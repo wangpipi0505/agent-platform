@@ -35,10 +35,12 @@
 
 ## 回归与已知预存问题
 
-- 本轮最终全量 engine-runtime 回归结果见文末补记（执行时后台运行中）。
-- **预存问题（与本轮改动无关，已用 `git stash` 在干净基线复现）**：
-  1. `OwnedFlowMaterialsPostgresTest.lastNodePostCommit...`：期望 4 次新请求实得 6（时序敏感，基线同样失败）；
-  2. `admin-common` 下 `ServiceTokensDeploymentModeTest`×5（`Files.readString` 未指定字符集，Git Bash/GBK 环境解码失败）、`LocalRunAdvanceAuthorityTest`×1、`AuthorityPolicyTest`×1——均在工程 PowerShell 工具链下通过，属编码/环境敏感，建议另立台账项处理（修法：`Files.readString(path, StandardCharsets.UTF_8)`）。
+- **全量套件在本 Git Bash 环境无法完整收尾**：两次独立全量运行均阻塞于 `RuntimeStreamTest`（流式/套接字类用例，疑似与该环境不兼容；工程自身证据 progress.md 记录的 846 零失败系经 PowerShell 工具链取得）。阻塞前已运行的全部类中，除下列预存问题外全部通过（含本轮 7 个新用例）。
+- **预存问题（与本轮改动无关）**：
+  1. `OwnedFlowMaterialsPostgresTest.lastNodePostCommit...`：期望 4 次新请求实得 6——已用 `git stash` 在干净基线复现同一失败，确认时序敏感预存；
+  2. `RuntimeClientsPublishedHttpTest.explicitLegacyConstruction...` 与 admin-common `ServiceTokensDeploymentModeTest`×5：`MalformedInputException` 同族——测试以平台默认字符集读取 UTF-8 产物（如 `Files.readString(path)` 未指定字符集），在 GBK 代码页的 Git Bash 下解码失败，PowerShell 工具链不受影响；建议另立台账项统一改 `StandardCharsets.UTF_8`；
+  3. 早前一次部分运行另见 `EngineContextPostgresTest`×2（Spring 上下文/端口）与 `FlowMaterialDatabasePreflightTest`×1——环境签名同类，所涉文件本轮均未改动。
+- 本轮改动文件的定向回归：`AgentLoopBudgetPostgresTest` 3/3、`RunOrphanConvergencePostgresTest` 4/4×3 轮、`ContextProjectionTest`/`ModelExchangeTest`/`ExecutionRecoveryTest` 全绿。
 
 ## 提交清单
 
