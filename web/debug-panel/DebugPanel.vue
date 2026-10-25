@@ -2,7 +2,7 @@
 import CodeViewer from "../shared/CodeViewer.vue";
 import FlowDesigner from "../flow-designer/FlowDesigner.vue";
 import NamedInputs from './NamedInputs.vue';
-import { ref, watch, onBeforeUnmount } from "vue";
+import { ref, computed, watch, onBeforeUnmount } from "vue";
 import { resumePayload } from "./control";
 import { mockRows, mockRules, type MockRow } from "./mock-rules";
 import { streamEvents, applyEvent, terminal, authorityFailure, type EventState } from "./events";
@@ -59,6 +59,26 @@ async function controls(save = false) {
 }
 const runId = ref("");
 const snapshot = ref<any>({});
+// UIF-A4：节点状态/LAST RUN 双 Tab——点击节点行查看其最近一次运行结果。
+// 数据源为状态接口已有的 nodeView（output/error/started_at/ended_at），只读展示。
+const runsTab = ref("nodes");
+const lastRunNode = ref<any>(null);
+const runNodes = computed(() =>
+  Object.entries(state.value.nodes).map(([node, status]) => {
+    const detail = (snapshot.value.nodes || []).find(
+      (n: any) => (n.nodeDefId || n.id) === node,
+    );
+    return { node, status, ...detail };
+  }),
+);
+function tryParse(value: any) {
+  if (typeof value !== "string") return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
+  }
+}
 const state = ref<EventState>({ watermark: '0', events: [], nodes: {} });
 const error = ref("");
 const busy = ref(false);
@@ -387,17 +407,46 @@ onBeforeUnmount(() => {
       />
       <pre>{{ JSON.stringify(snapshot.paused, null, 2) }}</pre>
     </div>
-    <el-table
-      :data="
-        Object.entries(state.nodes).map(([node, status]) => ({ node, status }))
-      "
-      ><el-table-column prop="node" label="节点" /><el-table-column label="状态"
-        ><template #default="{ row }"
-          ><span :class="['status', row.status]">{{
-            row.status
-          }}</span></template
-        ></el-table-column
-      ></el-table
+    <el-tabs v-model="runsTab">
+      <el-tab-pane label="节点状态" name="nodes"
+        ><el-table
+          :data="runNodes"
+          highlight-current-row
+          @row-click="(row: any) => (lastRunNode = row)"
+          ><el-table-column prop="node" label="节点" /><el-table-column label="状态"
+            ><template #default="{ row }"
+              ><span :class="['status', row.status]">{{
+                row.status
+              }}</span></template
+            ></el-table-column
+          ></el-table
+        ></el-tab-pane
+      ><el-tab-pane :label="lastRunNode ? 'LAST RUN · ' + lastRunNode.node : 'LAST RUN'" name="lastRun"
+        ><p class="muted" role="status">
+          最近一次运行的节点级输入输出（来自持久执行记录，只读）。
+        </p>
+        <template v-if="lastRunNode">
+          <h3>节点 {{ lastRunNode.node }} · {{ lastRunNode.status }}</h3>
+          <p v-if="lastRunNode.error && lastRunNode.error !== '{}'" class="error-text" role="alert">
+            {{ lastRunNode.error }}
+          </p>
+          <CodeViewer
+            :content="
+              JSON.stringify(
+                {
+                  output: tryParse(lastRunNode.output),
+                  error: tryParse(lastRunNode.error),
+                  startedAt: lastRunNode.started_at,
+                  endedAt: lastRunNode.ended_at,
+                },
+                null,
+                2,
+              )
+            "
+          />
+        </template>
+        <p v-else class="muted">在“节点状态”页点击任一行查看其最近运行结果。</p></el-tab-pane
+      ></el-tabs
     ><el-collapse
       ><el-collapse-item title="事件与输出" name="events">
         <pre>{{
