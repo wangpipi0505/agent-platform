@@ -19,9 +19,19 @@ public class RunController {
     private final ChunkBus chunks;
     private final ApprovalService approvals;
     private PortalRunEventsService portalEvents;
+    private RunWakeService wakes;
 
     @org.springframework.beans.factory.annotation.Autowired(required=false)
     public void portalEvents(PortalRunEventsService service){portalEvents=service;}
+
+    /** R-A6：外部唤醒为可选装配；测试夹具未注入时按需构建，端点行为不变。 */
+    @org.springframework.beans.factory.annotation.Autowired(required=false)
+    public void wakes(RunWakeService service){wakes=service;}
+
+    private RunWakeService wakes(){
+        if (wakes == null) wakes = new RunWakeService(store);
+        return wakes;
+    }
 
     public RunController(RunService s, TraceStore t, ChunkBus c, ApprovalService a) {
         service = s;
@@ -475,6 +485,11 @@ public class RunController {
     public Object approval(
             @PathVariable String id, @PathVariable long nid, @RequestBody JsonNode req) {
         return ApiResponse.ok(approvals.approve(id, nid, req, Actor.current()));
+    }
+
+    @org.springframework.web.bind.annotation.PostMapping("/internal/runs/{id}/wake")
+    public Object wake(@PathVariable String id, @RequestBody JsonNode req) {
+        return ApiResponse.ok(wakes().wake(id, req, Actor.current()));
     }
 
     @GetMapping("/internal/approvals")
