@@ -5,7 +5,7 @@ import NamedInputs from './NamedInputs.vue';
 import { ref, computed, watch, onBeforeUnmount } from "vue";
 import { resumePayload } from "./control";
 import { mockRows, mockRules, type MockRow } from "./mock-rules";
-import { streamEvents, applyEvent, terminal, authorityFailure, type EventState } from "./events";
+import { streamEvents, applyEvent, executingNode, terminal, authorityFailure, type EventState } from "./events";
 import { useAuth, useApi } from "../shared/api";
 import { decodeRunStatus, record, protocolFailure } from '../shared/run-protocol';
 const props = defineProps<{ appCode: string }>();
@@ -59,6 +59,8 @@ async function controls(save = false) {
 }
 const runId = ref("");
 const snapshot = ref<any>({});
+// UIF-A3：单 spinner 队列——并发 run 只显示最新执行的节点。
+const executing = ref<ReturnType<typeof executingNode>>(null);
 // UIF-A4：节点状态/LAST RUN 双 Tab——点击节点行查看其最近一次运行结果。
 // 数据源为状态接口已有的 nodeView（output/error/started_at/ended_at），只读展示。
 const runsTab = ref("nodes");
@@ -125,7 +127,10 @@ async function connect() {
         const node = (typeof instanceId === 'string' || typeof instanceId === 'number')
           ? snapshot.value.nodes?.find((n: any) => String(n.nodeInstanceId) === String(instanceId))
           : undefined;
-        state.value = applyEvent(state.value, e, typeof data?.nodeDefId === 'string' ? data.nodeDefId : node?.nodeDefId);
+        const defId = typeof data?.nodeDefId === 'string' ? data.nodeDefId : node?.nodeDefId;
+        state.value = applyEvent(state.value, e, defId);
+        // UIF-A3：并发执行只保留最新节点 spinner（seq 乱序/旧完成事件不抖动 UI）。
+        executing.value = executingNode(executing.value, e, defId);
         retry = 0;
         if (
           e.type === "WAITING_STEP" ||
@@ -363,6 +368,10 @@ onBeforeUnmount(() => {
       <div>
         <strong>{{ runId }}</strong>
         <span :class="['status', snapshot.status]">{{ snapshot.status }}</span>
+        <!-- UIF-A3：并发执行只显示最新节点（乱序/旧完成事件不抖动此指示） -->
+        <span v-if="executing" class="status RUNNING" role="status"
+          >执行中 · {{ executing.node }}</span
+        >
         <span class="muted"
           >{{ connected ? "事件已连接" : "事件未连接" }} · 游标
           {{ state.watermark }}</span
@@ -395,6 +404,7 @@ onBeforeUnmount(() => {
       :definition="flow.definition"
       :layout="flow.layout || {}"
       :states="state.nodes"
+      :run-nodes="snapshot.nodes || []"
       read-only
     />
     <div v-if="snapshot.paused">

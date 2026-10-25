@@ -42,6 +42,38 @@ export function applyEvent(s: EventState, e: RunEvent, nodeDefId?: string): Even
   if (typeof id === 'string' && Object.hasOwn(statuses, e.type)) nodes[id] = statuses[e.type];
   return { watermark: e.seq, events: [...s.events, e], nodes };
 }
+
+/**
+ * UIF-A3：并发执行的单 spinner 队列。
+ *
+ * 多个 run 同时推送事件时，画布只保留一个"执行中节点" spinner；规则
+ * （对齐 n8n useExecutingNode）：
+ * - NODE_STARTED 带单调 seq：seq ≤ 已记录序号（乱序/重放）直接丢弃；
+ * - NODE_FINISHED/NODE_FAILED 仅当完成节点正是"正在显示的那个"才清空；
+ * - 空闲时接受任意节点（兼容 waiting 恢复后计数器归零的场景）。
+ * executionId 归属由调用方过滤（streams 是按 run 订阅的），此处只管 seq 语义。
+ */
+export type ExecutingNode = { node: string; seq: string } | null;
+export function executingNode(
+  current: ExecutingNode,
+  event: RunEvent,
+  nodeDefId?: string,
+): ExecutingNode {
+  if (!cursor(event.seq)) return current;
+  const data = record(event.data);
+  const id = nodeDefId || data?.nodeDefId || data?.nodeId;
+  if (typeof id !== 'string') return current;
+  if (event.type === 'NODE_STARTED') {
+    if (current && !after(event.seq, current.seq)) return current;
+    return { node: id, seq: event.seq };
+  }
+  if (
+    (event.type === 'NODE_FINISHED' || event.type === 'NODE_FAILED') &&
+    current?.node === id
+  )
+    return null;
+  return current;
+}
 export const terminal = (status: string) =>
   [
     "SUCCEEDED",

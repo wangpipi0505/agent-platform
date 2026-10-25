@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { splitGraph, mergeGraph } from "../flow-designer/transform";
-import { parseFrames, applyEvent } from "../debug-panel/events";
+import { parseFrames, applyEvent, executingNode, type ExecutingNode } from "../debug-panel/events";
 import { createApi } from "../shared/api";
 describe("contract boundaries", () => {
   it("layout movement never changes business definition", () => {
@@ -61,5 +61,27 @@ describe("contract boundaries", () => {
     );
     await expect(api("/admin/apps")).rejects.toThrow("请先登录");
     expect(calls).toHaveLength(0);
+  });
+
+  it("executingNode keeps a single spinner under concurrent runs (UIF-A3)", () => {
+    let current: ExecutingNode = null;
+    const start = (seq: string, node: string) =>
+      (current = executingNode(current, { seq, type: "NODE_STARTED", data:{nodeId:node}, rawData:'{}' }, node));
+    const finish = (seq: string, node: string) =>
+      (current = executingNode(current, { seq, type: "NODE_FINISHED", data:{nodeId:node}, rawData:'{}' }, node));
+    start("5", "a");
+    // 乱序/重放的旧 START 不改变当前显示节点
+    start("3", "b");
+    expect(current).toEqual({ node: "a", seq: "5" });
+    start("6", "b");
+    expect(current).toEqual({ node: "b", seq: "6" });
+    // 其他节点的完成事件不清空 spinner（当前显示的是 b）
+    finish("7", "a");
+    expect(current).toEqual({ node: "b", seq: "6" });
+    // 当前节点自身完成才清空；空闲后接受任意序号（waiting 恢复计数归零场景）
+    finish("8", "b");
+    expect(current).toBeNull();
+    start("2", "c");
+    expect(current).toEqual({ node: "c", seq: "2" });
   });
 });

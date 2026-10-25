@@ -10,6 +10,8 @@ const props = defineProps<{
   definition: Definition;
   layout: any;
   states?: Record<string, string>;
+  /** UIF-A2：运行节点明细（output 等），供边数据量标签；与 states 同源自状态接口。 */
+  runNodes?: any[];
   readOnly?: boolean;
   draftKey?: string;
   draftRev?: number;
@@ -187,30 +189,73 @@ watch(
 watch(
   () => props.states,
   (states) => {
+    // UIF-A2 运行态着色（对齐 n8n 语义）：节点按状态描边（等待=虚线呼吸动画），
+    // 边按两端节点状态取优先级 running>error>success>waiting 染色——
+    // 用户不打开任何面板即可读出整条执行链路的状态。
+    const statusOf = (id: string) => states?.[id];
+    const colorOf = (id: string) =>
+      getComputedStyle(document.documentElement).getPropertyValue(
+        "--st-" +
+          (statusOf(id) === "SUCCEEDED"
+            ? "ok"
+            : statusOf(id) === "FAILED"
+              ? "fail"
+              : statusOf(id)?.startsWith("WAITING")
+                ? "suspend"
+                : statusOf(id) === "RUNNING"
+                  ? "run"
+                  : "wait"),
+      );
     for (const [id, status] of Object.entries(states || {})) {
       const cell = graph?.getCellById(id);
-      const token =
-        status === "SUCCEEDED"
-          ? "ok"
-          : status === "FAILED"
-            ? "fail"
-            : status.startsWith("WAITING")
-              ? "suspend"
-              : status === "RUNNING"
-                ? "run"
-                : "wait";
+      const running = status === "RUNNING";
+      const waiting = status?.startsWith("WAITING") ?? false;
       cell?.setAttrs({
         body: {
-          stroke: getComputedStyle(document.documentElement).getPropertyValue(
-            "--st-" + token,
-          ),
-          strokeWidth: 2,
+          stroke: colorOf(id),
+          strokeWidth: running ? 2.5 : 2,
+          // 等待态虚线 + CSS 呼吸动画类；运行态实线加粗；其余静止。
+          strokeDasharray: waiting ? "6 4" : null,
+          class: waiting ? "node-waiting-breath" : null,
         },
+      });
+    }
+    // 边状态 = 源/目标节点状态按优先级取色；源节点成功时标输出 item 数。
+    const rank = (v?: string) =>
+      v === "RUNNING" ? 4 : v === "FAILED" ? 3 : v === "SUCCEEDED" ? 2 : v?.startsWith("WAITING") ? 1 : 0;
+    for (const edge of graph?.getEdges() || []) {
+      const sourceId = String(edge.getSourceCellId() || "").replace(/^node_/, "");
+      const targetId = String(edge.getTargetCellId() || "").replace(/^node_/, "");
+      const winner = [statusOf(sourceId), statusOf(targetId)].sort(
+        (a, b) => rank(b) - rank(a),
+      )[0];
+      if (!winner) {
+        edge.setAttrs({ line: { stroke: null, strokeWidth: null }, label: { text: null } });
+        continue;
+      }
+      // 取色跟随持有胜出状态的端点；两端同状态时任取。
+      const holder = statusOf(sourceId) === winner ? sourceId : targetId;
+      edge.setAttrs({
+        line: { stroke: colorOf(holder), strokeWidth: rank(winner) >= 2 ? 2 : 1.5 },
+        label: { text: winner === "SUCCEEDED" ? itemCountLabel(sourceId) : null },
       });
     }
   },
   { deep: true },
 );
+// 源节点成功时，把其输出 item 数标在出边上（运行状态 nodes[].output 的行数）。
+function itemCountLabel(nodeDefId: string): string | null {
+  const detail = (props.runNodes || []).find(
+    (n: any) => (n.nodeDefId || n.id) === nodeDefId,
+  );
+  const output = detail?.output;
+  if (Array.isArray(output)) return output.length + " items";
+  if (output && typeof output === "object") {
+    const firstArray = Object.values(output).find((v) => Array.isArray(v));
+    if (Array.isArray(firstArray)) return firstArray.length + " items";
+  }
+  return null;
+}
 onBeforeUnmount(() => {
   clearTimeout(draftTimer);
   observer?.disconnect();
@@ -295,5 +340,26 @@ defineExpose({ focusNode });
 }
 .canvas-layout {
   grid-template-columns: minmax(0, 1fr) minmax(22rem, 35%);
+}
+/* UIF-A2：等待态虚线呼吸动画（X6 节点 body 上 class 由 states watcher 挂载）。
+   stroke-dashoffset 周期位移产生"缓慢流动"观感，比 JS 动画便宜且可 disabled。 */
+:deep(.node-waiting-breath) {
+  animation: waiting-breath 1.6s ease-in-out infinite;
+}
+@keyframes waiting-breath {
+  0%,
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  50% {
+    stroke-dashoffset: 10;
+    opacity: 0.72;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :deep(.node-waiting-breath) {
+    animation: none;
+  }
 }
 </style>
