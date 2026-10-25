@@ -54,7 +54,10 @@ public class AgentDriver {
                 prior.isEmpty()
                         ? Json.read("{}")
                         : TraceStore.json(prior.getFirst().get("checkpoint"));
-        Set<String> fingerprints = new HashSet<>();
+        // 契约 trace-model 终止规则情形6的判定状态：无进展 = 同一工具调用指纹
+        // "连续"重复的轮数，指纹变化即重置（不跨恢复记忆，与检查点恢复语义一致）。
+        String lastFingerprint = null;
+        int repeatedRounds = 0;
         int corrections = 0;
         int seq = 0, max = single ? 1 : config.path("maxSteps").asInt(25);
         long deadline = System.currentTimeMillis() + config.path("totalDurationMs").asLong(600000);
@@ -123,8 +126,20 @@ public class AgentDriver {
                 return terminal;
             }
             if (single) throw new IllegalArgumentException("LLM_NODE_TOOL_CALL_NOT_ALLOWED");
-            String fingerprint = Digest.sha256(calls.toString());
-            if (!fingerprints.add(fingerprint)) throw new IllegalArgumentException("NO_PROGRESS");
+            // 契约 trace-model 终止规则情形6：连续 N=3 轮 (skillId+参数hash) 指纹完全重复
+            // 才熔断；中途指纹变化即重置计数。此前"一次重复即熔断"与契约口径不符，
+            // 会误杀模型自查、参数自纠等合理的两轮重复。指纹只取技能名+参数，
+            // 不含调用 id——模型每轮生成的新 id 不应掩盖"同工具同参数"的重复事实。
+            StringBuilder source = new StringBuilder();
+            for (JsonNode call : calls)
+                source.append(call.path("name").asText())
+                        .append('\n')
+                        .append(call.path("arguments").toString())
+                        .append('\n');
+            String fingerprint = Digest.sha256(source.toString());
+            repeatedRounds = fingerprint.equals(lastFingerprint) ? repeatedRounds + 1 : 1;
+            lastFingerprint = fingerprint;
+            if (repeatedRounds >= 3) throw new IllegalArgumentException("NO_PROGRESS");
             List<Object> assistantCalls = new ArrayList<>();
             for (JsonNode call : calls)
                 assistantCalls.add(

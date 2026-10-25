@@ -202,7 +202,15 @@ public class FlowDriver {
                         yield agent.drive(run, node, modelConfig, args, actor, true);
                     }
                     case "CONFIRM" -> Json.tree(Map.of("approved", true));
-                    case "AGENT" -> agent.drive(run, node, config, args, actor, false);
+                    case "AGENT" -> {
+                        // 契约 trace-model §运行时引擎：Agent 节点是"受预算与深度约束的子循环"。
+                        // depth 与 steps/tokens 同为 run.budget.consumed 的单调累计指标：每次
+                        // 进入一个 Agent 子循环计 1，maxDepth（默认 2）即单次运行允许进入的
+                        // 子循环总次数上限，超限由 TraceStore.consume 抛 BUDGET_DEPTH 熔断，
+                        // 使嵌套 Agent 无法绕过深度约束无限展开。
+                        store.consume(TraceStore.number(run, "id"), "depth", 1, 2);
+                        yield agent.drive(run, node, config, args, actor, false);
+                    }
                     default ->
                             throw new IllegalArgumentException(
                                     "NODE_HANDLER_UNAVAILABLE:" + def.path("type").asText());
