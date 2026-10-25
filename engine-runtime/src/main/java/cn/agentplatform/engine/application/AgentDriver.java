@@ -28,6 +28,17 @@ public class AgentDriver {
         this.chunks = chunks;
     }
 
+    /**
+     * R-A7：工具调用 pre/post 拦截链，可选装配。手工构造（测试夹具）未注入时保持
+     * 空链零开销；Spring 环境注入按 @Order 排序的链。
+     */
+    private ToolInterceptorChain interceptors = ToolInterceptorChain.EMPTY;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    public void interceptors(ToolInterceptorChain chain) {
+        this.interceptors = chain;
+    }
+
     public JsonNode drive(
             Map<String, Object> run,
             Map<String, Object> node,
@@ -300,10 +311,14 @@ public class AgentDriver {
             throw new IllegalArgumentException(
                     Objects.toString(registration.get("error_semantic"), "NON_RETRYABLE_FAILURE"));
         if (registration.get("status").equals("SUCCEEDED"))
-            return Json.tree(registration.get("result"));
+            return interceptors.postResult(
+                    code, Json.tree(registration.get("result")), actor);
 
         JsonNode result;
         try {
+            // pre 链在登记/认领之后、外部派发之前：策略环节（超时/审计）可抛异常
+            // 短路本次调用；已登记事实由既有恢复路径对账，链不负责回滚。
+            interceptors.preDispatch(code, version, args, actor);
             result = clients.post("skill", "/internal/skills/" + code + "/execute", req, actor);
         } catch (org.springframework.web.client.RestClientException transport) {
             var authority =
@@ -333,7 +348,8 @@ public class AgentDriver {
         if (!result.path("status").asText().equals("SUCCEEDED"))
             throw new IllegalArgumentException(
                     result.path("errorSemantic").asText("SKILL_" + result.path("status").asText()));
-        return result.has("result") ? result.path("result") : result.path("output");
+        return interceptors.postResult(
+                code, result.has("result") ? result.path("result") : result.path("output"), actor);
     }
 
     public Map<String, Object> preview(JsonNode config, JsonNode inputs) {
