@@ -1,0 +1,4 @@
+async page => {
+ const d=page.getByRole('dialog',{name:'添加供应商'});if(!await d.count())await page.getByRole('button',{name:'添加供应商'}).click();await d.getByRole('textbox',{name:/^\*?编码$/}).fill('frontend_fixture_provider');await d.getByRole('textbox',{name:/^\*?名称$/}).fill('前端联调测试端点');await d.getByRole('textbox',{name:/服务地址/}).fill('http://127.0.0.1:28400/v1');await d.locator('.el-form-item').filter({hasText:'端点信任标签'}).locator('.el-select').click();await page.getByRole('option',{name:'LOCAL',exact:true}).click();await d.getByRole('textbox',{name:/名称/}).first().click();const response=page.waitForResponse(r=>r.url().endsWith('/admin/model-providers')&&r.request().method()==='POST');await d.getByRole('button',{name:'保存',exact:true}).click();const created=await (await response).json();if(created.code!=='OK')throw new Error(JSON.stringify(created));return {created:true,providerId:created.data.id,testFixtureEndpointOnly:true};
+}
+

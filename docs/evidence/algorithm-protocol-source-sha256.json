@@ -1,0 +1,1039 @@
+{
+  "scope": "algorithm protocol module implementation; no deployment/real JVM/Kubernetes claim",
+  "workspace": "G:/207/项目/算法重组工具/代码/agent-platform",
+  "baselineFileCount": 84,
+  "changes": [
+    {
+      "path": "docs/evidence/algorithm-protocol-report.md",
+      "status": "ADD",
+      "beforeSha256": null,
+      "afterSha256": "78b0b50fda64130c77e87a15fbec802c0e6411b694a22dfec16b53ed843e0394"
+    },
+    {
+      "path": "docs/open-source-references.md",
+      "status": "MODIFY",
+      "beforeSha256": "ad997d1bce71fc42d805d301a85565d20bc48d22a75bb4c7509f3fe81c437395",
+      "afterSha256": "0505265983b94dd088a89adfc3f6d346c0cc8cb899883ff328ce89ab23bd79bd"
+    },
+    {
+      "path": "scripts/test-algorithm-protocol.ps1",
+      "status": "ADD",
+      "beforeSha256": null,
+      "afterSha256": "e56a55eaec7743f9d425014f61ddb09ecfedfcfc819ba88b20f2450ecc7cb8d3"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/ReconciliationProofs.java",
+      "status": "MODIFY",
+      "beforeSha256": "fceb53d0d04360598e640d750fde05a8cb124dbf2cfe440a5fea7de630bd412d",
+      "afterSha256": "6ff0183299b4e999ffdd4571f137510a963eee3fdfdcbb6949ae6f14c3289639"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/SkillExecution.java",
+      "status": "MODIFY",
+      "beforeSha256": "bbc0ef8f7e7e9729329b5ca910ae0a1c0326b4f2ccbbf27ab879931b9f40a4af",
+      "afterSha256": "07549dafe605c314fda8640b94241c39893a3e6cfd5b853b14a0d3bacda9d61d"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/AlgorithmAdapter.java",
+      "status": "MODIFY",
+      "beforeSha256": "4226cca273164d3627e9a0fc3c2b43bc54b9f7b13a5ee7fbc8d99c5c97ea88dc",
+      "afterSha256": "7b68557b457f6b1643e2922498d20bdd90396268de77e0b4226bb9ad8914f052"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/ArtifactStore.java",
+      "status": "MODIFY",
+      "beforeSha256": "53e6b29ca802e4910b841fe57e2eaf2be09ae9eb68f26d173fed2c5ffb392802",
+      "afterSha256": "b46716f91b37b029d03dbed7a9383b4f41ad7d6347e94f82798b0e78e2a9c1a2"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/SkillAdapters.java",
+      "status": "MODIFY",
+      "beforeSha256": "cf12ad52665e97fd4b001e35828e962f77c98e17d9d44cc5d0e328f9d5b62e57",
+      "afterSha256": "e8b6b9a8aabd2993ed022768f7c64f83ab1bb8ab70820f4bc30d5dce1b3072d5"
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V311__algorithm_job_identity.sql",
+      "status": "ADD",
+      "beforeSha256": null,
+      "afterSha256": "763a5fd44c12cbe649fd8220a174a9853b16fd55944cd487c881a05a1f3bc4b1"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/AlgorithmExecutionPostgresTest.java",
+      "status": "ADD",
+      "beforeSha256": null,
+      "afterSha256": "6747b79b45c37dc2b71756ee283b51d8547c8c4a75465943939e68a01ffd9ebd"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/AlgorithmApiFixture.java",
+      "status": "ADD",
+      "beforeSha256": null,
+      "afterSha256": "05c0c4428f4459b9a363dacf05a82c56e6c43da5267f1d9a240ba18de5e435a5"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/AlgorithmMigrationPostgresTest.java",
+      "status": "ADD",
+      "beforeSha256": null,
+      "afterSha256": "2301f8eeb983b2df8331008996e0a6134c1a13d2e65777d4f660dca037956b3b"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/AlgorithmMinioFixture.java",
+      "status": "ADD",
+      "beforeSha256": null,
+      "afterSha256": "7c9ebdc0d7ed390bb3c053341d43ad965745b1854726508045b64889fb4ff406"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/AlgorithmProtocolTest.java",
+      "status": "ADD",
+      "beforeSha256": null,
+      "afterSha256": "106489aa3c664b3eda548917ddfa5e4a1602d6341e17e2e56b62fb3c816d0e1c"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/AlgorithmTestDatabase.java",
+      "status": "ADD",
+      "beforeSha256": null,
+      "afterSha256": "57d17735e0390996eb8252d84f91f6d5c76f50e28c59ed4fcb68b61c870fd49c"
+    },
+    {
+      "path": "tests/smoke-algorithm-protocol.mjs",
+      "status": "ADD",
+      "beforeSha256": null,
+      "afterSha256": "c38f77632210370cbb17ed765c5be5b3ea1c58c4d399de0b67018a904b52db12"
+    }
+  ],
+  "sourcePomBefore": "docs/evidence/algorithm-protocol-artifacts/final-full-before-sha256.json",
+  "sourcePomAfter": "docs/evidence/algorithm-protocol-artifacts/final-full-after-sha256.json",
+  "sourcePomFileCount": 90,
+  "sourcePomBeforeAfterEqual": true,
+  "fullRegression": {
+    "skill": {
+      "tests": 377,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "common": {
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "applyVerification": {
+    "commands": [
+      {
+        "command": [
+          "git",
+          "-c",
+          "core.autocrlf=false",
+          "-c",
+          "core.eol=lf",
+          "apply",
+          "--check",
+          "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\algorithm-protocol-artifacts\\algorithm-protocol-complete.patch"
+        ],
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "-c",
+          "core.autocrlf=false",
+          "-c",
+          "core.eol=lf",
+          "apply",
+          "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\algorithm-protocol-artifacts\\algorithm-protocol-complete.patch"
+        ],
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": "G:/207/项目/算法重组工具/代码/agent-platform/docs/evidence/algorithm-protocol-artifacts/algorithm-protocol-complete.patch:4: trailing whitespace.\n# 算法原任务协议实现与模块验收\nG:/207/项目/算法重组工具/代码/agent-platform/docs/evidence/algorithm-protocol-artifacts/algorithm-protocol-complete.patch:5: trailing whitespace.\n\nG:/207/项目/算法重组工具/代码/agent-platform/docs/evidence/algorithm-protocol-artifacts/algorithm-protocol-complete.patch:6: trailing whitespace.\n本报告仅记录本新工程 G2 算法协议增量。根任务已移交独占 skill 源码/target；前置原 attempt 改造与 Node 清理独立审查结论不由本报告重签。本轮没有 package、启停主服务、提交、发布、Kubernetes 集群或算法容器执行。当前主服务仍是根任务固定的 846 阶段制品。本报告不关闭完整 T11/G2；冻结后的独立审查和实际 engine/skill JVM 纵切由根任务执行。\nG:/207/项目/算法重组工具/代码/agent-platform/docs/evidence/algorithm-protocol-artifacts/algorithm-protocol-complete.patch:7: trailing whitespace.\n\nG:/207/项目/算法重组工具/代码/agent-platform/docs/evidence/algorithm-protocol-artifacts/algorithm-protocol-complete.patch:8: trailing whitespace.\n依据为 `algorithm-protocol-implementation-brief.md`、只读完整计划、`algorithm-readonly-retry-decisions.md` 及根任务本轮总期限裁决。原四契约、v1.2 原文、既有 POM、common/engine 生产代码、旧迁移和既有测试均未修改。\nwarning: squelched 4613 whitespace errors\nwarning: 4618 lines add whitespace errors.\n"
+      }
+    ],
+    "frozenFiles": 94,
+    "verifiedPaths": 94,
+    "replayByteEqual": true,
+    "frozenByteEqual": true,
+    "replayDirectory": "apply-replay-no-autocrlf"
+  },
+  "artifacts": [
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/algorithm-directed-green.log",
+      "sha256": "17239b04afa4dfbcf8258e608ca8782cea1999fa7319c96ec1a1900dda92aca7"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/algorithm-directed-matrix.log",
+      "sha256": "dcbcd19e635f153dc84a3d833c888f7aa74e6e064a414b895bc650ebe5914657"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/algorithm-directed-with-minio-deadline.log",
+      "sha256": "e0be1fafea83631476cc0917e6e0038a4d0c9eaf649ff3fa7545255a24c7a2ee"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/algorithm-existing-regression.log",
+      "sha256": "59b7fd8e9f196e57588efa9cf1f53f5d64d6b5007504b828ff56db51fb0d2a58"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/algorithm-final-candidate-directed.log",
+      "sha256": "5ef9b407bd9ab169840ed98215a589febcd2a532b104ef3a52636043f7d12faf"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/algorithm-final-directed-corrected.log",
+      "sha256": "0a46aa423578dcacc171b537bc09320169a92da0a6bb2362f13cb8a153a6f683"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/algorithm-final-directed.log",
+      "sha256": "6570a6fd801033c90e69a2c30a09428d0ec4336f1def00eb067db68e5054cbcd"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/algorithm-final-full.log",
+      "sha256": "c9d6bd9b30f52044ae4eecffa8b5d786ad97bcc9853f2c08ca7cf18b6bd2a580"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/algorithm-green-C-complete-json.log",
+      "sha256": "5df2937ddfadfe2265970ab7203b1a11fa43413b3da0a42cdba4191170589826"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/algorithm-green-first-actual.log",
+      "sha256": "08c86e7b13ecad5f0ccf5b86e74e688950edaaac49c0f14a8c8adeb33b87427e"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/algorithm-green-first.log",
+      "sha256": "8dcddf8711d572c17f6b0e65f2fbecff6b0c3df25a0fa91dfede2265e578b2a8"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/algorithm-green-minio-deadline-actual.log",
+      "sha256": "f7fe35c75b348d65ecaaafaa6958bd86c9dee47c4d9be5b07a0500ea512b4f6f"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/algorithm-green-minio-deadline.log",
+      "sha256": "40c767928a38327410ae6a51b3ccf838403964d7e2fb6caaeb6ea4fa30f0902a"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/algorithm-green-minio-split.log",
+      "sha256": "69665795481a82986af466d3b34b80a89bb59fec51d2d0a30ede29cf71c3f4df"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/algorithm-green-readonly-handoff.log",
+      "sha256": "b245848d7155d3c1884edc99b659507de0a7efc2c083e1c41004704f01a431ab"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/algorithm-green-readonly-races.log",
+      "sha256": "e49e559a2399554c219127120b85f195d3a3ee688b078452540231b32dfb58a7"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/algorithm-migration-first.log",
+      "sha256": "285b8a9c71c3da4816101fa3f63f5d9cc7073f41a67633f15c31bc39c6482343"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/algorithm-minio-phase-diagnostic.log",
+      "sha256": "c25b2d0ca234aa2efb9e68ea3c0808b320828ef2d0a893cda668f72b1b5aaf39"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/algorithm-protocol-complete.patch",
+      "sha256": "674fcc2b768c0ebca9be11980e5a261b2343a818db1842dd979c5950bb228159"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/algorithm-red-A-behavior.log",
+      "sha256": "026d91a92eb53ed7041dc7283dfd9d167dda23dbcac9bab722b94a8ab9d49d5c"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/algorithm-red-A.log",
+      "sha256": "2c6f516a83f1d73a46b89451d5e9b3b18e224bc0e1dabfa9fbf931971e773a9f"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/algorithm-red-B-behavior.log",
+      "sha256": "f99970eac83196db4300ca5b6ac4130e770f1d26f2493ff62ef604acfc1b31c0"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/algorithm-red-C-behavior.log",
+      "sha256": "673fa2273c768b730f2d9899225a480897ece9b0c4d7f6d87482e8974dbf420b"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/algorithm-red-C-complete-json.log",
+      "sha256": "d3c1be90cec07d012be5444e93ce9316890f471491c05799de4ac565640c2fbd"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/algorithm-red-C-corrected-fixture.log",
+      "sha256": "dbcf2e5218d62073ad5798e7652b492e27ec66201543f443bcb49a6c179c20eb"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/algorithm-red-decoded-gzip.log",
+      "sha256": "95b20560dd509f5f76c81dd771411e919a8c91e4f8d207564aa5579ee00fcfa9"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/algorithm-red-legacy-reconcile-corrected.log",
+      "sha256": "6514b867e3e543face7d4d4cbcc50bec6de47a180c968102032b7f626616a360"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/algorithm-red-legacy-reconcile.log",
+      "sha256": "fcaf306515e428dd8289fed2b45c501446f77c9d09380f048c385da26d2fb98a"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/algorithm-red-migration-behavior.log",
+      "sha256": "d45998b249eb9d11d8ce67dccb12fad930b35281f48c5b9919a7225fa3e356a8"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/algorithm-red-minio-deadline-warmed.log",
+      "sha256": "cbc56ce0f1a93344495161a8856e2ec330d8bb263bcaa8a62921b020d48f38f1"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/algorithm-red-minio-deadline.log",
+      "sha256": "531f3f1f0d4344c669717b046fe4c32da0b5d5e0bb39979543362b0e8f728773"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/algorithm-red-minio-split.log",
+      "sha256": "d6bfc899d59449592db220df69f9d744329152652dde9697c1479d2fb46aa9ad"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/algorithm-red-offload-schema.log",
+      "sha256": "60c884e024c3d7ecff195a6fe8aa3a060e1c4efd67ac7007e9d6def92f65503b"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/algorithm-red-readonly-handoff.log",
+      "sha256": "41526232ab6d2799c55e3dbf5fc1b70df03dffec56815b044e33e2b61e82c384"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/apply-initial-line-ending-diagnostic.json",
+      "sha256": "5b546177b13a9afc34a10dde76e026d535dcb8c04535bd1f0a793840f054580d"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/apply-verification.json",
+      "sha256": "b10ff2c221b695c3d9c18d61364108e51bb9da73fb44fbea7ba1c5fa1d5f809c"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/baseline-sha256.json",
+      "sha256": "8efc10a4a7d15b58852812fa5b871cacd855e692e99178a845f0d2bca60f65ee"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-full-after-sha256.json",
+      "sha256": "670839adf79b14462babc6bfe06aded5362f5e59a945d96a7c61d78cb3cad00a"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-full-before-sha256.json",
+      "sha256": "670839adf79b14462babc6bfe06aded5362f5e59a945d96a7c61d78cb3cad00a"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-suite-summary.json",
+      "sha256": "1df8dc8e7dc2d68ecad4ceb4b3d0714c338036548c101128dee7ab87f5a95cfe"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/admin-common/cn.agentplatform.common.CommonBoundaryTest.txt",
+      "sha256": "e8908423fb2349d6c7ab45c99eabcfea2b855e25eaf882f0571d723307016145"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/admin-common/cn.agentplatform.common.schema.SharedSchemaAdmissionTest.txt",
+      "sha256": "95f9e90af565256d0851d1e3e610b37256b1fa971594d05105f4632ce3ae3880"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/admin-common/cn.agentplatform.common.SecretVaultTest.txt",
+      "sha256": "72f8e38d413757a63304e0e4601a8f3837546507b783520779c8ee3574d326ac"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/admin-common/TEST-cn.agentplatform.common.CommonBoundaryTest.xml",
+      "sha256": "15aa37e38ba549ea62668fd781e3dc5f7a15ae9e0a54ac49da8f5df23bafe818"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/admin-common/TEST-cn.agentplatform.common.schema.SharedSchemaAdmissionTest.xml",
+      "sha256": "343ddf80153d523a8df1547b7292f609d37b3e2afc02e0f6ca1e93b9edfcead0"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/admin-common/TEST-cn.agentplatform.common.SecretVaultTest.xml",
+      "sha256": "bafd71a6d0cfa363ce7500877ab5521a1dcffe7b35a9d9b27166d83987a8aa80"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/cn.agentplatform.skill.api.OpenApiImportControllerTest.txt",
+      "sha256": "de87fed8ab0351fe094f7f717c7c400c05dd8c023151f8acdfaf2523eb4f8805"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/cn.agentplatform.skill.application.AlgorithmExecutionPostgresTest.txt",
+      "sha256": "730b8813a206b382227942978f08f911d9033f0d09785477be6d8771f992f1eb"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/cn.agentplatform.skill.application.AsyncHttpExecutionTest.txt",
+      "sha256": "0d4cad5f0e68f0c5e3ad61408f018c274252953d55f1e984b4fe59ebde7e6965"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/cn.agentplatform.skill.application.CallbackHttpTest.txt",
+      "sha256": "992720aeba7770111cdcee8d33cc64f2c4aac90557b881da0416751311740d72"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/cn.agentplatform.skill.application.OpenApiImportPersistenceTest.txt",
+      "sha256": "055db789eb26c9117912942941a3f9100b3fce1dfffa22bbbf01ecab02dac84e"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/cn.agentplatform.skill.application.OpenApiImportsTest.txt",
+      "sha256": "6ef9d6865d731c65492d42ec257715f189f0054d60c83ab0c1108b7ea9e7f345"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/cn.agentplatform.skill.application.ReconciliationProofTest.txt",
+      "sha256": "bc957062af76aa8d0516d977c051c518ce1e81493add33c0859e9f69c8956d37"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/cn.agentplatform.skill.application.SkillExecutionTest.txt",
+      "sha256": "ab4e6aaa39cd535af1dbaa69db30267250f5cc277ac499d5fa4c06662f18707d"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/cn.agentplatform.skill.application.SkillStatisticsPostgresTest.txt",
+      "sha256": "6c3e84283b74f6f5444ce13c34ac3c56f5c474e771fc66bb6f56f5c61958e2c3"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/cn.agentplatform.skill.domain.BoundedSchemaValidationTest.txt",
+      "sha256": "48aa84d3149843762afaa59ad3896b9e65136f44998537d5b93e3becded0044d"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/cn.agentplatform.skill.domain.SchemaWorkBudgetTest.txt",
+      "sha256": "7a78648af32edf8f2f7bd06e78e8991e57e7e421b83f2bae199406c87068d0e9"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/cn.agentplatform.skill.domain.SkillRulesTest.txt",
+      "sha256": "0cc35d5cdfaddcd203da75a0c9c647bb2c1a1b38dc6cf74d09dc83b68923ecbf"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/cn.agentplatform.skill.infra.AlgorithmMigrationPostgresTest.txt",
+      "sha256": "c0af7e558c7a9434c26835e337dc83932f0d07972b6c3bb1b8d295843733376f"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/cn.agentplatform.skill.infra.AlgorithmProtocolTest.txt",
+      "sha256": "482408db80b69477aa5fb7313a8edb195acb70ed82c6790b82e79c7461bf6182"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/cn.agentplatform.skill.infra.ArtifactBoundTest.txt",
+      "sha256": "9070232932ef1d7e413eb74b89d491499133f24c9379b8101bffcdfa300f839c"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/cn.agentplatform.skill.infra.ArtifactPersistenceTest.txt",
+      "sha256": "9611f40a23e92bfe5b4052e21d202865590d8a89bcd6e2f17e530d3bb8621255"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/cn.agentplatform.skill.infra.ArtifactReferenceTest.txt",
+      "sha256": "b79f13e969ea5a4152602f670034325731606cd47ad6b10b87d19eaa0af897c7"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/cn.agentplatform.skill.infra.HttpAsyncAttemptFenceTest.txt",
+      "sha256": "7f673d4c6194bbecaf2477d7dd25f15be0c8e31e07bdb882485181e8c5ce65c6"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/cn.agentplatform.skill.infra.HttpSchemaBoundaryTest.txt",
+      "sha256": "948665e52ab32e6e195ba4ca84b67f1a3b59bad5fd3d22aa83afbe597c1c8ea0"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/cn.agentplatform.skill.infra.McpAdapterTest.txt",
+      "sha256": "bc1fa42859d970574a21ebfe6676254a2069a007cfb2340f03741b9dc2aa578c"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/cn.agentplatform.skill.infra.McpExecutionPostgresTest.txt",
+      "sha256": "e0bbb6c05c2bacb1c5919baf29110948061cf78fb77d22ddbc05b9b8fc0d1b58"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/cn.agentplatform.skill.infra.McpManagementTest.txt",
+      "sha256": "ecd24cbe14d1a8f65d9c5c25d803c9cdbf20f1a90728167e4f59b712cd6e12ce"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/cn.agentplatform.skill.infra.McpResourceLifecycleTest.txt",
+      "sha256": "92666d7221e6b3f6427f0fb9b3479a3d8cf0c5b7df98817492919e8c55b90e83"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/cn.agentplatform.skill.infra.McpSchemaBoundaryTest.txt",
+      "sha256": "812986ba14d97c01c1046376a1e4ab8110d2ac58a1918cb6d7a3c084682081c3"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/cn.agentplatform.skill.infra.OpenApiHttpMappingTest.txt",
+      "sha256": "b7db0fbddeffa8453b00e2480af559704e55d30721340327e2ada532457d4f1f"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/cn.agentplatform.skill.infra.SignedCallbackTest.txt",
+      "sha256": "abf2cda118d12d5da55b902a508ee1e7c5825652cc00092ff7a43c4b285bc797"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/cn.agentplatform.skill.infra.SkillAttemptPropagationTest.txt",
+      "sha256": "db935de5d15e58369215ec1f13e648df44bad8304907eff189cf0ee6f675f022"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/TEST-cn.agentplatform.skill.api.OpenApiImportControllerTest.xml",
+      "sha256": "5f42194e0f34e4413fffa410577fce49166cbc44349a702f7f3cd3df948cd919"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/TEST-cn.agentplatform.skill.application.AlgorithmExecutionPostgresTest.xml",
+      "sha256": "1fdf66bdee48bbbcb520218814785815d68570a15dda54da5c82debcff253fb9"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/TEST-cn.agentplatform.skill.application.AsyncHttpExecutionTest.xml",
+      "sha256": "63af50d2bb50c69ef3eb44e3925f36db8e8075aeb30c6bf4e0c4af277e5dd894"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/TEST-cn.agentplatform.skill.application.CallbackHttpTest.xml",
+      "sha256": "f013ca8f661907ac5830762fb5e3618495541df4ba87915ce3e41f1e279eb803"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/TEST-cn.agentplatform.skill.application.OpenApiImportPersistenceTest.xml",
+      "sha256": "88b42ce906a005d217a60ebcb2d6c432e453be159b3d8bc0f5a444e5d031271f"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/TEST-cn.agentplatform.skill.application.OpenApiImportsTest.xml",
+      "sha256": "94e37c82829060ea999fd4bf679cc59c165b1c4d50948bd490b8bd586b114cd5"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/TEST-cn.agentplatform.skill.application.ReconciliationProofTest.xml",
+      "sha256": "36f51c0d5ac9f633af2c54d5b83ded432ec43822f9f1d53e3a28b94805d989ec"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/TEST-cn.agentplatform.skill.application.SkillExecutionTest.xml",
+      "sha256": "b213c7041e68f373c40bc40e885906b368d450d73a304068eb2d6211f89e9aba"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/TEST-cn.agentplatform.skill.application.SkillStatisticsPostgresTest.xml",
+      "sha256": "bc1df6cbe5f4a260951d4b0f12fa14eec2bd7d78bc77d4f28bcbd0373ae3de51"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/TEST-cn.agentplatform.skill.domain.BoundedSchemaValidationTest.xml",
+      "sha256": "0b8a44d195228acfb16f95d7a29df9050ba936dc285a5225a8bca5f1908c7d18"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/TEST-cn.agentplatform.skill.domain.SchemaWorkBudgetTest.xml",
+      "sha256": "e8f6e60b45fbeb5ad5b8c4a1d82414016517008e778e66d7f08c711f24f02e8e"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/TEST-cn.agentplatform.skill.domain.SkillRulesTest.xml",
+      "sha256": "cbad8b2813fd8656d79bd0d2cc1496b126f471d61812a453bbdceba73b41632a"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/TEST-cn.agentplatform.skill.infra.AlgorithmMigrationPostgresTest.xml",
+      "sha256": "31bb4bf6823dbcfcbb4460e9486ce712e5f45730094cd35c08f252ddbd3b9ba7"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/TEST-cn.agentplatform.skill.infra.AlgorithmProtocolTest.xml",
+      "sha256": "39a05a980e50252124892e5494e05a901dbe1c514aa592a6d02b20e7f7f610f7"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/TEST-cn.agentplatform.skill.infra.ArtifactBoundTest.xml",
+      "sha256": "e315d9845e40a582e0f7aec1594fbd02b4b98a94dbed822dd874ed0ebc537e62"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/TEST-cn.agentplatform.skill.infra.ArtifactPersistenceTest.xml",
+      "sha256": "39f16e9ba6569fc1b0f3cb90c82a4d2d9e75c01b4ddd1627db0666368038e411"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/TEST-cn.agentplatform.skill.infra.ArtifactReferenceTest.xml",
+      "sha256": "537e22f01d170dfccf8653083bfe5c2b0389eebbaba279bd395e7cfe21197d44"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/TEST-cn.agentplatform.skill.infra.HttpAsyncAttemptFenceTest.xml",
+      "sha256": "72c8020ff2a3cfd9c463b083d2e77f91366a0f5ec8e95223b741270b3f59dc43"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/TEST-cn.agentplatform.skill.infra.HttpSchemaBoundaryTest.xml",
+      "sha256": "4f44655b3597ecfaab4cae24927709a064ee3883a3f3eabd54858403f40abf42"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/TEST-cn.agentplatform.skill.infra.McpAdapterTest.xml",
+      "sha256": "a9341e35a16fdf776365243bcc503ce74f39de78ce1a572f042898a14473a261"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/TEST-cn.agentplatform.skill.infra.McpExecutionPostgresTest.xml",
+      "sha256": "a0837f34233f6777e19c304c2d5b6689b93614777d86d0fd558f41540958c141"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/TEST-cn.agentplatform.skill.infra.McpManagementTest.xml",
+      "sha256": "d7a7c8ac2b8e1f8dd903e85339016aca43ed3dd3635b6330856be1185d624148"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/TEST-cn.agentplatform.skill.infra.McpResourceLifecycleTest.xml",
+      "sha256": "78ad0d8bdcdef0f11ab9c761b8a38af5e08877b2476c1b3e25cbfda1d7e9cd3c"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/TEST-cn.agentplatform.skill.infra.McpSchemaBoundaryTest.xml",
+      "sha256": "71fc461836320076da21d3a23ac70864e5c32210d4ccdcdaf17b9913ef335b9a"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/TEST-cn.agentplatform.skill.infra.OpenApiHttpMappingTest.xml",
+      "sha256": "73f5b37c622693144516654d9db8adcc89bcfe6b0b0faedc7b6245a88e97d08e"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/TEST-cn.agentplatform.skill.infra.SignedCallbackTest.xml",
+      "sha256": "87ce01665937a72cc9927376bb18bbb8fd6adfe18552896858661ff32a0f373e"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/final-surefire/skill-registry/TEST-cn.agentplatform.skill.infra.SkillAttemptPropagationTest.xml",
+      "sha256": "5bbe0087783acbf24aed36175aa123473da29b89979b92a28740064d9a4706e3"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/frozen-sha256.json",
+      "sha256": "6233bec3370d46e3fd8c99428774c2750ea184a792693ba046bf958bf016b3b4"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/owned-change-list.json",
+      "sha256": "7751248cee14ac8d15f7440cf6be3a1ab1755747b391ddc2219addce837cdcb0"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/recreate-own-algorithm-schema.log",
+      "sha256": "2ff8c742fd1a02a9ca2d84b447ae9e06c5060bb7c994d248127e616c1d0abe4f"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/sdk/client-java-api-23.0.0-sources.jar",
+      "sha256": "7b0da48b1e4eb3843a8cb375066b701e38d0ec52af35d4d728551c2c76201929"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/sdk/commonMain/okio/internal/RealBufferedSource.kt",
+      "sha256": "af9df8104a796415e39b3c934ae4f5166fb6cbb5b59328e4a17c7864ed63d603"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/sdk/commonMain/okio/Segment.kt",
+      "sha256": "b88d443130e47c02d6d80f5754b5d50d6189c645393d4385fc7605a5912e4bf9"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/sdk/io/kubernetes/client/openapi/ApiClient.java",
+      "sha256": "58e38b725e93934445bb0d3ab7fb967722dfe2360a0cd5d3b2221825247a43bb"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/sdk/io/kubernetes/client/openapi/apis/BatchV1Api.java",
+      "sha256": "ebff6ca64b3851f77a15b54ea6e4d97dfbfc580f80a3b5585f680c1c1145b538"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/sdk/io/kubernetes/client/openapi/apis/CoreV1Api.java",
+      "sha256": "0517ea99bf3c830372574a5108476188d80e7d892766e22bc811cc9cf7c1bc1d"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/sdk/io/kubernetes/client/openapi/models/V1ContainerStatus.java",
+      "sha256": "09f41293cf5ec8d1057a6ae3754903e6c6c6eb4ab60e0721b75ad0fdb8b7405f"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/sdk/io/kubernetes/client/openapi/models/V1JobStatus.java",
+      "sha256": "c3c7ed789f620066dfc4fa625fdcec3d812198c404eb564785fe66642a7f4890"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/sdk/io/kubernetes/client/openapi/models/V1OwnerReference.java",
+      "sha256": "dbb566b35c98fe21e27812680b2413e600911d134b593e5ee1f29afab0261416"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/sdk/io/minio/MinioAsyncClient.java",
+      "sha256": "9cbb83b4144607779866ab62a22c56ee4ac388cf6079798946b9df4157c4b350"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/sdk/io/minio/MinioClient.java",
+      "sha256": "4c855a8fbfb3ce652a1b7d4387769ed2515e922bc3ff621e97d264ae9ce4f847"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/sdk/io/minio/S3Base.java",
+      "sha256": "c4abeda84f5c5c1f9184b7767febb591eaf6f5725e96df7919bc81aa12e87f97"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/sdk/jvmMain/okio/RealBufferedSource.kt",
+      "sha256": "7f9253b8dc4e8a7acb9881986f0d14bf8ab2440ac95f01457f5c5880008bbf90"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/sdk/KUBERNETES-LICENSE",
+      "sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/sdk/minio-8.5.17-sources.jar",
+      "sha256": "419efc157540138afd56dd1056e645370d91000f14564d7a841f2d5e9dc9a5ba"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/sdk/okhttp-4.12.0-sources.jar",
+      "sha256": "d91a769a4140e542cddbac4e67fcf279299614e8bfd53bd23b85e60c2861341c"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/sdk/okhttp3/internal/connection/RealCall.kt",
+      "sha256": "eb2395a4e2cfb0214149add9ca06e9740602dc6b5cf30c95e8eff2ba2c31659a"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/sdk/okhttp3/internal/http/BridgeInterceptor.kt",
+      "sha256": "c920bb50dcb96b90a4724205ea1495ee91a4c402dcb4c549deb51dabdfe529d9"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/sdk/okhttp3/OkHttpClient.kt",
+      "sha256": "7c57469526804a4708f841ee010533f843740c0de5fdfb38414b4b5fb04f65bc"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/sdk/okhttp3/ResponseBody.kt",
+      "sha256": "e788069a5d32bd82e9d3066aecc8c0af083c5b56309f7a4e2a727bfb7fb38425"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/sdk/okio-jvm-3.6.0-sources.jar",
+      "sha256": "870a42a7b468af8fd24d67b7b62e5861aab398c56f15a80b10642e7001564e2f"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-artifacts/sdk/source-sha256.json",
+      "sha256": "7821c043b1996d7e6c6ad3c86dd6784657d89888df76c1e66f184ab08c5fd096"
+    }
+  ],
+  "frozenFiles": [
+    {
+      "path": "admin-common/pom.xml",
+      "sha256": "99af8a5c016f23288319fadf0ad30dc0fa50f21c9c8bfea65b423b967e625295"
+    },
+    {
+      "path": "admin-common/src/main/java/cn/agentplatform/common/Actor.java",
+      "sha256": "795bfe4eb700d69f1c670dd16c7c6e5217c03ddf51c43a6d659264dc2cce23e0"
+    },
+    {
+      "path": "admin-common/src/main/java/cn/agentplatform/common/AllowedOriginPolicy.java",
+      "sha256": "81d49db3938b3b61950fba02101ce436a89de3034b8879b6ccba12c045de4eb2"
+    },
+    {
+      "path": "admin-common/src/main/java/cn/agentplatform/common/ApiKeyAuthenticator.java",
+      "sha256": "631169fa40028c074c822edf75f8dc433d109d58e83b28173a2ae1cac15947da"
+    },
+    {
+      "path": "admin-common/src/main/java/cn/agentplatform/common/ApiResponse.java",
+      "sha256": "f3530705dbc359804b109c32dd5d232b7c774f4a6e0b267aa60a002e96c8c765"
+    },
+    {
+      "path": "admin-common/src/main/java/cn/agentplatform/common/Digest.java",
+      "sha256": "8ca3cb0c437b930f645c85d35e09a9dfb09b03a12b2a67433474ff193e2fb655"
+    },
+    {
+      "path": "admin-common/src/main/java/cn/agentplatform/common/Json.java",
+      "sha256": "1d9741b98ce0c8e1dd1c6c69b0780901f82ff90157336c39aa8f9358222fb44e"
+    },
+    {
+      "path": "admin-common/src/main/java/cn/agentplatform/common/PlatformErrors.java",
+      "sha256": "ad964316ff6af8f810f19689fc10bf363c88ad2d30a5c3edea716b753d3e7443"
+    },
+    {
+      "path": "admin-common/src/main/java/cn/agentplatform/common/PlatformException.java",
+      "sha256": "3fe62cfb051e567c46da0dd0a43243380fcd15c659629ddc33127a9a0511a06a"
+    },
+    {
+      "path": "admin-common/src/main/java/cn/agentplatform/common/SecretVault.java",
+      "sha256": "b67fcbfac99e2bad546726777f83416bc81dfd52556dccc1334d7d162d841d06"
+    },
+    {
+      "path": "admin-common/src/main/java/cn/agentplatform/common/SecurityConfiguration.java",
+      "sha256": "147ead5ab82af2b839d05cd51738db00fcffe9ab18be972cb57990a9815bc90a"
+    },
+    {
+      "path": "admin-common/src/main/java/cn/agentplatform/common/ServiceTokens.java",
+      "sha256": "ebe86168b0c15a1b140f90812672898854287dde26824a17f1aa387a82b671ae"
+    },
+    {
+      "path": "admin-common/src/main/java/cn/agentplatform/common/TraceContextFilter.java",
+      "sha256": "16ec727bcc420ef9bd8ffccac35bcf7e9c91f9c257b2142b340e9267345e8a8a"
+    },
+    {
+      "path": "admin-common/src/main/java/cn/agentplatform/common/schema/BoundedRegexFactory.java",
+      "sha256": "c279b491da4ce6704d9681a8ae1c4b9234d35c37a67442c6243907831eb754d8"
+    },
+    {
+      "path": "admin-common/src/main/java/cn/agentplatform/common/schema/SchemaDeadline.java",
+      "sha256": "873130209479b23e2a357b8c0c7adba197080e6a87be44c319605214cd7350dc"
+    },
+    {
+      "path": "admin-common/src/main/java/cn/agentplatform/common/schema/SchemaWorkBudget.java",
+      "sha256": "213033935336d5b482617fb6d228b531f9683510542091f970d9a85391279a1f"
+    },
+    {
+      "path": "admin-common/src/test/java/cn/agentplatform/common/CommonBoundaryTest.java",
+      "sha256": "fd2f00f82d5dc19aac92962093f755afe7d17873c8c52111dab6e8a85408c0eb"
+    },
+    {
+      "path": "admin-common/src/test/java/cn/agentplatform/common/SecretVaultTest.java",
+      "sha256": "7607f76c0d24ab5b571d9f5aee71a2201b0563e557f48c0b59d9ec9668e378ab"
+    },
+    {
+      "path": "admin-common/src/test/java/cn/agentplatform/common/schema/SharedSchemaAdmissionTest.java",
+      "sha256": "4b4239f80d86af06860d5a04d38af65e49bb1f0fbf8e2069c108ff0df6ec06b8"
+    },
+    {
+      "path": "docs/evidence/algorithm-protocol-report.md",
+      "sha256": "78b0b50fda64130c77e87a15fbec802c0e6411b694a22dfec16b53ed843e0394"
+    },
+    {
+      "path": "docs/open-source-references.md",
+      "sha256": "0505265983b94dd088a89adfc3f6d346c0cc8cb899883ff328ce89ab23bd79bd"
+    },
+    {
+      "path": "pom.xml",
+      "sha256": "836ba70369072496695e167bf3ab937fe48c7150a5e0b13b7b8d13674ffbcb2c"
+    },
+    {
+      "path": "scripts/test-algorithm-protocol.ps1",
+      "sha256": "e56a55eaec7743f9d425014f61ddb09ecfedfcfc819ba88b20f2450ecc7cb8d3"
+    },
+    {
+      "path": "skill-registry/pom.xml",
+      "sha256": "fbb154b930491aa738cec3620f29f2d38b5f66910cc6394fab95ea8707eb0c96"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/SkillApplication.java",
+      "sha256": "9e742dcd1e549c9030f05ac78664333469e2c3b4e3a32a33bbcdeb73a3e9d267"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/api/ArtifactController.java",
+      "sha256": "29a46fa6094e24cc463c11612199b9860df0bf2b95c303dff01b44d249551a3c"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/api/OpenApiImportController.java",
+      "sha256": "d3b67f9c7eceb6f7842f4de5d8cd82d0fe9e0a9b3cbd2afd54df04b4a88e5bd4"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/api/ReconciliationProofController.java",
+      "sha256": "75a8e7b1a1868af3ae065b9fb064fabe77d52d89e7dd45e2220618a05612d37e"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/api/SkillCallbackController.java",
+      "sha256": "117f8e72657c134eaf59b4337057690d6f7f75fffc8cc2277a2314d9037192b8"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/api/SkillController.java",
+      "sha256": "64977fc4e25a1d1c8ff554658b00e546666edcb8103bf744382d0b3d912a5261"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/OpenApiImports.java",
+      "sha256": "35c2d2944f990c84efeaac374f96e4f58ad50422b5d5933a96df80d8c37f73ea"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/ReconciliationProofs.java",
+      "sha256": "6ff0183299b4e999ffdd4571f137510a963eee3fdfdcbb6949ae6f14c3289639"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/SkillCallbacks.java",
+      "sha256": "8c644cb051a46c435dfebaa8c33b88e831f00e665f218c7d2ac092a332091d0b"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/SkillCatalog.java",
+      "sha256": "f353fcf6e01fc76d68e35370799d659aed5eda82d54ead9551d4d3275bb8152f"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/SkillExecution.java",
+      "sha256": "07549dafe605c314fda8640b94241c39893a3e6cfd5b853b14a0d3bacda9d61d"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/SkillGovernance.java",
+      "sha256": "febbaf9fd08acfe4e385d38b68b6c2c372f0edac5056fc64633e97433ed4607d"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/SkillOutbox.java",
+      "sha256": "30bae61b51db4df75462c5d92badc5455fbec1fc7437856cd1d9a9da2da32db7"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/SkillStatistics.java",
+      "sha256": "84edb850c69043b69e9a95652a4a7e9dc7f00855dc48469cde1d897e7a436e4d"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/domain/SkillRules.java",
+      "sha256": "44da5fa25ab70b7ba80033e78155d0f839c4f1fbcb04c76117001d0a3d1f2cdd"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/AlgorithmAdapter.java",
+      "sha256": "7b68557b457f6b1643e2922498d20bdd90396268de77e0b4226bb9ad8914f052"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/ArtifactStore.java",
+      "sha256": "b46716f91b37b029d03dbed7a9383b4f41ad7d6347e94f82798b0e78e2a9c1a2"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/AsyncHttpResponse.java",
+      "sha256": "e807e4a589286269e551440b3831f30d53a20d249db1fbbd2ab0ca00be691b59"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/BoundedMcpSseTransport.java",
+      "sha256": "44b1a81c554a9be6b3e1b11a1881d467b347c9d1b2e604fe4147e95fa38c0c77"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/HttpAsyncAdapter.java",
+      "sha256": "8f17e0786d60ba70f7a589066c624c78cd651f0a1a560abf823f0dd0b4c1ae37"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/McpAdapter.java",
+      "sha256": "65bb3a464518d2f59ed25d5e0546c6afeafb8cef21a3caa864d5f0abcdee653e"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/OpenApiHttpMapping.java",
+      "sha256": "e6c45aea28d2a83fed74c5bb8c3268f7bb914fb55612c8c21e42ddd8a3eaee27"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/SignedCallback.java",
+      "sha256": "67b0405062c907e6c58fac498c9fb31daf2c55a74a7aea248c3c2afacf422bc1"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/SkillAdapters.java",
+      "sha256": "e8b6b9a8aabd2993ed022768f7c64f83ab1bb8ab70820f4bc30d5dce1b3072d5"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/SkillClients.java",
+      "sha256": "b0dd62e45ddc73225fa9c13afe1a817fd3a1289c37c1ea293c7f31c8530876e5"
+    },
+    {
+      "path": "skill-registry/src/main/resources/application.yml",
+      "sha256": "9170569d9d65c86f27bc0af68a02fd59d0786c524d178ace8385bcbb18d5c822"
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V300__skill.sql",
+      "sha256": "e8c764d3d3b2747e54567ba0750eef1b8638b6e8c86469f8c37ec1a59b65c9d2"
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V301__reconciliation.sql",
+      "sha256": "92496812c02c3f005a463220b0b1f4ea6ad6b2d62424e1a73989988eeb2ab6b8"
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V302__skill_immutability.sql",
+      "sha256": "abaaa4e3aea0db32f47308d5dbdedfc52796427c7a28016fd289ac9660883919"
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V303__execution_fact_generation.sql",
+      "sha256": "0d0e62e3185ca202622f77d83de995659f062b1082dff4ca7847b1cbccfc5aee"
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V304__fact_delivery_lease.sql",
+      "sha256": "38e6916d5b128d8fb6cc771deeffa6f7ab42701e7a384e3150b2a45a2e1f0e12"
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V305__controlled_contract_digest.sql",
+      "sha256": "4010940a7d37dc516c077771a6f0909b190c0c432987ee5ebedc453f91044600"
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V306__controlled_artifacts.sql",
+      "sha256": "44abf9f1d5688b29cc19f6a05ba6811f7ed8f00e0562251ca391b4b23e1afdcf"
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V307__http_async_binding.sql",
+      "sha256": "c32087496295f94f91e47a65602c1d77ef5d56cbbbeaa9ab67d96304a3b35824"
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V308__async_preparation_delivery.sql",
+      "sha256": "4a2229c9c0df0bc95c6e782306abf01fc60a7b7bcb3f9a825be6b0ee15390daf"
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V309__signed_callback_receipt.sql",
+      "sha256": "fcafff8492f60254a5f46c59fe1c092dd68fdcea580f012a637e28ece1c6076f"
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V310__reconciliation_proof.sql",
+      "sha256": "07ecf9e91a05c181400c75e54b3cceb99b019c63d4615c6562e62aeba3a01d6a"
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V311__algorithm_job_identity.sql",
+      "sha256": "763a5fd44c12cbe649fd8220a174a9853b16fd55944cd487c881a05a1f3bc4b1"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/api/OpenApiImportControllerTest.java",
+      "sha256": "4043ca81670aaca7757a521bbd661c69c8fbc889a7bd88af2c54ae424e07089c"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/AlgorithmExecutionPostgresTest.java",
+      "sha256": "6747b79b45c37dc2b71756ee283b51d8547c8c4a75465943939e68a01ffd9ebd"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/AsyncHttpExecutionTest.java",
+      "sha256": "d6e1b20f147264d692d15f0a62b55dd4a87ee4cdd93f183e30aeec4c2b58da43"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/CallbackHttpTest.java",
+      "sha256": "6341e5c67ec8275c77ed1abb81f2e519fc022a1116f7884cb76625657edaa71c"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/OpenApiImportPersistenceTest.java",
+      "sha256": "56a45b4e7cd175b2f87ba6995a6c38b344dc85de56a2678e2511a8d1a757dd3d"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/OpenApiImportsTest.java",
+      "sha256": "fcd7c4da3e39206b548071c866cb731b0c8240d2a5972dd3017490ff9e37c737"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/ReconciliationProofTest.java",
+      "sha256": "4a7a7d3d0ce66754d827c112df70249f2837f93ecbd238d91108c397f97e623a"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/SkillExecutionTest.java",
+      "sha256": "857f681c9a0c08ba65ff81793994b0fb613377a95dcb55f8a79ede7a043ec793"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/SkillStatisticsPostgresTest.java",
+      "sha256": "cb38be901ddbd53138d2e60157f7b9ddc87128695300abbed68676fe82ea1392"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/domain/BoundedSchemaValidationTest.java",
+      "sha256": "8724e22b2cb484983dc91089d9b19dac3d1358f48edaba94794d038e2cbe8e74"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/domain/SchemaWorkBudgetTest.java",
+      "sha256": "57874715dd0e51b8433b939b16709c195824b7f2f03bedd5ce247512dc11816a"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/domain/SkillRulesTest.java",
+      "sha256": "63c64fd5e55dca342b05b7048edbee8effabb42fa5b5533d252d8325da592f59"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/AlgorithmApiFixture.java",
+      "sha256": "05c0c4428f4459b9a363dacf05a82c56e6c43da5267f1d9a240ba18de5e435a5"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/AlgorithmMigrationPostgresTest.java",
+      "sha256": "2301f8eeb983b2df8331008996e0a6134c1a13d2e65777d4f660dca037956b3b"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/AlgorithmMinioFixture.java",
+      "sha256": "7c9ebdc0d7ed390bb3c053341d43ad965745b1854726508045b64889fb4ff406"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/AlgorithmProtocolTest.java",
+      "sha256": "106489aa3c664b3eda548917ddfa5e4a1602d6341e17e2e56b62fb3c816d0e1c"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/AlgorithmTestDatabase.java",
+      "sha256": "57d17735e0390996eb8252d84f91f6d5c76f50e28c59ed4fcb68b61c870fd49c"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/ArtifactBoundTest.java",
+      "sha256": "1500a9c42c2b9ce13a9768d2f54ab0f51350f51be5c166551fdb5ec4c7c2061e"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/ArtifactPersistenceTest.java",
+      "sha256": "b0265f972ca3e21000c7fed8b1b45eb5be99123a7310d2938e77051317e33b69"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/ArtifactReferenceTest.java",
+      "sha256": "57db0b3508664ee1d29f8c9b0e3d78356591b31cd30f77537f6c762fa3d271d2"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/HttpAsyncAttemptFenceTest.java",
+      "sha256": "8ba27ff69fd226652ea8929994cf35100e9e73987abc2d84411fde2e517dddc4"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/HttpFixture.java",
+      "sha256": "9ffb60a32f3a02f049e4b0752a3d674f22df1180b6403d7dd0d8f773944e733b"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/HttpSchemaBoundaryTest.java",
+      "sha256": "cbe63e114c29e7a4e925793679d51fce6271da6635ecff9ce00d62593a19765d"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/McpAdapterTest.java",
+      "sha256": "ebb60e0af57aa8d182d3c82e1698cabb336984c22153854fa93b17dd24370afc"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/McpExecutionPostgresTest.java",
+      "sha256": "255c1328a9771b79cc9f8bba97ad5d099df8368f92c994d2d08664712cce2f96"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/McpManagementTest.java",
+      "sha256": "79255f7c9bf7b059e8d488acf1a20c9db91f7a1da75841e72f284fee5d4ffb42"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/McpResourceLifecycleTest.java",
+      "sha256": "a56e0e871b5b99cdea22e6a9058dd9cef2d50bfee0e2dddeaebbf134e8ec947f"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/McpSchemaBoundaryTest.java",
+      "sha256": "072e939a9e454b950ee38f4ac8870d21615ea57c0d9b0d81b1bbe32fae955d38"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/OpenApiHttpMappingTest.java",
+      "sha256": "0bc281aad61e526be35472480980721da9bc74ca871bd7604861e5c07fc59efe"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/SignedCallbackTest.java",
+      "sha256": "c905c4e1049caaaa945bf43f5aa80c7b973f28904591e9722d5b87b5de1fe75f"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/SkillAttemptPropagationTest.java",
+      "sha256": "585763ee05189235984f9488fd5016edf2a2731daf46a67d10c1bb51df7e1e0f"
+    },
+    {
+      "path": "tests/smoke-algorithm-protocol.mjs",
+      "sha256": "c38f77632210370cbb17ed765c5be5b3ea1c58c4d399de0b67018a904b52db12"
+    }
+  ]
+}

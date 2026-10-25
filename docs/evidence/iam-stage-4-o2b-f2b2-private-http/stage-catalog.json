@@ -1,0 +1,1477 @@
+[
+  {
+    "stage": "iam-stage-o2b-f2b2-seed-red",
+    "selector": "PortalRunEventsPrivateHttpTest#sameSessionMovesOriginalQToRealGChildAndPrivatePackets",
+    "exit": 1,
+    "running": [],
+    "suites": [],
+    "evidence": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-seed-red",
+    "sourceEpoch": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-seed-red/source.json",
+      "bytes": 119378,
+      "sha256": "51a73c3138dff20387456268dad8024d90b28b8a9b78829cc5feeeb136d201c6"
+    },
+    "sourceCount": 623,
+    "command": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-seed-red/command.json",
+      "bytes": 610,
+      "sha256": "bdc94df6ec5674a07880a41623e76dc8798809d26bf0d0762b9e76b46fb1bccd"
+    },
+    "raw": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-seed-red/raw.log",
+      "bytes": 6247,
+      "sha256": "68d7b3609ac16cc8581a373813d4d9d115b9f9124ed6a8c6be46cde4d60d2932"
+    },
+    "compiler": [
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-seed-red/compiler/admin-common/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst",
+        "bytes": 6917,
+        "sha256": "4de727ce102cd93188b72e2dd752e03c8dfc150f327ad92eee1040589c1941b2"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-seed-red/compiler/admin-common/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst",
+        "bytes": 8001,
+        "sha256": "e203729ab966bdef4bed127a344a896a19cd0a5ceb41cf615f32ae170a514ca9"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-seed-red/compiler/admin-common/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst",
+        "bytes": 6374,
+        "sha256": "4c013d6419baa7d39876e14d08c2c7b2e37a68e2e56ea283cc20cc7875d0ba55"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-seed-red/compiler/admin-common/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst",
+        "bytes": 4544,
+        "sha256": "dcf9f2347467a015748da291f1930b66c828a7ee27a8089b67a887ed88e686dd"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-seed-red/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst",
+        "bytes": 3884,
+        "sha256": "33a148ad8f4e19c1d7ce368f98bbb671fe98ca113af6951998aad27da8676c80"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-seed-red/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst",
+        "bytes": 2877,
+        "sha256": "68fda9ff21ab748408f192ec3f2875fef66cd4f72891e3a8d64c200a86135865"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-seed-red/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst",
+        "bytes": 5499,
+        "sha256": "4ecc644accb23fde7d8b7f9c7cd1bdb92c57a3fa83a26b23a8a27a8b30c76a37"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-seed-red/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst",
+        "bytes": 2899,
+        "sha256": "536aa704a7a3cee1084d97c40965aff5467d6e57da5ed655198fae87a0a12960"
+      }
+    ],
+    "reportFiles": [],
+    "finiteTargetCapture": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-seed-red/target-finite.json",
+      "bytes": 76607,
+      "sha256": "f9d8816726e14cfd5dd1b7985c27b7b3104b8a60b72b2369c0fdefe5d67158bc"
+    },
+    "diagnostics": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-seed-red/diagnostics.json",
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    }
+  },
+  {
+    "stage": "iam-stage-o2b-f2b2-seed-behavior",
+    "selector": "PortalRunEventsPrivateHttpTest#sameSessionMovesOriginalQToRealGChildAndPrivatePackets",
+    "exit": 1,
+    "running": [
+      "cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest",
+        "tests": 1,
+        "errors": 1,
+        "skipped": 0,
+        "failures": 0
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-seed-behavior",
+    "sourceEpoch": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-seed-behavior/source.json",
+      "bytes": 119378,
+      "sha256": "e143ac5ab23aa84e982f545d15dba737f7ebe6e76447b902ef59bfcaa2a07715"
+    },
+    "sourceCount": 623,
+    "command": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-seed-behavior/command.json",
+      "bytes": 625,
+      "sha256": "247e4677b77e3f20812eca0e0daad4da5bdae1a36b7ec7595f4a4252f19c8259"
+    },
+    "raw": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-seed-behavior/raw.log",
+      "bytes": 8214,
+      "sha256": "144e29350bf0ae6c3f71c32397ba44786a58eea32ae6c150d2a62b116b108f6a"
+    },
+    "compiler": [
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-seed-behavior/compiler/admin-common/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst",
+        "bytes": 6917,
+        "sha256": "4de727ce102cd93188b72e2dd752e03c8dfc150f327ad92eee1040589c1941b2"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-seed-behavior/compiler/admin-common/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst",
+        "bytes": 8001,
+        "sha256": "e203729ab966bdef4bed127a344a896a19cd0a5ceb41cf615f32ae170a514ca9"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-seed-behavior/compiler/admin-common/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst",
+        "bytes": 6374,
+        "sha256": "4c013d6419baa7d39876e14d08c2c7b2e37a68e2e56ea283cc20cc7875d0ba55"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-seed-behavior/compiler/admin-common/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst",
+        "bytes": 4544,
+        "sha256": "dcf9f2347467a015748da291f1930b66c828a7ee27a8089b67a887ed88e686dd"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-seed-behavior/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst",
+        "bytes": 3964,
+        "sha256": "7aaa091a474560ce8da9acf44d0baa8affe070ee1c324362dff22e4c44152329"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-seed-behavior/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst",
+        "bytes": 2877,
+        "sha256": "68fda9ff21ab748408f192ec3f2875fef66cd4f72891e3a8d64c200a86135865"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-seed-behavior/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst",
+        "bytes": 5640,
+        "sha256": "8ec268bbecc8438024270cb6910ed7581793a4d90a4a9070e5bd2aa8c4a5460c"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-seed-behavior/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst",
+        "bytes": 2899,
+        "sha256": "536aa704a7a3cee1084d97c40965aff5467d6e57da5ed655198fae87a0a12960"
+      }
+    ],
+    "reportFiles": [
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-seed-behavior/cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest.txt",
+        "bytes": 1598,
+        "sha256": "51f321da578247b551cb303681bf3d5d3592f58e7ce3d0332f20241e747c123a"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-seed-behavior/TEST-cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest.xml",
+        "bytes": 40159,
+        "sha256": "a30de76e50806115a38e6348a95dc14391ae938875cac21d4f64eddb9b1cd369"
+      }
+    ],
+    "finiteTargetCapture": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-seed-behavior/target-finite.json",
+      "bytes": 77774,
+      "sha256": "d1ae16d917e3fe16c535e20a242b2eb847c7c76c30961587d37c910204c0a766"
+    },
+    "diagnostics": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-seed-behavior/diagnostics.json",
+      "bytes": 202,
+      "sha256": "3d1dd15a754736a8655cd4246430a38fff5e4bfe65fd6e2d29ca1e891b0aae94"
+    }
+  },
+  {
+    "stage": "iam-stage-o2b-f2b2-functional-seed-red",
+    "selector": "PortalRunEventsPrivateHttpTest#sameSessionMovesOriginalQToRealGChildAndPrivatePackets",
+    "exit": 1,
+    "running": [
+      "cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest",
+        "tests": 1,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 1
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-functional-seed-red",
+    "sourceEpoch": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-functional-seed-red/source.json",
+      "bytes": 119378,
+      "sha256": "8cc02c8d3b2a1ab08d85dc01cfe347ce40cb3e41b2ae0d7fb876a07e49177b85"
+    },
+    "sourceCount": 623,
+    "command": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-functional-seed-red/command.json",
+      "bytes": 643,
+      "sha256": "3f3757aa5b8d31da8e84a1cbcd928ff5abb482af79ac0668a20264d9e93e9c97"
+    },
+    "raw": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-functional-seed-red/raw.log",
+      "bytes": 8485,
+      "sha256": "7b8904ed0554822c3cae44a42ae7c10ecf15f512dacbcf0d1af616c28b7f8a81"
+    },
+    "compiler": [
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-functional-seed-red/compiler/admin-common/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst",
+        "bytes": 6917,
+        "sha256": "4de727ce102cd93188b72e2dd752e03c8dfc150f327ad92eee1040589c1941b2"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-functional-seed-red/compiler/admin-common/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst",
+        "bytes": 8001,
+        "sha256": "e203729ab966bdef4bed127a344a896a19cd0a5ceb41cf615f32ae170a514ca9"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-functional-seed-red/compiler/admin-common/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst",
+        "bytes": 6374,
+        "sha256": "4c013d6419baa7d39876e14d08c2c7b2e37a68e2e56ea283cc20cc7875d0ba55"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-functional-seed-red/compiler/admin-common/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst",
+        "bytes": 4544,
+        "sha256": "dcf9f2347467a015748da291f1930b66c828a7ee27a8089b67a887ed88e686dd"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-functional-seed-red/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst",
+        "bytes": 3964,
+        "sha256": "7aaa091a474560ce8da9acf44d0baa8affe070ee1c324362dff22e4c44152329"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-functional-seed-red/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst",
+        "bytes": 2877,
+        "sha256": "68fda9ff21ab748408f192ec3f2875fef66cd4f72891e3a8d64c200a86135865"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-functional-seed-red/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst",
+        "bytes": 5640,
+        "sha256": "8ec268bbecc8438024270cb6910ed7581793a4d90a4a9070e5bd2aa8c4a5460c"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-functional-seed-red/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst",
+        "bytes": 2899,
+        "sha256": "536aa704a7a3cee1084d97c40965aff5467d6e57da5ed655198fae87a0a12960"
+      }
+    ],
+    "reportFiles": [
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-functional-seed-red/cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest.txt",
+        "bytes": 2054,
+        "sha256": "282f2a9b7c365fee8f3c777ed64e0f783a6938220ef5255048f5ec7faa3b91c2"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-functional-seed-red/TEST-cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest.xml",
+        "bytes": 41218,
+        "sha256": "82e01b332c6d24f6f5067717bdc1f68ac34813cec8658a196f3c119ba0fff1ff"
+      }
+    ],
+    "finiteTargetCapture": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-functional-seed-red/target-finite.json",
+      "bytes": 77774,
+      "sha256": "02135fe2734ee96b6785a4f5ffe69fe3e9b4acc6485ae416889e259d472499da"
+    },
+    "diagnostics": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-functional-seed-red/diagnostics.json",
+      "bytes": 202,
+      "sha256": "c006e612d7cbb49e35fd7bf0c7cc48068e59849e84e75628aaddae8bd96b938b"
+    }
+  },
+  {
+    "stage": "iam-stage-o2b-f2b2-normal-green",
+    "selector": "PortalRunEventsPrivateHttpTest#sameSessionMovesOriginalQToRealGChildAndPrivatePackets",
+    "exit": 1,
+    "running": [],
+    "suites": [],
+    "evidence": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-normal-green",
+    "sourceEpoch": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-normal-green/source.json",
+      "bytes": 119378,
+      "sha256": "41c541d024d25e3ca40a4bef262d7f4494910d5595f17ca9943485af0ae34c53"
+    },
+    "sourceCount": 623,
+    "command": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-normal-green/command.json",
+      "bytes": 622,
+      "sha256": "7c0bb25f52c41969a7bb24f45f19540a3eb4094febd3053efd600650c1774d07"
+    },
+    "raw": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-normal-green/raw.log",
+      "bytes": 5826,
+      "sha256": "faae69f0f2331fbbf6c5ec72867f87b07f941e281248d7cddcdc33ace95e3e7a"
+    },
+    "compiler": [
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-normal-green/compiler/admin-common/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst",
+        "bytes": 6917,
+        "sha256": "4de727ce102cd93188b72e2dd752e03c8dfc150f327ad92eee1040589c1941b2"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-normal-green/compiler/admin-common/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst",
+        "bytes": 8001,
+        "sha256": "e203729ab966bdef4bed127a344a896a19cd0a5ceb41cf615f32ae170a514ca9"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-normal-green/compiler/admin-common/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst",
+        "bytes": 6374,
+        "sha256": "4c013d6419baa7d39876e14d08c2c7b2e37a68e2e56ea283cc20cc7875d0ba55"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-normal-green/compiler/admin-common/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst",
+        "bytes": 4544,
+        "sha256": "dcf9f2347467a015748da291f1930b66c828a7ee27a8089b67a887ed88e686dd"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-normal-green/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst",
+        "bytes": 3343,
+        "sha256": "e46c4d9b85a3763c9c05396e8ec483c219d1e8ee63594f7fa0a7e3e58961506f"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-normal-green/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst",
+        "bytes": 2877,
+        "sha256": "68fda9ff21ab748408f192ec3f2875fef66cd4f72891e3a8d64c200a86135865"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-normal-green/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst",
+        "bytes": 5640,
+        "sha256": "8ec268bbecc8438024270cb6910ed7581793a4d90a4a9070e5bd2aa8c4a5460c"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-normal-green/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst",
+        "bytes": 2899,
+        "sha256": "536aa704a7a3cee1084d97c40965aff5467d6e57da5ed655198fae87a0a12960"
+      }
+    ],
+    "reportFiles": [],
+    "finiteTargetCapture": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-normal-green/target-finite.json",
+      "bytes": 75281,
+      "sha256": "f14ec1b774aa6a6459be6438707fc75b9cf174f00cb54cb7ffe40fd04cf5d104"
+    },
+    "diagnostics": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-normal-green/diagnostics.json",
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    }
+  },
+  {
+    "stage": "iam-stage-o2b-f2b2-normal-green2",
+    "selector": "PortalRunEventsPrivateHttpTest#sameSessionMovesOriginalQToRealGChildAndPrivatePackets",
+    "exit": 1,
+    "running": [
+      "cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest",
+        "tests": 1,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 1
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-normal-green2",
+    "sourceEpoch": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-normal-green2/source.json",
+      "bytes": 119378,
+      "sha256": "26e0ef86145dee0b1e83a0f7f897475157e211f0ca498d4dc06fc9ab5a191948"
+    },
+    "sourceCount": 623,
+    "command": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-normal-green2/command.json",
+      "bytes": 625,
+      "sha256": "27202a47ba63ade4f7bba68e475f20fc3abec42e5216a903e23a828d4c23e6bf"
+    },
+    "raw": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-normal-green2/raw.log",
+      "bytes": 9659,
+      "sha256": "c6a72a8a41b0fabb53a52d51c17ce8affeea44ca9ae3eaf743e1c4d1ade78fb5"
+    },
+    "compiler": [
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-normal-green2/compiler/admin-common/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst",
+        "bytes": 6917,
+        "sha256": "4de727ce102cd93188b72e2dd752e03c8dfc150f327ad92eee1040589c1941b2"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-normal-green2/compiler/admin-common/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst",
+        "bytes": 8001,
+        "sha256": "e203729ab966bdef4bed127a344a896a19cd0a5ceb41cf615f32ae170a514ca9"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-normal-green2/compiler/admin-common/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst",
+        "bytes": 6374,
+        "sha256": "4c013d6419baa7d39876e14d08c2c7b2e37a68e2e56ea283cc20cc7875d0ba55"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-normal-green2/compiler/admin-common/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst",
+        "bytes": 4544,
+        "sha256": "dcf9f2347467a015748da291f1930b66c828a7ee27a8089b67a887ed88e686dd"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-normal-green2/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst",
+        "bytes": 4107,
+        "sha256": "84ef87f09bcf20b8cef2b9b0e4cada1f2072e2a5ea34b717216ac5600d40db59"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-normal-green2/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst",
+        "bytes": 2877,
+        "sha256": "68fda9ff21ab748408f192ec3f2875fef66cd4f72891e3a8d64c200a86135865"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-normal-green2/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst",
+        "bytes": 5640,
+        "sha256": "8ec268bbecc8438024270cb6910ed7581793a4d90a4a9070e5bd2aa8c4a5460c"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-normal-green2/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst",
+        "bytes": 2899,
+        "sha256": "536aa704a7a3cee1084d97c40965aff5467d6e57da5ed655198fae87a0a12960"
+      }
+    ],
+    "reportFiles": [
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-normal-green2/cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest.txt",
+        "bytes": 2259,
+        "sha256": "17583e536f323a7fdb33d58ad37b05cee456d499197a007837d91f357d7ab332"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-normal-green2/TEST-cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest.xml",
+        "bytes": 41653,
+        "sha256": "3084db439495ce07c0fe7625b208e72b3167cfccad6439d43776659ed4a3d3fd"
+      }
+    ],
+    "finiteTargetCapture": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-normal-green2/target-finite.json",
+      "bytes": 78229,
+      "sha256": "6f14fa3090b301194cbbb445ccab12f8ed30a4b791cd7e16d08351f9c5b168a4"
+    },
+    "diagnostics": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-normal-green2/diagnostics.json",
+      "bytes": 202,
+      "sha256": "19f308a61c64c758369a9eef5e585dc95a469957d19ba34f16b1c6fbba712d35"
+    }
+  },
+  {
+    "stage": "iam-stage-o2b-f2b2-large-child-green",
+    "selector": "PortalRunEventsPrivateHttpTest#sameSessionMovesOriginalQToRealGChildAndPrivatePackets",
+    "exit": 1,
+    "running": [
+      "cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest",
+        "tests": 1,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 1
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-large-child-green",
+    "sourceEpoch": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-large-child-green/source.json",
+      "bytes": 119379,
+      "sha256": "fe05bca99c72d7f7cf9137667d3c4f13601453d4da985ca1523d1e4f65d53481"
+    },
+    "sourceCount": 623,
+    "command": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-large-child-green/command.json",
+      "bytes": 637,
+      "sha256": "1c666c5a2a953d41f3f0aaeb4e4a1b986a7029a4d1f1de195d3042f740f75720"
+    },
+    "raw": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-large-child-green/raw.log",
+      "bytes": 9584,
+      "sha256": "81d68e0524790116bbedd661cd3334518c6e6707b6bc95a4a1111ca8591b061c"
+    },
+    "compiler": [
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-large-child-green/compiler/admin-common/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst",
+        "bytes": 6917,
+        "sha256": "4de727ce102cd93188b72e2dd752e03c8dfc150f327ad92eee1040589c1941b2"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-large-child-green/compiler/admin-common/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst",
+        "bytes": 8001,
+        "sha256": "e203729ab966bdef4bed127a344a896a19cd0a5ceb41cf615f32ae170a514ca9"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-large-child-green/compiler/admin-common/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst",
+        "bytes": 6374,
+        "sha256": "4c013d6419baa7d39876e14d08c2c7b2e37a68e2e56ea283cc20cc7875d0ba55"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-large-child-green/compiler/admin-common/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst",
+        "bytes": 4544,
+        "sha256": "dcf9f2347467a015748da291f1930b66c828a7ee27a8089b67a887ed88e686dd"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-large-child-green/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst",
+        "bytes": 4107,
+        "sha256": "84ef87f09bcf20b8cef2b9b0e4cada1f2072e2a5ea34b717216ac5600d40db59"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-large-child-green/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst",
+        "bytes": 2877,
+        "sha256": "68fda9ff21ab748408f192ec3f2875fef66cd4f72891e3a8d64c200a86135865"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-large-child-green/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst",
+        "bytes": 5640,
+        "sha256": "8ec268bbecc8438024270cb6910ed7581793a4d90a4a9070e5bd2aa8c4a5460c"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-large-child-green/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst",
+        "bytes": 2899,
+        "sha256": "536aa704a7a3cee1084d97c40965aff5467d6e57da5ed655198fae87a0a12960"
+      }
+    ],
+    "reportFiles": [
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-large-child-green/cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest.txt",
+        "bytes": 2606,
+        "sha256": "102b45d171d69d026a7ab4290e781d5b22b05fe6b48eb0463976b2311be73cdb"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-large-child-green/TEST-cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest.xml",
+        "bytes": 42341,
+        "sha256": "1af6d7a28ccf9b3e46944afef7eb4f6c8efc8b8741aa28f662981856e68ce5ea"
+      }
+    ],
+    "finiteTargetCapture": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-large-child-green/target-finite.json",
+      "bytes": 78229,
+      "sha256": "11285398d2642dc03e60c9a0acbbfe8180f423e850b7b6f8e4c7552a5917255c"
+    },
+    "diagnostics": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-large-child-green/diagnostics.json",
+      "bytes": 202,
+      "sha256": "a9f397621a9e8fa3855e193b90e17d6acf7c5856d3a6f85f63e46f84921c61eb"
+    }
+  },
+  {
+    "stage": "iam-stage-o2b-f2b2-large-child-green2",
+    "selector": "PortalRunEventsPrivateHttpTest#sameSessionMovesOriginalQToRealGChildAndPrivatePackets",
+    "exit": 0,
+    "running": [
+      "cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest",
+        "tests": 1,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-large-child-green2",
+    "sourceEpoch": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-large-child-green2/source.json",
+      "bytes": 119379,
+      "sha256": "277ec06e2f3b91ff28a8d804d2003aeb95e30f5b37e30ba56ffa79d901cd5d4f"
+    },
+    "sourceCount": 623,
+    "command": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-large-child-green2/command.json",
+      "bytes": 640,
+      "sha256": "972471abc6ce0b69d92c71fe566accd728741fde0ddf84e39f25a83e17ad0839"
+    },
+    "raw": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-large-child-green2/raw.log",
+      "bytes": 5173,
+      "sha256": "53669437bf21deca9d11e43e008a50e488f24207b8c791471979721e6238ea3f"
+    },
+    "compiler": [
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-large-child-green2/compiler/admin-common/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst",
+        "bytes": 6917,
+        "sha256": "4de727ce102cd93188b72e2dd752e03c8dfc150f327ad92eee1040589c1941b2"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-large-child-green2/compiler/admin-common/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst",
+        "bytes": 8001,
+        "sha256": "e203729ab966bdef4bed127a344a896a19cd0a5ceb41cf615f32ae170a514ca9"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-large-child-green2/compiler/admin-common/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst",
+        "bytes": 6374,
+        "sha256": "4c013d6419baa7d39876e14d08c2c7b2e37a68e2e56ea283cc20cc7875d0ba55"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-large-child-green2/compiler/admin-common/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst",
+        "bytes": 4544,
+        "sha256": "dcf9f2347467a015748da291f1930b66c828a7ee27a8089b67a887ed88e686dd"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-large-child-green2/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst",
+        "bytes": 4107,
+        "sha256": "84ef87f09bcf20b8cef2b9b0e4cada1f2072e2a5ea34b717216ac5600d40db59"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-large-child-green2/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst",
+        "bytes": 2877,
+        "sha256": "68fda9ff21ab748408f192ec3f2875fef66cd4f72891e3a8d64c200a86135865"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-large-child-green2/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst",
+        "bytes": 5640,
+        "sha256": "8ec268bbecc8438024270cb6910ed7581793a4d90a4a9070e5bd2aa8c4a5460c"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-large-child-green2/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst",
+        "bytes": 2899,
+        "sha256": "536aa704a7a3cee1084d97c40965aff5467d6e57da5ed655198fae87a0a12960"
+      }
+    ],
+    "reportFiles": [
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-large-child-green2/cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest.txt",
+        "bytes": 376,
+        "sha256": "cd6dedc93828f741aba3285edbc495c76c337b6aef1931ea156459f68cccea33"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-large-child-green2/TEST-cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest.xml",
+        "bytes": 38986,
+        "sha256": "29d87cdccfa540a00cbf2ab3910ed6b18788bad308d9961f6d369776ac78bb19"
+      }
+    ],
+    "finiteTargetCapture": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-large-child-green2/target-finite.json",
+      "bytes": 78228,
+      "sha256": "05bab6c1737b722561ef52934fc231c57fa8ea1dd34e122aa213111784349794"
+    },
+    "diagnostics": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-large-child-green2/diagnostics.json",
+      "bytes": 202,
+      "sha256": "166423d603dc8964c6e6813070fd8ac5fd4f51507a6d0d7ac6763bedbdd59917"
+    }
+  },
+  {
+    "stage": "iam-stage-o2b-f2b2-error-wire-red",
+    "selector": "PortalRunEventsPrivateHttpTest#finitePrivateErrorsReturnOnlyTheirAllowedCodeAndStatus",
+    "exit": 1,
+    "running": [
+      "cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest",
+        "tests": 1,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 1
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-error-wire-red",
+    "sourceEpoch": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-error-wire-red/source.json",
+      "bytes": 119379,
+      "sha256": "61ee01769d843a08c8a7ab6967d35639d6254bfa8fa97ebb79ef5e67edaaba1e"
+    },
+    "sourceCount": 623,
+    "command": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-error-wire-red/command.json",
+      "bytes": 628,
+      "sha256": "4e778f0a159218b7c8ce500b0a902310ba215e11f6bbe660781475a275414a20"
+    },
+    "raw": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-error-wire-red/raw.log",
+      "bytes": 9052,
+      "sha256": "c11bc165aa62ff01db87fc6367233130a7a0b5535915162ad21d2c03fb5a5b5e"
+    },
+    "compiler": [
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-error-wire-red/compiler/admin-common/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst",
+        "bytes": 6917,
+        "sha256": "4de727ce102cd93188b72e2dd752e03c8dfc150f327ad92eee1040589c1941b2"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-error-wire-red/compiler/admin-common/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst",
+        "bytes": 8001,
+        "sha256": "e203729ab966bdef4bed127a344a896a19cd0a5ceb41cf615f32ae170a514ca9"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-error-wire-red/compiler/admin-common/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst",
+        "bytes": 6374,
+        "sha256": "4c013d6419baa7d39876e14d08c2c7b2e37a68e2e56ea283cc20cc7875d0ba55"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-error-wire-red/compiler/admin-common/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst",
+        "bytes": 4544,
+        "sha256": "dcf9f2347467a015748da291f1930b66c828a7ee27a8089b67a887ed88e686dd"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-error-wire-red/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst",
+        "bytes": 4107,
+        "sha256": "84ef87f09bcf20b8cef2b9b0e4cada1f2072e2a5ea34b717216ac5600d40db59"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-error-wire-red/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst",
+        "bytes": 2877,
+        "sha256": "68fda9ff21ab748408f192ec3f2875fef66cd4f72891e3a8d64c200a86135865"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-error-wire-red/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst",
+        "bytes": 5640,
+        "sha256": "8ec268bbecc8438024270cb6910ed7581793a4d90a4a9070e5bd2aa8c4a5460c"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-error-wire-red/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst",
+        "bytes": 2899,
+        "sha256": "536aa704a7a3cee1084d97c40965aff5467d6e57da5ed655198fae87a0a12960"
+      }
+    ],
+    "reportFiles": [
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-error-wire-red/cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest.txt",
+        "bytes": 2311,
+        "sha256": "1074507e9e99c3cf21755dc799169ac2121040272f6ab5d27f2db19eccc16e05"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-error-wire-red/TEST-cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest.xml",
+        "bytes": 41757,
+        "sha256": "180fb5ed631a7a60fd9abd6b995d1a24dc8b5b66c69d838e4114cf0f359e3b22"
+      }
+    ],
+    "finiteTargetCapture": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-error-wire-red/target-finite.json",
+      "bytes": 78229,
+      "sha256": "c7c9bf8c11009a09cf3c4c8bbb39eeda8058f0409608343a6606f441726733c9"
+    },
+    "diagnostics": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-error-wire-red/diagnostics.json",
+      "bytes": 202,
+      "sha256": "54a5ede25b0c3c2545eae89736ef4d4888990d7b1edc2ff17f7d882daabe886f"
+    }
+  },
+  {
+    "stage": "iam-stage-o2b-f2b2-errors-green",
+    "selector": "PortalRunEventsPrivateHttpTest",
+    "exit": 0,
+    "running": [
+      "cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest",
+        "tests": 2,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-errors-green",
+    "sourceEpoch": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-errors-green/source.json",
+      "bytes": 119379,
+      "sha256": "b016c508766c01e1a4defe252846a74e45ef9aac4b78c5693b222bf06a01a34e"
+    },
+    "sourceCount": 623,
+    "command": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-errors-green/command.json",
+      "bytes": 512,
+      "sha256": "e655c4c6b1706f3319b45a875395f24c693ef21cf8737c3d5a6f4f6170e41c0a"
+    },
+    "raw": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-errors-green/raw.log",
+      "bytes": 5884,
+      "sha256": "2052c7059e725361f7574faf82769e12bd89f449c10908ff213f014b5af2ab9f"
+    },
+    "compiler": [
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-errors-green/compiler/admin-common/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst",
+        "bytes": 6917,
+        "sha256": "4de727ce102cd93188b72e2dd752e03c8dfc150f327ad92eee1040589c1941b2"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-errors-green/compiler/admin-common/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst",
+        "bytes": 8001,
+        "sha256": "e203729ab966bdef4bed127a344a896a19cd0a5ceb41cf615f32ae170a514ca9"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-errors-green/compiler/admin-common/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst",
+        "bytes": 6374,
+        "sha256": "4c013d6419baa7d39876e14d08c2c7b2e37a68e2e56ea283cc20cc7875d0ba55"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-errors-green/compiler/admin-common/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst",
+        "bytes": 4544,
+        "sha256": "dcf9f2347467a015748da291f1930b66c828a7ee27a8089b67a887ed88e686dd"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-errors-green/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst",
+        "bytes": 4107,
+        "sha256": "84ef87f09bcf20b8cef2b9b0e4cada1f2072e2a5ea34b717216ac5600d40db59"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-errors-green/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst",
+        "bytes": 2877,
+        "sha256": "68fda9ff21ab748408f192ec3f2875fef66cd4f72891e3a8d64c200a86135865"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-errors-green/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst",
+        "bytes": 5640,
+        "sha256": "8ec268bbecc8438024270cb6910ed7581793a4d90a4a9070e5bd2aa8c4a5460c"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-errors-green/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst",
+        "bytes": 2899,
+        "sha256": "536aa704a7a3cee1084d97c40965aff5467d6e57da5ed655198fae87a0a12960"
+      }
+    ],
+    "reportFiles": [
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-errors-green/cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest.txt",
+        "bytes": 376,
+        "sha256": "2de78516b98e888b2b10d8a92d3172178badfd8ea3b090dbaa68fc63b63c475d"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-errors-green/TEST-cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest.xml",
+        "bytes": 39091,
+        "sha256": "19cc2f0a62d2b8786ce041a5e386a69db31e32f5ae26aa459c6a05881f634302"
+      }
+    ],
+    "finiteTargetCapture": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-errors-green/target-finite.json",
+      "bytes": 78228,
+      "sha256": "b3631788eefd37b3ecf38edd63bdba9160d7e5d6b70b327baf5a9398577af19c"
+    },
+    "diagnostics": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-errors-green/diagnostics.json",
+      "bytes": 202,
+      "sha256": "2b0649802e6e9ec63fb30b40fd8d5c7532e1a21544ecf1cca52d35d1ab402ec9"
+    }
+  },
+  {
+    "stage": "iam-stage-o2b-f2b2-lifecycle-red",
+    "selector": "PortalRunEventsPrivateHttpTest#legalHeadContinuesAfterChildExpiryAndNewGCurrentGeneration,PortalRunEventsPrivateAuthorityTest",
+    "exit": 1,
+    "running": [
+      "cn.agentplatform.gateway.infra.PortalRunEventsPrivateAuthorityTest",
+      "cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalRunEventsPrivateAuthorityTest",
+        "tests": 1,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 1
+      },
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest",
+        "tests": 1,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 1
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-lifecycle-red",
+    "sourceEpoch": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-lifecycle-red/source.json",
+      "bytes": 119380,
+      "sha256": "2097189f041726f33f0189c8ca52ffd2502856a6b3c8e8594db9029c19b5f6b7"
+    },
+    "sourceCount": 623,
+    "command": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-lifecycle-red/command.json",
+      "bytes": 705,
+      "sha256": "9507b81141445349d9543b38ee2d9682afe9d7d991ec1f497ca0eb16c6f6aaeb"
+    },
+    "raw": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-lifecycle-red/raw.log",
+      "bytes": 15087,
+      "sha256": "aee284169de34178d65692d6febbf6405d357750bb3379e0177640c8f0e9cd43"
+    },
+    "compiler": [
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-lifecycle-red/compiler/admin-common/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst",
+        "bytes": 6917,
+        "sha256": "4de727ce102cd93188b72e2dd752e03c8dfc150f327ad92eee1040589c1941b2"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-lifecycle-red/compiler/admin-common/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst",
+        "bytes": 8001,
+        "sha256": "e203729ab966bdef4bed127a344a896a19cd0a5ceb41cf615f32ae170a514ca9"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-lifecycle-red/compiler/admin-common/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst",
+        "bytes": 6374,
+        "sha256": "4c013d6419baa7d39876e14d08c2c7b2e37a68e2e56ea283cc20cc7875d0ba55"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-lifecycle-red/compiler/admin-common/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst",
+        "bytes": 4544,
+        "sha256": "dcf9f2347467a015748da291f1930b66c828a7ee27a8089b67a887ed88e686dd"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-lifecycle-red/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst",
+        "bytes": 4107,
+        "sha256": "84ef87f09bcf20b8cef2b9b0e4cada1f2072e2a5ea34b717216ac5600d40db59"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-lifecycle-red/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst",
+        "bytes": 2877,
+        "sha256": "68fda9ff21ab748408f192ec3f2875fef66cd4f72891e3a8d64c200a86135865"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-lifecycle-red/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst",
+        "bytes": 5730,
+        "sha256": "3195981b14dfe6cdc7b3264910d20855174da499b166ed52cf16924dda9be849"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-lifecycle-red/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst",
+        "bytes": 2899,
+        "sha256": "536aa704a7a3cee1084d97c40965aff5467d6e57da5ed655198fae87a0a12960"
+      }
+    ],
+    "reportFiles": [
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-lifecycle-red/cn.agentplatform.gateway.infra.PortalRunEventsPrivateAuthorityTest.txt",
+        "bytes": 2353,
+        "sha256": "1da044d1a637e732f8ba85709a1cbdfc83ffa7b80f2da2372e66072738a2fdf8"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-lifecycle-red/cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest.txt",
+        "bytes": 3826,
+        "sha256": "2fce330854cfb6af675a3cb6bfa1fea76bd4a844bdb49c480e12d4ef8a80eb20"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-lifecycle-red/TEST-cn.agentplatform.gateway.infra.PortalRunEventsPrivateAuthorityTest.xml",
+        "bytes": 41834,
+        "sha256": "7d1ed9a486054ee969ee9dc807cdc28e331f4684560b02c196077e5115a6caa4"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-lifecycle-red/TEST-cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest.xml",
+        "bytes": 44849,
+        "sha256": "c22a3fbae8fe6d036d3041c6a2a8a137ac2b80d4ab42ab5ef99b45127a41c794"
+      }
+    ],
+    "finiteTargetCapture": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-lifecycle-red/target-finite.json",
+      "bytes": 78959,
+      "sha256": "2cf183af4b9b195dab3604597b687da1c9d659a605c9f53b8650081e0fb102be"
+    },
+    "diagnostics": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-lifecycle-red/diagnostics.json",
+      "bytes": 202,
+      "sha256": "730e81536e793e76d80432d72e15121e73db4a82fd77073ac7f17380463a6f11"
+    }
+  },
+  {
+    "stage": "iam-stage-o2b-f2b2-lifecycle-green",
+    "selector": "PortalRunEventsPrivateHttpTest#legalHeadContinuesAfterChildExpiryAndNewGCurrentGeneration,PortalRunEventsPrivateAuthorityTest",
+    "exit": 0,
+    "running": [
+      "cn.agentplatform.gateway.infra.PortalRunEventsPrivateAuthorityTest",
+      "cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalRunEventsPrivateAuthorityTest",
+        "tests": 1,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0
+      },
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest",
+        "tests": 1,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-lifecycle-green",
+    "sourceEpoch": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-lifecycle-green/source.json",
+      "bytes": 119380,
+      "sha256": "2ced44bb7a5a5a23d71ff95e1115be6ccb2453d060048700f2ee3eb2bc89b63e"
+    },
+    "sourceCount": 623,
+    "command": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-lifecycle-green/command.json",
+      "bytes": 711,
+      "sha256": "491910b483ab9223e1c6d574d75de5fdc179f1d021c7d443c810dedfabaf2329"
+    },
+    "raw": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-lifecycle-green/raw.log",
+      "bytes": 6120,
+      "sha256": "00b73f13bd19da8a4f40f0efa861a92adccb776e89bf8a4bcad08b31fb5f3151"
+    },
+    "compiler": [
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-lifecycle-green/compiler/admin-common/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst",
+        "bytes": 6917,
+        "sha256": "4de727ce102cd93188b72e2dd752e03c8dfc150f327ad92eee1040589c1941b2"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-lifecycle-green/compiler/admin-common/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst",
+        "bytes": 8001,
+        "sha256": "e203729ab966bdef4bed127a344a896a19cd0a5ceb41cf615f32ae170a514ca9"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-lifecycle-green/compiler/admin-common/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst",
+        "bytes": 6374,
+        "sha256": "4c013d6419baa7d39876e14d08c2c7b2e37a68e2e56ea283cc20cc7875d0ba55"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-lifecycle-green/compiler/admin-common/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst",
+        "bytes": 4544,
+        "sha256": "dcf9f2347467a015748da291f1930b66c828a7ee27a8089b67a887ed88e686dd"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-lifecycle-green/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst",
+        "bytes": 4107,
+        "sha256": "84ef87f09bcf20b8cef2b9b0e4cada1f2072e2a5ea34b717216ac5600d40db59"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-lifecycle-green/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst",
+        "bytes": 2877,
+        "sha256": "68fda9ff21ab748408f192ec3f2875fef66cd4f72891e3a8d64c200a86135865"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-lifecycle-green/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst",
+        "bytes": 5730,
+        "sha256": "3195981b14dfe6cdc7b3264910d20855174da499b166ed52cf16924dda9be849"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-lifecycle-green/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst",
+        "bytes": 2899,
+        "sha256": "536aa704a7a3cee1084d97c40965aff5467d6e57da5ed655198fae87a0a12960"
+      }
+    ],
+    "reportFiles": [
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-lifecycle-green/cn.agentplatform.gateway.infra.PortalRunEventsPrivateAuthorityTest.txt",
+        "bytes": 386,
+        "sha256": "42f384b54e0df54279b9951c8aa3f364ce509ed3602d1755b9b9dd66e67b9a21"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-lifecycle-green/cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest.txt",
+        "bytes": 376,
+        "sha256": "515cab2c2dcbcb33e727f6f236e139eb448788c10a43e65b701aefa24d47aa59"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-lifecycle-green/TEST-cn.agentplatform.gateway.infra.PortalRunEventsPrivateAuthorityTest.xml",
+        "bytes": 39038,
+        "sha256": "60895f55a9d872c41e66b6a213c389f76c8fd16aba0c17d45ea00e3a94ce6b0b"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-lifecycle-green/TEST-cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest.xml",
+        "bytes": 39030,
+        "sha256": "e69ab0af05c3d434f5c301177a915736632b720f3586dbf68c344e679a0d0365"
+      }
+    ],
+    "finiteTargetCapture": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-lifecycle-green/target-finite.json",
+      "bytes": 78957,
+      "sha256": "4f414d8705c39d1ff64855bf3619b21da5196d3a10cbc2ff6f8f0960316d63c9"
+    },
+    "diagnostics": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-lifecycle-green/diagnostics.json",
+      "bytes": 202,
+      "sha256": "4134ab1f4de50c39e1c3b78d557f60a5b5b88147219d72cccf02aebe48a04de9"
+    }
+  },
+  {
+    "stage": "iam-stage-o2b-f2b2-authority-matrix",
+    "selector": "PortalRunEventsPrivateAuthorityTest#consumeRequiresCompletedOriginalQAndIsSingleUse+sameAuthorityMustImplementBothInterfacesAndRejectForeignHolder+realChildAndGAreCheckedAtHandshakeAndActualWriter+revokedGInterruptsActualReadAndDeliversNoLaterPacket+stuckCallbacksAndBorrowLeaksKeepTwoOwnersAndRejectThird+actualPhysicalCloseMustFinishBeforeEitherOwnerIsReleased+shortGDeadlineInterruptsTheActualInput",
+    "exit": 1,
+    "running": [],
+    "suites": [],
+    "evidence": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-authority-matrix",
+    "sourceEpoch": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-authority-matrix/source.json",
+      "bytes": 119381,
+      "sha256": "f7da52db87b0d5bd465a87092b6f9bc2cad5176a55134c13e629fca7989a09fb"
+    },
+    "sourceCount": 623,
+    "command": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-authority-matrix/command.json",
+      "bytes": 2252,
+      "sha256": "35098709b93e8a0828cc053b4291acd01d47f3f4c983863e340fb3b1ebe8f5bb"
+    },
+    "raw": null,
+    "compiler": [
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-authority-matrix/compiler/admin-common/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst",
+        "bytes": 6917,
+        "sha256": "4de727ce102cd93188b72e2dd752e03c8dfc150f327ad92eee1040589c1941b2"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-authority-matrix/compiler/admin-common/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst",
+        "bytes": 8001,
+        "sha256": "e203729ab966bdef4bed127a344a896a19cd0a5ceb41cf615f32ae170a514ca9"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-authority-matrix/compiler/admin-common/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst",
+        "bytes": 6374,
+        "sha256": "4c013d6419baa7d39876e14d08c2c7b2e37a68e2e56ea283cc20cc7875d0ba55"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-authority-matrix/compiler/admin-common/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst",
+        "bytes": 4544,
+        "sha256": "dcf9f2347467a015748da291f1930b66c828a7ee27a8089b67a887ed88e686dd"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-authority-matrix/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst",
+        "bytes": 4107,
+        "sha256": "84ef87f09bcf20b8cef2b9b0e4cada1f2072e2a5ea34b717216ac5600d40db59"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-authority-matrix/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst",
+        "bytes": 2877,
+        "sha256": "68fda9ff21ab748408f192ec3f2875fef66cd4f72891e3a8d64c200a86135865"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-authority-matrix/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst",
+        "bytes": 5730,
+        "sha256": "3195981b14dfe6cdc7b3264910d20855174da499b166ed52cf16924dda9be849"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-authority-matrix/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst",
+        "bytes": 2899,
+        "sha256": "536aa704a7a3cee1084d97c40965aff5467d6e57da5ed655198fae87a0a12960"
+      }
+    ],
+    "reportFiles": [],
+    "finiteTargetCapture": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-authority-matrix/target-finite.json",
+      "bytes": 78013,
+      "sha256": "6d304b4e4c951afb5b1b0b79414dc13fcb93c53ea37088dcb3bdbebed1994e24"
+    },
+    "diagnostics": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-authority-matrix/diagnostics.json",
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    }
+  },
+  {
+    "stage": "iam-stage-o2b-f2b2-authority-matrix2",
+    "selector": "PortalRunEventsPrivateAuthorityTest",
+    "exit": 0,
+    "running": [
+      "cn.agentplatform.gateway.infra.PortalRunEventsPrivateAuthorityTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalRunEventsPrivateAuthorityTest",
+        "tests": 8,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-authority-matrix2",
+    "sourceEpoch": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-authority-matrix2/source.json",
+      "bytes": 119381,
+      "sha256": "f7da52db87b0d5bd465a87092b6f9bc2cad5176a55134c13e629fca7989a09fb"
+    },
+    "sourceCount": 623,
+    "command": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-authority-matrix2/command.json",
+      "bytes": 537,
+      "sha256": "49714c803ad4e6acdf46156c960b8b7e0b30bfd7178a023c7fb94c15f0aac87c"
+    },
+    "raw": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-authority-matrix2/raw.log",
+      "bytes": 5184,
+      "sha256": "46cadababc8b447e4cb8c182b49b03d57120ddfe3734bb2daac5ff8464661bf2"
+    },
+    "compiler": [
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-authority-matrix2/compiler/admin-common/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst",
+        "bytes": 6917,
+        "sha256": "4de727ce102cd93188b72e2dd752e03c8dfc150f327ad92eee1040589c1941b2"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-authority-matrix2/compiler/admin-common/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst",
+        "bytes": 8001,
+        "sha256": "e203729ab966bdef4bed127a344a896a19cd0a5ceb41cf615f32ae170a514ca9"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-authority-matrix2/compiler/admin-common/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst",
+        "bytes": 6374,
+        "sha256": "4c013d6419baa7d39876e14d08c2c7b2e37a68e2e56ea283cc20cc7875d0ba55"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-authority-matrix2/compiler/admin-common/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst",
+        "bytes": 4544,
+        "sha256": "dcf9f2347467a015748da291f1930b66c828a7ee27a8089b67a887ed88e686dd"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-authority-matrix2/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst",
+        "bytes": 4107,
+        "sha256": "84ef87f09bcf20b8cef2b9b0e4cada1f2072e2a5ea34b717216ac5600d40db59"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-authority-matrix2/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst",
+        "bytes": 2877,
+        "sha256": "68fda9ff21ab748408f192ec3f2875fef66cd4f72891e3a8d64c200a86135865"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-authority-matrix2/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst",
+        "bytes": 5805,
+        "sha256": "40516e9fb7d80797d5e5eddab9c0ce398d875e19d3323a9fe83bd539f8bf6285"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-authority-matrix2/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst",
+        "bytes": 2899,
+        "sha256": "536aa704a7a3cee1084d97c40965aff5467d6e57da5ed655198fae87a0a12960"
+      }
+    ],
+    "reportFiles": [
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-authority-matrix2/cn.agentplatform.gateway.infra.PortalRunEventsPrivateAuthorityTest.txt",
+        "bytes": 386,
+        "sha256": "87cadb8ac0969059eae7a7ddbfbcc01cbe7339dad253cd273c5f2e6a7fc4cc42"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-authority-matrix2/TEST-cn.agentplatform.gateway.infra.PortalRunEventsPrivateAuthorityTest.xml",
+        "bytes": 40099,
+        "sha256": "527ad83c427040160b71dd603d1d6ba6c7460cda5f37adfa7b34076b6b9e85e2"
+      }
+    ],
+    "finiteTargetCapture": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-authority-matrix2/target-finite.json",
+      "bytes": 78726,
+      "sha256": "012ebdf1eaa22d6771e300e9b69ab7f260fd1acbc20cdcaa35af98f45a0fb200"
+    },
+    "diagnostics": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-authority-matrix2/diagnostics.json",
+      "bytes": 202,
+      "sha256": "baaeb117f295c027f688407e0376a31ad0f6b10d6346fd2d2656a645097b25e6"
+    }
+  },
+  {
+    "stage": "iam-stage-o2b-f2b2-http-matrix",
+    "selector": "PortalRunEventsPrivateHttpTest",
+    "exit": 0,
+    "running": [
+      "cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest",
+        "tests": 9,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-http-matrix",
+    "sourceEpoch": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-http-matrix/source.json",
+      "bytes": 119381,
+      "sha256": "bb95152285dced1f93559da763996e05357bfb0eeb2900d06ac70a3da1b5c3b0"
+    },
+    "sourceCount": 623,
+    "command": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-http-matrix/command.json",
+      "bytes": 509,
+      "sha256": "235091359fd9e62c659bdba551f204eb8ea9ea6a84850f6d30c71c2ccc392deb"
+    },
+    "raw": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-http-matrix/raw.log",
+      "bytes": 5175,
+      "sha256": "53b191de63c698fc7f8dc59cd36782c4d8975b6529cf901fdbf10dade860d717"
+    },
+    "compiler": [
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-http-matrix/compiler/admin-common/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst",
+        "bytes": 6917,
+        "sha256": "4de727ce102cd93188b72e2dd752e03c8dfc150f327ad92eee1040589c1941b2"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-http-matrix/compiler/admin-common/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst",
+        "bytes": 8001,
+        "sha256": "e203729ab966bdef4bed127a344a896a19cd0a5ceb41cf615f32ae170a514ca9"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-http-matrix/compiler/admin-common/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst",
+        "bytes": 6374,
+        "sha256": "4c013d6419baa7d39876e14d08c2c7b2e37a68e2e56ea283cc20cc7875d0ba55"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-http-matrix/compiler/admin-common/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst",
+        "bytes": 4544,
+        "sha256": "dcf9f2347467a015748da291f1930b66c828a7ee27a8089b67a887ed88e686dd"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-http-matrix/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst",
+        "bytes": 4107,
+        "sha256": "84ef87f09bcf20b8cef2b9b0e4cada1f2072e2a5ea34b717216ac5600d40db59"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-http-matrix/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst",
+        "bytes": 2877,
+        "sha256": "68fda9ff21ab748408f192ec3f2875fef66cd4f72891e3a8d64c200a86135865"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-http-matrix/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst",
+        "bytes": 5805,
+        "sha256": "40516e9fb7d80797d5e5eddab9c0ce398d875e19d3323a9fe83bd539f8bf6285"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-http-matrix/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst",
+        "bytes": 2899,
+        "sha256": "536aa704a7a3cee1084d97c40965aff5467d6e57da5ed655198fae87a0a12960"
+      }
+    ],
+    "reportFiles": [
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-http-matrix/cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest.txt",
+        "bytes": 376,
+        "sha256": "5a9517aa7612bdc75c5d8abfe968c92c971d64897edcdbbc9e7788bc6cc18bbd"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-http-matrix/TEST-cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest.xml",
+        "bytes": 40210,
+        "sha256": "6c161ef40b792a5ced6981976f6b95115e0cd4f7cf40f33565549f90ae199a6f"
+      }
+    ],
+    "finiteTargetCapture": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-http-matrix/target-finite.json",
+      "bytes": 78716,
+      "sha256": "38cd0690b57c8405d98fd300323525d9232d810ffac85963976de80894246ff8"
+    },
+    "diagnostics": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-http-matrix/diagnostics.json",
+      "bytes": 202,
+      "sha256": "6e77d01a32c5896163dbf09d87a71b26e769ce53f59670ab9f1222107928b9a5"
+    }
+  },
+  {
+    "stage": "iam-stage-o2b-f2b2-final",
+    "selector": "PortalRunEventsPrivateHttpTest,PortalRunEventsPrivateAuthorityTest,PortalRunEventsHttpTest",
+    "exit": 0,
+    "running": [
+      "cn.agentplatform.gateway.infra.PortalRunEventsHttpTest",
+      "cn.agentplatform.gateway.infra.PortalRunEventsPrivateAuthorityTest",
+      "cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalRunEventsHttpTest",
+        "tests": 14,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0
+      },
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalRunEventsPrivateAuthorityTest",
+        "tests": 8,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0
+      },
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest",
+        "tests": 9,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-final",
+    "sourceEpoch": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-final/source.json",
+      "bytes": 119381,
+      "sha256": "c2dd5086c9718098dc0957aa7f0dd3e7c809f56793d7eaea1b53e3987262c246"
+    },
+    "sourceCount": 623,
+    "command": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-final/command.json",
+      "bytes": 611,
+      "sha256": "c0e7ddc12a069bc64dc705c96dffcc95eaf71634f427143c7c5f673d16d40b6f"
+    },
+    "raw": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-final/raw.log",
+      "bytes": 6335,
+      "sha256": "a1825d0007389a60fdad40048df36a0470e4481e5d4e7ed65a05a7bd83bf89ef"
+    },
+    "compiler": [
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-final/compiler/admin-common/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst",
+        "bytes": 6917,
+        "sha256": "4de727ce102cd93188b72e2dd752e03c8dfc150f327ad92eee1040589c1941b2"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-final/compiler/admin-common/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst",
+        "bytes": 8001,
+        "sha256": "e203729ab966bdef4bed127a344a896a19cd0a5ceb41cf615f32ae170a514ca9"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-final/compiler/admin-common/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst",
+        "bytes": 6374,
+        "sha256": "4c013d6419baa7d39876e14d08c2c7b2e37a68e2e56ea283cc20cc7875d0ba55"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-final/compiler/admin-common/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst",
+        "bytes": 4544,
+        "sha256": "dcf9f2347467a015748da291f1930b66c828a7ee27a8089b67a887ed88e686dd"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-final/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst",
+        "bytes": 4107,
+        "sha256": "84ef87f09bcf20b8cef2b9b0e4cada1f2072e2a5ea34b717216ac5600d40db59"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-final/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst",
+        "bytes": 2877,
+        "sha256": "68fda9ff21ab748408f192ec3f2875fef66cd4f72891e3a8d64c200a86135865"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-final/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst",
+        "bytes": 5805,
+        "sha256": "40516e9fb7d80797d5e5eddab9c0ce398d875e19d3323a9fe83bd539f8bf6285"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-final/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst",
+        "bytes": 2899,
+        "sha256": "536aa704a7a3cee1084d97c40965aff5467d6e57da5ed655198fae87a0a12960"
+      }
+    ],
+    "reportFiles": [
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-final/cn.agentplatform.gateway.infra.PortalRunEventsHttpTest.txt",
+        "bytes": 363,
+        "sha256": "53965bdd7dd42b2859f87235441bf42976c149a07c26ce109ec2a1856ff11e77"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-final/cn.agentplatform.gateway.infra.PortalRunEventsPrivateAuthorityTest.txt",
+        "bytes": 386,
+        "sha256": "a808b117d588a802b7a1131ccd49d5e61bf97ba1e969ab35bebd73f2ed1ae76b"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-final/cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest.txt",
+        "bytes": 376,
+        "sha256": "7422e6fe5f41e934f8dcac5d7a8410806187f2e2a1f76bfe13727f171a45ffdd"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-final/TEST-cn.agentplatform.gateway.infra.PortalRunEventsHttpTest.xml",
+        "bytes": 41035,
+        "sha256": "0a3a6f948d78b4472f7a83ded165fbd20058c1757253f36a9fdc68c7c4294d99"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-final/TEST-cn.agentplatform.gateway.infra.PortalRunEventsPrivateAuthorityTest.xml",
+        "bytes": 40156,
+        "sha256": "dc92da8589d049ae096ca82bbf7105a8a21b5f0fec4bb9a21981b3d55c5eaa08"
+      },
+      {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-final/TEST-cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest.xml",
+        "bytes": 40268,
+        "sha256": "b30bf6c18e75b28d38ffc8c63b70fd150301a25a1766f8c71b651291c0da8e08"
+      }
+    ],
+    "finiteTargetCapture": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-final/target-finite.json",
+      "bytes": 79646,
+      "sha256": "a255fe587193f22ecac5493441d72f08a5589d2a98eb478e6b80ee9d79567629"
+    },
+    "diagnostics": {
+      "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-final/diagnostics.json",
+      "bytes": 202,
+      "sha256": "fb9f5594453cee1aa2ec8cfc719639fcad04076dec120cb9cd219d323f78cbaa"
+    }
+  }
+]

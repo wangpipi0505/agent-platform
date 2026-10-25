@@ -1,0 +1,117 @@
+{
+  "at": "2026-10-20T21:24:37.300Z",
+  "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+  "checkCommand": "git apply --check --directory=.local/iam-o1a-run-metadata/replay-overlay docs/evidence/iam-stage-4-o1a-run-metadata/source-fullcontext.patch",
+  "applyCommand": "git apply --directory=.local/iam-o1a-run-metadata/replay-overlay docs/evidence/iam-stage-4-o1a-run-metadata/source-fullcontext.patch",
+  "actualRootCwd": true,
+  "logicalSourceCount": 578,
+  "replayedPhysicalDelta": 10,
+  "allNamesBytesShaEqual": true,
+  "unchangedFiles": "Inherited immutable base entries; no full base copy or old-tree rescan.",
+  "frozen": {
+    "file": "docs/evidence/iam-stage-4-o1a-run-metadata/source-after.json",
+    "bytes": 109562,
+    "sha256": "719caa92b7dc1c33ee620e923247bb57bad45cee5c0b9c210401dc9fde463510"
+  },
+  "replay": {
+    "file": "docs/evidence/iam-stage-4-o1a-run-metadata/source-replay-effective.json",
+    "bytes": 109562,
+    "sha256": "719caa92b7dc1c33ee620e923247bb57bad45cee5c0b9c210401dc9fde463510"
+  },
+  "firstPatch": {
+    "patch": {
+      "file": "docs/evidence/iam-stage-4-o1a-run-metadata/source-fullcontext.patch",
+      "bytes": 220456,
+      "sha256": "7ebe2082bb7e9e833a3484c5070cc5473f43eaf69164024935fa077fbb71e3bb"
+    },
+    "checkLog": {
+      "file": "docs/evidence/iam-stage-4-o1a-run-metadata/replay-check.log",
+      "bytes": 8,
+      "sha256": "87a22800f55490262969ca8239f60cad450780c0adbb31e0f7e42ad026036cb1"
+    },
+    "applyLog": {
+      "file": "docs/evidence/iam-stage-4-o1a-run-metadata/replay-apply.log",
+      "bytes": 8,
+      "sha256": "87a22800f55490262969ca8239f60cad450780c0adbb31e0f7e42ad026036cb1"
+    },
+    "checkExit": 0,
+    "applyExit": 0,
+    "postApplyBytesEqual": false,
+    "mismatch": {
+      "file": "docs/evidence/iam-stage-4-o1a-run-metadata/replay-first-byte-mismatch.json",
+      "bytes": 1782,
+      "sha256": "61dd85e5d739f04e63b27b5d5d36a55885e64e67309d4503181233a6cee605fb"
+    }
+  },
+  "repair": {
+    "patch": {
+      "file": "docs/evidence/iam-stage-4-o1a-run-metadata/source-eol-repair.patch",
+      "bytes": 2658,
+      "sha256": "35551f6c61b7ef8d806fb2ba8874be1b20c9ada94aecc2a6abff48950a35cb4c"
+    },
+    "firstCheck": {
+      "at": "2026-10-20T21:24:12.973Z",
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "executable": "git",
+      "args": [
+        "-c",
+        "core.autocrlf=false",
+        "apply",
+        "--check",
+        "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\iam-stage-4-o1a-run-metadata\\source-eol-repair.patch"
+      ],
+      "gitDirectory": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\iam-o1a-run-metadata\\evidence.git",
+      "gitWorkTree": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\iam-o1a-run-metadata\\replay-overlay",
+      "exitCode": 1,
+      "log": {
+        "file": "docs/evidence/iam-stage-4-o1a-run-metadata/replay-repair-check.log",
+        "bytes": 906,
+        "sha256": "26fdf4134f56af327086fcff247b11e354d0b7c01524695d62964a7db096d94d"
+      }
+    },
+    "finalCheck": {
+      "at": "2026-10-20T21:24:34.277Z",
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "executable": "git",
+      "args": [
+        "-c",
+        "core.autocrlf=false",
+        "apply",
+        "--check",
+        "--directory=.local/iam-o1a-run-metadata/replay-overlay",
+        "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\iam-stage-4-o1a-run-metadata\\source-eol-repair.patch"
+      ],
+      "gitDirectory": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\iam-o1a-run-metadata\\evidence.git",
+      "gitWorkTree": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\iam-o1a-run-metadata\\replay-overlay",
+      "exitCode": 0,
+      "log": {
+        "file": "docs/evidence/iam-stage-4-o1a-run-metadata/replay-repair-check02.log",
+        "bytes": 8,
+        "sha256": "0e606818852cc6d4e60902e87575d34ac32240a5d6906a692c9213d2c43e035c"
+      }
+    },
+    "finalApply": {
+      "at": "2026-10-20T21:24:37.128Z",
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "executable": "git",
+      "args": [
+        "-c",
+        "core.autocrlf=false",
+        "apply",
+        "--directory=.local/iam-o1a-run-metadata/replay-overlay",
+        "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\iam-stage-4-o1a-run-metadata\\source-eol-repair.patch"
+      ],
+      "gitDirectory": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\iam-o1a-run-metadata\\evidence.git",
+      "gitWorkTree": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\iam-o1a-run-metadata\\replay-overlay",
+      "exitCode": 0,
+      "log": {
+        "file": "docs/evidence/iam-stage-4-o1a-run-metadata/replay-repair-apply02.log",
+        "bytes": 8,
+        "sha256": "0e606818852cc6d4e60902e87575d34ac32240a5d6906a692c9213d2c43e035c"
+      }
+    },
+    "onlyThreePrivateReplayFilesModified": true
+  },
+  "description": "The complete logical 578-file equality is after the two-patch chain. First text application succeeded but EOL normalization left 3 byte mismatches; private -text/-diff binary repair completed only those mismatches. No successful physical application or test was repeated.",
+  "rootAdvice": "Root first recommended private GIT_DIR/worktree=private replay and later clarified root worktree plus explicit --directory. Actual successful repair02 had the recorded private replay worktree plus explicit private directory prefix; its real 0/0 and full-byte equality take precedence, and no later reference command was rerun."
+}

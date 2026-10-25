@@ -1,0 +1,588 @@
+{
+  "schemaVersion": 1,
+  "task": "N2 independent review I1 positive FLOW gate fix",
+  "status": "DONE_WITH_CONCERNS",
+  "completedAt": "2026-10-20T13:45:23.724Z",
+  "workspace": "G:/207/项目/算法重组工具/代码/agent-platform",
+  "ownership": {
+    "sourceTargetReturned": true,
+    "returnedTo": "/root",
+    "authorStopsSourceTargetWrites": true,
+    "mavenStopped": true,
+    "noFurtherMavenPlanned": true,
+    "rootMayStartIndependentAudit": true
+  },
+  "outcome": {
+    "importantI1": "fixed pending same-reviewer independent re-review",
+    "productionChange": "TraceStore.pureFlow requires snapshot.type exactly FLOW; one gate line only",
+    "changedSourceFiles": [
+      "engine-runtime/src/main/java/cn/agentplatform/engine/infra/TraceStore.java",
+      "engine-runtime/src/test/java/cn/agentplatform/engine/infra/OwnedFlowSchedulerPostgresTest.java"
+    ],
+    "noOtherProductionChanges": true,
+    "materialsAndFixtureSourceUnchanged": true,
+    "sourceBefore": 364,
+    "sourceAfter": 364,
+    "targetBefore": 1761,
+    "targetAfter": 1764,
+    "targetAdded": 3,
+    "targetModified": 8,
+    "targetDeleted": 0,
+    "totalTargetChangedPaths": 11,
+    "jarChanges": 0
+  },
+  "tests": [
+    {
+      "stage": "iam-stage-5-n2-fix-red01",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-5-n2-fix-red01 engine-runtime OwnedFlowSchedulerPostgresTest#missingSnapshotTypeNeverStartsOwnedWorker,OwnedFlowSchedulerPostgresTest#nullSnapshotTypeNeverStartsOwnedWorker,OwnedFlowSchedulerPostgresTest#unknownSnapshotTypeNeverStartsOwnedWorker,OwnedFlowSchedulerPostgresTest#chatSnapshotTypeNeverStartsOwnedWorker",
+      "exitCode": 1,
+      "raw": {
+        "file": "docs/evidence/iam-stage-5-n2-owned-flow-fix/iam-stage-5-n2-fix-red01/raw.log",
+        "bytes": 11846,
+        "sha256": "ba93643e68f68b5e209e204256bc65d5fa5aad0780e2b5a09fad4f3bd5ecf47e"
+      },
+      "manifest": {
+        "file": "docs/evidence/iam-stage-5-n2-owned-flow-fix/iam-stage-5-n2-fix-red01/manifest.json",
+        "bytes": 101901,
+        "sha256": "d8d03bd4e232ac7718ccb1f66a1e4e057debbce9153e61832ce6d45282f0a171"
+      },
+      "actualRunning": [
+        "cn.agentplatform.engine.infra.OwnedFlowSchedulerPostgresTest"
+      ],
+      "actualXmlCount": 1,
+      "incidentalXmlExcluded": 64,
+      "totals": {
+        "tests": 4,
+        "failures": 3,
+        "errors": 0,
+        "skipped": 0
+      },
+      "actualTests": [
+        {
+          "class": "cn.agentplatform.engine.infra.OwnedFlowSchedulerPostgresTest",
+          "methods": [
+            "missingSnapshotTypeNeverStartsOwnedWorker",
+            "nullSnapshotTypeNeverStartsOwnedWorker",
+            "chatSnapshotTypeNeverStartsOwnedWorker",
+            "unknownSnapshotTypeNeverStartsOwnedWorker"
+          ],
+          "xml": {
+            "file": "docs/evidence/iam-stage-5-n2-owned-flow-fix/iam-stage-5-n2-fix-red01/xml/engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.OwnedFlowSchedulerPostgresTest.xml",
+            "bytes": 50992,
+            "sha256": "e01ba02e0a6a33f68f7b4e3a44818347ddd4ce208c91c70700d7e8cb200a5a20"
+          }
+        }
+      ],
+      "actualOutput": [
+        "N2_FIX_REUSED_DATABASE=agent_platform_iam_owned_flow_v12",
+        "N2_FIX_TYPE=missing,STATUS=SUCCEEDED,STARTED=1,ATTEMPTS=2,EXECUTIONS=2,NODE_OUTPUTS=2,RUN_OUTPUT=true,AUTHORIZED_PAYLOAD_READ_DELTA=207",
+        "N2_FIX_TYPE=json-null,STATUS=SUCCEEDED,STARTED=1,ATTEMPTS=2,EXECUTIONS=2,NODE_OUTPUTS=2,RUN_OUTPUT=true,AUTHORIZED_PAYLOAD_READ_DELTA=207",
+        "N2_FIX_TYPE=CHAT,STATUS=PENDING,STARTED=0,ATTEMPTS=0,EXECUTIONS=0,NODE_OUTPUTS=0,RUN_OUTPUT=false,AUTHORIZED_PAYLOAD_READ_DELTA=15",
+        "N2_FIX_TYPE=UNKNOWN,STATUS=SUCCEEDED,STARTED=1,ATTEMPTS=2,EXECUTIONS=2,NODE_OUTPUTS=2,RUN_OUTPUT=true,AUTHORIZED_PAYLOAD_READ_DELTA=207",
+        "[ERROR] Tests run: 4, Failures: 3, Errors: 0, Skipped: 0, Time elapsed: 15.83 s <<< FAILURE! -- in cn.agentplatform.engine.infra.OwnedFlowSchedulerPostgresTest",
+        "[ERROR] Tests run: 4, Failures: 3, Errors: 0, Skipped: 0",
+        "[INFO] BUILD FAILURE"
+      ],
+      "sourceCount": 364
+    },
+    {
+      "stage": "iam-stage-5-n2-fix-final01",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-5-n2-fix-final01 engine-runtime OwnedFlowSchedulerPostgresTest,OwnedFlowMaterialsPostgresTest",
+      "exitCode": 0,
+      "raw": {
+        "file": "docs/evidence/iam-stage-5-n2-owned-flow-fix/iam-stage-5-n2-fix-final01/raw.log",
+        "bytes": 36460,
+        "sha256": "d6d67c8dd9bea84a2a138c841fd34dbb5f89758c9ffa40f4ef3f73b41d0ed10c"
+      },
+      "manifest": {
+        "file": "docs/evidence/iam-stage-5-n2-owned-flow-fix/iam-stage-5-n2-fix-final01/manifest.json",
+        "bytes": 104104,
+        "sha256": "647f850c9a3e09df425ab0d4cb87a2a0ea5ca9087fc3ef7205d9e266a0a16b1f"
+      },
+      "actualRunning": [
+        "cn.agentplatform.engine.infra.OwnedFlowMaterialsPostgresTest",
+        "cn.agentplatform.engine.infra.OwnedFlowSchedulerPostgresTest"
+      ],
+      "actualXmlCount": 2,
+      "incidentalXmlExcluded": 63,
+      "totals": {
+        "tests": 25,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "actualTests": [
+        {
+          "class": "cn.agentplatform.engine.infra.OwnedFlowMaterialsPostgresTest",
+          "methods": [
+            "lastNodePostCommitProofExpiryLeavesGrantUsableAndAggregateOnlyNewCurrentNeverRerunsNode",
+            "oldDispatchCannotCommitOrFailForNewGenerationAndControlRenewalsPreserveDigest",
+            "conditionAllAnyAndErrorEdgesUseActualWinnerExclusiveAndSharedBranches",
+            "dispatchExpiryDuringFailureScopesRollsBackBeforeActualFailureCommit",
+            "actualNodeLockOutlivingDispatchRejectsBeforePayload",
+            "nodeCasZeroDefaultHasNoErrorOrSuccessScopeButValidDispatchFailRetainsAttemptFact",
+            "workerCommitInfrastructureFaultNeverEntersBusinessFallbackOrFailure",
+            "defaultErrorOutputAttemptAndEventsCommitTogetherAndEveryActualScopeFaultRollsBack",
+            "executionUsesOnlyMaterializedWorkAndItsRealAttemptPreservesPreviouslyConsumedParents",
+            "aggregateOutputAndTerminalEventScopeFaultsRollBackEntireAggregate",
+            "realPgSerializationFailureKeepsOriginalTypeAndRollsBackInsteadOfFallbackOr503",
+            "aggregateSeesItsOwnPrepareChangesAndDistinguishesSqlNullEndFromJsonNull",
+            "budgetStopRejectsCallerSuppliedBudgetReasonWhenActualBudgetIsStillAvailable",
+            "callbackProofExpiryRollsBackDefaultFactsAndNeverBecomesBusinessFailure",
+            "budgetPrecheckCommitsPrepareWinnerWithoutAttemptOrConsumptionAndBudgetStopIsAtomic"
+          ],
+          "xml": {
+            "file": "docs/evidence/iam-stage-5-n2-owned-flow-fix/iam-stage-5-n2-fix-final01/xml/engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.OwnedFlowMaterialsPostgresTest.xml",
+            "bytes": 66195,
+            "sha256": "d6b9dcf0b0a6428a9e4498fd3341ad286d1bbe045bef46b74e67766ffdd4e6d5"
+          }
+        },
+        {
+          "class": "cn.agentplatform.engine.infra.OwnedFlowSchedulerPostgresTest",
+          "methods": [
+            "legacyOriginalSchedulerAndFlowRemainFunctionalButExplicitProtectedQueueRejectsMissingAuthority",
+            "missingAuthorityCapabilityAndUnsupportedNodesNeverUseLegacyOrAgentDriver",
+            "protectedClaimOnlyOwnsDispatchBeforeCurrentAndReadsNoPayload",
+            "missingSnapshotTypeNeverStartsOwnedWorker",
+            "grantExpiryAndPersistentDenialAreExcludedByBothClaimPathsWithoutPayloadOrNetwork",
+            "current403And503MakeZeroPayloadAttemptAndStartAndBackoffBothQueueEntrypoints",
+            "nullSnapshotTypeNeverStartsOwnedWorker",
+            "chatSnapshotTypeNeverStartsOwnedWorker",
+            "originalReserveCreatedAndPollRunServiceFlowDriverCompleteExpiredPortalThroughDelegated",
+            "unknownSnapshotTypeNeverStartsOwnedWorker"
+          ],
+          "xml": {
+            "file": "docs/evidence/iam-stage-5-n2-owned-flow-fix/iam-stage-5-n2-fix-final01/xml/engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.OwnedFlowSchedulerPostgresTest.xml",
+            "bytes": 59243,
+            "sha256": "a48cecd187451d5011a0c5de9a558bf2412aa2d48f5d1251afe1f8601c2e31c4"
+          }
+        }
+      ],
+      "actualOutput": [
+        "N2_FIX_REUSED_DATABASE=agent_platform_iam_owned_flow_v12",
+        "[INFO] Tests run: 15, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 94.62 s -- in cn.agentplatform.engine.infra.OwnedFlowMaterialsPostgresTest",
+        "N2_FIX_REUSED_DATABASE=agent_platform_iam_owned_flow_v12",
+        "N2_FIX_TYPE=missing,STATUS=PENDING,STARTED=0,ATTEMPTS=0,EXECUTIONS=0,NODE_OUTPUTS=0,RUN_OUTPUT=false,AUTHORIZED_PAYLOAD_READ_DELTA=15",
+        "N2_FIX_TYPE=json-null,STATUS=PENDING,STARTED=0,ATTEMPTS=0,EXECUTIONS=0,NODE_OUTPUTS=0,RUN_OUTPUT=false,AUTHORIZED_PAYLOAD_READ_DELTA=15",
+        "N2_FIX_TYPE=CHAT,STATUS=PENDING,STARTED=0,ATTEMPTS=0,EXECUTIONS=0,NODE_OUTPUTS=0,RUN_OUTPUT=false,AUTHORIZED_PAYLOAD_READ_DELTA=15",
+        "N2_FIX_TYPE=UNKNOWN,STATUS=PENDING,STARTED=0,ATTEMPTS=0,EXECUTIONS=0,NODE_OUTPUTS=0,RUN_OUTPUT=false,AUTHORIZED_PAYLOAD_READ_DELTA=15",
+        "[INFO] Tests run: 10, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 45.59 s -- in cn.agentplatform.engine.infra.OwnedFlowSchedulerPostgresTest",
+        "[INFO] Tests run: 25, Failures: 0, Errors: 0, Skipped: 0",
+        "[INFO] BUILD SUCCESS"
+      ],
+      "sourceCount": 364
+    }
+  ],
+  "testInterpretation": {
+    "red": "All four separate new methods ran; missing/null/UNKNOWN incorrectly SUCCEEDED with 1 RUN_STARTED,2 attempts,2 real executions,2 node outputs,run output=true and authorized payload delta207; CHAT already rejected and passed, not four failures.",
+    "green": "All four inputs remained PENDING with zero RUN_STARTED/attempt/real execute/node-output/run-output and authorized payload delta15. The existing FLOW positive retained actual outputs and 2 transparent executions.",
+    "counter": "The test override increments an AtomicInteger then unconditionally calls super.executeFlow; no replacement handler/algorithm.",
+    "materialIntegrity": "type is supplied before actual createPublished/createNode admission with signed original binding and valid root/scopes; no post-admission material corruption.",
+    "original67": "belongs to old code; not rerun or summed with final25",
+    "notRerun": [
+      "old 67-test combined set",
+      "common/full seven-reactor suite",
+      "D3b/exhausted probe",
+      "history 200..217 preflight"
+    ]
+  },
+  "warnings": {
+    "audit": {
+      "file": "docs/evidence/iam-stage-5-n2-owned-flow-fix/warning-audit.json",
+      "bytes": 3482,
+      "sha256": "e46857699a11b664b379d03224badb7e2ff62c988e803c838a0e3ec2ad5b996c"
+    },
+    "redSchedulerWarnings": 1,
+    "finalSchedulerWarnings": 15,
+    "originalNegativeSources": 11,
+    "newTypeNegativeSources": 4,
+    "platformException": 14,
+    "uncategorizedSQLException": 1,
+    "perTest": [
+      {
+        "class": "cn.agentplatform.engine.infra.OwnedFlowMaterialsPostgresTest",
+        "name": "lastNodePostCommitProofExpiryLeavesGrantUsableAndAggregateOnlyNewCurrentNeverRerunsNode",
+        "count": 1,
+        "classification": [
+          "PlatformException"
+        ]
+      },
+      {
+        "class": "cn.agentplatform.engine.infra.OwnedFlowMaterialsPostgresTest",
+        "name": "workerCommitInfrastructureFaultNeverEntersBusinessFallbackOrFailure",
+        "count": 1,
+        "classification": [
+          "UncategorizedSQLException"
+        ]
+      },
+      {
+        "class": "cn.agentplatform.engine.infra.OwnedFlowSchedulerPostgresTest",
+        "name": "missingAuthorityCapabilityAndUnsupportedNodesNeverUseLegacyOrAgentDriver",
+        "count": 7,
+        "classification": [
+          "PlatformException",
+          "PlatformException",
+          "PlatformException",
+          "PlatformException",
+          "PlatformException",
+          "PlatformException",
+          "PlatformException"
+        ]
+      },
+      {
+        "class": "cn.agentplatform.engine.infra.OwnedFlowSchedulerPostgresTest",
+        "name": "missingSnapshotTypeNeverStartsOwnedWorker",
+        "count": 1,
+        "classification": [
+          "PlatformException"
+        ]
+      },
+      {
+        "class": "cn.agentplatform.engine.infra.OwnedFlowSchedulerPostgresTest",
+        "name": "current403And503MakeZeroPayloadAttemptAndStartAndBackoffBothQueueEntrypoints",
+        "count": 2,
+        "classification": [
+          "PlatformException",
+          "PlatformException"
+        ]
+      },
+      {
+        "class": "cn.agentplatform.engine.infra.OwnedFlowSchedulerPostgresTest",
+        "name": "nullSnapshotTypeNeverStartsOwnedWorker",
+        "count": 1,
+        "classification": [
+          "PlatformException"
+        ]
+      },
+      {
+        "class": "cn.agentplatform.engine.infra.OwnedFlowSchedulerPostgresTest",
+        "name": "chatSnapshotTypeNeverStartsOwnedWorker",
+        "count": 1,
+        "classification": [
+          "PlatformException"
+        ]
+      },
+      {
+        "class": "cn.agentplatform.engine.infra.OwnedFlowSchedulerPostgresTest",
+        "name": "unknownSnapshotTypeNeverStartsOwnedWorker",
+        "count": 1,
+        "classification": [
+          "PlatformException"
+        ]
+      }
+    ],
+    "notIndividuallyAssertedByOldTests": true,
+    "productionLoggingUnchanged": true,
+    "m1": "retained maintenance item; no global suppression or logging configuration changes",
+    "surefireToolDiagnostics": [
+      {
+        "stage": "iam-stage-5-n2-fix-red01",
+        "file": "engine-runtime/target/surefire-reports/2026-10-20T21-33-55_688.dumpstream",
+        "frozenFile": "docs/evidence/iam-stage-5-n2-owned-flow-fix/target-final/engine-runtime/target/surefire-reports/2026-10-20T21-33-55_688.dumpstream",
+        "bytes": 344,
+        "sha256": "8a9524ef660c8ac66e9008bf1e16ccc0e446b6b2ee9732bd7d33b6df7732e848",
+        "originalBytesPreserved": true
+      },
+      {
+        "stage": "iam-stage-5-n2-fix-final01",
+        "file": "engine-runtime/target/surefire-reports/2026-10-20T21-35-10_599.dumpstream",
+        "frozenFile": "docs/evidence/iam-stage-5-n2-owned-flow-fix/target-final/engine-runtime/target/surefire-reports/2026-10-20T21-35-10_599.dumpstream",
+        "bytes": 344,
+        "sha256": "443d56f1c5b6d33aee8a676f71930107a8b17a2ef20650c278863dc2e5179df6",
+        "originalBytesPreserved": true
+      }
+    ],
+    "diagnosticScope": "Two separate 344-byte Surefire boot Manifest-JAR absolute-classpath/root diagnostics preserved, one per stage. Actual forks/tests completed. Not counted as scheduler WARN; output not claimed pristine. No argLine/POM/runner/config change or noise-driven rerun."
+  },
+  "database": {
+    "only": "agent_platform_iam_owned_flow_v12",
+    "endpoint": "127.0.0.1:25432",
+    "reusedExisting": true,
+    "helper": "connect named existing database and assert current_database only",
+    "adminOrCreate": false,
+    "historyPreflightThisRepair": false,
+    "old217EvidencePreserved": true,
+    "fixtureFlyway": "existing validation/no new migrations",
+    "mainDatabaseOrExistingServicesTouched": false
+  },
+  "before": {
+    "capture": {
+      "file": ".local/iam-n2-owned-flow-fix/before.json",
+      "bytes": 22252168,
+      "sha256": "99c5bf2ee76db81c0133ff74c9fb325a75b008012fc0e144ab7503a67a50aa71"
+    },
+    "capturedAt": "2026-10-20T13:32:05.602Z",
+    "physicalSourceCopies": 364,
+    "physicalTargetCopies": 1761,
+    "all2125EqualOriginalN2Final": true,
+    "priorBefore": {
+      "file": ".local/iam-n2-owned-flow/before.json",
+      "bytes": 19694318,
+      "sha256": "d314f25b6f80f8eabfc3d4f5500abf70cd8389d27a6e27573637120c004ea001"
+    },
+    "reusedBaselineRootVerification": {
+      "file": {
+        "file": ".local/iam-n2-root-protected-check.json",
+        "bytes": 504,
+        "sha256": "adede3943299bd63c77142fafe547489f14ff374b9a93b5383f50d25ddb7e079"
+      },
+      "startedAt": "2026-10-20T13:15:30.221Z",
+      "endedAt": "2026-10-20T13:19:22.198Z",
+      "count": 75091,
+      "notRehashedForThisBefore": true
+    },
+    "supplementalActuallyHashed": 9462,
+    "originalReport": {
+      "file": "docs/evidence/iam-stage-5-n2-owned-flow-report.md",
+      "bytes": 15189,
+      "sha256": "1bed43ce19c658e8a0919dbcb986441ef67cc3a2cddea1a1caaec1110cdf38d0"
+    },
+    "originalReview": {
+      "file": "docs/evidence/review-iam-stage-5-n2.md",
+      "bytes": 13504,
+      "sha256": "b12f2ded1372546f013a20ca037e8d150a3824cec1a2fa3beb209637cec28c5d"
+    },
+    "oldHandoff": {
+      "file": "docs/evidence/iam-stage-5-n2-owned-flow/handoff.json",
+      "bytes": 6212,
+      "sha256": "3d640a5244587ff206b6a582f8bef2e416f5a38c6ac9427d91126224c9b65ac3"
+    }
+  },
+  "freezeAndReplay": {
+    "sourceBefore": 364,
+    "sourceAfter": 364,
+    "changedSources": 2,
+    "physicalSourceBeforeEqual": 364,
+    "physicalTargetBeforeEqual": 1761,
+    "sourceReplayByteEqual": 364,
+    "targetBefore": 1761,
+    "targetAfter": 1764,
+    "targetAdded": 3,
+    "targetModified": 8,
+    "targetDeleted": 0,
+    "totalTargetChangedPaths": 11,
+    "jarChanges": 0,
+    "patch": {
+      "file": "docs/evidence/iam-stage-5-n2-owned-flow-fix/change.patch",
+      "bytes": 103963,
+      "sha256": "18a7180e8cafa5738050044afdda466b784e605875e65fcc6833bcc22fb59957"
+    },
+    "applyCheck": 0,
+    "apply": 0,
+    "reportOriginal": {
+      "file": "docs/evidence/iam-stage-5-n2-owned-flow-report.md",
+      "bytes": 15189,
+      "sha256": "1bed43ce19c658e8a0919dbcb986441ef67cc3a2cddea1a1caaec1110cdf38d0"
+    },
+    "reviewOriginal": {
+      "file": "docs/evidence/review-iam-stage-5-n2.md",
+      "bytes": 13504,
+      "sha256": "b12f2ded1372546f013a20ca037e8d150a3824cec1a2fa3beb209637cec28c5d"
+    },
+    "baselineDirectory": "docs/evidence/iam-stage-5-n2-owned-flow-fix/baseline/",
+    "frozenDirectory": "docs/evidence/iam-stage-5-n2-owned-flow-fix/frozen/",
+    "replayDirectory": "docs/evidence/iam-stage-5-n2-owned-flow-fix/replay/",
+    "targetFinalDirectory": "docs/evidence/iam-stage-5-n2-owned-flow-fix/target-final/",
+    "noGitHeadOrRemote": "HEAD unresolved/no configured remote recorded in git-boundary; actual no-index patch and git apply --check/apply succeeded",
+    "finalRecheck": {
+      "source": 364,
+      "target": 1764,
+      "beforePhysical": 2125,
+      "sourceFrozenAndReplayByteEqual": 364,
+      "targetFinalByteEqual": 1764
+    }
+  },
+  "protection": {
+    "startedAt": "2026-10-20T13:41:55.175Z",
+    "endedAt": "2026-10-20T13:42:36.583Z",
+    "reusedOriginals": 75091,
+    "supplemental": 9462,
+    "totalProtected": 84553,
+    "runners": 28,
+    "externalDocs": 8,
+    "unauthorized": 0,
+    "runnerChanges": 0,
+    "externalDocChanges": 0,
+    "additions": 0,
+    "allowedReportAppend": 1,
+    "originalReportPrefixBytes": 15189,
+    "originalReportPrefixSha256": "1bed43ce19c658e8a0919dbcb986441ef67cc3a2cddea1a1caaec1110cdf38d0",
+    "prefixEqual": true,
+    "reportAfter": {
+      "file": "docs/evidence/iam-stage-5-n2-owned-flow-report.md",
+      "bytes": 23673,
+      "sha256": "6210728ba5d212573b0ab7a54f4ed3d1681ef4d8e0702b538b589046e4da5768"
+    },
+    "reviewUnchanged": {
+      "file": "docs/evidence/review-iam-stage-5-n2.md",
+      "bytes": 13504,
+      "sha256": "b12f2ded1372546f013a20ca037e8d150a3824cec1a2fa3beb209637cec28c5d"
+    },
+    "formalFixBrief": {
+      "file": "docs/evidence/iam-stage-5-n2-owned-flow-fix-brief.md",
+      "bytes": 7102,
+      "sha256": "05ac188b5ddcd411038cbdc0cb566d286d2b67c3be9b03bdbc69364974dfa500"
+    },
+    "before": {
+      "file": ".local/iam-n2-owned-flow-fix/before.json",
+      "bytes": 22252168,
+      "sha256": "99c5bf2ee76db81c0133ff74c9fb325a75b008012fc0e144ab7503a67a50aa71"
+    },
+    "sourceAfter": {
+      "file": "docs/evidence/iam-stage-5-n2-owned-flow-fix/source-after.json",
+      "bytes": 74822,
+      "sha256": "ea61bf74aeea2cce1e3d464edc4c091a6e2afc5a8a568ca048b2cae3bb6e93e0"
+    },
+    "targetAfter": {
+      "file": "docs/evidence/iam-stage-5-n2-owned-flow-fix/target-after.json",
+      "bytes": 361732,
+      "sha256": "19b714cddf010c4d7a47bde610bebf28c4126dc076ae0449668875a4d0b517d3"
+    },
+    "patch": {
+      "file": "docs/evidence/iam-stage-5-n2-owned-flow-fix/change.patch",
+      "bytes": 103963,
+      "sha256": "18a7180e8cafa5738050044afdda466b784e605875e65fcc6833bcc22fb59957"
+    },
+    "originalReportPrefixRetained": true,
+    "initialReviewFullFileRetained": true,
+    "oldHandoffRetained": true,
+    "allOldN2HistoricalEvidenceIncluded": true,
+    "notSampled": "SDK/Maven dependency trees; original 75091 static baseline reused only after root physical verification; newly discovered static files actually hashed"
+  },
+  "report": {
+    "originalPrefix": {
+      "file": "docs/evidence/iam-stage-5-n2-owned-flow-report.md",
+      "bytes": 15189,
+      "sha256": "1bed43ce19c658e8a0919dbcb986441ef67cc3a2cddea1a1caaec1110cdf38d0"
+    },
+    "current": {
+      "file": "docs/evidence/iam-stage-5-n2-owned-flow-report.md",
+      "bytes": 23673,
+      "sha256": "6210728ba5d212573b0ab7a54f4ed3d1681ef4d8e0702b538b589046e4da5768"
+    },
+    "appendix": "N2 I1 fix appendix and exact dumpstream provenance appended; original15189 bytes immutable",
+    "originalCopiesDirectory": "docs/evidence/iam-stage-5-n2-owned-flow-fix/originals/"
+  },
+  "selfReview": {
+    "onlyAuthorizedTwoSourceFiles": true,
+    "positiveFlowGateMissingNullUnknownChatChecked": true,
+    "realFlowPositiveRetained": true,
+    "transparentCounterCallsSuper": true,
+    "perStageRawRunningXmlAndSourceFrozen": true,
+    "realPatchAppliedAnd364SourceHashesEqual": true,
+    "protectedDriftZero": true,
+    "targetDeletionsCounted": true
+  },
+  "limits": [
+    "same reviewer must independently re-review I1 before N2 acceptance",
+    "M1 remains 15 expected negative scheduler WARN, two separate Surefire diagnostics preserved",
+    "production IAM remains closed; no N3/N4/full recovery/real environment acceptance",
+    "no shared index updates, commit, package, deployment, publish or push"
+  ],
+  "originalN2TargetCorrection": {
+    "added": 22,
+    "modified": 24,
+    "deleted": 1,
+    "total": 47,
+    "reference": ".local/iam-n2-root-audit-addendum.json",
+    "oldDeletedClass": "RunAuthority$StaleCheck.class",
+    "deletionMechanism": "not recorded at per-class operation level; automatic Maven cleanup not asserted"
+  },
+  "evidence": [
+    {
+      "file": "docs/evidence/iam-stage-5-n2-owned-flow-fix/before.json",
+      "bytes": 22252168,
+      "sha256": "99c5bf2ee76db81c0133ff74c9fb325a75b008012fc0e144ab7503a67a50aa71"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n2-owned-flow-fix/root-decisions.md",
+      "bytes": 2832,
+      "sha256": "438bfc1f4de613ef3918cc52bfec43acb57370acb0b54a340bce9dbf61b61be3"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n2-owned-flow-fix/source-before.json",
+      "bytes": 74822,
+      "sha256": "e0f4cb1573c63c67d8360347a1f367f85b25ddd6976ddf4b21d1be919d0861a1"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n2-owned-flow-fix/source-after.json",
+      "bytes": 74822,
+      "sha256": "ea61bf74aeea2cce1e3d464edc4c091a6e2afc5a8a568ca048b2cae3bb6e93e0"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n2-owned-flow-fix/source-changes.json",
+      "bytes": 937,
+      "sha256": "8428f02f77c15831a677eecc6b91ec091eb28a45720eba52fc66045dff30aa34"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n2-owned-flow-fix/target-before.json",
+      "bytes": 361103,
+      "sha256": "8de40cd5a3f9a9788ecaa587b42b5e9866875cd27625acbe5de41e4dd3a2451d"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n2-owned-flow-fix/target-after.json",
+      "bytes": 361732,
+      "sha256": "19b714cddf010c4d7a47bde610bebf28c4126dc076ae0449668875a4d0b517d3"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n2-owned-flow-fix/target-changes.json",
+      "bytes": 2637,
+      "sha256": "84819d119982a91c462a36d8f1ca68d81843fe4072e161ab9d7d5d1ed489e0e5"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n2-owned-flow-fix/change.patch",
+      "bytes": 103963,
+      "sha256": "18a7180e8cafa5738050044afdda466b784e605875e65fcc6833bcc22fb59957"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n2-owned-flow-fix/patch-check.json",
+      "bytes": 940,
+      "sha256": "9c37e202238801c53a874a83fb4530d5a185e2ffe33ef840a959261caefd4e02"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n2-owned-flow-fix/apply-check.json",
+      "bytes": 228,
+      "sha256": "2730f103c78bbc61d4eba3146facdddc7fb2385663e4799f657f7c24c6ab98bd"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n2-owned-flow-fix/apply.json",
+      "bytes": 213,
+      "sha256": "6c31804d005a6a4e2d032807bc9958ed4a517b125fbd963af869bb3d5ede8679"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n2-owned-flow-fix/git-boundary.json",
+      "bytes": 285,
+      "sha256": "b3dc0aa4e361283fd65f30fad8708520f35cae0b6e70df7ec807d09d0b44b690"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n2-owned-flow-fix/test-audit.json",
+      "bytes": 14094,
+      "sha256": "903126f46b9d12505859869335fed8997c431c9d606e484f25166a68ad4d7ca8"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n2-owned-flow-fix/warning-audit.json",
+      "bytes": 3482,
+      "sha256": "e46857699a11b664b379d03224badb7e2ff62c988e803c838a0e3ec2ad5b996c"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n2-owned-flow-fix/report-prefix.json",
+      "bytes": 340,
+      "sha256": "1ad07cc50475bce2c648ac2ffa5b64bbee4148867ddbac72ef6b5cb99e11ee28"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n2-owned-flow-fix/protected-after.json",
+      "bytes": 21794623,
+      "sha256": "409ab8287ad2c1167f29f0433d5c6dd93ae25e8f8dbc7f9e86a21ead45774935"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n2-owned-flow-fix/protected-changes.json",
+      "bytes": 305,
+      "sha256": "49cb8d1d0dfed55dc75fd7e5fae3216af1d3ccad153915e0bbb5aeb951159cfd"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n2-owned-flow-fix/protection-summary.json",
+      "bytes": 1825,
+      "sha256": "b0497ef1b0093ec312438d1c4f6657f110ddaca41552981287888cf715c8c708"
+    }
+  ]
+}

@@ -1,0 +1,246 @@
+[
+  {
+    "at": "2026-10-20T20:56:30.835Z",
+    "method": "GET",
+    "url": "/auth/session",
+    "rawHeaders": [
+      "Host",
+      "127.0.0.1:53324",
+      "Connection",
+      "keep-alive",
+      "sec-ch-ua-platform",
+      "\"Windows\"",
+      "Authorization",
+      "Bearer A",
+      "User-Agent",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+      "Accept",
+      "application/json, text/plain, */*",
+      "sec-ch-ua",
+      "\"Google Chrome\";v=\"155\", \"Chromium\";v=\"155\", \"Not(A:Brand\";v=\"24\"",
+      "Content-Type",
+      "application/json",
+      "sec-ch-ua-mobile",
+      "?0",
+      "Sec-Fetch-Site",
+      "same-origin",
+      "Sec-Fetch-Mode",
+      "cors",
+      "Sec-Fetch-Dest",
+      "empty",
+      "Referer",
+      "http://127.0.0.1:53324/fixture.html",
+      "Accept-Encoding",
+      "gzip, deflate, br, zstd",
+      "Accept-Language",
+      "zh-CN,zh;q=0.9"
+    ],
+    "authorization": "Bearer A",
+    "cookie": null,
+    "body": "",
+    "response": {
+      "status": 200,
+      "kind": "json",
+      "envelope": {
+        "code": "OK",
+        "message": "OK",
+        "data": {
+          "tenantId": "tenant_A",
+          "principalId": "A",
+          "roles": [
+            "ADMIN"
+          ],
+          "expiresAt": "2026-10-20T20:57:30.836Z"
+        }
+      }
+    }
+  },
+  {
+    "at": "2026-10-20T20:56:30.914Z",
+    "method": "GET",
+    "url": "/admin/apps?",
+    "rawHeaders": [
+      "Host",
+      "127.0.0.1:53324",
+      "Connection",
+      "keep-alive",
+      "sec-ch-ua-platform",
+      "\"Windows\"",
+      "Authorization",
+      "Bearer A",
+      "User-Agent",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+      "Accept",
+      "application/json, text/plain, */*",
+      "sec-ch-ua",
+      "\"Google Chrome\";v=\"155\", \"Chromium\";v=\"155\", \"Not(A:Brand\";v=\"24\"",
+      "Content-Type",
+      "application/json",
+      "sec-ch-ua-mobile",
+      "?0",
+      "Sec-Fetch-Site",
+      "same-origin",
+      "Sec-Fetch-Mode",
+      "cors",
+      "Sec-Fetch-Dest",
+      "empty",
+      "Referer",
+      "http://127.0.0.1:53324/fixture.html",
+      "Accept-Encoding",
+      "gzip, deflate, br, zstd",
+      "Accept-Language",
+      "zh-CN,zh;q=0.9"
+    ],
+    "authorization": "Bearer A",
+    "cookie": null,
+    "body": "",
+    "response": {
+      "status": 200,
+      "kind": "json",
+      "envelope": {
+        "code": "OK",
+        "message": "OK",
+        "data": [
+          {
+            "code": "app",
+            "name": "应用 A",
+            "type": "FLOW",
+            "status": "PUBLISHED",
+            "draftRev": 1,
+            "draftId": 1,
+            "currentVersionNo": 1,
+            "config": {},
+            "definition": {
+              "inputs": [],
+              "nodes": [],
+              "edges": []
+            },
+            "layout": {}
+          }
+        ]
+      }
+    }
+  },
+  {
+    "at": "2026-10-20T20:56:31.012Z",
+    "method": "GET",
+    "url": "/auth/session",
+    "rawHeaders": [
+      "Host",
+      "127.0.0.1:53324",
+      "Connection",
+      "keep-alive",
+      "sec-ch-ua-platform",
+      "\"Windows\"",
+      "Authorization",
+      "Bearer A",
+      "User-Agent",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+      "Accept",
+      "application/json, text/plain, */*",
+      "sec-ch-ua",
+      "\"Google Chrome\";v=\"155\", \"Chromium\";v=\"155\", \"Not(A:Brand\";v=\"24\"",
+      "Content-Type",
+      "application/json",
+      "sec-ch-ua-mobile",
+      "?0",
+      "Sec-Fetch-Site",
+      "same-origin",
+      "Sec-Fetch-Mode",
+      "cors",
+      "Sec-Fetch-Dest",
+      "empty",
+      "Referer",
+      "http://127.0.0.1:53324/fixture.html",
+      "Accept-Encoding",
+      "gzip, deflate, br, zstd",
+      "Accept-Language",
+      "zh-CN,zh;q=0.9"
+    ],
+    "authorization": "Bearer A",
+    "cookie": null,
+    "body": "",
+    "response": {
+      "status": 200,
+      "kind": "json",
+      "envelope": {
+        "code": "OK",
+        "message": "OK",
+        "data": {
+          "tenantId": "tenant_A",
+          "principalId": "A",
+          "roles": [
+            "ADMIN"
+          ],
+          "expiresAt": "2026-10-20T20:57:31.012Z"
+        }
+      }
+    }
+  },
+  {
+    "at": "2026-10-20T20:56:31.030Z",
+    "method": "GET",
+    "url": "/admin/apps?",
+    "rawHeaders": [
+      "Host",
+      "127.0.0.1:53324",
+      "Connection",
+      "keep-alive",
+      "sec-ch-ua-platform",
+      "\"Windows\"",
+      "Authorization",
+      "Bearer A",
+      "User-Agent",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+      "Accept",
+      "application/json, text/plain, */*",
+      "sec-ch-ua",
+      "\"Google Chrome\";v=\"155\", \"Chromium\";v=\"155\", \"Not(A:Brand\";v=\"24\"",
+      "Content-Type",
+      "application/json",
+      "sec-ch-ua-mobile",
+      "?0",
+      "Sec-Fetch-Site",
+      "same-origin",
+      "Sec-Fetch-Mode",
+      "cors",
+      "Sec-Fetch-Dest",
+      "empty",
+      "Referer",
+      "http://127.0.0.1:53324/fixture.html",
+      "Accept-Encoding",
+      "gzip, deflate, br, zstd",
+      "Accept-Language",
+      "zh-CN,zh;q=0.9"
+    ],
+    "authorization": "Bearer A",
+    "cookie": null,
+    "body": "",
+    "response": {
+      "status": 200,
+      "kind": "json",
+      "envelope": {
+        "code": "OK",
+        "message": "OK",
+        "data": [
+          {
+            "code": "app",
+            "name": "应用 A",
+            "type": "FLOW",
+            "status": "PUBLISHED",
+            "draftRev": 1,
+            "draftId": 1,
+            "currentVersionNo": 1,
+            "config": {},
+            "definition": {
+              "inputs": [],
+              "nodes": [],
+              "edges": []
+            },
+            "layout": {}
+          }
+        ]
+      }
+    }
+  }
+]

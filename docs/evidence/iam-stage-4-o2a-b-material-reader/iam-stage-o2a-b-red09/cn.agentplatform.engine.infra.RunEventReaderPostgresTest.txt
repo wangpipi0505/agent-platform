@@ -1,0 +1,15 @@
+-------------------------------------------------------------------------------
+Test set: cn.agentplatform.engine.infra.RunEventReaderPostgresTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 3.601 s <<< FAILURE! -- in cn.agentplatform.engine.infra.RunEventReaderPostgresTest
+cn.agentplatform.engine.infra.RunEventReaderPostgresTest.requiredLabelsAreWritableOnlyDuringTheLiveBorrowAndNeverAfterConsumeOrClose -- Time elapsed: 3.585 s <<< ERROR!
+cn.agentplatform.common.PlatformException: 运行授权或材料范围不匹配
+	at cn.agentplatform.engine.infra.RunAuthorityStore.denied(RunAuthorityStore.java:227)
+	at cn.agentplatform.engine.infra.RunEventReader$Borrow.writeRequiredDataLabels(RunEventReader.java:141)
+	at cn.agentplatform.engine.infra.RunEventReaderPostgresTest.lambda$requiredLabelsAreWritableOnlyDuringTheLiveBorrowAndNeverAfterConsumeOrClose$2(RunEventReaderPostgresTest.java:107)
+	at cn.agentplatform.engine.infra.RunEventReader$EventEmission.consume(RunEventReader.java:129)
+	at cn.agentplatform.engine.infra.RunEventReaderPostgresTest.requiredLabelsAreWritableOnlyDuringTheLiveBorrowAndNeverAfterConsumeOrClose(RunEventReaderPostgresTest.java:107)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+

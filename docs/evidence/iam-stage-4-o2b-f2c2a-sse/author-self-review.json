@@ -1,0 +1,28 @@
+{
+  "status": "author self-review complete; root fresh full review still required",
+  "scope": [
+    "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsHttp.java",
+    "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsMaterialVerifier.java",
+    "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsSse.java",
+    "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseTest.java",
+    "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseLifecycleTest.java",
+    "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsPacketDecoder.java",
+    "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsPacketBudget.java"
+  ],
+  "checks": [
+    "other623 exact and complete630 source names/bytes",
+    "raw and canonical shared single-writer admission before packet borrow",
+    "initial Q cursor immutable; public after only complete write/flush/drain/fresh event",
+    "original-request bootstrap; genuine listener IO; finite inert ready-idle shell",
+    "actual socket outer lock before app gate/token; complete action tail; per REQUEST epoch",
+    "release/recycle invalidates before delegate; no completion invented",
+    "SSE exit lease before old Http cleanup; actual worker/IO/borrow/action/completion and detach gates",
+    "fixed profile baseline prepaid before bridge/wrappers; once per JVM lifetime",
+    "actual child waitFor/collector; prior failures and epochs retained; no old fixed launcher"
+  ],
+  "concerns": [
+    "forced socket release without completion retains two Owners until actual JVM exit",
+    "baseline is engineering graph charging, not RSS/JVM/native/framework capacity",
+    "public EVENTS assembly and real engine PG chain remain C2b; UI null/long remains C2c"
+  ]
+}

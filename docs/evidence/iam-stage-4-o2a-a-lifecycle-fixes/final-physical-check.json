@@ -1,0 +1,28 @@
+{
+  "sourceActualNames": 589,
+  "sourceNamesBytesSha256Equal": true,
+  "logicalTarget": 2027,
+  "physicalTargetDrift": [],
+  "sourceManifest": {
+    "file": "docs/evidence/iam-stage-4-o2a-a-lifecycle-fixes/source-after.json",
+    "bytes": 111999,
+    "sha256": "3ad9c38b06e8ddc637f6ef4a36a5c2e474d15cf306ba1af341a3d6fad01ae7e4"
+  },
+  "targetManifest": {
+    "file": "docs/evidence/iam-stage-4-o2a-a-lifecycle-fixes/target-after.json",
+    "bytes": 420391,
+    "sha256": "19c4c35fb21135407ea912003ede6532906a056d78c1efecdbf3e4f6ea2c3219"
+  },
+  "launcher": {
+    "file": ".tools/run-iam-module-tests.mjs",
+    "bytes": 2884,
+    "sha256": "0a86ddfdf91bff1971cf41f9326ea0d0f23e0b0c32d3e02082f7290a26867de4"
+  },
+  "compiledSourceCounts": {
+    "main": 57,
+    "test": 29
+  },
+  "actualRunning": "Profile only; compiled tests are not executed tests",
+  "resources": "All owned Session clients/HTTP fixtures closed by try-with-resources; Session.close asserts workers/scheduler terminated; all blocking filler tasks released and counted; Maven/Java child exited",
+  "noOtherProcessesStarted": true
+}

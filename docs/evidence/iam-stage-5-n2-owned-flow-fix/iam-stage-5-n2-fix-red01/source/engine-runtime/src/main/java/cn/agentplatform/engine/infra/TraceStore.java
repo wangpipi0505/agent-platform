@@ -1,0 +1,1521 @@
+package cn.agentplatform.engine.infra;
+
+import static cn.agentplatform.engine.infra.RunAuthorityStore.*;
+
+import cn.agentplatform.common.*;
+import cn.agentplatform.common.authority.*;
+import cn.agentplatform.common.authority.HttpCurrentAuthorityClient.RetainedAuthorization;
+import cn.agentplatform.engine.domain.GraphRules;
+import cn.agentplatform.engine.domain.RunDispatch;
+
+import com.fasterxml.jackson.databind.JsonNode;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.*;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.*;
+import org.springframework.transaction.support.TransactionTemplate;
+
+import java.time.*;
+import java.util.*;
+import java.util.function.Supplier;
+
+import javax.sql.DataSource;
+
+@Repository
+public class TraceStore {
+    private final JdbcTemplate db;
+    private final TransactionTemplate tx;
+    private final TransactionTemplate protectedTx;
+    private final DataSource source;
+    private final Clock clock;
+    private final MaterialScopeStore materials;
+
+    @Autowired
+    public TraceStore(JdbcTemplate db, PlatformTransactionManager tm) {
+        this(db,tm,Clock.systemUTC());
+    }
+    public TraceStore(JdbcTemplate db, PlatformTransactionManager tm,Clock clock) {
+        this.db = db;
+        this.tx = new TransactionTemplate(tm);
+        this.source=Objects.requireNonNull(db.getDataSource());this.clock=Objects.requireNonNull(clock);
+        if (!(tm instanceof DataSourceTransactionManager manager)
+                || manager.getDataSource() != source)
+            throw new IllegalArgumentException("SAME_DATASOURCE_MANAGER_REQUIRED");
+        protectedTx=new TransactionTemplate(tm);protectedTx.setIsolationLevel(TransactionDefinition.ISOLATION_REPEATABLE_READ);
+        materials=new MaterialScopeStore(source,clock);
+    }
+
+    public JdbcTemplate db() {
+        return db;
+    }
+
+    java.sql.Timestamp authorityNow() {
+        return java.sql.Timestamp.from(clock.instant());
+    }
+
+    public <T> T atomic(Supplier<T> f) {
+        return tx.execute(s -> f.get());
+    }
+
+    public Map<String, Object> run(String id, Actor actor) {
+        if(protectedRun(id,actor))throw denied();
+        var rows =
+                db.queryForList(
+                        "select * from engine.run where public_id=? and tenant_id=? and"
+                            + " principal_id=?",
+                        id,
+                        actor.tenantId(),
+                        actor.principalId());
+        if (rows.isEmpty()) throw new PlatformException(404, "RUN_NOT_FOUND", "运行不存在");
+        return rows.getFirst();
+    }
+
+    public List<Map<String, Object>> nodes(long id) {
+        legacy(id);
+        return db.queryForList(
+                "select * from engine.node_instance where run_id=? order by step_seq", id);
+    }
+
+    public int event(long run, String type, Object payload) {
+        legacy(run);
+        int seq =
+                db.queryForObject(
+                        "update engine.run set event_seq=event_seq+1 where id=? returning"
+                            + " event_seq",
+                        Integer.class,
+                        run);
+        db.update(
+                "insert into engine.run_event(run_id,seq,type,payload) values(?,?,?,?::jsonb)",
+                run,
+                seq,
+                type,
+                Json.write(payload));
+        return seq;
+    }
+
+    public List<Map<String, Object>> events(long run, long after) {
+        legacy(run);
+        var rows =
+                db.queryForList(
+                        "select seq,type,payload,created_at from engine.run_event where run_id=?"
+                            + " and seq>? order by seq",
+                        run,
+                        after);
+        rows.forEach(r -> r.put("payload", json(r.get("payload"))));
+        return rows;
+    }
+
+    public Map<String, Object> claim(long node, String owner) {
+        legacyNode(node);
+        return atomic(
+                () -> {
+                    long runId =
+                            db.queryForObject(
+                                    "select run_id from engine.node_instance where id=?",
+                                    Long.class,
+                                    node);
+                    // Lock order is run then node, matching cancel/aggregate and seq allocation
+                    // (§31.4.5).
+                    var run = lockRun(runId);
+                    if (!run.get("status").equals("RUNNING")) return null;
+                    var row =
+                            db.queryForMap(
+                                    "select * from engine.node_instance where id=? for update",
+                                    node);
+                    if (!Set.of("READY", "RUNNING").contains(row.get("status"))) return null;
+                    if (row.get("status").equals("RUNNING")
+                            && Boolean.TRUE.equals(
+                                    db.queryForObject(
+                                            "select lease_until>now() from engine.node_instance"
+                                                    + " where id=?",
+                                            Boolean.class,
+                                            node))) return null;
+                    var rules = json(run.get("snapshot")).path("definition").path("executionRules");
+                    int maxParallel =
+                            rules.path("parallel").asBoolean(true)
+                                    ? rules.path("maxParallel").asInt(8)
+                                    : 1;
+                    int active =
+                            db.queryForObject(
+                                    "select count(*) from engine.node_instance where run_id=? and"
+                                            + " status='RUNNING' and lease_until>now()",
+                                    Integer.class,
+                                    runId);
+                    if (active >= maxParallel) return null;
+                    String generation = owner + "_" + UUID.randomUUID().toString().substring(0, 8);
+                    db.update(
+                            "update engine.node_instance set"
+                                + " status='RUNNING',lease_owner=?,lease_until=now()+interval '90"
+                                + " seconds',started_at=coalesce(started_at,now()) where id=?",
+                            generation,
+                            node);
+                    int no =
+                            db.queryForObject(
+                                    "select coalesce(max(attempt_no),0)+1 from engine.attempt where"
+                                            + " node_instance_id=?",
+                                    Integer.class,
+                                    node);
+                    if (no == 1) consume(runId, "steps", 1, 25);
+                    long a =
+                            db.queryForObject(
+                                    "insert into"
+                                        + " engine.attempt(node_instance_id,attempt_no,status,idempotency_key,request_snapshot_ref,request_snapshot)"
+                                        + " values(?,?,'RUNNING',?,'pending', '{}'::jsonb)"
+                                        + " returning id",
+                                    Long.class,
+                                    node,
+                                    no,
+                                    Digest.sha256("node:" + node));
+                    db.update(
+                            "update engine.attempt set request_snapshot_ref=? where id=?",
+                            "pg:attempt/" + a,
+                            a);
+                    event(
+                            ((Number) row.get("run_id")).longValue(),
+                            "NODE_STARTED",
+                            Map.of("nodeInstanceId", node, "attemptId", a, "attemptNo", no));
+                    var result =
+                            db.queryForMap("select * from engine.node_instance where id=?", node);
+                    result.put("attemptId", a);
+                    return result;
+                });
+    }
+
+    public void freeze(long attempt, Object request) {
+        legacyAttempt(attempt);
+        db.update(
+                "update engine.attempt set request_snapshot=?::jsonb where id=? and"
+                    + " status='RUNNING'",
+                Json.write(request),
+                attempt);
+    }
+
+    public void response(long attempt, Object response) {
+        legacyAttempt(attempt);
+        db.update(
+                "update engine.attempt set response=?::jsonb,response_ref=?,routed_model=?::jsonb"
+                    + " where id=?",
+                Json.write(response),
+                "pg:attempt/" + attempt + "/response",
+                Json.write(Json.tree(response).path("actualModel")),
+                attempt);
+    }
+
+    public boolean commit(long run, long node, long attempt, String owner, Object output) {
+        legacy(run);legacyNode(node);legacyAttempt(attempt);
+        return atomic(
+                () -> {
+                    lockRun(run);
+                    // §31.4.5: only a live RUNNING generation can become the unique logical result.
+                    // A zero-row CAS records evidence and emits no logical-success event.
+                    int n =
+                            db.update(
+                                    "update engine.node_instance set"
+                                        + " status='SUCCEEDED',committed_attempt_id=?,committed_output_ref=?,output=?::jsonb,output_digest=?,ended_at=now()"
+                                        + " where id=? and committed_attempt_id is null and"
+                                        + " status='RUNNING' and lease_owner=? and"
+                                        + " lease_until>now()",
+                                    attempt,
+                                    "pg:node/" + node,
+                                    Json.write(output),
+                                    Digest.sha256(Json.write(output)),
+                                    node,
+                                    owner);
+                    if (n == 0) {
+                        db.update(
+                                "insert into engine.attempt_note(node_instance_id,attempt_id,kind)"
+                                        + " values(?,?,'SUPERSEDED_SUBMIT')",
+                                node,
+                                attempt);
+                        return false;
+                    }
+                    db.update(
+                            "update engine.attempt set status='SUCCEEDED',ended_at=now() where"
+                                    + " id=?",
+                            attempt);
+                    event(
+                            run,
+                            "LOGIC_RESULT_COMMITTED",
+                            Map.of("nodeInstanceId", node, "attemptId", attempt));
+                    event(
+                            run,
+                            "NODE_FINISHED",
+                            Map.of("nodeInstanceId", node, "status", "SUCCEEDED"));
+                    return true;
+                });
+    }
+
+    public void fail(long run, long node, long attempt, String owner, Object error) {
+        legacy(run);legacyNode(node);legacyAttempt(attempt);
+        atomic(
+                () -> {
+                    lockRun(run);
+                    int n =
+                            db.update(
+                                    "update engine.node_instance set"
+                                        + " status='FAILED',error=?::jsonb,ended_at=now() where"
+                                        + " id=? and status='RUNNING' and lease_owner=? and"
+                                        + " lease_until>now()",
+                                    Json.write(error),
+                                    node,
+                                    owner);
+                    db.update(
+                            "update engine.attempt set"
+                                + " status='FAILED',error=?::jsonb,ended_at=now() where id=?",
+                            Json.write(error),
+                            attempt);
+                    if (n > 0)
+                        event(run, "NODE_FAILED", Map.of("nodeInstanceId", node, "error", error));
+                    return null;
+                });
+    }
+
+    public boolean protectedRun(String id, Actor actor) {
+        var rows =
+                db.queryForList(
+                        "select r.id,exists(select 1 from engine.run_authority a where"
+                            + " a.run_id=r.id) as protected from engine.run r where r.public_id=?"
+                            + " and r.tenant_id=? and r.principal_id=?",
+                        id,
+                        actor.tenantId(),
+                        actor.principalId());
+        if (rows.isEmpty()) throw new PlatformException(404, "RUN_NOT_FOUND", "运行不存在");
+        return Boolean.TRUE.equals(rows.getFirst().get("protected"));
+    }
+
+    private void legacy(long run) {
+        if (Boolean.TRUE.equals(
+                db.queryForObject(
+                        "select exists(select 1 from engine.run_authority where run_id=?)",
+                        Boolean.class,
+                        run))) throw denied();
+    }
+
+    private void legacyNode(long node) {
+        legacy(
+                db.queryForObject(
+                        "select run_id from engine.node_instance where id=?", Long.class, node));
+    }
+
+    private void legacyAttempt(long attempt) {
+        legacy(
+                db.queryForObject(
+                        "select n.run_id from engine.attempt a join engine.node_instance n on"
+                            + " n.id=a.node_instance_id where a.id=?",
+                        Long.class,
+                        attempt));
+    }
+
+    public record PublishedView(
+            Map<String, Object> run,
+            List<Map<String, Object>> nodes,
+            List<Map<String, Object>> events,
+            RetainedAuthorization proof) {
+        public void requireCurrent() {
+            AuthorityContext.requireBound(proof);
+            proof.requireVerified();
+        }
+    }
+
+    /**
+     * Only the original main POST response purpose is accepted. Refresh occurs before the single RR
+     * snapshot; callers in a transaction must finish it before composing this response.
+     */
+    public PublishedView statusPublished(String id, Actor actor) {
+        if (TransactionSynchronizationManager.isActualTransactionActive())
+            throw new IllegalStateException("STATUS_REFRESH_REQUIRES_NO_TRANSACTION");
+        var ids =
+                db.queryForList(
+                        "select r.id from engine.run r join engine.run_authority a on a.run_id=r.id"
+                            + " where r.public_id=? and r.tenant_id=? and r.principal_id=?",
+                        Long.class,
+                        id,
+                        actor.tenantId(),
+                        actor.principalId());
+        if (ids.size() != 1) throw denied();
+        var before = new RunAuthorityStore(source, clock).load(ids.getFirst());
+        var main = AuthorityContext.current();
+        requirePurpose(main, false);
+        materials.requireReader(before, main);
+        var proof = AuthorityContext.requireInitialFor(actor, before.root());
+        AuthorityContext.requireBound(proof);
+        var view =
+                MaterialScopeStore.snapshot(
+                        source,
+                        () -> {
+                            var b = RunAuthorityStore.load(db, before.runId(), true);
+                            same(b.root(), before.root());
+                            same(b.owner(), before.owner());
+                            materials.requireReader(b, proof.current());
+                            var unsupported =
+                                    db.queryForMap(
+                                            "select exists(select 1 from engine.tool_call where"
+                                                + " run_id=r.id) as"
+                                                + " tools,controlled_draft_skill_version_id,controlled_skill_test_version_id"
+                                                + " from engine.run r where id=?",
+                                            b.runId());
+                            if (Boolean.TRUE.equals(unsupported.get("tools"))
+                                    || unsupported.get("controlled_draft_skill_version_id") != null
+                                    || unsupported.get("controlled_skill_test_version_id") != null)
+                                throw denied();
+                            var scopes = materials.currentScopes(b);
+                            var nodeIds =
+                                    db.queryForList(
+                                            "select id from engine.node_instance where run_id=?"
+                                                    + " order by step_seq",
+                                            Long.class,
+                                            b.runId());
+                            var eventIds =
+                                    db.queryForList(
+                                            "select id from engine.run_event where run_id=? order"
+                                                    + " by seq",
+                                            Long.class,
+                                            b.runId());
+                            var needed = new ArrayList<MaterialScopeV1>();
+                            for (var s : scopes)
+                                if (!s.material().kind().startsWith("attempt-")) needed.add(s);
+                            requireComplete(b, needed, nodeIds, List.of(), eventIds);
+                            // Every metadata ref is checked before any payload. A missing nullable
+                            // scope is denial.
+                            needed.forEach(
+                                    s -> MaterialAuthorization.require(s, proof.current(), clock));
+                            AuthorityContext.requireBound(proof);
+                            var values = new LinkedHashMap<String, JsonNode>();
+                            var sqlNull = new HashSet<String>();
+                            for (var scope : needed) {
+                                var value = materials.readCurrentValue(b, scope, proof);
+                                String locator =
+                                        key(scope.material().kind(), scope.material().id());
+                                values.put(locator, value.value());
+                                if (value.sqlNull()) sqlNull.add(locator);
+                            }
+                            var run = state(values, "run-state", b.publicId());
+                            run.put("id", b.runId());
+                            for (String kind :
+                                    List.of(
+                                            "run-inputs",
+                                            "run-output",
+                                            "run-error",
+                                            "run-version-refs")) {
+                                var value = values.get(key(kind, b.publicId()));
+                                run.put(
+                                        kind.substring(4).replace('-', '_'),
+                                        sqlNull.contains(key(kind, b.publicId())) ? null : value);
+                            }
+                            var nodes = new ArrayList<Map<String, Object>>();
+                            for (long node : nodeIds) {
+                                var row = state(values, "node-state", Long.toString(node));
+                                for (String kind : List.of("node-output", "node-error")) {
+                                    var value = values.get(key(kind, Long.toString(node)));
+                                    row.put(
+                                            kind.substring(5),
+                                            sqlNull.contains(key(kind, Long.toString(node)))
+                                                    ? null
+                                                    : value);
+                                }
+                                nodes.add(row);
+                            }
+                            var events = new ArrayList<Map<String, Object>>();
+                            for (long event : eventIds) {
+                                var row = state(values, "run-event", Long.toString(event));
+                                var visible = new LinkedHashMap<String, Object>();
+                                for (String field : List.of("seq", "type", "payload", "created_at"))
+                                    visible.put(field, row.get(field));
+                                visible.put(
+                                        "payload",
+                                        values.get(key("run-event", Long.toString(event)))
+                                                .get("payload"));
+                                events.add(visible);
+                            }
+                            var result =
+                                    new PublishedView(
+                                            run, List.copyOf(nodes), List.copyOf(events), proof);
+                            result.requireCurrent();
+                            return result;
+                        });
+        // A proof expiring during the actual read transaction's completion is never delivered.
+        view.requireCurrent();
+        return view;
+    }
+
+    private static String key(String kind, String locator) {
+        return kind + ":" + locator;
+    }
+
+    private static Map<String, Object> state(
+            Map<String, JsonNode> values, String kind, String locator) {
+        var n = values.get(key(kind, locator));
+        if (n == null || !n.isObject()) throw denied();
+        var row = new LinkedHashMap<String, Object>();
+        n.fields()
+                .forEachRemaining(
+                        e -> {
+                            var v = e.getValue();
+                            Object value =
+                                    v.isNull()
+                                            ? null
+                                            : v.isTextual()
+                                                    ? v.textValue()
+                                                    : v.isBoolean()
+                                                            ? v.booleanValue()
+                                                            : v.isIntegralNumber()
+                                                                    ? v.longValue()
+                                                                    : v;
+                            if (value instanceof String text
+                                    && Set.of("started_at", "ended_at", "created_at", "lease_until")
+                                            .contains(e.getKey()))
+                                value = java.sql.Timestamp.from(Instant.parse(text));
+                            row.put(e.getKey(), value);
+                        });
+        return row;
+    }
+
+    private static void requireComplete(
+            Binding b,
+            List<MaterialScopeV1> scopes,
+            List<Long> nodes,
+            List<Long> attempts,
+            List<Long> events) {
+        var expected = new HashSet<String>();
+        for (String kind : MaterialScopeStore.KINDS) expected.add(key(kind, b.publicId()));
+        for (String kind : MaterialScopeStore.RUN_KINDS) expected.add(key(kind, b.publicId()));
+        for (long node : nodes)
+            for (String kind : MaterialScopeStore.NODE_KINDS)
+                expected.add(key(kind, Long.toString(node)));
+        for (long attempt : attempts)
+            for (String kind : MaterialScopeStore.ATTEMPT_KINDS)
+                expected.add(key(kind, Long.toString(attempt)));
+        for (long event : events) expected.add(key("run-event", Long.toString(event)));
+        var actual = new HashSet<String>();
+        for (var s : scopes)
+            if (!actual.add(key(s.material().kind(), s.material().id()))) throw denied();
+        same(expected, actual);
+    }
+
+    private record WriteView(
+            Binding binding,
+            List<MaterialScopeV1> scopes,
+            Map<String, JsonNode> values,
+            Set<String> sqlNulls) {}
+
+    private WriteView writable(long run, RetainedAuthorization proof) {
+        return writable(run, proof, 0, 0);
+    }
+
+    private WriteView writable(long run, RetainedAuthorization proof, long node, long attempt) {
+        return writable(run, proof, node, attempt, null);
+    }
+
+    private WriteView writable(
+            long run, RetainedAuthorization proof, long node, long attempt, RunDispatch dispatch) {
+        // Run, authority observation, then node locks. Only control metadata precedes scope checks.
+        if (db.queryForList("select id from engine.run where id=? for update", Long.class, run)
+                        .size()
+                != 1) throw denied();
+        // Serialize the durable current/block observation with this mutation. A run lock alone
+        // lets recordCheck commit denial while this RR snapshot still sees its earlier success.
+        // PostgreSQL 16 RR closes concurrent-update conflicts; this component does not retry them.
+        if (db.queryForList(
+                                "select run_id from engine.run_authority where run_id=? for update",
+                                Long.class,
+                                run)
+                        .size()
+                != 1) throw denied();
+        var b = RunAuthorityStore.load(db, run, true);
+        materials.requireWriter(b, proof, false);
+        if (dispatch != null) requireDispatch(dispatch);
+        var nodes =
+                db.queryForList(
+                        "select id from engine.node_instance where run_id=? order by id for update",
+                        Long.class,
+                        run);
+        // Node-row contention can outlive the dispatch after the earlier run/authority check.
+        // No business material is read until this actual post-lock clock_timestamp fence passes.
+        if (dispatch != null) requireDispatch(dispatch);
+        if (node != 0) relation(run, node, attempt);
+        var attempts =
+                db.queryForList(
+                        "select a.id from engine.attempt a join engine.node_instance n on"
+                                + " n.id=a.node_instance_id where n.run_id=? order by a.id",
+                        Long.class,
+                        run);
+        var events =
+                db.queryForList(
+                        "select id from engine.run_event where run_id=? order by id",
+                        Long.class,
+                        run);
+        var scopes = materials.currentScopes(b);
+        requireComplete(b, scopes, nodes, attempts, events);
+        scopes.forEach(s -> MaterialAuthorization.require(s, proof.current(), clock));
+        proof.requireVerified();
+        var values = new LinkedHashMap<String, JsonNode>();
+        var nulls = new HashSet<String>();
+        for (var scope : scopes) {
+            var payload = materials.readCurrentValue(b, scope, proof);
+            String k = key(scope.material().kind(), scope.material().id());
+            values.put(k, payload.value());
+            if (payload.sqlNull()) nulls.add(k);
+        }
+        return new WriteView(b, new ArrayList<>(scopes), values, nulls);
+    }
+
+    private <T> T protectedAtomic(RetainedAuthorization proof, Supplier<T> work) {
+        if (proof == null) throw denied();
+        proof.requireVerified();
+        if (TransactionSynchronizationManager.isActualTransactionActive()) {
+            requireWrite(source);
+            var c = DataSourceUtils.getConnection(source);
+            try {
+                if (c.getTransactionIsolation() < java.sql.Connection.TRANSACTION_REPEATABLE_READ)
+                    throw new IllegalStateException("REPEATABLE_READ_REQUIRED");
+            } catch (java.sql.SQLException e) {
+                throw new IllegalStateException(e);
+            } finally {
+                DataSourceUtils.releaseConnection(c, source);
+            }
+            // REQUIRED joining cannot observe its caller's later commit. N2's concrete outer
+            // owners need their own retained-proof completion seam before composing writes.
+            throw new IllegalStateException("PROTECTED_WRITE_REQUIRES_TOP_LEVEL_TRANSACTION");
+        }
+        try {
+            var result =
+                    protectedTx.execute(
+                            s -> {
+                                try {
+                                    var value = work.get();
+                                    proof.requireVerified();
+                                    return value;
+                                } catch (RuntimeException | Error e) {
+                                    ((ConnectionHolder)
+                                                    TransactionSynchronizationManager.getResource(
+                                                            source))
+                                            .setRollbackOnly();
+                                    throw e;
+                                }
+                            });
+            proof.requireVerified();
+            return result;
+        } catch (RuntimeException | Error e) {
+            if (TransactionSynchronizationManager.hasResource(source))
+                ((ConnectionHolder) TransactionSynchronizationManager.getResource(source))
+                        .setRollbackOnly();
+            throw e;
+        }
+    }
+
+    private void append(WriteView view, String kind, String locator, RetainedAuthorization proof) {
+        // Later events in this same action consume facts just materialized above. Keep those real
+        // persisted scopes as direct parents instead of silently reverting to the entry snapshot.
+        var scope = materials.append(view.binding(), kind, locator, proof, view.scopes());
+        view.scopes().add(scope);
+        var payload = materials.readCurrentValue(view.binding(), scope, proof);
+        String k = key(kind, locator);
+        view.values().put(k, payload.value());
+        if (payload.sqlNull()) view.sqlNulls().add(k);
+        else view.sqlNulls().remove(k);
+    }
+
+    private long appendEvent(
+            WriteView view, String type, Object payload, RetainedAuthorization proof) {
+        int seq =
+                db.queryForObject(
+                        "update engine.run set event_seq=event_seq+1 where id=? returning"
+                            + " event_seq",
+                        Integer.class,
+                        view.binding().runId());
+        long id =
+                db.queryForObject(
+                        "insert into engine.run_event(run_id,seq,type,payload)"
+                            + " values(?,?,?,?::jsonb) returning id",
+                        Long.class,
+                        view.binding().runId(),
+                        seq,
+                        type,
+                        Json.write(payload));
+        append(view, "run-event", Long.toString(id), proof);
+        append(view, "run-state", view.binding().publicId(), proof);
+        return seq;
+    }
+
+    public int event(long run, String type, Object payload, RetainedAuthorization proof) {
+        return protectedAtomic(
+                proof, () -> (int) appendEvent(writable(run, proof), type, payload, proof));
+    }
+
+    /** Concrete insertion seam for N3. It never attaches initial authority to an existing node. */
+    public long createNode(
+            long run,
+            String nodeDefId,
+            int stepSeq,
+            String nodeType,
+            JsonNode definition,
+            RetainedAuthorization admission) {
+        requireWrite(source);
+        try {
+            AuthorityContext.requireBound(admission);
+            db.queryForObject("select id from engine.run where id=? for update", Long.class, run);
+            var b = RunAuthorityStore.load(db, run, true);
+            materials.requireWriter(b, admission, true);
+            var parents = materials.currentScopes(b);
+            parents.forEach(s -> MaterialAuthorization.require(s, admission.current(), clock));
+            // A run missing earlier material metadata cannot acquire new nodes as a repair path.
+            requireComplete(
+                    b,
+                    parents,
+                    db.queryForList(
+                            "select id from engine.node_instance where run_id=?", Long.class, run),
+                    db.queryForList(
+                            "select a.id from engine.attempt a join engine.node_instance n on"
+                                + " n.id=a.node_instance_id where n.run_id=?",
+                            Long.class,
+                            run),
+                    db.queryForList(
+                            "select id from engine.run_event where run_id=?", Long.class, run));
+            object(definition);
+            long node =
+                    db.queryForObject(
+                            "insert into"
+                                + " engine.node_instance(run_id,node_def_id,step_seq,node_type,status,definition)"
+                                + " values(?,?,?,?,'READY',?::jsonb) returning id",
+                            Long.class,
+                            run,
+                            nodeDefId,
+                            stepSeq,
+                            nodeType,
+                            Json.write(definition));
+            for (String kind : MaterialScopeStore.NODE_KINDS)
+                materials.append(b, kind, Long.toString(node), admission, parents);
+            AuthorityContext.requireBound(admission);
+            return node;
+        } catch (RuntimeException | Error e) {
+            ((ConnectionHolder) TransactionSynchronizationManager.getResource(source))
+                    .setRollbackOnly();
+            throw e;
+        }
+    }
+
+    public Map<String, Object> claim(long node, String owner, RetainedAuthorization proof) {
+        long run =
+                db.queryForObject(
+                        "select run_id from engine.node_instance where id=?", Long.class, node);
+        return protectedAtomic(proof, () -> claim(writable(run, proof), node, owner, proof));
+    }
+
+    private Map<String, Object> claim(
+            WriteView view, long node, String owner, RetainedAuthorization proof) {
+        return claim(view, node, owner, proof, null);
+    }
+
+    private boolean claimable(WriteView view, long node) {
+        long run = view.binding().runId();
+        if (!"RUNNING"
+                .equals(state(view.values(), "run-state", view.binding().publicId()).get("status")))
+            return false;
+        var row = state(view.values(), "node-state", Long.toString(node));
+        if (!Set.of("READY", "RUNNING").contains(row.get("status"))) return false;
+        if ("RUNNING".equals(row.get("status"))
+                && Boolean.TRUE.equals(
+                        db.queryForObject(
+                                "select lease_until>clock_timestamp() from engine.node_instance"
+                                        + " where id=?",
+                                Boolean.class,
+                                node))) return false;
+        var rules =
+                view.values()
+                        .get(key("run-snapshot", view.binding().publicId()))
+                        .path("definition")
+                        .path("executionRules");
+        int max = rules.path("parallel").asBoolean(true) ? rules.path("maxParallel").asInt(8) : 1;
+        if (db.queryForObject(
+                        "select count(*) from engine.node_instance where run_id=? and"
+                                + " status='RUNNING' and lease_until>clock_timestamp()",
+                        Integer.class,
+                        run)
+                >= max) return false;
+        return true;
+    }
+
+    private Map<String, Object> claim(
+            WriteView view,
+            long node,
+            String owner,
+            RetainedAuthorization proof,
+            RunDispatch dispatch) {
+        long run = view.binding().runId();
+        if (!claimable(view, node)) return null;
+        int no =
+                db.queryForObject(
+                        "select coalesce(max(attempt_no),0)+1 from engine.attempt where"
+                                + " node_instance_id=?",
+                        Integer.class,
+                        node);
+        if (no == 1) consume(view, "steps", 1, 25, proof);
+        String generation = owner + "_" + UUID.randomUUID().toString().substring(0, 8);
+        if (dispatch != null) requireDispatch(dispatch);
+        var claimArgs = new ArrayList<Object>(Arrays.asList(generation, node));
+        if (dispatch != null) {
+            claimArgs.add(dispatch.owner());
+            claimArgs.add(dispatch.generation());
+        }
+        if (db.update(
+                        "update engine.node_instance set"
+                            + " status='RUNNING',lease_owner=?,lease_until=clock_timestamp()+interval"
+                            + " '90 seconds',started_at=coalesce(started_at,now()) where id=?"
+                                + (dispatch == null ? "" : dispatchFence()),
+                        claimArgs.toArray())
+                != 1) throw new DispatchLost();
+        long attempt =
+                db.queryForObject(
+                        "insert into"
+                            + " engine.attempt(node_instance_id,attempt_no,status,idempotency_key,request_snapshot_ref,request_snapshot)"
+                            + " values(?,?,'RUNNING',?,'pending','{}'::jsonb) returning id",
+                        Long.class,
+                        node,
+                        no,
+                        Digest.sha256("node:" + node));
+        db.update(
+                "update engine.attempt set request_snapshot_ref=? where id=?",
+                "pg:attempt/" + attempt,
+                attempt);
+        append(view, "node-state", Long.toString(node), proof);
+        // These real attempt parents retain every input consumed by execute across later changes.
+        for (String kind : MaterialScopeStore.ATTEMPT_KINDS)
+            append(view, kind, Long.toString(attempt), proof);
+        appendEvent(
+                view,
+                "NODE_STARTED",
+                Map.of("nodeInstanceId", node, "attemptId", attempt, "attemptNo", no),
+                proof);
+        var result = node(view, node);
+        result.putAll(
+                db.queryForMap(
+                        "select lease_owner,lease_until from engine.node_instance where id=?",
+                        node));
+        result.put("attemptId", attempt);
+        return result;
+    }
+
+    private void relation(long run, long node, long attempt) {
+        var ids =
+                db.queryForList(
+                        "select a.id from engine.attempt a join engine.node_instance n on"
+                            + " n.id=a.node_instance_id where a.id=? and n.id=? and n.run_id=?",
+                        Long.class,
+                        attempt,
+                        node,
+                        run);
+        if (ids.size() != 1) throw denied();
+    }
+
+    public boolean commit(
+            long run,
+            long node,
+            long attempt,
+            String owner,
+            Object output,
+            RetainedAuthorization proof) {
+        return protectedAtomic(
+                proof,
+                () ->
+                        commit(
+                                writable(run, proof, node, attempt),
+                                node,
+                                attempt,
+                                owner,
+                                output,
+                                null,
+                                false,
+                                null,
+                                proof));
+    }
+
+    private boolean commit(
+            WriteView view,
+            long node,
+            long attempt,
+            String owner,
+            Object output,
+            Object error,
+            boolean defaultValue,
+            RunDispatch dispatch,
+            RetainedAuthorization proof) {
+        String fence =
+                dispatch == null
+                        ? ""
+                        : " and exists(select 1 from engine.run r where r.id=node_instance.run_id"
+                                + " and r.dispatch_owner=? and r.dispatch_generation=? and"
+                                + " r.dispatch_until>clock_timestamp() and r.status='RUNNING')";
+        var args =
+                new ArrayList<Object>(
+                        Arrays.asList(
+                                attempt,
+                                "pg:node/" + node,
+                                Json.write(output),
+                                Digest.sha256(Json.write(output)),
+                                defaultValue,
+                                Json.write(error),
+                                node,
+                                view.binding().runId(),
+                                owner));
+        if (dispatch != null) {
+            args.add(dispatch.owner());
+            args.add(dispatch.generation());
+        }
+        int changed =
+                db.update(
+                        "update engine.node_instance set"
+                            + " status='SUCCEEDED',committed_attempt_id=?,committed_output_ref=?,output=?::jsonb,output_digest=?,error=case"
+                            + " when ? then ?::jsonb else error end,ended_at=now() where id=? and"
+                            + " run_id=? and committed_attempt_id is null and status='RUNNING' and"
+                            + " lease_owner=? and lease_until>clock_timestamp()"
+                                + fence,
+                        args.toArray());
+        if (changed == 0) {
+            db.update(
+                    "insert into engine.attempt_note(node_instance_id,attempt_id,kind)"
+                            + " values(?,?,'SUPERSEDED_SUBMIT')",
+                    node,
+                    attempt);
+            return false;
+        }
+        db.update(
+                "update engine.attempt set status='SUCCEEDED',ended_at=now() where id=?", attempt);
+        if (defaultValue) append(view, "node-error", Long.toString(node), proof);
+        append(view, "node-state", Long.toString(node), proof);
+        append(view, "node-output", Long.toString(node), proof);
+        append(view, "attempt-state", Long.toString(attempt), proof);
+        appendEvent(
+                view,
+                "LOGIC_RESULT_COMMITTED",
+                Map.of("nodeInstanceId", node, "attemptId", attempt),
+                proof);
+        appendEvent(
+                view,
+                "NODE_FINISHED",
+                Map.of("nodeInstanceId", node, "status", "SUCCEEDED"),
+                proof);
+        return true;
+    }
+
+    public void fail(
+            long run,
+            long node,
+            long attempt,
+            String owner,
+            Object error,
+            RetainedAuthorization proof) {
+        protectedAtomic(
+                proof,
+                () -> {
+                    fail(
+                            writable(run, proof, node, attempt),
+                            node,
+                            attempt,
+                            owner,
+                            error,
+                            null,
+                            proof);
+                    return null;
+                });
+    }
+
+    private void fail(
+            WriteView view,
+            long node,
+            long attempt,
+            String owner,
+            Object error,
+            RunDispatch dispatch,
+            RetainedAuthorization proof) {
+        String fence =
+                dispatch == null
+                        ? ""
+                        : " and exists(select 1 from engine.run r where r.id=node_instance.run_id"
+                                + " and r.dispatch_owner=? and r.dispatch_generation=? and"
+                                + " r.dispatch_until>clock_timestamp() and r.status='RUNNING')";
+        var args =
+                new ArrayList<Object>(
+                        Arrays.asList(Json.write(error), node, view.binding().runId(), owner));
+        if (dispatch != null) {
+            args.add(dispatch.owner());
+            args.add(dispatch.generation());
+        }
+        int changed =
+                db.update(
+                        "update engine.node_instance set"
+                                + " status='FAILED',error=?::jsonb,ended_at=now() where id=? and"
+                                + " run_id=? and status='RUNNING' and lease_owner=? and"
+                                + " lease_until>clock_timestamp()"
+                                + fence,
+                        args.toArray());
+        // A lost node CAS still records the true attempt failure, but never a lost dispatch.
+        if (dispatch != null) requireDispatch(dispatch);
+        db.update(
+                "update engine.attempt set status='FAILED',error=?::jsonb,ended_at=now() where"
+                        + " id=?",
+                Json.write(error),
+                attempt);
+        append(view, "attempt-state", Long.toString(attempt), proof);
+        append(view, "attempt-error", Long.toString(attempt), proof);
+        if (changed > 0) {
+            append(view, "node-state", Long.toString(node), proof);
+            append(view, "node-error", Long.toString(node), proof);
+            appendEvent(view, "NODE_FAILED", Map.of("nodeInstanceId", node, "error", error), proof);
+        }
+    }
+
+    public void consume(
+            long run, String metric, long amount, long defaultLimit, RetainedAuthorization proof) {
+        protectedAtomic(
+                proof,
+                () -> {
+                    consume(writable(run, proof), metric, amount, defaultLimit, proof);
+                    return null;
+                });
+    }
+
+    private void consume(
+            WriteView view,
+            String metric,
+            long amount,
+            long defaultLimit,
+            RetainedAuthorization proof) {
+        var budget = budgetAfter(view, metric, amount, defaultLimit);
+        db.update(
+                "update engine.run set budget=?::jsonb where id=?",
+                Json.write(budget),
+                view.binding().runId());
+        append(view, "run-budget", view.binding().publicId(), proof);
+    }
+
+    private com.fasterxml.jackson.databind.node.ObjectNode budgetAfter(
+            WriteView view, String metric, long amount, long defaultLimit) {
+        if (!Set.of("steps", "tokens", "depth", "modelCalls").contains(metric)) throw denied();
+        var budget =
+                (com.fasterxml.jackson.databind.node.ObjectNode)
+                        view.values().get(key("run-budget", view.binding().publicId())).deepCopy();
+        String limitName =
+                switch (metric) {
+                    case "steps" -> "maxSteps";
+                    case "tokens" -> "totalTokens";
+                    case "depth" -> "maxDepth";
+                    default -> metric;
+                };
+        long limit = budget.path("limits").path(limitName).asLong(defaultLimit),
+                current = budget.path("consumed").path(metric).asLong();
+        if (amount < 0 || amount > limit || current > limit - amount)
+            throw new PlatformException(409, "BUDGET_" + metric.toUpperCase(), "运行预算已耗尽：" + metric);
+        var state = state(view.values(), "run-state", view.binding().publicId());
+        if (state.get("started_at") instanceof java.sql.Timestamp started
+                && clock.millis() - started.getTime()
+                        > budget.path("limits").path("totalDurationMs").asLong(600000))
+            throw new PlatformException(409, "BUDGET_DURATION", "运行时间预算已耗尽");
+        ((com.fasterxml.jackson.databind.node.ObjectNode) budget.path("consumed"))
+                .put(metric, current + amount);
+        return budget;
+    }
+
+    /**
+     * A fixed work value, never an authority receipt. Only this store owns the actual RR commit.
+     */
+    public record FlowClaim(
+            Map<String, Object> run,
+            Map<String, Object> node,
+            JsonNode scope,
+            String budgetExhausted) {}
+
+    public static final class DispatchLost extends RuntimeException {}
+
+    public boolean protectedRun(long run) {
+        return Boolean.TRUE.equals(
+                db.queryForObject(
+                        "select exists(select 1 from engine.run_authority where run_id=?)",
+                        Boolean.class,
+                        run));
+    }
+
+    private static String dispatchFence() {
+        return " and exists(select 1 from engine.run r where r.id=node_instance.run_id and"
+                + " r.dispatch_owner=? and r.dispatch_generation=? and"
+                + " r.dispatch_until>clock_timestamp())";
+    }
+
+    private void requireDispatch(RunDispatch dispatch) {
+        if (!Boolean.TRUE.equals(
+                db.queryForObject(
+                        "select exists(select 1 from engine.run where id=? and dispatch_owner=? and"
+                                + " dispatch_generation=? and dispatch_until>clock_timestamp())",
+                        Boolean.class,
+                        dispatch.runId(),
+                        dispatch.owner(),
+                        dispatch.generation()))) throw new DispatchLost();
+    }
+
+    private Map<String, Object> node(WriteView view, long id) {
+        var row = state(view.values(), "node-state", Long.toString(id));
+        row.put("definition", view.values().get(key("node-definition", Long.toString(id))));
+        for (String field : List.of("output", "error")) {
+            String k = key("node-" + field, Long.toString(id));
+            row.put(field, view.sqlNulls().contains(k) ? null : view.values().get(k));
+        }
+        return row;
+    }
+
+    private List<Map<String, Object>> flowNodes(WriteView view) {
+        return view.values().keySet().stream()
+                .filter(k -> k.startsWith("node-state:"))
+                .map(k -> node(view, Long.parseLong(k.substring("node-state:".length()))))
+                .sorted(Comparator.comparingLong(n -> number(n, "step_seq")))
+                .toList();
+    }
+
+    private Map<String, Object> flowRun(WriteView view) {
+        String id = view.binding().publicId();
+        var run = state(view.values(), "run-state", id);
+        for (String field : List.of("snapshot", "inputs", "budget", "version-refs"))
+            run.put(field.replace('-', '_'), view.values().get(key("run-" + field, id)));
+        return run;
+    }
+
+    private JsonNode flowScope(WriteView view) {
+        var scope = new LinkedHashMap<String, Object>();
+        scope.put("input", view.values().get(key("run-inputs", view.binding().publicId())));
+        scope.put("context", Map.of());
+        for (var node : flowNodes(view)) {
+            scope.put(
+                    node.get("node_def_id").toString(),
+                    Map.of("output", json(node.get("output")), "error", json(node.get("error"))));
+            if (node.get("error") != null) scope.put("error", json(node.get("error")));
+        }
+        return Json.tree(scope);
+    }
+
+    private void pureFlow(WriteView view) {
+        var run = flowRun(view);
+        var snapshot = json(run.get("snapshot"));
+        if (!"FULL".equals(run.get("mode"))
+                || !"TASK".equals(run.get("trigger_type"))
+                || snapshot.path("type").asText().equals("CHAT")
+                || !snapshot.path("definition").isObject()
+                || flowNodes(view).isEmpty()) throw denied();
+        for (String field :
+                List.of(
+                        "controlledReplay",
+                        "debugSnapshot",
+                        "evalCandidate",
+                        "controlledDraftId",
+                        "debugControls")) if (snapshot.hasNonNull(field)) throw denied();
+        var config = snapshot.path("config");
+        for (String field :
+                List.of(
+                        "skillRefs",
+                        "promptRefs",
+                        "modelEntryId",
+                        "modelBinding",
+                        "tools",
+                        "frozenPrompts",
+                        "dataSources")) if (presentDependency(config.get(field))) throw denied();
+        for (String field : List.of("modelRefs", "skillRefs", "promptRefs", "ontology"))
+            if (presentDependency(snapshot.path("dependencyVersions").get(field))) throw denied();
+        for (var node : flowNodes(view)) {
+            var def = json(node.get("definition"));
+            if (!Set.of("START", "END", "CODE", "CONDITION").contains(def.path("type").asText())
+                    || !def.path("type").asText().equals(node.get("node_type"))) throw denied();
+            for (String field :
+                    List.of("skillRef", "promptRef", "modelOverride", "tools", "dataSources"))
+                if (presentDependency(def.get(field))) throw denied();
+        }
+        var definitions = new LinkedHashMap<String, JsonNode>();
+        for (var def : snapshot.path("definition").path("nodes")) {
+            if (!Set.of("START", "END", "CODE", "CONDITION").contains(def.path("type").asText())
+                    || definitions.put(def.path("id").asText(), def) != null) throw denied();
+        }
+        if (definitions.size() != flowNodes(view).size()) throw denied();
+        for (var node : flowNodes(view))
+            if (!Objects.equals(definitions.get(node.get("node_def_id")), node.get("definition")))
+                throw denied();
+        if (!db.queryForList(
+                        "select id from engine.run where id=? and"
+                                + " (controlled_draft_skill_version_id is not null or"
+                                + " controlled_skill_test_version_id is not null)",
+                        Long.class,
+                        view.binding().runId())
+                .isEmpty()) throw denied();
+        if (!db.queryForList(
+                        "select id from engine.tool_call where run_id=? limit 1",
+                        Long.class,
+                        view.binding().runId())
+                .isEmpty()) throw denied();
+    }
+
+    private static boolean presentDependency(JsonNode n) {
+        return n != null && !n.isNull() && !(n.isContainerNode() && n.isEmpty());
+    }
+
+    public List<Long> startOwnedFlow(RunDispatch dispatch, RetainedAuthorization proof) {
+        return protectedAtomic(
+                proof,
+                () -> {
+                    var view = writable(dispatch.runId(), proof, 0, 0, dispatch);
+                    pureFlow(view);
+                    var run = flowRun(view);
+                    if (!Set.of("PENDING", "RUNNING").contains(run.get("status"))) return List.of();
+                    if ("PENDING".equals(run.get("status"))) {
+                        int changed =
+                                db.update(
+                                        "update engine.run set status='RUNNING' where id=? and"
+                                                + " status='PENDING' and dispatch_owner=? and"
+                                                + " dispatch_generation=? and"
+                                                + " dispatch_until>clock_timestamp()",
+                                        dispatch.runId(),
+                                        dispatch.owner(),
+                                        dispatch.generation());
+                        if (changed != 1) throw new DispatchLost();
+                        append(view, "run-state", view.binding().publicId(), proof);
+                        appendEvent(
+                                view,
+                                "RUN_STARTED",
+                                Map.of(
+                                        "runId",
+                                        view.binding().publicId(),
+                                        "triggerType",
+                                        run.get("trigger_type")),
+                                proof);
+                    }
+                    requireDispatch(dispatch);
+                    return flowNodes(view).stream()
+                            .filter(n -> Set.of("READY", "RUNNING").contains(n.get("status")))
+                            .map(n -> number(n, "id"))
+                            .toList();
+                });
+    }
+
+    private boolean prepareFlow(
+            WriteView view, long node, RetainedAuthorization proof, RunDispatch dispatch) {
+        var decision =
+                GraphRules.prepare(
+                        view.values()
+                                .get(key("run-snapshot", view.binding().publicId()))
+                                .path("definition"),
+                        node(view, node),
+                        flowNodes(view));
+        if (!Set.of("WAIT", "READY").contains(decision.state())) {
+            if (db.update(
+                            "update engine.node_instance set status=?,ended_at=now() where id=? and"
+                                    + " status='READY'"
+                                    + dispatchFence(),
+                            decision.state(),
+                            node,
+                            dispatch.owner(),
+                            dispatch.generation())
+                    > 0) {
+                append(view, "node-state", Long.toString(node), proof);
+                appendEvent(
+                        view,
+                        decision.state().equals("FAILED") ? "NODE_FAILED" : "NODE_SKIPPED",
+                        Map.of("nodeInstanceId", node, "status", decision.state()),
+                        proof);
+            }
+            return false;
+        }
+        if (decision.winner() != null) {
+            if (db.update(
+                            "update engine.node_instance set winner_node_id=? where id=? and"
+                                    + " status='READY' and winner_node_id is null"
+                                    + dispatchFence(),
+                            decision.winner(),
+                            node,
+                            dispatch.owner(),
+                            dispatch.generation())
+                    > 0) append(view, "node-state", Long.toString(node), proof);
+            for (long parent : decision.abandon())
+                if (db.update(
+                                "update engine.node_instance set status='ABANDONED',ended_at=now()"
+                                        + " where id=? and status in ('READY','RUNNING')"
+                                        + dispatchFence(),
+                                parent,
+                                dispatch.owner(),
+                                dispatch.generation())
+                        > 0) append(view, "node-state", Long.toString(parent), proof);
+        }
+        return decision.state().equals("READY");
+    }
+
+    public FlowClaim prepareAndClaimFlow(
+            long node, String owner, RunDispatch dispatch, RetainedAuthorization proof) {
+        return protectedAtomic(
+                proof,
+                () -> {
+                    var view = writable(dispatch.runId(), proof, 0, 0, dispatch);
+                    pureFlow(view);
+                    if (!"RUNNING".equals(flowRun(view).get("status"))) return null;
+                    var row = node(view, node);
+                    if (!Set.of("READY", "RUNNING").contains(row.get("status"))) return null;
+                    if ("READY".equals(row.get("status"))
+                            && !prepareFlow(view, node, proof, dispatch)) {
+                        requireDispatch(dispatch);
+                        return null;
+                    }
+                    if (!claimable(view, node)) {
+                        requireDispatch(dispatch);
+                        return null;
+                    }
+                    // Preserve the old prepare-commit window: budget failure commits prepare only.
+                    int no =
+                            db.queryForObject(
+                                    "select coalesce(max(attempt_no),0)+1 from engine.attempt where"
+                                            + " node_instance_id=?",
+                                    Integer.class,
+                                    node);
+                    if (no == 1) {
+                        try {
+                            budgetAfter(view, "steps", 1, 25);
+                        } catch (PlatformException e) {
+                            requireDispatch(dispatch);
+                            return new FlowClaim(Map.of(), Map.of(), Json.object(), e.code());
+                        }
+                    }
+                    requireDispatch(dispatch);
+                    var claimed = claim(view, node, owner, proof, dispatch);
+                    requireDispatch(dispatch);
+                    return claimed == null
+                            ? null
+                            : new FlowClaim(flowRun(view), claimed, flowScope(view), null);
+                });
+    }
+
+    public boolean commitFlow(
+            long node,
+            long attempt,
+            String owner,
+            Object output,
+            RunDispatch dispatch,
+            RetainedAuthorization proof) {
+        return commitFlow(node, attempt, owner, output, null, false, dispatch, proof);
+    }
+
+    public boolean commitDefaultFlow(
+            long node,
+            long attempt,
+            String owner,
+            Object output,
+            Object error,
+            RunDispatch dispatch,
+            RetainedAuthorization proof) {
+        return commitFlow(node, attempt, owner, output, error, true, dispatch, proof);
+    }
+
+    private boolean commitFlow(
+            long node,
+            long attempt,
+            String owner,
+            Object output,
+            Object error,
+            boolean defaultValue,
+            RunDispatch dispatch,
+            RetainedAuthorization proof) {
+        return protectedAtomic(
+                proof,
+                () -> {
+                    WriteView view;
+                    try {
+                        view = writable(dispatch.runId(), proof, node, attempt, dispatch);
+                    } catch (DispatchLost lost) {
+                        return false;
+                    }
+                    boolean result =
+                            commit(
+                                    view,
+                                    node,
+                                    attempt,
+                                    owner,
+                                    output,
+                                    error,
+                                    defaultValue,
+                                    dispatch,
+                                    proof);
+                    requireDispatch(dispatch);
+                    return result;
+                });
+    }
+
+    public void failFlow(
+            long node,
+            long attempt,
+            String owner,
+            Object error,
+            RunDispatch dispatch,
+            RetainedAuthorization proof) {
+        protectedAtomic(
+                proof,
+                () -> {
+                    WriteView view;
+                    try {
+                        view = writable(dispatch.runId(), proof, node, attempt, dispatch);
+                    } catch (DispatchLost lost) {
+                        return null;
+                    }
+                    fail(view, node, attempt, owner, error, dispatch, proof);
+                    requireDispatch(dispatch);
+                    return null;
+                });
+    }
+
+    public void stopFlowForBudget(
+            RunDispatch dispatch, RetainedAuthorization proof, String reason) {
+        if (!Set.of("BUDGET_STEPS", "BUDGET_DURATION").contains(reason))
+            throw new IllegalArgumentException("FLOW_BUDGET_REASON_REQUIRED");
+        protectedAtomic(
+                proof,
+                () -> {
+                    var view = writable(dispatch.runId(), proof, 0, 0, dispatch);
+                    pureFlow(view);
+                    if (Set.of("SUCCEEDED", "FAILED", "CANCELLED")
+                            .contains(flowRun(view).get("status"))) return null;
+                    String actual = null;
+                    try {
+                        budgetAfter(view, "steps", 1, 25);
+                    } catch (PlatformException exhausted) {
+                        actual = exhausted.code();
+                    }
+                    if (!reason.equals(actual))
+                        throw new IllegalArgumentException("FLOW_BUDGET_NOT_EXHAUSTED");
+                    if (db.update(
+                                    "update engine.run set"
+                                        + " status='FAILED',stop_reason=?,error=?::jsonb,ended_at=now()"
+                                        + " where id=? and dispatch_owner=? and"
+                                        + " dispatch_generation=? and"
+                                        + " dispatch_until>clock_timestamp()",
+                                    reason,
+                                    Json.write(Map.of("semantic", reason, "message", "运行预算已耗尽")),
+                                    dispatch.runId(),
+                                    dispatch.owner(),
+                                    dispatch.generation())
+                            != 1) throw new DispatchLost();
+                    append(view, "run-state", view.binding().publicId(), proof);
+                    append(view, "run-error", view.binding().publicId(), proof);
+                    for (var node : flowNodes(view))
+                        if (db.update(
+                                        "update engine.node_instance set"
+                                            + " status='CANCELLED',ended_at=now() where id=? and"
+                                            + " status not in"
+                                            + " ('SUCCEEDED','FAILED','SKIPPED','ABANDONED','CANCELLED')"
+                                                + dispatchFence(),
+                                        node.get("id"),
+                                        dispatch.owner(),
+                                        dispatch.generation())
+                                > 0) append(view, "node-state", node.get("id").toString(), proof);
+                    appendEvent(
+                            view,
+                            "RUN_FINISHED",
+                            Map.of("status", "FAILED", "stopReason", reason),
+                            proof);
+                    requireDispatch(dispatch);
+                    return null;
+                });
+    }
+
+    public String aggregateFlow(RunDispatch dispatch, RetainedAuthorization proof) {
+        return protectedAtomic(
+                proof,
+                () -> {
+                    var view = writable(dispatch.runId(), proof, 0, 0, dispatch);
+                    pureFlow(view);
+                    String previous = flowRun(view).get("status").toString();
+                    if (Set.of("SUCCEEDED", "FAILED", "CANCELLED").contains(previous))
+                        return previous;
+                    boolean runnable = false;
+                    for (var pending : flowNodes(view)) {
+                        var fresh = node(view, number(pending, "id"));
+                        if ("RUNNING".equals(fresh.get("status"))) runnable = true;
+                        if ("READY".equals(fresh.get("status"))
+                                && prepareFlow(view, number(fresh, "id"), proof, dispatch))
+                            runnable = true;
+                    }
+                    var nodes = flowNodes(view);
+                    String state = GraphRules.aggregate(nodes, runnable);
+                    boolean terminal = Set.of("SUCCEEDED", "FAILED", "CANCELLED").contains(state);
+                    Object output = GraphRules.aggregateOutput(nodes);
+                    if (db.update(
+                                    "update engine.run set"
+                                        + " status=?,output=?::jsonb,output_ref=?,ended_at=case"
+                                        + " when ? then now() else null end,stop_reason=case when ?"
+                                        + " then ? else stop_reason end where id=? and"
+                                        + " dispatch_owner=? and dispatch_generation=? and"
+                                        + " dispatch_until>clock_timestamp()",
+                                    state,
+                                    output == null ? null : output.toString(),
+                                    output == null
+                                            ? null
+                                            : "pg:run/" + dispatch.runId() + "/output",
+                                    terminal,
+                                    terminal,
+                                    state.equals("FAILED") ? "NODE_FAILED" : "FINAL_ANSWER",
+                                    dispatch.runId(),
+                                    dispatch.owner(),
+                                    dispatch.generation())
+                            != 1) throw new DispatchLost();
+                    append(view, "run-state", view.binding().publicId(), proof);
+                    append(view, "run-output", view.binding().publicId(), proof);
+                    if (terminal) appendEvent(view, "RUN_FINISHED", Map.of("status", state), proof);
+                    requireDispatch(dispatch);
+                    return state;
+                });
+    }
+
+    public static long number(Map<String, Object> row, String key) {
+        return ((Number) row.get(key)).longValue();
+    }
+
+    public Map<String, Object> lockRun(long id) {
+        legacy(id);
+        return db.queryForMap("select * from engine.run where id=? for update", id);
+    }
+
+    public static com.fasterxml.jackson.databind.JsonNode json(Object value) {
+        return value == null ? Json.read("{}") : Json.read(value.toString());
+    }
+
+    public void consume(long run, String metric, long amount, long defaultLimit) {
+        legacy(run);
+        atomic(
+                () -> {
+                    var row =
+                            db.queryForMap(
+                                    "select budget,started_at from engine.run where id=? for"
+                                        + " update",
+                                    run);
+                    var budget =
+                            (com.fasterxml.jackson.databind.node.ObjectNode)
+                                    json(row.get("budget"));
+                    String limitName =
+                            switch (metric) {
+                                case "steps" -> "maxSteps";
+                                case "tokens" -> "totalTokens";
+                                case "depth" -> "maxDepth";
+                                default -> metric;
+                            };
+                    long limit = budget.path("limits").path(limitName).asLong(defaultLimit),
+                            current = budget.path("consumed").path(metric).asLong();
+                    if (amount < 0 || current + amount > limit)
+                        throw new PlatformException(
+                                409, "BUDGET_" + metric.toUpperCase(), "运行预算已耗尽：" + metric);
+                    if (row.get("started_at") instanceof java.sql.Timestamp started
+                            && System.currentTimeMillis() - started.getTime()
+                                    > budget.path("limits").path("totalDurationMs").asLong(600000))
+                        throw new PlatformException(409, "BUDGET_DURATION", "运行时间预算已耗尽");
+                    if (!budget.path("consumed").isObject()) budget.set("consumed", Json.object());
+                    ((com.fasterxml.jackson.databind.node.ObjectNode) budget.path("consumed"))
+                            .put(metric, current + amount);
+                    db.update(
+                            "update engine.run set budget=?::jsonb where id=?",
+                            Json.write(budget),
+                            run);
+                    return null;
+                });
+    }
+}

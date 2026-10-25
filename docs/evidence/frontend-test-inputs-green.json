@@ -1,0 +1,27 @@
+{
+  "phase": "green",
+  "fixtureOnly": true,
+  "requests": [
+    {
+      "path": "/admin/apps/named_fixture",
+      "query": {},
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/admin/debug-inputs",
+      "query": {
+        "appDraftId": "7",
+        "afterId": "0",
+        "limit": "20"
+      },
+      "method": "GET",
+      "body": null
+    }
+  ],
+  "checks": {
+    "structuredInput": true,
+    "namedConsumer": true
+  },
+  "pageErrors": []
+}

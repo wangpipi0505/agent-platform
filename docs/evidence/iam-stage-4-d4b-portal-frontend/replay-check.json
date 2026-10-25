@@ -1,0 +1,76 @@
+{
+  "at": "2026-10-20T20:31:50.198Z",
+  "patch": {
+    "file": "docs/evidence/iam-stage-4-d4b-portal-frontend/source-fullcontext.patch",
+    "bytes": 105266,
+    "sha256": "17e24e41962e76a563a11538a235f6bb4ec99df80db112ff32ea0d10a742c24e"
+  },
+  "patchGeneration": {
+    "command": [
+      "git",
+      "-c",
+      "core.autocrlf=false",
+      "-c",
+      "core.attributesfile=G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\iam-d4b-portal-frontend\\replay-attributes",
+      "diff",
+      "--no-index",
+      "--binary",
+      "--unified=100000",
+      ".local/iam-d4b-portal-frontend/patch-before",
+      "docs/evidence/iam-stage-4-d4b-portal-frontend/frozen-overlay"
+    ],
+    "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+    "exit": 1,
+    "expectedDiffExitOne": true,
+    "binaryAppVueForExactMixedLineEndings": true
+  },
+  "commands": [
+    {
+      "command": [
+        "git",
+        "-c",
+        "core.autocrlf=false",
+        "apply",
+        "--check",
+        "-p1",
+        "--directory=docs/evidence/iam-stage-4-d4b-portal-frontend/replay-overlay-exact-raw",
+        "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\iam-stage-4-d4b-portal-frontend\\source-fullcontext.patch"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "env": {
+        "GIT_DIR": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\iam-d4b-portal-frontend\\diff-repo",
+        "GIT_WORK_TREE": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform"
+      },
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "-c",
+        "core.autocrlf=false",
+        "apply",
+        "-p1",
+        "--directory=docs/evidence/iam-stage-4-d4b-portal-frontend/replay-overlay-exact-raw",
+        "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\iam-stage-4-d4b-portal-frontend\\source-fullcontext.patch"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "env": {
+        "GIT_DIR": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\iam-d4b-portal-frontend\\diff-repo",
+        "GIT_WORK_TREE": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform"
+      },
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "all16ChangedFilesExact": true,
+  "necessaryFrontendVerified": 192,
+  "backend380InheritedWithoutPhysicalRehash": true,
+  "effective": {
+    "file": "docs/evidence/iam-stage-4-d4b-portal-frontend/source-replay-effective.json",
+    "bytes": 108245,
+    "sha256": "c6736f661c52a8c1ef5a5b8815e944096a85db53de954d6748f856e035e60f0e"
+  }
+}

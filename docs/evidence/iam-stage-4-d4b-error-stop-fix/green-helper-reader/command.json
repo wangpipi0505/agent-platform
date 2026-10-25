@@ -1,0 +1,63 @@
+{
+  "at": "2026-10-20T20:45:35.877Z",
+  "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+  "command": [
+    "node",
+    "web/node_modules/vitest/vitest.mjs",
+    "run",
+    "--root",
+    "web",
+    "tests/portal-auth.test.ts",
+    "tests/stream-auth.test.ts",
+    "tests/run-observer.test.ts",
+    "-t",
+    "D4b fix|D4b late artifact blob|D4b aborts a pending|D4b stops after reader|D4b stops named IAM 503|uses status while the transient"
+  ],
+  "source": {
+    "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/green-helper-reader/source-before.json",
+    "bytes": 108246,
+    "sha256": "4c479be6e91523c034742ddcf266b9262379488b4d778ce8a551bfcec7f946f7"
+  },
+  "overlay": [
+    {
+      "file": "web/debug-panel/events.ts",
+      "bytes": 5022,
+      "sha256": "ca3eb15381fe7c309d3b458d3c3c8fd26160ca8e8d2e98f8db05166e994f1cb1"
+    },
+    {
+      "file": "web/shared/artifact.ts",
+      "bytes": 1548,
+      "sha256": "e3cb9b4dceb9882365a3180652d39539c28a7de181aa7dfb899921175338a04d"
+    },
+    {
+      "file": "web/shared/Artifacts.vue",
+      "bytes": 1458,
+      "sha256": "4e7a2865adc19338215362de061a3733471f27295f940257221b51571b1d165a"
+    },
+    {
+      "file": "web/tests/portal-auth.test.ts",
+      "bytes": 9282,
+      "sha256": "68f8ca590233259b2aa40d38159c18ccd815d677083f110ef2bf1377090c99ac"
+    },
+    {
+      "file": "web/tests/portal-browser.mjs",
+      "bytes": 30170,
+      "sha256": "77ef255fd8b50cb5362a48a5be1a358a13fc9560dc5ac970c8ffcea634ce2ddc"
+    },
+    {
+      "file": "web/tests/run-observer.test.ts",
+      "bytes": 8236,
+      "sha256": "ed0f51e1edad4d5ff55017c2497c700de521a7555d37b37124b8b1c9f94ee38f"
+    },
+    {
+      "file": "web/tests/stream-auth.test.ts",
+      "bytes": 12177,
+      "sha256": "9786851fc724cce3226a1e29ed7703ce91676fb209d2a6251ef3ade24f08c332"
+    }
+  ],
+  "unchangedComposition": {
+    "file": "docs/evidence/iam-stage-4-d4b-portal-frontend/composition.json",
+    "bytes": 3479,
+    "sha256": "3d4e73f7080859c2664e87ccee7d21fa645a305c52bf47ceae570ca1a45fd7db"
+  }
+}

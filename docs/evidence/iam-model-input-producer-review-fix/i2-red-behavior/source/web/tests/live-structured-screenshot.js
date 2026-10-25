@@ -1,0 +1,1 @@
+async page => {await page.locator('.x6-node').filter({hasText:'START'}).first().click();await page.getByRole('textbox',{name:'输入字段名称 1',exact:true}).waitFor();await page.screenshot({path:'../docs/evidence/frontend-live-structured-2560.png',fullPage:true});return {input:await page.getByRole('textbox',{name:'输入字段名称 1',exact:true}).inputValue()};}

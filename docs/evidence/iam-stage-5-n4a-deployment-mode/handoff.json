@@ -1,0 +1,763 @@
+{
+  "status": "DONE_WITH_CONCERNS",
+  "implementationOnly": true,
+  "notSelfAcceptance": true,
+  "scope": "N4a trusted Environment deployment snapshot and irreversible legacy signer closure; N4b untouched.",
+  "report": {
+    "file": "docs/evidence/iam-stage-5-n4a-deployment-mode-report.md",
+    "bytes": 29800,
+    "sha256": "a8ca2b197831a3f04e6739cdacf253e580de50521fd09a886a82b974f0a19812"
+  },
+  "sourceBefore": {
+    "file": "docs/evidence/iam-stage-5-n4a-deployment-mode/source-before.json",
+    "bytes": 75492,
+    "sha256": "730a2b8c74caa0c47fc1244b47055d956776e3df4b2a0f125d42f4b093b92656"
+  },
+  "sourceAfter": {
+    "file": "docs/evidence/iam-stage-5-n4a-deployment-mode/source-after.json",
+    "bytes": 75715,
+    "sha256": "0dbeae6acb133e467fac95918ce911addb42b5ba55070fe502f1dcace4e8c970"
+  },
+  "targetBefore": {
+    "file": "docs/evidence/iam-stage-5-n4a-deployment-mode/target-before.json",
+    "bytes": 369117,
+    "sha256": "1a4ac516fa75fe4ffcb706db938dc05caee476f605e8b4b10aeebd7f087f9923"
+  },
+  "targetAfter": {
+    "file": "docs/evidence/iam-stage-5-n4a-deployment-mode/target-after.json",
+    "bytes": 370833,
+    "sha256": "70a01e7b910c26560580597ec1b833196cb32bc0bfb3d12248c1e60ad448f148"
+  },
+  "sourceChanges": {
+    "file": "docs/evidence/iam-stage-5-n4a-deployment-mode/source-changes.json",
+    "bytes": 4847,
+    "sha256": "a36f7793d381f60cbf9a4b53314df048c07133c7ced4c7a7377b53fe67b63494"
+  },
+  "targetChanges": {
+    "file": "docs/evidence/iam-stage-5-n4a-deployment-mode/target-changes.json",
+    "bytes": 28897,
+    "sha256": "bd93059d6d009d5a9f2bb7e384bbaf361ac08275546e888da926b155cb1833dc"
+  },
+  "patch": {
+    "file": "docs/evidence/iam-stage-5-n4a-deployment-mode/change.patch",
+    "bytes": 139085,
+    "sha256": "f59e65cb3ed40a367244c480687b4799a99c7b980fadc36a954fe14aa88e6b8f"
+  },
+  "patchCheck": {
+    "sourceBefore": 367,
+    "sourceAfter": 368,
+    "sourceAdded": 1,
+    "sourceModified": 5,
+    "sourceDeleted": 0,
+    "physicalBeforeEqual": 2165,
+    "replayByteEqual": 368,
+    "patch": {
+      "file": "docs/evidence/iam-stage-5-n4a-deployment-mode/change.patch",
+      "bytes": 139085,
+      "sha256": "f59e65cb3ed40a367244c480687b4799a99c7b980fadc36a954fe14aa88e6b8f"
+    },
+    "gitApplyCheck": 0,
+    "gitApply": 0,
+    "targetBefore": 1798,
+    "targetAfter": 1806,
+    "targetAdded": 8,
+    "targetModified": 23,
+    "targetDeleted": 0,
+    "jarChanges": [
+      {
+        "kind": "modified",
+        "file": "admin-common/target/admin-common-0.1.0-SNAPSHOT-tests.jar",
+        "bytes": 236449,
+        "sha256": "c6ccefcd5cade5ff11caba1719aeec11039af66ad9e6521b732c41fb8cb45ba7",
+        "before": {
+          "file": "admin-common/target/admin-common-0.1.0-SNAPSHOT-tests.jar",
+          "bytes": 224108,
+          "sha256": "5e879609d0cbf78cc20a88ac76bbc0436716f82ace037aa1e97198f53b6f2f48"
+        },
+        "category": "test-fixture JAR"
+      }
+    ]
+  },
+  "protection": {
+    "startedAt": "2026-10-20T16:10:21.705Z",
+    "endedAt": "2026-10-20T16:14:38.375Z",
+    "protectedFiles": 109089,
+    "protectedBytes": 8718696454,
+    "prior101048RootVerifiedBasisReused": true,
+    "authorizedPriorUpdates": 6,
+    "newStaticCaptured": 8041,
+    "unauthorizedChanges": 0,
+    "unauthorizedAdditions": 0,
+    "runners": 28,
+    "runnerChanges": 0,
+    "indexes": 8,
+    "indexChanges": 0,
+    "sourceTargetFrozenFiles": 2174,
+    "sourceTargetDifferences": 0,
+    "sourceTargetAddedAfterFreeze": 0,
+    "sourceTargetMissingAfterFreeze": 0,
+    "registeredStages": 3,
+    "brief": {
+      "file": "docs/evidence/iam-stage-5-n4a-deployment-mode-brief.md",
+      "bytes": 11891,
+      "sha256": "bbed10df38458b2ea6c14b99736dcb86ffa6828615f31b0e060c09cbeab3e96d"
+    },
+    "before": {
+      "file": ".local/iam-n4a-deployment-mode/before.json",
+      "bytes": 29026375,
+      "sha256": "bd6fde9c5fba11af76b2f347621238fb46654c544fe83e43ca961dc578fdc37a"
+    },
+    "patch": {
+      "file": "docs/evidence/iam-stage-5-n4a-deployment-mode/change.patch",
+      "bytes": 139085,
+      "sha256": "f59e65cb3ed40a367244c480687b4799a99c7b980fadc36a954fe14aa88e6b8f"
+    },
+    "originalDesign": {
+      "file": "G:/207/项目/算法重组工具/文档/设计/详细设计/智能体构建/智能体构建平台详细设计-整合版.md",
+      "bytes": 239660,
+      "sha256": "3c72b2062beb2e8b377f2384843ea935a0074b50c0063e5106566bbd8dcd0c4f"
+    }
+  },
+  "testAudit": {
+    "file": "docs/evidence/iam-stage-5-n4a-deployment-mode/test-audit.json",
+    "bytes": 82668,
+    "sha256": "c7b888598d88631e35ae446678e7cd0c93d372fc382c59f811724bd345bb5327"
+  },
+  "coverage": {
+    "uniqueCases": [
+      {
+        "class": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "name": "configuredDomainBusinessRolesAreAcceptedAndReservedRolesRemainForbidden",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[1]",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[2]",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[3]",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[4]",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[5]",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[6]",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[7]",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[8]",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[9]",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[10]",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[11]",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[12]",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[13]",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[14]",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[15]",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[16]",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[17]",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[18]",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[19]",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[20]",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[21]",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[22]",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[23]",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[24]",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[25]",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[26]",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[27]",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[28]",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[29]",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[30]",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[31]",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[32]",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[33]",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[34]",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "name": "portalCeilingsAreRequiredAndStrictlyBoundByTheDeploymentBinder",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "name": "explicitGatewayDevPreservesIntegration",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final02"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "name": "explicitTestProfileMayUseOnlyLiteralLoopbackTrustEndpointsAndIamStaysClosed",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "name": "explicitDevelopmentModesKeepLegacyDecoder(String)[1]",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final02"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "name": "explicitDevelopmentModesKeepLegacyDecoder(String)[2]",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final02"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.ServiceTicketProviderTest",
+        "name": "resolverRequiresOwnDeploymentCredentialAndTransportCannotSendItToJwks",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.ServiceTicketProviderTest",
+        "name": "actorCannotMintAnIamServiceTicketEvenWhenLegacyKeyExists",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.ServiceTicketProviderTest",
+        "name": "sharedStrictJwksParsingRejectsPrivateAndDuplicateKeys",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.ServiceTokensDeploymentModeTest",
+        "name": "actualLegacySnapshotSurvivesJvmMutationsAndContextClose",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final02"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.ServiceTokensDeploymentModeTest",
+        "name": "actualIamOverridesJvmTestAndClosesAllLegacySignersBeforeListener",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.ServiceTokensDeploymentModeTest",
+        "name": "invalidDeploymentDoesNotRegisterPermission",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.ServiceTokensDeploymentModeTest",
+        "name": "unregisteredJvmTestCannotIssue",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.ServiceTokensDeploymentModeTest",
+        "name": "legacyThenIamClosesSigningAcrossThreads",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.authority.ServiceTokensDeploymentModeTest",
+        "name": "isolatedReceiverExplicitlyRegistersIamWithoutOpeningProductionChain",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final02"
+      },
+      {
+        "class": "cn.agentplatform.common.CommonBoundaryTest",
+        "name": "readsOnlyVerifiedJwtClaimsAndChecksRoles",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.CommonBoundaryTest",
+        "name": "validatesInternalTicketAndPreservesActorBoundary",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.CommonBoundaryTest",
+        "name": "usesCanonicalJsonForContentIdentity",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.common.CommonBoundaryTest",
+        "name": "rejectsMissingAuthenticatedIdentity",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final01"
+      },
+      {
+        "class": "cn.agentplatform.engine.infra.RuntimeClientsPublishedHttpTest",
+        "name": "oversizedBodyCancelsBeforeUnboundedAllocation",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final02"
+      },
+      {
+        "class": "cn.agentplatform.engine.infra.RuntimeClientsPublishedHttpTest",
+        "name": "unknownServiceNeverSignsOrSends",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final02"
+      },
+      {
+        "class": "cn.agentplatform.engine.infra.RuntimeClientsPublishedHttpTest",
+        "name": "headersThenUnfinishedBodyHasCompleteDeadlineAndClientCloses",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final02"
+      },
+      {
+        "class": "cn.agentplatform.engine.infra.RuntimeClientsPublishedHttpTest",
+        "name": "numericIdsVersionKeyAndStoredDigestAreAllValidated",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final02"
+      },
+      {
+        "class": "cn.agentplatform.engine.infra.RuntimeClientsPublishedHttpTest",
+        "name": "proofExpiringWhileRealExecutorQueuedNeverSendsPublishedGet",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final02"
+      },
+      {
+        "class": "cn.agentplatform.engine.infra.RuntimeClientsPublishedHttpTest",
+        "name": "publicVerifiedObjectAndUnboundCaptureCannotSend",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final02"
+      },
+      {
+        "class": "cn.agentplatform.engine.infra.RuntimeClientsPublishedHttpTest",
+        "name": "completeResponseStillRequiresOriginalBoundFrame",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final02"
+      },
+      {
+        "class": "cn.agentplatform.engine.infra.RuntimeClientsPublishedHttpTest",
+        "name": "appHttpFailureSemanticsRemainDistinct",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final02"
+      },
+      {
+        "class": "cn.agentplatform.engine.infra.RuntimeClientsPublishedHttpTest",
+        "name": "explicitLegacyConstructionKeepsKnownAppSkillModelRoutes",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final02"
+      },
+      {
+        "class": "cn.agentplatform.engine.infra.RuntimeClientsPublishedHttpTest",
+        "name": "iamActorGetPostStreamAndUnknownTargetsNeverSignOrSend",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final02"
+      },
+      {
+        "class": "cn.agentplatform.engine.infra.RuntimeClientsPublishedHttpTest",
+        "name": "redirectIsNotFollowedOrRetried",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final02"
+      },
+      {
+        "class": "cn.agentplatform.engine.infra.RuntimeClientsPublishedHttpTest",
+        "name": "disconnectedPublishedGetIsNeverAutomaticallyResent",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final02"
+      },
+      {
+        "class": "cn.agentplatform.engine.infra.RuntimeClientsPublishedHttpTest",
+        "name": "forwardReturningAfterProofExpiryCannotSendAppRequest",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final02"
+      },
+      {
+        "class": "cn.agentplatform.engine.infra.RuntimeClientsPublishedHttpTest",
+        "name": "trustedIamDoesNotFallBackWhenJvmModeSaysTest",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final02"
+      },
+      {
+        "class": "cn.agentplatform.engine.infra.RuntimeClientsPublishedHttpTest",
+        "name": "nonIdentityEncodingIsRejectedWithoutAutomaticDecompression",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final02"
+      },
+      {
+        "class": "cn.agentplatform.engine.infra.RuntimeClientsPublishedHttpTest",
+        "name": "boundMainForwardsExactOperationGrantOriginAndNeverPortalSource",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final02"
+      },
+      {
+        "class": "cn.agentplatform.engine.infra.RuntimeClientsPublishedHttpTest",
+        "name": "malformedJsonIsUnavailableWithoutBodyEcho",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final02"
+      },
+      {
+        "class": "cn.agentplatform.engine.infra.RuntimeClientsPublishedHttpTest",
+        "name": "trustedModeRejectsMissingCapabilityAndUnsafeOrigins",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final02"
+      },
+      {
+        "class": "cn.agentplatform.engine.infra.RuntimeClientsPublishedHttpTest",
+        "name": "unsafeCodeAndWrongRootNeverSend",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final02"
+      },
+      {
+        "class": "cn.agentplatform.engine.infra.RuntimeClientsPublishedHttpTest",
+        "name": "interruptionAfterHeadersCancelsRequestAndPreservesInterrupt",
+        "failed": false,
+        "skipped": false,
+        "stage": "iam-stage-5-n4a-final02"
+      }
+    ],
+    "uniqueCaseCount": 73,
+    "singleRun": false,
+    "currentProductionIdenticalAcrossFinal01Final02": true,
+    "originalFinal01": {
+      "actualTests": 53,
+      "passed": 48,
+      "failed": 5
+    },
+    "final02": {
+      "actualTests": 25,
+      "common": 5,
+      "engine": 20,
+      "failures": 0
+    },
+    "notSumOfAttempts": true,
+    "fixtureChanges": {
+      "file": "docs/evidence/iam-stage-5-n4a-deployment-mode/final01-to-final02-fixture-changes.json",
+      "bytes": 1295,
+      "sha256": "a2d9074840a7d95d8732de04f46d6d772d2e035782085bdd315c22ce165a5c9c"
+    }
+  },
+  "actualRounds": [
+    {
+      "stage": "iam-stage-5-n4a-red01",
+      "exitCode": 1,
+      "totals": {
+        "tests": 1,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0
+      },
+      "raw": {
+        "file": "docs/evidence/iam-stage-5-n4a-deployment-mode/iam-stage-5-n4a-red01/raw.log",
+        "bytes": 13449,
+        "sha256": "a5df87ccac2381b3ceb3f8acb5655a09050b36164e2acd1dc8f41d718df2c8f8"
+      },
+      "running": [
+        "cn.agentplatform.common.authority.ServiceTokensDeploymentModeTest"
+      ]
+    },
+    {
+      "stage": "iam-stage-5-n4a-final01",
+      "exitCode": 1,
+      "totals": {
+        "tests": 53,
+        "failures": 5,
+        "errors": 0,
+        "skipped": 0
+      },
+      "raw": {
+        "file": "docs/evidence/iam-stage-5-n4a-deployment-mode/iam-stage-5-n4a-final01/raw.log",
+        "bytes": 788680,
+        "sha256": "f87a1b0b1697c8eeb61e38b80e61ddea09b10c42696fb3c0942001aba63935b2"
+      },
+      "running": [
+        "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "cn.agentplatform.common.authority.ServiceTicketProviderTest",
+        "cn.agentplatform.common.authority.ServiceTokensDeploymentModeTest",
+        "cn.agentplatform.common.CommonBoundaryTest"
+      ]
+    },
+    {
+      "stage": "iam-stage-5-n4a-final02",
+      "exitCode": 0,
+      "totals": {
+        "tests": 25,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "raw": {
+        "file": "docs/evidence/iam-stage-5-n4a-deployment-mode/iam-stage-5-n4a-final02/raw.log",
+        "bytes": 9956,
+        "sha256": "1eea27600f6b8cc30693e00bc115ade5614a726f7c0d07fcfcc05696057e4ea8"
+      },
+      "running": [
+        "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "cn.agentplatform.common.authority.ServiceTokensDeploymentModeTest",
+        "cn.agentplatform.engine.infra.RuntimeClientsPublishedHttpTest"
+      ]
+    }
+  ],
+  "final01ToFinal02FixtureDelta": {
+    "file": "docs/evidence/iam-stage-5-n4a-deployment-mode/final01-to-final02-fixture.patch",
+    "bytes": 14451,
+    "sha256": "035eb4300b302e536a89a37aabe1583a90b00907d3f1defae4a2f905d0022537"
+  },
+  "upstream": {
+    "file": "docs/evidence/iam-stage-5-n4a-deployment-mode/upstream/reading-manifest.json",
+    "bytes": 5305,
+    "sha256": "6db16e545661d11f58c550e570aa248f04f6643002ab9e12c93459a2a419fa7b"
+  },
+  "resources": {
+    "file": "docs/evidence/iam-stage-5-n4a-deployment-mode/resources.json",
+    "bytes": 3754,
+    "sha256": "fb441193eca343cb603a66d49764945e2345bec57688f2e108623d60036472b5"
+  },
+  "toolNoise": {
+    "file": "docs/evidence/iam-stage-5-n4a-deployment-mode/tool-noise.md",
+    "bytes": 2939,
+    "sha256": "42121d32635e906e252e224c2711be53efa80b38366f0615389b658a4be050e2"
+  },
+  "automaticPolicyRejection": {
+    "action": "PowerShell here-string write to .local/iam-n4a-deployment-mode/upstream-evidence.mjs followed by node invocation",
+    "workdir": "G:/207/项目/算法重组工具/代码/agent-platform",
+    "target": ".local/iam-n4a-deployment-mode/upstream-evidence.mjs",
+    "statedReason": "blocked by policy",
+    "executed": false,
+    "fileWrittenByRejectedAction": false,
+    "businessFailure": false,
+    "safeCompletion": "apply_patch created the exact local evidence script; node invoked separately and completed. No permission escalation or credentials in command.",
+    "actualReturnSummary": "exec_command failed: CreateProcess { message: Rejected(... rejected: blocked by policy) }",
+    "actualReturnExcerpt": "rejected: blocked by policy",
+    "renderedErrorPrefix": "exec_command failed: CreateProcess",
+    "fullUntruncatedRawAvailable": false,
+    "originalToolOutputDisplayTruncated": true,
+    "excerptEvidence": "docs/evidence/iam-stage-5-n4a-deployment-mode/tool-error-excerpts.txt"
+  },
+  "productionIamStillClosed": true,
+  "noDbOrMainService": true,
+  "sourceTargetReturned": true,
+  "returnedAt": "2026-10-20T16:15:57.202Z",
+  "pending": "Root independent audit, fresh Spec/Quality review, any shared index updates; no further implementer writes."
+}

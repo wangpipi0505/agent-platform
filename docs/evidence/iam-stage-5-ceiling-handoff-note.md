@@ -1,0 +1,13 @@
+# E 实施前必须闭合的完整初始上限来源
+
+准备记录，不是已实现接口或功能验收。当前生产IAM仍闭锁。
+
+批准的Task5要求 `run_authority.initial_ceiling` 和材料scope保存受理时完整、可信的原始上限，不能把当前已收窄Actor或旧guard_ctx当历史上限。现C的VerifiedAuthority九字段只暴露current actor、operation.ceilingSha256等，DelegationRef不携带完整上限；HttpCurrentAuthorityClient在验签时读取并核initial_ceiling，但返回对象没有该完整值。仅凭这个不可逆hash不能恢复完整集合。
+
+E正式移交前须明确完整值如何从**实际已验且与current grant/operation/hash绑定的签名证据**进入业务受理事务。可核对方向是：普通请求中从已验service JWT的initial_ceiling提取，并复核其规范hash等于当次current operation.ceilingSha256；由接收守卫保存为仅本请求的明确metadata，在真实run/fact/model受理时同事务写入side table。普通`bind(VerifiedAuthority)`无此证明时不能补current.actor作为初始值；后台读取既有受信PG初始值，再与本次签名operation hash及当前主体/上限复核。这个方向可保持原VerifiedAuthority公开形状，但**目前没有这样的额外context接口**，不得在后续代码中臆造调用。
+
+也可以选择更窄的保留已验mapping产物方式，但必须给出具体接口/序列化边界与原调用点兼容，交root/独立review；不得从未验JWT解码、请求body、Actor.attributes或历史guard_ctx填值。不要仅因两个签名字符串一致就声称真实IAM持久Grant锚点已验收。
+
+有限验收必须包含：原上限region A/B、当前仅A时，持久initial_ceiling和由原材料派生的完整要求仍保留A/B，不能被收窄成A来使历史读取变绿；原labels并集不减少。错grant/主体/hash、缺完整值、payload与scope间事务失败均默认拒绝/回滚。合法同scope和后台新DELEGATED恢复须可用。实际原响应permit/opening ceiling与完整历史要求的关系还需在E/联合流按真实材料与连接核对，C holder单测不能替代。
+
+本记录用于root防止跨Task数据形状遗漏，尚未修改C/D2类型、原四契约、迁移或数据库。

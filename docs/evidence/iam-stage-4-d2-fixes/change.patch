@@ -1,0 +1,198 @@
+diff --git a/admin-common/src/test/java/cn/agentplatform/common/authority/LoopbackAuthority.java b/admin-common/src/test/java/cn/agentplatform/common/authority/LoopbackAuthority.java
+index 1711cf4..442ab80 100644
+--- a/admin-common/src/test/java/cn/agentplatform/common/authority/LoopbackAuthority.java
++++ b/admin-common/src/test/java/cn/agentplatform/common/authority/LoopbackAuthority.java
+@@ -114,6 +114,7 @@ public final class LoopbackAuthority implements AutoCloseable {
+     public Clock clock(){return clock;}
+     public RSAKey policySigningKey(){return policyKey;}
+     public RSAKey authoritySigningKey(){return key;}
++    public int grantCount(){return grants.size();}
+     public int authorityCalls(){return requests.size();}
+     public int policyCalls(){return policyCalls.get();}
+     public int resolverToAuthorityCalls(){return resolverToAuthority.get();}
+@@ -176,10 +177,12 @@ public final class LoopbackAuthority implements AutoCloseable {
+             JsonNode subject=verifySubject(token,integration);
+             Map<String,Object> details=integration?Json.mapper().convertValue(subject,new com.fasterxml.jackson.core.type.TypeReference<Map<String,Object>>(){}):Map.of();
+             String sourceHash=Digest.sha256(token);
+-            Grant original=integration&&externalPolicy!=null?grants.values().stream().filter(g->sourceHash.equals(g.integration.get("source_token_sha256"))).findFirst().orElse(null):null;
++            // A verified authentication survives JWT text/header/JSON representation changes.
++            // Keep its first version/ceiling in the existing finite Grant store; no new cache.
++            Grant original=integration&&externalPolicy!=null?originalAuthentication(subject):null;
+             PolicyResolveResult actual=integration&&externalPolicy!=null?externalPolicy(details,original==null?null:original.policyVersion,original==null?null:original.ceiling):null;
+-            if(actual!=null)details.put("source_token_sha256",sourceHash);
+-            Actor ceiling=actual==null?(explicitPortalActor==null?ceiling():explicitPortalActor):policyActor(actual);
++            if(actual!=null)details.put("source_token_sha256",sourceHash); // Diagnostic binding, never authentication identity.
++            Actor ceiling=actual==null?(explicitPortalActor==null?ceiling():explicitPortalActor):(original==null?initialIntegrationCeiling(subject,actual):original.ceiling);
+             var grant=new Grant("grant-"+(++serial),ceiling,call.resource(),clock.instant().plusSeconds(300),integration?"INTEGRATION":"PORTAL",AuthorityProtocol.time(subject,"exp"),version,integration?(actual==null?policyVersion:actual.policyVersion()):null,details);
+             // The initial external result is the only policy read for this exchange. Subsequent
+             // decisions query with this persisted grant version, never with caller-supplied overrides.
+@@ -217,7 +220,17 @@ public final class LoopbackAuthority implements AutoCloseable {
+             if(externalPolicy==null){AuthorityProtocol.same("app-a",AuthorityProtocol.text(c,"app_code"));AuthorityProtocol.same("biz-a",AuthorityProtocol.text(c,"biz_system_code"));AuthorityProtocol.same("alice",AuthorityProtocol.text(c,"user_id"));
+             if(!c.path("credential_id").isIntegralNumber()||c.path("credential_id").longValue()!=7)throw AuthorityProtocol.denied();
+             AuthorityProtocol.same(Digest.sha256("policy-v1"),AuthorityProtocol.text(c,"policy_digest"));}
+-            else {for(String k:List.of("app_code","biz_system_code","user_id","tenant_id","sub","policy_digest","origin"))AuthorityProtocol.text(c,k);if(!c.path("credential_id").isIntegralNumber()||!c.path("credential_id").canConvertToLong()||c.path("credential_id").longValue()<1)throw AuthorityProtocol.denied();}
++            else {
++                // This finite legacy HMAC source has its own fixed issuer; it is not a production IAM.
++                AuthorityProtocol.same(new JOSEObjectType("JWT"),jws.getHeader().getType());
++                AuthorityProtocol.same(ServiceTokens.ISSUER,AuthorityProtocol.text(c,"iss"));
++                bounded(c,"jti",128);bounded(c,"tenant_id",128);bounded(c,"app_code",64);bounded(c,"biz_system_code",64);bounded(c,"user_id",128);bounded(c,"sub",64);bounded(c,"origin",2048);
++                AuthorityProtocol.hash(AuthorityProtocol.text(c,"policy_digest"));
++                if(!c.path("credential_id").isIntegralNumber()||!c.path("credential_id").canConvertToLong()||c.path("credential_id").longValue()<1)throw AuthorityProtocol.denied();
++                var issued=AuthorityProtocol.time(c,"iat");var expires=AuthorityProtocol.time(c,"exp");
++                if(issued.isAfter(clock.instant())||!expires.isAfter(issued)||(c.has("nbf")&&AuthorityProtocol.time(c,"nbf").isAfter(clock.instant())))throw AuthorityProtocol.denied();
++                sourceIntegrationActor(c); // Strict claims and reserved identity bindings before any PG query.
++            }
+         }else{
+             if(!jws.verify(new RSASSAVerifier(portalKey.toRSAPublicKey())))throw AuthorityProtocol.denied();
+             AuthorityProtocol.same("user",AuthorityProtocol.text(c,"token_use"));AuthorityProtocol.same("portal-web",AuthorityProtocol.text(c,"client_id"));
+@@ -225,6 +238,41 @@ public final class LoopbackAuthority implements AutoCloseable {
+         if(!(integration&&externalPolicy!=null)){AuthorityProtocol.same(explicitPortalActor==null?"tenant-a":explicitPortalActor.tenantId(),AuthorityProtocol.text(c,"tenant_id"));AuthorityProtocol.same(explicitPortalActor==null?"alice":explicitPortalActor.principalId(),AuthorityProtocol.text(c,"sub"));}
+         if(!AuthorityProtocol.time(c,"exp").isAfter(clock.instant()))throw AuthorityProtocol.expired();return c;
+     }
++    private static String bounded(JsonNode c,String key,int max){String value=AuthorityProtocol.text(c,key);if(value.length()>max)throw AuthorityProtocol.denied();return value;}
++    private static Actor sourceIntegrationActor(JsonNode c){
++        var actor=AuthorityProtocol.actor(c);String biz=AuthorityProtocol.text(c,"biz_system_code"),user=AuthorityProtocol.text(c,"user_id");
++        AuthorityProtocol.same(IntegrationClaims.principal(biz,user),actor.principalId());
++        AuthorityProtocol.same(Set.of(biz),actor.attributes().get("bizSystemCode"));AuthorityProtocol.same(Set.of(user),actor.attributes().get("userId"));
++        return actor;
++    }
++    private Grant originalAuthentication(JsonNode subject){
++        String issuer=AuthorityProtocol.text(subject,"iss"),jti=AuthorityProtocol.text(subject,"jti");
++        var original=grants.values().stream().filter(g->g.origin.equals("INTEGRATION")&&issuer.equals(g.integration.get("iss"))&&jti.equals(g.integration.get("jti"))).findFirst().orElse(null);
++        if(original!=null){
++            var first=Json.tree(original.integration);
++            // Same identity may only be another representation, never another binding, lifetime
++            // or source ceiling. Actor parsing compares role/attribute sets independent of JSON order.
++            for(String k:List.of("iss","jti","tenant_id","sub","credential_id","app_code","biz_system_code","user_id","origin","policy_digest","token_use","aud","iat","nbf","exp"))AuthorityProtocol.same(first.get(k),subject.get(k));
++            AuthorityProtocol.same(sourceIntegrationActor(first),sourceIntegrationActor(subject));
++        }
++        return original;
++    }
++    private static Actor initialIntegrationCeiling(JsonNode subject,PolicyResolveResult policy){
++        var source=sourceIntegrationActor(subject);var upper=policyActor(policy);
++        AuthorityProtocol.same(AuthorityProtocol.subject(source),AuthorityProtocol.subject(upper));
++        var roles=new TreeSet<>(source.roles());roles.retainAll(upper.roles());roles.removeIf(IntegrationClaims::platformRole);
++        var attributes=new TreeMap<String,Set<String>>();
++        // AuthorityProtocol.attrs admits region as the permission attribute; reserved ownership
++        // is exact and dataLabels are obligations. Missing/empty permissions stay empty.
++        for(var entry:source.attributes().entrySet()){
++            String name=entry.getKey();if(Set.of("dataLabels","bizSystemCode","userId").contains(name))continue;
++            var values=new TreeSet<>(entry.getValue());values.retainAll(upper.attributes().getOrDefault(name,Set.of()));attributes.put(name,values);
++        }
++        for(String name:List.of("bizSystemCode","userId")){AuthorityProtocol.same(source.attributes().get(name),upper.attributes().get(name));attributes.put(name,source.attributes().get(name));}
++        var labels=new TreeSet<>(source.attributes().getOrDefault("dataLabels",Set.of()));labels.addAll(upper.attributes().getOrDefault("dataLabels",Set.of()));attributes.put("dataLabels",labels);
++        var result=new Actor(source.tenantId(),source.principalId(),roles,attributes);
++        AuthorityProtocol.within(source,result);AuthorityProtocol.within(upper,result);return result;
++    }
+     JsonNode service(String token)throws Exception {
+         var jwt=JWSObject.parse(token);if(!jwt.verify(new RSASSAVerifier(key.toRSAPublicKey())))throw AuthorityProtocol.denied();
+         var c=AuthorityResponseVerifier.object(jwt.getPayload().toBytes());if(!AuthorityProtocol.time(c,"exp").isAfter(clock.instant()))throw AuthorityProtocol.expired();return c;
+diff --git a/app-management/src/test/java/cn/agentplatform/app/application/IntegrationPolicyResolverHttpTest.java b/app-management/src/test/java/cn/agentplatform/app/application/IntegrationPolicyResolverHttpTest.java
+index aa0ed96..a0f2170 100644
+--- a/app-management/src/test/java/cn/agentplatform/app/application/IntegrationPolicyResolverHttpTest.java
++++ b/app-management/src/test/java/cn/agentplatform/app/application/IntegrationPolicyResolverHttpTest.java
+@@ -159,7 +159,103 @@ class IntegrationPolicyResolverHttpTest {
+         var issued=admin("POST","/admin/apps/"+APP+"/integration/credentials","/admin/apps/{code}/integration/credentials",resource,Json.write(body));assertThat(issued.statusCode()).as(issued.body()).isEqualTo(200);
+         assertThat(db.queryForObject("select policy_revision from app.integration_credential where tenant_id=? and app_code=? and biz_system_code='issued'",Long.class,TENANT,APP)).isEqualTo(1);
+     }
+-    static String integrationToken(String digest){var c=fixture.integrationClaims();c.put("tenant_id",TENANT);c.put("sub",IntegrationClaims.principal(BIZ,"alice"));c.put("app_code",APP);c.put("biz_system_code",BIZ);c.put("user_id","alice");c.put("credential_id",id);c.put("policy_digest",digest);return fixture.integration(c);}
++    static Map<String,Object> sourceClaims(String digest){
++        var c=fixture.integrationClaims();c.put("iss",ServiceTokens.ISSUER);c.put("tenant_id",TENANT);c.put("sub",IntegrationClaims.principal(BIZ,"alice"));c.put("app_code",APP);c.put("biz_system_code",BIZ);c.put("user_id","alice");c.put("credential_id",id);c.put("policy_digest",digest);
++        c.put("roles",List.of("reader"));c.put("attributes",Map.of("region",List.of("A"),"dataLabels",List.of("source-only"),"bizSystemCode",List.of(BIZ),"userId",List.of("alice")));return c;
++    }
++    static String integrationToken(String digest){return fixture.integration(sourceClaims(digest));}
++    static ServiceCall integrationCall(){return new ServiceCall("engine","proxy.engine.get.RunController.status",new ResourceBinding("run","r-test",Digest.sha256("snapshot-v1")));}
++    static com.fasterxml.jackson.databind.JsonNode ticketClaims(ServiceTicket ticket){return Json.read(new String(Base64.getUrlDecoder().decode(ticket.value().split("\\.")[1]),java.nio.charset.StandardCharsets.UTF_8));}
++    static Map<String,Object> widePolicy(){return Map.of("claimLimits",Map.of("principalIds",List.of("alice",LONG_USER),"roles",List.of("reader","writer","ADMIN"),"attributes",Map.of("region",List.of("A","B"),"dataLabels",List.of("restricted"))),"allowedOrigins",List.of("https://embed.example.invalid"));}
++    static String padBitsVariant(String token)throws Exception{
++        String alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";String result=token.substring(0,token.length()-1)+alphabet.charAt(alphabet.indexOf(token.charAt(token.length()-1))+1);
++        var original=com.nimbusds.jose.JWSObject.parse(token);var changed=com.nimbusds.jose.JWSObject.parse(result);
++        assertThat(changed.getSignature().decode()).isEqualTo(original.getSignature().decode());assertThat(changed.getPayload().toBytes()).isEqualTo(original.getPayload().toBytes());assertThat(result).isNotEqualTo(token);return result;
++    }
++    @org.junit.jupiter.params.ParameterizedTest
++    @org.junit.jupiter.params.provider.ValueSource(strings={"pad-bits","reordered-claims"})
++    void stableAuthenticationRejectsEquivalentOldTokenAfterSamePolicyRevision(String representation)throws Exception{
++        String digest=Json.read(resolve(requestBody("alice")).body()).path("policyDigest").asText();var claims=sourceClaims(digest);String original=fixture.integration(claims);
++        String equivalent=representation.equals("pad-bits")?padBitsVariant(original):fixture.integration(new TreeMap<>(claims));assertThat(equivalent).isNotEqualTo(original);
++        try(var gateway=fixture.client("gateway");var engine=fixture.client("engine")){
++            var call=integrationCall();int before=queries.get();var ticket=gateway.exchange(original,call);assertThat(queries.get()-before).isEqualTo(1);
++            before=queries.get();var current=engine.authorize(ticket.value(),call);assertThat(queries.get()-before).isEqualTo(1);
++
++            assertThat(update(policy("alice")).statusCode()).isEqualTo(200);assertThat(Json.read(resolve(requestBody("alice")).body()).path("policyDigest").asText()).isEqualTo(digest);
++            int grants=fixture.grantCount();before=queries.get();assertThatThrownBy(()->gateway.exchange(equivalent,call)).isInstanceOf(PlatformException.class);assertThat(queries.get()-before).isEqualTo(1);assertThat(fixture.grantCount()).isEqualTo(grants);
++            before=queries.get();assertThatThrownBy(()->gateway.exchange(original,call)).isInstanceOf(PlatformException.class);assertThat(queries.get()-before).isEqualTo(1);
++            before=queries.get();assertThatThrownBy(()->gateway.resume(current.delegation(),call)).isInstanceOf(PlatformException.class);assertThat(queries.get()-before).isEqualTo(1);
++            before=queries.get();assertThatThrownBy(()->engine.authorize(ticket.value(),call)).isInstanceOf(PlatformException.class);assertThat(queries.get()-before).isEqualTo(1);assertThat(fixture.grantCount()).isEqualTo(grants);
++            var fresh=new LinkedHashMap<>(claims);fresh.put("jti",UUID.randomUUID().toString());before=queries.get();var next=gateway.exchange(fixture.integration(fresh),call);assertThat(queries.get()-before).isEqualTo(1);assertThat(fixture.grantCount()).isEqualTo(grants+1);
++            before=queries.get();assertThat(engine.authorize(next.value(),call).actor().roles()).containsExactly("reader");assertThat(queries.get()-before).isEqualTo(1);
++        }
++        assertThat(fixture.resolverToAuthorityCalls()).isZero();
++    }
++    @Test void externalGrantKeepsNarrowSourceClaimsAndUnionsLabelsThroughEveryDecision()throws Exception{
++        assertThat(update(widePolicy()).statusCode()).isEqualTo(200);String digest=Json.read(resolve(requestBody("alice")).body()).path("policyDigest").asText();var claims=sourceClaims(digest);claims.put("roles",List.of("reader","ADMIN"));
++        try(var gateway=fixture.client("gateway");var engine=fixture.client("engine")){
++            var call=integrationCall();int before=queries.get();var ticket=gateway.exchange(fixture.integration(claims),call);assertThat(queries.get()-before).isEqualTo(1);
++            before=queries.get();var current=engine.authorize(ticket.value(),call);assertThat(queries.get()-before).isEqualTo(1);
++            before=queries.get();var resumed=gateway.resume(current.delegation(),call);assertThat(queries.get()-before).isEqualTo(1);
++            before=queries.get();var resumedCurrent=engine.authorize(resumed.value(),call);assertThat(queries.get()-before).isEqualTo(1);
++            before=queries.get();var repeated=gateway.exchange(fixture.integration(new TreeMap<>(claims)),call);assertThat(queries.get()-before).isEqualTo(1);
++            org.assertj.core.api.SoftAssertions.assertSoftly(soft->{
++                for(var candidate:List.of(ticket,resumed,repeated)){
++                    var n=ticketClaims(candidate);for(var actor:List.of(n,n.get("initial_ceiling"))){
++                        soft.assertThat(actor.path("roles").toString()).isEqualTo("[\"reader\"]");
++                        soft.assertThat(actor.path("attributes").path("region").toString()).isEqualTo("[\"A\"]");
++                        soft.assertThat(actor.path("attributes").path("dataLabels")).containsExactlyInAnyOrder(Json.tree("source-only"),Json.tree("restricted"));
++                        soft.assertThat(actor.path("attributes").path("bizSystemCode").toString()).isEqualTo("[\"partner\"]");soft.assertThat(actor.path("attributes").path("userId").toString()).isEqualTo("[\"alice\"]");
++                    }
++                }
++                for(var actor:List.of(current.actor(),resumedCurrent.actor())){soft.assertThat(actor.roles()).containsExactly("reader");soft.assertThat(actor.attributes().get("region")).containsExactly("A");soft.assertThat(actor.attributes().get("dataLabels")).containsExactlyInAnyOrder("source-only","restricted");}
++            });
++        }
++        assertThat(fixture.resolverToAuthorityCalls()).isZero();
++    }
++    @Test void emptySourcePermissionsAreNeverReplenishedFromPolicy()throws Exception{
++        assertThat(update(widePolicy()).statusCode()).isEqualTo(200);String digest=Json.read(resolve(requestBody("alice")).body()).path("policyDigest").asText();
++        try(var gateway=fixture.client("gateway");var engine=fixture.client("engine")){
++            for(boolean explicitEmptyRegion:List.of(false,true)){
++                var claims=sourceClaims(digest);claims.put("roles",List.of());var attributes=new LinkedHashMap<String,Object>();attributes.put("bizSystemCode",List.of(BIZ));attributes.put("userId",List.of("alice"));if(explicitEmptyRegion)attributes.put("region",List.of());claims.put("attributes",attributes);
++                int before=queries.get();var ticket=gateway.exchange(fixture.integration(claims),integrationCall());assertThat(queries.get()-before).isEqualTo(1);
++                var initial=ticketClaims(ticket).path("initial_ceiling");assertThat(initial.path("roles")).isEmpty();assertThat(initial.path("attributes").path("region")).isEmpty();assertThat(initial.path("attributes").path("dataLabels").toString()).isEqualTo("[\"restricted\"]");
++                before=queries.get();var current=engine.authorize(ticket.value(),integrationCall());assertThat(queries.get()-before).isEqualTo(1);assertThat(current.actor().roles()).isEmpty();assertThat(current.actor().attributes().getOrDefault("region",Set.of())).isEmpty();
++            }
++        }
++    }
++    @Test void malformedSourceAuthenticationRejectsBeforePolicyAndConsumesNoGrant()throws Exception{
++        String digest=Json.read(resolve(requestBody("alice")).body()).path("policyDigest").asText();
++        try(var gateway=fixture.client("gateway")){
++            var valid=sourceClaims(digest);String signed=fixture.integration(valid);int signatureStart=signed.lastIndexOf('.')+1;
++            String wrongSignature=signed.substring(0,signatureStart)+(signed.charAt(signatureStart)=='A'?'B':'A')+signed.substring(signatureStart+1);
++            assertSourceTokenDeniedWithoutQuery(gateway,wrongSignature);assertSourceTokenDeniedWithoutQuery(gateway,fixture.sign(valid,fixture.authoritySigningKey(),"JWT"));
++            for(String field:List.of("iss","jti","roles","attributes")){
++                var missing=sourceClaims(digest);missing.remove(field);assertSourceDeniedWithoutQuery(gateway,missing);
++                var wrong=sourceClaims(digest);wrong.put(field,7);assertSourceDeniedWithoutQuery(gateway,wrong);
++            }
++            for(Object jti:List.of(""," ","j".repeat(129),List.of("jti"))){var c=sourceClaims(digest);c.put("jti",jti);assertSourceDeniedWithoutQuery(gateway,c);}
++            var issuer=sourceClaims(digest);issuer.put("iss","wrong-issuer");assertSourceDeniedWithoutQuery(gateway,issuer);
++            var subject=sourceClaims(digest);subject.put("sub","other");assertSourceDeniedWithoutQuery(gateway,subject);
++            for(var attributes:List.of(Map.of("unknown",List.of("A")),Map.of("bizSystemCode",List.of("other"),"userId",List.of("alice")),Map.of("bizSystemCode",List.of(BIZ),"userId",List.of("other")),Map.of("region",List.of(1),"bizSystemCode",List.of(BIZ),"userId",List.of("alice")))){var c=sourceClaims(digest);c.put("attributes",attributes);assertSourceDeniedWithoutQuery(gateway,c);}
++        }
++    }
++    static void assertSourceDeniedWithoutQuery(HttpCurrentAuthorityClient gateway,Map<String,Object> claims){
++        assertSourceTokenDeniedWithoutQuery(gateway,fixture.integration(claims));
++    }
++    static void assertSourceTokenDeniedWithoutQuery(HttpCurrentAuthorityClient gateway,String token){
++        int before=queries.get(),grants=fixture.grantCount();assertThatThrownBy(()->gateway.exchange(token,integrationCall())).isInstanceOf(PlatformException.class);assertThat(queries.get()).isEqualTo(before);assertThat(fixture.grantCount()).isEqualTo(grants);
++    }
++    @Test void sameAuthenticationCannotChangeBindingsTimesOrOriginalCeiling()throws Exception{
++        String digest=Json.read(resolve(requestBody("alice")).body()).path("policyDigest").asText();var claims=sourceClaims(digest);
++        try(var gateway=fixture.client("gateway")){
++            gateway.exchange(fixture.integration(claims),integrationCall());
++            for(String field:List.of("tenant_id","sub","app_code","biz_system_code","user_id","credential_id","origin","policy_digest","iat","nbf","exp","roles","attributes")){
++                var changed=new LinkedHashMap<>(claims);changed.put(field,switch(field){case "credential_id"->id+1;case "iat","nbf"->((Number)claims.get(field)).longValue()-1;case "exp"->((Number)claims.get(field)).longValue()+1;case "roles"->List.of("reader","writer");case "attributes"->Map.of("region",List.of("A","B"),"dataLabels",List.of("source-only"),"bizSystemCode",List.of(BIZ),"userId",List.of("alice"));default->"changed";});assertSourceDeniedWithoutQuery(gateway,changed);
++            }
++        }
++    }
++
+     @Test void realResolverBackedGrantsFailAfterRevisionAndExplicitNewAuthenticationRecovers()throws Exception{
+         String digest=Json.read(resolve(requestBody("alice")).body()).path("policyDigest").asText();String subject=integrationToken(digest);
+         var call=new ServiceCall("engine","proxy.engine.get.RunController.status",new ResourceBinding("run","r-test",Digest.sha256("snapshot-v1")));

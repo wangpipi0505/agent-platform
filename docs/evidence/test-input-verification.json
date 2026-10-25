@@ -1,0 +1,118 @@
+{
+  "frozenAt": "2026-10-20T06:06:45.5329938+08:00",
+  "designSha256": "3c72b2062beb2e8b377f2384843ea935a0074b50c0063e5106566bbd8dcd0c4f",
+  "moduleChecks": [
+    {
+      "module": "app-management",
+      "tests": 35,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "finished": "2026-10-20T06:04:50+08:00",
+      "log": "docs/evidence/test-input-app-management-full.log"
+    },
+    {
+      "module": "engine-runtime",
+      "tests": 147,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "finished": "2026-10-20T06:06:10+08:00",
+      "log": "docs/evidence/test-input-engine-runtime-full.log"
+    },
+    {
+      "module": "monitor",
+      "tests": 18,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "finished": "2026-10-20T06:04:42+08:00",
+      "log": "docs/evidence/test-input-monitor-full.log"
+    },
+    {
+      "module": "platform-gateway",
+      "tests": 15,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "finished": "2026-10-20T05:57:22+08:00",
+      "owner": "root",
+      "log": ".local/test-input-routes-green.log"
+    }
+  ],
+  "sourceFiles": [
+    {
+      "path": "app-management/src/main/java/cn/agentplatform/app/application/DraftMetadataService.java",
+      "sha256": "f89341ca3f70779f42fcc4689a01e78d8e7e77a8b4ee256fc94c435696cd7568"
+    },
+    {
+      "path": "app-management/src/main/java/cn/agentplatform/app/api/DraftMetadataController.java",
+      "sha256": "bc1a56f634b72af182dc683d86b3f505bda1035739bd7e3d7991d8532791a8a8"
+    },
+    {
+      "path": "app-management/src/test/java/cn/agentplatform/app/application/DraftMetadataHttpTest.java",
+      "sha256": "ac3376d05927c75c488c83323a110cc1ea4d07f7503bd3d9d0dbe59d18ceb79a"
+    },
+    {
+      "path": "engine-runtime/src/main/resources/db/migration/V214__named_test_inputs.sql",
+      "sha256": "3322b6a7e9dacd0bd07605cba89ce1bf8f768e4de2fc2bd951082e23f641fc52"
+    },
+    {
+      "path": "engine-runtime/src/main/java/cn/agentplatform/engine/application/TestInputService.java",
+      "sha256": "ea33664be951bb2e8e50bc6e03d278ed4c00cb41f9f814a6d0e1ae2b3598d393"
+    },
+    {
+      "path": "engine-runtime/src/main/java/cn/agentplatform/engine/api/TestInputController.java",
+      "sha256": "f24e5ecac0194ae70c4978d169b51bd72a23c84de67cd0b359896d0db519f6c8"
+    },
+    {
+      "path": "engine-runtime/src/main/java/cn/agentplatform/engine/infra/TestInputClient.java",
+      "sha256": "d203521eaefc26c0cc3da5ce1b002cd3721b6db456276016edda0f6c050b1ef5"
+    },
+    {
+      "path": "engine-runtime/src/main/java/cn/agentplatform/engine/domain/InputDeclarations.java",
+      "sha256": "a3c850ced7c647bf9bcf224322d8f33c808fe122a71c173ef6b2d200a642ea65"
+    },
+    {
+      "path": "engine-runtime/src/test/java/cn/agentplatform/engine/infra/TestInputHttpTest.java",
+      "sha256": "fc8a028390928b41cb19ad6b49f0fa0ea1a2a6e5a6e48afb4f1ebeb865d55e9d"
+    },
+    {
+      "path": "engine-runtime/src/test/java/cn/agentplatform/engine/domain/InputDeclarationsTest.java",
+      "sha256": "316f753a84987e6ad79d7686779768e4a91a41cb0eb530159f0964b703a3be96"
+    },
+    {
+      "path": "engine-runtime/src/test/scripts/test-input-e2e.mjs",
+      "sha256": "eb0d3ada78c33a90ed1f5a225edf6151580976353d66525bf7d516e7a1fc7eb8"
+    },
+    {
+      "path": "engine-runtime/src/test/scripts/TestInputMigrations.java",
+      "sha256": "8ec6ef401817f32e811301c3f405e76806253d640b09694ec55deb34bd59d026"
+    },
+    {
+      "path": "monitor/src/main/resources/db/migration/V502__promoted_dataset_provenance.sql",
+      "sha256": "149617c42e470f5bbe9ec1786145bcf1d38b081682d9913ca6664c4fec6f34bd"
+    },
+    {
+      "path": "monitor/src/main/java/cn/agentplatform/monitor/application/DatasetService.java",
+      "sha256": "e32b80f3e1793caa1c9f7fd83a46a7478fefa19add35496a89220d0185c9f550"
+    },
+    {
+      "path": "monitor/src/main/java/cn/agentplatform/monitor/api/DatasetController.java",
+      "sha256": "970f9e36d14ab11546b97204510088ed793b8c513d8add3177412aa526bbe161"
+    },
+    {
+      "path": "monitor/src/test/java/cn/agentplatform/monitor/application/DatasetHttpTest.java",
+      "sha256": "01d08cfecf33704d7c578817b5aa65d43cb1af3fb04ce85ac98044caf7b6e1ac"
+    },
+    {
+      "path": "platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java",
+      "sha256": "85481cbf467bf441f844527536ac0289fcf8fa7d722f39199fe342d888d35086"
+    },
+    {
+      "path": "platform-gateway/src/test/java/cn/agentplatform/gateway/domain/RoutesTest.java",
+      "sha256": "af96366c8a848bcfbb5c99e7514717412e15cba9df00da91628d042a7b5b152b"
+    }
+  ],
+  "scope": "backend increment only; no full-project aggregate claim; existing development services not redeployed"
+}

@@ -1,0 +1,3 @@
+async page => {
+ await page.getByRole('link',{name:'发布集成',exact:true}).click();const response=page.waitForResponse(r=>r.url().endsWith('/publish/precheck')&&r.request().method()==='POST');await page.getByRole('button',{name:'运行发布预检'}).click();const result=await (await response).json();if(result.code!=='OK'||result.data.passed)throw new Error('Expected real gate to block');const commit=page.getByRole('button',{name:'确认发布版本'});await commit.waitFor();if(!await commit.isDisabled())throw new Error('Blocked candidate has enabled publish');return {gate:result.data.result,groups:result.data.report.checks.length,commitDisabled:true};
+}

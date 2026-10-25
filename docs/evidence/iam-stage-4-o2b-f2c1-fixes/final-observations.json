@@ -1,0 +1,56 @@
+{
+  "children": 3,
+  "childExitZero": 3,
+  "junitTests": 8,
+  "realTlsSessionsFromCases": 4,
+  "sessionCountBasis": "single-writer1 + reentrant-writer1 + retention2",
+  "summaries": [
+    {
+      "file": ".local/iam-o2b-f2c1-fixes/peers/reentrant-writer-43519aba-e391-4a01-981e-7e3a9fafe6e6/summary.properties",
+      "values": {
+        "group": "reentrant-writer",
+        "completed": "true"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-fixes/peers/reentrant-writer-43519aba-e391-4a01-981e-7e3a9fafe6e6/writer.properties",
+      "values": {
+        "reentrantAttempted": "true",
+        "innerGeneratorCalls": "0",
+        "heldBytes": "88342871",
+        "outerAndSequentialExited": "true"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-fixes/peers/retention-57a808b8-56e6-46c9-98d3-7092d1b3a9a7/retention.properties",
+      "values": {
+        "heldBytes": "176685742",
+        "thirdDenied": "true",
+        "actualWorkersExited": "true"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-fixes/peers/retention-57a808b8-56e6-46c9-98d3-7092d1b3a9a7/summary.properties",
+      "values": {
+        "group": "retention",
+        "completed": "true"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-fixes/peers/single-writer-03e4471e-f7ce-4c45-95c7-571f785c7586/summary.properties",
+      "values": {
+        "group": "single-writer",
+        "completed": "true"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-fixes/peers/single-writer-03e4471e-f7ce-4c45-95c7-571f785c7586/writer.properties",
+      "values": {
+        "secondGeneratorCalls": "0",
+        "heldBytes": "88342871",
+        "firstCrossThreadExited": "true",
+        "exceptionThenSequentialWrite": "true"
+      }
+    }
+  ]
+}

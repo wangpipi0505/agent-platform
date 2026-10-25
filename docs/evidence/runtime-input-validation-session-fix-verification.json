@@ -1,0 +1,79 @@
+{
+  "frozenAt": "2026-10-20T06:35:54.6774400+08:00",
+  "scope": "P1 ChatSessions pre-reservation input validation only; no deployment",
+  "previousEvidence": "docs/evidence/runtime-input-validation-verification.json",
+  "previousReview": "docs/evidence/review-runtime-input-validation.md",
+  "previousTestSha256": "2fe0285d6f848209327f9c5edeea8ac0fae2a3fc44de3adf5a05e304d78579ab",
+  "designSha256": "3c72b2062beb2e8b377f2384843ea935a0074b50c0063e5106566bbd8dcd0c4f",
+  "checks": [
+    {
+      "skipped": 0,
+      "errors": 0,
+      "failures": 7,
+      "name": "session-red",
+      "tests": 35
+    },
+    {
+      "skipped": 0,
+      "errors": 0,
+      "failures": 0,
+      "name": "session-green",
+      "tests": 39
+    },
+    {
+      "skipped": 0,
+      "errors": 0,
+      "failures": 0,
+      "name": "engine-full",
+      "tests": 365
+    }
+  ],
+  "files": [
+    {
+      "path": "engine-runtime/src/main/java/cn/agentplatform/engine/application/ChatSessions.java",
+      "sha256": "3cd96db53994eb07a0a3f0d34d0a03c5b57e82f2d9a7e846940ac3cda28f12ea"
+    },
+    {
+      "path": "engine-runtime/src/test/java/cn/agentplatform/engine/infra/RunInputValidationPostgresTest.java",
+      "sha256": "67fdaf99e18eacc483a158ce2532cc6259d8de7b5912ca3ec61c642b49a00ff4"
+    },
+    {
+      "path": "docs/evidence/runtime-input-validation-session-fix.md",
+      "sha256": "e981f70cd86a07430d180e001be60b714cffd6834fb145573cd1a79072896be6"
+    },
+    {
+      "path": "docs/evidence/runtime-input-validation-session-contracts.log",
+      "sha256": "f3790f517d3887be5c977eb865b94c8c8fca45e9f110485a22b503cffd568d6d"
+    },
+    {
+      "path": "docs/evidence/runtime-input-validation-session-format.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/evidence/runtime-input-validation-session-full.log",
+      "sha256": "3e5fe6af044cf1ea5a2f16c2a31093f62ad78269f7278a8862294c705f3424f3"
+    },
+    {
+      "path": "docs/evidence/runtime-input-validation-session-green.log",
+      "sha256": "495a4a590b5460c517ef87ceeb7c5e0e90f03eb5bf271d02b1b0940a9795cbdf"
+    },
+    {
+      "path": "docs/evidence/runtime-input-validation-session-red.log",
+      "sha256": "0999898bafaa62692f35e0a86467729f3fd594bc6646006442674d4966bb5133"
+    }
+  ],
+  "readOnlyDependencies": [
+    {
+      "path": "engine-runtime/src/main/java/cn/agentplatform/engine/application/RunService.java",
+      "sha256": "93b64f4dbd6a78e2b9a65a788a5c6ab6c5911fae73455142aaa28f913c39d24e"
+    },
+    {
+      "path": "engine-runtime/src/main/java/cn/agentplatform/engine/application/FlowDriver.java",
+      "sha256": "a0e65396eb52818a091b33cb1606053b0ddc4969381cace0b2b0f9e8b407c563"
+    },
+    {
+      "path": "engine-runtime/src/main/java/cn/agentplatform/engine/domain/InputDeclarations.java",
+      "sha256": "d7e3ea02fc12fb6574513fabc759fd978c2c42b4c3c340e9bfb46207644b5e89"
+    }
+  ]
+}

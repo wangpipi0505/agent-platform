@@ -1,0 +1,157 @@
+{
+  "status": "FIXER_COMPLETE_FROZEN_REVIEW_PENDING",
+  "schema": "File identity: project-relative file, bytes integer, sha256 lowercase hex; manifest rows as arrays; inventory is object with count and files.",
+  "sourceBefore": {
+    "count": 608,
+    "file": ".local/iam-o2b-e-fixes/source-before.json",
+    "bytes": 116139,
+    "sha256": "b89023b56cf78945a739ac953a0c4b8867bb92bc31ff72d46c1f96bdf893aca3"
+  },
+  "sourceAfter": {
+    "count": 608,
+    "file": ".local/iam-o2b-e-fixes/source-after.json",
+    "bytes": 116139,
+    "sha256": "303ec0625e9b8491d834cbd0ce27a38c0dcffab77104e333b38f960e102a5adf"
+  },
+  "targetBefore": {
+    "count": 2148,
+    "file": ".local/iam-o2b-e-fixes/target-before.json",
+    "bytes": 447925,
+    "sha256": "ce1a10735815197b171f17d439063241d186995b63bfe3b31b3ba8f8ac003adf"
+  },
+  "targetAfter": {
+    "count": 2148,
+    "file": ".local/iam-o2b-e-fixes/target-after.json",
+    "bytes": 447924,
+    "sha256": "30422b7bcf37c2e31ef6c596ced94543d432bf847bde17b513640d6dba403f51"
+  },
+  "finiteTargetOverlay": {
+    "count": 530,
+    "file": ".local/iam-o2b-e-fixes/finite-target-overlay.json",
+    "bytes": 117204,
+    "sha256": "d20251233b9f12f65556d086cb68823016cc1f1958fa32e053ae12d2c9c960fb"
+  },
+  "finalEpoch": {
+    "count": 608,
+    "file": ".local/iam-o2b-e-fixes/iam-stage-o2b-e-fixes-write-corrected/source-epoch.json",
+    "bytes": 116139,
+    "sha256": "303ec0625e9b8491d834cbd0ce27a38c0dcffab77104e333b38f960e102a5adf"
+  },
+  "lastEpoch": {
+    "count": 608,
+    "file": ".local/iam-o2b-e-fixes/iam-stage-o2b-e-fixes-write-corrected/source-epoch.json",
+    "bytes": 116139,
+    "sha256": "303ec0625e9b8491d834cbd0ce27a38c0dcffab77104e333b38f960e102a5adf"
+  },
+  "lastActualRunning": [
+    "cn.agentplatform.engine.application.PortalChildEventsHttpTest"
+  ],
+  "resolvedVerification": {
+    "file": "docs/evidence/iam-stage-4-o2b-e-fixes/verification.json",
+    "bytes": 2497,
+    "sha256": "bf165c4c761c877f2d6fdb79c004ac5397abb8c3c783643647dfb7ef2393811c"
+  },
+  "testOnlyCorrection": {
+    "file": "docs/evidence/iam-stage-4-o2b-e-fixes/inheritance.json",
+    "bytes": 2415,
+    "sha256": "f47aa8959fb4c22b1efba68c5bd05537d17dd4e1c9bf72dd2e9d649c134d36d8"
+  },
+  "unchangedLimits": {
+    "requestHeaderBytes": 32768,
+    "frameBytes": 270437,
+    "responsePoolBytes": 16777216,
+    "readerPermits": 2,
+    "workspaceBudgetBytes": 201326592
+  },
+  "finalCommand": {
+    "file": ".local/iam-o2b-e-fixes/iam-stage-o2b-e-fixes-write-corrected/command.json",
+    "bytes": 459,
+    "sha256": "5db9983caf25e61a30f2a0b7436faae6c7026b2d19ecdfc5f9c9812234eeb278"
+  },
+  "finalRaw": {
+    "file": ".local/iam-o2b-e-fixes/iam-stage-o2b-e-fixes-write-corrected/raw.log",
+    "bytes": 7751,
+    "sha256": "85bb5a5b7368575d21d325ae247da3500f914a673f910205c4b9a0bf0148b0cd"
+  },
+  "initialFinalCommand": {
+    "file": ".local/iam-o2b-e-fixes/iam-stage-o2b-e-fixes-final/command.json",
+    "bytes": 726,
+    "sha256": "4ae694825cebcf514ed93ddbc9e946fa94b5ad3840b09ac968bc7c73ea4d976f"
+  },
+  "initialFinalRaw": {
+    "file": ".local/iam-o2b-e-fixes/iam-stage-o2b-e-fixes-final/raw.log",
+    "bytes": 10660,
+    "sha256": "5db6d06e61f0f166441cc1ac7ed0b5996cbbf082158282630147281a78632ca4"
+  },
+  "testResults": {
+    "file": "docs/evidence/iam-stage-4-o2b-e-fixes/test-results.json",
+    "bytes": 4518,
+    "sha256": "1303af9c0a805320ef924359592fb67863710f19ad3ce05296890476a8db7bfa"
+  },
+  "inheritance": {
+    "file": "docs/evidence/iam-stage-4-o2b-e-fixes/inheritance.json",
+    "bytes": 2415,
+    "sha256": "f47aa8959fb4c22b1efba68c5bd05537d17dd4e1c9bf72dd2e9d649c134d36d8"
+  },
+  "sourceDelta": {
+    "count": 2,
+    "file": "docs/evidence/iam-stage-4-o2b-e-fixes/source-delta.json",
+    "bytes": 442,
+    "sha256": "e84dcab2cabad7b492ce30d6b15106b25014af185a07c0ad071091cc5f3e3771"
+  },
+  "patch": {
+    "file": "docs/evidence/iam-stage-4-o2b-e-fixes/source.patch",
+    "bytes": 19201,
+    "sha256": "29c81d8fb18b3a13972114970df7de9043a07a711cf1c1625ddd7a28a2df18d2"
+  },
+  "replayCommands": {
+    "count": 6,
+    "file": "docs/evidence/iam-stage-4-o2b-e-fixes/replay-commands.json",
+    "bytes": 32711,
+    "sha256": "71a3c7b6fa9a593009ac25ec172583e1f406d40ebbb408439c1bb18f96dea343"
+  },
+  "replayRoot": ".local/iam-o2b-e-fixes/replay",
+  "replayComplete": {
+    "file": ".local/iam-o2b-e-fixes/replay-complete.json",
+    "bytes": 778,
+    "sha256": "3eeb1cfdb3da35ad9d0d1a6c944b1fd84ee508dd21012e11f93b1cd963e964ca"
+  },
+  "journal": {
+    "file": ".local/iam-o2b-e-fixes/journal.jsonl",
+    "bytes": 7346,
+    "sha256": "7eae85d5c42a866d21235e8147d1be326e033a2e03628e94cbbd734a2e8601b5"
+  },
+  "verification": {
+    "file": "docs/evidence/iam-stage-4-o2b-e-fixes/verification.json",
+    "bytes": 2497,
+    "sha256": "bf165c4c761c877f2d6fdb79c004ac5397abb8c3c783643647dfb7ef2393811c"
+  },
+  "ownInventory": {
+    "file": "docs/evidence/iam-stage-4-o2b-e-fixes/own-inventory.json",
+    "soleExcludedSelf": true,
+    "includesPrivateGit": true,
+    "identityProvidedInFixerFinal": true
+  },
+  "report": {
+    "file": "docs/evidence/iam-stage-4-o2b-e-fixes-report.md",
+    "bytes": 13206,
+    "sha256": "79a441cf962b8654f018648b92f8c77dc750ea28271d47d7db0fb32aa2399952"
+  },
+  "sourceWrites": [
+    "engine-runtime/src/main/java/cn/agentplatform/engine/application/PortalRunEventsService.java",
+    "engine-runtime/src/test/java/cn/agentplatform/engine/application/PortalChildEventsHttpTest.java"
+  ],
+  "ownedRoots": [
+    ".local/iam-o2b-e-fixes",
+    "docs/evidence/iam-stage-4-o2b-e-fixes",
+    "docs/evidence/iam-stage-4-o2b-e-fixes-report.md",
+    ".tools/iam-o2b-efix-*"
+  ],
+  "writeAuthority": {
+    "source": "returned/frozen",
+    "target": "returned/frozen",
+    "localEvidenceHelpersReport": "returned/frozen",
+    "noFurtherFixerWrites": true
+  },
+  "limits": "Three final passes inherited plus one corrected failed write testcase, not one all-green final4. Negative WINDOW pre-prefix CapacityFailure and CAPACITY write/flush faults injected on actual minted borrow; not BUFFER_LIMIT pressure. E fix only; E Accepted still requires reviewer/root approval; F/TLS/decoder/public SSE/production capacity unfinished."
+}

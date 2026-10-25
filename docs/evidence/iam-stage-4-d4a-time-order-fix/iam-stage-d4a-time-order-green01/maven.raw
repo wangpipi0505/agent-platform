@@ -1,0 +1,68 @@
+[INFO] Scanning for projects...
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Build Order:
+[INFO] 
+[INFO] agent-platform                                                     [pom]
+[INFO] admin-common                                                       [jar]
+[INFO] 
+[INFO] ------------------< cn.agentplatform:agent-platform >-------------------
+[INFO] Building agent-platform 0.1.0-SNAPSHOT                             [1/2]
+[INFO]   from pom.xml
+[INFO] --------------------------------[ pom ]---------------------------------
+[INFO] 
+[INFO] --- enforcer:3.5.0:enforce (default) @ agent-platform ---
+[INFO] Rule 0: org.apache.maven.enforcer.rules.version.RequireJavaVersion passed
+[INFO] 
+[INFO] -------------------< cn.agentplatform:admin-common >--------------------
+[INFO] Building admin-common 0.1.0-SNAPSHOT                               [2/2]
+[INFO]   from admin-common\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- enforcer:3.5.0:enforce (default) @ admin-common ---
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ admin-common ---
+[INFO] Copying 0 resource from src\main\resources to target\classes
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.0:compile (default-compile) @ admin-common ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 54 source files with javac [debug parameters release 21] to target\classes
+[INFO] /G:/207/��Ŀ/�㷨���鹤��/����/agent-platform/admin-common/src/main/java/cn/agentplatform/common/Json.java: ĳЩ�����ļ�ʹ�û򸲸����ѹ�ʱ�� API��
+[INFO] /G:/207/��Ŀ/�㷨���鹤��/����/agent-platform/admin-common/src/main/java/cn/agentplatform/common/Json.java: �й���ϸ��Ϣ, ��ʹ�� -Xlint:deprecation ���±��롣
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ admin-common ---
+[INFO] skip non existing resourceDirectory G:\207\��Ŀ\�㷨���鹤��\����\agent-platform\admin-common\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.14.0:testCompile (default-testCompile) @ admin-common ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 25 source files with javac [debug parameters release 21] to target\test-classes
+[INFO] /G:/207/��Ŀ/�㷨���鹤��/����/agent-platform/admin-common/src/test/java/cn/agentplatform/common/authority/GatewayRunAuthorizationTest.java: ĳЩ�����ļ�ʹ����δ�����򲻰�ȫ�Ĳ�����
+[INFO] /G:/207/��Ŀ/�㷨���鹤��/����/agent-platform/admin-common/src/test/java/cn/agentplatform/common/authority/GatewayRunAuthorizationTest.java: �й���ϸ��Ϣ, ��ʹ�� -Xlint:unchecked ���±��롣
+[INFO] 
+[INFO] --- jar:3.4.2:test-jar (finite-test-fixtures) @ admin-common ---
+[INFO] Building jar: G:\207\��Ŀ\�㷨���鹤��\����\agent-platform\admin-common\target\admin-common-0.1.0-SNAPSHOT-tests.jar
+[INFO] 
+[INFO] --- surefire:3.5.3:test (default-test) @ admin-common ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running cn.agentplatform.common.authority.PortalSessionAuthorizationTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.789 s -- in cn.agentplatform.common.authority.PortalSessionAuthorizationTest
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Summary for agent-platform 0.1.0-SNAPSHOT:
+[INFO] 
+[INFO] agent-platform ..................................... SUCCESS [  0.230 s]
+[INFO] admin-common ....................................... SUCCESS [  7.707 s]
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  8.193 s
+[INFO] Finished at: 2026-10-21T03:57:05+08:00
+[INFO] ------------------------------------------------------------------------

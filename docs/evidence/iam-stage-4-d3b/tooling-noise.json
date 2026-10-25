@@ -1,0 +1,11 @@
+{
+  "helper": ".local/iam-d3b/summarize.mjs",
+  "attempt": 1,
+  "exitCode": 1,
+  "error": "TypeError: Cannot read properties of undefined (reading 'matchAll')",
+  "cause": "Initial evidence helper traversed source pom.xml along with Surefire XML; pom.xml has no testsuite element.",
+  "correction": "Parse only actual reports/TEST-*.xml archived for Running classes.",
+  "testRun": false,
+  "sourceTargetChanged": false,
+  "priorEvidenceOverwritten": false
+}

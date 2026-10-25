@@ -1,0 +1,244 @@
+diff --git a/docs/evidence/algorithm-process-runner-fixes-v3.md b/docs/evidence/algorithm-process-runner-fixes-v3.md
+new file mode 100644
+index 0000000..c0c8208
+--- /dev/null
++++ b/docs/evidence/algorithm-process-runner-fixes-v3.md
+@@ -0,0 +1,27 @@
++# 算法进程 runner 第三轮窄修复：有界异步 PowerShell
++
++2026-10-20，依据 root 对 v3 同线程阻塞实证的明确授权，仅将 runner 的 PowerShell 执行改成 Node 内置有界异步 execFile，并适配必要 await 调用链及有限检查。生产/src/POM/target/原 fixture、实际 SQL/事实、原4秒技能期限、健康与清理预算、精确归属和秘密白名单均保持。没有执行第四轮真实入口。
++
++## 原失败与阻塞证据保持
++
++第三轮报告 `algorithm-process-live-v3.md`、summary、execution、专用原始目录 `algorithm-process-runner/live-5b3418e87817/`、独立PG/进程只读补核和阻塞诊断均已归档。实际complete场景仅一次POST，Job fixture UID已生成而PG尚未采纳；原fact/call UNKNOWN、run WAITING_EXTERNAL、binding SENDING、工具逻辑提交0。没有业务重发、对账或降低complete预期。两自有JVM62900/46180均已停止、端口55459/55458为空，原finally成功；root独立检查同样无残留（`.local/algorithm-live-v3-cleanup-root.json`）。原未知事实和各轮错误不改写。
++
++原e306 helper 的实际定点诊断：一次归属检查耗1971.955ms，25ms timer和同进程有限HTTP均只能在同步检查返回后响应。合成PS350ms等待同样造成545.466ms阻塞。诊断只查询已退出的本轮PID/端口并访问独立本地 `/finite-probe`，没有触真实业务或Job。同步检查发生在每次status HTTP前，而K8s fixture在同一Node线程，因此会抢占原SDK4秒预算。这是可靠runner验收必须修复的结构问题；原请求未新增精确时序埋点，报告仍保留未排除其他网络因素的限制。
++
++## 新增五项行为红绿
++
++先新增 `tests/algorithm-process-runner-async.test.mjs`，实际原helper上5项全失败、退出1，完整red.log和红阶段源码保存在本轮目录。检查的是实际提取的runner helper：①合成PS等待期间，同线程有限HTTP/timer应先响应，旧helper实际已经同步结算而失败；②小绝对timeout应拒绝重复输出的长命令，旧helper忽略该小界限；③④stdout/stderr分别超界应保留标准原生溢出错误，旧helper全部接受；⑤非零exit应保留原code/stdout/stderr，旧包装丢失原exit code。测试不触真实Redis、PG、MinIO或JVM。
++
++实现使用 `promisify(execFile)`，固定默认10秒timeout和stdout/stderr各65536字节maxBuffer，保留显式UTF8。测试只通过私有小参数缩短界限，参数验证不允许超过运行默认上界；真实调用未传自定义bounds。Node内置timeout从调用启动计时，不因输出chunk续期；超时/溢出只结束execFile自己创建的PowerShell child，拒绝继续执行该归属调用，不据此停止尚未确认的JVM。原生Error不替换，保留code/signal/killed和stdout/stderr，可被原逐项cleanup收集。
++
++inspect/freeBeforeStart及最终records、owned、stop、start的必要调用全部await。只有完整确认PID/创建时间/精确JAR/所有listener owner后才继续HTTP；停止前仍有JS与PowerShell内部双重归属核验。未新增通用进程管理框架或依赖。此前Unicode行为测试仅适配实际async helper和await，其余21项检查保留。
++
++实际 `node --test tests/algorithm-process-runner.test.mjs tests/algorithm-process-runner-fixes.test.mjs tests/algorithm-process-runner-redis.test.mjs tests/algorithm-process-runner-async.test.mjs` 为26/26通过、0 fail/skip/cancel、退出0，见green.log。新增HTTP/timer确实在PS仍等待时完成；绝对timeout、stdout/stderr溢出和非零退出都检查原生错误内容。5份源码语法检查与replay命令记录syntax.log/replay.log。
++
++## 新增冻结与重放
++
++本轮baseline完整保存上轮六文件，SHA与fix-v2 sources逐项一致；baseline-absence.json登记新增async测试与本报告。frozen保存最终八文件，其中原报告/Redis/其他检查等不变文件也完整保留。`algorithm-process-runner-fixes-v3.patch` 为baseline→frozen真实完整差异，只改runner及Unicode测试的async适配，并新增测试/报告；原v1/v2/v3与之前两fix原字节保持。
++
++本轮freeze.mjs实际核对上轮frozen/replay/evidence/patch/历史manifest和已记录v1/v2原始证据，记录本轮v3报告/summary/raw/诊断/独立PG/root收尾检查SHA。在新replay目录复制baseline，实际git apply --check与apply退出0，八文件SHA与frozen一致；只读复制原fixture后实际语法检查五文件并执行26项有限检查。完整命令/输出见本轮replay.log，SHA见 `algorithm-process-runner-fixes-v3-sha256.json`。
++
++本窄修复只解决已实证的测试控制线程阻塞，不修改算法业务预算，不代表五实际算法场景通过。当前停止在冻结交付，等待同一独立审查者复核，第四轮必须由root另行移交原锁授权。
+diff --git a/tests/algorithm-process-runner-async.test.mjs b/tests/algorithm-process-runner-async.test.mjs
+new file mode 100644
+index 0000000..62a40d9
+--- /dev/null
++++ b/tests/algorithm-process-runner-async.test.mjs
+@@ -0,0 +1,58 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import fs from 'node:fs/promises';
++import http from 'node:http';
++import { execFile, spawnSync } from 'node:child_process';
++import { promisify } from 'node:util';
++
++const source = await fs.readFile(new URL('./smoke-algorithm-processes.mjs', import.meta.url), 'utf8');
++let start = source.indexOf('async function powershell(');
++if (start < 0) start = source.indexOf('function powershell(');
++const end = source.indexOf('export const ownershipScripts', start);
++assert(start >= 0 && end > start);
++const powershell = new Function('spawnSync', 'assert', 'execFileAsync', source.slice(start, end) + '\nreturn powershell;')(
++  spawnSync, assert, promisify(execFile));
++
++test('actual PowerShell wait leaves same-thread finite HTTP and timer responsive before it settles', async () => {
++  const server = http.createServer((req, res) => res.end('finite-only'));
++  await new Promise((resolve, reject) => { server.once('error', reject); server.listen(0, '127.0.0.1', resolve); });
++  let pending;
++  try {
++    let settled = false;
++    const timer = new Promise(resolve => setTimeout(resolve, 25));
++    const response = fetch('http://127.0.0.1:' + server.address().port + '/finite', { signal: AbortSignal.timeout(2000) }).then(result => result.text());
++    pending = Promise.resolve(powershell('Start-Sleep -Milliseconds 350; Write-Output "bounded"', {}, { timeoutMs: 2000, maxBuffer: 1024 }))
++      .then(value => { settled = true; return value; });
++    await Promise.all([timer, response]);
++    assert.equal(settled, false, 'HTTP/timer must respond while the actual PowerShell helper is still waiting');
++    assert.equal(await pending, 'bounded');
++  } finally {
++    if (pending) await pending;
++    server.closeAllConnections(); await new Promise(resolve => server.close(resolve));
++  }
++});
++
++test('one absolute PowerShell timeout rejects even a command designed to emit repeated output', async () => {
++  const at = performance.now();
++  await assert.rejects(async () => powershell('1..15 | ForEach-Object {Write-Output "tick"; Start-Sleep -Milliseconds 40}', {},
++    { timeoutMs: 400, maxBuffer: 1024 }), error => error.killed === true && error.signal === 'SIGTERM');
++  assert(performance.now() - at < 2000, 'Finite timeout must settle independently of output chunks');
++});
++
++for (const stream of ['stdout', 'stderr']) {
++  test('PowerShell ' + stream + ' overflow rejects with the original bounded execution error', async () => {
++    const script = stream === 'stdout' ? 'Write-Output ("x"*4096)' : '[Console]::Error.Write(("x"*4096))';
++    await assert.rejects(async () => powershell(script, {}, { timeoutMs: 2000, maxBuffer: 128 }), error => {
++      assert.equal(error.code, 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER');
++      assert.equal(typeof error[stream], 'string');
++      assert(error[stream].length <= 128);
++      return true;
++    });
++  });
++}
++
++test('nonzero PowerShell exit retains exit code and original stdout/stderr for cleanup error propagation', async () => {
++  await assert.rejects(async () => powershell('Write-Output "finite-out";[Console]::Error.WriteLine("finite-error");exit 7', {}, { timeoutMs: 2000, maxBuffer: 1024 }), error => {
++    assert.equal(error.code, 7); assert.match(error.stdout, /finite-out/); assert.match(error.stderr, /finite-error/); return true;
++  });
++});
+diff --git a/tests/algorithm-process-runner-fixes.test.mjs b/tests/algorithm-process-runner-fixes.test.mjs
+index 530a992..0eff8d7 100644
+--- a/tests/algorithm-process-runner-fixes.test.mjs
++++ b/tests/algorithm-process-runner-fixes.test.mjs
+@@ -1,16 +1,17 @@
+ import test from 'node:test';
+ import assert from 'node:assert/strict';
+ import fs from 'node:fs/promises';
+-import { spawnSync } from 'node:child_process';
++import { execFile, spawnSync } from 'node:child_process';
++import { promisify } from 'node:util';
+ import { assertScenarioTerminal } from './smoke-algorithm-processes.mjs';
+ 
+ test('the actual PowerShell helper round-trips a Chinese reviewed JAR path without inspecting any PID', async () => {
+   const source = await fs.readFile(new URL('./smoke-algorithm-processes.mjs', import.meta.url), 'utf8');
+-  const start = source.indexOf('function powershell('), end = source.indexOf('export const ownershipScripts', start);
++  const start = source.indexOf('async function powershell('), end = source.indexOf('export const ownershipScripts', start);
+   assert(start >= 0 && end > start, 'Extract the actual bounded PowerShell helper');
+-  const powershell = new Function('spawnSync', 'assert', source.slice(start, end) + '\nreturn powershell;')(spawnSync, assert);
++  const powershell = new Function('spawnSync', 'assert', 'execFileAsync', source.slice(start, end) + '\nreturn powershell;')(spawnSync, assert, promisify(execFile));
+   const expected = 'G:\\测试目录\\算法重组工具\\审查制品\\skill-registry.jar';
+-  const result = powershell('$env:ALGORITHM_TEST_UNICODE | ConvertTo-Json -Compress', { ALGORITHM_TEST_UNICODE: expected });
++  const result = await powershell('$env:ALGORITHM_TEST_UNICODE | ConvertTo-Json -Compress', { ALGORITHM_TEST_UNICODE: expected });
+   assert.equal(JSON.parse(result), expected);
+ });
+ 
+diff --git a/tests/smoke-algorithm-processes.mjs b/tests/smoke-algorithm-processes.mjs
+index 7ac3b52..687d74e 100644
+--- a/tests/smoke-algorithm-processes.mjs
++++ b/tests/smoke-algorithm-processes.mjs
+@@ -9,11 +9,13 @@ import crypto from 'node:crypto';
+ import http from 'node:http';
+ import net from 'node:net';
+ import assert from 'node:assert/strict';
+-import { spawn, spawnSync } from 'node:child_process';
++import { execFile, spawn, spawnSync } from 'node:child_process';
++import { promisify } from 'node:util';
+ import { pathToFileURL } from 'node:url';
+ import { startAlgorithmFixture } from './smoke-algorithm-protocol.mjs';
+ 
+ const root = path.resolve(import.meta.dirname, '..');
++const execFileAsync = promisify(execFile);
+ const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
+ const sha = value => crypto.createHash('sha256').update(value).digest('hex');
+ const quote = value => "'" + String(value).replaceAll("'", "''") + "'";
+@@ -88,14 +90,16 @@ async function until(load, accept, label, timeoutMs = 30000) {
+   throw Error('Timed out: ' + label);
+ }
+ 
+-function powershell(script, values = {}) {
+-  const result = spawnSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command',
++async function powershell(script, values = {}, bounds = {}) {
++  const timeout = bounds.timeoutMs ?? 10000, maxBuffer = bounds.maxBuffer ?? 65536;
++  assert(Number.isInteger(timeout) && timeout > 0 && timeout <= 10000, 'Finite PowerShell timeout required');
++  assert(Number.isInteger(maxBuffer) && maxBuffer > 0 && maxBuffer <= 65536, 'Finite PowerShell output bound required');
++  const { stdout } = await execFileAsync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command',
+     '[Console]::OutputEncoding=[System.Text.UTF8Encoding]::new($false);' + script], {
+     env: { SystemRoot: process.env.SystemRoot, WINDIR: process.env.WINDIR, PATH: process.env.PATH, ...values },
+-    encoding: 'utf8', windowsHide: true, timeout: 10000,
++    encoding: 'utf8', windowsHide: true, timeout, maxBuffer, killSignal: 'SIGTERM',
+   });
+-  assert.equal(result.status, 0, result.error?.message || result.stderr || 'Process inspection failed');
+-  return result.stdout.trim();
++  return stdout.trim();
+ }
+ 
+ export const ownershipScripts = {
+@@ -110,8 +114,8 @@ export const ownershipScripts = {
+     + ' -or $i -lt 0 -or $a[$i+1] -ne $env:ALG_JAR){throw "Refuse unrelated PID/JAR/creation"}; Stop-Process -Id ([int]$env:ALG_PID)',
+ };
+ 
+-function inspect(record) {
+-  const raw = powershell(ownershipScripts.inspect, { ALG_PID: String(record.pid), ALG_PORT: String(record.port) });
++async function inspect(record) {
++  const raw = await powershell(ownershipScripts.inspect, { ALG_PID: String(record.pid), ALG_PORT: String(record.port) });
+   return JSON.parse(raw);
+ }
+ 
+@@ -123,8 +127,8 @@ async function freePort() {
+   return port;
+ }
+ 
+-function freeBeforeStart(port) {
+-  powershell(ownershipScripts.free,
++async function freeBeforeStart(port) {
++  await powershell(ownershipScripts.free,
+     { ALG_PORT: String(port) });
+ }
+ 
+@@ -215,7 +219,7 @@ async function run(lockFile) {
+   async function writeRecords() {
+     for (const record of records) {
+       if (!record.pid) { record.final = { pid: null, listenerPids: [], notSpawned: true }; continue; }
+-      try { const observed = inspect(record); record.final = { pid: observed.pid, listenerPids: observed.listenerPids, sameCreation: observed.created === record.created }; delete record.finalInspectionError; }
++      try { const observed = await inspect(record); record.final = { pid: observed.pid, listenerPids: observed.listenerPids, sameCreation: observed.created === record.created }; delete record.finalInspectionError; }
+       catch (error) { record.finalInspectionError = errorView(error); }
+     }
+     await save('processes', records);
+@@ -232,7 +236,7 @@ async function run(lockFile) {
+     assert.equal(entry.child.exitCode, null, 'Owned JVM exited before HTTP');
+     assert.equal(entry.child.signalCode, null, 'Owned JVM stopped before HTTP');
+     assert(!entry.record.spawnError, 'Owned JVM spawn failed');
+-    const observation = inspect(entry.record);
++    const observation = await inspect(entry.record);
+     assertProcessOwnership(entry.record, observation, listener);
+     return observation;
+   }
+@@ -240,10 +244,10 @@ async function run(lockFile) {
+     const { child, record } = entry;
+     if (!record.pid && record.spawnError) { record.notSpawned = true; return; }
+     if (child.exitCode !== null || child.signalCode !== null) { record.exited = true; return; }
+-    const observation = inspect(record);
++    const observation = await inspect(record);
+     if (observation.pid === null) { record.exited = true; return; }
+     assertProcessOwnership(record, observation, false);
+-    powershell(ownershipScripts.stop,
++    await powershell(ownershipScripts.stop,
+     { ALG_PID: String(record.pid), ALG_CREATED: record.created, ALG_JAR: record.jar });
+     await until(async () => child.exitCode !== null || child.signalCode !== null, Boolean, 'owned JVM exit', 10000);
+     record.stopped = true;
+@@ -261,7 +265,7 @@ async function run(lockFile) {
+     return envelope.data;
+   }
+   async function start(module, port, common) {
+-    freeBeforeStart(port);
++    await freeBeforeStart(port);
+     const artifact = artifacts[module];
+     assert.equal(sha(await fs.readFile(artifact.jar)), artifact.sha256, 'Fixed JAR changed before spawn');
+     const index = children.length, outPath = path.join(evidence, module + '-' + index + '.out.log'), errPath = path.join(evidence, module + '-' + index + '.err.log');
+@@ -276,7 +280,7 @@ async function run(lockFile) {
+       child.on('error', error => { record.spawnError = errorView(error); });
+       await until(async () => {
+         assert(!record.spawnError && child.exitCode === null && child.signalCode === null, 'Private JVM failed during identity capture');
+-        const value = inspect(record);
++        const value = await inspect(record);
+         if (value.pid !== record.pid) return false;
+         record.created = value.created;
+         assertProcessOwnership(record, value, false); return true;
+@@ -284,7 +288,7 @@ async function run(lockFile) {
+       await save('processes', records);
+       const observation = await until(async () => {
+         assert(!record.spawnError && child.exitCode === null && child.signalCode === null, 'Private JVM failed before TCP listener');
+-        const value = inspect(record);
++        const value = await inspect(record);
+         if (value.pid === record.pid && !record.created) record.created = value.created;
+         if (!value.listenerPids.length) return null;
+         assertProcessOwnership(record, value); return value;

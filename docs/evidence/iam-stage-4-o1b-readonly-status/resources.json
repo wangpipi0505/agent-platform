@@ -1,0 +1,15 @@
+{
+  "at": "2026-10-20T22:12:38.485Z",
+  "database": "agent_platform_iam_o1b_status_v12",
+  "postgres": "127.0.0.1:25432; existing dedicated project PostgreSQL16.15, V200–217, not stopped or dropped",
+  "finalReady": {
+    "port": 65250,
+    "pid": 50120
+  },
+  "explicitCloseMarker": true,
+  "processAlive": false,
+  "processProbe": "ESRCH",
+  "engineSocketProbe": "ECONNREFUSED",
+  "ownership": "All authority/JWKS/resolver/dependency servers, runtime HTTP clients/decoder and service scheduler objects are owned in this single test JVM and explicitly closed. Scheduler was constructed/bound, never started. No child application process.",
+  "limitation": "Only the engine ready port was printed/probed; individual authority/resolver/dependency ports were not logged. JVM termination independently retires those in-process listeners."
+}

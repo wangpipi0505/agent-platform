@@ -1,0 +1,104 @@
+{
+  "realBehaviorRed": [
+    {
+      "stage": "iam-stage-o2b-f2b2-error-wire-red",
+      "result": {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-error-wire-red/result.json",
+        "bytes": 443,
+        "sha256": "17de9d463413727595832c3a8f6785bc004840ad075e13b04ae1b9fd2fe7af72"
+      },
+      "sourceEpoch": {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-error-wire-red/source.json",
+        "bytes": 119379,
+        "sha256": "61ee01769d843a08c8a7ab6967d35639d6254bfa8fa97ebb79ef5e67edaaba1e"
+      },
+      "suites": [
+        {
+          "class": "cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest",
+          "tests": 1,
+          "errors": 0,
+          "skipped": 0,
+          "failures": 1
+        }
+      ],
+      "children": [
+        {
+          "run": ".local/iam-o2b-f2b2-private-http/peers/errors-563a64ae-30d3-4255-a377-f8bb9d3355c8",
+          "pid": 22908,
+          "exitCode": 1,
+          "vectorResults": [
+            {
+              "file": ".local/iam-o2b-f2b2-private-http/peers/errors-563a64ae-30d3-4255-a377-f8bb9d3355c8/mapping-0.properties",
+              "bytes": 97,
+              "sha256": "9f6ce2bb84f7f95313a488527940aedfe57bf2bd488015c426e27fac4daec6b0",
+              "values": {
+                "wireStatus": "413",
+                "eRequestBytes": "8724",
+                "localStatus": "503",
+                "localCode": "RUN_METADATA_UNAVAILABLE",
+                "callbacks": "0"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "stage": "iam-stage-o2b-f2b2-lifecycle-red",
+      "result": {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-lifecycle-red/result.json",
+        "bytes": 731,
+        "sha256": "eabdc4f53ac7806af13c1bbc5d68c0c762a597baa9d79cd492ed48845b38321f"
+      },
+      "sourceEpoch": {
+        "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-lifecycle-red/source.json",
+        "bytes": 119380,
+        "sha256": "2097189f041726f33f0189c8ca52ffd2502856a6b3c8e8594db9029c19b5f6b7"
+      },
+      "suites": [
+        {
+          "class": "cn.agentplatform.gateway.infra.PortalRunEventsPrivateAuthorityTest",
+          "tests": 1,
+          "errors": 0,
+          "skipped": 0,
+          "failures": 1
+        },
+        {
+          "class": "cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest",
+          "tests": 1,
+          "errors": 0,
+          "skipped": 0,
+          "failures": 1
+        }
+      ],
+      "children": [
+        {
+          "run": ".local/iam-o2b-f2b2-private-http/peers/body-expiry-6c954a83-eec8-48a0-a085-a7460a0fc4d6",
+          "pid": 45792,
+          "exitCode": 1,
+          "vectorResults": []
+        },
+        {
+          "run": ".local/iam-o2b-f2b2-private-http/peers/late-g-6a66b138-1087-489e-b72a-b2fe8659ee84",
+          "pid": 23232,
+          "exitCode": 1,
+          "vectorResults": []
+        }
+      ]
+    }
+  ],
+  "classification": {
+    "iam-stage-o2b-f2b2-error-wire-red": "Actual E GET reaches raw TLS peer, real 413 EVENT_LIMIT response rejected by E parser to local503; mapping-0 records wire status, request bytes and actual local code/status.",
+    "iam-stage-o2b-f2b2-lifecycle-red": "Actual legal E head/body gate dies at frozen TLS head2s instead of renewed G lifetime; separate real G survives cancelled late transfer (expected close absent). Both tests fail as assertions in bounded child JVMs. Body failure also has peer diagnostic after Session close; original output preserved."
+  },
+  "nonBusinessRed": [
+    "seed-red missing consumePrivate compilation",
+    "seed-behavior child native-stderr UTF8 wrapper MalformedInput",
+    "functional-seed-red default-deny seed not yet E wire behavior",
+    "normal-green checked consumer exception compilation",
+    "normal-green2 ordinary8482 length-target assertion after two actual packets",
+    "large-child-green actor-config setup rejected by real within check",
+    "authority-matrix selector + rejected by existing runner before Maven"
+  ],
+  "allOriginalDiagnosticsPreserved": true
+}

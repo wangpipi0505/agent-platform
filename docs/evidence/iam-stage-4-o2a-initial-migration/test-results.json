@@ -1,0 +1,96 @@
+{
+  "status": "success",
+  "command": "node .tools/run-iam-module-tests.mjs iam-stage-o2a-initial-migration-final01 engine-runtime InitialMaterialScopePostgresTest",
+  "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+  "exit": 0,
+  "runnerOutput": "{\"stage\":\"iam-stage-o2a-initial-migration-final01\",\"modules\":\"engine-runtime\",\"tests\":\"InitialMaterialScopePostgresTest\",\"exitCode\":0,\"log\":\".local\\\\iam-stage-o2a-initial-migration-final01.log\",\"timedOut\":false}\n",
+  "rawOriginal": {
+    "file": ".local/iam-stage-o2a-initial-migration-final01.log",
+    "bytes": 12181,
+    "sha256": "ed0699b816f3a09613c1b998dce9827ff780bf6e76fc5a43fd5c5edf518484a1"
+  },
+  "sourceEpoch": {
+    "file": "engine-runtime/src/test/java/cn/agentplatform/engine/infra/InitialMaterialScopePostgresTest.java",
+    "bytes": 16582,
+    "sha256": "40814e5bfb55b02fc4122d9ec3d360b127e29d0212e3ed946726712db37194d4"
+  },
+  "raw": {
+    "file": "docs/evidence/iam-stage-4-o2a-initial-migration/iam-stage-o2a-initial-migration-final01/iam-stage-o2a-initial-migration-final01.log",
+    "bytes": 12181,
+    "sha256": "ed0699b816f3a09613c1b998dce9827ff780bf6e76fc5a43fd5c5edf518484a1"
+  },
+  "running": [
+    "cn.agentplatform.engine.infra.InitialMaterialScopePostgresTest"
+  ],
+  "reports": [
+    {
+      "file": "docs/evidence/iam-stage-4-o2a-initial-migration/iam-stage-o2a-initial-migration-final01/TEST-cn.agentplatform.engine.infra.InitialMaterialScopePostgresTest.xml",
+      "bytes": 54833,
+      "sha256": "1cff4e35450058cba2c164b6f2a1235666d36c4c6e5da8286f170ec861bdcd7d"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o2a-initial-migration/iam-stage-o2a-initial-migration-final01/cn.agentplatform.engine.infra.InitialMaterialScopePostgresTest.txt",
+      "bytes": 379,
+      "sha256": "452ae2d63e433dad80b3af5399ec7ca559913b3d747a72f364a051c5e09778a2"
+    }
+  ],
+  "suites": [
+    {
+      "class": "cn.agentplatform.engine.infra.InitialMaterialScopePostgresTest",
+      "tests": 12,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "cases": [
+        "freshSameOwnerGrantWithNewInitialReadsExpiredHistoricalGrant",
+        "integersBeyondDoubleRangeAndSignedZeroRemainExact",
+        "corruptedMetadataAndMissingScopesDenyWithoutSelectingPayload",
+        "payloadDigestMismatchAndRootNullAreRejectedAfterExactlyOneRead",
+        "sameRootStatusPurposeCannotReadInitialMaterial",
+        "immutableDatabaseRejectsConcurrentPayloadChangeBetweenMetadataAndSelect",
+        "readsThreeActualColumnsAndPreservesParentAndLabelUnion",
+        "wrongOwnerRootPurposeVersionOrDigestRejectBeforePayload",
+        "narrowerCurrentCannotReadAnyPayloadAndDoesNotRewriteHistory",
+        "recomputedScopeHashCannotHideWrongParentOwnerOrAdmissionAudit",
+        "repeatableReadMustNotSilentlyJoinReadCommitted",
+        "preciseJsonbNumbersNullsAndArrayOrderDetermineActualHashes"
+      ],
+      "xml": {
+        "file": "docs/evidence/iam-stage-4-o2a-initial-migration/iam-stage-o2a-initial-migration-final01/TEST-cn.agentplatform.engine.infra.InitialMaterialScopePostgresTest.xml",
+        "bytes": 54833,
+        "sha256": "1cff4e35450058cba2c164b6f2a1235666d36c4c6e5da8286f170ec861bdcd7d"
+      }
+    }
+  ],
+  "summaries": [
+    "[INFO] Tests run: 12, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 9.046 s -- in cn.agentplatform.engine.infra.InitialMaterialScopePostgresTest",
+    "[INFO] Tests run: 12, Failures: 0, Errors: 0, Skipped: 0",
+    "[INFO] BUILD SUCCESS"
+  ],
+  "noise": [
+    {
+      "line": 32,
+      "text": "[INFO] skip non existing resourceDirectory G:\\207\\��Ŀ\\�㷨���鹤��\\����\\agent-platform\\admin-common\\src\\test\\resources"
+    },
+    {
+      "line": 56,
+      "text": "[INFO] skip non existing resourceDirectory G:\\207\\��Ŀ\\�㷨���鹤��\\����\\agent-platform\\engine-runtime\\src\\test\\resources"
+    },
+    {
+      "line": 61,
+      "text": "[INFO] /G:/207/��Ŀ/�㷨���鹤��/����/agent-platform/engine-runtime/src/test/java/cn/agentplatform/engine/infra/RunEventReaderPostgresTest.java: ĳЩ�����ļ�ʹ�û򸲸����ѹ�ʱ�� API��"
+    },
+    {
+      "line": 62,
+      "text": "[INFO] /G:/207/��Ŀ/�㷨���鹤��/����/agent-platform/engine-runtime/src/test/java/cn/agentplatform/engine/infra/RunEventReaderPostgresTest.java: �й���ϸ��Ϣ, ��ʹ�� -Xlint:deprecation ���±��롣"
+    },
+    {
+      "line": 63,
+      "text": "[INFO] /G:/207/��Ŀ/�㷨���鹤��/����/agent-platform/engine-runtime/src/test/java/cn/agentplatform/engine/infra/FlowMaterialStatusPostgresTest.java: ĳЩ�����ļ�ʹ����δ�����򲻰�ȫ�Ĳ�����"
+    },
+    {
+      "line": 64,
+      "text": "[INFO] /G:/207/��Ŀ/�㷨���鹤��/����/agent-platform/engine-runtime/src/test/java/cn/agentplatform/engine/infra/FlowMaterialStatusPostgresTest.java: �й���ϸ��Ϣ, ��ʹ�� -Xlint:unchecked ���±��롣"
+    }
+  ]
+}

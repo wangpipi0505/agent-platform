@@ -1,0 +1,1033 @@
+{
+  "at": "2026-10-20T19:38:09.653061+00:00",
+  "multiStageApplicableNotOneFinalSourceSuite": true,
+  "stages": [
+    {
+      "stage": "iam-stage-d4a-common-red01",
+      "at": "2026-10-20T19:20:13.989Z",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-d4a-common-red01 admin-common PortalSessionAuthorizationTest",
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "exit": 1,
+      "sourceManifest": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-common-red01/source-before.json",
+        "bytes": 77906,
+        "sha256": "603ad7912dfeb0f6f8ef6d83ddb2db501e378bbaa3a102f5f5e019d63e61aa62"
+      },
+      "cases": [
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+          "name": "unsupportedDefaultCannotMintSessionFromPublicAuthority",
+          "status": "pass",
+          "message": null,
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-common-red01/admin-common/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+            "bytes": 34648,
+            "sha256": "1250f037626e63dd38aa14e49c954a4db5a674b5e3ae3ae3e407f5a2b4cc395a"
+          }
+        },
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+          "name": "signedPortalSessionUsesExactlyExchangeAndAuthorizeAndProjectsFourFields",
+          "status": "error",
+          "message": "门户会话能力尚未就绪",
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-common-red01/admin-common/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+            "bytes": 34648,
+            "sha256": "1250f037626e63dd38aa14e49c954a4db5a674b5e3ae3ae3e407f5a2b4cc395a"
+          }
+        }
+      ]
+    },
+    {
+      "stage": "iam-stage-d4a-common-green01",
+      "at": "2026-10-20T19:21:52.464Z",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-d4a-common-green01 admin-common PortalSessionAuthorizationTest",
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "exit": 0,
+      "sourceManifest": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-common-green01/source-before.json",
+        "bytes": 77906,
+        "sha256": "33592886ed9db556f3d0552c985693a807980ebeaf3b657581c23ad069832d3e"
+      },
+      "cases": [
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+          "name": "unsupportedDefaultCannotMintSessionFromPublicAuthority",
+          "status": "pass",
+          "message": null,
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-common-green01/admin-common/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+            "bytes": 33665,
+            "sha256": "b716596f2a29196d22564dc350430550a78f7ed22dcb5c2972cae9a89ff5b739"
+          }
+        },
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+          "name": "signedPortalSessionUsesExactlyExchangeAndAuthorizeAndProjectsFourFields",
+          "status": "pass",
+          "message": null,
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-common-green01/admin-common/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+            "bytes": 33665,
+            "sha256": "b716596f2a29196d22564dc350430550a78f7ed22dcb5c2972cae9a89ff5b739"
+          }
+        }
+      ]
+    },
+    {
+      "stage": "iam-stage-d4a-http-red01",
+      "at": "2026-10-20T19:22:24.058Z",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-d4a-http-red01 platform-gateway PortalSessionHttpTest",
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "exit": 1,
+      "sourceManifest": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-http-red01/source-before.json",
+        "bytes": 78122,
+        "sha256": "3a29d10d2468dc3d8ac795c344f652c1857166ea68909fa47374ae9cdfc61227"
+      },
+      "cases": [
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionHttpTest",
+          "name": "installedExactHandlerReturnsOnlyCurrentSessionWithNoBusinessCalls",
+          "status": "error",
+          "message": "Unable to start web server",
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-http-red01/platform-gateway/TEST-cn.agentplatform.common.authority.PortalSessionHttpTest.xml",
+            "bytes": 76983,
+            "sha256": "70ec805700624946da1307f5917df439d32302669578ef168b48f4fd7bbd8384"
+          }
+        }
+      ]
+    },
+    {
+      "stage": "iam-stage-d4a-http-red02",
+      "at": "2026-10-20T19:22:45.370Z",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-d4a-http-red02 platform-gateway PortalSessionHttpTest",
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "exit": 1,
+      "sourceManifest": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-http-red02/source-before.json",
+        "bytes": 78122,
+        "sha256": "af5fd0634c1201fd09145d86a6773ea4a03a4242c0b6f6c76903c56fc8d73945"
+      },
+      "cases": [
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionHttpTest",
+          "name": "installedExactHandlerReturnsOnlyCurrentSessionWithNoBusinessCalls",
+          "status": "error",
+          "message": "ROUTE_COVERAGE_MISSING: gateway GET /actuator/health/** java.lang.Object org.springframework.boot.actuate.endpoint.web.servlet.AbstractWebMvcEndpointHandlerMapping$OperationHandler.handle(jakarta.servlet.http.HttpServletRequest,java.util.Map<java.lang.String, java.lang.String>)",
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-http-red02/platform-gateway/TEST-cn.agentplatform.common.authority.PortalSessionHttpTest.xml",
+            "bytes": 55068,
+            "sha256": "c4010b4a382f6078cba0edb557215385df8a64e4ae0039e7ee96d3029fb48a08"
+          }
+        }
+      ]
+    },
+    {
+      "stage": "iam-stage-d4a-http-red03",
+      "at": "2026-10-20T19:23:12.729Z",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-d4a-http-red03 platform-gateway PortalSessionHttpTest",
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "exit": 1,
+      "sourceManifest": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-http-red03/source-before.json",
+        "bytes": 78122,
+        "sha256": "a04ea726e2e0101e29d101bdff3746340f971048b3c32544b97fb7f85f5517c5"
+      },
+      "cases": [
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionHttpTest",
+          "name": "installedExactHandlerReturnsOnlyCurrentSessionWithNoBusinessCalls",
+          "status": "error",
+          "message": "ROUTE_COVERAGE_MISSING: gateway GET /actuator public java.util.Map<java.lang.String, java.util.Map<java.lang.String, org.springframework.boot.actuate.endpoint.web.Link>> org.springframework.boot.actuate.endpoint.web.servlet.WebMvcEndpointHandlerMapping$WebMvcLinksHandler.links(jakarta.servlet.http.HttpServletRequest,jakarta.servlet.http.HttpServlet",
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-http-red03/platform-gateway/TEST-cn.agentplatform.common.authority.PortalSessionHttpTest.xml",
+            "bytes": 55323,
+            "sha256": "28f8592cef559168d4911a175f322bb19c1a0a1fc02be471096345f8b355e052"
+          }
+        }
+      ]
+    },
+    {
+      "stage": "iam-stage-d4a-http-red04",
+      "at": "2026-10-20T19:23:57.842Z",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-d4a-http-red04 platform-gateway PortalSessionHttpTest",
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "exit": 1,
+      "sourceManifest": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-http-red04/source-before.json",
+        "bytes": 78122,
+        "sha256": "cc226f922ff5f9573aa6191a36a71fcab92aab20c76b4219ff72d53fd34b8c0e"
+      },
+      "cases": [
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionHttpTest",
+          "name": "installedExactHandlerReturnsOnlyCurrentSessionWithNoBusinessCalls",
+          "status": "failure",
+          "message": "\nexpected: 200\n but was: 403",
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-http-red04/platform-gateway/TEST-cn.agentplatform.common.authority.PortalSessionHttpTest.xml",
+            "bytes": 40036,
+            "sha256": "6788f5655afcf816eb1752df23fda923d507db52eaf1fe128aa87d04a057ca71"
+          }
+        }
+      ]
+    },
+    {
+      "stage": "iam-stage-d4a-http-green01",
+      "at": "2026-10-20T19:24:46.869Z",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-d4a-http-green01 platform-gateway PortalSessionHttpTest",
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "exit": 0,
+      "sourceManifest": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-http-green01/source-before.json",
+        "bytes": 78335,
+        "sha256": "b58770afe5025ac2460da822d92214824e4b6be65cbd2bdc2c47276275205b38"
+      },
+      "cases": [
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionHttpTest",
+          "name": "installedExactHandlerReturnsOnlyCurrentSessionWithNoBusinessCalls",
+          "status": "pass",
+          "message": null,
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-http-green01/platform-gateway/TEST-cn.agentplatform.common.authority.PortalSessionHttpTest.xml",
+            "bytes": 39474,
+            "sha256": "7fb93d14d75479895d8e4d7865167af836820401d40e59b58f51b771deeebec6"
+          }
+        }
+      ]
+    },
+    {
+      "stage": "iam-stage-d4a-common-green02",
+      "at": "2026-10-20T19:26:18.270Z",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-d4a-common-green02 admin-common PortalSessionAuthorizationTest#authorizedRoleIntersectionMayBeEmptyAndGrantMayExpireBeforePortal,PortalSessionAuthorizationTest#invalidPortalAndIntegrationAre401ButUnavailableAuthorityIs503,PortalSessionAuthorizationTest#signedAuthorizeCannotChangeInitialSubjectResourceGrantOriginOperationOrTicket,PortalSessionAuthorizationTest#latestAuthorizeWindowSurvivesSpentExchangeWindowWithoutExtendingSessionExpiry,PortalSessionAuthorizationTest#sourceAndAuthorizationDeadlinesInvalidatePermanentlyWithDistinctStatus,PortalSessionAuthorizationTest#ownerCloseAndConsumedReleaseCannotBeReusedAndProofHasNoPublicMint,PortalSessionAuthorizationTest#monotonicLatestAuthorizeBudgetCannotBeExtendedByClockRollback",
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "exit": 1,
+      "sourceManifest": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-common-green02/source-before.json",
+        "bytes": 78335,
+        "sha256": "fcb5ff9136b5040714cbe4bb29f0136ae8efb367fe3c6430c27ea499f643b5e8"
+      },
+      "cases": [
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+          "name": "sourceAndAuthorizationDeadlinesInvalidatePermanentlyWithDistinctStatus",
+          "status": "pass",
+          "message": null,
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-common-green02/admin-common/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+            "bytes": 36072,
+            "sha256": "46d02a8e2399a65604661ccd62d37cae90c9d3e7fbc81017d9d87aae6a101f2a"
+          }
+        },
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+          "name": "ownerCloseAndConsumedReleaseCannotBeReusedAndProofHasNoPublicMint",
+          "status": "pass",
+          "message": null,
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-common-green02/admin-common/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+            "bytes": 36072,
+            "sha256": "46d02a8e2399a65604661ccd62d37cae90c9d3e7fbc81017d9d87aae6a101f2a"
+          }
+        },
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+          "name": "signedAuthorizeCannotChangeInitialSubjectResourceGrantOriginOperationOrTicket",
+          "status": "pass",
+          "message": null,
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-common-green02/admin-common/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+            "bytes": 36072,
+            "sha256": "46d02a8e2399a65604661ccd62d37cae90c9d3e7fbc81017d9d87aae6a101f2a"
+          }
+        },
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+          "name": "monotonicLatestAuthorizeBudgetCannotBeExtendedByClockRollback",
+          "status": "pass",
+          "message": null,
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-common-green02/admin-common/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+            "bytes": 36072,
+            "sha256": "46d02a8e2399a65604661ccd62d37cae90c9d3e7fbc81017d9d87aae6a101f2a"
+          }
+        },
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+          "name": "latestAuthorizeWindowSurvivesSpentExchangeWindowWithoutExtendingSessionExpiry",
+          "status": "pass",
+          "message": null,
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-common-green02/admin-common/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+            "bytes": 36072,
+            "sha256": "46d02a8e2399a65604661ccd62d37cae90c9d3e7fbc81017d9d87aae6a101f2a"
+          }
+        },
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+          "name": "invalidPortalAndIntegrationAre401ButUnavailableAuthorityIs503",
+          "status": "failure",
+          "message": "\nexpected: 503\n but was: 403",
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-common-green02/admin-common/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+            "bytes": 36072,
+            "sha256": "46d02a8e2399a65604661ccd62d37cae90c9d3e7fbc81017d9d87aae6a101f2a"
+          }
+        },
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+          "name": "authorizedRoleIntersectionMayBeEmptyAndGrantMayExpireBeforePortal",
+          "status": "pass",
+          "message": null,
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-common-green02/admin-common/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+            "bytes": 36072,
+            "sha256": "46d02a8e2399a65604661ccd62d37cae90c9d3e7fbc81017d9d87aae6a101f2a"
+          }
+        }
+      ]
+    },
+    {
+      "stage": "iam-stage-d4a-common-expiry-red01",
+      "at": "2026-10-20T19:27:31.852Z",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-d4a-common-expiry-red01 admin-common PortalSessionAuthorizationTest#signedElapsedExchangeAndAuthorizeDecisionsAre403BeforeAnyRelease,PortalSessionAuthorizationTest#ordinaryVerifierAndPinnedVerifierKeepExpiredSignedEvidenceUnavailable",
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "exit": 1,
+      "sourceManifest": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-common-expiry-red01/source-before.json",
+        "bytes": 78336,
+        "sha256": "3daa9107bb43bec88085006a8e1d1dea4c81c660e5ebb1910f23341adb84fdcf"
+      },
+      "cases": [
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+          "name": "signedElapsedExchangeAndAuthorizeDecisionsAre403BeforeAnyRelease",
+          "status": "failure",
+          "message": "\nexpected: 403\n but was: 503",
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-common-expiry-red01/admin-common/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+            "bytes": 34677,
+            "sha256": "379f8134192479509813cc61379108db6f10da7f8dd75dddd2542fd2a8179698"
+          }
+        },
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+          "name": "ordinaryVerifierAndPinnedVerifierKeepExpiredSignedEvidenceUnavailable",
+          "status": "pass",
+          "message": null,
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-common-expiry-red01/admin-common/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+            "bytes": 34677,
+            "sha256": "379f8134192479509813cc61379108db6f10da7f8dd75dddd2542fd2a8179698"
+          }
+        }
+      ]
+    },
+    {
+      "stage": "iam-stage-d4a-common-expiry-red02",
+      "at": "2026-10-20T19:27:50.873Z",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-d4a-common-expiry-red02 admin-common PortalSessionAuthorizationTest#signedElapsedExchangeAndAuthorizeDecisionsAre403BeforeAnyRelease",
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "exit": 1,
+      "sourceManifest": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-common-expiry-red02/source-before.json",
+        "bytes": 78336,
+        "sha256": "3ad0822368c22472ba2e2761e0fdccbca2385d9a1ca5de493ef098176a374e97"
+      },
+      "cases": [
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+          "name": "signedElapsedExchangeAndAuthorizeDecisionsAre403BeforeAnyRelease",
+          "status": "failure",
+          "message": "\nexpected: 403\n but was: 503",
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-common-expiry-red02/admin-common/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+            "bytes": 34395,
+            "sha256": "2018c8f98549e9ccd7e3814bb88aaa74bcc3316aadea37daf3a8d0f9f58a31f5"
+          }
+        }
+      ]
+    },
+    {
+      "stage": "iam-stage-d4a-common-expiry-green01",
+      "at": "2026-10-20T19:28:16.635Z",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-d4a-common-expiry-green01 admin-common PortalSessionAuthorizationTest#signedElapsedExchangeAndAuthorizeDecisionsAre403BeforeAnyRelease,PortalSessionAuthorizationTest#invalidPortalAndIntegrationAre401ButUnavailableAuthorityIs503",
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "exit": 0,
+      "sourceManifest": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-common-expiry-green01/source-before.json",
+        "bytes": 78336,
+        "sha256": "94b5e978f5d2830a2a72a58ceaaa1d0b2a7dc477d0d8b221eaf12380a2a75bb1"
+      },
+      "cases": [
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+          "name": "signedElapsedExchangeAndAuthorizeDecisionsAre403BeforeAnyRelease",
+          "status": "pass",
+          "message": null,
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-common-expiry-green01/admin-common/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+            "bytes": 33823,
+            "sha256": "e25c32faa6ee7fe78ef62b639c109bd5b04b293bf3d0dd2850cd2127af39b33a"
+          }
+        },
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+          "name": "invalidPortalAndIntegrationAre401ButUnavailableAuthorityIs503",
+          "status": "pass",
+          "message": null,
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-common-expiry-green01/admin-common/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+            "bytes": 33823,
+            "sha256": "e25c32faa6ee7fe78ef62b639c109bd5b04b293bf3d0dd2850cd2127af39b33a"
+          }
+        }
+      ]
+    },
+    {
+      "stage": "iam-stage-d4a-handoff-red01",
+      "at": "2026-10-20T19:29:00.386Z",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-d4a-handoff-red01 admin-common PortalSessionAuthorizationTest#exchangeMustStillBeCurrentAfterTicketDecoderBeforeAuthorizeRequest,PortalSessionAuthorizationTest#verifiedPortalExpiryDuringExchangeAndAuthorizeRemains401",
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "exit": 1,
+      "sourceManifest": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-handoff-red01/source-before.json",
+        "bytes": 78336,
+        "sha256": "6d54f3901f8c978ce93c593dd8217ae45b37f1ec1411b9f7d7a2aa306386987a"
+      },
+      "cases": [
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+          "name": "exchangeMustStillBeCurrentAfterTicketDecoderBeforeAuthorizeRequest",
+          "status": "failure",
+          "message": "\nExpecting code to raise a throwable.",
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-handoff-red01/admin-common/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+            "bytes": 34507,
+            "sha256": "c4ee4125a320981abf5e6abfe0e10a00b25d2082624a0b1c99bb55b4d8b9f527"
+          }
+        },
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+          "name": "verifiedPortalExpiryDuringExchangeAndAuthorizeRemains401",
+          "status": "pass",
+          "message": null,
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-handoff-red01/admin-common/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+            "bytes": 34507,
+            "sha256": "c4ee4125a320981abf5e6abfe0e10a00b25d2082624a0b1c99bb55b4d8b9f527"
+          }
+        }
+      ]
+    },
+    {
+      "stage": "iam-stage-d4a-handoff-green01",
+      "at": "2026-10-20T19:29:17.345Z",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-d4a-handoff-green01 admin-common PortalSessionAuthorizationTest#exchangeMustStillBeCurrentAfterTicketDecoderBeforeAuthorizeRequest,PortalSessionAuthorizationTest#ordinaryVerifierAndPinnedVerifierKeepExpiredSignedEvidenceUnavailable,PortalSessionAuthorizationTest#signedPortalSessionUsesExactlyExchangeAndAuthorizeAndProjectsFourFields,PortalSessionAuthorizationTest#latestAuthorizeWindowSurvivesSpentExchangeWindowWithoutExtendingSessionExpiry",
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "exit": 0,
+      "sourceManifest": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-handoff-green01/source-before.json",
+        "bytes": 78336,
+        "sha256": "256992e9915df962d017fb92403f27e6a160893ea42cf0033212314749863fb2"
+      },
+      "cases": [
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+          "name": "latestAuthorizeWindowSurvivesSpentExchangeWindowWithoutExtendingSessionExpiry",
+          "status": "pass",
+          "message": null,
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-handoff-green01/admin-common/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+            "bytes": 34428,
+            "sha256": "90acb2b231fbffffee5fe5370bad6cb4dd63c85755078fc5694bca031ab6b175"
+          }
+        },
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+          "name": "exchangeMustStillBeCurrentAfterTicketDecoderBeforeAuthorizeRequest",
+          "status": "pass",
+          "message": null,
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-handoff-green01/admin-common/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+            "bytes": 34428,
+            "sha256": "90acb2b231fbffffee5fe5370bad6cb4dd63c85755078fc5694bca031ab6b175"
+          }
+        },
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+          "name": "ordinaryVerifierAndPinnedVerifierKeepExpiredSignedEvidenceUnavailable",
+          "status": "pass",
+          "message": null,
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-handoff-green01/admin-common/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+            "bytes": 34428,
+            "sha256": "90acb2b231fbffffee5fe5370bad6cb4dd63c85755078fc5694bca031ab6b175"
+          }
+        },
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+          "name": "signedPortalSessionUsesExactlyExchangeAndAuthorizeAndProjectsFourFields",
+          "status": "pass",
+          "message": null,
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-handoff-green01/admin-common/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+            "bytes": 34428,
+            "sha256": "90acb2b231fbffffee5fe5370bad6cb4dd63c85755078fc5694bca031ab6b175"
+          }
+        }
+      ]
+    },
+    {
+      "stage": "iam-stage-d4a-http-green02",
+      "at": "2026-10-20T19:31:03.331Z",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-d4a-http-green02 platform-gateway PortalSessionHttpTest#actualHttpIngressRejectsQueryEmptyQueryBodyCookiesDuplicateAndInjectedCredentials,PortalSessionHttpTest#actualHttpInvalidSourceCurrentDenialAndAuthorityFailureAre401403503,PortalSessionHttpTest#trueJsonFirstWriteRejectsSourceCurrentAndOwnerExpiryWithoutSuccessBytes,PortalSessionHttpTest#installationRejectsReplacedAndSecondarySessionHandlerAndWrongOrDuplicateRegistration,PortalSessionHttpTest#normalLegacyStartsWithoutIamClientAndRunOnlyFiniteAssemblyKeepsOriginalBoundary",
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "exit": 1,
+      "sourceManifest": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-http-green02/source-before.json",
+        "bytes": 78337,
+        "sha256": "e8f357e89c8c641878992dd0f7b0ead80b6ded9c165720a5721ed96ca5e4841a"
+      },
+      "cases": [
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionHttpTest",
+          "name": "actualHttpInvalidSourceCurrentDenialAndAuthorityFailureAre401403503",
+          "status": "pass",
+          "message": null,
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-http-green02/platform-gateway/TEST-cn.agentplatform.common.authority.PortalSessionHttpTest.xml",
+            "bytes": 105659,
+            "sha256": "e37d196184e221f15715bf4f80d6f6146fcfe3a03f8d7ecc73e2550e27af3bc1"
+          }
+        },
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionHttpTest",
+          "name": "normalLegacyStartsWithoutIamClientAndRunOnlyFiniteAssemblyKeepsOriginalBoundary",
+          "status": "error",
+          "message": "Error creating bean with name 'managementSecurityFilterChain' defined in class path resource [org/springframework/boot/actuate/autoconfigure/security/servlet/ManagementWebSecurityAutoConfiguration.class]: Unsatisfied dependency expressed through method 'managementSecurityFilterChain' parameter 1: No qualifying bean of type 'org.springframework.secu",
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-http-green02/platform-gateway/TEST-cn.agentplatform.common.authority.PortalSessionHttpTest.xml",
+            "bytes": 105659,
+            "sha256": "e37d196184e221f15715bf4f80d6f6146fcfe3a03f8d7ecc73e2550e27af3bc1"
+          }
+        },
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionHttpTest",
+          "name": "trueJsonFirstWriteRejectsSourceCurrentAndOwnerExpiryWithoutSuccessBytes",
+          "status": "pass",
+          "message": null,
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-http-green02/platform-gateway/TEST-cn.agentplatform.common.authority.PortalSessionHttpTest.xml",
+            "bytes": 105659,
+            "sha256": "e37d196184e221f15715bf4f80d6f6146fcfe3a03f8d7ecc73e2550e27af3bc1"
+          }
+        },
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionHttpTest",
+          "name": "installationRejectsReplacedAndSecondarySessionHandlerAndWrongOrDuplicateRegistration",
+          "status": "pass",
+          "message": null,
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-http-green02/platform-gateway/TEST-cn.agentplatform.common.authority.PortalSessionHttpTest.xml",
+            "bytes": 105659,
+            "sha256": "e37d196184e221f15715bf4f80d6f6146fcfe3a03f8d7ecc73e2550e27af3bc1"
+          }
+        },
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionHttpTest",
+          "name": "actualHttpIngressRejectsQueryEmptyQueryBodyCookiesDuplicateAndInjectedCredentials",
+          "status": "failure",
+          "message": "[proxy] \nexpected: 403\n but was: 200",
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-http-green02/platform-gateway/TEST-cn.agentplatform.common.authority.PortalSessionHttpTest.xml",
+            "bytes": 105659,
+            "sha256": "e37d196184e221f15715bf4f80d6f6146fcfe3a03f8d7ecc73e2550e27af3bc1"
+          }
+        }
+      ]
+    },
+    {
+      "stage": "iam-stage-d4a-http-green03",
+      "at": "2026-10-20T19:31:46.703Z",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-d4a-http-green03 platform-gateway PortalSessionHttpTest#actualHttpIngressRejectsQueryEmptyQueryBodyCookiesDuplicateAndInjectedCredentials,PortalSessionHttpTest#normalLegacyStartsWithoutIamClientAndRunOnlyFiniteAssemblyKeepsOriginalBoundary",
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "exit": 0,
+      "sourceManifest": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-http-green03/source-before.json",
+        "bytes": 78337,
+        "sha256": "0bbe261f6a1d1fbae3021fab3812e211f3fb845b3393d70c940626ef46e73c29"
+      },
+      "cases": [
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionHttpTest",
+          "name": "normalLegacyStartsWithoutIamClientAndRunOnlyFiniteAssemblyKeepsOriginalBoundary",
+          "status": "pass",
+          "message": null,
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-http-green03/platform-gateway/TEST-cn.agentplatform.common.authority.PortalSessionHttpTest.xml",
+            "bytes": 39857,
+            "sha256": "c75ea879eb76dce1a7bed7e18d29526d681328ce01fc2827972056aa75145d5f"
+          }
+        },
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionHttpTest",
+          "name": "actualHttpIngressRejectsQueryEmptyQueryBodyCookiesDuplicateAndInjectedCredentials",
+          "status": "pass",
+          "message": null,
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-http-green03/platform-gateway/TEST-cn.agentplatform.common.authority.PortalSessionHttpTest.xml",
+            "bytes": 39857,
+            "sha256": "c75ea879eb76dce1a7bed7e18d29526d681328ce01fc2827972056aa75145d5f"
+          }
+        }
+      ]
+    },
+    {
+      "stage": "iam-stage-d4a-alias-red01",
+      "at": "2026-10-20T19:33:19.040Z",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-d4a-alias-red01 platform-gateway PortalSessionHttpTest#remainingIdentityAndCredentialAliasesCannotEnterSessionHandler",
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "exit": 1,
+      "sourceManifest": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-alias-red01/source-before.json",
+        "bytes": 78337,
+        "sha256": "20bf927f63a5604715a5a9883ec844c7ceb99bccab1e894570e25286f2b2b938"
+      },
+      "cases": [
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionHttpTest",
+          "name": "remainingIdentityAndCredentialAliasesCannotEnterSessionHandler",
+          "status": "failure",
+          "message": "\nexpected: 403\n but was: 200",
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-alias-red01/platform-gateway/TEST-cn.agentplatform.common.authority.PortalSessionHttpTest.xml",
+            "bytes": 40205,
+            "sha256": "85a6ebd376f7f35bbff7d21f7284bad23aff1d575ca2d0d3c3e2e9063cc0b0a8"
+          }
+        }
+      ]
+    },
+    {
+      "stage": "iam-stage-d4a-alias-green01",
+      "at": "2026-10-20T19:33:27.811Z",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-d4a-alias-green01 platform-gateway PortalSessionHttpTest#remainingIdentityAndCredentialAliasesCannotEnterSessionHandler",
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "exit": 0,
+      "sourceManifest": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-alias-green01/source-before.json",
+        "bytes": 78337,
+        "sha256": "292025262eb6377ae13eb545ee8b3e45a3561b36e7239dcdfe14675e15738c52"
+      },
+      "cases": [
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionHttpTest",
+          "name": "remainingIdentityAndCredentialAliasesCannotEnterSessionHandler",
+          "status": "pass",
+          "message": null,
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-alias-green01/platform-gateway/TEST-cn.agentplatform.common.authority.PortalSessionHttpTest.xml",
+            "bytes": 39535,
+            "sha256": "45f3117566a02040732214828194ce31e8be442f067b0838fef1203bb2c6c12f"
+          }
+        }
+      ]
+    },
+    {
+      "stage": "iam-stage-d4a-final-controls-green01",
+      "at": "2026-10-20T19:34:14.902Z",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-d4a-final-controls-green01 platform-gateway PortalSessionAuthorizationTest#sessionVerifierStillRejectsFutureAndMalformedSignedDatesAsUnavailable,PortalSessionAuthorizationTest#ticketAndGrantExpiryDuringPrivateJwksVerificationAre403,PortalSessionHttpTest#finiteInstalledSessionClosesItsActualGatewayIssuerResolverAndOwner",
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "exit": 0,
+      "sourceManifest": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-final-controls-green01/source-before.json",
+        "bytes": 78337,
+        "sha256": "8a8cff277019ba92ebf7ce83fd81e7dce21baa4856db41f60311688047e118fa"
+      },
+      "cases": [
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+          "name": "ticketAndGrantExpiryDuringPrivateJwksVerificationAre403",
+          "status": "pass",
+          "message": null,
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-final-controls-green01/admin-common/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+            "bytes": 33909,
+            "sha256": "0826170ed942d7b4e3e8dfafc17c7714d944c5eaee75bd2c8679be84c6acd7eb"
+          }
+        },
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+          "name": "sessionVerifierStillRejectsFutureAndMalformedSignedDatesAsUnavailable",
+          "status": "pass",
+          "message": null,
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-final-controls-green01/admin-common/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+            "bytes": 33909,
+            "sha256": "0826170ed942d7b4e3e8dfafc17c7714d944c5eaee75bd2c8679be84c6acd7eb"
+          }
+        },
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionHttpTest",
+          "name": "finiteInstalledSessionClosesItsActualGatewayIssuerResolverAndOwner",
+          "status": "pass",
+          "message": null,
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-final-controls-green01/platform-gateway/TEST-cn.agentplatform.common.authority.PortalSessionHttpTest.xml",
+            "bytes": 39731,
+            "sha256": "6051f064de7b68dd6128d886c06fc87891c917bdf56eb73b076a94cb077d25e8"
+          }
+        }
+      ]
+    },
+    {
+      "stage": "iam-stage-d4a-envelope-red01",
+      "at": "2026-10-20T19:37:03.721Z",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-d4a-envelope-red01 admin-common PortalSessionAuthorizationTest#emptyUnsignedAuthorityEnvelopeIsUnavailableInsteadOfAnIdentityDenial",
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "exit": 1,
+      "sourceManifest": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-envelope-red01/source-before.json",
+        "bytes": 78337,
+        "sha256": "6e325f222d8133786c83474ad069f914a128a03f2af142b22a519db774f901fd"
+      },
+      "cases": [
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+          "name": "emptyUnsignedAuthorityEnvelopeIsUnavailableInsteadOfAnIdentityDenial",
+          "status": "failure",
+          "message": "\nexpected: 503\n but was: 403",
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-envelope-red01/admin-common/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+            "bytes": 34404,
+            "sha256": "001dc93eafccc22322d968e9c3340e7ac986f2991cfb2ee686de879213d803a0"
+          }
+        }
+      ]
+    },
+    {
+      "stage": "iam-stage-d4a-envelope-green01",
+      "at": "2026-10-20T19:37:10.596Z",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-d4a-envelope-green01 admin-common PortalSessionAuthorizationTest#emptyUnsignedAuthorityEnvelopeIsUnavailableInsteadOfAnIdentityDenial",
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "exit": 0,
+      "sourceManifest": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-envelope-green01/source-before.json",
+        "bytes": 78337,
+        "sha256": "7e1a1b53ae7b494361bf75b36d2878a1f4dbb1e5d0631c3311643a8e34822708"
+      },
+      "cases": [
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+          "name": "emptyUnsignedAuthorityEnvelopeIsUnavailableInsteadOfAnIdentityDenial",
+          "status": "pass",
+          "message": null,
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-envelope-green01/admin-common/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+            "bytes": 33564,
+            "sha256": "d0f3e1837cd0cb00fa8fe1b7a5c0d01d3ea23db7d3f5ecdcae7ad8d4a111a364"
+          }
+        }
+      ]
+    }
+  ],
+  "latestCases": [
+    {
+      "stage": "iam-stage-d4a-common-green01",
+      "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+      "name": "unsupportedDefaultCannotMintSessionFromPublicAuthority",
+      "status": "pass",
+      "message": null,
+      "xml": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-common-green01/admin-common/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+        "bytes": 33665,
+        "sha256": "b716596f2a29196d22564dc350430550a78f7ed22dcb5c2972cae9a89ff5b739"
+      }
+    },
+    {
+      "stage": "iam-stage-d4a-handoff-green01",
+      "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+      "name": "signedPortalSessionUsesExactlyExchangeAndAuthorizeAndProjectsFourFields",
+      "status": "pass",
+      "message": null,
+      "xml": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-handoff-green01/admin-common/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+        "bytes": 34428,
+        "sha256": "90acb2b231fbffffee5fe5370bad6cb4dd63c85755078fc5694bca031ab6b175"
+      }
+    },
+    {
+      "stage": "iam-stage-d4a-http-green01",
+      "class": "cn.agentplatform.common.authority.PortalSessionHttpTest",
+      "name": "installedExactHandlerReturnsOnlyCurrentSessionWithNoBusinessCalls",
+      "status": "pass",
+      "message": null,
+      "xml": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-http-green01/platform-gateway/TEST-cn.agentplatform.common.authority.PortalSessionHttpTest.xml",
+        "bytes": 39474,
+        "sha256": "7fb93d14d75479895d8e4d7865167af836820401d40e59b58f51b771deeebec6"
+      }
+    },
+    {
+      "stage": "iam-stage-d4a-common-green02",
+      "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+      "name": "sourceAndAuthorizationDeadlinesInvalidatePermanentlyWithDistinctStatus",
+      "status": "pass",
+      "message": null,
+      "xml": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-common-green02/admin-common/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+        "bytes": 36072,
+        "sha256": "46d02a8e2399a65604661ccd62d37cae90c9d3e7fbc81017d9d87aae6a101f2a"
+      }
+    },
+    {
+      "stage": "iam-stage-d4a-common-green02",
+      "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+      "name": "ownerCloseAndConsumedReleaseCannotBeReusedAndProofHasNoPublicMint",
+      "status": "pass",
+      "message": null,
+      "xml": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-common-green02/admin-common/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+        "bytes": 36072,
+        "sha256": "46d02a8e2399a65604661ccd62d37cae90c9d3e7fbc81017d9d87aae6a101f2a"
+      }
+    },
+    {
+      "stage": "iam-stage-d4a-common-green02",
+      "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+      "name": "signedAuthorizeCannotChangeInitialSubjectResourceGrantOriginOperationOrTicket",
+      "status": "pass",
+      "message": null,
+      "xml": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-common-green02/admin-common/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+        "bytes": 36072,
+        "sha256": "46d02a8e2399a65604661ccd62d37cae90c9d3e7fbc81017d9d87aae6a101f2a"
+      }
+    },
+    {
+      "stage": "iam-stage-d4a-common-green02",
+      "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+      "name": "monotonicLatestAuthorizeBudgetCannotBeExtendedByClockRollback",
+      "status": "pass",
+      "message": null,
+      "xml": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-common-green02/admin-common/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+        "bytes": 36072,
+        "sha256": "46d02a8e2399a65604661ccd62d37cae90c9d3e7fbc81017d9d87aae6a101f2a"
+      }
+    },
+    {
+      "stage": "iam-stage-d4a-handoff-green01",
+      "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+      "name": "latestAuthorizeWindowSurvivesSpentExchangeWindowWithoutExtendingSessionExpiry",
+      "status": "pass",
+      "message": null,
+      "xml": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-handoff-green01/admin-common/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+        "bytes": 34428,
+        "sha256": "90acb2b231fbffffee5fe5370bad6cb4dd63c85755078fc5694bca031ab6b175"
+      }
+    },
+    {
+      "stage": "iam-stage-d4a-common-expiry-green01",
+      "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+      "name": "invalidPortalAndIntegrationAre401ButUnavailableAuthorityIs503",
+      "status": "pass",
+      "message": null,
+      "xml": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-common-expiry-green01/admin-common/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+        "bytes": 33823,
+        "sha256": "e25c32faa6ee7fe78ef62b639c109bd5b04b293bf3d0dd2850cd2127af39b33a"
+      }
+    },
+    {
+      "stage": "iam-stage-d4a-common-green02",
+      "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+      "name": "authorizedRoleIntersectionMayBeEmptyAndGrantMayExpireBeforePortal",
+      "status": "pass",
+      "message": null,
+      "xml": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-common-green02/admin-common/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+        "bytes": 36072,
+        "sha256": "46d02a8e2399a65604661ccd62d37cae90c9d3e7fbc81017d9d87aae6a101f2a"
+      }
+    },
+    {
+      "stage": "iam-stage-d4a-common-expiry-green01",
+      "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+      "name": "signedElapsedExchangeAndAuthorizeDecisionsAre403BeforeAnyRelease",
+      "status": "pass",
+      "message": null,
+      "xml": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-common-expiry-green01/admin-common/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+        "bytes": 33823,
+        "sha256": "e25c32faa6ee7fe78ef62b639c109bd5b04b293bf3d0dd2850cd2127af39b33a"
+      }
+    },
+    {
+      "stage": "iam-stage-d4a-handoff-green01",
+      "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+      "name": "ordinaryVerifierAndPinnedVerifierKeepExpiredSignedEvidenceUnavailable",
+      "status": "pass",
+      "message": null,
+      "xml": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-handoff-green01/admin-common/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+        "bytes": 34428,
+        "sha256": "90acb2b231fbffffee5fe5370bad6cb4dd63c85755078fc5694bca031ab6b175"
+      }
+    },
+    {
+      "stage": "iam-stage-d4a-handoff-green01",
+      "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+      "name": "exchangeMustStillBeCurrentAfterTicketDecoderBeforeAuthorizeRequest",
+      "status": "pass",
+      "message": null,
+      "xml": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-handoff-green01/admin-common/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+        "bytes": 34428,
+        "sha256": "90acb2b231fbffffee5fe5370bad6cb4dd63c85755078fc5694bca031ab6b175"
+      }
+    },
+    {
+      "stage": "iam-stage-d4a-handoff-red01",
+      "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+      "name": "verifiedPortalExpiryDuringExchangeAndAuthorizeRemains401",
+      "status": "pass",
+      "message": null,
+      "xml": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-handoff-red01/admin-common/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+        "bytes": 34507,
+        "sha256": "c4ee4125a320981abf5e6abfe0e10a00b25d2082624a0b1c99bb55b4d8b9f527"
+      }
+    },
+    {
+      "stage": "iam-stage-d4a-http-green02",
+      "class": "cn.agentplatform.common.authority.PortalSessionHttpTest",
+      "name": "actualHttpInvalidSourceCurrentDenialAndAuthorityFailureAre401403503",
+      "status": "pass",
+      "message": null,
+      "xml": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-http-green02/platform-gateway/TEST-cn.agentplatform.common.authority.PortalSessionHttpTest.xml",
+        "bytes": 105659,
+        "sha256": "e37d196184e221f15715bf4f80d6f6146fcfe3a03f8d7ecc73e2550e27af3bc1"
+      }
+    },
+    {
+      "stage": "iam-stage-d4a-http-green03",
+      "class": "cn.agentplatform.common.authority.PortalSessionHttpTest",
+      "name": "normalLegacyStartsWithoutIamClientAndRunOnlyFiniteAssemblyKeepsOriginalBoundary",
+      "status": "pass",
+      "message": null,
+      "xml": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-http-green03/platform-gateway/TEST-cn.agentplatform.common.authority.PortalSessionHttpTest.xml",
+        "bytes": 39857,
+        "sha256": "c75ea879eb76dce1a7bed7e18d29526d681328ce01fc2827972056aa75145d5f"
+      }
+    },
+    {
+      "stage": "iam-stage-d4a-http-green02",
+      "class": "cn.agentplatform.common.authority.PortalSessionHttpTest",
+      "name": "trueJsonFirstWriteRejectsSourceCurrentAndOwnerExpiryWithoutSuccessBytes",
+      "status": "pass",
+      "message": null,
+      "xml": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-http-green02/platform-gateway/TEST-cn.agentplatform.common.authority.PortalSessionHttpTest.xml",
+        "bytes": 105659,
+        "sha256": "e37d196184e221f15715bf4f80d6f6146fcfe3a03f8d7ecc73e2550e27af3bc1"
+      }
+    },
+    {
+      "stage": "iam-stage-d4a-http-green02",
+      "class": "cn.agentplatform.common.authority.PortalSessionHttpTest",
+      "name": "installationRejectsReplacedAndSecondarySessionHandlerAndWrongOrDuplicateRegistration",
+      "status": "pass",
+      "message": null,
+      "xml": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-http-green02/platform-gateway/TEST-cn.agentplatform.common.authority.PortalSessionHttpTest.xml",
+        "bytes": 105659,
+        "sha256": "e37d196184e221f15715bf4f80d6f6146fcfe3a03f8d7ecc73e2550e27af3bc1"
+      }
+    },
+    {
+      "stage": "iam-stage-d4a-http-green03",
+      "class": "cn.agentplatform.common.authority.PortalSessionHttpTest",
+      "name": "actualHttpIngressRejectsQueryEmptyQueryBodyCookiesDuplicateAndInjectedCredentials",
+      "status": "pass",
+      "message": null,
+      "xml": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-http-green03/platform-gateway/TEST-cn.agentplatform.common.authority.PortalSessionHttpTest.xml",
+        "bytes": 39857,
+        "sha256": "c75ea879eb76dce1a7bed7e18d29526d681328ce01fc2827972056aa75145d5f"
+      }
+    },
+    {
+      "stage": "iam-stage-d4a-alias-green01",
+      "class": "cn.agentplatform.common.authority.PortalSessionHttpTest",
+      "name": "remainingIdentityAndCredentialAliasesCannotEnterSessionHandler",
+      "status": "pass",
+      "message": null,
+      "xml": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-alias-green01/platform-gateway/TEST-cn.agentplatform.common.authority.PortalSessionHttpTest.xml",
+        "bytes": 39535,
+        "sha256": "45f3117566a02040732214828194ce31e8be442f067b0838fef1203bb2c6c12f"
+      }
+    },
+    {
+      "stage": "iam-stage-d4a-final-controls-green01",
+      "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+      "name": "ticketAndGrantExpiryDuringPrivateJwksVerificationAre403",
+      "status": "pass",
+      "message": null,
+      "xml": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-final-controls-green01/admin-common/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+        "bytes": 33909,
+        "sha256": "0826170ed942d7b4e3e8dfafc17c7714d944c5eaee75bd2c8679be84c6acd7eb"
+      }
+    },
+    {
+      "stage": "iam-stage-d4a-final-controls-green01",
+      "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+      "name": "sessionVerifierStillRejectsFutureAndMalformedSignedDatesAsUnavailable",
+      "status": "pass",
+      "message": null,
+      "xml": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-final-controls-green01/admin-common/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+        "bytes": 33909,
+        "sha256": "0826170ed942d7b4e3e8dfafc17c7714d944c5eaee75bd2c8679be84c6acd7eb"
+      }
+    },
+    {
+      "stage": "iam-stage-d4a-final-controls-green01",
+      "class": "cn.agentplatform.common.authority.PortalSessionHttpTest",
+      "name": "finiteInstalledSessionClosesItsActualGatewayIssuerResolverAndOwner",
+      "status": "pass",
+      "message": null,
+      "xml": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-final-controls-green01/platform-gateway/TEST-cn.agentplatform.common.authority.PortalSessionHttpTest.xml",
+        "bytes": 39731,
+        "sha256": "6051f064de7b68dd6128d886c06fc87891c917bdf56eb73b076a94cb077d25e8"
+      }
+    },
+    {
+      "stage": "iam-stage-d4a-envelope-green01",
+      "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+      "name": "emptyUnsignedAuthorityEnvelopeIsUnavailableInsteadOfAnIdentityDenial",
+      "status": "pass",
+      "message": null,
+      "xml": {
+        "file": "docs/evidence/iam-stage-4-d4a-portal-session/iam-stage-d4a-envelope-green01/admin-common/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+        "bytes": 33564,
+        "sha256": "d0f3e1837cd0cb00fa8fe1b7a5c0d01d3ea23db7d3f5ecdcae7ad8d4a111a364"
+      }
+    }
+  ],
+  "latestPass": 24,
+  "latestTotal": 24,
+  "sourceAfter": {
+    "file": "docs/evidence/iam-stage-4-d4a-portal-session/source-after.json",
+    "sha256": "7e1a1b53ae7b494361bf75b36d2878a1f4dbb1e5d0631c3311643a8e34822708"
+  }
+}

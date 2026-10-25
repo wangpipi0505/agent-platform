@@ -1,0 +1,199 @@
+diff --git a/docs/evidence/iam-stage-5-n4a-deployment-mode/iam-stage-5-n4a-final01/source/admin-common/src/test/java/cn/agentplatform/common/authority/ServiceTokensDeploymentModeTest.java b/docs/evidence/iam-stage-5-n4a-deployment-mode/iam-stage-5-n4a-final02/source/admin-common/src/test/java/cn/agentplatform/common/authority/ServiceTokensDeploymentModeTest.java
+index b3e4e86..e710932 100644
+--- a/docs/evidence/iam-stage-5-n4a-deployment-mode/iam-stage-5-n4a-final01/source/admin-common/src/test/java/cn/agentplatform/common/authority/ServiceTokensDeploymentModeTest.java
++++ b/docs/evidence/iam-stage-5-n4a-deployment-mode/iam-stage-5-n4a-final02/source/admin-common/src/test/java/cn/agentplatform/common/authority/ServiceTokensDeploymentModeTest.java
+@@ -9,61 +9,61 @@ import org.springframework.boot.*;
+ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+ import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+ import org.springframework.security.web.SecurityFilterChain;
+ import java.nio.file.*;
+ import java.net.*;
+ import java.net.http.*;
+ import java.time.Duration;
+ import java.util.*;
+ import java.util.concurrent.*;
+ import java.util.concurrent.atomic.AtomicInteger;
+ import static org.assertj.core.api.Assertions.*;
+ 
+ public class ServiceTokensDeploymentModeTest {
+     static final Actor ACTOR = new Actor("tenant-a", "alice", Set.of("EDITOR"), Map.of("region", Set.of("A")));
+ 
+     @Test void unregisteredJvmTestCannotIssue() throws Exception { runScenario("unregistered"); }
+     @Test void actualLegacySnapshotSurvivesJvmMutationsAndContextClose() throws Exception { runScenario("legacy-snapshot"); }
+     @Test void actualIamOverridesJvmTestAndClosesAllLegacySignersBeforeListener() throws Exception { runScenario("iam-before-listener"); }
+     @Test void legacyThenIamClosesSigningAcrossThreads() throws Exception { runScenario("legacy-then-iam"); }
+     @Test void invalidDeploymentDoesNotRegisterPermission() throws Exception { runScenario("invalid-registration"); }
+     @Test void isolatedReceiverExplicitlyRegistersIamWithoutOpeningProductionChain() throws Exception { runScenario("isolated-receiver"); }
+ 
+     // Fixed finite child scenarios use this module's own classpath; no reset, reflection or JUnit order dependency.
+     public static void runScenario(String scenario) throws Exception {
+         if (!Set.of("unregistered", "legacy-snapshot", "iam-before-listener", "legacy-then-iam", "invalid-registration",
+                 "isolated-receiver", "common-boundary", "authority-complete-iam", "authority-dev-hmac", "authority-test",
+                 "authority-gateway", "authority-loopback-iam", "authority-portal").contains(scenario)) throw new AssertionError("unknown child");
+         Path output = Files.createTempFile("n4a-" + scenario, ".log");
+         Process child = new ProcessBuilder(Path.of(System.getProperty("java.home"), "bin", "java.exe").toString(),
+-                "-cp", System.getProperty("java.class.path"), ServiceTokensDeploymentModeTest.class.getName(), scenario)
++                "-Djdk.net.unixdomain.tmpdir=V:/.local/tmp", "-cp", System.getProperty("java.class.path"), ServiceTokensDeploymentModeTest.class.getName(), scenario)
+                 .redirectErrorStream(true).redirectOutput(output.toFile()).start();
+         try {
+             boolean finished = child.waitFor(45, TimeUnit.SECONDS);
+             if (!finished) { child.destroyForcibly(); assertThat(child.waitFor(5, TimeUnit.SECONDS)).isTrue(); }
+             String raw = Files.readString(output);
+             System.out.print(raw);
+             assertThat(finished).as("bounded child " + scenario).isTrue();
+             assertThat(child.exitValue()).as(raw).isZero();
+             assertThat(raw).contains("N4A_EXECUTED=" + scenario);
+             System.out.println("N4A_CHILD_REAPED=" + scenario + ":" + child.pid());
+         } finally {
+             if (child.isAlive()) child.destroyForcibly();
+             assertThat(child.waitFor(5, TimeUnit.SECONDS)).isTrue();
+             Files.deleteIfExists(output);
+         }
+     }
+ 
+     static StandardEnvironment environment(Map<String, Object> properties, boolean test) {
+         var env = new StandardEnvironment();
+         var input = new LinkedHashMap<String, Object>();
+         input.put("agent.security.service-id", "engine"); input.put("server.address", "127.0.0.1");
+         input.putAll(properties);
+         env.getPropertySources().addFirst(new MapPropertySource("n4a-actual-deployment", input));
+         env.setActiveProfiles(test ? new String[]{"test"} : new String[0]);
+         return env;
+     }
+ 
+     static void deniedAll() {
+         assertThatThrownBy(() -> ServiceTokens.issue(ACTOR)).isInstanceOf(PlatformException.class)
+                 .extracting("code").isEqualTo("AUTHORITY_CONTEXT_MISSING");
+@@ -142,62 +142,62 @@ public class ServiceTokensDeploymentModeTest {
+                     assertThatThrownBy(() -> SecurityConfiguration.bindDeployment(environment(Map.of("agent.security.mode","test"),true)))
+                             .isInstanceOf(PlatformException.class);
+                     deniedAll();
+                 } finally { release.countDown(); executor.shutdownNow(); assertThat(executor.awaitTermination(5,TimeUnit.SECONDS)).isTrue(); }
+             }
+             case "invalid-registration" -> {
+                 System.setProperty("agent.security.mode","test"); System.setProperty("spring.profiles.active","test");
+                 for (var invalid : AuthorityConfigurationTest.invalidConfigurations().filter(i -> !i.name().equals("complete-iam-still-closed")).toList()) {
+                     var input = new LinkedHashMap<>(invalid.properties());
+                     // This scenario uses explicit Environment profiles; keep the original helper's meaning.
+                     var env = environment(input, Boolean.TRUE.equals(input.remove("stage1.test-profile")));
+                     env.getPropertySources().remove("systemProperties");
+                     assertThatThrownBy(() -> SecurityConfiguration.bindDeployment(env)).as(invalid.name()).hasStackTraceContaining(invalid.reason());
+                     assertThatThrownBy(() -> ServiceTokens.issue(ACTOR)).as(invalid.name()).isInstanceOf(PlatformException.class);
+                 }
+             }
+             case "common-boundary" -> {
+                 SecurityConfiguration.bindDeployment(environment(Map.of("agent.security.mode","test"),true));
+                 CommonBoundaryTest.legacyTicketAssertions();
+             }
+             case "isolated-receiver" -> isolatedReceiver();
+             case "authority-complete-iam", "authority-dev-hmac", "authority-test", "authority-gateway", "authority-loopback-iam", "authority-portal" -> AuthorityConfigurationTest.main(args);
+             default -> throw new AssertionError("unknown scenario");
+         }
+         System.out.println("N4A_EXECUTED=" + scenario);
+     }
+ 
+     @Configuration(proxyBeanMethods=false) @EnableAutoConfiguration @EnableWebSecurity
+     static class Receiver {
+         @Bean static BeanFactoryPostProcessor receiverDeployment(Environment environment) {
+-            return factory -> factory.registerSingleton("receiverDeployment", SecurityConfiguration.bindDeployment(environment));
++            return factory -> factory.registerSingleton("validatedReceiverDeployment", SecurityConfiguration.bindDeployment(environment));
+         }
+         @Bean SecurityFilterChain receiverChain(HttpSecurity http) throws Exception {
+             return http.csrf(c -> c.disable()).authorizeHttpRequests(c -> c.anyRequest().denyAll()).build();
+         }
+     }
+ 
+     static void isolatedReceiver() throws Exception {
+         var input = AuthorityConfigurationTest.completeIam();
+         input.put("server.address","127.0.0.1"); input.put("server.port",0);
+         input.put("spring.config.location","optional:classpath:/n4a-no-config/");
+         input.put("spring.main.banner-mode","off"); input.put("logging.level.root","ERROR");
+         input.put("spring.jmx.enabled",false); input.put("springdoc.api-docs.enabled",false);
+         var app = new SpringApplication(Receiver.class); app.setDefaultProperties(input);
+         try (var context = app.run()) {
+-            assertThat(context.getBean("receiverDeployment", AuthorityProperties.class).mode()).isEqualTo("iam");
++            assertThat(context.getBean("validatedReceiverDeployment", AuthorityProperties.class).mode()).isEqualTo("iam");
+             int port = ((org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext)context).getWebServer().getPort();
+             try (var client = HttpClient.newHttpClient()) {
+                 var response = client.send(HttpRequest.newBuilder(URI.create("http://127.0.0.1:"+port+"/isolated"))
+                         .timeout(Duration.ofSeconds(3)).GET().build(), HttpResponse.BodyHandlers.discarding());
+                 assertThat(response.statusCode()).isEqualTo(403);
+             }
+             deniedAll();
+             System.out.println("N4A_RECEIVER_PORT=" + port);
+         }
+         deniedAll();
+         var factories = new AtomicInteger();
+         assertThatThrownBy(() -> { try (var ignored = AuthorityConfigurationTest.application(AuthorityConfigurationTest.completeIam(),factories).run()) {} })
+                 .hasStackTraceContaining("IAM_TRUST_CHAIN_UNAVAILABLE");
+         assertThat(factories).hasValue(0);
+     }
+ }
+diff --git a/docs/evidence/iam-stage-5-n4a-deployment-mode/iam-stage-5-n4a-final01/source/engine-runtime/src/test/java/cn/agentplatform/engine/infra/RuntimeClientsPublishedHttpTest.java b/docs/evidence/iam-stage-5-n4a-deployment-mode/iam-stage-5-n4a-final02/source/engine-runtime/src/test/java/cn/agentplatform/engine/infra/RuntimeClientsPublishedHttpTest.java
+index a55ee3f..3b7383d 100644
+--- a/docs/evidence/iam-stage-5-n4a-deployment-mode/iam-stage-5-n4a-final01/source/engine-runtime/src/test/java/cn/agentplatform/engine/infra/RuntimeClientsPublishedHttpTest.java
++++ b/docs/evidence/iam-stage-5-n4a-deployment-mode/iam-stage-5-n4a-final02/source/engine-runtime/src/test/java/cn/agentplatform/engine/infra/RuntimeClientsPublishedHttpTest.java
+@@ -208,61 +208,61 @@ class RuntimeClientsPublishedHttpTest {
+                         assertThat(claims.path("origin_authentication_id").asText())
+                                 .isEqualTo(proof.requireOriginAuthenticationId());
+                         return null;
+                     });
+             assertThat(f.sends).hasValue(1);
+         }
+     }
+ 
+     @Test
+     void iamActorGetPostStreamAndUnknownTargetsNeverSignOrSend() throws Exception {
+         try (var f = new Fixture();
+                 var clients = f.clients()) {
+             int before = f.iam.requestAttempts();
+             for (String target : Arrays.asList("app", "skill", "model", null, "", "modle")) {
+                 assertThatThrownBy(() -> clients.get(target, "/private", ACTOR))
+                         .isInstanceOf(PlatformException.class);
+                 assertThatThrownBy(() -> clients.post(target, "/private", Map.of(), ACTOR))
+                         .isInstanceOf(PlatformException.class);
+             }
+             assertThatThrownBy(() -> clients.chatStream(Map.of(), ACTOR, s -> {}))
+                     .isInstanceOf(PlatformException.class);
+             assertThat(f.iam.requestAttempts()).isEqualTo(before);
+             assertThat(f.sends).hasValue(0);
+         }
+     }
+ 
+     @Test
+     void explicitLegacyConstructionKeepsKnownAppSkillModelRoutes() throws Exception {
+         var output = java.nio.file.Files.createTempFile("n4a-engine-legacy", ".log");
+         var child = new ProcessBuilder(java.nio.file.Path.of(System.getProperty("java.home"), "bin", "java.exe").toString(),
+-                "-cp", System.getProperty("java.class.path"), RuntimeClientsPublishedHttpTest.class.getName(), "legacy-routes")
++                "-Djdk.net.unixdomain.tmpdir=V:/.local/tmp", "-cp", System.getProperty("java.class.path"), RuntimeClientsPublishedHttpTest.class.getName(), "legacy-routes")
+                 .redirectErrorStream(true).redirectOutput(output.toFile()).start();
+         try {
+             boolean finished = child.waitFor(30, TimeUnit.SECONDS);
+             if (!finished) { child.destroyForcibly(); assertThat(child.waitFor(5, TimeUnit.SECONDS)).isTrue(); }
+             String raw = java.nio.file.Files.readString(output); System.out.print(raw);
+             assertThat(finished).as("bounded engine legacy child").isTrue();
+             assertThat(child.exitValue()).as(raw).isZero();
+             assertThat(raw).contains("N4A_ENGINE_EXECUTED=legacy-routes");
+             System.out.println("N4A_ENGINE_CHILD_REAPED=" + child.pid());
+         } finally {
+             if (child.isAlive()) child.destroyForcibly();
+             assertThat(child.waitFor(5, TimeUnit.SECONDS)).isTrue();
+             java.nio.file.Files.deleteIfExists(output);
+         }
+     }
+ 
+     public static void main(String[] args) throws Exception {
+         if (args.length != 1 || !"legacy-routes".equals(args[0])) throw new AssertionError("unknown engine child");
+         // A real validated Environment is the sole legacy permission source; IAM parent tests stay unregistered.
+         var environment = new org.springframework.core.env.StandardEnvironment();
+         environment.setActiveProfiles("test");
+         environment.getPropertySources().addFirst(new org.springframework.core.env.MapPropertySource("n4a-engine-legacy",
+                 Map.of("agent.security.mode", "test", "agent.security.service-id", "engine", "server.address", "127.0.0.1")));
+         SecurityConfiguration.bindDeployment(environment);
+         try (var f = new Fixture(); var clients = new RuntimeClients()) {
+             clients.app = f.origin(); clients.skill = f.origin(); clients.model = f.origin();
+             for (String target : List.of("app", "skill", "model"))
+                 assertThat(clients.get(target, "/internal/apps/" + CODE + "/published", ACTOR)).isEqualTo(payload().path("data"));
+             assertThat(f.sends).hasValue(3);
+             assertThatThrownBy(() -> clients.get("unknown", "/private", ACTOR)).isInstanceOf(PlatformException.class);

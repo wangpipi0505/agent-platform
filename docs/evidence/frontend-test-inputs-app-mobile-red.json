@@ -1,0 +1,42 @@
+{
+  "fixtureOnly": true,
+  "requests": [
+    {
+      "path": "/admin/apps/named_fixture",
+      "query": {},
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/admin/apps/named_fixture/publish/precheck",
+      "query": {},
+      "method": "POST",
+      "body": null
+    },
+    {
+      "path": "/admin/evaluation-datasets",
+      "query": {
+        "appCode": "named_fixture",
+        "limit": "20"
+      },
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/admin/apps/named_fixture/publish/precheck",
+      "query": {},
+      "method": "POST",
+      "body": null
+    },
+    {
+      "path": "/admin/evaluation-datasets/named_fixture/immutable-v1",
+      "query": {},
+      "method": "GET",
+      "body": null
+    }
+  ],
+  "checks": {
+    "missingSelectionCannotSubmit": true
+  },
+  "pageErrors": []
+}

@@ -1,0 +1,347 @@
+{
+  "stages": [
+    {
+      "stage": ".local/iam-o2b-f1-gateway-decoder/iam-stage-o2b-f1-red",
+      "command": {
+        "file": ".local/iam-o2b-f1-gateway-decoder/iam-stage-o2b-f1-red/command.json",
+        "bytes": 501,
+        "sha256": "ff6371f9b282ce88f3eeae9e1d4f3e493fe3722f648059856b3f14d2a0cb2d28"
+      },
+      "raw": {
+        "file": ".local/iam-o2b-f1-gateway-decoder/iam-stage-o2b-f1-red/raw.log",
+        "bytes": 8306,
+        "sha256": "8ffbeca1c532ec3641d15fe4a140c77e3322cd1403748a23f2ea6ed6e8df9c18"
+      },
+      "epoch": {
+        "file": ".local/iam-o2b-f1-gateway-decoder/iam-stage-o2b-f1-red/source-epoch.json",
+        "bytes": 117013,
+        "sha256": "f73e0130466b97e06bbf3e15ad6102455bc25dc1b764b9615135b7b84edb3c99"
+      },
+      "exit": 1,
+      "running": [
+        "cn.agentplatform.gateway.infra.PortalEventsPacketBudgetTest",
+        "cn.agentplatform.gateway.infra.PortalEventsPacketDecoderTest"
+      ],
+      "suites": [
+        {
+          "xml": {
+            "file": ".local/iam-o2b-f1-gateway-decoder/iam-stage-o2b-f1-red/reports/TEST-cn.agentplatform.gateway.infra.PortalEventsPacketBudgetTest.xml",
+            "bytes": 39551,
+            "sha256": "e407eb8f747cf3ffd71f0eea91887bd1a8059ac85c96a4fd7919e662db44a899"
+          },
+          "tests": 1,
+          "failures": 1,
+          "errors": 0,
+          "skipped": 0,
+          "methods": [
+            "twoOwnersThirdRejectedAndCloseRestoresSlots"
+          ]
+        },
+        {
+          "xml": {
+            "file": ".local/iam-o2b-f1-gateway-decoder/iam-stage-o2b-f1-red/reports/TEST-cn.agentplatform.gateway.infra.PortalEventsPacketDecoderTest.xml",
+            "bytes": 39625,
+            "sha256": "0042a84ac110955e034acdaebc755761c7792593ec32d77cd1522781d4c11f56"
+          },
+          "tests": 1,
+          "failures": 1,
+          "errors": 0,
+          "skipped": 0,
+          "methods": [
+            "magicFailureIsTerminal"
+          ]
+        }
+      ],
+      "counts": {
+        "tests": 2,
+        "failures": 2,
+        "errors": 0,
+        "skipped": 0
+      },
+      "compilerLines": [
+        "[INFO] Nothing to compile - all classes are up to date.",
+        "[INFO] Nothing to compile - all classes are up to date.",
+        "[INFO] Recompiling the module because of changed source code.",
+        "[INFO] Compiling 16 source files with javac [debug parameters release 21] to target\\classes",
+        "[INFO] Recompiling the module because of changed dependency.",
+        "[INFO] Compiling 13 source files with javac [debug parameters release 21] to target\\test-classes"
+      ]
+    },
+    {
+      "stage": ".local/iam-o2b-f1-gateway-decoder/iam-stage-o2b-f1-green",
+      "command": {
+        "file": ".local/iam-o2b-f1-gateway-decoder/iam-stage-o2b-f1-green/command.json",
+        "bytes": 434,
+        "sha256": "14c80abc815757bf6921c18db46767efcd1f2084eea005c84a99d7e79361c12b"
+      },
+      "raw": {
+        "file": ".local/iam-o2b-f1-gateway-decoder/iam-stage-o2b-f1-green/raw.log",
+        "bytes": 8138,
+        "sha256": "8f72570d01028ff9b3177d881f65ae5c7cb3789203aa95549902f5cea5916e89"
+      },
+      "epoch": {
+        "file": ".local/iam-o2b-f1-gateway-decoder/iam-stage-o2b-f1-green/source-epoch.json",
+        "bytes": 117015,
+        "sha256": "8488af1e2fdd18a6533c799b98ca19dd4055885261ad622968de02526a7496c0"
+      },
+      "exit": 1,
+      "running": [],
+      "suites": [],
+      "counts": {
+        "tests": 0,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "compilerLines": [
+        "[INFO] Nothing to compile - all classes are up to date.",
+        "[INFO] Nothing to compile - all classes are up to date.",
+        "[INFO] Recompiling the module because of changed source code.",
+        "[INFO] Compiling 16 source files with javac [debug parameters release 21] to target\\classes"
+      ]
+    },
+    {
+      "stage": ".local/iam-o2b-f1-gateway-decoder/iam-stage-o2b-f1-green-compiled",
+      "command": {
+        "file": ".local/iam-o2b-f1-gateway-decoder/iam-stage-o2b-f1-green-compiled/command.json",
+        "bytes": 434,
+        "sha256": "14c80abc815757bf6921c18db46767efcd1f2084eea005c84a99d7e79361c12b"
+      },
+      "raw": {
+        "file": ".local/iam-o2b-f1-gateway-decoder/iam-stage-o2b-f1-green-compiled/raw.log",
+        "bytes": 9352,
+        "sha256": "b313330a29b436690c051cdc574bbc5da58d2c44218b78389645a969ca57df64"
+      },
+      "epoch": {
+        "file": ".local/iam-o2b-f1-gateway-decoder/iam-stage-o2b-f1-green-compiled/source-epoch.json",
+        "bytes": 117015,
+        "sha256": "40f9b5272ed221bba8ed526fbe1b4aa316d83aed4b606df61e8c162ff268d680"
+      },
+      "exit": 1,
+      "running": [
+        "cn.agentplatform.gateway.infra.PortalEventsPacketBudgetTest",
+        "cn.agentplatform.gateway.infra.PortalEventsPacketDecoderTest"
+      ],
+      "suites": [
+        {
+          "xml": {
+            "file": ".local/iam-o2b-f1-gateway-decoder/iam-stage-o2b-f1-green-compiled/reports/TEST-cn.agentplatform.gateway.infra.PortalEventsPacketBudgetTest.xml",
+            "bytes": 42065,
+            "sha256": "67c35550aae05e9c362d96c0805fbb018845a0bfaf47e81b7ba337419338b1f9"
+          },
+          "tests": 7,
+          "failures": 2,
+          "errors": 0,
+          "skipped": 0,
+          "methods": [
+            "twoOwnersThirdRejectedAndCloseRestoresSlots",
+            "inputIsBoundOnceAndClosingDecoderDoesNotCloseUpstream",
+            "realWireAllocationIsPrechargedAndNoNextPacketIsRead",
+            "oneOwnerHasOneDecoderForItsEntireLifetime",
+            "packetMustCloseBeforeNextReadAndBorrowRejectsClose",
+            "blockedInputAndInterruptDoNotReleaseUntilRealExit",
+            "invalidHugeLengthNeverAllocatesOrReadsDeclaredBody"
+          ]
+        },
+        {
+          "xml": {
+            "file": ".local/iam-o2b-f1-gateway-decoder/iam-stage-o2b-f1-green-compiled/reports/TEST-cn.agentplatform.gateway.infra.PortalEventsPacketDecoderTest.xml",
+            "bytes": 40312,
+            "sha256": "c3286e2ae9545810abed662852d1e7be5e5e3f745fead572a4885aac08335305"
+          },
+          "tests": 10,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "methods": [
+            "windowRootShapeAndNullnessAreOnlyStructuralChecks",
+            "capacityHasExactCodeAndEndsResponse",
+            "strictJsonRejectsDuplicateUnknownTrailingAndEncodingsWithCorrectHashes",
+            "maximumWireAndUnsignedLengthLimits",
+            "everyPartialSegmentFailsAndBoundaryEofIsEmpty",
+            "acceptedTwelveEncoderVectorsRemainUntrustedWithSmallReads",
+            "exactStructureDepthTokenStringNameAndNumberLimits",
+            "prefixOrderingAndAllDigestFieldsAreChecked",
+            "exactHeaderSchemaTypesAndScalarBoundaries",
+            "magicFailureIsTerminal"
+          ]
+        }
+      ],
+      "counts": {
+        "tests": 17,
+        "failures": 2,
+        "errors": 0,
+        "skipped": 0
+      },
+      "compilerLines": [
+        "[INFO] Nothing to compile - all classes are up to date.",
+        "[INFO] Nothing to compile - all classes are up to date.",
+        "[INFO] Recompiling the module because of changed source code.",
+        "[INFO] Compiling 16 source files with javac [debug parameters release 21] to target\\classes",
+        "[INFO] Recompiling the module because of changed dependency.",
+        "[INFO] Compiling 13 source files with javac [debug parameters release 21] to target\\test-classes"
+      ]
+    },
+    {
+      "stage": ".local/iam-o2b-f1-gateway-decoder/iam-stage-o2b-f1-focused",
+      "command": {
+        "file": ".local/iam-o2b-f1-gateway-decoder/iam-stage-o2b-f1-focused/command.json",
+        "bytes": 823,
+        "sha256": "0c330ff723879cf4dea37986391c55447f4849e7018865180dc1765560ea30e8"
+      },
+      "raw": {
+        "file": ".local/iam-o2b-f1-gateway-decoder/iam-stage-o2b-f1-focused/raw.log",
+        "bytes": 5898,
+        "sha256": "d8d9e1cd7b28c6cae0905a38c8bafc62f3fae53d20b7ada1ebbd0466a22f8aba"
+      },
+      "epoch": {
+        "file": ".local/iam-o2b-f1-gateway-decoder/iam-stage-o2b-f1-focused/source-epoch.json",
+        "bytes": 117016,
+        "sha256": "7d2640ece2813868343b59cce286891e75432fa04be9adc5816089df203fa55f"
+      },
+      "exit": 0,
+      "running": [
+        "cn.agentplatform.gateway.infra.PortalEventsPacketBudgetTest",
+        "cn.agentplatform.gateway.infra.PortalEventsPacketDecoderTest"
+      ],
+      "suites": [
+        {
+          "xml": {
+            "file": ".local/iam-o2b-f1-gateway-decoder/iam-stage-o2b-f1-focused/reports/TEST-cn.agentplatform.gateway.infra.PortalEventsPacketBudgetTest.xml",
+            "bytes": 39852,
+            "sha256": "8e49a259e0ba90c91ae81657de986438ba767d0ee72dd9cbd424828c4eebdd4c"
+          },
+          "tests": 4,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "methods": [
+            "ownerLimitIsExactGlobalLedgerIsSharedAndFailedAllocationRollsBack",
+            "selectedJacksonProviderActuallyAllocatesBoundedReaderBackingAndNoSharedCaches",
+            "packetMustCloseBeforeNextReadAndBorrowRejectsClose",
+            "blockedInputAndInterruptDoNotReleaseUntilRealExit"
+          ]
+        },
+        {
+          "xml": {
+            "file": ".local/iam-o2b-f1-gateway-decoder/iam-stage-o2b-f1-focused/reports/TEST-cn.agentplatform.gateway.infra.PortalEventsPacketDecoderTest.xml",
+            "bytes": 39348,
+            "sha256": "94459cbea7e689302f2941a2c7bd05ec5b426eea9c4f50794f5e3005fa95fc0e"
+          },
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "methods": [
+            "eventTypeUtf16AndHeaderIntegerLimitsPreserveOriginalText"
+          ]
+        }
+      ],
+      "counts": {
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "compilerLines": [
+        "[INFO] Nothing to compile - all classes are up to date.",
+        "[INFO] Nothing to compile - all classes are up to date.",
+        "[INFO] Recompiling the module because of changed source code.",
+        "[INFO] Compiling 16 source files with javac [debug parameters release 21] to target\\classes",
+        "[INFO] Recompiling the module because of changed dependency.",
+        "[INFO] Compiling 13 source files with javac [debug parameters release 21] to target\\test-classes"
+      ]
+    },
+    {
+      "stage": ".local/iam-o2b-f1-gateway-decoder/iam-stage-o2b-f1-final",
+      "command": {
+        "file": ".local/iam-o2b-f1-gateway-decoder/iam-stage-o2b-f1-final/command.json",
+        "bytes": 434,
+        "sha256": "e9ed5ffbee10c912956677b10f23a6c058a0be2f67a9279c46dffaad38307893"
+      },
+      "raw": {
+        "file": ".local/iam-o2b-f1-gateway-decoder/iam-stage-o2b-f1-final/raw.log",
+        "bytes": 6236,
+        "sha256": "f6a3ffeb0c7de830970a765c4dbbf629253af8d3043c7ffc578212e1ce527b5d"
+      },
+      "epoch": {
+        "file": ".local/iam-o2b-f1-gateway-decoder/iam-stage-o2b-f1-final/source-epoch.json",
+        "bytes": 117016,
+        "sha256": "b391ee9fe99f69b51066006bdb468bcf4750cf2f6bd16a2dc22ae458fae301f4"
+      },
+      "exit": 0,
+      "running": [
+        "cn.agentplatform.gateway.infra.PortalEventsPacketBudgetTest",
+        "cn.agentplatform.gateway.infra.PortalEventsPacketDecoderTest"
+      ],
+      "suites": [
+        {
+          "xml": {
+            "file": ".local/iam-o2b-f1-gateway-decoder/iam-stage-o2b-f1-final/reports/TEST-cn.agentplatform.gateway.infra.PortalEventsPacketBudgetTest.xml",
+            "bytes": 40678,
+            "sha256": "f0b66c3d370c7c355de00040e71f62ef1b477483166bf6859e758c6fbbf8f985"
+          },
+          "tests": 9,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "methods": [
+            "twoOwnersThirdRejectedAndCloseRestoresSlots",
+            "ownerLimitIsExactGlobalLedgerIsSharedAndFailedAllocationRollsBack",
+            "selectedJacksonProviderActuallyAllocatesBoundedReaderBackingAndNoSharedCaches",
+            "inputIsBoundOnceAndClosingDecoderDoesNotCloseUpstream",
+            "realWireAllocationIsPrechargedAndNoNextPacketIsRead",
+            "oneOwnerHasOneDecoderForItsEntireLifetime",
+            "packetMustCloseBeforeNextReadAndBorrowRejectsClose",
+            "blockedInputAndInterruptDoNotReleaseUntilRealExit",
+            "invalidHugeLengthNeverAllocatesOrReadsDeclaredBody"
+          ]
+        },
+        {
+          "xml": {
+            "file": ".local/iam-o2b-f1-gateway-decoder/iam-stage-o2b-f1-final/reports/TEST-cn.agentplatform.gateway.infra.PortalEventsPacketDecoderTest.xml",
+            "bytes": 40481,
+            "sha256": "377e408d1dbe29b3c60f575e7121c5574bb5e2ba08c719d6918509ca7470070e"
+          },
+          "tests": 11,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "methods": [
+            "windowRootShapeAndNullnessAreOnlyStructuralChecks",
+            "capacityHasExactCodeAndEndsResponse",
+            "strictJsonRejectsDuplicateUnknownTrailingAndEncodingsWithCorrectHashes",
+            "maximumWireAndUnsignedLengthLimits",
+            "everyPartialSegmentFailsAndBoundaryEofIsEmpty",
+            "acceptedTwelveEncoderVectorsRemainUntrustedWithSmallReads",
+            "exactStructureDepthTokenStringNameAndNumberLimits",
+            "prefixOrderingAndAllDigestFieldsAreChecked",
+            "eventTypeUtf16AndHeaderIntegerLimitsPreserveOriginalText",
+            "exactHeaderSchemaTypesAndScalarBoundaries",
+            "magicFailureIsTerminal"
+          ]
+        }
+      ],
+      "counts": {
+        "tests": 20,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "compilerLines": [
+        "[INFO] Nothing to compile - all classes are up to date.",
+        "[INFO] Nothing to compile - all classes are up to date.",
+        "[INFO] Recompiling the module because of changed source code.",
+        "[INFO] Compiling 16 source files with javac [debug parameters release 21] to target\\classes",
+        "[INFO] Recompiling the module because of changed dependency.",
+        "[INFO] Compiling 13 source files with javac [debug parameters release 21] to target\\test-classes"
+      ]
+    }
+  ],
+  "functionalRed": "twoOwnersThirdRejectedAndCloseRestoresSlots expected2 but stub0; magicFailureIsTerminal expected IOException but stub empty. Actual feature assertions, not compile failures.",
+  "compileFailure": "green: builder JsonFactory.Feature disable has no three-feature overload; no Running; not functional RED.",
+  "compiledFailure": "green-compiled: decoder10 passed; budget2 failures because test expected pre-borrow bytes after a real separately charged384B borrow. Assertion failure kept borrow live, so later blocked test observed that leaked test owner. No production accounting relaxation. Test expected bytes corrected after borrow.",
+  "focused": "five cases passed; four budget cases including the two affected, exact quota+rollback, provider backing; one header eventType case. Additional acceptance tests were added after initial RED; do not claim each passed through individual historical RED.",
+  "invalidNoRun": "An attempted + method-selector was rejected by the own helper grammar before a stage/process existed; no testcase or RED claimed. Replaced by explicit repeated comma selectors with same methods.",
+  "final": "Only final20, no later test run; source epoch actually compiled16 production and13 test files."
+}

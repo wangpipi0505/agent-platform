@@ -1,0 +1,86 @@
+# Spec Compliance: SPEC COMPLIANT (scoped implementation)
+
+Code Quality: **APPROVED**. Findings: **C0 / I0 / M1**, where the one Minor is retained evidence-quality qualification M2 from the original review. No blocking implementation defect remains in the reviewed delta. **ALL / noBackground / NOTAccepted**. These code verdicts do not approve the historical execution deviations, grant task/project acceptance, or authorize production IAM, D3, public CHAT, engine sender or deployment.
+
+P = `G:/207/项目/算法重组工具/代码/agent-platform`; B = `.local/iam-model-initial-stream-fix`; S = `B/final2-source/source`. Source references below are repository-relative paths inspected through S, never mutable canonical source. MC = `model-gateway/src/main/java/cn/agentplatform/model/application/ModelCalls.java`; F = `model-gateway/src/test/java/cn/agentplatform/model/application/InitialStreamIntegrationFixture.java`; T = `model-gateway/src/test/java/cn/agentplatform/model/application/InitialStreamIntegrationTest.java`. J = `B/public-mechanisms/junit-43947c10bc080d8428ccf71e5e0cd859cd0c3faea016c6145a43b5216e22f530.java`.
+
+## Scope and identities
+
+Reviewed the task-specific review brief, implementation brief, full implementation report, immutable handback, original C0/I3/M2 review, project AGENTS/implementation brief/contracts README, and SDD task-reviewer contract. Read `B/native2-change.patch` once. The patch has ordinary narrow context and cuts the changed production/constructor functions, so restored only their necessary complete context from S. Outside-diff checks are named below.
+
+Independently hashed dispatch inputs:
+
+| File | Bytes | SHA256 |
+| --- | ---: | --- |
+| B/handback.json | 8070 | b84d988346bb7c6a86a63581f01fca673be525e11a69d5be602f0439f853b910 |
+| docs/evidence/iam-model-initial-stream-fix-report.md | 15133 | 3ab01b77930f989095627e12a3c23ac100a24277e6b8a0f62d60dfdc982b8bbc |
+| B/native2-change.patch | 21853 | 43c248c63cf18d9ae842df9dddf164b63fb6bc04143ca46a31c315a5d49a6314 |
+| B/final2-source/source.json | 135063 | dea83bd7cc0a1ff997379b894280343aa879db618a71092cf03f54a7d2c1ca0a |
+
+Compared old/new manifest entries: 680 -> 680, exactly MC/F/T modified, 677 unchanged, zero additions/deletions. This is within the five-file grant. ModelController, ModelStore, connectors, common/engine source, POM/config/migrations/contracts/web/status are outside this delta. Manifest comparison is scope evidence; root independently qualifies actual complete tree/package contents. Input manifest is `00e5b91d7072adbd54cd41d01aec2aff40005d013f72df81eabf9426610d9868`; it was integrity-qualified, not code-accepted.
+
+## Strengths and requirement disposition
+
+**I1 addressed.** MC:664 persists actual provider completion/usage, MC:665 marks completionPersisted, and MC:676 prevents later finalization failures from overwriting that success with failed call-log facts. MC:688-702 attempts permit/client cleanup and preserves RuntimeException cleanup failures as suppressed on the primary failure. MC:706-708 performs genuine current material/binding refresh plus owner/deadline checks after stream termination, persistence, reconciliation, circuit work, permit close and client termination, immediately before returning the result. This final authorization fence sits outside the persistence failure handler; denial cannot falsely refund SENT, retry, or fabricate provider failure. The unchanged synchronous controller writes final immediately after this return (`model-gateway/src/main/java/cn/agentplatform/model/api/ModelController.java:195-205`); its error path suppresses final.
+
+T:27 is a meaningful real boundary test: F:196-201 wraps the successful PostgreSQL finished executeUpdate and runs actual IAM revoke afterward; the test checks SUCCEEDED before revoke and checks no active transaction. It asserts client error/no final, exactly one provider dispatch, one log, SUCCEEDED/66 actual tokens and SENT. `B/final-fresh-final-boundary/post-finished-revoke.json:1` agrees. The retained RED records an AssertionError because final was still present. This is a later boundary than the old provider-wait revocation test.
+
+**I2 addressed.** MC:582-587 passes a private owner-thread closure that reacquires current material/binding, checks the same accepted/encoded wire identities, and validates the original owner and live deadline. MC:757-761 invokes it after SecretVault.resolve and before sendAsync, recomputing outgoing timeout afterward. No external production test hook or worker authority transfer was introduced; the transaction starts later at MC:618.
+
+T:48 temporarily replaces Properties in its isolated test JVM after fixture readiness. It delegates key reads to the original properties, counts only the actual owner servlet thread, performs actual IAM revoke during its second key read, returns the real value, and restores the exact original Properties in finally (T:71). The approved seam observes **after vault file read, before decrypt/resolve completion**; it does not pretend to inject after resolve returned. The production fence itself is after full credential preparation. Named outside-diff risk: whether the claimed seam really lies within credential preparation. `admin-common/src/main/java/cn/agentplatform/common/SecretVault.java:93-107` reads the secret file before key acquisition and decrypts afterward, supporting that precise description. `B/final-fresh-credential-boundary/credential-boundary.json:1` records two reads, restoration, and zero tokenizer/provider calls; T also asserts zero logs/reservations. The RED contains an actual tokenizer count of one. This evidence does not claim a separate deterministic expiry test at the same seam; live deadline validation is visible in MC:586/727-730 and existing affected deadline behavior is covered below.
+
+**I3 addressed.** F:59-94 catches constructor Exception/Error after resource acquisition begins and closes already acquired resources before rethrowing the original failure. F:154-166 attempts every owned stage independently, suppresses later failures, and clears current in finally. F:99 disables Spring destruction of the manually owned borrowed DataSource. Named outside-diff ownership risk: verifier close or ServiceAuthorization destruction might close the separately owned authority twice. `model-gateway/src/main/java/cn/agentplatform/model/application/InitialModelInputVerifier.java:630-631` closes its own transport; the focused ServiceAuthorization lifecycle scan found no close/destroy/PreDestroy ownership hook. No double authority owner was found.
+
+T:79 fails receiver setup only after real SELECT 1, Redis PING and an open client, checks identity of primary/suppressed failures, and verifies real pool closed/client terminated/Redis stopped/current cleared before its emergency cleanup. T:103 throws from the early context-close stage and a later HTTP-close hook, then verifies subsequent resources closed and current cleared, before emergency cleanup and process guard. The constructor and teardown closure JSON records confirm those observations. These tests are not assertions satisfied merely by killing the JVM. The REDs are real close-state AssertionErrors, not setup/launcher failures.
+
+**Original M1 addressed.** J:18-24 records event type, unique ID, display name, test/container flags, time, skip reason and finished result/throwable; J:34-37 records skipped methods and skipped containers and derives descendant skipped methods. J:47-62 retains unexecuted selected methods and container failures in clearly labelled custom XML. J:65-67 rejects skipped/aborted/failed events and any selection other than exactly one executed successful test. The adapter self-check is correctly labelled adapter-contract evidence, not production behavior. Its empty success method is purposeful: real BeforeEach/AfterEach marker writes are the behavior under test (`B/public-mechanisms/adapter-check-a2a9aa0a5f645ee5c4b32805970d552d15a26ba7486d4eb1691cea87eaf47154.java:4-15`). Five raw event/XML groups confirm method skip, container skip, aborted method, failed container and success. Expected exit codes are 1/1/1/1/0. Failed container has one unexecuted/skipped selected method and one suite-level error, without inventing a failed method. Original ten successful non-skipped runs remain historically valid.
+
+**Original M2 retained as required.** The implementation report:73-77 preserves failures, timeout/setup qualifications and privacy incidents. The task did not alter historical logs or mute production logging. See retained Minor below.
+
+## Exact test evidence inspected
+
+Safely parsed only testcase identities/statuses and suite counts from all final XML; did not output properties or raw XML. All 13 methods match the union and actual XML, with 9 DIRECT custom-derived cases and 4 Surefire cases. Every final command is exit 0/non-timeout and every final suite has zero failures/errors/skips. Each of the nine DIRECT event logs has one successful finished method and no skip/abort/failure event. All 13 referenced XML hashes match. Two legacy methods share one suite; they were not counted as two separate suites.
+
+Final selections verified: final-fresh-final-boundary, final-fresh-credential-boundary, final-fresh-constructor-lifecycle, final-fresh-teardown-lifecycle, final-fresh-positive, final-fresh-tokenizer-ack, final-fresh-tokenizer-deadline-2, final-fresh-rollback-direct, final-fresh-commit-unknown-direct, both final-fresh-legacy-regression methods, final-security and final-prompt. Existing actual evidence answers the affected success/raw-wire/unavailable-usage/downgrade/duplicate, tokenizer ACK/deadline, real rollback/commit-unknown, legacy stream, retained authority and native prompt questions. Internal tokenizer scenarios are not counted as separate JUnit methods. No test was rerun by this reviewer.
+
+Safely parsed the four real RED method results: each one actual FAILED assertion, not a failed container or discovery/setup error. Final-boundary RED observes unexpected final; credential RED observes tokenizer one; constructor/teardown REDs observe false close state. Final fresh-key facts were read separately. Earlier fixed-key executions remain behavior evidence with an execution qualification, not final fresh-resource acceptance evidence.
+
+Checked sourceManifestSha256 and actual helper/argfile hashes for the ten final fresh runtime groups, without printing argument contents: each binds the pre-format source `a5b3fb9accc2e6405ea43be5eb5e2c6947c858bf2ef10805410925b02058208a`, and helper/argument hashes match. The separate common/prompt regressions do not use provider vault credentials. Legacy execution remains ADAPTED_FIXTURE, as described by `B/regression-overlay.json:1`; no claim is made that this is an unmodified canonical test-fixture execution. Full overlay/runtime provenance is part of root's physical qualification.
+
+## Source/byte/artifact cohorts
+
+Independently compared actual pre-format/final2 MC bytes using the seven listed offsets from `B/eol-delta.json:1`: exactly seven CR-before-LF bytes removed; every other byte equal. Independently hashed both actual runtime-capture and normalized recompiled files for ModelCalls.class, ModelCalls$1.class and ModelCalls$2.class: all three pairs match the recorded SHA256 values in `B/eol-equivalence.json:1`. This is sufficient changed-class byte-equivalence evidence for the approved nonsemantic correction; the 13 test methods remain bound to their actual pre-format source. No behavioral rerun or resource reopening was performed or requested.
+
+Read `B/native2-replay.json`: old680 input, final2 target, exact reviewed patch hash, count680/allMatch. Read actual native2 diff-check/apply-check/apply/replay-driver command records: all exit0/non-timeout. These are retained execution records, not a claim that this reviewer reran Git/replay.
+
+Read the finite artifacts2/cohort declaration: six JARs, 634 project class/resource entries, separately qualified embedded common dependency, common/engine retained from package1 and normalized model from package2. Runtime capture, package1 fresh capture and package2 normalized capture are distinct. Root must finish the complete compiler-input/options/source binding and all-entry/JAR qualification; pairwise class hashes alone do not establish every compiler input or embedded dependency. Boot loader/META-INF/other nested dependencies are not claimed as individually compilation-compared. No artifact is promoted by this code review.
+
+## Findings
+
+### Critical
+
+None.
+
+### Important
+
+None in the scoped implementation delta. The historical execution violations below remain independently disqualifying for a blanket compliant-execution claim; absence of a code Important finding does not waive them.
+
+### Minor — retained non-pristine evidence qualification (original M2)
+
+`docs/evidence/iam-model-initial-stream-fix-report.md:77`, `B/failure-register.json:1`, and `B/final-fresh-legacy-regression/reports/TEST-cn.agentplatform.model.application.ModelCallsPostgresTest.xml:1`: historical setup/discovery/compilation/helper failures and a 30.128s SendFacts timeout remain failed executions. Safely parsing only system-out/system-err text counts identifies two ERROR log lines in the successful legacy regression suite, consistent with the expected rejection case retained by the previous review. The suite itself has two passing methods and zero testcase errors; these logs are not evidence of two additional product defects. Preserve this distinction, the failed command, and its replacement focused passes. No deletion, muting, scope expansion or rerun to improve historical appearance is requested. This is one nonblocking evidence-quality qualification, not a new production fix request.
+
+## Execution qualifications and unresolved root items
+
+The two current writer deviations are separate: (1) initial reuse of the historical fixed fixture vault master key, and (2) initial full helper read printing that fixed literal in tool output. The second is a no-credential-output violation independently of reuse. Both are explicitly retained in `docs/evidence/iam-model-initial-stream-fix-report.md:73-75` and `B/handback.json`. They are also distinct from the original reviewer's property-output incident in `docs/evidence/review-iam-model-initial-stream.md`. No value is reproduced here. Later random-key successes cannot erase any incident.
+
+`B/fresh-key-transition.json:1` declares a fresh random owner key introduced for subsequent groups, with private file handling and no DB reset. This review confirms final group source/hash/result binding without reading/comparing key values; root independently verifies random-key/resource provenance, protected ACLs and public-package exclusions. Earlier private originals/logs/configs/arguments must stay preserved locally; public packages must contain only allowed refs/hashes for private material. This review did not enumerate or export credential-bearing helpers/configs.
+
+Read closure declarations: `B/setup/db-closure.json:1` records preserved DB/data (10 call logs, 16 quotas), sessions0, two NOLOGIN/nonprivileged roles, memberships0 and no model/engine schema usage/create. `B/closure2.json` declares 27 closed groups and explicit future-seal exclusions. `B/control.json` declares 183 completed command records, 436 known identities, caps30/90/readiness30/shutdown10, mutex available/no Maven overlap; handback supplements final sealing command exit/identity results. These are inspected claims with specific retained records, not an independent process/DB re-probe. Root retains responsibility for exact registered identity closure, real intervals/caps/guards, ACL/public inventory, compiler arguments, whole-tree/JAR/native replay integrity and protected document checks. The original nine closed audit phases were not replayed.
+
+Default IAM/D3/public CHAT closure, v1.2/four contracts/schedules, no sibling business JAR and no engine-sender activation are unchanged-scope/cross-task constraints. The narrow diff introduces none of those activations, but a task code review is not a whole-platform deployment certificate.
+
+Review execution: only constrained PowerShell source/metadata reads, safe projections and hash/byte comparisons; no tests, compiler/runtime launch, Git, process/service/DB requests, old resource reuse or child agents. One reviewer projection initially had a PowerShell empty-pipe parse error before any command body executed; it was corrected and rerun as a read-only array projection. This did not change evidence or expose private data. Public Java adapter sources were inspected with redaction-first projection. Sole written output is this report; no code/status/ledger/certificate changed.
+
+## Assessment
+
+**Spec Compliant / Quality Approved** for the scoped fixes, with **C0 / I0 / M1** retained evidence qualification. The production checks now sit after the waits they protect, meaningful real boundary/lifecycle evidence supports the fixes, and adapter skipped outcomes are represented honestly. Global execution remains **NOTAccepted** pending root's independent physical qualification, with the credential incidents and failed historical executions permanently retained. **ALL / noBackground / NOTAccepted**.

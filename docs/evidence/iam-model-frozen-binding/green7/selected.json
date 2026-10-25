@@ -1,0 +1,77 @@
+{
+  "epoch": "green7",
+  "sourceManifest": ".local\\iam-model-frozen-binding\\green7-source\\source.json",
+  "sourceSha256": "5e4a053394066ff115a617c89cd3b85cc58518d49de50e1f5a91265ab20f89b7",
+  "actualRunning": [
+    "cn.agentplatform.model.application.FrozenModelBindingConsumerHttpTest",
+    "cn.agentplatform.model.application.FrozenModelBindingVerifierTest",
+    "cn.agentplatform.model.infra.FrozenModelBindingStorePostgresTest"
+  ],
+  "suites": [
+    {
+      "name": "cn.agentplatform.model.application.FrozenModelBindingConsumerHttpTest",
+      "module": "model-gateway",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": null,
+      "xmlSha256": "5751c5a5895414b81d385388a29639fccf1ce24d11a034da5351adbe72364e4b",
+      "classpathSha256": "c9e2697f33989cdff821a068c7ce073392fe6b72c1aa2388a424caccbd66dfdb",
+      "cases": [
+        "realSeparateJvmFrozenBindingJoinAndNumericDigest",
+        "separateProducerRejectsWrongOwnerRootOriginBeforeBindingSql"
+      ]
+    },
+    {
+      "name": "cn.agentplatform.model.application.FrozenModelBindingVerifierTest",
+      "module": "model-gateway",
+      "tests": 17,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": null,
+      "xmlSha256": "8477d3d936063fd3ab3bd2bc26b454d7b90976671d00863a110761e62fb788f4",
+      "classpathSha256": "c9e2697f33989cdff821a068c7ce073392fe6b72c1aa2388a424caccbd66dfdb",
+      "cases": [
+        "rejectsChangedSnapshotUnderOldSha",
+        "metadataBoundsAreStrictBeforeNewProof",
+        "fullTreeHashRetainsArrayOrderAndObjectOrderIsCanonical",
+        "frozenStateSurvivesMutableDisableAndEndpointLabelModelChanges",
+        "interruptionExpiryAndBoundedPoolNeverMintOrRetry",
+        "realFreezeAndAcceptedConsumerPositiveControl",
+        "capabilitiesAndEffectiveOutputAreChecked",
+        "refreshFollowsActualConnectionReleaseAndNarrowingRevocationOutageDeny",
+        "numericDigestCopiesAndResultLifetime",
+        "nullClosedReplacedCrossThreadAndAmbientTransactionDenyBeforeQuery",
+        "emptyClassificationRequiresLocalAndRetainedExpiryRetiresNewProof",
+        "cooperativeEightSecondEnvelopeCannotMintAfterOverrun",
+        "signedPostPgOwnerRootInitialOriginAndNewLabelChangesAreRechecked",
+        "actualHttpObserverPositiveControlsAndNoBusinessWrites",
+        "retainsLostLabelObligation",
+        "realPgLockTimeoutThenFreshHealthyFrame",
+        "missingTenantRowAndNestedIdsHaveNoMutableFallback"
+      ]
+    },
+    {
+      "name": "cn.agentplatform.model.infra.FrozenModelBindingStorePostgresTest",
+      "module": "model-gateway",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": null,
+      "xmlSha256": "7a309f437855e8a5b0a2c388fb610716927d1c0b15a3e982992083defcc86d83",
+      "classpathSha256": "c9e2697f33989cdff821a068c7ce073392fe6b72c1aa2388a424caccbd66dfdb",
+      "cases": [
+        "ordinaryStoreRequiresActualReadOnlyTransaction"
+      ]
+    }
+  ],
+  "totals": {
+    "tests": 20,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  }
+}

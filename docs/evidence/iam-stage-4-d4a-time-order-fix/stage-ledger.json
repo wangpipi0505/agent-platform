@@ -1,0 +1,248 @@
+{
+  "at": "2026-10-20T19:58:12.726435+00:00",
+  "stages": [
+    {
+      "stage": "iam-stage-d4a-time-order-red01",
+      "command": {
+        "at": "2026-10-20T19:56:37.656Z",
+        "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+        "command": "node .tools/run-iam-module-tests.mjs iam-stage-d4a-time-order-red01 admin-common PortalSessionAuthorizationTest#signedElapsedCurrentAndTicketRequireExpiryAfterNotBefore",
+        "sourceManifest": {
+          "file": "docs/evidence/iam-stage-4-d4a-time-order-fix/iam-stage-d4a-time-order-red01/source-before.json",
+          "bytes": 78337,
+          "sha256": "0e0e66e4f148097f65c36a253b85a579c41d30e11eab32e9c052a3a260fbefa0"
+        },
+        "baseline": {
+          "file": "docs/evidence/iam-stage-4-d4a-time-order-fix/before.json",
+          "bytes": 5154,
+          "sha256": "b57ae6f6fb09180f1555eced57413074e86f7b1eee70c856d00953d4e55a4ec7"
+        }
+      },
+      "result": {
+        "at": "2026-10-20T19:56:45.574Z",
+        "exit": 1,
+        "error": null,
+        "running": [
+          "[INFO] Running cn.agentplatform.common.authority.PortalSessionAuthorizationTest"
+        ]
+      },
+      "cases": [
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+          "name": "signedElapsedCurrentAndTicketRequireExpiryAfterNotBefore",
+          "status": "failure",
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-time-order-fix/iam-stage-d4a-time-order-red01/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+            "bytes": 35851,
+            "sha256": "1f3b5e0424fdd61a46bb090b20daac7cf72424fef3457b75115eb08a62706c2b"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "file": {
+            "file": "docs/evidence/iam-stage-4-d4a-time-order-fix/iam-stage-d4a-time-order-red01/variants-51536.json",
+            "bytes": 939,
+            "sha256": "550eea50c75219a82952eef5a6e99c82a366077658b5f4f9fa496661aba9011b"
+          },
+          "actual": {
+            "at": "2026-10-20T19:56:45.426889600Z",
+            "processStart": "2026-10-20T19:56:42.886Z",
+            "pid": 51536,
+            "observations": [
+              {
+                "iat": 1792454400,
+                "nbf": 1792454401,
+                "exp": 1792454401,
+                "operations": [
+                  "exchange",
+                  "authorize"
+                ],
+                "portalStillValid": true,
+                "actualStatus": 403,
+                "grantStillValid": true,
+                "now": 1792454403,
+                "variant": "current-nbf-equals-exp"
+              },
+              {
+                "iat": 1792454400,
+                "nbf": 1792454402,
+                "exp": 1792454401,
+                "operations": [
+                  "exchange",
+                  "authorize"
+                ],
+                "portalStillValid": true,
+                "actualStatus": 403,
+                "grantStillValid": true,
+                "now": 1792454403,
+                "variant": "current-nbf-after-exp"
+              },
+              {
+                "iat": 1792454400,
+                "nbf": 1792454401,
+                "exp": 1792454401,
+                "operations": [
+                  "exchange"
+                ],
+                "portalStillValid": true,
+                "actualStatus": 403,
+                "grantStillValid": true,
+                "now": 1792454403,
+                "variant": "ticket-nbf-equals-exp"
+              },
+              {
+                "iat": 1792454400,
+                "nbf": 1792454402,
+                "exp": 1792454401,
+                "operations": [
+                  "exchange"
+                ],
+                "portalStillValid": true,
+                "actualStatus": 403,
+                "grantStillValid": true,
+                "now": 1792454403,
+                "variant": "ticket-nbf-after-exp"
+              }
+            ],
+            "executedVariants": 4
+          }
+        }
+      ]
+    },
+    {
+      "stage": "iam-stage-d4a-time-order-green01",
+      "command": {
+        "at": "2026-10-20T19:56:56.154Z",
+        "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+        "command": "node .tools/run-iam-module-tests.mjs iam-stage-d4a-time-order-green01 admin-common PortalSessionAuthorizationTest#signedElapsedCurrentAndTicketRequireExpiryAfterNotBefore,PortalSessionAuthorizationTest#signedElapsedExchangeAndAuthorizeDecisionsAre403BeforeAnyRelease,PortalSessionAuthorizationTest#ordinaryVerifierAndPinnedVerifierKeepExpiredSignedEvidenceUnavailable",
+        "sourceManifest": {
+          "file": "docs/evidence/iam-stage-4-d4a-time-order-fix/iam-stage-d4a-time-order-green01/source-before.json",
+          "bytes": 78337,
+          "sha256": "f56b205dcf81af1e9be357e49fae284768916a920cb36343d2aac50f0ee5aed2"
+        },
+        "baseline": {
+          "file": "docs/evidence/iam-stage-4-d4a-time-order-fix/before.json",
+          "bytes": 5154,
+          "sha256": "b57ae6f6fb09180f1555eced57413074e86f7b1eee70c856d00953d4e55a4ec7"
+        }
+      },
+      "result": {
+        "at": "2026-10-20T19:57:05.513Z",
+        "exit": 0,
+        "error": null,
+        "running": [
+          "[INFO] Running cn.agentplatform.common.authority.PortalSessionAuthorizationTest"
+        ]
+      },
+      "cases": [
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+          "name": "signedElapsedCurrentAndTicketRequireExpiryAfterNotBefore",
+          "status": "pass",
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-time-order-fix/iam-stage-d4a-time-order-green01/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+            "bytes": 34094,
+            "sha256": "86940f15695c63f4b440785f6b5b4566edc6c29ab997265b9eaced282b6b3e25"
+          }
+        },
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+          "name": "signedElapsedExchangeAndAuthorizeDecisionsAre403BeforeAnyRelease",
+          "status": "pass",
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-time-order-fix/iam-stage-d4a-time-order-green01/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+            "bytes": 34094,
+            "sha256": "86940f15695c63f4b440785f6b5b4566edc6c29ab997265b9eaced282b6b3e25"
+          }
+        },
+        {
+          "class": "cn.agentplatform.common.authority.PortalSessionAuthorizationTest",
+          "name": "ordinaryVerifierAndPinnedVerifierKeepExpiredSignedEvidenceUnavailable",
+          "status": "pass",
+          "xml": {
+            "file": "docs/evidence/iam-stage-4-d4a-time-order-fix/iam-stage-d4a-time-order-green01/TEST-cn.agentplatform.common.authority.PortalSessionAuthorizationTest.xml",
+            "bytes": 34094,
+            "sha256": "86940f15695c63f4b440785f6b5b4566edc6c29ab997265b9eaced282b6b3e25"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "file": {
+            "file": "docs/evidence/iam-stage-4-d4a-time-order-fix/iam-stage-d4a-time-order-green01/variants-61624.json",
+            "bytes": 939,
+            "sha256": "739a5a5e92d788d374510831113ec7427c329d0a2825962c576d8b22daca1a4c"
+          },
+          "actual": {
+            "processStart": "2026-10-20T19:57:02.191Z",
+            "pid": 61624,
+            "observations": [
+              {
+                "nbf": 1792454401,
+                "exp": 1792454401,
+                "operations": [
+                  "exchange",
+                  "authorize"
+                ],
+                "portalStillValid": true,
+                "actualStatus": 503,
+                "grantStillValid": true,
+                "now": 1792454403,
+                "variant": "current-nbf-equals-exp",
+                "iat": 1792454400
+              },
+              {
+                "nbf": 1792454402,
+                "exp": 1792454401,
+                "operations": [
+                  "exchange",
+                  "authorize"
+                ],
+                "portalStillValid": true,
+                "actualStatus": 503,
+                "grantStillValid": true,
+                "now": 1792454403,
+                "variant": "current-nbf-after-exp",
+                "iat": 1792454400
+              },
+              {
+                "nbf": 1792454401,
+                "exp": 1792454401,
+                "operations": [
+                  "exchange"
+                ],
+                "portalStillValid": true,
+                "actualStatus": 503,
+                "grantStillValid": true,
+                "now": 1792454403,
+                "variant": "ticket-nbf-equals-exp",
+                "iat": 1792454400
+              },
+              {
+                "nbf": 1792454402,
+                "exp": 1792454401,
+                "operations": [
+                  "exchange"
+                ],
+                "portalStillValid": true,
+                "actualStatus": 503,
+                "grantStillValid": true,
+                "now": 1792454403,
+                "variant": "ticket-nbf-after-exp",
+                "iat": 1792454400
+              }
+            ],
+            "executedVariants": 4,
+            "at": "2026-10-20T19:57:04.705268400Z"
+          }
+        }
+      ]
+    }
+  ],
+  "newUniqueJUnitCases": 1,
+  "greenExecutedJUnitCases": 3,
+  "newVariants": 4,
+  "notFourUniqueCases": true,
+  "notOldD4a24Rerun": true
+}

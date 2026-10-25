@@ -1,0 +1,47 @@
+{
+  "status": "DONE_WITH_CONCERNS",
+  "independentReviews": "Pending; not self-approved",
+  "sourceOwnership": "Returned to root; no further author source writes",
+  "targetOwnership": "Returned to root; no further author Maven/target writes",
+  "report": "docs/evidence/iam-stage-5-e1b-report.md",
+  "reportSha256": "7070a68c00a6b0f52d14735ac0a78ae39d407ff729981d50f9d627e2efdca5db",
+  "sourceManifest": "docs/evidence/iam-stage-5-e1b/source-after.json",
+  "sourceManifestSha256": "35f339e649d7849c3b10c17607c06bc067cc5947047386443c04e9f9d5bce54e",
+  "compiledManifest": "docs/evidence/iam-stage-5-e1b/compiled-freeze.json",
+  "compiledManifestSha256": "c2e9a3d0241d02e5d354aaa88206e9cde3e6c2f8914709552d68ba458c34e1f0",
+  "targetManifest": "docs/evidence/iam-stage-5-e1b/target-after.json",
+  "targetManifestSha256": "e4fcea9e61e0c23a5224dde58896ba5802dedf0b8eeeb053cefa1fcf939031c2",
+  "patch": "docs/evidence/iam-stage-5-e1b/change.patch",
+  "patchSha256": "1b425f21483994eeb5e23c5e0f2722f40aa7100c0334c23659b4728195b66027",
+  "patchBytes": 178875,
+  "finalVerification": "docs/evidence/iam-stage-5-e1b/final-verification.json",
+  "finalVerificationSha256": "b76a20eee26287a946433a2fa9d1b4634dacd866d5a3bd728638133277fd51f8",
+  "finalCommon": {
+    "stage": "iam-stage-5-e1b-final-common01",
+    "tests": 179,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "sourceScope": "77 exact admin-common source/POM plus root POM; full356 snapshot differs in exactly2 later engine files"
+  },
+  "finalEngine": {
+    "stage": "iam-stage-5-e1b-final-engine02",
+    "tests": 35,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "all356SourceMatches": true
+  },
+  "sourceFiles": 356,
+  "compiledFiles": 311,
+  "otherTargetChanges": 0,
+  "protectedAuthorizedAddition": "docs/evidence/iam-d3b-published-payload-seam-proposal.md",
+  "limitations": [
+    "Not wired to production services/scheduler",
+    "No production IAM acceptance",
+    "Explicit reauthorization and all-material writers remain Task5 dependencies",
+    "Early incidental XML excluded from counts; original evidence preserved",
+    "First patch replay byte mismatch preserved; final full replay verified"
+  ],
+  "taskProgress": "Only T01 complete; no summed historic962 or fullTask5 claim"
+}

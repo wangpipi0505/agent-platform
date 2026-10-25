@@ -1,0 +1,38 @@
+{
+  "phase": "red",
+  "fixtureOnly": true,
+  "checks": {},
+  "requests": [
+    {
+      "kind": "detail",
+      "path": "/admin/apps/async_a",
+      "method": "GET"
+    },
+    {
+      "kind": "detail",
+      "path": "/admin/evaluations",
+      "method": "GET"
+    },
+    {
+      "kind": "detail",
+      "path": "/admin/apps/async_a/publish/precheck",
+      "method": "POST"
+    },
+    {
+      "kind": "detail",
+      "path": "/admin/evaluations",
+      "method": "GET"
+    },
+    {
+      "kind": "detail",
+      "path": "/admin/evaluation-datasets",
+      "method": "GET"
+    },
+    {
+      "kind": "detail",
+      "path": "/admin/evaluation-datasets/async_a/v1",
+      "method": "GET"
+    }
+  ],
+  "pageErrors": []
+}

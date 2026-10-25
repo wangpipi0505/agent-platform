@@ -1,0 +1,162 @@
+{
+  "status": "DONE_WITH_CONCERNS: inherited13 documented; final code awaits independent review/root acceptance",
+  "sourceAfter": {
+    "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/final02/source-after.json",
+    "bytes": 111999,
+    "sha256": "6fa517a594efdf523b83c45188b03b9e7a9ad14482a29e7d8113cfe7227fd271"
+  },
+  "targetAfter": {
+    "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/final02/target-after.json",
+    "bytes": 419611,
+    "sha256": "cbb51a971a6111c503babff9be6ded0846497cf4e79a95b2ba7e5e1076943f02"
+  },
+  "executedSource": {
+    "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/green04/after/source.json",
+    "bytes": 111999,
+    "sha256": "6fa517a594efdf523b83c45188b03b9e7a9ad14482a29e7d8113cfe7227fd271"
+  },
+  "finalSourceMatchesExecuted": true,
+  "report": {
+    "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response-report.md",
+    "bytes": 12758,
+    "sha256": "2f00b5db4edb6913d98798e3a8eb923cc8b29098d859ce3545fc42064cba603a"
+  },
+  "finalReplay": {
+    "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/final02/replay-proof.json",
+    "bytes": 776,
+    "sha256": "dd4ae70ba07529b43e6883affb00dab65480e9901ef46fa65578b5102d5cec24"
+  },
+  "historicalReplay": {
+    "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/replay-proof.json",
+    "bytes": 760,
+    "sha256": "0d6d6220c651db9db417489c7740bf6cc9b22ac44b0797d7e226938c0d1983b7"
+  },
+  "actualGreen04": {
+    "running": [
+      "cn.agentplatform.common.authority.PortalEventsAuthorityProfileTest"
+    ],
+    "reports": [
+      {
+        "cls": "cn.agentplatform.common.authority.PortalEventsAuthorityProfileTest",
+        "tests": 22,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0,
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.PortalEventsAuthorityProfileTest.xml",
+        "bytes": 37479,
+        "sha256": "4ba5482153a825803e811b3d687029806483a7e0adba6dc05b6430f8957ae724"
+      }
+    ]
+  },
+  "fullFinal01": {
+    "running": [
+      "cn.agentplatform.common.authority.AuthorityContextRetainedTest",
+      "cn.agentplatform.common.authority.GatewayStatusAuthorizationTest",
+      "cn.agentplatform.common.authority.PortalEventsAuthorityProfileTest",
+      "cn.agentplatform.common.authority.PortalEventsReceiverClosedTest",
+      "cn.agentplatform.common.authority.ResponseAuthorityTest",
+      "cn.agentplatform.common.authority.RetainedAuthorizationTest",
+      "cn.agentplatform.common.authority.RunObservationSelectorsTest",
+      "cn.agentplatform.common.authority.ServiceAuthorizationTest"
+    ],
+    "reports": [
+      {
+        "cls": "cn.agentplatform.common.authority.AuthorityContextRetainedTest",
+        "tests": 5,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0,
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.AuthorityContextRetainedTest.xml",
+        "bytes": 34383,
+        "sha256": "aab07fa9b5a4cd4e08d3e96101595891e75f8e1cd2f90cf4e3c90186978cd2ed"
+      },
+      {
+        "cls": "cn.agentplatform.common.authority.GatewayStatusAuthorizationTest",
+        "tests": 9,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0,
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.GatewayStatusAuthorizationTest.xml",
+        "bytes": 35802,
+        "sha256": "a0b58aa46d7da6b7435469dba70060b1c61fffaf426a6926caae483e9bfed294"
+      },
+      {
+        "cls": "cn.agentplatform.common.authority.PortalEventsAuthorityProfileTest",
+        "tests": 21,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0,
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.PortalEventsAuthorityProfileTest.xml",
+        "bytes": 37478,
+        "sha256": "4bdc554522ce86ebcd5b4b8d01d9e8be36eb208a20541938b29151283814e08e"
+      },
+      {
+        "cls": "cn.agentplatform.common.authority.PortalEventsReceiverClosedTest",
+        "tests": 1,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0,
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.PortalEventsReceiverClosedTest.xml",
+        "bytes": 34352,
+        "sha256": "1832dcd20e159cbff9ef375209001d290fa2b2cb8cd7246c208c464126ca913e"
+      },
+      {
+        "cls": "cn.agentplatform.common.authority.ResponseAuthorityTest",
+        "tests": 19,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0,
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.ResponseAuthorityTest.xml",
+        "bytes": 37173,
+        "sha256": "465821e7ad7fe842074793663a56291c370a56abd176f44f99124ec3a2adc31d"
+      },
+      {
+        "cls": "cn.agentplatform.common.authority.RetainedAuthorizationTest",
+        "tests": 13,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0,
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.RetainedAuthorizationTest.xml",
+        "bytes": 36234,
+        "sha256": "76d33887035e93a5b44558eec637ab7c4b3262b321b04f8d4fc3743d13f22e10"
+      },
+      {
+        "cls": "cn.agentplatform.common.authority.RunObservationSelectorsTest",
+        "tests": 3,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0,
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.RunObservationSelectorsTest.xml",
+        "bytes": 34544,
+        "sha256": "a48f893baeeab2e8031b5e3561eb94ead760609b9f887c688df3fd935f8a1f13"
+      },
+      {
+        "cls": "cn.agentplatform.common.authority.ServiceAuthorizationTest",
+        "tests": 14,
+        "errors": 13,
+        "skipped": 0,
+        "failures": 0,
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.ServiceAuthorizationTest.xml",
+        "bytes": 49323,
+        "sha256": "087815d0a74c17a43bce9baee9c2241bbaae22cd1a75ecc7d3e56cee227f7a38"
+      }
+    ]
+  },
+  "inheritedDisposition": {
+    "file": "docs/evidence/iam-stage-4-o2a-a-inherited-service-test-decision.md",
+    "bytes": 4094,
+    "sha256": "3f61d9207f55eff52162945fa77d0010b1f5c0cd69a90e3550b08a4c1b123a1f"
+  },
+  "sourceCount": 589,
+  "targetCount": 2023,
+  "finalCandidate": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/final02",
+  "ownInventory": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/final02/own-inventory.json",
+  "allWriteRightsReturned": [
+    "source exact9",
+    "target/backend generated common classes",
+    ".local/iam-o2a-a-portal-events-response",
+    "docs/evidence/iam-stage-4-o2a-a-portal-events-response",
+    "docs/evidence/iam-stage-4-o2a-a-portal-events-response-report.md"
+  ],
+  "noMoreWriterOperations": true
+}

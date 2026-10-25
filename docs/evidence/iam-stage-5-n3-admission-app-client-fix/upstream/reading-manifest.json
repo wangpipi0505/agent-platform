@@ -1,0 +1,95 @@
+{
+  "sourceArchive": {
+    "file": "docs/evidence/iam-stage-5-n3-admission-app-client/upstream/httpclient5-5.4.4-sources.jar",
+    "bytes": 753157,
+    "sha256": "1e56c35e4130f4917012cf0c8d021403bca2c805f60c9e689c65eac7d9c15312"
+  },
+  "officialSourceUrl": "https://repo.maven.apache.org/maven2/org/apache/httpcomponents/client5/httpclient5/5.4.4/httpclient5-5.4.4-sources.jar",
+  "version": "Apache HttpClient5 5.4.4; fixed core5 5.3.4 unchanged",
+  "license": "Apache-2.0",
+  "noNetworkFetchOrDependencyChange": true,
+  "files": [
+    {
+      "file": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/upstream/HttpClientBuilder.java",
+      "bytes": 42575,
+      "sha256": "52342ea379c713eb945d95c82975335bf34e3bdfe713f24b030df4a4c5f226b1",
+      "sourceFile": "HttpClientBuilder.java",
+      "reusedWithShaVerification": true
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/upstream/MainClientExec.java",
+      "bytes": 8639,
+      "sha256": "0a108d4686f3dbd0089ecc16dd13cc75a39db18ac023af63315e5c946d855601",
+      "sourceFile": "MainClientExec.java",
+      "reusedWithShaVerification": true
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/upstream/ProtocolExec.java",
+      "bytes": 14384,
+      "sha256": "677e06f8f4bcacecc6ef6d604c27455184e64d1f0a8895aa80c1457b6f477669",
+      "sourceFile": "ProtocolExec.java",
+      "reusedWithShaVerification": true
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/upstream/InternalExecRuntime.java",
+      "bytes": 12031,
+      "sha256": "f0fa2be898b53fbb6abcd28bd5813da91662aa7b1d690cf553d831bc1423af04",
+      "sourceFile": "InternalExecRuntime.java",
+      "reusedWithShaVerification": true
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/upstream/CloseableHttpClient.java",
+      "bytes": 12445,
+      "sha256": "ea5582aa887ddbb66ffd4155510308c86828da22d6f77922f2d29ca5d85e6b43",
+      "sourceFile": "CloseableHttpClient.java",
+      "reusedWithShaVerification": true
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/upstream/Apache-LICENSE.txt",
+      "bytes": 11358,
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceFile": "Apache-LICENSE.txt",
+      "reusedWithShaVerification": true
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/upstream/Apache-NOTICE.txt",
+      "bytes": 174,
+      "sha256": "4ad1973880c25e0c41fdf45fb47fbb3cb935b322982cca535d4dbf8062cc5a47",
+      "sourceFile": "Apache-NOTICE.txt",
+      "reusedWithShaVerification": true
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/upstream/ConnectExec.java",
+      "bytes": 14875,
+      "sha256": "255e80f7d9ec7e8c5f2706d9da06f104e071db98fdd4033c62f1a0c19b454d4d",
+      "sourceFile": "ConnectExec.java",
+      "reusedWithShaVerification": false
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/upstream/HttpClientContext.java",
+      "bytes": 20704,
+      "sha256": "4290ef49090428a1703d9c207b9fe561bbb6448420bee3e7e5dd1a8204652300",
+      "sourceFile": "HttpClientContext.java",
+      "reusedWithShaVerification": false
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/upstream/InternalHttpClient.java",
+      "bytes": 9421,
+      "sha256": "c24ebde804a510bae54d2911208c0409b6a02d0dd6df3bd30b478a4effa347c6",
+      "sourceFile": "InternalHttpClient.java",
+      "reusedWithShaVerification": false
+    }
+  ],
+  "actualReadMechanisms": [
+    "HttpClientBuilder 833-834, 899-963: context castOrCreate, LAST processing, Protocol→Connect→Main chain",
+    "ConnectExec 110-203: endpoint lease/connect/upgradeTls before chain.proceed",
+    "MainClientExec 99-143, 176-188: processor before execute and RuntimeException discard/rethrow",
+    "InternalHttpClient 145-188: same context adaptor into ExecChain.Scope and runtime exception propagation",
+    "HttpClientContext 151-188: existing typed context retained, independent create",
+    "InternalExecRuntime 213-240: cancellation check before endpoint.execute, no proof awareness",
+    "CloseableHttpClient 238-264: context overload response handler and response closing",
+    "Private RetainedAuthorization requireVerified in common source103-127: private verificationClock, no ThreadLocal"
+  ],
+  "productionReference": "Checks precede GET wire-write but are not atomic revocation of already-sent bytes; no cross-thread requireBound or public VA rebinding",
+  "jdkReferenceTagIsNotExactRuntimeBinary": true
+}

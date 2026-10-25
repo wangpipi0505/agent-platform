@@ -1,0 +1,18 @@
+{
+  "at": "2026-10-20T19:37:39.819Z",
+  "baseline": {
+    "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/overlay-reference.json",
+    "bytes": 4838,
+    "sha256": "e6bca9f0f8c1a02fe1eaa8cec5d4badab654ba08ed2ba6a2961de9e10263901c"
+  },
+  "effectiveSource": {
+    "file": "docs/evidence/iam-stage-4-d4a-portal-session/source-after.json",
+    "bytes": 78337,
+    "sha256": "7e1a1b53ae7b494361bf75b36d2878a1f4dbb1e5d0631c3311643a8e34822708"
+  },
+  "sourceOverlay": "docs/evidence/iam-stage-4-d4a-portal-session/frozen-overlay/",
+  "sourceCount": 380,
+  "overlayCount": 11,
+  "sourceBaseRule": "changed/new => own frozen-overlay; otherwise N4b2 fix frozen-overlay when present, else original B2 frozen; each full logical entry must match source-after",
+  "targetBaseRule": "own changed/new target overlay; otherwise N4b2 frozen-target-overlay when present, else original B2 target-final; apply target tombstones"
+}

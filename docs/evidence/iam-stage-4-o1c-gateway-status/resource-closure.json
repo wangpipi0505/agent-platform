@@ -1,0 +1,136 @@
+{
+  "actualChildExits": [
+    {
+      "stage": "iam-stage-o1c-red01",
+      "prefix": "O1C_CHILD_EXIT",
+      "exit": 1,
+      "pid": 56404,
+      "alive": false
+    },
+    {
+      "stage": "iam-stage-o1c-red01",
+      "prefix": "O1C_CHILD_EXIT",
+      "exit": 1,
+      "pid": 56404,
+      "alive": false
+    },
+    {
+      "stage": "iam-stage-o1c-red02",
+      "prefix": "O1C_CHILD_EXIT",
+      "alive": false,
+      "exit": 0,
+      "pid": 61744
+    },
+    {
+      "stage": "iam-stage-o1c-chain01",
+      "prefix": "O1C_CHILD_EXIT",
+      "pid": 49664,
+      "exit": 0,
+      "alive": false
+    },
+    {
+      "stage": "iam-stage-o1c-chain02",
+      "prefix": "O1C_CHILD_EXIT",
+      "exit": 1,
+      "pid": 64764,
+      "alive": false
+    },
+    {
+      "stage": "iam-stage-o1c-utf8-red01",
+      "prefix": "O1C_CHILD_EXIT",
+      "alive": false,
+      "pid": 13796,
+      "exit": 0
+    },
+    {
+      "stage": "iam-stage-o1c-chain-wire03",
+      "prefix": "O1C_CHILD_EXIT",
+      "pid": 25744,
+      "alive": false,
+      "exit": 0
+    },
+    {
+      "stage": "iam-stage-o1c-ingress04",
+      "prefix": "O1C_CHILD_EXIT",
+      "alive": false,
+      "exit": 0,
+      "pid": 46520
+    },
+    {
+      "stage": "iam-stage-o1c-gap05",
+      "prefix": "O1C_CHILD_EXIT",
+      "exit": 0,
+      "alive": false,
+      "pid": 3032
+    },
+    {
+      "stage": "iam-stage-o1c-positive-session06",
+      "prefix": "O1C_CHILD_EXIT",
+      "exit": 0,
+      "alive": false,
+      "pid": 50108
+    },
+    {
+      "stage": "iam-stage-o1c-portal-code-red07",
+      "prefix": "O1C_CHILD_EXIT",
+      "exit": 0,
+      "pid": 52996,
+      "alive": false
+    },
+    {
+      "stage": "iam-stage-o1c-errors-green08",
+      "prefix": "O1C_CHILD_EXIT",
+      "exit": 0,
+      "pid": 5196,
+      "alive": false
+    },
+    {
+      "stage": "iam-stage-o1c-post-regression09",
+      "prefix": "N4B2_ENGINE_",
+      "exit": 0,
+      "alive": false,
+      "pid": 48188
+    },
+    {
+      "stage": "iam-stage-o1c-post-regression09",
+      "prefix": "N3_APP_",
+      "exit": 0,
+      "alive": false,
+      "pid": 53424
+    },
+    {
+      "stage": "iam-stage-o1c-overflow-green11",
+      "prefix": "O1C_CHILD_EXIT",
+      "pid": 62752,
+      "alive": false,
+      "exit": 0
+    }
+  ],
+  "expectedFailureChildren": [
+    {
+      "stage": "iam-stage-o1c-red01",
+      "prefix": "O1C_CHILD_EXIT",
+      "exit": 1,
+      "pid": 56404,
+      "alive": false
+    },
+    {
+      "stage": "iam-stage-o1c-red01",
+      "prefix": "O1C_CHILD_EXIT",
+      "exit": 1,
+      "pid": 56404,
+      "alive": false
+    },
+    {
+      "stage": "iam-stage-o1c-chain02",
+      "prefix": "O1C_CHILD_EXIT",
+      "exit": 1,
+      "pid": 64764,
+      "alive": false
+    }
+  ],
+  "allObservedChildrenEnded": true,
+  "sharedPgStopped": false,
+  "unrelatedProcessesTouched": false,
+  "claims": "Process exits/owned closes only; no physical blocked-peer hard-close SLA. Partial stream actual bytes below stream remain unknown."
+}

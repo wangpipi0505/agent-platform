@@ -1,0 +1,282 @@
+{
+  "runner": {
+    "file": ".tools/run-iam-module-tests.mjs",
+    "bytes": 2884,
+    "sha256": "0a86ddfdf91bff1971cf41f9326ea0d0f23e0b0c32d3e02082f7290a26867de4"
+  },
+  "java": "Temurin21.0.12.8, offline .tools/m2; unchanged approved runner",
+  "commands": [
+    {
+      "stage": "red01",
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-4-o1b-red01 engine-runtime RunObservationStatusHttpPostgresTest#freshStatusDoesNotResumeExecutionGrant",
+      "exitCode": 1,
+      "log": {
+        "file": ".local/iam-stage-4-o1b-red01.log",
+        "bytes": 12011,
+        "sha256": "19c6b8d2e43b1e4e08f1807bc42af88361092b2ead4caae8c8091c7382e3be87"
+      },
+      "preCommandSource": {
+        "file": ".local/iam-o1b-readonly-status/red01/source.json",
+        "bytes": 109788,
+        "sha256": "a2715c801cba06e93a56d2f93700e91b32aea05a28a87db68258451b0386ddbe"
+      },
+      "running": [
+        "cn.agentplatform.engine.infra.RunObservationStatusHttpPostgresTest"
+      ],
+      "resultLines": [
+        "[ERROR] Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 8.560 s <<< FAILURE! -- in cn.agentplatform.engine.infra.RunObservationStatusHttpPostgresTest",
+        "[ERROR] Tests run: 1, Failures: 1, Errors: 0, Skipped: 0"
+      ],
+      "ready": [
+        "O1B_HTTP_READY={\"pid\":58488,\"port\":53180}"
+      ],
+      "closed": [
+        "O1B_RESOURCES_CLOSED=true"
+      ]
+    },
+    {
+      "stage": "green01",
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-4-o1b-green01 engine-runtime RunObservationStatusHttpPostgresTest#freshStatusDoesNotResumeExecutionGrant",
+      "exitCode": 0,
+      "log": {
+        "file": ".local/iam-stage-4-o1b-green01.log",
+        "bytes": 37836,
+        "sha256": "e9099b809b8f86696ec73b1b4ed53362fd3233b547ed5260fb7bf321b197d4be"
+      },
+      "preCommandSource": {
+        "file": ".local/iam-o1b-readonly-status/green01/source.json",
+        "bytes": 109789,
+        "sha256": "fd723fab32578e2be3f44a2c1b57c7d2ccb866b9ee48ab364ca47bd44d1a5dae"
+      },
+      "running": [
+        "cn.agentplatform.engine.infra.RunObservationStatusHttpPostgresTest"
+      ],
+      "resultLines": [
+        "[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 5.280 s -- in cn.agentplatform.engine.infra.RunObservationStatusHttpPostgresTest",
+        "[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0"
+      ],
+      "ready": [
+        "O1B_HTTP_READY={\"pid\":21800,\"port\":49893}"
+      ],
+      "closed": [
+        "O1B_RESOURCES_CLOSED=true"
+      ]
+    },
+    {
+      "stage": "red02",
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-4-o1b-red02 engine-runtime RunObservationStatusHttpPostgresTest#outputBudgetRejectsOneByteOverAndAcceptsExactUtf8Envelope,RunObservationStatusHttpPostgresTest#expiryAfterActualStreamAcquisitionWritesNoStatus",
+      "exitCode": 1,
+      "log": {
+        "file": ".local/iam-stage-4-o1b-red02.log",
+        "bytes": 69358,
+        "sha256": "5e78bd05ea360c49ab0f41db747eb5967711c6b97bab498cd3a7f8dc8b6f3eea"
+      },
+      "preCommandSource": {
+        "file": ".local/iam-o1b-readonly-status/red02/source.json",
+        "bytes": 109789,
+        "sha256": "9520fea8543921d1ef7f87c277465c2a0d0d772ae33d7f0c66e6a69c5b3c9e27"
+      },
+      "running": [
+        "cn.agentplatform.engine.infra.RunObservationStatusHttpPostgresTest"
+      ],
+      "resultLines": [
+        "[ERROR] Tests run: 2, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 66.18 s <<< FAILURE! -- in cn.agentplatform.engine.infra.RunObservationStatusHttpPostgresTest",
+        "[ERROR] Tests run: 2, Failures: 0, Errors: 1, Skipped: 0"
+      ],
+      "ready": [
+        "O1B_HTTP_READY={\"port\":61568,\"pid\":63108}"
+      ],
+      "closed": [
+        "O1B_RESOURCES_CLOSED=true"
+      ]
+    },
+    {
+      "stage": "green02",
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-4-o1b-green02 engine-runtime RunObservationStatusHttpPostgresTest",
+      "exitCode": 1,
+      "log": {
+        "file": ".local/iam-stage-4-o1b-green02.log",
+        "bytes": 483352,
+        "sha256": "d6c676bca02c281c43e887dcf63591881d847ba9ed8c9cd53edca72407e1946f"
+      },
+      "preCommandSource": {
+        "file": ".local/iam-o1b-readonly-status/green02/source.json",
+        "bytes": 109789,
+        "sha256": "7203438ae09b886652d775a3bb20beba08fbace13d3852aea5616760f230faf7"
+      },
+      "running": [
+        "cn.agentplatform.engine.infra.RunObservationStatusHttpPostgresTest"
+      ],
+      "resultLines": [
+        "[ERROR] Tests run: 12, Failures: 0, Errors: 2, Skipped: 0, Time elapsed: 18.28 s <<< FAILURE! -- in cn.agentplatform.engine.infra.RunObservationStatusHttpPostgresTest",
+        "[ERROR] Tests run: 12, Failures: 0, Errors: 2, Skipped: 0"
+      ],
+      "ready": [
+        "O1B_HTTP_READY={\"pid\":59772,\"port\":61244}"
+      ],
+      "closed": [
+        "O1B_RESOURCES_CLOSED=true"
+      ]
+    },
+    {
+      "stage": "final01",
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-4-o1b-final01 engine-runtime RunObservationStatusHttpPostgresTest,RunObservationSelectorsTest,RunObservationMetadataHttpPostgresTest#notFoundAndOtherOwnerHaveTheSame404WhileOwnedLegacyHas403,RunObservationMetadataHttpPostgresTest#damagedControlMetadataAndMissingOrInconsistentRootManifestsFailClosed,RunObservationMetadataHttpPostgresTest#ambientTransactionIsRejectedBeforeOnlineRefreshAndLegacyAssemblyNeedsNoIamBean,RunObservationMetadataHttpPostgresTest#currentRevocationOutageAndExpiryBlockBeforeSqlAndNoLegacyFallback,FlowMaterialStatusPostgresTest#explicitJsonNullOutputKeepsOriginalPresentationDistinctFromSqlNull,FlowMaterialStatusPostgresTest#actualRunServiceStatusReadsOriginalMapInOneReadOnlyRrAndPreservesAliasesAndTimes,GraphRulesTest#invariants",
+      "exitCode": 1,
+      "log": {
+        "file": ".local/iam-stage-4-o1b-final01.log",
+        "bytes": 510879,
+        "sha256": "f58b64ab07516de723ba0037532c09a80339043c19a4a225e3068e3f96191cec"
+      },
+      "preCommandSource": {
+        "file": ".local/iam-o1b-readonly-status/final01/source.json",
+        "bytes": 109789,
+        "sha256": "74be6149f83c838fa9b11e553c46b88099f7e31daf2b382eeed02b8291816bf0"
+      },
+      "running": [
+        "cn.agentplatform.common.authority.RunObservationSelectorsTest",
+        "cn.agentplatform.engine.domain.GraphRulesTest",
+        "cn.agentplatform.engine.infra.FlowMaterialStatusPostgresTest",
+        "cn.agentplatform.engine.infra.RunObservationMetadataHttpPostgresTest",
+        "cn.agentplatform.engine.infra.RunObservationStatusHttpPostgresTest"
+      ],
+      "resultLines": [
+        "[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.215 s -- in cn.agentplatform.common.authority.RunObservationSelectorsTest",
+        "[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0",
+        "[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.019 s -- in cn.agentplatform.engine.domain.GraphRulesTest",
+        "[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.833 s -- in cn.agentplatform.engine.infra.FlowMaterialStatusPostgresTest",
+        "[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 5.667 s -- in cn.agentplatform.engine.infra.RunObservationMetadataHttpPostgresTest",
+        "[ERROR] Tests run: 16, Failures: 1, Errors: 2, Skipped: 0, Time elapsed: 18.12 s <<< FAILURE! -- in cn.agentplatform.engine.infra.RunObservationStatusHttpPostgresTest",
+        "[ERROR] Tests run: 23, Failures: 1, Errors: 2, Skipped: 0"
+      ],
+      "ready": [
+        "O1A_HTTP_READY={\"port\":51668,\"pid\":50340}",
+        "O1B_HTTP_READY={\"port\":51775,\"pid\":50340}"
+      ],
+      "closed": [
+        "O1A_RESOURCES_CLOSED=true",
+        "O1B_RESOURCES_CLOSED=true"
+      ]
+    },
+    {
+      "stage": "final02",
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-4-o1b-final02 engine-runtime RunObservationStatusHttpPostgresTest",
+      "exitCode": 0,
+      "log": {
+        "file": ".local/iam-stage-4-o1b-final02.log",
+        "bytes": 373267,
+        "sha256": "0318603d4c4bd806113f5fbf6a00b6b6d6896bc8a46310846e6c6dcd0fee2492"
+      },
+      "preCommandSource": {
+        "file": ".local/iam-o1b-readonly-status/final02/source.json",
+        "bytes": 109789,
+        "sha256": "65de4b52e52f3ae2a9feaae83c0e7c4ab4cad4cc37be8c025e6f8f1868fec390"
+      },
+      "running": [
+        "cn.agentplatform.engine.infra.RunObservationStatusHttpPostgresTest"
+      ],
+      "resultLines": [
+        "[INFO] Tests run: 16, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 23.49 s -- in cn.agentplatform.engine.infra.RunObservationStatusHttpPostgresTest",
+        "[INFO] Tests run: 16, Failures: 0, Errors: 0, Skipped: 0"
+      ],
+      "ready": [
+        "O1B_HTTP_READY={\"pid\":24396,\"port\":54380}"
+      ],
+      "closed": [
+        "O1B_RESOURCES_CLOSED=true"
+      ]
+    },
+    {
+      "stage": "red03",
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-4-o1b-red03 engine-runtime RunObservationStatusHttpPostgresTest#partialBusinessWriteClosesActualStreamAndNeverRetriesStatus",
+      "exitCode": 1,
+      "log": {
+        "file": ".local/iam-stage-4-o1b-red03.log",
+        "bytes": 39460,
+        "sha256": "b2a6182d06d22b0fc20aff6db8feae284b7a0e7c3595db29188a56d59538385c"
+      },
+      "preCommandSource": {
+        "file": ".local/iam-o1b-readonly-status/red03/source.json",
+        "bytes": 109789,
+        "sha256": "6d7eb98fbd0b4ebd759aab4376ff6e91c427de85c85e95fbda7a773814d94b28"
+      },
+      "running": [
+        "cn.agentplatform.engine.infra.RunObservationStatusHttpPostgresTest"
+      ],
+      "resultLines": [
+        "[ERROR] Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 4.823 s <<< FAILURE! -- in cn.agentplatform.engine.infra.RunObservationStatusHttpPostgresTest",
+        "[ERROR] Tests run: 1, Failures: 1, Errors: 0, Skipped: 0"
+      ],
+      "ready": [
+        "O1B_HTTP_READY={\"port\":62004,\"pid\":62592}"
+      ],
+      "closed": [
+        "O1B_RESOURCES_CLOSED=true"
+      ]
+    },
+    {
+      "stage": "final03",
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-4-o1b-final03 engine-runtime RunObservationStatusHttpPostgresTest",
+      "exitCode": 1,
+      "log": {
+        "file": ".local/iam-stage-4-o1b-final03.log",
+        "bytes": 407720,
+        "sha256": "5916b306dbd67a6b7838da00723cc4ea773499917c1e6942d006fb2b07d86f50"
+      },
+      "preCommandSource": {
+        "file": ".local/iam-o1b-readonly-status/final03/source.json",
+        "bytes": 109789,
+        "sha256": "1934d2d199e891dc5d627004947dc74e3d3a43d956228c1d0846b1ab8f790694"
+      },
+      "running": [
+        "cn.agentplatform.engine.infra.RunObservationStatusHttpPostgresTest"
+      ],
+      "resultLines": [
+        "[ERROR] Tests run: 17, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 24.09 s <<< FAILURE! -- in cn.agentplatform.engine.infra.RunObservationStatusHttpPostgresTest",
+        "[ERROR] Tests run: 17, Failures: 1, Errors: 0, Skipped: 0"
+      ],
+      "ready": [
+        "O1B_HTTP_READY={\"pid\":61184,\"port\":62187}"
+      ],
+      "closed": [
+        "O1B_RESOURCES_CLOSED=true"
+      ]
+    },
+    {
+      "stage": "final04",
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-4-o1b-final04 engine-runtime RunObservationStatusHttpPostgresTest",
+      "exitCode": 0,
+      "log": {
+        "file": ".local/iam-stage-4-o1b-final04.log",
+        "bytes": 430038,
+        "sha256": "db761cfcd355bb3c135084cd234d83b2f3738cea420104c5db5f1e5941939a4d"
+      },
+      "preCommandSource": {
+        "file": ".local/iam-o1b-readonly-status/final04/source.json",
+        "bytes": 109789,
+        "sha256": "a956230f2e97c552e026196748fb67519c77acc1bcfaeee747df744cac25f8de"
+      },
+      "running": [
+        "cn.agentplatform.engine.infra.RunObservationStatusHttpPostgresTest"
+      ],
+      "resultLines": [
+        "[INFO] Tests run: 17, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 23.66 s -- in cn.agentplatform.engine.infra.RunObservationStatusHttpPostgresTest",
+        "[INFO] Tests run: 17, Failures: 0, Errors: 0, Skipped: 0"
+      ],
+      "ready": [
+        "O1B_HTTP_READY={\"port\":65250,\"pid\":50120}"
+      ],
+      "closed": [
+        "O1B_RESOURCES_CLOSED=true"
+      ]
+    }
+  ]
+}

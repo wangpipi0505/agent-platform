@@ -1,0 +1,174 @@
+{
+  "actualGatewayEngineSkill": true,
+  "actualPostgres": true,
+  "isolatedProtocolPeerOnly": true,
+  "sdkProtocol": "SSE + JSON-RPC 2.0",
+  "activeStreams": 0,
+  "openedStreams": 6,
+  "businessCalls": 2,
+  "methods": [
+    "initialize",
+    "notifications/initialized",
+    "tools/list",
+    "tools/list",
+    "initialize",
+    "notifications/initialized",
+    "tools/list",
+    "tools/list",
+    "initialize",
+    "notifications/initialized",
+    "tools/list",
+    "tools/list",
+    "tools/call",
+    "initialize",
+    "notifications/initialized",
+    "tools/list",
+    "tools/list",
+    "initialize",
+    "notifications/initialized",
+    "tools/list",
+    "tools/list",
+    "initialize",
+    "notifications/initialized",
+    "tools/list",
+    "tools/list",
+    "tools/call"
+  ],
+  "evidence": [
+    {
+      "case": "discovery",
+      "protocolVersion": "2024-11-05",
+      "toolNames": [
+        "unrelated",
+        "lookup"
+      ],
+      "rawSchemaPreserved": true,
+      "businessCalls": 0,
+      "viewerStatus": 403,
+      "limits": {
+        "tools": 100,
+        "schemaBytes": 65536,
+        "events": 256,
+        "pages": 16,
+        "eventBytes": 4194304,
+        "sessionBytes": 16777216,
+        "localSessions": 2
+      }
+    },
+    {
+      "case": "real-draft-browser",
+      "realGatewayAndSavedDraft": true,
+      "mockedRoutes": 0,
+      "code": "smoke_mcp_good_f6954eaef1",
+      "version": 1,
+      "toolName": "lookup",
+      "bodylessDiscovery": true,
+      "rawSchemaVisible": true,
+      "viewportWidths": [
+        1440,
+        390
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/admin/skills/smoke_mcp_good_f6954eaef1"
+        },
+        {
+          "method": "GET",
+          "path": "/admin/skills/smoke_mcp_good_f6954eaef1"
+        },
+        {
+          "method": "GET",
+          "path": "/admin/skills/smoke_mcp_good_f6954eaef1/stats"
+        },
+        {
+          "method": "GET",
+          "path": "/admin/model-entries"
+        },
+        {
+          "method": "POST",
+          "path": "/admin/skills/smoke_mcp_good_f6954eaef1/drafts/1/mcp-tools"
+        }
+      ],
+      "pageErrors": []
+    },
+    {
+      "case": "smoke_mcp_good_f6954eaef1",
+      "runId": "r_44c305a67d4d4ad692957c191b2165c7",
+      "callId": 88,
+      "status": "SUCCEEDED",
+      "businessCalls": 1,
+      "facts": {
+        "skillStatus": "SUCCEEDED",
+        "engineStatus": "SUCCEEDED",
+        "semantic": null,
+        "value": 7,
+        "logicalCommits": 1
+      }
+    },
+    {
+      "case": "smoke_mcp_missing_f6954eaef1",
+      "runId": "r_1917e9a549ef41afb666a1eab7033f29",
+      "callId": 89,
+      "status": "FAILED",
+      "businessCalls": 0,
+      "facts": {
+        "skillStatus": "FAILED",
+        "engineStatus": "FAILED",
+        "semantic": "PARAM_ERROR",
+        "value": null,
+        "logicalCommits": 0
+      }
+    },
+    {
+      "case": "smoke_mcp_schema_f6954eaef1",
+      "runId": "r_ce33f39a38e34b6aba3b5b652ee3562b",
+      "callId": 90,
+      "status": "FAILED",
+      "businessCalls": 0,
+      "facts": {
+        "skillStatus": "FAILED",
+        "engineStatus": "FAILED",
+        "semantic": "PARAM_ERROR",
+        "value": null,
+        "logicalCommits": 0
+      }
+    },
+    {
+      "case": "write-isError-reconcile",
+      "skillCode": "smoke_mcp_write_unknown_f6954eaef1",
+      "runId": "r_3bfedc2aaf5f4b3eb536f4deb2a09f12",
+      "callId": 91,
+      "approvalRequired": true,
+      "explicitDeclaredRole": "EDITOR",
+      "status": "WAITING_EXTERNAL",
+      "businessCalls": 1,
+      "queryOpenedStreams": 0,
+      "observations": [
+        {
+          "retryBusinessAllowed": false,
+          "callId": 91,
+          "status": "UNKNOWN",
+          "outcome": "UNKNOWN"
+        },
+        {
+          "retryBusinessAllowed": false,
+          "callId": 91,
+          "status": "UNKNOWN",
+          "outcome": "UNKNOWN"
+        }
+      ],
+      "auditOutcomes": [
+        "UNKNOWN",
+        "UNKNOWN"
+      ],
+      "factIdentityUnchanged": true
+    }
+  ],
+  "cleanup": {
+    "runStatus": "CANCELLED",
+    "skillStatus": "UNKNOWN"
+  },
+  "rawSha256": "0f046ae8ead086ff1353833ea452fc1087eeb8300378d13edbe6072cc5bec5ae",
+  "logSha256": "0696c31054fbb44f7b7ef156a0e3f7f67e1fa6bc5ccfcd068cc5e64a3b6df5b7"
+}

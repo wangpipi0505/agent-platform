@@ -1,0 +1,32 @@
+{
+  "epoch": "red2",
+  "sourceManifest": ".local\\iam-model-frozen-binding\\red2-source\\source.json",
+  "sourceSha256": "dd18e101a9aa42b767e6f69873132920c5f1353b209821d388daf3718bbdb2de",
+  "actualRunning": [
+    "cn.agentplatform.model.application.FrozenModelBindingVerifierTest"
+  ],
+  "suites": [
+    {
+      "name": "cn.agentplatform.model.application.FrozenModelBindingVerifierTest",
+      "module": "model-gateway",
+      "tests": 3,
+      "failures": 2,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": null,
+      "xmlSha256": "3e556fcdce9b1d0095c225013c4951ee13231cec5db35d0ff70d295bade637b6",
+      "classpathSha256": "c9e2697f33989cdff821a068c7ce073392fe6b72c1aa2388a424caccbd66dfdb",
+      "cases": [
+        "rejectsChangedSnapshotUnderOldSha",
+        "realFreezeAndAcceptedConsumerPositiveControl",
+        "retainsLostLabelObligation"
+      ]
+    }
+  ],
+  "totals": {
+    "tests": 3,
+    "failures": 2,
+    "errors": 0,
+    "skipped": 0
+  }
+}

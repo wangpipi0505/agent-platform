@@ -1,0 +1,693 @@
+[
+  {
+    "epoch": "red2",
+    "sourceManifest": ".local\\iam-model-frozen-binding\\red2-source\\source.json",
+    "sourceSha256": "dd18e101a9aa42b767e6f69873132920c5f1353b209821d388daf3718bbdb2de",
+    "actualRunning": [
+      "cn.agentplatform.model.application.FrozenModelBindingVerifierTest"
+    ],
+    "suites": [
+      {
+        "name": "cn.agentplatform.model.application.FrozenModelBindingVerifierTest",
+        "module": "model-gateway",
+        "tests": 3,
+        "failures": 2,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": null,
+        "xmlSha256": "3e556fcdce9b1d0095c225013c4951ee13231cec5db35d0ff70d295bade637b6",
+        "classpathSha256": "c9e2697f33989cdff821a068c7ce073392fe6b72c1aa2388a424caccbd66dfdb",
+        "cases": [
+          "rejectsChangedSnapshotUnderOldSha",
+          "realFreezeAndAcceptedConsumerPositiveControl",
+          "retainsLostLabelObligation"
+        ]
+      }
+    ],
+    "totals": {
+      "tests": 3,
+      "failures": 2,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  {
+    "epoch": "green-candidate",
+    "sourceManifest": ".local\\iam-model-frozen-binding\\green-candidate-source\\source.json",
+    "sourceSha256": "f1848269a3ce1cca08178bcb17cca51f1971becc355a3a65f226a84d4121dd17",
+    "actualRunning": [
+      "cn.agentplatform.model.application.FrozenModelBindingVerifierTest",
+      "cn.agentplatform.model.infra.FrozenModelBindingStorePostgresTest"
+    ],
+    "suites": [
+      {
+        "name": "cn.agentplatform.model.application.FrozenModelBindingVerifierTest",
+        "module": "model-gateway",
+        "tests": 14,
+        "failures": 0,
+        "errors": 1,
+        "skipped": 0,
+        "timestamp": null,
+        "xmlSha256": "96874d9f7508457dd2f375214ba59519ba06d113e071154924214dfe635cb55e",
+        "classpathSha256": "c9e2697f33989cdff821a068c7ce073392fe6b72c1aa2388a424caccbd66dfdb",
+        "cases": [
+          "rejectsChangedSnapshotUnderOldSha",
+          "metadataBoundsAreStrictBeforeNewProof",
+          "fullTreeHashRetainsArrayOrderAndObjectOrderIsCanonical",
+          "frozenStateSurvivesMutableDisableAndEndpointLabelModelChanges",
+          "interruptionExpiryAndBoundedPoolNeverMintOrRetry",
+          "realFreezeAndAcceptedConsumerPositiveControl",
+          "capabilitiesAndEffectiveOutputAreChecked",
+          "refreshFollowsActualConnectionReleaseAndNarrowingRevocationOutageDeny",
+          "numericDigestCopiesAndResultLifetime",
+          "nullClosedReplacedCrossThreadAndAmbientTransactionDenyBeforeQuery",
+          "actualHttpObserverPositiveControlsAndNoBusinessWrites",
+          "retainsLostLabelObligation",
+          "realPgLockTimeoutThenFreshHealthyFrame",
+          "missingTenantRowAndNestedIdsHaveNoMutableFallback"
+        ]
+      },
+      {
+        "name": "cn.agentplatform.model.infra.FrozenModelBindingStorePostgresTest",
+        "module": "model-gateway",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": null,
+        "xmlSha256": "53796000d1ca359118d6db6d81364e596b892369bcef4c5b4ea5fbfd9a992f2f",
+        "classpathSha256": "c9e2697f33989cdff821a068c7ce073392fe6b72c1aa2388a424caccbd66dfdb",
+        "cases": [
+          "ordinaryStoreRequiresActualReadOnlyTransaction"
+        ]
+      }
+    ],
+    "totals": {
+      "tests": 15,
+      "failures": 0,
+      "errors": 1,
+      "skipped": 0
+    }
+  },
+  {
+    "epoch": "green5",
+    "sourceManifest": ".local\\iam-model-frozen-binding\\green5-source\\source.json",
+    "sourceSha256": "b4769340c13704a3f60bfa940a5d8a587fde2293914654fe11d9b94c23bea8f1",
+    "actualRunning": [
+      "cn.agentplatform.common.authority.AuthorityContextRetainedTest",
+      "cn.agentplatform.common.authority.CurrentAuthorityClientTest",
+      "cn.agentplatform.common.authority.RetainedAuthorizationTest",
+      "cn.agentplatform.engine.application.FrozenModelsTest",
+      "cn.agentplatform.model.application.FrozenModelBindingConsumerHttpTest",
+      "cn.agentplatform.model.application.FrozenModelBindingVerifierTest",
+      "cn.agentplatform.model.application.InitialModelInputConsumerHttpTest",
+      "cn.agentplatform.model.application.InitialModelInputVerifierTest",
+      "cn.agentplatform.model.domain.ModelPolicyTest",
+      "cn.agentplatform.model.infra.EngineModelInputManifestClientHttpTest",
+      "cn.agentplatform.model.infra.FrozenModelBindingStorePostgresTest"
+    ],
+    "suites": [
+      {
+        "name": "cn.agentplatform.common.authority.AuthorityContextRetainedTest",
+        "module": "admin-common",
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": null,
+        "xmlSha256": "256af366bd608770112b9a7812fb9207cfd1f6b1c0694b1c4927abf390e63d7c",
+        "classpathSha256": "25d30a24284aeb3c702d709ef814cfb3057efe87737a921a60913318fa335c2e",
+        "cases": [
+          "everyRefreshFailureRemainsTerminalAfterTheCauseIsRemoved",
+          "currentOnlyBindingAndMissingProofCannotUpgradeThroughRefresh",
+          "closedNonLifoFramesAndDifferentThreadsCannotReuseCapturedProof",
+          "expiryFoundByLocalBoundOrCurrentReadRetiresFrameEvenIfClockLaterMovesBack",
+          "successfulRefreshReplacesSnapshotAndOldIdentityFailureRetiresTheCurrentFrame"
+        ]
+      },
+      {
+        "name": "cn.agentplatform.common.authority.CurrentAuthorityClientTest",
+        "module": "admin-common",
+        "tests": 20,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": null,
+        "xmlSha256": "e8d7eab367f00ee49dcad0f106d77a632bd649983ba15c60c958a4731c81da1b",
+        "classpathSha256": "25d30a24284aeb3c702d709ef814cfb3057efe87737a921a60913318fa335c2e",
+        "cases": [
+          "signedPortalExchangePreservesLocalCeilingAndIndependentClientAuthentication",
+          "reviewI3ApproverCurrentTrustAndBindingsRemainMandatory",
+          "unsupportedClientDefaultCannotWrapPublicAuthorityAsGatewayRunProof",
+          "workloadCannotBecomeAUserAndContextIsNotInherited",
+          "rr2ResumeCannotReintroduceRolesOutsideOriginalSignedGrantCeiling",
+          "integrationPolicyUsesIndependentHttpAssertionOnEveryDecisionWithoutRecursion",
+          "authenticatedEngineCannotChooseAnotherTenantSubjectResourceActionOrMissingGrant",
+          "portalCannotHideBroaderInitialCeilingBehindNarrowCurrentRoles",
+          "rr2NewDelegatedOperationSurvivesOriginalPortalExpiryButForwardCannotResetItsDeadline",
+          "noCachedTicketAfterScopeRoleVersionGrantOrNetworkFailureAndExplicitRecoveryWorks",
+          "signedReplyTamperNonceTicketJtiCallerResourceAndExpiryAreNotAccepted",
+          "integrationBadMacCrossUseClientAndTtlNeverExchange",
+          "reviewI2LifoExceptionOwnerAndChildBoundaries",
+          "reviewI3CurrentEditorApproverProofDoesNotImposeFrozenBusinessRoles",
+          "rr2MissingOperationPolicyOrSignedOperationFieldAndForwardDeadlineChangeFail",
+          "r3ResolverStringActiveCannotBeCoercedIntoPermission",
+          "integrationResolverMissingInactiveOldVersionWrongTrustDomainAndBindingsDeny",
+          "issuerCannotRestoreLocallyRemovedAdminOrRegion",
+          "approvalUsesRecordedApproverAndRevocationIsLive",
+          "reviewI2NonLifoSameAuthorityNeverRestoresClosedFrame"
+        ]
+      },
+      {
+        "name": "cn.agentplatform.common.authority.RetainedAuthorizationTest",
+        "module": "admin-common",
+        "tests": 13,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": null,
+        "xmlSha256": "47b6d2fa15d5e3d135e0eaf6407e81606290fafd2a4c754ce4fcee72175b5670",
+        "classpathSha256": "25d30a24284aeb3c702d709ef814cfb3057efe87737a921a60913318fa335c2e",
+        "cases": [
+          "singleSidedOriginCannotBeSilentlyIgnored",
+          "signedTicketAndDecisionTamperingCannotMintProof",
+          "legacyIntegrationSourceMustHaveFixedVerifiedIssuerAndBoundedJti",
+          "samePortalAuthenticationCannotChangeOriginalRolesOnAnotherGrant",
+          "receivedSignedTicketInitialCannotDisagreeWithItsOperationHash",
+          "originBothAbsentIsCurrentOnlyAndEveryPartialOrMalformedPairDenies",
+          "proofUsesSameClientClockAndEarliestSignedDeadline",
+          "verifiedSourceRepresentationDoesNotResetInitialOrPolicyAnchor",
+          "originalAuthenticationSurvivesDistinctGrantsForwardAndRealResumeButFreshJtiDiffers",
+          "fixtureChecksFixedSourceDomainsTypesAndTimeBeforeComputingOrigin",
+          "legacyDefaultAndPublicValuesCannotMintInitialProof",
+          "sameMappingRetainsFullInitialWhileCurrentNarrowsWithExactlyOneQuery",
+          "ticketExpiringDuringTheSingleCurrentQueryCannotProduceAUsableMapping"
+        ]
+      },
+      {
+        "name": "cn.agentplatform.engine.application.FrozenModelsTest",
+        "module": "engine-runtime",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": null,
+        "xmlSha256": "8bd09ed1b51806e8f8a8b5f5acf201e56ad35e5254ad3b5952f94e45147f5316",
+        "classpathSha256": "4278c0f4ffbe987314e6025a90bd0ea8253ac93569000df03fed7785cb3fd425",
+        "cases": [
+          "forgedOrAmbiguousSnapshotReferenceIsRejected",
+          "selectsEffectiveEntryAndPreservesAuthoritativeReference"
+        ]
+      },
+      {
+        "name": "cn.agentplatform.model.application.FrozenModelBindingConsumerHttpTest",
+        "module": "model-gateway",
+        "tests": 2,
+        "failures": 0,
+        "errors": 1,
+        "skipped": 0,
+        "timestamp": null,
+        "xmlSha256": "afb1db5240f6a1a18e568181417c300713208a2875f19a85fd7ac9153f3f5a55",
+        "classpathSha256": "c9e2697f33989cdff821a068c7ce073392fe6b72c1aa2388a424caccbd66dfdb",
+        "cases": [
+          "realSeparateJvmFrozenBindingJoinAndNumericDigest",
+          "separateProducerRejectsWrongOwnerRootOriginBeforeBindingSql"
+        ]
+      },
+      {
+        "name": "cn.agentplatform.model.application.FrozenModelBindingVerifierTest",
+        "module": "model-gateway",
+        "tests": 17,
+        "failures": 0,
+        "errors": 1,
+        "skipped": 0,
+        "timestamp": null,
+        "xmlSha256": "eb445f9bbcf35a5afaeb8e32eb5363a864390fa5e62897b04b48ad154f8e5448",
+        "classpathSha256": "c9e2697f33989cdff821a068c7ce073392fe6b72c1aa2388a424caccbd66dfdb",
+        "cases": [
+          "rejectsChangedSnapshotUnderOldSha",
+          "metadataBoundsAreStrictBeforeNewProof",
+          "fullTreeHashRetainsArrayOrderAndObjectOrderIsCanonical",
+          "frozenStateSurvivesMutableDisableAndEndpointLabelModelChanges",
+          "interruptionExpiryAndBoundedPoolNeverMintOrRetry",
+          "realFreezeAndAcceptedConsumerPositiveControl",
+          "capabilitiesAndEffectiveOutputAreChecked",
+          "refreshFollowsActualConnectionReleaseAndNarrowingRevocationOutageDeny",
+          "numericDigestCopiesAndResultLifetime",
+          "nullClosedReplacedCrossThreadAndAmbientTransactionDenyBeforeQuery",
+          "emptyClassificationRequiresLocalAndRetainedExpiryRetiresNewProof",
+          "cooperativeEightSecondEnvelopeCannotMintAfterOverrun",
+          "signedPostPgOwnerRootInitialOriginAndNewLabelChangesAreRechecked",
+          "actualHttpObserverPositiveControlsAndNoBusinessWrites",
+          "retainsLostLabelObligation",
+          "realPgLockTimeoutThenFreshHealthyFrame",
+          "missingTenantRowAndNestedIdsHaveNoMutableFallback"
+        ]
+      },
+      {
+        "name": "cn.agentplatform.model.application.InitialModelInputConsumerHttpTest",
+        "module": "model-gateway",
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": null,
+        "xmlSha256": "c0dde94240ef3debc1ae94db5ca8d04f94db7dc5184494ad077ad254cd87a9b8",
+        "classpathSha256": "c9e2697f33989cdff821a068c7ce073392fe6b72c1aa2388a424caccbd66dfdb",
+        "cases": [
+          "realPgMissingManifestLegacyScopeWrongOwnerRootAndOtherOriginDenyAtProducer",
+          "realProducerNumericMutationDeniesBeforeMetadataGet",
+          "actualProducerClosureRepeatedAuthorizationAndNewGrantOperationSucceed"
+        ]
+      },
+      {
+        "name": "cn.agentplatform.model.application.InitialModelInputVerifierTest",
+        "module": "model-gateway",
+        "tests": 16,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": null,
+        "xmlSha256": "1f315fe5a705bad35eb96882a2a216281e2cf80312ad059c5199ba488f22ae79",
+        "classpathSha256": "c9e2697f33989cdff821a068c7ce073392fe6b72c1aa2388a424caccbd66dfdb",
+        "cases": [
+          "wrongMeasurePurposeDeniesBeforeDataGet",
+          "strictSelectorsAndFullCandidateHashDenyBeforeGet",
+          "wideFiniteDecimalRetainsFrozenParserSupport",
+          "closureOwnerRootInitialSnapshotAndUnionCannotBeChangedWithOnlyManifestRehash",
+          "strictLexerRejectsNonJsonNumberInjectionAndOversizedTokenBeforeGet",
+          "reordersOnlyObjectKeysAndUsesExactLiveFinalMapping",
+          "missingConfigurationAndDefaultIamGuardRemainClosed",
+          "producerNumericCanonicalShaSurvivesStrictParsingAndMutationDeniesBeforeGet",
+          "realSignedBoundRequestProducesPrivateResultAndRetiresWithFrame",
+          "producerDecimalCanonicalAndCommonExponentRemainIndividuallyBound",
+          "ambientTransactionDeniesBeforeAuthorityRefreshOrMaterialHttp",
+          "permissionArrayOrderMayDifferFromRawManifestHashAndRetainScopeDigest",
+          "signedForwardWithChangedOrMissingOriginDeniesBeforeDataGet",
+          "privateConstructorsAndNoPublicProofInputs",
+          "noContextAndCurrentOnlyDenyBeforeGet",
+          "currentNarrowingRevocationOutageAndExpiryDuringTransportReturnNoResult"
+        ]
+      },
+      {
+        "name": "cn.agentplatform.model.domain.ModelPolicyTest",
+        "module": "model-gateway",
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": null,
+        "xmlSha256": "0d8110dafdcf1e9edc902a2a8d4fbdd2bbae2f82ab6b69a59842bce2f3efda64",
+        "classpathSha256": "c9e2697f33989cdff821a068c7ce073392fe6b72c1aa2388a424caccbd66dfdb",
+        "cases": [
+          "localEndpointStillNeedsRequiredLabels",
+          "admissionRejectsInsufficientContext",
+          "unclassifiedNeverDefaultsToPublic"
+        ]
+      },
+      {
+        "name": "cn.agentplatform.model.infra.EngineModelInputManifestClientHttpTest",
+        "module": "model-gateway",
+        "tests": 11,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": null,
+        "xmlSha256": "ab6f1e56ad119904ad2c5a95d8a45912f04ae0f9f28b014b7733e1792bfc693a",
+        "classpathSha256": "c9e2697f33989cdff821a068c7ce073392fe6b72c1aa2388a424caccbd66dfdb",
+        "cases": [
+          "finiteHttpsOriginOnly",
+          "sameAndDifferentOriginRedirectsNeverForwardBearer",
+          "oneTotalDeadlineIncludesStalledHeadersAndTricklingBody",
+          "boundedNormalTlsTypedManifest",
+          "interruptionCancelsAndPreservesInterruptStatus",
+          "strictBytesJsonFieldsTypesArraysAndHashes",
+          "wrongHostAndUntrustedCaFailOrdinaryTls",
+          "contentLengthAndChunkOverflowCancelBoundedSubscriber",
+          "roleEntitlementLabelAndParentCountsAreCheckedBeforeTypedSets",
+          "ambientTransactionDeniesBeforeMetadataHttp",
+          "assertedHeadersAndContentEncodingMustMatchExactly"
+        ]
+      },
+      {
+        "name": "cn.agentplatform.model.infra.FrozenModelBindingStorePostgresTest",
+        "module": "model-gateway",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": null,
+        "xmlSha256": "d75fcbd97add2516ccbcb1287383942c0600e58b61d983b24936efee9a27277a",
+        "classpathSha256": "c9e2697f33989cdff821a068c7ce073392fe6b72c1aa2388a424caccbd66dfdb",
+        "cases": [
+          "ordinaryStoreRequiresActualReadOnlyTransaction"
+        ]
+      }
+    ],
+    "totals": {
+      "tests": 93,
+      "failures": 0,
+      "errors": 2,
+      "skipped": 0
+    }
+  },
+  {
+    "epoch": "green6",
+    "sourceManifest": ".local\\iam-model-frozen-binding\\green6-source\\source.json",
+    "sourceSha256": "bc2099156c4e5231704e6797e0ad309cb4a28a8a4b6f4a35b7a833c44039ab7c",
+    "actualRunning": [
+      "cn.agentplatform.common.authority.AuthorityContextRetainedTest",
+      "cn.agentplatform.common.authority.CurrentAuthorityClientTest",
+      "cn.agentplatform.common.authority.RetainedAuthorizationTest",
+      "cn.agentplatform.engine.application.FrozenModelsTest",
+      "cn.agentplatform.model.application.FrozenModelBindingConsumerHttpTest",
+      "cn.agentplatform.model.application.FrozenModelBindingVerifierTest",
+      "cn.agentplatform.model.application.InitialModelInputConsumerHttpTest",
+      "cn.agentplatform.model.application.InitialModelInputVerifierTest",
+      "cn.agentplatform.model.domain.ModelPolicyTest",
+      "cn.agentplatform.model.infra.EngineModelInputManifestClientHttpTest",
+      "cn.agentplatform.model.infra.FrozenModelBindingStorePostgresTest"
+    ],
+    "suites": [
+      {
+        "name": "cn.agentplatform.common.authority.AuthorityContextRetainedTest",
+        "module": "admin-common",
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": null,
+        "xmlSha256": "30a409594d1f8d7fe973f6db9f3d80b11963d70093f77f9b4c91a725f8af2c33",
+        "classpathSha256": "25d30a24284aeb3c702d709ef814cfb3057efe87737a921a60913318fa335c2e",
+        "cases": [
+          "everyRefreshFailureRemainsTerminalAfterTheCauseIsRemoved",
+          "currentOnlyBindingAndMissingProofCannotUpgradeThroughRefresh",
+          "closedNonLifoFramesAndDifferentThreadsCannotReuseCapturedProof",
+          "expiryFoundByLocalBoundOrCurrentReadRetiresFrameEvenIfClockLaterMovesBack",
+          "successfulRefreshReplacesSnapshotAndOldIdentityFailureRetiresTheCurrentFrame"
+        ]
+      },
+      {
+        "name": "cn.agentplatform.common.authority.CurrentAuthorityClientTest",
+        "module": "admin-common",
+        "tests": 20,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": null,
+        "xmlSha256": "d6c4806cc8b967280969c9b096f9c22a4c978f7eb1bf21d67a9a63e21e5d13ea",
+        "classpathSha256": "25d30a24284aeb3c702d709ef814cfb3057efe87737a921a60913318fa335c2e",
+        "cases": [
+          "signedPortalExchangePreservesLocalCeilingAndIndependentClientAuthentication",
+          "reviewI3ApproverCurrentTrustAndBindingsRemainMandatory",
+          "unsupportedClientDefaultCannotWrapPublicAuthorityAsGatewayRunProof",
+          "workloadCannotBecomeAUserAndContextIsNotInherited",
+          "rr2ResumeCannotReintroduceRolesOutsideOriginalSignedGrantCeiling",
+          "integrationPolicyUsesIndependentHttpAssertionOnEveryDecisionWithoutRecursion",
+          "authenticatedEngineCannotChooseAnotherTenantSubjectResourceActionOrMissingGrant",
+          "portalCannotHideBroaderInitialCeilingBehindNarrowCurrentRoles",
+          "rr2NewDelegatedOperationSurvivesOriginalPortalExpiryButForwardCannotResetItsDeadline",
+          "noCachedTicketAfterScopeRoleVersionGrantOrNetworkFailureAndExplicitRecoveryWorks",
+          "signedReplyTamperNonceTicketJtiCallerResourceAndExpiryAreNotAccepted",
+          "integrationBadMacCrossUseClientAndTtlNeverExchange",
+          "reviewI2LifoExceptionOwnerAndChildBoundaries",
+          "reviewI3CurrentEditorApproverProofDoesNotImposeFrozenBusinessRoles",
+          "rr2MissingOperationPolicyOrSignedOperationFieldAndForwardDeadlineChangeFail",
+          "r3ResolverStringActiveCannotBeCoercedIntoPermission",
+          "integrationResolverMissingInactiveOldVersionWrongTrustDomainAndBindingsDeny",
+          "issuerCannotRestoreLocallyRemovedAdminOrRegion",
+          "approvalUsesRecordedApproverAndRevocationIsLive",
+          "reviewI2NonLifoSameAuthorityNeverRestoresClosedFrame"
+        ]
+      },
+      {
+        "name": "cn.agentplatform.common.authority.RetainedAuthorizationTest",
+        "module": "admin-common",
+        "tests": 13,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": null,
+        "xmlSha256": "4fef789b012aa71c0dda51e4eec08a5b7d8f45c0a6b649ca918c8858b34b05ee",
+        "classpathSha256": "25d30a24284aeb3c702d709ef814cfb3057efe87737a921a60913318fa335c2e",
+        "cases": [
+          "singleSidedOriginCannotBeSilentlyIgnored",
+          "signedTicketAndDecisionTamperingCannotMintProof",
+          "legacyIntegrationSourceMustHaveFixedVerifiedIssuerAndBoundedJti",
+          "samePortalAuthenticationCannotChangeOriginalRolesOnAnotherGrant",
+          "receivedSignedTicketInitialCannotDisagreeWithItsOperationHash",
+          "originBothAbsentIsCurrentOnlyAndEveryPartialOrMalformedPairDenies",
+          "proofUsesSameClientClockAndEarliestSignedDeadline",
+          "verifiedSourceRepresentationDoesNotResetInitialOrPolicyAnchor",
+          "originalAuthenticationSurvivesDistinctGrantsForwardAndRealResumeButFreshJtiDiffers",
+          "fixtureChecksFixedSourceDomainsTypesAndTimeBeforeComputingOrigin",
+          "legacyDefaultAndPublicValuesCannotMintInitialProof",
+          "sameMappingRetainsFullInitialWhileCurrentNarrowsWithExactlyOneQuery",
+          "ticketExpiringDuringTheSingleCurrentQueryCannotProduceAUsableMapping"
+        ]
+      },
+      {
+        "name": "cn.agentplatform.engine.application.FrozenModelsTest",
+        "module": "engine-runtime",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": null,
+        "xmlSha256": "8719f43a11f1c67deb84018d3075564183d9e3ace8877d3a38738d3df85e61fe",
+        "classpathSha256": "4278c0f4ffbe987314e6025a90bd0ea8253ac93569000df03fed7785cb3fd425",
+        "cases": [
+          "forgedOrAmbiguousSnapshotReferenceIsRejected",
+          "selectsEffectiveEntryAndPreservesAuthoritativeReference"
+        ]
+      },
+      {
+        "name": "cn.agentplatform.model.application.FrozenModelBindingConsumerHttpTest",
+        "module": "model-gateway",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": null,
+        "xmlSha256": "eae45bcf21a613f73852a1362233c2959b3513310ac9033fc6803d00696d5fa3",
+        "classpathSha256": "c9e2697f33989cdff821a068c7ce073392fe6b72c1aa2388a424caccbd66dfdb",
+        "cases": [
+          "realSeparateJvmFrozenBindingJoinAndNumericDigest",
+          "separateProducerRejectsWrongOwnerRootOriginBeforeBindingSql"
+        ]
+      },
+      {
+        "name": "cn.agentplatform.model.application.FrozenModelBindingVerifierTest",
+        "module": "model-gateway",
+        "tests": 17,
+        "failures": 0,
+        "errors": 1,
+        "skipped": 0,
+        "timestamp": null,
+        "xmlSha256": "1dda535fa647cfc1dda8dc1a2d59dd7958a822a48c5ba28b2389a7a25cd47de6",
+        "classpathSha256": "c9e2697f33989cdff821a068c7ce073392fe6b72c1aa2388a424caccbd66dfdb",
+        "cases": [
+          "rejectsChangedSnapshotUnderOldSha",
+          "metadataBoundsAreStrictBeforeNewProof",
+          "fullTreeHashRetainsArrayOrderAndObjectOrderIsCanonical",
+          "frozenStateSurvivesMutableDisableAndEndpointLabelModelChanges",
+          "interruptionExpiryAndBoundedPoolNeverMintOrRetry",
+          "realFreezeAndAcceptedConsumerPositiveControl",
+          "capabilitiesAndEffectiveOutputAreChecked",
+          "refreshFollowsActualConnectionReleaseAndNarrowingRevocationOutageDeny",
+          "numericDigestCopiesAndResultLifetime",
+          "nullClosedReplacedCrossThreadAndAmbientTransactionDenyBeforeQuery",
+          "emptyClassificationRequiresLocalAndRetainedExpiryRetiresNewProof",
+          "cooperativeEightSecondEnvelopeCannotMintAfterOverrun",
+          "signedPostPgOwnerRootInitialOriginAndNewLabelChangesAreRechecked",
+          "actualHttpObserverPositiveControlsAndNoBusinessWrites",
+          "retainsLostLabelObligation",
+          "realPgLockTimeoutThenFreshHealthyFrame",
+          "missingTenantRowAndNestedIdsHaveNoMutableFallback"
+        ]
+      },
+      {
+        "name": "cn.agentplatform.model.application.InitialModelInputConsumerHttpTest",
+        "module": "model-gateway",
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": null,
+        "xmlSha256": "3d6bd4f2369907fc1e902f6785f8e7a300c3ac5cac7d3bc12704055c96b54873",
+        "classpathSha256": "c9e2697f33989cdff821a068c7ce073392fe6b72c1aa2388a424caccbd66dfdb",
+        "cases": [
+          "realPgMissingManifestLegacyScopeWrongOwnerRootAndOtherOriginDenyAtProducer",
+          "realProducerNumericMutationDeniesBeforeMetadataGet",
+          "actualProducerClosureRepeatedAuthorizationAndNewGrantOperationSucceed"
+        ]
+      },
+      {
+        "name": "cn.agentplatform.model.application.InitialModelInputVerifierTest",
+        "module": "model-gateway",
+        "tests": 16,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": null,
+        "xmlSha256": "989b9edb4cd3cf99698c2f77f015c14eaf763249682df383817ed25bc778032e",
+        "classpathSha256": "c9e2697f33989cdff821a068c7ce073392fe6b72c1aa2388a424caccbd66dfdb",
+        "cases": [
+          "wrongMeasurePurposeDeniesBeforeDataGet",
+          "strictSelectorsAndFullCandidateHashDenyBeforeGet",
+          "wideFiniteDecimalRetainsFrozenParserSupport",
+          "closureOwnerRootInitialSnapshotAndUnionCannotBeChangedWithOnlyManifestRehash",
+          "strictLexerRejectsNonJsonNumberInjectionAndOversizedTokenBeforeGet",
+          "reordersOnlyObjectKeysAndUsesExactLiveFinalMapping",
+          "missingConfigurationAndDefaultIamGuardRemainClosed",
+          "producerNumericCanonicalShaSurvivesStrictParsingAndMutationDeniesBeforeGet",
+          "realSignedBoundRequestProducesPrivateResultAndRetiresWithFrame",
+          "producerDecimalCanonicalAndCommonExponentRemainIndividuallyBound",
+          "ambientTransactionDeniesBeforeAuthorityRefreshOrMaterialHttp",
+          "permissionArrayOrderMayDifferFromRawManifestHashAndRetainScopeDigest",
+          "signedForwardWithChangedOrMissingOriginDeniesBeforeDataGet",
+          "privateConstructorsAndNoPublicProofInputs",
+          "noContextAndCurrentOnlyDenyBeforeGet",
+          "currentNarrowingRevocationOutageAndExpiryDuringTransportReturnNoResult"
+        ]
+      },
+      {
+        "name": "cn.agentplatform.model.domain.ModelPolicyTest",
+        "module": "model-gateway",
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": null,
+        "xmlSha256": "d53c4b3719f8124f06a4de1be726f676385e85d0551d9a28b68b4515481fb9b6",
+        "classpathSha256": "c9e2697f33989cdff821a068c7ce073392fe6b72c1aa2388a424caccbd66dfdb",
+        "cases": [
+          "localEndpointStillNeedsRequiredLabels",
+          "admissionRejectsInsufficientContext",
+          "unclassifiedNeverDefaultsToPublic"
+        ]
+      },
+      {
+        "name": "cn.agentplatform.model.infra.EngineModelInputManifestClientHttpTest",
+        "module": "model-gateway",
+        "tests": 11,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": null,
+        "xmlSha256": "173e5f085304901cdbd08c79c5f2abcb5866b352bd065eff3471fd95a984ab6f",
+        "classpathSha256": "c9e2697f33989cdff821a068c7ce073392fe6b72c1aa2388a424caccbd66dfdb",
+        "cases": [
+          "finiteHttpsOriginOnly",
+          "sameAndDifferentOriginRedirectsNeverForwardBearer",
+          "oneTotalDeadlineIncludesStalledHeadersAndTricklingBody",
+          "boundedNormalTlsTypedManifest",
+          "interruptionCancelsAndPreservesInterruptStatus",
+          "strictBytesJsonFieldsTypesArraysAndHashes",
+          "wrongHostAndUntrustedCaFailOrdinaryTls",
+          "contentLengthAndChunkOverflowCancelBoundedSubscriber",
+          "roleEntitlementLabelAndParentCountsAreCheckedBeforeTypedSets",
+          "ambientTransactionDeniesBeforeMetadataHttp",
+          "assertedHeadersAndContentEncodingMustMatchExactly"
+        ]
+      },
+      {
+        "name": "cn.agentplatform.model.infra.FrozenModelBindingStorePostgresTest",
+        "module": "model-gateway",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": null,
+        "xmlSha256": "cbd203d06e97d989ad1c7a0b836d3ba46e2c9c88dd73e552f89defaca71341a7",
+        "classpathSha256": "c9e2697f33989cdff821a068c7ce073392fe6b72c1aa2388a424caccbd66dfdb",
+        "cases": [
+          "ordinaryStoreRequiresActualReadOnlyTransaction"
+        ]
+      }
+    ],
+    "totals": {
+      "tests": 93,
+      "failures": 0,
+      "errors": 1,
+      "skipped": 0
+    }
+  },
+  {
+    "epoch": "green7",
+    "sourceManifest": ".local\\iam-model-frozen-binding\\green7-source\\source.json",
+    "sourceSha256": "5e4a053394066ff115a617c89cd3b85cc58518d49de50e1f5a91265ab20f89b7",
+    "actualRunning": [
+      "cn.agentplatform.model.application.FrozenModelBindingConsumerHttpTest",
+      "cn.agentplatform.model.application.FrozenModelBindingVerifierTest",
+      "cn.agentplatform.model.infra.FrozenModelBindingStorePostgresTest"
+    ],
+    "suites": [
+      {
+        "name": "cn.agentplatform.model.application.FrozenModelBindingConsumerHttpTest",
+        "module": "model-gateway",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": null,
+        "xmlSha256": "5751c5a5895414b81d385388a29639fccf1ce24d11a034da5351adbe72364e4b",
+        "classpathSha256": "c9e2697f33989cdff821a068c7ce073392fe6b72c1aa2388a424caccbd66dfdb",
+        "cases": [
+          "realSeparateJvmFrozenBindingJoinAndNumericDigest",
+          "separateProducerRejectsWrongOwnerRootOriginBeforeBindingSql"
+        ]
+      },
+      {
+        "name": "cn.agentplatform.model.application.FrozenModelBindingVerifierTest",
+        "module": "model-gateway",
+        "tests": 17,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": null,
+        "xmlSha256": "8477d3d936063fd3ab3bd2bc26b454d7b90976671d00863a110761e62fb788f4",
+        "classpathSha256": "c9e2697f33989cdff821a068c7ce073392fe6b72c1aa2388a424caccbd66dfdb",
+        "cases": [
+          "rejectsChangedSnapshotUnderOldSha",
+          "metadataBoundsAreStrictBeforeNewProof",
+          "fullTreeHashRetainsArrayOrderAndObjectOrderIsCanonical",
+          "frozenStateSurvivesMutableDisableAndEndpointLabelModelChanges",
+          "interruptionExpiryAndBoundedPoolNeverMintOrRetry",
+          "realFreezeAndAcceptedConsumerPositiveControl",
+          "capabilitiesAndEffectiveOutputAreChecked",
+          "refreshFollowsActualConnectionReleaseAndNarrowingRevocationOutageDeny",
+          "numericDigestCopiesAndResultLifetime",
+          "nullClosedReplacedCrossThreadAndAmbientTransactionDenyBeforeQuery",
+          "emptyClassificationRequiresLocalAndRetainedExpiryRetiresNewProof",
+          "cooperativeEightSecondEnvelopeCannotMintAfterOverrun",
+          "signedPostPgOwnerRootInitialOriginAndNewLabelChangesAreRechecked",
+          "actualHttpObserverPositiveControlsAndNoBusinessWrites",
+          "retainsLostLabelObligation",
+          "realPgLockTimeoutThenFreshHealthyFrame",
+          "missingTenantRowAndNestedIdsHaveNoMutableFallback"
+        ]
+      },
+      {
+        "name": "cn.agentplatform.model.infra.FrozenModelBindingStorePostgresTest",
+        "module": "model-gateway",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "timestamp": null,
+        "xmlSha256": "7a309f437855e8a5b0a2c388fb610716927d1c0b15a3e982992083defcc86d83",
+        "classpathSha256": "c9e2697f33989cdff821a068c7ce073392fe6b72c1aa2388a424caccbd66dfdb",
+        "cases": [
+          "ordinaryStoreRequiresActualReadOnlyTransaction"
+        ]
+      }
+    ],
+    "totals": {
+      "tests": 20,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  }
+]

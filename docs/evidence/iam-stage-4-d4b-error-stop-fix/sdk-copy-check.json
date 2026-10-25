@@ -1,0 +1,16 @@
+{
+  "at": "2026-10-20T20:47:18.997Z",
+  "sdk": {
+    "file": "web/assistant.js/dist/assistant.js",
+    "bytes": 229194,
+    "sha256": "12da80d13fc3a86151df710ba57a6813180d51776df28746afcca62be08a372c"
+  },
+  "deployed": {
+    "file": "web/webapp/dist/assistant.js",
+    "bytes": 229194,
+    "sha256": "12da80d13fc3a86151df710ba57a6813180d51776df28746afcca62be08a372c"
+  },
+  "equal": true,
+  "command": "node web/shared/copy-assistant.mjs",
+  "sequence": "Three independent Vite builds dispatched concurrently; SDK finished first, webapp second, admin last; copy after all complete"
+}

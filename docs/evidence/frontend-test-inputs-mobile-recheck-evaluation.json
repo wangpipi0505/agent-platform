@@ -1,0 +1,131 @@
+{
+  "fixtureOnly": true,
+  "requests": [
+    {
+      "path": "/admin/apps/named_fixture",
+      "query": {},
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/admin/apps/named_fixture/publish/precheck",
+      "query": {},
+      "method": "POST",
+      "body": null
+    },
+    {
+      "path": "/admin/evaluation-datasets",
+      "query": {
+        "appCode": "named_fixture",
+        "limit": "20"
+      },
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/admin/apps/named_fixture/publish/precheck",
+      "query": {},
+      "method": "POST",
+      "body": null
+    },
+    {
+      "path": "/admin/evaluation-datasets/named_fixture/immutable-v1",
+      "query": {},
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/admin/evaluations",
+      "query": {},
+      "method": "POST",
+      "body": {
+        "appCode": "named_fixture",
+        "draftRev": 4,
+        "candidateSha256": "candidate-fixture-sha",
+        "datasetVersion": "immutable-v1",
+        "cases": [
+          {
+            "id": "case-source",
+            "inputs": {
+              "question": "冻结输入"
+            },
+            "expected": {
+              "answer": "独立预期",
+              "tokens": 5
+            },
+            "safety": true
+          }
+        ]
+      }
+    },
+    {
+      "path": "/admin/apps/named_fixture/publish/precheck",
+      "query": {},
+      "method": "POST",
+      "body": null
+    },
+    {
+      "path": "/admin/evaluation-datasets",
+      "query": {
+        "appCode": "named_fixture",
+        "limit": "20"
+      },
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/admin/evaluations",
+      "query": {},
+      "method": "POST",
+      "body": {
+        "appCode": "named_fixture",
+        "draftRev": 4,
+        "candidateSha256": "candidate-fixture-sha",
+        "datasetVersion": "manual-v1",
+        "cases": [
+          {
+            "id": "case-source",
+            "inputs": {
+              "question": "冻结输入"
+            },
+            "expected": {
+              "answer": "独立预期",
+              "tokens": 5
+            },
+            "safety": true
+          }
+        ]
+      }
+    },
+    {
+      "path": "/admin/apps/named_fixture",
+      "query": {},
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/admin/apps/named_fixture",
+      "query": {},
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/admin/debug-inputs",
+      "query": {
+        "appDraftId": "7",
+        "afterId": "0",
+        "limit": "20"
+      },
+      "method": "GET",
+      "body": null
+    }
+  ],
+  "checks": {
+    "missingSelectionCannotSubmit": true,
+    "actualAdminMobileNoOverflow": true,
+    "immutableDatasetSentThroughOriginalEvaluationApi": true,
+    "manualAdvancedCompatible": true,
+    "actualAdminDebugMobileNoOverflow": true
+  },
+  "pageErrors": []
+}

@@ -1,0 +1,87 @@
+{
+  "componentFixtureOnly": true,
+  "phase": "red",
+  "requests": [
+    {
+      "path": "/admin/statistics",
+      "query": {
+        "from": "2026-09-20T00:00:00.000Z",
+        "to": "2026-10-20T00:00:00.000Z",
+        "groupBy": "day",
+        "page": "1",
+        "pageSize": "20"
+      }
+    },
+    {
+      "path": "/admin/statistics/snapshots",
+      "query": {}
+    },
+    {
+      "path": "/admin/statistics",
+      "query": {
+        "from": "2026-09-20T00:00:00.000Z",
+        "to": "2026-10-20T00:00:00.000Z",
+        "groupBy": "day",
+        "appCode": "unsubmitted_app",
+        "page": "2",
+        "pageSize": "20"
+      }
+    },
+    {
+      "path": "/admin/statistics",
+      "query": {
+        "from": "2026-09-20T00:00:00.000Z",
+        "to": "2026-10-20T00:00:00.000Z",
+        "groupBy": "day",
+        "appCode": "unsubmitted_app",
+        "page": "1",
+        "pageSize": "20"
+      }
+    },
+    {
+      "path": "/admin/apps/source",
+      "query": {}
+    },
+    {
+      "path": "/admin/apps/source/versions",
+      "query": {}
+    },
+    {
+      "path": "/admin/apps/source/lifecycle-logs",
+      "query": {}
+    },
+    {
+      "path": "/admin/apps/source/versions/diff",
+      "query": {
+        "fromVersion": "1",
+        "toVersion": "2"
+      }
+    }
+  ],
+  "pageErrors": [],
+  "unsavedFilterPagination": {
+    "queries": [
+      {
+        "from": "2026-09-20T00:00:00.000Z",
+        "to": "2026-10-20T00:00:00.000Z",
+        "groupBy": "day",
+        "page": "1",
+        "pageSize": "20"
+      },
+      {
+        "from": "2026-09-20T00:00:00.000Z",
+        "to": "2026-10-20T00:00:00.000Z",
+        "groupBy": "day",
+        "appCode": "unsubmitted_app",
+        "page": "2",
+        "pageSize": "20"
+      }
+    ],
+    "passed": false
+  },
+  "submittedSmallCohortStartsPageOne": true,
+  "diffLateResponse": {
+    "selectorText": "v1\n→\nv1\n对照版本",
+    "staleResultVisible": true
+  }
+}

@@ -1,0 +1,140 @@
+[
+  {
+    "stage": "iam-stage-5-n3-fix-red01",
+    "command": "node .tools/run-iam-module-tests.mjs iam-stage-5-n3-fix-red01 engine-runtime PublishedAdmissionHttpPostgresTest#expiryAfterCommittedResponseMetadataNeverNotifiesSchedulerAndFreshPollRecovers,RuntimeClientsPublishedHttpTest#proofExpiringWhileRealExecutorQueuedNeverSendsPublishedGet",
+    "exitCode": 1,
+    "raw": {
+      "file": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/iam-stage-5-n3-fix-red01/raw.log",
+      "bytes": 15899,
+      "sha256": "06e10b2c734246e40bd2f7e6a96e6046e8dfd5b659b1250a6a68d4440a7af9fd"
+    },
+    "sourceCount": 367,
+    "running": [
+      "cn.agentplatform.engine.infra.PublishedAdmissionHttpPostgresTest",
+      "cn.agentplatform.engine.infra.RuntimeClientsPublishedHttpTest"
+    ],
+    "xml": [
+      {
+        "name": "cn.agentplatform.engine.infra.PublishedAdmissionHttpPostgresTest",
+        "tests": 1,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0,
+        "cases": [
+          "expiryAfterCommittedResponseMetadataNeverNotifiesSchedulerAndFreshPollRecovers"
+        ],
+        "file": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/iam-stage-5-n3-fix-red01/xml/engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.PublishedAdmissionHttpPostgresTest.xml",
+        "bytes": 51959,
+        "sha256": "f16c0327b586dd1e9f508678ca1ca23500a7f20ae9b627ccae2814b1d63ac2f9"
+      },
+      {
+        "name": "cn.agentplatform.engine.infra.RuntimeClientsPublishedHttpTest",
+        "tests": 1,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0,
+        "cases": [
+          "proofExpiringWhileRealExecutorQueuedNeverSendsPublishedGet"
+        ],
+        "file": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/iam-stage-5-n3-fix-red01/xml/engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RuntimeClientsPublishedHttpTest.xml",
+        "bytes": 47226,
+        "sha256": "0bd0b14a8388de685fd9009b9fa3e554369c45a1de5c0df555882a20b4305daf"
+      }
+    ],
+    "totals": {
+      "tests": 2,
+      "failures": 2,
+      "errors": 0,
+      "skipped": 0
+    },
+    "incidentalXml": 76
+  },
+  {
+    "stage": "iam-stage-5-n3-fix-final01",
+    "command": "node .tools/run-iam-module-tests.mjs iam-stage-5-n3-fix-final01 engine-runtime PublishedAdmissionHttpPostgresTest,RuntimeClientsPublishedHttpTest",
+    "exitCode": 0,
+    "raw": {
+      "file": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/iam-stage-5-n3-fix-final01/raw.log",
+      "bytes": 48095,
+      "sha256": "652cf585a3ee077c3c58f57edce9fcb8a1bd622707c0eec4f89a2508769ce86f"
+    },
+    "sourceCount": 367,
+    "running": [
+      "cn.agentplatform.engine.infra.PublishedAdmissionHttpPostgresTest",
+      "cn.agentplatform.engine.infra.RuntimeClientsPublishedHttpTest"
+    ],
+    "xml": [
+      {
+        "name": "cn.agentplatform.engine.infra.PublishedAdmissionHttpPostgresTest",
+        "tests": 20,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "cases": [
+          "explicitVersionDebugStepAndV1AliasAreClosedBeforeAppSend",
+          "repeatedPostUsesOneProtectedRrViewAndPreservesOriginalGrant",
+          "actualPublishedAdmissionAndOwnedWorkerReturnFullStatus",
+          "everyAdmissionWriteFailureRollsBackRunAuthorityNodesAndScopes",
+          "narrowedCurrentCannotAdmitInitialABOrReadItsAcceptedMaterials",
+          "expiryAfterCommittedResponseMetadataNeverNotifiesSchedulerAndFreshPollRecovers",
+          "actualAdvisoryWaitCannotOutliveBoundProofAndLockTimeoutIsFinite",
+          "publishedCodeConditionAndOutputMappingUseOriginalFlowDriver",
+          "ambientTransactionAndMissingFrameRejectBeforeAnyAuthorityOrAppIo",
+          "expiryDuringNodeMaterialsRollsBackButAfterActualCommitPreservesPendingAndSlot",
+          "legacyAcceptedRowWithoutAuthorityIsNeverReadOrBackfilled",
+          "remainingOwnedWorkerDependenciesAreRejectedBeforeAdmission",
+          "workerCanFinishBeforeCreationStatusAndNarrowingStillLeaksNoPayload",
+          "emptyDependencyContainersAndNullsAreLegalPublishedStructure",
+          "unsupportedGraphAndEveryDependencyAreRejectedBeforeLegacyPreparation",
+          "explicitFlowNonemptyGraphAndOriginalInputDagBudgetGuardRemainRequired",
+          "persistLockRaceReturnsSameRunOutsideRcWithoutDuplicateNudge",
+          "actualAppPointerChangeAndDisableCreateNothing",
+          "capacityFullRecheckWaitsForCommittedSameRequestAndReadsOnlyAfterLock",
+          "changedMainRootAndMissingScopesRejectBeforeEnginePayload"
+        ],
+        "file": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/iam-stage-5-n3-fix-final01/xml/engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.PublishedAdmissionHttpPostgresTest.xml",
+        "bytes": 87062,
+        "sha256": "5818ae0b6648682ef4796048b171766fc17932fbcd19b0fc699eb3d977fecfa5"
+      },
+      {
+        "name": "cn.agentplatform.engine.infra.RuntimeClientsPublishedHttpTest",
+        "tests": 20,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "cases": [
+          "oversizedBodyCancelsBeforeUnboundedAllocation",
+          "unknownServiceNeverSignsOrSends",
+          "headersThenUnfinishedBodyHasCompleteDeadlineAndClientCloses",
+          "numericIdsVersionKeyAndStoredDigestAreAllValidated",
+          "proofExpiringWhileRealExecutorQueuedNeverSendsPublishedGet",
+          "publicVerifiedObjectAndUnboundCaptureCannotSend",
+          "completeResponseStillRequiresOriginalBoundFrame",
+          "appHttpFailureSemanticsRemainDistinct",
+          "explicitLegacyConstructionKeepsKnownAppSkillModelRoutes",
+          "iamActorGetPostStreamAndUnknownTargetsNeverSignOrSend",
+          "redirectIsNotFollowedOrRetried",
+          "disconnectedPublishedGetIsNeverAutomaticallyResent",
+          "forwardReturningAfterProofExpiryCannotSendAppRequest",
+          "trustedIamDoesNotFallBackWhenJvmModeSaysTest",
+          "nonIdentityEncodingIsRejectedWithoutAutomaticDecompression",
+          "boundMainForwardsExactOperationGrantOriginAndNeverPortalSource",
+          "malformedJsonIsUnavailableWithoutBodyEcho",
+          "trustedModeRejectsMissingCapabilityAndUnsafeOrigins",
+          "unsafeCodeAndWrongRootNeverSend",
+          "interruptionAfterHeadersCancelsRequestAndPreservesInterrupt"
+        ],
+        "file": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/iam-stage-5-n3-fix-final01/xml/engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RuntimeClientsPublishedHttpTest.xml",
+        "bytes": 49444,
+        "sha256": "0f09c97ce5aaedc93383e96c48b9fdd445153f548bead251e9006ce130c79e5e"
+      }
+    ],
+    "totals": {
+      "tests": 40,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "incidentalXml": 76
+  }
+]

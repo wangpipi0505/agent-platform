@@ -1,0 +1,1173 @@
+{
+  "at": "2026-10-20T03:24:54.817Z",
+  "exit": 0,
+  "stderr": "",
+  "data": {
+    "database": "agent_platform_algorithm_live_f7fecdf481a3",
+    "runs": [
+      {
+        "id": 1,
+        "runId": "r_d4ba885d57be4dccad0af8ed3e922c6c",
+        "status": "SUCCEEDED",
+        "tenantId": "algorithm-live-f7fecdf481a3"
+      },
+      {
+        "id": 2,
+        "runId": "r_2700d27889274aea890a7042b9e0f994",
+        "status": "SUCCEEDED",
+        "tenantId": "algorithm-live-f7fecdf481a3"
+      }
+    ],
+    "calls": [
+      {
+        "id": 1,
+        "args": {
+          "message": "complete"
+        },
+        "result": {
+          "error": null,
+          "owner": {
+            "runId": "r_d4ba885d57be4dccad0af8ed3e922c6c",
+            "callId": 1,
+            "tenantId": "algorithm-live-f7fecdf481a3",
+            "attemptId": 2,
+            "skillCode": "alg_live_f7fecdf481a3_complete",
+            "principalId": "algorithm-live",
+            "nodeInstanceId": 2,
+            "skillVersionId": 1
+          },
+          "isMock": false,
+          "status": "SUCCEEDED",
+          "fileRefs": [],
+          "guardTrace": {
+            "roles": [
+              "ADMIN",
+              "SERVICE",
+              "EDITOR"
+            ],
+            "argsDigest": "bf3e3d891044b1229e23a604013d8be68e1ce3bcbd016f27f1a2701a7b52b895"
+          },
+          "structured": {
+            "value": "ok-complete"
+          },
+          "modelSummary": "{\"value\":\"ok-complete\"}",
+          "cardPayloadJson": ""
+        },
+        "run_id": 1,
+        "status": "SUCCEEDED",
+        "is_mock": false,
+        "args_ref": "pg:call/f61bdd114e77ba5e320c2792cfcbeebdee9077917b028b16f9be8c8a53a22600/args",
+        "call_seq": 1,
+        "attempt_id": 2,
+        "claimed_at": "2026-10-20T11:23:19.366276+08:00",
+        "claimed_by": "42ff7657-8e80-4171-aea7-647043fc5719_bf4c7fc7",
+        "created_at": "2026-10-20T11:23:19.306094+08:00",
+        "result_ref": "pg:call/1/result",
+        "skill_code": "alg_live_f7fecdf481a3_complete",
+        "args_digest": "bf3e3d891044b1229e23a604013d8be68e1ce3bcbd016f27f1a2701a7b52b895",
+        "duration_ms": 541,
+        "claimed_lease": "2026-10-20T11:24:49.614394+08:00",
+        "mock_snapshot": {},
+        "error_semantic": null,
+        "recovery_error": null,
+        "idempotency_key": "f61bdd114e77ba5e320c2792cfcbeebdee9077917b028b16f9be8c8a53a22600",
+        "approval_context": null,
+        "node_instance_id": 2,
+        "recovery_next_at": null,
+        "skill_version_id": 1,
+        "recovery_attempts": 0,
+        "mock_source_digest": null,
+        "mock_source_call_id": null,
+        "readonly_retry_count": 0,
+        "skill_contract_sha256": "92ad259b084cc1ee7f46f316c535c63cddf6c7b57f7851f447f940d3b51b3907",
+        "debug_controls_revision": 0
+      },
+      {
+        "id": 2,
+        "args": {
+          "message": "ack-loss"
+        },
+        "result": {
+          "error": null,
+          "owner": {
+            "runId": "r_2700d27889274aea890a7042b9e0f994",
+            "callId": 2,
+            "tenantId": "algorithm-live-f7fecdf481a3",
+            "attemptId": 5,
+            "skillCode": "alg_live_f7fecdf481a3_ack_loss",
+            "principalId": "algorithm-live",
+            "nodeInstanceId": 5,
+            "skillVersionId": 2
+          },
+          "isMock": false,
+          "status": "SUCCEEDED",
+          "fileRefs": [],
+          "guardTrace": {
+            "roles": [
+              "EDITOR",
+              "SERVICE",
+              "ADMIN"
+            ],
+            "argsDigest": "592d1399c0cec60648ca389b005f639e6702012893f050b1796617f1f6db38fa"
+          },
+          "structured": {
+            "value": "ok-ack-loss"
+          },
+          "modelSummary": "{\"value\":\"ok-ack-loss\"}",
+          "cardPayloadJson": ""
+        },
+        "run_id": 2,
+        "status": "SUCCEEDED",
+        "is_mock": false,
+        "args_ref": "pg:call/7d69fc487dd17919c76c19df3784b0408a74430dfe6939c0630fddd309c1e190/args",
+        "call_seq": 1,
+        "attempt_id": 5,
+        "claimed_at": "2026-10-20T11:23:52.367544+08:00",
+        "claimed_by": "c7c0989b-cfaa-44d3-8755-60c7efd6f6db_733c3e0f",
+        "created_at": "2026-10-20T11:23:52.308473+08:00",
+        "result_ref": "pg:call/2/result",
+        "skill_code": "alg_live_f7fecdf481a3_ack_loss",
+        "args_digest": "592d1399c0cec60648ca389b005f639e6702012893f050b1796617f1f6db38fa",
+        "duration_ms": 467,
+        "claimed_lease": "2026-10-20T11:25:22.815938+08:00",
+        "mock_snapshot": {},
+        "error_semantic": null,
+        "recovery_error": "PlatformException",
+        "idempotency_key": "7d69fc487dd17919c76c19df3784b0408a74430dfe6939c0630fddd309c1e190",
+        "approval_context": null,
+        "node_instance_id": 5,
+        "recovery_next_at": "2026-10-20T11:24:23.695537+08:00",
+        "skill_version_id": 2,
+        "recovery_attempts": 1,
+        "mock_source_digest": null,
+        "mock_source_call_id": null,
+        "readonly_retry_count": 0,
+        "skill_contract_sha256": "cee406de357a44e1eba9cda458cab14c9d58f3038d32ba5df44ea3219b17c7f1",
+        "debug_controls_revision": 0
+      }
+    ],
+    "facts": [
+      {
+        "result": {
+          "error": null,
+          "owner": {
+            "runId": "r_d4ba885d57be4dccad0af8ed3e922c6c",
+            "callId": 1,
+            "tenantId": "algorithm-live-f7fecdf481a3",
+            "attemptId": 2,
+            "skillCode": "alg_live_f7fecdf481a3_complete",
+            "principalId": "algorithm-live",
+            "nodeInstanceId": 2,
+            "skillVersionId": 1
+          },
+          "isMock": false,
+          "status": "SUCCEEDED",
+          "fileRefs": [],
+          "guardTrace": {
+            "roles": [
+              "ADMIN",
+              "SERVICE",
+              "EDITOR"
+            ],
+            "argsDigest": "bf3e3d891044b1229e23a604013d8be68e1ce3bcbd016f27f1a2701a7b52b895"
+          },
+          "structured": {
+            "value": "ok-complete"
+          },
+          "modelSummary": "{\"value\":\"ok-complete\"}",
+          "cardPayloadJson": ""
+        },
+        "run_id": "r_d4ba885d57be4dccad0af8ed3e922c6c",
+        "status": "SUCCEEDED",
+        "call_id": 1,
+        "is_mock": false,
+        "call_kind": "DEBUG",
+        "tenant_id": "algorithm-live-f7fecdf481a3",
+        "attempt_id": 2,
+        "created_at": "2026-10-20T11:23:19.376738+08:00",
+        "updated_at": "2026-10-20T11:23:19.972673+08:00",
+        "args_digest": "bf3e3d891044b1229e23a604013d8be68e1ce3bcbd016f27f1a2701a7b52b895",
+        "duration_ms": 541,
+        "principal_id": "algorithm-live",
+        "callback_error": null,
+        "callback_state": "DELIVERED",
+        "delivery_owner": null,
+        "execution_owner": "42ff7657-8e80-4171-aea7-647043fc5719_bf4c7fc7",
+        "next_delivery_at": "2026-10-20T11:23:19.948474+08:00",
+        "request_snapshot": {
+          "mock": {},
+          "runId": "r_d4ba885d57be4dccad0af8ed3e922c6c",
+          "callId": 1,
+          "callSeq": 1,
+          "arguments": {
+            "message": "complete"
+          },
+          "attemptId": 2,
+          "skillCode": "alg_live_f7fecdf481a3_complete",
+          "leaseOwner": "42ff7657-8e80-4171-aea7-647043fc5719_bf4c7fc7",
+          "leaseUntil": "2026-10-20T03:24:49.296637Z",
+          "triggerType": "DEBUG",
+          "idempotencyKey": "f61bdd114e77ba5e320c2792cfcbeebdee9077917b028b16f9be8c8a53a22600",
+          "nodeInstanceId": 2,
+          "skillVersionId": 1,
+          "guardedArguments": {
+            "message": "complete"
+          },
+          "authorityTriggerType": "DEBUG"
+        },
+        "skill_version_id": 1,
+        "delivery_attempts": 0,
+        "attempt_duration_ms": 541,
+        "delivery_lease_until": null,
+        "skill_contract_sha256": "92ad259b084cc1ee7f46f316c535c63cddf6c7b57f7851f447f940d3b51b3907"
+      },
+      {
+        "result": {
+          "error": null,
+          "owner": {
+            "runId": "r_2700d27889274aea890a7042b9e0f994",
+            "callId": 2,
+            "tenantId": "algorithm-live-f7fecdf481a3",
+            "attemptId": 5,
+            "skillCode": "alg_live_f7fecdf481a3_ack_loss",
+            "principalId": "algorithm-live",
+            "nodeInstanceId": 5,
+            "skillVersionId": 2
+          },
+          "isMock": false,
+          "status": "SUCCEEDED",
+          "fileRefs": [],
+          "guardTrace": {
+            "roles": [
+              "EDITOR",
+              "SERVICE",
+              "ADMIN"
+            ],
+            "argsDigest": "592d1399c0cec60648ca389b005f639e6702012893f050b1796617f1f6db38fa"
+          },
+          "structured": {
+            "value": "ok-ack-loss"
+          },
+          "modelSummary": "{\"value\":\"ok-ack-loss\"}",
+          "cardPayloadJson": ""
+        },
+        "run_id": "r_2700d27889274aea890a7042b9e0f994",
+        "status": "SUCCEEDED",
+        "call_id": 2,
+        "is_mock": false,
+        "call_kind": "DEBUG",
+        "tenant_id": "algorithm-live-f7fecdf481a3",
+        "attempt_id": 5,
+        "created_at": "2026-10-20T11:23:52.383229+08:00",
+        "updated_at": "2026-10-20T11:23:55.970092+08:00",
+        "args_digest": "592d1399c0cec60648ca389b005f639e6702012893f050b1796617f1f6db38fa",
+        "duration_ms": 467,
+        "principal_id": "algorithm-live",
+        "callback_error": null,
+        "callback_state": "DELIVERED",
+        "delivery_owner": null,
+        "execution_owner": "c7c0989b-cfaa-44d3-8755-60c7efd6f6db_733c3e0f",
+        "next_delivery_at": "2026-10-20T11:23:55.953805+08:00",
+        "request_snapshot": {
+          "mock": {},
+          "runId": "r_2700d27889274aea890a7042b9e0f994",
+          "callId": 2,
+          "callSeq": 1,
+          "arguments": {
+            "message": "ack-loss"
+          },
+          "attemptId": 5,
+          "skillCode": "alg_live_f7fecdf481a3_ack_loss",
+          "leaseOwner": "c7c0989b-cfaa-44d3-8755-60c7efd6f6db_733c3e0f",
+          "leaseUntil": "2026-10-20T03:25:22.299522Z",
+          "triggerType": "DEBUG",
+          "idempotencyKey": "7d69fc487dd17919c76c19df3784b0408a74430dfe6939c0630fddd309c1e190",
+          "nodeInstanceId": 5,
+          "skillVersionId": 2,
+          "guardedArguments": {
+            "message": "ack-loss"
+          },
+          "authorityTriggerType": "DEBUG"
+        },
+        "skill_version_id": 2,
+        "delivery_attempts": 0,
+        "attempt_duration_ms": 467,
+        "delivery_lease_until": null,
+        "skill_contract_sha256": "cee406de357a44e1eba9cda458cab14c9d58f3038d32ba5df44ea3219b17c7f1"
+      }
+    ],
+    "bindings": [
+      {
+        "run_id": "r_d4ba885d57be4dccad0af8ed3e922c6c",
+        "status": "DONE",
+        "call_id": 1,
+        "metadata": {
+          "image": "algorithm-proof:finite",
+          "protocol": "ALGORITHM",
+          "contractSha256": "92ad259b084cc1ee7f46f316c535c63cddf6c7b57f7851f447f940d3b51b3907",
+          "serviceAccount": "algorithm-proof",
+          "terminalEvidence": {
+            "apiSha256": "f4ae72cd16fb79489961c02b3e3bdaafca81bea45128a6d74e558ee02f718b0d",
+            "condition": "Complete",
+            "namespace": "alg-live-f7fecdf481a3-complete",
+            "sourceKind": "K8S_JOB",
+            "sourceSha256": "bda4ef6c5f13e6c5c97940fcbfaf538a1f4dace2c47c3f4e4f28e13dd3f6c988",
+            "externalJobId": "alg-404772026b9963271ec5c6f778e45de7e33f19a8",
+            "externalJobUid": "802b86f3-9a83-470a-9c26-c6130c8a95c7",
+            "identitySha256": "44568f3c68c2da16c54a9f72ddfed67b14e37749342bfc18f4be35c9a91223e2"
+          }
+        },
+        "tenant_id": "algorithm-live-f7fecdf481a3",
+        "attempt_id": 2,
+        "updated_at": "2026-10-20T11:23:19.948474+08:00",
+        "principal_id": "algorithm-live",
+        "send_started": true,
+        "external_job_id": "alg-404772026b9963271ec5c6f778e45de7e33f19a8",
+        "idempotency_key": "f61bdd114e77ba5e320c2792cfcbeebdee9077917b028b16f9be8c8a53a22600",
+        "external_job_uid": "802b86f3-9a83-470a-9c26-c6130c8a95c7",
+        "request_snapshot": {
+          "mock": {},
+          "runId": "r_d4ba885d57be4dccad0af8ed3e922c6c",
+          "callId": 1,
+          "callSeq": 1,
+          "arguments": {
+            "message": "complete"
+          },
+          "attemptId": 2,
+          "skillCode": "alg_live_f7fecdf481a3_complete",
+          "leaseOwner": "42ff7657-8e80-4171-aea7-647043fc5719_bf4c7fc7",
+          "leaseUntil": "2026-10-20T03:24:49.296637Z",
+          "triggerType": "DEBUG",
+          "idempotencyKey": "f61bdd114e77ba5e320c2792cfcbeebdee9077917b028b16f9be8c8a53a22600",
+          "nodeInstanceId": 2,
+          "skillVersionId": 1,
+          "guardedArguments": {
+            "message": "complete"
+          },
+          "authorityTriggerType": "DEBUG"
+        },
+        "skill_version_id": 1,
+        "external_namespace": "alg-live-f7fecdf481a3-complete",
+        "external_api_sha256": "f4ae72cd16fb79489961c02b3e3bdaafca81bea45128a6d74e558ee02f718b0d",
+        "external_identity_sha256": "44568f3c68c2da16c54a9f72ddfed67b14e37749342bfc18f4be35c9a91223e2"
+      },
+      {
+        "run_id": "r_2700d27889274aea890a7042b9e0f994",
+        "status": "DONE",
+        "call_id": 2,
+        "metadata": {
+          "image": "algorithm-proof:finite",
+          "protocol": "ALGORITHM",
+          "contractSha256": "cee406de357a44e1eba9cda458cab14c9d58f3038d32ba5df44ea3219b17c7f1",
+          "serviceAccount": "algorithm-proof",
+          "terminalEvidence": {
+            "apiSha256": "d2977e470234ce74d2e42442740bf062fd5aa72b027d9314d7b8f0db602c1e6a",
+            "condition": "Complete",
+            "namespace": "alg-live-f7fecdf481a3-ack-loss",
+            "sourceKind": "K8S_JOB",
+            "sourceSha256": "4f27c65ab9800236539010a36b652e563453d7006fd8227585454f2f28b2ef32",
+            "externalJobId": "alg-cee2b5d4ca67267e9026d3812b8489563464db68",
+            "externalJobUid": "f5c374eb-0bed-48da-884a-42fc1a2ad114",
+            "identitySha256": "dd66e0c29c0388ba5c79a45d3ae24f3cd6dc7eac027e15a29d23213f93cc13de"
+          }
+        },
+        "tenant_id": "algorithm-live-f7fecdf481a3",
+        "attempt_id": 5,
+        "updated_at": "2026-10-20T11:23:55.953805+08:00",
+        "principal_id": "algorithm-live",
+        "send_started": true,
+        "external_job_id": "alg-cee2b5d4ca67267e9026d3812b8489563464db68",
+        "idempotency_key": "7d69fc487dd17919c76c19df3784b0408a74430dfe6939c0630fddd309c1e190",
+        "external_job_uid": "f5c374eb-0bed-48da-884a-42fc1a2ad114",
+        "request_snapshot": {
+          "mock": {},
+          "runId": "r_2700d27889274aea890a7042b9e0f994",
+          "callId": 2,
+          "callSeq": 1,
+          "arguments": {
+            "message": "ack-loss"
+          },
+          "attemptId": 5,
+          "skillCode": "alg_live_f7fecdf481a3_ack_loss",
+          "leaseOwner": "c7c0989b-cfaa-44d3-8755-60c7efd6f6db_733c3e0f",
+          "leaseUntil": "2026-10-20T03:25:22.299522Z",
+          "triggerType": "DEBUG",
+          "idempotencyKey": "7d69fc487dd17919c76c19df3784b0408a74430dfe6939c0630fddd309c1e190",
+          "nodeInstanceId": 5,
+          "skillVersionId": 2,
+          "guardedArguments": {
+            "message": "ack-loss"
+          },
+          "authorityTriggerType": "DEBUG"
+        },
+        "skill_version_id": 2,
+        "external_namespace": "alg-live-f7fecdf481a3-ack-loss",
+        "external_api_sha256": "d2977e470234ce74d2e42442740bf062fd5aa72b027d9314d7b8f0db602c1e6a",
+        "external_identity_sha256": "dd66e0c29c0388ba5c79a45d3ae24f3cd6dc7eac027e15a29d23213f93cc13de"
+      }
+    ],
+    "attempts": [
+      {
+        "id": 1,
+        "error": null,
+        "status": "SUCCEEDED",
+        "ended_at": "2026-10-20T11:23:19.291045+08:00",
+        "response": null,
+        "attempt_no": 1,
+        "checkpoint": {},
+        "started_at": "2026-10-20T11:23:19.277078+08:00",
+        "response_ref": null,
+        "routed_model": null,
+        "idempotency_key": "c0396b94ed60bae669824eb23ac1fab03dbb428fed0751bce9e1286818db58b0",
+        "node_instance_id": 1,
+        "request_snapshot": {},
+        "request_snapshot_ref": "pg:attempt/1"
+      },
+      {
+        "id": 2,
+        "error": null,
+        "status": "SUCCEEDED",
+        "ended_at": "2026-10-20T11:23:19.97566+08:00",
+        "response": null,
+        "attempt_no": 1,
+        "checkpoint": {},
+        "started_at": "2026-10-20T11:23:19.296637+08:00",
+        "response_ref": null,
+        "routed_model": null,
+        "idempotency_key": "f6619d9e244288c63f01cd862d31419ede73b78d6bd60b5e097b2a93187b6c23",
+        "node_instance_id": 2,
+        "request_snapshot": {},
+        "request_snapshot_ref": "pg:attempt/2"
+      },
+      {
+        "id": 3,
+        "error": null,
+        "status": "SUCCEEDED",
+        "ended_at": "2026-10-20T11:23:19.989431+08:00",
+        "response": null,
+        "attempt_no": 1,
+        "checkpoint": {},
+        "started_at": "2026-10-20T11:23:19.98233+08:00",
+        "response_ref": null,
+        "routed_model": null,
+        "idempotency_key": "9188fbe646f33780265c216e6b0345559909d7742be3989b00ea90639122edee",
+        "node_instance_id": 3,
+        "request_snapshot": {},
+        "request_snapshot_ref": "pg:attempt/3"
+      },
+      {
+        "id": 4,
+        "error": null,
+        "status": "SUCCEEDED",
+        "ended_at": "2026-10-20T11:23:52.293775+08:00",
+        "response": null,
+        "attempt_no": 1,
+        "checkpoint": {},
+        "started_at": "2026-10-20T11:23:52.280499+08:00",
+        "response_ref": null,
+        "routed_model": null,
+        "idempotency_key": "18715253886e06e439c6d872d6a6d1155f45ac3d9cd4abf27d0806566843539f",
+        "node_instance_id": 4,
+        "request_snapshot": {},
+        "request_snapshot_ref": "pg:attempt/4"
+      },
+      {
+        "id": 5,
+        "error": {
+          "path": "toolCall.2",
+          "reason": "技能执行结果未知，等待对账",
+          "message": "技能执行结果未知，等待对账",
+          "semantic": "RESULT_UNKNOWN"
+        },
+        "status": "UNKNOWN",
+        "ended_at": null,
+        "response": null,
+        "attempt_no": 1,
+        "checkpoint": {},
+        "started_at": "2026-10-20T11:23:52.299522+08:00",
+        "response_ref": null,
+        "routed_model": null,
+        "idempotency_key": "26ff519f381b17dcd5bdfe0b675c7f00057ae035262355b03a6abd77aaa60667",
+        "node_instance_id": 5,
+        "request_snapshot": {},
+        "request_snapshot_ref": "pg:attempt/5"
+      },
+      {
+        "id": 6,
+        "error": null,
+        "status": "SUCCEEDED",
+        "ended_at": "2026-10-20T11:23:56.08095+08:00",
+        "response": null,
+        "attempt_no": 2,
+        "checkpoint": {},
+        "started_at": "2026-10-20T11:23:56.073884+08:00",
+        "response_ref": null,
+        "routed_model": null,
+        "idempotency_key": "26ff519f381b17dcd5bdfe0b675c7f00057ae035262355b03a6abd77aaa60667",
+        "node_instance_id": 5,
+        "request_snapshot": {},
+        "request_snapshot_ref": "pg:attempt/6"
+      },
+      {
+        "id": 7,
+        "error": null,
+        "status": "SUCCEEDED",
+        "ended_at": "2026-10-20T11:23:56.088443+08:00",
+        "response": null,
+        "attempt_no": 1,
+        "checkpoint": {},
+        "started_at": "2026-10-20T11:23:56.084241+08:00",
+        "response_ref": null,
+        "routed_model": null,
+        "idempotency_key": "1ae7379d1c1aba97c835174e14b75f40ef37aee9cfd8129ce6739f7cbaee26c6",
+        "node_instance_id": 6,
+        "request_snapshot": {},
+        "request_snapshot_ref": "pg:attempt/7"
+      }
+    ],
+    "nodes": [
+      {
+        "id": 1,
+        "error": null,
+        "output": {
+          "message": "complete"
+        },
+        "run_id": 1,
+        "status": "SUCCEEDED",
+        "ended_at": "2026-10-20T11:23:19.291045+08:00",
+        "released": false,
+        "step_seq": 1,
+        "node_type": "START",
+        "pause_seq": null,
+        "definition": {
+          "id": "start",
+          "type": "START"
+        },
+        "started_at": "2026-10-20T11:23:19.277078+08:00",
+        "lease_owner": "42ff7657-8e80-4171-aea7-647043fc5719_34e04db3",
+        "lease_until": "2026-10-20T11:24:49.277078+08:00",
+        "node_def_id": "start",
+        "input_digest": null,
+        "output_digest": "bf3e3d891044b1229e23a604013d8be68e1ce3bcbd016f27f1a2701a7b52b895",
+        "join_semantics": null,
+        "winner_node_id": null,
+        "approval_context": null,
+        "committed_attempt_id": 1,
+        "committed_output_ref": "pg:node/1"
+      },
+      {
+        "id": 2,
+        "error": null,
+        "output": {
+          "value": "ok-complete"
+        },
+        "run_id": 1,
+        "status": "SUCCEEDED",
+        "ended_at": "2026-10-20T11:23:19.97566+08:00",
+        "released": false,
+        "step_seq": 2,
+        "node_type": "SKILL",
+        "pause_seq": null,
+        "definition": {
+          "id": "draft_skill",
+          "args": {
+            "message": "complete"
+          },
+          "type": "SKILL",
+          "skillRef": {
+            "code": "alg_live_f7fecdf481a3_complete",
+            "version": 1,
+            "execution": {
+              "readonly": true,
+              "idempotent": true,
+              "sideEffect": false,
+              "cancellable": false
+            },
+            "skillVersionId": 1
+          }
+        },
+        "started_at": "2026-10-20T11:23:19.296637+08:00",
+        "lease_owner": "42ff7657-8e80-4171-aea7-647043fc5719_bf4c7fc7",
+        "lease_until": "2026-10-20T11:24:49.614394+08:00",
+        "node_def_id": "draft_skill",
+        "input_digest": null,
+        "output_digest": "850fc16d5edc46fe9aa6856b307b928fd3a900ec21244b9b44c95558f92c5b8b",
+        "join_semantics": null,
+        "winner_node_id": null,
+        "approval_context": null,
+        "committed_attempt_id": 2,
+        "committed_output_ref": "pg:node/2"
+      },
+      {
+        "id": 3,
+        "error": null,
+        "output": {
+          "result": {
+            "value": "ok-complete"
+          }
+        },
+        "run_id": 1,
+        "status": "SUCCEEDED",
+        "ended_at": "2026-10-20T11:23:19.989431+08:00",
+        "released": false,
+        "step_seq": 3,
+        "node_type": "END",
+        "pause_seq": null,
+        "definition": {
+          "id": "end",
+          "type": "END"
+        },
+        "started_at": "2026-10-20T11:23:19.98233+08:00",
+        "lease_owner": "42ff7657-8e80-4171-aea7-647043fc5719_7784a9a9",
+        "lease_until": "2026-10-20T11:24:49.98233+08:00",
+        "node_def_id": "end",
+        "input_digest": null,
+        "output_digest": "6734bbfc40725e9e61c05897c20d43fe9a2b7e77f2b486a2978784187c74eabc",
+        "join_semantics": null,
+        "winner_node_id": null,
+        "approval_context": null,
+        "committed_attempt_id": 3,
+        "committed_output_ref": "pg:node/3"
+      },
+      {
+        "id": 4,
+        "error": null,
+        "output": {
+          "message": "ack-loss"
+        },
+        "run_id": 2,
+        "status": "SUCCEEDED",
+        "ended_at": "2026-10-20T11:23:52.293775+08:00",
+        "released": false,
+        "step_seq": 1,
+        "node_type": "START",
+        "pause_seq": null,
+        "definition": {
+          "id": "start",
+          "type": "START"
+        },
+        "started_at": "2026-10-20T11:23:52.280499+08:00",
+        "lease_owner": "c7c0989b-cfaa-44d3-8755-60c7efd6f6db_6c75391a",
+        "lease_until": "2026-10-20T11:25:22.280499+08:00",
+        "node_def_id": "start",
+        "input_digest": null,
+        "output_digest": "592d1399c0cec60648ca389b005f639e6702012893f050b1796617f1f6db38fa",
+        "join_semantics": null,
+        "winner_node_id": null,
+        "approval_context": null,
+        "committed_attempt_id": 4,
+        "committed_output_ref": "pg:node/4"
+      },
+      {
+        "id": 5,
+        "error": {
+          "path": "toolCall.2",
+          "reason": "技能执行结果未知，等待对账",
+          "message": "技能执行结果未知，等待对账",
+          "semantic": "RESULT_UNKNOWN"
+        },
+        "output": {
+          "value": "ok-ack-loss"
+        },
+        "run_id": 2,
+        "status": "SUCCEEDED",
+        "ended_at": "2026-10-20T11:23:56.08095+08:00",
+        "released": true,
+        "step_seq": 2,
+        "node_type": "SKILL",
+        "pause_seq": null,
+        "definition": {
+          "id": "draft_skill",
+          "args": {
+            "message": "ack-loss"
+          },
+          "type": "SKILL",
+          "skillRef": {
+            "code": "alg_live_f7fecdf481a3_ack_loss",
+            "version": 1,
+            "execution": {
+              "readonly": true,
+              "idempotent": true,
+              "sideEffect": false,
+              "cancellable": false
+            },
+            "skillVersionId": 2
+          }
+        },
+        "started_at": "2026-10-20T11:23:52.299522+08:00",
+        "lease_owner": "c7c0989b-cfaa-44d3-8755-60c7efd6f6db_d7944601",
+        "lease_until": "2026-10-20T11:25:26.073884+08:00",
+        "node_def_id": "draft_skill",
+        "input_digest": null,
+        "output_digest": "5b853f6382347f352d8a88fa6f1aef4087d5341fefb0b49a56f9a6c04ce11579",
+        "join_semantics": null,
+        "winner_node_id": null,
+        "approval_context": null,
+        "committed_attempt_id": 6,
+        "committed_output_ref": "pg:node/5"
+      },
+      {
+        "id": 6,
+        "error": null,
+        "output": {
+          "result": {
+            "value": "ok-ack-loss"
+          }
+        },
+        "run_id": 2,
+        "status": "SUCCEEDED",
+        "ended_at": "2026-10-20T11:23:56.088443+08:00",
+        "released": false,
+        "step_seq": 3,
+        "node_type": "END",
+        "pause_seq": null,
+        "definition": {
+          "id": "end",
+          "type": "END"
+        },
+        "started_at": "2026-10-20T11:23:56.084241+08:00",
+        "lease_owner": "c7c0989b-cfaa-44d3-8755-60c7efd6f6db_7d597bdc",
+        "lease_until": "2026-10-20T11:25:26.084241+08:00",
+        "node_def_id": "end",
+        "input_digest": null,
+        "output_digest": "edbe2d8894f4b1277af0a0465c054735a70f7b7f641d75466773359809461e1a",
+        "join_semantics": null,
+        "winner_node_id": null,
+        "approval_context": null,
+        "committed_attempt_id": 7,
+        "committed_output_ref": "pg:node/6"
+      }
+    ],
+    "events": [
+      {
+        "id": 1,
+        "seq": 1,
+        "type": "RUN_STARTED",
+        "run_id": 1,
+        "payload": {
+          "runId": "r_d4ba885d57be4dccad0af8ed3e922c6c",
+          "triggerType": "DEBUG"
+        },
+        "created_at": "2026-10-20T11:23:19.261743+08:00"
+      },
+      {
+        "id": 2,
+        "seq": 2,
+        "type": "NODE_STARTED",
+        "run_id": 1,
+        "payload": {
+          "attemptId": 1,
+          "attemptNo": 1,
+          "nodeInstanceId": 1
+        },
+        "created_at": "2026-10-20T11:23:19.277078+08:00"
+      },
+      {
+        "id": 3,
+        "seq": 3,
+        "type": "LOGIC_RESULT_COMMITTED",
+        "run_id": 1,
+        "payload": {
+          "attemptId": 1,
+          "nodeInstanceId": 1
+        },
+        "created_at": "2026-10-20T11:23:19.291045+08:00"
+      },
+      {
+        "id": 4,
+        "seq": 4,
+        "type": "NODE_FINISHED",
+        "run_id": 1,
+        "payload": {
+          "status": "SUCCEEDED",
+          "nodeInstanceId": 1
+        },
+        "created_at": "2026-10-20T11:23:19.291045+08:00"
+      },
+      {
+        "id": 5,
+        "seq": 5,
+        "type": "NODE_STARTED",
+        "run_id": 1,
+        "payload": {
+          "attemptId": 2,
+          "attemptNo": 1,
+          "nodeInstanceId": 2
+        },
+        "created_at": "2026-10-20T11:23:19.296637+08:00"
+      },
+      {
+        "id": 6,
+        "seq": 6,
+        "type": "LOGIC_RESULT_COMMITTED",
+        "run_id": 1,
+        "payload": {
+          "attemptId": 2,
+          "nodeInstanceId": 2
+        },
+        "created_at": "2026-10-20T11:23:19.97566+08:00"
+      },
+      {
+        "id": 7,
+        "seq": 7,
+        "type": "NODE_FINISHED",
+        "run_id": 1,
+        "payload": {
+          "status": "SUCCEEDED",
+          "nodeInstanceId": 2
+        },
+        "created_at": "2026-10-20T11:23:19.97566+08:00"
+      },
+      {
+        "id": 8,
+        "seq": 8,
+        "type": "NODE_STARTED",
+        "run_id": 1,
+        "payload": {
+          "attemptId": 3,
+          "attemptNo": 1,
+          "nodeInstanceId": 3
+        },
+        "created_at": "2026-10-20T11:23:19.98233+08:00"
+      },
+      {
+        "id": 9,
+        "seq": 9,
+        "type": "LOGIC_RESULT_COMMITTED",
+        "run_id": 1,
+        "payload": {
+          "attemptId": 3,
+          "nodeInstanceId": 3
+        },
+        "created_at": "2026-10-20T11:23:19.989431+08:00"
+      },
+      {
+        "id": 10,
+        "seq": 10,
+        "type": "NODE_FINISHED",
+        "run_id": 1,
+        "payload": {
+          "status": "SUCCEEDED",
+          "nodeInstanceId": 3
+        },
+        "created_at": "2026-10-20T11:23:19.989431+08:00"
+      },
+      {
+        "id": 11,
+        "seq": 11,
+        "type": "RUN_FINISHED",
+        "run_id": 1,
+        "payload": {
+          "status": "SUCCEEDED"
+        },
+        "created_at": "2026-10-20T11:23:19.992141+08:00"
+      },
+      {
+        "id": 12,
+        "seq": 1,
+        "type": "RUN_STARTED",
+        "run_id": 2,
+        "payload": {
+          "runId": "r_2700d27889274aea890a7042b9e0f994",
+          "triggerType": "DEBUG"
+        },
+        "created_at": "2026-10-20T11:23:52.269589+08:00"
+      },
+      {
+        "id": 13,
+        "seq": 2,
+        "type": "NODE_STARTED",
+        "run_id": 2,
+        "payload": {
+          "attemptId": 4,
+          "attemptNo": 1,
+          "nodeInstanceId": 4
+        },
+        "created_at": "2026-10-20T11:23:52.280499+08:00"
+      },
+      {
+        "id": 14,
+        "seq": 3,
+        "type": "LOGIC_RESULT_COMMITTED",
+        "run_id": 2,
+        "payload": {
+          "attemptId": 4,
+          "nodeInstanceId": 4
+        },
+        "created_at": "2026-10-20T11:23:52.293775+08:00"
+      },
+      {
+        "id": 15,
+        "seq": 4,
+        "type": "NODE_FINISHED",
+        "run_id": 2,
+        "payload": {
+          "status": "SUCCEEDED",
+          "nodeInstanceId": 4
+        },
+        "created_at": "2026-10-20T11:23:52.293775+08:00"
+      },
+      {
+        "id": 16,
+        "seq": 5,
+        "type": "NODE_STARTED",
+        "run_id": 2,
+        "payload": {
+          "attemptId": 5,
+          "attemptNo": 1,
+          "nodeInstanceId": 5
+        },
+        "created_at": "2026-10-20T11:23:52.299522+08:00"
+      },
+      {
+        "id": 17,
+        "seq": 6,
+        "type": "WAITING_EXTERNAL",
+        "run_id": 2,
+        "payload": {
+          "error": {
+            "path": "toolCall.2",
+            "reason": "技能执行结果未知，等待对账",
+            "message": "技能执行结果未知，等待对账",
+            "semantic": "RESULT_UNKNOWN"
+          },
+          "nodeInstanceId": 5
+        },
+        "created_at": "2026-10-20T11:23:52.90691+08:00"
+      },
+      {
+        "id": 18,
+        "seq": 7,
+        "type": "EXTERNAL_READY",
+        "run_id": 2,
+        "payload": {
+          "nodeInstanceId": 5
+        },
+        "created_at": "2026-10-20T11:23:56.064+08:00"
+      },
+      {
+        "id": 19,
+        "seq": 8,
+        "type": "NODE_STARTED",
+        "run_id": 2,
+        "payload": {
+          "attemptId": 6,
+          "attemptNo": 2,
+          "nodeInstanceId": 5
+        },
+        "created_at": "2026-10-20T11:23:56.073884+08:00"
+      },
+      {
+        "id": 20,
+        "seq": 9,
+        "type": "LOGIC_RESULT_COMMITTED",
+        "run_id": 2,
+        "payload": {
+          "attemptId": 6,
+          "nodeInstanceId": 5
+        },
+        "created_at": "2026-10-20T11:23:56.08095+08:00"
+      },
+      {
+        "id": 21,
+        "seq": 10,
+        "type": "NODE_FINISHED",
+        "run_id": 2,
+        "payload": {
+          "status": "SUCCEEDED",
+          "nodeInstanceId": 5
+        },
+        "created_at": "2026-10-20T11:23:56.08095+08:00"
+      },
+      {
+        "id": 22,
+        "seq": 11,
+        "type": "NODE_STARTED",
+        "run_id": 2,
+        "payload": {
+          "attemptId": 7,
+          "attemptNo": 1,
+          "nodeInstanceId": 6
+        },
+        "created_at": "2026-10-20T11:23:56.084241+08:00"
+      },
+      {
+        "id": 23,
+        "seq": 12,
+        "type": "LOGIC_RESULT_COMMITTED",
+        "run_id": 2,
+        "payload": {
+          "attemptId": 7,
+          "nodeInstanceId": 6
+        },
+        "created_at": "2026-10-20T11:23:56.088443+08:00"
+      },
+      {
+        "id": 24,
+        "seq": 13,
+        "type": "NODE_FINISHED",
+        "run_id": 2,
+        "payload": {
+          "status": "SUCCEEDED",
+          "nodeInstanceId": 6
+        },
+        "created_at": "2026-10-20T11:23:56.088443+08:00"
+      },
+      {
+        "id": 25,
+        "seq": 14,
+        "type": "RUN_FINISHED",
+        "run_id": 2,
+        "payload": {
+          "status": "SUCCEEDED"
+        },
+        "created_at": "2026-10-20T11:23:56.0905+08:00"
+      }
+    ],
+    "notes": [
+      {
+        "id": 1,
+        "kind": "TOOL_EXECUTION_FACT",
+        "payload": {
+          "owner": "42ff7657-8e80-4171-aea7-647043fc5719_bf4c7fc7",
+          "callId": 1,
+          "isMock": false,
+          "result": {
+            "error": null,
+            "owner": {
+              "runId": "r_d4ba885d57be4dccad0af8ed3e922c6c",
+              "callId": 1,
+              "tenantId": "algorithm-live-f7fecdf481a3",
+              "attemptId": 2,
+              "skillCode": "alg_live_f7fecdf481a3_complete",
+              "principalId": "algorithm-live",
+              "nodeInstanceId": 2,
+              "skillVersionId": 1
+            },
+            "isMock": false,
+            "status": "SUCCEEDED",
+            "fileRefs": [],
+            "guardTrace": {
+              "roles": [
+                "ADMIN",
+                "SERVICE",
+                "EDITOR"
+              ],
+              "argsDigest": "bf3e3d891044b1229e23a604013d8be68e1ce3bcbd016f27f1a2701a7b52b895"
+            },
+            "structured": {
+              "value": "ok-complete"
+            },
+            "modelSummary": "{\"value\":\"ok-complete\"}",
+            "cardPayloadJson": ""
+          },
+          "status": "SUCCEEDED",
+          "accepted": true,
+          "attemptId": 2,
+          "durationMs": 541,
+          "factDigest": "c3da7d80db1284aa150415467a5661565ad7271ebaa8cf6e8092902e4dfcd625"
+        },
+        "attempt_id": 2,
+        "created_at": "2026-10-20T11:23:19.964101+08:00",
+        "node_instance_id": 2
+      },
+      {
+        "id": 2,
+        "kind": "TOOL_EXECUTION_FACT",
+        "payload": {
+          "owner": "c7c0989b-cfaa-44d3-8755-60c7efd6f6db_733c3e0f",
+          "callId": 2,
+          "isMock": false,
+          "result": {
+            "error": {
+              "reason": "ALGORITHM_OBSERVATION stage=POST_JOB category=IOException call=2 attempt=5; 保留原Job仅对账",
+              "semantic": "RESULT_UNKNOWN"
+            },
+            "owner": {
+              "runId": "r_2700d27889274aea890a7042b9e0f994",
+              "callId": 2,
+              "tenantId": "algorithm-live-f7fecdf481a3",
+              "attemptId": 5,
+              "skillCode": "alg_live_f7fecdf481a3_ack_loss",
+              "principalId": "algorithm-live",
+              "nodeInstanceId": 5,
+              "skillVersionId": 2
+            },
+            "isMock": false,
+            "status": "UNKNOWN",
+            "fileRefs": [],
+            "guardTrace": {
+              "roles": [
+                "EDITOR",
+                "SERVICE",
+                "ADMIN"
+              ],
+              "argsDigest": "592d1399c0cec60648ca389b005f639e6702012893f050b1796617f1f6db38fa"
+            },
+            "structured": null,
+            "modelSummary": "ALGORITHM_OBSERVATION stage=POST_JOB category=IOException call=2 attempt=5; 保留原Job仅对账",
+            "cardPayloadJson": ""
+          },
+          "status": "UNKNOWN",
+          "accepted": true,
+          "attemptId": 5,
+          "durationMs": 467,
+          "factDigest": "ded2f8f2f306e814510c669adb4fd695aaf665e4da5d0047944a243521038c0a",
+          "errorSemantic": "RESULT_UNKNOWN"
+        },
+        "attempt_id": 5,
+        "created_at": "2026-10-20T11:23:52.894533+08:00",
+        "node_instance_id": 5
+      },
+      {
+        "id": 3,
+        "kind": "TOOL_EXECUTION_FACT",
+        "payload": {
+          "owner": "c7c0989b-cfaa-44d3-8755-60c7efd6f6db_733c3e0f",
+          "callId": 2,
+          "isMock": false,
+          "result": {
+            "error": null,
+            "owner": {
+              "runId": "r_2700d27889274aea890a7042b9e0f994",
+              "callId": 2,
+              "tenantId": "algorithm-live-f7fecdf481a3",
+              "attemptId": 5,
+              "skillCode": "alg_live_f7fecdf481a3_ack_loss",
+              "principalId": "algorithm-live",
+              "nodeInstanceId": 5,
+              "skillVersionId": 2
+            },
+            "isMock": false,
+            "status": "SUCCEEDED",
+            "fileRefs": [],
+            "guardTrace": {
+              "roles": [
+                "EDITOR",
+                "SERVICE",
+                "ADMIN"
+              ],
+              "argsDigest": "592d1399c0cec60648ca389b005f639e6702012893f050b1796617f1f6db38fa"
+            },
+            "structured": {
+              "value": "ok-ack-loss"
+            },
+            "modelSummary": "{\"value\":\"ok-ack-loss\"}",
+            "cardPayloadJson": ""
+          },
+          "status": "SUCCEEDED",
+          "accepted": true,
+          "attemptId": 5,
+          "durationMs": 467,
+          "factDigest": "b030bc633287fa4a170b348bb840236e0040ffa257903eaf0fbcf727de9dac90"
+        },
+        "attempt_id": 5,
+        "created_at": "2026-10-20T11:23:55.965534+08:00",
+        "node_instance_id": 5
+      }
+    ],
+    "artifacts": 0,
+    "engineMigration": 215,
+    "skillMigration": 311
+  }
+}

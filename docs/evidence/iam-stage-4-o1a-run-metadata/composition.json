@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-20T21:22:50.981Z",
+  "sourceBase": {
+    "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/source-after.json",
+    "bytes": 108247,
+    "sha256": "327a225065b0d71768e6111638435f70d3e7b520a7f2ba22ea1c60ecc6232dd7"
+  },
+  "backendBase": {
+    "file": "docs/evidence/iam-stage-4-d4a-time-order-fix/source-after.json",
+    "bytes": 78337,
+    "sha256": "f56b205dcf81af1e9be357e49fae284768916a920cb36343d2aac50f0ee5aed2"
+  },
+  "targetBase": {
+    "file": "docs/evidence/iam-stage-4-d4a-time-order-fix/target-after.json",
+    "bytes": 398551,
+    "sha256": "8b52aa85f9eb05ce6572e3e45668dac8566ae661c6b2e2d42a7165ffe3c00a30"
+  },
+  "sourceOverlay": "docs/evidence/iam-stage-4-o1a-run-metadata/frozen-overlay/",
+  "targetOverlay": "docs/evidence/iam-stage-4-o1a-run-metadata/frozen-target-overlay/",
+  "sourceRule": "Own 10-file delta, else immutable D4b lifecycle source composition (backend380 D4a + frontend192); validate exact logical source-after names/bytes/SHA.",
+  "targetRule": "Own compiler/resource/finite-test delta, else D4a target1933 composition; no tombstones.",
+  "sourceCount": 578,
+  "targetCount": 1948
+}

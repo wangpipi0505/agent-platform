@@ -1,0 +1,30 @@
+{
+  "at": "2026-10-20T21:29:08.431Z",
+  "source": {
+    "file": "docs/evidence/iam-stage-4-o1a-run-metadata/source-after.json",
+    "bytes": 109562,
+    "sha256": "719caa92b7dc1c33ee620e923247bb57bad45cee5c0b9c210401dc9fde463510"
+  },
+  "target": {
+    "file": "docs/evidence/iam-stage-4-o1a-run-metadata/target-after.json",
+    "bytes": 402031,
+    "sha256": "1404555e5bd1f0adfca1a3f74077d952dc9e9f62097a99dc60bf0ed2eed7bda2"
+  },
+  "sourceOverlay": "docs/evidence/iam-stage-4-o1a-run-metadata/frozen-overlay/",
+  "targetOverlay": "docs/evidence/iam-stage-4-o1a-run-metadata/frozen-target-overlay/",
+  "sourceTargetOwnEvidenceWritesFrozen": true,
+  "sourceFiles": 578,
+  "physicalSourceDelta": 10,
+  "physicalTargetDelta": 32,
+  "fullLogicalReplayNamesBytesShaEqual": true,
+  "report": {
+    "file": "docs/evidence/iam-stage-4-o1a-run-metadata-report.md",
+    "bytes": 14351,
+    "sha256": "f60db9ef148115e1591fda39eb1b0bc2ef5da45934fc5119238bd556818e3d9e"
+  },
+  "manifestExclusions": [
+    "docs/evidence/iam-stage-4-o1a-run-metadata/evidence-manifest.json",
+    "docs/evidence/iam-stage-4-o1a-run-metadata/seal.json"
+  ],
+  "rule": "Inventory excludes itself and its seal to avoid self-reference; final seal pins both manifest and report. No further author mutation."
+}

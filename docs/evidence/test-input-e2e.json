@@ -1,0 +1,79 @@
+{
+  "database": "agent_platform_test_input_test",
+  "startedAt": "2026-10-19T22:06:35.299Z",
+  "processes": [
+    {
+      "module": "app-management",
+      "pid": 49332,
+      "main": "cn.agentplatform.app.AppApplication",
+      "port": 51974,
+      "database": "agent_platform_test_input_test",
+      "args": [
+        "-Djava.io.tmpdir=V:/.local/tmp",
+        "-Djdk.net.unixdomain.tmpdir=V:/.local/tmp",
+        "-Xmx256m",
+        "cn.agentplatform.app.AppApplication",
+        "--server.port=51974",
+        "--spring.datasource.url=jdbc:postgresql://127.0.0.1:25432/agent_platform_test_input_test",
+        "--agent.services.app=http://127.0.0.1:51974",
+        "--agent.services.engine=http://127.0.0.1:51975",
+        "--agent.services.monitor=http://127.0.0.1:51976",
+        "--agent.services.skill=http://127.0.0.1:1",
+        "--agent.services.model=http://127.0.0.1:1"
+      ]
+    },
+    {
+      "module": "monitor",
+      "pid": 12224,
+      "main": "cn.agentplatform.monitor.MonitorApplication",
+      "port": 51976,
+      "database": "agent_platform_test_input_test",
+      "args": [
+        "-Djava.io.tmpdir=V:/.local/tmp",
+        "-Djdk.net.unixdomain.tmpdir=V:/.local/tmp",
+        "-Xmx256m",
+        "cn.agentplatform.monitor.MonitorApplication",
+        "--server.port=51976",
+        "--spring.datasource.url=jdbc:postgresql://127.0.0.1:25432/agent_platform_test_input_test",
+        "--agent.services.app=http://127.0.0.1:51974",
+        "--agent.services.engine=http://127.0.0.1:51975",
+        "--agent.services.monitor=http://127.0.0.1:51976",
+        "--agent.services.skill=http://127.0.0.1:1",
+        "--agent.services.model=http://127.0.0.1:1"
+      ]
+    },
+    {
+      "module": "engine-runtime",
+      "pid": 20096,
+      "main": "cn.agentplatform.engine.EngineApplication",
+      "port": 51975,
+      "database": "agent_platform_test_input_test",
+      "args": [
+        "-Djava.io.tmpdir=V:/.local/tmp",
+        "-Djdk.net.unixdomain.tmpdir=V:/.local/tmp",
+        "-Xmx256m",
+        "cn.agentplatform.engine.EngineApplication",
+        "--server.port=51975",
+        "--spring.datasource.url=jdbc:postgresql://127.0.0.1:25432/agent_platform_test_input_test",
+        "--agent.services.app=http://127.0.0.1:51974",
+        "--agent.services.engine=http://127.0.0.1:51975",
+        "--agent.services.monitor=http://127.0.0.1:51977",
+        "--agent.services.skill=http://127.0.0.1:1",
+        "--agent.services.model=http://127.0.0.1:1"
+      ]
+    }
+  ],
+  "checks": [
+    "real app draft metadata validates complete FLOW input via internal service ticket",
+    "monitor commit followed by actual TCP response loss returns 502; edit source; same request recovers original revision and exactly one immutable dataset",
+    "conflicting request/version 409; owner and tenant isolation 404",
+    "existing EvaluationService executes actual START→END engine graph and persists ACCEPTED report; actual output matches explicit expected",
+    "same dataset modified content remains 409; missing safety remains 400; wrong expected remains REJECTED"
+  ],
+  "reportId": "er_4a95c0c7-76d7-4973-979b-00e512ee9add",
+  "runId": "r_2a4f6038cee648ddb2a1e7ba2b0e8d31",
+  "monitorAcceptedRequests": 4,
+  "result": "PASS",
+  "finishedAt": "2026-10-19T22:06:44.024Z",
+  "cleanedUp": true
+}

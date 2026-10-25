@@ -1,0 +1,15 @@
+{
+  "command": "node docs/evidence/iam-stage-4-d3a0-deadline-fix/capture.mjs freeze",
+  "exitCode": 1,
+  "observedError": "AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal",
+  "location": "capture.mjs:49 protectedChanges comparison against []",
+  "actualProtectedChanges": [
+    {
+      "file": "docs/evidence/iam-d3e-first-published-path-proposal.md",
+      "before": "b27b63051d7e63c83fef7503f9cc6af8779503c1bbbc0b27890cf42ece92921b",
+      "after": "972e08d6b7c5e4b06488d914989163d170bcb7f850fb0764544019cf58461739"
+    }
+  ],
+  "provenance": "Summary transcribed from actual terminal tool output; original stderr remains in the tool transcript. Not a Maven/test failure. Patch generation/apply had not started.",
+  "resolution": "Root confirmed a separately owned authorized proposal append. Preserve baseline and changes, assert this exact exception, and continue without rerunning tests."
+}

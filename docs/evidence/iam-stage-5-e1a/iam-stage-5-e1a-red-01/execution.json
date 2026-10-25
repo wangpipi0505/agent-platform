@@ -1,0 +1,48 @@
+{
+  "command": "node .tools/run-iam-module-tests.mjs iam-stage-5-e1a-red-01 admin-common RetainedAuthorizationTest",
+  "ran": [
+    "cn.agentplatform.common.authority.RetainedAuthorizationTest"
+  ],
+  "rawSha256": "08652f9d37cdd025c487475c27309c6cd4f0cbd688c359d30dccbb136bbf2bfc",
+  "reports": [
+    {
+      "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.RetainedAuthorizationTest.xml",
+      "sha256": "703491c67f55806b73b67ad2c22a1e6682f52e0b07582d9e74b381bef56281fa",
+      "bytes": 36158
+    },
+    {
+      "file": "admin-common/target/surefire-reports/cn.agentplatform.common.authority.RetainedAuthorizationTest.txt",
+      "sha256": "640697dfbe28ad37026726f4d63c831348a70c5404d8f5b24ed5de788436a0cb",
+      "bytes": 2687
+    }
+  ],
+  "buildSuccess": false,
+  "warnings": [],
+  "errors": [
+    "[ERROR] Tests run: 4, Failures: 4, Errors: 0, Skipped: 0, Time elapsed: 1.562 s <<< FAILURE! -- in cn.agentplatform.common.authority.RetainedAuthorizationTest",
+    "[ERROR] cn.agentplatform.common.authority.RetainedAuthorizationTest.singleSidedOriginCannotBeSilentlyIgnored -- Time elapsed: 0.849 s <<< FAILURE!",
+    "[ERROR] cn.agentplatform.common.authority.RetainedAuthorizationTest.legacyIntegrationSourceMustHaveFixedVerifiedIssuerAndBoundedJti -- Time elapsed: 0.181 s <<< FAILURE!",
+    "[ERROR] cn.agentplatform.common.authority.RetainedAuthorizationTest.samePortalAuthenticationCannotChangeOriginalRolesOnAnotherGrant -- Time elapsed: 0.315 s <<< FAILURE!",
+    "[ERROR] cn.agentplatform.common.authority.RetainedAuthorizationTest.receivedSignedTicketInitialCannotDisagreeWithItsOperationHash -- Time elapsed: 0.200 s <<< FAILURE!",
+    "[ERROR] Failures: ",
+    "[ERROR]   RetainedAuthorizationTest.legacyIntegrationSourceMustHaveFixedVerifiedIssuerAndBoundedJti:42 ",
+    "[ERROR]   RetainedAuthorizationTest.receivedSignedTicketInitialCannotDisagreeWithItsOperationHash:20 ",
+    "[ERROR]   RetainedAuthorizationTest.samePortalAuthenticationCannotChangeOriginalRolesOnAnotherGrant:35 ",
+    "[ERROR]   RetainedAuthorizationTest.singleSidedOriginCannotBeSilentlyIgnored:28 ",
+    "[ERROR] Tests run: 4, Failures: 4, Errors: 0, Skipped: 0",
+    "[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.3:test (default-test) on project admin-common: There are test failures.",
+    "[ERROR] ",
+    "[ERROR] See G:\\207\\��Ŀ\\�㷨���鹤��\\����\\agent-platform\\admin-common\\target\\surefire-reports for the individual test results.",
+    "[ERROR] See dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.",
+    "[ERROR] -> [Help 1]",
+    "[ERROR] ",
+    "[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.",
+    "[ERROR] Re-run Maven using the -X switch to enable full debug logging.",
+    "[ERROR] ",
+    "[ERROR] For more information about the errors and possible solutions, please read the following articles:",
+    "[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException",
+    "[ERROR] ",
+    "[ERROR] After correcting the problems, you can resume the build with the command",
+    "[ERROR]   mvn <args> -rf :admin-common"
+  ]
+}

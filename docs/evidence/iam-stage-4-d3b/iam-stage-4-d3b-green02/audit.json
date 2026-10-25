@@ -1,0 +1,43 @@
+{
+  "stage": "iam-stage-4-d3b-green02",
+  "archivedAt": "2026-10-20T10:47:09.034Z",
+  "requested": "PublishedPayloadHttpTest",
+  "actualRunning": [
+    "cn.agentplatform.app.application.PublishedPayloadHttpTest"
+  ],
+  "reports": [
+    {
+      "file": "app-management/target/surefire-reports/cn.agentplatform.app.application.PublishedPayloadHttpTest.txt",
+      "bytes": 1723,
+      "sha256": "701fe6a7f5c569012ce9c5a4afd2c51b35c3fe6fe3d34594ea64ee786ac7cb55"
+    },
+    {
+      "file": "app-management/target/surefire-reports/TEST-cn.agentplatform.app.application.PublishedPayloadHttpTest.xml",
+      "bytes": 77890,
+      "sha256": "5db15c7ef19837dafb4ee64e24292775ef76820027437f0ce16d4dc9848c76fd"
+    }
+  ],
+  "buildSuccess": false,
+  "sourceFiles": 357,
+  "noise": [
+    "[ERROR] Tests run: 24, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 18.70 s <<< FAILURE! -- in cn.agentplatform.app.application.PublishedPayloadHttpTest",
+    "[ERROR] cn.agentplatform.app.application.PublishedPayloadHttpTest.heldShareLockBlocksRealWriterThenReleasesAfterRead -- Time elapsed: 0.854 s <<< FAILURE!",
+    "[ERROR] Failures: ",
+    "[ERROR]   PublishedPayloadHttpTest.heldShareLockBlocksRealWriterThenReleasesAfterRead:215 ",
+    "[ERROR] Tests run: 24, Failures: 1, Errors: 0, Skipped: 0",
+    "[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.3:test (default-test) on project app-management: There are test failures.",
+    "[ERROR] ",
+    "[ERROR] See G:\\207\\��Ŀ\\�㷨���鹤��\\����\\agent-platform\\app-management\\target\\surefire-reports for the individual test results.",
+    "[ERROR] See dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.",
+    "[ERROR] -> [Help 1]",
+    "[ERROR] ",
+    "[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.",
+    "[ERROR] Re-run Maven using the -X switch to enable full debug logging.",
+    "[ERROR] ",
+    "[ERROR] For more information about the errors and possible solutions, please read the following articles:",
+    "[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException",
+    "[ERROR] ",
+    "[ERROR] After correcting the problems, you can resume the build with the command",
+    "[ERROR]   mvn <args> -rf :app-management"
+  ]
+}

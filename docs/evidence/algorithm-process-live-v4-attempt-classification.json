@@ -1,0 +1,518 @@
+{
+  "at": "2026-10-20T03:26:32.279Z",
+  "classification": "external call attempt retained; one extra node-local recovery attempt reuses stored terminal fact",
+  "node": {
+    "id": 5,
+    "error": {
+      "path": "toolCall.2",
+      "reason": "技能执行结果未知，等待对账",
+      "message": "技能执行结果未知，等待对账",
+      "semantic": "RESULT_UNKNOWN"
+    },
+    "output": {
+      "value": "ok-ack-loss"
+    },
+    "run_id": 2,
+    "status": "SUCCEEDED",
+    "ended_at": "2026-10-20T11:23:56.08095+08:00",
+    "released": true,
+    "step_seq": 2,
+    "node_type": "SKILL",
+    "pause_seq": null,
+    "definition": {
+      "id": "draft_skill",
+      "args": {
+        "message": "ack-loss"
+      },
+      "type": "SKILL",
+      "skillRef": {
+        "code": "alg_live_f7fecdf481a3_ack_loss",
+        "version": 1,
+        "execution": {
+          "readonly": true,
+          "idempotent": true,
+          "sideEffect": false,
+          "cancellable": false
+        },
+        "skillVersionId": 2
+      }
+    },
+    "started_at": "2026-10-20T11:23:52.299522+08:00",
+    "lease_owner": "c7c0989b-cfaa-44d3-8755-60c7efd6f6db_d7944601",
+    "lease_until": "2026-10-20T11:25:26.073884+08:00",
+    "node_def_id": "draft_skill",
+    "input_digest": null,
+    "output_digest": "5b853f6382347f352d8a88fa6f1aef4087d5341fefb0b49a56f9a6c04ce11579",
+    "join_semantics": null,
+    "winner_node_id": null,
+    "approval_context": null,
+    "committed_attempt_id": 6,
+    "committed_output_ref": "pg:node/5"
+  },
+  "attempts": [
+    {
+      "id": 5,
+      "error": {
+        "path": "toolCall.2",
+        "reason": "技能执行结果未知，等待对账",
+        "message": "技能执行结果未知，等待对账",
+        "semantic": "RESULT_UNKNOWN"
+      },
+      "status": "UNKNOWN",
+      "ended_at": null,
+      "response": null,
+      "attempt_no": 1,
+      "checkpoint": {},
+      "started_at": "2026-10-20T11:23:52.299522+08:00",
+      "response_ref": null,
+      "routed_model": null,
+      "idempotency_key": "26ff519f381b17dcd5bdfe0b675c7f00057ae035262355b03a6abd77aaa60667",
+      "node_instance_id": 5,
+      "request_snapshot": {},
+      "request_snapshot_ref": "pg:attempt/5"
+    },
+    {
+      "id": 6,
+      "error": null,
+      "status": "SUCCEEDED",
+      "ended_at": "2026-10-20T11:23:56.08095+08:00",
+      "response": null,
+      "attempt_no": 2,
+      "checkpoint": {},
+      "started_at": "2026-10-20T11:23:56.073884+08:00",
+      "response_ref": null,
+      "routed_model": null,
+      "idempotency_key": "26ff519f381b17dcd5bdfe0b675c7f00057ae035262355b03a6abd77aaa60667",
+      "node_instance_id": 5,
+      "request_snapshot": {},
+      "request_snapshot_ref": "pg:attempt/6"
+    }
+  ],
+  "externalOriginal": {
+    "callId": 2,
+    "beforeAttempt": 5,
+    "afterCallAttempt": 5,
+    "afterFactAttempt": 5,
+    "afterBindingAttempt": 5,
+    "factSnapshotAttempt": 5,
+    "bindingSnapshotAttempt": 5,
+    "beforeOwner": "c7c0989b-cfaa-44d3-8755-60c7efd6f6db_733c3e0f",
+    "afterCallOwner": "c7c0989b-cfaa-44d3-8755-60c7efd6f6db_733c3e0f",
+    "afterFactOwner": "c7c0989b-cfaa-44d3-8755-60c7efd6f6db_733c3e0f",
+    "factSnapshotOwner": "c7c0989b-cfaa-44d3-8755-60c7efd6f6db_733c3e0f",
+    "bindingSnapshotOwner": "c7c0989b-cfaa-44d3-8755-60c7efd6f6db_733c3e0f",
+    "requestSnapshotsUnchanged": true
+  },
+  "originalExternalAttemptBoundRows": 1,
+  "localCommitAttemptId": 6,
+  "postCount": 1,
+  "runCalls": 1,
+  "runFacts": 1,
+  "toolLogicalCommits": 1,
+  "acceptedTerminalFacts": 1,
+  "readonlyRetryCount": 0,
+  "events": [
+    {
+      "id": 12,
+      "seq": 1,
+      "type": "RUN_STARTED",
+      "run_id": 2,
+      "payload": {
+        "runId": "r_2700d27889274aea890a7042b9e0f994",
+        "triggerType": "DEBUG"
+      },
+      "created_at": "2026-10-20T11:23:52.269589+08:00"
+    },
+    {
+      "id": 13,
+      "seq": 2,
+      "type": "NODE_STARTED",
+      "run_id": 2,
+      "payload": {
+        "attemptId": 4,
+        "attemptNo": 1,
+        "nodeInstanceId": 4
+      },
+      "created_at": "2026-10-20T11:23:52.280499+08:00"
+    },
+    {
+      "id": 14,
+      "seq": 3,
+      "type": "LOGIC_RESULT_COMMITTED",
+      "run_id": 2,
+      "payload": {
+        "attemptId": 4,
+        "nodeInstanceId": 4
+      },
+      "created_at": "2026-10-20T11:23:52.293775+08:00"
+    },
+    {
+      "id": 15,
+      "seq": 4,
+      "type": "NODE_FINISHED",
+      "run_id": 2,
+      "payload": {
+        "status": "SUCCEEDED",
+        "nodeInstanceId": 4
+      },
+      "created_at": "2026-10-20T11:23:52.293775+08:00"
+    },
+    {
+      "id": 16,
+      "seq": 5,
+      "type": "NODE_STARTED",
+      "run_id": 2,
+      "payload": {
+        "attemptId": 5,
+        "attemptNo": 1,
+        "nodeInstanceId": 5
+      },
+      "created_at": "2026-10-20T11:23:52.299522+08:00"
+    },
+    {
+      "id": 17,
+      "seq": 6,
+      "type": "WAITING_EXTERNAL",
+      "run_id": 2,
+      "payload": {
+        "error": {
+          "path": "toolCall.2",
+          "reason": "技能执行结果未知，等待对账",
+          "message": "技能执行结果未知，等待对账",
+          "semantic": "RESULT_UNKNOWN"
+        },
+        "nodeInstanceId": 5
+      },
+      "created_at": "2026-10-20T11:23:52.90691+08:00"
+    },
+    {
+      "id": 18,
+      "seq": 7,
+      "type": "EXTERNAL_READY",
+      "run_id": 2,
+      "payload": {
+        "nodeInstanceId": 5
+      },
+      "created_at": "2026-10-20T11:23:56.064+08:00"
+    },
+    {
+      "id": 19,
+      "seq": 8,
+      "type": "NODE_STARTED",
+      "run_id": 2,
+      "payload": {
+        "attemptId": 6,
+        "attemptNo": 2,
+        "nodeInstanceId": 5
+      },
+      "created_at": "2026-10-20T11:23:56.073884+08:00"
+    },
+    {
+      "id": 20,
+      "seq": 9,
+      "type": "LOGIC_RESULT_COMMITTED",
+      "run_id": 2,
+      "payload": {
+        "attemptId": 6,
+        "nodeInstanceId": 5
+      },
+      "created_at": "2026-10-20T11:23:56.08095+08:00"
+    },
+    {
+      "id": 21,
+      "seq": 10,
+      "type": "NODE_FINISHED",
+      "run_id": 2,
+      "payload": {
+        "status": "SUCCEEDED",
+        "nodeInstanceId": 5
+      },
+      "created_at": "2026-10-20T11:23:56.08095+08:00"
+    },
+    {
+      "id": 22,
+      "seq": 11,
+      "type": "NODE_STARTED",
+      "run_id": 2,
+      "payload": {
+        "attemptId": 7,
+        "attemptNo": 1,
+        "nodeInstanceId": 6
+      },
+      "created_at": "2026-10-20T11:23:56.084241+08:00"
+    },
+    {
+      "id": 23,
+      "seq": 12,
+      "type": "LOGIC_RESULT_COMMITTED",
+      "run_id": 2,
+      "payload": {
+        "attemptId": 7,
+        "nodeInstanceId": 6
+      },
+      "created_at": "2026-10-20T11:23:56.088443+08:00"
+    },
+    {
+      "id": 24,
+      "seq": 13,
+      "type": "NODE_FINISHED",
+      "run_id": 2,
+      "payload": {
+        "status": "SUCCEEDED",
+        "nodeInstanceId": 6
+      },
+      "created_at": "2026-10-20T11:23:56.088443+08:00"
+    },
+    {
+      "id": 25,
+      "seq": 14,
+      "type": "RUN_FINISHED",
+      "run_id": 2,
+      "payload": {
+        "status": "SUCCEEDED"
+      },
+      "created_at": "2026-10-20T11:23:56.0905+08:00"
+    }
+  ],
+  "notes": [
+    {
+      "id": 2,
+      "kind": "TOOL_EXECUTION_FACT",
+      "payload": {
+        "owner": "c7c0989b-cfaa-44d3-8755-60c7efd6f6db_733c3e0f",
+        "callId": 2,
+        "isMock": false,
+        "result": {
+          "error": {
+            "reason": "ALGORITHM_OBSERVATION stage=POST_JOB category=IOException call=2 attempt=5; 保留原Job仅对账",
+            "semantic": "RESULT_UNKNOWN"
+          },
+          "owner": {
+            "runId": "r_2700d27889274aea890a7042b9e0f994",
+            "callId": 2,
+            "tenantId": "algorithm-live-f7fecdf481a3",
+            "attemptId": 5,
+            "skillCode": "alg_live_f7fecdf481a3_ack_loss",
+            "principalId": "algorithm-live",
+            "nodeInstanceId": 5,
+            "skillVersionId": 2
+          },
+          "isMock": false,
+          "status": "UNKNOWN",
+          "fileRefs": [],
+          "guardTrace": {
+            "roles": [
+              "EDITOR",
+              "SERVICE",
+              "ADMIN"
+            ],
+            "argsDigest": "592d1399c0cec60648ca389b005f639e6702012893f050b1796617f1f6db38fa"
+          },
+          "structured": null,
+          "modelSummary": "ALGORITHM_OBSERVATION stage=POST_JOB category=IOException call=2 attempt=5; 保留原Job仅对账",
+          "cardPayloadJson": ""
+        },
+        "status": "UNKNOWN",
+        "accepted": true,
+        "attemptId": 5,
+        "durationMs": 467,
+        "factDigest": "ded2f8f2f306e814510c669adb4fd695aaf665e4da5d0047944a243521038c0a",
+        "errorSemantic": "RESULT_UNKNOWN"
+      },
+      "attempt_id": 5,
+      "created_at": "2026-10-20T11:23:52.894533+08:00",
+      "node_instance_id": 5
+    },
+    {
+      "id": 3,
+      "kind": "TOOL_EXECUTION_FACT",
+      "payload": {
+        "owner": "c7c0989b-cfaa-44d3-8755-60c7efd6f6db_733c3e0f",
+        "callId": 2,
+        "isMock": false,
+        "result": {
+          "error": null,
+          "owner": {
+            "runId": "r_2700d27889274aea890a7042b9e0f994",
+            "callId": 2,
+            "tenantId": "algorithm-live-f7fecdf481a3",
+            "attemptId": 5,
+            "skillCode": "alg_live_f7fecdf481a3_ack_loss",
+            "principalId": "algorithm-live",
+            "nodeInstanceId": 5,
+            "skillVersionId": 2
+          },
+          "isMock": false,
+          "status": "SUCCEEDED",
+          "fileRefs": [],
+          "guardTrace": {
+            "roles": [
+              "EDITOR",
+              "SERVICE",
+              "ADMIN"
+            ],
+            "argsDigest": "592d1399c0cec60648ca389b005f639e6702012893f050b1796617f1f6db38fa"
+          },
+          "structured": {
+            "value": "ok-ack-loss"
+          },
+          "modelSummary": "{\"value\":\"ok-ack-loss\"}",
+          "cardPayloadJson": ""
+        },
+        "status": "SUCCEEDED",
+        "accepted": true,
+        "attemptId": 5,
+        "durationMs": 467,
+        "factDigest": "b030bc633287fa4a170b348bb840236e0040ffa257903eaf0fbcf727de9dac90"
+      },
+      "attempt_id": 5,
+      "created_at": "2026-10-20T11:23:55.965534+08:00",
+      "node_instance_id": 5
+    }
+  ],
+  "sources": {
+    "RunService": {
+      "file": "engine-runtime/src/main/java/cn/agentplatform/engine/application/RunService.java",
+      "sha256": "64ec76373af17935a540ffd8ef0ba5092bbd3933ee9657566cff8036934b460c",
+      "relevantLines": [
+        "                store.db()",
+        "                        .queryForList(",
+        "                                \"select n.id,n.run_id from engine.node_instance n join engine.run r\"",
+        "                                    + \" on r.id=n.run_id where n.status='WAITING_EXTERNAL' and\"",
+        "                                    + \" r.status in ('RUNNING','WAITING_EXTERNAL') and\"",
+        "                                    + \" exists(select 1 from engine.tool_call t where\"",
+        "                                    + \" t.node_instance_id=n.id) and not exists(select 1 from\"",
+        "                                    + \" engine.tool_call t where t.node_instance_id=n.id and\"",
+        "                                    + \" t.status not in ('SUCCEEDED','FAILED')) order by n.id limit\"",
+        "                                    + \" 32\"))",
+        "            store.atomic(",
+        "                    () -> {",
+        "                        long rid = TraceStore.number(node, \"run_id\");",
+        "                        store.lockRun(rid);",
+        "                        int changed =",
+        "                                store.db()",
+        "                                        .update(",
+        "                                                \"update engine.node_instance set\"",
+        "                                                    + \" status='READY',released=true,lease_owner=null,lease_until=null\"",
+        "                                                    + \" where id=? and status='WAITING_EXTERNAL'\",",
+        "                                                node.get(\"id\"));",
+        "                        if (changed > 0) {",
+        "                            store.db()",
+        "                                    .update(",
+        "                                            \"update engine.run set status='RUNNING' where id=? and\"",
+        "                                                    + \" status='WAITING_EXTERNAL'\",",
+        "                                            rid);",
+        "                            scheduler.wake(rid);",
+        "                            store.event(",
+        "                                    rid,",
+        "                                    \"EXTERNAL_READY\",",
+        "                                    Map.of(\"nodeInstanceId\", node.get(\"id\")));",
+        "                        }",
+        "                        return null;",
+        "                    });",
+        "    }",
+        ""
+      ]
+    },
+    "TraceStore": {
+      "file": "engine-runtime/src/main/java/cn/agentplatform/engine/infra/TraceStore.java",
+      "sha256": "968657cb15867549014e40eebd82fe66300dbee7c00176e288099d4280ce4e87",
+      "relevantLines": [
+        "                            \"update engine.node_instance set\"",
+        "                                + \" status='RUNNING',lease_owner=?,lease_until=now()+interval '90\"",
+        "                                + \" seconds',started_at=coalesce(started_at,now()) where id=?\",",
+        "                            generation,",
+        "                            node);",
+        "                    int no =",
+        "                            db.queryForObject(",
+        "                                    \"select coalesce(max(attempt_no),0)+1 from engine.attempt where\"",
+        "                                            + \" node_instance_id=?\",",
+        "                                    Integer.class,",
+        "                                    node);",
+        "                    if (no == 1) consume(runId, \"steps\", 1, 25);",
+        "                    long a =",
+        "                            db.queryForObject(",
+        "                                    \"insert into\"",
+        "                                        + \" engine.attempt(node_instance_id,attempt_no,status,idempotency_key,request_snapshot_ref,request_snapshot)\"",
+        "                                        + \" values(?,?,'RUNNING',?,'pending', '{}'::jsonb)\"",
+        "                                        + \" returning id\",",
+        "                                    Long.class,",
+        "                                    node,",
+        "                                    no,",
+        "                                    Digest.sha256(\"node:\" + node));",
+        "                    db.update(",
+        "                            \"update engine.attempt set request_snapshot_ref=? where id=?\",",
+        "                            \"pg:attempt/\" + a,",
+        "                            a);",
+        "                    event(",
+        "                            ((Number) row.get(\"run_id\")).longValue(),",
+        "                            \"NODE_STARTED\",",
+        "                            Map.of(\"nodeInstanceId\", node, \"attemptId\", a, \"attemptNo\", no));",
+        "                    var result =",
+        "                            db.queryForMap(\"select * from engine.node_instance where id=?\", node);",
+        "                    result.put(\"attemptId\", a);",
+        "                    return result;",
+        "                });",
+        "    }",
+        "",
+        "    public void freeze(long attempt, Object request) {",
+        "        db.update("
+      ]
+    },
+    "AgentDriver": {
+      "file": "engine-runtime/src/main/java/cn/agentplatform/engine/application/AgentDriver.java",
+      "sha256": "891646e22563d2fc6ae16fd079ea32596e0cc42566ba5ad15b23cbb8794e3bc6",
+      "relevantLines": [
+        "        req.put(\"mock\", Map.of()); // Authority.mock_snapshot is the sole approval for skill mocks.",
+        "        req.put(\"skillCode\", code);",
+        "        var registration = new ToolCalls(store).register(Json.tree(req), actor);",
+        "        req.put(\"callId\", registration.get(\"callId\"));",
+        "        if (ControlledReplay.enabled(run) && registration.get(\"status\").equals(\"REGISTERED\"))",
+        "            return ControlledReplay.skill(",
+        "                    store, run, node, code, version, args, seq, registration, actor, clients);",
+        "        if (registration.get(\"status\").equals(\"FAILED\"))",
+        "            throw new IllegalArgumentException(",
+        "                    Objects.toString(registration.get(\"error_semantic\"), \"NON_RETRYABLE_FAILURE\"));",
+        "        if (registration.get(\"status\").equals(\"SUCCEEDED\"))",
+        "            return Json.tree(registration.get(\"result\"));",
+        "",
+        "        JsonNode result;",
+        "        try {",
+        "            result = clients.post(\"skill\", \"/internal/skills/\" + code + \"/execute\", req, actor);",
+        "        } catch (org.springframework.web.client.RestClientException transport) {",
+        "            var authority ="
+      ]
+    },
+    "ToolCalls": {
+      "file": "engine-runtime/src/main/java/cn/agentplatform/engine/infra/ToolCalls.java",
+      "sha256": "a482740783898d771dda0e4a8cbee8c739c9b115223a6a38b45d7f958d21c5c0",
+      "relevantLines": [
+        "                    String key = Digest.sha256(rid + \":\" + nid + \":\" + seq + \":\" + version);",
+        "                    if (!key.equals(req.path(\"idempotencyKey\").asText()))",
+        "                        throw new PlatformException(409, \"CALL_KEY_MISMATCH\", \"幂等键与逻辑调用不匹配\");",
+        "                    String digest = Digest.sha256(Json.canonical(req.path(\"arguments\")));",
+        "                    store.db()",
+        "                            .update(",
+        "                                    \"insert into\"",
+        "                                        + \" engine.tool_call(run_id,node_instance_id,call_seq,skill_version_id,args_digest,args_ref,idempotency_key,status,skill_code,args,attempt_id)\"",
+        "                                        + \" values(?,?,?,?,?,? ,?,'REGISTERED',?,?::jsonb,?) on\"",
+        "                                        + \" conflict(idempotency_key) do nothing\",",
+        "                                    rid,",
+        "                                    nid,",
+        "                                    seq,",
+        "                                    version,",
+        "                                    digest,",
+        "                                    \"pg:call/\" + key + \"/args\",",
+        "                                    key,",
+        "                                    req.path(\"skillCode\").asText(),",
+        "                                    Json.write(req.path(\"arguments\")),",
+        "                                    req.path(\"attemptId\").asLong());",
+        "                    var call =",
+        "                            store.db()",
+        "                                    .queryForMap(",
+        "                                            \"select * from engine.tool_call where idempotency_key=?\"",
+        "                                                + \" for update\","
+      ]
+    }
+  }
+}

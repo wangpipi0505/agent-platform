@@ -1,0 +1,25 @@
+{
+  "initialEditFailure": {
+    "kind": "helper assertion before mutation",
+    "observed": "ERR_ASSERTION assert(s.includes(capacityAttempts)) due to LF source and CRLF replacement pattern",
+    "subsequentZeroStage": ".local/iam-o2b-e-fixes/iam-stage-o2b-e-fixes-red",
+    "classification": "INVALID; no actual Running/testcases; not functional RED",
+    "processOrderingCorrection": "Subsequent edits and run calls separated; actual exit observed before dependent source/target mutation."
+  },
+  "red2ThreadInspection": {
+    "command": [
+      "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/jcmd.exe",
+      "29016",
+      "Thread.print"
+    ],
+    "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+    "output": {
+      "file": ".local/iam-o2b-e-fixes/red-2-threads.txt",
+      "bytes": 100567,
+      "sha256": "805f0f56adae83563c6274cfcbd59ef19f83f1918d23ebd9a6d7323e35f93f13"
+    },
+    "purpose": "Read-only diagnosis of ~30s Servlet graceful close delay after expected assertion failures, before latch finally. Thread stack showed actual complete blocked and caller in context.close. New test cleanup releases latch inside resource scope. No test re-execution.",
+    "metadataRecordedAfterObservedCommand": true
+  },
+  "inheritedOriginalInvalidStages": "Original E stale-class INVALID, HTML400, PG/test errors and 45-test final are frozen and are not rewritten, rerun or reclassified."
+}

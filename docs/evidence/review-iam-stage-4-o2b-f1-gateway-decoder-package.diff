@@ -1,0 +1,535 @@
+# O2b F1 complete-context review package
+Base=Accepted E+fixes source608; head=.local/iam-o2b-f1-gateway-decoder/source-after.json source612. Four new files, no commits.
+Requirements=docs/evidence/iam-stage-4-o2b-f1-brief.md
+Report=docs/evidence/iam-stage-4-o2b-f1-gateway-decoder-report.md
+All four files complete context; review text, not an executable patch. No tests/PG/replay reruns. F1 output is UNTRUSTED data; no F2/TLS/current/material/SSE acceptance.
+--- BEGIN FULL CONTEXT DIFF ---
+diff --git a/platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsPacketBudget.java b/platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsPacketBudget.java
+new file mode 100644
+index 0000000..5472504
+--- /dev/null
++++ b/platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsPacketBudget.java
+@@ -0,0 +1,55 @@
++package cn.agentplatform.gateway.infra;
++
++/** Resource admission only; Owner conveys no IAM authority. Conservative charges, not heap telemetry. */
++public final class PortalEventsPacketBudget {
++    public static final long GLOBAL_BYTES=201326592L,OWNER_BYTES=100663296L,SCAN_BYTES=67108864L;
++    public static final PortalEventsPacketBudget SHARED=new PortalEventsPacketBudget();
++    private static final long OWNER_BASE=65536L,TOKEN_BYTES=128L;
++    private long reserved;
++    private int owners;
++    private PortalEventsPacketBudget(){}
++    public synchronized Owner acquire(){
++        if(owners==2)throw new IllegalStateException("packet owner slots exhausted");
++        long next=Math.addExact(reserved,OWNER_BASE);
++        if(next>GLOBAL_BYTES)throw new IllegalStateException("packet global budget exhausted");
++        reserved=next;owners++;
++        try{return new Owner(this);}catch(RuntimeException|Error e){reserved-=OWNER_BASE;owners--;throw e;}
++    }
++    public synchronized long reservedBytes(){return reserved;}
++    public synchronized int owners(){return owners;}
++    public static final class Owner implements AutoCloseable {
++        private final PortalEventsPacketBudget budget;
++        private long reserved=OWNER_BASE;
++        private boolean closed,claimed;
++        private PortalEventsPacketDecoder decoder;
++        private Owner(PortalEventsPacketBudget budget){this.budget=budget;}
++        synchronized void claim(PortalEventsPacketDecoder candidate){
++            requireOpen();if(claimed)throw new IllegalStateException("owner already claimed a decoder");claimed=true;decoder=candidate;
++        }
++        synchronized void requireOpen(){if(closed)throw new IllegalStateException("packet owner closed");}
++        public synchronized long reservedBytes(){return reserved;}
++        /** F2 must reserve its additional business model/frame before allocating it. */
++        public synchronized Reservation reserve(long bytes){
++            requireOpen();if(bytes<0)throw new IllegalArgumentException("negative reservation");
++            long charged=Math.addExact(bytes,TOKEN_BYTES),next=Math.addExact(reserved,charged);
++            synchronized(budget){long global=Math.addExact(budget.reserved,charged);if(next>OWNER_BYTES||global>GLOBAL_BYTES)throw new IllegalStateException("packet allocation budget exhausted");reserved=next;budget.reserved=global;}
++            try{return new Reservation(this,charged);}catch(RuntimeException|Error e){release(charged);throw e;}
++        }
++        private synchronized void release(long bytes){
++            if(bytes>reserved)throw new IllegalStateException("packet ledger underflow");synchronized(budget){reserved-=bytes;budget.reserved-=bytes;}
++        }
++        @Override public synchronized void close(){
++            if(closed)return;
++            if(decoder!=null)decoder.close(); // Refuse while physical read/borrow is active; caller retries after actual exit.
++            if(reserved!=OWNER_BASE)throw new IllegalStateException("owner has live reservations");
++            decoder=null;closed=true;synchronized(budget){budget.reserved-=OWNER_BASE;reserved=0;budget.owners--;}
++        }
++    }
++    /** Resource tokens cannot be minted by callers. */
++    public static final class Reservation implements AutoCloseable {
++        private Owner owner;
++        private final long bytes;
++        private Reservation(Owner owner,long bytes){this.owner=owner;this.bytes=bytes;}
++        @Override public synchronized void close(){if(owner!=null){owner.release(bytes);owner=null;}}
++    }
++}
+diff --git a/platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsPacketDecoder.java b/platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsPacketDecoder.java
+new file mode 100644
+index 0000000..a89541f
+--- /dev/null
++++ b/platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsPacketDecoder.java
+@@ -0,0 +1,223 @@
++package cn.agentplatform.gateway.infra;
++
++import com.fasterxml.jackson.core.*;
++import java.io.*;
++import java.nio.ByteBuffer;
++import java.nio.charset.*;
++import java.security.*;
++import java.util.*;
++import cn.agentplatform.gateway.infra.PortalEventsPacketBudget.Owner;
++import cn.agentplatform.gateway.infra.PortalEventsPacketBudget.Reservation;
++
++/**
++ * Private APEV v1 wire integrity only. Receipt, source, association, floor/current,
++ * row digests and permission to publish remain unverified and belong to F2.
++ * Owns no HTTP stream: closing this borrowed decoder never closes upstream.
++ */
++public final class PortalEventsPacketDecoder implements AutoCloseable {
++    private static final int MAX_HEADER=8192,MAX_METADATA=8388608,MAX_PAYLOAD=262144,MAX_WIRE=8659012;
++    private static final Set<String> HEADER_KEYS=Set.of("childResponseId","runId","resourceSha256","initialCursor","afterSeq","eventSeq","eventType","payloadBytes","metadataSha256","payloadSha256");
++    private static final Set<String> WINDOW_KEYS=Set.of("runDbId","owner","acceptedSnapshotSha","initialCeiling","initialCeilingSha256","provenance","rootScopes","stateScope","eventScope","scopes","state","eventIdentity","window","hasEvent");
++    private final Owner owner;
++    private InputStream input;
++    private boolean inputBound,reading,closed,failed,ended,helloSeen,capacitySeen,ordinalExhausted;
++    private long expectedOrdinal;
++    private UntrustedPacket packet;
++
++    public PortalEventsPacketDecoder(Owner owner){this.owner=Objects.requireNonNull(owner);owner.claim(this);}
++
++    public Optional<UntrustedPacket> readNext(InputStream upstream)throws IOException {
++        Objects.requireNonNull(upstream);
++        synchronized(owner){
++            owner.requireOpen();if(closed||failed)throw new IllegalStateException("packet decoder terminal");
++            if(reading||packet!=null)throw new IllegalStateException("previous packet/read remains active");
++            if(inputBound&&input!=upstream)throw new IllegalStateException("decoder input cannot be replaced");
++            if(!inputBound){inputBound=true;input=upstream;}
++            if(ended)return Optional.empty();reading=true;
++        }
++        Reservation work=null,prefixCharge=null,headerCharge=null,wireCharge=null;
++        byte[] prefix=null,headerBytes=null,wire=null;
++        try{
++            // Reserve the entire verified provider model BEFORE parser, UTF8 scratch or structure scan.
++            work=owner.reserve(PortalEventsPacketBudget.SCAN_BYTES);
++            prefixCharge=owner.reserve(24+32);prefix=new byte[24];
++            int first=upstream.read();
++            if(first<0){synchronized(owner){ended=true;}return Optional.empty();}
++            if(capacitySeen||ordinalExhausted)throw invalid("bytes after CAPACITY/ordinal exhaustion");
++            prefix[0]=(byte)first;readExactly(upstream,prefix,1,23);
++            ByteBuffer p=ByteBuffer.wrap(prefix);
++            if(p.getInt()!=0x41504556||Short.toUnsignedInt(p.getShort())!=1)throw invalid("prefix magic/version");
++            int kind=Short.toUnsignedInt(p.getShort());long ordinal=p.getLong();
++            long hl=Integer.toUnsignedLong(p.getInt()),ml=Integer.toUnsignedLong(p.getInt());
++            if(kind<1||kind>3||ordinal<0||ordinal!=expectedOrdinal||(!helloSeen&&kind!=1)||(helloSeen&&kind==1))throw invalid("kind/ordinal/HELLO order");
++            if(hl<1||hl>MAX_HEADER||ml<1||ml>MAX_METADATA)throw invalid("unsigned segment length");
++            // Checked long arithmetic and all intersections precede casts and backing allocation.
++            long minimum=Math.addExact(Math.addExact(24L,hl),Math.addExact(ml,44L));
++            if(minimum>MAX_WIRE)throw invalid("wire length");
++            headerCharge=owner.reserve(hl+32);headerBytes=new byte[(int)hl];readExactly(upstream,headerBytes,0,headerBytes.length);
++            Header facts=header(scan(headerBytes,0,headerBytes.length,0));
++            long total=Math.addExact(minimum,facts.payloadBytes());if(total>MAX_WIRE)throw invalid("wire length");
++            wireCharge=owner.reserve(total+32);wire=new byte[(int)total];
++            System.arraycopy(prefix,0,wire,0,24);System.arraycopy(headerBytes,0,wire,24,headerBytes.length);
++            int metadataAt=24+(int)hl,payloadAt=metadataAt+(int)ml,commitAt=payloadAt+facts.payloadBytes();
++            p=null;headerBytes=null;headerCharge.close();headerCharge=null;prefix=null;prefixCharge.close();prefixCharge=null;
++            readExactly(upstream,wire,metadataAt,(int)ml);readExactly(upstream,wire,payloadAt,facts.payloadBytes());readExactly(upstream,wire,commitAt,44);
++            ByteBuffer commit=ByteBuffer.wrap(wire,commitAt,44);
++            if(commit.getInt()!=0x4150434d||commit.getLong()!=ordinal)throw invalid("COMMIT magic/ordinal");
++            commit=null;
++            byte[] computed=digest(wire,0,commitAt);
++            for(int i=0;i<computed.length;i++)if(computed[i]!=wire[commitAt+12+i])throw invalid("COMMIT SHA256");
++            if(!HexFormat.of().formatHex(digest(wire,metadataAt,(int)ml)).equals(facts.metadataSha256())||!HexFormat.of().formatHex(digest(wire,payloadAt,facts.payloadBytes())).equals(facts.payloadSha256()))throw invalid("segment SHA256");
++            Map<String,Object> metadata=scan(wire,metadataAt,(int)ml,kind);
++            validateMetadata(kind,facts,metadata);
++            if(facts.payloadBytes()>0)scan(wire,payloadAt,facts.payloadBytes(),4);
++            UntrustedPacket result=new UntrustedPacket(this,wire,wireCharge,kind,ordinal,facts,metadataAt,(int)ml,payloadAt);
++            synchronized(owner){
++                packet=result;helloSeen=true;if(kind==3)capacitySeen=true;
++                if(ordinal==Long.MAX_VALUE)ordinalExhausted=true;else expectedOrdinal=ordinal+1;
++            }
++            wire=null;wireCharge=null;return Optional.of(result);
++        }catch(IOException|RuntimeException|Error e){synchronized(owner){failed=true;}throw e;}
++        finally{
++            // No phase token is returned until actual synchronous parser/read work has exited.
++            wire=null;headerBytes=null;prefix=null;
++            if(wireCharge!=null)wireCharge.close();if(headerCharge!=null)headerCharge.close();if(prefixCharge!=null)prefixCharge.close();if(work!=null)work.close();
++            synchronized(owner){reading=false;}
++        }
++    }
++    private static void readExactly(InputStream in,byte[] bytes,int at,int count)throws IOException {
++        int end=at+count;
++        while(at<end){int n=in.read(bytes,at,Math.min(8192,end-at));if(n<0)throw invalid("partial packet EOF");if(n==0){int b=in.read();if(b<0)throw invalid("partial packet EOF");bytes[at++]=(byte)b;}else at+=n;}
++    }
++    private static byte[] digest(byte[] b,int at,int length){
++        try{MessageDigest d=MessageDigest.getInstance("SHA-256");for(int n=0;n<length;n+=8192)d.update(b,at+n,Math.min(8192,length-n));return d.digest();}
++        catch(NoSuchAlgorithmException e){throw new IllegalStateException("SHA-256 unavailable");}
++    }
++    private static IOException invalid(String message){return new IOException("invalid private packet: "+message);}
++
++    // Exactly this Reader factory is used for each sequential segment. No byte bootstrap,
++    // canonicalized/interned names or shared recycler can outlive the prepaid phase.
++    private static JsonFactory factory(int depth,int tokens,int string,int number){
++        return JsonFactory.builder().disable(JsonFactory.Feature.CANONICALIZE_FIELD_NAMES).disable(JsonFactory.Feature.INTERN_FIELD_NAMES).disable(JsonFactory.Feature.USE_THREAD_LOCAL_FOR_BUFFER_RECYCLING)
++                .enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION).disable(StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION)
++                .streamReadConstraints(StreamReadConstraints.builder().maxNestingDepth(depth).maxTokenCount(tokens).maxStringLength(string).maxNameLength(string).maxNumberLength(number).maxDocumentLength(MAX_METADATA).build()).build();
++    }
++    private static Map<String,Object> scan(byte[] bytes,int start,int length,int schema)throws IOException {
++        int maxDepth=schema==0?8:schema==4?64:80,maxTokens=schema==0?2048:262144,maxString=schema==0?4096:1048576,maxNumber=schema==0?19:1000;
++        Set<String> keys=schema==0?HEADER_KEYS:schema==1?Set.of("receipt"):schema==2?WINDOW_KEYS:schema==3?Set.of("code"):Set.of();
++        Map<String,Object> root=new HashMap<>();
++        CharsetDecoder utf8=StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT).onUnmappableCharacter(CodingErrorAction.REPORT);
++        try(Reader reader=new InputStreamReader(new ByteArrayInputStream(bytes,start,length),utf8);JsonParser parser=factory(maxDepth,maxTokens,maxString,maxNumber).createParser(reader)){
++            int depth=0,count=0;boolean seen=false,done=false;String key=null;
++            for(JsonToken t;(t=parser.nextToken())!=null;){
++                if(done)throw invalid("trailing JSON value");if(++count>maxTokens)throw invalid("JSON token limit");
++                if(t==JsonToken.FIELD_NAME){
++                    String name=parser.currentName();if(name.length()>maxString)throw invalid("JSON name limit");unicode(name);
++                    if(depth==1&&schema!=4){if(!keys.contains(name))throw invalid("unknown root field");key=name;}
++                    continue;
++                }
++                if(!seen){seen=true;if(schema!=4&&t!=JsonToken.START_OBJECT)throw invalid("JSON root object required");}
++                if(t==JsonToken.VALUE_STRING){parser.finishToken();int size=parser.getTextLength();if(size>maxString)throw invalid("JSON string limit");unicode(parser.getTextCharacters(),parser.getTextOffset(),size);}
++                if(t.isNumeric()&&parser.getTextLength()>maxNumber)throw invalid("JSON number limit");
++                if(depth==1&&key!=null){
++                    Object value=t;
++                    if(schema==0){
++                        if(t==JsonToken.VALUE_STRING)value=parser.getText();else if(t==JsonToken.VALUE_NUMBER_INT)value=parser.getLongValue();else if(t!=JsonToken.VALUE_NULL)throw invalid("header scalar type");
++                    }else if(schema==1||schema==3){if(t!=JsonToken.VALUE_STRING)throw invalid("metadata scalar type");value=parser.getText();}
++                    else if(key.equals("hasEvent")){if(t!=JsonToken.VALUE_TRUE&&t!=JsonToken.VALUE_FALSE)throw invalid("hasEvent boolean");value=t==JsonToken.VALUE_TRUE;}
++                    else if(key.equals("runDbId")){if(t!=JsonToken.VALUE_NUMBER_INT||parser.getLongValue()<1)throw invalid("runDbId positive integer");}
++                    root.put(key,value);key=null;
++                }
++                if(t==JsonToken.START_OBJECT||t==JsonToken.START_ARRAY){if(++depth>maxDepth)throw invalid("JSON depth limit");}
++                else if(t==JsonToken.END_OBJECT||t==JsonToken.END_ARRAY){if(--depth==0)done=true;}
++                else if(depth==0)done=true;
++            }
++            if(!seen||!done||(schema!=4&&!root.keySet().equals(keys)))throw invalid("JSON missing fields/value");
++            return root;
++        }catch(IOException|RuntimeException e){
++            // Jackson exceptions may retain their parser and raw ContentReference. Never
++            // let that graph escape after the scan reservation has been returned.
++            throw invalid("JSON structure/UTF8/limits");
++        }
++    }
++    private static void unicode(String text)throws IOException {
++        for(int i=0;i<text.length();i++){char c=text.charAt(i);if(Character.isHighSurrogate(c)){if(++i==text.length()||!Character.isLowSurrogate(text.charAt(i)))throw invalid("unpaired surrogate");}else if(Character.isLowSurrogate(c))throw invalid("unpaired surrogate");}
++    }
++    private static void unicode(char[] text,int start,int size)throws IOException {
++        int end=start+size;for(int i=start;i<end;i++){char c=text[i];if(Character.isHighSurrogate(c)){if(++i==end||!Character.isLowSurrogate(text[i]))throw invalid("unpaired surrogate");}else if(Character.isLowSurrogate(c))throw invalid("unpaired surrogate");}
++    }
++    private static String string(Map<String,Object> m,String key)throws IOException {Object v=m.get(key);if(!(v instanceof String s))throw invalid("header string type");return s;}
++    private static long integer(Map<String,Object> m,String key)throws IOException {Object v=m.get(key);if(!(v instanceof Long n))throw invalid("header integer type");return n;}
++    private static String sha(Map<String,Object> m,String key)throws IOException {String s=string(m,key);if(s.length()!=64)throw invalid("SHA256 shape");for(int i=0;i<64;i++){char c=s.charAt(i);if(!((c>='0'&&c<='9')||(c>='a'&&c<='f')))throw invalid("SHA256 shape");}return s;}
++    private static Header header(Map<String,Object> m)throws IOException {
++        String child=string(m,"childResponseId"),run=string(m,"runId");
++        if(child.isBlank()||child.length()>128||!run.matches("r_[0-9a-f]{32}"))throw invalid("child/run shape");
++        long initial=integer(m,"initialCursor"),after=integer(m,"afterSeq"),payload=integer(m,"payloadBytes");
++        if(initial<0||after<initial||payload<0||payload>MAX_PAYLOAD)throw invalid("header number range");
++        Long seq=m.get("eventSeq")==JsonToken.VALUE_NULL?null:integer(m,"eventSeq");
++        String type=m.get("eventType")==JsonToken.VALUE_NULL?null:string(m,"eventType");
++        if(seq!=null&&seq<1||type!=null&&type.isBlank())throw invalid("event scalar range");
++        return new Header(child,run,sha(m,"resourceSha256"),initial,after,seq,type,(int)payload,sha(m,"metadataSha256"),sha(m,"payloadSha256"));
++    }
++    private static void validateMetadata(int kind,Header h,Map<String,Object> m)throws IOException {
++        if(kind==1||kind==3){
++            if(h.eventSeq()!=null||h.eventType()!=null||h.payloadBytes()!=0)throw invalid("non-window event");
++            if(kind==1){String receipt=(String)m.get("receipt");if(h.afterSeq()!=h.initialCursor()||receipt.length()>4096||!receipt.matches("[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+"))throw invalid("HELLO receipt shape");}
++            else if(!Set.of("BUFFER_LIMIT","EVENT_LIMIT").contains(m.get("code")))throw invalid("CAPACITY code");
++            return;
++        }
++        for(String key:List.of("owner","initialCeiling","provenance","rootScopes","state","window"))if(m.get(key)!=JsonToken.START_OBJECT)throw invalid("WINDOW object type");
++        for(String key:List.of("acceptedSnapshotSha","initialCeilingSha256","stateScope"))if(m.get(key)!=JsonToken.VALUE_STRING)throw invalid("WINDOW string type");
++        if(m.get("scopes")!=JsonToken.START_ARRAY)throw invalid("WINDOW scopes array");
++        boolean event=(Boolean)m.get("hasEvent");
++        if(event){if(m.get("eventIdentity")!=JsonToken.START_OBJECT||m.get("eventScope")!=JsonToken.VALUE_STRING||h.eventSeq()==null||h.eventType()==null||h.payloadBytes()==0)throw invalid("event presence mismatch");}
++        else if(m.get("eventIdentity")!=JsonToken.VALUE_NULL||m.get("eventScope")!=JsonToken.VALUE_NULL||h.eventSeq()!=null||h.eventType()!=null||h.payloadBytes()!=0)throw invalid("noevent mismatch");
++    }
++
++    @Override public void close(){synchronized(owner){
++        if(closed)return;if(reading)throw new IllegalStateException("packet read/parse remains active");
++        if(packet!=null)packet.close();input=null;closed=true;
++    }}
++    /** Small immutable wire facts, never authorization or business proof. */
++    public record Header(String childResponseId,String runId,String resourceSha256,long initialCursor,long afterSeq,Long eventSeq,String eventType,int payloadBytes,String metadataSha256,String payloadSha256){}
++
++    /** Structurally complete bytes only; no receipt signature, run membership or publication rights. */
++    public static final class UntrustedPacket implements AutoCloseable {
++        private final PortalEventsPacketDecoder decoder;
++        private byte[] wire;
++        private Reservation reservation;
++        private final int kind,metadataAt,metadataLength,payloadAt;
++        private final long ordinal;
++        private Header header;
++        private int borrows;
++        private UntrustedPacket(PortalEventsPacketDecoder decoder,byte[] wire,Reservation reservation,int kind,long ordinal,Header header,int metadataAt,int metadataLength,int payloadAt){this.decoder=decoder;this.wire=wire;this.reservation=reservation;this.kind=kind;this.ordinal=ordinal;this.header=header;this.metadataAt=metadataAt;this.metadataLength=metadataLength;this.payloadAt=payloadAt;}
++        private void live(){decoder.owner.requireOpen();if(wire==null||decoder.closed)throw new IllegalStateException("untrusted packet closed");}
++        public int kind(){synchronized(decoder.owner){live();return kind;}}
++        public long ordinal(){synchronized(decoder.owner){live();return ordinal;}}
++        public Header header(){synchronized(decoder.owner){live();return header;}}
++        public InputStream metadata(){return borrow(metadataAt,metadataLength);}
++        public InputStream payload(){synchronized(decoder.owner){live();return borrow(payloadAt,header.payloadBytes());}}
++        private InputStream borrow(int start,int count){synchronized(decoder.owner){
++            live();Reservation charge=decoder.owner.reserve(256);
++            try{InputStream stream=new Segment(this,start,count,charge);borrows++;return stream;}catch(RuntimeException|Error e){charge.close();throw e;}
++        }}
++        @Override public void close(){synchronized(decoder.owner){
++            if(wire==null)return;if(borrows!=0)throw new IllegalStateException("packet segment borrow remains active");
++            wire=null;header=null;reservation.close();reservation=null;decoder.packet=null;
++        }}
++    }
++    private static final class Segment extends InputStream {
++        private UntrustedPacket packet;
++        private final Owner owner;
++        private Reservation reservation;
++        private int position;
++        private final int end;
++        private Segment(UntrustedPacket packet,int start,int count,Reservation reservation){this.packet=packet;owner=packet.decoder.owner;position=start;end=start+count;this.reservation=reservation;}
++        private void live()throws IOException {if(packet==null)throw new IOException("packet segment closed");packet.live();}
++        @Override public int read()throws IOException {synchronized(owner){live();return position==end?-1:Byte.toUnsignedInt(packet.wire[position++]);}}
++        @Override public int read(byte[] out,int off,int length)throws IOException {Objects.checkFromIndexSize(off,length,out.length);synchronized(owner){live();if(length==0)return 0;if(position==end)return -1;int n=Math.min(length,end-position);System.arraycopy(packet.wire,position,out,off,n);position+=n;return n;}}
++        @Override public long skip(long count)throws IOException {synchronized(owner){live();long n=Math.min(Math.max(0,count),end-position);position+=(int)n;return n;}}
++        @Override public int available()throws IOException {synchronized(owner){live();return end-position;}}
++        @Override public void close(){synchronized(owner){if(packet!=null){packet.borrows--;packet=null;reservation.close();reservation=null;}}}
++    }
++}
+diff --git a/platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalEventsPacketBudgetTest.java b/platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalEventsPacketBudgetTest.java
+new file mode 100644
+index 0000000..5036c7d
+--- /dev/null
++++ b/platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalEventsPacketBudgetTest.java
+@@ -0,0 +1,94 @@
++package cn.agentplatform.gateway.infra;
++
++import org.junit.jupiter.api.Test;
++import java.io.*;
++import java.lang.reflect.*;
++import java.nio.ByteBuffer;
++import java.util.concurrent.*;
++import java.util.concurrent.atomic.*;
++import static cn.agentplatform.gateway.infra.PortalEventsPacketDecoderTest.*;
++import static org.assertj.core.api.Assertions.*;
++
++class PortalEventsPacketBudgetTest {
++    @Test void twoOwnersThirdRejectedAndCloseRestoresSlots(){
++        var b=PortalEventsPacketBudget.SHARED;try(var a=b.acquire();var c=b.acquire()){
++            assertThat(b.owners()).isEqualTo(2);assertThatThrownBy(b::acquire).isInstanceOf(IllegalStateException.class);
++            assertThat(b.reservedBytes()).isEqualTo(a.reservedBytes()+c.reservedBytes());
++        }assertThat(b.owners()).isZero();assertThat(b.reservedBytes()).isZero();
++    }
++    @Test void oneOwnerHasOneDecoderForItsEntireLifetime()throws Exception{
++        try(var o=PortalEventsPacketBudget.SHARED.acquire()){
++            var d=new PortalEventsPacketDecoder(o);assertThatThrownBy(()->new PortalEventsPacketDecoder(o)).isInstanceOf(IllegalStateException.class);d.close();assertThatThrownBy(()->new PortalEventsPacketDecoder(o)).isInstanceOf(IllegalStateException.class);
++        }
++    }
++    @Test void packetMustCloseBeforeNextReadAndBorrowRejectsClose()throws Exception{
++        try(var o=PortalEventsPacketBudget.SHARED.acquire();var d=new PortalEventsPacketDecoder(o)){
++            var in=new ByteArrayInputStream(join(hello(),packet(2,1,window(false,"{}"),"")));var p=d.readNext(in).orElseThrow();long live=o.reservedBytes();
++            assertThatThrownBy(()->d.readNext(in)).isInstanceOf(IllegalStateException.class);
++            var borrow=p.metadata();live=o.reservedBytes();assertThatThrownBy(p::close).isInstanceOf(IllegalStateException.class);assertThatThrownBy(d::close).isInstanceOf(IllegalStateException.class);assertThatThrownBy(o::close).isInstanceOf(IllegalStateException.class);assertThat(o.reservedBytes()).isEqualTo(live);
++            assertThat(borrow.read()).isEqualTo('{');borrow.close();assertThatThrownBy(borrow::read).isInstanceOf(IOException.class);p.close();p.close();assertThatThrownBy(p::metadata).isInstanceOf(IllegalStateException.class);assertThatThrownBy(p::header).isInstanceOf(IllegalStateException.class);
++            d.readNext(in).orElseThrow().close();
++        }assertThat(PortalEventsPacketBudget.SHARED.reservedBytes()).isZero();
++    }
++    @Test void inputIsBoundOnceAndClosingDecoderDoesNotCloseUpstream()throws Exception{
++        AtomicBoolean closed=new AtomicBoolean();var in=new ByteArrayInputStream(hello()){@Override public void close(){closed.set(true);}};
++        try(var o=PortalEventsPacketBudget.SHARED.acquire()){
++            var d=new PortalEventsPacketDecoder(o);d.readNext(in).orElseThrow().close();assertThatThrownBy(()->d.readNext(new ByteArrayInputStream(hello()))).isInstanceOf(IllegalStateException.class);d.close();assertThat(closed).isFalse();assertThatThrownBy(()->d.readNext(in)).isInstanceOf(IllegalStateException.class);
++        }
++    }
++    @Test void blockedInputAndInterruptDoNotReleaseUntilRealExit()throws Exception{
++        var b=PortalEventsPacketBudget.SHARED;var o=b.acquire();var d=new PortalEventsPacketDecoder(o);long base=o.reservedBytes();CountDownLatch entered=new CountDownLatch(1),release=new CountDownLatch(1);AtomicReference<Throwable> failed=new AtomicReference<>();
++        InputStream in=new InputStream(){@Override public int read()throws IOException{entered.countDown();boolean done=false;while(!done)try{release.await();done=true;}catch(InterruptedException ignored){}throw new IOException("physical read exited");}};
++        Thread t=new Thread(()->{try{d.readNext(in);}catch(Throwable e){failed.set(e);}});
++        try{t.start();assertThat(entered.await(5,TimeUnit.SECONDS)).isTrue();long active=o.reservedBytes();assertThat(active).isGreaterThanOrEqualTo(base+PortalEventsPacketBudget.SCAN_BYTES);t.interrupt();assertThatThrownBy(d::close).isInstanceOf(IllegalStateException.class);assertThatThrownBy(o::close).isInstanceOf(IllegalStateException.class);assertThat(o.reservedBytes()).isEqualTo(active);}
++        finally{release.countDown();t.join(5000);assertThat(t.isAlive()).isFalse();}
++        assertThat(failed.get()).isInstanceOf(IOException.class);assertThat(o.reservedBytes()).isEqualTo(base);d.close();o.close();assertThat(b.reservedBytes()).isZero();
++    }
++    @Test void realWireAllocationIsPrechargedAndNoNextPacketIsRead()throws Exception{
++        byte[] h=hello(),both=join(h,packet(2,1,window(false,"{}"),""));AtomicInteger consumed=new AtomicInteger();AtomicBoolean charged=new AtomicBoolean();
++        try(var o=PortalEventsPacketBudget.SHARED.acquire();var d=new PortalEventsPacketDecoder(o)){
++            long base=o.reservedBytes();InputStream in=new ByteArrayInputStream(both){@Override public synchronized int read(){charged.set(o.reservedBytes()>=base+PortalEventsPacketBudget.SCAN_BYTES);int x=super.read();if(x>=0)consumed.incrementAndGet();return x;}@Override public synchronized int read(byte[] b,int off,int n){assertThat(n).isLessThanOrEqualTo(8192);int x=super.read(b,off,n);if(x>0)consumed.addAndGet(x);return x;}};
++            var p=d.readNext(in).orElseThrow();assertThat(charged).isTrue();assertThat(consumed).hasValue(h.length);
++            Field wire=p.getClass().getDeclaredField("wire");wire.setAccessible(true);byte[] backing=(byte[])wire.get(p);assertThat(backing).hasSize(h.length);assertThat(o.reservedBytes()).isGreaterThanOrEqualTo(base+backing.length+24);System.out.println("F1_WIRE_ALLOCATION bytes="+backing.length+" charged="+(o.reservedBytes()-base)+" prechargedScan="+charged.get());p.close();assertThat(wire.get(p)).isNull();assertThat(o.reservedBytes()).isEqualTo(base);d.readNext(in).orElseThrow().close();
++        }
++    }
++    @Test void invalidHugeLengthNeverAllocatesOrReadsDeclaredBody()throws Exception{
++        byte[] h=hello();ByteBuffer.wrap(h).putInt(20,-1);AtomicInteger consumed=new AtomicInteger();
++        try(var o=PortalEventsPacketBudget.SHARED.acquire();var d=new PortalEventsPacketDecoder(o)){
++            long base=o.reservedBytes();var in=new ByteArrayInputStream(h){@Override public synchronized int read(){int n=super.read();if(n>=0)consumed.incrementAndGet();return n;}@Override public synchronized int read(byte[] b,int off,int len){int n=super.read(b,off,len);if(n>0)consumed.addAndGet(n);return n;}};
++            assertThatThrownBy(()->d.readNext(in)).isInstanceOf(IOException.class);assertThat(consumed).hasValue(24);assertThat(o.reservedBytes()).isEqualTo(base);
++        }
++    }
++    @Test void ownerLimitIsExactGlobalLedgerIsSharedAndFailedAllocationRollsBack()throws Exception{
++        var b=PortalEventsPacketBudget.SHARED;try(var a=b.acquire();var c=b.acquire()){
++            long base=a.reservedBytes();long available=PortalEventsPacketBudget.OWNER_BYTES-base-128;
++            try(var one=a.reserve(available);var two=c.reserve(available)){
++                assertThat(a.reservedBytes()).isEqualTo(PortalEventsPacketBudget.OWNER_BYTES);assertThat(b.reservedBytes()).isEqualTo(PortalEventsPacketBudget.GLOBAL_BYTES);
++                assertThatThrownBy(()->a.reserve(1)).isInstanceOf(IllegalStateException.class);assertThatThrownBy(()->c.reserve(Long.MAX_VALUE)).isInstanceOf(ArithmeticException.class);assertThat(b.reservedBytes()).isEqualTo(PortalEventsPacketBudget.GLOBAL_BYTES);
++                assertThatThrownBy(a::close).isInstanceOf(IllegalStateException.class);
++            }
++            assertThat(a.reservedBytes()).isEqualTo(base);assertThat(c.reservedBytes()).isEqualTo(base);
++            try(var block=a.reserve(PortalEventsPacketBudget.OWNER_BYTES-base-128)){
++                var decoder=new PortalEventsPacketDecoder(a);AtomicInteger reads=new AtomicInteger();InputStream in=new InputStream(){public int read(){reads.incrementAndGet();return -1;}};
++                assertThatThrownBy(()->decoder.readNext(in)).isInstanceOf(IllegalStateException.class);assertThat(reads).hasValue(0);assertThat(a.reservedBytes()).isEqualTo(PortalEventsPacketBudget.OWNER_BYTES);decoder.close();
++            }
++        }assertThat(b.reservedBytes()).isZero();
++    }
++    @Test void selectedJacksonProviderActuallyAllocatesBoundedReaderBackingAndNoSharedCaches()throws Exception{
++        Method method=PortalEventsPacketDecoder.class.getDeclaredMethod("factory",int.class,int.class,int.class,int.class);method.setAccessible(true);
++        var factory=(com.fasterxml.jackson.core.JsonFactory)method.invoke(null,80,262144,1048576,1000);
++        assertThat(factory.version().toString()).isEqualTo("2.19.0");
++        for(var feature:new com.fasterxml.jackson.core.JsonFactory.Feature[]{com.fasterxml.jackson.core.JsonFactory.Feature.CANONICALIZE_FIELD_NAMES,com.fasterxml.jackson.core.JsonFactory.Feature.INTERN_FIELD_NAMES,com.fasterxml.jackson.core.JsonFactory.Feature.USE_THREAD_LOCAL_FOR_BUFFER_RECYCLING})assertThat(factory.isEnabled(feature)).isFalse();
++        try(var o=PortalEventsPacketBudget.SHARED.acquire();var paid=o.reserve(PortalEventsPacketBudget.SCAN_BYTES);var parser=factory.createParser(new StringReader("{\"x\":\""+"x".repeat(1048576)+"\"}"))){
++            assertThat(parser.getClass().getName()).isEqualTo("com.fasterxml.jackson.core.json.ReaderBasedJsonParser");Field input=parser.getClass().getDeclaredField("_inputBuffer");input.setAccessible(true);assertThat((char[])input.get(parser)).hasSize(4000);
++            while(parser.nextToken()!=null)if(parser.currentToken()==com.fasterxml.jackson.core.JsonToken.VALUE_STRING){parser.finishToken();assertThat(parser.getTextLength()).isEqualTo(1048576);assertThat(parser.getTextCharacters().length).isGreaterThanOrEqualTo(1048576);System.out.println("F1_PROVIDER_BACKING parser="+parser.getClass().getName()+" inputChars="+((char[])input.get(parser)).length+" aggregatedChars="+parser.getTextCharacters().length+" scanCharge="+PortalEventsPacketBudget.SCAN_BYTES);}
++            assertThat(o.reservedBytes()).isGreaterThan(PortalEventsPacketBudget.SCAN_BYTES);
++        }
++        // This provider probe inspects the actual private production factory; no injectable production hook.
++        var mx=(com.sun.management.ThreadMXBean)java.lang.management.ManagementFactory.getThreadMXBean();
++        if(mx.isThreadAllocatedMemorySupported()){
++            mx.setThreadAllocatedMemoryEnabled(true);String metadata=window(false,"{\"x\":"+quote("x".repeat(1048576))+"}");byte[] body=join(hello(),packet(2,1,metadata,""));
++            try(var o=PortalEventsPacketBudget.SHARED.acquire();var d=new PortalEventsPacketDecoder(o)){var in=new ByteArrayInputStream(body);d.readNext(in).orElseThrow().close();long before=mx.getThreadAllocatedBytes(Thread.currentThread().threadId());d.readNext(in).orElseThrow().close();long allocated=mx.getThreadAllocatedBytes(Thread.currentThread().threadId())-before;System.out.println("F1_REAL_SCAN_ALLOCATION threadAllocatedBytes="+allocated+" wireFixtureBytes="+body.length+" proofKind=allocation-observation-not-live-heap-bound");assertThat(allocated).isGreaterThan(body.length);assertThat(allocated).isLessThan(PortalEventsPacketBudget.SCAN_BYTES+body.length);}
++        }
++    }
++}
+diff --git a/platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalEventsPacketDecoderTest.java b/platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalEventsPacketDecoderTest.java
+new file mode 100644
+index 0000000..8eeda76
+--- /dev/null
++++ b/platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalEventsPacketDecoderTest.java
+@@ -0,0 +1,133 @@
++package cn.agentplatform.gateway.infra;
++
++import com.fasterxml.jackson.databind.*;
++import org.junit.jupiter.api.Test;
++import java.io.*;
++import java.nio.*;
++import java.nio.charset.StandardCharsets;
++import java.nio.file.*;
++import java.security.*;
++import java.util.*;
++import static org.assertj.core.api.Assertions.*;
++
++class PortalEventsPacketDecoderTest {
++    static final ObjectMapper JSON=new ObjectMapper();
++    static final String SHA="0".repeat(64),RUN="r_"+"a".repeat(32);
++    static final byte[] EMPTY=new byte[0];
++    static byte[] utf8(String s){return s.getBytes(StandardCharsets.UTF_8);}
++    static String quote(String s)throws Exception{return JSON.writeValueAsString(s);}
++    static String sha(byte[] b)throws Exception{return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(b));}
++    static String header(byte[] m,byte[] p,boolean e)throws Exception{return "{\"childResponseId\":\"child\",\"runId\":\""+RUN+"\",\"resourceSha256\":\""+SHA+"\",\"initialCursor\":0,\"afterSeq\":0,\"eventSeq\":"+(e?"1":"null")+",\"eventType\":"+(e?quote("事件 类型 "+"界".repeat(32)):"null")+",\"payloadBytes\":"+p.length+",\"metadataSha256\":\""+sha(m)+"\",\"payloadSha256\":\""+sha(p)+"\"}";}
++    // Mechanical protocol shapes only: no fixture here confers PG/issuer authority.
++    static String window(boolean e,String state){return "{\"runDbId\":1,\"owner\":{},\"acceptedSnapshotSha\":\""+SHA+"\",\"initialCeiling\":{},\"initialCeilingSha256\":\""+SHA+"\",\"provenance\":{},\"rootScopes\":{},\"stateScope\":\"scope\",\"eventScope\":"+(e?"\"scope\"":"null")+",\"scopes\":[],\"state\":"+state+",\"eventIdentity\":"+(e?"{}":"null")+",\"window\":{},\"hasEvent\":"+e+"}";}
++    static byte[] packet(int k,long n,String m,String p)throws Exception{return packet(k,n,utf8(m),utf8(p),null);}
++    static byte[] packet(int k,long n,byte[] m,byte[] p,String h)throws Exception{
++        byte[] hb=utf8(h==null?header(m,p,p.length>0):h);ByteBuffer b=ByteBuffer.allocate(24+hb.length+m.length+p.length+44);
++        b.putInt(0x41504556).putShort((short)1).putShort((short)k).putLong(n).putInt(hb.length).putInt(m.length).put(hb).put(m).put(p);
++        byte[] d=MessageDigest.getInstance("SHA-256").digest(Arrays.copyOf(b.array(),b.position()));b.putInt(0x4150434d).putLong(n).put(d);return b.array();
++    }
++    static byte[] hello()throws Exception{return packet(1,0,"{\"receipt\":\"aa.bb.cc\"}","");}
++    static byte[] metadata(){return utf8("{\"receipt\":\"aa.bb.cc\"}");}
++    static byte[] join(byte[]... a){int size=Arrays.stream(a).mapToInt(b->b.length).sum();byte[] out=new byte[size];int pos=0;for(byte[] b:a){System.arraycopy(b,0,out,pos,b.length);pos+=b.length;}return out;}
++    static void rejects(byte[] b,String why)throws Exception{
++        try(var o=PortalEventsPacketBudget.SHARED.acquire();var d=new PortalEventsPacketDecoder(o)){
++            assertThatThrownBy(()->d.readNext(new ByteArrayInputStream(b))).as(why).isInstanceOf(IOException.class);
++            assertThatThrownBy(()->d.readNext(new ByteArrayInputStream(hello()))).isInstanceOf(IllegalStateException.class);
++        }
++    }
++    static void rejectWindow(String m,String p,String why)throws Exception{
++        try(var o=PortalEventsPacketBudget.SHARED.acquire();var d=new PortalEventsPacketDecoder(o)){
++            var in=new ByteArrayInputStream(join(hello(),packet(2,1,m,p)));d.readNext(in).orElseThrow().close();assertThatThrownBy(()->d.readNext(in)).as(why).isInstanceOf(IOException.class);
++        }
++    }
++    static void acceptsWindow(String m,String p)throws Exception{
++        try(var o=PortalEventsPacketBudget.SHARED.acquire();var d=new PortalEventsPacketDecoder(o)){
++            var in=new ByteArrayInputStream(join(hello(),packet(2,1,m,p)));d.readNext(in).orElseThrow().close();try(var packet=d.readNext(in).orElseThrow();var payload=packet.payload()){assertThat(payload.readAllBytes()).isEqualTo(utf8(p));}assertThat(d.readNext(in)).isEmpty();
++        }
++    }
++    @Test void acceptedTwelveEncoderVectorsRemainUntrustedWithSmallReads()throws Exception{
++        Path root=Files.exists(Path.of(".local/iam-o2b-f1-frozen-inputs.json"))?Path.of(""):Path.of("..");int packets=0,maxParents=0;Set<Integer> kinds=new HashSet<>();
++        for(JsonNode ref:JSON.readTree(Files.readAllBytes(root.resolve(".local/iam-o2b-f1-frozen-inputs.json"))).get("vectors")){
++            byte[] wire=Files.readAllBytes(root.resolve(ref.get("file").asText()));assertThat(wire.length).isEqualTo(ref.get("bytes").asInt());assertThat(sha(wire)).isEqualTo(ref.get("sha256").asText());
++            try(var o=PortalEventsPacketBudget.SHARED.acquire();var d=new PortalEventsPacketDecoder(o)){
++                InputStream in=new ByteArrayInputStream(wire){@Override public synchronized int read(byte[] b,int off,int len){return super.read(b,off,Math.min(7,len));}};long ordinal=0;
++                while(true){var next=d.readNext(in);if(next.isEmpty())break;try(var untrusted=next.orElseThrow()){
++                    assertThat(untrusted.ordinal()).isEqualTo(ordinal++);kinds.add(untrusted.kind());packets++;
++                    try(var m=untrusted.metadata();var p=untrusted.payload()){byte[] mb=m.readAllBytes(),pb=p.readAllBytes();assertThat(sha(mb)).isEqualTo(untrusted.header().metadataSha256());assertThat(sha(pb)).isEqualTo(untrusted.header().payloadSha256());maxParents=Math.max(maxParents,parentCount(JSON.readTree(mb)));}
++                }}
++            }
++        }
++        assertThat(packets).isEqualTo(25);assertThat(kinds).containsExactlyInAnyOrder(1,2,3);assertThat(maxParents).isGreaterThanOrEqualTo(65);
++        // Receipt bytes are unverified: this test proves no association or authorization.
++    }
++    static int parentCount(JsonNode n){int max=n.isObject()&&n.has("parentScopeSha256")?n.get("parentScopeSha256").size():0;for(JsonNode c:n)max=Math.max(max,parentCount(c));return max;}
++    @Test void magicFailureIsTerminal()throws Exception{byte[] b=hello();b[0]=0;rejects(b,"magic");}
++    @Test void everyPartialSegmentFailsAndBoundaryEofIsEmpty()throws Exception{
++        byte[] b=hello();int h=ByteBuffer.wrap(b).getInt(16),m=ByteBuffer.wrap(b).getInt(20);
++        for(int n:new int[]{1,23,24,24+h-1,24+h,24+h+m-1,24+h+m,b.length-1})rejects(Arrays.copyOf(b,n),"cut "+n);
++        try(var o=PortalEventsPacketBudget.SHARED.acquire();var d=new PortalEventsPacketDecoder(o)){assertThat(d.readNext(new ByteArrayInputStream(EMPTY))).isEmpty();}
++        byte[] w=packet(2,1,window(true,"{}"),"{\"x\":1}");int hp=ByteBuffer.wrap(w).getInt(16),mp=ByteBuffer.wrap(w).getInt(20);
++        for(int n:new int[]{24+hp+mp,24+hp+mp+1,w.length-45})try(var o=PortalEventsPacketBudget.SHARED.acquire();var d=new PortalEventsPacketDecoder(o)){var in=new ByteArrayInputStream(join(b,Arrays.copyOf(w,n)));d.readNext(in).orElseThrow().close();assertThatThrownBy(()->d.readNext(in)).isInstanceOf(IOException.class);}
++    }
++    @Test void prefixOrderingAndAllDigestFieldsAreChecked()throws Exception{
++        for(int at:new int[]{4,6,8,16,20}){byte[] b=hello();b[at]=(byte)0xff;rejects(b,"field "+at);}
++        for(int at:new int[]{24,hello().length-44,hello().length-40,hello().length-1}){byte[] b=hello();b[at]^=1;rejects(b,"commit/header "+at);}
++        for(String digest:new String[]{sha(metadata()),sha(EMPTY)})rejects(packet(1,0,metadata(),EMPTY,header(metadata(),EMPTY,false).replace(digest,SHA)),"segment SHA; COMMIT recalculated");
++        for(byte[] second:new byte[][]{hello(),packet(2,2,window(false,"{}"),""),packet(2,0,window(false,"{}"),"")})try(var o=PortalEventsPacketBudget.SHARED.acquire();var d=new PortalEventsPacketDecoder(o)){var in=new ByteArrayInputStream(join(hello(),second));d.readNext(in).orElseThrow().close();assertThatThrownBy(()->d.readNext(in)).isInstanceOf(IOException.class);}
++        rejects(packet(2,0,window(false,"{}"),""),"HELLO required");rejects(packet(1,Long.MAX_VALUE,"{\"receipt\":\"aa.bb.cc\"}",""),"ordinal initial/overflow");
++        // Mechanical internal boundary setup avoids pretending to send 2^63 real packets.
++        try(var o=PortalEventsPacketBudget.SHARED.acquire();var d=new PortalEventsPacketDecoder(o)){
++            var in=new ByteArrayInputStream(join(hello(),packet(2,Long.MAX_VALUE,window(false,"{}"),""),new byte[]{1}));d.readNext(in).orElseThrow().close();var expected=PortalEventsPacketDecoder.class.getDeclaredField("expectedOrdinal");expected.setAccessible(true);expected.setLong(d,Long.MAX_VALUE);d.readNext(in).orElseThrow().close();assertThatThrownBy(()->d.readNext(in)).isInstanceOf(IOException.class);
++        }
++    }
++    @Test void strictJsonRejectsDuplicateUnknownTrailingAndEncodingsWithCorrectHashes()throws Exception{
++        for(String m:new String[]{"{\"receipt\":\"aa.bb.cc\",\"receipt\":\"aa.bb.cc\"}","{\"receipt\":\"aa.bb.cc\",\"other\":1}","{\"receipt\":\"aa.bb.cc\"} {}","\ufeff{\"receipt\":\"aa.bb.cc\"}","{\"receipt\":\"\\uD800\"}","{\"receipt\":\"é.bb.cc\"}","{\"receipt\":\"a.b\"}","[]"})rejects(packet(1,0,m,""),m);
++        for(byte[] m:new byte[][]{"{\"receipt\":\"aa.bb.cc\"}".getBytes(StandardCharsets.UTF_16BE),new byte[]{(byte)0xc0,(byte)0xaf},new byte[]{(byte)0xed,(byte)0xa0,(byte)0x80}})rejects(packet(1,0,m,EMPTY,null),"UTF8 only");
++        for(String p:new String[]{"{} {}","{\"x\":1,\"x\":2}","\"\\uDC00\"","\ufeffnull","[1,]"})rejectWindow(window(true,"{}"),p,p);
++        rejectWindow(window(false,"{\"dynamic\":{\"k\":1,\"k\":2}}"),"","nested duplicate");
++    }
++    @Test void exactHeaderSchemaTypesAndScalarBoundaries()throws Exception{
++        String h=header(metadata(),EMPTY,false);
++        String[][] changes={{"\"child\"","\" \""},{"\""+RUN+"\"","\"r_X\""},{"\"resourceSha256\":\""+SHA+"\"","\"resourceSha256\":\"A"+"0".repeat(63)+"\""},{"\"afterSeq\":0","\"afterSeq\":-1"},{"\"initialCursor\":0","\"initialCursor\":9223372036854775808"},{"\"payloadBytes\":0","\"payloadBytes\":262145"},{"\"payloadBytes\":0","\"payloadBytes\":0.0"},{"\"eventSeq\":null","\"eventSeq\":0"},{"\"eventType\":null","\"eventType\":\" \""}};
++        for(String[] c:changes)rejects(packet(1,0,metadata(),EMPTY,h.replace(c[0],c[1])),Arrays.toString(c));
++        rejects(packet(1,0,metadata(),EMPTY,h.substring(0,h.length()-1)+",\"extra\":0}"),"unknown header");rejects(packet(1,0,metadata(),EMPTY,h.replace("\"child\"",quote("x".repeat(129)))),"child129");
++        try(var o=PortalEventsPacketBudget.SHARED.acquire();var d=new PortalEventsPacketDecoder(o)){d.readNext(new ByteArrayInputStream(packet(1,0,metadata(),EMPTY,h.replace("\"child\"",quote("x".repeat(128)))))).orElseThrow().close();}
++        String receipt="a".repeat(4092)+".a.a";try(var o=PortalEventsPacketBudget.SHARED.acquire();var d=new PortalEventsPacketDecoder(o)){d.readNext(new ByteArrayInputStream(packet(1,0,"{\"receipt\":"+quote(receipt)+"}",""))).orElseThrow().close();}rejects(packet(1,0,"{\"receipt\":"+quote(receipt+"a")+"}",""),"receipt4097");
++        acceptsWindow(window(true,"{\"dynamic attributes\":{\"未知\":1}}"),"null");
++    }
++    @Test void windowRootShapeAndNullnessAreOnlyStructuralChecks()throws Exception{
++        String m=window(false,"{}");
++        for(String bad:new String[]{m.replace("\"owner\":{}","\"owner\":[]"),m.replace("\"hasEvent\":false","\"hasEvent\":0"),m.replace("\"scopes\":[]","\"scopes\":{}"),m.replace("\"eventIdentity\":null","\"eventIdentity\":{}"),m.replace("\"state\":{}","\"state\":null"),m.replace("\"runDbId\":1,",""),m.substring(0,m.length()-1)+",\"unknown\":null}"})rejectWindow(bad,"","root type/key");
++        rejectWindow(window(true,"{}"),"","event needs header+bytes");rejectWindow(m,"null","noevent has no payload");acceptsWindow(window(true,"{}"),"null");acceptsWindow(m,"");
++    }
++    @Test void capacityHasExactCodeAndEndsResponse()throws Exception{
++        for(String code:new String[]{"BUFFER_LIMIT","EVENT_LIMIT"})try(var o=PortalEventsPacketBudget.SHARED.acquire();var d=new PortalEventsPacketDecoder(o)){var in=new ByteArrayInputStream(join(hello(),packet(3,1,"{\"code\":\""+code+"\"}","")));d.readNext(in).orElseThrow().close();try(var p=d.readNext(in).orElseThrow()){assertThat(p.kind()).isEqualTo(3);}assertThat(d.readNext(in)).isEmpty();}
++        for(String m:new String[]{"{\"code\":\"OTHER\"}","{\"code\":\"BUFFER_LIMIT\",\"x\":0}"})try(var o=PortalEventsPacketBudget.SHARED.acquire();var d=new PortalEventsPacketDecoder(o)){var in=new ByteArrayInputStream(join(hello(),packet(3,1,m,"")));d.readNext(in).orElseThrow().close();assertThatThrownBy(()->d.readNext(in)).isInstanceOf(IOException.class);}
++    }
++    static int tokens(String s)throws Exception{int n=0;try(var p=JSON.getFactory().createParser(s)){while(p.nextToken()!=null)n++;}return n;}
++    @Test void exactStructureDepthTokenStringNameAndNumberLimits()throws Exception{
++        acceptsWindow(window(false,"{\"x\":"+"[".repeat(78)+"0"+"]".repeat(78)+"}"),"");rejectWindow(window(false,"{\"x\":"+"[".repeat(79)+"0"+"]".repeat(79)+"}"),"","metadata depth81");
++        acceptsWindow(window(true,"{}"),"[".repeat(64)+"0"+"]".repeat(64));rejectWindow(window(true,"{}"),"[".repeat(65)+"0"+"]".repeat(65),"payload depth65");
++        String max="x".repeat(1048576);acceptsWindow(window(false,"{\"x\":"+quote(max)+"}"),"");rejectWindow(window(false,"{\"x\":"+quote(max+"x")+"}"),"","string+1");
++        acceptsWindow(window(false,"{"+quote(max)+":0}"),"");rejectWindow(window(false,"{"+quote(max+"x")+":0}"),"","name+1");
++        String number="1".repeat(1000);acceptsWindow(window(false,"{\"n\":"+number+"}"),"");rejectWindow(window(false,"{\"n\":"+number+"1}"),"","number1001");
++        String skeleton=window(false,"{\"x\":[]}");int count=262144-tokens(skeleton);String full=skeleton.replace("\"x\":[]","\"x\":["+"0,".repeat(count-1)+"0]");assertThat(tokens(full)).isEqualTo(262144);acceptsWindow(full,"");rejectWindow(full.replace("\"x\":[","\"x\":[0,"),"","tokens+1 includes ends");
++        acceptsWindow(window(true,"{}"),"["+"0,".repeat(131070)+"0]");
++    }
++    @Test void maximumWireAndUnsignedLengthLimits()throws Exception{
++        String m=window(true,"{}");m+=" ".repeat(8388608-utf8(m).length);String p="\""+"x".repeat(262142)+"\"",h=header(utf8(m),utf8(p),true);h+=" ".repeat(8192-utf8(h).length);byte[] w=packet(2,1,utf8(m),utf8(p),h);assertThat(w.length).isEqualTo(8659012);
++        try(var o=PortalEventsPacketBudget.SHARED.acquire();var d=new PortalEventsPacketDecoder(o)){var in=new ByteArrayInputStream(join(hello(),w));d.readNext(in).orElseThrow().close();d.readNext(in).orElseThrow().close();}
++        for(int at:new int[]{16,20})for(int n:new int[]{0,at==16?8193:8388609,-1}){byte[] b=hello();ByteBuffer.wrap(b).putInt(at,n);rejects(b,"unsigned length "+at+":"+Integer.toUnsignedLong(n));}
++    }
++    @Test void eventTypeUtf16AndHeaderIntegerLimitsPreserveOriginalText()throws Exception{
++        byte[] m=utf8(window(true,"{}")),p=utf8("null");String normal="事件 类型 "+"界".repeat(32),h=header(m,p,true);
++        String unicode="界".repeat(32);assertThat(utf8(unicode)).hasSize(96);
++        try(var o=PortalEventsPacketBudget.SHARED.acquire();var d=new PortalEventsPacketDecoder(o)){var in=new ByteArrayInputStream(join(hello(),packet(2,1,m,p,h.replace(quote(normal),quote(unicode)))));d.readNext(in).orElseThrow().close();try(var packet=d.readNext(in).orElseThrow()){assertThat(packet.header().eventType()).isEqualTo(unicode);}}
++        String exact=h.replace(quote(normal),quote("x".repeat(4096)));byte[] wire=packet(2,1,m,p,exact);
++        try(var o=PortalEventsPacketBudget.SHARED.acquire();var d=new PortalEventsPacketDecoder(o)){var in=new ByteArrayInputStream(join(hello(),wire));d.readNext(in).orElseThrow().close();try(var packet=d.readNext(in).orElseThrow()){assertThat(packet.header().eventType()).hasSize(4096);}}
++        try(var o=PortalEventsPacketBudget.SHARED.acquire();var d=new PortalEventsPacketDecoder(o)){var in=new ByteArrayInputStream(join(hello(),packet(2,1,m,p,h.replace(quote(normal),quote("x".repeat(4097))))));d.readNext(in).orElseThrow().close();assertThatThrownBy(()->d.readNext(in)).isInstanceOf(IOException.class);}
++        String max=header(metadata(),EMPTY,false).replace("\"initialCursor\":0","\"initialCursor\":9223372036854775807").replace("\"afterSeq\":0","\"afterSeq\":9223372036854775807");
++        try(var o=PortalEventsPacketBudget.SHARED.acquire();var d=new PortalEventsPacketDecoder(o)){try(var packet=d.readNext(new ByteArrayInputStream(packet(1,0,metadata(),EMPTY,max))).orElseThrow()){assertThat(packet.header().afterSeq()).isEqualTo(Long.MAX_VALUE);}}
++        rejects(packet(1,0,metadata(),EMPTY,max.replace("9223372036854775807","19223372036854775807")),"20 digit integer");
++    }
++}

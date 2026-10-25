@@ -1,0 +1,2155 @@
+{
+  "createdAt": "2026-10-20T18:13:24.658Z",
+  "currentSource": {
+    "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/source-after.json",
+    "bytes": 77685,
+    "sha256": "cdc3f4a1151a57005aed2f9a605226bae7f6456d8c7d1c339af5a2476a11968a"
+  },
+  "uniqueCurrentCases": 48,
+  "cases": [
+    {
+      "class": "cn.agentplatform.common.authority.GatewayIngressBoundaryTest",
+      "name": "noPublicJwtOrCopiedOrdinaryAttributeCanMintRequestCapability",
+      "testFile": {
+        "file": "admin-common/src/test/java/cn/agentplatform/common/authority/GatewayIngressBoundaryTest.java",
+        "bytes": 2609,
+        "sha256": "0ab0ad0478a271e17b4d2b4769a79ac7186d05c6a29a52bdfbadf2f4ebfa74c3"
+      },
+      "currentMethodSha256": "269c64c772a84d0dbc7ce514eba2022fc8fb794eb21356adfc9c18f5f2d46cd8",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-proxy07",
+        "number": 7,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy07/xml/TEST-cn.agentplatform.common.authority.GatewayIngressBoundaryTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy07/source.json",
+          "bytes": 77227,
+          "sha256": "2e8a10a4b3248ff17bbea64c6d0970546b0926fdfe14bb699ec37fc8ccafddd7"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy07/source/admin-common/src/test/java/cn/agentplatform/common/authority/GatewayIngressBoundaryTest.java",
+          "bytes": 2178,
+          "sha256": "39d0a44152d373a2a4962f57242a3e3a96c59b64a495b48ad6d45335add53938"
+        },
+        "methodSha256": "18e08489ccdb15a9641a7495a262dbddc3fd17585fc203098aefbe7c364a199e"
+      },
+      "methodBytesEqual": false,
+      "whitespaceOnlyMethodDifference": true,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-proxy07",
+          "number": 7,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy07/xml/TEST-cn.agentplatform.common.authority.GatewayIngressBoundaryTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.common.authority.GatewayIngressBoundaryTest",
+      "name": "ordinaryIngressStillRejectsAnyAndWildcards",
+      "testFile": {
+        "file": "admin-common/src/test/java/cn/agentplatform/common/authority/GatewayIngressBoundaryTest.java",
+        "bytes": 2609,
+        "sha256": "0ab0ad0478a271e17b4d2b4769a79ac7186d05c6a29a52bdfbadf2f4ebfa74c3"
+      },
+      "currentMethodSha256": "6e19bb7860e8865de71bd0d4696cf7d3b000228180c59a36cd5636359f0d91a8",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-proxy07",
+        "number": 7,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy07/xml/TEST-cn.agentplatform.common.authority.GatewayIngressBoundaryTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy07/source.json",
+          "bytes": 77227,
+          "sha256": "2e8a10a4b3248ff17bbea64c6d0970546b0926fdfe14bb699ec37fc8ccafddd7"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy07/source/admin-common/src/test/java/cn/agentplatform/common/authority/GatewayIngressBoundaryTest.java",
+          "bytes": 2178,
+          "sha256": "39d0a44152d373a2a4962f57242a3e3a96c59b64a495b48ad6d45335add53938"
+        },
+        "methodSha256": "4d623b26429abf8d31aca490f6faa5528347315bff511a910636bc6b00cb5323"
+      },
+      "methodBytesEqual": false,
+      "whitespaceOnlyMethodDifference": true,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-proxy07",
+          "number": 7,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy07/xml/TEST-cn.agentplatform.common.authority.GatewayIngressBoundaryTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.common.authority.GatewayIngressBoundaryTest",
+      "name": "ordinaryReceiverStillRequiresItsServiceGuardOnDisabledCatalogRows",
+      "testFile": {
+        "file": "admin-common/src/test/java/cn/agentplatform/common/authority/GatewayIngressBoundaryTest.java",
+        "bytes": 2609,
+        "sha256": "0ab0ad0478a271e17b4d2b4769a79ac7186d05c6a29a52bdfbadf2f4ebfa74c3"
+      },
+      "currentMethodSha256": "b6dc17d138b8bc91cf884f6710a3ea115e3800c3adf3a2514d2e5fe75f067b35",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-proxy07",
+        "number": 7,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy07/xml/TEST-cn.agentplatform.common.authority.GatewayIngressBoundaryTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy07/source.json",
+          "bytes": 77227,
+          "sha256": "2e8a10a4b3248ff17bbea64c6d0970546b0926fdfe14bb699ec37fc8ccafddd7"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy07/source/admin-common/src/test/java/cn/agentplatform/common/authority/GatewayIngressBoundaryTest.java",
+          "bytes": 2178,
+          "sha256": "39d0a44152d373a2a4962f57242a3e3a96c59b64a495b48ad6d45335add53938"
+        },
+        "methodSha256": "db1236f8a03a4932a9d0c9c6933a920a708a2b3be068b3385d0c8de6a2ba773d"
+      },
+      "methodBytesEqual": false,
+      "whitespaceOnlyMethodDifference": true,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-proxy07",
+          "number": 7,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy07/xml/TEST-cn.agentplatform.common.authority.GatewayIngressBoundaryTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest",
+      "name": "actualIamControllerRejectsQueryBeforeAnyLegacyOrAuthorityBusinessSend",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+        "bytes": 81617,
+        "sha256": "c751f44f091c854e0ef3e15e7693f9c6422fdea8ba1a378c15829227fc160dd2"
+      },
+      "currentMethodSha256": "4b92e0e07f1a0358f221b77889e65d8755f4d619df57b6fa6c56bdacef973cbd",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-proxy10",
+        "number": 10,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/source.json",
+          "bytes": 77227,
+          "sha256": "921b9deb2eeb14274e0277f2e541889b02be1af116e98e986fc109a9b64fdad3"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/source/platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+          "bytes": 13415,
+          "sha256": "cd6b92b09a7abbec310c251e6d94f77d9f1c371427e8fd88220e9ed3e3228703"
+        },
+        "methodSha256": "5545f166e4e93b8461dcdc735a6d94d28d1fe31fc6b452b851a493f6e16a12f2"
+      },
+      "methodBytesEqual": false,
+      "whitespaceOnlyMethodDifference": true,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-red02",
+          "number": 2,
+          "status": "failed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-red02/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-red03",
+          "number": 3,
+          "status": "failed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-red03/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-guard06",
+          "number": 6,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-guard06/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-proxy07",
+          "number": 7,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy07/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-proxy10",
+          "number": 10,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest",
+      "name": "realMvcAsyncProxyUsesSeparateTargetTicketsAndPreservesExactLegalBody",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+        "bytes": 81617,
+        "sha256": "c751f44f091c854e0ef3e15e7693f9c6422fdea8ba1a378c15829227fc160dd2"
+      },
+      "currentMethodSha256": "7036eb43921f77a0b605b868bc6a91d6479f62a262d05584c60b695a28bd836c",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-proxy16",
+        "number": 16,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy16/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy16/source.json",
+          "bytes": 77682,
+          "sha256": "12312004136efb587f307b2b67dd8d9c9ff15ca9b1d2ef00ea91914864f1f0ab"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy16/source/platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+          "bytes": 14167,
+          "sha256": "fa5501c8f912c787d7e38e190ea9978ed3e1a507237c1c697ea7a797c0941f08"
+        },
+        "methodSha256": "421224ec67d9e991ea9cc6368e51d22a1d9bc083e32f08e02e594d05d0804f9a"
+      },
+      "methodBytesEqual": false,
+      "whitespaceOnlyMethodDifference": true,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-proxy07",
+          "number": 7,
+          "status": "failed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy07/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-diagnostic08",
+          "number": 8,
+          "status": "failed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-diagnostic08/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-diagnostic09",
+          "number": 9,
+          "status": "failed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-diagnostic09/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-proxy10",
+          "number": 10,
+          "status": "error",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-diagnostic12",
+          "number": 12,
+          "status": "error",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-diagnostic12/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-diagnostic13",
+          "number": 13,
+          "status": "error",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-diagnostic13/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-proxy16",
+          "number": 16,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy16/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest",
+      "name": "wrongMethodsPathsQueriesAndIdentityAreDeniedBeforeAnyExchange",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+        "bytes": 81617,
+        "sha256": "c751f44f091c854e0ef3e15e7693f9c6422fdea8ba1a378c15829227fc160dd2"
+      },
+      "currentMethodSha256": "bd9256fff6f2ba502909bd15ae8619c1ae665997166c91d1ccd18c12ab04b411",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-boundary18",
+        "number": 18,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-boundary18/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-boundary18/source.json",
+          "bytes": 77682,
+          "sha256": "5c9d284b17320902ff190a6edc070d72338e8dfcc2f1432cdfe1c9e27c8b3853"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-boundary18/source/platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+          "bytes": 23591,
+          "sha256": "07a52e1e92314d0bd98e9c586378f427dcf65d02d6d31729880eee0b29b045e5"
+        },
+        "methodSha256": "35d0fd89bca83b793177d47198a3fe3f26375f43bc6817a9095c264e06986039"
+      },
+      "methodBytesEqual": false,
+      "whitespaceOnlyMethodDifference": true,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-proxy07",
+          "number": 7,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy07/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-proxy10",
+          "number": 10,
+          "status": "error",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-diagnostic12",
+          "number": 12,
+          "status": "error",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-diagnostic12/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-proxy16",
+          "number": 16,
+          "status": "failed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy16/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-boundary18",
+          "number": 18,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-boundary18/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest",
+      "name": "malformedCompressedAndOversizeBodiesNeverStartMetadata",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+        "bytes": 81617,
+        "sha256": "c751f44f091c854e0ef3e15e7693f9c6422fdea8ba1a378c15829227fc160dd2"
+      },
+      "currentMethodSha256": "33769dc2cc542d46a95657a541aa0299d17b6d40809aeb1d3b7b55ee923368d9",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-proxy10",
+        "number": 10,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/source.json",
+          "bytes": 77227,
+          "sha256": "921b9deb2eeb14274e0277f2e541889b02be1af116e98e986fc109a9b64fdad3"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/source/platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+          "bytes": 13415,
+          "sha256": "cd6b92b09a7abbec310c251e6d94f77d9f1c371427e8fd88220e9ed3e3228703"
+        },
+        "methodSha256": "78c66658a82356390007c436ee50f77e70f8e2b4dec3b7fb6a1dcfc8ec4c9159"
+      },
+      "methodBytesEqual": false,
+      "whitespaceOnlyMethodDifference": true,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-proxy07",
+          "number": 7,
+          "status": "failed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy07/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-proxy10",
+          "number": 10,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest",
+      "name": "stalledActualMetadataHandleIsCancelledAndWorkerReallyExits",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+        "bytes": 81617,
+        "sha256": "c751f44f091c854e0ef3e15e7693f9c6422fdea8ba1a378c15829227fc160dd2"
+      },
+      "currentMethodSha256": "bbad3ef505cad6fdac00064521d7f16c7c3fb079f3167fd552b0f98907029336",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-proxy10",
+        "number": 10,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/source.json",
+          "bytes": 77227,
+          "sha256": "921b9deb2eeb14274e0277f2e541889b02be1af116e98e986fc109a9b64fdad3"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/source/platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+          "bytes": 13415,
+          "sha256": "cd6b92b09a7abbec310c251e6d94f77d9f1c371427e8fd88220e9ed3e3228703"
+        },
+        "methodSha256": "759da0648130ef3b74cab2aa7202a8b32394a12a7a5717beb7eefaf991e43d04"
+      },
+      "methodBytesEqual": false,
+      "whitespaceOnlyMethodDifference": true,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-proxy07",
+          "number": 7,
+          "status": "failed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy07/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-proxy10",
+          "number": 10,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest",
+      "name": "expiredMainAfterCompleteBufferNeverLeaksSuccessfulJson",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+        "bytes": 81617,
+        "sha256": "c751f44f091c854e0ef3e15e7693f9c6422fdea8ba1a378c15829227fc160dd2"
+      },
+      "currentMethodSha256": "5799a81abce22ac270bd71bfdb68d73a8903bc86fe7ac789c2e07781f6a92605",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-proxy10",
+        "number": 10,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/source.json",
+          "bytes": 77227,
+          "sha256": "921b9deb2eeb14274e0277f2e541889b02be1af116e98e986fc109a9b64fdad3"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/source/platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+          "bytes": 13415,
+          "sha256": "cd6b92b09a7abbec310c251e6d94f77d9f1c371427e8fd88220e9ed3e3228703"
+        },
+        "methodSha256": "615db9cb66752a2c1a83bd80bf7d26d30d0590703f0301f1e90ab0ecb27aec5c"
+      },
+      "methodBytesEqual": false,
+      "whitespaceOnlyMethodDifference": true,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-proxy07",
+          "number": 7,
+          "status": "failed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy07/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-proxy10",
+          "number": 10,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest",
+      "name": "engineRedirectOrOversizeDoesNotEscapeFiniteJsonOutput",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+        "bytes": 81617,
+        "sha256": "c751f44f091c854e0ef3e15e7693f9c6422fdea8ba1a378c15829227fc160dd2"
+      },
+      "currentMethodSha256": "986201b17264ea850041783bfff6e1fb87813ecaa3586788c79051aeb41280ac",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-proxy10",
+        "number": 10,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/source.json",
+          "bytes": 77227,
+          "sha256": "921b9deb2eeb14274e0277f2e541889b02be1af116e98e986fc109a9b64fdad3"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/source/platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+          "bytes": 13415,
+          "sha256": "cd6b92b09a7abbec310c251e6d94f77d9f1c371427e8fd88220e9ed3e3228703"
+        },
+        "methodSha256": "731f3f7e5a51c0825cbe3c735c6e5df0f8918f02ad509b8e0e83a612e9282aec"
+      },
+      "methodBytesEqual": false,
+      "whitespaceOnlyMethodDifference": true,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-proxy07",
+          "number": 7,
+          "status": "failed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy07/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-proxy10",
+          "number": 10,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest",
+      "name": "rawHttpWireDiagnostic",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+        "bytes": 81617,
+        "sha256": "c751f44f091c854e0ef3e15e7693f9c6422fdea8ba1a378c15829227fc160dd2"
+      },
+      "currentMethodSha256": "09b1735e2cae4cb2d1a1a42022ef1f32b89839bf1a799db1d9dcf6028f527f4e",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-proxy16",
+        "number": 16,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy16/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy16/source.json",
+          "bytes": 77682,
+          "sha256": "12312004136efb587f307b2b67dd8d9c9ff15ca9b1d2ef00ea91914864f1f0ab"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy16/source/platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+          "bytes": 14167,
+          "sha256": "fa5501c8f912c787d7e38e190ea9978ed3e1a507237c1c697ea7a797c0941f08"
+        },
+        "methodSha256": "a3838cee40731ef3379d66ea342a64552958ad46d4095206b937a04eb8514d7d"
+      },
+      "methodBytesEqual": false,
+      "whitespaceOnlyMethodDifference": false,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-diagnostic14",
+          "number": 14,
+          "status": "failed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-diagnostic14/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-diagnostic15",
+          "number": 15,
+          "status": "failed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-diagnostic15/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-proxy16",
+          "number": 16,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy16/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest",
+      "name": "rawEmptyQueryIsRejected",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+        "bytes": 81617,
+        "sha256": "c751f44f091c854e0ef3e15e7693f9c6422fdea8ba1a378c15829227fc160dd2"
+      },
+      "currentMethodSha256": "56d3f367030aaa8aa0ada2ac10e2ea2422bd5d239af998ccf6ee3011eb17c06d",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-chain17",
+        "number": 17,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-chain17/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-chain17/source.json",
+          "bytes": 77682,
+          "sha256": "73bfb2f642c7e237273b09f34f8e81fb9ab2a32b1d41d05d2ef992c980b38416"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-chain17/source/platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+          "bytes": 14796,
+          "sha256": "74b877ddfee23ef6ebac367660173ed872c7d30c5f07d1fadf8864128fadd656"
+        },
+        "methodSha256": "bc5a09774101d7d6d70154988de9d7e13e0b50e45be184dcced42af9a0aad9fd"
+      },
+      "methodBytesEqual": false,
+      "whitespaceOnlyMethodDifference": false,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-chain17",
+          "number": 17,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-chain17/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest",
+      "name": "actualFilterProofUsesOwnedAncestorSingleClaimAndRejectsCopyAndReentry",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+        "bytes": 81617,
+        "sha256": "c751f44f091c854e0ef3e15e7693f9c6422fdea8ba1a378c15829227fc160dd2"
+      },
+      "currentMethodSha256": "f57887347857035dca63e16096693bffea70924c761ddfe887611c08f0564f50",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-boundary18",
+        "number": 18,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-boundary18/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-boundary18/source.json",
+          "bytes": 77682,
+          "sha256": "5c9d284b17320902ff190a6edc070d72338e8dfcc2f1432cdfe1c9e27c8b3853"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-boundary18/source/platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+          "bytes": 23591,
+          "sha256": "07a52e1e92314d0bd98e9c586378f427dcf65d02d6d31729880eee0b29b045e5"
+        },
+        "methodSha256": "52658aafffa04d386a3c5ca47202572a6a8564526fa3e1e3be8cc3c3880ee8ba"
+      },
+      "methodBytesEqual": false,
+      "whitespaceOnlyMethodDifference": true,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-boundary18",
+          "number": 18,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-boundary18/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest",
+      "name": "cglibActualControllerAndFrameworkOuterFilterRemainTheSameInstalledObjects",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+        "bytes": 81617,
+        "sha256": "c751f44f091c854e0ef3e15e7693f9c6422fdea8ba1a378c15829227fc160dd2"
+      },
+      "currentMethodSha256": "09e4b720ea2b4ff781b66880af97637886b43e53f0d26bd78bb1d34ba3e158e0",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-boundary18",
+        "number": 18,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-boundary18/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-boundary18/source.json",
+          "bytes": 77682,
+          "sha256": "5c9d284b17320902ff190a6edc070d72338e8dfcc2f1432cdfe1c9e27c8b3853"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-boundary18/source/platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+          "bytes": 23591,
+          "sha256": "07a52e1e92314d0bd98e9c586378f427dcf65d02d6d31729880eee0b29b045e5"
+        },
+        "methodSha256": "0cdeaf1be1c2019e06d60bf344942f029910078ab06abde74d90f25325d8ce1e"
+      },
+      "methodBytesEqual": false,
+      "whitespaceOnlyMethodDifference": true,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-boundary18",
+          "number": 18,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-boundary18/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest",
+      "name": "invalidActualRegistrationChainsAndGlobalMappingsFailBeforeListenerEvent",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+        "bytes": 81617,
+        "sha256": "c751f44f091c854e0ef3e15e7693f9c6422fdea8ba1a378c15829227fc160dd2"
+      },
+      "currentMethodSha256": "13a1cf1dd9928468095a3c2359ae397e057c40e7b27f0920029356eb285e0ef3",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-lifecycle19",
+        "number": 19,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-lifecycle19/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-lifecycle19/source.json",
+          "bytes": 77682,
+          "sha256": "c8f9f043c67a8200d9f14630df4029592cccfc34a273a4ae7498cf6372a3e0a0"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-lifecycle19/source/platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+          "bytes": 31193,
+          "sha256": "0661bcaa7b1b329202a1b4fb99c3ea9186311dc58ef4d4bcd48481328f51fd7a"
+        },
+        "methodSha256": "8f6e4a97a62396992c94a2ad985257d432fb610b3f4d60195ecb46b6a95c914a"
+      },
+      "methodBytesEqual": false,
+      "whitespaceOnlyMethodDifference": true,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-boundary18",
+          "number": 18,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-boundary18/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-lifecycle19",
+          "number": 19,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-lifecycle19/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest",
+      "name": "liteAssemblyIsNotAComponentScanCandidate",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+        "bytes": 81617,
+        "sha256": "c751f44f091c854e0ef3e15e7693f9c6422fdea8ba1a378c15829227fc160dd2"
+      },
+      "currentMethodSha256": "dcb3802070c507d6c3cece029bfc8b1eda49b3184ab3b10609f1797418ab1de2",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-boundary18",
+        "number": 18,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-boundary18/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-boundary18/source.json",
+          "bytes": 77682,
+          "sha256": "5c9d284b17320902ff190a6edc070d72338e8dfcc2f1432cdfe1c9e27c8b3853"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-boundary18/source/platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+          "bytes": 23591,
+          "sha256": "07a52e1e92314d0bd98e9c586378f427dcf65d02d6d31729880eee0b29b045e5"
+        },
+        "methodSha256": "1bbda10fd32d643e2ffc76fc677edda58988ed3b79a28e1631b5f55012969ae6"
+      },
+      "methodBytesEqual": false,
+      "whitespaceOnlyMethodDifference": true,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-boundary18",
+          "number": 18,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-boundary18/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest",
+      "name": "mainExpiresBetweenBufferAndActualFirstWriteWithZeroSuccessBytes",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+        "bytes": 81617,
+        "sha256": "c751f44f091c854e0ef3e15e7693f9c6422fdea8ba1a378c15829227fc160dd2"
+      },
+      "currentMethodSha256": "f0498b6b778d7755b7af9683cb028065b4c796928a6c18fed0cdf07b6dbd735b",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-lifecycle19",
+        "number": 19,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-lifecycle19/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-lifecycle19/source.json",
+          "bytes": 77682,
+          "sha256": "c8f9f043c67a8200d9f14630df4029592cccfc34a273a4ae7498cf6372a3e0a0"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-lifecycle19/source/platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+          "bytes": 31193,
+          "sha256": "0661bcaa7b1b329202a1b4fb99c3ea9186311dc58ef4d4bcd48481328f51fd7a"
+        },
+        "methodSha256": "b5781dfb75e1f57ec6176125ef07d1cfe69952acc9705365ae9269cbfc3d30cb"
+      },
+      "methodBytesEqual": false,
+      "whitespaceOnlyMethodDifference": true,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-lifecycle19",
+          "number": 19,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-lifecycle19/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest",
+      "name": "exactTwoMibLegalRequestRemainsUnchangedAndOnlyPostsOnce",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+        "bytes": 81617,
+        "sha256": "c751f44f091c854e0ef3e15e7693f9c6422fdea8ba1a378c15829227fc160dd2"
+      },
+      "currentMethodSha256": "0046454133a1c907fa43694495e747e9f3a858ed8db81edf0db237d72550a9dd",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-lifecycle19",
+        "number": 19,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-lifecycle19/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-lifecycle19/source.json",
+          "bytes": 77682,
+          "sha256": "c8f9f043c67a8200d9f14630df4029592cccfc34a273a4ae7498cf6372a3e0a0"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-lifecycle19/source/platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+          "bytes": 31193,
+          "sha256": "0661bcaa7b1b329202a1b4fb99c3ea9186311dc58ef4d4bcd48481328f51fd7a"
+        },
+        "methodSha256": "cf0e21b500b852e310bf9fa80239cb6ba9f2844a0312cac93b5c5e657405731e"
+      },
+      "methodBytesEqual": false,
+      "whitespaceOnlyMethodDifference": true,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-lifecycle19",
+          "number": 19,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-lifecycle19/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest",
+      "name": "duplicateAuthCookieEncodedPathAndRegisteredDevHandlerCannotMintProof",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+        "bytes": 81617,
+        "sha256": "c751f44f091c854e0ef3e15e7693f9c6422fdea8ba1a378c15829227fc160dd2"
+      },
+      "currentMethodSha256": "0aa53f491e37c0e3a61405d0f27e40c4424ec3087c0d905473d54d05879cc29f",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-lifecycle19",
+        "number": 19,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-lifecycle19/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-lifecycle19/source.json",
+          "bytes": 77682,
+          "sha256": "c8f9f043c67a8200d9f14630df4029592cccfc34a273a4ae7498cf6372a3e0a0"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-lifecycle19/source/platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+          "bytes": 31193,
+          "sha256": "0661bcaa7b1b329202a1b4fb99c3ea9186311dc58ef4d4bcd48481328f51fd7a"
+        },
+        "methodSha256": "0f334b59410b4340766c0d460f2ce8cbf6b9bedf3cebfcf15108b3ec1058bbad"
+      },
+      "methodBytesEqual": false,
+      "whitespaceOnlyMethodDifference": true,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-lifecycle19",
+          "number": 19,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-lifecycle19/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest",
+      "name": "incompletePrefixUsesOneTotalBudgetWithoutStartingAnyUpstream",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+        "bytes": 81617,
+        "sha256": "c751f44f091c854e0ef3e15e7693f9c6422fdea8ba1a378c15829227fc160dd2"
+      },
+      "currentMethodSha256": "4d838c55bca633b892f39e5724e201ff701ff66e721d3abcdefc2ac50e1b0108",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-lifecycle19",
+        "number": 19,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-lifecycle19/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-lifecycle19/source.json",
+          "bytes": 77682,
+          "sha256": "c8f9f043c67a8200d9f14630df4029592cccfc34a273a4ae7498cf6372a3e0a0"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-lifecycle19/source/platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+          "bytes": 31193,
+          "sha256": "0661bcaa7b1b329202a1b4fb99c3ea9186311dc58ef4d4bcd48481328f51fd7a"
+        },
+        "methodSha256": "e7bc930c6d83d74ec76211ca072a70ac5dddf1dd3d44cf39e1260b62045305fd"
+      },
+      "methodBytesEqual": false,
+      "whitespaceOnlyMethodDifference": false,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-lifecycle19",
+          "number": 19,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-lifecycle19/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest",
+      "name": "realHttpHandleLateInstallAndCloseRaceNeverStartAnotherRequest",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+        "bytes": 81617,
+        "sha256": "c751f44f091c854e0ef3e15e7693f9c6422fdea8ba1a378c15829227fc160dd2"
+      },
+      "currentMethodSha256": "0dc621e5212dcafc479f712bc12302f041076eb5681ea833e464cc6e7effa716",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-lifecycle19",
+        "number": 19,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-lifecycle19/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-lifecycle19/source.json",
+          "bytes": 77682,
+          "sha256": "c8f9f043c67a8200d9f14630df4029592cccfc34a273a4ae7498cf6372a3e0a0"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-lifecycle19/source/platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+          "bytes": 31193,
+          "sha256": "0661bcaa7b1b329202a1b4fb99c3ea9186311dc58ef4d4bcd48481328f51fd7a"
+        },
+        "methodSha256": "4777b6ff10c0a05dc0b2c724117f2e13e52ad0205eea7052cf9413fb2cb077bf"
+      },
+      "methodBytesEqual": false,
+      "whitespaceOnlyMethodDifference": true,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-lifecycle19",
+          "number": 19,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-lifecycle19/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest",
+      "name": "slowResponseReaderClosesItselfBeforeOwnedResourcesAreChecked",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+        "bytes": 81617,
+        "sha256": "c751f44f091c854e0ef3e15e7693f9c6422fdea8ba1a378c15829227fc160dd2"
+      },
+      "currentMethodSha256": "80465d76b32d7bd4e09880ec46c2423e66f9e5ba060b0907bfc65baf095594e2",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-lifecycle19",
+        "number": 19,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-lifecycle19/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-lifecycle19/source.json",
+          "bytes": 77682,
+          "sha256": "c8f9f043c67a8200d9f14630df4029592cccfc34a273a4ae7498cf6372a3e0a0"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-lifecycle19/source/platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+          "bytes": 31193,
+          "sha256": "0661bcaa7b1b329202a1b4fb99c3ea9186311dc58ef4d4bcd48481328f51fd7a"
+        },
+        "methodSha256": "601e7f3579f35923e34055449d27ce612c31875aa95499368d656ff3346910fc"
+      },
+      "methodBytesEqual": false,
+      "whitespaceOnlyMethodDifference": false,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-lifecycle19",
+          "number": 19,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-lifecycle19/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest",
+      "name": "secondaryActualHandlerMappingCannotHideAnotherAnyRegistration",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+        "bytes": 81617,
+        "sha256": "c751f44f091c854e0ef3e15e7693f9c6422fdea8ba1a378c15829227fc160dd2"
+      },
+      "currentMethodSha256": "6d3c564a7129f8fbc8c1473f7b49f1cc565ec6bb2eed069e044b0430a38085db",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-final21",
+        "number": 21,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-final21/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-final21/source.json",
+          "bytes": 77682,
+          "sha256": "a97bc73262fc964fab93b7ea20005393969af8b13f74cb1d8ae5909490779fac"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-final21/source/platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+          "bytes": 36807,
+          "sha256": "b74377719467d364f86c534447c545f07b223a3e2f3e39e4c83dcd604567ccd7"
+        },
+        "methodSha256": "89c98d4e7f425d18a5ea1ef381374bdbb9a89de870176c088f33ad42dfdd146e"
+      },
+      "methodBytesEqual": false,
+      "whitespaceOnlyMethodDifference": true,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-final21",
+          "number": 21,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-final21/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest",
+      "name": "strictSuccessfulJsonAndFiniteErrorStatusesHaveNoOutputBypass",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+        "bytes": 81617,
+        "sha256": "c751f44f091c854e0ef3e15e7693f9c6422fdea8ba1a378c15829227fc160dd2"
+      },
+      "currentMethodSha256": "4cccdeea2de56ad9e7a1968b3418597e96827b4d2ca2365aad31f711e7f0d361",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-final21",
+        "number": 21,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-final21/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-final21/source.json",
+          "bytes": 77682,
+          "sha256": "a97bc73262fc964fab93b7ea20005393969af8b13f74cb1d8ae5909490779fac"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-final21/source/platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+          "bytes": 36807,
+          "sha256": "b74377719467d364f86c534447c545f07b223a3e2f3e39e4c83dcd604567ccd7"
+        },
+        "methodSha256": "77feb4df2eeec24a1e609752ced72f5fa24d71a8d2844dad0352a5e173ff3a20"
+      },
+      "methodBytesEqual": false,
+      "whitespaceOnlyMethodDifference": true,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-final21",
+          "number": 21,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-final21/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest",
+      "name": "closeDuringRealEngineReadCancelsOwnedHandleAndLateCallbackIsTerminal",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+        "bytes": 81617,
+        "sha256": "c751f44f091c854e0ef3e15e7693f9c6422fdea8ba1a378c15829227fc160dd2"
+      },
+      "currentMethodSha256": "16eb71e6da93f0b26007f47e10d176c19571025cccbf1206d1e1a97ce69d5fdf",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-final21",
+        "number": 21,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-final21/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-final21/source.json",
+          "bytes": 77682,
+          "sha256": "a97bc73262fc964fab93b7ea20005393969af8b13f74cb1d8ae5909490779fac"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-final21/source/platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+          "bytes": 36807,
+          "sha256": "b74377719467d364f86c534447c545f07b223a3e2f3e39e4c83dcd604567ccd7"
+        },
+        "methodSha256": "ef5ee9e6698dd0af3aa06d55c7935877d841dc5ff75d393eb7382e280a39fc69"
+      },
+      "methodBytesEqual": false,
+      "whitespaceOnlyMethodDifference": true,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-final21",
+          "number": 21,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-final21/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest",
+      "name": "realAuthorityMainTimeoutStopsBeforeEngineAndOwnedWorkerExits",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+        "bytes": 81617,
+        "sha256": "c751f44f091c854e0ef3e15e7693f9c6422fdea8ba1a378c15829227fc160dd2"
+      },
+      "currentMethodSha256": "910550da69902a072e31f59c8484f554851b9ba48dc8c14967129af3ed6af811",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-final21",
+        "number": 21,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-final21/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-final21/source.json",
+          "bytes": 77682,
+          "sha256": "a97bc73262fc964fab93b7ea20005393969af8b13f74cb1d8ae5909490779fac"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-final21/source/platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+          "bytes": 36807,
+          "sha256": "b74377719467d364f86c534447c545f07b223a3e2f3e39e4c83dcd604567ccd7"
+        },
+        "methodSha256": "3b08946a30fdb2d7b0d8c9e337903cb5e233b9a374f293f08c93469eff736a1b"
+      },
+      "methodBytesEqual": false,
+      "whitespaceOnlyMethodDifference": true,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-final21",
+          "number": 21,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-final21/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest",
+      "name": "publicSecurityContextJwtCannotSkipFilterAndCompletedProofCannotBeReattached",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+        "bytes": 81617,
+        "sha256": "c751f44f091c854e0ef3e15e7693f9c6422fdea8ba1a378c15829227fc160dd2"
+      },
+      "currentMethodSha256": "81d9b37f31511ccf7978ba1437bf5a6cd483117c6aa0e9f8460fdd8b1fe77c57",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-final22",
+        "number": 22,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-final22/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-final22/source.json",
+          "bytes": 77685,
+          "sha256": "6cf7679ce18644cc36cfa328db8a4b527bb20b3edfc7a988f6093606044a7e63"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-final22/source/platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+          "bytes": 78983,
+          "sha256": "a00b544eee860fdbb6ca9bb454321bc6fec4d58390ecc976118cdcb6a97fb198"
+        },
+        "methodSha256": "81d9b37f31511ccf7978ba1437bf5a6cd483117c6aa0e9f8460fdd8b1fe77c57"
+      },
+      "methodBytesEqual": true,
+      "whitespaceOnlyMethodDifference": true,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-final22",
+          "number": 22,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-final22/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest",
+      "name": "bodyCompletionAtDeadlineRaceCanOnlySubmitOneMainPost",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+        "bytes": 81617,
+        "sha256": "c751f44f091c854e0ef3e15e7693f9c6422fdea8ba1a378c15829227fc160dd2"
+      },
+      "currentMethodSha256": "3b190f95ed74b4fed3c47ad94c4076aeb4ba61640598bd6ea5de3346726c8c10",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-final22",
+        "number": 22,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-final22/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-final22/source.json",
+          "bytes": 77685,
+          "sha256": "6cf7679ce18644cc36cfa328db8a4b527bb20b3edfc7a988f6093606044a7e63"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-final22/source/platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+          "bytes": 78983,
+          "sha256": "a00b544eee860fdbb6ca9bb454321bc6fec4d58390ecc976118cdcb6a97fb198"
+        },
+        "methodSha256": "378982515d5d52781e2783dd6eece61e140f4dac5610509316a91cffba5c6c6e"
+      },
+      "methodBytesEqual": false,
+      "whitespaceOnlyMethodDifference": true,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-final22",
+          "number": 22,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-final22/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest",
+      "name": "realUndeclaredChunkedTrailersCannotEscapeFullBodyValidation",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+        "bytes": 81617,
+        "sha256": "c751f44f091c854e0ef3e15e7693f9c6422fdea8ba1a378c15829227fc160dd2"
+      },
+      "currentMethodSha256": "3c07c30d322c53ab1a527c9e1cae7953a486f5549da611bf3aeb7c568b060f1f",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-trailer-green25",
+        "number": 25,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-trailer-green25/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-trailer-green25/source.json",
+          "bytes": 77685,
+          "sha256": "b606727b3183ffdc23c4c8ce68855c4a23eb874329d741f59feabeca87797e4c"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-trailer-green25/source/platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+          "bytes": 84544,
+          "sha256": "00260211f68c5046a16493772b2ceb2b819f3d76e064efc9fa3d1cbd9c03db7e"
+        },
+        "methodSha256": "c850e5e9dbf4bc80103a08278fa805c0f807f852f1424bace6a3ba568066895e"
+      },
+      "methodBytesEqual": false,
+      "whitespaceOnlyMethodDifference": false,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-trailer-red23",
+          "number": 23,
+          "status": "failed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-trailer-red23/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-trailer-green25",
+          "number": 25,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-trailer-green25/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest",
+      "name": "finiteOversizeChunkHeaderCannotPrecedeAnAcceptedJsonBody",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+        "bytes": 81617,
+        "sha256": "c751f44f091c854e0ef3e15e7693f9c6422fdea8ba1a378c15829227fc160dd2"
+      },
+      "currentMethodSha256": "2026cf90120226ced8b2bc3af102b71559e6a25601a9b6599dc52e923f2f7287",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-line-green28",
+        "number": 28,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-line-green28/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-line-green28/source.json",
+          "bytes": 77685,
+          "sha256": "cdc3f4a1151a57005aed2f9a605226bae7f6456d8c7d1c339af5a2476a11968a"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-line-green28/source/platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+          "bytes": 81617,
+          "sha256": "c751f44f091c854e0ef3e15e7693f9c6422fdea8ba1a378c15829227fc160dd2"
+        },
+        "methodSha256": "2026cf90120226ced8b2bc3af102b71559e6a25601a9b6599dc52e923f2f7287"
+      },
+      "methodBytesEqual": true,
+      "whitespaceOnlyMethodDifference": true,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-line-red26",
+          "number": 26,
+          "status": "failed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-line-red26/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-line-green27",
+          "number": 27,
+          "status": "failed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-line-green27/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-line-green28",
+          "number": 28,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-line-green28/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest",
+      "name": "ordinaryMultiHeaderChunkedJsonStillUsesBothTargetedHops",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+        "bytes": 81617,
+        "sha256": "c751f44f091c854e0ef3e15e7693f9c6422fdea8ba1a378c15829227fc160dd2"
+      },
+      "currentMethodSha256": "0bc3709a87097a88fd66927c3ac047a45e34dd47f2e21d5e13d8297fef20dc37",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-line-green28",
+        "number": 28,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-line-green28/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-line-green28/source.json",
+          "bytes": 77685,
+          "sha256": "cdc3f4a1151a57005aed2f9a605226bae7f6456d8c7d1c339af5a2476a11968a"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-line-green28/source/platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+          "bytes": 81617,
+          "sha256": "c751f44f091c854e0ef3e15e7693f9c6422fdea8ba1a378c15829227fc160dd2"
+        },
+        "methodSha256": "0bc3709a87097a88fd66927c3ac047a45e34dd47f2e21d5e13d8297fef20dc37"
+      },
+      "methodBytesEqual": true,
+      "whitespaceOnlyMethodDifference": true,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-trailer-green25",
+          "number": 25,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-trailer-green25/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-line-green27",
+          "number": 27,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-line-green27/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-line-green28",
+          "number": 28,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-line-green28/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.common.authority.GatewayPublishedChainPostgresTest",
+      "name": "portalThroughRealMetadataMainRunAppPgAndOwnedFlowReturnsFullStatusAndReplay",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayPublishedChainPostgresTest.java",
+        "bytes": 32387,
+        "sha256": "632b11e58628024a3e154a306f036735f93d1872711f984318fbc4b9396d6c00"
+      },
+      "currentMethodSha256": "367e732722419092c28c8a4395d86959d9ed1545b421b044c4c3a6273c9af891",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-trailer-green25",
+        "number": 25,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-trailer-green25/xml/TEST-cn.agentplatform.common.authority.GatewayPublishedChainPostgresTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-trailer-green25/source.json",
+          "bytes": 77685,
+          "sha256": "b606727b3183ffdc23c4c8ce68855c4a23eb874329d741f59feabeca87797e4c"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-trailer-green25/source/platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayPublishedChainPostgresTest.java",
+          "bytes": 32387,
+          "sha256": "632b11e58628024a3e154a306f036735f93d1872711f984318fbc4b9396d6c00"
+        },
+        "methodSha256": "367e732722419092c28c8a4395d86959d9ed1545b421b044c4c3a6273c9af891"
+      },
+      "methodBytesEqual": true,
+      "whitespaceOnlyMethodDifference": true,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-boundary18",
+          "number": 18,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-boundary18/xml/TEST-cn.agentplatform.common.authority.GatewayPublishedChainPostgresTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-final21",
+          "number": 21,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-final21/xml/TEST-cn.agentplatform.common.authority.GatewayPublishedChainPostgresTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-final22",
+          "number": 22,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-final22/xml/TEST-cn.agentplatform.common.authority.GatewayPublishedChainPostgresTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-framing24",
+          "number": 24,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-framing24/xml/TEST-cn.agentplatform.common.authority.GatewayPublishedChainPostgresTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-trailer-green25",
+          "number": 25,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-trailer-green25/xml/TEST-cn.agentplatform.common.authority.GatewayPublishedChainPostgresTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.common.authority.GatewayPublishedChainPostgresTest",
+      "name": "pointerSwitchAfterLookupIsRejectedBeforeRunAdmission",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayPublishedChainPostgresTest.java",
+        "bytes": 32387,
+        "sha256": "632b11e58628024a3e154a306f036735f93d1872711f984318fbc4b9396d6c00"
+      },
+      "currentMethodSha256": "d8ae6bc1a09a63534f03965619b26e2ef2fa82f2d486ac54e4434aa00775df03",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-boundary18",
+        "number": 18,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-boundary18/xml/TEST-cn.agentplatform.common.authority.GatewayPublishedChainPostgresTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-boundary18/source.json",
+          "bytes": 77682,
+          "sha256": "5c9d284b17320902ff190a6edc070d72338e8dfcc2f1432cdfe1c9e27c8b3853"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-boundary18/source/platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayPublishedChainPostgresTest.java",
+          "bytes": 14597,
+          "sha256": "923ffbb24874789e2c20dce472c17d249cd5da090cc2cc85dc60dc0792cbe00c"
+        },
+        "methodSha256": "ecd0e226b3eb13d166f3b5e6815929c4e21f336fc20278fbd871005a6669e1a6"
+      },
+      "methodBytesEqual": false,
+      "whitespaceOnlyMethodDifference": true,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-boundary18",
+          "number": 18,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-boundary18/xml/TEST-cn.agentplatform.common.authority.GatewayPublishedChainPostgresTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.common.authority.GatewayPublishedChainPostgresTest",
+      "name": "disabledApplicationAfterLookupIsRejectedBeforeRunAdmission",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayPublishedChainPostgresTest.java",
+        "bytes": 32387,
+        "sha256": "632b11e58628024a3e154a306f036735f93d1872711f984318fbc4b9396d6c00"
+      },
+      "currentMethodSha256": "24f0bd587158aeeff6a3589c8287ef53db5561d3611a11adc6ec201f82e27680",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-boundary18",
+        "number": 18,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-boundary18/xml/TEST-cn.agentplatform.common.authority.GatewayPublishedChainPostgresTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-boundary18/source.json",
+          "bytes": 77682,
+          "sha256": "5c9d284b17320902ff190a6edc070d72338e8dfcc2f1432cdfe1c9e27c8b3853"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-boundary18/source/platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayPublishedChainPostgresTest.java",
+          "bytes": 14597,
+          "sha256": "923ffbb24874789e2c20dce472c17d249cd5da090cc2cc85dc60dc0792cbe00c"
+        },
+        "methodSha256": "75aea14e25e025ad58c943ff7abd1fc952df5fb3346d72e3069c72c35fdb65d8"
+      },
+      "methodBytesEqual": false,
+      "whitespaceOnlyMethodDifference": true,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-boundary18",
+          "number": 18,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-boundary18/xml/TEST-cn.agentplatform.common.authority.GatewayPublishedChainPostgresTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.common.authority.GatewayPublishedChainPostgresTest",
+      "name": "expiredOriginalPortalCannotOpenMainAfterMetadata",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayPublishedChainPostgresTest.java",
+        "bytes": 32387,
+        "sha256": "632b11e58628024a3e154a306f036735f93d1872711f984318fbc4b9396d6c00"
+      },
+      "currentMethodSha256": "b827de23d11d0ed7019018c3f5cecfcac1859d4df219ac8eef56dafce687cc4f",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-boundary18",
+        "number": 18,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-boundary18/xml/TEST-cn.agentplatform.common.authority.GatewayPublishedChainPostgresTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-boundary18/source.json",
+          "bytes": 77682,
+          "sha256": "5c9d284b17320902ff190a6edc070d72338e8dfcc2f1432cdfe1c9e27c8b3853"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-boundary18/source/platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayPublishedChainPostgresTest.java",
+          "bytes": 14597,
+          "sha256": "923ffbb24874789e2c20dce472c17d249cd5da090cc2cc85dc60dc0792cbe00c"
+        },
+        "methodSha256": "8aa834c5489fd7eeaa313da9aaa0837485c776f3b15f7cd2a56d26149cc2b120"
+      },
+      "methodBytesEqual": false,
+      "whitespaceOnlyMethodDifference": true,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-boundary18",
+          "number": 18,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-boundary18/xml/TEST-cn.agentplatform.common.authority.GatewayPublishedChainPostgresTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.common.authority.GatewayPublishedChainPostgresTest",
+      "name": "tamperedMainTicketAndCurrentNarrowingCannotAdmitRun",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayPublishedChainPostgresTest.java",
+        "bytes": 32387,
+        "sha256": "632b11e58628024a3e154a306f036735f93d1872711f984318fbc4b9396d6c00"
+      },
+      "currentMethodSha256": "6a556c243bf658116e5699f807918d218d193296b2fd69b3b7507c8d3228ad5e",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-boundary18",
+        "number": 18,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-boundary18/xml/TEST-cn.agentplatform.common.authority.GatewayPublishedChainPostgresTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-boundary18/source.json",
+          "bytes": 77682,
+          "sha256": "5c9d284b17320902ff190a6edc070d72338e8dfcc2f1432cdfe1c9e27c8b3853"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-boundary18/source/platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayPublishedChainPostgresTest.java",
+          "bytes": 14597,
+          "sha256": "923ffbb24874789e2c20dce472c17d249cd5da090cc2cc85dc60dc0792cbe00c"
+        },
+        "methodSha256": "91caccb445eac068b1efcde6e38c7169d3e7089cfd4dd6119c355b922832538c"
+      },
+      "methodBytesEqual": false,
+      "whitespaceOnlyMethodDifference": true,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-boundary18",
+          "number": 18,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-boundary18/xml/TEST-cn.agentplatform.common.authority.GatewayPublishedChainPostgresTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.common.authority.GatewayPublishedChainPostgresTest",
+      "name": "actualMaterialScopeOutsideCurrentCeilingLeaksNoStatus",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayPublishedChainPostgresTest.java",
+        "bytes": 32387,
+        "sha256": "632b11e58628024a3e154a306f036735f93d1872711f984318fbc4b9396d6c00"
+      },
+      "currentMethodSha256": "c1b6ed8c215b92feab67e38b366d33e1bd59fc3a71374c3179bcc281944be2c5",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-final21",
+        "number": 21,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-final21/xml/TEST-cn.agentplatform.common.authority.GatewayPublishedChainPostgresTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-final21/source.json",
+          "bytes": 77682,
+          "sha256": "a97bc73262fc964fab93b7ea20005393969af8b13f74cb1d8ae5909490779fac"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-final21/source/platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayPublishedChainPostgresTest.java",
+          "bytes": 16219,
+          "sha256": "94f19bc6bed0fc30d129a5a983eede198be7d71125ac266e5e7e2f413d880f7d"
+        },
+        "methodSha256": "2afee5e4af976d5c199ef4f972f6c725e294ac649ce8e2b304c0955b574370f8"
+      },
+      "methodBytesEqual": false,
+      "whitespaceOnlyMethodDifference": true,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-final21",
+          "number": 21,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-final21/xml/TEST-cn.agentplatform.common.authority.GatewayPublishedChainPostgresTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.common.authority.GatewayPublishedChainPostgresTest",
+      "name": "verifiedPortalWithoutPlatformScopeAndServiceTicketCannotEnterGateway",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayPublishedChainPostgresTest.java",
+        "bytes": 32387,
+        "sha256": "632b11e58628024a3e154a306f036735f93d1872711f984318fbc4b9396d6c00"
+      },
+      "currentMethodSha256": "ac90ce6bd54c828e7f03ce12b6135020e3b88cbf11f0eb64655e9851334c80ec",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-final22",
+        "number": 22,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-final22/xml/TEST-cn.agentplatform.common.authority.GatewayPublishedChainPostgresTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-final22/source.json",
+          "bytes": 77685,
+          "sha256": "6cf7679ce18644cc36cfa328db8a4b527bb20b3edfc7a988f6093606044a7e63"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-final22/source/platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayPublishedChainPostgresTest.java",
+          "bytes": 32387,
+          "sha256": "632b11e58628024a3e154a306f036735f93d1872711f984318fbc4b9396d6c00"
+        },
+        "methodSha256": "ac90ce6bd54c828e7f03ce12b6135020e3b88cbf11f0eb64655e9851334c80ec"
+      },
+      "methodBytesEqual": true,
+      "whitespaceOnlyMethodDifference": true,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-final21",
+          "number": 21,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-final21/xml/TEST-cn.agentplatform.common.authority.GatewayPublishedChainPostgresTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-final22",
+          "number": 22,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-final22/xml/TEST-cn.agentplatform.common.authority.GatewayPublishedChainPostgresTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.gateway.application.PublishedMetadataClientTest",
+      "name": "targetedTicketAndActualVersionUseDistinctNormalExchanges",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/PublishedMetadataClientTest.java",
+        "bytes": 14649,
+        "sha256": "5636edbdacee44e852a1d96f531b160f509c1ab132163ffad848e8e6f9535717"
+      },
+      "currentMethodSha256": "7e140fc8baea7d69126dfa8e3e4173b69d6dba431f9fc2c91006f8156f607849",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-lifecycle19",
+        "number": 19,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-lifecycle19/xml/TEST-cn.agentplatform.gateway.application.PublishedMetadataClientTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-lifecycle19/source.json",
+          "bytes": 77682,
+          "sha256": "c8f9f043c67a8200d9f14630df4029592cccfc34a273a4ae7498cf6372a3e0a0"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-lifecycle19/source/platform-gateway/src/test/java/cn/agentplatform/gateway/application/PublishedMetadataClientTest.java",
+          "bytes": 10763,
+          "sha256": "16e0c5b47cb6077a51f0e481a394fc2b8a9cc260ae8e4d0fdaa4f55468b83f3f"
+        },
+        "methodSha256": "81ce67f9d0583ad6f3a0b2734537659dd90c4b41d97440882a27d7d3dfd5b781"
+      },
+      "methodBytesEqual": false,
+      "whitespaceOnlyMethodDifference": true,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-proxy07",
+          "number": 7,
+          "status": "error",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy07/xml/TEST-cn.agentplatform.gateway.application.PublishedMetadataClientTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-proxy10",
+          "number": 10,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/xml/TEST-cn.agentplatform.gateway.application.PublishedMetadataClientTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-lifecycle19",
+          "number": 19,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-lifecycle19/xml/TEST-cn.agentplatform.gateway.application.PublishedMetadataClientTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.gateway.application.PublishedMetadataClientTest",
+      "name": "strictResponseTypesExtraFieldsWrongCodeAndInvalidVersionsAreRejected",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/PublishedMetadataClientTest.java",
+        "bytes": 14649,
+        "sha256": "5636edbdacee44e852a1d96f531b160f509c1ab132163ffad848e8e6f9535717"
+      },
+      "currentMethodSha256": "d18cd47bc4e9843e86311a6f7b37676a7fbb90edcd22997fd9186a1be7c11466",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-proxy10",
+        "number": 10,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/xml/TEST-cn.agentplatform.gateway.application.PublishedMetadataClientTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/source.json",
+          "bytes": 77227,
+          "sha256": "921b9deb2eeb14274e0277f2e541889b02be1af116e98e986fc109a9b64fdad3"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/source/platform-gateway/src/test/java/cn/agentplatform/gateway/application/PublishedMetadataClientTest.java",
+          "bytes": 10763,
+          "sha256": "16e0c5b47cb6077a51f0e481a394fc2b8a9cc260ae8e4d0fdaa4f55468b83f3f"
+        },
+        "methodSha256": "4b64076da7930cf67ff7511e7b3302f7120b9e22213e55a02757c646235c50da"
+      },
+      "methodBytesEqual": false,
+      "whitespaceOnlyMethodDifference": true,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-proxy07",
+          "number": 7,
+          "status": "error",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy07/xml/TEST-cn.agentplatform.gateway.application.PublishedMetadataClientTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-proxy10",
+          "number": 10,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/xml/TEST-cn.agentplatform.gateway.application.PublishedMetadataClientTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.gateway.application.PublishedMetadataClientTest",
+      "name": "redirectAndBoundedOversizeNeverFollowAnotherDestination",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/PublishedMetadataClientTest.java",
+        "bytes": 14649,
+        "sha256": "5636edbdacee44e852a1d96f531b160f509c1ab132163ffad848e8e6f9535717"
+      },
+      "currentMethodSha256": "fd6e02614d4ac4904605c7d208e24786551a69a26e957544dfb112985fd750b8",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-proxy10",
+        "number": 10,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/xml/TEST-cn.agentplatform.gateway.application.PublishedMetadataClientTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/source.json",
+          "bytes": 77227,
+          "sha256": "921b9deb2eeb14274e0277f2e541889b02be1af116e98e986fc109a9b64fdad3"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/source/platform-gateway/src/test/java/cn/agentplatform/gateway/application/PublishedMetadataClientTest.java",
+          "bytes": 10763,
+          "sha256": "16e0c5b47cb6077a51f0e481a394fc2b8a9cc260ae8e4d0fdaa4f55468b83f3f"
+        },
+        "methodSha256": "071a5cca8f7fed22562034738b7ad2b18286378fa082b84fa4e781e0fefd8b4c"
+      },
+      "methodBytesEqual": false,
+      "whitespaceOnlyMethodDifference": true,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-proxy07",
+          "number": 7,
+          "status": "error",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy07/xml/TEST-cn.agentplatform.gateway.application.PublishedMetadataClientTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-proxy10",
+          "number": 10,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/xml/TEST-cn.agentplatform.gateway.application.PublishedMetadataClientTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.gateway.application.PublishedMetadataClientTest",
+      "name": "configuredOriginAndCodeCannotBecomeUserSelectedUrls",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/PublishedMetadataClientTest.java",
+        "bytes": 14649,
+        "sha256": "5636edbdacee44e852a1d96f531b160f509c1ab132163ffad848e8e6f9535717"
+      },
+      "currentMethodSha256": "9e9741c69c9fe79e181b65972bec9b064f6e080a9b1850945ddb408b9a3f86c2",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-proxy10",
+        "number": 10,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/xml/TEST-cn.agentplatform.gateway.application.PublishedMetadataClientTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/source.json",
+          "bytes": 77227,
+          "sha256": "921b9deb2eeb14274e0277f2e541889b02be1af116e98e986fc109a9b64fdad3"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/source/platform-gateway/src/test/java/cn/agentplatform/gateway/application/PublishedMetadataClientTest.java",
+          "bytes": 10763,
+          "sha256": "16e0c5b47cb6077a51f0e481a394fc2b8a9cc260ae8e4d0fdaa4f55468b83f3f"
+        },
+        "methodSha256": "7738be3bd566fa0e2816c81014e73bec67c020d00a26e0d0410ced8c94c12cd7"
+      },
+      "methodBytesEqual": false,
+      "whitespaceOnlyMethodDifference": true,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-proxy07",
+          "number": 7,
+          "status": "error",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy07/xml/TEST-cn.agentplatform.gateway.application.PublishedMetadataClientTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-proxy10",
+          "number": 10,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/xml/TEST-cn.agentplatform.gateway.application.PublishedMetadataClientTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.gateway.application.PublishedMetadataClientTest",
+      "name": "expiredOriginalSourceCannotAcquireMainGrantAfterLookup",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/PublishedMetadataClientTest.java",
+        "bytes": 14649,
+        "sha256": "5636edbdacee44e852a1d96f531b160f509c1ab132163ffad848e8e6f9535717"
+      },
+      "currentMethodSha256": "4128dbd875758ccb68e376391b32d56c08869db5e5c542ba8bcf245ec8115e17",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-proxy10",
+        "number": 10,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/xml/TEST-cn.agentplatform.gateway.application.PublishedMetadataClientTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/source.json",
+          "bytes": 77227,
+          "sha256": "921b9deb2eeb14274e0277f2e541889b02be1af116e98e986fc109a9b64fdad3"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/source/platform-gateway/src/test/java/cn/agentplatform/gateway/application/PublishedMetadataClientTest.java",
+          "bytes": 10763,
+          "sha256": "16e0c5b47cb6077a51f0e481a394fc2b8a9cc260ae8e4d0fdaa4f55468b83f3f"
+        },
+        "methodSha256": "6b8a9d8a1ac5303ddb959b3b19682e394105ba47bcf0911e3eb9056f9bfe6589"
+      },
+      "methodBytesEqual": false,
+      "whitespaceOnlyMethodDifference": true,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-proxy07",
+          "number": 7,
+          "status": "error",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy07/xml/TEST-cn.agentplatform.gateway.application.PublishedMetadataClientTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-proxy10",
+          "number": 10,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/xml/TEST-cn.agentplatform.gateway.application.PublishedMetadataClientTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.gateway.application.PublishedMetadataClientTest",
+      "name": "overflowAndExplicitCancelCloseTheActualBodySubscription",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/PublishedMetadataClientTest.java",
+        "bytes": 14649,
+        "sha256": "5636edbdacee44e852a1d96f531b160f509c1ab132163ffad848e8e6f9535717"
+      },
+      "currentMethodSha256": "c8ba02f9b5aee55ea75e95895d8d5f0b5b2116a5c7eedd5d69f2501bbcd9e27b",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-proxy10",
+        "number": 10,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/xml/TEST-cn.agentplatform.gateway.application.PublishedMetadataClientTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/source.json",
+          "bytes": 77227,
+          "sha256": "921b9deb2eeb14274e0277f2e541889b02be1af116e98e986fc109a9b64fdad3"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/source/platform-gateway/src/test/java/cn/agentplatform/gateway/application/PublishedMetadataClientTest.java",
+          "bytes": 10763,
+          "sha256": "16e0c5b47cb6077a51f0e481a394fc2b8a9cc260ae8e4d0fdaa4f55468b83f3f"
+        },
+        "methodSha256": "c8ba02f9b5aee55ea75e95895d8d5f0b5b2116a5c7eedd5d69f2501bbcd9e27b"
+      },
+      "methodBytesEqual": true,
+      "whitespaceOnlyMethodDifference": true,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-proxy07",
+          "number": 7,
+          "status": "error",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy07/xml/TEST-cn.agentplatform.gateway.application.PublishedMetadataClientTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-proxy10",
+          "number": 10,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/xml/TEST-cn.agentplatform.gateway.application.PublishedMetadataClientTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.gateway.application.PublishedMetadataClientTest",
+      "name": "closeIsTerminalAndNoCrossSubjectResultIsCached",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/PublishedMetadataClientTest.java",
+        "bytes": 14649,
+        "sha256": "5636edbdacee44e852a1d96f531b160f509c1ab132163ffad848e8e6f9535717"
+      },
+      "currentMethodSha256": "2b57accedbb021d88293eeafe1b9a319a75a70290f22baca341a53fe5d2ac70f",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-final21",
+        "number": 21,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-final21/xml/TEST-cn.agentplatform.gateway.application.PublishedMetadataClientTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-final21/source.json",
+          "bytes": 77682,
+          "sha256": "a97bc73262fc964fab93b7ea20005393969af8b13f74cb1d8ae5909490779fac"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-final21/source/platform-gateway/src/test/java/cn/agentplatform/gateway/application/PublishedMetadataClientTest.java",
+          "bytes": 10763,
+          "sha256": "16e0c5b47cb6077a51f0e481a394fc2b8a9cc260ae8e4d0fdaa4f55468b83f3f"
+        },
+        "methodSha256": "1a4dbc1408a478653c041ef41e6520b4410d8b6555a229b2e1aca4541c0e2197"
+      },
+      "methodBytesEqual": false,
+      "whitespaceOnlyMethodDifference": true,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-proxy07",
+          "number": 7,
+          "status": "error",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy07/xml/TEST-cn.agentplatform.gateway.application.PublishedMetadataClientTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-proxy10",
+          "number": 10,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/xml/TEST-cn.agentplatform.gateway.application.PublishedMetadataClientTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-final21",
+          "number": 21,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-final21/xml/TEST-cn.agentplatform.gateway.application.PublishedMetadataClientTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.gateway.application.PublishedMetadataClientTest",
+      "name": "fullBodyDeadlineCancelsARealStalledHttpResponse",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/PublishedMetadataClientTest.java",
+        "bytes": 14649,
+        "sha256": "5636edbdacee44e852a1d96f531b160f509c1ab132163ffad848e8e6f9535717"
+      },
+      "currentMethodSha256": "07c7e6a367cb50e62732dd99b6f62967660df0a818daa4cf13a4ebca7ab13188",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-lifecycle19",
+        "number": 19,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-lifecycle19/xml/TEST-cn.agentplatform.gateway.application.PublishedMetadataClientTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-lifecycle19/source.json",
+          "bytes": 77682,
+          "sha256": "c8f9f043c67a8200d9f14630df4029592cccfc34a273a4ae7498cf6372a3e0a0"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-lifecycle19/source/platform-gateway/src/test/java/cn/agentplatform/gateway/application/PublishedMetadataClientTest.java",
+          "bytes": 10763,
+          "sha256": "16e0c5b47cb6077a51f0e481a394fc2b8a9cc260ae8e4d0fdaa4f55468b83f3f"
+        },
+        "methodSha256": "ae509e5223d8cbd99f16219507c8148ef8f9ac3bed8fb10a2342b9b2b097e903"
+      },
+      "methodBytesEqual": false,
+      "whitespaceOnlyMethodDifference": true,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-proxy07",
+          "number": 7,
+          "status": "error",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy07/xml/TEST-cn.agentplatform.gateway.application.PublishedMetadataClientTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-proxy10",
+          "number": 10,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/xml/TEST-cn.agentplatform.gateway.application.PublishedMetadataClientTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-lifecycle19",
+          "number": 19,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-lifecycle19/xml/TEST-cn.agentplatform.gateway.application.PublishedMetadataClientTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.gateway.application.PublishedMetadataClientTest",
+      "name": "missingDuplicateTrailingAndOutOfRangeFieldsCannotBecomeAResource",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/PublishedMetadataClientTest.java",
+        "bytes": 14649,
+        "sha256": "5636edbdacee44e852a1d96f531b160f509c1ab132163ffad848e8e6f9535717"
+      },
+      "currentMethodSha256": "675a53d58e2290bf75efe099f8c93afe0df5444e38565736820bb27ee27ef4e8",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-proxy10",
+        "number": 10,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/xml/TEST-cn.agentplatform.gateway.application.PublishedMetadataClientTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/source.json",
+          "bytes": 77227,
+          "sha256": "921b9deb2eeb14274e0277f2e541889b02be1af116e98e986fc109a9b64fdad3"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/source/platform-gateway/src/test/java/cn/agentplatform/gateway/application/PublishedMetadataClientTest.java",
+          "bytes": 10763,
+          "sha256": "16e0c5b47cb6077a51f0e481a394fc2b8a9cc260ae8e4d0fdaa4f55468b83f3f"
+        },
+        "methodSha256": "94d7fd31408b3e904c00c2096781446e1e8a96d1682a20e812506c9eb9ec89e0"
+      },
+      "methodBytesEqual": false,
+      "whitespaceOnlyMethodDifference": true,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-proxy07",
+          "number": 7,
+          "status": "error",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy07/xml/TEST-cn.agentplatform.gateway.application.PublishedMetadataClientTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-proxy10",
+          "number": 10,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/xml/TEST-cn.agentplatform.gateway.application.PublishedMetadataClientTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    },
+    {
+      "class": "cn.agentplatform.gateway.application.PublishedMetadataClientTest",
+      "name": "subjectMismatchIsRejectedBeforeAnyAppSend",
+      "testFile": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/PublishedMetadataClientTest.java",
+        "bytes": 14649,
+        "sha256": "5636edbdacee44e852a1d96f531b160f509c1ab132163ffad848e8e6f9535717"
+      },
+      "currentMethodSha256": "e32e53832a7b904debd2b4ce484f588108759162d9b22cba43782f82197d63d0",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-proxy10",
+        "number": 10,
+        "status": "passed",
+        "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/xml/TEST-cn.agentplatform.gateway.application.PublishedMetadataClientTest.xml",
+        "stageSource": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/source.json",
+          "bytes": 77227,
+          "sha256": "921b9deb2eeb14274e0277f2e541889b02be1af116e98e986fc109a9b64fdad3"
+        },
+        "testFile": {
+          "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/source/platform-gateway/src/test/java/cn/agentplatform/gateway/application/PublishedMetadataClientTest.java",
+          "bytes": 10763,
+          "sha256": "16e0c5b47cb6077a51f0e481a394fc2b8a9cc260ae8e4d0fdaa4f55468b83f3f"
+        },
+        "methodSha256": "64f3586b74021b20cc849942192af65c6bd8fdb3a7fcb181de1bac11ef96ef8d"
+      },
+      "methodBytesEqual": false,
+      "whitespaceOnlyMethodDifference": true,
+      "executionHistory": [
+        {
+          "stage": "iam-stage-n4b2-proxy07",
+          "number": 7,
+          "status": "error",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy07/xml/TEST-cn.agentplatform.gateway.application.PublishedMetadataClientTest.xml"
+        },
+        {
+          "stage": "iam-stage-n4b2-proxy10",
+          "number": 10,
+          "status": "passed",
+          "xml": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/iam-stage-n4b2-proxy10/xml/TEST-cn.agentplatform.gateway.application.PublishedMetadataClientTest.xml"
+        }
+      ],
+      "applicability": "Later source changes are scoped below; no claim that every current source byte was executed together in one stage."
+    }
+  ],
+  "changedMethodsSinceLastGreen": [
+    "rawHttpWireDiagnostic",
+    "rawEmptyQueryIsRejected",
+    "incompletePrefixUsesOneTotalBudgetWithoutStartingAnyUpstream",
+    "slowResponseReaderClosesItselfBeforeOwnedResourcesAreChecked",
+    "realUndeclaredChunkedTrailersCannotEscapeFullBodyValidation"
+  ],
+  "applicabilityReview": [
+    {
+      "stage": "proxy07 common3",
+      "reason": "Common negative cases unchanged; later common guard changes exercised by actual gateway installed/proof/startup cases18/19/21/22. No fake gateway/proof mint test API."
+    },
+    {
+      "stage": "proxy10 metadata10",
+      "reason": "All original10 assertions retained and first green10, two impacted actual-transport/ticket cases19 and close21 specifically rechecked. LimitedBody subscription test remains old Flow API semantics only, not Apache cancellation evidence."
+    },
+    {
+      "stage": "proxy16/boundary18/lifecycle19/final21/final22",
+      "reason": "Actual callback self-interrupt fix16; strict syntax/JSON21, complete-buffer/write verification19, close/deadline races19/21/22 independently exercised. Later new tests/source formatting do not add HTTP retries or change allowlisted ingress scope."
+    },
+    {
+      "stage": "boundary18/final21/final22/trailer-green25",
+      "reason": "PG cases5 first green18; actual material/nonscope cases21/22 and updated same-origin/four-distinct-grant positive22. Header/trailer transport changed25 so true full-chain positive explicitly repeated25. Startup18 UOE was not guard proof; corrected startup case19 is last valid."
+    },
+    {
+      "stage": "line-green28",
+      "reason": "Connection maxLineLength -1 to8192 hardening after real9000byte chunk-extension red26. Ordinary multi-header/chunked positive rechecked28. Root explicitly approved no PG25 rerun: its recorded short-line chunked frames unaffected by new bound. Trailer helper extraction preserves fixture semantics; line hardening only narrows accepted framing."
+    },
+    {
+      "stage": "engine-fixture-compile-setup03/04",
+      "reason": "PG executed setup03 compiled fixture; later AOSP formatting changes source/debug line positions only. Final compile04 rebuilds current formatted fixture bytes into frozen target with0tests; not represented as a new behavior green."
+    }
+  ],
+  "rerunPolicy": "No common179/N4a53/B1 historical49/old engine20/N1N2N3 PG/full962 rerun; only new or named affected cases. Stage27 did not apply line setter because CRLF match missed LF; retained actual1pass1fail before actualsetter28.",
+  "methodReview": [
+    {
+      "name": "rawHttpWireDiagnostic",
+      "reason": "Fixed AOSP formatter split concatenated compile-time string literals; numeric durations, wire bytes, assertions and cleanup unchanged. Formatting stage record retained; no new business behavior."
+    },
+    {
+      "name": "rawEmptyQueryIsRejected",
+      "reason": "Fixed AOSP formatter split concatenated compile-time string literals; numeric durations, wire bytes, assertions and cleanup unchanged. Formatting stage record retained; no new business behavior."
+    },
+    {
+      "name": "incompletePrefixUsesOneTotalBudgetWithoutStartingAnyUpstream",
+      "reason": "Fixed AOSP formatter split concatenated compile-time string literals; numeric durations, wire bytes, assertions and cleanup unchanged. Formatting stage record retained; no new business behavior."
+    },
+    {
+      "name": "slowResponseReaderClosesItselfBeforeOwnedResourcesAreChecked",
+      "reason": "Fixed AOSP formatter split concatenated compile-time string literals; numeric durations, wire bytes, assertions and cleanup unchanged. Formatting stage record retained; no new business behavior."
+    },
+    {
+      "name": "realUndeclaredChunkedTrailersCannotEscapeFullBodyValidation",
+      "reason": "Private finite raw receiver extracted unchanged header/body bytes into helper; same trailer literal and same PlatformException expectation as green25. New9000 chunk-extension helper call actually red26/green28. No claim extracted trailer invocation reran after25."
+    }
+  ]
+}

@@ -1,0 +1,141 @@
+
+ RUN  v4.1.12 G:/207/项目/算法重组工具/代码/agent-platform/web
+
+ ❯ tests/portal-auth.test.ts (15 tests | 15 failed) 10ms
+   × defaults to portal, allows only explicit dev, and rejects unknown modes 3ms
+   × validates explicit host provider and preserves method this 1ms
+   × missing provider shows portal entry without fetching dev token 1ms
+   × session HTTP 401 never installs a candidate or historical roles 0ms
+   × session HTTP 403 never installs a candidate or historical roles 0ms
+   × session HTTP 503 never installs a candidate or historical roles 0ms
+   × rejects malformed/expired exact session contract {"tenantId":"tenant","principalId":"person","roles":[],"expiresAt":"bad"} 0ms
+   × rejects malformed/expired exact session contract {"tenantId":"tenant","principalId":"person","roles":[],"expiresAt":"2020-01-01T00:00:00Z"} 0ms
+   × rejects malformed/expired exact session contract {"tenantId":"tenant","principalId":"person","roles":[],"expiresAt":"2026-10-20T20:13:33.935Z","extra":"unexpected"} 0ms
+   × rejects malformed/expired exact session contract {"tenantId":"tenant","principalId":"person","roles":[""],"expiresAt":"2026-10-20T20:13:33.936Z"} 0ms
+   × rejects malformed/expired exact session contract {"tenantId":"","principalId":"person","roles":[],"expiresAt":"2026-10-20T20:13:33.936Z"} 0ms
+   × same token reconnect creates a new generation and aborts old API/body and old API factory 0ms
+   × late provider and late session cannot replace a later connected identity 0ms
+   × expiry and logout invalidate without reconnecting, disposal unsubscribes and releases timers 1ms
+   × segments a far future deadline and rechecks actual time before expiring 0ms
+
+ Test Files  1 failed (1)
+      Tests  15 failed (15)
+   Start at  04:12:33
+   Duration  280ms (transform 46ms, setup 0ms, import 159ms, tests 10ms, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 15 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/portal-auth.test.ts > defaults to portal, allows only explicit dev, and rejects unknown modes
+Error: Portal session not implemented
+ ❯ portalMode shared/portal-auth.ts:1:70
+      1| export function portalMode(_mode?: string): 'portal' | 'dev' { throw n…
+       |                                                                      ^
+      2| export function trustedPortal(_host: any): any { throw new Error('Port…
+      3| export function createPortalSession(_auth: any, _provider: any, _optio…
+ ❯ tests/portal-auth.test.ts:11:9
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/15]⎯
+
+ FAIL  tests/portal-auth.test.ts > validates explicit host provider and preserves method this
+Error: Portal session not implemented
+ ❯ trustedPortal shared/portal-auth.ts:2:56
+      1| export function portalMode(_mode?: string): 'portal' | 'dev' { throw n…
+      2| export function trustedPortal(_host: any): any { throw new Error('Port…
+       |                                                        ^
+      3| export function createPortalSession(_auth: any, _provider: any, _optio…
+      4|
+ ❯ tests/portal-auth.test.ts:16:40
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/15]⎯
+
+ FAIL  tests/portal-auth.test.ts > missing provider shows portal entry without fetching dev token
+Error: Portal session not implemented
+ ❯ createPortalSession shared/portal-auth.ts:3:93
+      1| export function portalMode(_mode?: string): 'portal' | 'dev' { throw n…
+      2| export function trustedPortal(_host: any): any { throw new Error('Port…
+      3| export function createPortalSession(_auth: any, _provider: any, _optio…
+       |                                                                                             ^
+      4|
+ ❯ tests/portal-auth.test.ts:21:54
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/15]⎯
+
+ FAIL  tests/portal-auth.test.ts > session HTTP 401 never installs a candidate or historical roles
+ FAIL  tests/portal-auth.test.ts > session HTTP 403 never installs a candidate or historical roles
+ FAIL  tests/portal-auth.test.ts > session HTTP 503 never installs a candidate or historical roles
+Error: Portal session not implemented
+ ❯ createPortalSession shared/portal-auth.ts:3:93
+      1| export function portalMode(_mode?: string): 'portal' | 'dev' { throw n…
+      2| export function trustedPortal(_host: any): any { throw new Error('Port…
+      3| export function createPortalSession(_auth: any, _provider: any, _optio…
+       |                                                                                             ^
+      4|
+ ❯ tests/portal-auth.test.ts:26:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/15]⎯
+
+ FAIL  tests/portal-auth.test.ts > rejects malformed/expired exact session contract {"tenantId":"tenant","principalId":"person","roles":[],"expiresAt":"bad"}
+ FAIL  tests/portal-auth.test.ts > rejects malformed/expired exact session contract {"tenantId":"tenant","principalId":"person","roles":[],"expiresAt":"2020-01-01T00:00:00Z"}
+ FAIL  tests/portal-auth.test.ts > rejects malformed/expired exact session contract {"tenantId":"tenant","principalId":"person","roles":[],"expiresAt":"2026-10-20T20:13:33.935Z","extra":"unexpected"}
+ FAIL  tests/portal-auth.test.ts > rejects malformed/expired exact session contract {"tenantId":"tenant","principalId":"person","roles":[""],"expiresAt":"2026-10-20T20:13:33.936Z"}
+ FAIL  tests/portal-auth.test.ts > rejects malformed/expired exact session contract {"tenantId":"","principalId":"person","roles":[],"expiresAt":"2026-10-20T20:13:33.936Z"}
+Error: Portal session not implemented
+ ❯ createPortalSession shared/portal-auth.ts:3:93
+      1| export function portalMode(_mode?: string): 'portal' | 'dev' { throw n…
+      2| export function trustedPortal(_host: any): any { throw new Error('Port…
+      3| export function createPortalSession(_auth: any, _provider: any, _optio…
+       |                                                                                             ^
+      4|
+ ❯ tests/portal-auth.test.ts:34:30
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/15]⎯
+
+ FAIL  tests/portal-auth.test.ts > same token reconnect creates a new generation and aborts old API/body and old API factory
+Error: Portal session not implemented
+ ❯ createPortalSession shared/portal-auth.ts:3:93
+      1| export function portalMode(_mode?: string): 'portal' | 'dev' { throw n…
+      2| export function trustedPortal(_host: any): any { throw new Error('Port…
+      3| export function createPortalSession(_auth: any, _provider: any, _optio…
+       |                                                                                             ^
+      4|
+ ❯ tests/portal-auth.test.ts:38:30
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/15]⎯
+
+ FAIL  tests/portal-auth.test.ts > late provider and late session cannot replace a later connected identity
+Error: Portal session not implemented
+ ❯ createPortalSession shared/portal-auth.ts:3:93
+      1| export function portalMode(_mode?: string): 'portal' | 'dev' { throw n…
+      2| export function trustedPortal(_host: any): any { throw new Error('Port…
+      3| export function createPortalSession(_auth: any, _provider: any, _optio…
+       |                                                                                             ^
+      4|
+ ❯ tests/portal-auth.test.ts:47:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/15]⎯
+
+ FAIL  tests/portal-auth.test.ts > expiry and logout invalidate without reconnecting, disposal unsubscribes and releases timers
+Error: Portal session not implemented
+ ❯ createPortalSession shared/portal-auth.ts:3:93
+      1| export function portalMode(_mode?: string): 'portal' | 'dev' { throw n…
+      2| export function trustedPortal(_host: any): any { throw new Error('Port…
+      3| export function createPortalSession(_auth: any, _provider: any, _optio…
+       |                                                                                             ^
+      4|
+ ❯ tests/portal-auth.test.ts:54:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/15]⎯
+
+ FAIL  tests/portal-auth.test.ts > segments a far future deadline and rechecks actual time before expiring
+Error: Portal session not implemented
+ ❯ createPortalSession shared/portal-auth.ts:3:93
+      1| export function portalMode(_mode?: string): 'portal' | 'dev' { throw n…
+      2| export function trustedPortal(_host: any): any { throw new Error('Port…
+      3| export function createPortalSession(_auth: any, _provider: any, _optio…
+       |                                                                                             ^
+      4|
+ ❯ tests/portal-auth.test.ts:61:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/15]⎯
+

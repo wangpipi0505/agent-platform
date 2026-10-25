@@ -1,0 +1,1790 @@
+diff --git a/web/admin/src/App.vue b/web/admin/src/App.vue
+index 7e01bec674f5e84a0664a9c7ad2d1ea27dc45cad..e55e54d93c3c4a28c2bdc27d1cabe5ac643ef7e0 100644
+GIT binary patch
+delta 720
+zcmaJ<&ubGw7$w=ZVv5Cs1>=vpSv0$g$rkBFyPcK@mG+=e5B1>1>Fy*Q*vu~Tqfj@i
+zx%JZOVL?183VO9TU{M4Q`bT(DFD=bM#EalTablB{2=y{BeD8bjeee68-q+SQw9T2!
+zkYK11VR<7nm%GalV>l!L3cl<x0wcB@a?5se0phxkSrjtlgDMOda&ult7}q^PDIy$L
+zHkdASA;n^c$?25a992O)uGn=ZJWmN(b@jj+nq-_}QnO=hRjnT0o(-<<)t!IvwwuU@
+z!}!Q3u3CkCJVjhk;-<fkmky|y`Rk>=o<;*X1lAD%z^p8Vl+RKcQq%5It>kZwVX^`P
+z>_d*M?o2gA5QXhg?DR|i$pLD2PVlozZQtOMV5^QI6G#VoCqrFNWODL$cDM&?G~|!d
+zzqDh0MmvsVtML7BZZB}lR>+U%4XyVt7UfUp+`vfOr<$IbIF(h2O-+mr$(xrd8Tov2
+zJR?851Bc|-%Xv*6z4ACKU(dyZBi-!*P6cw)3)kMu=EB9n1r|Y~djVt&7<IvsZ|Euy
+zSmuav>;ofG$-$tEeRT(zuNu>F{P%#=WziWYQp@#l1cP}$Nv6izWa+ELvHAZ7TQV80
+u5#*Oc!OfDnz4fxyY;Lc;`Sx~w_r+FgZDZ%b=I*;kJNKTMw*0jCA^HOt(GT4K
+
+delta 799
+zcmY*XO-vI(6iz8<*r*(gVk_df8UaIFK@KXVq%j4FVu?XK8Qs=}Zfv&bZfl4k6rmV_
+zLU6<g0;Ww$8WpK-8k)8%2^#e#2M=C6v9ntahMOl3PPbU<Y2M%W-uJyX<3VkBQX6a5
+z9CF^HDW10WGPS_V<zBa^hhYVq<{}|9?s4peaa|4kt+PX3e}mvXcW4$g0g{AU`VfpB
+zzH4-Nxjv(ha(ihU@21=w-ADk?PxKQM*T*_Rx0iMDjE4mr)5EqwW9um$<>g(*f32wd
+z6vG2`Xf<SQM_{nIRA{SUi-eDrf3(6+QYjVIYk?Maf#X8uX-%=F8X6iZG&RDdh6B3@
+zo4cLnII4#>3b)Q%HHCht(e$6cZZ6(knE!r3r!Dk<wY)4U^vByCl)(OWJ*>Acnt;#1
+zbT^U5cDR$k>83cYiB!3h7OWZoGe@gxVTa=&{5-w?q_x#{r4w{qwsyAIueO7=70^{@
+ztT&r(Grk-GV_bDG7SSEG$TP{zkSK{zUKmEHBwC3`;vAZcnN6-b3jqiEz<`vRkfR~A
+zFeW7?<WWB^M~{+da%w9*j$$KHVit{t<oKWx9aGZJ<cTLz0%w;qv7yZJ^oD;hYcCJW
+z@v)qZfhaMg%ns)#Z}=aoIxs6!Z=N9SHaNUI?_uG$S9<tmt?XR(mMpnl3V<cE`T_+a
+zDDBU-+~J)EZda-*$~$s(%1jE0)5_C#ia3P=g0l1hgEPt3Qc6@JQ91Y)i;_|SX>}eg
+zJx6m<BtrB!xEYFX&WF)R00%K!l_pGIKLg*tDL-M_UVoN(e#d6KYjwWQK;!Qz{IH)b
+Zf%C3Xcr(1OZ0DZ%`&Ly6U$1@Y{R>H@TJ-<`
+
+diff --git a/web/admin/src/PortalShell.vue b/web/admin/src/PortalShell.vue
+new file mode 100644
+index 0000000..fae4960
+--- /dev/null
++++ b/web/admin/src/PortalShell.vue
+@@ -0,0 +1,28 @@
++<script setup lang="ts">
++import {onMounted,onBeforeUnmount} from 'vue';
++import App from './App.vue';
++import {useAuth} from '../../shared/api';
++import {createPortalSession,type PortalTokenProvider} from '../../shared/portal-auth';
++const props=defineProps<{provider?:PortalTokenProvider;mode:'portal'|'dev';configurationError?:string}>();
++const auth=useAuth();
++const portal=createPortalSession(auth,props.provider,{mode:props.mode});
++onMounted(()=>{if(!props.configurationError&&props.mode==='portal')void portal.connect();});
++onBeforeUnmount(portal.dispose);
++</script>
++<template>
++  <App v-if="auth.token" :key="auth.generation" />
++  <div v-else class="login" data-testid="portal-entry">
++    <section class="panel portal-entry">
++      <div class="muted">AGENT PLATFORM · V1.2</div>
++      <h1>智能体构建工作台</h1>
++      <p class="muted">从模型与技能出发，将业务流程编排为可调试、可评测、可发布的智能体。</p>
++      <p :role="auth.connection==='connecting'?'status':'alert'" data-testid="portal-notice">{{configurationError||auth.notice||(mode==='dev'?'开发登录仅用于显式配置的隔离开发环境':'正在连接门户会话…')}}</p>
++      <el-button v-if="!configurationError && (mode==='dev'||auth.connection!=='missing')" type="primary" :aria-busy="auth.connection==='connecting'" @click="portal.connect" data-testid="portal-reconnect">{{mode==='dev'?'进入开发工作台':'重新连接'}}</el-button>
++      <p class="muted">身份变化会清除本页未保存内容。</p>
++    </section>
++  </div>
++</template>
++<style scoped>
++.portal-entry{width:min(32rem,calc(100vw - 2rem));overflow-wrap:anywhere}
++.portal-entry h1{margin-top:1rem}
++</style>
+diff --git a/web/admin/src/RunDetail.vue b/web/admin/src/RunDetail.vue
+index 543add7..45f38cc 100644
+--- a/web/admin/src/RunDetail.vue
++++ b/web/admin/src/RunDetail.vue
+@@ -1,144 +1,156 @@
+ <script setup lang="ts">
+ import { ref, onMounted, onBeforeUnmount } from "vue";
+-import { useAuth, createApi, useApi } from "../../shared/api";
+-import { terminal, streamEvents } from "../../debug-panel/events";
++import { useAuth, useApi } from "../../shared/api";
++import { terminal, streamEvents,authorityFailure } from "../../debug-panel/events";
+ import Artifacts from '../../shared/Artifacts.vue';
+ import { outputWarning } from '../../shared/content';
+ const props = defineProps<{ runId: string }>();
+ const api = useApi();
++const auth=useAuth(),session=auth.snapshot();
++const blocked=ref(false);
++const current=()=>!stopped&&session.current();
+ const value = ref<any>({});
+ const error = ref("");
+ const active = ref("summary");
+ const selected = ref<any>();
+ const replay = ref(0);
+ let stopped = false;
+ let controller: AbortController;
+ let timer: ReturnType<typeof setTimeout>;
+ async function refresh() {
+   value.value = await api("/admin/runs/" + encodeURIComponent(props.runId));
+ }
+ async function connect() {
++  if(!current()||blocked.value)return;
+   try {
+     await refresh();
+-    if (terminal(value.value.status)) return;
++    if (!current()||blocked.value||terminal(value.value.status)) return;
+     controller = new AbortController();
+     await streamEvents(
+       "/admin/runs/" + encodeURIComponent(props.runId) + "/events",
+       () => useAuth().token,
+       value.value.eventsWatermark || 0,
+-      () => void refresh(),
++      () => {if(current()&&!blocked.value)void refresh().catch(observationError);},
+       controller.signal,
+       () => {
+-        useAuth().token = "";
++        auth.invalidate(session.generation);
+       },
++      session,
+     );
+   } catch (e: any) {
+-    if (e.name !== "AbortError") error.value = e.message;
++    observationError(e);
+   } finally {
+-    if (!stopped && !terminal(value.value.status))
++    if (current()&&!blocked.value && !terminal(value.value.status))
+       timer = setTimeout(connect, 2000);
+   }
+ }
++function observationError(e:any){
++  if(!current()||e.name==='AbortError')return;
++  if(authorityFailure(e)){blocked.value=true;controller?.abort();clearTimeout(timer);}
++  error.value=e.message;
++}
++function reconnect(){if(!current())return;blocked.value=false;error.value='';void connect();}
+ async function cancel() {
+   if (!confirm("确认取消本次正式运行？已产生的外部效果不会自动撤销。")) return;
+   try {
+     await api(
+       "/admin/runs/" + encodeURIComponent(props.runId) + "/cancel",
+       "POST",
+     );
+     await refresh();
+   } catch (e: any) {
+     error.value = e.message;
+   }
+ }
+ onMounted(connect);
+ onBeforeUnmount(() => {
+   stopped = true;
+   controller?.abort();
+   clearTimeout(timer);
+ });
+ </script>
+ <template>
+   <div v-if="error" class="error" role="alert">{{ error }}</div>
++  <el-button v-if="blocked" @click="reconnect">重新连接观察</el-button>
+   <div class="panel">
+     <div class="row">
+       <div>
+         <h2>{{ runId }}</h2>
+         <span :class="['status', value.status]">{{ value.status }}</span>
+       </div>
+       <el-button
+         v-if="value.status && !terminal(value.status)"
+         type="danger"
+         plain
+         @click="cancel"
+         >取消运行</el-button
+       >
+     </div>
+     <el-tabs v-model="active"
+       ><el-tab-pane label="节点摘要" name="summary"
+         ><el-table :data="value.nodes || []" @row-click="selected = $event"
+           ><el-table-column prop="nodeDefId" label="节点" /><el-table-column
+             prop="node_type"
+             label="类型" /><el-table-column label="状态"
+             ><template #default="{ row }"
+               ><span :class="['status', row.status]">{{
+                 row.status
+               }}</span></template
+             ></el-table-column
+           ><el-table-column
+             prop="started_at"
+             label="开始时间" /><el-table-column
+             prop="ended_at"
+             label="结束时间"
+         /></el-table>
+         <h2>运行输出</h2>
+         <p v-if="outputWarning(value.output)" class="output-warning" role="status">{{ outputWarning(value.output) }}</p>
+         <Artifacts :files="value.fileRefs||value.output?.fileRefs||[]" :run-id="runId" admin/>
+         <pre>{{
+           JSON.stringify(
+             value.output ??
+               (terminal(value.status)
+                 ? "运行完成，未返回输出"
+                 : "运行尚无输出"),
+             null,
+             2,
+           )
+         }}</pre>
+         <pre
+           v-if="
+             value.error &&
+             (typeof value.error === 'string' || Object.keys(value.error).length)
+           "
+           class="error"
+           >{{ JSON.stringify(value.error, null, 2) }}</pre></el-tab-pane
+       ><el-tab-pane label="版本与依赖" name="versions">
+         <pre>{{ JSON.stringify(value.versionRefs || {}, null, 2) }}</pre>
+         <p class="muted">
+           本体调用版本：{{
+             (value.versionRefs?.ontologyVersions || value.versionRefs?.ontology)
+               ?.length
+               ? "见以上版本链"
+               : "不适用（服务端未报告本体调用）"
+           }}
+         </p></el-tab-pane
+       ><el-tab-pane label="事件回放" name="replay"
+         ><p class="muted">历史事件来自持久化执行记录，不会重新执行技能。</p>
+         <el-slider
+           v-model="replay"
+           :max="Math.max((value.events?.length || 1) - 1, 0)"
+           :show-tooltip="false"
+         />
+         <pre>{{
+           JSON.stringify(value.events?.[replay] || "暂无事件", null, 2)
+         }}</pre>
+       </el-tab-pane></el-tabs
+     ><el-collapse v-if="selected"
+       ><el-collapse-item
+         :title="'节点检查器 · ' + selected.nodeDefId"
+         name="node"
+       >
+         <pre>{{ JSON.stringify(selected, null, 2) }}</pre>
+       </el-collapse-item></el-collapse
+     >
+   </div>
+ </template>
+diff --git a/web/admin/src/main.ts b/web/admin/src/main.ts
+index 14be10e..ba60303 100644
+--- a/web/admin/src/main.ts
++++ b/web/admin/src/main.ts
+@@ -1,10 +1,15 @@
+ import { installPermissions } from "../../shared/permission";
+ import { createApp } from "vue";
+ import { createPinia } from "pinia";
+ import ElementPlus from "element-plus";
+ import "element-plus/dist/index.css";
+ import "../../shared/tokens.css";
+-import App from "./App.vue";
+-const app = createApp(App).use(createPinia()).use(ElementPlus);
++import PortalShell from "./PortalShell.vue";
++import {portalMode,trustedPortal} from '../../shared/portal-auth';
++// Capture the host's explicit provider before mounting, without waiting for its ticket.
++const provider=trustedPortal(window as Window & {agentPlatformPortal?:unknown});
++let mode:'portal'|'dev'='portal',configurationError='';
++try{mode=portalMode(import.meta.env.VITE_AUTH_MODE);}catch(e:any){configurationError=e.message;}
++const app = createApp(PortalShell,{provider,mode,configurationError}).use(createPinia()).use(ElementPlus);
+ installPermissions(app);
+ app.mount("#app");
+diff --git a/web/debug-panel/DebugPanel.vue b/web/debug-panel/DebugPanel.vue
+index e0c5948..d6f4f2b 100644
+--- a/web/debug-panel/DebugPanel.vue
++++ b/web/debug-panel/DebugPanel.vue
+@@ -1,418 +1,428 @@
+ <script setup lang="ts">
+ import CodeViewer from "../shared/CodeViewer.vue";
+ import FlowDesigner from "../flow-designer/FlowDesigner.vue";
+ import NamedInputs from './NamedInputs.vue';
+ import { ref, watch, onBeforeUnmount } from "vue";
+ import { resumePayload } from "./control";
+ import { mockRows, mockRules, type MockRow } from "./mock-rules";
+-import { streamEvents, applyEvent, terminal, type EventState } from "./events";
++import { streamEvents, applyEvent, terminal, authorityFailure, type EventState } from "./events";
+ import { useAuth, useApi } from "../shared/api";
+ const props = defineProps<{ appCode: string }>();
+ const auth = useAuth();
+ const api = useApi();
++const session=auth.snapshot();
++const observationStopped=ref(false);
+ const inputForm = ref<InstanceType<typeof NamedInputs>>();
+ const draft = ref<any>();
+ const draftLoading = ref(false);
+ let draftSequence = 0;
+ let draftRequest = new AbortController();
+ const flow = ref<any>();
+ const inspector = ref<any>();
+ const mode = ref("FULL");
+ const breakpoints = ref<string[]>([]);
+ const mocks = ref<MockRow[]>([]);
+ const controlsBase = ref<any>({});
+ const controlsRevision = ref<number>();
+ async function controls(save = false) {
+   const sequence = draftSequence;
+   busy.value = true;
+   error.value = "";
+   try {
+     if (save && controlsRevision.value === undefined)
+       throw Error("请先载入当前控制版本");
+     const data = await api(
+       "/admin/debug-runs/" + runId.value + "/controls",
+       save ? "PUT" : "GET",
+       save
+         ? {
+             ...controlsBase.value,
+             expectedRevision: controlsRevision.value,
+             breakpoints: breakpoints.value,
+             mocks: mockRules(mocks.value),
+           }
+         : undefined,
+     );
+     if (disposed || sequence !== draftSequence) return;
+     controlsRevision.value = data.revision;
+     controlsBase.value = data.controls;
+     breakpoints.value = data.controls.breakpoints || [];
+     mocks.value = mockRows(data.controls.mocks || []);
+   } catch (e: any) {
+     if (disposed || sequence !== draftSequence) return;
+     controlsRevision.value = undefined;
+     error.value = e.message;
+   } finally {
+     if (!disposed && sequence === draftSequence) busy.value = false;
+   }
+ }
+ const runId = ref("");
+ const snapshot = ref<any>({});
+ const state = ref<EventState>({ watermark: 0, events: [], nodes: {} });
+ const error = ref("");
+ const busy = ref(false);
+ const connected = ref(false);
+ let controller: AbortController;
+ let timer: ReturnType<typeof setTimeout>;
+ let disposed = false;
+ let retry = 0;
+ async function restore() {
+   const id = runId.value, sequence = draftSequence;
+   const result = await api(`/admin/debug-runs/${id}/status`);
+   if (disposed || sequence !== draftSequence || id !== runId.value) return;
+   snapshot.value = result;
+   state.value = {
+     watermark: snapshot.value.eventsWatermark || 0,
+     events: snapshot.value.events || [],
+     nodes: Object.fromEntries(
+       (snapshot.value.nodes || []).map((n: any) => [
+         n.nodeDefId || n.id,
+         n.status,
+       ]),
+     ),
+   };
+ }
+ async function connect() {
+-  if (disposed || !runId.value) return;
++  if (disposed || !session.current()||observationStopped.value||!runId.value) return;
+   const id = runId.value, sequence = draftSequence;
+-  const current = () => !disposed && sequence === draftSequence && id === runId.value;
++  const current = () => !disposed && session.current()&&sequence === draftSequence && id === runId.value;
+   try {
+     await restore();
+     if (!current() || terminal(snapshot.value.status)) return;
+     controller = new AbortController();
+     connected.value = true;
+     await streamEvents(
+       `/admin/runs/${runId.value}/events`,
+       () => auth.token,
+       state.value.watermark,
+       (e) => {
+         if (!current()) return;
+         const node = snapshot.value.nodes?.find(
+           (n: any) => String(n.nodeInstanceId) === String(e.nodeInstanceId),
+         );
+         state.value = applyEvent(state.value, {
+           ...e,
+           nodeDefId: e.nodeDefId || node?.nodeDefId,
+         });
+         retry = 0;
+         if (
+           e.type === "WAITING_STEP" ||
+           e.type === "WAITING_APPROVAL" ||
+           e.type === "RUN_FINISHED"
+         )
+-          void restore();
++          void restore().catch(observationError);
+       },
+       controller.signal,
+       () => {
+-        if (current()) auth.token = "";
++        if (current()) auth.invalidate(session.generation);
+       },
++      session,
+     );
+   } catch (e: any) {
+-    if (current() && e.name !== "AbortError")
+-      error.value = e.message + "；正在恢复权威状态。";
++    if(current())observationError(e);
+   } finally {
+     if (current()) connected.value = false;
+-    if (current() && !terminal(snapshot.value.status))
++    if (current() && !observationStopped.value&&!terminal(snapshot.value.status))
+       timer = setTimeout(connect, Math.min(30000, 1000 * 2 ** retry++));
+   }
+ }
++function observationError(e:any){
++  if(disposed||!session.current()||e.name==='AbortError')return;
++  if(authorityFailure(e)){observationStopped.value=true;controller?.abort();clearTimeout(timer);}
++  error.value=e.message+(observationStopped.value?'；请手动重新连接观察。':'；正在恢复权威状态。');
++}
++async function refreshStatus(){try{await restore();}catch(e){observationError(e);}}
++function reconnect(){if(disposed||!session.current())return;observationStopped.value=false;error.value='';void connect();}
+ async function start() {
+   if (busy.value || !draft.value || !inputForm.value) return;
+   const code = props.appCode, sequence = draftSequence;
+   busy.value = true;
+   error.value = "";
+   try {
+     controller?.abort();
+     clearTimeout(timer);
+     const result = await api("/admin/debug-runs", "POST", {
+       appCode: code,
+       mode: mode.value,
+       inputs: inputForm.value.collect(),
+       breakpoints: breakpoints.value,
+       mocks: mockRules(mocks.value),
+     });
+     if (disposed || sequence !== draftSequence) return;
+     controlsRevision.value=undefined;controlsBase.value={};
+     runId.value = result.runId;
+-    sessionStorage.setItem("debug:" + code, runId.value);
++    observationStopped.value=false;
+     void connect();
+   } catch (e: any) {
+     if (!disposed && sequence === draftSequence) error.value = e.message;
+   } finally {
+     if (!disposed && sequence === draftSequence) busy.value = false;
+   }
+ }
+ async function action(action: string) {
+   const sequence = draftSequence;
+   busy.value = true;
+   try {
+     const p = snapshot.value.paused;
+     if (!p) throw new Error("当前没有可放行的挂起节点，请刷新状态");
+     await api(
+       `/admin/debug-runs/${runId.value}/resume`,
+       "POST",
+       resumePayload(p, action, crypto.randomUUID()),
+     );
+     if (!disposed && sequence === draftSequence) await restore();
+   } catch (e: any) {
+     if (!disposed && sequence === draftSequence) error.value = e.message;
+   } finally {
+     if (!disposed && sequence === draftSequence) busy.value = false;
+   }
+ }
+ async function cancel() {
+   if (!confirm("终止后本次调试不能继续，确认终止？")) return;
+   const sequence = draftSequence;
+   try {
+     await api(`/admin/debug-runs/${runId.value}/cancel`, "POST");
+     if (!disposed && sequence === draftSequence) await restore();
+   } catch (e: any) {
+     if (!disposed && sequence === draftSequence) error.value = e.message;
+   }
+ }
+ async function inspect(kind: string) {
+   const sequence = draftSequence;
+   try {
+     const p = snapshot.value.paused;
+     const result = await api(
+       kind === "prompt"
+         ? "/admin/debug-runs/" +
+             runId.value +
+             "/node/" +
+             p.nodeInstanceId +
+             "/prompt"
+         : "/admin/debug-runs/" + runId.value + "/variables",
+     );
+     if (!disposed && sequence === draftSequence) inspector.value = result;
+   } catch (e: any) {
+     if (!disposed && sequence === draftSequence) error.value = e.message;
+   }
+ }
+ function loadDraft() {
+   const sequence = ++draftSequence;
+   draftRequest.abort(); draftRequest = new AbortController();
+   controller?.abort(); clearTimeout(timer);
+   connected.value = false; retry = 0; inspector.value = undefined; controlsRevision.value = undefined; controlsBase.value = {};
+   breakpoints.value = []; mocks.value = [];
+   draft.value = undefined; flow.value = undefined; draftLoading.value = true; busy.value = false; error.value = '';
+   runId.value = ''; snapshot.value = {}; state.value = {watermark:0,events:[],nodes:{}};
+   void api("/admin/apps/" + encodeURIComponent(props.appCode), 'GET', undefined, draftRequest.signal)
+     .then((a) => {
+       if (disposed || sequence !== draftSequence) return;
+       if (!a.draftId) throw Error('草稿信息缺少标识，请刷新应用后重试');
+       draft.value = a;
+       if (a.type === "FLOW")
+         flow.value = { definition: a.definition, layout: a.layout };
+     })
+     .catch((e) => { if (!disposed && sequence === draftSequence && e.name !== 'AbortError') error.value = e.message; })
+     .finally(() => { if (!disposed && sequence === draftSequence) draftLoading.value = false; });
+-  runId.value = sessionStorage.getItem("debug:" + props.appCode) || "";
+-  if (runId.value) void connect();
++  // A new workspace never restores the previous identity's selected run.
++  observationStopped.value=false;
+ }
+ watch(() => props.appCode, loadDraft, {immediate:true});
+ onBeforeUnmount(() => {
+   disposed = true;
+   draftSequence++; draftRequest.abort();
+   controller?.abort();
+   clearTimeout(timer);
+ });
+ </script>
+ <template>
+   <div class="panel">
+     <div class="row debug-header">
+       <div>
+         <h2>调试预览</h2>
+         <span class="muted"
+           >草稿运行与正式运行隔离，离开页面不会终止任务。</span
+         >
+       </div>
+       <div class="actions">
+         <el-radio-group v-model="mode"
+           ><el-radio-button value="FULL">全量</el-radio-button
+           ><el-radio-button value="STEP">单步</el-radio-button></el-radio-group
+         ><el-button
+           type="primary"
+           :loading="busy"
+           :disabled="!draft || (!!runId && !terminal(snapshot.status))"
+           v-permission="'edit'"
+           @click="start"
+           >开始调试</el-button
+         >
+       </div>
+     </div>
+     <p v-if="draftLoading" class="muted" role="status">正在载入草稿输入…</p>
+     <NamedInputs v-if="draft" :key="appCode + ':' + draft.draftId" ref="inputForm" :app-code="appCode" :draft-id="draft.draftId" :declaration="draft.type === 'FLOW' ? draft.definition?.inputs : (draft.config?.inputSchema ?? draft.config?.inputs ?? draft.inputSchema)" />
+     <el-button v-else-if="!draftLoading" @click="loadDraft">重新载入草稿</el-button>
+     <details>
+       <summary>断点与技能 Mock</summary>
+       <p class="muted">
+         规则仅影响本次调试。运行中修改须先载入控制版本，再保存后续节点规则。
+       </p>
+       <el-select
+         v-model="breakpoints"
+         multiple
+         placeholder="选择断点节点"
+         aria-label="断点节点"
+         ><el-option
+           v-for="n in flow?.definition?.nodes || []"
+           :key="n.id"
+           :value="n.id"
+           :label="n.name || n.id"
+       /></el-select>
+       <div v-for="(m, i) in mocks" :key="i" class="row">
+         <el-input
+           v-model="m.skillCode"
+           placeholder="技能编码"
+           aria-label="Mock 技能编码"
+         /><el-select v-model="m.mode" aria-label="Mock 模式"
+           ><el-option value="FIXED" label="固定响应" /><el-option
+             value="LAST_REAL"
+             label="复用最近真实结果" /></el-select
+         ><el-input
+           v-if="m.mode === 'FIXED'"
+           v-model="m.response"
+           type="textarea"
+           placeholder="固定响应 JSON"
+           aria-label="Mock 固定响应"
+         />
+         <div v-if="m.mode === 'LAST_REAL'">
+           <p class="muted">
+             由服务端匹配当前身份、参数、技能版本及合同。无匹配结果会报错，不发起真实业务调用。
+           </p>
+           <details>
+             <summary>高级：指定来源调用（可省略）</summary>
+             <el-input-number
+               v-model="m.sourceCallId"
+               :min="1"
+               :precision="0"
+               aria-label="来源调用标识"
+               placeholder="自动匹配"
+             />
+           </details>
+         </div>
+         <el-button @click="mocks.splice(i, 1)">移除</el-button>
+       </div>
+       <el-button
+         @click="mocks.push({ skillCode: '', response: '{}', mode: 'FIXED' })"
+         >添加技能 Mock</el-button
+       >
+       <template v-if="runId && !terminal(snapshot.status)"
+         ><el-button :loading="busy" @click="controls()">载入当前控制</el-button
+         ><el-button
+           :loading="busy"
+           v-permission="'edit'"
+           @click="controls(true)"
+           >保存调试控制</el-button
+         ><span class="muted"
+           >版本 {{ controlsRevision ?? "未载入" }}</span
+         ></template
+       >
+     </details>
+   </div>
+   <div v-if="error" class="error" role="alert">{{ error }}</div>
++  <el-button v-if="observationStopped" @click="reconnect">重新连接观察</el-button>
+   <div v-if="snapshot.status === 'FAILED'" class="error" role="alert">
+     运行失败：{{
+       snapshot.error?.message ||
+       snapshot.error?.code ||
+       snapshot.nodes?.find((n: any) => n.status === "FAILED")?.error?.message ||
+       "请查看节点错误详情"
+     }}。检查输入、来源权限和技能版本后可重新开始调试。
+   </div>
+   <div v-if="runId" class="panel">
+     <div class="row">
+       <div>
+         <strong>{{ runId }}</strong>
+         <span :class="['status', snapshot.status]">{{ snapshot.status }}</span>
+         <span class="muted"
+           >{{ connected ? "事件已连接" : "事件未连接" }} · 游标
+           {{ state.watermark }}</span
+         >
+       </div>
+       <div class="actions">
+-        <el-button @click="restore">刷新状态</el-button
++        <el-button @click="refreshStatus">刷新状态</el-button
+         ><el-button
+           v-for="a in snapshot.paused?.allowedActions?.filter(
+             (x: string) => x !== 'CANCEL',
+           )"
+           :key="a"
+           :disabled="busy"
+           v-permission="'edit'"
+           @click="action(a)"
+           >{{
+             a === "NEXT_NODE"
+               ? "执行本节点"
+               : a === "RUN_TO_BREAKPOINT"
+                 ? "运行到断点"
+                 : "运行到结束"
+           }}</el-button
+         ><el-button type="danger" plain v-permission="'edit'" @click="cancel"
+           >终止</el-button
+         >
+       </div>
+     </div>
+     <FlowDesigner
+       v-if="flow?.definition"
+       :definition="flow.definition"
+       :layout="flow.layout || {}"
+       :states="state.nodes"
+       read-only
+     />
+     <div v-if="snapshot.paused">
+       <h2>挂起检查器</h2>
+       <el-button @click="inspect('prompt')">查看完整请求</el-button
+       ><el-button @click="inspect('variables')">查看变量</el-button>
+       <CodeViewer
+         v-if="inspector"
+         :content="JSON.stringify(inspector, null, 2)"
+       />
+       <pre>{{ JSON.stringify(snapshot.paused, null, 2) }}</pre>
+     </div>
+     <el-table
+       :data="
+         Object.entries(state.nodes).map(([node, status]) => ({ node, status }))
+       "
+       ><el-table-column prop="node" label="节点" /><el-table-column label="状态"
+         ><template #default="{ row }"
+           ><span :class="['status', row.status]">{{
+             row.status
+           }}</span></template
+         ></el-table-column
+       ></el-table
+     ><el-collapse
+       ><el-collapse-item title="事件与输出" name="events">
+         <pre>{{
+           JSON.stringify(
+             {
+               events: state.events,
+               output: snapshot.output,
+               error: snapshot.error,
+               versionRefs: snapshot.versionRefs,
+             },
+             null,
+             2,
+           )
+         }}</pre>
+       </el-collapse-item></el-collapse
+     >
+   </div>
+   <el-empty v-else description="输入数据并开始调试" />
+ </template>
+ <style scoped>
+ @media(max-width:600px){.debug-header{flex-direction:column;align-items:stretch;gap:1rem}.debug-header .actions{justify-content:space-between;flex-wrap:wrap;gap:.75rem}.debug-header .el-radio-group{display:inline-flex;flex-wrap:nowrap}.debug-header .el-button{min-height:44px}}
+ @media(max-width:600px){
+   .panel > .row:not(.debug-header){flex-direction:column;align-items:stretch}
+   .panel > .row:not(.debug-header) > div{min-width:0;overflow-wrap:anywhere}
+   .panel > .row:not(.debug-header) .actions{flex-wrap:wrap}
+   /* The read-only graph needs real canvas width before X6 can fit the nodes. */
+   .panel :deep(.canvas-layout){grid-template-columns:minmax(0,1fr);min-width:0}
+   .panel :deep(.canvas),.panel :deep(.properties-panel){min-width:0;max-width:100%}
+ }
+ </style>
+diff --git a/web/debug-panel/events.ts b/web/debug-panel/events.ts
+index c1f4b4e..09310b5 100644
+--- a/web/debug-panel/events.ts
++++ b/web/debug-panel/events.ts
+@@ -1,101 +1,122 @@
+ export type Frame = { id: string; event: string; data: string };
+ export function parseFrames(input: string) {
+   const text = input.replace(/\r\n/g, "\n");
+   const parts = text.split("\n\n");
+   const rest = parts.pop()!;
+   return {
+     frames: parts
+       .filter((p) => p.trim())
+       .map((p) => {
+         const f: Frame = { id: "", event: "message", data: "" };
+         const data: string[] = [];
+         for (const line of p.split("\n")) {
+           const i = line.indexOf(":");
+           const key = line.slice(0, i);
+           const value = line.slice(i + 1).replace(/^ /, "");
+           if (key === "data") data.push(value);
+           if (key === "id") f.id = value;
+           if (key === "event") f.event = value;
+         }
+         f.data = data.join("\n");
+         return f;
+       }),
+     rest,
+   };
+ }
+ export type EventState = {
+   watermark: number;
+   events: any[];
+   nodes: Record<string, string>;
+ };
+ export function applyEvent(s: EventState, e: any): EventState {
+   if (!Number.isFinite(e.seq) || e.seq <= s.watermark) return s;
+   const nodes = { ...s.nodes };
+   const id = e.nodeDefId || e.nodeId;
+   if (id)
+     nodes[id] =
+       (
+         {
+           NODE_STARTED: "RUNNING",
+           NODE_FINISHED: "SUCCEEDED",
+           NODE_FAILED: "FAILED",
+           WAITING_STEP: "WAITING_STEP",
+           WAITING_APPROVAL: "WAITING_APPROVAL",
+         } as any
+       )[e.type] || nodes[id];
+   return { watermark: e.seq, events: [...s.events, e], nodes };
+ }
+ export const terminal = (status: string) =>
+   [
+     "SUCCEEDED",
+     "SUCCESS",
+     "COMPLETED",
+     "FAILED",
+     "CANCELLED",
+     "FINISHED",
+   ].includes(status);
++const authorityReasons=['AUTHORITY_EXPIRED','AUTHORITY_DENIED','AUTHORITY_UNAVAILABLE'];
++export function authorityReset(event:any) {
++  if(event?.type!=='stream_reset'||!authorityReasons.includes(event.reason))return;
++  const reason=event.reason;
++  return Object.assign(Error(reason==='AUTHORITY_UNAVAILABLE'?'授权服务暂不可用，请手动恢复连接':reason==='AUTHORITY_DENIED'?'当前身份无权继续观察，请手动恢复连接':'观察授权已到期，请重新连接'),{reason,code:reason,status:reason==='AUTHORITY_UNAVAILABLE'?503:403});
++}
++export const authorityFailure=(error:any)=>error?.status===401||error?.status===403||authorityReasons.includes(error?.reason)
++  ||(error?.status===503&&['IAM_AUTHORITY_UNAVAILABLE','PORTAL_SESSION_UNAVAILABLE','AUTHORITY_UNAVAILABLE'].includes(error.code));
+ export async function streamEvents(
+   url: string,
+   token: () => string,
+   watermark: number,
+   onEvent: (e: any) => void,
+   signal: AbortSignal,
+   onUnauthorized?: () => void,
++  scope?: {signal:AbortSignal;current:()=>boolean},
+ ) {
+   // A disconnected viewer never cancels the run. The caller restores authoritative status before every reconnect.
+-  signal.throwIfAborted();
++  if(scope)signal=signal===scope.signal?signal:AbortSignal.any([signal,scope.signal]);
++  const check=()=>{signal.throwIfAborted();if(scope&&!scope.current())throw new DOMException('观察已停止','AbortError');};
++  check();
+   const requestToken = token();
+   if (!requestToken) throw new Error("请先登录");
+   const response = await fetch(url, {
+     headers: {
+       Authorization: `Bearer ${requestToken}`,
+       "Last-Event-ID": String(watermark),
+       Accept: "text/event-stream",
+     },
+     signal,
++    credentials:'omit',
+   });
+-  signal.throwIfAborted();
++  check();
+   if (response.status === 401 && token() === requestToken) onUnauthorized?.();
+-  if (!response.ok)
+-    throw Object.assign(new Error(`事件连接失败 (${response.status})`), { status: response.status });
++  if (!response.ok) {
++    const envelope=await response.json().catch(()=>({}));check();
++    throw Object.assign(new Error(envelope.message||`事件连接失败 (${response.status})`), { status: response.status,code:envelope.code });
++  }
+   if (!response.body) throw new Error("服务未返回事件流");
+   const reader = response.body.getReader();
++  const stopReader=()=>{void reader.cancel().catch(()=>{});};
++  signal.addEventListener('abort',stopReader,{once:true});
+   const decoder = new TextDecoder();
+   let pending = "";
+-  while (!signal.aborted) {
++  try { while (true) {
++    check();
+     const r = await reader.read();
++    check();
+     pending += decoder.decode(r.value, { stream: !r.done });
+     const { frames, rest } = parseFrames(pending);
+     pending = rest;
+     for (const f of frames) {
++      check();
+       if (!f.data) continue;
+       const payload = JSON.parse(f.data);
+-      onEvent({
++      const event={
+         ...payload,
+         type: payload.type || (f.event === "chunk" ? "CHUNK" : f.event),
+         seq: Number(f.id || payload.seq),
+-      });
++      };
++      const stopped=authorityReset(event);if(stopped)throw stopped;
++      check();onEvent(event);check();
+     }
+     if (r.done) return;
+-  }
++  } } finally {signal.removeEventListener('abort',stopReader);try{await reader.cancel();}finally{reader.releaseLock();}}
+ }
+diff --git a/web/shared/Artifacts.vue b/web/shared/Artifacts.vue
+index 983240c..777857e 100644
+--- a/web/shared/Artifacts.vue
++++ b/web/shared/Artifacts.vue
+@@ -1,31 +1,34 @@
+ <script setup lang="ts">
+-import { ref } from "vue";
++import { ref, onBeforeUnmount } from "vue";
+ import { useAuth } from "./api";
+ import { downloadArtifact } from "./artifact";
+ const props = defineProps<{ files: any[]; runId: string; endpoint?: string; admin?:boolean }>();
+ const error = ref("");
+ const busy = ref(false);
++const auth=useAuth(),session=auth.snapshot(),controller=new AbortController();
++const scope={signal:AbortSignal.any([session.signal,controller.signal]),current:session.current};
++onBeforeUnmount(()=>controller.abort());
+ async function download(file: any) {
+   busy.value = true;
+   error.value = "";
+   try {
+-    await downloadArtifact(file, props.runId, useAuth().token, props.endpoint,props.admin);
++    await downloadArtifact(file, props.runId, auth.token, props.endpoint,props.admin,scope);
+   } catch (e: any) {
+-    error.value = e.message;
++    if(!scope.signal.aborted&&scope.current()&&e.name!=='AbortError')error.value = e.message;
+   } finally {
+     busy.value = false;
+   }
+ }
+ </script>
+ <template>
+   <section v-if="files.length" class="panel">
+     <h2>结果附件</h2>
+     <div v-for="file in files" :key="file.artifactId" class="row">
+       <span
+         >{{ file.summary || file.name || file.artifactId }} ·
+         {{ file.bytes }} 字节</span
+       ><el-button :loading="busy" @click="download(file)">下载附件</el-button>
+     </div>
+     <p v-if="error" class="error" role="alert">{{ error }}</p>
+   </section>
+ </template>
+diff --git a/web/shared/api.ts b/web/shared/api.ts
+index f7e3ff7..2ea509d 100644
+--- a/web/shared/api.ts
++++ b/web/shared/api.ts
+@@ -1,108 +1,165 @@
+ import axios from "axios";
+ import { defineStore, getActivePinia } from "pinia";
+-import { ref } from "vue";
++import { ref, shallowRef, onScopeDispose, getCurrentScope } from "vue";
++export type SessionScope = { signal: AbortSignal; current: () => boolean };
++export type PortalIdentity = {tenantId:string;principalId:string;roles:string[];expiresAt:string};
++export function checkScope(scope?: SessionScope) {
++  if (scope && (scope.signal.aborted || !scope.current()))
++    throw new DOMException('会话已停止，请重新连接', 'AbortError');
++}
++export function combinedSignal(a?: AbortSignal, b?: AbortSignal) {
++  return a && b && a !== b ? AbortSignal.any([a,b]) : a || b;
++}
+ export const useAuth = defineStore("auth", () => {
+   const token = ref("");
+   const roles = ref<string[]>([]);
+   const user = ref<any>();
++  const generation=ref(0),controller=shallowRef(new AbortController());
++  const connection=ref('idle'),notice=ref('');
++  let timer: ReturnType<typeof setTimeout> | undefined;
++  function snapshot() {
++    const expected=generation.value,signal=controller.value.signal;
++    return {generation:expected,signal,current:()=>generation.value===expected&&!signal.aborted};
++  }
++  function invalidate(expected=generation.value,state='unauthenticated',message='会话已失效，请重新连接') {
++    if(expected!==generation.value)return false;
++    generation.value++;
++    controller.value.abort();controller.value=new AbortController();
++    clearTimeout(timer);timer=undefined;
++    token.value='';roles.value=[];user.value=undefined;
++    connection.value=state;notice.value=message;
++    return true;
++  }
++  function install(expected:number,candidate:string,identity:PortalIdentity) {
++    if(expected!==generation.value||controller.value.signal.aborted)return false;
++    token.value=candidate;user.value=identity;roles.value=[...identity.roles];
++    connection.value='authenticated';notice.value='';
++    const deadline=Date.parse(identity.expiresAt);
++    const expire=()=>{
++      if(expected!==generation.value)return;
++      const remaining=deadline-Date.now();
++      if(remaining<=0)invalidate(expected,'expired','会话已到期，请重新连接');
++      else timer=setTimeout(expire,Math.min(60_000,remaining));
++    };
++    clearTimeout(timer);expire();return true;
++  }
+   // UI visibility is not authorization. Every action is still verified by the backend Actor.
+   const can = (permission: string) =>
+     !!token.value &&
+     (roles.value.includes("ADMIN") ||
+       roles.value.includes(
+         (
+           { edit: "EDITOR", approve: "APPROVER", admin: "ADMIN" } as Record<
+             string,
+             string
+           >
+         )[permission],
+       ));
+-  return { token, roles, user, can };
++  return { token, roles, user, can, generation, connection, notice, snapshot, invalidate, install };
+ });
+ export function createApi(
+   token: () => string,
+   transport: typeof fetch = axiosTransport,
+   onUnauthorized?: () => void,
++  scope?: SessionScope,
+ ) {
+   return async <T = any>(
+     path: string,
+     method = "GET",
+     body?: unknown,
+     signal?: AbortSignal,
+   ): Promise<T> => {
++    checkScope(scope);
++    signal=combinedSignal(signal,scope?.signal);
+     signal?.throwIfAborted();
+     const requestToken = token();
+     if (!requestToken) throw new Error("请先登录");
+-    const response = await transport(path, {
++    let response:Response;
++    try { response = await transport(path, {
+       method,
+       signal,
+       headers: {
+         Authorization: `Bearer ${requestToken}`,
+         "Content-Type": "application/json",
+       },
+       body: body === undefined ? undefined : JSON.stringify(body),
+-    });
++      credentials:'omit',
++    }); } catch(error) { checkScope(scope);signal?.throwIfAborted();throw error; }
++    checkScope(scope);
+     signal?.throwIfAborted();
+     const envelope = await response
+       .json()
+       .catch(() => ({ message: `服务返回不可读响应 (${response.status})` }));
+     signal?.throwIfAborted();
++    checkScope(scope);
+     if (!response.ok || envelope.code !== "OK") {
+       // A stopped request or an earlier login must never revoke the current login.
+       if (response.status === 401 && token() === requestToken) onUnauthorized?.();
+       const error: any = new Error(
++        response.status===403?'当前账号没有此操作权限，请联系管理员。':
++        response.status===503&&['IAM_AUTHORITY_UNAVAILABLE','PORTAL_SESSION_UNAVAILABLE'].includes(envelope.code)?'授权服务暂不可用，请稍后手动重试':
+         String(envelope.code).startsWith("SYS-")
+           ? "系统繁忙，请稍后重试"
+           : envelope.message || `请求失败 (${response.status})`,
+       );
+       error.traceId = envelope.traceId;
+       error.status = response.status;
++      error.code = envelope.code;
+       throw error;
+     }
+     return envelope.data;
+   };
+ }
+ export function useApi() {
+   const auth = useAuth();
++  const session=auth.snapshot();
++  // An old component cannot use a new identity in a continuation after an await.
++  const disposed=new AbortController();
++  if(getCurrentScope())onScopeDispose(()=>disposed.abort());
++  const scope={signal:combinedSignal(session.signal,disposed.signal)!,current:session.current};
+   return createApi(
+     () => auth.token,
+     axiosTransport,
+     () => {
+-      auth.token = "";
+-    },
++      auth.invalidate(session.generation);
++    },scope,
+   );
+ }
+ export async function login() {
+-  const r = await fetch("/auth/dev-token", { method: "POST" });
++  const pinia=getActivePinia(),auth=pinia?useAuth(pinia):undefined,scope=auth?.snapshot();
++  const r = await fetch("/auth/dev-token", { method: "POST",credentials:'omit',signal:scope?.signal });
++  checkScope(scope);
+   const e = await r.json().catch(() => {
+     throw new Error("网关登录服务不可用，请确认开发环境网关已启动后重试");
+   });
++  checkScope(scope);
+   if (!r.ok || e.code !== "OK") throw new Error(e.message || "开发登录失败");
+   const token = e.data?.accessToken || e.data?.token || e.data;
+   if (typeof token !== "string") throw new Error("登录接口没有返回 token");
+-  if (getActivePinia()) {
+-    const auth = useAuth();
++  if (auth) {
+     auth.roles = Array.isArray(e.data?.user?.roles) ? e.data.user.roles : [];
+     auth.user = e.data?.user;
+   }
+   return token;
+ }
+ 
+-async function axiosTransport(
++export async function axiosTransport(
+   url: RequestInfo | URL,
+   options?: RequestInit,
+ ): Promise<Response> {
+   const response = await axios.request({
+     url: String(url),
+     method: options?.method || "GET",
+     headers: options?.headers as Record<string, string>,
+     data: options?.body,
+     signal: options?.signal ?? undefined,
+     responseType: "text",
+     validateStatus: () => true,
++    adapter:'fetch',
++    withCredentials:false,
+   });
+   return new Response(response.data, {
+     status: response.status,
+     headers: response.headers as Record<string, string>,
+   });
+ }
+diff --git a/web/shared/artifact.ts b/web/shared/artifact.ts
+index 153406f..c8b8a25 100644
+--- a/web/shared/artifact.ts
++++ b/web/shared/artifact.ts
+@@ -1,32 +1,42 @@
+ export function artifactPath(file: any, runId: string) {
+   // A business ticket must never be sent to arbitrary URLs or to the admin download surface.
+   const path = file.externalDownloadUrl;
+   const prefix = "/v1/runs/" + encodeURIComponent(runId) + "/artifacts/";
+   if (
+     typeof path !== "string" ||
+     !path.startsWith(prefix) ||
+     !/^\/v1\/runs\/[^/]+\/artifacts\/[^/?#]+\/download$/.test(path)
+   )
+     throw Error("附件缺少当前运行的受控下载入口");
+   return path;
+ }
+ export async function downloadArtifact(
+   file: any,
+   runId: string,
+   token: string,
+   endpoint = "",
+   admin = false,
++  scope?:{signal:AbortSignal;current:()=>boolean},
+ ) {
++  const check=()=>{scope?.signal.throwIfAborted();if(scope&&!scope.current())throw new DOMException('下载已停止','AbortError');};
++  check();
+   const path = admin ? file.downloadUrl : artifactPath(file, runId);
+   if(admin&&!/^\/admin\/artifacts\/[^/?#]+\/download$/.test(path||''))throw Error('附件缺少受控下载入口');
+   const r = await fetch(endpoint + path, {
+     headers: { Authorization: "Bearer " + token },
++    signal:scope?.signal,
++    credentials:'omit',
+   });
++  check();
+   if (!r.ok) throw Error("下载附件失败 (" + r.status + ")");
+-  const url = URL.createObjectURL(await r.blob());
++  const blob=await r.blob();check();
++  const url = URL.createObjectURL(blob);
++  try {
++  check();
+   const a = document.createElement("a");
+   a.href = url;
+   a.download = String(file.name || file.artifactId || "artifact");
++  check();
+   a.click();
+-  setTimeout(() => URL.revokeObjectURL(url), 1000);
++  } finally {URL.revokeObjectURL(url);}
+ }
+diff --git a/web/shared/portal-auth.ts b/web/shared/portal-auth.ts
+new file mode 100644
+index 0000000..a7572f8
+--- /dev/null
++++ b/web/shared/portal-auth.ts
+@@ -0,0 +1,60 @@
++import {createApi, checkScope, type PortalIdentity, type useAuth} from './api';
++export interface PortalTokenProvider {
++  getAccessToken(): Promise<string>;
++  onSessionChanged(listener: () => void): () => void;
++}
++export function portalMode(mode?:string):'portal'|'dev' {
++  if(mode===undefined||mode===''||mode==='portal')return 'portal';
++  if(mode==='dev')return 'dev';
++  throw Error('VITE_AUTH_MODE 无效，请配置 portal 或 dev');
++}
++// The same-origin embedding host is the trust boundary. The server verifies
++// every token; URL, storage and postMessage are never identity providers.
++export function trustedPortal(host:{agentPlatformPortal?:unknown}):PortalTokenProvider|undefined {
++  const value=host.agentPlatformPortal as PortalTokenProvider|undefined;
++  if(!value||typeof value.getAccessToken!=='function'||typeof value.onSessionChanged!=='function')return;
++  return {getAccessToken:value.getAccessToken.bind(value),onSessionChanged:value.onSessionChanged.bind(value)};
++}
++function identity(data:any):PortalIdentity {
++  if(!data||typeof data!=='object'||Array.isArray(data)||Object.keys(data).sort().join(',')!=='expiresAt,principalId,roles,tenantId'
++    ||![data.tenantId,data.principalId].every(x=>typeof x==='string'&&x.trim())
++    ||!Array.isArray(data.roles)||!data.roles.every((x:unknown)=>typeof x==='string'&&x.trim())
++    ||typeof data.expiresAt!=='string'||!/^\d{4}-\d\d-\d\dT.*(?:Z|[+-]\d\d:\d\d)$/.test(data.expiresAt)
++    ||!Number.isFinite(Date.parse(data.expiresAt))||Date.parse(data.expiresAt)<=Date.now())
++    throw Error('门户会话响应无效或已到期，请重新连接');
++  return {tenantId:data.tenantId,principalId:data.principalId,roles:[...data.roles],expiresAt:data.expiresAt};
++}
++export function createPortalSession(auth:ReturnType<typeof useAuth>,provider:PortalTokenProvider|undefined,options:{mode:'portal'|'dev';transport?:typeof fetch}) {
++  let disposed=false,unsubscribe:(()=>void)|undefined;
++  async function connect() {
++    if(disposed)return;
++    auth.invalidate(auth.generation,'connecting','正在连接门户会话…');
++    const scope=auth.snapshot();
++    try {
++      if(options.mode==='portal'&&!provider){auth.connection='missing';auth.notice='请从门户打开工作台';return;}
++      let token:string;
++      if(options.mode==='dev') {
++        // An explicit build/start choice, never a fallback from portal failure.
++        const r=await (options.transport??fetch)('/auth/dev-token',{method:'POST',credentials:'omit',signal:scope.signal});
++        checkScope(scope);const e=await r.json();checkScope(scope);
++        if(!r.ok||e.code!=='OK')throw Object.assign(Error(e.message||'开发登录失败'),{status:r.status});
++        token=e.data?.accessToken??e.data?.token??e.data;
++      } else token=await provider!.getAccessToken();
++      checkScope(scope);
++      if(typeof token!=='string'||!token.trim())throw Error('门户未提供有效访问票据，请重新连接');
++      const data=await createApi(()=>token,options.transport,undefined,scope)('/auth/session');
++      checkScope(scope);auth.install(scope.generation,token,identity(data));
++    } catch(e:any) {
++      if(!scope.current()||disposed||e.name==='AbortError')return;
++      auth.connection=e.status===401?'unauthenticated':e.status===403?'forbidden':e.status===503?'unavailable':'error';
++      auth.notice=e.status===401?'会话已失效，请重新连接':e.status===403?'当前账号无权访问工作台，请联系管理员':e.status===503?'会话暂不可用，请稍后手动重试':e.message||'门户连接失败，请重新连接';
++    }
++  }
++  if(options.mode==='portal'&&provider) {
++    try {
++      unsubscribe=provider.onSessionChanged(()=>{void connect();});
++      if(typeof unsubscribe!=='function')throw Error('门户会话订阅无效');
++    } catch(e:any) {provider=undefined;auth.connection='error';auth.notice=e.message;}
++  }
++  return {connect,dispose(){if(disposed)return;disposed=true;unsubscribe?.();auth.invalidate(auth.generation,'signed-out','已退出，请重新连接');}};
++}
+diff --git a/web/shared/run-observer.ts b/web/shared/run-observer.ts
+index 3ff40fe..ffdab4f 100644
+--- a/web/shared/run-observer.ts
++++ b/web/shared/run-observer.ts
+@@ -1,94 +1,95 @@
+-import { terminal } from '../debug-panel/events';
++import { terminal, authorityReset, authorityFailure } from '../debug-panel/events';
+ 
+ type RunStatus = { status: string; eventsWatermark?: number; [key: string]: any };
+ type Options<T extends RunStatus> = {
+   signal: AbortSignal;
+   open: (cursor: number, emit: (event: any) => void) => Promise<void>;
+   readStatus: () => Promise<T>;
+   onEvent: (event: any) => void;
+   onStatus: (snapshot: T) => unknown;
+   onConnection?: (state: 'connected' | 'reconnecting') => void;
+   pause?: (milliseconds: number) => Promise<void>;
+   maxFailures?: number;
+ };
+ 
+ const permanent = (error: any) =>
+-  error?.status >= 400 && error.status < 500 && ![408, 425, 429].includes(error.status);
++  authorityFailure(error)||(error?.status >= 400 && error.status < 500 && ![408, 425, 429].includes(error.status));
+ 
+ // Observe an already accepted run. Only an applied PG snapshot or a consumed fact
+ // advances the cursor; ephemeral chunks and reset hints never acknowledge facts.
+ export async function observeRun<T extends RunStatus>(options: Options<T>): Promise<T> {
+   const { signal } = options;
+   let cursor = 0;
+   let failures = 0;
+   let snapshotOnly = false;
+   let awaitingSnapshot = false;
+   const check = () => {
+     if (signal.aborted) throw new DOMException('观察已停止', 'AbortError');
+   };
+   const pending = async <V>(work: () => Promise<V>): Promise<V> => {
+     check();
+     let abort!: () => void;
+     const stopped = new Promise<never>((_, reject) => {
+       abort = () => reject(new DOMException('观察已停止', 'AbortError'));
+       signal.addEventListener('abort', abort, { once: true });
+     });
+     try { return await Promise.race([work(), stopped]); }
+     finally { signal.removeEventListener('abort', abort); }
+   };
+   const pause = (milliseconds: number) => pending(() => options.pause
+     ? options.pause(milliseconds)
+     : new Promise<void>((resolve) => {
+       const finish = () => { clearTimeout(timer); signal.removeEventListener('abort', finish); resolve(); };
+       const timer = setTimeout(finish, milliseconds);
+       signal.addEventListener('abort', finish, { once: true });
+     }));
+   while (true) {
+     check();
+     if (!snapshotOnly && !awaitingSnapshot) {
+       let accepting = true;
+       try {
+         await pending(() => options.open(cursor, event => {
+           if (!accepting || signal.aborted) return;
+           if (event.type === 'stream_reset') {
++            const stopped=authorityReset(event);if(stopped)throw stopped;
+             // An oversized durable event cannot become replayable by reconnecting.
+             // Poll snapshots until terminal instead of repeatedly requesting it.
+             if (event.reason === 'EVENT_LIMIT') snapshotOnly = true;
+             return;
+           }
+           if (event.type === 'stream_status') return;
+           const chunk = event.type === 'CHUNK' || event.type === 'chunk';
+           if (!chunk) {
+             if (!Number.isSafeInteger(event.seq) || event.seq <= cursor) return;
+           }
+           options.onEvent(event);
+           if (!chunk) cursor = event.seq;
+         }));
+       } catch (error) {
+         check();
+         if (permanent(error)) throw error;
+       } finally { accepting = false; }
+     }
+     awaitingSnapshot = true;
+     options.onConnection?.('reconnecting');
+     let snapshot: T;
+     try {
+       snapshot = await pending(options.readStatus);
+     } catch (error) {
+       check();
+       if (permanent(error) || ++failures >= (options.maxFailures ?? 5)) throw error;
+       await pause(Math.min(8000, 750 * 2 ** (failures - 1)));
+       continue;
+     }
+     check();
+     await options.onStatus(snapshot);
+     check();
+     awaitingSnapshot = false;
+     if (Number.isSafeInteger(snapshot.eventsWatermark) && snapshot.eventsWatermark! >= 0)
+       cursor = snapshot.eventsWatermark!;
+     failures = 0;
+     if (terminal(snapshot.status)) return snapshot;
+     await pause(750);
+     options.onConnection?.('connected');
+   }
+ }
+diff --git a/web/tests/login.test.ts b/web/tests/login.test.ts
+index 0d40a4f..0d5122b 100644
+--- a/web/tests/login.test.ts
++++ b/web/tests/login.test.ts
+@@ -1,7 +1,15 @@
+ import { it, expect, vi } from "vitest";
+ import { login } from "../shared/api";
++import {useAuth} from '../shared/api';
++import {createPinia,setActivePinia} from 'pinia';
+ it("login explains unavailable gateway instead of leaking JSON parser error", async () => {
+   vi.stubGlobal("fetch", async () => new Response("", { status: 502 }));
+   await expect(login()).rejects.toThrow("网关登录服务不可用");
+   vi.unstubAllGlobals();
+ });
++it('D4b late development login cannot mutate a later identity',async()=>{
++ setActivePinia(createPinia());const auth=useAuth();let resolve!:(x:Response)=>void;
++ vi.stubGlobal('fetch',()=>new Promise<Response>(r=>resolve=r));const pending=login();auth.invalidate(auth.generation);auth.token='new';auth.roles=['EDITOR'];auth.user={principalId:'new'};
++ resolve(new Response(JSON.stringify({code:'OK',data:{token:'old',user:{roles:['ADMIN']}}})));
++ await expect(pending).rejects.toMatchObject({name:'AbortError'});expect(auth.token).toBe('new');expect(auth.roles).toEqual(['EDITOR']);vi.unstubAllGlobals();
++});
+diff --git a/web/tests/portal-auth.test.ts b/web/tests/portal-auth.test.ts
+new file mode 100644
+index 0000000..d52e918
+--- /dev/null
++++ b/web/tests/portal-auth.test.ts
+@@ -0,0 +1,71 @@
++import {afterEach, beforeEach, expect, it, vi} from 'vitest';
++import {createPinia, setActivePinia} from 'pinia';
++import {useAuth, createApi} from '../shared/api';
++import {createPortalSession, portalMode, trustedPortal} from '../shared/portal-auth';
++import {downloadArtifact} from '../shared/artifact';
++const session=(roles:string[]=[])=>({tenantId:'tenant',principalId:'person',roles,expiresAt:new Date(Date.now()+60_000).toISOString()});
++const reply=(data:any,status=200,code='OK')=>new Response(JSON.stringify({code,data}),{status});
++const deferred=<T>()=>{let resolve!:(value:T)=>void;const promise=new Promise<T>(r=>resolve=r);return {promise,resolve};};
++beforeEach(()=>setActivePinia(createPinia()));
++afterEach(()=>{vi.useRealTimers();vi.unstubAllGlobals();});
++it('D4b late artifact blob cannot create a download after session change',async()=>{
++ const blob=deferred<Blob>(),response=new Response('file');response.blob=()=>blob.promise;
++ const transport=vi.fn(async()=>response);vi.stubGlobal('fetch',transport);
++ const create=vi.spyOn(URL,'createObjectURL'),controller=new AbortController();let active=true;
++ const pending=downloadArtifact({downloadUrl:'/admin/artifacts/a/download'},'r','token','',true,{signal:controller.signal,current:()=>active});
++ await Promise.resolve();active=false;blob.resolve(new Blob(['old']));await expect(pending).rejects.toMatchObject({name:'AbortError'});expect(create).not.toHaveBeenCalled();expect(transport).toHaveBeenCalledWith('/admin/artifacts/a/download',expect.objectContaining({credentials:'omit',signal:controller.signal}));create.mockRestore();
++});
++it('defaults to portal, allows only explicit dev, and rejects unknown modes',()=>{
++ expect(portalMode(undefined)).toBe('portal');expect(portalMode('dev')).toBe('dev');expect(()=>portalMode('production')).toThrow('VITE_AUTH_MODE');
++});
++it('validates explicit host provider and preserves method this',async()=>{
++ const auth=useAuth(),data=session();
++ const host={marker:'host',getAccessToken(){expect(this.marker).toBe('host');return Promise.resolve('candidate');},onSessionChanged(){expect(this.marker).toBe('host');return ()=>{};}};
++ const portal=createPortalSession(auth,trustedPortal({agentPlatformPortal:host}),{mode:'portal',transport:async()=>reply(data)});
++ await portal.connect();expect(auth.token).toBe('candidate');expect(auth.roles).toEqual([]);expect(auth.user).toEqual(data);expect(auth.can('edit')).toBe(false);portal.dispose();
++ expect(trustedPortal({agentPlatformPortal:{getAccessToken:'bad'}})).toBeUndefined();
++});
++it('missing provider shows portal entry without fetching dev token',async()=>{
++ const transport=vi.fn();const auth=useAuth(),portal=createPortalSession(auth,undefined,{mode:'portal',transport});
++ await portal.connect();expect(auth.connection).toBe('missing');expect(auth.notice).toBe('请从门户打开工作台');expect(transport).not.toHaveBeenCalled();portal.dispose();
++});
++it.each([401,403,503])('session HTTP %s never installs a candidate or historical roles',async status=>{
++ const auth=useAuth();auth.token='old';auth.roles=['ADMIN'];auth.user={principalId:'old'};
++ const portal=createPortalSession(auth,{getAccessToken:async()=> 'candidate',onSessionChanged:()=>()=>{}},{mode:'portal',transport:async()=>reply(session(),status)});
++ await portal.connect();expect(auth.token).toBe('');expect(auth.roles).toEqual([]);expect(auth.user).toBeUndefined();expect(auth.connection).toBe(status===401?'unauthenticated':status===403?'forbidden':'unavailable');portal.dispose();
++});
++it.each([
++ {tenantId:'tenant',principalId:'person',roles:[],expiresAt:'bad'},
++ {tenantId:'tenant',principalId:'person',roles:[],expiresAt:'2020-01-01T00:00:00Z'},
++ {...session(),extra:'unexpected'}, {...session(),roles:['']}, {...session(),tenantId:''},
++])('rejects malformed/expired exact session contract %j',async data=>{
++ const auth=useAuth(),portal=createPortalSession(auth,{getAccessToken:async()=> 'candidate',onSessionChanged:()=>()=>{}},{mode:'portal',transport:async()=>reply(data)});
++ await portal.connect();expect(auth.token).toBe('');expect(auth.user).toBeUndefined();portal.dispose();
++});
++it('same token reconnect creates a new generation and aborts old API/body and old API factory',async()=>{
++ const auth=useAuth(),portal=createPortalSession(auth,{getAccessToken:async()=> 'same',onSessionChanged:()=>()=>{}},{mode:'portal',transport:async()=>reply(session())});
++ await portal.connect();const snapshot=auth.snapshot(),body=deferred<any>(),response=reply(null);response.json=()=>body.promise;
++ const transport=vi.fn(async()=>response),api=createApi(()=>auth.token,transport,()=>auth.invalidate(snapshot.generation),snapshot);
++ const pending=api('/late');await Promise.resolve();await portal.connect();body.resolve({code:'OK',data:'old'});
++ await expect(pending).rejects.toMatchObject({name:'AbortError'});expect(snapshot.signal.aborted).toBe(true);expect(auth.generation).toBeGreaterThan(snapshot.generation);
++ await expect(api('/new-post','POST')).rejects.toMatchObject({name:'AbortError'});expect(transport).toHaveBeenCalledTimes(1);expect(auth.token).toBe('same');portal.dispose();
++});
++it('late provider and late session cannot replace a later connected identity',async()=>{
++ const auth=useAuth(),first=deferred<string>(),sessionReply=deferred<Response>();let calls=0;
++ const portal=createPortalSession(auth,{getAccessToken:()=>++calls===1?first.promise:Promise.resolve('new'),onSessionChanged:()=>()=>{}},{mode:'portal',transport:async()=>reply(session(['EDITOR']))});
++ const old=portal.connect();await portal.connect();first.resolve('old');await old;expect(auth.token).toBe('new');
++ const second=createPortalSession(auth,{getAccessToken:async()=> 'older',onSessionChanged:()=>()=>{}},{mode:'portal',transport:()=>sessionReply.promise});
++ const late=second.connect();await Promise.resolve();await portal.connect();sessionReply.resolve(reply(session(['ADMIN'])));await late;expect(auth.token).toBe('new');expect(auth.roles).toEqual(['EDITOR']);second.dispose();portal.dispose();
++});
++it('expiry and logout invalidate without reconnecting, disposal unsubscribes and releases timers',async()=>{
++ vi.useFakeTimers();const auth=useAuth(),unsubscribe=vi.fn(),getAccessToken=vi.fn(async()=> 'token');let changed!:()=>void;
++ const portal=createPortalSession(auth,{getAccessToken,onSessionChanged:fn=>{changed=fn;return unsubscribe;}},{mode:'portal',transport:async()=>reply(session())});
++ await portal.connect();await vi.advanceTimersByTimeAsync(60_001);expect(auth.token).toBe('');expect(auth.roles).toEqual([]);expect(getAccessToken).toHaveBeenCalledTimes(1);expect(auth.connection).toBe('expired');
++ changed();await vi.waitFor(()=>expect(auth.token).toBe('token'));auth.invalidate(auth.generation,'signed-out');expect(getAccessToken).toHaveBeenCalledTimes(2);
++ portal.dispose();expect(unsubscribe).toHaveBeenCalledTimes(1);expect(vi.getTimerCount()).toBe(0);
++});
++it('segments a far future deadline and rechecks actual time before expiring',async()=>{
++ vi.useFakeTimers();const auth=useAuth(),data={...session(),expiresAt:new Date(Date.now()+3_000_000_000).toISOString()};
++ const portal=createPortalSession(auth,{getAccessToken:async()=> 'token',onSessionChanged:()=>()=>{}},{mode:'portal',transport:async()=>reply(data)});
++ await portal.connect();await vi.advanceTimersByTimeAsync(60_000);expect(auth.token).toBe('token');vi.setSystemTime(new Date(data.expiresAt).getTime()+1);await vi.advanceTimersByTimeAsync(60_000);expect(auth.token).toBe('');portal.dispose();
++});
+diff --git a/web/tests/portal-browser.mjs b/web/tests/portal-browser.mjs
+new file mode 100644
+index 0000000..c63da63
+--- /dev/null
++++ b/web/tests/portal-browser.mjs
+@@ -0,0 +1,166 @@
++import {chromium,expect} from '@playwright/test';
++import {createServer as viteServer} from 'vite';
++import vue from '@vitejs/plugin-vue';
++import http from 'node:http';
++import fs from 'node:fs';
++import path from 'node:path';
++import {fileURLToPath} from 'node:url';
++const root=path.resolve(fileURLToPath(new URL('../..',import.meta.url)));
++const phase=process.argv[2]||'browser-1',out=path.join(root,'docs/evidence/iam-stage-4-d4b-portal-frontend',phase);
++const selector=process.argv[3];
++fs.mkdirSync(out,{recursive:true});
++const raw=[],results=[],errors=[],gates=new Map();
++let behavior={status:200,code:'OK',roles:['ADMIN'],reset:undefined,http:undefined,runStatus:'SUCCEEDED',expiry:60_000},statusReads=0;
++const save=(f,x)=>fs.writeFileSync(path.join(out,f),JSON.stringify(x,null,2)+'\n');
++const webRoot=path.join(root,'web/admin'),shared='/@fs/'+root.replaceAll('\\','/')+'/web/shared/';
++const vite=await viteServer({configFile:false,root:webRoot,plugins:[vue()],server:{middlewareMode:true,hmr:false,fs:{allow:[root]}},appType:'custom',logLevel:'error'});
++const appData=token=>({code:'app',name:'应用 '+token,type:'FLOW',status:'PUBLISHED',draftRev:1,draftId:1,currentVersionNo:1,config:{},definition:{inputs:[],nodes:[],edges:[]},layout:{}});
++const server=http.createServer(async(req,res)=>{
++ const url=new URL(req.url,'http://local'),p=url.pathname;
++ if(p.endsWith('/web/shared/chart.ts')&&gates.has('chart')){const held=gates.get('chart');held.started();await held.promise;}
++ if(p==='/dev-main.js'){
++  const transformed=await vite.transformRequest('/src/main.ts');
++  if(!transformed.code.includes('import.meta.env.VITE_AUTH_MODE'))throw Error('main env expression changed');
++  res.setHeader('Content-Type','text/javascript');res.end(transformed.code.replace('import.meta.env.VITE_AUTH_MODE',JSON.stringify('dev')));return;
++ }
++ if(p==='/ambient'){raw.push({at:new Date().toISOString(),method:req.method,url:req.url,rawHeaders:req.rawHeaders,cookie:req.headers.cookie??null,kind:'ambient-positive-control'});res.end('ambient cookie positive control');return;}
++ if(p==='/probe.js'){
++  res.setHeader('Content-Type','text/javascript');res.end(`import {useAuth,createApi} from ${JSON.stringify(shared+'api.ts')};import {downloadArtifact} from ${JSON.stringify(shared+'artifact.ts')};
++  window.initD4b=()=>window.d4b={auth:useAuth(),createApi,downloadArtifact,capture:()=>document.querySelector('.shell')?.__vueParentComponent.setupState};`);return;
++ }
++ if(p==='/fixture.html'){
++  const dev=url.searchParams.get('mode')==='dev';
++  const module=dev?`import '/dev-main.js';`:`import '/src/main.ts';`;
++  const html=`<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>D4b controlled portal</title></head><body><div id="app"></div><script type="module">${module}import '/probe.js';window.initD4b();</script></body></html>`;
++  res.setHeader('Content-Type','text/html');res.end(html);return;
++ }
++ if(/^\/(auth|admin|v1)\//.test(p)){
++  const token=String(req.headers.authorization||'').replace(/^Bearer /,'');
++  const row={at:new Date().toISOString(),method:req.method,url:req.url,rawHeaders:req.rawHeaders,authorization:req.headers.authorization??null,cookie:req.headers.cookie??null};raw.push(row);
++  let chunks=[];for await(const chunk of req)chunks.push(chunk);row.body=Buffer.concat(chunks).toString();
++  const gate=gates.get(token+' '+p);if(gate){gate.started?.();await gate.promise;}
++  let status=200,code='OK',data=[];
++  if(p==='/auth/session'){status=behavior.status;code=behavior.code;data={tenantId:'tenant_'+token,principalId:token,roles:behavior.roles,expiresAt:new Date(Date.now()+behavior.expiry).toISOString()};}
++  else if(p==='/auth/dev-token')data={accessToken:'dev-ticket'};
++  else if(p.endsWith('/download')){res.setHeader('Content-Type','application/octet-stream');res.end('controlled artifact');row.response={status:200,kind:'artifact',body:'controlled artifact'};return;}
++  else if(p.endsWith('/events')){
++   if(behavior.http){status=behavior.http.status;code=behavior.http.code;data=null;}
++   else {const body=behavior.reset?`event: stream_reset\ndata: ${JSON.stringify({reason:behavior.reset})}\n\nid: 3\nevent: NODE_STARTED\ndata: {"seq":3}\n\n`:behavior.statusFailure?'id: 3\nevent: WAITING_STEP\ndata: {"seq":3,"type":"WAITING_STEP"}\n\n':'event: stream_status\ndata: {"chunkReplay":false}\n\n';res.setHeader('Content-Type','text/event-stream');res.end(body);row.response={status:200,kind:'sse',body};return;}
++  } else if(/\/debug-runs\/?$/.test(p)&&req.method==='POST')data={runId:'r_debug'};
++  else if(p==='/admin/debug-inputs')data={items:[],hasMore:false,nextAfterId:0};
++  else if(p.includes('/debug-runs/')&&p.endsWith('/status'))data={runId:'r_debug',status:'RUNNING',eventsWatermark:0,nodes:[],events:[]};
++  else if(/^\/admin\/runs\//.test(p))data={runId:p.split('/')[3],status:behavior.runStatus,eventsWatermark:0,nodes:[],fileRefs:[{artifactId:'file',name:'result.txt',bytes:19,downloadUrl:'/admin/artifacts/file/download'}]};
++  else if(p==='/admin/apps')data=[appData(token)];
++  else if(p==='/admin/apps/app/copy')data={code:'old_copy'};
++  else if(p==='/admin/apps/app/versions')data=[{versionNo:1}];
++  else if(p==='/admin/apps/app')data=appData(token);
++  else if(p==='/admin/flows/app')data={definition:appData(token).definition,layout:{}};
++  else if(p.endsWith('/input-schema'))data={type:'FLOW',inputs:[]};
++  if(behavior.statusFailure&&(p.endsWith('/status')||/^\/admin\/runs\/[^/]+$/.test(p))&&++statusReads>=behavior.statusFailure.after){status=behavior.statusFailure.status;code=behavior.statusFailure.code;data=null;}
++  row.response={status,kind:'json',envelope:{code,message:status===200?'OK':'controlled '+code,data}};
++  res.writeHead(status,{'Content-Type':'application/json'});res.end(JSON.stringify(row.response.envelope));return;
++ }
++ vite.middlewares(req,res,()=>{res.statusCode=404;res.end('not found');});
++});
++await new Promise(r=>server.listen(0,'127.0.0.1',r));
++const port=server.address().port,origin='http://127.0.0.1:'+port;
++save('lifecycle-start.json',{cwd:process.cwd(),pid:process.pid,origin,readyAt:new Date().toISOString(),owned:'node HTTP+Vite middleware; child Chromium launched by this test; no existing processes touched'});
++const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});
++const context=await browser.newContext({viewport:{width:1440,height:960},acceptDownloads:true});
++context.setDefaultTimeout(8000);
++const delay=ms=>new Promise(r=>setTimeout(r,ms));
++const reset=()=>{behavior={status:200,code:'OK',roles:['ADMIN'],reset:undefined,http:undefined,runStatus:'SUCCEEDED',expiry:60_000};statusReads=0;};
++async function pageFor({provider=true,token='A',dev=false,hash='/apps',held=false}={}){
++ const page=await context.newPage();page.on('pageerror',e=>{errors.push({message:e.message,url:page.url()});save('page-errors.json',errors);});
++ await page.addInitScript(({provider,token,held})=>{
++  const native=setTimeout;window.setTimeout=(fn,ms,...args)=>native(fn,[1000,2000].includes(ms)?50:ms,...args);
++  window.host={token,calls:0,unsubscribed:0,listeners:[],held,release:undefined};
++  if(provider)window.agentPlatformPortal={getAccessToken(){window.host.calls++;return window.host.held?new Promise(r=>window.host.release=r):Promise.resolve(window.host.token);},onSessionChanged(fn){window.host.listeners.push(fn);return ()=>{window.host.unsubscribed++;window.host.listeners=window.host.listeners.filter(x=>x!==fn);};}};
++  window.switchIdentity=token=>{window.host.held=false;window.host.token=token;window.host.listeners.forEach(fn=>fn());};
++  window.downloadClicks=0;const click=HTMLAnchorElement.prototype.click;HTMLAnchorElement.prototype.click=function(){window.downloadClicks++;return click.call(this);};
++ },{provider,token,held});
++ await page.goto(origin+'/fixture.html'+(dev?'?mode=dev':'')+'#'+hash);
++ await page.waitForFunction(()=>window.d4b);
++ return page;
++}
++async function connected(page,token='A'){await expect(page.getByTestId('portal-identity')).toHaveText(token);await expect(page.locator('.shell')).toBeVisible();}
++async function run(name,fn){if(selector&&!new RegExp(selector).test(name))return;reset();const start=raw.length;try{const data=await fn();results.push({name,passed:true,rawStart:start,rawEnd:raw.length,...data});}catch(e){results.push({name,passed:false,error:e.stack,rawStart:start,rawEnd:raw.length});save('cases.json',results);throw e;}save('cases.json',results);console.log(JSON.stringify(results.at(-1)));}
++function gate(key){let resolve,started;const promise=new Promise(r=>resolve=r),ready=new Promise(r=>started=r);const value={promise,started};gates.set(key,value);return {ready,release:()=>{gates.delete(key);resolve();}};}
++try{
++ await run('visual-only final missing and signed-out entry copy screenshots',async()=>{
++  const missing=await pageFor({provider:false});try{await expect(missing.getByTestId('portal-notice')).toHaveText('请从门户打开工作台');await missing.screenshot({path:path.join(out,'missing-desktop.png'),fullPage:true});await missing.setViewportSize({width:390,height:844});await missing.screenshot({path:path.join(out,'missing-narrow.png'),fullPage:true});}finally{await missing.close();}
++  const page=await pageFor();try{await connected(page);await page.getByRole('button',{name:'退出',exact:true}).click();await expect(page.getByTestId('portal-entry')).toBeVisible();await page.screenshot({path:path.join(out,'signed-out-desktop.png'),fullPage:true});await page.setViewportSize({width:390,height:844});await page.screenshot({path:path.join(out,'signed-out-narrow.png'),fullPage:true});}finally{await page.close();}
++  return {captureOnly:true,screenshots:['missing-desktop.png','missing-narrow.png','signed-out-desktop.png','signed-out-narrow.png']};
++ });
++ await run('missing provider uses portal entry with no development fallback',async()=>{const page=await pageFor({provider:false});try{await expect(page.getByTestId('portal-notice')).toHaveText('请从门户打开工作台');expect(raw.filter(x=>x.url.startsWith('/auth/dev-token'))).toHaveLength(0);await page.screenshot({path:path.join(out,'missing-desktop.png'),fullPage:true});return {screenshot:'missing-desktop.png'};}finally{await page.close();}});
++ await run('pending provider mounts connection entry immediately; same token identity switch clears drafts',async()=>{const page=await pageFor({held:true});try{await expect(page.getByTestId('portal-entry')).toBeVisible();await page.evaluate(()=>window.host.release('A'));await connected(page);await page.evaluate(()=>{window.old=window.d4b.capture();window.old.dialog='app';window.old.form={name:'old draft'};window.switchIdentity('A');});await connected(page);await expect(page.getByRole('dialog')).toHaveCount(0);expect(await page.evaluate(()=>window.d4b.auth.generation)).toBe(2);return {sameTokenNewGeneration:true,draftGone:true};}finally{await page.close();}});
++ await run('manual reconnect supersedes held provider while connecting and ignores late old provider',async()=>{
++  const page=await pageFor({held:true});try{await expect(page.getByTestId('portal-entry')).toBeVisible();await expect(page.getByTestId('portal-reconnect')).toBeEnabled({timeout:1000});await page.evaluate(()=>{window.oldRelease=window.host.release;window.host.held=false;window.host.token='B';});await page.getByTestId('portal-reconnect').click();await connected(page,'B');await page.evaluate(()=>window.oldRelease('A'));await delay(100);expect(await page.evaluate(()=>window.d4b.auth.token)).toBe('B');return {manualSupersededPendingProvider:true,lateProviderIgnored:true};}finally{await page.close();}
++ });
++ for(const [status,code,message] of [[401,'UNAUTHORIZED','会话已失效'],[403,'SYS-AUTH-403','无权访问'],[503,'IAM_AUTHORITY_UNAVAILABLE','会话暂不可用']])await run('session '+status+' entry and manual reconnect',async()=>{behavior.status=status;behavior.code=code;const page=await pageFor();try{await expect(page.getByTestId('portal-notice')).toContainText(message);expect(await page.evaluate(()=>window.d4b.auth.roles)).toEqual([]);expect(await page.evaluate(()=>window.host.calls)).toBe(1);behavior.status=200;behavior.code='OK';await page.getByTestId('portal-reconnect').click();await connected(page);return {status,manualRecovery:true};}finally{await page.close();}});
++ await run('explicit development mode is manual and verifies session before workspace',async()=>{const page=await pageFor({provider:false,dev:true});try{await expect(page.getByRole('button',{name:'进入开发工作台'})).toBeVisible();await page.getByRole('button',{name:'进入开发工作台'}).click();await connected(page,'dev-ticket');return {devOnly:true};}finally{await page.close();}});
++ await run('real axios session and business HTTP, fetch SSE and artifact omit same-origin Cookie',async()=>{
++  await context.addCookies([{name:'ambient',value:'portal-cookie',url:origin}]);behavior.runStatus='RUNNING';const start=raw.length,page=await pageFor({hash:'/runs/r_cookie'});
++  try{await connected(page);await page.evaluate(()=>fetch('/ambient'));await expect(page.getByRole('button',{name:'下载附件'})).toBeVisible();const download=page.waitForEvent('download');await page.getByRole('button',{name:'下载附件'}).click();const file=await download;await file.saveAs(path.join(out,'downloaded-result.txt'));await expect.poll(()=>raw.slice(start).filter(x=>x.url.endsWith('/events')).length).toBeGreaterThan(0);
++   const requests=raw.slice(start);for(const category of ['/auth/session','/admin/runs/r_cookie','/admin/runs/r_cookie/events','/admin/artifacts/file/download']){const rows=requests.filter(x=>new URL(x.url,origin).pathname===category);expect(rows.length).toBeGreaterThan(0);for(const row of rows){expect(row.cookie).toBeNull();expect(row.authorization).toBe('Bearer A');}}
++   expect(await page.evaluate(()=>document.cookie)).toContain('ambient=portal-cookie');return {cookiePresentInDocument:true,rawCategories:4,download:file.suggestedFilename()};
++  }finally{await page.close();}
++ });
++ await run('late App allSettled/finally and old closures cannot mutate new identity, navigation, message or network',async()=>{
++  const hold=gate('A /admin/model-entries'),page=await pageFor({hash:'/apps/app/orchestration/flow'});
++  try{await connected(page);await hold.ready;await page.evaluate(()=>{window.old=window.d4b.capture();window.old.form={secret:'draft'};window.switchIdentity('B');});await connected(page,'B');await expect.poll(()=>page.evaluate(()=>window.d4b.capture().busy)).toBe(false);hold.release();await delay(100);
++   const before=raw.length;await page.evaluate(async()=>{window.old.go('/stale');window.old.failure({status:401,message:'stale failure'});window.old.success('stale toast');await window.old.load();await window.old.operation(async()=>{throw Error('must not execute');});});
++   expect(raw.length).toBe(before);expect(await page.evaluate(()=>location.hash)).toBe('#/apps/app/orchestration/flow');expect(await page.evaluate(()=>window.d4b.auth.token)).toBe('B');expect(await page.evaluate(()=>window.d4b.auth.roles)).toEqual(['ADMIN']);expect(await page.evaluate(()=>window.d4b.capture().form.secret)).toBeUndefined();await expect(page.getByText('stale toast',{exact:true})).toHaveCount(0);return {oldAllSettledReleased:true,oldClosuresStopped:true,newBusy:false};
++  }finally{hold.release();await page.close();}
++ });
++ await run('late real App copy POST cannot navigate new identity or replay a POST',async()=>{
++  const page=await pageFor(),hold=gate('A /admin/apps/app/copy');try{await connected(page);await page.evaluate(()=>{window.old=window.d4b.capture();window.old.startCopy({code:'app',name:'old'});window.old.copyForm={code:'copy',name:'copy'};window.copyPromise=window.old.copyApplication();});await hold.ready;await page.evaluate(()=>window.switchIdentity('B'));await connected(page,'B');hold.release();await page.evaluate(()=>window.copyPromise);expect(await page.evaluate(()=>location.hash)).toBe('#/apps');expect(raw.filter(x=>x.url==='/admin/apps/app/copy')).toHaveLength(1);return {postCount:1,hash:'#/apps'};}finally{hold.release();await page.close();}
++ });
++ await run('late providerOptions and published input consumers remain inside old workspace',async()=>{
++  const page=await pageFor();try{await connected(page);const hold=gate('A /admin/model-providers');await page.evaluate(()=>{window.old=window.d4b.capture();window.old.create('entry');});await hold.ready;await page.evaluate(()=>window.switchIdentity('B'));await connected(page,'B');hold.release();await delay(100);expect(await page.evaluate(()=>window.d4b.capture().providerOptions)).toEqual([]);
++   const schema=gate('B /v1/apps/app/input-schema');await page.evaluate(()=>location.hash='/apps/app/run');await schema.ready;await page.evaluate(()=>window.switchIdentity('C'));await connected(page,'C');schema.release();await delay(100);expect(await page.evaluate(()=>window.d4b.auth.token)).toBe('C');expect(raw.filter(x=>x.method==='POST'&&x.authorization==='Bearer C')).toHaveLength(0);return {providerOptionsCleared:true,schemaIsolated:true};
++  }finally{for(const g of gates.values())g.started?.();gates.clear();await page.close();}
++ });
++ await run('late artifact blob from actual component cannot click after identity switch',async()=>{
++  const page=await pageFor({hash:'/runs/r_blob'});try{await connected(page);await expect(page.getByRole('button',{name:'下载附件'})).toBeVisible();await page.evaluate(()=>{const native=Response.prototype.blob;Response.prototype.blob=async function(){const value=await native.call(this);await new Promise(r=>window.releaseBlob=r);return value;};});await page.getByRole('button',{name:'下载附件'}).click();await page.waitForFunction(()=>window.releaseBlob);await page.evaluate(()=>window.switchIdentity('B'));await connected(page,'B');await page.evaluate(()=>window.releaseBlob());await delay(100);expect(await page.evaluate(()=>window.downloadClicks)).toBe(0);return {downloadClicks:0};}finally{await page.close();}
++ });
++ await run('late chart dynamic import does not restore old workspace or busy state',async()=>{
++  const held=gate('chart'),page=await pageFor({hash:'/runs'});try{await connected(page);await held.ready;await page.evaluate(()=>{window.old=window.d4b.capture();window.switchIdentity('B');});await connected(page,'B');held.release();await expect.poll(()=>page.evaluate(()=>window.d4b.capture().busy)).toBe(false);expect(await page.evaluate(()=>window.old===window.d4b.capture())).toBe(false);expect(await page.evaluate(()=>window.d4b.auth.token)).toBe('B');return {oldWorkspaceUnmounted:true,newBusy:false};}finally{held.release();await page.close();}
++ });
++ await run('empty roles authenticate without admin controls, expiry and unmount never auto reconnect',async()=>{
++  behavior.roles=[];behavior.expiry=1200;const page=await pageFor();try{await connected(page);await expect(page.getByRole('button',{name:'创建智能体',exact:true})).toHaveCount(0);await expect(page.getByTestId('portal-entry')).toBeVisible();expect(await page.evaluate(()=>window.d4b.auth.roles)).toEqual([]);expect(await page.evaluate(()=>window.host.calls)).toBe(1);await page.evaluate(()=>document.querySelector('#app').__vue_app__.unmount());expect(await page.evaluate(()=>window.host.unsubscribed)).toBe(1);return {emptyRoles:true,expired:true,hostCalls:1,unsubscribed:1};}finally{await page.close();}
++ });
++ for(const consumer of ['RunDetail','DebugPanel'])for(const reason of ['AUTHORITY_EXPIRED','AUTHORITY_DENIED','AUTHORITY_UNAVAILABLE'])await run(consumer+' stops '+reason+' without status/open/cancel/POST growth',async()=>{
++  behavior.reset=reason;behavior.runStatus='RUNNING';const page=await pageFor({hash:consumer==='RunDetail'?'/runs/r_control':'/apps/app/orchestration/debug'});
++  try{await connected(page);if(consumer==='DebugPanel'){await expect(page.getByRole('button',{name:'开始调试'})).toBeEnabled();await page.getByRole('button',{name:'开始调试'}).click();}await expect(page.getByRole('button',{name:'重新连接观察'})).toBeVisible();const count=raw.length,post=raw.filter(x=>x.method==='POST').length;await delay(220);expect(raw.length).toBe(count);expect(raw.filter(x=>x.method==='POST')).toHaveLength(post);return {reason,consumer,requestsStable:true,postStable:true};}finally{await page.close();}
++ });
++ for(const consumer of ['RunDetail','DebugPanel'])await run(consumer+' stops named IAM 503 with manual recovery entry',async()=>{
++  behavior.http={status:503,code:'IAM_AUTHORITY_UNAVAILABLE'};behavior.runStatus='RUNNING';const page=await pageFor({hash:consumer==='RunDetail'?'/runs/r_http':'/apps/app/orchestration/debug'});try{await connected(page);if(consumer==='DebugPanel'){await expect(page.getByRole('button',{name:'开始调试'})).toBeEnabled();await page.getByRole('button',{name:'开始调试'}).click();}await expect(page.getByRole('button',{name:'重新连接观察'})).toBeVisible();const count=raw.length;await delay(220);expect(raw.length).toBe(count);return {consumer,code:'IAM_AUTHORITY_UNAVAILABLE',requestsStable:true};}finally{await page.close();}
++ });
++ for(const consumer of ['RunDetail','DebugPanel'])for(const status of [401,403])await run(consumer+' stops HTTP '+status+' without retry or cancel',async()=>{
++  behavior.http={status,code:status===401?'UNAUTHORIZED':'SYS-AUTH-403'};behavior.runStatus='RUNNING';const page=await pageFor({hash:consumer==='RunDetail'?'/runs/r_denied':'/apps/app/orchestration/debug'});try{await connected(page);if(consumer==='DebugPanel'){await expect(page.getByRole('button',{name:'开始调试'})).toBeEnabled();await page.getByRole('button',{name:'开始调试'}).click();}await expect(status===401?page.getByTestId('portal-entry'):page.getByRole('button',{name:'重新连接观察'})).toBeVisible();const count=raw.length;await delay(220);expect(raw.length).toBe(count);if(status===401){expect(await page.evaluate(()=>window.d4b.auth.roles)).toEqual([]);expect(await page.evaluate(()=>window.d4b.auth.user)).toBeUndefined();}return {consumer,status,requestsStable:true};}finally{await page.close();}
++ });
++ for(const consumer of ['RunDetail','DebugPanel'])await run(consumer+' ordinary dependency 503 retains status/reopen recovery',async()=>{
++  behavior.http={status:503,code:'DEPENDENCY_UNAVAILABLE'};behavior.runStatus='RUNNING';const start=raw.length,page=await pageFor({hash:consumer==='RunDetail'?'/runs/r_transient':'/apps/app/orchestration/debug'});try{await connected(page);if(consumer==='DebugPanel'){await expect(page.getByRole('button',{name:'开始调试'})).toBeEnabled();await page.getByRole('button',{name:'开始调试'}).click();}await expect.poll(()=>raw.slice(start).filter(x=>x.url.endsWith('/events')).length).toBeGreaterThanOrEqual(2);await expect(page.getByRole('button',{name:'重新连接观察'})).toHaveCount(0);expect(raw.slice(start).filter(x=>x.url.endsWith('/cancel'))).toHaveLength(0);return {consumer,ordinary503Retried:true,cancelCount:0};}finally{await page.close();}
++ });
++ for(const consumer of ['RunDetail','DebugPanel'])await run(consumer+' status authorization denial after business frame stops observation',async()=>{
++  behavior.runStatus='RUNNING';behavior.statusFailure={after:consumer==='RunDetail'?3:2,status:403,code:'SYS-AUTH-403'};
++  const page=await pageFor({hash:consumer==='RunDetail'?'/runs/r_event_status':'/apps/app/orchestration/debug'});try{await connected(page);if(consumer==='DebugPanel'){await expect(page.getByRole('button',{name:'开始调试'})).toBeEnabled();await page.getByRole('button',{name:'开始调试'}).click();}await expect(page.getByRole('button',{name:'重新连接观察'})).toBeVisible();const count=raw.length;await delay(220);expect(raw.length).toBe(count);return {consumer,status403AfterFrame:true,requestsStable:true};}finally{await page.close();}
++ });
++ await run('logout clears identity and waits for explicit reconnect; desktop and narrow layout',async()=>{
++  const page=await pageFor();try{
++   await connected(page);await page.screenshot({path:path.join(out,'connected-desktop.png'),fullPage:true});await page.setViewportSize({width:390,height:844});
++   const layout=await page.evaluate(()=>({viewport:innerWidth,width:document.documentElement.scrollWidth,inheritedMinimum:parseFloat(getComputedStyle(document.querySelector('.shell')).minWidth)}));
++   expect(layout.width).toBeLessThanOrEqual(Math.max(layout.viewport,layout.inheritedMinimum));await page.screenshot({path:path.join(out,'connected-narrow.png'),fullPage:true});
++   await page.getByRole('button',{name:'退出',exact:true}).click();await expect(page.getByTestId('portal-entry')).toBeVisible();expect(await page.evaluate(()=>window.d4b.auth.roles)).toEqual([]);expect(await page.evaluate(()=>window.d4b.auth.user)).toBeUndefined();expect(await page.evaluate(()=>window.host.calls)).toBe(1);
++   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:path.join(out,'signed-out-narrow.png'),fullPage:true});await page.getByTestId('portal-reconnect').click();await connected(page);
++   return {screenshots:['connected-desktop.png','connected-narrow.png','signed-out-narrow.png'],layout,entryOverflow:false,manualReconnect:true};
++  }finally{await page.close();}
++ });
++}finally{
++ for(const g of gates.values())g.started?.();
++ await context.close();await browser.close();await vite.close();server.closeAllConnections();await new Promise(r=>server.close(r));
++ save('raw-http.json',raw);save('page-errors.json',errors);save('lifecycle-end.json',{pid:process.pid,closedAt:new Date().toISOString(),httpClosed:!server.listening,viteClosed:true,chromiumClosed:!browser.isConnected()});
++ save('result.json',{phase,cwd:process.cwd(),origin,cases:results.length,passed:results.filter(x=>x.passed).length,failed:results.filter(x=>!x.passed).length,errors});
++}
++if(results.some(x=>!x.passed)||errors.length)process.exitCode=1;
+diff --git a/web/tests/run-observer.test.ts b/web/tests/run-observer.test.ts
+index cc85b8d..0eff28a 100644
+--- a/web/tests/run-observer.test.ts
++++ b/web/tests/run-observer.test.ts
+@@ -1,84 +1,94 @@
+ import { describe, it, expect } from 'vitest';
+ import { observeRun } from '../shared/run-observer';
+ 
+ describe('authoritative run observation across transient SSE connections',()=>{
++  it.each(['AUTHORITY_EXPIRED','AUTHORITY_DENIED','AUTHORITY_UNAVAILABLE'])('D4b stops %s reset without status or reopening',async reason=>{
++    let opens=0,reads=0;const facts:any[]=[];
++    await expect(observeRun({signal:new AbortController().signal,open:async(_,emit)=>{opens++;emit({type:'stream_reset',reason});emit({type:'NODE_STARTED',seq:1});},readStatus:async()=>{reads++;return {status:'SUCCEEDED'};},onStatus:()=>{},onEvent:e=>facts.push(e)})).rejects.toMatchObject({reason});
++    expect(opens).toBe(1);expect(reads).toBe(0);expect(facts).toEqual([]);
++  });
++  it('D4b stops named IAM 503 but retains ordinary 503 recovery',async()=>{
++    const base={signal:new AbortController().signal,pause:async()=>{},onStatus:()=>{},onEvent:()=>{}};let reads=0;
++    await expect(observeRun({...base,open:async()=>{throw Object.assign(Error('iam unavailable'),{status:503,code:'IAM_AUTHORITY_UNAVAILABLE'});},readStatus:async()=>{reads++;return {status:'SUCCEEDED'};}})).rejects.toMatchObject({code:'IAM_AUTHORITY_UNAVAILABLE'});expect(reads).toBe(0);
++    const result=await observeRun({...base,open:async()=>{throw Object.assign(Error('ordinary'),{status:503,code:'DEPENDENCY_UNAVAILABLE'});},readStatus:async()=>{reads++;return {status:'SUCCEEDED'};}});expect(result.status).toBe('SUCCEEDED');expect(reads).toBe(1);
++  });
+   it('keeps the accepted run through EOF and resumes from durable IDs, never chunk counters',async()=>{
+     const opened:number[]=[],events:any[]=[],states:any[]=[];let round=0;
+     const result=await observeRun({signal:new AbortController().signal,pause:async()=>{},
+       open:async(cursor,emit)=>{opened.push(cursor);round++;if(round===1){emit({type:'NODE_STARTED',seq:7});emit({type:'CHUNK',seq:900,text:'partial'});}else emit({type:'RUN_FINISHED',seq:9});},
+       readStatus:async()=>round===1?{status:'RUNNING',eventsWatermark:8}:{status:'SUCCEEDED',eventsWatermark:9,output:{text:'final'}},
+       onEvent:e=>events.push(e),onStatus:s=>states.push(s)});
+     expect(opened).toEqual([0,8]);expect(result.output!.text).toBe('final');
+     expect(states.map(s=>s.status)).toEqual(['RUNNING','SUCCEEDED']);expect(events).toHaveLength(3);
+   });
+ 
+   it('applies a reset snapshot before moving the cursor and drops replayed facts',async()=>{
+     const order:string[]=[],seen:number[]=[];let round=0;
+     await observeRun({signal:new AbortController().signal,pause:async()=>{},
+       open:async(cursor,emit)=>{order.push('open:'+cursor);round++;if(round===1)emit({type:'stream_reset',eventsWatermark:50,reason:'CURSOR_EXPIRED'});else{emit({type:'NODE_STARTED',seq:49});emit({type:'RUN_FINISHED',seq:51});}},
+       readStatus:async()=>{order.push('read');return {status:round===1?'RUNNING':'SUCCEEDED',eventsWatermark:round===1?50:51};},
+       onStatus:()=>order.push('snapshot'),onEvent:e=>{if(e.seq)seen.push(e.seq);}});
+     expect(order.slice(0,4)).toEqual(['open:0','read','snapshot','open:50']);expect(seen).toEqual([51]);
+   });
+ 
+   it('uses status while the transient channel fails without reissuing creation',async()=>{
+     let round=0;const states:string[]=[];
+     const result=await observeRun({signal:new AbortController().signal,pause:async()=>{},
+       open:async()=>{round++;throw new TypeError('network unavailable');},
+       readStatus:async()=>({status:round<2?'WAITING_APPROVAL':'SUCCEEDED',eventsWatermark:round}),
+       onStatus:s=>states.push(s.status),onEvent:()=>{}});
+     expect(round).toBe(2);expect(states).toEqual(['WAITING_APPROVAL','SUCCEEDED']);expect(result.status).toBe('SUCCEEDED');
+   });
+ 
+   it('stops on revoked authorization and bounds unavailable status retries',async()=>{
+     let reads=0;
+     const options={signal:new AbortController().signal,pause:async()=>{},open:async()=>{},onEvent:()=>{},onStatus:()=>{}};
+     await expect(observeRun({...options,readStatus:async()=>{reads++;throw Object.assign(new Error('revoked'),{status:401});}})).rejects.toThrow('revoked');
+     expect(reads).toBe(1);reads=0;
+     await expect(observeRun({...options,maxFailures:3,readStatus:async()=>{reads++;throw new TypeError('offline');}})).rejects.toThrow('offline');
+     expect(reads).toBe(3);
+   });
+ 
+   it('aborts a nonterminal observer without marking its backend run cancelled',async()=>{
+     const controller=new AbortController();let reads=0;
+     await expect(observeRun({signal:controller.signal,open:async()=>{},readStatus:async()=>{reads++;return {status:'RUNNING',eventsWatermark:1};},onStatus:()=>{},onEvent:()=>{},pause:async()=>{controller.abort();}})).rejects.toMatchObject({name:'AbortError'});
+     expect(reads).toBe(1);
+   });
+ 
+   it('does not reopen before an unavailable authoritative snapshot has been applied', async()=>{
+     const order:string[]=[];let reads=0;
+     await observeRun({signal:new AbortController().signal,pause:async()=>{},
+       open:async cursor=>{order.push('open:'+cursor);},
+       readStatus:async()=>{order.push('read');if(++reads===1)throw new TypeError('offline');return {status:'SUCCEEDED',eventsWatermark:4};},
+       onStatus:()=>{order.push('snapshot');},onEvent:()=>{}});
+     expect(order).toEqual(['open:0','read','read','snapshot']);
+   });
+ 
+   it('polls after EVENT_LIMIT without reopening the permanently oversized fact', async()=>{
+     let opens=0,reads=0;const delays:number[]=[];
+     await observeRun({signal:new AbortController().signal,pause:async ms=>{delays.push(ms);},
+       open:async(_,emit)=>{opens++;emit({type:'stream_reset',reason:'EVENT_LIMIT',lastEventId:500});},
+       readStatus:async()=>({status:++reads===3?'SUCCEEDED':'RUNNING',eventsWatermark:reads}),
+       onStatus:()=>{},onEvent:()=>{throw Error('control frame delivered as fact');}});
+     expect(opens).toBe(1);expect(reads).toBe(3);expect(delays).toEqual([750,750]);
+   });
+ 
+   it.each([400,401,403,404,422])('stops permanent stream HTTP %s without reading status', async status=>{
+     let reads=0;
+     await expect(observeRun({signal:new AbortController().signal,pause:async()=>{},
+       open:async()=>{throw Object.assign(Error('HTTP '+status),{status});},
+       readStatus:async()=>{reads++;return {status:'RUNNING'};},onStatus:()=>{},onEvent:()=>{}})).rejects.toThrow('HTTP '+status);
+     expect(reads).toBe(0);
+   });
+ 
+   it('aborts a hanging status read and ignores its late response and old stream callback',async()=>{
+     const controller=new AbortController();const states:any[]=[],events:any[]=[];
+     let resolve!:(value:any)=>void,late!:(event:any)=>void;
+     const observation=observeRun({signal:controller.signal,open:async(_,emit)=>{late=emit;},
+       readStatus:()=>new Promise<any>(r=>{resolve=r;controller.abort();}),
+       onStatus:s=>{states.push(s);},onEvent:e=>{events.push(e);}});
+     await expect(observation).rejects.toMatchObject({name:'AbortError'});
+     resolve({status:'SUCCEEDED',eventsWatermark:8});late({type:'RUN_FINISHED',seq:8});
+     await Promise.resolve();expect(states).toEqual([]);expect(events).toEqual([]);
+   });
+ });
+diff --git a/web/tests/stream-auth.test.ts b/web/tests/stream-auth.test.ts
+index 8b3a4a3..5b54fe9 100644
+--- a/web/tests/stream-auth.test.ts
++++ b/web/tests/stream-auth.test.ts
+@@ -1,110 +1,144 @@
+ import { afterEach, expect, it, vi } from 'vitest';
+ import axios from 'axios';
+ import { createApi } from '../shared/api';
+ import { streamEvents } from '../debug-panel/events';
+ 
+ afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+ const ok = () => new Response(JSON.stringify({ code: 'OK', data: { status: 'RUNNING' } }));
+ const revoked = () => new Response('', { status: 401 });
+ const deferred = <T>() => {
+   let resolve!: (value: T) => void;
+   const promise = new Promise<T>(r => { resolve = r; });
+   return { promise, resolve };
+ };
+ 
+ it('keeps existing GET and POST call signatures and bodies', async () => {
+   const transport = vi.fn(async () => ok());
+   const api = createApi(() => 'current', transport);
+   await expect(api('/status')).resolves.toEqual({ status: 'RUNNING' });
+   await api('/decision', 'POST', { approved: true });
+   expect(transport.mock.calls[1]).toEqual(['/decision', expect.objectContaining({
+     method: 'POST', body: '{"approved":true}', headers: expect.objectContaining({ Authorization: 'Bearer current' }),
+   })]);
+ });
+ 
+ it('API rejects an already aborted request before transport', async () => {
+   const transport = vi.fn(async () => ok()), controller = new AbortController();
+   controller.abort();
+   const api = createApi(() => 'current', transport);
+   await expect(api('/status', 'GET', undefined, controller.signal)).rejects.toMatchObject({ name: 'AbortError' });
+   expect(transport).not.toHaveBeenCalled();
+ });
+ 
+ it('passes the observation signal to a fetch-compatible transport', async () => {
+   const transport = vi.fn(async () => ok()), controller = new AbortController();
+   await createApi(() => 'current', transport)('/status', 'GET', undefined, controller.signal);
+   expect(transport.mock.calls[0]).toEqual(['/status', expect.objectContaining({ signal: controller.signal })]);
+ });
+ 
+ it('passes the observation signal to the default axios transport', async () => {
+   const request = vi.spyOn(axios, 'request').mockResolvedValue({ status: 200, headers: {}, data: '{"code":"OK","data":1}' });
+   const controller = new AbortController();
+   await expect(createApi(() => 'current')('/status', 'GET', undefined, controller.signal)).resolves.toBe(1);
+   expect(request).toHaveBeenCalledWith(expect.objectContaining({ signal: controller.signal }));
+ });
+ 
+ it.each([200, 401])('ignores late API HTTP %s after abort even if the transport completes', async status => {
+   const reply = deferred<Response>(), unauthorized = vi.fn(), controller = new AbortController();
+   const api = createApi(() => 'current', () => reply.promise, unauthorized);
+   const pending = api('/status', 'GET', undefined, controller.signal);
+   controller.abort(); reply.resolve(status === 200 ? ok() : revoked());
+   await expect(pending).rejects.toMatchObject({ name: 'AbortError' });
+   expect(unauthorized).not.toHaveBeenCalled();
+ });
+ 
+ it('checks abort again after asynchronous API body decoding', async () => {
+   const body = deferred<any>(), unauthorized = vi.fn(), controller = new AbortController();
+   const response = revoked(); response.json = () => body.promise;
+   const pending = createApi(() => 'current', async () => response, unauthorized)('/status', 'GET', undefined, controller.signal);
+   await Promise.resolve(); controller.abort(); body.resolve({ code: 'UNAUTHORIZED' });
+   await expect(pending).rejects.toMatchObject({ name: 'AbortError' });
+   expect(unauthorized).not.toHaveBeenCalled();
+ });
+ 
+ it('does not clear a new login when the old API token receives 401', async () => {
+   const reply = deferred<Response>(); let token = 'old';
+   const unauthorized = vi.fn(() => { token = ''; });
+   const pending = createApi(() => token, () => reply.promise, unauthorized)('/status');
+   token = 'new'; reply.resolve(revoked());
+   await expect(pending).rejects.toMatchObject({ status: 401 });
+   expect(token).toBe('new'); expect(unauthorized).not.toHaveBeenCalled();
+ });
+ 
+ it('clears the current API token on an active 401 with an unreadable body', async () => {
+   let token = 'current'; const unauthorized = vi.fn(() => { token = ''; });
+   const pending = createApi(() => token, async () => revoked(), unauthorized)('/status');
+   await expect(pending).rejects.toMatchObject({ status: 401 });
+   expect(token).toBe(''); expect(unauthorized).toHaveBeenCalledTimes(1);
+ });
+ 
+ it('SSE rejects an already aborted request before fetch', async () => {
+   const transport = vi.fn(async () => revoked()), controller = new AbortController(); controller.abort();
+   vi.stubGlobal('fetch', transport);
+   await expect(streamEvents('/events', () => 'current', 0, vi.fn(), controller.signal)).rejects.toMatchObject({ name: 'AbortError' });
+   expect(transport).not.toHaveBeenCalled();
+ });
+ 
+ it('ignores late SSE 401 after abort before unauthorized side effects', async () => {
+   const reply = deferred<Response>(), unauthorized = vi.fn(), controller = new AbortController();
+   vi.stubGlobal('fetch', () => reply.promise);
+   const pending = streamEvents('/events', () => 'current', 0, vi.fn(), controller.signal, unauthorized);
+   controller.abort(); reply.resolve(revoked());
+   await expect(pending).rejects.toMatchObject({ name: 'AbortError' });
+   expect(unauthorized).not.toHaveBeenCalled();
+ });
+ 
+ it('does not clear a new login when the old SSE token receives 401', async () => {
+   const reply = deferred<Response>(), controller = new AbortController(); let token = 'old';
+   const unauthorized = vi.fn(() => { token = ''; }); vi.stubGlobal('fetch', () => reply.promise);
+   const pending = streamEvents('/events', () => token, 0, vi.fn(), controller.signal, unauthorized);
+   token = 'new'; reply.resolve(revoked());
+   await expect(pending).rejects.toMatchObject({ status: 401 });
+   expect(token).toBe('new'); expect(unauthorized).not.toHaveBeenCalled();
+ });
+ 
+ it('clears the current SSE token on an active 401', async () => {
+   let token = 'current'; const unauthorized = vi.fn(() => { token = ''; });
+   vi.stubGlobal('fetch', async () => revoked());
+   await expect(streamEvents('/events', () => token, 0, vi.fn(), new AbortController().signal, unauthorized)).rejects.toMatchObject({ status: 401 });
+   expect(token).toBe(''); expect(unauthorized).toHaveBeenCalledTimes(1);
+ });
++
++it('D4b scopes same-token HTTP to generation, including late body and chained POST', async () => {
++  const body=deferred<any>(),response=ok();response.json=()=>body.promise;
++  const controller=new AbortController();let current=true;
++  const transport=vi.fn(async()=>response);
++  const api=createApi(()=> 'same',transport,vi.fn(),{signal:controller.signal,current:()=>current});
++  const pending=api('/late');await Promise.resolve();current=false;body.resolve({code:'OK',data:'old'});
++  await expect(pending).rejects.toMatchObject({name:'AbortError'});
++  await expect(api('/post','POST')).rejects.toMatchObject({name:'AbortError'});expect(transport).toHaveBeenCalledTimes(1);
++});
++it('D4b default axios fetch adapter explicitly omits ambient cookies',async()=>{
++  const request=vi.spyOn(axios,'request').mockResolvedValue({status:200,headers:{},data:'{"code":"OK","data":1}'});
++  await createApi(()=> 'token')('/session');
++  expect(request).toHaveBeenCalledWith(expect.objectContaining({adapter:'fetch',withCredentials:false}));
++});
++it('D4b names authorization denial and IAM unavailability without generic busy text',async()=>{
++ for(const [status,code,message] of [[403,'SYS-AUTH-403','没有此操作权限'],[503,'IAM_AUTHORITY_UNAVAILABLE','授权服务暂不可用']] as const){
++  await expect(createApi(()=> 'token',async()=>new Response(JSON.stringify({code,message:'internal'}),{status}))('/status')).rejects.toMatchObject({status,code,message:expect.stringContaining(message)});
++ }
++});
++it('D4b aborts a pending reader and releases it even if a custom body ignores fetch signal',async()=>{
++ const controller=new AbortController(),cancel=vi.fn();let started!:()=>void;const ready=new Promise<void>(r=>started=r);
++ vi.stubGlobal('fetch',async()=>new Response(new ReadableStream({pull(){started();},cancel})));
++ const observation=streamEvents('/events',()=> 'token',0,vi.fn(),controller.signal);await ready;controller.abort();await expect(observation).rejects.toMatchObject({name:'AbortError'});expect(cancel).toHaveBeenCalledTimes(1);
++});
++it.each(['AUTHORITY_EXPIRED','AUTHORITY_DENIED','AUTHORITY_UNAVAILABLE'])('D4b %s reset stops buffered facts and releases reader',async reason=>{
++  const cancelled=vi.fn();vi.stubGlobal('fetch',async()=>new Response(new ReadableStream({start(c){c.enqueue(new TextEncoder().encode(`event: stream_reset\ndata: {"reason":"${reason}"}\n\nid: 3\nevent: NODE_STARTED\ndata: {"seq":3}\n\n`));},cancel:cancelled})));
++  const events=vi.fn();await expect(streamEvents('/events',()=> 'token',0,events,new AbortController().signal)).rejects.toMatchObject({reason});expect(events).not.toHaveBeenCalled();expect(cancelled).toHaveBeenCalledTimes(1);
++});
++it('D4b stops after reader read abort and after callback abort within buffered frames',async()=>{
++ const controller=new AbortController(),cancel=vi.fn(),events=vi.fn(()=>controller.abort());
++ vi.stubGlobal('fetch',async()=>new Response(new ReadableStream({start(c){c.enqueue(new TextEncoder().encode('id: 1\ndata: {"seq":1}\n\nid: 2\ndata: {"seq":2}\n\n'));},cancel})));
++ await expect(streamEvents('/events',()=> 'token',0,events,controller.signal)).rejects.toMatchObject({name:'AbortError'});expect(events).toHaveBeenCalledTimes(1);expect(cancel).toHaveBeenCalledTimes(1);
++});

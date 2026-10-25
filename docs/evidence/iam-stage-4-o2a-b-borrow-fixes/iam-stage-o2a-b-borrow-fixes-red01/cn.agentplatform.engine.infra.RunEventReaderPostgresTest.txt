@@ -1,0 +1,37 @@
+-------------------------------------------------------------------------------
+Test set: cn.agentplatform.engine.infra.RunEventReaderPostgresTest
+-------------------------------------------------------------------------------
+Tests run: 3, Failures: 2, Errors: 0, Skipped: 0, Time elapsed: 7.582 s <<< FAILURE! -- in cn.agentplatform.engine.infra.RunEventReaderPostgresTest
+cn.agentplatform.engine.infra.RunEventReaderPostgresTest.bothOutputMethodsRejectCrossReentryAndRecoverAfterSinkIOException -- Time elapsed: 3.651 s <<< FAILURE!
+java.lang.AssertionError: 
+
+Expecting actual throwable to be an instance of:
+  cn.agentplatform.common.PlatformException
+but was:
+  java.lang.AssertionError: NESTED_OUTPUT_REACHED
+	at cn.agentplatform.engine.infra.RunEventReaderPostgresTest$2.write(RunEventReaderPostgresTest.java:122)
+	at java.base/java.io.OutputStream.write(OutputStream.java:167)
+	at java.base/java.io.OutputStream.write(OutputStream.java:124)
+	...(86 remaining lines not displayed - this can be changed with Assertions.setMaxStackTraceElementsDisplayed)
+	at cn.agentplatform.engine.infra.RunEventReaderPostgresTest$3.check(RunEventReaderPostgresTest.java:126)
+	at cn.agentplatform.engine.infra.RunEventReaderPostgresTest$3.write(RunEventReaderPostgresTest.java:124)
+	at cn.agentplatform.engine.infra.RunEventReader$Borrow.writePayload(RunEventReader.java:161)
+	at cn.agentplatform.engine.infra.RunEventReaderPostgresTest.lambda$bothOutputMethodsRejectCrossReentryAndRecoverAfterSinkIOException$4(RunEventReaderPostgresTest.java:127)
+	at cn.agentplatform.engine.infra.RunEventReader$EventEmission.consume(RunEventReader.java:133)
+	at cn.agentplatform.engine.infra.RunEventReaderPostgresTest.bothOutputMethodsRejectCrossReentryAndRecoverAfterSinkIOException(RunEventReaderPostgresTest.java:121)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+cn.agentplatform.engine.infra.RunEventReaderPostgresTest.payloadSinkMutationCannotChangeLaterWritesInTheSameRealBorrow -- Time elapsed: 1.691 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+
+expected: [123, 34, 116, 101, 120, 116, 34, 58, 34, -24, -89, -126, -27, -81, -97, 34, 44, 34, 105, 110, 116, 101, 103, 101, 114, 34, 58, 49, 50, 51, 52, 53, 54, 55, 56, 57, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 48, 125]
+ but was: [33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33]
+	at cn.agentplatform.engine.infra.RunEventReaderPostgresTest.lambda$payloadSinkMutationCannotChangeLaterWritesInTheSameRealBorrow$2(RunEventReaderPostgresTest.java:112)
+	at cn.agentplatform.engine.infra.RunEventReader$EventEmission.consume(RunEventReader.java:133)
+	at cn.agentplatform.engine.infra.RunEventReaderPostgresTest.payloadSinkMutationCannotChangeLaterWritesInTheSameRealBorrow(RunEventReaderPostgresTest.java:106)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+

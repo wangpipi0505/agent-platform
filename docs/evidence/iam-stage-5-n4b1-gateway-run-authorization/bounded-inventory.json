@@ -1,0 +1,28 @@
+{
+  "ordinaryExchange": "portalExchange delegates same decoder/map/platform.access/query/verifiedTicket/within/source checks; integration unchanged",
+  "ticketCallSites": [
+    "client",
+    "exchange_integration",
+    "portalExchange",
+    "resume",
+    "forward"
+  ],
+  "queryCallSites": [
+    "client",
+    "exchange_integration",
+    "portalExchange",
+    "resume",
+    "forward",
+    "authorizeRetained",
+    "authorizeWorkload",
+    "approver",
+    "open",
+    "check"
+  ],
+  "selected": [
+    "GatewayRunAuthorizationTest",
+    "CurrentAuthorityClientTest"
+  ],
+  "whyNoExtra": "Only these two source APIs affected. Shared private verifiedTicket returns the same prior ServiceTicket for old callers; existing CurrentAuthorityClientTest actual20 covers portal/integration/workload/forward/resume/approver/receiver constraints. No other selector requested or run.",
+  "noBroadRerun": true
+}

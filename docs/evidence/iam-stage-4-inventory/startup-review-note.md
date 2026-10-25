@@ -1,0 +1,14 @@
+# 运行时路由覆盖的启动时点关注
+
+root为后续D1只读核对了本工程已固定的Boot3.5.0和Context6.2.7源码，没有启动测试服务或修改实现。本记录不是运行时验证通过。
+
+实际源码：Task1/upstream中的AbstractApplicationContext.java、ServletWebServerApplicationContext.java，以及本目录upstream从同一Boot3.5.0 sources.jar提取的TomcatWebServer.java、WebServerStartStopLifecycle.java。
+
+- AbstractApplicationContext.refresh先执行工厂处理器，再onRefresh、finishBeanFactoryInitialization，最后finishRefresh；后两者分别执行preInstantiateSingletons和lifecycleProcessor.onRefresh。
+- ServletWebServerApplicationContext.createWebServer创建服务器并登记webServerStartStop。
+- TomcatWebServer.initialize在启动context时移走connectors并禁用bindOnInit，注释明确阻止此时绑定协议；真正start再addPreviouslyRemovedConnectors。
+- WebServerStartStopLifecycle.start调用webServer.start并发布ServletWebServerInitializedEvent。
+
+因此D1实施时需选能取得完整handler映射、又在服务真正接收请求前失败的校验时点，并以固定版本实际源码及有限启动反例证明。不能把静态158模板计数当runtime覆盖；不能等ApplicationReady后才发现未登记handler。这里不预先指定Java扩展接口，也不把“已读生命周期源码”当生产开放依据；Task3期间原工厂处理器IAM闭锁继续保持。
+
+准备期六业务模块252份src/POM和root POM仍与962固定源码相同，见historical-business-match.json；legacy-main-calls.txt的28行只是迁移搜索锚点，不是路由总数或验收数量。

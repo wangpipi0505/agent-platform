@@ -1,0 +1,27 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8"><title>C2c synthetic protocol fixture</title></head><body><div id="app"></div>
+<script type="module">
+import {createApp,h,ref} from 'vue';
+import {createPinia} from 'pinia';
+import ElementPlus from 'element-plus';
+import 'element-plus/dist/index.css';
+import '../shared/tokens.css';
+import DebugPanel from '../debug-panel/DebugPanel.vue';
+import RunDetail from '../admin/src/RunDetail.vue';
+import Chat from '../shared/Chat.vue';
+import {useAuth} from '../shared/api';
+import {init} from '../assistant.js/src/main';
+const mode=new URLSearchParams(location.search).get('mode');
+window.fixtureTickets=0;
+if(mode==='sdk'){
+ const instance=init({endpoint:location.origin,appCode:'c2c_synthetic',ticket:async()=>`c2c-synthetic-${++window.fixtureTickets}`});
+ window.disposeFixture=()=>instance.destroy();
+}else{
+ const code=ref('c2c_synthetic');
+ const app=createApp({render:()=>h(mode==='debug'?DebugPanel:mode==='detail'?RunDetail:Chat,mode==='detail'?{runId:'r_c2c'}:{appCode:code.value})});
+ const pinia=createPinia();app.use(pinia).use(ElementPlus);app.directive('permission',()=>{});
+ const auth=useAuth(pinia);auth.token='c2c-synthetic-only';auth.roles=['ADMIN'];
+ window.fixtureAuth=()=>auth.token;window.invalidateFixture=()=>auth.invalidate();
+ window.switchFixture=()=>{code.value='c2c_replacement';};
+ window.disposeFixture=()=>app.unmount();app.mount('#app');
+}
+</script></body></html>

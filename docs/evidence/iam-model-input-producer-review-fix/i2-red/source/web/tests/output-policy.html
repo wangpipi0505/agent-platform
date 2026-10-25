@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><title>输出策略组件验证</title></head>
+<body><div id="app"></div><script type="module">
+import { createApp, h } from 'vue';
+import { createPinia } from 'pinia';
+import ElementPlus from 'element-plus';
+import 'element-plus/dist/index.css';
+import '../shared/tokens.css';
+import Chat from '../shared/Chat.vue';
+import { useAuth } from '../shared/api';
+import { init } from '../assistant.js/src/main';
+if (new URLSearchParams(location.search).get('sdk') === '1') {
+  init({endpoint:location.origin,appCode:'output_fixture',ticket:async()=>'component-fixture-only'});
+} else {
+  const app = createApp({render:()=>h(Chat,{appCode:'output_fixture'})});
+  const pinia = createPinia(); app.use(pinia).use(ElementPlus);
+  useAuth(pinia).token='component-fixture-only';
+  app.mount('#app');
+}
+</script></body></html>

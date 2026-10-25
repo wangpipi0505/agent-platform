@@ -1,0 +1,16 @@
+-------------------------------------------------------------------------------
+Test set: cn.agentplatform.gateway.infra.GatewayPortalEventsServletTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 2.824 s <<< FAILURE! -- in cn.agentplatform.gateway.infra.GatewayPortalEventsServletTest
+cn.agentplatform.gateway.infra.GatewayPortalEventsServletTest.actualControllerSecurityChainHasExactEventsIngress -- Time elapsed: 2.806 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: EVENTS must reach its exact IAM ingress ==> expected: <200> but was: <403>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:563)
+	at cn.agentplatform.gateway.infra.GatewayPortalEventsServletTest.actualControllerSecurityChainHasExactEventsIngress(GatewayPortalEventsServletTest.java:42)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+

@@ -1,0 +1,38 @@
+{
+  "commands": [
+    {
+      "command": [
+        "git",
+        "-c",
+        "core.autocrlf=false",
+        "-c",
+        "core.eol=lf",
+        "apply",
+        "--check",
+        "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\algorithm-protocol-artifacts\\algorithm-protocol-complete.patch"
+      ],
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "-c",
+        "core.autocrlf=false",
+        "-c",
+        "core.eol=lf",
+        "apply",
+        "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\algorithm-protocol-artifacts\\algorithm-protocol-complete.patch"
+      ],
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": "G:/207/项目/算法重组工具/代码/agent-platform/docs/evidence/algorithm-protocol-artifacts/algorithm-protocol-complete.patch:4: trailing whitespace.\n# 算法原任务协议实现与模块验收\nG:/207/项目/算法重组工具/代码/agent-platform/docs/evidence/algorithm-protocol-artifacts/algorithm-protocol-complete.patch:5: trailing whitespace.\n\nG:/207/项目/算法重组工具/代码/agent-platform/docs/evidence/algorithm-protocol-artifacts/algorithm-protocol-complete.patch:6: trailing whitespace.\n本报告仅记录本新工程 G2 算法协议增量。根任务已移交独占 skill 源码/target；前置原 attempt 改造与 Node 清理独立审查结论不由本报告重签。本轮没有 package、启停主服务、提交、发布、Kubernetes 集群或算法容器执行。当前主服务仍是根任务固定的 846 阶段制品。本报告不关闭完整 T11/G2；冻结后的独立审查和实际 engine/skill JVM 纵切由根任务执行。\nG:/207/项目/算法重组工具/代码/agent-platform/docs/evidence/algorithm-protocol-artifacts/algorithm-protocol-complete.patch:7: trailing whitespace.\n\nG:/207/项目/算法重组工具/代码/agent-platform/docs/evidence/algorithm-protocol-artifacts/algorithm-protocol-complete.patch:8: trailing whitespace.\n依据为 `algorithm-protocol-implementation-brief.md`、只读完整计划、`algorithm-readonly-retry-decisions.md` 及根任务本轮总期限裁决。原四契约、v1.2 原文、既有 POM、common/engine 生产代码、旧迁移和既有测试均未修改。\nwarning: squelched 4613 whitespace errors\nwarning: 4618 lines add whitespace errors.\n"
+    }
+  ],
+  "frozenFiles": 94,
+  "verifiedPaths": 94,
+  "replayByteEqual": true,
+  "frozenByteEqual": true,
+  "replayDirectory": "apply-replay-no-autocrlf"
+}

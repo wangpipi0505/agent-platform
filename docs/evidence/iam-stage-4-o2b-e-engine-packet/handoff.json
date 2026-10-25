@@ -1,0 +1,124 @@
+{
+  "status": "AUTHOR_COMPLETE_FROZEN_REVIEW_PENDING",
+  "sourceBefore": {
+    "count": 603,
+    "file": ".local/iam-o2b-e-engine-packet/source-before.json",
+    "bytes": 115043,
+    "sha256": "ab0310201aff0a59e87f73b0692bf6e89b050591d7f33c2b4f099da3a97283c4"
+  },
+  "sourceAfter": {
+    "count": 608,
+    "file": ".local/iam-o2b-e-engine-packet/source-after.json",
+    "bytes": 116139,
+    "sha256": "b89023b56cf78945a739ac953a0c4b8867bb92bc31ff72d46c1f96bdf893aca3"
+  },
+  "targetBefore": {
+    "count": 2118,
+    "file": ".local/iam-o2b-e-engine-packet/target-before.json",
+    "bytes": 441041,
+    "sha256": "f04cd892a8842083b1d546795a5ce146aa3b4edec794f90f3fa0f2e58035a893"
+  },
+  "targetAfter": {
+    "count": 2148,
+    "file": ".local/iam-o2b-e-engine-packet/target-after.json",
+    "bytes": 447925,
+    "sha256": "ce1a10735815197b171f17d439063241d186995b63bfe3b31b3ba8f8ac003adf"
+  },
+  "finiteTargetOverlay": {
+    "count": 542,
+    "file": ".local/iam-o2b-e-engine-packet/finite-target-overlay.json",
+    "bytes": 119928,
+    "sha256": "5d8e3418e5108f59aaf6235890517b95cd3bfc8f2dd7b8df8146cb09004c88d5"
+  },
+  "finalEpoch": {
+    "count": 608,
+    "file": ".local/iam-o2b-e-engine-packet/iam-stage-o2b-e-final/source-epoch.json",
+    "bytes": 116139,
+    "sha256": "b89023b56cf78945a739ac953a0c4b8867bb92bc31ff72d46c1f96bdf893aca3"
+  },
+  "finalCommand": {
+    "file": ".local/iam-o2b-e-engine-packet/iam-stage-o2b-e-final/command.json",
+    "bytes": 575,
+    "sha256": "b7e79164aad8adb5f11013d55e74060988c21f11556a3f3ca7aa17ba073fd3b3"
+  },
+  "finalRaw": {
+    "file": ".local/iam-o2b-e-engine-packet/iam-stage-o2b-e-final/raw.log",
+    "bytes": 229148,
+    "sha256": "e1599d1af4e6d9d09f61080478265e956da3053a7dc32d2c7473c6d8b314dfd6"
+  },
+  "testResults": {
+    "file": "docs/evidence/iam-stage-4-o2b-e-engine-packet/test-results.json",
+    "bytes": 6798,
+    "sha256": "4e681f474837e76333f879d46b313eaac27099f6a2245f7f1e7940ca8055ca47"
+  },
+  "sourceDelta": {
+    "count": 9,
+    "file": "docs/evidence/iam-stage-4-o2b-e-engine-packet/source-delta.json",
+    "bytes": 1896,
+    "sha256": "7b83fd79bf7349a43b8361407fa5cfb445175ddb853f0b59c56dd1b32caeb81c"
+  },
+  "patch": {
+    "file": "docs/evidence/iam-stage-4-o2b-e-engine-packet/source.patch",
+    "bytes": 90459,
+    "sha256": "b49b4de0d973efadfe059292a17be2f0c0fc4d9f8ca10f7e3bdbf6c6875e8f90"
+  },
+  "replayCommands": {
+    "count": 9,
+    "file": "docs/evidence/iam-stage-4-o2b-e-engine-packet/replay-commands.json",
+    "bytes": 103448,
+    "sha256": "213211a3d4c05f575031e0b33fbf6c094ada6d6481bc789d9dc8fd037824ad90"
+  },
+  "replayRoot": ".local/iam-o2b-e-engine-packet/replay",
+  "replayComplete": {
+    "file": ".local/iam-o2b-e-engine-packet/replay-complete.json",
+    "bytes": 764,
+    "sha256": "5710089cf22f0f1f6d6c37453271b5c749c7a071d9acf320b8baa1aea5e6d310"
+  },
+  "journal": {
+    "file": ".local/iam-o2b-e-engine-packet/journal.jsonl",
+    "bytes": 19599,
+    "sha256": "6c0cc3abac3c864e74747c8a3efab6df81e830d4d498998a8b6eb2f02a162660"
+  },
+  "ownInventory": {
+    "file": "docs/evidence/iam-stage-4-o2b-e-engine-packet/own-inventory.json",
+    "soleExcludedSelf": true,
+    "includesPrivateGit": true,
+    "identityProvidedInAuthorFinal": true
+  },
+  "report": {
+    "file": "docs/evidence/iam-stage-4-o2b-e-engine-packet-report.md",
+    "bytes": 11412,
+    "sha256": "30cec031bc12801814e5b4f64d95e43ce673de59371cacd77089920a54fd308a"
+  },
+  "sourceWrites": [
+    "engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java",
+    "engine-runtime/src/main/java/cn/agentplatform/engine/application/PortalRunEventsService.java",
+    "engine-runtime/src/main/java/cn/agentplatform/engine/infra/RunEventReader.java",
+    "engine-runtime/src/main/java/cn/agentplatform/engine/infra/PortalEventsPacketWriter.java",
+    "engine-runtime/src/test/java/cn/agentplatform/engine/infra/PortalEventsPacketCodecTest.java",
+    "engine-runtime/src/test/java/cn/agentplatform/engine/infra/PortalChildEventsPostgresTest.java",
+    "engine-runtime/src/test/java/cn/agentplatform/engine/application/PortalChildEventsHttpTest.java",
+    "engine-runtime/src/test/java/cn/agentplatform/common/authority/PortalChildEventsAuthorityFixture.java",
+    "engine-runtime/src/main/resources/application.yml"
+  ],
+  "ownedRoots": [
+    ".local/iam-o2b-e-engine-packet",
+    "docs/evidence/iam-stage-4-o2b-e-engine-packet",
+    "docs/evidence/iam-stage-4-o2b-e-engine-packet-report.md",
+    ".tools/iam-o2b-e-*"
+  ],
+  "writeAuthority": {
+    "source": "returned/frozen",
+    "target": "returned/frozen",
+    "localEvidenceHelpersReport": "returned/frozen",
+    "noFurtherAuthorWrites": true
+  },
+  "knownUnverifiedSpecGap": {
+    "file": "engine-runtime/src/main/java/cn/agentplatform/engine/application/PortalRunEventsService.java",
+    "seam": "Owner.capacityReset privatePackets && !statusSent",
+    "behavior": "Private first queued fresh RR capacity failure before HELLO sets 413/application-json and completes without ApiResponse body.",
+    "observedBy": "source self-audit only; no new failing test run",
+    "next": "Root instructed fresh independent review plus root limited audit, then one fresh fix wave with new focused RED/GREEN and independent delta patch. Preserve original final45/replay608 unchanged."
+  },
+  "limits": "E encoder/engine only; no F decoder/TLS/public gateway SSE/production IAM/capacity or all-function acceptance. Author complete is not Accepted. Fresh independent review and root audit pending."
+}

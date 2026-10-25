@@ -1,0 +1,124 @@
+{
+  "childMarkers": [
+    {
+      "stage": "iam-stage-5-n4a-final01",
+      "marker": "N4A_EXECUTED=authority-complete-iam"
+    },
+    {
+      "stage": "iam-stage-5-n4a-final01",
+      "marker": "N4A_CHILD_REAPED=authority-complete-iam:54724"
+    },
+    {
+      "stage": "iam-stage-5-n4a-final01",
+      "marker": "N4A_EXECUTED=authority-portal"
+    },
+    {
+      "stage": "iam-stage-5-n4a-final01",
+      "marker": "N4A_CHILD_REAPED=authority-portal:39068"
+    },
+    {
+      "stage": "iam-stage-5-n4a-final01",
+      "marker": "N4A_EXECUTED=authority-loopback-iam"
+    },
+    {
+      "stage": "iam-stage-5-n4a-final01",
+      "marker": "N4A_CHILD_REAPED=authority-loopback-iam:23748"
+    },
+    {
+      "stage": "iam-stage-5-n4a-final01",
+      "marker": "N4A_EXECUTED=iam-before-listener"
+    },
+    {
+      "stage": "iam-stage-5-n4a-final01",
+      "marker": "N4A_CHILD_REAPED=iam-before-listener:25720"
+    },
+    {
+      "stage": "iam-stage-5-n4a-final01",
+      "marker": "N4A_EXECUTED=invalid-registration"
+    },
+    {
+      "stage": "iam-stage-5-n4a-final01",
+      "marker": "N4A_CHILD_REAPED=invalid-registration:51900"
+    },
+    {
+      "stage": "iam-stage-5-n4a-final01",
+      "marker": "N4A_EXECUTED=unregistered"
+    },
+    {
+      "stage": "iam-stage-5-n4a-final01",
+      "marker": "N4A_CHILD_REAPED=unregistered:65476"
+    },
+    {
+      "stage": "iam-stage-5-n4a-final01",
+      "marker": "N4A_EXECUTED=legacy-then-iam"
+    },
+    {
+      "stage": "iam-stage-5-n4a-final01",
+      "marker": "N4A_CHILD_REAPED=legacy-then-iam:20520"
+    },
+    {
+      "stage": "iam-stage-5-n4a-final01",
+      "marker": "N4A_EXECUTED=common-boundary"
+    },
+    {
+      "stage": "iam-stage-5-n4a-final01",
+      "marker": "N4A_CHILD_REAPED=common-boundary:17016"
+    },
+    {
+      "stage": "iam-stage-5-n4a-final02",
+      "marker": "N4A_EXECUTED=authority-gateway"
+    },
+    {
+      "stage": "iam-stage-5-n4a-final02",
+      "marker": "N4A_CHILD_REAPED=authority-gateway:49044"
+    },
+    {
+      "stage": "iam-stage-5-n4a-final02",
+      "marker": "N4A_EXECUTED=authority-dev-hmac"
+    },
+    {
+      "stage": "iam-stage-5-n4a-final02",
+      "marker": "N4A_CHILD_REAPED=authority-dev-hmac:57032"
+    },
+    {
+      "stage": "iam-stage-5-n4a-final02",
+      "marker": "N4A_EXECUTED=authority-test"
+    },
+    {
+      "stage": "iam-stage-5-n4a-final02",
+      "marker": "N4A_CHILD_REAPED=authority-test:56492"
+    },
+    {
+      "stage": "iam-stage-5-n4a-final02",
+      "marker": "N4A_EXECUTED=legacy-snapshot"
+    },
+    {
+      "stage": "iam-stage-5-n4a-final02",
+      "marker": "N4A_CHILD_REAPED=legacy-snapshot:61928"
+    },
+    {
+      "stage": "iam-stage-5-n4a-final02",
+      "marker": "N4A_RECEIVER_PORT=61719"
+    },
+    {
+      "stage": "iam-stage-5-n4a-final02",
+      "marker": "N4A_EXECUTED=isolated-receiver"
+    },
+    {
+      "stage": "iam-stage-5-n4a-final02",
+      "marker": "N4A_CHILD_REAPED=isolated-receiver:48444"
+    },
+    {
+      "stage": "iam-stage-5-n4a-final02",
+      "marker": "N4A_ENGINE_EXECUTED=legacy-routes"
+    },
+    {
+      "stage": "iam-stage-5-n4a-final02",
+      "marker": "N4A_ENGINE_CHILD_REAPED=33772"
+    }
+  ],
+  "mainServicePortsQueried": 0,
+  "terminationScope": "Only owned finite children, per-test finally kill/reap; executors and HTTP clients/servers closed by fixtures.",
+  "cleanup": "Parent asserts each child exit and N4A_EXECUTED marker; N4A_CHILD_REAPED/ENGINE_CHILD_REAPED include actual child PID; finite HTTP receiver closes before child marker. No DB access, no existing main-service process termination.",
+  "referenceRuntime": "Original launcher JAVA_HOME C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot; child inherits java.home and original V:/.local/tmp argument."
+}

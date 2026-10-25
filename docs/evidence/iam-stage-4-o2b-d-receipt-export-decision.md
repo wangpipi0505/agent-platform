@@ -1,0 +1,11 @@
+# D：child receipt只读导出补充裁定
+
+正式D brief/decisions的有限API补充，不增加8文件scope、不改原A/PortalEventsResponse/ingress/catalog/v1.2/四契约。用于后续E将真正child_open签发的receipt交给G验证；仅签名关联，仍非任意manifest字节认证。
+
+在ResponseAuthorityClient增加固定 portalEventsChildReceipt(PortalEventsResponse response): String，default按原adapter约定unavailable；HttpCurrentAuthorityClient实现。前后都以response.remainingNanos(this)做actual owner/live检查；slot.response与传入response必须同一对象，private固定mode必须ENGINE_CHILD，receipt只能来自此actual client正常child_open返回且已完整验签/绑定的唯一stored receipt。standalone/G/foreign/closed均拒绝。只读、本地、无网络、无重开/续期/新授权，不返回continuation/Retained/VA或caller自填字符串。原签名receipt随原child immutable，不因check续核重新签发或增加deadline；expiry仍不晚于原hard界。
+
+receipt固定为前述agent-portal-events-child-receipt+jwt / portal-events-child-receipt / urn:agent-platform:service:gateway。紧凑JWS仅ASCII，最多4096字节；先有限长度/结构检查再解码验签，不为测长度分配无界UTF8副本。既有最大decision envelope仍独立生效。超限拒绝，不截断；这不是G公开权限。
+
+GatewayPortalEventsResponse固定acceptChildReceipt(String signedReceipt)：输入仍是不可信JWT，限4096B并由actual owner验证固定typ/use/aud和预期唯一parent/child/双方grant-operation-ticket/source-resource-request-cursor/初始ceiling/deadline，保持本G current/live；只有child已被此G正常reservation产生才可接受。不能依据unsignedDTO/fixture抓包或String存在即mintcap。每G只接受一次receipt，不因相同字符串重复接受增加状态，失败不得重新child_exchange。未来E/F只在首个完整opening packet传该receipt，后续packet按已确认的association/ordinal验证，不把receipt当每包权限。
+
+在新两测试类验证真实G→E child_open→上述只读API→G真验receipt正例；错误owner/mode/closed、wrongtyp/audience/binding、第二receipt与超限负例。测试不得用fixture偷取receipt跳过这个生产导出接缝。其余正式D约束、scope、最终common集合及即时证据规则保持。

@@ -1,0 +1,28 @@
+monitor/src/main\java\cn\agentplatform\monitor\application\StatisticsService.java:267:                                        "Bearer " + ServiceTokens.issue(Actor.current()));
+monitor/src/main\java\cn\agentplatform\monitor\application\StatisticsService.java:274:                                        "Bearer " + ServiceTokens.issue(Actor.current()))
+platform-gateway/src/main\java\cn\agentplatform\gateway\domain\IntegrationPolicy.java:12:            Set.of("ADMIN", "EDITOR", "SERVICE", "GATEWAY_AUTH");
+monitor/src/main\java\cn\agentplatform\monitor\application\EvaluationService.java:84:                                        "Bearer " + ServiceTokens.issue(Actor.current()))
+monitor/src/main\java\cn\agentplatform\monitor\application\EvaluationService.java:93:                                        "Bearer " + ServiceTokens.issue(Actor.current()))
+platform-gateway/src/main\java\cn\agentplatform\gateway\application\IntegrationAccess.java:31:            new Actor("_gateway", "_gateway", Set.of("GATEWAY_AUTH"), Map.of());
+platform-gateway/src/main\java\cn\agentplatform\gateway\application\IntegrationAccess.java:78:                    .header("Authorization", "Bearer " + ServiceTokens.issue(BOOTSTRAP))
+platform-gateway/src/main\java\cn\agentplatform\gateway\application\IntegrationAccess.java:104:                        "_gateway",
+platform-gateway/src/main\java\cn\agentplatform\gateway\application\IntegrationAccess.java:105:                        Set.of("GATEWAY_AUTH"),
+platform-gateway/src/main\java\cn\agentplatform\gateway\application\IntegrationAccess.java:116:                ServiceTokens.integrationToken(
+platform-gateway/src/main\java\cn\agentplatform\gateway\application\IntegrationAccess.java:155:                            .header("Authorization", "Bearer " + ServiceTokens.issue(actor))
+platform-gateway/src/main\java\cn\agentplatform\gateway\application\IntegrationAccess.java:171:                            .header("Authorization", "Bearer " + ServiceTokens.issue(BOOTSTRAP))
+platform-gateway/src/main\java\cn\agentplatform\gateway\api\GatewayController.java:51:        upstream.setRequestProperty("Authorization", "Bearer " + ServiceTokens.issue(actor));
+platform-gateway/src/main\java\cn\agentplatform\gateway\api\GatewayController.java:128:                                .header("Authorization", "Bearer " + ServiceTokens.issue(actor))
+engine-runtime/src/main\java\cn\agentplatform\engine\infra\TestInputClient.java:41:                            .header("Authorization", "Bearer " + ServiceTokens.issue(actor));
+platform-gateway/src/main\java\cn\agentplatform\gateway\api\DevAuthentication.java:31:                        ServiceTokens.userToken(actor, 3600),
+engine-runtime/src/main\java\cn\agentplatform\engine\infra\RuntimeClients.java:43:                        .header("Authorization", "Bearer " + ServiceTokens.issue(actor))
+engine-runtime/src/main\java\cn\agentplatform\engine\infra\RuntimeClients.java:52:                        .header("Authorization", "Bearer " + ServiceTokens.issue(actor))
+engine-runtime/src/main\java\cn\agentplatform\engine\infra\RuntimeClients.java:94:            connection.setRequestProperty("Authorization", "Bearer " + ServiceTokens.issue(actor));
+app-management/src/main\java\cn\agentplatform\app\application\AppService.java:689:                                    "Bearer " + ServiceTokens.issue(Actor.current()))
+app-management/src/main\java\cn\agentplatform\app\application\AppService.java:706:                                    "Bearer " + ServiceTokens.issue(Actor.current()))
+app-management/src/main\java\cn\agentplatform\app\application\IntegrationService.java:104:        if (!actor.principalId().equals("_gateway")
+app-management/src/main\java\cn\agentplatform\app\application\IntegrationService.java:106:                || !actor.roles().contains("GATEWAY_AUTH"))
+app-management/src/main\java\cn\agentplatform\app\application\IntegrationService.java:107:            throw error(403, "GATEWAY_AUTH_REQUIRED", "仅网关专用认证身份可解析凭据归属");
+skill-registry/src/main\java\cn\agentplatform\skill\api\SkillCallbackController.java:29:                || !jwt.getAudience().contains("agent-platform-internal")
+skill-registry/src/main\java\cn\agentplatform\skill\application\ReconciliationProofs.java:43:                || !jwt.getAudience().contains("agent-platform-internal"))
+skill-registry/src/main\java\cn\agentplatform\skill\infra\SkillClients.java:42:                                    .header("Authorization", "Bearer " + ServiceTokens.issue(actor))
+skill-registry/src/main\java\cn\agentplatform\skill\infra\SkillClients.java:47:                                    .header("Authorization", "Bearer " + ServiceTokens.issue(actor))

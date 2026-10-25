@@ -1,0 +1,2 @@
+import {it,expect} from 'vitest';import {completedControlledCall} from '../shared/controlled-test';
+it('a reserved call ID while waiting approval cannot qualify a connection test',()=>{expect(completedControlledCall({status:'WAITING_APPROVAL',controlledCallId:36})).toBeUndefined();expect(completedControlledCall({status:'RUNNING',controlledCallId:36})).toBeUndefined();expect(completedControlledCall({status:'SUCCEEDED',controlledCallId:36})).toBe(36);expect(completedControlledCall({status:'SUCCEEDED'})).toBeUndefined();});

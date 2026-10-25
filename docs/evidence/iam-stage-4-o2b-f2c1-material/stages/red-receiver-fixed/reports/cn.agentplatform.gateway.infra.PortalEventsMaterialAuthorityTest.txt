@@ -1,0 +1,76 @@
+-------------------------------------------------------------------------------
+Test set: cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest
+-------------------------------------------------------------------------------
+Tests run: 3, Failures: 3, Errors: 0, Skipped: 0, Time elapsed: 4.461 s <<< FAILURE! -- in cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest
+cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.nestedUnknownFieldWithValidCommitNeverReachesWindow -- Time elapsed: 1.521 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+Exception in thread "main" java.lang.AssertionError: receiver peer
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest$Peer.close(PortalEventsMaterialAuthorityTest.java:174)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.exercise(PortalEventsMaterialAuthorityTest.java:188)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.main(PortalEventsMaterialAuthorityTest.java:194)
+Caused by: cn.agentplatform.common.PlatformException: ��ǰ��Ȩ������˲���
+	at cn.agentplatform.common.authority.AuthorityProtocol.denied(AuthorityProtocol.java:11)
+	at cn.agentplatform.common.authority.ServiceAuthorization.jwt(ServiceAuthorization.java:123)
+	at cn.agentplatform.common.authority.ServiceAuthorization.preHandle(ServiceAuthorization.java:55)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest$Peer.lambda$new$1(PortalEventsMaterialAuthorityTest.java:143)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+ ==> expected: <0> but was: <1>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:563)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.child(PortalEventsMaterialAuthorityTest.java:79)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.nestedUnknownFieldWithValidCommitNeverReachesWindow(PortalEventsMaterialAuthorityTest.java:54)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.signedReceiptTamperingNeverReachesWindow -- Time elapsed: 1.398 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+Exception in thread "main" java.lang.AssertionError: receiver peer
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest$Peer.close(PortalEventsMaterialAuthorityTest.java:174)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.exercise(PortalEventsMaterialAuthorityTest.java:188)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.main(PortalEventsMaterialAuthorityTest.java:193)
+Caused by: cn.agentplatform.common.PlatformException: ��ǰ��Ȩ������˲���
+	at cn.agentplatform.common.authority.AuthorityProtocol.denied(AuthorityProtocol.java:11)
+	at cn.agentplatform.common.authority.ServiceAuthorization.jwt(ServiceAuthorization.java:123)
+	at cn.agentplatform.common.authority.ServiceAuthorization.preHandle(ServiceAuthorization.java:55)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest$Peer.lambda$new$1(PortalEventsMaterialAuthorityTest.java:143)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+ ==> expected: <0> but was: <1>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:563)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.child(PortalEventsMaterialAuthorityTest.java:79)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.signedReceiptTamperingNeverReachesWindow(PortalEventsMaterialAuthorityTest.java:53)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.changedBusinessPayloadWithValidWireShaNeverReachesWindow -- Time elapsed: 1.460 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+Exception in thread "main" java.lang.AssertionError: receiver peer
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest$Peer.close(PortalEventsMaterialAuthorityTest.java:174)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.exercise(PortalEventsMaterialAuthorityTest.java:188)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.main(PortalEventsMaterialAuthorityTest.java:195)
+Caused by: cn.agentplatform.common.PlatformException: ��ǰ��Ȩ������˲���
+	at cn.agentplatform.common.authority.AuthorityProtocol.denied(AuthorityProtocol.java:11)
+	at cn.agentplatform.common.authority.ServiceAuthorization.jwt(ServiceAuthorization.java:123)
+	at cn.agentplatform.common.authority.ServiceAuthorization.preHandle(ServiceAuthorization.java:55)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest$Peer.lambda$new$1(PortalEventsMaterialAuthorityTest.java:143)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+ ==> expected: <0> but was: <1>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:563)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.child(PortalEventsMaterialAuthorityTest.java:79)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.changedBusinessPayloadWithValidWireShaNeverReachesWindow(PortalEventsMaterialAuthorityTest.java:55)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+

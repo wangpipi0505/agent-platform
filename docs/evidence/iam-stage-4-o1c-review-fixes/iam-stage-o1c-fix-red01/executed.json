@@ -1,0 +1,67 @@
+{
+  "program": "node",
+  "args": [
+    ".tools/run-iam-module-tests.mjs",
+    "iam-stage-o1c-fix-red01",
+    "admin-common,platform-gateway",
+    "RunObservationGetTransportTest#declaredExcessiveLengthAbortsBeforeClosingStalledBody,RunObservationGetTransportTest#preBodyRejectionsAbortBeforeClosingStalledBody"
+  ],
+  "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+  "exitCode": 1,
+  "launcherError": null,
+  "sourceBefore": {
+    "file": "docs/evidence/iam-stage-4-o1c-review-fixes/iam-stage-o1c-fix-red01/source-before.json",
+    "bytes": 111133,
+    "sha256": "1ff1de150a369f7def2b73f1278d0437c7d15921cf3ef9685bfd8cbd2e37fea7"
+  },
+  "sourceAfter": {
+    "file": "docs/evidence/iam-stage-4-o1c-review-fixes/iam-stage-o1c-fix-red01/source-after.json",
+    "bytes": 111133,
+    "sha256": "1ff1de150a369f7def2b73f1278d0437c7d15921cf3ef9685bfd8cbd2e37fea7"
+  },
+  "changedSourcePre": [
+    {
+      "file": "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PublishedRunHttp.java",
+      "bytes": 16534,
+      "sha256": "a5394662356492a8298f3bbf34c7b1cc49cd8060d3ebb21b0f054f765496d8c3"
+    },
+    {
+      "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/RunObservationGetTransportTest.java",
+      "bytes": 13893,
+      "sha256": "364021fddb07e008cd43faba02be4d6bc8d2471fe334c4e763d53768008b1a06"
+    }
+  ],
+  "changedSourcePost": [
+    {
+      "file": "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PublishedRunHttp.java",
+      "bytes": 16534,
+      "sha256": "a5394662356492a8298f3bbf34c7b1cc49cd8060d3ebb21b0f054f765496d8c3"
+    },
+    {
+      "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/RunObservationGetTransportTest.java",
+      "bytes": 13893,
+      "sha256": "364021fddb07e008cd43faba02be4d6bc8d2471fe334c4e763d53768008b1a06"
+    }
+  ],
+  "running": [
+    "cn.agentplatform.gateway.application.RunObservationGetTransportTest"
+  ],
+  "xml": [
+    {
+      "file": "platform-gateway/target/surefire-reports/TEST-cn.agentplatform.gateway.application.RunObservationGetTransportTest.xml",
+      "bytes": 41133,
+      "sha256": "b457af24177d3e7be9015eea64ae33cd538d9688b5aa0993df5ece536ebcd1d1"
+    },
+    {
+      "file": "platform-gateway/target/surefire-reports/cn.agentplatform.gateway.application.RunObservationGetTransportTest.txt",
+      "bytes": 1863,
+      "sha256": "b028a2988267a1d0217a918dedd24da34d0ee18fa8cafb4fa3e71a39d76903e0"
+    }
+  ],
+  "log": {
+    "file": "docs/evidence/iam-stage-4-o1c-review-fixes/iam-stage-o1c-fix-red01/command.log",
+    "bytes": 8429,
+    "sha256": "a217bdcab06855f79e096d3932c1141268829d13ef44b5770615aeb422db75be"
+  },
+  "ended": "2026-10-20T23:52:21.240Z"
+}

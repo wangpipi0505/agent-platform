@@ -1,0 +1,30 @@
+{
+  "schema": "f2b2-finite-component-model-v1",
+  "privateComponents": {
+    "facts": 16384,
+    "decoderGuardConsumer": 32768,
+    "gChildReferencesAndSendTransitions": 131072,
+    "phaseCancelExit": 131072,
+    "errorAndCloseTransitions": 131072,
+    "margin": 606208
+  },
+  "privateReserve": 1048576,
+  "token": 128,
+  "httpReserve": 3145728,
+  "ownerBase": 65536,
+  "qOnlyPerOwner": 3211392,
+  "privatePerOwner": 4260096,
+  "twoPrivateOwners": 8520192,
+  "f1ScanPeakCandidatePerOwner": 80036796,
+  "f1ConsumptionWithOneBorrowCandidate": 12919652,
+  "futureCombinedCandidatePerOwner": 98715562,
+  "futureTwoOwners": 197431124,
+  "globalF1Ledger": 201326592,
+  "excluded": [
+    "full JVM/TLS/JCA/provider/native/kernel/common internal graphs",
+    "arbitrary future consumer allocation and complete c1/c2 implementation"
+  ],
+  "oneHttpGraphAtOnce": true,
+  "privateReserveTiming": "consumePrivate before SavedFacts/decoder/private input allocations; begin remains Q-only",
+  "commonJoinClaim": false
+}

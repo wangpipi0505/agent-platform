@@ -1,0 +1,23 @@
+{
+  "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+  "args": [
+    "mvn.cmd",
+    "-o",
+    "-B",
+    "-ntp",
+    "-pl",
+    "engine-runtime",
+    "-am",
+    "test",
+    "-Dmaven.repo.local=.tools/m2",
+    "-Djdk.net.unixdomain.tmpdir=V:/.local/tmp",
+    "-Dsurefire.failIfNoSpecifiedTests=false",
+    "-Dmodel.input.evidence=G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\iam-model-input-producer\\preflight-04\\observer",
+    "-Dtest=ModelInputMaterialPostgresTest#preflight217AndSourceContinuity"
+  ],
+  "source": {
+    "file": "docs/evidence/iam-model-input-producer/preflight-04/source.json",
+    "bytes": 124613,
+    "sha256": "66752341fa769a9264f22b3ba3dd5994f1c3bf83933234288677154b9efe44e7"
+  }
+}

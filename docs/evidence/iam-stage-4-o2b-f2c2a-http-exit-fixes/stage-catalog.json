@@ -1,0 +1,466 @@
+[
+  {
+    "stage": "green-affected",
+    "sourceEpoch": {
+      "file": "docs/evidence/iam-stage-4-o2b-f2c2a-http-exit-fixes/stages/green-affected/source.json",
+      "bytes": 124057,
+      "sha256": "ba94bc33eed1901d400321e00eb91f62d2879add03b0bc08d2b86ebc8b1435a4"
+    },
+    "mavenExit": 0,
+    "suites": [
+      {
+        "name": "cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest",
+        "tests": "5",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "time": "29.787"
+      }
+    ],
+    "testcases": [
+      {
+        "name": "firstErrorAndLateFirstWindowCannotReviveRegistration",
+        "status": "pass"
+      },
+      {
+        "name": "actualCleanupSnapshotMustReturnBeforeHttpRefund",
+        "status": "pass"
+      },
+      {
+        "name": "inertReadyIdleShellAllowsMaterialFeeExitButRetainsFinalOwner",
+        "status": "pass"
+      },
+      {
+        "name": "actualAwaitClosedAncestorPinsRefundedShellCredit",
+        "status": "pass"
+      },
+      {
+        "name": "actualAbortSnapshotMustReturnBeforeHttpRefund",
+        "status": "pass"
+      }
+    ],
+    "children": [
+      {
+        "run": ".local/iam-o2b-f2c2a-http-exit-fixes/peers/ancestor-tail-b01167f7-917e-44f5-85cf-6929ab76845a",
+        "launch": {
+          "file": ".local/iam-o2b-f2c2a-http-exit-fixes/peers/ancestor-tail-b01167f7-917e-44f5-85cf-6929ab76845a/launch.properties",
+          "bytes": 69,
+          "sha256": "59ccc359f0ec2a41d53dff681d4c01fe398382a9000cf54f297ad13c84468395"
+        },
+        "exit": {
+          "file": ".local/iam-o2b-f2c2a-http-exit-fixes/peers/ancestor-tail-b01167f7-917e-44f5-85cf-6929ab76845a/exit.properties",
+          "bytes": 50,
+          "sha256": "91b41a9a7e1a62ac8acc6cc60aebf467d1b6e9883a1371c804a30878416eb120"
+        },
+        "pid": 24140,
+        "actualExit": 0,
+        "alive": "false",
+        "collectorAlive": "false",
+        "waitFor95AndFinally3Returned": "assertions reached actual exit cache; source-bound launcher",
+        "collectorJoined": true
+      },
+      {
+        "run": ".local/iam-o2b-f2c2a-http-exit-fixes/peers/bootstrap-bad-receipt-757a0723-4ff8-4c48-8330-b86416f27e61",
+        "launch": {
+          "file": ".local/iam-o2b-f2c2a-http-exit-fixes/peers/bootstrap-bad-receipt-757a0723-4ff8-4c48-8330-b86416f27e61/launch.properties",
+          "bytes": 69,
+          "sha256": "ab84bb16064aa549b0e4591a99d8a39ecbf2b9ba2a2737eeca0a5c16a56c4a3a"
+        },
+        "exit": {
+          "file": ".local/iam-o2b-f2c2a-http-exit-fixes/peers/bootstrap-bad-receipt-757a0723-4ff8-4c48-8330-b86416f27e61/exit.properties",
+          "bytes": 50,
+          "sha256": "f4f38758d4692b970f9bc3c1cf16fa941380989b5778c6f0f5cfcd24208ab67a"
+        },
+        "pid": 26732,
+        "actualExit": 0,
+        "alive": "false",
+        "collectorAlive": "false",
+        "waitFor95AndFinally3Returned": "assertions reached actual exit cache; source-bound launcher",
+        "collectorJoined": true
+      },
+      {
+        "run": ".local/iam-o2b-f2c2a-http-exit-fixes/peers/bootstrap-late-6a1afebd-c97a-4597-8407-9fb023eced61",
+        "launch": {
+          "file": ".local/iam-o2b-f2c2a-http-exit-fixes/peers/bootstrap-late-6a1afebd-c97a-4597-8407-9fb023eced61/launch.properties",
+          "bytes": 69,
+          "sha256": "429e3e57decaddf105fdfbb94ce3100b0cf3397aa6a41cf7db9de28782c2b424"
+        },
+        "exit": {
+          "file": ".local/iam-o2b-f2c2a-http-exit-fixes/peers/bootstrap-late-6a1afebd-c97a-4597-8407-9fb023eced61/exit.properties",
+          "bytes": 50,
+          "sha256": "28ac46bf1013d34190680b602051096d4dca6e2c88bce3f9d7b4a8c5561ba50e"
+        },
+        "pid": 49428,
+        "actualExit": 0,
+        "alive": "false",
+        "collectorAlive": "false",
+        "waitFor95AndFinally3Returned": "assertions reached actual exit cache; source-bound launcher",
+        "collectorJoined": true
+      },
+      {
+        "run": ".local/iam-o2b-f2c2a-http-exit-fixes/peers/http-cleanup-exit-cb78edec-cb37-4fcd-817c-87dee2280fec",
+        "launch": {
+          "file": ".local/iam-o2b-f2c2a-http-exit-fixes/peers/http-cleanup-exit-cb78edec-cb37-4fcd-817c-87dee2280fec/launch.properties",
+          "bytes": 69,
+          "sha256": "4ae5478293f88d49f3fa3f7064c31f1bd5294b5451dcb832a14bf6045519a790"
+        },
+        "exit": {
+          "file": ".local/iam-o2b-f2c2a-http-exit-fixes/peers/http-cleanup-exit-cb78edec-cb37-4fcd-817c-87dee2280fec/exit.properties",
+          "bytes": 50,
+          "sha256": "676ebd614e8a23cf51623ddfbb248024b91dc485f0f2a2b935e37a9cba27b4ec"
+        },
+        "pid": 64392,
+        "actualExit": 0,
+        "alive": "false",
+        "collectorAlive": "false",
+        "waitFor95AndFinally3Returned": "assertions reached actual exit cache; source-bound launcher",
+        "collectorJoined": true
+      },
+      {
+        "run": ".local/iam-o2b-f2c2a-http-exit-fixes/peers/http-stop-exit-21a89cb7-78ac-497f-8286-43c6f5c7d008",
+        "launch": {
+          "file": ".local/iam-o2b-f2c2a-http-exit-fixes/peers/http-stop-exit-21a89cb7-78ac-497f-8286-43c6f5c7d008/launch.properties",
+          "bytes": 69,
+          "sha256": "21c117350f9dfe16228ba7f8041d5d9b8f2117048cf723dac0212f9fa0ba9a56"
+        },
+        "exit": {
+          "file": ".local/iam-o2b-f2c2a-http-exit-fixes/peers/http-stop-exit-21a89cb7-78ac-497f-8286-43c6f5c7d008/exit.properties",
+          "bytes": 50,
+          "sha256": "5d4c8f0b5cc87750b1daaea625c31482ecd89d51d206e9a5fde3a99c4ec07a93"
+        },
+        "pid": 59552,
+        "actualExit": 0,
+        "alive": "false",
+        "collectorAlive": "false",
+        "waitFor95AndFinally3Returned": "assertions reached actual exit cache; source-bound launcher",
+        "collectorJoined": true
+      },
+      {
+        "run": ".local/iam-o2b-f2c2a-http-exit-fixes/peers/light-shell-d32dfaf1-3520-42f5-9c18-af74da328f78",
+        "launch": {
+          "file": ".local/iam-o2b-f2c2a-http-exit-fixes/peers/light-shell-d32dfaf1-3520-42f5-9c18-af74da328f78/launch.properties",
+          "bytes": 69,
+          "sha256": "25e4f7bd616cfd544d2513cfa3683245969c338147faad90eb697a83bb0280c2"
+        },
+        "exit": {
+          "file": ".local/iam-o2b-f2c2a-http-exit-fixes/peers/light-shell-d32dfaf1-3520-42f5-9c18-af74da328f78/exit.properties",
+          "bytes": 50,
+          "sha256": "9e016c698ca6cd82b02a1d3dd19356dffba04b8367e5d2cbc1771e96861e6c28"
+        },
+        "pid": 52536,
+        "actualExit": 0,
+        "alive": "false",
+        "collectorAlive": "false",
+        "waitFor95AndFinally3Returned": "assertions reached actual exit cache; source-bound launcher",
+        "collectorJoined": true
+      }
+    ],
+    "command": {
+      "file": "docs/evidence/iam-stage-4-o2b-f2c2a-http-exit-fixes/stages/green-affected/command.json",
+      "bytes": 665,
+      "sha256": "850d639d1012bc1d19ce0dd5d12693627f7765c3ea8d4d14baa6b0a062406074"
+    },
+    "processExit": {
+      "file": "docs/evidence/iam-stage-4-o2b-f2c2a-http-exit-fixes/stages/green-affected/process-exit.json",
+      "bytes": 320,
+      "sha256": "e463124b3237479d6954e2adffc5faa08963d1f72341c47fb19cee63f6f38ff1"
+    },
+    "raw": {
+      "file": "docs/evidence/iam-stage-4-o2b-f2c2a-http-exit-fixes/stages/green-affected/raw.log",
+      "bytes": 5513,
+      "sha256": "a8450490f19014ab67b9f0b4885c53c2cee1cf54c39d7f4795835c99bb9aaa39"
+    },
+    "finiteTarget": {
+      "file": "docs/evidence/iam-stage-4-o2b-f2c2a-http-exit-fixes/stages/green-affected/target-finite.json",
+      "bytes": 91875,
+      "sha256": "2dab37182d3bf5116b283b0b4b2c0ee1dac4f0c4b0c73f59c35aee26e61cec46"
+    }
+  },
+  {
+    "stage": "green-stop-nonnull-witness",
+    "sourceEpoch": {
+      "file": "docs/evidence/iam-stage-4-o2b-f2c2a-http-exit-fixes/stages/green-stop-nonnull-witness/source.json",
+      "bytes": 124057,
+      "sha256": "6f61ed3ce5ce87fbafead1dd1434f2b1d9dc1b3c3692be81a51c19a7155e3b9d"
+    },
+    "mavenExit": 0,
+    "suites": [
+      {
+        "name": "cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest",
+        "tests": "1",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "time": "6.604"
+      }
+    ],
+    "testcases": [
+      {
+        "name": "actualAbortSnapshotMustReturnBeforeHttpRefund",
+        "status": "pass"
+      }
+    ],
+    "children": [
+      {
+        "run": ".local/iam-o2b-f2c2a-http-exit-fixes/peers/http-stop-exit-a342bf7e-3b93-4078-bcfa-caf891c8ced8",
+        "launch": {
+          "file": ".local/iam-o2b-f2c2a-http-exit-fixes/peers/http-stop-exit-a342bf7e-3b93-4078-bcfa-caf891c8ced8/launch.properties",
+          "bytes": 69,
+          "sha256": "a79daf65f9efee82bbc2296c1a82aa3c3bb950b1795cbcf2185ec6b27ae9819c"
+        },
+        "exit": {
+          "file": ".local/iam-o2b-f2c2a-http-exit-fixes/peers/http-stop-exit-a342bf7e-3b93-4078-bcfa-caf891c8ced8/exit.properties",
+          "bytes": 50,
+          "sha256": "fc1a3dca36024b89a90b168a3d36d4fea6dde52e6a1bcff85ae9f9f9ced3fc13"
+        },
+        "pid": 45412,
+        "actualExit": 0,
+        "alive": "false",
+        "collectorAlive": "false",
+        "waitFor95AndFinally3Returned": "assertions reached actual exit cache; source-bound launcher",
+        "collectorJoined": true
+      }
+    ],
+    "command": {
+      "file": "docs/evidence/iam-stage-4-o2b-f2c2a-http-exit-fixes/stages/green-stop-nonnull-witness/command.json",
+      "bytes": 454,
+      "sha256": "1388d49778db604b87f80d94e338704b2c26cfef7e5ec658da08e5dedd8e189f"
+    },
+    "processExit": {
+      "file": "docs/evidence/iam-stage-4-o2b-f2c2a-http-exit-fixes/stages/green-stop-nonnull-witness/process-exit.json",
+      "bytes": 344,
+      "sha256": "99a17842a809a2e2214a99da2fb5b9d7d7fe9bbf5cc6059c2efda201a932e31c"
+    },
+    "raw": {
+      "file": "docs/evidence/iam-stage-4-o2b-f2c2a-http-exit-fixes/stages/green-stop-nonnull-witness/raw.log",
+      "bytes": 5513,
+      "sha256": "4897b5bef1efba844ece697f26155655b96ed19c1c2243076a6ad66660044d83"
+    },
+    "finiteTarget": {
+      "file": "docs/evidence/iam-stage-4-o2b-f2c2a-http-exit-fixes/stages/green-stop-nonnull-witness/target-finite.json",
+      "bytes": 91875,
+      "sha256": "3e529e7ce567fa6b95ff6e5f50df20037a246a70fd9103ce5ae83cdf97245951"
+    }
+  },
+  {
+    "stage": "red-cleanup-retry-hooks-only",
+    "sourceEpoch": {
+      "file": "docs/evidence/iam-stage-4-o2b-f2c2a-http-exit-fixes/stages/red-cleanup-retry-hooks-only/source.json",
+      "bytes": 124057,
+      "sha256": "75998960c92d3390362f225d7c6b494ed912474378fba132a60b6e61b4279d64"
+    },
+    "mavenExit": 1,
+    "suites": [
+      {
+        "name": "cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest",
+        "tests": "1",
+        "failures": "1",
+        "errors": "0",
+        "skipped": "0",
+        "time": "2.286"
+      }
+    ],
+    "testcases": [
+      {
+        "name": "actualCleanupSnapshotMustReturnBeforeHttpRefund",
+        "status": "failure"
+      }
+    ],
+    "children": [
+      {
+        "run": ".local/iam-o2b-f2c2a-http-exit-fixes/peers/http-cleanup-exit-21a25e5c-b491-46b3-a7fe-52ea347885ac",
+        "launch": {
+          "file": ".local/iam-o2b-f2c2a-http-exit-fixes/peers/http-cleanup-exit-21a25e5c-b491-46b3-a7fe-52ea347885ac/launch.properties",
+          "bytes": 69,
+          "sha256": "bd27649a30175f9d5c8667d90d7c85d6f5c16dd1115fe1f4576f1c3f2260b6f5"
+        },
+        "exit": {
+          "file": ".local/iam-o2b-f2c2a-http-exit-fixes/peers/http-cleanup-exit-21a25e5c-b491-46b3-a7fe-52ea347885ac/exit.properties",
+          "bytes": 50,
+          "sha256": "90c114945823f510fb78086d9ba643a62e511b7bb63963e530303e1bd5341faf"
+        },
+        "pid": 58624,
+        "actualExit": 1,
+        "alive": "false",
+        "collectorAlive": "false",
+        "waitFor95AndFinally3Returned": "assertions reached actual exit cache; source-bound launcher",
+        "collectorJoined": true
+      }
+    ],
+    "command": {
+      "file": "docs/evidence/iam-stage-4-o2b-f2c2a-http-exit-fixes/stages/red-cleanup-retry-hooks-only/command.json",
+      "bytes": 456,
+      "sha256": "8d01860685ee5b5c106527106e73774e7c3321981e1879cce58f6f1ca03ae841"
+    },
+    "processExit": {
+      "file": "docs/evidence/iam-stage-4-o2b-f2c2a-http-exit-fixes/stages/red-cleanup-retry-hooks-only/process-exit.json",
+      "bytes": 348,
+      "sha256": "3f0242acdbe12a9c47ed99c1c7ebfc50f5c7bbf61c51fcab261d5f11f273128f"
+    },
+    "raw": {
+      "file": "docs/evidence/iam-stage-4-o2b-f2c2a-http-exit-fixes/stages/red-cleanup-retry-hooks-only/raw.log",
+      "bytes": 20311,
+      "sha256": "2c9b808d27b6d76d382cf76478cd09c6d8bfeac19fc2cb6adbcb948988cbf404"
+    },
+    "finiteTarget": {
+      "file": "docs/evidence/iam-stage-4-o2b-f2c2a-http-exit-fixes/stages/red-cleanup-retry-hooks-only/target-finite.json",
+      "bytes": 91876,
+      "sha256": "d6b52ab3ccbecf8c1b886591316ba4a60b98e7d9cc31ae3362881f9054f4e2ff"
+    }
+  },
+  {
+    "stage": "red-hooks-only",
+    "sourceEpoch": {
+      "file": "docs/evidence/iam-stage-4-o2b-f2c2a-http-exit-fixes/stages/red-hooks-only/source.json",
+      "bytes": 124057,
+      "sha256": "cef3efb9d0440c0eb4ecb35fcfa2c70a48dac33e58c7aa1b2dc52fffc57d5148"
+    },
+    "mavenExit": 1,
+    "suites": [
+      {
+        "name": "cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest",
+        "tests": "2",
+        "failures": "2",
+        "errors": "0",
+        "skipped": "0",
+        "time": "10.556"
+      }
+    ],
+    "testcases": [
+      {
+        "name": "actualCleanupSnapshotMustReturnBeforeHttpRefund",
+        "status": "failure"
+      },
+      {
+        "name": "actualAbortSnapshotMustReturnBeforeHttpRefund",
+        "status": "failure"
+      }
+    ],
+    "children": [
+      {
+        "run": ".local/iam-o2b-f2c2a-http-exit-fixes/peers/http-cleanup-exit-8c3dbad7-bf4e-4664-9f02-236e84d64ec2",
+        "launch": {
+          "file": ".local/iam-o2b-f2c2a-http-exit-fixes/peers/http-cleanup-exit-8c3dbad7-bf4e-4664-9f02-236e84d64ec2/launch.properties",
+          "bytes": 69,
+          "sha256": "1c3eed8b5c788426141c7e4bbd64080eb3b2da3183a41469c9931cde940b82e4"
+        },
+        "exit": {
+          "file": ".local/iam-o2b-f2c2a-http-exit-fixes/peers/http-cleanup-exit-8c3dbad7-bf4e-4664-9f02-236e84d64ec2/exit.properties",
+          "bytes": 50,
+          "sha256": "065a90756db03115136bd54d9d3f55e5061aceab302f9601b6d8b92aacb9ac2a"
+        },
+        "pid": 60240,
+        "actualExit": 1,
+        "alive": "false",
+        "collectorAlive": "false",
+        "waitFor95AndFinally3Returned": "assertions reached actual exit cache; source-bound launcher",
+        "collectorJoined": true
+      },
+      {
+        "run": ".local/iam-o2b-f2c2a-http-exit-fixes/peers/http-stop-exit-550edbe7-771f-4c40-bc75-ac3e9a412b17",
+        "launch": {
+          "file": ".local/iam-o2b-f2c2a-http-exit-fixes/peers/http-stop-exit-550edbe7-771f-4c40-bc75-ac3e9a412b17/launch.properties",
+          "bytes": 68,
+          "sha256": "514ac246266ec6d72dcb18a620e81c59ed935e9d38f5930908dc394baf9d6483"
+        },
+        "exit": {
+          "file": ".local/iam-o2b-f2c2a-http-exit-fixes/peers/http-stop-exit-550edbe7-771f-4c40-bc75-ac3e9a412b17/exit.properties",
+          "bytes": 49,
+          "sha256": "3b26d4f386d1a606d590738d0fe6ad891fc72fa3b65598e66927f15c457be8d2"
+        },
+        "pid": 6636,
+        "actualExit": 1,
+        "alive": "false",
+        "collectorAlive": "false",
+        "waitFor95AndFinally3Returned": "assertions reached actual exit cache; source-bound launcher",
+        "collectorJoined": true
+      }
+    ],
+    "command": {
+      "file": "docs/evidence/iam-stage-4-o2b-f2c2a-http-exit-fixes/stages/red-hooks-only/command.json",
+      "bytes": 502,
+      "sha256": "bb3fa6abd1c0018e504f66c1dba816e6cc30c2fc28bb8f869a48c7548d85ee3a"
+    },
+    "processExit": {
+      "file": "docs/evidence/iam-stage-4-o2b-f2c2a-http-exit-fixes/stages/red-hooks-only/process-exit.json",
+      "bytes": 320,
+      "sha256": "035ec5fbf88f0d27a2abc134a06baf92a302b817fbb269166ea91aed9b7b103e"
+    },
+    "raw": {
+      "file": "docs/evidence/iam-stage-4-o2b-f2c2a-http-exit-fixes/stages/red-hooks-only/raw.log",
+      "bytes": 36574,
+      "sha256": "d9d5ab0fba0dfc57f4d8b0c9aafbc2e5317952541f2e7d7441b47ba3e5074cfa"
+    },
+    "finiteTarget": {
+      "file": "docs/evidence/iam-stage-4-o2b-f2c2a-http-exit-fixes/stages/red-hooks-only/target-finite.json",
+      "bytes": 91877,
+      "sha256": "92978f041b510c721d8143476fee24a07b5e3241e10b020f786f9d707d6a73ba"
+    }
+  },
+  {
+    "stage": "red-stop-nonnull-witness",
+    "sourceEpoch": {
+      "file": "docs/evidence/iam-stage-4-o2b-f2c2a-http-exit-fixes/stages/red-stop-nonnull-witness/source.json",
+      "bytes": 124057,
+      "sha256": "b24eab69f98736392f166052d0c327a1384ae87a76fbbc8846b1611048496edb"
+    },
+    "mavenExit": 1,
+    "suites": [
+      {
+        "name": "cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest",
+        "tests": "1",
+        "failures": "1",
+        "errors": "0",
+        "skipped": "0",
+        "time": "2.417"
+      }
+    ],
+    "testcases": [
+      {
+        "name": "actualAbortSnapshotMustReturnBeforeHttpRefund",
+        "status": "failure"
+      }
+    ],
+    "children": [
+      {
+        "run": ".local/iam-o2b-f2c2a-http-exit-fixes/peers/http-stop-exit-c1c7a760-bfd5-4251-a4e5-63a92de41f35",
+        "launch": {
+          "file": ".local/iam-o2b-f2c2a-http-exit-fixes/peers/http-stop-exit-c1c7a760-bfd5-4251-a4e5-63a92de41f35/launch.properties",
+          "bytes": 69,
+          "sha256": "4981c521126b14e4a96f1e24baecbcf62ceb1952a1effaffc77cb480c42f6166"
+        },
+        "exit": {
+          "file": ".local/iam-o2b-f2c2a-http-exit-fixes/peers/http-stop-exit-c1c7a760-bfd5-4251-a4e5-63a92de41f35/exit.properties",
+          "bytes": 50,
+          "sha256": "2f1c1978a86bb2eed849f17804fcf8b39bb66457864b88b670e45ce132fdbaa7"
+        },
+        "pid": 56128,
+        "actualExit": 1,
+        "alive": "false",
+        "collectorAlive": "false",
+        "waitFor95AndFinally3Returned": "assertions reached actual exit cache; source-bound launcher",
+        "collectorJoined": true
+      }
+    ],
+    "command": {
+      "file": "docs/evidence/iam-stage-4-o2b-f2c2a-http-exit-fixes/stages/red-stop-nonnull-witness/command.json",
+      "bytes": 454,
+      "sha256": "4469f8c0bb626109646d3f835eb55095d82ed8a07b9e459efa1be5017e76b81d"
+    },
+    "processExit": {
+      "file": "docs/evidence/iam-stage-4-o2b-f2c2a-http-exit-fixes/stages/red-stop-nonnull-witness/process-exit.json",
+      "bytes": 340,
+      "sha256": "6bae17659da0e71819f7871a000ca1850f69ebb4599cd9471ffecbf4306739a4"
+    },
+    "raw": {
+      "file": "docs/evidence/iam-stage-4-o2b-f2c2a-http-exit-fixes/stages/red-stop-nonnull-witness/raw.log",
+      "bytes": 22785,
+      "sha256": "0cb8ea11084ce20893c8bf21f7b5eec1a9a491aa4569009209a622d1a51c0d81"
+    },
+    "finiteTarget": {
+      "file": "docs/evidence/iam-stage-4-o2b-f2c2a-http-exit-fixes/stages/red-stop-nonnull-witness/target-finite.json",
+      "bytes": 91876,
+      "sha256": "2f60ef4d6541d5dedf89488f6146cb15744a8f32892e2085b8ca35c80b0d4a9f"
+    }
+  }
+]

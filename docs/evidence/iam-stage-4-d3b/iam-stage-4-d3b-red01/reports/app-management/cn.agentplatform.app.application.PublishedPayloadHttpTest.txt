@@ -1,0 +1,203 @@
+-------------------------------------------------------------------------------
+Test set: cn.agentplatform.app.application.PublishedPayloadHttpTest
+-------------------------------------------------------------------------------
+Tests run: 23, Failures: 17, Errors: 0, Skipped: 0, Time elapsed: 48.26 s <<< FAILURE! -- in cn.agentplatform.app.application.PublishedPayloadHttpTest
+cn.agentplatform.app.application.PublishedPayloadHttpTest.forgedRootCodeKindAndShaNeverReadPayload -- Time elapsed: 0.419 s <<< FAILURE!
+java.lang.AssertionError: 
+[{"code":"OK","message":"","data":{"type":"FLOW","config":{"guard":{"roles":["EDITOR"]},"private":"snapshot-secret"},"layout":{"x":12},"appCode":"payload-demo","versionNo":1,"definition":{"nodes":[{"id":"start"}]},"appVersionId":9,"candidateSha256":"64c66e3dc746bfd2362e562f685f54cc3134e4beb12ddc005e8eaf7cc192f3ba","appVersionKey":"payload-demo@1","versionId":9},"traceId":null}] 
+Expecting actual:
+  200
+to be in:
+  [403]
+
+	at cn.agentplatform.app.application.PublishedPayloadHttpTest.denied(PublishedPayloadHttpTest.java:137)
+	at cn.agentplatform.app.application.PublishedPayloadHttpTest.forgedRootCodeKindAndShaNeverReadPayload(PublishedPayloadHttpTest.java:165)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+cn.agentplatform.app.application.PublishedPayloadHttpTest.proofExpiryWhileWaitingForShareLockRejectsBeforePayload -- Time elapsed: 5.579 s <<< FAILURE!
+java.lang.AssertionError: finite latch timed out
+	at cn.agentplatform.app.application.PublishedPayloadHttpTest.await(PublishedPayloadHttpTest.java:139)
+	at cn.agentplatform.app.application.PublishedPayloadHttpTest.proofExpiryWhileWaitingForShareLockRejectsBeforePayload(PublishedPayloadHttpTest.java:212)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+cn.agentplatform.app.application.PublishedPayloadHttpTest.secondCurrentOutageDoesNotTouchPayload -- Time elapsed: 0.462 s <<< FAILURE!
+java.lang.AssertionError: 
+[{"code":"OK","message":"","data":{"type":"FLOW","config":{"guard":{"roles":["EDITOR"]},"private":"snapshot-secret"},"layout":{"x":12},"appCode":"payload-demo","versionNo":1,"definition":{"nodes":[{"id":"start"}]},"appVersionId":17,"candidateSha256":"64c66e3dc746bfd2362e562f685f54cc3134e4beb12ddc005e8eaf7cc192f3ba","appVersionKey":"payload-demo@1","versionId":17},"traceId":null}] 
+Expecting actual:
+  200
+to be in:
+  [503]
+
+	at cn.agentplatform.app.application.PublishedPayloadHttpTest.denied(PublishedPayloadHttpTest.java:137)
+	at cn.agentplatform.app.application.PublishedPayloadHttpTest.secondCurrentOutageDoesNotTouchPayload(PublishedPayloadHttpTest.java:153)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+cn.agentplatform.app.application.PublishedPayloadHttpTest.secondCurrentExpirationDoesNotTouchPayload -- Time elapsed: 0.415 s <<< FAILURE!
+java.lang.AssertionError: 
+[{"code":"OK","message":"","data":{"type":"FLOW","config":{"guard":{"roles":["EDITOR"]},"private":"snapshot-secret"},"layout":{"x":12},"appCode":"payload-demo","versionNo":1,"definition":{"nodes":[{"id":"start"}]},"appVersionId":21,"candidateSha256":"64c66e3dc746bfd2362e562f685f54cc3134e4beb12ddc005e8eaf7cc192f3ba","appVersionKey":"payload-demo@1","versionId":21},"traceId":null}] 
+Expecting actual:
+  200
+to be in:
+  [403]
+
+	at cn.agentplatform.app.application.PublishedPayloadHttpTest.denied(PublishedPayloadHttpTest.java:137)
+	at cn.agentplatform.app.application.PublishedPayloadHttpTest.secondCurrentExpirationDoesNotTouchPayload(PublishedPayloadHttpTest.java:154)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+cn.agentplatform.app.application.PublishedPayloadHttpTest.secondCurrentDenialDoesNotTouchPayload -- Time elapsed: 0.685 s <<< FAILURE!
+java.lang.AssertionError: 
+[{"code":"OK","message":"","data":{"type":"FLOW","config":{"guard":{"roles":["EDITOR"]},"private":"snapshot-secret"},"layout":{"x":12},"appCode":"payload-demo","versionNo":1,"definition":{"nodes":[{"id":"start"}]},"appVersionId":25,"candidateSha256":"64c66e3dc746bfd2362e562f685f54cc3134e4beb12ddc005e8eaf7cc192f3ba","appVersionKey":"payload-demo@1","versionId":25},"traceId":null}] 
+Expecting actual:
+  200
+to be in:
+  [403]
+
+	at cn.agentplatform.app.application.PublishedPayloadHttpTest.denied(PublishedPayloadHttpTest.java:137)
+	at cn.agentplatform.app.application.PublishedPayloadHttpTest.secondCurrentDenialDoesNotTouchPayload(PublishedPayloadHttpTest.java:152)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+cn.agentplatform.app.application.PublishedPayloadHttpTest.unknownTenantAndBusinessUnavailableStatesKeepOriginalStatuses -- Time elapsed: 0.888 s <<< FAILURE!
+java.lang.AssertionError: 
+[{"code":"VERSION_NOT_FOUND","message":"版本不存在","data":null,"traceId":null}] 
+Expecting actual:
+  404
+to be in:
+  [409]
+
+	at cn.agentplatform.app.application.PublishedPayloadHttpTest.denied(PublishedPayloadHttpTest.java:137)
+	at cn.agentplatform.app.application.PublishedPayloadHttpTest.unknownTenantAndBusinessUnavailableStatesKeepOriginalStatuses(PublishedPayloadHttpTest.java:178)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+cn.agentplatform.app.application.PublishedPayloadHttpTest.actualAuthorityResponseWaitAlsoHoldsNoPgLock -- Time elapsed: 5.300 s <<< FAILURE!
+java.lang.AssertionError: finite latch timed out
+	at cn.agentplatform.app.application.PublishedPayloadHttpTest.await(PublishedPayloadHttpTest.java:139)
+	at cn.agentplatform.app.application.PublishedPayloadHttpTest.actualAuthorityResponseWaitAlsoHoldsNoPgLock(PublishedPayloadHttpTest.java:202)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+cn.agentplatform.app.application.PublishedPayloadHttpTest.normalSavedPortalMetadataThenIndependentMainAndForwardReadsOnlyCurrentSnapshot -- Time elapsed: 0.506 s <<< FAILURE!
+java.lang.AssertionError: 
+
+Expecting AtomicInteger(1) to have value:
+  2
+but did not.
+	at cn.agentplatform.app.application.PublishedPayloadHttpTest.normalSavedPortalMetadataThenIndependentMainAndForwardReadsOnlyCurrentSnapshot(PublishedPayloadHttpTest.java:148)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+cn.agentplatform.app.application.PublishedPayloadHttpTest.heldShareLockBlocksRealWriterThenReleasesAfterRead -- Time elapsed: 5.403 s <<< FAILURE!
+java.lang.AssertionError: finite latch timed out
+	at cn.agentplatform.app.application.PublishedPayloadHttpTest.await(PublishedPayloadHttpTest.java:139)
+	at cn.agentplatform.app.application.PublishedPayloadHttpTest.heldShareLockBlocksRealWriterThenReleasesAfterRead(PublishedPayloadHttpTest.java:206)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+cn.agentplatform.app.application.PublishedPayloadHttpTest.oldVersionTicketConflictsRatherThanSelectingNewSnapshot -- Time elapsed: 0.431 s <<< FAILURE!
+java.lang.AssertionError: 
+[{"code":"OK","message":"","data":{"type":"FLOW","config":{"guard":{"roles":["EDITOR"]},"private":"snapshot-secret"},"layout":{"x":12},"appCode":"payload-demo","versionNo":2,"definition":{"nodes":[{"id":"start"}]},"appVersionId":50,"candidateSha256":"90579ce4010acd9ec38da534e694e144cd981ea1ec98c3d10ee3e687a7db9045","appVersionKey":"payload-demo@2","versionId":50},"traceId":null}] 
+Expecting actual:
+  200
+to be in:
+  [409]
+
+	at cn.agentplatform.app.application.PublishedPayloadHttpTest.denied(PublishedPayloadHttpTest.java:137)
+	at cn.agentplatform.app.application.PublishedPayloadHttpTest.oldVersionTicketConflictsRatherThanSelectingNewSnapshot(PublishedPayloadHttpTest.java:167)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+cn.agentplatform.app.application.PublishedPayloadHttpTest.statusChangeAfterRefreshBeforeLockRejectsWithoutPayload -- Time elapsed: 0.382 s <<< FAILURE!
+java.lang.AssertionError: 
+[{"code":"OK","message":"","data":{"type":"FLOW","config":{"guard":{"roles":["EDITOR"]},"private":"snapshot-secret"},"layout":{"x":12},"appCode":"payload-demo","versionNo":1,"definition":{"nodes":[{"id":"start"}]},"appVersionId":57,"candidateSha256":"64c66e3dc746bfd2362e562f685f54cc3134e4beb12ddc005e8eaf7cc192f3ba","appVersionKey":"payload-demo@1","versionId":57},"traceId":null}] 
+Expecting actual:
+  200
+to be in:
+  [409]
+
+	at cn.agentplatform.app.application.PublishedPayloadHttpTest.denied(PublishedPayloadHttpTest.java:137)
+	at cn.agentplatform.app.application.PublishedPayloadHttpTest.statusChangeAfterRefreshBeforeLockRejectsWithoutPayload(PublishedPayloadHttpTest.java:199)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+cn.agentplatform.app.application.PublishedPayloadHttpTest.expiryAfterPayloadBeforeCallbackEndsRejectsWithoutSuccessData -- Time elapsed: 0.393 s <<< FAILURE!
+java.lang.AssertionError: 
+
+Expecting AtomicInteger(1) to have value:
+  2
+but did not.
+	at cn.agentplatform.app.application.PublishedPayloadHttpTest.expiryAfterPayloadBeforeCallbackEndsRejectsWithoutSuccessData(PublishedPayloadHttpTest.java:215)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+cn.agentplatform.app.application.PublishedPayloadHttpTest.authorizedNarrowerCurrentProjectionStillReadsPayload -- Time elapsed: 0.364 s <<< FAILURE!
+java.lang.AssertionError: 
+
+Expecting AtomicInteger(1) to have value:
+  2
+but did not.
+	at cn.agentplatform.app.application.PublishedPayloadHttpTest.authorizedNarrowerCurrentProjectionStillReadsPayload(PublishedPayloadHttpTest.java:155)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+cn.agentplatform.app.application.PublishedPayloadHttpTest.missingInitialOriginProofCannotReadPayload -- Time elapsed: 0.524 s <<< FAILURE!
+java.lang.AssertionError: 
+[{"code":"OK","message":"","data":{"type":"FLOW","config":{"guard":{"roles":["EDITOR"]},"private":"snapshot-secret"},"layout":{"x":12},"appCode":"payload-demo","versionNo":1,"definition":{"nodes":[{"id":"start"}]},"appVersionId":73,"candidateSha256":"64c66e3dc746bfd2362e562f685f54cc3134e4beb12ddc005e8eaf7cc192f3ba","appVersionKey":"payload-demo@1","versionId":73},"traceId":null}] 
+Expecting actual:
+  200
+to be in:
+  [403]
+
+	at cn.agentplatform.app.application.PublishedPayloadHttpTest.denied(PublishedPayloadHttpTest.java:137)
+	at cn.agentplatform.app.application.PublishedPayloadHttpTest.missingInitialOriginProofCannotReadPayload(PublishedPayloadHttpTest.java:162)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+cn.agentplatform.app.application.PublishedPayloadHttpTest.onlineCurrentWaitHoldsNoApplicationLockAndPointerChangeRejectsOldRequest -- Time elapsed: 5.302 s <<< FAILURE!
+java.lang.AssertionError: finite latch timed out
+	at cn.agentplatform.app.application.PublishedPayloadHttpTest.await(PublishedPayloadHttpTest.java:139)
+	at cn.agentplatform.app.application.PublishedPayloadHttpTest.onlineCurrentWaitHoldsNoApplicationLockAndPointerChangeRejectsOldRequest(PublishedPayloadHttpTest.java:196)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+cn.agentplatform.app.application.PublishedPayloadHttpTest.expiryAfterActualCommitBeforeServiceReturnsRejectsWithoutSuccessData -- Time elapsed: 5.383 s <<< FAILURE!
+java.lang.AssertionError: finite latch timed out
+	at cn.agentplatform.app.application.PublishedPayloadHttpTest.await(PublishedPayloadHttpTest.java:139)
+	at cn.agentplatform.app.application.PublishedPayloadHttpTest.expiryAfterActualCommitBeforeServiceReturnsRejectsWithoutSuccessData(PublishedPayloadHttpTest.java:218)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+cn.agentplatform.app.application.PublishedPayloadHttpTest.malformedPersistedSnapshotIdentityIsRejectedAfterItsSinglePayloadRead -- Time elapsed: 1.593 s <<< FAILURE!
+java.lang.AssertionError: 
+[{"code":"OK","message":"","data":{"type":"FLOW","config":{"guard":{"roles":["EDITOR"]},"private":"snapshot-secret"},"layout":{"x":12},"appCode":"wrong","versionNo":1,"definition":{"nodes":[{"id":"start"}]},"appVersionId":93,"candidateSha256":"64c66e3dc746bfd2362e562f685f54cc3134e4beb12ddc005e8eaf7cc192f3ba","appVersionKey":"bad4ccc059850@1","versionId":93},"traceId":null}] 
+Expecting actual:
+  200
+to be in:
+  [409]
+
+	at cn.agentplatform.app.application.PublishedPayloadHttpTest.denied(PublishedPayloadHttpTest.java:137)
+	at cn.agentplatform.app.application.PublishedPayloadHttpTest.malformedPersistedSnapshotIdentityIsRejectedAfterItsSinglePayloadRead(PublishedPayloadHttpTest.java:222)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+

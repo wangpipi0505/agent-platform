@@ -1,0 +1,16 @@
+{
+  "command": [
+    "node",
+    ".tools/run-iam-module-tests.mjs",
+    "iam-stage-o2a-a-fix-green01",
+    "admin-common",
+    "PortalEventsAuthorityProfileTest#clientCloseDeliversCancellationWhileHolderStopIsPublishedButNotSubmitted,PortalEventsAuthorityProfileTest#rejectedCancellationRunsOutsideLifecycleLocksAndRetainsSlotUntilActualReturn,PortalEventsAuthorityProfileTest#expiryBeforeRenewalPublicationLeavesNoReservationAndCapacityIsReusable,PortalEventsAuthorityProfileTest#cancelledPublishedRenewalCannotRegisterTimerOrQueueAfterItsSlotWasReleased,PortalEventsAuthorityProfileTest#cancellationDuringTimerHandoffRemovesBothTimerAndQueuedWorkerExactlyOnce"
+  ],
+  "exitCode": 0,
+  "stdout": "{\"stage\":\"iam-stage-o2a-a-fix-green01\",\"modules\":\"admin-common\",\"tests\":\"PortalEventsAuthorityProfileTest#clientCloseDeliversCancellationWhileHolderStopIsPublishedButNotSubmitted,PortalEventsAuthorityProfileTest#rejectedCancellationRunsOutsideLifecycleLocksAndRetainsSlotUntilActualReturn,PortalEventsAuthorityProfileTest#expiryBeforeRenewalPublicationLeavesNoReservationAndCapacityIsReusable,PortalEventsAuthorityProfileTest#cancelledPublishedRenewalCannotRegisterTimerOrQueueAfterItsSlotWasReleased,PortalEventsAuthorityProfileTest#cancellationDuringTimerHandoffRemovesBothTimerAndQueuedWorkerExactlyOnce\",\"exitCode\":0,\"log\":\".local\\\\iam-stage-o2a-a-fix-green01.log\",\"timedOut\":false}\n",
+  "stderr": "",
+  "running": [
+    "cn.agentplatform.common.authority.PortalEventsAuthorityProfileTest"
+  ],
+  "at": "2026-10-21T01:05:16.256Z"
+}

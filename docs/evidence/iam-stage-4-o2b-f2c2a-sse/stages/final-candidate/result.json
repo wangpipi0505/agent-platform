@@ -1,0 +1,42 @@
+{
+  "stage": "final-candidate",
+  "exit": 1,
+  "epoch": {
+    "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/final-candidate/source.json",
+    "bytes": 124057,
+    "sha256": "ff57930c75f8518eaf9587c03879aa4894ac06e5de324f763ed4d0a1855825e6"
+  },
+  "sourceCount": 630,
+  "running": [
+    "cn.agentplatform.gateway.infra.PortalEventsPacketDecoderTest",
+    "cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest",
+    "cn.agentplatform.gateway.infra.PortalRunEventsSseTest"
+  ],
+  "suites": [
+    {
+      "name": "cn.agentplatform.gateway.infra.PortalEventsPacketDecoderTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.164"
+    },
+    {
+      "name": "cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest",
+      "tests": "22",
+      "failures": "1",
+      "errors": "0",
+      "skipped": "0",
+      "time": "129.782"
+    },
+    {
+      "name": "cn.agentplatform.gateway.infra.PortalRunEventsSseTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "19.566"
+    }
+  ],
+  "finiteTarget": 399
+}

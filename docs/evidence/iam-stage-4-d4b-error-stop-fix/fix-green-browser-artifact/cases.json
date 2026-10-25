@@ -1,0 +1,54 @@
+[
+  {
+    "name": "D4b fix artifact current 401 clears whole identity and stops observation without replay",
+    "passed": true,
+    "rawStart": 0,
+    "rawEnd": 6,
+    "token": "",
+    "user": null,
+    "roles": [],
+    "generation": 2,
+    "providerCalls": 1,
+    "downloadClicks": 0,
+    "previousGeneration": 1,
+    "requestsStable": true,
+    "postCount": 0,
+    "downloadCount": 1,
+    "screenshot": "current401-observed.png"
+  },
+  {
+    "name": "D4b fix artifact delayed old 401 cannot invalidate new identity or show old error",
+    "passed": true,
+    "rawStart": 6,
+    "rawEnd": 13,
+    "token": "B",
+    "user": {
+      "tenantId": "tenant_B",
+      "principalId": "B",
+      "roles": [
+        "ADMIN"
+      ],
+      "expiresAt": "2026-10-20T20:46:41.729Z"
+    },
+    "roles": [
+      "ADMIN"
+    ],
+    "generation": 2,
+    "providerCalls": 2,
+    "downloadClicks": 0,
+    "postCount": 0,
+    "downloadCount": 1,
+    "oldHTTP401ReturnedAfterNewSession": true
+  },
+  {
+    "name": "D4b fix artifact 403 preserves current identity and explains denied download",
+    "passed": true,
+    "rawStart": 13,
+    "rawEnd": 17,
+    "generation": 1,
+    "preservedIdentity": true,
+    "providerCalls": 1,
+    "downloadCount": 1,
+    "deniedMessage": true
+  }
+]

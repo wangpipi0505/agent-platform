@@ -1,0 +1,33 @@
+
+ RUN  v4.1.12 G:/207/项目/算法重组工具/代码/agent-platform/web
+
+ ❯ tests/stream-auth.test.ts (21 tests | 1 failed | 20 skipped) 8ms
+   × D4b names authorization denial and IAM unavailability without generic busy text 7ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 20 skipped (21)
+   Start at  04:24:59
+   Duration  311ms (transform 56ms, setup 0ms, import 189ms, tests 8ms, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/stream-auth.test.ts > D4b names authorization denial and IAM unavailability without generic busy text
+AssertionError: expected Error: 系统繁忙，请稍后重试 { …(3) } to match object { status: 403, …(2) }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+- {
++ Error {
+    "code": "SYS-AUTH-403",
+-   "message": StringContaining "没有此操作权限",
+    "status": 403,
+  }
+
+ ❯ tests/stream-auth.test.ts:128:124
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+

@@ -1,0 +1,101 @@
+{
+  "recordedAt": "2026-10-20T16:07:04.160Z",
+  "files": [
+    {
+      "file": "docs/evidence/iam-stage-5-n4a-deployment-mode/upstream/AbstractApplicationContext.java",
+      "url": "https://repo.maven.apache.org/maven2/org/springframework/spring-context/6.2.7/spring-context-6.2.7-sources.jar",
+      "version": "Spring Context 6.2.7",
+      "license": "Apache-2.0",
+      "readRanges": "refresh 591-659: factory processors before onRefresh, exception teardown",
+      "reuseShaVerified": true,
+      "bytes": 60037,
+      "sha256": "074cd3029bccb96e3193bc18024ee47ddbe331743d9297965b345756f8c29dcf"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n4a-deployment-mode/upstream/ServletWebServerApplicationContext.java",
+      "url": "https://repo.maven.apache.org/maven2/org/springframework/boot/spring-boot/3.5.0/spring-boot-3.5.0-sources.jar",
+      "version": "Spring Boot 3.5.0",
+      "license": "Apache-2.0",
+      "readRanges": "onRefresh/createWebServer/doClose 163-201",
+      "reuseShaVerified": true,
+      "bytes": 14915,
+      "sha256": "0c88140c8651f4d2218d87eb6786849a64e437f58b1297ec8fffcb85f73395e5"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n4a-deployment-mode/upstream/NoUnboundElementsBindHandler.java",
+      "url": "https://repo.maven.apache.org/maven2/org/springframework/boot/spring-boot/3.5.0/spring-boot-3.5.0-sources.jar",
+      "version": "Spring Boot 3.5.0",
+      "license": "Apache-2.0",
+      "readRanges": "onFailure/onFinish/checkNoUnboundElements/collectUnbound/isUnbound 75-128",
+      "reuseShaVerified": true,
+      "bytes": 6157,
+      "sha256": "2a177ab504b13a6b630f1a8996fadc7f54df659b4d4e9c8363d91f5351e347a9"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n4a-deployment-mode/upstream/Boot-Binder.java",
+      "url": "https://repo.maven.apache.org/maven2/org/springframework/boot/spring-boot/3.5.0/spring-boot-3.5.0-sources.jar",
+      "entry": "org/springframework/boot/context/properties/bind/Binder.java",
+      "version": "Spring Boot 3.5.0",
+      "license": "Apache-2.0",
+      "readRanges": "bind(String, Bindable, BindHandler) 251-263; get(Environment) 526-548",
+      "archiveShaVerified": true,
+      "bytes": 26471,
+      "sha256": "83e5be4b7073abf2c8d6e70a617b3383958f3c43b580dc1708ea6ef3e877fd26"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n4a-deployment-mode/upstream/Boot-LICENSE.txt",
+      "url": "https://repo.maven.apache.org/maven2/org/springframework/boot/spring-boot/3.5.0/spring-boot-3.5.0-sources.jar",
+      "entry": "META-INF/LICENSE.txt",
+      "version": "Spring Boot 3.5.0",
+      "license": "Apache-2.0",
+      "readRanges": "license header",
+      "bytes": 11359,
+      "sha256": "7200000367e0e8b47822d563a5ddd2dd3a97cc05b32bd7dbcc7b4eeb92b76628"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n4a-deployment-mode/upstream/Boot-NOTICE.txt",
+      "url": "https://repo.maven.apache.org/maven2/org/springframework/boot/spring-boot/3.5.0/spring-boot-3.5.0-sources.jar",
+      "entry": "META-INF/NOTICE.txt",
+      "version": "Spring Boot 3.5.0",
+      "license": "Apache-2.0",
+      "readRanges": "retained notice",
+      "bytes": 210,
+      "sha256": "e31f9c3e808edca4fbcbba9652cfe729fd985e8a8be145836bf400a01908acd8"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n4a-deployment-mode/upstream/Jdk21-Thread.java",
+      "url": "https://raw.githubusercontent.com/openjdk/jdk/jdk-21%2B35/src/java.base/share/classes/java/lang/Thread.java",
+      "version": "OpenJDK jdk-21+35 source reference",
+      "license": "GPL-2.0-only WITH Classpath-exception-2.0 (header retained)",
+      "readRanges": "header 1-24; lifecycle 67-80; start synchronization 1514-1544; bounded join(long) 2032-2084",
+      "runtimeIdentityNotClaimed": true,
+      "bytes": 117903,
+      "sha256": "23a38e9d8deba442c845137d46d6fd8fa74c507e364a697934827b0c783da85e"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n4a-deployment-mode/upstream/JLS21-ch17.html",
+      "url": "https://docs.oracle.com/javase/specs/jls/se21/html/jls-17.html",
+      "version": "Java SE 21 language specification",
+      "license": "Oracle specification documentation reference snapshot; not relicensed as open source",
+      "readRanges": "17.1 monitor/static synchronization; 17.4.5 monitor unlock/lock and start/join ordering (HTML 1240-1266)",
+      "bytes": 174369,
+      "sha256": "5352da1f94167b6db4c194a51e11e3d1d511f0292f62a44c56f7a92280bae9f1"
+    }
+  ],
+  "mechanism": "The class monitor is our implementation inference grounded in JLS21. Spring complete production IAM remains prelistener-closed. JDK21+35 reference is not runtime Temurin21.0.12+8. No SDK/dependency change.",
+  "verifiedOriginalShaManifest": {
+    "file": "docs/evidence/iam-stage-1/upstream/source-sha256.json",
+    "bytes": 1634,
+    "sha256": "6e818645c107664ce05a8d46aa310a7bfe5518bff02fe3c4c4b6d08b12828110"
+  },
+  "fixedBootArchive": {
+    "file": "docs/evidence/iam-stage-1/upstream/spring-boot-3.5.0-sources.jar",
+    "bytes": 1246951,
+    "sha256": "ed66046ed4aaae9eaaaf6211716761fb859b8312ee2dd5786c608585a0d4bf36"
+  },
+  "fixedContextArchive": {
+    "file": "docs/evidence/iam-stage-1/upstream/spring-context-6.2.7-sources.jar",
+    "bytes": 1107276,
+    "sha256": "19a97ef30d4917e6d8f5533fca9ffdebefb2abcfafef6cbbed7e7f3862f67d53"
+  }
+}

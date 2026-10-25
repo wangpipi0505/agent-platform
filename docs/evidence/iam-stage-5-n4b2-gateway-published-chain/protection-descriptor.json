@@ -1,0 +1,31 @@
+{
+  "protected": 123837,
+  "supplements": 6298,
+  "runners": 28,
+  "indexes": 8,
+  "base": {
+    "file": "docs/evidence/iam-stage-5-n4b1-gateway-run-authorization/protected-after.json",
+    "bytes": 30823469,
+    "sha256": "191490bbc796fb775e9e88bd8271ec121f413f3e9a5cb85dfd5befe81f4c4e3a"
+  },
+  "reusedRoot": {
+    "file": ".local/iam-n4b1-root-protected-check.json",
+    "bytes": 1111,
+    "sha256": "67900959d26619fe159082afb590151817cbc530aca60883e7e83d76931b9e11"
+  },
+  "exactExclusions": [
+    ".local/current-work-state.json",
+    "docs/evidence/iam-stage-5-n4b2-gateway-published-chain-report.md",
+    ".local/postgres.log"
+  ],
+  "directoryExclusions": [
+    ".local/iam-n4b2-gateway-published-chain/",
+    "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/",
+    ".local/minio/",
+    ".local/pgdata/",
+    ".local/redis/",
+    ".local/logs/",
+    ".local/tmp/",
+    ".local/wsl/"
+  ]
+}

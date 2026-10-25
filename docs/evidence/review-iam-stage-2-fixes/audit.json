@@ -1,0 +1,50 @@
+{
+  "before": {
+    "source": {
+      "entries": 34,
+      "mismatches": []
+    },
+    "target": {
+      "entries": 53,
+      "mismatches": []
+    },
+    "fix_manifest": {
+      "entries": 278,
+      "mismatches": []
+    },
+    "history": {
+      "entries": 591,
+      "mismatches": []
+    }
+  },
+  "after": {
+    "source": {
+      "entries": 34,
+      "mismatches": []
+    },
+    "target": {
+      "entries": 53,
+      "mismatches": []
+    },
+    "fix_manifest": {
+      "entries": 278,
+      "mismatches": []
+    },
+    "history": {
+      "entries": 591,
+      "mismatches": [
+        "docs/evidence/review-iam-stage-2.md"
+      ]
+    }
+  },
+  "original_report_bytes": 11303,
+  "original_report_sha256": "bc88528e9d8126718492f500cce191f79c540677b68dc3d75e16d82c04b6b269",
+  "appended_report_sha256": "5229f7c7db24d9da08c277b776c9c38ae0cd4dbcb7abda43d1311bd207040085",
+  "original_prefix_preserved": true,
+  "append_sha256": "e3f7eede6054d0e9069bbc9d2b0b22df1f6cf203b2a742cd9e757137ef198317",
+  "commands_executed": [
+    "python docs/evidence/review-iam-stage-2-fixes/audit-and-append.py"
+  ],
+  "test_commands_executed": [],
+  "appendix_reference_correction": "Corrected newly appended decoder call reference from line 61 to verified line 62; original 11303-byte report prefix remains byte-identical."
+}

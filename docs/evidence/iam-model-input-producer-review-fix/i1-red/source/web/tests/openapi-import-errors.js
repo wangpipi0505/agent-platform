@@ -1,0 +1,31 @@
+async page => {
+  await page.evaluate(() => location.hash = '/skills');
+  await page.getByRole('button', {name: '注册技能', exact: true}).click();
+  await page.getByText('OpenAPI 导入', {exact: true}).click();
+  const region = page.getByRole('region', {name: 'OpenAPI 导入', exact: true});
+  let previewRequests = 0;
+  const countPreview = request => { if (request.url().includes('/import-openapi/preview')) previewRequests++; };
+  page.on('request', countPreview);
+  await region.getByRole('textbox', {name: 'OpenAPI 文档文本', exact: true}).fill('中'.repeat(350000));
+  await region.getByRole('button', {name: '预览操作', exact: true}).click();
+  await region.getByRole('alert').filter({hasText: '超过 1 MiB'}).waitFor();
+  if (previewRequests !== 0) throw new Error('Oversized UTF-8 text sent to server');
+  page.off('request', countPreview);
+  await region.getByRole('textbox', {name: 'OpenAPI 文档文本', exact: true}).fill('{');
+  const serverWait = page.waitForResponse(r => r.url().includes('/import-openapi/preview') && r.request().method() === 'POST');
+  await region.getByRole('button', {name: '预览操作', exact: true}).click();
+  const serverResponse = await serverWait;
+  await region.getByRole('alert').waitFor();
+  const serverError = await region.getByRole('alert').textContent();
+  if (serverResponse.status() !== 400 || !serverError?.trim()) throw new Error('Server diagnostic missing');
+  await region.getByRole('textbox', {name: 'OpenAPI 文档文本', exact: true}).fill('openapi: 3.0.3');
+  await page.route('**/admin/skills/import-openapi/preview', route => route.abort('failed'));
+  await region.getByRole('button', {name: '预览操作', exact: true}).click();
+  await region.getByRole('alert').waitFor();
+  const networkError = await region.getByRole('alert').textContent();
+  await page.unroute('**/admin/skills/import-openapi/preview');
+  if (!networkError?.includes('检查网关连接后重试')) throw new Error('Network recovery instruction missing');
+  await page.screenshot({path: '../docs/evidence/frontend-openapi-network-error.png', fullPage: true});
+  await page.getByRole('button', {name: 'Close this dialog'}).click();
+  return {oversizedTextRequests: previewRequests, malformedDocumentStatus: serverResponse.status(), serverError, simulatedNetworkError: networkError, noDraftCreated: true};
+}

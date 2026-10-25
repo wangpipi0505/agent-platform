@@ -1,0 +1,48 @@
+{
+  "name": "agent-platform-web",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "admin",
+    "webapp",
+    "assistant.js",
+    "flow-designer",
+    "debug-panel",
+    "shared"
+  ],
+  "scripts": {
+    "dev": "vite --config admin/vite.config.ts",
+    "test": "vitest run",
+    "build": "vue-tsc --noEmit && vite build --config admin/vite.config.ts && vite build --config webapp/vite.config.ts && vite build --config assistant.js/vite.config.ts && node shared/copy-assistant.mjs",
+    "api:generate": "node shared/generate-api.mjs",
+    "dev:webapp": "vite --config webapp/vite.config.ts",
+    "dev:fixtures": "vite --config tests/vite.config.ts"
+  },
+  "dependencies": {
+    "@antv/x6": "^2.18.0",
+    "@antv/x6-plugin-history": "^2.2.4",
+    "@antv/x6-plugin-keyboard": "^2.2.3",
+    "@antv/x6-vue-shape": "^2.1.0",
+    "@codemirror/state": "^6.7.6",
+    "ajv": "^8.20.0",
+    "axios": "^1.8.0",
+    "codemirror": "^6.0.2",
+    "dompurify": "^3.2.0",
+    "echarts": "6.1.0",
+    "element-plus": "^2.9.0",
+    "marked": "^15.0.0",
+    "pinia": "^3.0.0",
+    "vue": "~3.5.0",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.51.0",
+    "@types/node": "^22.0.0",
+    "@vitejs/plugin-vue": "^5.2.0",
+    "openapi-typescript": "^7.6.0",
+    "typescript": "~5.8.0",
+    "vite": "^6.3.0",
+    "vitest": "^4.1.12",
+    "vue-tsc": "^2.2.0"
+  }
+}

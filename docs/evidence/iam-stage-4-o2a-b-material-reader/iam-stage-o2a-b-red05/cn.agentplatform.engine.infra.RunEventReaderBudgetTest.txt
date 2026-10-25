@@ -1,0 +1,20 @@
+-------------------------------------------------------------------------------
+Test set: cn.agentplatform.engine.infra.RunEventReaderBudgetTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 0.136 s <<< FAILURE! -- in cn.agentplatform.engine.infra.RunEventReaderBudgetTest
+cn.agentplatform.engine.infra.RunEventReaderBudgetTest.normalizationExpansionHasIndependentBudgetBeforeDecimalToIntegerExpansion -- Time elapsed: 0.120 s <<< FAILURE!
+java.lang.AssertionError: 
+
+Expecting actual throwable to be an instance of:
+  cn.agentplatform.engine.infra.RunEventReader.CapacityFailure
+but was:
+  java.lang.AssertionError: UNBOUNDED_EXPANSION_REACHED
+	at cn.agentplatform.engine.infra.RunEventReaderBudgetTest$1.toBigIntegerExact(RunEventReaderBudgetTest.java:39)
+	at cn.agentplatform.engine.infra.MaterialScopeStore.normalize(MaterialScopeStore.java:683)
+	at cn.agentplatform.engine.infra.MaterialScopeStore.digest(MaterialScopeStore.java:679)
+	...(81 remaining lines not displayed - this can be changed with Assertions.setMaxStackTraceElementsDisplayed)
+	at cn.agentplatform.engine.infra.RunEventReaderBudgetTest.normalizationExpansionHasIndependentBudgetBeforeDecimalToIntegerExpansion(RunEventReaderBudgetTest.java:42)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+

@@ -1,0 +1,22 @@
+# Documentation-only reserved IP addresses. Excluded from kustomization.
+# Replace with dedicated dependency endpoints/CIDRs and observed ports after review.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: dedicated-dependencies
+  namespace: agent-platform-v12
+spec:
+  podSelector:
+    matchLabels:
+      tier: backend
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - ipBlock: {cidr: 192.0.2.10/32}
+      ports: [{protocol: TCP, port: 5432}]
+    - to:
+        - ipBlock: {cidr: 192.0.2.11/32}
+      ports: [{protocol: TCP, port: 6379}]
+    - to:
+        - ipBlock: {cidr: 192.0.2.12/32}
+      ports: [{protocol: TCP, port: 9000}]

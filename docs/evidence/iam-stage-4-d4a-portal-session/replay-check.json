@@ -1,0 +1,43 @@
+{
+  "at": "2026-10-20T19:37:54.708Z",
+  "patch": {
+    "file": "docs/evidence/iam-stage-4-d4a-portal-session/source-fullcontext.patch",
+    "bytes": 259511,
+    "sha256": "9f2fb9b7a0bfe6ffe0bef75f86299557a6435fdc7d5accea1075a9fc1b27e804"
+  },
+  "results": [
+    {
+      "command": [
+        "git",
+        "-c",
+        "core.autocrlf=false",
+        "apply",
+        "--check",
+        "-p1",
+        "--directory=docs/evidence/iam-stage-4-d4a-portal-session/replay-overlay",
+        "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\iam-stage-4-d4a-portal-session\\source-fullcontext.patch"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "-c",
+        "core.autocrlf=false",
+        "apply",
+        "-p1",
+        "--directory=docs/evidence/iam-stage-4-d4a-portal-session/replay-overlay",
+        "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\iam-stage-4-d4a-portal-session\\source-fullcontext.patch"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "allLogicalNamesBytesShaEqual": true,
+  "logicalCount": 380
+}

@@ -1,0 +1,401 @@
+diff --git a/docs/evidence/algorithm-process-runner-attempt-scope.md b/docs/evidence/algorithm-process-runner-attempt-scope.md
+new file mode 100644
+index 0000000..54ff500
+--- /dev/null
++++ b/docs/evidence/algorithm-process-runner-attempt-scope.md
+@@ -0,0 +1,42 @@
++# 算法 runner：外部原代与本地恢复尝试的限定验收
++
++2026-10-20，依据 root 唯一入口 `algorithm-process-runner-attempt-scope-brief.md` 与独立 memo `algorithm-live-attempt-scope-review.md` 实施。本轮仅修改 runner 的只读PG采集/断言及新增两个纯Node文件；原31项检查的源码与语义保持，没有改生产、962固定JAR、原4秒/仅offload15秒期限、HTTP/初始提交/对账/重检请求、fixture、环境、健康、异步PS上界/UTF8/归属或收尾。没有接真实凭据、运行JVM、新库、PG/MinIO、Maven/package或第五轮入口。
++
++v4及前三轮失败、完整原始log/PG/process、全部旧patch/manifest/SHA、独立memo和brief均保留原字节。v4仍是退出1，complete通过而ack-loss未走完原runner，后3场景未执行；本次有限通过不改写该实际结果。
++
++## 依据与字段澄清
++
++已完整读取独立memo及brief，并定点读设计快照245—251、1003—1006、1750—1757，复查RunService/TraceStore/AgentDriver/ToolCalls相关源码以及AlgorithmAdapter终态字段。节点认领即记attempt，tool_call登记身份独立；`resumeExternalFacts`将已确定原call的等待node重新置READY，新的本地claim消费原存储结果。v4旧报告将方法误称 `recoverExternalReady`，实际为 `RunService.resumeExternalFacts`，本报告澄清，原报告不改。
++
++节点key是sha256("node:"+nodeId)，外部call key是sha256(runId+":"+nodeId+":"+seq+":"+versionId)，新oracle分别验证，不相互代替。terminalEvidence按实际externalJobId/externalJobUid/namespace/apiSha256/identitySha256/condition核验；Running UNKNOWN不要求终态证据。节点output与原structured比较只要求ack-loss成功恢复，不强加于Failed/Running/structured=null的转存。
++
++## memo六项要求与实现
++
++| 要求 | 对应采集及门禁 |
++|---|---|
++| 1. 逐行快照与明确集合 | capture新增calls/facts/bindings数组、完整node、attemptRows排序行、accepted终态terminalNotes行、完整带PG时间events；保留整数计数。单数别名仅从数组派生，长度必须各1，开始对账前先检查集合唯一。另存tenantRuns身份集合，拒绝重检另起业务run。 |
++| 2. ACK精确本地恢复 | 新私有测试oracle `tests/algorithm-process-attempt-scope.mjs` 只对ack-loss的before UNKNOWN/WAITING、原no1 UNKNOWN/零提交条件接受恰两行。原行整体不变，新no2成功、同node/key、且为committed_attempt_id。NODE_STARTED逐行映射；终态note时间≤EXTERNAL_READY≤新NODE_STARTED≤唯一逻辑提交，事件seq严格有序。其他四模式仍恰1行，拒绝第三行或错提交。 |
++| 3. 原外部身份固定 | 逐字段钉住call/fact/binding及两个完整request_snapshot，核snapshot内部attempt/leaseOwner/run/call/node/seq/version/key/args；结果owner、终态note/payload/result.owner均保持原外部代与owner。继续DEBUG/nonMock、readonly_retry_count=0。node当前owner允许合法本地重新认领，不覆盖外部owner。 |
++| 4. UID正确首采纳 | fixtureBefore非空原UID/Job为基准，ACK前PG UID可NULL，首次后必须精确采纳该UID；重检后仍同UID。绑定API/namespace/Job/identity/contract及实际终态证据六字段全部关联。 |
++| 5. 一次业务和终态/逻辑采纳 | run内call/fact/binding各1，accepted终态note恰1（Running为0），UNKNOWN note不计终态，SKILL逻辑提交恰1（Failed/Running为0），fixture各观察POST1且原Job路线、无认证或拒绝计数。 |
++| 6. 重检后重新采集 | 原有四个controlledCallId重检请求之后立即保存afterRecheck并重新执行全部oracle；另对本地attempt行、终态note、fact结果及node提交/输出字段与after比较。Running原流程无此HTTP重检，本轮不增加请求，仍验证原取消后的after集合与UNKNOWN事实。全部原输出、UID、MinIO、关闭检查继续执行，最终才标passed。 |
++
++采集仍走原显式begin read only，不SQL seed业务事实。修改没有替换实际SDK、接口、恢复或fixture路径，也没有因等待恢复扩大任何预算。
++
++## 实际行为红与有限负例
++
++先在原257e源码上提取实际 `assert.equal(scenario.after.attempts,1)`，用原v4 after真实attempts=2运行，合法本地恢复预期可接受却明确 `2 !== 1` 失败；`red.log` 实际1项失败/退出1，原源码/测试红快照保存。不是缺导出、语法或假异常的红。
++
++测试存档输入从v4真实ack-loss/fixture最终记录和专用库只读行复制，原始字节不改。真实v4未采node-before及afterRecheck；测试对缺失node-before字段做明确合成补全，afterRecheck是after的合成副本，其他四模式正例也明确标为合成。它们不回写原v4，不声称是第五轮或真实重检观察。实现初期 `green-first.log` 曾因测试补全未填新tenantRuns字段出现TypeError，随后补齐；该日志保留，不作为行为红或通过证据。
++
++新增93项纯Node检查覆盖：合法两行ACK及合成重检、其他四模式仍单行；第三attempt、原UNKNOWN行被改写、节点key误用外部key、错committed attempt/事件顺序/PG时间/逻辑归属/output；call/fact/binding身份逐字段、两snapshot逐字段及任意额外字段漂移；终态实际六字段、错误首次UID、新call/fact/binding/run、POST2、重复终态note/逻辑提交、note/result owner换代，以及仅afterRecheck出现的本地行/外部owner/UID/绑定降级/提交引用/输出摘要等漂移。均必须拒绝。
++
++实际全覆盖命令：`node --test tests/algorithm-process-runner.test.mjs tests/algorithm-process-runner-fixes.test.mjs tests/algorithm-process-runner-redis.test.mjs tests/algorithm-process-runner-async.test.mjs tests/algorithm-process-runner-async-cleanup.test.mjs tests/algorithm-process-attempt-scope.test.mjs`，最终124/124通过、0 fail/skip/cancel、退出0，原始green-final.log。原31项源码SHA保持上轮值，测试没有读取真实.env或联系服务。
++
++## 冻结、重放与限制
++
++baseline保存上轮十一交付文件，SHA逐项匹配原manifest；baseline-absence.json记录新增oracle/测试/本报告不存在。frozen保存最终十四文件；新 `algorithm-process-runner-attempt-scope.patch` 为完整真实baseline→frozen差异，仅改runner的采集/断言和新增这三文件。旧patch/manifest/报告不覆盖。
++
++freeze.mjs实际复核上轮冻结/重放/证据/patch与历史manifest、完整v4摘要中的全部证据、独立memo/brief及设计/相关源码SHA；新manifest固定本次红绿和输入。新replay复制baseline，实际git apply --check与apply退出0，十四文件逐字SHA与frozen一致；只读复制原fixture及本轮存档测试输入后，实际语法检查九文件并执行完整124项覆盖。具体命令和输出在replay.log，SHA在 `algorithm-process-runner-attempt-scope-sha256.json`。
++
++本轮只建立本次单次有限恢复的严格oracle，不宣称全系统attempt永远最多2，也不证明实际集群/容器/RBAC/IAM、容量或全部G2。PG采集SQL未接真实数据库执行；后续必须经原runner审查者核代码，再由root单独授权第五轮取真实五场景/MinIO/进程与事后只读证据。本次有限通过不表述成17功能、34任务、30验收或生产环境签收。
+diff --git a/tests/algorithm-process-attempt-scope.mjs b/tests/algorithm-process-attempt-scope.mjs
+new file mode 100644
+index 0000000..5e1ccf6
+--- /dev/null
++++ b/tests/algorithm-process-attempt-scope.mjs
+@@ -0,0 +1,130 @@
++import assert from 'node:assert/strict';
++import { createHash } from 'node:crypto';
++
++const digest = text => createHash('sha256').update(text).digest('hex');
++const timestamp = value => { const time = Date.parse(value); assert(Number.isFinite(time), 'Missing PG evidence time'); return time; };
++
++// Oracle for these five finite scenarios only: a node re-claim never authorizes another business call.
++export function assertAttemptScope(mode, scenario, observed, fixture) {
++  const before = scenario.before, original = before.call, externalAttempt = original.attempt_id;
++  const owner = original.claimed_by, nodeId = original.node_instance_id;
++  assert.equal(original.id, scenario.callId); assert.equal(before.run.publicId, scenario.runId);
++  const expectedOwner = { tenantId: before.fact.tenant_id, principalId: before.fact.principal_id,
++    runId: before.fact.run_id, nodeInstanceId: nodeId, attemptId: externalAttempt, callId: original.id,
++    skillVersionId: original.skill_version_id, skillCode: original.skill_code };
++  const nodeKey = digest('node:' + nodeId);
++  assert.equal(original.idempotency_key, digest([original.run_id, nodeId, original.call_seq, original.skill_version_id].join(':')), 'Original external call key');
++  assert.equal(before.attemptRows.length, 1, 'Exactly one original node claim');
++  assert.equal(before.attemptRows[0].id, externalAttempt); assert.equal(before.attemptRows[0].attempt_no, 1);
++  assert.equal(before.attemptRows[0].idempotency_key, nodeKey, 'Node key is independent of external call key');
++  for (const view of [before, observed]) {
++    for (const [plural, singular, count] of [['calls', 'call', 'runCalls'], ['facts', 'fact', 'runFacts'], ['bindings', 'binding', 'runBindings']]) {
++      assert.equal(view[plural].length, 1, 'Exactly one original ' + singular);
++      assert.equal(view[count], 1); assert.deepEqual(view[singular], view[plural][0], 'Scalar alias must match captured set');
++    }
++    assert.deepEqual(view.tenantRuns, before.tenantRuns, 'No new run during observation/recheck');
++    assert.equal(view.tenantRuns.filter(run => run.id === original.run_id && run.publicId === before.run.publicId).length, 1);
++    for (const field of ['id', 'publicId', 'tenantId', 'principalId']) assert.equal(view.run[field], before.run[field], 'Original run changed: ' + field);
++    for (const field of ['id', 'run_id', 'node_instance_id', 'call_seq', 'skill_version_id', 'skill_code', 'args_digest', 'skill_contract_sha256', 'idempotency_key', 'claimed_by', 'attempt_id', 'args'])
++      assert.deepEqual(view.call[field], original[field], 'Original call changed: ' + field);
++    for (const field of ['tenant_id', 'principal_id', 'run_id', 'call_id', 'skill_version_id', 'attempt_id', 'execution_owner', 'args_digest', 'skill_contract_sha256', 'call_kind', 'is_mock', 'request_snapshot'])
++      assert.deepEqual(view.fact[field], before.fact[field], 'Original fact changed: ' + field);
++    for (const field of ['tenant_id', 'principal_id', 'run_id', 'call_id', 'skill_version_id', 'attempt_id', 'idempotency_key', 'external_api_sha256', 'external_namespace', 'external_job_id', 'external_identity_sha256', 'request_snapshot'])
++      assert.deepEqual(view.binding[field], before.binding[field], 'Original binding changed: ' + field);
++    for (const field of ['protocol', 'image', 'serviceAccount', 'contractSha256'])
++      assert.equal(view.binding.metadata[field], before.binding.metadata[field], 'Original binding metadata changed: ' + field);
++    assert.equal(view.fact.call_kind, 'DEBUG'); assert.equal(view.fact.is_mock, false); assert.equal(view.call.is_mock, false);
++    assert.equal(view.call.readonly_retry_count, 0); assert.equal(view.binding.send_started, true);
++    assert.equal(view.run.id, original.run_id); assert.equal(view.run.tenantId, view.fact.tenant_id); assert.equal(view.run.principalId, view.fact.principal_id);
++    assert.equal(view.fact.call_id, original.id); assert.equal(view.fact.run_id, view.run.publicId);
++    assert.equal(view.fact.skill_version_id, original.skill_version_id); assert.equal(view.fact.attempt_id, externalAttempt); assert.equal(view.fact.execution_owner, owner);
++    assert.equal(view.fact.args_digest, original.args_digest); assert.equal(view.fact.skill_contract_sha256, original.skill_contract_sha256);
++    assert.equal(view.binding.tenant_id, view.fact.tenant_id); assert.equal(view.binding.principal_id, view.fact.principal_id);
++    assert.equal(view.binding.run_id, view.run.publicId); assert.equal(view.binding.call_id, original.id); assert.equal(view.binding.skill_version_id, original.skill_version_id);
++    assert.equal(view.binding.attempt_id, externalAttempt); assert.equal(view.binding.idempotency_key, original.idempotency_key);
++    assert.equal(view.binding.metadata.contractSha256, original.skill_contract_sha256);
++    assert.equal(view.binding.external_namespace, scenario.namespace); assert.equal(view.binding.external_job_id, scenario.fixtureBefore.jobName);
++    for (const snapshot of [view.fact.request_snapshot, view.binding.request_snapshot]) {
++      for (const [field, expected] of Object.entries({ attemptId: externalAttempt, leaseOwner: owner, runId: view.run.publicId,
++        callId: original.id, nodeInstanceId: nodeId, callSeq: original.call_seq, skillVersionId: original.skill_version_id,
++        idempotencyKey: original.idempotency_key, skillCode: original.skill_code })) assert.equal(snapshot[field], expected, 'Original snapshot identity: ' + field);
++      assert.deepEqual(snapshot.arguments, original.args);
++    }
++    assert.deepEqual(view.fact.result.owner, expectedOwner); assert.deepEqual(view.call.result.owner, expectedOwner);
++    assert.equal(view.node.id, nodeId); assert.equal(view.node.run_id, original.run_id); assert.equal(view.node.node_type, 'SKILL');
++    assert.equal(view.node.node_def_id, before.node.node_def_id);
++    assert.equal(view.attempts, view.attemptRows.length);
++    assert.equal(view.attemptRows.filter(attempt => attempt.id === externalAttempt).length, 1, 'Original external attempt must bind exactly one node row');
++    view.attemptRows.forEach((attempt, index) => {
++      assert.equal(attempt.node_instance_id, nodeId); assert.equal(attempt.attempt_no, index + 1);
++      assert.equal(attempt.idempotency_key, nodeKey, 'Every local row retains its node key');
++    });
++    assert.equal(view.acceptedTerminalFacts, view.terminalNotes.length);
++    for (const note of view.terminalNotes) {
++      assert.equal(note.kind, 'TOOL_EXECUTION_FACT'); assert.equal(note.node_instance_id, nodeId); assert.equal(note.attempt_id, externalAttempt);
++      for (const [field, expected] of Object.entries({ accepted: true, callId: original.id, attemptId: externalAttempt, owner, isMock: false, status: view.fact.status }))
++        assert.equal(note.payload[field], expected, 'Original terminal note: ' + field);
++      assert.deepEqual(note.payload.result, view.fact.result); assert.deepEqual(note.payload.result.owner, expectedOwner); timestamp(note.created_at);
++    }
++    view.events.forEach(event => { assert.equal(event.run_id, original.run_id); timestamp(event.created_at); });
++  }
++  assert.deepEqual(observed.attemptRows[0], before.attemptRows[0], 'Original node attempt remains unchanged');
++  assert.deepEqual(observed.events.slice(0, before.events.length), before.events, 'Original event history is retained');
++  const events = observed.events.filter(event => event.payload.nodeInstanceId === nodeId);
++  const starts = events.filter(event => event.type === 'NODE_STARTED'), commits = events.filter(event => event.type === 'LOGIC_RESULT_COMMITTED');
++  const ready = events.filter(event => event.type === 'EXTERNAL_READY');
++  assert.equal(starts.length, observed.attemptRows.length, 'NODE_STARTED exactly maps every local row');
++  starts.forEach((event, index) => {
++    assert.equal(event.payload.attemptId, observed.attemptRows[index].id); assert.equal(event.payload.attemptNo, index + 1);
++  });
++  const success = !['running', 'failed'].includes(mode), expectedStatus = mode === 'failed' ? 'FAILED' : mode === 'running' ? 'UNKNOWN' : 'SUCCEEDED';
++  assert.equal(observed.fact.status, expectedStatus); assert.equal(observed.call.status, expectedStatus);
++  assert.equal(observed.run.status, mode === 'running' ? 'CANCELLED' : expectedStatus);
++  assert.equal(observed.node.status, mode === 'running' ? 'CANCELLED' : expectedStatus);
++  assert.equal(observed.binding.status, mode === 'running' ? 'SUBMITTED' : 'DONE');
++  assert.equal(observed.toolCommits, success ? 1 : 0); assert.equal(commits.length, observed.toolCommits);
++  assert.equal(observed.terminalNotes.length, mode === 'running' ? 0 : 1);
++  if (mode === 'ack-loss') {
++    assert.equal(before.run.status, 'WAITING_EXTERNAL'); assert.equal(before.call.status, 'UNKNOWN'); assert.equal(before.fact.status, 'UNKNOWN');
++    assert.equal(before.attemptRows[0].status, 'UNKNOWN'); assert.equal(before.toolCommits, 0); assert.equal(before.terminalNotes.length, 0);
++    assert.equal(before.node.committed_attempt_id, null);
++    assert.equal(observed.attemptRows.length, 2, 'Only one local recovery claim is permitted');
++    const local = observed.attemptRows[1]; assert.equal(local.status, 'SUCCEEDED'); assert.notEqual(local.id, externalAttempt);
++    assert.equal(observed.node.committed_attempt_id, local.id); assert.equal(commits[0].payload.attemptId, local.id);
++    assert.deepEqual(observed.node.output, observed.fact.result.structured, 'Local recovery consumes original stored structured output');
++    assert.equal(ready.length, 1);
++    assert(ready[0].seq < starts[1].seq && starts[1].seq < commits[0].seq, 'Local recovery event order');
++    const times = [observed.terminalNotes[0].created_at, ready[0].created_at, starts[1].created_at, commits[0].created_at].map(timestamp);
++    assert(times.every((time, index) => index === 0 || time >= times[index - 1]), 'Terminal note precedes local recovery');
++  } else {
++    assert.equal(observed.attemptRows.length, 1, 'Non-recovery scenarios retain one node attempt'); assert.equal(ready.length, 0);
++    if (success) { assert.equal(observed.node.committed_attempt_id, externalAttempt); assert.equal(commits[0].payload.attemptId, externalAttempt); }
++    else assert.equal(observed.node.committed_attempt_id, null);
++  }
++  const originalFixture = scenario.fixtureBefore;
++  assert.equal(typeof originalFixture.jobUid, 'string'); assert(originalFixture.jobUid.length > 0);
++  assert.equal(fixture.jobUid, originalFixture.jobUid); assert.equal(fixture.jobName, originalFixture.jobName);
++  assert.equal(originalFixture.posts, 1); assert.equal(fixture.posts, 1); assert.equal(fixture.denied, 0); assert.equal(fixture.authRejected, 0);
++  const jobPath = '/apis/batch/v1/namespaces/' + scenario.namespace + '/jobs';
++  const podPath = '/api/v1/namespaces/' + scenario.namespace + '/pods';
++  assert.equal(originalFixture.routes[0], 'GET ' + jobPath + '/' + originalFixture.jobName);
++  assert.equal(originalFixture.routes[1], 'POST ' + jobPath);
++  const allowed = new Set(['GET ' + jobPath + '/' + originalFixture.jobName, 'POST ' + jobPath, 'GET ' + podPath, 'GET ' + podPath + '/algorithm-proof-pod/log']);
++  assert.deepEqual(fixture.routes.slice(0, originalFixture.routes.length), originalFixture.routes);
++  assert.equal(fixture.routes.filter(route => route === 'POST ' + jobPath).length, 1); assert(fixture.routes.every(route => allowed.has(route)), 'Only original Job routes');
++  if (before.binding.external_job_uid != null) assert.equal(before.binding.external_job_uid, originalFixture.jobUid);
++  assert.equal(observed.binding.external_job_uid, originalFixture.jobUid, 'First UID adoption is pinned to fixture-before');
++  if (mode !== 'running') {
++    const terminal = observed.binding.metadata.terminalEvidence;
++    for (const [field, expected] of Object.entries({ externalJobId: observed.binding.external_job_id, externalJobUid: originalFixture.jobUid,
++      namespace: observed.binding.external_namespace, apiSha256: observed.binding.external_api_sha256, identitySha256: observed.binding.external_identity_sha256,
++      condition: mode === 'failed' ? 'Failed' : 'Complete' })) assert.equal(terminal[field], expected, 'Terminal binding evidence: ' + field);
++  }
++  if (scenario.after && observed !== scenario.after) {
++    assert.deepEqual(observed.attemptRows, scenario.after.attemptRows, 'Recheck changed local attempts');
++    assert.deepEqual(observed.terminalNotes, scenario.after.terminalNotes, 'Recheck changed terminal adoption');
++    assert.deepEqual(observed.fact.result, scenario.after.fact.result, 'Recheck changed original result');
++    for (const field of ['committed_attempt_id', 'committed_output_ref', 'output_digest', 'output'])
++      assert.deepEqual(observed.node[field], scenario.after.node[field], 'Recheck changed node submission: ' + field);
++  }
++}
+diff --git a/tests/algorithm-process-attempt-scope.test.mjs b/tests/algorithm-process-attempt-scope.test.mjs
+new file mode 100644
+index 0000000..63a448f
+--- /dev/null
++++ b/tests/algorithm-process-attempt-scope.test.mjs
+@@ -0,0 +1,146 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import fs from 'node:fs/promises';
++import * as runner from './smoke-algorithm-processes.mjs';
++
++const input = new URL('../docs/evidence/algorithm-process-runner-attempt-scope/inputs/', import.meta.url);
++const read = async name => JSON.parse(await fs.readFile(new URL(name, input), 'utf8'));
++const archived = await read('v4-ack-loss.json'), pg = (await read('algorithm-process-live-v4-readonly.json')).data;
++const fixture = await read('v4-ack-fixture-final.json');
++let validate = runner.assertAttemptScope;
++if (!validate) {
++  const old = await fs.readFile(new URL('./smoke-algorithm-processes.mjs', import.meta.url), 'utf8');
++  const statement = old.match(/assert\.equal\(scenario\.after\.attempts, 1\);/)?.[0];
++  assert(statement, 'Run the actual old total-count assertion, not an import failure');
++  validate = (_mode, _scenario, view) => new Function('assert', 'scenario', statement)(assert, { after: view });
++}
++
++function sample() {
++  const scenario = structuredClone(archived), call = scenario.after.call, node = pg.nodes.find(node => node.id === call.node_instance_id);
++  const events = pg.events.filter(event => event.run_id === call.run_id), original = pg.attempts.find(attempt => attempt.id === scenario.before.call.attempt_id);
++  const waiting = events.find(event => event.type === 'WAITING_EXTERNAL' && event.payload.nodeInstanceId === node.id);
++  for (const [stage, view] of [['before', scenario.before], ['after', scenario.after]]) {
++    view.run = { ...view.run, id: call.run_id, tenantId: view.fact.tenant_id, principalId: view.fact.principal_id };
++    view.tenantRuns = pg.runs.map(run => ({ id: run.id, publicId: run.runId }));
++    view.calls = [view.call]; view.facts = [view.fact]; view.bindings = [view.binding]; view.runBindings = 1;
++    view.node = structuredClone(node);
++    view.attemptRows = stage === 'before' ? [structuredClone(original)] : structuredClone(pg.attempts.filter(attempt => attempt.node_instance_id === node.id));
++    view.terminalNotes = stage === 'before' ? [] : structuredClone(pg.notes.filter(note => note.node_instance_id === node.id && note.kind === 'TOOL_EXECUTION_FACT' && note.payload.accepted && ['SUCCEEDED', 'FAILED'].includes(note.payload.status)));
++    view.events = structuredClone(stage === 'before' ? events.filter(event => event.seq <= waiting.seq) : events);
++  }
++  // v4 did not capture node-before or any afterRecheck. These extra fields are synthetic test
++  // enrichment; after/node/attempt/note/event rows and the old attempts=2 failure are archived PG.
++  Object.assign(scenario.before.node, { status: 'WAITING_EXTERNAL', committed_attempt_id: null, committed_output_ref: null, output_digest: null,
++    output: null, ended_at: null, lease_owner: scenario.before.call.claimed_by, lease_until: scenario.before.call.claimed_lease });
++  scenario.afterRecheck = structuredClone(scenario.after);
++  scenario.syntheticAfterRecheck = true;
++  return scenario;
++}
++
++test('actual v4 two local rows are accepted while the external call remains in its original generation', () => {
++  const scenario = sample();
++  assert.equal(scenario.after.attempts, 2);
++  assert.doesNotThrow(() => validate('ack-loss', scenario, scenario.after, fixture));
++  assert.doesNotThrow(() => validate('ack-loss', scenario, scenario.afterRecheck, fixture));
++});
++
++const rejected = (name, mutate, recheckOnly = false) => test(name + (recheckOnly ? ' (synthetic afterRecheck only)' : ''), () => {
++  const scenario = sample(), currentFixture = structuredClone(fixture);
++  assert.doesNotThrow(() => validate('ack-loss', scenario, scenario.after, currentFixture));
++  const view = recheckOnly ? scenario.afterRecheck : scenario.after;
++  mutate(scenario, view, currentFixture);
++  assert.throws(() => validate('ack-loss', scenario, view, currentFixture));
++});
++
++const third = (_scenario, view) => { view.attemptRows.push({ ...view.attemptRows[1], id: 999, attempt_no: 3 }); view.attempts++; };
++const duplicateCommit = (_scenario, view) => { view.events.push({ ...view.events.find(event => event.type === 'LOGIC_RESULT_COMMITTED' && event.payload.nodeInstanceId === view.node.id), id: 999, seq: 999 }); view.toolCommits++; };
++const duplicateNote = (_scenario, view) => { view.terminalNotes.push(structuredClone(view.terminalNotes[0])); view.acceptedTerminalFacts++; };
++const newCall = (_scenario, view) => { view.calls.push({ ...view.call, id: 999 }); view.runCalls++; };
++const newBinding = (_scenario, view) => { view.bindings.push({ ...view.binding, call_id: 999 }); view.runBindings++; };
++
++rejected('third local attempt is not a permitted recovery', third);
++rejected('wrong committed attempt is rejected', (_s, view) => { view.node.committed_attempt_id = view.call.attempt_id; });
++rejected('node attempt key cannot be replaced by the external call key', (_s, view) => { view.attemptRows[1].idempotency_key = view.call.idempotency_key; });
++rejected('the original UNKNOWN row must not be rewritten to success', (_s, view) => { view.attemptRows[0].status = 'SUCCEEDED'; });
++rejected('EXTERNAL_READY must precede the second NODE_STARTED', (_s, view) => {
++  view.events.find(event => event.type === 'EXTERNAL_READY').seq = view.events.find(event => event.type === 'NODE_STARTED' && event.payload.attemptNo === 2).seq + 1;
++});
++rejected('terminal note time cannot follow the local recovery claim', (_s, view) => { view.terminalNotes[0].created_at = '2099-01-01T00:00:00Z'; });
++rejected('logic commit cannot reference the external original attempt', (_s, view) => {
++  view.events.find(event => event.type === 'LOGIC_RESULT_COMMITTED' && event.payload.nodeInstanceId === view.node.id).payload.attemptId = view.call.attempt_id;
++});
++rejected('recovery node output must consume original structured data', (_s, view) => { view.node.output = { value: 'different' }; });
++
++for (const [group, fields] of Object.entries({
++  call: ['id', 'run_id', 'node_instance_id', 'call_seq', 'skill_version_id', 'skill_code', 'args_digest', 'skill_contract_sha256', 'idempotency_key', 'claimed_by', 'attempt_id'],
++  fact: ['tenant_id', 'principal_id', 'run_id', 'call_id', 'skill_version_id', 'attempt_id', 'execution_owner', 'args_digest', 'skill_contract_sha256', 'call_kind'],
++  binding: ['tenant_id', 'principal_id', 'run_id', 'call_id', 'skill_version_id', 'attempt_id', 'idempotency_key', 'external_api_sha256', 'external_namespace', 'external_job_id', 'external_identity_sha256'],
++})) for (const field of fields) rejected(group + '.' + field + ' cannot drift', (_s, view) => {
++  view[group][field] = typeof view[group][field] === 'number' ? 999 : 'replacement';
++});
++for (const group of ['fact', 'binding']) for (const field of ['attemptId', 'leaseOwner', 'runId', 'callId', 'nodeInstanceId', 'callSeq', 'skillVersionId', 'idempotencyKey', 'skillCode', 'arguments'])
++  rejected(group + '.request_snapshot.' + field + ' cannot drift', (_s, view) => {
++    view[group].request_snapshot[field] = typeof view[group].request_snapshot[field] === 'number' ? 999 : field === 'arguments' ? { other: true } : 'replacement';
++  });
++for (const field of ['externalJobId', 'externalJobUid', 'namespace', 'apiSha256', 'identitySha256', 'condition'])
++  rejected('terminalEvidence.' + field + ' must match the original binding', (_s, view) => { view.binding.metadata.terminalEvidence[field] = 'replacement'; });
++rejected('first UID adoption cannot use a different Job even when post snapshots agree', (_s, view, current) => { view.binding.external_job_uid = current.jobUid = 'replacement-uid'; });
++rejected('a second external call is rejected', newCall);
++rejected('a second binding is rejected', newBinding);
++rejected('a second fact is rejected', (_s, view) => { view.facts.push({ ...view.fact, call_id: 999 }); view.runFacts++; });
++rejected('a new run without a POST is still rejected', (_s, view) => { view.tenantRuns.push({ id: 999, publicId: 'r_other' }); });
++rejected('business POST2 is rejected', (_s, _view, current) => { current.posts = 2; });
++rejected('duplicate accepted terminal note is rejected', duplicateNote);
++rejected('duplicate skill logical commit is rejected', duplicateCommit);
++rejected('terminal note must retain original attempt', (_s, view) => { view.terminalNotes[0].attempt_id = view.node.committed_attempt_id; });
++rejected('terminal note payload owner must retain original lease', (_s, view) => { view.terminalNotes[0].payload.owner = 'local-new-owner'; });
++rejected('result.owner cannot drift to the local recovery attempt', (_s, view) => { view.fact.result.owner.attemptId = view.node.committed_attempt_id; });
++rejected('an arbitrary snapshot field cannot be silently rewritten', (_s, view) => { view.binding.request_snapshot.newField = true; });
++
++for (const [name, mutate] of [
++  ['third attempt', third], ['new call', newCall], ['new binding', newBinding], ['duplicate note', duplicateNote], ['duplicate commit', duplicateCommit],
++  ['owner drift', (_s, view) => { view.fact.execution_owner = 'replacement'; }],
++  ['UID drift', (_s, view) => { view.binding.external_job_uid = 'replacement'; }],
++  ['binding downgrade', (_s, view) => { view.binding.status = 'SENDING'; }],
++  ['submission reference drift', (_s, view) => { view.node.committed_output_ref = 'other-reference'; }],
++  ['output digest drift', (_s, view) => { view.node.output_digest = 'other-digest'; }],
++]) rejected('recheck detects ' + name, mutate, true);
++
++function syntheticNonRecovery(mode) {
++  const scenario = sample(), view = scenario.after, success = ['complete', 'offload'].includes(mode);
++  const status = mode === 'running' ? 'UNKNOWN' : mode === 'failed' ? 'FAILED' : 'SUCCEEDED';
++  view.attemptRows = [structuredClone(view.attemptRows[0])]; view.attemptRows[0].status = status; view.attempts = 1;
++  view.node.status = mode === 'running' ? 'CANCELLED' : status; view.node.committed_attempt_id = success ? view.call.attempt_id : null;
++  if (!success) { view.node.committed_output_ref = null; view.node.output_digest = null; }
++  view.run.status = mode === 'running' ? 'CANCELLED' : status; view.call.status = view.fact.status = status;
++  view.fact.result.status = status;
++  if (!success) { view.fact.result.structured = null; view.fact.result.error = { semantic: mode === 'failed' ? 'NON_RETRYABLE_FAILURE' : 'RESULT_UNKNOWN' }; }
++  if (mode === 'offload') { view.fact.result.structured = null; view.fact.result.fileRefs = [{ artifactId: 'synthetic-only-artifact' }]; }
++  view.call.result = structuredClone(view.fact.result); view.node.output = structuredClone(view.fact.result.structured);
++  view.binding.status = mode === 'running' ? 'SUBMITTED' : 'DONE';
++  if (mode === 'running') delete view.binding.metadata.terminalEvidence;
++  else view.binding.metadata.terminalEvidence.condition = mode === 'failed' ? 'Failed' : 'Complete';
++  view.toolCommits = success ? 1 : 0;
++  view.terminalNotes = mode === 'running' ? [] : [structuredClone(view.terminalNotes[0])]; view.acceptedTerminalFacts = view.terminalNotes.length;
++  if (view.terminalNotes.length) { view.terminalNotes[0].payload.status = status; view.terminalNotes[0].payload.result = structuredClone(view.fact.result); }
++  const originalStart = view.events.find(event => event.type === 'NODE_STARTED' && event.payload.attemptId === view.call.attempt_id);
++  const oldCommit = view.events.find(event => event.type === 'LOGIC_RESULT_COMMITTED' && event.payload.nodeInstanceId === view.node.id);
++  view.events = [originalStart];
++  if (success) view.events.push({ ...oldCommit, payload: { nodeInstanceId: view.node.id, attemptId: view.call.attempt_id } });
++  scenario.before = structuredClone(view);
++  if (mode === 'running') { scenario.before.run.status = scenario.before.node.status = 'WAITING_EXTERNAL'; }
++  scenario.fixtureBefore = { ...structuredClone(fixture), routes: [...fixture.routes] };
++  scenario.afterRecheck = structuredClone(view);
++  return scenario;
++}
++
++for (const mode of ['complete', 'failed', 'running', 'offload']) {
++  test('synthetic ' + mode + ' retains the non-recovery single-attempt rule', () => {
++    const scenario = syntheticNonRecovery(mode);
++    assert.doesNotThrow(() => validate(mode, scenario, scenario.after, fixture));
++    assert.doesNotThrow(() => validate(mode, scenario, scenario.afterRecheck, fixture));
++    const extra = { ...scenario.after.attemptRows[0], id: 999, attempt_no: 2 };
++    scenario.after.attemptRows.push(extra); scenario.after.attempts++;
++    assert.throws(() => validate(mode, scenario, scenario.after, fixture));
++  });
++}
+diff --git a/tests/smoke-algorithm-processes.mjs b/tests/smoke-algorithm-processes.mjs
+index 687d74e..10393b1 100644
+--- a/tests/smoke-algorithm-processes.mjs
++++ b/tests/smoke-algorithm-processes.mjs
+@@ -13,6 +13,8 @@ import { execFile, spawn, spawnSync } from 'node:child_process';
+ import { promisify } from 'node:util';
+ import { pathToFileURL } from 'node:url';
+ import { startAlgorithmFixture } from './smoke-algorithm-protocol.mjs';
++import { assertAttemptScope } from './algorithm-process-attempt-scope.mjs';
++export { assertAttemptScope };
+ 
+ const root = path.resolve(import.meta.dirname, '..');
+ const execFileAsync = promisify(execFile);
+@@ -352,17 +354,28 @@ async function run(lockFile) {
+         value => ['SUCCEEDED', 'FAILED', 'WAITING_EXTERNAL', 'CANCELLED'].includes(value.status), 'controlled run ' + mode);
+       const call = Number(state.controlledCallId || state.callId || first.controlledCallId);
+       assert(Number.isSafeInteger(call) && call > 0, 'Actual controlledCallId required'); scenario.callId = call;
+-      const capture = () => readJson(`select json_build_object('run',json_build_object('publicId',r.public_id,'status',r.status),
+-        'call',to_jsonb(t),'fact',(select to_jsonb(f) from skill.execution_fact f where f.tenant_id=r.tenant_id and f.call_id=t.id),
+-        'binding',(select to_jsonb(b) from skill.external_job_binding b where b.tenant_id=r.tenant_id and b.call_id=t.id),
++      const capture = () => {
++        const view = readJson(`select json_build_object('run',json_build_object('id',r.id,'publicId',r.public_id,'status',r.status,'tenantId',r.tenant_id,'principalId',r.principal_id),
++        'node',to_jsonb(n),
++        'tenantRuns',(select json_agg(json_build_object('id',x.id,'publicId',x.public_id) order by x.id) from engine.run x where x.tenant_id=r.tenant_id),
++        'calls',(select coalesce(json_agg(to_jsonb(c) order by c.id),'[]'::json) from engine.tool_call c where c.run_id=r.id),
++        'facts',(select coalesce(json_agg(to_jsonb(f) order by f.call_id),'[]'::json) from skill.execution_fact f where f.tenant_id=r.tenant_id and f.run_id=r.public_id),
++        'bindings',(select coalesce(json_agg(to_jsonb(b) order by b.call_id),'[]'::json) from skill.external_job_binding b where b.tenant_id=r.tenant_id and b.run_id=r.public_id),
+         'toolCommits',(select count(*) from engine.run_event e where e.run_id=r.id and e.type='LOGIC_RESULT_COMMITTED' and (e.payload->>'nodeInstanceId')::bigint=t.node_instance_id),
+         'attempts',(select count(*) from engine.attempt a where a.node_instance_id=t.node_instance_id),
+         'runCalls',(select count(*) from engine.tool_call c where c.run_id=r.id),
+         'runFacts',(select count(*) from skill.execution_fact f where f.tenant_id=r.tenant_id and f.run_id=r.public_id),
++        'runBindings',(select count(*) from skill.external_job_binding b where b.tenant_id=r.tenant_id and b.run_id=r.public_id),
++        'attemptRows',(select coalesce(json_agg(to_jsonb(a) order by a.attempt_no,a.id),'[]'::json) from engine.attempt a where a.node_instance_id=t.node_instance_id),
++        'terminalNotes',(select coalesce(json_agg(to_jsonb(x) order by x.id),'[]'::json) from engine.attempt_note x where x.node_instance_id=t.node_instance_id and x.kind='TOOL_EXECUTION_FACT' and x.payload->>'accepted'='true' and x.payload->>'status' in ('SUCCEEDED','FAILED')),
+         'acceptedTerminalFacts',(select count(*) from engine.attempt_note n where n.node_instance_id=t.node_instance_id and n.kind='TOOL_EXECUTION_FACT' and n.payload->>'accepted'='true' and n.payload->>'status' in ('SUCCEEDED','FAILED')),
+-        'events',(select coalesce(json_agg(json_build_object('seq',e.seq,'type',e.type,'payload',e.payload) order by e.seq),'[]'::json) from engine.run_event e where e.run_id=r.id))
+-        from engine.run r join engine.tool_call t on t.run_id=r.id where r.tenant_id=${quote(tenant)} and r.public_id=${quote(scenario.runId)} and t.id=${call};`);
++        'events',(select coalesce(json_agg(to_jsonb(e) order by e.seq),'[]'::json) from engine.run_event e where e.run_id=r.id))
++        from engine.run r join engine.tool_call t on t.run_id=r.id join engine.node_instance n on n.id=t.node_instance_id where r.tenant_id=${quote(tenant)} and r.public_id=${quote(scenario.runId)} and t.id=${call};`);
++        return { ...view, call: view.calls[0] ?? null, fact: view.facts[0] ?? null, binding: view.bindings[0] ?? null };
++      };
+       scenario.before = await until(async () => capture(), value => value.fact && value.binding, 'original fact and binding');
++      for (const rows of [scenario.before.calls, scenario.before.facts, scenario.before.bindings]) assert.equal(rows.length, 1, 'Unique original row set before reconciliation');
++      assert.equal(scenario.before.call.id, call);
+       assert.equal(scenario.before.fact.is_mock, false); assert.equal(scenario.before.fact.call_kind, 'DEBUG');
+       assert.equal(scenario.before.call.attempt_id, scenario.before.fact.attempt_id);
+       assert.equal(scenario.before.binding.attempt_id, scenario.before.call.attempt_id);
+@@ -397,10 +410,15 @@ async function run(lockFile) {
+       for (const field of ['attempt_id', 'external_job_id', 'idempotency_key', 'external_namespace', 'external_identity_sha256'])
+         assert.equal(scenario.after.binding[field], scenario.before.binding[field], 'Original binding changed: ' + field);
+       assert.equal(scenario.after.call.id, call); assert.equal(scenario.after.call.attempt_id, scenario.before.call.attempt_id);
+-      assert.equal(scenario.after.attempts, 1); assert.equal(scenario.after.fact.is_mock, false);
++      assert.equal(scenario.after.fact.is_mock, false);
+       assert.equal(scenario.after.runCalls, 1); assert.equal(scenario.after.runFacts, 1);
+       assert.equal(scenario.after.acceptedTerminalFacts, mode === 'running' ? 0 : 1);
+-      if (mode !== 'running') scenario.recheck = await request(skill, route, { controlledCallId: call });
++      assertAttemptScope(mode, scenario, scenario.after, fixture.snapshot());
++      if (mode !== 'running') {
++        scenario.recheck = await request(skill, route, { controlledCallId: call });
++        scenario.afterRecheck = capture();
++        assertAttemptScope(mode, scenario, scenario.afterRecheck, fixture.snapshot());
++      }
+       assertScenarioTerminal(mode, scenario, fixture.snapshot(), stdout);
+       if (mode === 'complete' || mode === 'ack-loss') {
+         assert.equal(fixture.snapshot().logGets > 0, true); assert.equal(fixture.snapshot().podLists > 0, true);

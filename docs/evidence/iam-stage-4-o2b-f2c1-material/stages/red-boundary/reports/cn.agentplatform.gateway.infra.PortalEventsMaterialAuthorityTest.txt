@@ -1,0 +1,112 @@
+-------------------------------------------------------------------------------
+Test set: cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest
+-------------------------------------------------------------------------------
+Tests run: 3, Failures: 3, Errors: 0, Skipped: 0, Time elapsed: 4.186 s <<< FAILURE! -- in cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest
+cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.nestedUnknownFieldWithValidCommitNeverReachesWindow -- Time elapsed: 1.427 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+Exception in thread "main" cn.agentplatform.common.PlatformException: ���й۲�Ԫ�����ݲ�����
+	at cn.agentplatform.gateway.application.RunObservationMetadataClient.unavailable(RunObservationMetadataClient.java:68)
+	at cn.agentplatform.gateway.application.RunObservationMetadataClient.parseEvents(RunObservationMetadataClient.java:172)
+	at cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session.lambda$lookupMetadata$0(PortalRunEventsHttp.java:157)
+	at org.apache.hc.client5.http.impl.classic.CloseableHttpClient.execute(CloseableHttpClient.java:247)
+	at org.apache.hc.client5.http.impl.classic.CloseableHttpClient.execute(CloseableHttpClient.java:188)
+	at cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session.lookupMetadata(PortalRunEventsHttp.java:137)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.exercise(PortalEventsMaterialAuthorityTest.java:180)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.main(PortalEventsMaterialAuthorityTest.java:193)
+	Suppressed: java.lang.AssertionError: receiver peer
+		at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest$Peer.close(PortalEventsMaterialAuthorityTest.java:173)
+		at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.exercise(PortalEventsMaterialAuthorityTest.java:177)
+		... 1 more
+	Caused by: java.net.SocketException: Socket closed
+		at java.base/sun.nio.ch.NioSocketImpl.endAccept(NioSocketImpl.java:682)
+		at java.base/sun.nio.ch.NioSocketImpl.accept(NioSocketImpl.java:755)
+		at java.base/java.net.ServerSocket.implAccept(ServerSocket.java:698)
+		at java.base/java.net.ServerSocket.platformImplAccept(ServerSocket.java:663)
+		at java.base/java.net.ServerSocket.implAccept(ServerSocket.java:612)
+		at java.base/sun.security.ssl.SSLServerSocketImpl.accept(SSLServerSocketImpl.java:271)
+		at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest$Peer.lambda$new$1(PortalEventsMaterialAuthorityTest.java:130)
+		at java.base/java.lang.Thread.run(Thread.java:1583)
+ ==> expected: <0> but was: <1>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:563)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.child(PortalEventsMaterialAuthorityTest.java:79)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.nestedUnknownFieldWithValidCommitNeverReachesWindow(PortalEventsMaterialAuthorityTest.java:54)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.signedReceiptTamperingNeverReachesWindow -- Time elapsed: 1.355 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+Exception in thread "main" cn.agentplatform.common.PlatformException: ���й۲�Ԫ�����ݲ�����
+	at cn.agentplatform.gateway.application.RunObservationMetadataClient.unavailable(RunObservationMetadataClient.java:68)
+	at cn.agentplatform.gateway.application.RunObservationMetadataClient.parseEvents(RunObservationMetadataClient.java:172)
+	at cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session.lambda$lookupMetadata$0(PortalRunEventsHttp.java:157)
+	at org.apache.hc.client5.http.impl.classic.CloseableHttpClient.execute(CloseableHttpClient.java:247)
+	at org.apache.hc.client5.http.impl.classic.CloseableHttpClient.execute(CloseableHttpClient.java:188)
+	at cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session.lookupMetadata(PortalRunEventsHttp.java:137)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.exercise(PortalEventsMaterialAuthorityTest.java:180)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.main(PortalEventsMaterialAuthorityTest.java:192)
+	Suppressed: java.lang.AssertionError: receiver peer
+		at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest$Peer.close(PortalEventsMaterialAuthorityTest.java:173)
+		at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.exercise(PortalEventsMaterialAuthorityTest.java:177)
+		... 1 more
+	Caused by: java.net.SocketException: Socket closed
+		at java.base/sun.nio.ch.NioSocketImpl.endAccept(NioSocketImpl.java:682)
+		at java.base/sun.nio.ch.NioSocketImpl.accept(NioSocketImpl.java:755)
+		at java.base/java.net.ServerSocket.implAccept(ServerSocket.java:698)
+		at java.base/java.net.ServerSocket.platformImplAccept(ServerSocket.java:663)
+		at java.base/java.net.ServerSocket.implAccept(ServerSocket.java:612)
+		at java.base/sun.security.ssl.SSLServerSocketImpl.accept(SSLServerSocketImpl.java:271)
+		at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest$Peer.lambda$new$1(PortalEventsMaterialAuthorityTest.java:130)
+		at java.base/java.lang.Thread.run(Thread.java:1583)
+ ==> expected: <0> but was: <1>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:563)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.child(PortalEventsMaterialAuthorityTest.java:79)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.signedReceiptTamperingNeverReachesWindow(PortalEventsMaterialAuthorityTest.java:53)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.changedBusinessPayloadWithValidWireShaNeverReachesWindow -- Time elapsed: 1.310 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+Exception in thread "main" cn.agentplatform.common.PlatformException: ���й۲�Ԫ�����ݲ�����
+	at cn.agentplatform.gateway.application.RunObservationMetadataClient.unavailable(RunObservationMetadataClient.java:68)
+	at cn.agentplatform.gateway.application.RunObservationMetadataClient.parseEvents(RunObservationMetadataClient.java:172)
+	at cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session.lambda$lookupMetadata$0(PortalRunEventsHttp.java:157)
+	at org.apache.hc.client5.http.impl.classic.CloseableHttpClient.execute(CloseableHttpClient.java:247)
+	at org.apache.hc.client5.http.impl.classic.CloseableHttpClient.execute(CloseableHttpClient.java:188)
+	at cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session.lookupMetadata(PortalRunEventsHttp.java:137)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.exercise(PortalEventsMaterialAuthorityTest.java:180)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.main(PortalEventsMaterialAuthorityTest.java:194)
+	Suppressed: java.lang.AssertionError: receiver peer
+		at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest$Peer.close(PortalEventsMaterialAuthorityTest.java:173)
+		at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.exercise(PortalEventsMaterialAuthorityTest.java:177)
+		... 1 more
+	Caused by: java.net.SocketException: Socket closed
+		at java.base/sun.nio.ch.NioSocketImpl.endAccept(NioSocketImpl.java:682)
+		at java.base/sun.nio.ch.NioSocketImpl.accept(NioSocketImpl.java:755)
+		at java.base/java.net.ServerSocket.implAccept(ServerSocket.java:698)
+		at java.base/java.net.ServerSocket.platformImplAccept(ServerSocket.java:663)
+		at java.base/java.net.ServerSocket.implAccept(ServerSocket.java:612)
+		at java.base/sun.security.ssl.SSLServerSocketImpl.accept(SSLServerSocketImpl.java:271)
+		at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest$Peer.lambda$new$1(PortalEventsMaterialAuthorityTest.java:130)
+		at java.base/java.lang.Thread.run(Thread.java:1583)
+ ==> expected: <0> but was: <1>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:563)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.child(PortalEventsMaterialAuthorityTest.java:79)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.changedBusinessPayloadWithValidWireShaNeverReachesWindow(PortalEventsMaterialAuthorityTest.java:55)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+

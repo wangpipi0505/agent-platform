@@ -1,0 +1,22 @@
+Compiled from "PortalRunEventsSse.java"
+public final class cn.agentplatform.gateway.infra.PortalRunEventsSse$Handle implements java.lang.AutoCloseable {
+  private cn.agentplatform.gateway.infra.PortalRunEventsSse$State state;
+  private long after;
+  private boolean terminal;
+  private boolean sessionAttempted;
+  private boolean stateAttempted;
+  private cn.agentplatform.gateway.infra.PortalRunEventsSse$Handle();
+  synchronized void claimSession();
+  private synchronized void claimState();
+  private synchronized void attach(cn.agentplatform.gateway.infra.PortalRunEventsSse$State);
+  private synchronized cn.agentplatform.gateway.infra.PortalRunEventsSse$State active();
+  private synchronized void detach(cn.agentplatform.gateway.infra.PortalRunEventsSse$State, long, boolean);
+  public void close();
+  public boolean awaitClosed(java.time.Duration);
+  long after();
+  boolean terminal();
+  void wakeForTest();
+  void interruptReaderForTest();
+  boolean inertTokenForTest();
+  synchronized boolean detachedForTest();
+}

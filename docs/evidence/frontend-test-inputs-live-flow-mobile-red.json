@@ -1,0 +1,874 @@
+{
+  "realApi": true,
+  "mockedRoutes": 0,
+  "fixtureApp": "smoke_named_inputs_3db244a637",
+  "draftId": 34,
+  "independentExpected": {
+    "answer": "命名输入完整联调"
+  },
+  "checks": {
+    "realDraftAndNoExternalFlow": true,
+    "savedAndExplicitlyRestoredInput": true,
+    "realDebugSucceededWithKnownOutput": true,
+    "realRevisionTwoEdit": true
+  },
+  "requests": [
+    {
+      "path": "/admin/apps/smoke_named_inputs_3db244a637",
+      "query": {},
+      "method": "GET",
+      "status": 200,
+      "response": {
+        "code": "OK",
+        "message": "",
+        "data": {
+          "code": "smoke_named_inputs_3db244a637",
+          "name": "命名输入完整联调",
+          "type": "FLOW",
+          "description": "仅测试新工程输入保存、调试、评测链路；不调用模型或外部业务。",
+          "domain": "",
+          "status": "DRAFT",
+          "id": 34,
+          "draftId": 34,
+          "draftNo": 1,
+          "bizCategory": "",
+          "draftRev": 3,
+          "currentVersionNo": null,
+          "updatedAt": "2026-10-19T22:19:47.735531Z",
+          "tags": [],
+          "config": {
+            "guard": {
+              "roles": [
+                "EDITOR"
+              ],
+              "attributes": {}
+            },
+            "skillRefs": []
+          },
+          "definition": {
+            "edges": [
+              {
+                "to": "end",
+                "from": "start"
+              }
+            ],
+            "entry": "start",
+            "joins": [],
+            "nodes": [
+              {
+                "id": "start",
+                "name": "开始",
+                "type": "START"
+              },
+              {
+                "id": "end",
+                "name": "完成",
+                "type": "END"
+              }
+            ],
+            "inputs": [
+              {
+                "name": "question",
+                "type": "STRING",
+                "required": true,
+                "minLength": 2
+              }
+            ],
+            "outputs": [
+              {
+                "from": "${input.question}",
+                "name": "answer"
+              }
+            ],
+            "trigger": "TASK",
+            "executionRules": {
+              "parallel": false,
+              "maxParallel": 1,
+              "cyclesForbidden": true
+            },
+            "definitionVersion": "1.0"
+          },
+          "layout": {
+            "nodes": {
+              "end": {
+                "x": 400,
+                "y": 120
+              },
+              "start": {
+                "x": 100,
+                "y": 120
+              }
+            }
+          },
+          "candidateSha256": "676db1269ccad10ec2fca00a4fd9bc90fc4e8df33d4b8e9a38e1ec5089c55e8d"
+        },
+        "traceId": "74a85317-5b4a-455d-a04e-13988cdebb59"
+      }
+    },
+    {
+      "path": "/admin/apps/smoke_named_inputs_3db244a637",
+      "query": {},
+      "method": "GET",
+      "status": 200,
+      "response": {
+        "code": "OK",
+        "message": "",
+        "data": {
+          "code": "smoke_named_inputs_3db244a637",
+          "name": "命名输入完整联调",
+          "type": "FLOW",
+          "description": "仅测试新工程输入保存、调试、评测链路；不调用模型或外部业务。",
+          "domain": "",
+          "status": "DRAFT",
+          "id": 34,
+          "draftId": 34,
+          "draftNo": 1,
+          "bizCategory": "",
+          "draftRev": 3,
+          "currentVersionNo": null,
+          "updatedAt": "2026-10-19T22:19:47.735531Z",
+          "tags": [],
+          "config": {
+            "guard": {
+              "roles": [
+                "EDITOR"
+              ],
+              "attributes": {}
+            },
+            "skillRefs": []
+          },
+          "definition": {
+            "edges": [
+              {
+                "to": "end",
+                "from": "start"
+              }
+            ],
+            "entry": "start",
+            "joins": [],
+            "nodes": [
+              {
+                "id": "start",
+                "name": "开始",
+                "type": "START"
+              },
+              {
+                "id": "end",
+                "name": "完成",
+                "type": "END"
+              }
+            ],
+            "inputs": [
+              {
+                "name": "question",
+                "type": "STRING",
+                "required": true,
+                "minLength": 2
+              }
+            ],
+            "outputs": [
+              {
+                "from": "${input.question}",
+                "name": "answer"
+              }
+            ],
+            "trigger": "TASK",
+            "executionRules": {
+              "parallel": false,
+              "maxParallel": 1,
+              "cyclesForbidden": true
+            },
+            "definitionVersion": "1.0"
+          },
+          "layout": {
+            "nodes": {
+              "end": {
+                "x": 400,
+                "y": 120
+              },
+              "start": {
+                "x": 100,
+                "y": 120
+              }
+            }
+          },
+          "candidateSha256": "676db1269ccad10ec2fca00a4fd9bc90fc4e8df33d4b8e9a38e1ec5089c55e8d"
+        },
+        "traceId": "ca0fd89b-0e4b-416c-a8a4-63f386a7d979"
+      }
+    },
+    {
+      "path": "/admin/debug-inputs",
+      "query": {
+        "appDraftId": "34",
+        "afterId": "0",
+        "limit": "20"
+      },
+      "method": "GET",
+      "status": 200,
+      "response": {
+        "code": "OK",
+        "message": "",
+        "data": {
+          "nextAfterId": 0,
+          "items": [],
+          "hasMore": false
+        },
+        "traceId": "f4206f8d-5367-4885-a164-794184d25234"
+      }
+    },
+    {
+      "path": "/admin/debug-inputs",
+      "query": {
+        "appDraftId": "34"
+      },
+      "method": "POST",
+      "status": 200,
+      "body": {
+        "name": "完整前端联调-f3bbcdf8",
+        "inputs": {
+          "question": "命名输入完整联调"
+        }
+      },
+      "response": {
+        "code": "OK",
+        "message": "",
+        "data": {
+          "id": 1,
+          "appDraftId": 34,
+          "appCode": "smoke_named_inputs_3db244a637",
+          "name": "完整前端联调-f3bbcdf8",
+          "inputs": {
+            "question": "命名输入完整联调"
+          },
+          "revision": 1,
+          "createdAt": "2026-10-19T22:40:23.468112Z",
+          "updatedAt": "2026-10-19T22:40:23.468112Z"
+        },
+        "traceId": "bda6ba7c-6f27-4ac0-a858-3a1873560baf"
+      }
+    },
+    {
+      "path": "/admin/debug-inputs",
+      "query": {
+        "appDraftId": "34",
+        "afterId": "0",
+        "limit": "20"
+      },
+      "method": "GET",
+      "status": 200,
+      "response": {
+        "code": "OK",
+        "message": "",
+        "data": {
+          "nextAfterId": 1,
+          "items": [
+            {
+              "id": 1,
+              "appDraftId": 34,
+              "appCode": "smoke_named_inputs_3db244a637",
+              "name": "完整前端联调-f3bbcdf8",
+              "revision": 1,
+              "createdAt": "2026-10-19T22:40:23.468112Z",
+              "updatedAt": "2026-10-19T22:40:23.468112Z"
+            }
+          ],
+          "hasMore": false
+        },
+        "traceId": "3f64a59c-ae0f-46f5-8b9b-ac97844495b8"
+      }
+    },
+    {
+      "path": "/admin/debug-inputs/1",
+      "query": {},
+      "method": "GET",
+      "status": 200,
+      "response": {
+        "code": "OK",
+        "message": "",
+        "data": {
+          "id": 1,
+          "appDraftId": 34,
+          "appCode": "smoke_named_inputs_3db244a637",
+          "name": "完整前端联调-f3bbcdf8",
+          "inputs": {
+            "question": "命名输入完整联调"
+          },
+          "revision": 1,
+          "createdAt": "2026-10-19T22:40:23.468112Z",
+          "updatedAt": "2026-10-19T22:40:23.468112Z"
+        },
+        "traceId": "c053c341-3a63-4546-a87a-5d57cc169ebd"
+      }
+    },
+    {
+      "path": "/admin/debug-runs",
+      "query": {},
+      "method": "POST",
+      "status": 200,
+      "body": {
+        "appCode": "smoke_named_inputs_3db244a637",
+        "mode": "FULL",
+        "inputs": {
+          "question": "命名输入完整联调"
+        },
+        "breakpoints": [],
+        "mocks": []
+      },
+      "response": {
+        "code": "OK",
+        "message": "",
+        "data": {
+          "runId": "r_25ef4e31175e4bb3a8638176b2ac3384",
+          "appCode": "smoke_named_inputs_3db244a637",
+          "status": "RUNNING",
+          "eventsWatermark": 1,
+          "inputs": {
+            "question": "命名输入完整联调"
+          },
+          "output": {},
+          "fileRefs": [],
+          "error": {},
+          "versionRefs": {
+            "appVer": 0,
+            "modelCfg": null,
+            "ontology": [],
+            "skillVers": {},
+            "flowDefSha": "cd1446e1bbb5d43541f7a570f87d2a9b55a9f96b9f0fe0d6b59ae9b6096a9d81",
+            "promptVers": {},
+            "evalReportId": null,
+            "interpreterVer": "1.0"
+          },
+          "nodes": [
+            {
+              "id": 204,
+              "node_def_id": "start",
+              "node_type": "START",
+              "status": "READY",
+              "pause_seq": null,
+              "error": {},
+              "output": {},
+              "started_at": null,
+              "ended_at": null,
+              "nodeInstanceId": 204,
+              "nodeDefId": "start"
+            },
+            {
+              "id": 205,
+              "node_def_id": "end",
+              "node_type": "END",
+              "status": "READY",
+              "pause_seq": null,
+              "error": {},
+              "output": {},
+              "started_at": null,
+              "ended_at": null,
+              "nodeInstanceId": 205,
+              "nodeDefId": "end"
+            }
+          ],
+          "events": [
+            {
+              "seq": 1,
+              "type": "RUN_STARTED",
+              "payload": {
+                "runId": "r_25ef4e31175e4bb3a8638176b2ac3384",
+                "triggerType": "DEBUG"
+              },
+              "created_at": "2026-10-19T22:40:24.568+00:00"
+            }
+          ],
+          "paused": null
+        },
+        "traceId": "8fa4a0c4-23ab-46fa-baff-f203f8f2884f"
+      }
+    },
+    {
+      "path": "/admin/debug-runs/r_25ef4e31175e4bb3a8638176b2ac3384/status",
+      "query": {},
+      "method": "GET",
+      "status": 200,
+      "response": {
+        "code": "OK",
+        "message": "",
+        "data": {
+          "runId": "r_25ef4e31175e4bb3a8638176b2ac3384",
+          "appCode": "smoke_named_inputs_3db244a637",
+          "status": "RUNNING",
+          "eventsWatermark": 2,
+          "inputs": {
+            "question": "命名输入完整联调"
+          },
+          "output": {},
+          "fileRefs": [],
+          "error": {},
+          "versionRefs": {
+            "appVer": 0,
+            "modelCfg": null,
+            "ontology": [],
+            "skillVers": {},
+            "flowDefSha": "cd1446e1bbb5d43541f7a570f87d2a9b55a9f96b9f0fe0d6b59ae9b6096a9d81",
+            "promptVers": {},
+            "evalReportId": null,
+            "interpreterVer": "1.0"
+          },
+          "nodes": [
+            {
+              "id": 204,
+              "node_def_id": "start",
+              "node_type": "START",
+              "status": "RUNNING",
+              "pause_seq": null,
+              "error": {},
+              "output": {},
+              "started_at": "2026-10-19T22:40:24.592+00:00",
+              "ended_at": null,
+              "nodeInstanceId": 204,
+              "nodeDefId": "start"
+            },
+            {
+              "id": 205,
+              "node_def_id": "end",
+              "node_type": "END",
+              "status": "READY",
+              "pause_seq": null,
+              "error": {},
+              "output": {},
+              "started_at": null,
+              "ended_at": null,
+              "nodeInstanceId": 205,
+              "nodeDefId": "end"
+            }
+          ],
+          "events": [
+            {
+              "seq": 1,
+              "type": "RUN_STARTED",
+              "payload": {
+                "runId": "r_25ef4e31175e4bb3a8638176b2ac3384",
+                "triggerType": "DEBUG"
+              },
+              "created_at": "2026-10-19T22:40:24.568+00:00"
+            },
+            {
+              "seq": 2,
+              "type": "NODE_STARTED",
+              "payload": {
+                "attemptId": 231,
+                "attemptNo": 1,
+                "nodeInstanceId": 204
+              },
+              "created_at": "2026-10-19T22:40:24.592+00:00"
+            },
+            {
+              "seq": 3,
+              "type": "LOGIC_RESULT_COMMITTED",
+              "payload": {
+                "attemptId": 231,
+                "nodeInstanceId": 204
+              },
+              "created_at": "2026-10-19T22:40:24.598+00:00"
+            },
+            {
+              "seq": 4,
+              "type": "NODE_FINISHED",
+              "payload": {
+                "status": "SUCCEEDED",
+                "nodeInstanceId": 204
+              },
+              "created_at": "2026-10-19T22:40:24.598+00:00"
+            }
+          ],
+          "paused": null
+        },
+        "traceId": "2cbf6f1d-b6c1-4a7b-967c-f7e040858faf"
+      }
+    },
+    {
+      "path": "/admin/runs/r_25ef4e31175e4bb3a8638176b2ac3384/events",
+      "query": {},
+      "method": "GET",
+      "status": 200,
+      "observerError": "Unexpected token 'e', \"event:stre\"... is not valid JSON"
+    },
+    {
+      "path": "/admin/debug-runs/r_25ef4e31175e4bb3a8638176b2ac3384/status",
+      "query": {},
+      "method": "GET",
+      "status": 200,
+      "response": {
+        "code": "OK",
+        "message": "",
+        "data": {
+          "runId": "r_25ef4e31175e4bb3a8638176b2ac3384",
+          "appCode": "smoke_named_inputs_3db244a637",
+          "status": "SUCCEEDED",
+          "eventsWatermark": 8,
+          "inputs": {
+            "question": "命名输入完整联调"
+          },
+          "output": {
+            "answer": "命名输入完整联调"
+          },
+          "fileRefs": [],
+          "error": {},
+          "versionRefs": {
+            "appVer": 0,
+            "modelCfg": null,
+            "ontology": [],
+            "skillVers": {},
+            "flowDefSha": "cd1446e1bbb5d43541f7a570f87d2a9b55a9f96b9f0fe0d6b59ae9b6096a9d81",
+            "promptVers": {},
+            "evalReportId": null,
+            "interpreterVer": "1.0"
+          },
+          "nodes": [
+            {
+              "id": 204,
+              "node_def_id": "start",
+              "node_type": "START",
+              "status": "SUCCEEDED",
+              "pause_seq": null,
+              "error": {},
+              "output": {
+                "question": "命名输入完整联调"
+              },
+              "started_at": "2026-10-19T22:40:24.592+00:00",
+              "ended_at": "2026-10-19T22:40:24.598+00:00",
+              "nodeInstanceId": 204,
+              "nodeDefId": "start"
+            },
+            {
+              "id": 205,
+              "node_def_id": "end",
+              "node_type": "END",
+              "status": "SUCCEEDED",
+              "pause_seq": null,
+              "error": {},
+              "output": {
+                "answer": "命名输入完整联调"
+              },
+              "started_at": "2026-10-19T22:40:24.601+00:00",
+              "ended_at": "2026-10-19T22:40:24.606+00:00",
+              "nodeInstanceId": 205,
+              "nodeDefId": "end"
+            }
+          ],
+          "events": [
+            {
+              "seq": 1,
+              "type": "RUN_STARTED",
+              "payload": {
+                "runId": "r_25ef4e31175e4bb3a8638176b2ac3384",
+                "triggerType": "DEBUG"
+              },
+              "created_at": "2026-10-19T22:40:24.568+00:00"
+            },
+            {
+              "seq": 2,
+              "type": "NODE_STARTED",
+              "payload": {
+                "attemptId": 231,
+                "attemptNo": 1,
+                "nodeInstanceId": 204
+              },
+              "created_at": "2026-10-19T22:40:24.592+00:00"
+            },
+            {
+              "seq": 3,
+              "type": "LOGIC_RESULT_COMMITTED",
+              "payload": {
+                "attemptId": 231,
+                "nodeInstanceId": 204
+              },
+              "created_at": "2026-10-19T22:40:24.598+00:00"
+            },
+            {
+              "seq": 4,
+              "type": "NODE_FINISHED",
+              "payload": {
+                "status": "SUCCEEDED",
+                "nodeInstanceId": 204
+              },
+              "created_at": "2026-10-19T22:40:24.598+00:00"
+            },
+            {
+              "seq": 5,
+              "type": "NODE_STARTED",
+              "payload": {
+                "attemptId": 232,
+                "attemptNo": 1,
+                "nodeInstanceId": 205
+              },
+              "created_at": "2026-10-19T22:40:24.601+00:00"
+            },
+            {
+              "seq": 6,
+              "type": "LOGIC_RESULT_COMMITTED",
+              "payload": {
+                "attemptId": 232,
+                "nodeInstanceId": 205
+              },
+              "created_at": "2026-10-19T22:40:24.606+00:00"
+            },
+            {
+              "seq": 7,
+              "type": "NODE_FINISHED",
+              "payload": {
+                "status": "SUCCEEDED",
+                "nodeInstanceId": 205
+              },
+              "created_at": "2026-10-19T22:40:24.606+00:00"
+            },
+            {
+              "seq": 8,
+              "type": "RUN_FINISHED",
+              "payload": {
+                "status": "SUCCEEDED"
+              },
+              "created_at": "2026-10-19T22:40:24.609+00:00"
+            }
+          ],
+          "paused": null
+        },
+        "traceId": "994b005f-333e-417c-871c-58a798bfb23f"
+      }
+    },
+    {
+      "path": "/admin/debug-inputs/1",
+      "query": {},
+      "method": "GET",
+      "status": 200,
+      "response": {
+        "code": "OK",
+        "message": "",
+        "data": {
+          "id": 1,
+          "appDraftId": 34,
+          "appCode": "smoke_named_inputs_3db244a637",
+          "name": "完整前端联调-f3bbcdf8",
+          "inputs": {
+            "question": "命名输入完整联调"
+          },
+          "revision": 1,
+          "createdAt": "2026-10-19T22:40:23.468112Z",
+          "updatedAt": "2026-10-19T22:40:23.468112Z"
+        },
+        "traceId": "4b7dffa5-be30-49dc-974a-4a8062182fb0"
+      }
+    },
+    {
+      "path": "/admin/debug-inputs/1",
+      "query": {},
+      "method": "PUT",
+      "status": 200,
+      "body": {
+        "name": "完整前端联调-f3bbcdf8-已复核",
+        "inputs": {
+          "question": "命名输入完整联调"
+        },
+        "revision": 1
+      },
+      "response": {
+        "code": "OK",
+        "message": "",
+        "data": {
+          "id": 1,
+          "appDraftId": 34,
+          "appCode": "smoke_named_inputs_3db244a637",
+          "name": "完整前端联调-f3bbcdf8-已复核",
+          "inputs": {
+            "question": "命名输入完整联调"
+          },
+          "revision": 2,
+          "createdAt": "2026-10-19T22:40:23.468112Z",
+          "updatedAt": "2026-10-19T22:40:25.244856Z"
+        },
+        "traceId": "dacf9be2-3a9a-4c01-ba5b-6d0c886e3534"
+      }
+    },
+    {
+      "path": "/admin/debug-inputs",
+      "query": {
+        "appDraftId": "34",
+        "afterId": "0",
+        "limit": "20"
+      },
+      "method": "GET",
+      "status": 200,
+      "response": {
+        "code": "OK",
+        "message": "",
+        "data": {
+          "nextAfterId": 1,
+          "items": [
+            {
+              "id": 1,
+              "appDraftId": 34,
+              "appCode": "smoke_named_inputs_3db244a637",
+              "name": "完整前端联调-f3bbcdf8-已复核",
+              "revision": 2,
+              "createdAt": "2026-10-19T22:40:23.468112Z",
+              "updatedAt": "2026-10-19T22:40:25.244856Z"
+            }
+          ],
+          "hasMore": false
+        },
+        "traceId": "e11325fb-d058-42d7-9af9-60f03fb26a3f"
+      }
+    },
+    {
+      "path": "/admin/debug-runs/r_25ef4e31175e4bb3a8638176b2ac3384/status",
+      "query": {},
+      "method": "GET",
+      "status": 200,
+      "response": {
+        "code": "OK",
+        "message": "",
+        "data": {
+          "runId": "r_25ef4e31175e4bb3a8638176b2ac3384",
+          "appCode": "smoke_named_inputs_3db244a637",
+          "status": "SUCCEEDED",
+          "eventsWatermark": 8,
+          "inputs": {
+            "question": "命名输入完整联调"
+          },
+          "output": {
+            "answer": "命名输入完整联调"
+          },
+          "fileRefs": [],
+          "error": {},
+          "versionRefs": {
+            "appVer": 0,
+            "modelCfg": null,
+            "ontology": [],
+            "skillVers": {},
+            "flowDefSha": "cd1446e1bbb5d43541f7a570f87d2a9b55a9f96b9f0fe0d6b59ae9b6096a9d81",
+            "promptVers": {},
+            "evalReportId": null,
+            "interpreterVer": "1.0"
+          },
+          "nodes": [
+            {
+              "id": 204,
+              "node_def_id": "start",
+              "node_type": "START",
+              "status": "SUCCEEDED",
+              "pause_seq": null,
+              "error": {},
+              "output": {
+                "question": "命名输入完整联调"
+              },
+              "started_at": "2026-10-19T22:40:24.592+00:00",
+              "ended_at": "2026-10-19T22:40:24.598+00:00",
+              "nodeInstanceId": 204,
+              "nodeDefId": "start"
+            },
+            {
+              "id": 205,
+              "node_def_id": "end",
+              "node_type": "END",
+              "status": "SUCCEEDED",
+              "pause_seq": null,
+              "error": {},
+              "output": {
+                "answer": "命名输入完整联调"
+              },
+              "started_at": "2026-10-19T22:40:24.601+00:00",
+              "ended_at": "2026-10-19T22:40:24.606+00:00",
+              "nodeInstanceId": 205,
+              "nodeDefId": "end"
+            }
+          ],
+          "events": [
+            {
+              "seq": 1,
+              "type": "RUN_STARTED",
+              "payload": {
+                "runId": "r_25ef4e31175e4bb3a8638176b2ac3384",
+                "triggerType": "DEBUG"
+              },
+              "created_at": "2026-10-19T22:40:24.568+00:00"
+            },
+            {
+              "seq": 2,
+              "type": "NODE_STARTED",
+              "payload": {
+                "attemptId": 231,
+                "attemptNo": 1,
+                "nodeInstanceId": 204
+              },
+              "created_at": "2026-10-19T22:40:24.592+00:00"
+            },
+            {
+              "seq": 3,
+              "type": "LOGIC_RESULT_COMMITTED",
+              "payload": {
+                "attemptId": 231,
+                "nodeInstanceId": 204
+              },
+              "created_at": "2026-10-19T22:40:24.598+00:00"
+            },
+            {
+              "seq": 4,
+              "type": "NODE_FINISHED",
+              "payload": {
+                "status": "SUCCEEDED",
+                "nodeInstanceId": 204
+              },
+              "created_at": "2026-10-19T22:40:24.598+00:00"
+            },
+            {
+              "seq": 5,
+              "type": "NODE_STARTED",
+              "payload": {
+                "attemptId": 232,
+                "attemptNo": 1,
+                "nodeInstanceId": 205
+              },
+              "created_at": "2026-10-19T22:40:24.601+00:00"
+            },
+            {
+              "seq": 6,
+              "type": "LOGIC_RESULT_COMMITTED",
+              "payload": {
+                "attemptId": 232,
+                "nodeInstanceId": 205
+              },
+              "created_at": "2026-10-19T22:40:24.606+00:00"
+            },
+            {
+              "seq": 7,
+              "type": "NODE_FINISHED",
+              "payload": {
+                "status": "SUCCEEDED",
+                "nodeInstanceId": 205
+              },
+              "created_at": "2026-10-19T22:40:24.606+00:00"
+            },
+            {
+              "seq": 8,
+              "type": "RUN_FINISHED",
+              "payload": {
+                "status": "SUCCEEDED"
+              },
+              "created_at": "2026-10-19T22:40:24.609+00:00"
+            }
+          ],
+          "paused": null
+        },
+        "traceId": "3790756c-6350-4765-b9c8-230a7febc688"
+      }
+    }
+  ],
+  "pageErrors": [],
+  "startedAt": "2026-10-19T22:40:17.216Z",
+  "inputId": 1,
+  "runId": "r_25ef4e31175e4bb3a8638176b2ac3384",
+  "debugOutput": {
+    "answer": "命名输入完整联调"
+  },
+  "completed": false,
+  "failure": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\nfalse !== true\n\n    at file:///G:/207/%E9%A1%B9%E7%9B%AE/%E7%AE%97%E6%B3%95%E9%87%8D%E7%BB%84%E5%B7%A5%E5%85%B7/%E4%BB%A3%E7%A0%81/agent-platform/web/tests/named-inputs-live-browser.mjs:131:10",
+  "endedAt": "2026-10-19T22:40:28.096Z"
+}

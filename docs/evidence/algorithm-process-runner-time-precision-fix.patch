@@ -1,0 +1,119 @@
+diff --git a/docs/evidence/algorithm-process-runner-time-precision-fix.md b/docs/evidence/algorithm-process-runner-time-precision-fix.md
+new file mode 100644
+index 0000000..f7a95a3
+--- /dev/null
++++ b/docs/evidence/algorithm-process-runner-time-precision-fix.md
+@@ -0,0 +1,24 @@
++# PG 微秒时间顺序窄修复
++
++本轮只修 `tests/algorithm-process-attempt-scope.mjs` 的时间换算，并新增 `tests/algorithm-process-attempt-time.test.mjs` 11 项有限行为测试。原 runner SHA 保持 `e2878c7ae3275eaa26e6a7e24a178fae79c9bac38c91d9ecdfbe55d7c348a1e4`；capture SQL、原 93 项 scope 测试和旧 31 项测试均未改。没有读取真实凭据、连接服务/数据库、启动 JVM、创建新库或执行第五轮。
++
++独立审查给出的反例成立：终态 note `2026-10-20T11:23:56.064001+08:00` 晚于 READY `.064000+08:00`，但原 `Date.parse` 将二者截到同一毫秒并接受。新增测试直接调用原 oracle，复用旧测试的 v4 归档行与明确标注的 before-node 合成补充，只替换四个阶段的时间。
++
++修复将带时区的整秒交给标准库 `Date.parse`，再以 `BigInt(整秒毫秒) * 1000n + 六位补零小数` 得到整数微秒。PG 的 0–6 位小数不再经过毫秒截断。原相邻 `>=` 门禁继续适用，真实相等合法，时区按绝对时间比较；没有引入依赖或日期框架。
++
++实际执行命令和原始输出位于本报告同名目录，命令/退出码亦记录于 `commands.json`：
++
++```text
++node --test tests/algorithm-process-attempt-time.test.mjs
++旧 oracle：exit 1，11 项中 7 通过、4 失败（Missing expected exception），见 red.log。
++修复 oracle：exit 0，11/11，见 green-time.log。
++
++node --test tests/algorithm-process-runner.test.mjs tests/algorithm-process-runner-fixes.test.mjs tests/algorithm-process-runner-redis.test.mjs tests/algorithm-process-runner-async.test.mjs tests/algorithm-process-runner-async-cleanup.test.mjs tests/algorithm-process-attempt-scope.test.mjs tests/algorithm-process-attempt-time.test.mjs
++exit 0，135/135，无取消/跳过，见 green-all.log。
++```
++
++四个反例分别是同毫秒内 note 晚于 READY、READY 晚于第二次 START、START 晚于 COMMIT，以及跨时区的同毫秒逆序。七个正例覆盖相邻微秒正序、全等、PG 不同小数位、跨毫秒边界、跨时区等时与正序、整秒与零小数等时。旧 124 项完整运行并保留原语义。
++
++`algorithm-process-runner-time-precision-fix/baseline` 保存本次修改前完整 14 个 source；`frozen` 保存本次 16 个 source。完整 patch 仅含 oracle 替换、新测试和本报告。`freeze.mjs` 实际执行 `git apply --check` 和 `git apply` 重建 `replay`，核对 16/16 SHA，并在 replay 执行所有 MJS syntax 与同一 135 项测试。详见 `replay.log` 及独立 `algorithm-process-runner-time-precision-fix-sha256.json`。
++
++冻结过程逐项核对前一 scope manifest 的 frozen/replay/evidence/只读依据及 patch、四轮实际执行的原始目录和报告/summary/日志快照；历史证据保持原字节，v4 仍记录失败。本轮有限测试通过只说明 P2 时间比较修复，不代表真实第五轮通过。冻结后移交原 reviewer 关闭 P2，真实执行仍暂停。
+diff --git a/tests/algorithm-process-attempt-scope.mjs b/tests/algorithm-process-attempt-scope.mjs
+index 5e1ccf6..41998de 100644
+--- a/tests/algorithm-process-attempt-scope.mjs
++++ b/tests/algorithm-process-attempt-scope.mjs
+@@ -2,7 +2,14 @@ import assert from 'node:assert/strict';
+ import { createHash } from 'node:crypto';
+ 
+ const digest = text => createHash('sha256').update(text).digest('hex');
+-const timestamp = value => { const time = Date.parse(value); assert(Number.isFinite(time), 'Missing PG evidence time'); return time; };
++const timestamp = value => {
++  const parts = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.(\d{1,6}))?(Z|[+-]\d{2}:\d{2})$/.exec(value);
++  assert(parts, 'Missing PG evidence time');
++  // Parse only whole seconds through Date; PG fractional microseconds must never be rounded to milliseconds.
++  const seconds = Date.parse(parts[1] + parts[3]);
++  assert(Number.isFinite(seconds), 'Missing PG evidence time');
++  return BigInt(seconds) * 1000n + BigInt((parts[2] || '').padEnd(6, '0'));
++};
+ 
+ // Oracle for these five finite scenarios only: a node re-claim never authorizes another business call.
+ export function assertAttemptScope(mode, scenario, observed, fixture) {
+diff --git a/tests/algorithm-process-attempt-time.test.mjs b/tests/algorithm-process-attempt-time.test.mjs
+new file mode 100644
+index 0000000..66f1557
+--- /dev/null
++++ b/tests/algorithm-process-attempt-time.test.mjs
+@@ -0,0 +1,63 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import fs from 'node:fs/promises';
++import { assertAttemptScope } from './algorithm-process-attempt-scope.mjs';
++
++// Reuse the archived v4 rows and the existing test's explicitly synthetic before-node enrichment.
++const input = new URL('../docs/evidence/algorithm-process-runner-attempt-scope/inputs/', import.meta.url);
++const read = async name => JSON.parse(await fs.readFile(new URL(name, input), 'utf8'));
++const archived = await read('v4-ack-loss.json'), pg = (await read('algorithm-process-live-v4-readonly.json')).data;
++const fixture = await read('v4-ack-fixture-final.json');
++const source = await fs.readFile(new URL('./algorithm-process-attempt-scope.test.mjs', import.meta.url), 'utf8');
++const start = source.indexOf('function sample()'), end = source.indexOf("test('actual v4", start);
++assert(start >= 0 && end > start);
++const sample = new Function('archived', 'pg', 'fixture', source.slice(start, end) + '\nreturn sample;')(archived, pg, fixture);
++
++function withTimes(times) {
++  const scenario = sample(), view = scenario.after;
++  const rows = [view.terminalNotes[0], view.events.find(event => event.type === 'EXTERNAL_READY'),
++    view.events.find(event => event.type === 'NODE_STARTED' && event.payload.attemptNo === 2),
++    view.events.find(event => event.type === 'LOGIC_RESULT_COMMITTED' && event.payload.nodeInstanceId === view.node.id)];
++  rows.forEach((row, index) => { row.created_at = times[index]; });
++  return () => assertAttemptScope('ack-loss', scenario, view, fixture);
++}
++const local = fraction => '2026-10-20T11:23:56.' + fraction + '+08:00';
++
++for (const [name, fractions] of [
++  ['note after ready', ['064001', '064000', '064002', '064003']],
++  ['ready after start', ['064000', '064002', '064001', '064003']],
++  ['start after commit', ['064000', '064001', '064003', '064002']],
++]) test('same-millisecond microsecond inversion rejects ' + name, () => {
++  const times = fractions.map(local);
++  assert.equal(new Set(times.map(Date.parse)).size, 1, 'The old millisecond parser collapses these four distinct times');
++  assert.throws(withTimes(times), /Terminal note precedes local recovery/);
++});
++
++for (const [name, fractions] of [
++  ['strict adjacent microseconds', ['064000', '064001', '064002', '064003']],
++  ['all equal', ['064001', '064001', '064001', '064001']],
++  ['variable PG fractional precision', ['064', '064000', '064001', '06401']],
++  ['across millisecond boundary', ['064998', '064999', '065000', '065001']],
++]) test('legal PG precision accepts ' + name, () => {
++  assert.doesNotThrow(withTimes(fractions.map(local)));
++});
++
++test('equal instants in different timezones retain microseconds', () => {
++  assert.doesNotThrow(withTimes(['2026-10-20T11:23:56.064001+08:00', '2026-10-20T03:23:56.064001Z',
++    '2026-10-19T23:23:56.064001-04:00', '2026-10-20T05:53:56.064001+02:30']));
++});
++
++test('ascending instants across timezones retain microseconds', () => {
++  assert.doesNotThrow(withTimes(['2026-10-20T11:23:56.064000+08:00', '2026-10-20T03:23:56.064001Z',
++    '2026-10-19T23:23:56.064002-04:00', '2026-10-20T05:53:56.064003+02:30']));
++});
++
++test('timezone-equivalent same-millisecond inversion is rejected', () => {
++  assert.throws(withTimes(['2026-10-20T11:23:56.064002+08:00', '2026-10-20T03:23:56.064001Z',
++    '2026-10-19T23:23:56.064003-04:00', '2026-10-20T05:53:56.064004+02:30']), /Terminal note precedes local recovery/);
++});
++
++test('whole-second and fractional zero equality is legal', () => {
++  assert.doesNotThrow(withTimes(['2026-10-20T11:23:56+08:00', '2026-10-20T03:23:56.0Z',
++    '2026-10-19T23:23:56.000000-04:00', '2026-10-20T05:53:56.000+02:30']));
++});

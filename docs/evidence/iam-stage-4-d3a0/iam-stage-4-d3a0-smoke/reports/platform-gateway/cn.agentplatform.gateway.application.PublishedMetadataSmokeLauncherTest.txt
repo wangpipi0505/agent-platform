@@ -1,0 +1,40 @@
+-------------------------------------------------------------------------------
+Test set: cn.agentplatform.gateway.application.PublishedMetadataSmokeLauncherTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 0.775 s <<< FAILURE! -- in cn.agentplatform.gateway.application.PublishedMetadataSmokeLauncherTest
+cn.agentplatform.gateway.application.PublishedMetadataSmokeLauncherTest.launchTwoIsolatedJvmFixturesWithFiniteDeadline -- Time elapsed: 0.759 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+[Exception in thread "main" java.io.UncheckedIOException: java.io.IOException: Unable to establish loopback connection
+	at java.net.http/jdk.internal.net.http.HttpClientImpl.<init>(HttpClientImpl.java:508)
+	at java.net.http/jdk.internal.net.http.HttpClientImpl.create(HttpClientImpl.java:436)
+	at java.net.http/jdk.internal.net.http.HttpClientBuilderImpl.build(HttpClientBuilderImpl.java:143)
+	at cn.agentplatform.common.authority.LoopbackAuthority.<init>(LoopbackAuthority.java:26)
+	at cn.agentplatform.common.authority.PublishedMetadataSmokeMain.main(PublishedMetadataSmokeMain.java:20)
+Caused by: java.io.IOException: Unable to establish loopback connection
+	at java.base/sun.nio.ch.PipeImpl$Initializer.run(PipeImpl.java:103)
+	at java.base/sun.nio.ch.PipeImpl$Initializer.run(PipeImpl.java:67)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:571)
+	at java.base/sun.nio.ch.PipeImpl.<init>(PipeImpl.java:197)
+	at java.base/sun.nio.ch.WEPollSelectorImpl.<init>(WEPollSelectorImpl.java:79)
+	at java.base/sun.nio.ch.WEPollSelectorProvider.openSelector(WEPollSelectorProvider.java:33)
+	at java.base/java.nio.channels.Selector.open(Selector.java:295)
+	at java.net.http/jdk.internal.net.http.HttpClientImpl$SelectorManager.<init>(HttpClientImpl.java:1132)
+	at java.net.http/jdk.internal.net.http.HttpClientImpl.<init>(HttpClientImpl.java:505)
+	... 4 more
+Caused by: java.net.SocketException: Invalid argument: connect
+	at java.base/sun.nio.ch.UnixDomainSockets.connect0(Native Method)
+	at java.base/sun.nio.ch.UnixDomainSockets.connect(UnixDomainSockets.java:154)
+	at java.base/sun.nio.ch.UnixDomainSockets.connect(UnixDomainSockets.java:150)
+	at java.base/sun.nio.ch.SocketChannelImpl.connect(SocketChannelImpl.java:878)
+	at java.base/java.nio.channels.SocketChannel.open(SocketChannel.java:285)
+	at java.base/sun.nio.ch.PipeImpl$Initializer$LoopbackConnector.run(PipeImpl.java:132)
+	at java.base/sun.nio.ch.PipeImpl$Initializer.run(PipeImpl.java:85)
+	... 12 more
+] 
+expected: 0
+ but was: 1
+	at cn.agentplatform.gateway.application.PublishedMetadataSmokeLauncherTest.launchTwoIsolatedJvmFixturesWithFiniteDeadline(PublishedMetadataSmokeLauncherTest.java:19)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+

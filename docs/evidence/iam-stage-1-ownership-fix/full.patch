@@ -1,0 +1,69 @@
+diff --git a/admin-common/src/main/java/cn/agentplatform/common/authority/ClaimCeiling.java b/admin-common/src/main/java/cn/agentplatform/common/authority/ClaimCeiling.java
+--- a/admin-common/src/main/java/cn/agentplatform/common/authority/ClaimCeiling.java
++++ b/admin-common/src/main/java/cn/agentplatform/common/authority/ClaimCeiling.java
+@@ -28,6 +28,8 @@
+             if (!left.containsKey(key) && !right.containsKey(key)) continue;
+             var a = left.get(key); var b = right.get(key);
+             if (a == null || b == null || a.size() != 1 || !a.equals(b)) throw denied();
++            String owner = a.iterator().next();
++            if (owner == null || owner.isBlank()) throw denied();
+             result.put(key, Set.copyOf(a));
+         }
+         return Map.copyOf(result);
+diff --git a/admin-common/src/test/java/cn/agentplatform/common/authority/AuthorityPolicyTest.java b/admin-common/src/test/java/cn/agentplatform/common/authority/AuthorityPolicyTest.java
+--- a/admin-common/src/test/java/cn/agentplatform/common/authority/AuthorityPolicyTest.java
++++ b/admin-common/src/test/java/cn/agentplatform/common/authority/AuthorityPolicyTest.java
+@@ -3,12 +3,16 @@
+ import cn.agentplatform.common.Actor;
+ import cn.agentplatform.common.PlatformException;
+ import org.junit.jupiter.api.Test;
++import org.junit.jupiter.params.ParameterizedTest;
++import org.junit.jupiter.params.provider.MethodSource;
++import org.junit.jupiter.params.provider.Arguments;
+ import org.springframework.security.core.context.SecurityContextHolder;
+ import org.springframework.security.oauth2.jwt.Jwt;
+ import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+ import java.util.*;
+ import java.nio.file.*;
+ import java.util.regex.Pattern;
++import java.util.stream.Stream;
+ import static org.assertj.core.api.Assertions.*;
+ 
+ class AuthorityPolicyTest {
+@@ -60,6 +64,12 @@
+ 
+     @Test void ownershipMustMatchAndCannotBeCompletedFromOneSide() {
+         for (String key : List.of("bizSystemCode", "userId")) {
++            assertThat(ClaimCeiling.attributes(Map.of(key, Set.of("a")), Map.of(key, Set.of("a"))).get(key))
++                    .containsExactly("a");
++            assertThat(ClaimCeiling.attributes(Map.of(key, Set.of(" a ")), Map.of(key, Set.of(" a "))).get(key))
++                    .containsExactly(" a ");
++            assertThatThrownBy(() -> ClaimCeiling.attributes(Map.of(key, Set.of(" a ")), Map.of(key, Set.of("a"))))
++                    .isInstanceOf(PlatformException.class);
+             assertThatThrownBy(() -> ClaimCeiling.attributes(Map.of(key, Set.of("a")), Map.of(key, Set.of("b"))))
+                     .isInstanceOf(PlatformException.class);
+             assertThatThrownBy(() -> ClaimCeiling.attributes(Map.of(), Map.of(key, Set.of("a"))))
+@@ -74,6 +84,23 @@
+         assertThatThrownBy(() -> ClaimCeiling.subject(key, null)).isInstanceOf(PlatformException.class);
+         assertThatThrownBy(() -> new SubjectKey("", "p")).isInstanceOf(IllegalArgumentException.class);
+         assertThatThrownBy(() -> new ResourceBinding("run", "1", "")).isInstanceOf(IllegalArgumentException.class);
++    }
++
++    static Stream<Arguments> invalidOwnershipSingletons() {
++        return Stream.of("bizSystemCode", "userId").flatMap(key ->
++                Stream.of("", " ", (String) null).map(value -> Arguments.of(key, value)));
++    }
++
++    @ParameterizedTest(name = "{0}: invalid singleton [{1}]")
++    @MethodSource("invalidOwnershipSingletons")
++    void blankOrNullOwnershipCannotPassEquality(String key, String value) {
++        // Collections.singleton deliberately permits null, unlike Set.of: reject at the authority boundary.
++        var attributes = Map.of(key, Collections.singleton(value));
++        assertThatThrownBy(() -> ClaimCeiling.attributes(attributes, attributes))
++                .isInstanceOfSatisfying(PlatformException.class, error -> {
++                    assertThat(error.status()).isEqualTo(403);
++                    assertThat(error.code()).isEqualTo("SYS-AUTH-403");
++                });
+     }
+ 
+     @Test void catalogSeparatesActionsAndModesAndKeepsUnusedEntrypointsDisabled() {

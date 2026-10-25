@@ -1,0 +1,50 @@
+{
+  "sourceOrTestRerunsForMetadata": 0,
+  "oldOwnedWrites": 0,
+  "errors": [
+    {
+      "phase": "initial runner root assertion",
+      "exit": 1,
+      "error": "E assertion still named retention-fixes evidence root; fixed before any Maven/process/stage launch. No old evidence directory used.",
+      "originalHelperSnapshot": false,
+      "limitation": "First prelaunch failed helper revision not separately captured; exact failure preserved in conversation, no successful command repeated."
+    },
+    {
+      "phase": "self-review metadata",
+      "exit": 1,
+      "error": "UnicodeDecodeError gbk at byte0xa1 position51133 while reading existing UTF8 test source; no final Git invoked",
+      "helper": {
+        "file": ".tools/iam-o2b-f2c2a-http-exit-fixes-selfreview-utf8-failed.py",
+        "bytes": 6194,
+        "sha256": "8dc69349763286d8d9f5cde755ff50d06fd8ca61e883e607363d9540dd3f1d7e"
+      },
+      "repair": "explicit UTF8 source/JSON reads, resumed unfinished self-review only"
+    },
+    {
+      "phase": "native before-copy attempt1",
+      "cache": {
+        "file": ".local/iam-o2b-f2c2a-http-exit-fixes/native-command-cache/final-before-copy.json",
+        "bytes": 951,
+        "sha256": "2a7e4f39ee6435db1dabdf305b320e0e3688766bbce8777151c8e7d537b8cb8b"
+      },
+      "helper": {
+        "file": ".tools/iam-o2b-f2c2a-http-exit-fixes-copy-encoding-failed.ps1",
+        "bytes": 935,
+        "sha256": "5fece0881a18ed28e40102f40a53d1179a6b99b97aa09fd7990d53d863618b3f"
+      },
+      "error": "Windows PowerShell5 read BOMless UTF8 fixed workspace constant as ANSI; sole-root assertion rejected before any file copy or Git"
+    },
+    {
+      "phase": "native before-copy attempt2",
+      "cache": {
+        "file": ".local/iam-o2b-f2c2a-http-exit-fixes/native-command-cache/final-before-copy-utf8.json",
+        "bytes": 966,
+        "sha256": "eea73ff3db9eb01924ce99b29dd45e67b953678c1b0754d17d07816ab71bf675"
+      },
+      "error": "Host Set-Content utf8 remained BOMless; same assertion rejected before any copy or Git",
+      "repair": "explicit UTF8 BOM, distinct retry final-before-copy-bom; failed caches unchanged"
+    }
+  ],
+  "successfulGitPhasesRepeated": 0,
+  "successfulMavenPhasesRepeatedForMetadata": 0
+}

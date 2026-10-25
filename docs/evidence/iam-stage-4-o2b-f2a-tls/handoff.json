@@ -1,0 +1,956 @@
+{
+  "schema": "F2a frozen author handoff v1; ownInventory SHA is returned externally to avoid a hash cycle",
+  "status": "DONE",
+  "acceptance": "pending independent spec+quality review and root finite audit",
+  "frozenAt": "2026-10-21T09:47:22.410Z",
+  "workspace": "G:/207/项目/算法重组工具/代码/agent-platform",
+  "sourceBefore": {
+    "file": ".local/iam-o2b-f1-gateway-decoder/source-after.json",
+    "bytes": 117016,
+    "sha256": "b391ee9fe99f69b51066006bdb468bcf4750cf2f6bd16a2dc22ae458fae301f4",
+    "count": 612
+  },
+  "sourceAfter": {
+    "file": ".local/iam-o2b-f2a-tls/source-after.json",
+    "bytes": 118270,
+    "sha256": "b64fbebf0a650bb8d9cc6988c78752560f657679e3f6bce3f157b17370a339c2",
+    "count": 618,
+    "schema": "source rows file bytes sha256"
+  },
+  "sourceWrites": [
+    "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsTls.java",
+    "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsTlsConnection.java",
+    "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsTlsDebt.java",
+    "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalEventsTlsDebtTest.java",
+    "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalEventsTlsTest.java",
+    "platform-gateway/src/test/resources/iam-o2b-f2a/tls-fixtures.p12"
+  ],
+  "accepted612Unchanged": true,
+  "newFiles": 6,
+  "gatewayEventsOpened": false,
+  "actualFinal": {
+    "stage": "iam-stage-o2b-f2a-final",
+    "tests": 39,
+    "classes": 2,
+    "debtTests": 7,
+    "tlsTests": 32,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "peerCaseDirectories": 32,
+    "childActualExits": 61
+  },
+  "manifestArtifacts": [
+    {
+      "file": ".local/iam-o2b-f2a-tls/source-before.json",
+      "bytes": 117016,
+      "sha256": "b391ee9fe99f69b51066006bdb468bcf4750cf2f6bd16a2dc22ae458fae301f4",
+      "count": 612,
+      "schema": "source rows file/bytes/sha256"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-tls/source-after.json",
+      "bytes": 118270,
+      "sha256": "b64fbebf0a650bb8d9cc6988c78752560f657679e3f6bce3f157b17370a339c2",
+      "count": 618,
+      "schema": "source rows file/bytes/sha256"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-tls/source-new.json",
+      "bytes": 1257,
+      "sha256": "89772780b587366fdde82314b2d09b3e6056bfeeae5ee19aa7c52356992bbef1",
+      "count": 6,
+      "schema": "exact allowed new source rows"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-tls/source-snapshot.json",
+      "bytes": 140518,
+      "sha256": "f800925dff963a783355b346009b7f483bd34240c4852f17f0b2ece84cfc1d0b",
+      "count": 618,
+      "schema": "full after-source snapshot rows"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-tls/replay-after.json",
+      "bytes": 118270,
+      "sha256": "b64fbebf0a650bb8d9cc6988c78752560f657679e3f6bce3f157b17370a339c2",
+      "count": 618,
+      "schema": "full replay-after rows"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-tls/baseline-index-blobs.json",
+      "bytes": 117016,
+      "sha256": "b391ee9fe99f69b51066006bdb468bcf4750cf2f6bd16a2dc22ae458fae301f4",
+      "count": 612,
+      "schema": "private before Git tree blobs exact source rows"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-tls/replay-index-blobs.json",
+      "bytes": 117016,
+      "sha256": "b391ee9fe99f69b51066006bdb468bcf4750cf2f6bd16a2dc22ae458fae301f4",
+      "count": 612,
+      "schema": "private before replay Git tree blobs exact source rows"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-tls/target-before.json",
+      "bytes": 452264,
+      "sha256": "86cf879d8893d7b49bcec0e261a262e1339596f2ce5c431e37190cb07c7530f0",
+      "count": 2167,
+      "schema": "inherited historical logical target rows"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-tls/target-after.json",
+      "bytes": 459636,
+      "sha256": "2c0dc655b7664f3e1dd4efe965a71cd10590edea1ab3ec06c4df69a4566450b8",
+      "count": 2200,
+      "schema": "historical logical target plus current finite overlay"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-tls/target-overlay.json",
+      "bytes": 70462,
+      "sha256": "d2846579b1d3bfa948728039dcdf186315ab07aced78bf0089ec286c801847c6",
+      "count": 314,
+      "schema": "observed finite current physical target rows"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-tls/target-delta.json",
+      "bytes": 8002,
+      "sha256": "25da24373822a3cd3c0d7604ecc90218f17bc5666845ed54efdcc54c27d477b5",
+      "count": 33,
+      "schema": "new/changed finite target rows"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-tls/resource-copies.json",
+      "bytes": 513,
+      "sha256": "ad41f25a55dd3cb7278ff7b090b35066c2cd295860ed4358bca62300c6c2f181",
+      "count": 2,
+      "schema": "actual resource-copy paths and basis"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-tls/diagnostics-new.json",
+      "bytes": 2590,
+      "sha256": "62f106bd76ab10b198c2b10461964ab9530e77ae837fa542d358d0d2fc5e73a1",
+      "count": 13,
+      "schema": "new original diagnostic target rows"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o2b-f2a-tls/test-stages.json",
+      "bytes": 8131,
+      "sha256": "409fb4a11d1e55ff8d0801d7a02643b56b1e2ec2372f7a0734d05f41329ca34a",
+      "count": 13,
+      "schema": "physical stage summaries from actual Running XML"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o2b-f2a-tls/diagnostics.json",
+      "bytes": 6300,
+      "sha256": "85dcbea245b0762a5f4b275ff110981b1a3632bf568d3877e88decf11ac57b8a",
+      "count": 13,
+      "schema": "original diagnostic rows plus copy/stage/basis"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o2b-f2a-tls/peer-results.json",
+      "bytes": 153045,
+      "sha256": "4a7a8ea539df8fdeb445047bcba48d77759fec65f20c800054a9bd0c1b6b0163",
+      "count": 87,
+      "schema": "all actual peer result snapshots including failed attempts"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o2b-f2a-tls/final-observations.json",
+      "bytes": 24975,
+      "sha256": "e8174608938742f9307ccf32413d2c90a43d460aceb8394b88bf1297957b8ad9",
+      "count": 18,
+      "schema": "named final actual peer observations"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o2b-f2a-tls/source-comparison.json",
+      "bytes": 1139,
+      "sha256": "23a0ce7690a42f8f64b2d2fdc8977632e4c540ffa99bb7cc9f02db416ee085c4",
+      "count": 1,
+      "schema": "primary range and inherited mechanism provenance"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o2b-f2a-tls/metadata-corrections.json",
+      "bytes": 3637,
+      "sha256": "ab1a878a7bea4dd42262b3ade46568054085d0fa33cfdde99a621119b1ded3c4",
+      "count": 11,
+      "schema": "retained failures and exact corrections"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-tls/relocation-map.json",
+      "bytes": 160722,
+      "sha256": "4fe73b66dcebf4e909e9886c7658fc51efb53ac25befff49c379db5a2254fe31",
+      "count": 404,
+      "schema": "root-approved finite original/destination same-disk move map"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o2b-f2a-tls/source.binary.patch",
+      "bytes": 168795,
+      "sha256": "5750a5a06134782abb070e3e32994239daa77b7babd6fd8a4b2c192dd342dec6",
+      "count": 6,
+      "schema": "raw git binary delta for six allowlisted files"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-tls/journal.jsonl",
+      "bytes": 19605,
+      "sha256": "d25770906f63be95ae5a0ef1ed22c74084797508271db96c8d36d6967025c9e7",
+      "count": 99,
+      "schema": "append-only physical phase journal"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o2b-f2a-tls-report.md",
+      "bytes": 18124,
+      "sha256": "11fb2e3ad7041387cc1457c73a9c3e9ba7a55e36c370abca89cb7ed64eecce17",
+      "count": 1,
+      "schema": "author implementation report; independent acceptance pending"
+    }
+  ],
+  "controlArtifacts": [
+    {
+      "file": ".tools/iam-o2b-f2a-controls.mjs",
+      "bytes": 6384,
+      "sha256": "ead43d5f6e8018a38f65429d051d64c05f353d8b952f4267cf700b47232b33dc",
+      "count": 1,
+      "schema": "exact control/helper bytes"
+    },
+    {
+      "file": ".tools/iam-o2b-f2a-evidence.mjs",
+      "bytes": 6363,
+      "sha256": "598927bcba1e874c8459997077082722293060da1af60e0b0e22e3c5ce656dff",
+      "count": 1,
+      "schema": "exact control/helper bytes"
+    },
+    {
+      "file": ".tools/iam-o2b-f2a-finalize.mjs",
+      "bytes": 26522,
+      "sha256": "d37d01bb58c0e89f7400b47788c3289a7f7a17f912b6a48a118b71a2d4e67552",
+      "count": 1,
+      "schema": "exact control/helper bytes"
+    },
+    {
+      "file": ".tools/iam-o2b-f2a-fixtures.mjs",
+      "bytes": 4667,
+      "sha256": "4a48e4ff295d3a55c2b51c75265da7f53b19bc5955db25b68ce4130d08d1d70d",
+      "count": 1,
+      "schema": "exact control/helper bytes"
+    },
+    {
+      "file": ".tools/iam-o2b-f2a-package.mjs",
+      "bytes": 7835,
+      "sha256": "5ac82674b3f19e149447eae6d7eae2c1da69ceeb2be6d44bf037e79d655815d0",
+      "count": 1,
+      "schema": "exact control/helper bytes"
+    },
+    {
+      "file": ".tools/iam-o2b-f2a-relocate.ps1",
+      "bytes": 2362,
+      "sha256": "dc53f3138edba342e7b9917f29e0b31ccbd56464db5f163d8bbf85a5ba19372f",
+      "count": 1,
+      "schema": "exact control/helper bytes"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-tls/baseline-init.json",
+      "bytes": 431,
+      "sha256": "b151b3f29ad52f2e14036383e308a5c24338e914747a30153d0719da62e3fa4c",
+      "count": 1,
+      "schema": "exact control/helper bytes"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-tls/baseline-attributes.json",
+      "bytes": 1967,
+      "sha256": "114c88fa9ea6a9190b7ccdbfd3bcf865309b9292ffdf1efafe24a42af31f1d44",
+      "count": 1,
+      "schema": "exact control/helper bytes"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-tls/baseline-add.json",
+      "bytes": 45629,
+      "sha256": "55e8c431b0559cd5120801394d0de71dcf4da6ecc3fc736e8d27d7796daddb31",
+      "count": 1,
+      "schema": "exact control/helper bytes"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-tls/baseline-add-v2.json",
+      "bytes": 334,
+      "sha256": "bb8a99d69f608bbb33a3bf8e5d195c2f55efe7ca1f3a14a374d2e512de164284",
+      "count": 1,
+      "schema": "exact control/helper bytes"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-tls/baseline-tree.json",
+      "bytes": 247,
+      "sha256": "df86eca268594ecaec54d0b60d8e8e8c84665446b898151046216c51a921db4a",
+      "count": 1,
+      "schema": "exact control/helper bytes"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-tls/replay-init.json",
+      "bytes": 427,
+      "sha256": "dad65e661981dfc9fd25bb913a97bd2b6ec49ade6b189d1165250bdd9c6b989f",
+      "count": 1,
+      "schema": "exact control/helper bytes"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-tls/replay-attributes.json",
+      "bytes": 1965,
+      "sha256": "a5b2d71ea532ca3d8f1fd75b03328a71324bd64271977abd79bf65a7cb348fb7",
+      "count": 1,
+      "schema": "exact control/helper bytes"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-tls/replay-add-v2.json",
+      "bytes": 330,
+      "sha256": "288151d0300d64b135909eff573fca9c45e8f67064176c575edb355a017383f6",
+      "count": 1,
+      "schema": "exact control/helper bytes"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-tls/replay-tree.json",
+      "bytes": 245,
+      "sha256": "9cdeffed9edb9737ccac55b14eccdaaf6befff5f4244ab2baecbc26d95b654fe",
+      "count": 1,
+      "schema": "exact control/helper bytes"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-tls/patch-add.json",
+      "bytes": 821,
+      "sha256": "3ed6872e2faf7afbd69a40c63ad7260dee4fe74e29ff63c7cbaf173e903b8883",
+      "count": 1,
+      "schema": "exact control/helper bytes"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-tls/patch-generate.json",
+      "bytes": 171745,
+      "sha256": "2eb2d2622cb1cab2613b1e1d6f42feb1a8344542bd47a9f960a7fd17ee38a47c",
+      "count": 1,
+      "schema": "exact control/helper bytes"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-tls/patch-after-tree.json",
+      "bytes": 312,
+      "sha256": "4a3491fb5b1961da31d11c00e1ecd279f82f26059624c70c6d022d03749752bb",
+      "count": 1,
+      "schema": "exact control/helper bytes"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-tls/replay-check.json",
+      "bytes": 407,
+      "sha256": "994b2029697813b332ab3229ae2fdcecadee959baebae8868fe42454086f627c",
+      "count": 1,
+      "schema": "exact control/helper bytes"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-tls/replay-apply.json",
+      "bytes": 392,
+      "sha256": "8a598bd90898ff5fd90c6dba04b3b230ec889122655ea58a9ea9e854667ebbac",
+      "count": 1,
+      "schema": "exact control/helper bytes"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-tls/isolated-gitconfig",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "count": 1,
+      "schema": "exact control/helper bytes"
+    }
+  ],
+  "stages": [
+    {
+      "stage": "iam-stage-o2b-f2a-core-green",
+      "directory": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-core-green",
+      "command": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-core-green/command.json",
+        "bytes": 529,
+        "sha256": "a12b12612ac71ad21024055b48623b862cde94eb079f3fd66f573de1d3193576"
+      },
+      "result": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-core-green/result.json",
+        "bytes": 599,
+        "sha256": "7641518f7ff4450d90a9f4ab9d8fdad417bebbb9c056805c073fff3ec2768595"
+      },
+      "sourceEpoch": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-core-green/source.json",
+        "bytes": 118270,
+        "sha256": "34ae4c9d062acde75015260a832282d3900abbddbaed86693323385b7bf3a227"
+      },
+      "raw": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-core-green/raw.log",
+        "bytes": 6073,
+        "sha256": "c507d0cbeeb19b0465b3db9cd71e49704ebe2ccca0eab45cc6303ba3172bf698"
+      },
+      "compilerLists": "compiler/ byte-exact originals; only Running report XML/txt counts tests",
+      "selector": "PortalEventsTlsDebtTest,PortalEventsTlsTest",
+      "exit": 0,
+      "running": [
+        "cn.agentplatform.gateway.infra.PortalEventsTlsDebtTest",
+        "cn.agentplatform.gateway.infra.PortalEventsTlsTest"
+      ],
+      "suites": [
+        {
+          "class": "cn.agentplatform.gateway.infra.PortalEventsTlsDebtTest",
+          "tests": 6,
+          "errors": 0,
+          "skipped": 0,
+          "failures": 0
+        },
+        {
+          "class": "cn.agentplatform.gateway.infra.PortalEventsTlsTest",
+          "tests": 1,
+          "errors": 0,
+          "skipped": 0,
+          "failures": 0
+        }
+      ],
+      "evidence": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-core-green"
+    },
+    {
+      "stage": "iam-stage-o2b-f2a-deadlines",
+      "directory": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-deadlines",
+      "command": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-deadlines/command.json",
+        "bytes": 712,
+        "sha256": "5fc4f7d6ac834d5405afda6d6a71e99d9798e84dbf14e2a50648b1e38bacde55"
+      },
+      "result": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-deadlines/result.json",
+        "bytes": 691,
+        "sha256": "dd6833edd05334660d419af2ea3d24e03f8fb0d944b9874df94abfdd75a72da8"
+      },
+      "sourceEpoch": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-deadlines/source.json",
+        "bytes": 118270,
+        "sha256": "35d5a9233e32c2266a1bc27a4eb527bb6db405268976d30c2ae2c5c7896f1a11"
+      },
+      "raw": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-deadlines/raw.log",
+        "bytes": 6075,
+        "sha256": "82b1d909cb6cb5a3a1b41d43047f4df8fc27e238a8389c4fc0e44acdbb1bdf0c"
+      },
+      "compilerLists": "compiler/ byte-exact originals; only Running report XML/txt counts tests",
+      "selector": "PortalEventsTlsDebtTest#checkedCounterOverflowAbortsWithoutGrantingCredit,PortalEventsTlsTest#realEndpointsObserveFixedDeadlinesAndAbort",
+      "exit": 0,
+      "running": [
+        "cn.agentplatform.gateway.infra.PortalEventsTlsDebtTest",
+        "cn.agentplatform.gateway.infra.PortalEventsTlsTest"
+      ],
+      "suites": [
+        {
+          "class": "cn.agentplatform.gateway.infra.PortalEventsTlsDebtTest",
+          "tests": 1,
+          "errors": 0,
+          "skipped": 0,
+          "failures": 0
+        },
+        {
+          "class": "cn.agentplatform.gateway.infra.PortalEventsTlsTest",
+          "tests": 7,
+          "errors": 0,
+          "skipped": 0,
+          "failures": 0
+        }
+      ],
+      "evidence": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-deadlines"
+    },
+    {
+      "stage": "iam-stage-o2b-f2a-final",
+      "directory": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-final",
+      "command": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-final/command.json",
+        "bytes": 514,
+        "sha256": "9f282c566544578d6090d6002d5001460991daa4e2572682c8e6e71f6aa97b91"
+      },
+      "result": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-final/result.json",
+        "bytes": 595,
+        "sha256": "7b51a69b687ddcf03b65f3cac3f05ca1f070466582cc228f6f7a04b698260245"
+      },
+      "sourceEpoch": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-final/source.json",
+        "bytes": 118270,
+        "sha256": "20c0ad589674fe227ef7624997bc04a90a5bb3ddb4deac0361c6dfd7c4f45b68"
+      },
+      "raw": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-final/raw.log",
+        "bytes": 6077,
+        "sha256": "1fe7acd4894706d4818ef8100d410f57b147e9db9f6b25d8ef5fcdd863ac5769"
+      },
+      "compilerLists": "compiler/ byte-exact originals; only Running report XML/txt counts tests",
+      "selector": "PortalEventsTlsDebtTest,PortalEventsTlsTest",
+      "exit": 0,
+      "running": [
+        "cn.agentplatform.gateway.infra.PortalEventsTlsDebtTest",
+        "cn.agentplatform.gateway.infra.PortalEventsTlsTest"
+      ],
+      "suites": [
+        {
+          "class": "cn.agentplatform.gateway.infra.PortalEventsTlsDebtTest",
+          "tests": 7,
+          "errors": 0,
+          "skipped": 0,
+          "failures": 0
+        },
+        {
+          "class": "cn.agentplatform.gateway.infra.PortalEventsTlsTest",
+          "tests": 32,
+          "errors": 0,
+          "skipped": 0,
+          "failures": 0
+        }
+      ],
+      "evidence": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-final"
+    },
+    {
+      "stage": "iam-stage-o2b-f2a-functional-red",
+      "directory": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-functional-red",
+      "command": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-functional-red/command.json",
+        "bytes": 541,
+        "sha256": "3ece6d0fb74d8c7e45412edba2cb80aae159a22befe95946333dacc47ef1eb60"
+      },
+      "result": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-functional-red/result.json",
+        "bytes": 603,
+        "sha256": "686db6b23ccc649864f1985f0582e9f64fa0eded080f000a9adaaae95154b5e8"
+      },
+      "sourceEpoch": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-functional-red/source.json",
+        "bytes": 118266,
+        "sha256": "ce169e6fc3b0c08bcd031a1f8955c38d2fcb8e8ab793b99f694972541e3f7c9b"
+      },
+      "raw": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-functional-red/raw.log",
+        "bytes": 15694,
+        "sha256": "beb1aaecb1ae11d3eb782852289f340455c63e729efbc354fc3bc4f6bb90e1b7"
+      },
+      "compilerLists": "compiler/ byte-exact originals; only Running report XML/txt counts tests",
+      "selector": "PortalEventsTlsDebtTest,PortalEventsTlsTest",
+      "exit": 1,
+      "running": [
+        "cn.agentplatform.gateway.infra.PortalEventsTlsDebtTest",
+        "cn.agentplatform.gateway.infra.PortalEventsTlsTest"
+      ],
+      "suites": [
+        {
+          "class": "cn.agentplatform.gateway.infra.PortalEventsTlsDebtTest",
+          "tests": 6,
+          "errors": 0,
+          "skipped": 0,
+          "failures": 6
+        },
+        {
+          "class": "cn.agentplatform.gateway.infra.PortalEventsTlsTest",
+          "tests": 1,
+          "errors": 0,
+          "skipped": 0,
+          "failures": 1
+        }
+      ],
+      "evidence": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-functional-red"
+    },
+    {
+      "stage": "iam-stage-o2b-f2a-nst",
+      "directory": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-nst",
+      "command": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-nst/command.json",
+        "bytes": 532,
+        "sha256": "09fd38ef5eae3fe88bea7b6cc5bc318619c75b5e1ed202cfe4dbeb50f1afd05e"
+      },
+      "result": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-nst/result.json",
+        "bytes": 379,
+        "sha256": "bc4dbc70cab403b2823dfa2b1317f9dfcc7170adc362a3bf1f29f88cc135808a"
+      },
+      "sourceEpoch": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-nst/source.json",
+        "bytes": 118270,
+        "sha256": "dc86ab8378f11f0270c291a8209775b29996fb2af4754c62aec6617970484bbc"
+      },
+      "raw": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-nst/raw.log",
+        "bytes": 5151,
+        "sha256": "a5583cb7222209982f273c33109540d8e42bf2875cbd6e61cbd144378eca9d7c"
+      },
+      "compilerLists": "compiler/ byte-exact originals; only Running report XML/txt counts tests",
+      "selector": "PortalEventsTlsTest#normalTicketsInterleaveWithoutReset",
+      "exit": 0,
+      "running": [
+        "cn.agentplatform.gateway.infra.PortalEventsTlsTest"
+      ],
+      "suites": [
+        {
+          "class": "cn.agentplatform.gateway.infra.PortalEventsTlsTest",
+          "tests": 1,
+          "errors": 0,
+          "skipped": 0,
+          "failures": 0
+        }
+      ],
+      "evidence": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-nst"
+    },
+    {
+      "stage": "iam-stage-o2b-f2a-overflow-red",
+      "directory": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-overflow-red",
+      "command": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-overflow-red/command.json",
+        "bytes": 595,
+        "sha256": "356750cca21271a4c918933ac623478016de5159e01026e3bd5a737c15df04d9"
+      },
+      "result": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-overflow-red/result.json",
+        "bytes": 414,
+        "sha256": "9902f2d6b7b234d889acdb612b39aad185fb0e6242d98c0cd8c0a227dcee78c1"
+      },
+      "sourceEpoch": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-overflow-red/source.json",
+        "bytes": 118270,
+        "sha256": "dd286aa2fcd6c402f3bb696d56eca642c1106319eb0c6c7b31532e8ff5cdbd40"
+      },
+      "raw": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-overflow-red/raw.log",
+        "bytes": 7315,
+        "sha256": "b282eddcd103c8ca086df90df015baf7e6f2b1e7fc553d44d35353dfca2d876a"
+      },
+      "compilerLists": "compiler/ byte-exact originals; only Running report XML/txt counts tests",
+      "selector": "PortalEventsTlsDebtTest#checkedCounterOverflowAbortsWithoutGrantingCredit",
+      "exit": 1,
+      "running": [
+        "cn.agentplatform.gateway.infra.PortalEventsTlsDebtTest"
+      ],
+      "suites": [
+        {
+          "class": "cn.agentplatform.gateway.infra.PortalEventsTlsDebtTest",
+          "tests": 1,
+          "errors": 0,
+          "skipped": 0,
+          "failures": 1
+        }
+      ],
+      "evidence": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-overflow-red"
+    },
+    {
+      "stage": "iam-stage-o2b-f2a-red",
+      "directory": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-red",
+      "command": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-red/command.json",
+        "bytes": 508,
+        "sha256": "5a11c5d2f34f1b9d85eee918cc82f56be448f653b3d78a5865f049150500c0c8"
+      },
+      "result": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-red/result.json",
+        "bytes": 592,
+        "sha256": "e29f190aa0ae3ceeec31a5ba4e91ebb2df7bb541f087078771b91aa2e78ae00c"
+      },
+      "sourceEpoch": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-red/source.json",
+        "bytes": 118265,
+        "sha256": "6da7ef376bbb76e075a4d4513bcab64827f803b3b014d1a02d5ad3cb2ad67951"
+      },
+      "raw": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-red/raw.log",
+        "bytes": 9685,
+        "sha256": "c3e6c00c70f6ccdfdf8fc964d55aa844b28c0101ec2396febab06bb7fd890d58"
+      },
+      "compilerLists": "compiler/ byte-exact originals; only Running report XML/txt counts tests",
+      "selector": "PortalEventsTlsDebtTest,PortalEventsTlsTest",
+      "exit": 1,
+      "running": [
+        "cn.agentplatform.gateway.infra.PortalEventsTlsDebtTest",
+        "cn.agentplatform.gateway.infra.PortalEventsTlsTest"
+      ],
+      "suites": [
+        {
+          "class": "cn.agentplatform.gateway.infra.PortalEventsTlsDebtTest",
+          "tests": 1,
+          "errors": 0,
+          "skipped": 0,
+          "failures": 1
+        },
+        {
+          "class": "cn.agentplatform.gateway.infra.PortalEventsTlsTest",
+          "tests": 1,
+          "errors": 1,
+          "skipped": 0,
+          "failures": 0
+        }
+      ],
+      "evidence": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-red"
+    },
+    {
+      "stage": "iam-stage-o2b-f2a-stream-guards",
+      "directory": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-stream-guards",
+      "command": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-stream-guards/command.json",
+        "bytes": 734,
+        "sha256": "2580eab31981cabeaa289ed07c03f34c92457150bbaed1647effc765460ddcbe"
+      },
+      "result": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-stream-guards/result.json",
+        "bytes": 475,
+        "sha256": "dd65a8df56f3f8fc46c12b15e3cb75bcd10dca2f5b16c432a83e1ffeb49b8082"
+      },
+      "sourceEpoch": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-stream-guards/source.json",
+        "bytes": 118270,
+        "sha256": "58a6cf29f15adbff6b30025e8e4f0c0e8afb624fdb04aaf68c7bf5d09e44e55e"
+      },
+      "raw": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-stream-guards/raw.log",
+        "bytes": 5862,
+        "sha256": "ff495a7be071de8b5da5f3492337eed47a7aa508941004b76c20f09a5e1abe60"
+      },
+      "compilerLists": "compiler/ byte-exact originals; only Running report XML/txt counts tests",
+      "selector": "PortalEventsTlsTest#realTlsTrafficKeepsCumulativeDebtAndOutputBounded,PortalEventsTlsTest#missingOrNetworkEnabledJvmProfileFailsBeforeAcquire",
+      "exit": 0,
+      "running": [
+        "cn.agentplatform.gateway.infra.PortalEventsTlsTest"
+      ],
+      "suites": [
+        {
+          "class": "cn.agentplatform.gateway.infra.PortalEventsTlsTest",
+          "tests": 8,
+          "errors": 0,
+          "skipped": 0,
+          "failures": 0
+        }
+      ],
+      "evidence": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-stream-guards"
+    },
+    {
+      "stage": "iam-stage-o2b-f2a-thresholds",
+      "directory": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-thresholds",
+      "command": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-thresholds/command.json",
+        "bytes": 721,
+        "sha256": "66e8e101f0e7a238a7d0db7e1cc89fe737ed052f4a2ae4b68a20e804dda34bd7"
+      },
+      "result": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-thresholds/result.json",
+        "bytes": 471,
+        "sha256": "33769430f21e0e609cf7bf13b10e12a3dd5b037bf288eb8679c0e6bf015e0dad"
+      },
+      "sourceEpoch": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-thresholds/source.json",
+        "bytes": 118270,
+        "sha256": "45d35d580ded75127e92e10e1ac0107d1d8019785f6b0aa67ce4090b4c5ae911"
+      },
+      "raw": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-thresholds/raw.log",
+        "bytes": 20537,
+        "sha256": "e5c4faccabed127d160f9ea40f4909276914545eba4b826a7b594cd02ce60cef"
+      },
+      "compilerLists": "compiler/ byte-exact originals; only Running report XML/txt counts tests",
+      "selector": "PortalEventsTlsTest#credentialOrProfileFailureDeliversNoApplication,PortalEventsTlsTest#validSignedPeerFixturesExerciseExactStaticThreshold",
+      "exit": 1,
+      "running": [
+        "cn.agentplatform.gateway.infra.PortalEventsTlsTest"
+      ],
+      "suites": [
+        {
+          "class": "cn.agentplatform.gateway.infra.PortalEventsTlsTest",
+          "tests": 12,
+          "errors": 0,
+          "skipped": 0,
+          "failures": 3
+        }
+      ],
+      "evidence": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-thresholds"
+    },
+    {
+      "stage": "iam-stage-o2b-f2a-thresholds-fixed",
+      "directory": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-thresholds-fixed",
+      "command": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-thresholds-fixed/command.json",
+        "bytes": 739,
+        "sha256": "7d32e980a4a46a5c99f1da81982b811096aebfc7b9db65c582884412b46f30b1"
+      },
+      "result": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-thresholds-fixed/result.json",
+        "bytes": 477,
+        "sha256": "113d1993389e2e02d1d80b5aa082b77622d11b3bda4de07fc38dbb315a84493f"
+      },
+      "sourceEpoch": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-thresholds-fixed/source.json",
+        "bytes": 118270,
+        "sha256": "fb72e6a5a4bee2d4a40d4d1a9f5597766b58823e585c0e23ffb09f76a9a99da7"
+      },
+      "raw": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-thresholds-fixed/raw.log",
+        "bytes": 5864,
+        "sha256": "5db4ea0c25e3427a9eacae7e83a58635dba0235f47c96b2e9eaa71ed4becb447"
+      },
+      "compilerLists": "compiler/ byte-exact originals; only Running report XML/txt counts tests",
+      "selector": "PortalEventsTlsTest#credentialOrProfileFailureDeliversNoApplication,PortalEventsTlsTest#validSignedPeerFixturesExerciseExactStaticThreshold",
+      "exit": 0,
+      "running": [
+        "cn.agentplatform.gateway.infra.PortalEventsTlsTest"
+      ],
+      "suites": [
+        {
+          "class": "cn.agentplatform.gateway.infra.PortalEventsTlsTest",
+          "tests": 12,
+          "errors": 0,
+          "skipped": 0,
+          "failures": 0
+        }
+      ],
+      "evidence": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-thresholds-fixed"
+    },
+    {
+      "stage": "iam-stage-o2b-f2a-tls-red",
+      "directory": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-tls-red",
+      "command": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-tls-red/command.json",
+        "bytes": 472,
+        "sha256": "5cf8702d606464b6ef068cbdef7fe8b3e9c47595b1b2d7561e990df0b26de07c"
+      },
+      "result": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-tls-red/result.json",
+        "bytes": 347,
+        "sha256": "96677bf756f3ca4ff2a425d6028f4d50a05ced7c15c8f4c2129b50c35c8cb24b"
+      },
+      "sourceEpoch": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-tls-red/source.json",
+        "bytes": 118265,
+        "sha256": "98d522e275f4add2adaeb188a7ff784f597e6b488b6905d39bf6fa821a7cd019"
+      },
+      "raw": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-tls-red/raw.log",
+        "bytes": 7485,
+        "sha256": "66b7e9339e85b98f2537a06ef4cae5e285fc5c7263e6e94bbe5a268cf0ea92ef"
+      },
+      "compilerLists": "compiler/ byte-exact originals; only Running report XML/txt counts tests",
+      "selector": "PortalEventsTlsTest",
+      "exit": 1,
+      "running": [
+        "cn.agentplatform.gateway.infra.PortalEventsTlsTest"
+      ],
+      "suites": [
+        {
+          "class": "cn.agentplatform.gateway.infra.PortalEventsTlsTest",
+          "tests": 1,
+          "errors": 0,
+          "skipped": 0,
+          "failures": 1
+        }
+      ],
+      "evidence": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-tls-red"
+    },
+    {
+      "stage": "iam-stage-o2b-f2a-traffic",
+      "directory": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-traffic",
+      "command": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-traffic/command.json",
+        "bytes": 860,
+        "sha256": "c940062d99f54dedbfce25add2e5a36b3cb5c100f4e64a81af06625215f99ec1"
+      },
+      "result": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-traffic/result.json",
+        "bytes": 541,
+        "sha256": "054efc2b8a93ea5ac0f51cdcaab9bd909377492d602f771d117105e0080e9ee2"
+      },
+      "sourceEpoch": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-traffic/source.json",
+        "bytes": 118270,
+        "sha256": "6c872a9ca618975d3dc0fba8b47d33ea688f3be4a2656ade900b0c996efa5cf1"
+      },
+      "raw": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-traffic/raw.log",
+        "bytes": 267329,
+        "sha256": "d18e962e0bae213668f0eb5677f4121481fa3364fdff7b58886523b090a81570"
+      },
+      "compilerLists": "compiler/ byte-exact originals; only Running report XML/txt counts tests",
+      "selector": "PortalEventsTlsTest#realTlsTrafficKeepsCumulativeDebtAndOutputBounded,PortalEventsTlsTest#mechanicalLifecycleAndConfigurationHaveNoAuthorityBypass,PortalEventsTlsTest#missingJvmProfileDeclarationFailsBeforeAcquire",
+      "exit": 1,
+      "running": [
+        "cn.agentplatform.gateway.infra.PortalEventsTlsTest"
+      ],
+      "suites": [
+        {
+          "class": "cn.agentplatform.gateway.infra.PortalEventsTlsTest",
+          "tests": 7,
+          "errors": 0,
+          "skipped": 0,
+          "failures": 1
+        }
+      ],
+      "evidence": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-traffic"
+    },
+    {
+      "stage": "iam-stage-o2b-f2a-traffic-fixed",
+      "directory": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-traffic-fixed",
+      "command": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-traffic-fixed/command.json",
+        "bytes": 590,
+        "sha256": "b9266d1de1ecaa350460953b50377fdbb8b49293faf5440e91aaf0874a74f9f4"
+      },
+      "result": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-traffic-fixed/result.json",
+        "bytes": 403,
+        "sha256": "a94065e4d04b4e10c4b2a245f38f64309cf619db434c3caf2bd2dda31b9d1783"
+      },
+      "sourceEpoch": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-traffic-fixed/source.json",
+        "bytes": 118270,
+        "sha256": "3e1b48249d3e16021350862471a5485b560eb7b525424428fc586f746de0f703"
+      },
+      "raw": {
+        "file": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-traffic-fixed/raw.log",
+        "bytes": 10419,
+        "sha256": "8c98a71cf4151f70169532f894cece520b737898e7f67045b160f1df0b137d5c"
+      },
+      "compilerLists": "compiler/ byte-exact originals; only Running report XML/txt counts tests",
+      "selector": "PortalEventsTlsTest#realTlsTrafficKeepsCumulativeDebtAndOutputBounded",
+      "exit": 1,
+      "running": [
+        "cn.agentplatform.gateway.infra.PortalEventsTlsTest"
+      ],
+      "suites": [
+        {
+          "class": "cn.agentplatform.gateway.infra.PortalEventsTlsTest",
+          "tests": 5,
+          "errors": 0,
+          "skipped": 0,
+          "failures": 1
+        }
+      ],
+      "evidence": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-traffic-fixed"
+    }
+  ],
+  "ownedRoots": [
+    ".local/iam-o2b-f2a-tls/",
+    "docs/evidence/iam-stage-4-o2b-f2a-tls/",
+    "docs/evidence/iam-stage-4-o2b-f2a-tls-report.md",
+    ".tools/iam-o2b-f2a-*",
+    ".local/iam-stage-o2b-f2a-*.log",
+    "six exact sourceWrites",
+    "finite target-overlay and new diagnostic manifest paths"
+  ],
+  "ownInventory": {
+    "file": "docs/evidence/iam-stage-4-o2b-f2a-tls/own-inventory.json",
+    "count": 5311,
+    "schema": "array file bytes sha256; includes handoff/privateGit/all owned, excludes only itself; SHA returned in final author message for root cache"
+  },
+  "patch": {
+    "file": "docs/evidence/iam-stage-4-o2b-f2a-tls/source.binary.patch",
+    "bytes": 168795,
+    "sha256": "5750a5a06134782abb070e3e32994239daa77b7babd6fd8a4b2c192dd342dec6",
+    "generationExecutions": 1,
+    "checkExecutions": 1,
+    "applyExecutions": 1,
+    "fullReplayAfterVerified": 618,
+    "postApplySourceCopy": false
+  },
+  "limitations": [
+    "production launcher/assembly H-chain-AIA static initialization not accepted",
+    "No complete TLS heap/JCE/native/global X509 cache or 16MiB/full-chain 192MiB proof",
+    "Normal NST10 and real KeyUpdate tested; arbitrary ticket flood not exhaustively tested",
+    "No Apache HTTP/Q, receipt G-current, public SSE, real engine/issuer/PG or deployment acceptance",
+    "13 preserved Windows Surefire path diagnostics and old-source deprecation warnings"
+  ],
+  "rights": {
+    "source": "returned after this handoff and inventory freeze",
+    "target": "returned after this handoff and inventory freeze",
+    "ownedArtifacts": "frozen and returned; no further author writes",
+    "noCommit": true,
+    "noSuccessfulFinalRerun": true
+  },
+  "reviewReady": true
+}

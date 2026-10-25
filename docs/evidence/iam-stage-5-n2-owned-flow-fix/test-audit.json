@@ -1,0 +1,274 @@
+[
+  {
+    "stage": "iam-stage-5-n2-fix-red01",
+    "raw": {
+      "file": "docs/evidence/iam-stage-5-n2-owned-flow-fix/iam-stage-5-n2-fix-red01/raw.log",
+      "bytes": 11846,
+      "sha256": "ba93643e68f68b5e209e204256bc65d5fa5aad0780e2b5a09fad4f3bd5ecf47e"
+    },
+    "manifest": {
+      "file": "docs/evidence/iam-stage-5-n2-owned-flow-fix/iam-stage-5-n2-fix-red01/manifest.json",
+      "bytes": 101901,
+      "sha256": "d8d03bd4e232ac7718ccb1f66a1e4e057debbce9153e61832ce6d45282f0a171"
+    },
+    "sourceCount": 364,
+    "running": [
+      "cn.agentplatform.engine.infra.OwnedFlowSchedulerPostgresTest"
+    ],
+    "xml": [
+      {
+        "name": "cn.agentplatform.engine.infra.OwnedFlowSchedulerPostgresTest",
+        "tests": 4,
+        "failures": 3,
+        "errors": 0,
+        "skipped": 0,
+        "perTest": [
+          {
+            "name": "missingSnapshotTypeNeverStartsOwnedWorker",
+            "warnings": []
+          },
+          {
+            "name": "nullSnapshotTypeNeverStartsOwnedWorker",
+            "warnings": []
+          },
+          {
+            "name": "chatSnapshotTypeNeverStartsOwnedWorker",
+            "warnings": [
+              "21:34:20.599 [virtual-143] WARN cn.agentplatform.engine.application.RunScheduler -- Scheduler operation failed: PlatformException"
+            ]
+          },
+          {
+            "name": "unknownSnapshotTypeNeverStartsOwnedWorker",
+            "warnings": []
+          }
+        ],
+        "file": "docs/evidence/iam-stage-5-n2-owned-flow-fix/iam-stage-5-n2-fix-red01/xml/engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.OwnedFlowSchedulerPostgresTest.xml",
+        "bytes": 50992,
+        "sha256": "e01ba02e0a6a33f68f7b4e3a44818347ddd4ce208c91c70700d7e8cb200a5a20"
+      }
+    ],
+    "totals": {
+      "tests": 4,
+      "failures": 3,
+      "errors": 0,
+      "skipped": 0
+    },
+    "warnings": [
+      "21:34:20.599 [virtual-143] WARN cn.agentplatform.engine.application.RunScheduler -- Scheduler operation failed: PlatformException"
+    ],
+    "incidental": 64,
+    "summary": [
+      "N2_FIX_REUSED_DATABASE=agent_platform_iam_owned_flow_v12",
+      "N2_FIX_TYPE=missing,STATUS=SUCCEEDED,STARTED=1,ATTEMPTS=2,EXECUTIONS=2,NODE_OUTPUTS=2,RUN_OUTPUT=true,AUTHORIZED_PAYLOAD_READ_DELTA=207",
+      "N2_FIX_TYPE=json-null,STATUS=SUCCEEDED,STARTED=1,ATTEMPTS=2,EXECUTIONS=2,NODE_OUTPUTS=2,RUN_OUTPUT=true,AUTHORIZED_PAYLOAD_READ_DELTA=207",
+      "N2_FIX_TYPE=CHAT,STATUS=PENDING,STARTED=0,ATTEMPTS=0,EXECUTIONS=0,NODE_OUTPUTS=0,RUN_OUTPUT=false,AUTHORIZED_PAYLOAD_READ_DELTA=15",
+      "N2_FIX_TYPE=UNKNOWN,STATUS=SUCCEEDED,STARTED=1,ATTEMPTS=2,EXECUTIONS=2,NODE_OUTPUTS=2,RUN_OUTPUT=true,AUTHORIZED_PAYLOAD_READ_DELTA=207",
+      "[ERROR] Tests run: 4, Failures: 3, Errors: 0, Skipped: 0, Time elapsed: 15.83 s <<< FAILURE! -- in cn.agentplatform.engine.infra.OwnedFlowSchedulerPostgresTest",
+      "[ERROR] Tests run: 4, Failures: 3, Errors: 0, Skipped: 0",
+      "[INFO] BUILD FAILURE"
+    ]
+  },
+  {
+    "stage": "iam-stage-5-n2-fix-final01",
+    "raw": {
+      "file": "docs/evidence/iam-stage-5-n2-owned-flow-fix/iam-stage-5-n2-fix-final01/raw.log",
+      "bytes": 36460,
+      "sha256": "d6d67c8dd9bea84a2a138c841fd34dbb5f89758c9ffa40f4ef3f73b41d0ed10c"
+    },
+    "manifest": {
+      "file": "docs/evidence/iam-stage-5-n2-owned-flow-fix/iam-stage-5-n2-fix-final01/manifest.json",
+      "bytes": 104104,
+      "sha256": "647f850c9a3e09df425ab0d4cb87a2a0ea5ca9087fc3ef7205d9e266a0a16b1f"
+    },
+    "sourceCount": 364,
+    "running": [
+      "cn.agentplatform.engine.infra.OwnedFlowMaterialsPostgresTest",
+      "cn.agentplatform.engine.infra.OwnedFlowSchedulerPostgresTest"
+    ],
+    "xml": [
+      {
+        "name": "cn.agentplatform.engine.infra.OwnedFlowMaterialsPostgresTest",
+        "tests": 15,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "perTest": [
+          {
+            "name": "lastNodePostCommitProofExpiryLeavesGrantUsableAndAggregateOnlyNewCurrentNeverRerunsNode",
+            "warnings": [
+              "21:35:24.479 [virtual-79] WARN cn.agentplatform.engine.application.RunScheduler -- Scheduler operation failed: PlatformException"
+            ]
+          },
+          {
+            "name": "oldDispatchCannotCommitOrFailForNewGenerationAndControlRenewalsPreserveDigest",
+            "warnings": []
+          },
+          {
+            "name": "conditionAllAnyAndErrorEdgesUseActualWinnerExclusiveAndSharedBranches",
+            "warnings": []
+          },
+          {
+            "name": "dispatchExpiryDuringFailureScopesRollsBackBeforeActualFailureCommit",
+            "warnings": []
+          },
+          {
+            "name": "actualNodeLockOutlivingDispatchRejectsBeforePayload",
+            "warnings": []
+          },
+          {
+            "name": "nodeCasZeroDefaultHasNoErrorOrSuccessScopeButValidDispatchFailRetainsAttemptFact",
+            "warnings": []
+          },
+          {
+            "name": "workerCommitInfrastructureFaultNeverEntersBusinessFallbackOrFailure",
+            "warnings": [
+              "21:35:55.290 [virtual-325] WARN cn.agentplatform.engine.application.RunScheduler -- Scheduler operation failed: UncategorizedSQLException"
+            ]
+          },
+          {
+            "name": "defaultErrorOutputAttemptAndEventsCommitTogetherAndEveryActualScopeFaultRollsBack",
+            "warnings": []
+          },
+          {
+            "name": "executionUsesOnlyMaterializedWorkAndItsRealAttemptPreservesPreviouslyConsumedParents",
+            "warnings": []
+          },
+          {
+            "name": "aggregateOutputAndTerminalEventScopeFaultsRollBackEntireAggregate",
+            "warnings": []
+          },
+          {
+            "name": "realPgSerializationFailureKeepsOriginalTypeAndRollsBackInsteadOfFallbackOr503",
+            "warnings": []
+          },
+          {
+            "name": "aggregateSeesItsOwnPrepareChangesAndDistinguishesSqlNullEndFromJsonNull",
+            "warnings": []
+          },
+          {
+            "name": "budgetStopRejectsCallerSuppliedBudgetReasonWhenActualBudgetIsStillAvailable",
+            "warnings": []
+          },
+          {
+            "name": "callbackProofExpiryRollsBackDefaultFactsAndNeverBecomesBusinessFailure",
+            "warnings": []
+          },
+          {
+            "name": "budgetPrecheckCommitsPrepareWinnerWithoutAttemptOrConsumptionAndBudgetStopIsAtomic",
+            "warnings": []
+          }
+        ],
+        "file": "docs/evidence/iam-stage-5-n2-owned-flow-fix/iam-stage-5-n2-fix-final01/xml/engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.OwnedFlowMaterialsPostgresTest.xml",
+        "bytes": 66195,
+        "sha256": "d6b9dcf0b0a6428a9e4498fd3341ad286d1bbe045bef46b74e67766ffdd4e6d5"
+      },
+      {
+        "name": "cn.agentplatform.engine.infra.OwnedFlowSchedulerPostgresTest",
+        "tests": 10,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "perTest": [
+          {
+            "name": "legacyOriginalSchedulerAndFlowRemainFunctionalButExplicitProtectedQueueRejectsMissingAuthority",
+            "warnings": []
+          },
+          {
+            "name": "missingAuthorityCapabilityAndUnsupportedNodesNeverUseLegacyOrAgentDriver",
+            "warnings": [
+              "21:36:59.722 [virtual-928] WARN cn.agentplatform.engine.application.RunScheduler -- Scheduler operation failed: PlatformException",
+              "21:37:01.529 [virtual-954] WARN cn.agentplatform.engine.application.RunScheduler -- Scheduler operation failed: PlatformException",
+              "21:37:04.558 [virtual-981] WARN cn.agentplatform.engine.application.RunScheduler -- Scheduler operation failed: PlatformException",
+              "21:37:07.826 [virtual-1006] WARN cn.agentplatform.engine.application.RunScheduler -- Scheduler operation failed: PlatformException",
+              "21:37:10.828 [virtual-1033] WARN cn.agentplatform.engine.application.RunScheduler -- Scheduler operation failed: PlatformException",
+              "21:37:13.726 [virtual-1059] WARN cn.agentplatform.engine.application.RunScheduler -- Scheduler operation failed: PlatformException",
+              "21:37:15.628 [virtual-1084] WARN cn.agentplatform.engine.application.RunScheduler -- Scheduler operation failed: PlatformException"
+            ]
+          },
+          {
+            "name": "protectedClaimOnlyOwnsDispatchBeforeCurrentAndReadsNoPayload",
+            "warnings": []
+          },
+          {
+            "name": "missingSnapshotTypeNeverStartsOwnedWorker",
+            "warnings": [
+              "21:37:19.896 [virtual-1135] WARN cn.agentplatform.engine.application.RunScheduler -- Scheduler operation failed: PlatformException"
+            ]
+          },
+          {
+            "name": "grantExpiryAndPersistentDenialAreExcludedByBothClaimPathsWithoutPayloadOrNetwork",
+            "warnings": []
+          },
+          {
+            "name": "current403And503MakeZeroPayloadAttemptAndStartAndBackoffBothQueueEntrypoints",
+            "warnings": [
+              "21:37:25.810 [virtual-1212] WARN cn.agentplatform.engine.application.RunScheduler -- Scheduler operation failed: PlatformException",
+              "21:37:27.931 [virtual-1238] WARN cn.agentplatform.engine.application.RunScheduler -- Scheduler operation failed: PlatformException"
+            ]
+          },
+          {
+            "name": "nullSnapshotTypeNeverStartsOwnedWorker",
+            "warnings": [
+              "21:37:31.703 [virtual-1266] WARN cn.agentplatform.engine.application.RunScheduler -- Scheduler operation failed: PlatformException"
+            ]
+          },
+          {
+            "name": "chatSnapshotTypeNeverStartsOwnedWorker",
+            "warnings": [
+              "21:37:34.111 [virtual-1292] WARN cn.agentplatform.engine.application.RunScheduler -- Scheduler operation failed: PlatformException"
+            ]
+          },
+          {
+            "name": "originalReserveCreatedAndPollRunServiceFlowDriverCompleteExpiredPortalThroughDelegated",
+            "warnings": []
+          },
+          {
+            "name": "unknownSnapshotTypeNeverStartsOwnedWorker",
+            "warnings": [
+              "21:37:40.049 [virtual-1345] WARN cn.agentplatform.engine.application.RunScheduler -- Scheduler operation failed: PlatformException"
+            ]
+          }
+        ],
+        "file": "docs/evidence/iam-stage-5-n2-owned-flow-fix/iam-stage-5-n2-fix-final01/xml/engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.OwnedFlowSchedulerPostgresTest.xml",
+        "bytes": 59243,
+        "sha256": "a48cecd187451d5011a0c5de9a558bf2412aa2d48f5d1251afe1f8601c2e31c4"
+      }
+    ],
+    "totals": {
+      "tests": 25,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "warnings": [
+      "21:35:24.479 [virtual-79] WARN cn.agentplatform.engine.application.RunScheduler -- Scheduler operation failed: PlatformException",
+      "21:35:55.290 [virtual-325] WARN cn.agentplatform.engine.application.RunScheduler -- Scheduler operation failed: UncategorizedSQLException",
+      "21:36:59.722 [virtual-928] WARN cn.agentplatform.engine.application.RunScheduler -- Scheduler operation failed: PlatformException",
+      "21:37:01.529 [virtual-954] WARN cn.agentplatform.engine.application.RunScheduler -- Scheduler operation failed: PlatformException",
+      "21:37:04.558 [virtual-981] WARN cn.agentplatform.engine.application.RunScheduler -- Scheduler operation failed: PlatformException",
+      "21:37:07.826 [virtual-1006] WARN cn.agentplatform.engine.application.RunScheduler -- Scheduler operation failed: PlatformException",
+      "21:37:10.828 [virtual-1033] WARN cn.agentplatform.engine.application.RunScheduler -- Scheduler operation failed: PlatformException",
+      "21:37:13.726 [virtual-1059] WARN cn.agentplatform.engine.application.RunScheduler -- Scheduler operation failed: PlatformException",
+      "21:37:15.628 [virtual-1084] WARN cn.agentplatform.engine.application.RunScheduler -- Scheduler operation failed: PlatformException",
+      "21:37:19.896 [virtual-1135] WARN cn.agentplatform.engine.application.RunScheduler -- Scheduler operation failed: PlatformException",
+      "21:37:25.810 [virtual-1212] WARN cn.agentplatform.engine.application.RunScheduler -- Scheduler operation failed: PlatformException",
+      "21:37:27.931 [virtual-1238] WARN cn.agentplatform.engine.application.RunScheduler -- Scheduler operation failed: PlatformException",
+      "21:37:31.703 [virtual-1266] WARN cn.agentplatform.engine.application.RunScheduler -- Scheduler operation failed: PlatformException",
+      "21:37:34.111 [virtual-1292] WARN cn.agentplatform.engine.application.RunScheduler -- Scheduler operation failed: PlatformException",
+      "21:37:40.049 [virtual-1345] WARN cn.agentplatform.engine.application.RunScheduler -- Scheduler operation failed: PlatformException"
+    ],
+    "incidental": 63,
+    "summary": [
+      "N2_FIX_REUSED_DATABASE=agent_platform_iam_owned_flow_v12",
+      "[INFO] Tests run: 15, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 94.62 s -- in cn.agentplatform.engine.infra.OwnedFlowMaterialsPostgresTest",
+      "N2_FIX_REUSED_DATABASE=agent_platform_iam_owned_flow_v12",
+      "N2_FIX_TYPE=missing,STATUS=PENDING,STARTED=0,ATTEMPTS=0,EXECUTIONS=0,NODE_OUTPUTS=0,RUN_OUTPUT=false,AUTHORIZED_PAYLOAD_READ_DELTA=15",
+      "N2_FIX_TYPE=json-null,STATUS=PENDING,STARTED=0,ATTEMPTS=0,EXECUTIONS=0,NODE_OUTPUTS=0,RUN_OUTPUT=false,AUTHORIZED_PAYLOAD_READ_DELTA=15",
+      "N2_FIX_TYPE=CHAT,STATUS=PENDING,STARTED=0,ATTEMPTS=0,EXECUTIONS=0,NODE_OUTPUTS=0,RUN_OUTPUT=false,AUTHORIZED_PAYLOAD_READ_DELTA=15",
+      "N2_FIX_TYPE=UNKNOWN,STATUS=PENDING,STARTED=0,ATTEMPTS=0,EXECUTIONS=0,NODE_OUTPUTS=0,RUN_OUTPUT=false,AUTHORIZED_PAYLOAD_READ_DELTA=15",
+      "[INFO] Tests run: 10, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 45.59 s -- in cn.agentplatform.engine.infra.OwnedFlowSchedulerPostgresTest",
+      "[INFO] Tests run: 25, Failures: 0, Errors: 0, Skipped: 0",
+      "[INFO] BUILD SUCCESS"
+    ]
+  }
+]

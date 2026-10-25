@@ -1,0 +1,1068 @@
+{
+  "from": {
+    "file": "docs/evidence/iam-stage-4-o1a-run-metadata/iam-stage-o1a-green03/runner.log",
+    "bytes": 41085,
+    "sha256": "9b7bb6c1a765e92aa222ba9d7e6ba2c07a98a9e253efcceb6f3d6e2f6cc7aad4"
+  },
+  "observations": [
+    {
+      "kind": "O1A_DB",
+      "value": {
+        "existed": true,
+        "migrationCount": 18,
+        "database": "agent_platform_iam_o1a_metadata_v12"
+      }
+    },
+    {
+      "kind": "O1A_HTTP_READY",
+      "value": {
+        "pid": 60128,
+        "port": 59903
+      }
+    },
+    {
+      "kind": "O1A_CLAIM_REJECTION",
+      "value": {
+        "metadataSql": 0,
+        "authorityDelta": 0,
+        "status": 403,
+        "field": "action"
+      }
+    },
+    {
+      "kind": "O1A_CLAIM_REJECTION",
+      "value": {
+        "metadataSql": 0,
+        "authorityDelta": 0,
+        "status": 401,
+        "field": "caller"
+      }
+    },
+    {
+      "kind": "O1A_CLAIM_REJECTION",
+      "value": {
+        "metadataSql": 0,
+        "authorityDelta": 0,
+        "status": 401,
+        "field": "target"
+      }
+    },
+    {
+      "kind": "O1A_CLAIM_REJECTION",
+      "value": {
+        "metadataSql": 0,
+        "authorityDelta": 0,
+        "status": 401,
+        "field": "authority_mode"
+      }
+    },
+    {
+      "kind": "O1A_CLAIM_REJECTION",
+      "value": {
+        "metadataSql": 0,
+        "authorityDelta": 0,
+        "status": 403,
+        "field": "source_kind"
+      }
+    },
+    {
+      "kind": "O1A_CLAIM_REJECTION",
+      "value": {
+        "metadataSql": 0,
+        "authorityDelta": 0,
+        "status": 403,
+        "field": "origin_kind"
+      }
+    },
+    {
+      "kind": "O1A_CASE",
+      "value": {
+        "rawQueries": [],
+        "test": "wrongPurposeClaimsAndQueryTicketOnOtherRoutesFailBeforeMetadata()",
+        "controllerBoundaries": 0,
+        "sql": [],
+        "authorityCalls": 4
+      }
+    },
+    {
+      "kind": "O1A_SUCCESS",
+      "value": {
+        "observedAuthorityOperations": [
+          "exchange",
+          "authorize",
+          "authorize",
+          "exchange",
+          "authorize",
+          "authorize"
+        ],
+        "authorityDelta": 2,
+        "dataUtf8Bytes": 485,
+        "sql": [
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id,r.principal_id,r.trigger_type,r.mode,(r.debug_snapshot is not null or r.eval_candidate is not null or r.controlled_draft_skill_version_id is not null or r.controlled_draft_skill_digest is not null or r.controlled_skill_test_version_id is not null or r.controlled_skill_test_digest is not null or r.controlled_skill_test_status is not null) as unsupported,exists(select 1 from engine.tool_call t where t.run_id=r.id) as has_tools from engine.run r where r.public_id=? and r.tenant_id=? and r.principal_id=?",
+            "connection": 2012670393,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          },
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id as run_tenant,r.principal_id as run_principal,r.app_code,r.app_version_id as run_version,a.* from engine.run r join engine.run_authority a on a.run_id=r.id where r.id=?",
+            "connection": 2012670393,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          },
+          {
+            "sql": "select tenant_id,producer,kind,material_id,material_version,payload_sha256,scope_sha256,scope::text as scope from engine.material_scope where run_id=? and kind in ('run-snapshot','run-inputs','run-version-refs')",
+            "connection": 2012670393,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          }
+        ],
+        "httpHandlers": 1,
+        "response": {
+          "code": "OK",
+          "message": "",
+          "data": {
+            "runId": "r_b6fb3cf9a67246b089795717270c63f0",
+            "owner": {
+              "tenantId": "o1a-6d72b630-9245-44cf-b403-88822f941395",
+              "principalId": "alice"
+            },
+            "root": {
+              "kind": "app-version",
+              "id": "app-a@1",
+              "versionDigest": "dda18a0e21ae47c53b4309434cbc02ae8bf764fa83a6defbb719431242722aa7"
+            },
+            "appVersionId": 4294967297,
+            "appVersionNo": 1,
+            "acceptedSnapshotSha256": "bd0f3e1b2ba64319b992c0316382a82cad124a4a330269f7feca112a44223fc5",
+            "initialCeilingSha256": "661f2da53a2f9faba2d5f513d0bc8e7d52094333d18e31ecc15516d31ceb7d82"
+          },
+          "traceId": null
+        }
+      }
+    },
+    {
+      "kind": "O1A_EFFECTS",
+      "value": {
+        "before": {
+          "runs": 50,
+          "nodes": 0,
+          "attempts": 0,
+          "events": 0,
+          "tools": 0
+        },
+        "workerBeans": 0,
+        "after": {
+          "runs": 50,
+          "nodes": 0,
+          "attempts": 0,
+          "events": 0,
+          "tools": 0
+        },
+        "runtimeClientBeans": 0
+      }
+    },
+    {
+      "kind": "O1A_CASE",
+      "value": {
+        "rawQueries": [
+          "<null>"
+        ],
+        "test": "actualHttpProjectsSevenFieldsFromReadOnlyRepeatableReadWithoutPayload()",
+        "controllerBoundaries": 1,
+        "sql": [
+          {
+            "sql": "select check_version,blocked_reason,last_decision_id from engine.run_authority where run_id=?",
+            "connection": 97394375,
+            "isolation": 2,
+            "readOnly": false,
+            "autoCommit": true
+          },
+          {
+            "sql": "select (select count(*) from engine.run) as runs,(select count(*) from engine.node_instance) as nodes,(select count(*) from engine.attempt) as attempts,(select count(*) from engine.run_event) as events,(select count(*) from engine.tool_call) as tools",
+            "connection": 1493446952,
+            "isolation": 2,
+            "readOnly": false,
+            "autoCommit": true
+          }
+        ],
+        "authorityCalls": 6
+      }
+    },
+    {
+      "kind": "O1A_CASE",
+      "value": {
+        "rawQueries": [],
+        "test": "actualMappingWithoutInstalledGuardFailsStartupBeforeListening()",
+        "controllerBoundaries": 0,
+        "sql": [],
+        "authorityCalls": 0
+      }
+    },
+    {
+      "kind": "O1A_PG_ILLEGAL_CONTROL",
+      "value": {
+        "column": "root_kind",
+        "sql": [
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id,r.principal_id,r.trigger_type,r.mode,(r.debug_snapshot is not null or r.eval_candidate is not null or r.controlled_draft_skill_version_id is not null or r.controlled_draft_skill_digest is not null or r.controlled_skill_test_version_id is not null or r.controlled_skill_test_digest is not null or r.controlled_skill_test_status is not null) as unsupported,exists(select 1 from engine.tool_call t where t.run_id=r.id) as has_tools from engine.run r where r.public_id=? and r.tenant_id=? and r.principal_id=?",
+            "connection": 1310599462,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          },
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id as run_tenant,r.principal_id as run_principal,r.app_code,r.app_version_id as run_version,a.* from engine.run r join engine.run_authority a on a.run_id=r.id where r.id=?",
+            "connection": 1310599462,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          }
+        ],
+        "status": 403
+      }
+    },
+    {
+      "kind": "O1A_PG_ILLEGAL_CONTROL",
+      "value": {
+        "column": "resource_digest",
+        "sql": [
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id,r.principal_id,r.trigger_type,r.mode,(r.debug_snapshot is not null or r.eval_candidate is not null or r.controlled_draft_skill_version_id is not null or r.controlled_draft_skill_digest is not null or r.controlled_skill_test_version_id is not null or r.controlled_skill_test_digest is not null or r.controlled_skill_test_status is not null) as unsupported,exists(select 1 from engine.tool_call t where t.run_id=r.id) as has_tools from engine.run r where r.public_id=? and r.tenant_id=? and r.principal_id=?",
+            "connection": 116702877,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          },
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id as run_tenant,r.principal_id as run_principal,r.app_code,r.app_version_id as run_version,a.* from engine.run r join engine.run_authority a on a.run_id=r.id where r.id=?",
+            "connection": 116702877,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          }
+        ],
+        "status": 403
+      }
+    },
+    {
+      "kind": "O1A_CASE",
+      "value": {
+        "rawQueries": [
+          "<null>",
+          "<null>"
+        ],
+        "test": "actualInvalidDigestAndRootKindInPostgresAreDeniedWithoutReadingPayload()",
+        "controllerBoundaries": 2,
+        "sql": [
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id,r.principal_id,r.trigger_type,r.mode,(r.debug_snapshot is not null or r.eval_candidate is not null or r.controlled_draft_skill_version_id is not null or r.controlled_draft_skill_digest is not null or r.controlled_skill_test_version_id is not null or r.controlled_skill_test_digest is not null or r.controlled_skill_test_status is not null) as unsupported,exists(select 1 from engine.tool_call t where t.run_id=r.id) as has_tools from engine.run r where r.public_id=? and r.tenant_id=? and r.principal_id=?",
+            "connection": 116702877,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          },
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id as run_tenant,r.principal_id as run_principal,r.app_code,r.app_version_id as run_version,a.* from engine.run r join engine.run_authority a on a.run_id=r.id where r.id=?",
+            "connection": 116702877,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          },
+          {
+            "sql": "alter table engine.run disable trigger user",
+            "connection": 1486260637,
+            "isolation": 2,
+            "readOnly": false,
+            "autoCommit": false
+          },
+          {
+            "sql": "alter table engine.run_authority disable trigger user",
+            "connection": 1486260637,
+            "isolation": 2,
+            "readOnly": false,
+            "autoCommit": false
+          },
+          {
+            "sql": "alter table engine.material_scope disable trigger user",
+            "connection": 1486260637,
+            "isolation": 2,
+            "readOnly": false,
+            "autoCommit": false
+          },
+          {
+            "sql": "update engine.run_authority set resource_digest='dda18a0e21ae47c53b4309434cbc02ae8bf764fa83a6defbb719431242722aa7' where run_id=?",
+            "connection": 1486260637,
+            "isolation": 2,
+            "readOnly": false,
+            "autoCommit": false
+          },
+          {
+            "sql": "alter table engine.material_scope enable trigger user",
+            "connection": 1486260637,
+            "isolation": 2,
+            "readOnly": false,
+            "autoCommit": false
+          },
+          {
+            "sql": "alter table engine.run_authority enable trigger user",
+            "connection": 1486260637,
+            "isolation": 2,
+            "readOnly": false,
+            "autoCommit": false
+          },
+          {
+            "sql": "alter table engine.run enable trigger user",
+            "connection": 1486260637,
+            "isolation": 2,
+            "readOnly": false,
+            "autoCommit": false
+          },
+          {
+            "sql": "alter table engine.run_authority add constraint run_authority_resource_digest_check check (resource_digest ~ '^[a-f0-9]{64}$')",
+            "connection": 1258442674,
+            "isolation": 2,
+            "readOnly": false,
+            "autoCommit": true
+          }
+        ],
+        "authorityCalls": 12
+      }
+    },
+    {
+      "kind": "O1A_REFRESH_REJECTION",
+      "value": {
+        "metadataSql": 0,
+        "authorityDelta": 2,
+        "status": 403,
+        "failure": "revoked"
+      }
+    },
+    {
+      "kind": "O1A_REFRESH_REJECTION",
+      "value": {
+        "metadataSql": 0,
+        "authorityDelta": 1,
+        "status": 503,
+        "failure": "outage"
+      }
+    },
+    {
+      "kind": "O1A_REFRESH_REJECTION",
+      "value": {
+        "metadataSql": 0,
+        "authorityDelta": 1,
+        "status": 403,
+        "failure": "local-proof-expired"
+      }
+    },
+    {
+      "kind": "O1A_CASE",
+      "value": {
+        "rawQueries": [
+          "<null>",
+          "<null>",
+          "<null>"
+        ],
+        "test": "currentRefreshInsideServiceFailsBeforeOpeningDatabaseSnapshot()",
+        "controllerBoundaries": 3,
+        "sql": [],
+        "authorityCalls": 10
+      }
+    },
+    {
+      "kind": "O1A_RAW",
+      "value": {
+        "queryString": "x=1",
+        "responseStatus": "HTTP/1.1 400 ",
+        "requestTarget": "/internal/runs/r_68989b97729e4da0bb6dd317e1d68d4b/observation-metadata?x=1"
+      }
+    },
+    {
+      "kind": "O1A_RAW",
+      "value": {
+        "queryString": "",
+        "responseStatus": "HTTP/1.1 400 ",
+        "requestTarget": "/internal/runs/r_68989b97729e4da0bb6dd317e1d68d4b/observation-metadata?"
+      }
+    },
+    {
+      "kind": "O1A_CASE",
+      "value": {
+        "rawQueries": [
+          "x=1",
+          "",
+          "<null>",
+          "<null>"
+        ],
+        "test": "rawQueryBareQuestionBodyAndDispatcherAreRejectedAtRealHandlerBoundary()",
+        "controllerBoundaries": 4,
+        "sql": [],
+        "authorityCalls": 8
+      }
+    },
+    {
+      "kind": "O1A_CASE",
+      "value": {
+        "rawQueries": [],
+        "test": "ambientTransactionIsRejectedBeforeOnlineRefreshAndLegacyAssemblyNeedsNoIamBean()",
+        "controllerBoundaries": 0,
+        "sql": [],
+        "authorityCalls": 6
+      }
+    },
+    {
+      "kind": "O1A_WRITE_PURPOSE",
+      "value": {
+        "body": "{\"code\":\"SYS-AUTH-403\",\"message\":\"��ǰ��Ȩ�������˲���\",\"data\":null,\"traceId\":null}",
+        "authorityDelta": 0,
+        "status": 403
+      }
+    },
+    {
+      "kind": "O1A_CASE",
+      "value": {
+        "rawQueries": [],
+        "test": "querySelectorCannotBecomeExistingRunWritePermission()",
+        "controllerBoundaries": 0,
+        "sql": [],
+        "authorityCalls": 1
+      }
+    },
+    {
+      "kind": "O1A_CORRUPTION",
+      "value": {
+        "mutation": "delete from engine.material_scope where run_id=? and kind='run-inputs'",
+        "sql": [
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id,r.principal_id,r.trigger_type,r.mode,(r.debug_snapshot is not null or r.eval_candidate is not null or r.controlled_draft_skill_version_id is not null or r.controlled_draft_skill_digest is not null or r.controlled_skill_test_version_id is not null or r.controlled_skill_test_digest is not null or r.controlled_skill_test_status is not null) as unsupported,exists(select 1 from engine.tool_call t where t.run_id=r.id) as has_tools from engine.run r where r.public_id=? and r.tenant_id=? and r.principal_id=?",
+            "connection": 1247294628,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          },
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id as run_tenant,r.principal_id as run_principal,r.app_code,r.app_version_id as run_version,a.* from engine.run r join engine.run_authority a on a.run_id=r.id where r.id=?",
+            "connection": 1247294628,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          },
+          {
+            "sql": "select tenant_id,producer,kind,material_id,material_version,payload_sha256,scope_sha256,scope::text as scope from engine.material_scope where run_id=? and kind in ('run-snapshot','run-inputs','run-version-refs')",
+            "connection": 1247294628,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          }
+        ],
+        "status": 403
+      }
+    },
+    {
+      "kind": "O1A_CORRUPTION",
+      "value": {
+        "mutation": "update engine.run_authority set root_id='different@1' where run_id=?",
+        "sql": [
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id,r.principal_id,r.trigger_type,r.mode,(r.debug_snapshot is not null or r.eval_candidate is not null or r.controlled_draft_skill_version_id is not null or r.controlled_draft_skill_digest is not null or r.controlled_skill_test_version_id is not null or r.controlled_skill_test_digest is not null or r.controlled_skill_test_status is not null) as unsupported,exists(select 1 from engine.tool_call t where t.run_id=r.id) as has_tools from engine.run r where r.public_id=? and r.tenant_id=? and r.principal_id=?",
+            "connection": 463426196,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          },
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id as run_tenant,r.principal_id as run_principal,r.app_code,r.app_version_id as run_version,a.* from engine.run r join engine.run_authority a on a.run_id=r.id where r.id=?",
+            "connection": 463426196,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          }
+        ],
+        "status": 403
+      }
+    },
+    {
+      "kind": "O1A_CORRUPTION",
+      "value": {
+        "mutation": "update engine.run_authority set app_version_id=4294967298 where run_id=?",
+        "sql": [
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id,r.principal_id,r.trigger_type,r.mode,(r.debug_snapshot is not null or r.eval_candidate is not null or r.controlled_draft_skill_version_id is not null or r.controlled_draft_skill_digest is not null or r.controlled_skill_test_version_id is not null or r.controlled_skill_test_digest is not null or r.controlled_skill_test_status is not null) as unsupported,exists(select 1 from engine.tool_call t where t.run_id=r.id) as has_tools from engine.run r where r.public_id=? and r.tenant_id=? and r.principal_id=?",
+            "connection": 2139622434,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          },
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id as run_tenant,r.principal_id as run_principal,r.app_code,r.app_version_id as run_version,a.* from engine.run r join engine.run_authority a on a.run_id=r.id where r.id=?",
+            "connection": 2139622434,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          }
+        ],
+        "status": 403
+      }
+    },
+    {
+      "kind": "O1A_CORRUPTION",
+      "value": {
+        "mutation": "update engine.run_authority set app_version_no=2 where run_id=?",
+        "sql": [
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id,r.principal_id,r.trigger_type,r.mode,(r.debug_snapshot is not null or r.eval_candidate is not null or r.controlled_draft_skill_version_id is not null or r.controlled_draft_skill_digest is not null or r.controlled_skill_test_version_id is not null or r.controlled_skill_test_digest is not null or r.controlled_skill_test_status is not null) as unsupported,exists(select 1 from engine.tool_call t where t.run_id=r.id) as has_tools from engine.run r where r.public_id=? and r.tenant_id=? and r.principal_id=?",
+            "connection": 709987594,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          },
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id as run_tenant,r.principal_id as run_principal,r.app_code,r.app_version_id as run_version,a.* from engine.run r join engine.run_authority a on a.run_id=r.id where r.id=?",
+            "connection": 709987594,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          }
+        ],
+        "status": 403
+      }
+    },
+    {
+      "kind": "O1A_CORRUPTION",
+      "value": {
+        "mutation": "update engine.run_authority set principal_id='bob' where run_id=?",
+        "sql": [
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id,r.principal_id,r.trigger_type,r.mode,(r.debug_snapshot is not null or r.eval_candidate is not null or r.controlled_draft_skill_version_id is not null or r.controlled_draft_skill_digest is not null or r.controlled_skill_test_version_id is not null or r.controlled_skill_test_digest is not null or r.controlled_skill_test_status is not null) as unsupported,exists(select 1 from engine.tool_call t where t.run_id=r.id) as has_tools from engine.run r where r.public_id=? and r.tenant_id=? and r.principal_id=?",
+            "connection": 1220344872,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          },
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id as run_tenant,r.principal_id as run_principal,r.app_code,r.app_version_id as run_version,a.* from engine.run r join engine.run_authority a on a.run_id=r.id where r.id=?",
+            "connection": 1220344872,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          }
+        ],
+        "status": 403
+      }
+    },
+    {
+      "kind": "O1A_CORRUPTION",
+      "value": {
+        "mutation": "update engine.run_authority set initial_ceiling_sha256=repeat('a',64) where run_id=?",
+        "sql": [
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id,r.principal_id,r.trigger_type,r.mode,(r.debug_snapshot is not null or r.eval_candidate is not null or r.controlled_draft_skill_version_id is not null or r.controlled_draft_skill_digest is not null or r.controlled_skill_test_version_id is not null or r.controlled_skill_test_digest is not null or r.controlled_skill_test_status is not null) as unsupported,exists(select 1 from engine.tool_call t where t.run_id=r.id) as has_tools from engine.run r where r.public_id=? and r.tenant_id=? and r.principal_id=?",
+            "connection": 1561220588,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          },
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id as run_tenant,r.principal_id as run_principal,r.app_code,r.app_version_id as run_version,a.* from engine.run r join engine.run_authority a on a.run_id=r.id where r.id=?",
+            "connection": 1561220588,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          }
+        ],
+        "status": 403
+      }
+    },
+    {
+      "kind": "O1A_CORRUPTION",
+      "value": {
+        "mutation": "update engine.run_authority set accepted_snapshot_sha256=repeat('b',64) where run_id=?",
+        "sql": [
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id,r.principal_id,r.trigger_type,r.mode,(r.debug_snapshot is not null or r.eval_candidate is not null or r.controlled_draft_skill_version_id is not null or r.controlled_draft_skill_digest is not null or r.controlled_skill_test_version_id is not null or r.controlled_skill_test_digest is not null or r.controlled_skill_test_status is not null) as unsupported,exists(select 1 from engine.tool_call t where t.run_id=r.id) as has_tools from engine.run r where r.public_id=? and r.tenant_id=? and r.principal_id=?",
+            "connection": 1506677668,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          },
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id as run_tenant,r.principal_id as run_principal,r.app_code,r.app_version_id as run_version,a.* from engine.run r join engine.run_authority a on a.run_id=r.id where r.id=?",
+            "connection": 1506677668,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          },
+          {
+            "sql": "select tenant_id,producer,kind,material_id,material_version,payload_sha256,scope_sha256,scope::text as scope from engine.material_scope where run_id=? and kind in ('run-snapshot','run-inputs','run-version-refs')",
+            "connection": 1506677668,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          }
+        ],
+        "status": 403
+      }
+    },
+    {
+      "kind": "O1A_CORRUPTION",
+      "value": {
+        "mutation": "update engine.run_authority set initial_ceiling=jsonb_set(initial_ceiling,'{roles}','[]'::jsonb) where run_id=?",
+        "sql": [
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id,r.principal_id,r.trigger_type,r.mode,(r.debug_snapshot is not null or r.eval_candidate is not null or r.controlled_draft_skill_version_id is not null or r.controlled_draft_skill_digest is not null or r.controlled_skill_test_version_id is not null or r.controlled_skill_test_digest is not null or r.controlled_skill_test_status is not null) as unsupported,exists(select 1 from engine.tool_call t where t.run_id=r.id) as has_tools from engine.run r where r.public_id=? and r.tenant_id=? and r.principal_id=?",
+            "connection": 1729903472,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          },
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id as run_tenant,r.principal_id as run_principal,r.app_code,r.app_version_id as run_version,a.* from engine.run r join engine.run_authority a on a.run_id=r.id where r.id=?",
+            "connection": 1729903472,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          }
+        ],
+        "status": 403
+      }
+    },
+    {
+      "kind": "O1A_CORRUPTION",
+      "value": {
+        "mutation": "update engine.material_scope set scope_sha256=repeat('c',64) where run_id=? and kind='run-snapshot'",
+        "sql": [
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id,r.principal_id,r.trigger_type,r.mode,(r.debug_snapshot is not null or r.eval_candidate is not null or r.controlled_draft_skill_version_id is not null or r.controlled_draft_skill_digest is not null or r.controlled_skill_test_version_id is not null or r.controlled_skill_test_digest is not null or r.controlled_skill_test_status is not null) as unsupported,exists(select 1 from engine.tool_call t where t.run_id=r.id) as has_tools from engine.run r where r.public_id=? and r.tenant_id=? and r.principal_id=?",
+            "connection": 1069019725,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          },
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id as run_tenant,r.principal_id as run_principal,r.app_code,r.app_version_id as run_version,a.* from engine.run r join engine.run_authority a on a.run_id=r.id where r.id=?",
+            "connection": 1069019725,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          },
+          {
+            "sql": "select tenant_id,producer,kind,material_id,material_version,payload_sha256,scope_sha256,scope::text as scope from engine.material_scope where run_id=? and kind in ('run-snapshot','run-inputs','run-version-refs')",
+            "connection": 1069019725,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          }
+        ],
+        "status": 403
+      }
+    },
+    {
+      "kind": "O1A_CORRUPTION",
+      "value": {
+        "mutation": "update engine.material_scope set scope=jsonb_set(scope,'{parentScopeSha256}','[]'::jsonb) where run_id=? and kind='run-version-refs'",
+        "sql": [
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id,r.principal_id,r.trigger_type,r.mode,(r.debug_snapshot is not null or r.eval_candidate is not null or r.controlled_draft_skill_version_id is not null or r.controlled_draft_skill_digest is not null or r.controlled_skill_test_version_id is not null or r.controlled_skill_test_digest is not null or r.controlled_skill_test_status is not null) as unsupported,exists(select 1 from engine.tool_call t where t.run_id=r.id) as has_tools from engine.run r where r.public_id=? and r.tenant_id=? and r.principal_id=?",
+            "connection": 1272661800,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          },
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id as run_tenant,r.principal_id as run_principal,r.app_code,r.app_version_id as run_version,a.* from engine.run r join engine.run_authority a on a.run_id=r.id where r.id=?",
+            "connection": 1272661800,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          },
+          {
+            "sql": "select tenant_id,producer,kind,material_id,material_version,payload_sha256,scope_sha256,scope::text as scope from engine.material_scope where run_id=? and kind in ('run-snapshot','run-inputs','run-version-refs')",
+            "connection": 1272661800,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          }
+        ],
+        "status": 403
+      }
+    },
+    {
+      "kind": "O1A_CORRUPTION",
+      "value": {
+        "mutation": "update engine.run set mode='DEBUG' where id=?",
+        "sql": [
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id,r.principal_id,r.trigger_type,r.mode,(r.debug_snapshot is not null or r.eval_candidate is not null or r.controlled_draft_skill_version_id is not null or r.controlled_draft_skill_digest is not null or r.controlled_skill_test_version_id is not null or r.controlled_skill_test_digest is not null or r.controlled_skill_test_status is not null) as unsupported,exists(select 1 from engine.tool_call t where t.run_id=r.id) as has_tools from engine.run r where r.public_id=? and r.tenant_id=? and r.principal_id=?",
+            "connection": 1702910740,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          }
+        ],
+        "status": 403
+      }
+    },
+    {
+      "kind": "O1A_CASE",
+      "value": {
+        "rawQueries": [
+          "<null>",
+          "<null>",
+          "<null>",
+          "<null>",
+          "<null>",
+          "<null>",
+          "<null>",
+          "<null>",
+          "<null>",
+          "<null>",
+          "<null>"
+        ],
+        "test": "damagedControlMetadataAndMissingOrInconsistentRootManifestsFailClosed()",
+        "controllerBoundaries": 11,
+        "sql": [
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id,r.principal_id,r.trigger_type,r.mode,(r.debug_snapshot is not null or r.eval_candidate is not null or r.controlled_draft_skill_version_id is not null or r.controlled_draft_skill_digest is not null or r.controlled_skill_test_version_id is not null or r.controlled_skill_test_digest is not null or r.controlled_skill_test_status is not null) as unsupported,exists(select 1 from engine.tool_call t where t.run_id=r.id) as has_tools from engine.run r where r.public_id=? and r.tenant_id=? and r.principal_id=?",
+            "connection": 1702910740,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          }
+        ],
+        "authorityCalls": 66
+      }
+    },
+    {
+      "kind": "O1A_STORAGE_TRUST_BOUNDARY",
+      "value": {
+        "payloadReads": 0,
+        "reason": "immutable trigger was deliberately bypassed; no independent metadata binds resource_digest to snapshot candidate",
+        "status": 200
+      }
+    },
+    {
+      "kind": "O1A_CASE",
+      "value": {
+        "rawQueries": [
+          "<null>"
+        ],
+        "test": "selfConsistentLegalRootDigestReplacementIsTheDocumentedStorageTrustBoundary()",
+        "controllerBoundaries": 1,
+        "sql": [
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id,r.principal_id,r.trigger_type,r.mode,(r.debug_snapshot is not null or r.eval_candidate is not null or r.controlled_draft_skill_version_id is not null or r.controlled_draft_skill_digest is not null or r.controlled_skill_test_version_id is not null or r.controlled_skill_test_digest is not null or r.controlled_skill_test_status is not null) as unsupported,exists(select 1 from engine.tool_call t where t.run_id=r.id) as has_tools from engine.run r where r.public_id=? and r.tenant_id=? and r.principal_id=?",
+            "connection": 1520588975,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          },
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id as run_tenant,r.principal_id as run_principal,r.app_code,r.app_version_id as run_version,a.* from engine.run r join engine.run_authority a on a.run_id=r.id where r.id=?",
+            "connection": 1520588975,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          },
+          {
+            "sql": "select tenant_id,producer,kind,material_id,material_version,payload_sha256,scope_sha256,scope::text as scope from engine.material_scope where run_id=? and kind in ('run-snapshot','run-inputs','run-version-refs')",
+            "connection": 1520588975,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          }
+        ],
+        "authorityCalls": 6
+      }
+    },
+    {
+      "kind": "O1A_CASE",
+      "value": {
+        "rawQueries": [],
+        "test": "currentRevocationOutageAndExpiryBlockBeforeSqlAndNoLegacyFallback()",
+        "controllerBoundaries": 0,
+        "sql": [],
+        "authorityCalls": 7
+      }
+    },
+    {
+      "kind": "O1A_CASE",
+      "value": {
+        "rawQueries": [
+          "<null>"
+        ],
+        "test": "selectorPathOwnerTenantAndDigestCannotSubstituteAnotherRun()",
+        "controllerBoundaries": 1,
+        "sql": [],
+        "authorityCalls": 12
+      }
+    },
+    {
+      "kind": "O1A_CASE",
+      "value": {
+        "rawQueries": [
+          "<null>",
+          "<null>",
+          "<null>",
+          "<null>"
+        ],
+        "test": "notFoundAndOtherOwnerHaveTheSame404WhileOwnedLegacyHas403()",
+        "controllerBoundaries": 4,
+        "sql": [
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id,r.principal_id,r.trigger_type,r.mode,(r.debug_snapshot is not null or r.eval_candidate is not null or r.controlled_draft_skill_version_id is not null or r.controlled_draft_skill_digest is not null or r.controlled_skill_test_version_id is not null or r.controlled_skill_test_digest is not null or r.controlled_skill_test_status is not null) as unsupported,exists(select 1 from engine.tool_call t where t.run_id=r.id) as has_tools from engine.run r where r.public_id=? and r.tenant_id=? and r.principal_id=?",
+            "connection": 1802274609,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          },
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id as run_tenant,r.principal_id as run_principal,r.app_code,r.app_version_id as run_version,a.* from engine.run r join engine.run_authority a on a.run_id=r.id where r.id=?",
+            "connection": 1802274609,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          }
+        ],
+        "authorityCalls": 15
+      }
+    },
+    {
+      "kind": "O1A_PINNED_LONG_ROOT",
+      "value": {
+        "appServiceStarted": false,
+        "laterAcceptedVersionNo": 4294967299,
+        "data": {
+          "runId": "r_0668699060e145269b6cc8773d95c24a",
+          "owner": {
+            "tenantId": "o1a-e24cca37-b4d2-4b43-b71f-b6c481afbf4c",
+            "principalId": "alice"
+          },
+          "root": {
+            "kind": "app-version",
+            "id": "app-a@4294967298",
+            "versionDigest": "dda18a0e21ae47c53b4309434cbc02ae8bf764fa83a6defbb719431242722aa7"
+          },
+          "appVersionId": 4294967297,
+          "appVersionNo": 4294967298,
+          "acceptedSnapshotSha256": "10de2dc61c07c34ec95c8e9ea257865d0e0fda415b4682eee6261068e8268d16",
+          "initialCeilingSha256": "488c608acc99fad48d5371a400bb01465be73fcb5ecd62e21a647aa42cee797d"
+        }
+      }
+    },
+    {
+      "kind": "O1A_CASE",
+      "value": {
+        "rawQueries": [
+          "<null>",
+          "<null>"
+        ],
+        "test": "longVersionNumbersRemainPinnedWhenLaterRunsAreAccepted()",
+        "controllerBoundaries": 2,
+        "sql": [
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id,r.principal_id,r.trigger_type,r.mode,(r.debug_snapshot is not null or r.eval_candidate is not null or r.controlled_draft_skill_version_id is not null or r.controlled_draft_skill_digest is not null or r.controlled_skill_test_version_id is not null or r.controlled_skill_test_digest is not null or r.controlled_skill_test_status is not null) as unsupported,exists(select 1 from engine.tool_call t where t.run_id=r.id) as has_tools from engine.run r where r.public_id=? and r.tenant_id=? and r.principal_id=?",
+            "connection": 473128919,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          },
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id as run_tenant,r.principal_id as run_principal,r.app_code,r.app_version_id as run_version,a.* from engine.run r join engine.run_authority a on a.run_id=r.id where r.id=?",
+            "connection": 473128919,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          },
+          {
+            "sql": "select tenant_id,producer,kind,material_id,material_version,payload_sha256,scope_sha256,scope::text as scope from engine.material_scope where run_id=? and kind in ('run-snapshot','run-inputs','run-version-refs')",
+            "connection": 473128919,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          }
+        ],
+        "authorityCalls": 12
+      }
+    },
+    {
+      "kind": "O1A_LOCAL_TERMINAL",
+      "value": {
+        "sql": [
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id,r.principal_id,r.trigger_type,r.mode,(r.debug_snapshot is not null or r.eval_candidate is not null or r.controlled_draft_skill_version_id is not null or r.controlled_draft_skill_digest is not null or r.controlled_skill_test_version_id is not null or r.controlled_skill_test_digest is not null or r.controlled_skill_test_status is not null) as unsupported,exists(select 1 from engine.tool_call t where t.run_id=r.id) as has_tools from engine.run r where r.public_id=? and r.tenant_id=? and r.principal_id=?",
+            "connection": 418584991,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          },
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id as run_tenant,r.principal_id as run_principal,r.app_code,r.app_version_id as run_version,a.* from engine.run r join engine.run_authority a on a.run_id=r.id where r.id=?",
+            "connection": 418584991,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          },
+          {
+            "sql": "select tenant_id,producer,kind,material_id,material_version,payload_sha256,scope_sha256,scope::text as scope from engine.material_scope where run_id=? and kind in ('run-snapshot','run-inputs','run-version-refs')",
+            "connection": 418584991,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          }
+        ],
+        "status": 403,
+        "boundary": "manifest-expiry"
+      }
+    },
+    {
+      "kind": "O1A_LOCAL_TERMINAL",
+      "value": {
+        "sql": [
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id,r.principal_id,r.trigger_type,r.mode,(r.debug_snapshot is not null or r.eval_candidate is not null or r.controlled_draft_skill_version_id is not null or r.controlled_draft_skill_digest is not null or r.controlled_skill_test_version_id is not null or r.controlled_skill_test_digest is not null or r.controlled_skill_test_status is not null) as unsupported,exists(select 1 from engine.tool_call t where t.run_id=r.id) as has_tools from engine.run r where r.public_id=? and r.tenant_id=? and r.principal_id=?",
+            "connection": 809466864,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          },
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id as run_tenant,r.principal_id as run_principal,r.app_code,r.app_version_id as run_version,a.* from engine.run r join engine.run_authority a on a.run_id=r.id where r.id=?",
+            "connection": 809466864,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          },
+          {
+            "sql": "select tenant_id,producer,kind,material_id,material_version,payload_sha256,scope_sha256,scope::text as scope from engine.material_scope where run_id=? and kind in ('run-snapshot','run-inputs','run-version-refs')",
+            "connection": 809466864,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          }
+        ],
+        "status": 403,
+        "boundary": "manifest-frame-close"
+      }
+    },
+    {
+      "kind": "O1A_LOCAL_TERMINAL",
+      "value": {
+        "sql": [
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id,r.principal_id,r.trigger_type,r.mode,(r.debug_snapshot is not null or r.eval_candidate is not null or r.controlled_draft_skill_version_id is not null or r.controlled_draft_skill_digest is not null or r.controlled_skill_test_version_id is not null or r.controlled_skill_test_digest is not null or r.controlled_skill_test_status is not null) as unsupported,exists(select 1 from engine.tool_call t where t.run_id=r.id) as has_tools from engine.run r where r.public_id=? and r.tenant_id=? and r.principal_id=?",
+            "connection": 1053312364,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          },
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id as run_tenant,r.principal_id as run_principal,r.app_code,r.app_version_id as run_version,a.* from engine.run r join engine.run_authority a on a.run_id=r.id where r.id=?",
+            "connection": 1053312364,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          },
+          {
+            "sql": "select tenant_id,producer,kind,material_id,material_version,payload_sha256,scope_sha256,scope::text as scope from engine.material_scope where run_id=? and kind in ('run-snapshot','run-inputs','run-version-refs')",
+            "connection": 1053312364,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          }
+        ],
+        "status": 403,
+        "boundary": "post-commit-expiry"
+      }
+    },
+    {
+      "kind": "O1A_LOCAL_TERMINAL",
+      "value": {
+        "sql": [
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id,r.principal_id,r.trigger_type,r.mode,(r.debug_snapshot is not null or r.eval_candidate is not null or r.controlled_draft_skill_version_id is not null or r.controlled_draft_skill_digest is not null or r.controlled_skill_test_version_id is not null or r.controlled_skill_test_digest is not null or r.controlled_skill_test_status is not null) as unsupported,exists(select 1 from engine.tool_call t where t.run_id=r.id) as has_tools from engine.run r where r.public_id=? and r.tenant_id=? and r.principal_id=?",
+            "connection": 1372170356,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          },
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id as run_tenant,r.principal_id as run_principal,r.app_code,r.app_version_id as run_version,a.* from engine.run r join engine.run_authority a on a.run_id=r.id where r.id=?",
+            "connection": 1372170356,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          },
+          {
+            "sql": "select tenant_id,producer,kind,material_id,material_version,payload_sha256,scope_sha256,scope::text as scope from engine.material_scope where run_id=? and kind in ('run-snapshot','run-inputs','run-version-refs')",
+            "connection": 1372170356,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          }
+        ],
+        "status": 403,
+        "boundary": "post-commit-frame-close"
+      }
+    },
+    {
+      "kind": "O1A_CASE",
+      "value": {
+        "rawQueries": [
+          "<null>",
+          "<null>",
+          "<null>",
+          "<null>"
+        ],
+        "test": "localExpiryOrClosedFrameAfterReadAndCommitPreventsAValidProjection()",
+        "controllerBoundaries": 4,
+        "sql": [
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id,r.principal_id,r.trigger_type,r.mode,(r.debug_snapshot is not null or r.eval_candidate is not null or r.controlled_draft_skill_version_id is not null or r.controlled_draft_skill_digest is not null or r.controlled_skill_test_version_id is not null or r.controlled_skill_test_digest is not null or r.controlled_skill_test_status is not null) as unsupported,exists(select 1 from engine.tool_call t where t.run_id=r.id) as has_tools from engine.run r where r.public_id=? and r.tenant_id=? and r.principal_id=?",
+            "connection": 1372170356,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          },
+          {
+            "sql": "select r.id,r.public_id,r.tenant_id as run_tenant,r.principal_id as run_principal,r.app_code,r.app_version_id as run_version,a.* from engine.run r join engine.run_authority a on a.run_id=r.id where r.id=?",
+            "connection": 1372170356,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          },
+          {
+            "sql": "select tenant_id,producer,kind,material_id,material_version,payload_sha256,scope_sha256,scope::text as scope from engine.material_scope where run_id=? and kind in ('run-snapshot','run-inputs','run-version-refs')",
+            "connection": 1372170356,
+            "isolation": 4,
+            "readOnly": true,
+            "autoCommit": false
+          }
+        ],
+        "authorityCalls": 24
+      }
+    },
+    {
+      "kind": "O1A_CASE",
+      "value": {
+        "rawQueries": [
+          "<null>",
+          "<null>",
+          "<null>",
+          "id=a&id=b"
+        ],
+        "test": "invalidPublicIdAndRawDuplicateQueryAre400BeforeMetadata()",
+        "controllerBoundaries": 4,
+        "sql": [],
+        "authorityCalls": 8
+      }
+    },
+    {
+      "kind": "O1A_RESOURCES_CLOSED",
+      "value": true
+    }
+  ]
+}

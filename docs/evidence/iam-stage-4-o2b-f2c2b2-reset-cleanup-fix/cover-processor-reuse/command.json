@@ -1,0 +1,30 @@
+{
+  "java": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/java.exe",
+  "args": [
+    "-Djdk.net.unixdomain.tmpdir=V:/.local/tmp",
+    "-Djdk.tls.maxHandshakeMessageSize=32768",
+    "-Djdk.tls.maxCertificateChainLength=4",
+    "-Dcom.sun.security.enableAIAcaIssuers=false",
+    "-Djdk.tls.server.newSessionTicketCount=0",
+    "-Djdk.tls.server.enableStatusRequestExtension=false",
+    "-cp",
+    "[exact frozen surefire.test.class.path]",
+    "cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest",
+    "processor-reuse",
+    "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\iam-stage-4-o2b-f2c2b2-reset-cleanup-fix\\cover-processor-reuse\\observer"
+  ],
+  "classpathFrom": {
+    "file": "docs/evidence/iam-stage-4-o2b-f2c2b2-reset-cleanup-fix/green-01/finite-target/platform-gateway/target/surefire-reports/TEST-cn.agentplatform.gateway.infra.PortalRunEventsSseResetCleanupTest.xml",
+    "bytes": 39137,
+    "sha256": "60c6529fb5fa9cf8db1c71fc7a8893451cf0f3e338fce10b02510355f5b36811"
+  },
+  "classpathSha256": "1c64b319fc6d0be4bb317e3bfeb3aeb457409af921172f7813ffd1f75d50e3e1",
+  "method": "sameProcessorOnAnotherSocketCannotReceiveOldAbort",
+  "scenario": "processor-reuse",
+  "sourceEpoch": {
+    "file": "docs/evidence/iam-stage-4-o2b-f2c2b2-reset-cleanup-fix/green-01/source.json",
+    "bytes": 123136,
+    "sha256": "719fed1d8b58b4669e16458f6de3942561899d5765e883d09351b74073e67146"
+  },
+  "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform"
+}

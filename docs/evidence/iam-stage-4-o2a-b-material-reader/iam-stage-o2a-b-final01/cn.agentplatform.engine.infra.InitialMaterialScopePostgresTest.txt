@@ -1,0 +1,15 @@
+-------------------------------------------------------------------------------
+Test set: cn.agentplatform.engine.infra.InitialMaterialScopePostgresTest
+-------------------------------------------------------------------------------
+Tests run: 12, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 12.57 s <<< FAILURE! -- in cn.agentplatform.engine.infra.InitialMaterialScopePostgresTest
+cn.agentplatform.engine.infra.InitialMaterialScopePostgresTest.sameRootStatusPurposeCannotReadInitialMaterial -- Time elapsed: 0.497 s <<< ERROR!
+cn.agentplatform.common.PlatformException: 当前授权不允许此操作
+	at cn.agentplatform.common.authority.AuthorityProtocol.denied(AuthorityProtocol.java:11)
+	at cn.agentplatform.common.authority.HttpCurrentAuthorityClient.query(HttpCurrentAuthorityClient.java:455)
+	at cn.agentplatform.common.authority.HttpCurrentAuthorityClient.portalExchange(HttpCurrentAuthorityClient.java:151)
+	at cn.agentplatform.common.authority.HttpCurrentAuthorityClient.exchange(HttpCurrentAuthorityClient.java:140)
+	at cn.agentplatform.engine.infra.InitialMaterialScopePostgresTest.sameRootStatusPurposeCannotReadInitialMaterial(InitialMaterialScopePostgresTest.java:132)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+

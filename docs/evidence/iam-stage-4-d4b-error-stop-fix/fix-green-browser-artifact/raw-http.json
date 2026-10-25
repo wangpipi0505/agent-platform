@@ -1,0 +1,958 @@
+[
+  {
+    "at": "2026-10-20T20:45:38.956Z",
+    "method": "GET",
+    "url": "/auth/session",
+    "rawHeaders": [
+      "Host",
+      "127.0.0.1:64105",
+      "Connection",
+      "keep-alive",
+      "sec-ch-ua-platform",
+      "\"Windows\"",
+      "Authorization",
+      "Bearer A",
+      "User-Agent",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+      "Accept",
+      "application/json, text/plain, */*",
+      "sec-ch-ua",
+      "\"Google Chrome\";v=\"155\", \"Chromium\";v=\"155\", \"Not(A:Brand\";v=\"24\"",
+      "Content-Type",
+      "application/json",
+      "sec-ch-ua-mobile",
+      "?0",
+      "Sec-Fetch-Site",
+      "same-origin",
+      "Sec-Fetch-Mode",
+      "cors",
+      "Sec-Fetch-Dest",
+      "empty",
+      "Referer",
+      "http://127.0.0.1:64105/fixture.html",
+      "Accept-Encoding",
+      "gzip, deflate, br, zstd",
+      "Accept-Language",
+      "zh-CN,zh;q=0.9"
+    ],
+    "authorization": "Bearer A",
+    "cookie": null,
+    "body": "",
+    "response": {
+      "status": 200,
+      "kind": "json",
+      "envelope": {
+        "code": "OK",
+        "message": "OK",
+        "data": {
+          "tenantId": "tenant_A",
+          "principalId": "A",
+          "roles": [
+            "ADMIN"
+          ],
+          "expiresAt": "2026-10-20T20:46:38.956Z"
+        }
+      }
+    }
+  },
+  {
+    "at": "2026-10-20T20:45:39.011Z",
+    "method": "GET",
+    "url": "/admin/runs/r_current_artifact",
+    "rawHeaders": [
+      "Host",
+      "127.0.0.1:64105",
+      "Connection",
+      "keep-alive",
+      "sec-ch-ua-platform",
+      "\"Windows\"",
+      "Authorization",
+      "Bearer A",
+      "User-Agent",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+      "Accept",
+      "application/json, text/plain, */*",
+      "sec-ch-ua",
+      "\"Google Chrome\";v=\"155\", \"Chromium\";v=\"155\", \"Not(A:Brand\";v=\"24\"",
+      "Content-Type",
+      "application/json",
+      "sec-ch-ua-mobile",
+      "?0",
+      "Sec-Fetch-Site",
+      "same-origin",
+      "Sec-Fetch-Mode",
+      "cors",
+      "Sec-Fetch-Dest",
+      "empty",
+      "Referer",
+      "http://127.0.0.1:64105/fixture.html",
+      "Accept-Encoding",
+      "gzip, deflate, br, zstd",
+      "Accept-Language",
+      "zh-CN,zh;q=0.9"
+    ],
+    "authorization": "Bearer A",
+    "cookie": null,
+    "body": "",
+    "response": {
+      "status": 200,
+      "kind": "json",
+      "envelope": {
+        "code": "OK",
+        "message": "OK",
+        "data": {
+          "runId": "r_current_artifact",
+          "status": "RUNNING",
+          "eventsWatermark": 0,
+          "nodes": [],
+          "fileRefs": [
+            {
+              "artifactId": "file",
+              "name": "result.txt",
+              "bytes": 19,
+              "downloadUrl": "/admin/artifacts/file/download"
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "at": "2026-10-20T20:45:39.049Z",
+    "method": "GET",
+    "url": "/admin/runs/r_current_artifact",
+    "rawHeaders": [
+      "Host",
+      "127.0.0.1:64105",
+      "Connection",
+      "keep-alive",
+      "sec-ch-ua-platform",
+      "\"Windows\"",
+      "Authorization",
+      "Bearer A",
+      "User-Agent",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+      "Accept",
+      "application/json, text/plain, */*",
+      "sec-ch-ua",
+      "\"Google Chrome\";v=\"155\", \"Chromium\";v=\"155\", \"Not(A:Brand\";v=\"24\"",
+      "Content-Type",
+      "application/json",
+      "sec-ch-ua-mobile",
+      "?0",
+      "Sec-Fetch-Site",
+      "same-origin",
+      "Sec-Fetch-Mode",
+      "cors",
+      "Sec-Fetch-Dest",
+      "empty",
+      "Referer",
+      "http://127.0.0.1:64105/fixture.html",
+      "Accept-Encoding",
+      "gzip, deflate, br, zstd",
+      "Accept-Language",
+      "zh-CN,zh;q=0.9"
+    ],
+    "authorization": "Bearer A",
+    "cookie": null,
+    "body": "",
+    "response": {
+      "status": 200,
+      "kind": "json",
+      "envelope": {
+        "code": "OK",
+        "message": "OK",
+        "data": {
+          "runId": "r_current_artifact",
+          "status": "RUNNING",
+          "eventsWatermark": 0,
+          "nodes": [],
+          "fileRefs": [
+            {
+              "artifactId": "file",
+              "name": "result.txt",
+              "bytes": 19,
+              "downloadUrl": "/admin/artifacts/file/download"
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "at": "2026-10-20T20:45:39.068Z",
+    "method": "GET",
+    "url": "/admin/runs/r_current_artifact/events",
+    "rawHeaders": [
+      "Host",
+      "127.0.0.1:64105",
+      "Connection",
+      "keep-alive",
+      "sec-ch-ua-platform",
+      "\"Windows\"",
+      "Authorization",
+      "Bearer A",
+      "Last-Event-ID",
+      "0",
+      "User-Agent",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+      "Accept",
+      "text/event-stream",
+      "sec-ch-ua",
+      "\"Google Chrome\";v=\"155\", \"Chromium\";v=\"155\", \"Not(A:Brand\";v=\"24\"",
+      "sec-ch-ua-mobile",
+      "?0",
+      "Sec-Fetch-Site",
+      "same-origin",
+      "Sec-Fetch-Mode",
+      "cors",
+      "Sec-Fetch-Dest",
+      "empty",
+      "Referer",
+      "http://127.0.0.1:64105/fixture.html",
+      "Accept-Encoding",
+      "gzip, deflate, br, zstd",
+      "Accept-Language",
+      "zh-CN,zh;q=0.9"
+    ],
+    "authorization": "Bearer A",
+    "cookie": null,
+    "body": "",
+    "response": {
+      "status": 200,
+      "kind": "sse",
+      "body": "event: stream_status\ndata: {\"chunkReplay\":false}\n\n"
+    }
+  },
+  {
+    "at": "2026-10-20T20:45:39.072Z",
+    "method": "GET",
+    "url": "/admin/runs/r_current_artifact",
+    "rawHeaders": [
+      "Host",
+      "127.0.0.1:64105",
+      "Connection",
+      "keep-alive",
+      "sec-ch-ua-platform",
+      "\"Windows\"",
+      "Authorization",
+      "Bearer A",
+      "User-Agent",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+      "Accept",
+      "application/json, text/plain, */*",
+      "sec-ch-ua",
+      "\"Google Chrome\";v=\"155\", \"Chromium\";v=\"155\", \"Not(A:Brand\";v=\"24\"",
+      "Content-Type",
+      "application/json",
+      "sec-ch-ua-mobile",
+      "?0",
+      "Sec-Fetch-Site",
+      "same-origin",
+      "Sec-Fetch-Mode",
+      "cors",
+      "Sec-Fetch-Dest",
+      "empty",
+      "Referer",
+      "http://127.0.0.1:64105/fixture.html",
+      "Accept-Encoding",
+      "gzip, deflate, br, zstd",
+      "Accept-Language",
+      "zh-CN,zh;q=0.9"
+    ],
+    "authorization": "Bearer A",
+    "cookie": null,
+    "body": "",
+    "response": {
+      "status": 200,
+      "kind": "json",
+      "envelope": {
+        "code": "OK",
+        "message": "OK",
+        "data": {
+          "runId": "r_current_artifact",
+          "status": "RUNNING",
+          "eventsWatermark": 0,
+          "nodes": [],
+          "fileRefs": [
+            {
+              "artifactId": "file",
+              "name": "result.txt",
+              "bytes": 19,
+              "downloadUrl": "/admin/artifacts/file/download"
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "at": "2026-10-20T20:45:39.120Z",
+    "method": "GET",
+    "url": "/admin/artifacts/file/download",
+    "rawHeaders": [
+      "Host",
+      "127.0.0.1:64105",
+      "Connection",
+      "keep-alive",
+      "sec-ch-ua-platform",
+      "\"Windows\"",
+      "Authorization",
+      "Bearer A",
+      "User-Agent",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+      "sec-ch-ua",
+      "\"Google Chrome\";v=\"155\", \"Chromium\";v=\"155\", \"Not(A:Brand\";v=\"24\"",
+      "sec-ch-ua-mobile",
+      "?0",
+      "Accept",
+      "*/*",
+      "Sec-Fetch-Site",
+      "same-origin",
+      "Sec-Fetch-Mode",
+      "cors",
+      "Sec-Fetch-Dest",
+      "empty",
+      "Referer",
+      "http://127.0.0.1:64105/fixture.html",
+      "Accept-Encoding",
+      "gzip, deflate, br, zstd",
+      "Accept-Language",
+      "zh-CN,zh;q=0.9"
+    ],
+    "authorization": "Bearer A",
+    "cookie": null,
+    "body": "",
+    "response": {
+      "status": 401,
+      "kind": "artifact",
+      "body": "controlled artifact"
+    }
+  },
+  {
+    "at": "2026-10-20T20:45:41.548Z",
+    "method": "GET",
+    "url": "/auth/session",
+    "rawHeaders": [
+      "Host",
+      "127.0.0.1:64105",
+      "Connection",
+      "keep-alive",
+      "sec-ch-ua-platform",
+      "\"Windows\"",
+      "Authorization",
+      "Bearer A",
+      "User-Agent",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+      "Accept",
+      "application/json, text/plain, */*",
+      "sec-ch-ua",
+      "\"Google Chrome\";v=\"155\", \"Chromium\";v=\"155\", \"Not(A:Brand\";v=\"24\"",
+      "Content-Type",
+      "application/json",
+      "sec-ch-ua-mobile",
+      "?0",
+      "Sec-Fetch-Site",
+      "same-origin",
+      "Sec-Fetch-Mode",
+      "cors",
+      "Sec-Fetch-Dest",
+      "empty",
+      "Referer",
+      "http://127.0.0.1:64105/fixture.html",
+      "Accept-Encoding",
+      "gzip, deflate, br, zstd",
+      "Accept-Language",
+      "zh-CN,zh;q=0.9"
+    ],
+    "authorization": "Bearer A",
+    "cookie": null,
+    "body": "",
+    "response": {
+      "status": 200,
+      "kind": "json",
+      "envelope": {
+        "code": "OK",
+        "message": "OK",
+        "data": {
+          "tenantId": "tenant_A",
+          "principalId": "A",
+          "roles": [
+            "ADMIN"
+          ],
+          "expiresAt": "2026-10-20T20:46:41.548Z"
+        }
+      }
+    }
+  },
+  {
+    "at": "2026-10-20T20:45:41.609Z",
+    "method": "GET",
+    "url": "/admin/runs/r_old_artifact",
+    "rawHeaders": [
+      "Host",
+      "127.0.0.1:64105",
+      "Connection",
+      "keep-alive",
+      "sec-ch-ua-platform",
+      "\"Windows\"",
+      "Authorization",
+      "Bearer A",
+      "User-Agent",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+      "Accept",
+      "application/json, text/plain, */*",
+      "sec-ch-ua",
+      "\"Google Chrome\";v=\"155\", \"Chromium\";v=\"155\", \"Not(A:Brand\";v=\"24\"",
+      "Content-Type",
+      "application/json",
+      "sec-ch-ua-mobile",
+      "?0",
+      "Sec-Fetch-Site",
+      "same-origin",
+      "Sec-Fetch-Mode",
+      "cors",
+      "Sec-Fetch-Dest",
+      "empty",
+      "Referer",
+      "http://127.0.0.1:64105/fixture.html",
+      "Accept-Encoding",
+      "gzip, deflate, br, zstd",
+      "Accept-Language",
+      "zh-CN,zh;q=0.9"
+    ],
+    "authorization": "Bearer A",
+    "cookie": null,
+    "body": "",
+    "response": {
+      "status": 200,
+      "kind": "json",
+      "envelope": {
+        "code": "OK",
+        "message": "OK",
+        "data": {
+          "runId": "r_old_artifact",
+          "status": "SUCCEEDED",
+          "eventsWatermark": 0,
+          "nodes": [],
+          "fileRefs": [
+            {
+              "artifactId": "file",
+              "name": "result.txt",
+              "bytes": 19,
+              "downloadUrl": "/admin/artifacts/file/download"
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "at": "2026-10-20T20:45:41.660Z",
+    "method": "GET",
+    "url": "/admin/runs/r_old_artifact",
+    "rawHeaders": [
+      "Host",
+      "127.0.0.1:64105",
+      "Connection",
+      "keep-alive",
+      "sec-ch-ua-platform",
+      "\"Windows\"",
+      "Authorization",
+      "Bearer A",
+      "User-Agent",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+      "Accept",
+      "application/json, text/plain, */*",
+      "sec-ch-ua",
+      "\"Google Chrome\";v=\"155\", \"Chromium\";v=\"155\", \"Not(A:Brand\";v=\"24\"",
+      "Content-Type",
+      "application/json",
+      "sec-ch-ua-mobile",
+      "?0",
+      "Sec-Fetch-Site",
+      "same-origin",
+      "Sec-Fetch-Mode",
+      "cors",
+      "Sec-Fetch-Dest",
+      "empty",
+      "Referer",
+      "http://127.0.0.1:64105/fixture.html",
+      "Accept-Encoding",
+      "gzip, deflate, br, zstd",
+      "Accept-Language",
+      "zh-CN,zh;q=0.9"
+    ],
+    "authorization": "Bearer A",
+    "cookie": null,
+    "body": "",
+    "response": {
+      "status": 200,
+      "kind": "json",
+      "envelope": {
+        "code": "OK",
+        "message": "OK",
+        "data": {
+          "runId": "r_old_artifact",
+          "status": "SUCCEEDED",
+          "eventsWatermark": 0,
+          "nodes": [],
+          "fileRefs": [
+            {
+              "artifactId": "file",
+              "name": "result.txt",
+              "bytes": 19,
+              "downloadUrl": "/admin/artifacts/file/download"
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "at": "2026-10-20T20:45:41.721Z",
+    "method": "GET",
+    "url": "/admin/artifacts/file/download",
+    "rawHeaders": [
+      "Host",
+      "127.0.0.1:64105",
+      "Connection",
+      "keep-alive",
+      "sec-ch-ua-platform",
+      "\"Windows\"",
+      "Authorization",
+      "Bearer A",
+      "User-Agent",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+      "sec-ch-ua",
+      "\"Google Chrome\";v=\"155\", \"Chromium\";v=\"155\", \"Not(A:Brand\";v=\"24\"",
+      "sec-ch-ua-mobile",
+      "?0",
+      "Accept",
+      "*/*",
+      "Sec-Fetch-Site",
+      "same-origin",
+      "Sec-Fetch-Mode",
+      "cors",
+      "Sec-Fetch-Dest",
+      "empty",
+      "Referer",
+      "http://127.0.0.1:64105/fixture.html",
+      "Accept-Encoding",
+      "gzip, deflate, br, zstd",
+      "Accept-Language",
+      "zh-CN,zh;q=0.9"
+    ],
+    "authorization": "Bearer A",
+    "cookie": null,
+    "body": "",
+    "response": {
+      "status": 401,
+      "kind": "artifact",
+      "body": "controlled artifact"
+    }
+  },
+  {
+    "at": "2026-10-20T20:45:41.729Z",
+    "method": "GET",
+    "url": "/auth/session",
+    "rawHeaders": [
+      "Host",
+      "127.0.0.1:64105",
+      "Connection",
+      "keep-alive",
+      "sec-ch-ua-platform",
+      "\"Windows\"",
+      "Authorization",
+      "Bearer B",
+      "User-Agent",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+      "Accept",
+      "application/json, text/plain, */*",
+      "sec-ch-ua",
+      "\"Google Chrome\";v=\"155\", \"Chromium\";v=\"155\", \"Not(A:Brand\";v=\"24\"",
+      "Content-Type",
+      "application/json",
+      "sec-ch-ua-mobile",
+      "?0",
+      "Sec-Fetch-Site",
+      "same-origin",
+      "Sec-Fetch-Mode",
+      "cors",
+      "Sec-Fetch-Dest",
+      "empty",
+      "Referer",
+      "http://127.0.0.1:64105/fixture.html",
+      "Accept-Encoding",
+      "gzip, deflate, br, zstd",
+      "Accept-Language",
+      "zh-CN,zh;q=0.9"
+    ],
+    "authorization": "Bearer B",
+    "cookie": null,
+    "body": "",
+    "response": {
+      "status": 200,
+      "kind": "json",
+      "envelope": {
+        "code": "OK",
+        "message": "OK",
+        "data": {
+          "tenantId": "tenant_B",
+          "principalId": "B",
+          "roles": [
+            "ADMIN"
+          ],
+          "expiresAt": "2026-10-20T20:46:41.729Z"
+        }
+      }
+    }
+  },
+  {
+    "at": "2026-10-20T20:45:41.741Z",
+    "method": "GET",
+    "url": "/admin/runs/r_old_artifact",
+    "rawHeaders": [
+      "Host",
+      "127.0.0.1:64105",
+      "Connection",
+      "keep-alive",
+      "sec-ch-ua-platform",
+      "\"Windows\"",
+      "Authorization",
+      "Bearer B",
+      "User-Agent",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+      "Accept",
+      "application/json, text/plain, */*",
+      "sec-ch-ua",
+      "\"Google Chrome\";v=\"155\", \"Chromium\";v=\"155\", \"Not(A:Brand\";v=\"24\"",
+      "Content-Type",
+      "application/json",
+      "sec-ch-ua-mobile",
+      "?0",
+      "Sec-Fetch-Site",
+      "same-origin",
+      "Sec-Fetch-Mode",
+      "cors",
+      "Sec-Fetch-Dest",
+      "empty",
+      "Referer",
+      "http://127.0.0.1:64105/fixture.html",
+      "Accept-Encoding",
+      "gzip, deflate, br, zstd",
+      "Accept-Language",
+      "zh-CN,zh;q=0.9"
+    ],
+    "authorization": "Bearer B",
+    "cookie": null,
+    "body": "",
+    "response": {
+      "status": 200,
+      "kind": "json",
+      "envelope": {
+        "code": "OK",
+        "message": "OK",
+        "data": {
+          "runId": "r_old_artifact",
+          "status": "SUCCEEDED",
+          "eventsWatermark": 0,
+          "nodes": [],
+          "fileRefs": [
+            {
+              "artifactId": "file",
+              "name": "result.txt",
+              "bytes": 19,
+              "downloadUrl": "/admin/artifacts/file/download"
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "at": "2026-10-20T20:45:41.750Z",
+    "method": "GET",
+    "url": "/admin/runs/r_old_artifact",
+    "rawHeaders": [
+      "Host",
+      "127.0.0.1:64105",
+      "Connection",
+      "keep-alive",
+      "sec-ch-ua-platform",
+      "\"Windows\"",
+      "Authorization",
+      "Bearer B",
+      "User-Agent",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+      "Accept",
+      "application/json, text/plain, */*",
+      "sec-ch-ua",
+      "\"Google Chrome\";v=\"155\", \"Chromium\";v=\"155\", \"Not(A:Brand\";v=\"24\"",
+      "Content-Type",
+      "application/json",
+      "sec-ch-ua-mobile",
+      "?0",
+      "Sec-Fetch-Site",
+      "same-origin",
+      "Sec-Fetch-Mode",
+      "cors",
+      "Sec-Fetch-Dest",
+      "empty",
+      "Referer",
+      "http://127.0.0.1:64105/fixture.html",
+      "Accept-Encoding",
+      "gzip, deflate, br, zstd",
+      "Accept-Language",
+      "zh-CN,zh;q=0.9"
+    ],
+    "authorization": "Bearer B",
+    "cookie": null,
+    "body": "",
+    "response": {
+      "status": 200,
+      "kind": "json",
+      "envelope": {
+        "code": "OK",
+        "message": "OK",
+        "data": {
+          "runId": "r_old_artifact",
+          "status": "SUCCEEDED",
+          "eventsWatermark": 0,
+          "nodes": [],
+          "fileRefs": [
+            {
+              "artifactId": "file",
+              "name": "result.txt",
+              "bytes": 19,
+              "downloadUrl": "/admin/artifacts/file/download"
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "at": "2026-10-20T20:45:42.118Z",
+    "method": "GET",
+    "url": "/auth/session",
+    "rawHeaders": [
+      "Host",
+      "127.0.0.1:64105",
+      "Connection",
+      "keep-alive",
+      "sec-ch-ua-platform",
+      "\"Windows\"",
+      "Authorization",
+      "Bearer A",
+      "User-Agent",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+      "Accept",
+      "application/json, text/plain, */*",
+      "sec-ch-ua",
+      "\"Google Chrome\";v=\"155\", \"Chromium\";v=\"155\", \"Not(A:Brand\";v=\"24\"",
+      "Content-Type",
+      "application/json",
+      "sec-ch-ua-mobile",
+      "?0",
+      "Sec-Fetch-Site",
+      "same-origin",
+      "Sec-Fetch-Mode",
+      "cors",
+      "Sec-Fetch-Dest",
+      "empty",
+      "Referer",
+      "http://127.0.0.1:64105/fixture.html",
+      "Accept-Encoding",
+      "gzip, deflate, br, zstd",
+      "Accept-Language",
+      "zh-CN,zh;q=0.9"
+    ],
+    "authorization": "Bearer A",
+    "cookie": null,
+    "body": "",
+    "response": {
+      "status": 200,
+      "kind": "json",
+      "envelope": {
+        "code": "OK",
+        "message": "OK",
+        "data": {
+          "tenantId": "tenant_A",
+          "principalId": "A",
+          "roles": [
+            "ADMIN"
+          ],
+          "expiresAt": "2026-10-20T20:46:42.118Z"
+        }
+      }
+    }
+  },
+  {
+    "at": "2026-10-20T20:45:42.171Z",
+    "method": "GET",
+    "url": "/admin/runs/r_forbidden_artifact",
+    "rawHeaders": [
+      "Host",
+      "127.0.0.1:64105",
+      "Connection",
+      "keep-alive",
+      "sec-ch-ua-platform",
+      "\"Windows\"",
+      "Authorization",
+      "Bearer A",
+      "User-Agent",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+      "Accept",
+      "application/json, text/plain, */*",
+      "sec-ch-ua",
+      "\"Google Chrome\";v=\"155\", \"Chromium\";v=\"155\", \"Not(A:Brand\";v=\"24\"",
+      "Content-Type",
+      "application/json",
+      "sec-ch-ua-mobile",
+      "?0",
+      "Sec-Fetch-Site",
+      "same-origin",
+      "Sec-Fetch-Mode",
+      "cors",
+      "Sec-Fetch-Dest",
+      "empty",
+      "Referer",
+      "http://127.0.0.1:64105/fixture.html",
+      "Accept-Encoding",
+      "gzip, deflate, br, zstd",
+      "Accept-Language",
+      "zh-CN,zh;q=0.9"
+    ],
+    "authorization": "Bearer A",
+    "cookie": null,
+    "body": "",
+    "response": {
+      "status": 200,
+      "kind": "json",
+      "envelope": {
+        "code": "OK",
+        "message": "OK",
+        "data": {
+          "runId": "r_forbidden_artifact",
+          "status": "SUCCEEDED",
+          "eventsWatermark": 0,
+          "nodes": [],
+          "fileRefs": [
+            {
+              "artifactId": "file",
+              "name": "result.txt",
+              "bytes": 19,
+              "downloadUrl": "/admin/artifacts/file/download"
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "at": "2026-10-20T20:45:42.207Z",
+    "method": "GET",
+    "url": "/admin/runs/r_forbidden_artifact",
+    "rawHeaders": [
+      "Host",
+      "127.0.0.1:64105",
+      "Connection",
+      "keep-alive",
+      "sec-ch-ua-platform",
+      "\"Windows\"",
+      "Authorization",
+      "Bearer A",
+      "User-Agent",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+      "Accept",
+      "application/json, text/plain, */*",
+      "sec-ch-ua",
+      "\"Google Chrome\";v=\"155\", \"Chromium\";v=\"155\", \"Not(A:Brand\";v=\"24\"",
+      "Content-Type",
+      "application/json",
+      "sec-ch-ua-mobile",
+      "?0",
+      "Sec-Fetch-Site",
+      "same-origin",
+      "Sec-Fetch-Mode",
+      "cors",
+      "Sec-Fetch-Dest",
+      "empty",
+      "Referer",
+      "http://127.0.0.1:64105/fixture.html",
+      "Accept-Encoding",
+      "gzip, deflate, br, zstd",
+      "Accept-Language",
+      "zh-CN,zh;q=0.9"
+    ],
+    "authorization": "Bearer A",
+    "cookie": null,
+    "body": "",
+    "response": {
+      "status": 200,
+      "kind": "json",
+      "envelope": {
+        "code": "OK",
+        "message": "OK",
+        "data": {
+          "runId": "r_forbidden_artifact",
+          "status": "SUCCEEDED",
+          "eventsWatermark": 0,
+          "nodes": [],
+          "fileRefs": [
+            {
+              "artifactId": "file",
+              "name": "result.txt",
+              "bytes": 19,
+              "downloadUrl": "/admin/artifacts/file/download"
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "at": "2026-10-20T20:45:42.252Z",
+    "method": "GET",
+    "url": "/admin/artifacts/file/download",
+    "rawHeaders": [
+      "Host",
+      "127.0.0.1:64105",
+      "Connection",
+      "keep-alive",
+      "sec-ch-ua-platform",
+      "\"Windows\"",
+      "Authorization",
+      "Bearer A",
+      "User-Agent",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+      "sec-ch-ua",
+      "\"Google Chrome\";v=\"155\", \"Chromium\";v=\"155\", \"Not(A:Brand\";v=\"24\"",
+      "sec-ch-ua-mobile",
+      "?0",
+      "Accept",
+      "*/*",
+      "Sec-Fetch-Site",
+      "same-origin",
+      "Sec-Fetch-Mode",
+      "cors",
+      "Sec-Fetch-Dest",
+      "empty",
+      "Referer",
+      "http://127.0.0.1:64105/fixture.html",
+      "Accept-Encoding",
+      "gzip, deflate, br, zstd",
+      "Accept-Language",
+      "zh-CN,zh;q=0.9"
+    ],
+    "authorization": "Bearer A",
+    "cookie": null,
+    "body": "",
+    "response": {
+      "status": 403,
+      "kind": "artifact",
+      "body": "controlled artifact"
+    }
+  }
+]

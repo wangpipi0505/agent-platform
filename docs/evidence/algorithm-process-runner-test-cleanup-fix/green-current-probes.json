@@ -1,0 +1,32 @@
+[
+  {
+    "mode": "ps-rejection",
+    "exit": 0,
+    "stdout": "{\"mode\":\"ps-rejection\",\"noRealResourcesStarted\":true,\"closeCalls\":[\"closeAllConnections\",\"close\"],\"unhandled\":[],\"errors\":[{\"message\":\"synthetic PowerShell failure\"}],\"originalHttpRetained\":false,\"originalPsRetained\":true,\"destroyErrorRetained\":false,\"closeErrorRetained\":false,\"httpIsPrimary\":false}\n",
+    "stderr": ""
+  },
+  {
+    "mode": "double-failure",
+    "exit": 0,
+    "stdout": "{\"mode\":\"double-failure\",\"noRealResourcesStarted\":true,\"closeCalls\":[\"closeAllConnections\",\"close\"],\"unhandled\":[],\"errors\":[{\"message\":\"synthetic HTTP failure\"},{\"message\":\"synthetic PowerShell failure\"}],\"originalHttpRetained\":true,\"originalPsRetained\":true,\"destroyErrorRetained\":false,\"closeErrorRetained\":false,\"httpIsPrimary\":true}\n",
+    "stderr": ""
+  },
+  {
+    "mode": "fast-rejection",
+    "exit": 0,
+    "stdout": "{\"mode\":\"fast-rejection\",\"noRealResourcesStarted\":true,\"closeCalls\":[\"closeAllConnections\",\"close\"],\"unhandled\":[],\"errors\":[{\"message\":\"synthetic PowerShell failure\"}],\"originalHttpRetained\":false,\"originalPsRetained\":true,\"destroyErrorRetained\":false,\"closeErrorRetained\":false,\"httpIsPrimary\":false}\n",
+    "stderr": ""
+  },
+  {
+    "mode": "all-close-errors",
+    "exit": 0,
+    "stdout": "{\"mode\":\"all-close-errors\",\"noRealResourcesStarted\":true,\"closeCalls\":[\"closeAllConnections\",\"close\"],\"unhandled\":[],\"errors\":[{\"message\":\"synthetic PowerShell failure\"},{\"message\":\"synthetic connection destroy failure\"},{\"message\":\"synthetic close failure\"}],\"originalHttpRetained\":false,\"originalPsRetained\":true,\"destroyErrorRetained\":true,\"closeErrorRetained\":true,\"httpIsPrimary\":false}\n",
+    "stderr": ""
+  },
+  {
+    "mode": "close-never-settles",
+    "exit": 0,
+    "stdout": "{\"mode\":\"close-never-settles\",\"noRealResourcesStarted\":true,\"closeCalls\":[\"closeAllConnections\",\"close\"],\"unhandled\":[],\"errors\":[{\"message\":\"HTTP test server close timed out\",\"code\":\"ETIMEDOUT\"}],\"originalHttpRetained\":false,\"originalPsRetained\":false,\"destroyErrorRetained\":false,\"closeErrorRetained\":false,\"httpIsPrimary\":false}\n",
+    "stderr": ""
+  }
+]

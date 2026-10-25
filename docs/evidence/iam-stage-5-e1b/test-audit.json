@@ -1,0 +1,350 @@
+[
+  {
+    "stage": "iam-stage-5-e1b-audit-red01",
+    "rawSha256": "d79c7135a140d22b6d98bd5ca55919a635bb458d4a12d7cbdb8803e6f6a17d59",
+    "executed": [
+      "cn.agentplatform.engine.infra.RunAuthorityPersistencePostgresTest"
+    ],
+    "incidental": 0,
+    "totals": {
+      "tests": 1,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0
+    },
+    "buildSuccess": false,
+    "note": "Only raw Running suites are executed evidence; original incidental XML and original executed-suites.json are preserved."
+  },
+  {
+    "stage": "iam-stage-5-e1b-code-red01",
+    "rawSha256": "c176568227d01868a88a9d6b6d7b288cd0abface4c6625e5e6b83c28c1bcbcea",
+    "executed": [
+      "cn.agentplatform.engine.infra.RunAuthorityPersistencePostgresTest"
+    ],
+    "incidental": 0,
+    "totals": {
+      "tests": 1,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0
+    },
+    "buildSuccess": false,
+    "note": "Only raw Running suites are executed evidence; original incidental XML and original executed-suites.json are preserved."
+  },
+  {
+    "stage": "iam-stage-5-e1b-current-edge01",
+    "rawSha256": "30ed63a44fe9c6efdb4eac39b7ddc1ceb36416e1de186b44de6add85d429541c",
+    "executed": [
+      "cn.agentplatform.common.authority.LocalRunAdvanceAuthorityTest",
+      "cn.agentplatform.engine.infra.RunAuthorityLocalCurrentPostgresTest"
+    ],
+    "incidental": 2,
+    "totals": {
+      "tests": 13,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "buildSuccess": true,
+    "note": "Only raw Running suites are executed evidence; original incidental XML and original executed-suites.json are preserved."
+  },
+  {
+    "stage": "iam-stage-5-e1b-current-green01",
+    "rawSha256": "8848fc3d734166a34fe94a1dbda6cbd86f6318f39792d526b002172ce7540278",
+    "executed": [
+      "cn.agentplatform.engine.infra.RunAuthorityLocalCurrentPostgresTest"
+    ],
+    "incidental": 1,
+    "totals": {
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "buildSuccess": true,
+    "note": "Only raw Running suites are executed evidence; original incidental XML and original executed-suites.json are preserved."
+  },
+  {
+    "stage": "iam-stage-5-e1b-current-red01",
+    "rawSha256": "570d2d86142acfaed0d33e5f23914c1c70826d7ac74471a47cc873df46289596",
+    "executed": [
+      "cn.agentplatform.engine.infra.RunAuthorityLocalCurrentPostgresTest"
+    ],
+    "incidental": 1,
+    "totals": {
+      "tests": 1,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0
+    },
+    "buildSuccess": false,
+    "note": "Only raw Running suites are executed evidence; original incidental XML and original executed-suites.json are preserved."
+  },
+  {
+    "stage": "iam-stage-5-e1b-edge-green01",
+    "rawSha256": "65ed492978bd131fc96aa4bbc329d6b5619e642e66258d1d8a9eb54cb2e60af7",
+    "executed": [
+      "cn.agentplatform.engine.infra.InitialMaterialScopePostgresTest",
+      "cn.agentplatform.engine.infra.RunAuthorityPersistencePostgresTest"
+    ],
+    "incidental": 0,
+    "totals": {
+      "tests": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "buildSuccess": true,
+    "note": "Only raw Running suites are executed evidence; original incidental XML and original executed-suites.json are preserved."
+  },
+  {
+    "stage": "iam-stage-5-e1b-edge-red01",
+    "rawSha256": "6227a2ba9dc29a6ac87d87b5fb3ff095e2980a6b118ff553f3f465268252847b",
+    "executed": [
+      "cn.agentplatform.engine.infra.InitialMaterialScopePostgresTest",
+      "cn.agentplatform.engine.infra.RunAuthorityPersistencePostgresTest"
+    ],
+    "incidental": 0,
+    "totals": {
+      "tests": 14,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0
+    },
+    "buildSuccess": false,
+    "note": "Only raw Running suites are executed evidence; original incidental XML and original executed-suites.json are preserved."
+  },
+  {
+    "stage": "iam-stage-5-e1b-final-common01",
+    "rawSha256": "4c39d6b88bd4f3b0ab2bdb4a958a8bf1bf6153b75c0b38a814046380c8f7049d",
+    "executed": [
+      "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+      "cn.agentplatform.common.authority.AuthorityContextRetainedTest",
+      "cn.agentplatform.common.authority.AuthorityPolicyTest",
+      "cn.agentplatform.common.authority.CurrentAuthorityClientTest",
+      "cn.agentplatform.common.authority.IntegrationClaimsTest",
+      "cn.agentplatform.common.authority.LocalRunAdvanceAuthorityTest",
+      "cn.agentplatform.common.authority.MetadataSelectorsTest",
+      "cn.agentplatform.common.authority.PolicyRequestVerifierTest",
+      "cn.agentplatform.common.authority.PortalClaimMapperTest",
+      "cn.agentplatform.common.authority.ResponseAuthorityTest",
+      "cn.agentplatform.common.authority.RetainedAuthorizationTest",
+      "cn.agentplatform.common.authority.RouteCoverageVerifierTest",
+      "cn.agentplatform.common.authority.ServiceAuthorizationTest",
+      "cn.agentplatform.common.authority.ServiceTicketProviderTest",
+      "cn.agentplatform.common.authority.TrustedJwtDecoderTest",
+      "cn.agentplatform.common.CommonBoundaryTest",
+      "cn.agentplatform.common.schema.SharedSchemaAdmissionTest",
+      "cn.agentplatform.common.SecretVaultTest"
+    ],
+    "incidental": 0,
+    "totals": {
+      "tests": 179,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "buildSuccess": true,
+    "note": "Only raw Running suites are executed evidence; original incidental XML and original executed-suites.json are preserved."
+  },
+  {
+    "stage": "iam-stage-5-e1b-final-engine01",
+    "rawSha256": "f7ec088e9df8efe1d733eccf85d27c8a40bca9cae643877d3da549381dae3e76",
+    "executed": [
+      "cn.agentplatform.engine.infra.InitialMaterialScopePostgresTest",
+      "cn.agentplatform.engine.infra.RunAuthorityLocalCurrentPostgresTest",
+      "cn.agentplatform.engine.infra.RunAuthorityPersistencePostgresTest"
+    ],
+    "incidental": 0,
+    "totals": {
+      "tests": 33,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "buildSuccess": true,
+    "note": "Only raw Running suites are executed evidence; original incidental XML and original executed-suites.json are preserved."
+  },
+  {
+    "stage": "iam-stage-5-e1b-final-engine02",
+    "rawSha256": "a2fb6824678193ca90226e68a16b11a1d51cbbf350721367edc547af4518e2f5",
+    "executed": [
+      "cn.agentplatform.engine.infra.InitialMaterialScopePostgresTest",
+      "cn.agentplatform.engine.infra.RunAuthorityLocalCurrentPostgresTest",
+      "cn.agentplatform.engine.infra.RunAuthorityPersistencePostgresTest"
+    ],
+    "incidental": 0,
+    "totals": {
+      "tests": 35,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "buildSuccess": true,
+    "note": "Only raw Running suites are executed evidence; original incidental XML and original executed-suites.json are preserved."
+  },
+  {
+    "stage": "iam-stage-5-e1b-local-green01",
+    "rawSha256": "b513f581ee5ca99608b794bd4126bd136a8add68cddd54cdaa4316afdc9badc9",
+    "executed": [
+      "cn.agentplatform.common.authority.LocalRunAdvanceAuthorityTest"
+    ],
+    "incidental": 0,
+    "totals": {
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "buildSuccess": true,
+    "note": "Only raw Running suites are executed evidence; original incidental XML and original executed-suites.json are preserved."
+  },
+  {
+    "stage": "iam-stage-5-e1b-local-red01",
+    "rawSha256": "fcbc7dce8cf2287bb317501fa066ea36467a074d827d62e7a40f523422e1bb0b",
+    "executed": [
+      "cn.agentplatform.common.authority.LocalRunAdvanceAuthorityTest"
+    ],
+    "incidental": 0,
+    "totals": {
+      "tests": 2,
+      "failures": 0,
+      "errors": 1,
+      "skipped": 0
+    },
+    "buildSuccess": false,
+    "note": "Only raw Running suites are executed evidence; original incidental XML and original executed-suites.json are preserved."
+  },
+  {
+    "stage": "iam-stage-5-e1b-local-red02",
+    "rawSha256": "1e3f3171045d64cceddee69fa2cdddc2c6a511a72ef042ca3ee9dd9dbf39fc06",
+    "executed": [
+      "cn.agentplatform.common.authority.LocalRunAdvanceAuthorityTest"
+    ],
+    "incidental": 0,
+    "totals": {
+      "tests": 2,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0
+    },
+    "buildSuccess": false,
+    "note": "Only raw Running suites are executed evidence; original incidental XML and original executed-suites.json are preserved."
+  },
+  {
+    "stage": "iam-stage-5-e1b-material-check01",
+    "rawSha256": "1c79d22d3b041e9123f74766bed218eb49320f44fdc1467113d951a98f62ed2b",
+    "executed": [
+      "cn.agentplatform.engine.infra.InitialMaterialScopePostgresTest"
+    ],
+    "incidental": 1,
+    "totals": {
+      "tests": 7,
+      "failures": 2,
+      "errors": 0,
+      "skipped": 0
+    },
+    "buildSuccess": false,
+    "note": "Only raw Running suites are executed evidence; original incidental XML and original executed-suites.json are preserved."
+  },
+  {
+    "stage": "iam-stage-5-e1b-metadata-green01",
+    "rawSha256": "642edab6bc4da3549c0bc074cb6425be73569e151ff9cd4697be5ad20ba05644",
+    "executed": [
+      "cn.agentplatform.engine.infra.InitialMaterialScopePostgresTest",
+      "cn.agentplatform.engine.infra.RunAuthorityLocalCurrentPostgresTest",
+      "cn.agentplatform.engine.infra.RunAuthorityPersistencePostgresTest"
+    ],
+    "incidental": 0,
+    "totals": {
+      "tests": 30,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "buildSuccess": true,
+    "note": "Only raw Running suites are executed evidence; original incidental XML and original executed-suites.json are preserved."
+  },
+  {
+    "stage": "iam-stage-5-e1b-metadata-red01",
+    "rawSha256": "88ba5fdc7c0dba9380f1305e76ff483effe2c3de83f887111bce9ed4385c76e0",
+    "executed": [
+      "cn.agentplatform.engine.infra.InitialMaterialScopePostgresTest",
+      "cn.agentplatform.engine.infra.RunAuthorityLocalCurrentPostgresTest",
+      "cn.agentplatform.engine.infra.RunAuthorityPersistencePostgresTest"
+    ],
+    "incidental": 1,
+    "totals": {
+      "tests": 30,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0
+    },
+    "buildSuccess": false,
+    "note": "Only raw Running suites are executed evidence; original incidental XML and original executed-suites.json are preserved."
+  },
+  {
+    "stage": "iam-stage-5-e1b-persistence-green01",
+    "rawSha256": "f0c3e466a448582e9054f319cbbbb8e9b4c9f966285e0dcb7ef2442d24eebcab",
+    "executed": [
+      "cn.agentplatform.engine.infra.RunAuthorityPersistencePostgresTest"
+    ],
+    "incidental": 0,
+    "totals": {
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "buildSuccess": true,
+    "note": "Only raw Running suites are executed evidence; original incidental XML and original executed-suites.json are preserved."
+  },
+  {
+    "stage": "iam-stage-5-e1b-persistence-red01",
+    "rawSha256": "dcd25d87a617fae13bf905ac0c62128f6cc7370a085ecc11c24482f4f2281e3e",
+    "executed": [
+      "cn.agentplatform.engine.infra.RunAuthorityPersistencePostgresTest"
+    ],
+    "incidental": 2,
+    "totals": {
+      "tests": 1,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0
+    },
+    "buildSuccess": false,
+    "note": "Only raw Running suites are executed evidence; original incidental XML and original executed-suites.json are preserved."
+  },
+  {
+    "stage": "iam-stage-5-e1b-persistence-red02",
+    "rawSha256": "70a897975921b387d898801a54c7547e7c3df6edaf3c13ec810796ee02e66f49",
+    "executed": [
+      "cn.agentplatform.engine.infra.RunAuthorityPersistencePostgresTest"
+    ],
+    "incidental": 1,
+    "totals": {
+      "tests": 1,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0
+    },
+    "buildSuccess": false,
+    "note": "Only raw Running suites are executed evidence; original incidental XML and original executed-suites.json are preserved."
+  },
+  {
+    "stage": "iam-stage-5-e1b-pg-preflight01",
+    "rawSha256": "b41a902062024fc766a3d5c639ffbaaeed5bb712e70559719ba075d120d63697",
+    "executed": [
+      "cn.agentplatform.engine.infra.RunAuthorityDatabasePreflightTest"
+    ],
+    "incidental": 1,
+    "totals": {
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "buildSuccess": true,
+    "note": "Only raw Running suites are executed evidence; original incidental XML and original executed-suites.json are preserved."
+  }
+]

@@ -1,0 +1,124 @@
+{
+  "frozenAt": "2026-10-20T06:27:00.9978506+08:00",
+  "scope": "Shared RunService input admission and FLOW START compatibility only; no deployment",
+  "designSha256": "3c72b2062beb2e8b377f2384843ea935a0074b50c0063e5106566bbd8dcd0c4f",
+  "checks": [
+    {
+      "name": "admission-red",
+      "errors": 0,
+      "tests": 21,
+      "skipped": 0,
+      "failures": 15
+    },
+    {
+      "name": "admission-green",
+      "errors": 0,
+      "tests": 21,
+      "skipped": 0,
+      "failures": 0
+    },
+    {
+      "name": "first-engine-full",
+      "errors": 0,
+      "tests": 351,
+      "skipped": 0,
+      "failures": 0
+    },
+    {
+      "name": "start-correct-red",
+      "errors": 0,
+      "tests": 27,
+      "skipped": 0,
+      "failures": 4
+    },
+    {
+      "name": "start-green",
+      "errors": 0,
+      "tests": 27,
+      "skipped": 0,
+      "failures": 0
+    },
+    {
+      "name": "final-production-engine-full",
+      "errors": 0,
+      "tests": 357,
+      "skipped": 0,
+      "failures": 0
+    },
+    {
+      "name": "final-strengthened-targeted",
+      "errors": 0,
+      "tests": 27,
+      "skipped": 0,
+      "failures": 0
+    }
+  ],
+  "readOnlyDependencies": [
+    {
+      "sha256": "d7e3ea02fc12fb6574513fabc759fd978c2c42b4c3c340e9bfb46207644b5e89",
+      "path": "engine-runtime/src/main/java/cn/agentplatform/engine/domain/InputDeclarations.java"
+    }
+  ],
+  "files": [
+    {
+      "path": "engine-runtime/src/main/java/cn/agentplatform/engine/application/RunService.java",
+      "sha256": "93b64f4dbd6a78e2b9a65a788a5c6ab6c5911fae73455142aaa28f913c39d24e"
+    },
+    {
+      "path": "engine-runtime/src/main/java/cn/agentplatform/engine/application/FlowDriver.java",
+      "sha256": "a0e65396eb52818a091b33cb1606053b0ddc4969381cace0b2b0f9e8b407c563"
+    },
+    {
+      "path": "engine-runtime/src/test/java/cn/agentplatform/engine/infra/RunInputValidationPostgresTest.java",
+      "sha256": "2fe0285d6f848209327f9c5edeea8ac0fae2a3fc44de3adf5a05e304d78579ab"
+    },
+    {
+      "path": "docs/evidence/runtime-input-validation.md",
+      "sha256": "de0b577e4a3f6ce21d63582a8500d406314db554a0194c9ecec96a19d888579c"
+    },
+    {
+      "path": "docs/evidence/runtime-input-validation-contracts.log",
+      "sha256": "f3790f517d3887be5c977eb865b94c8c8fca45e9f110485a22b503cffd568d6d"
+    },
+    {
+      "path": "docs/evidence/runtime-input-validation-engine-full.log",
+      "sha256": "f76fed26cde20a1fdcca56675b6bdb9b5d2d10a2ee75d8fc2d55e731cb667cea"
+    },
+    {
+      "path": "docs/evidence/runtime-input-validation-final-engine-full.log",
+      "sha256": "cf82f7a0316571f3221f64368d6724df5b97ddac6ea62f494c6fe405da37ef74"
+    },
+    {
+      "path": "docs/evidence/runtime-input-validation-final-green.log",
+      "sha256": "a596675866dd306a13e13a6ba842f655870f72f649c57ee24cfef90f08b50a2f"
+    },
+    {
+      "path": "docs/evidence/runtime-input-validation-format.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/evidence/runtime-input-validation-pg-green.log",
+      "sha256": "eb4eb5694b099ffff403308ab228372f865721e7c445eac7551247ade9eb7948"
+    },
+    {
+      "path": "docs/evidence/runtime-input-validation-pg-red.log",
+      "sha256": "f6a8541853bdc2de74961b391eaab86323028aaea149251897ced44aa67d7d14"
+    },
+    {
+      "path": "docs/evidence/runtime-input-validation-red.log",
+      "sha256": "dc46682828a8ed8f9a916741e66a4d658ceae1ac2aec35ed04834d5f9271be90"
+    },
+    {
+      "path": "docs/evidence/runtime-input-validation-start-green.log",
+      "sha256": "fe75910c6e82d5f381ac06804fe677c3d58ed5cf80c4e9b29c527cd131546401"
+    },
+    {
+      "path": "docs/evidence/runtime-input-validation-start-harness-red.log",
+      "sha256": "c7ba6901a95bdf38eb77baa9e91807349d0ab2f9ebf5df6b52684c02d4397f91"
+    },
+    {
+      "path": "docs/evidence/runtime-input-validation-start-red.log",
+      "sha256": "9bb66cc8cb6c3d3dfb55cddb953e1db6f1f25077595edd86f39070d8c51ebeee"
+    }
+  ]
+}

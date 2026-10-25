@@ -1,0 +1,25 @@
+
+ RUN  v4.1.12 G:/207/项目/算法重组工具/代码/agent-platform/web
+
+ ❯ tests/portal-auth.test.ts (0 test)
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  04:12:14
+   Duration  278ms (transform 41ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/portal-auth.test.ts [ tests/portal-auth.test.ts ]
+Error: Cannot find module '../shared/portal-auth' imported from G:/207/项目/算法重组工具/代码/agent-platform/web/tests/portal-auth.test.ts
+ ❯ tests/portal-auth.test.ts:4:1
+      2| import {createPinia, setActivePinia} from 'pinia';
+      3| import {useAuth, createApi} from '../shared/api';
+      4| import {createPortalSession, portalMode, trustedPortal} from '../share…
+       | ^
+      5| const session=(roles:string[]=[])=>({tenantId:'tenant',principalId:'pe…
+      6| const reply=(data:any,status=200,code='OK')=>new Response(JSON.stringi…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+

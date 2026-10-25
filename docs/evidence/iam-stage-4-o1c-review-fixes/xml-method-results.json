@@ -1,0 +1,119 @@
+[
+  {
+    "stage": "iam-stage-o1c-fix-red01",
+    "class": "cn.agentplatform.gateway.application.RunObservationGetTransportTest",
+    "tests": 2,
+    "failures": 2,
+    "errors": 0,
+    "skipped": 0,
+    "xml": "TEST-cn.agentplatform.gateway.application.RunObservationGetTransportTest.xml",
+    "methods": [
+      {
+        "name": "preBodyRejectionsAbortBeforeClosingStalledBody",
+        "seconds": 2.313,
+        "failure": "java.lang.AssertionError",
+        "error": null
+      },
+      {
+        "name": "declaredExcessiveLengthAbortsBeforeClosingStalledBody",
+        "seconds": 2.007,
+        "failure": "java.lang.AssertionError",
+        "error": null
+      }
+    ]
+  },
+  {
+    "stage": "iam-stage-o1c-fix-final01",
+    "class": "cn.agentplatform.common.authority.GatewayRunStatusChainPostgresTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "xml": "TEST-cn.agentplatform.common.authority.GatewayRunStatusChainPostgresTest.xml",
+    "methods": [
+      {
+        "name": "partialOutputNeverAppendsOrRetries",
+        "seconds": 1.462,
+        "failure": null,
+        "error": null
+      },
+      {
+        "name": "realGatewayQueryAndStatusReturnOriginalBytes",
+        "seconds": 0.633,
+        "failure": null,
+        "error": null
+      }
+    ]
+  },
+  {
+    "stage": "iam-stage-o1c-fix-final01",
+    "class": "cn.agentplatform.gateway.application.RunObservationGetTransportTest",
+    "tests": 10,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "xml": "TEST-cn.agentplatform.gateway.application.RunObservationGetTransportTest.xml",
+    "methods": [
+      {
+        "name": "retainedErrorsRequireStrictFiniteStatusCodeEnvelopePairs",
+        "seconds": 0.049,
+        "failure": null,
+        "error": null
+      },
+      {
+        "name": "overflowAbortsBeforeClosingUnreadChunkStream",
+        "seconds": 0.038,
+        "failure": null,
+        "error": null
+      },
+      {
+        "name": "realChunkedMultiHeaderResponseUsesOnlyFixedPathAndOneTicket",
+        "seconds": 0.003,
+        "failure": null,
+        "error": null
+      },
+      {
+        "name": "metadataAndStatusActualReadLimitsAcceptExactAndRejectPlusOne",
+        "seconds": 0.071,
+        "failure": null,
+        "error": null
+      },
+      {
+        "name": "checkAfterActualConnectCanDenyBeforeAnyRequestByte",
+        "seconds": 0.002,
+        "failure": null,
+        "error": null
+      },
+      {
+        "name": "totalDeadlineCancellationAndOwnedCloseStopActualHandles",
+        "seconds": 0.109,
+        "failure": null,
+        "error": null
+      },
+      {
+        "name": "preBodyRejectionsAbortBeforeClosingStalledBody",
+        "seconds": 0.014,
+        "failure": null,
+        "error": null
+      },
+      {
+        "name": "strictErrorsRejectNonUtf8Encoding",
+        "seconds": 0.009,
+        "failure": null,
+        "error": null
+      },
+      {
+        "name": "redirectsChallengesUnknownAndUnsafeWireNeverRetryOrForwardHeaders",
+        "seconds": 0.028,
+        "failure": null,
+        "error": null
+      },
+      {
+        "name": "declaredExcessiveLengthAbortsBeforeClosingStalledBody",
+        "seconds": 0.004,
+        "failure": null,
+        "error": null
+      }
+    ]
+  }
+]

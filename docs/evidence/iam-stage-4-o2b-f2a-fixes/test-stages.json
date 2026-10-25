@@ -1,0 +1,118 @@
+[
+  {
+    "stage": "iam-stage-o2b-f2a-fix-bulk-collector-green",
+    "selector": "PortalEventsTlsTest#bulkReaderOwnsWholeCallIncludingBlockedTarget,PortalEventsTlsTest#launchMetadataFailureActuallyTerminatesNewOwnedProcess,PortalEventsTlsTest#mechanicalLifecycleAndConfigurationHaveNoAuthorityBypass",
+    "exit": 1,
+    "running": [
+      "cn.agentplatform.gateway.infra.PortalEventsTlsTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalEventsTlsTest",
+        "tests": 6,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 1
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2a-fixes/stages/iam-stage-o2b-f2a-fix-bulk-collector-green"
+  },
+  {
+    "stage": "iam-stage-o2b-f2a-fix-eof-collector-green",
+    "selector": "PortalEventsTlsTest#bulkReaderOwnsWholeCallIncludingBlockedTarget,PortalEventsTlsTest#boundedReadNBytesReturnsShortCountAtEofWithUniqueCredit,PortalEventsTlsTest#launchMetadataFailureActuallyTerminatesNewOwnedProcess",
+    "exit": 0,
+    "running": [
+      "cn.agentplatform.gateway.infra.PortalEventsTlsTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalEventsTlsTest",
+        "tests": 6,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2a-fixes/stages/iam-stage-o2b-f2a-fix-eof-collector-green"
+  },
+  {
+    "stage": "iam-stage-o2b-f2a-fix-final",
+    "selector": "PortalEventsTlsDebtTest,PortalEventsTlsTest",
+    "exit": 0,
+    "running": [
+      "cn.agentplatform.gateway.infra.PortalEventsTlsDebtTest",
+      "cn.agentplatform.gateway.infra.PortalEventsTlsTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalEventsTlsDebtTest",
+        "tests": 7,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0
+      },
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalEventsTlsTest",
+        "tests": 40,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2a-fixes/stages/iam-stage-o2b-f2a-fix-final"
+  },
+  {
+    "stage": "iam-stage-o2b-f2a-fix-focused-green",
+    "selector": "PortalEventsTlsTest#bulkReaderOwnsWholeCallIncludingBlockedTarget,PortalEventsTlsTest#plainObserverDetectsApplicationAndAdditionalConnectionNegativeControl,PortalEventsTlsTest#launchMetadataFailureActuallyTerminatesNewOwnedProcess,PortalEventsTlsTest#closedSocketStateSurvivesCloseFailureWithoutReleasingSlot,PortalEventsTlsTest#credentialOrProfileFailureDeliversNoApplication",
+    "exit": 0,
+    "running": [
+      "cn.agentplatform.gateway.infra.PortalEventsTlsTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalEventsTlsTest",
+        "tests": 13,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2a-fixes/stages/iam-stage-o2b-f2a-fix-focused-green"
+  },
+  {
+    "stage": "iam-stage-o2b-f2a-fix-functional-red",
+    "selector": "PortalEventsTlsTest#bulkReaderOwnsWholeCallIncludingBlockedTarget,PortalEventsTlsTest#plainObserverDetectsApplicationAndAdditionalConnectionNegativeControl,PortalEventsTlsTest#launchMetadataFailureActuallyTerminatesNewOwnedProcess",
+    "exit": 1,
+    "running": [
+      "cn.agentplatform.gateway.infra.PortalEventsTlsTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalEventsTlsTest",
+        "tests": 4,
+        "errors": 1,
+        "skipped": 0,
+        "failures": 3
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2a-fixes/stages/iam-stage-o2b-f2a-fix-functional-red"
+  },
+  {
+    "stage": "iam-stage-o2b-f2a-fix-observer-state-red",
+    "selector": "PortalEventsTlsTest#plainObserverDetectsApplicationAndAdditionalConnectionNegativeControl,PortalEventsTlsTest#closedSocketStateSurvivesCloseFailureWithoutReleasingSlot",
+    "exit": 1,
+    "running": [
+      "cn.agentplatform.gateway.infra.PortalEventsTlsTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalEventsTlsTest",
+        "tests": 2,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 2
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2a-fixes/stages/iam-stage-o2b-f2a-fix-observer-state-red"
+  }
+]

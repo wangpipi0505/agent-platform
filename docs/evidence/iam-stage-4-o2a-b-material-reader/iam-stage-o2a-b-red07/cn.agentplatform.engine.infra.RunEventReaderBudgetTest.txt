@@ -1,0 +1,14 @@
+-------------------------------------------------------------------------------
+Test set: cn.agentplatform.engine.infra.RunEventReaderBudgetTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 0.051 s <<< FAILURE! -- in cn.agentplatform.engine.infra.RunEventReaderBudgetTest
+cn.agentplatform.engine.infra.RunEventReaderBudgetTest.deploymentRepresentationModelCanonicalAndTotalBudgetsAreIndependentHardLimits -- Time elapsed: 0.034 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+
+expected: 67108864L
+ but was: 536870912L
+	at cn.agentplatform.engine.infra.RunEventReaderBudgetTest.deploymentRepresentationModelCanonicalAndTotalBudgetsAreIndependentHardLimits(RunEventReaderBudgetTest.java:92)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+

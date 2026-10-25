@@ -1,0 +1,46 @@
+[
+  {
+    "name": "D4b lifecycle Shell logout ignores queued host notifications and manual reconnect restores one subscription",
+    "passed": true,
+    "rawStart": 0,
+    "rawEnd": 6,
+    "afterLogout": {
+      "token": "",
+      "user": null,
+      "roles": [],
+      "providerCalls": 1,
+      "subscriptions": 1,
+      "unsubscribed": 1,
+      "active": 0
+    },
+    "manualSubscriptions": 2,
+    "activeSubscriptions": 1,
+    "activeHostSwitch": "B",
+    "postOrCancelCount": 0
+  },
+  {
+    "name": "D4b lifecycle Shell artifact401 stays invalid after host event until manual reconnect",
+    "passed": true,
+    "rawStart": 6,
+    "rawEnd": 17,
+    "currentArtifact401": true,
+    "hostDidNotReconnect": true,
+    "manualIdentity": "B",
+    "providerCalls": 2,
+    "downloadCount": 1,
+    "postOrCancelCount": 0
+  },
+  {
+    "name": "D4b lifecycle Shell expiry bounds rollback and waits for manual recovery after host event",
+    "passed": true,
+    "rawStart": 17,
+    "rawEnd": 21,
+    "wallRollbackMs": 3600000,
+    "installedLifetimeMs": 1200,
+    "expiredAtMonotonicBound": true,
+    "hostDidNotReconnect": true,
+    "manualIdentity": "B",
+    "providerCalls": 2,
+    "postOrCancelCount": 0
+  }
+]

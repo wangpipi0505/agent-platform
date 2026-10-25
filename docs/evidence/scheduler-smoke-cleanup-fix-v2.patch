@@ -1,0 +1,169 @@
+diff --git a/tests/scheduler-smoke-cleanup.mjs b/tests/scheduler-smoke-cleanup.mjs
+index 44a614d..65cb94c 100644
+--- a/tests/scheduler-smoke-cleanup.mjs
++++ b/tests/scheduler-smoke-cleanup.mjs
+@@ -1,17 +1,29 @@
+ // Private to the real scheduler smoke script and its finite, pure Node regression.
+-export async function cleanupSchedulerSmoke({ lock, children, processRecords, stop, fixture, sockets, writeRecords, failure }) {
++export async function cleanupSchedulerSmoke({ lock, children, processRecords, stop, fixture, sockets, writeRecords, failure, closeTimeoutMs = 1000 }) {
+   const errors = [];
+-  const attempt = async (resource, close) => {
+-    try { await close(); } catch (cause) { errors.push(new Error('Cleanup failed: ' + resource, { cause })); }
++  const attempt = async (resource, close, timeoutMs) => {
++    let timer;
++    try {
++      const closing = close();
++      await (timeoutMs === undefined ? closing : Promise.race([closing, new Promise((resolve, reject) => {
++        timer = setTimeout(() => reject(Object.assign(new Error(resource + ' timed out after ' + timeoutMs + 'ms'), { code: 'ETIMEDOUT' })), timeoutMs);
++      })]));
++    } catch (cause) { errors.push(new Error('Cleanup failed: ' + resource, { cause })); }
++    finally { clearTimeout(timer); }
+   };
+-  if (lock && lock.exitCode === null) await attempt('node lock', () => lock.stdin.end('rollback;\n\\q\n'));
++  if (lock && lock.exitCode === null) await attempt('node lock', () => new Promise((resolve, reject) => {
++    // end() returns Writable; observe completion and retain the error handler because
++    // Node may emit the queued stream error after invoking the end callback.
++    lock.stdin.on('error', reject);
++    lock.stdin.end('rollback;\n\\q\n', error => error ? reject(error) : resolve());
++  }), closeTimeoutMs);
+   for (const child of children) {
+     await attempt('engine PID ' + child.pid, () => stop({ child, record: processRecords.find(entry => entry.pid === child.pid) }));
+   }
+   // Initiate peer close before destroying connections; its callback may wait for them.
+   const peerClosed = fixture ? attempt('fixture peer', () => new Promise((resolve, reject) => {
+     fixture.close(error => error && error.code !== 'ERR_SERVER_NOT_RUNNING' ? reject(error) : resolve());
+-  })) : Promise.resolve();
++  }), closeTimeoutMs) : Promise.resolve();
+   let socketIndex = 0;
+   for (const socket of sockets) await attempt('fixture socket ' + socketIndex++, () => socket.destroy());
+   // Persist final stop results even while peer shutdown is still settling.
+diff --git a/tests/scheduler-smoke-cleanup.test.mjs b/tests/scheduler-smoke-cleanup.test.mjs
+index 193c2fa..0b5308c 100644
+--- a/tests/scheduler-smoke-cleanup.test.mjs
++++ b/tests/scheduler-smoke-cleanup.test.mjs
+@@ -1,6 +1,7 @@
+ import assert from 'node:assert/strict';
+ import fs from 'node:fs/promises';
+ import path from 'node:path';
++import { Writable } from 'node:stream';
+ import test from 'node:test';
+ import { cleanupSchedulerSmoke } from './scheduler-smoke-cleanup.mjs';
+ 
+@@ -13,7 +14,9 @@ function resources(failures = {}) {
+   return {
+     calls,
+     options: {
+-      lock: { exitCode: null, stdin: { end: text => { assert.equal(text, 'rollback;\n\\q\n'); run('lock'); } } },
++      lock: { exitCode: null, stdin: new Writable({ write(chunk, encoding, done) {
++        try { assert.equal(chunk.toString(), 'rollback;\n\\q\n'); run('lock'); done(); } catch (error) { done(error); }
++      } }) },
+       children: [{ pid: 101 }, { pid: 102 }],
+       processRecords: [{ pid: 101 }, { pid: 102 }],
+       stop: async ({ child, record }) => { assert.equal(record.pid, child.pid); run('stop:' + child.pid); record.stopped = true; },
+diff --git a/tests/scheduler-smoke-cleanup-async.test.mjs b/tests/scheduler-smoke-cleanup-async.test.mjs
+new file mode 100644
+index 0000000..3c53ad9
+--- /dev/null
++++ b/tests/scheduler-smoke-cleanup-async.test.mjs
+@@ -0,0 +1,101 @@
++import assert from 'node:assert/strict';
++import { spawnSync } from 'node:child_process';
++import { Writable } from 'node:stream';
++import test from 'node:test';
++import { cleanupSchedulerSmoke } from './scheduler-smoke-cleanup.mjs';
++
++const helperUrl = new URL('./scheduler-smoke-cleanup.mjs', import.meta.url).href;
++
++test('real Writable nextTick EPIPE is aggregated without an unhandled event or skipped resources', { timeout: 3000 }, () => {
++  const source = `
++    import assert from 'node:assert/strict';
++    import { Writable } from 'node:stream';
++    import { cleanupSchedulerSmoke } from ${JSON.stringify(helperUrl)};
++    const calls = [];
++    const validation = new Error('original validation');
++    const pipeError = Object.assign(new Error('closed lock pipe'), {code: 'EPIPE'});
++    const stdin = new Writable({ write(chunk, encoding, done) {
++      assert.equal(chunk.toString(), 'rollback;\\n\\\\q\\n');
++      calls.push('lock-write');
++      process.nextTick(() => done(pipeError));
++    }});
++    let thrown;
++    try { await cleanupSchedulerSmoke({
++      lock: {exitCode: null, stdin},
++      children: [{pid:101}, {pid:102}], processRecords: [{pid:101}, {pid:102}],
++      stop: async ({child}) => { calls.push('stop:' + child.pid); await new Promise(resolve => setImmediate(resolve)); },
++      fixture: {close: done => {calls.push('peer'); done();}},
++      sockets: new Set([{destroy: () => calls.push('socket')}]),
++      writeRecords: async () => calls.push('records'), failure: {error: validation}, closeTimeoutMs: 30
++    }); } catch (error) { thrown = error; }
++    await new Promise(resolve => setImmediate(resolve));
++    assert.deepEqual(calls, ['lock-write','stop:101','stop:102','peer','socket','records']);
++    assert(thrown instanceof AggregateError);
++    assert.equal(thrown.cause, validation);
++    assert.equal(thrown.errors[0], validation);
++    assert.equal(thrown.errors[1].cause, pipeError);
++    console.log(JSON.stringify({calls, originalPreserved: true, code: thrown.errors[1].cause.code}));
++  `;
++  const child = spawnSync(process.execPath, ['--input-type=module', '-'], { input: source, encoding: 'utf8', timeout: 2000, windowsHide: true });
++  assert.equal(child.error, undefined, String(child.error));
++  assert.equal(child.status, 0, 'stdout: ' + child.stdout + '\nstderr: ' + child.stderr);
++  assert.equal(child.stderr, '');
++  assert.equal(JSON.parse(child.stdout).code, 'EPIPE');
++});
++
++test('peer that never closes rejects within the bound after a socket destroy failure', { timeout: 1000 }, async () => {
++  const calls = [];
++  const validation = new Error('original validation');
++  const socketError = new Error('socket destroy failed');
++  const cleanup = cleanupSchedulerSmoke({
++    children: [], processRecords: [], stop: async () => {},
++    fixture: { close: () => calls.push('peer') },
++    sockets: new Set([{destroy: () => {calls.push('socket:1'); throw socketError;}}, {destroy: () => calls.push('socket:2')}]),
++    writeRecords: async () => calls.push('records'), failure: {error: validation}, closeTimeoutMs: 30
++  });
++  let observer;
++  const outcome = await Promise.race([cleanup.then(() => ({fulfilled: true}), error => ({error})),
++    new Promise(resolve => { observer = setTimeout(() => resolve({pending: true}), 200); })]);
++  clearTimeout(observer);
++  assert.deepEqual(calls, ['peer','socket:1','socket:2','records']);
++  assert.equal(outcome.pending, undefined, 'peer close must have a finite rejection bound');
++  assert(outcome.error instanceof AggregateError);
++  assert.equal(outcome.error.cause, validation);
++  assert.equal(outcome.error.errors[0], validation);
++  assert(outcome.error.errors.some(error => error.cause === socketError));
++  assert(outcome.error.errors.some(error => /fixture peer/.test(error.message) && error.cause.code === 'ETIMEDOUT'));
++});
++
++test('peer with a missing tracked socket still reports its timeout', { timeout: 1000 }, async () => {
++  const calls = [];
++  const cleanup = cleanupSchedulerSmoke({
++    children: [], processRecords: [], stop: async () => {},
++    fixture: {close: () => calls.push('peer')}, sockets: new Set(),
++    writeRecords: async () => calls.push('records'), closeTimeoutMs: 30
++  });
++  let observer;
++  const outcome = await Promise.race([cleanup.then(() => ({fulfilled: true}), error => ({error})),
++    new Promise(resolve => { observer = setTimeout(() => resolve({pending: true}), 200); })]);
++  clearTimeout(observer);
++  assert.deepEqual(calls, ['peer','records']);
++  assert.equal(outcome.pending, undefined, 'missing sockets must not leave peer cleanup pending');
++  assert(outcome.error instanceof AggregateError);
++  assert.equal(outcome.error.errors.length, 1);
++  assert.equal(outcome.error.errors[0].cause.code, 'ETIMEDOUT');
++});
++
++test('lock whose real Writable never completes is bounded and later resources still run', { timeout: 1000 }, async () => {
++  const calls = [];
++  const validation = new Error('original validation');
++  const stdin = new Writable({write() {calls.push('lock-write');}});
++  let thrown;
++  try { await cleanupSchedulerSmoke({
++    lock: {exitCode: null, stdin}, children: [{pid:101}], processRecords: [{pid:101}],
++    stop: async () => calls.push('stop'), fixture: {close: done => {calls.push('peer'); done();}}, sockets: new Set(),
++    writeRecords: async () => calls.push('records'), failure: {error: validation}, closeTimeoutMs: 30
++  }); } catch (error) { thrown = error; }
++  assert.deepEqual(calls, ['lock-write','stop','peer','records']);
++  assert(thrown instanceof AggregateError);
++  assert.equal(thrown.cause, validation);
++  assert.equal(thrown.errors[1].cause.code, 'ETIMEDOUT');
++});

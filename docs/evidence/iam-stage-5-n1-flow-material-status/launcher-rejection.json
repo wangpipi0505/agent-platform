@@ -1,0 +1,9 @@
+{
+  "classification": "launcher grammar rejection, not Maven/setup/behavior test",
+  "command": "node .tools/run-iam-module-tests.mjs iam-stage-5-n1-red03 engine-runtime FlowMaterialScopePostgresTest#normalLeaseRenewalDoesNotInvalidateUserFactScope+explicitRetainedMaterialReadChecksProofAfterActualReadCommit",
+  "exit": 1,
+  "reason": "tests argument did not match /^[A-Za-z0-9_#*,.-]+$/ because + is outside the controlled grammar",
+  "actualMavenStarted": false,
+  "xmlExecuted": 0,
+  "correction": "same not-yet-created stage name launched using the allowed whole FlowMaterialScopePostgresTest argument; protected runner unchanged"
+}

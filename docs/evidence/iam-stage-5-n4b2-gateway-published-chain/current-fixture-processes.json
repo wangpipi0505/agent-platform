@@ -1,0 +1,15 @@
+{
+  "at": "2026-10-20T18:16:03.837Z",
+  "command": [
+    "powershell.exe",
+    "-NoProfile",
+    "-NonInteractive",
+    "-Command",
+    "$taskFixtureProcesses = @(Get-CimInstance Win32_Process -Filter \"Name = 'java.exe'\" | Where-Object { $_.CommandLine -match 'cn[.]agentplatform[.]common[.]authority[.](PublishedAdmissionFixtureMain|GatewayPublishedEngineFixtureMain)' } | Select-Object ProcessId,CommandLine); ConvertTo-Json -InputObject $taskFixtureProcesses -Depth 3 -Compress"
+  ],
+  "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+  "exit": 0,
+  "matches": [],
+  "stdout": "[]\r\n",
+  "stderr": ""
+}

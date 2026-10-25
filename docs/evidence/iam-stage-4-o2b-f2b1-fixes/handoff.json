@@ -1,0 +1,350 @@
+{
+  "schema": "f2b1-http-fixes-handoff-v1",
+  "status": "DONE_WITH_CONCERNS",
+  "projectRoot": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+  "scope": "I1 unique cleanup/I2 real HTTPS body bounds/M1 local format only; root independent review pending",
+  "sourceWrites": [
+    "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsHttp.java",
+    "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsHttpTest.java",
+    "platform-gateway/src/main/java/cn/agentplatform/gateway/application/RunObservationMetadataClient.java",
+    "platform-gateway/src/test/java/cn/agentplatform/gateway/application/RunObservationEventsMetadataTest.java"
+  ],
+  "ownedRoots": [
+    ".local/iam-o2b-f2b1-fixes",
+    "docs/evidence/iam-stage-4-o2b-f2b1-fixes"
+  ],
+  "ownedHelperFiles": [
+    ".tools/iam-o2b-f2b1-fixes-controls.mjs",
+    ".tools/iam-o2b-f2b1-fixes-evidence.mjs",
+    ".tools/iam-o2b-f2b1-fixes-finalize.mjs",
+    ".tools/iam-o2b-f2b1-fixes-format.mjs",
+    ".tools/iam-o2b-f2b1-fixes-package.mjs",
+    ".tools/iam-o2b-f2b1-fixes-run-control.mjs"
+  ],
+  "externalStageArtifacts": [
+    ".local/iam-stage-o2b-f2b1-fixes-red-concurrent.log",
+    ".local/iam-stage-o2b-f2b1-fixes-focused2.log",
+    ".local/iam-stage-o2b-f2b1-fixes-final.log"
+  ],
+  "source": {
+    "count": 621,
+    "changedExisting": 4,
+    "new": 0,
+    "unchanged": 617,
+    "before": {
+      "file": ".local/iam-o2b-f2b1-fixes/source-before.json",
+      "bytes": 118929,
+      "sha256": "73d316639100f8be3aa99924fd5cb4cd6ca860a729b1bc3df7d5a753ede185f0"
+    },
+    "after": {
+      "file": ".local/iam-o2b-f2b1-fixes/source-after.json",
+      "bytes": 118930,
+      "sha256": "7ce27abedc333786bff2c7c886ab6092814b52118bf1fd3fd87f6a52eacf81fa"
+    },
+    "epoch": {
+      "file": ".local/iam-o2b-f2b1-fixes/stages/iam-stage-o2b-f2b1-fixes-final/source.json",
+      "bytes": 118930,
+      "sha256": "7ce27abedc333786bff2c7c886ab6092814b52118bf1fd3fd87f6a52eacf81fa"
+    },
+    "metadataTokensEqual": true,
+    "statusPrefixBytes": 6168
+  },
+  "target": {
+    "inheritedLogical": 2223,
+    "overlay": 143,
+    "logicalAfter": 2226,
+    "overlayManifest": {
+      "file": ".local/iam-o2b-f2b1-fixes/target-overlay.json",
+      "bytes": 32546,
+      "sha256": "f0f9ba014d6441c166070bfbb25dacb0d8408081e02abc7200b4cb62d3072955"
+    },
+    "after": {
+      "file": ".local/iam-o2b-f2b1-fixes/target-after.json",
+      "bytes": 465582,
+      "sha256": "4b7643c6b7f82ba96199f3d9b8e934089f94cbeb084e383ad13f5c6cf6ec3f53"
+    },
+    "basis": {
+      "file": "docs/evidence/iam-stage-4-o2b-f2b1-fixes/target-overlay-basis.json",
+      "bytes": 46848,
+      "sha256": "e381381431326eeb555eaa5990bffcafa5aaa958a78a09aec61deda87c2e76c0"
+    },
+    "diagnosticsSeparate": {
+      "file": ".local/iam-o2b-f2b1-fixes/diagnostics-new.json",
+      "bytes": 600,
+      "sha256": "8e9f14c58996fd164eb7ed995855070fdf88c51d117163dd2ec0b69a68dba595"
+    },
+    "liveFilesSeparateFromOwnedInventory": true
+  },
+  "report": {
+    "file": "docs/evidence/iam-stage-4-o2b-f2b1-fixes-report.md",
+    "bytes": 14334,
+    "sha256": "19c38b9cccf84b37f98e3f84ce60287c978d54c86c6345933addd664af00d0ac"
+  },
+  "controlIdentities": {
+    "file": "docs/evidence/iam-stage-4-o2b-f2b1-fixes/control-identities.json",
+    "bytes": 5036,
+    "sha256": "28d75e84cf2f136475421c4f13c6883a68dd173a967909a5cbd1f354345d7a90"
+  },
+  "controls": [
+    {
+      "file": ".local/iam-o2b-f2b1-fixes/source-before.json",
+      "bytes": 118929,
+      "sha256": "73d316639100f8be3aa99924fd5cb4cd6ca860a729b1bc3df7d5a753ede185f0"
+    },
+    {
+      "file": ".local/iam-o2b-f2b1-fixes/source-after.json",
+      "bytes": 118930,
+      "sha256": "7ce27abedc333786bff2c7c886ab6092814b52118bf1fd3fd87f6a52eacf81fa"
+    },
+    {
+      "file": ".local/iam-o2b-f2b1-fixes/source-delta.json",
+      "bytes": 2054,
+      "sha256": "7f0fdcd54abcedf0d0c3781b11b08a2d3de87e36687a7ef2ff3a920a25033ce6"
+    },
+    {
+      "file": ".local/iam-o2b-f2b1-fixes/source-new.json",
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "file": ".local/iam-o2b-f2b1-fixes/source-snapshot.json",
+      "bytes": 143149,
+      "sha256": "89d58914ef4d539cd47b62d5c60fcd1a14c9b79605ac132e1282b7eef3504456"
+    },
+    {
+      "file": ".local/iam-o2b-f2b1-fixes/target-before.json",
+      "bytes": 464896,
+      "sha256": "db710f41df507b401ce2230fd43c95c4015959b5b3ca3df109e48d5c974d72cc"
+    },
+    {
+      "file": ".local/iam-o2b-f2b1-fixes/target-after.json",
+      "bytes": 465582,
+      "sha256": "4b7643c6b7f82ba96199f3d9b8e934089f94cbeb084e383ad13f5c6cf6ec3f53"
+    },
+    {
+      "file": ".local/iam-o2b-f2b1-fixes/target-delta.json",
+      "bytes": 8457,
+      "sha256": "35f96ba94f9bbd16560153b081b351a59a54cf3f936e1d4ed6a42c51b1a4389a"
+    },
+    {
+      "file": ".local/iam-o2b-f2b1-fixes/target-overlay.json",
+      "bytes": 32546,
+      "sha256": "f0f9ba014d6441c166070bfbb25dacb0d8408081e02abc7200b4cb62d3072955"
+    },
+    {
+      "file": ".local/iam-o2b-f2b1-fixes/diagnostics-new.json",
+      "bytes": 600,
+      "sha256": "8e9f14c58996fd164eb7ed995855070fdf88c51d117163dd2ec0b69a68dba595"
+    },
+    {
+      "file": ".local/iam-o2b-f2b1-fixes/replay-after.json",
+      "bytes": 118930,
+      "sha256": "7ce27abedc333786bff2c7c886ab6092814b52118bf1fd3fd87f6a52eacf81fa"
+    },
+    {
+      "file": ".local/iam-o2b-f2b1-fixes/baseline-index-blobs.json",
+      "bytes": 118929,
+      "sha256": "49ef93131a31c9ed68e0f9d7fa140a648b1db35b95945c2f72cd37a94f4eadf5"
+    },
+    {
+      "file": ".local/iam-o2b-f2b1-fixes/replay-index-observed-after-overlap.json",
+      "bytes": 154948,
+      "sha256": "4b4a7bfa27599beffd5eecc4bb6540d8b8e21d223afaa59c84780c3a3193e288"
+    },
+    {
+      "file": ".local/iam-o2b-f2b1-fixes/metadata-corrections.json",
+      "bytes": 1723,
+      "sha256": "269c223d57d7b27046f49256501a9a1eb4df80c735cf62e9c917eaeede58da69"
+    },
+    {
+      "file": ".local/iam-o2b-f2b1-fixes/source-live-name-closure.json",
+      "bytes": 99,
+      "sha256": "ef0c2e57dc86eb661a4be563cbb543be327775b57a7ea8c69155cbd238fa8302"
+    },
+    {
+      "file": ".local/iam-o2b-f2b1-fixes/control-diagnostics.json",
+      "bytes": 1603,
+      "sha256": "a186dceca14e17eeb8dcc6a003abaa5b7881c99e06b72c2c320bb3c010b25532"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o2b-f2b1-fixes/compilation-proof.json",
+      "bytes": 3739,
+      "sha256": "d08700be1d754a72ab70e8b483a24843bf07574be3444e0b4006b7a197ac1122"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o2b-f2b1-fixes/final-epoch-compilation-binding.json",
+      "bytes": 764,
+      "sha256": "78a5a8761bd97c3c5a3368cf638088f78b009d3ab4c98833fb660765bfa373cc"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o2b-f2b1-fixes/metadata-token-and-status-prefix.json",
+      "bytes": 1577,
+      "sha256": "db40fb1a6f985bb2db0c3a0d6d9baf2665d0dc028b047d4fc0d9bed2e9366df0"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o2b-f2b1-fixes/patch-worktree-proof.json",
+      "bytes": 131001,
+      "sha256": "b839782a5e9235e2200958486724dc504e4439e496528e9d29f2356567c3d6ab"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o2b-f2b1-fixes/peer-exits.json",
+      "bytes": 27134,
+      "sha256": "a9eb00ad85969af8609aa3dc1a4c60f82134893de7a60e91c1bb321c410b3141"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o2b-f2b1-fixes/source-closure.json",
+      "bytes": 2037,
+      "sha256": "997c1f3b446ee59cc50c5264d5f6df39d93cff0da0a4f2e34fd90bbf332f42ce"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o2b-f2b1-fixes/source.binary.patch",
+      "bytes": 67158,
+      "sha256": "c3a1cdb45089b0c00364ca3f680f8b3175b4d13e12241725eb429f3f87b63eb0"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o2b-f2b1-fixes/stage-catalog.json",
+      "bytes": 18789,
+      "sha256": "2c6416ad0b84a0abf4a5d194b4d5e8fcd13e26b25235ae4f1b618f6defe3934a"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o2b-f2b1-fixes/target-overlay-basis-v1.json",
+      "bytes": 47352,
+      "sha256": "eda47346baef2b4e0f03868054bad6d4073e6317414159c4966943c1f4448b26"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o2b-f2b1-fixes/target-overlay-basis.json",
+      "bytes": 46848,
+      "sha256": "e381381431326eeb555eaa5990bffcafa5aaa958a78a09aec61deda87c2e76c0"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o2b-f2b1-fixes/test-stages.json",
+      "bytes": 2168,
+      "sha256": "4dd1472bfc9f755593d6b874dc7723c9e17e2cf6103bd8a6a487bae1bf430d43"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o2b-f2b1-fixes-report.md",
+      "bytes": 14334,
+      "sha256": "19c38b9cccf84b37f98e3f84ce60287c978d54c86c6345933addd664af00d0ac"
+    }
+  ],
+  "stages": {
+    "file": "docs/evidence/iam-stage-4-o2b-f2b1-fixes/stage-catalog.json",
+    "bytes": 18789,
+    "sha256": "2c6416ad0b84a0abf4a5d194b4d5e8fcd13e26b25235ae4f1b618f6defe3934a"
+  },
+  "compilation": {
+    "file": "docs/evidence/iam-stage-4-o2b-f2b1-fixes/compilation-proof.json",
+    "bytes": 3739,
+    "sha256": "d08700be1d754a72ab70e8b483a24843bf07574be3444e0b4006b7a197ac1122"
+  },
+  "epochBinding": {
+    "file": "docs/evidence/iam-stage-4-o2b-f2b1-fixes/final-epoch-compilation-binding.json",
+    "bytes": 764,
+    "sha256": "78a5a8761bd97c3c5a3368cf638088f78b009d3ab4c98833fb660765bfa373cc"
+  },
+  "tests": [
+    {
+      "class": "cn.agentplatform.gateway.infra.PortalRunEventsHttpTest",
+      "tests": 14,
+      "errors": 0,
+      "skipped": 0,
+      "failures": 0
+    }
+  ],
+  "focusedTests": [
+    {
+      "class": "cn.agentplatform.gateway.infra.PortalRunEventsHttpTest",
+      "tests": 3,
+      "errors": 0,
+      "skipped": 0,
+      "failures": 0
+    }
+  ],
+  "newBehaviorRed": {
+    "stage": "iam-stage-o2b-f2b1-fixes-red-concurrent",
+    "tests": 1,
+    "failures": 1,
+    "errors": 0,
+    "meaning": "Old production allowed two cleanup callers to enter real timer termination wait; no API-missing or actual NPE claim"
+  },
+  "selectorRejection": {
+    "stage": "iam-stage-o2b-f2b1-fixes-focused",
+    "noMaven": true,
+    "noRunning": true,
+    "noChild": true
+  },
+  "children": {
+    "count": 18,
+    "greenExitZero": 17,
+    "redExitOne": 1,
+    "allActuallyExitedAndCollectorJoined": true,
+    "proof": {
+      "file": "docs/evidence/iam-stage-4-o2b-f2b1-fixes/peer-exits.json",
+      "bytes": 27134,
+      "sha256": "a9eb00ad85969af8609aa3dc1a4c60f82134893de7a60e91c1bb321c410b3141"
+    }
+  },
+  "patch": {
+    "file": {
+      "file": "docs/evidence/iam-stage-4-o2b-f2b1-fixes/source.binary.patch",
+      "bytes": 67158,
+      "sha256": "c3a1cdb45089b0c00364ca3f680f8b3175b4d13e12241725eb429f3f87b63eb0"
+    },
+    "privateBaselineIndex621": {
+      "file": ".local/iam-o2b-f2b1-fixes/baseline-index-blobs.json",
+      "bytes": 118929,
+      "sha256": "49ef93131a31c9ed68e0f9d7fa140a648b1db35b95945c2f72cd37a94f4eadf5"
+    },
+    "check": {
+      "file": ".local/iam-o2b-f2b1-fixes/replay-check.json",
+      "bytes": 416,
+      "sha256": "5e8dc1f2dbfc7b4838e7db1612ad618c379c6316b53dbc21624a0afe35059b77"
+    },
+    "apply": {
+      "file": ".local/iam-o2b-f2b1-fixes/replay-apply.json",
+      "bytes": 401,
+      "sha256": "66c87660d7385507dc7ea71c61eb661efe79a49986fba4a9c5fafc37e936d6c6"
+    },
+    "checkApplyEachOnce": true,
+    "ordinaryWorktreeOnly": true,
+    "extraIndexBeforePass": false,
+    "preApplyWorktreeManifestSaved": false,
+    "rawImagesAnd617LineageProof": {
+      "file": "docs/evidence/iam-stage-4-o2b-f2b1-fixes/patch-worktree-proof.json",
+      "bytes": 131001,
+      "sha256": "b839782a5e9235e2200958486724dc504e4439e496528e9d29f2356567c3d6ab"
+    },
+    "completeAfter621": {
+      "file": ".local/iam-o2b-f2b1-fixes/replay-after.json",
+      "bytes": 118930,
+      "sha256": "7ce27abedc333786bff2c7c886ab6092814b52118bf1fd3fd87f6a52eacf81fa"
+    },
+    "names": {
+      "file": ".local/iam-o2b-f2b1-fixes/replay-name-closure.json",
+      "bytes": 46570,
+      "sha256": "ab95f048d26861152a667b0a7d99689fa08c53ba1692329e54030cdd508a5392"
+    },
+    "noSourceCopiedAfterApply": true
+  },
+  "ownInventory": {
+    "file": "docs/evidence/iam-stage-4-o2b-f2b1-fixes/own-inventory.json",
+    "count": 5841,
+    "excludesOnlyItself": true,
+    "identity": "Final response provides bytes/SHA; avoids cyclic identity"
+  },
+  "frozen": true,
+  "returnedWriteRights": {
+    "source": true,
+    "target": true,
+    "owned": true
+  },
+  "concerns": [
+    "Auxiliary second replay index initialization overlapped ordinary worktree apply and its before-index assertion failed. Primary baseline621 before index independently passed. No check/apply rerun or source repair.",
+    "No independent full replay worktree before manifest was saved prior to apply. Raw binary four preimages/postimages, fixed617 copy lineage, primary baseline621 and complete final621 names/bytes are preserved separately.",
+    "Two initial high-level metadata-node error streams were displayed in tool transcripts but not redirected to owned raw files; honest observed summaries, Git subcommand raw fields and full observed index identities are retained.",
+    "Three new344B Windows Surefire classpath dumpstream diagnostics plus existing deprecation remain; JDK checks were not bypassed.",
+    "Existing historical b1 reflection/API/environment RED limitations remain; only this new concurrency RED is behavior evidence.",
+    "3MiB remains a finite HTTP object model, not RSS/whole JVM/TLS/JCA/native capacity proof.",
+    "EVENTS remains closed/unassembled; G/E, materials, SSE, real engine/PG chain and production launch are not validated."
+  ]
+}

@@ -1,0 +1,2627 @@
+diff --git a/admin-common/src/main/java/cn/agentplatform/common/SecurityConfiguration.java b/admin-common/src/main/java/cn/agentplatform/common/SecurityConfiguration.java
+index 62af342..6833120 100644
+--- a/admin-common/src/main/java/cn/agentplatform/common/SecurityConfiguration.java
++++ b/admin-common/src/main/java/cn/agentplatform/common/SecurityConfiguration.java
+@@ -1,265 +1,274 @@
+ package cn.agentplatform.common;
+ 
+ import jakarta.servlet.*;
+ import jakarta.servlet.http.*;
+ 
+ import cn.agentplatform.common.authority.AuthorityProperties;
+ import cn.agentplatform.common.authority.ServiceAuthorization;
+ import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
+ import org.springframework.boot.context.properties.bind.*;
+ import org.springframework.boot.context.properties.bind.handler.NoUnboundElementsBindHandler;
+ import org.springframework.core.env.Environment;
+ 
+ import org.springframework.beans.factory.ObjectProvider;
+ import org.springframework.beans.factory.annotation.Qualifier;
+ import org.springframework.beans.factory.annotation.Value;
+ import org.springframework.context.annotation.*;
+ import org.springframework.http.*;
+ import org.springframework.security.authorization.AuthorizationDecision;
+ import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+ import org.springframework.security.config.http.SessionCreationPolicy;
+ import org.springframework.security.core.context.SecurityContextHolder;
+ import org.springframework.security.core.GrantedAuthority;
+ import org.springframework.security.core.authority.SimpleGrantedAuthority;
+ import org.springframework.security.oauth2.core.*;
+ import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+ import org.springframework.security.oauth2.jwt.*;
+ import org.springframework.security.oauth2.server.resource.authentication.*;
+ import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
+ import org.springframework.security.web.SecurityFilterChain;
+ import org.springframework.web.cors.*;
+ import org.springframework.web.filter.OncePerRequestFilter;
+ 
+ import java.io.IOException;
+ import java.nio.charset.StandardCharsets;
+ import java.util.*;
+ 
+ import javax.crypto.spec.SecretKeySpec;
+ 
+ @Configuration
+ @EnableMethodSecurity
+ public class SecurityConfiguration {
+     @Bean
+     static BeanFactoryPostProcessor authorityModeGuard(Environment environment) {
+         return beanFactory -> {
+-            var properties = Binder.get(environment).bind("agent.security",
+-                    Bindable.of(AuthorityProperties.class), new NoUnboundElementsBindHandler(BindHandler.DEFAULT))
+-                    .orElseGet(() -> new AuthorityProperties(null, null, null, null, null, null, null, null, null));
+-            properties.validateDeployment(environment.getProperty("agent.dev-auth", Boolean.class, false),
+-                    environment.getProperty("server.address"),
+-                    Arrays.asList(environment.getActiveProfiles()).contains("test"));
++            var properties = bindDeployment(environment);
+             // Spring Context 6.2.7 invokes factory processors before onRefresh; Boot 3.5.0
+             // creates its web server in onRefresh. Reject IAM here, before any listener exists.
+             // D1 component receivers do not open production IAM; D3 must migrate every service first.
+             if ("iam".equals(properties.mode())) throw new IllegalStateException("IAM_TRUST_CHAIN_UNAVAILABLE");
+             beanFactory.registerSingleton("authorityProperties", properties);
+         };
+     }
+ 
++    /** Bind and validate actual deployment sources before publishing any signing permission. */
++    public static AuthorityProperties bindDeployment(Environment environment) {
++        var properties = Binder.get(environment).bind("agent.security",
++                Bindable.of(AuthorityProperties.class), new NoUnboundElementsBindHandler(BindHandler.DEFAULT))
++                .orElseGet(() -> new AuthorityProperties(null, null, null, null, null, null, null, null, null));
++        properties.validateDeployment(environment.getProperty("agent.dev-auth", Boolean.class, false),
++                environment.getProperty("server.address"),
++                Arrays.asList(environment.getActiveProfiles()).contains("test"));
++        // Boot 3.5.0 Binder/NoUnboundElementsBindHandler finish strict binding before this
++        // registration. Invalid input cannot change the classloader signing state.
++        ServiceTokens.registerDeployment(properties.mode());
++        return properties;
++    }
++
+     @Bean
+     JwtDecoder jwtDecoder(
+             @Value("${agent.security.jwt-secret}") String secret,
+             @Value("${agent.security.allow-embed:false}") boolean allowEmbed) {
+         if (secret.length() < 32) throw new IllegalStateException("JWT密钥必须独立且至少32字符");
+         var decoder =
+                 NimbusJwtDecoder.withSecretKey(
+                                 new SecretKeySpec(
+                                         secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256"))
+                         .macAlgorithm(MacAlgorithm.HS256)
+                         .build();
+         OAuth2TokenValidator<Jwt> audience =
+                 jwt -> {
+                     boolean portal =
+                             jwt.getAudience().contains("agent-platform")
+                                     && "user".equals(jwt.getClaimAsString("token_use"));
+                     boolean internal =
+                             jwt.getAudience().contains("agent-platform-internal")
+                                     && "service".equals(jwt.getClaimAsString("token_use"));
+                     boolean integration =
+                             allowEmbed
+                                     && jwt.getAudience().contains("agent-platform-embed")
+                                     && "integration".equals(jwt.getClaimAsString("token_use"));
+                     return portal || internal || integration
+                             ? OAuth2TokenValidatorResult.success()
+                             : OAuth2TokenValidatorResult.failure(
+                                     new OAuth2Error("invalid_token", "票据受众无效", null));
+                 };
+         decoder.setJwtValidator(
+                 new DelegatingOAuth2TokenValidator<>(
+                         JwtValidators.createDefaultWithIssuer(ServiceTokens.ISSUER), audience));
+         return decoder;
+     }
+ 
+     @Bean
+     SecurityFilterChain security(
+             HttpSecurity http,
+             JwtDecoder decoder,
+             @Qualifier("cors") CorsConfigurationSource corsSource,
+             ObjectProvider<ApiKeyAuthenticator> apiKeys, AuthorityProperties deployment)
+             throws Exception {
+         JwtGrantedAuthoritiesConverter authorities = new JwtGrantedAuthoritiesConverter();
+         authorities.setAuthoritiesClaimName("roles");
+         authorities.setAuthorityPrefix("ROLE_");
+         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
+         boolean trusted = "iam".equals(deployment.mode());
+         converter.setJwtGrantedAuthoritiesConverter(jwt -> {
+             if (!trusted) return authorities.convert(jwt);
+             var result = new ArrayList<GrantedAuthority>();
+             if ("user".equals(jwt.getClaimAsString("token_use"))) {
+                 jwt.getClaimAsStringList("roles").stream()
+                         .filter(role -> !Set.of("SERVICE", "GATEWAY_AUTH").contains(role))
+                         .forEach(role -> result.add(new SimpleGrantedAuthority("ROLE_" + role)));
+                 String scope = jwt.getClaimAsString("scope");
+                 if (scope != null && !scope.isEmpty())
+                     Arrays.stream(scope.split(" ")).forEach(s -> result.add(new SimpleGrantedAuthority("SCOPE_" + s)));
+             }
+             return result;
+         });
+         if (trusted) http.addFilterBefore(new OncePerRequestFilter() {
+             @Override protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+                     FilterChain chain) throws ServletException, IOException {
+                 try { chain.doFilter(request, response); }
+                 catch (PlatformException error) { authError(response, error.status(), error.code()); }
+             }
+         }, BearerTokenAuthenticationFilter.class);
+         ApiKeyAuthenticator apiKey = apiKeys.getIfAvailable();
+         if (apiKey != null)
+             http.addFilterBefore(
+                     new OncePerRequestFilter() {
+                         @Override
+                         protected void doFilterInternal(
+                                 HttpServletRequest request,
+                                 HttpServletResponse response,
+                                 FilterChain chain)
+                                 throws ServletException, IOException {
+                             String header = request.getHeader("Authorization");
+                             if (request.getRequestURI().startsWith("/v1/")
+                                     && header != null
+                                     && header.startsWith("ApiKey ")) {
+                                 try {
+                                     SecurityContextHolder.getContext()
+                                             .setAuthentication(apiKey.authenticate(request));
+                                 } catch (PlatformException error) {
+                                     response.setStatus(error.status());
+                                     response.setContentType("application/json;charset=UTF-8");
+                                     response.getWriter()
+                                             .write(
+                                                     Json.write(
+                                                             new ApiResponse<>(
+                                                                     error.code(),
+                                                                     error.getMessage(),
+                                                                     null,
+                                                                     null)));
+                                     return;
+                                 }
+                             }
+                             chain.doFilter(request, response);
+                         }
+                     },
+                     BearerTokenAuthenticationFilter.class);
+         return http.csrf(x -> x.disable())
+                 .cors(x -> x.configurationSource(corsSource))
+                 .sessionManagement(x -> x.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                 .authorizeHttpRequests(
+                         x ->
+                                 x.requestMatchers(
+                                                 "/actuator/health",
+                                                 "/actuator/health/**",
+                                                 "/auth/dev-token",
+                                                 "/embed/ticket",
+                                                 "/assistant.js")
+                                         .permitAll()
+                                         .requestMatchers("/admin/**", "/v3/api-docs")
+                                         .access(
+                                                 (auth, context) ->
+                                                         new AuthorizationDecision(
+                                                                 auth.get().isAuthenticated()
+                                                                         && (!trusted || portalScope(auth.get()))
+                                                                         && !(auth.get()
+                                                                                                 .getPrincipal()
+                                                                                         instanceof
+                                                                                         Jwt jwt
+                                                                                 && "integration"
+                                                                                         .equals(
+                                                                                                 jwt
+                                                                                                         .getClaimAsString(
+                                                                                                                 "token_use")))))
+                                         .requestMatchers("/internal/**")
+                                         .access((auth, context) -> new AuthorizationDecision(
+                                                 // Current-authority/resource guards are not yet installed. No RS256
+                                                 // service ticket may turn a role string into a service capability.
+                                                 !trusted && auth.get().getAuthorities().stream()
+                                                         .anyMatch(a -> a.getAuthority().equals("ROLE_SERVICE"))))
+                                         .anyRequest()
+                                         .access((auth, context) -> new AuthorizationDecision(auth.get().isAuthenticated()
+                                                 && (!trusted || portalScope(auth.get())))))
+                 .exceptionHandling(x -> x
+                         .authenticationEntryPoint((request, response, error) -> authError(response, 401, "SYS-AUTH-401"))
+                         .accessDeniedHandler((request, response, error) -> authError(response, 403, "SYS-AUTH-403")))
+                 .oauth2ResourceServer(
+                         x -> x.authenticationEntryPoint((request, response, error) -> authError(response, 401, "SYS-AUTH-401"))
+                                 .accessDeniedHandler((request, response, error) -> authError(response, 403, "SYS-AUTH-403"))
+                                 .jwt(j -> j.decoder(decoder).jwtAuthenticationConverter(converter)))
+                 .build();
+     }
+ 
+     /** Explicit downstream entry; its decoder belongs to the service trust domain. */
+     public static SecurityFilterChain serviceSecurity(HttpSecurity http, JwtDecoder decoder, ServiceAuthorization receiver) throws Exception {
+         Objects.requireNonNull(receiver);
+         http.addFilterBefore(new OncePerRequestFilter() {
+             @Override protected void doFilterInternal(HttpServletRequest request,HttpServletResponse response,FilterChain chain)
+                     throws ServletException,IOException {
+                 try { chain.doFilter(request,response); }
+                 catch(PlatformException error) { authError(response,error.status(),error.code()); }
+             }
+         },BearerTokenAuthenticationFilter.class);
+         return http.csrf(x -> x.disable())
+                 .sessionManagement(x -> x.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                 .authorizeHttpRequests(x -> x.requestMatchers(receiver::healthRequest).permitAll().anyRequest().authenticated())
+                 .exceptionHandling(x -> x.authenticationEntryPoint((request,response,error)->authError(response,401,"SYS-AUTH-401"))
+                     .accessDeniedHandler((request,response,error)->authError(response,403,"SYS-AUTH-403")))
+                 .oauth2ResourceServer(x -> x.authenticationEntryPoint((request,response,error)->authError(response,401,"SYS-AUTH-401"))
+                     .jwt(j -> j.decoder(decoder).jwtAuthenticationConverter(jwt->new JwtAuthenticationToken(jwt,List.of()))))
+                 .build();
+     }
+ 
+     private static boolean portalScope(org.springframework.security.core.Authentication auth) {
+         return auth.getPrincipal() instanceof Jwt jwt && "user".equals(jwt.getClaimAsString("token_use"))
+                 && auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("SCOPE_platform.access"));
+     }
+ 
+     private static void authError(HttpServletResponse response, int status, String code) throws IOException {
+         response.setStatus(status);
+         response.setContentType("application/json;charset=UTF-8");
+         response.getWriter().write(Json.write(new ApiResponse<>(code, "身份或授权验证未通过", null, null)));
+     }
+ 
+     @Bean
+     CorsConfigurationSource cors(
+             ObjectProvider<AllowedOriginPolicy> policies,
+             @Value(
+                             "${agent.security.cors-origins:http://localhost:15173,http://127.0.0.1:15173,http://localhost:15174,http://127.0.0.1:15174}")
+                     List<String> origins) {
+         return request -> {
+             String origin = request.getHeader("Origin");
+             boolean allowed =
+                     origin != null
+                             && (origins.contains(origin)
+                                     || policies.orderedStream().anyMatch(p -> p.allowed(origin)));
+             CorsConfiguration cors = new CorsConfiguration();
+             cors.setAllowedOrigins(allowed ? List.of(origin) : List.of());
+             cors.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+             cors.setAllowedHeaders(
+                     List.of(
+                             "Authorization",
+                             "Content-Type",
+                             "Last-Event-ID",
+                             "X-User-Id",
+                             "X-User-Roles",
+                             "X-User-Attributes"));
+             cors.setMaxAge(30L);
+             return cors;
+         };
+     }
+ }
+diff --git a/admin-common/src/main/java/cn/agentplatform/common/ServiceTokens.java b/admin-common/src/main/java/cn/agentplatform/common/ServiceTokens.java
+index 1520b7d..2ede4ff 100644
+--- a/admin-common/src/main/java/cn/agentplatform/common/ServiceTokens.java
++++ b/admin-common/src/main/java/cn/agentplatform/common/ServiceTokens.java
+@@ -1,101 +1,114 @@
+-package cn.agentplatform.common;
+-
+-import java.nio.charset.StandardCharsets;
+-import java.time.Instant;
+-import java.util.*;
+-
+-import javax.crypto.Mac;
+-import javax.crypto.spec.SecretKeySpec;
+-
+-/** Legacy explicit dev/test HMAC only; IAM listeners are closed until authority exchange is installed.
+- * This key domain is never a fallback for TrustedJwtDecoder's RS256 portal/service domains. */
+-public final class ServiceTokens {
+-    public static final String ISSUER = "agent-platform-v12";
+-
+-    private ServiceTokens() {}
+-
+-    public static String issue(Actor actor) {
+-        String mode=System.getProperty("agent.security.mode","");
+-        boolean test="test".equals(mode) && Arrays.asList(System.getProperty("spring.profiles.active","").split(",")).contains("test");
+-        boolean dev="dev-hmac".equals(mode) && Boolean.parseBoolean(System.getProperty("agent.dev-auth","false"));
+-        if(!test && !dev)throw new PlatformException(403,"AUTHORITY_CONTEXT_MISSING","服务票据必须由当前可信授权签发");
+-        return sign(actor, "agent-platform-internal", "service", 120, Map.of());
+-    }
+-
+-    public static String userToken(Actor actor, int ttl) {
+-        return sign(actor, "agent-platform", "user", ttl, Map.of());
+-    }
+-
+-    public static String integrationToken(
+-            Actor actor, String app, String biz, long credentialId, String policyDigest, int ttl) {
+-        if (ttl < 1 || ttl > 300) throw new IllegalArgumentException("出票有效期必须为1至300秒");
+-        String user =
+-                actor.attributes()
+-                        .getOrDefault("userId", Set.of(actor.principalId()))
+-                        .iterator()
+-                        .next();
+-        return sign(
+-                actor,
+-                "agent-platform-embed",
+-                "integration",
+-                ttl,
+-                Map.of(
+-                        "app_code",
+-                        app,
+-                        "biz_system_code",
+-                        biz,
+-                        "user_id",
+-                        user,
+-                        "credential_id",
+-                        credentialId,
+-                        "policy_digest",
+-                        policyDigest));
+-    }
+-
+-    private static String sign(
+-            Actor actor, String audience, String use, int ttl, Map<String, Object> extra) {
+-        long now = Instant.now().getEpochSecond();
+-        Set<String> roles = new HashSet<>(actor.roles());
+-        if ("service".equals(use)) roles.add("SERVICE");
+-        Map<String, Object> claims = new LinkedHashMap<>();
+-        claims.put("iss", ISSUER);
+-        claims.put("sub", actor.principalId());
+-        claims.put("tenant_id", actor.tenantId());
+-        claims.put("aud", audience);
+-        claims.put("iat", now);
+-        claims.put("exp", now + ttl);
+-        claims.put("jti", UUID.randomUUID().toString());
+-        claims.put("token_use", use);
+-        claims.put("roles", roles);
+-        claims.put("attributes", actor.attributes());
+-        claims.putAll(extra);
+-        String signing =
+-                b64(Json.write(Map.of("alg", "HS256", "typ", "JWT")))
+-                        + "."
+-                        + b64(Json.write(claims));
+-        try {
+-            Mac mac = Mac.getInstance("HmacSHA256");
+-            mac.init(new SecretKeySpec(secretBytes(), "HmacSHA256"));
+-            return signing
+-                    + "."
+-                    + Base64.getUrlEncoder()
+-                            .withoutPadding()
+-                            .encodeToString(mac.doFinal(signing.getBytes(StandardCharsets.UTF_8)));
+-        } catch (Exception e) {
+-            throw new IllegalStateException("内部票据签发失败", e);
+-        }
+-    }
+-
+-    public static byte[] secretBytes() {
+-        String value = System.getenv("AGENT_JWT_SECRET");
+-        if (value == null || value.isBlank()) value = System.getProperty("agent.jwt.secret", "");
+-        if (value.length() < 32) throw new IllegalStateException("必须为新工程配置至少32字符的独立JWT密钥");
+-        return value.getBytes(StandardCharsets.UTF_8);
+-    }
+-
+-    private static String b64(String text) {
+-        return Base64.getUrlEncoder()
+-                .withoutPadding()
+-                .encodeToString(text.getBytes(StandardCharsets.UTF_8));
+-    }
+-}
++package cn.agentplatform.common;
++
++import java.nio.charset.StandardCharsets;
++import java.time.Instant;
++import java.util.*;
++
++import javax.crypto.Mac;
++import javax.crypto.spec.SecretKeySpec;
++
++/** Legacy explicit dev/test HMAC only; IAM listeners are closed until authority exchange is installed.
++ * This key domain is never a fallback for TrustedJwtDecoder's RS256 portal/service domains. */
++public final class ServiceTokens {
++    public static final String ISSUER = "agent-platform-v12";
++
++    private ServiceTokens() {}
++
++    // One classloader lifetime: context close/start failure and JVM property edits cannot
++    // reopen IAM. Already signed strings and previously running listeners are not revoked.
++    private static String deploymentMode;
++
++    static synchronized void registerDeployment(String mode) {
++        if ("iam".equals(deploymentMode) && !"iam".equals(mode))
++            throw new PlatformException(403, "AUTHORITY_CONTEXT_MISSING", "IAM部署已关闭旧票据签发");
++        deploymentMode = mode;
++    }
++
++    public static synchronized String issue(Actor actor) {
++        if (deploymentMode == null || "iam".equals(deploymentMode))
++            throw new PlatformException(403, "AUTHORITY_CONTEXT_MISSING", "服务票据必须由当前可信授权签发");
++        return sign(actor, "agent-platform-internal", "service", 120, Map.of());
++    }
++
++    public static String userToken(Actor actor, int ttl) {
++        return sign(actor, "agent-platform", "user", ttl, Map.of());
++    }
++
++    public static String integrationToken(
++            Actor actor, String app, String biz, long credentialId, String policyDigest, int ttl) {
++        if (ttl < 1 || ttl > 300) throw new IllegalArgumentException("出票有效期必须为1至300秒");
++        String user =
++                actor.attributes()
++                        .getOrDefault("userId", Set.of(actor.principalId()))
++                        .iterator()
++                        .next();
++        return sign(
++                actor,
++                "agent-platform-embed",
++                "integration",
++                ttl,
++                Map.of(
++                        "app_code",
++                        app,
++                        "biz_system_code",
++                        biz,
++                        "user_id",
++                        user,
++                        "credential_id",
++                        credentialId,
++                        "policy_digest",
++                        policyDigest));
++    }
++
++    // JLS 21 §§17.1/17.4.5: the same class monitor covers registration, issue
++    // permission and signing; its unlock is visible to subsequent signing calls.
++    // ponytail: one short classloader lock; no cross-context registry or throughput framework.
++    private static synchronized String sign(
++            Actor actor, String audience, String use, int ttl, Map<String, Object> extra) {
++        if ("iam".equals(deploymentMode))
++            throw new PlatformException(403, "AUTHORITY_CONTEXT_MISSING", "IAM部署已关闭旧票据签发");
++        long now = Instant.now().getEpochSecond();
++        Set<String> roles = new HashSet<>(actor.roles());
++        if ("service".equals(use)) roles.add("SERVICE");
++        Map<String, Object> claims = new LinkedHashMap<>();
++        claims.put("iss", ISSUER);
++        claims.put("sub", actor.principalId());
++        claims.put("tenant_id", actor.tenantId());
++        claims.put("aud", audience);
++        claims.put("iat", now);
++        claims.put("exp", now + ttl);
++        claims.put("jti", UUID.randomUUID().toString());
++        claims.put("token_use", use);
++        claims.put("roles", roles);
++        claims.put("attributes", actor.attributes());
++        claims.putAll(extra);
++        String signing =
++                b64(Json.write(Map.of("alg", "HS256", "typ", "JWT")))
++                        + "."
++                        + b64(Json.write(claims));
++        try {
++            Mac mac = Mac.getInstance("HmacSHA256");
++            mac.init(new SecretKeySpec(secretBytes(), "HmacSHA256"));
++            return signing
++                    + "."
++                    + Base64.getUrlEncoder()
++                            .withoutPadding()
++                            .encodeToString(mac.doFinal(signing.getBytes(StandardCharsets.UTF_8)));
++        } catch (Exception e) {
++            throw new IllegalStateException("内部票据签发失败", e);
++        }
++    }
++
++    public static byte[] secretBytes() {
++        String value = System.getenv("AGENT_JWT_SECRET");
++        if (value == null || value.isBlank()) value = System.getProperty("agent.jwt.secret", "");
++        if (value.length() < 32) throw new IllegalStateException("必须为新工程配置至少32字符的独立JWT密钥");
++        return value.getBytes(StandardCharsets.UTF_8);
++    }
++
++    private static String b64(String text) {
++        return Base64.getUrlEncoder()
++                .withoutPadding()
++                .encodeToString(text.getBytes(StandardCharsets.UTF_8));
++    }
++}
+diff --git a/admin-common/src/test/java/cn/agentplatform/common/CommonBoundaryTest.java b/admin-common/src/test/java/cn/agentplatform/common/CommonBoundaryTest.java
+index e5abca4..38b2b71 100644
+--- a/admin-common/src/test/java/cn/agentplatform/common/CommonBoundaryTest.java
++++ b/admin-common/src/test/java/cn/agentplatform/common/CommonBoundaryTest.java
+@@ -1,75 +1,79 @@
+ package cn.agentplatform.common;
+ 
+ import static org.assertj.core.api.Assertions.*;
+ 
+ import com.fasterxml.jackson.databind.JsonNode;
+ 
+ import org.junit.jupiter.api.Test;
+ import org.springframework.security.core.context.SecurityContextHolder;
+ import org.springframework.security.oauth2.jwt.Jwt;
+ import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+ 
+ import java.time.Instant;
+ import java.util.*;
+ 
+-class CommonBoundaryTest {
++public class CommonBoundaryTest {
+     @Test
+     void rejectsMissingAuthenticatedIdentity() {
+         SecurityContextHolder.clearContext();
+         assertThatThrownBy(Actor::current).isInstanceOf(PlatformException.class);
+     }
+ 
+     @Test
+     void readsOnlyVerifiedJwtClaimsAndChecksRoles() {
+         Jwt jwt =
+                 Jwt.withTokenValue("verified-by-decoder")
+                         .header("alg", "HS256")
+                         .subject("alice")
+                         .claim("tenant_id", "tenant-a")
+                         .claim("roles", List.of("EDITOR"))
+                         .claim("attributes", Map.of("region", List.of("A")))
+                         .issuedAt(Instant.now())
+                         .expiresAt(Instant.now().plusSeconds(60))
+                         .build();
+         SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(jwt));
+         try {
+             Actor actor = Actor.current();
+             assertThat(actor.tenantId()).isEqualTo("tenant-a");
+             actor.requireRole("EDITOR");
+             assertThatThrownBy(() -> actor.requireRole("APPROVER"))
+                     .isInstanceOf(PlatformException.class);
+             assertThat(actor.attributes().get("region")).containsExactly("A");
+         } finally {
+             SecurityContextHolder.clearContext();
+         }
+     }
+ 
+     @Test
+     void usesCanonicalJsonForContentIdentity() {
+         assertThat(Digest.sha256(Json.canonical(Map.of("z", 1, "a", 2))))
+                 .isEqualTo(Digest.sha256(Json.canonical(Map.of("a", 2, "z", 1))));
+         assertThat(Json.read(Json.write(Map.of("中文", "保存"))).get("中文").asText()).isEqualTo("保存");
+     }
+ 
+     @Test
+-    void validatesInternalTicketAndPreservesActorBoundary() {
++    void validatesInternalTicketAndPreservesActorBoundary() throws Exception {
++        cn.agentplatform.common.authority.ServiceTokensDeploymentModeTest.runScenario("common-boundary");
++    }
++
++    public static void legacyTicketAssertions() {
+         var names=List.of("agent.jwt.secret","agent.security.mode","spring.profiles.active");
+         var before=new HashMap<String,String>();names.forEach(n->before.put(n,System.getProperty(n)));
+         try {
+         System.setProperty("agent.jwt.secret", "abcdefghijklmnopqrstuvwxyz0123456789-TEST-ONLY");
+         System.setProperty("agent.security.mode","test");
+         System.setProperty("spring.profiles.active","test");
+         Actor actor =
+                 new Actor("tenant-a", "alice", Set.of("EDITOR"), Map.of("region", Set.of("A")));
+         String ticket = ServiceTokens.issue(actor);
+         JsonNode claims =
+                 Json.read(new String(Base64.getUrlDecoder().decode(ticket.split("\\.")[1])));
+         assertThat(claims.get("tenant_id").asText()).isEqualTo("tenant-a");
+         assertThat(claims.get("sub").asText()).isEqualTo("alice");
+         assertThat(claims.get("aud").asText()).isEqualTo("agent-platform-internal");
+         assertThat(claims.get("roles").toString())
+                 .doesNotContain("ADMIN")
+                 .contains("EDITOR", "SERVICE");
+         } finally { before.forEach((k,v)->{if(v==null)System.clearProperty(k);else System.setProperty(k,v);}); }
+     }
+ }
+diff --git a/admin-common/src/test/java/cn/agentplatform/common/authority/AuthorityConfigurationTest.java b/admin-common/src/test/java/cn/agentplatform/common/authority/AuthorityConfigurationTest.java
+index 563b0a7..d504962 100644
+--- a/admin-common/src/test/java/cn/agentplatform/common/authority/AuthorityConfigurationTest.java
++++ b/admin-common/src/test/java/cn/agentplatform/common/authority/AuthorityConfigurationTest.java
+@@ -1,208 +1,232 @@
+ package cn.agentplatform.common.authority;
+ 
+ import cn.agentplatform.common.SecurityConfiguration;
+ import org.junit.jupiter.params.ParameterizedTest;
+ import org.junit.jupiter.api.Test;
+ import org.junit.jupiter.params.provider.MethodSource;
+ import org.springframework.boot.SpringApplication;
+ import org.springframework.boot.WebApplicationType;
+ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+ import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
+ import org.springframework.boot.web.servlet.ServletContextInitializer;
+ import org.springframework.boot.web.server.WebServer;
+ import org.springframework.context.annotation.*;
+ import org.springframework.context.support.GenericApplicationContext;
+ import java.util.*;
+ import java.util.concurrent.atomic.AtomicInteger;
+ import java.util.stream.Stream;
+ import java.time.Instant;
+ import static org.assertj.core.api.Assertions.*;
+ 
+ class AuthorityConfigurationTest {
++    // Successful deployment registration is process-lifetime state; the parent stays unregistered.
++    private static boolean childProcess;
++
++    public static void main(String[] args) throws Exception {
++        childProcess = true;
++        var tests = new AuthorityConfigurationTest();
++        switch (args[0]) {
++            case "authority-complete-iam" -> tests.illegalConfigurationFailsBeforeCreatingListener(
++                    new Invalid("complete-iam-still-closed", completeIam(), "IAM_TRUST_CHAIN_UNAVAILABLE"));
++            case "authority-dev-hmac" -> tests.explicitDevelopmentModesKeepLegacyDecoder("dev-hmac");
++            case "authority-test" -> tests.explicitDevelopmentModesKeepLegacyDecoder("test");
++            case "authority-gateway" -> tests.explicitGatewayDevPreservesIntegration();
++            case "authority-loopback-iam" -> tests.explicitTestProfileMayUseOnlyLiteralLoopbackTrustEndpointsAndIamStaysClosed();
++            case "authority-portal" -> tests.portalCeilingsAreRequiredAndStrictlyBoundByTheDeploymentBinder();
++            default -> throw new AssertionError("unknown authority child");
++        }
++    }
+     @Configuration(proxyBeanMethods = false)
+     @EnableAutoConfiguration
+     @Import(SecurityConfiguration.class)
+     static class TestApp {}
+ 
+     static Map<String, Object> completeIam() {
+         var p = new LinkedHashMap<String, Object>();
+         p.put("agent.security.mode", "iam");
+         p.put("agent.security.service-id", "engine");
+         p.put("agent.security.authority.client-id", "engine");
+         p.put("agent.security.authority.issuer", "https://authority.invalid");
+         p.put("agent.security.authority.jwks-uri", "https://authority.invalid/jwks");
+         p.put("agent.security.authority.token-uri", "https://authority.invalid/token");
+         p.put("agent.security.authority.decision-uri", "https://authority.invalid/decision");
+         p.put("agent.security.authority.client-secret-ref", "env:AGENT_SECRET_IAM_ENGINE_CLIENT");
+         p.put("agent.security.authority.allowed-algorithm", "RS256");
+         p.put("agent.security.authority.audience", "urn:agent-platform:service:engine");
+         return p;
+     }
+     record Invalid(String name, Map<String, Object> properties, String reason) {
+         @Override public String toString() { return name; }
+     }
+     static Stream<Invalid> invalidConfigurations() {
+         var cases = new ArrayList<Invalid>();
+         cases.add(new Invalid("no-mode", Map.of(), "SECURITY_MODE_REQUIRED"));
+         cases.add(new Invalid("unknown-mode", Map.of("agent.security.mode", "production"), "SECURITY_MODE_INVALID"));
+         cases.add(new Invalid("complete-iam-still-closed", completeIam(), "IAM_TRUST_CHAIN_UNAVAILABLE"));
+         for (String key : List.of("issuer", "jwks-uri", "token-uri", "decision-uri", "client-secret-ref", "client-id", "allowed-algorithm", "audience")) {
+             var p = completeIam(); p.remove("agent.security.authority." + key);
+             cases.add(new Invalid("missing-" + key, p, "IAM_CONFIG_REQUIRED"));
+         }
+         for (var entry : Map.<String, Object>of("agent.dev-auth", true, "agent.security.portal.enabled", true,
+                 "agent.security.authority.client-id", "app", "agent.security.service-id", "other").entrySet()) {
+             var p = completeIam(); p.put(entry.getKey(), entry.getValue());
+             cases.add(new Invalid(entry.getKey(), p,
+                     entry.getKey().equals("agent.dev-auth") ? "IAM_DEV_AUTH_FORBIDDEN" :
+                     entry.getKey().equals("agent.security.portal.enabled") ? "PORTAL_SERVICE_FORBIDDEN" :
+                     entry.getKey().equals("agent.security.service-id") ? "SERVICE_ID_INVALID" : "IAM_CLIENT_SERVICE_MISMATCH"));
+         }
+         var badUrl = completeIam(); badUrl.put("agent.security.authority.token-uri", "http://authority.invalid/token");
+         cases.add(new Invalid("insecure-iam-url", badUrl, "IAM_URI_INVALID"));
+         for (var entry : Map.<String, Object>of(
+                 "agent.security.authority.allowed-algorithm", "HS256",
+                 "agent.security.authority.audience", "urn:agent-platform:service:app",
+                 "agent.security.authority.client-secret-ref", "env:AGENT_SECRET_IAM_APP_CLIENT",
+                 "agent.security.integration.enabled", true).entrySet()) {
+             var p = completeIam(); p.put(entry.getKey(), entry.getValue());
+             cases.add(new Invalid(entry.getKey(), p,
+                     entry.getKey().endsWith("allowed-algorithm") ? "IAM_ALGORITHM_INVALID" :
+                     entry.getKey().endsWith("audience") ? "IAM_AUDIENCE_INVALID" :
+                     entry.getKey().endsWith("client-secret-ref") ? "IAM_SECRET_REF_INVALID" : "PORTAL_SERVICE_FORBIDDEN"));
+         }
+         for (var entry : Map.of("max-ticket-seconds", 61, "max-decision-seconds", 6,
+                 "connect-timeout-ms", 1001, "read-timeout-ms", 2001).entrySet()) {
+             for (int value : List.of(0, entry.getValue())) {
+                 var p = completeIam(); p.put("agent.security.authority." + entry.getKey(), value);
+                 cases.add(new Invalid(entry.getKey() + "=" + value, p, "IAM_BUDGET_INVALID"));
+             }
+         }
+         var userInfo = completeIam(); userInfo.put("agent.security.authority.jwks-uri", "https://user@authority.invalid/jwks");
+         cases.add(new Invalid("userinfo-uri", userInfo, "IAM_URI_INVALID"));
+         cases.add(new Invalid("dev-without-dev-auth", Map.of("agent.security.mode", "dev-hmac"), "DEV_AUTH_REQUIRED"));
+         cases.add(new Invalid("dev-non-loopback", Map.of("agent.security.mode", "dev-hmac", "agent.dev-auth", true, "server.address", "0.0.0.0"), "LOOPBACK_BIND_REQUIRED"));
+         cases.add(new Invalid("dev-engine-cannot-enable-legacy-integration", Map.of("agent.security.mode", "dev-hmac", "agent.dev-auth", true, "agent.security.allow-embed", true), "PORTAL_SERVICE_FORBIDDEN"));
+         cases.add(new Invalid("test-without-profile", Map.of("agent.security.mode", "test"), "TEST_PROFILE_REQUIRED"));
+         var typo = completeIam(); typo.put("agent.security.authority.decison-uri", "https://authority.invalid/typo");
+         cases.add(new Invalid("unknown-property", typo, "left unbound"));
+         return cases.stream();
+     }
+ 
+     @ParameterizedTest(name = "{0}") @MethodSource("invalidConfigurations")
+-    void illegalConfigurationFailsBeforeCreatingListener(Invalid invalid) {
++    void illegalConfigurationFailsBeforeCreatingListener(Invalid invalid) throws Exception {
++        if (!childProcess && "complete-iam-still-closed".equals(invalid.name())) {
++            ServiceTokensDeploymentModeTest.runScenario("authority-complete-iam"); return;
++        }
+         var factories = new AtomicInteger();
+         var app = application(invalid.properties(), factories);
+         assertThatThrownBy(() -> { try (var ignored = app.run()) {} })
+                 .hasStackTraceContaining(invalid.reason());
+         assertThat(factories).as("no web server construction or listener on rejected configuration").hasValue(0);
+     }
+ 
+     static Stream<String> developmentModes() { return Stream.of("dev-hmac", "test"); }
+ 
+     @ParameterizedTest @MethodSource("developmentModes")
+-    void explicitDevelopmentModesKeepLegacyDecoder(String mode) {
++    void explicitDevelopmentModesKeepLegacyDecoder(String mode) throws Exception {
++        if (!childProcess) { ServiceTokensDeploymentModeTest.runScenario("authority-" + mode); return; }
+         var factories = new AtomicInteger();
+         try (var context = application(Map.of("agent.security.mode", mode, "agent.dev-auth", true, "stage1.test-profile", mode.equals("test")), factories).run()) {
+             assertThat(context.isActive()).isTrue();
+             assertThat(factories).hasValue(1);
+             var decoder = context.getBean(org.springframework.security.oauth2.jwt.JwtDecoder.class);
+             assertThat(decoder.decode(signed("agent-platform", "user")).getSubject()).isEqualTo("test-principal");
+             assertThat(decoder.decode(signed("agent-platform-internal", "service")).getClaimAsString("token_use")).isEqualTo("service");
+             assertThatThrownBy(() -> decoder.decode(signed("agent-platform-internal", "user")))
+                     .isInstanceOf(org.springframework.security.oauth2.jwt.JwtException.class);
+             assertThatThrownBy(() -> decoder.decode(signed("agent-platform-embed", "integration")))
+                     .isInstanceOf(org.springframework.security.oauth2.jwt.JwtException.class);
+         }
+     }
+ 
+-    @Test void explicitGatewayDevPreservesIntegration() {
++    @Test void explicitGatewayDevPreservesIntegration() throws Exception {
++        if (!childProcess) { ServiceTokensDeploymentModeTest.runScenario("authority-gateway"); return; }
+         try (var context = application(Map.of("agent.security.mode", "dev-hmac", "agent.dev-auth", true,
+                 "agent.security.service-id", "gateway", "agent.security.allow-embed", true), new AtomicInteger()).run()) {
+             assertThat(context.getBean(org.springframework.security.oauth2.jwt.JwtDecoder.class)
+                     .decode(signed("agent-platform-embed", "integration")).getClaimAsString("token_use"))
+                     .isEqualTo("integration");
+         }
+     }
+ 
+-    @Test void explicitTestProfileMayUseOnlyLiteralLoopbackTrustEndpointsAndIamStaysClosed() {
++    @Test void explicitTestProfileMayUseOnlyLiteralLoopbackTrustEndpointsAndIamStaysClosed() throws Exception {
++        if (!childProcess) { ServiceTokensDeploymentModeTest.runScenario("authority-loopback-iam"); return; }
+         var p=completeIam();p.replaceAll((k,v)->v instanceof String s?s.replace("https://authority.invalid","http://127.0.0.1:12345"):v);
+         p.put("stage1.test-profile",true);
+         var factories=new AtomicInteger();
+         assertThatThrownBy(()->{try(var ignored=application(p,factories).run()){}}).hasStackTraceContaining("IAM_TRUST_CHAIN_UNAVAILABLE");
+         assertThat(factories).hasValue(0);
+         p.put("agent.security.authority.jwks-uri","http://localhost:12345/jwks");
+         assertThatThrownBy(()->{try(var ignored=application(p,factories).run()){}}).hasStackTraceContaining("IAM_URI_INVALID");
+         assertThat(factories).hasValue(0);
+     }
+ 
+-    @Test void portalCeilingsAreRequiredAndStrictlyBoundByTheDeploymentBinder() {
++    @Test void portalCeilingsAreRequiredAndStrictlyBoundByTheDeploymentBinder() throws Exception {
++        if (!childProcess) { ServiceTokensDeploymentModeTest.runScenario("authority-portal"); return; }
+         var p=completeIam();p.put("agent.security.service-id","gateway");
+         p.put("agent.security.authority.client-id","gateway");p.put("agent.security.authority.client-secret-ref","env:AGENT_SECRET_IAM_GATEWAY_CLIENT");
+         p.put("agent.security.authority.audience","urn:agent-platform:service:gateway");
+         p.put("agent.security.portal.enabled",true);p.put("agent.security.portal.issuer","https://portal.invalid");
+         p.put("agent.security.portal.jwks-uri","https://portal.invalid/jwks");p.put("agent.security.portal.audience","portal-gateway");
+         p.put("agent.security.portal.client-id","portal-web");p.put("agent.security.portal.role-allowlist[0]","EDITOR");
+         p.put("agent.security.portal.attribute-allowlist[0]","region");
+         var factories=new AtomicInteger();
+         assertThatThrownBy(()->{try(var ignored=application(p,factories).run()){}}).hasStackTraceContaining("PORTAL_CONFIG_REQUIRED");
+         p.put("agent.security.portal.attribute-value-allowlist.region[0]","A");p.put("agent.security.portal.scope-allowlist[0]","platform.access");
+         assertThatThrownBy(()->{try(var ignored=application(p,factories).run()){}}).hasStackTraceContaining("IAM_TRUST_CHAIN_UNAVAILABLE");
+         p.put("agent.security.portal.role-allowlist[0]","SERVICE");
+         assertThatThrownBy(()->{try(var ignored=application(p,factories).run()){}}).hasStackTraceContaining("PORTAL_CEILING_INVALID");
+         assertThat(factories).hasValue(0);
+     }
+ 
+     @Test void configuredDomainBusinessRolesAreAcceptedAndReservedRolesRemainForbidden() throws Exception {
+         try (var issuer = new LoopbackIssuer()) {
+             var c = issuer.config(); var p = c.portal();
+             for (var roles : List.of(Set.of("ops"), Set.of("VIEWER"), Set.of("ops", "EDITOR"))) {
+                 var portal = new AuthorityProperties.Portal(true, p.issuer(), p.jwksUri(), p.audience(), p.clientId(),
+                         roles, p.attributeAllowlist(), p.attributeValueAllowlist(), p.scopeAllowlist());
+                 assertThatCode(() -> new AuthorityProperties(c.mode(), c.serviceId(), portal, c.authority(),
+                         null, null, null, false, null).validate(true)).doesNotThrowAnyException();
+             }
+             for (String role : List.of("SERVICE", "GATEWAY_AUTH", "", " ")) {
+                 var portal = new AuthorityProperties.Portal(true, p.issuer(), p.jwksUri(), p.audience(), p.clientId(),
+                         Set.of(role), p.attributeAllowlist(), p.attributeValueAllowlist(), p.scopeAllowlist());
+                 assertThatThrownBy(() -> new AuthorityProperties(c.mode(), c.serviceId(), portal, c.authority(),
+                         null, null, null, false, null).validate(true)).hasMessage("PORTAL_CEILING_INVALID");
+             }
+         }
+     }
+ 
+     private static String signed(String audience, String use) {
+         try {
+             var jwt = new com.nimbusds.jwt.SignedJWT(new com.nimbusds.jose.JWSHeader(com.nimbusds.jose.JWSAlgorithm.HS256),
+                     new com.nimbusds.jwt.JWTClaimsSet.Builder().issuer("agent-platform-v12").audience(audience)
+                     .subject("test-principal").claim("tenant_id", "test-tenant").claim("token_use", use)
+                     .issueTime(Date.from(Instant.now())).expirationTime(Date.from(Instant.now().plusSeconds(30))).build());
+             jwt.sign(new com.nimbusds.jose.crypto.MACSigner("stage1-test-only-012345678901234567890123456789"));
+             return jwt.serialize();
+         } catch (Exception ex) { throw new AssertionError(ex); }
+     }
+ 
+-    private static SpringApplication application(Map<String, Object> properties, AtomicInteger factories) {
++    static SpringApplication application(Map<String, Object> properties, AtomicInteger factories) {
+         var defaults = new HashMap<String, Object>();
+         defaults.put("agent.security.service-id", "engine");
+         defaults.put("server.address", "127.0.0.1"); defaults.put("server.port", "0");
+         defaults.put("spring.config.location", "optional:classpath:/iam-stage-1-no-config/");
+         defaults.put("spring.main.banner-mode", "off"); defaults.put("logging.level.root", "ERROR");
+         defaults.put("spring.jmx.enabled", false);
+         defaults.put("springdoc.api-docs.enabled", false);
+         defaults.put("agent.security.jwt-secret", "stage1-test-only-012345678901234567890123456789");
+         defaults.putAll(properties);
+         var app = new SpringApplication(TestApp.class);
+         if (Boolean.TRUE.equals(properties.get("stage1.test-profile"))) app.setAdditionalProfiles("test");
+         app.setWebApplicationType(WebApplicationType.SERVLET);
+         app.setDefaultProperties(defaults);
+         app.addInitializers(context -> ((GenericApplicationContext) context).registerBean(
+                 "stage1WebServerFactory", TomcatServletWebServerFactory.class,
+                 () -> new TomcatServletWebServerFactory() {
+                     @Override public WebServer getWebServer(ServletContextInitializer... initializers) {
+                         factories.incrementAndGet(); return super.getWebServer(initializers);
+                     }
+                 }));
+         return app;
+     }
+ }
+diff --git a/docs/evidence/iam-stage-5-n4a-deployment-mode/frozen/admin-common/src/test/java/cn/agentplatform/common/authority/ServiceTokensDeploymentModeTest.java b/admin-common/src/test/java/cn/agentplatform/common/authority/ServiceTokensDeploymentModeTest.java
+new file mode 100644
+index 0000000..e710932
+--- /dev/null
++++ b/admin-common/src/test/java/cn/agentplatform/common/authority/ServiceTokensDeploymentModeTest.java
+@@ -0,0 +1,203 @@
++package cn.agentplatform.common.authority;
++
++import cn.agentplatform.common.*;
++import org.junit.jupiter.api.Test;
++import org.springframework.core.env.*;
++import org.springframework.context.annotation.*;
++import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
++import org.springframework.boot.*;
++import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
++import org.springframework.security.config.annotation.web.builders.HttpSecurity;
++import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
++import org.springframework.security.web.SecurityFilterChain;
++import java.nio.file.*;
++import java.net.*;
++import java.net.http.*;
++import java.time.Duration;
++import java.util.*;
++import java.util.concurrent.*;
++import java.util.concurrent.atomic.AtomicInteger;
++import static org.assertj.core.api.Assertions.*;
++
++public class ServiceTokensDeploymentModeTest {
++    static final Actor ACTOR = new Actor("tenant-a", "alice", Set.of("EDITOR"), Map.of("region", Set.of("A")));
++
++    @Test void unregisteredJvmTestCannotIssue() throws Exception { runScenario("unregistered"); }
++    @Test void actualLegacySnapshotSurvivesJvmMutationsAndContextClose() throws Exception { runScenario("legacy-snapshot"); }
++    @Test void actualIamOverridesJvmTestAndClosesAllLegacySignersBeforeListener() throws Exception { runScenario("iam-before-listener"); }
++    @Test void legacyThenIamClosesSigningAcrossThreads() throws Exception { runScenario("legacy-then-iam"); }
++    @Test void invalidDeploymentDoesNotRegisterPermission() throws Exception { runScenario("invalid-registration"); }
++    @Test void isolatedReceiverExplicitlyRegistersIamWithoutOpeningProductionChain() throws Exception { runScenario("isolated-receiver"); }
++
++    // Fixed finite child scenarios use this module's own classpath; no reset, reflection or JUnit order dependency.
++    public static void runScenario(String scenario) throws Exception {
++        if (!Set.of("unregistered", "legacy-snapshot", "iam-before-listener", "legacy-then-iam", "invalid-registration",
++                "isolated-receiver", "common-boundary", "authority-complete-iam", "authority-dev-hmac", "authority-test",
++                "authority-gateway", "authority-loopback-iam", "authority-portal").contains(scenario)) throw new AssertionError("unknown child");
++        Path output = Files.createTempFile("n4a-" + scenario, ".log");
++        Process child = new ProcessBuilder(Path.of(System.getProperty("java.home"), "bin", "java.exe").toString(),
++                "-Djdk.net.unixdomain.tmpdir=V:/.local/tmp", "-cp", System.getProperty("java.class.path"), ServiceTokensDeploymentModeTest.class.getName(), scenario)
++                .redirectErrorStream(true).redirectOutput(output.toFile()).start();
++        try {
++            boolean finished = child.waitFor(45, TimeUnit.SECONDS);
++            if (!finished) { child.destroyForcibly(); assertThat(child.waitFor(5, TimeUnit.SECONDS)).isTrue(); }
++            String raw = Files.readString(output);
++            System.out.print(raw);
++            assertThat(finished).as("bounded child " + scenario).isTrue();
++            assertThat(child.exitValue()).as(raw).isZero();
++            assertThat(raw).contains("N4A_EXECUTED=" + scenario);
++            System.out.println("N4A_CHILD_REAPED=" + scenario + ":" + child.pid());
++        } finally {
++            if (child.isAlive()) child.destroyForcibly();
++            assertThat(child.waitFor(5, TimeUnit.SECONDS)).isTrue();
++            Files.deleteIfExists(output);
++        }
++    }
++
++    static StandardEnvironment environment(Map<String, Object> properties, boolean test) {
++        var env = new StandardEnvironment();
++        var input = new LinkedHashMap<String, Object>();
++        input.put("agent.security.service-id", "engine"); input.put("server.address", "127.0.0.1");
++        input.putAll(properties);
++        env.getPropertySources().addFirst(new MapPropertySource("n4a-actual-deployment", input));
++        env.setActiveProfiles(test ? new String[]{"test"} : new String[0]);
++        return env;
++    }
++
++    static void deniedAll() {
++        assertThatThrownBy(() -> ServiceTokens.issue(ACTOR)).isInstanceOf(PlatformException.class)
++                .extracting("code").isEqualTo("AUTHORITY_CONTEXT_MISSING");
++        assertThatThrownBy(() -> ServiceTokens.userToken(ACTOR, 30)).isInstanceOf(PlatformException.class);
++        assertThatThrownBy(() -> ServiceTokens.integrationToken(ACTOR,"app","biz",1,"digest",30))
++                .isInstanceOf(PlatformException.class);
++        assertThat(ServiceTokens.secretBytes()).hasSizeGreaterThanOrEqualTo(32);
++    }
++
++    static void claims(String token) throws Exception {
++        var jwt = com.nimbusds.jwt.SignedJWT.parse(token);
++        assertThat(jwt.verify(new com.nimbusds.jose.crypto.MACVerifier(ServiceTokens.secretBytes()))).isTrue();
++        var c = jwt.getJWTClaimsSet();
++        assertThat(c.getIssuer()).isEqualTo(ServiceTokens.ISSUER);
++        assertThat(c.getSubject()).isEqualTo("alice");
++        assertThat(c.getStringClaim("tenant_id")).isEqualTo("tenant-a");
++        assertThat(c.getAudience()).containsExactly("agent-platform-internal");
++        assertThat(c.getStringClaim("token_use")).isEqualTo("service");
++        assertThat(c.getStringListClaim("roles")).containsExactlyInAnyOrder("EDITOR", "SERVICE");
++        assertThat(c.getJSONObjectClaim("attributes")).containsKey("region");
++        assertThat(c.getExpirationTime().getTime() - c.getIssueTime().getTime()).isEqualTo(120_000);
++        assertThat(c.getJWTID()).isNotBlank();
++    }
++
++    public static void main(String[] args) throws Exception {
++        String scenario = args[0];
++        switch (scenario) {
++            case "unregistered" -> {
++                System.setProperty("agent.security.mode", "test"); System.setProperty("spring.profiles.active", "test");
++                assertThatThrownBy(() -> ServiceTokens.issue(ACTOR)).isInstanceOf(PlatformException.class);
++                // Deliberate compatibility boundary: these two APIs can sign before any IAM registration.
++                assertThat(com.nimbusds.jwt.SignedJWT.parse(ServiceTokens.userToken(ACTOR,30)).getJWTClaimsSet().getStringClaim("token_use")).isEqualTo("user");
++                assertThat(com.nimbusds.jwt.SignedJWT.parse(ServiceTokens.integrationToken(ACTOR,"app","biz",1,"digest",30)).getJWTClaimsSet().getStringClaim("token_use")).isEqualTo("integration");
++            }
++            case "legacy-snapshot" -> {
++                var factories = new AtomicInteger();
++                try (var context = AuthorityConfigurationTest.application(Map.of("agent.security.mode","test", "stage1.test-profile",true), factories).run()) {
++                    assertThat(context.isActive()).isTrue(); assertThat(factories).hasValue(1);
++                    claims(ServiceTokens.issue(ACTOR));
++                }
++                for (String mode : List.of("iam", "dev-hmac", "nonsense")) {
++                    System.setProperty("agent.security.mode",mode); System.setProperty("spring.profiles.active","production");
++                    System.setProperty("agent.dev-auth","false"); claims(ServiceTokens.issue(ACTOR));
++                }
++                // Both validated legacy modes are one permission category; JVM values are irrelevant.
++                SecurityConfiguration.bindDeployment(environment(Map.of("agent.security.mode","dev-hmac", "agent.dev-auth",true),false));
++                claims(ServiceTokens.issue(ACTOR));
++                SecurityConfiguration.bindDeployment(environment(Map.of("agent.security.mode","test"),true));
++                claims(ServiceTokens.issue(ACTOR));
++            }
++            case "iam-before-listener" -> {
++                System.setProperty("agent.security.mode", "test"); System.setProperty("spring.profiles.active", "test");
++                var factories = new AtomicInteger(); var app = AuthorityConfigurationTest.application(Map.of(), factories);
++                // Defaults lose to JVM properties; this actual source precedes systemProperties.
++                app.addInitializers(context -> context.getEnvironment().getPropertySources().addFirst(
++                        new MapPropertySource("n4a-trusted-iam", AuthorityConfigurationTest.completeIam())));
++                assertThatThrownBy(() -> { try (var ignored = app.run()) {} }).hasStackTraceContaining("IAM_TRUST_CHAIN_UNAVAILABLE");
++                assertThat(factories).hasValue(0); deniedAll();
++                assertThatThrownBy(() -> { try (var ignored = app.run()) {} }).hasStackTraceContaining("IAM_TRUST_CHAIN_UNAVAILABLE");
++                assertThat(factories).hasValue(0); deniedAll();
++                System.setProperty("agent.security.mode","dev-hmac"); System.setProperty("agent.dev-auth","true");
++                deniedAll();
++                var legacy = AuthorityConfigurationTest.application(Map.of("agent.security.mode","dev-hmac","agent.dev-auth",true), factories);
++                assertThatThrownBy(() -> { try (var ignored = legacy.run()) {} }).isInstanceOf(PlatformException.class).extracting("code").isEqualTo("AUTHORITY_CONTEXT_MISSING");
++                assertThat(factories).hasValue(0); deniedAll();
++            }
++            case "legacy-then-iam" -> {
++                SecurityConfiguration.bindDeployment(environment(Map.of("agent.security.mode","test"),true));
++                String alreadySigned = ServiceTokens.issue(ACTOR); claims(alreadySigned);
++                var release = new CountDownLatch(1); var executor = Executors.newSingleThreadExecutor();
++                try {
++                    var afterRegistration = executor.submit(() -> { assertThat(release.await(5,TimeUnit.SECONDS)).isTrue(); deniedAll(); return true; });
++                    SecurityConfiguration.bindDeployment(environment(AuthorityConfigurationTest.completeIam(),false));
++                    deniedAll(); release.countDown(); assertThat(afterRegistration.get(5,TimeUnit.SECONDS)).isTrue();
++                    claims(alreadySigned); // A string signed before registration is not retroactively removed.
++                    assertThatThrownBy(() -> SecurityConfiguration.bindDeployment(environment(Map.of("agent.security.mode","test"),true)))
++                            .isInstanceOf(PlatformException.class);
++                    deniedAll();
++                } finally { release.countDown(); executor.shutdownNow(); assertThat(executor.awaitTermination(5,TimeUnit.SECONDS)).isTrue(); }
++            }
++            case "invalid-registration" -> {
++                System.setProperty("agent.security.mode","test"); System.setProperty("spring.profiles.active","test");
++                for (var invalid : AuthorityConfigurationTest.invalidConfigurations().filter(i -> !i.name().equals("complete-iam-still-closed")).toList()) {
++                    var input = new LinkedHashMap<>(invalid.properties());
++                    // This scenario uses explicit Environment profiles; keep the original helper's meaning.
++                    var env = environment(input, Boolean.TRUE.equals(input.remove("stage1.test-profile")));
++                    env.getPropertySources().remove("systemProperties");
++                    assertThatThrownBy(() -> SecurityConfiguration.bindDeployment(env)).as(invalid.name()).hasStackTraceContaining(invalid.reason());
++                    assertThatThrownBy(() -> ServiceTokens.issue(ACTOR)).as(invalid.name()).isInstanceOf(PlatformException.class);
++                }
++            }
++            case "common-boundary" -> {
++                SecurityConfiguration.bindDeployment(environment(Map.of("agent.security.mode","test"),true));
++                CommonBoundaryTest.legacyTicketAssertions();
++            }
++            case "isolated-receiver" -> isolatedReceiver();
++            case "authority-complete-iam", "authority-dev-hmac", "authority-test", "authority-gateway", "authority-loopback-iam", "authority-portal" -> AuthorityConfigurationTest.main(args);
++            default -> throw new AssertionError("unknown scenario");
++        }
++        System.out.println("N4A_EXECUTED=" + scenario);
++    }
++
++    @Configuration(proxyBeanMethods=false) @EnableAutoConfiguration @EnableWebSecurity
++    static class Receiver {
++        @Bean static BeanFactoryPostProcessor receiverDeployment(Environment environment) {
++            return factory -> factory.registerSingleton("validatedReceiverDeployment", SecurityConfiguration.bindDeployment(environment));
++        }
++        @Bean SecurityFilterChain receiverChain(HttpSecurity http) throws Exception {
++            return http.csrf(c -> c.disable()).authorizeHttpRequests(c -> c.anyRequest().denyAll()).build();
++        }
++    }
++
++    static void isolatedReceiver() throws Exception {
++        var input = AuthorityConfigurationTest.completeIam();
++        input.put("server.address","127.0.0.1"); input.put("server.port",0);
++        input.put("spring.config.location","optional:classpath:/n4a-no-config/");
++        input.put("spring.main.banner-mode","off"); input.put("logging.level.root","ERROR");
++        input.put("spring.jmx.enabled",false); input.put("springdoc.api-docs.enabled",false);
++        var app = new SpringApplication(Receiver.class); app.setDefaultProperties(input);
++        try (var context = app.run()) {
++            assertThat(context.getBean("validatedReceiverDeployment", AuthorityProperties.class).mode()).isEqualTo("iam");
++            int port = ((org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext)context).getWebServer().getPort();
++            try (var client = HttpClient.newHttpClient()) {
++                var response = client.send(HttpRequest.newBuilder(URI.create("http://127.0.0.1:"+port+"/isolated"))
++                        .timeout(Duration.ofSeconds(3)).GET().build(), HttpResponse.BodyHandlers.discarding());
++                assertThat(response.statusCode()).isEqualTo(403);
++            }
++            deniedAll();
++            System.out.println("N4A_RECEIVER_PORT=" + port);
++        }
++        deniedAll();
++        var factories = new AtomicInteger();
++        assertThatThrownBy(() -> { try (var ignored = AuthorityConfigurationTest.application(AuthorityConfigurationTest.completeIam(),factories).run()) {} })
++                .hasStackTraceContaining("IAM_TRUST_CHAIN_UNAVAILABLE");
++        assertThat(factories).hasValue(0);
++    }
++}
+diff --git a/engine-runtime/src/test/java/cn/agentplatform/engine/infra/RuntimeClientsPublishedHttpTest.java b/engine-runtime/src/test/java/cn/agentplatform/engine/infra/RuntimeClientsPublishedHttpTest.java
+index e59b65b..3b7383d 100644
+--- a/engine-runtime/src/test/java/cn/agentplatform/engine/infra/RuntimeClientsPublishedHttpTest.java
++++ b/engine-runtime/src/test/java/cn/agentplatform/engine/infra/RuntimeClientsPublishedHttpTest.java
+@@ -1,781 +1,798 @@
+-package cn.agentplatform.engine.infra;
+-
+-import static org.assertj.core.api.Assertions.*;
+-
+-import cn.agentplatform.common.*;
+-import cn.agentplatform.common.authority.*;
+-import cn.agentplatform.common.authority.HttpCurrentAuthorityClient.RetainedAuthorization;
+-import cn.agentplatform.engine.api.RunController;
+-
+-import com.fasterxml.jackson.databind.JsonNode;
+-import com.sun.net.httpserver.HttpServer;
+-
+-import org.junit.jupiter.api.*;
+-import org.springframework.mock.web.*;
+-import org.springframework.security.core.context.SecurityContextHolder;
+-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+-import org.springframework.web.context.request.*;
+-import org.springframework.web.method.HandlerMethod;
+-import org.springframework.web.servlet.HandlerMapping;
+-
+-import java.net.*;
+-import java.nio.charset.StandardCharsets;
+-import java.time.*;
+-import java.util.*;
+-import java.util.concurrent.*;
+-import java.util.concurrent.atomic.AtomicInteger;
+-import java.util.function.*;
+-
+-class RuntimeClientsPublishedHttpTest {
+-    static final String CODE = "client-flow", SHA = Digest.sha256("stored-client-candidate");
+-    static final ResourceBinding ROOT = new ResourceBinding("app-version", CODE + "@1", SHA);
+-    static final ServiceCall MAIN =
+-            new ServiceCall("engine", "proxy.engine.post.RunController.run", ROOT);
+-    static final Actor ACTOR =
+-            new Actor(
+-                    "tenant-a",
+-                    "alice",
+-                    Set.of("EDITOR"),
+-                    Map.of("region", Set.of("A"), "dataLabels", Set.of("initial")));
+-
+-    @FunctionalInterface
+-    interface BoundWork<T> {
+-        T apply(RetainedAuthorization proof) throws Exception;
+-    }
+-
+-    static <T> T bound(LoopbackAuthority iam, HttpCurrentAuthorityClient engine, BoundWork<T> work)
+-            throws Exception {
+-        try (var gateway = iam.client("gateway");
+-                var decoder = new TrustedJwtDecoder(iam.config("engine"), iam.clock(), true)) {
+-            var ticket = gateway.exchange(iam.portal(), MAIN);
+-            var request = new MockHttpServletRequest("POST", "/admin/apps/" + CODE + "/runs");
+-            var response = new MockHttpServletResponse();
+-            request.setAttribute(
+-                    HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE, "/admin/apps/{code}/runs");
+-            RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+-            SecurityContextHolder.getContext()
+-                    .setAuthentication(
+-                            new JwtAuthenticationToken(decoder.decode(ticket.value()), List.of()));
+-            var handler =
+-                    new HandlerMethod(
+-                            new RunController(null, null, null, null),
+-                            RunController.class.getMethod("run", String.class, JsonNode.class));
+-            var guard = new ServiceAuthorization("engine", new ServiceRoutePolicy(), engine);
+-            try {
+-                guard.preHandle(request, response, handler);
+-                return work.apply(AuthorityContext.requireInitialFor(Actor.current(), ROOT));
+-            } finally {
+-                guard.afterCompletion(request, response, handler, null);
+-                SecurityContextHolder.clearContext();
+-                RequestContextHolder.resetRequestAttributes();
+-            }
+-        }
+-    }
+-
+-    static JsonNode payload() {
+-        return Json.tree(
+-                Map.of(
+-                        "code",
+-                        "OK",
+-                        "data",
+-                        Map.of(
+-                                "appCode",
+-                                CODE,
+-                                "appVersionId",
+-                                17,
+-                                "versionId",
+-                                17,
+-                                "versionNo",
+-                                1,
+-                                "appVersionKey",
+-                                CODE + "@1",
+-                                "candidateSha256",
+-                                SHA,
+-                                "type",
+-                                "FLOW",
+-                                "config",
+-                                Map.of(),
+-                                "definition",
+-                                Map.of("nodes", List.of()))));
+-    }
+-
+-    static final class Fixture implements AutoCloseable {
+-        final LoopbackAuthority iam = new LoopbackAuthority();
+-        final HttpCurrentAuthorityClient engine;
+-        final HttpServer server;
+-        final ExecutorService executor = Executors.newCachedThreadPool();
+-        final AtomicInteger sends = new AtomicInteger(), redirected = new AtomicInteger();
+-        volatile Consumer<com.sun.net.httpserver.HttpExchange> handler =
+-                x -> reply(x, 200, payload().toString());
+-        volatile String received;
+-
+-        Fixture() throws Exception {
+-            iam.portalActor(ACTOR);
+-            engine = iam.client("engine");
+-            server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+-            server.setExecutor(executor);
+-            server.createContext(
+-                    "/internal/apps/" + CODE + "/published",
+-                    x -> {
+-                        sends.incrementAndGet();
+-                        received = x.getRequestHeaders().getFirst("Authorization");
+-                        handler.accept(x);
+-                    });
+-            server.createContext(
+-                    "/redirected",
+-                    x -> {
+-                        redirected.incrementAndGet();
+-                        reply(x, 200, payload().toString());
+-                    });
+-            server.start();
+-        }
+-
+-        String origin() {
+-            return "http://127.0.0.1:" + server.getAddress().getPort();
+-        }
+-
+-        RuntimeClients clients() {
+-            return new RuntimeClients(iam.config("engine"), engine, origin(), true);
+-        }
+-
+-        @Override
+-        public void close() throws Exception {
+-            server.stop(0);
+-            executor.shutdownNow();
+-            assertThat(executor.awaitTermination(3, TimeUnit.SECONDS)).isTrue();
+-            engine.close();
+-            iam.close();
+-        }
+-    }
+-
+-    static void reply(com.sun.net.httpserver.HttpExchange x, int status, String value) {
+-        try {
+-            var b = value.getBytes(StandardCharsets.UTF_8);
+-            x.sendResponseHeaders(status, b.length);
+-            try (var out = x.getResponseBody()) {
+-                out.write(b);
+-            }
+-        } catch (java.io.IOException ignored) {
+-            x.close();
+-        }
+-    }
+-
+-    static void unavailable(Throwable failure) {
+-        assertThat(failure)
+-                .isInstanceOfSatisfying(
+-                        PlatformException.class,
+-                        e -> {
+-                            assertThat(e.status()).isEqualTo(503);
+-                            assertThat(e.code()).isEqualTo("APP_PUBLISHED_UNAVAILABLE");
+-                            assertThat(e.getMessage()).doesNotContain("private-upstream-body");
+-                        });
+-    }
+-
+-    @Test
+-    void boundMainForwardsExactOperationGrantOriginAndNeverPortalSource() throws Exception {
+-        try (var f = new Fixture();
+-                var clients = f.clients()) {
+-            bound(
+-                    f.iam,
+-                    f.engine,
+-                    proof -> {
+-                        assertThat(clients.published(CODE, proof))
+-                                .isEqualTo(payload().path("data"));
+-                        assertThat(f.received).startsWith("Bearer ");
+-                        String token = f.received.substring(7);
+-                        var claims =
+-                                Json.read(
+-                                        new String(
+-                                                Base64.getUrlDecoder()
+-                                                        .decode(token.split("\\.")[1]),
+-                                                StandardCharsets.UTF_8));
+-                        assertThat(claims.path("caller").asText()).isEqualTo("engine");
+-                        assertThat(claims.path("action").asText()).isEqualTo("app.published.read");
+-                        assertThat(claims.path("grant_ref").asText())
+-                                .isEqualTo(proof.current().delegation().value());
+-                        assertThat(claims.path("operation").path("operation_id").asText())
+-                                .isEqualTo(proof.current().operation().operationId());
+-                        assertThat(claims.path("resource"))
+-                                .isEqualTo(
+-                                        Json.tree(
+-                                                Map.of(
+-                                                        "kind",
+-                                                        ROOT.kind(),
+-                                                        "id",
+-                                                        ROOT.id(),
+-                                                        "version_digest",
+-                                                        ROOT.versionDigest())));
+-                        assertThat(claims.path("origin_authentication_id").asText())
+-                                .isEqualTo(proof.requireOriginAuthenticationId());
+-                        return null;
+-                    });
+-            assertThat(f.sends).hasValue(1);
+-        }
+-    }
+-
+-    @Test
+-    void iamActorGetPostStreamAndUnknownTargetsNeverSignOrSend() throws Exception {
+-        try (var f = new Fixture();
+-                var clients = f.clients()) {
+-            int before = f.iam.requestAttempts();
+-            for (String target : Arrays.asList("app", "skill", "model", null, "", "modle")) {
+-                assertThatThrownBy(() -> clients.get(target, "/private", ACTOR))
+-                        .isInstanceOf(PlatformException.class);
+-                assertThatThrownBy(() -> clients.post(target, "/private", Map.of(), ACTOR))
+-                        .isInstanceOf(PlatformException.class);
+-            }
+-            assertThatThrownBy(() -> clients.chatStream(Map.of(), ACTOR, s -> {}))
+-                    .isInstanceOf(PlatformException.class);
+-            assertThat(f.iam.requestAttempts()).isEqualTo(before);
+-            assertThat(f.sends).hasValue(0);
+-        }
+-    }
+-
+-    @Test
+-    void explicitLegacyConstructionKeepsKnownAppSkillModelRoutes() throws Exception {
+-        String previous = System.getProperty("agent.security.mode");
+-        String previousProfiles = System.getProperty("spring.profiles.active");
+-        System.setProperty("agent.security.mode", "test");
+-        System.setProperty("spring.profiles.active", "test");
+-        try (var f = new Fixture();
+-                var clients = new RuntimeClients()) {
+-            clients.app = f.origin();
+-            clients.skill = f.origin();
+-            clients.model = f.origin();
+-            for (String target : List.of("app", "skill", "model"))
+-                assertThat(clients.get(target, "/internal/apps/" + CODE + "/published", ACTOR))
+-                        .isEqualTo(payload().path("data"));
+-            assertThat(f.sends).hasValue(3);
+-        } finally {
+-            if (previous == null) System.clearProperty("agent.security.mode");
+-            else System.setProperty("agent.security.mode", previous);
+-            if (previousProfiles == null) System.clearProperty("spring.profiles.active");
+-            else System.setProperty("spring.profiles.active", previousProfiles);
+-        }
+-    }
+-
+-    @Test
+-    void trustedIamDoesNotFallBackWhenJvmModeSaysTest() throws Exception {
+-        String previous = System.getProperty("agent.security.mode");
+-        try {
+-            System.setProperty("agent.security.mode", "test");
+-            try (var f = new Fixture();
+-                    var clients = f.clients()) {
+-                assertThat(clients.iamEnabled()).isTrue();
+-                assertThatThrownBy(
+-                                () ->
+-                                        clients.get(
+-                                                "app",
+-                                                "/internal/apps/" + CODE + "/published",
+-                                                ACTOR))
+-                        .isInstanceOfSatisfying(
+-                                PlatformException.class,
+-                                e -> assertThat(e.code()).isEqualTo("IAM_LEGACY_CLIENT_FORBIDDEN"));
+-                assertThat(f.sends).hasValue(0);
+-            }
+-        } finally {
+-            if (previous == null) System.clearProperty("agent.security.mode");
+-            else System.setProperty("agent.security.mode", previous);
+-        }
+-    }
+-
+-    @Test
+-    void trustedModeRejectsMissingCapabilityAndUnsafeOrigins() throws Exception {
+-        try (var f = new Fixture()) {
+-            assertThatThrownBy(
+-                            () ->
+-                                    new RuntimeClients(
+-                                            f.iam.config("engine"), null, f.origin(), true))
+-                    .isInstanceOf(IllegalStateException.class);
+-            for (String origin :
+-                    List.of(
+-                            f.origin() + "/",
+-                            f.origin() + "/prefix",
+-                            f.origin() + "?q=1",
+-                            f.origin() + "#x",
+-                            "http://localhost:1",
+-                            "http://127.0.0.1@external.invalid",
+-                            "ftp://127.0.0.1:1"))
+-                assertThatThrownBy(
+-                                () ->
+-                                        new RuntimeClients(
+-                                                f.iam.config("engine"), f.engine, origin, true))
+-                        .isInstanceOf(IllegalArgumentException.class);
+-            assertThatThrownBy(
+-                            () ->
+-                                    new RuntimeClients(
+-                                            f.iam.config("app"), f.engine, f.origin(), true))
+-                    .isInstanceOf(IllegalArgumentException.class);
+-        }
+-    }
+-
+-    @Test
+-    void publicVerifiedObjectAndUnboundCaptureCannotSend() throws Exception {
+-        try (var f = new Fixture();
+-                var clients = f.clients()) {
+-            var retained =
+-                    bound(
+-                            f.iam,
+-                            f.engine,
+-                            proof -> {
+-                                try (var fake = AuthorityContext.bind(proof.current())) {
+-                                    assertThatThrownBy(() -> clients.published(CODE, proof))
+-                                            .isInstanceOf(PlatformException.class);
+-                                }
+-                                return proof;
+-                            });
+-            assertThatThrownBy(() -> clients.published(CODE, retained))
+-                    .isInstanceOf(PlatformException.class);
+-            assertThat(f.sends).hasValue(0);
+-        }
+-    }
+-
+-    @Test
+-    void unsafeCodeAndWrongRootNeverSend() throws Exception {
+-        try (var f = new Fixture();
+-                var clients = f.clients()) {
+-            bound(
+-                    f.iam,
+-                    f.engine,
+-                    proof -> {
+-                        for (String code : List.of("../x", "client-flow?x=1", "other", "a%2Fb"))
+-                            assertThatThrownBy(() -> clients.published(code, proof))
+-                                    .isInstanceOf(PlatformException.class);
+-                        return null;
+-                    });
+-            assertThat(f.sends).hasValue(0);
+-        }
+-    }
+-
+-    @Test
+-    void appHttpFailureSemanticsRemainDistinct() throws Exception {
+-        try (var f = new Fixture();
+-                var clients = f.clients()) {
+-            for (int status : List.of(401, 403, 409, 503)) {
+-                f.handler =
+-                        x -> {
+-                            if (status == 401)
+-                                x.getResponseHeaders()
+-                                        .set("WWW-Authenticate", "Basic realm=\"n3-fixture\"");
+-                            reply(x, status, "private-upstream-body");
+-                        };
+-                bound(
+-                        f.iam,
+-                        f.engine,
+-                        proof -> {
+-                            assertThatThrownBy(() -> clients.published(CODE, proof))
+-                                    .isInstanceOfSatisfying(
+-                                            PlatformException.class,
+-                                            e -> {
+-                                                assertThat(e.status()).isEqualTo(status);
+-                                                assertThat(e.code())
+-                                                        .isEqualTo("APP_PUBLISHED_HTTP_" + status);
+-                                                assertThat(e.getMessage())
+-                                                        .doesNotContain("private-upstream-body");
+-                                            });
+-                            return null;
+-                        });
+-            }
+-            assertThat(f.sends).hasValue(4);
+-        }
+-    }
+-
+-    @Test
+-    void redirectIsNotFollowedOrRetried() throws Exception {
+-        try (var f = new Fixture();
+-                var clients = f.clients()) {
+-            f.handler =
+-                    x -> {
+-                        x.getResponseHeaders().set("Location", f.origin() + "/redirected");
+-                        reply(x, 302, "private-upstream-body");
+-                    };
+-            bound(
+-                    f.iam,
+-                    f.engine,
+-                    proof -> {
+-                        assertThatThrownBy(() -> clients.published(CODE, proof))
+-                                .satisfies(RuntimeClientsPublishedHttpTest::unavailable);
+-                        return null;
+-                    });
+-            assertThat(f.sends).hasValue(1);
+-            assertThat(f.redirected).hasValue(0);
+-        }
+-    }
+-
+-    @Test
+-    void disconnectedPublishedGetIsNeverAutomaticallyResent() throws Exception {
+-        try (var f = new Fixture();
+-                var clients = f.clients()) {
+-            bound(
+-                    f.iam,
+-                    f.engine,
+-                    proof -> {
+-                        clients.published(CODE, proof);
+-                        return null;
+-                    });
+-            assertThat(f.sends).hasValue(1);
+-            f.handler = x -> x.close();
+-            bound(
+-                    f.iam,
+-                    f.engine,
+-                    proof -> {
+-                        assertThatThrownBy(() -> clients.published(CODE, proof))
+-                                .satisfies(RuntimeClientsPublishedHttpTest::unavailable);
+-                        return null;
+-                    });
+-            assertThat(f.sends)
+-                    .as("one warmup plus one failed GET; the transport must not resend it")
+-                    .hasValue(2);
+-        }
+-    }
+-
+-    @Test
+-    void numericIdsVersionKeyAndStoredDigestAreAllValidated() throws Exception {
+-        try (var f = new Fixture();
+-                var clients = f.clients()) {
+-            for (String field :
+-                    List.of(
+-                            "appCode",
+-                            "appVersionId",
+-                            "versionId",
+-                            "versionNo",
+-                            "appVersionKey",
+-                            "candidateSha256")) {
+-                var envelope = (com.fasterxml.jackson.databind.node.ObjectNode) payload();
+-                ((com.fasterxml.jackson.databind.node.ObjectNode) envelope.path("data"))
+-                        .set(field, Json.tree(field.contains("Id") ? 0 : "wrong"));
+-                f.handler = x -> reply(x, 200, envelope.toString());
+-                bound(
+-                        f.iam,
+-                        f.engine,
+-                        proof -> {
+-                            assertThatThrownBy(() -> clients.published(CODE, proof))
+-                                    .satisfies(RuntimeClientsPublishedHttpTest::unavailable);
+-                            return null;
+-                        });
+-            }
+-        }
+-    }
+-
+-    @Test
+-    void malformedJsonIsUnavailableWithoutBodyEcho() throws Exception {
+-        try (var f = new Fixture();
+-                var clients = f.clients()) {
+-            f.handler = x -> reply(x, 200, "private-upstream-body");
+-            bound(
+-                    f.iam,
+-                    f.engine,
+-                    proof -> {
+-                        assertThatThrownBy(() -> clients.published(CODE, proof))
+-                                .satisfies(RuntimeClientsPublishedHttpTest::unavailable);
+-                        return null;
+-                    });
+-        }
+-    }
+-
+-    @Test
+-    void nonIdentityEncodingIsRejectedWithoutAutomaticDecompression() throws Exception {
+-        try (var f = new Fixture();
+-                var clients = f.clients()) {
+-            f.handler =
+-                    x -> {
+-                        assertThat(x.getRequestHeaders().getFirst("Accept-Encoding"))
+-                                .isEqualTo("identity");
+-                        x.getResponseHeaders().set("Content-Encoding", "gzip");
+-                        reply(x, 200, payload().toString());
+-                    };
+-            bound(
+-                    f.iam,
+-                    f.engine,
+-                    proof -> {
+-                        assertThatThrownBy(() -> clients.published(CODE, proof))
+-                                .satisfies(RuntimeClientsPublishedHttpTest::unavailable);
+-                        return null;
+-                    });
+-            assertThat(f.sends).hasValue(1);
+-        }
+-    }
+-
+-    @Test
+-    void forwardReturningAfterProofExpiryCannotSendAppRequest() throws Exception {
+-        try (var f = new Fixture()) {
+-            var slow =
+-                    (CurrentAuthorityClient)
+-                            java.lang.reflect.Proxy.newProxyInstance(
+-                                    CurrentAuthorityClient.class.getClassLoader(),
+-                                    new Class[] {CurrentAuthorityClient.class},
+-                                    (p, m, a) -> {
+-                                        try {
+-                                            Object result = m.invoke(f.engine, a);
+-                                            if (m.getName().equals("forward"))
+-                                                f.iam.advanceClock(Duration.ofSeconds(6));
+-                                            return result;
+-                                        } catch (java.lang.reflect.InvocationTargetException e) {
+-                                            throw e.getCause();
+-                                        }
+-                                    });
+-            try (var clients = new RuntimeClients(f.iam.config("engine"), slow, f.origin(), true)) {
+-                bound(
+-                        f.iam,
+-                        f.engine,
+-                        proof -> {
+-                            assertThatThrownBy(() -> clients.published(CODE, proof))
+-                                    .isInstanceOfSatisfying(
+-                                            PlatformException.class,
+-                                            e -> assertThat(e.status()).isEqualTo(403));
+-                            return null;
+-                        });
+-                assertThat(f.sends).hasValue(0);
+-            }
+-        }
+-    }
+-
+-    @Test
+-    void proofExpiringWhileRealExecutorQueuedNeverSendsPublishedGet() throws Exception {
+-        try (var f = new Fixture()) {
+-            var blocked = new CountDownLatch(1);
+-            var submitted = new CountDownLatch(1);
+-            var release = new CountDownLatch(1);
+-            var controlFailure = new java.util.concurrent.atomic.AtomicReference<Throwable>();
+-            var owned =
+-                    new ThreadPoolExecutor(
+-                            1, 1, 0, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(1)) {
+-                        @Override
+-                        public void execute(Runnable task) {
+-                            super.execute(task);
+-                            if (!getQueue().isEmpty()) submitted.countDown();
+-                        }
+-                    };
+-            owned.submit(
+-                    () -> {
+-                        blocked.countDown();
+-                        try {
+-                            if (!release.await(5, TimeUnit.SECONDS))
+-                                throw new AssertionError("finite executor block timeout");
+-                        } catch (InterruptedException e) {
+-                            Thread.currentThread().interrupt();
+-                        }
+-                    });
+-            assertThat(blocked.await(2, TimeUnit.SECONDS)).isTrue();
+-            var control =
+-                    Thread.ofPlatform()
+-                            .name("n3-proof-expiry-control")
+-                            .start(
+-                                    () -> {
+-                                        try {
+-                                            if (!submitted.await(5, TimeUnit.SECONDS))
+-                                                throw new AssertionError("finite submit timeout");
+-                                            // The main passed caller checks and is queued. Only
+-                                            // the verification clock changes; no real sleep or
+-                                            // CPU exhaustion consumes the transport deadline.
+-                                            f.iam.advanceClock(Duration.ofSeconds(6));
+-                                        } catch (Throwable failure) {
+-                                            controlFailure.set(failure);
+-                                        } finally {
+-                                            release.countDown();
+-                                        }
+-                                    });
+-            try (var clients =
+-                    new RuntimeClients(f.iam.config("engine"), f.engine, f.origin(), true, owned)) {
+-                bound(
+-                        f.iam,
+-                        f.engine,
+-                        proof -> {
+-                            assertThatThrownBy(() -> clients.published(CODE, proof))
+-                                    .isInstanceOfSatisfying(
+-                                            PlatformException.class,
+-                                            e -> assertThat(e.status()).isEqualTo(403));
+-                            return null;
+-                        });
+-                assertThat(f.sends).hasValue(0);
+-            } finally {
+-                release.countDown();
+-                control.join(2000);
+-                owned.shutdownNow();
+-                assertThat(owned.awaitTermination(2, TimeUnit.SECONDS)).isTrue();
+-                assertThat(control.isAlive()).isFalse();
+-                assertThat(controlFailure.get()).isNull();
+-            }
+-        }
+-    }
+-
+-    @Test
+-    void interruptionAfterHeadersCancelsRequestAndPreservesInterrupt() throws Exception {
+-        try (var f = new Fixture();
+-                var clients = f.clients()) {
+-            var headers = new CountDownLatch(1);
+-            var release = new CountDownLatch(1);
+-            Thread caller = Thread.currentThread();
+-            f.handler =
+-                    x -> {
+-                        try {
+-                            x.sendResponseHeaders(200, 0);
+-                            x.getResponseBody().write('{');
+-                            x.getResponseBody().flush();
+-                            headers.countDown();
+-                            release.await(4, TimeUnit.SECONDS);
+-                        } catch (Exception ignored) {
+-                        } finally {
+-                            x.close();
+-                        }
+-                    };
+-            var interrupt =
+-                    Thread.ofPlatform()
+-                            .daemon(true)
+-                            .start(
+-                                    () -> {
+-                                        try {
+-                                            if (headers.await(3, TimeUnit.SECONDS))
+-                                                caller.interrupt();
+-                                        } catch (InterruptedException ignored) {
+-                                        }
+-                                    });
+-            try {
+-                bound(
+-                        f.iam,
+-                        f.engine,
+-                        proof -> {
+-                            assertThatThrownBy(() -> clients.published(CODE, proof))
+-                                    .satisfies(RuntimeClientsPublishedHttpTest::unavailable);
+-                            assertThat(Thread.currentThread().isInterrupted()).isTrue();
+-                            return null;
+-                        });
+-            } finally {
+-                Thread.interrupted();
+-                release.countDown();
+-                interrupt.join(2000);
+-            }
+-            assertThat(f.sends).hasValue(1);
+-        }
+-    }
+-
+-    @Test
+-    void completeResponseStillRequiresOriginalBoundFrame() throws Exception {
+-        try (var f = new Fixture();
+-                var clients = f.clients()) {
+-            f.handler =
+-                    x -> {
+-                        f.iam.advanceClock(Duration.ofSeconds(6));
+-                        reply(x, 200, payload().toString());
+-                    };
+-            bound(
+-                    f.iam,
+-                    f.engine,
+-                    proof -> {
+-                        assertThatThrownBy(() -> clients.published(CODE, proof))
+-                                .isInstanceOfSatisfying(
+-                                        PlatformException.class,
+-                                        e -> assertThat(e.status()).isEqualTo(403));
+-                        return null;
+-                    });
+-            assertThat(f.sends).hasValue(1);
+-        }
+-    }
+-
+-    @Test
+-    void oversizedBodyCancelsBeforeUnboundedAllocation() throws Exception {
+-        try (var f = new Fixture();
+-                var clients = f.clients()) {
+-            f.handler = x -> reply(x, 200, " ".repeat(4194305));
+-            long start = System.nanoTime();
+-            bound(
+-                    f.iam,
+-                    f.engine,
+-                    proof -> {
+-                        assertThatThrownBy(() -> clients.published(CODE, proof))
+-                                .satisfies(RuntimeClientsPublishedHttpTest::unavailable);
+-                        return null;
+-                    });
+-            assertThat(Duration.ofNanos(System.nanoTime() - start))
+-                    .isLessThan(Duration.ofSeconds(4));
+-            assertThat(f.sends).hasValue(1);
+-        }
+-    }
+-
+-    @Test
+-    void headersThenUnfinishedBodyHasCompleteDeadlineAndClientCloses() throws Exception {
+-        try (var f = new Fixture()) {
+-            var release = new CountDownLatch(1);
+-            var entered = new CountDownLatch(1);
+-            f.handler =
+-                    x -> {
+-                        try {
+-                            x.sendResponseHeaders(200, 0);
+-                            x.getResponseBody().write('{');
+-                            x.getResponseBody().flush();
+-                            entered.countDown();
+-                            release.await(5, TimeUnit.SECONDS);
+-                        } catch (Exception ignored) {
+-                        } finally {
+-                            x.close();
+-                        }
+-                    };
+-            var before =
+-                    Thread.getAllStackTraces().keySet().stream()
+-                            .map(Thread::threadId)
+-                            .collect(java.util.stream.Collectors.toSet());
+-            try (var clients = f.clients()) {
+-                long start = System.nanoTime();
+-                bound(
+-                        f.iam,
+-                        f.engine,
+-                        proof -> {
+-                            assertThatThrownBy(() -> clients.published(CODE, proof))
+-                                    .satisfies(RuntimeClientsPublishedHttpTest::unavailable);
+-                            return null;
+-                        });
+-                assertThat(entered.await(1, TimeUnit.SECONDS)).isTrue();
+-                assertThat(Duration.ofNanos(System.nanoTime() - start))
+-                        .isBetween(Duration.ofMillis(1800), Duration.ofSeconds(4));
+-            } finally {
+-                release.countDown();
+-            }
+-            long until = System.nanoTime() + TimeUnit.SECONDS.toNanos(3);
+-            while (newSelectors(before) > 0 && System.nanoTime() < until) Thread.sleep(10);
+-            assertThat(newSelectors(before)).isZero();
+-            assertThat(f.sends).hasValue(1);
+-        }
+-    }
+-
+-    static long newSelectors(Set<Long> before) {
+-        return Thread.getAllStackTraces().keySet().stream()
+-                .filter(
+-                        t ->
+-                                !before.contains(t.threadId())
+-                                        && t.isAlive()
+-                                        && (t.getName().contains("SelectorManager")
+-                                                || t.getName().startsWith("app-published-")))
+-                .count();
+-    }
+-
+-    @Test
+-    void unknownServiceNeverSignsOrSends() throws Exception {
+-        var sends = new AtomicInteger();
+-        var server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+-        server.createContext(
+-                "/",
+-                x -> {
+-                    sends.incrementAndGet();
+-                    byte[] data = "{\"code\":\"OK\",\"data\":{}}".getBytes(StandardCharsets.UTF_8);
+-                    x.sendResponseHeaders(200, data.length);
+-                    try (var out = x.getResponseBody()) {
+-                        out.write(data);
+-                    }
+-                });
+-        server.start();
+-        try {
+-            var clients = new RuntimeClients();
+-            clients.model = "http://127.0.0.1:" + server.getAddress().getPort();
+-            var actor = new Actor("tenant-a", "alice", Set.of("EDITOR"), Map.of());
+-            for (String target : Arrays.asList(null, "", "modle", "APP")) {
+-                assertThatThrownBy(() -> clients.get(target, "/must-not-send", actor))
+-                        .isInstanceOfSatisfying(
+-                                PlatformException.class,
+-                                e -> assertThat(e.status()).isEqualTo(403));
+-            }
+-            assertThat(sends).hasValue(0);
+-        } finally {
+-            server.stop(0);
+-        }
+-    }
+-}
++package cn.agentplatform.engine.infra;
++
++import static org.assertj.core.api.Assertions.*;
++
++import cn.agentplatform.common.*;
++import cn.agentplatform.common.authority.*;
++import cn.agentplatform.common.authority.HttpCurrentAuthorityClient.RetainedAuthorization;
++import cn.agentplatform.engine.api.RunController;
++
++import com.fasterxml.jackson.databind.JsonNode;
++import com.sun.net.httpserver.HttpServer;
++
++import org.junit.jupiter.api.*;
++import org.springframework.mock.web.*;
++import org.springframework.security.core.context.SecurityContextHolder;
++import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
++import org.springframework.web.context.request.*;
++import org.springframework.web.method.HandlerMethod;
++import org.springframework.web.servlet.HandlerMapping;
++
++import java.net.*;
++import java.nio.charset.StandardCharsets;
++import java.time.*;
++import java.util.*;
++import java.util.concurrent.*;
++import java.util.concurrent.atomic.AtomicInteger;
++import java.util.function.*;
++
++class RuntimeClientsPublishedHttpTest {
++    static final String CODE = "client-flow", SHA = Digest.sha256("stored-client-candidate");
++    static final ResourceBinding ROOT = new ResourceBinding("app-version", CODE + "@1", SHA);
++    static final ServiceCall MAIN =
++            new ServiceCall("engine", "proxy.engine.post.RunController.run", ROOT);
++    static final Actor ACTOR =
++            new Actor(
++                    "tenant-a",
++                    "alice",
++                    Set.of("EDITOR"),
++                    Map.of("region", Set.of("A"), "dataLabels", Set.of("initial")));
++
++    @FunctionalInterface
++    interface BoundWork<T> {
++        T apply(RetainedAuthorization proof) throws Exception;
++    }
++
++    static <T> T bound(LoopbackAuthority iam, HttpCurrentAuthorityClient engine, BoundWork<T> work)
++            throws Exception {
++        try (var gateway = iam.client("gateway");
++                var decoder = new TrustedJwtDecoder(iam.config("engine"), iam.clock(), true)) {
++            var ticket = gateway.exchange(iam.portal(), MAIN);
++            var request = new MockHttpServletRequest("POST", "/admin/apps/" + CODE + "/runs");
++            var response = new MockHttpServletResponse();
++            request.setAttribute(
++                    HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE, "/admin/apps/{code}/runs");
++            RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
++            SecurityContextHolder.getContext()
++                    .setAuthentication(
++                            new JwtAuthenticationToken(decoder.decode(ticket.value()), List.of()));
++            var handler =
++                    new HandlerMethod(
++                            new RunController(null, null, null, null),
++                            RunController.class.getMethod("run", String.class, JsonNode.class));
++            var guard = new ServiceAuthorization("engine", new ServiceRoutePolicy(), engine);
++            try {
++                guard.preHandle(request, response, handler);
++                return work.apply(AuthorityContext.requireInitialFor(Actor.current(), ROOT));
++            } finally {
++                guard.afterCompletion(request, response, handler, null);
++                SecurityContextHolder.clearContext();
++                RequestContextHolder.resetRequestAttributes();
++            }
++        }
++    }
++
++    static JsonNode payload() {
++        return Json.tree(
++                Map.of(
++                        "code",
++                        "OK",
++                        "data",
++                        Map.of(
++                                "appCode",
++                                CODE,
++                                "appVersionId",
++                                17,
++                                "versionId",
++                                17,
++                                "versionNo",
++                                1,
++                                "appVersionKey",
++                                CODE + "@1",
++                                "candidateSha256",
++                                SHA,
++                                "type",
++                                "FLOW",
++                                "config",
++                                Map.of(),
++                                "definition",
++                                Map.of("nodes", List.of()))));
++    }
++
++    static final class Fixture implements AutoCloseable {
++        final LoopbackAuthority iam = new LoopbackAuthority();
++        final HttpCurrentAuthorityClient engine;
++        final HttpServer server;
++        final ExecutorService executor = Executors.newCachedThreadPool();
++        final AtomicInteger sends = new AtomicInteger(), redirected = new AtomicInteger();
++        volatile Consumer<com.sun.net.httpserver.HttpExchange> handler =
++                x -> reply(x, 200, payload().toString());
++        volatile String received;
++
++        Fixture() throws Exception {
++            iam.portalActor(ACTOR);
++            engine = iam.client("engine");
++            server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
++            server.setExecutor(executor);
++            server.createContext(
++                    "/internal/apps/" + CODE + "/published",
++                    x -> {
++                        sends.incrementAndGet();
++                        received = x.getRequestHeaders().getFirst("Authorization");
++                        handler.accept(x);
++                    });
++            server.createContext(
++                    "/redirected",
++                    x -> {
++                        redirected.incrementAndGet();
++                        reply(x, 200, payload().toString());
++                    });
++            server.start();
++        }
++
++        String origin() {
++            return "http://127.0.0.1:" + server.getAddress().getPort();
++        }
++
++        RuntimeClients clients() {
++            return new RuntimeClients(iam.config("engine"), engine, origin(), true);
++        }
++
++        @Override
++        public void close() throws Exception {
++            server.stop(0);
++            executor.shutdownNow();
++            assertThat(executor.awaitTermination(3, TimeUnit.SECONDS)).isTrue();
++            engine.close();
++            iam.close();
++        }
++    }
++
++    static void reply(com.sun.net.httpserver.HttpExchange x, int status, String value) {
++        try {
++            var b = value.getBytes(StandardCharsets.UTF_8);
++            x.sendResponseHeaders(status, b.length);
++            try (var out = x.getResponseBody()) {
++                out.write(b);
++            }
++        } catch (java.io.IOException ignored) {
++            x.close();
++        }
++    }
++
++    static void unavailable(Throwable failure) {
++        assertThat(failure)
++                .isInstanceOfSatisfying(
++                        PlatformException.class,
++                        e -> {
++                            assertThat(e.status()).isEqualTo(503);
++                            assertThat(e.code()).isEqualTo("APP_PUBLISHED_UNAVAILABLE");
++                            assertThat(e.getMessage()).doesNotContain("private-upstream-body");
++                        });
++    }
++
++    @Test
++    void boundMainForwardsExactOperationGrantOriginAndNeverPortalSource() throws Exception {
++        try (var f = new Fixture();
++                var clients = f.clients()) {
++            bound(
++                    f.iam,
++                    f.engine,
++                    proof -> {
++                        assertThat(clients.published(CODE, proof))
++                                .isEqualTo(payload().path("data"));
++                        assertThat(f.received).startsWith("Bearer ");
++                        String token = f.received.substring(7);
++                        var claims =
++                                Json.read(
++                                        new String(
++                                                Base64.getUrlDecoder()
++                                                        .decode(token.split("\\.")[1]),
++                                                StandardCharsets.UTF_8));
++                        assertThat(claims.path("caller").asText()).isEqualTo("engine");
++                        assertThat(claims.path("action").asText()).isEqualTo("app.published.read");
++                        assertThat(claims.path("grant_ref").asText())
++                                .isEqualTo(proof.current().delegation().value());
++                        assertThat(claims.path("operation").path("operation_id").asText())
++                                .isEqualTo(proof.current().operation().operationId());
++                        assertThat(claims.path("resource"))
++                                .isEqualTo(
++                                        Json.tree(
++                                                Map.of(
++                                                        "kind",
++                                                        ROOT.kind(),
++                                                        "id",
++                                                        ROOT.id(),
++                                                        "version_digest",
++                                                        ROOT.versionDigest())));
++                        assertThat(claims.path("origin_authentication_id").asText())
++                                .isEqualTo(proof.requireOriginAuthenticationId());
++                        return null;
++                    });
++            assertThat(f.sends).hasValue(1);
++        }
++    }
++
++    @Test
++    void iamActorGetPostStreamAndUnknownTargetsNeverSignOrSend() throws Exception {
++        try (var f = new Fixture();
++                var clients = f.clients()) {
++            int before = f.iam.requestAttempts();
++            for (String target : Arrays.asList("app", "skill", "model", null, "", "modle")) {
++                assertThatThrownBy(() -> clients.get(target, "/private", ACTOR))
++                        .isInstanceOf(PlatformException.class);
++                assertThatThrownBy(() -> clients.post(target, "/private", Map.of(), ACTOR))
++                        .isInstanceOf(PlatformException.class);
++            }
++            assertThatThrownBy(() -> clients.chatStream(Map.of(), ACTOR, s -> {}))
++                    .isInstanceOf(PlatformException.class);
++            assertThat(f.iam.requestAttempts()).isEqualTo(before);
++            assertThat(f.sends).hasValue(0);
++        }
++    }
++
++    @Test
++    void explicitLegacyConstructionKeepsKnownAppSkillModelRoutes() throws Exception {
++        var output = java.nio.file.Files.createTempFile("n4a-engine-legacy", ".log");
++        var child = new ProcessBuilder(java.nio.file.Path.of(System.getProperty("java.home"), "bin", "java.exe").toString(),
++                "-Djdk.net.unixdomain.tmpdir=V:/.local/tmp", "-cp", System.getProperty("java.class.path"), RuntimeClientsPublishedHttpTest.class.getName(), "legacy-routes")
++                .redirectErrorStream(true).redirectOutput(output.toFile()).start();
++        try {
++            boolean finished = child.waitFor(30, TimeUnit.SECONDS);
++            if (!finished) { child.destroyForcibly(); assertThat(child.waitFor(5, TimeUnit.SECONDS)).isTrue(); }
++            String raw = java.nio.file.Files.readString(output); System.out.print(raw);
++            assertThat(finished).as("bounded engine legacy child").isTrue();
++            assertThat(child.exitValue()).as(raw).isZero();
++            assertThat(raw).contains("N4A_ENGINE_EXECUTED=legacy-routes");
++            System.out.println("N4A_ENGINE_CHILD_REAPED=" + child.pid());
++        } finally {
++            if (child.isAlive()) child.destroyForcibly();
++            assertThat(child.waitFor(5, TimeUnit.SECONDS)).isTrue();
++            java.nio.file.Files.deleteIfExists(output);
++        }
++    }
++
++    public static void main(String[] args) throws Exception {
++        if (args.length != 1 || !"legacy-routes".equals(args[0])) throw new AssertionError("unknown engine child");
++        // A real validated Environment is the sole legacy permission source; IAM parent tests stay unregistered.
++        var environment = new org.springframework.core.env.StandardEnvironment();
++        environment.setActiveProfiles("test");
++        environment.getPropertySources().addFirst(new org.springframework.core.env.MapPropertySource("n4a-engine-legacy",
++                Map.of("agent.security.mode", "test", "agent.security.service-id", "engine", "server.address", "127.0.0.1")));
++        SecurityConfiguration.bindDeployment(environment);
++        try (var f = new Fixture(); var clients = new RuntimeClients()) {
++            clients.app = f.origin(); clients.skill = f.origin(); clients.model = f.origin();
++            for (String target : List.of("app", "skill", "model"))
++                assertThat(clients.get(target, "/internal/apps/" + CODE + "/published", ACTOR)).isEqualTo(payload().path("data"));
++            assertThat(f.sends).hasValue(3);
++            assertThatThrownBy(() -> clients.get("unknown", "/private", ACTOR)).isInstanceOf(PlatformException.class);
++            assertThat(f.sends).hasValue(3);
++        }
++        System.out.println("N4A_ENGINE_EXECUTED=legacy-routes");
++    }
++
++    @Test
++    void trustedIamDoesNotFallBackWhenJvmModeSaysTest() throws Exception {
++        String previous = System.getProperty("agent.security.mode");
++        try {
++            System.setProperty("agent.security.mode", "test");
++            try (var f = new Fixture();
++                    var clients = f.clients()) {
++                assertThat(clients.iamEnabled()).isTrue();
++                assertThatThrownBy(
++                                () ->
++                                        clients.get(
++                                                "app",
++                                                "/internal/apps/" + CODE + "/published",
++                                                ACTOR))
++                        .isInstanceOfSatisfying(
++                                PlatformException.class,
++                                e -> assertThat(e.code()).isEqualTo("IAM_LEGACY_CLIENT_FORBIDDEN"));
++                assertThat(f.sends).hasValue(0);
++            }
++        } finally {
++            if (previous == null) System.clearProperty("agent.security.mode");
++            else System.setProperty("agent.security.mode", previous);
++        }
++    }
++
++    @Test
++    void trustedModeRejectsMissingCapabilityAndUnsafeOrigins() throws Exception {
++        try (var f = new Fixture()) {
++            assertThatThrownBy(
++                            () ->
++                                    new RuntimeClients(
++                                            f.iam.config("engine"), null, f.origin(), true))
++                    .isInstanceOf(IllegalStateException.class);
++            for (String origin :
++                    List.of(
++                            f.origin() + "/",
++                            f.origin() + "/prefix",
++                            f.origin() + "?q=1",
++                            f.origin() + "#x",
++                            "http://localhost:1",
++                            "http://127.0.0.1@external.invalid",
++                            "ftp://127.0.0.1:1"))
++                assertThatThrownBy(
++                                () ->
++                                        new RuntimeClients(
++                                                f.iam.config("engine"), f.engine, origin, true))
++                        .isInstanceOf(IllegalArgumentException.class);
++            assertThatThrownBy(
++                            () ->
++                                    new RuntimeClients(
++                                            f.iam.config("app"), f.engine, f.origin(), true))
++                    .isInstanceOf(IllegalArgumentException.class);
++        }
++    }
++
++    @Test
++    void publicVerifiedObjectAndUnboundCaptureCannotSend() throws Exception {
++        try (var f = new Fixture();
++                var clients = f.clients()) {
++            var retained =
++                    bound(
++                            f.iam,
++                            f.engine,
++                            proof -> {
++                                try (var fake = AuthorityContext.bind(proof.current())) {
++                                    assertThatThrownBy(() -> clients.published(CODE, proof))
++                                            .isInstanceOf(PlatformException.class);
++                                }
++                                return proof;
++                            });
++            assertThatThrownBy(() -> clients.published(CODE, retained))
++                    .isInstanceOf(PlatformException.class);
++            assertThat(f.sends).hasValue(0);
++        }
++    }
++
++    @Test
++    void unsafeCodeAndWrongRootNeverSend() throws Exception {
++        try (var f = new Fixture();
++                var clients = f.clients()) {
++            bound(
++                    f.iam,
++                    f.engine,
++                    proof -> {
++                        for (String code : List.of("../x", "client-flow?x=1", "other", "a%2Fb"))
++                            assertThatThrownBy(() -> clients.published(code, proof))
++                                    .isInstanceOf(PlatformException.class);
++                        return null;
++                    });
++            assertThat(f.sends).hasValue(0);
++        }
++    }
++
++    @Test
++    void appHttpFailureSemanticsRemainDistinct() throws Exception {
++        try (var f = new Fixture();
++                var clients = f.clients()) {
++            for (int status : List.of(401, 403, 409, 503)) {
++                f.handler =
++                        x -> {
++                            if (status == 401)
++                                x.getResponseHeaders()
++                                        .set("WWW-Authenticate", "Basic realm=\"n3-fixture\"");
++                            reply(x, status, "private-upstream-body");
++                        };
++                bound(
++                        f.iam,
++                        f.engine,
++                        proof -> {
++                            assertThatThrownBy(() -> clients.published(CODE, proof))
++                                    .isInstanceOfSatisfying(
++                                            PlatformException.class,
++                                            e -> {
++                                                assertThat(e.status()).isEqualTo(status);
++                                                assertThat(e.code())
++                                                        .isEqualTo("APP_PUBLISHED_HTTP_" + status);
++                                                assertThat(e.getMessage())
++                                                        .doesNotContain("private-upstream-body");
++                                            });
++                            return null;
++                        });
++            }
++            assertThat(f.sends).hasValue(4);
++        }
++    }
++
++    @Test
++    void redirectIsNotFollowedOrRetried() throws Exception {
++        try (var f = new Fixture();
++                var clients = f.clients()) {
++            f.handler =
++                    x -> {
++                        x.getResponseHeaders().set("Location", f.origin() + "/redirected");
++                        reply(x, 302, "private-upstream-body");
++                    };
++            bound(
++                    f.iam,
++                    f.engine,
++                    proof -> {
++                        assertThatThrownBy(() -> clients.published(CODE, proof))
++                                .satisfies(RuntimeClientsPublishedHttpTest::unavailable);
++                        return null;
++                    });
++            assertThat(f.sends).hasValue(1);
++            assertThat(f.redirected).hasValue(0);
++        }
++    }
++
++    @Test
++    void disconnectedPublishedGetIsNeverAutomaticallyResent() throws Exception {
++        try (var f = new Fixture();
++                var clients = f.clients()) {
++            bound(
++                    f.iam,
++                    f.engine,
++                    proof -> {
++                        clients.published(CODE, proof);
++                        return null;
++                    });
++            assertThat(f.sends).hasValue(1);
++            f.handler = x -> x.close();
++            bound(
++                    f.iam,
++                    f.engine,
++                    proof -> {
++                        assertThatThrownBy(() -> clients.published(CODE, proof))
++                                .satisfies(RuntimeClientsPublishedHttpTest::unavailable);
++                        return null;
++                    });
++            assertThat(f.sends)
++                    .as("one warmup plus one failed GET; the transport must not resend it")
++                    .hasValue(2);
++        }
++    }
++
++    @Test
++    void numericIdsVersionKeyAndStoredDigestAreAllValidated() throws Exception {
++        try (var f = new Fixture();
++                var clients = f.clients()) {
++            for (String field :
++                    List.of(
++                            "appCode",
++                            "appVersionId",
++                            "versionId",
++                            "versionNo",
++                            "appVersionKey",
++                            "candidateSha256")) {
++                var envelope = (com.fasterxml.jackson.databind.node.ObjectNode) payload();
++                ((com.fasterxml.jackson.databind.node.ObjectNode) envelope.path("data"))
++                        .set(field, Json.tree(field.contains("Id") ? 0 : "wrong"));
++                f.handler = x -> reply(x, 200, envelope.toString());
++                bound(
++                        f.iam,
++                        f.engine,
++                        proof -> {
++                            assertThatThrownBy(() -> clients.published(CODE, proof))
++                                    .satisfies(RuntimeClientsPublishedHttpTest::unavailable);
++                            return null;
++                        });
++            }
++        }
++    }
++
++    @Test
++    void malformedJsonIsUnavailableWithoutBodyEcho() throws Exception {
++        try (var f = new Fixture();
++                var clients = f.clients()) {
++            f.handler = x -> reply(x, 200, "private-upstream-body");
++            bound(
++                    f.iam,
++                    f.engine,
++                    proof -> {
++                        assertThatThrownBy(() -> clients.published(CODE, proof))
++                                .satisfies(RuntimeClientsPublishedHttpTest::unavailable);
++                        return null;
++                    });
++        }
++    }
++
++    @Test
++    void nonIdentityEncodingIsRejectedWithoutAutomaticDecompression() throws Exception {
++        try (var f = new Fixture();
++                var clients = f.clients()) {
++            f.handler =
++                    x -> {
++                        assertThat(x.getRequestHeaders().getFirst("Accept-Encoding"))
++                                .isEqualTo("identity");
++                        x.getResponseHeaders().set("Content-Encoding", "gzip");
++                        reply(x, 200, payload().toString());
++                    };
++            bound(
++                    f.iam,
++                    f.engine,
++                    proof -> {
++                        assertThatThrownBy(() -> clients.published(CODE, proof))
++                                .satisfies(RuntimeClientsPublishedHttpTest::unavailable);
++                        return null;
++                    });
++            assertThat(f.sends).hasValue(1);
++        }
++    }
++
++    @Test
++    void forwardReturningAfterProofExpiryCannotSendAppRequest() throws Exception {
++        try (var f = new Fixture()) {
++            var slow =
++                    (CurrentAuthorityClient)
++                            java.lang.reflect.Proxy.newProxyInstance(
++                                    CurrentAuthorityClient.class.getClassLoader(),
++                                    new Class[] {CurrentAuthorityClient.class},
++                                    (p, m, a) -> {
++                                        try {
++                                            Object result = m.invoke(f.engine, a);
++                                            if (m.getName().equals("forward"))
++                                                f.iam.advanceClock(Duration.ofSeconds(6));
++                                            return result;
++                                        } catch (java.lang.reflect.InvocationTargetException e) {
++                                            throw e.getCause();
++                                        }
++                                    });
++            try (var clients = new RuntimeClients(f.iam.config("engine"), slow, f.origin(), true)) {
++                bound(
++                        f.iam,
++                        f.engine,
++                        proof -> {
++                            assertThatThrownBy(() -> clients.published(CODE, proof))
++                                    .isInstanceOfSatisfying(
++                                            PlatformException.class,
++                                            e -> assertThat(e.status()).isEqualTo(403));
++                            return null;
++                        });
++                assertThat(f.sends).hasValue(0);
++            }
++        }
++    }
++
++    @Test
++    void proofExpiringWhileRealExecutorQueuedNeverSendsPublishedGet() throws Exception {
++        try (var f = new Fixture()) {
++            var blocked = new CountDownLatch(1);
++            var submitted = new CountDownLatch(1);
++            var release = new CountDownLatch(1);
++            var controlFailure = new java.util.concurrent.atomic.AtomicReference<Throwable>();
++            var owned =
++                    new ThreadPoolExecutor(
++                            1, 1, 0, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(1)) {
++                        @Override
++                        public void execute(Runnable task) {
++                            super.execute(task);
++                            if (!getQueue().isEmpty()) submitted.countDown();
++                        }
++                    };
++            owned.submit(
++                    () -> {
++                        blocked.countDown();
++                        try {
++                            if (!release.await(5, TimeUnit.SECONDS))
++                                throw new AssertionError("finite executor block timeout");
++                        } catch (InterruptedException e) {
++                            Thread.currentThread().interrupt();
++                        }
++                    });
++            assertThat(blocked.await(2, TimeUnit.SECONDS)).isTrue();
++            var control =
++                    Thread.ofPlatform()
++                            .name("n3-proof-expiry-control")
++                            .start(
++                                    () -> {
++                                        try {
++                                            if (!submitted.await(5, TimeUnit.SECONDS))
++                                                throw new AssertionError("finite submit timeout");
++                                            // The main passed caller checks and is queued. Only
++                                            // the verification clock changes; no real sleep or
++                                            // CPU exhaustion consumes the transport deadline.
++                                            f.iam.advanceClock(Duration.ofSeconds(6));
++                                        } catch (Throwable failure) {
++                                            controlFailure.set(failure);
++                                        } finally {
++                                            release.countDown();
++                                        }
++                                    });
++            try (var clients =
++                    new RuntimeClients(f.iam.config("engine"), f.engine, f.origin(), true, owned)) {
++                bound(
++                        f.iam,
++                        f.engine,
++                        proof -> {
++                            assertThatThrownBy(() -> clients.published(CODE, proof))
++                                    .isInstanceOfSatisfying(
++                                            PlatformException.class,
++                                            e -> assertThat(e.status()).isEqualTo(403));
++                            return null;
++                        });
++                assertThat(f.sends).hasValue(0);
++            } finally {
++                release.countDown();
++                control.join(2000);
++                owned.shutdownNow();
++                assertThat(owned.awaitTermination(2, TimeUnit.SECONDS)).isTrue();
++                assertThat(control.isAlive()).isFalse();
++                assertThat(controlFailure.get()).isNull();
++            }
++        }
++    }
++
++    @Test
++    void interruptionAfterHeadersCancelsRequestAndPreservesInterrupt() throws Exception {
++        try (var f = new Fixture();
++                var clients = f.clients()) {
++            var headers = new CountDownLatch(1);
++            var release = new CountDownLatch(1);
++            Thread caller = Thread.currentThread();
++            f.handler =
++                    x -> {
++                        try {
++                            x.sendResponseHeaders(200, 0);
++                            x.getResponseBody().write('{');
++                            x.getResponseBody().flush();
++                            headers.countDown();
++                            release.await(4, TimeUnit.SECONDS);
++                        } catch (Exception ignored) {
++                        } finally {
++                            x.close();
++                        }
++                    };
++            var interrupt =
++                    Thread.ofPlatform()
++                            .daemon(true)
++                            .start(
++                                    () -> {
++                                        try {
++                                            if (headers.await(3, TimeUnit.SECONDS))
++                                                caller.interrupt();
++                                        } catch (InterruptedException ignored) {
++                                        }
++                                    });
++            try {
++                bound(
++                        f.iam,
++                        f.engine,
++                        proof -> {
++                            assertThatThrownBy(() -> clients.published(CODE, proof))
++                                    .satisfies(RuntimeClientsPublishedHttpTest::unavailable);
++                            assertThat(Thread.currentThread().isInterrupted()).isTrue();
++                            return null;
++                        });
++            } finally {
++                Thread.interrupted();
++                release.countDown();
++                interrupt.join(2000);
++            }
++            assertThat(f.sends).hasValue(1);
++        }
++    }
++
++    @Test
++    void completeResponseStillRequiresOriginalBoundFrame() throws Exception {
++        try (var f = new Fixture();
++                var clients = f.clients()) {
++            f.handler =
++                    x -> {
++                        f.iam.advanceClock(Duration.ofSeconds(6));
++                        reply(x, 200, payload().toString());
++                    };
++            bound(
++                    f.iam,
++                    f.engine,
++                    proof -> {
++                        assertThatThrownBy(() -> clients.published(CODE, proof))
++                                .isInstanceOfSatisfying(
++                                        PlatformException.class,
++                                        e -> assertThat(e.status()).isEqualTo(403));
++                        return null;
++                    });
++            assertThat(f.sends).hasValue(1);
++        }
++    }
++
++    @Test
++    void oversizedBodyCancelsBeforeUnboundedAllocation() throws Exception {
++        try (var f = new Fixture();
++                var clients = f.clients()) {
++            f.handler = x -> reply(x, 200, " ".repeat(4194305));
++            long start = System.nanoTime();
++            bound(
++                    f.iam,
++                    f.engine,
++                    proof -> {
++                        assertThatThrownBy(() -> clients.published(CODE, proof))
++                                .satisfies(RuntimeClientsPublishedHttpTest::unavailable);
++                        return null;
++                    });
++            assertThat(Duration.ofNanos(System.nanoTime() - start))
++                    .isLessThan(Duration.ofSeconds(4));
++            assertThat(f.sends).hasValue(1);
++        }
++    }
++
++    @Test
++    void headersThenUnfinishedBodyHasCompleteDeadlineAndClientCloses() throws Exception {
++        try (var f = new Fixture()) {
++            var release = new CountDownLatch(1);
++            var entered = new CountDownLatch(1);
++            f.handler =
++                    x -> {
++                        try {
++                            x.sendResponseHeaders(200, 0);
++                            x.getResponseBody().write('{');
++                            x.getResponseBody().flush();
++                            entered.countDown();
++                            release.await(5, TimeUnit.SECONDS);
++                        } catch (Exception ignored) {
++                        } finally {
++                            x.close();
++                        }
++                    };
++            var before =
++                    Thread.getAllStackTraces().keySet().stream()
++                            .map(Thread::threadId)
++                            .collect(java.util.stream.Collectors.toSet());
++            try (var clients = f.clients()) {
++                long start = System.nanoTime();
++                bound(
++                        f.iam,
++                        f.engine,
++                        proof -> {
++                            assertThatThrownBy(() -> clients.published(CODE, proof))
++                                    .satisfies(RuntimeClientsPublishedHttpTest::unavailable);
++                            return null;
++                        });
++                assertThat(entered.await(1, TimeUnit.SECONDS)).isTrue();
++                assertThat(Duration.ofNanos(System.nanoTime() - start))
++                        .isBetween(Duration.ofMillis(1800), Duration.ofSeconds(4));
++            } finally {
++                release.countDown();
++            }
++            long until = System.nanoTime() + TimeUnit.SECONDS.toNanos(3);
++            while (newSelectors(before) > 0 && System.nanoTime() < until) Thread.sleep(10);
++            assertThat(newSelectors(before)).isZero();
++            assertThat(f.sends).hasValue(1);
++        }
++    }
++
++    static long newSelectors(Set<Long> before) {
++        return Thread.getAllStackTraces().keySet().stream()
++                .filter(
++                        t ->
++                                !before.contains(t.threadId())
++                                        && t.isAlive()
++                                        && (t.getName().contains("SelectorManager")
++                                                || t.getName().startsWith("app-published-")))
++                .count();
++    }
++
++    @Test
++    void unknownServiceNeverSignsOrSends() throws Exception {
++        var sends = new AtomicInteger();
++        var server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
++        server.createContext(
++                "/",
++                x -> {
++                    sends.incrementAndGet();
++                    byte[] data = "{\"code\":\"OK\",\"data\":{}}".getBytes(StandardCharsets.UTF_8);
++                    x.sendResponseHeaders(200, data.length);
++                    try (var out = x.getResponseBody()) {
++                        out.write(data);
++                    }
++                });
++        server.start();
++        try {
++            var clients = new RuntimeClients();
++            clients.model = "http://127.0.0.1:" + server.getAddress().getPort();
++            var actor = new Actor("tenant-a", "alice", Set.of("EDITOR"), Map.of());
++            for (String target : Arrays.asList(null, "", "modle", "APP")) {
++                assertThatThrownBy(() -> clients.get(target, "/must-not-send", actor))
++                        .isInstanceOfSatisfying(
++                                PlatformException.class,
++                                e -> assertThat(e.status()).isEqualTo(403));
++            }
++            assertThat(sends).hasValue(0);
++        } finally {
++            server.stop(0);
++        }
++    }
++}

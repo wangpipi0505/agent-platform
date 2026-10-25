@@ -1,0 +1,7 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>X6 契约集成测试</title></head><body><h1>测试夹具：画布组件集成</h1><div id="app"></div><pre id="saved"></pre><script type="module">
+import {createApp,h} from 'vue';import ElementPlus from 'element-plus';import 'element-plus/dist/index.css';import '../shared/tokens.css';import {safeMarkdown} from '../shared/content';window.safeMarkdown=safeMarkdown;import SkillWizard from '../admin/src/SkillWizard.vue';import FlowDesigner from '../flow-designer/FlowDesigner.vue';
+const definition={definitionVersion:'1.0',trigger:'TASK',entry:'s',inputs:[],outputs:[],nodes:[{id:'s',type:'START',name:'开始'},{id:'e',type:'END',name:'结束'}],edges:[{from:'s',to:'e'}],joins:[],executionRules:{parallel:false,maxParallel:1,cyclesForbidden:true}};
+createApp({render:()=>new URLSearchParams(location.search).get('component')==='skill'?h(SkillWizard,{initial:{code:'',name:'',type:'HTTP',description:'',endpoint:'',authRef:'',inputSchema:{type:'object'},outputSchema:{type:'object'},execution:{readonly:true,sideEffect:false,idempotent:true,cancellable:false},guard:{roles:[],attributes:{}},timeoutMs:30000},onSave:value=>document.querySelector('#saved').textContent=JSON.stringify(value)}):h(FlowDesigner,{definition,layout:{s:{x:80,y:120},e:{x:380,y:120}},onSave:value=>document.querySelector('#saved').textContent=JSON.stringify(value)})}).use(ElementPlus).mount('#app');
+</script></body></html>
+
+

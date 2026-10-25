@@ -1,0 +1,32 @@
+{
+  "checkedAt": "2026-10-20T08:29:57.337Z",
+  "checks": [
+    {
+      "manifest": "source-after.json",
+      "count": 344,
+      "mismatches": 0
+    },
+    {
+      "manifest": "target-after.json",
+      "count": 1632,
+      "mismatches": 0
+    },
+    {
+      "manifest": "protected-before.json",
+      "count": 8954,
+      "mismatches": 0
+    }
+  ],
+  "sourceCount": 344,
+  "allFrozenAndReplayBytesMatch": true,
+  "allFrozenTargetBytesMatch": true,
+  "reportSha256": "2d1c7d3cd6ab7bb0822be0eeee1da91640e92357a3ab7709079b709185325c00",
+  "patchSha256": "dc290dffefa85ddf9d077b2f0a0f5b093ea6600efed1e6899d683dbca5d16ea6",
+  "sourceAndTargetReturned": true,
+  "implementationStatus": "DONE_WITH_CONCERNS",
+  "concerns": [
+    "Known existing D3a0 brief omitted by initial protective prefix filter; original SHA unavailable; no retrospective equality claim",
+    "Non200 upstream errors currently fail closed as503; app endpoint itself preserves404/409; real gateway wiring remains pending",
+    "Patch applies with8 whitespace warnings; original failed rounds and initial Git boundary discovery retained"
+  ]
+}

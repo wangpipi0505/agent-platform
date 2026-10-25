@@ -1,0 +1,44 @@
+-------------------------------------------------------------------------------
+Test set: cn.agentplatform.app.application.PublishedMetadataHttpTest
+-------------------------------------------------------------------------------
+Tests run: 9, Failures: 0, Errors: 2, Skipped: 0, Time elapsed: 6.058 s <<< FAILURE! -- in cn.agentplatform.app.application.PublishedMetadataHttpTest
+cn.agentplatform.app.application.PublishedMetadataHttpTest.unknownAndUnavailablePublishedStatesPreserve404And409 -- Time elapsed: 0.846 s <<< ERROR!
+org.springframework.dao.DuplicateKeyException: 
+PreparedStatementCallback; SQL [insert into app.application(tenant_id,code,name,type,status,current_version_no,created_by) values(?,?,'Metadata test','CHAT',?,?,'alice')]; ERROR: duplicate key value violates unique constraint "application_pkey"
+  详细：Key (tenant_id, code)=(another-tenant, hidden) already exists.
+	at org.springframework.jdbc.support.SQLStateSQLExceptionTranslator.doTranslate(SQLStateSQLExceptionTranslator.java:116)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:107)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:116)
+	at org.springframework.jdbc.core.JdbcTemplate.translateException(JdbcTemplate.java:1556)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:677)
+	at org.springframework.jdbc.core.JdbcTemplate.update(JdbcTemplate.java:972)
+	at org.springframework.jdbc.core.JdbcTemplate.update(JdbcTemplate.java:1016)
+	at org.springframework.jdbc.core.JdbcTemplate.update(JdbcTemplate.java:1026)
+	at cn.agentplatform.app.application.PublishedMetadataHttpTest.seedApp(PublishedMetadataHttpTest.java:65)
+	at cn.agentplatform.app.application.PublishedMetadataHttpTest.unknownAndUnavailablePublishedStatesPreserve404And409(PublishedMetadataHttpTest.java:137)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+Caused by: org.postgresql.util.PSQLException: ERROR: duplicate key value violates unique constraint "application_pkey"
+  详细：Key (tenant_id, code)=(another-tenant, hidden) already exists.
+	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2733)
+	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2420)
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:372)
+	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:517)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:434)
+	at org.postgresql.jdbc.PgPreparedStatement.executeWithFlags(PgPreparedStatement.java:194)
+	at org.postgresql.jdbc.PgPreparedStatement.executeUpdate(PgPreparedStatement.java:155)
+	at org.springframework.jdbc.core.JdbcTemplate.lambda$update$2(JdbcTemplate.java:977)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:658)
+	... 8 more
+
+cn.agentplatform.app.application.PublishedMetadataHttpTest.workloadIntegrationAndDelegatedResumeNeverBecomeInitialLookup -- Time elapsed: 0.201 s <<< ERROR!
+cn.agentplatform.common.PlatformException: 当前授权不允许此操作
+	at cn.agentplatform.common.authority.AuthorityProtocol.denied(AuthorityProtocol.java:11)
+	at cn.agentplatform.common.authority.HttpCurrentAuthorityClient.query(HttpCurrentAuthorityClient.java:148)
+	at cn.agentplatform.common.authority.HttpCurrentAuthorityClient.exchange(HttpCurrentAuthorityClient.java:31)
+	at cn.agentplatform.app.application.PublishedMetadataHttpTest.workloadIntegrationAndDelegatedResumeNeverBecomeInitialLookup(PublishedMetadataHttpTest.java:115)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+

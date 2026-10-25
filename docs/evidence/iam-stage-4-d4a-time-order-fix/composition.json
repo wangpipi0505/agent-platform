@@ -1,0 +1,23 @@
+{
+  "at": "2026-10-20T19:57:30.463Z",
+  "base": {
+    "file": "docs/evidence/iam-stage-4-d4a-portal-session/composition.json",
+    "bytes": 921,
+    "sha256": "78f3d4355dab9ce1a05e79d1312439df1760766d591b185082f95e71ec875895"
+  },
+  "baseSource": {
+    "file": "docs/evidence/iam-stage-4-d4a-portal-session/source-after.json",
+    "bytes": 78337,
+    "sha256": "7e1a1b53ae7b494361bf75b36d2878a1f4dbb1e5d0631c3311643a8e34822708"
+  },
+  "baseTarget": {
+    "file": "docs/evidence/iam-stage-4-d4a-portal-session/target-after.json",
+    "bytes": 398161,
+    "sha256": "0a855288ee3f47bff030da2f562abdad3c6533c1ee224ed80e5e63d980f99516"
+  },
+  "sourceOverlay": "docs/evidence/iam-stage-4-d4a-time-order-fix/frozen-overlay/",
+  "targetOverlay": "docs/evidence/iam-stage-4-d4a-time-order-fix/frozen-target-overlay/",
+  "sourceRule": "Own two-file overlay, else prior D4a overlay, else N4b2 fix overlay, else original B2 frozen",
+  "targetRule": "Own changed/new overlay and tombstones, else prior D4a overlay, else N4b2 fix overlay, else original B2 target-final",
+  "targetTombstones": []
+}

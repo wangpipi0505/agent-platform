@@ -1,0 +1,76 @@
+{
+  "status": "PASS",
+  "source": 608,
+  "delta": 2,
+  "newFiles": 0,
+  "sourceEpoch": {
+    "file": ".local/iam-o2b-e-fixes/iam-stage-o2b-e-fixes-write-corrected/source-epoch.json",
+    "bytes": 116139,
+    "sha256": "303ec0625e9b8491d834cbd0ce27a38c0dcffab77104e333b38f960e102a5adf"
+  },
+  "sourceAfter": {
+    "file": ".local/iam-o2b-e-fixes/source-after.json",
+    "bytes": 116139,
+    "sha256": "303ec0625e9b8491d834cbd0ce27a38c0dcffab77104e333b38f960e102a5adf"
+  },
+  "acceptedDistinct": {
+    "tests": 4,
+    "passed": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "warning": "Not a single 4-green run. Three successful initial-final cases inherited with unchanged production bytes; failed write testcase corrected alone."
+  },
+  "initialFinalPreserved": true,
+  "correctionOnlyFailedWriteCase": true,
+  "currentBytesActuallyRecompiled": true,
+  "finiteTargetOverlayCount": 530,
+  "logicalTargetCount": 2148,
+  "replay": {
+    "files": 608,
+    "namesBytesShaExact": true,
+    "patch": {
+      "file": "docs/evidence/iam-stage-4-o2b-e-fixes/source.patch",
+      "bytes": 19201,
+      "sha256": "29c81d8fb18b3a13972114970df7de9043a07a711cf1c1625ddd7a28a2df18d2"
+    },
+    "commands": {
+      "file": "docs/evidence/iam-stage-4-o2b-e-fixes/replay-commands.json",
+      "bytes": 32711,
+      "sha256": "71a3c7b6fa9a593009ac25ec172583e1f406d40ebbb408439c1bb18f96dea343"
+    },
+    "source": {
+      "file": ".local/iam-o2b-e-fixes/replay-source.json",
+      "bytes": 116139,
+      "sha256": "303ec0625e9b8491d834cbd0ce27a38c0dcffab77104e333b38f960e102a5adf"
+    },
+    "check": 0,
+    "apply": 0,
+    "checkAttempts": 1,
+    "applyAttempts": 1,
+    "noSourceCopiesAfterBaseline": true,
+    "noSourceCopiesAfterApply": true,
+    "commitsCreated": 0
+  },
+  "originalFrozenIdentities": [
+    {
+      "file": ".local/iam-o2b-e-engine-packet/source-after.json",
+      "bytes": 116139,
+      "sha256": "b89023b56cf78945a739ac953a0c4b8867bb92bc31ff72d46c1f96bdf893aca3"
+    },
+    {
+      "file": ".local/iam-o2b-e-engine-packet/target-after.json",
+      "bytes": 447925,
+      "sha256": "ce1a10735815197b171f17d439063241d186995b63bfe3b31b3ba8f8ac003adf"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o2b-e-engine-packet/source.patch",
+      "bytes": 90459,
+      "sha256": "b49b4de0d973efadfe059292a17be2f0c0fc4d9f8ca10f7e3bdbf6c6875e8f90"
+    }
+  ],
+  "original45NotRerun": true,
+  "originalReplayNotRerun": true,
+  "noBroadTargetScan": true,
+  "diagnosticsExcluded": true
+}

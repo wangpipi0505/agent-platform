@@ -1,0 +1,16 @@
+{
+  "schema": "Only actually read primary ranges; fixed-tag source is mechanism evidence, not a binary equivalence audit",
+  "inherited": [
+    ".local/iam-o2b-f2-transport-preparation.md",
+    ".local/iam-o2b-f2-jsse-preparation.md",
+    ".local/iam-o2b-f2-root-followup-notes.md"
+  ],
+  "newlyRead": [
+    {
+      "url": "https://raw.githubusercontent.com/openjdk/jdk21u/jdk-21.0.12%2B8/src/java.base/share/classes/sun/security/ssl/CertificateMessage.java",
+      "lines": "zero-based 648–658; 693–707; 716–798; 844–901",
+      "purpose": "CertificateEntry encoded size, T13 certificate DER entries/context/send; chain count reject; actual server localCertificates equals producer input"
+    }
+  ],
+  "method": "For actual selected KM chain, confirm server SSLSession localCertificates on successful handshakes. Body=1 context length+0 context bytes+3 list length+sum(3 DER length+DER bytes+2 empty per-entry extension length). H/H+1 server stapling false; fixture has no AIA/staple responses. Failure mode is specific H or chain check. This is production-path and selected-chain derivation, not decrypted packet observation."
+}

@@ -1,0 +1,56 @@
+-------------------------------------------------------------------------------
+Test set: cn.agentplatform.gateway.infra.GatewayPortalEventsServletTest
+-------------------------------------------------------------------------------
+Tests run: 4, Failures: 1, Errors: 1, Skipped: 0, Time elapsed: 22.92 s <<< FAILURE! -- in cn.agentplatform.gateway.infra.GatewayPortalEventsServletTest
+cn.agentplatform.gateway.infra.GatewayPortalEventsServletTest.originalRawServletBootstrapRegressionUsesOnlyOwnedRunRoot -- Time elapsed: 2.551 s <<< ERROR!
+java.nio.charset.MalformedInputException: Input length = 1
+	at java.base/java.lang.String.throwMalformed(String.java:1268)
+	at java.base/java.lang.String.decodeUTF8_UTF16(String.java:1135)
+	at java.base/java.lang.String.newStringUTF8NoRepl(String.java:749)
+	at java.base/java.lang.String.newStringNoRepl1(String.java:780)
+	at java.base/java.lang.String.newStringNoRepl(String.java:762)
+	at java.base/java.lang.System$2.newStringNoRepl(System.java:2481)
+	at java.base/java.nio.file.Files.readString(Files.java:3362)
+	at java.base/java.nio.file.Files.readString(Files.java:3318)
+	at cn.agentplatform.gateway.infra.GatewayPortalEventsServletTest.child(GatewayPortalEventsServletTest.java:129)
+	at cn.agentplatform.gateway.infra.GatewayPortalEventsServletTest.originalRawServletBootstrapRegressionUsesOnlyOwnedRunRoot(GatewayPortalEventsServletTest.java:112)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+cn.agentplatform.gateway.infra.GatewayPortalEventsServletTest.actualControllerSecurityChainHasExactEventsIngress -- Time elapsed: 3.580 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+Exception in thread "main" org.opentest4j.AssertionFailedError: expected: <200> but was: <403>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:145)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:531)
+	at cn.agentplatform.gateway.infra.GatewayPortalEventsServletTest.boot(GatewayPortalEventsServletTest.java:157)
+	at cn.agentplatform.gateway.infra.GatewayPortalEventsServletTest.main(GatewayPortalEventsServletTest.java:141)
+	Suppressed: java.lang.AssertionError: receiver peer
+		at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest$SequencePeer.close(PortalRunEventsSseLifecycleTest.java:843)
+		at cn.agentplatform.gateway.infra.GatewayPortalEventsServletTest.boot(GatewayPortalEventsServletTest.java:144)
+		... 1 more
+	Caused by: java.net.SocketException: Socket closed
+		at java.base/sun.nio.ch.NioSocketImpl.endAccept(NioSocketImpl.java:682)
+		at java.base/sun.nio.ch.NioSocketImpl.accept(NioSocketImpl.java:755)
+		at java.base/java.net.ServerSocket.implAccept(ServerSocket.java:698)
+		at java.base/java.net.ServerSocket.platformImplAccept(ServerSocket.java:663)
+		at java.base/java.net.ServerSocket.implAccept(ServerSocket.java:612)
+		at java.base/sun.security.ssl.SSLServerSocketImpl.accept(SSLServerSocketImpl.java:271)
+		at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest$SequencePeer.lambda$new$1(PortalRunEventsSseLifecycleTest.java:741)
+		at java.base/java.lang.Thread.run(Thread.java:1583)
+ ==> expected: <0> but was: <1>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:563)
+	at cn.agentplatform.gateway.infra.GatewayPortalEventsServletTest.child(GatewayPortalEventsServletTest.java:129)
+	at cn.agentplatform.gateway.infra.GatewayPortalEventsServletTest.actualControllerSecurityChainHasExactEventsIngress(GatewayPortalEventsServletTest.java:106)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+

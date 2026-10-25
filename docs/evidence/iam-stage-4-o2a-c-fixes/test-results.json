@@ -1,0 +1,605 @@
+{
+  "counts": {
+    "tests": 24,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "final": {
+    "phase": "final",
+    "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+    "command": "node .tools/run-iam-module-tests.mjs iam-stage-o2a-c-fixes-final engine-runtime PortalRunEventsLifecycleTest,PortalRunEventsCapacityTest,PortalRunEventsHttpTest,RunEventReaderBudgetTest#emissionAndBorrowCannotBeMintedPubliclyOrExportLargePayloadReferences,RunEventReaderBudgetTest#getterClosureExpiryAndGenerationFailureAreLocalAndSticky",
+    "started": "2026-10-21T04:58:07.789Z",
+    "finished": "2026-10-21T04:59:31.320Z",
+    "exit": 0,
+    "launcherError": null,
+    "sourceEpoch": {
+      "file": ".local/iam-o2a-c-fixes/final/source-epoch.json",
+      "bytes": 114375,
+      "sha256": "44192fbf077285773a9c8d35c9e89c1e6e9f1958184a16aee81ae0c211da9b54"
+    },
+    "raw": {
+      "file": ".local/iam-o2a-c-fixes/final/raw.log",
+      "bytes": 167820,
+      "sha256": "f1f6ff889c2d0f11e4077d53b3d41c1d72877f99f8d71faa732a8a5c75029225"
+    },
+    "running": [
+      "cn.agentplatform.engine.infra.PortalRunEventsCapacityTest",
+      "cn.agentplatform.engine.infra.PortalRunEventsHttpTest",
+      "cn.agentplatform.engine.infra.PortalRunEventsLifecycleTest",
+      "cn.agentplatform.engine.infra.RunEventReaderBudgetTest"
+    ],
+    "reports": [
+      {
+        "original": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.PortalRunEventsCapacityTest.xml",
+        "archive": {
+          "file": ".local/iam-o2a-c-fixes/final/engine-runtime-TEST-cn.agentplatform.engine.infra.PortalRunEventsCapacityTest.xml",
+          "bytes": 48513,
+          "sha256": "c5791160640482aaf629441c9d5226a0c428d0df84e8836fcba482c67708ba8f"
+        }
+      },
+      {
+        "original": "engine-runtime/target/surefire-reports/cn.agentplatform.engine.infra.PortalRunEventsCapacityTest.txt",
+        "archive": {
+          "file": ".local/iam-o2a-c-fixes/final/engine-runtime-cn.agentplatform.engine.infra.PortalRunEventsCapacityTest.txt",
+          "bytes": 368,
+          "sha256": "9352b44d8b7607a05000d417c434ede55ca9304f6da38345c6982e8663f1ab5d"
+        }
+      },
+      {
+        "original": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.PortalRunEventsHttpTest.xml",
+        "archive": {
+          "file": ".local/iam-o2a-c-fixes/final/engine-runtime-TEST-cn.agentplatform.engine.infra.PortalRunEventsHttpTest.xml",
+          "bytes": 47497,
+          "sha256": "eed431bd9b46d5997e4242ecf9fefb08020539ec0cbe05dd03702ebbd6b6d1c7"
+        }
+      },
+      {
+        "original": "engine-runtime/target/surefire-reports/cn.agentplatform.engine.infra.PortalRunEventsHttpTest.txt",
+        "archive": {
+          "file": ".local/iam-o2a-c-fixes/final/engine-runtime-cn.agentplatform.engine.infra.PortalRunEventsHttpTest.txt",
+          "bytes": 360,
+          "sha256": "0b0762c760fb43aff7065f85cc2a36f2549997df0b1786dcdaa36e74294414f6"
+        }
+      },
+      {
+        "original": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.PortalRunEventsLifecycleTest.xml",
+        "archive": {
+          "file": ".local/iam-o2a-c-fixes/final/engine-runtime-TEST-cn.agentplatform.engine.infra.PortalRunEventsLifecycleTest.xml",
+          "bytes": 207520,
+          "sha256": "da83422575878e68006e925a98e6c87151afc7d4a031201f4b8ee3ff6984cd07"
+        }
+      },
+      {
+        "original": "engine-runtime/target/surefire-reports/cn.agentplatform.engine.infra.PortalRunEventsLifecycleTest.txt",
+        "archive": {
+          "file": ".local/iam-o2a-c-fixes/final/engine-runtime-cn.agentplatform.engine.infra.PortalRunEventsLifecycleTest.txt",
+          "bytes": 371,
+          "sha256": "82a497b85924eb0c098e3735ba205da30785280c3c895880ad898f246ba80ca6"
+        }
+      },
+      {
+        "original": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RunEventReaderBudgetTest.xml",
+        "archive": {
+          "file": ".local/iam-o2a-c-fixes/final/engine-runtime-TEST-cn.agentplatform.engine.infra.RunEventReaderBudgetTest.xml",
+          "bytes": 46814,
+          "sha256": "84a3a457639664722692ac33eae5d70dff25e791d743a585e46bc4e98526e322"
+        }
+      },
+      {
+        "original": "engine-runtime/target/surefire-reports/cn.agentplatform.engine.infra.RunEventReaderBudgetTest.txt",
+        "archive": {
+          "file": ".local/iam-o2a-c-fixes/final/engine-runtime-cn.agentplatform.engine.infra.RunEventReaderBudgetTest.txt",
+          "bytes": 362,
+          "sha256": "56109cabcaaa933bfd6d377d72748f29f29a30047ec8a7d06dac128234bacea6"
+        }
+      }
+    ]
+  },
+  "suites": [
+    {
+      "xml": {
+        "file": ".local/iam-o2a-c-fixes/final/engine-runtime-TEST-cn.agentplatform.engine.infra.PortalRunEventsCapacityTest.xml",
+        "bytes": 48513,
+        "sha256": "c5791160640482aaf629441c9d5226a0c428d0df84e8836fcba482c67708ba8f"
+      },
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "cases": [
+        "stateCapAndCombinedRootCapFailBeforeStateTextGetter",
+        "realHttpUtf8PayloadAtExactBudgetAndPlusOneResetRemainFinite",
+        "freshQueuedFirstReadCapacityFailureBeforeCommitMapsToGenericHttp413",
+        "fullFrameExactMaximumAndPlusOneUseSingleExactBacking",
+        "portalFramesAndOldResponseReservationsShareOneSixteenMiBPoolAndSlots"
+      ]
+    },
+    {
+      "xml": {
+        "file": ".local/iam-o2a-c-fixes/final/engine-runtime-TEST-cn.agentplatform.engine.infra.PortalRunEventsHttpTest.xml",
+        "bytes": 47497,
+        "sha256": "eed431bd9b46d5997e4242ecf9fefb08020539ec0cbe05dd03702ebbd6b6d1c7"
+      },
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "cases": [
+        "actualWireDrainsFifteenNodeTerminalRunAndLastEventIdResumes",
+        "realTcpDisconnectReleasesObservationAndDoesNotCancelPersistedRun",
+        "realMappedHandlerDispatchAndFrameFailuresStayClosedAndUnknownOrOtherOwnerStay404",
+        "listenerInstallationFailureCompletesOnceAndReleasesItsRealOwnedResources",
+        "realSignedMappedEngineEventsUseProtectedWindow",
+        "selectedCursorInvalidDuplicatesUnknownQueryAliasesAndMissingServiceHaveNoPayloadSql"
+      ]
+    },
+    {
+      "xml": {
+        "file": ".local/iam-o2a-c-fixes/final/engine-runtime-TEST-cn.agentplatform.engine.infra.PortalRunEventsLifecycleTest.xml",
+        "bytes": 207520,
+        "sha256": "da83422575878e68006e925a98e6c87151afc7d4a031201f4b8ee3ff6984cd07"
+      },
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "cases": [
+        "hardBoundDuringActualGetterProducesNoBusinessWrite",
+        "actualWriteAndFlushBlockingKeepResourcesAfterStopAndSendNoFollowingEvent",
+        "queuedNeverRunOwnersHoldNoReaderOrFrameAndRealSubmissionRejectionReleasesSlot",
+        "renewedGenerationAfterStatusFlushCannotSendBusinessEventUntilFreshWindow",
+        "timeoutOnCompleteAndShutdownKeepTwoActualGetterOwnersUntilEachReturns",
+        "expiredOriginalTicketHealthyRenewalAfterRealGetterReturnsRereadsBeforeFirstWrite",
+        "invalidatedAfterCallbackBeforeFinalGuardRetainsBothOwnersThroughComplete",
+        "invalidatedBetweenFreshReadAndConsumeEntryRetainsBothOwnersThroughComplete",
+        "supersededRetriesAreBoundedPerRoundAndSuccessfulCursorProgressStartsNextRound",
+        "actualCompleteCallRetainsCurrentReaderFrameAndSlotThroughItsFinally",
+        "twoActivePollersObserveNewTerminalWhileTwoQueuedOwnersWaitWithoutReaderStarvation"
+      ]
+    },
+    {
+      "xml": {
+        "file": ".local/iam-o2a-c-fixes/final/engine-runtime-TEST-cn.agentplatform.engine.infra.RunEventReaderBudgetTest.xml",
+        "bytes": 46814,
+        "sha256": "84a3a457639664722692ac33eae5d70dff25e791d743a585e46bc4e98526e322"
+      },
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "cases": [
+        "emissionAndBorrowCannotBeMintedPubliclyOrExportLargePayloadReferences",
+        "getterClosureExpiryAndGenerationFailureAreLocalAndSticky"
+      ]
+    }
+  ],
+  "stages": [
+    {
+      "phase": "red-guard-entry",
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-o2a-c-fixes-red-guard-entry engine-runtime PortalRunEventsLifecycleTest#invalidatedBetweenFreshReadAndConsumeEntryRetainsBothOwnersThroughComplete",
+      "started": "2026-10-21T04:53:42.647Z",
+      "finished": "2026-10-21T04:54:28.305Z",
+      "exit": 1,
+      "launcherError": null,
+      "sourceEpoch": {
+        "file": ".local/iam-o2a-c-fixes/red-guard-entry/source-epoch.json",
+        "bytes": 114375,
+        "sha256": "ea0ff71a0194aac9a904d8b87ca23df77cab275147d097edfa1f8192936fe821"
+      },
+      "raw": {
+        "file": ".local/iam-o2a-c-fixes/red-guard-entry/raw.log",
+        "bytes": 167466,
+        "sha256": "bbcf7e224a969fb22790d97ef252dde3177ca129c7c25993820620203ef61228"
+      },
+      "running": [
+        "cn.agentplatform.engine.infra.PortalRunEventsLifecycleTest"
+      ],
+      "reports": [
+        {
+          "original": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.PortalRunEventsLifecycleTest.xml",
+          "archive": {
+            "file": ".local/iam-o2a-c-fixes/red-guard-entry/engine-runtime-TEST-cn.agentplatform.engine.infra.PortalRunEventsLifecycleTest.xml",
+            "bytes": 206789,
+            "sha256": "dfe8b673e4030cf09edd2b47668d78c076108b507f1c3fdd0ca4ad90a1fa670f"
+          }
+        },
+        {
+          "original": "engine-runtime/target/surefire-reports/cn.agentplatform.engine.infra.PortalRunEventsLifecycleTest.txt",
+          "archive": {
+            "file": ".local/iam-o2a-c-fixes/red-guard-entry/engine-runtime-cn.agentplatform.engine.infra.PortalRunEventsLifecycleTest.txt",
+            "bytes": 1116,
+            "sha256": "31c88078866c3cb049eb68122836987b1c59ec727c94fdb981c3b6c60e4e19d6"
+          }
+        }
+      ],
+      "suites": [
+        {
+          "xml": {
+            "file": ".local/iam-o2a-c-fixes/red-guard-entry/engine-runtime-TEST-cn.agentplatform.engine.infra.PortalRunEventsLifecycleTest.xml",
+            "bytes": 206789,
+            "sha256": "dfe8b673e4030cf09edd2b47668d78c076108b507f1c3fdd0ca4ad90a1fa670f"
+          },
+          "tests": 1,
+          "failures": 1,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            "invalidatedBetweenFreshReadAndConsumeEntryRetainsBothOwnersThroughComplete"
+          ]
+        }
+      ]
+    },
+    {
+      "phase": "red-final-guard",
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-o2a-c-fixes-red-final-guard engine-runtime PortalRunEventsLifecycleTest#invalidatedAfterCallbackBeforeFinalGuardRetainsBothOwnersThroughComplete",
+      "started": "2026-10-21T04:54:37.750Z",
+      "finished": "2026-10-21T04:55:19.234Z",
+      "exit": 1,
+      "launcherError": null,
+      "sourceEpoch": {
+        "file": ".local/iam-o2a-c-fixes/red-final-guard/source-epoch.json",
+        "bytes": 114375,
+        "sha256": "ea0ff71a0194aac9a904d8b87ca23df77cab275147d097edfa1f8192936fe821"
+      },
+      "raw": {
+        "file": ".local/iam-o2a-c-fixes/red-final-guard/raw.log",
+        "bytes": 165240,
+        "sha256": "21549af4dcdcbfe76bbe5e516a5ccf7f04575ef4b1ccf9b9344521d835d9dd4a"
+      },
+      "running": [
+        "cn.agentplatform.engine.infra.PortalRunEventsLifecycleTest"
+      ],
+      "reports": [
+        {
+          "original": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.PortalRunEventsLifecycleTest.xml",
+          "archive": {
+            "file": ".local/iam-o2a-c-fixes/red-final-guard/engine-runtime-TEST-cn.agentplatform.engine.infra.PortalRunEventsLifecycleTest.xml",
+            "bytes": 205669,
+            "sha256": "8e2d37c9485858c6ff5e30672a291d55413775a69cf2a8e9137ba0814798bb4f"
+          }
+        },
+        {
+          "original": "engine-runtime/target/surefire-reports/cn.agentplatform.engine.infra.PortalRunEventsLifecycleTest.txt",
+          "archive": {
+            "file": ".local/iam-o2a-c-fixes/red-final-guard/engine-runtime-cn.agentplatform.engine.infra.PortalRunEventsLifecycleTest.txt",
+            "bytes": 1112,
+            "sha256": "6920457ff877946197a77ed53ace8f27e94a89762da56760a0e452b3230b056a"
+          }
+        }
+      ],
+      "suites": [
+        {
+          "xml": {
+            "file": ".local/iam-o2a-c-fixes/red-final-guard/engine-runtime-TEST-cn.agentplatform.engine.infra.PortalRunEventsLifecycleTest.xml",
+            "bytes": 205669,
+            "sha256": "8e2d37c9485858c6ff5e30672a291d55413775a69cf2a8e9137ba0814798bb4f"
+          },
+          "tests": 1,
+          "failures": 1,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            "invalidatedAfterCallbackBeforeFinalGuardRetainsBothOwnersThroughComplete"
+          ]
+        }
+      ]
+    },
+    {
+      "phase": "red-uncommitted",
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-o2a-c-fixes-red-uncommitted engine-runtime PortalRunEventsCapacityTest#freshQueuedFirstReadCapacityFailureBeforeCommitMapsToGenericHttp413",
+      "started": "2026-10-21T04:55:30.558Z",
+      "finished": "2026-10-21T04:55:46.187Z",
+      "exit": 1,
+      "launcherError": null,
+      "sourceEpoch": {
+        "file": ".local/iam-o2a-c-fixes/red-uncommitted/source-epoch.json",
+        "bytes": 114375,
+        "sha256": "ec070e52fbaf2962c3a8fbc2186f1738bcffd9991ebc88060d3fb6bdfb51c0f1"
+      },
+      "raw": {
+        "file": ".local/iam-o2a-c-fixes/red-uncommitted/raw.log",
+        "bytes": 7992,
+        "sha256": "7fb287bbc1a808c8c2cbb8957be32145274f3270cf78bc905adc1f1678e6a903"
+      },
+      "running": [
+        "cn.agentplatform.engine.infra.PortalRunEventsCapacityTest"
+      ],
+      "reports": [
+        {
+          "original": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.PortalRunEventsCapacityTest.xml",
+          "archive": {
+            "file": ".local/iam-o2a-c-fixes/red-uncommitted/engine-runtime-TEST-cn.agentplatform.engine.infra.PortalRunEventsCapacityTest.xml",
+            "bytes": 47658,
+            "sha256": "c0fe73fd0c9e797a01f727835556577180bda9d104a40e60f08e547c75e7bb4a"
+          }
+        },
+        {
+          "original": "engine-runtime/target/surefire-reports/cn.agentplatform.engine.infra.PortalRunEventsCapacityTest.txt",
+          "archive": {
+            "file": ".local/iam-o2a-c-fixes/red-uncommitted/engine-runtime-cn.agentplatform.engine.infra.PortalRunEventsCapacityTest.txt",
+            "bytes": 978,
+            "sha256": "61bf3a640f7c3d20d1d90205bc409cd6897c283c55068741d01e772896466eaa"
+          }
+        }
+      ],
+      "suites": [
+        {
+          "xml": {
+            "file": ".local/iam-o2a-c-fixes/red-uncommitted/engine-runtime-TEST-cn.agentplatform.engine.infra.PortalRunEventsCapacityTest.xml",
+            "bytes": 47658,
+            "sha256": "c0fe73fd0c9e797a01f727835556577180bda9d104a40e60f08e547c75e7bb4a"
+          },
+          "tests": 1,
+          "failures": 1,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            "freshQueuedFirstReadCapacityFailureBeforeCommitMapsToGenericHttp413"
+          ]
+        }
+      ]
+    },
+    {
+      "phase": "focused-fixes",
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-o2a-c-fixes-focused-fixes engine-runtime PortalRunEventsLifecycleTest#invalidatedBetweenFreshReadAndConsumeEntryRetainsBothOwnersThroughComplete,PortalRunEventsLifecycleTest#invalidatedAfterCallbackBeforeFinalGuardRetainsBothOwnersThroughComplete,PortalRunEventsCapacityTest#freshQueuedFirstReadCapacityFailureBeforeCommitMapsToGenericHttp413",
+      "started": "2026-10-21T04:56:48.143Z",
+      "finished": "2026-10-21T04:57:15.131Z",
+      "exit": 0,
+      "launcherError": null,
+      "sourceEpoch": {
+        "file": ".local/iam-o2a-c-fixes/focused-fixes/source-epoch.json",
+        "bytes": 114375,
+        "sha256": "b10eaecf0c03d79083609efed701f46c78e5670252264fe80406b9957c9c217f"
+      },
+      "raw": {
+        "file": ".local/iam-o2a-c-fixes/focused-fixes/raw.log",
+        "bytes": 8483,
+        "sha256": "b9b4a8970f57132aa1217f49822ad88b2e56d4ba6d9c32be76f2e07502c2d4eb"
+      },
+      "running": [
+        "cn.agentplatform.engine.infra.PortalRunEventsCapacityTest",
+        "cn.agentplatform.engine.infra.PortalRunEventsLifecycleTest"
+      ],
+      "reports": [
+        {
+          "original": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.PortalRunEventsCapacityTest.xml",
+          "archive": {
+            "file": ".local/iam-o2a-c-fixes/focused-fixes/engine-runtime-TEST-cn.agentplatform.engine.infra.PortalRunEventsCapacityTest.xml",
+            "bytes": 47302,
+            "sha256": "da7eec8c5bfeb52795aae06bea77e20195075f3587114607a703f13ee36aca1a"
+          }
+        },
+        {
+          "original": "engine-runtime/target/surefire-reports/cn.agentplatform.engine.infra.PortalRunEventsCapacityTest.txt",
+          "archive": {
+            "file": ".local/iam-o2a-c-fixes/focused-fixes/engine-runtime-cn.agentplatform.engine.infra.PortalRunEventsCapacityTest.txt",
+            "bytes": 368,
+            "sha256": "199e48f79285ae766ee8b73122588fea1850620ba0affc21707baff02753d42e"
+          }
+        },
+        {
+          "original": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.PortalRunEventsLifecycleTest.xml",
+          "archive": {
+            "file": ".local/iam-o2a-c-fixes/focused-fixes/engine-runtime-TEST-cn.agentplatform.engine.infra.PortalRunEventsLifecycleTest.xml",
+            "bytes": 47750,
+            "sha256": "6411c57a7c78fb32ca854afa13f06143301df1aa543796d7523e83e28066f7de"
+          }
+        },
+        {
+          "original": "engine-runtime/target/surefire-reports/cn.agentplatform.engine.infra.PortalRunEventsLifecycleTest.txt",
+          "archive": {
+            "file": ".local/iam-o2a-c-fixes/focused-fixes/engine-runtime-cn.agentplatform.engine.infra.PortalRunEventsLifecycleTest.txt",
+            "bytes": 370,
+            "sha256": "ca51c13ef896e7638e3bfeb6e141a65b18a25a3de511324c52e14888234c6887"
+          }
+        }
+      ],
+      "suites": [
+        {
+          "xml": {
+            "file": ".local/iam-o2a-c-fixes/focused-fixes/engine-runtime-TEST-cn.agentplatform.engine.infra.PortalRunEventsCapacityTest.xml",
+            "bytes": 47302,
+            "sha256": "da7eec8c5bfeb52795aae06bea77e20195075f3587114607a703f13ee36aca1a"
+          },
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            "freshQueuedFirstReadCapacityFailureBeforeCommitMapsToGenericHttp413"
+          ]
+        },
+        {
+          "xml": {
+            "file": ".local/iam-o2a-c-fixes/focused-fixes/engine-runtime-TEST-cn.agentplatform.engine.infra.PortalRunEventsLifecycleTest.xml",
+            "bytes": 47750,
+            "sha256": "6411c57a7c78fb32ca854afa13f06143301df1aa543796d7523e83e28066f7de"
+          },
+          "tests": 2,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            "invalidatedAfterCallbackBeforeFinalGuardRetainsBothOwnersThroughComplete",
+            "invalidatedBetweenFreshReadAndConsumeEntryRetainsBothOwnersThroughComplete"
+          ]
+        }
+      ]
+    },
+    {
+      "phase": "final",
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-o2a-c-fixes-final engine-runtime PortalRunEventsLifecycleTest,PortalRunEventsCapacityTest,PortalRunEventsHttpTest,RunEventReaderBudgetTest#emissionAndBorrowCannotBeMintedPubliclyOrExportLargePayloadReferences,RunEventReaderBudgetTest#getterClosureExpiryAndGenerationFailureAreLocalAndSticky",
+      "started": "2026-10-21T04:58:07.789Z",
+      "finished": "2026-10-21T04:59:31.320Z",
+      "exit": 0,
+      "launcherError": null,
+      "sourceEpoch": {
+        "file": ".local/iam-o2a-c-fixes/final/source-epoch.json",
+        "bytes": 114375,
+        "sha256": "44192fbf077285773a9c8d35c9e89c1e6e9f1958184a16aee81ae0c211da9b54"
+      },
+      "raw": {
+        "file": ".local/iam-o2a-c-fixes/final/raw.log",
+        "bytes": 167820,
+        "sha256": "f1f6ff889c2d0f11e4077d53b3d41c1d72877f99f8d71faa732a8a5c75029225"
+      },
+      "running": [
+        "cn.agentplatform.engine.infra.PortalRunEventsCapacityTest",
+        "cn.agentplatform.engine.infra.PortalRunEventsHttpTest",
+        "cn.agentplatform.engine.infra.PortalRunEventsLifecycleTest",
+        "cn.agentplatform.engine.infra.RunEventReaderBudgetTest"
+      ],
+      "reports": [
+        {
+          "original": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.PortalRunEventsCapacityTest.xml",
+          "archive": {
+            "file": ".local/iam-o2a-c-fixes/final/engine-runtime-TEST-cn.agentplatform.engine.infra.PortalRunEventsCapacityTest.xml",
+            "bytes": 48513,
+            "sha256": "c5791160640482aaf629441c9d5226a0c428d0df84e8836fcba482c67708ba8f"
+          }
+        },
+        {
+          "original": "engine-runtime/target/surefire-reports/cn.agentplatform.engine.infra.PortalRunEventsCapacityTest.txt",
+          "archive": {
+            "file": ".local/iam-o2a-c-fixes/final/engine-runtime-cn.agentplatform.engine.infra.PortalRunEventsCapacityTest.txt",
+            "bytes": 368,
+            "sha256": "9352b44d8b7607a05000d417c434ede55ca9304f6da38345c6982e8663f1ab5d"
+          }
+        },
+        {
+          "original": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.PortalRunEventsHttpTest.xml",
+          "archive": {
+            "file": ".local/iam-o2a-c-fixes/final/engine-runtime-TEST-cn.agentplatform.engine.infra.PortalRunEventsHttpTest.xml",
+            "bytes": 47497,
+            "sha256": "eed431bd9b46d5997e4242ecf9fefb08020539ec0cbe05dd03702ebbd6b6d1c7"
+          }
+        },
+        {
+          "original": "engine-runtime/target/surefire-reports/cn.agentplatform.engine.infra.PortalRunEventsHttpTest.txt",
+          "archive": {
+            "file": ".local/iam-o2a-c-fixes/final/engine-runtime-cn.agentplatform.engine.infra.PortalRunEventsHttpTest.txt",
+            "bytes": 360,
+            "sha256": "0b0762c760fb43aff7065f85cc2a36f2549997df0b1786dcdaa36e74294414f6"
+          }
+        },
+        {
+          "original": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.PortalRunEventsLifecycleTest.xml",
+          "archive": {
+            "file": ".local/iam-o2a-c-fixes/final/engine-runtime-TEST-cn.agentplatform.engine.infra.PortalRunEventsLifecycleTest.xml",
+            "bytes": 207520,
+            "sha256": "da83422575878e68006e925a98e6c87151afc7d4a031201f4b8ee3ff6984cd07"
+          }
+        },
+        {
+          "original": "engine-runtime/target/surefire-reports/cn.agentplatform.engine.infra.PortalRunEventsLifecycleTest.txt",
+          "archive": {
+            "file": ".local/iam-o2a-c-fixes/final/engine-runtime-cn.agentplatform.engine.infra.PortalRunEventsLifecycleTest.txt",
+            "bytes": 371,
+            "sha256": "82a497b85924eb0c098e3735ba205da30785280c3c895880ad898f246ba80ca6"
+          }
+        },
+        {
+          "original": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RunEventReaderBudgetTest.xml",
+          "archive": {
+            "file": ".local/iam-o2a-c-fixes/final/engine-runtime-TEST-cn.agentplatform.engine.infra.RunEventReaderBudgetTest.xml",
+            "bytes": 46814,
+            "sha256": "84a3a457639664722692ac33eae5d70dff25e791d743a585e46bc4e98526e322"
+          }
+        },
+        {
+          "original": "engine-runtime/target/surefire-reports/cn.agentplatform.engine.infra.RunEventReaderBudgetTest.txt",
+          "archive": {
+            "file": ".local/iam-o2a-c-fixes/final/engine-runtime-cn.agentplatform.engine.infra.RunEventReaderBudgetTest.txt",
+            "bytes": 362,
+            "sha256": "56109cabcaaa933bfd6d377d72748f29f29a30047ec8a7d06dac128234bacea6"
+          }
+        }
+      ],
+      "suites": [
+        {
+          "xml": {
+            "file": ".local/iam-o2a-c-fixes/final/engine-runtime-TEST-cn.agentplatform.engine.infra.PortalRunEventsCapacityTest.xml",
+            "bytes": 48513,
+            "sha256": "c5791160640482aaf629441c9d5226a0c428d0df84e8836fcba482c67708ba8f"
+          },
+          "tests": 5,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            "stateCapAndCombinedRootCapFailBeforeStateTextGetter",
+            "realHttpUtf8PayloadAtExactBudgetAndPlusOneResetRemainFinite",
+            "freshQueuedFirstReadCapacityFailureBeforeCommitMapsToGenericHttp413",
+            "fullFrameExactMaximumAndPlusOneUseSingleExactBacking",
+            "portalFramesAndOldResponseReservationsShareOneSixteenMiBPoolAndSlots"
+          ]
+        },
+        {
+          "xml": {
+            "file": ".local/iam-o2a-c-fixes/final/engine-runtime-TEST-cn.agentplatform.engine.infra.PortalRunEventsHttpTest.xml",
+            "bytes": 47497,
+            "sha256": "eed431bd9b46d5997e4242ecf9fefb08020539ec0cbe05dd03702ebbd6b6d1c7"
+          },
+          "tests": 6,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            "actualWireDrainsFifteenNodeTerminalRunAndLastEventIdResumes",
+            "realTcpDisconnectReleasesObservationAndDoesNotCancelPersistedRun",
+            "realMappedHandlerDispatchAndFrameFailuresStayClosedAndUnknownOrOtherOwnerStay404",
+            "listenerInstallationFailureCompletesOnceAndReleasesItsRealOwnedResources",
+            "realSignedMappedEngineEventsUseProtectedWindow",
+            "selectedCursorInvalidDuplicatesUnknownQueryAliasesAndMissingServiceHaveNoPayloadSql"
+          ]
+        },
+        {
+          "xml": {
+            "file": ".local/iam-o2a-c-fixes/final/engine-runtime-TEST-cn.agentplatform.engine.infra.PortalRunEventsLifecycleTest.xml",
+            "bytes": 207520,
+            "sha256": "da83422575878e68006e925a98e6c87151afc7d4a031201f4b8ee3ff6984cd07"
+          },
+          "tests": 11,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            "hardBoundDuringActualGetterProducesNoBusinessWrite",
+            "actualWriteAndFlushBlockingKeepResourcesAfterStopAndSendNoFollowingEvent",
+            "queuedNeverRunOwnersHoldNoReaderOrFrameAndRealSubmissionRejectionReleasesSlot",
+            "renewedGenerationAfterStatusFlushCannotSendBusinessEventUntilFreshWindow",
+            "timeoutOnCompleteAndShutdownKeepTwoActualGetterOwnersUntilEachReturns",
+            "expiredOriginalTicketHealthyRenewalAfterRealGetterReturnsRereadsBeforeFirstWrite",
+            "invalidatedAfterCallbackBeforeFinalGuardRetainsBothOwnersThroughComplete",
+            "invalidatedBetweenFreshReadAndConsumeEntryRetainsBothOwnersThroughComplete",
+            "supersededRetriesAreBoundedPerRoundAndSuccessfulCursorProgressStartsNextRound",
+            "actualCompleteCallRetainsCurrentReaderFrameAndSlotThroughItsFinally",
+            "twoActivePollersObserveNewTerminalWhileTwoQueuedOwnersWaitWithoutReaderStarvation"
+          ]
+        },
+        {
+          "xml": {
+            "file": ".local/iam-o2a-c-fixes/final/engine-runtime-TEST-cn.agentplatform.engine.infra.RunEventReaderBudgetTest.xml",
+            "bytes": 46814,
+            "sha256": "84a3a457639664722692ac33eae5d70dff25e791d743a585e46bc4e98526e322"
+          },
+          "tests": 2,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            "emissionAndBorrowCannotBeMintedPubliclyOrExportLargePayloadReferences",
+            "getterClosureExpiryAndGenerationFailureAreLocalAndSticky"
+          ]
+        }
+      ]
+    }
+  ],
+  "scope": "Only exact final four classes/selectors; original C29/B65/historical root audit not rerun."
+}

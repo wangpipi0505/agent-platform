@@ -1,0 +1,72 @@
+[
+  {
+    "command": [
+      "git",
+      "rev-parse",
+      "--verify",
+      "HEAD"
+    ],
+    "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+    "exitCode": 128,
+    "stdout": "",
+    "stderr": "fatal: Needed a single revision\n"
+  },
+  {
+    "command": [
+      "git",
+      "remote",
+      "-v"
+    ],
+    "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+    "exitCode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "git",
+      "-c",
+      "core.autocrlf=false",
+      "diff",
+      "--no-index",
+      "--binary",
+      "--no-ext-diff",
+      "--no-renames",
+      "--src-prefix=a/",
+      "--dst-prefix=b/",
+      "baseline",
+      "frozen"
+    ],
+    "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\iam-stage-4-d1",
+    "exitCode": 1,
+    "stdout": "Saved 161709 patch bytes to full.patch after path-prefix normalization.",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "git",
+      "-c",
+      "core.autocrlf=false",
+      "apply",
+      "--check",
+      "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\iam-stage-4-d1\\full.patch"
+    ],
+    "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\iam-stage-4-d1\\replay",
+    "exitCode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "git",
+      "-c",
+      "core.autocrlf=false",
+      "apply",
+      "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\iam-stage-4-d1\\full.patch"
+    ],
+    "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\iam-stage-4-d1\\replay",
+    "exitCode": 0,
+    "stdout": "",
+    "stderr": "G:/207/项目/算法重组工具/代码/agent-platform/docs/evidence/iam-stage-4-d1/full.patch:61: trailing whitespace.\npackage cn.agentplatform.common;\r\nG:/207/项目/算法重组工具/代码/agent-platform/docs/evidence/iam-stage-4-d1/full.patch:62: trailing whitespace.\n\r\nG:/207/项目/算法重组工具/代码/agent-platform/docs/evidence/iam-stage-4-d1/full.patch:63: trailing whitespace.\nimport org.springframework.security.core.context.SecurityContextHolder;\r\nG:/207/项目/算法重组工具/代码/agent-platform/docs/evidence/iam-stage-4-d1/full.patch:64: trailing whitespace.\nimport org.springframework.security.oauth2.jwt.Jwt;\r\nG:/207/项目/算法重组工具/代码/agent-platform/docs/evidence/iam-stage-4-d1/full.patch:65: trailing whitespace.\n\r\nwarning: squelched 1494 whitespace errors\nwarning: 1499 lines add whitespace errors.\n"
+  }
+]

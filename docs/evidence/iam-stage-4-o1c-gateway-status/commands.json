@@ -1,0 +1,422 @@
+[
+  {
+    "stage": "iam-stage-o1c-red01",
+    "argv": [
+      "node",
+      ".tools/run-iam-module-tests.mjs",
+      "iam-stage-o1c-red01",
+      "admin-common,engine-runtime,platform-gateway",
+      "GatewayRunStatusChainPostgresTest#realGatewayQueryAndStatusReturnOriginalBytes"
+    ],
+    "cwd": "G:/207/项目/算法重组工具/代码/agent-platform",
+    "exitCode": 1,
+    "classification": "setup failure, not RED",
+    "sourceBefore": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-red01-source.json",
+      "bytes": 110245,
+      "sha256": "32af81a8034cdbaf5ef78f78cee2d538955b86e9a94f06a4af37e7e837470209"
+    },
+    "log": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-red01/command.log",
+      "bytes": 60642,
+      "sha256": "591994f8cad0fc3e5bcf35daa5095a958b2ae745776b6c1f6e4afcf209454156"
+    },
+    "actualExecuted": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-red01/executed.json",
+      "bytes": 531,
+      "sha256": "ac33a608ae509fb58b21667a9efd631892fbfe4ef0c0f3de467fbf56d7fc4831"
+    }
+  },
+  {
+    "stage": "iam-stage-o1c-red02",
+    "argv": [
+      "node",
+      ".tools/run-iam-module-tests.mjs",
+      "iam-stage-o1c-red02",
+      "admin-common,engine-runtime,platform-gateway",
+      "GatewayRunStatusChainPostgresTest#realGatewayQueryAndStatusReturnOriginalBytes"
+    ],
+    "cwd": "G:/207/项目/算法重组工具/代码/agent-platform",
+    "exitCode": 1,
+    "classification": "closed-route behavior RED",
+    "sourceBefore": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-red02-source.json",
+      "bytes": 110245,
+      "sha256": "78ad9e9aeac841f263a2765450b807b0ad7dafec9fa9ba3b74abd319da7ae664"
+    },
+    "log": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-red02/command.log",
+      "bytes": 8118,
+      "sha256": "06e5c4f59e3470323a982b0a289d997887d1cf70915b64744b1c4e472aaa66f8"
+    },
+    "actualExecuted": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-red02/executed.json",
+      "bytes": 530,
+      "sha256": "3cb01e3a5389a55760c21270e4d5ff23b12f394112da0799658ac34b7da3aadd"
+    }
+  },
+  {
+    "stage": "iam-stage-o1c-chain01",
+    "argv": [
+      "node",
+      ".tools/run-iam-module-tests.mjs",
+      "iam-stage-o1c-chain01",
+      "admin-common,engine-runtime,platform-gateway",
+      "GatewayRunStatusChainPostgresTest#realGatewayQueryAndStatusReturnOriginalBytes"
+    ],
+    "cwd": "G:/207/项目/算法重组工具/代码/agent-platform",
+    "exitCode": 1,
+    "classification": "overstrict Content-Length oracle",
+    "sourceBefore": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-chain01-source.json",
+      "bytes": 110683,
+      "sha256": "2bf7919779e78005332c264073317ae9ec1fe3fb55abe1dad974fa91605d9a00"
+    },
+    "log": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-chain01/command.log",
+      "bytes": 39678,
+      "sha256": "191181fdcabf11bbb5a921cdfcbfa8e1a8b28b12cc1f6151c19c01865a635f86"
+    },
+    "actualExecuted": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-chain01/executed.json",
+      "bytes": 533,
+      "sha256": "4e448ea51b615bfe37e8d618fa4b3ab1df392b8b7f8921e9302cb45b238ea45f"
+    }
+  },
+  {
+    "stage": "iam-stage-o1c-common-wire01",
+    "argv": [
+      "node",
+      ".tools/run-iam-module-tests.mjs",
+      "iam-stage-o1c-common-wire01",
+      "admin-common,platform-gateway",
+      "GatewayStatusAuthorizationTest,RunObservationGetTransportTest"
+    ],
+    "cwd": "G:/207/项目/算法重组工具/代码/agent-platform",
+    "exitCode": 0,
+    "classification": "initial common8/wire6",
+    "sourceBefore": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-common-wire01-source.json",
+      "bytes": 111132,
+      "sha256": "bfbf1d9104420a1fe256214550c068849939d48c8fe27e3f54d3b3eb1cb50dbb"
+    },
+    "log": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-common-wire01/command.log",
+      "bytes": 7855,
+      "sha256": "4758f55e7a43214720374bd3f3a4278d1708973c6a730c8b6002c1dd7ebd7171"
+    },
+    "actualExecuted": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-common-wire01/executed.json",
+      "bytes": 856,
+      "sha256": "2f0c541bb528a09ec8d29ecf22922ae12d6a06e4649571a01ab1eb20d89919b7"
+    }
+  },
+  {
+    "stage": "iam-stage-o1c-chain02",
+    "argv": [
+      "node",
+      ".tools/run-iam-module-tests.mjs",
+      "iam-stage-o1c-chain02",
+      "admin-common,engine-runtime,platform-gateway",
+      "GatewayRunStatusChainPostgresTest"
+    ],
+    "cwd": "G:/207/项目/算法重组工具/代码/agent-platform",
+    "exitCode": 1,
+    "classification": "fixture window and expired seed grant, cascade failures retained",
+    "sourceBefore": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-chain02-source.json",
+      "bytes": 111132,
+      "sha256": "cc548aa7ada83aee07eb68424e7a60080a57ec168bea8c6411b90c17ee626c7d"
+    },
+    "log": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-chain02/command.log",
+      "bytes": 598668,
+      "sha256": "2dc923641c166147ef47556733f2ba6536e315e485dff30e5b5b210515ce29bb"
+    },
+    "actualExecuted": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-chain02/executed.json",
+      "bytes": 535,
+      "sha256": "e4c13f1117f0f9242d20993da4a1dc727f167cf7819800f6ad77e584ba156692"
+    }
+  },
+  {
+    "stage": "iam-stage-o1c-utf8-red01",
+    "argv": [
+      "node",
+      ".tools/run-iam-module-tests.mjs",
+      "iam-stage-o1c-utf8-red01",
+      "admin-common,engine-runtime,platform-gateway",
+      "GatewayRunStatusChainPostgresTest#nonUtf8StatusWireIsRejectedBeforeBusinessWrite,RunObservationGetTransportTest#strictErrorsRejectNonUtf8Encoding"
+    ],
+    "cwd": "G:/207/项目/算法重组工具/代码/agent-platform",
+    "exitCode": 1,
+    "classification": "UTF autodetect behavior RED",
+    "sourceBefore": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-utf8-red01-source.json",
+      "bytes": 111133,
+      "sha256": "125e19d0463fa2e382b8909015c499dc39bd65cce47a39cb7eb8ba6ef9d6cba3"
+    },
+    "log": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-utf8-red01/command.log",
+      "bytes": 11731,
+      "sha256": "5706047a687fd9aaa07bf6cc9a97c70a2c987826834004f8f0dff30c834f1261"
+    },
+    "actualExecuted": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-utf8-red01/executed.json",
+      "bytes": 864,
+      "sha256": "7f88d4c294aecd625eab5d55458d89d9dd5c4c20c4817df5162a7e7eaf95bd7b"
+    }
+  },
+  {
+    "stage": "iam-stage-o1c-chain-wire03",
+    "argv": [
+      "node",
+      ".tools/run-iam-module-tests.mjs",
+      "iam-stage-o1c-chain-wire03",
+      "admin-common,engine-runtime,platform-gateway",
+      "GatewayRunStatusChainPostgresTest,RunObservationGetTransportTest"
+    ],
+    "cwd": "G:/207/项目/算法重组工具/代码/agent-platform",
+    "exitCode": 1,
+    "classification": "bare-query client normalization oracle;18 passed",
+    "sourceBefore": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-chain-wire03-source.json",
+      "bytes": 111133,
+      "sha256": "50b98f36f50a36aba45b19c7b60c145fa48a459184bd08824431a2a26a617440"
+    },
+    "log": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-chain-wire03/command.log",
+      "bytes": 239297,
+      "sha256": "6b6b3c4c7caa0ceb27149bed7506129a194d6efa4e825c3c175b78e3e9dfdf10"
+    },
+    "actualExecuted": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-chain-wire03/executed.json",
+      "bytes": 868,
+      "sha256": "01347271340ecd391f32656e4dee90dd6d5e3bca8aa3f9c6b1bbeb29d24a8cd3"
+    }
+  },
+  {
+    "stage": "iam-stage-o1c-ingress04",
+    "argv": [
+      "node",
+      ".tools/run-iam-module-tests.mjs",
+      "iam-stage-o1c-ingress04",
+      "admin-common,platform-gateway",
+      "GatewayRunStatusChainPostgresTest#wrongMethodAliasQueryBodyHeadersAndForwardStopBeforeExchange"
+    ],
+    "cwd": "G:/207/项目/算法重组工具/代码/agent-platform",
+    "exitCode": 1,
+    "classification": "Proxy-Authorization client normalization oracle",
+    "sourceBefore": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-ingress04-source.json",
+      "bytes": 111133,
+      "sha256": "ca875b3534f69bdacbaa32a0f1fb05e108591dc914ca2e5e25d83d8443521a4d"
+    },
+    "log": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-ingress04/command.log",
+      "bytes": 38382,
+      "sha256": "734b36be29d96a52237b1a7a31d72de8c408e5bcc1092990dd4f6eb3e8b4a426"
+    },
+    "actualExecuted": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-ingress04/executed.json",
+      "bytes": 535,
+      "sha256": "7a3b918a423609b146f587d1467a09f12f9ed949b2f115b062618e5bd234d6ba"
+    }
+  },
+  {
+    "stage": "iam-stage-o1c-gap05",
+    "argv": [
+      "node",
+      ".tools/run-iam-module-tests.mjs",
+      "iam-stage-o1c-gap05",
+      "admin-common,engine-runtime,platform-gateway",
+      "GatewayStatusAuthorizationTest#signedWrongPurposeCallerDelegationAndRequestSourceFailClosed,GatewayRunStatusChainPostgresTest#metadataEncodingAndWireBudgetAreVerifiedIndependently,GatewayRunStatusChainPostgresTest#wrongMethodAliasQueryBodyHeadersAndForwardStopBeforeExchange,RunObservationGetTransportTest#strictErrorsRejectNonUtf8Encoding"
+    ],
+    "cwd": "G:/207/项目/算法重组工具/代码/agent-platform",
+    "exitCode": 0,
+    "classification": "targeted four methods",
+    "sourceBefore": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-gap05-source.json",
+      "bytes": 111133,
+      "sha256": "c388b4d39b52f9171945598423bcdbe6ea85059c5a1c96d23780a7568d7f4004"
+    },
+    "log": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-gap05/command.log",
+      "bytes": 15628,
+      "sha256": "e5875facb454d1fb6f2161ce5166dc59c27268cfd60ee6b6c47f53370a1855ba"
+    },
+    "actualExecuted": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-gap05/executed.json",
+      "bytes": 1177,
+      "sha256": "eefa65705cb572c5774bb05fa6fb58924ef2800b65f469f40ba9aa63a3c504e2"
+    }
+  },
+  {
+    "stage": "iam-stage-o1c-positive-session06",
+    "argv": [
+      "node",
+      ".tools/run-iam-module-tests.mjs",
+      "iam-stage-o1c-positive-session06",
+      "admin-common,engine-runtime,platform-gateway",
+      "GatewayRunStatusChainPostgresTest#realGatewayQueryAndStatusReturnOriginalBytes,PortalSessionHttpTest#normalLegacyStartsWithoutIamClientAndRunOnlyFiniteAssemblyKeepsOriginalBoundary,PortalSessionHttpTest#installedExactHandlerReturnsOnlyCurrentSessionWithNoBusinessCalls"
+    ],
+    "cwd": "G:/207/项目/算法重组工具/代码/agent-platform",
+    "exitCode": 0,
+    "classification": "raw UTF8 positive +two session regressions",
+    "sourceBefore": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-positive-session06-source.json",
+      "bytes": 111133,
+      "sha256": "669c7325f2ec0e0dff0773fe3075bece0216ffb7e5c2293c1133dfa0065fa50d"
+    },
+    "log": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-positive-session06/command.log",
+      "bytes": 38497,
+      "sha256": "c090f52c096028e35eb0aee5335a3744b5fd83bf62a5f4cafe59e6973dda1558"
+    },
+    "actualExecuted": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-positive-session06/executed.json",
+      "bytes": 848,
+      "sha256": "abc0a0e5dedcaeeffdbddb79e963045f978a7031e5885c50f453be82eb6c7a59"
+    }
+  },
+  {
+    "stage": "iam-stage-o1c-portal-code-red07",
+    "argv": [
+      "node",
+      ".tools/run-iam-module-tests.mjs",
+      "iam-stage-o1c-portal-code-red07",
+      "admin-common,platform-gateway",
+      "GatewayRunStatusChainPostgresTest#initialPortalVerifierInfrastructureIs503AndExplicitInvalidSourceIs401"
+    ],
+    "cwd": "G:/207/项目/算法重组工具/代码/agent-platform",
+    "exitCode": 1,
+    "classification": "dedicated Portal401 code RED",
+    "sourceBefore": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-portal-code-red07-source.json",
+      "bytes": 111133,
+      "sha256": "964e1749e747502c2b830fcc7e6b73ad0e3313b16c5676f7d161c813a4288793"
+    },
+    "log": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-portal-code-red07/command.log",
+      "bytes": 8646,
+      "sha256": "66f0f7c1c529a2454a447af1280fac28f5b84d231cfa77434b34e1ca312a0f15"
+    },
+    "actualExecuted": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-portal-code-red07/executed.json",
+      "bytes": 542,
+      "sha256": "3da7896a84f7b2361935bcde583eb8776188e07e324460bab68ee66e32ca7319"
+    }
+  },
+  {
+    "stage": "iam-stage-o1c-errors-green08",
+    "argv": [
+      "node",
+      ".tools/run-iam-module-tests.mjs",
+      "iam-stage-o1c-errors-green08",
+      "admin-common,engine-runtime,platform-gateway",
+      "GatewayRunStatusChainPostgresTest#initialPortalVerifierInfrastructureIs503AndExplicitInvalidSourceIs401,GatewayRunStatusChainPostgresTest#realEngineCurrentDenialAndActualStreamExpiryRemain403"
+    ],
+    "cwd": "G:/207/项目/算法重组工具/代码/agent-platform",
+    "exitCode": 0,
+    "classification": "Portal verifier +actual engine denials",
+    "sourceBefore": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-errors-green08-source.json",
+      "bytes": 111133,
+      "sha256": "f77260cc9ea6728d874696760cf2dad458de5615f13f588cfd6186d2e2ad8f2f"
+    },
+    "log": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-errors-green08/command.log",
+      "bytes": 39087,
+      "sha256": "8ff3dfa445e98e8f86359783af80d8c57ad1e8c5d7307769f4951a9866092221"
+    },
+    "actualExecuted": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-errors-green08/executed.json",
+      "bytes": 540,
+      "sha256": "b05d65f869fa63cbf4094999eb60fd5763be001a8552ee6229ba7e5b1708a693"
+    }
+  },
+  {
+    "stage": "iam-stage-o1c-post-regression09",
+    "argv": [
+      "node",
+      ".tools/run-iam-module-tests.mjs",
+      "iam-stage-o1c-post-regression09",
+      "admin-common,app-management,engine-runtime,platform-gateway",
+      "GatewayPublishedChainPostgresTest#portalThroughRealMetadataMainRunAppPgAndOwnedFlowReturnsFullStatusAndReplay"
+    ],
+    "cwd": "G:/207/项目/算法重组工具/代码/agent-platform",
+    "exitCode": 0,
+    "classification": "exact original POST once",
+    "sourceBefore": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-post-regression09-source.json",
+      "bytes": 111133,
+      "sha256": "f77260cc9ea6728d874696760cf2dad458de5615f13f588cfd6186d2e2ad8f2f"
+    },
+    "log": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-post-regression09/command.log",
+      "bytes": 18192,
+      "sha256": "916e911af5eec9cbd901805712db623a44f3e55456c25c8e3f63ff9df0e1e43d"
+    },
+    "actualExecuted": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-post-regression09/executed.json",
+      "bytes": 543,
+      "sha256": "35a9d55e4560e724754c6db57bb85b689f494cdd61bd3c02583d6d003bf3b5e7"
+    }
+  },
+  {
+    "stage": "iam-stage-o1c-overflow-red10",
+    "argv": [
+      "node",
+      ".tools/run-iam-module-tests.mjs",
+      "iam-stage-o1c-overflow-red10",
+      "admin-common,platform-gateway",
+      "RunObservationGetTransportTest#overflowAbortsBeforeClosingUnreadChunkStream"
+    ],
+    "cwd": "G:/207/项目/算法重组工具/代码/agent-platform",
+    "exitCode": 1,
+    "classification": "stalled unread chunk2044ms behavior RED",
+    "sourceBefore": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-overflow-red10-source.json",
+      "bytes": 111133,
+      "sha256": "0b8cc097975724194d2601149c0fc69fc1a66b10bafa2dac9a25c7804136c01d"
+    },
+    "log": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-overflow-red10/command.log",
+      "bytes": 7099,
+      "sha256": "f1e3debcfa155633c76d537231e05cb3e8b6c33d1398896f30590e99a5e1b08a"
+    },
+    "actualExecuted": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-overflow-red10/executed.json",
+      "bytes": 539,
+      "sha256": "ce936559f5aae666fcbf9f0cb75636d78d7c86b3a5e8797aafa543b518063ff2"
+    }
+  },
+  {
+    "stage": "iam-stage-o1c-overflow-green11",
+    "argv": [
+      "node",
+      ".tools/run-iam-module-tests.mjs",
+      "iam-stage-o1c-overflow-green11",
+      "admin-common,platform-gateway",
+      "RunObservationGetTransportTest#overflowAbortsBeforeClosingUnreadChunkStream,RunObservationGetTransportTest#realChunkedMultiHeaderResponseUsesOnlyFixedPathAndOneTicket,RunObservationGetTransportTest#metadataAndStatusActualReadLimitsAcceptExactAndRejectPlusOne,GatewayRunStatusChainPostgresTest#partialOutputNeverAppendsOrRetries"
+    ],
+    "cwd": "G:/207/项目/算法重组工具/代码/agent-platform",
+    "exitCode": 0,
+    "classification": "abort43ms +necessary controls and actual WARN",
+    "sourceBefore": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-overflow-green11-source.json",
+      "bytes": 111133,
+      "sha256": "52ba562ec73af06e2decbd97546da3711d281946837b37217661e746919a5b53"
+    },
+    "log": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-overflow-green11/command.log",
+      "bytes": 60225,
+      "sha256": "d1cd9699dbb0f48c6162f752adea7f0d971c9764a32ee548f4404da720256de7"
+    },
+    "actualExecuted": {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-overflow-green11/executed.json",
+      "bytes": 870,
+      "sha256": "ef8c6a4f38a5d6b26279035b8ef50fbe85566575d0a20b43f00b5919c2e9e645"
+    }
+  }
+]

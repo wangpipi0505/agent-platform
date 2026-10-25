@@ -1,0 +1,136 @@
+-------------------------------------------------------------------------------
+Test set: cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest
+-------------------------------------------------------------------------------
+Tests run: 3, Failures: 3, Errors: 0, Skipped: 0, Time elapsed: 35.44 s <<< FAILURE! -- in cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest
+cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.nestedUnknownFieldWithValidCommitNeverReachesWindow -- Time elapsed: 17.20 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+Exception in thread "main" java.io.UncheckedIOException: java.io.IOException: Unable to establish loopback connection
+	at java.net.http/jdk.internal.net.http.HttpClientImpl.<init>(HttpClientImpl.java:508)
+	at java.net.http/jdk.internal.net.http.HttpClientImpl.create(HttpClientImpl.java:436)
+	at java.net.http/jdk.internal.net.http.HttpClientBuilderImpl.build(HttpClientBuilderImpl.java:143)
+	at cn.agentplatform.common.authority.LoopbackAuthority.<init>(LoopbackAuthority.java:26)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest$Fixture.<init>(PortalEventsMaterialAuthorityTest.java:88)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.exercise(PortalEventsMaterialAuthorityTest.java:177)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.main(PortalEventsMaterialAuthorityTest.java:193)
+Caused by: java.io.IOException: Unable to establish loopback connection
+	at java.base/sun.nio.ch.PipeImpl$Initializer.run(PipeImpl.java:103)
+	at java.base/sun.nio.ch.PipeImpl$Initializer.run(PipeImpl.java:67)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:571)
+	at java.base/sun.nio.ch.PipeImpl.<init>(PipeImpl.java:197)
+	at java.base/sun.nio.ch.WEPollSelectorImpl.<init>(WEPollSelectorImpl.java:79)
+	at java.base/sun.nio.ch.WEPollSelectorProvider.openSelector(WEPollSelectorProvider.java:33)
+	at java.base/java.nio.channels.Selector.open(Selector.java:295)
+	at java.net.http/jdk.internal.net.http.HttpClientImpl$SelectorManager.<init>(HttpClientImpl.java:1132)
+	at java.net.http/jdk.internal.net.http.HttpClientImpl.<init>(HttpClientImpl.java:505)
+	... 6 more
+Caused by: java.net.SocketException: Unrecognized Windows Sockets error: 10106: socket
+	at java.base/sun.nio.ch.Net.socket0(Native Method)
+	at java.base/sun.nio.ch.Net.serverSocket(Net.java:556)
+	at java.base/sun.nio.ch.ServerSocketChannelImpl.<init>(ServerSocketChannelImpl.java:135)
+	at java.base/sun.nio.ch.ServerSocketChannelImpl.<init>(ServerSocketChannelImpl.java:116)
+	at java.base/sun.nio.ch.SelectorProviderImpl.openServerSocketChannel(SelectorProviderImpl.java:72)
+	at java.base/java.nio.channels.ServerSocketChannel.open(ServerSocketChannel.java:145)
+	at java.base/sun.nio.ch.PipeImpl.createListener(PipeImpl.java:229)
+	at java.base/sun.nio.ch.PipeImpl$Initializer$LoopbackConnector.run(PipeImpl.java:127)
+	at java.base/sun.nio.ch.PipeImpl$Initializer.run(PipeImpl.java:85)
+	... 14 more
+ ==> expected: <0> but was: <1>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:563)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.child(PortalEventsMaterialAuthorityTest.java:79)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.nestedUnknownFieldWithValidCommitNeverReachesWindow(PortalEventsMaterialAuthorityTest.java:54)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.signedReceiptTamperingNeverReachesWindow -- Time elapsed: 9.222 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+Exception in thread "main" java.io.UncheckedIOException: java.io.IOException: Unable to establish loopback connection
+	at java.net.http/jdk.internal.net.http.HttpClientImpl.<init>(HttpClientImpl.java:508)
+	at java.net.http/jdk.internal.net.http.HttpClientImpl.create(HttpClientImpl.java:436)
+	at java.net.http/jdk.internal.net.http.HttpClientBuilderImpl.build(HttpClientBuilderImpl.java:143)
+	at cn.agentplatform.common.authority.LoopbackAuthority.<init>(LoopbackAuthority.java:26)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest$Fixture.<init>(PortalEventsMaterialAuthorityTest.java:88)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.exercise(PortalEventsMaterialAuthorityTest.java:177)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.main(PortalEventsMaterialAuthorityTest.java:192)
+Caused by: java.io.IOException: Unable to establish loopback connection
+	at java.base/sun.nio.ch.PipeImpl$Initializer.run(PipeImpl.java:103)
+	at java.base/sun.nio.ch.PipeImpl$Initializer.run(PipeImpl.java:67)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:571)
+	at java.base/sun.nio.ch.PipeImpl.<init>(PipeImpl.java:197)
+	at java.base/sun.nio.ch.WEPollSelectorImpl.<init>(WEPollSelectorImpl.java:79)
+	at java.base/sun.nio.ch.WEPollSelectorProvider.openSelector(WEPollSelectorProvider.java:33)
+	at java.base/java.nio.channels.Selector.open(Selector.java:295)
+	at java.net.http/jdk.internal.net.http.HttpClientImpl$SelectorManager.<init>(HttpClientImpl.java:1132)
+	at java.net.http/jdk.internal.net.http.HttpClientImpl.<init>(HttpClientImpl.java:505)
+	... 6 more
+Caused by: java.net.SocketException: Unrecognized Windows Sockets error: 10106: socket
+	at java.base/sun.nio.ch.Net.socket0(Native Method)
+	at java.base/sun.nio.ch.Net.serverSocket(Net.java:556)
+	at java.base/sun.nio.ch.ServerSocketChannelImpl.<init>(ServerSocketChannelImpl.java:135)
+	at java.base/sun.nio.ch.ServerSocketChannelImpl.<init>(ServerSocketChannelImpl.java:116)
+	at java.base/sun.nio.ch.SelectorProviderImpl.openServerSocketChannel(SelectorProviderImpl.java:72)
+	at java.base/java.nio.channels.ServerSocketChannel.open(ServerSocketChannel.java:145)
+	at java.base/sun.nio.ch.PipeImpl.createListener(PipeImpl.java:229)
+	at java.base/sun.nio.ch.PipeImpl$Initializer$LoopbackConnector.run(PipeImpl.java:127)
+	at java.base/sun.nio.ch.PipeImpl$Initializer.run(PipeImpl.java:85)
+	... 14 more
+ ==> expected: <0> but was: <1>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:563)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.child(PortalEventsMaterialAuthorityTest.java:79)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.signedReceiptTamperingNeverReachesWindow(PortalEventsMaterialAuthorityTest.java:53)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.changedBusinessPayloadWithValidWireShaNeverReachesWindow -- Time elapsed: 8.918 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+Exception in thread "main" java.io.UncheckedIOException: java.io.IOException: Unable to establish loopback connection
+	at java.net.http/jdk.internal.net.http.HttpClientImpl.<init>(HttpClientImpl.java:508)
+	at java.net.http/jdk.internal.net.http.HttpClientImpl.create(HttpClientImpl.java:436)
+	at java.net.http/jdk.internal.net.http.HttpClientBuilderImpl.build(HttpClientBuilderImpl.java:143)
+	at cn.agentplatform.common.authority.LoopbackAuthority.<init>(LoopbackAuthority.java:26)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest$Fixture.<init>(PortalEventsMaterialAuthorityTest.java:88)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.exercise(PortalEventsMaterialAuthorityTest.java:177)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.main(PortalEventsMaterialAuthorityTest.java:194)
+Caused by: java.io.IOException: Unable to establish loopback connection
+	at java.base/sun.nio.ch.PipeImpl$Initializer.run(PipeImpl.java:103)
+	at java.base/sun.nio.ch.PipeImpl$Initializer.run(PipeImpl.java:67)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:571)
+	at java.base/sun.nio.ch.PipeImpl.<init>(PipeImpl.java:197)
+	at java.base/sun.nio.ch.WEPollSelectorImpl.<init>(WEPollSelectorImpl.java:79)
+	at java.base/sun.nio.ch.WEPollSelectorProvider.openSelector(WEPollSelectorProvider.java:33)
+	at java.base/java.nio.channels.Selector.open(Selector.java:295)
+	at java.net.http/jdk.internal.net.http.HttpClientImpl$SelectorManager.<init>(HttpClientImpl.java:1132)
+	at java.net.http/jdk.internal.net.http.HttpClientImpl.<init>(HttpClientImpl.java:505)
+	... 6 more
+Caused by: java.net.SocketException: Unrecognized Windows Sockets error: 10106: socket
+	at java.base/sun.nio.ch.Net.socket0(Native Method)
+	at java.base/sun.nio.ch.Net.serverSocket(Net.java:556)
+	at java.base/sun.nio.ch.ServerSocketChannelImpl.<init>(ServerSocketChannelImpl.java:135)
+	at java.base/sun.nio.ch.ServerSocketChannelImpl.<init>(ServerSocketChannelImpl.java:116)
+	at java.base/sun.nio.ch.SelectorProviderImpl.openServerSocketChannel(SelectorProviderImpl.java:72)
+	at java.base/java.nio.channels.ServerSocketChannel.open(ServerSocketChannel.java:145)
+	at java.base/sun.nio.ch.PipeImpl.createListener(PipeImpl.java:229)
+	at java.base/sun.nio.ch.PipeImpl$Initializer$LoopbackConnector.run(PipeImpl.java:127)
+	at java.base/sun.nio.ch.PipeImpl$Initializer.run(PipeImpl.java:85)
+	... 14 more
+ ==> expected: <0> but was: <1>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:563)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.child(PortalEventsMaterialAuthorityTest.java:79)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.changedBusinessPayloadWithValidWireShaNeverReachesWindow(PortalEventsMaterialAuthorityTest.java:55)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+

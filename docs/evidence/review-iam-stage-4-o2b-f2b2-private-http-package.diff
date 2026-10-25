@@ -1,0 +1,2269 @@
+# O2b F2b2 complete-context package
+Base=limited Accepted F2b1 fixed source621; head=.local/iam-o2b-f2b2-private-http/source-after.json source623. Three existing modifications, two new tests; no commits.
+Requirements=docs/evidence/iam-stage-4-o2b-f2b2-private-http-brief.md
+Clarification=.local/iam-o2b-f2b2-test-vector-clarification.md
+Report=docs/evidence/iam-stage-4-o2b-f2b2-private-http-report.md
+Only same-session G/child/private input; no receipt/material/publicSSE/assembly. All five files follow with full context.
+--- BEGIN FULL CONTEXT DIFF ---
+diff --git a/platform-gateway/src/main/java/cn/agentplatform/gateway/application/RunObservationMetadataClient.java b/platform-gateway/src/main/java/cn/agentplatform/gateway/application/RunObservationMetadataClient.java
+index 453e7f2..51c4a70 100644
+--- a/platform-gateway/src/main/java/cn/agentplatform/gateway/application/RunObservationMetadataClient.java
++++ b/platform-gateway/src/main/java/cn/agentplatform/gateway/application/RunObservationMetadataClient.java
+@@ -1,300 +1,308 @@
+ package cn.agentplatform.gateway.application;
+ 
+ import cn.agentplatform.common.*;
+ import cn.agentplatform.common.authority.*;
+ import cn.agentplatform.common.authority.HttpCurrentAuthorityClient.*;
+ import cn.agentplatform.gateway.infra.PublishedRunHttp;
+ import com.fasterxml.jackson.core.*;
+ import com.fasterxml.jackson.databind.*;
+ import jakarta.servlet.http.HttpServletRequest;
+ import java.net.URI;
+ import java.util.*;
+ import java.util.concurrent.ConcurrentHashMap;
+ 
+ /** Fixed engine Q projection. Parsed facts cannot mint a permission; Q retains signed evidence. */
+ public final class RunObservationMetadataClient implements AutoCloseable {
+     private static final ObjectMapper JSON=new ObjectMapper(JsonFactory.builder().enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION).build())
+             .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS).enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS);
+     private final URI origin;private final CurrentAuthorityClient authority;private final PublishedRunHttp http;
+     private final Set<PublishedRunHttp.Cancellation> active=ConcurrentHashMap.newKeySet();private volatile boolean closed;
+     public RunObservationMetadataClient(URI origin,CurrentAuthorityClient authority,PublishedRunHttp http){this(origin,authority,http,false);}
+     /** Explicit isolated receiver only; default constructor requires HTTPS. Transport is borrowed. */
+     public RunObservationMetadataClient(URI origin,CurrentAuthorityClient authority,PublishedRunHttp http,boolean testLoopback){this.origin=PublishedRunHttp.origin(origin,testLoopback);this.authority=Objects.requireNonNull(authority);this.http=Objects.requireNonNull(http);}
+     public static final class Result {
+         private final ResourceBinding snapshot;private final GatewayObservationQueryAuthorization query;
+         private Result(ResourceBinding snapshot,GatewayObservationQueryAuthorization query){this.snapshot=snapshot;this.query=query;}
+         public ResourceBinding snapshot(){return snapshot;}
+         public void requireMain(GatewayStatusAuthorization main){main.requireSameQuery(query);if(!snapshot.equals(main.ticket().operation().resource()))throw unavailable();}
+         @Override public String toString(){return "RunObservationMetadata[validated-facts]";}
+     }
+     public Result lookup(GatewayIngressBoundary.PortalStatusRequest capture,HttpServletRequest request,long deadline,PublishedRunHttp.Cancellation cancellation){
+         active.add(cancellation);
+         try{
+             Runnable check=()->{if(closed||deadline-System.nanoTime()<=0)throw unavailable();capture.requireLive(request);};check.run();
+             var q=authority.exchangeGatewayRunObservationQuery(capture.sourceToken(),capture.subject(),capture.publicRunId());check.run();
+             byte[] bytes=http.getRunObservationMetadata(origin,capture.publicRunId(),q.ticket().value(),deadline,cancellation,()->{check.run();q.requireVerified();}).body();
+             var resource=parse(bytes,capture.subject(),capture.publicRunId());check.run();q.requireVerified();return new Result(resource,q);
+         }finally{active.remove(cancellation);}
+     }
+     private static ResourceBinding parse(byte[] bytes,SubjectKey expected,String run){
+         try{
+             var root=readUtf8(JSON,bytes);requireEnvelope(root);
+             var d=root.path("data");
+             if(!fields(d,Set.of("runId","owner","root","appVersionId","appVersionNo","acceptedSnapshotSha256","initialCeilingSha256"))
+                     ||Json.mapper().writeValueAsBytes(d).length>4096||!text(d,"runId").equals(run))throw unavailable();
+             var owner=d.path("owner");if(!fields(owner,Set.of("tenantId","principalId"))||!text(owner,"tenantId").equals(expected.tenantId())||!text(owner,"principalId").equals(expected.principalId())
+                     ||expected.tenantId().length()>128||expected.principalId().length()>128)throw unavailable();
+             long no=positive(d.path("appVersionNo"));positive(d.path("appVersionId"));
+             var app=d.path("root");if(!fields(app,Set.of("kind","id","versionDigest"))||!text(app,"kind").equals("app-version")
+                     ||!text(app,"id").matches("[A-Za-z][A-Za-z0-9_-]{0,63}@"+no))throw unavailable();
+             hash(text(app,"versionDigest"));hash(text(d,"initialCeilingSha256"));String sha=text(d,"acceptedSnapshotSha256");hash(sha);
+             return RunObservationSelectors.status(run,sha);
+         }catch(Exception invalid){throw unavailable();}
+     }
+     static void requireEnvelope(JsonNode r){
+         if(!fields(r,Set.of("code","message","data","traceId"))||!text(r,"code").equals("OK")||!r.path("message").isTextual()||r.path("message").textValue().length()>512
+                 ||!(r.path("traceId").isNull()||r.path("traceId").isTextual()&&r.path("traceId").textValue().length()<=128))throw unavailable();
+     }
+     static JsonNode readUtf8(ObjectMapper mapper,byte[] bytes)throws java.io.IOException {
+         // Byte-based Jackson autodetect accepts UTF-16/32. The observation wire profile is UTF-8.
+         var text=java.nio.charset.StandardCharsets.UTF_8.newDecoder().onMalformedInput(java.nio.charset.CodingErrorAction.REPORT)
+                 .onUnmappableCharacter(java.nio.charset.CodingErrorAction.REPORT).decode(java.nio.ByteBuffer.wrap(bytes));
+         return mapper.readTree(text.toString());
+     }
+     private static boolean fields(JsonNode d,Set<String> names){if(d==null||!d.isObject()||d.size()!=names.size())return false;for(String n:names)if(!d.has(n))return false;return true;}
+     private static String text(JsonNode d,String key){var n=d.path(key);if(!n.isTextual())throw unavailable();return n.textValue();}
+     private static long positive(JsonNode n){if(!n.isIntegralNumber()||!n.canConvertToLong()||n.longValue()<1)throw unavailable();return n.longValue();}
+     private static void hash(String value){if(!value.matches("[a-f0-9]{64}"))throw unavailable();}
+     private static PlatformException unavailable(){return new PlatformException(503,"RUN_METADATA_UNAVAILABLE","运行观察元数据暂不可用");}
+     @Override public void close(){closed=true;active.forEach(PublishedRunHttp.Cancellation::cancel);}
+     /** EVENTS facts remain tied to this exact Opening/Q; they are never an authorization. */
+     public static final class EventsMetadata implements AutoCloseable {
+         private GatewayEventsOpening opening;
+         private GatewayObservationQueryAuthorization query;
+         private final String runId, tenantId, principalId, rootId, rootDigest, accepted, initial;
+         private final long versionId, versionNo;
+         private final ResourceBinding snapshot;
+         private EventsMetadata(GatewayEventsOpening o, GatewayObservationQueryAuthorization q, Map<String, Object> d) {
+             opening = o;
+             query = q;
+             runId = (String) d.get("runId");
+             var owner = objectValue(d, "owner");
+             tenantId = (String) owner.get("tenantId");
+             principalId = (String) owner.get("principalId");
+             var root = objectValue(d, "root");
+             rootId = (String) root.get("id");
+             rootDigest = (String) root.get("versionDigest");
+             versionId = (Long) d.get("appVersionId");
+             versionNo = (Long) d.get("appVersionNo");
+             accepted = (String) d.get("acceptedSnapshotSha256");
+             initial = (String) d.get("initialCeilingSha256");
+             snapshot = RunObservationSelectors.events(runId, accepted);
+         }
+         private void live() {
+             if (opening == null || query == null || opening.queryAuthorization() != query || !opening.publicRunId().equals(runId)) throw unavailable();
+             query.requireVerified();
+         }
+         public synchronized String runId() {
+             live();
+             return runId;
+         }
+         public synchronized SubjectKey owner() {
+             live();
+             return query.ticket().operation().subject();
+         }
+         public synchronized ResourceBinding root() {
+             live();
+             return new ResourceBinding("app-version", rootId, rootDigest);
+         }
+         public synchronized long appVersionId() {
+             live();
+             return versionId;
+         }
+         public synchronized long appVersionNo() {
+             live();
+             return versionNo;
+         }
+         public synchronized String acceptedSnapshotSha256() {
+             live();
+             return accepted;
+         }
+         public synchronized String initialCeilingSha256() {
+             live();
+             return initial;
+         }
+         public synchronized ResourceBinding snapshot() {
+             live();
+             return snapshot;
+         }
+         @Override public synchronized void close() {
+             opening = null;
+             query = null;
+         }
+         @Override public String toString() {
+             return "EventsMetadata[validated-facts]";
+         }
+     }
+     public static EventsMetadata parseEvents(GatewayEventsOpening opening, byte[] boundedBody) {
+         Objects.requireNonNull(opening);
+         var q = opening.queryAuthorization();
+         q.requireVerified();
+         String run = opening.publicRunId();
+         EventsMetadata facts;
+         try {
+             var envelope = eventsEnvelope(boundedBody, false);
+             if (!"OK".equals(envelope.get("code"))) throw unavailable();
+             var d = objectValue(envelope, "data");
+             var owner = objectValue(d, "owner");
+             var app = objectValue(d, "root");
+             var subject = q.ticket().operation().subject();
+             if (!run.equals(d.get("runId")) || !subject.tenantId().equals(owner.get("tenantId")) || !subject.principalId().equals(owner.get("principalId")) || !q.ticket().operation().resource().equals(RunObservationSelectors.metadata(subject, run))) throw unavailable();
+             long no = (Long) d.get("appVersionNo");
+             if (!"app-version".equals(app.get("kind")) || !((String) app.get("id")).matches("[A-Za-z][A-Za-z0-9_-]{0,63}@" + no)) throw unavailable();
+             hash((String) app.get("versionDigest"));
+             hash((String) d.get("acceptedSnapshotSha256"));
+             hash((String) d.get("initialCeilingSha256"));
+             // No DOM/ObjectMapper/shared recycler: fixed seven-field streaming model only.
+             var sink = new java.io.OutputStream() {
+                 int bytes;
+                 public void write(int b) throws java.io.IOException {
+                     if (++ bytes > 4096) throw new java.io.IOException("data limit");
+                 }
+                 public void write(byte[] b, int off, int len) throws java.io.IOException {
+                     if (len > 4096 - bytes) throw new java.io.IOException("data limit");
+                     bytes += len;
+                 }
+             };
+             try (var generator = eventsFactory().createGenerator(sink)) {
+                 writeEventsData(generator, d);
+             }
+             facts = new EventsMetadata(opening, q, d);
+         } catch (Exception invalid) {
+             throw unavailable();
+         }
+         if (opening.queryAuthorization() != q || !opening.publicRunId().equals(run)) throw unavailable();
+         q.requireVerified();
+         return facts;
+     }
+     /** Only finite strict ApiResponse errors; internal 401 can never become Portal 401. */
+     public static PlatformException parseEventsFailure(GatewayEventsOpening opening, int status, byte[] body) {
+         var q = opening.queryAuthorization();
+         q.requireVerified();
+         String code;
+         try {
+             var e = eventsEnvelope(body, true);
+             code = (String) e.get("code");
+             if (!(status == 404 && "RUN_NOT_FOUND".equals(code) || status == 403 && Set.of("AUTHORITY_EXPIRED", "AUTHORITY_CONTEXT_MISSING", "RUN_AUTHORITY_DENIED", "MATERIAL_SCOPE_MISSING_OR_CHANGED", "SYS-AUTH-403", "AUTHORITY_DENIED").contains(code))) throw unavailable();
+         } catch (Exception invalid) {
+             throw unavailable();
+         }
+         if (opening.queryAuthorization() != q) throw unavailable();
+         q.requireVerified();
+         return new PlatformException(status, code, "运行观察请求未获准");
+     }
+     private static JsonFactory eventsFactory() {
+         return JsonFactory.builder().disable(JsonFactory.Feature.CANONICALIZE_FIELD_NAMES).disable(JsonFactory.Feature.INTERN_FIELD_NAMES).disable(JsonFactory.Feature.USE_THREAD_LOCAL_FOR_BUFFER_RECYCLING).disable(StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION).enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION).streamReadConstraints(StreamReadConstraints.builder().maxNestingDepth(4).maxNameLength(32).maxStringLength(512).maxNumberLength(20).maxDocumentLength(8192).build()).build();
+     }
+     private static Map<String, Object> eventsEnvelope(byte[] b, boolean error) throws java.io.IOException {
+         if (b == null || b.length > 8192) throw unavailable();
+         char[] chars = new char[8192];
+         var decoder = java.nio.charset.StandardCharsets.UTF_8.newDecoder().onMalformedInput(java.nio.charset.CodingErrorAction.REPORT).onUnmappableCharacter(java.nio.charset.CodingErrorAction.REPORT);
+         var target = java.nio.CharBuffer.wrap(chars);
+         var result = decoder.decode(java.nio.ByteBuffer.wrap(b), target, true);
+         if (result.isError()) result.throwException();
+         if (result.isOverflow()) throw unavailable();
+         result = decoder.flush(target);
+         if (result.isError()) result.throwException();
+         if (result.isOverflow() || target.position() > 0 && chars[0] == '\ufeff') throw unavailable();
+         try (var p = eventsFactory().createParser(chars, 0, target.position())) {
+             var reader = new EventsReader(p, error);
+             var root = reader.object(0);
+             if (reader.next() != null) throw unavailable();
+             return root;
+         }
+     }
+     @SuppressWarnings("unchecked") private static Map<String, Object> objectValue(Map<String, Object> m, String key) {
+         Object v = m.get(key);
+         if (!(v instanceof Map)) throw unavailable();
+         return (Map<String, Object>) v;
+     }
+     private static final class EventsReader {
+         private final JsonParser parser;
+         private final boolean error;
+         private int tokens;
+         EventsReader(JsonParser p, boolean error) {
+             parser = p;
+             this.error = error;
+         }
+         JsonToken next() throws java.io.IOException {
+             if (++ tokens > 64) throw unavailable();
+             return parser.nextToken();
+         }
+         String scalar(int max) throws java.io.IOException {
+             if (parser.currentToken() != JsonToken.VALUE_STRING) throw unavailable();
+             parser.finishToken();
+             String s = parser.getText();
+             if (s.length() > max) throw unavailable();
+             for (int i = 0; i < s.length(); i++) {
+                 char c = s.charAt(i);
+                 if (Character.isHighSurrogate(c)) {
+                     if (++ i == s.length() || !Character.isLowSurrogate(s.charAt(i))) throw unavailable();
+                 } else if (Character.isLowSurrogate(c)) throw unavailable();
+             }
+             return s;
+         }
+         Map<String, Object> object(int schema) throws java.io.IOException {
+             if ((schema == 0 ? next() : parser.currentToken()) != JsonToken.START_OBJECT) throw unavailable();
+             Set<String> names = switch (schema) {
+                 case 0 -> Set.of("code", "message", "data", "traceId");
+                 case 1 -> Set.of("runId", "owner", "root", "appVersionId", "appVersionNo", "acceptedSnapshotSha256", "initialCeilingSha256");
+                 case 2 -> Set.of("tenantId", "principalId");
+                 case 3 -> Set.of("kind", "id", "versionDigest");
+                 default -> throw unavailable();
+             };
+             Map<String, Object> values = new HashMap<>();
+             while (next() != JsonToken.END_OBJECT) {
+                 if (parser.currentToken() != JsonToken.FIELD_NAME) throw unavailable();
+                 String name = parser.currentName();
+                 if (!names.contains(name) || values.containsKey(name)) throw unavailable();
+                 JsonToken token = next();
+                 Object value;
+                 if (schema == 0 && name.equals("data")) {
+                     if (error) {
+                         if (token != JsonToken.VALUE_NULL) throw unavailable();
+                         value = null;
+                     } else value = object(1);
+                 } else if (schema == 1 && (name.equals("owner") || name.equals("root"))) value = object(name.equals("owner") ? 2 : 3);
+                 else if (schema == 1 && (name.equals("appVersionId") || name.equals("appVersionNo"))) {
+                     if (token != JsonToken.VALUE_NUMBER_INT) throw unavailable();
+                     long n = parser.getLongValue();
+                     if (n <= 0) throw unavailable();
+                     value = n;
+                 } else if (schema == 0 && name.equals("traceId") && token == JsonToken.VALUE_NULL) value = null;
+                 else value = scalar(schema == 2 || name.equals("traceId") ? 128 : 512);
+                 values.put(name, value);
+             }
+             if (!values.keySet().equals(names)) throw unavailable();
+             return values;
+         }
+     }
+     private static void writeEventsData(JsonGenerator g, Map<String, Object> d) throws java.io.IOException {
+         g.writeStartObject();
+         g.writeStringField("runId", (String) d.get("runId"));
+         g.writeObjectFieldStart("owner");
+         var o = objectValue(d, "owner");
+         g.writeStringField("tenantId", (String) o.get("tenantId"));
+         g.writeStringField("principalId", (String) o.get("principalId"));
+         g.writeEndObject();
+         g.writeObjectFieldStart("root");
+         var r = objectValue(d, "root");
+         g.writeStringField("kind", (String) r.get("kind"));
+         g.writeStringField("id", (String) r.get("id"));
+         g.writeStringField("versionDigest", (String) r.get("versionDigest"));
+         g.writeEndObject();
+         g.writeNumberField("appVersionId", (Long) d.get("appVersionId"));
+         g.writeNumberField("appVersionNo", (Long) d.get("appVersionNo"));
+         g.writeStringField("acceptedSnapshotSha256", (String) d.get("acceptedSnapshotSha256"));
+         g.writeStringField("initialCeilingSha256", (String) d.get("initialCeilingSha256"));
+         g.writeEndObject();
+     }
++    /** Pure finite error data only; the owning private Session must check its own G around parsing. */
++    public static String parsePrivateEventsErrorCode(byte[] body) {
++        try {
++            String code = (String) eventsEnvelope(body, true).get("code");
++            if (!code.matches("[A-Z][A-Z0-9_-]{0,63}")) throw unavailable();
++            return code;
++        } catch (Exception invalid) { throw unavailable(); }
++    }
+ }
+diff --git a/platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsHttp.java b/platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsHttp.java
+index 4cc5ecc..d5bb78e 100644
+--- a/platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsHttp.java
++++ b/platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsHttp.java
+@@ -1,592 +1,780 @@
+ package cn.agentplatform.gateway.infra;
+ import cn.agentplatform.common.PlatformException;
+-import cn.agentplatform.common.authority.CurrentAuthorityClient;
++import cn.agentplatform.common.authority.*;
++import cn.agentplatform.common.authority.HttpCurrentAuthorityClient.PortalEventsChildAuthorization;
+ import cn.agentplatform.common.authority.HttpCurrentAuthorityClient.GatewayEventsOpening;
+ import cn.agentplatform.common.authority.HttpCurrentAuthorityClient.GatewayObservationQueryAuthorization;
+ import cn.agentplatform.gateway.application.RunObservationMetadataClient;
+ import cn.agentplatform.gateway.application.RunObservationMetadataClient.EventsMetadata;
+ import java.io.*;
+ import java.net.*;
+ import java.time.Duration;
+ import java.util.*;
+ import java.util.concurrent.*;
+ import javax.net.ssl.*;
+ import org.apache.hc.client5.http.*;
+ import org.apache.hc.client5.http.classic.methods.HttpGet;
+ import org.apache.hc.client5.http.config.*;
+ import org.apache.hc.client5.http.impl.classic.*;
+ import org.apache.hc.client5.http.impl.io.*;
+ import org.apache.hc.client5.http.io.*;
+ import org.apache.hc.client5.http.protocol.HttpClientContext;
+ import org.apache.hc.client5.http.ssl.TlsSocketStrategy;
+ import org.apache.hc.core5.http.*;
+ import org.apache.hc.core5.http.config.Http1Config;
+ import org.apache.hc.core5.http.impl.io.*;
+ import org.apache.hc.core5.http.io.*;
+ import org.apache.hc.core5.http.protocol.HttpContext;
+ import org.apache.hc.core5.io.CloseMode;
+ import org.apache.hc.core5.util.*;
+-/** Unassembled original-Q metadata transport. Resource admission conveys no authorization. */
++/** Unassembled original-Q and private APEV input transport. Resource admission conveys no authorization. */
+ public final class PortalRunEventsHttp {
+     // Fixed finite object model: A393216+B65536+C524288+D262144+E1048576+F65536+G131072
+     // =2490368, plus655360 margin=3145728; F1 separately charges the128B reservation token.
+     static final long HTTP_BYTES = 3145728L;
++    static final long PRIVATE_BYTES = 1048576L;
+     private final PortalEventsTls tls;
+     public PortalRunEventsHttp(PortalEventsTls tls) {
+         this.tls = Objects.requireNonNull(tls);
+     }
+     public Session begin(CurrentAuthorityClient authority, String originalPortalSource, String run, long cursor) {
+         Objects.requireNonNull(authority);
+         var owner = PortalEventsPacketBudget.SHARED.acquire();
+         PortalEventsPacketBudget.Reservation fee = null;
+         GatewayEventsOpening opening = null;
+         try {
+             fee = owner.reserve(HTTP_BYTES);
+             long t0 = System.nanoTime();
+             opening = authority.beginGatewayPortalEvents(originalPortalSource, run, cursor);
+-            return new Session(tls, owner, fee, t0, opening);
++            return new Session(tls, owner, fee, t0, opening, authority, originalPortalSource);
+         } catch (RuntimeException | Error failure) {
+             if (opening != null) opening.close();
+             if (fee != null) fee.close();
+             owner.close();
+             throw failure;
+         }
+     }
+     public static final class Session implements AutoCloseable {
+         private final PortalEventsTls tls;
+         private final PortalEventsPacketBudget.Owner owner;
+         private PortalEventsPacketBudget.Reservation fee;
+         private GatewayEventsOpening opening;
+         private GatewayObservationQueryAuthorization query;
++        private CurrentAuthorityClient authority;
++        private String originalPortalSource;
++        private PortalEventsPacketBudget.Reservation privateFee;
++        private SavedFacts saved;
++        private GatewayPortalEventsResponse gatewayResponse;
++        private PortalEventsChildAuthorization child;
++        private PortalEventsPacketDecoder decoder;
++        private InputStream privateInput;
++        private boolean qReady, privateUsed, privatePhase, bodyPhase;
++        private long alarmEpoch;
++        // Values are copied only from this Session's still-live Q facts before transfer.
++        private record SavedFacts(String run, SubjectKey subject, ResourceBinding root, long versionId,
++                long versionNo, String accepted, String initial, ResourceBinding snapshot, long cursor) {}
+         private final long t0, openingDeadline, lifetimeDeadline;
+         private long hopDeadline;
+         private boolean used, active, stopped, closing, closed, transportClean, cleanupActive;
+         private Thread operationThread;
+         private PortalEventsTlsConnection handle;
+         private Socket raw;
+         private SSLSocket ssl;
+         private byte[] sslId;
+         private HttpGet request;
+         private HttpClientContext context;
+         private PoolingHttpClientConnectionManager manager;
+         private CloseableHttpClient client;
+         private EventsMetadata facts;
+         private ManagedHttpClientConnection connection;
+         private ScheduledThreadPoolExecutor timer;
+         private ScheduledFuture<?> alarm;
+         private final IdentityHashMap<ClassicHttpRequest, Session> guards = new IdentityHashMap<>(2);
+         private volatile Runnable beforeOutputForTest;
+         private volatile boolean identityMatched;
+-        private Session(PortalEventsTls tls, PortalEventsPacketBudget.Owner owner, PortalEventsPacketBudget.Reservation fee, long t0, GatewayEventsOpening opening) {
++        private Session(PortalEventsTls tls, PortalEventsPacketBudget.Owner owner, PortalEventsPacketBudget.Reservation fee, long t0, GatewayEventsOpening opening, CurrentAuthorityClient authority, String originalPortalSource) {
+             this.tls = tls;
+             this.owner = owner;
+             this.fee = fee;
+             this.t0 = t0;
+             this.opening = opening;
++            this.authority = authority;
++            this.originalPortalSource = originalPortalSource;
+             openingDeadline = t0 + TimeUnit.SECONDS.toNanos(5);
+             lifetimeDeadline = t0 + TimeUnit.SECONDS.toNanos(55);
+             query = opening.queryAuthorization();
+         }
+         private void live() {
++            if (privatePhase) { livePrivate(!bodyPhase); return; }
+             synchronized (this) {
+                 if (stopped || closed || System.nanoTime() - Math.min(openingDeadline, hopDeadline == 0 ? openingDeadline : hopDeadline) >= 0) throw unavailable();
+             }
+             if (opening.queryAuthorization() != query) throw unavailable();
+             opening.publicRunId();
+             query.requireVerified();
+         }
+         public EventsMetadata lookupMetadata() {
+             synchronized (this) {
+                 if (used || closing || closed) throw unavailable();
+                 used = true;
+                 active = true;
+                 operationThread = Thread.currentThread();
+                 hopDeadline = Math.min(openingDeadline, Math.min(lifetimeDeadline, System.nanoTime() + TimeUnit.SECONDS.toNanos(2)));
+             }
+             try {
+                 live();
+                 build();
+                 live();
+                 String ticket = query.ticket().value();
+                 ascii(ticket, 16384);
+                 request = new HttpGet("https://" + tls.hostname + ":" + tls.port + "/internal/runs/" + opening.publicRunId() + "/observation-metadata");
+                 request.setVersion(HttpVersion.HTTP_1_1);
+                 request.setHeader("Authorization", "Bearer " + ticket);
+                 request.setHeader("Accept", "application/json");
+                 request.setHeader("Accept-Encoding", "identity");
+                 request.setHeader("Connection", "close");
+                 context = HttpClientContext.create();
+                 facts = client.execute(request, context, response -> {
+                     try {
+                         live();
+                         checkResponse(response);
+                         var entity = response.getEntity();
+                         if (entity == null) throw unavailable();
+                         byte[] body = new byte[8193];
+                         int count = 0;
+                         var in = entity.getContent();
+                         for (;;) {
+                             live();
+                             int n = in.read(body, count, body.length - count);
+                             if (n < 0) break;
+                             if (n == 0) throw unavailable();
+                             count += n;
+                             if (count > 8192) throw unavailable();
+                         }
+                         live();
+                         byte[] bounded = Arrays.copyOf(body, count);
+                         if (response.getCode() != 200) throw RunObservationMetadataClient.parseEventsFailure(opening, response.getCode(), bounded);
+                         var parsed = RunObservationMetadataClient.parseEvents(opening, bounded);
+                         live();
+                         return parsed;
+                     } finally {
+                         stopTransport();
+                     }
+                     // Abort before Apache closes a body: never drain an unknown remainder.
+                 });
+                 if (!finishTransport(Duration.ofSeconds(2))) throw unavailable();
+                 liveAfterHttp();
+                 synchronized (this) {
+                     if (stopped || closing || closed) throw unavailable();
++                    qReady = true;
+                     return facts;
+                 }
+             } catch (PlatformException failure) {
+                 abort();
+                 throw failure;
+             } catch (Exception failure) {
+                 abort();
+                 throw unavailable();
+             } finally {
+                 stopTransport();
+                 boolean finished;
+                 try {
+                     finished = finishTransport(Duration.ofSeconds(2));
+                 } finally {
+                     synchronized (this) {
+                         active = false;
+                         operationThread = null;
+                         notifyAll();
+                     }
+                 }
+                 if (!finished) throw unavailable();
+             }
+         }
++        @FunctionalInterface interface PacketConsumer { void accept(PortalEventsPacketDecoder.UntrustedPacket packet) throws IOException; }
++        void consumePrivate(PacketConsumer consumer) {
++            Objects.requireNonNull(consumer);
++            synchronized (this) {
++                if (!qReady || active || privateUsed || stopped || closing || closed || !transportClean) throw unavailable();
++                privateUsed = true;
++                active = true;
++                operationThread = Thread.currentThread();
++            }
++            try {
++                // Lazy admission: Q-only owners retain the original 3211392B price.
++                privateFee = owner.reserve(PRIVATE_BYTES);
++                if (!(authority instanceof ResponseAuthorityClient responseAuthority)) throw unavailable();
++                liveOpening();
++                saved = new SavedFacts(facts.runId(), facts.owner(), facts.root(), facts.appVersionId(), facts.appVersionNo(),
++                        facts.acceptedSnapshotSha256(), facts.initialCeilingSha256(), facts.snapshot(), opening.effectiveCursor());
++                liveOpening();
++                facts.close();
++                facts = null;
++                var g = responseAuthority.openGatewayPortalEvents(opening, saved.snapshot(), this::abort);
++                synchronized (this) { gatewayResponse = g; }
++                // Transfer invalidates Opening/Q getters; from here only the same G is consulted.
++                if (System.nanoTime() - openingDeadline >= 0) throw unavailable();
++                privatePhase = true;
++                opening.close();
++                opening = null;
++                query = null;
++                current();
++                try {
++                    var issued = authority.exchangePortalEventsChild(originalPortalSource, g);
++                    synchronized (this) { child = issued; }
++                } finally { originalPortalSource = null; }
++                synchronized (this) {
++                    if (stopped || closing || closed) throw unavailable();
++                    hopDeadline = Math.min(lifetimeDeadline, Math.min(System.nanoTime() + TimeUnit.SECONDS.toNanos(2),
++                            System.nanoTime() + current().remainingNanos()));
++                    transportClean = false;
++                }
++                live();
++                build();
++                live();
++                String ticket = child.ticket().value();
++                ascii(ticket, 16384);
++                request = new HttpGet("https://" + tls.hostname + ":" + tls.port + "/admin/runs/" + saved.run()
++                        + "/events?Last-Event-ID=" + Long.toString(saved.cursor()));
++                request.setVersion(HttpVersion.HTTP_1_1);
++                request.setHeader("Authorization", "Bearer " + ticket);
++                request.setHeader("Accept", "application/vnd.agent-platform.portal-events.v1");
++                request.setHeader("Accept-Encoding", "identity");
++                request.setHeader("Connection", "close");
++                context = HttpClientContext.create();
++                client.execute(request, context, response -> {
++                    try {
++                        live();
++                        checkResponse(response, true);
++                        var entity = response.getEntity();
++                        if (entity == null) throw unavailable();
++                        enterBody();
++                        if (response.getCode() != 200) {
++                            byte[] body = new byte[8193];
++                            int count = 0;
++                            var in = entity.getContent();
++                            for (;;) {
++                                live();
++                                int n = in.read(body, count, body.length - count);
++                                live();
++                                if (n < 0) break;
++                                if (n == 0 || (count += n) > 8192) throw unavailable();
++                            }
++                            live();
++                            String code = RunObservationMetadataClient.parsePrivateEventsErrorCode(Arrays.copyOf(body, count));
++                            live();
++                            int status = response.getCode();
++                            if (!(status == 400 && code.equals("EVENT_CURSOR") || status == 404 && code.equals("RUN_NOT_FOUND")
++                                    || status == 429 && code.equals("STREAM_CAPACITY") || status == 413 && Set.of("EVENT_LIMIT", "BUFFER_LIMIT").contains(code)
++                                    || status == 403 && Set.of("AUTHORITY_EXPIRED", "AUTHORITY_CONTEXT_MISSING", "RUN_AUTHORITY_DENIED", "MATERIAL_SCOPE_MISSING_OR_CHANGED", "SYS-AUTH-403", "AUTHORITY_DENIED").contains(code))) throw unavailable();
++                            throw new PlatformException(status, code, "Private events request rejected");
++                        }
++                        privateInput = new FilterInputStream(entity.getContent()) {
++                            @Override public int read() throws IOException { live(); int n = in.read(); live(); return n; }
++                            @Override public int read(byte[] b, int off, int len) throws IOException { live(); int n = in.read(b, off, len); live(); return n; }
++                            @Override public void close() { stopTransport(); }
++                        };
++                        decoder = new PortalEventsPacketDecoder(owner);
++                        for (;;) {
++                            live();
++                            var next = decoder.readNext(privateInput);
++                            if (next.isEmpty()) { live(); break; }
++                            try (var packet = next.orElseThrow()) {
++                                live();
++                                consumer.accept(packet);
++                                live();
++                            }
++                        }
++                        return null;
++                    } finally { stopTransport(); }
++                });
++            } catch (PlatformException failure) {
++                abort(); throw failure;
++            } catch (Exception failure) {
++                abort(); throw unavailable();
++            } finally {
++                originalPortalSource = null;
++                stopTransport();
++                try { finishTransport(Duration.ofSeconds(2)); }
++                finally {
++                    boolean requestedClose;
++                    synchronized (this) { active = false; operationThread = null; requestedClose = closing; notifyAll(); }
++                    // A cancelled transfer must close a late G even when its caller already exhausted the close wait.
++                    if (requestedClose) awaitClosed(Duration.ofSeconds(2));
++                }
++            }
++        }
++        private void liveOpening() {
++            synchronized (this) { if (stopped || closing || closed || System.nanoTime() - openingDeadline >= 0) throw unavailable(); }
++            if (opening.queryAuthorization() != query) throw unavailable();
++            opening.publicRunId(); query.requireVerified();
++        }
++        private GatewayPortalEventsResponse.Capture current() {
++            synchronized (this) { if (stopped || closing || closed || System.nanoTime() - lifetimeDeadline >= 0 || gatewayResponse == null) throw unavailable(); }
++            var capture = gatewayResponse.currentCapture();
++            if (!saved.subject().equals(capture.subject()) || !saved.snapshot().equals(capture.resource())
++                    || saved.cursor() != capture.initialCursor()) throw unavailable();
++            gatewayResponse.requireLive(capture);
++            if (gatewayResponse.isSuperseded(capture)) throw unavailable();
++            return capture;
++        }
++        private void livePrivate(boolean head) {
++            current();
++            if (head) {
++                if (hopDeadline != 0 && System.nanoTime() - hopDeadline >= 0 || child == null) throw unavailable();
++                child.requireVerified();
++            }
++        }
++        private void enterBody() {
++            livePrivate(true);
++            synchronized (this) {
++                if (stopped || closing || closed || bodyPhase) throw unavailable();
++                bodyPhase = true;
++                arm(lifetimeDeadline);
++            }
++            live();
++        }
++        private void arm(long deadline) {
++            long epoch = ++alarmEpoch;
++            if (alarm != null) alarm.cancel(false);
++            alarm = timer.schedule(() -> {
++                synchronized (Session.this) {
++                    if (epoch != alarmEpoch || stopped || closed) return;
++                    stopped = true;
++                }
++                stopTransport();
++            }, Math.max(0, deadline - System.nanoTime()), TimeUnit.NANOSECONDS);
++        }
+         private void liveAfterHttp() {
+             if (System.nanoTime() - hopDeadline >= 0) throw unavailable();
+             // Successful Q close deliberately stops only the physical hop, not its retained Opening.
+             if (opening.queryAuthorization() != query) throw unavailable();
+             opening.publicRunId();
+             query.requireVerified();
+         }
+         private void build() {
+             // One timer task for one absolute hop; no per-read scheduling or application worker queue.
+             timer = new ScheduledThreadPoolExecutor(1, Thread.ofPlatform().daemon().inheritInheritableThreadLocals(false).name("portal-events-http-deadline").factory());
+             timer.setRemoveOnCancelPolicy(true);
+             timer.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
+             timer.setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
+-            alarm = timer.schedule(this::abort, Math.max(0, hopDeadline - System.nanoTime()), TimeUnit.NANOSECONDS);
++            arm(hopDeadline);
+             var builder = new PoolingHttpClientConnectionManagerBuilder() {
+                 @Override protected HttpClientConnectionOperator createConnectionOperator(SchemePortResolver ignored, DnsResolver ignoredDns, TlsSocketStrategy ignoredTls) {
+                     var dns = new DnsResolver() {
+                         public InetAddress[] resolve(String h) throws UnknownHostException {
+                             if (!tls.hostname.equals(h)) throw new UnknownHostException("Fixed TLS host required");
+                             return new InetAddress[] {
+                                 tls.address
+                             };
+                         }
+                         public String resolveCanonicalHostname(String h) throws UnknownHostException {
+                             resolve(h);
+                             return tls.hostname;
+                         }
+                     };
+                     return new DefaultHttpClientConnectionOperator(proxy -> {
+                         if (proxy != null) throw new IOException("Proxy prohibited");
+                         live();
+-                        var acquired = tls.acquire(Math.min(lifetimeDeadline, hopDeadline));
++                        // E's TLS hard anchor is the original lifetime. The phase timer owns the shorter head
++                        // bound; freezing checked_until/head into this handle would kill healthy renewed G bodies.
++                        var acquired = tls.acquire(privatePhase ? lifetimeDeadline : Math.min(lifetimeDeadline, hopDeadline));
+                         if (!(acquired instanceof PortalEventsTlsConnection c) || !c.belongsTo(tls)) {
+                             acquired.abort();
+                             throw new IOException("Foreign TLS handle");
+                         }
+                         synchronized (Session.this) {
+                             if (stopped || handle != null) {
+                                 c.abort();
+                                 throw new IOException("TLS installation stopped");
+                             }
+                             handle = c;
+                         }
+                         try {
+                             var socket = c.rawSocketForConnect();
+                             synchronized (Session.this) {
+                                 if (stopped) {
+                                     c.abort();
+                                     throw new IOException("TLS installation stopped");
+                                 }
+                                 raw = socket;
+                             }
+                             return socket;
+                         } catch (RuntimeException | IOException e) {
+                             c.abort();
+                             throw e;
+                         }
+                     }, endpoint -> {
+                         if (!"https".equals(endpoint.getSchemeName()) || !tls.hostname.equals(endpoint.getHostName()) || endpoint.getPort() != tls.port) throw new IllegalArgumentException("Fixed HTTPS route required");
+                         return tls.port;
+                     }, dns, scheme -> "https".equals(scheme) ?(socket, host, port, attachment, ctx) -> {
+                         if (socket != raw || !tls.hostname.equals(host) || port != tls.port || ctx != context) throw new IOException("TLS upgrade identity rejected");
+                         live();
+                         var verified = handle.upgradeConnectedSocket();
+                         live();
+                         synchronized (Session.this) {
+                             if (stopped) {
+                                 handle.abort();
+                                 throw new IOException("TLS upgrade stopped");
+                             }
+                             ssl = verified;
+                             sslId = verified.getSession().getId();
+                         }
+                         return verified;
+                     }
+                     : null);
+                 }
+             };
+             manager = builder.setConnectionFactory(attachment -> new QuietConnection(this)).setMaxConnTotal(1).setMaxConnPerRoute(1).setDefaultSocketConfig(SocketConfig.custom().setSoTimeout(Timeout.ofMilliseconds(2000)).setSoLinger(TimeValue.NEG_ONE_MILLISECOND).build()).setDefaultConnectionConfig(ConnectionConfig.custom().setConnectTimeout(Timeout.ofMilliseconds(1000)).setSocketTimeout(Timeout.ofMilliseconds(2000)).setValidateAfterInactivity(TimeValue.NEG_ONE_MILLISECOND).build()).build();
+             client = HttpClients.custom().setConnectionManager(manager).setConnectionReuseStrategy((r, s, c) -> false).setRoutePlanner((host, ctx) -> {
+                 if (ctx != context || !"https".equals(host.getSchemeName()) || !tls.hostname.equals(host.getHostName()) || host.getPort() != tls.port || host.getAddress() != null) throw new HttpException("Fixed route required");
+                 return new HttpRoute(host, null, true);
+             }).disableAutomaticRetries().disableRedirectHandling().disableContentCompression().disableCookieManagement().disableAuthCaching().disableConnectionState().disableDefaultUserAgent().setDefaultCookieSpecRegistry(name -> null).setDefaultAuthSchemeRegistry(name -> null).setDefaultCredentialsProvider((scope, ctx) -> null).setDefaultRequestConfig(RequestConfig.custom().setAuthenticationEnabled(false).setProtocolUpgradeEnabled(false).setHardCancellationEnabled(true).setConnectionRequestTimeout(Timeout.ofMilliseconds(1)).setResponseTimeout(Timeout.ofMilliseconds(2000)).build()).setRequestExecutor(new HttpRequestExecutor() {
+                 @Override public ClassicHttpResponse execute(ClassicHttpRequest actual, HttpClientConnection conn, HttpResponseInformationCallback callback, HttpContext ctx) throws IOException, HttpException {
+                     check(actual, conn, ctx);
+                     synchronized (guards) {
+                         if (guards.containsKey(actual) || guards.size() >= 2) throw new IOException("Request identity capacity");
+                         guards.put(actual, Session.this);
+                     }
+                     try {
+                         return super.execute(actual, conn, callback, ctx);
+                     } finally {
+                         synchronized (guards) {
+                             guards.remove(actual);
+                         }
+                     }
+                 }
+             }).build();
+         }
+         private void check(ClassicHttpRequest actual, HttpClientConnection conn, HttpContext ctx) throws IOException {
+             live();
+             if (ctx != context || !(conn instanceof QuietConnection connection) || connection.session != this || connection.getSocket() != ssl || ssl == null) throw new IOException("Request connection identity rejected");
+             var session = ssl.getSession();
+             if (!session.isValid() || !PortalEventsTls.PROTOCOL.equals(session.getProtocol()) || !PortalEventsTls.CIPHER.equals(session.getCipherSuite()) || !tls.hostname.equals(session.getPeerHost()) || session.getPeerPort() != tls.port || !Arrays.equals(sslId, session.getId())) throw new IOException("TLS session identity rejected");
+-            if (!"GET".equals(actual.getMethod()) || actual.getEntity() != null || !HttpVersion.HTTP_1_1.equals(actual.getVersion()) || !actual.getRequestUri().equals("/internal/runs/" + opening.publicRunId() + "/observation-metadata")) throw new IOException("Fixed request required");
++            if (!"GET".equals(actual.getMethod()) || actual.getEntity() != null || !HttpVersion.HTTP_1_1.equals(actual.getVersion()) || !actual.getRequestUri().equals(privatePhase ? "/admin/runs/" + saved.run() + "/events?Last-Event-ID=" + Long.toString(saved.cursor()) : "/internal/runs/" + opening.publicRunId() + "/observation-metadata")) throw new IOException("Fixed request required");
+             var headers = actual.getHeaders();
+             if (headers.length > 16) throw new IOException("Request header count");
+             var names = new HashSet<String>();
+             for (var h : headers) {
+                 String name = h.getName().toLowerCase(Locale.ROOT);
+                 if (!names.add(name)) throw new IOException("Duplicate request header");
+                 String expected = switch (name) {
+-                    case "authorization" -> "Bearer " + query.ticket().value();
+-                    case "accept" -> "application/json";
++                    case "authorization" -> "Bearer " + (privatePhase ? child.ticket().value() : query.ticket().value());
++                    case "accept" -> privatePhase ? "application/vnd.agent-platform.portal-events.v1" : "application/json";
+                     case "accept-encoding" -> "identity";
+                     case "host" -> tls.hostname + ":" + tls.port;
+                     case "connection" -> "close";
+                     default -> throw new IOException("Unexpected request header");
+                 };
+                 if (!expected.equals(h.getValue())) throw new IOException("Fixed request header required");
+             }
+             if (!names.equals(Set.of("authorization", "accept", "accept-encoding", "host", "connection"))) throw new IOException("Missing request header");
+             requestOctets(actual);
+             live();
+         }
+         private void writerCheck(ClassicHttpRequest actual, QuietConnection conn) throws IOException {
+             synchronized (guards) {
+                 if (guards.get(actual) != this) throw new IOException("Missing original request identity");
+             }
+             check(actual, conn, context);
+             identityMatched = true;
+         }
+         private void stopTransport() {
+             PortalEventsTlsConnection c;
+             HttpGet r;
+             synchronized (this) {
+                 c = handle;
+                 r = request;
+             }
+             if (c != null) c.abort();
+             if (r != null) r.cancel();
+         }
+         public void abort() {
+             synchronized (this) {
+                 stopped = true;
+             }
+             stopTransport();
+         }
+         private boolean finishTransport(Duration timeout) {
+             long deadline = System.nanoTime() + timeout.toNanos();
+             PortalEventsTlsConnection closingHandle;
+             HttpGet closingRequest;
+             ScheduledFuture<?> closingAlarm;
+             ScheduledThreadPoolExecutor closingTimer;
+             CloseableHttpClient closingClient;
+             PoolingHttpClientConnectionManager closingManager;
+             synchronized (this) {
+                 while (cleanupActive) {
+                     long left = deadline - System.nanoTime();
+                     if (left <= 0) return false;
+                     try {
+                         TimeUnit.NANOSECONDS.timedWait(this, left);
+                     } catch (InterruptedException e) {
+                         Thread.currentThread().interrupt();
+                         return false;
+                     }
+                 }
+                 if (active && operationThread != Thread.currentThread() || transportClean) return transportClean;
+                 // Election and snapshots share one lock. Failed cleanup retains the original references for retry.
+                 cleanupActive = true;
+                 closingHandle = handle;
+                 closingRequest = request;
+                 closingAlarm = alarm;
+                 closingTimer = timer;
+                 closingClient = client;
+                 closingManager = manager;
+             }
+             try {
+                 if (closingHandle != null) closingHandle.abort();
+                 if (closingRequest != null) closingRequest.cancel();
+                 if (closingAlarm != null) closingAlarm.cancel(false);
+                 if (closingTimer != null) closingTimer.shutdown();
+                 // Physical waits and library close must leave both Session and identity locks available to abort.
+                 if (closingHandle != null && !closingHandle.awaitClosed(Duration.ofNanos(Math.max(0, deadline - System.nanoTime())))) return false;
+                 if (closingTimer != null && !closingTimer.awaitTermination(Math.max(0, deadline - System.nanoTime()), TimeUnit.NANOSECONDS)) return false;
+                 if (closingClient != null) closingClient.close(CloseMode.IMMEDIATE);
+                 else if (closingManager != null) closingManager.close(CloseMode.IMMEDIATE);
+                 synchronized (this) {
+                     client = null;
+                     manager = null;
+                     connection = null;
+                     request = null;
+                     context = null;
+                     ssl = null;
+                     sslId = null;
+                     raw = null;
+                     handle = null;
+                     alarm = null;
+                     timer = null;
+                     beforeOutputForTest = null;
+                     synchronized (guards) {
+                         guards.clear();
+                     }
+                     transportClean = true;
+                     return true;
+                 }
+             } catch (InterruptedException e) {
+                 Thread.currentThread().interrupt();
+                 return false;
+             } catch (RuntimeException e) {
+                 return false;
+             } finally {
+                 synchronized (this) {
+                     cleanupActive = false;
+                     notifyAll();
+                 }
+             }
+         }
+         public boolean awaitClosed(Duration timeout) {
+             if (timeout.isNegative()) throw new IllegalArgumentException("Negative close wait");
+             long deadline = System.nanoTime() + timeout.toNanos();
+             synchronized (this) {
+                 if (closed) return true;
+                 if (!closing) return false;
+                 while (active) {
+                     long left = deadline - System.nanoTime();
+                     if (left <= 0) return false;
+                     try {
+                         TimeUnit.NANOSECONDS.timedWait(this, left);
+                     } catch (InterruptedException e) {
+                         Thread.currentThread().interrupt();
+                         return false;
+                     }
+                 }
+             }
+             if (!finishTransport(Duration.ofNanos(Math.max(0, deadline - System.nanoTime())))) return false;
+             synchronized (this) {
+                 if (closed) return true;
+-                opening.close();
++                // Refuse release if a callback retained a segment or decoder work remains live.
++                try { if (decoder != null) decoder.close(); } catch (RuntimeException stillBorrowed) { return false; }
++                decoder = null;
++                privateInput = null;
++                if (gatewayResponse != null) gatewayResponse.close();
++                gatewayResponse = null;
++                child = null;
++                saved = null;
++                authority = null;
++                originalPortalSource = null;
++                if (opening != null) opening.close();
+                 opening = null;
+                 query = null;
+                 if (facts != null) facts.close();
+                 facts = null;
++                if (privateFee != null) privateFee.close();
++                privateFee = null;
+                 fee.close();
+                 fee = null;
+                 owner.close();
+                 closed = true;
+                 notifyAll();
+                 return true;
+             }
+         }
+         @Override public void close() {
+             synchronized (this) {
+                 closing = true;
+             }
+             abort();
+             awaitClosed(Duration.ofSeconds(2));
+         }
+         // Mechanical blocking only; cannot install a different ticket, socket, URL, or proof.
+         void beforeOutputForTest(Runnable hook) {
+             beforeOutputForTest = hook;
+         }
+     }
+     static int requestOctets(ClassicHttpRequest r) throws IOException {
+         int bytes = ascii(r.getMethod(), 16) + 1 + ascii(r.getRequestUri(), 512) + 1 + ascii(r.getVersion().toString(), 16) + 2;
+         for (var h : r.getHeaders()) bytes = Math.addExact(bytes, ascii(h.getName(), 32768) + 2 + ascii(h.getValue(), 32768) + 2);
+         bytes = Math.addExact(bytes, 2);
+         if (bytes > 32768) throw new IOException("Request head limit");
+         return bytes;
+     }
+     private static int ascii(String value, int limit) throws IOException {
+         if (value == null || value.length() > limit) throw new IOException("ASCII field limit");
+         for (int i = 0; i < value.length(); i++) {
+             char c = value.charAt(i);
+             if (c < 32 || c > 126) throw new IOException("ASCII field rejected");
+         }
+         return value.length();
+     }
+-    private static void checkResponse(ClassicHttpResponse response) throws IOException {
+-        if (!HttpVersion.HTTP_1_1.equals(response.getVersion()) || !Set.of(200, 403, 404).contains(response.getCode())) throw new IOException("Response status rejected");
++    private static void checkResponse(ClassicHttpResponse response) throws IOException { checkResponse(response, false); }
++    private static void checkResponse(ClassicHttpResponse response, boolean events) throws IOException {
++        if (!HttpVersion.HTTP_1_1.equals(response.getVersion()) || !(events ? Set.of(200, 400, 403, 404, 413, 429) : Set.of(200, 403, 404)).contains(response.getCode())) throw new IOException("Response status rejected");
+         var counts = new HashMap<String, Integer>();
+         String cl = null, te = null, type = null;
+         for (var h : response.getHeaders()) {
+             String name = h.getName().toLowerCase(Locale.ROOT);
+             int n = counts.merge(name, 1, Integer::sum);
+             if (Set.of("content-encoding", "set-cookie", "location", "trailer", "www-authenticate", "proxy-authenticate").contains(name)) throw new IOException("Response header rejected");
+             if (Set.of("content-length", "transfer-encoding", "content-type").contains(name) && n != 1) throw new IOException("Duplicate response framing");
+             if (name.equals("content-length")) cl = h.getValue();
+             if (name.equals("transfer-encoding")) te = h.getValue();
+             if (name.equals("content-type")) type = h.getValue();
+         }
+-        if (type == null || !type.matches("(?i)application/json(?:;[ ]*charset=UTF-8)?") || cl != null && te != null || cl == null && te == null) throw new IOException("Response framing rejected");
++        if (type == null || !(events && response.getCode() == 200 ? type.equals("application/vnd.agent-platform.portal-events.v1") : type.matches("(?i)application/json(?:;[ ]*charset=UTF-8)?")) || cl != null && te != null || cl == null && te == null) throw new IOException("Response framing rejected");
+         if (cl != null) {
+             if (!cl.matches("0|[1-9][0-9]{0,18}")) throw new IOException("Content length rejected");
+             try {
+-                if (Long.parseLong(cl) > 8192) throw new IOException("Body limit");
++                if (Long.parseLong(cl) > 8192 && !(events && response.getCode() == 200)) throw new IOException("Body limit");
+             } catch (NumberFormatException e) {
+                 throw new IOException("Content length rejected");
+             }
+         }
+         if (te != null && !te.equalsIgnoreCase("chunked")) throw new IOException("Transfer coding rejected");
+     }
+     /** Core5.3.4 standard parser/writer/holder, without DefaultManaged's header or wire hooks. */
+     private static final class QuietConnection extends DefaultBHttpClientConnection implements ManagedHttpClientConnection {
+         final Session session;
+         private boolean terminated;
+         QuietConnection(Session session) {
+             super(Http1Config.custom().setBufferSize(8192).setMaxLineLength(8192).setMaxHeaderCount(1).setMaxEmptyLineCount(2).build(), null, null, null, null, () -> {
+                 var delegate = DefaultHttpRequestWriterFactory.INSTANCE.create();
+                 return (actual, buffer, out) -> {
+                     session.writerCheck(actual, (QuietConnection) sessionConnection(session));
+                     delegate.write(actual, buffer, out);
+                 };
+             }, config -> {
+                 var delegate = new org.apache.hc.core5.http.impl.io.DefaultHttpResponseParser(Http1Config.custom().setMaxLineLength(8192).setMaxHeaderCount(64).setMaxEmptyLineCount(2).build());
+                 return (buffer, in) -> {
+                     try {
+                         var response = delegate.parse(new HeadBuffer(buffer), in);
+-                        checkResponse(response);
++                        checkResponse(response, session.privatePhase);
+                         return response;
+                     } catch (IOException | HttpException | RuntimeException e) {
+                         session.stopTransport();
+                         throw e;
+                     }
+                 };
+             });
+             this.session = session;
+         }
+         // The unique connection is set by bind before any executor/writer invocation.
+         private static ManagedHttpClientConnection sessionConnection(Session session) {
+             return session.connection;
+         }
+         @Override public void bind(Socket socket) throws IOException {
+             if (terminated) throw new IOException("Connection exited");
+             super.bind(socket);
+             session.connection = this;
+         }
+         @Override public void bind(SSLSocket ssl, Socket raw) throws IOException {
+             if (terminated) throw new IOException("Connection exited");
+             super.bind(new SocketHolder(ssl, raw) {
+                 @Override protected OutputStream getOutputStream(Socket socket) throws IOException {
+                     Runnable hook = session.beforeOutputForTest;
+                     if (hook != null) hook.run();
+                     return super.getOutputStream(socket);
+                 }
+             });
+             session.connection = this;
+         }
+         @Override public Socket getSocket() {
+             var holder = getSocketHolder();
+             return holder == null ? null : holder.getSocket();
+         }
+         @Override public void setSocketTimeout(Timeout timeout) {
+             if (!(getSocket() instanceof SSLSocket)) super.setSocketTimeout(timeout);
+             /* SafeSsl retains F2a15000ms; absolute hop timer aborts earlier. */
+         }
+         @Override public void activate() {
+             if (terminated) throw new IllegalStateException("Connection exited");
+         }
+         @Override public void passivate() {
+             session.stopTransport();
+         }
+         @Override public void close() {
+             close(CloseMode.IMMEDIATE);
+         }
+         @Override public void close(CloseMode mode) {
+             terminated = true;
+             session.stopTransport();
+             super.close(CloseMode.IMMEDIATE);
+         }
+     }
+     /** Charge only parsed lines, including rejected line, before standard parser retains them. */
+     private static final class HeadBuffer implements SessionInputBuffer {
+         final SessionInputBuffer input;
+         int total;
+         HeadBuffer(SessionInputBuffer input) {
+             this.input = input;
+         }
+         public int readLine(CharArrayBuffer line, InputStream stream) throws IOException {
+             int start = line.length();
+             int n = input.readLine(line, stream);
+             if (n >= 0) {
+                 int length = line.length() - start;
+                 total = Math.addExact(total, length + 2);
+                 if (total > 8192) throw new IOException("Response head limit");
+                 if (length > 0 && (line.charAt(start) == ' ' || line.charAt(start) == '\t')) throw new IOException("Folded response header");
+                 for (int i = start; i < line.length(); i++) {
+                     char c = line.charAt(i);
+                     if (c < 32 || c == 127) throw new IOException("Response head control");
+                 }
+             }
+             return n;
+         }
+         public int length() {
+             return input.length();
+         }
+         public int capacity() {
+             return input.capacity();
+         }
+         public int available() {
+             return input.available();
+         }
+         public int read(byte[] b, int off, int len, InputStream in) throws IOException {
+             return input.read(b, off, len, in);
+         }
+         public int read(byte[] b, InputStream in) throws IOException {
+             return input.read(b, in);
+         }
+         public int read(InputStream in) throws IOException {
+             return input.read(in);
+         }
+         public HttpTransportMetrics getMetrics() {
+             return input.getMetrics();
+         }
+     }
+     private static PlatformException unavailable() {
+         return new PlatformException(503, "RUN_METADATA_UNAVAILABLE", "运行观察元数据暂不可用");
+     }
+ }
+diff --git a/platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsHttpTest.java b/platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsHttpTest.java
+index 100d3ac..fed392d 100644
+--- a/platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsHttpTest.java
++++ b/platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsHttpTest.java
+@@ -1,860 +1,860 @@
+ package cn.agentplatform.gateway.infra;
+ import cn.agentplatform.common.*;
+ import cn.agentplatform.gateway.application.RunObservationEventsMetadataTest;
+ import cn.agentplatform.gateway.application.RunObservationEventsMetadataTest.Fixture;
+ import java.io.*;
+ import java.net.*;
+ import java.nio.charset.StandardCharsets;
+ import java.nio.file.*;
+ import java.security.*;
+ import java.time.Duration;
+ import java.lang.reflect.*;
+ import java.util.*;
+ import java.util.concurrent.*;
+ import java.util.concurrent.atomic.*;
+ import javax.net.ssl.*;
+ import org.junit.jupiter.api.Test;
+ import static org.junit.jupiter.api.Assertions.*;
+ /** Fresh fixed-profile JVMs and real issuer/TLS sockets; no business JAR or engine/PG claim. */
+ public class PortalRunEventsHttpTest {
+     static final String HOST = "engine.f2a.test", RUN = RunObservationEventsMetadataTest.RUN;
+     static Path root() {
+         Path p = Path.of(System.getProperty("user.dir")).toAbsolutePath();
+         if (!Files.exists(p.resolve("AGENTS.md"))) p = p.getParent();
+         if (!Files.exists(p.resolve("AGENTS.md"))) throw new IllegalStateException();
+         return p;
+     }
+     @Test void originalQUsesRealHttpsAndNeverLogsBearerAtHeadersOrWireDebug() throws Exception {
+         child("normal");
+     }
+     @Test void rawPeersRejectUnsafeHeadsFramingTrailersInformationalAndBodies() throws Exception {
+         child("wire");
+     }
+     @Test void finiteStrictErrorMappingsKeepInternal401Unavailable() throws Exception {
+         child("errors");
+     }
+     @Test void slowHeadAndBlockedReadHaveOneAbsoluteDeadlineAndNoDrain() throws Exception {
+         child("deadline");
+     }
+     @Test void invalidatedOpeningAtTlsAndWriterSeamsDeliversZeroRequestBytes() throws Exception {
+         child("proof");
+     }
+     @Test void twoSessionsRetainReservationUntilActualCloseAndRejectThird() throws Exception {
+         child("capacity");
+     }
+     @Test void credentialFailuresNeverDeliverAnHttpRequest() throws Exception {
+         child("credentials");
+     }
+     @Test void concurrentLookupAndCancellationCannotDeliverFactsOrReleaseEarly() throws Exception {
+         child("cancel");
+     }
+     @Test void physicalCloseGateRetainsHttpOwnerAndReleasesExactlyOnce() throws Exception {
+         child("close-gate");
+     }
+     @Test void concurrentClosersHaveOneCleanupExecutorAndRespectWaitBudgets() throws Exception {
+         child("concurrent-close");
+     }
+     @Test void cleanupInterruptionAndExceptionRetainReferencesForRetry() throws Exception {
+         child("cleanup-retry");
+     }
+     @Test void realHttpsBody8192AndChunked8193RespectReadAndCloseBounds() throws Exception {
+         child("body-bounds");
+     }
+     @Test void requestWireBoundsAndIdentityMissAreCheckedBeforeWriter() throws Exception {
+         child("mechanics");
+     }
+     static void child(String group) throws Exception {
+-        Path run = Files.createDirectories(root().resolve(".local/iam-o2b-f2b1-fixes/peers/" + group + "-" + UUID.randomUUID()));
++        Path run = Files.createDirectories(root().resolve(System.getProperty("iam.portal.http.ownedRoot", ".local/iam-o2b-f2b2-private-http") + "/peers/original-q-" + group + "-" + UUID.randomUUID()));
+         var words = new ArrayList<>(List.of("-Djdk.net.unixdomain.tmpdir=V:/.local/tmp", "-Djdk.tls.maxHandshakeMessageSize=32768", "-Djdk.tls.maxCertificateChainLength=4", "-Dcom.sun.security.enableAIAcaIssuers=false", "-Djdk.tls.server.newSessionTicketCount=0", "-Djdk.tls.server.enableStatusRequestExtension=false", "-cp", System.getProperty("surefire.test.class.path", System.getProperty("java.class.path")), PortalRunEventsHttpTest.class.getName(), group, run.toString()));
+         Files.writeString(run.resolve("client.args"), String.join("\n", words.stream().map(s -> "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"") + "\"").toList()));
+         var command = new ArrayList<String>();
+         command.add(Path.of(System.getProperty("java.home"), "bin/java.exe").toString());
+         command.addAll(words);
+         Process p = new ProcessBuilder(command).directory(root().toFile()).redirectErrorStream(true).start();
+         Thread collector = null;
+         var failure = new AtomicReference<Throwable>();
+         try {
+             Files.writeString(run.resolve("launch.properties"), "pid=" + p.pid() + "\ncwd=" + root() + "\nargs=client.args\n");
+             var out = Files.newOutputStream(run.resolve("client.out"));
+             collector = Thread.ofPlatform().daemon().start(() -> {
+                 try (out; var in = p.getInputStream()) {
+                     byte[] b = new byte[4096];
+                     int n, total = 0;
+                     while ((n = in.read(b)) != - 1) {
+                         total += n;
+                         if (total > 131072) throw new IOException("bounded child output");
+                         out.write(b, 0, n);
+                     }
+                 } catch (Throwable t) {
+                     failure.set(t);
+                     p.destroyForcibly();
+                 }
+             });
+             assertTrue(p.waitFor(group.equals("wire") ? 55 : 30, TimeUnit.SECONDS), "owned child deadline");
+             collector.join(3000);
+             assertFalse(collector.isAlive());
+             assertNull(failure.get());
+             String text = Files.readString(run.resolve("client.out"));
+             assertEquals(0, p.exitValue(), text);
+         } finally {
+             if (p.isAlive()) p.destroyForcibly();
+             assertTrue(p.waitFor(3, TimeUnit.SECONDS));
+             if (collector != null) {
+                 collector.join(3000);
+                 assertFalse(collector.isAlive());
+             }
+             Files.writeString(run.resolve("exit.properties"), "pid=" + p.pid() + "\nexit=" + p.exitValue() + "\nalive=" + p.isAlive() + "\ncollectorAlive=" + (collector != null && collector.isAlive()) + "\n");
+         }
+     }
+     static Object call(Object receiver, String name, Class<?>[] types, Object ... args) {
+         try {
+             return receiver.getClass().getMethod(name, types).invoke(receiver, args);
+         } catch (InvocationTargetException e) {
+             if (e.getCause() instanceof RuntimeException r) throw r;
+             throw new AssertionError(e.getCause());
+         } catch (ReflectiveOperationException e) {
+             throw new AssertionError("Original-Q HTTPS behavior is required", e);
+         }
+     }
+     static Object transport(PortalEventsTls tls) {
+         try {
+             return Class.forName("cn.agentplatform.gateway.infra.PortalRunEventsHttp").getConstructor(PortalEventsTls.class).newInstance(tls);
+         } catch (ReflectiveOperationException e) {
+             throw new AssertionError("Original-Q HTTPS behavior is required", e);
+         }
+     }
+     static Object begin(Object t, Fixture f) {
+         return call(t, "begin", new Class<?>[] {
+             cn.agentplatform.common.authority.CurrentAuthorityClient.class, String.class, String.class, long.class
+         }, f.gateway, f.source, RUN, 7L);
+     }
+     static Object lookup(Object s) {
+         return call(s, "lookupMetadata", new Class<?>[0]);
+     }
+     static void close(Object s) {
+         call(s, "close", new Class<?>[0]);
+         assertEquals(true, call(s, "awaitClosed", new Class<?>[] {
+             Duration.class
+         }, Duration.ofSeconds(3)));
+     }
+     static PlatformException denied(Object s) {
+         return assertThrows(PlatformException.class, () -> lookup(s));
+     }
+     static byte[] utf(String s) {
+         return s.getBytes(StandardCharsets.UTF_8);
+     }
+     static byte[] fixed(int status, String body) {
+         return utf("HTTP/1.1 " + status + " Finite\r\nContent-Type: application/json\r\nContent-Length: " + utf(body).length + "\r\n\r\n" + body);
+     }
+     static byte[] normal() {
+         return fixed(200, RunObservationEventsMetadataTest.valid());
+     }
+     static Path ca(Path run, String alias) throws Exception {
+         var cert = fixtures().getCertificate(alias);
+         Path p = run.resolve("ca-" + alias + ".pem");
+         if (!Files.exists(p)) Files.writeString(p, "-----BEGIN CERTIFICATE-----\n" + Base64.getMimeEncoder(64, new byte[] {
+             10
+         }).encodeToString(cert.getEncoded()) + "\n-----END CERTIFICATE-----\n");
+         return p;
+     }
+     static KeyStore fixtures() throws Exception {
+         var k = KeyStore.getInstance("PKCS12");
+         try (var in = PortalRunEventsHttpTest.class.getResourceAsStream("/iam-o2b-f2a/tls-fixtures.p12")) {
+             k.load(in, "f2a-test-only".toCharArray());
+         }
+         return k;
+     }
+     static PortalEventsTls tls(Peer peer, Path run, String ca) throws Exception {
+         return new PortalEventsTls(URI.create("https://" + HOST + ":" + peer.listener.getLocalPort()), new byte[] {
+             127, 0, 0, 1
+         }, ca(run, ca));
+     }
+     static final class Peer implements AutoCloseable {
+         final SSLServerSocket listener;
+         final Thread worker;
+         final AtomicInteger connects = new AtomicInteger(), bytes = new AtomicInteger();
+         final CountDownLatch connected = new CountDownLatch(1), requestDone = new CountDownLatch(1), release = new CountDownLatch(1), beforeHandshake = new CountDownLatch(1), clientClosed = new CountDownLatch(1);
+         volatile SSLSocket socket;
+         volatile String request = "";
+         volatile Throwable failure;
+         volatile Runnable beforeBodyEnd;
+         volatile boolean closeObserved;
+         Peer(byte[] response, String mode) throws Exception {
+             var c = SSLContext.getInstance("TLSv1.3", "SunJSSE");
+             var km = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+             km.init(fixtures(), "f2a-test-only".toCharArray());
+             var original = Arrays.stream(km.getKeyManagers()).filter(X509ExtendedKeyManager.class::isInstance).map(X509ExtendedKeyManager.class::cast).findFirst().orElseThrow();
+             c.init(new KeyManager[] {
+                 new PortalEventsTlsTest.FixedKey(original, mode.equals("san") ? "wrong-san" : "normal", new Properties())
+             }, null, null);
+             listener = (SSLServerSocket) c.getServerSocketFactory().createServerSocket(0, 2, InetAddress.getByAddress(new byte[] {
+                 127, 0, 0, 1
+             }));
+             listener.setEnabledProtocols(new String[] {
+                 "TLSv1.3"
+             });
+             listener.setEnabledCipherSuites(new String[] {
+                 PortalEventsTls.CIPHER
+             });
+             listener.setSoTimeout(3000);
+             worker = Thread.ofPlatform().daemon().start(() -> {
+                 try {
+                     try (var s = (SSLSocket) listener.accept()) {
+                         socket = s;
+                         connects.incrementAndGet();
+                         connected.countDown();
+                         s.setSoTimeout(4000);
+                         beforeHandshake.countDown();
+                         if (mode.equals("handshake")) assertTrue(release.await(4, TimeUnit.SECONDS));
+                         s.startHandshake();
+                         var b = new ByteArrayOutputStream();
+                         int last = 0, x;
+                         while ((x = s.getInputStream().read()) != - 1) {
+                             bytes.incrementAndGet();
+                             b.write(x);
+                             last = (last << 8) | x;
+                             if (last == 0x0d0a0d0a || b.size() > 32768) break;
+                         }
+                         request = b.toString(StandardCharsets.US_ASCII);
+                         requestDone.countDown();
+                         if (response != null) {
+                             if (mode.equals("slow")) {
+                                 for (byte v : response) {
+                                     s.getOutputStream().write(v);
+                                     s.getOutputStream().flush();
+                                     Thread.sleep(120);
+                                 }
+                             } else {
+                                 if (beforeBodyEnd != null) {
+                                     s.getOutputStream().write(response, 0, response.length - 1);
+                                     s.getOutputStream().flush();
+                                     beforeBodyEnd.run();
+                                     s.getOutputStream().write(response[response.length - 1]);
+                                 } else s.getOutputStream().write(response);
+                                 s.getOutputStream().flush();
+                             }
+                         }
+                         if (mode.equals("hold") || mode.equals("read")) release.await(4, TimeUnit.SECONDS);
+                         if (mode.equals("observe-close")) {
+                             // The overflow vector deliberately withholds the next chunk's payload and terminator.
+                             // EOF/reset here is peer-observed client close; no test-side close releases the read.
+                             try {
+                                 assertEquals(- 1, s.getInputStream().read());
+                                 closeObserved = true;
+                             } catch (SocketException closed) {
+                                 closeObserved = true;
+                             } finally {
+                                 clientClosed.countDown();
+                             }
+                         }
+                     } catch (IOException expected) {
+                     }
+                     listener.setSoTimeout(150);
+                     try (var extra = listener.accept()) {
+                         connects.incrementAndGet();
+                     } catch (SocketTimeoutException expected) {
+                     }
+                 } catch (Throwable e) {
+                     failure = e;
+                 } finally {
+                     requestDone.countDown();
+                 }
+             });
+         }
+         public void close() throws Exception {
+             release.countDown();
+             listener.close();
+             if (socket != null) socket.close();
+             worker.join(5000);
+             assertFalse(worker.isAlive());
+             if (failure != null && !(failure instanceof SocketException)) throw new AssertionError(failure);
+         }
+     }
+     static void normal(Path run) throws Exception {
+         var logs = new StringBuilder();
+         var context = (ch.qos.logback.classic.LoggerContext) org.slf4j.LoggerFactory.getILoggerFactory();
+         var appender = new ch.qos.logback.core.AppenderBase<ch.qos.logback.classic.spi.ILoggingEvent>() {
+             protected void append(ch.qos.logback.classic.spi.ILoggingEvent e) {
+                 String s = e.getFormattedMessage();
+                 if (logs.length() + s.length() > 32768) throw new AssertionError("bounded headers/wire logs");
+                 logs.append(s);
+             }
+         };
+         appender.setContext(context);
+         appender.start();
+         for (String n : List.of("org.apache.hc.client5.http.headers", "org.apache.hc.client5.http.wire")) {
+             var l = context.getLogger(n);
+             l.setLevel(ch.qos.logback.classic.Level.DEBUG);
+             l.setAdditive(false);
+             l.addAppender(appender);
+         }
+         try (var f = new Fixture(); var p = new Peer(normal(), "normal"); var tls = tls(p, run, "root")) {
+             System.setProperty("https.proxyHost", "127.0.0.1");
+             System.setProperty("https.proxyPort", "1");
+             System.setProperty("socksProxyHost", "127.0.0.1");
+             System.setProperty("socksProxyPort", "1");
+             Object s = begin(transport(tls), f);
+             try {
+                 Object result = lookup(s);
+                 assertNotNull(result);
+                 assertEquals("EventsMetadata[validated-facts]", result.toString());
+                 assertEquals(1, f.iam.grantCount());
+                 assertTrue(p.requestDone.await(2, TimeUnit.SECONDS));
+                 assertTrue(p.request.startsWith("GET /internal/runs/" + RUN + "/observation-metadata HTTP/1.1\r\n"));
+                 String q = ((cn.agentplatform.common.authority.HttpCurrentAuthorityClient.GatewayEventsOpening) field(s, "opening")).queryAuthorization().ticket().value();
+                 assertTrue(p.request.contains("Authorization: Bearer " + q + "\r\n"));
+                 assertEquals(1, p.request.split("Authorization:", - 1).length - 1);
+                 assertFalse(logs.toString().contains(q));
+                 assertFalse(logs.toString().contains(f.source));
+                 assertTrue(p.request.contains("Host: " + HOST + ":" + p.listener.getLocalPort()));
+                 assertTrue(p.request.contains("Accept: application/json\r\n"));
+                 assertTrue(p.request.contains("Accept-Encoding: identity\r\n"));
+                 assertFalse(p.request.contains("Cookie:"));
+                 assertFalse(p.request.contains(f.source));
+                 assertEquals(true, field(s, "identityMatched"));
+                 assertEquals(1, p.connects.get());
+                 assertThrows(RuntimeException.class, () -> lookup(s));
+             } finally {
+                 close(s);
+             }
+             assertEquals(0, PortalEventsPacketBudget.SHARED.owners());
+             assertEquals(0, PortalEventsPacketBudget.SHARED.reservedBytes());
+         }
+         appender.stop();
+         Files.writeString(run.resolve("summary.properties"), "normal=true\nheadersWireDebug=true\ncredentialLogAbsent=true\n");
+     }
+     static Object field(Object s, String name) throws Exception {
+         var f = s.getClass().getDeclaredField(name);
+         f.setAccessible(true);
+         return f.get(s);
+     }
+     static void wire(Path run) throws Exception {
+         var vectors = new ArrayList<byte[]>();
+         String body = RunObservationEventsMetadataTest.valid();
+         String good = new String(normal(), StandardCharsets.UTF_8);
+         for (String h : List.of("Content-Encoding: identity", "Content-Encoding: gzip", "Set-Cookie: x=y", "Location: https://other.invalid/", "Trailer: X", "Content-Type: application/json", "Content-Length: 0", "Transfer-Encoding: chunked", "Content-Length: 00", "Content-Length: -1", "Content-Length: 9223372036854775808", "X-Fold: a\r\n b", "X-Ctrl: \u0001")) vectors.add(utf(good.replace("\r\n\r\n", "\r\n" + h + "\r\n\r\n")));
+         for (int code : List.of(100, 101, 103)) vectors.add(utf("HTTP/1.1 " + code + " Info\r\n\r\n" + good));
+         vectors.add(utf(good.replace("HTTP/1.1", "HTTP/1.0")));
+         vectors.add(utf(good.replace("Content-Length: " + utf(body).length + "\r\n", "")));
+         int end = good.indexOf("\r\n\r\n") + 4;
+         String padHeader = "X-Pad: ";
+         String headExact = good.substring(0, end - 2) + padHeader + "x".repeat(8192 - end - padHeader.length() - 2) + "\r\n\r\n" + body;
+         vectors.add(utf(headExact.replace("X-Pad: ", "X-Pad: xx")));
+         vectors.add(utf(good.substring(0, good.length() - 1)));
+         vectors.add(fixed(200, body + " ".repeat(8193 - utf(body).length)));
+         vectors.add(utf("\r\n".repeat(4) + good));
+         vectors.add(utf(good.replace("\r\n\r\n", "\r\nX-Large: " + "x".repeat(8192) + "\r\n\r\n")));
+         vectors.add(utf(good.replace("\r\n\r\n", "\r\n" + "X-A: a\r\n".repeat(62) + "\r\n")));
+         String chunkHead = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nTransfer-Encoding: chunked\r\n\r\n";
+         vectors.add(utf(chunkHead + Integer.toHexString(utf(body).length) + "\r\n" + body + "\r\n0\r\nX-Trailer: x\r\n\r\n"));
+         vectors.add(utf(chunkHead + "1;" + "x".repeat(8192) + "\r\nx\r\n0\r\n\r\n"));
+         try (var f = new Fixture()) {
+             for (byte[] v : vectors) try (var p = new Peer(v, "normal"); var tls = tls(p, run, "root")) {
+                 Object s = begin(transport(tls), f);
+                 try {
+                     assertEquals(503, denied(s).status());
+                 } finally {
+                     close(s);
+                 }
+                 assertEquals(1, p.connects.get());
+             }
+             for (byte[] v : List.of(normal(), utf(headExact), utf(good.replace("\r\n\r\n", "\r\n" + "X-A: a\r\n".repeat(61) + "\r\n")), utf(chunkHead + Integer.toHexString(utf(body).length) + "\r\n" + body + "\r\n0\r\n\r\n"))) try (var p = new Peer(v, "normal"); var tls = tls(p, run, "root")) {
+                 Object s = begin(transport(tls), f);
+                 try {
+                     assertNotNull(lookup(s));
+                 } finally {
+                     close(s);
+                 }
+             }
+         }
+         Files.writeString(run.resolve("summary.properties"), "rejectedVectors=" + vectors.size() + "\npositiveVectors=4\n");
+     }
+     static void errors(Path run) throws Exception {
+         try (var f = new Fixture()) {
+             for (String code : List.of("RUN_NOT_FOUND", "AUTHORITY_EXPIRED", "AUTHORITY_CONTEXT_MISSING", "RUN_AUTHORITY_DENIED", "MATERIAL_SCOPE_MISSING_OR_CHANGED", "SYS-AUTH-403", "AUTHORITY_DENIED", "UNKNOWN")) {
+                 int status = code.equals("RUN_NOT_FOUND") ? 404 : 403;
+                 try (var p = new Peer(fixed(status, Json.write(new ApiResponse<>(code, "private upstream", null, null))), "normal"); var tls = tls(p, run, "root")) {
+                     Object s = begin(transport(tls), f);
+                     try {
+                         var e = denied(s);
+                         assertEquals(code.equals("UNKNOWN") ? 503 : status, e.status());
+                         assertFalse(e.getMessage().contains("private upstream"));
+                     } finally {
+                         close(s);
+                     }
+                 }
+             }
+             for (int status : List.of(401, 302, 500)) try (var p = new Peer(fixed(status, Json.write(new ApiResponse<>("RUN_NOT_FOUND", "x", null, null))), "normal"); var tls = tls(p, run, "root")) {
+                 Object s = begin(transport(tls), f);
+                 try {
+                     assertEquals(503, denied(s).status());
+                 } finally {
+                     close(s);
+                 }
+             }
+         }
+     }
+     static void deadline(Path run) throws Exception {
+         try (var f = new Fixture()) {
+             for (String mode : List.of("slow", "hold", "read")) try (var p = new Peer(mode.equals("slow") ? normal() : utf("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: " + (mode.equals("read") ? 32 : 8193) + "\r\n\r\n"), mode); var tls = tls(p, run, "root")) {
+                 Object s = begin(transport(tls), f);
+                 long start = System.nanoTime();
+                 try {
+                     assertEquals(503, denied(s).status());
+                     assertTrue(System.nanoTime() - start < TimeUnit.MILLISECONDS.toNanos(mode.equals("hold") ? 1500 : 3200));
+                 } finally {
+                     close(s);
+                 }
+             }
+         }
+     }
+     static void proof(Path run) throws Exception {
+         try (var f = new Fixture(); var p = new Peer(normal(), "handshake"); var tls = tls(p, run, "root"); var worker = Executors.newSingleThreadExecutor()) {
+             Object s = begin(transport(tls), f);
+             try {
+                 var future = worker.submit(() -> lookup(s));
+                 assertTrue(p.beforeHandshake.await(2, TimeUnit.SECONDS));
+                 f.iam.advanceClock(Duration.ofSeconds(6));
+                 p.release.countDown();
+                 assertThrows(ExecutionException.class, () -> future.get(3, TimeUnit.SECONDS));
+                 assertTrue(p.requestDone.await(2, TimeUnit.SECONDS));
+                 assertEquals(0, p.bytes.get());
+             } finally {
+                 p.release.countDown();
+                 close(s);
+             }
+         }
+         try (var f = new Fixture(); var p = new Peer(normal(), "normal"); var tls = tls(p, run, "root"); var worker = Executors.newSingleThreadExecutor()) {
+             var entered = new CountDownLatch(1);
+             var release = new CountDownLatch(1);
+             var session = (PortalRunEventsHttp.Session) begin(transport(tls), f);
+             session.beforeOutputForTest(() -> {
+                 entered.countDown();
+                 try {
+                     if (!release.await(4, TimeUnit.SECONDS)) throw new IllegalStateException("bounded writer gate");
+                 } catch (InterruptedException e) {
+                     Thread.currentThread().interrupt();
+                     throw new IllegalStateException();
+                 }
+             });
+             try {
+                 var future = worker.submit(session::lookupMetadata);
+                 assertTrue(entered.await(2, TimeUnit.SECONDS));
+                 f.iam.advanceClock(Duration.ofSeconds(6));
+                 release.countDown();
+                 assertThrows(ExecutionException.class, () -> future.get(3, TimeUnit.SECONDS));
+                 assertTrue(p.requestDone.await(2, TimeUnit.SECONDS));
+                 assertEquals(0, p.bytes.get());
+             } finally {
+                 release.countDown();
+                 close(session);
+             }
+         }
+     }
+     @Test void bodyCompletionCannotReturnFactsAfterOriginalQueryExpires() throws Exception {
+         child("body-expiry");
+     }
+     static void bodyExpiry(Path run) throws Exception {
+         try (var f = new Fixture(); var p = new Peer(normal(), "normal"); var tls = tls(p, run, "root")) {
+             p.beforeBodyEnd = () -> f.iam.advanceClock(Duration.ofSeconds(6));
+             Object s = begin(transport(tls), f);
+             try {
+                 assertThrows(PlatformException.class, () -> lookup(s));
+             } finally {
+                 close(s);
+             }
+         }
+     }
+     static void credentials(Path run) throws Exception {
+         for (String mode : List.of("ca", "san")) try (var f = new Fixture(); var p = new Peer(normal(), mode); var tls = tls(p, run, mode.equals("ca") ? "other" : "root")) {
+             Object s = begin(transport(tls), f);
+             try {
+                 assertEquals(503, denied(s).status());
+                 assertTrue(p.requestDone.await(2, TimeUnit.SECONDS));
+                 assertEquals(0, p.bytes.get());
+                 assertEquals(1, p.connects.get());
+             } finally {
+                 close(s);
+             }
+         }
+         try (var f = new Fixture(); var listener = new ServerSocket(0, 1, InetAddress.getByAddress(new byte[] {
+             127, 0, 0, 1
+         })); var worker = Executors.newSingleThreadExecutor(); var tls = new PortalEventsTls(URI.create("https://" + HOST + ":" + listener.getLocalPort()), new byte[] {
+             127, 0, 0, 1
+         }, ca(run, "root"))) {
+             listener.setSoTimeout(3000);
+             var seen = new AtomicInteger();
+             var peer = worker.submit(() -> {
+                 try (var sock = listener.accept()) {
+                     seen.incrementAndGet();
+                     sock.setSoTimeout(3000);
+                     sock.getOutputStream().write(utf("HTTP/1.1 200 Finite\r\n\r\n"));
+                     byte[] first = sock.getInputStream().readNBytes(5);
+                     assertEquals(22, first[0] & 255);
+                 }
+                 return null;
+             });
+             Object s = begin(transport(tls), f);
+             try {
+                 assertEquals(503, denied(s).status());
+                 peer.get(4, TimeUnit.SECONDS);
+                 assertEquals(1, seen.get());
+             } finally {
+                 close(s);
+             }
+         }
+     }
+     static void capacity(Path run) throws Exception {
+         try (var f = new Fixture(); var p = new Peer(normal(), "normal"); var tls = tls(p, run, "root")) {
+             Object t = transport(tls), a = begin(t, f), b = null;
+             try {
+                 assertEquals(3211392L, PortalEventsPacketBudget.SHARED.reservedBytes());
+                 b = begin(t, f);
+                 assertEquals(6422784L, PortalEventsPacketBudget.SHARED.reservedBytes());
+                 assertThrows(RuntimeException.class, () -> begin(t, f));
+                 assertEquals(2, f.iam.grantCount());
+             } finally {
+                 close(a);
+                 if (b != null) close(b);
+             }
+             assertEquals(0, PortalEventsPacketBudget.SHARED.reservedBytes());
+         }
+     }
+     static void mechanics(Path run) throws Exception {
+         assertEquals("32768", System.getProperty("jdk.tls.maxHandshakeMessageSize"));
+         var head = new org.apache.hc.core5.http.message.BasicClassicHttpRequest("GET", "/internal/runs/" + RUN + "/observation-metadata");
+         head.setVersion(org.apache.hc.core5.http.HttpVersion.HTTP_1_1);
+         head.setHeader("Authorization", "Bearer " + "x".repeat(8495));
+         assertTrue(PortalRunEventsHttp.requestOctets(head) < 32768);
+         head.setHeader("X-Padding", "");
+         int base = PortalRunEventsHttp.requestOctets(head);
+         head.setHeader("X-Padding", "x".repeat(32768 - base));
+         assertEquals(32768, PortalRunEventsHttp.requestOctets(head));
+         head.setHeader("X-Padding", "x".repeat(32769 - base));
+         assertThrows(IOException.class, () -> PortalRunEventsHttp.requestOctets(head));
+         try (var f = new Fixture(); var p = new Peer(normal(), "normal"); var tls = tls(p, run, "root")) {
+             Object s = begin(transport(tls), f);
+             try {
+                 Class<?> connection = Class.forName("cn.agentplatform.gateway.infra.PortalRunEventsHttp$QuietConnection");
+                 var constructor = connection.getDeclaredConstructors()[0];
+                 constructor.setAccessible(true);
+                 Object c = constructor.newInstance(s);
+                 var writer = s.getClass().getDeclaredMethod("writerCheck", org.apache.hc.core5.http.ClassicHttpRequest.class, connection);
+                 writer.setAccessible(true);
+                 var e = assertThrows(InvocationTargetException.class, () -> writer.invoke(s, head, c));
+                 assertInstanceOf(IOException.class, e.getCause());
+                 assertEquals(0, p.bytes.get());
+             } finally {
+                 close(s);
+             }
+         }
+         Files.writeString(run.resolve("summary.properties"), "mechanical8495Fits=true\nrequest32768Exact=true\nrequest32769Rejected=true\nmissingIdentityRejected=true\n");
+     }
+     static void cancel(Path run) throws Exception {
+         try (var f = new Fixture(); var p = new Peer(normal(), "normal"); var tls = tls(p, run, "root"); var worker = Executors.newSingleThreadExecutor()) {
+             var entered = new CountDownLatch(1);
+             var release = new CountDownLatch(1);
+             var session = (PortalRunEventsHttp.Session) begin(transport(tls), f);
+             session.beforeOutputForTest(() -> {
+                 entered.countDown();
+                 try {
+                     if (!release.await(4, TimeUnit.SECONDS)) throw new IllegalStateException("cancel gate limit");
+                 } catch (InterruptedException e) {
+                     Thread.currentThread().interrupt();
+                     throw new IllegalStateException();
+                 }
+             });
+             try {
+                 var future = worker.submit(session::lookupMetadata);
+                 assertTrue(entered.await(2, TimeUnit.SECONDS));
+                 var timer = (ScheduledThreadPoolExecutor) field(session, "timer");
+                 assertThrows(PlatformException.class, session::lookupMetadata);
+                 session.abort();
+                 assertEquals(3211392L, PortalEventsPacketBudget.SHARED.reservedBytes());
+                 assertFalse(session.awaitClosed(Duration.ofMillis(10)));
+                 release.countDown();
+                 assertThrows(ExecutionException.class, () -> future.get(3, TimeUnit.SECONDS));
+                 assertTrue(timer.isTerminated());
+                 assertTrue(timer.getQueue().isEmpty());
+                 assertEquals(0, p.bytes.get());
+             } finally {
+                 release.countDown();
+                 close(session);
+             }
+             Object before = begin(transport(tls), f);
+             call(before, "abort", new Class<?>[0]);
+             try {
+                 denied(before);
+             } finally {
+                 close(before);
+             }
+             assertEquals(0, PortalEventsPacketBudget.SHARED.owners());
+         }
+     }
+     static void closeGate(Path run) throws Exception {
+         try (var f = new Fixture(); var p = new Peer(normal(), "normal"); var tls = tls(p, run, "root")) {
+             var session = (PortalRunEventsHttp.Session) begin(transport(tls), f);
+             var handle = (PortalEventsTlsConnection) tls.acquire(System.nanoTime() + TimeUnit.SECONDS.toNanos(5));
+             var entered = new CountDownLatch(1);
+             var release = new CountDownLatch(1);
+             handle.installRawForTest(new Socket() {
+                 public void close() throws IOException {
+                     entered.countDown();
+                     try {
+                         if (!release.await(6, TimeUnit.SECONDS)) throw new IOException("close gate limit");
+                     } catch (InterruptedException e) {
+                         Thread.currentThread().interrupt();
+                         throw new IOException("close gate interrupted");
+                     }
+                 }
+             });
+             var field = session.getClass().getDeclaredField("handle");
+             field.setAccessible(true);
+             field.set(session, handle);
+             try {
+                 session.close();
+                 assertTrue(entered.await(1, TimeUnit.SECONDS));
+                 assertFalse(session.awaitClosed(Duration.ofMillis(20)));
+                 assertEquals(3211392L, PortalEventsPacketBudget.SHARED.reservedBytes());
+                 Object second = begin(transport(tls), f);
+                 try {
+                     assertThrows(RuntimeException.class, () -> begin(transport(tls), f));
+                 } finally {
+                     close(second);
+                 }
+             } finally {
+                 release.countDown();
+                 assertTrue(session.awaitClosed(Duration.ofSeconds(3)));
+                 session.close();
+                 assertEquals(0, PortalEventsPacketBudget.SHARED.owners());
+                 assertEquals(0, PortalEventsPacketBudget.SHARED.reservedBytes());
+             }
+         }
+     }
+     // This gate delays a real timer worker's exit; it cannot supply TLS/Q/facts or fake termination.
+     static class TerminationGate extends ScheduledThreadPoolExecutor {
+         final CountDownLatch workerEntered = new CountDownLatch(1), release = new CountDownLatch(1), awaitEntered = new CountDownLatch(1);
+         final AtomicInteger waits = new AtomicInteger();
+         TerminationGate() {
+             super(1, Thread.ofPlatform().daemon().factory());
+             execute(() -> {
+                 workerEntered.countDown();
+                 try {
+                     if (!release.await(6, TimeUnit.SECONDS)) throw new AssertionError("termination gate limit");
+                 } catch (InterruptedException e) {
+                     Thread.currentThread().interrupt();
+                 }
+             });
+         }
+         @Override public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
+             waits.incrementAndGet();
+             awaitEntered.countDown();
+             return super.awaitTermination(timeout, unit);
+         }
+     }
+     static void concurrentClose(Path run) throws Exception {
+         try (var f = new Fixture(); var p = new Peer(normal(), "normal"); var tls = tls(p, run, "root"); var workers = Executors.newFixedThreadPool(2)) {
+             var session = (PortalRunEventsHttp.Session) begin(transport(tls), f);
+             var timer = new TerminationGate();
+             assertTrue(timer.workerEntered.await(1, TimeUnit.SECONDS));
+             var timerField = session.getClass().getDeclaredField("timer");
+             timerField.setAccessible(true);
+             timerField.set(session, timer);
+             var handle = (PortalEventsTlsConnection) tls.acquire(System.nanoTime() + TimeUnit.SECONDS.toNanos(5));
+             var socketEntered = new CountDownLatch(1);
+             var socketRelease = new CountDownLatch(1);
+             handle.installRawForTest(new Socket() {
+                 public void close() throws IOException {
+                     socketEntered.countDown();
+                     try {
+                         if (!socketRelease.await(6, TimeUnit.SECONDS)) throw new IOException("physical close gate limit");
+                     } catch (InterruptedException e) {
+                         Thread.currentThread().interrupt();
+                         throw new IOException(e);
+                     }
+                     super.close();
+                 }
+             });
+             var handleField = session.getClass().getDeclaredField("handle");
+             handleField.setAccessible(true);
+             handleField.set(session, handle);
+             Object second = begin(transport(tls), f);
+             var closer = workers.submit(session::close);
+             Future<Boolean> waiter = null;
+             try {
+                 assertTrue(socketEntered.await(1, TimeUnit.SECONDS));
+                 assertEquals(6422784L, PortalEventsPacketBudget.SHARED.reservedBytes());
+                 assertFalse(session.awaitClosed(Duration.ofMillis(20)));
+                 assertThrows(RuntimeException.class, () -> begin(transport(tls), f));
+                 socketRelease.countDown();
+                 assertTrue(timer.awaitEntered.await(1, TimeUnit.SECONDS));
+                 assertTrue(handle.awaitClosed(Duration.ZERO));
+                 long start = System.nanoTime();
+                 assertFalse(session.awaitClosed(Duration.ofMillis(40)));
+                 assertTrue(System.nanoTime() - start < TimeUnit.SECONDS.toNanos(1));
+                 assertEquals(1, timer.waits.get(), "Only the elected caller may await transport termination");
+                 assertEquals(6422784L, PortalEventsPacketBudget.SHARED.reservedBytes());
+                 assertThrows(RuntimeException.class, () -> begin(transport(tls), f));
+                 var waiting = new CountDownLatch(1);
+                 waiter = workers.submit(() -> {
+                     waiting.countDown();
+                     return session.awaitClosed(Duration.ofSeconds(3));
+                 });
+                 assertTrue(waiting.await(1, TimeUnit.SECONDS));
+                 timer.release.countDown();
+                 closer.get(3, TimeUnit.SECONDS);
+                 assertTrue(waiter.get(3, TimeUnit.SECONDS));
+                 assertTrue(timer.isTerminated());
+                 assertEquals(1, timer.waits.get());
+                 assertEquals(3211392L, PortalEventsPacketBudget.SHARED.reservedBytes());
+                 session.close();
+                 assertTrue(session.awaitClosed(Duration.ZERO));
+                 assertEquals(3211392L, PortalEventsPacketBudget.SHARED.reservedBytes());
+             } finally {
+                 socketRelease.countDown();
+                 timer.release.countDown();
+                 closer.get(3, TimeUnit.SECONDS);
+                 if (waiter != null) assertTrue(waiter.get(3, TimeUnit.SECONDS));
+                 close(session);
+                 close(second);
+             }
+             assertEquals(0, PortalEventsPacketBudget.SHARED.owners());
+             assertEquals(0, PortalEventsPacketBudget.SHARED.reservedBytes());
+         }
+         Files.writeString(run.resolve("summary.properties"), "uniqueCleanup=true\nshortWaitBounded=true\nretainedBeforeTermination=true\nreleasedOnce=true\n");
+     }
+     static void cleanupRetry(Path run) throws Exception {
+         try (var f = new Fixture(); var p = new Peer(normal(), "normal"); var tls = tls(p, run, "root")) {
+             for (boolean interrupt : List.of(true, false)) {
+                 var session = (PortalRunEventsHttp.Session) begin(transport(tls), f);
+                 var failOnce = new AtomicBoolean(!interrupt);
+                 var timer = new TerminationGate() {
+                     @Override public boolean awaitTermination(long n, TimeUnit unit) throws InterruptedException {
+                         if (failOnce.compareAndSet(true, false)) throw new IllegalStateException("mechanical termination failure");
+                         return super.awaitTermination(n, unit);
+                     }
+                 };
+                 assertTrue(timer.workerEntered.await(1, TimeUnit.SECONDS));
+                 var timerField = session.getClass().getDeclaredField("timer");
+                 timerField.setAccessible(true);
+                 timerField.set(session, timer);
+                 var failure = new AtomicReference<Throwable>();
+                 var interrupted = new AtomicBoolean();
+                 Thread closer = Thread.ofPlatform().start(() -> {
+                     try {
+                         session.close();
+                         interrupted.set(Thread.currentThread().isInterrupted());
+                     } catch (Throwable e) {
+                         failure.set(e);
+                     }
+                 });
+                 try {
+                     if (interrupt) {
+                         assertTrue(timer.awaitEntered.await(1, TimeUnit.SECONDS));
+                         closer.interrupt();
+                     }
+                     closer.join(3000);
+                     assertFalse(closer.isAlive());
+                     assertNull(failure.get());
+                     assertEquals(interrupt, interrupted.get());
+                     assertSame(timer, field(session, "timer"));
+                     assertEquals(false, field(session, "cleanupActive"));
+                     assertEquals(3211392L, PortalEventsPacketBudget.SHARED.reservedBytes());
+                     assertFalse(timer.isTerminated());
+                 } finally {
+                     timer.release.countDown();
+                     closer.join(3000);
+                     assertFalse(closer.isAlive());
+                     close(session);
+                 }
+                 assertTrue(timer.isTerminated());
+                 assertEquals(0, PortalEventsPacketBudget.SHARED.reservedBytes());
+             }
+         }
+         Files.writeString(run.resolve("summary.properties"), "interruptedCleanupRetried=true\nexceptionCleanupRetried=true\nreferencesRetainedUntilTermination=true\n");
+     }
+     static void bodyBounds(Path run) throws Exception {
+         String body = RunObservationEventsMetadataTest.valid();
+         String exact = body + " ".repeat(8192 - utf(body).length);
+         assertEquals(8192, utf(exact).length);
+         String chunkHead = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nTransfer-Encoding: chunked\r\n\r\n";
+         var vectors = List.of(fixed(200, exact), utf(chunkHead + "2000\r\n" + exact + "\r\n0\r\n\r\n"), utf(chunkHead + "2001\r\n" + exact + " \r\n1000\r\n"));
+         try (var f = new Fixture()) {
+             for (int i = 0; i < vectors.size(); i++) {
+                 try (var p = new Peer(vectors.get(i), "observe-close"); var tls = tls(p, run, "root")) {
+                     var session = (PortalRunEventsHttp.Session) begin(transport(tls), f);
+                     var opening = (cn.agentplatform.common.authority.HttpCurrentAuthorityClient.GatewayEventsOpening) field(session, "opening");
+                     var original = opening.queryAuthorization();
+                     int grants = f.iam.grantCount();
+                     var handle = new AtomicReference<PortalEventsTlsConnection>();
+                     var timer = new AtomicReference<ScheduledThreadPoolExecutor>();
+                     session.beforeOutputForTest(() -> {
+                         try {
+                             handle.set((PortalEventsTlsConnection) field(session, "handle"));
+                             timer.set((ScheduledThreadPoolExecutor) field(session, "timer"));
+                         } catch (Exception e) {
+                             throw new AssertionError(e);
+                         }
+                     });
+                     long start = System.nanoTime();
+                     try {
+                         if (i < 2) {
+                             var facts = session.lookupMetadata();
+                             assertEquals(RUN, facts.runId());
+                             assertEquals(RunObservationEventsMetadataTest.OWNER, facts.owner());
+                             assertEquals(new cn.agentplatform.common.authority.ResourceBinding("app-version", "Demo@3", RunObservationEventsMetadataTest.SHA), facts.root());
+                             assertEquals(17, facts.appVersionId());
+                             assertEquals(3, facts.appVersionNo());
+                             assertEquals(RunObservationEventsMetadataTest.SHA, facts.acceptedSnapshotSha256());
+                             assertEquals(RunObservationEventsMetadataTest.SHA, facts.initialCeilingSha256());
+                             assertSame(original, opening.queryAuthorization());
+                         } else {
+                             assertEquals(503, denied(session).status());
+                             assertNull(field(session, "facts"));
+                             assertEquals(true, field(session, "stopped"));
+                             assertTrue(System.nanoTime() - start < TimeUnit.MILLISECONDS.toNanos(1500), "overflow exits before hop deadline with tail withheld");
+                         }
+                         assertNotNull(handle.get());
+                         assertTrue(handle.get().awaitClosed(Duration.ZERO));
+                         assertTrue(timer.get().isTerminated());
+                         assertTrue(p.clientClosed.await(1, TimeUnit.SECONDS));
+                         assertTrue(p.closeObserved);
+                         assertEquals(grants, f.iam.grantCount());
+                         assertEquals(1, p.connects.get());
+                         assertEquals(1, p.request.split("Authorization:", - 1).length - 1);
+                         assertTrue(p.request.contains("Authorization: Bearer " + original.ticket().value() + "\r\n"));
+                         assertThrows(PlatformException.class, session::lookupMetadata);
+                         assertEquals(grants, f.iam.grantCount());
+                         assertEquals(3211392L, PortalEventsPacketBudget.SHARED.reservedBytes());
+                     } finally {
+                         close(session);
+                     }
+                     assertEquals(0, PortalEventsPacketBudget.SHARED.owners());
+                     assertEquals(0, PortalEventsPacketBudget.SHARED.reservedBytes());
+                 }
+             }
+         }
+         Files.writeString(run.resolve("summary.properties"), "cl8192Bytes=8192\nchunk8192Bytes=8192\nchunkOverflowBytes=8193\nchunkOverflowHasContentLength=false\nunknownTailWithheld=true\npeerObservedClose=true\nphysicalExitAndTimerTermination=true\noriginalQueryOnly=true\n");
+     }
+     public static void main(String[] args) throws Exception {
+         Path run = Path.of(args[1]);
+         switch (args[0]) {
+             case "normal" -> normal(run);
+             case "wire" -> wire(run);
+             case "errors" -> errors(run);
+             case "deadline" -> deadline(run);
+             case "proof" -> proof(run);
+             case "capacity" -> capacity(run);
+             case "mechanics" -> mechanics(run);
+             case "close-gate" -> closeGate(run);
+             case "concurrent-close" -> concurrentClose(run);
+             case "cleanup-retry" -> cleanupRetry(run);
+             case "body-bounds" -> bodyBounds(run);
+             case "credentials" -> credentials(run);
+             case "cancel" -> cancel(run);
+             case "body-expiry" -> bodyExpiry(run);
+             default -> throw new IllegalArgumentException();
+         }
+         System.out.println("F2B1_GROUP_OK=" + args[0]);
+     }
+ }
+diff --git a/platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsPrivateAuthorityTest.java b/platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsPrivateAuthorityTest.java
+new file mode 100644
+index 0000000..54b912e
+--- /dev/null
++++ b/platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsPrivateAuthorityTest.java
+@@ -0,0 +1,111 @@
++package cn.agentplatform.gateway.infra;
++import cn.agentplatform.common.*;
++import cn.agentplatform.common.authority.*;
++import cn.agentplatform.gateway.application.RunObservationEventsMetadataTest.Fixture;
++import java.io.*;
++import java.lang.reflect.*;
++import java.nio.file.*;
++import java.time.Duration;
++import java.util.concurrent.*;
++import java.util.concurrent.atomic.*;
++import org.junit.jupiter.api.Test;
++import static cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest.*;
++import static org.junit.jupiter.api.Assertions.*;
++/** Real original Opening/G/child; mechanical barriers only schedule actual lifecycle boundaries. */
++public class PortalRunEventsPrivateAuthorityTest {
++    @Test void cancelledTransferClosesItsLateGWithoutSendingChildOrHttp()throws Exception {child("late-g");}
++    @Test void consumeRequiresCompletedOriginalQAndIsSingleUse()throws Exception {child("admission");}
++    @Test void sameAuthorityMustImplementBothInterfacesAndRejectForeignHolder()throws Exception {child("authority");}
++    @Test void realChildAndGAreCheckedAtHandshakeAndActualWriter()throws Exception {child("proof");}
++    @Test void revokedGInterruptsActualReadAndDeliversNoLaterPacket()throws Exception {child("revoked-read");}
++    @Test void stuckCallbacksAndBorrowLeaksKeepTwoOwnersAndRejectThird()throws Exception {child("retention");}
++    @Test void actualPhysicalCloseMustFinishBeforeEitherOwnerIsReleased()throws Exception {child("physical-close");}
++    @Test void shortGDeadlineInterruptsTheActualInput()throws Exception {child("short-g");}
++    @FunctionalInterface interface CheckedCondition {boolean get()throws Exception;}
++    static void until(CheckedCondition condition,long ms)throws Exception {long end=System.nanoTime()+TimeUnit.MILLISECONDS.toNanos(ms);while(!condition.get()){if(System.nanoTime()-end>=0)throw new AssertionError("bounded condition deadline");Thread.sleep(5);}}
++    static CurrentAuthorityClient adapter(Fixture f,InvocationHandler handler,boolean both){return (CurrentAuthorityClient)Proxy.newProxyInstance(CurrentAuthorityClient.class.getClassLoader(),both?new Class<?>[]{CurrentAuthorityClient.class,ResponseAuthorityClient.class}:new Class<?>[]{CurrentAuthorityClient.class},handler);}
++    static Object invoke(Fixture f,Method method,Object[] args)throws Throwable {try{return method.invoke(f.gateway,args);}catch(InvocationTargetException e){throw e.getCause();}}
++    static void lateG(Path run)throws Exception {
++        try(var f=new Fixture();var p=new Peer(response(200,MIME,packets()),"normal");var tls=tls(p,run);var worker=Executors.newSingleThreadExecutor()){
++            var entered=new CountDownLatch(1);var release=new CountDownLatch(1);var actual=new AtomicReference<GatewayPortalEventsResponse>();
++            var authority=adapter(f,(proxy,m,args)->{Object result=invoke(f,m,args);if(m.getName().equals("openGatewayPortalEvents")){actual.set((GatewayPortalEventsResponse)result);entered.countDown();assertTrue(release.await(6,TimeUnit.SECONDS));}return result;},true);
++            var s=new PortalRunEventsHttp(tls).begin(authority,f.source,RUN,7);s.lookupMetadata();Future<?> future=worker.submit(()->s.consumePrivate(packet->fail("late transfer cannot deliver")));
++            try {assertTrue(entered.await(2,TimeUnit.SECONDS));s.close();assertFalse(s.awaitClosed(Duration.ZERO));assertEquals(4260096L,PortalEventsPacketBudget.SHARED.reservedBytes());release.countDown();assertThrows(ExecutionException.class,()->future.get(3,TimeUnit.SECONDS));assertEquals(0,p.eBytes.get());assertFalse(f.iam.observedOperations().contains("portal_events_child_exchange"));
++                assertThrows(PlatformException.class,()->actual.get().currentCapture());
++                Files.writeString(run.resolve("summary.properties"),"lateGClosedBeforeReturn=true\nchildExchanges=0\neRequestBytes=0\n");
++            }finally{release.countDown();closed(s);}
++        }
++    }
++
++    static void admission(Path run)throws Exception {
++        try(var f=new Fixture();var p=new Peer(response(200,MIME,packets()),"normal");var tls=tls(p,run)) {
++            var s=new PortalRunEventsHttp(tls).begin(f.gateway,f.source,RUN,7);
++            try {assertThrows(PlatformException.class,()->s.consumePrivate(packet->fail()));assertEquals(3211392L,PortalEventsPacketBudget.SHARED.reservedBytes());s.lookupMetadata();s.consumePrivate(packet->{});assertThrows(PlatformException.class,()->s.consumePrivate(packet->fail()));assertEquals(1,java.util.Collections.frequency(f.iam.observedOperations(),"portal_events_child_exchange"));}finally{closed(s);}
++        }
++        try(var f=new Fixture();var p=new Peer(response(200,MIME,packets()),"normal");var tls=tls(p,run);var worker=Executors.newSingleThreadExecutor()){
++            var entered=new CountDownLatch(1);var release=new CountDownLatch(1);var s=new PortalRunEventsHttp(tls).begin(f.gateway,f.source,RUN,7);
++            s.beforeOutputForTest(()->{entered.countDown();try{assertTrue(release.await(3,TimeUnit.SECONDS));}catch(InterruptedException e){throw new AssertionError(e);}});
++            try {var q=worker.submit(s::lookupMetadata);assertTrue(entered.await(1,TimeUnit.SECONDS));assertThrows(PlatformException.class,()->s.consumePrivate(packet->fail()));assertNull(field(s,"privateFee"));release.countDown();q.get(2,TimeUnit.SECONDS);s.consumePrivate(packet->{});}finally{release.countDown();closed(s);}
++        }
++        for(var m:PortalRunEventsHttp.Session.class.getMethods())assertNotEquals("consumePrivate",m.getName());
++        Files.writeString(run.resolve("summary.properties"),"beforeQAndQRunningDenied=true\nsingleUse=true\npublicPrivateConsumerAbsent=true\n");
++    }
++    static void authority(Path run)throws Exception {
++        try(var f=new Fixture();var p=new Peer(response(200,MIME,packets()),"normal");var tls=tls(p,run)) {
++            var onlyCurrent=adapter(f,(proxy,m,args)->invoke(f,m,args),false);var s=new PortalRunEventsHttp(tls).begin(onlyCurrent,f.source,RUN,7);
++            try{s.lookupMetadata();assertThrows(PlatformException.class,()->s.consumePrivate(packet->fail()));assertEquals(0,p.eBytes.get());assertFalse(f.iam.observedOperations().contains("portal_gateway_events_open"));assertNull(field(s,"saved"));assertNull(field(s,"originalPortalSource"));}finally{closed(s);}
++        }
++        try(var f=new Fixture();var foreign=new Fixture();var p=new Peer(response(200,MIME,packets()),"normal");var tls=tls(p,run)){
++            var otherOpening=foreign.begin();var other=foreign.gateway.openGatewayPortalEvents(otherOpening,RunObservationSelectors.events(RUN,"a".repeat(64)),()->{});
++            var mixed=adapter(f,(proxy,m,args)->m.getName().equals("openGatewayPortalEvents")?other:invoke(f,m,args),true);var s=new PortalRunEventsHttp(tls).begin(mixed,f.source,RUN,7);
++            try{s.lookupMetadata();assertThrows(PlatformException.class,()->s.consumePrivate(packet->fail()));assertEquals(0,p.eBytes.get());assertFalse(f.iam.observedOperations().contains("portal_events_child_exchange"));}finally{closed(s);otherOpening.close();other.close();}
++        }
++        Files.writeString(run.resolve("summary.properties"),"sameInstanceDualInterfaceRequired=true\nforeignHolderDeniedByRealCommonAssociation=true\neRequestBytes=0\n");
++    }
++    static void proof(Path run)throws Exception {
++        for(String seam:new String[]{"handshake","writer"})for(boolean revoke:new boolean[]{false,true}){
++            try(var f=new Fixture();var p=new Peer(response(200,MIME,packets()),seam.equals("handshake")?"handshake":"normal");var tls=tls(p,run);var worker=Executors.newSingleThreadExecutor()){
++                set(f.iam,"childTicketSeconds",2L);var s=new PortalRunEventsHttp(tls).begin(f.gateway,f.source,RUN,7);s.lookupMetadata();var entered=new CountDownLatch(1);var release=new CountDownLatch(1);
++                if(seam.equals("writer"))s.beforeOutputForTest(()->{entered.countDown();try{assertTrue(release.await(4,TimeUnit.SECONDS));}catch(InterruptedException e){throw new AssertionError(e);}});
++                var future=worker.submit(()->s.consumePrivate(packet->fail("invalid proof callback")));
++                try {assertTrue((seam.equals("writer")?entered:p.eConnected).await(2,TimeUnit.SECONDS));
++                    if(revoke){set(f.iam,"gatewayEventsRevoked",true);var g=(GatewayPortalEventsResponse)field(s,"gatewayResponse");assertThrows(PlatformException.class,()->f.gateway.checkGatewayPortalEvents(g));}else f.iam.advanceClock(Duration.ofSeconds(3));
++                    release.countDown();p.release.countDown();assertThrows(ExecutionException.class,()->future.get(3,TimeUnit.SECONDS));assertEquals(0,p.eBytes.get());
++                    Files.writeString(run.resolve(seam+"-"+(revoke?"revoked":"expired")+".properties"),"realProof=true\neRequestBytes="+p.eBytes.get()+"\n");
++                }finally{release.countDown();p.release.countDown();closed(s);}
++            }
++        }
++    }
++    static void revokedRead(Path run)throws Exception {
++        byte[] hello=PortalEventsPacketDecoderTest.hello();byte[] head=utf("HTTP/1.1 200 Finite\r\nContent-Type: "+MIME+"\r\nContent-Length: 100000\r\n\r\n");
++        try(var f=new Fixture();var p=new Peer(PortalEventsPacketDecoderTest.join(head,hello),"hold");var tls=tls(p,run);var worker=Executors.newSingleThreadExecutor()){
++            var s=new PortalRunEventsHttp(tls).begin(f.gateway,f.source,RUN,7);s.lookupMetadata();var first=new CountDownLatch(1);var count=new AtomicInteger();var future=worker.submit(()->s.consumePrivate(packet->{count.incrementAndGet();first.countDown();}));
++            try{assertTrue(first.await(2,TimeUnit.SECONDS));until(()->PortalEventsPacketBudget.SHARED.reservedBytes()>67108864L,1000);set(f.iam,"gatewayEventsRevoked",true);var g=(GatewayPortalEventsResponse)field(s,"gatewayResponse");long start=System.nanoTime();assertThrows(PlatformException.class,()->f.gateway.checkGatewayPortalEvents(g));assertThrows(ExecutionException.class,()->future.get(3,TimeUnit.SECONDS));assertEquals(1,count.get());Files.writeString(run.resolve("summary.properties"),"callbacks=1\nrevokedWhileActualRead=true\nexitMillis="+TimeUnit.NANOSECONDS.toMillis(System.nanoTime()-start)+"\n");}finally{p.release.countDown();closed(s);}
++        }
++    }
++    static void retention(Path run)throws Exception {
++        for(boolean leak:new boolean[]{false,true})try(var f=new Fixture();var a=new Peer(response(200,MIME,packets()),"normal");var b=new Peer(response(200,MIME,packets()),"normal");var ta=tls(a,run);var tb=tls(b,run);var workers=Executors.newFixedThreadPool(2)){
++            var sa=new PortalRunEventsHttp(ta).begin(f.gateway,f.source,RUN,7);sa.lookupMetadata();var entered=new CountDownLatch(2);var release=new CountDownLatch(1);var borrows=new java.util.concurrent.ConcurrentLinkedQueue<InputStream>();var calls=new AtomicInteger();
++            PortalRunEventsHttp.Session.PacketConsumer consumer=packet->{calls.incrementAndGet();if(leak)borrows.add(packet.metadata());entered.countDown();if(!leak)try{assertTrue(release.await(12,TimeUnit.SECONDS));}catch(InterruptedException e){throw new IOException("callback interrupted");}};
++            var fa=workers.submit(()->sa.consumePrivate(consumer));var sb=new PortalRunEventsHttp(tb).begin(f.gateway,f.source,RUN,7);sb.lookupMetadata();var fb=workers.submit(()->sb.consumePrivate(consumer));
++            try{assertTrue(entered.await(3,TimeUnit.SECONDS));if(leak){assertThrows(ExecutionException.class,()->fa.get(3,TimeUnit.SECONDS));assertThrows(ExecutionException.class,()->fb.get(3,TimeUnit.SECONDS));}sa.close();sb.close();assertFalse(sa.awaitClosed(Duration.ofMillis(10)));assertFalse(sb.awaitClosed(Duration.ofMillis(10)));assertEquals(2,PortalEventsPacketBudget.SHARED.owners());long held=PortalEventsPacketBudget.SHARED.reservedBytes();assertTrue(held>8520192L);int before=f.iam.authorityCalls();assertThrows(IllegalStateException.class,()->new PortalRunEventsHttp(ta).begin(f.gateway,f.source,RUN,7));assertEquals(before,f.iam.authorityCalls());assertEquals(2,calls.get());
++                release.countDown();for(var stream:borrows)stream.close();if(!leak){assertThrows(ExecutionException.class,()->fa.get(3,TimeUnit.SECONDS));assertThrows(ExecutionException.class,()->fb.get(3,TimeUnit.SECONDS));}assertTrue(sa.awaitClosed(Duration.ofSeconds(3)));assertTrue(sb.awaitClosed(Duration.ofSeconds(3)));sa.close();sb.close();assertEquals(0,PortalEventsPacketBudget.SHARED.owners());assertEquals(0,PortalEventsPacketBudget.SHARED.reservedBytes());Files.writeString(run.resolve((leak?"borrow":"callback")+".properties"),"retainedBytes="+held+"\ncallbacks=2\nthirdDenied=true\nreleasedExactlyOnce=true\n");
++            }finally{release.countDown();for(var stream:borrows)stream.close();sa.close();sb.close();assertTrue(sa.awaitClosed(Duration.ofSeconds(3)));assertTrue(sb.awaitClosed(Duration.ofSeconds(3)));}
++        }
++    }
++    static void physicalClose(Path run)throws Exception {
++        try(var f=new Fixture();var a=new Peer(response(200,MIME,packets()),"normal");var b=new Peer(response(200,MIME,packets()),"normal");var ta=tls(a,run);var tb=tls(b,run)){
++            var sa=new PortalRunEventsHttp(ta).begin(f.gateway,f.source,RUN,7);sa.lookupMetadata();sa.consumePrivate(packet->{});var sb=new PortalRunEventsHttp(tb).begin(f.gateway,f.source,RUN,7);sb.lookupMetadata();sb.consumePrivate(packet->{});
++            var entered=new CountDownLatch(2);var release=new CountDownLatch(1);int i=0;
++            for(var session:new PortalRunEventsHttp.Session[]{sa,sb}){var handle=(PortalEventsTlsConnection)(i++==0?ta:tb).acquire(System.nanoTime()+TimeUnit.SECONDS.toNanos(15));handle.installRawForTest(new java.net.Socket(){@Override public void close()throws IOException{entered.countDown();try{if(!release.await(12,TimeUnit.SECONDS))throw new IOException("physical close gate deadline");}catch(InterruptedException e){throw new IOException("physical close interrupted");}super.close();}});set(session,"handle",handle);set(session,"transportClean",false);}
++            try{sa.close();sb.close();assertTrue(entered.await(1,TimeUnit.SECONDS));assertFalse(sa.awaitClosed(Duration.ofMillis(10)));assertFalse(sb.awaitClosed(Duration.ofMillis(10)));assertEquals(8520192L,PortalEventsPacketBudget.SHARED.reservedBytes());assertThrows(IllegalStateException.class,()->new PortalRunEventsHttp(ta).begin(f.gateway,f.source,RUN,7));release.countDown();assertTrue(sa.awaitClosed(Duration.ofSeconds(3)));assertTrue(sb.awaitClosed(Duration.ofSeconds(3)));assertEquals(0,PortalEventsPacketBudget.SHARED.reservedBytes());Files.writeString(run.resolve("summary.properties"),"mechanicalSocketCloseOnly=true\ntwoOwnersRetained=8520192\nthirdDenied=true\nactualCloseReturnedBeforeRelease=true\n");}finally{release.countDown();sa.close();sb.close();assertTrue(sa.awaitClosed(Duration.ofSeconds(3)));assertTrue(sb.awaitClosed(Duration.ofSeconds(3)));}
++        }
++    }
++    static void shortG(Path run)throws Exception {
++        byte[] head=utf("HTTP/1.1 200 Finite\r\nContent-Type: "+MIME+"\r\nContent-Length: 100000\r\n\r\n");
++        try(var f=new Fixture();var p=new Peer(head,"hold");var tls=tls(p,run)){
++            set(f.iam,"gatewayEventsOperationSeconds",3L);var s=new PortalRunEventsHttp(tls).begin(f.gateway,f.source,RUN,7);s.lookupMetadata();long start=System.nanoTime();try{assertThrows(PlatformException.class,()->s.consumePrivate(packet->fail()));long ms=TimeUnit.NANOSECONDS.toMillis(System.nanoTime()-start);assertTrue(ms>=1500&&ms<4500,"actual short G "+ms);Files.writeString(run.resolve("summary.properties"),"configuredGOperationSeconds=3\nactualMillis="+ms+"\ncallbacks=0\n");}finally{p.release.countDown();closed(s);}
++        }
++    }
++    static void run(String group,Path run)throws Exception {switch(group){case "late-g"->lateG(run);case "admission"->admission(run);case "authority"->authority(run);case "proof"->proof(run);case "revoked-read"->revokedRead(run);case "retention"->retention(run);case "physical-close"->physicalClose(run);case "short-g"->shortG(run);default->throw new IllegalArgumentException(group);}}
++}
+diff --git a/platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsPrivateHttpTest.java b/platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsPrivateHttpTest.java
+new file mode 100644
+index 0000000..8581b44
+--- /dev/null
++++ b/platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsPrivateHttpTest.java
+@@ -0,0 +1,160 @@
++package cn.agentplatform.gateway.infra;
++import cn.agentplatform.common.*;
++import cn.agentplatform.gateway.application.RunObservationEventsMetadataTest;
++import cn.agentplatform.gateway.application.RunObservationEventsMetadataTest.Fixture;
++import java.io.*;
++import java.net.*;
++import java.nio.charset.StandardCharsets;
++import java.nio.file.*;
++import java.security.*;
++import java.time.Duration;
++import java.util.*;
++import java.util.concurrent.*;
++import java.util.concurrent.atomic.*;
++import javax.net.ssl.*;
++import org.junit.jupiter.api.Test;
++import static org.junit.jupiter.api.Assertions.*;
++/** Private TLS input only: packets remain untrusted, with no receipt/material/public output. */
++public class PortalRunEventsPrivateHttpTest {
++    static final String HOST=PortalRunEventsHttpTest.HOST,RUN=RunObservationEventsMetadataTest.RUN,MIME="application/vnd.agent-platform.portal-events.v1";
++    @Test void sameSessionMovesOriginalQToRealGChildAndPrivatePackets() throws Exception { child("normal"); }
++    @Test void finitePrivateErrorsReturnOnlyTheirAllowedCodeAndStatus() throws Exception { child("errors"); }
++    @Test void legalHeadContinuesAfterChildExpiryAndNewGCurrentGeneration() throws Exception { child("body-expiry"); }
++    @Test void ordinarySignedChildHasNoArtificialMinimumLength() throws Exception { child("ordinary"); }
++    @Test void rawPrivatePeersRejectUnsafeHeadsErrorsAndFraming() throws Exception { child("wire"); }
++    @Test void actualLargeClAndChunkedInputsUseOnePacketAndRejectPartialCommit() throws Exception { child("packets"); }
++    @Test void completeHeadHasOneTwoSecondDeadline() throws Exception { child("head-deadline"); }
++    @Test void actualBodyIdleExpiresAfterFifteenSeconds() throws Exception { child("idle"); }
++    @Test void originalFiftyFiveSecondAnchorStopsAnActivelyDeliveringPeer() throws Exception { child("hard55"); }
++    static Path root(){return PortalRunEventsHttpTest.root();}
++    static void child(String group) throws Exception {
++        Path run=Files.createDirectories(root().resolve(".local/iam-o2b-f2b2-private-http/peers/"+group+"-"+UUID.randomUUID()));
++        var words=new ArrayList<>(List.of("-Djdk.net.unixdomain.tmpdir=V:/.local/tmp","-Djdk.tls.maxHandshakeMessageSize=32768","-Djdk.tls.maxCertificateChainLength=4","-Dcom.sun.security.enableAIAcaIssuers=false","-Djdk.tls.server.newSessionTicketCount=0","-Djdk.tls.server.enableStatusRequestExtension=false","-cp",System.getProperty("surefire.test.class.path",System.getProperty("java.class.path")),PortalRunEventsPrivateHttpTest.class.getName(),group,run.toString()));
++        Files.writeString(run.resolve("client.args"),String.join("\n",words.stream().map(s->"\""+s.replace("\\","\\\\").replace("\"","\\\"")+"\"").toList()));
++        var command=new ArrayList<String>();command.add(Path.of(System.getProperty("java.home"),"bin/java.exe").toString());command.addAll(words);
++        Process p=new ProcessBuilder(command).directory(root().toFile()).redirectErrorStream(true).start();Thread collector=null;var failure=new AtomicReference<Throwable>();
++        try {
++            Files.writeString(run.resolve("launch.properties"),"pid="+p.pid()+"\ncwd="+root()+"\nargs=client.args\n");
++            var out=Files.newOutputStream(run.resolve("client.out"));collector=Thread.ofPlatform().daemon().start(()->{try(out;var in=p.getInputStream()){byte[] b=new byte[4096];int n,total=0;while((n=in.read(b))!=-1){total+=n;if(total>131072)throw new IOException("bounded child output");out.write(b,0,n);}}catch(Throwable t){failure.set(t);p.destroyForcibly();}});
++            assertTrue(p.waitFor(group.equals("hard55")?75:group.equals("idle")?35:60,TimeUnit.SECONDS),"owned child deadline");collector.join(3000);assertFalse(collector.isAlive());assertNull(failure.get());assertEquals(0,p.exitValue(),new String(Files.readAllBytes(run.resolve("client.out")),StandardCharsets.UTF_8));
++        } finally {if(p.isAlive())p.destroyForcibly();assertTrue(p.waitFor(3,TimeUnit.SECONDS));if(collector!=null){collector.join(3000);assertFalse(collector.isAlive());}Files.writeString(run.resolve("exit.properties"),"pid="+p.pid()+"\nexit="+p.exitValue()+"\nalive="+p.isAlive()+"\ncollectorAlive="+(collector!=null&&collector.isAlive())+"\n");}
++    }
++    static byte[] utf(String s){return s.getBytes(StandardCharsets.UTF_8);}
++    static byte[] response(int status,String type,byte[] body){return PortalEventsPacketDecoderTest.join(utf("HTTP/1.1 "+status+" Finite\r\nContent-Type: "+type+"\r\nContent-Length: "+body.length+"\r\n\r\n"),body);}
++    static byte[] packets() throws Exception{return PortalEventsPacketDecoderTest.join(PortalEventsPacketDecoderTest.hello(),PortalEventsPacketDecoderTest.packet(3,1,"{\"code\":\"BUFFER_LIMIT\"}",""));}
++    static PortalEventsTls tls(Peer p,Path run)throws Exception{return new PortalEventsTls(URI.create("https://"+HOST+":"+p.listener.getLocalPort()),new byte[]{127,0,0,1},PortalRunEventsHttpTest.ca(run,"root"));}
++    static Object field(Object receiver,String name)throws Exception{var f=receiver.getClass().getDeclaredField(name);f.setAccessible(true);return f.get(receiver);}
++    static void set(Object receiver,String name,Object value)throws Exception{var f=receiver.getClass().getDeclaredField(name);f.setAccessible(true);f.set(receiver,value);}
++    static void closed(PortalRunEventsHttp.Session s){s.close();assertTrue(s.awaitClosed(Duration.ofSeconds(3)));assertEquals(0,PortalEventsPacketBudget.SHARED.owners());assertEquals(0,PortalEventsPacketBudget.SHARED.reservedBytes());}
++    static final class Peer implements AutoCloseable {
++        final SSLServerSocket listener;final Thread worker;final byte[] eResponse;final String mode;
++        final AtomicInteger connections=new AtomicInteger(),eBytes=new AtomicInteger();
++        final CountDownLatch qClosed=new CountDownLatch(1),eConnected=new CountDownLatch(1),eRequest=new CountDownLatch(1),release=new CountDownLatch(1),eClosed=new CountDownLatch(1);
++        volatile SSLSocket socket;volatile String qRequest="",request="";volatile Throwable failure;volatile Runnable beforeBody;
++        Peer(byte[] response,String mode)throws Exception {
++            eResponse=response;this.mode=mode;var c=SSLContext.getInstance("TLSv1.3","SunJSSE");var km=KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());km.init(PortalRunEventsHttpTest.fixtures(),"f2a-test-only".toCharArray());
++            var original=Arrays.stream(km.getKeyManagers()).filter(X509ExtendedKeyManager.class::isInstance).map(X509ExtendedKeyManager.class::cast).findFirst().orElseThrow();
++            c.init(new KeyManager[]{new PortalEventsTlsTest.FixedKey(original,"normal",new Properties())},null,null);
++            listener=(SSLServerSocket)c.getServerSocketFactory().createServerSocket(0,2,InetAddress.getByAddress(new byte[]{127,0,0,1}));listener.setEnabledProtocols(new String[]{"TLSv1.3"});listener.setEnabledCipherSuites(new String[]{PortalEventsTls.CIPHER});listener.setSoTimeout(5000);
++            worker=Thread.ofPlatform().daemon().start(()->{
++                try {
++                    try(var q=(SSLSocket)listener.accept()){socket=q;connections.incrementAndGet();q.setSoTimeout(5000);q.startHandshake();qRequest=readHead(q,false);q.getOutputStream().write(PortalRunEventsHttpTest.normal());q.getOutputStream().flush();observeClose(q);qClosed.countDown();}
++                    try(var e=(SSLSocket)listener.accept()){socket=e;connections.incrementAndGet();e.setSoTimeout(65000);eConnected.countDown();if(mode.equals("handshake"))assertTrue(release.await(5,TimeUnit.SECONDS));e.startHandshake();request=readHead(e,true);eRequest.countDown();if(request.isEmpty())return;
++                        if(eResponse!=null){
++                            if(mode.equals("drip")) {int at=new String(eResponse,StandardCharsets.ISO_8859_1).indexOf("\r\n\r\n")+4;e.getOutputStream().write(eResponse,0,at);e.getOutputStream().flush();while(at<eResponse.length){var prefix=java.nio.ByteBuffer.wrap(eResponse,at,24);int len=24+prefix.getInt(at+16)+prefix.getInt(at+20)+44;e.getOutputStream().write(eResponse,at,len);e.getOutputStream().flush();at+=len;Thread.sleep(1000);}}
++                            else if(mode.equals("split")) {int at=new String(eResponse,StandardCharsets.ISO_8859_1).indexOf("\r\n\r\n")+4;e.getOutputStream().write(eResponse,0,at);e.getOutputStream().flush();if(beforeBody!=null)beforeBody.run();e.getOutputStream().write(eResponse,at,eResponse.length-at);}
++                            else e.getOutputStream().write(eResponse);
++                            e.getOutputStream().flush();
++                        }
++                        if(mode.equals("hold"))assertTrue(release.await(65,TimeUnit.SECONDS));
++                        observeClose(e);eClosed.countDown();
++                    }
++                }catch(SocketTimeoutException|SocketException expected){}catch(Throwable t){failure=t;}finally{qClosed.countDown();eRequest.countDown();eClosed.countDown();}
++            });
++        }
++        String readHead(SSLSocket s,boolean e)throws IOException{var b=new ByteArrayOutputStream();int last=0,x;while((x=s.getInputStream().read())!=-1){if(e)eBytes.incrementAndGet();b.write(x);last=(last<<8)|x;if(last==0x0d0a0d0a||b.size()>32768)break;}return b.toString(StandardCharsets.US_ASCII);}
++        static void observeClose(SSLSocket s)throws IOException{try{assertEquals(-1,s.getInputStream().read());}catch(SocketException expected){}}
++        public void close()throws Exception {release.countDown();listener.close();if(socket!=null)socket.close();worker.join(5000);assertFalse(worker.isAlive());if(failure!=null)throw new AssertionError(failure);}
++    }
++    static void normal(Path run)throws Exception { normal(run,true); }
++    static void normal(Path run,boolean padded)throws Exception {
++        try(var f=new Fixture();var p=new Peer(response(200,MIME,packets()),"normal");var tls=tls(p,run)){
++            if(padded)f.iam.ticketMutation(c->{if(c.containsKey("portal_events_child"))c.put("private_test_padding","x".repeat(32));});
++            String source=f.source;var s=new PortalRunEventsHttp(tls).begin(f.gateway,source,RUN,7);var facts=s.lookupMetadata();assertTrue(p.qClosed.await(1,TimeUnit.SECONDS));assertNull(field(s,"handle"));assertNull(field(s,"timer"));assertEquals(3211392L,PortalEventsPacketBudget.SHARED.reservedBytes());var n=new AtomicInteger();
++            try {s.consumePrivate(packet->{assertEquals(n.getAndIncrement(),packet.ordinal());try(var b=packet.metadata()){assertTrue(b.read()>=0);}});assertEquals(2,n.get());assertEquals(4260096L,PortalEventsPacketBudget.SHARED.reservedBytes());assertThrows(PlatformException.class,facts::runId);assertTrue(p.request.startsWith("GET /admin/runs/"+RUN+"/events?Last-Event-ID=7 HTTP/1.1\r\n"));assertTrue(p.request.contains("Accept: "+MIME+"\r\n"));assertFalse(p.request.contains(source));assertEquals(2,p.connections.get());
++                String child=p.request.substring(p.request.indexOf("Authorization: Bearer ")+22).split("\r\n",2)[0];assertTrue(child.length()>8000&&child.length()<=16384,"actual signed child length "+child.length());if(padded)assertTrue(child.length()>=8495,"padded signed child length "+child.length());assertTrue(p.request.length()<=32768);assertEquals(1,Collections.frequency(f.iam.observedOperations(),"portal_events_child_exchange"));
++                Files.writeString(run.resolve("summary.properties"),"actualChildBytes="+child.length()+"\nactualRequestHeadBytes="+p.request.length()+"\nconnections=2\nqPhysicalExitBeforeE=true\ncallbacks="+n.get()+"\nprivateUntrustedOnly=true\n");
++            }finally{closed(s);}
++        }
++    }
++    static String error(String code){return "{\"code\":\""+code+"\",\"message\":\"server detail never escapes\",\"data\":null,\"traceId\":null}";}
++    static void errors(Path run)throws Exception {
++        String[][] vectors={{"413","EVENT_LIMIT"},{"413","BUFFER_LIMIT"},{"429","STREAM_CAPACITY"},{"400","EVENT_CURSOR"},{"403","RUN_AUTHORITY_DENIED"},{"404","RUN_NOT_FOUND"}};
++        int index=0;
++        for(var v:vectors)try(var f=new Fixture();var p=new Peer(response(Integer.parseInt(v[0]),"application/json",utf(error(v[1]))),"normal");var tls=tls(p,run)) {
++            var s=new PortalRunEventsHttp(tls).begin(f.gateway,f.source,RUN,7);s.lookupMetadata();var callbacks=new AtomicInteger();
++            try {var failure=assertThrows(PlatformException.class,()->s.consumePrivate(packet->callbacks.incrementAndGet()));
++                Files.writeString(run.resolve("mapping-"+(index++)+".properties"),"wireStatus="+v[0]+"\neRequestBytes="+p.eBytes.get()+"\nlocalStatus="+failure.status()+"\nlocalCode="+failure.code()+"\ncallbacks="+callbacks.get()+"\n");
++                assertTrue(p.eBytes.get()>0);assertEquals(Integer.parseInt(v[0]),failure.status());assertEquals(v[1],failure.code());assertFalse(failure.getMessage().contains("server detail"));assertNull(failure.getCause());assertEquals(0,callbacks.get());
++            }finally{closed(s);}
++        }
++    }
++    static void bodyExpiry(Path run)throws Exception {
++        try(var f=new Fixture();var p=new Peer(response(200,MIME,packets()),"split");var tls=tls(p,run)){
++            set(f.iam,"childTicketSeconds",2L);var s=new PortalRunEventsHttp(tls).begin(f.gateway,f.source,RUN,7);s.lookupMetadata();var callbacks=new AtomicInteger();var generationChanged=new AtomicBoolean();var childExpired=new AtomicBoolean();
++            p.beforeBody=()->{try {PortalRunEventsPrivateAuthorityTest.until(()->{synchronized(s){return Boolean.TRUE.equals(field(s,"bodyPhase"));}},1000);var g=(cn.agentplatform.common.authority.GatewayPortalEventsResponse)field(s,"gatewayResponse");var old=g.currentCapture();Thread.sleep(3200);generationChanged.set(g.isSuperseded(old));var c=(cn.agentplatform.common.authority.HttpCurrentAuthorityClient.PortalEventsChildAuthorization)field(s,"child");assertThrows(PlatformException.class,c::requireVerified);childExpired.set(true);}catch(Exception e){throw new AssertionError(e);}};
++            long started=System.nanoTime();try{s.consumePrivate(packet->callbacks.incrementAndGet());assertEquals(2,callbacks.get());assertTrue(generationChanged.get());assertTrue(childExpired.get());Files.writeString(run.resolve("summary.properties"),"legalHead=true\nactualWaitMillis="+TimeUnit.NANOSECONDS.toMillis(System.nanoTime()-started)+"\nchildExpired=true\nnewGGeneration=true\ncallbacks="+callbacks.get()+"\n");}finally{closed(s);}
++        }
++    }
++    static byte[] raw(String head,byte[] body){return PortalEventsPacketDecoderTest.join(utf(head),body);}
++    static byte[] chunked(byte[] body){return raw("HTTP/1.1 200 Finite\r\nContent-Type: "+MIME+"\r\nTransfer-Encoding: chunked\r\n\r\n",PortalEventsPacketDecoderTest.join(utf(Integer.toHexString(body.length)+"\r\n"),body,utf("\r\n0\r\n\r\n")));}
++    static void wire(Path run)throws Exception {
++        byte[] good=packets();String ok="HTTP/1.1 200 Finite\r\nContent-Type: "+MIME+"\r\nContent-Length: "+good.length+"\r\n";var bad=new LinkedHashMap<String,byte[]>();
++        bad.put("sse",response(200,"text/event-stream",good));bad.put("json-success",response(200,"application/json",good));bad.put("mime-parameter",response(200,MIME+";charset=UTF-8",good));
++        for(int status:new int[]{100,101,103,401,302,500})bad.put("status-"+status,response(status,"application/json",utf(error("RUN_AUTHORITY_DENIED"))));
++        for(String h:new String[]{"Content-Encoding: gzip","Content-Encoding: identity","Set-Cookie: a=b","Location: /elsewhere","Trailer: X-Fact","WWW-Authenticate: Bearer","Proxy-Authenticate: Basic","Content-Type: "+MIME,"Transfer-Encoding: chunked"," folded","X-Control: a\u0001b"})bad.put("header-"+bad.size(),raw(ok+h+"\r\n\r\n",good));
++        for(String cl:new String[]{"-1","+1","01","9223372036854775808","0,0"})bad.put("cl-"+bad.size(),raw("HTTP/1.1 200 Finite\r\nContent-Type: "+MIME+"\r\nContent-Length: "+cl+"\r\n\r\n",good));
++        bad.put("duplicate-cl",raw(ok+"Content-Length: "+good.length+"\r\n\r\n",good));bad.put("no-framing",raw("HTTP/1.1 200 Finite\r\nContent-Type: "+MIME+"\r\n\r\n",good));bad.put("te-unknown",raw("HTTP/1.1 200 Finite\r\nContent-Type: "+MIME+"\r\nTransfer-Encoding: gzip\r\n\r\n",good));
++        bad.put("trailer",raw("HTTP/1.1 200 Finite\r\nContent-Type: "+MIME+"\r\nTransfer-Encoding: chunked\r\n\r\n",PortalEventsPacketDecoderTest.join(utf(Integer.toHexString(good.length)+"\r\n"),good,utf("\r\n0\r\nX-Trailer: denied\r\n\r\n"))));
++        for(int status:new int[]{400,403,404,413,429})bad.put("unknown-code-"+status,response(status,"application/json",utf(error("OTHER"))));
++        for(String json:new String[]{error("EVENT_LIMIT").replace("\"code\":\"EVENT_LIMIT\"","\"code\":\"EVENT_LIMIT\",\"code\":\"EVENT_LIMIT\""),error("EVENT_LIMIT")+"{}",error("EVENT_LIMIT").replace("null,\"traceId\"","{},\"traceId\""),error("EVENT_LIMIT").replace("server detail never escapes","\\uD800")})bad.put("strict-json-"+bad.size(),response(413,"application/json",utf(json)));
++        bad.put("utf16",response(413,"application/json",error("EVENT_LIMIT").getBytes(StandardCharsets.UTF_16BE)));bad.put("error-cl8193",response(413,"application/json",utf(error("EVENT_LIMIT")+" ".repeat(8193-utf(error("EVENT_LIMIT")).length))));
++        byte[] oversized=utf(error("EVENT_LIMIT")+" ".repeat(8193-utf(error("EVENT_LIMIT")).length));bad.put("error-chunk8193",raw("HTTP/1.1 413 Finite\r\nContent-Type: application/json\r\nTransfer-Encoding: chunked\r\n\r\n",PortalEventsPacketDecoderTest.join(utf(Integer.toHexString(oversized.length)+"\r\n"),oversized,utf("\r\n0\r\n\r\n"))));
++        String many=ok+"X: 1\r\n".repeat(62)+"\r\n";bad.put("headers64",raw(many,good));String base=ok+"X-Padding: ";int padding=8192-utf(base+"\r\n\r\n").length;bad.put("head8193",raw(base+"x".repeat(padding+1)+"\r\n\r\n",good));
++        int n=0;for(var vector:bad.entrySet())try(var f=new Fixture();var p=new Peer(vector.getValue(),"normal");var tls=tls(p,run)){
++            var session=new PortalRunEventsHttp(tls).begin(f.gateway,f.source,RUN,7);session.lookupMetadata();var callbacks=new AtomicInteger();try{var failure=assertThrows(PlatformException.class,()->session.consumePrivate(packet->callbacks.incrementAndGet()),vector.getKey());assertEquals(503,failure.status(),vector.getKey());assertNull(failure.getCause());assertTrue(p.eBytes.get()>0);if(!vector.getKey().equals("trailer"))assertEquals(0,callbacks.get(),vector.getKey());Files.writeString(run.resolve("vector-"+(n++)+".properties"),"name="+vector.getKey()+"\nstatus="+failure.status()+"\ncallbacks="+callbacks.get()+"\n");}finally{closed(session);}
++        }
++        for(String head:new String[]{ok+"X: 1\r\n".repeat(61)+"\r\n",base+"x".repeat(padding)+"\r\n\r\n"})try(var f=new Fixture();var p=new Peer(raw(head,good),"normal");var tls=tls(p,run)){
++            var session=new PortalRunEventsHttp(tls).begin(f.gateway,f.source,RUN,7);session.lookupMetadata();try{var count=new AtomicInteger();session.consumePrivate(packet->count.incrementAndGet());assertEquals(2,count.get());}finally{closed(session);}
++        }
++        Files.writeString(run.resolve("summary.properties"),"rejectedVectors="+bad.size()+"\nheaders63Accepted=true\nhead8192Accepted=true\nhead8193Rejected=true\n");
++    }
++    static void packetInputs(Path run)throws Exception {
++        String window=PortalEventsPacketDecoderTest.window(false,"{\"padding\":\""+"x".repeat(20000)+"\"}");byte[] large=PortalEventsPacketDecoderTest.join(PortalEventsPacketDecoderTest.hello(),PortalEventsPacketDecoderTest.packet(2,1,window,""));assertTrue(large.length>8192);
++        for(byte[] wire:new byte[][]{response(200,MIME,large),chunked(large)})try(var f=new Fixture();var p=new Peer(wire,"normal");var tls=tls(p,run)){
++            var session=new PortalRunEventsHttp(tls).begin(f.gateway,f.source,RUN,7);session.lookupMetadata();var count=new AtomicInteger();try{session.consumePrivate(packet->{assertEquals(count.getAndIncrement(),packet.ordinal());assertTrue(PortalEventsPacketBudget.SHARED.reservedBytes()<8000000L,"F1 scan has exited before callback");assertSame(packet,fieldUnchecked(session,"decoder","packet"));try(var metadata=packet.metadata()){assertTrue(metadata.read()>=0);}});assertEquals(2,count.get());}finally{closed(session);}
++        }
++        byte[] bad=PortalEventsPacketDecoderTest.hello();bad[bad.length-1]^=1;byte[] truncated=Arrays.copyOf(PortalEventsPacketDecoderTest.hello(),30);int i=0;
++        for(byte[] body:new byte[][]{bad,truncated,PortalEventsPacketDecoderTest.join(PortalEventsPacketDecoderTest.hello(),bad)})try(var f=new Fixture();var p=new Peer(response(200,MIME,body),"normal");var tls=tls(p,run)){
++            var session=new PortalRunEventsHttp(tls).begin(f.gateway,f.source,RUN,7);session.lookupMetadata();var count=new AtomicInteger();try{assertThrows(PlatformException.class,()->session.consumePrivate(packet->count.incrementAndGet()));assertEquals(i++==2?1:0,count.get());}finally{closed(session);}
++        }
++        try(var f=new Fixture();var p=new Peer(response(200,MIME,PortalEventsPacketDecoderTest.hello()),"normal");var tls=tls(p,run)){
++            var session=new PortalRunEventsHttp(tls).begin(f.gateway,f.source,RUN,7);session.lookupMetadata();try{var count=new AtomicInteger();session.consumePrivate(packet->count.incrementAndGet());assertEquals(1,count.get());}finally{closed(session);}
++        }
++        Files.writeString(run.resolve("summary.properties"),"largeActualBodyBytes="+large.length+"\nclAndChunked=true\nscanReleasedBeforeCallback=true\nonePacketBorrow=true\nbadCommitAndTruncationRejected=true\nhelloEofHasNoTerminalAssertion=true\n");
++    }
++    static Object fieldUnchecked(Object receiver,String first,String second){try{return field(field(receiver,first),second);}catch(Exception e){throw new AssertionError(e);}}
++    static void deadline(Path run,boolean idle)throws Exception {
++        byte[] head=idle?utf("HTTP/1.1 200 Finite\r\nContent-Type: "+MIME+"\r\nContent-Length: 100000\r\n\r\n"):null;
++        try(var f=new Fixture();var p=new Peer(head,"hold");var tls=tls(p,run)){
++            var session=new PortalRunEventsHttp(tls).begin(f.gateway,f.source,RUN,7);session.lookupMetadata();long start=System.nanoTime();try{assertThrows(PlatformException.class,()->session.consumePrivate(packet->fail("deadline callback")));long ms=TimeUnit.NANOSECONDS.toMillis(System.nanoTime()-start);assertTrue(ms>=(idle?14000:1500)&&ms<(idle?18000:3500),"actual deadline "+ms);assertNull(field(session,"handle"));assertNull(field(session,"timer"));Files.writeString(run.resolve("summary.properties"),"phase="+(idle?"body":"head")+"\nactualMillis="+ms+"\nphysicalAndTimerExitBeforeReturn=true\n");}finally{p.release.countDown();closed(session);}
++        }
++    }
++    static void hard55(Path run)throws Exception {
++        var bodies=new ArrayList<byte[]>();bodies.add(PortalEventsPacketDecoderTest.hello());for(int n=1;n<=60;n++)bodies.add(PortalEventsPacketDecoderTest.packet(2,n,PortalEventsPacketDecoderTest.window(false,"{}"),""));byte[] body=PortalEventsPacketDecoderTest.join(bodies.toArray(byte[][]::new));
++        try(var f=new Fixture();var p=new Peer(response(200,MIME,body),"drip");var tls=tls(p,run)){
++            var session=new PortalRunEventsHttp(tls).begin(f.gateway,f.source,RUN,7);session.lookupMetadata();long t0=(Long)field(session,"t0");var callbacks=new AtomicInteger();try{assertThrows(PlatformException.class,()->session.consumePrivate(packet->callbacks.incrementAndGet()));long ms=TimeUnit.NANOSECONDS.toMillis(System.nanoTime()-t0);assertTrue(ms>=54500&&ms<57500,"actual original anchor "+ms);assertTrue(callbacks.get()>=50&&callbacks.get()<=56);int count=callbacks.get();Thread.sleep(100);assertEquals(count,callbacks.get());assertNull(field(session,"handle"));assertNull(field(session,"timer"));Files.writeString(run.resolve("summary.properties"),"actualOriginalAnchorMillis="+ms+"\ncallbacks="+count+"\ncontinuedBodyDeliveryAvoidedIdle=true\nt0Unmodified=true\nphysicalAndTimerExit=true\n");}finally{closed(session);}
++        }
++    }
++    public static void main(String[] args)throws Exception {Path run=Path.of(args[1]);switch(args[0]){case "normal"->normal(run);case "ordinary"->normal(run,false);case "wire"->wire(run);case "packets"->packetInputs(run);case "head-deadline"->deadline(run,false);case "idle"->deadline(run,true);case "hard55"->hard55(run);case "errors"->errors(run);case "body-expiry"->bodyExpiry(run);default->PortalRunEventsPrivateAuthorityTest.run(args[0],run);}System.out.println("F2B2_GROUP_OK="+args[0]);}
++}

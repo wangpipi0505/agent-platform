@@ -1,0 +1,9 @@
+[
+  {
+    "name": "D4b lifecycle Shell logout ignores queued host notifications and manual reconnect restores one subscription",
+    "passed": false,
+    "error": "Error: expect(received).toEqual(expected) // deep equality\n\n- Expected  -  6\n+ Received  + 15\n\n  Object {\n-   \"active\": 0,\n-   \"providerCalls\": 1,\n-   \"roles\": Array [],\n+   \"active\": 1,\n+   \"providerCalls\": 2,\n+   \"roles\": Array [\n+     \"ADMIN\",\n+   ],\n    \"subscriptions\": 1,\n-   \"token\": \"\",\n-   \"unsubscribed\": 1,\n-   \"user\": null,\n+   \"token\": \"A\",\n+   \"unsubscribed\": 0,\n+   \"user\": Object {\n+     \"expiresAt\": \"2026-10-20T20:57:31.012Z\",\n+     \"principalId\": \"A\",\n+     \"roles\": Array [\n+       \"ADMIN\",\n+     ],\n+     \"tenantId\": \"tenant_A\",\n+   },\n  }\n    at captureRawStack (G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\web\\node_modules\\playwright-core\\lib\\coreBundle.js:9282:17)\n    at callMatcherAsStep (G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\web\\node_modules\\playwright\\lib\\matchers\\expect.js:13316:57)\n    at Object.toEqual (G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\web\\node_modules\\playwright\\lib\\matchers\\expect.js:13308:23)\n    at G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\web\\tests\\portal-browser.mjs:92:415\n    at async run (G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\web\\tests\\portal-browser.mjs:87:128)\n    at async file:///G:/207/%E9%A1%B9%E7%9B%AE/%E7%AE%97%E6%B3%95%E9%87%8D%E7%BB%84%E5%B7%A5%E5%85%B7/%E4%BB%A3%E7%A0%81/agent-platform/web/tests/portal-browser.mjs:90:2",
+    "rawStart": 0,
+    "rawEnd": 4
+  }
+]

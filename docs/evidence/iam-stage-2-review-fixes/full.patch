@@ -1,0 +1,242 @@
+diff --git a/admin-common/src/main/java/cn/agentplatform/common/authority/AuthorityProperties.java b/admin-common/src/main/java/cn/agentplatform/common/authority/AuthorityProperties.java
+--- a/admin-common/src/main/java/cn/agentplatform/common/authority/AuthorityProperties.java
++++ b/admin-common/src/main/java/cn/agentplatform/common/authority/AuthorityProperties.java
+@@ -58,7 +58,8 @@
+                     || portal.attributeValueAllowlist() == null || portal.scopeAllowlist() == null
+                     || !portal.scopeAllowlist().contains("platform.access"))
+                 throw invalid("PORTAL_CONFIG_REQUIRED");
+-            if (!Set.of("ADMIN", "EDITOR", "APPROVER").containsAll(portal.roleAllowlist())
++            if (portal.roleAllowlist().stream().anyMatch(role -> role == null || role.isBlank()
++                    || Set.of("SERVICE", "GATEWAY_AUTH").contains(role))
+                     || !Set.of("region", "dataLabels", "bizSystemCode", "userId").containsAll(portal.attributeAllowlist())
+                     || !portal.attributeValueAllowlist().keySet().equals(portal.attributeAllowlist()))
+                 throw invalid("PORTAL_CEILING_INVALID");
+diff --git a/admin-common/src/main/java/cn/agentplatform/common/authority/PortalClaimMapper.java b/admin-common/src/main/java/cn/agentplatform/common/authority/PortalClaimMapper.java
+--- a/admin-common/src/main/java/cn/agentplatform/common/authority/PortalClaimMapper.java
++++ b/admin-common/src/main/java/cn/agentplatform/common/authority/PortalClaimMapper.java
+@@ -33,8 +33,20 @@
+         if(value==null)return Set.of();
+         if(!(value instanceof String s))throw invalid();
+         if(s.isEmpty())return Set.of();
+-        if(!s.matches("[A-Za-z0-9:._-]+( [A-Za-z0-9:._-]+)*"))throw invalid();
+-        return Set.copyOf(Arrays.asList(s.split(" ")));
++        // Scan iteratively: repeated short scopes inside the JWT byte limit must not consume stack.
++        var result=new HashSet<String>();
++        int start=0;
++        for(int i=0;i<s.length();i++){
++            char c=s.charAt(i);
++            if(c==' '){
++                if(i==start)throw invalid();
++                result.add(s.substring(start,i));start=i+1;
++            }else if(!((c>='A' && c<='Z') || (c>='a' && c<='z') || (c>='0' && c<='9')
++                    || c==':' || c=='.' || c=='_' || c=='-'))throw invalid();
++        }
++        if(start==s.length())throw invalid();
++        result.add(s.substring(start));
++        return Set.copyOf(result);
+     }
+     static Map<String,Set<String>> attributes(Object value){
+         if(value==null)return Map.of();
+diff --git a/admin-common/src/main/java/cn/agentplatform/common/authority/TrustedJwtDecoder.java b/admin-common/src/main/java/cn/agentplatform/common/authority/TrustedJwtDecoder.java
+--- a/admin-common/src/main/java/cn/agentplatform/common/authority/TrustedJwtDecoder.java
++++ b/admin-common/src/main/java/cn/agentplatform/common/authority/TrustedJwtDecoder.java
+@@ -59,6 +59,7 @@
+                     c.put("scope",String.join(" ",new TreeSet<>(mapped.scopes())));
+                 }).build();
+             }
++            requireServiceScope(jwt);
+             return jwt;
+         }catch(JwtException ex){
+             // Spring wraps custom JWKSource exceptions. Keep upstream failures distinct from bad tokens.
+@@ -92,8 +93,7 @@
+         String client=PortalClaimMapper.text(c.get("client_id"));
+         if(!AuthorityProperties.SERVICES.contains(caller) || !caller.equals(client)
+                 || !config.serviceId().equals(c.get("target")))throw invalid();
+-        String action=PortalClaimMapper.text(c.get("action"));
+-        if(!PortalClaimMapper.scopes(c.get("scope")).equals(Set.of(action)))throw invalid();
++        PortalClaimMapper.text(c.get("action"));
+         if(!(c.get("resource") instanceof Map<?,?> resource) || !resource.keySet().equals(Set.of("kind","id","version_digest")))throw invalid();
+         for(var v:resource.values())PortalClaimMapper.text(v);
+         String mode=PortalClaimMapper.text(c.get("authority_mode"));
+@@ -102,8 +102,15 @@
+         }else if("delegated".equals(mode)){
+             for(String k:List.of("tenant_id","grant_ref","authorization_version"))PortalClaimMapper.text(c.get(k));
+         }else throw invalid();
+-        if(routes.stream().noneMatch(r->mode.equals(r.mode()) && caller.equals(r.caller())
+-                && config.serviceId().equals(r.target()) && action.equals(r.action())))throw invalid();
++    }
++    private void requireServiceScope(Jwt jwt){
++        // Only called after Nimbus signature and every timestamp/profile/identity validator succeeded.
++        var c=jwt.getClaims();
++        String action=(String)c.get("action"), caller=(String)c.get("caller"), mode=(String)c.get("authority_mode");
++        if(!PortalClaimMapper.scopes(c.get("scope")).equals(Set.of(action))
++                || routes.stream().noneMatch(r->mode.equals(r.mode()) && caller.equals(r.caller())
++                && config.serviceId().equals(r.target()) && action.equals(r.action())))
++            throw new PlatformException(403,"SYS-AUTH-403","服务调用范围未获授权");
+     }
+     private JWKSet keys(URI uri){
+         byte[] bytes=http.get(uri);
+diff --git a/admin-common/src/test/java/cn/agentplatform/common/authority/AuthorityConfigurationTest.java b/admin-common/src/test/java/cn/agentplatform/common/authority/AuthorityConfigurationTest.java
+--- a/admin-common/src/test/java/cn/agentplatform/common/authority/AuthorityConfigurationTest.java
++++ b/admin-common/src/test/java/cn/agentplatform/common/authority/AuthorityConfigurationTest.java
+@@ -151,6 +151,24 @@
+         p.put("agent.security.portal.role-allowlist[0]","SERVICE");
+         assertThatThrownBy(()->{try(var ignored=application(p,factories).run()){}}).hasStackTraceContaining("PORTAL_CEILING_INVALID");
+         assertThat(factories).hasValue(0);
++    }
++
++    @Test void configuredDomainBusinessRolesAreAcceptedAndReservedRolesRemainForbidden() throws Exception {
++        try (var issuer = new LoopbackIssuer()) {
++            var c = issuer.config(); var p = c.portal();
++            for (var roles : List.of(Set.of("ops"), Set.of("VIEWER"), Set.of("ops", "EDITOR"))) {
++                var portal = new AuthorityProperties.Portal(true, p.issuer(), p.jwksUri(), p.audience(), p.clientId(),
++                        roles, p.attributeAllowlist(), p.attributeValueAllowlist(), p.scopeAllowlist());
++                assertThatCode(() -> new AuthorityProperties(c.mode(), c.serviceId(), portal, c.authority(),
++                        null, null, null, false, null).validate(true)).doesNotThrowAnyException();
++            }
++            for (String role : List.of("SERVICE", "GATEWAY_AUTH", "", " ")) {
++                var portal = new AuthorityProperties.Portal(true, p.issuer(), p.jwksUri(), p.audience(), p.clientId(),
++                        Set.of(role), p.attributeAllowlist(), p.attributeValueAllowlist(), p.scopeAllowlist());
++                assertThatThrownBy(() -> new AuthorityProperties(c.mode(), c.serviceId(), portal, c.authority(),
++                        null, null, null, false, null).validate(true)).hasMessage("PORTAL_CEILING_INVALID");
++            }
++        }
+     }
+ 
+     private static String signed(String audience, String use) {
+diff --git a/admin-common/src/test/java/cn/agentplatform/common/authority/PortalClaimMapperTest.java b/admin-common/src/test/java/cn/agentplatform/common/authority/PortalClaimMapperTest.java
+--- a/admin-common/src/test/java/cn/agentplatform/common/authority/PortalClaimMapperTest.java
++++ b/admin-common/src/test/java/cn/agentplatform/common/authority/PortalClaimMapperTest.java
+@@ -8,6 +8,33 @@
+ import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+ import static org.assertj.core.api.Assertions.*;
+ class PortalClaimMapperTest {
++    @Test void iterativeScopeParsingPreservesAsciiTokensAndExactSpaceRules() {
++        assertThat(PortalClaimMapper.scopes("Az09:._- abc")).containsExactlyInAnyOrder("Az09:._-", "abc");
++        assertThat(PortalClaimMapper.scopes("a a")).containsExactly("a");
++        assertThat(PortalClaimMapper.scopes("")).isEmpty();
++        assertThat(PortalClaimMapper.scopes(null)).isEmpty();
++        for (String scope : List.of(" a", "a ", "a  b", "a\tb", "a\nb", "中文", "a/b", "a,b"))
++            assertThatThrownBy(() -> PortalClaimMapper.scopes(scope)).isInstanceOf(org.springframework.security.oauth2.jwt.JwtException.class);
++        assertThatThrownBy(() -> PortalClaimMapper.scopes(List.of("a"))).isInstanceOf(org.springframework.security.oauth2.jwt.JwtException.class);
++    }
++    @Test void signedConfiguredDomainRolesArePreservedWithoutAdminSubstitution() throws Exception {
++        try (var issuer = new LoopbackIssuer()) {
++            var c = issuer.config(); var p = c.portal();
++            var portal = new AuthorityProperties.Portal(true, p.issuer(), p.jwksUri(), p.audience(), p.clientId(),
++                    Set.of("ops", "VIEWER"), p.attributeAllowlist(), p.attributeValueAllowlist(), p.scopeAllowlist());
++            var config = new AuthorityProperties(c.mode(), c.serviceId(), portal, c.authority(), null, null, null, false, null);
++            assertThatCode(() -> config.validate(true)).doesNotThrowAnyException();
++            var claims = issuer.portal(TrustedJwtDecoderTest.NOW);
++            claims.put("roles", List.of("ops", "VIEWER", "ADMIN", "SERVICE", "GATEWAY_AUTH", "unconfigured"));
++            try (var decoder = new TrustedJwtDecoder(config, java.time.Clock.fixed(TrustedJwtDecoderTest.NOW, java.time.ZoneOffset.UTC), true)) {
++                assertThat(new PortalClaimMapper(portal).map(decoder.decode(issuer.sign(claims))).actor().roles())
++                        .containsExactlyInAnyOrder("ops", "VIEWER");
++            }
++            try (var decoder = new TrustedJwtDecoder(c, java.time.Clock.fixed(TrustedJwtDecoderTest.NOW, java.time.ZoneOffset.UTC), true)) {
++                assertThat(new PortalClaimMapper(p).map(decoder.decode(issuer.sign(claims))).actor().roles()).isEmpty();
++            }
++        }
++    }
+     @Test void issuerClientCeilingClipsPermissionsAndPreservesSensitivityObligations() throws Exception {
+         try(var issuer=new LoopbackIssuer()){
+             var jwt=Jwt.withTokenValue("already-verified-test-input").header("alg","RS256")
+diff --git a/admin-common/src/test/java/cn/agentplatform/common/authority/TrustedJwtDecoderTest.java b/admin-common/src/test/java/cn/agentplatform/common/authority/TrustedJwtDecoderTest.java
+--- a/admin-common/src/test/java/cn/agentplatform/common/authority/TrustedJwtDecoderTest.java
++++ b/admin-common/src/test/java/cn/agentplatform/common/authority/TrustedJwtDecoderTest.java
+@@ -32,6 +32,18 @@
+ 
+ class TrustedJwtDecoderTest {
+     static final Instant NOW=Instant.parse("2026-10-20T00:00:00Z");
++    @Test void signedFixed2500ShortScopesWithinJwtLimitProduceTheConfiguredIntersection() throws Exception {
++        try (var issuer = new LoopbackIssuer(); var decoder = new TrustedJwtDecoder(issuer.config(), Clock.fixed(NOW, ZoneOffset.UTC), true)) {
++            String shortScopes = String.join(" ", Collections.nCopies(2500, "a"));
++            assertThat(shortScopes).hasSize(4999);
++            var claims = issuer.portal(NOW); claims.put("scope", shortScopes);
++            String token = issuer.sign(claims); assertThat(token.length()).isLessThanOrEqualTo(16384);
++            assertThat(decoder.decode(token).getClaimAsString("scope")).isEmpty();
++            claims.put("scope", "platform.access " + shortScopes);
++            token = issuer.sign(claims); assertThat(token.length()).isLessThanOrEqualTo(16384);
++            assertThat(decoder.decode(token).getClaimAsString("scope")).isEqualTo("platform.access");
++        }
++    }
+     @Test void validRsaSignatureWorksButWrongSignatureNeverPasses() throws Exception {
+         try(var issuer=new LoopbackIssuer()){
+             var decoder=new TrustedJwtDecoder(issuer.config(),Clock.fixed(NOW,ZoneOffset.UTC),true);
+@@ -142,7 +154,11 @@
+                     "action","business.delete","scope","unrelated extra","resource",Map.of("kind","origin","id","test"),"exp",NOW.plusSeconds(61).getEpochSecond());
+                 for(var entry:changes.entrySet()){
+                     var c=new LinkedHashMap<>(original);c.put(entry.getKey(),entry.getValue());
+-                    assertThat(catchThrowable(()->decoder.decode(issuer.sign(c)))).as(entry.getKey()).isInstanceOf(JwtException.class);
++                    var error=catchThrowable(()->decoder.decode(issuer.sign(c)));
++                    if(Set.of("action","scope").contains(entry.getKey()))
++                        assertThat(error).as(entry.getKey()).isInstanceOf(PlatformException.class)
++                                .extracting(e->((PlatformException)e).status()).isEqualTo(403);
++                    else assertThat(error).as(entry.getKey()).isInstanceOf(JwtException.class);
+                 }
+             }
+             var c=new LinkedHashMap<>(workload);c.put("sub","alice");assertThatThrownBy(()->decoder.decode(issuer.sign(c))).isInstanceOf(JwtException.class);
+@@ -202,10 +218,11 @@
+         public Instant instant(){return now;}
+     }
+     static LoopbackIssuer webIssuer;
++    static boolean internalWeb;
+     static final AtomicInteger handlers=new AtomicInteger();
+     @Configuration(proxyBeanMethods=false) @EnableAutoConfiguration @EnableWebSecurity
+     static class ProbeApp {
+-        @Bean JwtDecoder decoder(){return new TrustedJwtDecoder(webIssuer.config(),Clock.fixed(NOW,ZoneOffset.UTC),true);}
++        @Bean JwtDecoder decoder(){return new TrustedJwtDecoder(internalWeb ? webIssuer.internalConfig() : webIssuer.config(),Clock.fixed(NOW,ZoneOffset.UTC),true);}
+         @Bean SecurityFilterChain filter(HttpSecurity http,JwtDecoder decoder,ObjectProvider<ApiKeyAuthenticator> keys)throws Exception{
+             // Invoke the real chain method without importing production configuration's closed IAM startup guard.
+             var method=SecurityConfiguration.class.getDeclaredMethod("security",HttpSecurity.class,JwtDecoder.class,CorsConfigurationSource.class,ObjectProvider.class);
+@@ -219,7 +236,7 @@
+     }
+     @Test void realHttpRejectsPortalServiceRoleMissingScopeAndJwksOutageBeforeHandler()throws Exception{
+         try(var issuer=new LoopbackIssuer()){
+-            webIssuer=issuer;handlers.set(0);
++            webIssuer=issuer;internalWeb=false;handlers.set(0);
+             var app=new SpringApplication(ProbeApp.class);app.setAdditionalProfiles("test");
+             app.setDefaultProperties(Map.of("server.address","127.0.0.1","server.port","0","spring.main.banner-mode","off",
+                 "spring.config.location","optional:classpath:/iam-stage-2-no-config/","spring.jmx.enabled",false,"springdoc.api-docs.enabled",false,"logging.level.root","ERROR"));
+@@ -241,4 +258,41 @@
+         var response=client.send(HttpRequest.newBuilder(URI.create(url)).header("Authorization","Bearer "+token).GET().build(),HttpResponse.BodyHandlers.ofString());
+         assertThat(response.statusCode()).isEqualTo(status);if(code!=null)assertThat(Json.read(response.body()).path("code").asText()).isEqualTo(code);
+     }
++    @Test void signedUnregisteredActionAndInsufficientScopeAreForbiddenAfterIdentityValidation() throws Exception {
++        try (var issuer = new LoopbackIssuer()) {
++            webIssuer = issuer; internalWeb = true; handlers.set(0);
++            var app = new SpringApplication(ProbeApp.class); app.setAdditionalProfiles("test");
++            app.setDefaultProperties(Map.of("server.address", "127.0.0.1", "server.port", "0", "spring.main.banner-mode", "off",
++                    "spring.config.location", "optional:classpath:/iam-stage-2-no-config/", "spring.jmx.enabled", false,
++                    "springdoc.api-docs.enabled", false, "logging.level.root", "ERROR"));
++            try (var context = (ServletWebServerApplicationContext) app.run(); var client = HttpClient.newHttpClient()) {
++                String url = "http://127.0.0.1:" + context.getWebServer().getPort() + "/internal/probe";
++                var valid = issuer.service(NOW, false);
++                assertResponse(client, url, issuer.sign(valid), 403, "SYS-AUTH-403");
++                var unregistered = new LinkedHashMap<>(valid); unregistered.put("action", "business.delete"); unregistered.put("scope", "business.delete");
++                var insufficient = new LinkedHashMap<>(valid); insufficient.put("scope", "unrelated");
++                var failures = new ArrayList<String>();
++                for (var claims : List.of(unregistered, insufficient)) {
++                    var response = client.send(HttpRequest.newBuilder(URI.create(url)).header("Authorization", "Bearer " + issuer.sign(claims)).build(), HttpResponse.BodyHandlers.ofString());
++                    if (response.statusCode() != 403 || !"SYS-AUTH-403".equals(Json.read(response.body()).path("code").asText()))
++                        failures.add(claims.get("action") + "/" + claims.get("scope") + ": " + response.statusCode());
++                    assertThat(handlers).hasValue(0);
++                }
++                assertThat(failures).as("verified authorization rejections must be 403").isEmpty();
++                for (var claims : List.of(unregistered, insufficient)) {
++                    assertResponse(client, url, issuer.sign(claims, issuer.k2, "k1", "at+jwt"), 401, "SYS-AUTH-401");
++                    for (String key : List.of("token_use", "client_id")) {
++                        var malformed = new LinkedHashMap<>(claims); malformed.put(key, "other");
++                        assertResponse(client, url, issuer.sign(malformed), 401, "SYS-AUTH-401");
++                    }
++                    var missing = new LinkedHashMap<>(claims); missing.remove("resource");
++                    assertResponse(client, url, issuer.sign(missing), 401, "SYS-AUTH-401");
++                    assertThat(handlers).hasValue(0);
++                }
++                issuer.status = 503;
++                assertResponse(client, url, issuer.sign(unregistered), 503, "IAM_AUTHORITY_UNAVAILABLE");
++                assertThat(handlers).hasValue(0);
++            } finally { internalWeb = false; }
++        }
++    }
+ }

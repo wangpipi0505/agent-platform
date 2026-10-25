@@ -1,0 +1,159 @@
+diff --git a/docs/evidence/algorithm-process-runner-test-cleanup-fix.md b/docs/evidence/algorithm-process-runner-test-cleanup-fix.md
+new file mode 100644
+index 0000000..7bf2dad
+--- /dev/null
++++ b/docs/evidence/algorithm-process-runner-test-cleanup-fix.md
+@@ -0,0 +1,31 @@
++# 异步响应性测试收尾 P2 返修
++
++2026-10-20，依据同审查者 Needs fixes 与 root 明确授权，本轮只修 `tests/algorithm-process-runner-async.test.mjs` 第一项测试的异常收尾，新增两个有限故障验证文件。已审真实 runner SHA仍为 `257e8545c4818d1d40a235a32a3c10d6912997e10d9a0aacf876bd56d3b75688`，没有任何runner/其他原测试/生产/fixture/4秒期限/env/health/清理预算修改，第四轮继续暂停。
++
++## 复现与红证据
++
++已读最新审查及 `review-algorithm-process-runner-v3/async-cleanup-probe.mjs/.log`。原测试finally先await pending，PS拒绝会跳过closeAllConnections和close；双失败会覆盖先发生HTTP错误，快速拒绝还可能在被await前产生unhandledRejection。
++
++新增 `tests/algorithm-process-runner-async-cleanup-probe.mjs` 提取实际第一测试回调，注入假server/fetch/PS，不创建socket、PowerShell、JVM或任何真实服务；同一probe可读取固定baseline callback。新增 `tests/algorithm-process-runner-async-cleanup.test.mjs` 用有2秒timeout/16KiB输出界限的独立Node子进程执行五种故障：PS拒绝、HTTP+PS双拒绝、立即PS拒绝、PS+两个关闭错误、close回调不结算。它们检查实际关闭调用顺序、原错误对象身份及主错误、无未处理拒绝、关闭超时和有界子进程退出。
++
++实际旧async文件上五项全红、退出1，原始red.log及红阶段三文件保存。本轮又用同一probe运行完整旧baseline callback，原始 `red-baseline-probes.json` 保存：前四case退出0仅表示probe成功捕获错误，其中PS失败case的closeCalls=[]；双失败只剩PS错误，HTTP原错丢失；快速PS拒绝观察到unhandled及rejection-handled警告；never-close case退出13并有未结算top-level-await警告。没有把probe成功捕获缺陷的退出0误作通过。
++
++## 窄修复
++
++pending使用已附双路径结算handler的Promise链启动PS，将成功/失败转为可等待的value/error结果，快速拒绝立即被观察；主体仍检查HTTP/timer确实先于PS结算。主体错误先记录，finally再次读取pending只补原PS错误且去重，不替换原HTTP错误。嵌套finally独立尝试closeAllConnections及server.close，前项失败不跳过后项；server.close有测试专用1秒界限，callback永不结算也记录ETIMEDOUT并继续退出，timer必清除。单错误抛原对象，多错误用AggregateError保留完整errors与第一个原错误cause。listen也移入try，以便其失败进入相同收尾。没有创建通用清理框架。
++
++原PS调用仍是原2000ms有限测试参数；server本身关闭界限仅属于这个测试，未更改runner/helper业务或收尾预算。伪造故障的probe将该测试1秒关闭等待缩为30ms加速有限回归，不改真实测试源码的界限。
++
++## 实际覆盖验证
++
++- `node --test tests/algorithm-process-runner-async.test.mjs tests/algorithm-process-runner-async-cleanup.test.mjs` 实际10/10通过、退出0，见green-directed.log。
++- `node --test tests/algorithm-process-runner.test.mjs tests/algorithm-process-runner-fixes.test.mjs tests/algorithm-process-runner-redis.test.mjs tests/algorithm-process-runner-async.test.mjs tests/algorithm-process-runner-async-cleanup.test.mjs` 实际31/31通过、0 fail/skip/cancel、退出0，见green-all.log。
++- 同一五case实际回调probe的 `green-current-probes.json` 均退出0、stderr空、unhandled=[]，两项关闭调用均实际尝试；双失败保留原HTTP与PS且HTTP为cause，三错误case保留PS/连接销毁/close原对象；不结算close有ETIMEDOUT，无未结算await。
++
++这些是有限测试自身的护栏，不能替代第四轮真实五场景；本轮没有接触JVM/PG/Redis/MinIO/业务Job。
++
++## 独立冻结与重放
++
++本轮baseline完整保存fix-v3八交付文件，SHA逐项与上轮sources匹配；新两验证文件和报告在baseline-absence.json登记不存在。frozen保存最终十一文件，其中runner等上轮不变文件也完整保留。新 `algorithm-process-runner-test-cleanup-fix.patch` 是baseline→frozen真实完整差异，仅修改async测试并新增两个验证文件和本报告。
++
++freeze.mjs实际复核上轮frozen/replay/evidence/保留v3/raw/root清理/patch/历史manifest字节，确保原fix-v3及三actual历史不变；新manifest保存本轮所有SHA。新的replay复制baseline后实际git apply --check与apply退出0，十一文件SHA与frozen一致；只读复制原fixture后实际语法检查七文件并完整运行31项有限检查。完整命令和结果在replay.log、SHA见 `algorithm-process-runner-test-cleanup-fix-sha256.json`。第四轮仍等待原审查者复核与root另行授权。
+diff --git a/tests/algorithm-process-runner-async-cleanup-probe.mjs b/tests/algorithm-process-runner-async-cleanup-probe.mjs
+new file mode 100644
+index 0000000..1ee52b6
+--- /dev/null
++++ b/tests/algorithm-process-runner-async-cleanup-probe.mjs
+@@ -0,0 +1,34 @@
++import fs from 'node:fs/promises';
++import assert from 'node:assert/strict';
++
++// Execute only the actual responsiveness test callback with fake HTTP/PS; no socket or PS starts.
++const source = await fs.readFile(process.argv[3] || new URL('./algorithm-process-runner-async.test.mjs', import.meta.url), 'utf8');
++const start = source.indexOf("test('actual PowerShell wait"), end = source.indexOf("test('one absolute", start);
++assert(start >= 0 && end > start);
++const mode = process.argv[2], closeCalls = [], unhandled = [];
++const httpError = Error('synthetic HTTP failure'), psError = Error('synthetic PowerShell failure');
++const destroyError = Error('synthetic connection destroy failure'), closeError = Error('synthetic close failure');
++process.on('unhandledRejection', error => unhandled.push(error.message));
++const server = { once() {}, listen(_port, _host, ready) { ready(); }, address() { return { port: 1 }; },
++  closeAllConnections() { closeCalls.push('closeAllConnections'); if (mode === 'all-close-errors') throw destroyError; },
++  close(done) { closeCalls.push('close'); if (mode === 'close-never-settles') return; done(mode === 'all-close-errors' ? closeError : undefined); } };
++let callback;
++new Function('test', 'http', 'assert', 'fetch', 'powershell', 'setTimeout', 'clearTimeout', source.slice(start, end))(
++  (_name, run) => { callback = run; }, { createServer: () => server }, assert,
++  () => mode === 'double-failure' ? new Promise((_resolve, reject) => setTimeout(() => reject(httpError), 1))
++    : Promise.resolve({ text: () => Promise.resolve('finite-only') }),
++  () => mode === 'fast-rejection' ? Promise.reject(psError) : new Promise((resolve, reject) => setTimeout(() => {
++    if (mode === 'close-never-settles') resolve('bounded'); else reject(psError);
++  }, 40)),
++  (callback, ms) => setTimeout(callback, ms === 1000 ? 30 : ms), clearTimeout,
++);
++let observed;
++try { await callback(); } catch (error) { observed = error; }
++await new Promise(resolve => setTimeout(resolve, 60));
++const errors = observed instanceof AggregateError ? observed.errors : observed ? [observed] : [];
++process.stdout.write(JSON.stringify({ mode, noRealResourcesStarted: true, closeCalls, unhandled,
++  errors: errors.map(error => ({ message: error.message, code: error.code })),
++  originalHttpRetained: errors.includes(httpError), originalPsRetained: errors.includes(psError),
++  destroyErrorRetained: errors.includes(destroyError), closeErrorRetained: errors.includes(closeError),
++  httpIsPrimary: observed === httpError || observed?.cause === httpError,
++}) + '\n');
+diff --git a/tests/algorithm-process-runner-async-cleanup.test.mjs b/tests/algorithm-process-runner-async-cleanup.test.mjs
+new file mode 100644
+index 0000000..8f91dcc
+--- /dev/null
++++ b/tests/algorithm-process-runner-async-cleanup.test.mjs
+@@ -0,0 +1,21 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { execFile } from 'node:child_process';
++import { promisify } from 'node:util';
++import { fileURLToPath } from 'node:url';
++
++for (const mode of ['ps-rejection', 'double-failure', 'fast-rejection', 'all-close-errors', 'close-never-settles']) {
++  test('actual async test cleanup: ' + mode, async () => {
++    const { stdout, stderr } = await promisify(execFile)(process.execPath,
++      [fileURLToPath(new URL('./algorithm-process-runner-async-cleanup-probe.mjs', import.meta.url)), mode],
++      { timeout: 2000, maxBuffer: 16384, windowsHide: true });
++    assert.equal(stderr, '', 'No unhandled rejection or unsettled-await warning');
++    const result = JSON.parse(stdout);
++    assert.deepEqual(result.closeCalls, ['closeAllConnections', 'close']);
++    assert.deepEqual(result.unhandled, []);
++    if (mode !== 'close-never-settles') assert.equal(result.originalPsRetained, true);
++    if (mode === 'double-failure') { assert.equal(result.originalHttpRetained, true); assert.equal(result.httpIsPrimary, true); }
++    if (mode === 'all-close-errors') { assert.equal(result.destroyErrorRetained, true); assert.equal(result.closeErrorRetained, true); }
++    if (mode === 'close-never-settles') assert(result.errors.some(error => error.code === 'ETIMEDOUT'));
++  });
++}
+diff --git a/tests/algorithm-process-runner-async.test.mjs b/tests/algorithm-process-runner-async.test.mjs
+index 62a40d9..e0fde75 100644
+--- a/tests/algorithm-process-runner-async.test.mjs
++++ b/tests/algorithm-process-runner-async.test.mjs
+@@ -15,21 +15,43 @@ const powershell = new Function('spawnSync', 'assert', 'execFileAsync', source.s
+ 
+ test('actual PowerShell wait leaves same-thread finite HTTP and timer responsive before it settles', async () => {
+   const server = http.createServer((req, res) => res.end('finite-only'));
+-  await new Promise((resolve, reject) => { server.once('error', reject); server.listen(0, '127.0.0.1', resolve); });
+   let pending;
++  const errors = [];
+   try {
+-    let settled = false;
++    await new Promise((resolve, reject) => { server.once('error', reject); server.listen(0, '127.0.0.1', resolve); });
++    let settled = false, outcome;
+     const timer = new Promise(resolve => setTimeout(resolve, 25));
++    // Attach both settlement paths before starting PS, so an early rejection is always observed.
++    pending = Promise.resolve().then(() => powershell('Start-Sleep -Milliseconds 350; Write-Output "bounded"', {}, { timeoutMs: 2000, maxBuffer: 1024 }))
++      .then(value => { settled = true; return outcome = { value }; }, error => { settled = true; return outcome = { error }; });
+     const response = fetch('http://127.0.0.1:' + server.address().port + '/finite', { signal: AbortSignal.timeout(2000) }).then(result => result.text());
+-    pending = Promise.resolve(powershell('Start-Sleep -Milliseconds 350; Write-Output "bounded"', {}, { timeoutMs: 2000, maxBuffer: 1024 }))
+-      .then(value => { settled = true; return value; });
+     await Promise.all([timer, response]);
++    if (outcome?.error) throw outcome.error;
+     assert.equal(settled, false, 'HTTP/timer must respond while the actual PowerShell helper is still waiting');
+-    assert.equal(await pending, 'bounded');
++    const result = await pending;
++    if (result.error) throw result.error;
++    assert.equal(result.value, 'bounded');
++  } catch (error) {
++    errors.push(error);
+   } finally {
+-    if (pending) await pending;
+-    server.closeAllConnections(); await new Promise(resolve => server.close(resolve));
++    try {
++      if (pending) {
++        const result = await pending;
++        if (result.error && !errors.includes(result.error)) errors.push(result.error);
++      }
++    } catch (error) { if (!errors.includes(error)) errors.push(error); }
++    finally {
++      try { server.closeAllConnections(); } catch (error) { errors.push(error); }
++      let closeTimer;
++      try {
++        await Promise.race([new Promise((resolve, reject) => server.close(error => error && error.code !== 'ERR_SERVER_NOT_RUNNING' ? reject(error) : resolve())),
++          new Promise((_resolve, reject) => { closeTimer = setTimeout(() => reject(Object.assign(Error('HTTP test server close timed out'), { code: 'ETIMEDOUT' })), 1000); })]);
++      } catch (error) { errors.push(error); }
++      finally { clearTimeout(closeTimer); }
++    }
+   }
++  if (errors.length > 1) throw new AggregateError(errors, 'Async responsiveness test and cleanup failed', { cause: errors[0] });
++  if (errors.length) throw errors[0];
+ });
+ 
+ test('one absolute PowerShell timeout rejects even a command designed to emit repeated output', async () => {

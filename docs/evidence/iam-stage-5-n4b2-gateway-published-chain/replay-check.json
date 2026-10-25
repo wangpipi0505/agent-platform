@@ -1,0 +1,61 @@
+{
+  "at": "2026-10-20T18:12:26.987Z",
+  "diff": {
+    "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\iam-stage-5-n4b2-gateway-published-chain",
+    "args": [
+      "git diff --no-index --binary --no-renames --unified=100000 -- baseline frozen"
+    ],
+    "exit": 1
+  },
+  "patch": {
+    "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/source-fullcontext.patch",
+    "bytes": 256657,
+    "sha256": "89dbf7a6c764763a21564e3e64485c06887675045a58dc977609db2e16c90061"
+  },
+  "results": [
+    {
+      "command": [
+        "git",
+        "-c",
+        "core.autocrlf=false",
+        "apply",
+        "--check",
+        "-p2",
+        "--directory=docs/evidence/iam-stage-5-n4b2-gateway-published-chain/replay",
+        "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\iam-stage-5-n4b2-gateway-published-chain\\source-fullcontext.patch"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "-c",
+        "core.autocrlf=false",
+        "apply",
+        "-p2",
+        "--directory=docs/evidence/iam-stage-5-n4b2-gateway-published-chain/replay",
+        "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\iam-stage-5-n4b2-gateway-published-chain\\source-fullcontext.patch"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "source": {
+    "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/source-after.json",
+    "bytes": 77685,
+    "sha256": "cdc3f4a1151a57005aed2f9a605226bae7f6456d8c7d1c339af5a2476a11968a"
+  },
+  "replay": {
+    "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/source-replay.json",
+    "bytes": 77685,
+    "sha256": "1eaa190bb8a54407f53674f1956a73ad49f59c1656099aeeb3801a4f37d4355e"
+  },
+  "allNamesBytesAndHashesEqual": true,
+  "sourceCount": 377,
+  "beforePhysicalCopiesVerified": 2183
+}

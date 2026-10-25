@@ -1,0 +1,5 @@
+{"name":"DebugPanel stops AUTHORITY_EXPIRED without status/open/cancel/POST growth","passed":true,"rawStart":0,"rawEnd":7,"reason":"AUTHORITY_EXPIRED","consumer":"DebugPanel","requestsStable":true,"postStable":true}
+{"name":"DebugPanel stops AUTHORITY_DENIED without status/open/cancel/POST growth","passed":true,"rawStart":7,"rawEnd":14,"reason":"AUTHORITY_DENIED","consumer":"DebugPanel","requestsStable":true,"postStable":true}
+{"name":"DebugPanel stops AUTHORITY_UNAVAILABLE without status/open/cancel/POST growth","passed":true,"rawStart":14,"rawEnd":21,"reason":"AUTHORITY_UNAVAILABLE","consumer":"DebugPanel","requestsStable":true,"postStable":true}
+{"name":"DebugPanel stops named IAM 503 with manual recovery entry","passed":true,"rawStart":21,"rawEnd":28,"consumer":"DebugPanel","code":"IAM_AUTHORITY_UNAVAILABLE","requestsStable":true}
+{"name":"logout clears identity and waits for explicit reconnect; desktop and narrow layout","passed":true,"rawStart":28,"rawEnd":32,"screenshots":["connected-desktop.png","connected-narrow.png","signed-out-narrow.png"],"layout":{"viewport":390,"width":1366,"inheritedMinimum":1366},"entryOverflow":false,"manualReconnect":true}

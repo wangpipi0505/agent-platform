@@ -1,0 +1,1125 @@
+diff --git a/admin-common/src/main/java/cn/agentplatform/common/authority/CurrentAuthorityClient.java b/admin-common/src/main/java/cn/agentplatform/common/authority/CurrentAuthorityClient.java
+index ddae769..c68748a 100644
+--- a/admin-common/src/main/java/cn/agentplatform/common/authority/CurrentAuthorityClient.java
++++ b/admin-common/src/main/java/cn/agentplatform/common/authority/CurrentAuthorityClient.java
+@@ -14,6 +14,8 @@ public interface CurrentAuthorityClient {
+  default HttpCurrentAuthorityClient.GatewayRunAuthorization exchangeGatewayPublishedRun(String originalPortalToken,ResourceBinding publishedRoot){
+   throw AuthorityProtocol.denied();
+  }
++ default HttpCurrentAuthorityClient.GatewayObservationQueryAuthorization exchangeGatewayRunObservationQuery(String originalPortalToken,SubjectKey subject,String publicRunId){throw AuthorityProtocol.denied();}
++ default HttpCurrentAuthorityClient.GatewayStatusAuthorization exchangeGatewayRunStatus(String originalPortalToken,ResourceBinding runSnapshot){throw AuthorityProtocol.denied();}
+  ServiceTicket resume(DelegationRef delegation,ServiceCall call);
+  ServiceTicket forward(VerifiedAuthority authority,ServiceCall call);
+  VerifiedAuthority authorize(String serviceTicket,ServiceCall call);
+diff --git a/admin-common/src/main/java/cn/agentplatform/common/authority/GatewayIngressBoundary.java b/admin-common/src/main/java/cn/agentplatform/common/authority/GatewayIngressBoundary.java
+index 2265b9a..0f569a2 100644
+--- a/admin-common/src/main/java/cn/agentplatform/common/authority/GatewayIngressBoundary.java
++++ b/admin-common/src/main/java/cn/agentplatform/common/authority/GatewayIngressBoundary.java
+@@ -32,7 +32,8 @@ public final class GatewayIngressBoundary implements AsyncHandlerInterceptor {
+     private final Object controller;
+     private final Method method;
+     private static final String SESSION_CONTROLLER="cn.agentplatform.gateway.api.PortalSessionController";
+-    private enum Purpose { RUN, SESSION }
++    private enum Purpose { RUN, SESSION, STATUS }
++    private final boolean statusInstalled;
+     private final Object sessionController;
+     private final Method sessionMethod;
+     private final TrustedJwtDecoder decoder;
+@@ -45,8 +46,13 @@ public final class GatewayIngressBoundary implements AsyncHandlerInterceptor {
+ 
+     /** A second fixed purpose, never an arbitrary caller-provided handler allow-list. */
+     public GatewayIngressBoundary(Object controller,Object sessionController,TrustedJwtDecoder decoder,Clock clock) {
++        this(controller,sessionController,false,decoder,clock);
++    }
++
++    public GatewayIngressBoundary(Object controller,Object sessionController,boolean statusInstalled,TrustedJwtDecoder decoder,Clock clock) {
+         this.controller = Objects.requireNonNull(controller);
+         this.sessionController=sessionController;
++        this.statusInstalled=statusInstalled;
+         this.decoder = Objects.requireNonNull(decoder);
+         this.clock = Objects.requireNonNull(clock);
+         try {
+@@ -94,6 +100,8 @@ public final class GatewayIngressBoundary implements AsyncHandlerInterceptor {
+     }
+ 
+     private Purpose route(HttpServletRequest r) {
++        if(statusInstalled&&r.getDispatcherType()==DispatcherType.REQUEST&&"GET".equals(r.getMethod())
++                &&r.getRequestURI().matches("/admin/runs/r_[0-9a-f]{32}")&&r.getQueryString()==null&&r.getContextPath().isEmpty())return Purpose.STATUS;
+         if(sessionInstalled()&&r.getDispatcherType()==DispatcherType.REQUEST&&"GET".equals(r.getMethod())
+                 &&"/auth/session".equals(r.getRequestURI())&&r.getQueryString()==null&&r.getContextPath().isEmpty())return Purpose.SESSION;
+         if (r.getDispatcherType() != DispatcherType.REQUEST
+@@ -112,6 +120,8 @@ public final class GatewayIngressBoundary implements AsyncHandlerInterceptor {
+         final SubjectKey subject;
+         final Instant expires;
+         final Purpose purpose;
++        final Thread thread=Thread.currentThread();
++        final long startedNanos=System.nanoTime(),sourceBudget;
+         boolean ready, claimed, invalid;
+ 
+         Proof(
+@@ -125,13 +135,14 @@ public final class GatewayIngressBoundary implements AsyncHandlerInterceptor {
+             this.source = source;
+             this.subject = subject;
+             this.expires = expires;
++            sourceBudget=remaining(owner.clock.instant(),expires);
+             path = anchor.getRequestURI();
+             purpose=owner.route(anchor);
+         }
+ 
+         void check(HttpServletRequest request) {
+             if(owner.route(request)!=purpose)throw denied();
+-            if(!expires.isAfter(owner.clock.instant())&&purpose==Purpose.SESSION)throw new PlatformException(401,"PORTAL_TOKEN_INVALID","门户身份已失效");
++            if(!expires.isAfter(owner.clock.instant())&&(purpose==Purpose.SESSION||purpose==Purpose.STATUS))throw new PlatformException(401,"PORTAL_TOKEN_INVALID","门户身份已失效");
+             if (invalid
+                     || claimed
+                     || !path.equals(request.getRequestURI())
+@@ -206,13 +217,38 @@ public final class GatewayIngressBoundary implements AsyncHandlerInterceptor {
+         var p=proof(r);synchronized(p){p.check(r);if(!p.ready||p.purpose!=Purpose.SESSION)throw denied();p.claimed=true;return new PortalSessionRequest(p);}
+     }
+ 
++    /** This capability belongs to one synchronous captured request, including after stream acquisition. */
++    public static final class PortalStatusRequest {
++        private final Proof capture;
++        private PortalStatusRequest(Proof p){capture=p;}
++        public String sourceToken(){return capture.source;}
++        public SubjectKey subject(){return capture.subject;}
++        public String publicRunId(){return capture.path.substring("/admin/runs/".length());}
++        public void requireLive(HttpServletRequest request){
++            synchronized(capture){
++                var p=capture;long elapsed=System.nanoTime()-p.startedNanos;
++                if(!p.expires.isAfter(p.owner.clock.instant())||elapsed<0||elapsed>=p.sourceBudget)
++                    throw new PlatformException(401,"PORTAL_TOKEN_INVALID","门户身份已失效");
++                if(p.purpose!=Purpose.STATUS||!p.claimed||!p.ready||p.invalid
++                        ||Thread.currentThread()!=p.thread||request.getAttribute(KEY)!=p
++                        ||!hasAnchor(request,p.anchor)||!p.path.equals(request.getRequestURI())
++                        ||p.owner.route(request)!=Purpose.STATUS)throw denied();
++            }
++        }
++        @Override public String toString(){return "PortalStatusRequest[private-capture]";}
++    }
++    private static long remaining(Instant start,Instant end){try{return Math.max(0,Duration.between(start,end).toNanos());}catch(ArithmeticException e){return Long.MAX_VALUE;}}
++    public static PortalStatusRequest claimStatus(HttpServletRequest request){
++        var p=proof(request);synchronized(p){p.check(request);if(!p.ready||p.purpose!=Purpose.STATUS)throw denied();p.claimed=true;var result=new PortalStatusRequest(p);result.requireLive(request);return result;}
++    }
++
+     @Override
+     public boolean preHandle(HttpServletRequest r, HttpServletResponse s, Object handler) {
+         var p = proof(r);
+         synchronized (p) {
+             p.check(r);
+             if (p.owner != this || p.ready || !(handler instanceof HandlerMethod h)
+-                    || !(p.purpose==Purpose.RUN?owns(h):ownsSession(h)))
++                    || !(p.purpose==Purpose.SESSION?ownsSession(h):owns(h)))
+                 throw denied();
+             p.ready = true;
+         }
+@@ -247,13 +283,15 @@ public final class GatewayIngressBoundary implements AsyncHandlerInterceptor {
+                 throws IOException, ServletException {
+             var r = (HttpServletRequest) request;
+             var s = (HttpServletResponse) response;
++            boolean observation=false;
+             try {
+                 var purpose=route(r);
++                observation=purpose==Purpose.STATUS;
+                 if("/auth/session".equals(r.getRequestURI()))s.setHeader("Cache-Control","no-store");
+                 if (r.getAttribute(KEY) != null
+                         || r.getHeader("X-Api-Key") != null
+                         || r.getHeader("Cookie") != null) throw denied();
+-                if(purpose==Purpose.SESSION){
++                if(purpose==Purpose.SESSION||purpose==Purpose.STATUS){
+                     var names=Collections.list(r.getHeaderNames());
+                     for(String name:names){String lower=name.toLowerCase(Locale.ROOT);
+                         if(lower.startsWith("x-user-")||lower.startsWith("x-tenant")||lower.startsWith("x-principal")||lower.equals("apikey")||lower.equals("api-key")||lower.equals("proxy-authorization")||lower.startsWith("x-auth-")||lower.equals("x-subject")||lower.equals("x-resource")||lower.equals("x-target")||lower.equals("x-action"))throw denied();
+@@ -284,15 +322,22 @@ public final class GatewayIngressBoundary implements AsyncHandlerInterceptor {
+                 SecurityContextHolder.setContext(context);
+                 chain.doFilter(r, s);
+             } catch (org.springframework.security.oauth2.jwt.JwtException bad) {
+-                reject(s, 401);
++                if(observation)rejectObservation(s,401);else reject(s,401);
+             } catch (PlatformException bad) {
+-                reject(s, bad.status());
++                if(observation&&bad.status()==503)rejectObservation(s,503);else reject(s,bad.status());
+             } finally {
+                 clear(r);
+             }
+         }
+     }
+ 
++    private static void rejectObservation(HttpServletResponse response,int status)throws IOException {
++        if(!response.isCommitted()){
++            response.setHeader("Cache-Control","no-store");response.setStatus(status);response.setContentType("application/json;charset=UTF-8");
++            response.getWriter().write(Json.write(new ApiResponse<>(status==401?"PORTAL_TOKEN_INVALID":"RUN_STATUS_UNAVAILABLE",status==401?"门户身份已失效":"运行状态暂不可用",null,null)));
++        }
++    }
++
+     private static void reject(HttpServletResponse s, int status) throws IOException {
+         if (!s.isCommitted()) {
+             s.setHeader("Cache-Control","no-store");
+diff --git a/admin-common/src/main/java/cn/agentplatform/common/authority/HttpCurrentAuthorityClient.java b/admin-common/src/main/java/cn/agentplatform/common/authority/HttpCurrentAuthorityClient.java
+index 28df60a..695a7b4 100644
+--- a/admin-common/src/main/java/cn/agentplatform/common/authority/HttpCurrentAuthorityClient.java
++++ b/admin-common/src/main/java/cn/agentplatform/common/authority/HttpCurrentAuthorityClient.java
+@@ -163,6 +163,81 @@ public final class HttpCurrentAuthorityClient implements CurrentAuthorityClient,
+         proof.requireVerified();
+         return proof;
+     }
++    @Override public GatewayObservationQueryAuthorization exchangeGatewayRunObservationQuery(String source,SubjectKey subject,String run){
++        var call=new ServiceCall("engine",RunObservationSelectors.ACTION,RunObservationSelectors.metadata(subject,run));
++        var proof=observationExchange(source,call);
++        AuthorityProtocol.same(subject,proof.evidence.verified().ticket().operation().subject());
++        return new GatewayObservationQueryAuthorization(proof,run);
++    }
++    @Override public GatewayStatusAuthorization exchangeGatewayRunStatus(String source,ResourceBinding resource){
++        if(resource==null)throw AuthorityProtocol.denied();
++        AuthorityProtocol.same(RunObservationSelectors.status(resource.id(),resource.versionDigest()),resource);
++        return new GatewayStatusAuthorization(observationExchange(source,new ServiceCall("engine",RunObservationSelectors.STATUS_ACTION,resource)));
++    }
++    private ObservationProof observationExchange(String source,ServiceCall call){
++        if(closed||!"iam".equals(config.mode())||!"gateway".equals(config.serviceId()))throw BoundedIamHttp.unavailable();
++        final org.springframework.security.oauth2.jwt.Jwt original;
++        try{original=decoder.decode(source);}catch(org.springframework.security.oauth2.jwt.JwtException invalid){throw invalidPortal();}
++        if(!"user".equals(original.getClaimAsString("token_use")))throw invalidPortal();
++        try{
++            var exchange=portalExchange(source,call);var ticket=exchange.verified().ticket();
++            RunObservationSelectors.requirePurpose(call,"gateway","delegated",ticket.operation().sourceKind(),ticket.operation().originKind());
++            AuthorityProtocol.same(new SubjectKey(original.getClaimAsString("tenant_id"),original.getSubject()),ticket.operation().subject());
++            origin(exchange.verified().claims());
++            var result=new ObservationProof(this,exchange,AuthorityProtocol.digest(source));result.check();return result;
++        }catch(org.springframework.security.oauth2.jwt.JwtException internal){
++            if(!original.getExpiresAt().isAfter(clock.instant()))throw invalidPortal();
++            // Internal service-ticket/JWK verification is never evidence of a bad original Portal.
++            throw BoundedIamHttp.unavailable();
++        }catch(PlatformException failure){
++            if(!original.getExpiresAt().isAfter(clock.instant()))throw invalidPortal();
++            if(failure.status()==401||"AUTHORITY_EXPIRED".equals(failure.code()))throw BoundedIamHttp.unavailable();
++            throw failure;
++        }
++    }
++    /** Exchange-only local evidence: no public actor/current/DTO factory and no online re-authorization. */
++    private static final class ObservationProof {
++        final HttpCurrentAuthorityClient owner;final PortalExchange evidence;final String sourceDigest;
++        final Instant internalExpiry;final long sourceBudget,internalBudget;PlatformException failure;
++        ObservationProof(HttpCurrentAuthorityClient owner,PortalExchange evidence,String sourceDigest){
++            this.owner=owner;this.evidence=evidence;this.sourceDigest=sourceDigest;
++            var ticket=evidence.verified().ticket();
++            internalExpiry=Collections.min(List.of(AuthorityProtocol.time(evidence.current(),"exp"),ticket.expiresAt(),ticket.operation().expiresAt(),AuthorityProtocol.time(evidence.verified().claims(),"grant_expires_at"),evidence.observedAt().plusSeconds(owner.config.authority().maxDecisionSeconds())));
++            sourceBudget=PortalSessionAuthorization.budget(evidence.observedAt(),evidence.sourceExpiresAt());
++            internalBudget=PortalSessionAuthorization.budget(evidence.observedAt(),internalExpiry);
++        }
++        synchronized void check(){
++            if(failure!=null)throw failure;
++            try{long elapsed=System.nanoTime()-evidence.startedNanos();var now=owner.clock.instant();
++                if(!evidence.sourceExpiresAt().isAfter(now)||elapsed<0||elapsed>=sourceBudget)throw invalidPortal();
++                if(owner.closed||!internalExpiry.isAfter(now)||elapsed>=internalBudget)throw BoundedIamHttp.unavailable();
++            }catch(PlatformException denied){failure=denied;throw denied;}
++        }
++        ServiceTicket ticket(){return evidence.verified().ticket();}
++    }
++    public static final class GatewayObservationQueryAuthorization {
++        private final ObservationProof proof;private final String run;
++        private GatewayObservationQueryAuthorization(ObservationProof proof,String run){this.proof=proof;this.run=run;}
++        public ServiceTicket ticket(){proof.check();return proof.ticket();}
++        public void requireVerified(){proof.check();}
++        @Override public String toString(){return "GatewayObservationQueryAuthorization[private-proof]";}
++    }
++    public static final class GatewayStatusAuthorization {
++        private final ObservationProof proof;
++        private GatewayStatusAuthorization(ObservationProof proof){this.proof=proof;}
++        public ServiceTicket ticket(){proof.check();return proof.ticket();}
++        public void requireVerified(){proof.check();}
++        public void requireSameQuery(GatewayObservationQueryAuthorization query){
++            proof.check();query.proof.check();
++            if(proof.owner!=query.proof.owner)throw AuthorityProtocol.denied();
++            AuthorityProtocol.same(proof.sourceDigest,query.proof.sourceDigest);
++            AuthorityProtocol.same(origin(proof.evidence.verified().claims()),origin(query.proof.evidence.verified().claims()));
++            var main=proof.ticket().operation();var q=query.proof.ticket().operation();
++            AuthorityProtocol.same(main.subject(),q.subject());AuthorityProtocol.same(main.resource().id(),query.run);
++            if(main.grantRef().equals(q.grantRef())||main.operationId().equals(q.operationId()))throw AuthorityProtocol.denied();
++        }
++        @Override public String toString(){return "GatewayStatusAuthorization[private-proof]";}
++    }
+     /**
+      * Same private portal/query/ticket verification, never a public authority wrapper. This proof
+      * belongs to its creating client and can be checked on another thread without rebinding a
+diff --git a/admin-common/src/test/java/cn/agentplatform/common/authority/GatewayStatusAuthorizationTest.java b/admin-common/src/test/java/cn/agentplatform/common/authority/GatewayStatusAuthorizationTest.java
+new file mode 100644
+index 0000000..d05ee10
+--- /dev/null
++++ b/admin-common/src/test/java/cn/agentplatform/common/authority/GatewayStatusAuthorizationTest.java
+@@ -0,0 +1,56 @@
++package cn.agentplatform.common.authority;
++
++import static org.assertj.core.api.Assertions.*;
++import cn.agentplatform.common.*;
++import org.junit.jupiter.api.*;
++import java.lang.reflect.Modifier;
++import java.time.*;
++import java.util.*;
++
++class GatewayStatusAuthorizationTest {
++    LoopbackAuthority iam;HttpCurrentAuthorityClient gateway;String source;
++    static final String RUN="r_"+"a".repeat(32),OTHER="r_"+"b".repeat(32),SHA=Digest.sha256("accepted");
++    static final SubjectKey OWNER=new SubjectKey("o1c-common","alice");
++    @BeforeEach void start()throws Exception {iam=new LoopbackAuthority();iam.portalActor(new Actor(OWNER.tenantId(),OWNER.principalId(),Set.of("EDITOR"),Map.of("region",Set.of("A"),"dataLabels",Set.of("initial"))));gateway=iam.client("gateway");source=iam.portal();iam.registerObservation(OWNER,RUN,SHA);iam.registerObservation(OWNER,OTHER,SHA);}
++    @AfterEach void close(){gateway.close();iam.close();System.out.println("O1C_AUTH_RESOURCES_CLOSED=true");}
++    @Test void realIndependentFixedQueryAndMainHavePrivateProofsAndSameOriginalSource(){
++        var q=gateway.exchangeGatewayRunObservationQuery(source,OWNER,RUN);var m=gateway.exchangeGatewayRunStatus(source,RunObservationSelectors.status(RUN,SHA));m.requireSameQuery(q);
++        assertThat(q.ticket().operation().grantRef()).isNotEqualTo(m.ticket().operation().grantRef());assertThat(q.ticket().operation().operationId()).isNotEqualTo(m.ticket().operation().operationId());
++        assertThat(iam.observedOperations()).containsExactly("exchange","exchange");assertThat(iam.requests).allSatisfy(r->{assertThat(r.path("subject_token").asText()).isEqualTo(source);assertThat(r.path("target").asText()).isEqualTo("engine");});
++        for(var type:List.of(HttpCurrentAuthorityClient.GatewayObservationQueryAuthorization.class,HttpCurrentAuthorityClient.GatewayStatusAuthorization.class))assertThat(type.getDeclaredConstructors()).allSatisfy(c->assertThat(Modifier.isPrivate(c.getModifiers())).isTrue());
++    }
++    @Test void localCurrentExpiryIs503AndOriginalSourceExpiryIs401(){
++        var q=gateway.exchangeGatewayRunObservationQuery(source,OWNER,RUN);iam.advanceClock(Duration.ofSeconds(6));expect(q::requireVerified,503);
++        iam.advanceClock(Duration.ofSeconds(35));expect(()->gateway.exchangeGatewayRunObservationQuery(source,OWNER,RUN),401);
++    }
++    @Test void closedOwnerInvalidatesQueryAndMainWithoutNewCalls(){
++        var q=gateway.exchangeGatewayRunObservationQuery(source,OWNER,RUN);var m=gateway.exchangeGatewayRunStatus(source,RunObservationSelectors.status(RUN,SHA));int count=iam.authorityCalls();gateway.close();expect(q::requireVerified,503);expect(m::requireVerified,503);assertThat(iam.authorityCalls()).isEqualTo(count);
++    }
++    @Test void internalTicketJwtFailureNeverEscapesAsOriginalPortal401(){
++        iam.ticketMutation(c->c.put("aud","wrong-engine"));expect(()->gateway.exchangeGatewayRunObservationQuery(source,OWNER,RUN),503);assertThat(iam.authorityCalls()).isEqualTo(1);
++    }
++    @Test void sameOwnerDifferentRunAndDifferentOriginalAuthenticationCannotSwapMain(){
++        var q=gateway.exchangeGatewayRunObservationQuery(source,OWNER,RUN);var m=gateway.exchangeGatewayRunStatus(source,RunObservationSelectors.status(OTHER,SHA));expect(()->m.requireSameQuery(q),403);
++        var different=gateway.exchangeGatewayRunStatus(iam.portal(),RunObservationSelectors.status(RUN,SHA));expect(()->different.requireSameQuery(q),403);
++    }
++    @Test void wrongSelectorSubjectAndSnapshotAreDeniedBySignedExchange(){
++        expect(()->gateway.exchangeGatewayRunObservationQuery(source,new SubjectKey("other","alice"),RUN),403);
++        expect(()->gateway.exchangeGatewayRunStatus(source,RunObservationSelectors.status(RUN,Digest.sha256("wrong"))),403);
++        assertThat(iam.observedOperations()).containsExactly("exchange","exchange");
++    }
++    @Test void sourceAndInternalLifetimeLatchSurviveWallRollback()throws Exception {
++        var q=gateway.exchangeGatewayRunObservationQuery(source,OWNER,RUN);iam.advanceClock(Duration.ofSeconds(6));expect(q::requireVerified,503);iam.advanceClock(Duration.ofSeconds(-6));expect(q::requireVerified,503);
++        var shortSource=iam.portal(1);var m=gateway.exchangeGatewayRunStatus(shortSource,RunObservationSelectors.status(RUN,SHA));Thread.sleep(1100);iam.advanceClock(Duration.ofSeconds(-5));expect(m::requireVerified,401);
++    }
++    @Test void unknownJwtAndVerifierUnavailableAreDifferent(){
++        expect(()->gateway.exchangeGatewayRunObservationQuery("bad",OWNER,RUN),401);iam.jwksUnavailable=true;expect(()->gateway.exchangeGatewayRunObservationQuery(source,OWNER,RUN),503);assertThat(iam.authorityCalls()).isEqualTo(1);
++    }
++    @Test void signedWrongPurposeCallerDelegationAndRequestSourceFailClosed(){
++        for(String field:List.of("target","action","scope","caller","client_id","authority_mode","operation.source_kind","origin_authentication_id")){
++            iam.clearFiniteGrants();iam.registerObservation(OWNER,RUN,SHA);
++            iam.ticketMutation(c->{if(field.equals("operation.source_kind")){var operation=new LinkedHashMap<>((Map<String,Object>)c.get("operation"));operation.put("source_kind","DELEGATED");c.put("operation",operation);}else c.put(field,field.equals("origin_authentication_id")?"":"wrong-purpose");});
++            expect(()->gateway.exchangeGatewayRunObservationQuery(source,OWNER,RUN),403);assertThat(iam.authorityCalls()).isEqualTo(1);
++        }
++    }
++    static void expect(Runnable action,int status){assertThatThrownBy(action::run).isInstanceOfSatisfying(PlatformException.class,e->assertThat(e.status()).isEqualTo(status));}
++}
+diff --git a/engine-runtime/src/test/java/cn/agentplatform/common/authority/GatewayRunStatusEngineFixtureMain.java b/engine-runtime/src/test/java/cn/agentplatform/common/authority/GatewayRunStatusEngineFixtureMain.java
+new file mode 100644
+index 0000000..5ba63ae
+--- /dev/null
++++ b/engine-runtime/src/test/java/cn/agentplatform/common/authority/GatewayRunStatusEngineFixtureMain.java
+@@ -0,0 +1,156 @@
++package cn.agentplatform.common.authority;
++
++import cn.agentplatform.common.*;
++import cn.agentplatform.engine.api.*;
++import cn.agentplatform.engine.application.*;
++import cn.agentplatform.engine.domain.GraphRules;
++import cn.agentplatform.engine.infra.*;
++import com.fasterxml.jackson.databind.JsonNode;
++import org.flywaydb.core.Flyway;
++import org.springframework.boot.*;
++import org.springframework.boot.autoconfigure.*;
++import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
++import org.springframework.context.annotation.*;
++import org.springframework.jdbc.core.JdbcTemplate;
++import org.springframework.jdbc.datasource.*;
++import org.springframework.security.config.annotation.web.builders.HttpSecurity;
++import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
++import org.springframework.security.core.context.SecurityContextHolder;
++import org.springframework.security.oauth2.jwt.JwtDecoder;
++import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
++import org.springframework.security.web.SecurityFilterChain;
++import org.springframework.mock.web.*;
++import org.springframework.web.context.request.*;
++import org.springframework.web.method.HandlerMethod;
++import org.springframework.web.servlet.HandlerMapping;
++import org.springframework.web.servlet.mvc.method.RequestMappingInfoHandlerMapping;
++import org.springframework.transaction.support.TransactionTemplate;
++import javax.sql.DataSource;
++import java.io.*;
++import java.net.*;
++import java.nio.charset.StandardCharsets;
++import java.sql.*;
++import java.time.*;
++import java.util.*;
++import java.util.concurrent.CopyOnWriteArrayList;
++import java.util.concurrent.atomic.*;
++
++/** Dedicated JVM/PG; trusted finite stdin management is not a public admission endpoint. */
++public final class GatewayRunStatusEngineFixtureMain {
++    static final String DATABASE="agent_platform_iam_o1c_gateway_status_v12";
++    static final ResourceBinding ROOT=new ResourceBinding("app-version","app-a@1",Digest.sha256("o1c-candidate"));
++    static final AtomicReference<Instant> now=new AtomicReference<>();
++    static final Clock clock=new Clock(){public ZoneId getZone(){return ZoneOffset.UTC;}public Clock withZone(ZoneId z){return this;}public Instant instant(){return now.get();}};
++    static AuthorityProperties trust;static String secret;static DataSource ds;static JdbcTemplate db;
++    static HttpCurrentAuthorityClient authority;static TraceStore trace;static RunService service;
++    static RunScheduler scheduler;static RuntimeClients runtime;
++    static final List<Map<String,Object>> sql=new CopyOnWriteArrayList<>();
++    static final AtomicInteger dependencyCalls=new AtomicInteger(),metadataCalls=new AtomicInteger(),statusCalls=new AtomicInteger();
++    static com.sun.net.httpserver.HttpServer dependency;
++    static volatile String faultPath="";static volatile int faultStatus;static volatile byte[] faultBody=new byte[0],lastStatus=new byte[0];
++    static volatile boolean expireAtActualStream;
++    static final List<Map<String,Object>> wire=new CopyOnWriteArrayList<>();
++    @Configuration(proxyBeanMethods=false) @EnableAutoConfiguration @EnableWebSecurity
++    @Import({RunObservationMetadataController.class,PlatformErrors.class})
++    static class Receiver {
++        @Bean org.springframework.boot.web.servlet.FilterRegistrationBean<jakarta.servlet.Filter> wire(){
++            var bean=new org.springframework.boot.web.servlet.FilterRegistrationBean<jakarta.servlet.Filter>();bean.setOrder(Integer.MIN_VALUE);
++            bean.setFilter((request,response,chain)->{
++                var r=(jakarta.servlet.http.HttpServletRequest)request;var s=(jakarta.servlet.http.HttpServletResponse)response;
++                String path=r.getRequestURI(),kind=path.startsWith("/internal/runs/")?"metadata":path.startsWith("/admin/runs/")?"status":"other";
++                var auth=Collections.list(r.getHeaders("Authorization"));wire.add(Map.of("path",path,"kind",kind,"authorizationCount",auth.size(),"ticketSha",auth.isEmpty()?"":Digest.sha256(auth.getFirst()),"cookie",r.getHeader("Cookie")!=null,"query",r.getQueryString()==null?"<null>":r.getQueryString()));
++                if(kind.equals(faultPath)){s.setStatus(faultStatus);s.setContentType("application/json");s.setHeader("WWW-Authenticate","Basic realm=finite");s.getOutputStream().write(faultBody);return;}
++                if(!kind.equals("status")){chain.doFilter(r,s);return;}
++                chain.doFilter(r,new jakarta.servlet.http.HttpServletResponseWrapper(s){
++                    @Override public jakarta.servlet.ServletOutputStream getOutputStream()throws IOException{var actual=super.getOutputStream();if(expireAtActualStream){expireAtActualStream=false;now.updateAndGet(t->t.plusSeconds(6));}return new jakarta.servlet.ServletOutputStream(){
++                        @Override public boolean isReady(){return actual.isReady();}@Override public void setWriteListener(jakarta.servlet.WriteListener l){actual.setWriteListener(l);}
++                        @Override public void write(int b)throws IOException{actual.write(b);}
++                        @Override public void write(byte[] b,int o,int n)throws IOException{actual.write(b,o,n);if(getStatus()==200)lastStatus=Arrays.copyOfRange(b,o,o+n);}
++                        @Override public void close()throws IOException{actual.close();}
++                    };}
++                });
++            });return bean;
++        }
++        @Bean AuthorityProperties authorityProperties(){return trust;}
++        @Bean DataSource dataSource(){return ds;}
++        @Bean JdbcTemplate jdbc(){return db;}
++        @Bean(destroyMethod="close") HttpCurrentAuthorityClient authority(){return authority=new HttpCurrentAuthorityClient(trust,clock,new WorkloadCredentialResolver(trust,n->secret,true),true);}
++        @Bean RunObservationMetadataService metadata(){return new RunObservationMetadataService(db);}
++        @Bean RunController runs(HttpCurrentAuthorityClient a){
++            trace=new TraceStore(db,new DataSourceTransactionManager(ds),clock);
++            runtime=new RuntimeClients(trust,authority,"http://127.0.0.1:"+dependency.getAddress().getPort(),true);
++            scheduler=new RunScheduler(trace){@Override public void start(){throw new AssertionError("NO_SCHEDULER_START");}@Override public void created(long id,Admission a){throw new AssertionError("NO_WORKER_WAKE");}};
++            service=new RunService(trace,runtime,null,null,scheduler,null,new RunAuthorityStore(ds,clock),clock);
++            return new RunController(service,trace,null,null);
++        }
++        @Bean(destroyMethod="close") JwtDecoder decoder(){return new TrustedJwtDecoder(trust,clock,true);}
++        @Bean ServiceAuthorization authorization(HttpCurrentAuthorityClient a){return new ServiceAuthorization("engine",new ServiceRoutePolicy(),a);}
++        @Bean SecurityFilterChain security(HttpSecurity h,JwtDecoder d,ServiceAuthorization a)throws Exception{return SecurityConfiguration.serviceSecurity(h,d,a);}
++        @Bean org.springframework.web.servlet.handler.MappedInterceptor guard(ServiceAuthorization a){return a.mappedInterceptor();}
++        @Bean org.springframework.web.servlet.handler.MappedInterceptor observations(){return new org.springframework.web.servlet.handler.MappedInterceptor(null,new org.springframework.web.servlet.HandlerInterceptor(){
++            @Override public boolean preHandle(jakarta.servlet.http.HttpServletRequest r,jakarta.servlet.http.HttpServletResponse s,Object h){if(r.getRequestURI().startsWith("/internal/runs/"))metadataCalls.incrementAndGet();if(r.getRequestURI().startsWith("/admin/runs/"))statusCalls.incrementAndGet();return true;}
++        });}
++        @Bean RouteCoverageVerifier coverage(List<RequestMappingInfoHandlerMapping> m){return new RouteCoverageVerifier("engine",new ServiceRoutePolicy(),m);}
++    }
++    static Connection observe(Connection c){
++        return (Connection)java.lang.reflect.Proxy.newProxyInstance(GatewayRunStatusEngineFixtureMain.class.getClassLoader(),new Class[]{Connection.class},(p,m,a)->{
++            try{Object result=m.invoke(c,a);if(result instanceof Statement statement&&(m.getName().equals("prepareStatement")||m.getName().equals("createStatement"))){String prepared=a!=null&&a.length>0&&a[0] instanceof String?(String)a[0]:null;
++                return java.lang.reflect.Proxy.newProxyInstance(GatewayRunStatusEngineFixtureMain.class.getClassLoader(),new Class[]{result instanceof PreparedStatement?PreparedStatement.class:Statement.class},(sp,sm,sa)->{try{
++                    String text=prepared!=null?prepared:sa!=null&&sa.length>0&&sa[0] instanceof String?(String)sa[0]:null;
++                    if(sm.getName().startsWith("execute")&&text!=null)sql.add(Map.of("sql",text,"connection",System.identityHashCode(c),"isolation",c.getTransactionIsolation(),"readOnly",c.isReadOnly(),"autoCommit",c.getAutoCommit()));
++                    return sm.invoke(statement,sa);
++                }catch(java.lang.reflect.InvocationTargetException e){throw e.getCause();}});
++            }return result;}catch(java.lang.reflect.InvocationTargetException e){throw e.getCause();}
++        });
++    }
++    static JsonNode snapshot(){return Json.read("""
++        {"appCode":"app-a","type":"FLOW","versionNo":1,"appVersionId":4294967297,"candidateSha256":"%s","config":{},"definition":{"nodes":[{"id":"start","type":"START"},{"id":"end","type":"END"}],"edges":[{"from":"start","to":"end"}]}}
++        """.formatted(ROOT.versionDigest()));}
++    static Object seed(JsonNode command)throws Exception {
++        var snap=snapshot();GraphRules.requirePublishedFlow(snap);
++        var sentinel=new IllegalStateException("O1C_GATE_REACHED_STORAGE");
++        var validating=new TraceStore(db,new DataSourceTransactionManager(ds),clock){@Override public <T>T atomic(java.util.function.Supplier<T> write){throw sentinel;}};
++        try(var idle=new RunScheduler(validating){@Override public Admission reserveInteractive(){throw new AssertionError("NO_QUEUE_CLAIM");}@Override public void created(long id,Admission a){throw new AssertionError("NO_WAKE");}}){
++            try{new RunService(validating,null,null,null,idle).createReservedSessionTurn("app-a",Json.read("{\"inputs\":{},\"mode\":\"FULL\"}"),snap,new Actor(command.path("tenant").asText(),"alice",Set.of("EDITOR"),Map.of()),null);throw new AssertionError("GATE_NOT_RUN");}
++            catch(IllegalStateException e){if(e!=sentinel)throw e;}
++            var wrong=snap.deepCopy();((com.fasterxml.jackson.databind.node.ObjectNode)wrong.path("definition")).set("edges",Json.read("[{\"source\":\"start\",\"target\":\"end\"}]"));
++            try{new RunService(validating,null,null,null,idle).createReservedSessionTurn("app-a",Json.read("{\"inputs\":{},\"mode\":\"FULL\"}"),wrong,new Actor(command.path("tenant").asText(),"alice",Set.of("EDITOR"),Map.of()),null);throw new AssertionError("BAD_DAG_ACCEPTED");}catch(PlatformException e){if(!"UNKNOWN_EDGE".equals(e.code()))throw e;}
++        }
++        String ticket=command.path("ticket").asText();var request=new MockHttpServletRequest("POST","/admin/apps/app-a/runs");var response=new MockHttpServletResponse();request.setAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE,"/admin/apps/{code}/runs");
++        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
++        try(var decoder=new TrustedJwtDecoder(trust,clock,true)){
++            SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(decoder.decode(ticket),List.of()));
++            var guard=new ServiceAuthorization("engine",new ServiceRoutePolicy(),authority);var handler=new HandlerMethod(new RunController(null,null,null,null),RunController.class.getMethod("run",String.class,JsonNode.class));
++            try{
++                guard.preHandle(request,response,handler);var proof=AuthorityContext.requireInitialFor(Actor.current(),ROOT);
++                var budget=Json.tree(Map.of("limits",Map.of("maxSteps",25,"modelCalls",40,"totalTokens",200000,"totalDurationMs",600000,"maxDepth",2),"consumed",Map.of("steps",0,"modelCalls",0,"tokens",0,"depth",0),"deadline",clock.instant().plusSeconds(599).toString()));
++                long id=new TransactionTemplate(new DataSourceTransactionManager(ds)).execute(s->{long run=new RunAuthorityStore(ds,clock).createPublished(proof,snap,Json.read("{\"privateInput\":\"not-status\"}"),Json.read("{\"appVer\":1}"),budget,"FULL",UUID.randomUUID().toString(),Set.of("initial"));trace.createNode(run,"start",1,"START",snap.path("definition").path("nodes").get(0),proof);trace.createNode(run,"end",2,"END",snap.path("definition").path("nodes").get(1),proof);return run;});
++                var binding=new RunAuthorityStore(ds,clock).load(id);
++                // Writer refresh is fixture setup, never counted as a gateway observation grant.
++                var writer=new RunAuthority(new RunAuthorityStore(ds,clock),authority,clock,Duration.ofSeconds(3)).currentRetained(id,new ServiceCall("engine","run.advance",ROOT));
++                var numeric=new com.fasterxml.jackson.databind.ObjectMapper().enable(com.fasterxml.jackson.databind.DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS).readTree("{\"integer\":123456789012345678901234567890,\"decimal\":1.2345678901234567890123456789,\"nullValue\":null}");
++                ((com.fasterxml.jackson.databind.node.ObjectNode)numeric).put("text","观察\n\"\\");trace.event(id,"O1C_NUMERIC_FIXTURE",numeric,writer);
++                int padding=command.path("padBytes").asInt();if(padding<0||padding>2*1024*1024)throw new IllegalArgumentException("FINITE_PAD");if(padding>0)trace.event(id,"O1C_PAD_FIXTURE",Json.tree(Map.of("padding","x".repeat(padding))),writer);
++                return Map.of("run",binding.publicId(),"sha",binding.snapshotSha(),"owner",binding.owner(),"id",id,"gate","finiteFlow+realDag;production-storage-seam");
++            }finally{guard.afterCompletion(request,response,handler,null);}
++        }finally{SecurityContextHolder.clearContext();RequestContextHolder.resetRequestAttributes();}
++    }
++    static Object stats(){var result=new LinkedHashMap<String,Object>();result.put("facts",db.queryForMap("select (select count(*) from engine.run) as runs,(select count(*) from engine.node_instance) as nodes,(select count(*) from engine.attempt) as attempts,(select count(*) from engine.run_event) as events,(select count(*) from engine.tool_call) as tools"));result.put("sql",List.copyOf(sql));result.put("metadata",metadataCalls.get());result.put("status",statusCalls.get());result.put("dependencies",dependencyCalls.get());result.put("workers",scheduler.activeWorkers());result.put("wire",List.copyOf(wire));result.put("lastStatusBytes",lastStatus.length);return result;}
++    public static void main(String[] args)throws Exception {
++        try(var input=new BufferedReader(new InputStreamReader(System.in,StandardCharsets.UTF_8))){
++            var init=Json.read(Objects.requireNonNull(input.readLine()));trust=Json.read(init.path("trust").toString(),AuthorityProperties.class);trust.validate(true);secret=init.path("secret").asText();now.set(Instant.parse(init.path("now").asText()));
++            String password=System.getenv("AGENT_DB_PASSWORD");if(password==null||password.isBlank())throw new IllegalStateException("OWN_PG_CREDENTIAL_REQUIRED");
++            var admin=new JdbcTemplate(new DriverManagerDataSource("jdbc:postgresql://127.0.0.1:25432/postgres","agent_v12",password));boolean existed=Boolean.TRUE.equals(admin.queryForObject("select exists(select 1 from pg_database where datname=?)",Boolean.class,DATABASE));if(!existed)admin.execute("create database "+DATABASE);
++            ds=new DelegatingDataSource(new DriverManagerDataSource("jdbc:postgresql://127.0.0.1:25432/"+DATABASE,"agent_v12",password)){@Override public Connection getConnection()throws SQLException{return observe(super.getConnection());}};db=new JdbcTemplate(ds);
++            if(!DATABASE.equals(db.queryForObject("select current_database()",String.class)))throw new AssertionError("WRONG_DATABASE");
++            Flyway.configure().dataSource(ds).schemas("engine").defaultSchema("engine").locations("classpath:db/migration").target("217").load().migrate();
++            int count=db.queryForObject("select count(*) from engine.flyway_schema_history where success and version::integer between 200 and 217",Integer.class);if(count!=18)throw new AssertionError("MIGRATIONS");
++            dependency=com.sun.net.httpserver.HttpServer.create(new InetSocketAddress("127.0.0.1",0),0);dependency.createContext("/",x->{dependencyCalls.incrementAndGet();x.sendResponseHeaders(503,-1);x.close();});dependency.start();
++            var boot=new SpringApplication(Receiver.class);boot.setAdditionalProfiles("test");boot.setDefaultProperties(Map.ofEntries(Map.entry("server.address","127.0.0.1"),Map.entry("server.port","0"),Map.entry("spring.config.location","optional:classpath:/o1c-engine-no-config/"),Map.entry("spring.main.banner-mode","off"),Map.entry("springdoc.api-docs.enabled",false),Map.entry("spring.flyway.enabled",false),Map.entry("management.endpoints.web.exposure.exclude","*"),Map.entry("management.endpoints.web.discovery.enabled",false),Map.entry("logging.level.root","ERROR")));
++            try(var context=(ServletWebServerApplicationContext)boot.run()){
++                System.out.println("O1C_ENGINE_READY="+Json.write(Map.of("port",context.getWebServer().getPort(),"pid",ProcessHandle.current().pid(),"database",DATABASE,"existed",existed,"migrations",count)));System.out.flush();
++                for(String line;(line=input.readLine())!=null;){var c=Json.read(line);String action=c.path("action").asText();if(action.equals("STOP"))break;Object reply=switch(action){case "seed"->seed(c);case "stats"->stats();case "last"->Map.of("base64",Base64.getEncoder().encodeToString(lastStatus));case "expireAtStream"->{expireAtActualStream=true;yield Map.of("configured",true);}case "fault"->{faultPath=c.path("path").asText();faultStatus=c.path("status").asInt();faultBody=c.has("base64")?Base64.getDecoder().decode(c.path("base64").asText()):c.path("body").asText().getBytes(StandardCharsets.UTF_8);yield Map.of("configured",true);}case "reset"->{sql.clear();wire.clear();lastStatus=new byte[0];metadataCalls.set(0);statusCalls.set(0);faultPath="";expireAtActualStream=false;yield Map.of("reset",true);}case "clock"->{now.set(Instant.parse(c.path("now").asText()));yield Map.of("clock",now.get().toString());}default->throw new IllegalArgumentException("FINITE_COMMAND");};System.out.println("O1C_ENGINE_REPLY="+Json.write(reply));System.out.flush();}
++            }
++        }finally{if(scheduler!=null)scheduler.close();if(runtime!=null)runtime.close();if(dependency!=null)dependency.stop(0);secret=null;System.out.println("O1C_ENGINE_CLOSED="+ProcessHandle.current().pid());System.out.flush();}
++    }
++}
+diff --git a/platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java b/platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java
+index 722a1e4..6072ecd 100644
+--- a/platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java
++++ b/platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java
+@@ -5,6 +5,7 @@ import cn.agentplatform.common.authority.AuthorityProperties;
+ import cn.agentplatform.common.authority.GatewayIngressBoundary;
+ import cn.agentplatform.gateway.application.IntegrationAccess;
+ import cn.agentplatform.gateway.application.PublishedRunProxy;
++import cn.agentplatform.gateway.application.RunStatusProxy;
+ import cn.agentplatform.gateway.domain.Routes;
+ 
+ import jakarta.servlet.http.*;
+@@ -26,16 +27,24 @@ public class GatewayController {
+     private final IntegrationAccess integration;
+     private final AuthorityProperties deployment;
+     private final Optional<PublishedRunProxy> published;
++    private final Optional<RunStatusProxy> status;
+ 
+     public GatewayController(
+             Environment env,
+             IntegrationAccess integration,
+             AuthorityProperties deployment,
+             Optional<PublishedRunProxy> published) {
++        this(env,integration,deployment,published,Optional.empty());
++    }
++
++    @org.springframework.beans.factory.annotation.Autowired
++    public GatewayController(Environment env,IntegrationAccess integration,AuthorityProperties deployment,
++            Optional<PublishedRunProxy> published,Optional<RunStatusProxy> status) {
+         this.env = env;
+         this.integration = integration;
+         this.deployment = Objects.requireNonNull(deployment);
+         this.published = Objects.requireNonNull(published);
++        this.status=Objects.requireNonNull(status);
+     }
+ 
+     private String base(String service) {
+@@ -45,6 +54,11 @@ public class GatewayController {
+     @RequestMapping({"/admin/**", "/v1/**"})
+     public void proxy(HttpServletRequest req, HttpServletResponse res) throws IOException {
+         if ("iam".equals(deployment.mode())) {
++            if("GET".equals(req.getMethod())&&req.getRequestURI().matches("/admin/runs/r_[0-9a-f]{32}")){
++                var source=GatewayIngressBoundary.claimStatus(req);
++                status.orElseThrow(()->new PlatformException(503,"RUN_STATUS_UNAVAILABLE","运行状态暂不可用")).forward(req,res,source);
++                return;
++            }
+             var source = GatewayIngressBoundary.claim(req);
+             var proxy =
+                     published.orElseThrow(
+diff --git a/platform-gateway/src/main/java/cn/agentplatform/gateway/application/RunObservationMetadataClient.java b/platform-gateway/src/main/java/cn/agentplatform/gateway/application/RunObservationMetadataClient.java
+new file mode 100644
+index 0000000..fc1d5dd
+--- /dev/null
++++ b/platform-gateway/src/main/java/cn/agentplatform/gateway/application/RunObservationMetadataClient.java
+@@ -0,0 +1,70 @@
++package cn.agentplatform.gateway.application;
++
++import cn.agentplatform.common.*;
++import cn.agentplatform.common.authority.*;
++import cn.agentplatform.common.authority.HttpCurrentAuthorityClient.*;
++import cn.agentplatform.gateway.infra.PublishedRunHttp;
++import com.fasterxml.jackson.core.*;
++import com.fasterxml.jackson.databind.*;
++import jakarta.servlet.http.HttpServletRequest;
++import java.net.URI;
++import java.util.*;
++import java.util.concurrent.ConcurrentHashMap;
++
++/** Fixed engine Q projection. Parsed facts cannot mint a permission; Q retains signed evidence. */
++public final class RunObservationMetadataClient implements AutoCloseable {
++    private static final ObjectMapper JSON=new ObjectMapper(JsonFactory.builder().enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION).build())
++            .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS).enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS);
++    private final URI origin;private final CurrentAuthorityClient authority;private final PublishedRunHttp http;
++    private final Set<PublishedRunHttp.Cancellation> active=ConcurrentHashMap.newKeySet();private volatile boolean closed;
++    public RunObservationMetadataClient(URI origin,CurrentAuthorityClient authority,PublishedRunHttp http){this(origin,authority,http,false);}
++    /** Explicit isolated receiver only; default constructor requires HTTPS. Transport is borrowed. */
++    public RunObservationMetadataClient(URI origin,CurrentAuthorityClient authority,PublishedRunHttp http,boolean testLoopback){this.origin=PublishedRunHttp.origin(origin,testLoopback);this.authority=Objects.requireNonNull(authority);this.http=Objects.requireNonNull(http);}
++    public static final class Result {
++        private final ResourceBinding snapshot;private final GatewayObservationQueryAuthorization query;
++        private Result(ResourceBinding snapshot,GatewayObservationQueryAuthorization query){this.snapshot=snapshot;this.query=query;}
++        public ResourceBinding snapshot(){return snapshot;}
++        public void requireMain(GatewayStatusAuthorization main){main.requireSameQuery(query);if(!snapshot.equals(main.ticket().operation().resource()))throw unavailable();}
++        @Override public String toString(){return "RunObservationMetadata[validated-facts]";}
++    }
++    public Result lookup(GatewayIngressBoundary.PortalStatusRequest capture,HttpServletRequest request,long deadline,PublishedRunHttp.Cancellation cancellation){
++        active.add(cancellation);
++        try{
++            Runnable check=()->{if(closed||deadline-System.nanoTime()<=0)throw unavailable();capture.requireLive(request);};check.run();
++            var q=authority.exchangeGatewayRunObservationQuery(capture.sourceToken(),capture.subject(),capture.publicRunId());check.run();
++            byte[] bytes=http.getRunObservationMetadata(origin,capture.publicRunId(),q.ticket().value(),deadline,cancellation,()->{check.run();q.requireVerified();}).body();
++            var resource=parse(bytes,capture.subject(),capture.publicRunId());check.run();q.requireVerified();return new Result(resource,q);
++        }finally{active.remove(cancellation);}
++    }
++    private static ResourceBinding parse(byte[] bytes,SubjectKey expected,String run){
++        try{
++            var root=readUtf8(JSON,bytes);requireEnvelope(root);
++            var d=root.path("data");
++            if(!fields(d,Set.of("runId","owner","root","appVersionId","appVersionNo","acceptedSnapshotSha256","initialCeilingSha256"))
++                    ||Json.mapper().writeValueAsBytes(d).length>4096||!text(d,"runId").equals(run))throw unavailable();
++            var owner=d.path("owner");if(!fields(owner,Set.of("tenantId","principalId"))||!text(owner,"tenantId").equals(expected.tenantId())||!text(owner,"principalId").equals(expected.principalId())
++                    ||expected.tenantId().length()>128||expected.principalId().length()>128)throw unavailable();
++            long no=positive(d.path("appVersionNo"));positive(d.path("appVersionId"));
++            var app=d.path("root");if(!fields(app,Set.of("kind","id","versionDigest"))||!text(app,"kind").equals("app-version")
++                    ||!text(app,"id").matches("[A-Za-z][A-Za-z0-9_-]{0,63}@"+no))throw unavailable();
++            hash(text(app,"versionDigest"));hash(text(d,"initialCeilingSha256"));String sha=text(d,"acceptedSnapshotSha256");hash(sha);
++            return RunObservationSelectors.status(run,sha);
++        }catch(Exception invalid){throw unavailable();}
++    }
++    static void requireEnvelope(JsonNode r){
++        if(!fields(r,Set.of("code","message","data","traceId"))||!text(r,"code").equals("OK")||!r.path("message").isTextual()||r.path("message").textValue().length()>512
++                ||!(r.path("traceId").isNull()||r.path("traceId").isTextual()&&r.path("traceId").textValue().length()<=128))throw unavailable();
++    }
++    static JsonNode readUtf8(ObjectMapper mapper,byte[] bytes)throws java.io.IOException {
++        // Byte-based Jackson autodetect accepts UTF-16/32. The observation wire profile is UTF-8.
++        var text=java.nio.charset.StandardCharsets.UTF_8.newDecoder().onMalformedInput(java.nio.charset.CodingErrorAction.REPORT)
++                .onUnmappableCharacter(java.nio.charset.CodingErrorAction.REPORT).decode(java.nio.ByteBuffer.wrap(bytes));
++        return mapper.readTree(text.toString());
++    }
++    private static boolean fields(JsonNode d,Set<String> names){if(d==null||!d.isObject()||d.size()!=names.size())return false;for(String n:names)if(!d.has(n))return false;return true;}
++    private static String text(JsonNode d,String key){var n=d.path(key);if(!n.isTextual())throw unavailable();return n.textValue();}
++    private static long positive(JsonNode n){if(!n.isIntegralNumber()||!n.canConvertToLong()||n.longValue()<1)throw unavailable();return n.longValue();}
++    private static void hash(String value){if(!value.matches("[a-f0-9]{64}"))throw unavailable();}
++    private static PlatformException unavailable(){return new PlatformException(503,"RUN_METADATA_UNAVAILABLE","运行观察元数据暂不可用");}
++    @Override public void close(){closed=true;active.forEach(PublishedRunHttp.Cancellation::cancel);}
++}
+diff --git a/platform-gateway/src/main/java/cn/agentplatform/gateway/application/RunStatusProxy.java b/platform-gateway/src/main/java/cn/agentplatform/gateway/application/RunStatusProxy.java
+new file mode 100644
+index 0000000..59a3ae4
+--- /dev/null
++++ b/platform-gateway/src/main/java/cn/agentplatform/gateway/application/RunStatusProxy.java
+@@ -0,0 +1,53 @@
++package cn.agentplatform.gateway.application;
++
++import cn.agentplatform.common.*;
++import cn.agentplatform.common.authority.*;
++import cn.agentplatform.gateway.infra.PublishedRunHttp;
++import com.fasterxml.jackson.core.*;
++import com.fasterxml.jackson.databind.*;
++import jakarta.servlet.http.*;
++import java.io.IOException;
++import java.net.URI;
++import java.util.*;
++import java.util.concurrent.*;
++
++/** One synchronous Q/M operation; full validation precedes any successful browser business byte. */
++public final class RunStatusProxy implements AutoCloseable {
++    private static final ObjectMapper JSON=new ObjectMapper(JsonFactory.builder().enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION).build())
++            .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS).enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS);
++    private final URI origin;private final RunObservationMetadataClient metadata;private final CurrentAuthorityClient authority;private final PublishedRunHttp http;
++    private final Set<PublishedRunHttp.Cancellation> active=ConcurrentHashMap.newKeySet();private volatile boolean closed;
++    public RunStatusProxy(URI origin,RunObservationMetadataClient metadata,CurrentAuthorityClient authority,PublishedRunHttp http){this(origin,metadata,authority,http,false);}
++    public RunStatusProxy(URI origin,RunObservationMetadataClient metadata,CurrentAuthorityClient authority,PublishedRunHttp http,boolean testLoopback){this.origin=PublishedRunHttp.origin(origin,testLoopback);this.metadata=Objects.requireNonNull(metadata);this.authority=Objects.requireNonNull(authority);this.http=Objects.requireNonNull(http);}
++    public void forward(HttpServletRequest request,HttpServletResponse response,GatewayIngressBoundary.PortalStatusRequest capture)throws IOException {
++        final long deadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(5);var cancellation=new PublishedRunHttp.Cancellation();active.add(cancellation);
++        try{
++            Runnable live=()->{if(closed||cancellation.cancelled()||deadline-System.nanoTime()<=0)throw unavailable();capture.requireLive(request);};live.run();
++            var facts=metadata.lookup(capture,request,deadline,cancellation);live.run();
++            var main=authority.exchangeGatewayRunStatus(capture.sourceToken(),facts.snapshot());live.run();facts.requireMain(main);
++            Runnable send=()->{live.run();main.requireVerified();};
++            byte[] bytes=http.getRunStatus(origin,capture.publicRunId(),main.ticket().value(),deadline,cancellation,send).body();
++            validate(bytes,capture.publicRunId());send.run();
++            response.setStatus(200);response.setHeader("Cache-Control","no-store");response.setContentType("application/json");response.setCharacterEncoding("UTF-8");
++            // The actual MVC stream acquisition is part of the window. Never unwrap its delegate.
++            var output=response.getOutputStream();send.run();
++            try{output.write(bytes);}catch(IOException failure){
++                try{output.close();}catch(IOException closeFailure){failure.addSuppressed(closeFailure);}
++                org.slf4j.LoggerFactory.getLogger(RunStatusProxy.class).warn("Run status output interrupted: committed={}, attemptedBytes={}, actualBytes=unknown",response.isCommitted(),bytes.length,failure);
++                if(!response.isCommitted())throw failure;
++            }
++        }catch(PlatformException failure){
++            // Return only owned finite messages; a valid engine size denial is not Portal expiry.
++            if(failure.status()==401)throw new PlatformException(401,"PORTAL_TOKEN_INVALID","门户身份已失效");
++            if(failure.status()==404)throw new PlatformException(404,"RUN_NOT_FOUND","运行不存在");
++            if(failure.status()==403)throw new PlatformException(403,failure.code(),"RUN_STATUS_TOO_LARGE".equals(failure.code())?"运行状态超出范围":"当前授权不允许读取运行状态");
++            throw unavailable();
++        }finally{cancellation.cancel();active.remove(cancellation);}
++    }
++    private static void validate(byte[] bytes,String run){
++        try{var root=RunObservationMetadataClient.readUtf8(JSON,bytes);RunObservationMetadataClient.requireEnvelope(root);var d=root.path("data");if(!d.isObject()||!d.path("runId").isTextual()||!run.equals(d.path("runId").textValue()))throw unavailable();}
++        catch(Exception invalid){throw unavailable();}
++    }
++    private static PlatformException unavailable(){return new PlatformException(503,"RUN_STATUS_UNAVAILABLE","运行状态暂不可用");}
++    @Override public void close(){closed=true;active.forEach(PublishedRunHttp.Cancellation::cancel);}
++}
+diff --git a/platform-gateway/src/main/java/cn/agentplatform/gateway/infra/GatewayIamAssembly.java b/platform-gateway/src/main/java/cn/agentplatform/gateway/infra/GatewayIamAssembly.java
+index d6114c8..44c1a2e 100644
+--- a/platform-gateway/src/main/java/cn/agentplatform/gateway/infra/GatewayIamAssembly.java
++++ b/platform-gateway/src/main/java/cn/agentplatform/gateway/infra/GatewayIamAssembly.java
+@@ -3,6 +3,7 @@ package cn.agentplatform.gateway.infra;
+ import cn.agentplatform.common.authority.*;
+ import cn.agentplatform.gateway.api.GatewayController;
+ import cn.agentplatform.gateway.api.PortalSessionController;
++import cn.agentplatform.gateway.application.RunStatusProxy;
+ import org.springframework.beans.factory.ObjectProvider;
+ 
+ import jakarta.servlet.*;
+@@ -28,12 +29,13 @@ public final class GatewayIamAssembly {
+     GatewayIngressBoundary gatewayIngressBoundary(
+             GatewayController controller,
+             ObjectProvider<PortalSessionController> session,
++            ObjectProvider<RunStatusProxy> status,
+             TrustedJwtDecoder decoder,
+             Clock clock,
+             AuthorityProperties properties) {
+         if (!"iam".equals(properties.mode()) || !"gateway".equals(properties.serviceId()))
+             throw new IllegalStateException("GATEWAY_IAM_REQUIRED");
+-        return new GatewayIngressBoundary(controller,session.getIfAvailable(),decoder,clock);
++        return new GatewayIngressBoundary(controller,session.getIfAvailable(),status.getIfAvailable()!=null,decoder,clock);
+     }
+ 
+     @Bean
+diff --git a/platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PublishedRunHttp.java b/platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PublishedRunHttp.java
+index bd3a068..a902f40 100644
+--- a/platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PublishedRunHttp.java
++++ b/platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PublishedRunHttp.java
+@@ -31,6 +31,10 @@ public final class PublishedRunHttp implements AutoCloseable {
+     private final AtomicBoolean closed = new AtomicBoolean();
+ 
+     public record Response(int status, byte[] body) {}
++    private enum Policy { LEGACY, OBSERVATION_METADATA, STATUS }
++    private static final com.fasterxml.jackson.databind.ObjectMapper JSON=new com.fasterxml.jackson.databind.ObjectMapper(
++            com.fasterxml.jackson.core.JsonFactory.builder().enable(com.fasterxml.jackson.core.StreamReadFeature.STRICT_DUPLICATE_DETECTION).build())
++            .enable(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_TRAILING_TOKENS);
+ 
+     public PublishedRunHttp() {
+         // Core 5.3.4's trailer parser rejects when headerLines.size() >= maxHeaderCount.
+@@ -180,6 +184,14 @@ public final class PublishedRunHttp implements AutoCloseable {
+         return execute(request, ticket, maximum, deadline, cancel, check);
+     }
+ 
++    public Response getRunObservationMetadata(URI origin,String run,String ticket,long deadline,Cancellation cancel,Runnable check){
++        requireRun(run);return execute(new HttpGet(origin.resolve("/internal/runs/"+run+"/observation-metadata")),ticket,8192,deadline,cancel,check,Policy.OBSERVATION_METADATA);
++    }
++    public Response getRunStatus(URI origin,String run,String ticket,long deadline,Cancellation cancel,Runnable check){
++        requireRun(run);return execute(new HttpGet(origin.resolve("/admin/runs/"+run)),ticket,2*1024*1024,deadline,cancel,check,Policy.STATUS);
++    }
++    private static void requireRun(String run){if(run==null||!run.matches("r_[0-9a-f]{32}"))throw unavailable();}
++
+     private Response execute(
+             HttpUriRequestBase request,
+             String ticket,
+@@ -187,6 +199,10 @@ public final class PublishedRunHttp implements AutoCloseable {
+             long totalDeadline,
+             Cancellation cancellation,
+             Runnable beforeSend) {
++        return execute(request,ticket,maximum,totalDeadline,cancellation,beforeSend,Policy.LEGACY);
++    }
++    private Response execute(HttpUriRequestBase request,String ticket,int maximum,long totalDeadline,
++            Cancellation cancellation,Runnable beforeSend,Policy policy) {
+         long hopDeadline =
+                 Math.min(totalDeadline, System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(2000));
+         Runnable check =
+@@ -228,10 +244,11 @@ public final class PublishedRunHttp implements AutoCloseable {
+                     response -> {
+                         int status = response.getCode();
+                         if (status != 200) {
+-                            if (Set.of(401, 403, 409, 503).contains(status))
++                            if(policy!=Policy.LEGACY){if(status!=403&&status!=404)throw unavailable();}
++                            else if (Set.of(401, 403, 409, 503).contains(status))
+                                 throw new PlatformException(
+                                         status, "DEPENDENCY_REJECTED", "下游拒绝当前请求");
+-                            throw unavailable();
++                            else throw unavailable();
+                         }
+                         for (String header :
+                                 List.of("Content-Encoding", "Set-Cookie", "Location", "Trailer"))
+@@ -243,20 +260,30 @@ public final class PublishedRunHttp implements AutoCloseable {
+                                                 "(?i)application/json(?:\\s*;\\s*charset\\s*=\\s*(?:UTF-8|utf-8))?"))
+                             throw unavailable();
+                         var entity = response.getEntity();
+-                        if (entity == null || entity.getContentLength() > maximum)
++                        int limit=status==200?maximum:8192;
++                        if (entity == null || entity.getContentLength() > limit)
+                             throw unavailable();
+                         var output = new ByteArrayOutputStream();
+                         try (var in = entity.getContent()) {
+-                            byte[] bytes = new byte[8192];
+-                            int n;
+-                            while ((n = in.read(bytes)) != -1) {
+-                                check.run();
+-                                if (n > maximum - output.size()) throw unavailable();
+-                                output.write(bytes, 0, n);
++                            try {
++                                byte[] bytes = new byte[8192];
++                                int n;
++                                while ((n = in.read(bytes)) != -1) {
++                                    check.run();
++                                    if (n > limit - output.size()) throw unavailable();
++                                    output.write(bytes, 0, n);
++                                }
++                            }catch(IOException|RuntimeException failure){
++                                // Core's chunk stream close drains unread frames. Abort a terminal
++                                // observation before that close; preserve legacy POST/get mechanics.
++                                if(policy!=Policy.LEGACY)cancellation.cancel();
++                                throw failure;
+                             }
+                         }
+                         check.run();
+-                        return new Response(status, output.toByteArray());
++                        byte[] body=output.toByteArray();
++                        if(status!=200)throw observationError(status,body,policy);
++                        return new Response(status, body);
+                     });
+         } catch (PlatformException e) {
+             throw e;
+@@ -273,6 +300,21 @@ public final class PublishedRunHttp implements AutoCloseable {
+     private static PlatformException unavailable() {
+         return new PlatformException(503, "DEPENDENCY_UNAVAILABLE", "服务暂不可用");
+     }
++    private static PlatformException observationError(int status,byte[] bytes,Policy policy){
++        try{
++            var text=java.nio.charset.StandardCharsets.UTF_8.newDecoder().onMalformedInput(java.nio.charset.CodingErrorAction.REPORT)
++                    .onUnmappableCharacter(java.nio.charset.CodingErrorAction.REPORT).decode(java.nio.ByteBuffer.wrap(bytes));
++            var r=JSON.readTree(text.toString());
++            if(r==null||!r.isObject()||r.size()!=4||!r.has("code")||!r.has("message")||!r.has("data")||!r.has("traceId")
++                    ||!r.path("code").isTextual()||!r.path("message").isTextual()||r.path("message").textValue().length()>512
++                    ||!r.path("data").isNull()||!(r.path("traceId").isNull()||r.path("traceId").isTextual()&&r.path("traceId").textValue().length()<=128))return unavailable();
++            String code=r.path("code").textValue();
++            if(status==404&&code.equals("RUN_NOT_FOUND"))return new PlatformException(404,code,"运行不存在");
++            if(status==403&&code.equals("RUN_STATUS_TOO_LARGE")&&policy==Policy.STATUS)return new PlatformException(403,code,"运行状态超出范围");
++            if(status==403&&Set.of("SYS-AUTH-403","AUTHORITY_EXPIRED","AUTHORITY_CONTEXT_MISSING","RUN_AUTHORITY_DENIED","MATERIAL_SCOPE_MISSING_OR_CHANGED","AUTHORITY_DENIED").contains(code))return new PlatformException(403,code,"当前授权不允许读取运行状态");
++            return unavailable();
++        }catch(Exception invalid){return unavailable();}
++    }
+ 
+     @Override
+     public void close() {
+diff --git a/platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayRunStatusChainPostgresTest.java b/platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayRunStatusChainPostgresTest.java
+new file mode 100644
+index 0000000..097a7ec
+--- /dev/null
++++ b/platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayRunStatusChainPostgresTest.java
+@@ -0,0 +1,226 @@
++package cn.agentplatform.common.authority;
++
++import static org.assertj.core.api.Assertions.*;
++import cn.agentplatform.common.*;
++import cn.agentplatform.gateway.api.GatewayController;
++import cn.agentplatform.gateway.application.*;
++import cn.agentplatform.gateway.infra.*;
++import com.fasterxml.jackson.databind.JsonNode;
++import org.junit.jupiter.api.*;
++import org.springframework.boot.*;
++import org.springframework.boot.autoconfigure.*;
++import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
++import org.springframework.context.annotation.*;
++import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
++import java.io.*;
++import java.net.*;
++import java.net.http.*;
++import java.nio.charset.StandardCharsets;
++import java.nio.file.*;
++import java.time.*;
++import java.util.*;
++import java.util.concurrent.*;
++import java.util.concurrent.atomic.*;
++import java.util.function.Consumer;
++
++/** Parent gateway has no engine business dependency; only HTTP + private child management cross. */
++@TestMethodOrder(MethodOrderer.MethodName.class)
++class GatewayRunStatusChainPostgresTest {
++    static final Path ROOT=Path.of("..").toAbsolutePath().normalize();
++    static LoopbackAuthority iam;static Child engine;static int enginePort;
++    static ServletWebServerApplicationContext context;static HttpClient browser=HttpClient.newHttpClient();
++    static String tenant,source,run,sha;static long runId;static JsonNode baseline;
++    static final AtomicReference<Consumer<jakarta.servlet.http.HttpServletRequest>> streamAction=new AtomicReference<>(r->{});
++    static final AtomicInteger streamWindows=new AtomicInteger(),businessWrites=new AtomicInteger();static volatile boolean partial;
++    @Configuration(proxyBeanMethods=false)
++    @EnableAutoConfiguration(exclude=org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration.class)
++    @EnableWebSecurity @Import({GatewayController.class,GatewayIamAssembly.class,PlatformErrors.class})
++    static class Receiver {
++        @Bean org.springframework.boot.web.servlet.FilterRegistrationBean<jakarta.servlet.Filter> outputWindow(){
++            var bean=new org.springframework.boot.web.servlet.FilterRegistrationBean<jakarta.servlet.Filter>();bean.setOrder(Integer.MIN_VALUE);
++            bean.setFilter((request,response,chain)->{
++                var r=(jakarta.servlet.http.HttpServletRequest)request;
++                if(r.getRequestURI().equals("/o1c-forward")){r.getRequestDispatcher("/admin/runs/"+run).forward(r,response);return;}
++                chain.doFilter(request,new jakarta.servlet.http.HttpServletResponseWrapper((jakarta.servlet.http.HttpServletResponse)response){
++                    @Override public jakarta.servlet.ServletOutputStream getOutputStream()throws IOException {
++                        var actual=super.getOutputStream();streamWindows.incrementAndGet();streamAction.getAndSet(q->{}).accept(((org.springframework.web.context.request.ServletRequestAttributes)org.springframework.web.context.request.RequestContextHolder.currentRequestAttributes()).getRequest());
++                        return new jakarta.servlet.ServletOutputStream(){
++                            @Override public boolean isReady(){return actual.isReady();}@Override public void setWriteListener(jakarta.servlet.WriteListener l){actual.setWriteListener(l);}
++                            @Override public void write(int b)throws IOException{actual.write(b);}
++                            @Override public void write(byte[] b,int o,int n)throws IOException{if(getStatus()==200)businessWrites.addAndGet(partial?Math.min(n,128):n);if(partial&&getStatus()==200){actual.write(b,o,Math.min(n,128));actual.flush();throw new IOException("O1C_FINITE_PARTIAL_WRITE");}actual.write(b,o,n);}
++                            @Override public void close()throws IOException{actual.close();}
++                        };
++                    }
++                });
++            });return bean;
++        }
++        @Bean static org.springframework.beans.factory.config.BeanFactoryPostProcessor deployment(org.springframework.core.env.Environment e){return f->f.registerSingleton("authorityProperties",SecurityConfiguration.bindDeployment(e));}
++        @Bean(destroyMethod="close") TrustedJwtDecoder decoder(AuthorityProperties p){return new TrustedJwtDecoder(p,iam.clock(),true);}
++        @Bean Clock clock(){return iam.clock();}
++        @Bean IntegrationAccess integration(TrustedJwtDecoder d){return new IntegrationAccess("http://127.0.0.1:"+enginePort,"http://127.0.0.1:"+enginePort,d);}
++        @Bean(destroyMethod="close") HttpCurrentAuthorityClient authority(){return iam.client("gateway");}
++        @Bean(destroyMethod="close") PublishedRunHttp runStatusHttp(){return new PublishedRunHttp();}
++        @Bean(destroyMethod="close") RunObservationMetadataClient metadata(PublishedRunHttp h,HttpCurrentAuthorityClient a){return new RunObservationMetadataClient(URI.create("http://127.0.0.1:"+enginePort),a,h,true);}
++        @Bean(destroyMethod="close") RunStatusProxy status(PublishedRunHttp h,HttpCurrentAuthorityClient a,RunObservationMetadataClient m){return new RunStatusProxy(URI.create("http://127.0.0.1:"+enginePort),m,a,h,true);}
++    }
++    @Configuration(proxyBeanMethods=false)
++    @EnableAutoConfiguration(exclude=org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration.class)
++    @EnableWebSecurity @Import({GatewayController.class,GatewayIamAssembly.class,PlatformErrors.class})
++    static class NoStatusReceiver {
++        @Bean AuthorityProperties properties(){return iam.config("gateway");}
++        @Bean(destroyMethod="close") TrustedJwtDecoder decoder(AuthorityProperties p){return new TrustedJwtDecoder(p,iam.clock(),true);}
++        @Bean Clock clock(){return iam.clock();}
++        @Bean IntegrationAccess integration(TrustedJwtDecoder d){return new IntegrationAccess("http://127.0.0.1:"+enginePort,"http://127.0.0.1:"+enginePort,d);}
++    }
++    @BeforeAll static void start()throws Exception {
++        assertThat(System.getProperty("java.class.path")).doesNotContain("engine-runtime","app-management");
++        iam=new LoopbackAuthority();iam.portalActor(actor("o1c-initial"));
++        try{
++            engine=new Child();engine.send(Map.of("trust",iam.config("engine"),"secret",iam.secrets.get("engine"),"now",iam.clock().instant().toString()));
++            var ready=engine.await("READY",35);enginePort=ready.path("port").asInt();System.out.println("O1C_ENGINE_ID="+ready);
++            var boot=new SpringApplication(Receiver.class);boot.setAdditionalProfiles("test");boot.setDefaultProperties(Map.ofEntries(Map.entry("server.address","127.0.0.1"),Map.entry("server.port","0"),Map.entry("spring.config.location","optional:classpath:/o1c-gateway-no-config/"),Map.entry("spring.main.banner-mode","off"),Map.entry("springdoc.api-docs.enabled",false),Map.entry("spring.flyway.enabled",false),Map.entry("management.endpoints.web.exposure.exclude","*"),Map.entry("management.endpoints.web.discovery.enabled",false),Map.entry("logging.level.root","ERROR"),Map.entry("logging.level.cn.agentplatform.gateway.application.RunStatusProxy","WARN")));
++            boot.addInitializers(c->{var p=new LinkedHashMap<String,Object>();flatten("agent.security",Json.tree(iam.config("gateway")),p);p.put("agent.dev-auth",false);c.getEnvironment().getPropertySources().addFirst(new org.springframework.core.env.MapPropertySource("o1c-trust",p));});
++            context=(ServletWebServerApplicationContext)boot.run();
++            System.out.println("O1C_GATEWAY_ID="+Json.write(Map.of("pid",ProcessHandle.current().pid(),"port",context.getWebServer().getPort())));
++        }catch(Throwable e){try{close();}catch(Throwable cleanup){e.addSuppressed(cleanup);}throw e;}
++    }
++    static Actor actor(String t){return new Actor(t,"alice",Set.of("EDITOR"),Map.of("region",Set.of("A","B"),"dataLabels",Set.of("initial")));}
++    @BeforeEach void seed()throws Exception {
++        streamAction.set(r->{});streamWindows.set(0);businessWrites.set(0);partial=false;
++        iam.clearFiniteGrants();iam.revoked(false);iam.unavailable(false);iam.ticketMutation(c->{});iam.decisionMutation(c->{});
++        tenant="o1c-"+UUID.randomUUID();iam.portalActor(actor(tenant));source=iam.portal();
++        engine.command(Map.of("action","clock","now",iam.clock().instant().toString()));
++        try(var gateway=iam.client("gateway")){
++            var ticket=gateway.exchange(source,new ServiceCall("engine","proxy.engine.post.RunController.run",new ResourceBinding("app-version","app-a@1",Digest.sha256("o1c-candidate"))));
++            var seed=engine.command(Map.of("action","seed","tenant",tenant,"ticket",ticket.value()));run=seed.path("run").asText();sha=seed.path("sha").asText();runId=seed.path("id").asLong();
++            assertThat(run).matches("r_[0-9a-f]{32}");assertThat(seed.path("gate").asText()).contains("realDag");
++            iam.registerObservation(new SubjectKey(tenant,"alice"),run,sha);System.out.println("O1C_TRUSTED_SEED="+seed);
++        }
++        iam.clearFiniteGrants();iam.registerObservation(new SubjectKey(tenant,"alice"),run,sha);engine.command(Map.of("action","reset"));baseline=stats();
++    }
++    @AfterEach void evidence(TestInfo info)throws Exception {streamAction.set(r->{});partial=false;System.out.println("O1C_CASE="+Json.write(Map.of("test",info.getDisplayName(),"engine",stats(),"operations",iam.observedOperations(),"authorityCalls",iam.authorityCalls(),"streamWindows",streamWindows.get(),"businessWriteBytes",businessWrites.get())));}
++    @AfterAll static void close()throws Exception {if(context!=null){context.close();context=null;}if(engine!=null){engine.close();engine=null;}browser.close();if(iam!=null){iam.close();iam=null;}System.out.println("O1C_PARENT_RESOURCES_CLOSED=true");}
++    static JsonNode stats()throws Exception{return engine.command(Map.of("action","stats"));}
++    static HttpResponse<byte[]> get(String path,String token)throws Exception{return browser.send(HttpRequest.newBuilder(URI.create("http://127.0.0.1:"+context.getWebServer().getPort()+path)).timeout(Duration.ofSeconds(12)).header("Authorization","Bearer "+token).GET().build(),HttpResponse.BodyHandlers.ofByteArray());}
++    @Test void realGatewayQueryAndStatusReturnOriginalBytes()throws Exception {
++        var response=get("/admin/runs/"+run,source);
++        assertThat(response.statusCode()).as(new String(response.body(),StandardCharsets.UTF_8)).isEqualTo(200);
++        var root=Json.read(new String(response.body(),StandardCharsets.UTF_8));assertThat(root.path("code").asText()).isEqualTo("OK");assertThat(root.path("data").path("runId").asText()).isEqualTo(run);
++        assertThat(response.body()).isEqualTo(Base64.getDecoder().decode(engine.command(Map.of("action","last")).path("base64").asText()));
++        assertThat(new String(response.body(),StandardCharsets.UTF_8)).contains("123456789012345678901234567890","1.2345678901234567890123456789","\"nullValue\":null","观察\\n\\\"\\\\");assertThat(root.path("data").size()).isEqualTo(12);
++        // Tomcat may compute a fresh length when the entire finite body fits its buffer.
++        response.headers().firstValue("Content-Length").ifPresent(v->assertThat(Long.parseLong(v)).isEqualTo(response.body().length));
++        var after=stats();assertThat(after.path("facts")).isEqualTo(baseline.path("facts"));assertThat(after.path("dependencies").asInt()).isZero();assertThat(after.path("workers").asInt()).isZero();
++        assertThat(after.path("metadata").asInt()).isEqualTo(1);assertThat(after.path("status").asInt()).isEqualTo(1);
++        var exchanges=iam.requests.stream().filter(r->r.path("operation").asText().equals("exchange")).toList();assertThat(exchanges).hasSize(2);for(var q:exchanges)assertThat(q.path("subject_token").asText()).isEqualTo(source);
++        assertThat(iam.grants).hasSize(2);assertThat(iam.operations).hasSize(2);
++        assertThat(iam.observedOperations()).containsExactly("exchange","authorize","authorize","exchange","authorize","authorize");
++        var payload=new ArrayList<JsonNode>();after.path("sql").forEach(s->{if(payload(s.path("sql").asText()))payload.add(s);});assertThat(payload).isNotEmpty();assertThat(payload.stream().map(s->s.path("connection").asInt()).distinct()).hasSize(1);for(var s:payload){assertThat(s.path("readOnly").asBoolean()).isTrue();assertThat(s.path("isolation").asInt()).isEqualTo(4);}
++        int firstPayload=-1;for(int i=0;i<after.path("sql").size();i++)if(payload(after.path("sql").get(i).path("sql").asText())){firstPayload=i;break;}assertThat(firstPayload).isGreaterThan(3);
++        for(var w:after.path("wire")){assertThat(w.path("authorizationCount").asInt()).isEqualTo(1);assertThat(w.path("cookie").asBoolean()).isFalse();assertThat(w.path("ticketSha").asText()).isNotEqualTo(Digest.sha256("Bearer "+source));assertThat(w.path("query").asText()).isEqualTo("<null>");}
++        System.out.println("O1C_RAW_EQUAL="+Json.write(Map.of("bytes",response.body().length,"sha",Digest.sha256(new String(response.body(),StandardCharsets.UTF_8)),"payloadConnection",payload.getFirst().path("connection").asInt(),"qControlPayload",0)));
++    }
++    static boolean payload(String sql){return sql.startsWith("select row_to_json(material)::text")||sql.matches("select (snapshot|inputs|version_refs|budget|output|error|definition)::text from engine\\.(run|node_instance).* ".stripTrailing());}
++    static void resetObservation()throws Exception {iam.clearFiniteGrants();iam.ticketMutation(c->{});iam.registerObservation(new SubjectKey(tenant,"alice"),run,sha);engine.command(Map.of("action","reset"));businessWrites.set(0);streamWindows.set(0);}
++    static void fault(String path,int status,String body)throws Exception {engine.command(Map.of("action","fault","path",path,"status",status,"body",body));}
++    static void noBusiness(HttpResponse<byte[]> r,int status){assertThat(r.statusCode()).isEqualTo(status);assertThat(new String(r.body(),StandardCharsets.UTF_8)).doesNotContain("\"nodes\"","O1C_NUMERIC_FIXTURE","privateInput");assertThat(businessWrites.get()).isZero();r.headers().firstValue("Content-Length").ifPresent(v->assertThat(Integer.parseInt(v)).isEqualTo(r.body().length));assertThat(r.headers().firstValue("WWW-Authenticate")).isEmpty();}
++    @Test void actualOutputStreamAcquisitionRechecksCaptureAndMain()throws Exception {
++        for(String mode:List.of("capture-close","capture-replace","internal-expiry","source-expiry")){
++            resetObservation();streamAction.set(r->{switch(mode){case "capture-close"->context.getBean(GatewayIngressBoundary.class).afterCompletion(r,null,null,null);case "capture-replace"->r.setAttribute(GatewayIngressBoundary.class.getName()+".proof",new Object());case "internal-expiry"->iam.advanceClock(Duration.ofSeconds(6));case "source-expiry"->iam.advanceClock(Duration.ofSeconds(41));default->throw new AssertionError();}});
++            var r=get("/admin/runs/"+run,source);noBusiness(r,mode.equals("source-expiry")?401:mode.equals("internal-expiry")?503:403);assertThat(streamWindows.get()).isPositive();assertThat(stats().path("status").asInt()).isEqualTo(1);
++            iam.advanceClock(Duration.ofSeconds(mode.equals("source-expiry")?-41:mode.equals("internal-expiry")?-6:0));
++        }
++    }
++    @Test void initialPortalVerifierInfrastructureIs503AndExplicitInvalidSourceIs401()throws Exception {
++        try{
++            for(boolean malformed:List.of(false,true)){
++                resetObservation();iam.server.removeContext("/portal-jwks");iam.server.createContext("/portal-jwks",x->LoopbackAuthority.send(x,malformed?200:503,malformed?"{bad-jwks":"unavailable"));
++                noBusiness(get("/admin/runs/"+run,source),503);assertThat(iam.authorityCalls()).isZero();assertThat(stats().path("wire")).isEmpty();
++            }
++        }finally{iam.server.removeContext("/portal-jwks");iam.server.createContext("/portal-jwks",x->LoopbackAuthority.send(x,200,new com.nimbusds.jose.jwk.JWKSet(iam.portalKey.toPublicJWK()).toString()));}
++        var unknownClaims=iam.base("user","portal-gateway",20);unknownClaims.putAll(Map.of("iss",iam.issuer()+"/portal","sub","alice","tenant_id",tenant,"client_id","portal-web","roles",Set.of("EDITOR"),"attributes",actor(tenant).attributes(),"scope","platform.access"));
++        for(String invalid:List.of("bad",iam.portal(-1),iam.sign(unknownClaims,LoopbackIssuer.key("unknown-portal-kid"),"at+jwt"))){var r=get("/admin/runs/"+run,invalid);noBusiness(r,401);assertThat(Json.read(new String(r.body(),StandardCharsets.UTF_8)).path("code").asText()).isEqualTo("PORTAL_TOKEN_INVALID");assertThat(iam.authorityCalls()).isZero();}
++    }
++    @Test void internal401NeverBecomesPortalLogout()throws Exception {
++        for(String path:List.of("metadata","status")){
++            resetObservation();fault(path,401,"");noBusiness(get("/admin/runs/"+run,source),503);assertThat(iam.requests.stream().filter(r->r.path("operation").asText().equals("exchange"))).hasSize(path.equals("metadata")?1:2);assertThat(stats().path("wire")).hasSize(path.equals("metadata")?1:2);
++        }
++        resetObservation();iam.ticketMutation(c->c.put("aud","wrong-internal"));noBusiness(get("/admin/runs/"+run,source),503);assertThat(stats().path("wire")).isEmpty();assertThat(iam.authorityCalls()).isEqualTo(1);
++    }
++    @Test void metadataFailureStopsBeforeMainExchangeAndKeepsControlReadsPure()throws Exception {
++        String unknown="r_"+"f".repeat(32);noBusiness(get("/admin/runs/"+unknown,source),404);assertThat(iam.requests.stream().filter(r->r.path("operation").asText().equals("exchange"))).hasSize(1);assertThat(stats().path("status").asInt()).isZero();for(var s:stats().path("sql"))assertThat(payload(s.path("sql").asText())).isFalse();
++        resetObservation();iam.portalActor(actor("o1c-other-owner"));String other=iam.portal();noBusiness(get("/admin/runs/"+run,other),404);iam.portalActor(actor(tenant));
++        String valid=Json.write(new ApiResponse<>("OK","",Map.of("runId",run,"owner",new SubjectKey(tenant,"alice"),"root",new ResourceBinding("app-version","app-a@4294967297",Digest.sha256("candidate")),"appVersionId",4294967297L,"appVersionNo",4294967297L,"acceptedSnapshotSha256",sha,"initialCeilingSha256",Digest.sha256("initial")),null));
++        var bad=new ArrayList<String>(List.of("","null","[]","{}",valid+" {}",valid.replace("\"runId\":","\"extra\":1,\"runId\":"),valid.replace("\"appVersionNo\":4294967297","\"appVersionNo\":9223372036854775808"),valid.replace(run,"r_"+"e".repeat(32)),valid.replace("\"owner\":","\"owner\":null,\"duplicateOwner\":")));
++        for(String body:bad){resetObservation();fault("metadata",200,body);noBusiness(get("/admin/runs/"+run,source),503);assertThat(iam.authorityCalls()).isEqualTo(1);assertThat(stats().path("wire")).hasSize(1);}
++        resetObservation();fault("metadata",200,valid);assertThat(get("/admin/runs/"+run,source).statusCode()).isEqualTo(200);assertThat(iam.requests.stream().filter(r->r.path("operation").asText().equals("exchange"))).hasSize(2);
++    }
++    @Test void missingStatusBeanKeepsActualIngressClosed()throws Exception {
++        var boot=new SpringApplication(NoStatusReceiver.class);boot.setAdditionalProfiles("test");boot.setDefaultProperties(Map.ofEntries(Map.entry("server.address","127.0.0.1"),Map.entry("server.port","0"),Map.entry("spring.config.location","optional:classpath:/o1c-closed-no-config/"),Map.entry("spring.main.banner-mode","off"),Map.entry("springdoc.api-docs.enabled",false),Map.entry("spring.flyway.enabled",false),Map.entry("management.endpoints.web.exposure.exclude","*"),Map.entry("management.endpoints.web.discovery.enabled",false),Map.entry("logging.level.root","ERROR")));
++        try(var closed=(ServletWebServerApplicationContext)boot.run()){
++            assertThat(closed.getBeansOfType(RunStatusProxy.class)).isEmpty();var r=browser.send(HttpRequest.newBuilder(URI.create("http://127.0.0.1:"+closed.getWebServer().getPort()+"/admin/runs/"+run)).header("Authorization","Bearer "+source).GET().build(),HttpResponse.BodyHandlers.ofByteArray());noBusiness(r,403);assertThat(iam.authorityCalls()).isZero();assertThat(stats().path("wire")).isEmpty();System.out.println("O1C_NO_STATUS_RECEIVER="+closed.getWebServer().getPort());
++        }
++    }
++    @Test void partialOutputNeverAppendsOrRetries()throws Exception {
++        partial=true;try(var socket=new Socket("127.0.0.1",context.getWebServer().getPort())){socket.setSoTimeout(5000);socket.getOutputStream().write(("GET /admin/runs/"+run+" HTTP/1.1\r\nHost: localhost\r\nAuthorization: Bearer "+source+"\r\nConnection: close\r\n\r\n").getBytes(StandardCharsets.US_ASCII));socket.getOutputStream().flush();String raw=new String(socket.getInputStream().readAllBytes(),StandardCharsets.UTF_8);assertThat(raw).contains("HTTP/1.1 200","\"code\":\"OK\"").doesNotContain("RUN_STATUS_UNAVAILABLE","PORTAL_TOKEN_INVALID");assertThat(businessWrites.get()).isEqualTo(128);assertThat(stats().path("wire")).hasSize(2);System.out.println("O1C_PARTIAL_PEER="+Json.write(Map.of("rawBytes",raw.getBytes(StandardCharsets.UTF_8).length,"attemptedBusinessPrefix",128,"actualBelowStream","unknown","wire",raw)));}
++    }
++    @Test void statusLimitMalformedAndWrongRunNeverReleaseBusinessBytes()throws Exception {
++        String base="{\"code\":\"OK\",\"message\":\"\",\"data\":{\"runId\":\""+run+"\",\"padding\":\"%s\"},\"traceId\":null}";int overhead=base.formatted("").getBytes(StandardCharsets.UTF_8).length;
++        resetObservation();fault("status",200,base.formatted("x".repeat(2*1024*1024-overhead)));var exact=get("/admin/runs/"+run,source);assertThat(exact.statusCode()).isEqualTo(200);assertThat(exact.body()).hasSize(2*1024*1024);
++        for(String body:List.of(base.formatted("x".repeat(2*1024*1024-overhead+1)),"","null","[]",base.formatted("")+" {}",base.formatted("").replace(run,"r_"+"e".repeat(32)),base.formatted("").replace("\"runId\":","\"runId\":\"duplicate\",\"runId\":"))){resetObservation();fault("status",200,body);noBusiness(get("/admin/runs/"+run,source),503);assertThat(stats().path("wire")).hasSize(2);}
++        resetObservation();try(var gateway=iam.client("gateway")){var ticket=gateway.exchange(source,new ServiceCall("engine","proxy.engine.post.RunController.run",new ResourceBinding("app-version","app-a@1",Digest.sha256("o1c-candidate"))));var seeded=engine.command(Map.of("action","seed","tenant",tenant,"ticket",ticket.value(),"padBytes",2*1024*1024));run=seeded.path("run").asText();sha=seeded.path("sha").asText();runId=seeded.path("id").asLong();}resetObservation();var before=stats().path("facts");var large=get("/admin/runs/"+run,source);noBusiness(large,403);assertThat(Json.read(new String(large.body(),StandardCharsets.UTF_8)).path("code").asText()).isEqualTo("RUN_STATUS_TOO_LARGE");assertThat(stats().path("facts")).isEqualTo(before);
++    }
++    @Test void nonUtf8StatusWireIsRejectedBeforeBusinessWrite()throws Exception {
++        String valid=Json.write(new ApiResponse<>("OK","",Map.of("runId",run),null));
++        engine.command(Map.of("action","fault","path","status","status",200,"base64",Base64.getEncoder().encodeToString(valid.getBytes(StandardCharsets.UTF_16))));
++        noBusiness(get("/admin/runs/"+run,source),503);
++    }
++    @Test void metadataEncodingAndWireBudgetAreVerifiedIndependently()throws Exception {
++        String valid=Json.write(new ApiResponse<>("OK","",Map.of("runId",run,"owner",new SubjectKey(tenant,"alice"),"root",new ResourceBinding("app-version","app-a@4294967297",Digest.sha256("candidate")),"appVersionId",4294967297L,"appVersionNo",4294967297L,"acceptedSnapshotSha256",sha,"initialCeilingSha256",Digest.sha256("initial")),null));
++        for(String path:List.of("metadata","status")){
++            String body=path.equals("metadata")?valid:Json.write(new ApiResponse<>("OK","",Map.of("runId",run),null));
++            var samples=new ArrayList<byte[]>();for(var charset:List.of(StandardCharsets.UTF_16,StandardCharsets.UTF_16LE,java.nio.charset.Charset.forName("UTF-32BE")))samples.add(body.getBytes(charset));
++            var bad=new ByteArrayOutputStream();bad.write("{\"code\":\"OK\",\"message\":\"".getBytes(StandardCharsets.UTF_8));bad.write(0xc3);bad.write("\",\"data\":{},\"traceId\":null}".getBytes(StandardCharsets.UTF_8));samples.add(bad.toByteArray());
++            for(byte[] bytes:samples){resetObservation();engine.command(Map.of("action","fault","path",path,"status",200,"base64",Base64.getEncoder().encodeToString(bytes)));noBusiness(get("/admin/runs/"+run,source),503);assertThat(stats().path("wire")).hasSize(path.equals("metadata")?1:2);}
++        }
++        int data=Json.mapper().writeValueAsBytes(Json.read(valid).path("data")).length,wire=valid.getBytes(StandardCharsets.UTF_8).length;assertThat(data).isLessThan(4096);
++        resetObservation();fault("metadata",200,valid+" ".repeat(8192-wire));var exact=get("/admin/runs/"+run,source);assertThat(exact.statusCode()).isEqualTo(200);
++        resetObservation();fault("metadata",200,valid+" ".repeat(8193-wire));noBusiness(get("/admin/runs/"+run,source),503);assertThat(iam.authorityCalls()).isEqualTo(1);assertThat(stats().path("wire")).hasSize(1);
++        System.out.println("O1C_Q_BUDGET="+Json.write(Map.of("dataUtf8",data,"baseWireUtf8",wire,"validWireExact",8192,"rejectedWire",8193,"data4096LegalExtreme","unreachable under exact field bounds; no illegal DTO fabricated")));
++    }
++    @Test void strictKnownDenialsRetain403AndUnsafePairsBecome503()throws Exception {
++        for(String code:List.of("AUTHORITY_EXPIRED","RUN_AUTHORITY_DENIED","MATERIAL_SCOPE_MISSING_OR_CHANGED","AUTHORITY_DENIED","UNKNOWN","RUN_METADATA_TOO_LARGE")){
++            resetObservation();fault("status",403,Json.write(new ApiResponse<>(code,"private error",null,"private trace")));var r=get("/admin/runs/"+run,source);noBusiness(r,Set.of("UNKNOWN","RUN_METADATA_TOO_LARGE").contains(code)?503:403);assertThat(new String(r.body(),StandardCharsets.UTF_8)).doesNotContain("private error","private trace");
++        }
++    }
++    @Test void realEngineCurrentDenialAndActualStreamExpiryRemain403()throws Exception {
++        iam.decisionMutation(c->{var last=iam.requests.getLast();if(last.path("operation").asText().equals("authorize")&&last.path("action").asText().equals(RunObservationSelectors.STATUS_ACTION))c.put("active",false);});
++        var denial=get("/admin/runs/"+run,source);noBusiness(denial,403);assertThat(Json.read(new String(denial.body(),StandardCharsets.UTF_8)).path("code").asText()).isEqualTo("SYS-AUTH-403");assertThat(stats().path("wire")).hasSize(2);assertThat(stats().path("lastStatusBytes").asInt()).isZero();
++        resetObservation();engine.command(Map.of("action","expireAtStream"));var expiry=get("/admin/runs/"+run,source);noBusiness(expiry,403);assertThat(Json.read(new String(expiry.body(),StandardCharsets.UTF_8)).path("code").asText()).isEqualTo("AUTHORITY_EXPIRED");assertThat(stats().path("lastStatusBytes").asInt()).isZero();engine.command(Map.of("action","clock","now",iam.clock().instant().toString()));
++    }
++    @Test void wrongMethodAliasQueryBodyHeadersAndForwardStopBeforeExchange()throws Exception {
++        var requests=new ArrayList<HttpRequest>();String origin="http://127.0.0.1:"+context.getWebServer().getPort();
++        for(String path:List.of("/admin/runs/"+run+"?x=1","/admin/debug-runs/"+run+"/status","/v1/runs/"+run,"/admin/runs/"+run+"/","/o1c-forward"))requests.add(HttpRequest.newBuilder(URI.create(origin+path)).header("Authorization","Bearer "+source).GET().build());
++        for(String header:List.of("Cookie","X-Api-Key","X-User-Id","X-Tenant","X-Principal","X-Actor","X-Resource","X-Target","X-Action"))requests.add(HttpRequest.newBuilder(URI.create(origin+"/admin/runs/"+run)).header("Authorization","Bearer "+source).header(header,"forged").GET().build());
++        requests.add(HttpRequest.newBuilder(URI.create(origin+"/admin/runs/"+run)).header("Authorization","Bearer "+source).header("Authorization","Bearer "+source).GET().build());requests.add(HttpRequest.newBuilder(URI.create(origin+"/admin/runs/"+run)).header("Authorization","Bearer "+source).method("GET",HttpRequest.BodyPublishers.ofString("{}")).build());requests.add(HttpRequest.newBuilder(URI.create(origin+"/admin/runs/"+run)).header("Authorization","Bearer "+source).POST(HttpRequest.BodyPublishers.noBody()).build());
++        for(var request:requests){var r=browser.send(request,HttpResponse.BodyHandlers.ofByteArray());System.out.println("O1C_INGRESS_CASE="+Json.write(Map.of("path",request.uri().getRawPath(),"method",request.method(),"headerNames",request.headers().map().keySet(),"status",r.statusCode())));assertThat(r.statusCode()).as(request.uri()+" "+request.method()+" "+request.headers().map().keySet()).isIn(401,403);assertThat(new String(r.body(),StandardCharsets.UTF_8)).doesNotContain("\"nodes\"");}
++        // JDK HttpClient drops the bare '?'; send the literal target over the owned real socket.
++        for(boolean bare:List.of(true,false))try(var socket=new Socket("127.0.0.1",context.getWebServer().getPort())){socket.setSoTimeout(4000);socket.getOutputStream().write(("GET /admin/runs/"+run+(bare?"?":"")+" HTTP/1.1\r\nHost: localhost\r\nAuthorization: Bearer "+source+"\r\n"+(bare?"":"Proxy-Authorization: forged\r\n")+"Connection: close\r\n\r\n").getBytes(StandardCharsets.US_ASCII));socket.getOutputStream().flush();String raw=new String(socket.getInputStream().readAllBytes(),StandardCharsets.UTF_8);assertThat(raw).startsWith("HTTP/1.1 403").doesNotContain("\"nodes\"");System.out.println(bare?"O1C_LITERAL_BARE_QUERY=403":"O1C_LITERAL_PROXY_AUTHORIZATION=403");}
++        assertThat(iam.authorityCalls()).isZero();assertThat(stats().path("wire")).isEmpty();
++    }
++    @Test void zzOwnerClientCloseAfterActualStreamCannotReleaseStatus()throws Exception {streamAction.set(r->context.getBean(HttpCurrentAuthorityClient.class).close());noBusiness(get("/admin/runs/"+run,source),503);assertThat(stats().path("status").asInt()).isEqualTo(1);assertThat(streamWindows.get()).isPositive();}
++    static void flatten(String prefix,JsonNode v,Map<String,Object> p){if(v.isObject())v.fields().forEachRemaining(e->{String k=prefix.endsWith("attribute-value-allowlist")?"["+e.getKey()+"]":"."+e.getKey().replaceAll("([a-z])([A-Z])","$1-$2").toLowerCase(Locale.ROOT);flatten(prefix+k,e.getValue(),p);});else if(v.isArray()){for(int i=0;i<v.size();i++)flatten(prefix+"["+i+"]",v.get(i),p);}else if(!v.isNull())p.put(prefix,v.isBoolean()?v.booleanValue():v.isNumber()?v.numberValue():v.asText());}
++    static final class Child implements AutoCloseable {
++        final Process process;final BufferedWriter stdin;final BlockingQueue<String> lines=new LinkedBlockingQueue<>();final StringBuilder output=new StringBuilder();final Thread drain;
++        Child()throws Exception {
++            String cp=Files.readString(ROOT.resolve(".local/iam-o1c-gateway-status/engine-classpath.txt")).strip();
++            for(String e:cp.split(";")){String rel=ROOT.relativize(Path.of(e).toRealPath()).toString().replace('\\','/');assertThat(rel.startsWith(".tools/m2/")||rel.startsWith("engine-runtime/target/")||rel.startsWith("admin-common/target/")).as(rel).isTrue();}
++            process=new ProcessBuilder(Path.of(System.getProperty("java.home"),"bin/java.exe").toString(),"-Djdk.net.unixdomain.tmpdir=V:/.local/tmp","-cp",cp,"cn.agentplatform.common.authority.GatewayRunStatusEngineFixtureMain").directory(ROOT.toFile()).redirectErrorStream(true).start();stdin=process.outputWriter(StandardCharsets.UTF_8);
++            drain=Thread.ofPlatform().daemon(true).start(()->{try(var r=process.inputReader(StandardCharsets.UTF_8)){for(String l;(l=r.readLine())!=null;){lines.add(l);synchronized(output){output.append(l).append('\n');}}}catch(IOException e){lines.add("CHILD_IO_FAILURE");}});
++        }
++        void send(Object value)throws Exception{stdin.write(Json.write(value));stdin.newLine();stdin.flush();}
++        JsonNode command(Object v)throws Exception{send(v);return await("REPLY",12);}
++        JsonNode await(String kind,int seconds)throws Exception{String key="O1C_ENGINE_"+kind+"=";long end=System.nanoTime()+TimeUnit.SECONDS.toNanos(seconds);while(System.nanoTime()<end){String l=lines.poll(100,TimeUnit.MILLISECONDS);if(l!=null&&l.startsWith(key))return Json.read(l.substring(key.length()));if(!process.isAlive())break;}throw new AssertionError("MISSING_"+kind+"\n"+output);}
++        public void close()throws Exception{try{if(process.isAlive()){send(Map.of("action","STOP"));stdin.close();if(!process.waitFor(15,TimeUnit.SECONDS))throw new AssertionError("OWN_CHILD_STOP_TIMEOUT");}assertThat(process.exitValue()).isZero();}finally{if(process.isAlive()){process.destroy();if(!process.waitFor(3,TimeUnit.SECONDS)){process.destroyForcibly();process.waitFor(3,TimeUnit.SECONDS);}}drain.join(2000);Files.writeString(ROOT.resolve(".local/iam-o1c-gateway-status/engine-"+process.pid()+".log"),output);System.out.println("O1C_CHILD_EXIT="+Json.write(Map.of("pid",process.pid(),"alive",process.isAlive(),"exit",process.exitValue())));}}
++    }
++}
+diff --git a/platform-gateway/src/test/java/cn/agentplatform/gateway/application/RunObservationGetTransportTest.java b/platform-gateway/src/test/java/cn/agentplatform/gateway/application/RunObservationGetTransportTest.java
+new file mode 100644
+index 0000000..6720409
+--- /dev/null
++++ b/platform-gateway/src/test/java/cn/agentplatform/gateway/application/RunObservationGetTransportTest.java
+@@ -0,0 +1,93 @@
++package cn.agentplatform.gateway.application;
++
++import static org.assertj.core.api.Assertions.*;
++import cn.agentplatform.common.*;
++import cn.agentplatform.gateway.infra.PublishedRunHttp;
++import org.junit.jupiter.api.*;
++import java.io.*;
++import java.net.*;
++import java.nio.charset.StandardCharsets;
++import java.time.Duration;
++import java.util.*;
++import java.util.concurrent.*;
++import java.util.concurrent.atomic.*;
++
++/** Raw peers exercise the fixed GET wire policy only; they are not IAM/PG chain success evidence. */
++class RunObservationGetTransportTest {
++    static final String RUN="r_"+"a".repeat(32);
++    static byte[] utf(String text){return text.getBytes(StandardCharsets.UTF_8);}
++    static byte[] response(int status,String headers,byte[] body){var out=new ByteArrayOutputStream();out.writeBytes(utf("HTTP/1.1 "+status+" Finite\r\nContent-Type: application/json\r\n"+headers+"\r\n"));out.writeBytes(body);return out.toByteArray();}
++    static byte[] fixed(int status,String body){byte[] b=utf(body);return response(status,"Content-Length: "+b.length+"\r\n",b);}
++    static long deadline(){return System.nanoTime()+TimeUnit.SECONDS.toNanos(5);}
++    @Test void realChunkedMultiHeaderResponseUsesOnlyFixedPathAndOneTicket()throws Exception {
++        try(var p=new Peer(response(200,"X-One: 1\r\nX-Two: 2\r\nTransfer-Encoding: chunked\r\n",utf("2\r\n{}\r\n0\r\n\r\n")));var h=new PublishedRunHttp()){
++            var c=new PublishedRunHttp.Cancellation();var r=h.getRunStatus(p.origin(),RUN,"finite-service-ticket",deadline(),c,()->{});assertThat(r.body()).isEqualTo(utf("{}"));
++            assertThat(p.request()).startsWith("GET /admin/runs/"+RUN+" HTTP/1.1");assertThat(p.request()).contains("Authorization: Bearer finite-service-ticket","Accept-Encoding: identity").doesNotContain("Cookie:","X-User-","Portal");assertThat(p.accepts.get()).isEqualTo(1);assertThat(c.installedHandles()).isEqualTo(1);
++        }
++    }
++    @Test void metadataAndStatusActualReadLimitsAcceptExactAndRejectPlusOne()throws Exception {
++        for(boolean metadata:List.of(true,false)){int limit=metadata?8192:2*1024*1024;
++            for(int extra:List.of(0,1))try(var p=new Peer(response(200,"Transfer-Encoding: chunked\r\n",chunk(new byte[limit+extra])));var h=new PublishedRunHttp()){
++                if(extra==0)assertThat((metadata?h.getRunObservationMetadata(p.origin(),RUN,"t",deadline(),new PublishedRunHttp.Cancellation(),()->{}):h.getRunStatus(p.origin(),RUN,"t",deadline(),new PublishedRunHttp.Cancellation(),()->{})).body()).hasSize(limit);
++                else unavailable(()->{if(metadata)h.getRunObservationMetadata(p.origin(),RUN,"t",deadline(),new PublishedRunHttp.Cancellation(),()->{});else h.getRunStatus(p.origin(),RUN,"t",deadline(),new PublishedRunHttp.Cancellation(),()->{});});
++                assertThat(p.accepts.get()).isEqualTo(1);
++            }
++        }
++    }
++    static byte[] chunk(byte[] bytes){var out=new ByteArrayOutputStream();out.writeBytes(utf(Integer.toHexString(bytes.length)+"\r\n"));out.writeBytes(bytes);out.writeBytes(utf("\r\n0\r\n\r\n"));return out.toByteArray();}
++    @Test void retainedErrorsRequireStrictFiniteStatusCodeEnvelopePairs()throws Exception {
++        var cases=new LinkedHashMap<String,Integer>();cases.put("RUN_STATUS_TOO_LARGE",403);cases.put("AUTHORITY_EXPIRED",403);cases.put("AUTHORITY_CONTEXT_MISSING",403);cases.put("RUN_AUTHORITY_DENIED",403);cases.put("MATERIAL_SCOPE_MISSING_OR_CHANGED",403);cases.put("SYS-AUTH-403",403);cases.put("AUTHORITY_DENIED",403);cases.put("RUN_NOT_FOUND",404);
++        for(var e:cases.entrySet())try(var p=new Peer(fixed(e.getValue(),Json.write(new ApiResponse<>(e.getKey(),"private upstream message",null,"upstream-trace"))));var h=new PublishedRunHttp()){
++            assertThatThrownBy(()->h.getRunStatus(p.origin(),RUN,"t",deadline(),new PublishedRunHttp.Cancellation(),()->{})).isInstanceOfSatisfying(PlatformException.class,x->{assertThat(x.status()).isEqualTo(e.getValue());assertThat(x.code()).isEqualTo(e.getKey());assertThat(x.getMessage()).doesNotContain("private upstream","upstream-trace");});assertThat(p.accepts.get()).isEqualTo(1);
++        }
++        for(String body:List.of("{}","",Json.write(new ApiResponse<>("UNKNOWN","x",null,null)),"{\"code\":\"RUN_NOT_FOUND\",\"message\":\"x\",\"data\":{},\"traceId\":null}","{\"code\":\"RUN_NOT_FOUND\",\"code\":\"RUN_NOT_FOUND\",\"message\":\"x\",\"data\":null,\"traceId\":null}",Json.write(new ApiResponse<>("RUN_NOT_FOUND","x",null,null))+" {}"))try(var p=new Peer(fixed(404,body));var h=new PublishedRunHttp()){unavailable(()->h.getRunStatus(p.origin(),RUN,"t",deadline(),new PublishedRunHttp.Cancellation(),()->{}));}
++        try(var p=new Peer(fixed(403,Json.write(new ApiResponse<>("RUN_METADATA_TOO_LARGE","x",null,null))));var h=new PublishedRunHttp()){unavailable(()->h.getRunObservationMetadata(p.origin(),RUN,"t",deadline(),new PublishedRunHttp.Cancellation(),()->{}));}
++    }
++    @Test void redirectsChallengesUnknownAndUnsafeWireNeverRetryOrForwardHeaders()throws Exception {
++        var bodies=new ArrayList<byte[]>();for(int s:List.of(301,302,307,400,401,409,500,502,503))bodies.add(response(s,"Location: http://127.0.0.1:1/private\r\nWWW-Authenticate: Basic realm=finite\r\nContent-Length: 0\r\n",new byte[0]));
++        for(String h:List.of("Content-Encoding: gzip\r\n","Set-Cookie: private=yes\r\n","Location: /x\r\n","Trailer: Private\r\n","Content-Type: application/json\r\n","X-Long: "+"a".repeat(8192)+"\r\n"))bodies.add(response(200,h+"Content-Length: 2\r\n",utf("{}")));
++        bodies.add(response(200,"Transfer-Encoding: chunked\r\n",utf("2\r\n{}\r\n0\r\nX-Trailer: private\r\n\r\n")));
++        bodies.add(response(200,"Transfer-Encoding: chunked\r\n",utf("2;"+"x".repeat(8192)+"\r\n{}\r\n0\r\n\r\n")));
++        bodies.add(response(200,"Content-Length: 4\r\n",utf("{}")));
++        bodies.add(response(200,"X-H: a\r\n".repeat(65)+"Content-Length: 2\r\n",utf("{}")));
++        for(byte[] b:bodies)try(var p=new Peer(b);var h=new PublishedRunHttp()){unavailable(()->h.getRunStatus(p.origin(),RUN,"t",deadline(),new PublishedRunHttp.Cancellation(),()->{}));assertThat(p.accepts.get()).isEqualTo(1);}
++    }
++    @Test void totalDeadlineCancellationAndOwnedCloseStopActualHandles()throws Exception {
++        try(var p=new Peer(null);var h=new PublishedRunHttp()){
++            var cancel=new PublishedRunHttp.Cancellation();long begin=System.nanoTime();unavailable(()->h.getRunStatus(p.origin(),RUN,"t",begin+TimeUnit.MILLISECONDS.toNanos(100),cancel,()->{}));assertThat(Duration.ofNanos(System.nanoTime()-begin)).isLessThan(Duration.ofSeconds(2));assertThat(cancel.cancelledHandles()).isPositive();assertThat(p.accepts.get()).isEqualTo(1);
++        }
++        try(var p=new Peer(null);var h=new PublishedRunHttp();var worker=Executors.newSingleThreadExecutor()){
++            var cancel=new PublishedRunHttp.Cancellation();var f=worker.submit(()->h.getRunStatus(p.origin(),RUN,"t",deadline(),cancel,()->{}));assertThat(p.accepted.await(2,TimeUnit.SECONDS)).isTrue();cancel.cancel();assertThatThrownBy(()->f.get(3,TimeUnit.SECONDS)).hasCauseInstanceOf(PlatformException.class);assertThat(cancel.cancelledHandles()).isPositive();assertThat(p.accepts.get()).isEqualTo(1);
++        }
++        try(var p=new Peer(null);var h=new PublishedRunHttp();var worker=Executors.newSingleThreadExecutor()){
++            var f=worker.submit(()->h.getRunStatus(p.origin(),RUN,"t",deadline(),new PublishedRunHttp.Cancellation(),()->{}));assertThat(p.accepted.await(2,TimeUnit.SECONDS)).isTrue();h.close();assertThatThrownBy(()->f.get(3,TimeUnit.SECONDS)).hasCauseInstanceOf(PlatformException.class);assertThat(p.accepts.get()).isEqualTo(1);
++        }
++    }
++    @Test void checkAfterActualConnectCanDenyBeforeAnyRequestByte()throws Exception {
++        try(var p=new Peer(null);var h=new PublishedRunHttp()){
++            var calls=new AtomicInteger();unavailable(()->h.getRunStatus(p.origin(),RUN,"t",deadline(),new PublishedRunHttp.Cancellation(),()->{if(calls.incrementAndGet()>=3)throw new PlatformException(503,"FINITE_DENIAL","safe");}));assertThat(p.accepted.await(2,TimeUnit.SECONDS)).isTrue();assertThat(p.request()).isEmpty();assertThat(p.accepts.get()).isEqualTo(1);
++        }
++    }
++    @Test void strictErrorsRejectNonUtf8Encoding()throws Exception {
++        String error=Json.write(new ApiResponse<>("RUN_NOT_FOUND","x",null,null));var samples=new ArrayList<byte[]>();for(var charset:List.of(StandardCharsets.UTF_16,StandardCharsets.UTF_16LE,java.nio.charset.Charset.forName("UTF-32BE")))samples.add(error.getBytes(charset));
++        var bad=new ByteArrayOutputStream();bad.write(utf("{\"code\":\"RUN_NOT_FOUND\",\"message\":\""));bad.write(0xc3);bad.write(utf("\",\"data\":null,\"traceId\":null}"));samples.add(bad.toByteArray());
++        for(byte[] body:samples)try(var p=new Peer(response(404,"Content-Length: "+body.length+"\r\n",body));var h=new PublishedRunHttp()){unavailable(()->h.getRunStatus(p.origin(),RUN,"t",deadline(),new PublishedRunHttp.Cancellation(),()->{}));}
++    }
++    @Test void overflowAbortsBeforeClosingUnreadChunkStream()throws Exception {
++        int size=2*1024*1024+1;var partial=new ByteArrayOutputStream();partial.write(utf(Integer.toHexString(size)+"\r\n"));partial.write(new byte[size]);
++        try(var p=new Peer(response(200,"Transfer-Encoding: chunked\r\n",partial.toByteArray()),true);var h=new PublishedRunHttp()){
++            long begin=System.nanoTime();var cancel=new PublishedRunHttp.Cancellation();unavailable(()->h.getRunStatus(p.origin(),RUN,"t",deadline(),cancel,()->{}));long elapsed=System.nanoTime()-begin;
++            System.out.println("O1C_OVERFLOW_ABORT="+Json.write(Map.of("elapsedMs",TimeUnit.NANOSECONDS.toMillis(elapsed),"requests",p.accepts.get(),"cancelledHandles",cancel.cancelledHandles())));
++            assertThat(Duration.ofNanos(elapsed)).isLessThan(Duration.ofSeconds(1));assertThat(p.accepts.get()).isEqualTo(1);
++        }
++    }
++    static void unavailable(Runnable r){assertThatThrownBy(r::run).isInstanceOfSatisfying(PlatformException.class,e->assertThat(e.status()).isEqualTo(503));}
++    static final class Peer implements AutoCloseable {
++        final ServerSocket server=new ServerSocket();final AtomicInteger accepts=new AtomicInteger();final CountDownLatch accepted=new CountDownLatch(1),read=new CountDownLatch(1);final Thread thread;volatile Socket socket;volatile String request="";
++        Peer(byte[] response)throws Exception {this(response,false);}
++        Peer(byte[] response,boolean holdAfterResponse)throws Exception {server.bind(new InetSocketAddress("127.0.0.1",0));thread=Thread.ofPlatform().daemon(true).start(()->{try(var s=server.accept()){socket=s;accepts.incrementAndGet();accepted.countDown();s.setSoTimeout(3000);var bytes=new ByteArrayOutputStream();int b;while((b=s.getInputStream().read())!=-1){bytes.write(b);if(bytes.size()>=4&&bytes.toString(StandardCharsets.US_ASCII).endsWith("\r\n\r\n"))break;if(bytes.size()>32768)break;}request=bytes.toString(StandardCharsets.US_ASCII);read.countDown();if(response!=null){s.getOutputStream().write(response);s.getOutputStream().flush();}if(response==null||holdAfterResponse){try{s.getInputStream().read();}catch(IOException ignored){}}}catch(IOException e){read.countDown();}});}
++        URI origin(){return URI.create("http://127.0.0.1:"+server.getLocalPort());}
++        String request()throws Exception{read.await(4,TimeUnit.SECONDS);return request;}
++        public void close()throws Exception {server.close();if(socket!=null)socket.close();thread.join(4000);assertThat(thread.isAlive()).isFalse();System.out.println("O1C_RAW_PEER_CLOSED="+accepts.get());}
++    }
++}

@@ -1,0 +1,234 @@
+--- before/platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsHttp.java
++++ after/platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsHttp.java
+@@ -85,6 +85,7 @@
+         private final long t0, openingDeadline, lifetimeDeadline;
+         private long hopDeadline;
+         private boolean used, active, stopped, closing, closed, transportClean, cleanupActive;
++        private int transportStops;
+         private Thread operationThread;
+         private PortalEventsTlsConnection handle;
+         private Socket raw;
+@@ -100,6 +101,8 @@
+         private ScheduledFuture<?> alarm;
+         private final IdentityHashMap<ClassicHttpRequest, Session> guards = new IdentityHashMap<>(2);
+         private volatile Runnable beforeOutputForTest;
++        private volatile java.util.function.Consumer<String> transportCheckpointForTest;
++        void transportCheckpointForTest(java.util.function.Consumer<String> hook) { transportCheckpointForTest=hook; }
+         private volatile boolean identityMatched;
+         private Session(PortalEventsTls tls, PortalEventsPacketBudget.Owner owner, PortalEventsPacketBudget.Reservation fee, long t0, GatewayEventsOpening opening, CurrentAuthorityClient authority, String originalPortalSource,PortalRunEventsSse.Handle lifecycleAnchor) {
+             this.lifecycleAnchor=lifecycleAnchor;
+@@ -565,14 +568,30 @@
+             identityMatched = true;
+         }
+         private void stopTransport() {
+-            PortalEventsTlsConnection c;
+-            HttpGet r;
+-            synchronized (this) {
+-                c = handle;
+-                r = request;
+-            }
+-            if (c != null) c.abort();
+-            if (r != null) r.cancel();
++            synchronized (this) {
++                // An elected cleanup already owns the abort wakeup. Other admitted stops
++                // remain concurrent so an earlier stalled canceller cannot strand real IO.
++                if (transportClean || cleanupActive || transportStops == Integer.MAX_VALUE) return;
++                transportStops++;
++            }
++            stopTransportReferences();
++            synchronized (this) { transportStops--; notifyAll(); }
++        }
++        private boolean stopTransportReferences() {
++            try {
++                PortalEventsTlsConnection c;
++                HttpGet r;
++                synchronized (this) { c=handle; r=request; }
++                var hook=transportCheckpointForTest;
++                if(hook!=null&&c!=null&&r!=null)hook.accept("stop-snapshot");
++                if(c!=null)c.abort();
++                if(r!=null)r.cancel();
++                return true;
++            } catch (RuntimeException | Error failure) {
++                // This narrow boundary fails closed: no Throwable crosses the actual
++                // heavy-helper return. Original transport fields remain for cleanup retry.
++                return false;
++            }
+         }
+         public void abort() {
+             SseLease owned;
+@@ -585,14 +604,8 @@
+         }
+         private boolean finishTransport(Duration timeout) {
+             long deadline = System.nanoTime() + timeout.toNanos();
+-            PortalEventsTlsConnection closingHandle;
+-            HttpGet closingRequest;
+-            ScheduledFuture<?> closingAlarm;
+-            ScheduledThreadPoolExecutor closingTimer;
+-            CloseableHttpClient closingClient;
+-            PoolingHttpClientConnectionManager closingManager;
+-            synchronized (this) {
+-                while (cleanupActive) {
++            synchronized (this) {
++                while (cleanupActive || transportStops != 0) {
+                     long left = deadline - System.nanoTime();
+                     if (left <= 0) return false;
+                     try {
+@@ -603,16 +616,34 @@
+                     }
+                 }
+                 if (active && operationThread != Thread.currentThread() || transportClean) return transportClean;
+-                // Election and snapshots share one lock. Failed cleanup retains the original references for retry.
++                // Admission and election share one lock; no new stop snapshot can enter.
+                 cleanupActive = true;
+-                closingHandle = handle;
+-                closingRequest = request;
+-                closingAlarm = alarm;
+-                closingTimer = timer;
+-                closingClient = client;
+-                closingManager = manager;
+-            }
++            }
++            boolean cleaned=finishTransportReferences(deadline);
++            // Only Session/primitive locals survive this actual inner return. Publishing
++            // clean in the heavy helper's finally would still expose its reference frame.
++            synchronized (this) {
++                if(cleaned)transportClean=true;
++                cleanupActive=false;
++                notifyAll();
++                return cleaned;
++            }
++        }
++        private boolean finishTransportReferences(long deadline) {
+             try {
++                PortalEventsTlsConnection closingHandle;
++                HttpGet closingRequest;
++                ScheduledFuture<?> closingAlarm;
++                ScheduledThreadPoolExecutor closingTimer;
++                CloseableHttpClient closingClient;
++                PoolingHttpClientConnectionManager closingManager;
++                java.util.function.Consumer<String> hook;
++                synchronized (this) {
++                    closingHandle=handle; closingRequest=request; closingAlarm=alarm;
++                    closingTimer=timer; closingClient=client; closingManager=manager;
++                    hook=transportCheckpointForTest;
++                }
++                if(hook!=null)hook.accept("cleanup-snapshot");
+                 if (closingHandle != null) closingHandle.abort();
+                 if (closingRequest != null) closingRequest.cancel();
+                 if (closingAlarm != null) closingAlarm.cancel(false);
+@@ -622,6 +653,7 @@
+                 if (closingTimer != null && !closingTimer.awaitTermination(Math.max(0, deadline - System.nanoTime()), TimeUnit.NANOSECONDS)) return false;
+                 if (closingClient != null) closingClient.close(CloseMode.IMMEDIATE);
+                 else if (closingManager != null) closingManager.close(CloseMode.IMMEDIATE);
++                if(hook!=null)hook.accept("cleanup-tail");
+                 synchronized (this) {
+                     client = null;
+                     manager = null;
+@@ -635,22 +667,19 @@
+                     alarm = null;
+                     timer = null;
+                     beforeOutputForTest = null;
++                    transportCheckpointForTest = null;
+                     synchronized (guards) {
+                         guards.clear();
+                     }
+-                    transportClean = true;
+                     return true;
+                 }
+             } catch (InterruptedException e) {
+                 Thread.currentThread().interrupt();
+                 return false;
+-            } catch (RuntimeException e) {
++            } catch (RuntimeException | Error failure) {
++                // Includes test probes and close failures: retain original fields, keep
++                // transport dirty, and allow a later bounded retry without a heavy Throwable.
+                 return false;
+-            } finally {
+-                synchronized (this) {
+-                    cleanupActive = false;
+-                    notifyAll();
+-                }
+             }
+         }
+         public boolean awaitClosed(Duration timeout) {
+--- before/platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseLifecycleTest.java
++++ after/platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseLifecycleTest.java
+@@ -48,7 +48,7 @@
+     @Test void noFutureWritableCallbackIsNeededForTheOwnedIdleDeadline() throws Exception { child("not-ready-idle"); }
+     @Test void controlledProfileAndSingleLifetimeInstanceFailClosed() throws Exception { child("bad-profile"); }
+     @Test void forcedConnectorReleaseInvalidatesTokensWithoutInventingCompletion() throws Exception { child("forced-release"); }
+-    static Path runs() throws IOException { return Files.createDirectories(root().resolve(".local/iam-o2b-f2c2a-retention-fixes/peers")); }
++    static Path runs() throws IOException { return Files.createDirectories(root().resolve(".local/iam-o2b-f2c2a-http-exit-fixes/peers")); }
+     static void child(String group) throws Exception {
+         Path run = Files.createDirectory(runs().resolve(group + "-" + UUID.randomUUID()));
+         var args = List.of("-Djdk.net.unixdomain.tmpdir=V:/.local/tmp", "-Djdk.tls.maxHandshakeMessageSize=32768", "-Djdk.tls.maxCertificateChainLength=4",
+@@ -97,6 +97,8 @@
+     @Test void uncertainHandleConstructionAndRegistrationBurnSharedCredits()throws Exception { child("handle-burn"); }
+     @Test void mixedAutomaticReferencesReuseOneSharedPopulation()throws Exception { child("mixed-reference"); }
+     @Test void actualAwaitClosedAncestorPinsRefundedShellCredit()throws Exception { child("ancestor-tail"); }
++    @Test void actualAbortSnapshotMustReturnBeforeHttpRefund()throws Exception { child("http-stop-exit"); }
++    @Test void actualCleanupSnapshotMustReturnBeforeHttpRefund()throws Exception { child("http-cleanup-exit"); }
+     @Test void retainedFinishedHandlesConsumeSharedFactoryCapacity()throws Exception { child("retained-cap"); }
+     @Test void q403FailureClosesTransferredSessionBeforeReturningCapacity()throws Exception { child("fix-q403"); }
+     @Test void qTransportFailureClosesTransferredSessionBeforeReturningCapacity()throws Exception { child("fix-qtransport"); }
+@@ -221,6 +223,7 @@
+         if(mode.equals("handle-burn")) { handleBurn(run);return; }
+         if(mode.equals("mixed-reference")) { mixedReference(run);return; }
+         if(mode.equals("ancestor-tail")) { ancestorTail(run);return; }
++        if(mode.startsWith("http-")) { httpHelperExit(mode,run);return; }
+         if(mode.equals("retained-cap")) { retainedCap(run);return; }
+         if(mode.startsWith("fix-q")) { startupFailure(mode,run);return; }
+         if(mode.equals("fix-offthread")||mode.equals("fix-dispatcher")||mode.equals("fix-missing-token")) { startupScope(mode.substring(4),run);return; }
+@@ -369,6 +372,39 @@
+             assertTrue(handle.awaitClosed(Duration.ofSeconds(5)));
+         } finally { release.countDown();completionRelease.countDown(); }
+     }
++    static void httpHelperExit(String mode,Path run)throws Exception {
++        var entered=new CountDownLatch(1);var release=new CountDownLatch(1);var secondDone=new CountDownLatch(1);
++        var failures=new ConcurrentLinkedQueue<Throwable>();var firstResult=new AtomicBoolean();var secondResult=new AtomicBoolean();
++        boolean stop=mode.equals("http-stop-exit");
++        try(var f=new Fixture();var peer=new SequencePeer(f,run,m->{},"idle",utf("null"));var tls=peer.tls();var server=new Server(run,f,tls,null);var socket=server.request(f.run)) {
++            var handle=server.handle();var session=server.session.get();assertNotNull(session);
++            assertTrue(server.waitTrace("frame-complete",5000));
++            long end=System.nanoTime()+TimeUnit.SECONDS.toNanos(3);
++            while(field(session,"request")==null&&System.nanoTime()<end)Thread.sleep(5);
++            assertNotNull(field(session,"request"));assertNotNull(field(session,"handle"));
++            session.transportCheckpointForTest(phase->{
++                // An actual failed cleanup leaves its transport fields intact. The operation and
++                // real onComplete then exit before the named closer retries those same resources.
++                if(!stop&&phase.equals("cleanup-snapshot")&&!Thread.currentThread().getName().equals("owned-http-first"))throw new IllegalStateException("owned cleanup retry vector");
++                if(Thread.currentThread().getName().equals("owned-http-first")&&phase.equals(stop?"stop-snapshot":"cleanup-tail")) { entered.countDown();pause(release); }
++            });
++            var first=Thread.ofPlatform().name("owned-http-first").start(()->{try { if(stop)session.abort();else { session.close();firstResult.set(session.awaitClosed(Duration.ofSeconds(5))); } }catch(Throwable failure) { failures.add(failure); }});
++            Thread second=null;
++            try {
++                assertTrue(entered.await(6,TimeUnit.SECONDS),"actual Http helper reached its reference-bearing window");
++                second=Thread.ofPlatform().name("owned-http-second").start(()->{try { session.close();secondResult.set(session.awaitClosed(Duration.ofMillis(100))); }catch(Throwable failure) { failures.add(failure); }finally { secondDone.countDown(); }});
++                assertTrue(secondDone.await(5,TimeUnit.SECONDS),"other real closer has bounded wait");
++                long held=PortalEventsPacketBudget.SHARED.reservedBytes();int owners=PortalEventsPacketBudget.SHARED.owners();
++                Files.writeString(run.resolve("http-helper-window.properties"),"mode="+mode+"\nactualHelperPaused=true\nsecondCloserReturned="+secondResult.get()+"\nowners="+owners+"\nreserved="+held+"\n");
++                assertFalse(secondResult.get(),"another closer cannot refund before the actual heavy helper returns");
++                assertEquals(1,owners,"original Owner remains admitted");
++                assertTrue(held>=PortalEventsPacketBudget.SHARED.connectorBaselineBytes()+PortalRunEventsHttp.HTTP_BYTES,"original Http graph remains charged");
++            } finally { release.countDown();first.join(8000);if(second!=null)second.join(8000);assertFalse(first.isAlive());if(second!=null)assertFalse(second.isAlive()); }
++            assertTrue(failures.isEmpty(),failures.toString());assertTrue(session.awaitClosed(Duration.ofSeconds(5)));assertTrue(handle.awaitClosed(Duration.ofSeconds(5)));
++            assertEquals(PortalEventsPacketBudget.SHARED.connectorBaselineBytes(),PortalEventsPacketBudget.SHARED.reservedBytes());assertEquals(0,PortalEventsPacketBudget.SHARED.owners());
++            Files.writeString(run.resolve("http-helper-exit.properties"),"mode="+mode+"\nactualFirstThreadExited=true\nactualSecondThreadExited=true\nfinalOwners=0\nfinalBytes="+PortalEventsPacketBudget.SHARED.reservedBytes()+"\n");
++        } finally { release.countDown(); }
++    }
+     static void retainedCap(Path run)throws Exception {
+         try(var f=new Fixture();var a=new SequencePeer(f,Files.createDirectories(run.resolve("a")),m->{},"eof",utf("null"));var b=new SequencePeer(f,Files.createDirectories(run.resolve("b")),m->{},"eof",utf("null"));var c=new SequencePeer(f,Files.createDirectories(run.resolve("c")),m->{},"scope",utf("null"));var ta=a.tls();var tb=b.tls();var tc=c.tls();var server=new Server(run,f,List.of(ta,tb,tc),Arrays.asList(null,null,null))) {
+             var held=new org.apache.coyote.Processor[1533];
+@@ -535,9 +571,10 @@
+                 while(System.nanoTime()<end) { long observed=PortalEventsPacketBudget.SHARED.reservedBytes();if(observed>=67108864L&&observed<83886080L)break;Thread.sleep(10); }
+                 long scan=PortalEventsPacketBudget.SHARED.reservedBytes();assertTrue(scan>=67108864L&&scan<83886080L,"old C1 gone, next actual F1 read charged");
+                 server.session.get().close();assertFalse(server.session.get().awaitClosed(Duration.ZERO));
+-                assertEquals(7218374L,PortalEventsPacketBudget.SHARED.reservedBytes(),"original HTTP/private/SSE/Owner retained before completion");
++                long retained=PortalEventsPacketBudget.SHARED.reservedBytes();
++                assertEquals(PortalEventsPacketBudget.SHARED.connectorBaselineBytes()+6169798L,retained,"original HTTP/private/SSE/Owner retained before completion");
+                 release.countDown();assertTrue(server.handle().awaitClosed(Duration.ofSeconds(5)));assertEquals(3145728L,PortalEventsPacketBudget.SHARED.reservedBytes());
+-                Files.writeString(run.resolve("light-shell.properties"),"nextF1Bytes="+scan+"\noldMaterialExited=true\nouterCallbackStillPaused=true\nretainedBeforeCompletion=7218374\nfinalBytes=3145728\n");
++                Files.writeString(run.resolve("light-shell.properties"),"nextF1Bytes="+scan+"\noldMaterialExited=true\nouterCallbackStillPaused=true\nretainedBeforeCompletion="+retained+"\nfinalBytes="+PortalEventsPacketBudget.SHARED.reservedBytes()+"\n");
+             } finally { release.countDown(); }
+         }
+     }

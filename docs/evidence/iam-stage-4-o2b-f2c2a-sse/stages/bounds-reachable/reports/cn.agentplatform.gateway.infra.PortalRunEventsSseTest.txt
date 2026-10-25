@@ -1,0 +1,30 @@
+-------------------------------------------------------------------------------
+Test set: cn.agentplatform.gateway.infra.PortalRunEventsSseTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 2.597 s <<< FAILURE! -- in cn.agentplatform.gateway.infra.PortalRunEventsSseTest
+cn.agentplatform.gateway.infra.PortalRunEventsSseTest.utf8TypesNullMaxPayloadAndReachablePlusOne -- Time elapsed: 2.595 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+Exception in thread "main" cn.agentplatform.common.PlatformException: event business SHA
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialVerifier.denied(PortalEventsMaterialVerifier.java:700)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialVerifier.checkBusiness(PortalEventsMaterialVerifier.java:325)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialVerifier.consume(PortalEventsMaterialVerifier.java:86)
+	at cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session.lambda$consumeVerified$1(PortalRunEventsHttp.java:203)
+	at cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session.lambda$consumePrivate$2(PortalRunEventsHttp.java:352)
+	at org.apache.hc.client5.http.impl.classic.CloseableHttpClient.execute(CloseableHttpClient.java:247)
+	at org.apache.hc.client5.http.impl.classic.CloseableHttpClient.execute(CloseableHttpClient.java:188)
+	at cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session.consumePrivate(PortalRunEventsHttp.java:313)
+	at cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session.consumeVerified(PortalRunEventsHttp.java:199)
+	at cn.agentplatform.gateway.infra.PortalRunEventsSseTest.bounds(PortalRunEventsSseTest.java:131)
+	at cn.agentplatform.gateway.infra.PortalRunEventsSseTest.main(PortalRunEventsSseTest.java:160)
+ ==> expected: <0> but was: <1>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:563)
+	at cn.agentplatform.gateway.infra.PortalRunEventsSseTest.child(PortalRunEventsSseTest.java:57)
+	at cn.agentplatform.gateway.infra.PortalRunEventsSseTest.utf8TypesNullMaxPayloadAndReachablePlusOne(PortalRunEventsSseTest.java:24)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+

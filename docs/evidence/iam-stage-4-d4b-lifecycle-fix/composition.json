@@ -1,0 +1,50 @@
+{
+  "at": "2026-10-20T20:58:43.082Z",
+  "base": {
+    "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/composition.json",
+    "bytes": 2252,
+    "sha256": "18cc06c558b72175894a4e8442d51e8077b12605df3f5340186de1d8961b6d76"
+  },
+  "baseSource": {
+    "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/source-after.json",
+    "bytes": 108246,
+    "sha256": "4c479be6e91523c034742ddcf266b9262379488b4d778ce8a551bfcec7f946f7"
+  },
+  "baseDist": {
+    "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/dist-after.json",
+    "bytes": 2474,
+    "sha256": "5b1c4486521c38378e862d43583960721daecb187158d3ca6d8b7f85b2962863"
+  },
+  "sourceOverlay": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/frozen-overlay/",
+  "sourceRule": "Own4-file overlay, else I1/I2 frozen-overlay, else original D4b frozen-overlay, else original frontend-base; backend380 inherited unchanged",
+  "distOverlay": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/frozen-dist-overlay/",
+  "distRule": "Own changed/new overlay, else I1/I2 composition, else original D4b frozen-dist-overlay or dist-unchanged; apply tombstones",
+  "distTombstones": [
+    {
+      "file": "web/admin/dist/assets/DebugPanel-BUPLqScM.js",
+      "bytes": 412037,
+      "sha256": "f5a88c5061627a6f8679ba0a862aacffd970db2feee39fcb5e483daf0bc6cce8"
+    },
+    {
+      "file": "web/admin/dist/assets/FlowDesigner-xgGY4y66.js",
+      "bytes": 467892,
+      "sha256": "e949e3fbeac6721dbc205a23c4761eda5e5f0fd6a53f2669224f219bc94f6a5b"
+    },
+    {
+      "file": "web/admin/dist/assets/RunDetail-DXK_9h2S.js",
+      "bytes": 77200,
+      "sha256": "0cfa6dab180721e9e33c5c3642d3d81b1b002eea891118449537946624951ef7"
+    },
+    {
+      "file": "web/admin/dist/assets/index-DOxT5CWr.js",
+      "bytes": 1356216,
+      "sha256": "7ff7ce1998ea7fe9967b24b97dcf4c2e521e5149a4445dfaa421ce06e3a3604d"
+    },
+    {
+      "file": "web/webapp/dist/assets/index-BOtDbB6w.js",
+      "bytes": 1312820,
+      "sha256": "23d4f3886baa57653ef149e71191292cce8a067f555e098a1b757f6f05695299"
+    }
+  ],
+  "backendTargets": "1933 sealed D4a+I1 inherited, no physical rescan or copy"
+}

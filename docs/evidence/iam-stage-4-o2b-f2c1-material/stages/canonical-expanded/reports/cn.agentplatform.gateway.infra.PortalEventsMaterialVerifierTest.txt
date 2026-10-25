@@ -1,0 +1,16 @@
+-------------------------------------------------------------------------------
+Test set: cn.agentplatform.gateway.infra.PortalEventsMaterialVerifierTest
+-------------------------------------------------------------------------------
+Tests run: 5, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 0.250 s <<< FAILURE! -- in cn.agentplatform.gateway.infra.PortalEventsMaterialVerifierTest
+cn.agentplatform.gateway.infra.PortalEventsMaterialVerifierTest.preciseNumbersUnicodeNullAndNestedOrderingMatchIndependentBytes -- Time elapsed: 0.017 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: {"界":"é😀\n\t\u0001\"\\","a":null} ==> expected: <c1d95f848b26ac7df57976700f780479178290b38ee006e18c1055f7d6693636> but was: <ce44972823833a50e56e83ac7d1d1df5c54b4443cf99ecfb216f2fd3a5e765d7>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1156)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialVerifierTest.preciseNumbersUnicodeNullAndNestedOrderingMatchIndependentBytes(PortalEventsMaterialVerifierTest.java:31)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+

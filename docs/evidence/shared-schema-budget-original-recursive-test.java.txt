@@ -1,0 +1,26 @@
+    @Test
+    void recursiveLocalSchemasAndNamedAnchorsRemainValid() {
+        var policy =
+                new OutputPolicy(
+                        Json.read(
+                                """
+{"format":{"type":"json","schema":{"$defs":{"branch":{
+"$anchor":"branch","type":"object","properties":{
+"value":{"type":"integer"},"child":{"$ref":"#branch"}},"required":["value"]}},
+"$ref":"#/$defs/branch"}}}
+"""));
+        assertTrue(
+                policy.validate(
+                                Json.tree(
+                                        java.util.Map.of(
+                                                "text", "{\"value\":1,\"child\":{\"value\":2}}")))
+                        .valid());
+        assertFalse(
+                policy.validate(
+                                Json.tree(
+                                        java.util.Map.of(
+                                                "text",
+                                                "{\"value\":1,\"child\":{\"value\":\"bad\"}}")))
+                        .valid());
+    }
+

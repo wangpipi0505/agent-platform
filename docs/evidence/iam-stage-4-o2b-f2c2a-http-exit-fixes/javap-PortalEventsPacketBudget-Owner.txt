@@ -1,0 +1,15 @@
+Compiled from "PortalEventsPacketBudget.java"
+public final class cn.agentplatform.gateway.infra.PortalEventsPacketBudget$Owner implements java.lang.AutoCloseable {
+  private final cn.agentplatform.gateway.infra.PortalEventsPacketBudget budget;
+  private long reserved;
+  private boolean closed;
+  private boolean claimed;
+  private cn.agentplatform.gateway.infra.PortalEventsPacketDecoder decoder;
+  private cn.agentplatform.gateway.infra.PortalEventsPacketBudget$Owner(cn.agentplatform.gateway.infra.PortalEventsPacketBudget);
+  synchronized void claim(cn.agentplatform.gateway.infra.PortalEventsPacketDecoder);
+  synchronized void requireOpen();
+  public synchronized long reservedBytes();
+  public synchronized cn.agentplatform.gateway.infra.PortalEventsPacketBudget$Reservation reserve(long);
+  private synchronized void release(long);
+  public synchronized void close();
+}

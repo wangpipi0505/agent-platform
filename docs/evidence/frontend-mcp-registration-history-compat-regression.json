@@ -1,0 +1,297 @@
+{
+  "phase": "regression",
+  "fixtureOnly": true,
+  "requests": [
+    {
+      "path": "/admin/apps/named_fixture",
+      "query": {},
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/admin/debug-inputs",
+      "query": {
+        "appDraftId": "7",
+        "afterId": "0",
+        "limit": "20"
+      },
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/admin/debug-inputs/1",
+      "query": {},
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/admin/debug-inputs/1",
+      "query": {},
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/admin/debug-runs",
+      "query": {},
+      "method": "POST",
+      "body": {
+        "appCode": "named_fixture",
+        "mode": "FULL",
+        "inputs": {
+          "question": "保存的内容",
+          "options": {
+            "limit": 3
+          }
+        },
+        "breakpoints": [],
+        "mocks": []
+      }
+    },
+    {
+      "path": "/admin/debug-runs/r_named_fixture/status",
+      "query": {},
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/admin/debug-inputs",
+      "query": {
+        "appDraftId": "7"
+      },
+      "method": "POST",
+      "body": {
+        "name": "工作示例",
+        "inputs": {
+          "question": "保存的内容",
+          "options": {
+            "limit": 3
+          }
+        }
+      }
+    },
+    {
+      "path": "/admin/debug-inputs",
+      "query": {
+        "appDraftId": "7",
+        "afterId": "0",
+        "limit": "20"
+      },
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/admin/debug-inputs",
+      "query": {
+        "appDraftId": "7",
+        "afterId": "2",
+        "limit": "20"
+      },
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/admin/debug-inputs",
+      "query": {
+        "appDraftId": "7",
+        "afterId": "0",
+        "limit": "20"
+      },
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/admin/debug-inputs/1",
+      "query": {},
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/admin/debug-inputs/1",
+      "query": {},
+      "method": "PUT",
+      "body": {
+        "name": "典型问题",
+        "inputs": {
+          "question": "冲突后保留的编辑",
+          "options": {
+            "limit": 3
+          }
+        },
+        "revision": 3
+      }
+    },
+    {
+      "path": "/admin/debug-inputs/1",
+      "query": {},
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/admin/debug-inputs/1",
+      "query": {},
+      "method": "PUT",
+      "body": {
+        "name": "典型问题",
+        "inputs": {
+          "question": "按新声明纠正",
+          "options": {
+            "limit": 3
+          }
+        },
+        "revision": 3
+      }
+    },
+    {
+      "path": "/admin/debug-inputs",
+      "query": {
+        "appDraftId": "7",
+        "afterId": "0",
+        "limit": "20"
+      },
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/admin/debug-inputs/1/promote",
+      "query": {},
+      "method": "POST",
+      "body": {
+        "requestId": "0338b41d-5af3-4177-a225-cf82a538c4f3",
+        "revision": 3,
+        "datasetVersion": "debug-2026-10-20-f073e6fa",
+        "caseId": "case-f073e6fa",
+        "expected": {
+          "answer": "独立预期"
+        },
+        "safety": true
+      }
+    },
+    {
+      "path": "/admin/debug-inputs/1/promote",
+      "query": {},
+      "method": "POST",
+      "body": {
+        "requestId": "0338b41d-5af3-4177-a225-cf82a538c4f3",
+        "revision": 3,
+        "datasetVersion": "debug-2026-10-20-f073e6fa",
+        "caseId": "case-f073e6fa",
+        "expected": {
+          "answer": "独立预期"
+        },
+        "safety": true
+      }
+    },
+    {
+      "path": "/admin/debug-inputs/1/promote",
+      "query": {},
+      "method": "POST",
+      "body": {
+        "requestId": "244a066c-36ad-4d2c-9359-93666eba3904",
+        "revision": 3,
+        "datasetVersion": "debug-2026-10-20-f073e6fa",
+        "caseId": "case-f073e6fa",
+        "expected": {
+          "answer": "新预期"
+        },
+        "safety": true
+      }
+    },
+    {
+      "path": "/admin/debug-inputs/1",
+      "query": {
+        "revision": "3"
+      },
+      "method": "DELETE",
+      "body": null
+    },
+    {
+      "path": "/admin/debug-inputs",
+      "query": {
+        "appDraftId": "7",
+        "afterId": "0",
+        "limit": "20"
+      },
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/admin/debug-inputs",
+      "query": {
+        "appDraftId": "7",
+        "afterId": "0",
+        "limit": "20"
+      },
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/admin/debug-inputs",
+      "query": {
+        "appDraftId": "7",
+        "afterId": "0",
+        "limit": "20"
+      },
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/admin/debug-inputs",
+      "query": {
+        "appDraftId": "7",
+        "afterId": "0",
+        "limit": "20"
+      },
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/admin/debug-inputs/1",
+      "query": {},
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/admin/apps/other_fixture",
+      "query": {},
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/admin/debug-inputs",
+      "query": {
+        "appDraftId": "8",
+        "afterId": "0",
+        "limit": "20"
+      },
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/admin/debug-inputs/1",
+      "query": {},
+      "method": "GET",
+      "body": null
+    }
+  ],
+  "checks": {
+    "structuredInput": true,
+    "namedConsumer": true,
+    "lateLoadPreservesEdits": true,
+    "explicitUseAndObjects": true,
+    "structuredValuesUsedForDebugRun": true,
+    "saveWithoutId": true,
+    "cursorPaging": true,
+    "cas409PreservesEdits": true,
+    "schemaRepairFromMetadata": true,
+    "safetyMustBeExplicit": true,
+    "promotionExplicitExpectedAndStableRetry": true,
+    "changedPromotionGetsNewRequestId": true,
+    "deleteUsesCAS": true,
+    "emptyState": true,
+    "permissionFailure": true,
+    "draftSwitchRejectsLateInput": true,
+    "mobileNoOverflow": true,
+    "unmountNoLateSideEffects": true
+  },
+  "pageErrors": []
+}

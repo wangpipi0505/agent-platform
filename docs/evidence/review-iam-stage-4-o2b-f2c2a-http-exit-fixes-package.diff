@@ -1,0 +1,363 @@
+# C2a fixes complete two-path delta review package
+Base=prior retention-anchor source630 (artifactPASS, reviewR-I1/R-M1 open); head=.local/iam-o2b-f2c2a-http-exit-fixes/source-after.json source630; two existing modified, zero new, other628 exact pending root finite delta audit.
+Requirements=docs/evidence/iam-stage-4-o2b-f2c2a-http-exit-fixes-brief.md + inherited shared-population amendment
+Report=docs/evidence/iam-stage-4-o2b-f2c2a-http-exit-fixes-report.md
+Original complete7 full-context review inherited: docs/evidence/review-iam-stage-4-o2b-f2c2a-sse-package.diff (8431eadc); prior review42473B prefix caeca071 frozen; original full7, previous2path and complete4path delta inherited.
+Read all delta hunks to EOF once; no separate reread changed files/tests/PG/replay. New named risks may inspect unchanged dependencies narrowly.
+--- BEGIN COMPLETE TWO-PATH FIX DELTA ---
+diff --git a/platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsHttp.java b/platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsHttp.java
+index cb3a074..ed7b3c9 100644
+--- a/platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsHttp.java
++++ b/platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsHttp.java
+@@ -78,35 +78,38 @@ public final class PortalRunEventsHttp {
+         private PortalEventsPacketDecoder decoder;
+         private InputStream privateInput;
+         private boolean qReady, privateUsed, privatePhase, bodyPhase;
+         private long alarmEpoch;
+         // Values are copied only from this Session's still-live Q facts before transfer.
+         private record SavedFacts(String run, SubjectKey subject, ResourceBinding root, long versionId,
+                 long versionNo, String accepted, String initial, ResourceBinding snapshot, long cursor) {}
+         private final long t0, openingDeadline, lifetimeDeadline;
+         private long hopDeadline;
+         private boolean used, active, stopped, closing, closed, transportClean, cleanupActive;
++        private int transportStops;
+         private Thread operationThread;
+         private PortalEventsTlsConnection handle;
+         private Socket raw;
+         private SSLSocket ssl;
+         private byte[] sslId;
+         private HttpGet request;
+         private HttpClientContext context;
+         private PoolingHttpClientConnectionManager manager;
+         private CloseableHttpClient client;
+         private EventsMetadata facts;
+         private ManagedHttpClientConnection connection;
+         private ScheduledThreadPoolExecutor timer;
+         private ScheduledFuture<?> alarm;
+         private final IdentityHashMap<ClassicHttpRequest, Session> guards = new IdentityHashMap<>(2);
+         private volatile Runnable beforeOutputForTest;
++        private volatile java.util.function.Consumer<String> transportCheckpointForTest;
++        void transportCheckpointForTest(java.util.function.Consumer<String> hook) { transportCheckpointForTest=hook; }
+         private volatile boolean identityMatched;
+         private Session(PortalEventsTls tls, PortalEventsPacketBudget.Owner owner, PortalEventsPacketBudget.Reservation fee, long t0, GatewayEventsOpening opening, CurrentAuthorityClient authority, String originalPortalSource,PortalRunEventsSse.Handle lifecycleAnchor) {
+             this.lifecycleAnchor=lifecycleAnchor;
+             this.tls = tls;
+             this.owner = owner;
+             this.fee = fee;
+             this.t0 = t0;
+             this.opening = opening;
+             this.authority = authority;
+             this.originalPortalSource = originalPortalSource;
+@@ -558,106 +561,132 @@ public final class PortalRunEventsHttp {
+             live();
+         }
+         private void writerCheck(ClassicHttpRequest actual, QuietConnection conn) throws IOException {
+             synchronized (guards) {
+                 if (guards.get(actual) != this) throw new IOException("Missing original request identity");
+             }
+             check(actual, conn, context);
+             identityMatched = true;
+         }
+         private void stopTransport() {
+-            PortalEventsTlsConnection c;
+-            HttpGet r;
+             synchronized (this) {
+-                c = handle;
+-                r = request;
++                // An elected cleanup already owns the abort wakeup. Other admitted stops
++                // remain concurrent so an earlier stalled canceller cannot strand real IO.
++                if (transportClean || cleanupActive || transportStops == Integer.MAX_VALUE) return;
++                transportStops++;
++            }
++            stopTransportReferences();
++            synchronized (this) { transportStops--; notifyAll(); }
++        }
++        private boolean stopTransportReferences() {
++            try {
++                PortalEventsTlsConnection c;
++                HttpGet r;
++                synchronized (this) { c=handle; r=request; }
++                var hook=transportCheckpointForTest;
++                if(hook!=null&&c!=null&&r!=null)hook.accept("stop-snapshot");
++                if(c!=null)c.abort();
++                if(r!=null)r.cancel();
++                return true;
++            } catch (RuntimeException | Error failure) {
++                // This narrow boundary fails closed: no Throwable crosses the actual
++                // heavy-helper return. Original transport fields remain for cleanup retry.
++                return false;
+             }
+-            if (c != null) c.abort();
+-            if (r != null) r.cancel();
+         }
+         public void abort() {
+             SseLease owned;
+             synchronized (this) {
+                 stopped = true;
+                 owned=sseLease;
+             }
+             if(owned!=null)owned.signal();
+             stopTransport();
+         }
+         private boolean finishTransport(Duration timeout) {
+             long deadline = System.nanoTime() + timeout.toNanos();
+-            PortalEventsTlsConnection closingHandle;
+-            HttpGet closingRequest;
+-            ScheduledFuture<?> closingAlarm;
+-            ScheduledThreadPoolExecutor closingTimer;
+-            CloseableHttpClient closingClient;
+-            PoolingHttpClientConnectionManager closingManager;
+             synchronized (this) {
+-                while (cleanupActive) {
++                while (cleanupActive || transportStops != 0) {
+                     long left = deadline - System.nanoTime();
+                     if (left <= 0) return false;
+                     try {
+                         TimeUnit.NANOSECONDS.timedWait(this, left);
+                     } catch (InterruptedException e) {
+                         Thread.currentThread().interrupt();
+                         return false;
+                     }
+                 }
+                 if (active && operationThread != Thread.currentThread() || transportClean) return transportClean;
+-                // Election and snapshots share one lock. Failed cleanup retains the original references for retry.
++                // Admission and election share one lock; no new stop snapshot can enter.
+                 cleanupActive = true;
+-                closingHandle = handle;
+-                closingRequest = request;
+-                closingAlarm = alarm;
+-                closingTimer = timer;
+-                closingClient = client;
+-                closingManager = manager;
+             }
++            boolean cleaned=finishTransportReferences(deadline);
++            // Only Session/primitive locals survive this actual inner return. Publishing
++            // clean in the heavy helper's finally would still expose its reference frame.
++            synchronized (this) {
++                if(cleaned)transportClean=true;
++                cleanupActive=false;
++                notifyAll();
++                return cleaned;
++            }
++        }
++        private boolean finishTransportReferences(long deadline) {
+             try {
++                PortalEventsTlsConnection closingHandle;
++                HttpGet closingRequest;
++                ScheduledFuture<?> closingAlarm;
++                ScheduledThreadPoolExecutor closingTimer;
++                CloseableHttpClient closingClient;
++                PoolingHttpClientConnectionManager closingManager;
++                java.util.function.Consumer<String> hook;
++                synchronized (this) {
++                    closingHandle=handle; closingRequest=request; closingAlarm=alarm;
++                    closingTimer=timer; closingClient=client; closingManager=manager;
++                    hook=transportCheckpointForTest;
++                }
++                if(hook!=null)hook.accept("cleanup-snapshot");
+                 if (closingHandle != null) closingHandle.abort();
+                 if (closingRequest != null) closingRequest.cancel();
+                 if (closingAlarm != null) closingAlarm.cancel(false);
+                 if (closingTimer != null) closingTimer.shutdown();
+                 // Physical waits and library close must leave both Session and identity locks available to abort.
+                 if (closingHandle != null && !closingHandle.awaitClosed(Duration.ofNanos(Math.max(0, deadline - System.nanoTime())))) return false;
+                 if (closingTimer != null && !closingTimer.awaitTermination(Math.max(0, deadline - System.nanoTime()), TimeUnit.NANOSECONDS)) return false;
+                 if (closingClient != null) closingClient.close(CloseMode.IMMEDIATE);
+                 else if (closingManager != null) closingManager.close(CloseMode.IMMEDIATE);
++                if(hook!=null)hook.accept("cleanup-tail");
+                 synchronized (this) {
+                     client = null;
+                     manager = null;
+                     connection = null;
+                     request = null;
+                     context = null;
+                     ssl = null;
+                     sslId = null;
+                     raw = null;
+                     handle = null;
+                     alarm = null;
+                     timer = null;
+                     beforeOutputForTest = null;
++                    transportCheckpointForTest = null;
+                     synchronized (guards) {
+                         guards.clear();
+                     }
+-                    transportClean = true;
+                     return true;
+                 }
+             } catch (InterruptedException e) {
+                 Thread.currentThread().interrupt();
+                 return false;
+-            } catch (RuntimeException e) {
++            } catch (RuntimeException | Error failure) {
++                // Includes test probes and close failures: retain original fields, keep
++                // transport dirty, and allow a later bounded retry without a heavy Throwable.
+                 return false;
+-            } finally {
+-                synchronized (this) {
+-                    cleanupActive = false;
+-                    notifyAll();
+-                }
+             }
+         }
+         public boolean awaitClosed(Duration timeout) {
+             if (timeout.isNegative()) throw new IllegalArgumentException("Negative close wait");
+             long deadline = System.nanoTime() + timeout.toNanos();
+             SseLease owned;
+             synchronized(this) { if(closed)return true;if(!closing)return false;owned=sseLease; }
+             // A failed finite onComplete wait may be retried by the original Session's owner.
+             // This call holds no Session monitor and cannot bypass the heavy/worker/completion gate.
+             if(owned!=null&&!owned.released)owned.reap(Duration.ofNanos(Math.max(0,deadline-System.nanoTime())));
+diff --git a/platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseLifecycleTest.java b/platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseLifecycleTest.java
+index 19a6f69..acc3ed4 100644
+--- a/platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseLifecycleTest.java
++++ b/platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseLifecycleTest.java
+@@ -41,21 +41,21 @@ public class PortalRunEventsSseLifecycleTest {
+     @Test void lateAbortCannotTouchReusedKeepaliveRequest() throws Exception { child("keepalive"); }
+     @Test void realNotReadyNotificationResumesTheSameFrame() throws Exception { child("backpressure-resume"); }
+     @Test void exactLongMaxCursorAndHighPrecisionJsonReachRealServletBytes() throws Exception { child("long-id");child("precision"); }
+     @Test void inertReadyIdleShellAllowsMaterialFeeExitButRetainsFinalOwner() throws Exception { child("light-shell"); }
+     @Test void actualPendingFlushRequiresDrainAndFreshGenerationBeforeCursor() throws Exception { for(String point:List.of("drain","generation","revoke"))child("pending-flush-"+point); }
+     @Test void stalledActualActionRetainsTwoOwnersUntilActionAndCompletionExit() throws Exception { child("action-retention"); }
+     @Test void sameProcessorOnAnotherSocketCannotReceiveOldAbort() throws Exception { child("processor-reuse"); }
+     @Test void noFutureWritableCallbackIsNeededForTheOwnedIdleDeadline() throws Exception { child("not-ready-idle"); }
+     @Test void controlledProfileAndSingleLifetimeInstanceFailClosed() throws Exception { child("bad-profile"); }
+     @Test void forcedConnectorReleaseInvalidatesTokensWithoutInventingCompletion() throws Exception { child("forced-release"); }
+-    static Path runs() throws IOException { return Files.createDirectories(root().resolve(".local/iam-o2b-f2c2a-retention-fixes/peers")); }
++    static Path runs() throws IOException { return Files.createDirectories(root().resolve(".local/iam-o2b-f2c2a-http-exit-fixes/peers")); }
+     static void child(String group) throws Exception {
+         Path run = Files.createDirectory(runs().resolve(group + "-" + UUID.randomUUID()));
+         var args = List.of("-Djdk.net.unixdomain.tmpdir=V:/.local/tmp", "-Djdk.tls.maxHandshakeMessageSize=32768", "-Djdk.tls.maxCertificateChainLength=4",
+         "-Dcom.sun.security.enableAIAcaIssuers=false", "-Djdk.tls.server.newSessionTicketCount=0", "-Djdk.tls.server.enableStatusRequestExtension=false",
+         "-cp", System.getProperty("surefire.test.class.path", System.getProperty("java.class.path")), PortalRunEventsSseLifecycleTest.class.getName(),
+         group, run.toString());
+         Files.writeString(run.resolve("client.args"), String.join("\n", args));
+         var command = new ArrayList<String>();
+         command.add(Path.of(System.getProperty("java.home"), "bin/java.exe").toString());
+         command.addAll(args);
+@@ -90,20 +90,22 @@ public class PortalRunEventsSseLifecycleTest {
+             assertFalse(collector.isAlive());
+             Files.writeString(run.resolve("exit.properties"), "pid=" + p.pid() + "\nexit=" + p.exitValue() + "\nalive=" + p.isAlive() + "\ncollectorAlive=" + collector.isAlive() + "\n");
+         }
+     }
+ 
+     @Test void invalidCursorCannotPublishAnUnreapableLease()throws Exception { child("invalid-cursor"); }
+     @Test void preasyncUnsupportedDetachesHeavyStateBeforeRefund()throws Exception { child("preasync"); }
+     @Test void uncertainHandleConstructionAndRegistrationBurnSharedCredits()throws Exception { child("handle-burn"); }
+     @Test void mixedAutomaticReferencesReuseOneSharedPopulation()throws Exception { child("mixed-reference"); }
+     @Test void actualAwaitClosedAncestorPinsRefundedShellCredit()throws Exception { child("ancestor-tail"); }
++    @Test void actualAbortSnapshotMustReturnBeforeHttpRefund()throws Exception { child("http-stop-exit"); }
++    @Test void actualCleanupSnapshotMustReturnBeforeHttpRefund()throws Exception { child("http-cleanup-exit"); }
+     @Test void retainedFinishedHandlesConsumeSharedFactoryCapacity()throws Exception { child("retained-cap"); }
+     @Test void q403FailureClosesTransferredSessionBeforeReturningCapacity()throws Exception { child("fix-q403"); }
+     @Test void qTransportFailureClosesTransferredSessionBeforeReturningCapacity()throws Exception { child("fix-qtransport"); }
+     @Test void transferredServletCannotClaimTheOriginalRequestFromWorker()throws Exception { child("fix-offthread"); }
+     @Test void originalRequestScopeAndDispatcherAreRequiredBeforeQuery()throws Exception { child("fix-dispatcher");child("fix-missing-token"); }
+     @Test void uncertainProcessorConstructionBurnsItsReservedBundle()throws Exception { child("fix-burn"); }
+     @Test void automaticPhantomNotificationCanReturnActualFactoryCapacity()throws Exception { child("fix-reuse"); }
+     @Test void actualProcessorFactoryRefusesBeyondFixedStrongPopulation()throws Exception { child("fix-cap"); }
+     public static void main(String[] args)throws Exception { scenario(args[0],Path.of(args[1])); }
+     static byte[] wire(SequencePeer peer,byte[] hello,String child,ObjectNode original,byte[] payload,String mode)throws Exception {
+@@ -214,20 +216,21 @@ public class PortalRunEventsSseLifecycleTest {
+             for(var tls:endpoints)tls.close();tomcat.stop();tomcat.destroy();
+             Files.writeString(run.resolve("protocol.properties"),"implementation="+protocol.getClass().getName()+"\ncreated="+protocol.creationsForTest()+"\nrecycled="+protocol.recyclesForTest()+"\nwaiting="+protocol.getWaitingProcessorCount()+"\nbaseline="+PortalEventsPacketBudget.SHARED.connectorBaselineBytes()+"\nreserved="+PortalEventsPacketBudget.SHARED.reservedBytes()+"\nowners="+PortalEventsPacketBudget.SHARED.owners()+"\n");
+         }
+     }
+     static void scenario(String mode,Path run)throws Exception {
+         if(mode.equals("invalid-cursor")) { invalidCursor(run);return; }
+         if(mode.equals("preasync")) { preasync(run);return; }
+         if(mode.equals("handle-burn")) { handleBurn(run);return; }
+         if(mode.equals("mixed-reference")) { mixedReference(run);return; }
+         if(mode.equals("ancestor-tail")) { ancestorTail(run);return; }
++        if(mode.startsWith("http-")) { httpHelperExit(mode,run);return; }
+         if(mode.equals("retained-cap")) { retainedCap(run);return; }
+         if(mode.startsWith("fix-q")) { startupFailure(mode,run);return; }
+         if(mode.equals("fix-offthread")||mode.equals("fix-dispatcher")||mode.equals("fix-missing-token")) { startupScope(mode.substring(4),run);return; }
+         if(mode.equals("fix-cap")||mode.equals("fix-burn")||mode.equals("fix-reuse")) { allocationCap(mode,run);return; }
+         if(mode.startsWith("generation-")||mode.startsWith("freshness-")) { freshness(mode,run);return; }
+         if(mode.startsWith("bootstrap-")) { bootstrap(mode.substring(10),run);return; }
+         if(mode.startsWith("pending-flush-")) { pendingFlush(mode.substring(14),run);return; }
+         switch(mode) {
+             case "action-retention" -> { actionRetention(run);return; }
+             case "processor-reuse" -> { processorReuse(run);return; }
+@@ -362,20 +365,53 @@ public class PortalRunEventsSseLifecycleTest {
+                 for(String name:List.of("client","manager","connection","request","context","ssl","sslId","raw","handle","alarm","timer","beforeOutputForTest","decoder","privateInput","gatewayResponse","child","saved","authority","originalPortalSource","opening","query","facts","privateFee","fee","materialChild","materialCheckpointForTest","operationThread"))assertNull(field(session,name),name);
+                 assertTrue(((Map<?,?>)field(session,"guards")).isEmpty());Object lease=field(session,"sseLease");assertEquals(true,field(lease,"released"));for(String name:List.of("charge","cancellation","exit"))assertNull(field(lease,name));assertNull(field(field(session,"owner"),"decoder"));
+                 assertThrows(IllegalStateException.class,()->new PortalRunEventsHttp(tls).forSse(f.observed,f.source,f.run,0,handle));assertEquals(0,PortalEventsPacketBudget.SHARED.owners());
+                 boolean ancestor=Arrays.stream(reaper.getStackTrace()).anyMatch(x->x.getMethodName().equals("awaitClosed")||x.getMethodName().equals("reap"));
+                 Files.writeString(run.resolve("ancestor-tail.properties"),"ownerRefunded=true\ncellHeldAfterDetachHelperReturned=true\nfinalSessionAnchorExact=true\nfinalStateHandleExact=true\nreaperAncestorObserved="+ancestor+"\n");
+                 assertTrue(ancestor,"actual awaitClosed/reap ancestor remains live after refund");
+             } finally { release.countDown();completionRelease.countDown();locker.join(5000);reaper.join(5000);assertFalse(locker.isAlive());assertFalse(reaper.isAlive()); }
+             assertTrue(handle.awaitClosed(Duration.ofSeconds(5)));
+         } finally { release.countDown();completionRelease.countDown(); }
+     }
++    static void httpHelperExit(String mode,Path run)throws Exception {
++        var entered=new CountDownLatch(1);var release=new CountDownLatch(1);var secondDone=new CountDownLatch(1);
++        var failures=new ConcurrentLinkedQueue<Throwable>();var firstResult=new AtomicBoolean();var secondResult=new AtomicBoolean();
++        boolean stop=mode.equals("http-stop-exit");
++        try(var f=new Fixture();var peer=new SequencePeer(f,run,m->{},"idle",utf("null"));var tls=peer.tls();var server=new Server(run,f,tls,null);var socket=server.request(f.run)) {
++            var handle=server.handle();var session=server.session.get();assertNotNull(session);
++            assertTrue(server.waitTrace("frame-complete",5000));
++            long end=System.nanoTime()+TimeUnit.SECONDS.toNanos(3);
++            while(field(session,"request")==null&&System.nanoTime()<end)Thread.sleep(5);
++            assertNotNull(field(session,"request"));assertNotNull(field(session,"handle"));
++            session.transportCheckpointForTest(phase->{
++                // An actual failed cleanup leaves its transport fields intact. The operation and
++                // real onComplete then exit before the named closer retries those same resources.
++                if(!stop&&phase.equals("cleanup-snapshot")&&!Thread.currentThread().getName().equals("owned-http-first"))throw new IllegalStateException("owned cleanup retry vector");
++                if(Thread.currentThread().getName().equals("owned-http-first")&&phase.equals(stop?"stop-snapshot":"cleanup-tail")) { entered.countDown();pause(release); }
++            });
++            var first=Thread.ofPlatform().name("owned-http-first").start(()->{try { if(stop)session.abort();else { session.close();firstResult.set(session.awaitClosed(Duration.ofSeconds(5))); } }catch(Throwable failure) { failures.add(failure); }});
++            Thread second=null;
++            try {
++                assertTrue(entered.await(6,TimeUnit.SECONDS),"actual Http helper reached its reference-bearing window");
++                second=Thread.ofPlatform().name("owned-http-second").start(()->{try { session.close();secondResult.set(session.awaitClosed(Duration.ofMillis(100))); }catch(Throwable failure) { failures.add(failure); }finally { secondDone.countDown(); }});
++                assertTrue(secondDone.await(5,TimeUnit.SECONDS),"other real closer has bounded wait");
++                long held=PortalEventsPacketBudget.SHARED.reservedBytes();int owners=PortalEventsPacketBudget.SHARED.owners();
++                Files.writeString(run.resolve("http-helper-window.properties"),"mode="+mode+"\nactualHelperPaused=true\nsecondCloserReturned="+secondResult.get()+"\nowners="+owners+"\nreserved="+held+"\n");
++                assertFalse(secondResult.get(),"another closer cannot refund before the actual heavy helper returns");
++                assertEquals(1,owners,"original Owner remains admitted");
++                assertTrue(held>=PortalEventsPacketBudget.SHARED.connectorBaselineBytes()+PortalRunEventsHttp.HTTP_BYTES,"original Http graph remains charged");
++            } finally { release.countDown();first.join(8000);if(second!=null)second.join(8000);assertFalse(first.isAlive());if(second!=null)assertFalse(second.isAlive()); }
++            assertTrue(failures.isEmpty(),failures.toString());assertTrue(session.awaitClosed(Duration.ofSeconds(5)));assertTrue(handle.awaitClosed(Duration.ofSeconds(5)));
++            assertEquals(PortalEventsPacketBudget.SHARED.connectorBaselineBytes(),PortalEventsPacketBudget.SHARED.reservedBytes());assertEquals(0,PortalEventsPacketBudget.SHARED.owners());
++            Files.writeString(run.resolve("http-helper-exit.properties"),"mode="+mode+"\nactualFirstThreadExited=true\nactualSecondThreadExited=true\nfinalOwners=0\nfinalBytes="+PortalEventsPacketBudget.SHARED.reservedBytes()+"\n");
++        } finally { release.countDown(); }
++    }
+     static void retainedCap(Path run)throws Exception {
+         try(var f=new Fixture();var a=new SequencePeer(f,Files.createDirectories(run.resolve("a")),m->{},"eof",utf("null"));var b=new SequencePeer(f,Files.createDirectories(run.resolve("b")),m->{},"eof",utf("null"));var c=new SequencePeer(f,Files.createDirectories(run.resolve("c")),m->{},"scope",utf("null"));var ta=a.tls();var tb=b.tls();var tc=c.tls();var server=new Server(run,f,List.of(ta,tb,tc),Arrays.asList(null,null,null))) {
+             var held=new org.apache.coyote.Processor[1533];
+             for(int i=0;i<held.length;i++)held[i]=server.protocol.createProcessor();
+             for(int i=0;i<2;i++) {
+                 try(var socket=server.request(f.run)) { assertTrue(new String(socket.getInputStream().readAllBytes(),StandardCharsets.UTF_8).contains("data: null")); }
+                 assertTrue(server.exchanges.get(i).handle().awaitClosed(Duration.ofSeconds(5)));
+             }
+             assertEquals(1534,server.protocol.creationsForTest(),"two real requests reuse one original processor");
+             try(var socket=server.request(f.run)) { socket.getInputStream().readAllBytes(); }
+@@ -528,23 +564,24 @@ public class PortalRunEventsSseLifecycleTest {
+         var entered=new CountDownLatch(1);var release=new CountDownLatch(1);var frames=new AtomicInteger();var hit=new AtomicBoolean();
+         try(var f=new Fixture();var peer=new SequencePeer(f,run,m->{},"idle",utf("null"));var tls=peer.tls();var server=new Server(run,f,tls,(phase,value)->{
+             if(phase.equals("frame-complete"))frames.incrementAndGet();
+             if(phase.equals("ready-idle")&&frames.get()==2&&hit.compareAndSet(false,true)) { entered.countDown();pause(release); }
+         });var socket=server.request(f.run)) {
+             try {
+                 assertTrue(entered.await(5,TimeUnit.SECONDS));long end=System.nanoTime()+TimeUnit.SECONDS.toNanos(3);
+                 while(System.nanoTime()<end) { long observed=PortalEventsPacketBudget.SHARED.reservedBytes();if(observed>=67108864L&&observed<83886080L)break;Thread.sleep(10); }
+                 long scan=PortalEventsPacketBudget.SHARED.reservedBytes();assertTrue(scan>=67108864L&&scan<83886080L,"old C1 gone, next actual F1 read charged");
+                 server.session.get().close();assertFalse(server.session.get().awaitClosed(Duration.ZERO));
+-                assertEquals(7218374L,PortalEventsPacketBudget.SHARED.reservedBytes(),"original HTTP/private/SSE/Owner retained before completion");
++                long retained=PortalEventsPacketBudget.SHARED.reservedBytes();
++                assertEquals(PortalEventsPacketBudget.SHARED.connectorBaselineBytes()+6169798L,retained,"original HTTP/private/SSE/Owner retained before completion");
+                 release.countDown();assertTrue(server.handle().awaitClosed(Duration.ofSeconds(5)));assertEquals(3145728L,PortalEventsPacketBudget.SHARED.reservedBytes());
+-                Files.writeString(run.resolve("light-shell.properties"),"nextF1Bytes="+scan+"\noldMaterialExited=true\nouterCallbackStillPaused=true\nretainedBeforeCompletion=7218374\nfinalBytes=3145728\n");
++                Files.writeString(run.resolve("light-shell.properties"),"nextF1Bytes="+scan+"\noldMaterialExited=true\nouterCallbackStillPaused=true\nretainedBeforeCompletion="+retained+"\nfinalBytes="+PortalEventsPacketBudget.SHARED.reservedBytes()+"\n");
+             } finally { release.countDown(); }
+         }
+     }
+     static void pendingFlush(String selected,Path run)throws Exception {
+         for(String outcome:List.of(selected)) {
+             Path vector=Files.createDirectory(run.resolve(outcome));byte[] raw=utf("\""+"x".repeat(8000)+"\"");
+             try(var f=new Fixture();var peer=new SequencePeer(f,vector,m->{},"pending-flush",raw);var tls=peer.tls();var server=new Server(vector,f,tls,null);var socket=server.request(f.run)) {
+                 assertTrue(server.waitTrace("flush-wait",8000),"actual nonblocking flush left bytes pending");
+                 var h=server.handle();long before=h.after();assertTrue(before<20);
+                 if(outcome.equals("generation")) { var g=currentGateway.get();var old=g.currentCapture();f.gateway.checkGatewayPortalEvents(g);assertTrue(g.isSuperseded(old)); }

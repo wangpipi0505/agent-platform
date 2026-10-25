@@ -1,0 +1,1031 @@
+diff --git a/admin-common/pom.xml b/admin-common/pom.xml
+index 1ac9fb8..ee327c7 100644
+--- a/admin-common/pom.xml
++++ b/admin-common/pom.xml
+@@ -1 +1 @@
+-<project xmlns="http://maven.apache.org/POM/4.0.0"><modelVersion>4.0.0</modelVersion><parent><groupId>cn.agentplatform</groupId><artifactId>agent-platform</artifactId><version>0.1.0-SNAPSHOT</version></parent><artifactId>admin-common</artifactId><dependencies><dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-web</artifactId></dependency><dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-validation</artifactId></dependency><dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-oauth2-resource-server</artifactId></dependency><dependency><groupId>org.springdoc</groupId><artifactId>springdoc-openapi-starter-webmvc-api</artifactId><version>2.8.9</version></dependency><dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-test</artifactId><scope>test</scope></dependency><dependency><groupId>com.networknt</groupId><artifactId>json-schema-validator</artifactId><version>1.5.6</version></dependency><dependency><groupId>com.google.re2j</groupId><artifactId>re2j</artifactId><version>1.8</version></dependency></dependencies></project>
++<project xmlns="http://maven.apache.org/POM/4.0.0"><modelVersion>4.0.0</modelVersion><parent><groupId>cn.agentplatform</groupId><artifactId>agent-platform</artifactId><version>0.1.0-SNAPSHOT</version></parent><artifactId>admin-common</artifactId><dependencies><dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-web</artifactId></dependency><dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-validation</artifactId></dependency><dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-oauth2-resource-server</artifactId></dependency><dependency><groupId>org.springdoc</groupId><artifactId>springdoc-openapi-starter-webmvc-api</artifactId><version>2.8.9</version></dependency><dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-test</artifactId><scope>test</scope></dependency><dependency><groupId>com.networknt</groupId><artifactId>json-schema-validator</artifactId><version>1.5.6</version></dependency><dependency><groupId>com.google.re2j</groupId><artifactId>re2j</artifactId><version>1.8</version></dependency></dependencies><build><plugins><plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-jar-plugin</artifactId><version>3.4.2</version><executions><execution><id>finite-test-fixtures</id><phase>process-test-classes</phase><goals><goal>test-jar</goal></goals></execution></executions></plugin></plugins></build></project>
+diff --git a/admin-common/src/main/java/cn/agentplatform/common/authority/IntegrationClaims.java b/admin-common/src/main/java/cn/agentplatform/common/authority/IntegrationClaims.java
+new file mode 100644
+index 0000000..3be3ad7
+--- /dev/null
++++ b/admin-common/src/main/java/cn/agentplatform/common/authority/IntegrationClaims.java
+@@ -0,0 +1,12 @@
++package cn.agentplatform.common.authority;
++import cn.agentplatform.common.*;
++import com.fasterxml.jackson.databind.JsonNode;
++import java.util.*;
++/** Pure legacy integration rules shared by gateway issuance and the PG policy resolver. */
++public final class IntegrationClaims {
++    private static final Set<String> PLATFORM_ROLES=Set.of("ADMIN","EDITOR","SERVICE","GATEWAY_AUTH");
++    private IntegrationClaims(){}
++    public static String principal(String biz,String user){String value=biz+":"+user;return value.length()<=64?value:"ext_"+Digest.sha256(biz+"\u0000"+user).substring(0,60);}
++    public static String digest(JsonNode credential){return Digest.sha256(Json.canonical(Map.of("secretRef",credential.path("secretRef"),"claimLimits",credential.path("claimLimits"),"allowedOrigins",credential.path("allowedOrigins"))));}
++    public static boolean platformRole(String role){return PLATFORM_ROLES.contains(role.toUpperCase(Locale.ROOT));}
++}
+diff --git a/admin-common/src/main/java/cn/agentplatform/common/authority/PolicyRequestVerifier.java b/admin-common/src/main/java/cn/agentplatform/common/authority/PolicyRequestVerifier.java
+new file mode 100644
+index 0000000..9f5ae98
+--- /dev/null
++++ b/admin-common/src/main/java/cn/agentplatform/common/authority/PolicyRequestVerifier.java
+@@ -0,0 +1,67 @@
++package cn.agentplatform.common.authority;
++
++import cn.agentplatform.common.*;
++import com.nimbusds.jose.jwk.RSAKey;
++import jakarta.servlet.http.HttpServletRequest;
++import java.nio.charset.StandardCharsets;
++import java.security.MessageDigest;
++import java.time.*;
++import java.util.*;
++
++/** Independent, pinned POLICY_MACHINE domain. Never produces an Actor or calls an authority. */
++public final class PolicyRequestVerifier {
++    public static final String PATH="/internal/iam/integration-policy/resolve";
++    public static final String ATTRIBUTE=PolicyRequestVerifier.class.getName()+".proof";
++    private final String issuer;
++    private final Map<String,RSAKey> keys;
++    private final Clock clock;
++    public PolicyRequestVerifier(String issuer,List<RSAKey> keys,Clock clock){
++        if(issuer==null||issuer.isBlank()||keys==null||keys.isEmpty()||keys.size()>2||clock==null)throw new IllegalArgumentException("POLICY_KEYS_REQUIRED");
++        var fixed=new HashMap<String,RSAKey>();
++        for(var key:keys){
++            if(key==null||key.isPrivate()||key.getKeyID()==null||key.getKeyID().isBlank()||key.size()<2048
++                ||fixed.putIfAbsent(key.getKeyID(),key)!=null)throw new IllegalArgumentException("POLICY_PUBLIC_KEY_INVALID");
++        }
++        this.issuer=issuer;this.keys=Map.copyOf(fixed);this.clock=clock;
++    }
++    public Proof verify(HttpServletRequest request,byte[] body){
++        try{
++            exact(request);
++            if(body==null||body.length==0||body.length>8192)throw rejected();
++            var headers=Collections.list(request.getHeaders("Authorization"));
++            if(headers.size()!=1||!headers.getFirst().startsWith("Bearer "))throw rejected();
++            String token=headers.getFirst().substring(7);
++            if(token.length()>16384||!token.matches("[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+"))throw rejected();
++            var header=AuthorityResponseVerifier.object(Base64.getUrlDecoder().decode(token.split("\\.")[0]));
++            var key=keys.get(AuthorityProtocol.text(header,"kid"));if(key==null)throw rejected();
++            // Nimbus 9.37.3 verifies bytes; the existing strict verifier separately checks JSON,
++            // type/use/audience/issuer and NumericDates. Local failures never become remote 503s.
++            var claims=AuthorityResponseVerifier.verifyPinned(token,"agent-policy-request+jwt","policy-query","app-policy-resolver",30,key,issuer,clock).claims();
++            AuthorityProtocol.same("iam-policy-resolver",AuthorityProtocol.text(claims,"sub"));
++            AuthorityProtocol.same("iam-policy-resolver",AuthorityProtocol.text(claims,"caller"));
++            AuthorityProtocol.same("app-policy-resolver",AuthorityProtocol.text(claims,"target"));
++            AuthorityProtocol.same("integration.policy.resolve",AuthorityProtocol.text(claims,"action"));
++            String hash=HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(body));
++            AuthorityProtocol.same(hash,AuthorityProtocol.text(claims,"bodySha256"));
++            var json=AuthorityResponseVerifier.object(body);
++            AuthorityProtocol.same(AuthorityProtocol.text(json,"nonce"),AuthorityProtocol.text(claims,"nonce"));
++            return new Proof(this,request,body,AuthorityProtocol.time(claims,"exp"));
++        }catch(Exception denied){throw rejected();}
++    }
++    public void require(HttpServletRequest request,Proof proof){
++        exact(request);if(proof==null||proof.owner!=this||proof.request!=request||!proof.expires.isAfter(clock.instant()))throw rejected();
++    }
++    private static void exact(HttpServletRequest request){
++        if(request==null||!"POST".equals(request.getMethod())||!PATH.equals(request.getServletPath())
++            ||request.getQueryString()!=null||request.getDispatcherType()!=jakarta.servlet.DispatcherType.REQUEST)throw rejected();
++    }
++    private static PlatformException rejected(){return new PlatformException(401,"POLICY_REQUEST_REJECTED","策略请求验证失败");}
++    /** Immutable original bytes are the sole controller input. Copying this object to another
++     * request or another verifier cannot create an ingress capability. No public constructor. */
++    public static final class Proof {
++        private final PolicyRequestVerifier owner;private final HttpServletRequest request;
++        private final byte[] bytes;private final Instant expires;
++        private Proof(PolicyRequestVerifier owner,HttpServletRequest request,byte[] bytes,Instant expires){this.owner=owner;this.request=request;this.bytes=bytes.clone();this.expires=expires;}
++        public byte[] body(HttpServletRequest request){owner.require(request,this);return bytes.clone();}
++    }
++}
+diff --git a/admin-common/src/main/java/cn/agentplatform/common/authority/ServiceAuthorization.java b/admin-common/src/main/java/cn/agentplatform/common/authority/ServiceAuthorization.java
+index ff4ceae..d2ec45f 100644
+--- a/admin-common/src/main/java/cn/agentplatform/common/authority/ServiceAuthorization.java
++++ b/admin-common/src/main/java/cn/agentplatform/common/authority/ServiceAuthorization.java
+@@ -19,9 +19,17 @@ public final class ServiceAuthorization implements AsyncHandlerInterceptor {
+     private final ServiceRoutePolicy routes;
+     private final CurrentAuthorityClient authority;
+     private final java.lang.reflect.Method healthHandler;
++    private final java.lang.reflect.Method policyHandler;
++    private final PolicyRequestVerifier policyVerifier;
+ 
+     public ServiceAuthorization(String serviceId,ServiceRoutePolicy routes,CurrentAuthorityClient authority){this(serviceId,routes,authority,null);}
+     public ServiceAuthorization(String serviceId,ServiceRoutePolicy routes,CurrentAuthorityClient authority,java.lang.reflect.Method healthHandler) {
++        this(serviceId,routes,authority,healthHandler,null,null);
++    }
++    public ServiceAuthorization(String serviceId,ServiceRoutePolicy routes,CurrentAuthorityClient authority,
++            java.lang.reflect.Method healthHandler,java.lang.reflect.Method policyHandler,PolicyRequestVerifier policyVerifier) {
++        if((policyHandler==null)!=(policyVerifier==null))throw new IllegalArgumentException("POLICY_HANDLER_VERIFIER_REQUIRED");
++        this.policyHandler=policyHandler;this.policyVerifier=policyVerifier;
+         if(!AuthorityProperties.SERVICES.contains(serviceId))throw new IllegalArgumentException("SERVICE_ID_INVALID");
+         this.serviceId=serviceId;this.routes=Objects.requireNonNull(routes);this.authority=Objects.requireNonNull(authority);this.healthHandler=healthHandler;
+     }
+@@ -38,6 +46,12 @@ public final class ServiceAuthorization implements AsyncHandlerInterceptor {
+         if(healthRequest(request)&&handler instanceof org.springframework.web.method.HandlerMethod method
+                 &&healthHandler.equals(method.getMethod())
+                 &&"/actuator/health".equals(request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE)))return true;
++        if(policyHandler!=null&&handler instanceof org.springframework.web.method.HandlerMethod method
++                &&policyHandler.equals(method.getMethod())&&PolicyRequestVerifier.PATH.equals(request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE))){
++            Object proof=request.getAttribute(PolicyRequestVerifier.ATTRIBUTE);
++            if(!(proof instanceof PolicyRequestVerifier.Proof verified))throw AuthorityProtocol.denied();
++            policyVerifier.require(request,verified);return true;
++        }
+         var jwt=jwt();
+         var call=new ServiceCall(serviceId,jwt.getClaimAsString("action"),
+                 AuthorityProtocol.resource(Json.tree(jwt.getClaims().get("resource"))));
+diff --git a/admin-common/src/test/java/cn/agentplatform/common/authority/AuthorityPolicyTest.java b/admin-common/src/test/java/cn/agentplatform/common/authority/AuthorityPolicyTest.java
+index bd67fd8..cc2d6ac 100644
+--- a/admin-common/src/test/java/cn/agentplatform/common/authority/AuthorityPolicyTest.java
++++ b/admin-common/src/test/java/cn/agentplatform/common/authority/AuthorityPolicyTest.java
+@@ -177,7 +177,15 @@ class AuthorityPolicyTest {
+             if (row.source().startsWith("springdoc-")) continue;
+             catalog.add(row.target() + "|" + row.method() + "|" + row.template());
+         }
+-        assertThat(actual).hasSize(158).containsExactlyInAnyOrderElementsOf(catalog);
++        // POLICY_MACHINE is a distinct exact ingress, never a service capability. Retain every
++        // original catalog entry and compare the full union rather than merely changing a count.
++        String policyIngress="app|POST|"+PolicyRequestVerifier.PATH;
++        assertThat(catalog).hasSize(158).doesNotContain(policyIngress);
++        var allIngress=new HashSet<>(catalog);allIngress.add(policyIngress);
++        assertThat(actual).hasSize(159).containsExactlyInAnyOrderElementsOf(allIngress);
++        assertThat(policy.routes()).noneMatch(r->r.template().equals(PolicyRequestVerifier.PATH));
++        String policySource=Files.readString(root.resolve("app-management/src/main/java/cn/agentplatform/app/api/IntegrationPolicyResolverController.java"));
++        assertThat(policySource).contains("@PostMapping(\""+PolicyRequestVerifier.PATH+"\")");
+         assertThat(policy.routes().stream().filter(r -> r.source().startsWith("springdoc-"))).hasSize(5);
+         assertThat(policy.routes().stream().filter(ServiceRoutePolicy.Route::integrationAllowed))
+                 .allMatch(r -> r.caller().equals("gateway") && r.mode().equals("delegated") && r.template().startsWith("/v1/"))
+diff --git a/admin-common/src/test/java/cn/agentplatform/common/authority/IntegrationClaimsTest.java b/admin-common/src/test/java/cn/agentplatform/common/authority/IntegrationClaimsTest.java
+new file mode 100644
+index 0000000..122ae0a
+--- /dev/null
++++ b/admin-common/src/test/java/cn/agentplatform/common/authority/IntegrationClaimsTest.java
+@@ -0,0 +1,15 @@
++package cn.agentplatform.common.authority;
++import cn.agentplatform.common.*;
++import org.junit.jupiter.api.Test;
++import java.util.*;
++import static org.assertj.core.api.Assertions.*;
++class IntegrationClaimsTest {
++    @Test void shortLongPrincipalAndCanonicalDigestRetainIssuedTicketContract(){
++        assertThat(IntegrationClaims.principal("biz","alice")).isEqualTo("biz:alice");
++        String user="u".repeat(90);assertThat(IntegrationClaims.principal("biz",user)).isEqualTo("ext_"+Digest.sha256("biz\u0000"+user).substring(0,60));
++        var c=Json.tree(Map.of("secretRef","test-ref","claimLimits",Map.of("roles",List.of("reader")),"allowedOrigins",List.of("https://example.invalid")));
++        assertThat(IntegrationClaims.digest(c)).isEqualTo(Digest.sha256(Json.canonical(Map.of("secretRef",c.path("secretRef"),"claimLimits",c.path("claimLimits"),"allowedOrigins",c.path("allowedOrigins")))));
++        for(String role:List.of("ADMIN","admin","EDITOR","SERVICE","GATEWAY_AUTH"))assertThat(IntegrationClaims.platformRole(role)).isTrue();
++        assertThat(IntegrationClaims.platformRole("reader")).isFalse();
++    }
++}
+diff --git a/admin-common/src/test/java/cn/agentplatform/common/authority/LoopbackAuthority.java b/admin-common/src/test/java/cn/agentplatform/common/authority/LoopbackAuthority.java
+index 13bfee9..1711cf4 100644
+--- a/admin-common/src/test/java/cn/agentplatform/common/authority/LoopbackAuthority.java
++++ b/admin-common/src/test/java/cn/agentplatform/common/authority/LoopbackAuthority.java
+@@ -18,7 +18,7 @@ import java.util.function.Consumer;
+  * Finite protocol fixture, never a production authority or PG substitute. The policy server is a
+  * separate HTTP handler and trust domain; all INTEGRATION decisions query that server exactly once.
+  */
+-final class LoopbackAuthority implements AutoCloseable {
++public final class LoopbackAuthority implements AutoCloseable {
+     final MutableClock clock=new MutableClock();
+     final RSAKey key=LoopbackIssuer.key("authority"),portalKey=LoopbackIssuer.key("portal"),policyKey=LoopbackIssuer.key("policy");
+     final byte[] integrationKey=new byte[32];
+@@ -43,6 +43,12 @@ final class LoopbackAuthority implements AutoCloseable {
+     Consumer<Map<String,Object>> changeTicket=c->{};
+     Consumer<Map<String,Object>> changePermit=c->{};
+     int serial;
++    URI externalPolicy;
++    public void externalPolicy(URI endpoint){if(!"http".equals(endpoint.getScheme())||!"127.0.0.1".equals(endpoint.getHost())||!PolicyRequestVerifier.PATH.equals(endpoint.getPath()))throw new IllegalArgumentException("FINITE_LOOPBACK_ONLY");externalPolicy=endpoint;}
++    public void clearFiniteGrants(){grants.clear();operations.clear();decisions.clear();requests.clear();changeDecision=c->{};}
++    public void narrowAdminAtResourceCheck(){var count=new AtomicInteger();changeDecision=c->{if(c.containsKey("roles")&&count.incrementAndGet()>=2)c.put("roles",Set.of());};}
++    Actor explicitPortalActor;
++    public void portalActor(Actor actor){explicitPortalActor=actor;currentRoles=actor.roles();}
+     record Grant(String id,Actor ceiling,ResourceBinding resource,Instant expires,String origin,Instant sourceExpires,String version,String policyVersion,Map<String,Object> integration) {}
+     record Operation(String id,Grant grant,String source,Instant issued,Instant expires) {}
+     record Decision(String id,Operation operation,ServiceCall call,String caller,Instant expires,String ticketJti) {}
+@@ -52,7 +58,7 @@ final class LoopbackAuthority implements AutoCloseable {
+     record PolicyResolveResult(int schemaVersion,long credentialId,String tenantId,String appCode,String bizSystemCode,String userId,
+         String principalId,boolean active,boolean subjectAllowed,Set<String> roleCeiling,Map<String,Set<String>> attributeCeiling,
+         Set<String> dataLabels,Set<String> allowedOrigins,String policyVersion,String policyDigest,String nonce) {}
+-    LoopbackAuthority() throws Exception {
++    public LoopbackAuthority() throws Exception {
+         new java.security.SecureRandom().nextBytes(integrationKey);
+         for(String c:AuthorityProperties.SERVICES)secrets.put(c,UUID.randomUUID().toString());
+         server=HttpServer.create(new InetSocketAddress("127.0.0.1",0),0);
+@@ -64,15 +70,15 @@ final class LoopbackAuthority implements AutoCloseable {
+         resolver.createContext("/internal/iam/integration-policy/resolve",this::resolve);
+         server.start();resolver.start();
+     }
+-    String issuer(){return "http://127.0.0.1:"+server.getAddress().getPort();}
+-    String policyIssuer(){return "http://127.0.0.1:"+resolver.getAddress().getPort();}
+-    AuthorityProperties config(String service){
++    public String issuer(){return "http://127.0.0.1:"+server.getAddress().getPort();}
++    public String policyIssuer(){return "http://127.0.0.1:"+resolver.getAddress().getPort();}
++    public AuthorityProperties config(String service){
+         return new AuthorityProperties("iam",service,"gateway".equals(service)?new AuthorityProperties.Portal(true,issuer()+"/portal",issuer()+"/portal-jwks","portal-gateway","portal-web",
+-            Set.of("EDITOR"),Set.of("region","dataLabels"),Map.of("region",Set.of("A"),"dataLabels",Set.of("restricted")),Set.of("platform.access")):null,
++            explicitPortalActor==null?Set.of("EDITOR"):explicitPortalActor.roles(),Set.of("region","dataLabels"),Map.of("region",Set.of("A"),"dataLabels",Set.of("restricted")),Set.of("platform.access")):null,
+             new AuthorityProperties.Authority(issuer(),issuer()+"/jwks",issuer()+"/token",issuer()+"/decision",service,"env:AGENT_SECRET_IAM_"+service.toUpperCase(Locale.ROOT)+"_CLIENT","RS256","urn:agent-platform:service:"+service,60,5,1000,2000),
+             "gateway".equals(service)?new AuthorityProperties.Integration(true,"test-only-ref"):null,null,null,false,null);
+     }
+-    HttpCurrentAuthorityClient client(String service){
++    public HttpCurrentAuthorityClient client(String service){
+         var c=config(service);return new HttpCurrentAuthorityClient(c,clock,new WorkloadCredentialResolver(c,name->secrets.get(service),true),true);
+     }
+     static ServiceCall call(String caller,String target){
+@@ -80,30 +86,37 @@ final class LoopbackAuthority implements AutoCloseable {
+         return new ServiceCall(target,route.action(),new ResourceBinding("run","r-test",Digest.sha256("snapshot-v1")));
+     }
+     static Actor ceiling(){return new Actor("tenant-a","alice",Set.of("EDITOR"),Map.of("region",Set.of("A"),"dataLabels",Set.of("confidential","restricted")));}
+-    String portal(){return portal(40);}
++    public String portal(){return portal(40);}
+     String portal(long ttl){
+         var c=base("user","portal-gateway",ttl);c.put("iss",issuer()+"/portal");c.put("sub","alice");c.put("tenant_id","tenant-a");
+         c.put("client_id","portal-web");c.put("roles",Set.of("ADMIN","EDITOR"));c.put("attributes",Map.of("region",List.of("A","B"),"dataLabels",List.of("confidential")));c.put("scope","platform.access");
++        if(explicitPortalActor!=null){c.put("tenant_id",explicitPortalActor.tenantId());c.put("sub",explicitPortalActor.principalId());c.put("roles",explicitPortalActor.roles());c.put("attributes",explicitPortalActor.attributes());}
+         return sign(c,portalKey,"at+jwt");
+     }
+-    Map<String,Object> integrationClaims(){
++    public Map<String,Object> integrationClaims(){
+         var c=base("integration","agent-platform-embed",20);c.put("sub","alice");c.put("tenant_id","tenant-a");
+         c.put("app_code","app-a");c.put("biz_system_code","biz-a");c.put("user_id","alice");c.put("credential_id",7L);c.put("policy_digest",Digest.sha256("policy-v1"));c.put("origin","https://embed.example.invalid");
+         return c;
+     }
+     String integration(){return integration(integrationClaims());}
+-    String integration(Map<String,Object> c){
++    public String integration(Map<String,Object> c){
+         try{var jwt=new JWSObject(new JWSHeader.Builder(JWSAlgorithm.HS256).type(new JOSEObjectType("JWT")).build(),new Payload(Json.write(c)));jwt.sign(new MACSigner(integrationKey));return jwt.serialize();}
+         catch(Exception e){throw new AssertionError(e);}
+     }
+-    Map<String,Object> base(String use,String audience,long ttl){
++    public Map<String,Object> base(String use,String audience,long ttl){
+         var c=new LinkedHashMap<String,Object>();c.put("iss",issuer());c.put("aud",audience);c.put("token_use",use);
+         c.put("iat",clock.instant().getEpochSecond());c.put("nbf",clock.instant().getEpochSecond());c.put("exp",clock.instant().plusSeconds(ttl).getEpochSecond());c.put("jti","id-"+(++serial));return c;
+     }
+-    String sign(Map<String,Object> claims,RSAKey key,String typ){
++    public String sign(Map<String,Object> claims,RSAKey key,String typ){
+         try{var jwt=new JWSObject(new JWSHeader.Builder(JWSAlgorithm.RS256).keyID(key.getKeyID()).type(new JOSEObjectType(typ)).build(),new Payload(Json.write(claims)));jwt.sign(new RSASSASigner(key));return jwt.serialize();}
+         catch(Exception e){throw new AssertionError(e);}
+     }
++    public Clock clock(){return clock;}
++    public RSAKey policySigningKey(){return policyKey;}
++    public RSAKey authoritySigningKey(){return key;}
++    public int authorityCalls(){return requests.size();}
++    public int policyCalls(){return policyCalls.get();}
++    public int resolverToAuthorityCalls(){return resolverToAuthority.get();}
+     void handle(HttpExchange x){
+         try{
+             if(unavailable){send(x,503,"unavailable-test");return;}
+@@ -158,12 +171,20 @@ final class LoopbackAuthority implements AutoCloseable {
+         }
+         Operation op;String subjectCaller=caller;
+         if(type.equals("exchange")||type.equals("exchange_integration")){
+-            if(!caller.equals("gateway")||grants.size()>=2)throw AuthorityProtocol.denied();
++            if(!caller.equals("gateway")||grants.size()>=(explicitPortalActor==null?2:32))throw AuthorityProtocol.denied();
+             String token=AuthorityProtocol.text(request,"subject_token");boolean integration=type.equals("exchange_integration");
+             JsonNode subject=verifySubject(token,integration);
+             Map<String,Object> details=integration?Json.mapper().convertValue(subject,new com.fasterxml.jackson.core.type.TypeReference<Map<String,Object>>(){}):Map.of();
+-            var grant=new Grant("grant-"+(++serial),ceiling(),call.resource(),clock.instant().plusSeconds(300),integration?"INTEGRATION":"PORTAL",AuthorityProtocol.time(subject,"exp"),version,integration?policyVersion:null,details);
+-            current(grant);grants.put(grant.id,grant);op=operation(grant,grant.origin,grant.sourceExpires);
++            String sourceHash=Digest.sha256(token);
++            Grant original=integration&&externalPolicy!=null?grants.values().stream().filter(g->sourceHash.equals(g.integration.get("source_token_sha256"))).findFirst().orElse(null):null;
++            PolicyResolveResult actual=integration&&externalPolicy!=null?externalPolicy(details,original==null?null:original.policyVersion,original==null?null:original.ceiling):null;
++            if(actual!=null)details.put("source_token_sha256",sourceHash);
++            Actor ceiling=actual==null?(explicitPortalActor==null?ceiling():explicitPortalActor):policyActor(actual);
++            var grant=new Grant("grant-"+(++serial),ceiling,call.resource(),clock.instant().plusSeconds(300),integration?"INTEGRATION":"PORTAL",AuthorityProtocol.time(subject,"exp"),version,integration?(actual==null?policyVersion:actual.policyVersion()):null,details);
++            // The initial external result is the only policy read for this exchange. Subsequent
++            // decisions query with this persisted grant version, never with caller-supplied overrides.
++            if(actual==null)current(grant);else if(revoked||!scopeAllowed)throw AuthorityProtocol.denied();
++            grants.put(grant.id,grant);op=operation(grant,grant.origin,grant.sourceExpires);
+             if(integration){for(String k:List.of("tenant_id","sub","app_code","biz_system_code","user_id","credential_id","policy_digest"))reply.put(k,subject.get(k));reply.put("subject_token_sha256",AuthorityProtocol.digest(token));}
+         }else if(type.equals("resume")){
+             var grant=grants.get(AuthorityProtocol.text(request,"grant_ref"));if(grant==null||!operationPolicy)throw AuthorityProtocol.denied();
+@@ -193,14 +214,15 @@ final class LoopbackAuthority implements AutoCloseable {
+             if(!JWSAlgorithm.HS256.equals(jws.getHeader().getAlgorithm())||!jws.verify(new MACVerifier(integrationKey)))throw AuthorityProtocol.denied();
+             AuthorityProtocol.same("integration",AuthorityProtocol.text(c,"token_use"));AuthorityProtocol.same("agent-platform-embed",AuthorityProtocol.text(c,"aud"));
+             if(AuthorityProtocol.time(c,"exp").isAfter(AuthorityProtocol.time(c,"iat").plusSeconds(300)))throw AuthorityProtocol.denied();
+-            AuthorityProtocol.same("app-a",AuthorityProtocol.text(c,"app_code"));AuthorityProtocol.same("biz-a",AuthorityProtocol.text(c,"biz_system_code"));AuthorityProtocol.same("alice",AuthorityProtocol.text(c,"user_id"));
++            if(externalPolicy==null){AuthorityProtocol.same("app-a",AuthorityProtocol.text(c,"app_code"));AuthorityProtocol.same("biz-a",AuthorityProtocol.text(c,"biz_system_code"));AuthorityProtocol.same("alice",AuthorityProtocol.text(c,"user_id"));
+             if(!c.path("credential_id").isIntegralNumber()||c.path("credential_id").longValue()!=7)throw AuthorityProtocol.denied();
+-            AuthorityProtocol.same(Digest.sha256("policy-v1"),AuthorityProtocol.text(c,"policy_digest"));
++            AuthorityProtocol.same(Digest.sha256("policy-v1"),AuthorityProtocol.text(c,"policy_digest"));}
++            else {for(String k:List.of("app_code","biz_system_code","user_id","tenant_id","sub","policy_digest","origin"))AuthorityProtocol.text(c,k);if(!c.path("credential_id").isIntegralNumber()||!c.path("credential_id").canConvertToLong()||c.path("credential_id").longValue()<1)throw AuthorityProtocol.denied();}
+         }else{
+             if(!jws.verify(new RSASSAVerifier(portalKey.toRSAPublicKey())))throw AuthorityProtocol.denied();
+             AuthorityProtocol.same("user",AuthorityProtocol.text(c,"token_use"));AuthorityProtocol.same("portal-web",AuthorityProtocol.text(c,"client_id"));
+         }
+-        AuthorityProtocol.same("tenant-a",AuthorityProtocol.text(c,"tenant_id"));AuthorityProtocol.same("alice",AuthorityProtocol.text(c,"sub"));
++        if(!(integration&&externalPolicy!=null)){AuthorityProtocol.same(explicitPortalActor==null?"tenant-a":explicitPortalActor.tenantId(),AuthorityProtocol.text(c,"tenant_id"));AuthorityProtocol.same(explicitPortalActor==null?"alice":explicitPortalActor.principalId(),AuthorityProtocol.text(c,"sub"));}
+         if(!AuthorityProtocol.time(c,"exp").isAfter(clock.instant()))throw AuthorityProtocol.expired();return c;
+     }
+     JsonNode service(String token)throws Exception {
+@@ -209,7 +231,7 @@ final class LoopbackAuthority implements AutoCloseable {
+     }
+     void current(Grant grant)throws Exception {
+         if(revoked||!scopeAllowed||grant==null||!grant.expires.isAfter(clock.instant())||!grant.version.equals(version))throw AuthorityProtocol.denied();
+-        if(!currentRoles.containsAll(grant.ceiling.roles()))throw AuthorityProtocol.denied();
++        if(!(externalPolicy!=null&&grant.origin.equals("INTEGRATION"))&&!currentRoles.containsAll(grant.ceiling.roles()))throw AuthorityProtocol.denied();
+         if(grant.origin.equals("INTEGRATION"))policy(grant);
+     }
+     void activeOperation(Operation op){if(!op.expires.isAfter(clock.instant()))throw AuthorityProtocol.expired();}
+@@ -255,6 +277,7 @@ final class LoopbackAuthority implements AutoCloseable {
+         if(new ServiceRoutePolicy().routes().stream().noneMatch(r->Objects.equals(caller,r.caller())&&Objects.equals(call.target(),r.target())&&Objects.equals(call.action(),r.action())&&mode.equals(r.mode())))throw AuthorityProtocol.denied();
+     }
+     void policy(Grant g)throws Exception {
++        if(externalPolicy!=null){externalPolicy(g.integration,g.policyVersion,g.ceiling);return;}
+         policyCalls.incrementAndGet();String nonce=UUID.randomUUID().toString();
+         var request=new PolicyResolveRequest(1,7,"tenant-a","app-a","biz-a","alice","alice",g.policyVersion,nonce);
+         String body=Json.write(request);var assertion=base("policy-query","app-policy-resolver",30);
+@@ -277,6 +300,27 @@ final class LoopbackAuthority implements AutoCloseable {
+         if(!AuthorityProtocol.strings(result.get("roleCeiling")).containsAll(g.ceiling.roles())||!AuthorityProtocol.attrs(result.get("attributeCeiling")).getOrDefault("region",Set.of()).containsAll(g.ceiling.attributes().get("region")))throw AuthorityProtocol.denied();
+         if(!g.ceiling.attributes().getOrDefault("dataLabels",Set.of()).containsAll(AuthorityProtocol.strings(result.get("dataLabels"))))throw AuthorityProtocol.denied();
+     }
++    static Actor policyActor(PolicyResolveResult p){var attrs=new HashMap<>(p.attributeCeiling());attrs.put("dataLabels",p.dataLabels());return new Actor(p.tenantId(),p.principalId(),p.roleCeiling(),attrs);}
++    PolicyResolveResult externalPolicy(Map<String,Object> details,String expectedVersion,Actor ceiling)throws Exception {
++        policyCalls.incrementAndGet();String nonce=UUID.randomUUID().toString();var d=Json.tree(details);
++        var request=new PolicyResolveRequest(1,d.path("credential_id").longValue(),AuthorityProtocol.text(d,"tenant_id"),AuthorityProtocol.text(d,"app_code"),AuthorityProtocol.text(d,"biz_system_code"),AuthorityProtocol.text(d,"user_id"),AuthorityProtocol.text(d,"sub"),expectedVersion,nonce);
++        String body=Json.write(request);var assertion=base("policy-query","app-policy-resolver",30);
++        long now=Instant.now().getEpochSecond();assertion.put("iat",now);assertion.put("nbf",now);assertion.put("exp",now+30);
++        assertion.put("iss",policyIssuer()+"/policy-issuer");assertion.put("sub","iam-policy-resolver");assertion.put("caller","iam-policy-resolver");assertion.put("target","app-policy-resolver");assertion.put("action","integration.policy.resolve");assertion.put("nonce",nonce);assertion.put("bodySha256",Digest.sha256(body));
++        var response=policyHttp.send(HttpRequest.newBuilder(externalPolicy).timeout(Duration.ofSeconds(2)).header("Content-Type","application/json").header("Authorization","Bearer "+sign(assertion,policyKey,"agent-policy-request+jwt")).POST(HttpRequest.BodyPublishers.ofString(body)).build(),HttpResponse.BodyHandlers.ofString());
++        if(response.statusCode()!=200||response.body().length()>65536)throw AuthorityProtocol.denied();
++        var n=AuthorityResponseVerifier.object(response.body().getBytes(StandardCharsets.UTF_8));
++        var fields=Set.of("schemaVersion","credentialId","tenantId","appCode","bizSystemCode","userId","principalId","active","subjectAllowed","roleCeiling","attributeCeiling","dataLabels","allowedOrigins","policyVersion","policyDigest","nonce");
++        if(n.size()!=fields.size())throw AuthorityProtocol.denied();for(String k:fields)if(!n.has(k))throw AuthorityProtocol.denied();
++        if(!n.path("schemaVersion").isIntegralNumber()||n.path("schemaVersion").intValue()!=1||!n.path("credentialId").isIntegralNumber()||n.path("credentialId").longValue()!=request.credentialId()||!n.path("active").isBoolean()||!n.path("active").booleanValue()||!n.path("subjectAllowed").isBoolean()||!n.path("subjectAllowed").booleanValue())throw AuthorityProtocol.denied();
++        AuthorityProtocol.same(request.expectedTenantId(),AuthorityProtocol.text(n,"tenantId"));AuthorityProtocol.same(request.expectedAppCode(),AuthorityProtocol.text(n,"appCode"));AuthorityProtocol.same(request.expectedBizSystemCode(),AuthorityProtocol.text(n,"bizSystemCode"));AuthorityProtocol.same(request.userId(),AuthorityProtocol.text(n,"userId"));AuthorityProtocol.same(request.expectedPrincipalId(),AuthorityProtocol.text(n,"principalId"));AuthorityProtocol.same(nonce,AuthorityProtocol.text(n,"nonce"));
++        String pv=AuthorityProtocol.text(n,"policyVersion");if(expectedVersion!=null)AuthorityProtocol.same(expectedVersion,pv);
++        AuthorityProtocol.same(AuthorityProtocol.text(d,"policy_digest"),AuthorityProtocol.text(n,"policyDigest"));
++        var origins=AuthorityProtocol.strings(n.get("allowedOrigins"));if(!origins.contains(AuthorityProtocol.text(d,"origin")))throw AuthorityProtocol.denied();
++        var p=new PolicyResolveResult(1,request.credentialId(),request.expectedTenantId(),request.expectedAppCode(),request.expectedBizSystemCode(),request.userId(),request.expectedPrincipalId(),true,true,AuthorityProtocol.strings(n.get("roleCeiling")),AuthorityProtocol.attrs(n.get("attributeCeiling")),AuthorityProtocol.strings(n.get("dataLabels")),origins,pv,AuthorityProtocol.text(n,"policyDigest"),nonce);
++        if(ceiling!=null)AuthorityProtocol.within(policyActor(p),ceiling);
++        return p;
++    }
+     void resolve(HttpExchange x){
+         try{
+             if(policyUnavailable){send(x,503,"resolver-unavailable");return;}
+diff --git a/admin-common/src/test/java/cn/agentplatform/common/authority/PolicyRequestVerifierTest.java b/admin-common/src/test/java/cn/agentplatform/common/authority/PolicyRequestVerifierTest.java
+new file mode 100644
+index 0000000..38e4fad
+--- /dev/null
++++ b/admin-common/src/test/java/cn/agentplatform/common/authority/PolicyRequestVerifierTest.java
+@@ -0,0 +1,66 @@
++package cn.agentplatform.common.authority;
++
++import cn.agentplatform.common.*;
++import com.nimbusds.jose.jwk.RSAKey;
++import java.nio.charset.StandardCharsets;
++import java.util.*;
++import org.junit.jupiter.api.Test;
++import org.springframework.mock.web.MockHttpServletRequest;
++import static org.assertj.core.api.Assertions.*;
++
++class PolicyRequestVerifierTest {
++    static final byte[] BODY="{\"nonce\":\"finite-policy-nonce\"}".getBytes(StandardCharsets.UTF_8);
++    static MockHttpServletRequest request(String token){var r=new MockHttpServletRequest("POST",PolicyRequestVerifier.PATH);r.setServletPath(PolicyRequestVerifier.PATH);r.setContent(BODY);r.addHeader("Authorization","Bearer "+token);return r;}
++    static Map<String,Object> claims(LoopbackAuthority f){var c=f.base("policy-query","app-policy-resolver",30);c.put("iss",f.policyIssuer()+"/policy-issuer");c.put("sub","iam-policy-resolver");c.put("caller","iam-policy-resolver");c.put("target","app-policy-resolver");c.put("action","integration.policy.resolve");c.put("nonce","finite-policy-nonce");c.put("bodySha256",Digest.sha256(new String(BODY,StandardCharsets.UTF_8)));return c;}
++    static PolicyRequestVerifier verifier(LoopbackAuthority f){return new PolicyRequestVerifier(f.policyIssuer()+"/policy-issuer",List.of(f.policyKey.toPublicJWK()),f.clock);}
++    @Test void signedPolicyProofIsBoundToExactRequestBodyTimeAndVerifier()throws Exception{
++        try(var f=new LoopbackAuthority()){
++            var v=verifier(f);var r=request(f.sign(claims(f),f.policyKey,"agent-policy-request+jwt"));
++            var proof=v.verify(r,BODY);assertThat(proof.body(r)).containsExactly(BODY);assertThatCode(()->v.require(r,proof)).doesNotThrowAnyException();
++            assertThatThrownBy(()->v.require(request(r.getHeader("Authorization").substring(7)),proof)).isInstanceOf(PlatformException.class);
++            assertThatThrownBy(()->verifier(f).require(r,proof)).isInstanceOf(PlatformException.class);
++            assertThatThrownBy(()->proof.body(request("copied"))).isInstanceOf(PlatformException.class);
++            f.clock.advance(31);assertThatThrownBy(()->v.require(r,proof)).isInstanceOf(PlatformException.class);
++        }
++    }
++    @Test void wrongDomainClaimsMethodPathAndBodyFailLocallyWithout503()throws Exception{
++        try(var f=new LoopbackAuthority()){
++            var v=verifier(f);
++            for(String field:List.of("iss","sub","caller","target","action","token_use","aud","nonce","bodySha256")){
++                var c=claims(f);c.put(field,"wrong");reject(v,request(f.sign(c,f.policyKey,"agent-policy-request+jwt")),BODY);
++            }
++            for(String field:List.of("iat","nbf","exp")){var c=claims(f);c.put(field,field.equals("exp")?0:f.clock.instant().plusSeconds(1).getEpochSecond());reject(v,request(f.sign(c,f.policyKey,"agent-policy-request+jwt")),BODY);}
++            var longTtl=claims(f);longTtl.put("exp",f.clock.instant().plusSeconds(31).getEpochSecond());reject(v,request(f.sign(longTtl,f.policyKey,"agent-policy-request+jwt")),BODY);
++            var raw=f.sign(claims(f),f.policyKey,"agent-policy-request+jwt");var method=request(raw);method.setMethod("GET");reject(v,method,BODY);var path=request(raw);path.setServletPath("/internal/other");reject(v,path,BODY);
++            reject(v,request(f.sign(claims(f),new RSAKey.Builder(f.key).keyID(f.policyKey.getKeyID()).build(),"agent-policy-request+jwt")),BODY);
++            reject(v,request(f.sign(claims(f),f.key,"agent-policy-request+jwt")),BODY);reject(v,request(f.sign(claims(f),f.policyKey,"at+jwt")),BODY);
++            reject(v,request(raw),"{\"nonce\":\"changed\"}".getBytes(StandardCharsets.UTF_8));
++            reject(v,request("eyJhbGciOiJub25lIn0.e30."),BODY);
++            var duplicate="{\"nonce\":\"finite-policy-nonce\",\"nonce\":\"finite-policy-nonce\"}".getBytes(StandardCharsets.UTF_8);var c=claims(f);c.put("bodySha256",Digest.sha256(new String(duplicate,StandardCharsets.UTF_8)));reject(v,request(f.sign(c,f.policyKey,"agent-policy-request+jwt")),duplicate);
++        }
++    }
++    static void reject(PolicyRequestVerifier v,MockHttpServletRequest r,byte[] b){assertThatThrownBy(()->v.verify(r,b)).isInstanceOfSatisfying(PlatformException.class,e->assertThat(e.status()).isIn(401,403));}
++    @Test void missingPrivateDuplicateOrTooManyPinnedKeysRejectAtConstruction()throws Exception{
++        try(var f=new LoopbackAuthority()){
++            for(var keys:List.of(List.<RSAKey>of(),List.of(f.policyKey),List.of(f.policyKey.toPublicJWK(),f.policyKey.toPublicJWK()),List.of(f.policyKey.toPublicJWK(),f.key.toPublicJWK(),f.portalKey.toPublicJWK())))
++                assertThatThrownBy(()->new PolicyRequestVerifier("issuer",keys,f.clock)).isInstanceOf(IllegalArgumentException.class);
++        }
++    }
++
++    static class PolicyHandler {public void resolve(){} public void other(){}}
++    @Test void globalGuardRequiresRegisteredMethodAndUnforgeableProof()throws Exception{
++        try(var f=new LoopbackAuthority();var client=f.client("app")){
++            var verifier=verifier(f);var method=PolicyHandler.class.getMethod("resolve");
++            var guard=new ServiceAuthorization("app",new ServiceRoutePolicy(),client,null,method,verifier);
++            var handler=new org.springframework.web.method.HandlerMethod(new PolicyHandler(),method);
++            var r=request(f.sign(claims(f),f.policyKey,"agent-policy-request+jwt"));r.setAttribute(org.springframework.web.servlet.HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE,PolicyRequestVerifier.PATH);
++            assertThatThrownBy(()->guard.preHandle(r,new org.springframework.mock.web.MockHttpServletResponse(),handler)).isInstanceOf(PlatformException.class);
++            r.setAttribute(PolicyRequestVerifier.ATTRIBUTE,true);assertThatThrownBy(()->guard.preHandle(r,new org.springframework.mock.web.MockHttpServletResponse(),handler)).isInstanceOf(PlatformException.class);
++            var proof=verifier.verify(r,BODY);r.setAttribute(PolicyRequestVerifier.ATTRIBUTE,proof);assertThat(guard.preHandle(r,new org.springframework.mock.web.MockHttpServletResponse(),handler)).isTrue();
++            var bytes=proof.body(r);bytes[0]=0;assertThat(proof.body(r)).containsExactly(BODY);
++            var other=new org.springframework.web.method.HandlerMethod(new PolicyHandler(),PolicyHandler.class.getMethod("other"));assertThatThrownBy(()->guard.preHandle(r,new org.springframework.mock.web.MockHttpServletResponse(),other)).isInstanceOf(PlatformException.class);
++            assertThatThrownBy(()->new ServiceAuthorization("app",new ServiceRoutePolicy(),client,null,method,null)).isInstanceOf(IllegalArgumentException.class);
++            var withoutRegistration=new ServiceAuthorization("app",new ServiceRoutePolicy(),client);assertThatThrownBy(()->withoutRegistration.preHandle(r,new org.springframework.mock.web.MockHttpServletResponse(),handler)).isInstanceOf(PlatformException.class);
++        }
++    }
++}
+diff --git a/app-management/pom.xml b/app-management/pom.xml
+index 3373664..21f797d 100644
+--- a/app-management/pom.xml
++++ b/app-management/pom.xml
+@@ -1 +1 @@
+-<project xmlns="http://maven.apache.org/POM/4.0.0"><modelVersion>4.0.0</modelVersion><parent><groupId>cn.agentplatform</groupId><artifactId>agent-platform</artifactId><version>0.1.0-SNAPSHOT</version></parent><artifactId>app-management</artifactId><dependencies><dependency><groupId>cn.agentplatform</groupId><artifactId>admin-common</artifactId><version>${project.version}</version></dependency><dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-jdbc</artifactId></dependency><dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-actuator</artifactId></dependency><dependency><groupId>io.micrometer</groupId><artifactId>micrometer-registry-prometheus</artifactId></dependency><dependency><groupId>org.flywaydb</groupId><artifactId>flyway-core</artifactId></dependency><dependency><groupId>org.flywaydb</groupId><artifactId>flyway-database-postgresql</artifactId></dependency><dependency><groupId>org.postgresql</groupId><artifactId>postgresql</artifactId><scope>runtime</scope></dependency><dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-test</artifactId><scope>test</scope></dependency></dependencies><build><plugins><plugin><groupId>org.springframework.boot</groupId><artifactId>spring-boot-maven-plugin</artifactId></plugin></plugins></build></project>
++<project xmlns="http://maven.apache.org/POM/4.0.0"><modelVersion>4.0.0</modelVersion><parent><groupId>cn.agentplatform</groupId><artifactId>agent-platform</artifactId><version>0.1.0-SNAPSHOT</version></parent><artifactId>app-management</artifactId><dependencies><dependency><groupId>cn.agentplatform</groupId><artifactId>admin-common</artifactId><version>${project.version}</version></dependency><dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-jdbc</artifactId></dependency><dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-actuator</artifactId></dependency><dependency><groupId>io.micrometer</groupId><artifactId>micrometer-registry-prometheus</artifactId></dependency><dependency><groupId>org.flywaydb</groupId><artifactId>flyway-core</artifactId></dependency><dependency><groupId>org.flywaydb</groupId><artifactId>flyway-database-postgresql</artifactId></dependency><dependency><groupId>org.postgresql</groupId><artifactId>postgresql</artifactId><scope>runtime</scope></dependency><dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-test</artifactId><scope>test</scope></dependency><dependency><groupId>cn.agentplatform</groupId><artifactId>admin-common</artifactId><version>${project.version}</version><type>test-jar</type><scope>test</scope></dependency></dependencies><build><plugins><plugin><groupId>org.springframework.boot</groupId><artifactId>spring-boot-maven-plugin</artifactId></plugin></plugins></build></project>
+diff --git a/app-management/src/main/java/cn/agentplatform/app/api/IntegrationPolicyResolverController.java b/app-management/src/main/java/cn/agentplatform/app/api/IntegrationPolicyResolverController.java
+new file mode 100644
+index 0000000..143032c
+--- /dev/null
++++ b/app-management/src/main/java/cn/agentplatform/app/api/IntegrationPolicyResolverController.java
+@@ -0,0 +1,20 @@
++package cn.agentplatform.app.api;
++import cn.agentplatform.app.application.IntegrationPolicyResolver;
++import cn.agentplatform.app.domain.*;
++import cn.agentplatform.common.*;
++import cn.agentplatform.common.authority.PolicyRequestVerifier;
++import jakarta.servlet.http.HttpServletRequest;
++import org.springframework.web.bind.annotation.*;
++import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
++@RestController
++@ConditionalOnProperty(prefix="agent.policy-resolver",name="enabled",havingValue="true")
++public class IntegrationPolicyResolverController {
++    private final IntegrationPolicyResolver resolver;
++    public IntegrationPolicyResolverController(IntegrationPolicyResolver resolver){this.resolver=resolver;}
++    @PostMapping("/internal/iam/integration-policy/resolve")
++    public PolicyResolveResult resolve(HttpServletRequest request){
++        Object value=request.getAttribute(PolicyRequestVerifier.ATTRIBUTE);
++        if(!(value instanceof PolicyRequestVerifier.Proof proof))throw new PlatformException(401,"POLICY_PROOF_REQUIRED","缺少策略请求证明");
++        return resolver.resolve(PolicyResolveRequest.parse(proof.body(request)));
++    }
++}
+diff --git a/app-management/src/main/java/cn/agentplatform/app/application/IntegrationPolicyResolver.java b/app-management/src/main/java/cn/agentplatform/app/application/IntegrationPolicyResolver.java
+new file mode 100644
+index 0000000..e35e295
+--- /dev/null
++++ b/app-management/src/main/java/cn/agentplatform/app/application/IntegrationPolicyResolver.java
+@@ -0,0 +1,33 @@
++package cn.agentplatform.app.application;
++import cn.agentplatform.app.domain.*;
++import cn.agentplatform.common.*;
++import cn.agentplatform.common.authority.IntegrationClaims;
++import com.fasterxml.jackson.databind.JsonNode;
++import java.util.*;
++import org.springframework.jdbc.core.JdbcTemplate;
++import org.springframework.stereotype.Service;
++@Service
++public class IntegrationPolicyResolver {
++    private final JdbcTemplate db;
++    public IntegrationPolicyResolver(JdbcTemplate db){this.db=db;}
++    public PolicyResolveResult resolve(PolicyResolveRequest request){
++        String principal=IntegrationClaims.principal(request.expectedBizSystemCode(),request.userId());
++        if(!principal.equals(request.expectedPrincipalId()))throw new PlatformException(403,"POLICY_SUBJECT_MISMATCH","策略主体不匹配");
++        // One parameterized PostgreSQL statement observes status, revision and ceilings in one
++        // MVCC snapshot. No Actor, SecretVault, credential HTTP endpoint or authority dependency.
++        var rows=db.query("select /* credentialId */ id,tenant_id,app_code,biz_system_code,status,secret_ref,claim_limits,allowed_origins,policy_revision from app.integration_credential where id=? and tenant_id=? and app_code=? and biz_system_code=?",
++            (r,n)->{
++                String version=r.getLong("id")+":"+r.getLong("policy_revision");
++                if(request.expectedPolicyVersion()!=null&&!request.expectedPolicyVersion().equals(version))throw new PlatformException(409,"POLICY_VERSION_CHANGED","策略版本已变更");
++                JsonNode limits=Json.read(r.getString("claim_limits")),origins=Json.read(r.getString("allowed_origins"));
++                boolean subject=strings(limits.path("principalIds")).contains(request.userId());
++                var roles=strings(limits.path("roles"));roles.removeIf(IntegrationClaims::platformRole);
++                var attrs=new TreeMap<String,Set<String>>();limits.path("attributes").fields().forEachRemaining(e->{if(!Set.of("dataLabels","bizSystemCode","userId").contains(e.getKey()))attrs.put(e.getKey(),strings(e.getValue()));});
++                attrs.put("bizSystemCode",Set.of(r.getString("biz_system_code")));attrs.put("userId",Set.of(request.userId()));
++                String digest=IntegrationClaims.digest(Json.tree(Map.of("secretRef",r.getString("secret_ref"),"claimLimits",limits,"allowedOrigins",origins)));
++                return new PolicyResolveResult(1,r.getLong("id"),r.getString("tenant_id"),r.getString("app_code"),r.getString("biz_system_code"),request.userId(),principal,"ACTIVE".equals(r.getString("status")),subject,subject?Set.copyOf(roles):Set.of(),subject?Map.copyOf(attrs):Map.of(),strings(limits.path("attributes").path("dataLabels")),strings(origins),version,digest,request.nonce());
++            },request.credentialId(),request.expectedTenantId(),request.expectedAppCode(),request.expectedBizSystemCode());
++        if(rows.isEmpty())throw new PlatformException(404,"POLICY_NOT_FOUND","策略不存在");return rows.getFirst();
++    }
++    private static Set<String> strings(JsonNode node){var out=new TreeSet<String>();if(node.isArray())node.forEach(v->{if(v.isTextual())out.add(v.textValue());});return out;}
++}
+diff --git a/app-management/src/main/java/cn/agentplatform/app/application/IntegrationService.java b/app-management/src/main/java/cn/agentplatform/app/application/IntegrationService.java
+index ad40c47..d48de6a 100644
+--- a/app-management/src/main/java/cn/agentplatform/app/application/IntegrationService.java
++++ b/app-management/src/main/java/cn/agentplatform/app/application/IntegrationService.java
+@@ -4,6 +4,7 @@ import static cn.agentplatform.app.application.AppService.*;
+ 
+ import cn.agentplatform.app.domain.IntegrationRules;
+ import cn.agentplatform.common.*;
++import cn.agentplatform.common.authority.*;
+ 
+ import org.springframework.jdbc.core.JdbcTemplate;
+ import org.springframework.stereotype.Service;
+@@ -127,8 +128,7 @@ public class IntegrationService {
+     @Transactional
+     public Map<String, Object> issue(String code, Map<String, Object> body) {
+         Actor.current().requireRole("ADMIN");
+-        var app = apps.get(code);
+-        if (app.get("currentVersionNo") == null) throw error(409, "APP_UNPUBLISHED", "请先发布应用");
++        requirePublishedVersion(code);
+         String biz = text(body, "bizSystemCode");
+         if (!biz.matches("[A-Za-z][A-Za-z0-9_-]{0,63}"))
+             throw error(400, "INVALID_INPUT", "业务系统编码无效");
+@@ -168,9 +168,9 @@ public class IntegrationService {
+     @Transactional
+     public Map<String, Object> revoke(String code, String biz) {
+         Actor.current().requireRole("ADMIN");
+-        get(code, biz, false);
++        requireCredential(code, biz);
+         db.update(
+-                "update app.integration_credential set status='REVOKED',revoked_at=now() where"
++                "update app.integration_credential set status='REVOKED',revoked_at=now(),policy_revision=policy_revision+1 where"
+                     + " tenant_id=? and app_code=? and biz_system_code=?",
+                 tenant(),
+                 code,
+@@ -182,7 +182,7 @@ public class IntegrationService {
+     @Transactional
+     public Map<String, Object> policy(String code, String biz, Map<String, Object> body) {
+         Actor.current().requireRole("ADMIN");
+-        get(code, biz, false);
++        requireCredential(code, biz);
+         var limits = object(body.get("claimLimits"));
+         Object origins = body.get("allowedOrigins");
+         try {
+@@ -193,7 +193,7 @@ public class IntegrationService {
+         }
+         db.update(
+                 "update app.integration_credential set"
+-                    + " claim_limits=?::jsonb,allowed_origins=?::jsonb where tenant_id=? and"
++                    + " claim_limits=?::jsonb,allowed_origins=?::jsonb,policy_revision=policy_revision+1 where tenant_id=? and"
+                     + " app_code=? and biz_system_code=?",
+                 Json.write(limits),
+                 Json.write(origins),
+@@ -204,6 +204,25 @@ public class IntegrationService {
+         return get(code, biz, false);
+     }
+ 
++    /** Lock the real published pointer before authorization and retain the lock until issue commits.
++     * The stored immutable published SHA is authoritative; no draft/payload is read to derive it. */
++    private void requirePublishedVersion(String code) {
++        var rows=db.queryForList("select a.current_version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.version_no=a.current_version_no where a.tenant_id=? and a.code=? for update of a",tenant(),code);
++        if(rows.isEmpty())throw error(404,"APP_NOT_FOUND","应用不存在");
++        var row=rows.getFirst();if(row.get("current_version_no")==null||row.get("candidate_sha256")==null)throw error(409,"APP_UNPUBLISHED","请先发布应用");
++        AuthorityContext.requireFor(Actor.current(),new ResourceBinding("app-version",code+"@"+row.get("current_version_no"),row.get("candidate_sha256").toString())).actor().requireRole("ADMIN");
++    }
++    /** Policy metadata is read under the row lock. The same transaction verifies the old exact
++     * resource, mutates policy and increments revision; concurrent updates cannot lose increments. */
++    private void requireCredential(String code,String biz) {
++        var rows=db.queryForList("select id,policy_revision,secret_ref,claim_limits,allowed_origins from app.integration_credential where tenant_id=? and app_code=? and biz_system_code=? for update",tenant(),code,biz);
++        if(rows.isEmpty())throw error(404,"INTEGRATION_NOT_FOUND","集成凭据不存在");
++        var row=rows.getFirst();long id=((Number)row.get("id")).longValue();
++        String digest=IntegrationClaims.digest(Json.tree(Map.of("secretRef",row.get("secret_ref"),"claimLimits",Json.read(row.get("claim_limits").toString()),"allowedOrigins",Json.read(row.get("allowed_origins").toString()))));
++        String version=Digest.sha256(Json.canonical(Map.of("credentialId",id,"policyVersion",id+":"+row.get("policy_revision"),"policyDigest",digest)));
++        AuthorityContext.requireFor(Actor.current(),new ResourceBinding("integration-credential",Long.toString(id),version)).actor().requireRole("ADMIN");
++    }
++
+     private void audit(String code, String action, String biz) {
+         db.update(
+                 "insert into"
+diff --git a/app-management/src/main/java/cn/agentplatform/app/domain/PolicyResolveRequest.java b/app-management/src/main/java/cn/agentplatform/app/domain/PolicyResolveRequest.java
+new file mode 100644
+index 0000000..28486b6
+--- /dev/null
++++ b/app-management/src/main/java/cn/agentplatform/app/domain/PolicyResolveRequest.java
+@@ -0,0 +1,26 @@
++package cn.agentplatform.app.domain;
++import cn.agentplatform.common.*;
++import java.util.*;
++/** Strict internal v1 DTO. Coercion and unknown fields are forbidden at the trust boundary. */
++public record PolicyResolveRequest(int schemaVersion,long credentialId,String expectedTenantId,
++    String expectedAppCode,String expectedBizSystemCode,String userId,String expectedPrincipalId,
++    String expectedPolicyVersion,String nonce) {
++    public PolicyResolveRequest {
++        if(schemaVersion!=1||credentialId<1)throw invalid();
++        text(expectedTenantId,128);text(expectedAppCode,64);text(expectedBizSystemCode,64);
++        text(userId,128);text(expectedPrincipalId,64);text(nonce,128);
++        if(expectedPolicyVersion!=null&&!expectedPolicyVersion.matches("[1-9][0-9]{0,18}:[1-9][0-9]{0,18}"))throw invalid();
++    }
++    public static PolicyResolveRequest parse(byte[] bytes){
++        var n=Json.read(new String(bytes,java.nio.charset.StandardCharsets.UTF_8));
++        var fields=Set.of("schemaVersion","credentialId","expectedTenantId","expectedAppCode","expectedBizSystemCode","userId","expectedPrincipalId","expectedPolicyVersion","nonce");
++        if(!n.isObject()||n.size()!=fields.size())throw invalid();
++        n.fieldNames().forEachRemaining(k->{if(!fields.contains(k))throw invalid();});
++        if(!n.path("schemaVersion").isIntegralNumber()||!n.path("schemaVersion").canConvertToInt()||!n.path("credentialId").isIntegralNumber()||!n.path("credentialId").canConvertToLong())throw invalid();
++        for(String k:fields)if(!Set.of("schemaVersion","credentialId","expectedPolicyVersion").contains(k)&&!n.path(k).isTextual())throw invalid();
++        if(!n.has("expectedPolicyVersion")||!(n.get("expectedPolicyVersion").isNull()||n.get("expectedPolicyVersion").isTextual()))throw invalid();
++        return new PolicyResolveRequest(n.get("schemaVersion").intValue(),n.get("credentialId").longValue(),n.get("expectedTenantId").textValue(),n.get("expectedAppCode").textValue(),n.get("expectedBizSystemCode").textValue(),n.get("userId").textValue(),n.get("expectedPrincipalId").textValue(),n.get("expectedPolicyVersion").isNull()?null:n.get("expectedPolicyVersion").textValue(),n.get("nonce").textValue());
++    }
++    private static void text(String value,int max){if(value==null||value.isBlank()||value.length()>max||value.codePoints().anyMatch(Character::isISOControl))throw invalid();}
++    private static PlatformException invalid(){return new PlatformException(400,"POLICY_REQUEST_INVALID","策略查询字段无效");}
++}
+diff --git a/app-management/src/main/java/cn/agentplatform/app/domain/PolicyResolveResult.java b/app-management/src/main/java/cn/agentplatform/app/domain/PolicyResolveResult.java
+new file mode 100644
+index 0000000..420ce45
+--- /dev/null
++++ b/app-management/src/main/java/cn/agentplatform/app/domain/PolicyResolveResult.java
+@@ -0,0 +1,6 @@
++package cn.agentplatform.app.domain;
++import java.util.*;
++public record PolicyResolveResult(int schemaVersion,long credentialId,String tenantId,String appCode,
++    String bizSystemCode,String userId,String principalId,boolean active,boolean subjectAllowed,
++    Set<String> roleCeiling,Map<String,Set<String>> attributeCeiling,Set<String> dataLabels,
++    Set<String> allowedOrigins,String policyVersion,String policyDigest,String nonce) {}
+diff --git a/app-management/src/main/java/cn/agentplatform/app/infra/PolicyResolverSecurity.java b/app-management/src/main/java/cn/agentplatform/app/infra/PolicyResolverSecurity.java
+new file mode 100644
+index 0000000..f2cdd7a
+--- /dev/null
++++ b/app-management/src/main/java/cn/agentplatform/app/infra/PolicyResolverSecurity.java
+@@ -0,0 +1,42 @@
++package cn.agentplatform.app.infra;
++import cn.agentplatform.app.api.IntegrationPolicyResolverController;
++import cn.agentplatform.common.*;
++import cn.agentplatform.common.authority.*;
++import com.nimbusds.jose.jwk.*;
++import jakarta.servlet.*;
++import jakarta.servlet.http.*;
++import java.io.IOException;
++import java.time.Clock;
++import org.springframework.beans.factory.annotation.Value;
++import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
++import org.springframework.context.annotation.*;
++import org.springframework.core.annotation.Order;
++import org.springframework.security.config.annotation.web.builders.HttpSecurity;
++import org.springframework.security.config.http.SessionCreationPolicy;
++import org.springframework.security.web.SecurityFilterChain;
++import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
++import org.springframework.web.filter.OncePerRequestFilter;
++@Configuration(proxyBeanMethods=false)
++@ConditionalOnProperty(prefix="agent.policy-resolver",name="enabled",havingValue="true")
++public class PolicyResolverSecurity {
++    @Bean PolicyRequestVerifier policyRequestVerifier(@Value("${agent.policy-resolver.issuer:}") String issuer,@Value("${agent.policy-resolver.public-jwks:}") String jwks){
++        try{return new PolicyRequestVerifier(issuer,JWKSet.parse(jwks).getKeys().stream().map(k->{if(!(k instanceof RSAKey r))throw new IllegalArgumentException("POLICY_RSA_REQUIRED");return r;}).toList(),Clock.systemUTC());}
++        catch(Exception e){throw new IllegalArgumentException("POLICY_PUBLIC_CONFIGURATION_REQUIRED");}
++    }
++    public static java.lang.reflect.Method handler(){try{return IntegrationPolicyResolverController.class.getMethod("resolve",HttpServletRequest.class);}catch(Exception e){throw new IllegalStateException(e);}}
++    public static RouteCoverageVerifier.Ingress ingress(){return new RouteCoverageVerifier.Ingress("POST",PolicyRequestVerifier.PATH,handler());}
++    @Bean @Order(1) SecurityFilterChain policySecurity(HttpSecurity http,PolicyRequestVerifier verifier)throws Exception{
++        // Security's first matching chain is exact; no /internal/** exemption.
++        return http.securityMatcher(r->"POST".equals(r.getMethod())&&PolicyRequestVerifier.PATH.equals(r.getServletPath()))
++            .csrf(x->x.disable()).sessionManagement(x->x.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
++            .authorizeHttpRequests(x->x.anyRequest().permitAll())
++            .addFilterBefore(new OncePerRequestFilter(){
++                @Override protected void doFilterInternal(HttpServletRequest request,HttpServletResponse response,FilterChain chain)throws ServletException,IOException{
++                    try{
++                        var proof=verifier.verify(request,request.getInputStream().readNBytes(8193));request.setAttribute(PolicyRequestVerifier.ATTRIBUTE,proof);
++                        try{chain.doFilter(request,response);}finally{request.removeAttribute(PolicyRequestVerifier.ATTRIBUTE);}
++                    }catch(PlatformException denied){response.setStatus(denied.status());response.setContentType("application/json;charset=UTF-8");response.getWriter().write(Json.write(new ApiResponse<>(denied.code(),denied.getMessage(),null,null)));}
++                }
++            },AnonymousAuthenticationFilter.class).build();
++    }
++}
+diff --git a/app-management/src/main/resources/db/migration/V104__integration_policy_revision.sql b/app-management/src/main/resources/db/migration/V104__integration_policy_revision.sql
+new file mode 100644
+index 0000000..d17b068
+--- /dev/null
++++ b/app-management/src/main/resources/db/migration/V104__integration_policy_revision.sql
+@@ -0,0 +1,2 @@
++-- The row update lock serializes all policy changes; revision and policy always commit together.
++ALTER TABLE app.integration_credential ADD COLUMN policy_revision bigint NOT NULL DEFAULT 1 CHECK (policy_revision > 0);
+diff --git a/app-management/src/test/java/cn/agentplatform/app/application/IntegrationPolicyDatabaseTest.java b/app-management/src/test/java/cn/agentplatform/app/application/IntegrationPolicyDatabaseTest.java
+new file mode 100644
+index 0000000..04d8bff
+--- /dev/null
++++ b/app-management/src/test/java/cn/agentplatform/app/application/IntegrationPolicyDatabaseTest.java
+@@ -0,0 +1,22 @@
++package cn.agentplatform.app.application;
++
++import org.junit.jupiter.api.Test;
++import org.springframework.jdbc.core.JdbcTemplate;
++import org.springframework.jdbc.datasource.DriverManagerDataSource;
++import org.flywaydb.core.Flyway;
++import static org.assertj.core.api.Assertions.*;
++
++/** Bootstrap touches only the explicitly dedicated D2 database. No skipped/memory fallback. */
++class IntegrationPolicyDatabaseTest {
++    @Test void dedicatedDatabaseAndRevisionMigrationAreRealPostgres(){
++        String password=System.getenv("AGENT_DB_PASSWORD");assertThat(password).isNotBlank();
++        var admin=new JdbcTemplate(new DriverManagerDataSource("jdbc:postgresql://127.0.0.1:25432/postgres","agent_v12",password));
++        boolean exists=Boolean.TRUE.equals(admin.queryForObject("select exists(select 1 from pg_database where datname='agent_platform_iam_policy_v12')",Boolean.class));
++        System.out.println("D2_DATABASE_EXISTED="+exists);
++        if(!exists)admin.execute("CREATE DATABASE agent_platform_iam_policy_v12");
++        var ds=new DriverManagerDataSource("jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_policy_v12","agent_v12",password);
++        Flyway.configure().dataSource(ds).schemas("app").defaultSchema("app").locations("classpath:db/migration").load().migrate();
++        var db=new JdbcTemplate(ds);assertThat(db.queryForObject("select current_database()",String.class)).isEqualTo("agent_platform_iam_policy_v12");
++        assertThat(db.queryForObject("select count(*) from information_schema.columns where table_schema='app' and table_name='integration_credential' and column_name='policy_revision'",Integer.class)).isEqualTo(1);
++    }
++}
+diff --git a/app-management/src/test/java/cn/agentplatform/app/application/IntegrationPolicyResolverHttpTest.java b/app-management/src/test/java/cn/agentplatform/app/application/IntegrationPolicyResolverHttpTest.java
+new file mode 100644
+index 0000000..aa0ed96
+--- /dev/null
++++ b/app-management/src/test/java/cn/agentplatform/app/application/IntegrationPolicyResolverHttpTest.java
+@@ -0,0 +1,215 @@
++package cn.agentplatform.app.application;
++
++import cn.agentplatform.app.api.*;
++import cn.agentplatform.app.domain.*;
++import cn.agentplatform.app.infra.PolicyResolverSecurity;
++import cn.agentplatform.common.*;
++import cn.agentplatform.common.authority.*;
++import com.nimbusds.jose.jwk.JWKSet;
++import java.net.*;
++import java.net.http.*;
++import java.time.*;
++import java.util.*;
++import java.util.concurrent.atomic.AtomicInteger;
++import javax.sql.DataSource;
++import org.junit.jupiter.api.*;
++import org.springframework.boot.*;
++import org.springframework.boot.autoconfigure.*;
++import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
++import org.springframework.context.annotation.*;
++import org.springframework.core.annotation.Order;
++import org.springframework.jdbc.core.*;
++import org.springframework.jdbc.datasource.*;
++import org.springframework.security.config.annotation.web.builders.HttpSecurity;
++import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
++import org.springframework.security.oauth2.jwt.JwtDecoder;
++import org.springframework.security.web.SecurityFilterChain;
++import org.springframework.transaction.annotation.EnableTransactionManagement;
++import org.springframework.web.servlet.mvc.method.RequestMappingInfoHandlerMapping;
++import static org.assertj.core.api.Assertions.*;
++
++class IntegrationPolicyResolverHttpTest {
++    static LoopbackAuthority fixture;
++    static final String TENANT="d2-policy-tests", APP="policy-app", BIZ="partner";
++    static final AtomicInteger queries=new AtomicInteger(),auditErrors=new AtomicInteger();
++    static boolean includeProof=true;
++    static DataSource ds;
++    static JdbcTemplate db;
++    static long id;
++    static ServletWebServerApplicationContext app;
++    static final String LONG_USER="u".repeat(90);
++    static Map<String,Object> policy(String user){return Map.of("claimLimits",Map.of("principalIds",List.of(user,LONG_USER),"roles",List.of("reader","ADMIN","EDITOR","SERVICE"),"attributes",Map.of("region",List.of("A"),"dataLabels",List.of("restricted"))),"allowedOrigins",List.of("https://embed.example.invalid"));}
++    @Configuration(proxyBeanMethods=false) @EnableAutoConfiguration @EnableWebSecurity @EnableTransactionManagement
++    @Import({PolicyResolverSecurity.class,IntegrationPolicyResolverController.class,IntegrationController.class,IntegrationService.class,IntegrationPolicyResolver.class,PlatformErrors.class})
++    static class Receiver {
++        @Bean TestDatabaseErrors databaseErrors(){return new TestDatabaseErrors();}
++        @Bean DataSource dataSource(){return ds;}
++        @Bean JdbcTemplate jdbc(){return new JdbcTemplate(ds){@Override public <T> List<T> query(String sql,RowMapper<T> mapper,Object...args){if(sql.contains("policy_revision")&&sql.contains("credentialId"))queries.incrementAndGet();return super.query(sql,mapper,args);}};}
++        @Bean DataSourceTransactionManager transactions(){return new DataSourceTransactionManager(ds);}
++        @Bean AppService apps(JdbcTemplate jdbc,DataSourceTransactionManager tx){return new AppService(jdbc,tx,"http://127.0.0.1:1","http://127.0.0.1:1","http://127.0.0.1:1","http://127.0.0.1:1");}
++        @Bean JwtDecoder decoder(){return new TrustedJwtDecoder(fixture.config("app"),fixture.clock(),true);}
++        @Bean(destroyMethod="close") HttpCurrentAuthorityClient current(){return fixture.client("app");}
++        @Bean ServiceAuthorization authorization(CurrentAuthorityClient current,PolicyRequestVerifier verifier){return new ServiceAuthorization("app",new ServiceRoutePolicy(),current,null,includeProof?PolicyResolverSecurity.handler():null,includeProof?verifier:null);}
++        @Bean @Order(2) SecurityFilterChain service(HttpSecurity http,JwtDecoder decoder,ServiceAuthorization receiver)throws Exception{return SecurityConfiguration.serviceSecurity(http,decoder,receiver);}
++        @Bean org.springframework.web.servlet.handler.MappedInterceptor guard(ServiceAuthorization receiver){return receiver.mappedInterceptor();}
++        @Bean RouteCoverageVerifier coverage(List<RequestMappingInfoHandlerMapping> mappings){return new RouteCoverageVerifier("app",new ServiceRoutePolicy(),mappings,Set.of(PolicyResolverSecurity.ingress()));}
++    }
++    @org.springframework.web.bind.annotation.RestControllerAdvice static class TestDatabaseErrors {
++        @org.springframework.web.bind.annotation.ExceptionHandler(org.springframework.dao.DataAccessException.class)
++        org.springframework.http.ResponseEntity<Object> failed(){auditErrors.incrementAndGet();return org.springframework.http.ResponseEntity.status(500).body(Map.of("code","FINITE_DATABASE_FAILURE"));}
++    }
++    @BeforeAll static void start()throws Exception{
++        new IntegrationPolicyDatabaseTest().dedicatedDatabaseAndRevisionMigrationAreRealPostgres();
++        ds=new DriverManagerDataSource("jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_policy_v12","agent_v12",System.getenv("AGENT_DB_PASSWORD"));db=new JdbcTemplate(ds);
++        fixture=new LoopbackAuthority();fixture.portalActor(new Actor(TENANT,"admin-d2",Set.of("ADMIN"),Map.of("dataLabels",Set.of("restricted"))));
++        app=startReceiver();fixture.externalPolicy(URI.create("http://127.0.0.1:"+app.getWebServer().getPort()+PolicyRequestVerifier.PATH));
++    }
++    static ServletWebServerApplicationContext startReceiver(){
++        var application=new SpringApplication(Receiver.class);application.setAdditionalProfiles("test");
++        application.setDefaultProperties(Map.ofEntries(Map.entry("server.address","127.0.0.1"),Map.entry("server.port","0"),Map.entry("spring.config.location","optional:classpath:/d2-no-config/"),Map.entry("spring.main.banner-mode","off"),Map.entry("springdoc.api-docs.enabled",false),Map.entry("spring.flyway.enabled",false),Map.entry("management.endpoints.web.exposure.exclude","*"),Map.entry("management.endpoints.web.discovery.enabled",false),Map.entry("logging.level.root","ERROR"),Map.entry("agent.policy-resolver.enabled",true),Map.entry("agent.policy-resolver.issuer",fixture.policyIssuer()+"/policy-issuer"),Map.entry("agent.policy-resolver.public-jwks",new JWKSet(fixture.policySigningKey().toPublicJWK()).toString())));
++        return (ServletWebServerApplicationContext)application.run();
++    }
++    @AfterAll static void close(){if(app!=null)app.close();if(fixture!=null)fixture.close();}
++    @BeforeEach void seed(){
++        fixture.clearFiniteGrants();auditErrors.set(0);
++        db.update("delete from app.integration_credential where tenant_id=?",TENANT);
++        db.update("insert into app.application(tenant_id,code,name,type,status,current_version_no,created_by) values(?,?,'Policy test','CHAT','PUBLISHED',1,'admin-d2') on conflict(tenant_id,code) do nothing",TENANT,APP);
++        db.update("insert into app.app_draft(tenant_id,app_id,app_code) select tenant_id,id,code from app.application where tenant_id=? and code=? on conflict do nothing",TENANT,APP);
++        db.update("insert into app.app_version(tenant_id,app_code,version_no,draft_rev,candidate_sha256,snapshot,eval_report_id,published_by,app_id,app_draft_id) select a.tenant_id,a.code,1,1,?,'{}','finite','admin-d2',a.id,d.id from app.application a join app.app_draft d on d.tenant_id=a.tenant_id and d.app_code=a.code where a.tenant_id=? and a.code=? on conflict do nothing",Digest.sha256("published-d2"),TENANT,APP);
++        var p=policy("alice");id=db.queryForObject("insert into app.integration_credential(tenant_id,app_code,biz_system_code,secret_ref,secret_sha256,status,claim_limits,allowed_origins,issued_by) values(?,?,?,'d2-only-reference',?,'ACTIVE',?::jsonb,?::jsonb,'admin-d2') returning id",Long.class,TENANT,APP,BIZ,Digest.sha256("not-a-key"),Json.write(p.get("claimLimits")),Json.write(p.get("allowedOrigins")));queries.set(0);
++    }
++    static Map<String,Object> requestBody(String user){var r=new LinkedHashMap<String,Object>();r.put("schemaVersion",1);r.put("credentialId",id);r.put("expectedTenantId",TENANT);r.put("expectedAppCode",APP);r.put("expectedBizSystemCode",BIZ);r.put("userId",user);r.put("expectedPrincipalId",IntegrationClaims.principal(BIZ,user));r.put("expectedPolicyVersion",null);r.put("nonce",UUID.randomUUID().toString());return r;}
++    static Map<String,Object> assertionClaims(String body){var c=fixture.base("policy-query","app-policy-resolver",30);long now=Instant.now().getEpochSecond();c.put("iat",now);c.put("nbf",now);c.put("exp",now+30);c.put("iss",fixture.policyIssuer()+"/policy-issuer");c.put("sub","iam-policy-resolver");c.put("caller","iam-policy-resolver");c.put("target","app-policy-resolver");c.put("action","integration.policy.resolve");c.put("nonce",Json.read(body).path("nonce").asText());c.put("bodySha256",Digest.sha256(body));return c;}
++    static String assertion(String body){return fixture.sign(assertionClaims(body),fixture.policySigningKey(),"agent-policy-request+jwt");}
++    static HttpResponse<String> http(String method,String path,String token,String body)throws Exception{
++        try(var client=HttpClient.newHttpClient()){return client.send(HttpRequest.newBuilder(URI.create("http://127.0.0.1:"+app.getWebServer().getPort()+path)).timeout(Duration.ofSeconds(8)).header("Authorization","Bearer "+token).header("Content-Type","application/json").method(method,HttpRequest.BodyPublishers.ofString(body)).build(),HttpResponse.BodyHandlers.ofString());}
++    }
++    static HttpResponse<String> resolve(Map<String,Object> r)throws Exception{String body=Json.write(r);return http("POST",PolicyRequestVerifier.PATH,assertion(body),body);}
++    static ResourceBinding credentialResource(){var row=db.queryForMap("select id,policy_revision,secret_ref,claim_limits,allowed_origins from app.integration_credential where id=?",id);var c=Json.tree(Map.of("secretRef",row.get("secret_ref"),"claimLimits",Json.read(row.get("claim_limits").toString()),"allowedOrigins",Json.read(row.get("allowed_origins").toString())));return new ResourceBinding("integration-credential",Long.toString(id),Digest.sha256(Json.canonical(Map.of("credentialId",id,"policyVersion",id+":"+row.get("policy_revision"),"policyDigest",IntegrationClaims.digest(c)))));}
++    static HttpResponse<String> admin(String method,String path,String template,ResourceBinding resource,String body)throws Exception{try(var gateway=fixture.client("gateway")){var route=new ServiceRoutePolicy().require("gateway","app",method,template);var call=new ServiceCall("app",route.action(),resource);return http(method,path,gateway.exchange(fixture.portal(),call).value(),body);}}
++    static HttpResponse<String> update(Map<String,Object> p)throws Exception{return admin("PUT","/admin/apps/"+APP+"/integration/credentials/"+BIZ,"/admin/apps/{code}/integration/credentials/{biz}",credentialResource(),Json.write(p));}
++    @Test void policyAndOrdinaryAdminServiceBothWorkInSameMappingAndNoSecretsLeak()throws Exception{
++        var r=resolve(requestBody("alice"));assertThat(fixture.authorityCalls()).isZero();assertThat(queries).hasValue(1);assertThat(r.statusCode()).as(r.body()).isEqualTo(200);var n=Json.read(r.body());assertThat(n.path("principalId").asText()).isEqualTo("partner:alice");assertThat(n.path("policyVersion").asText()).isEqualTo(id+":1");assertThat(n.path("roleCeiling").toString()).isEqualTo("[\"reader\"]");assertThat(n.path("attributeCeiling").has("dataLabels")).isFalse();assertThat(n.path("dataLabels").toString()).isEqualTo("[\"restricted\"]");assertThat(n.fieldNames()).toIterable().containsExactlyInAnyOrder("schemaVersion","credentialId","tenantId","appCode","bizSystemCode","userId","principalId","active","subjectAllowed","roleCeiling","attributeCeiling","dataLabels","allowedOrigins","policyVersion","policyDigest","nonce");assertThat(r.body()).doesNotContain("secretRef","d2-only-reference","principalIds",LONG_USER);
++        var updated=update(policy("alice"));assertThat(updated.statusCode()).as(updated.body()).isEqualTo(200);
++        assertThat(db.queryForObject("select policy_revision from app.integration_credential where id=?",Long.class,id)).isEqualTo(2);
++    }
++    @Test void policyAndRevokeChangesAdvanceRevisionAndOldExpectedVersionRejects()throws Exception{
++        var p=update(policy("bob"));assertThat(p.statusCode()).as(p.body()).isEqualTo(200);assertThat(db.queryForObject("select policy_revision from app.integration_credential where id=?",Long.class,id)).isEqualTo(2);
++        var old=requestBody("alice");old.put("expectedPolicyVersion",id+":1");assertThat(resolve(old).statusCode()).isEqualTo(409);
++        var gone=resolve(requestBody("alice"));assertThat(Json.read(gone.body()).path("subjectAllowed").asBoolean()).isFalse();
++        var revoked=admin("POST","/admin/apps/"+APP+"/integration/credentials/"+BIZ+"/revoke","/admin/apps/{code}/integration/credentials/{biz}/revoke",credentialResource(),"");assertThat(revoked.statusCode()).as(revoked.body()).isEqualTo(200);assertThat(db.queryForObject("select policy_revision from app.integration_credential where id=?",Long.class,id)).isEqualTo(3);
++    }
++
++    @Test void wrongSignatureClaimsAlgorithmsMethodPathAndBindingNeverQueryPg()throws Exception{
++        String body=Json.write(requestBody("alice"));
++        for(String field:List.of("iss","caller","sub","target","action","aud","token_use","nonce","bodySha256")){
++            var c=assertionClaims(body);c.put(field,"wrong");var r=http("POST",PolicyRequestVerifier.PATH,fixture.sign(c,fixture.policySigningKey(),"agent-policy-request+jwt"),body);assertThat(r.statusCode()).as(field+r.body()).isIn(401,403);
++        }
++        for(String field:List.of("iat","nbf","exp")){var c=assertionClaims(body);c.put(field,field.equals("exp")?0:Instant.now().plusSeconds(120).getEpochSecond());assertThat(http("POST",PolicyRequestVerifier.PATH,fixture.sign(c,fixture.policySigningKey(),"agent-policy-request+jwt"),body).statusCode()).isIn(401,403);}
++        for(String token:List.of(fixture.sign(assertionClaims(body),fixture.authoritySigningKey(),"agent-policy-request+jwt"),fixture.sign(assertionClaims(body),fixture.policySigningKey(),"at+jwt"),fixture.portal(),fixture.integration(fixture.integrationClaims()),"eyJhbGciOiJub25lIn0.e30."))assertThat(http("POST",PolicyRequestVerifier.PATH,token,body).statusCode()).isIn(401,403);
++        assertThat(http("POST",PolicyRequestVerifier.PATH,assertion(body),body+" ").statusCode()).isIn(401,403);
++        assertThat(http("GET",PolicyRequestVerifier.PATH,assertion(body),body).statusCode()).isIn(401,403);
++        assertThat(http("POST","/internal/iam/integration-policy/other",assertion(body),body).statusCode()).isIn(401,403);
++        String duplicate=body.replace("{","{\"schemaVersion\":1,");assertThat(http("POST",PolicyRequestVerifier.PATH,assertion(duplicate),duplicate).statusCode()).isIn(401,403);
++        assertThat(queries).hasValue(0);assertThat(fixture.resolverToAuthorityCalls()).isZero();
++    }
++    @Test void strictDtoTypesBoundsAndUnknownFieldsRejectBeforePg()throws Exception{
++        for(String field:List.of("schemaVersion","credentialId","expectedTenantId","expectedAppCode","expectedBizSystemCode","userId","expectedPrincipalId","expectedPolicyVersion","nonce")){
++            var missing=requestBody("alice");missing.remove(field);var r=resolve(missing);assertThat(r.statusCode()).as("missing "+field+r.body()).isIn(400,401);
++            var wrong=requestBody("alice");wrong.put(field,List.of("wrong"));assertThat(resolve(wrong).statusCode()).as(field).isIn(400,401);
++        }
++        for(var entry:Map.<String,Object>of("schemaVersion",2,"credentialId",0,"expectedTenantId","t".repeat(129),"expectedAppCode","a".repeat(65),"userId","u".repeat(129),"expectedPolicyVersion","1:0").entrySet()){var r=requestBody("alice");r.put(entry.getKey(),entry.getValue());assertThat(resolve(r).statusCode()).isEqualTo(400);}
++        var extra=requestBody("alice");extra.put("allowed",true);assertThat(resolve(extra).statusCode()).isEqualTo(400);
++        assertThat(queries).hasValue(0);
++    }
++    @Test void tenantAppBizCredentialPrincipalIsolationLongMappingAndSubjectRemoval()throws Exception{
++        for(String field:List.of("expectedTenantId","expectedAppCode","expectedBizSystemCode","credentialId","expectedPrincipalId")){
++            var r=requestBody("alice");r.put(field,field.equals("credentialId")?Long.MAX_VALUE:"wrong");var out=resolve(r);assertThat(out.statusCode()).as(field+out.body()).isIn(403,404);assertThat(out.body()).doesNotContain("d2-only-reference","claimLimits","principalIds");
++        }
++        var outsider=resolve(requestBody("bob"));assertThat(outsider.statusCode()).isEqualTo(200);assertThat(Json.read(outsider.body()).path("subjectAllowed").asBoolean()).isFalse();
++        var longResult=resolve(requestBody(LONG_USER));assertThat(longResult.statusCode()).as(longResult.body()).isEqualTo(200);assertThat(Json.read(longResult.body()).path("principalId").asText()).isEqualTo(IntegrationClaims.principal(BIZ,LONG_USER));
++        var active=resolve(requestBody("alice"));String digest=Json.read(active.body()).path("policyDigest").asText();var meta=db.queryForMap("select secret_ref,claim_limits,allowed_origins from app.integration_credential where id=?",id);
++        assertThat(digest).isEqualTo(Digest.sha256(Json.canonical(Map.of("secretRef",Json.tree(meta.get("secret_ref")),"claimLimits",Json.read(meta.get("claim_limits").toString()),"allowedOrigins",Json.read(meta.get("allowed_origins").toString())))));
++    }
++    @Test void crossedTrustDomainsAndWrongCredentialResourcesWriteNothing()throws Exception{
++        String body=Json.write(requestBody("alice"));
++        assertThat(http("PUT","/admin/apps/"+APP+"/integration/credentials/"+BIZ,assertion(body),Json.write(policy("bob"))).statusCode()).isIn(401,403);
++        try(var gateway=fixture.client("gateway")){
++            var route=new ServiceRoutePolicy().require("gateway","app","PUT","/admin/apps/{code}/integration/credentials/{biz}");
++            var token=gateway.exchange(fixture.portal(),new ServiceCall("app",route.action(),credentialResource())).value();
++            assertThat(http("POST",PolicyRequestVerifier.PATH,token,body).statusCode()).isIn(401,403);
++        }
++        for(var resource:List.of(new ResourceBinding("integration-credential",Long.toString(id+1),credentialResource().versionDigest()),new ResourceBinding("integration-credential",Long.toString(id),Digest.sha256("wrong")))){
++            assertThat(admin("PUT","/admin/apps/"+APP+"/integration/credentials/"+BIZ,"/admin/apps/{code}/integration/credentials/{biz}",resource,Json.write(policy("bob"))).statusCode()).isEqualTo(403);
++        }
++        assertThat(db.queryForObject("select policy_revision from app.integration_credential where id=?",Long.class,id)).isEqualTo(1);assertThat(queries).hasValue(0);
++    }
++    @Test void invalidPolicyAndAuditFailureRollBackRevisionAndPayload()throws Exception{
++        var invalid=new HashMap<>(policy("bob"));invalid.put("allowedOrigins",List.of("http://external.invalid"));assertThat(update(invalid).statusCode()).isEqualTo(400);
++        db.execute("create or replace function app.d2_fail_audit() returns trigger language plpgsql as $$ begin if new.tenant_id='d2-policy-tests' and new.action='INTEGRATION_POLICY' then raise exception 'finite-audit-failure'; end if; return new; end $$");
++        db.execute("create trigger d2_fail_audit before insert on app.lifecycle_log for each row execute function app.d2_fail_audit()");
++        try{assertThat(update(policy("bob")).statusCode()).isEqualTo(500);assertThat(auditErrors).hasValue(1);}finally{db.execute("drop trigger d2_fail_audit on app.lifecycle_log");db.execute("drop function app.d2_fail_audit()");}
++        assertThat(db.queryForObject("select policy_revision from app.integration_credential where id=?",Long.class,id)).isEqualTo(1);
++        assertThat(db.queryForObject("select claim_limits->'principalIds' @> '[\"alice\"]'::jsonb from app.integration_credential where id=?",Boolean.class,id)).isTrue();
++    }
++    @Test void issueBindsStoredPublishedVersionAndInitialRevisionIsOne()throws Exception{
++        var body=new HashMap<>(policy("alice"));body.put("bizSystemCode","issued");
++        var resource=new ResourceBinding("app-version",APP+"@1",Digest.sha256("published-d2"));
++        assertThat(admin("POST","/admin/apps/"+APP+"/integration/credentials","/admin/apps/{code}/integration/credentials",new ResourceBinding("app-version",APP+"@1",Digest.sha256("wrong")),Json.write(body)).statusCode()).isEqualTo(403);
++        var issued=admin("POST","/admin/apps/"+APP+"/integration/credentials","/admin/apps/{code}/integration/credentials",resource,Json.write(body));assertThat(issued.statusCode()).as(issued.body()).isEqualTo(200);
++        assertThat(db.queryForObject("select policy_revision from app.integration_credential where tenant_id=? and app_code=? and biz_system_code='issued'",Long.class,TENANT,APP)).isEqualTo(1);
++    }
++    static String integrationToken(String digest){var c=fixture.integrationClaims();c.put("tenant_id",TENANT);c.put("sub",IntegrationClaims.principal(BIZ,"alice"));c.put("app_code",APP);c.put("biz_system_code",BIZ);c.put("user_id","alice");c.put("credential_id",id);c.put("policy_digest",digest);return fixture.integration(c);}
++    @Test void realResolverBackedGrantsFailAfterRevisionAndExplicitNewAuthenticationRecovers()throws Exception{
++        String digest=Json.read(resolve(requestBody("alice")).body()).path("policyDigest").asText();String subject=integrationToken(digest);
++        var call=new ServiceCall("engine","proxy.engine.get.RunController.status",new ResourceBinding("run","r-test",Digest.sha256("snapshot-v1")));
++        try(var gateway=fixture.client("gateway");var engine=fixture.client("engine")){
++            int before=queries.get();var ticket=gateway.exchange(subject,call);assertThat(queries.get()-before).isEqualTo(1);
++            before=queries.get();var current=engine.authorize(ticket.value(),call);assertThat(queries.get()-before).isEqualTo(1);
++            assertThat(current.actor().roles()).containsExactly("reader");
++            assertThat(update(policy("alice")).statusCode()).isEqualTo(200);
++            before=queries.get();assertThatThrownBy(()->engine.authorize(ticket.value(),call)).isInstanceOf(PlatformException.class);assertThat(queries.get()-before).isEqualTo(1);
++            before=queries.get();assertThatThrownBy(()->gateway.resume(current.delegation(),call)).isInstanceOf(PlatformException.class);assertThat(queries.get()-before).isEqualTo(1);
++            before=queries.get();assertThatThrownBy(()->gateway.exchange(subject,call)).isInstanceOf(PlatformException.class);assertThat(queries.get()-before).isEqualTo(1);
++            var fresh=gateway.exchange(integrationToken(digest),call);assertThat(engine.authorize(fresh.value(),call).actor().roles()).containsExactly("reader");
++            assertThat(admin("POST","/admin/apps/"+APP+"/integration/credentials/"+BIZ+"/revoke","/admin/apps/{code}/integration/credentials/{biz}/revoke",credentialResource(),"").statusCode()).isEqualTo(200);
++            assertThatThrownBy(()->gateway.exchange(integrationToken(digest),call)).isInstanceOf(PlatformException.class);
++        }
++        assertThat(fixture.resolverToAuthorityCalls()).isZero();
++    }
++
++    @Test void concurrentStaleWritesSerializeAndSnapshotsNeverMixRevisionAndPolicy()throws Exception{
++        String oldDigest=Json.read(resolve(requestBody("alice")).body()).path("policyDigest").asText();
++        var route=new ServiceRoutePolicy().require("gateway","app","PUT","/admin/apps/{code}/integration/credentials/{biz}");var call=new ServiceCall("app",route.action(),credentialResource());String first,second;
++        try(var gateway=fixture.client("gateway")){first=gateway.exchange(fixture.portal(),call).value();second=gateway.exchange(fixture.portal(),call).value();}
++        String path="/admin/apps/"+APP+"/integration/credentials/"+BIZ,body=Json.write(policy("bob"));
++        try(var pool=java.util.concurrent.Executors.newFixedThreadPool(3)){
++            var gate=new java.util.concurrent.CountDownLatch(1);
++            var a=pool.submit(()->{gate.await();return http("PUT",path,first,body);});
++            var b=pool.submit(()->{gate.await();return http("PUT",path,second,body);});
++            var reads=pool.submit(()->{gate.await();var out=new ArrayList<com.fasterxml.jackson.databind.JsonNode>();for(int i=0;i<4;i++){var r=resolve(requestBody("alice"));assertThat(r.statusCode()).isEqualTo(200);out.add(Json.read(r.body()));}return out;});gate.countDown();
++            assertThat(List.of(a.get(8,java.util.concurrent.TimeUnit.SECONDS).statusCode(),b.get(8,java.util.concurrent.TimeUnit.SECONDS).statusCode())).containsExactlyInAnyOrder(200,403);
++            String newDigest=Json.read(resolve(requestBody("alice")).body()).path("policyDigest").asText();assertThat(newDigest).isNotEqualTo(oldDigest);
++            for(var n:reads.get(8,java.util.concurrent.TimeUnit.SECONDS)){if(n.path("policyVersion").asText().equals(id+":1")){assertThat(n.path("policyDigest").asText()).isEqualTo(oldDigest);assertThat(n.path("subjectAllowed").asBoolean()).isTrue();}else{assertThat(n.path("policyVersion").asText()).isEqualTo(id+":2");assertThat(n.path("policyDigest").asText()).isEqualTo(newDigest);assertThat(n.path("subjectAllowed").asBoolean()).isFalse();}}
++        }
++        assertThat(update(policy("alice")).statusCode()).isEqualTo(200);assertThat(db.queryForObject("select policy_revision from app.integration_credential where id=?",Long.class,id)).isEqualTo(3);
++    }
++    @Test void nonAdminAndWrongTenantCannotMutateEvenWithCorrectServiceRoute()throws Exception{
++        try{
++            fixture.portalActor(new Actor(TENANT,"reader-d2",Set.of("reader"),Map.of("dataLabels",Set.of("restricted"))));assertThat(update(policy("bob")).statusCode()).isEqualTo(403);
++            fixture.portalActor(new Actor("other-tenant","admin-d2",Set.of("ADMIN"),Map.of("dataLabels",Set.of("restricted"))));assertThat(update(policy("bob")).statusCode()).isEqualTo(404);
++        }finally{fixture.portalActor(new Actor(TENANT,"admin-d2",Set.of("ADMIN"),Map.of("dataLabels",Set.of("restricted"))));}
++        assertThat(db.queryForObject("select policy_revision from app.integration_credential where id=?",Long.class,id)).isEqualTo(1);
++    }
++
++    @Test void adminRoleMustStillExistAtTheFinalResourceDecision()throws Exception{
++        fixture.narrowAdminAtResourceCheck();assertThat(update(policy("bob")).statusCode()).isEqualTo(403);
++        assertThat(db.queryForObject("select policy_revision from app.integration_credential where id=?",Long.class,id)).isEqualTo(1);
++    }
++
++    @Test void actualPolicyChainWithoutGlobalProofRegistrationCannotEnterResolver()throws Exception{
++        var original=app;includeProof=false;
++        try(var denied=startReceiver()){app=denied;assertThat(resolve(requestBody("alice")).statusCode()).isEqualTo(403);assertThat(queries).hasValue(0);}
++        finally{app=original;includeProof=true;}
++    }
++}
+diff --git a/app-management/src/test/java/cn/agentplatform/app/infra/PolicyResolverSecurityTest.java b/app-management/src/test/java/cn/agentplatform/app/infra/PolicyResolverSecurityTest.java
+new file mode 100644
+index 0000000..e532f7c
+--- /dev/null
++++ b/app-management/src/test/java/cn/agentplatform/app/infra/PolicyResolverSecurityTest.java
+@@ -0,0 +1,24 @@
++package cn.agentplatform.app.infra;
++import cn.agentplatform.app.api.IntegrationPolicyResolverController;
++import cn.agentplatform.common.authority.*;
++import com.nimbusds.jose.jwk.JWKSet;
++import org.junit.jupiter.api.Test;
++import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
++import org.springframework.context.annotation.*;
++import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
++import static org.assertj.core.api.Assertions.*;
++class PolicyResolverSecurityTest {
++    @Configuration(proxyBeanMethods=false) @EnableWebSecurity static class Web {}
++    @Test void disabledRegistersNeitherPolicyChainNorController(){
++        new WebApplicationContextRunner().withUserConfiguration(Web.class,PolicyResolverSecurity.class,IntegrationPolicyResolverController.class).withPropertyValues("agent.policy-resolver.enabled=false")
++            .run(c->{assertThat(c).hasNotFailed();assertThat(c).doesNotHaveBean(PolicyRequestVerifier.class);assertThat(c).doesNotHaveBean(IntegrationPolicyResolverController.class);assertThat(c).doesNotHaveBean("policySecurity");});
++    }
++    @Test void enabledMissingPrivateAndUnknownPublicKeyConfigurationFailStartup()throws Exception{
++        try(var f=new LoopbackAuthority()){
++            for(String keys:java.util.List.of("","{}",new JWKSet(f.policySigningKey()).toString(false))){
++                new WebApplicationContextRunner().withUserConfiguration(Web.class,PolicyResolverSecurity.class).withPropertyValues("agent.policy-resolver.enabled=true","agent.policy-resolver.issuer=independent-policy","agent.policy-resolver.public-jwks="+keys)
++                    .run(c->{assertThat(c).hasFailed();assertThat(c.getStartupFailure()).hasRootCauseMessage("POLICY_PUBLIC_CONFIGURATION_REQUIRED");});
++            }
++        }
++    }
++}
+diff --git a/platform-gateway/src/main/java/cn/agentplatform/gateway/domain/IntegrationPolicy.java b/platform-gateway/src/main/java/cn/agentplatform/gateway/domain/IntegrationPolicy.java
+index 08f4adc..f847a89 100644
+--- a/platform-gateway/src/main/java/cn/agentplatform/gateway/domain/IntegrationPolicy.java
++++ b/platform-gateway/src/main/java/cn/agentplatform/gateway/domain/IntegrationPolicy.java
+@@ -8,8 +8,6 @@ import java.util.*;
+ 
+ /** 出票声明仅能在平台管理员预设的上限内收缩；业务身份不能获得平台管理/内部调用角色。 */
+ public final class IntegrationPolicy {
+-    private static final Set<String> PLATFORM_ROLES =
+-            Set.of("ADMIN", "EDITOR", "SERVICE", "GATEWAY_AUTH");
+ 
+     private IntegrationPolicy() {}
+ 
+@@ -21,7 +19,7 @@ public final class IntegrationPolicy {
+             throw new PlatformException(403, "CLAIM_LIMIT_EXCEEDED", "用户不在签发声明上限内");
+         Set<String> roles = strings(requested.path("roles"));
+         roles.retainAll(strings(limits.path("roles")));
+-        roles.removeIf(r -> PLATFORM_ROLES.contains(r.toUpperCase(Locale.ROOT)));
++        roles.removeIf(cn.agentplatform.common.authority.IntegrationClaims::platformRole);
+         Map<String, Set<String>> attributes = new LinkedHashMap<>();
+         requested
+                 .path("attributes")
+@@ -36,9 +34,7 @@ public final class IntegrationPolicy {
+         String biz = credential.path("bizSystemCode").asText();
+         attributes.put("bizSystemCode", Set.of(biz));
+         attributes.put("userId", Set.of(user));
+-        String principal = biz + ":" + user;
+-        if (principal.length() > 64)
+-            principal = "ext_" + Digest.sha256(biz + "\u0000" + user).substring(0, 60);
++        String principal = cn.agentplatform.common.authority.IntegrationClaims.principal(biz, user);
+         return new Actor(credential.path("tenantId").asText(), principal, roles, attributes);
+     }
+ 
+@@ -53,15 +49,7 @@ public final class IntegrationPolicy {
+     }
+ 
+     public static String digest(JsonNode c) {
+-        return Digest.sha256(
+-                Json.canonical(
+-                        Map.of(
+-                                "secretRef",
+-                                c.path("secretRef"),
+-                                "claimLimits",
+-                                c.path("claimLimits"),
+-                                "allowedOrigins",
+-                                c.path("allowedOrigins"))));
++        return cn.agentplatform.common.authority.IntegrationClaims.digest(c);
+     }
+ 
+     public static boolean allowedPath(String path, String method, String app) {
+diff --git a/platform-gateway/src/test/java/cn/agentplatform/gateway/domain/IntegrationPolicyTest.java b/platform-gateway/src/test/java/cn/agentplatform/gateway/domain/IntegrationPolicyTest.java
+index a4f211b..f0d5786 100644
+--- a/platform-gateway/src/test/java/cn/agentplatform/gateway/domain/IntegrationPolicyTest.java
++++ b/platform-gateway/src/test/java/cn/agentplatform/gateway/domain/IntegrationPolicyTest.java
+@@ -117,4 +117,13 @@ class IntegrationPolicyTest {
+         assertThat(IntegrationPolicy.allowedPath("/v1/apps/ops/sessions/s_1/secret", "GET", "ops"))
+                 .isFalse();
+     }
++
++    @Test void sharedRulesPreserveLongPrincipalAndCanonicalLegacyDigest() {
++        String user="u".repeat(90);var c=new HashMap<>(credential());
++        c.put("claimLimits",Map.of("principalIds",List.of(user),"roles",List.of("operator","admin"),"attributes",Map.of("region",List.of("A"))));
++        var node=Json.tree(c);var actor=IntegrationPolicy.clip(node,Json.tree(Map.of("userId",user,"roles",List.of("operator","admin"))));
++        assertThat(actor.principalId()).isEqualTo("ext_"+Digest.sha256("partner\u0000"+user).substring(0,60));assertThat(actor.roles()).containsExactly("operator");
++        assertThat(IntegrationPolicy.digest(node)).isEqualTo(Digest.sha256(Json.canonical(Map.of("secretRef",node.path("secretRef"),"claimLimits",node.path("claimLimits"),"allowedOrigins",node.path("allowedOrigins")))));
++        assertThat(IntegrationPolicy.allowedPath("/internal/iam/integration-policy/resolve","POST","ops")).isFalse();
++    }
+ }

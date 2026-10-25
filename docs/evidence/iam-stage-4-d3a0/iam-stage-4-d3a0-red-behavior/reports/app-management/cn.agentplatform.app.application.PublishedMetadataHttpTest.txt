@@ -1,0 +1,34 @@
+-------------------------------------------------------------------------------
+Test set: cn.agentplatform.app.application.PublishedMetadataHttpTest
+-------------------------------------------------------------------------------
+Tests run: 4, Failures: 3, Errors: 0, Skipped: 0, Time elapsed: 4.554 s <<< FAILURE! -- in cn.agentplatform.app.application.PublishedMetadataHttpTest
+cn.agentplatform.app.application.PublishedMetadataHttpTest.deliberatelySignedMetadataKindCannotEnterActualPayloadController -- Time elapsed: 0.442 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+[{"code":"OK","message":"","data":{"code":"published-demo","name":"Metadata test","type":"CHAT","description":"","domain":"","status":"PUBLISHED","id":9,"draftId":9,"draftNo":1,"bizCategory":"","draftRev":1,"currentVersionNo":1,"updatedAt":"2026-10-20T08:07:16.505886Z","tags":[],"config":{"private":"payload-secret"},"definition":{},"layout":{},"candidateSha256":"009c0aae08e3bab5eae6b4b4e2b8dd83926c2981c637b2aecf24de531934da1c"},"traceId":null}] 
+expected: 403
+ but was: 200
+	at cn.agentplatform.app.application.PublishedMetadataHttpTest.deliberatelySignedMetadataKindCannotEnterActualPayloadController(PublishedMetadataHttpTest.java:88)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+cn.agentplatform.app.application.PublishedMetadataHttpTest.payloadKindCannotEnterMetadataController -- Time elapsed: 0.200 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+[{"code":"OK","message":"","data":{"appCode":"published-demo","versionId":11,"versionNo":1,"versionSha256":"eba612486de490605983eb93d2bb181032b61350490b5c2489f86e9206388859"},"traceId":null}] 
+expected: 403
+ but was: 200
+	at cn.agentplatform.app.application.PublishedMetadataHttpTest.payloadKindCannotEnterMetadataController(PublishedMetadataHttpTest.java:92)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+cn.agentplatform.app.application.PublishedMetadataHttpTest.forgedSelectorTenantCodeOrDigestCannotQueryPg -- Time elapsed: 0.207 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+[{"code":"OK","message":"","data":{"appCode":"published-demo","versionId":15,"versionNo":1,"versionSha256":"eba612486de490605983eb93d2bb181032b61350490b5c2489f86e9206388859"},"traceId":null}] 
+expected: 403
+ but was: 200
+	at cn.agentplatform.app.application.PublishedMetadataHttpTest.forgedSelectorTenantCodeOrDigestCannotQueryPg(PublishedMetadataHttpTest.java:82)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+

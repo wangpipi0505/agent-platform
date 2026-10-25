@@ -1,0 +1,192 @@
+{
+  "sourceAfter": {
+    "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/source-after.json",
+    "bytes": 77685,
+    "sha256": "6caf11a109ae9812af0d6994cfc11761923c40ecd943dfa793a9b900ea6bbba6"
+  },
+  "selectedCurrentCases": 5,
+  "cases": [
+    {
+      "name": "closeBeforeActualStartAsyncCompletesItsLateContext",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-fix-green04",
+        "class": "cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest",
+        "status": "pass",
+        "xml": {
+          "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/iam-stage-n4b2-fix-green04/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml",
+          "bytes": 40241,
+          "sha256": "43920a1571977d534c102efa99dbaa3f32957c8fe97436edd5e59b8caf67144d"
+        }
+      },
+      "history": [
+        {
+          "stage": "iam-stage-n4b2-fix-red01",
+          "class": "cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest",
+          "status": "failure",
+          "xml": {
+            "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/iam-stage-n4b2-fix-red01/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml",
+            "bytes": 41606,
+            "sha256": "d8676214d79dc3ab274482984651ce2d89a934a771b0f7854746869dd701a6d8"
+          }
+        },
+        {
+          "stage": "iam-stage-n4b2-fix-green03",
+          "class": "cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest",
+          "status": "error",
+          "xml": {
+            "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/iam-stage-n4b2-fix-green03/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml",
+            "bytes": 44703,
+            "sha256": "6475f737123ba35c754e4410e37163ef69cf4c3641365fcdeee43e2925a4aaee"
+          }
+        },
+        {
+          "stage": "iam-stage-n4b2-fix-green04",
+          "class": "cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest",
+          "status": "pass",
+          "xml": {
+            "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/iam-stage-n4b2-fix-green04/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml",
+            "bytes": 40241,
+            "sha256": "43920a1571977d534c102efa99dbaa3f32957c8fe97436edd5e59b8caf67144d"
+          }
+        }
+      ],
+      "applicability": "Final production/test source actually exercised green04. Container onComplete once, no timeout/manualcleanup; close returned before latch release; actual MVC timeout/error callbacks replayed without swallowing exceptions."
+    },
+    {
+      "name": "closeAfterMvcStartAsyncBeforeHandleInstallCompletesItsLateContext",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-fix-green04",
+        "class": "cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest",
+        "status": "pass",
+        "xml": {
+          "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/iam-stage-n4b2-fix-green04/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml",
+          "bytes": 40241,
+          "sha256": "43920a1571977d534c102efa99dbaa3f32957c8fe97436edd5e59b8caf67144d"
+        }
+      },
+      "history": [
+        {
+          "stage": "iam-stage-n4b2-fix-red01",
+          "class": "cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest",
+          "status": "failure",
+          "xml": {
+            "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/iam-stage-n4b2-fix-red01/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml",
+            "bytes": 41606,
+            "sha256": "d8676214d79dc3ab274482984651ce2d89a934a771b0f7854746869dd701a6d8"
+          }
+        },
+        {
+          "stage": "iam-stage-n4b2-fix-red02",
+          "class": "cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest",
+          "status": "error",
+          "xml": {
+            "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/iam-stage-n4b2-fix-red02/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml",
+            "bytes": 59227,
+            "sha256": "84621a5ce9b09201d52d3ccc1a6b1428faa79865077d1b271bd185146fc90298"
+          }
+        },
+        {
+          "stage": "iam-stage-n4b2-fix-green03",
+          "class": "cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest",
+          "status": "error",
+          "xml": {
+            "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/iam-stage-n4b2-fix-green03/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml",
+            "bytes": 44703,
+            "sha256": "6475f737123ba35c754e4410e37163ef69cf4c3641365fcdeee43e2925a4aaee"
+          }
+        },
+        {
+          "stage": "iam-stage-n4b2-fix-green04",
+          "class": "cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest",
+          "status": "pass",
+          "xml": {
+            "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/iam-stage-n4b2-fix-green04/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml",
+            "bytes": 40241,
+            "sha256": "43920a1571977d534c102efa99dbaa3f32957c8fe97436edd5e59b8caf67144d"
+          }
+        }
+      ],
+      "applicability": "Final production/test source actually exercised green04. Container onComplete once, no timeout/manualcleanup; close returned before latch release; actual MVC timeout/error callbacks replayed without swallowing exceptions."
+    },
+    {
+      "name": "realMvcAsyncProxyUsesSeparateTargetTicketsAndPreservesExactLegalBody",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-fix-green03",
+        "class": "cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest",
+        "status": "pass",
+        "xml": {
+          "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/iam-stage-n4b2-fix-green03/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml",
+          "bytes": 44703,
+          "sha256": "6475f737123ba35c754e4410e37163ef69cf4c3641365fcdeee43e2925a4aaee"
+        }
+      },
+      "history": [
+        {
+          "stage": "iam-stage-n4b2-fix-green03",
+          "class": "cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest",
+          "status": "pass",
+          "xml": {
+            "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/iam-stage-n4b2-fix-green03/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml",
+            "bytes": 44703,
+            "sha256": "6475f737123ba35c754e4410e37163ef69cf4c3641365fcdeee43e2925a4aaee"
+          }
+        }
+      ],
+      "applicability": "Valid green03; green04 changes only new race helper cleanup/oracle and moves async-null terminal branch before constant JSON allocation. This path is excluded for the installed-async normal/engine-read cases; common name/bytes unchanged after green03."
+    },
+    {
+      "name": "closeDuringRealEngineReadCancelsOwnedHandleAndLateCallbackIsTerminal",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-fix-green03",
+        "class": "cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest",
+        "status": "pass",
+        "xml": {
+          "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/iam-stage-n4b2-fix-green03/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml",
+          "bytes": 44703,
+          "sha256": "6475f737123ba35c754e4410e37163ef69cf4c3641365fcdeee43e2925a4aaee"
+        }
+      },
+      "history": [
+        {
+          "stage": "iam-stage-n4b2-fix-green03",
+          "class": "cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest",
+          "status": "pass",
+          "xml": {
+            "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/iam-stage-n4b2-fix-green03/xml/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml",
+            "bytes": 44703,
+            "sha256": "6475f737123ba35c754e4410e37163ef69cf4c3641365fcdeee43e2925a4aaee"
+          }
+        }
+      ],
+      "applicability": "Valid green03; green04 changes only new race helper cleanup/oracle and moves async-null terminal branch before constant JSON allocation. This path is excluded for the installed-async normal/engine-read cases; common name/bytes unchanged after green03."
+    },
+    {
+      "name": "ordinaryReceiverRejectsAnUnregisteredRouteBeforeGuardChecks",
+      "lastValidGreen": {
+        "stage": "iam-stage-n4b2-fix-green03",
+        "class": "cn.agentplatform.common.authority.GatewayIngressBoundaryTest",
+        "status": "pass",
+        "xml": {
+          "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/iam-stage-n4b2-fix-green03/xml/TEST-cn.agentplatform.common.authority.GatewayIngressBoundaryTest.xml",
+          "bytes": 33909,
+          "sha256": "fa458a316f535c3688f6461551e191a2a7d1fc3612a9af1c606dd73719feac25"
+        }
+      },
+      "history": [
+        {
+          "stage": "iam-stage-n4b2-fix-green03",
+          "class": "cn.agentplatform.common.authority.GatewayIngressBoundaryTest",
+          "status": "pass",
+          "xml": {
+            "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/iam-stage-n4b2-fix-green03/xml/TEST-cn.agentplatform.common.authority.GatewayIngressBoundaryTest.xml",
+            "bytes": 33909,
+            "sha256": "fa458a316f535c3688f6461551e191a2a7d1fc3612a9af1c606dd73719feac25"
+          }
+        }
+      ],
+      "applicability": "Valid green03; green04 changes only new race helper cleanup/oracle and moves async-null terminal branch before constant JSON allocation. This path is excluded for the installed-async normal/engine-read cases; common name/bytes unchanged after green03."
+    }
+  ],
+  "finalSameSourceFiveCaseRun": false,
+  "validCoverage": "3 unaffected last-valid green03 +2 final-source green04; not one final-source5pass run."
+}

@@ -1,0 +1,14 @@
+-------------------------------------------------------------------------------
+Test set: cn.agentplatform.app.application.PublishedMetadataHttpTest
+-------------------------------------------------------------------------------
+Tests run: 9, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 5.898 s <<< FAILURE! -- in cn.agentplatform.app.application.PublishedMetadataHttpTest
+cn.agentplatform.app.application.PublishedMetadataHttpTest.workloadIntegrationAndDelegatedResumeNeverBecomeInitialLookup -- Time elapsed: 0.191 s <<< ERROR!
+cn.agentplatform.common.PlatformException: 当前授权不允许此操作
+	at cn.agentplatform.common.authority.AuthorityProtocol.denied(AuthorityProtocol.java:11)
+	at cn.agentplatform.common.authority.HttpCurrentAuthorityClient.query(HttpCurrentAuthorityClient.java:148)
+	at cn.agentplatform.common.authority.HttpCurrentAuthorityClient.exchange(HttpCurrentAuthorityClient.java:31)
+	at cn.agentplatform.app.application.PublishedMetadataHttpTest.workloadIntegrationAndDelegatedResumeNeverBecomeInitialLookup(PublishedMetadataHttpTest.java:115)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+

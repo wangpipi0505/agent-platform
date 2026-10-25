@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MCP 注册与草稿检查受控验证</title></head>
+<body><div id="app"></div><script type="module">
+import {createApp,h,ref} from 'vue';import {createPinia} from 'pinia';import ElementPlus from 'element-plus';import 'element-plus/dist/index.css';import '../shared/tokens.css';import SkillWizard from '../admin/src/SkillWizard.vue';import ResourceDetail from '../admin/src/ResourceDetail.vue';import {useAuth} from '../shared/api';import {installPermissions} from '../shared/permission';
+const wizard=new URLSearchParams(location.search).has('wizard');
+const initial={code:'lookup_fixture',name:'MCP 注册受控验证',type:'MCP',endpoint:'https://fixture.invalid/sse',authRef:'',timeoutMs:10000,inputSchema:{type:'object',properties:{query:{type:'string'}},required:['query']},outputSchema:{type:'object'},execution:{readonly:true,sideEffect:false,idempotent:true,cancellable:true},guard:{roles:['EDITOR','analyst'],attributes:{domain:['fixture']}}};
+const resource=ref({code:'lookup_fixture',name:'MCP 草稿受控验证',description:'仅用于真实组件界面检查'}),saved=ref();
+const app=createApp({render:()=>h('main',{class:'fixture'},[h('p',{class:'muted'},'受控 API 验证 · 不连接真实 MCP 服务'),wizard?h(SkillWizard,{initial,onSave:value=>{saved.value=JSON.parse(JSON.stringify(value));}}):h(ResourceDetail,{resource:resource.value,kind:'skill'}),saved.value?h('pre',{id:'saved'},JSON.stringify(saved.value,null,2)):null])});
+app.use(createPinia()).use(ElementPlus);const auth=useAuth();auth.token='component-fixture-only';auth.roles=['EDITOR','ADMIN'];auth.user={tenantId:'tenant-fixture',principalId:'owner'};installPermissions(app);
+window.mcpFixture=change=>{if('token'in change)auth.token=change.token;if(change.roles)auth.roles=change.roles;if(change.principalId)auth.user.principalId=change.principalId;if(change.tenantId)auth.user.tenantId=change.tenantId;if(change.code)resource.value={...resource.value,code:change.code};};app.mount('#app');
+</script><style>.fixture{padding:1.5rem;max-width:1100px;margin:auto;min-width:0}.fixture>.panel{padding:1rem}@media(max-width:600px){.fixture{padding:.75rem}}</style></body></html>

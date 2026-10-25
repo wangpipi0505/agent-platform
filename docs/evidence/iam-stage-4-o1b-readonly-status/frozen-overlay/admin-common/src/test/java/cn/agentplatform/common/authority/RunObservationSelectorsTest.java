@@ -1,0 +1,51 @@
+package cn.agentplatform.common.authority;
+
+import static org.assertj.core.api.Assertions.*;
+import cn.agentplatform.common.*;
+import java.util.*;
+import org.junit.jupiter.api.Test;
+
+class RunObservationSelectorsTest {
+    static final String RUN="r_"+"a".repeat(32);
+    @Test void statusPurposeIsBidirectionalAndOnlyAcceptsFreshPortalSnapshot(){
+        var resource=RunObservationSelectors.status(RUN,Digest.sha256("accepted"));
+        var call=new ServiceCall("engine",RunObservationSelectors.STATUS_ACTION,resource);
+        RunObservationSelectors.requirePurpose(call,"gateway","delegated","PORTAL","PORTAL");
+        for(String action:List.of(RunObservationSelectors.ACTION,"proxy.engine.post.RunController.run","run.advance","proxy.engine.get.RunController.events"))
+            assertThatThrownBy(()->RunObservationSelectors.requirePurpose(new ServiceCall("engine",action,resource),"gateway","delegated","PORTAL","PORTAL")).isInstanceOf(PlatformException.class);
+        for(var wrong:List.of(new ResourceBinding("app-version","app-a@1",resource.versionDigest()),RunObservationSelectors.metadata(new SubjectKey("t","p"),RUN),new ResourceBinding("run-snapshot",RUN,"A".repeat(64))))
+            assertThatThrownBy(()->RunObservationSelectors.requirePurpose(new ServiceCall("engine",call.action(),wrong),"gateway","delegated","PORTAL","PORTAL")).isInstanceOf(PlatformException.class);
+        for(String caller:List.of("app","engine"))assertThatThrownBy(()->RunObservationSelectors.requirePurpose(call,caller,"delegated","PORTAL","PORTAL")).isInstanceOf(PlatformException.class);
+        for(String source:List.of("DELEGATED","INTEGRATION"))assertThatThrownBy(()->RunObservationSelectors.requirePurpose(call,"gateway","delegated",source,"PORTAL")).isInstanceOf(PlatformException.class);
+        assertThatThrownBy(()->RunObservationSelectors.requirePurpose(call,"gateway","workload","PORTAL","PORTAL")).isInstanceOf(PlatformException.class);
+        assertThatThrownBy(()->RunObservationSelectors.requirePurpose(call,"gateway","delegated","PORTAL","INTEGRATION")).isInstanceOf(PlatformException.class);
+    }
+    @Test void canonicalQueryBindsVerifiedSubjectPathAndProjection(){
+        var subject=new SubjectKey("t\"租户","p\\主体");
+        var actual=RunObservationSelectors.metadata(subject,RUN);
+        assertThat(actual.kind()).isEqualTo("run-observation-selector-v1");
+        assertThat(actual.id()).isEqualTo(Json.canonical(List.of("run-observation-selector.v1",subject.tenantId(),subject.principalId(),RUN,"run-observation-metadata.v1")));
+        assertThat(actual.versionDigest()).isEqualTo(Digest.sha256(Json.canonical(Map.of("schema","run-observation-selector.v1","tenant_id",subject.tenantId(),"principal_id",subject.principalId(),"run_id",RUN,"projection","run-observation-metadata.v1"))));
+        assertThat(actual).isNotEqualTo(RunObservationSelectors.metadata(new SubjectKey("other",subject.principalId()),RUN));
+        assertThat(actual).isNotEqualTo(RunObservationSelectors.metadata(new SubjectKey(subject.tenantId(),"other"),RUN));
+        assertThat(actual).isNotEqualTo(RunObservationSelectors.metadata(subject,"r_"+"b".repeat(32)));
+    }
+    @Test void invalidInputIs400AndPurposeIsBidirectional(){
+        for(String run:List.of("","r-test","r_"+"A".repeat(32),"r_"+"a".repeat(31),"r_"+"a".repeat(33),"../"+RUN,RUN+"?"))
+            assertThatThrownBy(()->RunObservationSelectors.metadata(new SubjectKey("t","p"),run)).isInstanceOfSatisfying(PlatformException.class,e->assertThat(e.status()).isEqualTo(400));
+        assertThatThrownBy(()->RunObservationSelectors.metadata(new SubjectKey("t".repeat(129),"p"),RUN)).isInstanceOf(PlatformException.class);
+        assertThatThrownBy(()->RunObservationSelectors.metadata(new SubjectKey("t","p".repeat(129)),RUN)).isInstanceOf(PlatformException.class);
+        var resource=RunObservationSelectors.metadata(new SubjectKey("t","p"),RUN);
+        var query=new ServiceCall("engine",RunObservationSelectors.ACTION,resource);
+        RunObservationSelectors.requirePurpose(query,"gateway","delegated","PORTAL","PORTAL");
+        for(var call:List.of(new ServiceCall("app",query.action(),resource),new ServiceCall("engine","run.advance",resource),new ServiceCall("engine",query.action(),new ResourceBinding("run-snapshot",RUN,Digest.sha256("snapshot")))))
+            assertThatThrownBy(()->RunObservationSelectors.requirePurpose(call,"gateway","delegated","PORTAL","PORTAL")).isInstanceOf(PlatformException.class);
+        for(String caller:List.of("app","engine"))assertThatThrownBy(()->RunObservationSelectors.requirePurpose(query,caller,"delegated","PORTAL","PORTAL")).isInstanceOf(PlatformException.class);
+        assertThatThrownBy(()->RunObservationSelectors.requirePurpose(query,"gateway","workload","PORTAL","PORTAL")).isInstanceOf(PlatformException.class);
+        for(String source:List.of("INTEGRATION","DELEGATED"))assertThatThrownBy(()->RunObservationSelectors.requirePurpose(query,"gateway","delegated",source,"PORTAL")).isInstanceOf(PlatformException.class);
+        assertThatThrownBy(()->RunObservationSelectors.requirePurpose(query,"gateway","delegated","PORTAL","INTEGRATION")).isInstanceOf(PlatformException.class);
+        assertThat(new ServiceRoutePolicy().routes().stream().filter(r->RunObservationSelectors.ACTION.equals(r.action())).toList()).singleElement().satisfies(r->{
+            assertThat(r.method()).isEqualTo("GET");assertThat(r.template()).isEqualTo("/internal/runs/{id}/observation-metadata");assertThat(r.caller()).isEqualTo("gateway");assertThat(r.target()).isEqualTo("engine");assertThat(r.mode()).isEqualTo("delegated");assertThat(r.integrationAllowed()).isFalse();
+        });
+    }
+}

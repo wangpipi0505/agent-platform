@@ -1,0 +1,45 @@
+133:      * the actual value was not equal to the expected value.
+134:      */
+135:     public final boolean compareAndSet(int expectedValue, int newValue) {
+136:         return U.compareAndSetInt(this, VALUE, expectedValue, newValue);
+137:     }
+138: 
+139:     /**
+140:      * Possibly atomically sets the value to {@code newValue}
+141:      * if the current value {@code == expectedValue},
+142:      * with memory effects as specified by {@link VarHandle#weakCompareAndSetPlain}.
+143:      *
+144:      * @deprecated This method has plain memory effects but the method
+145:      * name implies volatile memory effects (see methods such as
+146:      * {@link #compareAndExchange} and {@link #compareAndSet}).  To avoid
+147:      * confusion over plain or volatile memory effects it is recommended that
+148:      * the method {@link #weakCompareAndSetPlain} be used instead.
+149:      *
+150:      * @param expectedValue the expected value
+151:      * @param newValue the new value
+152:      * @return {@code true} if successful
+153:      * @see #weakCompareAndSetPlain
+154:      */
+
+97:      * @param newValue the new value
+98:      */
+99:     public final void set(int newValue) {
+100:         value = newValue;
+101:     }
+102: 
+103:     /**
+104:      * Sets the value to {@code newValue},
+105:      * with memory effects as specified by {@link VarHandle#setRelease}.
+106:      *
+107:      * @param newValue the new value
+108:      * @since 1.6
+109:      */
+110:     public final void lazySet(int newValue) {
+111:         U.putIntRelease(this, VALUE, newValue);
+112:     }
+113: 
+114:     /**
+115:      * Atomically sets the value to {@code newValue} and returns the old value,
+116:      * with memory effects as specified by {@link VarHandle#getAndSet}.
+117:      *
+118:      * @param newValue the new value

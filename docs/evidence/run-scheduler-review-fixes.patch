@@ -1,0 +1,998 @@
+diff --git a/engine-runtime/src/main/java/cn/agentplatform/engine/application/ChatSessions.java b/engine-runtime/src/main/java/cn/agentplatform/engine/application/ChatSessions.java
+index afd45fb..b3c41f9 100644
+--- a/engine-runtime/src/main/java/cn/agentplatform/engine/application/ChatSessions.java
++++ b/engine-runtime/src/main/java/cn/agentplatform/engine/application/ChatSessions.java
+@@ -100,71 +100,80 @@ public class ChatSessions {
+             }
+         }
+         try {
+-            var reservation =
+-                    store.atomic(
+-                            () -> {
+-                                var session = owned(code, id, actor, true);
+-                                var existing =
++            java.util.function.Supplier<Map<String, Object>> reserve =
++                    () ->
++                            store.atomic(
++                                    () -> {
++                                        var session = owned(code, id, actor, true);
++                                        var existing =
++                                                store.db()
++                                                        .queryForList(
++                                                                "select * from engine.chat_turn"
++                                                                        + " where session_id=? and"
++                                                                        + " request_id=?",
++                                                                id,
++                                                                requestId);
++                                        if (!existing.isEmpty()) {
++                                            if (!TraceStore.json(existing.getFirst().get("inputs"))
++                                                    .equals(req.path("inputs")))
++                                                throw new PlatformException(
++                                                        409, "REQUEST_CONFLICT", "轮次请求号已绑定其他输入");
++                                            return existing.getFirst();
++                                        }
++                                        var pending =
++                                                store.db()
++                                                        .queryForList(
++                                                                "select t.run_public_id,r.status"
++                                                                    + " from engine.chat_turn t"
++                                                                    + " left join engine.run r on"
++                                                                    + " r.public_id=t.run_public_id"
++                                                                    + " where t.session_id=? order"
++                                                                    + " by t.turn_no desc limit 1",
++                                                                id);
++                                        if (!pending.isEmpty()
++                                                && (pending.getFirst().get("status") == null
++                                                        || !Set.of(
++                                                                        "SUCCEEDED",
++                                                                        "FAILED",
++                                                                        "CANCELLED")
++                                                                .contains(
++                                                                        pending.getFirst()
++                                                                                .get("status"))))
++                                            throw new PlatformException(
++                                                    409, "CHAT_TURN_ACTIVE", "上一轮仍在执行或恢复");
++                                        // Validate locally under the session lock.
++                                        // Accepted requestIds retain their original inputs.
++                                        // Schema loading cannot perform HTTP here.
++                                        InputDeclarations.validate(
++                                                TraceStore.json(session.get("snapshot")),
++                                                req.path("inputs"));
++                                        int turn = ((Number) session.get("next_turn")).intValue();
+                                         store.db()
+-                                                .queryForList(
+-                                                        "select * from engine.chat_turn where"
+-                                                                + " session_id=? and request_id=?",
++                                                .update(
++                                                        "insert into"
++                                                            + " engine.chat_turn(session_id,turn_no,request_id,inputs)"
++                                                            + " values(?,?,?,?::jsonb)",
+                                                         id,
+-                                                        requestId);
+-                                if (!existing.isEmpty()) {
+-                                    if (!TraceStore.json(existing.getFirst().get("inputs"))
+-                                            .equals(req.path("inputs")))
+-                                        throw new PlatformException(
+-                                                409, "REQUEST_CONFLICT", "轮次请求号已绑定其他输入");
+-                                    return existing.getFirst();
+-                                }
+-                                var pending =
++                                                        turn,
++                                                        requestId,
++                                                        Json.write(req.path("inputs")));
+                                         store.db()
+-                                                .queryForList(
+-                                                        "select t.run_public_id,r.status from"
+-                                                            + " engine.chat_turn t left join"
+-                                                            + " engine.run r on"
+-                                                            + " r.public_id=t.run_public_id where"
+-                                                            + " t.session_id=? order by t.turn_no"
+-                                                            + " desc limit 1",
++                                                .update(
++                                                        "update engine.chat_session set"
++                                                                + " next_turn=next_turn+1 where"
++                                                                + " public_id=?",
+                                                         id);
+-                                if (!pending.isEmpty()
+-                                        && (pending.getFirst().get("status") == null
+-                                                || !Set.of("SUCCEEDED", "FAILED", "CANCELLED")
+-                                                        .contains(
+-                                                                pending.getFirst().get("status"))))
+-                                    throw new PlatformException(
+-                                            409, "CHAT_TURN_ACTIVE", "上一轮仍在执行或恢复");
+-                                // Reject locally before consuming a turn: otherwise RunService's
+-                                // admission gate could leave a durable reservation with no run.
+-                                // Existing requestIds above remain accepted work. This is the
+-                                // pinned
+-                                // session declaration, and schema loading cannot perform HTTP here.
+-                                InputDeclarations.validate(
+-                                        TraceStore.json(session.get("snapshot")),
+-                                        req.path("inputs"));
+-                                int turn = ((Number) session.get("next_turn")).intValue();
+-                                store.db()
+-                                        .update(
+-                                                "insert into"
+-                                                    + " engine.chat_turn(session_id,turn_no,request_id,inputs)"
+-                                                    + " values(?,?,?,?::jsonb)",
+-                                                id,
+-                                                turn,
+-                                                requestId,
+-                                                Json.write(req.path("inputs")));
+-                                store.db()
+-                                        .update(
+-                                                "update engine.chat_session set"
+-                                                    + " next_turn=next_turn+1 where public_id=?",
+-                                                id);
+-                                return store.db()
+-                                        .queryForMap(
+-                                                "select * from engine.chat_turn where session_id=?"
+-                                                        + " and turn_no=?",
+-                                                id,
+-                                                turn);
+-                            });
++                                        return store.db()
++                                                .queryForMap(
++                                                        "select * from engine.chat_turn where"
++                                                                + " session_id=? and turn_no=?",
++                                                        id,
++                                                        turn);
++                                    });
++            // The first durable reservation is the admission point, before consuming next_turn.
++            // Subsequent run preparation may perform HTTP outside this short transaction. Once
++            // accepted, drain cannot reject the same ticket's completion and orphan its turn.
++            var reservation = ticket == null ? reserve.get() : ticket.persist(reserve);
+             if (reservation.get("run_public_id") != null)
+                 return runs.status(reservation.get("run_public_id").toString(), actor);
+             var session = owned(code, id, actor, false);
+diff --git a/engine-runtime/src/main/java/cn/agentplatform/engine/application/RunScheduler.java b/engine-runtime/src/main/java/cn/agentplatform/engine/application/RunScheduler.java
+index 6972a4b..396475d 100644
+--- a/engine-runtime/src/main/java/cn/agentplatform/engine/application/RunScheduler.java
++++ b/engine-runtime/src/main/java/cn/agentplatform/engine/application/RunScheduler.java
+@@ -104,11 +104,11 @@ public class RunScheduler
+                             });
+             timer.scheduleWithFixedDelay(
+                     () -> safe(this::poll), 0, poll.toMillis(), TimeUnit.MILLISECONDS);
++            // Dispatch can have a longer lease, but nodes/tool claims retain their fixed 90s
++            // lease. Both the first heartbeat and every later one must protect that boundary.
++            long heartbeatMs = Math.max(10, Math.min(30000, lease.toMillis() / 3));
+             heartbeatTimer.scheduleWithFixedDelay(
+-                    () -> safe(this::heartbeat),
+-                    Math.max(10, lease.toMillis() / 3),
+-                    Math.max(10, lease.toMillis() / 3),
+-                    TimeUnit.MILLISECONDS);
++                    () -> safe(this::heartbeat), heartbeatMs, heartbeatMs, TimeUnit.MILLISECONDS);
+             LoggerFactory.getLogger(RunScheduler.class)
+                     .info(
+                             "Run scheduler started owner={} interactive={} batch={} leaseMs={}"
+@@ -142,25 +142,40 @@ public class RunScheduler
+ 
+         private final Queue queue;
+         private State state = State.OPEN;
+-        private boolean persisted, closeRequested;
++        private boolean persisted, accepted, reservationCompleted, closeRequested;
+ 
+         private Admission(Queue queue) {
+             this.queue = queue;
+         }
+ 
+         public <T> T persist(Supplier<T> write) {
++            return persist(write, false);
++        }
++
++        /** Complete this already durable chat reservation, using its original finite slot. */
++        <T> T completeReservation(Supplier<T> write) {
++            return persist(write, true);
++        }
++
++        private <T> T persist(Supplier<T> write, boolean completion) {
+             synchronized (gate) {
+-                if (state != State.OPEN || persisted)
++                if (state != State.OPEN
++                        || (completion ? !accepted || reservationCompleted : persisted))
+                     throw new IllegalStateException("Admission already consumed");
+-                if (draining) throw new RunAdmissionRejected(true);
+-                persisted = true;
++                if (!completion && draining) throw new RunAdmissionRejected(true);
++                if (completion) reservationCompleted = true;
++                else persisted = true;
+                 state = State.PERSISTING;
+             }
+             // Crossing the admission check starts an in-flight persistence operation. Stop never
+             // rolls that transaction back; accepted PG work can remain queued. No DB work holds
+             // the Java gate needed by shutdown or other pools.
+             try {
+-                return write.get();
++                T result = write.get();
++                synchronized (gate) {
++                    if (!completion) accepted = true;
++                }
++                return result;
+             } finally {
+                 synchronized (gate) {
+                     state = State.OPEN;
+@@ -383,8 +398,9 @@ public class RunScheduler
+         List<RunDispatch> snapshot;
+         // Poll, admission and PG locks must not block the independent renewal lane.
+         snapshot = List.copyOf(active.values());
+-        for (var dispatch : snapshot) repository.renew(dispatch, lease);
+-        renewNodes.run();
++        // A locked/failed item must not starve another run or the node/tool renewal lane.
++        for (var dispatch : snapshot) safe(() -> repository.renew(dispatch, lease));
++        safe(renewNodes);
+     }
+ 
+     @Override
+diff --git a/engine-runtime/src/main/java/cn/agentplatform/engine/application/RunService.java b/engine-runtime/src/main/java/cn/agentplatform/engine/application/RunService.java
+index c1394d8..914a405 100644
+--- a/engine-runtime/src/main/java/cn/agentplatform/engine/application/RunService.java
++++ b/engine-runtime/src/main/java/cn/agentplatform/engine/application/RunService.java
+@@ -467,7 +467,9 @@ public class RunService {
+                                     });
+             long run =
+                     admission != null
+-                            ? admission.persist(persist)
++                            ? acceptedReservation
++                                    ? admission.completeReservation(persist)
++                                    : admission.persist(persist)
+                             : acceptedReservation ? persist.get() : scheduler.persistNew(persist);
+             String publicId =
+                     store.db()
+@@ -1601,27 +1603,48 @@ public class RunService {
+     }
+ 
+     public void renewLeases() {
+-        for (Long node : activeNodes)
+-            store.atomic(
+-                    () -> {
+-                        store.db()
+-                                .update(
+-                                        "update engine.node_instance set lease_until=now()+interval"
+-                                            + " '90 seconds' where id=? and status='RUNNING' and"
+-                                            + " lease_owner like ? and lease_until>now()",
+-                                        node,
+-                                        owner + "_%");
+-                        store.db()
+-                                .update(
+-                                        "update engine.tool_call t set claimed_lease=n.lease_until"
+-                                            + " from engine.node_instance n where n.id=? and"
+-                                            + " n.id=t.node_instance_id and n.status='RUNNING' and"
+-                                            + " t.claimed_by=n.lease_owner and t.status in"
+-                                            + " ('EXECUTING','SUBMITTED') and"
+-                                            + " t.claimed_lease>now()",
+-                                        node);
+-                        return null;
+-                    });
++        for (Long node : activeNodes) {
++            try {
++                store.atomic(
++                        () -> {
++                            // Each item is a short transaction. Busy node/tool rows are skipped,
++                            // never waited on while other live workers need their leases renewed.
++                            int renewed =
++                                    store.db()
++                                            .update(
++                                                    "with renewable as (select id from"
++                                                        + " engine.node_instance where id=? and"
++                                                        + " status='RUNNING' and lease_owner like ?"
++                                                        + " and lease_until>now() for update skip"
++                                                        + " locked) update engine.node_instance n"
++                                                        + " set lease_until=now()+interval '90"
++                                                        + " seconds' from renewable r where"
++                                                        + " n.id=r.id",
++                                                    node,
++                                                    owner + "_%");
++                            if (renewed == 0) return null;
++                            store.db()
++                                    .update(
++                                            "with renewable as (select t.id,n.lease_until from"
++                                                + " engine.tool_call t join engine.node_instance n"
++                                                + " on n.id=t.node_instance_id where n.id=? and"
++                                                + " n.status='RUNNING' and n.lease_owner like ? and"
++                                                + " n.lease_until>now() and"
++                                                + " t.claimed_by=n.lease_owner and t.status in"
++                                                + " ('EXECUTING','SUBMITTED') and"
++                                                + " t.claimed_lease>now() for update of t skip"
++                                                + " locked) update engine.tool_call t set"
++                                                + " claimed_lease=r.lease_until from renewable r"
++                                                + " where t.id=r.id",
++                                            node,
++                                            owner + "_%");
++                            return null;
++                        });
++            } catch (RuntimeException failure) {
++                org.slf4j.LoggerFactory.getLogger(RunService.class)
++                        .warn("Node lease renewal failed: {}", failure.getClass().getSimpleName());
++            }
++        }
+     }
+ 
+     @Scheduled(fixedDelay = 60000)
+diff --git a/engine-runtime/src/main/java/cn/agentplatform/engine/infra/RunScheduleRepository.java b/engine-runtime/src/main/java/cn/agentplatform/engine/infra/RunScheduleRepository.java
+index 4ee0345..34d9524 100644
+--- a/engine-runtime/src/main/java/cn/agentplatform/engine/infra/RunScheduleRepository.java
++++ b/engine-runtime/src/main/java/cn/agentplatform/engine/infra/RunScheduleRepository.java
+@@ -81,16 +81,20 @@ public class RunScheduleRepository {
+     }
+ 
+     public boolean renew(RunDispatch lease, Duration duration) {
++        // Busy rows receive no extension. The locking selection retains every authority/expiry
++        // predicate, so skipping a heartbeat can never revive an expired or foreign generation.
+         return store.db()
+                         .update(
+-                                "update engine.run set dispatch_until=now()+(? * interval '1"
+-                                    + " millisecond') where id=? and dispatch_owner=? and"
+-                                    + " dispatch_generation=? and dispatch_until>now() and status"
+-                                    + " not in ('SUCCEEDED','FAILED','CANCELLED')",
+-                                duration.toMillis(),
++                                "with renewable as (select id from engine.run where id=? and"
++                                    + " dispatch_owner=? and dispatch_generation=? and"
++                                    + " dispatch_until>now() and status not in"
++                                    + " ('SUCCEEDED','FAILED','CANCELLED') for update skip locked)"
++                                    + " update engine.run r set dispatch_until=now()+(? * interval"
++                                    + " '1 millisecond') from renewable n where r.id=n.id",
+                                 lease.runId(),
+                                 lease.owner(),
+-                                lease.generation())
++                                lease.generation(),
++                                duration.toMillis())
+                 == 1;
+     }
+ 
+diff --git a/engine-runtime/src/test/java/cn/agentplatform/engine/infra/RunSchedulerReviewPostgresTest.java b/engine-runtime/src/test/java/cn/agentplatform/engine/infra/RunSchedulerReviewPostgresTest.java
+new file mode 100644
+--- /dev/null
++++ b/engine-runtime/src/test/java/cn/agentplatform/engine/infra/RunSchedulerReviewPostgresTest.java
+@@ -0,0 +1,610 @@
++package cn.agentplatform.engine.infra;
++
++import static org.junit.jupiter.api.Assertions.*;
++
++import cn.agentplatform.common.*;
++import cn.agentplatform.engine.application.*;
++import cn.agentplatform.engine.domain.*;
++import cn.agentplatform.engine.domain.RunDispatch.Queue;
++
++import com.fasterxml.jackson.databind.JsonNode;
++
++import org.junit.jupiter.api.*;
++import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
++import org.junit.jupiter.params.ParameterizedTest;
++import org.junit.jupiter.params.provider.ValueSource;
++
++import java.sql.Connection;
++import java.time.Duration;
++import java.util.*;
++import java.util.concurrent.*;
++import java.util.concurrent.atomic.AtomicInteger;
++
++/** Review counterexamples use the real session, run, dispatch and node/tool lease paths. */
++@EnabledIfEnvironmentVariable(named = "ENGINE_PG_TEST", matches = "true")
++class RunSchedulerReviewPostgresTest {
++    private final TracePostgresTest fixture = new TracePostgresTest();
++    private TraceStore store;
++
++    @BeforeAll
++    static void connect() throws Exception {
++        TracePostgresTest.connect();
++    }
++
++    @BeforeEach
++    void clean() {
++        TracePostgresTest.db.update("delete from engine.chat_turn");
++        TracePostgresTest.db.update("delete from engine.chat_session");
++        fixture.clean();
++        store = TracePostgresTest.store;
++    }
++
++    @AfterEach
++    void cleanup() {
++        clean();
++    }
++
++    private RuntimeClients clients() {
++        return new RuntimeClients() {
++            @Override
++            public JsonNode get(String service, String path, Actor actor) {
++                return RunAdmissionHttpTest.snapshot(true);
++            }
++
++            @Override
++            public JsonNode post(String service, String path, Object body, Actor actor) {
++                return fail("pure START/END admission must never perform a paid call");
++            }
++        };
++    }
++
++    @Test
++    void drainBeforeFirstSessionReservationRejectsWithoutConsumingTurn() {
++        var clients = clients();
++        try (var scheduler =
++                new RunScheduler(new RunScheduleRepository(store), 1, 1, 20, 3000, 0)) {
++            var runs =
++                    new RunService(store, clients, null, null, scheduler) {
++                        @Override
++                        public RunScheduler.Admission reserveSessionTurn() {
++                            var ticket = super.reserveSessionTurn();
++                            scheduler.close();
++                            return ticket;
++                        }
++                    };
++            var sessions = new ChatSessions(store, clients, runs);
++            String id =
++                    sessions.create("chat", TracePostgresTest.actor).get("sessionId").toString();
++            var rejected =
++                    assertThrows(
++                            RunAdmissionRejected.class,
++                            () ->
++                                    sessions.turn(
++                                            "chat",
++                                            id,
++                                            Json.read(
++                                                    "{\"requestId\":\"first\",\"inputs\":{\"message\":\"hi\"}}"),
++                                            TracePostgresTest.actor));
++            assertEquals(503, rejected.status());
++            assertEquals(
++                    0,
++                    store.db()
++                            .queryForObject(
++                                    "select count(*) from engine.chat_turn where session_id=?",
++                                    Integer.class,
++                                    id));
++            assertEquals(
++                    1,
++                    store.db()
++                            .queryForObject(
++                                    "select next_turn from engine.chat_session where public_id=?",
++                                    Integer.class,
++                                    id));
++            assertEquals(
++                    0,
++                    store.db()
++                            .queryForObject(
++                                    "select count(*) from engine.run where tenant_id='engine-test'",
++                                    Integer.class));
++            assertEquals(1, scheduler.available(Queue.INTERACTIVE));
++        }
++    }
++
++    @Test
++    void acceptedSessionReservationSurvivesDrainAndReplaysSamePendingRun() {
++        var clients = clients();
++        try (var scheduler =
++                new RunScheduler(new RunScheduleRepository(store), 1, 1, 20, 3000, 0)) {
++            var runs =
++                    new RunService(store, clients, null, null, scheduler) {
++                        @Override
++                        public Map<String, Object> createReservedSessionTurn(
++                                String code,
++                                JsonNode request,
++                                JsonNode snapshot,
++                                Actor actor,
++                                RunScheduler.Admission ticket) {
++                            assertEquals(
++                                    1,
++                                    store.db()
++                                            .queryForObject(
++                                                    "select count(*) from engine.chat_turn where"
++                                                            + " run_public_id is null",
++                                                    Integer.class));
++                            scheduler.close();
++                            return super.createReservedSessionTurn(
++                                    code, request, snapshot, actor, ticket);
++                        }
++                    };
++            var sessions = new ChatSessions(store, clients, runs);
++            String id =
++                    sessions.create("chat", TracePostgresTest.actor).get("sessionId").toString();
++            var request = Json.read("{\"requestId\":\"accepted\",\"inputs\":{\"message\":\"hi\"}}");
++            var result =
++                    assertDoesNotThrow(
++                            () -> sessions.turn("chat", id, request, TracePostgresTest.actor));
++            assertEquals("PENDING", result.get("status"));
++            assertEquals(
++                    result.get("runId"),
++                    sessions.turn("chat", id, request, TracePostgresTest.actor).get("runId"));
++            assertEquals(
++                    result.get("runId"),
++                    store.db()
++                            .queryForObject(
++                                    "select run_public_id from engine.chat_turn where session_id=?",
++                                    String.class,
++                                    id));
++            assertEquals(
++                    2,
++                    store.db()
++                            .queryForObject(
++                                    "select next_turn from engine.chat_session where public_id=?",
++                                    Integer.class,
++                                    id));
++            assertEquals(
++                    1,
++                    store.db()
++                            .queryForObject(
++                                    "select count(*) from engine.run where tenant_id='engine-test'",
++                                    Integer.class));
++            assertEquals(
++                    "REQUEST_CONFLICT",
++                    assertThrows(
++                                    PlatformException.class,
++                                    () ->
++                                            sessions.turn(
++                                                    "chat",
++                                                    id,
++                                                    Json.read(
++                                                            "{\"requestId\":\"accepted\",\"inputs\":{\"message\":\"different\"}}"),
++                                                    TracePostgresTest.actor))
++                            .code());
++            assertEquals(1, scheduler.available(Queue.INTERACTIVE));
++        }
++    }
++
++    @Test
++    void sessionCompletionRequiresTheSameTicketsSuccessfulFirstAcceptance() {
++        var clients = clients();
++        try (var scheduler =
++                new RunScheduler(new RunScheduleRepository(store), 1, 1, 20, 3000, 0)) {
++            var runs = new RunService(store, clients, null, null, scheduler);
++            try (var ticket = runs.reserveSessionTurn()) {
++                assertThrows(
++                        IllegalStateException.class,
++                        () ->
++                                runs.createReservedSessionTurn(
++                                        "chat",
++                                        Json.read(
++                                                "{\"requestId\":\"unaccepted\",\"inputs\":{\"message\":\"hi\"}}"),
++                                        RunAdmissionHttpTest.snapshot(true),
++                                        TracePostgresTest.actor,
++                                        ticket));
++            }
++            assertEquals(
++                    0,
++                    store.db()
++                            .queryForObject(
++                                    "select count(*) from engine.run where tenant_id='engine-test'",
++                                    Integer.class));
++            assertEquals(1, scheduler.available(Queue.INTERACTIVE));
++        }
++    }
++
++    @Test
++    void acceptedPreparationRunsOutsideReservationTransactionAndSurvivesDrain() {
++        var clients = clients();
++        var prepared = new AtomicInteger();
++        try (var scheduler =
++                new RunScheduler(new RunScheduleRepository(store), 1, 1, 20, 3000, 0)) {
++            var runs =
++                    new RunService(store, clients, null, null, scheduler) {
++                        @Override
++                        public Map<String, Object> createReservedSessionTurn(
++                                String code,
++                                JsonNode request,
++                                JsonNode snapshot,
++                                Actor actor,
++                                RunScheduler.Admission ticket) {
++                            assertFalse(
++                                    org.springframework.transaction.support
++                                            .TransactionSynchronizationManager
++                                            .isActualTransactionActive(),
++                                    "run preparation/HTTP must occur after the reservation"
++                                            + " transaction ends");
++                            prepared.incrementAndGet();
++                            scheduler.close();
++                            return super.createReservedSessionTurn(
++                                    code, request, snapshot, actor, ticket);
++                        }
++                    };
++            var sessions = new ChatSessions(store, clients, runs);
++            String id =
++                    sessions.create("chat", TracePostgresTest.actor).get("sessionId").toString();
++            var result =
++                    sessions.turn(
++                            "chat",
++                            id,
++                            Json.read(
++                                    "{\"requestId\":\"prepared\",\"inputs\":{\"message\":\"hi\"}}"),
++                            TracePostgresTest.actor);
++            assertEquals("PENDING", result.get("status"));
++            assertEquals(1, prepared.get());
++            assertEquals(
++                    0,
++                    store.db()
++                            .queryForObject(
++                                    "select count(*) from engine.run_event e join engine.run r on"
++                                            + " r.id=e.run_id where r.tenant_id='engine-test' and"
++                                            + " e.type='RUN_STARTED'",
++                                    Integer.class));
++            assertEquals(
++                    0,
++                    store.db()
++                            .queryForObject(
++                                    "select count(*) from engine.model_invocation m join engine.run"
++                                            + " r on r.id=m.run_id where r.tenant_id='engine-test'",
++                                    Integer.class));
++            assertEquals(
++                    0,
++                    store.db()
++                            .queryForObject(
++                                    "select count(*) from engine.tool_call t join engine.run r on"
++                                            + " r.id=t.run_id where r.tenant_id='engine-test'",
++                                    Integer.class));
++        }
++    }
++
++    private long ready() {
++        long id = fixture.run();
++        fixture.node(id, "READY");
++        return id;
++    }
++
++    @SuppressWarnings("unchecked")
++    private static <T> T field(Object target, String name) throws Exception {
++        var f = target.getClass().getDeclaredField(name);
++        f.setAccessible(true);
++        return (T) f.get(target);
++    }
++
++    private Connection lock(String table, long id) throws Exception {
++        var connection = Objects.requireNonNull(store.db().getDataSource()).getConnection();
++        connection.setAutoCommit(false);
++        try (var statement =
++                connection.prepareStatement(
++                        "select id from engine." + table + " where id=? for update")) {
++            statement.setLong(1, id);
++            statement.executeQuery().close();
++        }
++        return connection;
++    }
++
++    @Test
++    void lockedRunCannotStarveOtherDispatchOrNodeRenewals() throws Exception {
++        ready();
++        ready();
++        var entered = new CountDownLatch(2);
++        var release = new CountDownLatch(1);
++        var renewals = new AtomicInteger();
++        var scheduler = new RunScheduler(new RunScheduleRepository(store), 2, 1, 20, 1000, 1000);
++        scheduler.bind(
++                id -> {
++                    entered.countDown();
++                    try {
++                        release.await(5, TimeUnit.SECONDS);
++                    } catch (InterruptedException e) {
++                        Thread.currentThread().interrupt();
++                    }
++                },
++                renewals::incrementAndGet,
++                () -> {});
++        try {
++            scheduler.poll();
++            assertTrue(entered.await(2, TimeUnit.SECONDS));
++            ConcurrentMap<Long, RunDispatch> active = field(scheduler, "active");
++            var ordered = List.copyOf(active.values());
++            try (var held = lock("run", ordered.getFirst().runId())) {
++                scheduler.start();
++                Thread.sleep(1300);
++                assertTrue(
++                        store.db()
++                                .queryForObject(
++                                        "select dispatch_until>now() from engine.run where id=?",
++                                        Boolean.class,
++                                        ordered.get(1).runId()),
++                        "one locked run must not expire the unrelated dispatch");
++                assertTrue(renewals.get() >= 2, "node renewal lane must still make progress");
++                held.rollback();
++            }
++        } finally {
++            release.countDown();
++            scheduler.close();
++        }
++    }
++
++    @Test
++    void failedDispatchRenewalDoesNotSkipOtherItemsOrNodes() throws Exception {
++        long first = ready(), second = ready();
++        var renewed = ConcurrentHashMap.<Long>newKeySet();
++        var renewNodes = new AtomicInteger();
++        var release = new CountDownLatch(1);
++        var entered = new CountDownLatch(2);
++        var repo =
++                new RunScheduleRepository(store) {
++                    @Override
++                    public boolean renew(RunDispatch dispatch, Duration lease) {
++                        if (dispatch.runId() == first)
++                            throw new IllegalStateException("one failed item");
++                        renewed.add(dispatch.runId());
++                        return super.renew(dispatch, lease);
++                    }
++                };
++        try (var scheduler = new RunScheduler(repo, 2, 1, 20, 3000, 1000)) {
++            scheduler.bind(
++                    id -> {
++                        entered.countDown();
++                        try {
++                            release.await(3, TimeUnit.SECONDS);
++                        } catch (InterruptedException e) {
++                            Thread.currentThread().interrupt();
++                        }
++                    },
++                    renewNodes::incrementAndGet,
++                    () -> {});
++            try {
++                scheduler.poll();
++                assertTrue(entered.await(2, TimeUnit.SECONDS));
++                assertDoesNotThrow(scheduler::heartbeat);
++                assertEquals(Set.of(second), renewed);
++                assertEquals(1, renewNodes.get());
++            } finally {
++                release.countDown();
++            }
++        }
++    }
++
++    @Test
++    void lockedNodeDoesNotBlockUnrelatedNodeOrCallRenewal() throws Exception {
++        nodeRenewalLockIsolation(false);
++    }
++
++    @Test
++    void lockedToolCallDoesNotBlockUnrelatedNodeOrCallRenewal() throws Exception {
++        nodeRenewalLockIsolation(true);
++    }
++
++    private void nodeRenewalLockIsolation(boolean callLock) throws Exception {
++        try (var scheduler =
++                        new RunScheduler(new RunScheduleRepository(store), 2, 1, 20, 3000, 1000);
++                var executor = Executors.newSingleThreadExecutor()) {
++            var runs = new RunService(store, clients(), null, null, scheduler);
++            Set<Long> active = field(runs, "activeNodes");
++            String owner = field(runs, "owner");
++            long[] nodes = new long[2], calls = new long[2];
++            var tools = new ToolCalls(store);
++            for (int i = 0; i < 2; i++) {
++                long rid = fixture.run();
++                nodes[i] = fixture.node(rid, "READY");
++                var node = store.claim(nodes[i], owner);
++                var request = fixture.call(rid, nodes[i], node);
++                calls[i] =
++                        TraceStore.number(
++                                tools.register(request.register(), TracePostgresTest.actor),
++                                "callId");
++                assertEquals(
++                        true,
++                        tools.claim(calls[i], request.claim(), TracePostgresTest.actor)
++                                .get("claimed"));
++                if (callLock) tools.submitted(calls[i], request.claim(), TracePostgresTest.actor);
++                active.add(nodes[i]);
++                store.db()
++                        .update(
++                                "update engine.node_instance set lease_until=now()+interval '3"
++                                        + " seconds' where id=?",
++                                nodes[i]);
++                store.db()
++                        .update(
++                                "update engine.tool_call set claimed_lease=now()+interval '3"
++                                        + " seconds' where id=?",
++                                calls[i]);
++            }
++            long first = active.iterator().next();
++            int lockedIndex = first == nodes[0] ? 0 : 1, other = 1 - lockedIndex;
++            Future<?> renewing;
++            try (var held =
++                    lock(
++                            callLock ? "tool_call" : "node_instance",
++                            callLock ? calls[lockedIndex] : nodes[lockedIndex])) {
++                renewing = executor.submit(runs::renewLeases);
++                try {
++                    assertDoesNotThrow(
++                            () -> renewing.get(800, TimeUnit.MILLISECONDS),
++                            "one locked resource must not stall the whole renewal lane");
++                    assertTrue(
++                            store.db()
++                                    .queryForObject(
++                                            "select lease_until>now()+interval '60 seconds' from"
++                                                    + " engine.node_instance where id=?",
++                                            Boolean.class,
++                                            nodes[other]));
++                    assertTrue(
++                            store.db()
++                                    .queryForObject(
++                                            "select claimed_lease>now()+interval '60 seconds' from"
++                                                    + " engine.tool_call where id=?",
++                                            Boolean.class,
++                                            calls[other]));
++                } finally {
++                    held.rollback();
++                }
++            }
++            renewing.get(2, TimeUnit.SECONDS);
++            active.clear();
++        }
++    }
++
++    @ParameterizedTest
++    @ValueSource(strings = {"expired-node", "foreign-node", "expired-call", "foreign-call"})
++    void renewalNeverRevivesExpiredOrForeignNodeAndCallLeases(String invalid) throws Exception {
++        try (var scheduler =
++                new RunScheduler(new RunScheduleRepository(store), 1, 1, 20, 3000, 0)) {
++            var runs = new RunService(store, clients(), null, null, scheduler);
++            Set<Long> active = field(runs, "activeNodes");
++            String owner = field(runs, "owner");
++            long rid = fixture.run(), nid = fixture.node(rid, "READY");
++            var node = store.claim(nid, owner);
++            var request = fixture.call(rid, nid, node);
++            var tools = new ToolCalls(store);
++            long cid =
++                    TraceStore.number(
++                            tools.register(request.register(), TracePostgresTest.actor), "callId");
++            tools.claim(cid, request.claim(), TracePostgresTest.actor);
++            store.db()
++                    .update(
++                            "update engine.node_instance set lease_until=now()+interval '3 seconds'"
++                                    + " where id=?",
++                            nid);
++            store.db()
++                    .update(
++                            "update engine.tool_call set claimed_lease=now()+interval '3 seconds'"
++                                    + " where id=?",
++                            cid);
++            switch (invalid) {
++                case "expired-node" ->
++                        store.db()
++                                .update(
++                                        "update engine.node_instance set lease_until=now()-interval"
++                                                + " '1 second' where id=?",
++                                        nid);
++                case "foreign-node" ->
++                        store.db()
++                                .update(
++                                        "update engine.node_instance set"
++                                                + " lease_owner='different_generation' where id=?",
++                                        nid);
++                case "expired-call" ->
++                        store.db()
++                                .update(
++                                        "update engine.tool_call set claimed_lease=now()-interval"
++                                                + " '1 second' where id=?",
++                                        cid);
++                case "foreign-call" ->
++                        store.db()
++                                .update(
++                                        "update engine.tool_call set"
++                                                + " claimed_by='different_generation' where id=?",
++                                        cid);
++                default -> fail(invalid);
++            }
++            var before =
++                    store.db()
++                            .queryForMap(
++                                    "select n.lease_until,t.claimed_lease from engine.node_instance"
++                                        + " n join engine.tool_call t on t.node_instance_id=n.id"
++                                        + " where n.id=?",
++                                    nid);
++            active.add(nid);
++            runs.renewLeases();
++            var after =
++                    store.db()
++                            .queryForMap(
++                                    "select n.lease_until,t.claimed_lease from engine.node_instance"
++                                        + " n join engine.tool_call t on t.node_instance_id=n.id"
++                                        + " where n.id=?",
++                                    nid);
++            assertEquals(
++                    before.get("claimed_lease"),
++                    after.get("claimed_lease"),
++                    "invalid call/node authority must never be renewed");
++            if (invalid.endsWith("node"))
++                assertEquals(before.get("lease_until"), after.get("lease_until"));
++            else
++                assertTrue(
++                        store.db()
++                                .queryForObject(
++                                        "select lease_until>now()+interval '60 seconds' from"
++                                                + " engine.node_instance where id=?",
++                                        Boolean.class,
++                                        nid));
++            active.clear();
++        }
++    }
++
++    @Test
++    void failedNodeRenewalRollsBackOnlyItsOwnItemAndContinues() throws Exception {
++        try (var scheduler =
++                new RunScheduler(new RunScheduleRepository(store), 2, 1, 20, 3000, 0)) {
++            var runs = new RunService(store, clients(), null, null, scheduler);
++            Set<Long> active = field(runs, "activeNodes");
++            String owner = field(runs, "owner");
++            for (int i = 0; i < 2; i++) {
++                long nid = fixture.node(fixture.run(), "READY");
++                store.claim(nid, owner);
++                store.db()
++                        .update(
++                                "update engine.node_instance set lease_until=now()+interval '3"
++                                        + " seconds' where id=?",
++                                nid);
++                active.add(nid);
++            }
++            var nodes = List.copyOf(active);
++            store.db()
++                    .execute(
++                            "create function engine.scheduler_reject_renew() returns trigger"
++                                + " language plpgsql as 'begin raise exception ''injected renewal"
++                                + " failure''; end'");
++            try {
++                store.db()
++                        .execute(
++                                "create trigger scheduler_reject_renew before update on"
++                                        + " engine.node_instance for each row when (new.id="
++                                        + nodes.getFirst()
++                                        + ") execute function engine.scheduler_reject_renew()");
++                try {
++                    assertDoesNotThrow(runs::renewLeases);
++                    assertTrue(
++                            store.db()
++                                    .queryForObject(
++                                            "select lease_until>now()+interval '60 seconds' from"
++                                                    + " engine.node_instance where id=?",
++                                            Boolean.class,
++                                            nodes.get(1)));
++                    assertFalse(
++                            store.db()
++                                    .queryForObject(
++                                            "select lease_until>now()+interval '60 seconds' from"
++                                                    + " engine.node_instance where id=?",
++                                            Boolean.class,
++                                            nodes.getFirst()));
++                } finally {
++                    store.db()
++                            .execute("drop trigger scheduler_reject_renew on engine.node_instance");
++                }
++            } finally {
++                store.db().execute("drop function engine.scheduler_reject_renew()");
++                active.clear();
++            }
++        }
++    }
++}
+diff --git a/engine-runtime/src/test/java/cn/agentplatform/engine/infra/RunSchedulerTimingTest.java b/engine-runtime/src/test/java/cn/agentplatform/engine/infra/RunSchedulerTimingTest.java
+new file mode 100644
+--- /dev/null
++++ b/engine-runtime/src/test/java/cn/agentplatform/engine/infra/RunSchedulerTimingTest.java
+@@ -0,0 +1,38 @@
++package cn.agentplatform.engine.infra;
++
++import static org.mockito.Mockito.*;
++
++import cn.agentplatform.engine.application.RunScheduler;
++
++import org.junit.jupiter.params.ParameterizedTest;
++import org.junit.jupiter.params.provider.CsvSource;
++
++import java.util.concurrent.*;
++
++/** Captures the actual scheduled task arguments without pretending to run a 90 second lease. */
++class RunSchedulerTimingTest {
++    @ParameterizedTest
++    @CsvSource({"100,33", "90000,30000", "300000,30000"})
++    void heartbeatFirstDelayAndPeriodProtectBothDispatchAndFixedNodeLease(
++            long lease, long expected) {
++        var poll = mock(ScheduledExecutorService.class);
++        var heartbeat = mock(ScheduledExecutorService.class);
++        try (var executors = mockStatic(Executors.class);
++                var scheduler =
++                        new RunScheduler(mock(RunScheduleRepository.class), 1, 1, 20, lease, 0)) {
++            executors
++                    .when(
++                            () ->
++                                    Executors.newSingleThreadScheduledExecutor(
++                                            any(ThreadFactory.class)))
++                    .thenReturn(poll, heartbeat);
++            scheduler.start();
++            verify(heartbeat)
++                    .scheduleWithFixedDelay(
++                            any(Runnable.class),
++                            eq(expected),
++                            eq(expected),
++                            eq(TimeUnit.MILLISECONDS));
++        }
++    }
++}

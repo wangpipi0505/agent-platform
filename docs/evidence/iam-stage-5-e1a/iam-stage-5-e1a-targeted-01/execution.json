@@ -1,0 +1,80 @@
+{
+  "command": "node .tools/run-iam-module-tests.mjs iam-stage-5-e1a-targeted-01 admin-common RetainedAuthorizationTest,AuthorityContextRetainedTest,ServiceAuthorizationTest,CurrentAuthorityClientTest",
+  "ran": [
+    "cn.agentplatform.common.authority.AuthorityContextRetainedTest",
+    "cn.agentplatform.common.authority.CurrentAuthorityClientTest",
+    "cn.agentplatform.common.authority.RetainedAuthorizationTest",
+    "cn.agentplatform.common.authority.ServiceAuthorizationTest"
+  ],
+  "rawSha256": "345c27feda358c3a8294367a0e783f35f3cecaf0d7f85b60c1d092f596a1e811",
+  "reports": [
+    {
+      "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.AuthorityContextRetainedTest.xml",
+      "sha256": "9814642ded0d64c4e01a04d6e14905097a6c2e55bd2b3382b48c909aed5674b8",
+      "bytes": 34267
+    },
+    {
+      "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.CurrentAuthorityClientTest.xml",
+      "sha256": "ece9df975f1ef75750380c201ddcbc6f723d39a0c893b85552fb97ff66269017",
+      "bytes": 36636
+    },
+    {
+      "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.RetainedAuthorizationTest.xml",
+      "sha256": "1a93f18c24daba004b4666066ba3814f2140db3b21b716e97bd5213ecf9d430b",
+      "bytes": 35941
+    },
+    {
+      "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.ServiceAuthorizationTest.xml",
+      "sha256": "16f9527af17aa028bd909af45132f114c5533e31773c8853d7b5d8cae2144011",
+      "bytes": 37732
+    },
+    {
+      "file": "admin-common/target/surefire-reports/cn.agentplatform.common.authority.AuthorityContextRetainedTest.txt",
+      "sha256": "c084f88a364a462f3e6476785aa95d88c77b8f883de2303a84b5fe6ca37bf012",
+      "bytes": 378
+    },
+    {
+      "file": "admin-common/target/surefire-reports/cn.agentplatform.common.authority.CurrentAuthorityClientTest.txt",
+      "sha256": "16066b0a567682c2614e15be53b67493547e4ab654fcaf098de8706bde212ac1",
+      "bytes": 375
+    },
+    {
+      "file": "admin-common/target/surefire-reports/cn.agentplatform.common.authority.RetainedAuthorizationTest.txt",
+      "sha256": "6f21c2fcfec267507f00596fffaf021dfa22b8dc6ccbd8d01f03deecd31e37c6",
+      "bytes": 977
+    },
+    {
+      "file": "admin-common/target/surefire-reports/cn.agentplatform.common.authority.ServiceAuthorizationTest.txt",
+      "sha256": "4a0280351b10cc5365a1cd306aef02355ed833bc71e97194119a7212f56a546e",
+      "bytes": 1676
+    }
+  ],
+  "buildSuccess": false,
+  "warnings": [],
+  "errors": [
+    "[ERROR] Tests run: 12, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 3.366 s <<< FAILURE! -- in cn.agentplatform.common.authority.RetainedAuthorizationTest",
+    "[ERROR] cn.agentplatform.common.authority.RetainedAuthorizationTest.fixtureChecksFixedSourceDomainsTypesAndTimeBeforeComputingOrigin -- Time elapsed: 0.208 s <<< FAILURE!",
+    "[ERROR] Tests run: 14, Failures: 2, Errors: 0, Skipped: 0, Time elapsed: 7.775 s <<< FAILURE! -- in cn.agentplatform.common.authority.ServiceAuthorizationTest",
+    "[ERROR] cn.agentplatform.common.authority.ServiceAuthorizationTest.signedOldAdminCannotOverrideOnlineEditorInRealController -- Time elapsed: 0.454 s <<< FAILURE!",
+    "[ERROR] cn.agentplatform.common.authority.ServiceAuthorizationTest.retainedInitialUsesOnePreHandleQueryAndOneExplicitRefreshThenClosesOnHttpAndAsync -- Time elapsed: 0.421 s <<< FAILURE!",
+    "[ERROR] Failures: ",
+    "[ERROR]   RetainedAuthorizationTest.fixtureChecksFixedSourceDomainsTypesAndTimeBeforeComputingOrigin:210 ",
+    "[ERROR]   ServiceAuthorizationTest.retainedInitialUsesOnePreHandleQueryAndOneExplicitRefreshThenClosesOnHttpAndAsync:428 ",
+    "[ERROR]   ServiceAuthorizationTest.signedOldAdminCannotOverrideOnlineEditorInRealController:119 [{\"code\":\"SYS-AUTH-403\",\"message\":\"��ǰ��Ȩ�������˲���\",\"data\":null,\"traceId\":null}] ",
+    "[ERROR] Tests run: 50, Failures: 3, Errors: 0, Skipped: 0",
+    "[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.3:test (default-test) on project admin-common: There are test failures.",
+    "[ERROR] ",
+    "[ERROR] See G:\\207\\��Ŀ\\�㷨���鹤��\\����\\agent-platform\\admin-common\\target\\surefire-reports for the individual test results.",
+    "[ERROR] See dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.",
+    "[ERROR] -> [Help 1]",
+    "[ERROR] ",
+    "[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.",
+    "[ERROR] Re-run Maven using the -X switch to enable full debug logging.",
+    "[ERROR] ",
+    "[ERROR] For more information about the errors and possible solutions, please read the following articles:",
+    "[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException",
+    "[ERROR] ",
+    "[ERROR] After correcting the problems, you can resume the build with the command",
+    "[ERROR]   mvn <args> -rf :admin-common"
+  ]
+}

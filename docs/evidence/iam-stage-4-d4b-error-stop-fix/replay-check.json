@@ -1,0 +1,65 @@
+{
+  "at": "2026-10-20T20:47:19.234Z",
+  "generation": {
+    "command": [
+      "git",
+      "-c",
+      "core.autocrlf=false",
+      "diff",
+      "--no-index",
+      "--binary",
+      "--unified=100000",
+      "docs/evidence/iam-stage-4-d4b-error-stop-fix/before-overlay",
+      "docs/evidence/iam-stage-4-d4b-error-stop-fix/frozen-overlay"
+    ],
+    "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+    "exit": 1,
+    "expectedDiffExitOne": true
+  },
+  "commands": [
+    {
+      "command": [
+        "git",
+        "-c",
+        "core.autocrlf=false",
+        "apply",
+        "--check",
+        "-p1",
+        "--directory=docs/evidence/iam-stage-4-d4b-error-stop-fix/replay-overlay",
+        "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\iam-stage-4-d4b-error-stop-fix\\source-fullcontext.patch"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "-c",
+        "core.autocrlf=false",
+        "apply",
+        "-p1",
+        "--directory=docs/evidence/iam-stage-4-d4b-error-stop-fix/replay-overlay",
+        "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\iam-stage-4-d4b-error-stop-fix\\source-fullcontext.patch"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "patch": {
+    "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/source-fullcontext.patch",
+    "bytes": 70600,
+    "sha256": "80b3831ed27e79cb2695c778b0fe09bce5eed1ceb6c4651ff8a72167e40019c9"
+  },
+  "all192FrontendNamesBytesSHAEqual": true,
+  "backend380Inherited": true,
+  "fullNecessary572Equal": true,
+  "effective": {
+    "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/source-replay-effective.json",
+    "bytes": 108246,
+    "sha256": "4c479be6e91523c034742ddcf266b9262379488b4d778ce8a551bfcec7f946f7"
+  }
+}

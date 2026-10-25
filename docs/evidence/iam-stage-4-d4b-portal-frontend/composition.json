@@ -1,0 +1,81 @@
+{
+  "at": "2026-10-20T20:30:10.572Z",
+  "backendSource": {
+    "file": "docs/evidence/iam-stage-4-d4a-time-order-fix/source-after.json",
+    "bytes": 78337,
+    "sha256": "f56b205dcf81af1e9be357e49fae284768916a920cb36343d2aac50f0ee5aed2"
+  },
+  "backendTarget": {
+    "file": "docs/evidence/iam-stage-4-d4a-time-order-fix/target-after.json",
+    "bytes": 398551,
+    "sha256": "8b52aa85f9eb05ce6572e3e45668dac8566ae661c6b2e2d42a7165ffe3c00a30"
+  },
+  "backendComposition": {
+    "file": "docs/evidence/iam-stage-4-d4a-time-order-fix/composition.json",
+    "bytes": 1084,
+    "sha256": "cfdc119fa175650ea56d2b115ebeb1f8b7b6c1e22a7b37d253eeb77980fc15ca"
+  },
+  "backendRule": "Reuse sealed D4a+I1 380 source / 1933 target logical inventory; no backend physical rescan, copy, test or modification",
+  "frontendBase": "docs/evidence/iam-stage-4-d4b-portal-frontend/frontend-base/",
+  "frontendBefore": {
+    "file": "docs/evidence/iam-stage-4-d4b-portal-frontend/web-before.json",
+    "bytes": 38271,
+    "sha256": "3033705e0587227285eaad8e4efcf77bddf8e133113ec52f7924e88c6b9ea1f0"
+  },
+  "frontendOverlay": "docs/evidence/iam-stage-4-d4b-portal-frontend/frozen-overlay/",
+  "frontendRule": "Changed/new => own frozen-overlay, unchanged necessary frontend source => own frontend-base; legacy web/.playwright-cli entries remain referenced by original pre-edit manifest and are excluded from necessary-source manifests",
+  "distOverlay": "docs/evidence/iam-stage-4-d4b-portal-frontend/frozen-dist-overlay/",
+  "distUnchanged": "docs/evidence/iam-stage-4-d4b-portal-frontend/dist-unchanged/",
+  "distTombstones": [
+    {
+      "file": "web/admin/dist/assets/DebugPanel-DN9ajx83.js",
+      "bytes": 411624,
+      "sha256": "ee45c8d4ce6d95fbbbffda214ae95116e8895c84e52cadafb6d7f9c37164d3ff"
+    },
+    {
+      "file": "web/admin/dist/assets/DebugPanel-Mxf7PLEN.css",
+      "bytes": 1245,
+      "sha256": "3f2344d1509edc2a2d38775cf7e604501cfdb88a4e9c857db4f37462df441ead"
+    },
+    {
+      "file": "web/admin/dist/assets/FlowDesigner-TrTyXbnw.js",
+      "bytes": 467892,
+      "sha256": "6dca5144162d59c33dc47b9315e6a663e3c1975ed69c432878d5dd697cdcd4f3"
+    },
+    {
+      "file": "web/admin/dist/assets/RunDetail-BZ38nDTw.js",
+      "bytes": 76241,
+      "sha256": "69fa43bb5c4aa717af41d5b6931e96ebc8259b114933bc9b58a26b8cefbb3c83"
+    },
+    {
+      "file": "web/admin/dist/assets/events-DeiHk0Bk.js",
+      "bytes": 1576,
+      "sha256": "4340f8e5a96adafcb6f7381aa7b93add771dd82773699c0bc5569dfcad48f45e"
+    },
+    {
+      "file": "web/admin/dist/assets/index-CEiI9vBl.js",
+      "bytes": 1351749,
+      "sha256": "5d225d2de50f98df1e2abc1dcda942f6ac068d9f5d0b4370efcbb7f9570754d0"
+    },
+    {
+      "file": "web/admin/dist/assets/index-Dvqvo7o-.css",
+      "bytes": 372984,
+      "sha256": "45036b0c78ed1e6f11f945d56a471f5bdce900961b921ea1cff626365bc51be0"
+    },
+    {
+      "file": "web/webapp/dist/assets/index-CZD-PVRG.js",
+      "bytes": 1309543,
+      "sha256": "781fb53aba06a5bb533c505bc91eba6939d90ca89a00c67a7002f71bd58c5311"
+    }
+  ],
+  "requiredLogicalSource": {
+    "file": "docs/evidence/iam-stage-4-d4b-portal-frontend/necessary-source-after.json",
+    "bytes": 108245,
+    "sha256": "c6736f661c52a8c1ef5a5b8815e944096a85db53de954d6748f856e035e60f0e"
+  },
+  "completeInventory": {
+    "file": "docs/evidence/iam-stage-4-d4b-portal-frontend/source-after.json",
+    "bytes": 117218,
+    "sha256": "b10dec2c1df9c138c74f1ac3760dd0016ceeb2e662e8d47feddda967e063ffb0"
+  }
+}

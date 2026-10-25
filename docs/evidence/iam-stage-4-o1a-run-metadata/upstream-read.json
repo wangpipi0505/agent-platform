@@ -1,0 +1,39 @@
+{
+  "at": "2026-10-20T21:26:53.653Z",
+  "version": "Spring Framework6.2.7 Apache-2.0; fixed sources inherited from previously verified same-project archive",
+  "reading": "This author narrowly read doBegin, prepareConnectionForTransaction and handleExistingTransaction before writing the transaction-boundary comment; not a whole-upstream audit.",
+  "files": [
+    {
+      "file": "docs/evidence/iam-stage-5-e1b/upstream/DataSourceTransactionManager.java",
+      "bytes": 19844,
+      "sha256": "1cbf0f1a13d957ccaff5bfe3fe511cb70823445eef92a062e5d552a2ff67b135"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1b/upstream/DataSourceUtils.java",
+      "bytes": 21697,
+      "sha256": "9d4aefa1e4a3a3251f0231e8478267e4b7199e4dbe37f0b864b1c64d8f13aa45"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1b/upstream/AbstractPlatformTransactionManager.java",
+      "bytes": 59081,
+      "sha256": "060a6b97928f033a8e0caec76a96d378e4f8b7c22309d54acf832dcdcf7f3081"
+    }
+  ],
+  "officialReferences": [
+    {
+      "file": "AbstractPlatformTransactionManager.java",
+      "url": "https://raw.githubusercontent.com/spring-projects/spring-framework/v6.2.7/spring-tx/src/main/java/org/springframework/transaction/support/AbstractPlatformTransactionManager.java",
+      "sha256": "060a6b97928f033a8e0caec76a96d378e4f8b7c22309d54acf832dcdcf7f3081"
+    },
+    {
+      "file": "DataSourceUtils.java",
+      "url": "https://raw.githubusercontent.com/spring-projects/spring-framework/v6.2.7/spring-jdbc/src/main/java/org/springframework/jdbc/datasource/DataSourceUtils.java",
+      "sha256": "9d4aefa1e4a3a3251f0231e8478267e4b7199e4dbe37f0b864b1c64d8f13aa45"
+    },
+    {
+      "file": "DataSourceTransactionManager.java",
+      "url": "https://raw.githubusercontent.com/spring-projects/spring-framework/v6.2.7/spring-jdbc/src/main/java/org/springframework/jdbc/datasource/DataSourceTransactionManager.java",
+      "sha256": "1cbf0f1a13d957ccaff5bfe3fe511cb70823445eef92a062e5d552a2ff67b135"
+    }
+  ]
+}

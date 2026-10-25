@@ -1,0 +1,317 @@
+Compiled from "PortalRunEventsSse.java"
+public final class cn.agentplatform.gateway.infra.PortalRunEventsSse$Handle implements java.lang.AutoCloseable {
+  private cn.agentplatform.gateway.infra.PortalRunEventsSse$State state;
+  private long after;
+  private boolean terminal;
+  private boolean sessionAttempted;
+  private boolean stateAttempted;
+  private cn.agentplatform.gateway.infra.PortalRunEventsSse$Handle();
+  synchronized void claimSession();
+  private synchronized void claimState();
+  private synchronized void attach(cn.agentplatform.gateway.infra.PortalRunEventsSse$State);
+  private synchronized cn.agentplatform.gateway.infra.PortalRunEventsSse$State active();
+  private synchronized void detach(cn.agentplatform.gateway.infra.PortalRunEventsSse$State, long, boolean);
+  public void close();
+  public boolean awaitClosed(java.time.Duration);
+  long after();
+  boolean terminal();
+  void wakeForTest();
+  void interruptReaderForTest();
+  boolean inertTokenForTest();
+  synchronized boolean detachedForTest();
+}
+
+Compiled from "PortalRunEventsSse.java"
+final class cn.agentplatform.gateway.infra.PortalRunEventsSse$HandleReference extends java.lang.ref.PhantomReference<cn.agentplatform.gateway.infra.PortalRunEventsSse$Handle> {
+  private final int index;
+  cn.agentplatform.gateway.infra.PortalRunEventsSse$HandleReference(cn.agentplatform.gateway.infra.PortalRunEventsSse$Handle, java.lang.ref.ReferenceQueue<java.lang.Object>, int);
+}
+
+Compiled from "PortalRunEventsSse.java"
+final class cn.agentplatform.gateway.infra.PortalRunEventsSse$State implements jakarta.servlet.WriteListener,jakarta.servlet.AsyncListener {
+  final java.lang.Object cell;
+  final java.lang.Object io;
+  cn.agentplatform.gateway.infra.PortalRunEventsSse$RequestSlot token;
+  final cn.agentplatform.gateway.infra.PortalRunEventsSse$Handle handle;
+  java.util.function.BiConsumer<java.lang.String, java.lang.Long> probe;
+  cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session session;
+  cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session$SseLease lease;
+  jakarta.servlet.AsyncContext async;
+  jakarta.servlet.ServletOutputStream output;
+  cn.agentplatform.gateway.infra.PortalRunEventsSse$Frame frame;
+  java.lang.Thread worker;
+  cn.agentplatform.gateway.infra.PortalEventsMaterialVerifier$VerifiedWindow slot;
+  final long deadline;
+  long idleDeadline;
+  long after;
+  boolean installed;
+  boolean stopping;
+  boolean abortIssued;
+  boolean eof;
+  boolean completed;
+  boolean completeRequested;
+  boolean finalizing;
+  boolean finished;
+  boolean terminal;
+  boolean statusSent;
+  boolean event;
+  boolean done;
+  boolean frameDone;
+  boolean attempted;
+  boolean flushed;
+  int offset;
+  int heavy;
+  int actions;
+  cn.agentplatform.gateway.infra.PortalRunEventsSse$State(cn.agentplatform.gateway.infra.PortalRunEventsSse$Handle, cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session, cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session$SseLease, cn.agentplatform.gateway.infra.PortalRunEventsSse$RequestSlot, java.util.function.BiConsumer<java.lang.String, java.lang.Long>);
+  private void detachUnstarted();
+  private void detachHeavy();
+  void point(java.lang.String, long);
+  void fresh();
+  long left();
+  boolean awaitWork();
+  void publish(cn.agentplatform.gateway.infra.PortalEventsMaterialVerifier$VerifiedWindow, boolean) throws java.io.IOException;
+  void read();
+  public void onWritePossible() throws java.io.IOException;
+  private boolean writeSlot() throws java.io.IOException;
+  void complete();
+  void stop();
+  void cancelSignal();
+  public void onError(java.lang.Throwable);
+  public void onTimeout(jakarta.servlet.AsyncEvent);
+  public void onError(jakarta.servlet.AsyncEvent);
+  public void onStartAsync(jakarta.servlet.AsyncEvent);
+  public void onComplete(jakarta.servlet.AsyncEvent);
+  private boolean awaitWorker(long);
+  boolean finish(java.time.Duration);
+  private void lambda$read$0(cn.agentplatform.gateway.infra.PortalEventsMaterialVerifier$VerifiedWindow) throws java.io.IOException;
+}
+
+Compiled from "PortalRunEventsSse.java"
+final class cn.agentplatform.gateway.infra.PortalRunEventsSse$RequestSlot {
+  private org.apache.catalina.connector.Response response;
+  private cn.agentplatform.gateway.infra.PortalRunEventsSse$WrappedProcessor origin;
+  private org.apache.tomcat.util.net.SocketWrapperBase<?> originalSocket;
+  private cn.agentplatform.gateway.infra.PortalRunEventsSse$State state;
+  private java.lang.Thread requestThread;
+  private boolean armed;
+  private boolean used;
+  private boolean claimed;
+  cn.agentplatform.gateway.infra.PortalRunEventsSse$RequestSlot(org.apache.catalina.connector.Response, cn.agentplatform.gateway.infra.PortalRunEventsSse$WrappedProcessor, org.apache.tomcat.util.net.SocketWrapperBase<?>);
+  synchronized void requireOriginal(jakarta.servlet.http.HttpServletRequest, jakarta.servlet.http.HttpServletResponse);
+  synchronized void reject();
+  synchronized void arm(cn.agentplatform.gateway.infra.PortalRunEventsSse$State);
+  void abort(cn.agentplatform.gateway.infra.PortalRunEventsSse$State);
+  synchronized void disarm(cn.agentplatform.gateway.infra.PortalRunEventsSse$State);
+  synchronized void invalidate();
+}
+
+Compiled from "PortalRunEventsSse.java"
+final class cn.agentplatform.gateway.infra.PortalRunEventsSse$WrappedProcessor implements org.apache.coyote.Processor {
+  private final cn.agentplatform.gateway.infra.PortalRunEventsSse$ControlledProtocol protocol;
+  private final org.apache.coyote.Processor delegate;
+  private final long id;
+  private volatile org.apache.tomcat.util.net.SocketWrapperBase<?> socket;
+  private volatile cn.agentplatform.gateway.infra.PortalRunEventsSse$RequestSlot slot;
+  cn.agentplatform.gateway.infra.PortalRunEventsSse$WrappedProcessor(cn.agentplatform.gateway.infra.PortalRunEventsSse$ControlledProtocol, org.apache.coyote.Processor, long);
+  void invalidate();
+  public org.apache.tomcat.util.net.AbstractEndpoint$Handler$SocketState process(org.apache.tomcat.util.net.SocketWrapperBase<?>, org.apache.tomcat.util.net.SocketEvent) throws java.io.IOException;
+  public void recycle();
+  public org.apache.coyote.UpgradeToken getUpgradeToken();
+  public boolean isUpgrade();
+  public boolean isAsync();
+  public void timeoutAsync(long);
+  public org.apache.coyote.Request getRequest();
+  public void setSslSupport(org.apache.tomcat.util.net.SSLSupport);
+  public java.nio.ByteBuffer getLeftoverInput();
+  public void pause();
+  public boolean checkAsyncTimeoutGeneration();
+}
+
+Compiled from "PortalRunEventsSse.java"
+final class cn.agentplatform.gateway.infra.PortalRunEventsSse$SlotReference extends java.lang.ref.PhantomReference<org.apache.coyote.Processor> {
+  private final int index;
+  cn.agentplatform.gateway.infra.PortalRunEventsSse$SlotReference(org.apache.coyote.Processor, java.lang.ref.ReferenceQueue<java.lang.Object>, int);
+}
+
+Compiled from "PortalRunEventsSse.java"
+public final class cn.agentplatform.gateway.infra.PortalRunEventsSse$ControlledProtocol extends org.apache.coyote.http11.Http11NioProtocol {
+  private static boolean constructed;
+  private long creations;
+  private long recycles;
+  private long processes;
+  private long lastProcessor;
+  private long allocations;
+  private long returned;
+  private static final int BUNDLES;
+  private static final byte FREE;
+  private static final byte RESERVED;
+  private static final byte TRACKED;
+  private static final byte BURNED;
+  private java.lang.ref.Reference<?>[] references;
+  private byte[] slots;
+  private java.lang.ref.ReferenceQueue<java.lang.Object> queue;
+  private boolean corrupt;
+  private int failurePoint;
+  private int handleFailurePoint;
+  private long handleAllocations;
+  private long handleReturned;
+  private long processorReturned;
+  public cn.agentplatform.gateway.infra.PortalRunEventsSse$ControlledProtocol();
+  private void verify(boolean);
+  public void setExecutor(java.util.concurrent.Executor);
+  public void start() throws java.lang.Exception;
+  private org.apache.coyote.Processor waitingKey(org.apache.coyote.Processor);
+  public void addWaitingProcessor(org.apache.coyote.Processor);
+  public void removeWaitingProcessor(org.apache.coyote.Processor);
+  protected synchronized org.apache.coyote.Processor createProcessor();
+  private synchronized cn.agentplatform.gateway.infra.PortalRunEventsSse$Handle createHandle();
+  private int freeIndex();
+  private void drainReferences();
+  synchronized void failHandleConstructionForTest(int);
+  synchronized long handleAllocationsForTest();
+  synchronized long handleReturnedForTest();
+  synchronized long processorReturnedForTest();
+  synchronized void failConstructionForTest(int);
+  synchronized long allocationsForTest();
+  synchronized int burnedForTest();
+  synchronized long returnedForTest();
+  boolean waitingIdentityForTest(org.apache.coyote.Processor);
+  synchronized long creationsForTest();
+  synchronized long recyclesForTest();
+  synchronized long processorForTest();
+  org.apache.tomcat.util.net.SocketWrapperBase<?> currentSocketForTest();
+}
+
+Compiled from "PortalRunEventsSse.java"
+final class cn.agentplatform.gateway.infra.PortalRunEventsSse$Bridge {
+  final java.lang.Thread[] threads;
+  final cn.agentplatform.gateway.infra.PortalRunEventsSse$WrappedProcessor[] processors;
+  private cn.agentplatform.gateway.infra.PortalRunEventsSse$Bridge();
+  synchronized cn.agentplatform.gateway.infra.PortalRunEventsSse$WrappedProcessor current();
+}
+
+Compiled from "PortalRunEventsHttp.java"
+public final class cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session implements java.lang.AutoCloseable {
+  private final cn.agentplatform.gateway.infra.PortalRunEventsSse$Handle lifecycleAnchor;
+  private final cn.agentplatform.gateway.infra.PortalEventsTls tls;
+  private final cn.agentplatform.gateway.infra.PortalEventsPacketBudget$Owner owner;
+  private cn.agentplatform.gateway.infra.PortalEventsPacketBudget$Reservation fee;
+  private cn.agentplatform.common.authority.HttpCurrentAuthorityClient$GatewayEventsOpening opening;
+  private cn.agentplatform.common.authority.HttpCurrentAuthorityClient$GatewayObservationQueryAuthorization query;
+  private cn.agentplatform.common.authority.CurrentAuthorityClient authority;
+  private java.lang.String originalPortalSource;
+  private cn.agentplatform.gateway.infra.PortalEventsPacketBudget$Reservation privateFee;
+  private cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session$SavedFacts saved;
+  private cn.agentplatform.common.authority.GatewayPortalEventsResponse gatewayResponse;
+  private cn.agentplatform.common.authority.HttpCurrentAuthorityClient$PortalEventsChildAuthorization child;
+  private cn.agentplatform.gateway.infra.PortalEventsPacketDecoder decoder;
+  private java.io.InputStream privateInput;
+  private boolean qReady;
+  private boolean privateUsed;
+  private boolean privatePhase;
+  private boolean bodyPhase;
+  private long alarmEpoch;
+  private final long t0;
+  private final long openingDeadline;
+  private final long lifetimeDeadline;
+  private long hopDeadline;
+  private boolean used;
+  private boolean active;
+  private boolean stopped;
+  private boolean closing;
+  private boolean closed;
+  private boolean transportClean;
+  private boolean cleanupActive;
+  private java.lang.Thread operationThread;
+  private cn.agentplatform.gateway.infra.PortalEventsTlsConnection handle;
+  private java.net.Socket raw;
+  private javax.net.ssl.SSLSocket ssl;
+  private byte[] sslId;
+  private org.apache.hc.client5.http.classic.methods.HttpGet request;
+  private org.apache.hc.client5.http.protocol.HttpClientContext context;
+  private org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager manager;
+  private org.apache.hc.client5.http.impl.classic.CloseableHttpClient client;
+  private cn.agentplatform.gateway.application.RunObservationMetadataClient$EventsMetadata facts;
+  private org.apache.hc.client5.http.io.ManagedHttpClientConnection connection;
+  private java.util.concurrent.ScheduledThreadPoolExecutor timer;
+  private java.util.concurrent.ScheduledFuture<?> alarm;
+  private final java.util.IdentityHashMap<org.apache.hc.core5.http.ClassicHttpRequest, cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session> guards;
+  private volatile java.lang.Runnable beforeOutputForTest;
+  private volatile boolean identityMatched;
+  private java.lang.String materialChild;
+  private volatile java.util.function.BiConsumer<java.lang.String, java.lang.Integer> materialCheckpointForTest;
+  private cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session$SseLease sseLease;
+  private long publicAfter;
+  private cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session(cn.agentplatform.gateway.infra.PortalEventsTls, cn.agentplatform.gateway.infra.PortalEventsPacketBudget$Owner, cn.agentplatform.gateway.infra.PortalEventsPacketBudget$Reservation, long, cn.agentplatform.common.authority.HttpCurrentAuthorityClient$GatewayEventsOpening, cn.agentplatform.common.authority.CurrentAuthorityClient, java.lang.String, cn.agentplatform.gateway.infra.PortalRunEventsSse$Handle);
+  private void live();
+  public cn.agentplatform.gateway.application.RunObservationMetadataClient$EventsMetadata lookupMetadata();
+  void materialCheckpointForTest(java.util.function.BiConsumer<java.lang.String, java.lang.Integer>);
+  void consumeVerified(cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session$WindowConsumer);
+  synchronized cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session$SseLease beginSse();
+  void consumePrivate(cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session$PacketConsumer);
+  private void liveOpening();
+  private cn.agentplatform.common.authority.GatewayPortalEventsResponse$Capture current();
+  private void livePrivate(boolean);
+  private void enterBody();
+  private void arm(long);
+  private void liveAfterHttp();
+  private void build();
+  private void check(org.apache.hc.core5.http.ClassicHttpRequest, org.apache.hc.core5.http.io.HttpClientConnection, org.apache.hc.core5.http.protocol.HttpContext) throws java.io.IOException;
+  private void writerCheck(org.apache.hc.core5.http.ClassicHttpRequest, cn.agentplatform.gateway.infra.PortalRunEventsHttp$QuietConnection) throws java.io.IOException;
+  private void stopTransport();
+  public void abort();
+  private boolean finishTransport(java.time.Duration);
+  public boolean awaitClosed(java.time.Duration);
+  public void close();
+  void beforeOutputForTest(java.lang.Runnable);
+  private static org.apache.hc.client5.http.auth.Credentials lambda$build$9(org.apache.hc.client5.http.auth.AuthScope, org.apache.hc.core5.http.protocol.HttpContext);
+  private static org.apache.hc.client5.http.auth.AuthSchemeFactory lambda$build$8(java.lang.String);
+  private static org.apache.hc.client5.http.cookie.CookieSpecFactory lambda$build$7(java.lang.String);
+  private org.apache.hc.client5.http.HttpRoute lambda$build$6(org.apache.hc.core5.http.HttpHost, org.apache.hc.core5.http.protocol.HttpContext) throws org.apache.hc.core5.http.HttpException;
+  private static boolean lambda$build$5(org.apache.hc.core5.http.HttpRequest, org.apache.hc.core5.http.HttpResponse, org.apache.hc.core5.http.protocol.HttpContext);
+  private org.apache.hc.client5.http.io.ManagedHttpClientConnection lambda$build$4(java.net.Socket) throws java.io.IOException;
+  private void lambda$arm$3(long);
+  private java.lang.Object lambda$consumePrivate$2(cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session$PacketConsumer, org.apache.hc.core5.http.ClassicHttpResponse) throws org.apache.hc.core5.http.HttpException, java.io.IOException;
+  private void lambda$consumeVerified$1(cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session$WindowConsumer, cn.agentplatform.gateway.infra.PortalEventsPacketDecoder$UntrustedPacket) throws java.io.IOException;
+  private cn.agentplatform.gateway.application.RunObservationMetadataClient$EventsMetadata lambda$lookupMetadata$0(org.apache.hc.core5.http.ClassicHttpResponse) throws org.apache.hc.core5.http.HttpException, java.io.IOException;
+}
+
+Compiled from "PortalRunEventsHttp.java"
+final class cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session$SseLease {
+  private cn.agentplatform.gateway.infra.PortalEventsPacketBudget$Reservation charge;
+  private boolean released;
+  private java.lang.Runnable cancellation;
+  private java.util.function.Function<java.time.Duration, java.lang.Boolean> exit;
+  final cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session this$0;
+  private cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session$SseLease(cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session, cn.agentplatform.gateway.infra.PortalEventsPacketBudget$Reservation);
+  long deadline();
+  synchronized void cancellation(java.lang.Runnable);
+  synchronized void exits(java.util.function.Function<java.time.Duration, java.lang.Boolean>);
+  void signal();
+  void reap(java.time.Duration);
+  void release();
+}
+
+Compiled from "PortalEventsPacketBudget.java"
+public final class cn.agentplatform.gateway.infra.PortalEventsPacketBudget$Owner implements java.lang.AutoCloseable {
+  private final cn.agentplatform.gateway.infra.PortalEventsPacketBudget budget;
+  private long reserved;
+  private boolean closed;
+  private boolean claimed;
+  private cn.agentplatform.gateway.infra.PortalEventsPacketDecoder decoder;
+  private cn.agentplatform.gateway.infra.PortalEventsPacketBudget$Owner(cn.agentplatform.gateway.infra.PortalEventsPacketBudget);
+  synchronized void claim(cn.agentplatform.gateway.infra.PortalEventsPacketDecoder);
+  synchronized void requireOpen();
+  public synchronized long reservedBytes();
+  public synchronized cn.agentplatform.gateway.infra.PortalEventsPacketBudget$Reservation reserve(long);
+  private synchronized void release(long);
+  public synchronized void close();
+}
+
+Compiled from "PortalEventsPacketBudget.java"
+public final class cn.agentplatform.gateway.infra.PortalEventsPacketBudget$Reservation implements java.lang.AutoCloseable {
+  private cn.agentplatform.gateway.infra.PortalEventsPacketBudget$Owner owner;
+  private final long bytes;
+  private cn.agentplatform.gateway.infra.PortalEventsPacketBudget$Reservation(cn.agentplatform.gateway.infra.PortalEventsPacketBudget$Owner, long);
+  public synchronized void close();
+}

@@ -1,0 +1,34 @@
+-------------------------------------------------------------------------------
+Test set: cn.agentplatform.engine.infra.RunEventReaderBudgetTest
+-------------------------------------------------------------------------------
+Tests run: 3, Failures: 3, Errors: 0, Skipped: 0, Time elapsed: 0.167 s <<< FAILURE! -- in cn.agentplatform.engine.infra.RunEventReaderBudgetTest
+cn.agentplatform.engine.infra.RunEventReaderBudgetTest.metadataStreamingParserChecksEverySingleConstraintBeforeDom -- Time elapsed: 0.145 s <<< FAILURE!
+java.lang.AssertionError: 
+
+Expecting code to raise a throwable.
+	at cn.agentplatform.engine.infra.RunEventReaderBudgetTest.rejected(RunEventReaderBudgetTest.java:10)
+	at cn.agentplatform.engine.infra.RunEventReaderBudgetTest.metadataStreamingParserChecksEverySingleConstraintBeforeDom(RunEventReaderBudgetTest.java:13)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+cn.agentplatform.engine.infra.RunEventReaderBudgetTest.cumulativeByteRecordAndParentBudgetsRejectOverflowAndNeverSilentlyTruncate -- Time elapsed: 0.002 s <<< FAILURE!
+java.lang.AssertionError: 
+
+Expecting code to raise a throwable.
+	at cn.agentplatform.engine.infra.RunEventReaderBudgetTest.rejected(RunEventReaderBudgetTest.java:10)
+	at cn.agentplatform.engine.infra.RunEventReaderBudgetTest.cumulativeByteRecordAndParentBudgetsRejectOverflowAndNeverSilentlyTruncate(RunEventReaderBudgetTest.java:27)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+cn.agentplatform.engine.infra.RunEventReaderBudgetTest.rootParserHasItsOwnFiniteDepthTokensStringAndNumberLimits -- Time elapsed: 0.002 s <<< FAILURE!
+java.lang.AssertionError: 
+
+Expecting code to raise a throwable.
+	at cn.agentplatform.engine.infra.RunEventReaderBudgetTest.rejected(RunEventReaderBudgetTest.java:10)
+	at cn.agentplatform.engine.infra.RunEventReaderBudgetTest.rootParserHasItsOwnFiniteDepthTokensStringAndNumberLimits(RunEventReaderBudgetTest.java:21)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+

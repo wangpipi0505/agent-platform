@@ -1,0 +1,2 @@
+import {it,expect} from 'vitest';import {decisionPayload} from '../shared/approval';
+it('confirmation binds the displayed server snapshot digest and rejects missing or expired snapshots',()=>{expect(decisionPayload({snapshotDigest:'sha',expiresAt:'2099-01-01T00:00:00Z'},true,'r')).toEqual({approved:true,requestId:'r',snapshotDigest:'sha'});expect(()=>decisionPayload({},true,'r')).toThrow();expect(()=>decisionPayload({snapshotDigest:'sha',expiresAt:'2000-01-01T00:00:00Z'},true,'r')).toThrow();});

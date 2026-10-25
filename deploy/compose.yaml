@@ -1,0 +1,482 @@
+name: agent-platform-v12-independent
+services:
+  platform-gateway:
+    profiles: &id001
+    - acceptance
+    restart: unless-stopped
+    user: 10001:10001
+    read_only: true
+    cap_drop: &id002
+    - ALL
+    security_opt: &id003
+    - no-new-privileges:true
+    stop_grace_period: 60s
+    tmpfs: &id004
+    - /tmp:rw,noexec,nosuid,size=128m,uid=10001,gid=10001,mode=1770
+    mem_limit: 1g
+    cpus: 1.0
+    env_file: &id005
+    - ${AGENT_RUNTIME_ENV_FILE:?Explicit untracked acceptance secrets file required}
+    networks: &id006
+    - services
+    - telemetry
+    - dependencies
+    volumes: &id007
+    - vault:/var/lib/agent-vault
+    image: ${PLATFORM_GATEWAY_IMAGE:?Explicit release image digest required}
+    environment:
+      AGENT_BIND_ADDRESS: 0.0.0.0
+      SERVER_PORT: '8080'
+      AGENT_DEV_AUTH: 'false'
+      AGENT_RELEASE_GATE: ${AGENT_RELEASE_GATE:-BLOCKED_IAM_SCOPE_ACCEPTANCE}
+      JAVA_TOOL_OPTIONS: -XX:+UseZGC -XX:+ZGenerational -XX:MaxRAMPercentage=70 -XX:MaxDirectMemorySize=128m
+        -XX:+ExitOnOutOfMemoryError
+      SERVER_SHUTDOWN: graceful
+      SPRING_LIFECYCLE_TIMEOUT_PER_SHUTDOWN_PHASE: 45s
+      MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED: 'true'
+      MANAGEMENT_ENDPOINT_HEALTH_PROBES_ADD_ADDITIONAL_PATHS: 'true'
+      MANAGEMENT_ENDPOINT_HEALTH_GROUP_READINESS_INCLUDE: readinessState,db
+      AGENT_SECRET_DIR: /var/lib/agent-vault
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      OTEL_LOGS_EXPORTER: otlp
+      OTEL_METRICS_EXPORTER: otlp
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_INSTRUMENTATION_HTTP_SERVER_CAPTURE_REQUEST_HEADERS: ''
+      OTEL_INSTRUMENTATION_HTTP_SERVER_CAPTURE_RESPONSE_HEADERS: ''
+      OTEL_INSTRUMENTATION_HTTP_CLIENT_CAPTURE_REQUEST_HEADERS: ''
+      OTEL_INSTRUMENTATION_HTTP_CLIENT_CAPTURE_RESPONSE_HEADERS: ''
+      OTEL_INSTRUMENTATION_JDBC_STATEMENT_SANITIZER_ENABLED: 'true'
+      OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT: 'false'
+      AGENT_GATEWAY_URL: http://platform-gateway:8080
+      AGENT_APP_URL: http://app-management:8080
+      AGENT_ENGINE_URL: http://engine-runtime:8080
+      AGENT_SKILL_URL: http://skill-registry:8080
+      AGENT_MODEL_URL: http://model-gateway:8080
+      AGENT_MONITOR_URL: http://monitor:8080
+      AGENT_DB_URL: ${AGENT_DB_JDBC_BASE:?Dedicated PostgreSQL JDBC URL without query
+        required}?currentSchema=gateway
+      OTEL_SERVICE_NAME: platform-gateway
+  app-management:
+    profiles: *id001
+    restart: unless-stopped
+    user: 10001:10001
+    read_only: true
+    cap_drop: *id002
+    security_opt: *id003
+    stop_grace_period: 60s
+    tmpfs: *id004
+    mem_limit: 1g
+    cpus: 1.0
+    env_file: *id005
+    networks: *id006
+    volumes: *id007
+    image: ${APP_MANAGEMENT_IMAGE:?Explicit release image digest required}
+    environment:
+      AGENT_BIND_ADDRESS: 0.0.0.0
+      SERVER_PORT: '8080'
+      AGENT_DEV_AUTH: 'false'
+      AGENT_RELEASE_GATE: ${AGENT_RELEASE_GATE:-BLOCKED_IAM_SCOPE_ACCEPTANCE}
+      JAVA_TOOL_OPTIONS: -XX:+UseZGC -XX:+ZGenerational -XX:MaxRAMPercentage=70 -XX:MaxDirectMemorySize=128m
+        -XX:+ExitOnOutOfMemoryError
+      SERVER_SHUTDOWN: graceful
+      SPRING_LIFECYCLE_TIMEOUT_PER_SHUTDOWN_PHASE: 45s
+      MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED: 'true'
+      MANAGEMENT_ENDPOINT_HEALTH_PROBES_ADD_ADDITIONAL_PATHS: 'true'
+      MANAGEMENT_ENDPOINT_HEALTH_GROUP_READINESS_INCLUDE: readinessState,db
+      AGENT_SECRET_DIR: /var/lib/agent-vault
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      OTEL_LOGS_EXPORTER: otlp
+      OTEL_METRICS_EXPORTER: otlp
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_INSTRUMENTATION_HTTP_SERVER_CAPTURE_REQUEST_HEADERS: ''
+      OTEL_INSTRUMENTATION_HTTP_SERVER_CAPTURE_RESPONSE_HEADERS: ''
+      OTEL_INSTRUMENTATION_HTTP_CLIENT_CAPTURE_REQUEST_HEADERS: ''
+      OTEL_INSTRUMENTATION_HTTP_CLIENT_CAPTURE_RESPONSE_HEADERS: ''
+      OTEL_INSTRUMENTATION_JDBC_STATEMENT_SANITIZER_ENABLED: 'true'
+      OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT: 'false'
+      AGENT_GATEWAY_URL: http://platform-gateway:8080
+      AGENT_APP_URL: http://app-management:8080
+      AGENT_ENGINE_URL: http://engine-runtime:8080
+      AGENT_SKILL_URL: http://skill-registry:8080
+      AGENT_MODEL_URL: http://model-gateway:8080
+      AGENT_MONITOR_URL: http://monitor:8080
+      AGENT_DB_URL: ${AGENT_DB_JDBC_BASE:?Dedicated PostgreSQL JDBC URL without query
+        required}?currentSchema=app
+      OTEL_SERVICE_NAME: app-management
+  engine-runtime:
+    profiles: *id001
+    restart: unless-stopped
+    user: 10001:10001
+    read_only: true
+    cap_drop: *id002
+    security_opt: *id003
+    stop_grace_period: 60s
+    tmpfs: *id004
+    mem_limit: 1g
+    cpus: 1.0
+    env_file: *id005
+    networks: *id006
+    volumes: *id007
+    image: ${ENGINE_RUNTIME_IMAGE:?Explicit release image digest required}
+    environment:
+      AGENT_BIND_ADDRESS: 0.0.0.0
+      SERVER_PORT: '8080'
+      AGENT_DEV_AUTH: 'false'
+      AGENT_RELEASE_GATE: ${AGENT_RELEASE_GATE:-BLOCKED_IAM_SCOPE_ACCEPTANCE}
+      JAVA_TOOL_OPTIONS: -XX:+UseZGC -XX:+ZGenerational -XX:MaxRAMPercentage=70 -XX:MaxDirectMemorySize=128m
+        -XX:+ExitOnOutOfMemoryError
+      SERVER_SHUTDOWN: graceful
+      SPRING_LIFECYCLE_TIMEOUT_PER_SHUTDOWN_PHASE: 45s
+      MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED: 'true'
+      MANAGEMENT_ENDPOINT_HEALTH_PROBES_ADD_ADDITIONAL_PATHS: 'true'
+      MANAGEMENT_ENDPOINT_HEALTH_GROUP_READINESS_INCLUDE: readinessState,db
+      AGENT_SECRET_DIR: /var/lib/agent-vault
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      OTEL_LOGS_EXPORTER: otlp
+      OTEL_METRICS_EXPORTER: otlp
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_INSTRUMENTATION_HTTP_SERVER_CAPTURE_REQUEST_HEADERS: ''
+      OTEL_INSTRUMENTATION_HTTP_SERVER_CAPTURE_RESPONSE_HEADERS: ''
+      OTEL_INSTRUMENTATION_HTTP_CLIENT_CAPTURE_REQUEST_HEADERS: ''
+      OTEL_INSTRUMENTATION_HTTP_CLIENT_CAPTURE_RESPONSE_HEADERS: ''
+      OTEL_INSTRUMENTATION_JDBC_STATEMENT_SANITIZER_ENABLED: 'true'
+      OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT: 'false'
+      AGENT_GATEWAY_URL: http://platform-gateway:8080
+      AGENT_APP_URL: http://app-management:8080
+      AGENT_ENGINE_URL: http://engine-runtime:8080
+      AGENT_SKILL_URL: http://skill-registry:8080
+      AGENT_MODEL_URL: http://model-gateway:8080
+      AGENT_MONITOR_URL: http://monitor:8080
+      AGENT_DB_URL: ${AGENT_DB_JDBC_BASE:?Dedicated PostgreSQL JDBC URL without query
+        required}?currentSchema=engine
+      OTEL_SERVICE_NAME: engine-runtime
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          memory: 1g
+          cpus: '1.0'
+        reservations:
+          memory: 512m
+          cpus: '0.25'
+  skill-registry:
+    profiles: *id001
+    restart: unless-stopped
+    user: 10001:10001
+    read_only: true
+    cap_drop: *id002
+    security_opt: *id003
+    stop_grace_period: 60s
+    tmpfs: *id004
+    mem_limit: 1g
+    cpus: 1.0
+    env_file: *id005
+    networks: *id006
+    volumes: *id007
+    image: ${SKILL_REGISTRY_IMAGE:?Explicit release image digest required}
+    environment:
+      AGENT_BIND_ADDRESS: 0.0.0.0
+      SERVER_PORT: '8080'
+      AGENT_DEV_AUTH: 'false'
+      AGENT_RELEASE_GATE: ${AGENT_RELEASE_GATE:-BLOCKED_IAM_SCOPE_ACCEPTANCE}
+      JAVA_TOOL_OPTIONS: -XX:+UseZGC -XX:+ZGenerational -XX:MaxRAMPercentage=70 -XX:MaxDirectMemorySize=128m
+        -XX:+ExitOnOutOfMemoryError
+      SERVER_SHUTDOWN: graceful
+      SPRING_LIFECYCLE_TIMEOUT_PER_SHUTDOWN_PHASE: 45s
+      MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED: 'true'
+      MANAGEMENT_ENDPOINT_HEALTH_PROBES_ADD_ADDITIONAL_PATHS: 'true'
+      MANAGEMENT_ENDPOINT_HEALTH_GROUP_READINESS_INCLUDE: readinessState,db
+      AGENT_SECRET_DIR: /var/lib/agent-vault
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      OTEL_LOGS_EXPORTER: otlp
+      OTEL_METRICS_EXPORTER: otlp
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_INSTRUMENTATION_HTTP_SERVER_CAPTURE_REQUEST_HEADERS: ''
+      OTEL_INSTRUMENTATION_HTTP_SERVER_CAPTURE_RESPONSE_HEADERS: ''
+      OTEL_INSTRUMENTATION_HTTP_CLIENT_CAPTURE_REQUEST_HEADERS: ''
+      OTEL_INSTRUMENTATION_HTTP_CLIENT_CAPTURE_RESPONSE_HEADERS: ''
+      OTEL_INSTRUMENTATION_JDBC_STATEMENT_SANITIZER_ENABLED: 'true'
+      OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT: 'false'
+      AGENT_GATEWAY_URL: http://platform-gateway:8080
+      AGENT_APP_URL: http://app-management:8080
+      AGENT_ENGINE_URL: http://engine-runtime:8080
+      AGENT_SKILL_URL: http://skill-registry:8080
+      AGENT_MODEL_URL: http://model-gateway:8080
+      AGENT_MONITOR_URL: http://monitor:8080
+      AGENT_DB_URL: ${AGENT_DB_JDBC_BASE:?Dedicated PostgreSQL JDBC URL without query
+        required}?currentSchema=skill
+      OTEL_SERVICE_NAME: skill-registry
+  model-gateway:
+    profiles: *id001
+    restart: unless-stopped
+    user: 10001:10001
+    read_only: true
+    cap_drop: *id002
+    security_opt: *id003
+    stop_grace_period: 60s
+    tmpfs: *id004
+    mem_limit: 1g
+    cpus: 1.0
+    env_file: *id005
+    networks: *id006
+    volumes: *id007
+    image: ${MODEL_GATEWAY_IMAGE:?Explicit release image digest required}
+    environment:
+      AGENT_BIND_ADDRESS: 0.0.0.0
+      SERVER_PORT: '8080'
+      AGENT_DEV_AUTH: 'false'
+      AGENT_RELEASE_GATE: ${AGENT_RELEASE_GATE:-BLOCKED_IAM_SCOPE_ACCEPTANCE}
+      JAVA_TOOL_OPTIONS: -XX:+UseZGC -XX:+ZGenerational -XX:MaxRAMPercentage=70 -XX:MaxDirectMemorySize=128m
+        -XX:+ExitOnOutOfMemoryError
+      SERVER_SHUTDOWN: graceful
+      SPRING_LIFECYCLE_TIMEOUT_PER_SHUTDOWN_PHASE: 45s
+      MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED: 'true'
+      MANAGEMENT_ENDPOINT_HEALTH_PROBES_ADD_ADDITIONAL_PATHS: 'true'
+      MANAGEMENT_ENDPOINT_HEALTH_GROUP_READINESS_INCLUDE: readinessState,db
+      AGENT_SECRET_DIR: /var/lib/agent-vault
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      OTEL_LOGS_EXPORTER: otlp
+      OTEL_METRICS_EXPORTER: otlp
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_INSTRUMENTATION_HTTP_SERVER_CAPTURE_REQUEST_HEADERS: ''
+      OTEL_INSTRUMENTATION_HTTP_SERVER_CAPTURE_RESPONSE_HEADERS: ''
+      OTEL_INSTRUMENTATION_HTTP_CLIENT_CAPTURE_REQUEST_HEADERS: ''
+      OTEL_INSTRUMENTATION_HTTP_CLIENT_CAPTURE_RESPONSE_HEADERS: ''
+      OTEL_INSTRUMENTATION_JDBC_STATEMENT_SANITIZER_ENABLED: 'true'
+      OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT: 'false'
+      AGENT_GATEWAY_URL: http://platform-gateway:8080
+      AGENT_APP_URL: http://app-management:8080
+      AGENT_ENGINE_URL: http://engine-runtime:8080
+      AGENT_SKILL_URL: http://skill-registry:8080
+      AGENT_MODEL_URL: http://model-gateway:8080
+      AGENT_MONITOR_URL: http://monitor:8080
+      AGENT_DB_URL: ${AGENT_DB_JDBC_BASE:?Dedicated PostgreSQL JDBC URL without query
+        required}?currentSchema=model
+      OTEL_SERVICE_NAME: model-gateway
+  monitor:
+    profiles: *id001
+    restart: unless-stopped
+    user: 10001:10001
+    read_only: true
+    cap_drop: *id002
+    security_opt: *id003
+    stop_grace_period: 60s
+    tmpfs: *id004
+    mem_limit: 1g
+    cpus: 1.0
+    env_file: *id005
+    networks: *id006
+    volumes: *id007
+    image: ${MONITOR_IMAGE:?Explicit release image digest required}
+    environment:
+      AGENT_BIND_ADDRESS: 0.0.0.0
+      SERVER_PORT: '8080'
+      AGENT_DEV_AUTH: 'false'
+      AGENT_RELEASE_GATE: ${AGENT_RELEASE_GATE:-BLOCKED_IAM_SCOPE_ACCEPTANCE}
+      JAVA_TOOL_OPTIONS: -XX:+UseZGC -XX:+ZGenerational -XX:MaxRAMPercentage=70 -XX:MaxDirectMemorySize=128m
+        -XX:+ExitOnOutOfMemoryError
+      SERVER_SHUTDOWN: graceful
+      SPRING_LIFECYCLE_TIMEOUT_PER_SHUTDOWN_PHASE: 45s
+      MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED: 'true'
+      MANAGEMENT_ENDPOINT_HEALTH_PROBES_ADD_ADDITIONAL_PATHS: 'true'
+      MANAGEMENT_ENDPOINT_HEALTH_GROUP_READINESS_INCLUDE: readinessState,db
+      AGENT_SECRET_DIR: /var/lib/agent-vault
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      OTEL_LOGS_EXPORTER: otlp
+      OTEL_METRICS_EXPORTER: otlp
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_INSTRUMENTATION_HTTP_SERVER_CAPTURE_REQUEST_HEADERS: ''
+      OTEL_INSTRUMENTATION_HTTP_SERVER_CAPTURE_RESPONSE_HEADERS: ''
+      OTEL_INSTRUMENTATION_HTTP_CLIENT_CAPTURE_REQUEST_HEADERS: ''
+      OTEL_INSTRUMENTATION_HTTP_CLIENT_CAPTURE_RESPONSE_HEADERS: ''
+      OTEL_INSTRUMENTATION_JDBC_STATEMENT_SANITIZER_ENABLED: 'true'
+      OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT: 'false'
+      AGENT_GATEWAY_URL: http://platform-gateway:8080
+      AGENT_APP_URL: http://app-management:8080
+      AGENT_ENGINE_URL: http://engine-runtime:8080
+      AGENT_SKILL_URL: http://skill-registry:8080
+      AGENT_MODEL_URL: http://model-gateway:8080
+      AGENT_MONITOR_URL: http://monitor:8080
+      AGENT_DB_URL: ${AGENT_DB_JDBC_BASE:?Dedicated PostgreSQL JDBC URL without query
+        required}?currentSchema=monitor
+      OTEL_SERVICE_NAME: monitor
+  frontend:
+    profiles:
+    - acceptance
+    image: ${FRONTEND_IMAGE:?Explicit frontend image digest required}
+    user: 10001:10001
+    read_only: true
+    cap_drop:
+    - ALL
+    security_opt:
+    - no-new-privileges:true
+    tmpfs:
+    - /tmp:rw,noexec,nosuid,size=64m,uid=10001,gid=10001,mode=1770
+    ports:
+    - 127.0.0.1:18090:8080
+    networks:
+    - services
+    mem_limit: 128m
+    cpus: 0.5
+    stop_grace_period: 30s
+    depends_on:
+      platform-gateway:
+        condition: service_healthy
+  otel-collector:
+    profiles:
+    - ops
+    image: ${OTEL_COLLECTOR_IMAGE:?Explicit ops image digest required}
+    user: 10001:10001
+    read_only: true
+    cap_drop:
+    - ALL
+    security_opt:
+    - no-new-privileges:true
+    tmpfs:
+    - /tmp:rw,noexec,nosuid,size=64m,uid=10001,gid=10001,mode=1770
+    networks:
+    - telemetry
+    - ops
+    mem_limit: 768m
+    cpus: 1.0
+    stop_grace_period: 30s
+    volumes:
+    - ./ops/otel-collector.yaml:/etc/otel/config.yaml:ro
+    command:
+    - --config=/etc/otel/config.yaml
+  prometheus:
+    profiles:
+    - ops
+    image: ${PROMETHEUS_IMAGE:?Explicit ops image digest required}
+    user: 10001:10001
+    read_only: true
+    cap_drop:
+    - ALL
+    security_opt:
+    - no-new-privileges:true
+    tmpfs:
+    - /tmp:rw,noexec,nosuid,size=64m,uid=10001,gid=10001,mode=1770
+    networks:
+    - ops
+    mem_limit: 768m
+    cpus: 1.0
+    stop_grace_period: 30s
+    volumes:
+    - ./ops/prometheus.yaml:/etc/prometheus/prometheus.yml:ro
+    - prometheus:/prometheus
+    command:
+    - --config.file=/etc/prometheus/prometheus.yml
+    - --storage.tsdb.path=/prometheus
+    - --storage.tsdb.retention.time=7d
+    - --storage.tsdb.retention.size=4GB
+  grafana:
+    profiles:
+    - ops
+    image: ${GRAFANA_IMAGE:?Explicit ops image digest required}
+    user: 10001:10001
+    read_only: true
+    cap_drop:
+    - ALL
+    security_opt:
+    - no-new-privileges:true
+    tmpfs:
+    - /tmp:rw,noexec,nosuid,size=64m,uid=10001,gid=10001,mode=1770
+    networks:
+    - ops
+    mem_limit: 256m
+    cpus: 1.0
+    stop_grace_period: 30s
+    volumes:
+    - ./ops/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/platform.yaml:ro
+    - grafana:/var/lib/grafana
+    ports:
+    - 127.0.0.1:13000:3000
+    env_file:
+    - ${AGENT_OPS_ENV_FILE:?Explicit untracked Grafana ops credentials file required}
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: 'false'
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+      GF_AUTH_BASIC_ENABLED: 'true'
+      GF_SECURITY_DISABLE_INITIAL_ADMIN_CREATION: 'false'
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - test -n "$${GF_SECURITY_ADMIN_USER:-}" && test "$${#GF_SECURITY_ADMIN_PASSWORD}"
+      -ge 32 || { echo "Explicit ops credentials (password >=32 characters) required."
+      >&2; exit 78; }; exec /run.sh
+  loki:
+    profiles:
+    - ops
+    image: ${LOKI_IMAGE:?Explicit ops image digest required}
+    user: 10001:10001
+    read_only: true
+    cap_drop:
+    - ALL
+    security_opt:
+    - no-new-privileges:true
+    tmpfs:
+    - /tmp:rw,noexec,nosuid,size=64m,uid=10001,gid=10001,mode=1770
+    networks:
+    - ops
+    mem_limit: 768m
+    cpus: 1.0
+    stop_grace_period: 30s
+    volumes:
+    - ./ops/loki.yaml:/etc/loki/config.yaml:ro
+    - loki:/loki
+    command:
+    - -config.file=/etc/loki/config.yaml
+  tempo:
+    profiles:
+    - ops
+    image: ${TEMPO_IMAGE:?Explicit ops image digest required}
+    user: 10001:10001
+    read_only: true
+    cap_drop:
+    - ALL
+    security_opt:
+    - no-new-privileges:true
+    tmpfs:
+    - /tmp:rw,noexec,nosuid,size=64m,uid=10001,gid=10001,mode=1770
+    networks:
+    - ops
+    mem_limit: 768m
+    cpus: 1.0
+    stop_grace_period: 30s
+    volumes:
+    - ./ops/tempo.yaml:/etc/tempo/config.yaml:ro
+    - tempo:/tempo
+    command:
+    - -config.file=/etc/tempo/config.yaml
+networks:
+  services:
+    internal: true
+  telemetry:
+    internal: true
+  ops:
+    internal: true
+  dependencies:
+    external: true
+    name: ${AGENT_DEPENDENCY_NETWORK:?Dedicated new dependency network required}
+volumes:
+  vault:
+    external: true
+    name: ${AGENT_VAULT_VOLUME:?Preprovisioned isolated non-root volume required}
+  prometheus:
+    external: true
+    name: ${AGENT_PROMETHEUS_VOLUME:?Preprovisioned isolated non-root volume required}
+  grafana:
+    external: true
+    name: ${AGENT_GRAFANA_VOLUME:?Preprovisioned isolated non-root volume required}
+  loki:
+    external: true
+    name: ${AGENT_LOKI_VOLUME:?Preprovisioned isolated non-root volume required}
+  tempo:
+    external: true
+    name: ${AGENT_TEMPO_VOLUME:?Preprovisioned isolated non-root volume required}

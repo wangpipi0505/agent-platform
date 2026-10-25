@@ -1,0 +1,35 @@
+-------------------------------------------------------------------------------
+Test set: cn.agentplatform.gateway.infra.PortalRunEventsSseTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 2.020 s <<< FAILURE! -- in cn.agentplatform.gateway.infra.PortalRunEventsSseTest
+cn.agentplatform.gateway.infra.PortalRunEventsSseTest.rawPayloadPreservesNumbersEscapesAndStringWhitespace -- Time elapsed: 2.007 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+Exception in thread "main" org.opentest4j.AssertionFailedError: raw numeric lexemes and escapes must survive ==> array lengths differ, expected: <76> but was: <67>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertArrayEquals.assertArraysHaveSameLength(AssertArrayEquals.java:428)
+	at org.junit.jupiter.api.AssertArrayEquals.assertArrayEquals(AssertArrayEquals.java:205)
+	at org.junit.jupiter.api.AssertArrayEquals.assertArrayEquals(AssertArrayEquals.java:63)
+	at org.junit.jupiter.api.Assertions.assertArrayEquals(Assertions.java:1238)
+	at cn.agentplatform.gateway.infra.PortalRunEventsSseTest.lambda$raw$2(PortalRunEventsSseTest.java:82)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialVerifier.consume(PortalEventsMaterialVerifier.java:93)
+	at cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session.lambda$consumeVerified$1(PortalRunEventsHttp.java:203)
+	at cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session.lambda$consumePrivate$2(PortalRunEventsHttp.java:325)
+	at org.apache.hc.client5.http.impl.classic.CloseableHttpClient.execute(CloseableHttpClient.java:247)
+	at org.apache.hc.client5.http.impl.classic.CloseableHttpClient.execute(CloseableHttpClient.java:188)
+	at cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session.consumePrivate(PortalRunEventsHttp.java:286)
+	at cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session.consumeVerified(PortalRunEventsHttp.java:199)
+	at cn.agentplatform.gateway.infra.PortalRunEventsSseTest.raw(PortalRunEventsSseTest.java:79)
+	at cn.agentplatform.gateway.infra.PortalRunEventsSseTest.main(PortalRunEventsSseTest.java:90)
+ ==> expected: <0> but was: <1>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:563)
+	at cn.agentplatform.gateway.infra.PortalRunEventsSseTest.child(PortalRunEventsSseTest.java:53)
+	at cn.agentplatform.gateway.infra.PortalRunEventsSseTest.rawPayloadPreservesNumbersEscapesAndStringWhitespace(PortalRunEventsSseTest.java:17)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+

@@ -1,0 +1,262 @@
+{
+  "phase": "green",
+  "fixtureOnly": true,
+  "checks": {
+    "permissionRestoreKeepsUnknownAck": true,
+    "detailAndCreationMutuallyExclusive": true,
+    "listRefreshCannotUnlockDetail": true,
+    "detailFailureReleasesOnlyItsLock": true,
+    "candidateReturnPreservesOriginalUnknownAck": true,
+    "accountReturnPreservesOriginalUnknownAck": true,
+    "otherOwnerCannotClearOriginalUnknownAck": true,
+    "sign-inReturnPreservesOriginalUnknownAck": true
+  },
+  "requests": [
+    {
+      "kind": "permission",
+      "path": "/admin/apps/async_a",
+      "method": "GET"
+    },
+    {
+      "kind": "permission",
+      "path": "/admin/evaluations",
+      "method": "GET"
+    },
+    {
+      "kind": "permission",
+      "path": "/admin/apps/async_a/publish/precheck",
+      "method": "POST"
+    },
+    {
+      "kind": "permission",
+      "path": "/admin/evaluations",
+      "method": "GET"
+    },
+    {
+      "kind": "permission",
+      "path": "/admin/evaluation-datasets",
+      "method": "GET"
+    },
+    {
+      "kind": "permission",
+      "path": "/admin/evaluation-datasets/async_a/v1",
+      "method": "GET"
+    },
+    {
+      "kind": "permission",
+      "path": "/admin/evaluations",
+      "method": "POST"
+    },
+    {
+      "kind": "permission",
+      "path": "/admin/evaluations",
+      "method": "GET"
+    },
+    {
+      "kind": "permission",
+      "path": "/admin/evaluations/er_existing",
+      "method": "GET"
+    },
+    {
+      "kind": "detail",
+      "path": "/admin/apps/async_a",
+      "method": "GET"
+    },
+    {
+      "kind": "detail",
+      "path": "/admin/evaluations",
+      "method": "GET"
+    },
+    {
+      "kind": "detail",
+      "path": "/admin/apps/async_a/publish/precheck",
+      "method": "POST"
+    },
+    {
+      "kind": "detail",
+      "path": "/admin/evaluations",
+      "method": "GET"
+    },
+    {
+      "kind": "detail",
+      "path": "/admin/evaluation-datasets",
+      "method": "GET"
+    },
+    {
+      "kind": "detail",
+      "path": "/admin/evaluation-datasets/async_a/v1",
+      "method": "GET"
+    },
+    {
+      "kind": "detail",
+      "path": "/admin/evaluations",
+      "method": "GET"
+    },
+    {
+      "kind": "detail",
+      "path": "/admin/evaluations/er_existing",
+      "method": "GET"
+    },
+    {
+      "kind": "detail",
+      "path": "/admin/evaluations",
+      "method": "GET"
+    },
+    {
+      "kind": "detail",
+      "path": "/admin/evaluations",
+      "method": "GET"
+    },
+    {
+      "kind": "candidate",
+      "path": "/admin/apps/async_a",
+      "method": "GET"
+    },
+    {
+      "kind": "candidate",
+      "path": "/admin/evaluations",
+      "method": "GET"
+    },
+    {
+      "kind": "candidate",
+      "path": "/admin/apps/async_a/publish/precheck",
+      "method": "POST"
+    },
+    {
+      "kind": "candidate",
+      "path": "/admin/evaluations",
+      "method": "GET"
+    },
+    {
+      "kind": "candidate",
+      "path": "/admin/evaluation-datasets",
+      "method": "GET"
+    },
+    {
+      "kind": "candidate",
+      "path": "/admin/evaluation-datasets/async_a/v1",
+      "method": "GET"
+    },
+    {
+      "kind": "candidate",
+      "path": "/admin/evaluations",
+      "method": "POST"
+    },
+    {
+      "kind": "candidate",
+      "path": "/admin/apps/async_a/publish/precheck",
+      "method": "POST"
+    },
+    {
+      "kind": "candidate",
+      "path": "/admin/evaluations",
+      "method": "GET"
+    },
+    {
+      "kind": "candidate",
+      "path": "/admin/apps/async_a/publish/precheck",
+      "method": "POST"
+    },
+    {
+      "kind": "candidate",
+      "path": "/admin/evaluations",
+      "method": "GET"
+    },
+    {
+      "kind": "account",
+      "path": "/admin/apps/async_a",
+      "method": "GET"
+    },
+    {
+      "kind": "account",
+      "path": "/admin/evaluations",
+      "method": "GET"
+    },
+    {
+      "kind": "account",
+      "path": "/admin/apps/async_a/publish/precheck",
+      "method": "POST"
+    },
+    {
+      "kind": "account",
+      "path": "/admin/evaluations",
+      "method": "GET"
+    },
+    {
+      "kind": "account",
+      "path": "/admin/evaluation-datasets",
+      "method": "GET"
+    },
+    {
+      "kind": "account",
+      "path": "/admin/evaluation-datasets/async_a/v1",
+      "method": "GET"
+    },
+    {
+      "kind": "account",
+      "path": "/admin/evaluations",
+      "method": "POST"
+    },
+    {
+      "kind": "account",
+      "path": "/admin/evaluations",
+      "method": "GET"
+    },
+    {
+      "kind": "account",
+      "path": "/admin/evaluations/er_other",
+      "method": "GET"
+    },
+    {
+      "kind": "account",
+      "path": "/admin/evaluations/er_existing",
+      "method": "GET"
+    },
+    {
+      "kind": "sign-in",
+      "path": "/admin/apps/async_a",
+      "method": "GET"
+    },
+    {
+      "kind": "sign-in",
+      "path": "/admin/evaluations",
+      "method": "GET"
+    },
+    {
+      "kind": "sign-in",
+      "path": "/admin/apps/async_a/publish/precheck",
+      "method": "POST"
+    },
+    {
+      "kind": "sign-in",
+      "path": "/admin/evaluations",
+      "method": "GET"
+    },
+    {
+      "kind": "sign-in",
+      "path": "/admin/evaluation-datasets",
+      "method": "GET"
+    },
+    {
+      "kind": "sign-in",
+      "path": "/admin/evaluation-datasets/async_a/v1",
+      "method": "GET"
+    },
+    {
+      "kind": "sign-in",
+      "path": "/admin/evaluations",
+      "method": "POST"
+    },
+    {
+      "kind": "sign-in",
+      "path": "/admin/evaluations",
+      "method": "GET"
+    },
+    {
+      "kind": "sign-in",
+      "path": "/admin/evaluation-datasets",
+      "method": "GET"
+    }
+  ],
+  "pageErrors": []
+}

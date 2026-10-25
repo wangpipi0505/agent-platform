@@ -1,0 +1,25 @@
+# NOT included by kustomization.yaml. Requires a real concurrent-runs gauge,
+# Prometheus adapter, and measured per-pod capacity; these have not been accepted.
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: engine-runtime
+  namespace: agent-platform-v12
+spec:
+  minReplicas: 2
+  maxReplicas: 10
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: engine-runtime
+  metrics:
+    - type: Pods
+      pods:
+        metric:
+          name: engine_active_runs
+        target:
+          type: AverageValue
+          averageValue: '50'
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300

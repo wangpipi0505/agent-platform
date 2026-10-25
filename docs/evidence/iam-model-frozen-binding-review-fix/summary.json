@@ -1,0 +1,436 @@
+{
+  "status": "REPAIR_DONE_PENDING_INDEPENDENT_REVIEW",
+  "sourceSha256": "2aa978a9b19297fc15ea428f2fddca3cd4a3604f1c00b43174002a8ac826fa7c",
+  "tests": {
+    "red": {
+      "running": [
+        "[INFO] Running cn.agentplatform.model.application.FrozenModelBindingVerifierTest"
+      ],
+      "xml": [
+        {
+          "file": "red/target/model-gateway/surefire-reports/TEST-cn.agentplatform.model.application.FrozenModelBindingVerifierTest.xml",
+          "name": "cn.agentplatform.model.application.FrozenModelBindingVerifierTest",
+          "tests": 2,
+          "failures": 1,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            {
+              "name": "transactionBudgetRejectsDelayedReadBeforeFinalRefresh",
+              "time": "4.716",
+              "failure": {
+                "message": "[expired transaction cannot mint a binding proof] \nExpecting actual not to be null",
+                "type": "java.lang.AssertionError"
+              }
+            },
+            {
+              "name": "realFreezeAndAcceptedConsumerPositiveControl",
+              "time": "0.428",
+              "failure": null
+            }
+          ]
+        }
+      ],
+      "exit": 1,
+      "sourceSha256": "f46625446d10d0375f2e3ba8e31f0a46cafa3d70f2c147c9504c048c407ec024"
+    },
+    "green": {
+      "running": [
+        "[INFO] Running cn.agentplatform.model.application.FrozenModelBindingConsumerHttpTest",
+        "[INFO] Running cn.agentplatform.model.application.FrozenModelBindingVerifierTest",
+        "[INFO] Running cn.agentplatform.model.infra.FrozenModelBindingStorePostgresTest"
+      ],
+      "xml": [
+        {
+          "file": "green/target/model-gateway/surefire-reports/TEST-cn.agentplatform.model.application.FrozenModelBindingConsumerHttpTest.xml",
+          "name": "cn.agentplatform.model.application.FrozenModelBindingConsumerHttpTest",
+          "tests": 2,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            {
+              "name": "realSeparateJvmFrozenBindingJoinAndNumericDigest",
+              "time": "2.454",
+              "failure": null
+            },
+            {
+              "name": "separateProducerRejectsWrongOwnerRootOriginBeforeBindingSql",
+              "time": "0.52",
+              "failure": null
+            }
+          ]
+        },
+        {
+          "file": "green/target/model-gateway/surefire-reports/TEST-cn.agentplatform.model.application.FrozenModelBindingVerifierTest.xml",
+          "name": "cn.agentplatform.model.application.FrozenModelBindingVerifierTest",
+          "tests": 19,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            {
+              "name": "rejectsChangedSnapshotUnderOldSha",
+              "time": "0.855",
+              "failure": null
+            },
+            {
+              "name": "metadataBoundsAreStrictBeforeNewProof",
+              "time": "7.998",
+              "failure": null
+            },
+            {
+              "name": "fullTreeHashRetainsArrayOrderAndObjectOrderIsCanonical",
+              "time": "0.329",
+              "failure": null
+            },
+            {
+              "name": "frozenStateSurvivesMutableDisableAndEndpointLabelModelChanges",
+              "time": "0.631",
+              "failure": null
+            },
+            {
+              "name": "interruptionExpiryAndBoundedPoolNeverMintOrRetry",
+              "time": "2.672",
+              "failure": null
+            },
+            {
+              "name": "transactionBudgetRejectsDelayedReadBeforeFinalRefresh",
+              "time": "3.609",
+              "failure": null
+            },
+            {
+              "name": "realFreezeAndAcceptedConsumerPositiveControl",
+              "time": "0.317",
+              "failure": null
+            },
+            {
+              "name": "capabilitiesAndEffectiveOutputAreChecked",
+              "time": "1.486",
+              "failure": null
+            },
+            {
+              "name": "refreshFollowsActualConnectionReleaseAndNarrowingRevocationOutageDeny",
+              "time": "1.485",
+              "failure": null
+            },
+            {
+              "name": "numericDigestCopiesAndResultLifetime",
+              "time": "0.371",
+              "failure": null
+            },
+            {
+              "name": "nullClosedReplacedCrossThreadAndAmbientTransactionDenyBeforeQuery",
+              "time": "0.259",
+              "failure": null
+            },
+            {
+              "name": "transactionCleanupOverrunCannotReachFinalRefresh",
+              "time": "3.573",
+              "failure": null
+            },
+            {
+              "name": "emptyClassificationRequiresLocalAndRetainedExpiryRetiresNewProof",
+              "time": "0.54",
+              "failure": null
+            },
+            {
+              "name": "cooperativeEightSecondEnvelopeCannotMintAfterOverrun",
+              "time": "8.325",
+              "failure": null
+            },
+            {
+              "name": "signedPostPgOwnerRootInitialOriginAndNewLabelChangesAreRechecked",
+              "time": "2.06",
+              "failure": null
+            },
+            {
+              "name": "actualHttpObserverPositiveControlsAndNoBusinessWrites",
+              "time": "0.365",
+              "failure": null
+            },
+            {
+              "name": "retainsLostLabelObligation",
+              "time": "0.259",
+              "failure": null
+            },
+            {
+              "name": "realPgLockTimeoutThenFreshHealthyFrame",
+              "time": "1.414",
+              "failure": null
+            },
+            {
+              "name": "missingTenantRowAndNestedIdsHaveNoMutableFallback",
+              "time": "2.457",
+              "failure": null
+            }
+          ]
+        },
+        {
+          "file": "green/target/model-gateway/surefire-reports/TEST-cn.agentplatform.model.infra.FrozenModelBindingStorePostgresTest.xml",
+          "name": "cn.agentplatform.model.infra.FrozenModelBindingStorePostgresTest",
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            {
+              "name": "ordinaryStoreRequiresActualReadOnlyTransaction",
+              "time": "0.552",
+              "failure": null
+            }
+          ]
+        }
+      ],
+      "exit": 0,
+      "sourceSha256": "2aa978a9b19297fc15ea428f2fddca3cd4a3604f1c00b43174002a8ac826fa7c"
+    }
+  },
+  "native": {
+    "beforeCount": 667,
+    "afterCount": 667,
+    "added": [],
+    "changed": [
+      "model-gateway/src/main/java/cn/agentplatform/model/application/FrozenModelBindingVerifier.java",
+      "model-gateway/src/main/java/cn/agentplatform/model/infra/FrozenModelBindingStore.java",
+      "model-gateway/src/test/java/cn/agentplatform/model/application/FrozenModelBindingVerifierTest.java"
+    ],
+    "removed": [],
+    "unchanged": 664,
+    "nativeBinaryPatchBytes": 10303,
+    "nativeBinaryPatchSha256": "0e0f10c8eb364fc7f8c33918c5305b0fe870b876109e451711a71ec847dc7346",
+    "diffCheck": 0,
+    "applyCheck": 0,
+    "apply": 0,
+    "full667Equivalent": true,
+    "commands": [
+      {
+        "args": [
+          "git",
+          "-C",
+          "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\iam-model-frozen-binding-review-fix\\native-sealed\\work",
+          "init"
+        ],
+        "exit": 0,
+        "stdout": "Initialized empty Git repository in G:/207/项目/算法重组工具/代码/agent-platform/.local/iam-model-frozen-binding-review-fix/native-sealed/work/.git/\n",
+        "stderr": ""
+      },
+      {
+        "args": [
+          "git",
+          "-C",
+          "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\iam-model-frozen-binding-review-fix\\native-sealed\\work",
+          "config",
+          "core.autocrlf",
+          "false"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "args": [
+          "git",
+          "-C",
+          "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\iam-model-frozen-binding-review-fix\\native-sealed\\work",
+          "config",
+          "core.whitespace",
+          "cr-at-eol"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "args": [
+          "git",
+          "-C",
+          "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\iam-model-frozen-binding-review-fix\\native-sealed\\work",
+          "add",
+          "--pathspec-from-file=G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\iam-model-frozen-binding-review-fix\\native-sealed\\before-pathspec.txt"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "args": [
+          "git",
+          "-C",
+          "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\iam-model-frozen-binding-review-fix\\native-sealed\\work",
+          "diff",
+          "--binary",
+          "--no-ext-diff",
+          "--no-textconv"
+        ],
+        "exit": 0,
+        "stdout": "diff --git a/model-gateway/src/main/java/cn/agentplatform/model/application/FrozenModelBindingVerifier.java b/model-gateway/src/main/java/cn/agentplatform/model/application/FrozenModelBindingVerifier.java\nindex 84ca4bc..6bc2737 100644\n--- a/model-gateway/src/main/java/cn/agentplatform/model/application/FrozenModelBindingVerifier.java\n+++ b/model-gateway/src/main/java/cn/agentplatform/model/application/FrozenModelBindingVerifier.java\n@@ -20,6 +20,7 @@ import org.springframework.transaction.support.*;\n /** Explicit, request-local prerequisite. No bean, credential, tokenization or outbound-send path. */\r\n public final class FrozenModelBindingVerifier {\r\n   private static final long ENVELOPE_NANOS = 8_000_000_000L;\r\n+  private static final long TRANSACTION_NANOS = 3_000_000_000L;\r\n   private static final ObjectMapper STRICT = new ObjectMapper(\r\n       JsonFactory.builder().enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION)\r\n           .streamReadConstraints(StreamReadConstraints.builder().maxNestingDepth(32)\r\n@@ -65,16 +66,20 @@ public final class FrozenModelBindingVerifier {\n     same(manifest.modelBindingRef().sha256(), text(request.path(\"modelBindingRef\").get(\"sha256\"),64));\r\n     if (!manifest.modelBindingRef().sha256().matches(\"[0-9a-f]{64}\")) throw missing();\r\n     checkTime(started);\r\n+    // Start conservatively before acquisition: Spring's holder covers the actual transaction,\r\n+    // while this monotonic budget also rejects slow begin/commit/cleanup before final IAM.\r\n+    long transactionStarted = System.nanoTime();\r\n     BindingRow row;\r\n     try {\r\n       row = tx.execute(status -> {\r\n-        checkTime(started);\r\n+        checkTransactionTime(started, transactionStarted);\r\n         AuthorityContext.requireBound(captured);\r\n         captured.requireVerified();\r\n         var found = store.read(initial.tenantId(), manifest.modelBindingRef().bindingId());\r\n-        checkTime(started);\r\n+        checkTransactionTime(started, transactionStarted);\r\n         captured.requireVerified();\r\n         AuthorityContext.requireBound(captured);\r\n+        checkTransactionTime(started, transactionStarted);\r\n         return found;\r\n       });\r\n     } catch (PlatformException e) {\r\n@@ -82,7 +87,7 @@ public final class FrozenModelBindingVerifier {\n     } catch (RuntimeException e) {\r\n       throw unavailable();\r\n     }\r\n-    checkTime(started);\r\n+    checkTransactionTime(started, transactionStarted);\r\n     JsonNode metadata = metadata(row, manifest);\r\n     checkTime(started);\r\n     // TransactionTemplate has completed cleanup, including returning its connection, before IAM.\r\n@@ -197,6 +202,11 @@ public final class FrozenModelBindingVerifier {\n     try { return HexFormat.of().formatHex(MessageDigest.getInstance(\"SHA-256\").digest(bytes)); }\r\n     catch (java.security.NoSuchAlgorithmException e) { throw new IllegalStateException(e); }\r\n   }\r\n+  private static void checkTransactionTime(long started, long transactionStarted) {\r\n+    checkTime(started);\r\n+    if (System.nanoTime() - transactionStarted >= TRANSACTION_NANOS) throw unavailable();\r\n+  }\r\n+\r\n   private static void checkTime(long started) {\r\n     if (Thread.currentThread().isInterrupted() || System.nanoTime()-started>=ENVELOPE_NANOS) throw unavailable();\r\n   }\r\ndiff --git a/model-gateway/src/main/java/cn/agentplatform/model/infra/FrozenModelBindingStore.java b/model-gateway/src/main/java/cn/agentplatform/model/infra/FrozenModelBindingStore.java\nindex e81696b..d0c4b04 100644\n--- a/model-gateway/src/main/java/cn/agentplatform/model/infra/FrozenModelBindingStore.java\n+++ b/model-gateway/src/main/java/cn/agentplatform/model/infra/FrozenModelBindingStore.java\n@@ -5,6 +5,7 @@ import java.sql.*;\n import java.util.Objects;\n import javax.sql.DataSource;\n import org.springframework.jdbc.datasource.DataSourceUtils;\n+import org.springframework.jdbc.datasource.ConnectionHolder;\n import org.springframework.transaction.support.TransactionSynchronizationManager;\n \n /** Ordinary row data only. The application verifier owns authority and the transaction. */\n@@ -15,19 +16,27 @@ public final class FrozenModelBindingStore {\n     if (!TransactionSynchronizationManager.isActualTransactionActive()\n         || !TransactionSynchronizationManager.isCurrentTransactionReadOnly())\n       throw new IllegalStateException(\"FROZEN_BINDING_REQUIRES_READ_ONLY_TRANSACTION\");\n+    long started = System.nanoTime();\n+    checkTime(started);\n     Connection connection = DataSourceUtils.getConnection(dataSource);\n     try (var setup = connection.createStatement()) {\n-      setup.setQueryTimeout(2);\n+      timeout(setup, started);\n       setup.execute(\"set local statement_timeout='2000ms'\");\n+      timeout(setup, started);\n       setup.execute(\"set local lock_timeout='1000ms'\");\n       try (var query = connection.prepareStatement(\n           \"select id,model_entry_id,provider_id,sha256,case when octet_length(snapshot::text)<=262144 then snapshot::text else null end as snapshot_json from model.binding_snapshot where tenant_id=? and id=?\")) {\n-        query.setQueryTimeout(2); query.setMaxRows(2);\n+        timeout(query, started); query.setMaxRows(2);\n         query.setString(1, tenantId); query.setLong(2, bindingId);\n         try (var rows = query.executeQuery()) {\n-          if (!rows.next()) throw missing();\n+          boolean present = rows.next();\n+          checkTime(started);\n+          if (!present) throw missing();\n           var row = new BindingRow(rows.getLong(1), rows.getLong(2), rows.getLong(3), rows.getString(4), rows.getString(5));\n-          if (rows.next() || row.snapshotJson() == null) throw missing();\n+          checkTime(started);\n+          boolean extra = rows.next();\n+          checkTime(started);\n+          if (extra || row.snapshotJson() == null) throw missing();\n           return row;\n         }\n       }\n@@ -35,6 +44,20 @@ public final class FrozenModelBindingStore {\n       throw new PlatformException(503,\"SYS-MODEL-503\",\"模型绑定暂不可用\");\n     } finally { DataSourceUtils.releaseConnection(connection,dataSource); }\n   }\n+  private void timeout(Statement statement, long started) throws SQLException {\n+    checkTime(started);\n+    // Spring reads/validates the holder deadline per execution. Its whole-second TTL rounds up,\n+    // so retain the independent 2s cap and reject elapsed work again after reads/callback/cleanup.\n+    DataSourceUtils.applyTimeout(statement, dataSource, 2);\n+    statement.setQueryTimeout(Math.min(2, statement.getQueryTimeout()));\n+    checkTime(started);\n+  }\n+  private void checkTime(long started) {\n+    if (Thread.currentThread().isInterrupted() || System.nanoTime() - started >= 3_000_000_000L)\n+      throw new PlatformException(503,\"SYS-MODEL-503\",\"模型绑定暂不可用\");\n+    var holder = (ConnectionHolder) TransactionSynchronizationManager.getResource(dataSource);\n+    if (holder != null && holder.hasTimeout()) holder.getTimeToLiveInMillis();\n+  }\n   private static PlatformException missing() { return new PlatformException(403,\"MATERIAL_SCOPE_MISSING_OR_CHANGED\",\"材料范围缺失或已改变\"); }\n   public record BindingRow(long id,long modelEntryId,long providerId,String sha256,String snapshotJson) {}\n }\ndiff --git a/model-gateway/src/test/java/cn/agentplatform/model/application/FrozenModelBindingVerifierTest.java b/model-gateway/src/test/java/cn/agentplatform/model/application/FrozenModelBindingVerifierTest.java\nindex bfd8eda..2008efb 100644\n--- a/model-gateway/src/test/java/cn/agentplatform/model/application/FrozenModelBindingVerifierTest.java\n+++ b/model-gateway/src/test/java/cn/agentplatform/model/application/FrozenModelBindingVerifierTest.java\n@@ -15,6 +15,39 @@ class FrozenModelBindingVerifierTest {\n       f.accepted(input->{var proof=new FrozenModelBindingVerifier(f.ds).verify(input);assertThat(proof.bindingSha256()).isEqualTo(f.binding.path(\"sha256\").asText());assertThat(f.ds.reads).hasValue(1);assertThat(f.ds.borrowed).hasValue(0);return null;});\r\n     }\r\n   }\r\n+  @Test void transactionBudgetRejectsDelayedReadBeforeFinalRefresh()throws Exception{\r\n+    try(var f=new FrozenModelBindingConsumerFixture()){\r\n+      f.accepted(input->{\r\n+        int calls=f.consumer.iam.authorityCalls();\r\n+        f.ds.beforeRead=()->{\r\n+          assertThat(f.ds.transactions.getLast()).containsEntry(\"readOnly\",true).containsEntry(\"autoCommit\",false);\r\n+          try{Thread.sleep(3250);}catch(InterruptedException e){Thread.currentThread().interrupt();}\r\n+        };\r\n+        long start=System.nanoTime();\r\n+        var failure=catchThrowable(()->new FrozenModelBindingVerifier(f.ds).verify(input));\r\n+        long elapsed=java.time.Duration.ofNanos(System.nanoTime()-start).toMillis();\r\n+        assertThat(elapsed).isBetween(3000L,7900L);\r\n+        assertThat(f.ds.borrowed).hasValue(0);\r\n+        assertThat(failure).as(\"expired transaction cannot mint a binding proof\").isInstanceOfSatisfying(PlatformException.class,e->{\r\n+          assertThat(e.status()).isEqualTo(503);assertThat(e.code()).isEqualTo(\"SYS-MODEL-503\");assertThat(e.getMessage()).isEqualTo(\"模型绑定暂不可用\");\r\n+        });\r\n+        assertThat(f.consumer.iam.authorityCalls()).isEqualTo(calls);\r\n+        return null;\r\n+      });\r\n+    }\r\n+  }\r\n+  @Test void transactionCleanupOverrunCannotReachFinalRefresh()throws Exception{\r\n+    try(var f=new FrozenModelBindingConsumerFixture()){\r\n+      f.accepted(input->{\r\n+        int calls=f.consumer.iam.authorityCalls();\r\n+        f.ds.afterRelease=()->{try{Thread.sleep(3250);}catch(InterruptedException e){Thread.currentThread().interrupt();}};\r\n+        assertThatThrownBy(()->new FrozenModelBindingVerifier(f.ds).verify(input)).isInstanceOfSatisfying(PlatformException.class,e->{\r\n+          assertThat(e.status()).isEqualTo(503);assertThat(e.code()).isEqualTo(\"SYS-MODEL-503\");assertThat(e.getMessage()).isEqualTo(\"模型绑定暂不可用\");\r\n+        });\r\n+        assertThat(f.consumer.iam.authorityCalls()).isEqualTo(calls);assertThat(f.ds.borrowed).hasValue(0);return null;\r\n+      });\r\n+    }\r\n+  }\r\n   @Test void rejectsChangedSnapshotUnderOldSha()throws Exception{\r\n     try(var f=new FrozenModelBindingConsumerFixture()){\r\n       var snapshot=(ObjectNode)Json.read(f.original);snapshot.put(\"modelName\",\"tampered\");f.snapshot(snapshot,false);\r\n",
+        "stderr": ""
+      },
+      {
+        "args": [
+          "git",
+          "-C",
+          "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\iam-model-frozen-binding-review-fix\\native-sealed\\work",
+          "diff",
+          "--check"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "args": [
+          "git",
+          "-C",
+          "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\iam-model-frozen-binding-review-fix\\native-sealed\\apply",
+          "init"
+        ],
+        "exit": 0,
+        "stdout": "Initialized empty Git repository in G:/207/项目/算法重组工具/代码/agent-platform/.local/iam-model-frozen-binding-review-fix/native-sealed/apply/.git/\n",
+        "stderr": ""
+      },
+      {
+        "args": [
+          "git",
+          "-C",
+          "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\iam-model-frozen-binding-review-fix\\native-sealed\\apply",
+          "config",
+          "core.autocrlf",
+          "false"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "args": [
+          "git",
+          "-C",
+          "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\iam-model-frozen-binding-review-fix\\native-sealed\\apply",
+          "config",
+          "core.whitespace",
+          "cr-at-eol"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "args": [
+          "git",
+          "-C",
+          "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\iam-model-frozen-binding-review-fix\\native-sealed\\apply",
+          "apply",
+          "--check",
+          "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\iam-model-frozen-binding-review-fix\\native-sealed\\change.patch"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "args": [
+          "git",
+          "-C",
+          "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\iam-model-frozen-binding-review-fix\\native-sealed\\apply",
+          "apply",
+          "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\iam-model-frozen-binding-review-fix\\native-sealed\\change.patch"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    ]
+  },
+  "resourceEpochs": [
+    {
+      "database": "iam_model_frozen_binding_fix_31e30d3ffa214e7882d10a1fe875195f",
+      "sessions": 0,
+      "roles": [
+        {
+          "rolname": "imfbfix_m_31e30d3ffa214e7882d10a1fe875195f",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolcreatedb": false,
+          "rolcreaterole": false,
+          "rolreplication": false,
+          "rolbypassrls": false
+        },
+        {
+          "rolname": "imfbfix_e_31e30d3ffa214e7882d10a1fe875195f",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolcreatedb": false,
+          "rolcreaterole": false,
+          "rolreplication": false,
+          "rolbypassrls": false
+        }
+      ],
+      "schemaPrivileges": [
+        {
+          "rolname": "imfbfix_m_31e30d3ffa214e7882d10a1fe875195f",
+          "model_usage": true,
+          "engine_usage": false
+        },
+        {
+          "rolname": "imfbfix_e_31e30d3ffa214e7882d10a1fe875195f",
+          "model_usage": false,
+          "engine_usage": true
+        }
+      ],
+      "businessCounters": {
+        "call_logs": 0,
+        "quotas": 0
+      },
+      "memberships": 0
+    },
+    {
+      "database": "iam_model_frozen_binding_fix_0bc56524744c45c297bb8f1d4c9ac8ab",
+      "sessions": 0,
+      "roles": [
+        {
+          "rolname": "imfbfix_m_0bc56524744c45c297bb8f1d4c9ac8ab",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolcreatedb": false,
+          "rolcreaterole": false,
+          "rolreplication": false,
+          "rolbypassrls": false
+        },
+        {
+          "rolname": "imfbfix_e_0bc56524744c45c297bb8f1d4c9ac8ab",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolcreatedb": false,
+          "rolcreaterole": false,
+          "rolreplication": false,
+          "rolbypassrls": false
+        }
+      ],
+      "schemaPrivileges": [
+        {
+          "rolname": "imfbfix_m_0bc56524744c45c297bb8f1d4c9ac8ab",
+          "model_usage": true,
+          "engine_usage": false
+        },
+        {
+          "rolname": "imfbfix_e_0bc56524744c45c297bb8f1d4c9ac8ab",
+          "model_usage": false,
+          "engine_usage": true
+        }
+      ],
+      "businessCounters": {
+        "call_logs": 0,
+        "quotas": 0
+      },
+      "memberships": 0
+    }
+  ],
+  "privateLogCheck": {
+    "secretValuesChecked": 18,
+    "filesChecked": 281,
+    "matches": 0
+  },
+  "accepted": false
+}

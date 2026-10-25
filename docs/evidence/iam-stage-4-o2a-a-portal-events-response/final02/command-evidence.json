@@ -1,0 +1,302 @@
+[
+  {
+    "stage": "red01",
+    "meaning": "setup: gateway configuration created before fixture actor; not RED",
+    "command": "node .tools/run-iam-module-tests.mjs iam-stage-o2a-a-red01 admin-common PortalEventsAuthorityProfileTest#realSignedEventsAdmissionOpensIndependentFreshResponseAndCrossesThreads",
+    "exitCode": 1,
+    "tests": 1,
+    "failures": 0,
+    "errors": 1,
+    "skipped": 0,
+    "executedSource": {
+      "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/red01/before/source.json",
+      "bytes": 111777,
+      "sha256": "43c733da73965814fdd0313a3327d593d704ce556f7aa403ac1c7a4a9add721d"
+    },
+    "actualRunning": {
+      "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/red01/after/actual-running.json",
+      "bytes": 524,
+      "sha256": "aae89cbe2902da98484421a16d28bcfd890570f7a64b8e97021b4b2a866b5400"
+    },
+    "raw": {
+      "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/red01/after/raw.log",
+      "bytes": 6873,
+      "sha256": "deaf56952312c56325a7066441d290ee4c380b1173b9a31183bd34d68644923d"
+    }
+  },
+  {
+    "stage": "red02",
+    "meaning": "meaningful RED: actual signed E exchange/authorize/frame reaches default-closed open",
+    "command": "node .tools/run-iam-module-tests.mjs iam-stage-o2a-a-red02 admin-common PortalEventsAuthorityProfileTest#realSignedEventsAdmissionOpensIndependentFreshResponseAndCrossesThreads",
+    "exitCode": 1,
+    "tests": 1,
+    "failures": 0,
+    "errors": 1,
+    "skipped": 0,
+    "executedSource": {
+      "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/red02/before/source.json",
+      "bytes": 111777,
+      "sha256": "7c10ea117fb313869d398aef82f335b5be1d3055a86cb48464de45a8ad5fcf1b"
+    },
+    "actualRunning": {
+      "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/red02/after/actual-running.json",
+      "bytes": 524,
+      "sha256": "c0b34feabded7523aac70226aba6b93178037923a3b0f7196d08206ee732e254"
+    },
+    "raw": {
+      "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/red02/after/raw.log",
+      "bytes": 6024,
+      "sha256": "887e9bd67ef17820c85d1072fb95b87c41bd4fb1ef06753bf5987a82cbd6c49a"
+    }
+  },
+  {
+    "stage": "green01",
+    "meaning": "setup: Java generic inference compilation failure; not RED",
+    "command": "node .tools/run-iam-module-tests.mjs iam-stage-o2a-a-green01 admin-common PortalEventsAuthorityProfileTest#realSignedEventsAdmissionOpensIndependentFreshResponseAndCrossesThreads",
+    "exitCode": 1,
+    "tests": 0,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "executedSource": {
+      "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/green01/before/source.json",
+      "bytes": 111777,
+      "sha256": "6a5cfb01bce5d8dcb1125939b68d40fb2d1efb4bc2e89b6a69ac281e63ad2dab"
+    },
+    "actualRunning": {
+      "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/green01/after/actual-running.json",
+      "bytes": 37,
+      "sha256": "bafce2509db455dabde6bc3b1945a56c45f58d98bb4ea6e5309be7836d7d7059"
+    },
+    "raw": {
+      "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/green01/after/raw.log",
+      "bytes": 4411,
+      "sha256": "40b08d26fec649ce858600ce6df7ba3a61079a7709551cd44eacc522349ed38a"
+    }
+  },
+  {
+    "stage": "green02",
+    "meaning": "behavior failure: local LongNode versus wire IntNode equality",
+    "command": "node .tools/run-iam-module-tests.mjs iam-stage-o2a-a-green02 admin-common PortalEventsAuthorityProfileTest#realSignedEventsAdmissionOpensIndependentFreshResponseAndCrossesThreads",
+    "exitCode": 1,
+    "tests": 1,
+    "failures": 0,
+    "errors": 1,
+    "skipped": 0,
+    "executedSource": {
+      "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/green02/before/source.json",
+      "bytes": 111777,
+      "sha256": "5b6d1f55910541fe97ec336f419d3a85a8979a2ac83776802a69377dbd25b208"
+    },
+    "actualRunning": {
+      "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/green02/after/actual-running.json",
+      "bytes": 524,
+      "sha256": "548f2237e070923594576551acb10982b54fcab73c5663fde5baf43ca48ff8b8"
+    },
+    "raw": {
+      "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/green02/after/raw.log",
+      "bytes": 6958,
+      "sha256": "5b7cc2ed86086a41af9dbf249cd25ec39ddedca618e1dcd1d17613e84b02c328"
+    }
+  },
+  {
+    "stage": "green03",
+    "meaning": "first positive real open/check/cross-thread GREEN",
+    "command": "node .tools/run-iam-module-tests.mjs iam-stage-o2a-a-green03 admin-common PortalEventsAuthorityProfileTest#realSignedEventsAdmissionOpensIndependentFreshResponseAndCrossesThreads",
+    "exitCode": 0,
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "executedSource": {
+      "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/green03/before/source.json",
+      "bytes": 111777,
+      "sha256": "1b7c10b5ca72c57a8cbe8c0dbeb3df3f601a679cc7b0d88057e74d3e91facf49"
+    },
+    "actualRunning": {
+      "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/green03/after/actual-running.json",
+      "bytes": 524,
+      "sha256": "e8aa9b7d437296e00319f454e6192628a4735a6e63d8ded31474ac4a46ca02d2"
+    },
+    "raw": {
+      "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/green03/after/raw.log",
+      "bytes": 4550,
+      "sha256": "12b4cd96a8f00b7af53ad8db055dde9207e748fb08fc944cb32965bc7f1e1bc2"
+    }
+  },
+  {
+    "stage": "red03",
+    "meaning": "meaningful RED: local expiry followed by wall rollback reused capture",
+    "command": "node .tools/run-iam-module-tests.mjs iam-stage-o2a-a-red03 admin-common PortalEventsAuthorityProfileTest#localExpiryDetectedByCaptureIsTerminalAcrossWallRollback",
+    "exitCode": 1,
+    "tests": 1,
+    "failures": 1,
+    "errors": 0,
+    "skipped": 0,
+    "executedSource": {
+      "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/red03/before/source.json",
+      "bytes": 111999,
+      "sha256": "2e742426e8e390e91cd0aec769fcd70d2f3a7041317f5b48bc477bb6aad2e970"
+    },
+    "actualRunning": {
+      "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/red03/after/actual-running.json",
+      "bytes": 524,
+      "sha256": "21c9623dbcd0ce171235d41a7901a284d38b2c4a1d209914eb62fcb8a31ccde3"
+    },
+    "raw": {
+      "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/red03/after/raw.log",
+      "bytes": 5885,
+      "sha256": "d2d8712ff0d390373c67e645d042c5a0b8d333fd89780ec85f0187d1908cf592"
+    }
+  },
+  {
+    "stage": "focused01",
+    "meaning": "13-method matrix: 11 pass, first anchor and internal-key category expose defects",
+    "command": "node .tools/run-iam-module-tests.mjs iam-stage-o2a-a-focused01 admin-common PortalEventsAuthorityProfileTest,PortalEventsReceiverClosedTest",
+    "exitCode": 1,
+    "tests": 13,
+    "failures": 1,
+    "errors": 1,
+    "skipped": 0,
+    "executedSource": {
+      "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/focused01/before/source.json",
+      "bytes": 111999,
+      "sha256": "e40006b2a82d441d8c5ee16dcc4e3f3ce60584cabb7e8db5f24d573346e77fb7"
+    },
+    "actualRunning": {
+      "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/focused01/after/actual-running.json",
+      "bytes": 1002,
+      "sha256": "6c2d94ce708e7e9c31487c7345056eff3e18ca8e04e0e45af66a2eaf6e4d2d8d"
+    },
+    "raw": {
+      "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/focused01/after/raw.log",
+      "bytes": 8413,
+      "sha256": "dbdeea63c9f49b2656b544173709c51f8bb068015c81a2f355791e4e770a8915"
+    }
+  },
+  {
+    "stage": "focused02",
+    "meaning": "targeted two defects GREEN; physical worker exit awaited outside lifecycle locks",
+    "command": "node .tools/run-iam-module-tests.mjs iam-stage-o2a-a-focused02 admin-common PortalEventsAuthorityProfileTest#realFirstAnchorSurvivesRefreshAndItsExpiredOldCurrentDoesNotSupplyPermission,PortalEventsAuthorityProfileTest#signedProfileBindingAndCryptographicFailuresNeverMintOrRelabelInternal401",
+    "exitCode": 0,
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "executedSource": {
+      "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/focused02/before/source.json",
+      "bytes": 111999,
+      "sha256": "b2506eec733ea5f8640da290cb24497885d880cc4e166e1620206980921e37bb"
+    },
+    "actualRunning": {
+      "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/focused02/after/actual-running.json",
+      "bytes": 524,
+      "sha256": "dc601ccfabb01f4549826a72ef177903dead9d38e62f712cc6e586b65470cd6e"
+    },
+    "raw": {
+      "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/focused02/after/raw.log",
+      "bytes": 4550,
+      "sha256": "c2f5cbaa751d14b50036d703d30d300683f2918795acadfb7bf58acc719f145c"
+    }
+  },
+  {
+    "stage": "focused03",
+    "meaning": "six new boundary methods GREEN",
+    "command": "node .tools/run-iam-module-tests.mjs iam-stage-o2a-a-focused03 admin-common PortalEventsAuthorityProfileTest#queryStatusAndExecutionRetainedCannotBorrowEventsResponseProfile,PortalEventsAuthorityProfileTest#renewalIndependentlyChecksSignedRequestSourceOperationAndCurrent,PortalEventsAuthorityProfileTest#actualDifferentRunCaptureIsNotExchangeableEvenForSamePrincipalAndOwner,PortalEventsAuthorityProfileTest#idleRevocationAndSourceOrGrantExpiryStopWithoutAConsumerAndNeverResumeExecution,PortalEventsAuthorityProfileTest#shorterPublicDeadlineAndRealElapsedTimeRemainHardAfterWallRollback,PortalEventsAuthorityProfileTest#boundedSlotsAndBlockedCancellationKeepTheirPhysicalOwnershipUntilWorkersReturn",
+    "exitCode": 0,
+    "tests": 6,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "executedSource": {
+      "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/focused03/before/source.json",
+      "bytes": 111999,
+      "sha256": "d2c38c2e9e2297e5f14ff66ade4629192cfa028d05a1d0aa8badfe976eff247e"
+    },
+    "actualRunning": {
+      "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/focused03/after/actual-running.json",
+      "bytes": 524,
+      "sha256": "ce91928109977c4de5222ca20a0fcd151c71cfc857ca99998104a41e49b9b983"
+    },
+    "raw": {
+      "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/focused03/after/raw.log",
+      "bytes": 4550,
+      "sha256": "3702b15f103ab12393a6cdea76ba3ee5a8fc3eb7e32252e13db00ce741c39880"
+    }
+  },
+  {
+    "stage": "final01",
+    "meaning": "only eight-class affected command; 72 PASS, 13 inherited ERROR retained",
+    "command": "node .tools/run-iam-module-tests.mjs iam-stage-o2a-a-final01 admin-common PortalEventsAuthorityProfileTest,PortalEventsReceiverClosedTest,AuthorityContextRetainedTest,RetainedAuthorizationTest,ResponseAuthorityTest,RunObservationSelectorsTest,GatewayStatusAuthorizationTest,ServiceAuthorizationTest",
+    "exitCode": 1,
+    "tests": 85,
+    "failures": 0,
+    "errors": 13,
+    "skipped": 0,
+    "executedSource": {
+      "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/final01/before/source.json",
+      "bytes": 111999,
+      "sha256": "6fa27e64cba736cfb27dab2f9ca7b3b6cce4c99f4f3a45791fcf4982c5a875ba"
+    },
+    "actualRunning": {
+      "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/final01/after/actual-running.json",
+      "bytes": 3793,
+      "sha256": "23f8a02ecc4f6280bd20f181f5ec5c5f8ac64918018db997e8af6cd454400791"
+    },
+    "raw": {
+      "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/final01/after/raw.log",
+      "bytes": 23204,
+      "sha256": "f0cdd95c2af59372d2ffb0eb80e7b8f4183aa8401c9fca5315d8acc1002bd742"
+    }
+  },
+  {
+    "stage": "red04",
+    "meaning": "meaningful RED: self-added historical/new ceiling equality rejects valid current coverage",
+    "command": "node .tools/run-iam-module-tests.mjs iam-stage-o2a-a-red04 admin-common PortalEventsAuthorityProfileTest#historicalExecutionCeilingIsProvenanceAndDoesNotHaveToEqualNewObservationCeiling",
+    "exitCode": 1,
+    "tests": 1,
+    "failures": 0,
+    "errors": 1,
+    "skipped": 0,
+    "executedSource": {
+      "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/red04/before/source.json",
+      "bytes": 111999,
+      "sha256": "16e393aa5db0d7ab07bd58bdfa8995c2e28fcebd9c37dc3a8d74e510665aefc4"
+    },
+    "actualRunning": {
+      "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/red04/after/actual-running.json",
+      "bytes": 524,
+      "sha256": "7c0d5206daebaf8b4819fc0193993b227b6e86eecdc0efb89486245f2c795546"
+    },
+    "raw": {
+      "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/red04/after/raw.log",
+      "bytes": 6137,
+      "sha256": "fec2be9274373715c203dc54d9ae4311ebcf9c02917a4fe19b12c2f287336a08"
+    }
+  },
+  {
+    "stage": "green04",
+    "meaning": "post-fix Profile whole class 22 GREEN; necessary regression for final production change",
+    "command": "node .tools/run-iam-module-tests.mjs iam-stage-o2a-a-green04 admin-common PortalEventsAuthorityProfileTest",
+    "exitCode": 0,
+    "tests": 22,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "executedSource": {
+      "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/green04/before/source.json",
+      "bytes": 111999,
+      "sha256": "6fa517a594efdf523b83c45188b03b9e7a9ad14482a29e7d8113cfe7227fd271"
+    },
+    "actualRunning": {
+      "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/green04/after/actual-running.json",
+      "bytes": 525,
+      "sha256": "c33323ca449d13b00c7a810002084f513e7f6cb2480c475d79a2fece6051e072"
+    },
+    "raw": {
+      "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/green04/after/raw.log",
+      "bytes": 4588,
+      "sha256": "b291b48d0ebc444f2e0ce7f9efa0447a2c54407012343108c711c8f6ffbd6b61"
+    }
+  }
+]

@@ -1,0 +1,37 @@
+-------------------------------------------------------------------------------
+Test set: cn.agentplatform.engine.infra.RunEventReaderPostgresTest
+-------------------------------------------------------------------------------
+Tests run: 2, Failures: 0, Errors: 2, Skipped: 0, Time elapsed: 5.190 s <<< FAILURE! -- in cn.agentplatform.engine.infra.RunEventReaderPostgresTest
+cn.agentplatform.engine.infra.RunEventReaderPostgresTest.statementTimeoutUsesRemainingFloorAfterParameterPreparation -- Time elapsed: 3.152 s <<< ERROR!
+cn.agentplatform.common.PlatformException: 运行授权或材料范围不匹配
+	at cn.agentplatform.engine.infra.RunAuthorityStore.denied(RunAuthorityStore.java:227)
+	at cn.agentplatform.engine.infra.RunEventReader$Work.lambda$query$0(RunEventReader.java:175)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:346)
+	at cn.agentplatform.engine.infra.RunEventReader$Work.query(RunEventReader.java:164)
+	at cn.agentplatform.engine.infra.MaterialScopeStore.requireObservedLocator(MaterialScopeStore.java:570)
+	at cn.agentplatform.engine.infra.RunEventReader.read(RunEventReader.java:90)
+	at cn.agentplatform.engine.infra.RunEventReader.lambda$readNext$0(RunEventReader.java:59)
+	at org.springframework.transaction.support.TransactionTemplate.execute(TransactionTemplate.java:140)
+	at cn.agentplatform.engine.infra.RunEventReader.readNext(RunEventReader.java:59)
+	at cn.agentplatform.engine.infra.RunEventReaderPostgresTest.statementTimeoutUsesRemainingFloorAfterParameterPreparation(RunEventReaderPostgresTest.java:199)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+cn.agentplatform.engine.infra.RunEventReaderPostgresTest.newMeasurementRecordsTokenBackingCanonicalModelAndTotalPeaks -- Time elapsed: 2.036 s <<< ERROR!
+cn.agentplatform.common.PlatformException: 运行授权或材料范围不匹配
+	at cn.agentplatform.engine.infra.RunAuthorityStore.denied(RunAuthorityStore.java:227)
+	at cn.agentplatform.engine.infra.RunEventReader$Work.lambda$query$0(RunEventReader.java:175)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:346)
+	at cn.agentplatform.engine.infra.RunEventReader$Work.query(RunEventReader.java:164)
+	at cn.agentplatform.engine.infra.RunEventReader$Work.jsonText(RunEventReader.java:189)
+	at cn.agentplatform.engine.infra.MaterialScopeStore.readObservedScope(MaterialScopeStore.java:551)
+	at cn.agentplatform.engine.infra.RunEventReader.read(RunEventReader.java:87)
+	at cn.agentplatform.engine.infra.RunEventReader.lambda$readNext$0(RunEventReader.java:59)
+	at org.springframework.transaction.support.TransactionTemplate.execute(TransactionTemplate.java:140)
+	at cn.agentplatform.engine.infra.RunEventReader.readNext(RunEventReader.java:59)
+	at cn.agentplatform.engine.infra.RunEventReaderPostgresTest.newMeasurementRecordsTokenBackingCanonicalModelAndTotalPeaks(RunEventReaderPostgresTest.java:204)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+

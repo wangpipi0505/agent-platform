@@ -1,0 +1,57 @@
+-------------------------------------------------------------------------------
+Test set: cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest
+-------------------------------------------------------------------------------
+Tests run: 2, Failures: 2, Errors: 0, Skipped: 0, Time elapsed: 3.850 s <<< FAILURE! -- in cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest
+cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.sameWindowReentrantWriterIsRejected -- Time elapsed: 1.812 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+Exception in thread "main" org.opentest4j.AssertionFailedError: Expected cn.agentplatform.common.PlatformException to be thrown, but nothing was thrown.
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:152)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:73)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:35)
+	at org.junit.jupiter.api.Assertions.assertThrows(Assertions.java:3128)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest$4.writeString(PortalEventsMaterialAuthorityTest.java:395)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialVerifier.write(PortalEventsMaterialVerifier.java:1017)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialVerifier.write(PortalEventsMaterialVerifier.java:1008)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialVerifier$VerifiedWindow.writePayload(PortalEventsMaterialVerifier.java:402)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.lambda$reentrantWriter$44(PortalEventsMaterialAuthorityTest.java:404)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialVerifier.consume(PortalEventsMaterialVerifier.java:93)
+	at cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session.lambda$consumeVerified$1(PortalRunEventsHttp.java:203)
+	at cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session.lambda$consumePrivate$2(PortalRunEventsHttp.java:325)
+	at org.apache.hc.client5.http.impl.classic.CloseableHttpClient.execute(CloseableHttpClient.java:247)
+	at org.apache.hc.client5.http.impl.classic.CloseableHttpClient.execute(CloseableHttpClient.java:188)
+	at cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session.consumePrivate(PortalRunEventsHttp.java:286)
+	at cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session.consumeVerified(PortalRunEventsHttp.java:199)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.reentrantWriter(PortalEventsMaterialAuthorityTest.java:382)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.main(PortalEventsMaterialAuthorityTest.java:867)
+ ==> expected: <0> but was: <1>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:563)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.child(PortalEventsMaterialAuthorityTest.java:108)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.sameWindowReentrantWriterIsRejected(PortalEventsMaterialAuthorityTest.java:300)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.sameWindowConcurrentWriterIsRejected -- Time elapsed: 1.940 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+Exception in thread "main" cn.agentplatform.common.PlatformException: ���й۲�Ԫ�����ݲ�����
+	at cn.agentplatform.gateway.infra.PortalRunEventsHttp.unavailable(PortalRunEventsHttp.java:820)
+	at cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session.consumePrivate(PortalRunEventsHttp.java:335)
+	at cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session.consumeVerified(PortalRunEventsHttp.java:199)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.singleWriter(PortalEventsMaterialAuthorityTest.java:310)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.main(PortalEventsMaterialAuthorityTest.java:866)
+ ==> expected: <0> but was: <1>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:563)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.child(PortalEventsMaterialAuthorityTest.java:108)
+	at cn.agentplatform.gateway.infra.PortalEventsMaterialAuthorityTest.sameWindowConcurrentWriterIsRejected(PortalEventsMaterialAuthorityTest.java:297)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+

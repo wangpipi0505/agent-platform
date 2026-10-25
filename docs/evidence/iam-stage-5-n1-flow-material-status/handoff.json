@@ -1,0 +1,187 @@
+{
+  "status": "DONE_WITH_CONCERNS",
+  "root": "G:/207/项目/算法重组工具/代码/agent-platform",
+  "completedAt": "2026-10-20T12:04:13.315Z",
+  "ownershipReturned": {
+    "source": true,
+    "target": true,
+    "recipient": "root",
+    "authorWillNotRunMavenOrModifySourceTarget": true
+  },
+  "report": {
+    "file": "docs/evidence/iam-stage-5-n1-flow-material-status-report.md",
+    "bytes": 15459,
+    "sha256": "41b9ec7d5e36e7737f9e91ca038f142936d46e64a5a40ac5fb967bcd687d5f10"
+  },
+  "source": {
+    "file": "docs/evidence/iam-stage-5-n1-flow-material-status/source-after.json",
+    "bytes": 74381,
+    "sha256": "bbc0491672b771781405173869706a2d741673dd96b76d9b919666560a2aa51c"
+  },
+  "target": {
+    "file": "docs/evidence/iam-stage-5-n1-flow-material-status/target-after.json",
+    "bytes": 356710,
+    "sha256": "6f2f43db986d1ec09a942342b469e9d9d998814889a86a2ed92a1cc7a354c706"
+  },
+  "sourceBefore": {
+    "file": "docs/evidence/iam-stage-5-n1-flow-material-status/source-before.json",
+    "bytes": 73294,
+    "sha256": "bdd8d926e3aed39bc4812d3a2ca9ee73651de7446b7bc03f35667fcbda1d4ced"
+  },
+  "targetBefore": {
+    "file": "docs/evidence/iam-stage-5-n1-flow-material-status/target-before.json",
+    "bytes": 350300,
+    "sha256": "d49ed3864f336bd48d552cc562f34a8857a3c28e89660bbe0759a3800436d68a"
+  },
+  "sourceCount": 362,
+  "targetCount": 1740,
+  "changedSources": 14,
+  "targetChanges": 51,
+  "jarChanges": 0,
+  "sourceManifestPrior": "docs/evidence/iam-stage-4-d3b/source-after.json",
+  "sourceManifestPriorSha256": "bdd8d926e3aed39bc4812d3a2ca9ee73651de7446b7bc03f35667fcbda1d4ced",
+  "finalTest": {
+    "stage": "iam-stage-5-n1-final01",
+    "command": "node .tools/run-iam-module-tests.mjs iam-stage-5-n1-final01 engine-runtime FlowMaterialScopePostgresTest,FlowMaterialStatusPostgresTest,FlowMaterialTransactionsPostgresTest,InitialMaterialScopePostgresTest,RunAuthorityPersistencePostgresTest,RunAuthorityLocalCurrentPostgresTest",
+    "exitCode": 0,
+    "actualRunning": [
+      "cn.agentplatform.engine.infra.FlowMaterialScopePostgresTest",
+      "cn.agentplatform.engine.infra.FlowMaterialStatusPostgresTest",
+      "cn.agentplatform.engine.infra.FlowMaterialTransactionsPostgresTest",
+      "cn.agentplatform.engine.infra.InitialMaterialScopePostgresTest",
+      "cn.agentplatform.engine.infra.RunAuthorityLocalCurrentPostgresTest",
+      "cn.agentplatform.engine.infra.RunAuthorityPersistencePostgresTest"
+    ],
+    "xml": [
+      {
+        "name": "cn.agentplatform.engine.infra.FlowMaterialScopePostgresTest",
+        "tests": 11,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "file": "docs/evidence/iam-stage-5-n1-flow-material-status/iam-stage-5-n1-final01/xml/engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.FlowMaterialScopePostgresTest.xml",
+        "bytes": 53537,
+        "sha256": "8f1d4098681065a3548d6ad24d42d058da8b16402ca61dab19095bc76ca74a72"
+      },
+      {
+        "name": "cn.agentplatform.engine.infra.FlowMaterialStatusPostgresTest",
+        "tests": 11,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "file": "docs/evidence/iam-stage-5-n1-flow-material-status/iam-stage-5-n1-final01/xml/engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.FlowMaterialStatusPostgresTest.xml",
+        "bytes": 56305,
+        "sha256": "74bfdc45a14c8b25d23ca0f02ea87c73b744451111da73d06f076196495b5468"
+      },
+      {
+        "name": "cn.agentplatform.engine.infra.FlowMaterialTransactionsPostgresTest",
+        "tests": 10,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "file": "docs/evidence/iam-stage-5-n1-flow-material-status/iam-stage-5-n1-final01/xml/engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.FlowMaterialTransactionsPostgresTest.xml",
+        "bytes": 59888,
+        "sha256": "d79b6aa4d149cd15f8ef87b5704e21cd41f1e035226f56561555516458eb1730"
+      },
+      {
+        "name": "cn.agentplatform.engine.infra.InitialMaterialScopePostgresTest",
+        "tests": 12,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "file": "docs/evidence/iam-stage-5-n1-flow-material-status/iam-stage-5-n1-final01/xml/engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.InitialMaterialScopePostgresTest.xml",
+        "bytes": 54365,
+        "sha256": "b83b611e5d2ed6c147d9d1aa653794d0827632d71242b221e77eb9fa692af90b"
+      },
+      {
+        "name": "cn.agentplatform.engine.infra.RunAuthorityLocalCurrentPostgresTest",
+        "tests": 12,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "file": "docs/evidence/iam-stage-5-n1-flow-material-status/iam-stage-5-n1-final01/xml/engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RunAuthorityLocalCurrentPostgresTest.xml",
+        "bytes": 54802,
+        "sha256": "a6dd477d46f7438220cf6451267ad278eadddb12c37e668a08add7178eab9e19"
+      },
+      {
+        "name": "cn.agentplatform.engine.infra.RunAuthorityPersistencePostgresTest",
+        "tests": 13,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "file": "docs/evidence/iam-stage-5-n1-flow-material-status/iam-stage-5-n1-final01/xml/engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RunAuthorityPersistencePostgresTest.xml",
+        "bytes": 57792,
+        "sha256": "9c5eb17d19971ec12417fb426b5a3eb4c0b67f2fe24f0b63bb0c0ef8b4f3b380"
+      }
+    ],
+    "totals": {
+      "tests": 69,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "incidentalXml": 57,
+    "raw": {
+      "file": "docs/evidence/iam-stage-5-n1-flow-material-status/iam-stage-5-n1-final01/raw.log",
+      "bytes": 58177,
+      "sha256": "ddd435ff17527e74fa44d6bb91b1de329f3e386d54bd36f2758130f1ea81c0e5"
+    }
+  },
+  "testAudit": {
+    "file": "docs/evidence/iam-stage-5-n1-flow-material-status/test-audit.json",
+    "bytes": 23203,
+    "sha256": "6409226ee13bc13566da2c56eaac61fda55da5d4dad56574d5b2b5887b298738"
+  },
+  "rootDecisions": {
+    "file": "docs/evidence/iam-stage-5-n1-flow-material-status/root-decisions.md",
+    "bytes": 4036,
+    "sha256": "6d4036ffe27f4744992ab43884a406af9f47c44d060ae7f9c15e8948d9adce64"
+  },
+  "patch": {
+    "file": "docs/evidence/iam-stage-5-n1-flow-material-status/change.patch",
+    "bytes": 355021,
+    "sha256": "86d68bcc5f484b41cd96dae522054488f15aed97865d89e8da98eed1006aac58"
+  },
+  "patchCheck": {
+    "file": "docs/evidence/iam-stage-5-n1-flow-material-status/patch-check.json",
+    "bytes": 804,
+    "sha256": "542be8114342326accb13f7969a19618201fc5364be4439799940c8d79a4a0c7"
+  },
+  "protection": {
+    "file": "docs/evidence/iam-stage-5-n1-flow-material-status/protection-summary.json",
+    "bytes": 1462,
+    "sha256": "ca8c89f98bb49e4a98754c2952dbd8dfe4c0596cf4e8b569574e589fceabf0af"
+  },
+  "protectedChanges": {
+    "file": "docs/evidence/iam-stage-5-n1-flow-material-status/protected-changes.json",
+    "bytes": 90,
+    "sha256": "8478ac5b7ee92a577bfab74ddb3b879d011d9bb0fa40c9bee6f10d2d129afdf7"
+  },
+  "protectedCounts": {
+    "static": 65381,
+    "runners": 28,
+    "externalDocs": 8,
+    "changes": 0,
+    "additions": 0
+  },
+  "migration": {
+    "v216Unchanged": true,
+    "v216Sha256": "e8ed2edd783ba6e14a04653f2327b3d4c1ff114bd1e4533a0bfecf6bc5de0999",
+    "actualNext": 217,
+    "newDatabase": "agent_platform_iam_flow_material_v12",
+    "oldE1bDatabaseUsedOnlyInFinalAffectedSet": "agent_platform_iam_engine_v12"
+  },
+  "physical": {
+    "before": ".local/iam-n1-flow-material-status/before/",
+    "sourceFrozen": "docs/evidence/iam-stage-5-n1-flow-material-status/frozen/",
+    "sourceActualApplied": "docs/evidence/iam-stage-5-n1-flow-material-status/replay/",
+    "targetFrozen": "docs/evidence/iam-stage-5-n1-flow-material-status/target-final/"
+  },
+  "concerns": [
+    "N1 is actual engine material/status component only; original admission, owned scheduler/FlowDriver and gateway require N2/N3/N4.",
+    "Intentional VA-only default denial and top-level worker RR/status no-ambient requirements must be respected by later concrete integration owners.",
+    "red05 behavior-red counter tail was not reached; preflight post-run full archive includes later test assembly, so only its actual executed preflight source/raw/XML is claimed.",
+    "red02 assertion noise and red07 observation noise preserved, not claimed as implementation behavior reds."
+  ],
+  "next": "root independent Spec/Quality review; no full Task5 completion, deployment, commit, publication, global/index update, or real IAM enablement"
+}

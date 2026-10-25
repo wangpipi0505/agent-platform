@@ -1,0 +1,60 @@
+{
+  "schema": "Preserved failures and limitations; no history rewritten",
+  "corrections": [
+    {
+      "phase": "baseline",
+      "failure": "Empty git init template does not create .git/info; first metadata step ENOENT",
+      "fix": "Create only private .git/info and resume successful init"
+    },
+    {
+      "phase": "baseline add",
+      "failure": "612 explicit command arguments exceeded Windows process command length; baseline-add.json retains ENAMETOOLONG",
+      "fix": "Explicit finite pathspec file, baseline-add-v2.json; no source reset or normalization; before-index blobs independently byte checked before patch"
+    },
+    {
+      "phase": "initial RED launcher",
+      "failure": "UTF-8 argument-file launch on Windows did not start usable child; reading native error bytes as UTF-8 failed",
+      "fix": "Actual ProcessBuilder separate argument vector; preserve initial XML/raw, do not count this as TLS functional RED"
+    },
+    {
+      "phase": "TLS red endpoint",
+      "failure": "Server accept waited after fail-closed scaffold never connected; parent server child deadline",
+      "fix": "Finite 3s accept; next functional RED asserts TLS success=false with expected scaffold IOException; no fake success"
+    },
+    {
+      "phase": "thresholds",
+      "failure": "Port file existence raced its first write, two NumberFormatExceptions; H certificate handshake succeeded but subsequent ticket of 33021 bytes exceeded H",
+      "fix": "Wait for nonempty port; equal tickets=0 startup for H/H+1 only; signed Certificate H passes and H+1 specific limit rejects"
+    },
+    {
+      "phase": "NST debug",
+      "failure": "Two 128KiB bounded log collection failures",
+      "fix": "Test server uses its isolated root truststore, no system root dump; root-approved NST-only cap 1MiB; actual Produced10/Consumed10 then pass"
+    },
+    {
+      "phase": "overflow",
+      "failure": "Accounting-overflow exception during conservative re-settlement prevented abort callback",
+      "fix": "Always abort in finally, keep reservation charged; dedicated RED then focused GREEN and final"
+    },
+    {
+      "phase": "peer artifact location",
+      "failure": "Surefire user.dir is module; initial artifacts created under platform-gateway/.local/iam-o2b-f2a-tls/peers",
+      "fix": "After all peers exited, finite validated PowerShell Move-Item of 47 directories/404 files with relocation map; final peers use verified absolute project root. Historical paths remain original"
+    },
+    {
+      "phase": "failed thresholds source epoch",
+      "failure": "Production raw lifecycle patch applied after failed thresholds compilation while its peer tests were still executing",
+      "fix": "Archive original stage source.json as the epoch; its target-finite input-source hashes are late observations, not a byte-compiler assertion. Subsequent thresholds-fixed and final compile current full gateway bytes; no source edits during those stages"
+    },
+    {
+      "phase": "diagnostics",
+      "failure": "13 Windows Surefire Boot Manifest path diagnostics, each 344B, include suggestion to disable a JDK check",
+      "fix": "Keep originals and separate diagnostic manifest; never apply that suggestion or rerun passing tests for noise"
+    },
+    {
+      "phase": "baseline metadata resumption",
+      "failure": "Attribute check was repeated while repairing the failed initial private-baseline metadata setup",
+      "fix": "No patch check/apply or successful tests repeated for packaging; first patch generation/check/apply and full 618 replay each executed once. First accepted612 verification was cached."
+    }
+  ]
+}

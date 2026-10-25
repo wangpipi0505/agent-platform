@@ -1,0 +1,7 @@
+# F1边界测试口径补充
+
+本补充只明确正式brief已要求的限制交集，不扩大scope/限额/输出权限。各个schema、UTF8段字节、JSON结构与预算同时适用，并不承诺每个单独最大值能组成合法报文。
+
+“边界和+1”按真实可达路径验证：例如payload段仅256KiB，无法把1MiB字符串作为正常payload正例；header固定标量schema也不能为了测试depth8，虚构深嵌套header并称正常协议。对不可达的孤立上限，可核固定parser配置/有意义的独立内部结构扫描接缝，或记录先触达的更小交集；无需为凑某个数字另造生产测试hook/放松schema。不能把只触发COMMIT/unknown-key失败的用例，说成已动态触发所声称的深层限额。
+
+实际可达的metadata全局深度/token/string/number、wire字节/长度、header/eventType字符串和Owner预算仍需关键边界与越界测试。具体覆盖矩阵按真实用例及精确拒绝原因记录，不预造全矩阵通过。F2独立scope限制、完整材料及公开输出不进入F1。

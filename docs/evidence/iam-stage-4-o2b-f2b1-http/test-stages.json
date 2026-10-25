@@ -1,0 +1,230 @@
+[
+  {
+    "stage": "iam-stage-o2b-f2b1-final",
+    "selector": "PortalRunEventsHttpTest,RunObservationEventsMetadataTest",
+    "exit": 0,
+    "running": [
+      "cn.agentplatform.gateway.application.RunObservationEventsMetadataTest",
+      "cn.agentplatform.gateway.infra.PortalRunEventsHttpTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.application.RunObservationEventsMetadataTest",
+        "tests": 7,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0
+      },
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalRunEventsHttpTest",
+        "tests": 11,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2b1-http/stages/iam-stage-o2b-f2b1-final"
+  },
+  {
+    "stage": "iam-stage-o2b-f2b1-focused-boundaries",
+    "selector": "PortalRunEventsHttpTest#rawPeersRejectUnsafeHeadsFramingTrailersInformationalAndBodies+slowHeadAndBlockedReadHaveOneAbsoluteDeadlineAndNoDrain+credentialFailuresNeverDeliverAnHttpRequest+bodyCompletionCannotReturnFactsAfterOriginalQueryExpires",
+    "exit": 1,
+    "running": [],
+    "suites": [],
+    "evidence": ".local/iam-o2b-f2b1-http/stages/iam-stage-o2b-f2b1-focused-boundaries"
+  },
+  {
+    "stage": "iam-stage-o2b-f2b1-focused-boundaries2",
+    "selector": "PortalRunEventsHttpTest#rawPeersRejectUnsafeHeadsFramingTrailersInformationalAndBodies,PortalRunEventsHttpTest#slowHeadAndBlockedReadHaveOneAbsoluteDeadlineAndNoDrain,PortalRunEventsHttpTest#credentialFailuresNeverDeliverAnHttpRequest,PortalRunEventsHttpTest#bodyCompletionCannotReturnFactsAfterOriginalQueryExpires",
+    "exit": 0,
+    "running": [
+      "cn.agentplatform.gateway.infra.PortalRunEventsHttpTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalRunEventsHttpTest",
+        "tests": 4,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2b1-http/stages/iam-stage-o2b-f2b1-focused-boundaries2"
+  },
+  {
+    "stage": "iam-stage-o2b-f2b1-focused-cleanup",
+    "selector": "PortalRunEventsHttpTest#concurrentLookupAndCancellationCannotDeliverFactsOrReleaseEarly,RunObservationEventsMetadataTest#widestLegalOwnerRootAndLongFieldsRemainBoundedAndFactsAreClosable",
+    "exit": 0,
+    "running": [
+      "cn.agentplatform.gateway.application.RunObservationEventsMetadataTest",
+      "cn.agentplatform.gateway.infra.PortalRunEventsHttpTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.application.RunObservationEventsMetadataTest",
+        "tests": 1,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0
+      },
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalRunEventsHttpTest",
+        "tests": 1,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2b1-http/stages/iam-stage-o2b-f2b1-focused-cleanup"
+  },
+  {
+    "stage": "iam-stage-o2b-f2b1-focused-compat",
+    "selector": "RunObservationEventsMetadataTest#existingStatusLookupRetainsNormalFactsAndStrictErrorMeaning,PortalRunEventsHttpTest#physicalCloseGateRetainsHttpOwnerAndReleasesExactlyOnce",
+    "exit": 0,
+    "running": [
+      "cn.agentplatform.gateway.application.RunObservationEventsMetadataTest",
+      "cn.agentplatform.gateway.infra.PortalRunEventsHttpTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.application.RunObservationEventsMetadataTest",
+        "tests": 1,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0
+      },
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalRunEventsHttpTest",
+        "tests": 1,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2b1-http/stages/iam-stage-o2b-f2b1-focused-compat"
+  },
+  {
+    "stage": "iam-stage-o2b-f2b1-focused-initial",
+    "selector": "PortalRunEventsHttpTest",
+    "exit": 0,
+    "running": [
+      "cn.agentplatform.gateway.infra.PortalRunEventsHttpTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalRunEventsHttpTest",
+        "tests": 7,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2b1-http/stages/iam-stage-o2b-f2b1-focused-initial"
+  },
+  {
+    "stage": "iam-stage-o2b-f2b1-green-http",
+    "selector": "PortalRunEventsHttpTest#originalQUsesRealHttpsAndNeverLogsBearerAtHeadersOrWireDebug",
+    "exit": 1,
+    "running": [],
+    "suites": [],
+    "evidence": ".local/iam-o2b-f2b1-http/stages/iam-stage-o2b-f2b1-green-http"
+  },
+  {
+    "stage": "iam-stage-o2b-f2b1-green-http2",
+    "selector": "PortalRunEventsHttpTest#originalQUsesRealHttpsAndNeverLogsBearerAtHeadersOrWireDebug",
+    "exit": 0,
+    "running": [
+      "cn.agentplatform.gateway.infra.PortalRunEventsHttpTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalRunEventsHttpTest",
+        "tests": 1,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2b1-http/stages/iam-stage-o2b-f2b1-green-http2"
+  },
+  {
+    "stage": "iam-stage-o2b-f2b1-green-parser",
+    "selector": "RunObservationEventsMetadataTest",
+    "exit": 1,
+    "running": [],
+    "suites": [],
+    "evidence": ".local/iam-o2b-f2b1-http/stages/iam-stage-o2b-f2b1-green-parser"
+  },
+  {
+    "stage": "iam-stage-o2b-f2b1-green-parser2",
+    "selector": "RunObservationEventsMetadataTest",
+    "exit": 0,
+    "running": [
+      "cn.agentplatform.gateway.application.RunObservationEventsMetadataTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.application.RunObservationEventsMetadataTest",
+        "tests": 5,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2b1-http/stages/iam-stage-o2b-f2b1-green-parser2"
+  },
+  {
+    "stage": "iam-stage-o2b-f2b1-red-http",
+    "selector": "PortalRunEventsHttpTest#originalQUsesRealHttpsAndNeverLogsBearerAtHeadersOrWireDebug",
+    "exit": 1,
+    "running": [
+      "cn.agentplatform.gateway.infra.PortalRunEventsHttpTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalRunEventsHttpTest",
+        "tests": 1,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 1
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2b1-http/stages/iam-stage-o2b-f2b1-red-http"
+  },
+  {
+    "stage": "iam-stage-o2b-f2b1-red-http2",
+    "selector": "PortalRunEventsHttpTest#originalQUsesRealHttpsAndNeverLogsBearerAtHeadersOrWireDebug",
+    "exit": 1,
+    "running": [
+      "cn.agentplatform.gateway.infra.PortalRunEventsHttpTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalRunEventsHttpTest",
+        "tests": 1,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 1
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2b1-http/stages/iam-stage-o2b-f2b1-red-http2"
+  },
+  {
+    "stage": "iam-stage-o2b-f2b1-red-parser",
+    "selector": "RunObservationEventsMetadataTest#realOpeningProducesSevenBoundFactsWithoutAnotherExchange",
+    "exit": 1,
+    "running": [
+      "cn.agentplatform.gateway.application.RunObservationEventsMetadataTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.application.RunObservationEventsMetadataTest",
+        "tests": 1,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 1
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2b1-http/stages/iam-stage-o2b-f2b1-red-parser"
+  }
+]

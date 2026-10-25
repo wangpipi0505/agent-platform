@@ -1,0 +1,27 @@
+-------------------------------------------------------------------------------
+Test set: cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 66.73 s <<< FAILURE! -- in cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest
+cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.slowReaderCurrentAuthorityAndExpiry -- Time elapsed: 66.71 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:31)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:183)
+	at cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.focused(PortalRunEventsJoinedChainTest.java:132)
+	at cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.slowReaderCurrentAuthorityAndExpiry(PortalRunEventsJoinedChainTest.java:105)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	Suppressed: org.opentest4j.AssertionFailedError: inspect gateway-out.log ==> expected: <0> but was: <1>
+		at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+		at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+		at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+		at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
+		at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:563)
+		at cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest$Child.close(PortalRunEventsJoinedChainTest.java:71)
+		at cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.focused(PortalRunEventsJoinedChainTest.java:113)
+		... 4 more
+

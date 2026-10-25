@@ -1,0 +1,65 @@
+{
+  "at": "2026-10-20T20:58:43.294Z",
+  "generation": {
+    "command": [
+      "git",
+      "-c",
+      "core.autocrlf=false",
+      "diff",
+      "--no-index",
+      "--binary",
+      "--unified=100000",
+      "docs/evidence/iam-stage-4-d4b-lifecycle-fix/before-overlay",
+      "docs/evidence/iam-stage-4-d4b-lifecycle-fix/frozen-overlay"
+    ],
+    "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+    "exit": 1,
+    "expectedDiffExitOne": true
+  },
+  "commands": [
+    {
+      "command": [
+        "git",
+        "-c",
+        "core.autocrlf=false",
+        "apply",
+        "--check",
+        "-p1",
+        "--directory=docs/evidence/iam-stage-4-d4b-lifecycle-fix/replay-overlay",
+        "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\iam-stage-4-d4b-lifecycle-fix\\source-fullcontext.patch"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "-c",
+        "core.autocrlf=false",
+        "apply",
+        "-p1",
+        "--directory=docs/evidence/iam-stage-4-d4b-lifecycle-fix/replay-overlay",
+        "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\iam-stage-4-d4b-lifecycle-fix\\source-fullcontext.patch"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "patch": {
+    "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/source-fullcontext.patch",
+    "bytes": 65439,
+    "sha256": "86aa72e5ff4d374642023936bdf200d2f2f99158654301d075c5aa24c420392c"
+  },
+  "all192FrontendNamesBytesSHAEqual": true,
+  "backend380Inherited": true,
+  "fullNecessary572Equal": true,
+  "effective": {
+    "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/source-replay-effective.json",
+    "bytes": 108247,
+    "sha256": "327a225065b0d71768e6111638435f70d3e7b520a7f2ba22ea1c60ecc6232dd7"
+  }
+}

@@ -1,0 +1,176 @@
+diff --git a/engine-runtime/src/main/java/cn/agentplatform/engine/application/PortalRunEventsService.java b/engine-runtime/src/main/java/cn/agentplatform/engine/application/PortalRunEventsService.java
+index c26b2a100c2239c085dc807f3bc6795e6ef2ade1..aa6fbf9adb0ed23f70e019891beff2e636a9e704 100644
+--- a/engine-runtime/src/main/java/cn/agentplatform/engine/application/PortalRunEventsService.java
++++ b/engine-runtime/src/main/java/cn/agentplatform/engine/application/PortalRunEventsService.java
+@@ -142,17 +142,21 @@ public final class PortalRunEventsService implements AutoCloseable {
+                     var done=new AtomicBoolean();
+                     try{
+                         pending.consume(view->{
+-                            try{
+-                                check();var window=view.window();String reset=window.resetReason();var frame=new Frame();
+-                                if(reset!=null){frame.controlInto("stream_reset",reset,window.status(),window.watermark(),after);send(view,frame);done.set(true);complete();return;}
+-                                if(!statusSent){frame.controlInto("stream_status",null,null,0,after);send(view,frame);statusSent=true;}
+-                                if(view.hasEvent()){
+-                                    frame.count=0;frame.event(view);send(view,frame);after=view.info().seq();
+-                                    if(Set.of("SUCCEEDED","FAILED","CANCELLED").contains(window.status())&&after>=window.watermark()){done.set(true);complete();}
+-                                }else if(window.drained()){done.set(true);complete();}
+-                            }catch(RunEventReader.Superseded old){
+-                                if(superseded>=2){complete();throw old;}throw old;
+-                            }catch(RuntimeException|Error failure){complete();throw failure;}
++                            check();var window=view.window();String reset=window.resetReason();var frame=new Frame();
++                            if(reset!=null){frame.controlInto("stream_reset",reset,window.status(),window.watermark(),after);send(view,frame);done.set(true);return;}
++                            if(!statusSent){frame.controlInto("stream_status",null,null,0,after);send(view,frame);statusSent=true;}
++                            if(view.hasEvent()){
++                                frame.count=0;frame.event(view);send(view,frame);after=view.info().seq();
++                                if(Set.of("SUCCEEDED","FAILED","CANCELLED").contains(window.status())&&after>=window.watermark())done.set(true);
++                            }else if(window.drained())done.set(true);
++                        },failure->{
++                            // This seam includes entry and final guard failures. A healthy
++                            // bounded retry alone may release the old window before reread;
++                            // termination must complete while B and this frame are still held.
++                            if(failure instanceof RunEventReader.Superseded&&!done.get()&&superseded<2){
++                                try{check();response.currentCapture();return;}catch(RuntimeException retired){/* Complete below while still owning this window. */}
++                            }
++                            if(failure!=null||done.get())complete();
+                         });
+                         superseded=0; // A successful complete window starts the next bounded read round.
+                     }catch(RunEventReader.Superseded old){if(++superseded>2)throw old;}
+@@ -181,10 +185,16 @@ public final class PortalRunEventsService implements AutoCloseable {
+         void capacityReset(RunEventReader.CapacityFailure failure){
+             // No unvalidated status/watermark is included. The fresh local capture guards
+             // this fixed capacity control; a failed holder never authorizes a final reset.
+-            var capture=response.currentCapture();check();var frame=Frame.control("stream_reset",failure.code(),null,0,after);
++            var capture=response.currentCapture();check();byte[] bytes;int count;
++            // Opening preflight is not an output proof. Only the actual Servlet commit
++            // decides whether fresh-window capacity is an HTTP error or a bounded reset.
++            if(!output.isCommitted()){
++                output.setStatus(failure.status());output.setContentType("application/json");
++                bytes=Json.write(new ApiResponse<>(failure.code(),"事件观察不可用",null,null)).getBytes(java.nio.charset.StandardCharsets.UTF_8);count=bytes.length;
++            }else{var frame=Frame.control("stream_reset",failure.code(),null,0,after);bytes=frame.bytes;count=frame.count;}
+             try{
+                 response.requireLive(capture);if(stream==null){stream=output.getOutputStream();check();response.requireLive(capture);}
+-                check();response.requireLive(capture);stream.write(frame.bytes,0,frame.count);check();response.requireLive(capture);
++                check();response.requireLive(capture);stream.write(bytes,0,count);check();response.requireLive(capture);
+                 stream.flush();check();response.requireLive(capture);complete();
+             }catch(IOException io){throw new UncheckedIOException(io);}
+         }
+diff --git a/engine-runtime/src/main/java/cn/agentplatform/engine/infra/RunEventReader.java b/engine-runtime/src/main/java/cn/agentplatform/engine/infra/RunEventReader.java
+index 28b097124262819ef50ddfdab946430a91f8348f..182d7ce4893e1e398f890741fdd2cea0f0779ee3 100644
+--- a/engine-runtime/src/main/java/cn/agentplatform/engine/infra/RunEventReader.java
++++ b/engine-runtime/src/main/java/cn/agentplatform/engine/infra/RunEventReader.java
+@@ -99,6 +99,11 @@ public final class RunEventReader {
+         private final EventEmission owner;private final WindowInfo window;
+         private WindowEmission(EventEmission owner,WindowInfo window){this.owner=owner;this.window=window;}
+         public void consume(Consumer<WindowBorrow> action){owner.consume(borrow->action.accept(new WindowBorrow(borrow,window)));}
++        /** C's actual exit runs after either guard/action failure, before the original lease
++         * finally. Ordinary B borrows retain their existing consume/close contract. */
++        public void consume(Consumer<WindowBorrow> action,Consumer<Throwable> beforeRelease){
++            Objects.requireNonNull(action);owner.consumeWindow(borrow->action.accept(new WindowBorrow(borrow,window)),beforeRelease);
++        }
+         public void close(){owner.close();}
+     }
+     public static final class WindowBorrow{
+@@ -212,6 +217,20 @@ public final class RunEventReader {
+             try{consume.accept(new Borrow(this));guard();}catch(RuntimeException|Error failure){primary=failure;throw failure;}
+             finally{try{cleanup(primary);}finally{synchronized(this){active=false;consumer=null;finish();}}}
+         }
++        private void consumeWindow(Consumer<Borrow> consume,Consumer<Throwable> beforeRelease){
++            Objects.requireNonNull(beforeRelease);
++            synchronized(this){usable();if(active)throw denied();active=true;consumer=Thread.currentThread();}
++            Throwable primary=null;
++            // Claim actual ownership before the entry guard: stop/close cannot recycle a
++            // C window while its terminal Servlet complete is still physically executing.
++            try{guard();consume.accept(new Borrow(this));guard();}
++            catch(RuntimeException|Error failure){primary=failure;throw failure;}
++            finally{
++                // No holder or emission monitor is held over application write/complete.
++                try{beforeRelease.accept(primary);}
++                finally{try{cleanup(primary);}finally{synchronized(this){active=false;consumer=null;finish();}}}
++            }
++        }
+         private synchronized void guard(){usable();if(!active||consumer!=Thread.currentThread())throw denied();live(response,capture,window);}
+         private void finish(){payload=null;labels=null;finished=true;lease.close();}
+         public synchronized void close(){if(finished)return;closing=true;if(!active)finish();}
+diff --git a/engine-runtime/src/test/java/cn/agentplatform/engine/infra/PortalRunEventsCapacityTest.java b/engine-runtime/src/test/java/cn/agentplatform/engine/infra/PortalRunEventsCapacityTest.java
+index 8f626ce48c4c289b80b0fc0d86fddfaa14a3fa95..74fd23dd313cf5e42701f901f4426dddf9973ce8 100644
+--- a/engine-runtime/src/test/java/cn/agentplatform/engine/infra/PortalRunEventsCapacityTest.java
++++ b/engine-runtime/src/test/java/cn/agentplatform/engine/infra/PortalRunEventsCapacityTest.java
+@@ -9,6 +9,29 @@ import java.util.*;
+ import org.junit.jupiter.api.Test;
+ 
+ class PortalRunEventsCapacityTest {
++    @Test void freshQueuedFirstReadCapacityFailureBeforeCommitMapsToGenericHttp413()throws Exception{
++        try(var f=new PortalRunEventWindowPostgresTest.Fixture();var callers=java.util.concurrent.Executors.newSingleThreadExecutor()){
++            PortalRunEventsHttpTest.fixture=f;var b=f.seed(0);String ticket=PortalRunEventsAuthorityFixture.ticket(f.auth,b.owner(),b.publicId(),b.snapshotSha());
++            var h=new PortalRunEventsHttpTest.Hooks();h.block="complete";PortalRunEventsHttpTest.hooks=h;var workers=new java.util.concurrent.CountDownLatch(2);var release=new java.util.concurrent.CountDownLatch(1);
++            try(var server=PortalRunEventsHttpTest.start(PortalRunEventsHttpTest.Receiver.class);var fresh=f.open(b,0)){
++                var service=server.getBean(cn.agentplatform.engine.application.PortalRunEventsService.class);var pool=PortalRunEventsLifecycleTest.executor(service);
++                for(int i=0;i<2;i++)pool.execute(()->{workers.countDown();boolean done=false;while(!done)try{done=release.await(100,java.util.concurrent.TimeUnit.MILLISECONDS);}catch(InterruptedException ignored){}});
++                assertThat(workers.await(2,java.util.concurrent.TimeUnit.SECONDS)).isTrue();
++                var future=callers.submit(()->PortalRunEventsHttpTest.request(server,b.publicId(),ticket,"?Last-Event-ID=1"));PortalRunEventsLifecycleTest.await(()->pool.getQueue().size()==1);
++                assertThat(h.writes).hasValue(0); // Opening's real successful preflight did not commit.
++                f.append(b.runId(),"C_LARGE_FRESH","x".repeat(262143));release.countDown();PortalRunEventsLifecycleTest.entered(h);
++                var bus=server.getBean(ChunkBus.class);assertThat(PortalRunEventsLifecycleTest.availableFrames(bus)).isEqualTo(61);
++                try(var one=server.getBean(RunEventReader.class).readNext(fresh,0).orElseThrow();var two=server.getBean(RunEventReader.class).readNext(fresh,0).orElseThrow()){}
++                try(var one=bus.subscribe(100)){assertThatThrownBy(()->bus.subscribe(101)).isInstanceOf(PlatformException.class);}
++                assertThat(h.exits).hasValue(0);h.release.countDown();var result=future.get(4,java.util.concurrent.TimeUnit.SECONDS);
++                assertThat(result.statusCode()).isEqualTo(413);assertThat(result.headers().firstValue("content-type").orElse("")).startsWith("application/json");
++                assertThat(Json.read(result.body()).path("code").asText()).isEqualTo("EVENT_LIMIT");assertThat(Json.read(result.body()).path("message").asText()).isEqualTo("事件观察不可用");
++                assertThat(result.body()).doesNotContain("stream_reset","EVENT_PAYLOAD","有限事件材料容量不足");
++                PortalRunEventsLifecycleTest.await(()->h.exits.get()==1);PortalRunEventsLifecycleTest.await(()->{try{return PortalRunEventsLifecycleTest.availableFrames(bus)==62;}catch(Exception e){throw new AssertionError(e);}});
++                try(var one=bus.subscribe(100);var two=bus.subscribe(101)){}
++            }finally{release.countDown();h.release.countDown();PortalRunEventsHttpTest.hooks=null;}
++        }
++    }
+     @Test void fullFrameExactMaximumAndPlusOneUseSingleExactBacking()throws Exception{
+         // Domain event_seq is currently int, so long19 framing is exercised on the actual
+         // encoder backing, without fabricating a signed event or exposing a proof constructor.
+diff --git a/engine-runtime/src/test/java/cn/agentplatform/engine/infra/PortalRunEventsLifecycleTest.java b/engine-runtime/src/test/java/cn/agentplatform/engine/infra/PortalRunEventsLifecycleTest.java
+index e4f9993c0f32f7410c1f3f68f56c7c8306b645fb..4a4ff7a246a66850a4cfed9d3148fc6d0c8530bd 100644
+--- a/engine-runtime/src/test/java/cn/agentplatform/engine/infra/PortalRunEventsLifecycleTest.java
++++ b/engine-runtime/src/test/java/cn/agentplatform/engine/infra/PortalRunEventsLifecycleTest.java
+@@ -21,6 +21,44 @@ class PortalRunEventsLifecycleTest {
+     static PortalEventsResponse heldResponse(PortalRunEventsService service){try{var field=PortalRunEventsService.class.getDeclaredField("owners");field.setAccessible(true);var owner=((Set<?>)field.get(service)).iterator().next();var response=owner.getClass().getDeclaredField("response");response.setAccessible(true);return (PortalEventsResponse)response.get(owner);}catch(ReflectiveOperationException failure){throw new AssertionError(failure);}}
+     static Future<HttpResponse<String>> request(ExecutorService caller,ServletWebServerApplicationContext server,String run,String ticket){return caller.submit(()->PortalRunEventsHttpTest.request(server,run,ticket,""));}
+     static int availableFrames(ChunkBus bus)throws Exception{var leases=new ArrayList<AutoCloseable>();try{AutoCloseable l;while((l=bus.reservePortalFrame())!=null)leases.add(l);return leases.size();}finally{for(var l:leases)l.close();}}
++    @Test void invalidatedBetweenFreshReadAndConsumeEntryRetainsBothOwnersThroughComplete()throws Exception{guardBoundaryOwners(false);}
++    @Test void invalidatedAfterCallbackBeforeFinalGuardRetainsBothOwnersThroughComplete()throws Exception{guardBoundaryOwners(true);}
++    static void guardBoundaryOwners(boolean afterCallback)throws Exception{
++        try(var f=new PortalRunEventWindowPostgresTest.Fixture();var callers=Executors.newFixedThreadPool(2)){
++            PortalRunEventsHttpTest.fixture=f;var b=f.seed(0);String ticket=PortalRunEventsAuthorityFixture.ticket(f.auth,b.owner(),b.publicId(),b.snapshotSha());
++            var h=new PortalRunEventsHttpTest.Hooks(2);h.block="complete";h.secondRelease=new CountDownLatch(1);PortalRunEventsHttpTest.hooks=h;
++            try(var server=PortalRunEventsHttpTest.start(PortalRunEventsHttpTest.Receiver.class);var fresh=f.open(b,0)){
++                var service=server.getBean(PortalRunEventsService.class);var actual=server.getBean(RunEventReader.class);var timed=org.mockito.Mockito.spy(actual);var cutoffs=new AtomicInteger();
++                // Mockito changes only the call timing. Every RR, mint, borrow, guard and
++                // resource finally delegates to the actual reader and its actual result.
++                org.mockito.Mockito.doAnswer(call->{
++                    var result=(RunEventReader.WindowEmission)call.callRealMethod();
++                    if(!Thread.currentThread().getName().equals("portal-events-writer"))return result;
++                    var holder=(PortalEventsResponse)call.getArgument(0);
++                    if(!afterCallback){cutoffs.incrementAndGet();holder.close();return result;}
++                    return org.mockito.Mockito.mock(RunEventReader.WindowEmission.class,invoke->{
++                        var args=invoke.getArguments().clone();
++                        if(invoke.getMethod().getName().equals("consume")){
++                            @SuppressWarnings("unchecked") var action=(java.util.function.Consumer<RunEventReader.WindowBorrow>)args[0];
++                            args[0]=(java.util.function.Consumer<RunEventReader.WindowBorrow>)view->{action.accept(view);cutoffs.incrementAndGet();holder.close();};
++                        }
++                        try{return invoke.getMethod().invoke(result,args);}catch(java.lang.reflect.InvocationTargetException failure){throw failure.getCause();}
++                    });
++                }).when(timed).readWindow(org.mockito.ArgumentMatchers.any(PortalEventsResponse.class),org.mockito.ArgumentMatchers.anyLong());
++                var readerField=PortalRunEventsService.class.getDeclaredField("reader");readerField.setAccessible(true);readerField.set(service,timed);
++                var first=callers.submit(()->PortalRunEventsHttpTest.request(server,b.publicId(),ticket,"?Last-Event-ID=1"));var second=callers.submit(()->PortalRunEventsHttpTest.request(server,b.publicId(),ticket,"?Last-Event-ID=1"));
++                entered(h);assertThat(cutoffs).hasValue(2);var bus=server.getBean(ChunkBus.class);service.close();
++                assertThat(catchThrowable(()->{try(var unexpected=actual.readNext(fresh,0).orElseThrow()) {}})).isInstanceOf(RunEventReader.CapacityFailure.class);
++                assertThatThrownBy(()->bus.subscribe(100)).isInstanceOf(PlatformException.class);assertThat(availableFrames(bus)).isEqualTo(60);assertThat(h.exits).hasValue(0);
++                if(!afterCallback)assertThat(h.writes).hasValue(0);
++                h.release.countDown();await(()->h.exits.get()==1);await(()->{try{return availableFrames(bus)==61;}catch(Exception e){throw new AssertionError(e);}});
++                try(var one=actual.readNext(fresh,0).orElseThrow()){assertThatThrownBy(()->actual.readNext(fresh,0)).isInstanceOf(RunEventReader.CapacityFailure.class);}
++                try(var one=bus.subscribe(100)){assertThatThrownBy(()->bus.subscribe(101)).isInstanceOf(PlatformException.class);}
++                h.secondRelease.countDown();first.get(4,TimeUnit.SECONDS);second.get(4,TimeUnit.SECONDS);await(()->h.exits.get()==2);await(()->{try{return availableFrames(bus)==62;}catch(Exception e){throw new AssertionError(e);}});
++                try(var one=actual.readNext(fresh,0).orElseThrow();var two=actual.readNext(fresh,0).orElseThrow();var slotOne=bus.subscribe(100);var slotTwo=bus.subscribe(101)){}
++            }finally{h.release.countDown();h.secondRelease.countDown();PortalRunEventsHttpTest.hooks=null;}
++        }
++    }
+     @Test void expiredOriginalTicketHealthyRenewalAfterRealGetterReturnsRereadsBeforeFirstWrite()throws Exception{
+         try(var f=new PortalRunEventWindowPostgresTest.Fixture();var callers=Executors.newSingleThreadExecutor()){
+             PortalRunEventsHttpTest.fixture=f;var b=f.seed(0);f.finish(b.runId());PortalRunEventsAuthorityFixture.shortEventsTicket(f.auth);

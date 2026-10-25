@@ -1,0 +1,25 @@
+{
+  "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+  "args": [
+    "mvn.cmd",
+    "-o",
+    "-B",
+    "-ntp",
+    "-pl",
+    "engine-runtime",
+    "-am",
+    "test",
+    "-Dmaven.repo.local=.tools/m2",
+    "-Djdk.net.unixdomain.tmpdir=V:/.local/tmp",
+    "-Dsurefire.failIfNoSpecifiedTests=false",
+    "-Dmodel.input.evidence=G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\iam-model-input-producer-review-fix\\i3-green\\observer",
+    "-Dmodel.input.registry=G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\iam-model-input-producer-review-fix\\databases.jsonl",
+    "-Dtest=ModelInputMaterialPostgresTest#malformedParameterShapesNeverConsumeImmutableSlot+validTypedParametersSurvivePersistedCanonicalRequest",
+    "-Dmodel.input.tls=G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\iam-model-input-producer\\tls\\engine.p12"
+  ],
+  "source": {
+    "file": "docs/evidence/iam-model-input-producer-review-fix/i3-green/source.json",
+    "bytes": 125472,
+    "sha256": "a8fcdb8e75b76b1eb9ea11f6944848fd894ae8da026fb9e04ef06b0f6b35105a"
+  }
+}

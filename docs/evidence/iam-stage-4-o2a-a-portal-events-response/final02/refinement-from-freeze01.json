@@ -1,0 +1,31 @@
+{
+  "reason": "Remove self-added equality between historical execution ceiling SHA and fresh observation ceiling SHA; preserve historical provenance and validate current cover only.",
+  "changedSources": [
+    {
+      "file": "admin-common/src/main/java/cn/agentplatform/common/authority/PortalEventsResponse.java",
+      "bytes": 6169,
+      "sha256": "bb2d917da887d3551efdc5f5182b58d1c50920c0923cd28776ae330b030a58eb"
+    },
+    {
+      "file": "admin-common/src/test/java/cn/agentplatform/common/authority/PortalEventsAuthorityProfileTest.java",
+      "bytes": 34862,
+      "sha256": "d89631984f0e3053b8ae6bca42ff070ca9edf5821f1d3da00a7d3757ae8edfb0"
+    }
+  ],
+  "preservedHistoricalFreeze": {
+    "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/freeze-summary.json",
+    "bytes": 5695,
+    "sha256": "4993bdc797cf07272581cddf2d4e7ccdc93461e3800932c3f300f4562a666c4d"
+  },
+  "historicalFirstReplay": {
+    "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/replay-proof.json",
+    "bytes": 760,
+    "sha256": "0d6d6220c651db9db417489c7740bf6cc9b22ac44b0797d7e226938c0d1983b7"
+  },
+  "finalFirstReplay": {
+    "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/final02/replay-proof.json",
+    "bytes": 776,
+    "sha256": "dd4ae70ba07529b43e6883affb00dab65480e9901ef46fa65578b5102d5cec24"
+  },
+  "priorReplaySucceededAndWasSuperseded": true
+}

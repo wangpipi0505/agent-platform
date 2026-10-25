@@ -1,0 +1,31 @@
+-------------------------------------------------------------------------------
+Test set: cn.agentplatform.engine.infra.RunEventReaderBudgetTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 0.907 s <<< FAILURE! -- in cn.agentplatform.engine.infra.RunEventReaderBudgetTest
+cn.agentplatform.engine.infra.RunEventReaderBudgetTest.captureInitialCursorAndRemainingAreLiveLocalOperations -- Time elapsed: 0.887 s <<< FAILURE!
+java.lang.AssertionError: 
+[live signed cursor getter] 
+Expecting ListFromStream:
+  ["responseId",
+    "requireMaterial",
+    "subject",
+    "resource",
+    "equals",
+    "toString",
+    "hashCode",
+    "getClass",
+    "notify",
+    "notifyAll",
+    "wait",
+    "wait",
+    "wait"]
+to contain:
+  ["initialCursor", "remainingNanos"]
+but could not find the following element(s):
+  ["initialCursor", "remainingNanos"]
+
+	at cn.agentplatform.engine.infra.RunEventReaderBudgetTest.captureInitialCursorAndRemainingAreLiveLocalOperations(RunEventReaderBudgetTest.java:13)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+

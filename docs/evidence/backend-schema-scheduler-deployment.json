@@ -1,0 +1,185 @@
+{
+  "stage": "schema-scheduler-20261020-0830",
+  "gitHeadAvailable": false,
+  "testSummary": {
+    "backendSourceFiles": 262,
+    "sourceChanged": false,
+    "modules": [
+      {
+        "module": "admin-common",
+        "tests": 10,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "platform-gateway",
+        "tests": 16,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "app-management",
+        "tests": 35,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "engine-runtime",
+        "tests": 427,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "skill-registry",
+        "tests": 270,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "model-gateway",
+        "tests": 66,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "monitor",
+        "tests": 22,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    ],
+    "totalTests": 846,
+    "logSha256": "0eee2c9ed8279f00ad6998f16cb1c2eec4eed63aee08a7df3d7e4d483742937f"
+  },
+  "sourceManifest": "docs/evidence/backend-schema-scheduler-source-sha256.json",
+  "jars": [
+    {
+      "service": "platform-gateway",
+      "file": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\artifacts\\schema-scheduler-20261020-0830\\platform-gateway.jar",
+      "sha256": "2e162dbffd0d29fea63eecdba478035fd7164063fcab0fc9d4357bbc34547f68"
+    },
+    {
+      "service": "app-management",
+      "file": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\artifacts\\schema-scheduler-20261020-0830\\app-management.jar",
+      "sha256": "db0634e2a68d084aec280e25fcc89498cde4ae7f910fb229a75f10e4cf8ea523"
+    },
+    {
+      "service": "engine-runtime",
+      "file": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\artifacts\\schema-scheduler-20261020-0830\\engine-runtime.jar",
+      "sha256": "4fb6f8e3856f73098bac0b8ca6c743f8bbf9ceaf692c6a8c14fce319e6e010e7"
+    },
+    {
+      "service": "skill-registry",
+      "file": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\artifacts\\schema-scheduler-20261020-0830\\skill-registry.jar",
+      "sha256": "e7663f646061daf1f803d07185ee8c55c9126fb4d91e5904cfb9cf30f47b438f"
+    },
+    {
+      "service": "model-gateway",
+      "file": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\artifacts\\schema-scheduler-20261020-0830\\model-gateway.jar",
+      "sha256": "8761cb916003eb01bd09763a31af8ba487125c30db7f99bf5ec55150282e6cd6"
+    },
+    {
+      "service": "monitor",
+      "file": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\artifacts\\schema-scheduler-20261020-0830\\monitor.jar",
+      "sha256": "432012922fc421301ab89efb9e1f2872b3c1f5959733fac94651e0403fd6fa1c"
+    }
+  ],
+  "packageTestsSkipped": true,
+  "forceNormalJarCreation": true,
+  "processes": [
+    {
+      "service": "platform-gateway",
+      "port": 18080,
+      "pid": 46040,
+      "jar": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\platform-gateway\\target\\platform-gateway-0.1.0-SNAPSHOT.jar",
+      "owned": true
+    },
+    {
+      "service": "app-management",
+      "port": 18081,
+      "pid": 46860,
+      "jar": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\app-management\\target\\app-management-0.1.0-SNAPSHOT.jar",
+      "owned": true
+    },
+    {
+      "service": "engine-runtime",
+      "port": 18082,
+      "pid": 10768,
+      "jar": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\engine-runtime\\target\\engine-runtime-0.1.0-SNAPSHOT.jar",
+      "owned": true
+    },
+    {
+      "service": "skill-registry",
+      "port": 18083,
+      "pid": 42116,
+      "jar": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\skill-registry\\target\\skill-registry-0.1.0-SNAPSHOT.jar",
+      "owned": true
+    },
+    {
+      "service": "model-gateway",
+      "port": 18084,
+      "pid": 47796,
+      "jar": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\model-gateway\\target\\model-gateway-0.1.0-SNAPSHOT.jar",
+      "owned": true
+    },
+    {
+      "service": "monitor",
+      "port": 18085,
+      "pid": 29744,
+      "jar": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\monitor\\target\\monitor-0.1.0-SNAPSHOT.jar",
+      "owned": true
+    }
+  ],
+  "embeddedCommon": [
+    {
+      "service": "platform-gateway",
+      "commonSha256": "9f1719d1eb2830850d9e2c256a35cffadf94675f803865036e3d272539b231b9",
+      "re2j": "1.8",
+      "networknt": "1.5.6",
+      "oldSkillBudgetAbsent": true
+    },
+    {
+      "service": "app-management",
+      "commonSha256": "9f1719d1eb2830850d9e2c256a35cffadf94675f803865036e3d272539b231b9",
+      "re2j": "1.8",
+      "networknt": "1.5.6",
+      "oldSkillBudgetAbsent": true
+    },
+    {
+      "service": "engine-runtime",
+      "commonSha256": "9f1719d1eb2830850d9e2c256a35cffadf94675f803865036e3d272539b231b9",
+      "re2j": "1.8",
+      "networknt": "1.5.6",
+      "oldSkillBudgetAbsent": true
+    },
+    {
+      "service": "skill-registry",
+      "commonSha256": "9f1719d1eb2830850d9e2c256a35cffadf94675f803865036e3d272539b231b9",
+      "re2j": "1.8",
+      "networknt": "1.5.6",
+      "oldSkillBudgetAbsent": true
+    },
+    {
+      "service": "model-gateway",
+      "commonSha256": "9f1719d1eb2830850d9e2c256a35cffadf94675f803865036e3d272539b231b9",
+      "re2j": "1.8",
+      "networknt": "1.5.6",
+      "oldSkillBudgetAbsent": true
+    },
+    {
+      "service": "monitor",
+      "commonSha256": "9f1719d1eb2830850d9e2c256a35cffadf94675f803865036e3d272539b231b9",
+      "re2j": "1.8",
+      "networknt": "1.5.6",
+      "oldSkillBudgetAbsent": true
+    }
+  ],
+  "packageLogSha256": "70e69e5e89e5802ab54b0420962904df3b8c45e64ea32d8dfad3ff75735f698c"
+}

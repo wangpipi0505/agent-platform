@@ -1,0 +1,46 @@
+{
+  "at": "2026-10-20T20:57:12.280Z",
+  "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+  "command": [
+    "node",
+    "web/node_modules/vitest/vitest.mjs",
+    "run",
+    "--root",
+    "web",
+    "tests/portal-auth.test.ts",
+    "-t",
+    "D4b lifecycle|same token reconnect|late provider and late session|segments a far future"
+  ],
+  "source": {
+    "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/green-lifecycle-unit/source-before.json",
+    "bytes": 108247,
+    "sha256": "9116300e6c95f5896bf89e13b48c5f30e0b816aa51db7dd22f352ea4dc5bc5a5"
+  },
+  "overlay": [
+    {
+      "file": "web/shared/api.ts",
+      "bytes": 7021,
+      "sha256": "43abc705e6b414ca6052e64edd9cea7b7954f62ae34603bb1f99b43e8f13e8ae"
+    },
+    {
+      "file": "web/shared/portal-auth.ts",
+      "bytes": 5482,
+      "sha256": "c1688883348a7c8a2d8aa82fb3f18c97857e57e65b66ce71504a12f0d0b8cf27"
+    },
+    {
+      "file": "web/tests/portal-auth.test.ts",
+      "bytes": 14445,
+      "sha256": "0f1dbe963e0adf0080436b0e36b5dc04232812e17d46b0feb6c5a9d0291b783c"
+    },
+    {
+      "file": "web/tests/portal-browser.mjs",
+      "bytes": 34649,
+      "sha256": "cac4b83f5eb4bf6170ccda8ee4320e385618e8c71660f14f51fa352d9ca2db2b"
+    }
+  ],
+  "unchangedComposition": {
+    "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/composition.json",
+    "bytes": 2252,
+    "sha256": "18cc06c558b72175894a4e8442d51e8077b12605df3f5340186de1d8961b6d76"
+  }
+}

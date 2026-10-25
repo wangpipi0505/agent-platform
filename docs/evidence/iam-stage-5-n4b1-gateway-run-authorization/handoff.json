@@ -1,0 +1,195 @@
+{
+  "status": "DONE_WITH_CONCERNS",
+  "scope": "N4b1 finite common gateway published-run proof component; not N4b/full Task5 acceptance",
+  "ownershipReturnedAt": "2026-10-20T16:55:02.284Z",
+  "sourceOwnership": "returned to root; no further implementer writes",
+  "targetOwnership": "returned to root; no further implementer writes",
+  "report": {
+    "file": "docs/evidence/iam-stage-5-n4b1-gateway-run-authorization-report.md",
+    "bytes": 14213,
+    "sha256": "b99c0a3082f535d2011589739efa5f248a02de8bc4688d4e601b60af2813601a"
+  },
+  "evidenceManifest": {
+    "file": "docs/evidence/iam-stage-5-n4b1-gateway-run-authorization/evidence-files.json",
+    "bytes": 1785064,
+    "sha256": "9fdfa04d434d998161b224d249e842fbfe16b32df3278a530a6863b401944714"
+  },
+  "source": {
+    "before": 368,
+    "after": 369,
+    "added": 1,
+    "modified": 3,
+    "deleted": 0,
+    "manifest": {
+      "file": "docs/evidence/iam-stage-5-n4b1-gateway-run-authorization/source-after.json",
+      "bytes": 75935,
+      "sha256": "e9e2140273874502f0eff0bd8ad035f795694a4e80cb4e167daee7e6f28401f8"
+    }
+  },
+  "target": {
+    "before": 1806,
+    "after": 1814,
+    "added": 8,
+    "modified": 12,
+    "deleted": 0,
+    "manifest": {
+      "file": "docs/evidence/iam-stage-5-n4b1-gateway-run-authorization/target-after.json",
+      "bytes": 372619,
+      "sha256": "1e4de86fa31e89c3d7d004e5eb603dcc772077fba3cc8e2f8b8dd923a04b0d55"
+    }
+  },
+  "protection": {
+    "file": "docs/evidence/iam-stage-5-n4b1-gateway-run-authorization/protection-summary.json",
+    "bytes": 592,
+    "sha256": "e958ce109653d6dafb48d7ca7d1678005c8f396cdd12de363c1c1fdf4bcb584b"
+  },
+  "physicalProtectedSummary": {
+    "startedAt": "2026-10-20T16:48:54.577Z",
+    "endedAt": "2026-10-20T16:54:19.572Z",
+    "protectedFiles": 117539,
+    "protectedBytes": 9814266735,
+    "reusedRootBase": 109089,
+    "actualNewStaticSupplement": 8450,
+    "approvedPriorStaticTransitions": 5,
+    "approvedExternalTransitions": 3,
+    "unauthorizedStaticChanges": 0,
+    "runnerChanges": 0,
+    "indexChanges": 0,
+    "unauthorizedAdditions": 0,
+    "runners": 28,
+    "indexes": 8,
+    "source": 369,
+    "target": 1814,
+    "allSourceTargetFrozenBytesStillEqual": true,
+    "all2174PhysicalBeforeCopiesVerified": true,
+    "beforeIsPhasedNotAtomic": true
+  },
+  "patch": {
+    "file": "docs/evidence/iam-stage-5-n4b1-gateway-run-authorization/change.patch",
+    "bytes": 67949,
+    "sha256": "759d751d1958f8881ae1ab2ea3d8d4d17cc78adbb6c068cf0d4f0aab406bb9c1"
+  },
+  "actualApplyCheck": {
+    "command": [
+      "git",
+      "-c",
+      "core.autocrlf=false",
+      "apply",
+      "--check",
+      "-p2",
+      "--directory=docs/evidence/iam-stage-5-n4b1-gateway-run-authorization/replay",
+      "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\iam-stage-5-n4b1-gateway-run-authorization\\change.patch"
+    ],
+    "workdir": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+    "exit": 0,
+    "stdout": "",
+    "stderr": "",
+    "error": null
+  },
+  "actualApply": {
+    "command": [
+      "git",
+      "-c",
+      "core.autocrlf=false",
+      "apply",
+      "-p2",
+      "--directory=docs/evidence/iam-stage-5-n4b1-gateway-run-authorization/replay",
+      "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\iam-stage-5-n4b1-gateway-run-authorization\\change.patch"
+    ],
+    "workdir": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+    "exit": 0,
+    "stdout": "",
+    "stderr": "",
+    "error": null
+  },
+  "all369ReplayByteEqual": true,
+  "tests": [
+    {
+      "stage": "iam-stage-n4b1-setup01",
+      "exit": 1,
+      "actualRunning": [],
+      "suites": [],
+      "commandArtifact": "docs/evidence/iam-stage-5-n4b1-gateway-run-authorization/iam-stage-n4b1-setup01/command.json",
+      "executionArtifact": "docs/evidence/iam-stage-5-n4b1-gateway-run-authorization/iam-stage-n4b1-setup01/execution.json"
+    },
+    {
+      "stage": "iam-stage-n4b1-red01",
+      "exit": 1,
+      "actualRunning": [
+        "cn.agentplatform.common.authority.GatewayRunAuthorizationTest"
+      ],
+      "suites": [
+        {
+          "name": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+          "tests": 29,
+          "failures": 4,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "commandArtifact": "docs/evidence/iam-stage-5-n4b1-gateway-run-authorization/iam-stage-n4b1-red01/command.json",
+      "executionArtifact": "docs/evidence/iam-stage-5-n4b1-gateway-run-authorization/iam-stage-n4b1-red01/execution.json"
+    },
+    {
+      "stage": "iam-stage-n4b1-final01",
+      "exit": 0,
+      "actualRunning": [
+        "cn.agentplatform.common.authority.CurrentAuthorityClientTest",
+        "cn.agentplatform.common.authority.GatewayRunAuthorizationTest"
+      ],
+      "suites": [
+        {
+          "name": "cn.agentplatform.common.authority.CurrentAuthorityClientTest",
+          "tests": 20,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "name": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+          "tests": 29,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "commandArtifact": "docs/evidence/iam-stage-5-n4b1-gateway-run-authorization/iam-stage-n4b1-final01/command.json",
+      "executionArtifact": "docs/evidence/iam-stage-5-n4b1-gateway-run-authorization/iam-stage-n4b1-final01/execution.json"
+    }
+  ],
+  "runtime": "Original runner Java21 Temurin21.0.12+8 offline own .tools/m2, no dependencies/config/runner change",
+  "productionFiles": [
+    "admin-common/src/main/java/cn/agentplatform/common/authority/CurrentAuthorityClient.java",
+    "admin-common/src/main/java/cn/agentplatform/common/authority/HttpCurrentAuthorityClient.java"
+  ],
+  "testFiles": [
+    "admin-common/src/test/java/cn/agentplatform/common/authority/GatewayRunAuthorizationTest.java",
+    "admin-common/src/test/java/cn/agentplatform/common/authority/CurrentAuthorityClientTest.java"
+  ],
+  "productionIamStillClosed": true,
+  "sharedIndexesUnchanged": true,
+  "noPackageDeployCommitPushHeadRemote": true,
+  "greenNotRerun": true,
+  "resources": {
+    "file": "docs/evidence/iam-stage-5-n4b1-gateway-run-authorization/resources.json",
+    "bytes": 951,
+    "sha256": "dc747049face9556bc7d35362063a11a52575585d4b73124b711efa06aa4fae8"
+  },
+  "toolEvents": {
+    "file": "docs/evidence/iam-stage-5-n4b1-gateway-run-authorization/tool-events.json",
+    "bytes": 7672,
+    "sha256": "e2cfbc0c33b61fadb8b73e19cc88251f258354c3c8c12b8506d8c19621c3c042"
+  },
+  "limitations": [
+    "Pending root audit and fresh independent Spec/Quality review; no self-acceptance",
+    "Gateway proxy/JSON prePOST/postbuffer/prewrite boundaries not yet wired; real full metadata/main/app/engine/PG chain is N4b2",
+    "No real IAM/model/ontology/K8s acceptance; existing production closure untouched",
+    "Existing BoundedIamHttp JDK retry/close cancellation limitation remains; no literal zero retry/hard bounded all-network claim",
+    "Signed decision window <=5s is finite adapter constraint, not instant revocation SLA/global wire atomicity",
+    "Source/ticket/op/grant short-boundary cases respect nested order; do not imply independently shortest grant with still-valid longer ticket",
+    "Before capture phased; supplement walk interruption/resumption and duplicate raw index metadata correction explicitly recorded without before rewrite",
+    "Tool display excerpts may be truncated; full actual Maven/raw/XML/source commands retained; tool-events is not complete external tool transcript",
+    "Owned worker/handler exit assertions retained, no per-endpoint/PID OS census recorded",
+    "No production JAR rebuilt; changed common -tests.jar is test fixture archive"
+  ]
+}

@@ -1,0 +1,98 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+ExpectError: expect(received).toEqual(expected) // deep equality
+
+- Expected  -  6
++ Received  + 15
+
+  Object {
+-   "active": 0,
+-   "providerCalls": 1,
+-   "roles": Array [],
++   "active": 1,
++   "providerCalls": 2,
++   "roles": Array [
++     "ADMIN",
++   ],
+    "subscriptions": 1,
+-   "token": "",
+-   "unsubscribed": 1,
+-   "user": null,
++   "token": "A",
++   "unsubscribed": 0,
++   "user": Object {
++     "expiresAt": "2026-10-20T20:57:31.012Z",
++     "principalId": "A",
++     "roles": Array [
++       "ADMIN",
++     ],
++     "tenantId": "tenant_A",
++   },
+  }
+    at captureRawStack (G:\207\项目\算法重组工具\代码\agent-platform\web\node_modules\playwright-core\lib\coreBundle.js:9282:17)
+    at callMatcherAsStep (G:\207\项目\算法重组工具\代码\agent-platform\web\node_modules\playwright\lib\matchers\expect.js:13316:57)
+    at Object.toEqual (G:\207\项目\算法重组工具\代码\agent-platform\web\node_modules\playwright\lib\matchers\expect.js:13308:23)
+    at G:\207\项目\算法重组工具\代码\agent-platform\web\tests\portal-browser.mjs:92:415
+    at async run (G:\207\项目\算法重组工具\代码\agent-platform\web\tests\portal-browser.mjs:87:128)
+    at async file:///G:/207/%E9%A1%B9%E7%9B%AE/%E7%AE%97%E6%B3%95%E9%87%8D%E7%BB%84%E5%B7%A5%E5%85%B7/%E4%BB%A3%E7%A0%81/agent-platform/web/tests/portal-browser.mjs:90:2 {
+  matcherResult: {
+    actual: {
+      token: 'A',
+      user: {
+        tenantId: 'tenant_A',
+        principalId: 'A',
+        roles: [ 'ADMIN' ],
+        expiresAt: '2026-10-20T20:57:31.012Z'
+      },
+      roles: [ 'ADMIN' ],
+      providerCalls: 2,
+      subscriptions: 1,
+      unsubscribed: 0,
+      active: 1
+    },
+    expected: {
+      token: '',
+      user: null,
+      roles: [],
+      providerCalls: 1,
+      subscriptions: 1,
+      unsubscribed: 1,
+      active: 0
+    },
+    message: 'expect(received).toEqual(expected) // deep equality\n' +
+      '\n' +
+      '- Expected  -  6\n' +
+      '+ Received  + 15\n' +
+      '\n' +
+      '  Object {\n' +
+      '-   "active": 0,\n' +
+      '-   "providerCalls": 1,\n' +
+      '-   "roles": Array [],\n' +
+      '+   "active": 1,\n' +
+      '+   "providerCalls": 2,\n' +
+      '+   "roles": Array [\n' +
+      '+     "ADMIN",\n' +
+      '+   ],\n' +
+      '    "subscriptions": 1,\n' +
+      '-   "token": "",\n' +
+      '-   "unsubscribed": 1,\n' +
+      '-   "user": null,\n' +
+      '+   "token": "A",\n' +
+      '+   "unsubscribed": 0,\n' +
+      '+   "user": Object {\n' +
+      '+     "expiresAt": "2026-10-20T20:57:31.012Z",\n' +
+      '+     "principalId": "A",\n' +
+      '+     "roles": Array [\n' +
+      '+       "ADMIN",\n' +
+      '+     ],\n' +
+      '+     "tenantId": "tenant_A",\n' +
+      '+   },\n' +
+      '  }',
+    name: 'toEqual',
+    pass: false
+  }
+}
+
+Node.js v24.16.0

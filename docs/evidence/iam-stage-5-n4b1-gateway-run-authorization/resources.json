@@ -1,0 +1,7 @@
+{
+  "basis": "Assertions in actual49 passing cases, not an OS-wide endpoint/process audit",
+  "newTestWorkers": "Single-thread local proof executor shutdownNow+awaitTermination2s; close-during executor shutdownNow+awaitTermination4s, handler entered/release/exited latches; Future.get2/3s. shutdownNow requests interruption; awaitTermination/exited confirm worker/handler exit.",
+  "futureCancellation": "No Future.cancel call was used. The exchange Future is observed by get and the actual owned executor termination is asserted separately.",
+  "fixture": "Original LoopbackAuthority try-with closes server/resolver stop(0) and policyHttp.close; each actual HttpCurrentAuthorityClient closes decoder+http. Per-endpoint port/PID/OS socket census not recorded.",
+  "limitation": "Existing BoundedIamHttp JDK retry/close hard-cancellation limitation remains. No claim that all network operations can be hard-cancelled or all close calls are bounded."
+}

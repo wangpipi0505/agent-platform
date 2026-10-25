@@ -1,0 +1,100 @@
+{
+  "redWarnings": 1,
+  "finalWarnings": 15,
+  "originalExpectedSources": 11,
+  "newTypeNegatives": 4,
+  "productionLoggingUnchanged": true,
+  "notClaimedAsTestLocalLogAssertions": true,
+  "perTest": [
+    {
+      "class": "cn.agentplatform.engine.infra.OwnedFlowMaterialsPostgresTest",
+      "name": "lastNodePostCommitProofExpiryLeavesGrantUsableAndAggregateOnlyNewCurrentNeverRerunsNode",
+      "count": 1,
+      "classification": [
+        "PlatformException"
+      ]
+    },
+    {
+      "class": "cn.agentplatform.engine.infra.OwnedFlowMaterialsPostgresTest",
+      "name": "workerCommitInfrastructureFaultNeverEntersBusinessFallbackOrFailure",
+      "count": 1,
+      "classification": [
+        "UncategorizedSQLException"
+      ]
+    },
+    {
+      "class": "cn.agentplatform.engine.infra.OwnedFlowSchedulerPostgresTest",
+      "name": "missingAuthorityCapabilityAndUnsupportedNodesNeverUseLegacyOrAgentDriver",
+      "count": 7,
+      "classification": [
+        "PlatformException",
+        "PlatformException",
+        "PlatformException",
+        "PlatformException",
+        "PlatformException",
+        "PlatformException",
+        "PlatformException"
+      ]
+    },
+    {
+      "class": "cn.agentplatform.engine.infra.OwnedFlowSchedulerPostgresTest",
+      "name": "missingSnapshotTypeNeverStartsOwnedWorker",
+      "count": 1,
+      "classification": [
+        "PlatformException"
+      ]
+    },
+    {
+      "class": "cn.agentplatform.engine.infra.OwnedFlowSchedulerPostgresTest",
+      "name": "current403And503MakeZeroPayloadAttemptAndStartAndBackoffBothQueueEntrypoints",
+      "count": 2,
+      "classification": [
+        "PlatformException",
+        "PlatformException"
+      ]
+    },
+    {
+      "class": "cn.agentplatform.engine.infra.OwnedFlowSchedulerPostgresTest",
+      "name": "nullSnapshotTypeNeverStartsOwnedWorker",
+      "count": 1,
+      "classification": [
+        "PlatformException"
+      ]
+    },
+    {
+      "class": "cn.agentplatform.engine.infra.OwnedFlowSchedulerPostgresTest",
+      "name": "chatSnapshotTypeNeverStartsOwnedWorker",
+      "count": 1,
+      "classification": [
+        "PlatformException"
+      ]
+    },
+    {
+      "class": "cn.agentplatform.engine.infra.OwnedFlowSchedulerPostgresTest",
+      "name": "unknownSnapshotTypeNeverStartsOwnedWorker",
+      "count": 1,
+      "classification": [
+        "PlatformException"
+      ]
+    }
+  ],
+  "surefireToolDiagnostics": [
+    {
+      "stage": "iam-stage-5-n2-fix-red01",
+      "file": "engine-runtime/target/surefire-reports/2026-10-20T21-33-55_688.dumpstream",
+      "frozenFile": "docs/evidence/iam-stage-5-n2-owned-flow-fix/target-final/engine-runtime/target/surefire-reports/2026-10-20T21-33-55_688.dumpstream",
+      "bytes": 344,
+      "sha256": "8a9524ef660c8ac66e9008bf1e16ccc0e446b6b2ee9732bd7d33b6df7732e848",
+      "originalBytesPreserved": true
+    },
+    {
+      "stage": "iam-stage-5-n2-fix-final01",
+      "file": "engine-runtime/target/surefire-reports/2026-10-20T21-35-10_599.dumpstream",
+      "frozenFile": "docs/evidence/iam-stage-5-n2-owned-flow-fix/target-final/engine-runtime/target/surefire-reports/2026-10-20T21-35-10_599.dumpstream",
+      "bytes": 344,
+      "sha256": "443d56f1c5b6d33aee8a676f71930107a8b17a2ef20650c278863dc2e5179df6",
+      "originalBytesPreserved": true
+    }
+  ],
+  "diagnostic": "Each contains the Surefire boot Manifest-JAR absolute classpath/root warning; tests ran to recorded completion. No hint/config/argLine applied."
+}

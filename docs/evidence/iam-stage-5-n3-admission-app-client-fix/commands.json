@@ -1,0 +1,62 @@
+[
+  {
+    "command": [
+      "node",
+      ".tools/run-iam-module-tests.mjs",
+      "iam-stage-5-n3-fix-red01",
+      "engine-runtime",
+      "PublishedAdmissionHttpPostgresTest#expiryAfterCommittedResponseMetadataNeverNotifiesSchedulerAndFreshPollRecovers,RuntimeClientsPublishedHttpTest#proofExpiringWhileRealExecutorQueuedNeverSendsPublishedGet"
+    ],
+    "startedAt": "2026-10-20T15:32:56.781Z",
+    "endedAt": "2026-10-20T15:33:30.713Z",
+    "exitCode": 1,
+    "signal": null,
+    "error": null,
+    "runnerStdout": "{\"stage\":\"iam-stage-5-n3-fix-red01\",\"modules\":\"engine-runtime\",\"tests\":\"PublishedAdmissionHttpPostgresTest#expiryAfterCommittedResponseMetadataNeverNotifiesSchedulerAndFreshPollRecovers,RuntimeClientsPublishedHttpTest#proofExpiringWhileRealExecutorQueuedNeverSendsPublishedGet\",\"exitCode\":1,\"log\":\".local\\\\iam-stage-5-n3-fix-red01.log\",\"timedOut\":false}\n",
+    "runnerStderr": "",
+    "helperReuseVerified": [
+      {
+        "file": "app-management/src/test/java/cn/agentplatform/common/authority/PublishedAdmissionFixtureMain.java",
+        "bytes": 16230,
+        "sha256": "4a11f92fabd7eb080f14ba8f2ac684bd48bee1668f659502a647607a9325b859"
+      },
+      {
+        "file": "app-management/target/test-classes/cn/agentplatform/common/authority/PublishedAdmissionFixtureMain.class",
+        "bytes": 13528,
+        "sha256": "9626b49e08406b66c9ed8bcaf84d521d5645f3ac05db3f0f13e2a7baf639a43b"
+      }
+    ],
+    "workdir": "G:/207/项目/算法重组工具/代码/agent-platform",
+    "raw": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/iam-stage-5-n3-fix-red01/raw.log"
+  },
+  {
+    "command": [
+      "node",
+      ".tools/run-iam-module-tests.mjs",
+      "iam-stage-5-n3-fix-final01",
+      "engine-runtime",
+      "PublishedAdmissionHttpPostgresTest,RuntimeClientsPublishedHttpTest"
+    ],
+    "startedAt": "2026-10-20T15:33:59.317Z",
+    "endedAt": "2026-10-20T15:35:37.068Z",
+    "exitCode": 0,
+    "signal": null,
+    "error": null,
+    "runnerStdout": "{\"stage\":\"iam-stage-5-n3-fix-final01\",\"modules\":\"engine-runtime\",\"tests\":\"PublishedAdmissionHttpPostgresTest,RuntimeClientsPublishedHttpTest\",\"exitCode\":0,\"log\":\".local\\\\iam-stage-5-n3-fix-final01.log\",\"timedOut\":false}\n",
+    "runnerStderr": "",
+    "helperReuseVerified": [
+      {
+        "file": "app-management/src/test/java/cn/agentplatform/common/authority/PublishedAdmissionFixtureMain.java",
+        "bytes": 16230,
+        "sha256": "4a11f92fabd7eb080f14ba8f2ac684bd48bee1668f659502a647607a9325b859"
+      },
+      {
+        "file": "app-management/target/test-classes/cn/agentplatform/common/authority/PublishedAdmissionFixtureMain.class",
+        "bytes": 13528,
+        "sha256": "9626b49e08406b66c9ed8bcaf84d521d5645f3ac05db3f0f13e2a7baf639a43b"
+      }
+    ],
+    "workdir": "G:/207/项目/算法重组工具/代码/agent-platform",
+    "raw": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/iam-stage-5-n3-fix-final01/raw.log"
+  }
+]

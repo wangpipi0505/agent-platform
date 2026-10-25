@@ -1,0 +1,4 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>命名测试输入组件验证</title></head><body><div id="app" style="max-width:1100px;margin:24px auto"></div><script type="module">
+import {createApp,h,ref} from 'vue';import {createPinia} from 'pinia';import ElementPlus from 'element-plus';import 'element-plus/dist/index.css';import '../shared/tokens.css';import DebugPanel from '../debug-panel/DebugPanel.vue';import {useAuth} from '../shared/api';
+const code=ref('named_fixture');const app=createApp({render:()=>h(DebugPanel,{appCode:code.value})});app.use(createPinia()).use(ElementPlus);const auth=useAuth();auth.token='component-fixture-only';auth.roles=['EDITOR'];app.directive('permission',{mounted(el,b){if(!auth.can(b.value))el.remove();}});window.switchFixture=()=>code.value='other_fixture';window.disposeFixture=()=>app.unmount();app.mount('#app');
+</script></body></html>

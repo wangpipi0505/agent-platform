@@ -1,0 +1,539 @@
+{
+  "at": "2026-10-20T23:31:30.439Z",
+  "purpose": "Correct frozen test-verification newMethods.source attribution without changing original files or rerunning tests",
+  "original": "docs/evidence/iam-stage-4-o1c-gateway-status/test-verification.json",
+  "finding": "source fields identify final test source, not the corresponding execution-stage source. Use command.sourceBefore and archived actual Running XML for executed identity. These are distinct latest method results, not one final-source suite.",
+  "count": 31,
+  "different": 26,
+  "rows": [
+    {
+      "className": "cn.agentplatform.common.authority.GatewayStatusAuthorizationTest",
+      "method": "realIndependentFixedQueryAndMainHavePrivateProofsAndSameOriginalSource",
+      "stage": "iam-stage-o1c-common-wire01",
+      "actualPreSourceManifest": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-common-wire01-source.json",
+      "executedSource": {
+        "file": "admin-common/src/test/java/cn/agentplatform/common/authority/GatewayStatusAuthorizationTest.java",
+        "bytes": 4873,
+        "sha256": "60819cfbc26370a48fbb31407c6b27938eabd05fd74e5dfee4cb35922ebb2a55"
+      },
+      "finalSource": {
+        "file": "admin-common/src/test/java/cn/agentplatform/common/authority/GatewayStatusAuthorizationTest.java",
+        "bytes": 5635,
+        "sha256": "42ca61df0c2cad4f392bc9868f8bceb0873c34721f7efe067ca9614a783e96ea"
+      },
+      "sourceHashDiffers": true
+    },
+    {
+      "className": "cn.agentplatform.common.authority.GatewayStatusAuthorizationTest",
+      "method": "localCurrentExpiryIs503AndOriginalSourceExpiryIs401",
+      "stage": "iam-stage-o1c-common-wire01",
+      "actualPreSourceManifest": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-common-wire01-source.json",
+      "executedSource": {
+        "file": "admin-common/src/test/java/cn/agentplatform/common/authority/GatewayStatusAuthorizationTest.java",
+        "bytes": 4873,
+        "sha256": "60819cfbc26370a48fbb31407c6b27938eabd05fd74e5dfee4cb35922ebb2a55"
+      },
+      "finalSource": {
+        "file": "admin-common/src/test/java/cn/agentplatform/common/authority/GatewayStatusAuthorizationTest.java",
+        "bytes": 5635,
+        "sha256": "42ca61df0c2cad4f392bc9868f8bceb0873c34721f7efe067ca9614a783e96ea"
+      },
+      "sourceHashDiffers": true
+    },
+    {
+      "className": "cn.agentplatform.common.authority.GatewayStatusAuthorizationTest",
+      "method": "closedOwnerInvalidatesQueryAndMainWithoutNewCalls",
+      "stage": "iam-stage-o1c-common-wire01",
+      "actualPreSourceManifest": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-common-wire01-source.json",
+      "executedSource": {
+        "file": "admin-common/src/test/java/cn/agentplatform/common/authority/GatewayStatusAuthorizationTest.java",
+        "bytes": 4873,
+        "sha256": "60819cfbc26370a48fbb31407c6b27938eabd05fd74e5dfee4cb35922ebb2a55"
+      },
+      "finalSource": {
+        "file": "admin-common/src/test/java/cn/agentplatform/common/authority/GatewayStatusAuthorizationTest.java",
+        "bytes": 5635,
+        "sha256": "42ca61df0c2cad4f392bc9868f8bceb0873c34721f7efe067ca9614a783e96ea"
+      },
+      "sourceHashDiffers": true
+    },
+    {
+      "className": "cn.agentplatform.common.authority.GatewayStatusAuthorizationTest",
+      "method": "internalTicketJwtFailureNeverEscapesAsOriginalPortal401",
+      "stage": "iam-stage-o1c-common-wire01",
+      "actualPreSourceManifest": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-common-wire01-source.json",
+      "executedSource": {
+        "file": "admin-common/src/test/java/cn/agentplatform/common/authority/GatewayStatusAuthorizationTest.java",
+        "bytes": 4873,
+        "sha256": "60819cfbc26370a48fbb31407c6b27938eabd05fd74e5dfee4cb35922ebb2a55"
+      },
+      "finalSource": {
+        "file": "admin-common/src/test/java/cn/agentplatform/common/authority/GatewayStatusAuthorizationTest.java",
+        "bytes": 5635,
+        "sha256": "42ca61df0c2cad4f392bc9868f8bceb0873c34721f7efe067ca9614a783e96ea"
+      },
+      "sourceHashDiffers": true
+    },
+    {
+      "className": "cn.agentplatform.common.authority.GatewayStatusAuthorizationTest",
+      "method": "sameOwnerDifferentRunAndDifferentOriginalAuthenticationCannotSwapMain",
+      "stage": "iam-stage-o1c-common-wire01",
+      "actualPreSourceManifest": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-common-wire01-source.json",
+      "executedSource": {
+        "file": "admin-common/src/test/java/cn/agentplatform/common/authority/GatewayStatusAuthorizationTest.java",
+        "bytes": 4873,
+        "sha256": "60819cfbc26370a48fbb31407c6b27938eabd05fd74e5dfee4cb35922ebb2a55"
+      },
+      "finalSource": {
+        "file": "admin-common/src/test/java/cn/agentplatform/common/authority/GatewayStatusAuthorizationTest.java",
+        "bytes": 5635,
+        "sha256": "42ca61df0c2cad4f392bc9868f8bceb0873c34721f7efe067ca9614a783e96ea"
+      },
+      "sourceHashDiffers": true
+    },
+    {
+      "className": "cn.agentplatform.common.authority.GatewayStatusAuthorizationTest",
+      "method": "wrongSelectorSubjectAndSnapshotAreDeniedBySignedExchange",
+      "stage": "iam-stage-o1c-common-wire01",
+      "actualPreSourceManifest": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-common-wire01-source.json",
+      "executedSource": {
+        "file": "admin-common/src/test/java/cn/agentplatform/common/authority/GatewayStatusAuthorizationTest.java",
+        "bytes": 4873,
+        "sha256": "60819cfbc26370a48fbb31407c6b27938eabd05fd74e5dfee4cb35922ebb2a55"
+      },
+      "finalSource": {
+        "file": "admin-common/src/test/java/cn/agentplatform/common/authority/GatewayStatusAuthorizationTest.java",
+        "bytes": 5635,
+        "sha256": "42ca61df0c2cad4f392bc9868f8bceb0873c34721f7efe067ca9614a783e96ea"
+      },
+      "sourceHashDiffers": true
+    },
+    {
+      "className": "cn.agentplatform.common.authority.GatewayStatusAuthorizationTest",
+      "method": "sourceAndInternalLifetimeLatchSurviveWallRollback",
+      "stage": "iam-stage-o1c-common-wire01",
+      "actualPreSourceManifest": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-common-wire01-source.json",
+      "executedSource": {
+        "file": "admin-common/src/test/java/cn/agentplatform/common/authority/GatewayStatusAuthorizationTest.java",
+        "bytes": 4873,
+        "sha256": "60819cfbc26370a48fbb31407c6b27938eabd05fd74e5dfee4cb35922ebb2a55"
+      },
+      "finalSource": {
+        "file": "admin-common/src/test/java/cn/agentplatform/common/authority/GatewayStatusAuthorizationTest.java",
+        "bytes": 5635,
+        "sha256": "42ca61df0c2cad4f392bc9868f8bceb0873c34721f7efe067ca9614a783e96ea"
+      },
+      "sourceHashDiffers": true
+    },
+    {
+      "className": "cn.agentplatform.common.authority.GatewayStatusAuthorizationTest",
+      "method": "unknownJwtAndVerifierUnavailableAreDifferent",
+      "stage": "iam-stage-o1c-common-wire01",
+      "actualPreSourceManifest": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-common-wire01-source.json",
+      "executedSource": {
+        "file": "admin-common/src/test/java/cn/agentplatform/common/authority/GatewayStatusAuthorizationTest.java",
+        "bytes": 4873,
+        "sha256": "60819cfbc26370a48fbb31407c6b27938eabd05fd74e5dfee4cb35922ebb2a55"
+      },
+      "finalSource": {
+        "file": "admin-common/src/test/java/cn/agentplatform/common/authority/GatewayStatusAuthorizationTest.java",
+        "bytes": 5635,
+        "sha256": "42ca61df0c2cad4f392bc9868f8bceb0873c34721f7efe067ca9614a783e96ea"
+      },
+      "sourceHashDiffers": true
+    },
+    {
+      "className": "cn.agentplatform.common.authority.GatewayStatusAuthorizationTest",
+      "method": "signedWrongPurposeCallerDelegationAndRequestSourceFailClosed",
+      "stage": "iam-stage-o1c-gap05",
+      "actualPreSourceManifest": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-gap05-source.json",
+      "executedSource": {
+        "file": "admin-common/src/test/java/cn/agentplatform/common/authority/GatewayStatusAuthorizationTest.java",
+        "bytes": 5635,
+        "sha256": "42ca61df0c2cad4f392bc9868f8bceb0873c34721f7efe067ca9614a783e96ea"
+      },
+      "finalSource": {
+        "file": "admin-common/src/test/java/cn/agentplatform/common/authority/GatewayStatusAuthorizationTest.java",
+        "bytes": 5635,
+        "sha256": "42ca61df0c2cad4f392bc9868f8bceb0873c34721f7efe067ca9614a783e96ea"
+      },
+      "sourceHashDiffers": false
+    },
+    {
+      "className": "cn.agentplatform.common.authority.GatewayRunStatusChainPostgresTest",
+      "method": "realGatewayQueryAndStatusReturnOriginalBytes",
+      "stage": "iam-stage-o1c-positive-session06",
+      "actualPreSourceManifest": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-positive-session06-source.json",
+      "executedSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayRunStatusChainPostgresTest.java",
+        "bytes": 31476,
+        "sha256": "f047b34f26c8ec661342adc4ce89a5e7be3c3808c9833d1f41e1436a92fa8021"
+      },
+      "finalSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayRunStatusChainPostgresTest.java",
+        "bytes": 33064,
+        "sha256": "b537afc4faa640bc9db6b0a2d26e176475847445fc7de9f0d782a25964a4a528"
+      },
+      "sourceHashDiffers": true
+    },
+    {
+      "className": "cn.agentplatform.common.authority.GatewayRunStatusChainPostgresTest",
+      "method": "actualOutputStreamAcquisitionRechecksCaptureAndMain",
+      "stage": "iam-stage-o1c-chain-wire03",
+      "actualPreSourceManifest": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-chain-wire03-source.json",
+      "executedSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayRunStatusChainPostgresTest.java",
+        "bytes": 28320,
+        "sha256": "172c1c7e67b217b938f1e3a317a1e358c339e3efad62d53e79bebd7cf04b5c7d"
+      },
+      "finalSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayRunStatusChainPostgresTest.java",
+        "bytes": 33064,
+        "sha256": "b537afc4faa640bc9db6b0a2d26e176475847445fc7de9f0d782a25964a4a528"
+      },
+      "sourceHashDiffers": true
+    },
+    {
+      "className": "cn.agentplatform.common.authority.GatewayRunStatusChainPostgresTest",
+      "method": "initialPortalVerifierInfrastructureIs503AndExplicitInvalidSourceIs401",
+      "stage": "iam-stage-o1c-errors-green08",
+      "actualPreSourceManifest": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-errors-green08-source.json",
+      "executedSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayRunStatusChainPostgresTest.java",
+        "bytes": 32978,
+        "sha256": "fa80fa06246ab5574d5ba7fc25cb5510d5fcfa56ab3d6bcd3f0ea9ad1ad1a2b6"
+      },
+      "finalSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayRunStatusChainPostgresTest.java",
+        "bytes": 33064,
+        "sha256": "b537afc4faa640bc9db6b0a2d26e176475847445fc7de9f0d782a25964a4a528"
+      },
+      "sourceHashDiffers": true
+    },
+    {
+      "className": "cn.agentplatform.common.authority.GatewayRunStatusChainPostgresTest",
+      "method": "internal401NeverBecomesPortalLogout",
+      "stage": "iam-stage-o1c-chain-wire03",
+      "actualPreSourceManifest": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-chain-wire03-source.json",
+      "executedSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayRunStatusChainPostgresTest.java",
+        "bytes": 28320,
+        "sha256": "172c1c7e67b217b938f1e3a317a1e358c339e3efad62d53e79bebd7cf04b5c7d"
+      },
+      "finalSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayRunStatusChainPostgresTest.java",
+        "bytes": 33064,
+        "sha256": "b537afc4faa640bc9db6b0a2d26e176475847445fc7de9f0d782a25964a4a528"
+      },
+      "sourceHashDiffers": true
+    },
+    {
+      "className": "cn.agentplatform.common.authority.GatewayRunStatusChainPostgresTest",
+      "method": "metadataFailureStopsBeforeMainExchangeAndKeepsControlReadsPure",
+      "stage": "iam-stage-o1c-chain-wire03",
+      "actualPreSourceManifest": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-chain-wire03-source.json",
+      "executedSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayRunStatusChainPostgresTest.java",
+        "bytes": 28320,
+        "sha256": "172c1c7e67b217b938f1e3a317a1e358c339e3efad62d53e79bebd7cf04b5c7d"
+      },
+      "finalSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayRunStatusChainPostgresTest.java",
+        "bytes": 33064,
+        "sha256": "b537afc4faa640bc9db6b0a2d26e176475847445fc7de9f0d782a25964a4a528"
+      },
+      "sourceHashDiffers": true
+    },
+    {
+      "className": "cn.agentplatform.common.authority.GatewayRunStatusChainPostgresTest",
+      "method": "missingStatusBeanKeepsActualIngressClosed",
+      "stage": "iam-stage-o1c-chain-wire03",
+      "actualPreSourceManifest": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-chain-wire03-source.json",
+      "executedSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayRunStatusChainPostgresTest.java",
+        "bytes": 28320,
+        "sha256": "172c1c7e67b217b938f1e3a317a1e358c339e3efad62d53e79bebd7cf04b5c7d"
+      },
+      "finalSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayRunStatusChainPostgresTest.java",
+        "bytes": 33064,
+        "sha256": "b537afc4faa640bc9db6b0a2d26e176475847445fc7de9f0d782a25964a4a528"
+      },
+      "sourceHashDiffers": true
+    },
+    {
+      "className": "cn.agentplatform.common.authority.GatewayRunStatusChainPostgresTest",
+      "method": "partialOutputNeverAppendsOrRetries",
+      "stage": "iam-stage-o1c-overflow-green11",
+      "actualPreSourceManifest": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-overflow-green11-source.json",
+      "executedSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayRunStatusChainPostgresTest.java",
+        "bytes": 33064,
+        "sha256": "b537afc4faa640bc9db6b0a2d26e176475847445fc7de9f0d782a25964a4a528"
+      },
+      "finalSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayRunStatusChainPostgresTest.java",
+        "bytes": 33064,
+        "sha256": "b537afc4faa640bc9db6b0a2d26e176475847445fc7de9f0d782a25964a4a528"
+      },
+      "sourceHashDiffers": false
+    },
+    {
+      "className": "cn.agentplatform.common.authority.GatewayRunStatusChainPostgresTest",
+      "method": "statusLimitMalformedAndWrongRunNeverReleaseBusinessBytes",
+      "stage": "iam-stage-o1c-chain-wire03",
+      "actualPreSourceManifest": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-chain-wire03-source.json",
+      "executedSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayRunStatusChainPostgresTest.java",
+        "bytes": 28320,
+        "sha256": "172c1c7e67b217b938f1e3a317a1e358c339e3efad62d53e79bebd7cf04b5c7d"
+      },
+      "finalSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayRunStatusChainPostgresTest.java",
+        "bytes": 33064,
+        "sha256": "b537afc4faa640bc9db6b0a2d26e176475847445fc7de9f0d782a25964a4a528"
+      },
+      "sourceHashDiffers": true
+    },
+    {
+      "className": "cn.agentplatform.common.authority.GatewayRunStatusChainPostgresTest",
+      "method": "nonUtf8StatusWireIsRejectedBeforeBusinessWrite",
+      "stage": "iam-stage-o1c-chain-wire03",
+      "actualPreSourceManifest": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-chain-wire03-source.json",
+      "executedSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayRunStatusChainPostgresTest.java",
+        "bytes": 28320,
+        "sha256": "172c1c7e67b217b938f1e3a317a1e358c339e3efad62d53e79bebd7cf04b5c7d"
+      },
+      "finalSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayRunStatusChainPostgresTest.java",
+        "bytes": 33064,
+        "sha256": "b537afc4faa640bc9db6b0a2d26e176475847445fc7de9f0d782a25964a4a528"
+      },
+      "sourceHashDiffers": true
+    },
+    {
+      "className": "cn.agentplatform.common.authority.GatewayRunStatusChainPostgresTest",
+      "method": "metadataEncodingAndWireBudgetAreVerifiedIndependently",
+      "stage": "iam-stage-o1c-gap05",
+      "actualPreSourceManifest": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-gap05-source.json",
+      "executedSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayRunStatusChainPostgresTest.java",
+        "bytes": 31456,
+        "sha256": "bf8cdc38642cb6398eb5190406428a680e88726a440136694f44878fdc8ec8e2"
+      },
+      "finalSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayRunStatusChainPostgresTest.java",
+        "bytes": 33064,
+        "sha256": "b537afc4faa640bc9db6b0a2d26e176475847445fc7de9f0d782a25964a4a528"
+      },
+      "sourceHashDiffers": true
+    },
+    {
+      "className": "cn.agentplatform.common.authority.GatewayRunStatusChainPostgresTest",
+      "method": "strictKnownDenialsRetain403AndUnsafePairsBecome503",
+      "stage": "iam-stage-o1c-chain-wire03",
+      "actualPreSourceManifest": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-chain-wire03-source.json",
+      "executedSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayRunStatusChainPostgresTest.java",
+        "bytes": 28320,
+        "sha256": "172c1c7e67b217b938f1e3a317a1e358c339e3efad62d53e79bebd7cf04b5c7d"
+      },
+      "finalSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayRunStatusChainPostgresTest.java",
+        "bytes": 33064,
+        "sha256": "b537afc4faa640bc9db6b0a2d26e176475847445fc7de9f0d782a25964a4a528"
+      },
+      "sourceHashDiffers": true
+    },
+    {
+      "className": "cn.agentplatform.common.authority.GatewayRunStatusChainPostgresTest",
+      "method": "realEngineCurrentDenialAndActualStreamExpiryRemain403",
+      "stage": "iam-stage-o1c-errors-green08",
+      "actualPreSourceManifest": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-errors-green08-source.json",
+      "executedSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayRunStatusChainPostgresTest.java",
+        "bytes": 32978,
+        "sha256": "fa80fa06246ab5574d5ba7fc25cb5510d5fcfa56ab3d6bcd3f0ea9ad1ad1a2b6"
+      },
+      "finalSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayRunStatusChainPostgresTest.java",
+        "bytes": 33064,
+        "sha256": "b537afc4faa640bc9db6b0a2d26e176475847445fc7de9f0d782a25964a4a528"
+      },
+      "sourceHashDiffers": true
+    },
+    {
+      "className": "cn.agentplatform.common.authority.GatewayRunStatusChainPostgresTest",
+      "method": "wrongMethodAliasQueryBodyHeadersAndForwardStopBeforeExchange",
+      "stage": "iam-stage-o1c-gap05",
+      "actualPreSourceManifest": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-gap05-source.json",
+      "executedSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayRunStatusChainPostgresTest.java",
+        "bytes": 31456,
+        "sha256": "bf8cdc38642cb6398eb5190406428a680e88726a440136694f44878fdc8ec8e2"
+      },
+      "finalSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayRunStatusChainPostgresTest.java",
+        "bytes": 33064,
+        "sha256": "b537afc4faa640bc9db6b0a2d26e176475847445fc7de9f0d782a25964a4a528"
+      },
+      "sourceHashDiffers": true
+    },
+    {
+      "className": "cn.agentplatform.common.authority.GatewayRunStatusChainPostgresTest",
+      "method": "zzOwnerClientCloseAfterActualStreamCannotReleaseStatus",
+      "stage": "iam-stage-o1c-chain-wire03",
+      "actualPreSourceManifest": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-chain-wire03-source.json",
+      "executedSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayRunStatusChainPostgresTest.java",
+        "bytes": 28320,
+        "sha256": "172c1c7e67b217b938f1e3a317a1e358c339e3efad62d53e79bebd7cf04b5c7d"
+      },
+      "finalSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayRunStatusChainPostgresTest.java",
+        "bytes": 33064,
+        "sha256": "b537afc4faa640bc9db6b0a2d26e176475847445fc7de9f0d782a25964a4a528"
+      },
+      "sourceHashDiffers": true
+    },
+    {
+      "className": "cn.agentplatform.gateway.application.RunObservationGetTransportTest",
+      "method": "realChunkedMultiHeaderResponseUsesOnlyFixedPathAndOneTicket",
+      "stage": "iam-stage-o1c-overflow-green11",
+      "actualPreSourceManifest": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-overflow-green11-source.json",
+      "executedSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/RunObservationGetTransportTest.java",
+        "bytes": 11651,
+        "sha256": "f3b910eb5713c12484256c4ef0d1e59f14c6f787aefc07cebbf6baa7116ad79d"
+      },
+      "finalSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/RunObservationGetTransportTest.java",
+        "bytes": 11651,
+        "sha256": "f3b910eb5713c12484256c4ef0d1e59f14c6f787aefc07cebbf6baa7116ad79d"
+      },
+      "sourceHashDiffers": false
+    },
+    {
+      "className": "cn.agentplatform.gateway.application.RunObservationGetTransportTest",
+      "method": "metadataAndStatusActualReadLimitsAcceptExactAndRejectPlusOne",
+      "stage": "iam-stage-o1c-overflow-green11",
+      "actualPreSourceManifest": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-overflow-green11-source.json",
+      "executedSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/RunObservationGetTransportTest.java",
+        "bytes": 11651,
+        "sha256": "f3b910eb5713c12484256c4ef0d1e59f14c6f787aefc07cebbf6baa7116ad79d"
+      },
+      "finalSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/RunObservationGetTransportTest.java",
+        "bytes": 11651,
+        "sha256": "f3b910eb5713c12484256c4ef0d1e59f14c6f787aefc07cebbf6baa7116ad79d"
+      },
+      "sourceHashDiffers": false
+    },
+    {
+      "className": "cn.agentplatform.gateway.application.RunObservationGetTransportTest",
+      "method": "retainedErrorsRequireStrictFiniteStatusCodeEnvelopePairs",
+      "stage": "iam-stage-o1c-chain-wire03",
+      "actualPreSourceManifest": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-chain-wire03-source.json",
+      "executedSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/RunObservationGetTransportTest.java",
+        "bytes": 10222,
+        "sha256": "378c10e5a3b5b42476b8050c8f72e8d0d870f24c71a689880d9c79ec46989a2e"
+      },
+      "finalSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/RunObservationGetTransportTest.java",
+        "bytes": 11651,
+        "sha256": "f3b910eb5713c12484256c4ef0d1e59f14c6f787aefc07cebbf6baa7116ad79d"
+      },
+      "sourceHashDiffers": true
+    },
+    {
+      "className": "cn.agentplatform.gateway.application.RunObservationGetTransportTest",
+      "method": "redirectsChallengesUnknownAndUnsafeWireNeverRetryOrForwardHeaders",
+      "stage": "iam-stage-o1c-chain-wire03",
+      "actualPreSourceManifest": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-chain-wire03-source.json",
+      "executedSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/RunObservationGetTransportTest.java",
+        "bytes": 10222,
+        "sha256": "378c10e5a3b5b42476b8050c8f72e8d0d870f24c71a689880d9c79ec46989a2e"
+      },
+      "finalSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/RunObservationGetTransportTest.java",
+        "bytes": 11651,
+        "sha256": "f3b910eb5713c12484256c4ef0d1e59f14c6f787aefc07cebbf6baa7116ad79d"
+      },
+      "sourceHashDiffers": true
+    },
+    {
+      "className": "cn.agentplatform.gateway.application.RunObservationGetTransportTest",
+      "method": "totalDeadlineCancellationAndOwnedCloseStopActualHandles",
+      "stage": "iam-stage-o1c-chain-wire03",
+      "actualPreSourceManifest": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-chain-wire03-source.json",
+      "executedSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/RunObservationGetTransportTest.java",
+        "bytes": 10222,
+        "sha256": "378c10e5a3b5b42476b8050c8f72e8d0d870f24c71a689880d9c79ec46989a2e"
+      },
+      "finalSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/RunObservationGetTransportTest.java",
+        "bytes": 11651,
+        "sha256": "f3b910eb5713c12484256c4ef0d1e59f14c6f787aefc07cebbf6baa7116ad79d"
+      },
+      "sourceHashDiffers": true
+    },
+    {
+      "className": "cn.agentplatform.gateway.application.RunObservationGetTransportTest",
+      "method": "checkAfterActualConnectCanDenyBeforeAnyRequestByte",
+      "stage": "iam-stage-o1c-chain-wire03",
+      "actualPreSourceManifest": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-chain-wire03-source.json",
+      "executedSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/RunObservationGetTransportTest.java",
+        "bytes": 10222,
+        "sha256": "378c10e5a3b5b42476b8050c8f72e8d0d870f24c71a689880d9c79ec46989a2e"
+      },
+      "finalSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/RunObservationGetTransportTest.java",
+        "bytes": 11651,
+        "sha256": "f3b910eb5713c12484256c4ef0d1e59f14c6f787aefc07cebbf6baa7116ad79d"
+      },
+      "sourceHashDiffers": true
+    },
+    {
+      "className": "cn.agentplatform.gateway.application.RunObservationGetTransportTest",
+      "method": "strictErrorsRejectNonUtf8Encoding",
+      "stage": "iam-stage-o1c-gap05",
+      "actualPreSourceManifest": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-gap05-source.json",
+      "executedSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/RunObservationGetTransportTest.java",
+        "bytes": 10612,
+        "sha256": "502f81bcb5bc23794e73eda3e0da7c481e936bdb01af9d6aa2327a5f3cc359a3"
+      },
+      "finalSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/RunObservationGetTransportTest.java",
+        "bytes": 11651,
+        "sha256": "f3b910eb5713c12484256c4ef0d1e59f14c6f787aefc07cebbf6baa7116ad79d"
+      },
+      "sourceHashDiffers": true
+    },
+    {
+      "className": "cn.agentplatform.gateway.application.RunObservationGetTransportTest",
+      "method": "overflowAbortsBeforeClosingUnreadChunkStream",
+      "stage": "iam-stage-o1c-overflow-green11",
+      "actualPreSourceManifest": "docs/evidence/iam-stage-4-o1c-gateway-status/iam-stage-o1c-overflow-green11-source.json",
+      "executedSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/RunObservationGetTransportTest.java",
+        "bytes": 11651,
+        "sha256": "f3b910eb5713c12484256c4ef0d1e59f14c6f787aefc07cebbf6baa7116ad79d"
+      },
+      "finalSource": {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/RunObservationGetTransportTest.java",
+        "bytes": 11651,
+        "sha256": "f3b910eb5713c12484256c4ef0d1e59f14c6f787aefc07cebbf6baa7116ad79d"
+      },
+      "sourceHashDiffers": false
+    }
+  ],
+  "limits": "No intermediate source text is invented. Per-command hash manifests are preserved; final source identity does not prove that exact final source executed earlier. Readonly author explanation pending separately.",
+  "rootDiscoveryCorrection": "Initial manually transcribed27 was wrong; machine-computed26/31 different,5/31 identical. Assert stopped before file write; no tests/apply repeated."
+}

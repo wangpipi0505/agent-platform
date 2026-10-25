@@ -1,0 +1,92 @@
+[
+  {
+    "stage": "iam-stage-5-n3-red01",
+    "command": "node .tools/run-iam-module-tests.mjs iam-stage-5-n3-red01 engine-runtime RuntimeClientsPublishedHttpTest",
+    "workdir": "G:/207/项目/算法重组工具/代码/agent-platform",
+    "raw": "docs/evidence/iam-stage-5-n3-admission-app-client/iam-stage-5-n3-red01/raw.log"
+  },
+  {
+    "stage": "iam-stage-5-n3-red02",
+    "command": "node .tools/run-iam-module-tests.mjs iam-stage-5-n3-red02 engine-runtime PublishedAdmissionHttpPostgresTest",
+    "workdir": "G:/207/项目/算法重组工具/代码/agent-platform",
+    "raw": "docs/evidence/iam-stage-5-n3-admission-app-client/iam-stage-5-n3-red02/raw.log"
+  },
+  {
+    "stage": "iam-stage-5-n3-red03",
+    "command": "node .tools/run-iam-module-tests.mjs iam-stage-5-n3-red03 engine-runtime PublishedAdmissionHttpPostgresTest",
+    "workdir": "G:/207/项目/算法重组工具/代码/agent-platform",
+    "raw": "docs/evidence/iam-stage-5-n3-admission-app-client/iam-stage-5-n3-red03/raw.log"
+  },
+  {
+    "stage": "iam-stage-5-n3-red04",
+    "command": "node .tools/run-iam-module-tests.mjs iam-stage-5-n3-red04 engine-runtime PublishedAdmissionHttpPostgresTest",
+    "workdir": "G:/207/项目/算法重组工具/代码/agent-platform",
+    "raw": "docs/evidence/iam-stage-5-n3-admission-app-client/iam-stage-5-n3-red04/raw.log"
+  },
+  {
+    "stage": "iam-stage-5-n3-red05",
+    "command": "node .tools/run-iam-module-tests.mjs iam-stage-5-n3-red05 engine-runtime PublishedAdmissionHttpPostgresTest",
+    "workdir": "G:/207/项目/算法重组工具/代码/agent-platform",
+    "raw": "docs/evidence/iam-stage-5-n3-admission-app-client/iam-stage-5-n3-red05/raw.log"
+  },
+  {
+    "stage": "iam-stage-5-n3-green01",
+    "command": "node .tools/run-iam-module-tests.mjs iam-stage-5-n3-green01 engine-runtime RuntimeClientsPublishedHttpTest,PublishedAdmissionHttpPostgresTest",
+    "workdir": "G:/207/项目/算法重组工具/代码/agent-platform",
+    "raw": "docs/evidence/iam-stage-5-n3-admission-app-client/iam-stage-5-n3-green01/raw.log"
+  },
+  {
+    "stage": "iam-stage-5-n3-green02",
+    "command": "node .tools/run-iam-module-tests.mjs iam-stage-5-n3-green02 engine-runtime RuntimeClientsPublishedHttpTest,PublishedAdmissionHttpPostgresTest",
+    "workdir": "G:/207/项目/算法重组工具/代码/agent-platform",
+    "raw": "docs/evidence/iam-stage-5-n3-admission-app-client/iam-stage-5-n3-green02/raw.log"
+  },
+  {
+    "stage": "iam-stage-5-n3-green03",
+    "command": "node .tools/run-iam-module-tests.mjs iam-stage-5-n3-green03 engine-runtime RuntimeClientsPublishedHttpTest,PublishedAdmissionHttpPostgresTest",
+    "workdir": "G:/207/项目/算法重组工具/代码/agent-platform",
+    "raw": "docs/evidence/iam-stage-5-n3-admission-app-client/iam-stage-5-n3-green03/raw.log"
+  },
+  {
+    "stage": "iam-stage-5-n3-green04",
+    "command": "node .tools/run-iam-module-tests.mjs iam-stage-5-n3-green04 engine-runtime RuntimeClientsPublishedHttpTest,PublishedAdmissionHttpPostgresTest",
+    "workdir": "G:/207/项目/算法重组工具/代码/agent-platform",
+    "raw": "docs/evidence/iam-stage-5-n3-admission-app-client/iam-stage-5-n3-green04/raw.log"
+  },
+  {
+    "stage": "iam-stage-5-n3-retry-red01",
+    "command": "node .tools/run-iam-module-tests.mjs iam-stage-5-n3-retry-red01 engine-runtime RuntimeClientsPublishedHttpTest#disconnectedPublishedGetIsNeverAutomaticallyResent,PublishedAdmissionHttpPostgresTest#everyAdmissionWriteFailureRollsBackRunAuthorityNodesAndScopes,PublishedAdmissionHttpPostgresTest#actualAdvisoryWaitCannotOutliveBoundProofAndLockTimeoutIsFinite,PublishedAdmissionHttpPostgresTest#workerCanFinishBeforeCreationStatusAndNarrowingStillLeaksNoPayload",
+    "workdir": "G:/207/项目/算法重组工具/代码/agent-platform",
+    "raw": "docs/evidence/iam-stage-5-n3-admission-app-client/iam-stage-5-n3-retry-red01/raw.log"
+  },
+  {
+    "stage": "iam-stage-5-n3-client-green01",
+    "command": "node .tools/run-iam-module-tests.mjs iam-stage-5-n3-client-green01 engine-runtime RuntimeClientsPublishedHttpTest",
+    "workdir": "G:/207/项目/算法重组工具/代码/agent-platform",
+    "raw": "docs/evidence/iam-stage-5-n3-admission-app-client/iam-stage-5-n3-client-green01/raw.log"
+  },
+  {
+    "stage": "iam-stage-5-n3-gate-red01",
+    "command": "node .tools/run-iam-module-tests.mjs iam-stage-5-n3-gate-red01 engine-runtime PublishedAdmissionHttpPostgresTest#remainingOwnedWorkerDependenciesAreRejectedBeforeAdmission",
+    "workdir": "G:/207/项目/算法重组工具/代码/agent-platform",
+    "raw": "docs/evidence/iam-stage-5-n3-admission-app-client/iam-stage-5-n3-gate-red01/raw.log"
+  },
+  {
+    "stage": "iam-stage-5-n3-final01",
+    "command": "node .tools/run-iam-module-tests.mjs iam-stage-5-n3-final01 engine-runtime RuntimeClientsPublishedHttpTest,PublishedAdmissionHttpPostgresTest,FlowMaterialStatusPostgresTest,OwnedFlowSchedulerPostgresTest",
+    "workdir": "G:/207/项目/算法重组工具/代码/agent-platform",
+    "raw": "docs/evidence/iam-stage-5-n3-admission-app-client/iam-stage-5-n3-final01/raw.log"
+  },
+  {
+    "stage": "iam-stage-5-n3-final02",
+    "command": "node .tools/run-iam-module-tests.mjs iam-stage-5-n3-final02 engine-runtime RuntimeClientsPublishedHttpTest",
+    "workdir": "G:/207/项目/算法重组工具/代码/agent-platform",
+    "raw": "docs/evidence/iam-stage-5-n3-admission-app-client/iam-stage-5-n3-final02/raw.log"
+  },
+  {
+    "stage": "iam-stage-5-n3-final03",
+    "command": "node .tools/run-iam-module-tests.mjs iam-stage-5-n3-final03 engine-runtime RuntimeClientsPublishedHttpTest",
+    "workdir": "G:/207/项目/算法重组工具/代码/agent-platform",
+    "raw": "docs/evidence/iam-stage-5-n3-admission-app-client/iam-stage-5-n3-final03/raw.log"
+  }
+]

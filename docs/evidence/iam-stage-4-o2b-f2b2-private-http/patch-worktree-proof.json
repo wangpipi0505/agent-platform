@@ -1,0 +1,58 @@
+{
+  "patch": {
+    "file": "docs/evidence/iam-stage-4-o2b-f2b2-private-http/source.binary.patch",
+    "bytes": 22844,
+    "sha256": "46955b608f6f3a4fe707d1e83b34b4c3ad808c9d45468f07b34196832ad99c9c"
+  },
+  "primaryBaseline621Tree": "1005d7176b21ee3a7ecd79feb36c3be23aa91a1b",
+  "actualBaselineBlobs": {
+    "file": ".local/iam-o2b-f2b2-private-http/baseline-index-blobs.json",
+    "bytes": 118930,
+    "sha256": "e2a54195410b83786ea28ea3a921342e1c4865ac45d592a9b992b2eba0d97ae5"
+  },
+  "replayBeforeBytes": {
+    "file": ".local/iam-o2b-f2b2-private-http/replay-before.json",
+    "bytes": 118930,
+    "sha256": "7ce27abedc333786bff2c7c886ab6092814b52118bf1fd3fd87f6a52eacf81fa"
+  },
+  "replayBeforeNames": {
+    "file": ".local/iam-o2b-f2b2-private-http/replay-before-names.json",
+    "bytes": 46532,
+    "sha256": "4c6ff20e4def3d2bf0b811031be021a37cabf7c90bca8dd54cad64b8a397ea44"
+  },
+  "attrsBeforeAdd": "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsHttp.java: text: unset\nplatform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsHttp.java: diff: unset\nplatform-gateway/src/main/java/cn/agentplatform/gateway/application/RunObservationMetadataClient.java: text: unset\nplatform-gateway/src/main/java/cn/agentplatform/gateway/application/RunObservationMetadataClient.java: diff: unset\nplatform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsHttpTest.java: text: unset\nplatform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsHttpTest.java: diff: unset\nplatform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsPrivateHttpTest.java: text: unset\nplatform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsPrivateHttpTest.java: diff: unset\nplatform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsPrivateAuthorityTest.java: text: unset\nplatform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsPrivateAuthorityTest.java: diff: unset\n",
+  "configIsolation": {
+    "system": true,
+    "global": true,
+    "template": true,
+    "textDiffDisabledBeforeAdd": true
+  },
+  "check": {
+    "file": ".local/iam-o2b-f2b2-private-http/replay-check.json",
+    "bytes": 437,
+    "sha256": "8ae613ed26f15ec7b50ef30f2b6d95ae0439581d8ed6cb7141315f20e607b04c"
+  },
+  "apply": {
+    "file": ".local/iam-o2b-f2b2-private-http/replay-apply.json",
+    "bytes": 422,
+    "sha256": "70ad512401ca38b7dcdf29e78c1272bcdd982417fb0d19187a4d363952cbed0a"
+  },
+  "plainWorktreeOnly": true,
+  "checkCount": 1,
+  "applyCount": 1,
+  "noReplayIndex": true,
+  "fullAfter623": {
+    "file": ".local/iam-o2b-f2b2-private-http/replay-after.json",
+    "bytes": 119381,
+    "sha256": "c2dd5086c9718098dc0957aa7f0dd3e7c809f56793d7eaea1b53e3987262c246"
+  },
+  "afterNames": {
+    "file": ".local/iam-o2b-f2b2-private-http/replay-name-closure.json",
+    "bytes": 46817,
+    "sha256": "2f591e59ac34a71fd1c2f9273e04832a989cad4e87a74375d452db4fff9ea9a4"
+  },
+  "noSourceCopiedAfterApply": true,
+  "noCommitOrRemote": true,
+  "head": "Only init-created unborn symbolic HEAD exists; there is no resolved HEAD commit.",
+  "strictSequence": "baseline copy -> init/attrs -> add -> tree+cat-file blob verification -> independent replay copy/init without index -> save before621 bytes/names -> patch add/generate -> one plain check -> one plain apply -> complete after623 bytes/names; every spawnSync completed before the dependent operation."
+}

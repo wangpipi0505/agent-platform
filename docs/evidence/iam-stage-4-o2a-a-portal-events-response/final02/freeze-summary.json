@@ -1,0 +1,52 @@
+{
+  "source": {
+    "before": 585,
+    "after": 589,
+    "backend": 397,
+    "frontendInherited": 192,
+    "modified": 5,
+    "added": 4,
+    "deleted": 0
+  },
+  "executedSource": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/green04/after/source.json",
+  "finalSource": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/final02/source-after.json",
+  "executedEqualsFinal": true,
+  "target": {
+    "acceptedLogical": 2004,
+    "independentInheritedCorrection": 4,
+    "actualCandidates": 187,
+    "after": 2023
+  },
+  "exactTaskPaths": [
+    "admin-common/src/main/java/cn/agentplatform/common/authority/AuthorityContext.java",
+    "admin-common/src/main/java/cn/agentplatform/common/authority/HttpCurrentAuthorityClient.java",
+    "admin-common/src/main/java/cn/agentplatform/common/authority/PortalEventsBinding.java",
+    "admin-common/src/main/java/cn/agentplatform/common/authority/PortalEventsResponse.java",
+    "admin-common/src/main/java/cn/agentplatform/common/authority/ResponseAuthorityClient.java",
+    "admin-common/src/main/java/cn/agentplatform/common/authority/RunObservationSelectors.java",
+    "admin-common/src/test/java/cn/agentplatform/common/authority/LoopbackAuthority.java",
+    "admin-common/src/test/java/cn/agentplatform/common/authority/PortalEventsAuthorityProfileTest.java",
+    "admin-common/src/test/java/cn/agentplatform/common/authority/PortalEventsReceiverClosedTest.java"
+  ],
+  "statusOnlyReceiverMethodBytesUnchanged": true,
+  "finalCommand": {
+    "running": [
+      "cn.agentplatform.common.authority.PortalEventsAuthorityProfileTest"
+    ],
+    "reports": [
+      {
+        "cls": "cn.agentplatform.common.authority.PortalEventsAuthorityProfileTest",
+        "tests": 22,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0,
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.PortalEventsAuthorityProfileTest.xml",
+        "bytes": 37479,
+        "sha256": "4ba5482153a825803e811b3d687029806483a7e0adba6dc05b6430f8957ae724"
+      }
+    ]
+  },
+  "tests": 22,
+  "errors": 0,
+  "limitations": "Current candidate green04 is Profile22 PASS. Historical final01 remains 85 run: 72 PASS / 13 inherited ServiceAuthorizationTest ERROR under root inherited-service-test decision. Earlier freeze01 replay0/0 is superseded, preserved unchanged. No engine/PG/gateway success or global completion."
+}

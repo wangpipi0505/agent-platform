@@ -1,0 +1,114 @@
+{
+  "baseline": {
+    "file": "docs/evidence/iam-stage-4-o2a-a-portal-events-response/final02/target-after.json",
+    "bytes": 419611,
+    "sha256": "cbb51a971a6111c503babff9be6ded0846497cf4e79a95b2ba7e5e1076943f02"
+  },
+  "baselineLogical": 2023,
+  "phases": [
+    {
+      "stage": "iam-stage-o2a-a-fix-red01",
+      "running": [
+        {
+          "cls": "cn.agentplatform.common.authority.PortalEventsAuthorityProfileTest",
+          "tests": 5,
+          "errors": 0,
+          "skipped": 0,
+          "failures": 5
+        }
+      ],
+      "overlay": 188,
+      "diagnosticNewOrChanged": 1,
+      "preSource": {
+        "file": "docs/evidence/iam-stage-4-o2a-a-lifecycle-fixes/iam-stage-o2a-a-fix-red01/before/source.json",
+        "bytes": 111999,
+        "sha256": "f20f0a4856ccfb9f46877eadba457247c3e20acca9b5e21fcfc407f0277081b3"
+      },
+      "postSource": {
+        "file": "docs/evidence/iam-stage-4-o2a-a-lifecycle-fixes/iam-stage-o2a-a-fix-red01/after/source.json",
+        "bytes": 111999,
+        "sha256": "f20f0a4856ccfb9f46877eadba457247c3e20acca9b5e21fcfc407f0277081b3"
+      }
+    },
+    {
+      "stage": "iam-stage-o2a-a-fix-green01",
+      "running": [
+        {
+          "cls": "cn.agentplatform.common.authority.PortalEventsAuthorityProfileTest",
+          "tests": 5,
+          "errors": 0,
+          "skipped": 0,
+          "failures": 0
+        }
+      ],
+      "overlay": 188,
+      "diagnosticNewOrChanged": 1,
+      "preSource": {
+        "file": "docs/evidence/iam-stage-4-o2a-a-lifecycle-fixes/iam-stage-o2a-a-fix-green01/before/source.json",
+        "bytes": 111999,
+        "sha256": "d58a79f6d595ce996cb6a5c04a9a22f218b073e71c97f1ab3fa9285000c49e7f"
+      },
+      "postSource": {
+        "file": "docs/evidence/iam-stage-4-o2a-a-lifecycle-fixes/iam-stage-o2a-a-fix-green01/after/source.json",
+        "bytes": 111999,
+        "sha256": "d58a79f6d595ce996cb6a5c04a9a22f218b073e71c97f1ab3fa9285000c49e7f"
+      }
+    },
+    {
+      "stage": "iam-stage-o2a-a-fix-red02",
+      "running": [
+        {
+          "cls": "cn.agentplatform.common.authority.PortalEventsAuthorityProfileTest",
+          "tests": 1,
+          "errors": 0,
+          "skipped": 0,
+          "failures": 1
+        }
+      ],
+      "overlay": 188,
+      "diagnosticNewOrChanged": 1,
+      "preSource": {
+        "file": "docs/evidence/iam-stage-4-o2a-a-lifecycle-fixes/iam-stage-o2a-a-fix-red02/before/source.json",
+        "bytes": 111999,
+        "sha256": "16115ded13f8fc5c494fb377e6f9ed92eb289f9e9c90961bb7f39bc997b26210"
+      },
+      "postSource": {
+        "file": "docs/evidence/iam-stage-4-o2a-a-lifecycle-fixes/iam-stage-o2a-a-fix-red02/after/source.json",
+        "bytes": 111999,
+        "sha256": "16115ded13f8fc5c494fb377e6f9ed92eb289f9e9c90961bb7f39bc997b26210"
+      }
+    },
+    {
+      "stage": "iam-stage-o2a-a-fix-final01",
+      "running": [
+        {
+          "cls": "cn.agentplatform.common.authority.PortalEventsAuthorityProfileTest",
+          "tests": 28,
+          "errors": 0,
+          "skipped": 0,
+          "failures": 0
+        }
+      ],
+      "overlay": 188,
+      "diagnosticNewOrChanged": 1,
+      "preSource": {
+        "file": "docs/evidence/iam-stage-4-o2a-a-lifecycle-fixes/iam-stage-o2a-a-fix-final01/before/source.json",
+        "bytes": 111999,
+        "sha256": "3ad9c38b06e8ddc637f6ef4a36a5c2e474d15cf306ba1af341a3d6fad01ae7e4"
+      },
+      "postSource": {
+        "file": "docs/evidence/iam-stage-4-o2a-a-lifecycle-fixes/iam-stage-o2a-a-fix-final01/after/source.json",
+        "bytes": 111999,
+        "sha256": "3ad9c38b06e8ddc637f6ef4a36a5c2e474d15cf306ba1af341a3d6fad01ae7e4"
+      }
+    }
+  ],
+  "finalLogical": 2027,
+  "notPureClasspath": true,
+  "app4": "Already in inherited corrected lineage; no app compile/read/reclassification",
+  "final": {
+    "file": "docs/evidence/iam-stage-4-o2a-a-lifecycle-fixes/target-after.json",
+    "bytes": 420391,
+    "sha256": "19c4c35fb21135407ea912003ede6532906a056d78c1efecdbf3e4f6ea2c3219"
+  }
+}

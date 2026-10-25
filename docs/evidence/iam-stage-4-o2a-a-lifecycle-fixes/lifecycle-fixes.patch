@@ -1,0 +1,584 @@
+diff --git a/admin-common/src/main/java/cn/agentplatform/common/authority/HttpCurrentAuthorityClient.java b/admin-common/src/main/java/cn/agentplatform/common/authority/HttpCurrentAuthorityClient.java
+index 23e5a83..8c4f496 100644
+--- a/admin-common/src/main/java/cn/agentplatform/common/authority/HttpCurrentAuthorityClient.java
++++ b/admin-common/src/main/java/cn/agentplatform/common/authority/HttpCurrentAuthorityClient.java
+@@ -61,6 +61,8 @@ public final class HttpCurrentAuthorityClient implements CurrentAuthorityClient,
+     private volatile boolean closed;
+     private final Object eventsMutex = new Object();
+     private EventsRuntime eventsRuntime;
++    // Package-only observation points for deterministic lifecycle tests; these mint no authority.
++    java.util.function.Consumer<String> eventsLifecycle = point -> {};
+     public HttpCurrentAuthorityClient(AuthorityProperties config,Clock clock,WorkloadCredentialResolver credentials,boolean testProfile){
+         config.validate(testProfile);this.config=config;this.clock=Objects.requireNonNull(clock);this.credentials=Objects.requireNonNull(credentials);
+         http=new BoundedIamHttp(config,testProfile);verifier=new AuthorityResponseVerifier(config,clock,http);decoder=new TrustedJwtDecoder(config,clock,testProfile);
+@@ -830,6 +832,9 @@ public final class HttpCurrentAuthorityClient implements CurrentAuthorityClient,
+ 
+     EventsTask<Void> renewEvents(PortalEventsResponse response, PortalEventsEvidence previous) {
+         var runtime = eventsRuntime();
++        eventsLifecycle.accept("renew-deadline");
++        // Expiry/owner checks may throw. Do them before this unpublished task reserves slot work.
++        long deadline = System.nanoTime() + previous.remainingNanos();
+         var task = runtime.<Void>task(previous.slot, () -> {
+             try {
+                 var next = renewedEventsEvidence(previous);
+@@ -840,7 +845,7 @@ public final class HttpCurrentAuthorityClient implements CurrentAuthorityClient,
+                 throw failure;
+             }
+         }, response);
+-        task.deadlineNanos = System.nanoTime() + previous.remainingNanos();
++        task.deadlineNanos = deadline;
+         return task;
+     }
+ 
+@@ -891,8 +896,13 @@ public final class HttpCurrentAuthorityClient implements CurrentAuthorityClient,
+         private final AtomicInteger threadIds = new AtomicInteger();
+         private final ThreadPoolExecutor workers = new ThreadPoolExecutor(2, 2, 0, TimeUnit.MILLISECONDS,
+                 new ArrayBlockingQueue<>(64), r -> new Thread(r, "iam-portal-events-worker-" + threadIds.incrementAndGet()));
++        private volatile Thread watchdogThread;
+         private final ScheduledThreadPoolExecutor scheduler = new ScheduledThreadPoolExecutor(1,
+-                r -> new Thread(r, "iam-portal-events-watchdog"));
++                r -> {
++                    var thread = new Thread(r, "iam-portal-events-watchdog");
++                    watchdogThread = thread;
++                    return thread;
++                });
+ 
+         private EventsRuntime() {
+             scheduler.setRemoveOnCancelPolicy(true);
+@@ -917,25 +927,56 @@ public final class HttpCurrentAuthorityClient implements CurrentAuthorityClient,
+ 
+         private void execute(EventsTask<?> task) {
+             try {
+-                if (task.deadlineNanos != Long.MAX_VALUE) {
+-                    task.timeout = scheduler.schedule(() -> {
+-                        if (!task.isDone()) {
+-                            if (task.response != null) task.response.stop(AuthorityProtocol.expired());
+-                            task.cancel(true);
+-                            if (task.response == null) task.slot.stop();
+-                        }
+-                    }, Math.max(0, task.deadlineNanos - System.nanoTime()), TimeUnit.NANOSECONDS);
++                // Registration, timer handoff and queue submission share the terminal-state monitor.
++                // finish/cancel cannot retire a reservation and then let execute create new queue work.
++                synchronized (task) {
++                    if (task.finished || task.isCancelled() || task.submitted) return;
++                    if (task.deadlineNanos != Long.MAX_VALUE) {
++                        var timeout = scheduler.schedule(() -> {
++                            if (!task.isDone()) {
++                                if (task.response != null) task.response.stop(AuthorityProtocol.expired());
++                                task.cancel(true);
++                                if (task.response == null) task.slot.stop();
++                            }
++                        }, Math.max(0, task.deadlineNanos - System.nanoTime()), TimeUnit.NANOSECONDS);
++                        eventsLifecycle.accept("timer-created");
++                        task.timeout = timeout;
++                    }
++                    task.submitted = true;
++                    workers.execute(task);
+                 }
+-                workers.execute(task);
+             }
+-            catch (RejectedExecutionException rejected) {
++            catch (RuntimeException rejected) {
+                 task.cancel(false);
+                 throw BoundedIamHttp.unavailable();
+             }
+         }
+ 
++        private void executeCancellation(EventsTask<Void> task) {
++            synchronized (task) {
++                if (task.submitted) return;
++                try {
++                    workers.execute(task);
++                    task.submitted = true;
++                    return;
++                } catch (RejectedExecutionException saturatedOrClosed) {
++                    // Never block the sole deadline thread on a user callback. Its slot retains this
++                    // unsubmitted task; a later tick retries delivery only, never authority HTTP.
++                    if (Thread.currentThread() == watchdogThread) return;
++                    task.submitted = true;
++                    // A rejected cancellation has not happened. The stopping caller owns its delivery;
++                    // no escape thread/queue, and the callback still retains its physical reservation.
++                }
++            }
++            task.run();
++        }
++
+         private void tick() {
+             for (var slot : snapshot()) {
++                if (slot.stopped) {
++                    slot.stop();
++                    continue;
++                }
+                 var response = slot.response;
+                 if (response != null) {
+                     response.tick();
+@@ -954,8 +995,10 @@ public final class HttpCurrentAuthorityClient implements CurrentAuthorityClient,
+                 if (response != null) response.stop(BoundedIamHttp.unavailable());
+                 else {
+                     if (slot.openingTask != null) slot.openingTask.cancel(true);
+-                    slot.stop();
+                 }
++                // Holder stop publication does not establish cancellation submission. Help deliver
++                // the slot's one shared callback before shutting down the worker executor.
++                slot.stop();
+             }
+             workers.shutdown();
+         }
+@@ -969,6 +1012,7 @@ public final class HttpCurrentAuthorityClient implements CurrentAuthorityClient,
+         private volatile long deadlineNanos = Long.MAX_VALUE;
+         private volatile EventsTask<?> openingTask;
+         private volatile PortalEventsResponse response;
++        private EventsTask<Void> cancellation;
+ 
+         private EventsSlot(EventsRuntime runtime, Runnable cancel) {
+             this.runtime = runtime;
+@@ -984,20 +1028,22 @@ public final class HttpCurrentAuthorityClient implements CurrentAuthorityClient,
+             if (release) runtime.released(this);
+         }
+         private void stop() {
++            EventsTask<Void> task;
+             synchronized (this) {
+-                if (stopped) return;
+-                // Reserve the callback before publishing stop; blocked cancellation retains capacity.
+-                work++;
+-                stopped = true;
+-                var cancellation = new EventsTask<Void>(this, () -> {
+-                    try { cancel.run(); }
+-                    catch (RuntimeException ignored) { /* best-effort owned cancellation */ }
+-                    return null;
+-                }, null);
+-                // Submission is atomic with stop so client.close cannot shut the pool between them.
+-                // The callback itself always runs on a worker, outside every lifecycle mutex.
+-                runtime.execute(cancellation);
++                if (!stopped) {
++                    // Reserve before publishing stop; even caller-run rejection handling keeps capacity.
++                    work++;
++                    stopped = true;
++                    cancellation = new EventsTask<>(this, () -> {
++                        try { cancel.run(); }
++                        catch (RuntimeException ignored) { /* best-effort owned cancellation */ }
++                        return null;
++                    }, null);
++                }
++                task = cancellation;
+             }
++            // Any concurrent closer can deliver this same task; callbacks never run under a state lock.
++            runtime.executeCancellation(task);
+         }
+     }
+ 
+@@ -1008,7 +1054,7 @@ public final class HttpCurrentAuthorityClient implements CurrentAuthorityClient,
+         private long deadlineNanos = Long.MAX_VALUE;
+         private volatile ScheduledFuture<?> timeout;
+         private final CountDownLatch exited = new CountDownLatch(1);
+-        private boolean started, finished;
++        private boolean started, finished, submitted;
+ 
+         private EventsTask(EventsSlot slot, Callable<T> callable, PortalEventsResponse response) {
+             super(callable);
+@@ -1028,13 +1074,14 @@ public final class HttpCurrentAuthorityClient implements CurrentAuthorityClient,
+ 
+         @Override
+         public boolean cancel(boolean interrupt) {
+-            boolean cancelled = super.cancel(interrupt);
++            boolean cancelled;
+             boolean queued;
+-            synchronized (this) { queued = !started; }
+-            if (queued) {
+-                slot.runtime.workers.remove(this);
+-                finish();
++            synchronized (this) {
++                cancelled = super.cancel(interrupt);
++                queued = !started;
++                if (queued) slot.runtime.workers.remove(this);
+             }
++            if (queued) finish();
+             return cancelled;
+         }
+ 
+@@ -1042,9 +1089,8 @@ public final class HttpCurrentAuthorityClient implements CurrentAuthorityClient,
+             synchronized (this) {
+                 if (finished) return;
+                 finished = true;
++                if (timeout != null) timeout.cancel(false);
+             }
+-            var deadline = timeout;
+-            if (deadline != null) deadline.cancel(false);
+             if (response != null) response.renewFinished(this);
+             slot.finished();
+             exited.countDown();
+diff --git a/admin-common/src/main/java/cn/agentplatform/common/authority/PortalEventsResponse.java b/admin-common/src/main/java/cn/agentplatform/common/authority/PortalEventsResponse.java
+index f6e2a2b..7db0173 100644
+--- a/admin-common/src/main/java/cn/agentplatform/common/authority/PortalEventsResponse.java
++++ b/admin-common/src/main/java/cn/agentplatform/common/authority/PortalEventsResponse.java
+@@ -69,8 +69,12 @@ public final class PortalEventsResponse implements AutoCloseable {
+             pending = task;
+         }
+         // Publish before submission; even an immediate result cannot strand single-flight.
+-        try { owner.executeEvents(task); }
++        try {
++            owner.eventsLifecycle.accept("renew-published");
++            owner.executeEvents(task);
++        }
+         catch (RuntimeException rejected) {
++            task.cancel(false);
+             stop(BoundedIamHttp.unavailable());
+             throw rejected;
+         }
+@@ -122,6 +126,7 @@ public final class PortalEventsResponse implements AutoCloseable {
+             slot = evidence.slot;
+         }
+         // Stop precedes cancellation. Running work owns its physical slot until its actual finally.
++        owner.eventsLifecycle.accept("stop-published");
+         if (task != null) task.cancel(true);
+         owner.cancelEvents(slot);
+     }
+diff --git a/admin-common/src/test/java/cn/agentplatform/common/authority/PortalEventsAuthorityProfileTest.java b/admin-common/src/test/java/cn/agentplatform/common/authority/PortalEventsAuthorityProfileTest.java
+index 76b7fb0..a7edefb 100644
+--- a/admin-common/src/test/java/cn/agentplatform/common/authority/PortalEventsAuthorityProfileTest.java
++++ b/admin-common/src/test/java/cn/agentplatform/common/authority/PortalEventsAuthorityProfileTest.java
+@@ -110,6 +110,13 @@ class PortalEventsAuthorityProfileTest {
+             engine.close();
+             gateway.close();
+             iam.close();
++            try {
++                var runtime = field(engine, "eventsRuntime");
++                if (runtime != null) {
++                    assertThat(workers(runtime).isTerminated()).isTrue();
++                    assertThat(scheduler(runtime).isTerminated()).isTrue();
++                }
++            } catch (Exception failure) { throw new AssertionError(failure); }
+         }
+     }
+ 
+@@ -451,8 +458,9 @@ class PortalEventsAuthorityProfileTest {
+     }
+ 
+     @Test
+-    void idleRevocationAndSourceOrGrantExpiryStopWithoutAConsumerAndNeverResumeExecution() throws Exception {
+-        for (String cause : List.of("revoked", "source", "grant")) {
++    void idleRevocationAndElapsedHardBoundariesStopWithoutAConsumerAndNeverResumeExecution() throws Exception {
++        // The long jumps cross several deadlines; operation <= grant prevents an independent grant-first case.
++        for (String cause : List.of("revoked", "past-source", "past-all-boundaries")) {
+             try (var session = new Session()) {
+                 var cancelled = new CountDownLatch(1);
+                 try (var response = session.open("idle-" + cause, cancelled::countDown)) {
+@@ -460,7 +468,7 @@ class PortalEventsAuthorityProfileTest {
+                         session.iam.revoked = true;
+                         session.iam.clock.advance(3);
+                     } else {
+-                        session.iam.clock.advance(cause.equals("source") ? 121 : 301);
++                        session.iam.clock.advance(cause.equals("past-source") ? 121 : 301);
+                     }
+                     assertThat(cancelled.await(3, TimeUnit.SECONDS)).isTrue();
+                     status(response::currentCapture, 403);
+@@ -604,6 +612,309 @@ class PortalEventsAuthorityProfileTest {
+         }
+     }
+ 
++    private static Object field(Object owner, String name) throws Exception {
++        var field = owner.getClass().getDeclaredField(name);
++        field.setAccessible(true);
++        return field.get(owner);
++    }
++
++    private static void await(CountDownLatch latch) {
++        try { assertThat(latch.await(3, TimeUnit.SECONDS)).isTrue(); }
++        catch (InterruptedException interrupted) { Thread.currentThread().interrupt(); throw new AssertionError(interrupted); }
++    }
++
++    private static void until(java.util.function.BooleanSupplier condition) {
++        long end = System.nanoTime() + TimeUnit.SECONDS.toNanos(3);
++        while (!condition.getAsBoolean() && System.nanoTime() < end) Thread.onSpinWait();
++        assertThat(condition.getAsBoolean()).isTrue();
++    }
++
++    private static java.util.concurrent.ScheduledThreadPoolExecutor scheduler(Object runtime) throws Exception {
++        return (java.util.concurrent.ScheduledThreadPoolExecutor) field(runtime, "scheduler");
++    }
++
++    private static java.util.concurrent.ThreadPoolExecutor workers(Object runtime) throws Exception {
++        return (java.util.concurrent.ThreadPoolExecutor) field(runtime, "workers");
++    }
++
++    private static Object quietRuntime(Session session) throws Exception {
++        var runtime = field(session.engine, "eventsRuntime");
++        // These tests drive the exact transition; prevent an unrelated periodic tick from racing it.
++        for (var timer : scheduler(runtime).getQueue()) {
++            if (timer instanceof java.util.concurrent.RunnableScheduledFuture<?> scheduled && scheduled.isPeriodic()) {
++                scheduled.cancel(false);
++            }
++        }
++        return runtime;
++    }
++
++    private static int slotCount(Object runtime) throws Exception {
++        synchronized (runtime) { return ((Set<?>) field(runtime, "slots")).size(); }
++    }
++
++    private static void awaitReleased(Object runtime) throws Exception {
++        // Slot removal is after the callback's actual finally; Future.done alone is insufficient.
++        until(() -> {
++            try { return slotCount(runtime) == 0; }
++            catch (Exception failure) { throw new AssertionError(failure); }
++        });
++    }
++
++    private static void blockWorkers(Object runtime, CountDownLatch release) throws Exception {
++        var entered = new CountDownLatch(2);
++        for (int i = 0; i < 2; i++) workers(runtime).execute(() -> {
++            entered.countDown();
++            try { assertThat(release.await(10, TimeUnit.SECONDS)).isTrue(); }
++            catch (InterruptedException interrupted) { Thread.currentThread().interrupt(); }
++        });
++        await(entered);
++    }
++
++    private static void assertCancellationOutsideLocks(Object response) {
++        try {
++            var slot = field(field(response, "evidence"), "slot");
++            for (var lock : List.of(response, slot, field(slot, "runtime"), field(slot, "cancellation"))) {
++                assertThat(Thread.holdsLock(lock)).isFalse();
++            }
++        } catch (Exception failure) { throw new AssertionError(failure); }
++    }
++
++    @Test
++    void clientCloseDeliversCancellationWhileHolderStopIsPublishedButNotSubmitted() throws Exception {
++        try (var session = new Session(); var callers = Executors.newFixedThreadPool(2)) {
++            var published = new CountDownLatch(1);
++            var resumeStop = new CountDownLatch(1);
++            var callbackEntered = new CountDownLatch(1);
++            var callbackExit = new CountDownLatch(1);
++            var calls = new AtomicInteger();
++            var responseLock = new java.util.concurrent.atomic.AtomicReference<Object>();
++            var response = session.open("stop-close-gap", () -> {
++                assertCancellationOutsideLocks(responseLock.get());
++                calls.incrementAndGet(); callbackEntered.countDown(); await(callbackExit);
++            });
++            responseLock.set(response);
++            var runtime = quietRuntime(session);
++            var pool = workers(runtime);
++            session.engine.eventsLifecycle = point -> {
++                if (point.equals("stop-published")) { published.countDown(); await(resumeStop); }
++            };
++            try {
++                var holderClose = callers.submit(() -> {
++                    try { response.close(); return (Throwable) null; }
++                    catch (Throwable failure) { return failure; }
++                });
++                await(published);
++                var ownerClose = callers.submit(session.engine::close);
++                until(pool::isShutdown);
++                resumeStop.countDown();
++                assertThat(holderClose.get(2, TimeUnit.SECONDS)).isNull();
++                await(callbackEntered);
++                assertThat(calls).hasValue(1);
++                assertThat(slotCount(runtime)).isEqualTo(1);
++                callbackExit.countDown();
++                ownerClose.get(3, TimeUnit.SECONDS);
++                assertThat(slotCount(runtime)).isZero();
++                assertThat(pool.isTerminated()).isTrue();
++                assertThat(scheduler(runtime).isTerminated()).isTrue();
++                denied(response::currentCapture);
++            } finally { resumeStop.countDown(); callbackExit.countDown(); responseLock.set(null); }
++        }
++    }
++
++    @Test
++    void rejectedCancellationRunsOutsideLifecycleLocksAndRetainsSlotUntilActualReturn() throws Exception {
++        try (var session = new Session(); var caller = Executors.newSingleThreadExecutor()) {
++            var releaseWorkers = new CountDownLatch(1);
++            var callbackEntered = new CountDownLatch(1);
++            var callbackExit = new CountDownLatch(1);
++            var count = new AtomicInteger();
++            var fillerExits = new AtomicInteger();
++            var responseLock = new java.util.concurrent.atomic.AtomicReference<Object>();
++            var response = session.open("rejected-cancel", () -> {
++                assertCancellationOutsideLocks(responseLock.get());
++                count.incrementAndGet(); callbackEntered.countDown(); await(callbackExit);
++            });
++            responseLock.set(response);
++            var runtime = quietRuntime(session);
++            try {
++                blockWorkers(runtime, releaseWorkers);
++                for (int i = 0; i < 64; i++) workers(runtime).execute(fillerExits::incrementAndGet);
++                var closing = caller.submit(() -> {
++                    try { response.close(); return (Throwable) null; }
++                    catch (Throwable failure) { return failure; }
++                });
++                await(callbackEntered);
++                assertThat(slotCount(runtime)).isEqualTo(1);
++                assertThat(closing.isDone()).isFalse();
++                callbackExit.countDown();
++                assertThat(closing.get(2, TimeUnit.SECONDS)).isNull();
++                awaitReleased(runtime);
++                assertThat(count).hasValue(1);
++                releaseWorkers.countDown();
++                var pool = workers(runtime);
++                until(() -> fillerExits.get() == 64 && pool.getActiveCount() == 0);
++            } finally { releaseWorkers.countDown(); callbackExit.countDown(); responseLock.set(null); }
++        }
++    }
++
++    @Test
++    void expiryBeforeRenewalPublicationLeavesNoReservationAndCapacityIsReusable() throws Exception {
++        try (var session = new Session(); var caller = Executors.newSingleThreadExecutor()) {
++            var response = session.open("unpublished-expiry", () -> {});
++            var runtime = quietRuntime(session);
++            var deadline = new CountDownLatch(1);
++            var resume = new CountDownLatch(1);
++            session.engine.eventsLifecycle = point -> {
++                if (point.equals("renew-deadline")) { deadline.countDown(); await(resume); }
++            };
++            try {
++                var check = caller.submit(() -> denied(() -> session.engine.checkPortalEvents(response)));
++                await(deadline);
++                session.iam.clock.advance(6);
++                resume.countDown();
++                check.get(2, TimeUnit.SECONDS);
++                response.close();
++                awaitReleased(runtime);
++                assertThat(session.iam.observedOperations()).doesNotContain("portal_events_check");
++                session.engine.eventsLifecycle = point -> {};
++                try (var next = session.open("capacity-reused", () -> {})) {
++                    assertThat(slotCount(runtime)).isEqualTo(1);
++                    next.currentCapture();
++                }
++                awaitReleased(runtime);
++            } finally { resume.countDown(); response.close(); }
++        }
++    }
++
++    @Test
++    void saturatedWatchdogDefersCancellationWithoutBlockingOtherDeadlines() throws Exception {
++        try (var session = new Session()) {
++            var releaseWorkers = new CountDownLatch(1);
++            var releaseCallback = new CountDownLatch(1);
++            var callbackEntered = new CountDownLatch(1);
++            var callbackThread = new java.util.concurrent.atomic.AtomicReference<Thread>();
++            var calls = new AtomicInteger();
++            var fillerExits = new AtomicInteger();
++            var response = session.open("watchdog-rejection", () -> {
++                calls.incrementAndGet();
++                callbackThread.set(Thread.currentThread());
++                callbackEntered.countDown(); await(releaseCallback);
++            });
++            var runtime = quietRuntime(session);
++            var pool = workers(runtime);
++            var timer = scheduler(runtime);
++            var watchdog = timer.submit(Thread::currentThread).get(2, TimeUnit.SECONDS);
++            try {
++                blockWorkers(runtime, releaseWorkers);
++                for (int i = 0; i < 64; i++) pool.execute(fillerExits::incrementAndGet);
++                timer.execute(response::close);
++                var nextDeadline = new CountDownLatch(1);
++                timer.execute(nextDeadline::countDown);
++                assertThat(nextDeadline.await(1, TimeUnit.SECONDS)).isTrue();
++                assertThat(callbackEntered.getCount()).isEqualTo(1);
++                assertThat(slotCount(runtime)).isEqualTo(1);
++                var slot = ((Set<?>) field(runtime, "slots")).iterator().next();
++                var cancellation = field(slot, "cancellation");
++                synchronized (cancellation) { assertThat(field(cancellation, "submitted")).isEqualTo(false); }
++                releaseWorkers.countDown();
++                until(() -> pool.getQueue().isEmpty());
++                var tick = runtime.getClass().getDeclaredMethod("tick");
++                tick.setAccessible(true);
++                timer.submit(() -> {
++                    try { tick.invoke(runtime); }
++                    catch (Exception failure) { throw new AssertionError(failure); }
++                }).get(2, TimeUnit.SECONDS);
++                await(callbackEntered);
++                assertThat(callbackThread.get()).isNotSameAs(watchdog);
++                assertThat(slotCount(runtime)).isEqualTo(1);
++                releaseCallback.countDown();
++                awaitReleased(runtime);
++                assertThat(calls).hasValue(1);
++                assertThat(fillerExits).hasValue(64);
++                until(() -> pool.getActiveCount() == 0);
++            } finally { releaseWorkers.countDown(); releaseCallback.countDown(); }
++        }
++    }
++
++    @Test
++    void cancelledPublishedRenewalCannotRegisterTimerOrQueueAfterItsSlotWasReleased() throws Exception {
++        try (var session = new Session(); var caller = Executors.newSingleThreadExecutor()) {
++            var response = session.open("cancel-before-execute", () -> {});
++            var captured = response.currentCapture();
++            var runtime = quietRuntime(session);
++            var published = new CountDownLatch(1);
++            var resume = new CountDownLatch(1);
++            var releaseWorkers = new CountDownLatch(1);
++            session.engine.eventsLifecycle = point -> {
++                if (point.equals("renew-published")) { published.countDown(); await(resume); }
++            };
++            try {
++                var renewal = caller.submit(() -> response.renew(session.engine));
++                await(published);
++                var task = (HttpCurrentAuthorityClient.EventsTask<?>) field(response, "pending");
++                var slot = field(task, "slot");
++                response.close();
++                awaitReleased(runtime);
++                blockWorkers(runtime, releaseWorkers);
++                resume.countDown();
++                assertThat(renewal.get(2, TimeUnit.SECONDS)).isSameAs(task);
++                assertThat(List.of(workers(runtime).getQueue().size(), scheduler(runtime).getQueue().size()))
++                        .containsExactly(0, 0);
++                assertThat(field(slot, "work")).isEqualTo(0);
++                assertThat(((CountDownLatch) field(task, "exited")).getCount()).isZero();
++                task.cancel(true);
++                assertThat(field(slot, "work")).isEqualTo(0);
++                assertThat(session.iam.observedOperations()).doesNotContain("portal_events_check");
++                denied(captured::subject);
++                denied(response::currentCapture);
++            } finally { resume.countDown(); releaseWorkers.countDown(); response.close(); }
++        }
++    }
++
++    @Test
++    void cancellationDuringTimerHandoffRemovesBothTimerAndQueuedWorkerExactlyOnce() throws Exception {
++        try (var session = new Session(); var callers = Executors.newFixedThreadPool(2)) {
++            var response = session.open("timer-handoff", () -> {});
++            var captured = response.currentCapture();
++            var runtime = quietRuntime(session);
++            var registered = new CountDownLatch(1);
++            var resume = new CountDownLatch(1);
++            var cancelEntered = new CountDownLatch(1);
++            var cancellingThread = new java.util.concurrent.atomic.AtomicReference<Thread>();
++            var releaseWorkers = new CountDownLatch(1);
++            session.engine.eventsLifecycle = point -> {
++                if (point.equals("timer-created")) { registered.countDown(); await(resume); }
++            };
++            try {
++                blockWorkers(runtime, releaseWorkers);
++                var renewal = callers.submit(() -> response.renew(session.engine));
++                await(registered);
++                var task = (HttpCurrentAuthorityClient.EventsTask<?>) field(response, "pending");
++                var slot = field(task, "slot");
++                var cancel = callers.submit(() -> {
++                    cancellingThread.set(Thread.currentThread()); cancelEntered.countDown(); task.cancel(true);
++                });
++                await(cancelEntered);
++                // The old implementation finishes here; a coordinated submit holds the task monitor.
++                until(() -> cancel.isDone() || cancellingThread.get().getState() == Thread.State.BLOCKED);
++                resume.countDown();
++                renewal.get(2, TimeUnit.SECONDS);
++                cancel.get(2, TimeUnit.SECONDS);
++                assertThat(List.of(workers(runtime).getQueue().size(), scheduler(runtime).getQueue().size()))
++                        .containsExactly(0, 0);
++                assertThat(field(slot, "work")).isEqualTo(0);
++                task.cancel(true);
++                assertThat(field(slot, "work")).isEqualTo(0);
++                assertThat(session.iam.observedOperations()).doesNotContain("portal_events_check");
++                response.close();
++                releaseWorkers.countDown();
++                awaitReleased(runtime);
++                denied(captured::subject);
++                denied(response::currentCapture);
++            } finally { resume.countDown(); releaseWorkers.countDown(); response.close(); }
++        }
++    }
++
+     @Test
+     void historicalExecutionCeilingIsProvenanceAndDoesNotHaveToEqualNewObservationCeiling() throws Exception {
+         try (var session = new Session(); var response = session.open("historical-floor", () -> {})) {

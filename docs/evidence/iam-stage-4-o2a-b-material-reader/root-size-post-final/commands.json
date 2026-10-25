@@ -1,0 +1,45 @@
+[
+  {
+    "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+    "command": [
+      "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.tools\\postgresql-16.15\\pgsql\\bin\\psql.exe",
+      "-X",
+      "-h",
+      "127.0.0.1",
+      "-p",
+      "25432",
+      "-U",
+      "agent_v12",
+      "-d",
+      "agent_platform_iam_o2a_b_material_v12",
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-A",
+      "-t",
+      "-c",
+      "select current_database()"
+    ],
+    "exitCode": 0
+  },
+  {
+    "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+    "command": [
+      "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.tools\\postgresql-16.15\\pgsql\\bin\\psql.exe",
+      "-X",
+      "-h",
+      "127.0.0.1",
+      "-p",
+      "25432",
+      "-U",
+      "agent_v12",
+      "-d",
+      "agent_platform_iam_o2a_b_material_v12",
+      "-v",
+      "ON_ERROR_STOP=1",
+      "--csv",
+      "-c",
+      "select id,public_id,octet_length(snapshot::text) as snapshot_utf8_bytes,octet_length(version_refs::text) as refs_utf8_bytes,jsonb_typeof(snapshot) as snapshot_type,jsonb_typeof(version_refs) as refs_type from engine.run where public_id='r_e401e36a9bc34090bf7bee7f9a9473da'"
+    ],
+    "exitCode": 0
+  }
+]

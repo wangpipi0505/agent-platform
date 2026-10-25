@@ -1,0 +1,94 @@
+{
+  "phase": "mcp-check",
+  "fixtureOnly": true,
+  "checks": {
+    "multipleRunningToAcceptedWithSingleCreate": true,
+    "readableSummary": true,
+    "mobileNoOverflow": true
+  },
+  "requests": [
+    {
+      "path": "/admin/apps/async_a",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/admin/evaluations",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/admin/apps/async_a/publish/precheck",
+      "method": "POST",
+      "body": null
+    },
+    {
+      "path": "/admin/evaluations",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/admin/evaluation-datasets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/admin/evaluation-datasets/async_a/frozen-v1",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/admin/evaluations",
+      "method": "POST",
+      "body": {
+        "appCode": "async_a",
+        "draftRev": 3,
+        "candidateSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "datasetVersion": "frozen-v1",
+        "cases": [
+          {
+            "id": "case_one",
+            "inputs": {
+              "question": "输入"
+            },
+            "expected": {
+              "answer": "独立预期"
+            },
+            "safety": true
+          }
+        ]
+      }
+    },
+    {
+      "path": "/admin/evaluations/er_async",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/admin/evaluations/er_async/resume",
+      "method": "POST",
+      "body": null
+    },
+    {
+      "path": "/admin/evaluations/er_async",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/admin/evaluations/er_async/resume",
+      "method": "POST",
+      "body": null
+    },
+    {
+      "path": "/admin/evaluations/er_async",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/admin/evaluations/er_async/resume",
+      "method": "POST",
+      "body": null
+    }
+  ],
+  "pageErrors": []
+}

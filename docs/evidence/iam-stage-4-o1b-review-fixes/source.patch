@@ -1,0 +1,394 @@
+diff --git a/engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java b/engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java
+index 6860470..02bd9a7 100644
+--- a/engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java
++++ b/engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java
+@@ -68,41 +68,76 @@ public class RunController {
+     }
+ 
+     @GetMapping({"/admin/runs/{id}", "/admin/debug-runs/{id}/status", "/v1/runs/{id}"})
+-    public Object status(@PathVariable String id,jakarta.servlet.http.HttpServletRequest request,jakarta.servlet.http.HttpServletResponse response)throws java.io.IOException {
+-        if(!service.iamEnabled())return ApiResponse.ok(service.status(id,Actor.current()));
+-        Object actual=request.getAttribute(org.springframework.web.servlet.HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE);
+-        if(!(actual instanceof org.springframework.web.method.HandlerMethod handler)||handler.getBeanType()!=RunController.class
+-                ||!handler.getMethod().getName().equals("status")||handler.getMethod().getDeclaringClass()!=RunController.class
+-                ||request.getDispatcherType()!=jakarta.servlet.DispatcherType.REQUEST||!"GET".equals(request.getMethod())
+-                ||!"/admin/runs/{id}".equals(request.getAttribute(org.springframework.web.servlet.HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE))
+-                ||!request.getRequestURI().equals(request.getContextPath()+"/admin/runs/"+id)
+-                ||request.getQueryString()!=null||request.getContentLengthLong()>0||request.getInputStream().read()!=-1)
+-            throw new PlatformException(400,"INVALID_RUN_OBSERVATION_REQUEST","运行状态观察请求无效");
+-        var observed=service.observeStatus(id,Actor.current());
+-        var buffer=new StatusBuffer();
+-        Json.mapper().writeValue(buffer,ApiResponse.ok(observed.value()));
+-        byte[] bytes=buffer.toByteArray();observed.requireCurrent();
+-        response.setContentType("application/json");response.setCharacterEncoding("UTF-8");
++    public Object status(
++            @PathVariable String id,
++            jakarta.servlet.http.HttpServletRequest request,
++            jakarta.servlet.http.HttpServletResponse response) throws java.io.IOException {
++        if (!service.iamEnabled()) return ApiResponse.ok(service.status(id, Actor.current()));
++        Object actual = request.getAttribute(
++                org.springframework.web.servlet.HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE);
++        if (!(actual instanceof org.springframework.web.method.HandlerMethod handler)
++                || handler.getBeanType() != RunController.class
++                || !handler.getMethod().getName().equals("status")
++                || handler.getMethod().getDeclaringClass() != RunController.class
++                || request.getDispatcherType() != jakarta.servlet.DispatcherType.REQUEST
++                || !"GET".equals(request.getMethod())
++                || !"/admin/runs/{id}".equals(request.getAttribute(
++                        org.springframework.web.servlet.HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE))
++                || !request.getRequestURI().equals(request.getContextPath() + "/admin/runs/" + id)
++                || request.getQueryString() != null
++                || request.getContentLengthLong() > 0
++                || request.getInputStream().read() != -1)
++            throw new PlatformException(400, "INVALID_RUN_OBSERVATION_REQUEST", "运行状态观察请求无效");
++        var observed = service.observeStatus(id, Actor.current());
++        var buffer = new StatusBuffer();
++        Json.mapper().writeValue(buffer, ApiResponse.ok(observed.value()));
++        byte[] bytes = buffer.toByteArray();
++        observed.requireCurrent();
++        response.setContentType("application/json");
++        response.setCharacterEncoding("UTF-8");
+         // MVC 6.2.7 supplies the actual response wrapper. Acquisition itself can block/retire M;
+         // headers and serialization precede the final same-frame check, then first business write.
+-        var output=response.getOutputStream();observed.requireCurrent();
+-        try{output.write(bytes);}
+-        catch(java.io.IOException failure){
++        var output = response.getOutputStream();
++        observed.requireCurrent();
++        try {
++            output.write(bytes);
++        } catch (java.io.IOException failure) {
+             // A failed write may already have committed part of the JSON. Never append an error
+             // envelope or retry it; physical bytes accepted below this stream are unknowable here.
+-            try{output.close();}catch(java.io.IOException closeFailure){failure.addSuppressed(closeFailure);}
++            try {
++                output.close();
++            } catch (java.io.IOException closeFailure) {
++                failure.addSuppressed(closeFailure);
++            }
+             org.slf4j.LoggerFactory.getLogger(RunController.class).warn(
+                     "Run status output interrupted: committed={}, attemptedBytes={}, actualBytes=unknown",
+-                    response.isCommitted(),bytes.length,failure);
+-            if(!response.isCommitted())throw failure;
++                    response.isCommitted(), bytes.length, failure);
++            if (!response.isCommitted()) throw failure;
+         }
+         return null;
+     }
+-    private static final int STATUS_MAX_BYTES=2*1024*1024;
++    private static final int STATUS_MAX_BYTES = 2 * 1024 * 1024;
+     private static final class StatusBuffer extends java.io.ByteArrayOutputStream {
+-        private void capacity(int amount){if(amount<0||amount>STATUS_MAX_BYTES-count)throw new PlatformException(403,"RUN_STATUS_TOO_LARGE","完整运行状态响应超出本接口允许大小");}
+-        @Override public synchronized void write(int value){capacity(1);super.write(value);}
+-        @Override public synchronized void write(byte[] value,int offset,int length){capacity(length);super.write(value,offset,length);}
++        private StatusBuffer() {
++            // Preallocation plus the count guard prevents inherited geometric growth. The
++            // response copy and already-read material graph are separate from this 2 MiB array.
++            super(STATUS_MAX_BYTES);
++        }
++
++        private void capacity(int amount) {
++            if (amount < 0 || amount > STATUS_MAX_BYTES - count)
++                throw new PlatformException(403, "RUN_STATUS_TOO_LARGE", "完整运行状态响应超出本接口允许大小");
++        }
++
++        @Override public synchronized void write(int value) {
++            capacity(1);
++            super.write(value);
++        }
++
++        @Override public synchronized void write(byte[] value, int offset, int length) {
++            capacity(length);
++            super.write(value, offset, length);
++        }
+     }
+ 
+     @PostMapping("/admin/debug-runs/{id}/resume")
+diff --git a/engine-runtime/src/test/java/cn/agentplatform/engine/infra/RunObservationStatusHttpPostgresTest.java b/engine-runtime/src/test/java/cn/agentplatform/engine/infra/RunObservationStatusHttpPostgresTest.java
+index 597c99b..8f11867 100644
+--- a/engine-runtime/src/test/java/cn/agentplatform/engine/infra/RunObservationStatusHttpPostgresTest.java
++++ b/engine-runtime/src/test/java/cn/agentplatform/engine/infra/RunObservationStatusHttpPostgresTest.java
+@@ -115,13 +115,26 @@ class RunObservationStatusHttpPostgresTest {
+         @Bean ServiceAuthorization authorization(){return new ServiceAuthorization("engine",new ServiceRoutePolicy(),engine);}
+         @Bean SecurityFilterChain security(HttpSecurity h,JwtDecoder d,ServiceAuthorization a)throws Exception{return SecurityConfiguration.serviceSecurity(h,d,a);}
+         @Bean org.springframework.web.servlet.handler.MappedInterceptor guard(ServiceAuthorization a){return omitGuard?new org.springframework.web.servlet.handler.MappedInterceptor(null,new org.springframework.web.servlet.HandlerInterceptor(){}):a.mappedInterceptor();}
+-        @Bean org.springframework.web.servlet.handler.MappedInterceptor requestBoundary(){return new org.springframework.web.servlet.handler.MappedInterceptor(null,new org.springframework.web.servlet.HandlerInterceptor(){
+-            @Override public boolean preHandle(jakarta.servlet.http.HttpServletRequest request,jakarta.servlet.http.HttpServletResponse response,Object handler){
+-                if(handler instanceof HandlerMethod h&&(h.getBeanType()==RunObservationMetadataController.class||h.getBeanType()==RunController.class)){
+-                    controllerBoundaries.incrementAndGet();rawQueries.add(request.getQueryString()==null?"<null>":request.getQueryString());beforeController.accept(request);
+-                }return true;
+-            }
+-        });}
++        @Bean org.springframework.web.servlet.handler.MappedInterceptor requestBoundary() {
++            return new org.springframework.web.servlet.handler.MappedInterceptor(null,
++                    new org.springframework.web.servlet.HandlerInterceptor() {
++                        @Override public boolean preHandle(
++                                jakarta.servlet.http.HttpServletRequest request,
++                                jakarta.servlet.http.HttpServletResponse response, Object handler) {
++                            if (handler instanceof HandlerMethod h
++                                    && (h.getBeanType() == RunObservationMetadataController.class
++                                            || h.getBeanType() == RunController.class)) {
++                                controllerBoundaries.incrementAndGet();
++                                rawQueries.add(request.getQueryString() == null
++                                        ? "<null>" : request.getQueryString());
++                                beforeController.accept(request);
++                            }
++                            // A completed nested forward owns the response; finish the original
++                            // dispatch instead of re-entering a handler with its closed stream.
++                            return !Boolean.TRUE.equals(request.getAttribute("o1b.forward-complete"));
++                        }
++                    });
++        }
+         @Bean RouteCoverageVerifier coverage(List<RequestMappingInfoHandlerMapping> mappings){return new RouteCoverageVerifier("engine",new ServiceRoutePolicy(),mappings);}
+     }
+     @BeforeAll static void start()throws Exception {
+@@ -194,16 +207,35 @@ class RunObservationStatusHttpPostgresTest {
+     static long create()throws Exception {
+         return create(1);
+     }
+-    static long create(long versionNo)throws Exception {
+-        var root=new ResourceBinding("app-version","app-a@"+versionNo,ROOT.versionDigest());var call=new ServiceCall("engine",MAIN.action(),root);var admission=gateway.exchange(source,call);
+-        return withFrame(admission,call,"POST","/admin/apps/app-a/runs","/admin/apps/{code}/runs",proof->{
+-            var snapshot=Json.read("{\"appCode\":\"app-a\",\"type\":\"FLOW\",\"versionNo\":"+versionNo+",\"appVersionId\":4294967297,\"candidateSha256\":\""+ROOT.versionDigest()+"\",\"config\":{},\"definition\":{\"nodes\":[{\"id\":\"start\",\"type\":\"START\"},{\"id\":\"end\",\"type\":\"END\"}],\"edges\":[{\"source\":\"start\",\"target\":\"end\"}]}}");
+-            if(unsupportedFlow)((com.fasterxml.jackson.databind.node.ObjectNode)snapshot.path("definition").path("nodes").get(1)).put("type","LLM");
+-            var budget=Json.tree(Map.of("limits",Map.of("maxSteps",25,"modelCalls",40,"totalTokens",200000,"totalDurationMs",600000,"maxDepth",2),"consumed",Map.of("steps",0,"modelCalls",0,"tokens",0,"depth",0),"deadline",iam.clock().instant().plusSeconds(599).toString()));
+-            return new TransactionTemplate(new DataSourceTransactionManager(ds)).execute(s->{
+-                long id=new RunAuthorityStore(ds,iam.clock()).createPublished(proof,snapshot,Json.read("{\"privateInput\":\"do-not-return\"}"),Json.tree(Map.of("appVer",versionNo)),budget,"FULL",UUID.randomUUID().toString(),Set.of("initial"));
+-                trace.createNode(id,"start",1,"START",Json.read("{\"id\":\"start\",\"type\":\"START\"}"),proof);
+-                trace.createNode(id,"end",2,"END",Json.read("{\"id\":\"end\",\"type\":\"END\"}"),proof);
++    static JsonNode snapshot(long versionNo) {
++        return Json.read("""
++                {"appCode":"app-a","type":"FLOW","versionNo":%d,"appVersionId":4294967297,
++                 "candidateSha256":"%s","config":{},"definition":{
++                   "nodes":[{"id":"start","type":"START"},{"id":"end","type":"END"}],
++                   "edges":[{"from":"start","to":"end"}]}}
++                """.formatted(versionNo, ROOT.versionDigest()));
++    }
++    static long create(long versionNo) throws Exception {
++        var root = new ResourceBinding("app-version", "app-a@" + versionNo, ROOT.versionDigest());
++        var call = new ServiceCall("engine", MAIN.action(), root);
++        var admission = gateway.exchange(source, call);
++        return withFrame(admission, call, "POST", "/admin/apps/app-a/runs", "/admin/apps/{code}/runs", proof -> {
++            var snapshot = snapshot(versionNo);
++            if (unsupportedFlow)
++                ((com.fasterxml.jackson.databind.node.ObjectNode) snapshot.path("definition").path("nodes").get(1))
++                        .put("type", "LLM");
++            var budget = Json.tree(Map.of(
++                    "limits", Map.of("maxSteps", 25, "modelCalls", 40, "totalTokens", 200000,
++                            "totalDurationMs", 600000, "maxDepth", 2),
++                    "consumed", Map.of("steps", 0, "modelCalls", 0, "tokens", 0, "depth", 0),
++                    "deadline", iam.clock().instant().plusSeconds(599).toString()));
++            return new TransactionTemplate(new DataSourceTransactionManager(ds)).execute(s -> {
++                long id = new RunAuthorityStore(ds, iam.clock()).createPublished(
++                        proof, snapshot, Json.read("{\"privateInput\":\"do-not-return\"}"),
++                        Json.tree(Map.of("appVer", versionNo)), budget, "FULL",
++                        UUID.randomUUID().toString(), Set.of("initial"));
++                trace.createNode(id, "start", 1, "START", Json.read("{\"id\":\"start\",\"type\":\"START\"}"), proof);
++                trace.createNode(id, "end", 2, "END", Json.read("{\"id\":\"end\",\"type\":\"END\"}"), proof);
+                 return id;
+             });
+         });
+@@ -245,25 +277,137 @@ class RunObservationStatusHttpPostgresTest {
+         db.update(sql,id);for(String table:List.of("run_event","node_instance","material_scope","run_authority","run"))db.execute("alter table engine."+table+" enable trigger user");return null;});}
+     static void expireOrClose(String mode){if(mode.equals("expiry"))iam.advanceClock(Duration.ofSeconds(6));else if(mode.equals("replace"))((ServletRequestAttributes)RequestContextHolder.currentRequestAttributes()).getRequest().setAttribute("o1b.replacement",AuthorityContext.bind(AuthorityContext.current()));else{
+         var attrs=(ServletRequestAttributes)RequestContextHolder.currentRequestAttributes();((AuthorityContext)attrs.getRequest().getAttribute(ServiceAuthorization.class.getName()+".frame")).close();}}
+-    @Test void outputBudgetRejectsOneByteOverAndAcceptsExactUtf8Envelope()throws Exception {
+-        long id=completeRun();String run=publicId(id);var writer=local(id);output(id,Map.of("text","观察\n\"\\"),writer);
+-        var m=metadataThenStatus(run);var first=request("GET","/admin/runs/"+run,m,null);assertThat(first.statusCode()).isEqualTo(200);
+-        int base=first.body().getBytes(StandardCharsets.UTF_8).length;int padding=2*1024*1024-base;
+-        var retainedMaximum=new AtomicInteger();
+-        Json.mapper().getFactory().setOutputDecorator(new com.fasterxml.jackson.core.io.OutputDecorator(){
+-            public Writer decorate(com.fasterxml.jackson.core.io.IOContext c,Writer writer){return writer;}
+-            public OutputStream decorate(com.fasterxml.jackson.core.io.IOContext c,OutputStream output){return new FilterOutputStream(output){
+-                private void sample(){if(output instanceof ByteArrayOutputStream bytes)retainedMaximum.accumulateAndGet(bytes.size(),Math::max);}
+-                @Override public void write(int value)throws IOException{try{out.write(value);}finally{sample();}}
+-                @Override public void write(byte[] value,int offset,int length)throws IOException{try{out.write(value,offset,length);}finally{sample();}}
+-            };}
++    static ByteArrayOutputStream statusBuffer() throws ReflectiveOperationException {
++        var type = Class.forName(RunController.class.getName() + "$StatusBuffer");
++        var constructor = type.getDeclaredConstructor();
++        constructor.setAccessible(true);
++        return (ByteArrayOutputStream) constructor.newInstance();
++    }
++
++    static int backingCapacity(ByteArrayOutputStream buffer) throws IOException {
++        var capacity = new AtomicInteger();
++        // writeTo passes its real backing array to the sink, without a byte-array copy.
++        // Only our own constructor is reflected; no JDK internals or product diagnostics.
++        buffer.writeTo(new OutputStream() {
++            @Override public void write(int value) { throw new AssertionError("bulk write expected"); }
++            @Override public void write(byte[] bytes, int offset, int length) {
++                assertThat(length).isEqualTo(buffer.size());
++                capacity.set(bytes.length);
++            }
++        });
++        return capacity.get();
++    }
++
++    @Test void retainedBufferCapacityNeverExceedsBudgetForAdversarialWriteShapes() throws Exception {
++        int limit = 2 * 1024 * 1024;
++        for (int[] shape : List.of(new int[]{8000}, new int[]{1}, new int[]{31, 8000, 8191})) {
++            var buffer = statusBuffer();
++            byte[] chunk = new byte[8191];
++            int writes = 0;
++            while (buffer.size() < limit) {
++                int length = Math.min(shape[writes++ % shape.length], limit - buffer.size());
++                if (length == 1) buffer.write(7);
++                else buffer.write(chunk, 0, length);
++                int capacity = backingCapacity(buffer);
++                if (capacity > limit) {
++                    System.out.println("O1B_CAPACITY_VIOLATION=" + Json.write(Map.of(
++                            "shape", Arrays.toString(shape), "count", buffer.size(), "capacity", capacity, "limit", limit)));
++                }
++                assertThat(capacity).as("actual backing capacity at count=%s shape=%s", buffer.size(), Arrays.toString(shape))
++                        .isLessThanOrEqualTo(limit);
++            }
++            assertThat(buffer.size()).isEqualTo(limit);
++            assertThatThrownBy(() -> buffer.write(7)).isInstanceOf(PlatformException.class);
++            assertThatThrownBy(() -> buffer.write(chunk, 0, 1)).isInstanceOf(PlatformException.class);
++            assertThat(backingCapacity(buffer)).isLessThanOrEqualTo(limit);
++            System.out.println("O1B_CAPACITY=" + Json.write(Map.of(
++                    "shape", Arrays.toString(shape), "count", buffer.size(), "capacity", backingCapacity(buffer))));
++        }
++    }
++
++    @Test void sharedSnapshotPassesProductionFiniteFlowAndAdmissionDagGates() {
++        var snapshot = snapshot(1);
++        GraphRules.requirePublishedFlow(snapshot);
++        var reachedPersistence = new IllegalStateException("O1B_VALIDATION_REACHED_PERSISTENCE");
++        var validatingStore = new TraceStore(db, new DataSourceTransactionManager(ds), iam.clock()) {
++            @Override public <T> T atomic(Supplier<T> write) { throw reachedPersistence; }
++        };
++        var before = facts();
++        int calls = dependencyCalls.get();
++        var schedulerActions = new AtomicInteger();
++        statements.clear();
++        try (var idleScheduler = new RunScheduler(validatingStore) {
++            @Override public void start() { schedulerActions.incrementAndGet(); throw new AssertionError("no scheduler start"); }
++            @Override public Admission reserveInteractive() { schedulerActions.incrementAndGet(); throw new AssertionError("no queue claim"); }
++            @Override public void created(long id, Admission ticket) { schedulerActions.incrementAndGet(); throw new AssertionError("no worker wake"); }
++        }) {
++            var validation = new RunService(validatingStore, null, null, null, idleScheduler);
++            // Existing reserved path skips interactive queue claims. The sentinel stops before
++            // persistence/created; this proves real input/DAG gates, not public IAM admission.
++            assertThatThrownBy(() -> validation.createReservedSessionTurn(
++                    "app-a", Json.read("{\"inputs\":{},\"mode\":\"FULL\"}"), snapshot,
++                    new Actor(tenant, "alice", Set.of("EDITOR"), Map.of()), null))
++                    .isSameAs(reachedPersistence);
++            var wrongEdges = snapshot.deepCopy();
++            ((com.fasterxml.jackson.databind.node.ObjectNode) wrongEdges.path("definition")).set(
++                    "edges", Json.read("[{\"source\":\"start\",\"target\":\"end\"}]"));
++            assertThatThrownBy(() -> validation.createReservedSessionTurn(
++                    "app-a", Json.read("{\"inputs\":{},\"mode\":\"FULL\"}"), wrongEdges,
++                    new Actor(tenant, "alice", Set.of("EDITOR"), Map.of()), null))
++                    .isInstanceOfSatisfying(PlatformException.class,
++                            failure -> assertThat(failure.code()).isEqualTo("UNKNOWN_EDGE"));
++        }
++        assertThat(statements).isEmpty();
++        assertThat(schedulerActions).hasValue(0);
++        assertThat(facts()).isEqualTo(before);
++        assertThat(dependencyCalls.get()).isEqualTo(calls);
++        System.out.println("O1B_ADMISSION_GATE=finiteFlow+realCreateInternalDag; stopped-before-persistence");
++    }
++    @Test void outputBudgetRejectsOneByteOverAndAcceptsExactUtf8Envelope() throws Exception {
++        long id = completeRun();
++        String run = publicId(id);
++        var writer = local(id);
++        output(id, Map.of("text", "观察\n\"\\"), writer);
++        var m = metadataThenStatus(run);
++        var first = request("GET", "/admin/runs/" + run, m, null);
++        assertThat(first.statusCode()).isEqualTo(200);
++        int base = first.body().getBytes(StandardCharsets.UTF_8).length;
++        int padding = 2 * 1024 * 1024 - base;
++        var retainedMaximum = new AtomicInteger();
++        Json.mapper().getFactory().setOutputDecorator(new com.fasterxml.jackson.core.io.OutputDecorator() {
++            public Writer decorate(com.fasterxml.jackson.core.io.IOContext c, Writer writer) { return writer; }
++            public OutputStream decorate(com.fasterxml.jackson.core.io.IOContext c, OutputStream output) {
++                return new FilterOutputStream(output) {
++                    private void sample() throws IOException {
++                        if (output instanceof ByteArrayOutputStream bytes)
++                            retainedMaximum.accumulateAndGet(backingCapacity(bytes), Math::max);
++                    }
++                    @Override public void write(int value) throws IOException {
++                        try { out.write(value); } finally { sample(); }
++                    }
++                    @Override public void write(byte[] value, int offset, int length) throws IOException {
++                        try { out.write(value, offset, length); } finally { sample(); }
++                    }
++                };
++            }
+         });
+-        output(id,Map.of("text","观察\n\"\\"+"x".repeat(padding)),writer);
+-        var exact=request("GET","/admin/runs/"+run,m,null);assertThat(exact.statusCode()).as(exact.body().substring(0,Math.min(200,exact.body().length()))).isEqualTo(200);assertThat(exact.body().getBytes(StandardCharsets.UTF_8).length).isEqualTo(2*1024*1024);
+-        output(id,Map.of("text","观察\n\"\\"+"x".repeat(padding+1)),writer);statements.clear();
+-        var exceeded=request("GET","/admin/runs/"+run,m,null);noBusiness(exceeded,403);assertThat(Json.read(exceeded.body()).path("code").asText()).isEqualTo("RUN_STATUS_TOO_LARGE");assertThat(payloadReads()).isPositive();
+-        assertThat(retainedMaximum.get()).isEqualTo(2*1024*1024);Json.mapper().getFactory().setOutputDecorator(null);
+-        System.out.println("O1B_BUDGET="+Json.write(Map.of("exact",exact.body().getBytes(StandardCharsets.UTF_8).length,"over",exact.body().getBytes(StandardCharsets.UTF_8).length+1,"baseUtf8",base,"bufferMaximum",retainedMaximum.get(),"error",Json.read(exceeded.body()))));
++        output(id, Map.of("text", "观察\n\"\\" + "x".repeat(padding)), writer);
++        var exact = request("GET", "/admin/runs/" + run, m, null);
++        assertThat(exact.statusCode()).as(exact.body().substring(0, Math.min(200, exact.body().length()))).isEqualTo(200);
++        assertThat(exact.body().getBytes(StandardCharsets.UTF_8).length).isEqualTo(2 * 1024 * 1024);
++        output(id, Map.of("text", "观察\n\"\\" + "x".repeat(padding + 1)), writer);
++        statements.clear();
++        var exceeded = request("GET", "/admin/runs/" + run, m, null);
++        noBusiness(exceeded, 403);
++        assertThat(Json.read(exceeded.body()).path("code").asText()).isEqualTo("RUN_STATUS_TOO_LARGE");
++        assertThat(payloadReads()).isPositive();
++        assertThat(retainedMaximum.get()).isEqualTo(2 * 1024 * 1024);
++        Json.mapper().getFactory().setOutputDecorator(null);
++        System.out.println("O1B_BUDGET=" + Json.write(Map.of(
++                "exact", exact.body().getBytes(StandardCharsets.UTF_8).length,
++                "over", exact.body().getBytes(StandardCharsets.UTF_8).length + 1,
++                "baseUtf8", base, "actualBackingCapacityMaximum", retainedMaximum.get(),
++                "error", Json.read(exceeded.body()))));
+     }
+     @Test void expiryAfterActualStreamAcquisitionWritesNoStatus()throws Exception {
+         for(String mode:List.of("expiry","close","replace")){
+@@ -423,14 +567,40 @@ class RunObservationStatusHttpPostgresTest {
+             out.write(("GET "+target+" HTTP/1.1\r\nHost: 127.0.0.1\r\nAuthorization: Bearer "+ticket+"\r\nContent-Type: application/json\r\nContent-Length: "+bytes.length+"\r\nConnection: close\r\n\r\n").getBytes(StandardCharsets.US_ASCII));out.write(bytes);out.flush();return new String(socket.getInputStream().readAllBytes(),StandardCharsets.UTF_8);
+         }
+     }
+-    @Test void actualAdminHandlerRejectsRawQueryBareQuestionBodyAndDispatcher()throws Exception {
+-        long id=completeRun();String run=publicId(id);var m=metadataThenStatus(run);
+-        for(String suffix:List.of("?x=1","?","?id=a&id=b")){
+-            statements.clear();String response=raw("/admin/runs/"+run+suffix,m.value(),"");assertThat(response).startsWith("HTTP/1.1 400");assertThat(statements).isEmpty();assertThat(rawQueries.getLast()).isEqualTo(suffix.substring(1));
++    @Test void actualAdminHandlerRejectsRawQueryBareQuestionBodyAndDispatcher() throws Exception {
++        long id = completeRun();
++        String run = publicId(id);
++        var m = metadataThenStatus(run);
++        for (String suffix : List.of("?x=1", "?", "?id=a&id=b")) {
++            statements.clear();
++            String response = raw("/admin/runs/" + run + suffix, m.value(), "");
++            assertThat(response).startsWith("HTTP/1.1 400");
++            assertThat(statements).isEmpty();
++            assertThat(rawQueries.getLast()).isEqualTo(suffix.substring(1));
+         }
+-        statements.clear();assertThat(raw("/admin/runs/"+run,m.value(),"{}")).startsWith("HTTP/1.1 400");assertThat(statements).isEmpty();
+-        var fired=new AtomicBoolean();beforeController=r->{if(fired.compareAndSet(false,true))try{r.getRequestDispatcher("/admin/runs/"+run).forward(r,((ServletRequestAttributes)RequestContextHolder.currentRequestAttributes()).getResponse());}catch(Exception e){throw new IllegalStateException(e);}};
+-        statements.clear();noBusiness(request("GET","/admin/runs/"+run,m,null),403);assertThat(fired).isTrue();assertThat(statements).isEmpty();beforeController=r->{};
++        statements.clear();
++        assertThat(raw("/admin/runs/" + run, m.value(), "{}")).startsWith("HTTP/1.1 400");
++        assertThat(statements).isEmpty();
++        var fired = new AtomicBoolean();
++        var completed = new AtomicBoolean();
++        beforeController = r -> {
++            if (fired.compareAndSet(false, true)) {
++                try {
++                    r.getRequestDispatcher("/admin/runs/" + run).forward(r,
++                            ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getResponse());
++                    r.setAttribute("o1b.forward-complete", true);
++                    completed.set(true);
++                } catch (Exception e) {
++                    throw new IllegalStateException(e);
++                }
++            }
++        };
++        statements.clear();
++        noBusiness(request("GET", "/admin/runs/" + run, m, null), 403);
++        assertThat(fired).isTrue();
++        assertThat(completed).isTrue();
++        assertThat(statements).isEmpty();
++        beforeController = r -> {};
+     }
+     @Test void publicRecordsCannotMintObserverOrWriterAndLegacyAndPostStillUseOriginalPurpose()throws Exception {
+         long id=completeRun();String run=publicId(id);var m=metadataThenStatus(run);

@@ -1,0 +1,42 @@
+{
+  "command": "node .tools/run-iam-module-tests.mjs iam-stage-5-e1a-red-02 admin-common RetainedAuthorizationTest#ticketExpiringDuringTheSingleCurrentQueryCannotProduceAUsableMapping",
+  "ran": [
+    "cn.agentplatform.common.authority.RetainedAuthorizationTest"
+  ],
+  "rawSha256": "b3e8160b3a585a788ccec9ecc7f1b4a277144a7d5634ec9d4c8a02a1b3896b79",
+  "reports": [
+    {
+      "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.RetainedAuthorizationTest.xml",
+      "sha256": "708f6994abb96ac23e34d30f60e40f73cd2458a5937736a1abc802010928364e",
+      "bytes": 34112
+    },
+    {
+      "file": "admin-common/target/surefire-reports/cn.agentplatform.common.authority.RetainedAuthorizationTest.txt",
+      "sha256": "2def37e832a8c246811f2b7fff932d9ea4a9c5043f83bf2b076061c0a2951d49",
+      "bytes": 984
+    }
+  ],
+  "buildSuccess": false,
+  "warnings": [],
+  "errors": [
+    "[ERROR] Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 0.858 s <<< FAILURE! -- in cn.agentplatform.common.authority.RetainedAuthorizationTest",
+    "[ERROR] cn.agentplatform.common.authority.RetainedAuthorizationTest.ticketExpiringDuringTheSingleCurrentQueryCannotProduceAUsableMapping -- Time elapsed: 0.846 s <<< FAILURE!",
+    "[ERROR] Failures: ",
+    "[ERROR]   RetainedAuthorizationTest.ticketExpiringDuringTheSingleCurrentQueryCannotProduceAUsableMapping:240 ",
+    "[ERROR] Tests run: 1, Failures: 1, Errors: 0, Skipped: 0",
+    "[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.3:test (default-test) on project admin-common: There are test failures.",
+    "[ERROR] ",
+    "[ERROR] See G:\\207\\��Ŀ\\�㷨���鹤��\\����\\agent-platform\\admin-common\\target\\surefire-reports for the individual test results.",
+    "[ERROR] See dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.",
+    "[ERROR] -> [Help 1]",
+    "[ERROR] ",
+    "[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.",
+    "[ERROR] Re-run Maven using the -X switch to enable full debug logging.",
+    "[ERROR] ",
+    "[ERROR] For more information about the errors and possible solutions, please read the following articles:",
+    "[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException",
+    "[ERROR] ",
+    "[ERROR] After correcting the problems, you can resume the build with the command",
+    "[ERROR]   mvn <args> -rf :admin-common"
+  ]
+}

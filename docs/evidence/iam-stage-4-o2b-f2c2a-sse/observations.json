@@ -1,0 +1,1384 @@
+{
+  "actualTests": {
+    "total": 29,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "suites": [
+      {
+        "name": "cn.agentplatform.gateway.infra.PortalEventsPacketDecoderTest",
+        "tests": "1",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "time": "0.164"
+      },
+      {
+        "name": "cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest",
+        "tests": "22",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "time": "134.872"
+      },
+      {
+        "name": "cn.agentplatform.gateway.infra.PortalRunEventsSseTest",
+        "tests": "6",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "time": "19.3"
+      }
+    ],
+    "finalChildren": 38,
+    "totalChildren": 117,
+    "allChildrenActuallyExited": true
+  },
+  "baselineBytes": 1048576,
+  "baselineUntil": "actual JVM exit; not connector stop",
+  "ordinaryLifecycleFinal": "owners0 and global reserved1048576",
+  "legacyWithoutConnector": "owners0 and global reserved0",
+  "forcedSocketRelease": "no completion; owners2 remain charged until child JVM actually exits",
+  "priorFailuresRetained": true,
+  "stages": [
+    {
+      "stage": "red-raw",
+      "result": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/red-raw/result.json",
+        "bytes": 331,
+        "sha256": "17ef64ec5d8768f5610e2f133f2c5ff8b3fcc7db11f1a95178dedd0290ced3df"
+      },
+      "sourceEpoch": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/red-raw/source.json",
+        "bytes": 123392,
+        "sha256": "6b4a6488efa08b27266ccceff39fd3e79b62b137a3edcc6dfd3b071abd83f68c"
+      },
+      "effectiveAllowedPaths": 5,
+      "actuallyCopiedPaths": [
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsMaterialVerifier.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsHttp.java"
+      ],
+      "inheritedOtherSource": 625,
+      "sourceCount": 627,
+      "exit": 0,
+      "suites": [],
+      "finiteTargetCount": 371,
+      "children": [],
+      "command": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/red-raw/command.json",
+        "bytes": 452,
+        "sha256": "a7cb32843cb25468c14b3c99a6162dff2e74d08f1348659381b9eaebb877226a"
+      },
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/red-raw/raw.log",
+        "bytes": 3946,
+        "sha256": "cdeb5163a3f3a0e288fbae6d3a7ab744fccdd06fca1360ca34cdd1d968f30c01"
+      },
+      "startedAt": "2026-10-21T14:54:48.023346+00:00",
+      "completedAt": "2026-10-21T14:54:50.592430+00:00"
+    },
+    {
+      "stage": "red-raw-actual",
+      "result": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/red-raw-actual/result.json",
+        "bytes": 612,
+        "sha256": "e84fc64342858f90ea82e513d9033a0d03ec4ea4e34124cccac7e327fe266149"
+      },
+      "sourceEpoch": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/red-raw-actual/source.json",
+        "bytes": 123838,
+        "sha256": "02dcc9b0af5e1f827a05a0db01727bcda68ff76551d8398323ac0e8d3a1aa09f"
+      },
+      "effectiveAllowedPaths": 5,
+      "actuallyCopiedPaths": [
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsMaterialVerifier.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsHttp.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseLifecycleTest.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseTest.java"
+      ],
+      "inheritedOtherSource": 625,
+      "sourceCount": 629,
+      "exit": 1,
+      "suites": [
+        {
+          "name": "cn.agentplatform.gateway.infra.PortalRunEventsSseTest",
+          "tests": "1",
+          "failures": "1",
+          "errors": "0",
+          "skipped": "0",
+          "time": "2.02"
+        }
+      ],
+      "finiteTargetCount": 375,
+      "children": [
+        ".local/iam-o2b-f2c2a-sse/peers/raw-37324c08-037f-42a8-bb9b-18d8c5a737a7"
+      ],
+      "command": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/red-raw-actual/command.json",
+        "bytes": 452,
+        "sha256": "c65e868d74c2e4304129ce1d4b9e7316af657d0c33d4667f7ea477d262cf5f6f"
+      },
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/red-raw-actual/raw.log",
+        "bytes": 10766,
+        "sha256": "ae9b0344b71e908f6c0a07466c1fe820ab0a2f9a3bde1a7ea46c2bd65ed1500b"
+      },
+      "startedAt": "2026-10-21T14:55:27.311848+00:00",
+      "completedAt": "2026-10-21T14:55:40.114187+00:00"
+    },
+    {
+      "stage": "green-raw",
+      "result": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/green-raw/result.json",
+        "bytes": 603,
+        "sha256": "72ecd0a4f4d698d8a184e2af4d7344ae5e33f32aee1dbe7e5827f2e82816e35c"
+      },
+      "sourceEpoch": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/green-raw/source.json",
+        "bytes": 123838,
+        "sha256": "8be9bd3669f00d0da08ed5f0c8373f6b8ad7a188ee0240e60838cd573df797b1"
+      },
+      "effectiveAllowedPaths": 5,
+      "actuallyCopiedPaths": [
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsMaterialVerifier.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsHttp.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseLifecycleTest.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseTest.java"
+      ],
+      "inheritedOtherSource": 625,
+      "sourceCount": 629,
+      "exit": 0,
+      "suites": [
+        {
+          "name": "cn.agentplatform.gateway.infra.PortalRunEventsSseTest",
+          "tests": "1",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0",
+          "time": "1.778"
+        }
+      ],
+      "finiteTargetCount": 376,
+      "children": [
+        ".local/iam-o2b-f2c2a-sse/peers/raw-1848fedf-3e12-49f6-82a3-8d0c8341b007"
+      ],
+      "command": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/green-raw/command.json",
+        "bytes": 452,
+        "sha256": "5985debc726ec1a81406b7e9da6b211ca5f40f219ab14990f242c158f1bd85ef"
+      },
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/green-raw/raw.log",
+        "bytes": 5495,
+        "sha256": "25d865dd1734393f16c06a01db6873099c8e4914ec94bccbc5a222573eb1f56e"
+      },
+      "startedAt": "2026-10-21T14:56:29.578101+00:00",
+      "completedAt": "2026-10-21T14:56:46.732495+00:00"
+    },
+    {
+      "stage": "lifecycle-first",
+      "result": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/lifecycle-first/result.json",
+        "bytes": 347,
+        "sha256": "13a62346fa3b150e9f0080fe1062f382b074cce24e91828c21f8ef17f4747752"
+      },
+      "sourceEpoch": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/lifecycle-first/source.json",
+        "bytes": 124056,
+        "sha256": "ae3eec24f3938e029bfee45a3ee1f1af8fd0af23b6affa0d6d405526d4313827"
+      },
+      "effectiveAllowedPaths": 5,
+      "actuallyCopiedPaths": [
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsMaterialVerifier.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsHttp.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsSse.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseLifecycleTest.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseTest.java"
+      ],
+      "inheritedOtherSource": 625,
+      "sourceCount": 630,
+      "exit": 1,
+      "suites": [],
+      "finiteTargetCount": 374,
+      "children": [],
+      "command": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/lifecycle-first/command.json",
+        "bytes": 460,
+        "sha256": "a8fdd3fb3d6f675858051f362650940d8f99c9509cb794924dca4aa08dd52200"
+      },
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/lifecycle-first/raw.log",
+        "bytes": 5378,
+        "sha256": "c9c4729f4998157b7adf79a1f390921a8fa2c676700d07883a005d9932b2d0f2"
+      },
+      "startedAt": "2026-10-21T15:02:17.883427+00:00",
+      "completedAt": "2026-10-21T15:02:26.602690+00:00"
+    },
+    {
+      "stage": "lifecycle-compile",
+      "result": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/lifecycle-compile/result.json",
+        "bytes": 637,
+        "sha256": "9cc0c3cea6e39aab41c77cb81bf57183c4b6ab2cb3e25a0b6b93f81bacedb1f6"
+      },
+      "sourceEpoch": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/lifecycle-compile/source.json",
+        "bytes": 124056,
+        "sha256": "79f7532072cf0f5718bb0c90b2d8243ef2f702040d99380b6fc8d24161e80532"
+      },
+      "effectiveAllowedPaths": 5,
+      "actuallyCopiedPaths": [
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsMaterialVerifier.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsHttp.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsSse.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseLifecycleTest.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseTest.java"
+      ],
+      "inheritedOtherSource": 625,
+      "sourceCount": 630,
+      "exit": 0,
+      "suites": [
+        {
+          "name": "cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest",
+          "tests": "1",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0",
+          "time": "5.945"
+        }
+      ],
+      "finiteTargetCount": 385,
+      "children": [
+        ".local/iam-o2b-f2c2a-sse/peers/sequence-336f29c7-cd12-4ed9-a493-59c6d49f76ae"
+      ],
+      "command": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/lifecycle-compile/command.json",
+        "bytes": 459,
+        "sha256": "c9d172230f33b90e76445c59c14c5832fde5e5ecb0345d64371e598e00491c8a"
+      },
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/lifecycle-compile/raw.log",
+        "bytes": 5513,
+        "sha256": "ab5f23e197d98eb824ffa382ed05d5dd5a0c97437984379f4f91b62bb191e4eb"
+      },
+      "startedAt": "2026-10-21T15:02:45.442177+00:00",
+      "completedAt": "2026-10-21T15:03:07.376475+00:00"
+    },
+    {
+      "stage": "backpressure-first",
+      "result": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/backpressure-first/result.json",
+        "bytes": 640,
+        "sha256": "247604e0f55b9b000e27e36b9bd201a07a89c0e8332685f120360be0568624f7"
+      },
+      "sourceEpoch": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/backpressure-first/source.json",
+        "bytes": 124056,
+        "sha256": "c6bfef00cebeb089834aa70ccb55094c3e9cd09d3a321c4a20378bb34cf9b872"
+      },
+      "effectiveAllowedPaths": 5,
+      "actuallyCopiedPaths": [
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsMaterialVerifier.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsHttp.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsSse.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseLifecycleTest.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseTest.java"
+      ],
+      "inheritedOtherSource": 625,
+      "sourceCount": 630,
+      "exit": 1,
+      "suites": [
+        {
+          "name": "cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest",
+          "tests": "1",
+          "failures": "1",
+          "errors": "0",
+          "skipped": "0",
+          "time": "10.953"
+        }
+      ],
+      "finiteTargetCount": 385,
+      "children": [
+        ".local/iam-o2b-f2c2a-sse/peers/backpressure-4c2ae4e9-f1e1-4256-903b-3189b0ab2727"
+      ],
+      "command": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/backpressure-first/command.json",
+        "bytes": 459,
+        "sha256": "8ffec2d3325d89986d3fba0888e7a6138046e7c4d1e308e5e26822bb1cdc5c46"
+      },
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/backpressure-first/raw.log",
+        "bytes": 22410,
+        "sha256": "e0372507add8e62d45678d5653095b3c44347470884383d13c29424707f1fa19"
+      },
+      "startedAt": "2026-10-21T15:04:06.963026+00:00",
+      "completedAt": "2026-10-21T15:04:32.930940+00:00"
+    },
+    {
+      "stage": "raw-and-bounds",
+      "result": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/raw-and-bounds/result.json",
+        "bytes": 613,
+        "sha256": "2f5ccbba897065e59d8c651e7300fdd709f7c4be64bd725d369fee18959b1f93"
+      },
+      "sourceEpoch": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/raw-and-bounds/source.json",
+        "bytes": 124057,
+        "sha256": "e2c49349b0c7857dd3465cd3e872f24de3b9b31ff5b8f82be63faae95f8fabff"
+      },
+      "effectiveAllowedPaths": 5,
+      "actuallyCopiedPaths": [
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsMaterialVerifier.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsHttp.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsSse.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseLifecycleTest.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseTest.java"
+      ],
+      "inheritedOtherSource": 625,
+      "sourceCount": 630,
+      "exit": 1,
+      "suites": [
+        {
+          "name": "cn.agentplatform.gateway.infra.PortalRunEventsSseTest",
+          "tests": "3",
+          "failures": "1",
+          "errors": "0",
+          "skipped": "0",
+          "time": "5.587"
+        }
+      ],
+      "finiteTargetCount": 389,
+      "children": [
+        ".local/iam-o2b-f2c2a-sse/peers/bounds-6ba26412-be82-4279-80fc-c828ff1ff1bb",
+        ".local/iam-o2b-f2c2a-sse/peers/raw-f1f5891c-6b3a-4640-819c-ef50d58631e0",
+        ".local/iam-o2b-f2c2a-sse/peers/raw-writer-8f76fadd-c1cc-4941-a5e8-ca6f027f1fba"
+      ],
+      "command": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/raw-and-bounds/command.json",
+        "bytes": 552,
+        "sha256": "36a84ab719f9a30dd30944ac6060ffde3cf7863fbfc24fd740d5af3a9dceea45"
+      },
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/raw-and-bounds/raw.log",
+        "bytes": 9354,
+        "sha256": "0363c57a7b4e67e827b60c2b8c907f7998c3c3e6c2be7f802a4aa7e6dca352a8"
+      },
+      "startedAt": "2026-10-21T15:06:53.584136+00:00",
+      "completedAt": "2026-10-21T15:07:15.470020+00:00"
+    },
+    {
+      "stage": "bounds-reachable",
+      "result": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/bounds-reachable/result.json",
+        "bytes": 897,
+        "sha256": "594a2e9a8527b2c5d1a3dfc4f38a8bc1f63eb782a548d38c4b8188f4c8688cae"
+      },
+      "sourceEpoch": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/bounds-reachable/source.json",
+        "bytes": 124057,
+        "sha256": "83d8680d3a46536a4a74b9d1697c62f87aa08ded55678831f5ddfa997759c69c"
+      },
+      "effectiveAllowedPaths": 5,
+      "actuallyCopiedPaths": [
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsMaterialVerifier.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsHttp.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsSse.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseLifecycleTest.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseTest.java"
+      ],
+      "inheritedOtherSource": 625,
+      "sourceCount": 630,
+      "exit": 1,
+      "suites": [
+        {
+          "name": "cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest",
+          "tests": "1",
+          "failures": "1",
+          "errors": "0",
+          "skipped": "0",
+          "time": "2.872"
+        },
+        {
+          "name": "cn.agentplatform.gateway.infra.PortalRunEventsSseTest",
+          "tests": "1",
+          "failures": "1",
+          "errors": "0",
+          "skipped": "0",
+          "time": "2.597"
+        }
+      ],
+      "finiteTargetCount": 391,
+      "children": [
+        ".local/iam-o2b-f2c2a-sse/peers/backpressure-5ebfd8dc-1193-4755-af8f-2d5ac6a35cfe",
+        ".local/iam-o2b-f2c2a-sse/peers/bounds-8c797f5c-91ce-45de-983a-346777c2ec96"
+      ],
+      "command": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/bounds-reachable/command.json",
+        "bytes": 525,
+        "sha256": "d966571b739540a902d102576a284be2c7cdb360132cd968e1fd5c406c6a4eab"
+      },
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/bounds-reachable/raw.log",
+        "bytes": 24018,
+        "sha256": "dac7191afdfd5780b61c3c3fe67f88b6f9b08d54bf4c24c6a56b01234fb496db"
+      },
+      "startedAt": "2026-10-21T15:08:11.925557+00:00",
+      "completedAt": "2026-10-21T15:08:29.230768+00:00"
+    },
+    {
+      "stage": "type-amendment-and-backpressure",
+      "result": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/type-amendment-and-backpressure/result.json",
+        "bytes": 927,
+        "sha256": "f26c48ed3520ac6b814d6b11f87a5a70f6b10538403dd3a39c43d575a547d9c3"
+      },
+      "sourceEpoch": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/type-amendment-and-backpressure/source.json",
+        "bytes": 124057,
+        "sha256": "8c0c5222498aca00db2792e6ce54dcea2cebe3db604ffc58fbef5942d9ab8db9"
+      },
+      "effectiveAllowedPaths": 6,
+      "actuallyCopiedPaths": [
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsMaterialVerifier.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsPacketDecoder.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsHttp.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsSse.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseLifecycleTest.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseTest.java"
+      ],
+      "inheritedOtherSource": 624,
+      "sourceCount": 630,
+      "exit": 1,
+      "suites": [
+        {
+          "name": "cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest",
+          "tests": "1",
+          "failures": "1",
+          "errors": "0",
+          "skipped": "0",
+          "time": "2.886"
+        },
+        {
+          "name": "cn.agentplatform.gateway.infra.PortalRunEventsSseTest",
+          "tests": "1",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0",
+          "time": "6.333"
+        }
+      ],
+      "finiteTargetCount": 391,
+      "children": [
+        ".local/iam-o2b-f2c2a-sse/peers/backpressure-df5efa23-cff9-4afd-bc73-eee82b73edda",
+        ".local/iam-o2b-f2c2a-sse/peers/bounds-ea89768f-b19c-4a5c-9f3b-e6f30e13677f"
+      ],
+      "command": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/type-amendment-and-backpressure/command.json",
+        "bytes": 525,
+        "sha256": "5bbcb24a4d38dcc3c0fea678f7977862eb0ee87a3a1a700afe798d31dd4ce6a7"
+      },
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/type-amendment-and-backpressure/raw.log",
+        "bytes": 20722,
+        "sha256": "4b76335f4a0b185792db8805a0c1d79d4bf1f03ba983fb588289bfa0d41dd3be"
+      },
+      "startedAt": "2026-10-21T15:11:49.633967+00:00",
+      "completedAt": "2026-10-21T15:12:10.819049+00:00"
+    },
+    {
+      "stage": "lifecycle-negatives-1",
+      "result": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/lifecycle-negatives-1/result.json",
+        "bytes": 646,
+        "sha256": "3f171968d2f5641dc15cfbd8ec7270320acda642db9af500167da1a661d9ad75"
+      },
+      "sourceEpoch": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/lifecycle-negatives-1/source.json",
+        "bytes": 124057,
+        "sha256": "48cc6e2a72ee37dba17ff2a053064bd818210446e4153d01762c78b347d2b8b3"
+      },
+      "effectiveAllowedPaths": 6,
+      "actuallyCopiedPaths": [
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsMaterialVerifier.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsPacketDecoder.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsHttp.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsSse.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseLifecycleTest.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseTest.java"
+      ],
+      "inheritedOtherSource": 624,
+      "sourceCount": 630,
+      "exit": 0,
+      "suites": [
+        {
+          "name": "cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest",
+          "tests": "5",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0",
+          "time": "16.982"
+        }
+      ],
+      "finiteTargetCount": 389,
+      "children": [
+        ".local/iam-o2b-f2c2a-sse/peers/backpressure-3c74726d-e796-40c7-8e2b-bffdebfad9fb",
+        ".local/iam-o2b-f2c2a-sse/peers/generation-2ce412b7-5675-42ff-9c41-b90cd2a18573",
+        ".local/iam-o2b-f2c2a-sse/peers/reset-1bb04dc1-170c-4fc0-a7bf-58dda463cb5a",
+        ".local/iam-o2b-f2c2a-sse/peers/revoke-partial-16a9c2e1-0dce-491f-846f-d786fd9e22bd",
+        ".local/iam-o2b-f2c2a-sse/peers/spaces-c5d47ac4-5bae-4e0e-ab59-bde9714cddda"
+      ],
+      "command": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/lifecycle-negatives-1/command.json",
+        "bytes": 646,
+        "sha256": "d578db8bbb65e15ff0f27ce29f1088298c50d3459073b3f9f9c5e4e5079bdbdb"
+      },
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/lifecycle-negatives-1/raw.log",
+        "bytes": 6017,
+        "sha256": "b8fb404efc90c6751744e9523038a2ce2c06f7051ff20ede50b79a23667c41df"
+      },
+      "startedAt": "2026-10-21T15:14:10.299623+00:00",
+      "completedAt": "2026-10-21T15:14:39.848017+00:00"
+    },
+    {
+      "stage": "lifecycle-exit-gates",
+      "result": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/lifecycle-exit-gates/result.json",
+        "bytes": 645,
+        "sha256": "f63da5ad988565c6026648ef44b21045c18da6485162e91a876900b3525dd748"
+      },
+      "sourceEpoch": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/lifecycle-exit-gates/source.json",
+        "bytes": 124057,
+        "sha256": "d59f3ec9cd544f4f2298416372f6dd0ac39c46f74d64fcc5838b675ac70bd019"
+      },
+      "effectiveAllowedPaths": 6,
+      "actuallyCopiedPaths": [
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsMaterialVerifier.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsPacketDecoder.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsHttp.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsSse.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseLifecycleTest.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseTest.java"
+      ],
+      "inheritedOtherSource": 624,
+      "sourceCount": 630,
+      "exit": 1,
+      "suites": [
+        {
+          "name": "cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest",
+          "tests": "7",
+          "failures": "3",
+          "errors": "0",
+          "skipped": "0",
+          "time": "139.361"
+        }
+      ],
+      "finiteTargetCount": 390,
+      "children": [
+        ".local/iam-o2b-f2c2a-sse/peers/abort-order-19c3f906-f488-40e2-8da5-eaaafda32939",
+        ".local/iam-o2b-f2c2a-sse/peers/backpressure-resume-d9c2ee40-b80f-445e-bb26-67e5222672f9",
+        ".local/iam-o2b-f2c2a-sse/peers/bootstrap-failure-1aa8406d-9ef0-4a8c-bf8b-0bbf7c7240b7",
+        ".local/iam-o2b-f2c2a-sse/peers/completion-retention-6c781cc5-999e-42eb-8f5a-89cf04fd527a",
+        ".local/iam-o2b-f2c2a-sse/peers/heavy-retention-f5a19e0c-bc43-4b7d-97b0-ac33340787a1",
+        ".local/iam-o2b-f2c2a-sse/peers/idle-70996b52-96a4-4e4c-a336-c8e3b4503341",
+        ".local/iam-o2b-f2c2a-sse/peers/keepalive-a458e6c0-4e1f-4ce7-b89f-7ac25e642d0e"
+      ],
+      "command": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/lifecycle-exit-gates/command.json",
+        "bytes": 773,
+        "sha256": "b30cc1ec60b85c518b5864ce6ed5d104bcc2a99cb5cb92ccdc3df380aafebc64"
+      },
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/lifecycle-exit-gates/raw.log",
+        "bytes": 45697,
+        "sha256": "f0a36ed0257ff43fa1cd37098b658400275ef74ef62a1b8f2a528537dcea6d13"
+      },
+      "startedAt": "2026-10-21T15:16:17.339463+00:00",
+      "completedAt": "2026-10-21T15:18:48.721648+00:00"
+    },
+    {
+      "stage": "bootstrap-and-real-idle",
+      "result": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/bootstrap-and-real-idle/result.json",
+        "bytes": 649,
+        "sha256": "68fb74f74d1114d232ae90e4fb55dfd1d07e2a8030480bb354b1d0083afffce7"
+      },
+      "sourceEpoch": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/bootstrap-and-real-idle/source.json",
+        "bytes": 124057,
+        "sha256": "d4ef4b419035fe36987c858640ecbf395e3b4e56cc9dae7ce4340afee9b7af20"
+      },
+      "effectiveAllowedPaths": 6,
+      "actuallyCopiedPaths": [
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsMaterialVerifier.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsPacketDecoder.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsHttp.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsSse.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseLifecycleTest.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseTest.java"
+      ],
+      "inheritedOtherSource": 624,
+      "sourceCount": 630,
+      "exit": 0,
+      "suites": [
+        {
+          "name": "cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest",
+          "tests": "2",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0",
+          "time": "22.67"
+        }
+      ],
+      "finiteTargetCount": 390,
+      "children": [
+        ".local/iam-o2b-f2c2a-sse/peers/bootstrap-failure-604b4167-262f-4ce6-a203-196c5f7fbe07",
+        ".local/iam-o2b-f2c2a-sse/peers/idle-40fbc9e0-4c65-4a4e-9b19-007a6ade5806"
+      ],
+      "command": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/bootstrap-and-real-idle/command.json",
+        "bytes": 520,
+        "sha256": "ac651693561afdf3163c266871890cd493e0633f14bf2a848b15ce62c74c6824"
+      },
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/bootstrap-and-real-idle/raw.log",
+        "bytes": 6017,
+        "sha256": "863ce6d0a74af68b10948ac7d92e0333f0882038d1b9c59ebebc33dc02282271"
+      },
+      "startedAt": "2026-10-21T15:22:08.592199+00:00",
+      "completedAt": "2026-10-21T15:22:42.818696+00:00"
+    },
+    {
+      "stage": "max-frame-and-precision",
+      "result": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/max-frame-and-precision/result.json",
+        "bytes": 911,
+        "sha256": "c67f007a63c109d1e406739ba5f8c5e0c291f0a629e12b6fc41038c140d11347"
+      },
+      "sourceEpoch": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/max-frame-and-precision/source.json",
+        "bytes": 124057,
+        "sha256": "d066f454e406e0a5b7bb7d0b119135bfef3a1c61153f02cf945693c6e7de4aa1"
+      },
+      "effectiveAllowedPaths": 6,
+      "actuallyCopiedPaths": [
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsMaterialVerifier.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsPacketDecoder.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsHttp.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsSse.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseLifecycleTest.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseTest.java"
+      ],
+      "inheritedOtherSource": 624,
+      "sourceCount": 630,
+      "exit": 0,
+      "suites": [
+        {
+          "name": "cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest",
+          "tests": "1",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0",
+          "time": "2.844"
+        },
+        {
+          "name": "cn.agentplatform.gateway.infra.PortalRunEventsSseTest",
+          "tests": "1",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0",
+          "time": "5.809"
+        }
+      ],
+      "finiteTargetCount": 393,
+      "children": [
+        ".local/iam-o2b-f2c2a-sse/peers/bounds-36001eec-82a6-4ecd-bf89-8ef48e22e330",
+        ".local/iam-o2b-f2c2a-sse/peers/long-and-precision-6f6d7b90-10fe-427e-97cd-5683bdab2a16"
+      ],
+      "command": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/max-frame-and-precision/command.json",
+        "bytes": 534,
+        "sha256": "41c5186e28cabc6a98b6adf3a7880f3885241a325262ab504fefbc5ebfb4d2d8"
+      },
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/max-frame-and-precision/raw.log",
+        "bytes": 5253,
+        "sha256": "b9f254a55e9aa719929efd66cb4c260382088f2db64f3e5b284c04dc4cf48341"
+      },
+      "startedAt": "2026-10-21T15:26:40.401240+00:00",
+      "completedAt": "2026-10-21T15:27:00.562433+00:00"
+    },
+    {
+      "stage": "light-shell-real-exit",
+      "result": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/light-shell-real-exit/result.json",
+        "bytes": 645,
+        "sha256": "b74ef0b29ff07d0e5b229fbde0b82b5017547294b121e6122a1c89c13ac51ed3"
+      },
+      "sourceEpoch": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/light-shell-real-exit/source.json",
+        "bytes": 124057,
+        "sha256": "2602c0fe2b474c98f2c757190e81c77ed3d6b10aebc5d2802d354c644e23ed4b"
+      },
+      "effectiveAllowedPaths": 6,
+      "actuallyCopiedPaths": [
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsMaterialVerifier.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsPacketDecoder.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsHttp.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsSse.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseLifecycleTest.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseTest.java"
+      ],
+      "inheritedOtherSource": 624,
+      "sourceCount": 630,
+      "exit": 0,
+      "suites": [
+        {
+          "name": "cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest",
+          "tests": "1",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0",
+          "time": "4.836"
+        }
+      ],
+      "finiteTargetCount": 391,
+      "children": [
+        ".local/iam-o2b-f2c2a-sse/peers/light-shell-bf4ebd96-d7a3-4b1e-844f-d0c569167430"
+      ],
+      "command": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/light-shell-real-exit/command.json",
+        "bytes": 469,
+        "sha256": "722817b5ea2c0cfb85c3c59381752f8132524e83ef64a6db37a2073a57b38443"
+      },
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/light-shell-real-exit/raw.log",
+        "bytes": 5513,
+        "sha256": "92e771f0a1c988c7c7a197d005459792b6d4d36a378f31311de5e74a793c7247"
+      },
+      "startedAt": "2026-10-21T15:31:21.756588+00:00",
+      "completedAt": "2026-10-21T15:31:46.007919+00:00"
+    },
+    {
+      "stage": "actual-pending-flush",
+      "result": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/actual-pending-flush/result.json",
+        "bytes": 643,
+        "sha256": "c1887dc199fefd97ef963d05eb859f377a5db42ee499047f88005080e44806ad"
+      },
+      "sourceEpoch": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/actual-pending-flush/source.json",
+        "bytes": 124057,
+        "sha256": "d4dbf8512b7157674e1d00507e2521b8ca3cca296ffac334d9583df15fc16030"
+      },
+      "effectiveAllowedPaths": 6,
+      "actuallyCopiedPaths": [
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsMaterialVerifier.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsPacketDecoder.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsHttp.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsSse.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseLifecycleTest.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseTest.java"
+      ],
+      "inheritedOtherSource": 624,
+      "sourceCount": 630,
+      "exit": 0,
+      "suites": [
+        {
+          "name": "cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest",
+          "tests": "1",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0",
+          "time": "4.776"
+        }
+      ],
+      "finiteTargetCount": 391,
+      "children": [
+        ".local/iam-o2b-f2c2a-sse/peers/pending-flush-a69c57d6-0faa-4381-86e1-be050ce26e2d"
+      ],
+      "command": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/actual-pending-flush/command.json",
+        "bytes": 470,
+        "sha256": "cd55371b9ab85bd07dac4d18fd5a9f10c0ab8dffe4c281358a833b9da06b2424"
+      },
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/actual-pending-flush/raw.log",
+        "bytes": 5043,
+        "sha256": "f2707cdc98760a041aa6050f71b771fdcdd5c182418d0954e050e27695887a3e"
+      },
+      "startedAt": "2026-10-21T15:33:16.605246+00:00",
+      "completedAt": "2026-10-21T15:33:33.700442+00:00"
+    },
+    {
+      "stage": "spi-abort-order-red-fix",
+      "result": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/spi-abort-order-red-fix/result.json",
+        "bytes": 363,
+        "sha256": "3ff0661be5487da7569dc8e2ccd06390b6615519c9b705ee84f2c77b4273af86"
+      },
+      "sourceEpoch": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/spi-abort-order-red-fix/source.json",
+        "bytes": 124057,
+        "sha256": "894670bd681ae1416aa3debe837da3785f04963401d76afd43f1847aa1ab7661"
+      },
+      "effectiveAllowedPaths": 7,
+      "actuallyCopiedPaths": [
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsMaterialVerifier.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsPacketBudget.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsPacketDecoder.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsHttp.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsSse.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseLifecycleTest.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseTest.java"
+      ],
+      "inheritedOtherSource": 623,
+      "sourceCount": 630,
+      "exit": 1,
+      "suites": [],
+      "finiteTargetCount": 383,
+      "children": [],
+      "command": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/spi-abort-order-red-fix/command.json",
+        "bytes": 522,
+        "sha256": "68cac6f45fe45bdd291b20ff76a8a0fcce127b24d2035c6ab6f1b271280f8519"
+      },
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/spi-abort-order-red-fix/raw.log",
+        "bytes": 5536,
+        "sha256": "829de87c6a275f8a1621ffa7f3b23e396c027775b58d317cba5f2a380cc35f24"
+      },
+      "startedAt": "2026-10-21T15:48:01.828217+00:00",
+      "completedAt": "2026-10-21T15:48:08.839908+00:00"
+    },
+    {
+      "stage": "spi-abort-order-actual",
+      "result": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/spi-abort-order-actual/result.json",
+        "bytes": 647,
+        "sha256": "581d25a582f3f7ddd5aa80205cb6ac7db3b8de2548f08d41638a63649c3ae49e"
+      },
+      "sourceEpoch": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/spi-abort-order-actual/source.json",
+        "bytes": 124057,
+        "sha256": "a43fa38665ae2624c13c82e6f99cda11fc926df22c5e31fb66a78747a0ae5597"
+      },
+      "effectiveAllowedPaths": 7,
+      "actuallyCopiedPaths": [
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsMaterialVerifier.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsPacketBudget.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsPacketDecoder.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsHttp.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsSse.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseLifecycleTest.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseTest.java"
+      ],
+      "inheritedOtherSource": 623,
+      "sourceCount": 630,
+      "exit": 0,
+      "suites": [
+        {
+          "name": "cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest",
+          "tests": "2",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0",
+          "time": "8.283"
+        }
+      ],
+      "finiteTargetCount": 395,
+      "children": [
+        ".local/iam-o2b-f2c2a-sse/peers/abort-order-2fa4b697-46d0-428d-9d26-67fb84e43da0",
+        ".local/iam-o2b-f2c2a-sse/peers/sequence-0088d2cb-201a-4357-979a-2e476b7764e7"
+      ],
+      "command": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/spi-abort-order-actual/command.json",
+        "bytes": 522,
+        "sha256": "ef86b1b73b2d4bbf7b6efa874025c2554d291f68e0af501bde95c66020176145"
+      },
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/spi-abort-order-actual/raw.log",
+        "bytes": 5513,
+        "sha256": "72363431cd477f119e760528d9687cb5eaa5752c25eb1b806544d8804cb42a3e"
+      },
+      "startedAt": "2026-10-21T15:48:41.449666+00:00",
+      "completedAt": "2026-10-21T15:49:04.865386+00:00"
+    },
+    {
+      "stage": "spi-lifecycle-boundaries",
+      "result": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/spi-lifecycle-boundaries/result.json",
+        "bytes": 652,
+        "sha256": "f7a372ab249293a53422a66afde67a352592def528c2fa3088e397d5bdea93da"
+      },
+      "sourceEpoch": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/spi-lifecycle-boundaries/source.json",
+        "bytes": 124057,
+        "sha256": "7afc452c7a02c95269511fc2b8ed2ec6fe98bcf2281e31cfb89117e3d907eb96"
+      },
+      "effectiveAllowedPaths": 7,
+      "actuallyCopiedPaths": [
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsMaterialVerifier.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsPacketBudget.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsPacketDecoder.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsHttp.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsSse.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseLifecycleTest.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseTest.java"
+      ],
+      "inheritedOtherSource": 623,
+      "sourceCount": 630,
+      "exit": 1,
+      "suites": [
+        {
+          "name": "cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest",
+          "tests": "5",
+          "failures": "2",
+          "errors": "0",
+          "skipped": "0",
+          "time": "29.325"
+        }
+      ],
+      "finiteTargetCount": 395,
+      "children": [
+        ".local/iam-o2b-f2c2a-sse/peers/action-retention-f4bc8eb0-b335-4a18-8909-a3b825567fbc",
+        ".local/iam-o2b-f2c2a-sse/peers/bad-profile-82859dcb-df37-4f23-899f-f2cddbeb402f",
+        ".local/iam-o2b-f2c2a-sse/peers/forced-release-7593ea33-a111-41a4-91de-5fa74accee26",
+        ".local/iam-o2b-f2c2a-sse/peers/not-ready-idle-018b2243-c32a-4546-a9d1-dc6563a258c1",
+        ".local/iam-o2b-f2c2a-sse/peers/processor-reuse-fd5e9ade-b347-4189-92a6-14164899951e"
+      ],
+      "command": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/spi-lifecycle-boundaries/command.json",
+        "bytes": 697,
+        "sha256": "42140af710c648a5db58aa88c252912baa499289b3e2f132e9b9851f8d7b14f2"
+      },
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/spi-lifecycle-boundaries/raw.log",
+        "bytes": 40696,
+        "sha256": "8d30ef163e6fd9e9d7d40584e95e9df2fe80d262a538120300202ad756fe4364"
+      },
+      "startedAt": "2026-10-21T15:56:23.670624+00:00",
+      "completedAt": "2026-10-21T15:57:07.071776+00:00"
+    },
+    {
+      "stage": "spi-idle-and-release",
+      "result": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/spi-idle-and-release/result.json",
+        "bytes": 643,
+        "sha256": "842af06e7571d6b94b7bad322ea21db23b410d3b89dbf22c4ce0badd32d1c572"
+      },
+      "sourceEpoch": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/spi-idle-and-release/source.json",
+        "bytes": 124057,
+        "sha256": "7afc452c7a02c95269511fc2b8ed2ec6fe98bcf2281e31cfb89117e3d907eb96"
+      },
+      "effectiveAllowedPaths": 7,
+      "actuallyCopiedPaths": [
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsMaterialVerifier.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsPacketBudget.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsPacketDecoder.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsHttp.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsSse.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseLifecycleTest.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseTest.java"
+      ],
+      "inheritedOtherSource": 623,
+      "sourceCount": 630,
+      "exit": 1,
+      "suites": [
+        {
+          "name": "cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest",
+          "tests": "1",
+          "failures": "1",
+          "errors": "0",
+          "skipped": "0",
+          "time": "17.57"
+        }
+      ],
+      "finiteTargetCount": 395,
+      "children": [
+        ".local/iam-o2b-f2c2a-sse/peers/not-ready-idle-a1a47257-b4ce-49a0-9717-d6dff7b732e6"
+      ],
+      "command": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/spi-idle-and-release/command.json",
+        "bytes": 528,
+        "sha256": "b0656e51cf2ec71a53cbb0a974707d049a08fe24b8724ec27387900075e27a66"
+      },
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/spi-idle-and-release/raw.log",
+        "bytes": 20893,
+        "sha256": "0a9fc0d2248a4ef9e9527936ef56e199279978915523df473942b5c7a3eb2f65"
+      },
+      "startedAt": "2026-10-21T16:00:58.031914+00:00",
+      "completedAt": "2026-10-21T16:01:18.797882+00:00"
+    },
+    {
+      "stage": "spi-real-release-and-idle",
+      "result": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/spi-real-release-and-idle/result.json",
+        "bytes": 655,
+        "sha256": "4e0bf6b3bbcfde471ee085b1ac4c76110cfdd5884024ba407eea9be79af9aaf1"
+      },
+      "sourceEpoch": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/spi-real-release-and-idle/source.json",
+        "bytes": 124057,
+        "sha256": "b5f1623545f7ee6585389c9c5fee0384dd0b71f053930ce374ad521480e2488c"
+      },
+      "effectiveAllowedPaths": 7,
+      "actuallyCopiedPaths": [
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsMaterialVerifier.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsPacketBudget.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsPacketDecoder.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsHttp.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsSse.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseLifecycleTest.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseTest.java"
+      ],
+      "inheritedOtherSource": 623,
+      "sourceCount": 630,
+      "exit": 1,
+      "suites": [
+        {
+          "name": "cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest",
+          "tests": "2",
+          "failures": "1",
+          "errors": "0",
+          "skipped": "0",
+          "time": "112.561"
+        }
+      ],
+      "finiteTargetCount": 395,
+      "children": [
+        ".local/iam-o2b-f2c2a-sse/peers/forced-release-b991cb60-9256-4414-8d19-d7fba03be5b7",
+        ".local/iam-o2b-f2c2a-sse/peers/not-ready-idle-b86b6fd8-e675-4ee9-a407-130b30fa6054"
+      ],
+      "command": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/spi-real-release-and-idle/command.json",
+        "bytes": 530,
+        "sha256": "6ac98a3d1265c5fd2c27caf869ed2023cb4eaef285e6d9c57af95c7d2daebbc3"
+      },
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/spi-real-release-and-idle/raw.log",
+        "bytes": 7794,
+        "sha256": "fb5ce5a2e9a2fe3102c01107fa0c686539a360cfeb5b963e4e5f01ef96cbfefc"
+      },
+      "startedAt": "2026-10-21T16:02:16.383343+00:00",
+      "completedAt": "2026-10-21T16:04:26.223393+00:00"
+    },
+    {
+      "stage": "spi-forced-release-exit",
+      "result": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/spi-forced-release-exit/result.json",
+        "bytes": 648,
+        "sha256": "f423c1cb91940d121a78d55fd4fead5dbc245e7a030db054e787670f5883c3c5"
+      },
+      "sourceEpoch": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/spi-forced-release-exit/source.json",
+        "bytes": 124057,
+        "sha256": "ff57930c75f8518eaf9587c03879aa4894ac06e5de324f763ed4d0a1855825e6"
+      },
+      "effectiveAllowedPaths": 7,
+      "actuallyCopiedPaths": [
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsMaterialVerifier.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsPacketBudget.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsPacketDecoder.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsHttp.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsSse.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseLifecycleTest.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseTest.java"
+      ],
+      "inheritedOtherSource": 623,
+      "sourceCount": 630,
+      "exit": 0,
+      "suites": [
+        {
+          "name": "cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest",
+          "tests": "1",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0",
+          "time": "8.65"
+        }
+      ],
+      "finiteTargetCount": 395,
+      "children": [
+        ".local/iam-o2b-f2c2a-sse/peers/forced-release-b775f5d3-ac33-4bb1-b474-9a527bb66ff8"
+      ],
+      "command": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/spi-forced-release-exit/command.json",
+        "bytes": 474,
+        "sha256": "2cdd1ac7c063d07a7ac910ea7d699ea40fc19fa765c26ba12e405184b55545b0"
+      },
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/spi-forced-release-exit/raw.log",
+        "bytes": 5043,
+        "sha256": "c75bfc0914172c0a9eb778be6ebd62eb2d8f3f67fb68b17e795055a45d54a5a4"
+      },
+      "startedAt": "2026-10-21T16:04:43.676310+00:00",
+      "completedAt": "2026-10-21T16:05:04.711503+00:00"
+    },
+    {
+      "stage": "final-candidate",
+      "result": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/final-candidate/result.json",
+        "bytes": 1175,
+        "sha256": "b3b1a1547a66b3bfddb65a2f04bca340bc1828cecec132023aeea4a578d80daa"
+      },
+      "sourceEpoch": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/final-candidate/source.json",
+        "bytes": 124057,
+        "sha256": "ff57930c75f8518eaf9587c03879aa4894ac06e5de324f763ed4d0a1855825e6"
+      },
+      "effectiveAllowedPaths": 7,
+      "actuallyCopiedPaths": [
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsMaterialVerifier.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsPacketBudget.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsPacketDecoder.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsHttp.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsSse.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseLifecycleTest.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseTest.java"
+      ],
+      "inheritedOtherSource": 623,
+      "sourceCount": 630,
+      "exit": 1,
+      "suites": [
+        {
+          "name": "cn.agentplatform.gateway.infra.PortalEventsPacketDecoderTest",
+          "tests": "1",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0",
+          "time": "0.164"
+        },
+        {
+          "name": "cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest",
+          "tests": "22",
+          "failures": "1",
+          "errors": "0",
+          "skipped": "0",
+          "time": "129.782"
+        },
+        {
+          "name": "cn.agentplatform.gateway.infra.PortalRunEventsSseTest",
+          "tests": "6",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0",
+          "time": "19.566"
+        }
+      ],
+      "finiteTargetCount": 399,
+      "children": [
+        ".local/iam-o2b-f2c2a-sse/peers/abort-order-96835747-0479-4a46-8043-04c6cf2ee7b2",
+        ".local/iam-o2b-f2c2a-sse/peers/action-retention-eaa734a1-32ad-41a2-99be-420736a37882",
+        ".local/iam-o2b-f2c2a-sse/peers/backpressure-5958a60b-3b88-4294-9194-7bccb9de2224",
+        ".local/iam-o2b-f2c2a-sse/peers/backpressure-resume-3c32f804-fd1f-44f9-9b93-60cdad9ffce8",
+        ".local/iam-o2b-f2c2a-sse/peers/bad-profile-c0dda995-f8da-49f1-af57-5c2e91984980",
+        ".local/iam-o2b-f2c2a-sse/peers/bootstrap-bad-receipt-63457a9e-4de3-4713-a8bd-5c10956a57cc",
+        ".local/iam-o2b-f2c2a-sse/peers/bootstrap-late-0d8eeca1-f83a-4109-96fa-4f26e1b09050",
+        ".local/iam-o2b-f2c2a-sse/peers/bounds-7cafddec-b36a-4d25-ae73-5b887b257ce4",
+        ".local/iam-o2b-f2c2a-sse/peers/completion-retention-5a5d8fd4-8319-485e-98e3-3457d95a8a7d",
+        ".local/iam-o2b-f2c2a-sse/peers/eof-07fae852-b3d6-46ee-bc7b-34fc2a56f718",
+        ".local/iam-o2b-f2c2a-sse/peers/forced-release-ee839110-92c5-461b-83f6-e26d7444beef",
+        ".local/iam-o2b-f2c2a-sse/peers/freshness-partial-4d35b54d-992a-40da-90aa-f6f91c05d1a6",
+        ".local/iam-o2b-f2c2a-sse/peers/freshness-revoke-b5872aeb-be84-4928-b88b-1385c3cab6f1",
+        ".local/iam-o2b-f2c2a-sse/peers/generation-after-getter-6ef3b892-d27b-4365-b9e3-165da9cdb63d",
+        ".local/iam-o2b-f2c2a-sse/peers/generation-after-write-df95e361-e030-46e4-bde3-bb43930938c4",
+        ".local/iam-o2b-f2c2a-sse/peers/generation-before-flush-0f13a969-aa1c-45e3-87b8-2c0986f4f999",
+        ".local/iam-o2b-f2c2a-sse/peers/generation-before-getter-e9c480a0-727f-4391-bced-15329c40ae22",
+        ".local/iam-o2b-f2c2a-sse/peers/generation-before-ready-9805cc43-e839-447f-9324-9bff0643412d",
+        ".local/iam-o2b-f2c2a-sse/peers/generation-before-write-8d2e4c7e-572b-4ae5-8551-8e6f46c64354",
+        ".local/iam-o2b-f2c2a-sse/peers/heavy-retention-38f8b361-fa64-41eb-930e-9a29384162a4",
+        ".local/iam-o2b-f2c2a-sse/peers/idle-b59f5472-a023-4893-a702-a112ed05de2e",
+        ".local/iam-o2b-f2c2a-sse/peers/keepalive-199b295e-1035-4932-bc38-c4182374e4f9",
+        ".local/iam-o2b-f2c2a-sse/peers/legacy-reentrant-8c81edb8-9206-45c6-a0dc-070c38028e16",
+        ".local/iam-o2b-f2c2a-sse/peers/legacy-retention-5190a20a-1db5-40c4-b401-b8843898b9e3",
+        ".local/iam-o2b-f2c2a-sse/peers/legacy-single-7d3f4243-7b99-48f0-832e-9991ae0c95c9",
+        ".local/iam-o2b-f2c2a-sse/peers/light-shell-d0f86fe3-e0a7-4e9e-9a8b-07564f4b81cd",
+        ".local/iam-o2b-f2c2a-sse/peers/long-id-405b7cb1-9ecb-4d61-832d-8f006e613178",
+        ".local/iam-o2b-f2c2a-sse/peers/not-ready-idle-306e040f-0bad-47bd-95a8-238fa37529f7",
+        ".local/iam-o2b-f2c2a-sse/peers/pending-flush-drain-e08bc32c-e6b9-4c51-abd5-b4085f4c4f2b",
+        ".local/iam-o2b-f2c2a-sse/peers/pending-flush-generation-237c70ad-2afc-4d7c-8ecc-52a2a1ce8625",
+        ".local/iam-o2b-f2c2a-sse/peers/pending-flush-revoke-6921d59d-a20b-4c20-8b16-48c817636fe1",
+        ".local/iam-o2b-f2c2a-sse/peers/precision-88edbea6-2cbd-489a-b813-32cbca7d3388",
+        ".local/iam-o2b-f2c2a-sse/peers/processor-reuse-2911d043-19ae-421f-a170-b21cf9dc9694",
+        ".local/iam-o2b-f2c2a-sse/peers/raw-f3df07c8-cdf1-422d-b49a-bb5216d5bde1",
+        ".local/iam-o2b-f2c2a-sse/peers/raw-writer-4ae67d48-0dcc-47f1-ad59-bf421cd6486f",
+        ".local/iam-o2b-f2c2a-sse/peers/reset-b0bc9136-2917-405b-aa13-94a34017dcc2",
+        ".local/iam-o2b-f2c2a-sse/peers/sequence-08ab872f-1557-4e05-a561-79ea291f3cae",
+        ".local/iam-o2b-f2c2a-sse/peers/spaces-1017ee46-d771-4bda-875f-92ab7968ccd5"
+      ],
+      "command": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/final-candidate/command.json",
+        "bytes": 518,
+        "sha256": "d55928c118ec1aa26a83b4324e1cc2bd24374877aae3460e7e2b3aa2f70f209d"
+      },
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/final-candidate/raw.log",
+        "bytes": 19689,
+        "sha256": "d8197693aa5685abd6d62c567ca7633f832f8784e23ba4703076a1c45e7aa8af"
+      },
+      "startedAt": "2026-10-21T16:05:59.947728+00:00",
+      "completedAt": "2026-10-21T16:08:32.935001+00:00"
+    },
+    {
+      "stage": "spi-light-shell-admission",
+      "result": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/spi-light-shell-admission/result.json",
+        "bytes": 653,
+        "sha256": "13342c12e379fe0c17b9a60908b573ddf8bc346f8bcbd732e87ac877b764f84d"
+      },
+      "sourceEpoch": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/spi-light-shell-admission/source.json",
+        "bytes": 124057,
+        "sha256": "e4bb4f1fcd18df2eebc99d2e5d676197cc53dc5509ff5c5f21979c3d5515f6ae"
+      },
+      "effectiveAllowedPaths": 7,
+      "actuallyCopiedPaths": [
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsMaterialVerifier.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsPacketBudget.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsPacketDecoder.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsHttp.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsSse.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseLifecycleTest.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseTest.java"
+      ],
+      "inheritedOtherSource": 623,
+      "sourceCount": 630,
+      "exit": 0,
+      "suites": [
+        {
+          "name": "cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest",
+          "tests": "1",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0",
+          "time": "6.453"
+        }
+      ],
+      "finiteTargetCount": 395,
+      "children": [
+        ".local/iam-o2b-f2c2a-sse/peers/light-shell-8b934686-02c1-4505-a1bc-c8f190efe542"
+      ],
+      "command": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/spi-light-shell-admission/command.json",
+        "bytes": 469,
+        "sha256": "c0e9e040c6d989599813b9cbef9d7737d0cea4f5fa661528cbe2481113dcb555"
+      },
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/spi-light-shell-admission/raw.log",
+        "bytes": 5043,
+        "sha256": "ccdda2a4f2a8d1d0e3d46b9d5534c79f0fc825f82f9f29eabc5cc36c5b28b102"
+      },
+      "startedAt": "2026-10-21T16:09:28.310027+00:00",
+      "completedAt": "2026-10-21T16:09:52.714997+00:00"
+    },
+    {
+      "stage": "final-candidate-safe",
+      "result": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/final-candidate-safe/result.json",
+        "bytes": 1183,
+        "sha256": "2e7d43513c1dd9c8cde52fcd2e948e697325a5a61276df227d0b864ed910c133"
+      },
+      "sourceEpoch": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/final-candidate-safe/source.json",
+        "bytes": 124057,
+        "sha256": "e4bb4f1fcd18df2eebc99d2e5d676197cc53dc5509ff5c5f21979c3d5515f6ae"
+      },
+      "effectiveAllowedPaths": 7,
+      "actuallyCopiedPaths": [
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsMaterialVerifier.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsPacketBudget.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsPacketDecoder.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsHttp.java",
+        "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsSse.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseLifecycleTest.java",
+        "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseTest.java"
+      ],
+      "inheritedOtherSource": 623,
+      "sourceCount": 630,
+      "exit": 0,
+      "suites": [
+        {
+          "name": "cn.agentplatform.gateway.infra.PortalEventsPacketDecoderTest",
+          "tests": "1",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0",
+          "time": "0.164"
+        },
+        {
+          "name": "cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest",
+          "tests": "22",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0",
+          "time": "134.872"
+        },
+        {
+          "name": "cn.agentplatform.gateway.infra.PortalRunEventsSseTest",
+          "tests": "6",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0",
+          "time": "19.3"
+        }
+      ],
+      "finiteTargetCount": 399,
+      "children": [
+        ".local/iam-o2b-f2c2a-sse/peers/abort-order-524c66e6-140c-4fa4-aef0-0a3157ff59a6",
+        ".local/iam-o2b-f2c2a-sse/peers/action-retention-091dde7e-5497-4a07-96f0-edaa150928d1",
+        ".local/iam-o2b-f2c2a-sse/peers/backpressure-fc7e9129-dcb0-4b6f-b51f-6031d8284031",
+        ".local/iam-o2b-f2c2a-sse/peers/backpressure-resume-e7be3b67-998a-4b94-af9a-e0667fdb00ab",
+        ".local/iam-o2b-f2c2a-sse/peers/bad-profile-c29630ef-d6c6-4749-aa14-81501f2c84dc",
+        ".local/iam-o2b-f2c2a-sse/peers/bootstrap-bad-receipt-c1df5b80-1917-484f-9d7e-3e739d5472e7",
+        ".local/iam-o2b-f2c2a-sse/peers/bootstrap-late-51d730bb-c6c7-41c9-82fb-930b01f319ca",
+        ".local/iam-o2b-f2c2a-sse/peers/bounds-346f4b0f-7c0b-45f6-bbad-e4b9998a8f56",
+        ".local/iam-o2b-f2c2a-sse/peers/completion-retention-ed2788b4-f060-4b4e-8714-d2952f8699a0",
+        ".local/iam-o2b-f2c2a-sse/peers/eof-e5ac3384-3752-472a-b20d-fda5abcb2a8b",
+        ".local/iam-o2b-f2c2a-sse/peers/forced-release-2f609504-9315-4884-9b7f-860f2b4753e9",
+        ".local/iam-o2b-f2c2a-sse/peers/freshness-partial-8095c691-e51b-46b7-bb19-d483712eafb2",
+        ".local/iam-o2b-f2c2a-sse/peers/freshness-revoke-8d1a879c-d327-4bbd-9fcb-b5479710948a",
+        ".local/iam-o2b-f2c2a-sse/peers/generation-after-getter-92bba2a9-019b-4f83-b09a-60fa4adb5b9e",
+        ".local/iam-o2b-f2c2a-sse/peers/generation-after-write-dc46b917-c161-4e67-a3c7-329aa62b71f4",
+        ".local/iam-o2b-f2c2a-sse/peers/generation-before-flush-a1c74adc-8b7f-4b42-982e-4e75c6fff953",
+        ".local/iam-o2b-f2c2a-sse/peers/generation-before-getter-90e0daef-5c1a-4c2f-b5ce-05857cb84ce0",
+        ".local/iam-o2b-f2c2a-sse/peers/generation-before-ready-28ef869e-fd17-41d6-819a-e622b0a937e4",
+        ".local/iam-o2b-f2c2a-sse/peers/generation-before-write-30ccf021-b79e-4b27-8db9-f1c32493ef65",
+        ".local/iam-o2b-f2c2a-sse/peers/heavy-retention-4dd74a2a-f4ad-4841-b15b-003e50e28ea3",
+        ".local/iam-o2b-f2c2a-sse/peers/idle-2b4f0d64-b44d-42fe-92e3-d42c09d2dc1b",
+        ".local/iam-o2b-f2c2a-sse/peers/keepalive-816688f0-ea4d-4a2b-9ba7-977e84efd776",
+        ".local/iam-o2b-f2c2a-sse/peers/legacy-reentrant-9fbb2339-4482-410a-b69b-2737caaff9a0",
+        ".local/iam-o2b-f2c2a-sse/peers/legacy-retention-5ebb46dc-86b0-48ab-a1e2-1a86bb63585e",
+        ".local/iam-o2b-f2c2a-sse/peers/legacy-single-78137067-da8e-4e96-b252-d61587ac8992",
+        ".local/iam-o2b-f2c2a-sse/peers/light-shell-97480822-41f6-4feb-b5ae-68fb92daf16e",
+        ".local/iam-o2b-f2c2a-sse/peers/long-id-8e14c089-41fc-4b6f-8d52-c82f910e6a92",
+        ".local/iam-o2b-f2c2a-sse/peers/not-ready-idle-276ed868-f520-4c49-8e68-29fab15f3b7d",
+        ".local/iam-o2b-f2c2a-sse/peers/pending-flush-drain-281c66fc-31df-4842-a929-bc4cb07cd98b",
+        ".local/iam-o2b-f2c2a-sse/peers/pending-flush-generation-34adb8c6-7957-44fc-a424-6d4227074bee",
+        ".local/iam-o2b-f2c2a-sse/peers/pending-flush-revoke-dac07e3d-8d8a-4f08-9529-f4700afdcb58",
+        ".local/iam-o2b-f2c2a-sse/peers/precision-0ad699ea-4249-4ed1-8ba0-a04ca8727688",
+        ".local/iam-o2b-f2c2a-sse/peers/processor-reuse-b68ee439-cb55-4dd4-b335-27b9b31c1b29",
+        ".local/iam-o2b-f2c2a-sse/peers/raw-0b507451-a3c7-40cb-8dcc-1d8a3d6b305f",
+        ".local/iam-o2b-f2c2a-sse/peers/raw-writer-fd726776-5ef2-49fc-a765-da9a06a1886a",
+        ".local/iam-o2b-f2c2a-sse/peers/reset-b4e27a6e-e1d4-4fac-9f07-71cc7fde097b",
+        ".local/iam-o2b-f2c2a-sse/peers/sequence-7c9614a4-85b3-4334-a714-973ba21cefe7",
+        ".local/iam-o2b-f2c2a-sse/peers/spaces-d2f1c179-fdc7-4549-bd65-bffa781af6ae"
+      ],
+      "command": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/final-candidate-safe/command.json",
+        "bytes": 518,
+        "sha256": "1dfe6a4e26cf95f74d86b7997b8d56f35ea635fdfd47d6cf805af384e660b69c"
+      },
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-o2b-f2c2a-sse/stages/final-candidate-safe/raw.log",
+        "bytes": 4968,
+        "sha256": "ccc06f4c1a854d90f557a551656d0a82b5310b0bf9c31b2c70b1baaaa693a130"
+      },
+      "startedAt": "2026-10-21T16:10:19.663378+00:00",
+      "completedAt": "2026-10-21T16:12:57.206317+00:00"
+    }
+  ]
+}

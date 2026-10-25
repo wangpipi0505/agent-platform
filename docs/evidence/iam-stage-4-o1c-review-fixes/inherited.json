@@ -1,0 +1,36 @@
+{
+  "source": {
+    "file": "docs/evidence/iam-stage-4-o1c-gateway-status/source-after.json",
+    "bytes": 111133,
+    "sha256": "047196ce0cfc82590e6fb68b7bba71a0ad99d9a17e493284711b6dcc529edd7e"
+  },
+  "target": {
+    "file": "docs/evidence/iam-stage-4-o1c-gateway-status/target-after.json",
+    "bytes": 415442,
+    "sha256": "f27b51ec7e455d029d5f9f138d20c1ddf8ed21ef6eaab2c47a05147bec6f8ea1"
+  },
+  "rootAudit": {
+    "file": ".local/iam-o1c-root-check.json",
+    "bytes": 9953,
+    "sha256": "7a9868548f23e9d25e21a96555f822fd7795b3e13f5854d8d71ae763c66e30cc"
+  },
+  "correctionIdentity": {
+    "file": "docs/evidence/iam-stage-4-o1c-executed-source-correction.json",
+    "bytes": 28824,
+    "sha256": "968a3b7a9a2099578df83b933f9313ff82c8c103bee6ccfb160f225000a447c2"
+  },
+  "correctionTopLevelKeys": [
+    "at",
+    "purpose",
+    "original",
+    "finding",
+    "count",
+    "different",
+    "rows",
+    "limits",
+    "rootDiscoveryCorrection"
+  ],
+  "readLimit": "Correction schema only; original 26/31 attribution accepted from independent supplement, not re-audited",
+  "countSource": 585,
+  "countTarget": 2005
+}

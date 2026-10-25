@@ -1,0 +1,129 @@
+skill-registry\src\test\java\cn\agentplatform\skill\infra\ArtifactPersistenceTest.java:123:        var adapter = new SkillAdapters(store, null);
+skill-registry\src\test\java\cn\agentplatform\skill\infra\ArtifactPersistenceTest.java:173:        var adapters = new SkillAdapters(store, null);
+skill-registry\src\test\java\cn\agentplatform\skill\infra\ArtifactReferenceTest.java:22:        var adapter = new SkillAdapters(new ArtifactStore(Map.of()), null);
+skill-registry\src\test\java\cn\agentplatform\skill\infra\SkillAttemptPropagationTest.java:18:        var adapters = new SkillAdapters(mock(ArtifactStore.class), algorithm, async);
+skill-registry\src\test\java\cn\agentplatform\skill\infra\SkillAttemptPropagationTest.java:24:                                    adapters.invoke(
+skill-registry\src\test\java\cn\agentplatform\skill\infra\SkillAttemptPropagationTest.java:37:                () -> new McpAdapter().invoke(Map.of(), Map.of(), 1, "run", 0, adapters));
+skill-registry\src\test\java\cn\agentplatform\skill\infra\SkillAttemptPropagationTest.java:41:                        new AlgorithmAdapter(null)
+skill-registry\src\test\java\cn\agentplatform\skill\infra\SkillAttemptPropagationTest.java:42:                                .invoke(Map.of(), Map.of(), "key", 1, false, adapters, "run", 0));
+skill-registry\src\test\java\cn\agentplatform\skill\infra\SkillAttemptPropagationTest.java:46:                        new HttpAsyncAdapter(null)
+skill-registry\src\test\java\cn\agentplatform\skill\infra\SkillAttemptPropagationTest.java:47:                                .invoke(Map.of(), Map.of(), "key", 1, false, "run", 0, adapters));
+skill-registry\src\test\java\cn\agentplatform\skill\infra\SkillAttemptPropagationTest.java:54:        var adapters = new SkillAdapters(mock(ArtifactStore.class), algorithm, async);
+skill-registry\src\test\java\cn\agentplatform\skill\infra\SkillAttemptPropagationTest.java:57:        adapters.invoke(algoContract, args, "key", 4, true, "run", 37);
+skill-registry\src\test\java\cn\agentplatform\skill\infra\SkillAttemptPropagationTest.java:58:        verify(algorithm).invoke(algoContract, args, "key", 4, true, adapters, "run", 37);
+skill-registry\src\test\java\cn\agentplatform\skill\infra\SkillAttemptPropagationTest.java:60:        adapters.invoke(httpContract, args, "key", 4, true, "run", 37);
+skill-registry\src\test\java\cn\agentplatform\skill\infra\SkillAttemptPropagationTest.java:61:        verify(async).invoke(httpContract, args, "key", 4, true, "run", 37, adapters);
+skill-registry\src\test\java\cn\agentplatform\skill\application\SkillStatisticsPostgresTest.java:8:import cn.agentplatform.skill.api.SkillController;
+skill-registry\src\test\java\cn\agentplatform\skill\infra\HttpAsyncAttemptFenceTest.java:140:        adapter = new HttpAsyncAdapter(db);
+skill-registry\src\test\java\cn\agentplatform\skill\infra\HttpAsyncAttemptFenceTest.java:141:        outputs = new SkillAdapters(new ArtifactStore(db), new AlgorithmAdapter(db), adapter);
+skill-registry\src\test\java\cn\agentplatform\skill\infra\HttpAsyncAttemptFenceTest.java:155:        return target.invoke(
+skill-registry\src\test\java\cn\agentplatform\skill\infra\HttpAsyncAttemptFenceTest.java:195:        assertThrows(RuntimeException.class, () -> invoke(new HttpAsyncAdapter(racing), false));
+skill-registry\src\test\java\cn\agentplatform\skill\infra\HttpAsyncAttemptFenceTest.java:244:        assertThrows(RuntimeException.class, () -> invoke(new HttpAsyncAdapter(racing), false));
+skill-registry\src\test\java\cn\agentplatform\skill\infra\McpExecutionPostgresTest.java:7:import cn.agentplatform.skill.application.*;
+skill-registry\src\test\java\cn\agentplatform\skill\infra\McpExecutionPostgresTest.java:55:        peer = new McpAdapterTest.Peer();
+skill-registry\src\test\java\cn\agentplatform\skill\infra\McpExecutionPostgresTest.java:102:                        new SkillAdapters(artifacts, mock(AlgorithmAdapter.class)),
+skill-registry\src\test\java\cn\agentplatform\skill\infra\HttpSchemaBoundaryTest.java:50:        adapters = new SkillAdapters(mock(ArtifactStore.class), mock(AlgorithmAdapter.class));
+skill-registry\src\test\java\cn\agentplatform\skill\infra\HttpSchemaBoundaryTest.java:64:        return adapters.invoke(
+skill-registry\src\test\java\cn\agentplatform\skill\application\SkillExecutionTest.java:7:import cn.agentplatform.skill.infra.*;
+skill-registry\src\test\java\cn\agentplatform\skill\application\SkillExecutionTest.java:75:        adapters = new SkillAdapters(new ArtifactStore(db), new AlgorithmAdapter(db));
+skill-registry\src\test\java\cn\agentplatform\skill\infra\OpenApiHttpMappingTest.java:7:import cn.agentplatform.skill.application.SkillCatalog;
+skill-registry\src\test\java\cn\agentplatform\skill\infra\OpenApiHttpMappingTest.java:147:            new SkillAdapters(mock(ArtifactStore.class), mock(AlgorithmAdapter.class))
+skill-registry\src\test\java\cn\agentplatform\skill\infra\OpenApiHttpMappingTest.java:148:                    .invoke(
+skill-registry\src\test\java\cn\agentplatform\skill\infra\OpenApiHttpMappingTest.java:198:            new SkillAdapters(mock(ArtifactStore.class), mock(AlgorithmAdapter.class))
+skill-registry\src\test\java\cn\agentplatform\skill\infra\OpenApiHttpMappingTest.java:199:                    .invoke(body, Map.of("id", "item", "body", "hello"), "key", 1, false, null, 1);
+skill-registry\src\test\java\cn\agentplatform\skill\application\AsyncHttpExecutionTest.java:7:import cn.agentplatform.skill.infra.*;
+skill-registry\src\test\java\cn\agentplatform\skill\application\AsyncHttpExecutionTest.java:289:                        new SkillAdapters(
+skill-registry\src\test\java\cn\agentplatform\skill\application\AsyncHttpExecutionTest.java:291:                                new AlgorithmAdapter(db),
+skill-registry\src\test\java\cn\agentplatform\skill\application\AsyncHttpExecutionTest.java:292:                                new HttpAsyncAdapter(db)),
+skill-registry\src\test\java\cn\agentplatform\skill\application\AsyncHttpExecutionTest.java:668:                        new SkillAdapters(
+skill-registry\src\test\java\cn\agentplatform\skill\application\AsyncHttpExecutionTest.java:670:                                new AlgorithmAdapter(db),
+skill-registry\src\test\java\cn\agentplatform\skill\application\AsyncHttpExecutionTest.java:671:                                new HttpAsyncAdapter(db)),
+skill-registry\src\test\java\cn\agentplatform\skill\infra\McpManagementTest.java:8:import cn.agentplatform.skill.api.SkillController;
+skill-registry\src\test\java\cn\agentplatform\skill\infra\McpManagementTest.java:9:import cn.agentplatform.skill.application.*;
+skill-registry\src\test\java\cn\agentplatform\skill\infra\McpManagementTest.java:102:        peer = new McpAdapterTest.Peer();
+skill-registry\src\test\java\cn\agentplatform\skill\infra\McpAdapterTest.java:32:        adapters = new SkillAdapters(mock(ArtifactStore.class), mock(AlgorithmAdapter.class));
+skill-registry\src\test\java\cn\agentplatform\skill\infra\McpAdapterTest.java:86:        return adapters.invoke(
+skill-registry\src\test\java\cn\agentplatform\skill\infra\McpAdapterTest.java:93:        return adapters.invoke(c, Map.of("region", "A"), "stable-key", 1, false, "run-1", 1);
+skill-registry\src\test\java\cn\agentplatform\skill\infra\McpAdapterTest.java:134:                                adapters.invoke(
+skill-registry\src\test\java\cn\agentplatform\skill\infra\McpAdapterTest.java:154:                                adapters.invoke(
+skill-registry\src\test\java\cn\agentplatform\skill\infra\McpAdapterTest.java:322:                                adapters.invoke(
+skill-registry\src\test\java\cn\agentplatform\skill\infra\McpAdapterTest.java:421:                                adapters.invoke(
+skill-registry\src\test\java\cn\agentplatform\skill\infra\McpAdapterTest.java:457:                                adapters.invoke(
+skill-registry\src\test\java\cn\agentplatform\skill\infra\McpAdapterTest.java:515:                                    adapters.invoke(
+skill-registry\src\test\java\cn\agentplatform\skill\infra\McpAdapterTest.java:526:                                    adapters.invoke(
+skill-registry\src\test\java\cn\agentplatform\skill\infra\McpAdapterTest.java:546:                                        adapters.invoke(
+skill-registry\src\test\java\cn\agentplatform\skill\api\OpenApiImportControllerTest.java:8:import cn.agentplatform.skill.application.OpenApiImports;
+skill-registry\src\test\java\cn\agentplatform\skill\infra\McpSchemaBoundaryTest.java:19:        fixture = new McpAdapterTest();
+skill-registry\src\test\java\cn\agentplatform\skill\infra\McpSchemaBoundaryTest.java:35:            fixture.invoke(false);
+skill-registry\src\test\java\cn\agentplatform\skill\infra\McpSchemaBoundaryTest.java:134:                assertDoesNotThrow(() -> fixture.invoke(false)).structured().path("value").asInt());
+skill-registry\src\test\java\cn\agentplatform\skill\infra\McpSchemaBoundaryTest.java:153:                assertDoesNotThrow(() -> fixture.invoke(false)).structured().path("value").asInt());
+skill-registry\src\test\java\cn\agentplatform\skill\infra\McpSchemaBoundaryTest.java:165:                assertDoesNotThrow(() -> fixture.invoke(false)).structured().path("value").asInt());
+skill-registry\src\test\java\cn\agentplatform\skill\infra\McpSchemaBoundaryTest.java:218:                assertDoesNotThrow(() -> fixture.invoke(false)).structured().path("value").asInt());
+skill-registry\src\test\java\cn\agentplatform\skill\infra\McpSchemaBoundaryTest.java:231:                                fixture.adapters.invoke(
+skill-registry\src\test\java\cn\agentplatform\skill\infra\McpSchemaBoundaryTest.java:258:                                fixture.adapters.invoke(
+skill-registry\src\test\java\cn\agentplatform\skill\infra\McpSchemaBoundaryTest.java:290:                                fixture.adapters.invoke(
+skill-registry\src\test\java\cn\agentplatform\skill\application\OpenApiImportPersistenceTest.java:7:import cn.agentplatform.skill.infra.SkillClients;
+skill-registry\src\test\java\cn\agentplatform\skill\application\CallbackHttpTest.java:7:import cn.agentplatform.skill.infra.*;
+skill-registry\src\test\java\cn\agentplatform\skill\application\CallbackHttpTest.java:218:                new SkillAdapters(
+skill-registry\src\test\java\cn\agentplatform\skill\application\CallbackHttpTest.java:219:                        new ArtifactStore(db), new AlgorithmAdapter(db), new HttpAsyncAdapter(db));
+skill-registry\src\test\java\cn\agentplatform\skill\application\ReconciliationProofTest.java:6:import cn.agentplatform.skill.api.ReconciliationProofController;
+skill-registry\src\test\java\cn\agentplatform\skill\application\ReconciliationProofTest.java:7:import cn.agentplatform.skill.api.SkillController;
+skill-registry\src\test\java\cn\agentplatform\skill\application\ReconciliationProofTest.java:8:import cn.agentplatform.skill.infra.*;
+skill-registry\src\test\java\cn\agentplatform\skill\application\ReconciliationProofTest.java:296:                        new SkillAdapters(
+skill-registry\src\test\java\cn\agentplatform\skill\application\ReconciliationProofTest.java:298:                                new AlgorithmAdapter(db),
+skill-registry\src\test\java\cn\agentplatform\skill\application\ReconciliationProofTest.java:299:                                new HttpAsyncAdapter(db)),
+skill-registry\src\test\java\cn\agentplatform\skill\infra\McpResourceLifecycleTest.java:16:        try (var peer = new McpAdapterTest.Peer()) {
+skill-registry\src\main\java\cn\agentplatform\skill\infra\SkillAdapters.java:6:import cn.agentplatform.skill.domain.SkillRules;
+skill-registry\src\main\java\cn\agentplatform\skill\infra\SkillAdapters.java:110:                            ? asyncHttp.invoke(
+skill-registry\src\main\java\cn\agentplatform\skill\infra\SkillAdapters.java:126:                    algorithm.invoke(
+skill-registry\src\main\java\cn\agentplatform\skill\infra\SkillAdapters.java:373:        return new McpAdapter().invoke(contract, arguments, callId, runId, expectedAttempt, this);
+skill-registry\src\main\java\cn\agentplatform\skill\infra\OpenApiHttpMapping.java:4:import cn.agentplatform.skill.domain.SkillRules;
+skill-registry\src\main\java\cn\agentplatform\skill\infra\McpAdapter.java:7:import cn.agentplatform.skill.domain.SkillRules;
+skill-registry\src\main\java\cn\agentplatform\skill\infra\McpAdapter.java:53:            throw new SkillAdapters.Failure("QUOTA", false, "MCP本机并发会话已满，请稍后重试");
+skill-registry\src\main\java\cn\agentplatform\skill\infra\McpAdapter.java:68:                throw new SkillAdapters.Failure("PARAM_ERROR", false, "MCP服务器没有声明工具能力");
+skill-registry\src\main\java\cn\agentplatform\skill\infra\McpAdapter.java:73:                    throw new SkillAdapters.Failure("OUTPUT_INVALID", false, "MCP工具分页超过16页");
+skill-registry\src\main\java\cn\agentplatform\skill\infra\McpAdapter.java:76:                    throw new SkillAdapters.Failure("OUTPUT_INVALID", false, "MCP工具列表为空响应");
+skill-registry\src\main\java\cn\agentplatform\skill\infra\McpAdapter.java:80:                    throw new SkillAdapters.Failure("OUTPUT_INVALID", false, "MCP工具分页游标无效或循环");
+skill-registry\src\main\java\cn\agentplatform\skill\infra\McpAdapter.java:84:                throw new SkillAdapters.Failure("PARAM_ERROR", false, "MCP服务器没有可用工具");
+skill-registry\src\main\java\cn\agentplatform\skill\infra\McpAdapter.java:119:                                            new SkillAdapters.Failure(
+skill-registry\src\main\java\cn\agentplatform\skill\infra\McpAdapter.java:127:                throw new SkillAdapters.Failure("PARAM_ERROR", false, "参数不同时符合冻结与当前MCP工具Schema");
+skill-registry\src\main\java\cn\agentplatform\skill\infra\McpAdapter.java:134:                throw new SkillAdapters.Failure(
+skill-registry\src\main\java\cn\agentplatform\skill\infra\McpAdapter.java:148:                throw new SkillAdapters.Failure("NO_PERMISSION", false, "MCP认证引用不允许用于当前租户");
+skill-registry\src\main\java\cn\agentplatform\skill\infra\McpAdapter.java:158:                throw new SkillAdapters.Failure("RESULT_UNKNOWN", true, "MCP调用已开始，外部效果尚未核实，禁止自动重发");
+skill-registry\src\main\java\cn\agentplatform\skill\infra\McpAdapter.java:160:            throw new SkillAdapters.Failure("RETRYABLE_FAILURE", false, "MCP连接、协议或总时限检查失败");
+skill-registry\src\main\java\cn\agentplatform\skill\infra\HttpAsyncAdapter.java:6:import cn.agentplatform.skill.domain.SkillRules;
+skill-registry\src\main\java\cn\agentplatform\skill\infra\HttpAsyncAdapter.java:353:                                throw new SkillAdapters.Failure(
+skill-registry\src\main\java\cn\agentplatform\skill\infra\HttpAsyncAdapter.java:400:        return new SkillAdapters.Failure("RESULT_UNKNOWN", true, message);
+skill-registry\src\main\java\cn\agentplatform\skill\infra\BoundedMcpSseTransport.java:5:import cn.agentplatform.skill.domain.SkillRules;
+skill-registry\src\main\java\cn\agentplatform\skill\infra\BoundedMcpSseTransport.java:90:        if (nanos <= 0) throw new SkillAdapters.Failure("RETRYABLE_FAILURE", false, "MCP会话总时限已到");
+skill-registry\src\main\java\cn\agentplatform\skill\infra\BoundedMcpSseTransport.java:281:        return new SkillAdapters.Failure("OUTPUT_INVALID", false, message);
+skill-registry\src\main\java\cn\agentplatform\skill\infra\BoundedMcpSseTransport.java:286:        throw new SkillAdapters.Failure(
+skill-registry\src\main\java\cn\agentplatform\skill\infra\BoundedMcpSseTransport.java:315:                                            throw new SkillAdapters.Failure(
+skill-registry\src\main\java\cn\agentplatform\skill\infra\BoundedMcpSseTransport.java:323:                                            throw new SkillAdapters.Failure(
+skill-registry\src\main\java\cn\agentplatform\skill\infra\BoundedMcpSseTransport.java:399:                            : new SkillAdapters.Failure(
+skill-registry\src\main\java\cn\agentplatform\skill\infra\BoundedMcpSseTransport.java:450:                throw new SkillAdapters.Failure("PARAM_ERROR", false, "固定MCP SDK仅支持2024-11-05协议");
+skill-registry\src\main\java\cn\agentplatform\skill\infra\ArtifactStore.java:5:import cn.agentplatform.skill.domain.SkillRules;
+skill-registry\src\main\java\cn\agentplatform\skill\api\ArtifactController.java:3:import cn.agentplatform.skill.infra.ArtifactStore;
+skill-registry\src\main\java\cn\agentplatform\skill\api\OpenApiImportController.java:4:import cn.agentplatform.skill.application.OpenApiImports;
+skill-registry\src\main\java\cn\agentplatform\skill\api\ReconciliationProofController.java:4:import cn.agentplatform.skill.application.ReconciliationProofs;
+skill-registry\src\main\java\cn\agentplatform\skill\api\SkillCallbackController.java:4:import cn.agentplatform.skill.application.SkillCallbacks;
+skill-registry\src\main\java\cn\agentplatform\skill\api\SkillController.java:4:import cn.agentplatform.skill.application.*;
+skill-registry\src\main\java\cn\agentplatform\skill\application\SkillCallbacks.java:6:import cn.agentplatform.skill.domain.SkillRules;
+skill-registry\src\main\java\cn\agentplatform\skill\application\SkillCallbacks.java:7:import cn.agentplatform.skill.infra.*;
+skill-registry\src\main\java\cn\agentplatform\skill\application\OpenApiImports.java:4:import cn.agentplatform.skill.domain.SkillRules;
+skill-registry\src\main\java\cn\agentplatform\skill\application\OpenApiImports.java:5:import cn.agentplatform.skill.infra.OpenApiHttpMapping;
+skill-registry\src\main\java\cn\agentplatform\skill\application\SkillCatalog.java:4:import cn.agentplatform.skill.domain.SkillRules;
+skill-registry\src\main\java\cn\agentplatform\skill\application\SkillCatalog.java:5:import cn.agentplatform.skill.infra.McpAdapter;
+skill-registry\src\main\java\cn\agentplatform\skill\application\SkillCatalog.java:6:import cn.agentplatform.skill.infra.OpenApiHttpMapping;
+skill-registry\src\main\java\cn\agentplatform\skill\application\SkillCatalog.java:7:import cn.agentplatform.skill.infra.SkillAdapters;
+skill-registry\src\main\java\cn\agentplatform\skill\application\SkillCatalog.java:8:import cn.agentplatform.skill.infra.SkillClients;
+skill-registry\src\main\java\cn\agentplatform\skill\application\SkillCatalog.java:141:            return new McpAdapter().discover(candidate);
+skill-registry\src\main\java\cn\agentplatform\skill\application\SkillExecution.java:6:import cn.agentplatform.skill.domain.SkillRules;
+skill-registry\src\main\java\cn\agentplatform\skill\application\SkillExecution.java:7:import cn.agentplatform.skill.infra.*;
+skill-registry\src\main\java\cn\agentplatform\skill\application\SkillExecution.java:206:                                new SkillAdapters.Raw(
+skill-registry\src\main\java\cn\agentplatform\skill\application\SkillExecution.java:269:                            adapters.invoke(
+skill-registry\src\main\java\cn\agentplatform\skill\application\SkillExecution.java:676:                        adapters.invoke(
+skill-registry\src\main\java\cn\agentplatform\skill\application\SkillExecution.java:703:                        adapters.invoke(
+skill-registry\src\main\java\cn\agentplatform\skill\application\SkillExecution.java:730:                            new SkillAdapters.Raw(
+skill-registry\src\main\java\cn\agentplatform\skill\application\SkillGovernance.java:6:import cn.agentplatform.skill.domain.SkillRules;
+skill-registry\src\main\java\cn\agentplatform\skill\application\SkillGovernance.java:7:import cn.agentplatform.skill.infra.*;

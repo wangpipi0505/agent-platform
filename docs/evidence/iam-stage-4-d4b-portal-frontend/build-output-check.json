@@ -1,0 +1,17 @@
+{
+  "at": "2026-10-20T20:30:10.572Z",
+  "sdk": {
+    "file": "web/assistant.js/dist/assistant.js",
+    "bytes": 229151,
+    "sha256": "cde3ca987284af21afc303f0f851f7afd0acf088189f38eb42952935ce5e571f"
+  },
+  "deployed": {
+    "file": "web/webapp/dist/assistant.js",
+    "bytes": 229151,
+    "sha256": "cde3ca987284af21afc303f0f851f7afd0acf088189f38eb42952935ce5e571f"
+  },
+  "equal": true,
+  "copyCommand": "node web/shared/copy-assistant.mjs",
+  "buildSequence": "Three independent Vite builds dispatched concurrently; SDK finished first, webapp second, admin third; SDK copied to webapp/dist only after all finished. Later root-authorized copy-only PortalShell text revision rebuilt admin alone.",
+  "notCopiedToPublic": true
+}

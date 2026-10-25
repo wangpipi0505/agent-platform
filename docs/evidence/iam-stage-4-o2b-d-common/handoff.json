@@ -1,0 +1,101 @@
+{
+  "status": "author-frozen; NOT Accepted",
+  "sourceCount": 603,
+  "delta": 8,
+  "finalPhysicalRun": {
+    "stage": "iam-stage-o2b-d-final",
+    "command": "node .tools/run-iam-module-tests.mjs iam-stage-o2b-d-final admin-common GatewayPortalEventsAuthorityTest,PortalEventsChildAssociationTest,PortalEventsAuthorityProfileTest,PortalEventsReceiverClosedTest,RunObservationSelectorsTest,ServiceAuthorizationTest",
+    "tests": 87,
+    "passed": 86,
+    "failures": 1,
+    "errors": 0,
+    "skipped": 0,
+    "exit": 1,
+    "newG": 18,
+    "newChild": 22,
+    "oldA": 28,
+    "closed": 2,
+    "selector": 3,
+    "service": 14,
+    "neverRerun": true
+  },
+  "report": {
+    "file": "docs/evidence/iam-stage-4-o2b-d-common-report.md",
+    "bytes": 10468,
+    "sha256": "865bf213f2e54e7a19590d4158733a612b851fdfcb6f59bf172916f53f46f638"
+  },
+  "sourceBefore": {
+    "file": ".local/iam-o2b-d-common/source-before.json",
+    "bytes": 114375,
+    "sha256": "44192fbf077285773a9c8d35c9e89c1e6e9f1958184a16aee81ae0c211da9b54"
+  },
+  "sourceAfter": {
+    "file": ".local/iam-o2b-d-common/source-after.json",
+    "bytes": 115043,
+    "sha256": "ab4a97cab7548de056a5548e129b49c6e19c0c4692ac82fa8f4857e19ec0087c"
+  },
+  "targetBefore": {
+    "file": ".local/iam-o2b-d-common/target-before.json",
+    "bytes": 435939,
+    "sha256": "65646da310fefd754a22b1284854291de3447551ff801a2b8da9f150473eebc9"
+  },
+  "targetAfter": {
+    "file": ".local/iam-o2b-d-common/target-after.json",
+    "bytes": 441041,
+    "sha256": "5f425586d177676f2a205b5330ef9ffa63ef21ce9fd1cdd2405529aef6ce1191"
+  },
+  "finiteTargetOverlay": {
+    "file": ".local/iam-o2b-d-common/target-overlay.json",
+    "bytes": 47434,
+    "sha256": "7715e5ae8b3523de15000645314250818ed14a05baa36fe44f930ea419737796"
+  },
+  "targetOverlayCount": 213,
+  "targetLogicalCount": 2118,
+  "finalEpoch": {
+    "file": ".local/iam-o2b-d-common/iam-stage-o2b-d-final/source-epoch.json",
+    "bytes": 115043,
+    "sha256": "ab4a97cab7548de056a5548e129b49c6e19c0c4692ac82fa8f4857e19ec0087c"
+  },
+  "testResults": {
+    "file": "docs/evidence/iam-stage-4-o2b-d-common/test-results.json",
+    "bytes": 34845,
+    "sha256": "f6a7ae3a1e030d8461a36b833d658fd6303f610af30841f8694a0714eccb3960"
+  },
+  "inheritedConflict": {
+    "file": ".local/iam-o2b-d-common/inherited-selector-conflict.json",
+    "bytes": 1041,
+    "sha256": "9437aa92ab3b9460282b17afba30ae7d1cf3deece7515eaa19f991f41f6dafb5"
+  },
+  "earlyIncident": {
+    "file": ".local/iam-o2b-d-common/incident-first-patch/incident.json",
+    "bytes": 952,
+    "sha256": "e3e990b54e4e45c59b5e823aa8fb1c2e71585c2b8f1103bfbe9a93c2749f5716"
+  },
+  "finalReplay": {
+    "file": ".local/iam-o2b-d-common/final-replay-complete.json",
+    "bytes": 965,
+    "sha256": "988a6fe9d723836a42c990aa65eb74464e45a1051233ff38cbf7bcb8f74a7d33"
+  },
+  "patch": {
+    "file": "docs/evidence/iam-stage-4-o2b-d-common/final-source.patch",
+    "bytes": 132241,
+    "sha256": "1a9da0768f3a780a7060f361ee24fdd9b450ddca2dc5a6c105f03988c01b515f"
+  },
+  "replayCommands": {
+    "file": "docs/evidence/iam-stage-4-o2b-d-common/final-replay-commands.json",
+    "bytes": 147344,
+    "sha256": "c7565a75582f7fbbd7236b172c10acfe9d77ba3730089c9a06ba11ef9b36b5da"
+  },
+  "journal": ".local/iam-o2b-d-common/journal.jsonl",
+  "ownInventory": "docs/evidence/iam-stage-4-o2b-d-common/own-inventory.json",
+  "writeAuthority": "8 source files and own finite target/local/evidence/helpers/report returned to root; author frozen after inventory",
+  "rootRuling": "Fresh D review and finite root audit first. Then separate selector-only migration, independent review and exact 3-method verification; preserve original 87/1F and merge indexes once after both. Do not repair original early replay incident.",
+  "boundaries": [
+    "no production issuer deployment",
+    "no actual metadata HTTP",
+    "gateway EVENTS ingress remains closed",
+    "no PG/SSE/TLS/private wire/Servlet writer acceptance",
+    "no commits",
+    "no old indexes changed"
+  ]
+}

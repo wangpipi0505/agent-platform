@@ -1,0 +1,263 @@
+[
+  {
+    "stage": "iam-stage-o1c-fix-red01",
+    "command": {
+      "program": "node",
+      "args": [
+        ".tools/run-iam-module-tests.mjs",
+        "iam-stage-o1c-fix-red01",
+        "admin-common,platform-gateway",
+        "RunObservationGetTransportTest#declaredExcessiveLengthAbortsBeforeClosingStalledBody,RunObservationGetTransportTest#preBodyRejectionsAbortBeforeClosingStalledBody"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "executedSource": "docs/evidence/iam-stage-4-o1c-review-fixes/iam-stage-o1c-fix-red01/source-before.json",
+      "changedSourceSnapshots": ".local/iam-o1c-review-fixes/stages/iam-stage-o1c-fix-red01/pre/source/",
+      "started": "2026-10-20T23:52:11.097Z"
+    },
+    "exitCode": 1,
+    "executedSource": {
+      "file": "docs/evidence/iam-stage-4-o1c-review-fixes/iam-stage-o1c-fix-red01/source-before.json",
+      "bytes": 111133,
+      "sha256": "1ff1de150a369f7def2b73f1278d0437c7d15921cf3ef9685bfd8cbd2e37fea7"
+    },
+    "finalSource": {
+      "file": "docs/evidence/iam-stage-4-o1c-review-fixes/source-after.json",
+      "bytes": 111133,
+      "sha256": "f345e812e51c27e715580862cd3780f3e20ce929bd99fb1098c0d17045e3b697"
+    },
+    "sourceUnchangedDuringCommand": true,
+    "executedChangedSources": [
+      {
+        "file": "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PublishedRunHttp.java",
+        "bytes": 16534,
+        "sha256": "a5394662356492a8298f3bbf34c7b1cc49cd8060d3ebb21b0f054f765496d8c3"
+      },
+      {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/RunObservationGetTransportTest.java",
+        "bytes": 13893,
+        "sha256": "364021fddb07e008cd43faba02be4d6bc8d2471fe334c4e763d53768008b1a06"
+      }
+    ],
+    "finalChangedSources": [
+      {
+        "file": "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PublishedRunHttp.java",
+        "bytes": 17035,
+        "sha256": "5656dacfdd8bbb77b9b25526f135854f1ab78a573084ce7fdc6a91d4e1a7794b"
+      },
+      {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/RunObservationGetTransportTest.java",
+        "bytes": 13893,
+        "sha256": "364021fddb07e008cd43faba02be4d6bc8d2471fe334c4e763d53768008b1a06"
+      }
+    ],
+    "running": [
+      "cn.agentplatform.gateway.application.RunObservationGetTransportTest"
+    ],
+    "xml": [
+      {
+        "file": "platform-gateway/target/surefire-reports/TEST-cn.agentplatform.gateway.application.RunObservationGetTransportTest.xml",
+        "bytes": 41133,
+        "sha256": "b457af24177d3e7be9015eea64ae33cd538d9688b5aa0993df5ece536ebcd1d1"
+      },
+      {
+        "file": "platform-gateway/target/surefire-reports/cn.agentplatform.gateway.application.RunObservationGetTransportTest.txt",
+        "bytes": 1863,
+        "sha256": "b028a2988267a1d0217a918dedd24da34d0ee18fa8cafb4fa3e71a39d76903e0"
+      }
+    ],
+    "earlyRejectionCases": [
+      {
+        "requests": 1,
+        "policy": "Q",
+        "reason": "status-599",
+        "cancelled": false,
+        "installedHandles": 1,
+        "elapsedMs": 2042,
+        "cancelledHandles": 1
+      },
+      {
+        "requests": 1,
+        "policy": "Q",
+        "reason": "declared-length",
+        "cancelled": false,
+        "installedHandles": 1,
+        "elapsedMs": 2003,
+        "cancelledHandles": 1
+      }
+    ],
+    "closedRawPeers": 2,
+    "allRawPeersExactlyOneAccept": true
+  },
+  {
+    "stage": "iam-stage-o1c-fix-final01",
+    "command": {
+      "program": "node",
+      "args": [
+        ".tools/run-iam-module-tests.mjs",
+        "iam-stage-o1c-fix-final01",
+        "admin-common,platform-gateway",
+        "RunObservationGetTransportTest,GatewayRunStatusChainPostgresTest#realGatewayQueryAndStatusReturnOriginalBytes,GatewayRunStatusChainPostgresTest#partialOutputNeverAppendsOrRetries"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "executedSource": "docs/evidence/iam-stage-4-o1c-review-fixes/iam-stage-o1c-fix-final01/source-before.json",
+      "changedSourceSnapshots": ".local/iam-o1c-review-fixes/stages/iam-stage-o1c-fix-final01/pre/source/",
+      "started": "2026-10-21T00:03:57.852Z"
+    },
+    "exitCode": 0,
+    "executedSource": {
+      "file": "docs/evidence/iam-stage-4-o1c-review-fixes/iam-stage-o1c-fix-final01/source-before.json",
+      "bytes": 111133,
+      "sha256": "f345e812e51c27e715580862cd3780f3e20ce929bd99fb1098c0d17045e3b697"
+    },
+    "finalSource": {
+      "file": "docs/evidence/iam-stage-4-o1c-review-fixes/source-after.json",
+      "bytes": 111133,
+      "sha256": "f345e812e51c27e715580862cd3780f3e20ce929bd99fb1098c0d17045e3b697"
+    },
+    "sourceUnchangedDuringCommand": true,
+    "executedChangedSources": [
+      {
+        "file": "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PublishedRunHttp.java",
+        "bytes": 17035,
+        "sha256": "5656dacfdd8bbb77b9b25526f135854f1ab78a573084ce7fdc6a91d4e1a7794b"
+      },
+      {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/RunObservationGetTransportTest.java",
+        "bytes": 13893,
+        "sha256": "364021fddb07e008cd43faba02be4d6bc8d2471fe334c4e763d53768008b1a06"
+      }
+    ],
+    "finalChangedSources": [
+      {
+        "file": "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PublishedRunHttp.java",
+        "bytes": 17035,
+        "sha256": "5656dacfdd8bbb77b9b25526f135854f1ab78a573084ce7fdc6a91d4e1a7794b"
+      },
+      {
+        "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/RunObservationGetTransportTest.java",
+        "bytes": 13893,
+        "sha256": "364021fddb07e008cd43faba02be4d6bc8d2471fe334c4e763d53768008b1a06"
+      }
+    ],
+    "running": [
+      "cn.agentplatform.common.authority.GatewayRunStatusChainPostgresTest",
+      "cn.agentplatform.gateway.application.RunObservationGetTransportTest"
+    ],
+    "xml": [
+      {
+        "file": "platform-gateway/target/surefire-reports/TEST-cn.agentplatform.common.authority.GatewayRunStatusChainPostgresTest.xml",
+        "bytes": 124878,
+        "sha256": "708337d58eaeff39aa5a177f9c610f2059d686e64b2cf452a4d50cff12243e81"
+      },
+      {
+        "file": "platform-gateway/target/surefire-reports/cn.agentplatform.common.authority.GatewayRunStatusChainPostgresTest.txt",
+        "bytes": 388,
+        "sha256": "ad57e4a5d0142a889320c8d71752ec41e4471aa476a63037b2e662eb3ee8bced"
+      },
+      {
+        "file": "platform-gateway/target/surefire-reports/TEST-cn.agentplatform.gateway.application.RunObservationGetTransportTest.xml",
+        "bytes": 44565,
+        "sha256": "8c4f1aa95085a8363c79ab786521b0c644d69605d2eee5ea781d87a7146f8fdb"
+      },
+      {
+        "file": "platform-gateway/target/surefire-reports/cn.agentplatform.gateway.application.RunObservationGetTransportTest.txt",
+        "bytes": 389,
+        "sha256": "264a73b63b07f5f2d58a27c5f0522ff7175020734b54d4a0dcc29156536a885f"
+      }
+    ],
+    "earlyRejectionCases": [
+      {
+        "elapsedMs": 1,
+        "cancelledHandles": 1,
+        "requests": 1,
+        "policy": "Q",
+        "reason": "status-599",
+        "cancelled": true,
+        "installedHandles": 1
+      },
+      {
+        "elapsedMs": 0,
+        "cancelledHandles": 1,
+        "requests": 1,
+        "policy": "Q",
+        "reason": "status-401",
+        "cancelled": true,
+        "installedHandles": 1
+      },
+      {
+        "elapsedMs": 0,
+        "cancelledHandles": 1,
+        "requests": 1,
+        "policy": "Q",
+        "reason": "unsafe-header",
+        "cancelled": true,
+        "installedHandles": 1
+      },
+      {
+        "elapsedMs": 0,
+        "cancelledHandles": 1,
+        "requests": 1,
+        "policy": "Q",
+        "reason": "wrong-type",
+        "cancelled": true,
+        "installedHandles": 1
+      },
+      {
+        "elapsedMs": 1,
+        "cancelledHandles": 1,
+        "requests": 1,
+        "policy": "M",
+        "reason": "status-599",
+        "cancelled": true,
+        "installedHandles": 1
+      },
+      {
+        "elapsedMs": 0,
+        "cancelledHandles": 1,
+        "requests": 1,
+        "policy": "M",
+        "reason": "status-401",
+        "cancelled": true,
+        "installedHandles": 1
+      },
+      {
+        "elapsedMs": 0,
+        "cancelledHandles": 1,
+        "requests": 1,
+        "policy": "M",
+        "reason": "unsafe-header",
+        "cancelled": true,
+        "installedHandles": 1
+      },
+      {
+        "elapsedMs": 0,
+        "cancelledHandles": 1,
+        "requests": 1,
+        "policy": "M",
+        "reason": "wrong-type",
+        "cancelled": true,
+        "installedHandles": 1
+      },
+      {
+        "elapsedMs": 1,
+        "cancelledHandles": 1,
+        "requests": 1,
+        "policy": "Q",
+        "reason": "declared-length",
+        "cancelled": true,
+        "installedHandles": 1
+      },
+      {
+        "elapsedMs": 0,
+        "cancelledHandles": 1,
+        "requests": 1,
+        "policy": "M",
+        "reason": "declared-length",
+        "cancelled": true,
+        "installedHandles": 1
+      }
+    ],
+    "closedRawPeers": 58,
+    "allRawPeersExactlyOneAccept": true
+  }
+]

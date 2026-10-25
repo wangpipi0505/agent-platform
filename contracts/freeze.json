@@ -1,0 +1,42 @@
+{
+  "baseline": "v1.2",
+  "sourceSha256": "3c72b2062beb2e8b377f2384843ea935a0074b50c0063e5106566bbd8dcd0c4f",
+  "scope": "原文等价提取，不变更原契约正文",
+  "frozenForImplementation": true,
+  "approvalBasis": "用户已确认v1.2并明确要求依此持续开发",
+  "projectSignoff": "不虚构新增签字；工程评审和测试证据单列",
+  "contracts": [
+    {
+      "name": "graph-definition",
+      "file": "contracts/graph-definition.md",
+      "sourceLineStart": 1400,
+      "sourceLineEnd": 1686,
+      "sha256": "2053fb5e90369e3194a72cb199e40a51cc7eead327ee3620c323e43fe2c79c99"
+    },
+    {
+      "name": "trace-model",
+      "file": "contracts/trace-model.md",
+      "sourceLineStart": 1687,
+      "sourceLineEnd": 2233,
+      "sha256": "7d0fe91476d6336877b00ece046d5e2daf1a239bf316a7d0b2f6c4507eaacb5f"
+    },
+    {
+      "name": "skill-invocation",
+      "file": "contracts/skill-invocation.md",
+      "sourceLineStart": 940,
+      "sourceLineEnd": 1399,
+      "sha256": "43dce0daf6d5510ed9399190e2ea83418bcc2c501778e25ef6efaecef7016506"
+    },
+    {
+      "name": "authorization-confirmation",
+      "file": "contracts/authorization-confirmation.md",
+      "sourceLineStart": 2234,
+      "sourceLineEnd": 2531,
+      "sha256": "7283fb06f4f790b030f154d3546931e71907f48e498f2b869f622d28e392c995",
+      "additionalFrozenSources": [
+        "trace-model.md",
+        "snapshot/detailed-design-v1.2.md 第一/七部分"
+      ]
+    }
+  ]
+}

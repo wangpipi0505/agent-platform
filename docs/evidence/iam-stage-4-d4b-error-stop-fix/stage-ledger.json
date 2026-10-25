@@ -1,0 +1,382 @@
+{
+  "at": "2026-10-20T20:47:19.358Z",
+  "stages": [
+    {
+      "stage": "red-helper-reader",
+      "command": [
+        "node",
+        "web/node_modules/vitest/vitest.mjs",
+        "run",
+        "--root",
+        "web",
+        "tests/portal-auth.test.ts",
+        "tests/stream-auth.test.ts",
+        "tests/run-observer.test.ts",
+        "-t",
+        "D4b fix"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "at": "2026-10-20T20:44:32.814Z",
+      "exit": 1,
+      "source": {
+        "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/red-helper-reader/source-before.json",
+        "bytes": 108246,
+        "sha256": "38a8e5a10125d5466f297b515bdfd41a45146e066b1a8d3e983694881b9b7c2b"
+      },
+      "overlayCount": 3,
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/red-helper-reader/output.raw",
+        "bytes": 8142,
+        "sha256": "882ea92017eb492625d204d2357533be4eeeff4e1b978355470ba9a99eb7609e"
+      },
+      "commandRecord": {
+        "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/red-helper-reader/command.json",
+        "bytes": 1287,
+        "sha256": "ae834fb753aeb95e0e9c0bd9bd8cb6df001c583351bd4ae3ab5e3a1d003a0500"
+      },
+      "resultRecord": {
+        "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/red-helper-reader/result.json",
+        "bytes": 69,
+        "sha256": "d4e915c91d32f9de82243d11176cc2724a34e336ddc2d7fb3da8c6daaa60596e"
+      }
+    },
+    {
+      "stage": "red-browser-current401",
+      "command": [
+        "node",
+        "web/tests/portal-browser.mjs",
+        "fix-red-browser-current401",
+        "D4b fix artifact current"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "at": "2026-10-20T20:45:08.580Z",
+      "exit": 1,
+      "source": {
+        "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/red-browser-current401/source-before.json",
+        "bytes": 108246,
+        "sha256": "68cc218550375027c41122a3b9aa5c9167e517e6e41ee4c75a5b2bc17eaf0252"
+      },
+      "overlayCount": 4,
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/red-browser-current401/output.raw",
+        "bytes": 2213,
+        "sha256": "b74287ebac3a84eee8d429492618054dafd1dd2d16d2275ddfb0ca82f677a1c2"
+      },
+      "commandRecord": {
+        "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/red-browser-current401/command.json",
+        "bytes": 1355,
+        "sha256": "d4bef38f5ca73b208db3f72df84529efe27dc739f3977df64107fba8f435cc5a"
+      },
+      "resultRecord": {
+        "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/red-browser-current401/result.json",
+        "bytes": 69,
+        "sha256": "8942bbadff757d9d0f89cbaebdce264bf8a3900b4aa499e4b6a893675f8112a1"
+      },
+      "browserPhase": "fix-red-browser-current401",
+      "browserCases": [
+        {
+          "name": "D4b fix artifact current 401 clears whole identity and stops observation without replay",
+          "passed": false,
+          "error": "Error: expect(received).toMatchObject(expected)\n\n- Expected  -  3\n+ Received  + 12\n\n  Object {\n    \"downloadClicks\": 0,\n    \"providerCalls\": 1,\n-   \"roles\": Array [],\n-   \"token\": \"\",\n-   \"user\": null,\n+   \"roles\": Array [\n+     \"ADMIN\",\n+   ],\n+   \"token\": \"A\",\n+   \"user\": Object {\n+     \"expiresAt\": \"2026-10-20T20:46:10.009Z\",\n+     \"principalId\": \"A\",\n+     \"roles\": Array [\n+       \"ADMIN\",\n+     ],\n+     \"tenantId\": \"tenant_A\",\n+   },\n  }\n    at captureRawStack (G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\web\\node_modules\\playwright-core\\lib\\coreBundle.js:9282:17)\n    at callMatcherAsStep (G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\web\\node_modules\\playwright\\lib\\matchers\\expect.js:13316:57)\n    at Object.toMatchObject (G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\web\\node_modules\\playwright\\lib\\matchers\\expect.js:13308:23)\n    at G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\web\\tests\\portal-browser.mjs:94:18\n    at async run (G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\web\\tests\\portal-browser.mjs:87:128)\n    at async file:///G:/207/%E9%A1%B9%E7%9B%AE/%E7%AE%97%E6%B3%95%E9%87%8D%E7%BB%84%E5%B7%A5%E5%85%B7/%E4%BB%A3%E7%A0%81/agent-platform/web/tests/portal-browser.mjs:90:2",
+          "rawStart": 0,
+          "rawEnd": 15
+        }
+      ]
+    },
+    {
+      "stage": "green-helper-reader",
+      "command": [
+        "node",
+        "web/node_modules/vitest/vitest.mjs",
+        "run",
+        "--root",
+        "web",
+        "tests/portal-auth.test.ts",
+        "tests/stream-auth.test.ts",
+        "tests/run-observer.test.ts",
+        "-t",
+        "D4b fix|D4b late artifact blob|D4b aborts a pending|D4b stops after reader|D4b stops named IAM 503|uses status while the transient"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "at": "2026-10-20T20:45:35.877Z",
+      "exit": 0,
+      "source": {
+        "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/green-helper-reader/source-before.json",
+        "bytes": 108246,
+        "sha256": "4c479be6e91523c034742ddcf266b9262379488b4d778ce8a551bfcec7f946f7"
+      },
+      "overlayCount": 7,
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/green-helper-reader/output.raw",
+        "bytes": 257,
+        "sha256": "e251564cd370da57935886105ddb9883b2f6965f8c39e0fbd9fda9ac0c3c293b"
+      },
+      "commandRecord": {
+        "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/green-helper-reader/command.json",
+        "bytes": 2052,
+        "sha256": "5ad0b7b53980748a7b787e87125b4f4acdfcf9632a44b5f59fc582d6159cb976"
+      },
+      "resultRecord": {
+        "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/green-helper-reader/result.json",
+        "bytes": 69,
+        "sha256": "fa03fc655d325f9f807a563dc9ce21949d0ddae78c7b0e616b24661efa5944de"
+      }
+    },
+    {
+      "stage": "green-browser-artifact",
+      "command": [
+        "node",
+        "web/tests/portal-browser.mjs",
+        "fix-green-browser-artifact",
+        "D4b fix artifact"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "at": "2026-10-20T20:45:37.267Z",
+      "exit": 0,
+      "source": {
+        "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/green-browser-artifact/source-before.json",
+        "bytes": 108246,
+        "sha256": "4c479be6e91523c034742ddcf266b9262379488b4d778ce8a551bfcec7f946f7"
+      },
+      "overlayCount": 7,
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/green-browser-artifact/output.raw",
+        "bytes": 957,
+        "sha256": "4ed41ec522308b3f7f2f7a23a901d084df8575d5843ef38f28ebe6f4ddb902cd"
+      },
+      "commandRecord": {
+        "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/green-browser-artifact/command.json",
+        "bytes": 1823,
+        "sha256": "90f9554a65b94e2be104a5b05a5d57c315190299288ed66f059b376791d7e0b5"
+      },
+      "resultRecord": {
+        "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/green-browser-artifact/result.json",
+        "bytes": 69,
+        "sha256": "45b40e21bbcbf1cbfa6e963bd176e83b78ecbdcc7c08619526d6dabdc27dd7a9"
+      },
+      "browserPhase": "fix-green-browser-artifact",
+      "browserCases": [
+        {
+          "name": "D4b fix artifact current 401 clears whole identity and stops observation without replay",
+          "passed": true,
+          "rawStart": 0,
+          "rawEnd": 6,
+          "token": "",
+          "user": null,
+          "roles": [],
+          "generation": 2,
+          "providerCalls": 1,
+          "downloadClicks": 0,
+          "previousGeneration": 1,
+          "requestsStable": true,
+          "postCount": 0,
+          "downloadCount": 1,
+          "screenshot": "current401-observed.png"
+        },
+        {
+          "name": "D4b fix artifact delayed old 401 cannot invalidate new identity or show old error",
+          "passed": true,
+          "rawStart": 6,
+          "rawEnd": 13,
+          "token": "B",
+          "user": {
+            "tenantId": "tenant_B",
+            "principalId": "B",
+            "roles": [
+              "ADMIN"
+            ],
+            "expiresAt": "2026-10-20T20:46:41.729Z"
+          },
+          "roles": [
+            "ADMIN"
+          ],
+          "generation": 2,
+          "providerCalls": 2,
+          "downloadClicks": 0,
+          "postCount": 0,
+          "downloadCount": 1,
+          "oldHTTP401ReturnedAfterNewSession": true
+        },
+        {
+          "name": "D4b fix artifact 403 preserves current identity and explains denied download",
+          "passed": true,
+          "rawStart": 13,
+          "rawEnd": 17,
+          "generation": 1,
+          "preservedIdentity": true,
+          "providerCalls": 1,
+          "downloadCount": 1,
+          "deniedMessage": true
+        }
+      ]
+    },
+    {
+      "stage": "final-build-webapp",
+      "command": [
+        "node",
+        "web/node_modules/vite/bin/vite.js",
+        "build",
+        "--config",
+        "web/webapp/vite.config.ts"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "at": "2026-10-20T20:46:07.307Z",
+      "exit": 0,
+      "source": {
+        "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/final-build-webapp/source-before.json",
+        "bytes": 108246,
+        "sha256": "4c479be6e91523c034742ddcf266b9262379488b4d778ce8a551bfcec7f946f7"
+      },
+      "overlayCount": 7,
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/final-build-webapp/output.raw",
+        "bytes": 671,
+        "sha256": "d861b12523b471f9919e775fcbeecd9b1399488aa168340ef8d15f0da156ee10"
+      },
+      "commandRecord": {
+        "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/final-build-webapp/command.json",
+        "bytes": 1828,
+        "sha256": "da4957f9d17b4077ce94655113fc7f68a448b3dce3fe4320fe31262ebf8e6b0e"
+      },
+      "resultRecord": {
+        "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/final-build-webapp/result.json",
+        "bytes": 69,
+        "sha256": "7545c41beb5456407f9f4d151373ea6fb86d3b8d5952ea1b09819aa25436b3cc"
+      }
+    },
+    {
+      "stage": "final-build-assistant",
+      "command": [
+        "node",
+        "web/node_modules/vite/bin/vite.js",
+        "build",
+        "--config",
+        "web/assistant.js/vite.config.ts"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "at": "2026-10-20T20:46:07.315Z",
+      "exit": 0,
+      "source": {
+        "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/final-build-assistant/source-before.json",
+        "bytes": 108246,
+        "sha256": "4c479be6e91523c034742ddcf266b9262379488b4d778ce8a551bfcec7f946f7"
+      },
+      "overlayCount": 7,
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/final-build-assistant/output.raw",
+        "bytes": 194,
+        "sha256": "c82a55853f1450e5c6c9b2ef7286c97ff7bfa38713f3c1b77ec0eaf187bf57bc"
+      },
+      "commandRecord": {
+        "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/final-build-assistant/command.json",
+        "bytes": 1837,
+        "sha256": "5206fbea289e888b9820df163e35db6eea340239d0c2a267063989ef5e2a25a9"
+      },
+      "resultRecord": {
+        "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/final-build-assistant/result.json",
+        "bytes": 69,
+        "sha256": "8a8abaac8e72ee75da202b49d36ad1ef7d4fa0e05b6b98edf296afcdb07dabed"
+      }
+    },
+    {
+      "stage": "final-typecheck",
+      "command": [
+        "node",
+        "web/node_modules/vue-tsc/bin/vue-tsc.js",
+        "--noEmit",
+        "-p",
+        "web/tsconfig.json"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "at": "2026-10-20T20:46:07.315Z",
+      "exit": 0,
+      "source": {
+        "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/final-typecheck/source-before.json",
+        "bytes": 108246,
+        "sha256": "4c479be6e91523c034742ddcf266b9262379488b4d778ce8a551bfcec7f946f7"
+      },
+      "overlayCount": 7,
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/final-typecheck/output.raw",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "commandRecord": {
+        "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/final-typecheck/command.json",
+        "bytes": 1820,
+        "sha256": "11760ab55361b02994a0e87f7a7871a2b6d8daa9e3e504ea1c4e554c048c1313"
+      },
+      "resultRecord": {
+        "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/final-typecheck/result.json",
+        "bytes": 69,
+        "sha256": "37d8b61abecb89ebc154cd841705fe9d196e809104b2e5861d291385d1acd604"
+      }
+    },
+    {
+      "stage": "final-build-admin",
+      "command": [
+        "node",
+        "web/node_modules/vite/bin/vite.js",
+        "build",
+        "--config",
+        "web/admin/vite.config.ts"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "at": "2026-10-20T20:46:07.323Z",
+      "exit": 0,
+      "source": {
+        "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/final-build-admin/source-before.json",
+        "bytes": 108246,
+        "sha256": "4c479be6e91523c034742ddcf266b9262379488b4d778ce8a551bfcec7f946f7"
+      },
+      "overlayCount": 7,
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/final-build-admin/output.raw",
+        "bytes": 1189,
+        "sha256": "8bdc6589861c8502424c453ad8ddf839e3065b5cb28c909adc15c1b9dd00538b"
+      },
+      "commandRecord": {
+        "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/final-build-admin/command.json",
+        "bytes": 1826,
+        "sha256": "64b151d5a318583093d5b79bd60947e05edb78a67a2249bbd9a2a24225fce110"
+      },
+      "resultRecord": {
+        "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/final-build-admin/result.json",
+        "bytes": 69,
+        "sha256": "45e6eeaf4635f8dcba245a443b784fa834fb4fa493c2c844dfecfa4713163aa2"
+      }
+    },
+    {
+      "stage": "final-sdk-copy",
+      "command": [
+        "node",
+        "web/shared/copy-assistant.mjs"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "at": "2026-10-20T20:46:21.341Z",
+      "exit": 0,
+      "source": {
+        "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/final-sdk-copy/source-before.json",
+        "bytes": 108246,
+        "sha256": "4c479be6e91523c034742ddcf266b9262379488b4d778ce8a551bfcec7f946f7"
+      },
+      "overlayCount": 7,
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/final-sdk-copy/output.raw",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "commandRecord": {
+        "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/final-sdk-copy/command.json",
+        "bytes": 1758,
+        "sha256": "3ba9a74aaef76af41f96ccf375b73d7c1f4bcd77b84da680c2fe3dd61d06b181"
+      },
+      "resultRecord": {
+        "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/final-sdk-copy/result.json",
+        "bytes": 69,
+        "sha256": "46c3027a92735ccf01aa414d1f6f0f4ec219b59ed7da4329a89168c4e0ea97ec"
+      }
+    }
+  ],
+  "notOneCombinedGreenRun": true
+}

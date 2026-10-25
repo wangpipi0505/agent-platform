@@ -1,0 +1,69 @@
+
+ RUN  v4.1.12 G:/207/项目/算法重组工具/代码/agent-platform/web
+
+ ❯ tests/portal-auth.test.ts (27 tests | 5 failed | 20 skipped) 66ms
+   × D4b lifecycle logout unsubscribes and old queued callbacks cannot revive or replace a later subscription 6ms
+   × D4b lifecycle synchronous subscribe and unsubscribe notifications do not recursively connect 1ms
+   × D4b lifecycle current401 pauses host notifications until one explicit reconnect 1ms
+   × D4b lifecycle wall rollback cannot extend a sixty-second installed lifetime 3ms
+   × D4b lifecycle expiry waits for manual reconnect and logout unsubscribes before disposal 1ms
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 2 passed | 20 skipped (27)
+   Start at  04:55:46
+   Duration  358ms (transform 63ms, setup 0ms, import 187ms, tests 66ms, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/portal-auth.test.ts > D4b lifecycle logout unsubscribes and old queued callbacks cannot revive or replace a later subscription
+AssertionError: expected "vi.fn()" to be called 1 times, but got 0 times
+ ❯ tests/portal-auth.test.ts:15:114
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  tests/portal-auth.test.ts > D4b lifecycle synchronous subscribe and unsubscribe notifications do not recursively connect
+AssertionError: expected "vi.fn()" to be called 1 times, but got 2 times
+ ❯ tests/portal-auth.test.ts:25:48
+     23|  const subscribe=vi.fn((listener:()=>void)=>{listener();return ()=>{un…
+     24|  const portal=createPortalSession(auth,{getAccessToken,onSessionChange…
+     25|  await portal.connect();expect(getAccessToken).toHaveBeenCalledTimes(1…
+       |                                                ^
+     26|  auth.invalidate(auth.generation,'signed-out');expect(unsubscribe).toH…
+     27| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  tests/portal-auth.test.ts > D4b lifecycle current401 pauses host notifications until one explicit reconnect
+AssertionError: expected "vi.fn()" to be called 1 times, but got 2 times
+ ❯ tests/portal-auth.test.ts:32:128
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  tests/portal-auth.test.ts > D4b lifecycle wall rollback cannot extend a sixty-second installed lifetime
+AssertionError: expected 'ticket' to be '' // Object.is equality
+
+- Expected
++ Received
+
++ ticket
+
+ ❯ tests/portal-auth.test.ts:45:21
+     43|  const auth=useAuth(),portal=createPortalSession(auth,{getAccessToken:…
+     44|  await portal.connect();vi.setSystemTime(Date.now()-3_600_000);monoton…
+     45|  expect(auth.token).toBe('');expect(auth.user).toBeUndefined();expect(…
+       |                     ^
+     46| });
+     47| it('D4b lifecycle stale expiry callback cannot clear a newer generatio…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  tests/portal-auth.test.ts > D4b lifecycle expiry waits for manual reconnect and logout unsubscribes before disposal
+AssertionError: expected "vi.fn()" to be called 1 times, but got 2 times
+ ❯ tests/portal-auth.test.ts:123:87
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+

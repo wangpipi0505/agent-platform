@@ -1,0 +1,10 @@
+{
+  "stage": "iam-stage-5-e1b-i1-fix-red01",
+  "command": "node .tools/run-iam-module-tests.mjs iam-stage-5-e1b-i1-fix-red01 engine-runtime RunAuthorityLocalCurrentPostgresTest#successExpiresWhileCasWaitsOnUnchangedRow+currentDoesNotReturnProofExpiredDuringCommit",
+  "exitCode": 1,
+  "mavenStarted": false,
+  "rawLogCreated": false,
+  "reason": "Existing controlled launcher rejected '+' against its closed test-name grammar /^[A-Za-z0-9_#*,.-]+$/ before reading configuration or spawning Maven.",
+  "capturedConsoleExcerpt": "AssertionError [ERR_ASSERTION]: The input did not match the regular expression /^[A-Za-z0-9_#*,.-]+$/. Input: 'RunAuthorityLocalCurrentPostgresTest#successExpiresWhileCasWaitsOnUnchangedRow+currentDoesNotReturnProofExpiredDuringCommit'",
+  "disposition": "Use comma-separated fully qualified class#method selectors in red02/red03; launcher unchanged; not a compiler, behavior or test-suite execution. This file records actual observed console output, not an invented Maven raw log."
+}

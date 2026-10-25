@@ -1,0 +1,72 @@
+{
+  "startedAt": "2026-10-20T10:51:45.068Z",
+  "endedAt": "2026-10-20T10:51:59.897Z",
+  "sourceBefore": 356,
+  "sourceAfter": 357,
+  "changed": [
+    "app-management/src/main/java/cn/agentplatform/app/api/AppController.java",
+    "app-management/src/main/java/cn/agentplatform/app/application/AppService.java",
+    "app-management/src/test/java/cn/agentplatform/app/application/ApplicationLifecycleTest.java",
+    "app-management/src/test/java/cn/agentplatform/app/application/PublishTransactionTest.java",
+    "app-management/src/test/java/cn/agentplatform/app/application/PublishedMetadataHttpTest.java",
+    "app-management/src/test/java/cn/agentplatform/app/application/PublishedPayloadHttpTest.java",
+    "app-management/src/test/java/cn/agentplatform/common/authority/PublishedMetadataFixtureMain.java"
+  ],
+  "diffExit": 1,
+  "applyExit": 0,
+  "byteEqualLiveFrozenReplay": 357,
+  "patch": {
+    "file": "docs/evidence/iam-stage-4-d3b/change.patch",
+    "bytes": 171915,
+    "sha256": "88ce9c05505090a7bbf66634f3618706b35ff8bcf2b0d83a3b65c6b6553440d8"
+  },
+  "targetBefore": 1695,
+  "targetAfter": 1709,
+  "targetChanged": 32,
+  "noHeadRemoteCommitUsed": true,
+  "comparison": [
+    {
+      "stage": "iam-stage-4-d3b-red01",
+      "sourceFiles": 357,
+      "finalDifferences": [
+        "app-management/src/main/java/cn/agentplatform/app/api/AppController.java",
+        "app-management/src/main/java/cn/agentplatform/app/application/AppService.java",
+        "app-management/src/test/java/cn/agentplatform/app/application/ApplicationLifecycleTest.java",
+        "app-management/src/test/java/cn/agentplatform/app/application/PublishTransactionTest.java",
+        "app-management/src/test/java/cn/agentplatform/app/application/PublishedMetadataHttpTest.java",
+        "app-management/src/test/java/cn/agentplatform/app/application/PublishedPayloadHttpTest.java",
+        "app-management/src/test/java/cn/agentplatform/common/authority/PublishedMetadataFixtureMain.java"
+      ]
+    },
+    {
+      "stage": "iam-stage-4-d3b-green01",
+      "sourceFiles": 357,
+      "finalDifferences": [
+        "app-management/src/test/java/cn/agentplatform/app/application/PublishTransactionTest.java",
+        "app-management/src/test/java/cn/agentplatform/app/application/PublishedPayloadHttpTest.java"
+      ]
+    },
+    {
+      "stage": "iam-stage-4-d3b-green02",
+      "sourceFiles": 357,
+      "finalDifferences": [
+        "app-management/src/test/java/cn/agentplatform/app/application/PublishedPayloadHttpTest.java"
+      ]
+    },
+    {
+      "stage": "iam-stage-4-d3b-green03",
+      "sourceFiles": 357,
+      "finalDifferences": []
+    },
+    {
+      "stage": "iam-stage-4-d3b-final01",
+      "sourceFiles": 357,
+      "finalDifferences": []
+    },
+    {
+      "stage": "iam-stage-4-d3b-smoke01",
+      "sourceFiles": 357,
+      "finalDifferences": []
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "first": {
+    "helper": ".local/iam-o2a-a-lifecycle-fixes/freeze.mjs",
+    "step": "target-lineage",
+    "error": "ENOENT",
+    "operation": "fs.copyFileSync(source, destination, COPYFILE_EXCL)",
+    "source": "admin-common/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst",
+    "destination": "docs/evidence/iam-stage-4-o2a-a-lifecycle-fixes/iam-stage-o2a-a-fix-red01/after/compiler-status/compile-createdFiles.lst",
+    "reason": "Own compiler-status destination directory did not yet exist",
+    "preservedJournal": ".local/iam-o2a-a-lifecycle-fixes/freeze-journal.jsonl",
+    "continuation": "Created only own destination directories; source-success marker retained and skipped; no test or replay repeated"
+  },
+  "second": {
+    "helper": ".local/iam-o2a-a-lifecycle-fixes/verify-final.mjs",
+    "error": "EEXIST",
+    "operation": "identity(source) read bytes/SHA then fs.copyFileSync(source, destination, COPYFILE_EXCL)",
+    "source": "app-management/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst",
+    "destination": "docs/evidence/iam-stage-4-o2a-a-lifecycle-fixes/iam-stage-o2a-a-fix-red01/before/compiler-status/compile-default-compile-createdFiles.lst",
+    "reason": "Mistaken inherited-list selection included app; own common list already occupied same destination basename",
+    "actualAppAction": "Read-only source identity comparison; COPYFILE_EXCL failed on existing own destination. No app write/restore/delete/build and no destination overwrite occurred",
+    "continuation": "Filter limited to admin-common; resumed only own common evidence-list reconstruction with identical cached bytes/SHA; did not rerun erroneous selection",
+    "originalFailureEvidence": "Original tool execution output retained; this JSON is an explicit bounded transcription, not a replay or invented raw log"
+  },
+  "third": {
+    "kind": "Target metadata attribution",
+    "superseded": "docs/evidence/iam-stage-4-o2a-a-lifecycle-fixes/target-after.json",
+    "supersededLogical": 2027,
+    "corrected": "docs/evidence/iam-stage-4-o2a-a-lifecycle-fixes/final/target-after.json",
+    "correctedLogical": 2023,
+    "correction": "docs/evidence/iam-stage-4-o2a-a-lifecycle-fixes/final/target-metadata-correction.json",
+    "reason": "Four new dumpstreams must be separate diagnostic evidence, not compiler/resource/actualRunning logical overlay",
+    "continuation": "Composed cached identities only; successful physical stage and replay preserved without rereading target or repeating tests/replay"
+  }
+}

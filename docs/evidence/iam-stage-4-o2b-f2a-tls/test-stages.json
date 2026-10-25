@@ -1,0 +1,276 @@
+[
+  {
+    "stage": "iam-stage-o2b-f2a-core-green",
+    "selector": "PortalEventsTlsDebtTest,PortalEventsTlsTest",
+    "exit": 0,
+    "running": [
+      "cn.agentplatform.gateway.infra.PortalEventsTlsDebtTest",
+      "cn.agentplatform.gateway.infra.PortalEventsTlsTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalEventsTlsDebtTest",
+        "tests": 6,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0
+      },
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalEventsTlsTest",
+        "tests": 1,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-core-green"
+  },
+  {
+    "stage": "iam-stage-o2b-f2a-deadlines",
+    "selector": "PortalEventsTlsDebtTest#checkedCounterOverflowAbortsWithoutGrantingCredit,PortalEventsTlsTest#realEndpointsObserveFixedDeadlinesAndAbort",
+    "exit": 0,
+    "running": [
+      "cn.agentplatform.gateway.infra.PortalEventsTlsDebtTest",
+      "cn.agentplatform.gateway.infra.PortalEventsTlsTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalEventsTlsDebtTest",
+        "tests": 1,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0
+      },
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalEventsTlsTest",
+        "tests": 7,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-deadlines"
+  },
+  {
+    "stage": "iam-stage-o2b-f2a-final",
+    "selector": "PortalEventsTlsDebtTest,PortalEventsTlsTest",
+    "exit": 0,
+    "running": [
+      "cn.agentplatform.gateway.infra.PortalEventsTlsDebtTest",
+      "cn.agentplatform.gateway.infra.PortalEventsTlsTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalEventsTlsDebtTest",
+        "tests": 7,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0
+      },
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalEventsTlsTest",
+        "tests": 32,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-final"
+  },
+  {
+    "stage": "iam-stage-o2b-f2a-functional-red",
+    "selector": "PortalEventsTlsDebtTest,PortalEventsTlsTest",
+    "exit": 1,
+    "running": [
+      "cn.agentplatform.gateway.infra.PortalEventsTlsDebtTest",
+      "cn.agentplatform.gateway.infra.PortalEventsTlsTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalEventsTlsDebtTest",
+        "tests": 6,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 6
+      },
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalEventsTlsTest",
+        "tests": 1,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 1
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-functional-red"
+  },
+  {
+    "stage": "iam-stage-o2b-f2a-nst",
+    "selector": "PortalEventsTlsTest#normalTicketsInterleaveWithoutReset",
+    "exit": 0,
+    "running": [
+      "cn.agentplatform.gateway.infra.PortalEventsTlsTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalEventsTlsTest",
+        "tests": 1,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-nst"
+  },
+  {
+    "stage": "iam-stage-o2b-f2a-overflow-red",
+    "selector": "PortalEventsTlsDebtTest#checkedCounterOverflowAbortsWithoutGrantingCredit",
+    "exit": 1,
+    "running": [
+      "cn.agentplatform.gateway.infra.PortalEventsTlsDebtTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalEventsTlsDebtTest",
+        "tests": 1,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 1
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-overflow-red"
+  },
+  {
+    "stage": "iam-stage-o2b-f2a-red",
+    "selector": "PortalEventsTlsDebtTest,PortalEventsTlsTest",
+    "exit": 1,
+    "running": [
+      "cn.agentplatform.gateway.infra.PortalEventsTlsDebtTest",
+      "cn.agentplatform.gateway.infra.PortalEventsTlsTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalEventsTlsDebtTest",
+        "tests": 1,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 1
+      },
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalEventsTlsTest",
+        "tests": 1,
+        "errors": 1,
+        "skipped": 0,
+        "failures": 0
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-red"
+  },
+  {
+    "stage": "iam-stage-o2b-f2a-stream-guards",
+    "selector": "PortalEventsTlsTest#realTlsTrafficKeepsCumulativeDebtAndOutputBounded,PortalEventsTlsTest#missingOrNetworkEnabledJvmProfileFailsBeforeAcquire",
+    "exit": 0,
+    "running": [
+      "cn.agentplatform.gateway.infra.PortalEventsTlsTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalEventsTlsTest",
+        "tests": 8,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-stream-guards"
+  },
+  {
+    "stage": "iam-stage-o2b-f2a-thresholds",
+    "selector": "PortalEventsTlsTest#credentialOrProfileFailureDeliversNoApplication,PortalEventsTlsTest#validSignedPeerFixturesExerciseExactStaticThreshold",
+    "exit": 1,
+    "running": [
+      "cn.agentplatform.gateway.infra.PortalEventsTlsTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalEventsTlsTest",
+        "tests": 12,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 3
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-thresholds"
+  },
+  {
+    "stage": "iam-stage-o2b-f2a-thresholds-fixed",
+    "selector": "PortalEventsTlsTest#credentialOrProfileFailureDeliversNoApplication,PortalEventsTlsTest#validSignedPeerFixturesExerciseExactStaticThreshold",
+    "exit": 0,
+    "running": [
+      "cn.agentplatform.gateway.infra.PortalEventsTlsTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalEventsTlsTest",
+        "tests": 12,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-thresholds-fixed"
+  },
+  {
+    "stage": "iam-stage-o2b-f2a-tls-red",
+    "selector": "PortalEventsTlsTest",
+    "exit": 1,
+    "running": [
+      "cn.agentplatform.gateway.infra.PortalEventsTlsTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalEventsTlsTest",
+        "tests": 1,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 1
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-tls-red"
+  },
+  {
+    "stage": "iam-stage-o2b-f2a-traffic",
+    "selector": "PortalEventsTlsTest#realTlsTrafficKeepsCumulativeDebtAndOutputBounded,PortalEventsTlsTest#mechanicalLifecycleAndConfigurationHaveNoAuthorityBypass,PortalEventsTlsTest#missingJvmProfileDeclarationFailsBeforeAcquire",
+    "exit": 1,
+    "running": [
+      "cn.agentplatform.gateway.infra.PortalEventsTlsTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalEventsTlsTest",
+        "tests": 7,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 1
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-traffic"
+  },
+  {
+    "stage": "iam-stage-o2b-f2a-traffic-fixed",
+    "selector": "PortalEventsTlsTest#realTlsTrafficKeepsCumulativeDebtAndOutputBounded",
+    "exit": 1,
+    "running": [
+      "cn.agentplatform.gateway.infra.PortalEventsTlsTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalEventsTlsTest",
+        "tests": 5,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 1
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2a-tls/stages/iam-stage-o2b-f2a-traffic-fixed"
+  }
+]

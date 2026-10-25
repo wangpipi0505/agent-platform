@@ -1,0 +1,19 @@
+{
+  "args": [
+    "mvn.cmd",
+    "-o",
+    "-B",
+    "-ntp",
+    "-pl",
+    "platform-gateway",
+    "-am",
+    "test",
+    "-Dmaven.repo.local=.tools/m2",
+    "-Djdk.net.unixdomain.tmpdir=V:/.local/tmp",
+    "-Dtest=GatewayPortalEventsServletTest#actualControllerSecurityChainHasExactEventsIngress",
+    "-Dsurefire.failIfNoSpecifiedTests=false",
+    "-Dc2b1.groups=postasync"
+  ],
+  "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+  "pid": 64784
+}

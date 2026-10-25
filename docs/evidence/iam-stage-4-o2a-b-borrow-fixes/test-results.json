@@ -1,0 +1,135 @@
+[
+  {
+    "stage": "iam-stage-o2a-b-borrow-fixes-red01",
+    "command": "node .tools/run-iam-module-tests.mjs iam-stage-o2a-b-borrow-fixes-red01 engine-runtime RunEventReaderPostgresTest#payloadSinkMutationCannotChangeLaterWritesInTheSameRealBorrow,RunEventReaderPostgresTest#bothOutputMethodsRejectCrossReentryAndRecoverAfterSinkIOException,RunEventReaderPostgresTest#blockingActualPayloadWritesKeepBothPermitsUntilConsumerFinallyReturns,RunEventReaderBudgetTest#rootFieldNameParserAccepts1048576CharactersAndRejects1048577",
+    "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+    "exit": 1,
+    "raw": {
+      "file": "docs/evidence/iam-stage-4-o2a-b-borrow-fixes/iam-stage-o2a-b-borrow-fixes-red01/iam-stage-o2a-b-borrow-fixes-red01.log",
+      "bytes": 12912,
+      "sha256": "bb2c380013b03d36f14cf9bb3afe0dd50ddb5c418b5e9b627a5c0b72d0f5b042"
+    },
+    "suites": [
+      {
+        "class": "cn.agentplatform.engine.infra.RunEventReaderBudgetTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "cases": [
+          "rootFieldNameParserAccepts1048576CharactersAndRejects1048577"
+        ],
+        "xml": {
+          "file": "docs/evidence/iam-stage-4-o2a-b-borrow-fixes/iam-stage-o2a-b-borrow-fixes-red01/TEST-cn.agentplatform.engine.infra.RunEventReaderBudgetTest.xml",
+          "bytes": 46128,
+          "sha256": "83bc1ac8968c35fbbb109e3af1289e4cbf88dace373ca137695000ccb8201f1c"
+        }
+      },
+      {
+        "class": "cn.agentplatform.engine.infra.RunEventReaderPostgresTest",
+        "tests": 3,
+        "failures": 2,
+        "errors": 0,
+        "skipped": 0,
+        "cases": [
+          "bothOutputMethodsRejectCrossReentryAndRecoverAfterSinkIOException",
+          "blockingActualPayloadWritesKeepBothPermitsUntilConsumerFinallyReturns",
+          "payloadSinkMutationCannotChangeLaterWritesInTheSameRealBorrow"
+        ],
+        "xml": {
+          "file": "docs/evidence/iam-stage-4-o2a-b-borrow-fixes/iam-stage-o2a-b-borrow-fixes-red01/TEST-cn.agentplatform.engine.infra.RunEventReaderPostgresTest.xml",
+          "bytes": 52203,
+          "sha256": "a9297384000fdb944a6f2c41ba5d65da131845555c11bffdf27526c44f286b09"
+        }
+      }
+    ]
+  },
+  {
+    "stage": "iam-stage-o2a-b-borrow-fixes-green01",
+    "command": "node .tools/run-iam-module-tests.mjs iam-stage-o2a-b-borrow-fixes-green01 engine-runtime RunEventReaderBudgetTest,RunEventReaderPostgresTest#payloadSinkMutationCannotChangeLaterWritesInTheSameRealBorrow,RunEventReaderPostgresTest#bothOutputMethodsRejectCrossReentryAndRecoverAfterSinkIOException,RunEventReaderPostgresTest#blockingActualPayloadWritesKeepBothPermitsUntilConsumerFinallyReturns",
+    "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+    "exit": 0,
+    "raw": {
+      "file": "docs/evidence/iam-stage-4-o2a-b-borrow-fixes/iam-stage-o2a-b-borrow-fixes-green01/iam-stage-o2a-b-borrow-fixes-green01.log",
+      "bytes": 8633,
+      "sha256": "c2b98093bd0f55b4d4ea2dfffa07a18e7f2eda903ac1f4840bfbbda86e804420"
+    },
+    "suites": [
+      {
+        "class": "cn.agentplatform.engine.infra.RunEventReaderBudgetTest",
+        "tests": 14,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "cases": [
+          "scopeArraysRejectDuplicateHashesWrongTypesAndParentCountBeyond4096",
+          "captureInitialCursorAndRemainingAreLiveLocalOperations",
+          "canonicalExactBoundaryAndLongAccumulationOverflowFailBeforeExpansion",
+          "subMillisecondConservativeBudgetNeverRequestsAConnectionOrDisablesTimeout",
+          "metadataStreamingParserChecksEverySingleConstraintBeforeDom",
+          "parserCancellationChecksRealCaptureAndFieldNamesConsumeTokenBudget",
+          "deploymentRepresentationModelCanonicalAndTotalBudgetsAreIndependentHardLimits",
+          "emissionAndBorrowCannotBeMintedPubliclyOrExportLargePayloadReferences",
+          "rootFieldNameParserAccepts1048576CharactersAndRejects1048577",
+          "getterClosureExpiryAndGenerationFailureAreLocalAndSticky",
+          "modelIntersectionIsAdmittedBeforeSecondDomAndTemporaryReservationsUnwind",
+          "cumulativeByteRecordAndParentBudgetsRejectOverflowAndNeverSilentlyTruncate",
+          "normalizationExpansionHasIndependentBudgetBeforeDecimalToIntegerExpansion",
+          "rootParserHasItsOwnFiniteDepthTokensStringAndNumberLimits"
+        ],
+        "xml": {
+          "file": "docs/evidence/iam-stage-4-o2a-b-borrow-fixes/iam-stage-o2a-b-borrow-fixes-green01/TEST-cn.agentplatform.engine.infra.RunEventReaderBudgetTest.xml",
+          "bytes": 48257,
+          "sha256": "b08b4d311eca19bf163be6fbb18a64b507f6e4936d9b2bf70a0cde27acbfe3ef"
+        }
+      },
+      {
+        "class": "cn.agentplatform.engine.infra.RunEventReaderPostgresTest",
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "cases": [
+          "bothOutputMethodsRejectCrossReentryAndRecoverAfterSinkIOException",
+          "blockingActualPayloadWritesKeepBothPermitsUntilConsumerFinallyReturns",
+          "payloadSinkMutationCannotChangeLaterWritesInTheSameRealBorrow"
+        ],
+        "xml": {
+          "file": "docs/evidence/iam-stage-4-o2a-b-borrow-fixes/iam-stage-o2a-b-borrow-fixes-green01/TEST-cn.agentplatform.engine.infra.RunEventReaderPostgresTest.xml",
+          "bytes": 48291,
+          "sha256": "751bbd5ac1a784f5bc3f697476cc54465dcfdcc6169faf8dbcdcf2050e3209c6"
+        }
+      }
+    ]
+  },
+  {
+    "stage": "iam-stage-o2a-b-borrow-fixes-green02",
+    "command": "node .tools/run-iam-module-tests.mjs iam-stage-o2a-b-borrow-fixes-green02 engine-runtime RunEventReaderPostgresTest#payloadSinkMutationCannotChangeLaterWritesInTheSameRealBorrow,RunEventReaderPostgresTest#bothOutputMethodsRejectCrossReentryAndRecoverAfterSinkIOException,RunEventReaderPostgresTest#blockingActualPayloadWritesKeepBothPermitsUntilConsumerFinallyReturns",
+    "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+    "exit": 0,
+    "raw": {
+      "file": "docs/evidence/iam-stage-4-o2a-b-borrow-fixes/iam-stage-o2a-b-borrow-fixes-green02/iam-stage-o2a-b-borrow-fixes-green02.log",
+      "bytes": 8419,
+      "sha256": "b8a9fd287233fb828773e609db4b98144de6803e2d7b065b853b438229c847c1"
+    },
+    "suites": [
+      {
+        "class": "cn.agentplatform.engine.infra.RunEventReaderPostgresTest",
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "cases": [
+          "bothOutputMethodsRejectCrossReentryAndRecoverAfterSinkIOException",
+          "blockingActualPayloadWritesKeepBothPermitsUntilConsumerFinallyReturns",
+          "payloadSinkMutationCannotChangeLaterWritesInTheSameRealBorrow"
+        ],
+        "xml": {
+          "file": "docs/evidence/iam-stage-4-o2a-b-borrow-fixes/iam-stage-o2a-b-borrow-fixes-green02/TEST-cn.agentplatform.engine.infra.RunEventReaderPostgresTest.xml",
+          "bytes": 48266,
+          "sha256": "2a45794448b73719e0404a0cb9ed1b69b47a2aee3835c55c0d4714976f7036b4"
+        }
+      }
+    ]
+  }
+]

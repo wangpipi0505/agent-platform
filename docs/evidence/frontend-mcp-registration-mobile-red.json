@@ -1,0 +1,131 @@
+{
+  "fixtureOnly": true,
+  "checks": {
+    "missingToolBlocksWizard": true,
+    "exactToolAndGuardSubmitted": true,
+    "explicitSelectedDraftBodylessPost": true,
+    "fullRawSchemaAndProtocolVisible": true
+  },
+  "requests": [
+    {
+      "path": "/admin/skills/lookup_fixture",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/admin/model-entries",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/admin/skills/lookup_fixture/drafts/2/mcp-tools",
+      "method": "POST",
+      "body": null
+    }
+  ],
+  "pageErrors": [],
+  "screenshots": [
+    "docs/evidence/frontend-mcp-registration-wizard-390.png",
+    "docs/evidence/frontend-mcp-registration-wizard-1440.png",
+    "docs/evidence/frontend-mcp-registration-tools-1440.png",
+    "docs/evidence/frontend-mcp-registration-tools-390.png"
+  ],
+  "overflow": [
+    {
+      "tag": "DIV",
+      "class": "actions",
+      "right": 400.515625,
+      "text": "版本 2 · DRAFT发布所选版本"
+    },
+    {
+      "tag": "BUTTON",
+      "class": "el-button",
+      "right": 400.515625,
+      "text": "发布所选版本"
+    },
+    {
+      "tag": "DIV",
+      "class": "el-popper is-pure is-light el-tooltip el-select__popper el-zoom-in-top-leave-active el-zoom-in-top-leave-to",
+      "right": 1116.59375,
+      "text": "版本 3 · DRAFT版本 2 · DRAFT版本 1 · PUBLISHED版本 4 · DRAFT"
+    },
+    {
+      "tag": "DIV",
+      "class": "el-select-dropdown",
+      "right": 1115.59375,
+      "text": "版本 3 · DRAFT版本 2 · DRAFT版本 1 · PUBLISHED版本 4 · DRAFT"
+    },
+    {
+      "tag": "DIV",
+      "class": "el-scrollbar",
+      "right": 1115.59375,
+      "text": "版本 3 · DRAFT版本 2 · DRAFT版本 1 · PUBLISHED版本 4 · DRAFT"
+    },
+    {
+      "tag": "DIV",
+      "class": "el-select-dropdown__wrap el-scrollbar__wrap el-scrollbar__wrap--hidden-default",
+      "right": 1115.59375,
+      "text": "版本 3 · DRAFT版本 2 · DRAFT版本 1 · PUBLISHED版本 4 · DRAFT"
+    },
+    {
+      "tag": "UL",
+      "class": "el-scrollbar__view el-select-dropdown__list",
+      "right": 1115.59375,
+      "text": "版本 3 · DRAFT版本 2 · DRAFT版本 1 · PUBLISHED版本 4 · DRAFT"
+    },
+    {
+      "tag": "LI",
+      "class": "el-select-dropdown__item",
+      "right": 1115.59375,
+      "text": "版本 3 · DRAFT"
+    },
+    {
+      "tag": "SPAN",
+      "class": "",
+      "right": 1056.953125,
+      "text": "版本 3 · DRAFT"
+    },
+    {
+      "tag": "LI",
+      "class": "el-select-dropdown__item is-selected is-hovering",
+      "right": 1115.59375,
+      "text": "版本 2 · DRAFT"
+    },
+    {
+      "tag": "SPAN",
+      "class": "",
+      "right": 1061.515625,
+      "text": "版本 2 · DRAFT"
+    },
+    {
+      "tag": "LI",
+      "class": "el-select-dropdown__item",
+      "right": 1115.59375,
+      "text": "版本 1 · PUBLISHED"
+    },
+    {
+      "tag": "SPAN",
+      "class": "",
+      "right": 1083.59375,
+      "text": "版本 1 · PUBLISHED"
+    },
+    {
+      "tag": "LI",
+      "class": "el-select-dropdown__item",
+      "right": 1115.59375,
+      "text": "版本 4 · DRAFT"
+    },
+    {
+      "tag": "SPAN",
+      "class": "",
+      "right": 1056.953125,
+      "text": "版本 4 · DRAFT"
+    },
+    {
+      "tag": "SPAN",
+      "class": "el-popper__arrow",
+      "right": 1036,
+      "text": ""
+    }
+  ]
+}

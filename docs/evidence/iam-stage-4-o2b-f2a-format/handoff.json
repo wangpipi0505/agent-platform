@@ -1,0 +1,93 @@
+{
+  "schema": "f2a-format-handoff-v1",
+  "projectRoot": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+  "sourceWrites": [
+    "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsTlsConnection.java",
+    "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalEventsTlsTest.java"
+  ],
+  "ownedRoots": [
+    ".local/iam-o2b-f2a-format",
+    "docs/evidence/iam-stage-4-o2b-f2a-format"
+  ],
+  "report": {
+    "file": "docs/evidence/iam-stage-4-o2b-f2a-format-report.md",
+    "bytes": 1829,
+    "sha256": "2e4d0b7a1b31cd8524569aeaa1cc84593a3ea4beb3ae0d2192ef02fddee2d9e6"
+  },
+  "helper": ".tools/iam-o2b-f2a-format.mjs",
+  "controls": [
+    {
+      "file": ".local/iam-o2b-f2a-format/source-before.json",
+      "bytes": 118270,
+      "sha256": "b0c594e9e4e66748f517b3acd983d402afc1c9982d43b5b038e352f65a6e7853"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-format/source-after.json",
+      "bytes": 118270,
+      "sha256": "e9a961138967910fae61a2f611c8fd0f69d1391c4b4c973dc78b79da8e6be1e0"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-format/source-delta.json",
+      "bytes": 1003,
+      "sha256": "625bbe13793a236c215e19a2e6391ba7273ba81f632bcc9499aa1fe081325e73"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-format/source-new.json",
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-format/source-snapshot.json",
+      "bytes": 142372,
+      "sha256": "7502536237b4eabe225eeb20c448b97f6bd6a2bc2ae7e4ff91a9ac38a8841521"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-format/copy-lineage.json",
+      "bytes": 298803,
+      "sha256": "edb03f9486f1fd48b98ddbc49c8686752a22916b780074b98a9b768bd50d7e6d"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o2b-f2a-format/token-proof.json",
+      "bytes": 4288,
+      "sha256": "2af97638945ba82edbdb15fa47c4ebee706ca7b65581569c624ce21e18139017"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o2b-f2a-format/whitespace.diff",
+      "bytes": 27120,
+      "sha256": "2a61ae77ae5d36241a09341a190111b723e66cc0ed9e703973b60e4fc5a23034"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o2b-f2a-format-report.md",
+      "bytes": 1829,
+      "sha256": "2e4d0b7a1b31cd8524569aeaa1cc84593a3ea4beb3ae0d2192ef02fddee2d9e6"
+    }
+  ],
+  "source": {
+    "count": 618,
+    "changedExisting": 2,
+    "new": 0,
+    "inherited616NotRehashed": true,
+    "manifest": ".local/iam-o2b-f2a-format/source-after.json",
+    "snapshot": ".local/iam-o2b-f2a-format/source-after",
+    "copyLineage": ".local/iam-o2b-f2a-format/copy-lineage.json"
+  },
+  "proof": {
+    "tokensExactlyEqual": true,
+    "commentsAndStringsPreserved": true,
+    "onlyNamedLeadingWhitespace": true,
+    "noNewCompilationOrTests": true,
+    "inheritedFunctionalFinal": "47/0/0/0 in frozen fix epoch"
+  },
+  "ownInventory": {
+    "file": "docs/evidence/iam-stage-4-o2b-f2a-format/own-inventory.json",
+    "count": 634,
+    "schema": "file/bytes/sha256; 616 snapshot identities inherit the audited copy lineage; all other entries are measured here",
+    "identity": "Final response only; no cyclic SHA reference"
+  },
+  "frozen": true,
+  "returnedWriteRights": {
+    "source": true,
+    "newOwned": true
+  },
+  "review": "Pending original reviewer named-range check; author does not accept."
+}

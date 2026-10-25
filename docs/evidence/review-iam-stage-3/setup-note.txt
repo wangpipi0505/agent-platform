@@ -1,0 +1,3 @@
+Initial runner invocation stopped before javac/java: frozen XML java.class.path ends with an empty entry, and the runner's path-validation loop rejected the empty string.
+Original error: GetFullPath($entry): The path is empty. (Parameter 'path'), run-probe.ps1 line 34.
+Corrected the validation loop to skip the empty terminal entry. No probe was executed and no source/target file was modified during that invocation.

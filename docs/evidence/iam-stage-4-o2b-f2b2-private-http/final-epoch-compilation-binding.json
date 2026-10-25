@@ -1,0 +1,44 @@
+{
+  "sourceEpoch": {
+    "file": ".local/iam-o2b-f2b2-private-http/stages/iam-stage-o2b-f2b2-final/source.json",
+    "bytes": 119381,
+    "sha256": "c2dd5086c9718098dc0957aa7f0dd3e7c809f56793d7eaea1b53e3987262c246"
+  },
+  "final": "iam-stage-o2b-f2b2-final",
+  "actualGatewayMainCompile": 20,
+  "actualGatewayTestCompile": 19,
+  "commonUpToDateSections": 2,
+  "finalFreshGatewayCompile": true,
+  "finalRunning": [
+    "cn.agentplatform.gateway.infra.PortalRunEventsHttpTest",
+    "cn.agentplatform.gateway.infra.PortalRunEventsPrivateAuthorityTest",
+    "cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest"
+  ],
+  "finalSuites": [
+    {
+      "class": "cn.agentplatform.gateway.infra.PortalRunEventsHttpTest",
+      "tests": 14,
+      "errors": 0,
+      "skipped": 0,
+      "failures": 0
+    },
+    {
+      "class": "cn.agentplatform.gateway.infra.PortalRunEventsPrivateAuthorityTest",
+      "tests": 8,
+      "errors": 0,
+      "skipped": 0,
+      "failures": 0
+    },
+    {
+      "class": "cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest",
+      "tests": 9,
+      "errors": 0,
+      "skipped": 0,
+      "failures": 0
+    }
+  ],
+  "totalTests": 31,
+  "previousSuccessesDifferentCompleteSourceEpochs": true,
+  "noFinalBehaviorRerun": true,
+  "oldMetadataStatusF1F2aProviderPgNotRerun": true
+}

@@ -1,0 +1,268 @@
+{
+  "status": "DONE",
+  "scope": "N3 I1/I2 directed fix only; N3 acceptance remains pending independent audit/review",
+  "completedAt": "2026-10-20T15:45:15.981Z",
+  "workspace": "G:/207/项目/算法重组工具/代码/agent-platform",
+  "brief": {
+    "file": "docs/evidence/iam-stage-5-n3-admission-app-client-fix-brief.md",
+    "bytes": 9826,
+    "sha256": "c33e6732bf9dec8a43234294c4fa3939a52f4de7e950fd4449c352a954e76458"
+  },
+  "report": {
+    "file": "docs/evidence/iam-stage-5-n3-admission-app-client-fix-report.md",
+    "bytes": 16409,
+    "sha256": "b61daadcaa106bd6a6eec1dd51f75608039fc0ad229a769a921b5553a3ed6c60"
+  },
+  "sourceTargetOwnership": {
+    "previous": "/root/iam_n3_admission_app_client",
+    "returnedTo": "/root",
+    "returned": true,
+    "noFurtherSourceTargetReportWrites": true,
+    "mavenStopped": true
+  },
+  "maven": {
+    "allCommandsReturned": true,
+    "stages": 2,
+    "last": "iam-stage-5-n3-fix-final01",
+    "noSetupCompileOrExtraRegression": true,
+    "commands": {
+      "file": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/commands.json",
+      "bytes": 2997,
+      "sha256": "c816b1da85a31e9f5e1b7864410231d023bbb72bec59f2978f7d0033aa077857"
+    }
+  },
+  "coverage": {
+    "currentSingleRun": true,
+    "tests": 40,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "stage": "iam-stage-5-n3-fix-final01",
+    "classes": [
+      {
+        "name": "cn.agentplatform.engine.infra.PublishedAdmissionHttpPostgresTest",
+        "tests": 20,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "file": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/iam-stage-5-n3-fix-final01/xml/engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.PublishedAdmissionHttpPostgresTest.xml",
+        "sha256": "5818ae0b6648682ef4796048b171766fc17932fbcd19b0fc699eb3d977fecfa5"
+      },
+      {
+        "name": "cn.agentplatform.engine.infra.RuntimeClientsPublishedHttpTest",
+        "tests": 20,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "file": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/iam-stage-5-n3-fix-final01/xml/engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RuntimeClientsPublishedHttpTest.xml",
+        "sha256": "0f09c97ce5aaedc93383e96c48b9fdd445153f548bead251e9006ce130c79e5e"
+      }
+    ],
+    "i1": "expiryAfterCommittedResponseMetadataNeverNotifiesSchedulerAndFreshPollRecovers",
+    "i2": "proofExpiringWhileRealExecutorQueuedNeverSendsPublishedGet",
+    "red": "fix-red01 actual2/2F/0E: createdCalls1 instead0; app sends1 instead0 in0.407s",
+    "audit": {
+      "file": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/test-audit.json",
+      "bytes": 6812,
+      "sha256": "a4a699578750cc0193aa1201964e79aa271b661e2407a67b26f88b6392b8d077"
+    },
+    "current": {
+      "file": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/current-covered-tests.json",
+      "bytes": 4715,
+      "sha256": "1c5191db35590b82a69ac892e025a56f316a6f30d5e02b5f13cd21eddd4c6658"
+    },
+    "priorCountsNotAdded": true
+  },
+  "sourceTarget": {
+    "sourceBefore": 367,
+    "sourceAfter": 367,
+    "sourceAdded": 0,
+    "sourceModified": 4,
+    "sourceDeleted": 0,
+    "targetBefore": 1795,
+    "targetAfter": 1798,
+    "targetAdded": 3,
+    "targetModified": 10,
+    "targetDeleted": 0,
+    "businessJarChanges": 0,
+    "manifests": [
+      {
+        "file": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/source-before.json",
+        "bytes": 75492,
+        "sha256": "297a5b55920d7bc38adb8a4af8d7426fcbaa9827cf81a6805d89d76fd48603f5"
+      },
+      {
+        "file": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/source-after.json",
+        "bytes": 75492,
+        "sha256": "730a2b8c74caa0c47fc1244b47055d956776e3df4b2a0f125d42f4b093b92656"
+      },
+      {
+        "file": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/source-changes.json",
+        "bytes": 2051,
+        "sha256": "ede10afac0da7a9eab9219622084ac2b0d7b1e234c632d5728812826875f225d"
+      },
+      {
+        "file": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/target-before.json",
+        "bytes": 368494,
+        "sha256": "eb7cc047f3181f1324a2859090bc2648a0d0e02ba8e672fbe86d689170543876"
+      },
+      {
+        "file": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/target-after.json",
+        "bytes": 369117,
+        "sha256": "1a4ac516fa75fe4ffcb706db938dc05caee476f605e8b4b10aeebd7f087f9923"
+      },
+      {
+        "file": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/target-changes.json",
+        "bytes": 5955,
+        "sha256": "0d7c8dfbac62f5768c98ec5e99351d204cd2319c5a3116940efa8929908c2257"
+      }
+    ],
+    "physicalBeforeByteEqual": 2162,
+    "physicalLocations": {
+      "before": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/before/",
+      "baseline": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/baseline/",
+      "frozen": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/frozen/",
+      "targetFinal": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/target-final/",
+      "replay": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/replay/"
+    }
+  },
+  "patch": {
+    "file": {
+      "file": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/change.patch",
+      "bytes": 251529,
+      "sha256": "bea265d2ca9fee391a6206835624afd06d96d594b13cc349fbb660ad45478eec"
+    },
+    "applyCheckExit": 0,
+    "applyExit": 0,
+    "replayByteEqualFiles": 367,
+    "check": {
+      "file": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/patch-check.json",
+      "bytes": 543,
+      "sha256": "94ce8c6a9d2097e0649a70f92abc127ec7547243868b7256a2aba1d3a8ac9221"
+    },
+    "apply": {
+      "file": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/apply.json",
+      "bytes": 233,
+      "sha256": "74dfec338d74117c7320d0bfbf51b93463d93d4862886a5f01a5a1a90d2ab8cc"
+    },
+    "noHeadOrRemoteUsed": true
+  },
+  "protection": {
+    "files": 101048,
+    "bytes": 7634684209,
+    "changes": 0,
+    "additions": 0,
+    "runners": 28,
+    "runnerChanges": 0,
+    "indexes": 8,
+    "indexChanges": 0,
+    "sourceTargetFrozenFiles": 2165,
+    "sourceTargetDifferences": 0,
+    "summary": {
+      "file": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/protection-summary.json",
+      "bytes": 1969,
+      "sha256": "4c8c785601ac49f7ab37e696dc9e84b7242af313099051b93964cbbbdf4b34b1"
+    },
+    "fullAfter": {
+      "file": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/protected-after.json",
+      "bytes": 26343566,
+      "sha256": "bbac7c1ecf641c648d515e02a289bcbd1191705c8578a60ca30a0b369fe4d349"
+    },
+    "diff": {
+      "file": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/protected-changes.json",
+      "bytes": 188,
+      "sha256": "808bba16fb017e82052c34db94ad23711b78b0133965a5a8902f78122a1043d1"
+    },
+    "originalReportAndReviewUnchanged": [
+      {
+        "before": {
+          "file": "docs/evidence/iam-stage-5-n3-admission-app-client-report.md",
+          "bytes": 28426,
+          "sha256": "0312f487df70a93a124f4e183834c8d88eb3dc251333a7862351fc6a352507a4"
+        },
+        "after": {
+          "file": "docs/evidence/iam-stage-5-n3-admission-app-client-report.md",
+          "bytes": 28426,
+          "sha256": "0312f487df70a93a124f4e183834c8d88eb3dc251333a7862351fc6a352507a4"
+        }
+      },
+      {
+        "before": {
+          "file": "docs/evidence/review-iam-stage-5-n3.md",
+          "bytes": 18890,
+          "sha256": "d971492e77ece4178c710185f8aaa0b159a9addb468aa01e3a67a74e46a8ceca"
+        },
+        "after": {
+          "file": "docs/evidence/review-iam-stage-5-n3.md",
+          "bytes": 18890,
+          "sha256": "d971492e77ece4178c710185f8aaa0b159a9addb468aa01e3a67a74e46a8ceca"
+        }
+      }
+    ]
+  },
+  "resources": {
+    "ownAppChildren": 2,
+    "ownRecordedEngineAppPorts": 23,
+    "remainingObservedPidIdentities": 0,
+    "remainingOwnedListeners": 0,
+    "noOtherProcessTerminated": true,
+    "cleanup": {
+      "file": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/resource-cleanup.json",
+      "bytes": 832,
+      "sha256": "25d449a188112a3d48eae5068510430c366041b8b01c0dedf72cf7ce12043135"
+    },
+    "clientFixturePortsNotClaimedAsIndividualOsAudit": true
+  },
+  "databaseHistory": {
+    "file": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/database-history.json",
+    "bytes": 16771,
+    "sha256": "d0f93cf12c239b21f0aca281240a0d0e25f2962fe44edb457473d742c1f2f211"
+  },
+  "upstream": {
+    "file": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/upstream/reading-manifest.json",
+    "bytes": 4631,
+    "sha256": "2cfba8509e3535358813791aed3802f8b11468023d8fe956455c5bc653ad6201"
+  },
+  "noise": {
+    "businessAssertionsRedOnly": true,
+    "toolEvidence": {
+      "file": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/tool-noise.md",
+      "bytes": 2227,
+      "sha256": "d4045f3615c39596c95f1cbc91b2acfe164520997ea0e3ca4969626cddf21517"
+    },
+    "actualTestNoise": {
+      "file": "docs/evidence/iam-stage-5-n3-admission-app-client-fix/noise-audit.json",
+      "bytes": 170211,
+      "sha256": "5e85c0333c1b53bc88833b8eda89da775f3958ddb8bf1d098af0aaf684a89361"
+    },
+    "finalizePartialCompletion": "Physical freeze/apply/replay/test-audit completed before ENOENT basename mistake; only unwritten upstream/resources continued; no successful step or business test rerun",
+    "windowsDumpstreams": [
+      {
+        "file": "engine-runtime/target/surefire-reports/2026-10-20T23-33-06_006.dumpstream",
+        "bytes": 344
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/2026-10-20T23-34-02_321.dumpstream",
+        "bytes": 344
+      }
+    ]
+  },
+  "boundaries": {
+    "callerFrameBoundPreserved": true,
+    "workerUsesPrivateVerificationClockWithoutThreadLocal": true,
+    "requestContextMissingProofOrDeadline": "403 deny",
+    "sameMonotonicDeadline": "single2s covering submit/queue/connect/fullbody; elapseddeadline503",
+    "executionException": "PlatformException cause propagated, authorization403 remains403",
+    "wireWriteNotAtomicRevocation": true,
+    "noTlsConnectionWaitProbe": true,
+    "globalIamBootLockRetained": true,
+    "noCommonPomAppRunnerConfigSchemaRouteChanges": true,
+    "noPackageDeployCommitPush": true,
+    "sharedIndexesModified": false
+  },
+  "pending": [
+    "Root independent audit and original reviewer fix diff/current actual coverage review",
+    "N4 true GatewayController and globally consistent ordinary IAM mode; N4a mode/profile fixture",
+    "Independent GET status/SSE, CHAT/tools/models/session/history/replay, complete recovery, Observer/RR1/RR2, portal browser, real IAM/ontology/K8s/capacity/all Task5"
+  ]
+}

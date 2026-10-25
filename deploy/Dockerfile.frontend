@@ -1,0 +1,31 @@
+ARG NODE_BUILD_IMAGE
+ARG NGINX_RUNTIME_IMAGE
+FROM ${NODE_BUILD_IMAGE} AS frontend-build
+WORKDIR /build/web
+COPY web/package*.json ./
+COPY web/admin/package.json admin/package.json
+COPY web/webapp/package.json webapp/package.json
+COPY web/assistant.js/package.json assistant.js/package.json
+COPY web/shared/package.json shared/package.json
+COPY web/flow-designer/package.json flow-designer/package.json
+COPY web/debug-panel/package.json debug-panel/package.json
+RUN npm ci
+COPY web/ ./
+# The three release artifacts have independent asset prefixes on the same origin.
+RUN npx vue-tsc --noEmit && npx vite build --config admin/vite.config.ts --base=/console/ \
+ && npx vite build --config webapp/vite.config.ts --base=/w/ \
+ && npx vite build --config assistant.js/vite.config.ts \
+ && mkdir -p /release/console /release/w /release/embed \
+ && cp -R admin/dist/. /release/console/ && cp -R webapp/dist/. /release/w/ \
+ && cp assistant.js/dist/assistant.js /release/assistant.js \
+ && hash=$(sha256sum /release/assistant.js | cut -d' ' -f1) \
+ && cp /release/assistant.js "/release/embed/assistant.${hash}.js" \
+ && printf '%s\n' "assistant.${hash}.js" > /release/embed/manifest.txt
+FROM ${NGINX_RUNTIME_IMAGE}
+COPY --from=frontend-build /release/ /usr/share/nginx/html/
+COPY deploy/nginx.conf /etc/nginx/nginx.conf
+USER 10001:10001
+EXPOSE 8080
+STOPSIGNAL SIGQUIT
+ENTRYPOINT ["nginx", "-g", "daemon off;"]
+HEALTHCHECK --interval=15s --timeout=3s --retries=3 CMD ["wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]

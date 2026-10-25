@@ -1,0 +1,957 @@
+diff --git a/admin-common/src/main/java/cn/agentplatform/common/Actor.java b/admin-common/src/main/java/cn/agentplatform/common/Actor.java
+--- a/admin-common/src/main/java/cn/agentplatform/common/Actor.java
++++ b/admin-common/src/main/java/cn/agentplatform/common/Actor.java
+@@ -24,10 +24,16 @@
+         var auth = SecurityContextHolder.getContext().getAuthentication();
+         if (auth == null || !(auth.getPrincipal() instanceof Jwt jwt))
+             throw new PlatformException(401, "SYS-AUTH-401", "请先登录");
++        // A machine client cannot be projected onto a tenant/user, even if a future caller
++        // accidentally supplies user-shaped claims beside its verified workload ticket.
++        if ("workload".equals(jwt.getClaims().get("authority_mode")))
++            throw new PlatformException(403, "SYS-AUTH-403", "机器能力不能映射为用户身份");
+         Set<String> roles = new HashSet<>();
+         Object roleClaim = jwt.getClaims().get("roles");
+         if (roleClaim instanceof Collection<?> list)
+             list.forEach(r -> roles.add(String.valueOf(r)));
++        if ("RS256".equals(jwt.getHeaders().get("alg")))
++            roles.removeAll(Set.of("SERVICE", "GATEWAY_AUTH"));
+         Map<String, Set<String>> attrs = new HashMap<>();
+         Object attrClaim = jwt.getClaims().get("attributes");
+         if (attrClaim instanceof Map<?, ?> map)
+diff --git a/admin-common/src/main/java/cn/agentplatform/common/SecurityConfiguration.java b/admin-common/src/main/java/cn/agentplatform/common/SecurityConfiguration.java
+--- a/admin-common/src/main/java/cn/agentplatform/common/SecurityConfiguration.java
++++ b/admin-common/src/main/java/cn/agentplatform/common/SecurityConfiguration.java
+@@ -4,6 +4,7 @@
+ import jakarta.servlet.http.*;
+ 
+ import cn.agentplatform.common.authority.AuthorityProperties;
++import cn.agentplatform.common.authority.TrustedJwtDecoder;
+ import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
+ import org.springframework.boot.context.properties.bind.*;
+ import org.springframework.boot.context.properties.bind.handler.NoUnboundElementsBindHandler;
+@@ -19,6 +20,8 @@
+ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+ import org.springframework.security.config.http.SessionCreationPolicy;
+ import org.springframework.security.core.context.SecurityContextHolder;
++import org.springframework.security.core.GrantedAuthority;
++import org.springframework.security.core.authority.SimpleGrantedAuthority;
+ import org.springframework.security.oauth2.core.*;
+ import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+ import org.springframework.security.oauth2.jwt.*;
+@@ -99,7 +102,27 @@
+         authorities.setAuthoritiesClaimName("roles");
+         authorities.setAuthorityPrefix("ROLE_");
+         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
+-        converter.setJwtGrantedAuthoritiesConverter(authorities);
++        boolean trusted = decoder instanceof TrustedJwtDecoder;
++        converter.setJwtGrantedAuthoritiesConverter(jwt -> {
++            if (!trusted) return authorities.convert(jwt);
++            var result = new ArrayList<GrantedAuthority>();
++            if ("user".equals(jwt.getClaimAsString("token_use"))) {
++                jwt.getClaimAsStringList("roles").stream()
++                        .filter(role -> !Set.of("SERVICE", "GATEWAY_AUTH").contains(role))
++                        .forEach(role -> result.add(new SimpleGrantedAuthority("ROLE_" + role)));
++                String scope = jwt.getClaimAsString("scope");
++                if (scope != null && !scope.isEmpty())
++                    Arrays.stream(scope.split(" ")).forEach(s -> result.add(new SimpleGrantedAuthority("SCOPE_" + s)));
++            }
++            return result;
++        });
++        if (trusted) http.addFilterBefore(new OncePerRequestFilter() {
++            @Override protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
++                    FilterChain chain) throws ServletException, IOException {
++                try { chain.doFilter(request, response); }
++                catch (PlatformException error) { authError(response, error.status(), error.code()); }
++            }
++        }, BearerTokenAuthenticationFilter.class);
+         ApiKeyAuthenticator apiKey = apiKeys.getIfAvailable();
+         if (apiKey != null)
+             http.addFilterBefore(
+@@ -152,6 +175,7 @@
+                                                 (auth, context) ->
+                                                         new AuthorizationDecision(
+                                                                 auth.get().isAuthenticated()
++                                                                        && (!trusted || portalScope(auth.get()))
+                                                                         && !(auth.get()
+                                                                                                 .getPrincipal()
+                                                                                         instanceof
+@@ -162,12 +186,33 @@
+                                                                                                         .getClaimAsString(
+                                                                                                                 "token_use")))))
+                                         .requestMatchers("/internal/**")
+-                                        .hasAuthority("ROLE_SERVICE")
++                                        .access((auth, context) -> new AuthorizationDecision(
++                                                // Current-authority/resource guards are not yet installed. No RS256
++                                                // service ticket may turn a role string into a service capability.
++                                                !trusted && auth.get().getAuthorities().stream()
++                                                        .anyMatch(a -> a.getAuthority().equals("ROLE_SERVICE"))))
+                                         .anyRequest()
+-                                        .authenticated())
++                                        .access((auth, context) -> new AuthorizationDecision(auth.get().isAuthenticated()
++                                                && (!trusted || portalScope(auth.get())))))
++                .exceptionHandling(x -> x
++                        .authenticationEntryPoint((request, response, error) -> authError(response, 401, "SYS-AUTH-401"))
++                        .accessDeniedHandler((request, response, error) -> authError(response, 403, "SYS-AUTH-403")))
+                 .oauth2ResourceServer(
+-                        x -> x.jwt(j -> j.decoder(decoder).jwtAuthenticationConverter(converter)))
++                        x -> x.authenticationEntryPoint((request, response, error) -> authError(response, 401, "SYS-AUTH-401"))
++                                .accessDeniedHandler((request, response, error) -> authError(response, 403, "SYS-AUTH-403"))
++                                .jwt(j -> j.decoder(decoder).jwtAuthenticationConverter(converter)))
+                 .build();
++    }
++
++    private static boolean portalScope(org.springframework.security.core.Authentication auth) {
++        return auth.getPrincipal() instanceof Jwt jwt && "user".equals(jwt.getClaimAsString("token_use"))
++                && auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("SCOPE_platform.access"));
++    }
++
++    private static void authError(HttpServletResponse response, int status, String code) throws IOException {
++        response.setStatus(status);
++        response.setContentType("application/json;charset=UTF-8");
++        response.getWriter().write(Json.write(new ApiResponse<>(code, "身份或授权验证未通过", null, null)));
+     }
+ 
+     @Bean
+diff --git a/admin-common/src/main/java/cn/agentplatform/common/ServiceTokens.java b/admin-common/src/main/java/cn/agentplatform/common/ServiceTokens.java
+--- a/admin-common/src/main/java/cn/agentplatform/common/ServiceTokens.java
++++ b/admin-common/src/main/java/cn/agentplatform/common/ServiceTokens.java
+@@ -7,7 +7,8 @@
+ import javax.crypto.Mac;
+ import javax.crypto.spec.SecretKeySpec;
+ 
+-/** 详设用户令牌不透传下游：换发短期内部票据，仅保留已验证的原主体/权限交集。 */
++/** Legacy explicit dev/test HMAC only; IAM listeners are closed until authority exchange is installed.
++ * This key domain is never a fallback for TrustedJwtDecoder's RS256 portal/service domains. */
+ public final class ServiceTokens {
+     public static final String ISSUER = "agent-platform-v12";
+ 
+diff --git a/admin-common/src/main/java/cn/agentplatform/common/authority/AuthorityProperties.java b/admin-common/src/main/java/cn/agentplatform/common/authority/AuthorityProperties.java
+--- a/admin-common/src/main/java/cn/agentplatform/common/authority/AuthorityProperties.java
++++ b/admin-common/src/main/java/cn/agentplatform/common/authority/AuthorityProperties.java
+@@ -13,7 +13,8 @@
+     public static final Set<String> SERVICES = Set.of("gateway", "app", "engine", "skill", "model", "monitor");
+ 
+     public record Portal(boolean enabled, String issuer, String jwksUri, String audience,
+-                         String clientId, Set<String> roleAllowlist, Set<String> attributeAllowlist) {}
++                         String clientId, Set<String> roleAllowlist, Set<String> attributeAllowlist,
++                         Map<String, Set<String>> attributeValueAllowlist, Set<String> scopeAllowlist) {}
+     public record Integration(boolean enabled, String keySecretRef) {}
+     public record Authority(
+             String issuer, String jwksUri, String tokenUri, String decisionUri,
+@@ -22,6 +23,10 @@
+             @DefaultValue("1000") int connectTimeoutMs, @DefaultValue("2000") int readTimeoutMs) {}
+ 
+     public void validate() {
++        validate(false);
++    }
++
++    public void validate(boolean testProfile) {
+         if (mode == null || mode.isBlank()) throw invalid("SECURITY_MODE_REQUIRED");
+         if (!Set.of("dev-hmac", "test", "iam").contains(mode)) throw invalid("SECURITY_MODE_INVALID");
+         if (!SERVICES.contains(Objects.toString(serviceId, ""))) throw invalid("SERVICE_ID_INVALID");
+@@ -29,7 +34,7 @@
+                 && ((portal != null && portal.enabled()) || (integration != null && integration.enabled())
+                     || Boolean.TRUE.equals(allowEmbed)))
+             throw invalid("PORTAL_SERVICE_FORBIDDEN");
+-        if (!"iam".equals(mode)) return;
++        if (!"iam".equals(mode) && authority == null) return;
+         if (authority == null) throw invalid("IAM_CONFIG_REQUIRED");
+         var a = authority;
+         for (String required : Arrays.asList(a.issuer(), a.jwksUri(), a.tokenUri(), a.decisionUri(),
+@@ -40,17 +45,30 @@
+             throw invalid("IAM_SECRET_REF_INVALID");
+         if (!"RS256".equals(a.allowedAlgorithm())) throw invalid("IAM_ALGORITHM_INVALID");
+         if (!("urn:agent-platform:service:" + serviceId).equals(a.audience())) throw invalid("IAM_AUDIENCE_INVALID");
+-        for (String uri : List.of(a.issuer(), a.jwksUri(), a.tokenUri(), a.decisionUri())) requireHttps(uri);
++        for (String uri : List.of(a.issuer(), a.jwksUri(), a.tokenUri(), a.decisionUri())) requireTrustedUri(uri, testProfile);
+         if (a.maxTicketSeconds() < 1 || a.maxTicketSeconds() > 60
+                 || a.maxDecisionSeconds() < 1 || a.maxDecisionSeconds() > 5
+                 || a.connectTimeoutMs() < 1 || a.connectTimeoutMs() > 1000
+                 || a.readTimeoutMs() < 1 || a.readTimeoutMs() > 2000) throw invalid("IAM_BUDGET_INVALID");
+         if (portal != null && portal.enabled()) {
+-            requireHttps(portal.issuer()); requireHttps(portal.jwksUri());
++            requireTrustedUri(portal.issuer(), testProfile); requireTrustedUri(portal.jwksUri(), testProfile);
+             if (portal.audience() == null || portal.audience().isBlank() || portal.clientId() == null
+                     || portal.clientId().isBlank() || portal.roleAllowlist() == null || portal.roleAllowlist().isEmpty()
+-                    || portal.attributeAllowlist() == null || portal.attributeAllowlist().isEmpty())
++                    || portal.attributeAllowlist() == null || portal.attributeAllowlist().isEmpty()
++                    || portal.attributeValueAllowlist() == null || portal.scopeAllowlist() == null
++                    || !portal.scopeAllowlist().contains("platform.access"))
+                 throw invalid("PORTAL_CONFIG_REQUIRED");
++            if (!Set.of("ADMIN", "EDITOR", "APPROVER").containsAll(portal.roleAllowlist())
++                    || !Set.of("region", "dataLabels", "bizSystemCode", "userId").containsAll(portal.attributeAllowlist())
++                    || !portal.attributeValueAllowlist().keySet().equals(portal.attributeAllowlist()))
++                throw invalid("PORTAL_CEILING_INVALID");
++            portal.attributeValueAllowlist().forEach((key, values) -> {
++                if (values == null || values.isEmpty() || values.stream().anyMatch(v -> v == null || v.isBlank())
++                        || ((key.equals("bizSystemCode") || key.equals("userId")) && values.size() != 1))
++                    throw invalid("PORTAL_CEILING_INVALID");
++            });
++            if (portal.scopeAllowlist().stream().anyMatch(v -> v == null || !v.matches("[A-Za-z0-9:._-]+")))
++                throw invalid("PORTAL_CEILING_INVALID");
+         }
+         if (integration != null && integration.enabled()
+                 && (integration.keySecretRef() == null || integration.keySecretRef().isBlank()))
+@@ -58,7 +76,7 @@
+     }
+ 
+     public void validateDeployment(boolean devAuth, String address, boolean testProfile) {
+-        validate();
++        validate(testProfile);
+         if ("iam".equals(mode)) {
+             if (devAuth) throw invalid("IAM_DEV_AUTH_FORBIDDEN");
+             return;
+@@ -70,10 +88,12 @@
+             throw invalid("LOOPBACK_BIND_REQUIRED");
+     }
+ 
+-    private static void requireHttps(String value) {
++    static void requireTrustedUri(String value, boolean testProfile) {
+         try {
+             var uri = URI.create(Objects.requireNonNull(value));
+-            if (!"https".equals(uri.getScheme()) || uri.getHost() == null || uri.getUserInfo() != null
++            boolean testLoopback = testProfile && "http".equals(uri.getScheme())
++                    && Set.of("127.0.0.1", "[::1]", "::1").contains(Objects.toString(uri.getHost(), ""));
++            if ((!"https".equals(uri.getScheme()) && !testLoopback) || uri.getHost() == null || uri.getUserInfo() != null
+                     || uri.getFragment() != null || uri.getRawQuery() != null) throw invalid("IAM_URI_INVALID");
+         } catch (IllegalArgumentException | NullPointerException ex) { throw invalid("IAM_URI_INVALID"); }
+     }
+diff --git a/admin-common/src/main/java/cn/agentplatform/common/authority/BoundedIamHttp.java b/admin-common/src/main/java/cn/agentplatform/common/authority/BoundedIamHttp.java
+new file mode 100644
+--- /dev/null
++++ b/admin-common/src/main/java/cn/agentplatform/common/authority/BoundedIamHttp.java
+@@ -0,0 +1,76 @@
++package cn.agentplatform.common.authority;
++
++import cn.agentplatform.common.Json;
++import cn.agentplatform.common.PlatformException;
++import java.io.ByteArrayOutputStream;
++import java.net.*;
++import java.net.http.*;
++import java.nio.ByteBuffer;
++import java.nio.charset.StandardCharsets;
++import java.time.Duration;
++import java.util.*;
++import java.util.concurrent.*;
++import java.util.concurrent.Flow;
++
++/** Fixed deployment endpoints only. No discovery, redirects, retries, cookies or response cache. */
++public final class BoundedIamHttp implements AutoCloseable {
++    public static final int MAX_BYTES=64*1024;
++    private final Set<URI> gets, posts;
++    private final int deadlineMs;
++    private final HttpClient client;
++    public BoundedIamHttp(AuthorityProperties config, boolean testProfile) {
++        config.validate(testProfile);
++        var a=Objects.requireNonNull(config.authority(),"IAM_CONFIG_REQUIRED");
++        var allowed=new HashSet<URI>();allowed.add(URI.create(a.jwksUri()));
++        if(config.portal()!=null && config.portal().enabled())allowed.add(URI.create(config.portal().jwksUri()));
++        gets=Set.copyOf(allowed);posts=Set.of(URI.create(a.tokenUri()),URI.create(a.decisionUri()));
++        deadlineMs=a.readTimeoutMs();
++        client=HttpClient.newBuilder().connectTimeout(Duration.ofMillis(a.connectTimeoutMs()))
++                .followRedirects(HttpClient.Redirect.NEVER).build();
++    }
++    public byte[] get(URI uri){return request(uri,"GET",null,null,gets);}
++    public byte[] postForm(URI uri,Map<String,String> fields){
++        var encoded=new ArrayList<String>();
++        fields.forEach((k,v)->encoded.add(URLEncoder.encode(k,StandardCharsets.UTF_8)+"="+URLEncoder.encode(v,StandardCharsets.UTF_8)));
++        return request(uri,"POST",String.join("&",encoded).getBytes(StandardCharsets.UTF_8),"application/x-www-form-urlencoded",posts);
++    }
++    public byte[] postJson(URI uri,Object value){return request(uri,"POST",Json.write(value).getBytes(StandardCharsets.UTF_8),"application/json",posts);}
++    private byte[] request(URI uri,String method,byte[] body,String contentType,Set<URI> allowed){
++        if(!allowed.contains(uri))throw new IllegalArgumentException("IAM_ENDPOINT_NOT_CONFIGURED");
++        if(body!=null && body.length>MAX_BYTES)throw new IllegalArgumentException("IAM_REQUEST_TOO_LARGE");
++        var builder=HttpRequest.newBuilder(uri).timeout(Duration.ofMillis(deadlineMs)).header("Accept","application/json");
++        if(contentType!=null)builder.header("Content-Type",contentType);
++        builder.method(method,body==null?HttpRequest.BodyPublishers.noBody():HttpRequest.BodyPublishers.ofByteArray(body));
++        var subscriber=new LimitedBody();
++        var future=client.sendAsync(builder.build(),info->{
++            if(info.statusCode()!=200 || info.headers().firstValueAsLong("Content-Length").orElse(0)>MAX_BYTES)subscriber.reject();
++            return subscriber;
++        });
++        try {return future.get(deadlineMs,TimeUnit.MILLISECONDS).body();}
++        catch(InterruptedException e){Thread.currentThread().interrupt();throw unavailable();}
++        catch(ExecutionException|TimeoutException|CancellationException e){throw unavailable();}
++        finally{subscriber.cancel();future.cancel(true);}
++    }
++    static PlatformException unavailable(){return new PlatformException(503,"IAM_AUTHORITY_UNAVAILABLE","可信授权服务暂不可用");}
++    /** Completion covers the full body; overflow/timeout cancels the active HTTP subscription. */
++    private static final class LimitedBody implements HttpResponse.BodySubscriber<byte[]> {
++        private final CompletableFuture<byte[]> done=new CompletableFuture<>();
++        private final ByteArrayOutputStream bytes=new ByteArrayOutputStream();
++        private Flow.Subscription subscription;
++        public CompletionStage<byte[]> getBody(){return done;}
++        public synchronized void onSubscribe(Flow.Subscription s){subscription=s;if(done.isDone())s.cancel();else s.request(1);}
++        public synchronized void onNext(List<ByteBuffer> buffers){
++            if(done.isDone())return;
++            for(var buffer:buffers){
++                if(buffer.remaining()>MAX_BYTES-bytes.size()){reject();return;}
++                byte[] piece=new byte[buffer.remaining()];buffer.get(piece);bytes.writeBytes(piece);
++            }
++            subscription.request(1);
++        }
++        public void onError(Throwable error){done.completeExceptionally(unavailable());}
++        public synchronized void onComplete(){done.complete(bytes.toByteArray());}
++        synchronized void reject(){done.completeExceptionally(unavailable());cancel();}
++        synchronized void cancel(){if(subscription!=null)subscription.cancel();if(!done.isDone())done.completeExceptionally(unavailable());}
++    }
++    @Override public void close(){client.close();}
++}
+diff --git a/admin-common/src/main/java/cn/agentplatform/common/authority/PortalClaimMapper.java b/admin-common/src/main/java/cn/agentplatform/common/authority/PortalClaimMapper.java
+new file mode 100644
+--- /dev/null
++++ b/admin-common/src/main/java/cn/agentplatform/common/authority/PortalClaimMapper.java
+@@ -0,0 +1,46 @@
++package cn.agentplatform.common.authority;
++
++import cn.agentplatform.common.Actor;
++import org.springframework.security.oauth2.jwt.*;
++import java.util.*;
++
++/** This adapter's signed client_id/space-separated scope profile; input must already be verified. */
++public final class PortalClaimMapper {
++    public record Mapped(Actor actor, Set<String> scopes) {}
++    private final AuthorityProperties.Portal portal;
++    public PortalClaimMapper(AuthorityProperties.Portal portal){this.portal=Objects.requireNonNull(portal);}
++    public Mapped map(Jwt jwt){
++        var c=jwt.getClaims();
++        if(!portal.enabled() || !portal.issuer().equals(text(c.get("iss")))
++                || !portal.clientId().equals(text(c.get("client_id"))) || !"user".equals(text(c.get("token_use")))
++                || !jwt.getAudience().equals(List.of(portal.audience())))throw invalid();
++        String tenant=text(c.get("tenant_id")), subject=text(c.get("sub"));
++        Set<String> roles=new HashSet<>(strings(c.get("roles")));roles.retainAll(portal.roleAllowlist());
++        roles.removeAll(Set.of("SERVICE","GATEWAY_AUTH"));
++        var attrs=attributes(c.get("attributes"));
++        // Sensitivity labels remain obligations even when absent from the permission allowlist.
++        var mapped=ClaimCeiling.attributes(attrs,portal.attributeValueAllowlist());
++        var scopes=new HashSet<>(scopes(c.get("scope")));scopes.retainAll(portal.scopeAllowlist());
++        return new Mapped(new Actor(tenant,subject,roles,mapped),Set.copyOf(scopes));
++    }
++    static String text(Object value){if(!(value instanceof String s)||s.isBlank())throw invalid();return s;}
++    static Set<String> strings(Object value){
++        if(value==null)return Set.of();
++        if(!(value instanceof Collection<?> values))throw invalid();
++        var result=new HashSet<String>();for(var item:values)result.add(text(item));return Set.copyOf(result);
++    }
++    static Set<String> scopes(Object value){
++        if(value==null)return Set.of();
++        if(!(value instanceof String s))throw invalid();
++        if(s.isEmpty())return Set.of();
++        if(!s.matches("[A-Za-z0-9:._-]+( [A-Za-z0-9:._-]+)*"))throw invalid();
++        return Set.copyOf(Arrays.asList(s.split(" ")));
++    }
++    static Map<String,Set<String>> attributes(Object value){
++        if(value==null)return Map.of();
++        if(!(value instanceof Map<?,?> values))throw invalid();
++        var result=new HashMap<String,Set<String>>();
++        values.forEach((k,v)->{if(v==null)throw invalid();result.put(text(k),strings(v));});return Map.copyOf(result);
++    }
++    static BadJwtException invalid(){return new BadJwtException("JWT_PROFILE_INVALID");}
++}
+diff --git a/admin-common/src/main/java/cn/agentplatform/common/authority/TrustedJwtDecoder.java b/admin-common/src/main/java/cn/agentplatform/common/authority/TrustedJwtDecoder.java
+new file mode 100644
+--- /dev/null
++++ b/admin-common/src/main/java/cn/agentplatform/common/authority/TrustedJwtDecoder.java
+@@ -0,0 +1,140 @@
++package cn.agentplatform.common.authority;
++
++import cn.agentplatform.common.PlatformException;
++import com.fasterxml.jackson.core.*;
++import com.fasterxml.jackson.databind.*;
++import com.nimbusds.jose.*;
++import com.nimbusds.jose.jwk.*;
++import com.nimbusds.jose.jwk.source.JWKSource;
++import com.nimbusds.jose.proc.*;
++import com.nimbusds.jwt.proc.DefaultJWTProcessor;
++import org.springframework.security.oauth2.core.*;
++import org.springframework.security.oauth2.jwt.*;
++import java.net.URI;
++import java.time.*;
++import java.util.*;
++
++/** RS256 portal and authority domains only. Integration HMAC is never an alternative key source. */
++public final class TrustedJwtDecoder implements JwtDecoder,AutoCloseable {
++    private static final ObjectMapper JSON=new ObjectMapper(JsonFactory.builder().enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION).build());
++    private final AuthorityProperties config;
++    private final Clock clock;
++    private final BoundedIamHttp http;
++    private final NimbusJwtDecoder authority,portal;
++    private final PortalClaimMapper mapper;
++    private final List<ServiceRoutePolicy.Route> routes=new ServiceRoutePolicy().routes();
++    public TrustedJwtDecoder(AuthorityProperties config,Clock clock,boolean testProfile){
++        config.validate(testProfile);this.config=config;this.clock=Objects.requireNonNull(clock);
++        http=new BoundedIamHttp(config,testProfile);
++        authority=decoder(config.authority().issuer(),config.authority().jwksUri(),false);
++        boolean enabled=config.portal()!=null && config.portal().enabled();
++        portal=enabled?decoder(config.portal().issuer(),config.portal().jwksUri(),true):null;
++        mapper=enabled?new PortalClaimMapper(config.portal()):null;
++    }
++    @Override public Jwt decode(String token){
++        try{
++            if(token==null || token.length()>16384 || !token.matches("[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+"))throw invalid();
++            var parts=token.split("\\.");var header=object(Base64.getUrlDecoder().decode(parts[0]));
++            if(!"RS256".equals(header.path("alg").textValue()) || !"at+jwt".equals(header.path("typ").textValue())
++                    || !header.path("kid").isTextual() || header.path("kid").textValue().isBlank()
++                    || header.has("jku") || header.has("x5u") || header.has("jwk") || header.has("x5c") || header.has("crit"))throw invalid();
++            var raw=object(Base64.getUrlDecoder().decode(parts[1]));
++            // Original JSON types are checked before Nimbus/Spring coercion and synthesized iat.
++            for(String k:List.of("iss","sub","jti","token_use","client_id"))requiredText(raw,k);
++            for(String k:List.of("exp","iat"))numericDate(raw,k);
++            if(raw.has("nbf"))numericDate(raw,"nbf");
++            var aud=raw.get("aud");
++            if(!(aud!=null && (aud.isTextual() || (aud.isArray() && aud.size()==1 && aud.get(0).isTextual()))))throw invalid();
++            String issuer=raw.path("iss").textValue();
++            // Unverified issuer/use select fixed candidates only; no URL comes from a token.
++            boolean user="user".equals(raw.path("token_use").textValue());
++            NimbusJwtDecoder selected=user && portal!=null && config.portal().issuer().equals(issuer)?portal:
++                    !user && config.authority().issuer().equals(issuer)?authority:null;
++            if(selected==null)throw invalid();
++            var jwt=selected.decode(token);
++            if(user){
++                var mapped=mapper.map(jwt);
++                return Jwt.withTokenValue(token).headers(h->h.putAll(jwt.getHeaders())).claims(c->{
++                    c.putAll(jwt.getClaims());c.put("roles",mapped.actor().roles());c.put("attributes",mapped.actor().attributes());
++                    c.put("scope",String.join(" ",new TreeSet<>(mapped.scopes())));
++                }).build();
++            }
++            return jwt;
++        }catch(JwtException ex){
++            // Spring wraps custom JWKSource exceptions. Keep upstream failures distinct from bad tokens.
++            for(Throwable cause=ex;cause!=null;cause=cause.getCause())if(cause instanceof PlatformException p && p.status()==503)throw p;
++            throw new BadJwtException("JWT_INVALID");
++        }catch(PlatformException ex){throw ex;}
++        catch(Exception ex){throw invalid();}
++    }
++    private NimbusJwtDecoder decoder(String issuer,String jwks,boolean user){
++        JWKSource<SecurityContext> source=(selector,context)->selector.select(keys(URI.create(jwks)));
++        var processor=new DefaultJWTProcessor<SecurityContext>();
++        processor.setJWSTypeVerifier(new DefaultJOSEObjectTypeVerifier<>(new JOSEObjectType("at+jwt")));
++        processor.setJWSKeySelector(new JWSVerificationKeySelector<>(JWSAlgorithm.RS256,source));
++        processor.setJWTClaimsSetVerifier((claims,context)->{});
++        var decoder=new NimbusJwtDecoder(processor);
++        var timestamps=new JwtTimestampValidator(Duration.ZERO);timestamps.setClock(clock);
++        decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(timestamps,new JwtIssuerValidator(issuer),jwt->{
++            try{validateClaims(jwt,user);return OAuth2TokenValidatorResult.success();}
++            catch(JwtException ex){return OAuth2TokenValidatorResult.failure(new OAuth2Error("invalid_token","JWT_PROFILE_INVALID",null));}
++        }));return decoder;
++    }
++    private void validateClaims(Jwt jwt,boolean user){
++        var c=jwt.getClaims();var now=clock.instant();var exp=jwt.getExpiresAt();var iat=jwt.getIssuedAt();
++        if(exp==null || iat==null || !exp.isAfter(now) || !exp.isAfter(iat) || iat.isAfter(now))throw invalid();
++        PortalClaimMapper.scopes(c.get("scope"));PortalClaimMapper.strings(c.get("roles"));PortalClaimMapper.attributes(c.get("attributes"));
++        if(user){mapper.map(jwt);return;}
++        var a=config.authority();
++        if(!"service".equals(c.get("token_use")) || !jwt.getAudience().equals(List.of(a.audience()))
++                || exp.isAfter(iat.plusSeconds(a.maxTicketSeconds())) || jwt.getNotBefore()==null)throw invalid();
++        String caller=PortalClaimMapper.text(c.get("caller"));
++        String client=PortalClaimMapper.text(c.get("client_id"));
++        if(!AuthorityProperties.SERVICES.contains(caller) || !caller.equals(client)
++                || !config.serviceId().equals(c.get("target")))throw invalid();
++        String action=PortalClaimMapper.text(c.get("action"));
++        if(!PortalClaimMapper.scopes(c.get("scope")).equals(Set.of(action)))throw invalid();
++        if(!(c.get("resource") instanceof Map<?,?> resource) || !resource.keySet().equals(Set.of("kind","id","version_digest")))throw invalid();
++        for(var v:resource.values())PortalClaimMapper.text(v);
++        String mode=PortalClaimMapper.text(c.get("authority_mode"));
++        if("workload".equals(mode)){
++            if(!caller.equals(jwt.getSubject()) || List.of("tenant_id","grant_ref","roles","attributes","authorization_version","act","user_id").stream().anyMatch(c::containsKey))throw invalid();
++        }else if("delegated".equals(mode)){
++            for(String k:List.of("tenant_id","grant_ref","authorization_version"))PortalClaimMapper.text(c.get(k));
++        }else throw invalid();
++        if(routes.stream().noneMatch(r->mode.equals(r.mode()) && caller.equals(r.caller())
++                && config.serviceId().equals(r.target()) && action.equals(r.action())))throw invalid();
++    }
++    private JWKSet keys(URI uri){
++        byte[] bytes=http.get(uri);
++        try{
++            var root=object(bytes);var array=root.get("keys");
++            if(array==null || !array.isArray() || array.isEmpty() || array.size()>8)throw invalid();
++            var ids=new HashSet<String>();var keys=new ArrayList<JWK>();
++            for(var key:array){
++                if(!key.isObject() || !"RSA".equals(key.path("kty").textValue()) || !"RS256".equals(key.path("alg").textValue())
++                        || !"sig".equals(key.path("use").textValue()) || !key.path("kid").isTextual()
++                        || key.path("kid").textValue().isBlank() || !ids.add(key.path("kid").textValue()))throw invalid();
++                for(String forbidden:List.of("d","p","q","dp","dq","qi","oth","k","x5u","jku","x5c"))if(key.has(forbidden))throw invalid();
++                if(key.has("key_ops") && (!key.get("key_ops").isArray() || key.get("key_ops").size()!=1 || !"verify".equals(key.get("key_ops").get(0).textValue())))throw invalid();
++                var rsa=RSAKey.parse(key.toString());if(rsa.isPrivate() || rsa.size()<2048)throw invalid();keys.add(rsa);
++            }
++            return new JWKSet(keys);
++        }catch(Exception ex){throw BoundedIamHttp.unavailable();}
++    }
++    private static JsonNode object(byte[] bytes)throws Exception{
++        try(var parser=JSON.createParser(bytes)){
++            JsonNode node=JSON.readTree(parser);if(node==null || !node.isObject() || parser.nextToken()!=null)throw invalid();return node;
++        }
++    }
++    private static void requiredText(JsonNode c,String k){if(!c.path(k).isTextual() || c.path(k).textValue().isBlank())throw invalid();}
++    private static void numericDate(JsonNode claims,String key){
++        var value=claims.path(key);
++        if(!value.isIntegralNumber() || !value.canConvertToLong())throw invalid();
++        // Nimbus 9.37.3 JWTClaimsSet.parse multiplies seconds by 1000 in a long.
++        // Reject overflow before that conversion can wrap a huge date into a valid short ticket.
++        Math.multiplyExact(value.longValue(),1000L);
++    }
++    private static BadJwtException invalid(){return PortalClaimMapper.invalid();}
++    @Override public void close(){http.close();}
++}
+diff --git a/admin-common/src/test/java/cn/agentplatform/common/authority/AuthorityConfigurationTest.java b/admin-common/src/test/java/cn/agentplatform/common/authority/AuthorityConfigurationTest.java
+--- a/admin-common/src/test/java/cn/agentplatform/common/authority/AuthorityConfigurationTest.java
++++ b/admin-common/src/test/java/cn/agentplatform/common/authority/AuthorityConfigurationTest.java
+@@ -125,6 +125,34 @@
+         }
+     }
+ 
++    @Test void explicitTestProfileMayUseOnlyLiteralLoopbackTrustEndpointsAndIamStaysClosed() {
++        var p=completeIam();p.replaceAll((k,v)->v instanceof String s?s.replace("https://authority.invalid","http://127.0.0.1:12345"):v);
++        p.put("stage1.test-profile",true);
++        var factories=new AtomicInteger();
++        assertThatThrownBy(()->{try(var ignored=application(p,factories).run()){}}).hasStackTraceContaining("IAM_TRUST_CHAIN_UNAVAILABLE");
++        assertThat(factories).hasValue(0);
++        p.put("agent.security.authority.jwks-uri","http://localhost:12345/jwks");
++        assertThatThrownBy(()->{try(var ignored=application(p,factories).run()){}}).hasStackTraceContaining("IAM_URI_INVALID");
++        assertThat(factories).hasValue(0);
++    }
++
++    @Test void portalCeilingsAreRequiredAndStrictlyBoundByTheDeploymentBinder() {
++        var p=completeIam();p.put("agent.security.service-id","gateway");
++        p.put("agent.security.authority.client-id","gateway");p.put("agent.security.authority.client-secret-ref","env:AGENT_SECRET_IAM_GATEWAY_CLIENT");
++        p.put("agent.security.authority.audience","urn:agent-platform:service:gateway");
++        p.put("agent.security.portal.enabled",true);p.put("agent.security.portal.issuer","https://portal.invalid");
++        p.put("agent.security.portal.jwks-uri","https://portal.invalid/jwks");p.put("agent.security.portal.audience","portal-gateway");
++        p.put("agent.security.portal.client-id","portal-web");p.put("agent.security.portal.role-allowlist[0]","EDITOR");
++        p.put("agent.security.portal.attribute-allowlist[0]","region");
++        var factories=new AtomicInteger();
++        assertThatThrownBy(()->{try(var ignored=application(p,factories).run()){}}).hasStackTraceContaining("PORTAL_CONFIG_REQUIRED");
++        p.put("agent.security.portal.attribute-value-allowlist.region[0]","A");p.put("agent.security.portal.scope-allowlist[0]","platform.access");
++        assertThatThrownBy(()->{try(var ignored=application(p,factories).run()){}}).hasStackTraceContaining("IAM_TRUST_CHAIN_UNAVAILABLE");
++        p.put("agent.security.portal.role-allowlist[0]","SERVICE");
++        assertThatThrownBy(()->{try(var ignored=application(p,factories).run()){}}).hasStackTraceContaining("PORTAL_CEILING_INVALID");
++        assertThat(factories).hasValue(0);
++    }
++
+     private static String signed(String audience, String use) {
+         try {
+             var jwt = new com.nimbusds.jwt.SignedJWT(new com.nimbusds.jose.JWSHeader(com.nimbusds.jose.JWSAlgorithm.HS256),
+diff --git a/admin-common/src/test/java/cn/agentplatform/common/authority/LoopbackIssuer.java b/admin-common/src/test/java/cn/agentplatform/common/authority/LoopbackIssuer.java
+new file mode 100644
+--- /dev/null
++++ b/admin-common/src/test/java/cn/agentplatform/common/authority/LoopbackIssuer.java
+@@ -0,0 +1,105 @@
++package cn.agentplatform.common.authority;
++
++import cn.agentplatform.common.Json;
++import com.nimbusds.jose.*;
++import com.nimbusds.jose.crypto.RSASSASigner;
++import com.nimbusds.jose.jwk.*;
++import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
++import com.nimbusds.jwt.*;
++import com.sun.net.httpserver.HttpServer;
++import java.net.*;
++import java.nio.charset.StandardCharsets;
++import java.time.*;
++import java.util.*;
++import java.util.concurrent.atomic.AtomicInteger;
++
++/** Finite test-only issuer. Keys never leave this test process as production configuration. */
++final class LoopbackIssuer implements AutoCloseable {
++    final RSAKey k1 = key("k1"), k2 = key("k2");
++    final HttpServer server;
++    final AtomicInteger requests = new AtomicInteger();
++    final AtomicInteger unexpectedRequests = new AtomicInteger();
++    volatile String jwks = new JWKSet(k1.toPublicJWK()).toString();
++    volatile int status = 200;
++    LoopbackIssuer() throws Exception {
++        server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
++        server.createContext("/jwks", exchange -> {
++            requests.incrementAndGet();
++            var body = jwks.getBytes(StandardCharsets.UTF_8);
++            exchange.getResponseHeaders().set("Content-Type", "application/json");
++            if (status == 302) exchange.getResponseHeaders().set("Location", issuer()+"/unexpected");
++            exchange.sendResponseHeaders(status, body.length);
++            try (var out = exchange.getResponseBody()) { out.write(body); }
++            exchange.close();
++        });
++        server.createContext("/token", exchange -> {
++            var body=exchange.getRequestBody().readNBytes(4096);
++            exchange.sendResponseHeaders(200,body.length);
++            try(var out=exchange.getResponseBody()){out.write(body);}exchange.close();
++        });
++        server.createContext("/decision", exchange -> {
++            var body=exchange.getRequestBody().readNBytes(4096);
++            exchange.sendResponseHeaders(200,body.length);
++            try(var out=exchange.getResponseBody()){out.write(body);}exchange.close();
++        });
++        server.createContext("/unexpected",exchange->{unexpectedRequests.incrementAndGet();exchange.sendResponseHeaders(200,0);exchange.close();});
++        server.start();
++    }
++    static RSAKey key(String id) {
++        try { return new RSAKeyGenerator(2048).keyID(id).algorithm(JWSAlgorithm.RS256).keyUse(KeyUse.SIGNATURE).generate(); }
++        catch (Exception e) { throw new AssertionError(e); }
++    }
++    String issuer() { return "http://127.0.0.1:"+server.getAddress().getPort(); }
++    URI uri(String path) { return URI.create(issuer()+path); }
++    void keys(RSAKey... keys) { jwks=Json.write(Map.of("keys",Arrays.stream(keys).map(k->k.toPublicJWK().toJSONObject()).toList())); }
++    Map<String,Object> portal(Instant now) {
++        var c = new LinkedHashMap<String,Object>();
++        c.put("iss",issuer());c.put("aud",List.of("portal-gateway"));c.put("sub","alice");
++        c.put("tenant_id","tenant-a");c.put("iat",now.getEpochSecond());c.put("exp",now.plusSeconds(300).getEpochSecond());
++        c.put("jti","test-jti");c.put("token_use","user");c.put("client_id","portal-web");
++        c.put("roles",List.of("EDITOR","ADMIN","SERVICE","GATEWAY_AUTH"));
++        c.put("attributes",Map.of("region",List.of("A","B"),"dataLabels",List.of("confidential"),"unknown",List.of("all")));
++        c.put("scope","platform.access extra");return c;
++    }
++    Map<String,Object> service(Instant now, boolean workload) {
++        var c=portal(now);c.put("iss",issuer()+"/authority");c.put("aud",List.of("urn:agent-platform:service:app"));
++        c.put("token_use","service");c.put("client_id","gateway");c.put("caller","gateway");c.put("target","app");
++        c.put("exp",now.plusSeconds(60).getEpochSecond());c.put("nbf",now.getEpochSecond());
++        String action=workload?"integration.origin.check":new ServiceRoutePolicy().routes().stream()
++            .filter(r->"delegated".equals(r.mode())&&"gateway".equals(r.caller())&&"app".equals(r.target())).findFirst().orElseThrow().action();
++        c.put("action",action);c.put("scope",action);
++        c.put("resource",Map.of("kind","origin","id","test-origin","version_digest","v1"));
++        c.put("authority_mode",workload?"workload":"delegated");
++        if(workload){c.put("sub","gateway");for(var k:List.of("tenant_id","roles","attributes"))c.remove(k);}
++        else{c.put("grant_ref","test-grant");c.put("authorization_version","v1");}
++        return c;
++    }
++    String sign(Map<String,Object> claims) { return sign(claims,k1,"k1","at+jwt"); }
++    String signRaw(String payload,JWSHeader header){
++        try{var jwt=new JWSObject(header,new Payload(payload));jwt.sign(new RSASSASigner(k1));return jwt.serialize();}
++        catch(Exception e){throw new AssertionError(e);}
++    }
++    String sign(Map<String,Object> claims,RSAKey key,String kid,String typ) {
++        try {
++            var h=new JWSHeader.Builder(JWSAlgorithm.RS256).type(new JOSEObjectType(typ));
++            if(kid!=null)h.keyID(kid);
++            // Preserve malformed raw claim types; JWTClaimsSet.parse would coerce dates before signing.
++            var jwt=new JWSObject(h.build(),new Payload(Json.write(claims)));
++            jwt.sign(new RSASSASigner(key));return jwt.serialize();
++        }catch(Exception e){throw new AssertionError(e);}
++    }
++    AuthorityProperties config() {
++        return new AuthorityProperties("iam","gateway",
++            new AuthorityProperties.Portal(true,issuer(),uri("/jwks").toString(),"portal-gateway","portal-web",
++                Set.of("EDITOR"),Set.of("region","dataLabels"),Map.of("region",Set.of("A"),"dataLabels",Set.of("restricted")),Set.of("platform.access")),
++            new AuthorityProperties.Authority(issuer()+"/authority",uri("/jwks").toString(),uri("/token").toString(),uri("/decision").toString(),
++                "gateway","env:AGENT_SECRET_IAM_GATEWAY_CLIENT","RS256","urn:agent-platform:service:gateway",60,5,1000,2000),null,null,null,false,null);
++    }
++    AuthorityProperties internalConfig(){
++        var c=config();var a=c.authority();
++        return new AuthorityProperties("iam","app",null,
++            new AuthorityProperties.Authority(a.issuer(),a.jwksUri(),a.tokenUri(),a.decisionUri(),"app","env:AGENT_SECRET_IAM_APP_CLIENT",
++                "RS256","urn:agent-platform:service:app",60,5,1000,2000),null,null,null,false,null);
++    }
++    @Override public void close(){server.stop(0);}
++}
+diff --git a/admin-common/src/test/java/cn/agentplatform/common/authority/PortalClaimMapperTest.java b/admin-common/src/test/java/cn/agentplatform/common/authority/PortalClaimMapperTest.java
+new file mode 100644
+--- /dev/null
++++ b/admin-common/src/test/java/cn/agentplatform/common/authority/PortalClaimMapperTest.java
+@@ -0,0 +1,60 @@
++package cn.agentplatform.common.authority;
++import org.junit.jupiter.api.Test;
++import org.springframework.security.oauth2.jwt.Jwt;
++import java.util.*;
++import cn.agentplatform.common.PlatformException;
++import cn.agentplatform.common.Actor;
++import org.springframework.security.core.context.SecurityContextHolder;
++import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
++import static org.assertj.core.api.Assertions.*;
++class PortalClaimMapperTest {
++    @Test void issuerClientCeilingClipsPermissionsAndPreservesSensitivityObligations() throws Exception {
++        try(var issuer=new LoopbackIssuer()){
++            var jwt=Jwt.withTokenValue("already-verified-test-input").header("alg","RS256")
++                .claims(c->c.putAll(issuer.portal(TrustedJwtDecoderTest.NOW)))
++                .issuedAt(TrustedJwtDecoderTest.NOW).expiresAt(TrustedJwtDecoderTest.NOW.plusSeconds(300)).build();
++            var mapped=new PortalClaimMapper(issuer.config().portal()).map(jwt);
++            assertThat(mapped.actor().roles()).containsExactly("EDITOR");
++            assertThat(mapped.actor().attributes().get("region")).containsExactly("A");
++            assertThat(mapped.actor().attributes().get("dataLabels")).containsExactlyInAnyOrder("confidential","restricted");
++            assertThat(mapped.scopes()).containsExactly("platform.access");
++        }
++    }
++    @Test void clientAndClaimTypesMustMatchAndMissingScopeAddsNoPermission() throws Exception {
++        try(var issuer=new LoopbackIssuer()){
++            var mapper=new PortalClaimMapper(issuer.config().portal());
++            for(String key:List.of("iss","client_id","token_use")){
++                var c=issuer.portal(TrustedJwtDecoderTest.NOW);c.put(key,"other");
++                assertThatThrownBy(()->mapper.map(jwt(c))).isInstanceOf(org.springframework.security.oauth2.jwt.JwtException.class);
++            }
++            var c=issuer.portal(TrustedJwtDecoderTest.NOW);c.remove("scope");
++            assertThat(mapper.map(jwt(c)).scopes()).isEmpty();
++            c.put("roles",List.of(42));assertThatThrownBy(()->mapper.map(jwt(c))).isInstanceOf(org.springframework.security.oauth2.jwt.JwtException.class);
++        }
++    }
++    private static Jwt jwt(Map<String,Object> claims){return Jwt.withTokenValue("verified-test-input").header("alg","RS256").claims(c->c.putAll(claims))
++        .issuedAt(TrustedJwtDecoderTest.NOW).expiresAt(TrustedJwtDecoderTest.NOW.plusSeconds(300)).build();}
++    @Test void actorNeverGrantsServiceBusinessRolesFromTrustedRsaClaims()throws Exception{
++        try(var issuer=new LoopbackIssuer()){
++            SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(jwt(issuer.service(TrustedJwtDecoderTest.NOW,false))));
++            try{assertThat(Actor.current().roles()).doesNotContain("SERVICE","GATEWAY_AUTH");}
++            finally{SecurityContextHolder.clearContext();}
++        }
++    }
++    @Test void knownOwnershipValuesRequireExactSingleSignedValuesAndLabelsCannotDisappear()throws Exception{
++        try(var issuer=new LoopbackIssuer()){
++            var base=issuer.config().portal();
++            var p=new AuthorityProperties.Portal(true,base.issuer(),base.jwksUri(),base.audience(),base.clientId(),base.roleAllowlist(),
++                Set.of("region","bizSystemCode","userId"),Map.of("region",Set.of("A"),"bizSystemCode",Set.of("biz"),"userId",Set.of("alice")),base.scopeAllowlist());
++            var mapper=new PortalClaimMapper(p);var c=issuer.portal(TrustedJwtDecoderTest.NOW);
++            c.put("attributes",Map.of("region",List.of("B"),"dataLabels",List.of("secret"),"bizSystemCode",List.of("biz"),"userId",List.of("alice")));
++            var actor=mapper.map(jwt(c)).actor();assertThat(actor.attributes().get("region")).isEmpty();
++            assertThat(actor.attributes().get("dataLabels")).containsExactly("secret");
++            for(var ownership:List.of(List.of("other"),List.of("alice","other"),List.of(" "))){
++                c.put("attributes",Map.of("bizSystemCode",List.of("biz"),"userId",ownership));
++                assertThatThrownBy(()->mapper.map(jwt(c))).isInstanceOf(ownership.equals(List.of(" "))
++                    ?org.springframework.security.oauth2.jwt.JwtException.class:PlatformException.class);
++            }
++        }
++    }
++}
+diff --git a/admin-common/src/test/java/cn/agentplatform/common/authority/TrustedJwtDecoderTest.java b/admin-common/src/test/java/cn/agentplatform/common/authority/TrustedJwtDecoderTest.java
+new file mode 100644
+--- /dev/null
++++ b/admin-common/src/test/java/cn/agentplatform/common/authority/TrustedJwtDecoderTest.java
+@@ -0,0 +1,244 @@
++package cn.agentplatform.common.authority;
++
++import org.junit.jupiter.api.*;
++import org.springframework.security.oauth2.jwt.JwtException;
++import java.time.*;
++import java.util.*;
++import java.util.function.Consumer;
++import com.nimbusds.jose.*;
++import com.nimbusds.jose.crypto.MACSigner;
++import com.nimbusds.jwt.*;
++import cn.agentplatform.common.*;
++import org.springframework.security.core.context.SecurityContextHolder;
++import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
++import java.net.*;
++import java.net.http.*;
++import java.util.concurrent.atomic.AtomicInteger;
++import org.springframework.boot.*;
++import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
++import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
++import org.springframework.context.annotation.*;
++import org.springframework.beans.factory.ObjectProvider;
++import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
++import org.springframework.security.config.annotation.web.builders.HttpSecurity;
++import org.springframework.security.oauth2.jwt.JwtDecoder;
++import org.springframework.security.web.SecurityFilterChain;
++import org.springframework.web.bind.annotation.*;
++import org.springframework.web.cors.CorsConfigurationSource;
++import java.nio.charset.StandardCharsets;
++import java.util.concurrent.*;
++import com.sun.net.httpserver.HttpServer;
++import static org.assertj.core.api.Assertions.*;
++
++class TrustedJwtDecoderTest {
++    static final Instant NOW=Instant.parse("2026-10-20T00:00:00Z");
++    @Test void validRsaSignatureWorksButWrongSignatureNeverPasses() throws Exception {
++        try(var issuer=new LoopbackIssuer()){
++            var decoder=new TrustedJwtDecoder(issuer.config(),Clock.fixed(NOW,ZoneOffset.UTC),true);
++            assertThat(decoder.decode(issuer.sign(issuer.portal(NOW))).getSubject()).isEqualTo("alice");
++            assertThatThrownBy(()->decoder.decode(issuer.sign(issuer.portal(NOW),issuer.k2,"k1","at+jwt")))
++                .isInstanceOf(JwtException.class);
++        }
++    }
++    @Test void invalidClaimMatrixIsRejectedWithoutClaimCoercion() throws Exception {
++        try(var issuer=new LoopbackIssuer()){
++            var decoder=new TrustedJwtDecoder(issuer.config(),Clock.fixed(NOW,ZoneOffset.UTC),true);
++            Map<String,Consumer<Map<String,Object>>> cases=new LinkedHashMap<>();
++            for(String key:List.of("exp","iat","jti","tenant_id","sub","client_id"))cases.put("missing-"+key,c->c.remove(key));
++            cases.put("issuer",c->c.put("iss","https://attacker.invalid"));
++            cases.put("audience",c->c.put("aud",List.of("wrong")));
++            cases.put("multi-audience",c->c.put("aud",List.of("portal-gateway","other")));
++            cases.put("use",c->c.put("token_use","service"));
++            cases.put("id-token",c->c.put("token_use","id"));
++            cases.put("client",c->c.put("client_id","other"));
++            cases.put("expired",c->c.put("exp",NOW.minusSeconds(1).getEpochSecond()));
++            cases.put("exact-expiry",c->c.put("exp",NOW.getEpochSecond()));
++            cases.put("future-nbf",c->c.put("nbf",NOW.plusSeconds(1).getEpochSecond()));
++            cases.put("future-iat",c->c.put("iat",NOW.plusSeconds(1).getEpochSecond()));
++            cases.put("numeric-sub",c->c.put("sub",42));
++            cases.put("numeric-jti",c->c.put("jti",42));
++            cases.put("string-exp",c->c.put("exp","1792454700"));
++            cases.put("fraction-iat",c->c.put("iat",1.5));
++            cases.put("overflow-exp",c->c.put("exp",(1L<<61)+NOW.plusSeconds(300).getEpochSecond()));
++            cases.put("overflow-iat",c->c.put("iat",(1L<<61)+NOW.getEpochSecond()));
++            cases.put("scope-type",c->c.put("scope",List.of("platform.access")));
++            cases.put("role-type",c->c.put("roles",List.of(42)));
++            cases.put("attribute-type",c->c.put("attributes",Map.of("region","A")));
++            for(var entry:cases.entrySet()){
++                var c=issuer.portal(NOW);entry.getValue().accept(c);
++                assertThat(catchThrowable(()->decoder.decode(issuer.sign(c)))).as(entry.getKey()).isInstanceOf(JwtException.class);
++            }
++            for(String kid:Arrays.asList(null,"","unknown"))assertThatThrownBy(()->decoder.decode(issuer.sign(issuer.portal(NOW),issuer.k1,kid,"at+jwt"))).isInstanceOf(JwtException.class);
++            assertThatThrownBy(()->decoder.decode(issuer.sign(issuer.portal(NOW),issuer.k1,"k1","JWT"))).isInstanceOf(JwtException.class);
++            assertThatThrownBy(()->decoder.decode("a".repeat(16385))).isInstanceOf(JwtException.class);
++            var claims=JWTClaimsSet.parse(Json.write(issuer.portal(NOW)));
++            var hs=new SignedJWT(new JWSHeader(JWSAlgorithm.HS256),claims);
++            hs.sign(new MACSigner(issuer.k1.toRSAPublicKey().getEncoded()));
++            assertThatThrownBy(()->decoder.decode(hs.serialize())).isInstanceOf(JwtException.class);
++            assertThatThrownBy(()->decoder.decode(new PlainJWT(claims).serialize())).isInstanceOf(JwtException.class);
++        }
++    }
++    @Test void rotationOutageRecoveryAndClockNeverReuseAStaleKeyOrExpiredToken() throws Exception {
++        try(var issuer=new LoopbackIssuer()){
++            var clock=new MutableClock();var decoder=new TrustedJwtDecoder(issuer.config(),clock,true);
++            var one=issuer.sign(issuer.portal(NOW));var two=issuer.sign(issuer.portal(NOW),issuer.k2,"k2","at+jwt");
++            decoder.decode(one);issuer.keys(issuer.k1,issuer.k2);decoder.decode(two);decoder.decode(one);
++            issuer.keys(issuer.k2);assertThatThrownBy(()->decoder.decode(one)).isInstanceOf(JwtException.class);
++            decoder.decode(two);issuer.status=503;
++            assertThatThrownBy(()->decoder.decode(two)).isInstanceOf(PlatformException.class).extracting(e->((PlatformException)e).status()).isEqualTo(503);
++            issuer.status=200;decoder.decode(two);clock.now=NOW.plusSeconds(301);
++            assertThatThrownBy(()->decoder.decode(two)).isInstanceOf(JwtException.class);
++            assertThat(issuer.requests.get()).isGreaterThanOrEqualTo(7);
++        }
++    }
++    @Test void malformedJwksIsUnavailableNotAKeyFallback() throws Exception {
++        try(var issuer=new LoopbackIssuer()){
++            var decoder=new TrustedJwtDecoder(issuer.config(),Clock.fixed(NOW,ZoneOffset.UTC),true);
++            var good=issuer.k1.toPublicJWK().toJSONObject();
++            var privateKey=issuer.k1.toJSONObject();
++            var wrongUse=new LinkedHashMap<>(good);wrongUse.put("use","enc");
++            var noKid=new LinkedHashMap<>(good);noKid.remove("kid");
++            var wrongAlg=new LinkedHashMap<>(good);wrongAlg.put("alg","HS256");
++            var oct=Map.<String,Object>of("kid","oct","kty","oct","k","dGVzdA");
++            for(var keys:List.of(List.of(good,good),List.of(privateKey),List.of(wrongUse),List.of(noKid),List.of(wrongAlg),List.of(good,oct),Collections.nCopies(9,good))){
++                issuer.jwks=Json.write(Map.of("keys",keys));
++                assertThatThrownBy(()->decoder.decode(issuer.sign(issuer.portal(NOW)))).isInstanceOf(PlatformException.class);
++            }
++            issuer.jwks="not-json";assertThatThrownBy(()->decoder.decode(issuer.sign(issuer.portal(NOW)))).isInstanceOf(PlatformException.class);
++        }
++    }
++    @Test void tokenUrlsAndDuplicateRawClaimsNeverDriveNetworkDiscovery()throws Exception{
++        try(var issuer=new LoopbackIssuer();var decoder=new TrustedJwtDecoder(issuer.config(),Clock.fixed(NOW,ZoneOffset.UTC),true)){
++            var header=new JWSHeader.Builder(JWSAlgorithm.RS256).keyID("k1").type(new JOSEObjectType("at+jwt")).jwkURL(issuer.uri("/unexpected")).build();
++            assertThatThrownBy(()->decoder.decode(issuer.signRaw(Json.write(issuer.portal(NOW)),header))).isInstanceOf(JwtException.class);
++            var plainHeader=new JWSHeader.Builder(JWSAlgorithm.RS256).keyID("k1").type(new JOSEObjectType("at+jwt")).build();
++            String duplicate="{\"iss\":\"https://attacker.invalid\","+Json.write(issuer.portal(NOW)).substring(1);
++            assertThatThrownBy(()->decoder.decode(issuer.signRaw(duplicate,plainHeader))).isInstanceOf(JwtException.class);
++            assertThat(issuer.requests).hasValue(0);assertThat(issuer.unexpectedRequests).hasValue(0);
++        }
++    }
++    @Test void trustedInputRequiresExplicitTestProfileForHttp() throws Exception {
++        try(var issuer=new LoopbackIssuer()){
++            assertThatThrownBy(()->new TrustedJwtDecoder(issuer.config(),Clock.fixed(NOW,ZoneOffset.UTC),false)).hasMessageContaining("IAM_URI_INVALID");
++        }
++    }
++    @Test void delegatedAndWorkloadTicketsHaveDisjointSignedBindings()throws Exception{
++        try(var issuer=new LoopbackIssuer();var decoder=new TrustedJwtDecoder(issuer.internalConfig(),Clock.fixed(NOW,ZoneOffset.UTC),true)){
++            var delegated=issuer.service(NOW,false);var workload=issuer.service(NOW,true);
++            assertThat(decoder.decode(issuer.sign(delegated)).getClaimAsString("grant_ref")).isEqualTo("test-grant");
++            var jwt=decoder.decode(issuer.sign(workload));assertThat(jwt.getSubject()).isEqualTo("gateway");
++            SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(jwt));
++            try{assertThatThrownBy(Actor::current).isInstanceOf(PlatformException.class).extracting(e->((PlatformException)e).status()).isEqualTo(403);}
++            finally{SecurityContextHolder.clearContext();}
++            for(String k:List.of("tenant_id","grant_ref","authorization_version")){
++                var c=new LinkedHashMap<>(delegated);c.remove(k);assertThatThrownBy(()->decoder.decode(issuer.sign(c))).isInstanceOf(JwtException.class);
++            }
++            for(String k:List.of("tenant_id","grant_ref","roles","attributes","authorization_version","user_id")){
++                var c=new LinkedHashMap<>(workload);c.put(k,k.equals("roles")?List.of("ADMIN"):k.equals("attributes")?Map.of():"user");
++                assertThatThrownBy(()->decoder.decode(issuer.sign(c))).isInstanceOf(JwtException.class);
++            }
++            for(var original:List.of(delegated,workload)){
++                Map<String,Object> changes=Map.of("client_id","other","caller","engine","target","engine","authority_mode","other",
++                    "action","business.delete","scope","unrelated extra","resource",Map.of("kind","origin","id","test"),"exp",NOW.plusSeconds(61).getEpochSecond());
++                for(var entry:changes.entrySet()){
++                    var c=new LinkedHashMap<>(original);c.put(entry.getKey(),entry.getValue());
++                    assertThat(catchThrowable(()->decoder.decode(issuer.sign(c)))).as(entry.getKey()).isInstanceOf(JwtException.class);
++                }
++            }
++            var c=new LinkedHashMap<>(workload);c.put("sub","alice");assertThatThrownBy(()->decoder.decode(issuer.sign(c))).isInstanceOf(JwtException.class);
++            var missingNbf=new LinkedHashMap<>(workload);missingNbf.remove("nbf");assertThatThrownBy(()->decoder.decode(issuer.sign(missingNbf))).isInstanceOf(JwtException.class);
++            assertThatThrownBy(()->decoder.decode(issuer.sign(issuer.portal(NOW)))).isInstanceOf(JwtException.class);
++            assertThatThrownBy(()->new TrustedJwtDecoder(issuer.config(),Clock.fixed(NOW,ZoneOffset.UTC),true).decode(issuer.sign(workload))).isInstanceOf(JwtException.class);
++        }
++    }
++    @Test void fixedHttpEndpointsNoRedirectAndFiniteBodySizes()throws Exception{
++        try(var issuer=new LoopbackIssuer();var http=new BoundedIamHttp(issuer.config(),true)){
++            assertThat(new String(http.postForm(issuer.uri("/token"),Map.of("a","x y&z")),StandardCharsets.UTF_8)).isEqualTo("a=x+y%26z");
++            assertThat(Json.read(new String(http.postJson(issuer.uri("/decision"),Map.of("a","b")),StandardCharsets.UTF_8)).path("a").asText()).isEqualTo("b");
++            int count=issuer.requests.get();assertThatThrownBy(()->http.get(issuer.uri("/unexpected"))).hasMessage("IAM_ENDPOINT_NOT_CONFIGURED");assertThat(issuer.requests).hasValue(count);
++            issuer.status=302;assertThatThrownBy(()->http.get(issuer.uri("/jwks"))).isInstanceOf(PlatformException.class);
++            assertThat(issuer.unexpectedRequests).hasValue(0);
++            issuer.status=200;issuer.jwks="x".repeat(65536);assertThat(http.get(issuer.uri("/jwks"))).hasSize(65536);
++            issuer.jwks="x".repeat(65537);assertThatThrownBy(()->http.get(issuer.uri("/jwks"))).isInstanceOf(PlatformException.class);
++        }
++    }
++    @Test void bodyDeadlineCancelsReadingAfterHeadersAndChunkedOverflowIsBounded()throws Exception{
++        try(var issuer=new LoopbackIssuer()){
++            var started=new CountDownLatch(1);var release=new CountDownLatch(1);var finished=new CountDownLatch(1);
++            var server=HttpServer.create(new InetSocketAddress("127.0.0.1",0),0);
++            server.createContext("/body",exchange->{
++                try{
++                    exchange.sendResponseHeaders(200,0);exchange.getResponseBody().write(new byte[]{1});exchange.getResponseBody().flush();started.countDown();
++                    release.await(3,TimeUnit.SECONDS);
++                }catch(Exception ignored){}finally{exchange.close();finished.countDown();}
++            });server.start();
++            var uri="http://127.0.0.1:"+server.getAddress().getPort()+"/body";
++            var c=issuer.config();var a=c.authority();
++            var shortConfig=new AuthorityProperties(c.mode(),c.serviceId(),null,
++                new AuthorityProperties.Authority(a.issuer(),uri,a.tokenUri(),a.decisionUri(),a.clientId(),a.clientSecretRef(),a.allowedAlgorithm(),a.audience(),60,5,1000,200),null,null,null,false,null);
++            try(var http=new BoundedIamHttp(shortConfig,true)){
++                long begin=System.nanoTime();
++                try{
++                    assertThatThrownBy(()->http.get(URI.create(uri))).isInstanceOf(PlatformException.class);
++                    assertThat(started.getCount()).isZero();assertThat(Duration.ofNanos(System.nanoTime()-begin)).isLessThan(Duration.ofSeconds(2));
++                }finally{release.countDown();assertThat(finished.await(2,TimeUnit.SECONDS)).isTrue();}
++            }finally{server.stop(0);}
++            var chunks=HttpServer.create(new InetSocketAddress("127.0.0.1",0),0);
++            chunks.createContext("/body",exchange->{
++                try{exchange.sendResponseHeaders(200,0);exchange.getResponseBody().write(new byte[65537]);}catch(Exception ignored){}finally{exchange.close();}
++            });chunks.start();
++            var u="http://127.0.0.1:"+chunks.getAddress().getPort()+"/body";
++            var overflowConfig=new AuthorityProperties(c.mode(),c.serviceId(),null,
++                new AuthorityProperties.Authority(a.issuer(),u,a.tokenUri(),a.decisionUri(),a.clientId(),a.clientSecretRef(),a.allowedAlgorithm(),a.audience(),60,5,1000,2000),null,null,null,false,null);
++            try(var http=new BoundedIamHttp(overflowConfig,true)){
++                assertThatThrownBy(()->http.get(URI.create(u))).isInstanceOf(PlatformException.class);
++            }finally{chunks.stop(0);}
++        }
++    }
++    static final class MutableClock extends Clock {
++        Instant now=NOW;
++        public ZoneId getZone(){return ZoneOffset.UTC;}
++        public Clock withZone(ZoneId zone){return this;}
++        public Instant instant(){return now;}
++    }
++    static LoopbackIssuer webIssuer;
++    static final AtomicInteger handlers=new AtomicInteger();
++    @Configuration(proxyBeanMethods=false) @EnableAutoConfiguration @EnableWebSecurity
++    static class ProbeApp {
++        @Bean JwtDecoder decoder(){return new TrustedJwtDecoder(webIssuer.config(),Clock.fixed(NOW,ZoneOffset.UTC),true);}
++        @Bean SecurityFilterChain filter(HttpSecurity http,JwtDecoder decoder,ObjectProvider<ApiKeyAuthenticator> keys)throws Exception{
++            // Invoke the real chain method without importing production configuration's closed IAM startup guard.
++            var method=SecurityConfiguration.class.getDeclaredMethod("security",HttpSecurity.class,JwtDecoder.class,CorsConfigurationSource.class,ObjectProvider.class);
++            method.setAccessible(true);
++            return (SecurityFilterChain)method.invoke(new SecurityConfiguration(),http,decoder,(CorsConfigurationSource)request->null,keys);
++        }
++        @Bean ProbeController probe(){return new ProbeController();}
++    }
++    @RestController static class ProbeController {
++        @GetMapping({"/v1/probe","/internal/probe"}) Object get(){handlers.incrementAndGet();return Actor.current();}
++    }
++    @Test void realHttpRejectsPortalServiceRoleMissingScopeAndJwksOutageBeforeHandler()throws Exception{
++        try(var issuer=new LoopbackIssuer()){
++            webIssuer=issuer;handlers.set(0);
++            var app=new SpringApplication(ProbeApp.class);app.setAdditionalProfiles("test");
++            app.setDefaultProperties(Map.of("server.address","127.0.0.1","server.port","0","spring.main.banner-mode","off",
++                "spring.config.location","optional:classpath:/iam-stage-2-no-config/","spring.jmx.enabled",false,"springdoc.api-docs.enabled",false,"logging.level.root","ERROR"));
++            try(var context=(ServletWebServerApplicationContext)app.run();var client=HttpClient.newHttpClient()){
++                String base="http://127.0.0.1:"+context.getWebServer().getPort();
++                var token=issuer.sign(issuer.portal(NOW));
++                assertResponse(client,base+"/v1/probe",token,200,null);assertThat(handlers).hasValue(1);
++                var noScope=issuer.portal(NOW);noScope.remove("scope");
++                assertResponse(client,base+"/v1/probe",issuer.sign(noScope),403,"SYS-AUTH-403");assertThat(handlers).hasValue(1);
++                // A correctly signed portal token directly presents the historical broad SERVICE role.
++                assertResponse(client,base+"/internal/probe",token,403,"SYS-AUTH-403");assertThat(handlers).hasValue(1);
++                assertResponse(client,base+"/v1/probe",issuer.sign(issuer.portal(NOW),issuer.k2,"k1","at+jwt"),401,"SYS-AUTH-401");assertThat(handlers).hasValue(1);
++                issuer.status=503;assertResponse(client,base+"/v1/probe",token,503,"IAM_AUTHORITY_UNAVAILABLE");assertThat(handlers).hasValue(1);
++                issuer.status=200;assertResponse(client,base+"/v1/probe",token,200,null);assertThat(handlers).hasValue(2);
++            }
++        }
++    }
++    static void assertResponse(HttpClient client,String url,String token,int status,String code)throws Exception{
++        var response=client.send(HttpRequest.newBuilder(URI.create(url)).header("Authorization","Bearer "+token).GET().build(),HttpResponse.BodyHandlers.ofString());
++        assertThat(response.statusCode()).isEqualTo(status);if(code!=null)assertThat(Json.read(response.body()).path("code").asText()).isEqualTo(code);
++    }
++}

@@ -1,0 +1,22 @@
+{
+  "completePatch": {
+    "file": ".local/iam-model-frozen-wire/native/frozen-wire.diff",
+    "bytes": 25755,
+    "sha256": "e69c6eac30cfe4b052e79dd36b4c2772521f9de078de61c438775fb864774eb6"
+  },
+  "readComplete": true,
+  "canonicalWrites": [
+    "model-gateway/src/main/java/cn/agentplatform/model/application/FrozenInitialWireGuard.java",
+    "model-gateway/src/test/java/cn/agentplatform/model/application/FrozenInitialWireGuardTest.java",
+    "model-gateway/src/test/java/cn/agentplatform/model/application/FrozenInitialWireGuardHttpTest.java",
+    "model-gateway/src/test/java/cn/agentplatform/model/application/FrozenInitialPromptFixture.java"
+  ],
+  "productionUnwired": true,
+  "newFindings": [],
+  "independentReview": false,
+  "executionDeviationsRetained": [
+    "316ms Maven overlap",
+    "seed fixture30.010s timeout; prior fixture timeouts and setup failures"
+  ],
+  "historyI1NotWaived": true
+}

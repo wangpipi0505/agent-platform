@@ -1,0 +1,64 @@
+{
+  "recordedAt": "2026-10-20T16:38:09.823Z",
+  "files": [
+    {
+      "file": "docs/evidence/iam-stage-5-n4b1-gateway-run-authorization/upstream/NimbusJwtDecoder.java",
+      "bytes": 30485,
+      "sha256": "9b416170f1713bd5ead6d45eba2282f6a85a20f4ab682ee46c00872bd094b769",
+      "url": "https://repo.maven.apache.org/maven2/org/springframework/security/spring-security-oauth2-jose/6.5.0/spring-security-oauth2-jose-6.5.0-sources.jar",
+      "license": "Apache-2.0",
+      "verifiedDescriptor": {
+        "file": "docs/evidence/iam-stage-5-e1b/upstream/manifest.json",
+        "bytes": 2736,
+        "sha256": "eb884a2cf18136614694000aa36bd5c265f868adc729fc182d717d9f12a6c2b4"
+      },
+      "readRanges": "decode/createJwt/validateJwt 135-205"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n4b1-gateway-run-authorization/upstream/DefaultJWTProcessor.java",
+      "bytes": 12787,
+      "sha256": "6cd3ec9508b6027995ba3068afcc6aacb8087ea0efe55c9458ba50ff733e0b3e",
+      "url": "https://repo.maven.apache.org/maven2/com/nimbusds/nimbus-jose-jwt/9.37.3/nimbus-jose-jwt-9.37.3-sources.jar",
+      "license": "Apache-2.0",
+      "verifiedDescriptor": {
+        "file": "docs/evidence/iam-stage-5-e1b/upstream/manifest.json",
+        "bytes": 2736,
+        "sha256": "eb884a2cf18136614694000aa36bd5c265f868adc729fc182d717d9f12a6c2b4"
+      },
+      "readRanges": "process(SignedJWT) 334-390; license 1-18"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n4b1-gateway-run-authorization/upstream/Jdk21-Clock.java",
+      "bytes": 35138,
+      "sha256": "d0057da8ab53bfd41450c1504b28f98c0646b5997d977f6cc416f6bf7fd809a4",
+      "url": "https://raw.githubusercontent.com/openjdk/jdk/jdk-21%2B35/src/java.base/share/classes/java/time/Clock.java",
+      "license": "GPL-2.0-only WITH Classpath-exception-2.0; original header retained",
+      "reference": "jdk-21+35; not runtime identity Temurin21.0.12+8",
+      "readRanges": "instant contract and system/fixed clocks"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n4b1-gateway-run-authorization/upstream/Jdk21-System.java",
+      "bytes": 117736,
+      "sha256": "c51b88b6dc193b6447441769e24e89ebdbc3482796889a7506064bf07a7a8020",
+      "url": "https://raw.githubusercontent.com/openjdk/jdk/jdk-21%2B35/src/java.base/share/classes/java/lang/System.java",
+      "license": "GPL-2.0-only WITH Classpath-exception-2.0; original header retained",
+      "reference": "jdk-21+35; not runtime identity Temurin21.0.12+8",
+      "readRanges": "nanoTime contract elapsed subtraction; currentTimeMillis contract"
+    }
+  ],
+  "originalShaDescriptor": {
+    "file": "docs/evidence/iam-stage-1/upstream/source-sha256.json",
+    "bytes": 1634,
+    "sha256": "6e818645c107664ce05a8d46aa310a7bfe5518bff02fe3c4c4b6d08b12828110"
+  },
+  "springArchive": {
+    "file": "docs/evidence/iam-stage-2/upstream/spring-security-oauth2-jose-6.5.0-sources.jar",
+    "bytes": 81169,
+    "sha256": "5cb167d7ff418dacf3377684215caef295daf0a7f09ed91aeb779e41e523f4eb"
+  },
+  "nimbusArchive": {
+    "file": "docs/evidence/iam-stage-2/upstream/nimbus-jose-jwt-9.37.3-sources.jar",
+    "bytes": 491999,
+    "sha256": "242b29b06f220497563a1d1540601ba9f0d5960be8ded0608d69098bf6cb04b2"
+  }
+}

@@ -1,0 +1,60 @@
+package cn.agentplatform.common.authority;
+import org.junit.jupiter.api.Test;
+import org.springframework.security.oauth2.jwt.Jwt;
+import java.util.*;
+import cn.agentplatform.common.PlatformException;
+import cn.agentplatform.common.Actor;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+import static org.assertj.core.api.Assertions.*;
+class PortalClaimMapperTest {
+    @Test void issuerClientCeilingClipsPermissionsAndPreservesSensitivityObligations() throws Exception {
+        try(var issuer=new LoopbackIssuer()){
+            var jwt=Jwt.withTokenValue("already-verified-test-input").header("alg","RS256")
+                .claims(c->c.putAll(issuer.portal(TrustedJwtDecoderTest.NOW)))
+                .issuedAt(TrustedJwtDecoderTest.NOW).expiresAt(TrustedJwtDecoderTest.NOW.plusSeconds(300)).build();
+            var mapped=new PortalClaimMapper(issuer.config().portal()).map(jwt);
+            assertThat(mapped.actor().roles()).containsExactly("EDITOR");
+            assertThat(mapped.actor().attributes().get("region")).containsExactly("A");
+            assertThat(mapped.actor().attributes().get("dataLabels")).containsExactlyInAnyOrder("confidential","restricted");
+            assertThat(mapped.scopes()).containsExactly("platform.access");
+        }
+    }
+    @Test void clientAndClaimTypesMustMatchAndMissingScopeAddsNoPermission() throws Exception {
+        try(var issuer=new LoopbackIssuer()){
+            var mapper=new PortalClaimMapper(issuer.config().portal());
+            for(String key:List.of("iss","client_id","token_use")){
+                var c=issuer.portal(TrustedJwtDecoderTest.NOW);c.put(key,"other");
+                assertThatThrownBy(()->mapper.map(jwt(c))).isInstanceOf(org.springframework.security.oauth2.jwt.JwtException.class);
+            }
+            var c=issuer.portal(TrustedJwtDecoderTest.NOW);c.remove("scope");
+            assertThat(mapper.map(jwt(c)).scopes()).isEmpty();
+            c.put("roles",List.of(42));assertThatThrownBy(()->mapper.map(jwt(c))).isInstanceOf(org.springframework.security.oauth2.jwt.JwtException.class);
+        }
+    }
+    private static Jwt jwt(Map<String,Object> claims){return Jwt.withTokenValue("verified-test-input").header("alg","RS256").claims(c->c.putAll(claims))
+        .issuedAt(TrustedJwtDecoderTest.NOW).expiresAt(TrustedJwtDecoderTest.NOW.plusSeconds(300)).build();}
+    @Test void actorNeverGrantsServiceBusinessRolesFromTrustedRsaClaims()throws Exception{
+        try(var issuer=new LoopbackIssuer()){
+            SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(jwt(issuer.service(TrustedJwtDecoderTest.NOW,false))));
+            try{assertThat(Actor.current().roles()).doesNotContain("SERVICE","GATEWAY_AUTH");}
+            finally{SecurityContextHolder.clearContext();}
+        }
+    }
+    @Test void knownOwnershipValuesRequireExactSingleSignedValuesAndLabelsCannotDisappear()throws Exception{
+        try(var issuer=new LoopbackIssuer()){
+            var base=issuer.config().portal();
+            var p=new AuthorityProperties.Portal(true,base.issuer(),base.jwksUri(),base.audience(),base.clientId(),base.roleAllowlist(),
+                Set.of("region","bizSystemCode","userId"),Map.of("region",Set.of("A"),"bizSystemCode",Set.of("biz"),"userId",Set.of("alice")),base.scopeAllowlist());
+            var mapper=new PortalClaimMapper(p);var c=issuer.portal(TrustedJwtDecoderTest.NOW);
+            c.put("attributes",Map.of("region",List.of("B"),"dataLabels",List.of("secret"),"bizSystemCode",List.of("biz"),"userId",List.of("alice")));
+            var actor=mapper.map(jwt(c)).actor();assertThat(actor.attributes().get("region")).isEmpty();
+            assertThat(actor.attributes().get("dataLabels")).containsExactly("secret");
+            for(var ownership:List.of(List.of("other"),List.of("alice","other"),List.of(" "))){
+                c.put("attributes",Map.of("bizSystemCode",List.of("biz"),"userId",ownership));
+                assertThatThrownBy(()->mapper.map(jwt(c))).isInstanceOf(ownership.equals(List.of(" "))
+                    ?org.springframework.security.oauth2.jwt.JwtException.class:PlatformException.class);
+            }
+        }
+    }
+}

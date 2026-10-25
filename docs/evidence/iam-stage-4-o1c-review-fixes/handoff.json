@@ -1,0 +1,192 @@
+{
+  "status": "DONE",
+  "pending": "Root finite delta audit and independent original reviewer recheck; no global acceptance",
+  "writeOwnership": "All source/target/backend-class/local/evidence/report write ownership frozen and returned to root",
+  "scope": {
+    "modified": [
+      "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PublishedRunHttp.java",
+      "platform-gateway/src/test/java/cn/agentplatform/gateway/application/RunObservationGetTransportTest.java"
+    ],
+    "source": 585,
+    "backend": 393,
+    "frontend": 192,
+    "added": 0,
+    "deleted": 0,
+    "historicalTarget": 2005,
+    "inheritedDrift": {
+      "modified": 5,
+      "deleted": 1,
+      "preciseHistoricalTimingUnknown": true
+    },
+    "correctedTargetBaseline": 2004,
+    "ownCompilerReportCandidates": 245,
+    "ownTargetDelta": 7,
+    "logicalTarget": 2004
+  },
+  "verification": {
+    "redTests": 2,
+    "redFailures": 2,
+    "redErrors": 0,
+    "greenTests": 12,
+    "transport": 10,
+    "chainControls": 2,
+    "greenFailures": 0,
+    "greenErrors": 0,
+    "greenSkipped": 0,
+    "singleFinalCommand": true,
+    "greenEarlyCases": 10,
+    "greenEarlyElapsedMs": [
+      0,
+      1
+    ],
+    "rawPeers": 58,
+    "privatePatchCheck": 0,
+    "privatePatchApply": 0,
+    "logicalReplayEquality": 585
+  },
+  "originalInherited": [
+    {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status-report.md",
+      "bytes": 18660,
+      "sha256": "ce6b0672dcb7b0615ce0d5bd003f1ec85aed092ebb6a905d850f277c08fd90c6"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/handoff.json",
+      "bytes": 4600,
+      "sha256": "b7cef80924945929fb1a8e1b16b44af7bc26dcdb12fb536f62fa5b48955abce2"
+    },
+    {
+      "file": ".local/iam-o1c-root-check.json",
+      "bytes": 9953,
+      "sha256": "7a9868548f23e9d25e21a96555f822fd7795b3e13f5854d8d71ae763c66e30cc"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/source-after.json",
+      "bytes": 111133,
+      "sha256": "047196ce0cfc82590e6fb68b7bba71a0ad99d9a17e493284711b6dcc529edd7e"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o1c-gateway-status/target-after.json",
+      "bytes": 415442,
+      "sha256": "f27b51ec7e455d029d5f9f138d20c1ddf8ed21ef6eaab2c47a05147bec6f8ea1"
+    }
+  ],
+  "report": {
+    "file": "docs/evidence/iam-stage-4-o1c-review-fixes-report.md",
+    "bytes": 8677,
+    "sha256": "add17898b113db838ab41a0e66f96bd40df9a8633257f35367c0708f750fbfc3"
+  },
+  "artifacts": [
+    {
+      "file": "docs/evidence/iam-stage-4-o1c-review-fixes/source-before.json",
+      "bytes": 111133,
+      "sha256": "047196ce0cfc82590e6fb68b7bba71a0ad99d9a17e493284711b6dcc529edd7e"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o1c-review-fixes/source-after.json",
+      "bytes": 111133,
+      "sha256": "f345e812e51c27e715580862cd3780f3e20ce929bd99fb1098c0d17045e3b697"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o1c-review-fixes/source-delta.json",
+      "bytes": 1021,
+      "sha256": "e51343f278829a08e6082a4b25abb371c9e3ec097479a98ff32af98b6c623c40"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o1c-review-fixes/target-after.json",
+      "bytes": 415208,
+      "sha256": "ca4fd5d44f0be29a020ed213334b7e135fbd07b99a9c21e243532b4a71cf1dc8"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o1c-review-fixes/target-delta.json",
+      "bytes": 4162,
+      "sha256": "46e0c3c1d0fb4442967106d231bdb6cb23a4fb82cd2ed8f6c9ef40908282506a"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o1c-review-fixes/target-candidates.json",
+      "bytes": 62368,
+      "sha256": "28e16fa73c065a480a760cd267610b548da26584bf7c5bae44e0f731534eafb3"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o1c-review-fixes/inherited-target-correction.json",
+      "bytes": 4120,
+      "sha256": "6c09ee420718789c0b9544ae605bdcec76816176584c147db20b336b950e14ce"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o1c-review-fixes/engine-classpath-verification.json",
+      "bytes": 168747,
+      "sha256": "e6c996d6a46a0490db21d00b322b344694c8fb5a38b564b80472c76d57bca6f0"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o1c-review-fixes/composition.json",
+      "bytes": 1175,
+      "sha256": "6960766a77d49f1c3fc9b63a62b80515a1da7bdc62e8eb61766070bfe4e1857d"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o1c-review-fixes/source.patch",
+      "bytes": 5703,
+      "sha256": "19b1509fd14d34a6bc38b7234e26e12d1793f78bd6c9955d54b2dba998109f91"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o1c-review-fixes/replay-after.json",
+      "bytes": 111133,
+      "sha256": "f345e812e51c27e715580862cd3780f3e20ce929bd99fb1098c0d17045e3b697"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o1c-review-fixes/replay-verification.json",
+      "bytes": 778,
+      "sha256": "2c4b85f17be5dc35d933de0e659fc68cac201726dbe8776ab027205c5aa9a795"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o1c-review-fixes/commands.json",
+      "bytes": 9209,
+      "sha256": "25a1710305728dda76f3bcd3486c0968b4afebedfb70ff082e691779465bfac9"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o1c-review-fixes/test-verification.json",
+      "bytes": 3010,
+      "sha256": "0ddd513093773b0fcea40894dd9521b47788c8d60652f5f4c14515ce6f0518b2"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o1c-review-fixes/xml-method-results.json",
+      "bytes": 3356,
+      "sha256": "19b4f3ef26adcfc9c67a4430510b27a4f852e0126df61711956b6a2b32ee7fae"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o1c-review-fixes/resource-closure.json",
+      "bytes": 2656,
+      "sha256": "ee0c68d1eb7705bc853b9998506d519b9ed32b46a172f634c7f42fe6cc563bc9"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o1c-review-fixes/child-log-migration.json",
+      "bytes": 854,
+      "sha256": "c6c8dcaf45c726daded8a4e29c47b65fe5daf2ff3f500e3da2d3680bb686bbd3"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o1c-review-fixes/inventory.json",
+      "bytes": 443981,
+      "sha256": "8eb168c8a7772c6fcca01575a498bdc870dd844b38dc50c35d6c53812e375c7c"
+    }
+  ],
+  "commits": [],
+  "realGitMutation": false,
+  "packageDeployAutomationSchedule": false,
+  "helperFailures": [
+    {
+      "file": ".local/iam-o1c-review-fixes/locator-check01-failure.json",
+      "bytes": 852,
+      "sha256": "7205f795604a03d975dab4baa8f96a302ef556150672b8344bc3d8c9c87542cc"
+    },
+    {
+      "file": ".local/iam-o1c-review-fixes/locator-check02-failure.json",
+      "bytes": 382,
+      "sha256": "8cdeb935700e2e2fb45d0dc049181d0486fc9967283111dfc5d0407ebfe0d2bd"
+    }
+  ],
+  "limits": [
+    "No heap/instant revocation/blocked-peer physical-hard-close bound",
+    "No full Boot/real external IAM/G6E/F/global task acceptance",
+    "No complete old-target physical re-audit or fresh whole-PG row-by-row audit",
+    "Original31+3 remain15-command history; independent26/31 source correction unchanged"
+  ]
+}

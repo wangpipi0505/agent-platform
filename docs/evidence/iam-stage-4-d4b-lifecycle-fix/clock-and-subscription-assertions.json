@@ -1,0 +1,58 @@
+{
+  "at": "2026-10-20T21:00:14.143Z",
+  "provenance": "Exact assertions in named source-bound tests, confirmed by actual green outputs; not separately emitted raw variable probes",
+  "red": {
+    "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/red-lifecycle-unit/output.raw",
+    "bytes": 3283,
+    "sha256": "1a07215c63cedb8cdff1919e931139ee821cc5c56671c583acb29afc562db9e2"
+  },
+  "green": {
+    "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/green-lifecycle-unit/output.raw",
+    "bytes": 257,
+    "sha256": "cd94d3ff2c8406eaa8926697f940c62cab59268da69ef1547bfb53f3d782e106"
+  },
+  "extraErrorGates": {
+    "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/green-error-entry-gates/output.raw",
+    "bytes": 254,
+    "sha256": "cd8409643967cfd43fde5846d6b07647009f71b8c3c632652eeb123cc56b66ee"
+  },
+  "assertions": [
+    {
+      "case": "logout old queued callback and cleanup synchronous callback",
+      "unsubscribeOnLogout": 1,
+      "oldCallbackCannotAcquire": true,
+      "manualRegistrations": 2,
+      "activeRegistrationNotDuplicated": true,
+      "disposeIdempotent": true
+    },
+    {
+      "case": "synchronous subscribe notification",
+      "tokenAcquisitions": 1,
+      "whyIgnored": "Only callback during registration is ignored; same manual connect immediately fetches latest token. Normal connecting/authenticated notifications remain active."
+    },
+    {
+      "case": "current401 and revised expiry",
+      "hostCannotRecover": true,
+      "manualReconnectRestores": true
+    },
+    {
+      "case": "wall rollback",
+      "installedRemainingMs": 60000,
+      "wallRollbackMs": 3600000,
+      "controlledMonotonicElapsedMs": 60001,
+      "token": "",
+      "roles": [],
+      "userCleared": true
+    },
+    {
+      "case": "stale expiry callback",
+      "manuallyInvokedOldTimer": true,
+      "newGenerationBRetained": true
+    },
+    {
+      "case": "far future segment / forward jump",
+      "oldNamedControlPassed": true
+    }
+  ],
+  "limits": "No initial client-server clock sync proof; no instantaneous background/frozen-tab expiry SLA; recovery checks the earlier fixed monotonic/wall deadline."
+}

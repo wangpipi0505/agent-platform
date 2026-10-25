@@ -1,0 +1,40 @@
+{
+  "top": {
+    "args": [
+      "rev-parse",
+      "--show-toplevel"
+    ],
+    "exit": 0,
+    "stdout": "G:/207/项目/算法重组工具/代码/agent-platform\n",
+    "stderr": ""
+  },
+  "head": {
+    "args": [
+      "rev-parse",
+      "--verify",
+      "HEAD"
+    ],
+    "exit": 128,
+    "stdout": "",
+    "stderr": "fatal: Needed a single revision\n"
+  },
+  "remote": {
+    "args": [
+      "remote"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "count": {
+    "args": [
+      "rev-list",
+      "--all",
+      "--count"
+    ],
+    "exit": 0,
+    "stdout": "0\n",
+    "stderr": ""
+  },
+  "note": "No HEAD or remote used for patch; actual no-index physical baseline comparison and git apply were performed."
+}

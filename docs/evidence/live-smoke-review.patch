@@ -1,0 +1,464 @@
+diff --git a/tests/smoke-mcp-protocol.mjs b/tests/smoke-mcp-protocol.mjs
+new file mode 100644
+index 0000000..eb53336
+--- /dev/null
++++ b/tests/smoke-mcp-protocol.mjs
+@@ -0,0 +1,210 @@
++/** Real gateway/engine/skill/PG path against an isolated SSE + JSON-RPC MCP peer.
++ * This peer proves protocol wiring and frozen arguments, not a supplier's capabilities.
++ */
++import fs from 'node:fs/promises';
++import path from 'node:path';
++import crypto from 'node:crypto';
++import http from 'node:http';
++import assert from 'node:assert/strict';
++import { spawnSync } from 'node:child_process';
++
++const root = path.resolve(import.meta.dirname, '..');
++const base = 'http://127.0.0.1:18080';
++const env = Object.fromEntries((await fs.readFile(path.join(root, '.env'), 'utf8'))
++  .split(/\r?\n/).filter(line => line && !line.startsWith('#')).map(line => {
++    const at = line.indexOf('='); return [line.slice(0, at), line.slice(at + 1)];
++  }));
++const authResponse = await fetch(base + '/auth/dev-token', { method: 'POST', signal: AbortSignal.timeout(10000) });
++assert.equal(authResponse.status, 200);
++const auth = await authResponse.json();
++assert.equal(auth.code, 'OK');
++const userToken = auth.data.accessToken;
++const claims = JSON.parse(Buffer.from(userToken.split('.')[1], 'base64url').toString());
++function tokenWith(patch) {
++  const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
++  const body = Buffer.from(JSON.stringify({ ...claims, ...patch, exp: Math.floor(Date.now() / 1000) + 300 })).toString('base64url');
++  const signed = header + '.' + body;
++  return signed + '.' + crypto.createHmac('sha256', env.AGENT_JWT_SECRET).update(signed).digest('base64url');
++}
++async function request(route, method = 'GET', body, token = userToken) {
++  const response = await fetch(base + route, { method,
++    headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
++    body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(20000) });
++  return { status: response.status, envelope: await response.json() };
++}
++async function api(route, method = 'GET', body) {
++  const response = await request(route, method, body);
++  assert.equal(response.status, 200, route + ': ' + JSON.stringify(response.envelope));
++  assert.equal(response.envelope.code, 'OK');
++  return response.envelope.data;
++}
++function sql(query) {
++  const result = spawnSync(path.join(root, '.tools/postgresql-16.15/pgsql/bin/psql.exe'),
++    ['-h', '127.0.0.1', '-p', '25432', '-U', env.AGENT_DB_USER || 'agent_v12',
++      '-d', 'agent_platform_dev_v12', '-At', '-v', 'ON_ERROR_STOP=1', '-f', '-'],
++    { input: query, encoding: 'utf8', env: { ...process.env, PGPASSWORD: env.AGENT_DB_PASSWORD } });
++  assert.equal(result.status, 0, result.stderr); return result.stdout.trim();
++}
++const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
++async function until(load, predicate, detail) {
++  for (let attempt = 0; attempt < 200; attempt++) {
++    const value = await load(); if (predicate(value)) return value; await pause(75);
++  }
++  throw new Error('Timed out: ' + detail);
++}
++
++const sessions = new Map(), sockets = new Set(), calls = [], methods = [];
++let activeStreams = 0, openedStreams = 0;
++let businessWriteError = false;
++let remoteSchema = { type: 'object', properties: { region: { type: 'string', pattern: '^A$' } }, required: ['region'], additionalProperties: false };
++function event(response, name, value) {
++  response.write('event: ' + name + '\ndata: ' + (typeof value === 'string' ? value : JSON.stringify(value)) + '\n\n');
++}
++const fixture = http.createServer(async (req, res) => {
++  try {
++    const url = new URL(req.url, 'http://127.0.0.1:28418');
++    if (req.method === 'GET' && url.pathname === '/sse') {
++      const id = crypto.randomUUID(); openedStreams++; activeStreams++; sessions.set(id, res);
++      res.setHeader('Content-Type', 'text/event-stream'); res.setHeader('Cache-Control', 'no-cache'); res.flushHeaders();
++      event(res, 'endpoint', '/messages?session=' + id);
++      const heartbeat = setInterval(() => { if (!res.destroyed) res.write(': ping\n\n'); }, 100);
++      res.once('close', () => { clearInterval(heartbeat); sessions.delete(id); activeStreams--; });
++      return;
++    }
++    if (req.method === 'POST' && url.pathname === '/messages') {
++      const stream = sessions.get(url.searchParams.get('session'));
++      if (!stream) { res.writeHead(404); res.end(); return; }
++      const chunks = []; let length = 0;
++      for await (const chunk of req) {
++        length += chunk.length; assert(length <= 128 * 1024, 'fixture request limit'); chunks.push(chunk);
++      }
++      const rpc = JSON.parse(Buffer.concat(chunks).toString('utf8'));
++      assert.equal(rpc.jsonrpc, '2.0'); methods.push(rpc.method);
++      res.writeHead(202); res.end();
++      if (!Object.hasOwn(rpc, 'id')) return;
++      let result;
++      if (rpc.method === 'initialize') result = { protocolVersion: '2024-11-05', capabilities: { tools: {} }, serverInfo: { name: 'isolated-mcp-peer', version: '1.0' } };
++      else if (rpc.method === 'tools/list') {
++        const second = rpc.params?.cursor === 'page-2';
++        result = { tools: [{ name: second ? 'lookup' : 'unrelated', description: second ? '按区域查询固定测试值' : '无关工具，用于验证精确绑定', inputSchema: second ? remoteSchema : { type: 'object' } }], ...(second ? {} : { nextCursor: 'page-2' }) };
++      } else if (rpc.method === 'tools/call') {
++        assert.equal(rpc.params.name, 'lookup'); assert.deepEqual(rpc.params.arguments, { region: 'A' });
++        calls.push({ name: rpc.params.name, arguments: rpc.params.arguments });
++        result = { content: [{ type: 'text', text: '{"value":7}' }], isError: businessWriteError };
++      } else throw new Error('Unexpected MCP method: ' + rpc.method);
++      if (!stream.destroyed) event(stream, 'message', { jsonrpc: '2.0', id: rpc.id, result });
++      return;
++    }
++    res.writeHead(404); res.end();
++  } catch (error) { res.destroy(error); }
++});
++fixture.on('connection', socket => { sockets.add(socket); socket.on('close', () => sockets.delete(socket)); });
++await new Promise((resolve, reject) => { fixture.once('error', reject); fixture.listen(28418, '127.0.0.1', resolve); });
++const runs = [], evidence = [];
++try {
++  const suffix = crypto.randomUUID().replaceAll('-', '').slice(0, 10);
++  async function create(label, toolName = 'lookup', write = false) {
++    const code = 'smoke_mcp_' + label + '_' + suffix;
++    const skill = await api('/admin/skills', 'POST', { code, name: 'MCP隔离协议 ' + label,
++      description: '真实SSE/JSON-RPC协议验证，不能作为供应商能力验收', type: 'MCP',
++      endpoint: 'http://127.0.0.1:28418/sse', toolName, timeoutMs: 4000,
++      inputSchema: { type: 'object', properties: { region: { type: 'string' } }, required: ['region'], additionalProperties: false },
++      outputSchema: { type: 'object', properties: { value: { type: 'integer' } }, required: ['value'], additionalProperties: false },
++      execution: { readonly: !write, sideEffect: write, idempotent: true, cancellable: false, ...(write ? { confirmRoles: ['EDITOR'] } : {}) },
++      guard: { roles: ['EDITOR'], attributes: {} } });
++    return { code, skill };
++  }
++  const good = await create('good');
++  const discovery = await api('/admin/skills/' + good.code + '/drafts/1/mcp-tools', 'POST');
++  assert.equal(discovery.protocolVersion, '2024-11-05'); assert.equal(discovery.serverInfo.name, 'isolated-mcp-peer');
++  assert.deepEqual(discovery.tools.map(tool => tool.name), ['unrelated', 'lookup']);
++  assert.deepEqual(discovery.tools[1].inputSchema, remoteSchema); assert.equal(calls.length, 0);
++  await until(async () => activeStreams, n => n === 0, 'discovery SSE close');
++  const opensBeforeDenied = openedStreams;
++  const denied = await request('/admin/skills/' + good.code + '/drafts/1/mcp-tools', 'POST', undefined, tokenWith({ roles: ['VIEWER'] }));
++  assert.equal(denied.status, 403); assert.equal(openedStreams, opensBeforeDenied);
++  evidence.push({ case: 'discovery', protocolVersion: discovery.protocolVersion, toolNames: discovery.tools.map(tool => tool.name), rawSchemaPreserved: true, businessCalls: 0, viewerStatus: denied.status, limits: discovery.limits });
++
++  if (process.argv.includes('--browser')) {
++    const { verifyMcpDraftInBrowser } = await import('../web/tests/mcp-registration-live-browser.mjs');
++    evidence.push({ case: 'real-draft-browser', ...await verifyMcpDraftInBrowser(good.code) });
++    assert.equal(calls.length, 0, 'Browser discovery does not invoke a business tool');
++    await until(async () => activeStreams, n => n === 0, 'browser discovery SSE close');
++  }
++
++  async function controlled(subject, wanted, semantic) {
++    const before = calls.length;
++    const accepted = await api('/admin/skills/' + subject.code + '/drafts/1/connection-test', 'POST', { inputs: { region: 'A' }, requestId: crypto.randomUUID() });
++    runs.push(accepted.runId);
++    const final = await until(() => api('/admin/debug-runs/' + accepted.runId + '/status'),
++      state => ['SUCCEEDED', 'FAILED', 'CANCELLED'].includes(state.status), subject.code);
++    assert.equal(final.status, wanted, JSON.stringify(final));
++    const callId = Number(final.controlledCallId || final.callId); assert(Number.isSafeInteger(callId) && callId > 0);
++    const facts = JSON.parse(sql(`select json_build_object('skillStatus',f.status,'engineStatus',t.status,'semantic',t.error_semantic,'value',f.result->'structured'->'value','logicalCommits',(select count(*) from engine.run_event e where e.run_id=t.run_id and e.type='LOGIC_RESULT_COMMITTED' and e.payload->>'nodeInstanceId'=t.node_instance_id::text)) from skill.execution_fact f join engine.tool_call t on t.id=f.call_id where f.call_id=${callId} and f.tenant_id='local-v12';`));
++    if (semantic) assert.equal(facts.semantic, semantic);
++    assert.equal(calls.length - before, wanted === 'SUCCEEDED' ? 1 : 0);
++    if (wanted === 'SUCCEEDED') {
++      assert.equal(facts.skillStatus, 'SUCCEEDED'); assert.equal(facts.engineStatus, 'SUCCEEDED');
++      assert.equal(facts.value, 7); assert.equal(facts.logicalCommits, 1);
++      const check = await api('/admin/skills/' + subject.code + '/drafts/1/connection-test', 'POST', { controlledCallId: callId });
++      assert.equal(check.ok, true); assert.equal(calls.length, before + 1);
++    }
++    await until(async () => activeStreams, n => n === 0, 'controlled SSE close');
++    evidence.push({ case: subject.code, runId: accepted.runId, callId, status: final.status, businessCalls: calls.length - before, facts });
++  }
++  await controlled(good, 'SUCCEEDED');
++  await controlled(await create('missing', 'missing_tool'), 'FAILED', 'PARAM_ERROR');
++  remoteSchema = { ...remoteSchema, minProperties: 2 };
++  await controlled(await create('schema'), 'FAILED', 'PARAM_ERROR');
++  assert.equal(calls.length, 1);
++
++  // A protocol isError does not prove a write was NOT_APPLIED. Use the normal
++  // declared-role/snapshot approval path, then verify repeated reconciliation is query-only.
++  delete remoteSchema.minProperties; businessWriteError = true;
++  const write = await create('write_unknown', 'lookup', true);
++  const beforeWrite = calls.length;
++  const accepted = await api('/admin/skills/' + write.code + '/drafts/1/connection-test', 'POST', { inputs: { region: 'A' }, requestId: crypto.randomUUID() });
++  runs.push(accepted.runId);
++  await until(() => api('/admin/debug-runs/' + accepted.runId + '/status'), state => state.status === 'WAITING_APPROVAL', 'write approval');
++  assert.equal(calls.length, beforeWrite, 'no tools/call before explicit approval');
++  const approval = await until(async () => (await api('/admin/approvals')).find(item => item.runId === accepted.runId), Boolean, 'declared-role approval');
++  assert(approval.confirmRoles.includes('EDITOR'));
++  await api('/admin/approvals/' + accepted.runId + '/' + approval.nodeInstanceId, 'POST', { requestId: crypto.randomUUID(), snapshotDigest: approval.snapshotDigest, approved: true });
++  const waiting = await until(() => api('/admin/debug-runs/' + accepted.runId + '/status'), state => state.status === 'WAITING_EXTERNAL', 'write unknown');
++  const callId = Number(waiting.controlledCallId || waiting.callId); assert(Number.isSafeInteger(callId) && callId > 0);
++  assert.equal(calls.length, beforeWrite + 1);
++  await until(async () => activeStreams, n => n === 0, 'write SSE close');
++  const factQuery = `select json_build_object('status',f.status,'attemptId',f.attempt_id,'argsDigest',f.args_digest,'contractSha256',f.skill_contract_sha256,'requestSnapshot',f.request_snapshot,'engineStatus',t.status) from skill.execution_fact f join engine.tool_call t on t.id=f.call_id where f.call_id=${callId} and f.tenant_id='local-v12';`;
++  const originalFact = JSON.parse(sql(factQuery));
++  assert.equal(originalFact.status, 'UNKNOWN'); assert.equal(originalFact.engineStatus, 'UNKNOWN');
++  const beforeQueries = openedStreams;
++  const serviceToken = tokenWith({ roles: [...new Set([...(claims.roles || []), 'SERVICE'])], aud: 'agent-platform-internal', token_use: 'service' });
++  const observations = [];
++  for (let repeat = 0; repeat < 2; repeat++) {
++    const response = await fetch('http://127.0.0.1:18083/internal/skill-facts/' + callId + '/reconcile', { method: 'POST', headers: { Authorization: 'Bearer ' + serviceToken, 'Content-Type': 'application/json' }, body: '{}', signal: AbortSignal.timeout(10000) });
++    const envelope = await response.json(); assert.equal(response.status, 200, JSON.stringify(envelope));
++    assert.equal(envelope.code, 'OK'); assert.equal(envelope.data.status, 'UNKNOWN');
++    assert.equal(envelope.data.outcome, 'UNKNOWN'); assert.equal(envelope.data.retryBusinessAllowed, false); observations.push(envelope.data);
++  }
++  assert.equal(calls.length, beforeWrite + 1); assert.equal(openedStreams, beforeQueries);
++  assert.deepEqual(JSON.parse(sql(factQuery)), originalFact);
++  const notes = JSON.parse(sql(`select coalesce(json_agg(outcome order by id),'[]') from skill.reconciliation_note where tenant_id='local-v12' and call_id=${callId};`));
++  assert.deepEqual(notes, ['UNKNOWN', 'UNKNOWN']);
++  evidence.push({ case: 'write-isError-reconcile', skillCode: write.code, runId: accepted.runId, callId, approvalRequired: true,
++    explicitDeclaredRole: 'EDITOR', status: waiting.status, businessCalls: calls.length - beforeWrite, queryOpenedStreams: openedStreams - beforeQueries,
++    observations, auditOutcomes: notes, factIdentityUnchanged: true });
++  assert.equal(calls.length, 2); assert.equal(activeStreams, 0);
++  const result = { actualGatewayEngineSkill: true, actualPostgres: true, isolatedProtocolPeerOnly: true,
++    sdkProtocol: 'SSE + JSON-RPC 2.0', activeStreams, openedStreams, businessCalls: calls.length, methods, evidence };
++  await fs.writeFile(path.join(root, '.local/mcp-protocol-live.json'), JSON.stringify(result, null, 2));
++  process.stdout.write(JSON.stringify(result, null, 2) + '\n');
++} finally {
++  // Keep durable facts as evidence; only this script's unfinished runs may be cancelled.
++  for (const id of runs) {
++    try {
++      const state = await api('/admin/debug-runs/' + id + '/status');
++      if (!['SUCCEEDED', 'FAILED', 'CANCELLED'].includes(state.status)) await api('/admin/debug-runs/' + id + '/cancel', 'POST', {});
++    } catch { /* Cleanup cannot overwrite the original verification error. */ }
++  }
++  fixture.close(); for (const socket of sockets) socket.destroy();
++}
+diff --git a/tests/smoke-run-scheduler-replicas.mjs b/tests/smoke-run-scheduler-replicas.mjs
+new file mode 100644
+index 0000000..df3bde1
+--- /dev/null
++++ b/tests/smoke-run-scheduler-replicas.mjs
+@@ -0,0 +1,152 @@
++/** Two reviewed engine JVMs, a fresh PG database and pure FLOW fixtures.
++ * Tests scheduling opportunity handover; no provider, node-execution or load claim.
++ * Usage: node tests/smoke-run-scheduler-replicas.mjs .local/artifacts/<reviewed>/engine-runtime.jar
++ */
++import fs from 'node:fs/promises';
++import path from 'node:path';
++import crypto from 'node:crypto';
++import http from 'node:http';
++import assert from 'node:assert/strict';
++import { spawn, spawnSync } from 'node:child_process';
++
++const root = path.resolve(import.meta.dirname, '..');
++const artifact = await fs.realpath(path.resolve(root, process.argv[2] || 'MISSING-REVIEWED-ARTIFACT'));
++assert(artifact.toLowerCase().startsWith(path.join(root, '.local/artifacts').toLowerCase() + path.sep), 'Use a copied, reviewed project artifact');
++const artifactSha256 = crypto.createHash('sha256').update(await fs.readFile(artifact)).digest('hex');
++const local = Object.fromEntries((await fs.readFile(path.join(root, '.env'), 'utf8')).split(/\r?\n/)
++  .filter(line => line && !line.startsWith('#')).map(line => { const at = line.indexOf('='); return [line.slice(0, at), line.slice(at + 1)]; }));
++const suffix = crypto.randomUUID().replaceAll('-', '').slice(0, 10);
++const database = 'agent_platform_scheduler_live_' + suffix;
++const tenant = 'scheduler-live-' + suffix, principal = 'scheduler-live';
++const java = path.join(local.AGENT_JAVA_HOME || 'C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot', 'bin/java.exe');
++const psql = path.join(root, '.tools/postgresql-16.15/pgsql/bin/psql.exe');
++const pgEnv = { ...process.env, PGPASSWORD: local.AGENT_DB_PASSWORD };
++const pgArgs = ['-h', '127.0.0.1', '-p', '25432', '-U', local.AGENT_DB_USER || 'agent_v12', '-d', database, '-At', '-v', 'ON_ERROR_STOP=1'];
++const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
++function sql(query) {
++  const result = spawnSync(psql, [...pgArgs, '-f', '-'], { input: query, env: pgEnv, encoding: 'utf8', windowsHide: true });
++  assert.equal(result.status, 0, result.stderr); return result.stdout.trim();
++}
++const quote = value => "'" + String(value).replaceAll("'", "''") + "'";
++const jsonSql = value => quote(JSON.stringify(value)) + '::jsonb';
++async function until(load, predicate, label, timeout = 30000) {
++  const end = Date.now() + timeout;
++  while (Date.now() < end) { const value = await load(); if (predicate(value)) return value; await pause(100); }
++  throw Error('Timed out: ' + label);
++}
++const now = Math.floor(Date.now() / 1000);
++const claims = { iss: 'agent-platform-v12', sub: principal, tenant_id: tenant, aud: 'agent-platform', token_use: 'user',
++  roles: ['EDITOR'], attributes: {}, iat: now, exp: now + 900, jti: crypto.randomUUID() };
++const signing = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url') + '.' + Buffer.from(JSON.stringify(claims)).toString('base64url');
++const token = signing + '.' + crypto.createHmac('sha256', local.AGENT_JWT_SECRET).update(signing).digest('base64url');
++const snapshot = { appCode: 'scheduler_live', appVersionId: 1, versionNo: 1, type: 'FLOW', config: {},
++  definition: { nodes: [{ id: 'start', type: 'START' }, { id: 'end', type: 'END' }], edges: [{ from: 'start', to: 'end' }], outputs: [], executionRules: { parallel: false, maxParallel: 1 } } };
++const guard = { tenantId: tenant, principalId: principal, roles: ['EDITOR'], attributes: {} };
++const children = [], processRecords = [], sockets = new Set();
++let upstreamReads = 0, lock;
++const fixture = http.createServer((req, res) => {
++  upstreamReads++; res.setHeader('Content-Type', 'application/json');
++  res.end(JSON.stringify({ code: 'OK', message: 'ok', data: snapshot, traceId: 'isolated-scheduler-peer' }));
++});
++fixture.on('connection', socket => { sockets.add(socket); socket.on('close', () => sockets.delete(socket)); });
++await new Promise((resolve, reject) => { fixture.once('error', reject); fixture.listen(28419, '127.0.0.1', resolve); });
++async function start(port) {
++  const portEnv = { ...process.env, AGENT_SCHEDULER_TEST_PORT: String(port) };
++  const free = spawnSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command',
++    'if(Get-NetTCPConnection -LocalPort ([int]$env:AGENT_SCHEDULER_TEST_PORT) -State Listen -ErrorAction SilentlyContinue){exit 7}'],
++    { env: portEnv, encoding: 'utf8', windowsHide: true });
++  assert.equal(free.status, 0, 'Refuse to start or contact an occupied test port: ' + port);
++  const name = 'scheduler-live-' + suffix + '-' + port + '-' + children.length;
++  const outPath = path.join(root, '.local/logs/' + name + '.out.log');
++  const errPath = path.join(root, '.local/logs/' + name + '.err.log');
++  const out = await fs.open(outPath, 'w'), err = await fs.open(errPath, 'w');
++  const child = spawn(java, ['-Djava.io.tmpdir=V:/.local/tmp', '-Djdk.net.unixdomain.tmpdir=V:/.local/tmp', '-Xms64m', '-Xmx256m', '-jar', artifact],
++    { cwd: root, env: { ...process.env, ...local, SERVER_PORT: String(port), AGENT_DB_URL: 'jdbc:postgresql://127.0.0.1:25432/' + database + '?currentSchema=engine',
++      AGENT_APP_URL: 'http://127.0.0.1:28419', AGENT_ENGINE_URL: 'http://127.0.0.1:' + port,
++      AGENT_INTERACTIVE_WORKERS: '1', AGENT_BATCH_WORKERS: '1', AGENT_SCHEDULER_POLL_MS: '100', AGENT_SCHEDULER_LEASE_MS: '1000', AGENT_SCHEDULER_DRAIN_MS: '1000' },
++      windowsHide: true, stdio: ['ignore', out.fd, err.fd] });
++  await out.close(); await err.close(); children.push(child);
++  const record = { pid: child.pid, port, jar: artifact, database, outPath, errPath };
++  processRecords.push(record); await fs.writeFile(path.join(root, '.local/scheduler-live-processes.json'), JSON.stringify(processRecords, null, 2));
++  // Confirm TCP ownership before any HTTP request; a healthy unrelated listener is not ours.
++  await until(async () => {
++    assert.equal(child.exitCode, null, 'Owned engine exited before opening its port');
++    const owned = spawnSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command',
++      '$n=Get-NetTCPConnection -LocalPort ([int]$env:AGENT_SCHEDULER_TEST_PORT) -State Listen -ErrorAction SilentlyContinue; if(@($n | Where-Object OwningProcess -eq ([int]$env:AGENT_SCHEDULER_TEST_PID)).Count -lt 1){exit 8}'],
++      { env: { ...portEnv, AGENT_SCHEDULER_TEST_PID: String(child.pid) }, encoding: 'utf8', windowsHide: true });
++    return owned.status === 0;
++  }, Boolean, 'owned engine TCP listener ' + port, 60000);
++  await until(async () => { try { return (await fetch('http://127.0.0.1:' + port + '/actuator/health', { signal: AbortSignal.timeout(1000) })).ok; } catch { return false; } }, ok => ok, 'engine health ' + port, 60000);
++  const output = await fs.readFile(outPath, 'utf8');
++  record.owner = output.match(/Run scheduler started owner=([a-f0-9-]+)/)?.[1]; assert(record.owner, 'scheduler owner startup evidence');
++  return { child, record };
++}
++async function stop(engine) {
++  if (!engine || engine.child.exitCode !== null || engine.child.signalCode !== null) return;
++  // Verify the original project JAR and port before terminating a recorded process.
++  const code = '$p=Get-CimInstance Win32_Process -Filter "ProcessId=' + engine.child.pid + '";if($null -eq $p){exit 0};if($p.Name -ne "java.exe" -or -not $p.CommandLine.Contains($env:AGENT_SCHEDULER_REVIEWED_JAR)){throw "Refuse unrelated PID"};Stop-Process -Id ' + engine.child.pid;
++  const result = spawnSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', code], { env: { ...process.env, AGENT_SCHEDULER_REVIEWED_JAR: artifact }, encoding: 'utf8', windowsHide: true });
++  assert.equal(result.status, 0, result.stderr);
++  await until(async () => engine.child.exitCode !== null || engine.child.signalCode !== null, Boolean, 'child exit', 10000);
++  engine.record.stopped = true;
++}
++function seed(publicId, head = false, delayed = false) {
++  return `with inserted as (insert into engine.run(public_id,app_code,debug_snapshot,trigger_type,status,principal_id,tenant_id,input_ref,version_refs,guard_ctx,budget,snapshot,inputs,dispatch_next_at) values(${quote(publicId)},'scheduler_live',${jsonSql(snapshot)},'DEBUG',${quote(head ? 'RUNNING' : 'PENDING')},${quote(principal)},${quote(tenant)},'pg:isolated-scheduler-fixture','{}',${jsonSql(guard)},'{}',${jsonSql(snapshot)},'{}',now()${delayed ? "+interval '2 seconds'" : ''}) returning id) insert into engine.node_instance(run_id,node_def_id,step_seq,node_type,status,definition,lease_owner,lease_until) select id,'start',1,'START',${quote(head ? 'RUNNING' : 'READY')},'{"id":"start","type":"START"}',${head ? "'fixture-other-node-owner',now()+interval '10 minutes'" : 'null,null'} from inserted;` +
++    (head ? '' : `insert into engine.node_instance(run_id,node_def_id,step_seq,node_type,status,definition) select id,'end',2,'END','READY','{"id":"end","type":"END"}' from engine.run where public_id=${quote(publicId)};`);
++}
++let first, second;
++try {
++  const created = spawnSync(path.join(root, '.tools/postgresql-16.15/pgsql/bin/createdb.exe'),
++    ['-h', '127.0.0.1', '-p', '25432', '-U', local.AGENT_DB_USER || 'agent_v12', database], { env: pgEnv, encoding: 'utf8', windowsHide: true });
++  assert.equal(created.status, 0, created.stderr); // New unique DB only; never replace/drop another database.
++  first = await start(18086);
++  const handoverId = 'r_scheduler_handover_' + suffix;
++  sql(seed(handoverId, false, true));
++  lock = spawn(psql, [...pgArgs, '-f', '-'], { env: pgEnv, windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });
++  let lockOutput = '', lockError = ''; lock.stdout.on('data', data => { lockOutput += data; }); lock.stderr.on('data', data => { lockError += data; });
++  lock.stdin.write(`begin; select n.id from engine.node_instance n join engine.run r on r.id=n.run_id where r.public_id=${quote(handoverId)} and n.node_def_id='start' for update of n;\n\\echo NODE_LOCKED\n`);
++  await until(async () => lockOutput, value => value.includes('NODE_LOCKED'), 'fixture node lock');
++  const held = await until(async () => JSON.parse(sql(`select json_build_object('owner',dispatch_owner,'generation',dispatch_generation,'until',dispatch_until,'valid',dispatch_until>now()) from engine.run where public_id=${quote(handoverId)};`)), value => value.owner === first.record.owner && value.valid, 'first real dispatch claim');
++  await stop(first);
++  lock.stdin.end('commit;\n\\q\n');
++  await until(async () => lock.exitCode, value => value !== null, 'node lock released'); assert.equal(lock.exitCode, 0, lockError); lock = null;
++  await until(async () => sql(`select dispatch_until<=now() from engine.run where public_id=${quote(handoverId)};`), value => value === 't', 'real dispatch expiry');
++  second = await start(18087);
++  const handed = await until(async () => JSON.parse(sql(`select json_build_object('status',status,'generation',dispatch_generation,'startedEvents',(select count(*) from engine.run_event where run_id=r.id and type='RUN_STARTED'),'commits',(select count(*) from engine.run_event where run_id=r.id and type='LOGIC_RESULT_COMMITTED'),'attempts',(select count(*) from engine.attempt a join engine.node_instance n on n.id=a.node_instance_id where n.run_id=r.id)) from engine.run r where public_id=${quote(handoverId)};`)), value => value.status === 'SUCCEEDED', 'successor handover');
++  assert.equal(handed.generation, held.generation + 1); assert.equal(handed.startedEvents, 1); assert.equal(handed.commits, 2); assert.equal(handed.attempts, 2);
++  first = await start(18086);
++  const prefix = 'r_scheduler_tail_' + suffix + '_';
++  const rows = []; for (let i = 0; i < 101; i++) rows.push(seed('r_scheduler_head_' + suffix + '_' + i, true));
++  for (let i = 0; i < 200; i++) rows.push(seed(prefix + i));
++  sql('begin;' + rows.join('\n') + 'commit;');
++  const cohort = await until(async () => JSON.parse(sql(`select json_build_object('total',count(*),'succeeded',count(*) filter(where status='SUCCEEDED'),'failed',count(*) filter(where status='FAILED'),'maxGeneration',max(dispatch_generation)) from engine.run where public_id like ${quote(prefix + '%')};`)), value => value.succeeded === 200, 'all fair tail rows', 90000);
++  assert.equal(cohort.failed, 0);
++  const uniqueness = JSON.parse(sql(`select json_build_object('starts',(select count(*) from engine.run_event e join engine.run r on r.id=e.run_id where r.public_id like ${quote(prefix + '%')} and e.type='RUN_STARTED'),'commits',(select count(*) from engine.run_event e join engine.run r on r.id=e.run_id where r.public_id like ${quote(prefix + '%')} and e.type='LOGIC_RESULT_COMMITTED'),'attempts',(select count(*) from engine.attempt a join engine.node_instance n on n.id=a.node_instance_id join engine.run r on r.id=n.run_id where r.public_id like ${quote(prefix + '%')}),'workerOwners',(select count(distinct split_part(n.lease_owner,'_',1)) from engine.node_instance n join engine.run r on r.id=n.run_id where r.public_id like ${quote(prefix + '%')}),'headAttempts',(select count(*) from engine.attempt a join engine.node_instance n on n.id=a.node_instance_id join engine.run r on r.id=n.run_id where r.public_id like ${quote('r_scheduler_head_' + suffix + '_%')}));`));
++  assert.equal(uniqueness.starts, 200); assert.equal(uniqueness.commits, 400); assert.equal(uniqueness.attempts, 400); assert.equal(uniqueness.workerOwners, 2); assert.equal(uniqueness.headAttempts, 0);
++  const httpChecks = [];
++  for (const port of [18086, 18087]) {
++    const body = JSON.stringify({ appCode: 'scheduler_live', inputs: {}, requestId: crypto.randomUUID() });
++    let rejected = 0;
++    const envelope = await until(async () => {
++      const response = await fetch('http://127.0.0.1:' + port + '/admin/debug-runs', { method: 'POST', headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }, body, signal: AbortSignal.timeout(10000) });
++      const value = await response.json();
++      // A final cohort worker may still be exiting after its durable success. Retry the
++      // same unaccepted request only on an explicit capacity rejection, never on lost ACK.
++      if (response.status === 429) { assert(Number(response.headers.get('Retry-After')) > 0); rejected++; await pause(1000); return null; }
++      assert.equal(response.status, 200, JSON.stringify(value)); return value;
++    }, Boolean, 'HTTP admission after cohort');
++    const id = envelope.data.runId;
++    await until(async () => sql(`select status from engine.run where public_id=${quote(id)};`), value => value === 'SUCCEEDED', 'actual HTTP run');
++    httpChecks.push({ port, runId: id, capacityRejectionsBeforeAcceptance: rejected, acceptedStatus: envelope.data.status, finalStatus: 'SUCCEEDED' });
++  }
++  const result = { actualTwoEngineJvms: true, freshDatabase: database, artifactSha256, fixtureRowsOnly: true, providerCalls: 0,
++    handover: { runId: handoverId, original: held, final: handed, ownerProcessStopped: true, dispatchWaitedForRealExpiry: true, nodeWasNotYetClaimed: true },
++    fairness: { liveHeadRows: 101, readyTailRows: 200, cohort, uniqueness }, upstreamReads, httpChecks, processRecords,
++    exclusions: ['provider cancellation', 'in-flight node lease takeover', 'distributed resource permits', 'capacity benchmark', 'graceful OS stop'] };
++  await fs.writeFile(path.join(root, '.local/run-scheduler-replicas-live.json'), JSON.stringify(result, null, 2)); process.stdout.write(JSON.stringify(result, null, 2) + '\n');
++} finally {
++  if (lock && lock.exitCode === null) lock.stdin.end('rollback;\n\\q\n');
++  for (const child of children) { const record = processRecords.find(entry => entry.pid === child.pid); await stop({ child, record }); }
++  fixture.close(); for (const socket of sockets) socket.destroy();
++  await fs.writeFile(path.join(root, '.local/scheduler-live-processes.json'), JSON.stringify(processRecords, null, 2));
++}
+diff --git a/web/tests/mcp-registration-live-browser.mjs b/web/tests/mcp-registration-live-browser.mjs
+new file mode 100644
+index 0000000..087c35e
+--- /dev/null
++++ b/web/tests/mcp-registration-live-browser.mjs
+@@ -0,0 +1,52 @@
++import { chromium } from '@playwright/test';
++import assert from 'node:assert/strict';
++import path from 'node:path';
++import crypto from 'node:crypto';
++
++// Called by the root protocol runner while its finite local peer is alive.
++// Uses the real portal sign-in and gateway; there are no intercepted API routes.
++export async function verifyMcpDraftInBrowser(code) {
++  assert(/^smoke_mcp_good_[a-f0-9]{10}$/.test(code), 'Only this runner\'s own draft');
++  const root = path.resolve(import.meta.dirname, '../..');
++  const browser = await chromium.launchPersistentContext(
++    path.join(root, '.local/chromium-mcp-live-' + crypto.randomUUID()),
++    { executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, viewport: { width: 1440, height: 1000 } },
++  );
++  const page = await browser.newPage();
++  const requests = [], pageErrors = [];
++  page.on('pageerror', error => pageErrors.push(error.message));
++  page.on('request', request => {
++    const url = new URL(request.url());
++    // Never record credentials, Authorization headers or authentication responses.
++    if (url.pathname.startsWith('/admin/')) requests.push({ method: request.method(), path: url.pathname });
++  });
++  try {
++    await page.goto('http://127.0.0.1:15173/#/skills/' + code);
++    await page.getByRole('button', { name: '进入开发工作台', exact: true }).click();
++    const panel = page.getByRole('region', { name: 'MCP 草稿工具检查', exact: true });
++    await panel.waitFor();
++    assert.match(await panel.innerText(), /所选版本 1.*绑定工具 lookup/);
++    const endpoint = '/admin/skills/' + code + '/drafts/1/mcp-tools';
++    const responsePromise = page.waitForResponse(response => new URL(response.url()).pathname === endpoint && response.request().method() === 'POST');
++    await panel.getByRole('button', { name: '检查远端工具', exact: true }).click();
++    const response = await responsePromise;
++    assert.equal(response.status(), 200);
++    assert.equal(response.request().postData(), null);
++    const envelope = await response.json();
++    assert.equal(envelope.code, 'OK');
++    assert.deepEqual(envelope.data.tools.map(tool => tool.name), ['unrelated', 'lookup']);
++    await panel.getByText('已找到准确绑定名称。请继续核对输入 Schema。', { exact: true }).waitFor();
++    const tool = panel.locator('article').filter({ has: page.locator('strong code').filter({ hasText: /^lookup$/ }) });
++    await tool.getByText('展开完整原始 inputSchema', { exact: true }).click();
++    assert.match(await tool.locator('pre').innerText(), /"pattern": "\^A\$"/);
++    for (const width of [1440, 390]) {
++      await page.setViewportSize({ width, height: width === 390 ? 844 : 1000 });
++      await page.screenshot({ path: path.join(root, 'docs/evidence/frontend-mcp-live-tools-' + width + '.png'), fullPage: true, animations: 'disabled' });
++      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'MCP detail must fit ' + width);
++    }
++    const writes = requests.filter(request => request.method !== 'GET');
++    assert.deepEqual(writes, [{ method: 'POST', path: endpoint }]);
++    assert.deepEqual(pageErrors, []);
++    return { realGatewayAndSavedDraft: true, mockedRoutes: 0, code, version: 1, toolName: 'lookup', bodylessDiscovery: true, rawSchemaVisible: true, viewportWidths: [1440, 390], requests, pageErrors };
++  } finally { await browser.close(); }
++}
+diff --git a/web/tests/evaluation-async-live-browser.mjs b/web/tests/evaluation-async-live-browser.mjs
+new file mode 100644
+index 0000000..e3b11f9
+--- /dev/null
++++ b/web/tests/evaluation-async-live-browser.mjs
+@@ -0,0 +1,26 @@
++import fs from 'node:fs/promises';import path from 'node:path';import {spawnSync} from 'node:child_process';
++if(!process.argv.includes('--g5-ready'))throw Error('仅在 root 确认 G5 服务部署就绪后使用 --g5-ready');
++const scratch=path.join(import.meta.dirname,'.evaluation-async-live.mjs');
++try{
++ let source=await fs.readFile(path.join(import.meta.dirname,'named-inputs-live-browser.mjs'),'utf8');
++ source=source.replaceAll('docs/evidence/frontend-test-inputs-live','docs/evidence/frontend-evaluation-async-live');
++ const marker='const evaluated = await data(await evaluationResponse);';
++ if(!source.includes(marker))throw Error('Frozen live script changed; inspect explicitly');
++ source=source.replace(marker,`let evaluated = await data(await evaluationResponse);
++  evidence.initialEvaluationStatus = evaluated.status;
++  const observedId = evaluated.evalReportId || evaluated.id;
++  if(evaluated.status !== 'ACCEPTED') {
++    await page.getByText('评测已通过', {exact:true}).waitFor({timeout:60000});
++    await Promise.all(pending);
++    const updates=evidence.requests.filter(item=>item.path==='/admin/evaluations/'+observedId||item.path==='/admin/evaluations/'+observedId+'/resume');
++    evaluated=updates.map(item=>item.response?.data).findLast(item=>item?.status==='ACCEPTED');
++    assert(evaluated, 'The original report must reach accepted through actual GET/resume responses');
++    evidence.observationReads=updates.filter(item=>item.method==='GET').length;
++    evidence.resumeRequests=updates.filter(item=>item.method==='POST').length;
++  }
++  assert.equal(evidence.requests.filter(item=>item.path==='/admin/evaluations'&&item.method==='POST').length,1);
++  evidence.checks.singleOriginalReportObservedToAccepted=true;`);
++ // GET/list is tenant-scoped; retain only this test application's rows in saved logs.
++ source=source.replace('entry.response = envelope;',"entry.response = url.pathname==='/admin/evaluations'&&request.method()==='GET'&&Array.isArray(envelope.data)?{...envelope,data:envelope.data.filter(item=>item.appCode===fixture.appCode)}:envelope;");
++ await fs.writeFile(scratch,source);const run=spawnSync(process.execPath,[scratch,'--engine-ready'],{stdio:'inherit',cwd:path.resolve(import.meta.dirname,'../..')});if(run.error)throw run.error;if(run.status!==0)throw Error('Live async evaluation failed '+run.status);
++}finally{await fs.rm(scratch,{force:true});}

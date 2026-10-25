@@ -1,0 +1,65 @@
+{
+  "at": "2026-10-20T20:13:55.801Z",
+  "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+  "command": [
+    "node",
+    "web/node_modules/vitest/vitest.mjs",
+    "run",
+    "--root",
+    "web",
+    "tests/portal-auth.test.ts",
+    "tests/stream-auth.test.ts",
+    "tests/run-observer.test.ts",
+    "tests/login.test.ts",
+    "tests/stream.test.ts",
+    "tests/expiry.test.ts",
+    "tests/permission.test.ts"
+  ],
+  "source": {
+    "file": "docs/evidence/iam-stage-4-d4b-portal-frontend/green-core/source-before.json",
+    "bytes": 116909,
+    "sha256": "5056e104b437f513e417047971a36cb1a36787e77bc61ca87b93e38054212654"
+  },
+  "overlay": [
+    {
+      "file": "web/debug-panel/events.ts",
+      "bytes": 4536,
+      "sha256": "a82e7858ed947b38a5a1cbaa5ee9121f9f25c775201611c7fd54d403ceacb112"
+    },
+    {
+      "file": "web/shared/api.ts",
+      "bytes": 6218,
+      "sha256": "ec2de931a65960ed32da1f80e9bd19692ac2ccc46a15d8f0140accb7177f9aea"
+    },
+    {
+      "file": "web/shared/portal-auth.ts",
+      "bytes": 4026,
+      "sha256": "4c25de0cc09f4a47c6e362cbefd57f34f0e8e0d14852b3b77d30066cd630585e"
+    },
+    {
+      "file": "web/shared/run-observer.ts",
+      "bytes": 3813,
+      "sha256": "7dbf2838f67da73fd8da0d48de914fa0d50b260bc6f2c912363763c03ecfd980"
+    },
+    {
+      "file": "web/tests/portal-auth.test.ts",
+      "bytes": 6606,
+      "sha256": "8465fe92e49f07b9bbb813bc1bc324646e1050bba3427d7617cbfc42e0c05c12"
+    },
+    {
+      "file": "web/tests/run-observer.test.ts",
+      "bytes": 7094,
+      "sha256": "d6be810eec044c65377f8fcb339f232d4cb6ed738813e4b84b8508089dc3f4ca"
+    },
+    {
+      "file": "web/tests/stream-auth.test.ts",
+      "bytes": 8415,
+      "sha256": "88eb6fe93639a39e5f79e6aaf5803485db1ff9d89e01e35f3d613e36439a6ed9"
+    }
+  ],
+  "unchangedComposition": {
+    "file": "docs/evidence/iam-stage-4-d4a-time-order-fix/composition.json",
+    "bytes": 1084,
+    "sha256": "cfdc119fa175650ea56d2b115ebeb1f8b7b6c1e22a7b37d253eeb77980fc15ca"
+  }
+}

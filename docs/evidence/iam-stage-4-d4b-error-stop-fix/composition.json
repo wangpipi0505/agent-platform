@@ -1,0 +1,55 @@
+{
+  "at": "2026-10-20T20:47:18.995Z",
+  "base": {
+    "file": "docs/evidence/iam-stage-4-d4b-portal-frontend/composition.json",
+    "bytes": 3479,
+    "sha256": "3d4e73f7080859c2664e87ccee7d21fa645a305c52bf47ceae570ca1a45fd7db"
+  },
+  "baseSource": {
+    "file": "docs/evidence/iam-stage-4-d4b-portal-frontend/necessary-source-after.json",
+    "bytes": 108245,
+    "sha256": "c6736f661c52a8c1ef5a5b8815e944096a85db53de954d6748f856e035e60f0e"
+  },
+  "baseDist": {
+    "file": "docs/evidence/iam-stage-4-d4b-portal-frontend/dist-after.json",
+    "bytes": 2474,
+    "sha256": "209f1556d66536acd8aea5d6465f3483683140ddfe75999ffbb2b0fa78baaae3"
+  },
+  "sourceOverlay": "docs/evidence/iam-stage-4-d4b-error-stop-fix/frozen-overlay/",
+  "sourceRule": "Own7-file overlay, else old D4b frozen-overlay when present, else old frontend-base; backend380 inherited unchanged from D4a+I1",
+  "distOverlay": "docs/evidence/iam-stage-4-d4b-error-stop-fix/frozen-dist-overlay/",
+  "distRule": "Own changed/new overlay, else old D4b frozen-dist-overlay or dist-unchanged; apply tombstones",
+  "distTombstones": [
+    {
+      "file": "web/admin/dist/assets/DebugPanel-D-n1EX_N.js",
+      "bytes": 412037,
+      "sha256": "3430b949558e85233395454660654939e1778b2fd248367f3d5d89de907e5727"
+    },
+    {
+      "file": "web/admin/dist/assets/FlowDesigner-BiVqU9jx.js",
+      "bytes": 467892,
+      "sha256": "977c39bbc58df9255311cc89943d8b0ad3816ceca4fb28c646d6f2b0fd3713c2"
+    },
+    {
+      "file": "web/admin/dist/assets/RunDetail-DO-1xwnT.js",
+      "bytes": 77032,
+      "sha256": "099ac8a9132581cd3a55af13684b8738852d20782c17bdf10c4e74aae40c04c7"
+    },
+    {
+      "file": "web/admin/dist/assets/events-DDuDks0I.js",
+      "bytes": 2715,
+      "sha256": "e629d866ca00b5432fb93f30ce6ffe6ff0806134bde1e4de0a2cde91c38c4054"
+    },
+    {
+      "file": "web/admin/dist/assets/index-BCuiiWiQ.js",
+      "bytes": 1356216,
+      "sha256": "0320836d0fd356bb38d3b8fb9f8c2103f2f461bbbd3b3bba619b1fc0c2c59cb2"
+    },
+    {
+      "file": "web/webapp/dist/assets/index-BYetKIv1.js",
+      "bytes": 1312642,
+      "sha256": "a98fb14f25867bb4fe45e24cc8602952b863fdf456b3108ae310292909207341"
+    }
+  ],
+  "backendTargets": "1933 sealed D4a+I1 inherited, no physical rescan or copy"
+}

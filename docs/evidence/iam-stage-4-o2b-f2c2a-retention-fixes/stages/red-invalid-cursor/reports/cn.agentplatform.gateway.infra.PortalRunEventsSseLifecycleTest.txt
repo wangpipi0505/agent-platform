@@ -1,0 +1,27 @@
+-------------------------------------------------------------------------------
+Test set: cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 3.631 s <<< FAILURE! -- in cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest
+cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest.invalidCursorCannotPublishAnUnreapableLease -- Time elapsed: 3.616 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+Exception in thread "main" org.opentest4j.AssertionFailedError: rejected original cursor must not publish an unreapable SSE lease ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest.invalidCursor(PortalRunEventsSseLifecycleTest.java:285)
+	at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest.scenario(PortalRunEventsSseLifecycleTest.java:218)
+	at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest.main(PortalRunEventsSseLifecycleTest.java:108)
+ ==> expected: <0> but was: <1>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:563)
+	at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest.child(PortalRunEventsSseLifecycleTest.java:84)
+	at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest.invalidCursorCannotPublishAnUnreapableLease(PortalRunEventsSseLifecycleTest.java:95)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+

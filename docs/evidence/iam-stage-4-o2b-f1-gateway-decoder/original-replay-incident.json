@@ -1,0 +1,57 @@
+{
+  "status": "ORIGINAL_REPLAY_FULL_BYTES_FAILED",
+  "originalPatch": {
+    "file": "docs/evidence/iam-stage-4-o2b-f1-gateway-decoder/source.patch",
+    "bytes": 52743,
+    "sha256": "d443c66e6f47668c07d01d4794ea29c747d31cc80d7cc561bc5c6ef754cc8a6e"
+  },
+  "originalCheck": {
+    "file": ".local/iam-o2b-f1-gateway-decoder/git/first-check.json",
+    "bytes": 1134,
+    "sha256": "dcc5650e74d4b3bbabbd90f99b5ec1987fabce6dbe1489ac6d62a635fbed2044"
+  },
+  "originalApply": {
+    "file": ".local/iam-o2b-f1-gateway-decoder/git/first-apply.json",
+    "bytes": 1119,
+    "sha256": "3b58c07cf1824750b6097eb27feea4686661d904b69132ba9735bdbe6c558b3d"
+  },
+  "checkExit": 0,
+  "applyExit": 0,
+  "firstCheckAttempts": 1,
+  "firstApplyAttempts": 1,
+  "sourceCount": 612,
+  "mismatchCount": 2,
+  "mismatch": [
+    {
+      "expected": {
+        "file": "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsPacketBudget.java",
+        "bytes": 3537,
+        "sha256": "c59d9add3cd90b98d51472489a9e596db7aaf01eb322bec6699849760251ebbd"
+      },
+      "actual": {
+        "file": "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsPacketBudget.java",
+        "bytes": 3536,
+        "sha256": "9a51d39c10491857a1126cb2eb51a62b16639e76a513128dc624afee3dc0425b"
+      }
+    },
+    {
+      "expected": {
+        "file": "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsPacketDecoder.java",
+        "bytes": 19120,
+        "sha256": "0ecf83482fde638be4dd4ad7ae0fefb4ed932bd0ff6347c86334e7100388ba1e"
+      },
+      "actual": {
+        "file": "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsPacketDecoder.java",
+        "bytes": 19119,
+        "sha256": "03ee910d8f61b7374749bda2eebac23b71ab83aca42e9d300b9ed1582f6321ce"
+      }
+    }
+  ],
+  "actualManifest": {
+    "file": ".local/iam-o2b-f1-gateway-decoder/original-failed-replay-source.json",
+    "bytes": 117016,
+    "sha256": "47b8d5d27974fb0094ab2a6cc4073bd85b32462f7da0b4fa0fe661e0492a3c3f"
+  },
+  "reason": "Project .gitattributes text=auto eol=lf normalized the sole final CRLF in two new production files during git diff. core.autocrlf=false did not override repository attribute. Source/target/final epoch remain untouched. Original successful process exits do not prove full612 bytes.",
+  "recoveryAuthority": "Root explicit message authorizes a separate private byte-corrected baseline/patch and exactly one first check/apply there. Original patch/replay/commands remain unchanged; no commit, no after-apply copy, no source/test changes or test reruns."
+}

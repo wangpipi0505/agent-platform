@@ -1,0 +1,122 @@
+{
+  "at": "2026-10-20T20:34:56.419Z",
+  "case": "real axios session and business HTTP, fetch SSE and artifact omit same-origin Cookie",
+  "phase": "browser-5",
+  "sourceRecord": {
+    "file": "docs/evidence/iam-stage-4-d4b-portal-frontend/browser-5/command.json",
+    "bytes": 3263,
+    "sha256": "4ab7b18500069f3213eea7fbbc4b65d5f170dfcc9d0db9b7c70eed567fa861a5"
+  },
+  "raw": {
+    "file": "docs/evidence/iam-stage-4-d4b-portal-frontend/browser-5/raw-http.json",
+    "bytes": 138337,
+    "sha256": "1ddd993b1bff58885bab44f800d69aedcdad7209ba33752f1f4b8acf48864c2f"
+  },
+  "range": [
+    3,
+    16
+  ],
+  "actualAmbientCookiePositiveControl": [
+    {
+      "url": "/ambient",
+      "cookie": "ambient=portal-cookie"
+    }
+  ],
+  "categories": [
+    {
+      "path": "/auth/session",
+      "requests": [
+        {
+          "method": "GET",
+          "cookie": null,
+          "authorization": "Bearer A",
+          "responseStatus": 200
+        }
+      ]
+    },
+    {
+      "path": "/admin/runs/r_cookie",
+      "requests": [
+        {
+          "method": "GET",
+          "cookie": null,
+          "authorization": "Bearer A",
+          "responseStatus": 200
+        },
+        {
+          "method": "GET",
+          "cookie": null,
+          "authorization": "Bearer A",
+          "responseStatus": 200
+        },
+        {
+          "method": "GET",
+          "cookie": null,
+          "authorization": "Bearer A",
+          "responseStatus": 200
+        },
+        {
+          "method": "GET",
+          "cookie": null,
+          "authorization": "Bearer A",
+          "responseStatus": 200
+        },
+        {
+          "method": "GET",
+          "cookie": null,
+          "authorization": "Bearer A",
+          "responseStatus": 200
+        },
+        {
+          "method": "GET",
+          "cookie": null,
+          "authorization": "Bearer A",
+          "responseStatus": 200
+        },
+        {
+          "method": "GET",
+          "cookie": null,
+          "authorization": "Bearer A",
+          "responseStatus": 200
+        }
+      ]
+    },
+    {
+      "path": "/admin/runs/r_cookie/events",
+      "requests": [
+        {
+          "method": "GET",
+          "cookie": null,
+          "authorization": "Bearer A",
+          "responseStatus": 200
+        },
+        {
+          "method": "GET",
+          "cookie": null,
+          "authorization": "Bearer A",
+          "responseStatus": 200
+        },
+        {
+          "method": "GET",
+          "cookie": null,
+          "authorization": "Bearer A",
+          "responseStatus": 200
+        }
+      ]
+    },
+    {
+      "path": "/admin/artifacts/file/download",
+      "requests": [
+        {
+          "method": "GET",
+          "cookie": null,
+          "authorization": "Bearer A",
+          "responseStatus": 200
+        }
+      ]
+    }
+  ],
+  "allBearerRequestsCookieOmitted": true,
+  "actualDownload": "browser-5/downloaded-result.txt",
+  "notD4aProductionIntegration": true
+}

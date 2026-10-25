@@ -1,0 +1,63 @@
+{
+  "provenance": "Recorded summaries of actual tool calls; these summaries are not claimed raw stdout",
+  "events": [
+    {
+      "stage": "init-first",
+      "exit": 1,
+      "reason": "Evidence helper initially walked node_modules before filtering; stopped via own exec session Ctrl-C and changed to directory-entry pruning before baseline init. No product source edit or test yet."
+    },
+    {
+      "stage": "red-portal",
+      "exit": 1,
+      "reason": "Vitest launched without --root web; discovery was interrupted via own exec session Ctrl-C. No usable behavior red counted. Command/source manifest retained; no result/output file fabricated."
+    },
+    {
+      "stage": "red-portal-root",
+      "exit": 1,
+      "reason": "New module absent, import failure, 0 tests; setup only, separate from 15-test placeholder behavior red."
+    },
+    {
+      "stage": "browser-1",
+      "exit": 1,
+      "reason": "In-memory HTML import-analysis of custom /probe.js produced html-proxy errors/404; no business API request. After repeated same setup failure, owned node tree PID10724 was stopped with taskkill /PID10724 /T /F, exit0; killed descendants were the Vite esbuild and Chromium processes launched by this run. Lifecycle finally did not execute; no clean shutdown falsely claimed.",
+      "origin": "http://127.0.0.1:56421",
+      "readyAt": "2026-10-20T20:18:14.050Z",
+      "forceCleanupCommand": "taskkill /PID 10724 /T /F"
+    },
+    {
+      "stage": "browser-2",
+      "exit": 1,
+      "reason": "First five cases passed; explicit-dev fixture imported unversioned optimized modules beside versioned Vite modules, creating duplicate Pinia state. UI pageerror preserved. HTTP/Vite/Chromium gracefully closed."
+    },
+    {
+      "stage": "browser-3",
+      "exit": 1,
+      "reason": "Deferring probe did not solve duplicate module Pinia setup; failure preserved, graceful cleanup."
+    },
+    {
+      "stage": "browser-4",
+      "exit": 1,
+      "reason": "Virtual dev entry cold loading timed out; no product behavior assertion, graceful cleanup. Replaced harness with actual transformed main.ts and only explicit env-expression substitution."
+    },
+    {
+      "stage": "browser-5",
+      "exit": 1,
+      "reason": "14 named assertions passed; fixture debug-inputs returned array instead of {items,...}, producing four pageerrors. Narrow zero-overflow oracle also failed against inherited fixed min-width1366; fixture corrected and narrow limit made explicit, no product layout change."
+    },
+    {
+      "stage": "red-debug-event-status",
+      "exit": 1,
+      "reason": "Request-stop assertion passed after EOF recovery, but actual business-frame status403 caused unhandled DebugPanel restore rejection/pageerror. This is a real red, not a clean passing stage; fixed event-triggered restore catch and checked both consumers in green-event-status."
+    },
+    {
+      "stage": "replay-text-attempt",
+      "exit": 1,
+      "reason": "Root-cwd check/apply exit0, but exact byte comparison failed: root .gitattributes text=auto eol=lf normalized App single CRLF, 50829 -> 50828bytes. Preserved replay and patch."
+    },
+    {
+      "stage": "replay-binary-normalized-attempt",
+      "exit": 1,
+      "reason": "Temporary global -diff attributes produced binary patch, but root .gitattributes still normalized blob bytes. Preserved separately. Final isolated private GIT_DIR info/attributes -text overcame filter without touching real repository attributes/config."
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+async page=>{return await page.evaluate(()=>{const s=document.querySelector('agent-platform-assistant').shadowRoot;return {value:s.querySelector('textarea').value,html:s.querySelector('.log').innerHTML,button:s.querySelector('.send').outerHTML};});}

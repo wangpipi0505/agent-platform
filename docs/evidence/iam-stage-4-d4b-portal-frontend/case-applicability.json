@@ -1,0 +1,218 @@
+{
+  "at": "2026-10-20T20:34:56.421Z",
+  "actualBrowserUniqueApplicable": 32,
+  "cases": [
+    {
+      "stage": "browser-2",
+      "name": "missing provider uses portal entry with no development fallback",
+      "rawStart": 0,
+      "rawEnd": 0
+    },
+    {
+      "stage": "browser-2",
+      "name": "pending provider mounts connection entry immediately; same token identity switch clears drafts",
+      "rawStart": 0,
+      "rawEnd": 4
+    },
+    {
+      "stage": "browser-2",
+      "name": "session 401 entry and manual reconnect",
+      "rawStart": 4,
+      "rawEnd": 7
+    },
+    {
+      "stage": "browser-2",
+      "name": "session 403 entry and manual reconnect",
+      "rawStart": 7,
+      "rawEnd": 10
+    },
+    {
+      "stage": "browser-2",
+      "name": "session 503 entry and manual reconnect",
+      "rawStart": 10,
+      "rawEnd": 13
+    },
+    {
+      "stage": "browser-5",
+      "name": "explicit development mode is manual and verifies session before workspace",
+      "rawStart": 0,
+      "rawEnd": 3
+    },
+    {
+      "stage": "browser-5",
+      "name": "real axios session and business HTTP, fetch SSE and artifact omit same-origin Cookie",
+      "rawStart": 3,
+      "rawEnd": 16
+    },
+    {
+      "stage": "browser-5",
+      "name": "late App allSettled/finally and old closures cannot mutate new identity, navigation, message or network",
+      "rawStart": 16,
+      "rawEnd": 28
+    },
+    {
+      "stage": "browser-5",
+      "name": "late real App copy POST cannot navigate new identity or replay a POST",
+      "rawStart": 28,
+      "rawEnd": 33
+    },
+    {
+      "stage": "browser-5",
+      "name": "late providerOptions and published input consumers remain inside old workspace",
+      "rawStart": 33,
+      "rawEnd": 45
+    },
+    {
+      "stage": "browser-5",
+      "name": "late artifact blob from actual component cannot click after identity switch",
+      "rawStart": 45,
+      "rawEnd": 52
+    },
+    {
+      "stage": "browser-5",
+      "name": "RunDetail stops AUTHORITY_EXPIRED without status/open/cancel/POST growth",
+      "rawStart": 52,
+      "rawEnd": 56
+    },
+    {
+      "stage": "browser-5",
+      "name": "RunDetail stops AUTHORITY_DENIED without status/open/cancel/POST growth",
+      "rawStart": 56,
+      "rawEnd": 60
+    },
+    {
+      "stage": "browser-5",
+      "name": "RunDetail stops AUTHORITY_UNAVAILABLE without status/open/cancel/POST growth",
+      "rawStart": 60,
+      "rawEnd": 64
+    },
+    {
+      "stage": "browser-5",
+      "name": "RunDetail stops named IAM 503 with manual recovery entry",
+      "rawStart": 85,
+      "rawEnd": 89
+    },
+    {
+      "stage": "browser-6",
+      "name": "DebugPanel stops AUTHORITY_EXPIRED without status/open/cancel/POST growth",
+      "rawStart": 0,
+      "rawEnd": 7
+    },
+    {
+      "stage": "browser-6",
+      "name": "DebugPanel stops AUTHORITY_DENIED without status/open/cancel/POST growth",
+      "rawStart": 7,
+      "rawEnd": 14
+    },
+    {
+      "stage": "browser-6",
+      "name": "DebugPanel stops AUTHORITY_UNAVAILABLE without status/open/cancel/POST growth",
+      "rawStart": 14,
+      "rawEnd": 21
+    },
+    {
+      "stage": "browser-6",
+      "name": "DebugPanel stops named IAM 503 with manual recovery entry",
+      "rawStart": 21,
+      "rawEnd": 28
+    },
+    {
+      "stage": "browser-6",
+      "name": "logout clears identity and waits for explicit reconnect; desktop and narrow layout",
+      "rawStart": 28,
+      "rawEnd": 32
+    },
+    {
+      "stage": "browser-7",
+      "name": "late chart dynamic import does not restore old workspace or busy state",
+      "rawStart": 0,
+      "rawEnd": 4
+    },
+    {
+      "stage": "browser-7",
+      "name": "empty roles authenticate without admin controls, expiry and unmount never auto reconnect",
+      "rawStart": 4,
+      "rawEnd": 6
+    },
+    {
+      "stage": "browser-7",
+      "name": "RunDetail stops HTTP 401 without retry or cancel",
+      "rawStart": 6,
+      "rawEnd": 10
+    },
+    {
+      "stage": "browser-7",
+      "name": "RunDetail stops HTTP 403 without retry or cancel",
+      "rawStart": 10,
+      "rawEnd": 14
+    },
+    {
+      "stage": "browser-7",
+      "name": "DebugPanel stops HTTP 401 without retry or cancel",
+      "rawStart": 14,
+      "rawEnd": 21
+    },
+    {
+      "stage": "browser-7",
+      "name": "DebugPanel stops HTTP 403 without retry or cancel",
+      "rawStart": 21,
+      "rawEnd": 28
+    },
+    {
+      "stage": "browser-7",
+      "name": "RunDetail ordinary dependency 503 retains status/reopen recovery",
+      "rawStart": 28,
+      "rawEnd": 34
+    },
+    {
+      "stage": "browser-7",
+      "name": "DebugPanel ordinary dependency 503 retains status/reopen recovery",
+      "rawStart": 34,
+      "rawEnd": 43
+    },
+    {
+      "stage": "green-event-status",
+      "name": "RunDetail status authorization denial after business frame stops observation",
+      "rawStart": 0,
+      "rawEnd": 5
+    },
+    {
+      "stage": "green-event-status",
+      "name": "DebugPanel status authorization denial after business frame stops observation",
+      "rawStart": 5,
+      "rawEnd": 13
+    },
+    {
+      "stage": "green-manual-pending",
+      "name": "manual reconnect supersedes held provider while connecting and ignores late old provider",
+      "rawStart": 0,
+      "rawEnd": 2
+    },
+    {
+      "stage": "final-entry-screenshots",
+      "name": "visual-only final missing and signed-out entry copy screenshots",
+      "rawStart": 0,
+      "rawEnd": 2
+    }
+  ],
+  "notOneGreenSuite": true,
+  "stageFailuresRetained": true,
+  "finalSourceAmendments": "Later shared API change only maps403/named IAM503 messages; green-final-affected covers text and preserves error metadata. Later consumer error handlers are covered by green-event-status. Root-authorized final PortalShell bottom-copy-only change covered by final-entry-screenshots + admin-only rebuild, preserves earlier interaction conclusions.",
+  "unitEvidence": [
+    {
+      "phase": "green-core",
+      "passed": 57,
+      "scope": "Initial seven directly affected selected suites; not full127"
+    },
+    {
+      "phase": "green-download-login",
+      "passed": 2,
+      "scope": "Only newly added scoped artifact and late legacy login"
+    },
+    {
+      "phase": "green-final-affected",
+      "passed": 8,
+      "scope": "Named changed error/reader/login and directly affected old cases"
+    }
+  ]
+}

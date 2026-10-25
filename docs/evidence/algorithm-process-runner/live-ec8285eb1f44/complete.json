@@ -1,0 +1,1992 @@
+{
+  "mode": "complete",
+  "phase": "passed",
+  "namespace": "alg-live-ec8285eb1f44-complete",
+  "skillCode": "alg_live_ec8285eb1f44_complete",
+  "skillVersionId": 1,
+  "connection": {
+    "runId": "r_78455d30c3b34e879f895a8db4e3d7cf",
+    "status": "RUNNING",
+    "action": "WAIT_AND_RECHECK",
+    "reason": "实际只读连接、权限或Schema检查未通过",
+    "ok": false,
+    "latencyMs": 204,
+    "candidateSha256": "e9eceafe8562b1463647b2acf5e1cdf9385af4ea6bb82bd8b3876eeca03c5209"
+  },
+  "runId": "r_78455d30c3b34e879f895a8db4e3d7cf",
+  "callId": 1,
+  "before": {
+    "run": {
+      "id": 1,
+      "publicId": "r_78455d30c3b34e879f895a8db4e3d7cf",
+      "status": "SUCCEEDED",
+      "tenantId": "algorithm-live-ec8285eb1f44",
+      "principalId": "algorithm-live"
+    },
+    "node": {
+      "id": 2,
+      "error": null,
+      "output": {
+        "value": "ok-complete"
+      },
+      "run_id": 1,
+      "status": "SUCCEEDED",
+      "ended_at": "2026-10-20T11:59:49.238415+08:00",
+      "released": false,
+      "step_seq": 2,
+      "node_type": "SKILL",
+      "pause_seq": null,
+      "definition": {
+        "id": "draft_skill",
+        "args": {
+          "message": "complete"
+        },
+        "type": "SKILL",
+        "skillRef": {
+          "code": "alg_live_ec8285eb1f44_complete",
+          "version": 1,
+          "execution": {
+            "readonly": true,
+            "idempotent": true,
+            "sideEffect": false,
+            "cancellable": false
+          },
+          "skillVersionId": 1
+        }
+      },
+      "started_at": "2026-10-20T11:59:48.561166+08:00",
+      "lease_owner": "b6bfa271-982b-443e-9c0e-e63e8ca5c5c2_75e1a91a",
+      "lease_until": "2026-10-20T12:01:18.993359+08:00",
+      "node_def_id": "draft_skill",
+      "input_digest": null,
+      "output_digest": "850fc16d5edc46fe9aa6856b307b928fd3a900ec21244b9b44c95558f92c5b8b",
+      "join_semantics": null,
+      "winner_node_id": null,
+      "approval_context": null,
+      "committed_attempt_id": 2,
+      "committed_output_ref": "pg:node/2"
+    },
+    "tenantRuns": [
+      {
+        "id": 1,
+        "publicId": "r_78455d30c3b34e879f895a8db4e3d7cf"
+      }
+    ],
+    "calls": [
+      {
+        "id": 1,
+        "args": {
+          "message": "complete"
+        },
+        "result": {
+          "error": null,
+          "owner": {
+            "runId": "r_78455d30c3b34e879f895a8db4e3d7cf",
+            "callId": 1,
+            "tenantId": "algorithm-live-ec8285eb1f44",
+            "attemptId": 2,
+            "skillCode": "alg_live_ec8285eb1f44_complete",
+            "principalId": "algorithm-live",
+            "nodeInstanceId": 2,
+            "skillVersionId": 1
+          },
+          "isMock": false,
+          "status": "SUCCEEDED",
+          "fileRefs": [],
+          "guardTrace": {
+            "roles": [
+              "SERVICE",
+              "ADMIN",
+              "EDITOR"
+            ],
+            "argsDigest": "bf3e3d891044b1229e23a604013d8be68e1ce3bcbd016f27f1a2701a7b52b895"
+          },
+          "structured": {
+            "value": "ok-complete"
+          },
+          "modelSummary": "{\"value\":\"ok-complete\"}",
+          "cardPayloadJson": ""
+        },
+        "run_id": 1,
+        "status": "SUCCEEDED",
+        "is_mock": false,
+        "args_ref": "pg:call/f61bdd114e77ba5e320c2792cfcbeebdee9077917b028b16f9be8c8a53a22600/args",
+        "call_seq": 1,
+        "attempt_id": 2,
+        "claimed_at": "2026-10-20T11:59:48.628607+08:00",
+        "claimed_by": "b6bfa271-982b-443e-9c0e-e63e8ca5c5c2_75e1a91a",
+        "created_at": "2026-10-20T11:59:48.568287+08:00",
+        "result_ref": "pg:call/1/result",
+        "skill_code": "alg_live_ec8285eb1f44_complete",
+        "args_digest": "bf3e3d891044b1229e23a604013d8be68e1ce3bcbd016f27f1a2701a7b52b895",
+        "duration_ms": 535,
+        "claimed_lease": "2026-10-20T12:01:18.993359+08:00",
+        "mock_snapshot": {},
+        "error_semantic": null,
+        "recovery_error": null,
+        "idempotency_key": "f61bdd114e77ba5e320c2792cfcbeebdee9077917b028b16f9be8c8a53a22600",
+        "approval_context": null,
+        "node_instance_id": 2,
+        "recovery_next_at": null,
+        "skill_version_id": 1,
+        "recovery_attempts": 0,
+        "mock_source_digest": null,
+        "mock_source_call_id": null,
+        "readonly_retry_count": 0,
+        "skill_contract_sha256": "e9eceafe8562b1463647b2acf5e1cdf9385af4ea6bb82bd8b3876eeca03c5209",
+        "debug_controls_revision": 0
+      }
+    ],
+    "facts": [
+      {
+        "result": {
+          "error": null,
+          "owner": {
+            "runId": "r_78455d30c3b34e879f895a8db4e3d7cf",
+            "callId": 1,
+            "tenantId": "algorithm-live-ec8285eb1f44",
+            "attemptId": 2,
+            "skillCode": "alg_live_ec8285eb1f44_complete",
+            "principalId": "algorithm-live",
+            "nodeInstanceId": 2,
+            "skillVersionId": 1
+          },
+          "isMock": false,
+          "status": "SUCCEEDED",
+          "fileRefs": [],
+          "guardTrace": {
+            "roles": [
+              "SERVICE",
+              "ADMIN",
+              "EDITOR"
+            ],
+            "argsDigest": "bf3e3d891044b1229e23a604013d8be68e1ce3bcbd016f27f1a2701a7b52b895"
+          },
+          "structured": {
+            "value": "ok-complete"
+          },
+          "modelSummary": "{\"value\":\"ok-complete\"}",
+          "cardPayloadJson": ""
+        },
+        "run_id": "r_78455d30c3b34e879f895a8db4e3d7cf",
+        "status": "SUCCEEDED",
+        "call_id": 1,
+        "is_mock": false,
+        "call_kind": "DEBUG",
+        "tenant_id": "algorithm-live-ec8285eb1f44",
+        "attempt_id": 2,
+        "created_at": "2026-10-20T11:59:48.640589+08:00",
+        "updated_at": "2026-10-20T11:59:49.235927+08:00",
+        "args_digest": "bf3e3d891044b1229e23a604013d8be68e1ce3bcbd016f27f1a2701a7b52b895",
+        "duration_ms": 535,
+        "principal_id": "algorithm-live",
+        "callback_error": null,
+        "callback_state": "DELIVERED",
+        "delivery_owner": null,
+        "execution_owner": "b6bfa271-982b-443e-9c0e-e63e8ca5c5c2_75e1a91a",
+        "next_delivery_at": "2026-10-20T11:59:49.203109+08:00",
+        "request_snapshot": {
+          "mock": {},
+          "runId": "r_78455d30c3b34e879f895a8db4e3d7cf",
+          "callId": 1,
+          "callSeq": 1,
+          "arguments": {
+            "message": "complete"
+          },
+          "attemptId": 2,
+          "skillCode": "alg_live_ec8285eb1f44_complete",
+          "leaseOwner": "b6bfa271-982b-443e-9c0e-e63e8ca5c5c2_75e1a91a",
+          "leaseUntil": "2026-10-20T04:01:18.561166Z",
+          "triggerType": "DEBUG",
+          "idempotencyKey": "f61bdd114e77ba5e320c2792cfcbeebdee9077917b028b16f9be8c8a53a22600",
+          "nodeInstanceId": 2,
+          "skillVersionId": 1,
+          "guardedArguments": {
+            "message": "complete"
+          },
+          "authorityTriggerType": "DEBUG"
+        },
+        "skill_version_id": 1,
+        "delivery_attempts": 0,
+        "attempt_duration_ms": 535,
+        "delivery_lease_until": null,
+        "skill_contract_sha256": "e9eceafe8562b1463647b2acf5e1cdf9385af4ea6bb82bd8b3876eeca03c5209"
+      }
+    ],
+    "bindings": [
+      {
+        "run_id": "r_78455d30c3b34e879f895a8db4e3d7cf",
+        "status": "DONE",
+        "call_id": 1,
+        "metadata": {
+          "image": "algorithm-proof:finite",
+          "protocol": "ALGORITHM",
+          "contractSha256": "e9eceafe8562b1463647b2acf5e1cdf9385af4ea6bb82bd8b3876eeca03c5209",
+          "serviceAccount": "algorithm-proof",
+          "terminalEvidence": {
+            "apiSha256": "3dc1444a84f4911d4f723f2e40c370f453d017d57a73f0cfd340da91506496f0",
+            "condition": "Complete",
+            "namespace": "alg-live-ec8285eb1f44-complete",
+            "sourceKind": "K8S_JOB",
+            "sourceSha256": "fc2e91f500d6ea68f7beb95a81904ba1cbfd977089ae85bf064c07d775a190cd",
+            "externalJobId": "alg-404772026b9963271ec5c6f778e45de7e33f19a8",
+            "externalJobUid": "a8c2429f-a8e7-487a-8b73-23c099cec329",
+            "identitySha256": "d68fb73098316b64cb7d6d1f0beeb259b647142ae85664659ad072e9deb4c5a2"
+          }
+        },
+        "tenant_id": "algorithm-live-ec8285eb1f44",
+        "attempt_id": 2,
+        "updated_at": "2026-10-20T11:59:49.203109+08:00",
+        "principal_id": "algorithm-live",
+        "send_started": true,
+        "external_job_id": "alg-404772026b9963271ec5c6f778e45de7e33f19a8",
+        "idempotency_key": "f61bdd114e77ba5e320c2792cfcbeebdee9077917b028b16f9be8c8a53a22600",
+        "external_job_uid": "a8c2429f-a8e7-487a-8b73-23c099cec329",
+        "request_snapshot": {
+          "mock": {},
+          "runId": "r_78455d30c3b34e879f895a8db4e3d7cf",
+          "callId": 1,
+          "callSeq": 1,
+          "arguments": {
+            "message": "complete"
+          },
+          "attemptId": 2,
+          "skillCode": "alg_live_ec8285eb1f44_complete",
+          "leaseOwner": "b6bfa271-982b-443e-9c0e-e63e8ca5c5c2_75e1a91a",
+          "leaseUntil": "2026-10-20T04:01:18.561166Z",
+          "triggerType": "DEBUG",
+          "idempotencyKey": "f61bdd114e77ba5e320c2792cfcbeebdee9077917b028b16f9be8c8a53a22600",
+          "nodeInstanceId": 2,
+          "skillVersionId": 1,
+          "guardedArguments": {
+            "message": "complete"
+          },
+          "authorityTriggerType": "DEBUG"
+        },
+        "skill_version_id": 1,
+        "external_namespace": "alg-live-ec8285eb1f44-complete",
+        "external_api_sha256": "3dc1444a84f4911d4f723f2e40c370f453d017d57a73f0cfd340da91506496f0",
+        "external_identity_sha256": "d68fb73098316b64cb7d6d1f0beeb259b647142ae85664659ad072e9deb4c5a2"
+      }
+    ],
+    "toolCommits": 1,
+    "attempts": 1,
+    "runCalls": 1,
+    "runFacts": 1,
+    "runBindings": 1,
+    "attemptRows": [
+      {
+        "id": 2,
+        "error": null,
+        "status": "SUCCEEDED",
+        "ended_at": "2026-10-20T11:59:49.238415+08:00",
+        "response": null,
+        "attempt_no": 1,
+        "checkpoint": {},
+        "started_at": "2026-10-20T11:59:48.561166+08:00",
+        "response_ref": null,
+        "routed_model": null,
+        "idempotency_key": "f6619d9e244288c63f01cd862d31419ede73b78d6bd60b5e097b2a93187b6c23",
+        "node_instance_id": 2,
+        "request_snapshot": {},
+        "request_snapshot_ref": "pg:attempt/2"
+      }
+    ],
+    "terminalNotes": [
+      {
+        "id": 1,
+        "kind": "TOOL_EXECUTION_FACT",
+        "payload": {
+          "owner": "b6bfa271-982b-443e-9c0e-e63e8ca5c5c2_75e1a91a",
+          "callId": 1,
+          "isMock": false,
+          "result": {
+            "error": null,
+            "owner": {
+              "runId": "r_78455d30c3b34e879f895a8db4e3d7cf",
+              "callId": 1,
+              "tenantId": "algorithm-live-ec8285eb1f44",
+              "attemptId": 2,
+              "skillCode": "alg_live_ec8285eb1f44_complete",
+              "principalId": "algorithm-live",
+              "nodeInstanceId": 2,
+              "skillVersionId": 1
+            },
+            "isMock": false,
+            "status": "SUCCEEDED",
+            "fileRefs": [],
+            "guardTrace": {
+              "roles": [
+                "SERVICE",
+                "ADMIN",
+                "EDITOR"
+              ],
+              "argsDigest": "bf3e3d891044b1229e23a604013d8be68e1ce3bcbd016f27f1a2701a7b52b895"
+            },
+            "structured": {
+              "value": "ok-complete"
+            },
+            "modelSummary": "{\"value\":\"ok-complete\"}",
+            "cardPayloadJson": ""
+          },
+          "status": "SUCCEEDED",
+          "accepted": true,
+          "attemptId": 2,
+          "durationMs": 535,
+          "factDigest": "be6e2798a7833389698d37db1755429c861ae2c642b504c3dbb2d412e785b914"
+        },
+        "attempt_id": 2,
+        "created_at": "2026-10-20T11:59:49.22779+08:00",
+        "node_instance_id": 2
+      }
+    ],
+    "acceptedTerminalFacts": 1,
+    "events": [
+      {
+        "id": 1,
+        "seq": 1,
+        "type": "RUN_STARTED",
+        "run_id": 1,
+        "payload": {
+          "runId": "r_78455d30c3b34e879f895a8db4e3d7cf",
+          "triggerType": "DEBUG"
+        },
+        "created_at": "2026-10-20T11:59:48.529012+08:00"
+      },
+      {
+        "id": 2,
+        "seq": 2,
+        "type": "NODE_STARTED",
+        "run_id": 1,
+        "payload": {
+          "attemptId": 1,
+          "attemptNo": 1,
+          "nodeInstanceId": 1
+        },
+        "created_at": "2026-10-20T11:59:48.544552+08:00"
+      },
+      {
+        "id": 3,
+        "seq": 3,
+        "type": "LOGIC_RESULT_COMMITTED",
+        "run_id": 1,
+        "payload": {
+          "attemptId": 1,
+          "nodeInstanceId": 1
+        },
+        "created_at": "2026-10-20T11:59:48.555644+08:00"
+      },
+      {
+        "id": 4,
+        "seq": 4,
+        "type": "NODE_FINISHED",
+        "run_id": 1,
+        "payload": {
+          "status": "SUCCEEDED",
+          "nodeInstanceId": 1
+        },
+        "created_at": "2026-10-20T11:59:48.555644+08:00"
+      },
+      {
+        "id": 5,
+        "seq": 5,
+        "type": "NODE_STARTED",
+        "run_id": 1,
+        "payload": {
+          "attemptId": 2,
+          "attemptNo": 1,
+          "nodeInstanceId": 2
+        },
+        "created_at": "2026-10-20T11:59:48.561166+08:00"
+      },
+      {
+        "id": 6,
+        "seq": 6,
+        "type": "LOGIC_RESULT_COMMITTED",
+        "run_id": 1,
+        "payload": {
+          "attemptId": 2,
+          "nodeInstanceId": 2
+        },
+        "created_at": "2026-10-20T11:59:49.238415+08:00"
+      },
+      {
+        "id": 7,
+        "seq": 7,
+        "type": "NODE_FINISHED",
+        "run_id": 1,
+        "payload": {
+          "status": "SUCCEEDED",
+          "nodeInstanceId": 2
+        },
+        "created_at": "2026-10-20T11:59:49.238415+08:00"
+      },
+      {
+        "id": 8,
+        "seq": 8,
+        "type": "NODE_STARTED",
+        "run_id": 1,
+        "payload": {
+          "attemptId": 3,
+          "attemptNo": 1,
+          "nodeInstanceId": 3
+        },
+        "created_at": "2026-10-20T11:59:49.242739+08:00"
+      },
+      {
+        "id": 9,
+        "seq": 9,
+        "type": "LOGIC_RESULT_COMMITTED",
+        "run_id": 1,
+        "payload": {
+          "attemptId": 3,
+          "nodeInstanceId": 3
+        },
+        "created_at": "2026-10-20T11:59:49.250025+08:00"
+      },
+      {
+        "id": 10,
+        "seq": 10,
+        "type": "NODE_FINISHED",
+        "run_id": 1,
+        "payload": {
+          "status": "SUCCEEDED",
+          "nodeInstanceId": 3
+        },
+        "created_at": "2026-10-20T11:59:49.250025+08:00"
+      },
+      {
+        "id": 11,
+        "seq": 11,
+        "type": "RUN_FINISHED",
+        "run_id": 1,
+        "payload": {
+          "status": "SUCCEEDED"
+        },
+        "created_at": "2026-10-20T11:59:49.253252+08:00"
+      }
+    ],
+    "call": {
+      "id": 1,
+      "args": {
+        "message": "complete"
+      },
+      "result": {
+        "error": null,
+        "owner": {
+          "runId": "r_78455d30c3b34e879f895a8db4e3d7cf",
+          "callId": 1,
+          "tenantId": "algorithm-live-ec8285eb1f44",
+          "attemptId": 2,
+          "skillCode": "alg_live_ec8285eb1f44_complete",
+          "principalId": "algorithm-live",
+          "nodeInstanceId": 2,
+          "skillVersionId": 1
+        },
+        "isMock": false,
+        "status": "SUCCEEDED",
+        "fileRefs": [],
+        "guardTrace": {
+          "roles": [
+            "SERVICE",
+            "ADMIN",
+            "EDITOR"
+          ],
+          "argsDigest": "bf3e3d891044b1229e23a604013d8be68e1ce3bcbd016f27f1a2701a7b52b895"
+        },
+        "structured": {
+          "value": "ok-complete"
+        },
+        "modelSummary": "{\"value\":\"ok-complete\"}",
+        "cardPayloadJson": ""
+      },
+      "run_id": 1,
+      "status": "SUCCEEDED",
+      "is_mock": false,
+      "args_ref": "pg:call/f61bdd114e77ba5e320c2792cfcbeebdee9077917b028b16f9be8c8a53a22600/args",
+      "call_seq": 1,
+      "attempt_id": 2,
+      "claimed_at": "2026-10-20T11:59:48.628607+08:00",
+      "claimed_by": "b6bfa271-982b-443e-9c0e-e63e8ca5c5c2_75e1a91a",
+      "created_at": "2026-10-20T11:59:48.568287+08:00",
+      "result_ref": "pg:call/1/result",
+      "skill_code": "alg_live_ec8285eb1f44_complete",
+      "args_digest": "bf3e3d891044b1229e23a604013d8be68e1ce3bcbd016f27f1a2701a7b52b895",
+      "duration_ms": 535,
+      "claimed_lease": "2026-10-20T12:01:18.993359+08:00",
+      "mock_snapshot": {},
+      "error_semantic": null,
+      "recovery_error": null,
+      "idempotency_key": "f61bdd114e77ba5e320c2792cfcbeebdee9077917b028b16f9be8c8a53a22600",
+      "approval_context": null,
+      "node_instance_id": 2,
+      "recovery_next_at": null,
+      "skill_version_id": 1,
+      "recovery_attempts": 0,
+      "mock_source_digest": null,
+      "mock_source_call_id": null,
+      "readonly_retry_count": 0,
+      "skill_contract_sha256": "e9eceafe8562b1463647b2acf5e1cdf9385af4ea6bb82bd8b3876eeca03c5209",
+      "debug_controls_revision": 0
+    },
+    "fact": {
+      "result": {
+        "error": null,
+        "owner": {
+          "runId": "r_78455d30c3b34e879f895a8db4e3d7cf",
+          "callId": 1,
+          "tenantId": "algorithm-live-ec8285eb1f44",
+          "attemptId": 2,
+          "skillCode": "alg_live_ec8285eb1f44_complete",
+          "principalId": "algorithm-live",
+          "nodeInstanceId": 2,
+          "skillVersionId": 1
+        },
+        "isMock": false,
+        "status": "SUCCEEDED",
+        "fileRefs": [],
+        "guardTrace": {
+          "roles": [
+            "SERVICE",
+            "ADMIN",
+            "EDITOR"
+          ],
+          "argsDigest": "bf3e3d891044b1229e23a604013d8be68e1ce3bcbd016f27f1a2701a7b52b895"
+        },
+        "structured": {
+          "value": "ok-complete"
+        },
+        "modelSummary": "{\"value\":\"ok-complete\"}",
+        "cardPayloadJson": ""
+      },
+      "run_id": "r_78455d30c3b34e879f895a8db4e3d7cf",
+      "status": "SUCCEEDED",
+      "call_id": 1,
+      "is_mock": false,
+      "call_kind": "DEBUG",
+      "tenant_id": "algorithm-live-ec8285eb1f44",
+      "attempt_id": 2,
+      "created_at": "2026-10-20T11:59:48.640589+08:00",
+      "updated_at": "2026-10-20T11:59:49.235927+08:00",
+      "args_digest": "bf3e3d891044b1229e23a604013d8be68e1ce3bcbd016f27f1a2701a7b52b895",
+      "duration_ms": 535,
+      "principal_id": "algorithm-live",
+      "callback_error": null,
+      "callback_state": "DELIVERED",
+      "delivery_owner": null,
+      "execution_owner": "b6bfa271-982b-443e-9c0e-e63e8ca5c5c2_75e1a91a",
+      "next_delivery_at": "2026-10-20T11:59:49.203109+08:00",
+      "request_snapshot": {
+        "mock": {},
+        "runId": "r_78455d30c3b34e879f895a8db4e3d7cf",
+        "callId": 1,
+        "callSeq": 1,
+        "arguments": {
+          "message": "complete"
+        },
+        "attemptId": 2,
+        "skillCode": "alg_live_ec8285eb1f44_complete",
+        "leaseOwner": "b6bfa271-982b-443e-9c0e-e63e8ca5c5c2_75e1a91a",
+        "leaseUntil": "2026-10-20T04:01:18.561166Z",
+        "triggerType": "DEBUG",
+        "idempotencyKey": "f61bdd114e77ba5e320c2792cfcbeebdee9077917b028b16f9be8c8a53a22600",
+        "nodeInstanceId": 2,
+        "skillVersionId": 1,
+        "guardedArguments": {
+          "message": "complete"
+        },
+        "authorityTriggerType": "DEBUG"
+      },
+      "skill_version_id": 1,
+      "delivery_attempts": 0,
+      "attempt_duration_ms": 535,
+      "delivery_lease_until": null,
+      "skill_contract_sha256": "e9eceafe8562b1463647b2acf5e1cdf9385af4ea6bb82bd8b3876eeca03c5209"
+    },
+    "binding": {
+      "run_id": "r_78455d30c3b34e879f895a8db4e3d7cf",
+      "status": "DONE",
+      "call_id": 1,
+      "metadata": {
+        "image": "algorithm-proof:finite",
+        "protocol": "ALGORITHM",
+        "contractSha256": "e9eceafe8562b1463647b2acf5e1cdf9385af4ea6bb82bd8b3876eeca03c5209",
+        "serviceAccount": "algorithm-proof",
+        "terminalEvidence": {
+          "apiSha256": "3dc1444a84f4911d4f723f2e40c370f453d017d57a73f0cfd340da91506496f0",
+          "condition": "Complete",
+          "namespace": "alg-live-ec8285eb1f44-complete",
+          "sourceKind": "K8S_JOB",
+          "sourceSha256": "fc2e91f500d6ea68f7beb95a81904ba1cbfd977089ae85bf064c07d775a190cd",
+          "externalJobId": "alg-404772026b9963271ec5c6f778e45de7e33f19a8",
+          "externalJobUid": "a8c2429f-a8e7-487a-8b73-23c099cec329",
+          "identitySha256": "d68fb73098316b64cb7d6d1f0beeb259b647142ae85664659ad072e9deb4c5a2"
+        }
+      },
+      "tenant_id": "algorithm-live-ec8285eb1f44",
+      "attempt_id": 2,
+      "updated_at": "2026-10-20T11:59:49.203109+08:00",
+      "principal_id": "algorithm-live",
+      "send_started": true,
+      "external_job_id": "alg-404772026b9963271ec5c6f778e45de7e33f19a8",
+      "idempotency_key": "f61bdd114e77ba5e320c2792cfcbeebdee9077917b028b16f9be8c8a53a22600",
+      "external_job_uid": "a8c2429f-a8e7-487a-8b73-23c099cec329",
+      "request_snapshot": {
+        "mock": {},
+        "runId": "r_78455d30c3b34e879f895a8db4e3d7cf",
+        "callId": 1,
+        "callSeq": 1,
+        "arguments": {
+          "message": "complete"
+        },
+        "attemptId": 2,
+        "skillCode": "alg_live_ec8285eb1f44_complete",
+        "leaseOwner": "b6bfa271-982b-443e-9c0e-e63e8ca5c5c2_75e1a91a",
+        "leaseUntil": "2026-10-20T04:01:18.561166Z",
+        "triggerType": "DEBUG",
+        "idempotencyKey": "f61bdd114e77ba5e320c2792cfcbeebdee9077917b028b16f9be8c8a53a22600",
+        "nodeInstanceId": 2,
+        "skillVersionId": 1,
+        "guardedArguments": {
+          "message": "complete"
+        },
+        "authorityTriggerType": "DEBUG"
+      },
+      "skill_version_id": 1,
+      "external_namespace": "alg-live-ec8285eb1f44-complete",
+      "external_api_sha256": "3dc1444a84f4911d4f723f2e40c370f453d017d57a73f0cfd340da91506496f0",
+      "external_identity_sha256": "d68fb73098316b64cb7d6d1f0beeb259b647142ae85664659ad072e9deb4c5a2"
+    }
+  },
+  "fixtureBefore": {
+    "posts": 1,
+    "jobGets": 1,
+    "podLists": 1,
+    "logGets": 1,
+    "denied": 0,
+    "authRejected": 0,
+    "mode": "complete",
+    "jobName": "alg-404772026b9963271ec5c6f778e45de7e33f19a8",
+    "jobUid": "a8c2429f-a8e7-487a-8b73-23c099cec329",
+    "routes": [
+      "GET /apis/batch/v1/namespaces/alg-live-ec8285eb1f44-complete/jobs/alg-404772026b9963271ec5c6f778e45de7e33f19a8",
+      "POST /apis/batch/v1/namespaces/alg-live-ec8285eb1f44-complete/jobs",
+      "GET /api/v1/namespaces/alg-live-ec8285eb1f44-complete/pods",
+      "GET /api/v1/namespaces/alg-live-ec8285eb1f44-complete/pods/algorithm-proof-pod/log"
+    ],
+    "evidenceLevel": "finite-api-reception-only",
+    "clusterOrContainerExecution": false,
+    "logicalEngineCommitVerified": false
+  },
+  "after": {
+    "run": {
+      "id": 1,
+      "publicId": "r_78455d30c3b34e879f895a8db4e3d7cf",
+      "status": "SUCCEEDED",
+      "tenantId": "algorithm-live-ec8285eb1f44",
+      "principalId": "algorithm-live"
+    },
+    "node": {
+      "id": 2,
+      "error": null,
+      "output": {
+        "value": "ok-complete"
+      },
+      "run_id": 1,
+      "status": "SUCCEEDED",
+      "ended_at": "2026-10-20T11:59:49.238415+08:00",
+      "released": false,
+      "step_seq": 2,
+      "node_type": "SKILL",
+      "pause_seq": null,
+      "definition": {
+        "id": "draft_skill",
+        "args": {
+          "message": "complete"
+        },
+        "type": "SKILL",
+        "skillRef": {
+          "code": "alg_live_ec8285eb1f44_complete",
+          "version": 1,
+          "execution": {
+            "readonly": true,
+            "idempotent": true,
+            "sideEffect": false,
+            "cancellable": false
+          },
+          "skillVersionId": 1
+        }
+      },
+      "started_at": "2026-10-20T11:59:48.561166+08:00",
+      "lease_owner": "b6bfa271-982b-443e-9c0e-e63e8ca5c5c2_75e1a91a",
+      "lease_until": "2026-10-20T12:01:18.993359+08:00",
+      "node_def_id": "draft_skill",
+      "input_digest": null,
+      "output_digest": "850fc16d5edc46fe9aa6856b307b928fd3a900ec21244b9b44c95558f92c5b8b",
+      "join_semantics": null,
+      "winner_node_id": null,
+      "approval_context": null,
+      "committed_attempt_id": 2,
+      "committed_output_ref": "pg:node/2"
+    },
+    "tenantRuns": [
+      {
+        "id": 1,
+        "publicId": "r_78455d30c3b34e879f895a8db4e3d7cf"
+      }
+    ],
+    "calls": [
+      {
+        "id": 1,
+        "args": {
+          "message": "complete"
+        },
+        "result": {
+          "error": null,
+          "owner": {
+            "runId": "r_78455d30c3b34e879f895a8db4e3d7cf",
+            "callId": 1,
+            "tenantId": "algorithm-live-ec8285eb1f44",
+            "attemptId": 2,
+            "skillCode": "alg_live_ec8285eb1f44_complete",
+            "principalId": "algorithm-live",
+            "nodeInstanceId": 2,
+            "skillVersionId": 1
+          },
+          "isMock": false,
+          "status": "SUCCEEDED",
+          "fileRefs": [],
+          "guardTrace": {
+            "roles": [
+              "SERVICE",
+              "ADMIN",
+              "EDITOR"
+            ],
+            "argsDigest": "bf3e3d891044b1229e23a604013d8be68e1ce3bcbd016f27f1a2701a7b52b895"
+          },
+          "structured": {
+            "value": "ok-complete"
+          },
+          "modelSummary": "{\"value\":\"ok-complete\"}",
+          "cardPayloadJson": ""
+        },
+        "run_id": 1,
+        "status": "SUCCEEDED",
+        "is_mock": false,
+        "args_ref": "pg:call/f61bdd114e77ba5e320c2792cfcbeebdee9077917b028b16f9be8c8a53a22600/args",
+        "call_seq": 1,
+        "attempt_id": 2,
+        "claimed_at": "2026-10-20T11:59:48.628607+08:00",
+        "claimed_by": "b6bfa271-982b-443e-9c0e-e63e8ca5c5c2_75e1a91a",
+        "created_at": "2026-10-20T11:59:48.568287+08:00",
+        "result_ref": "pg:call/1/result",
+        "skill_code": "alg_live_ec8285eb1f44_complete",
+        "args_digest": "bf3e3d891044b1229e23a604013d8be68e1ce3bcbd016f27f1a2701a7b52b895",
+        "duration_ms": 535,
+        "claimed_lease": "2026-10-20T12:01:18.993359+08:00",
+        "mock_snapshot": {},
+        "error_semantic": null,
+        "recovery_error": null,
+        "idempotency_key": "f61bdd114e77ba5e320c2792cfcbeebdee9077917b028b16f9be8c8a53a22600",
+        "approval_context": null,
+        "node_instance_id": 2,
+        "recovery_next_at": null,
+        "skill_version_id": 1,
+        "recovery_attempts": 0,
+        "mock_source_digest": null,
+        "mock_source_call_id": null,
+        "readonly_retry_count": 0,
+        "skill_contract_sha256": "e9eceafe8562b1463647b2acf5e1cdf9385af4ea6bb82bd8b3876eeca03c5209",
+        "debug_controls_revision": 0
+      }
+    ],
+    "facts": [
+      {
+        "result": {
+          "error": null,
+          "owner": {
+            "runId": "r_78455d30c3b34e879f895a8db4e3d7cf",
+            "callId": 1,
+            "tenantId": "algorithm-live-ec8285eb1f44",
+            "attemptId": 2,
+            "skillCode": "alg_live_ec8285eb1f44_complete",
+            "principalId": "algorithm-live",
+            "nodeInstanceId": 2,
+            "skillVersionId": 1
+          },
+          "isMock": false,
+          "status": "SUCCEEDED",
+          "fileRefs": [],
+          "guardTrace": {
+            "roles": [
+              "SERVICE",
+              "ADMIN",
+              "EDITOR"
+            ],
+            "argsDigest": "bf3e3d891044b1229e23a604013d8be68e1ce3bcbd016f27f1a2701a7b52b895"
+          },
+          "structured": {
+            "value": "ok-complete"
+          },
+          "modelSummary": "{\"value\":\"ok-complete\"}",
+          "cardPayloadJson": ""
+        },
+        "run_id": "r_78455d30c3b34e879f895a8db4e3d7cf",
+        "status": "SUCCEEDED",
+        "call_id": 1,
+        "is_mock": false,
+        "call_kind": "DEBUG",
+        "tenant_id": "algorithm-live-ec8285eb1f44",
+        "attempt_id": 2,
+        "created_at": "2026-10-20T11:59:48.640589+08:00",
+        "updated_at": "2026-10-20T11:59:49.235927+08:00",
+        "args_digest": "bf3e3d891044b1229e23a604013d8be68e1ce3bcbd016f27f1a2701a7b52b895",
+        "duration_ms": 535,
+        "principal_id": "algorithm-live",
+        "callback_error": null,
+        "callback_state": "DELIVERED",
+        "delivery_owner": null,
+        "execution_owner": "b6bfa271-982b-443e-9c0e-e63e8ca5c5c2_75e1a91a",
+        "next_delivery_at": "2026-10-20T11:59:49.203109+08:00",
+        "request_snapshot": {
+          "mock": {},
+          "runId": "r_78455d30c3b34e879f895a8db4e3d7cf",
+          "callId": 1,
+          "callSeq": 1,
+          "arguments": {
+            "message": "complete"
+          },
+          "attemptId": 2,
+          "skillCode": "alg_live_ec8285eb1f44_complete",
+          "leaseOwner": "b6bfa271-982b-443e-9c0e-e63e8ca5c5c2_75e1a91a",
+          "leaseUntil": "2026-10-20T04:01:18.561166Z",
+          "triggerType": "DEBUG",
+          "idempotencyKey": "f61bdd114e77ba5e320c2792cfcbeebdee9077917b028b16f9be8c8a53a22600",
+          "nodeInstanceId": 2,
+          "skillVersionId": 1,
+          "guardedArguments": {
+            "message": "complete"
+          },
+          "authorityTriggerType": "DEBUG"
+        },
+        "skill_version_id": 1,
+        "delivery_attempts": 0,
+        "attempt_duration_ms": 535,
+        "delivery_lease_until": null,
+        "skill_contract_sha256": "e9eceafe8562b1463647b2acf5e1cdf9385af4ea6bb82bd8b3876eeca03c5209"
+      }
+    ],
+    "bindings": [
+      {
+        "run_id": "r_78455d30c3b34e879f895a8db4e3d7cf",
+        "status": "DONE",
+        "call_id": 1,
+        "metadata": {
+          "image": "algorithm-proof:finite",
+          "protocol": "ALGORITHM",
+          "contractSha256": "e9eceafe8562b1463647b2acf5e1cdf9385af4ea6bb82bd8b3876eeca03c5209",
+          "serviceAccount": "algorithm-proof",
+          "terminalEvidence": {
+            "apiSha256": "3dc1444a84f4911d4f723f2e40c370f453d017d57a73f0cfd340da91506496f0",
+            "condition": "Complete",
+            "namespace": "alg-live-ec8285eb1f44-complete",
+            "sourceKind": "K8S_JOB",
+            "sourceSha256": "fc2e91f500d6ea68f7beb95a81904ba1cbfd977089ae85bf064c07d775a190cd",
+            "externalJobId": "alg-404772026b9963271ec5c6f778e45de7e33f19a8",
+            "externalJobUid": "a8c2429f-a8e7-487a-8b73-23c099cec329",
+            "identitySha256": "d68fb73098316b64cb7d6d1f0beeb259b647142ae85664659ad072e9deb4c5a2"
+          }
+        },
+        "tenant_id": "algorithm-live-ec8285eb1f44",
+        "attempt_id": 2,
+        "updated_at": "2026-10-20T11:59:49.203109+08:00",
+        "principal_id": "algorithm-live",
+        "send_started": true,
+        "external_job_id": "alg-404772026b9963271ec5c6f778e45de7e33f19a8",
+        "idempotency_key": "f61bdd114e77ba5e320c2792cfcbeebdee9077917b028b16f9be8c8a53a22600",
+        "external_job_uid": "a8c2429f-a8e7-487a-8b73-23c099cec329",
+        "request_snapshot": {
+          "mock": {},
+          "runId": "r_78455d30c3b34e879f895a8db4e3d7cf",
+          "callId": 1,
+          "callSeq": 1,
+          "arguments": {
+            "message": "complete"
+          },
+          "attemptId": 2,
+          "skillCode": "alg_live_ec8285eb1f44_complete",
+          "leaseOwner": "b6bfa271-982b-443e-9c0e-e63e8ca5c5c2_75e1a91a",
+          "leaseUntil": "2026-10-20T04:01:18.561166Z",
+          "triggerType": "DEBUG",
+          "idempotencyKey": "f61bdd114e77ba5e320c2792cfcbeebdee9077917b028b16f9be8c8a53a22600",
+          "nodeInstanceId": 2,
+          "skillVersionId": 1,
+          "guardedArguments": {
+            "message": "complete"
+          },
+          "authorityTriggerType": "DEBUG"
+        },
+        "skill_version_id": 1,
+        "external_namespace": "alg-live-ec8285eb1f44-complete",
+        "external_api_sha256": "3dc1444a84f4911d4f723f2e40c370f453d017d57a73f0cfd340da91506496f0",
+        "external_identity_sha256": "d68fb73098316b64cb7d6d1f0beeb259b647142ae85664659ad072e9deb4c5a2"
+      }
+    ],
+    "toolCommits": 1,
+    "attempts": 1,
+    "runCalls": 1,
+    "runFacts": 1,
+    "runBindings": 1,
+    "attemptRows": [
+      {
+        "id": 2,
+        "error": null,
+        "status": "SUCCEEDED",
+        "ended_at": "2026-10-20T11:59:49.238415+08:00",
+        "response": null,
+        "attempt_no": 1,
+        "checkpoint": {},
+        "started_at": "2026-10-20T11:59:48.561166+08:00",
+        "response_ref": null,
+        "routed_model": null,
+        "idempotency_key": "f6619d9e244288c63f01cd862d31419ede73b78d6bd60b5e097b2a93187b6c23",
+        "node_instance_id": 2,
+        "request_snapshot": {},
+        "request_snapshot_ref": "pg:attempt/2"
+      }
+    ],
+    "terminalNotes": [
+      {
+        "id": 1,
+        "kind": "TOOL_EXECUTION_FACT",
+        "payload": {
+          "owner": "b6bfa271-982b-443e-9c0e-e63e8ca5c5c2_75e1a91a",
+          "callId": 1,
+          "isMock": false,
+          "result": {
+            "error": null,
+            "owner": {
+              "runId": "r_78455d30c3b34e879f895a8db4e3d7cf",
+              "callId": 1,
+              "tenantId": "algorithm-live-ec8285eb1f44",
+              "attemptId": 2,
+              "skillCode": "alg_live_ec8285eb1f44_complete",
+              "principalId": "algorithm-live",
+              "nodeInstanceId": 2,
+              "skillVersionId": 1
+            },
+            "isMock": false,
+            "status": "SUCCEEDED",
+            "fileRefs": [],
+            "guardTrace": {
+              "roles": [
+                "SERVICE",
+                "ADMIN",
+                "EDITOR"
+              ],
+              "argsDigest": "bf3e3d891044b1229e23a604013d8be68e1ce3bcbd016f27f1a2701a7b52b895"
+            },
+            "structured": {
+              "value": "ok-complete"
+            },
+            "modelSummary": "{\"value\":\"ok-complete\"}",
+            "cardPayloadJson": ""
+          },
+          "status": "SUCCEEDED",
+          "accepted": true,
+          "attemptId": 2,
+          "durationMs": 535,
+          "factDigest": "be6e2798a7833389698d37db1755429c861ae2c642b504c3dbb2d412e785b914"
+        },
+        "attempt_id": 2,
+        "created_at": "2026-10-20T11:59:49.22779+08:00",
+        "node_instance_id": 2
+      }
+    ],
+    "acceptedTerminalFacts": 1,
+    "events": [
+      {
+        "id": 1,
+        "seq": 1,
+        "type": "RUN_STARTED",
+        "run_id": 1,
+        "payload": {
+          "runId": "r_78455d30c3b34e879f895a8db4e3d7cf",
+          "triggerType": "DEBUG"
+        },
+        "created_at": "2026-10-20T11:59:48.529012+08:00"
+      },
+      {
+        "id": 2,
+        "seq": 2,
+        "type": "NODE_STARTED",
+        "run_id": 1,
+        "payload": {
+          "attemptId": 1,
+          "attemptNo": 1,
+          "nodeInstanceId": 1
+        },
+        "created_at": "2026-10-20T11:59:48.544552+08:00"
+      },
+      {
+        "id": 3,
+        "seq": 3,
+        "type": "LOGIC_RESULT_COMMITTED",
+        "run_id": 1,
+        "payload": {
+          "attemptId": 1,
+          "nodeInstanceId": 1
+        },
+        "created_at": "2026-10-20T11:59:48.555644+08:00"
+      },
+      {
+        "id": 4,
+        "seq": 4,
+        "type": "NODE_FINISHED",
+        "run_id": 1,
+        "payload": {
+          "status": "SUCCEEDED",
+          "nodeInstanceId": 1
+        },
+        "created_at": "2026-10-20T11:59:48.555644+08:00"
+      },
+      {
+        "id": 5,
+        "seq": 5,
+        "type": "NODE_STARTED",
+        "run_id": 1,
+        "payload": {
+          "attemptId": 2,
+          "attemptNo": 1,
+          "nodeInstanceId": 2
+        },
+        "created_at": "2026-10-20T11:59:48.561166+08:00"
+      },
+      {
+        "id": 6,
+        "seq": 6,
+        "type": "LOGIC_RESULT_COMMITTED",
+        "run_id": 1,
+        "payload": {
+          "attemptId": 2,
+          "nodeInstanceId": 2
+        },
+        "created_at": "2026-10-20T11:59:49.238415+08:00"
+      },
+      {
+        "id": 7,
+        "seq": 7,
+        "type": "NODE_FINISHED",
+        "run_id": 1,
+        "payload": {
+          "status": "SUCCEEDED",
+          "nodeInstanceId": 2
+        },
+        "created_at": "2026-10-20T11:59:49.238415+08:00"
+      },
+      {
+        "id": 8,
+        "seq": 8,
+        "type": "NODE_STARTED",
+        "run_id": 1,
+        "payload": {
+          "attemptId": 3,
+          "attemptNo": 1,
+          "nodeInstanceId": 3
+        },
+        "created_at": "2026-10-20T11:59:49.242739+08:00"
+      },
+      {
+        "id": 9,
+        "seq": 9,
+        "type": "LOGIC_RESULT_COMMITTED",
+        "run_id": 1,
+        "payload": {
+          "attemptId": 3,
+          "nodeInstanceId": 3
+        },
+        "created_at": "2026-10-20T11:59:49.250025+08:00"
+      },
+      {
+        "id": 10,
+        "seq": 10,
+        "type": "NODE_FINISHED",
+        "run_id": 1,
+        "payload": {
+          "status": "SUCCEEDED",
+          "nodeInstanceId": 3
+        },
+        "created_at": "2026-10-20T11:59:49.250025+08:00"
+      },
+      {
+        "id": 11,
+        "seq": 11,
+        "type": "RUN_FINISHED",
+        "run_id": 1,
+        "payload": {
+          "status": "SUCCEEDED"
+        },
+        "created_at": "2026-10-20T11:59:49.253252+08:00"
+      }
+    ],
+    "call": {
+      "id": 1,
+      "args": {
+        "message": "complete"
+      },
+      "result": {
+        "error": null,
+        "owner": {
+          "runId": "r_78455d30c3b34e879f895a8db4e3d7cf",
+          "callId": 1,
+          "tenantId": "algorithm-live-ec8285eb1f44",
+          "attemptId": 2,
+          "skillCode": "alg_live_ec8285eb1f44_complete",
+          "principalId": "algorithm-live",
+          "nodeInstanceId": 2,
+          "skillVersionId": 1
+        },
+        "isMock": false,
+        "status": "SUCCEEDED",
+        "fileRefs": [],
+        "guardTrace": {
+          "roles": [
+            "SERVICE",
+            "ADMIN",
+            "EDITOR"
+          ],
+          "argsDigest": "bf3e3d891044b1229e23a604013d8be68e1ce3bcbd016f27f1a2701a7b52b895"
+        },
+        "structured": {
+          "value": "ok-complete"
+        },
+        "modelSummary": "{\"value\":\"ok-complete\"}",
+        "cardPayloadJson": ""
+      },
+      "run_id": 1,
+      "status": "SUCCEEDED",
+      "is_mock": false,
+      "args_ref": "pg:call/f61bdd114e77ba5e320c2792cfcbeebdee9077917b028b16f9be8c8a53a22600/args",
+      "call_seq": 1,
+      "attempt_id": 2,
+      "claimed_at": "2026-10-20T11:59:48.628607+08:00",
+      "claimed_by": "b6bfa271-982b-443e-9c0e-e63e8ca5c5c2_75e1a91a",
+      "created_at": "2026-10-20T11:59:48.568287+08:00",
+      "result_ref": "pg:call/1/result",
+      "skill_code": "alg_live_ec8285eb1f44_complete",
+      "args_digest": "bf3e3d891044b1229e23a604013d8be68e1ce3bcbd016f27f1a2701a7b52b895",
+      "duration_ms": 535,
+      "claimed_lease": "2026-10-20T12:01:18.993359+08:00",
+      "mock_snapshot": {},
+      "error_semantic": null,
+      "recovery_error": null,
+      "idempotency_key": "f61bdd114e77ba5e320c2792cfcbeebdee9077917b028b16f9be8c8a53a22600",
+      "approval_context": null,
+      "node_instance_id": 2,
+      "recovery_next_at": null,
+      "skill_version_id": 1,
+      "recovery_attempts": 0,
+      "mock_source_digest": null,
+      "mock_source_call_id": null,
+      "readonly_retry_count": 0,
+      "skill_contract_sha256": "e9eceafe8562b1463647b2acf5e1cdf9385af4ea6bb82bd8b3876eeca03c5209",
+      "debug_controls_revision": 0
+    },
+    "fact": {
+      "result": {
+        "error": null,
+        "owner": {
+          "runId": "r_78455d30c3b34e879f895a8db4e3d7cf",
+          "callId": 1,
+          "tenantId": "algorithm-live-ec8285eb1f44",
+          "attemptId": 2,
+          "skillCode": "alg_live_ec8285eb1f44_complete",
+          "principalId": "algorithm-live",
+          "nodeInstanceId": 2,
+          "skillVersionId": 1
+        },
+        "isMock": false,
+        "status": "SUCCEEDED",
+        "fileRefs": [],
+        "guardTrace": {
+          "roles": [
+            "SERVICE",
+            "ADMIN",
+            "EDITOR"
+          ],
+          "argsDigest": "bf3e3d891044b1229e23a604013d8be68e1ce3bcbd016f27f1a2701a7b52b895"
+        },
+        "structured": {
+          "value": "ok-complete"
+        },
+        "modelSummary": "{\"value\":\"ok-complete\"}",
+        "cardPayloadJson": ""
+      },
+      "run_id": "r_78455d30c3b34e879f895a8db4e3d7cf",
+      "status": "SUCCEEDED",
+      "call_id": 1,
+      "is_mock": false,
+      "call_kind": "DEBUG",
+      "tenant_id": "algorithm-live-ec8285eb1f44",
+      "attempt_id": 2,
+      "created_at": "2026-10-20T11:59:48.640589+08:00",
+      "updated_at": "2026-10-20T11:59:49.235927+08:00",
+      "args_digest": "bf3e3d891044b1229e23a604013d8be68e1ce3bcbd016f27f1a2701a7b52b895",
+      "duration_ms": 535,
+      "principal_id": "algorithm-live",
+      "callback_error": null,
+      "callback_state": "DELIVERED",
+      "delivery_owner": null,
+      "execution_owner": "b6bfa271-982b-443e-9c0e-e63e8ca5c5c2_75e1a91a",
+      "next_delivery_at": "2026-10-20T11:59:49.203109+08:00",
+      "request_snapshot": {
+        "mock": {},
+        "runId": "r_78455d30c3b34e879f895a8db4e3d7cf",
+        "callId": 1,
+        "callSeq": 1,
+        "arguments": {
+          "message": "complete"
+        },
+        "attemptId": 2,
+        "skillCode": "alg_live_ec8285eb1f44_complete",
+        "leaseOwner": "b6bfa271-982b-443e-9c0e-e63e8ca5c5c2_75e1a91a",
+        "leaseUntil": "2026-10-20T04:01:18.561166Z",
+        "triggerType": "DEBUG",
+        "idempotencyKey": "f61bdd114e77ba5e320c2792cfcbeebdee9077917b028b16f9be8c8a53a22600",
+        "nodeInstanceId": 2,
+        "skillVersionId": 1,
+        "guardedArguments": {
+          "message": "complete"
+        },
+        "authorityTriggerType": "DEBUG"
+      },
+      "skill_version_id": 1,
+      "delivery_attempts": 0,
+      "attempt_duration_ms": 535,
+      "delivery_lease_until": null,
+      "skill_contract_sha256": "e9eceafe8562b1463647b2acf5e1cdf9385af4ea6bb82bd8b3876eeca03c5209"
+    },
+    "binding": {
+      "run_id": "r_78455d30c3b34e879f895a8db4e3d7cf",
+      "status": "DONE",
+      "call_id": 1,
+      "metadata": {
+        "image": "algorithm-proof:finite",
+        "protocol": "ALGORITHM",
+        "contractSha256": "e9eceafe8562b1463647b2acf5e1cdf9385af4ea6bb82bd8b3876eeca03c5209",
+        "serviceAccount": "algorithm-proof",
+        "terminalEvidence": {
+          "apiSha256": "3dc1444a84f4911d4f723f2e40c370f453d017d57a73f0cfd340da91506496f0",
+          "condition": "Complete",
+          "namespace": "alg-live-ec8285eb1f44-complete",
+          "sourceKind": "K8S_JOB",
+          "sourceSha256": "fc2e91f500d6ea68f7beb95a81904ba1cbfd977089ae85bf064c07d775a190cd",
+          "externalJobId": "alg-404772026b9963271ec5c6f778e45de7e33f19a8",
+          "externalJobUid": "a8c2429f-a8e7-487a-8b73-23c099cec329",
+          "identitySha256": "d68fb73098316b64cb7d6d1f0beeb259b647142ae85664659ad072e9deb4c5a2"
+        }
+      },
+      "tenant_id": "algorithm-live-ec8285eb1f44",
+      "attempt_id": 2,
+      "updated_at": "2026-10-20T11:59:49.203109+08:00",
+      "principal_id": "algorithm-live",
+      "send_started": true,
+      "external_job_id": "alg-404772026b9963271ec5c6f778e45de7e33f19a8",
+      "idempotency_key": "f61bdd114e77ba5e320c2792cfcbeebdee9077917b028b16f9be8c8a53a22600",
+      "external_job_uid": "a8c2429f-a8e7-487a-8b73-23c099cec329",
+      "request_snapshot": {
+        "mock": {},
+        "runId": "r_78455d30c3b34e879f895a8db4e3d7cf",
+        "callId": 1,
+        "callSeq": 1,
+        "arguments": {
+          "message": "complete"
+        },
+        "attemptId": 2,
+        "skillCode": "alg_live_ec8285eb1f44_complete",
+        "leaseOwner": "b6bfa271-982b-443e-9c0e-e63e8ca5c5c2_75e1a91a",
+        "leaseUntil": "2026-10-20T04:01:18.561166Z",
+        "triggerType": "DEBUG",
+        "idempotencyKey": "f61bdd114e77ba5e320c2792cfcbeebdee9077917b028b16f9be8c8a53a22600",
+        "nodeInstanceId": 2,
+        "skillVersionId": 1,
+        "guardedArguments": {
+          "message": "complete"
+        },
+        "authorityTriggerType": "DEBUG"
+      },
+      "skill_version_id": 1,
+      "external_namespace": "alg-live-ec8285eb1f44-complete",
+      "external_api_sha256": "3dc1444a84f4911d4f723f2e40c370f453d017d57a73f0cfd340da91506496f0",
+      "external_identity_sha256": "d68fb73098316b64cb7d6d1f0beeb259b647142ae85664659ad072e9deb4c5a2"
+    }
+  },
+  "recheck": {
+    "ok": true,
+    "latencyMs": 2,
+    "candidateSha256": "e9eceafe8562b1463647b2acf5e1cdf9385af4ea6bb82bd8b3876eeca03c5209"
+  },
+  "afterRecheck": {
+    "run": {
+      "id": 1,
+      "publicId": "r_78455d30c3b34e879f895a8db4e3d7cf",
+      "status": "SUCCEEDED",
+      "tenantId": "algorithm-live-ec8285eb1f44",
+      "principalId": "algorithm-live"
+    },
+    "node": {
+      "id": 2,
+      "error": null,
+      "output": {
+        "value": "ok-complete"
+      },
+      "run_id": 1,
+      "status": "SUCCEEDED",
+      "ended_at": "2026-10-20T11:59:49.238415+08:00",
+      "released": false,
+      "step_seq": 2,
+      "node_type": "SKILL",
+      "pause_seq": null,
+      "definition": {
+        "id": "draft_skill",
+        "args": {
+          "message": "complete"
+        },
+        "type": "SKILL",
+        "skillRef": {
+          "code": "alg_live_ec8285eb1f44_complete",
+          "version": 1,
+          "execution": {
+            "readonly": true,
+            "idempotent": true,
+            "sideEffect": false,
+            "cancellable": false
+          },
+          "skillVersionId": 1
+        }
+      },
+      "started_at": "2026-10-20T11:59:48.561166+08:00",
+      "lease_owner": "b6bfa271-982b-443e-9c0e-e63e8ca5c5c2_75e1a91a",
+      "lease_until": "2026-10-20T12:01:18.993359+08:00",
+      "node_def_id": "draft_skill",
+      "input_digest": null,
+      "output_digest": "850fc16d5edc46fe9aa6856b307b928fd3a900ec21244b9b44c95558f92c5b8b",
+      "join_semantics": null,
+      "winner_node_id": null,
+      "approval_context": null,
+      "committed_attempt_id": 2,
+      "committed_output_ref": "pg:node/2"
+    },
+    "tenantRuns": [
+      {
+        "id": 1,
+        "publicId": "r_78455d30c3b34e879f895a8db4e3d7cf"
+      }
+    ],
+    "calls": [
+      {
+        "id": 1,
+        "args": {
+          "message": "complete"
+        },
+        "result": {
+          "error": null,
+          "owner": {
+            "runId": "r_78455d30c3b34e879f895a8db4e3d7cf",
+            "callId": 1,
+            "tenantId": "algorithm-live-ec8285eb1f44",
+            "attemptId": 2,
+            "skillCode": "alg_live_ec8285eb1f44_complete",
+            "principalId": "algorithm-live",
+            "nodeInstanceId": 2,
+            "skillVersionId": 1
+          },
+          "isMock": false,
+          "status": "SUCCEEDED",
+          "fileRefs": [],
+          "guardTrace": {
+            "roles": [
+              "SERVICE",
+              "ADMIN",
+              "EDITOR"
+            ],
+            "argsDigest": "bf3e3d891044b1229e23a604013d8be68e1ce3bcbd016f27f1a2701a7b52b895"
+          },
+          "structured": {
+            "value": "ok-complete"
+          },
+          "modelSummary": "{\"value\":\"ok-complete\"}",
+          "cardPayloadJson": ""
+        },
+        "run_id": 1,
+        "status": "SUCCEEDED",
+        "is_mock": false,
+        "args_ref": "pg:call/f61bdd114e77ba5e320c2792cfcbeebdee9077917b028b16f9be8c8a53a22600/args",
+        "call_seq": 1,
+        "attempt_id": 2,
+        "claimed_at": "2026-10-20T11:59:48.628607+08:00",
+        "claimed_by": "b6bfa271-982b-443e-9c0e-e63e8ca5c5c2_75e1a91a",
+        "created_at": "2026-10-20T11:59:48.568287+08:00",
+        "result_ref": "pg:call/1/result",
+        "skill_code": "alg_live_ec8285eb1f44_complete",
+        "args_digest": "bf3e3d891044b1229e23a604013d8be68e1ce3bcbd016f27f1a2701a7b52b895",
+        "duration_ms": 535,
+        "claimed_lease": "2026-10-20T12:01:18.993359+08:00",
+        "mock_snapshot": {},
+        "error_semantic": null,
+        "recovery_error": null,
+        "idempotency_key": "f61bdd114e77ba5e320c2792cfcbeebdee9077917b028b16f9be8c8a53a22600",
+        "approval_context": null,
+        "node_instance_id": 2,
+        "recovery_next_at": null,
+        "skill_version_id": 1,
+        "recovery_attempts": 0,
+        "mock_source_digest": null,
+        "mock_source_call_id": null,
+        "readonly_retry_count": 0,
+        "skill_contract_sha256": "e9eceafe8562b1463647b2acf5e1cdf9385af4ea6bb82bd8b3876eeca03c5209",
+        "debug_controls_revision": 0
+      }
+    ],
+    "facts": [
+      {
+        "result": {
+          "error": null,
+          "owner": {
+            "runId": "r_78455d30c3b34e879f895a8db4e3d7cf",
+            "callId": 1,
+            "tenantId": "algorithm-live-ec8285eb1f44",
+            "attemptId": 2,
+            "skillCode": "alg_live_ec8285eb1f44_complete",
+            "principalId": "algorithm-live",
+            "nodeInstanceId": 2,
+            "skillVersionId": 1
+          },
+          "isMock": false,
+          "status": "SUCCEEDED",
+          "fileRefs": [],
+          "guardTrace": {
+            "roles": [
+              "SERVICE",
+              "ADMIN",
+              "EDITOR"
+            ],
+            "argsDigest": "bf3e3d891044b1229e23a604013d8be68e1ce3bcbd016f27f1a2701a7b52b895"
+          },
+          "structured": {
+            "value": "ok-complete"
+          },
+          "modelSummary": "{\"value\":\"ok-complete\"}",
+          "cardPayloadJson": ""
+        },
+        "run_id": "r_78455d30c3b34e879f895a8db4e3d7cf",
+        "status": "SUCCEEDED",
+        "call_id": 1,
+        "is_mock": false,
+        "call_kind": "DEBUG",
+        "tenant_id": "algorithm-live-ec8285eb1f44",
+        "attempt_id": 2,
+        "created_at": "2026-10-20T11:59:48.640589+08:00",
+        "updated_at": "2026-10-20T11:59:49.235927+08:00",
+        "args_digest": "bf3e3d891044b1229e23a604013d8be68e1ce3bcbd016f27f1a2701a7b52b895",
+        "duration_ms": 535,
+        "principal_id": "algorithm-live",
+        "callback_error": null,
+        "callback_state": "DELIVERED",
+        "delivery_owner": null,
+        "execution_owner": "b6bfa271-982b-443e-9c0e-e63e8ca5c5c2_75e1a91a",
+        "next_delivery_at": "2026-10-20T11:59:49.203109+08:00",
+        "request_snapshot": {
+          "mock": {},
+          "runId": "r_78455d30c3b34e879f895a8db4e3d7cf",
+          "callId": 1,
+          "callSeq": 1,
+          "arguments": {
+            "message": "complete"
+          },
+          "attemptId": 2,
+          "skillCode": "alg_live_ec8285eb1f44_complete",
+          "leaseOwner": "b6bfa271-982b-443e-9c0e-e63e8ca5c5c2_75e1a91a",
+          "leaseUntil": "2026-10-20T04:01:18.561166Z",
+          "triggerType": "DEBUG",
+          "idempotencyKey": "f61bdd114e77ba5e320c2792cfcbeebdee9077917b028b16f9be8c8a53a22600",
+          "nodeInstanceId": 2,
+          "skillVersionId": 1,
+          "guardedArguments": {
+            "message": "complete"
+          },
+          "authorityTriggerType": "DEBUG"
+        },
+        "skill_version_id": 1,
+        "delivery_attempts": 0,
+        "attempt_duration_ms": 535,
+        "delivery_lease_until": null,
+        "skill_contract_sha256": "e9eceafe8562b1463647b2acf5e1cdf9385af4ea6bb82bd8b3876eeca03c5209"
+      }
+    ],
+    "bindings": [
+      {
+        "run_id": "r_78455d30c3b34e879f895a8db4e3d7cf",
+        "status": "DONE",
+        "call_id": 1,
+        "metadata": {
+          "image": "algorithm-proof:finite",
+          "protocol": "ALGORITHM",
+          "contractSha256": "e9eceafe8562b1463647b2acf5e1cdf9385af4ea6bb82bd8b3876eeca03c5209",
+          "serviceAccount": "algorithm-proof",
+          "terminalEvidence": {
+            "apiSha256": "3dc1444a84f4911d4f723f2e40c370f453d017d57a73f0cfd340da91506496f0",
+            "condition": "Complete",
+            "namespace": "alg-live-ec8285eb1f44-complete",
+            "sourceKind": "K8S_JOB",
+            "sourceSha256": "fc2e91f500d6ea68f7beb95a81904ba1cbfd977089ae85bf064c07d775a190cd",
+            "externalJobId": "alg-404772026b9963271ec5c6f778e45de7e33f19a8",
+            "externalJobUid": "a8c2429f-a8e7-487a-8b73-23c099cec329",
+            "identitySha256": "d68fb73098316b64cb7d6d1f0beeb259b647142ae85664659ad072e9deb4c5a2"
+          }
+        },
+        "tenant_id": "algorithm-live-ec8285eb1f44",
+        "attempt_id": 2,
+        "updated_at": "2026-10-20T11:59:49.203109+08:00",
+        "principal_id": "algorithm-live",
+        "send_started": true,
+        "external_job_id": "alg-404772026b9963271ec5c6f778e45de7e33f19a8",
+        "idempotency_key": "f61bdd114e77ba5e320c2792cfcbeebdee9077917b028b16f9be8c8a53a22600",
+        "external_job_uid": "a8c2429f-a8e7-487a-8b73-23c099cec329",
+        "request_snapshot": {
+          "mock": {},
+          "runId": "r_78455d30c3b34e879f895a8db4e3d7cf",
+          "callId": 1,
+          "callSeq": 1,
+          "arguments": {
+            "message": "complete"
+          },
+          "attemptId": 2,
+          "skillCode": "alg_live_ec8285eb1f44_complete",
+          "leaseOwner": "b6bfa271-982b-443e-9c0e-e63e8ca5c5c2_75e1a91a",
+          "leaseUntil": "2026-10-20T04:01:18.561166Z",
+          "triggerType": "DEBUG",
+          "idempotencyKey": "f61bdd114e77ba5e320c2792cfcbeebdee9077917b028b16f9be8c8a53a22600",
+          "nodeInstanceId": 2,
+          "skillVersionId": 1,
+          "guardedArguments": {
+            "message": "complete"
+          },
+          "authorityTriggerType": "DEBUG"
+        },
+        "skill_version_id": 1,
+        "external_namespace": "alg-live-ec8285eb1f44-complete",
+        "external_api_sha256": "3dc1444a84f4911d4f723f2e40c370f453d017d57a73f0cfd340da91506496f0",
+        "external_identity_sha256": "d68fb73098316b64cb7d6d1f0beeb259b647142ae85664659ad072e9deb4c5a2"
+      }
+    ],
+    "toolCommits": 1,
+    "attempts": 1,
+    "runCalls": 1,
+    "runFacts": 1,
+    "runBindings": 1,
+    "attemptRows": [
+      {
+        "id": 2,
+        "error": null,
+        "status": "SUCCEEDED",
+        "ended_at": "2026-10-20T11:59:49.238415+08:00",
+        "response": null,
+        "attempt_no": 1,
+        "checkpoint": {},
+        "started_at": "2026-10-20T11:59:48.561166+08:00",
+        "response_ref": null,
+        "routed_model": null,
+        "idempotency_key": "f6619d9e244288c63f01cd862d31419ede73b78d6bd60b5e097b2a93187b6c23",
+        "node_instance_id": 2,
+        "request_snapshot": {},
+        "request_snapshot_ref": "pg:attempt/2"
+      }
+    ],
+    "terminalNotes": [
+      {
+        "id": 1,
+        "kind": "TOOL_EXECUTION_FACT",
+        "payload": {
+          "owner": "b6bfa271-982b-443e-9c0e-e63e8ca5c5c2_75e1a91a",
+          "callId": 1,
+          "isMock": false,
+          "result": {
+            "error": null,
+            "owner": {
+              "runId": "r_78455d30c3b34e879f895a8db4e3d7cf",
+              "callId": 1,
+              "tenantId": "algorithm-live-ec8285eb1f44",
+              "attemptId": 2,
+              "skillCode": "alg_live_ec8285eb1f44_complete",
+              "principalId": "algorithm-live",
+              "nodeInstanceId": 2,
+              "skillVersionId": 1
+            },
+            "isMock": false,
+            "status": "SUCCEEDED",
+            "fileRefs": [],
+            "guardTrace": {
+              "roles": [
+                "SERVICE",
+                "ADMIN",
+                "EDITOR"
+              ],
+              "argsDigest": "bf3e3d891044b1229e23a604013d8be68e1ce3bcbd016f27f1a2701a7b52b895"
+            },
+            "structured": {
+              "value": "ok-complete"
+            },
+            "modelSummary": "{\"value\":\"ok-complete\"}",
+            "cardPayloadJson": ""
+          },
+          "status": "SUCCEEDED",
+          "accepted": true,
+          "attemptId": 2,
+          "durationMs": 535,
+          "factDigest": "be6e2798a7833389698d37db1755429c861ae2c642b504c3dbb2d412e785b914"
+        },
+        "attempt_id": 2,
+        "created_at": "2026-10-20T11:59:49.22779+08:00",
+        "node_instance_id": 2
+      }
+    ],
+    "acceptedTerminalFacts": 1,
+    "events": [
+      {
+        "id": 1,
+        "seq": 1,
+        "type": "RUN_STARTED",
+        "run_id": 1,
+        "payload": {
+          "runId": "r_78455d30c3b34e879f895a8db4e3d7cf",
+          "triggerType": "DEBUG"
+        },
+        "created_at": "2026-10-20T11:59:48.529012+08:00"
+      },
+      {
+        "id": 2,
+        "seq": 2,
+        "type": "NODE_STARTED",
+        "run_id": 1,
+        "payload": {
+          "attemptId": 1,
+          "attemptNo": 1,
+          "nodeInstanceId": 1
+        },
+        "created_at": "2026-10-20T11:59:48.544552+08:00"
+      },
+      {
+        "id": 3,
+        "seq": 3,
+        "type": "LOGIC_RESULT_COMMITTED",
+        "run_id": 1,
+        "payload": {
+          "attemptId": 1,
+          "nodeInstanceId": 1
+        },
+        "created_at": "2026-10-20T11:59:48.555644+08:00"
+      },
+      {
+        "id": 4,
+        "seq": 4,
+        "type": "NODE_FINISHED",
+        "run_id": 1,
+        "payload": {
+          "status": "SUCCEEDED",
+          "nodeInstanceId": 1
+        },
+        "created_at": "2026-10-20T11:59:48.555644+08:00"
+      },
+      {
+        "id": 5,
+        "seq": 5,
+        "type": "NODE_STARTED",
+        "run_id": 1,
+        "payload": {
+          "attemptId": 2,
+          "attemptNo": 1,
+          "nodeInstanceId": 2
+        },
+        "created_at": "2026-10-20T11:59:48.561166+08:00"
+      },
+      {
+        "id": 6,
+        "seq": 6,
+        "type": "LOGIC_RESULT_COMMITTED",
+        "run_id": 1,
+        "payload": {
+          "attemptId": 2,
+          "nodeInstanceId": 2
+        },
+        "created_at": "2026-10-20T11:59:49.238415+08:00"
+      },
+      {
+        "id": 7,
+        "seq": 7,
+        "type": "NODE_FINISHED",
+        "run_id": 1,
+        "payload": {
+          "status": "SUCCEEDED",
+          "nodeInstanceId": 2
+        },
+        "created_at": "2026-10-20T11:59:49.238415+08:00"
+      },
+      {
+        "id": 8,
+        "seq": 8,
+        "type": "NODE_STARTED",
+        "run_id": 1,
+        "payload": {
+          "attemptId": 3,
+          "attemptNo": 1,
+          "nodeInstanceId": 3
+        },
+        "created_at": "2026-10-20T11:59:49.242739+08:00"
+      },
+      {
+        "id": 9,
+        "seq": 9,
+        "type": "LOGIC_RESULT_COMMITTED",
+        "run_id": 1,
+        "payload": {
+          "attemptId": 3,
+          "nodeInstanceId": 3
+        },
+        "created_at": "2026-10-20T11:59:49.250025+08:00"
+      },
+      {
+        "id": 10,
+        "seq": 10,
+        "type": "NODE_FINISHED",
+        "run_id": 1,
+        "payload": {
+          "status": "SUCCEEDED",
+          "nodeInstanceId": 3
+        },
+        "created_at": "2026-10-20T11:59:49.250025+08:00"
+      },
+      {
+        "id": 11,
+        "seq": 11,
+        "type": "RUN_FINISHED",
+        "run_id": 1,
+        "payload": {
+          "status": "SUCCEEDED"
+        },
+        "created_at": "2026-10-20T11:59:49.253252+08:00"
+      }
+    ],
+    "call": {
+      "id": 1,
+      "args": {
+        "message": "complete"
+      },
+      "result": {
+        "error": null,
+        "owner": {
+          "runId": "r_78455d30c3b34e879f895a8db4e3d7cf",
+          "callId": 1,
+          "tenantId": "algorithm-live-ec8285eb1f44",
+          "attemptId": 2,
+          "skillCode": "alg_live_ec8285eb1f44_complete",
+          "principalId": "algorithm-live",
+          "nodeInstanceId": 2,
+          "skillVersionId": 1
+        },
+        "isMock": false,
+        "status": "SUCCEEDED",
+        "fileRefs": [],
+        "guardTrace": {
+          "roles": [
+            "SERVICE",
+            "ADMIN",
+            "EDITOR"
+          ],
+          "argsDigest": "bf3e3d891044b1229e23a604013d8be68e1ce3bcbd016f27f1a2701a7b52b895"
+        },
+        "structured": {
+          "value": "ok-complete"
+        },
+        "modelSummary": "{\"value\":\"ok-complete\"}",
+        "cardPayloadJson": ""
+      },
+      "run_id": 1,
+      "status": "SUCCEEDED",
+      "is_mock": false,
+      "args_ref": "pg:call/f61bdd114e77ba5e320c2792cfcbeebdee9077917b028b16f9be8c8a53a22600/args",
+      "call_seq": 1,
+      "attempt_id": 2,
+      "claimed_at": "2026-10-20T11:59:48.628607+08:00",
+      "claimed_by": "b6bfa271-982b-443e-9c0e-e63e8ca5c5c2_75e1a91a",
+      "created_at": "2026-10-20T11:59:48.568287+08:00",
+      "result_ref": "pg:call/1/result",
+      "skill_code": "alg_live_ec8285eb1f44_complete",
+      "args_digest": "bf3e3d891044b1229e23a604013d8be68e1ce3bcbd016f27f1a2701a7b52b895",
+      "duration_ms": 535,
+      "claimed_lease": "2026-10-20T12:01:18.993359+08:00",
+      "mock_snapshot": {},
+      "error_semantic": null,
+      "recovery_error": null,
+      "idempotency_key": "f61bdd114e77ba5e320c2792cfcbeebdee9077917b028b16f9be8c8a53a22600",
+      "approval_context": null,
+      "node_instance_id": 2,
+      "recovery_next_at": null,
+      "skill_version_id": 1,
+      "recovery_attempts": 0,
+      "mock_source_digest": null,
+      "mock_source_call_id": null,
+      "readonly_retry_count": 0,
+      "skill_contract_sha256": "e9eceafe8562b1463647b2acf5e1cdf9385af4ea6bb82bd8b3876eeca03c5209",
+      "debug_controls_revision": 0
+    },
+    "fact": {
+      "result": {
+        "error": null,
+        "owner": {
+          "runId": "r_78455d30c3b34e879f895a8db4e3d7cf",
+          "callId": 1,
+          "tenantId": "algorithm-live-ec8285eb1f44",
+          "attemptId": 2,
+          "skillCode": "alg_live_ec8285eb1f44_complete",
+          "principalId": "algorithm-live",
+          "nodeInstanceId": 2,
+          "skillVersionId": 1
+        },
+        "isMock": false,
+        "status": "SUCCEEDED",
+        "fileRefs": [],
+        "guardTrace": {
+          "roles": [
+            "SERVICE",
+            "ADMIN",
+            "EDITOR"
+          ],
+          "argsDigest": "bf3e3d891044b1229e23a604013d8be68e1ce3bcbd016f27f1a2701a7b52b895"
+        },
+        "structured": {
+          "value": "ok-complete"
+        },
+        "modelSummary": "{\"value\":\"ok-complete\"}",
+        "cardPayloadJson": ""
+      },
+      "run_id": "r_78455d30c3b34e879f895a8db4e3d7cf",
+      "status": "SUCCEEDED",
+      "call_id": 1,
+      "is_mock": false,
+      "call_kind": "DEBUG",
+      "tenant_id": "algorithm-live-ec8285eb1f44",
+      "attempt_id": 2,
+      "created_at": "2026-10-20T11:59:48.640589+08:00",
+      "updated_at": "2026-10-20T11:59:49.235927+08:00",
+      "args_digest": "bf3e3d891044b1229e23a604013d8be68e1ce3bcbd016f27f1a2701a7b52b895",
+      "duration_ms": 535,
+      "principal_id": "algorithm-live",
+      "callback_error": null,
+      "callback_state": "DELIVERED",
+      "delivery_owner": null,
+      "execution_owner": "b6bfa271-982b-443e-9c0e-e63e8ca5c5c2_75e1a91a",
+      "next_delivery_at": "2026-10-20T11:59:49.203109+08:00",
+      "request_snapshot": {
+        "mock": {},
+        "runId": "r_78455d30c3b34e879f895a8db4e3d7cf",
+        "callId": 1,
+        "callSeq": 1,
+        "arguments": {
+          "message": "complete"
+        },
+        "attemptId": 2,
+        "skillCode": "alg_live_ec8285eb1f44_complete",
+        "leaseOwner": "b6bfa271-982b-443e-9c0e-e63e8ca5c5c2_75e1a91a",
+        "leaseUntil": "2026-10-20T04:01:18.561166Z",
+        "triggerType": "DEBUG",
+        "idempotencyKey": "f61bdd114e77ba5e320c2792cfcbeebdee9077917b028b16f9be8c8a53a22600",
+        "nodeInstanceId": 2,
+        "skillVersionId": 1,
+        "guardedArguments": {
+          "message": "complete"
+        },
+        "authorityTriggerType": "DEBUG"
+      },
+      "skill_version_id": 1,
+      "delivery_attempts": 0,
+      "attempt_duration_ms": 535,
+      "delivery_lease_until": null,
+      "skill_contract_sha256": "e9eceafe8562b1463647b2acf5e1cdf9385af4ea6bb82bd8b3876eeca03c5209"
+    },
+    "binding": {
+      "run_id": "r_78455d30c3b34e879f895a8db4e3d7cf",
+      "status": "DONE",
+      "call_id": 1,
+      "metadata": {
+        "image": "algorithm-proof:finite",
+        "protocol": "ALGORITHM",
+        "contractSha256": "e9eceafe8562b1463647b2acf5e1cdf9385af4ea6bb82bd8b3876eeca03c5209",
+        "serviceAccount": "algorithm-proof",
+        "terminalEvidence": {
+          "apiSha256": "3dc1444a84f4911d4f723f2e40c370f453d017d57a73f0cfd340da91506496f0",
+          "condition": "Complete",
+          "namespace": "alg-live-ec8285eb1f44-complete",
+          "sourceKind": "K8S_JOB",
+          "sourceSha256": "fc2e91f500d6ea68f7beb95a81904ba1cbfd977089ae85bf064c07d775a190cd",
+          "externalJobId": "alg-404772026b9963271ec5c6f778e45de7e33f19a8",
+          "externalJobUid": "a8c2429f-a8e7-487a-8b73-23c099cec329",
+          "identitySha256": "d68fb73098316b64cb7d6d1f0beeb259b647142ae85664659ad072e9deb4c5a2"
+        }
+      },
+      "tenant_id": "algorithm-live-ec8285eb1f44",
+      "attempt_id": 2,
+      "updated_at": "2026-10-20T11:59:49.203109+08:00",
+      "principal_id": "algorithm-live",
+      "send_started": true,
+      "external_job_id": "alg-404772026b9963271ec5c6f778e45de7e33f19a8",
+      "idempotency_key": "f61bdd114e77ba5e320c2792cfcbeebdee9077917b028b16f9be8c8a53a22600",
+      "external_job_uid": "a8c2429f-a8e7-487a-8b73-23c099cec329",
+      "request_snapshot": {
+        "mock": {},
+        "runId": "r_78455d30c3b34e879f895a8db4e3d7cf",
+        "callId": 1,
+        "callSeq": 1,
+        "arguments": {
+          "message": "complete"
+        },
+        "attemptId": 2,
+        "skillCode": "alg_live_ec8285eb1f44_complete",
+        "leaseOwner": "b6bfa271-982b-443e-9c0e-e63e8ca5c5c2_75e1a91a",
+        "leaseUntil": "2026-10-20T04:01:18.561166Z",
+        "triggerType": "DEBUG",
+        "idempotencyKey": "f61bdd114e77ba5e320c2792cfcbeebdee9077917b028b16f9be8c8a53a22600",
+        "nodeInstanceId": 2,
+        "skillVersionId": 1,
+        "guardedArguments": {
+          "message": "complete"
+        },
+        "authorityTriggerType": "DEBUG"
+      },
+      "skill_version_id": 1,
+      "external_namespace": "alg-live-ec8285eb1f44-complete",
+      "external_api_sha256": "3dc1444a84f4911d4f723f2e40c370f453d017d57a73f0cfd340da91506496f0",
+      "external_identity_sha256": "d68fb73098316b64cb7d6d1f0beeb259b647142ae85664659ad072e9deb4c5a2"
+    }
+  },
+  "fixtureAfter": {
+    "posts": 1,
+    "jobGets": 1,
+    "podLists": 1,
+    "logGets": 1,
+    "denied": 0,
+    "authRejected": 0,
+    "mode": "complete",
+    "jobName": "alg-404772026b9963271ec5c6f778e45de7e33f19a8",
+    "jobUid": "a8c2429f-a8e7-487a-8b73-23c099cec329",
+    "routes": [
+      "GET /apis/batch/v1/namespaces/alg-live-ec8285eb1f44-complete/jobs/alg-404772026b9963271ec5c6f778e45de7e33f19a8",
+      "POST /apis/batch/v1/namespaces/alg-live-ec8285eb1f44-complete/jobs",
+      "GET /api/v1/namespaces/alg-live-ec8285eb1f44-complete/pods",
+      "GET /api/v1/namespaces/alg-live-ec8285eb1f44-complete/pods/algorithm-proof-pod/log"
+    ],
+    "evidenceLevel": "finite-api-reception-only",
+    "clusterOrContainerExecution": false,
+    "logicalEngineCommitVerified": false
+  }
+}

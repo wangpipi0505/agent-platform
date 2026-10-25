@@ -1,0 +1,2 @@
+import {it,expect} from 'vitest';import {restoreSession} from '../shared/session';
+it('restores session version before loading its frozen inputs instead of latest inputs',async()=>{const calls:string[]=[];const api=async(path:string)=>{calls.push(path);return path.endsWith('/s')?{sessionId:'s',versionNo:3,turns:[]}:{inputs:[]};};const value=await restoreSession(api,'app','s');expect(value.session.versionNo).toBe(3);expect(calls).toEqual(['/v1/apps/app/sessions/s','/v1/apps/app/input-schema?versionNo=3']);});

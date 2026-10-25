@@ -1,0 +1,11 @@
+{
+  "at": "2026-10-20T20:49:49.514Z",
+  "provenance": "Recorded from actual tool call output, not claimed raw log",
+  "command": "node .local/iam-d4b-error-stop-fix/seal.mjs",
+  "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+  "exit": 1,
+  "error": "EBADF: bad file descriptor, read",
+  "cause": "Array.map(entry) passed its numeric index as entry optional physical path, causing fs.readFileSync to interpret an FD",
+  "fix": "map(f=>entry(f)); only seal helper changed, source/dist/tests unchanged",
+  "behaviorTestsRerun": false
+}

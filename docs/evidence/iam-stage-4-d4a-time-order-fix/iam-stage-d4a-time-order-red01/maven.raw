@@ -1,0 +1,132 @@
+[INFO] Scanning for projects...
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Build Order:
+[INFO] 
+[INFO] agent-platform                                                     [pom]
+[INFO] admin-common                                                       [jar]
+[INFO] 
+[INFO] ------------------< cn.agentplatform:agent-platform >-------------------
+[INFO] Building agent-platform 0.1.0-SNAPSHOT                             [1/2]
+[INFO]   from pom.xml
+[INFO] --------------------------------[ pom ]---------------------------------
+[INFO] 
+[INFO] --- enforcer:3.5.0:enforce (default) @ agent-platform ---
+[INFO] Rule 0: org.apache.maven.enforcer.rules.version.RequireJavaVersion passed
+[INFO] 
+[INFO] -------------------< cn.agentplatform:admin-common >--------------------
+[INFO] Building admin-common 0.1.0-SNAPSHOT                               [2/2]
+[INFO]   from admin-common\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- enforcer:3.5.0:enforce (default) @ admin-common ---
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ admin-common ---
+[INFO] Copying 0 resource from src\main\resources to target\classes
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.0:compile (default-compile) @ admin-common ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ admin-common ---
+[INFO] skip non existing resourceDirectory G:\207\��Ŀ\�㷨���鹤��\����\agent-platform\admin-common\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.14.0:testCompile (default-testCompile) @ admin-common ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 25 source files with javac [debug parameters release 21] to target\test-classes
+[INFO] /G:/207/��Ŀ/�㷨���鹤��/����/agent-platform/admin-common/src/test/java/cn/agentplatform/common/authority/GatewayRunAuthorizationTest.java: ĳЩ�����ļ�ʹ����δ�����򲻰�ȫ�Ĳ�����
+[INFO] /G:/207/��Ŀ/�㷨���鹤��/����/agent-platform/admin-common/src/test/java/cn/agentplatform/common/authority/GatewayRunAuthorizationTest.java: �й���ϸ��Ϣ, ��ʹ�� -Xlint:unchecked ���±��롣
+[INFO] 
+[INFO] --- jar:3.4.2:test-jar (finite-test-fixtures) @ admin-common ---
+[INFO] Building jar: G:\207\��Ŀ\�㷨���鹤��\����\agent-platform\admin-common\target\admin-common-0.1.0-SNAPSHOT-tests.jar
+[INFO] 
+[INFO] --- surefire:3.5.3:test (default-test) @ admin-common ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running cn.agentplatform.common.authority.PortalSessionAuthorizationTest
+[ERROR] Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 2.231 s <<< FAILURE! -- in cn.agentplatform.common.authority.PortalSessionAuthorizationTest
+[ERROR] cn.agentplatform.common.authority.PortalSessionAuthorizationTest.signedElapsedCurrentAndTicketRequireExpiryAfterNotBefore -- Time elapsed: 2.219 s <<< FAILURE!
+org.assertj.core.error.AssertJMultipleFailuresError: 
+
+Multiple Failures (4 failures)
+-- failure 1 --
+[current-nbf-equals-exp] 
+expected: 503
+ but was: 403
+at PortalSessionAuthorizationTest.signedElapsedCurrentAndTicketRequireExpiryAfterNotBefore(PortalSessionAuthorizationTest.java:209)
+-- failure 2 --
+[current-nbf-after-exp] 
+expected: 503
+ but was: 403
+at PortalSessionAuthorizationTest.signedElapsedCurrentAndTicketRequireExpiryAfterNotBefore(PortalSessionAuthorizationTest.java:209)
+-- failure 3 --
+[ticket-nbf-equals-exp] 
+expected: 503
+ but was: 403
+at PortalSessionAuthorizationTest.signedElapsedCurrentAndTicketRequireExpiryAfterNotBefore(PortalSessionAuthorizationTest.java:209)
+-- failure 4 --
+[ticket-nbf-after-exp] 
+expected: 503
+ but was: 403
+at PortalSessionAuthorizationTest.signedElapsedCurrentAndTicketRequireExpiryAfterNotBefore(PortalSessionAuthorizationTest.java:209)
+	at cn.agentplatform.common.authority.PortalSessionAuthorizationTest.signedElapsedCurrentAndTicketRequireExpiryAfterNotBefore(PortalSessionAuthorizationTest.java:224)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Failures: 
+[ERROR]   PortalSessionAuthorizationTest.signedElapsedCurrentAndTicketRequireExpiryAfterNotBefore:224 
+Multiple Failures (4 failures)
+-- failure 1 --
+[current-nbf-equals-exp] 
+expected: 503
+ but was: 403
+at PortalSessionAuthorizationTest.signedElapsedCurrentAndTicketRequireExpiryAfterNotBefore(PortalSessionAuthorizationTest.java:209)
+-- failure 2 --
+[current-nbf-after-exp] 
+expected: 503
+ but was: 403
+at PortalSessionAuthorizationTest.signedElapsedCurrentAndTicketRequireExpiryAfterNotBefore(PortalSessionAuthorizationTest.java:209)
+-- failure 3 --
+[ticket-nbf-equals-exp] 
+expected: 503
+ but was: 403
+at PortalSessionAuthorizationTest.signedElapsedCurrentAndTicketRequireExpiryAfterNotBefore(PortalSessionAuthorizationTest.java:209)
+-- failure 4 --
+[ticket-nbf-after-exp] 
+expected: 503
+ but was: 403
+at PortalSessionAuthorizationTest.signedElapsedCurrentAndTicketRequireExpiryAfterNotBefore(PortalSessionAuthorizationTest.java:209)
+[INFO] 
+[ERROR] Tests run: 1, Failures: 1, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Summary for agent-platform 0.1.0-SNAPSHOT:
+[INFO] 
+[INFO] agent-platform ..................................... SUCCESS [  0.218 s]
+[INFO] admin-common ....................................... FAILURE [  6.300 s]
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  6.776 s
+[INFO] Finished at: 2026-10-21T03:56:45+08:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.3:test (default-test) on project admin-common: There are test failures.
+[ERROR] 
+[ERROR] See G:\207\��Ŀ\�㷨���鹤��\����\agent-platform\admin-common\target\surefire-reports for the individual test results.
+[ERROR] See dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
+[ERROR] 
+[ERROR] After correcting the problems, you can resume the build with the command
+[ERROR]   mvn <args> -rf :admin-common

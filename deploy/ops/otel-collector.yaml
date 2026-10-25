@@ -1,0 +1,83 @@
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 512
+    spike_limit_mib: 128
+  transform/privacy:
+    error_mode: propagate
+    trace_statements:
+    - context: resource
+      statements:
+      - keep_keys(attributes, ["service.name", "service.version", "service.instance.id"])
+    - context: span
+      statements:
+      - set(name, "platform.operation")
+      - keep_keys(attributes, ["http.request.method", "http.response.status_code",
+        "db.system", "run_id", "node_instance_id", "attempt"])
+      - set(status.message, "")
+    - context: spanevent
+      statements:
+      - set(name, "platform.event")
+      - keep_keys(attributes, ["exception.type"])
+    log_statements:
+    - context: resource
+      statements:
+      - keep_keys(attributes, ["service.name", "service.version", "service.instance.id"])
+    - context: log
+      statements:
+      - 'set(body, "[redacted: deployment privacy policy]")'
+      - keep_keys(attributes, ["exception.type", "run_id", "node_instance_id", "attempt"])
+  batch:
+    send_batch_size: 512
+    timeout: 5s
+exporters:
+  otlp/tempo:
+    endpoint: tempo:4317
+    tls:
+      insecure: true
+  otlphttp/loki:
+    endpoint: http://loki:3100/otlp
+  prometheus:
+    endpoint: 0.0.0.0:8889
+    resource_to_telemetry_conversion:
+      enabled: false
+service:
+  extensions:
+  - health_check
+  pipelines:
+    traces:
+      receivers:
+      - otlp
+      processors:
+      - memory_limiter
+      - transform/privacy
+      - batch
+      exporters:
+      - otlp/tempo
+    logs:
+      receivers:
+      - otlp
+      processors:
+      - memory_limiter
+      - transform/privacy
+      - batch
+      exporters:
+      - otlphttp/loki
+    metrics:
+      receivers:
+      - otlp
+      processors:
+      - memory_limiter
+      - batch
+      exporters:
+      - prometheus

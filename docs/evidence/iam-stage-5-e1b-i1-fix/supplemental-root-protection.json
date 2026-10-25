@@ -1,0 +1,20 @@
+{
+  "sampling": "Post-run supplemental check; NOT part of initial protected-before. Initial before is preserved unchanged. Root retains independent original audit baseline.",
+  "rootAudit": [
+    {
+      "file": ".local/iam-stage-5-e1b-root-handoff-check.json",
+      "sha256": "72569ee3d41c59644c3c91f08e4684e16c0157f6ebb476727fa002da7b43a806",
+      "bytes": 9881
+    }
+  ],
+  "rootTargetBackupManifest": [
+    {
+      "file": ".local/artifacts/iam-stage-5-e1b-common-engine-target/manifest.json",
+      "sha256": "134bd7ab26620acc0108a68c5aa5daaf9c0dda2705f478ce0b2aea1519b17c22",
+      "bytes": 184511
+    }
+  ],
+  "rootTargetBackupFiles": 903,
+  "rootTargetBackupMatchesOriginalE1bTargetAfter": true,
+  "rootTargetBackupExpectedManifestSha256": "e4fcea9e61e0c23a5224dde58896ba5802dedf0b8eeeb053cefa1fcf939031c2"
+}

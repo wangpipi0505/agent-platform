@@ -1,0 +1,42 @@
+diff --git a/admin-common/src/test/java/cn/agentplatform/common/authority/RunObservationSelectorsTest.java b/admin-common/src/test/java/cn/agentplatform/common/authority/RunObservationSelectorsTest.java
+index 2a0e8892782cf56891f73d0a2b2e0cb62cc111e2..03160bf6e964f2ef894d6800efb176ed8c2ee30a 100644
+--- a/admin-common/src/test/java/cn/agentplatform/common/authority/RunObservationSelectorsTest.java
++++ b/admin-common/src/test/java/cn/agentplatform/common/authority/RunObservationSelectorsTest.java
+@@ -8,17 +8,26 @@ import org.junit.jupiter.api.Test;
+ class RunObservationSelectorsTest {
+     static final String RUN="r_"+"a".repeat(32);
+     @Test void statusPurposeIsBidirectionalAndOnlyAcceptsFreshPortalSnapshot(){
+-        var resource=RunObservationSelectors.status(RUN,Digest.sha256("accepted"));
+-        var call=new ServiceCall("engine",RunObservationSelectors.STATUS_ACTION,resource);
+-        RunObservationSelectors.requirePurpose(call,"gateway","delegated","PORTAL","PORTAL");
+-        for(String action:List.of(RunObservationSelectors.ACTION,"proxy.engine.post.RunController.run","run.advance","proxy.engine.get.RunController.events"))
+-            assertThatThrownBy(()->RunObservationSelectors.requirePurpose(new ServiceCall("engine",action,resource),"gateway","delegated","PORTAL","PORTAL")).isInstanceOf(PlatformException.class);
+-        for(var wrong:List.of(new ResourceBinding("app-version","app-a@1",resource.versionDigest()),RunObservationSelectors.metadata(new SubjectKey("t","p"),RUN),new ResourceBinding("run-snapshot",RUN,"A".repeat(64))))
+-            assertThatThrownBy(()->RunObservationSelectors.requirePurpose(new ServiceCall("engine",call.action(),wrong),"gateway","delegated","PORTAL","PORTAL")).isInstanceOf(PlatformException.class);
+-        for(String caller:List.of("app","engine"))assertThatThrownBy(()->RunObservationSelectors.requirePurpose(call,caller,"delegated","PORTAL","PORTAL")).isInstanceOf(PlatformException.class);
+-        for(String source:List.of("DELEGATED","INTEGRATION"))assertThatThrownBy(()->RunObservationSelectors.requirePurpose(call,"gateway","delegated",source,"PORTAL")).isInstanceOf(PlatformException.class);
+-        assertThatThrownBy(()->RunObservationSelectors.requirePurpose(call,"gateway","workload","PORTAL","PORTAL")).isInstanceOf(PlatformException.class);
+-        assertThatThrownBy(()->RunObservationSelectors.requirePurpose(call,"gateway","delegated","PORTAL","INTEGRATION")).isInstanceOf(PlatformException.class);
++        // Public STATUS/EVENTS share the strict snapshot grammar; freshness is checked online elsewhere.
++        for(String action:List.of(RunObservationSelectors.STATUS_ACTION,RunObservationSelectors.EVENTS_ACTION)){
++            var resource=action.equals(RunObservationSelectors.STATUS_ACTION)
++                    ?RunObservationSelectors.status(RUN,Digest.sha256("accepted"))
++                    :RunObservationSelectors.events(RUN,Digest.sha256("accepted"));
++            var call=new ServiceCall("engine",action,resource);
++            RunObservationSelectors.requirePurpose(call,"gateway","delegated","PORTAL","PORTAL");
++            for(var wrong:List.of(new ResourceBinding("app-version","app-a@1",resource.versionDigest()),RunObservationSelectors.metadata(new SubjectKey("t","p"),RUN),new ResourceBinding("run-snapshot",RUN,"A".repeat(64)),new ResourceBinding("run-snapshot","r-invalid",resource.versionDigest())))
++                assertThatThrownBy(()->RunObservationSelectors.requirePurpose(new ServiceCall("engine",action,wrong),"gateway","delegated","PORTAL","PORTAL")).isInstanceOf(PlatformException.class);
++            for(String target:List.of("app","gateway"))assertThatThrownBy(()->RunObservationSelectors.requirePurpose(new ServiceCall(target,action,resource),"gateway","delegated","PORTAL","PORTAL")).isInstanceOf(PlatformException.class);
++            for(String caller:List.of("app","engine"))assertThatThrownBy(()->RunObservationSelectors.requirePurpose(call,caller,"delegated","PORTAL","PORTAL")).isInstanceOf(PlatformException.class);
++            for(String source:List.of("DELEGATED","INTEGRATION"))assertThatThrownBy(()->RunObservationSelectors.requirePurpose(call,"gateway","delegated",source,"PORTAL")).isInstanceOf(PlatformException.class);
++            assertThatThrownBy(()->RunObservationSelectors.requirePurpose(call,"gateway","workload","PORTAL","PORTAL")).isInstanceOf(PlatformException.class);
++            assertThatThrownBy(()->RunObservationSelectors.requirePurpose(call,"gateway","delegated","PORTAL","INTEGRATION")).isInstanceOf(PlatformException.class);
++            for(String wrongAction:List.of(RunObservationSelectors.ACTION,"proxy.engine.post.RunController.run","run.advance"))
++                assertThatThrownBy(()->RunObservationSelectors.requirePurpose(new ServiceCall("engine",wrongAction,resource),"gateway","delegated","PORTAL","PORTAL")).isInstanceOf(PlatformException.class);
++        }
++        // G admission is private even when its real gateway/engine targets carry a valid snapshot.
++        for(String target:List.of("gateway","engine"))
++            assertThatThrownBy(()->RunObservationSelectors.requirePurpose(new ServiceCall(target,"gateway.run.events.observe",RunObservationSelectors.events(RUN,Digest.sha256("accepted"))),"gateway","delegated","PORTAL","PORTAL")).isInstanceOf(PlatformException.class);
+     }
+     @Test void canonicalQueryBindsVerifiedSubjectPathAndProjection(){
+         var subject=new SubjectKey("t\"租户","p\\主体");

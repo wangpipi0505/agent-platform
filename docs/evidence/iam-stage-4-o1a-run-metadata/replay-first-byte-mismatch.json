@@ -1,0 +1,45 @@
+{
+  "at": "2026-10-20T21:24:12.564Z",
+  "firstCheckExit": 0,
+  "firstApplyExit": 0,
+  "firstPostApplyVerificationExit": 1,
+  "diagnostic": "First text patch applied successfully, but project text/EOL normalization changed three mixed-EOL byte sequences. Preserve first application; repair only these remaining byte mismatches.",
+  "mismatches": [
+    {
+      "expected": {
+        "file": "admin-common/src/main/java/cn/agentplatform/common/authority/ServiceAuthorization.java",
+        "bytes": 9322,
+        "sha256": "8b97f99496135e8d3af0f874528f536a1164a7d285ad0b03c7feff4197727281"
+      },
+      "actual": {
+        "file": "admin-common/src/main/java/cn/agentplatform/common/authority/ServiceAuthorization.java",
+        "bytes": 9194,
+        "sha256": "2788a17e0dc4e276b78e08dbbe96445c5743e6868436c73a3a33defebb231344"
+      }
+    },
+    {
+      "expected": {
+        "file": "admin-common/src/main/resources/agent-service-authority.json",
+        "bytes": 86120,
+        "sha256": "fa37b6d8602e470e6511284b463b9905600aba1cd392a4f868927ce475515d9b"
+      },
+      "actual": {
+        "file": "admin-common/src/main/resources/agent-service-authority.json",
+        "bytes": 86117,
+        "sha256": "50a8f063bb1279b366c0c54af955519d774de280353d3147de502b0e72af3ec2"
+      }
+    },
+    {
+      "expected": {
+        "file": "engine-runtime/src/main/java/cn/agentplatform/engine/infra/RunAuthorityStore.java",
+        "bytes": 19772,
+        "sha256": "a4116e74d817a29026490ae860890f125571ad52ed33446845716e95045af21c"
+      },
+      "actual": {
+        "file": "engine-runtime/src/main/java/cn/agentplatform/engine/infra/RunAuthorityStore.java",
+        "bytes": 19770,
+        "sha256": "f11d8201b62ca04c840096dc814bcc630a9e573fe2d7384869add745435c43e9"
+      }
+    }
+  ]
+}

@@ -1,0 +1,916 @@
+{
+  "cases": [
+    {
+      "commits": 1,
+      "current": 2,
+      "sql": [
+        {
+          "category": "initial-metadata",
+          "sql": "select a.id,a.code,a.status,a.current_version_no,v.id as version_id,v.version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.app_id=a.id and v.version_no=a.current_version_no where a.tenant_id=? and a.code=?",
+          "transaction": false,
+          "autoCommit": true,
+          "connection": 1843381510,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 51128
+        },
+        {
+          "category": "application-lock",
+          "sql": "select a.id,a.code,a.status,a.current_version_no from app.application a where a.tenant_id=? and a.code=? for share of a",
+          "transaction": true,
+          "autoCommit": false,
+          "connection": 1516518036,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 50584
+        },
+        {
+          "category": "locked-metadata",
+          "sql": "select a.id,a.code,a.status,a.current_version_no,v.id as version_id,v.version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.app_id=a.id and v.version_no=a.current_version_no where a.tenant_id=? and a.code=?",
+          "transaction": true,
+          "autoCommit": false,
+          "connection": 1516518036,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 50584
+        },
+        {
+          "category": "payload",
+          "sql": "select snapshot::text from app.app_version where tenant_id=? and app_id=? and app_code=? and id=? and version_no=? and candidate_sha256=?",
+          "transaction": true,
+          "autoCommit": false,
+          "connection": 1516518036,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 50584
+        }
+      ],
+      "test": "draftWithPublishedPointerRemainsLegal()",
+      "businessWrites": 0
+    },
+    {
+      "commits": 0,
+      "current": 0,
+      "sql": [],
+      "test": "ambientBusinessTransactionIsRejectedBeforeAnyRefreshOrSql()",
+      "businessWrites": 0
+    },
+    {
+      "commits": 0,
+      "current": 1,
+      "sql": [],
+      "test": "portalAndInvalidSignatureCallerTargetActionMethodAndMetadataTicketsStopBeforeBusinessSql()",
+      "businessWrites": 0
+    },
+    {
+      "commits": 0,
+      "current": 3,
+      "sql": [
+        {
+          "category": "initial-metadata",
+          "sql": "select a.id,a.code,a.status,a.current_version_no,v.id as version_id,v.version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.app_id=a.id and v.version_no=a.current_version_no where a.tenant_id=? and a.code=?",
+          "transaction": false,
+          "autoCommit": true,
+          "connection": 433419475,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 52788
+        },
+        {
+          "category": "initial-metadata",
+          "sql": "select a.id,a.code,a.status,a.current_version_no,v.id as version_id,v.version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.app_id=a.id and v.version_no=a.current_version_no where a.tenant_id=? and a.code=?",
+          "transaction": false,
+          "autoCommit": true,
+          "connection": 1710555367,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 55632
+        }
+      ],
+      "test": "forgedRootCodeKindAndShaNeverReadPayload()",
+      "businessWrites": 0
+    },
+    {
+      "commits": 0,
+      "current": 2,
+      "sql": [
+        {
+          "category": "initial-metadata",
+          "sql": "select a.id,a.code,a.status,a.current_version_no,v.id as version_id,v.version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.app_id=a.id and v.version_no=a.current_version_no where a.tenant_id=? and a.code=?",
+          "transaction": false,
+          "autoCommit": true,
+          "connection": 1277558208,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 38156
+        },
+        {
+          "category": "application-lock",
+          "sql": "select a.id,a.code,a.status,a.current_version_no from app.application a where a.tenant_id=? and a.code=? for share of a",
+          "transaction": true,
+          "autoCommit": false,
+          "connection": 1209688220,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 57360
+        }
+      ],
+      "test": "proofExpiryWhileWaitingForShareLockRejectsBeforePayload()",
+      "businessWrites": 0
+    },
+    {
+      "commits": 0,
+      "current": 2,
+      "sql": [
+        {
+          "category": "initial-metadata",
+          "sql": "select a.id,a.code,a.status,a.current_version_no,v.id as version_id,v.version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.app_id=a.id and v.version_no=a.current_version_no where a.tenant_id=? and a.code=?",
+          "transaction": false,
+          "autoCommit": true,
+          "connection": 41746700,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 62980
+        }
+      ],
+      "test": "secondCurrentOutageDoesNotTouchPayload()",
+      "businessWrites": 0
+    },
+    {
+      "commits": 0,
+      "current": 2,
+      "sql": [
+        {
+          "category": "initial-metadata",
+          "sql": "select a.id,a.code,a.status,a.current_version_no,v.id as version_id,v.version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.app_id=a.id and v.version_no=a.current_version_no where a.tenant_id=? and a.code=?",
+          "transaction": false,
+          "autoCommit": true,
+          "connection": 511107013,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 45556
+        }
+      ],
+      "test": "secondCurrentExpirationDoesNotTouchPayload()",
+      "businessWrites": 0
+    },
+    {
+      "commits": 0,
+      "current": 2,
+      "sql": [
+        {
+          "category": "initial-metadata",
+          "sql": "select a.id,a.code,a.status,a.current_version_no,v.id as version_id,v.version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.app_id=a.id and v.version_no=a.current_version_no where a.tenant_id=? and a.code=?",
+          "transaction": false,
+          "autoCommit": true,
+          "connection": 1675216290,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 56684
+        }
+      ],
+      "test": "secondCurrentDenialDoesNotTouchPayload()",
+      "businessWrites": 0
+    },
+    {
+      "commits": 0,
+      "current": 6,
+      "sql": [
+        {
+          "category": "initial-metadata",
+          "sql": "select a.id,a.code,a.status,a.current_version_no,v.id as version_id,v.version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.app_id=a.id and v.version_no=a.current_version_no where a.tenant_id=? and a.code=?",
+          "transaction": false,
+          "autoCommit": true,
+          "connection": 436564785,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 57688
+        },
+        {
+          "category": "initial-metadata",
+          "sql": "select a.id,a.code,a.status,a.current_version_no,v.id as version_id,v.version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.app_id=a.id and v.version_no=a.current_version_no where a.tenant_id=? and a.code=?",
+          "transaction": false,
+          "autoCommit": true,
+          "connection": 1923584222,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 46180
+        },
+        {
+          "category": "initial-metadata",
+          "sql": "select a.id,a.code,a.status,a.current_version_no,v.id as version_id,v.version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.app_id=a.id and v.version_no=a.current_version_no where a.tenant_id=? and a.code=?",
+          "transaction": false,
+          "autoCommit": true,
+          "connection": 78570022,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 62788
+        },
+        {
+          "category": "initial-metadata",
+          "sql": "select a.id,a.code,a.status,a.current_version_no,v.id as version_id,v.version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.app_id=a.id and v.version_no=a.current_version_no where a.tenant_id=? and a.code=?",
+          "transaction": false,
+          "autoCommit": true,
+          "connection": 441010387,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 51020
+        },
+        {
+          "category": "initial-metadata",
+          "sql": "select a.id,a.code,a.status,a.current_version_no,v.id as version_id,v.version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.app_id=a.id and v.version_no=a.current_version_no where a.tenant_id=? and a.code=?",
+          "transaction": false,
+          "autoCommit": true,
+          "connection": 547846693,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 63744
+        },
+        {
+          "category": "initial-metadata",
+          "sql": "select a.id,a.code,a.status,a.current_version_no,v.id as version_id,v.version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.app_id=a.id and v.version_no=a.current_version_no where a.tenant_id=? and a.code=?",
+          "transaction": false,
+          "autoCommit": true,
+          "connection": 1316154696,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 37864
+        }
+      ],
+      "test": "unknownTenantAndBusinessUnavailableStatesKeepOriginalStatuses()",
+      "businessWrites": 0
+    },
+    {
+      "commits": 0,
+      "current": 1,
+      "sql": [],
+      "test": "explicitLegacyTestModePreservesExistingSnapshotProjection()",
+      "businessWrites": 0
+    },
+    {
+      "commits": 0,
+      "current": 2,
+      "sql": [
+        {
+          "category": "initial-metadata",
+          "sql": "select a.id,a.code,a.status,a.current_version_no,v.id as version_id,v.version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.app_id=a.id and v.version_no=a.current_version_no where a.tenant_id=? and a.code=?",
+          "transaction": false,
+          "autoCommit": true,
+          "connection": 2137980307,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 49184
+        },
+        {
+          "category": "application-lock",
+          "sql": "select a.id,a.code,a.status,a.current_version_no from app.application a where a.tenant_id=? and a.code=? for share of a",
+          "transaction": true,
+          "autoCommit": false,
+          "connection": 941419593,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 53356
+        },
+        {
+          "category": "locked-metadata",
+          "sql": "select a.id,a.code,a.status,a.current_version_no,v.id as version_id,v.version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.app_id=a.id and v.version_no=a.current_version_no where a.tenant_id=? and a.code=?",
+          "transaction": true,
+          "autoCommit": false,
+          "connection": 941419593,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 53356
+        }
+      ],
+      "test": "actualAuthorityResponseWaitAlsoHoldsNoPgLock()",
+      "businessWrites": 0
+    },
+    {
+      "commits": 1,
+      "current": 2,
+      "sql": [
+        {
+          "category": "initial-metadata",
+          "sql": "select a.id,a.code,a.status,a.current_version_no,v.id as version_id,v.version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.app_id=a.id and v.version_no=a.current_version_no where a.tenant_id=? and a.code=?",
+          "transaction": false,
+          "autoCommit": true,
+          "connection": 967082019,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 46052
+        },
+        {
+          "category": "application-lock",
+          "sql": "select a.id,a.code,a.status,a.current_version_no from app.application a where a.tenant_id=? and a.code=? for share of a",
+          "transaction": true,
+          "autoCommit": false,
+          "connection": 1033573327,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 49712
+        },
+        {
+          "category": "locked-metadata",
+          "sql": "select a.id,a.code,a.status,a.current_version_no,v.id as version_id,v.version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.app_id=a.id and v.version_no=a.current_version_no where a.tenant_id=? and a.code=?",
+          "transaction": true,
+          "autoCommit": false,
+          "connection": 1033573327,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 49712
+        },
+        {
+          "category": "payload",
+          "sql": "select snapshot::text from app.app_version where tenant_id=? and app_id=? and app_code=? and id=? and version_no=? and candidate_sha256=?",
+          "transaction": true,
+          "autoCommit": false,
+          "connection": 1033573327,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 49712
+        }
+      ],
+      "test": "normalSavedPortalMetadataThenIndependentMainAndForwardReadsOnlyCurrentSnapshot()",
+      "businessWrites": 0
+    },
+    {
+      "commits": 1,
+      "current": 2,
+      "sql": [
+        {
+          "category": "initial-metadata",
+          "sql": "select a.id,a.code,a.status,a.current_version_no,v.id as version_id,v.version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.app_id=a.id and v.version_no=a.current_version_no where a.tenant_id=? and a.code=?",
+          "transaction": false,
+          "autoCommit": true,
+          "connection": 389508027,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 38684
+        },
+        {
+          "category": "application-lock",
+          "sql": "select a.id,a.code,a.status,a.current_version_no from app.application a where a.tenant_id=? and a.code=? for share of a",
+          "transaction": true,
+          "autoCommit": false,
+          "connection": 319356293,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 53964
+        },
+        {
+          "category": "locked-metadata",
+          "sql": "select a.id,a.code,a.status,a.current_version_no,v.id as version_id,v.version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.app_id=a.id and v.version_no=a.current_version_no where a.tenant_id=? and a.code=?",
+          "transaction": true,
+          "autoCommit": false,
+          "connection": 319356293,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 53964
+        },
+        {
+          "category": "payload",
+          "sql": "select snapshot::text from app.app_version where tenant_id=? and app_id=? and app_code=? and id=? and version_no=? and candidate_sha256=?",
+          "transaction": true,
+          "autoCommit": false,
+          "connection": 319356293,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 53964
+        }
+      ],
+      "test": "heldShareLockBlocksRealWriterThenReleasesAfterRead()",
+      "businessWrites": 0
+    },
+    {
+      "commits": 0,
+      "current": 1,
+      "sql": [
+        {
+          "category": "initial-metadata",
+          "sql": "select a.id,a.code,a.status,a.current_version_no,v.id as version_id,v.version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.app_id=a.id and v.version_no=a.current_version_no where a.tenant_id=? and a.code=?",
+          "transaction": false,
+          "autoCommit": true,
+          "connection": 1727661017,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 53556
+        }
+      ],
+      "test": "oldVersionTicketConflictsRatherThanSelectingNewSnapshot()",
+      "businessWrites": 0
+    },
+    {
+      "commits": 0,
+      "current": 0,
+      "sql": [],
+      "test": "publishedTicketCannotEnterOtherActualAppAliases()",
+      "businessWrites": 0
+    },
+    {
+      "commits": 0,
+      "current": 2,
+      "sql": [
+        {
+          "category": "initial-metadata",
+          "sql": "select a.id,a.code,a.status,a.current_version_no,v.id as version_id,v.version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.app_id=a.id and v.version_no=a.current_version_no where a.tenant_id=? and a.code=?",
+          "transaction": false,
+          "autoCommit": true,
+          "connection": 1227592717,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 48996
+        },
+        {
+          "category": "application-lock",
+          "sql": "select a.id,a.code,a.status,a.current_version_no from app.application a where a.tenant_id=? and a.code=? for share of a",
+          "transaction": true,
+          "autoCommit": false,
+          "connection": 414610775,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 53412
+        },
+        {
+          "category": "locked-metadata",
+          "sql": "select a.id,a.code,a.status,a.current_version_no,v.id as version_id,v.version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.app_id=a.id and v.version_no=a.current_version_no where a.tenant_id=? and a.code=?",
+          "transaction": true,
+          "autoCommit": false,
+          "connection": 414610775,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 53412
+        }
+      ],
+      "test": "statusChangeAfterRefreshBeforeLockRejectsWithoutPayload()",
+      "businessWrites": 0
+    },
+    {
+      "commits": 0,
+      "current": 2,
+      "sql": [
+        {
+          "category": "initial-metadata",
+          "sql": "select a.id,a.code,a.status,a.current_version_no,v.id as version_id,v.version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.app_id=a.id and v.version_no=a.current_version_no where a.tenant_id=? and a.code=?",
+          "transaction": false,
+          "autoCommit": true,
+          "connection": 1271923338,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 41136
+        },
+        {
+          "category": "application-lock",
+          "sql": "select a.id,a.code,a.status,a.current_version_no from app.application a where a.tenant_id=? and a.code=? for share of a",
+          "transaction": true,
+          "autoCommit": false,
+          "connection": 1737937656,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 25356
+        },
+        {
+          "category": "locked-metadata",
+          "sql": "select a.id,a.code,a.status,a.current_version_no,v.id as version_id,v.version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.app_id=a.id and v.version_no=a.current_version_no where a.tenant_id=? and a.code=?",
+          "transaction": true,
+          "autoCommit": false,
+          "connection": 1737937656,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 25356
+        },
+        {
+          "category": "payload",
+          "sql": "select snapshot::text from app.app_version where tenant_id=? and app_id=? and app_code=? and id=? and version_no=? and candidate_sha256=?",
+          "transaction": true,
+          "autoCommit": false,
+          "connection": 1737937656,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 25356
+        }
+      ],
+      "test": "expiryAfterPayloadBeforeCallbackEndsRejectsWithoutSuccessData()",
+      "businessWrites": 0
+    },
+    {
+      "commits": 1,
+      "current": 2,
+      "sql": [
+        {
+          "category": "initial-metadata",
+          "sql": "select a.id,a.code,a.status,a.current_version_no,v.id as version_id,v.version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.app_id=a.id and v.version_no=a.current_version_no where a.tenant_id=? and a.code=?",
+          "transaction": false,
+          "autoCommit": true,
+          "connection": 1657117662,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 27236
+        },
+        {
+          "category": "application-lock",
+          "sql": "select a.id,a.code,a.status,a.current_version_no from app.application a where a.tenant_id=? and a.code=? for share of a",
+          "transaction": true,
+          "autoCommit": false,
+          "connection": 667355618,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 50696
+        },
+        {
+          "category": "locked-metadata",
+          "sql": "select a.id,a.code,a.status,a.current_version_no,v.id as version_id,v.version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.app_id=a.id and v.version_no=a.current_version_no where a.tenant_id=? and a.code=?",
+          "transaction": true,
+          "autoCommit": false,
+          "connection": 667355618,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 50696
+        },
+        {
+          "category": "payload",
+          "sql": "select snapshot::text from app.app_version where tenant_id=? and app_id=? and app_code=? and id=? and version_no=? and candidate_sha256=?",
+          "transaction": true,
+          "autoCommit": false,
+          "connection": 667355618,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 50696
+        }
+      ],
+      "test": "actualResumeWithDelegatedSourceAndPortalOriginRemainsLegal()",
+      "businessWrites": 0
+    },
+    {
+      "commits": 1,
+      "current": 2,
+      "sql": [
+        {
+          "category": "initial-metadata",
+          "sql": "select a.id,a.code,a.status,a.current_version_no,v.id as version_id,v.version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.app_id=a.id and v.version_no=a.current_version_no where a.tenant_id=? and a.code=?",
+          "transaction": false,
+          "autoCommit": true,
+          "connection": 51184337,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 8948
+        },
+        {
+          "category": "application-lock",
+          "sql": "select a.id,a.code,a.status,a.current_version_no from app.application a where a.tenant_id=? and a.code=? for share of a",
+          "transaction": true,
+          "autoCommit": false,
+          "connection": 1980793561,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 46748
+        },
+        {
+          "category": "locked-metadata",
+          "sql": "select a.id,a.code,a.status,a.current_version_no,v.id as version_id,v.version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.app_id=a.id and v.version_no=a.current_version_no where a.tenant_id=? and a.code=?",
+          "transaction": true,
+          "autoCommit": false,
+          "connection": 1980793561,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 46748
+        },
+        {
+          "category": "payload",
+          "sql": "select snapshot::text from app.app_version where tenant_id=? and app_id=? and app_code=? and id=? and version_no=? and candidate_sha256=?",
+          "transaction": true,
+          "autoCommit": false,
+          "connection": 1980793561,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 46748
+        }
+      ],
+      "test": "authorizedNarrowerCurrentProjectionStillReadsPayload()",
+      "businessWrites": 0
+    },
+    {
+      "commits": 0,
+      "current": 1,
+      "sql": [
+        {
+          "category": "initial-metadata",
+          "sql": "select a.id,a.code,a.status,a.current_version_no,v.id as version_id,v.version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.app_id=a.id and v.version_no=a.current_version_no where a.tenant_id=? and a.code=?",
+          "transaction": false,
+          "autoCommit": true,
+          "connection": 469798650,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 9212
+        }
+      ],
+      "test": "missingInitialOriginProofCannotReadPayload()",
+      "businessWrites": 0
+    },
+    {
+      "commits": 0,
+      "current": 0,
+      "sql": [],
+      "test": "missingRequestFrameCannotFallBackToLegacyPayload()",
+      "businessWrites": 0
+    },
+    {
+      "commits": 1,
+      "current": 2,
+      "sql": [
+        {
+          "category": "initial-metadata",
+          "sql": "select a.id,a.code,a.status,a.current_version_no,v.id as version_id,v.version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.app_id=a.id and v.version_no=a.current_version_no where a.tenant_id=? and a.code=?",
+          "transaction": false,
+          "autoCommit": true,
+          "connection": 371854905,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 29676
+        },
+        {
+          "category": "application-lock",
+          "sql": "select a.id,a.code,a.status,a.current_version_no from app.application a where a.tenant_id=? and a.code=? for share of a",
+          "transaction": true,
+          "autoCommit": false,
+          "connection": 1493138505,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 62172
+        },
+        {
+          "category": "locked-metadata",
+          "sql": "select a.id,a.code,a.status,a.current_version_no,v.id as version_id,v.version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.app_id=a.id and v.version_no=a.current_version_no where a.tenant_id=? and a.code=?",
+          "transaction": true,
+          "autoCommit": false,
+          "connection": 1493138505,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 62172
+        },
+        {
+          "category": "payload",
+          "sql": "select snapshot::text from app.app_version where tenant_id=? and app_id=? and app_code=? and id=? and version_no=? and candidate_sha256=?",
+          "transaction": true,
+          "autoCommit": false,
+          "connection": 1493138505,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 62172
+        }
+      ],
+      "test": "onlineCurrentWaitHoldsNoApplicationLockAndPointerChangeRejectsOldRequest()",
+      "businessWrites": 0
+    },
+    {
+      "commits": 1,
+      "current": 2,
+      "sql": [
+        {
+          "category": "initial-metadata",
+          "sql": "select a.id,a.code,a.status,a.current_version_no,v.id as version_id,v.version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.app_id=a.id and v.version_no=a.current_version_no where a.tenant_id=? and a.code=?",
+          "transaction": false,
+          "autoCommit": true,
+          "connection": 1787701142,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 58804
+        },
+        {
+          "category": "application-lock",
+          "sql": "select a.id,a.code,a.status,a.current_version_no from app.application a where a.tenant_id=? and a.code=? for share of a",
+          "transaction": true,
+          "autoCommit": false,
+          "connection": 25078684,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 63992
+        },
+        {
+          "category": "locked-metadata",
+          "sql": "select a.id,a.code,a.status,a.current_version_no,v.id as version_id,v.version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.app_id=a.id and v.version_no=a.current_version_no where a.tenant_id=? and a.code=?",
+          "transaction": true,
+          "autoCommit": false,
+          "connection": 25078684,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 63992
+        },
+        {
+          "category": "payload",
+          "sql": "select snapshot::text from app.app_version where tenant_id=? and app_id=? and app_code=? and id=? and version_no=? and candidate_sha256=?",
+          "transaction": true,
+          "autoCommit": false,
+          "connection": 25078684,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 63992
+        }
+      ],
+      "test": "expiryAfterActualCommitBeforeServiceReturnsRejectsWithoutSuccessData()",
+      "businessWrites": 0
+    },
+    {
+      "commits": 0,
+      "current": 8,
+      "sql": [
+        {
+          "category": "initial-metadata",
+          "sql": "select a.id,a.code,a.status,a.current_version_no,v.id as version_id,v.version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.app_id=a.id and v.version_no=a.current_version_no where a.tenant_id=? and a.code=?",
+          "transaction": false,
+          "autoCommit": true,
+          "connection": 1267487424,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 63644
+        },
+        {
+          "category": "application-lock",
+          "sql": "select a.id,a.code,a.status,a.current_version_no from app.application a where a.tenant_id=? and a.code=? for share of a",
+          "transaction": true,
+          "autoCommit": false,
+          "connection": 1445908142,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 59668
+        },
+        {
+          "category": "locked-metadata",
+          "sql": "select a.id,a.code,a.status,a.current_version_no,v.id as version_id,v.version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.app_id=a.id and v.version_no=a.current_version_no where a.tenant_id=? and a.code=?",
+          "transaction": true,
+          "autoCommit": false,
+          "connection": 1445908142,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 59668
+        },
+        {
+          "category": "payload",
+          "sql": "select snapshot::text from app.app_version where tenant_id=? and app_id=? and app_code=? and id=? and version_no=? and candidate_sha256=?",
+          "transaction": true,
+          "autoCommit": false,
+          "connection": 1445908142,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 59668
+        },
+        {
+          "category": "initial-metadata",
+          "sql": "select a.id,a.code,a.status,a.current_version_no,v.id as version_id,v.version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.app_id=a.id and v.version_no=a.current_version_no where a.tenant_id=? and a.code=?",
+          "transaction": false,
+          "autoCommit": true,
+          "connection": 1644743534,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 33932
+        },
+        {
+          "category": "application-lock",
+          "sql": "select a.id,a.code,a.status,a.current_version_no from app.application a where a.tenant_id=? and a.code=? for share of a",
+          "transaction": true,
+          "autoCommit": false,
+          "connection": 2054087628,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 41060
+        },
+        {
+          "category": "locked-metadata",
+          "sql": "select a.id,a.code,a.status,a.current_version_no,v.id as version_id,v.version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.app_id=a.id and v.version_no=a.current_version_no where a.tenant_id=? and a.code=?",
+          "transaction": true,
+          "autoCommit": false,
+          "connection": 2054087628,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 41060
+        },
+        {
+          "category": "payload",
+          "sql": "select snapshot::text from app.app_version where tenant_id=? and app_id=? and app_code=? and id=? and version_no=? and candidate_sha256=?",
+          "transaction": true,
+          "autoCommit": false,
+          "connection": 2054087628,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 41060
+        },
+        {
+          "category": "initial-metadata",
+          "sql": "select a.id,a.code,a.status,a.current_version_no,v.id as version_id,v.version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.app_id=a.id and v.version_no=a.current_version_no where a.tenant_id=? and a.code=?",
+          "transaction": false,
+          "autoCommit": true,
+          "connection": 2099908307,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 62184
+        },
+        {
+          "category": "application-lock",
+          "sql": "select a.id,a.code,a.status,a.current_version_no from app.application a where a.tenant_id=? and a.code=? for share of a",
+          "transaction": true,
+          "autoCommit": false,
+          "connection": 754582172,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 63752
+        },
+        {
+          "category": "locked-metadata",
+          "sql": "select a.id,a.code,a.status,a.current_version_no,v.id as version_id,v.version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.app_id=a.id and v.version_no=a.current_version_no where a.tenant_id=? and a.code=?",
+          "transaction": true,
+          "autoCommit": false,
+          "connection": 754582172,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 63752
+        },
+        {
+          "category": "payload",
+          "sql": "select snapshot::text from app.app_version where tenant_id=? and app_id=? and app_code=? and id=? and version_no=? and candidate_sha256=?",
+          "transaction": true,
+          "autoCommit": false,
+          "connection": 754582172,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 63752
+        },
+        {
+          "category": "initial-metadata",
+          "sql": "select a.id,a.code,a.status,a.current_version_no,v.id as version_id,v.version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.app_id=a.id and v.version_no=a.current_version_no where a.tenant_id=? and a.code=?",
+          "transaction": false,
+          "autoCommit": true,
+          "connection": 651733729,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 23752
+        },
+        {
+          "category": "application-lock",
+          "sql": "select a.id,a.code,a.status,a.current_version_no from app.application a where a.tenant_id=? and a.code=? for share of a",
+          "transaction": true,
+          "autoCommit": false,
+          "connection": 1623532485,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 30844
+        },
+        {
+          "category": "locked-metadata",
+          "sql": "select a.id,a.code,a.status,a.current_version_no,v.id as version_id,v.version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.app_id=a.id and v.version_no=a.current_version_no where a.tenant_id=? and a.code=?",
+          "transaction": true,
+          "autoCommit": false,
+          "connection": 1623532485,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 30844
+        },
+        {
+          "category": "payload",
+          "sql": "select snapshot::text from app.app_version where tenant_id=? and app_id=? and app_code=? and id=? and version_no=? and candidate_sha256=?",
+          "transaction": true,
+          "autoCommit": false,
+          "connection": 1623532485,
+          "isolation": 2,
+          "readOnly": false,
+          "backendPid": 30844
+        }
+      ],
+      "test": "malformedPersistedSnapshotIdentityIsRejectedAfterItsSinglePayloadRead()",
+      "businessWrites": 0
+    }
+  ],
+  "shareWait": [
+    "D3B_SHARE_WAIT={\"wait_event_type\":\"Lock\",\"blockers\":1}"
+  ],
+  "writerTimeouts": [
+    "D3B_WRITER_LOCK_TIMEOUT=current_version_no=2:55P03",
+    "D3B_WRITER_LOCK_TIMEOUT=status='DISABLED':55P03"
+  ],
+  "lockReleased": [
+    "D3B_LOCK_RELEASED=draftWithPublishedPointerRemainsLegal()",
+    "D3B_LOCK_RELEASED=ambientBusinessTransactionIsRejectedBeforeAnyRefreshOrSql()",
+    "D3B_LOCK_RELEASED=portalAndInvalidSignatureCallerTargetActionMethodAndMetadataTicketsStopBeforeBusinessSql()",
+    "D3B_LOCK_RELEASED=forgedRootCodeKindAndShaNeverReadPayload()",
+    "D3B_LOCK_RELEASED=proofExpiryWhileWaitingForShareLockRejectsBeforePayload()",
+    "D3B_LOCK_RELEASED=secondCurrentOutageDoesNotTouchPayload()",
+    "D3B_LOCK_RELEASED=secondCurrentExpirationDoesNotTouchPayload()",
+    "D3B_LOCK_RELEASED=secondCurrentDenialDoesNotTouchPayload()",
+    "D3B_LOCK_RELEASED=unknownTenantAndBusinessUnavailableStatesKeepOriginalStatuses()",
+    "D3B_LOCK_RELEASED=explicitLegacyTestModePreservesExistingSnapshotProjection()",
+    "D3B_LOCK_RELEASED=actualAuthorityResponseWaitAlsoHoldsNoPgLock()",
+    "D3B_LOCK_RELEASED=normalSavedPortalMetadataThenIndependentMainAndForwardReadsOnlyCurrentSnapshot()",
+    "D3B_LOCK_RELEASED=heldShareLockBlocksRealWriterThenReleasesAfterRead()",
+    "D3B_LOCK_RELEASED=oldVersionTicketConflictsRatherThanSelectingNewSnapshot()",
+    "D3B_LOCK_RELEASED=publishedTicketCannotEnterOtherActualAppAliases()",
+    "D3B_LOCK_RELEASED=statusChangeAfterRefreshBeforeLockRejectsWithoutPayload()",
+    "D3B_LOCK_RELEASED=expiryAfterPayloadBeforeCallbackEndsRejectsWithoutSuccessData()",
+    "D3B_LOCK_RELEASED=actualResumeWithDelegatedSourceAndPortalOriginRemainsLegal()",
+    "D3B_LOCK_RELEASED=authorizedNarrowerCurrentProjectionStillReadsPayload()",
+    "D3B_LOCK_RELEASED=missingInitialOriginProofCannotReadPayload()",
+    "D3B_LOCK_RELEASED=missingRequestFrameCannotFallBackToLegacyPayload()",
+    "D3B_LOCK_RELEASED=onlineCurrentWaitHoldsNoApplicationLockAndPointerChangeRejectsOldRequest()",
+    "D3B_LOCK_RELEASED=expiryAfterActualCommitBeforeServiceReturnsRejectsWithoutSuccessData()",
+    "D3B_LOCK_RELEASED=malformedPersistedSnapshotIdentityIsRejectedAfterItsSinglePayloadRead()"
+  ],
+  "businessWritesTotal": 0,
+  "note": "Fixture seeding/concurrency writes use separate db template. Callback/postcommit expiration legitimately read one payload before denying. Multi-step cases can reset counters after prior assertions; counters are per last observed scenario, not invented global PG totals."
+}

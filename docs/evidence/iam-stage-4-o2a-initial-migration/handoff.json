@@ -1,0 +1,134 @@
+{
+  "status": "DONE_WITH_CONCERNS",
+  "accepted": false,
+  "epoch": "initial-migration",
+  "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+  "commitsCreated": 0,
+  "sourceWriteOwnership": "returned after inventory seal; no further mutations",
+  "report": {
+    "file": "docs/evidence/iam-stage-4-o2a-initial-migration-report.md",
+    "bytes": 10547,
+    "sha256": "27452ff95b8e6e680f3cc4461c07222692d024bfb7d00125d4adb27ef028f1d8"
+  },
+  "sourceBefore": {
+    "file": ".local/iam-o2a-initial-migration/source-before.json",
+    "bytes": 112856,
+    "sha256": "83e1fc79f72a4b21bdeb75a3cc41b7d0406797070f25e4242fc74407b42f1a20"
+  },
+  "sourceAfter": {
+    "file": ".local/iam-o2a-initial-migration/source-after.json",
+    "bytes": 112856,
+    "sha256": "e9791749f842e9403604f5fc3ff354e596536746577c65eb7b610374d7d69d16"
+  },
+  "sourceTestBefore": {
+    "file": "engine-runtime/src/test/java/cn/agentplatform/engine/infra/InitialMaterialScopePostgresTest.java",
+    "bytes": 12829,
+    "sha256": "923f157c28235d5bc58421997e8282de80a38ee6ed8b97f433e7ad7892aff5ed"
+  },
+  "sourceTestAfter": {
+    "file": "engine-runtime/src/test/java/cn/agentplatform/engine/infra/InitialMaterialScopePostgresTest.java",
+    "bytes": 16582,
+    "sha256": "40814e5bfb55b02fc4122d9ec3d360b127e29d0212e3ed946726712db37194d4"
+  },
+  "sourceDelta": {
+    "file": "docs/evidence/iam-stage-4-o2a-initial-migration/source-delta.json",
+    "bytes": 628,
+    "sha256": "786f154617cf96f9e41de5c94403946562cf3ddcc009eda7b5bdc48b43787f96"
+  },
+  "methodCheck": {
+    "file": "docs/evidence/iam-stage-4-o2a-initial-migration/method-byte-check.json",
+    "bytes": 4748,
+    "sha256": "5ae83cc6cf64243608990c28be577f332490becfe4d079485b093bcc65f1fda3"
+  },
+  "testResults": {
+    "file": "docs/evidence/iam-stage-4-o2a-initial-migration/test-results.json",
+    "bytes": 5120,
+    "sha256": "cbf6dc680027fda8261649b91ddc8ecc70e16eacd9cc2607a4fbf9a6b5b28030"
+  },
+  "testCounts": {
+    "tests": 12,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "sourceEpoch": {
+    "file": "engine-runtime/src/test/java/cn/agentplatform/engine/infra/InitialMaterialScopePostgresTest.java",
+    "bytes": 16582,
+    "sha256": "40814e5bfb55b02fc4122d9ec3d360b127e29d0212e3ed946726712db37194d4"
+  },
+  "target": {
+    "status": "success",
+    "inherited": {
+      "file": ".local/iam-o2a-initial-migration/target-before.json",
+      "bytes": 427783,
+      "sha256": "a23b333e7e0efd1f4d74cfac75804d9c791a3f9bbc4905c3ca92b132009e1fac"
+    },
+    "inheritedCount": 2060,
+    "overlay": {
+      "file": ".local/iam-o2a-initial-migration/target-overlay.json",
+      "bytes": 101686,
+      "sha256": "9b00975b77589b26c5e3ea12c486f479e7ac296ed713b4d09719a542897cb4c4"
+    },
+    "overlayCount": 462,
+    "targetAfter": {
+      "file": ".local/iam-o2a-initial-migration/target-after.json",
+      "bytes": 427782,
+      "sha256": "9dd29bc3bd986d324a94dd100fa1c30e46518c715c0215aba555e8a644c4e98d"
+    },
+    "logicalCount": 2060,
+    "compilerInputs": {
+      "file": ".local/iam-o2a-initial-migration/compiler-inputs.json",
+      "bytes": 66786,
+      "sha256": "58a344157c0aa141170fdf81d145147963e1708ae9d7d75526820a3230f23add"
+    },
+    "diagnostics": {
+      "file": "docs/evidence/iam-stage-4-o2a-initial-migration/diagnostics.json",
+      "bytes": 745,
+      "sha256": "7fa1c329030eb2451f23f2d3567bf4fbdf357671493b3ba4450f45e42e634dbb"
+    },
+    "newDiagnosticsCount": 1
+  },
+  "replay": {
+    "status": "success",
+    "sourceCount": 593,
+    "equalToSourceAfter": true,
+    "manifest": {
+      "file": ".local/iam-o2a-initial-migration/replay-source.json",
+      "bytes": 112856,
+      "sha256": "e9791749f842e9403604f5fc3ff354e596536746577c65eb7b610374d7d69d16"
+    },
+    "commands": {
+      "file": "docs/evidence/iam-stage-4-o2a-initial-migration/replay-commands.json",
+      "bytes": 11414,
+      "sha256": "6efdf2deadc12a6be4dce980a0242b3c97c0eb158758919023e5d1403182dc91"
+    },
+    "patch": {
+      "file": "docs/evidence/iam-stage-4-o2a-initial-migration/source.patch",
+      "bytes": 5917,
+      "sha256": "378f36a952c6bdf11bcb67ba6ead5f75afea6b82155091affbfdd0d902250a95"
+    },
+    "firstCheckExit": 0,
+    "firstApplyExit": 0,
+    "commitsCreated": 0
+  },
+  "inheritedRed": ".local/iam-o2a-b-inherited-test-failure-check.json",
+  "beforeRoot": ".local/iam-o2a-initial-migration/before",
+  "afterRoot": ".local/iam-o2a-initial-migration/after",
+  "targetOverlayRoot": ".local/iam-o2a-initial-migration/target-overlay",
+  "inventory": "docs/evidence/iam-stage-4-o2a-initial-migration/own-inventory.json",
+  "journal": ".local/iam-o2a-initial-migration/journal.json",
+  "hashCache": ".local/iam-o2a-initial-migration/hash-cache.json",
+  "ownedRoots": [
+    ".local/iam-o2a-initial-migration",
+    "docs/evidence/iam-stage-4-o2a-initial-migration",
+    "docs/evidence/iam-stage-4-o2a-initial-migration-report.md",
+    ".tools/iam-o2a-initial-migration-work.mjs",
+    ".tools/iam-o2a-initial-migration-package.mjs"
+  ],
+  "concerns": [
+    "Fresh independent review and root finite audit pending",
+    "One Initial migration only; original B final01 65/1error remains historical",
+    "Handler/security seam only; full status HTTP/JSON, SSE/C, overall IAM and production capacity out of scope",
+    "One new344B Surefire diagnostic, existing deprecation/unchecked INFO and path mojibake retained"
+  ]
+}

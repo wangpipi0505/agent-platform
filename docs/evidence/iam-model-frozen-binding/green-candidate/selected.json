@@ -1,0 +1,58 @@
+{
+  "epoch": "green-candidate",
+  "sourceManifest": ".local\\iam-model-frozen-binding\\green-candidate-source\\source.json",
+  "sourceSha256": "f1848269a3ce1cca08178bcb17cca51f1971becc355a3a65f226a84d4121dd17",
+  "actualRunning": [
+    "cn.agentplatform.model.application.FrozenModelBindingVerifierTest",
+    "cn.agentplatform.model.infra.FrozenModelBindingStorePostgresTest"
+  ],
+  "suites": [
+    {
+      "name": "cn.agentplatform.model.application.FrozenModelBindingVerifierTest",
+      "module": "model-gateway",
+      "tests": 14,
+      "failures": 0,
+      "errors": 1,
+      "skipped": 0,
+      "timestamp": null,
+      "xmlSha256": "96874d9f7508457dd2f375214ba59519ba06d113e071154924214dfe635cb55e",
+      "classpathSha256": "c9e2697f33989cdff821a068c7ce073392fe6b72c1aa2388a424caccbd66dfdb",
+      "cases": [
+        "rejectsChangedSnapshotUnderOldSha",
+        "metadataBoundsAreStrictBeforeNewProof",
+        "fullTreeHashRetainsArrayOrderAndObjectOrderIsCanonical",
+        "frozenStateSurvivesMutableDisableAndEndpointLabelModelChanges",
+        "interruptionExpiryAndBoundedPoolNeverMintOrRetry",
+        "realFreezeAndAcceptedConsumerPositiveControl",
+        "capabilitiesAndEffectiveOutputAreChecked",
+        "refreshFollowsActualConnectionReleaseAndNarrowingRevocationOutageDeny",
+        "numericDigestCopiesAndResultLifetime",
+        "nullClosedReplacedCrossThreadAndAmbientTransactionDenyBeforeQuery",
+        "actualHttpObserverPositiveControlsAndNoBusinessWrites",
+        "retainsLostLabelObligation",
+        "realPgLockTimeoutThenFreshHealthyFrame",
+        "missingTenantRowAndNestedIdsHaveNoMutableFallback"
+      ]
+    },
+    {
+      "name": "cn.agentplatform.model.infra.FrozenModelBindingStorePostgresTest",
+      "module": "model-gateway",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timestamp": null,
+      "xmlSha256": "53796000d1ca359118d6db6d81364e596b892369bcef4c5b4ea5fbfd9a992f2f",
+      "classpathSha256": "c9e2697f33989cdff821a068c7ce073392fe6b72c1aa2388a424caccbd66dfdb",
+      "cases": [
+        "ordinaryStoreRequiresActualReadOnlyTransaction"
+      ]
+    }
+  ],
+  "totals": {
+    "tests": 15,
+    "failures": 0,
+    "errors": 1,
+    "skipped": 0
+  }
+}

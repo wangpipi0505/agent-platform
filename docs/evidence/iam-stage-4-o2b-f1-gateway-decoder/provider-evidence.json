@@ -1,0 +1,208 @@
+{
+  "fixedJackson": {
+    "file": ".tools/m2/com/fasterxml/jackson/core/jackson-core/2.19.0/jackson-core-2.19.0.jar",
+    "bytes": 599926,
+    "sha256": "da8e859bac94874528116a25f20c68560e4287acbf27628711b8a4f96b028430"
+  },
+  "jdk": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot; named source extracted from its lib/src.zip",
+  "model": {
+    "file": "docs/evidence/iam-stage-4-o2b-f1-gateway-decoder/provider-model.md",
+    "bytes": 7474,
+    "sha256": "d2a7f7eeb4540b4fb0f8930d8334b715922882befcbe8cd1fb95601d284de502"
+  },
+  "formula": {
+    "N": 131074,
+    "S": 1114112,
+    "namesOverhead": 33554944,
+    "nameContent": 16777216,
+    "scalar": 11141120,
+    "fixed": 4194304,
+    "total": 65667584,
+    "precharged": 67108864,
+    "margin": 1441280
+  },
+  "observations": [
+    "F1_PROVIDER_BACKING parser=com.fasterxml.jackson.core.json.ReaderBasedJsonParser inputChars=4000 aggregatedChars=1048576 scanCharge=67108864",
+    "F1_REAL_SCAN_ALLOCATION threadAllocatedBytes=5412560 wireFixtureBytes=1049915 proofKind=allocation-observation-not-live-heap-bound",
+    "F1_WIRE_ALLOCATION bytes=494 charged=654 prechargedScan=true"
+  ],
+  "observationsAreNotHeapUpperBound": true,
+  "primarySources": [
+    {
+      "file": ".local/iam-o2b-f1-gateway-decoder/primary/base/ParserBase.java",
+      "bytes": 59777,
+      "sha256": "4c0393edb3fa4cb4505aeb3886512a6bf0d7cb6297d66e6f0416d1e0a5fd0db8"
+    },
+    {
+      "file": ".local/iam-o2b-f1-gateway-decoder/primary/base/ParserBase.java.fetch.json",
+      "bytes": 407,
+      "sha256": "819b278d1645fb1a94633a67768febb3c18dbacb6889b75cd0a2062f6c3e96ed"
+    },
+    {
+      "file": ".local/iam-o2b-f1-gateway-decoder/primary/base/ParserMinimalBase.java",
+      "bytes": 30503,
+      "sha256": "ab5930a12aaed273a3303fb08c8573e509f090a8343345f7a1e89741b629e39c"
+    },
+    {
+      "file": ".local/iam-o2b-f1-gateway-decoder/primary/base/ParserMinimalBase.java.fetch.json",
+      "bytes": 421,
+      "sha256": "ed945e8793478792611c806e2f79e18038de2aa6aef7a1f5e926632af0c63aa7"
+    },
+    {
+      "file": ".local/iam-o2b-f1-gateway-decoder/primary/io/IOContext.java",
+      "bytes": 17313,
+      "sha256": "c55988d2127794137e3aa86a6fc762799559022b597454a3339e6db0c853dc9c"
+    },
+    {
+      "file": ".local/iam-o2b-f1-gateway-decoder/primary/io/IOContext.java.fetch.json",
+      "bytes": 401,
+      "sha256": "964308240669d9a0a26533b3720af0b3474508b1ec2ae3ad460e3d61f7161a61"
+    },
+    {
+      "file": ".local/iam-o2b-f1-gateway-decoder/primary/jdk21/java.base/java/lang/String.java",
+      "bytes": 195912,
+      "sha256": "449cb9a2b74976b019160caeb9bc16fa76b2bb64be2a626543de859fdbea2b14"
+    },
+    {
+      "file": ".local/iam-o2b-f1-gateway-decoder/primary/jdk21/java.base/java/lang/StringUTF16.java",
+      "bytes": 67091,
+      "sha256": "3679f04911b9025b800f9c95170895b9c003afed3d22aa1ae4a9fe2bb9dfb6e5"
+    },
+    {
+      "file": ".local/iam-o2b-f1-gateway-decoder/primary/jdk21/java.base/java/util/HashMap.java",
+      "bytes": 98875,
+      "sha256": "71c8d82247c2736e9fbe3769f366e9bd250bc73ecf390749998e830201aaabf2"
+    },
+    {
+      "file": ".local/iam-o2b-f1-gateway-decoder/primary/jdk21/java.base/java/util/HashSet.java",
+      "bytes": 15736,
+      "sha256": "b3fe31cbf8b68eeb1ed15bff4403a75b8014e716ca7c79fc30e1bceaed592956"
+    },
+    {
+      "file": ".local/iam-o2b-f1-gateway-decoder/primary/jdk21/java.base/java/util/LinkedHashMap.java",
+      "bytes": 48205,
+      "sha256": "93b36f97d195663c236ed00733a7ca09d0f491bf6ebcd818dbd7bac288805577"
+    },
+    {
+      "file": ".local/iam-o2b-f1-gateway-decoder/primary/jdk21/java.base/sun/nio/cs/StreamDecoder.java",
+      "bytes": 13788,
+      "sha256": "cd8d90af9538e4b190ff5157e28e13939ccf332155f2d93db375fb45115d11a4"
+    },
+    {
+      "file": ".local/iam-o2b-f1-gateway-decoder/primary/jdk21/java.base/sun/nio/cs/UTF_8.java",
+      "bytes": 23606,
+      "sha256": "a013a423b22a942a3217564c8369a7eb9568c2c6630551b45b40581da045acc7"
+    },
+    {
+      "file": ".local/iam-o2b-f1-gateway-decoder/primary/json/DupDetector.java",
+      "bytes": 3116,
+      "sha256": "5c27fe2153c42b426afe50355fe1b454921dffb8314481ccdc11b79aacb1a909"
+    },
+    {
+      "file": ".local/iam-o2b-f1-gateway-decoder/primary/json/DupDetector.java.fetch.json",
+      "bytes": 408,
+      "sha256": "40d70244835e1dc5c2add40d09144a1ad708004c5d96a92df75ebb6298db9152"
+    },
+    {
+      "file": ".local/iam-o2b-f1-gateway-decoder/primary/json/JsonReadContext.java",
+      "bytes": 8148,
+      "sha256": "3f42e388e55fe2cfb21a5155de24947df33aba7eab391b9a76fa946c826626fa"
+    },
+    {
+      "file": ".local/iam-o2b-f1-gateway-decoder/primary/json/JsonReadContext.java.fetch.json",
+      "bytes": 416,
+      "sha256": "77aaf7d004537be0900730e9c1c9a33ae164c582b9038707c7652e14c01be7f9"
+    },
+    {
+      "file": ".local/iam-o2b-f1-gateway-decoder/primary/json/ReaderBasedJsonParser.java",
+      "bytes": 108080,
+      "sha256": "3ef13e1c9508bbc2cdfed891b6fc613d7f963945e318efbefe968657b77bc86a"
+    },
+    {
+      "file": ".local/iam-o2b-f1-gateway-decoder/primary/json/ReaderBasedJsonParser.java.fetch.json",
+      "bytes": 430,
+      "sha256": "05e63e51514e0840cbb1e8f637353c6132341fb5365d1d0187d512c56b7f1ea3"
+    },
+    {
+      "file": ".local/iam-o2b-f1-gateway-decoder/primary/JsonFactory.java",
+      "bytes": 85652,
+      "sha256": "f9bc30ef5645a0181757b05295ea18165852be93c0d2d23e1eac9f0de10589a7"
+    },
+    {
+      "file": ".local/iam-o2b-f1-gateway-decoder/primary/JsonFactory.java.fetch.json",
+      "bytes": 399,
+      "sha256": "af97f243f4cd399b69a4a33cf6f9b4be098bc8887e8564a9e553dca4e1056746"
+    },
+    {
+      "file": ".local/iam-o2b-f1-gateway-decoder/primary/JsonFactoryBuilder.java",
+      "bytes": 8259,
+      "sha256": "f8fa62e18f4935f4250b8d3a1bd895f5d792eada24fb357300eda626c6fbc546"
+    },
+    {
+      "file": ".local/iam-o2b-f1-gateway-decoder/primary/JsonFactoryBuilder.java.fetch.json",
+      "bytes": 412,
+      "sha256": "8858dacb5398d6f6984767fe34042cfae67876bfae6971c2bf8c6db246d7aed8"
+    },
+    {
+      "file": ".local/iam-o2b-f1-gateway-decoder/primary/StreamReadConstraints.java",
+      "bytes": 24177,
+      "sha256": "8dea513c75baf5b12ae308ddabbbb72eff73f7e57be30322a42209324d0fa26e"
+    },
+    {
+      "file": ".local/iam-o2b-f1-gateway-decoder/primary/StreamReadConstraints.java.fetch.json",
+      "bytes": 419,
+      "sha256": "a8ac82271ef5ceda2dbca85fbaa5bfaf6ffd051750970b91ef77bb126caaca1b"
+    },
+    {
+      "file": ".local/iam-o2b-f1-gateway-decoder/primary/sym/CharsToNameCanonicalizer.java",
+      "bytes": 33938,
+      "sha256": "ce482c911eb7c98326a01532e9e04c38d9188e93bf6a4d7bf55fe4904398794c"
+    },
+    {
+      "file": ".local/iam-o2b-f1-gateway-decoder/primary/sym/CharsToNameCanonicalizer.java.fetch.json",
+      "bytes": 433,
+      "sha256": "1b18c7a8c2e89e3b6d1f390c3cdd21b0260392a768e176edb99f01c216b581e2"
+    },
+    {
+      "file": ".local/iam-o2b-f1-gateway-decoder/primary/util/BufferRecycler.java",
+      "bytes": 9159,
+      "sha256": "167e43c92ee512939e584b203437f9eaba7ce960bec019e30bca7346617bced1"
+    },
+    {
+      "file": ".local/iam-o2b-f1-gateway-decoder/primary/util/BufferRecycler.java.fetch.json",
+      "bytes": 414,
+      "sha256": "e227edbfb9ebfed2df089a950d49b8632ab3fa82ee41923a00ed6de5c592676a"
+    },
+    {
+      "file": ".local/iam-o2b-f1-gateway-decoder/primary/util/JsonRecyclerPools.java",
+      "bytes": 9783,
+      "sha256": "ccc99e5afcd410b362377aa544cdb4f3d7bab2b391c9d557cbc242de798b25d8"
+    },
+    {
+      "file": ".local/iam-o2b-f1-gateway-decoder/primary/util/JsonRecyclerPools.java.fetch.json",
+      "bytes": 420,
+      "sha256": "5211e5e8b5819de268b9f801819a0c897e428d054a692efdc1ddecf638900a4d"
+    },
+    {
+      "file": ".local/iam-o2b-f1-gateway-decoder/primary/util/ReadConstrainedTextBuffer.java",
+      "bytes": 929,
+      "sha256": "cda3e26522eb96367770abc42d5c45021b8162fd5a974f0e6a0de8cf0434a30e"
+    },
+    {
+      "file": ".local/iam-o2b-f1-gateway-decoder/primary/util/ReadConstrainedTextBuffer.java.fetch.json",
+      "bytes": 435,
+      "sha256": "8868f1136c4039d77e9b2d57d546bf9240db05fe9bd269777fe3d102da2812f3"
+    },
+    {
+      "file": ".local/iam-o2b-f1-gateway-decoder/primary/util/TextBuffer.java",
+      "bytes": 43483,
+      "sha256": "14211a2894a0471e255d95a2959f3ee1a8732ca157f06048b3a29a6fbb94920e"
+    },
+    {
+      "file": ".local/iam-o2b-f1-gateway-decoder/primary/util/TextBuffer.java.fetch.json",
+      "bytes": 407,
+      "sha256": "2268b815a3df2835180ebb3cb0e6536c77d4f831717bd26dce2bd92c6b77db67"
+    }
+  ],
+  "readRanges": "Only named ranges in provider-model.md were read; downloaded complete source files are saved for reviewer inspection, not claimed as fully read."
+}

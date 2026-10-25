@@ -1,0 +1,31 @@
+{
+  "newStatus": {
+    "stage": "final04",
+    "xml": {
+      "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RunObservationStatusHttpPostgresTest.xml",
+      "bytes": 474213,
+      "sha256": "88942a19549709f5b1a3858f4d28c281b7faa011b1083739250744dd1cb904bb"
+    },
+    "tests": 17,
+    "failures": 0,
+    "errors": 0,
+    "source": {
+      "file": "docs/evidence/iam-stage-4-o1b-readonly-status/source-after.json",
+      "bytes": 109789,
+      "sha256": "a956230f2e97c552e026196748fb67519c77acc1bcfaeee747df744cac25f8de"
+    }
+  },
+  "unchangedAffectedRegressions": {
+    "stage": "final01",
+    "commonSelector": 3,
+    "graphRules": 1,
+    "originalStatus": 2,
+    "o1aMetadata": 4,
+    "failures": 0,
+    "errors": 0,
+    "retainedXmlDirectory": ".local/iam-o1b-readonly-status/final01/reports",
+    "reason": "After final01 only IAM GET IOException handling and the new status test changed; selector, shared PG helper, graph gate, original status and O1a code/test bodies did not change."
+  },
+  "notOneCombinedGreenRun": true,
+  "oracleHistory": "red03 and final03 expected delegate.close=true; fixed MVC retires stream after write error, making that assertion invalid. final04 uses actual peer partial bytes plus primary/cause/suppressed close exception logging; not represented as the same original assertion turning green."
+}

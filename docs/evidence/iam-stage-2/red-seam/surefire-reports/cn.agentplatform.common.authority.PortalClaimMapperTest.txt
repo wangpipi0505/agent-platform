@@ -1,0 +1,19 @@
+-------------------------------------------------------------------------------
+Test set: cn.agentplatform.common.authority.PortalClaimMapperTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 0.368 s <<< FAILURE! -- in cn.agentplatform.common.authority.PortalClaimMapperTest
+cn.agentplatform.common.authority.PortalClaimMapperTest.issuerClientCeilingClipsPermissionsAndPreservesSensitivityObligations -- Time elapsed: 0.357 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+
+Expecting actual:
+  ["SERVICE", "EDITOR", "GATEWAY_AUTH", "ADMIN"]
+to contain exactly (and in same order):
+  ["EDITOR"]
+but some elements were not expected:
+  ["SERVICE", "GATEWAY_AUTH", "ADMIN"]
+
+	at cn.agentplatform.common.authority.PortalClaimMapperTest.issuerClientCeilingClipsPermissionsAndPreservesSensitivityObligations(PortalClaimMapperTest.java:13)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+

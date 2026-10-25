@@ -1,0 +1,53 @@
+{
+  "command": {
+    "file": ".local/iam-o2b-d-selector-migration/iam-stage-o2b-d-selector-migration-final/command.json",
+    "bytes": 540,
+    "sha256": "14b45a4ae0bbc544bb9c102d3513276726f52158a58f55558e25f695c5366e24"
+  },
+  "raw": {
+    "file": ".local/iam-o2b-d-selector-migration/iam-stage-o2b-d-selector-migration-final/raw.log",
+    "bytes": 4010,
+    "sha256": "4d229637cde78649e1b5fd2986b784f12e1496413d91d880573d512dba36e3ef"
+  },
+  "sourceEpoch": {
+    "file": ".local/iam-o2b-d-selector-migration/iam-stage-o2b-d-selector-migration-final/source-epoch.json",
+    "bytes": 115043,
+    "sha256": "ab0310201aff0a59e87f73b0692bf6e89b050591d7f33c2b4f099da3a97283c4"
+  },
+  "exit": 0,
+  "running": [
+    "cn.agentplatform.common.authority.RunObservationSelectorsTest"
+  ],
+  "suites": [
+    {
+      "xml": {
+        "file": ".local/iam-o2b-d-selector-migration/iam-stage-o2b-d-selector-migration-final/reports/TEST-cn.agentplatform.common.authority.RunObservationSelectorsTest.xml",
+        "bytes": 33791,
+        "sha256": "f42f59366d25e16f797f30ef50fa9822bf34164230a489e010c11cc8018bfa09"
+      },
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "methods": [
+        "canonicalQueryBindsVerifiedSubjectPathAndProjection",
+        "statusPurposeIsBidirectionalAndOnlyAcceptsFreshPortalSnapshot",
+        "invalidInputIs400AndPurposeIsBidirectional"
+      ]
+    }
+  ],
+  "counts": {
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "original87Unchanged": {
+    "tests": 87,
+    "passed": 86,
+    "failures": 1,
+    "errors": 0,
+    "skipped": 0,
+    "exit": 1
+  }
+}

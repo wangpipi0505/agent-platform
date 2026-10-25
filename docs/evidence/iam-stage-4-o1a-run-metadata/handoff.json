@@ -1,0 +1,52 @@
+{
+  "at": "2026-10-20T21:29:08.427Z",
+  "status": "DONE_WITH_CONCERNS",
+  "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+  "source": {
+    "file": "docs/evidence/iam-stage-4-o1a-run-metadata/source-after.json",
+    "bytes": 109562,
+    "sha256": "719caa92b7dc1c33ee620e923247bb57bad45cee5c0b9c210401dc9fde463510"
+  },
+  "sourceBaseCount": 572,
+  "sourceCount": 578,
+  "sourceAdded": 6,
+  "sourceModified": 4,
+  "target": {
+    "file": "docs/evidence/iam-stage-4-o1a-run-metadata/target-after.json",
+    "bytes": 402031,
+    "sha256": "1404555e5bd1f0adfca1a3f74077d952dc9e9f62097a99dc60bf0ed2eed7bda2"
+  },
+  "targetBaseCount": 1933,
+  "targetCount": 1948,
+  "targetAdded": 15,
+  "targetModified": 17,
+  "lastApplicableTests": {
+    "common": "green02: MetadataSelectorsTest5 + RunObservationSelectorsTest2",
+    "engine": "green03: RunObservationMetadataHttpPostgresTest16",
+    "notOne23TestCommand": true
+  },
+  "report": {
+    "file": "docs/evidence/iam-stage-4-o1a-run-metadata-report.md",
+    "bytes": 14351,
+    "sha256": "f60db9ef148115e1591fda39eb1b0bc2ef5da45934fc5119238bd556818e3d9e"
+  },
+  "replay": {
+    "file": "docs/evidence/iam-stage-4-o1a-run-metadata/replay-check.json",
+    "bytes": 5748,
+    "sha256": "5c0b5f7021413f2047ddfab6eea8d6b449b46d4e2207a24cdb3ef8e3d31369e5"
+  },
+  "resources": {
+    "file": "docs/evidence/iam-stage-4-o1a-run-metadata/resource-check.json",
+    "bytes": 1123,
+    "sha256": "789bff55c4181c97b7de4e138e5f8cde05094af99db7f2fbfd7a9c84d5e4dd6f"
+  },
+  "concerns": [
+    "Metadata-only cannot detect self-consistent legal resource_digest substitution after immutable trigger bypass; explicitly demonstrated 200/payload0.",
+    "No real IAM/app/gateway/model/ontology/K8s integration; no external status/events enabled.",
+    "Local final proof check is before service return, not all later wire boundaries; no instantaneous remote revocation guarantee.",
+    "Legacy validation is a finite Spring context/instance check, not complete default Boot startup.",
+    "Boot JARs were not repackaged; inherited production artifacts must not be deployed as this source.",
+    "First text replay needed a separate three-file binary EOL repair; original success/failures and corrected target-prefix check are retained."
+  ],
+  "ownership": "All backend source, corresponding target, and own evidence writes frozen and returned to root after this seal; no commit/deploy."
+}

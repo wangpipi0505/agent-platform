@@ -1,0 +1,904 @@
+{
+  "fixtureOnly": true,
+  "checks": {
+    "waitingApprovalNoAutoApprove": true,
+    "errorRequiresExplicitSameReportRetry": true,
+    "networkRetryKeepsSingleReport": true,
+    "reentryUsesExistingReportAndRequiresFreshBinding": true,
+    "status400StopsRequests": true,
+    "status401StopsRequests": true,
+    "status403StopsRequests": true,
+    "cross-appDiscardsLateReport": true,
+    "candidateDiscardsLateReport": true,
+    "leaveDiscardsLateReport": true,
+    "permissionDiscardsLateReport": true,
+    "unknownCreateAckRecoveredWithoutSecondPost": true,
+    "otherOwnerIsReadOnly": true
+  },
+  "requests": [
+    {
+      "kind": "approval",
+      "path": "/admin/apps/async_a",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "approval",
+      "path": "/admin/evaluations",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "approval",
+      "path": "/admin/apps/async_a/publish/precheck",
+      "method": "POST",
+      "body": null
+    },
+    {
+      "kind": "approval",
+      "path": "/admin/evaluations",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "approval",
+      "path": "/admin/evaluation-datasets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "approval",
+      "path": "/admin/evaluation-datasets/async_a/frozen-v1",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "approval",
+      "path": "/admin/evaluations",
+      "method": "POST",
+      "body": {
+        "appCode": "async_a",
+        "draftRev": 3,
+        "candidateSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "datasetVersion": "frozen-v1",
+        "cases": [
+          {
+            "id": "case_one",
+            "inputs": {
+              "question": "冻结输入"
+            },
+            "expected": {
+              "answer": "独立预期"
+            },
+            "safety": true
+          }
+        ]
+      }
+    },
+    {
+      "kind": "approval",
+      "path": "/admin/evaluations/er_approval",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "approval",
+      "path": "/admin/evaluations/er_approval/resume",
+      "method": "POST",
+      "body": null
+    },
+    {
+      "kind": "approval",
+      "path": "/admin/evaluations/er_approval",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "approval",
+      "path": "/admin/evaluations/er_approval/resume",
+      "method": "POST",
+      "body": null
+    },
+    {
+      "kind": "error",
+      "path": "/admin/apps/async_a",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "error",
+      "path": "/admin/evaluations",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "error",
+      "path": "/admin/apps/async_a/publish/precheck",
+      "method": "POST",
+      "body": null
+    },
+    {
+      "kind": "error",
+      "path": "/admin/evaluations",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "error",
+      "path": "/admin/evaluation-datasets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "error",
+      "path": "/admin/evaluation-datasets/async_a/frozen-v1",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "error",
+      "path": "/admin/evaluations",
+      "method": "POST",
+      "body": {
+        "appCode": "async_a",
+        "draftRev": 3,
+        "candidateSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "datasetVersion": "frozen-v1",
+        "cases": [
+          {
+            "id": "case_one",
+            "inputs": {
+              "question": "冻结输入"
+            },
+            "expected": {
+              "answer": "独立预期"
+            },
+            "safety": true
+          }
+        ]
+      }
+    },
+    {
+      "kind": "error",
+      "path": "/admin/evaluations/er_error/resume",
+      "method": "POST",
+      "body": null
+    },
+    {
+      "kind": "network",
+      "path": "/admin/apps/async_a",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "network",
+      "path": "/admin/evaluations",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "network",
+      "path": "/admin/apps/async_a/publish/precheck",
+      "method": "POST",
+      "body": null
+    },
+    {
+      "kind": "network",
+      "path": "/admin/evaluations",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "network",
+      "path": "/admin/evaluation-datasets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "network",
+      "path": "/admin/evaluation-datasets/async_a/frozen-v1",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "network",
+      "path": "/admin/evaluations",
+      "method": "POST",
+      "body": {
+        "appCode": "async_a",
+        "draftRev": 3,
+        "candidateSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "datasetVersion": "frozen-v1",
+        "cases": [
+          {
+            "id": "case_one",
+            "inputs": {
+              "question": "冻结输入"
+            },
+            "expected": {
+              "answer": "独立预期"
+            },
+            "safety": true
+          }
+        ]
+      }
+    },
+    {
+      "kind": "network",
+      "path": "/admin/evaluations/er_network",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "network",
+      "path": "/admin/evaluations/er_network",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "network",
+      "path": "/admin/evaluations/er_network",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "network",
+      "path": "/admin/evaluations/er_network/resume",
+      "method": "POST",
+      "body": null
+    },
+    {
+      "kind": "reenter",
+      "path": "/admin/apps/async_a",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "reenter",
+      "path": "/admin/evaluations",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "reenter",
+      "path": "/admin/apps/async_a/publish/precheck",
+      "method": "POST",
+      "body": null
+    },
+    {
+      "kind": "reenter",
+      "path": "/admin/evaluations",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "reenter",
+      "path": "/admin/evaluation-datasets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "reenter",
+      "path": "/admin/evaluations/er_reenter",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "reenter",
+      "path": "/admin/evaluations/er_reenter",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "reenter",
+      "path": "/admin/evaluations/er_reenter/resume",
+      "method": "POST",
+      "body": null
+    },
+    {
+      "kind": "reenter",
+      "path": "/admin/apps/async_a/publish/precheck",
+      "method": "POST",
+      "body": null
+    },
+    {
+      "kind": "reenter",
+      "path": "/admin/apps/async_a/publish/precheck",
+      "method": "POST",
+      "body": null
+    },
+    {
+      "kind": "reenter",
+      "path": "/admin/evaluations",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "denied400",
+      "path": "/admin/apps/async_a",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "denied400",
+      "path": "/admin/evaluations",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "denied400",
+      "path": "/admin/apps/async_a/publish/precheck",
+      "method": "POST",
+      "body": null
+    },
+    {
+      "kind": "denied400",
+      "path": "/admin/evaluations",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "denied400",
+      "path": "/admin/evaluation-datasets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "denied400",
+      "path": "/admin/evaluation-datasets/async_a/frozen-v1",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "denied400",
+      "path": "/admin/evaluations",
+      "method": "POST",
+      "body": {
+        "appCode": "async_a",
+        "draftRev": 3,
+        "candidateSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "datasetVersion": "frozen-v1",
+        "cases": [
+          {
+            "id": "case_one",
+            "inputs": {
+              "question": "冻结输入"
+            },
+            "expected": {
+              "answer": "独立预期"
+            },
+            "safety": true
+          }
+        ]
+      }
+    },
+    {
+      "kind": "denied400",
+      "path": "/admin/evaluations/er_denied400",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "denied401",
+      "path": "/admin/apps/async_a",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "denied401",
+      "path": "/admin/evaluations",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "denied401",
+      "path": "/admin/apps/async_a/publish/precheck",
+      "method": "POST",
+      "body": null
+    },
+    {
+      "kind": "denied401",
+      "path": "/admin/evaluations",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "denied401",
+      "path": "/admin/evaluation-datasets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "denied401",
+      "path": "/admin/evaluation-datasets/async_a/frozen-v1",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "denied401",
+      "path": "/admin/evaluations",
+      "method": "POST",
+      "body": {
+        "appCode": "async_a",
+        "draftRev": 3,
+        "candidateSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "datasetVersion": "frozen-v1",
+        "cases": [
+          {
+            "id": "case_one",
+            "inputs": {
+              "question": "冻结输入"
+            },
+            "expected": {
+              "answer": "独立预期"
+            },
+            "safety": true
+          }
+        ]
+      }
+    },
+    {
+      "kind": "denied401",
+      "path": "/admin/evaluations/er_denied401",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "denied403",
+      "path": "/admin/apps/async_a",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "denied403",
+      "path": "/admin/evaluations",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "denied403",
+      "path": "/admin/apps/async_a/publish/precheck",
+      "method": "POST",
+      "body": null
+    },
+    {
+      "kind": "denied403",
+      "path": "/admin/evaluations",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "denied403",
+      "path": "/admin/evaluation-datasets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "denied403",
+      "path": "/admin/evaluation-datasets/async_a/frozen-v1",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "denied403",
+      "path": "/admin/evaluations",
+      "method": "POST",
+      "body": {
+        "appCode": "async_a",
+        "draftRev": 3,
+        "candidateSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "datasetVersion": "frozen-v1",
+        "cases": [
+          {
+            "id": "case_one",
+            "inputs": {
+              "question": "冻结输入"
+            },
+            "expected": {
+              "answer": "独立预期"
+            },
+            "safety": true
+          }
+        ]
+      }
+    },
+    {
+      "kind": "denied403",
+      "path": "/admin/evaluations/er_denied403",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "cross-app",
+      "path": "/admin/apps/async_a",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "cross-app",
+      "path": "/admin/evaluations",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "cross-app",
+      "path": "/admin/apps/async_a/publish/precheck",
+      "method": "POST",
+      "body": null
+    },
+    {
+      "kind": "cross-app",
+      "path": "/admin/evaluations",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "cross-app",
+      "path": "/admin/evaluation-datasets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "cross-app",
+      "path": "/admin/evaluation-datasets/async_a/frozen-v1",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "cross-app",
+      "path": "/admin/evaluations",
+      "method": "POST",
+      "body": {
+        "appCode": "async_a",
+        "draftRev": 3,
+        "candidateSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "datasetVersion": "frozen-v1",
+        "cases": [
+          {
+            "id": "case_one",
+            "inputs": {
+              "question": "冻结输入"
+            },
+            "expected": {
+              "answer": "独立预期"
+            },
+            "safety": true
+          }
+        ]
+      }
+    },
+    {
+      "kind": "cross-app",
+      "path": "/admin/evaluations/er_cross-app",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "cross-app",
+      "path": "/admin/apps/async_b",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "cross-app",
+      "path": "/admin/evaluations",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "candidate",
+      "path": "/admin/apps/async_a",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "candidate",
+      "path": "/admin/evaluations",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "candidate",
+      "path": "/admin/apps/async_a/publish/precheck",
+      "method": "POST",
+      "body": null
+    },
+    {
+      "kind": "candidate",
+      "path": "/admin/evaluations",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "candidate",
+      "path": "/admin/evaluation-datasets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "candidate",
+      "path": "/admin/evaluation-datasets/async_a/frozen-v1",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "candidate",
+      "path": "/admin/evaluations",
+      "method": "POST",
+      "body": {
+        "appCode": "async_a",
+        "draftRev": 3,
+        "candidateSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "datasetVersion": "frozen-v1",
+        "cases": [
+          {
+            "id": "case_one",
+            "inputs": {
+              "question": "冻结输入"
+            },
+            "expected": {
+              "answer": "独立预期"
+            },
+            "safety": true
+          }
+        ]
+      }
+    },
+    {
+      "kind": "candidate",
+      "path": "/admin/evaluations/er_candidate",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "candidate",
+      "path": "/admin/apps/async_a/publish/precheck",
+      "method": "POST",
+      "body": null
+    },
+    {
+      "kind": "candidate",
+      "path": "/admin/evaluations",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "leave",
+      "path": "/admin/apps/async_a",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "leave",
+      "path": "/admin/evaluations",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "leave",
+      "path": "/admin/apps/async_a/publish/precheck",
+      "method": "POST",
+      "body": null
+    },
+    {
+      "kind": "leave",
+      "path": "/admin/evaluations",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "leave",
+      "path": "/admin/evaluation-datasets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "leave",
+      "path": "/admin/evaluation-datasets/async_a/frozen-v1",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "leave",
+      "path": "/admin/evaluations",
+      "method": "POST",
+      "body": {
+        "appCode": "async_a",
+        "draftRev": 3,
+        "candidateSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "datasetVersion": "frozen-v1",
+        "cases": [
+          {
+            "id": "case_one",
+            "inputs": {
+              "question": "冻结输入"
+            },
+            "expected": {
+              "answer": "独立预期"
+            },
+            "safety": true
+          }
+        ]
+      }
+    },
+    {
+      "kind": "leave",
+      "path": "/admin/evaluations/er_leave",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "permission",
+      "path": "/admin/apps/async_a",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "permission",
+      "path": "/admin/evaluations",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "permission",
+      "path": "/admin/apps/async_a/publish/precheck",
+      "method": "POST",
+      "body": null
+    },
+    {
+      "kind": "permission",
+      "path": "/admin/evaluations",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "permission",
+      "path": "/admin/evaluation-datasets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "permission",
+      "path": "/admin/evaluation-datasets/async_a/frozen-v1",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "permission",
+      "path": "/admin/evaluations",
+      "method": "POST",
+      "body": {
+        "appCode": "async_a",
+        "draftRev": 3,
+        "candidateSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "datasetVersion": "frozen-v1",
+        "cases": [
+          {
+            "id": "case_one",
+            "inputs": {
+              "question": "冻结输入"
+            },
+            "expected": {
+              "answer": "独立预期"
+            },
+            "safety": true
+          }
+        ]
+      }
+    },
+    {
+      "kind": "permission",
+      "path": "/admin/evaluations/er_permission",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "ack-lost",
+      "path": "/admin/apps/async_a",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "ack-lost",
+      "path": "/admin/evaluations",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "ack-lost",
+      "path": "/admin/apps/async_a/publish/precheck",
+      "method": "POST",
+      "body": null
+    },
+    {
+      "kind": "ack-lost",
+      "path": "/admin/evaluations",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "ack-lost",
+      "path": "/admin/evaluation-datasets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "ack-lost",
+      "path": "/admin/evaluation-datasets/async_a/frozen-v1",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "ack-lost",
+      "path": "/admin/evaluations",
+      "method": "POST",
+      "body": {
+        "appCode": "async_a",
+        "draftRev": 3,
+        "candidateSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "datasetVersion": "frozen-v1",
+        "cases": [
+          {
+            "id": "case_one",
+            "inputs": {
+              "question": "冻结输入"
+            },
+            "expected": {
+              "answer": "独立预期"
+            },
+            "safety": true
+          }
+        ]
+      }
+    },
+    {
+      "kind": "ack-lost",
+      "path": "/admin/evaluations",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "ack-lost",
+      "path": "/admin/evaluations/er_ack-lost",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "other-owner",
+      "path": "/admin/apps/async_a",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "other-owner",
+      "path": "/admin/evaluations",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "other-owner",
+      "path": "/admin/apps/async_a/publish/precheck",
+      "method": "POST",
+      "body": null
+    },
+    {
+      "kind": "other-owner",
+      "path": "/admin/evaluations",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "other-owner",
+      "path": "/admin/evaluation-datasets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "kind": "other-owner",
+      "path": "/admin/evaluations/er_other-owner",
+      "method": "GET",
+      "body": null
+    }
+  ],
+  "pageErrors": []
+}

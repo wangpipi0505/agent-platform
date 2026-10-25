@@ -1,0 +1,504 @@
+[
+  {
+    "stage": "iam-stage-n4b1-setup01",
+    "command": {
+      "command": [
+        "node",
+        ".tools/run-iam-module-tests.mjs",
+        "iam-stage-n4b1-setup01",
+        "admin-common",
+        "GatewayRunAuthorizationTest"
+      ],
+      "workdir": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "start": "2026-10-20T16:41:21.863Z",
+      "end": "2026-10-20T16:42:06.317Z",
+      "exit": 1,
+      "error": null,
+      "stdout": "{\"stage\":\"iam-stage-n4b1-setup01\",\"modules\":\"admin-common\",\"tests\":\"GatewayRunAuthorizationTest\",\"exitCode\":1,\"log\":\".local\\\\iam-stage-n4b1-setup01.log\",\"timedOut\":false}\n",
+      "stderr": ""
+    },
+    "actualRunning": [],
+    "suites": []
+  },
+  {
+    "stage": "iam-stage-n4b1-red01",
+    "command": {
+      "command": [
+        "node",
+        ".tools/run-iam-module-tests.mjs",
+        "iam-stage-n4b1-red01",
+        "admin-common",
+        "GatewayRunAuthorizationTest"
+      ],
+      "workdir": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "start": "2026-10-20T16:42:58.884Z",
+      "end": "2026-10-20T16:43:27.188Z",
+      "exit": 1,
+      "error": null,
+      "stdout": "{\"stage\":\"iam-stage-n4b1-red01\",\"modules\":\"admin-common\",\"tests\":\"GatewayRunAuthorizationTest\",\"exitCode\":1,\"log\":\".local\\\\iam-stage-n4b1-red01.log\",\"timedOut\":false}\n",
+      "stderr": ""
+    },
+    "actualRunning": [
+      "cn.agentplatform.common.authority.GatewayRunAuthorizationTest"
+    ],
+    "suites": [
+      {
+        "xml": {
+          "file": "docs/evidence/iam-stage-5-n4b1-gateway-run-authorization/iam-stage-n4b1-red01/xml/TEST-cn.agentplatform.common.authority.GatewayRunAuthorizationTest.xml",
+          "bytes": 40285,
+          "sha256": "84423b64fdb7e236f7a54844e49fc6055e0026eccac0bb77c602f387bad533d4"
+        },
+        "name": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+        "tests": 29,
+        "failures": 4,
+        "errors": 0,
+        "skipped": 0,
+        "cases": [
+          {
+            "name": "signedDeadlineMinimumRejectsWithoutBreakingTicketOperationGrantOrdering(String)[1]",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.813"
+          },
+          {
+            "name": "signedDeadlineMinimumRejectsWithoutBreakingTicketOperationGrantOrdering(String)[2]",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.14"
+          },
+          {
+            "name": "signedDeadlineMinimumRejectsWithoutBreakingTicketOperationGrantOrdering(String)[3]",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.253"
+          },
+          {
+            "name": "signedDeadlineMinimumRejectsWithoutBreakingTicketOperationGrantOrdering(String)[4]",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.281"
+          },
+          {
+            "name": "laterTicketJwkVerificationCannotReturnProofAfterSignedCurrentExpiry",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.169"
+          },
+          {
+            "name": "signedTamperingNeverMintsCapture(String)[1]",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.137"
+          },
+          {
+            "name": "signedTamperingNeverMintsCapture(String)[2]",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.185"
+          },
+          {
+            "name": "signedTamperingNeverMintsCapture(String)[3]",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.154"
+          },
+          {
+            "name": "signedTamperingNeverMintsCapture(String)[4]",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.233"
+          },
+          {
+            "name": "signedTamperingNeverMintsCapture(String)[5]",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.188"
+          },
+          {
+            "name": "signedTamperingNeverMintsCapture(String)[6]",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.142"
+          },
+          {
+            "name": "signedTamperingNeverMintsCapture(String)[7]",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.272"
+          },
+          {
+            "name": "signedTamperingNeverMintsCapture(String)[8]",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.127"
+          },
+          {
+            "name": "signedTamperingNeverMintsCapture(String)[9]",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.176"
+          },
+          {
+            "name": "signedTamperingNeverMintsCapture(String)[10]",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.149"
+          },
+          {
+            "name": "signedTamperingNeverMintsCapture(String)[11]",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.2"
+          },
+          {
+            "name": "signedTamperingNeverMintsCapture(String)[12]",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.208"
+          },
+          {
+            "name": "signedTamperingNeverMintsCapture(String)[13]",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.127"
+          },
+          {
+            "name": "signedTamperingNeverMintsCapture(String)[14]",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.09"
+          },
+          {
+            "name": "signedTamperingNeverMintsCapture(String)[15]",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.177"
+          },
+          {
+            "name": "signedTamperingNeverMintsCapture(String)[16]",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.129"
+          },
+          {
+            "name": "signedTamperingNeverMintsCapture(String)[17]",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.158"
+          },
+          {
+            "name": "closeInvalidatesExistingCaptureAndPreventsNewExchange",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.221"
+          },
+          {
+            "name": "finiteApiRejectsOtherServiceModeRootAndNonPortalSourcesBeforeAuthority",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.148"
+          },
+          {
+            "name": "signedCaptureKeepsMainBindingAndWorksWithoutThreadLocalsOrAuthorityRefresh",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.254"
+          },
+          {
+            "name": "separateCapturesUseFreshNonceOperationAndGrant",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.207"
+          },
+          {
+            "name": "closeDuringSignedExchangeDoesNotMintCapture",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.15"
+          },
+          {
+            "name": "monotonicBudgetExpiresEvenWhenWallClockRollsBackBeforeFirstRecheck",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "1.319"
+          },
+          {
+            "name": "signedCurrentExpiresWhileActualTicketRemainsValidAndClockRollbackCannotReviveProof",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.134"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "stage": "iam-stage-n4b1-final01",
+    "command": {
+      "command": [
+        "node",
+        ".tools/run-iam-module-tests.mjs",
+        "iam-stage-n4b1-final01",
+        "admin-common",
+        "GatewayRunAuthorizationTest,CurrentAuthorityClientTest"
+      ],
+      "workdir": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "start": "2026-10-20T16:44:20.385Z",
+      "end": "2026-10-20T16:44:39.684Z",
+      "exit": 0,
+      "error": null,
+      "stdout": "{\"stage\":\"iam-stage-n4b1-final01\",\"modules\":\"admin-common\",\"tests\":\"GatewayRunAuthorizationTest,CurrentAuthorityClientTest\",\"exitCode\":0,\"log\":\".local\\\\iam-stage-n4b1-final01.log\",\"timedOut\":false}\n",
+      "stderr": ""
+    },
+    "actualRunning": [
+      "cn.agentplatform.common.authority.CurrentAuthorityClientTest",
+      "cn.agentplatform.common.authority.GatewayRunAuthorizationTest"
+    ],
+    "suites": [
+      {
+        "xml": {
+          "file": "docs/evidence/iam-stage-5-n4b1-gateway-run-authorization/iam-stage-n4b1-final01/xml/TEST-cn.agentplatform.common.authority.CurrentAuthorityClientTest.xml",
+          "bytes": 36760,
+          "sha256": "21a6eda71557cc99edc4b14cf7820888b6fdeada71c4c4a345f7884940d95f20"
+        },
+        "name": "cn.agentplatform.common.authority.CurrentAuthorityClientTest",
+        "tests": 20,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "cases": [
+          {
+            "name": "signedPortalExchangePreservesLocalCeilingAndIndependentClientAuthentication",
+            "classname": "cn.agentplatform.common.authority.CurrentAuthorityClientTest",
+            "time": "0.869"
+          },
+          {
+            "name": "reviewI3ApproverCurrentTrustAndBindingsRemainMandatory",
+            "classname": "cn.agentplatform.common.authority.CurrentAuthorityClientTest",
+            "time": "0.363"
+          },
+          {
+            "name": "unsupportedClientDefaultCannotWrapPublicAuthorityAsGatewayRunProof",
+            "classname": "cn.agentplatform.common.authority.CurrentAuthorityClientTest",
+            "time": "0.004"
+          },
+          {
+            "name": "workloadCannotBecomeAUserAndContextIsNotInherited",
+            "classname": "cn.agentplatform.common.authority.CurrentAuthorityClientTest",
+            "time": "0.256"
+          },
+          {
+            "name": "rr2ResumeCannotReintroduceRolesOutsideOriginalSignedGrantCeiling",
+            "classname": "cn.agentplatform.common.authority.CurrentAuthorityClientTest",
+            "time": "0.125"
+          },
+          {
+            "name": "integrationPolicyUsesIndependentHttpAssertionOnEveryDecisionWithoutRecursion",
+            "classname": "cn.agentplatform.common.authority.CurrentAuthorityClientTest",
+            "time": "0.18"
+          },
+          {
+            "name": "authenticatedEngineCannotChooseAnotherTenantSubjectResourceActionOrMissingGrant",
+            "classname": "cn.agentplatform.common.authority.CurrentAuthorityClientTest",
+            "time": "0.171"
+          },
+          {
+            "name": "portalCannotHideBroaderInitialCeilingBehindNarrowCurrentRoles",
+            "classname": "cn.agentplatform.common.authority.CurrentAuthorityClientTest",
+            "time": "0.106"
+          },
+          {
+            "name": "rr2NewDelegatedOperationSurvivesOriginalPortalExpiryButForwardCannotResetItsDeadline",
+            "classname": "cn.agentplatform.common.authority.CurrentAuthorityClientTest",
+            "time": "0.228"
+          },
+          {
+            "name": "noCachedTicketAfterScopeRoleVersionGrantOrNetworkFailureAndExplicitRecoveryWorks",
+            "classname": "cn.agentplatform.common.authority.CurrentAuthorityClientTest",
+            "time": "0.315"
+          },
+          {
+            "name": "signedReplyTamperNonceTicketJtiCallerResourceAndExpiryAreNotAccepted",
+            "classname": "cn.agentplatform.common.authority.CurrentAuthorityClientTest",
+            "time": "0.339"
+          },
+          {
+            "name": "integrationBadMacCrossUseClientAndTtlNeverExchange",
+            "classname": "cn.agentplatform.common.authority.CurrentAuthorityClientTest",
+            "time": "0.122"
+          },
+          {
+            "name": "reviewI2LifoExceptionOwnerAndChildBoundaries",
+            "classname": "cn.agentplatform.common.authority.CurrentAuthorityClientTest",
+            "time": "0.173"
+          },
+          {
+            "name": "reviewI3CurrentEditorApproverProofDoesNotImposeFrozenBusinessRoles",
+            "classname": "cn.agentplatform.common.authority.CurrentAuthorityClientTest",
+            "time": "0.226"
+          },
+          {
+            "name": "rr2MissingOperationPolicyOrSignedOperationFieldAndForwardDeadlineChangeFail",
+            "classname": "cn.agentplatform.common.authority.CurrentAuthorityClientTest",
+            "time": "0.181"
+          },
+          {
+            "name": "r3ResolverStringActiveCannotBeCoercedIntoPermission",
+            "classname": "cn.agentplatform.common.authority.CurrentAuthorityClientTest",
+            "time": "0.191"
+          },
+          {
+            "name": "integrationResolverMissingInactiveOldVersionWrongTrustDomainAndBindingsDeny",
+            "classname": "cn.agentplatform.common.authority.CurrentAuthorityClientTest",
+            "time": "0.305"
+          },
+          {
+            "name": "issuerCannotRestoreLocallyRemovedAdminOrRegion",
+            "classname": "cn.agentplatform.common.authority.CurrentAuthorityClientTest",
+            "time": "0.574"
+          },
+          {
+            "name": "approvalUsesRecordedApproverAndRevocationIsLive",
+            "classname": "cn.agentplatform.common.authority.CurrentAuthorityClientTest",
+            "time": "0.14"
+          },
+          {
+            "name": "reviewI2NonLifoSameAuthorityNeverRestoresClosedFrame",
+            "classname": "cn.agentplatform.common.authority.CurrentAuthorityClientTest",
+            "time": "0.206"
+          }
+        ]
+      },
+      {
+        "xml": {
+          "file": "docs/evidence/iam-stage-5-n4b1-gateway-run-authorization/iam-stage-n4b1-final01/xml/TEST-cn.agentplatform.common.authority.GatewayRunAuthorizationTest.xml",
+          "bytes": 38065,
+          "sha256": "2f8ac84b299efb33c59952f41dc2d9bfbda349ea53121df5ce2ef723652f0126"
+        },
+        "name": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+        "tests": 29,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "cases": [
+          {
+            "name": "signedDeadlineMinimumRejectsWithoutBreakingTicketOperationGrantOrdering(String)[1]",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.106"
+          },
+          {
+            "name": "signedDeadlineMinimumRejectsWithoutBreakingTicketOperationGrantOrdering(String)[2]",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.241"
+          },
+          {
+            "name": "signedDeadlineMinimumRejectsWithoutBreakingTicketOperationGrantOrdering(String)[3]",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.175"
+          },
+          {
+            "name": "signedDeadlineMinimumRejectsWithoutBreakingTicketOperationGrantOrdering(String)[4]",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.196"
+          },
+          {
+            "name": "laterTicketJwkVerificationCannotReturnProofAfterSignedCurrentExpiry",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.1"
+          },
+          {
+            "name": "signedTamperingNeverMintsCapture(String)[1]",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.155"
+          },
+          {
+            "name": "signedTamperingNeverMintsCapture(String)[2]",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.234"
+          },
+          {
+            "name": "signedTamperingNeverMintsCapture(String)[3]",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.212"
+          },
+          {
+            "name": "signedTamperingNeverMintsCapture(String)[4]",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.147"
+          },
+          {
+            "name": "signedTamperingNeverMintsCapture(String)[5]",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.13"
+          },
+          {
+            "name": "signedTamperingNeverMintsCapture(String)[6]",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.187"
+          },
+          {
+            "name": "signedTamperingNeverMintsCapture(String)[7]",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.17"
+          },
+          {
+            "name": "signedTamperingNeverMintsCapture(String)[8]",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.227"
+          },
+          {
+            "name": "signedTamperingNeverMintsCapture(String)[9]",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.247"
+          },
+          {
+            "name": "signedTamperingNeverMintsCapture(String)[10]",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.174"
+          },
+          {
+            "name": "signedTamperingNeverMintsCapture(String)[11]",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.119"
+          },
+          {
+            "name": "signedTamperingNeverMintsCapture(String)[12]",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.246"
+          },
+          {
+            "name": "signedTamperingNeverMintsCapture(String)[13]",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.108"
+          },
+          {
+            "name": "signedTamperingNeverMintsCapture(String)[14]",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.17"
+          },
+          {
+            "name": "signedTamperingNeverMintsCapture(String)[15]",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.182"
+          },
+          {
+            "name": "signedTamperingNeverMintsCapture(String)[16]",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.118"
+          },
+          {
+            "name": "signedTamperingNeverMintsCapture(String)[17]",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.164"
+          },
+          {
+            "name": "closeInvalidatesExistingCaptureAndPreventsNewExchange",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.161"
+          },
+          {
+            "name": "finiteApiRejectsOtherServiceModeRootAndNonPortalSourcesBeforeAuthority",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.217"
+          },
+          {
+            "name": "signedCaptureKeepsMainBindingAndWorksWithoutThreadLocalsOrAuthorityRefresh",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.287"
+          },
+          {
+            "name": "separateCapturesUseFreshNonceOperationAndGrant",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.263"
+          },
+          {
+            "name": "closeDuringSignedExchangeDoesNotMintCapture",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.146"
+          },
+          {
+            "name": "monotonicBudgetExpiresEvenWhenWallClockRollsBackBeforeFirstRecheck",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "1.225"
+          },
+          {
+            "name": "signedCurrentExpiresWhileActualTicketRemainsValidAndClockRollbackCannotReviveProof",
+            "classname": "cn.agentplatform.common.authority.GatewayRunAuthorizationTest",
+            "time": "0.128"
+          }
+        ]
+      }
+    ]
+  }
+]

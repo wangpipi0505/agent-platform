@@ -1,0 +1,32 @@
+{
+  "patchSha256": "90500a461d1369d293956524303665099985344523cef4a33f624f6327d1ce5b",
+  "checks": [
+    {
+      "command": [
+        "git",
+        "-c",
+        "core.autocrlf=false",
+        "apply",
+        "--check",
+        "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\skill-expected-attempt-artifacts\\skill-expected-attempt.patch"
+      ],
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "-c",
+        "core.autocrlf=false",
+        "apply",
+        "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\skill-expected-attempt-artifacts\\skill-expected-attempt.patch"
+      ],
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": "G:/207/椤圭洰/绠楁硶閲嶇粍宸ュ叿/浠ｇ爜/agent-platform/docs/evidence/skill-expected-attempt-artifacts/skill-expected-attempt.patch:4584: trailing whitespace.\npackage cn.agentplatform.skill.infra;\nG:/207/椤圭洰/绠楁硶閲嶇粍宸ュ叿/浠ｇ爜/agent-platform/docs/evidence/skill-expected-attempt-artifacts/skill-expected-attempt.patch:4585: trailing whitespace.\n\nG:/207/椤圭洰/绠楁硶閲嶇粍宸ュ叿/浠ｇ爜/agent-platform/docs/evidence/skill-expected-attempt-artifacts/skill-expected-attempt.patch:4586: trailing whitespace.\nimport static org.junit.jupiter.api.Assertions.*;\nG:/207/椤圭洰/绠楁硶閲嶇粍宸ュ叿/浠ｇ爜/agent-platform/docs/evidence/skill-expected-attempt-artifacts/skill-expected-attempt.patch:4587: trailing whitespace.\nimport static org.mockito.Mockito.mock;\nG:/207/椤圭洰/绠楁硶閲嶇粍宸ュ叿/浠ｇ爜/agent-platform/docs/evidence/skill-expected-attempt-artifacts/skill-expected-attempt.patch:4588: trailing whitespace.\n\nwarning: squelched 1234 whitespace errors\nwarning: 1239 lines add whitespace errors.\n"
+    }
+  ],
+  "replayedFiles": 63,
+  "byteIdenticalToFrozen": true
+}

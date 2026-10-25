@@ -1,0 +1,213 @@
+{
+  "status": "DONE_WITH_CONCERNS",
+  "sourceReturned": true,
+  "targetReturned": true,
+  "report": {
+    "file": "docs/evidence/iam-stage-5-e1a-report.md",
+    "sha256": "f414394303aa6eec54e44c5711dd2470c925c574cf41641108af82fbca463239",
+    "bytes": 14854
+  },
+  "sourceFiles": 346,
+  "baselineSourceFiles": 344,
+  "sourceChanged": [
+    "admin-common/src/main/java/cn/agentplatform/common/authority/AuthorityContext.java",
+    "admin-common/src/main/java/cn/agentplatform/common/authority/CurrentAuthorityClient.java",
+    "admin-common/src/main/java/cn/agentplatform/common/authority/HttpCurrentAuthorityClient.java",
+    "admin-common/src/main/java/cn/agentplatform/common/authority/ServiceAuthorization.java",
+    "admin-common/src/test/java/cn/agentplatform/common/authority/LoopbackAuthority.java",
+    "admin-common/src/test/java/cn/agentplatform/common/authority/ServiceAuthorizationTest.java",
+    "admin-common/src/test/java/cn/agentplatform/common/authority/AuthorityContextRetainedTest.java",
+    "admin-common/src/test/java/cn/agentplatform/common/authority/RetainedAuthorizationTest.java"
+  ],
+  "sourceFrozenReplayByteEqual": true,
+  "targetFrozenByteEqual": true,
+  "tests": {
+    "tests": 174,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "fullRawSha256": "e8cca1faa6fdfa864001fc3477a5303f1042c564d2a0371f70a66623d35f6ac2",
+  "protectedOriginalUnchanged": 22786,
+  "protectedExactRootAddition": [
+    {
+      "file": "docs/evidence/iam-stage-5-e1b-persistence-seam-proposal.md",
+      "before": null,
+      "after": "6e22271f28828e29062428f684a7ce43b177e2f5191e6b829956117d55d425cc"
+    }
+  ],
+  "artifacts": [
+    {
+      "file": "docs/evidence/iam-stage-5-e1a/source-before.json",
+      "sha256": "7dbd180763ea3227c03abba1719cb7a57c454784f3796c071f44f5c655281b5f"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1a/source-after.json",
+      "sha256": "275b5c1d65948a5f594ea74662b0a4abe2765f7d953540ab27fa2c117dcff075"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1a/target-before.json",
+      "sha256": "5cbf6f669decec0c7a3cb8362047ab54bca9de78cfa84ea10ed7ca2c432d0654"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1a/target-after.json",
+      "sha256": "efd9059dfeb620d7690b5be1e13a4fdc1ceef8fbeeb2badb447ea7b146de934a"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1a/target-changes.json",
+      "sha256": "bbc40e7c46c8a828d5fa327807a7a1d3773a7bcc36718ece33d486b116729ecf"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1a/protected-before.json",
+      "sha256": "cb63d7553d0c3d40bc9dbd318f763c56507b9369409b11efee48f619d4d5e94e"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1a/protected-after.json",
+      "sha256": "c727e5acba9131d50b2bb8e262f081834b60196fdbcbe8312ec03454f1bcaad7"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1a/protected-changes.json",
+      "sha256": "08e6b16d8ea8da3753a356fa0883481f2ecc0a4c792e01b315eba223f3553ff1"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1a/changed-files.json",
+      "sha256": "56b18dcf88237438ee2e12dc8d640c884ae234844d623934243b5beb6cae5517"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1a/change.patch",
+      "sha256": "df23480232120b22d05f2c30b37cbdc9965f10bc94e56bb570caae5e5265d3f6"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1a/apply.log",
+      "sha256": "19eaf43821a7660ec323a87c8457bf74823beb296c39f5e01aa8a683aa50f061"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1a/git-boundary.log",
+      "sha256": "b6eabb3ca9268347f50e8592f1a2eb3a928f4a68335c496a280c003983ca72d4"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1a/replay-check.json",
+      "sha256": "2f34011c775ae688488318d3247ca9100e38f63222ff7a63aac2d473f2de6e21"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1a/patch-check.json",
+      "sha256": "3c27f3e5b114c4bc9fb76b80aabbc9b0658a263eacb7eccbe02243b6b794095a"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1a/handoff.json",
+      "sha256": "cf827dc95fb683f183b480e7aee62c785459c25676623d3d30f36bd8c68f1c9b"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1a/test-audit.json",
+      "sha256": "47043a8cc4a6c3c46e73a22d3048867bd84aa204aab6159eb67f0fc2f24236f3"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1a/upstream-read-sha256.json",
+      "sha256": "34f6b3f112c0858bc6293198c0a9e11c569fa31d2c275cac9f1b9fdc67e5fff6"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1a/root-protection-disposition.json",
+      "sha256": "01f7a33445beb6a1a60e0f69ecea0a2c13fbba177ecd041a39742f12ba2aa7f2"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1a/first-freeze-protected-after.json",
+      "sha256": "729383825eb5c57c73c3c2bf902cc75908d7e5f6eee57cb12ca44bd86791fd7b"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1a/first-freeze-protected-changes.json",
+      "sha256": "7dd0a16ed5add9422eaf2522beb7983e089da79e2cfa9a032aa587ed882f463a"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1a/freeze-attempt-01-failed.json",
+      "sha256": "3232d718a5e5682ad13d9b65e09b946ced917a1ded8d66bfca7880ec87542522"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1a/capture.mjs",
+      "sha256": "27f98484062b314cbd3fc9b80cb586ac32373a8a8b97aa0a27957465f07f805a"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1a/patch-replay.mjs",
+      "sha256": "ca10c0e1da3a1dd2caa17948c4d3cf3096cbd316fdd7b39766853ff81886af47"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1a/audit.mjs",
+      "sha256": "0e5049ce8646ccafe141513b6099c8f63f76048c7305a84b81d914fbde9f610e"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1a/finalize.mjs",
+      "sha256": "80f9f40bf32a1fa999569c9fe8e3af80506258a75253c9f1e7c2557bf95fb3bf"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1a/iam-stage-5-e1a-red-01/execution.json",
+      "sha256": "c37cec0eb0905f3e7a3b1a96933c5c996cb332360f0360c56f3a3e262b5deb34"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1a/iam-stage-5-e1a-red-01/source-sha.json",
+      "sha256": "6d67e99fcb7d2bb43f4cac64641a10709ad4f8c5d0e55a177c7568cab8adc5a5"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1a/iam-stage-5-e1a-red-01/raw.log",
+      "sha256": "08652f9d37cdd025c487475c27309c6cd4f0cbd688c359d30dccbb136bbf2bfc"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1a/iam-stage-5-e1a-targeted-01/execution.json",
+      "sha256": "5d95d6b2210eb6f1ba0b3c12021bf62cd0eebcf5c9bfbd885a856a2b5f403d55"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1a/iam-stage-5-e1a-targeted-01/source-sha.json",
+      "sha256": "b0bc26a09d884b298ae2257ca91af2ed0be95846480be66e46cac1042389fd42"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1a/iam-stage-5-e1a-targeted-01/raw.log",
+      "sha256": "345c27feda358c3a8294367a0e783f35f3cecaf0d7f85b60c1d092f596a1e811"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1a/iam-stage-5-e1a-targeted-02/execution.json",
+      "sha256": "0ef0ee883dea45cc6687e134f0d501169755cb71e672f144e5f5e6e81888623f"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1a/iam-stage-5-e1a-targeted-02/source-sha.json",
+      "sha256": "c2e9ef2cf3484afe20e153ff9bc1c6b701ed7f5282c807ee0150a06e97a7a87c"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1a/iam-stage-5-e1a-targeted-02/raw.log",
+      "sha256": "c03632447100a4488e8b75d619e0d2bebcc7b0857fc23330383f64d8ae02d0ec"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1a/iam-stage-5-e1a-red-02/execution.json",
+      "sha256": "6100a0d1b117ac58d5a6ef1b8df0e9b9720062a85f501fa2e5ff4cb2db4af609"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1a/iam-stage-5-e1a-red-02/source-sha.json",
+      "sha256": "f971afe2037dcd270de5c8b145a0848dc1066091f078647de0effec671bd973a"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1a/iam-stage-5-e1a-red-02/raw.log",
+      "sha256": "b3e8160b3a585a788ccec9ecc7f1b4a277144a7d5634ec9d4c8a02a1b3896b79"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1a/iam-stage-5-e1a-targeted-03/execution.json",
+      "sha256": "2d1922c3f6933a8e2ad4fdbc4d27dfaa8e6a525337818e197e86be5aab985a10"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1a/iam-stage-5-e1a-targeted-03/source-sha.json",
+      "sha256": "275b5c1d65948a5f594ea74662b0a4abe2765f7d953540ab27fa2c117dcff075"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1a/iam-stage-5-e1a-targeted-03/raw.log",
+      "sha256": "56d19a08c593ebfda7614a2a62b89819198da5434a4ebd83498ca1c89470ee64"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1a/iam-stage-5-e1a-full-01/execution.json",
+      "sha256": "6f77c47b8ea55e5c10e5cff5a70b76e1b1c9012cb40f1f26ee66ee3d92ddfe98"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1a/iam-stage-5-e1a-full-01/source-sha.json",
+      "sha256": "275b5c1d65948a5f594ea74662b0a4abe2765f7d953540ab27fa2c117dcff075"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-e1a/iam-stage-5-e1a-full-01/raw.log",
+      "sha256": "e8cca1faa6fdfa864001fc3477a5303f1042c564d2a0371f70a66623d35f6ac2"
+    }
+  ]
+}

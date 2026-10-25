@@ -1,0 +1,190 @@
+[
+  {
+    "run": ".local/iam-o2b-f2c1-fixes/peers/reentrant-writer-43519aba-e391-4a01-981e-7e3a9fafe6e6",
+    "pid": 42300,
+    "stage": "final-candidate",
+    "exit": 0,
+    "actualWaitForAndCollectorJoin": true,
+    "launch": {
+      "file": ".local/iam-o2b-f2c1-fixes/peers/reentrant-writer-43519aba-e391-4a01-981e-7e3a9fafe6e6/launch.properties",
+      "bytes": 69,
+      "sha256": "fbaf23c9742fd0150c09e98f85dbc081cb5215f89cd134321ed267ffd46e2bf3"
+    },
+    "exitRecord": {
+      "file": ".local/iam-o2b-f2c1-fixes/peers/reentrant-writer-43519aba-e391-4a01-981e-7e3a9fafe6e6/exit.properties",
+      "bytes": 50,
+      "sha256": "52577da04f000fe94552ab8d955053ac1398fd59247d90f86f7924db8850d2c7"
+    },
+    "output": {
+      "file": ".local/iam-o2b-f2c1-fixes/peers/reentrant-writer-43519aba-e391-4a01-981e-7e3a9fafe6e6/client.out",
+      "bytes": 30,
+      "sha256": "daa65b01c328ea9d849b24137e5ecc4538846f0822865339bd9979e7fff2564e"
+    },
+    "summaries": [
+      {
+        "file": ".local/iam-o2b-f2c1-fixes/peers/reentrant-writer-43519aba-e391-4a01-981e-7e3a9fafe6e6/summary.properties",
+        "values": {
+          "group": "reentrant-writer",
+          "completed": "true"
+        }
+      },
+      {
+        "file": ".local/iam-o2b-f2c1-fixes/peers/reentrant-writer-43519aba-e391-4a01-981e-7e3a9fafe6e6/writer.properties",
+        "values": {
+          "reentrantAttempted": "true",
+          "innerGeneratorCalls": "0",
+          "heldBytes": "88342871",
+          "outerAndSequentialExited": "true"
+        }
+      }
+    ]
+  },
+  {
+    "run": ".local/iam-o2b-f2c1-fixes/peers/reentrant-writer-9a2a686c-e71b-4c73-b864-2e54f3300598",
+    "pid": 50492,
+    "stage": "red-single-writer",
+    "exit": 1,
+    "actualWaitForAndCollectorJoin": true,
+    "launch": {
+      "file": ".local/iam-o2b-f2c1-fixes/peers/reentrant-writer-9a2a686c-e71b-4c73-b864-2e54f3300598/launch.properties",
+      "bytes": 69,
+      "sha256": "0152e07af6aefd4a80866e74afdd65c916f7a2a01b5268c805a62d3e8fa82865"
+    },
+    "exitRecord": {
+      "file": ".local/iam-o2b-f2c1-fixes/peers/reentrant-writer-9a2a686c-e71b-4c73-b864-2e54f3300598/exit.properties",
+      "bytes": 50,
+      "sha256": "8d98a6cc66e8be791fc3831aaf6cc8dc820ca7d75a55a114421ac3079a49f212"
+    },
+    "output": {
+      "file": ".local/iam-o2b-f2c1-fixes/peers/reentrant-writer-9a2a686c-e71b-4c73-b864-2e54f3300598/client.out",
+      "bytes": 2112,
+      "sha256": "8030f18bd18d5899795e99bba5227b154dfd3f5b90a0fc53ffdeb7c9b95dcce4"
+    },
+    "summaries": []
+  },
+  {
+    "run": ".local/iam-o2b-f2c1-fixes/peers/retention-57a808b8-56e6-46c9-98d3-7092d1b3a9a7",
+    "pid": 55236,
+    "stage": "final-candidate",
+    "exit": 0,
+    "actualWaitForAndCollectorJoin": true,
+    "launch": {
+      "file": ".local/iam-o2b-f2c1-fixes/peers/retention-57a808b8-56e6-46c9-98d3-7092d1b3a9a7/launch.properties",
+      "bytes": 69,
+      "sha256": "55c4b28bde69d489040e0609da5ea385ec3e6c674f7b573c4160204c2896dc2b"
+    },
+    "exitRecord": {
+      "file": ".local/iam-o2b-f2c1-fixes/peers/retention-57a808b8-56e6-46c9-98d3-7092d1b3a9a7/exit.properties",
+      "bytes": 50,
+      "sha256": "da2dcf51457f85911e6dd90ef10a5a65335f8c00aed21eb7879e1157cb4f71b2"
+    },
+    "output": {
+      "file": ".local/iam-o2b-f2c1-fixes/peers/retention-57a808b8-56e6-46c9-98d3-7092d1b3a9a7/client.out",
+      "bytes": 23,
+      "sha256": "0ce918f2450dcfc0c804cb094539ecc08d17294999306be8220766a4219d8e7a"
+    },
+    "summaries": [
+      {
+        "file": ".local/iam-o2b-f2c1-fixes/peers/retention-57a808b8-56e6-46c9-98d3-7092d1b3a9a7/retention.properties",
+        "values": {
+          "heldBytes": "176685742",
+          "thirdDenied": "true",
+          "actualWorkersExited": "true"
+        }
+      },
+      {
+        "file": ".local/iam-o2b-f2c1-fixes/peers/retention-57a808b8-56e6-46c9-98d3-7092d1b3a9a7/summary.properties",
+        "values": {
+          "group": "retention",
+          "completed": "true"
+        }
+      }
+    ]
+  },
+  {
+    "run": ".local/iam-o2b-f2c1-fixes/peers/single-writer-03e4471e-f7ce-4c45-95c7-571f785c7586",
+    "pid": 54200,
+    "stage": "final-candidate",
+    "exit": 0,
+    "actualWaitForAndCollectorJoin": true,
+    "launch": {
+      "file": ".local/iam-o2b-f2c1-fixes/peers/single-writer-03e4471e-f7ce-4c45-95c7-571f785c7586/launch.properties",
+      "bytes": 69,
+      "sha256": "3d005075859a49b6b66a7dbb5d6ae9ad22d836ef2610afde7ed278026d91228a"
+    },
+    "exitRecord": {
+      "file": ".local/iam-o2b-f2c1-fixes/peers/single-writer-03e4471e-f7ce-4c45-95c7-571f785c7586/exit.properties",
+      "bytes": 50,
+      "sha256": "845583e427dd6d23949ff7573f4f647aaeb5c0cd9b5453a9472adeb1d59966fe"
+    },
+    "output": {
+      "file": ".local/iam-o2b-f2c1-fixes/peers/single-writer-03e4471e-f7ce-4c45-95c7-571f785c7586/client.out",
+      "bytes": 27,
+      "sha256": "4c0f8021d349d582829c5de266c8cd2608306651b7e62f0c1dc161a532c4fe2e"
+    },
+    "summaries": [
+      {
+        "file": ".local/iam-o2b-f2c1-fixes/peers/single-writer-03e4471e-f7ce-4c45-95c7-571f785c7586/summary.properties",
+        "values": {
+          "group": "single-writer",
+          "completed": "true"
+        }
+      },
+      {
+        "file": ".local/iam-o2b-f2c1-fixes/peers/single-writer-03e4471e-f7ce-4c45-95c7-571f785c7586/writer.properties",
+        "values": {
+          "secondGeneratorCalls": "0",
+          "heldBytes": "88342871",
+          "firstCrossThreadExited": "true",
+          "exceptionThenSequentialWrite": "true"
+        }
+      }
+    ]
+  },
+  {
+    "run": ".local/iam-o2b-f2c1-fixes/peers/single-writer-8b3ec6aa-608f-400c-a4ea-f8f98b2ff9bc",
+    "pid": 41136,
+    "stage": "red-single-writer",
+    "exit": 1,
+    "actualWaitForAndCollectorJoin": true,
+    "launch": {
+      "file": ".local/iam-o2b-f2c1-fixes/peers/single-writer-8b3ec6aa-608f-400c-a4ea-f8f98b2ff9bc/launch.properties",
+      "bytes": 69,
+      "sha256": "306679c7f509904c133a5efd9388f6d3ef38c1fd084f7ef5d19c71652ac636a9"
+    },
+    "exitRecord": {
+      "file": ".local/iam-o2b-f2c1-fixes/peers/single-writer-8b3ec6aa-608f-400c-a4ea-f8f98b2ff9bc/exit.properties",
+      "bytes": 50,
+      "sha256": "b4738f5d68ea81e2235100aa9320e42e712c427362f8b8513e137ae9618cf6a1"
+    },
+    "output": {
+      "file": ".local/iam-o2b-f2c1-fixes/peers/single-writer-8b3ec6aa-608f-400c-a4ea-f8f98b2ff9bc/client.out",
+      "bytes": 657,
+      "sha256": "14a9f0ce61c554c1e14304be938e264cc7513d32d46df8d0d566a0ba361440ab"
+    },
+    "summaries": []
+  },
+  {
+    "run": ".local/iam-o2b-f2c1-fixes/peers/single-writer-ecfd5528-33dd-48b9-a5aa-d6e326176ce2",
+    "pid": 21956,
+    "stage": "red-concurrent-observable",
+    "exit": 1,
+    "actualWaitForAndCollectorJoin": true,
+    "launch": {
+      "file": ".local/iam-o2b-f2c1-fixes/peers/single-writer-ecfd5528-33dd-48b9-a5aa-d6e326176ce2/launch.properties",
+      "bytes": 69,
+      "sha256": "f7587a1f120e752849c3c5ac212a89cf1999f7f27ac266a09f23b1cd1c73d1e2"
+    },
+    "exitRecord": {
+      "file": ".local/iam-o2b-f2c1-fixes/peers/single-writer-ecfd5528-33dd-48b9-a5aa-d6e326176ce2/exit.properties",
+      "bytes": 50,
+      "sha256": "c7a94d936e59f25841f6b1ad9be8974dd2ee0a3774df983e4ef95015ad030bfb"
+    },
+    "output": {
+      "file": ".local/iam-o2b-f2c1-fixes/peers/single-writer-ecfd5528-33dd-48b9-a5aa-d6e326176ce2/client.out",
+      "bytes": 2165,
+      "sha256": "0136d0c47ec78d0474ceda59155ec740e7c97ce1991c115eb3b331819ebf12b6"
+    },
+    "summaries": []
+  }
+]

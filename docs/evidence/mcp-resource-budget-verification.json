@@ -1,0 +1,225 @@
+{
+  "status": "AUTHOR_VERIFIED_PENDING_INDEPENDENT_REVIEW",
+  "deployed": false,
+  "command": "mvn -B -ntp -pl skill-registry test -Dmaven.repo.local=V:/.tools/m2 -Djdk.net.unixdomain.tmpdir=V:/.local/tmp",
+  "jdk": "21.0.12",
+  "finishedAt": "2026-10-20T08:04:44+08:00",
+  "tests": 270,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "priorTests": 242,
+  "newTests": 28,
+  "formatExit": 0,
+  "contractsExit": 0,
+  "sourceCount": 12,
+  "sourceBeforeAfterEqual": true,
+  "sourceManifestSha256": "7de1dd0bf037adb95a1de37f06bf086212f97c2b007a3414528215efb7edbbdd",
+  "logs": [
+    {
+      "path": ".local/mcp-resource-preflight-red.log",
+      "sha256": "39cf678777c46b209ea6eb614200957a61aa2c82d23368fb5f7d55555f75f85d"
+    },
+    {
+      "path": ".local/mcp-resource-preflight-green.log",
+      "sha256": "704de030c6719ceb839ff65c49a285de4de74ae906bb192d487fad692c9cc304"
+    },
+    {
+      "path": ".local/mcp-resource-regex-red.log",
+      "sha256": "44a1cc432a8dbd29c022c339230b59c45db4e53fa8d6ee0ebd9a659d08ec2104"
+    },
+    {
+      "path": ".local/mcp-resource-lifecycle-red.log",
+      "sha256": "410ad09085f23cd969f032e7d3e31fcb4a19e7af4fce1dd595debdd1103c36c0"
+    },
+    {
+      "path": ".local/mcp-resource-budget-targeted.log",
+      "sha256": "cb7400805b92aa45ac1793ab71d1853cd3f1eb48d2fdd7da42f8867f99177302"
+    },
+    {
+      "path": ".local/mcp-resource-wire-green.log",
+      "sha256": "d99baf4862d073be05d9995cb4ca6e7e0ce0b4f85ca0bf165ebf359babaa0b85"
+    },
+    {
+      "path": ".local/mcp-resource-full-skill-268-red.log",
+      "sha256": "053a9052c41077b8692246d5e822964da818f28370b3fdc360c0122782872dee"
+    },
+    {
+      "path": ".local/mcp-resource-error-type-check.log",
+      "sha256": "c56f3b3c1a34b377dba848d89a7265ef7feb51441fab803bc253348991268d1a"
+    },
+    {
+      "path": ".local/mcp-resource-full-skill-final.log",
+      "sha256": "612b4d87fe27dd01b88a48a0cc83be1b74103c75d17d82511820ce4a01259fb8"
+    },
+    {
+      "path": ".local/mcp-resource-format-contracts.log",
+      "sha256": "f3790f517d3887be5c977eb865b94c8c8fca45e9f110485a22b503cffd568d6d"
+    }
+  ],
+  "suites": [
+    {
+      "suite": "cn.agentplatform.skill.api.OpenApiImportControllerTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "cn.agentplatform.skill.application.AsyncHttpExecutionTest",
+      "tests": 21,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "cn.agentplatform.skill.application.CallbackHttpTest",
+      "tests": 32,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "cn.agentplatform.skill.application.OpenApiImportPersistenceTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "cn.agentplatform.skill.application.OpenApiImportsTest",
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "cn.agentplatform.skill.application.ReconciliationProofTest",
+      "tests": 34,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "cn.agentplatform.skill.application.SkillExecutionTest",
+      "tests": 25,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "cn.agentplatform.skill.application.SkillStatisticsPostgresTest",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "cn.agentplatform.skill.domain.BoundedSchemaValidationTest",
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "cn.agentplatform.skill.domain.SchemaWorkBudgetTest",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "cn.agentplatform.skill.domain.SkillRulesTest",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "cn.agentplatform.skill.infra.ArtifactBoundTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "cn.agentplatform.skill.infra.ArtifactPersistenceTest",
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "cn.agentplatform.skill.infra.ArtifactReferenceTest",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "cn.agentplatform.skill.infra.HttpSchemaBoundaryTest",
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "tests": 38,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "cn.agentplatform.skill.infra.McpExecutionPostgresTest",
+      "tests": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "cn.agentplatform.skill.infra.McpManagementTest",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "cn.agentplatform.skill.infra.McpResourceLifecycleTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "cn.agentplatform.skill.infra.McpSchemaBoundaryTest",
+      "tests": 22,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "cn.agentplatform.skill.infra.OpenApiHttpMappingTest",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "cn.agentplatform.skill.infra.SignedCallbackTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "re2j": {
+    "version": "1.8",
+    "jarSha256": "7b52c72156dd7f98b3237a5b35c1d34fba381b21048c89208913ad80a45dfbd7",
+    "licensePath": "docs/licenses/re2j-1.8-BSD-3-Clause.txt",
+    "licenseSha256": "26a6133577cc8e48d7c002ac4d4a554786e7c0e1732e10f2db205e5e494c411b"
+  },
+  "limitsAreAdmissionNotHardRealtime": true,
+  "exhaustionProbeReplayed": false,
+  "originalReviewerApproved": false
+}

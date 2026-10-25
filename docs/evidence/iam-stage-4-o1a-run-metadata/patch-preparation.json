@@ -1,0 +1,40 @@
+{
+  "at": "2026-10-20T21:22:51.295Z",
+  "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+  "patch": {
+    "file": "docs/evidence/iam-stage-4-o1a-run-metadata/source-fullcontext.patch",
+    "bytes": 220456,
+    "sha256": "7ebe2082bb7e9e833a3484c5070cc5473f43eaf69164024935fa077fbb71e3bb"
+  },
+  "modifiedBaseFiles": [
+    {
+      "file": "admin-common/src/main/java/cn/agentplatform/common/authority/ServiceAuthorization.java",
+      "bytes": 9139,
+      "sha256": "5dacc7a313010e1d1a77254d259859bee78211c996797e3dd813b6fe60270a56"
+    },
+    {
+      "file": "admin-common/src/main/resources/agent-service-authority.json",
+      "bytes": 85575,
+      "sha256": "058d9e45eb0862d8837a38711a3a0cc8d482dec21e0b702075c5ac224f8f2f7f"
+    },
+    {
+      "file": "admin-common/src/test/java/cn/agentplatform/common/authority/LoopbackAuthority.java",
+      "bytes": 46370,
+      "sha256": "c7906330600651b7dc95f1de4011d246d595ce99cc94cef4d37161b0460ed38f"
+    },
+    {
+      "file": "engine-runtime/src/main/java/cn/agentplatform/engine/infra/RunAuthorityStore.java",
+      "bytes": 16421,
+      "sha256": "5f9cb84785a44e5130fde5cbbdc5c8125e74846fd35641cb809ec0ed6822f3a8"
+    }
+  ],
+  "newFiles": [
+    "admin-common/src/main/java/cn/agentplatform/common/authority/RunObservationSelectors.java",
+    "admin-common/src/test/java/cn/agentplatform/common/authority/RunObservationSelectorsTest.java",
+    "engine-runtime/src/main/java/cn/agentplatform/engine/api/RunObservationMetadataController.java",
+    "engine-runtime/src/main/java/cn/agentplatform/engine/application/RunObservationMetadataService.java",
+    "engine-runtime/src/main/java/cn/agentplatform/engine/domain/RunObservationMetadata.java",
+    "engine-runtime/src/test/java/cn/agentplatform/engine/infra/RunObservationMetadataHttpPostgresTest.java"
+  ],
+  "replayDirectory": ".local/iam-o1a-run-metadata/replay-overlay"
+}

@@ -1,0 +1,78 @@
+{
+  "program": "node",
+  "args": [
+    ".tools/run-iam-module-tests.mjs",
+    "iam-stage-o1c-fix-final01",
+    "admin-common,platform-gateway",
+    "RunObservationGetTransportTest,GatewayRunStatusChainPostgresTest#realGatewayQueryAndStatusReturnOriginalBytes,GatewayRunStatusChainPostgresTest#partialOutputNeverAppendsOrRetries"
+  ],
+  "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+  "exitCode": 0,
+  "launcherError": null,
+  "sourceBefore": {
+    "file": "docs/evidence/iam-stage-4-o1c-review-fixes/iam-stage-o1c-fix-final01/source-before.json",
+    "bytes": 111133,
+    "sha256": "f345e812e51c27e715580862cd3780f3e20ce929bd99fb1098c0d17045e3b697"
+  },
+  "sourceAfter": {
+    "file": "docs/evidence/iam-stage-4-o1c-review-fixes/iam-stage-o1c-fix-final01/source-after.json",
+    "bytes": 111133,
+    "sha256": "f345e812e51c27e715580862cd3780f3e20ce929bd99fb1098c0d17045e3b697"
+  },
+  "changedSourcePre": [
+    {
+      "file": "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PublishedRunHttp.java",
+      "bytes": 17035,
+      "sha256": "5656dacfdd8bbb77b9b25526f135854f1ab78a573084ce7fdc6a91d4e1a7794b"
+    },
+    {
+      "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/RunObservationGetTransportTest.java",
+      "bytes": 13893,
+      "sha256": "364021fddb07e008cd43faba02be4d6bc8d2471fe334c4e763d53768008b1a06"
+    }
+  ],
+  "changedSourcePost": [
+    {
+      "file": "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PublishedRunHttp.java",
+      "bytes": 17035,
+      "sha256": "5656dacfdd8bbb77b9b25526f135854f1ab78a573084ce7fdc6a91d4e1a7794b"
+    },
+    {
+      "file": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/RunObservationGetTransportTest.java",
+      "bytes": 13893,
+      "sha256": "364021fddb07e008cd43faba02be4d6bc8d2471fe334c4e763d53768008b1a06"
+    }
+  ],
+  "running": [
+    "cn.agentplatform.common.authority.GatewayRunStatusChainPostgresTest",
+    "cn.agentplatform.gateway.application.RunObservationGetTransportTest"
+  ],
+  "xml": [
+    {
+      "file": "platform-gateway/target/surefire-reports/TEST-cn.agentplatform.common.authority.GatewayRunStatusChainPostgresTest.xml",
+      "bytes": 124878,
+      "sha256": "708337d58eaeff39aa5a177f9c610f2059d686e64b2cf452a4d50cff12243e81"
+    },
+    {
+      "file": "platform-gateway/target/surefire-reports/cn.agentplatform.common.authority.GatewayRunStatusChainPostgresTest.txt",
+      "bytes": 388,
+      "sha256": "ad57e4a5d0142a889320c8d71752ec41e4471aa476a63037b2e662eb3ee8bced"
+    },
+    {
+      "file": "platform-gateway/target/surefire-reports/TEST-cn.agentplatform.gateway.application.RunObservationGetTransportTest.xml",
+      "bytes": 44565,
+      "sha256": "8c4f1aa95085a8363c79ab786521b0c644d69605d2eee5ea781d87a7146f8fdb"
+    },
+    {
+      "file": "platform-gateway/target/surefire-reports/cn.agentplatform.gateway.application.RunObservationGetTransportTest.txt",
+      "bytes": 389,
+      "sha256": "264a73b63b07f5f2d58a27c5f0522ff7175020734b54d4a0dcc29156536a885f"
+    }
+  ],
+  "log": {
+    "file": "docs/evidence/iam-stage-4-o1c-review-fixes/iam-stage-o1c-fix-final01/command.log",
+    "bytes": 94136,
+    "sha256": "d31c8d341855c7cdbae570c8b0b38e2f87941aa409f53d786d0b435cf72ba2fa"
+  },
+  "ended": "2026-10-21T00:04:14.782Z"
+}

@@ -1,0 +1,40 @@
+{
+  "superseded": [
+    {
+      "file": "docs/evidence/iam-stage-4-o2a-a-lifecycle-fixes/target-after.json",
+      "bytes": 420391,
+      "sha256": "19c4c35fb21135407ea912003ede6532906a056d78c1efecdbf3e4f6ea2c3219"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o2a-a-lifecycle-fixes/target-lineage.json",
+      "bytes": 4003,
+      "sha256": "2d2d3a96ebfce3ecdba9a69eefba01827c2999da878e11a33d1314c28f0ffe8d"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o2a-a-lifecycle-fixes/final-physical-check.json",
+      "bytes": 1097,
+      "sha256": "a3a71ad97fb90d0fb18c6952717352783417028d53aac2a97b3eea6555db90dc"
+    }
+  ],
+  "canonicalFinalTarget": {
+    "file": "docs/evidence/iam-stage-4-o2a-a-lifecycle-fixes/final/target-after.json",
+    "bytes": 419611,
+    "sha256": "b5bedc4fe8a66f1e4ee171adafd823d72cae3fb576e2e8e3358b82a827e2a335"
+  },
+  "excludedNewDiagnostics": [
+    "admin-common/target/surefire-reports/2026-10-21T09-03-49_435.dumpstream",
+    "admin-common/target/surefire-reports/2026-10-21T09-05-12_682.dumpstream",
+    "admin-common/target/surefire-reports/2026-10-21T09-06-08_121.dumpstream",
+    "admin-common/target/surefire-reports/2026-10-21T09-07-42_576.dumpstream"
+  ],
+  "reason": "Root required new diagnostics remain separate from compiler/resource/actualRunning overlay; inheriting historical diagnostic lineage does not authorize adding new dumpstreams",
+  "cachedPhysicalValidation": {
+    "originalVerifiedTarget": 2027,
+    "originalDrift": 0,
+    "remainingTarget": 2023,
+    "allRemainingPreviouslyVerified": true,
+    "noNewTargetReadHashScan": true
+  },
+  "testsRepeated": false,
+  "replayRepeated": false
+}

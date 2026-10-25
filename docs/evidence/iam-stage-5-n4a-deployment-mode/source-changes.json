@@ -1,0 +1,110 @@
+{
+  "added": [
+    {
+      "file": "admin-common/src/test/java/cn/agentplatform/common/authority/ServiceTokensDeploymentModeTest.java",
+      "bytes": 14313,
+      "sha256": "ba473cebdf2804c30aac230ba864a6ff7ac69680af55463ba4370b0ee9622c9f"
+    }
+  ],
+  "modified": [
+    {
+      "before": {
+        "file": "admin-common/src/main/java/cn/agentplatform/common/SecurityConfiguration.java",
+        "bytes": 16522,
+        "sha256": "8701c2b75e59a54c9251e671aad753ad2391ecd482364ab89dc3a0597ab9dc98"
+      },
+      "after": {
+        "file": "admin-common/src/main/java/cn/agentplatform/common/SecurityConfiguration.java",
+        "bytes": 17013,
+        "sha256": "f864681861e0d777b2b51489767e60408b6a6fa6307cfa0c1b4120b19ad9ff7a"
+      }
+    },
+    {
+      "before": {
+        "file": "admin-common/src/main/java/cn/agentplatform/common/ServiceTokens.java",
+        "bytes": 4293,
+        "sha256": "d10773c1b55e157746eaf5efdb8741eb110fcc0d730e88bb769f2d5adff2b000"
+      },
+      "after": {
+        "file": "admin-common/src/main/java/cn/agentplatform/common/ServiceTokens.java",
+        "bytes": 5090,
+        "sha256": "0ecf4aac5652e01d7c7e7e208720ebbc6345fb26d2c532e6c110fdd4dcb6ec05"
+      }
+    },
+    {
+      "before": {
+        "file": "admin-common/src/test/java/cn/agentplatform/common/CommonBoundaryTest.java",
+        "bytes": 3398,
+        "sha256": "baebf33889d3c11e3b70c3454bcba0a0ad7c49dfa303630b20ad908586ad92b0"
+      },
+      "after": {
+        "file": "admin-common/src/test/java/cn/agentplatform/common/CommonBoundaryTest.java",
+        "bytes": 3585,
+        "sha256": "0ce53038b4743bb513ab9e8fc2a53f4c614e3f0f504b4fccbc459ac8aa4a81af"
+      }
+    },
+    {
+      "before": {
+        "file": "admin-common/src/test/java/cn/agentplatform/common/authority/AuthorityConfigurationTest.java",
+        "bytes": 14555,
+        "sha256": "9b70b3a14f1265f11d86ac5d82016766e19760ad78e6ba463b9467e060b364a6"
+      },
+      "after": {
+        "file": "admin-common/src/test/java/cn/agentplatform/common/authority/AuthorityConfigurationTest.java",
+        "bytes": 16404,
+        "sha256": "19037e462a9e580b684e0644f5880ca7e5da9dcedd3e72917cef08cb605729bf"
+      }
+    },
+    {
+      "before": {
+        "file": "engine-runtime/src/test/java/cn/agentplatform/engine/infra/RuntimeClientsPublishedHttpTest.java",
+        "bytes": 34914,
+        "sha256": "e16e31eaa4e073c7a813b8c2c663beee66d365de81b8939beb73ef2b2433791a"
+      },
+      "after": {
+        "file": "engine-runtime/src/test/java/cn/agentplatform/engine/infra/RuntimeClientsPublishedHttpTest.java",
+        "bytes": 37252,
+        "sha256": "b3c6e965c6fe1fa783a7a241fdf52b28038eda56101bff02a67d5adc61928dc7"
+      }
+    }
+  ],
+  "deleted": [],
+  "attribution": [
+    {
+      "file": "admin-common/src/test/java/cn/agentplatform/common/authority/ServiceTokensDeploymentModeTest.java",
+      "bytes": 14313,
+      "sha256": "ba473cebdf2804c30aac230ba864a6ff7ac69680af55463ba4370b0ee9622c9f",
+      "reason": "Fixed child scenarios, precedence red/green, snapshot, invalid binding, lifecycle/barrier and isolated receiver."
+    },
+    {
+      "file": "admin-common/src/main/java/cn/agentplatform/common/SecurityConfiguration.java",
+      "bytes": 17013,
+      "sha256": "f864681861e0d777b2b51489767e60408b6a6fa6307cfa0c1b4120b19ad9ff7a",
+      "reason": "Extract the one strict validated Environment binding/registration entry; retain complete IAM prelistener closure."
+    },
+    {
+      "file": "admin-common/src/main/java/cn/agentplatform/common/ServiceTokens.java",
+      "bytes": 5090,
+      "sha256": "0ecf4aac5652e01d7c7e7e208720ebbc6345fb26d2c532e6c110fdd4dcb6ec05",
+      "reason": "Classloader lifetime deployment snapshot; common irreversible IAM signing closure, one monitor covers registration/issue/sign."
+    },
+    {
+      "file": "admin-common/src/test/java/cn/agentplatform/common/CommonBoundaryTest.java",
+      "bytes": 3585,
+      "sha256": "0ce53038b4743bb513ab9e8fc2a53f4c614e3f0f504b4fccbc459ac8aa4a81af",
+      "reason": "Move existing positive JWT claims assertions to validated isolated child."
+    },
+    {
+      "file": "admin-common/src/test/java/cn/agentplatform/common/authority/AuthorityConfigurationTest.java",
+      "bytes": 16404,
+      "sha256": "19037e462a9e580b684e0644f5880ca7e5da9dcedd3e72917cef08cb605729bf",
+      "reason": "Isolate all legitimate IAM and successful legacy contexts without weakening original assertions; parent invalid cases stay unregistered."
+    },
+    {
+      "file": "engine-runtime/src/test/java/cn/agentplatform/engine/infra/RuntimeClientsPublishedHttpTest.java",
+      "bytes": 37252,
+      "sha256": "b3c6e965c6fe1fa783a7a241fdf52b28038eda56101bff02a67d5adc61928dc7",
+      "reason": "Only JVM-only legacy positive fixture moves to validated child; parent IAM19 retained, unknown target asserted."
+    }
+  ]
+}

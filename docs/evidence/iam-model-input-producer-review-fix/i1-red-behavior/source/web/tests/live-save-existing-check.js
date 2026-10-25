@@ -1,0 +1,3 @@
+async page => {
+ const response=page.waitForResponse(r=>r.url().includes('/admin/flows/frontend_browser_flow_20261020')&&r.request().method()==='PUT');await page.getByRole('button',{name:'保存编排',exact:true}).click();const saved=await (await response).json();if(saved.code!=='OK')throw new Error(JSON.stringify(saved));const d=saved.data.definition;if(d.nodes.length!==2||d.edges.length!==1)throw new Error('Graph contract mismatch');return {saved:true,draftRev:saved.data.draftRev,nodes:d.nodes.length,edges:d.edges.length,positionsSeparate:!('position' in d.nodes[0]),digest:saved.data.candidateSha256};
+}

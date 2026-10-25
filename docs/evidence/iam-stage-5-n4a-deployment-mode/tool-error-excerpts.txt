@@ -1,0 +1,37 @@
+Original tool-output excerpts transcribed from this task's tool history; no command was rerun to recreate an error.
+
+1. First production-edit script attempt (failed before any source write):
+AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+
+  assert.ok(at>0)
+
+    at file:///G:/207/%E9%A1%B9%E7%9B%AE/%E7%AE%97%E6%B3%95%E9%87%8D%E7%BB%84%E5%B7%A5%E5%85%B7/%E4%BB%A3%E7%A0%81/agent-platform/.local/iam-n4a-deployment-mode/implement.mjs:2:544
+Node.js v24.16.0
+
+2. Incomplete XML evidence parsing (after completed source/target freeze and patch replay; only evidence parsing resumed):
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+39 !== 40
+
+    at file:///G:/207/%E9%A1%B9%E7%9B%AE/%E7%AE%97%E6%B3%95%E9%87%8D%E7%BB%84%E5%B7%A5%E5%85%B7/%E4%BB%A3%E7%A0%81/agent-platform/.local/iam-n4a-deployment-mode/finalize.mjs:35:707
+Node.js v24.16.0
+
+3. Automatic command policy rejection (no command execution or file write):
+Tool-visible error prefix: exec_command failed: CreateProcess
+Exact stated reason from rejected command message: rejected: blocked by policy
+The rendered error embedded the original PowerShell command and was display-truncated. A fully untruncated rejection payload is not retained; the exact stated reason above is retained without inferring a finer policy rule.
+Target action: PowerShell here-string write of .local/iam-n4a-deployment-mode/upstream-evidence.mjs followed by node invocation, in the new agent-platform workdir only.
+Safe completion: apply_patch wrote that local evidence script; a separate node command completed it. No permission escalation.
+
+4. Read-only path errors:
+Get-Content: Cannot find path 'G:\207\项目\算法重组工具\代码\agent-platform\.local\iam-stage-5-n4a-final01.log' because it does not exist.
+This read occurred before the original controlled runner had completed and written its log. The runner later completed normally; no test was rerun due to this read.
+Get-FileHash: Cannot find path 'G:\207\项目\算法重组工具\文档\设计\详细设计\智能体构建平台详细设计-整合版.md' because it does not exist.
+The abbreviated contract path was resolved only by a narrow listing of the explicitly authorized 智能体构建 design directory. The actual source SHA matches the frozen v1.2 digest; no document write.
+
+5. final01's actual five child fixture failures are preserved verbatim in its raw.log and selected XML, not transcribed here. They are neither the TDD behavioral red nor a successful green run.
+
+6. First report construction attempt, before report/handoff write:
+ReferenceError: run is not defined
+    at write-report.mjs:41:20
+Markdown backticks inside a JavaScript template made a syntactically valid unintended expression; node --check did not detect this runtime expression. Escaped template backticks and resumed only report/handoff construction.

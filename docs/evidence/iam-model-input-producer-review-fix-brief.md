@@ -1,0 +1,50 @@
+# Initial model-input producer: fix the three independent Important findings
+
+The user authorized continuous v1.2 implementation in the independent new project, with isolated test endpoints. This is a narrow correction of the frozen producer candidate, not a new public model feature. No user confirmation is needed for these repairs.
+
+Read AGENTS.md, docs/implementation-brief.md, contracts/README.md, and the frozen independent review first: docs/evidence/review-iam-model-input-producer.md (13805 bytes, SHA2569d6aab423e1cc900eb3d5c9b73d1a39e3a41661a9609847f2a8fb76a98a26b82). It defines I1/I2/I3 and their concrete effects. The original formal requirements are docs/evidence/iam-model-input-producer-brief.md and .local/iam-model-material-next-task-plan.md, supplemented by regression-isolation01–06. They remain binding except where this repair grant explicitly allows the existing new-component files below to change.
+
+## Frozen base and ownership
+
+Every shell must use cwd G:/207/项目/算法重组工具/代码/agent-platform. Do not access adjacent old code/config/data/processes/dependencies. Do not spawn agents, commit/deploy, restart primary services, alter global temp, create goals/automation/new chats, or contact others. JDK21 at C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot, own .tools/m2; unix-domain child temp V:/.local/tmp only if necessary. Preserve main18080–18085 and15173–15175. Never print AGENT_DB_PASSWORD, JWTs or full protected payloads.
+
+The complete frozen candidate has652 source files: .local/iam-model-input-producer/final/source.json125471B SHA747463804aeadbbad190cf37a8186dacb4f3f23f05ad4c20dfe0d8cb6d0c24a4, blobs sibling source/. Original complete644→652 diff is .local/iam-model-input-producer/final/source-644-to-652.patch110355B SHA2f9b228d15378f218ef74788b281b061232b46cfb44f76793d235c7b877a4d3c. Root has physically checked all652 sources, protected8,14212 owned artifacts and1122 actual finite targets; initial code review Needs fixes. This base is not Accepted. All prior authors/reviewers/planners returned write/runtime rights.
+
+You are the only new source writer. Only these FOUR existing canonical files may change; use the fixture change only if needed for deterministic test setup/observation:
+
+1. engine-runtime/src/main/java/cn/agentplatform/engine/infra/ModelInputMaterialStore.java
+2. engine-runtime/src/main/java/cn/agentplatform/engine/application/ModelInputMaterials.java
+3. engine-runtime/src/test/java/cn/agentplatform/engine/infra/ModelInputMaterialPostgresTest.java
+4. engine-runtime/src/test/java/cn/agentplatform/engine/infra/ModelInputMaterialFixture.java
+
+No added/deleted canonical source paths; total remains652. Manifest/controller/V218/catalog/two canonical migration-tip tests/HTTP test/common/RunAuthorityStore/MaterialScopeStore/Values/ContextAssembler/FrozenModels/model/web/POM/config/design/four contracts and protected8 are read-only. No framework/dependency upgrades. Cross-business HTTP, no sibling business JARs; existing common test fixture JAR is test-only. Original candidate helpers/evidence/report/control/inventory/runtime records are immutable; do not append to or overwrite them.
+
+Your only helper/output scopes are .local/iam-model-input-producer-review-fix/, docs/evidence/iam-model-input-producer-review-fix/, .tools/iam-model-input-producer-review-fix-*, and docs/evidence/iam-model-input-producer-review-fix-report.md. Use fresh owned databases on new-project PG25432/useragent_v12, absence-preflight and explicit task ownership registry; never connect/reset original77 or earlier fixture databases. Existing fixture TLS assets may be read as frozen test inputs, but all live test endpoints/ports/resources must be newly owned. Collect and close only resources from this repair's own registry, not all names sharing the old prefix. Redis/MinIO/primary processes untouched.
+
+## I1: bind the writer to the persisted latest successful check
+
+ModelInputMaterialStore.localBinding must require that the retained proof matches the latest successful decision on the same locked run_authority row, following the existing MaterialScopeStore.requireWriter invariant (line245ff). Current strict/blocked/retry/expiry/parent checks are insufficient if P1 obtains a proof, P2 completes a later successful current/CAS, then P1 acquires the write locks. Bind persisted last_decision_id (and any actual equivalent successful-check version requirement from existing APIs) before protected payload read and at the actual write/replay validation points. Retain run/authority lock ordering and local precommit checks; no IAM network in the PG transaction. Do not weaken public strict, invent exact original operation/grant equality for the separate reusable GET, or change CAS/backoff.
+
+Failure-first test: actual valid P1, actual successful later P2 for the same run, then P1 must deny before protected payload/new durable rows; P2 must positively produce the request/scope and matching provenance. Use deterministic ordering, not timing luck. The existing same-proof concurrent-idempotency test remains a useful separate positive. If legitimate fixture policy can change obligations within the bound ceiling, demonstrate preservation; do not fabricate a public VerifiedAuthority as a trusted proof.
+
+## I2: bound expansion before allocating an oversized request
+
+Current ModelInputMaterials calls ContextAssembler before the2MiB bound. Values.resolve uses whole String.replace; two sources below1MiB can amplify into a huge string. Add a local finite-profile preallocation guard or bounded expansion before the unchanged general assembler. Preserve ordinary Values/ContextAssembler semantics, including repeated/missing/non-string/nested input references and Unicode/JSON escaping where those are supported. Account for expanded UTF-8 and JSON costs; retain final complete canonical request bound and original source/depth limits. Reject oversized expansion before a large allocation while locks are held. Do not solve it by disabling all templates, reducing every valid source to a tiny arbitrary cap, copying a broad resolver framework, or modifying the read-only shared classes.
+
+Failure-first proof must distinguish preallocation protection from the old eventual403 after allocation. Do not deliberately allocate GiB in the main test JVM. Use a controlled bounded child or a deterministic allocation observation with a positive control if necessary, and report its real limits. Include sub1MiB sources whose expansion exceeds2MiB, plus supported repeated-variable/Unicode and a near-limit legitimate positive. Observe that failure leaves request and scope absent. No OOM/crash may be relabeled a green normal rejection.
+
+## I3: validate parameter value shapes consistently
+
+For each params key that this profile already accepts, validate its supported numeric/integral/string/list structure before any immutable request fact. Keep synonymous sampling/output behavior consistent; malformed examples params.temperature="bad", topP={}, stop={} must deny. Preserve legitimate parameters in the actual persisted canonical request. Use the accepted contracts/actual existing mapping to choose supported shapes; do not invent provider-specific numerical ranges not required by the profile. No new model-gateway behavior or provider call. Test failed config writes neither table, valid typed values survive unchanged, and existing unsupported-config/model-binding checks continue to work.
+
+## Verification and freeze
+
+Use TDD and meaningful actual behavior RED before each repair. Reuse the frozen source as old implementation; do not create a weakening patch to accepted security to manufacture RED. New source epochs and actual compiler inputs/classes must bind RED/GREEN. Given both writer and assembler changes, run the affected ModelInputMaterialPostgresTest and unchanged ModelInputMaterialHttpTest on repaired bytes, including legacy/default-deny/realTLS positives. Broad old92/backend/web/browser suites need not be repeated absent a new concrete concern. Additional checks only for changed behavior/failures.
+
+Original target package failed Boot repackage rename. Do not rerun that known environmental failure, delete/overwrite historical.original, diagnose via process termination, or restart main. Package common+engine with original POM/dep/JDK and skipTests in a fresh owned exact-source work copy; label build-only and physical paths accurately. Use actual javac inputs/createdFiles/resources/JAR/Running outputs for finite targets, not historical whole target/node_modules scans.
+
+Do not claim cross-JVM public scope verification was run when only request/manifest serialization was measured. The reviewed common AuthorityProtocol.digest recursively sorts Set; no canonicalization defect or common change is requested. Manifest wire hash and typed public scope hash are distinct checks. Keep model/provider/tokenizer/measure/SecretVault closed, full original/parent obligations and metadata-only authenticated GET intact. Public CHAT/modelRefs/LLM/AGENT/driver/defaultIAM gates stay closed.
+
+Self-review comments/invariants, save before/final652 full source blobs and per-epoch evidence, narrow actual652→652 native diff/check/apply in own scratch, source EOF and actual finite targets, command/exit/PG/HTTP/resource closure and retained warning classifications. Preserve failures and metadata errors; cache byte checks and resume only unfinished metadata phases. Report exact final test epoch(s), no cumulative inflated counts, no final whole-platform/default-launcher/capacity claim. No protected8 writes or Accepted claim.
+
+Write the complete repair report to your separate report path, explicitly map I1/I2/I3 to code/test evidence, then seal control/inventory last. Return only short status, report/control/inventory/diff/source identities, test summary/concerns, and explicit ALL source/target/DB/HTTP/helper/owned/evidence/report/runtime rights return. Root and a fresh reviewer then inspect the repair; do not continue background work after freeze.

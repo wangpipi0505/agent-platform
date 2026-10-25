@@ -1,0 +1,39 @@
+{
+  "commands": [
+    {
+      "command": [
+        "git",
+        "-c",
+        "core.autocrlf=false",
+        "-c",
+        "core.eol=lf",
+        "apply",
+        "--check",
+        "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\algorithm-protocol-review-fixes\\complete.patch"
+      ],
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "-c",
+        "core.autocrlf=false",
+        "-c",
+        "core.eol=lf",
+        "apply",
+        "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\algorithm-protocol-review-fixes\\complete.patch"
+      ],
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": "G:/207/项目/算法重组工具/代码/agent-platform/docs/evidence/algorithm-protocol-review-fixes/complete.patch:111: trailing whitespace.\n# 算法协议独立审查返修记录\nG:/207/项目/算法重组工具/代码/agent-platform/docs/evidence/algorithm-protocol-review-fixes/complete.patch:112: trailing whitespace.\n\nG:/207/项目/算法重组工具/代码/agent-platform/docs/evidence/algorithm-protocol-review-fixes/complete.patch:113: trailing whitespace.\n本轮处理 `review-algorithm-protocol.md` 的 R1/P2、R2/P2 和 N1/P3，依据 root 的 `algorithm-protocol-review-fix-brief.md`。独占同一新工程 skill 源码/target；不 package、不启停主服务、不运行实际 JVM 纵切、不修改 common/其他模块/POM/迁移/原四契约/v1.2/Node fixture/暂停 runner。原独立审查 REQUEST_CHANGES 是本轮输入，本报告不自行签署 APPROVE，也不关闭完整 G2/T11。\nG:/207/项目/算法重组工具/代码/agent-platform/docs/evidence/algorithm-protocol-review-fixes/complete.patch:114: trailing whitespace.\n\nG:/207/项目/算法重组工具/代码/agent-platform/docs/evidence/algorithm-protocol-review-fixes/complete.patch:115: trailing whitespace.\n## 新基线和保护范围\nwarning: squelched 1432 whitespace errors\nwarning: 1437 lines add whitespace errors.\n"
+    }
+  ],
+  "baselineFiles": 94,
+  "replayVerifiedFiles": 97,
+  "frozenFiles": 97,
+  "byteEqual": true,
+  "sourcePomBeforeAfterEqual": 91,
+  "protectedOriginalEvidenceEqual": 492
+}

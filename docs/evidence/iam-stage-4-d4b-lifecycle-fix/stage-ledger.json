@@ -1,0 +1,407 @@
+{
+  "at": "2026-10-20T20:58:43.409Z",
+  "stages": [
+    {
+      "stage": "red-lifecycle-unit",
+      "command": [
+        "node",
+        "web/node_modules/vitest/vitest.mjs",
+        "run",
+        "--root",
+        "web",
+        "tests/portal-auth.test.ts",
+        "-t",
+        "D4b lifecycle"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "at": "2026-10-20T20:55:46.043Z",
+      "exit": 1,
+      "source": {
+        "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/red-lifecycle-unit/source-before.json",
+        "bytes": 108247,
+        "sha256": "e2862058344692ca0c85600dba285a6888b432f6f9846f16f5594dc47f426456"
+      },
+      "overlayCount": 1,
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/red-lifecycle-unit/output.raw",
+        "bytes": 3283,
+        "sha256": "1a07215c63cedb8cdff1919e931139ee821cc5c56671c583acb29afc562db9e2"
+      },
+      "commandRecord": {
+        "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/red-lifecycle-unit/command.json",
+        "bytes": 896,
+        "sha256": "ee05a9d5e978ee8228bc71cb0e10009f3708e9adc88a5f00d7339f1a6803806a"
+      },
+      "resultRecord": {
+        "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/red-lifecycle-unit/result.json",
+        "bytes": 69,
+        "sha256": "c66bdb240282158f543e7fe10a9471cee84054f5b3513c9680e856e878b263bb"
+      }
+    },
+    {
+      "stage": "red-lifecycle-browser",
+      "command": [
+        "node",
+        "web/tests/portal-browser.mjs",
+        "lifecycle-red-browser",
+        "D4b lifecycle Shell logout"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "at": "2026-10-20T20:56:29.387Z",
+      "exit": 1,
+      "source": {
+        "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/red-lifecycle-browser/source-before.json",
+        "bytes": 108247,
+        "sha256": "8a702b1fc0e9d7479fe4908e40b714c3782adab9dd2f9fa3e0bb5c5a27dc68f1"
+      },
+      "overlayCount": 2,
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/red-lifecycle-browser/output.raw",
+        "bytes": 2990,
+        "sha256": "f53774f0a70b22f6369f260d1ec4b58e5c41591f2549dcdc60a5bc2fd1e744c7"
+      },
+      "commandRecord": {
+        "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/red-lifecycle-browser/command.json",
+        "bytes": 1020,
+        "sha256": "5e529dc7640f69adc5f02b57151f9ee761788e9fccb13d940adb81256b336a22"
+      },
+      "resultRecord": {
+        "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/red-lifecycle-browser/result.json",
+        "bytes": 69,
+        "sha256": "604ff8d60c742387e3af725595f0650e54aac525a22136582acbd8e465a059d4"
+      },
+      "browserPhase": "lifecycle-red-browser",
+      "browserCases": [
+        {
+          "name": "D4b lifecycle Shell logout ignores queued host notifications and manual reconnect restores one subscription",
+          "passed": false,
+          "error": "Error: expect(received).toEqual(expected) // deep equality\n\n- Expected  -  6\n+ Received  + 15\n\n  Object {\n-   \"active\": 0,\n-   \"providerCalls\": 1,\n-   \"roles\": Array [],\n+   \"active\": 1,\n+   \"providerCalls\": 2,\n+   \"roles\": Array [\n+     \"ADMIN\",\n+   ],\n    \"subscriptions\": 1,\n-   \"token\": \"\",\n-   \"unsubscribed\": 1,\n-   \"user\": null,\n+   \"token\": \"A\",\n+   \"unsubscribed\": 0,\n+   \"user\": Object {\n+     \"expiresAt\": \"2026-10-20T20:57:31.012Z\",\n+     \"principalId\": \"A\",\n+     \"roles\": Array [\n+       \"ADMIN\",\n+     ],\n+     \"tenantId\": \"tenant_A\",\n+   },\n  }\n    at captureRawStack (G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\web\\node_modules\\playwright-core\\lib\\coreBundle.js:9282:17)\n    at callMatcherAsStep (G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\web\\node_modules\\playwright\\lib\\matchers\\expect.js:13316:57)\n    at Object.toEqual (G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\web\\node_modules\\playwright\\lib\\matchers\\expect.js:13308:23)\n    at G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\web\\tests\\portal-browser.mjs:92:415\n    at async run (G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\web\\tests\\portal-browser.mjs:87:128)\n    at async file:///G:/207/%E9%A1%B9%E7%9B%AE/%E7%AE%97%E6%B3%95%E9%87%8D%E7%BB%84%E5%B7%A5%E5%85%B7/%E4%BB%A3%E7%A0%81/agent-platform/web/tests/portal-browser.mjs:90:2",
+          "rawStart": 0,
+          "rawEnd": 4
+        }
+      ]
+    },
+    {
+      "stage": "green-lifecycle-unit",
+      "command": [
+        "node",
+        "web/node_modules/vitest/vitest.mjs",
+        "run",
+        "--root",
+        "web",
+        "tests/portal-auth.test.ts",
+        "-t",
+        "D4b lifecycle|same token reconnect|late provider and late session|segments a far future"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "at": "2026-10-20T20:57:12.280Z",
+      "exit": 0,
+      "source": {
+        "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/green-lifecycle-unit/source-before.json",
+        "bytes": 108247,
+        "sha256": "9116300e6c95f5896bf89e13b48c5f30e0b816aa51db7dd22f352ea4dc5bc5a5"
+      },
+      "overlayCount": 4,
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/green-lifecycle-unit/output.raw",
+        "bytes": 257,
+        "sha256": "cd94d3ff2c8406eaa8926697f940c62cab59268da69ef1547bfb53f3d782e106"
+      },
+      "commandRecord": {
+        "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/green-lifecycle-unit/command.json",
+        "bytes": 1448,
+        "sha256": "d2006b65528dbec7610fc0668740071a1fd8a07bcb86b6c72b2d8be0df5f39db"
+      },
+      "resultRecord": {
+        "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/green-lifecycle-unit/result.json",
+        "bytes": 69,
+        "sha256": "92fc044fb1731eaa7d374d35612a7e6785b01ead9196afe9bf499592023c9253"
+      }
+    },
+    {
+      "stage": "green-lifecycle-browser",
+      "command": [
+        "node",
+        "web/tests/portal-browser.mjs",
+        "lifecycle-green-browser",
+        "D4b lifecycle Shell"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "at": "2026-10-20T20:57:13.545Z",
+      "exit": 0,
+      "source": {
+        "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/green-lifecycle-browser/source-before.json",
+        "bytes": 108247,
+        "sha256": "9116300e6c95f5896bf89e13b48c5f30e0b816aa51db7dd22f352ea4dc5bc5a5"
+      },
+      "overlayCount": 4,
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/green-lifecycle-browser/output.raw",
+        "bytes": 944,
+        "sha256": "89090f131b76e585f31d53e8da86dd5b460bf8088174460b73aaf5221042c2ab"
+      },
+      "commandRecord": {
+        "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/green-lifecycle-browser/command.json",
+        "bytes": 1329,
+        "sha256": "5710ec04bc974e75d8b30ad00d1442998a6967d3e22add9087eaf9351d224c05"
+      },
+      "resultRecord": {
+        "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/green-lifecycle-browser/result.json",
+        "bytes": 69,
+        "sha256": "0498eff9dcacf4c57d7fbbe2ec81df099a509ffe4f137229fd47c20fdfbdde14"
+      },
+      "browserPhase": "lifecycle-green-browser",
+      "browserCases": [
+        {
+          "name": "D4b lifecycle Shell logout ignores queued host notifications and manual reconnect restores one subscription",
+          "passed": true,
+          "rawStart": 0,
+          "rawEnd": 6,
+          "afterLogout": {
+            "token": "",
+            "user": null,
+            "roles": [],
+            "providerCalls": 1,
+            "subscriptions": 1,
+            "unsubscribed": 1,
+            "active": 0
+          },
+          "manualSubscriptions": 2,
+          "activeSubscriptions": 1,
+          "activeHostSwitch": "B",
+          "postOrCancelCount": 0
+        },
+        {
+          "name": "D4b lifecycle Shell artifact401 stays invalid after host event until manual reconnect",
+          "passed": true,
+          "rawStart": 6,
+          "rawEnd": 17,
+          "currentArtifact401": true,
+          "hostDidNotReconnect": true,
+          "manualIdentity": "B",
+          "providerCalls": 2,
+          "downloadCount": 1,
+          "postOrCancelCount": 0
+        },
+        {
+          "name": "D4b lifecycle Shell expiry bounds rollback and waits for manual recovery after host event",
+          "passed": true,
+          "rawStart": 17,
+          "rawEnd": 21,
+          "wallRollbackMs": 3600000,
+          "installedLifetimeMs": 1200,
+          "expiredAtMonotonicBound": true,
+          "hostDidNotReconnect": true,
+          "manualIdentity": "B",
+          "providerCalls": 2,
+          "postOrCancelCount": 0
+        }
+      ]
+    },
+    {
+      "stage": "green-error-entry-gates",
+      "command": [
+        "node",
+        "web/node_modules/vitest/vitest.mjs",
+        "run",
+        "--root",
+        "web",
+        "tests/portal-auth.test.ts",
+        "-t",
+        "D4b lifecycle session HTTP"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "at": "2026-10-20T20:58:01.203Z",
+      "exit": 0,
+      "source": {
+        "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/green-error-entry-gates/source-before.json",
+        "bytes": 108247,
+        "sha256": "327a225065b0d71768e6111638435f70d3e7b520a7f2ba22ea1c60ecc6232dd7"
+      },
+      "overlayCount": 4,
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/green-error-entry-gates/output.raw",
+        "bytes": 254,
+        "sha256": "cd8409643967cfd43fde5846d6b07647009f71b8c3c632652eeb123cc56b66ee"
+      },
+      "commandRecord": {
+        "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/green-error-entry-gates/command.json",
+        "bytes": 1390,
+        "sha256": "e66dc8077392584b164c7db24b8ca29d090cf91ad1540434fbc097885563c6a5"
+      },
+      "resultRecord": {
+        "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/green-error-entry-gates/result.json",
+        "bytes": 69,
+        "sha256": "2abea6b27938fa43b3264da9802400e63e9166124d42bf6597e3715e259771ba"
+      }
+    },
+    {
+      "stage": "final-build-admin",
+      "command": [
+        "node",
+        "web/node_modules/vite/bin/vite.js",
+        "build",
+        "--config",
+        "web/admin/vite.config.ts"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "at": "2026-10-20T20:58:02.441Z",
+      "exit": 0,
+      "source": {
+        "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/final-build-admin/source-before.json",
+        "bytes": 108247,
+        "sha256": "327a225065b0d71768e6111638435f70d3e7b520a7f2ba22ea1c60ecc6232dd7"
+      },
+      "overlayCount": 4,
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/final-build-admin/output.raw",
+        "bytes": 1189,
+        "sha256": "b34cb623e200dd804748b16bc92d78d57ce2eb1220ee74d6ad2e029ea23818a9"
+      },
+      "commandRecord": {
+        "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/final-build-admin/command.json",
+        "bytes": 1331,
+        "sha256": "23bde64ef483996f89b79bfa6daaf22d534bb198313d1b6aeddffed998bfcdc1"
+      },
+      "resultRecord": {
+        "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/final-build-admin/result.json",
+        "bytes": 69,
+        "sha256": "0a205eca355b82329e06d190d9686c9dbabe7a4981bc9527bd4967e5bd4dc3b5"
+      }
+    },
+    {
+      "stage": "final-typecheck",
+      "command": [
+        "node",
+        "web/node_modules/vue-tsc/bin/vue-tsc.js",
+        "--noEmit",
+        "-p",
+        "web/tsconfig.json"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "at": "2026-10-20T20:58:02.446Z",
+      "exit": 0,
+      "source": {
+        "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/final-typecheck/source-before.json",
+        "bytes": 108247,
+        "sha256": "327a225065b0d71768e6111638435f70d3e7b520a7f2ba22ea1c60ecc6232dd7"
+      },
+      "overlayCount": 4,
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/final-typecheck/output.raw",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "commandRecord": {
+        "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/final-typecheck/command.json",
+        "bytes": 1325,
+        "sha256": "568bd088ca88a828d611562e8fae0531bcdc9f7fb5858ea071f8bbc25aa4c81b"
+      },
+      "resultRecord": {
+        "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/final-typecheck/result.json",
+        "bytes": 69,
+        "sha256": "bc692d64154e105e0a2a0777cde53e7be2c4c9998d4616c15808e1118c75b718"
+      }
+    },
+    {
+      "stage": "final-build-assistant",
+      "command": [
+        "node",
+        "web/node_modules/vite/bin/vite.js",
+        "build",
+        "--config",
+        "web/assistant.js/vite.config.ts"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "at": "2026-10-20T20:58:02.459Z",
+      "exit": 0,
+      "source": {
+        "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/final-build-assistant/source-before.json",
+        "bytes": 108247,
+        "sha256": "327a225065b0d71768e6111638435f70d3e7b520a7f2ba22ea1c60ecc6232dd7"
+      },
+      "overlayCount": 4,
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/final-build-assistant/output.raw",
+        "bytes": 194,
+        "sha256": "fd6eec2a3bee6aee867bca09f043c189adadd6062bb80258b84461d817efe09d"
+      },
+      "commandRecord": {
+        "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/final-build-assistant/command.json",
+        "bytes": 1342,
+        "sha256": "a231b0ea35aded315415e234ef30bb3da73b16581806ecf5482b7f85db67ad41"
+      },
+      "resultRecord": {
+        "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/final-build-assistant/result.json",
+        "bytes": 69,
+        "sha256": "b130a131687f1818a3d55edeacc6ff0fd812fa54aa279872822a47c54edd8ceb"
+      }
+    },
+    {
+      "stage": "final-build-webapp",
+      "command": [
+        "node",
+        "web/node_modules/vite/bin/vite.js",
+        "build",
+        "--config",
+        "web/webapp/vite.config.ts"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "at": "2026-10-20T20:58:02.464Z",
+      "exit": 0,
+      "source": {
+        "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/final-build-webapp/source-before.json",
+        "bytes": 108247,
+        "sha256": "327a225065b0d71768e6111638435f70d3e7b520a7f2ba22ea1c60ecc6232dd7"
+      },
+      "overlayCount": 4,
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/final-build-webapp/output.raw",
+        "bytes": 671,
+        "sha256": "4ecd072022602b85aa34c2cd0dd7f15e1d80f11c7b16d1f9cdf8d8bb3e87c7eb"
+      },
+      "commandRecord": {
+        "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/final-build-webapp/command.json",
+        "bytes": 1333,
+        "sha256": "45069b23f883b9d041bbea2cf58e4f46f4a57237a51d77b8c57d970f31a113ca"
+      },
+      "resultRecord": {
+        "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/final-build-webapp/result.json",
+        "bytes": 69,
+        "sha256": "d9a56c8fdc0564683513eb86cad35ffd2d35cd0bf745950763f9c8aefa13a44b"
+      }
+    },
+    {
+      "stage": "final-sdk-copy",
+      "command": [
+        "node",
+        "web/shared/copy-assistant.mjs"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "at": "2026-10-20T20:58:17.342Z",
+      "exit": 0,
+      "source": {
+        "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/final-sdk-copy/source-before.json",
+        "bytes": 108247,
+        "sha256": "327a225065b0d71768e6111638435f70d3e7b520a7f2ba22ea1c60ecc6232dd7"
+      },
+      "overlayCount": 4,
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/final-sdk-copy/output.raw",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "commandRecord": {
+        "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/final-sdk-copy/command.json",
+        "bytes": 1263,
+        "sha256": "ffa0554849d00d0163484b389832360e6b5307d0228cf6c6466d27fa779f45e3"
+      },
+      "resultRecord": {
+        "file": "docs/evidence/iam-stage-4-d4b-lifecycle-fix/final-sdk-copy/result.json",
+        "bytes": 69,
+        "sha256": "8552087c4789293fbcdfb0e504fdad9c73e08dfe716adfc1352725716043b346"
+      }
+    }
+  ],
+  "notOneCombinedGreenRun": true
+}

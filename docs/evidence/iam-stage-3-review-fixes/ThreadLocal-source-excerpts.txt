@@ -1,0 +1,68 @@
+169:      * @return the current thread's value of this thread-local
+170:      */
+171:     public T get() {
+172:         return get(Thread.currentThread());
+173:     }
+174: 
+175:     /**
+176:      * Returns the value in the current carrier thread's copy of this
+177:      * thread-local variable.
+178:      */
+179:     T getCarrierThreadLocal() {
+180:         assert this instanceof CarrierThreadLocal<T>;
+181:         return get(Thread.currentCarrierThread());
+182:     }
+183: 
+184:     private T get(Thread t) {
+185:         ThreadLocalMap map = getMap(t);
+186:         if (map != null) {
+187:             ThreadLocalMap.Entry e = map.getEntry(this);
+188:             if (e != null) {
+189:                 @SuppressWarnings("unchecked")
+190:                 T result = (T) e.value;
+
+280:      * @since 1.5
+281:      */
+282:      public void remove() {
+283:          remove(Thread.currentThread());
+284:      }
+285: 
+286:      void removeCarrierThreadLocal() {
+287:          assert this instanceof CarrierThreadLocal<T>;
+288:          remove(Thread.currentCarrierThread());
+289:      }
+290: 
+291:      private void remove(Thread t) {
+292:          ThreadLocalMap m = getMap(t);
+293:          if (m != null) {
+294:              m.remove(this);
+295:          }
+296:      }
+297: 
+298:     /**
+299:      * Get the map associated with a ThreadLocal. Overridden in
+300:      * InheritableThreadLocal.
+301:      *
+
+303:      * @return the map
+304:      */
+305:     ThreadLocalMap getMap(Thread t) {
+306:         return t.threadLocals;
+307:     }
+308: 
+309:     /**
+310:      * Create the map associated with a ThreadLocal. Overridden in
+311:      * InheritableThreadLocal.
+312:      *
+313:      * @param t the current thread
+314:      * @param firstValue value for the initial entry of the map
+315:      */
+316:     void createMap(Thread t, T firstValue) {
+317:         t.threadLocals = new ThreadLocalMap(this, firstValue);
+318:     }
+319: 
+320:     /**
+321:      * Factory method to create map of inherited thread locals.
+322:      * Designed to be called only from Thread constructor.
+323:      *
+324:      * @param  parentMap the map associated with parent thread

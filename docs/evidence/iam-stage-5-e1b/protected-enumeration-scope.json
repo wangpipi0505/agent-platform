@@ -1,0 +1,26 @@
+{
+  "protectedRoots": [
+    "docs",
+    "contracts",
+    "web",
+    "deploy",
+    "config"
+  ],
+  "explicitFiles": [
+    "AGENTS.md",
+    ".tools/run-iam-module-tests.mjs"
+  ],
+  "taskExclusions": [
+    "docs/evidence/iam-stage-5-e1b/",
+    "docs/evidence/iam-stage-5-e1b-report.md"
+  ],
+  "generatedDirectorySkipsPresent": [
+    "web/admin/dist",
+    "web/admin/node_modules",
+    "web/assistant.js/dist",
+    "web/node_modules",
+    "web/webapp/dist",
+    "web/webapp/node_modules"
+  ],
+  "note": "Generated-directory filters were fixed before any source changes; no protected-change whitelist was expanded. No symlinks were followed."
+}

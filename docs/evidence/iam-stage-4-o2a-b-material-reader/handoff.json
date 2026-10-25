@@ -1,0 +1,377 @@
+{
+  "status": "DONE_WITH_CONCERNS",
+  "accepted": false,
+  "finalEpoch": "labels-fix",
+  "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+  "commitsCreated": 0,
+  "sourceBefore": {
+    "file": ".local/iam-o2a-b-material-reader/source-before.json",
+    "bytes": 111999,
+    "sha256": "01121a4739ff5a0299cce9e5ecaa0ab5d433cd0be177ffd5d03f9410c67fe346"
+  },
+  "final": {
+    "sourceAfter": {
+      "file": ".local/iam-o2a-b-material-reader/labels-fix/source-after.json",
+      "bytes": 112856,
+      "sha256": "21fc2a4425e5d0767cb3627719ddfce395c97b9ca3718ebb205a18c90e0e9439"
+    },
+    "changedFiles": {
+      "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/labels-fix/changed-files.json",
+      "bytes": 1686,
+      "sha256": "3b24ebc2dbceca1cf41b7b11500220095fa108d01136aa8b06b4fc3bf5b770d9"
+    },
+    "epochDelta": {
+      "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/labels-fix/epoch-source-delta.json",
+      "bytes": 423,
+      "sha256": "d57496772a5cf26ab31b47132b8384faa613e8f64ffdd3bdfa458e680b4bb71f"
+    },
+    "target": {
+      "status": "success",
+      "inherited": {
+        "file": ".local/iam-o2a-b-material-reader/target-after.json",
+        "bytes": 426227,
+        "sha256": "e948c378f034bb2f30b321daf92ac28c1ad6de0716c2e5ed92edc31f2194d59b"
+      },
+      "inheritedCount": 2053,
+      "overlay": {
+        "file": ".local/iam-o2a-b-material-reader/labels-fix/target-overlay.json",
+        "bytes": 100781,
+        "sha256": "e5bda5438f448da1b0a656fcfecbc23e67d0cec36ba14b7767bfe10183746604"
+      },
+      "overlayCount": 458,
+      "targetAfter": {
+        "file": ".local/iam-o2a-b-material-reader/labels-fix/target-after.json",
+        "bytes": 426441,
+        "sha256": "273eedad6e9767d8508abf0cd0639d66dd7429fc2ea24a2983bbcff620187b3f"
+      },
+      "logicalCount": 2054,
+      "actualRunning": [
+        {
+          "class": "cn.agentplatform.engine.infra.RunEventReaderBudgetTest",
+          "tests": 13,
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0
+        },
+        {
+          "class": "cn.agentplatform.engine.infra.RunEventReaderPostgresTest",
+          "tests": 18,
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0
+        }
+      ],
+      "tests": 31,
+      "finalTestStatus": "PASS",
+      "errors": 0,
+      "compilerInputs": {
+        "file": ".local/iam-o2a-b-material-reader/labels-fix/compiler-inputs.json",
+        "bytes": 32607,
+        "sha256": "1f866533bbc766230b53f5c3556b08527b4c6287719eac59b88db033a1c174b6"
+      },
+      "diagnostics": {
+        "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/labels-fix/diagnostics.json",
+        "bytes": 690,
+        "sha256": "9807456c80e9a7a0108a10f520432fcc389213f5f9fed63b20b17fc3ca293214"
+      }
+    },
+    "patchReplay": {
+      "status": "success",
+      "patch": {
+        "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/labels-fix/source.patch",
+        "bytes": 93433,
+        "sha256": "3988cd175bbdebd2f6a9ee06d13b964b9b2894dd64a239edb56800269fd053a2"
+      },
+      "commands": {
+        "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/labels-fix/replay-commands.json",
+        "bytes": 4565,
+        "sha256": "182ec4a5c9fe57cb4c5899d77395e2cf3aa7494b194730d5c045f31de3b01d56"
+      },
+      "replayManifest": {
+        "file": ".local/iam-o2a-b-material-reader/labels-fix/replay-source.json",
+        "bytes": 112856,
+        "sha256": "21fc2a4425e5d0767cb3627719ddfce395c97b9ca3718ebb205a18c90e0e9439"
+      },
+      "sourceCount": 593,
+      "firstCheckExit": 0,
+      "firstApplyExit": 0,
+      "commitsCreated": 0
+    },
+    "test": {
+      "status": "PASS",
+      "actualRunning": [
+        {
+          "class": "cn.agentplatform.engine.infra.RunEventReaderBudgetTest",
+          "tests": 13,
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0
+        },
+        {
+          "class": "cn.agentplatform.engine.infra.RunEventReaderPostgresTest",
+          "tests": 18,
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0
+        }
+      ],
+      "tests": 31,
+      "commands": {
+        "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/labels-fix/commands.json",
+        "bytes": 5407,
+        "sha256": "f37f12ea0ff03e05ada6ea5740e2005e4bcbe653275198f6496c2efba57204ad"
+      },
+      "rawXml": [
+        {
+          "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-final02/iam-stage-o2a-b-final02.log",
+          "bytes": 14646,
+          "sha256": "34e5024f705561667eb359d6958a1eee0c1b16b12e928d539a4192eef7cd5f1d"
+        },
+        {
+          "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-final02/TEST-cn.agentplatform.engine.infra.RunEventReaderPostgresTest.xml",
+          "bytes": 59611,
+          "sha256": "b7f7e71b73dda6c29529ccc3474eea84b308b491831b5802f7a1dde8cb4bfeaa"
+        },
+        {
+          "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-final02/cn.agentplatform.engine.infra.RunEventReaderPostgresTest.txt",
+          "bytes": 367,
+          "sha256": "f0e3c05e14fe29e812395e18dff335e03aefa155d77f83bbb43eceed49243a81"
+        },
+        {
+          "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-final02/TEST-cn.agentplatform.engine.infra.RunEventReaderBudgetTest.xml",
+          "bytes": 47845,
+          "sha256": "3f8402de1e6cda4d391edd18c4451ccbea4d8f8fd0070064238707b06bf833ad"
+        },
+        {
+          "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-final02/cn.agentplatform.engine.infra.RunEventReaderBudgetTest.txt",
+          "bytes": 363,
+          "sha256": "a94c7c343b0ea81cb103f39f5fbaa6e89fbc32589931c686eff7029c64febf59"
+        }
+      ]
+    },
+    "samples": {
+      "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/labels-fix/samples.json",
+      "bytes": 1164,
+      "sha256": "08badc00efdc823ebd119cd053fb17defbb1fb24342ba84bd3e90bc0d45328dc"
+    },
+    "journal": {
+      "file": ".local/iam-o2a-b-material-reader/labels-fix/journal.json",
+      "bytes": 3448,
+      "sha256": "2eac4e8d7cc452fd98fa47f70ce2b29aa266453375d7ac2d11b8c1d591078150"
+    },
+    "archivedManifests": [
+      {
+        "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/labels-fix/source-after.json",
+        "bytes": 112856,
+        "sha256": "21fc2a4425e5d0767cb3627719ddfce395c97b9ca3718ebb205a18c90e0e9439"
+      },
+      {
+        "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/labels-fix/target-after.json",
+        "bytes": 426441,
+        "sha256": "273eedad6e9767d8508abf0cd0639d66dd7429fc2ea24a2983bbcff620187b3f"
+      },
+      {
+        "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/labels-fix/target-overlay.json",
+        "bytes": 100781,
+        "sha256": "e5bda5438f448da1b0a656fcfecbc23e67d0cec36ba14b7767bfe10183746604"
+      },
+      {
+        "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/labels-fix/compiler-inputs.json",
+        "bytes": 32607,
+        "sha256": "1f866533bbc766230b53f5c3556b08527b4c6287719eac59b88db033a1c174b6"
+      },
+      {
+        "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/labels-fix/replay-source.json",
+        "bytes": 112856,
+        "sha256": "21fc2a4425e5d0767cb3627719ddfce395c97b9ca3718ebb205a18c90e0e9439"
+      }
+    ]
+  },
+  "preservedV1": {
+    "sourceAfter": {
+      "file": ".local/iam-o2a-b-material-reader/source-after.json",
+      "bytes": 112856,
+      "sha256": "c6fcbc29f7cb3a125cb36bc0073971908be0a704b03a26a88c0697a657266ff1"
+    },
+    "changedFiles": {
+      "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/changed-files.json",
+      "bytes": 1686,
+      "sha256": "4f990488c698cede279580e1d8c30abf977a63e1a555cf4919c40a9e45f758f4"
+    },
+    "target": {
+      "status": "success",
+      "inherited": {
+        "file": "docs/evidence/iam-stage-4-service-tests-migration/target-after.json",
+        "bytes": 419609,
+        "sha256": "244535cb02df60585217088e321f2b6ac44aaca20de22821a080d66d41967e20"
+      },
+      "inheritedCount": 2023,
+      "overlay": {
+        "file": ".local/iam-o2a-b-material-reader/target-overlay.json",
+        "bytes": 102384,
+        "sha256": "bb89a514cbbeb799c92649b640acd0721e2e9c9a402198d581946ca45fcff590"
+      },
+      "overlayCount": 465,
+      "targetAfter": {
+        "file": ".local/iam-o2a-b-material-reader/target-after.json",
+        "bytes": 426227,
+        "sha256": "e948c378f034bb2f30b321daf92ac28c1ad6de0716c2e5ed92edc31f2194d59b"
+      },
+      "logicalCount": 2053,
+      "actualRunning": [
+        {
+          "class": "cn.agentplatform.engine.domain.GraphRulesTest",
+          "tests": 1,
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0
+        },
+        {
+          "class": "cn.agentplatform.engine.infra.FlowMaterialScopePostgresTest",
+          "tests": 11,
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0
+        },
+        {
+          "class": "cn.agentplatform.engine.infra.FlowMaterialStatusPostgresTest",
+          "tests": 11,
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0
+        },
+        {
+          "class": "cn.agentplatform.engine.infra.InitialMaterialScopePostgresTest",
+          "tests": 12,
+          "errors": 1,
+          "failures": 0,
+          "skipped": 0
+        },
+        {
+          "class": "cn.agentplatform.engine.infra.RunEventReaderBudgetTest",
+          "tests": 13,
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0
+        },
+        {
+          "class": "cn.agentplatform.engine.infra.RunEventReaderPostgresTest",
+          "tests": 17,
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0
+        }
+      ],
+      "tests": 65,
+      "finalTestStatus": "FAIL_EXISTING_TEST",
+      "errors": 1,
+      "compilerInputs": {
+        "file": ".local/iam-o2a-b-material-reader/compiler-inputs.json",
+        "bytes": 32607,
+        "sha256": "1f866533bbc766230b53f5c3556b08527b4c6287719eac59b88db033a1c174b6"
+      },
+      "diagnostics": {
+        "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/diagnostics.json",
+        "bytes": 3055,
+        "sha256": "f0157fcade0dbd16c9de3f39d5971a1d338442fbcb47602631e44238e41fe454"
+      }
+    },
+    "patchReplay": {
+      "status": "success",
+      "patch": {
+        "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/source.patch",
+        "bytes": 90274,
+        "sha256": "f847e5356c5fff40e5a6b2613f55890e1ccec08edb94beec53ebf66c923925eb"
+      },
+      "commands": {
+        "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/replay-commands.json",
+        "bytes": 4361,
+        "sha256": "35868d86aa79f4488adb2f329cc26407b623dc85be569f6e01484e7acd21fc1e"
+      },
+      "replayManifest": {
+        "file": ".local/iam-o2a-b-material-reader/replay-source.json",
+        "bytes": 112856,
+        "sha256": "c6fcbc29f7cb3a125cb36bc0073971908be0a704b03a26a88c0697a657266ff1"
+      },
+      "sourceCount": 593,
+      "firstCheckExit": 0,
+      "firstApplyExit": 0,
+      "commitsCreated": 0
+    },
+    "commands": {
+      "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/commands.json",
+      "bytes": 23319,
+      "sha256": "87dd81d2880c3992b0ed8773cb9aa06040af17f1805ba1e19ae84f164e8360f5"
+    },
+    "samples": {
+      "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/samples.json",
+      "bytes": 2091,
+      "sha256": "0be1914c607a86338ac04bfc5bd3c89b645fa5d68629a25187ccbb24f955907e"
+    },
+    "final01": "six classes65:64pass/0failure/1 frozen inherited setup error; new B30pass",
+    "targetPhysicalArchive": {
+      "root": ".local/iam-o2a-b-material-reader/v1-target-archive",
+      "mapping": "cached465 paths relative to archive root; copy only before new compilation; no physical rehash by author",
+      "record": {
+        "file": ".local/iam-o2a-b-material-reader/v1-target-archive-record.json",
+        "bytes": 299,
+        "sha256": "ea11d25b449f557b16c263170537865119770badbd39151c833da9ca8fe3986f"
+      }
+    },
+    "journal": {
+      "file": ".local/iam-o2a-b-material-reader/journal.json",
+      "bytes": 4326,
+      "sha256": "d98c789bff26bf330778ef253f2ed79e4c24f7360dabd6267bc348cc1cd9ea4e"
+    }
+  },
+  "report": {
+    "file": "docs/evidence/iam-stage-4-o2a-b-material-reader-report.md",
+    "bytes": 29408,
+    "sha256": "0fca24b8c6551228eb340fd0ebcfcfd7619fea6f0c1c5385cb20b2e394e33f60"
+  },
+  "upstreamRead": {
+    "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/upstream-read.json",
+    "bytes": 73018,
+    "sha256": "de51bd83a193db8d788de65728fbeca9f0cfae11d1a9d0751651068f86788a84"
+  },
+  "rootSizeSupplement": {
+    "artifacts": {
+      "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/root-size-post-final/artifacts.json",
+      "bytes": 1106,
+      "sha256": "19885a7cac5258b8596fc04f878cbd1a87779d5df61bc31105b887a6770dbb09"
+    },
+    "meaning": "one explicitly allowed post-final01 immutable root scalar observation, not same measurement trace"
+  },
+  "decisions": [
+    {
+      "file": "docs/evidence/iam-stage-4-o2a-b-budget-decision.md",
+      "bytes": 3120,
+      "sha256": "f4204a3d8bc99e00d0fbeccc66151d4c491fd63b6e63c5c27c08cb04cd7f9cd2"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o2a-b-parser-cache-decision.md",
+      "bytes": 2359,
+      "sha256": "e7c184bc8402301526da23e08bf6c60d725131ede442d20cc752fc36741f8cc9"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o2a-b-inherited-test-decision.md",
+      "bytes": 3076,
+      "sha256": "646ea3769a7a5ae749ee0c288682ec39a8d5cc7a601a0fde5da5f20b264d3309"
+    }
+  ],
+  "inventory": {
+    "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/own-inventory.json",
+    "seal": "last single generation after this handoff/report; sole self-exclusion, final identity supplied separately to root to avoid circular digests"
+  },
+  "concerns": [
+    "frozen inherited Initial test migration pending in separate task",
+    "author done is not Accepted; independent fresh spec/quality review required",
+    "C HTTP/SSE/state/window/actual output and O2b cross-hop not implemented",
+    "reserved conservative representation upper bounds do not prove exact JVM heap/production capacity; common canonical actual is not directly measured",
+    "C must enforce finite receiving frame backing/queue budget across actual write/flush"
+  ],
+  "metadataRecovery": {
+    "file": ".local/iam-o2a-b-material-reader/labels-fix/metadata-error.json",
+    "meaning": "helper compile error only; successful physical phases reused"
+  }
+}

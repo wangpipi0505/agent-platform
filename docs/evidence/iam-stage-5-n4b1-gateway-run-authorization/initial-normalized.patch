@@ -1,0 +1,761 @@
+diff --git a/baseline/admin-common/src/main/java/cn/agentplatform/common/authority/CurrentAuthorityClient.java b/frozen/admin-common/src/main/java/cn/agentplatform/common/authority/CurrentAuthorityClient.java
+index e33b4d9..8882858 100644
+--- a/baseline/admin-common/src/main/java/cn/agentplatform/common/authority/CurrentAuthorityClient.java
++++ b/frozen/admin-common/src/main/java/cn/agentplatform/common/authority/CurrentAuthorityClient.java
+@@ -1,17 +1,21 @@
+ package cn.agentplatform.common.authority;
+ import cn.agentplatform.common.Actor;
+ import java.time.Instant;
+ import java.util.*;
+ 
+ public interface CurrentAuthorityClient {
+  ServiceTicket client(ServiceCall call);
+  ServiceTicket exchange(String subjectToken,ServiceCall call);
++ /** Only the IAM gateway's original portal exchange can mint this short-lived local proof. */
++ default HttpCurrentAuthorityClient.GatewayRunAuthorization exchangeGatewayPublishedRun(String originalPortalToken,ResourceBinding publishedRoot){
++  throw AuthorityProtocol.denied();
++ }
+  ServiceTicket resume(DelegationRef delegation,ServiceCall call);
+  ServiceTicket forward(VerifiedAuthority authority,ServiceCall call);
+  VerifiedAuthority authorize(String serviceTicket,ServiceCall call);
+  default HttpCurrentAuthorityClient.RetainedAuthorization authorizeRetained(String serviceTicket,ServiceCall call){
+   return HttpCurrentAuthorityClient.RetainedAuthorization.currentOnly(authorize(serviceTicket,call));
+  }
+  WorkloadAuthority authorizeWorkload(String serviceTicket,ServiceCall call);
+  VerifiedAuthority approver(DelegationRef delegation,SubjectKey approver,ResourceBinding approval);
+ }
+diff --git a/baseline/admin-common/src/main/java/cn/agentplatform/common/authority/HttpCurrentAuthorityClient.java b/frozen/admin-common/src/main/java/cn/agentplatform/common/authority/HttpCurrentAuthorityClient.java
+index 112605a..927d2f4 100644
+--- a/baseline/admin-common/src/main/java/cn/agentplatform/common/authority/HttpCurrentAuthorityClient.java
++++ b/frozen/admin-common/src/main/java/cn/agentplatform/common/authority/HttpCurrentAuthorityClient.java
+@@ -1,260 +1,325 @@
+ package cn.agentplatform.common.authority;
+ 
+ import cn.agentplatform.common.*;
+ import com.fasterxml.jackson.databind.JsonNode;
+ import java.net.URI;
+ import java.time.*;
+ import java.util.*;
+ 
+ /**
+  * Fixed custom adapter profile: signed decision envelopes bind the exact request digest and nonce.
+  * The authority owns persisted grants, ceilings and operation policy. No local permission cache exists.
+  */
+ public final class HttpCurrentAuthorityClient implements CurrentAuthorityClient,ResponseAuthorityClient,AutoCloseable {
+     private final AuthorityProperties config;
+     private final Clock clock;
+     private final WorkloadCredentialResolver credentials;
+     private final BoundedIamHttp http;
+     private final AuthorityResponseVerifier verifier;
+     private final TrustedJwtDecoder decoder;
++    private volatile boolean closed;
+     public HttpCurrentAuthorityClient(AuthorityProperties config,Clock clock,WorkloadCredentialResolver credentials,boolean testProfile){
+         config.validate(testProfile);this.config=config;this.clock=Objects.requireNonNull(clock);this.credentials=Objects.requireNonNull(credentials);
+         http=new BoundedIamHttp(config,testProfile);verifier=new AuthorityResponseVerifier(config,clock,http);decoder=new TrustedJwtDecoder(config,clock,testProfile);
+     }
+     @Override public ServiceTicket client(ServiceCall call){return ticket(query("client",call,Map.of(),true),call,"workload",null,null);}
+     @Override public ServiceTicket exchange(String subjectToken,ServiceCall call){
+         if(subjectToken==null||subjectToken.length()>16384||subjectToken.split("\\.").length!=3)throw AuthorityProtocol.denied();
+         // Unverified use only selects a fixed mutually exclusive profile. It never supplies permission.
+         var input=AuthorityResponseVerifier.object(Base64.getUrlDecoder().decode(subjectToken.split("\\.")[1]));
+         if("integration".equals(input.path("token_use").textValue())){
+             if(!"gateway".equals(config.serviceId())||config.integration()==null||!config.integration().enabled())throw AuthorityProtocol.denied();
+             var c=query("exchange_integration",call,Map.of("subject_token",subjectToken),true);
+             AuthorityProtocol.same(AuthorityProtocol.digest(subjectToken),AuthorityProtocol.text(c,"subject_token_sha256"));
+             for(String k:List.of("tenant_id","sub","app_code","biz_system_code","user_id","credential_id","policy_digest"))
+                 if(!input.has(k)||!Objects.equals(input.get(k),c.get(k)))throw AuthorityProtocol.denied();
+             var result=ticket(c,call,"delegated",null,null);
+             if(!"INTEGRATION".equals(result.operation().sourceKind())||result.operation().expiresAt().isAfter(AuthorityProtocol.time(input,"exp")))throw AuthorityProtocol.denied();
+             AuthorityProtocol.same(AuthorityProtocol.text(input,"tenant_id"),result.operation().subject().tenantId());
+             AuthorityProtocol.same(AuthorityProtocol.text(input,"sub"),result.operation().subject().principalId());
+             return result;
+         }
++        return portalExchange(subjectToken,call).verified().ticket();
++    }
++    private record VerifiedTicket(ServiceTicket ticket,JsonNode claims) {}
++    private record PortalExchange(VerifiedTicket verified,JsonNode current,Instant sourceExpiresAt,
++            Instant observedAt,long startedNanos) {}
++    private PortalExchange portalExchange(String subjectToken,ServiceCall call){
++        long startedNanos=System.nanoTime();var observedAt=clock.instant();
+         var jwt=decoder.decode(subjectToken);
+         if(!"user".equals(jwt.getClaims().get("token_use")))throw AuthorityProtocol.denied();
+         var mapped=new PortalClaimMapper(config.portal()).map(jwt);
+         if(!mapped.scopes().contains("platform.access"))throw AuthorityProtocol.denied();
+-        var result=ticket(query("exchange",call,Map.of("subject_token",subjectToken),true),call,"delegated",mapped.actor(),null);
+-        var signed=AuthorityResponseVerifier.object(Base64.getUrlDecoder().decode(result.value().split("\\.")[1]));
+-        AuthorityProtocol.within(mapped.actor(),AuthorityProtocol.actor(signed.get("initial_ceiling")));
++        var current=query("exchange",call,Map.of("subject_token",subjectToken),true);
++        var verified=verifiedTicket(current,call,"delegated",mapped.actor(),null);var result=verified.ticket();
++        AuthorityProtocol.within(mapped.actor(),AuthorityProtocol.actor(verified.claims().get("initial_ceiling")));
+         if(!"PORTAL".equals(result.operation().sourceKind())||result.operation().expiresAt().isAfter(jwt.getExpiresAt()))throw AuthorityProtocol.denied();
+-        return result;
++        return new PortalExchange(verified,current,jwt.getExpiresAt(),observedAt,startedNanos);
++    }
++    @Override public GatewayRunAuthorization exchangeGatewayPublishedRun(String originalPortalToken,ResourceBinding publishedRoot){
++        if(closed||!"iam".equals(config.mode())||!"gateway".equals(config.serviceId()))throw AuthorityProtocol.denied();
++        if(publishedRoot==null||!"app-version".equals(publishedRoot.kind()))throw AuthorityProtocol.denied();
++        int at=publishedRoot.id().lastIndexOf('@');
++        if(at<1||!publishedRoot.id().substring(at+1).matches("[1-9][0-9]{0,18}"))throw AuthorityProtocol.denied();
++        MetadataSelectors.code(publishedRoot.id().substring(0,at));
++        try{Long.parseLong(publishedRoot.id().substring(at+1));}catch(NumberFormatException bad){throw AuthorityProtocol.denied();}
++        AuthorityProtocol.hash(publishedRoot.versionDigest());
++        var exchange=portalExchange(originalPortalToken,new ServiceCall("engine","proxy.engine.post.RunController.run",publishedRoot));
++        origin(exchange.verified().claims());
++        var proof=new GatewayRunAuthorization(this,exchange);
++        // A late ticket/JWK verification cannot spend an already-expired current decision.
++        proof.requireVerified();
++        return proof;
++    }
++    /**
++     * Same private portal/query/ticket verification, never a public authority wrapper. This proof
++     * belongs to its creating client and can be checked on another thread without rebinding a
++     * request context. It cannot renew, refresh or extend a signed operation or response window.
++     * Close invalidates it as soon as the owner starts closing; this makes no promise that the
++     * underlying JDK HTTP client can hard-cancel every in-flight network operation.
++     */
++    public static final class GatewayRunAuthorization {
++        private final HttpCurrentAuthorityClient owner;
++        private final PortalExchange evidence;
++        private final Clock verificationClock;
++        private final Instant grantExpiresAt,expiresAt;
++        private final long budgetNanos;
++        private boolean failed;
++        private GatewayRunAuthorization(HttpCurrentAuthorityClient owner,PortalExchange evidence){
++            this.owner=owner;this.evidence=evidence;this.verificationClock=owner.clock;
++            this.grantExpiresAt=AuthorityProtocol.time(evidence.verified().claims(),"grant_expires_at");
++            this.expiresAt=Collections.min(List.of(AuthorityProtocol.time(evidence.current(),"exp"),
++                    ticket().expiresAt(),operation().expiresAt(),grantExpiresAt,evidence.sourceExpiresAt()));
++            // Anchor before portal/query/JWK verification, not at return or on subsequent checks.
++            // This may conservatively shorten the signed window; wall-clock rollback cannot add it back.
++            var budget=Duration.between(evidence.observedAt(),expiresAt);
++            var maximum=Duration.ofSeconds(owner.config.authority().maxDecisionSeconds());
++            if(budget.compareTo(maximum)>0)budget=maximum;
++            this.budgetNanos=budget.isNegative()?0:budget.toNanos();
++        }
++        public ServiceTicket ticket(){return evidence.verified().ticket();}
++        public OperationBinding operation(){return ticket().operation();}
++        public synchronized void requireVerified(){
++            if(failed)throw AuthorityProtocol.expired();
++            try{
++                if(owner.closed)throw AuthorityProtocol.denied();
++                var now=verificationClock.instant();
++                long elapsed=System.nanoTime()-evidence.startedNanos();
++                if(!expiresAt.isAfter(now)||elapsed<0||elapsed>=budgetNanos)throw AuthorityProtocol.expired();
++            }catch(RuntimeException failure){failed=true;throw failure;}
++        }
++        @Override public String toString(){return "GatewayRunAuthorization[private-proof]";}
+     }
+     @Override public ServiceTicket resume(DelegationRef delegation,ServiceCall call){
+         requireDelegation(delegation);
+         var result=ticket(query("resume",call,Map.of("grant_ref",delegation.value()),true),call,"delegated",null,delegation);
+         if(!"DELEGATED".equals(result.operation().sourceKind()))throw AuthorityProtocol.denied();
+         return result;
+     }
+     @Override public ServiceTicket forward(VerifiedAuthority authority,ServiceCall call){
+         AuthorityProtocol.requireCurrent(authority,clock);
+         var result=ticket(query("forward",call,Map.of("decision_id",authority.decisionId(),"grant_ref",authority.delegation().value(),"operation_id",authority.operation().operationId()),true),call,"delegated",authority.actor(),authority.delegation());
+         AuthorityProtocol.same(authority.operation(),result.operation());
+         return result;
+     }
+     @Override public VerifiedAuthority authorize(String serviceTicket,ServiceCall call){
+         return authorizeRetained(serviceTicket,call).current();
+     }
+     @Override public RetainedAuthorization authorizeRetained(String serviceTicket,ServiceCall call){
+         var jwt=decoder.decode(serviceTicket);
+         if(!"delegated".equals(jwt.getClaims().get("authority_mode")))throw AuthorityProtocol.denied();
+         var input=AuthorityResponseVerifier.object(Base64.getUrlDecoder().decode(serviceTicket.split("\\.")[1]));
+         AuthorityProtocol.call(input,call);
+         var current=query("authorize",call,Map.of("service_ticket",serviceTicket),false);
+         AuthorityProtocol.same(jwt.getId(),AuthorityProtocol.text(current,"ticket_jti"));
+         AuthorityProtocol.same(AuthorityProtocol.text(input,"caller"),AuthorityProtocol.text(current,"subject_caller"));
+         var result=authority(current,call);
+         AuthorityProtocol.same(AuthorityProtocol.text(input,"grant_ref"),result.delegation().value());
+         AuthorityProtocol.same(AuthorityProtocol.text(input,"authorization_version"),result.authorizationVersion());
+         AuthorityProtocol.within(AuthorityProtocol.actor(input),result.actor());
+         var operation=AuthorityProtocol.operation(input.get("operation"),AuthorityProtocol.actor(input),call.resource(),result.delegation().value(),clock);
+         AuthorityProtocol.same(operation,result.operation());
+         verifyCeiling(input,AuthorityProtocol.actor(input),operation,null);
+         var initial=AuthorityProtocol.actor(input.get("initial_ceiling"));
+         AuthorityProtocol.same(initial,AuthorityProtocol.actor(current.get("initial_ceiling")));
+         AuthorityProtocol.same(AuthorityProtocol.time(input,"grant_expires_at"),result.delegation().expiresAt());
+         if(jwt.getExpiresAt().isAfter(operation.expiresAt()))throw AuthorityProtocol.denied();
+         // The online query may consume the last part of the ticket's lifetime.
+         if(!jwt.getExpiresAt().isAfter(clock.instant()))throw AuthorityProtocol.expired();
+         // Both fields are from this exact verified ticket/decision pair. A partial rollout may
+         // omit both, but malformed or single-sided evidence must never become current-only.
+         if(!input.has("origin_authentication_id")&&!current.has("origin_authentication_id"))return RetainedAuthorization.currentOnly(result);
+         String origin=origin(input);AuthorityProtocol.same(origin,origin(current));
+         return new RetainedAuthorization(result,initial,origin,jwt.getId(),jwt.getExpiresAt(),
+                 AuthorityProtocol.text(current,"nonce"),AuthorityProtocol.text(current,"request_sha256"),clock);
+     }
+     private static String origin(JsonNode c){
+         String value=AuthorityProtocol.text(c,"origin_authentication_id");
+         if(value.length()>128)throw AuthorityProtocol.denied();return value;
+     }
+     /**
+      * Same-verification snapshot, not a durable authorization capability. Business transactions
+      * must additionally requireBound on the live request frame. No caller can attach an initial
+      * ceiling, origin or clock to a public VA; only the strict mapping above mints this proof.
+      */
+     public static final class RetainedAuthorization {
+         private final VerifiedAuthority current;
+         private final Actor initial;
+         private final String originAuthenticationId,ticketJti,nonce,requestSha256;
+         private final Instant ticketExpiresAt;
+         private final Clock verificationClock;
+         private RetainedAuthorization(VerifiedAuthority current,Actor initial,String originAuthenticationId,
+                 String ticketJti,Instant ticketExpiresAt,String nonce,String requestSha256,Clock verificationClock){
+             this.current=Objects.requireNonNull(current);
+             this.initial=initial==null?null:new Actor(initial.tenantId(),initial.principalId(),initial.roles(),initial.attributes());
+             this.originAuthenticationId=originAuthenticationId;this.ticketJti=ticketJti;this.ticketExpiresAt=ticketExpiresAt;
+             this.nonce=nonce;this.requestSha256=requestSha256;this.verificationClock=verificationClock;
+         }
+         public static RetainedAuthorization currentOnly(VerifiedAuthority current){
+             return new RetainedAuthorization(current,null,null,null,null,null,null,null);
+         }
+         public VerifiedAuthority current(){return current;}
+         public boolean hasInitialProof(){return initial!=null;}
+         public Actor requireInitialCeiling(){requireVerified();return initial;}
+         public String requireOriginAuthenticationId(){requireVerified();return originAuthenticationId;}
+         public void requireVerified(){
+             if(!hasInitialProof())throw AuthorityProtocol.denied();
+             AuthorityProtocol.requireCurrent(current,verificationClock);
+             if(!ticketExpiresAt.isAfter(verificationClock.instant()))throw AuthorityProtocol.expired();
+         }
+         @Override public String toString(){return "RetainedAuthorization[initialProof="+hasInitialProof()+"]";}
+     }
+     @Override public WorkloadAuthority authorizeWorkload(String serviceTicket,ServiceCall call){
+         var jwt=decoder.decode(serviceTicket);
+         if(!"workload".equals(jwt.getClaims().get("authority_mode")))throw AuthorityProtocol.denied();
+         var input=AuthorityResponseVerifier.object(Base64.getUrlDecoder().decode(serviceTicket.split("\\.")[1]));AuthorityProtocol.call(input,call);
+         var result=query("authorize_workload",call,Map.of("service_ticket",serviceTicket),false);
+         AuthorityProtocol.same(jwt.getId(),AuthorityProtocol.text(result,"ticket_jti"));
+         AuthorityProtocol.same("workload",AuthorityProtocol.text(result,"authority_mode"));
+         AuthorityProtocol.same(jwt.getClaimAsString("caller"),AuthorityProtocol.text(result,"subject_caller"));
+         for(String k:List.of("tenant_id","sub","grant_ref","roles","attributes","operation"))if(result.has(k))throw AuthorityProtocol.denied();
+         return new WorkloadAuthority(jwt.getClaimAsString("caller"),call,AuthorityProtocol.text(result,"jti"),AuthorityProtocol.time(result,"iat"),AuthorityProtocol.time(result,"exp"));
+     }
+     @Override public VerifiedAuthority approver(DelegationRef delegation,SubjectKey approver,ResourceBinding approval){
+         requireDelegation(delegation);
+         var call=new ServiceCall(config.serviceId(),"approval.current",approval);
+         var c=query("approver",call,Map.of("grant_ref",delegation.value(),"approver",approver),false);
+         var result=authority(c,call);
+         AuthorityProtocol.same(approver,AuthorityProtocol.subject(result.actor()));
+         AuthorityProtocol.same(delegation.value(),result.delegation().value());
+         return result;
+     }
+     private ServiceTicket ticket(JsonNode envelope,ServiceCall call,String mode,Actor upper,DelegationRef delegation){
++        return verifiedTicket(envelope,call,mode,upper,delegation).ticket();
++    }
++    private VerifiedTicket verifiedTicket(JsonNode envelope,ServiceCall call,String mode,Actor upper,DelegationRef delegation){
+         String raw=AuthorityProtocol.text(envelope,"ticket");
+         var c=verifier.verify(raw,"at+jwt","service","urn:agent-platform:service:"+call.target(),config.authority().maxTicketSeconds()).claims();
+         AuthorityProtocol.call(c,call);AuthorityProtocol.same(config.serviceId(),AuthorityProtocol.text(c,"caller"));
+         AuthorityProtocol.same(config.serviceId(),AuthorityProtocol.text(c,"client_id"));AuthorityProtocol.same(call.action(),AuthorityProtocol.text(c,"scope"));
+         AuthorityProtocol.same(mode,AuthorityProtocol.text(c,"authority_mode"));
+         if(!ServiceRoutePolicy.localRunAdvance(config.serviceId(),call,mode,c.path("operation").path("source_kind").asText(),c.path("operation").path("origin_kind").asText()) && new ServiceRoutePolicy().routes().stream().noneMatch(r->config.serviceId().equals(r.caller())&&call.target().equals(r.target())&&call.action().equals(r.action())&&mode.equals(r.mode())))throw AuthorityProtocol.denied();
+         if("workload".equals(mode)){
+             AuthorityProtocol.same(config.serviceId(),AuthorityProtocol.text(c,"sub"));
+             for(String k:List.of("tenant_id","grant_ref","roles","attributes","operation"))if(c.has(k))throw AuthorityProtocol.denied();
+-            return new ServiceTicket(raw,AuthorityProtocol.time(c,"exp"),null);
++            return new VerifiedTicket(new ServiceTicket(raw,AuthorityProtocol.time(c,"exp"),null),c);
+         }
+         var actor=AuthorityProtocol.actor(c);if(upper!=null)AuthorityProtocol.within(upper,actor);
+         String grant=AuthorityProtocol.text(c,"grant_ref");AuthorityProtocol.text(c,"authorization_version");
+         var grantExpiry=AuthorityProtocol.time(c,"grant_expires_at");
+         var operation=AuthorityProtocol.operation(c.get("operation"),actor,call.resource(),grant,clock);
+         verifyCeiling(c,actor,operation,upper);
+         if(delegation!=null){AuthorityProtocol.same(delegation.value(),grant);AuthorityProtocol.same(delegation.subject(),AuthorityProtocol.subject(actor));AuthorityProtocol.same(delegation.expiresAt(),grantExpiry);}
+         if(AuthorityProtocol.time(c,"exp").isAfter(operation.expiresAt())||operation.expiresAt().isAfter(grantExpiry))throw AuthorityProtocol.denied();
+-        return new ServiceTicket(raw,AuthorityProtocol.time(c,"exp"),operation);
++        return new VerifiedTicket(new ServiceTicket(raw,AuthorityProtocol.time(c,"exp"),operation),c);
+     }
+     private VerifiedAuthority authority(JsonNode c,ServiceCall call){
+         AuthorityProtocol.same("delegated",AuthorityProtocol.text(c,"authority_mode"));
+         var actor=AuthorityProtocol.actor(c);String grant=AuthorityProtocol.text(c,"grant_ref");
+         var delegation=new DelegationRef(grant,AuthorityProtocol.subject(actor),AuthorityProtocol.time(c,"grant_expires_at"));
+         var op=AuthorityProtocol.operation(c.get("operation"),actor,call.resource(),grant,clock);
+         verifyCeiling(c,actor,op,null);
+         var expiry=AuthorityProtocol.time(c,"exp");if(expiry.isAfter(op.expiresAt())||op.expiresAt().isAfter(delegation.expiresAt()))throw AuthorityProtocol.denied();
+         var result=new VerifiedAuthority(actor,AuthorityProtocol.text(c,"subject_caller"),call,delegation,AuthorityProtocol.text(c,"authorization_version"),AuthorityProtocol.time(c,"iat"),expiry,AuthorityProtocol.text(c,"jti"),op);
+         AuthorityProtocol.requireCurrent(result,clock);return result;
+     }
+     private void verifyCeiling(JsonNode claims,Actor actor,OperationBinding operation,Actor localUpper){
+         // Signed grant ceiling is immutable across resume. A current candidate may only narrow it.
+         var initial=AuthorityProtocol.actor(claims.get("initial_ceiling"));
+         AuthorityProtocol.same(operation.ceilingSha256(),AuthorityProtocol.ceiling(initial));
+         AuthorityProtocol.within(initial,actor);
+         if(localUpper!=null)AuthorityProtocol.within(localUpper,actor);
+     }
+     private void requireDelegation(DelegationRef d){if(d==null||d.value()==null||d.value().isBlank()||d.subject()==null)throw AuthorityProtocol.denied();if(!d.expiresAt().isAfter(clock.instant()))throw AuthorityProtocol.expired();}
+     private JsonNode query(String operation,ServiceCall call,Map<String,Object> fields,boolean token){
+         if("run.advance".equals(call.action()) && (!Set.of("resume","authorize").contains(operation)
+                 || !ServiceRoutePolicy.localRunAdvance(config.serviceId(),call,"delegated","DELEGATED","PORTAL")))throw AuthorityProtocol.denied();
+         var request=new LinkedHashMap<String,Object>(fields);request.put("operation",operation);request.putAll(AuthorityProtocol.call(call));
+         String nonce=UUID.randomUUID().toString();request.put("nonce",nonce);
+         var requestedAt=clock.instant().truncatedTo(java.time.temporal.ChronoUnit.SECONDS);
+         var bytes=http.postJsonAuthenticated(URI.create(token?config.authority().tokenUri():config.authority().decisionUri()),request,credentials.resolve());
+         var outer=AuthorityResponseVerifier.object(bytes);
+         var c=verifier.verify(AuthorityProtocol.text(outer,"assertion"),"agent-authority-decision+jwt","current-decision",config.authority().audience(),config.authority().maxDecisionSeconds()).claims();
+         AuthorityProtocol.same(nonce,AuthorityProtocol.text(c,"nonce"));AuthorityProtocol.same(AuthorityProtocol.digest(request),AuthorityProtocol.text(c,"request_sha256"));
+         AuthorityProtocol.same(config.serviceId(),AuthorityProtocol.text(c,"client_id"));AuthorityProtocol.call(c,call);
+         if(AuthorityProtocol.time(c,"iat").isBefore(requestedAt))throw BoundedIamHttp.unavailable();
+         if(!c.path("active").isBoolean()||!c.path("current").isBoolean())throw BoundedIamHttp.unavailable();
+         if(!c.path("active").booleanValue()||!c.path("current").booleanValue())throw AuthorityProtocol.denied();
+         return c;
+     }
+     @Override public ResponseLease open(VerifiedAuthority authority,ResponseBinding binding){
+         AuthorityProtocol.requireCurrent(authority,clock);
+         if(binding==null||binding.responseId()==null||binding.responseId().isBlank()||!Set.of("sse","model").contains(binding.kind()))throw AuthorityProtocol.denied();
+         AuthorityProtocol.hash(binding.requestSha256());
+         AuthorityProtocol.same(authority.call().resource(),binding.resource());
+         if(!binding.hardDeadline().isAfter(clock.instant()))throw AuthorityProtocol.expired();
+         if(binding.hardDeadline().isAfter(clock.instant().plusSeconds("sse".equals(binding.kind())?55:610)))throw AuthorityProtocol.denied();
+         if(!"INTEGRATION".equals(authority.operation().sourceKind())&&binding.hardDeadline().isAfter(authority.operation().expiresAt()))throw AuthorityProtocol.denied();
+         var c=query("response_open",authority.call(),Map.of("decision_id",authority.decisionId(),"binding",binding),false);
+         AuthorityProtocol.same(authority.operation().operationId(),AuthorityProtocol.text(c,"operation_id"));
+         AuthorityProtocol.same(authority.decisionId(),AuthorityProtocol.text(c,"opening_decision_id"));
+         var lease=lease(c,binding,null,authority);
+         AuthorityProtocol.same(authority.operation().sourceKind(),lease.sourceKind());AuthorityProtocol.same(authority.operation().expiresAt(),lease.sourceExpiresAt());
+         return lease;
+     }
+     @Override public ResponseLease check(ResponseLease lease){
+         lease.requireVerifiedLive();
+         var c=query("response_check",new ServiceCall(config.serviceId(),"response.continue",lease.binding().resource()),
+                 Map.of("continuation_ref",lease.continuationRef(),"binding",lease.binding()),false);
+         return lease(c,lease.binding(),lease,null);
+     }
+     private ResponseLease lease(JsonNode c,ResponseBinding binding,ResponseLease previous,VerifiedAuthority opening){
+         AuthorityProtocol.same(Json.tree(binding),c.get("binding"));
+         String source=AuthorityProtocol.text(c,"source_kind"),continuation=AuthorityProtocol.text(c,"continuation_ref"),decision=AuthorityProtocol.text(c,"opening_decision_id");
+         // The continuation is an immutable response-only proof, never a current user/service token.
+         var proof=verifier.verify(continuation,"agent-response-continuation+jwt","response-continuation",config.authority().audience(),611).claims();
+         AuthorityProtocol.same(Json.tree(binding),proof.get("binding"));
+         AuthorityProtocol.same(AuthorityProtocol.text(c,"operation_id"),AuthorityProtocol.text(proof,"operation_id"));
+         AuthorityProtocol.same(AuthorityProtocol.text(c,"ticket_jti"),AuthorityProtocol.text(proof,"ticket_jti"));
+         AuthorityProtocol.same(decision,AuthorityProtocol.text(proof,"opening_decision_id"));
+         AuthorityProtocol.same(source,AuthorityProtocol.text(proof,"source_kind"));
+         AuthorityProtocol.same(AuthorityProtocol.time(c,"source_expires_at"),AuthorityProtocol.time(proof,"source_expires_at"));
+         AuthorityProtocol.same(config.serviceId(),AuthorityProtocol.text(proof,"consumer"));
+         AuthorityProtocol.same(binding.hardDeadline(),AuthorityProtocol.time(proof,"exp"));
+         if(opening!=null){
+             AuthorityProtocol.same(opening.caller(),AuthorityProtocol.text(proof,"caller"));
+             AuthorityProtocol.same(opening.call().action(),AuthorityProtocol.text(proof,"action"));
+             AuthorityProtocol.same(opening.operation().operationId(),AuthorityProtocol.text(proof,"operation_id"));
+         }
+         var sourceExpiry=AuthorityProtocol.time(c,"source_expires_at");var checked=AuthorityProtocol.time(c,"exp");
+         if(!Set.of("PORTAL","INTEGRATION","DELEGATED").contains(source)||checked.isAfter(binding.hardDeadline()))throw AuthorityProtocol.denied();
+         ResponseMaterialPermit permit=previous==null?null:previous.completionPermit();
+         if(previous!=null){
+             AuthorityProtocol.same(previous.sourceKind(),source);AuthorityProtocol.same(previous.sourceExpiresAt(),sourceExpiry);
+             AuthorityProtocol.same(previous.continuationRef(),continuation);AuthorityProtocol.same(previous.openingDecisionId(),decision);
+             if(c.has("completion_permit"))throw AuthorityProtocol.denied();
+         }else if("INTEGRATION".equals(source)){
+             String raw=AuthorityProtocol.text(c,"completion_permit");
+             var verified=verifier.verify(raw,"agent-response-material+jwt","response-completion",config.authority().audience(),611);
+             permit=new ResponseMaterialPermit(raw,verified,config.authority().issuer(),config.authority().audience(),binding,opening,AuthorityProtocol.text(proof,"parent_response_id"),clock);
+         }else if(c.has("completion_permit"))throw AuthorityProtocol.denied();
+         if(!"INTEGRATION".equals(source)&&checked.isAfter(sourceExpiry))throw AuthorityProtocol.denied();
+         return previous==null?ResponseLease.opened(binding,source,continuation,decision,checked,sourceExpiry,permit):previous.renewed(checked);
+     }
+-    @Override public void close(){decoder.close();http.close();}
++    @Override public void close(){closed=true;decoder.close();http.close();}
+ }
+diff --git a/baseline/admin-common/src/test/java/cn/agentplatform/common/authority/CurrentAuthorityClientTest.java b/frozen/admin-common/src/test/java/cn/agentplatform/common/authority/CurrentAuthorityClientTest.java
+index b011c75..962eebc 100644
+--- a/baseline/admin-common/src/test/java/cn/agentplatform/common/authority/CurrentAuthorityClientTest.java
++++ b/frozen/admin-common/src/test/java/cn/agentplatform/common/authority/CurrentAuthorityClientTest.java
+@@ -1,224 +1,233 @@
+ package cn.agentplatform.common.authority;
+ 
+ import cn.agentplatform.common.*;
+ import org.junit.jupiter.api.*;
+ import java.util.*;
+ import java.util.concurrent.*;
+ import java.util.function.Consumer;
+ import static org.assertj.core.api.Assertions.*;
+ 
+ class CurrentAuthorityClientTest {
++    @Test void unsupportedClientDefaultCannotWrapPublicAuthorityAsGatewayRunProof(){
++        var fallback=(CurrentAuthorityClient)java.lang.reflect.Proxy.newProxyInstance(CurrentAuthorityClient.class.getClassLoader(),
++                new Class<?>[]{CurrentAuthorityClient.class},(proxy,method,args)->{
++                    if(method.isDefault())return java.lang.reflect.InvocationHandler.invokeDefault(proxy,method,args);
++                    throw new AssertionError("No ordinary authorization method may synthesize the private proof");
++                });
++        assertThatThrownBy(()->fallback.exchangeGatewayPublishedRun("unused",new ResourceBinding("app-version","app-a@1",Digest.sha256("v1"))))
++                .isInstanceOf(PlatformException.class);
++    }
+     @Test void reviewI3CurrentEditorApproverProofDoesNotImposeFrozenBusinessRoles()throws Exception{
+         try(var f=new LoopbackAuthority();var gateway=f.client("gateway");var engine=f.client("engine")){
+             var call=LoopbackAuthority.call("gateway","engine");var current=engine.authorize(gateway.exchange(f.portal(),call).value(),call);
+             f.approverRoles=Set.of("EDITOR");
+             assertThatCode(()->{
+                 var proof=engine.approver(current.delegation(),new SubjectKey("tenant-a","approver"),call.resource());
+                 assertThat(proof.actor().roles()).containsExactly("EDITOR");assertThat(proof.actor().principalId()).isEqualTo("approver");
+                 assertThat(proof.call().resource()).isEqualTo(call.resource());assertThat(proof.delegation().value()).isEqualTo(current.delegation().value());
+             }).doesNotThrowAnyException();
+         }
+     }
+     @Test void reviewI3ApproverCurrentTrustAndBindingsRemainMandatory()throws Exception{
+         try(var f=new LoopbackAuthority();var gateway=f.client("gateway");var engine=f.client("engine")){
+             var call=LoopbackAuthority.call("gateway","engine");var current=engine.authorize(gateway.exchange(f.portal(),call).value(),call);
+             var subject=new SubjectKey("tenant-a","approver");
+             f.approverRoles=Set.of("EDITOR");
+             for(String failure:List.of("revoked","subject","503","version","inactive","nonce","resource","signature","grant","expiry")){
+                 switch(failure){
+                     case "revoked"->f.approverAllowed=false;case "503"->f.unavailable=true;case "version"->f.version="v2";
+                     case "subject"->f.changeDecision=c->c.put("sub","alice");case "inactive"->f.changeDecision=c->c.put("current",false);
+                     case "nonce"->f.changeDecision=c->c.put("nonce","wrong");case "resource"->f.changeDecision=c->c.put("resource",Map.of("kind","run","id","other","version_digest","wrong"));
+                     case "signature"->f.badSignature=true;case "grant"->f.changeDecision=c->c.put("grant_ref","other");case "expiry"->f.changeDecision=c->c.put("exp",0);
+                 }
+                 assertThatThrownBy(()->engine.approver(current.delegation(),subject,call.resource())).as(failure).isInstanceOf(PlatformException.class);
+                 f.approverAllowed=true;f.unavailable=false;f.version="v1";f.badSignature=false;f.changeDecision=c->{};
+             }
+             assertThatThrownBy(()->engine.approver(current.delegation(),new SubjectKey("tenant-a","alice"),call.resource())).isInstanceOf(PlatformException.class);
+         }
+     }
+     @Test void reviewI2NonLifoSameAuthorityNeverRestoresClosedFrame()throws Exception{
+         try(var f=new LoopbackAuthority();var gateway=f.client("gateway");var engine=f.client("engine");var pool=Executors.newSingleThreadExecutor()){
+             var call=LoopbackAuthority.call("gateway","engine");var current=engine.authorize(gateway.exchange(f.portal(),call).value(),call);
+             var states=pool.submit(()->{
+                 var outer=AuthorityContext.bind(current);var inner=AuthorityContext.bind(current);
+                 outer.close();outer.close();boolean innerLive=contextIs(current);inner.close();inner.close();return List.of(innerLive,contextMissing());
+             }).get(2,TimeUnit.SECONDS);
+             assertThat(states).containsExactly(true,true);assertThat(contextMissing()).isTrue();
+         }
+     }
+     @Test void reviewI2LifoExceptionOwnerAndChildBoundaries()throws Exception{
+         try(var f=new LoopbackAuthority();var gateway=f.client("gateway");var engine=f.client("engine");var pool=Executors.newSingleThreadExecutor()){
+             var call=LoopbackAuthority.call("gateway","engine");var current=engine.authorize(gateway.exchange(f.portal(),call).value(),call);
+             try(var outer=AuthorityContext.bind(current)){
+                 try(var inner=AuthorityContext.bind(current)){assertThat(contextIs(current)).isTrue();}assertThat(contextIs(current)).isTrue();
+                 assertThat(pool.submit(()->{boolean missing=contextMissing();try{outer.close();return false;}catch(IllegalStateException expected){return missing&&contextMissing();}}).get(2,TimeUnit.SECONDS)).isTrue();
+                 assertThat(contextIs(current)).isTrue();
+                 assertThatThrownBy(()->{try(var inner=AuthorityContext.bind(current)){throw new IllegalArgumentException("fixture");}}).isInstanceOf(IllegalArgumentException.class);
+                 assertThat(contextIs(current)).isTrue();
+             }
+             assertThat(contextMissing()).isTrue();
+             assertThatThrownBy(()->{try(var scope=AuthorityContext.bind(current)){throw new IllegalArgumentException("fixture");}}).isInstanceOf(IllegalArgumentException.class);assertThat(contextMissing()).isTrue();
+         }
+     }
+     static boolean contextIs(VerifiedAuthority value){try{return AuthorityContext.current()==value;}catch(PlatformException missing){return false;}}
+     static boolean contextMissing(){try{AuthorityContext.current();return false;}catch(PlatformException missing){return true;}}
+     @Test void signedPortalExchangePreservesLocalCeilingAndIndependentClientAuthentication()throws Exception{
+         try(var f=new LoopbackAuthority();var gateway=f.client("gateway");var engine=f.client("engine")){
+             var call=LoopbackAuthority.call("gateway","engine");var token=gateway.exchange(f.portal(),call);var current=engine.authorize(token.value(),call);
+             assertThat(current.actor()).isEqualTo(LoopbackAuthority.ceiling());
+             assertThat(f.authenticatedClients).containsExactly("gateway","engine");
+             assertThat(f.requests).allSatisfy(r->{assertThat(r.has("roles")).isFalse();assertThat(r.has("attributes")).isFalse();assertThat(r.has("caller")).isFalse();});
+             assertThat(current.operation()).isEqualTo(token.operation());assertThat(f.businessSends).hasValue(0);
+         }
+     }
+     @Test void issuerCannotRestoreLocallyRemovedAdminOrRegion()throws Exception{
+         for(boolean role:List.of(true,false))try(var f=new LoopbackAuthority();var gateway=f.client("gateway")){
+             f.changeTicket=c->{if(role)c.put("roles",List.of("ADMIN","EDITOR"));else c.put("attributes",Map.of("region",List.of("A","B"),"dataLabels",List.of("confidential","restricted")));};
+             assertThatThrownBy(()->gateway.exchange(f.portal(),LoopbackAuthority.call("gateway","engine"))).isInstanceOf(PlatformException.class);
+         }
+     }
+     @Test void portalCannotHideBroaderInitialCeilingBehindNarrowCurrentRoles()throws Exception{
+         try(var f=new LoopbackAuthority();var gateway=f.client("gateway")){
+             f.changeTicket=c->{
+                 var broad=new Actor("tenant-a","alice",Set.of("ADMIN","EDITOR"),LoopbackAuthority.ceiling().attributes());
+                 c.put("initial_ceiling",Map.of("tenant_id",broad.tenantId(),"sub",broad.principalId(),"roles",broad.roles(),"attributes",broad.attributes()));
+                 var op=Json.mapper().convertValue(c.get("operation"),new com.fasterxml.jackson.core.type.TypeReference<Map<String,Object>>(){});op.put("ceiling_sha256",AuthorityProtocol.ceiling(broad));c.put("operation",op);
+             };
+             assertThatThrownBy(()->gateway.exchange(f.portal(),LoopbackAuthority.call("gateway","engine"))).isInstanceOf(PlatformException.class);
+         }
+     }
+     @Test void noCachedTicketAfterScopeRoleVersionGrantOrNetworkFailureAndExplicitRecoveryWorks()throws Exception{
+         try(var f=new LoopbackAuthority();var gateway=f.client("gateway");var engine=f.client("engine");var model=f.client("model")){
+             var call=LoopbackAuthority.call("gateway","engine");var token=gateway.exchange(f.portal(),call);var current=engine.authorize(token.value(),call);
+             var next=LoopbackAuthority.call("engine","model");var provider=new IamServiceTicketProvider(f.clock,engine);
+             assertThat(model.authorize(provider.issue(current,next).value(),next).actor()).isEqualTo(current.actor());
+             for(String failure:List.of("scope","role","version","grant","503","json","signature","jwks")){
+                 switch(failure){case "scope"->f.scopeAllowed=false;case "role"->f.currentRoles=Set.of();case "version"->f.version="opaque-new";case "grant"->f.revoked=true;case "503"->f.unavailable=true;case "json"->f.invalidJson=true;case "signature"->f.badSignature=true;case "jwks"->f.jwksUnavailable=true;}
+                 assertThatThrownBy(()->provider.issue(current,next)).as(failure).isInstanceOf(PlatformException.class);
+                 f.scopeAllowed=true;f.currentRoles=Set.of("EDITOR");f.version="v1";f.revoked=false;f.unavailable=false;f.invalidJson=false;f.badSignature=false;f.jwksUnavailable=false;
+             }
+             assertThat(provider.issue(current,next).operation()).isEqualTo(current.operation());
+             f.clock.advance(6);int count=f.requests.size();
+             assertThatThrownBy(()->provider.issue(current,next)).isInstanceOf(PlatformException.class);assertThat(f.requests).hasSize(count);
+             f.clock.advance(301);assertThatThrownBy(()->engine.resume(current.delegation(),next)).isInstanceOf(PlatformException.class);assertThat(f.requests).hasSize(count);
+             assertThat(f.businessSends).hasValue(0);
+         }
+     }
+     @Test void rr2NewDelegatedOperationSurvivesOriginalPortalExpiryButForwardCannotResetItsDeadline()throws Exception{
+         try(var f=new LoopbackAuthority();var gateway=f.client("gateway");var engine=f.client("engine");var model=f.client("model")){
+             var entry=LoopbackAuthority.call("gateway","engine");var old=gateway.exchange(f.portal(10),entry);var first=engine.authorize(old.value(),entry);
+             f.clock.advance(11);var next=LoopbackAuthority.call("engine","model");
+             assertThatThrownBy(()->engine.forward(first,next)).isInstanceOf(PlatformException.class);
+             var resumed=engine.resume(first.delegation(),next);var current=model.authorize(resumed.value(),next);
+             assertThat(resumed.operation().sourceKind()).isEqualTo("DELEGATED");assertThat(resumed.operation().originKind()).isEqualTo("PORTAL");
+             assertThat(current.actor()).isEqualTo(LoopbackAuthority.ceiling());assertThat(resumed.operation().operationId()).isNotEqualTo(old.operation().operationId());
+             assertThat(resumed.operation().ceilingSha256()).isEqualTo(old.operation().ceilingSha256());
+             assertThat(f.requests.get(f.requests.size()-2).fieldNames()).toIterable().containsExactlyInAnyOrder("grant_ref","operation","target","action","resource","nonce");
+             f.revoked=true;assertThatThrownBy(()->engine.resume(first.delegation(),next)).isInstanceOf(PlatformException.class);
+         }
+     }
+     @Test void rr2MissingOperationPolicyOrSignedOperationFieldAndForwardDeadlineChangeFail()throws Exception{
+         try(var f=new LoopbackAuthority();var gateway=f.client("gateway");var engine=f.client("engine")){
+             var entry=LoopbackAuthority.call("gateway","engine");var current=engine.authorize(gateway.exchange(f.portal(),entry).value(),entry);var next=LoopbackAuthority.call("engine","model");
+             f.operationPolicy=false;assertThatThrownBy(()->engine.resume(current.delegation(),next)).isInstanceOf(PlatformException.class);f.operationPolicy=true;
+             f.changeTicket=c->c.remove("operation");assertThatThrownBy(()->engine.resume(current.delegation(),next)).isInstanceOf(PlatformException.class);
+             f.changeTicket=c->{var op=Json.mapper().convertValue(c.get("operation"),new com.fasterxml.jackson.core.type.TypeReference<Map<String,Object>>(){});op.put("expires_at",f.clock.instant().plusSeconds(200).getEpochSecond());c.put("operation",op);};
+             assertThatThrownBy(()->engine.forward(current,next)).isInstanceOf(PlatformException.class);
+         }
+     }
+     @Test void rr2ResumeCannotReintroduceRolesOutsideOriginalSignedGrantCeiling()throws Exception{
+         try(var f=new LoopbackAuthority();var gateway=f.client("gateway");var engine=f.client("engine")){
+             var entry=LoopbackAuthority.call("gateway","engine");var current=engine.authorize(gateway.exchange(f.portal(10),entry).value(),entry);
+             f.clock.advance(11);f.changeTicket=c->c.put("roles",List.of("EDITOR","ADMIN"));
+             assertThatThrownBy(()->engine.resume(current.delegation(),LoopbackAuthority.call("engine","model"))).isInstanceOf(PlatformException.class);
+         }
+     }
+     @Test void authenticatedEngineCannotChooseAnotherTenantSubjectResourceActionOrMissingGrant()throws Exception{
+         try(var f=new LoopbackAuthority();var gateway=f.client("gateway");var engine=f.client("engine")){
+             var entry=LoopbackAuthority.call("gateway","engine");var current=engine.authorize(gateway.exchange(f.portal(),entry).value(),entry);
+             var next=LoopbackAuthority.call("engine","model");
+             assertThatThrownBy(()->engine.resume(new DelegationRef("missing",current.delegation().subject(),current.delegation().expiresAt()),next)).isInstanceOf(PlatformException.class);
+             assertThatThrownBy(()->engine.resume(new DelegationRef(current.delegation().value(),new SubjectKey("other","other"),current.delegation().expiresAt()),next)).isInstanceOf(PlatformException.class);
+             assertThatThrownBy(()->engine.resume(current.delegation(),new ServiceCall(next.target(),next.action(),new ResourceBinding("run","other","v2")))).isInstanceOf(PlatformException.class);
+             assertThatThrownBy(()->engine.forward(current,new ServiceCall("model","arbitrary.execute",next.resource()))).isInstanceOf(PlatformException.class);
+             assertThatThrownBy(()->engine.exchange(f.portal(),entry)).isInstanceOfAny(PlatformException.class,org.springframework.security.oauth2.jwt.JwtException.class);
+         }
+     }
+     @Test void signedReplyTamperNonceTicketJtiCallerResourceAndExpiryAreNotAccepted()throws Exception{
+         var changes=new LinkedHashMap<String,Consumer<Map<String,Object>>>();
+         changes.put("nonce",c->c.put("nonce","other"));changes.put("jti",c->c.put("ticket_jti","other"));changes.put("caller",c->c.put("subject_caller","monitor"));
+         changes.put("resource",c->c.put("resource",Map.of("kind","run","id","other","version_digest","other")));
+         changes.put("expiry",c->c.put("exp",0));changes.put("version",c->c.put("authorization_version","older"));
+         try(var f=new LoopbackAuthority();var gateway=f.client("gateway");var engine=f.client("engine")){
+             var entry=LoopbackAuthority.call("gateway","engine");var ticket=gateway.exchange(f.portal(),entry);
+             for(var change:changes.entrySet()){
+                 f.changeDecision=change.getValue();assertThatThrownBy(()->engine.authorize(ticket.value(),entry)).as(change.getKey()).isInstanceOf(PlatformException.class);
+             }
+         }
+     }
+     @Test void approvalUsesRecordedApproverAndRevocationIsLive()throws Exception{
+         try(var f=new LoopbackAuthority();var gateway=f.client("gateway");var engine=f.client("engine")){
+             var call=LoopbackAuthority.call("gateway","engine");var current=engine.authorize(gateway.exchange(f.portal(),call).value(),call);
+             var approved=engine.approver(current.delegation(),new SubjectKey("tenant-a","approver"),call.resource());
+             assertThat(approved.actor().roles()).containsExactly("APPROVER");
+             assertThatThrownBy(()->engine.approver(current.delegation(),new SubjectKey("tenant-a","alice"),call.resource())).isInstanceOf(PlatformException.class);
+             f.approverAllowed=false;assertThatThrownBy(()->engine.approver(current.delegation(),new SubjectKey("tenant-a","approver"),call.resource())).isInstanceOf(PlatformException.class);
+         }
+     }
+     @Test void integrationPolicyUsesIndependentHttpAssertionOnEveryDecisionWithoutRecursion()throws Exception{
+         try(var f=new LoopbackAuthority();var gateway=f.client("gateway");var engine=f.client("engine")){
+             var call=LoopbackAuthority.call("gateway","engine");
+             var ticket=gateway.exchange(f.integration(),call);assertThat(f.policyCalls).hasValue(1);
+             var current=engine.authorize(ticket.value(),call);assertThat(f.policyCalls).hasValue(2);
+             assertThat(current.operation().sourceKind()).isEqualTo("INTEGRATION");
+             engine.resume(current.delegation(),LoopbackAuthority.call("engine","model"));assertThat(f.policyCalls).hasValue(3);
+             assertThat(f.resolverToAuthority).hasValue(0);assertThat(f.businessSends).hasValue(0);
+         }
+     }
+     @Test void integrationResolverMissingInactiveOldVersionWrongTrustDomainAndBindingsDeny()throws Exception{
+         try(var f=new LoopbackAuthority();var gateway=f.client("gateway");var engine=f.client("engine")){
+             var call=LoopbackAuthority.call("gateway","engine");var ticket=gateway.exchange(f.integration(),call);
+             for(String failure:List.of("unavailable","inactive","subject","version","signature","field","binding")){
+                 switch(failure){case "unavailable"->f.policyUnavailable=true;case "inactive"->f.policyActive=false;case "subject"->f.policySubjectAllowed=false;case "version"->f.policyVersion="7:2";case "signature"->f.wrongPolicyKey=true;case "field"->f.omitPolicyField=true;case "binding"->f.wrongPolicyBinding=true;}
+                 int calls=f.policyCalls.get();assertThatThrownBy(()->engine.authorize(ticket.value(),call)).as(failure).isInstanceOf(PlatformException.class);assertThat(f.policyCalls).hasValue(calls+1);
+                 f.policyUnavailable=false;f.policyActive=true;f.policySubjectAllowed=true;f.policyVersion="7:1";f.wrongPolicyKey=false;f.omitPolicyField=false;f.wrongPolicyBinding=false;
+             }
+             assertThat(engine.authorize(ticket.value(),call).actor()).isEqualTo(LoopbackAuthority.ceiling());assertThat(f.resolverToAuthority).hasValue(0);
+             f.resolver.removeContext("/internal/iam/integration-policy/resolve");
+             assertThatThrownBy(()->engine.authorize(ticket.value(),call)).isInstanceOf(PlatformException.class);
+         }
+     }
+     @Test void r3ResolverStringActiveCannotBeCoercedIntoPermission()throws Exception{
+         try(var f=new LoopbackAuthority();var gateway=f.client("gateway");var engine=f.client("engine")){
+             var call=LoopbackAuthority.call("gateway","engine");var ticket=gateway.exchange(f.integration(),call);
+             f.wrongPolicyType=true;
+             assertThatThrownBy(()->engine.authorize(ticket.value(),call)).isInstanceOf(PlatformException.class);
+             assertThat(f.policyCalls).hasValue(2);assertThat(f.resolverToAuthority).hasValue(0);
+         }
+     }
+     @Test void integrationBadMacCrossUseClientAndTtlNeverExchange()throws Exception{
+         try(var f=new LoopbackAuthority();var gateway=f.client("gateway");var engine=f.client("engine")){
+             var call=LoopbackAuthority.call("gateway","engine");String token=f.integration();String changed=token.substring(0,token.length()-5)+"AAAAA";
+             assertThatThrownBy(()->gateway.exchange(changed,call)).isInstanceOf(PlatformException.class);
+             assertThatThrownBy(()->engine.exchange(token,call)).isInstanceOf(PlatformException.class);
+             var claims=f.integrationClaims();claims.put("exp",f.clock.instant().plusSeconds(301).getEpochSecond());
+             String tooLong=f.integration(claims);assertThatThrownBy(()->gateway.exchange(tooLong,call)).isInstanceOf(PlatformException.class);
+             claims=f.integrationClaims();claims.put("token_use","service");String wrong=f.integration(claims);
+             assertThatThrownBy(()->gateway.exchange(wrong,call)).isInstanceOfAny(PlatformException.class,org.springframework.security.oauth2.jwt.JwtException.class);
+         }
+     }
+     @Test void workloadCannotBecomeAUserAndContextIsNotInherited()throws Exception{
+         try(var f=new LoopbackAuthority();var gateway=f.client("gateway");var app=f.client("app")){
+             var call=new ServiceCall("app","integration.origin.check",new ResourceBinding("origin","embed","v1"));var ticket=gateway.client(call);
+             assertThat(app.authorizeWorkload(ticket.value(),call).caller()).isEqualTo("gateway");
+             assertThatThrownBy(()->app.authorize(ticket.value(),call)).isInstanceOf(PlatformException.class);
+             var userCall=LoopbackAuthority.call("gateway","app");var current=app.authorize(gateway.exchange(f.portal(),userCall).value(),userCall);
+             try(var scope=AuthorityContext.bind(current)){
+                 assertThat(AuthorityContext.current()).isSameAs(current);
+                 try(var pool=Executors.newSingleThreadExecutor()){assertThat(pool.submit(()->{try{AuthorityContext.current();return false;}catch(PlatformException e){return true;}}).get(2,TimeUnit.SECONDS)).isTrue();}
+             }
+             assertThatThrownBy(AuthorityContext::current).isInstanceOf(PlatformException.class);
+         }
+     }
+ }
+diff --git a/frozen/admin-common/src/test/java/cn/agentplatform/common/authority/GatewayRunAuthorizationTest.java b/frozen/admin-common/src/test/java/cn/agentplatform/common/authority/GatewayRunAuthorizationTest.java
+new file mode 100644
+index 0000000..fa31eb9
+--- /dev/null
++++ b/frozen/admin-common/src/test/java/cn/agentplatform/common/authority/GatewayRunAuthorizationTest.java
+@@ -0,0 +1,154 @@
++package cn.agentplatform.common.authority;
++
++import cn.agentplatform.common.*;
++import com.nimbusds.jose.jwk.JWKSet;
++import org.junit.jupiter.api.*;
++import org.junit.jupiter.params.ParameterizedTest;
++import org.junit.jupiter.params.provider.ValueSource;
++import org.springframework.security.core.context.SecurityContextHolder;
++import java.time.*;
++import java.util.*;
++import java.util.concurrent.*;
++import java.util.concurrent.atomic.AtomicInteger;
++import java.util.function.Consumer;
++import static org.assertj.core.api.Assertions.*;
++
++class GatewayRunAuthorizationTest {
++    private static final ResourceBinding ROOT=new ResourceBinding("app-version","app-a@1",Digest.sha256("published-v1"));
++    private static final ServiceCall RUN=new ServiceCall("engine","proxy.engine.post.RunController.run",ROOT);
++    @Test void signedCaptureKeepsMainBindingAndWorksWithoutThreadLocalsOrAuthorityRefresh()throws Exception{
++        try(var f=new LoopbackAuthority();var gateway=f.client("gateway");var engine=f.client("engine")){
++            String portal=f.portal();var proof=gateway.exchangeGatewayPublishedRun(portal,ROOT);var ticket=proof.ticket();
++            var claims=AuthorityResponseVerifier.object(Base64.getUrlDecoder().decode(ticket.value().split("\\.")[1]));
++            assertThat(proof.operation()).isEqualTo(ticket.operation());assertThat(proof.operation().subject()).isEqualTo(new SubjectKey("tenant-a","alice"));
++            assertThat(proof.operation().sourceKind()).isEqualTo("PORTAL");assertThat(proof.operation().originKind()).isEqualTo("PORTAL");
++            assertThat(proof.operation().resource()).isEqualTo(ROOT);AuthorityProtocol.call(claims,RUN);
++            assertThat(AuthorityProtocol.actor(claims.get("initial_ceiling"))).isEqualTo(LoopbackAuthority.ceiling());
++            assertThat(AuthorityProtocol.text(claims,"origin_authentication_id")).startsWith("oa1:");
++            var current=engine.authorize(ticket.value(),RUN);assertThat(current.operation()).isEqualTo(proof.operation());
++            assertThat(current.actor()).isEqualTo(LoopbackAuthority.ceiling());
++            assertThatThrownBy(()->gateway.authorize(ticket.value(),RUN)).isInstanceOfAny(PlatformException.class,org.springframework.security.oauth2.jwt.JwtException.class);
++            int calls=f.authorityCalls();SecurityContextHolder.clearContext();assertThatThrownBy(AuthorityContext::current).isInstanceOf(PlatformException.class);
++            ExecutorService worker=Executors.newSingleThreadExecutor();
++            try{assertThat(worker.submit(()->{proof.requireVerified();return proof.operation();}).get(2,TimeUnit.SECONDS)).isEqualTo(ticket.operation());}
++            finally{worker.shutdownNow();assertThat(worker.awaitTermination(2,TimeUnit.SECONDS)).isTrue();}
++            proof.requireVerified();assertThat(f.authorityCalls()).isEqualTo(calls);assertThat(f.businessSends).hasValue(0);
++        }
++    }
++    @Test void signedCurrentExpiresWhileActualTicketRemainsValidAndClockRollbackCannotReviveProof()throws Exception{
++        try(var f=new LoopbackAuthority();var gateway=f.client("gateway");var engine=f.client("engine")){
++            f.changeDecision=c->c.put("exp",f.clock.instant().plusSeconds(1).getEpochSecond());
++            var proof=gateway.exchangeGatewayPublishedRun(f.portal(),ROOT);var ticket=proof.ticket();f.clock.advance(1);
++            assertThat(ticket.expiresAt()).isAfter(f.clock.instant());assertThat(ticket.operation().expiresAt()).isAfter(f.clock.instant());
++            assertThat(engine.authorize(ticket.value(),RUN).operation()).isEqualTo(ticket.operation());
++            int count=f.authorityCalls();assertThatThrownBy(proof::requireVerified).isInstanceOf(PlatformException.class);
++            f.clock.advance(-1);assertThatThrownBy(proof::requireVerified).isInstanceOf(PlatformException.class);assertThat(f.authorityCalls()).isEqualTo(count);
++        }
++    }
++    @Test void laterTicketJwkVerificationCannotReturnProofAfterSignedCurrentExpiry()throws Exception{
++        try(var f=new LoopbackAuthority();var gateway=f.client("gateway")){
++            AtomicInteger keys=new AtomicInteger();Instant start=f.clock.instant();
++            f.server.removeContext("/jwks");f.server.createContext("/jwks",x->{
++                // Actual verifier fetches once for signed query, then once for signed ticket.
++                if(keys.incrementAndGet()==2)f.clock.advance(6);
++                LoopbackAuthority.send(x,200,new JWKSet(f.key.toPublicJWK()).toString());
++            });
++            try{assertThatThrownBy(()->gateway.exchangeGatewayPublishedRun(f.portal(),ROOT)).isInstanceOf(PlatformException.class);}
++            finally{assertThat(keys).hasValue(2);assertThat(f.requests).hasSize(1);assertThat(f.requests.getFirst().path("operation").asText()).isEqualTo("exchange");
++                assertThat(f.clock.instant()).isEqualTo(start.plusSeconds(6));assertThat(f.operations.values().iterator().next().expires()).isAfter(f.clock.instant());
++                f.server.removeContext("/jwks");f.server.createContext("/jwks",x->LoopbackAuthority.send(x,200,new JWKSet(f.key.toPublicJWK()).toString()));}
++        }
++    }
++    @ParameterizedTest @ValueSource(strings={"source","ticket","operation","grant"})
++    void signedDeadlineMinimumRejectsWithoutBreakingTicketOperationGrantOrdering(String boundary)throws Exception{
++        try(var f=new LoopbackAuthority();var gateway=f.client("gateway")){
++            if(!boundary.equals("source"))f.changeTicket=c->{
++                long limit=f.clock.instant().plusSeconds(1).getEpochSecond();c.put("exp",limit);
++                if(!boundary.equals("ticket")){var op=new LinkedHashMap<>((Map<String,Object>)c.get("operation"));op.put("expires_at",limit);c.put("operation",op);}
++                if(boundary.equals("grant"))c.put("grant_expires_at",limit);
++            };
++            var proof=gateway.exchangeGatewayPublishedRun(f.portal(boundary.equals("source")?1:40),ROOT);var ticket=proof.ticket();
++            assertThat(ticket.expiresAt()).isBeforeOrEqualTo(ticket.operation().expiresAt());f.clock.advance(1);
++            assertThatThrownBy(proof::requireVerified).isInstanceOf(PlatformException.class);f.clock.advance(-1);
++            assertThatThrownBy(proof::requireVerified).isInstanceOf(PlatformException.class);
++        }
++    }
++    @Test void closeInvalidatesExistingCaptureAndPreventsNewExchange()throws Exception{
++        try(var f=new LoopbackAuthority();var gateway=f.client("gateway")){
++            var proof=gateway.exchangeGatewayPublishedRun(f.portal(),ROOT);int count=f.authorityCalls();gateway.close();
++            assertThatThrownBy(proof::requireVerified).isInstanceOf(PlatformException.class);
++            assertThatThrownBy(()->gateway.exchangeGatewayPublishedRun(f.portal(),ROOT)).isInstanceOf(PlatformException.class);assertThat(f.authorityCalls()).isEqualTo(count);
++        }
++    }
++    @Test void closeDuringSignedExchangeDoesNotMintCapture()throws Exception{
++        try(var f=new LoopbackAuthority();var gateway=f.client("gateway")){
++            var existing=gateway.exchangeGatewayPublishedRun(f.portal(),ROOT);
++            AtomicInteger keys=new AtomicInteger();CountDownLatch entered=new CountDownLatch(1),release=new CountDownLatch(1),exited=new CountDownLatch(1);
++            f.server.removeContext("/jwks");f.server.createContext("/jwks",x->{
++                try{if(keys.incrementAndGet()==2){entered.countDown();if(!release.await(2,TimeUnit.SECONDS))throw new IllegalStateException("fixture-release");}LoopbackAuthority.send(x,200,new JWKSet(f.key.toPublicJWK()).toString());}
++                catch(Exception e){LoopbackAuthority.send(x,503,"fixture-closed");}finally{if(keys.get()>=2)exited.countDown();}
++            });
++            ExecutorService workers=Executors.newFixedThreadPool(2);
++            try{String portal=f.portal();var exchange=workers.submit(()->gateway.exchangeGatewayPublishedRun(portal,ROOT));assertThat(entered.await(2,TimeUnit.SECONDS)).isTrue();
++                var closing=workers.submit(gateway::close);
++                // The closed flag must be published before close waits for any JDK transport.
++                long until=System.nanoTime()+TimeUnit.SECONDS.toNanos(1);boolean rejected=false;
++                while(System.nanoTime()<until&&!rejected){try{existing.requireVerified();java.util.concurrent.locks.LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(1));}catch(PlatformException expected){rejected=true;}}
++                assertThat(rejected).isTrue();release.countDown();closing.get(3,TimeUnit.SECONDS);
++                assertThatThrownBy(()->exchange.get(3,TimeUnit.SECONDS)).isInstanceOf(ExecutionException.class);
++            }finally{release.countDown();workers.shutdownNow();assertThat(workers.awaitTermination(4,TimeUnit.SECONDS)).isTrue();assertThat(exited.await(2,TimeUnit.SECONDS)).isTrue();}
++        }
++    }
++    @Test void monotonicBudgetExpiresEvenWhenWallClockRollsBackBeforeFirstRecheck()throws Exception{
++        try(var f=new LoopbackAuthority();var gateway=f.client("gateway")){
++            f.changeDecision=c->c.put("exp",f.clock.instant().plusSeconds(1).getEpochSecond());
++            var proof=gateway.exchangeGatewayPublishedRun(f.portal(),ROOT);f.clock.advance(-1);
++            // A real elapsed-time boundary tests System.nanoTime; no production ticker hook.
++            assertThat(new CountDownLatch(1).await(1100,TimeUnit.MILLISECONDS)).isFalse();
++            assertThatThrownBy(proof::requireVerified).isInstanceOf(PlatformException.class);
++        }
++    }
++    @Test void separateCapturesUseFreshNonceOperationAndGrant()throws Exception{
++        try(var f=new LoopbackAuthority();var gateway=f.client("gateway")){
++            String portal=f.portal();var a=gateway.exchangeGatewayPublishedRun(portal,ROOT);var b=gateway.exchangeGatewayPublishedRun(portal,ROOT);
++            assertThat(a.operation().operationId()).isNotEqualTo(b.operation().operationId());assertThat(a.operation().grantRef()).isNotEqualTo(b.operation().grantRef());
++            assertThat(f.requests.get(0).path("nonce")).isNotEqualTo(f.requests.get(1).path("nonce"));a.requireVerified();b.requireVerified();
++        }
++    }
++    @Test void finiteApiRejectsOtherServiceModeRootAndNonPortalSourcesBeforeAuthority()throws Exception{
++        try(var f=new LoopbackAuthority();var gateway=f.client("gateway");var engine=f.client("engine")){
++            String portal=f.portal();assertThatThrownBy(()->engine.exchangeGatewayPublishedRun(portal,ROOT)).isInstanceOf(PlatformException.class);
++            var c=f.config("gateway");var dev=new AuthorityProperties("test",c.serviceId(),c.portal(),c.authority(),c.integration(),null,null,false,null);
++            try(var wrong=new HttpCurrentAuthorityClient(dev,f.clock,new WorkloadCredentialResolver(dev,n->f.secrets.get("gateway"),true),true)){
++                assertThatThrownBy(()->wrong.exchangeGatewayPublishedRun(portal,ROOT)).isInstanceOf(PlatformException.class);
++            }
++            for(var root:List.of(new ResourceBinding("run","app-a@1",ROOT.versionDigest()),new ResourceBinding("app-version","app-a@0",ROOT.versionDigest()),new ResourceBinding("app-version","app-a@01",ROOT.versionDigest()),new ResourceBinding("app-version","../a@1",ROOT.versionDigest()),new ResourceBinding("app-version","a@9223372036854775808",ROOT.versionDigest()),new ResourceBinding("app-version","a@1","wrong")))
++                assertThatThrownBy(()->gateway.exchangeGatewayPublishedRun(portal,root)).isInstanceOf(PlatformException.class);
++            assertThatThrownBy(()->gateway.exchangeGatewayPublishedRun(portal,null)).isInstanceOf(PlatformException.class);
++            assertThatThrownBy(()->gateway.exchangeGatewayPublishedRun(f.integration(),ROOT)).isInstanceOfAny(PlatformException.class,org.springframework.security.oauth2.jwt.JwtException.class);
++            for(String use:List.of("user-no-access","service","workload")){
++                var claims=f.base(use.equals("user-no-access")?"user":use,"portal-gateway",40);claims.put("iss",f.issuer()+"/portal");claims.put("sub","alice");claims.put("tenant_id","tenant-a");claims.put("client_id","portal-web");claims.put("roles",Set.of("EDITOR"));claims.put("attributes",Map.of("region",List.of("A"),"dataLabels",List.of("restricted")));claims.put("scope","other");
++                String token=f.sign(claims,f.portalKey,"at+jwt");assertThatThrownBy(()->gateway.exchangeGatewayPublishedRun(token,ROOT)).isInstanceOfAny(PlatformException.class,org.springframework.security.oauth2.jwt.JwtException.class);
++            }
++            assertThat(f.authorityCalls()).isZero();
++        }
++    }
++    @ParameterizedTest @ValueSource(strings={"nonce","hash","inactive","current","issuer","audience","caller","target","action","subject","initial","version","operation","missing","expiry","source","origin"})
++    void signedTamperingNeverMintsCapture(String failure)throws Exception{
++        try(var f=new LoopbackAuthority();var gateway=f.client("gateway")){
++            switch(failure){
++                case "nonce"->f.changeDecision=c->c.put("nonce","wrong");case "hash"->f.changeDecision=c->c.put("request_sha256",Digest.sha256("wrong"));
++                case "inactive"->f.changeDecision=c->c.put("active",false);case "current"->f.changeDecision=c->c.put("current",false);
++                case "issuer"->f.changeTicket=c->c.put("iss","https://wrong.invalid");case "audience"->f.changeTicket=c->c.put("aud","urn:agent-platform:service:gateway");
++                case "caller"->f.changeTicket=c->c.put("caller","monitor");case "target"->f.changeTicket=c->c.put("target","app");
++                case "action"->f.changeTicket=c->c.put("action","other");case "subject"->f.changeTicket=c->c.put("sub","other");
++                case "initial"->f.changeTicket=c->c.put("initial_ceiling",Map.of());case "version"->f.changeTicket=c->c.remove("authorization_version");
++                case "operation"->f.changeTicket=c->c.remove("operation");case "missing"->f.changeTicket=c->c.remove("grant_expires_at");
++                case "expiry"->f.changeTicket=c->c.put("grant_expires_at",f.clock.instant().getEpochSecond());
++                case "origin"->f.changeTicket=c->c.remove("origin_authentication_id");
++                case "source"->f.changeTicket=c->{var op=new LinkedHashMap<>((Map<String,Object>)c.get("operation"));op.put("source_kind","DELEGATED");c.put("operation",op);};
++            }
++            assertThatThrownBy(()->gateway.exchangeGatewayPublishedRun(f.portal(),ROOT)).as(failure).isInstanceOf(PlatformException.class);
++        }
++    }
++}

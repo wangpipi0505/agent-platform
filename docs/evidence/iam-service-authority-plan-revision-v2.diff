@@ -1,0 +1,221 @@
+diff --git a/docs/evidence/iam-service-authority-implementation-plan.md b/docs/evidence/iam-service-authority-implementation-plan.md
+index 48fd89e..3c114cb 100644
+--- a/docs/evidence/iam-service-authority-implementation-plan.md
++++ b/docs/evidence/iam-service-authority-implementation-plan.md
+@@ -128,14 +128,16 @@ public record ServiceCall(String target, String action, ResourceBinding resource
+ public record DelegationRef(String value, SubjectKey subject, Instant expiresAt) {}
+ public record VerifiedAuthority(
+     Actor actor, String caller, ServiceCall call, DelegationRef delegation,
+-    String authorizationVersion, Instant checkedAt, Instant expiresAt, String decisionId) {}
+-public record ServiceTicket(String value, Instant expiresAt) {}
++    String authorizationVersion, Instant checkedAt, Instant expiresAt, String decisionId,
++    OperationBinding operation) {}
++public record ServiceTicket(String value, Instant expiresAt, OperationBinding operation) {}
+ public record WorkloadAuthority(String caller, ServiceCall call,
+     String decisionId, Instant checkedAt, Instant expiresAt) {}
+ public interface CurrentAuthorityClient {
+     ServiceTicket client(ServiceCall call);
+     ServiceTicket exchange(String subjectToken, ServiceCall call);
+     ServiceTicket resume(DelegationRef delegation, ServiceCall call);
++    ServiceTicket forward(VerifiedAuthority authority, ServiceCall call);
+     VerifiedAuthority authorize(String serviceTicket, ServiceCall call);
+     WorkloadAuthority authorizeWorkload(String serviceTicket, ServiceCall call);
+     VerifiedAuthority approver(DelegationRef delegation, SubjectKey approver,
+@@ -152,21 +154,22 @@ public interface ServiceTicketProvider {
+ 
+ 有效业务范围 = 原委托上限 ∩ issuer/client 声明上限 ∩ 此刻可信 IAM/集成策略范围 ∩ 具体操作守卫。运行历史仅是上限，不能补回缺失的当前属性。scope action 需完全覆盖目标动作；不同服务的授权决策不能交叉使用。属性按语义处理：`region` 等授权集合取交集；`dataLabels` 等数据敏感级别是限制义务，保留历史材料标签与当前约束的并集，不能求交而删掉保密标签；tenant/sub、biz/user 归属值要求相等，不进行集合补全。未知属性默认不映射。
+ 
+-网络不可用不使用上次成功授权、旧角色或本地签票。有效签名但当前 scope/role 收窄时，新动作和历史受保护材料复用均重新判定；历史材料的所需范围不在当前范围内则拒绝整份复用，不能静默删字段当作安全裁剪。版本、摘要缺失的旧材料不能假设已获授权。新鲜度只能说明核实时刻；已完成外部副作用不能靠后来撤权撤销。取证在短事务外，事务内复核证据未过期、资源版本/取消/lease/attempt 未变；每次新发送和 G2 claim/submitted 检查点都重新获取证据，不对漫长业务持锁查询 IAM。
++网络不可用不使用上次成功授权、旧角色或本地签票。有效签名但当前 scope/role 收窄时，新动作和历史受保护材料复用均重新判定；历史材料的所需范围不在当前范围内则拒绝整份复用，不能静默删字段当作安全裁剪。唯一原响应完成例外使用 §2.4.1 独立限用途 permit，不放宽本段普通 current 规则。版本、摘要缺失的旧材料不能假设已获授权。新鲜度只能说明核实时刻；已完成外部副作用不能靠后来撤权撤销。取证在短事务外，事务内复核证据未过期、资源版本/取消/lease/attempt 未变；每次新发送和 G2 claim/submitted 检查点都重新获取证据，不对漫长业务持锁查询 IAM。
+ 
+ ### 2.4 R1：长响应授权生命周期与异步传递
+ 
+-这里的“新发送”指新业务请求/新模型或技能调用，不把已经获准的一次响应中的每个字节当成新的业务调用。长响应仍需要输出权限生命周期；生产不能只在握手验一次 JWT。所有源类型来自 authority 已签声明 `source_kind=PORTAL|INTEGRATION`，不能由请求头或 URL 自报。模型返回中的 toolCalls 只是已在途响应的数据，后续工具执行是新动作。
++这里的“新发送”指新业务请求/新模型或技能调用，不把已经获准的一次响应中的每个字节当成新的业务调用。长响应仍需要输出权限生命周期；生产不能只在握手验一次 JWT。所有源类型来自 authority 已签声明 `source_kind=PORTAL|INTEGRATION|DELEGATED`，不能由请求头或 URL 自报。DELEGATED 是 §2.4.2 的新后台动作来源，原 PORTAL 来源另存审计，不混为仍在使用原门户 JWT。模型返回中的 toolCalls 只是已在途响应的数据，后续工具执行是新动作。
+ 
+-**固定内部接口：** 在 common authority 包新增 `ResponseBinding(String responseId,String kind,ResourceBinding resource,String requestSha256,Instant hardDeadline)`、`ResponseLease(ResponseBinding binding,String sourceKind,String continuationRef,VerifiedAuthority openingAuthority,Instant checkedUntil,Instant sourceExpiresAt)`、`ResponseAuthorityClient.open(VerifiedAuthority,ResponseBinding)` 和 `check(ResponseLease)`。open/check 是外部 IAM adapter profile 的明确扩展，仅生产客户端；测试 authority 有对应有限处理器，不新建生产服务端。check 使用接收服务自己的 client 凭据、authority 签发且绑定本次响应的 continuationRef，响应绑定最初 caller/target/action/resource/jti 与当前 request nonce，返回新的当前决定。continuationRef 仅允许继续同一已受理响应，不能换票 execute、延长 hardDeadline、创建第二个 responseId 或新模型调用；它不是 expired bearer 通行证。缺此能力的生产长流入口保持关闭。
++**固定内部接口：** 在 common authority 包新增 `ResponseBinding(String responseId,String kind,ResourceBinding resource,String requestSha256,Instant hardDeadline)`、`ResponseLease(ResponseBinding binding,String sourceKind,String continuationRef,String openingDecisionId,Instant checkedUntil,Instant sourceExpiresAt,ResponseMaterialPermit completionPermit)`、`ResponseAuthorityClient.open(VerifiedAuthority,ResponseBinding)` 和 `check(ResponseLease)`。open/check 是外部 IAM adapter profile 的明确扩展，仅生产客户端；测试 authority 有对应有限处理器，不新建生产服务端。check 使用接收服务自己的 client 凭据、authority 签发且绑定本次响应的 continuationRef，响应绑定最初 caller/target/action/resource/jti 与当前 request nonce，返回新的当前决定。continuationRef 仅允许继续同一已受理响应，不能换票 execute、延长 hardDeadline、创建第二个 responseId 或新模型调用；它不是 expired bearer 通行证。lease 不保存可冒充 current 的 openingAuthority；completionPermit 只在已验 INTEGRATION open 时可非空，定义见 §2.4.1。缺此能力的生产长流入口保持关闭。
+ 
+ | 流/受理点 | 活跃期间、到期与撤销 | 关闭与后续 |
+ | --- | --- | --- |
+ | 门户观察 SSE：gateway 验门户 token，engine 验内部票据/owner/历史事件 scope，在订阅与提交 writer 前 open | 每轮读取新事件/转发 chunk 前检查租约；到 checkedUntil 必须在线 check；独立最多 1 秒的轻量 watchdog 检查到期并取消阻塞读取，防 idle 流永不重核。decision≤5 秒到期不是自动延长。原 portal JWT 或 grant 到期为硬终点；scope/role 撤销为 403，authority/JWKS 503 为不可继续 | 未 committed 返回 401/403/503；已 committed 最多发送既有 `stream_reset` 控制事件，reason 为 AUTHORITY_EXPIRED/DENIED/UNAVAILABLE，不含业务 payload，然后关闭；不再发送待缓冲业务事件/final。客户端识别这些原因后停止自动重连，显示重新连接/恢复授权。Last-Event-ID 重连是新请求，重新验 JWT、当前授权、owner 和历史事件材料 scope |
+ | 普通内部模型 stream（PORTAL 来源）：model controller 受理后、第一次真实 provider 外发前 open；engine RuntimeClients 与 gateway 只传递同一响应绑定 | 内部票据≤60秒只用于受理，后续超过该票据寿命仅可凭该响应的 continuationRef 在线续核；原 portal/grant 到期仍终止。每 chunk/final 前核当前租约，idle watchdog 不等待下一 chunk。check 拒绝/503 后禁止输出，并取消本地 reactive subscription/HTTP read，保留真实已发送/计量事实 | 续核不授权下一轮 MAIN、SUMMARY、输出修正 RETRY 或工具发送；这些都须重新取当前业务决定。若 provider 已返回但续核失败，结果可作为不可外送的已发生事实持久化，带 §2.5 scope，不能通过后续 final 补发 |
++| 后台新动作的内部模型 stream（DELEGATED 来源） | 仅消费 authority 根据有效持久 grant/current 签出的 §2.4.2 operation；sourceExpiresAt 为签名 operationExpiresAt，与原门户 JWT 到期无关。内部票据只用于受理，响应仍在线续核；operation/grant 到期、撤权或503关闭，不允许 drain | 每个新动作需新当前决定；不能为原 PORTAL 观察流续期，也不能把原 PORTAL 票据改标来源后使用 |
+ | INTEGRATION 已建立 SSE 与已在途单次响应 | 保留 snapshot:2887：在受理时有效且已完成 open 的当前响应，后续票据/grant到期、凭据吊销/策略撤销或查询503，转为 `DRAIN_CURRENT_RESPONSE`，仅完成该响应原绑定范围内数据，不扩范围/期限。SSE 截止是原 55 秒响应窗口，模型截止为原请求 timeout 与 emitter 610000ms 上限的较小者；这些是当前实现边界，非新增设计 SLA | 完成/原超时即关闭；不自动重连，不因此允许下一业务动作。已经受理但尚未实际 provider 外发的请求仍须发送检查点当前授权，不能借 drain 发首次业务；后续任何新模型/技能/SUMMARY/修正调用或新 SSE 都重核，撤销/503 则拒绝 |
+ 
+-PORTAL SSE/普通内部流续核失败默认关闭；只有 INTEGRATION 的明确当前响应例外允许 drain，该例外不改变 PG 运行授权状态，也不覆盖新资源/新调用。开始 drain 后，机器只可记账/保存已经收到事实；客户端不能用 `source_kind=INTEGRATION` 自报获得例外。集成 SSE 中允许输出的仍是该 run 已授权材料；若出现超出开流 ceiling 的新材料，§2.5 仍拒绝该材料，不能用 drain 扩权。
++PORTAL SSE/普通内部流及 DELEGATED 流续核失败默认关闭；只有 INTEGRATION 的明确当前响应例外允许 drain，该例外不改变 PG 运行授权状态，也不覆盖新资源/新调用。开始 drain 后，只允许 §2.4.1 的原响应材料读取/发送和在途事实记账；客户端不能用 `source_kind=INTEGRATION` 自报获得例外。集成 SSE 中允许输出的仍是该 run 已授权材料；超出开流 ceiling 的新材料必须拒绝，不能用 drain 扩权。
+ 
+ `ResponseLease` 在原请求线程创建后作为显式 final 参数传给 `StreamingResponseBody`、model 虚拟线程、ModelCalls callback 和 RuntimeClients reader。不能在异步线程重新 Actor.current()、复用 ambient SecurityContext 或从 Actor 重建权限；局部更新使用一个受该响应拥有者约束的 lease holder，两个流不共享。gateway 在每次 buffer 写出前检查本响应状态，防上游已拒绝但本地缓冲继续泄露。取消/超时/final/error 路径都关闭订阅、timer、InputStream、HTTP connection，watchdog 不能发新业务、不能阻塞于 DB 锁；先标记停止再关闭，已排队 chunk 在写出前复查停止位。
+ 
+@@ -174,6 +177,32 @@ PORTAL SSE/普通内部流续核失败默认关闭；只有 INTEGRATION 的明
+ 
+ **断流语义：** 断开观察 SSE 只终止该响应，不自动取消 run。关闭模型 subscription 只是本地停止消费，不能宣称供应商已取消或撤销外部效果；run 后续由原事实/UNKNOWN/恢复机制决定，且所有新动作须重新核当前权限。现有显式 cancel 接口和原四契约保持；已发数据无法追回。1 秒 watchdog 是软件建议的检测调度上限，不声称生产撤权 SLA；Clock+闩锁验收不使用长 sleep。
+ 
++#### 2.4.1 RR1：原响应专用材料读取/发送能力
++
++**与 current 分离的最小类型和入口：** common 增 `ResponseMaterialPermit`、`ResponseMaterialAccess`、`ResponseMaterial(payload,scope,responseId)`，域内 `MaterialScopeStore` 增 `readForResponse(MaterialRef,ResponseMaterialAccess)`；普通 `read(ref,VerifiedAuthority)` 和 `MaterialAuthorization.require(scope,current)` 的到期规则不变。响应专用 read/accept 只返回 ResponseMaterial，不能隐式转换为 assembler 接受的 AuthorizedMaterial。`ResponseMaterialAccess` 仅可由本地仍活跃的 response holder 根据已验 permit 建立，持 responseId/owner/绑定资源/停止位，不提供 Actor、VerifiedAuthority 或 ServiceTicket 转换。`MaterialAuthorization.requireForResponse(scope,access)` 及 `StreamAuthorityGuard.beforeMaterialWrite(material,access)` 专门验证以下约束，不能只在 beforeWrite 跳过 current。permit 本身不能把尚未外发的请求标为在途：模型 holder 必须已有 FrozenRequestConnector 实际首发事实，SSE 必须已合法建立原响应；缺该状态拒绝 drain。
++
++`ResponseMaterialPermit` 是 authority 在有效 INTEGRATION open 决定中签出的独立限用途对象：固定 issuer/RS256/kid、`typ=agent-response-material+jwt`、`token_use=response-completion`、jti、iat/nbf/exp；绑定 tenant/principal、source_kind=INTEGRATION、openingDecisionId/authorizationVersion、operationId、原 responseId/parentResponseId、caller/producer/consumer、原 action、ResourceBinding（run snapshot 或 invocation/attempt/round/outputAttempt 的版本摘要）、requestSha256、完整开流 ceiling 与 ceilingSha256、允许的材料 kind/归属选择器、hardDeadline。exp 等于不超过原 hardDeadline 的独立完成期限，authority 按既有响应窗口/请求超时政策钳定，不接受caller任意延长；这不是把已过期 service ticket 放宽验证。SSE 选择器仅原 run/version 的事件流和初始 cursor 后单调事件序列；模型仅本 invocation/attempt/round/outputAttempt 的最终结果，不能匹配另一个调用。未来事件/最终内容的 payloadSha256 不可预知，必须从后述可信 manifest 取得并逐项核实际内容，不能用 selector 省略版本/摘要。
++
++生产接收端在 open 仍有效时完成签名、独立用途、主体及全部绑定校验，并固定已验 signer 公钥及原 permit 原文于该短生命 response holder；每次 read/send 仍验证 permit 签名与独立 exp、response 活跃性、owner/资源/版本/摘要/ceiling。后续 grant/decision 到期或查询503仅允许此用途继续，不让普通 JWT decoder 接受过期票据；这里保留开流验过的公钥只供此 response permit，不作普通票据/JWKS 缓存 allow。缺 permit/已关闭/重启丢失 holder/错误签名/PORTAL 或 DELEGATED 来源一律不能 drain。完成期限内仍核材料要求：permit ceiling 的 roles/entitlements 必须覆盖 scope 的 required 集合，owner 一致，dataLabels 义务完整保留且接收/出域边界仍满足已绑定限制。permit/manifest/版本/摘要缺项拒绝，不用旧 Actor 补齐。
++
++**本域真实 PG 读取：** `RunController.events` 当前 `:227` 查询下一事件同时取 payload，`:259–264` 直接发送；改为通过 `MaterialScopeStore.nextEventRef(runId,lastSeq,resourceVersion)` 在短一致性读快照中只取 seq/type/version/manifest（不选 payload）。当前正常路径传 fresh current；进入 drain 后仅调用 `readForResponse(ref,access)`，先核真实 PG material_scope 与上述 selector/ceiling，再在同一一致性快照内按已验 id/version 取 payload，验证 payloadSha256/scopeSha256 后返回 ResponseMaterial，写出前再核 access deadline/停止位。不可在握手预读第二事件、将整个 run payload 先装内存再过滤、只验 run owner 或跳过新材料接口。另一 run、错 run snapshot、重写版本、缺 scope 或超 ceiling 都在取 payload 前拒绝；摘要失配在读取后但发送前拒绝。
++
++**跨域 manifest 与模型 final：** 采用现有已建立 model stream 的私有 sidecar，不在 drain 时发新的 manifest HTTP 请求。model 在 `ModelCalls` 完成本 invocation 的事实和 material_scope 同事务写入后，从本域经 readForResponse 取得受限最终材料；`ModelController` 在原 HTTP 流上先发送私有 `material_manifest` 控制帧，再发送原格式 `final`。控制帧仅含 ResponseBinding、MaterialRef、MaterialScopeV1 和 scopeSha256；producer/consumer、invocation/attempt/round/outputAttempt、requestSha256 必须匹配开流 permit，且 final 实际 bytes 与 manifest digest 一致。RuntimeClients 只在固定已验 TLS model endpoint 的同一已受理连接上接收此帧，在本地对应已验 response permit/holder 下验证；它先等待有效 manifest，再经 `MaterialScopeStore.acceptForResponse(manifest,bytes,access)` 检查来源、scope、version/digest 并把结果交 ModelExchange 同事务记账。不转发私有帧到门户/SDK，不改原 final JSON/四契约对象；乱序/缺失/重复冲突帧拒绝 final，有限缓冲沿现有响应字节上限。
++
++两个服务的 permit 均须在有效 open 时由 authority 签出，绑定同一 operation/响应关联、原资源、调用摘要和不递增期限；由客户端拼接 parentResponseId 不成立。模型输入 manifest 仍在首次 provider 外发前走普通当前授权接口；drain 只接受已在途响应的结果 manifest，不创建新输入请求。非流式在途响应采用同一已受理连接的私有 `X-Agent-Response-Material` header，承载上述manifest的base64url canonical JSON，解码上限16KiB（首版软件建议上限，fixture验边界），超限/缺项拒绝释放body，不改原body对象；由内部client消费并在gateway边界剥离。未实现该sidecar的路径保持拒绝，不用任意URL/新HTTP补查替代。普通 `GET /internal/material-scopes/...` 在 drain 时仍不可调用过期 delegated token，其他下载/回放/新响应也不能使用 permit。正常PORTAL/DELEGATED模型final仍经fresh current检查，不能强行走只接受INTEGRATION的响应能力。
++
++该能力只完成原 HTTP response：不能调用 token/exchange/resume/open、创建 responseId、授权 MAIN/SUMMARY/RETRY/skill、下载 artifact 或新建 replay。可保存已经发生的原结果事实，但后续 ContextAssembler/ChatHistory/恢复复用仍走 fresh VerifiedAuthority。SSE 历史事件在本次原 cursor 范围内继续发送并不授予一次新的 Last-Event-ID 重连；关闭后同 permit 重放必拒。
++
++#### 2.4.2 RR2：持久委托跨门户寿命与后台 operation
++
++**root 本轮软件 profile 裁决：** 已可信签发并持久化的 grant 可在其自身有效期、当前 authority 允许下跨越原门户 JWT 寿命。`resume(DelegationRef,ServiceCall)` 由已认证服务 client 请求，authority 查自身 grant 状态、当前 subject/roles/scope/资源，签发新的 `DELEGATED` 操作证据；不要求保存或重放原 JWT。caller 不能请求改 source 或自行填写 expiry。原 `origin_kind=PORTAL`、初始认证/decision 标识保留审计，原 JWT exp 可以作为审计时间，不充当后台动作的凭证或期限。
++
++common 增 `OperationBinding(operationId,sourceKind,originKind,issuedAt,expiresAt,grantRef,subject,resource,ceilingSha256)`，由已验 authority 声明 mapper 构造，作为 VerifiedAuthority/ServiceTicket 的关联上下文显式传递；签名 service ticket 和在线 decision 同时绑定 operationId、source_kind=DELEGATED、origin_kind=PORTAL、operation_expires_at、caller/target/action/resource/material ceiling/version，nonce/请求摘要按原要求校验。authority 按部署签收的 action lifetime 上限和 grant 到期较早者定 operationExpiresAt；无该 policy/必需签名字段默认拒绝，不能拿本机 now+60 秒补值。service ticket exp 仍≤60秒且≤operationExpiresAt；sourceExpiresAt 取签名 operationExpiresAt，response hardDeadline≤operationExpiresAt 及本地原请求超时。每≤5秒续核 current；grant 被撤/权限不足/503/operation 到期即停止 DELEGATED 输出，没有 INTEGRATION drain。
++
++新增 `CurrentAuthorityClient.forward(VerifiedAuthority,ServiceCall)`：在同一后台动作的 engine→model 等下一 hop 重新核 current 并换取受众/action 精确子票，保持 operationId/operationExpiresAt，子资源和 material 只能收窄；禁止重置同一动作截止。`ServiceTicketProvider.issue` 对已有 operation 调 forward，对尚无 operation 的后台入口不得隐式造新动作。**只有明确的新动作检查点**经 `RunAuthority.current(runId,call)` 请求 resume，authority 可签一个新 operation；它不是旧动作自动续期，新的 MAIN/SUMMARY/纠正 RETRY/技能均重新核 grant/current/material/业务守卫，operationId 与调用身份绑定。来源由 authority 自己判定，伪造 DELEGATED 请求头、过期原 PORTAL 票据或旧 Actor 均不能创建 operation。
++
++真实恢复链为 `RunService.driveRecovered → RunAuthority.current → ModelExchange → RuntimeClients.chatStream → ModelController/ModelCalls`。每个动作显式传新 operation/current；历史材料在组装前和实际发送前重新核。ModelExchange 已持久成功 response 仍按原事实恢复，不因授权更新重新外发。原浏览器 PORTAL SSE 继续在原 JWT 到期关闭，即使后台 DELEGATED 操作有效；不把后台 holder/permit 或其期限替换到旧 observer，重新观察必须新门户认证。此 profile 是外部 IAM 适配合同而非 RFC8693 自带保证，fixture 只验证软件；真实签收前仍 blocked。
++
+ ### 2.5 R2：可信材料 scope 的来源、持久化与真实消费点
+ 
+ 首版采用 root 允许的保守规则：**每份材料 required scope 至少等于其生成运行的完整可信初始 ceiling，再并入全部父材料要求。** 这可能比材料实际用到的权限更宽，导致权限收窄后整体拒绝，但不会把“当前少量字段”误判成可复用全部历史数据。ceiling 必须来自首次 verified authority 的签名决定/委托上限，经本地映射后与 run/turn 受理同事务写入；不能从旧 guard_ctx、模型输出、请求体或客户端声明反推。`initial_ceiling` 单独存在不够，还要有实际 payload/version 的绑定记录。
+@@ -198,7 +227,7 @@ schemaVersion 固定 1；payloadSha256 对实际持久/发送内容的 canonical
+ 
+ **同事务与跨服务：** engine/skill/model 各自 domain 建 `material_scope` side table，唯一键 `(tenant_id,producer,kind,id,version)`，保存以上 JSON 和 scopeSha256；不建立跨 schema 外键。与本域可见业务事实/READY 写入同事务，缺 scope 即禁止公开 payload；blob 上传保持现有先 UPLOADING 后上传流程，但 UPLOADING 登记与暂存 scope 同事务，最终内容摘要/完整 scope 和 READY 同事务，异常保留清理态，不因上传成功提前可下载。各域实际 schema 的下一迁移号连续分配，纳入 G6 E 候选迁移；model 额外迁移按当时最大版本核定，不能沿用 engine 号。
+ 
+-跨服务取材料仍走已登记 HTTPS service endpoint，固定服务 TLS 身份与当前 delegated ticket/资源绑定构成来源信任；响应头 `X-Agent-Material-Ref` 指向生产者 `GET /internal/material-scopes/{kind}/{id}` 的特定 version（query `version`），`X-Agent-Material-Sha256` 绑定 scope。该内部只读 endpoint 需要 `material.scope.read`、当前 owner/资源授权，返回 manifest 不含业务 payload，禁止 URL 从响应任意指定 host。接收方核 producer、id/version、payload digest 和scope，再与本域接收事实同事务复制。请求头、artifact reference、外部工具结果自带 scope 不能作为来源。HTTP 失败/manifest缺失不得先消费后补。模型出域请求的 material refs/manifest digest 由受信 engine 生成并绑定完整请求 digest；model 在调用 provider 前从 engine 已验接口核 scope，再把标签并入本次出域检查；不是相信业务 body 的 requiredLabels。
++普通跨服务取材料仍走已登记 HTTPS service endpoint，固定服务 TLS 身份与当前 delegated ticket/资源绑定构成来源信任；响应头 `X-Agent-Material-Ref` 指向生产者 `GET /internal/material-scopes/{kind}/{id}` 的特定 version（query `version`），`X-Agent-Material-Sha256` 绑定 scope。该内部只读 endpoint 需要 `material.scope.read`、当前 owner/资源授权，返回 manifest 不含业务 payload，禁止 URL 从响应任意指定 host。接收方核 producer、id/version、payload digest 和scope，再与本域接收事实同事务复制。请求头、artifact reference、外部工具结果自带 scope 不能作为来源。HTTP 失败/manifest缺失不得先消费后补。模型出域请求的 material refs/manifest digest 由受信 engine 生成并绑定完整请求 digest；model 在调用 provider 前从 engine 已验接口核 scope，再把标签并入本次出域检查；不是相信业务 body 的 requiredLabels。仅 §2.4.1 原响应 drain 改用独立 readForResponse/acceptForResponse 和同一受理连接上的可信 manifest；绝不把过期 openingAuthority 传给这里的普通接口。
+ 
+ | 实际写入/消费点 | 必须落地的 scope 行为 |
+ | --- | --- |
+@@ -331,7 +360,7 @@ agent:
+ }
+ ```
+ 
+-- [ ] 执行 `mvn.cmd -B -ntp -pl admin-common -am test "-Dmaven.repo.local=.tools/m2" "-Dtest=AuthorityPolicyTest,AuthorityConfigurationTest" -Dsurefire.failIfNoSpecifiedTests=false`；预期新类缺失而红，旧身份测试可继续存在但不当安全通过。
++- [ ] 执行 `mvn.cmd -B -ntp -pl admin-common -am test "-Dmaven.repo.local=.tools/m2" "-Dtest=AuthorityPolicyTest,AuthorityConfigurationTest" -Dsurefire.failIfNoSpecifiedTests=false`；新类缺失只算初始编译接缝失败，不算关键行为红。补最小可编译骨架后，必须先从真实错误授权/非法配置启动路径取得断言失败（例如错误允许或错误启动），再实现校验转绿；旧身份测试不当新安全通过。
+ - [ ] 实现纯交集核心并完整填写 route JSON；按上面图逐条核 caller，不生成 `*` 权限：
+ 
+ ```java
+@@ -356,7 +385,7 @@ public static Set<String> intersect(Set<String> left, Set<String> right) {
+ **Interfaces:** `TrustedJwtDecoder implements JwtDecoder` 只使用已配置 trust domain；`PortalClaimMapper.map(Jwt)` 产出裁剪 Actor 和允许 scope；`BoundedIamHttp` 提供 `byte[] get(URI)`、`byte[] postForm(URI,Map<String,String>)`、`byte[] postJson(URI,Object)`，每次请求固定边界、no redirect、有限 timeout。LoopbackIssuer 实现 AutoCloseable，用 JDK HttpServer 绑定 127.0.0.1:0，生成测试 RSA 密钥，仅返回小 JWKS，支持在测试线程同步替换 k1/k2 和返回 503，不运行生产 IAM。
+ 
+ - [ ] 先写真实签名样本测试：RS256/k1 正例，HS256 用 RSA 公钥作 secret、none、错 issuer/aud/use、缺 exp/iat/kid、过期/未来 nbf、无 tenant/sub、多个额外受众、ID token、未知 kid 都拒绝；上限之外 ADMIN/region 被拒或裁剪，缺必需 scope 403。至少一个测试直接把通用 SERVICE portal token 请求 `/internal/...`，结果拒绝。
+-- [ ] 执行 `mvn.cmd -B -ntp -pl admin-common -am test "-Dmaven.repo.local=.tools/m2" "-Dtest=TrustedJwtDecoderTest,PortalClaimMapperTest" -Dsurefire.failIfNoSpecifiedTests=false`，预期尚无 decoder/mapper 而红。
++- [ ] 执行 `mvn.cmd -B -ntp -pl admin-common -am test "-Dmaven.repo.local=.tools/m2" "-Dtest=TrustedJwtDecoderTest,PortalClaimMapperTest" -Dsurefire.failIfNoSpecifiedTests=false`；decoder/mapper 缺失只算编译接缝，补最小可编译骨架后必须针对真实验签/用途映射错误允许路径先观察行为断言失败，再实现转绿，不能把编译失败当关键失败路径证据。
+ - [ ] 保留 Nimbus 密码学验签；定制 JWKSource 每次使用 BoundedIamHttp 读取固定 JWKS、校验仅 RSA 公钥/非空唯一 kid/算法/用途后选择密钥。不得自行实现 RSA/JWS；拒绝重复 kid、私钥字段、oct、未知 kid。核心 processor 装配为：
+ 
+ ```java
+@@ -379,11 +408,11 @@ decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(
+ **Files:**
+ - Create: 本文 §2.3 的 `DelegationRef.java`、`VerifiedAuthority.java`、`WorkloadAuthority.java`、`ServiceTicket.java`、`CurrentAuthorityClient.java`、`ServiceTicketProvider.java`，均在 `admin-common/src/main/java/cn/agentplatform/common/authority/`。
+ - Create same package: `HttpCurrentAuthorityClient.java`、`IamServiceTicketProvider.java`、`AuthorityContext.java`、`WorkloadCredentialResolver.java`。
+-- Create same package: `ResponseBinding.java`、`ResponseLease.java`、`ResponseAuthorityClient.java`、`StreamAuthorityGuard.java`，精确接口/生命周期见 §2.4；`StreamAuthorityGuard.beforeWrite()` 和 `close()` 必须幂等且分别核当次lease与回收watchdog。
++- Create same package: `ResponseBinding.java`、`ResponseLease.java`、`ResponseAuthorityClient.java`、`StreamAuthorityGuard.java`、`ResponseMaterialPermit.java`、`ResponseMaterialAccess.java`、`ResponseMaterial.java`、`OperationBinding.java`，精确接口/生命周期见 §2.4；`StreamAuthorityGuard.beforeWrite()`、`beforeMaterialWrite` 和 `close()` 必须核当次lease/材料能力、停止位与回收watchdog；close幂等。
+ - Modify: `admin-common/src/main/java/cn/agentplatform/common/ServiceTokens.java`（生产 issue(Actor) 明确拒绝；integration/dev 隔离）。
+ - Test: `admin-common/src/test/java/cn/agentplatform/common/authority/CurrentAuthorityClientTest.java`、`ServiceTicketProviderTest.java`、`LoopbackAuthority.java`。
+ 
+-**Interfaces:** 本文 §2.3/2.4 是固定 task 交接；`ResponseAuthorityClient.open` 与 `check` 均返回 ResponseLease，check 只能更新同一 binding 的当前决定/checkedUntil，保留原 hardDeadline/sourceExpiresAt。`AuthorityContext.current()` 只返回已验证请求上下文，无则拒绝；后台显式传 `VerifiedAuthority`，不通过全局 ThreadLocal 跨线程“继承”身份。`WorkloadCredentialResolver.resolve()` 无用户参数，只解析部署配置绑定的本 client secret_ref，返回秘密只用于固定 token/decision endpoint 的认证头；无配置即启动失败。`LoopbackAuthority` 仅测试，维护有限 alice/approver、两 region、六业务 client，另有独立 `iam-policy-resolver` 签名身份；支持 grant revoke/version change/503。集成 current policy 只通过 §2.6 app HTTP 取得，禁止 fixture 静态 ACTIVE 替代。每测试独立实例，最多2个用户，普通JWKS≤8 key、policy独立固定≤2 key，不把 fixture 当生产实现。
++**Interfaces:** 本文 §2.3/2.4 是固定 task 交接；`ResponseAuthorityClient.open` 与 `check` 均返回 ResponseLease，check 只能更新同一 binding 的当前决定/checkedUntil，保留原 hardDeadline/sourceExpiresAt/operation；`CurrentAuthorityClient.forward` 只换同 operation 子票，resume 只在显式新动作检查点请求新 operation。签名 operation 必须由 mapper 附着至 VerifiedAuthority 和 ServiceTicket，不能靠调用者填 source/时间。`AuthorityContext.current()` 只返回已验证请求上下文，无则拒绝；后台显式传 `VerifiedAuthority`，不通过全局 ThreadLocal 跨线程“继承”身份。`WorkloadCredentialResolver.resolve()` 无用户参数，只解析部署配置绑定的本 client secret_ref，返回秘密只用于固定 token/decision endpoint 的认证头；无配置即启动失败。`LoopbackAuthority` 仅测试，维护有限 alice/approver、两 region、六业务 client，另有独立 `iam-policy-resolver` 签名身份；支持 grant revoke/version change/503、签名 response permit 和 DELEGATED operation。集成 current policy 只通过 §2.6 app HTTP 取得，禁止 fixture 静态 ACTIVE 替代。每测试独立实例，最多2个用户，普通JWKS≤8 key、policy独立固定≤2 key，不把 fixture 当生产实现。
+ 
+ - [ ] 测试先让已认证 engine 申请其他 tenant/subject 或 action、缺 grant、旧已撤 grant、错误 resource、篡改响应、过期 decision 都失败。抓取 token endpoint 请求，断言没有 caller 自报 roles/attributes 字段且认证来自该 client 的独立测试凭据。
+ - [ ] 执行 `mvn.cmd -B -ntp -pl admin-common -am test "-Dmaven.repo.local=.tools/m2" "-Dtest=CurrentAuthorityClientTest,ServiceTicketProviderTest" -Dsurefire.failIfNoSpecifiedTests=false`，预期实现缺失而红。
+@@ -395,16 +424,19 @@ public ServiceTicket issue(VerifiedAuthority authority, ServiceCall call) {
+         throw new PlatformException(403, "AUTHORITY_EXPIRED", "当前授权已过期");
+     if (!authority.delegation().expiresAt().isAfter(clock.instant()))
+         throw new PlatformException(403, "AUTHORITY_EXPIRED", "委托已过期");
+-    return currentAuthority.resume(authority.delegation(), call);
++    // Same operation: forwarding cannot reset its signed deadline.
++    return currentAuthority.forward(authority, call);
+ }
+ ```
+ 
+-`clock` 与 `currentAuthority` 是构造注入的 final 字段；resume 在服务器端重验当前 caller、链、主体、资源、scope，而不是只检查这个客户端的旧 expiresAt。响应签名和 nonce/绑定验证完成后才返回票据。没有证明的 `Actor` 不提供生产重载；保留旧静态签发仅于受控 dev/test 路径并加模式校验。
++`clock` 与 `currentAuthority` 是构造注入的 final 字段；forward 在服务器端重验当前 caller、链、主体、资源、scope 和 operation，既有 PORTAL/INTEGRATION 响应也保持其签名来源期限，不用 resume 偷换后台新动作。显式后台新动作入口才使用 resume 并验证新 DELEGATED operation，见 §2.4.2；两者都不只检查客户端的旧 expiresAt。响应签名和 nonce/绑定验证完成后才返回票据。没有证明的 `Actor` 不提供生产重载；保留旧静态签发仅于受控 dev/test 路径并加模式校验。
+ - [ ] 用 Clock 测试 receive 与下一次 issue 之间撤 scope/角色、版本变化、grant 到期、批准者撤 APPROVER；网络 503/错误 JSON/签名拒绝都不得返回缓存票据。错误响应体不进入日志。恢复网络后显式重新查询成功才可继续。
+ - [ ] **R1 红→绿：** 新增 `admin-common/src/test/java/cn/agentplatform/common/authority/ResponseAuthorityTest.java`，先证明原 request 生命周期无法在decision过期后停止async writer；测试使用 MutableClock 和两闩锁，让opening后阻塞writer，推进时钟/撤scope/503，再放行一次chunk。实现 §2.4 response-only open/check、不可变绑定和stop位；分别断言普通流0个后续chunk、INTEGRATION drain仅原response可写、换responseId/新action/check延长hardDeadline均403。命令：`mvn.cmd -B -ntp -pl admin-common -am test "-Dmaven.repo.local=.tools/m2" "-Dtest=ResponseAuthorityTest" -Dsurefire.failIfNoSpecifiedTests=false`；先红后绿，不能用该组件测试替代Task4真实循环测试。
+ - [ ] **R3 authority侧红→绿：** 新增 `CurrentAuthorityClientTest` 的集成profile用例，以独立policy assertion调用固定app resolver URL，缺resolver/错签名域/旧版本/active=false均拒绝；token/decision请求不可依赖自报roles。绑定DTO使用 §2.6 完整字段，response check重核集成策略也经此adapter（已进入drain的当前响应除外）。运行原Task3命令，记录resolver调用次数及决策拒绝原因，真实PG闭环留Task4完成。
+ - [ ] 重跑同命令，检查 fixture 的业务发送计数始终 0。仅测试 authority 交互，不声称已接生产 IAM。
+ 
++- [ ] **RR1/RR2 能力行为红→绿：** 在 ResponseAuthorityTest/CurrentAuthorityClientTest 先以真实 fixture 签名证明过期普通 VerifiedAuthority 仍拒绝，而独立完成 permit 仅原 response/owner/resource/ceiling/version/deadline 可读写；误用其换票/新open/其他用途均拒绝，PORTAL无完成permit。覆盖 authority 在原门户JWT过期后签新 DELEGATED operation、forward保持operationId/截止、caller自报来源/延期及撤grant拒绝；缺 operation policy/签名字段默认拒绝。使用Task3已有命令加 ResponseAuthorityTest，最小骨架后的行为失败才算红；不是执行本轮测试。
++
+ ### Task 4: 六服务 HTTP 迁移与 ApiKey/SDK 连通性
+ 
+ **Files:**
+@@ -445,6 +477,8 @@ outgoing.header("Authorization", "Bearer " + ticket.value());
+ - [ ] 每服务启动 route coverage：全部 handler 明确登记、未使用 handler 禁用；替换散落 hard-coded `ROLE_SERVICE`、`agent-platform-internal`、GATEWAY_AUTH 规则。业务 ADMIN/EDITOR、tenant SQL、归属、审批原检查保持；回调仍验证签名/body/attempt，不因机器票据而绕过原验证。
+ - [ ] 重跑同命令和原 IntegrationSecurityTest；票据 jti/aud 在每跳不同，捕获业务接收 header 断言不等于 portal token、integration token、ApiKey。部分迁移期间 iam 模式不得开放半套可用入口。
+ 
++- [ ] **RR1 真实材料交界红→绿（依赖E的表/接口）：** StreamAuthorityHttpTest 创建真实 PG run_event+material_scope，第一事件已发送后，以闩锁停在第二事件 nextEventRef 之前且未读 payload，分别令 decision/grant到期、authority撤权、503；放行后断言 INTEGRATION 经 readForResponse 真读合法第二事件并完成，不能预缓存payload。分别加入同run超ceiling、错manifest/scope摘要、错version、其他run和hardDeadline到期，拒绝前/后payload读取计数按§2.4.1分界且wire业务输出0。相同状态PORTAL第二payload读取/输出0，不进入该能力。ModelStreamAuthorityHttpTest 暂停真实在途provider的final生成，失效后走model持久scope→readForResponse→私有manifest+final→RuntimeClients.acceptForResponse→ModelExchange事实记录正例；错producer/responseId/请求摘要/manifest/version/payload digest、缺帧/乱序/跨连接重放均不释放final。drain跨域新manifest HTTP=0，旧current普通read拒绝，后续model/skill/new-SSE请求0；deadline/关闭后permit复用拒绝。运行上一stream命令留真实行为红绿，不能只测两个缓存chunk。
++
+ ### Task 5: 持久委托、恢复、历史材料与批准者新鲜度
+ 
+ **Files:**
+@@ -459,7 +493,7 @@ outgoing.header("Authorization", "Bearer " + ticket.value());
+ 
+ **Interfaces:** `RunAuthority.current(long runId,ServiceCall call)` 返回当前 VerifiedAuthority；`RunAuthority.approver(long callId)` 取持久 approvedBy 和批准摘要后调用 §2.3 approver。`FactAuthority.current(String tenant,long callId,long attemptId,ServiceCall call)` 只能核已有事实对应绑定。都禁止从历史 Actor 单独签票。
+ 
+-材料接口以 §2.5 为准：`MaterialAuthorization.require(MaterialScopeV1,VerifiedAuthority)` 不返回payload，只验owner/当前有效性/集合覆盖；各域 `MaterialScopeStore.write(MaterialScopeV1)` 必须处于调用方业务事务，`read(MaterialRef,VerifiedAuthority)` 先判权再由同域读取绑定payload，返回AuthorizedMaterial。`ChatHistory.load(store,run,current)` 不提供无current的生产重载；`ContextAssembler.assemble` 的历史参数改为AuthorizedMaterial集合，输出完整material refs/manifest摘要，不接受裸旧Map冒充已授权材料。
++材料接口以 §2.5 为准：`MaterialAuthorization.require(MaterialScopeV1,VerifiedAuthority)` 不返回payload，只验owner/当前有效性/集合覆盖；各域 `MaterialScopeStore.write(MaterialScopeV1)` 必须处于调用方业务事务，`read(MaterialRef,VerifiedAuthority)` 先判权再由同域读取绑定payload，返回AuthorizedMaterial。仅原响应完成使用 §2.4.1 的 `nextEventRef`、`readForResponse`、`acceptForResponse` 和 `MaterialAuthorization.requireForResponse`，后者返回的材料只能由原 response holder 写出或记录在途事实，不可提交给新动作 assembler。`ChatHistory.load(store,run,current)` 不提供无current的生产重载；`ContextAssembler.assemble` 的历史参数改为AuthorizedMaterial集合，输出完整material refs/manifest摘要，不接受裸旧Map冒充已授权材料。
+ 
+ - [ ] 写 PG+loopback authority 失败测试：旧 run 无 grant_ref，历史有 region A/B 而当前只有 A，approvedBy 另一人且其角色撤销，grant 过期，authority 503，队列延迟后证据过期；断言不调用外部模型/技能，不改变原事实为成功、不新增可发送 attempt、不吞兄弟调用/取消状态。
+ - [ ] 执行 `mvn.cmd -B -ntp -pl engine-runtime,skill-registry -am test "-Dmaven.repo.local=.tools/m2" "-Dtest=RecoveryAuthorityTest,ApprovalAuthorityTest,OutboxAuthorityTest" -Dsurefire.failIfNoSpecifiedTests=false`，使用已授权的新工程专用 PG 测试库，预期旧 guard 恢复/空 Actor 取票路径产生红色；此命令不启动数据库。
+@@ -475,13 +509,14 @@ create table engine.run_authority (
+   initial_ceiling jsonb not null,
+   resource_digest varchar(64) not null,
+   source_kind varchar(24) not null,
++  origin_authentication_id varchar(128) not null,
+   last_decision_id varchar(128),
+   last_checked_at timestamptz,
+   blocked_reason varchar(64)
+ );
+ ```
+ 
+-tenant/principal 的 64 长度来自实际 `V200__engine.sql:7`，实施前核后续迁移没有更改；grant_ref 不写日志，仅授权调用者凭据可使用。skill side table 主键 `(tenant_id,call_id,attempt_id)`，保存同一 delegated reference 的受限子引用、subject/有效期/原 ceiling/绑定摘要，不保存用户 JWT、API key 或明文 refresh token。收到首次已验受限票据时与业务创建同事务落表；没有授权 row 的历史数据不自动回填“当前有效”。新的 G2 attempt 必须重新绑定当前许可和授权，不能覆盖原代记录。
++tenant/principal 的 64 长度来自实际 `V200__engine.sql:7`，实施前核后续迁移没有更改；grant_ref 不写日志，仅授权调用者凭据可使用。这里 source_kind 保存原认证来源（例如PORTAL）和 origin_authentication_id 审计，不据此给新后台流打PORTAL标签；新动作 source_kind/operation 仅取authority本次签名。初次exchange也返回来源明确的OperationBinding；纯workload无用户operation且不得进入用户路径。skill side table 主键 `(tenant_id,call_id,attempt_id)`，保存同一 delegated reference 的受限子引用、subject/有效期/原 ceiling/绑定摘要，不保存用户 JWT、API key 或明文 refresh token。收到首次已验受限票据时与业务创建同事务落表；没有授权 row 的历史数据不自动回填“当前有效”。新的 G2 attempt 必须重新绑定当前许可和授权，不能覆盖原代记录。
+ - [ ] **R2 可信材料写入红→绿：** 先写scope缺失/摘要错/事务回滚测试，再按 §2.5 在run/turn、response/checkpoint、output/error/event、model invocation/SUMMARY、skill fact、artifact READY写入同事务metadata。材料初始full ceiling只取签名verified authority，不从guard_ctx补录；故意在payload与scope之间抛异常，断言两者均未公开，artifact不得READY。每个parent要求并集，dataLabels只增不减。命令：`mvn.cmd -B -ntp -pl engine-runtime,skill-registry,model-gateway -am test "-Dmaven.repo.local=.tools/m2" "-Dtest=MaterialScopeHistoryTest,MaterialScopeReplayTest,ArtifactAuthorityHttpTest,MaterialScopeEgressTest" -Dsurefire.failIfNoSpecifiedTests=false`。
+ - [ ] **R2 ChatHistory真实消费红→绿：** 构造真实ChatSessions.turn创建时A/B、在AgentDriver调用ChatHistory.load前闩锁暂停，authority收窄A后放行；再覆盖known requestId复用、缺run的reserved turn恢复和旧checkpoint。删除load旧对旧授权比较，改用刚取current证据逐material核验；断言模型/summary/tokenizer/provider网络发送均0。相同A/B合法多轮、同scope恢复和已声明EDITOR批准正例必须成功，证明新metadata可用。
+ - [ ] **R2 派生/下载/回放红→绿：** 走真实ModelExchange SUMMARY→ContextProjection→下一MAIN、TraceStore checkpoint→recovery、ArtifactStore READY→HTTP下载、ReplayService.log/get/reexecute。摘要和artifact summary保留全部parent要求；被压缩的B内容使当前A不能进入SUMMARY或MAIN；同scope但provider缺旧dataLabels也不得发送。scope缺项/版本digest不符时下载对象流打开数=0、回放业务输出字节=0；不得只测集合函数。重跑上一材料命令，全绿后才视为E的材料子任务完成。
+@@ -499,6 +534,8 @@ drive(runId, current.actor());
+ - [ ] G2 接口对接：取证/排队前/领取前/提交前核当前主体与 approvedBy；短事务内重验 expiry、资源摘要、lease、expectedAttempt、原批准到期。role version 变化后必须重新核实原批准者满足本 call 原声明的实际 `roles/confirmRoles`；ADMIN/EDITOR 没有自动豁免，但原声明为 EDITOR 时拥有当前 EDITOR 的合法批准者应继续通过。测试同时保留原声明 EDITOR 正例和原声明 APPROVER 却仅有 EDITOR 的负例，不把全部确认规则硬编码成 APPROVER。未来复用只认可原批准者当前证明及未过期原批准快照，不用发起人身份代替；批准者无当前证据沿既有确认流程重新确认。
+ - [ ] 重跑上述命令；撤权→拒绝→可信重新授权→恢复，仅已有事实可投递一次，新业务发送计数仍为 0；另测合法首次调用 1 次。审查历史结果、附件、检查点、原 prompt/context 的 scope 覆盖，scope 缩小但仍读取原大范围结果必须为红色阻断项。
+ 
++- [ ] **RR2 后台新动作红→绿：** RunAuthority.current 在每个真实新动作点调用resume+authorize，保存/传递签名DELEGATED operation；同动作RuntimeClients取票改forward，绝不改原PORTAL observer holder。IamRecoveryHttpTest 以fixture Clock设置原portal exp=t+10s、grant exp=t+300s、authority模型operation上限120s；推进到t+11s后从真实driveRecovered进入ModelExchange→RuntimeClients→model stream（首个provider外发须实际发生且仅1次），断言源DELEGATED、origin PORTAL、签名operation截止≤t+131s且各hop不变、用户JWT未持久/未重放、同scope材料合法、chunk/final成功。对照撤grant/当前scope收窄/伪来源/改截止拒绝且provider=0；已进入DELEGATED流后撤grant/503/operation到期则后续输出0。并行原PORTAL观察在t+10s仍关闭，后台成功不使其恢复。测试用有限Clock/闩锁，无真实IAM；命令纳入Task6 IamRecoveryHttpTest，E完成需具备该接口与真实路径测试。
++
+ ### Task 6: 有限真实跨服务失败矩阵与回归
+ 
+ **Files:**
+@@ -529,6 +566,8 @@ drive(runId, current.actor());
+ | ApiKey 吊销/claimLimits 修改/Origin 不合法、SDK session/artifact/approval | 保持原负向；合法 SDK 请求仍成功，已建立 SSE 按既有设计完成后关闭，不作“瞬时撤回已发数据”承诺 |
+ | 普通SSE/模型流open后decision过期、portal/grant到期、撤权、503；idle无chunk | 到checkedUntil必须成功续核，否则后续chunk/final=0；watchdog关闭idle流。短内部票据到期后仅同一response续核可继续，不产生第二次业务外发；断观察流cancel-run=0 |
+ | 集成已在途模型流/已建立55秒SSE在撤销/503后 | 原响应限定scope内完成并关闭；下一MAIN/SUMMARY/修正/技能发送=0；未实际外发的provider请求不能借drain首发 |
++| 集成第二PG事件尚未读payload、model final尚未生成时到期/撤权/503 | 独立完成permit经readForResponse/acceptForResponse和真实manifest核验原范围完成；普通过期current仍拒绝，跨域新manifest HTTP=0，错资源/version/digest/ceiling/deadline拒绝；PORTAL无drain |
++| 原PORTAL JWT过期，持久grant/current有效的后台恢复；撤grant对照 | authority签新DELEGATED operation后真实ModelExchange→model stream成功，不存/重放原JWT；同动作hop不延长签名期限，撤grant拒绝；原PORTAL观察到期仍关 |
+ | Last-Event-ID授权reset后重连；history载入前scope从A/B变A | 新请求重新认证、核历史事件/材料scope；禁止自动使用旧lease，模型/summary/tokenizer、下载打开与回放输出为0；同scope合法多轮/恢复成功 |
+ | authority→app独立resolver错误caller/签名域/跨credential/subject；PG撤销或策略revision递增 | 不返回secretRef/跨主体信息；旧grant exchange/resume/authorize均拒绝；resolver对authority请求计数0，无循环；新认证受新policy约束 |
+ | admin生产portal模式启动、无provider/有效JWT/401/403/503/新宿主身份 | 无dev-token请求；有效provider→真实session→admin业务链成功；失效停止观察、不会自动重放POST，旧401不覆盖新会话；SDK ticket()保持原用例 |
+@@ -539,6 +578,8 @@ drive(runId, current.actor());
+ - [ ] **门户真实浏览器收口：** `IamPortalBrowserTest` 管理有限issuer/authority/gateway/app测试进程和Vite测试宿主生命周期，子进程运行 `node web/tests/portal-auth-browser.mjs`，以临时loopback端口env传入；脚本用已安装Playwright启动headless浏览器，同源宿主provider仅交测试issuer签名JWT，真实Admin页面经过gateway decoder/session/authority/业务HTTP，不用page.route.fulfill模拟这些后端。覆盖首次有效进入、过期/撤权后停止观察与手动新token恢复、无provider或authority503错误态，以及迟到401不清新登录；断言localStorage/query均无token、dev-token请求0、自动业务POST重放0。入口命令 `mvn.cmd -B -ntp -pl platform-gateway -am test "-Dmaven.repo.local=.tools/m2" "-Dtest=IamPortalBrowserTest" -Dsurefire.failIfNoSpecifiedTests=false`；前端先 `npm.cmd --prefix web test -- tests/portal-auth.test.ts tests/login.test.ts tests/stream-auth.test.ts` 与 `npm.cmd --prefix web run build`。测试host不进生产bundle，不保存真实凭据；浏览器缺依赖记未运行。
+ - [ ] 重跑定向命令全绿后，仅在新代码稳定时运行一次 `mvn.cmd -B -ntp test "-Dmaven.repo.local=.tools/m2"` 以及 `node scripts/verify-contracts.mjs`；记录真实运行/失败/跳过数量，禁止预计新总数。业务依赖未准备时记录未运行并保留阶段未完成，不请求生产环境才能写软件。
+ 
++- [ ] **RR1/RR2复审交界收口：** 用Task4真实PG下一事件/模型final材料接口和Task5真实ModelExchange恢复链，逐项记录readForResponse/acceptForResponse调用、PG payload读取、manifest接收、最终wire、每hop operationId/截止和外发计数；原scope完成正例与错误绑定负例都不可省。命令：`mvn.cmd -B -ntp -pl engine-runtime,model-gateway,platform-gateway -am test "-Dmaven.repo.local=.tools/m2" "-Dtest=StreamAuthorityHttpTest,ModelStreamAuthorityHttpTest,IamRecoveryHttpTest" -Dsurefire.failIfNoSpecifiedTests=false`。隔离fixture通过只证明拟实施软件机制，不代表真实IAM支持或独立评审APPROVE；无全部行为证据保持C/D/E相关项未完成。
++
+ ### Task 7: 部署门禁和交付证据
+ 
+ **Files:**
+@@ -583,10 +624,12 @@ test "${AGENT_DEV_AUTH:-false}" = false || exit 78
+ - [x] R2在§2.5/Task5落可信full-ceiling来源、payload/version摘要、同事务写入、ChatHistory真实current参数、SUMMARY/checkpoint/artifact/replay传播和许可/义务不同方向。
+ - [x] R3在§2.6/Task3/Task4/Task6落固定独立policy接口、无环验证域、最小DTO、PG revision和真实HTTP拒绝旧grant。
+ - [x] 管理端门户消费配套明确现有dev-only缺口、最小宿主provider/已验session投影与浏览器链；没有把SDK集成ticket误当portal接口。
++- [x] RR1补原响应专用材料permit、PG下一事件/模型final同连接manifest及真实材料接口验收；没有把过期openingAuthority改称current。
++- [x] RR2采用root跨门户寿命的持久grant裁决，区分新DELEGATED operation与原PORTAL观察，明确各hop不重置期限及真实恢复正反例；Task1/2编译接缝不计关键行为红。
+ 
+ **root 实质裁决项（不会要求用户补环境后才继续软件）：**
+ 
+-以下1–4的原则已由 `docs/evidence/iam-service-authority-root-decisions.md` 接受，本次不重开原则决策、不改该裁决；三P1的具体接口与流/材料细化交原审查者复核。root已在返修消息允许§2.7 `/auth/session` 外部配套接口作为计划依赖，随本计划独立复核，不表示已实现。response-only continuation profile是对已接受当前authority能力的具体扩展，缺真实IAM等价能力继续默认拒绝相应生产流。
++以下1–4的原则已由 `docs/evidence/iam-service-authority-root-decisions.md` 接受，本次不重开原则决策、不改该裁决。原reviewer首轮返修复审已在计划层面关闭R2/R3及门户配套，仍为REQUEST_CHANGES；本轮RR1/RR2具体接口交原reviewer再次复核，不自行宣布关闭。root本轮消息裁决持久grant可跨原门户JWT寿命，已落实§2.4.2，未回写root裁决文件。response-only continuation/材料permit及DELEGATED operation是外部authority适配合同，缺真实IAM等价能力继续默认拒绝相应生产流。
+ 
+ 1. 认可“消费外部 authority 的 grant_ref + 在线决定 + approver 当前角色”作为首个内部 adapter profile，并指定实际生产 IAM 将来承接的等价能力；未获该能力时只有受影响生产动作禁用。不要把这个决策包装成新建生产 IAM 的授权。
+ 2. 认可集成 profile 的权威来源：受限 gateway 认证加独立当前 app policy resolver，或由实际 IAM 提供等价集成声明校验。无该能力时继续保留 ApiKey/SDK 的 dev/隔离验收，但不能生产降级为网关任意自报 Actor。

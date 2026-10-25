@@ -1,0 +1,30 @@
+{
+  "status": "FAILED_BEFORE_BUSINESS_HTTP",
+  "runnerExit": 1,
+  "originalRunnerSha256": "a29c1e0d0a0e6c68bed1238e9655ea3843de1eb590599468ab205f8e8fe891c4",
+  "rawDirectory": "docs/evidence/algorithm-process-runner/live-bcc9285991eb",
+  "database": "agent_platform_algorithm_live_bcc9285991eb",
+  "databaseRetained": true,
+  "skillChild": {"pid": 52436, "port": 54504, "created": "2026-10-20T02:51:00.8469670Z"},
+  "engineStarted": false,
+  "businessScenariosCompleted": 0,
+  "runId": null,
+  "callId": null,
+  "attemptId": null,
+  "jobUid": null,
+  "fixturePosts": 0,
+  "fixtureJobGets": 0,
+  "upstreamRejectEndpointRequests": 0,
+  "logicalCommits": null,
+  "offloadReady": false,
+  "downloadSha256": null,
+  "initialFinallyCleanupSucceeded": false,
+  "postFailureOwnership": {"pid": null, "listenerPids": []},
+  "rootCause": "PowerShell default stdout encoding corrupts Chinese JAR path when decoded as UTF8; identity/cleanup guards refuse it",
+  "nextAction": "root-approved narrow runner fix then independent review before another live execution",
+  "rawEvidence": [
+    "docs/evidence/algorithm-process-live-execution.log",
+    "docs/evidence/algorithm-process-live-encoding-diagnostic.json",
+    "docs/evidence/algorithm-process-live-first-pg-readonly.json"
+  ]
+}

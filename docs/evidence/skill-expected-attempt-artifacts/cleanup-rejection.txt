@@ -1,0 +1,10 @@
+Attempted optional cleanup (no source/runtime operation):
+G:/207/项目/算法重组工具/代码/agent-platform/docs/evidence/skill-expected-attempt-artifacts/replay
+
+Exact PowerShell action submitted through exec_command:
+$evidenceDir=(Resolve-Path -LiteralPath 'docs/evidence/skill-expected-attempt-artifacts').Path; $obsoleteReplay=(Resolve-Path -LiteralPath 'docs/evidence/skill-expected-attempt-artifacts/replay').Path; if ([IO.Path]::GetDirectoryName($obsoleteReplay) -ne $evidenceDir) { throw 'Unexpected replay target' }; Remove-Item -LiteralPath $obsoleteReplay -Recurse -Force; Get-Content docs/evidence/skill-expected-attempt-artifacts/green-final-full-skill.log -Tail 6
+
+Tool returned CreateProcess rejection. Exact rejection reason text:
+rejected: blocked by policy
+
+No more specific reason was provided. The action did not execute. No retry or equivalent deletion was attempted. The directory remains an unused baseline copy. Final valid patch replay is patch-replay/ and patch-replay-verification.json.

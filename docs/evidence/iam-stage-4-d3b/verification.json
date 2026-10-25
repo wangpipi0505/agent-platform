@@ -1,0 +1,129 @@
+{
+  "startedAt": "2026-10-20T11:02:39.135Z",
+  "endedAt": "2026-10-20T11:02:49.207Z",
+  "sourceBefore": 356,
+  "sourceAfter": 357,
+  "liveFrozenReplayEqual": 357,
+  "baselinePhysicalEqual": 356,
+  "targetLiveFrozenEqual": 1710,
+  "targetDeleted": [],
+  "protectedOriginalAfterExit": 1,
+  "protectedSampled": 135304,
+  "protectedImmediateEqual": 135301,
+  "authorizedChangedPaths": [
+    ".local/current-work-state.json",
+    ".local/postgres.log"
+  ],
+  "narrowOriginalJarRetry": [
+    {
+      "attempt": 1,
+      "success": true,
+      "at": "2026-10-20T10:57:29.720Z"
+    }
+  ],
+  "staticEqualAfterNarrow": 135302,
+  "externalDocsEqual": 8,
+  "originalPgLogPrefixUnchanged": true,
+  "patch": {
+    "file": "docs/evidence/iam-stage-4-d3b/change.patch",
+    "bytes": 172477,
+    "sha256": "e38bd6ed9e762843011ef6bcfcf66dfed6319020571aa7465a73c3d007541ab6"
+  },
+  "sourceManifest": {
+    "file": "docs/evidence/iam-stage-4-d3b/source-after.json",
+    "bytes": 73294,
+    "sha256": "bdd8d926e3aed39bc4812d3a2ca9ee73651de7446b7bc03f35667fcbda1d4ced"
+  },
+  "targetManifest": {
+    "file": "docs/evidence/iam-stage-4-d3b/target-after.json",
+    "bytes": 350300,
+    "sha256": "d49ed3864f336bd48d552cc562f34a8857a3c28e89660bbe0759a3800436d68a"
+  },
+  "report": {
+    "file": "docs/evidence/iam-stage-4-d3b-report.md",
+    "bytes": 14188,
+    "sha256": "964300173a47aff513abac5f992df77942ce2c4f1e0cd1fccd7c643010082664"
+  },
+  "nextStageAuthorizedNew": {
+    "file": "docs/evidence/iam-next-published-chain-seam-proposal.md",
+    "bytes": 29262,
+    "sha256": "5a7bef43ea57290367895cef38a029437f66733e0c6a3a636e34d1fc9aa9d308"
+  },
+  "stages": [
+    {
+      "stage": "iam-stage-4-d3b-red01",
+      "tests": 23,
+      "failures": 17,
+      "errors": 0,
+      "skipped": 0,
+      "classification": "behavior-red"
+    },
+    {
+      "stage": "iam-stage-4-d3b-green01",
+      "tests": 0,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "classification": "setup-testCompile-no-tests"
+    },
+    {
+      "stage": "iam-stage-4-d3b-green02",
+      "tests": 24,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0,
+      "classification": "real-lock-confirmed-test-translation-assertion-failure"
+    },
+    {
+      "stage": "iam-stage-4-d3b-green03",
+      "tests": 24,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "classification": "passing"
+    },
+    {
+      "stage": "iam-stage-4-d3b-final01",
+      "tests": 33,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "classification": "passing"
+    },
+    {
+      "stage": "iam-stage-4-d3b-smoke01",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "classification": "passing"
+    },
+    {
+      "stage": "iam-stage-4-d3b-final-payload02",
+      "tests": 24,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "classification": "passing"
+    }
+  ],
+  "metadataAndSmokeUnchangedSourceEntries": 356,
+  "finalSourceIdenticalStage": "iam-stage-4-d3b-final-payload02",
+  "oldFinal33IsDifferentTestSource": true,
+  "ownedPidTcp": [
+    {
+      "pid": 53176,
+      "alive": false,
+      "tcpConnections": 0
+    },
+    {
+      "pid": 64904,
+      "alive": false,
+      "tcpConnections": 0
+    }
+  ],
+  "sourceTargetOwnershipReturned": true,
+  "productionIamGlobalGateStillClosed": true,
+  "wholeD3ECompleted": false,
+  "deployed": false
+}

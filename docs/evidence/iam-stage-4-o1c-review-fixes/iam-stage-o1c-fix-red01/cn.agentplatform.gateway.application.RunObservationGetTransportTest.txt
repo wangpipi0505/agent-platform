@@ -1,0 +1,30 @@
+-------------------------------------------------------------------------------
+Test set: cn.agentplatform.gateway.application.RunObservationGetTransportTest
+-------------------------------------------------------------------------------
+Tests run: 2, Failures: 2, Errors: 0, Skipped: 0, Time elapsed: 4.333 s <<< FAILURE! -- in cn.agentplatform.gateway.application.RunObservationGetTransportTest
+cn.agentplatform.gateway.application.RunObservationGetTransportTest.preBodyRejectionsAbortBeforeClosingStalledBody -- Time elapsed: 2.313 s <<< FAILURE!
+java.lang.AssertionError: 
+
+Expecting actual:
+  2.0426022S
+to be less than:
+  1S 
+	at cn.agentplatform.gateway.application.RunObservationGetTransportTest.earlyRejection(RunObservationGetTransportTest.java:104)
+	at cn.agentplatform.gateway.application.RunObservationGetTransportTest.preBodyRejectionsAbortBeforeClosingStalledBody(RunObservationGetTransportTest.java:92)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+cn.agentplatform.gateway.application.RunObservationGetTransportTest.declaredExcessiveLengthAbortsBeforeClosingStalledBody -- Time elapsed: 2.007 s <<< FAILURE!
+java.lang.AssertionError: 
+
+Expecting actual:
+  2.0035539S
+to be less than:
+  1S 
+	at cn.agentplatform.gateway.application.RunObservationGetTransportTest.earlyRejection(RunObservationGetTransportTest.java:104)
+	at cn.agentplatform.gateway.application.RunObservationGetTransportTest.declaredExcessiveLengthAbortsBeforeClosingStalledBody(RunObservationGetTransportTest.java:87)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+

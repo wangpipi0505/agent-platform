@@ -1,0 +1,124 @@
+{
+  "runtime": "Configured Temurin21.0.12+8 HotSpot, verified default ObjectAlignmentInBytes8 / compressedOops/classPointers=true; conservative headers16/references8/arrayheaders24 and align8 used instead of actual smaller compressed layout",
+  "runtimeFlags": {
+    "file": ".local/iam-o2b-f2c2a-fixes/jdk-layout-flags.txt",
+    "bytes": 61513,
+    "sha256": "10eab4020aecba742d9e354cc2e9c4c43f86ca1a8e742cb20cf77584389776e1"
+  },
+  "jdkFieldSource": {
+    "file": "docs/evidence/iam-stage-4-o2b-f2c2a-fixes/jdk-reference-layout-source.json",
+    "bytes": 2308,
+    "sha256": "914f07005b41f84821aa577cf5ba0146c58e44a71e47e4c98d95e09b0dc259ba"
+  },
+  "bundleObjects": [
+    {
+      "object": "WrappedProcessor",
+      "references": 4,
+      "scalarBytes": 8,
+      "header": 16,
+      "upperBytes": 56,
+      "edges": "final unique delegate/protocol; mutable current socket/token"
+    },
+    {
+      "object": "SlotReference incl Reference fields",
+      "references": 4,
+      "scalarBytes": 4,
+      "header": 16,
+      "upperBytes": 56,
+      "edges": "GC referent/queue/next/discovered + scalar slot index; no strong referent copy/history"
+    },
+    {
+      "object": "RequestSlot",
+      "references": 5,
+      "scalarBytes": 2,
+      "header": 16,
+      "upperBytes": 64,
+      "edges": "response/origin/originalSocket/State/requestThread; all five null on retire; one current attribute"
+    },
+    {
+      "object": "State finished/current light shell",
+      "references": 12,
+      "scalarBytes": 51,
+      "header": 16,
+      "upperBytes": 168,
+      "edges": "12 refs including Handle, 3 longs/15 booleans/3 ints; active heavy/session/output/worker charged Owner; finished detaches them and token/probe/Handle"
+    },
+    {
+      "object": "cell+io monitor objects",
+      "references": 0,
+      "scalarBytes": 0,
+      "header": 16,
+      "upperBytes": 32,
+      "edges": "two fixed objects per State"
+    },
+    {
+      "object": "Handle during active/refund tail",
+      "references": 1,
+      "scalarBytes": 9,
+      "header": 16,
+      "upperBytes": 40,
+      "edges": "static nested class; after final detach state=null, only after(long)/terminal(boolean); no implicit outer"
+    }
+  ],
+  "bundleUpperBytes": 416,
+  "bundleReservation": 512,
+  "bundleSlack": 96,
+  "slots": 1536,
+  "fixedObjects": [
+    {
+      "object": "SlotReference[1536]",
+      "upperBytes": 12312,
+      "basis": "24-byte array header +1536*8-byte references"
+    },
+    {
+      "object": "byte[1536]",
+      "upperBytes": 1560,
+      "basis": "24-byte array header +1536 scalar states"
+    },
+    {
+      "object": "Bridge + Thread[64] + WrappedProcessor[64]",
+      "upperBytes": 1104,
+      "basis": "32 +2*(24+64*8)"
+    },
+    {
+      "object": "ReferenceQueue/ReentrantLock/NonfairSync/Condition/two queue lock nodes",
+      "upperBytes": 256,
+      "basis": "48+24+48+40+96; only singleton ReferenceHandler and serialized drainer; no remove/await"
+    },
+    {
+      "object": "protocol additions/static scalars/SLOT key",
+      "upperBytes": 512,
+      "basis": "conservative fixed field/key reserve, no own admission monitor allocation"
+    },
+    {
+      "object": "all source String literal occurrences (duplicates separately)",
+      "upperBytes": 10200,
+      "basis": "each String32 + aligned array(24+4*raw literal codepoints); conservative UTF16/escapes"
+    }
+  ],
+  "fixedUpperBytes": 25944,
+  "fixedReservation": 131072,
+  "baseline": 1048576,
+  "bundlePlusFixedReservation": 917504,
+  "retiredReferenceTailCount": 4,
+  "retiredTailReservation": 2048,
+  "unassignedMargin": 129024,
+  "allNewGateAllocationsAfterBaseline": true,
+  "gateSectionIdenticalAcrossGreenEpochs": [
+    {
+      "stage": "affected-matrix",
+      "bytes": 6076,
+      "sha256": "198af7f6d0bd7627ba08109dedae0a286365ee49805c05ab0f5a641264f5ea33"
+    },
+    {
+      "stage": "detached-tail-regression",
+      "bytes": 6076,
+      "sha256": "198af7f6d0bd7627ba08109dedae0a286365ee49805c05ab0f5a641264f5ea33"
+    }
+  ],
+  "externalReturnValueBoundary": "Caller-owned permanently retained completed Handle objects are not a bounded population. Each is scalar-only (null State field), static nested and has no State/token/protocol/outer back-edge. No adapter internal collection/history retains them. The bound is internal adapter graph, not all caller return values or whole JVM.",
+  "heavyBoundary": "Active/stalled State/material/IO/action/worker/session stays on original Owner until actual action/heavy/worker/borrow/completion exit; forced noCompletion retains Owner2 until JVM exit.",
+  "retirement": "new REQUEST/remove attribute; reject/preasync exception; completion; process exception/non-LONG; recycle both oldnull/oldsocket branches. Tokens null all5 references. Finished State clears token/probe/Handle, Handle clears State; bridge finally restores/removes current.",
+  "queue": "Only exact private automatic poll notification returns TRACKED credit. BURNED never returns. Helper fully returns with only scalar outer state before monitor release/reuse. JDK ReferenceHandler clears discovered, queue.poll self-links next: four retired512B tails charged; no manual clear/enqueue/get/refersTo or production GC.",
+  "claim": "Source/field budget for this fixed runtime and internal owned graph; no RSS/native/GC storage/full JVM measurement or claim. Unsupported changed object alignment/runtime is outside this fixed profile."
+}

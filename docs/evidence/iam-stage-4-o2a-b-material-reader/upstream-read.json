@@ -1,0 +1,717 @@
+[
+  {
+    "version": "Jackson core2.19.0",
+    "readScope": "named mechanisms and displayed bounded contexts; not full-upstream audit",
+    "entry": "com/fasterxml/jackson/core/StreamReadConstraints.java",
+    "jar": ".tools/iam-o2a-b-upstream/jackson-core-2.19.0-sources.jar",
+    "entrySha256": "8dea513c75baf5b12ae308ddabbbb72eff73f7e57be30322a42209324d0fa26e",
+    "entryBytes": 24177,
+    "ranges": [
+      {
+        "text": "    private static final long serialVersionUID = 1L;\n\n    /**\n     * Default setting for maximum depth: see {@link Builder#maxNestingDepth(int)} for details.\n     */\n    public static final int DEFAULT_MAX_DEPTH = 1000;\n\n    /**\n     * Default setting for maximum document length:\n     * see {@link Builder#maxDocumentLength} for details.\n     */\n    public static final long DEFAULT_MAX_DOC_LEN = -1L;\n",
+        "end": 48,
+        "start": 36
+      },
+      {
+        "text": "    public static final int DEFAULT_MAX_NUM_LEN = 1000;\n\n    /**\n     * Default setting for maximum string length: see {@link Builder#maxStringLength(int)}\n     * for details.\n     *<p>\n     * NOTE: Jackson 2.15.0 initially used a lower setting (5_000_000).\n     */\n    public static final int DEFAULT_MAX_STRING_LEN = 20_000_000;\n\n    /**\n     * Default setting for maximum name length: see {@link Builder#maxNameLength(int)}\n     * for details.",
+        "end": 70,
+        "start": 58
+      },
+      {
+        "text": "    public static final int DEFAULT_MAX_STRING_LEN = 20_000_000;\n\n    /**\n     * Default setting for maximum name length: see {@link Builder#maxNameLength(int)}\n     * for details.\n     *\n     * @since 2.16\n     */\n    public static final int DEFAULT_MAX_NAME_LEN = 50_000;\n\n    /**\n     * Limit for the maximum magnitude of Scale of {@link java.math.BigDecimal} that can be\n     * converted to {@link java.math.BigInteger}.",
+        "end": 78,
+        "start": 66
+      },
+      {
+        "text": "     */\n    private static final int MAX_BIGINT_SCALE_MAGNITUDE = 100_000;\n\n    protected final int _maxNestingDepth;\n    protected final long _maxDocLen;\n    protected final long _maxTokenCount;\n\n    protected final int _maxNumLen;\n    protected final int _maxStringLen;\n    protected final int _maxNameLen;\n\n    private static StreamReadConstraints DEFAULT =\n        new StreamReadConstraints(DEFAULT_MAX_DEPTH,",
+        "end": 93,
+        "start": 81
+      },
+      {
+        "text": "    public static final class Builder {\n        private long maxDocLen;\n        private long maxTokenCount;\n        private int maxNestingDepth;\n        private int maxNumLen;\n        private int maxStringLen;\n        private int maxNameLen;\n\n        /**\n         * Sets the maximum nesting depth. The depth is a count of objects and arrays that have not\n         * been closed, `{` and `[` respectively.\n         *\n         * @param maxNestingDepth the maximum depth",
+        "end": 135,
+        "start": 123
+      },
+      {
+        "text": "         * Sets the maximum nesting depth. The depth is a count of objects and arrays that have not\n         * been closed, `{` and `[` respectively.\n         *\n         * @param maxNestingDepth the maximum depth\n         *\n         * @return this builder\n         * @throws IllegalArgumentException if the maxNestingDepth is set to a negative value\n         */\n        public Builder maxNestingDepth(final int maxNestingDepth) {\n            if (maxNestingDepth < 0) {\n                throw new IllegalArgumentException(\"Cannot set maxNestingDepth to a negative value\");\n            }\n            this.maxNestingDepth = maxNestingDepth;",
+        "end": 144,
+        "start": 132
+      },
+      {
+        "text": "         * @param maxNestingDepth the maximum depth\n         *\n         * @return this builder\n         * @throws IllegalArgumentException if the maxNestingDepth is set to a negative value\n         */\n        public Builder maxNestingDepth(final int maxNestingDepth) {\n            if (maxNestingDepth < 0) {\n                throw new IllegalArgumentException(\"Cannot set maxNestingDepth to a negative value\");\n            }\n            this.maxNestingDepth = maxNestingDepth;\n            return this;\n        }\n",
+        "end": 147,
+        "start": 135
+      },
+      {
+        "text": "         * @return this builder\n         * @throws IllegalArgumentException if the maxNestingDepth is set to a negative value\n         */\n        public Builder maxNestingDepth(final int maxNestingDepth) {\n            if (maxNestingDepth < 0) {\n                throw new IllegalArgumentException(\"Cannot set maxNestingDepth to a negative value\");\n            }\n            this.maxNestingDepth = maxNestingDepth;\n            return this;\n        }\n\n        /**\n         * Sets the maximum allowed document length (for positive values over 0) or",
+        "end": 149,
+        "start": 137
+      },
+      {
+        "text": "         * @throws IllegalArgumentException if the maxNestingDepth is set to a negative value\n         */\n        public Builder maxNestingDepth(final int maxNestingDepth) {\n            if (maxNestingDepth < 0) {\n                throw new IllegalArgumentException(\"Cannot set maxNestingDepth to a negative value\");\n            }\n            this.maxNestingDepth = maxNestingDepth;\n            return this;\n        }\n\n        /**\n         * Sets the maximum allowed document length (for positive values over 0) or\n         * indicate that any length is acceptable ({@code 0} or negative number).",
+        "end": 150,
+        "start": 138
+      },
+      {
+        "text": "         */\n        public Builder maxNestingDepth(final int maxNestingDepth) {\n            if (maxNestingDepth < 0) {\n                throw new IllegalArgumentException(\"Cannot set maxNestingDepth to a negative value\");\n            }\n            this.maxNestingDepth = maxNestingDepth;\n            return this;\n        }\n\n        /**\n         * Sets the maximum allowed document length (for positive values over 0) or\n         * indicate that any length is acceptable ({@code 0} or negative number).\n         * The length is in input units of the input source, that is, in",
+        "end": 151,
+        "start": 139
+      },
+      {
+        "text": "            if (maxNestingDepth < 0) {\n                throw new IllegalArgumentException(\"Cannot set maxNestingDepth to a negative value\");\n            }\n            this.maxNestingDepth = maxNestingDepth;\n            return this;\n        }\n\n        /**\n         * Sets the maximum allowed document length (for positive values over 0) or\n         * indicate that any length is acceptable ({@code 0} or negative number).\n         * The length is in input units of the input source, that is, in\n         * {@code byte}s or {@code char}s.\n         *",
+        "end": 153,
+        "start": 141
+      },
+      {
+        "text": "         * @return this builder\n         * @throws IllegalArgumentException if the maxNumLen is set to a negative value\n         */\n        public Builder maxNumberLength(final int maxNumLen) {\n            if (maxNumLen < 0) {\n                throw new IllegalArgumentException(\"Cannot set maxNumberLength to a negative value\");\n            }\n            this.maxNumLen = maxNumLen;\n            return this;\n        }\n\n        /**\n         * Sets the maximum string length (in chars or bytes, depending on input context).",
+        "end": 213,
+        "start": 201
+      },
+      {
+        "text": "         */\n        public Builder maxNumberLength(final int maxNumLen) {\n            if (maxNumLen < 0) {\n                throw new IllegalArgumentException(\"Cannot set maxNumberLength to a negative value\");\n            }\n            this.maxNumLen = maxNumLen;\n            return this;\n        }\n\n        /**\n         * Sets the maximum string length (in chars or bytes, depending on input context).\n         * The default is 20,000,000. This limit is not exact, the limit is applied when we increase\n         * internal buffer sizes and an exception will happen at sizes greater than this limit. Some",
+        "end": 215,
+        "start": 203
+      },
+      {
+        "text": "         * text values that are a little bigger than the limit may be treated as valid but no text\n         * values with sizes less than or equal to this limit will be treated as invalid.\n         * <p>\n         *   Setting this value to lower than the {@link #maxNumberLength(int)} is not recommended.\n         * </p>\n         *<p>\n         * NOTE: Jackson 2.15.0 initially used a lower setting (5_000_000).\n         *\n         * @param maxStringLen the maximum string length (in chars or bytes, depending on input context)\n         *\n         * @return this builder\n         * @throws IllegalArgumentException if the maxStringLen is set to a negative value\n         */",
+        "end": 228,
+        "start": 216
+      },
+      {
+        "text": "         * @return this builder\n         * @throws IllegalArgumentException if the maxStringLen is set to a negative value\n         */\n        public Builder maxStringLength(final int maxStringLen) {\n            if (maxStringLen < 0) {\n                throw new IllegalArgumentException(\"Cannot set maxStringLen to a negative value\");\n            }\n            this.maxStringLen = maxStringLen;\n            return this;\n        }\n\n        /**\n         * Sets the maximum name length (in chars or bytes, depending on input context).",
+        "end": 238,
+        "start": 226
+      },
+      {
+        "text": "         * @throws IllegalArgumentException if the maxStringLen is set to a negative value\n         * @since 2.16.0\n         */\n        public Builder maxNameLength(final int maxNameLen) {\n            if (maxNameLen < 0) {\n                throw new IllegalArgumentException(\"Cannot set maxNameLen to a negative value\");\n            }\n            this.maxNameLen = maxNameLen;\n            return this;\n        }\n\n        Builder() {\n            this(DEFAULT_MAX_DEPTH, DEFAULT_MAX_DOC_LEN, DEFAULT_MAX_TOKEN_COUNT,",
+        "end": 259,
+        "start": 247
+      },
+      {
+        "text": "                    DEFAULT_MAX_NUM_LEN, DEFAULT_MAX_STRING_LEN, DEFAULT_MAX_NAME_LEN);\n        }\n\n        Builder(final int maxNestingDepth, final long maxDocLen, final long maxTokenCount,\n                final int maxNumLen, final int maxStringLen, final int maxNameLen) {\n            this.maxNestingDepth = maxNestingDepth;\n            this.maxDocLen = maxDocLen;\n            this.maxTokenCount = maxTokenCount;\n            this.maxNumLen = maxNumLen;\n            this.maxStringLen = maxStringLen;\n            this.maxNameLen = maxNameLen;\n        }\n",
+        "end": 272,
+        "start": 260
+      },
+      {
+        "text": "\n        Builder(final int maxNestingDepth, final long maxDocLen, final long maxTokenCount,\n                final int maxNumLen, final int maxStringLen, final int maxNameLen) {\n            this.maxNestingDepth = maxNestingDepth;\n            this.maxDocLen = maxDocLen;\n            this.maxTokenCount = maxTokenCount;\n            this.maxNumLen = maxNumLen;\n            this.maxStringLen = maxStringLen;\n            this.maxNameLen = maxNameLen;\n        }\n\n        Builder(StreamReadConstraints src) {\n            maxNestingDepth = src._maxNestingDepth;",
+        "end": 274,
+        "start": 262
+      },
+      {
+        "text": "        }\n\n        Builder(StreamReadConstraints src) {\n            maxNestingDepth = src._maxNestingDepth;\n            maxDocLen = src._maxDocLen;\n            maxTokenCount = src._maxTokenCount;\n            maxNumLen = src._maxNumLen;\n            maxStringLen = src._maxStringLen;\n            maxNameLen = src._maxNameLen;\n        }\n\n        public StreamReadConstraints build() {\n            return new StreamReadConstraints(maxNestingDepth, maxDocLen,",
+        "end": 283,
+        "start": 271
+      },
+      {
+        "text": "        }\n\n        public StreamReadConstraints build() {\n            return new StreamReadConstraints(maxNestingDepth, maxDocLen,\n                    maxNumLen, maxStringLen, maxNameLen, maxTokenCount);\n        }\n    }\n\n    /*\n    /**********************************************************************\n    /* Life-cycle\n    /**********************************************************************\n     */",
+        "end": 292,
+        "start": 280
+      },
+      {
+        "text": "     */\n\n    @Deprecated // since 2.16\n    protected StreamReadConstraints(final int maxNestingDepth, final long maxDocLen,\n            final int maxNumLen, final int maxStringLen) {\n        this(maxNestingDepth, maxDocLen,\n                maxNumLen, maxStringLen, DEFAULT_MAX_NAME_LEN, DEFAULT_MAX_TOKEN_COUNT);\n    }\n\n    /**\n     * @param maxNestingDepth Maximum input document nesting to allow\n     * @param maxDocLen Maximum input document length to allow\n     * @param maxNumLen Maximum number representation length to allow",
+        "end": 304,
+        "start": 292
+      },
+      {
+        "text": "    @Deprecated // since 2.16\n    protected StreamReadConstraints(final int maxNestingDepth, final long maxDocLen,\n            final int maxNumLen, final int maxStringLen) {\n        this(maxNestingDepth, maxDocLen,\n                maxNumLen, maxStringLen, DEFAULT_MAX_NAME_LEN, DEFAULT_MAX_TOKEN_COUNT);\n    }\n\n    /**\n     * @param maxNestingDepth Maximum input document nesting to allow\n     * @param maxDocLen Maximum input document length to allow\n     * @param maxNumLen Maximum number representation length to allow\n     * @param maxStringLen Maximum String value length to allow\n     * @param maxNameLen Maximum Object property name length to allow",
+        "end": 306,
+        "start": 294
+      },
+      {
+        "text": "    }\n\n    /**\n     * @param maxNestingDepth Maximum input document nesting to allow\n     * @param maxDocLen Maximum input document length to allow\n     * @param maxNumLen Maximum number representation length to allow\n     * @param maxStringLen Maximum String value length to allow\n     * @param maxNameLen Maximum Object property name length to allow\n     *\n     * @since 2.16\n     */\n    @Deprecated // since 2.18\n    protected StreamReadConstraints(final int maxNestingDepth, final long maxDocLen,",
+        "end": 311,
+        "start": 299
+      },
+      {
+        "text": "     * @since 2.16\n     */\n    @Deprecated // since 2.18\n    protected StreamReadConstraints(final int maxNestingDepth, final long maxDocLen,\n                                    final int maxNumLen, final int maxStringLen, final int maxNameLen) {\n        this(maxNestingDepth, maxDocLen, maxNumLen, maxStringLen, maxNameLen, DEFAULT_MAX_TOKEN_COUNT);\n    }\n\n    /**\n     * @param maxNestingDepth Maximum input document nesting to allow\n     * @param maxDocLen Maximum input document length to allow\n     * @param maxNumLen Maximum number representation length to allow\n     * @param maxStringLen Maximum String value length to allow",
+        "end": 320,
+        "start": 308
+      },
+      {
+        "text": "    @Deprecated // since 2.18\n    protected StreamReadConstraints(final int maxNestingDepth, final long maxDocLen,\n                                    final int maxNumLen, final int maxStringLen, final int maxNameLen) {\n        this(maxNestingDepth, maxDocLen, maxNumLen, maxStringLen, maxNameLen, DEFAULT_MAX_TOKEN_COUNT);\n    }\n\n    /**\n     * @param maxNestingDepth Maximum input document nesting to allow\n     * @param maxDocLen Maximum input document length to allow\n     * @param maxNumLen Maximum number representation length to allow\n     * @param maxStringLen Maximum String value length to allow\n     * @param maxNameLen Maximum Object property name length to allow\n     * @param maxTokenCount Maximum number of tokens to allow",
+        "end": 322,
+        "start": 310
+      },
+      {
+        "text": "    }\n\n    /**\n     * @param maxNestingDepth Maximum input document nesting to allow\n     * @param maxDocLen Maximum input document length to allow\n     * @param maxNumLen Maximum number representation length to allow\n     * @param maxStringLen Maximum String value length to allow\n     * @param maxNameLen Maximum Object property name length to allow\n     * @param maxTokenCount Maximum number of tokens to allow\n     *\n     * @since 2.18\n     */\n    protected StreamReadConstraints(final int maxNestingDepth, final long maxDocLen,",
+        "end": 326,
+        "start": 314
+      },
+      {
+        "text": "     *\n     * @since 2.18\n     */\n    protected StreamReadConstraints(final int maxNestingDepth, final long maxDocLen,\n            final int maxNumLen, final int maxStringLen, final int maxNameLen, final long maxTokenCount) {\n        _maxNestingDepth = maxNestingDepth;\n        _maxDocLen = maxDocLen;\n        _maxNumLen = maxNumLen;\n        _maxStringLen = maxStringLen;\n        _maxNameLen = maxNameLen;\n        _maxTokenCount = maxTokenCount;\n    }\n",
+        "end": 335,
+        "start": 323
+      },
+      {
+        "text": "     */\n    protected StreamReadConstraints(final int maxNestingDepth, final long maxDocLen,\n            final int maxNumLen, final int maxStringLen, final int maxNameLen, final long maxTokenCount) {\n        _maxNestingDepth = maxNestingDepth;\n        _maxDocLen = maxDocLen;\n        _maxNumLen = maxNumLen;\n        _maxStringLen = maxStringLen;\n        _maxNameLen = maxNameLen;\n        _maxTokenCount = maxTokenCount;\n    }\n\n    public static Builder builder() {\n        return new Builder();",
+        "end": 337,
+        "start": 325
+      },
+      {
+        "text": "\n    /**\n     * Accessor for maximum depth.\n     * see {@link Builder#maxNestingDepth(int)} for details.\n     *\n     * @return Maximum allowed depth\n     */\n    public int getMaxNestingDepth() {\n        return _maxNestingDepth;\n    }\n\n    /**\n     * Accessor for maximum document length.",
+        "end": 373,
+        "start": 361
+      },
+      {
+        "text": "     *\n     * @return Maximum allowed depth\n     */\n    public int getMaxNestingDepth() {\n        return _maxNestingDepth;\n    }\n\n    /**\n     * Accessor for maximum document length.\n     * see {@link Builder#maxDocumentLength(long)} for details.\n     *\n     * @return Maximum allowed depth\n     */",
+        "end": 377,
+        "start": 365
+      },
+      {
+        "text": "     * @return Maximum allowed depth\n     */\n    public int getMaxNestingDepth() {\n        return _maxNestingDepth;\n    }\n\n    /**\n     * Accessor for maximum document length.\n     * see {@link Builder#maxDocumentLength(long)} for details.\n     *\n     * @return Maximum allowed depth\n     */\n    public long getMaxDocumentLength() {",
+        "end": 378,
+        "start": 366
+      },
+      {
+        "text": "\n    /**\n     * Accessor for maximum length of numbers to decode.\n     * see {@link Builder#maxNumberLength(int)} for details.\n     *\n     * @return Maximum allowed number length\n     */\n    public int getMaxNumberLength() {\n        return _maxNumLen;\n    }\n\n    /**\n     * Accessor for maximum length of strings to decode.",
+        "end": 431,
+        "start": 419
+      },
+      {
+        "text": "     *\n     * @return Maximum allowed number length\n     */\n    public int getMaxNumberLength() {\n        return _maxNumLen;\n    }\n\n    /**\n     * Accessor for maximum length of strings to decode.\n     * see {@link Builder#maxStringLength(int)} for details.\n     *\n     * @return Maximum allowed string length\n     */",
+        "end": 435,
+        "start": 423
+      },
+      {
+        "text": "\n    /**\n     * Accessor for maximum length of strings to decode.\n     * see {@link Builder#maxStringLength(int)} for details.\n     *\n     * @return Maximum allowed string length\n     */\n    public int getMaxStringLength() {\n        return _maxStringLen;\n    }\n\n    /**\n     * Accessor for maximum length of names to decode.",
+        "end": 441,
+        "start": 429
+      },
+      {
+        "text": "     *\n     * @return Maximum allowed string length\n     */\n    public int getMaxStringLength() {\n        return _maxStringLen;\n    }\n\n    /**\n     * Accessor for maximum length of names to decode.\n     * see {@link Builder#maxNameLength(int)} for details.\n     *\n     * @return Maximum allowed name length\n     */",
+        "end": 445,
+        "start": 433
+      },
+      {
+        "text": "\n    /**\n     * Accessor for maximum length of names to decode.\n     * see {@link Builder#maxNameLength(int)} for details.\n     *\n     * @return Maximum allowed name length\n     */\n    public int getMaxNameLength() {\n        return _maxNameLen;\n    }\n\n    /*\n    /**********************************************************************",
+        "end": 451,
+        "start": 439
+      },
+      {
+        "text": "     *\n     * @return Maximum allowed name length\n     */\n    public int getMaxNameLength() {\n        return _maxNameLen;\n    }\n\n    /*\n    /**********************************************************************\n    /* Convenience methods for validation, document limits\n    /**********************************************************************\n     */\n",
+        "end": 455,
+        "start": 443
+      },
+      {
+        "text": "     */\n    public void validateNestingDepth(int depth) throws StreamConstraintsException\n    {\n        if (depth > _maxNestingDepth) {\n            throw _constructException(\n                    \"Document nesting depth (%d) exceeds the maximum allowed (%d, from %s)\",\n                    depth, _maxNestingDepth,\n                    _constrainRef(\"getMaxNestingDepth\"));\n        }\n    }\n\n    /**\n     * Convenience method that can be used to verify that the",
+        "end": 478,
+        "start": 466
+      },
+      {
+        "text": "        if (depth > _maxNestingDepth) {\n            throw _constructException(\n                    \"Document nesting depth (%d) exceeds the maximum allowed (%d, from %s)\",\n                    depth, _maxNestingDepth,\n                    _constrainRef(\"getMaxNestingDepth\"));\n        }\n    }\n\n    /**\n     * Convenience method that can be used to verify that the\n     * document length does not exceed the maximum specified by this\n     * constraints object (if any): if it does, a\n     * {@link StreamConstraintsException}",
+        "end": 481,
+        "start": 469
+      },
+      {
+        "text": "            throw _constructException(\n                    \"Document nesting depth (%d) exceeds the maximum allowed (%d, from %s)\",\n                    depth, _maxNestingDepth,\n                    _constrainRef(\"getMaxNestingDepth\"));\n        }\n    }\n\n    /**\n     * Convenience method that can be used to verify that the\n     * document length does not exceed the maximum specified by this\n     * constraints object (if any): if it does, a\n     * {@link StreamConstraintsException}\n     * is thrown.",
+        "end": 482,
+        "start": 470
+      },
+      {
+        "text": "            throw _constructException(\n                    \"Number value length (%d) exceeds the maximum allowed (%d, from %s)\",\n                    length, _maxNumLen,\n                    _constrainRef(\"getMaxNumberLength\"));\n        }\n    }\n\n    /**\n     * Convenience method that can be used to verify that an integer\n     * number of specified length does not exceed maximum specific by this\n     * constraints object: if it does, a\n     * {@link StreamConstraintsException}\n     * is thrown.",
+        "end": 559,
+        "start": 547
+      },
+      {
+        "text": "            throw _constructException(\n                    \"Number value length (%d) exceeds the maximum allowed (%d, from %s)\",\n                    length, _maxNumLen,\n                    _constrainRef(\"getMaxNumberLength\"));\n        }\n    }\n\n    /**\n     * Convenience method that can be used to verify that a String\n     * of specified length does not exceed maximum specific by this\n     * constraints object: if it does, a\n     * {@link StreamConstraintsException}\n     * is thrown.",
+        "end": 580,
+        "start": 568
+      },
+      {
+        "text": "            throw _constructException(\n                    \"String value length (%d) exceeds the maximum allowed (%d, from %s)\",\n                    length, _maxStringLen,\n                    _constrainRef(\"getMaxStringLength\"));\n        }\n    }\n\n    /**\n     * Convenience method that can be used to verify that a name\n     * of specified length does not exceed maximum specific by this\n     * constraints object: if it does, a\n     * {@link StreamConstraintsException}\n     * is thrown.",
+        "end": 601,
+        "start": 589
+      },
+      {
+        "text": "            throw _constructException(\n                    \"Name length (%d) exceeds the maximum allowed (%d, from %s)\",\n                    length, _maxNameLen,\n                    _constrainRef(\"getMaxNameLength\"));\n        }\n    }\n\n    /*\n    /**********************************************************************\n    /* Convenience methods for validation, other\n    /**********************************************************************\n     */\n",
+        "end": 622,
+        "start": 610
+      }
+    ],
+    "jarSha256": "d2a359b30e4b955ea188793a8a51c51a2eb11a65b31c274cfa4a3494b367e2b0"
+  },
+  {
+    "version": "Jackson core2.19.0",
+    "readScope": "named mechanisms and displayed bounded contexts; not full-upstream audit",
+    "entry": "com/fasterxml/jackson/core/json/ReaderBasedJsonParser.java",
+    "jar": ".tools/iam-o2a-b-upstream/jackson-core-2.19.0-sources.jar",
+    "entrySha256": "3ef13e1c9508bbc2cdfed891b6fc613d7f963945e318efbefe968657b77bc86a",
+    "entryBytes": 108080,
+    "ranges": [
+      {
+        "text": "        if (_currToken == JsonToken.VALUE_STRING) {\n            if (_tokenIncomplete) {\n                _tokenIncomplete = false;\n                _finishString(); // only strings can be incomplete\n            }\n            return _textBuffer.contentsAsString();\n        }\n        return _getText2(_currToken);\n    }\n\n    @Override // since 2.8\n    public int getText(Writer writer) throws IOException\n    {",
+        "end": 304,
+        "start": 292
+      },
+      {
+        "text": "        if (t == JsonToken.VALUE_STRING) {\n            if (_tokenIncomplete) {\n                _tokenIncomplete = false;\n                _finishString(); // only strings can be incomplete\n            }\n            return _textBuffer.contentsToWriter(writer);\n        }\n        if (t == JsonToken.FIELD_NAME) {\n            String n = _parsingContext.getCurrentName();\n            writer.write(n);\n            return n.length();\n        }\n        if (t != null) {",
+        "end": 318,
+        "start": 306
+      },
+      {
+        "text": "        if (_currToken == JsonToken.VALUE_STRING) {\n            if (_tokenIncomplete) {\n                _tokenIncomplete = false;\n                _finishString(); // only strings can be incomplete\n            }\n            return _textBuffer.contentsAsString();\n        }\n        if (_currToken == JsonToken.FIELD_NAME) {\n            return currentName();\n        }\n        return super.getValueAsString(null);\n    }\n",
+        "end": 347,
+        "start": 335
+      },
+      {
+        "text": "        if (_currToken == JsonToken.VALUE_STRING) {\n            if (_tokenIncomplete) {\n                _tokenIncomplete = false;\n                _finishString(); // only strings can be incomplete\n            }\n            return _textBuffer.contentsAsString();\n        }\n        if (_currToken == JsonToken.FIELD_NAME) {\n            return currentName();\n        }\n        return super.getValueAsString(defValue);\n    }\n",
+        "end": 363,
+        "start": 351
+      },
+      {
+        "text": "            case ID_STRING:\n                if (_tokenIncomplete) {\n                    _tokenIncomplete = false;\n                    _finishString(); // only strings can be incomplete\n                }\n                // fall through\n            case ID_NUMBER_INT:\n            case ID_NUMBER_FLOAT:\n                return _textBuffer.getTextBuffer();\n            default:\n                return _currToken.asCharArray();\n            }\n        }",
+        "end": 412,
+        "start": 400
+      },
+      {
+        "text": "    }\n\n    @Override\n    public final int getTextLength() throws IOException\n    {\n        if (_currToken != null) { // null only before/after document\n            switch (_currToken.id()) {\n            case ID_FIELD_NAME:\n                return _parsingContext.getCurrentName().length();\n            case ID_STRING:\n                if (_tokenIncomplete) {\n                    _tokenIncomplete = false;\n                    _finishString(); // only strings can be incomplete",
+        "end": 426,
+        "start": 414
+      },
+      {
+        "text": "            case ID_STRING:\n                if (_tokenIncomplete) {\n                    _tokenIncomplete = false;\n                    _finishString(); // only strings can be incomplete\n                }\n                // fall through\n            case ID_NUMBER_INT:\n            case ID_NUMBER_FLOAT:\n                return _textBuffer.size();\n            default:\n                return _currToken.asCharArray().length;\n            }\n        }",
+        "end": 435,
+        "start": 423
+      },
+      {
+        "text": "            case ID_STRING:\n                if (_tokenIncomplete) {\n                    _tokenIncomplete = false;\n                    _finishString(); // only strings can be incomplete\n                }\n                // fall through\n            case ID_NUMBER_INT:\n            case ID_NUMBER_FLOAT:\n                return _textBuffer.getTextOffset();\n            default:\n            }\n        }\n        return 0;",
+        "end": 459,
+        "start": 447
+      },
+      {
+        "text": "    public void finishToken() throws IOException {\n        if (_tokenIncomplete) {\n            _tokenIncomplete = false;\n            _finishString(); // only strings can be incomplete\n        }\n    }\n\n    /*\n    /**********************************************************\n    /* Public API, nextXxx() overrides\n    /**********************************************************\n     */\n",
+        "end": 821,
+        "start": 809
+      },
+      {
+        "text": "            if (t == JsonToken.VALUE_STRING) {\n                if (_tokenIncomplete) {\n                    _tokenIncomplete = false;\n                    _finishString();\n                }\n                return _textBuffer.contentsAsString();\n            }\n            if (t == JsonToken.START_ARRAY) {\n                createChildArrayContext(_tokenInputRow, _tokenInputCol);\n            } else if (t == JsonToken.START_OBJECT) {\n                createChildObjectContext(_tokenInputRow, _tokenInputCol);\n            }\n            return null;",
+        "end": 1213,
+        "start": 1201
+      },
+      {
+        "text": "    }\n\n    @Override\n    protected final void _finishString() throws IOException\n    {\n        /* First: let's try to see if we have simple String value: one\n         * that does not cross input buffer boundary, and does not\n         * contain escape sequences.\n         */\n        int ptr = _inputPtr;\n        final int inputLen = _inputEnd;\n\n        if (ptr < inputLen) {",
+        "end": 2151,
+        "start": 2139
+      },
+      {
+        "text": "        // Either ran out of input, or bumped into an escape sequence...\n        _textBuffer.resetWithCopy(_inputBuffer, _inputPtr, (ptr-_inputPtr));\n        _inputPtr = ptr;\n        _finishString2();\n    }\n\n    protected void _finishString2() throws IOException\n    {\n        char[] outBuf = _textBuffer.getCurrentSegment();\n        int outPtr = _textBuffer.getCurrentSegmentSize();\n        final int[] codes = INPUT_CODES_LATIN1;\n        final int maxCode = codes.length;\n",
+        "end": 2182,
+        "start": 2170
+      },
+      {
+        "text": "        _finishString2();\n    }\n\n    protected void _finishString2() throws IOException\n    {\n        char[] outBuf = _textBuffer.getCurrentSegment();\n        int outPtr = _textBuffer.getCurrentSegmentSize();\n        final int[] codes = INPUT_CODES_LATIN1;\n        final int maxCode = codes.length;\n\n        while (true) {\n            if (_inputPtr >= _inputEnd) {\n                if (!_loadMore()) {",
+        "end": 2185,
+        "start": 2173
+      }
+    ],
+    "jarSha256": "d2a359b30e4b955ea188793a8a51c51a2eb11a65b31c274cfa4a3494b367e2b0"
+  },
+  {
+    "version": "Jackson core2.19.0",
+    "readScope": "named mechanisms and displayed bounded contexts; not full-upstream audit",
+    "entry": "com/fasterxml/jackson/core/JsonFactory.java",
+    "jar": ".tools/iam-o2a-b-upstream/jackson-core-2.19.0-sources.jar",
+    "entrySha256": "f9bc30ef5645a0181757b05295ea18165852be93c0d2d23e1eac9f0de10589a7",
+    "entryBytes": 85652,
+    "ranges": [
+      {
+        "text": "         * all identical object property names for a single document).\n         *<p>\n         * Note: this setting only has effect if\n         * {@link #CANONICALIZE_FIELD_NAMES} is true -- otherwise no\n         * canonicalization of any sort is done.\n         *<p>\n         * This setting is enabled by default.\n         */\n        INTERN_FIELD_NAMES(true),\n\n        /**\n         * Feature that determines whether JSON object field names are\n         * to be canonicalized (details of how canonicalization is done",
+        "end": 87,
+        "start": 75
+      },
+      {
+        "text": "         *<p>\n         * This setting is enabled by default.\n         */\n        INTERN_FIELD_NAMES(true),\n\n        /**\n         * Feature that determines whether JSON object field names are\n         * to be canonicalized (details of how canonicalization is done\n         * then further specified by\n         * {@link #INTERN_FIELD_NAMES}).\n         *<p>\n         * This setting is enabled by default.\n         */",
+        "end": 92,
+        "start": 80
+      },
+      {
+        "text": "         * Feature that determines whether JSON object field names are\n         * to be canonicalized (details of how canonicalization is done\n         * then further specified by\n         * {@link #INTERN_FIELD_NAMES}).\n         *<p>\n         * This setting is enabled by default.\n         */\n        CANONICALIZE_FIELD_NAMES(true),\n\n        /**\n         * Feature that determines what happens if we encounter a case in symbol\n         * handling where number of hash collisions exceeds a safety threshold\n         * -- which almost certainly means a denial-of-service attack via generated",
+        "end": 98,
+        "start": 86
+      },
+      {
+        "text": "         *<p>\n         * This setting is enabled by default.\n         */\n        CANONICALIZE_FIELD_NAMES(true),\n\n        /**\n         * Feature that determines what happens if we encounter a case in symbol\n         * handling where number of hash collisions exceeds a safety threshold\n         * -- which almost certainly means a denial-of-service attack via generated\n         * duplicate hash codes.\n         * If feature is enabled, an {@link IllegalStateException} is\n         * thrown to indicate the suspected denial-of-service attack; if disabled, processing continues but\n         * canonicalization (and thereby <code>intern()</code>ing) is disabled) as protective",
+        "end": 102,
+        "start": 90
+      },
+      {
+        "text": "         *\n         * @since 2.6\n         */\n        USE_THREAD_LOCAL_FOR_BUFFER_RECYCLING(true),\n\n        /**\n         * Feature to control charset detection for byte-based inputs ({@code byte[]}, {@link InputStream}...).\n         * When this feature is enabled (the default), the factory will allow UTF-16 and UTF-32 inputs and try to detect\n         * them, as specified by RFC 4627. When this feature is disabled the factory will assume UTF-8,\n         * as specified by RFC 8259.\n         *<p>\n         * This setting is enabled by default.\n         *",
+        "end": 141,
+        "start": 129
+      },
+      {
+        "text": "     */\n    protected JsonFactory(JsonFactory src, ObjectCodec codec)\n    {\n        _recyclerPool = src._recyclerPool;\n        _objectCodec = codec;\n\n        // General\n        _factoryFeatures = src._factoryFeatures;\n        _parserFeatures = src._parserFeatures;\n        _generatorFeatures = src._generatorFeatures;\n        _inputDecorator = src._inputDecorator;\n        _outputDecorator = src._outputDecorator;\n        _generatorDecorators = _copy(src._generatorDecorators);",
+        "end": 406,
+        "start": 394
+      },
+      {
+        "text": "     */\n    public BufferRecycler _getBufferRecycler()\n    {\n        return _getRecyclerPool().acquireAndLinkPooled();\n    }\n\n    /**\n     * Accessor for getting access to {@link RecyclerPool} for getting\n     * {@link BufferRecycler} instance to use.\n     *\n     * @return RecyclerPool to use.\n     *\n     * @since 2.16",
+        "end": 2173,
+        "start": 2161
+      },
+      {
+        "text": "     *\n     * @since 2.16\n     */\n    public RecyclerPool<BufferRecycler> _getRecyclerPool() {\n        // 23-Apr-2015, tatu: Let's allow disabling of buffer recycling\n        //   scheme, for cases where it is considered harmful (possibly\n        //   on Android, for example)\n        if (!Feature.USE_THREAD_LOCAL_FOR_BUFFER_RECYCLING.enabledIn(_factoryFeatures)) {\n            return JsonRecyclerPools.nonRecyclingPool();\n        }\n        return _recyclerPool;\n    }\n",
+        "end": 2184,
+        "start": 2172
+      },
+      {
+        "text": "        // 23-Apr-2015, tatu: Let's allow disabling of buffer recycling\n        //   scheme, for cases where it is considered harmful (possibly\n        //   on Android, for example)\n        if (!Feature.USE_THREAD_LOCAL_FOR_BUFFER_RECYCLING.enabledIn(_factoryFeatures)) {\n            return JsonRecyclerPools.nonRecyclingPool();\n        }\n        return _recyclerPool;\n    }\n\n    /**\n     * Overridable factory method that actually instantiates desired\n     * context object.\n     *",
+        "end": 2188,
+        "start": 2176
+      }
+    ],
+    "jarSha256": "d2a359b30e4b955ea188793a8a51c51a2eb11a65b31c274cfa4a3494b367e2b0"
+  },
+  {
+    "version": "Jackson core2.19.0",
+    "readScope": "named mechanisms and displayed bounded contexts; not full-upstream audit",
+    "entry": "com/fasterxml/jackson/core/sym/CharsToNameCanonicalizer.java",
+    "jar": ".tools/iam-o2a-b-upstream/jackson-core-2.19.0-sources.jar",
+    "entrySha256": "ce482c911eb7c98326a01532e9e04c38d9188e93bf6a4d7bf55fe4904398794c",
+    "entryBytes": 33938,
+    "ranges": [
+      {
+        "text": "     * safely and efficiently, and without calling code having to know about parent\n     * information.\n     */\n    public void release() {\n        // If nothing has been added, nothing to do\n        if (!maybeDirty()) { return; }\n\n        // we will try to merge if child table has new entries\n        if (_parent != null && _canonicalize) { // canonicalize set to false if max size was reached\n            _parent.mergeChild(new TableInfo(this));\n            // Let's also mark this instance as dirty, so that just in\n            // case release was too early, there's no corruption of possibly shared data.\n            _hashShared = true;",
+        "end": 406,
+        "start": 394
+      },
+      {
+        "text": "        if (len < 1) { // empty Strings are simplest to handle up front\n            return \"\";\n        }\n        if (!_canonicalize) { // [JACKSON-259]\n            _streamReadConstraints.validateNameLength(len);\n            return new String(buffer, start, len);\n        }\n\n        /* Related to problems with sub-standard hashing (somewhat\n         * relevant for collision attacks too), let's try little\n         * bit of shuffling to improve hash codes.\n         * (note, however, that this can't help with full collisions)\n         */",
+        "end": 516,
+        "start": 504
+      },
+      {
+        "text": "        }\n\n        String newSymbol = new String(buffer, start, len);\n        if (JsonFactory.Feature.INTERN_FIELD_NAMES.enabledIn(_factoryFeatures)) {\n            newSymbol = InternCache.instance.intern(newSymbol);\n        }\n        ++_size;\n        // Ok; do we need to add primary entry, or a bucket?\n        if (_symbols[index] == null) {\n            _symbols[index] = newSymbol;\n        } else {\n            final int bix = (index >> 1);\n            Bucket newB = new Bucket(newSymbol, _buckets[bix]);",
+        "end": 581,
+        "start": 569
+      }
+    ],
+    "jarSha256": "d2a359b30e4b955ea188793a8a51c51a2eb11a65b31c274cfa4a3494b367e2b0"
+  },
+  {
+    "version": "Jackson core2.19.0",
+    "readScope": "named mechanisms and displayed bounded contexts; not full-upstream audit",
+    "entry": "com/fasterxml/jackson/core/util/BufferRecycler.java",
+    "jar": ".tools/iam-o2a-b-upstream/jackson-core-2.19.0-sources.jar",
+    "entrySha256": "167e43c92ee512939e584b203437f9eaba7ce960bec019e30bca7346617bced1",
+    "entryBytes": 9159,
+    "ranges": [
+      {
+        "text": "\n    // Buffer lengths\n\n    private final static int[] BYTE_BUFFER_LENGTHS = new int[] { 8000, 8000, 2000, 2000 };\n    private final static int[] CHAR_BUFFER_LENGTHS = new int[] { 4000, 4000, 200, 200 };\n\n    // Note: changed from simple array in 2.10:\n    protected final AtomicReferenceArray<byte[]> _byteBuffers;\n\n    // Note: changed from simple array in 2.10:\n    protected final AtomicReferenceArray<char[]> _charBuffers;\n\n    private RecyclerPool<BufferRecycler> _pool;",
+        "end": 104,
+        "start": 92
+      },
+      {
+        "text": "    // Buffer lengths\n\n    private final static int[] BYTE_BUFFER_LENGTHS = new int[] { 8000, 8000, 2000, 2000 };\n    private final static int[] CHAR_BUFFER_LENGTHS = new int[] { 4000, 4000, 200, 200 };\n\n    // Note: changed from simple array in 2.10:\n    protected final AtomicReferenceArray<byte[]> _byteBuffers;\n\n    // Note: changed from simple array in 2.10:\n    protected final AtomicReferenceArray<char[]> _charBuffers;\n\n    private RecyclerPool<BufferRecycler> _pool;\n",
+        "end": 105,
+        "start": 93
+      },
+      {
+        "text": "     *\n     * @return Buffer allocated (possibly recycled)\n     */\n    public final byte[] allocByteBuffer(int ix) {\n        return allocByteBuffer(ix, 0);\n    }\n\n    public byte[] allocByteBuffer(int ix, int minSize) {\n        final int DEF_SIZE = byteBufferLength(ix);\n        if (minSize < DEF_SIZE) {\n            minSize = DEF_SIZE;\n        }\n        byte[] buffer = _byteBuffers.getAndSet(ix, null);",
+        "end": 164,
+        "start": 152
+      },
+      {
+        "text": "     * @return Buffer allocated (possibly recycled)\n     */\n    public final byte[] allocByteBuffer(int ix) {\n        return allocByteBuffer(ix, 0);\n    }\n\n    public byte[] allocByteBuffer(int ix, int minSize) {\n        final int DEF_SIZE = byteBufferLength(ix);\n        if (minSize < DEF_SIZE) {\n            minSize = DEF_SIZE;\n        }\n        byte[] buffer = _byteBuffers.getAndSet(ix, null);\n        if (buffer == null || buffer.length < minSize) {",
+        "end": 165,
+        "start": 153
+      },
+      {
+        "text": "        return allocByteBuffer(ix, 0);\n    }\n\n    public byte[] allocByteBuffer(int ix, int minSize) {\n        final int DEF_SIZE = byteBufferLength(ix);\n        if (minSize < DEF_SIZE) {\n            minSize = DEF_SIZE;\n        }\n        byte[] buffer = _byteBuffers.getAndSet(ix, null);\n        if (buffer == null || buffer.length < minSize) {\n            buffer = balloc(minSize);\n        }\n        return buffer;",
+        "end": 168,
+        "start": 156
+      },
+      {
+        "text": "        if (minSize < DEF_SIZE) {\n            minSize = DEF_SIZE;\n        }\n        byte[] buffer = _byteBuffers.getAndSet(ix, null);\n        if (buffer == null || buffer.length < minSize) {\n            buffer = balloc(minSize);\n        }\n        return buffer;\n    }\n\n    public void releaseByteBuffer(int ix, byte[] buffer) {\n        // 13-Jan-2024, tatu: [core#1186] Replace only if beneficial:\n        byte[] oldBuffer = _byteBuffers.get(ix);",
+        "end": 173,
+        "start": 161
+      },
+      {
+        "text": "    /**********************************************************\n     */\n\n    public final char[] allocCharBuffer(int ix) {\n        return allocCharBuffer(ix, 0);\n    }\n\n    public char[] allocCharBuffer(int ix, int minSize) {\n        final int DEF_SIZE = charBufferLength(ix);\n        if (minSize < DEF_SIZE) {\n            minSize = DEF_SIZE;\n        }\n        char[] buffer = _charBuffers.getAndSet(ix, null);",
+        "end": 195,
+        "start": 183
+      },
+      {
+        "text": "     */\n\n    public final char[] allocCharBuffer(int ix) {\n        return allocCharBuffer(ix, 0);\n    }\n\n    public char[] allocCharBuffer(int ix, int minSize) {\n        final int DEF_SIZE = charBufferLength(ix);\n        if (minSize < DEF_SIZE) {\n            minSize = DEF_SIZE;\n        }\n        char[] buffer = _charBuffers.getAndSet(ix, null);\n        if (buffer == null || buffer.length < minSize) {",
+        "end": 196,
+        "start": 184
+      },
+      {
+        "text": "        return allocCharBuffer(ix, 0);\n    }\n\n    public char[] allocCharBuffer(int ix, int minSize) {\n        final int DEF_SIZE = charBufferLength(ix);\n        if (minSize < DEF_SIZE) {\n            minSize = DEF_SIZE;\n        }\n        char[] buffer = _charBuffers.getAndSet(ix, null);\n        if (buffer == null || buffer.length < minSize) {\n            buffer = calloc(minSize);\n        }\n        return buffer;",
+        "end": 199,
+        "start": 187
+      },
+      {
+        "text": "        if (minSize < DEF_SIZE) {\n            minSize = DEF_SIZE;\n        }\n        char[] buffer = _charBuffers.getAndSet(ix, null);\n        if (buffer == null || buffer.length < minSize) {\n            buffer = calloc(minSize);\n        }\n        return buffer;\n    }\n\n    public void releaseCharBuffer(int ix, char[] buffer) {\n        // 13-Jan-2024, tatu: [core#1186] Replace only if beneficial:\n        char[] oldBuffer = _charBuffers.get(ix);",
+        "end": 204,
+        "start": 192
+      },
+      {
+        "text": "     */\n\n    protected int byteBufferLength(int ix) {\n        return BYTE_BUFFER_LENGTHS[ix];\n    }\n\n    protected int charBufferLength(int ix) {\n        return CHAR_BUFFER_LENGTHS[ix];\n    }\n\n    /*\n    /**********************************************************\n    /* Actual allocations separated for easier debugging/profiling",
+        "end": 227,
+        "start": 215
+      },
+      {
+        "text": "    }\n\n    protected int charBufferLength(int ix) {\n        return CHAR_BUFFER_LENGTHS[ix];\n    }\n\n    /*\n    /**********************************************************\n    /* Actual allocations separated for easier debugging/profiling\n    /**********************************************************\n     */\n\n    protected byte[] balloc(int size) { return new byte[size]; }",
+        "end": 231,
+        "start": 219
+      }
+    ],
+    "jarSha256": "d2a359b30e4b955ea188793a8a51c51a2eb11a65b31c274cfa4a3494b367e2b0"
+  },
+  {
+    "version": "Jackson core2.19.0",
+    "readScope": "named mechanisms and displayed bounded contexts; not full-upstream audit",
+    "entry": "com/fasterxml/jackson/core/util/BufferRecyclers.java",
+    "jar": ".tools/iam-o2a-b-upstream/jackson-core-2.19.0-sources.jar",
+    "entrySha256": "517acbca77bc39fc3d599ba4699cb049a3bec8d0552cc72f02ad58dc319343d9",
+    "entryBytes": 6708,
+    "ranges": [
+      {
+        "text": "     * to a {@link BufferRecycler} used to provide a low-cost\n     * buffer recycling between reader and writer instances.\n     */\n    final protected static ThreadLocal<SoftReference<BufferRecycler>> _recyclerRef\n        = new ThreadLocal<>();\n\n    /**\n     * Main accessor to call for accessing possibly recycled {@link BufferRecycler} instance.\n     *\n     * @return {@link BufferRecycler} to use\n     *\n     * @deprecated Since 2.16 should use {@link RecyclerPool} abstraction instead\n     *   of calling static methods of this class",
+        "end": 69,
+        "start": 57
+      },
+      {
+        "text": "     *   of calling static methods of this class\n     */\n    @Deprecated // since 2.16\n    public static BufferRecycler getBufferRecycler()\n    {\n        SoftReference<BufferRecycler> ref = _recyclerRef.get();\n        BufferRecycler br = (ref == null) ? null : ref.get();\n\n        if (br == null) {\n            br = new BufferRecycler();\n            if (_bufferRecyclerTracker != null) {\n                ref = _bufferRecyclerTracker.wrapAndTrack(br);\n            } else {",
+        "end": 81,
+        "start": 69
+      },
+      {
+        "text": "    @Deprecated // since 2.16\n    public static BufferRecycler getBufferRecycler()\n    {\n        SoftReference<BufferRecycler> ref = _recyclerRef.get();\n        BufferRecycler br = (ref == null) ? null : ref.get();\n\n        if (br == null) {\n            br = new BufferRecycler();\n            if (_bufferRecyclerTracker != null) {\n                ref = _bufferRecyclerTracker.wrapAndTrack(br);\n            } else {\n                ref = new SoftReference<>(br);\n            }",
+        "end": 83,
+        "start": 71
+      },
+      {
+        "text": "            } else {\n                ref = new SoftReference<>(br);\n            }\n            _recyclerRef.set(ref);\n        }\n        return br;\n    }\n\n    /**\n     * Specialized method that will release all recycled {@link BufferRecycler} if\n     * (and only if) recycler tracking has been enabled\n     * (see {@link #SYSTEM_PROPERTY_TRACK_REUSABLE_BUFFERS}).\n     * This method is usually called on shutdown of the container like Application Server",
+        "end": 93,
+        "start": 81
+      }
+    ],
+    "jarSha256": "d2a359b30e4b955ea188793a8a51c51a2eb11a65b31c274cfa4a3494b367e2b0"
+  },
+  {
+    "version": "Jackson core2.19.0",
+    "readScope": "named mechanisms and displayed bounded contexts; not full-upstream audit",
+    "entry": "com/fasterxml/jackson/core/util/JsonRecyclerPools.java",
+    "jar": ".tools/iam-o2a-b-upstream/jackson-core-2.19.0-sources.jar",
+    "entrySha256": "ccc99e5afcd410b362377aa544cdb4f3d7bab2b391c9d557cbc242de798b25d8",
+    "entryBytes": 9783,
+    "ranges": [
+      {
+        "text": "    /**\n     * Method to call to get the default recycler pool instance:\n     * as of Jackson 2.18 this is same as calling\n     * {@link #threadLocalPool()}: Jackson 2.17.0 instead had this call\n     * {@link #newLockFreePool()} but this was reverted due to problems reported.\n     *<p>\n     * Default pool will likely be changed in Jackson 3.0 to something else.\n     *\n     * @return the default {@link RecyclerPool} implementation to use\n     *   if no specific implementation desired.\n     */\n    public static RecyclerPool<BufferRecycler> defaultPool() {\n        return threadLocalPool();",
+        "end": 31,
+        "start": 19
+      },
+      {
+        "text": "     * @return the default {@link RecyclerPool} implementation to use\n     *   if no specific implementation desired.\n     */\n    public static RecyclerPool<BufferRecycler> defaultPool() {\n        return threadLocalPool();\n    }\n\n    /**\n     * Accessor for getting the shared/global {@link ThreadLocalPool} instance\n     * (due to design only one instance ever needed)\n     *\n     * @return Globally shared instance of {@link ThreadLocalPool}\n     */",
+        "end": 39,
+        "start": 27
+      },
+      {
+        "text": "     *   if no specific implementation desired.\n     */\n    public static RecyclerPool<BufferRecycler> defaultPool() {\n        return threadLocalPool();\n    }\n\n    /**\n     * Accessor for getting the shared/global {@link ThreadLocalPool} instance\n     * (due to design only one instance ever needed)\n     *\n     * @return Globally shared instance of {@link ThreadLocalPool}\n     */\n    public static RecyclerPool<BufferRecycler> threadLocalPool() {",
+        "end": 40,
+        "start": 28
+      },
+      {
+        "text": "    }\n\n    /**\n     * Accessor for getting the shared/global {@link ThreadLocalPool} instance\n     * (due to design only one instance ever needed)\n     *\n     * @return Globally shared instance of {@link ThreadLocalPool}\n     */\n    public static RecyclerPool<BufferRecycler> threadLocalPool() {\n        return ThreadLocalPool.GLOBAL;\n    }\n\n    /**",
+        "end": 44,
+        "start": 32
+      },
+      {
+        "text": "     * Accessor for getting the shared/global {@link ThreadLocalPool} instance\n     * (due to design only one instance ever needed)\n     *\n     * @return Globally shared instance of {@link ThreadLocalPool}\n     */\n    public static RecyclerPool<BufferRecycler> threadLocalPool() {\n        return ThreadLocalPool.GLOBAL;\n    }\n\n    /**\n     * Accessor for getting the shared/global {@link NonRecyclingPool} instance\n     * (due to design only one instance ever needed)\n     *",
+        "end": 47,
+        "start": 35
+      },
+      {
+        "text": "     *\n     * @return Globally shared instance of {@link ThreadLocalPool}\n     */\n    public static RecyclerPool<BufferRecycler> threadLocalPool() {\n        return ThreadLocalPool.GLOBAL;\n    }\n\n    /**\n     * Accessor for getting the shared/global {@link NonRecyclingPool} instance\n     * (due to design only one instance ever needed)\n     *\n     * @return Globally shared instance of {@link NonRecyclingPool}.\n     */",
+        "end": 49,
+        "start": 37
+      },
+      {
+        "text": "     * @return Globally shared instance of {@link ThreadLocalPool}\n     */\n    public static RecyclerPool<BufferRecycler> threadLocalPool() {\n        return ThreadLocalPool.GLOBAL;\n    }\n\n    /**\n     * Accessor for getting the shared/global {@link NonRecyclingPool} instance\n     * (due to design only one instance ever needed)\n     *\n     * @return Globally shared instance of {@link NonRecyclingPool}.\n     */\n    public static RecyclerPool<BufferRecycler> nonRecyclingPool() {",
+        "end": 50,
+        "start": 38
+      },
+      {
+        "text": "    }\n\n    /**\n     * Accessor for getting the shared/global {@link NonRecyclingPool} instance\n     * (due to design only one instance ever needed)\n     *\n     * @return Globally shared instance of {@link NonRecyclingPool}.\n     */\n    public static RecyclerPool<BufferRecycler> nonRecyclingPool() {\n        return NonRecyclingPool.GLOBAL;\n    }\n\n    /**",
+        "end": 54,
+        "start": 42
+      },
+      {
+        "text": "     * Accessor for getting the shared/global {@link NonRecyclingPool} instance\n     * (due to design only one instance ever needed)\n     *\n     * @return Globally shared instance of {@link NonRecyclingPool}.\n     */\n    public static RecyclerPool<BufferRecycler> nonRecyclingPool() {\n        return NonRecyclingPool.GLOBAL;\n    }\n\n    /**\n     * Accessor for getting the shared/global {@link ConcurrentDequePool} instance.\n     *\n     * @return Globally shared instance of {@link NonRecyclingPool}.",
+        "end": 57,
+        "start": 45
+      },
+      {
+        "text": "     *\n     * @return Globally shared instance of {@link NonRecyclingPool}.\n     */\n    public static RecyclerPool<BufferRecycler> nonRecyclingPool() {\n        return NonRecyclingPool.GLOBAL;\n    }\n\n    /**\n     * Accessor for getting the shared/global {@link ConcurrentDequePool} instance.\n     *\n     * @return Globally shared instance of {@link NonRecyclingPool}.\n     */\n    public static RecyclerPool<BufferRecycler> sharedConcurrentDequePool() {",
+        "end": 59,
+        "start": 47
+      },
+      {
+        "text": "     * @return Globally shared instance of {@link NonRecyclingPool}.\n     */\n    public static RecyclerPool<BufferRecycler> nonRecyclingPool() {\n        return NonRecyclingPool.GLOBAL;\n    }\n\n    /**\n     * Accessor for getting the shared/global {@link ConcurrentDequePool} instance.\n     *\n     * @return Globally shared instance of {@link NonRecyclingPool}.\n     */\n    public static RecyclerPool<BufferRecycler> sharedConcurrentDequePool() {\n        return ConcurrentDequePool.GLOBAL;",
+        "end": 60,
+        "start": 48
+      },
+      {
+        "text": "    /**\n     * Accessor for getting the shared/global {@link ConcurrentDequePool} instance.\n     *\n     * @return Globally shared instance of {@link NonRecyclingPool}.\n     */\n    public static RecyclerPool<BufferRecycler> sharedConcurrentDequePool() {\n        return ConcurrentDequePool.GLOBAL;\n    }\n\n    /**\n     * Accessor for constructing a new, non-shared {@link ConcurrentDequePool} instance.\n     *\n     * @return Globally shared instance of {@link NonRecyclingPool}.",
+        "end": 66,
+        "start": 54
+      },
+      {
+        "text": "    /**\n     * Accessor for constructing a new, non-shared {@link ConcurrentDequePool} instance.\n     *\n     * @return Globally shared instance of {@link NonRecyclingPool}.\n     */\n    public static RecyclerPool<BufferRecycler> newConcurrentDequePool() {\n        return ConcurrentDequePool.construct();\n    }\n\n    /**\n     * Accessor for getting the shared/global {@link LockFreePool} instance.\n     *\n     * @return Globally shared instance of {@link LockFreePool}.",
+        "end": 75,
+        "start": 63
+      },
+      {
+        "text": "    /**\n     * {@link ThreadLocal}-based {@link RecyclerPool} implementation used for\n     * recycling {@link BufferRecycler} instances:\n     * see {@link RecyclerPool.ThreadLocalPoolBase} for full explanation\n     * of functioning.\n     */\n    public static class ThreadLocalPool\n        extends RecyclerPool.ThreadLocalPoolBase<BufferRecycler>\n    {\n        private static final long serialVersionUID = 1L;\n\n        protected static final ThreadLocalPool GLOBAL = new ThreadLocalPool();\n",
+        "end": 136,
+        "start": 124
+      },
+      {
+        "text": "     * see {@link RecyclerPool.ThreadLocalPoolBase} for full explanation\n     * of functioning.\n     */\n    public static class ThreadLocalPool\n        extends RecyclerPool.ThreadLocalPoolBase<BufferRecycler>\n    {\n        private static final long serialVersionUID = 1L;\n\n        protected static final ThreadLocalPool GLOBAL = new ThreadLocalPool();\n\n        private ThreadLocalPool() { }\n\n        @SuppressWarnings(\"deprecation\")",
+        "end": 139,
+        "start": 127
+      },
+      {
+        "text": "     * of functioning.\n     */\n    public static class ThreadLocalPool\n        extends RecyclerPool.ThreadLocalPoolBase<BufferRecycler>\n    {\n        private static final long serialVersionUID = 1L;\n\n        protected static final ThreadLocalPool GLOBAL = new ThreadLocalPool();\n\n        private ThreadLocalPool() { }\n\n        @SuppressWarnings(\"deprecation\")\n        @Override",
+        "end": 140,
+        "start": 128
+      },
+      {
+        "text": "    {\n        private static final long serialVersionUID = 1L;\n\n        protected static final ThreadLocalPool GLOBAL = new ThreadLocalPool();\n\n        private ThreadLocalPool() { }\n\n        @SuppressWarnings(\"deprecation\")\n        @Override\n        public BufferRecycler acquirePooled() {\n            return BufferRecyclers.getBufferRecycler();\n        }\n",
+        "end": 144,
+        "start": 132
+      },
+      {
+        "text": "\n        protected static final ThreadLocalPool GLOBAL = new ThreadLocalPool();\n\n        private ThreadLocalPool() { }\n\n        @SuppressWarnings(\"deprecation\")\n        @Override\n        public BufferRecycler acquirePooled() {\n            return BufferRecyclers.getBufferRecycler();\n        }\n\n        // // // JDK serialization support\n",
+        "end": 146,
+        "start": 134
+      },
+      {
+        "text": "        @SuppressWarnings(\"deprecation\")\n        @Override\n        public BufferRecycler acquirePooled() {\n            return BufferRecyclers.getBufferRecycler();\n        }\n\n        // // // JDK serialization support\n\n        protected Object readResolve() { return GLOBAL; }\n    }\n\n    /**\n     * Dummy {@link RecyclerPool} implementation that does not recycle",
+        "end": 151,
+        "start": 139
+      },
+      {
+        "text": "     * Dummy {@link RecyclerPool} implementation that does not recycle\n     * anything but simply creates new instances when asked to acquire items.\n     */\n    public static class NonRecyclingPool\n        extends RecyclerPool.NonRecyclingPoolBase<BufferRecycler>\n    {\n        private static final long serialVersionUID = 1L;\n\n        protected static final NonRecyclingPool GLOBAL = new NonRecyclingPool();\n\n        protected NonRecyclingPool() { }\n\n        @Override",
+        "end": 163,
+        "start": 151
+      },
+      {
+        "text": "     * anything but simply creates new instances when asked to acquire items.\n     */\n    public static class NonRecyclingPool\n        extends RecyclerPool.NonRecyclingPoolBase<BufferRecycler>\n    {\n        private static final long serialVersionUID = 1L;\n\n        protected static final NonRecyclingPool GLOBAL = new NonRecyclingPool();\n\n        protected NonRecyclingPool() { }\n\n        @Override\n        public BufferRecycler acquirePooled() {",
+        "end": 164,
+        "start": 152
+      },
+      {
+        "text": "    {\n        private static final long serialVersionUID = 1L;\n\n        protected static final NonRecyclingPool GLOBAL = new NonRecyclingPool();\n\n        protected NonRecyclingPool() { }\n\n        @Override\n        public BufferRecycler acquirePooled() {\n            return new BufferRecycler();\n        }\n        \n        // // // JDK serialization support",
+        "end": 168,
+        "start": 156
+      },
+      {
+        "text": "\n        protected static final NonRecyclingPool GLOBAL = new NonRecyclingPool();\n\n        protected NonRecyclingPool() { }\n\n        @Override\n        public BufferRecycler acquirePooled() {\n            return new BufferRecycler();\n        }\n        \n        // // // JDK serialization support\n\n        protected Object readResolve() { return GLOBAL; }",
+        "end": 170,
+        "start": 158
+      }
+    ],
+    "jarSha256": "d2a359b30e4b955ea188793a8a51c51a2eb11a65b31c274cfa4a3494b367e2b0"
+  },
+  {
+    "version": "Jackson core2.19.0",
+    "readScope": "named mechanisms and displayed bounded contexts; not full-upstream audit",
+    "entry": "com/fasterxml/jackson/core/util/TextBuffer.java",
+    "jar": ".tools/iam-o2a-b-upstream/jackson-core-2.19.0-sources.jar",
+    "entrySha256": "14211a2894a0471e255d95a2959f3ee1a8732ca157f06048b3a29a6fbb94920e",
+    "entryBytes": 43483,
+    "ranges": [
+      {
+        "text": "     * aggregated contents (that is, {@code _currentSegment}, to retain\n     * current token text if (but only if!) already aggregated.\n     */\n    public void releaseBuffers()\n    {\n        // inlined `resetWithEmpty()` (except leaving `_resultString` as-is\n        {\n            _inputStart = -1;\n            _currentSize = 0;\n            _inputLen = 0;\n\n            _inputBuffer = null;\n            // note: _resultString retained (see https://github.com/FasterXML/jackson-databind/issues/2635",
+        "end": 171,
+        "start": 159
+      },
+      {
+        "text": "                // And then return that array\n                char[] buf = _currentSegment;\n                _currentSegment = null;\n                _allocator.releaseCharBuffer(BufferRecycler.CHAR_TEXT_BUFFER, buf);\n            }\n        }\n    }\n\n    /**\n     * Method called to clear out any content text buffer may have, and\n     * initializes buffer to use non-shared data.\n     */\n    public void resetWithEmpty()",
+        "end": 194,
+        "start": 182
+      }
+    ],
+    "jarSha256": "d2a359b30e4b955ea188793a8a51c51a2eb11a65b31c274cfa4a3494b367e2b0"
+  },
+  {
+    "version": "Spring Framework6.2.7",
+    "readScope": "named mechanisms and displayed bounded contexts; not full-upstream audit",
+    "entry": "org/springframework/jdbc/core/JdbcTemplate.java",
+    "jar": ".tools/iam-o2a-b-upstream/spring-jdbc-6.2.7-sources.jar",
+    "entrySha256": "d38e52695ae9ec104927e874307acfcd0595e005274c20eb8915a41be03fb832",
+    "entryBytes": 62294,
+    "ranges": [
+      {
+        "text": "\n\t@Override\n\t@Nullable\n\tpublic <T> T execute(ConnectionCallback<T> action) throws DataAccessException {\n\t\tAssert.notNull(action, \"Callback object must not be null\");\n\n\t\tConnection con = DataSourceUtils.getConnection(obtainDataSource());\n\t\ttry {\n\t\t\t// Create close-suppressing Connection proxy, also preparing returned Statements.\n\t\t\tConnection conToUse = createConnectionProxy(con);\n\t\t\treturn action.doInConnection(conToUse);\n\t\t}\n\t\tcatch (SQLException ex) {",
+        "end": 348,
+        "start": 336
+      },
+      {
+        "text": "\tpublic <T> T execute(ConnectionCallback<T> action) throws DataAccessException {\n\t\tAssert.notNull(action, \"Callback object must not be null\");\n\n\t\tConnection con = DataSourceUtils.getConnection(obtainDataSource());\n\t\ttry {\n\t\t\t// Create close-suppressing Connection proxy, also preparing returned Statements.\n\t\t\tConnection conToUse = createConnectionProxy(con);\n\t\t\treturn action.doInConnection(conToUse);\n\t\t}\n\t\tcatch (SQLException ex) {\n\t\t\t// Release Connection early, to avoid potential connection pool deadlock\n\t\t\t// in the case when the exception translator hasn't been initialized yet.\n\t\t\tString sql = getSql(action);",
+        "end": 351,
+        "start": 339
+      },
+      {
+        "text": "\t\ttry {\n\t\t\t// Create close-suppressing Connection proxy, also preparing returned Statements.\n\t\t\tConnection conToUse = createConnectionProxy(con);\n\t\t\treturn action.doInConnection(conToUse);\n\t\t}\n\t\tcatch (SQLException ex) {\n\t\t\t// Release Connection early, to avoid potential connection pool deadlock\n\t\t\t// in the case when the exception translator hasn't been initialized yet.\n\t\t\tString sql = getSql(action);\n\t\t\tDataSourceUtils.releaseConnection(con, getDataSource());\n\t\t\tcon = null;\n\t\t\tthrow translateException(\"ConnectionCallback\", sql, ex);\n\t\t}",
+        "end": 355,
+        "start": 343
+      },
+      {
+        "text": "\t * @param con the JDBC Connection to create a proxy for\n\t * @return the Connection proxy\n\t * @see java.sql.Connection#close()\n\t * @see #execute(ConnectionCallback)\n\t * @see #applyStatementSettings\n\t */\n\tprotected Connection createConnectionProxy(Connection con) {\n\t\treturn (Connection) Proxy.newProxyInstance(\n\t\t\t\tConnectionProxy.class.getClassLoader(),\n\t\t\t\tnew Class<?>[] {ConnectionProxy.class},\n\t\t\t\tnew CloseSuppressingInvocationHandler(con));\n\t}\n",
+        "end": 378,
+        "start": 366
+      },
+      {
+        "text": "\tprivate <T> T execute(StatementCallback<T> action, boolean closeResources) throws DataAccessException {\n\t\tAssert.notNull(action, \"Callback object must not be null\");\n\n\t\tConnection con = DataSourceUtils.getConnection(obtainDataSource());\n\t\tStatement stmt = null;\n\t\ttry {\n\t\t\tstmt = con.createStatement();\n\t\t\tapplyStatementSettings(stmt);\n\t\t\tT result = action.doInStatement(stmt);\n\t\t\thandleWarnings(stmt);\n\t\t\treturn result;\n\t\t}\n\t\tcatch (SQLException ex) {",
+        "end": 397,
+        "start": 385
+      },
+      {
+        "text": "\t\t\tlogger.debug(\"Executing prepared SQL statement\" + (sql != null ? \" [\" + sql + \"]\" : \"\"));\n\t\t}\n\n\t\tConnection con = DataSourceUtils.getConnection(obtainDataSource());\n\t\tPreparedStatement ps = null;\n\t\ttry {\n\t\t\tps = psc.createPreparedStatement(con);\n\t\t\tapplyStatementSettings(ps);\n\t\t\tT result = action.doInPreparedStatement(ps);\n\t\t\thandleWarnings(ps);\n\t\t\treturn result;\n\t\t}\n\t\tcatch (SQLException ex) {",
+        "end": 662,
+        "start": 650
+      },
+      {
+        "text": "\t\t\tlogger.debug(\"Calling stored procedure\" + (sql != null ? \" [\" + sql + \"]\" : \"\"));\n\t\t}\n\n\t\tConnection con = DataSourceUtils.getConnection(obtainDataSource());\n\t\tCallableStatement cs = null;\n\t\ttry {\n\t\t\tcs = csc.createCallableStatement(con);\n\t\t\tapplyStatementSettings(cs);\n\t\t\tT result = action.doInCallableStatement(cs);\n\t\t\thandleWarnings(cs);\n\t\t\treturn result;\n\t\t}\n\t\tcatch (SQLException ex) {",
+        "end": 1176,
+        "start": 1164
+      }
+    ],
+    "jarSha256": "d71c17ecf47bd7699beb26ef324524fc02d454eacac3b3ce71cdff81d59a2420"
+  },
+  {
+    "version": "Spring Framework6.2.7",
+    "readScope": "named mechanisms and displayed bounded contexts; not full-upstream audit",
+    "entry": "org/springframework/jdbc/datasource/DataSourceTransactionManager.java",
+    "jar": ".tools/iam-o2a-b-upstream/spring-jdbc-6.2.7-sources.jar",
+    "entrySha256": "1cbf0f1a13d957ccaff5bfe3fe511cb70823445eef92a062e5d552a2ff67b135",
+    "entryBytes": 19844,
+    "ranges": [
+      {
+        "text": "\t\t\ttxObject.getConnectionHolder().setSynchronizedWithTransaction(true);\n\t\t\tcon = txObject.getConnectionHolder().getConnection();\n\n\t\t\tInteger previousIsolationLevel = DataSourceUtils.prepareConnectionForTransaction(con, definition);\n\t\t\ttxObject.setPreviousIsolationLevel(previousIsolationLevel);\n\t\t\ttxObject.setReadOnly(definition.isReadOnly());\n\n\t\t\t// Switch to manual commit if necessary. This is very expensive in some JDBC drivers,\n\t\t\t// so we don't want to do it unnecessarily (for example if we've explicitly\n\t\t\t// configured the connection pool to set it already).\n\t\t\tif (con.getAutoCommit()) {\n\t\t\t\ttxObject.setMustRestoreAutoCommit(true);\n\t\t\t\tif (logger.isDebugEnabled()) {",
+        "end": 288,
+        "start": 276
+      },
+      {
+        "text": "\t\t\t\tif (logger.isDebugEnabled()) {\n\t\t\t\t\tlogger.debug(\"Switching JDBC Connection [\" + con + \"] to manual commit\");\n\t\t\t\t}\n\t\t\t\tcon.setAutoCommit(false);\n\t\t\t}\n\n\t\t\tprepareTransactionalConnection(con, definition);\n\t\t\ttxObject.getConnectionHolder().setTransactionActive(true);\n\n\t\t\tint timeout = determineTimeout(definition);\n\t\t\tif (timeout != TransactionDefinition.TIMEOUT_DEFAULT) {\n\t\t\t\ttxObject.getConnectionHolder().setTimeoutInSeconds(timeout);\n\t\t\t}",
+        "end": 300,
+        "start": 288
+      },
+      {
+        "text": "\t}\n\n\t@Override\n\tprotected void doCommit(DefaultTransactionStatus status) {\n\t\tDataSourceTransactionObject txObject = (DataSourceTransactionObject) status.getTransaction();\n\t\tConnection con = txObject.getConnectionHolder().getConnection();\n\t\tif (status.isDebug()) {\n\t\t\tlogger.debug(\"Committing JDBC transaction on Connection [\" + con + \"]\");\n\t\t}\n\t\ttry {\n\t\t\tcon.commit();\n\t\t}\n\t\tcatch (SQLException ex) {",
+        "end": 339,
+        "start": 327
+      },
+      {
+        "text": "\t\t\tlogger.debug(\"Committing JDBC transaction on Connection [\" + con + \"]\");\n\t\t}\n\t\ttry {\n\t\t\tcon.commit();\n\t\t}\n\t\tcatch (SQLException ex) {\n\t\t\tthrow translateException(\"JDBC commit\", ex);\n\t\t}\n\t}\n\n\t@Override\n\tprotected void doRollback(DefaultTransactionStatus status) {\n\t\tDataSourceTransactionObject txObject = (DataSourceTransactionObject) status.getTransaction();",
+        "end": 346,
+        "start": 334
+      }
+    ],
+    "jarSha256": "d71c17ecf47bd7699beb26ef324524fc02d454eacac3b3ce71cdff81d59a2420"
+  }
+]

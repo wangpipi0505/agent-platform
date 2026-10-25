@@ -1,0 +1,104 @@
+{
+  "status": "FAILED_COMPLETE_POST_UNKNOWN",
+  "runnerExit": 1,
+  "runnerSha256": "e30638e7f0642570f8a5b5740678afff6153fd64aab7b4107696390059389c93",
+  "rawDirectory": "docs/evidence/algorithm-process-runner/live-5b3418e87817",
+  "database": "agent_platform_algorithm_live_5b3418e87817",
+  "databaseRetained": true,
+  "runId": "r_107994f6125f421b88b108b1552f47b2",
+  "callId": 1,
+  "attemptId": 2,
+  "executionOwner": "91a23a88-c3ff-4425-98ce-160281637554_26f6248c",
+  "callKind": "DEBUG",
+  "fixture": {
+    "posts": 1,
+    "jobGets": 1,
+    "podLists": 0,
+    "logGets": 0,
+    "denied": 0,
+    "authRejected": 0,
+    "mode": "complete",
+    "jobName": "alg-404772026b9963271ec5c6f778e45de7e33f19a8",
+    "jobUid": "e6817d8b-2acd-4a16-bcbd-70f0fb548d74",
+    "routes": [
+      "GET /apis/batch/v1/namespaces/alg-live-5b3418e87817-complete/jobs/alg-404772026b9963271ec5c6f778e45de7e33f19a8",
+      "POST /apis/batch/v1/namespaces/alg-live-5b3418e87817-complete/jobs"
+    ],
+    "evidenceLevel": "finite-api-reception-only",
+    "clusterOrContainerExecution": false,
+    "logicalEngineCommitVerified": false
+  },
+  "pgRunStatus": "WAITING_EXTERNAL",
+  "pgFactStatus": "UNKNOWN",
+  "pgBindingStatus": "SENDING",
+  "pgBindingUid": null,
+  "finalFactOriginal": {
+    "attemptId": true,
+    "executionOwner": true,
+    "callKind": true
+  },
+  "toolLogicalCommits": 0,
+  "acceptedTerminalFacts": 0,
+  "artifactCount": 0,
+  "otherFourScenariosExecuted": false,
+  "localCancellationPerformed": false,
+  "businessRetryPerformed": false,
+  "privateChildren": [
+    {
+      "pid": 62900,
+      "port": 55459,
+      "stopped": true,
+      "final": {
+        "pid": null,
+        "listenerPids": [],
+        "sameCreation": false
+      }
+    },
+    {
+      "pid": 46180,
+      "port": 55458,
+      "stopped": true,
+      "final": {
+        "pid": null,
+        "listenerPids": [],
+        "sameCreation": false
+      }
+    }
+  ],
+  "finallyCleanupSucceeded": true,
+  "postCleanupOwnership": {
+    "exit": 0,
+    "data": [
+      {
+        "port": 55459,
+        "listenerPids": [],
+        "pid": null,
+        "recordedPid": 62900
+      },
+      {
+        "port": 55458,
+        "listenerPids": [],
+        "pid": null,
+        "recordedPid": 46180
+      }
+    ]
+  },
+  "failure": "Timed out: terminal delivery complete; SDK POST_JOB IO_DEADLINE_OR_CANCEL under original 4000ms budget",
+  "rootCauseEvidence": "Actual sync PowerShell inspection blocks same-thread fixture HTTP/timer about1972ms; precise original request timing was not instrumented",
+  "sourceChangedOrLiveRetried": false,
+  "evidenceSha256": {
+    "docs/evidence/algorithm-process-runner/live-5b3418e87817/complete.json": "ff76bd02ded8927b6046a2e0a8da85094c2f6a999201cff1f73498c131a56ea3",
+    "docs/evidence/algorithm-process-runner/live-5b3418e87817/engine-runtime-1.err.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "docs/evidence/algorithm-process-runner/live-5b3418e87817/engine-runtime-1.out.log": "2c909e3b21b55d251e43e841506fe2a9a83ef669ff6a0bbda5120cf3adb720f7",
+    "docs/evidence/algorithm-process-runner/live-5b3418e87817/fixture-1-final.json": "1fd8a9161e4848453947a5e729a10a81c3c6ca667e358d518d1d563af93038fe",
+    "docs/evidence/algorithm-process-runner/live-5b3418e87817/processes.json": "517e2143cbd5799fd20f016795831b36ba31279018e7c44ef8bcba145571d2cf",
+    "docs/evidence/algorithm-process-runner/live-5b3418e87817/result.json": "e54be1207664fdc837fd52001c975f1a051b74758f2ae0de4e9e120ca807ddaf",
+    "docs/evidence/algorithm-process-runner/live-5b3418e87817/skill-registry-0.err.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "docs/evidence/algorithm-process-runner/live-5b3418e87817/skill-registry-0.out.log": "d77cb48c19b451152a6034b7390601dd3c523efec40351bd577e4c69f6f4d6a2",
+    "docs/evidence/algorithm-process-live-v3.md": "a1d01f5e047a205303996d4c8a17ff6656606bc91a2f0c48f29b5a0614271fa6",
+    "docs/evidence/algorithm-process-live-v3-execution.log": "f844095cc82fe57d40b50432971b144cce8920f8b44d29b5ec0316487d471f86",
+    "docs/evidence/algorithm-process-live-v3-readonly.json": "1ddf93042b6a5919c65af83b7707fddff478fe0b36dea0b98f337df77abccd8b",
+    "docs/evidence/algorithm-process-live-v3-blocking-diagnostic.mjs": "499427d8d1c3dfeb0409730ae890e75c2446c5a58bbc5b13e729f16babbb2be4",
+    "docs/evidence/algorithm-process-live-v3-blocking-diagnostic.json": "bdfd5865c3ca87a8049e51f6b4cdf34a3040bbd87b0a97fbf3e521a99af74056"
+  }
+}

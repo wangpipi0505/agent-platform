@@ -1,0 +1,239 @@
+{
+  "xml": [
+    {
+      "directory": "red-selected-xml",
+      "suites": [
+        {
+          "file": "TEST-cn.agentplatform.common.authority.CurrentAuthorityClientTest.xml",
+          "sha256": "9698a8710c64530d40e41fa37598c90fea6ce79571c36c3994f5ebeca28d3d1b",
+          "tests": 2,
+          "failures": 1,
+          "errors": 0,
+          "skipped": 0,
+          "new_testcases": [
+            "reviewI2LifoExceptionOwnerAndChildBoundaries",
+            "reviewI2NonLifoSameAuthorityNeverRestoresClosedFrame"
+          ]
+        },
+        {
+          "file": "TEST-cn.agentplatform.common.authority.ResponseAuthorityTest.xml",
+          "sha256": "60734256b36dc5ee1640e191a70bfc2f4cbc39e755ffe00e717090af97f1a31d",
+          "tests": 5,
+          "failures": 5,
+          "errors": 0,
+          "skipped": 0,
+          "new_testcases": [
+            "reviewI1ClosedSseLeaseCannotReplayConsumedSequence",
+            "reviewI1ActiveRenewedAndClosedLeasesCannotClaimAnotherHolder",
+            "reviewI1FailedConstructorTerminatesClaimAndShutsScheduler",
+            "reviewI1PublicCopiesCannotClaimOrLaunderSamePermit",
+            "reviewI1ClosedModelLeaseCannotReplayFinal"
+          ]
+        }
+      ],
+      "totals": [
+        7.0,
+        6.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "directory": "i3\\red-xml",
+      "suites": [
+        {
+          "file": "TEST-cn.agentplatform.common.authority.CurrentAuthorityClientTest.xml",
+          "sha256": "6c52911d979771c6dca890cbcaf2fede23cd89321a58c97fae11204097490f28",
+          "tests": 2,
+          "failures": 1,
+          "errors": 0,
+          "skipped": 0,
+          "new_testcases": [
+            "reviewI3ApproverCurrentTrustAndBindingsRemainMandatory",
+            "reviewI3CurrentEditorApproverProofDoesNotImposeFrozenBusinessRoles"
+          ]
+        }
+      ],
+      "totals": [
+        2.0,
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "directory": "i3\\green-named-xml",
+      "suites": [
+        {
+          "file": "TEST-cn.agentplatform.common.authority.CurrentAuthorityClientTest.xml",
+          "sha256": "02f9125e334f4230be5b363f498f53d485869a6a80af60c04fc66bd6b5650670",
+          "tests": 19,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "new_testcases": [
+            "reviewI3ApproverCurrentTrustAndBindingsRemainMandatory",
+            "reviewI2LifoExceptionOwnerAndChildBoundaries",
+            "reviewI3CurrentEditorApproverProofDoesNotImposeFrozenBusinessRoles",
+            "reviewI2NonLifoSameAuthorityNeverRestoresClosedFrame"
+          ]
+        },
+        {
+          "file": "TEST-cn.agentplatform.common.authority.ResponseAuthorityTest.xml",
+          "sha256": "7339ded3d290d98115ec835e7b52891ea8e50325c5d5790ed69a8a3e7b07f490",
+          "tests": 19,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "new_testcases": [
+            "reviewI1ClosedSseLeaseCannotReplayConsumedSequence",
+            "reviewI1ActiveRenewedAndClosedLeasesCannotClaimAnotherHolder",
+            "reviewI1FailedConstructorTerminatesClaimAndShutsScheduler",
+            "reviewI1PublicCopiesCannotClaimOrLaunderSamePermit",
+            "reviewI1ClosedModelLeaseCannotReplayFinal",
+            "reviewI1RenewalPreservesCursorAcceptanceAndFinalReservation"
+          ]
+        },
+        {
+          "file": "TEST-cn.agentplatform.common.authority.ServiceTicketProviderTest.xml",
+          "sha256": "9775ad49108b8bacc5cdc5922f5119fc5d3361a8a87a68407d643fdd47cf65d0",
+          "tests": 3,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "new_testcases": []
+        }
+      ],
+      "totals": [
+        41.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "directory": "i3\\final-common-xml",
+      "suites": [
+        {
+          "file": "TEST-cn.agentplatform.common.authority.AuthorityConfigurationTest.xml",
+          "sha256": "31143f5957fe0ec175318d75aa34596056adef721dddadc892b65d14ebe9dfe6",
+          "tests": 40,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "new_testcases": []
+        },
+        {
+          "file": "TEST-cn.agentplatform.common.authority.AuthorityPolicyTest.xml",
+          "sha256": "574c9280fdfcf6e17aa6583f273eae956ebb6f46b83fa23635bb8933d371f658",
+          "tests": 14,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "new_testcases": []
+        },
+        {
+          "file": "TEST-cn.agentplatform.common.authority.CurrentAuthorityClientTest.xml",
+          "sha256": "7de5341690c7672b361996fa3c25ed4a51f89c8389ab43bfff986dd67f7979f4",
+          "tests": 19,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "new_testcases": [
+            "reviewI3ApproverCurrentTrustAndBindingsRemainMandatory",
+            "reviewI2LifoExceptionOwnerAndChildBoundaries",
+            "reviewI3CurrentEditorApproverProofDoesNotImposeFrozenBusinessRoles",
+            "reviewI2NonLifoSameAuthorityNeverRestoresClosedFrame"
+          ]
+        },
+        {
+          "file": "TEST-cn.agentplatform.common.authority.PortalClaimMapperTest.xml",
+          "sha256": "0c7642f42681d70eb584895465eb49d54443be7dcc6bd8f989c30a669dd6b13a",
+          "tests": 6,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "new_testcases": []
+        },
+        {
+          "file": "TEST-cn.agentplatform.common.authority.ResponseAuthorityTest.xml",
+          "sha256": "fd25816052deb58ee7ab097096e0f444352b63c90fed6c260c0b7a584786b756",
+          "tests": 19,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "new_testcases": [
+            "reviewI1ClosedSseLeaseCannotReplayConsumedSequence",
+            "reviewI1ActiveRenewedAndClosedLeasesCannotClaimAnotherHolder",
+            "reviewI1FailedConstructorTerminatesClaimAndShutsScheduler",
+            "reviewI1PublicCopiesCannotClaimOrLaunderSamePermit",
+            "reviewI1ClosedModelLeaseCannotReplayFinal",
+            "reviewI1RenewalPreservesCursorAcceptanceAndFinalReservation"
+          ]
+        },
+        {
+          "file": "TEST-cn.agentplatform.common.authority.ServiceTicketProviderTest.xml",
+          "sha256": "dbfd4efafdec62b7ad8ba56a0b1a40cb4bd8febe96814a933ea84bc8d3ca513c",
+          "tests": 3,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "new_testcases": []
+        },
+        {
+          "file": "TEST-cn.agentplatform.common.authority.TrustedJwtDecoderTest.xml",
+          "sha256": "b76b6a862c47f426e02dfe9e99422b534cbae8b43b19744245a3861b7cb3e1ca",
+          "tests": 12,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "new_testcases": []
+        },
+        {
+          "file": "TEST-cn.agentplatform.common.CommonBoundaryTest.xml",
+          "sha256": "613fc30f80f99650bd72d0846a31cc4bac0c02f6c4dd198b692cd80dbc2be2d7",
+          "tests": 4,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "new_testcases": []
+        },
+        {
+          "file": "TEST-cn.agentplatform.common.schema.SharedSchemaAdmissionTest.xml",
+          "sha256": "36d564e3fcf71ece01c9db30137f6a4384425100c8db50a82b0277bee19c0af2",
+          "tests": 5,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "new_testcases": []
+        },
+        {
+          "file": "TEST-cn.agentplatform.common.SecretVaultTest.xml",
+          "sha256": "ab3547a54d4dd04b2dad6973df914928bfe3c29aba71146b1aa11f76cee28dc9",
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "new_testcases": []
+        }
+      ],
+      "totals": [
+        123.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    }
+  ],
+  "target_files_each": 245,
+  "original_review_prefix_bytes": 15212,
+  "probe_not_run": true,
+  "suites_not_rerun": true,
+  "source_sha_equal": true,
+  "source_files_each": 63,
+  "target_roots": 2,
+  "patch_sha256": "7c7e3c3f4e51e429c02e8b187ba32255ebb1a1058a8f568f5ba4de5d7e42f2c2",
+  "original_review_prefix_sha256": "df842cf0e5b1d987f077419e4f3b9ba2794c7307bdda7eabb35ca605fbc4e9d9",
+  "source_roots": 4,
+  "target_sha_equal": true
+}

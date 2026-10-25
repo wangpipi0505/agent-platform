@@ -1,0 +1,573 @@
+{
+  "status": "AUTHOR_VERIFIED_PENDING_INDEPENDENT_REVIEW",
+  "frozenAt": "2026-10-20T08:19:21.225972+08:00",
+  "deployed": false,
+  "allTargetsReleased": true,
+  "fullSevenModuleRunClaimed": false,
+  "modules": [
+    {
+      "module": "admin-common",
+      "command": "mvn -o -B -ntp -pl admin-common test -Dmaven.repo.local=V:/.tools/m2 -Djdk.net.unixdomain.tmpdir=V:/.local/tmp",
+      "finishedAt": "2026-10-20T08:12:57+08:00",
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sourceCount": 19,
+      "sourceBeforeAfterEqual": true,
+      "beforeSnapshot": ".local/shared-schema-admin-common-before.json",
+      "beforeSnapshotSha256": "fc1ed6af327eb4679f236031d8cec868e53179bd9c2808e0185b9644230a31d9",
+      "afterSnapshot": ".local/shared-schema-admin-common-after.json",
+      "afterSnapshotSha256": "e36f0f7b062f6565d4cf6d4e59883f441253e3ab8e14f9dddcbe774038f9217f",
+      "log": ".local/shared-schema-full-admin-common.log",
+      "logSha256": "fd209173ce302bb15d2891aeba6fdc98acf0c9321ebe5f9f51e7ceacb2a5c80c",
+      "suites": [
+        {
+          "suite": "cn.agentplatform.common.CommonBoundaryTest",
+          "tests": 4,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.common.schema.SharedSchemaAdmissionTest",
+          "tests": 5,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.common.SecretVaultTest",
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ]
+    },
+    {
+      "module": "engine-runtime",
+      "command": "mvn -o -B -ntp -pl engine-runtime test -Dmaven.repo.local=V:/.tools/m2 -Djdk.net.unixdomain.tmpdir=V:/.local/tmp",
+      "finishedAt": "2026-10-20T08:15:59+08:00",
+      "tests": 427,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sourceCount": 103,
+      "sourceBeforeAfterEqual": true,
+      "beforeSnapshot": ".local/shared-schema-engine-runtime-before.json",
+      "beforeSnapshotSha256": "f1d66857cf289fed428933839bb0e7d0d823f53fd1e4e6923c13b5259fb375f4",
+      "afterSnapshot": ".local/shared-schema-engine-runtime-after.json",
+      "afterSnapshotSha256": "3007fa3f8b369f8478846f59e38538ecbe20b89039574795ae305076241f9272",
+      "log": ".local/shared-schema-full-engine-runtime.log",
+      "logSha256": "625cdc880eb0bb7f0f9497a62c6a43c1b753d29af000f8e1cbcfb58fc52afc31",
+      "suites": [
+        {
+          "suite": "cn.agentplatform.engine.application.ContextAssemblerTest",
+          "tests": 3,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.engine.application.ContextProjectionTest",
+          "tests": 2,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.engine.application.FrozenModelsTest",
+          "tests": 2,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.engine.application.RunStatisticsPostgresTest",
+          "tests": 5,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.engine.domain.GraphRulesTest",
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.engine.domain.GraphValidatorTest",
+          "tests": 2,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.engine.domain.InputDeclarationSchemaPositionsTest",
+          "tests": 183,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.engine.domain.InputDeclarationsTest",
+          "tests": 3,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.engine.domain.JsonGateTest",
+          "tests": 3,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.engine.domain.OutputPolicyTest",
+          "tests": 11,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.engine.domain.SharedSchemaBudgetTest",
+          "tests": 8,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.engine.domain.ValuesTest",
+          "tests": 6,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.engine.infra.ChatSessionsTest",
+          "tests": 4,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.engine.infra.ChunkBusRedisTest",
+          "tests": 6,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.engine.infra.ChunkBusTest",
+          "tests": 5,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.engine.infra.ControlledDraftSkillTest",
+          "tests": 5,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.engine.infra.ControlledReplayTest",
+          "tests": 2,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.engine.infra.DebugControlsTest",
+          "tests": 4,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.engine.infra.EngineContextPostgresTest",
+          "tests": 2,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.engine.infra.ExecutionRecoveryTest",
+          "tests": 4,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.engine.infra.ModelExchangeTest",
+          "tests": 2,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.engine.infra.OutputPolicyPostgresTest",
+          "tests": 24,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.engine.infra.ReplayBoundaryTest",
+          "tests": 7,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.engine.infra.ReplayServiceTest",
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.engine.infra.RunAdmissionBoundaryPostgresTest",
+          "tests": 2,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.engine.infra.RunAdmissionHttpTest",
+          "tests": 5,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.engine.infra.RunEventResponseTest",
+          "tests": 2,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.engine.infra.RunEventsHttpTest",
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.engine.infra.RunEventsPostgresTest",
+          "tests": 9,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.engine.infra.RunInputValidationPostgresTest",
+          "tests": 37,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.engine.infra.RunSchedulerPostgresTest",
+          "tests": 24,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.engine.infra.RunSchedulerReviewPostgresTest",
+          "tests": 13,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.engine.infra.RunSchedulerTimingTest",
+          "tests": 3,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.engine.infra.RuntimeStreamTest",
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.engine.infra.TestInputHttpTest",
+          "tests": 9,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.engine.infra.ToolCancellationRaceTest",
+          "tests": 2,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.engine.infra.TracePostgresTest",
+          "tests": 24,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ]
+    },
+    {
+      "module": "skill-registry",
+      "command": "mvn -o -B -ntp -pl skill-registry test -Dmaven.repo.local=V:/.tools/m2 -Djdk.net.unixdomain.tmpdir=V:/.local/tmp",
+      "finishedAt": "2026-10-20T08:18:56+08:00",
+      "tests": 270,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sourceCount": 61,
+      "sourceBeforeAfterEqual": true,
+      "beforeSnapshot": ".local/shared-schema-skill-registry-before.json",
+      "beforeSnapshotSha256": "f72c9509ad7cb668ffb453b7779f914e8010e7248e01c86accf7b2e0b7d1964b",
+      "afterSnapshot": ".local/shared-schema-skill-registry-after.json",
+      "afterSnapshotSha256": "904f3b7867eaf6d145ef2097ac8fa9e58ee618727f0e5e0f26bc706604a25654",
+      "log": ".local/shared-schema-full-skill-registry.log",
+      "logSha256": "8965b94e1fcafe9f2a161fda46d3b37ab4fb2e5d4051e12bfd3c8316f7ea5aad",
+      "suites": [
+        {
+          "suite": "cn.agentplatform.skill.api.OpenApiImportControllerTest",
+          "tests": 4,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.skill.application.AsyncHttpExecutionTest",
+          "tests": 21,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.skill.application.CallbackHttpTest",
+          "tests": 32,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.skill.application.OpenApiImportPersistenceTest",
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.skill.application.OpenApiImportsTest",
+          "tests": 10,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.skill.application.ReconciliationProofTest",
+          "tests": 34,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.skill.application.SkillExecutionTest",
+          "tests": 25,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.skill.application.SkillStatisticsPostgresTest",
+          "tests": 7,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.skill.domain.BoundedSchemaValidationTest",
+          "tests": 11,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.skill.domain.SchemaWorkBudgetTest",
+          "tests": 7,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.skill.domain.SkillRulesTest",
+          "tests": 5,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.skill.infra.ArtifactBoundTest",
+          "tests": 3,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.skill.infra.ArtifactPersistenceTest",
+          "tests": 10,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.skill.infra.ArtifactReferenceTest",
+          "tests": 5,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.skill.infra.HttpSchemaBoundaryTest",
+          "tests": 8,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.skill.infra.McpAdapterTest",
+          "tests": 38,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.skill.infra.McpExecutionPostgresTest",
+          "tests": 9,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.skill.infra.McpManagementTest",
+          "tests": 7,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.skill.infra.McpResourceLifecycleTest",
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.skill.infra.McpSchemaBoundaryTest",
+          "tests": 22,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.skill.infra.OpenApiHttpMappingTest",
+          "tests": 7,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "cn.agentplatform.skill.infra.SignedCallbackTest",
+          "tests": 3,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ]
+    }
+  ],
+  "sourceManifestSha256": "7429a8107bf2f9c44fef3ce23db6cdc014c1bdbc845d04b5fb969708c0e724de",
+  "patchSha256": "5ba5f1f4e9263a9ac5c9d1a1e818eddfabcd9584511a1591136fdd6b89131a46",
+  "patchCheckAndApplicationVerified": true,
+  "reportSha256": "a2a9ae58994feefbd534e294334937b7fe1e1506cbd5879896ce72d371774bf6",
+  "originalPositiveTestSha256": "c7fceb0542b153e6ac1109cbed7073e13377560a9532830fa0ccc4a4f3895a7c",
+  "formatExit": 0,
+  "contractsExit": 0,
+  "safeBehaviorRed": {
+    "tests": 8,
+    "failures": 8,
+    "errors": 0,
+    "skipped": 0
+  },
+  "exhaustionProbeRun": false,
+  "recursiveSchemaCompatibilityNarrowed": true,
+  "logs": [
+    {
+      "path": ".local/shared-schema-common-install-final.log",
+      "sha256": "9902e7ff5a60a32d43f0fecf2ef87800d9ee3b3d4f5239b4b0670c3b56dde7e5"
+    },
+    {
+      "path": ".local/shared-schema-common-install.log",
+      "sha256": "03fb7a1bbeb30c94e7b1464180348bba51f47ed3f249023da909ba40ccd55caa"
+    },
+    {
+      "path": ".local/shared-schema-contracts.log",
+      "sha256": "f3790f517d3887be5c977eb865b94c8c8fca45e9f110485a22b503cffd568d6d"
+    },
+    {
+      "path": ".local/shared-schema-engine-pg-targeted.log",
+      "sha256": "23597a92d6f905c1668c8a0c060b0e5539ab929ecb873de71a3406ef8a8b41d9"
+    },
+    {
+      "path": ".local/shared-schema-engine-red.log",
+      "sha256": "cb66a838c1f5432d4e783654f68c05563938c15e5d69f3c6ff0a7a30f9ae5acf"
+    },
+    {
+      "path": ".local/shared-schema-engine-targeted.log",
+      "sha256": "e00b08f7c1c650113f2af8caf8421892e238d41de5986356a9e58870681aba6a"
+    },
+    {
+      "path": ".local/shared-schema-format.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".local/shared-schema-full-admin-common.log",
+      "sha256": "fd209173ce302bb15d2891aeba6fdc98acf0c9321ebe5f9f51e7ceacb2a5c80c"
+    },
+    {
+      "path": ".local/shared-schema-full-engine-runtime.log",
+      "sha256": "625cdc880eb0bb7f0f9497a62c6a43c1b753d29af000f8e1cbcfb58fc52afc31"
+    },
+    {
+      "path": ".local/shared-schema-full-skill-registry.log",
+      "sha256": "8965b94e1fcafe9f2a161fda46d3b37ab4fb2e5d4051e12bfd3c8316f7ea5aad"
+    },
+    {
+      "path": ".local/shared-schema-skill-reference-compile-error.log",
+      "sha256": "d1f398ceecfbc3a45980abfbb08967323033c83788f7131fb7019925cdbcbb5f"
+    },
+    {
+      "path": ".local/shared-schema-skill-reference-import-error-2.log",
+      "sha256": "4c00dc20b58dfe3249071c70a44bec1b4c3e8fa934d1181cfd31772a48b23fb6"
+    },
+    {
+      "path": ".local/shared-schema-skill-reference-import-error.log",
+      "sha256": "a1c91f981c8bcd003b72fb259b6bb060553f5ab57f7fb532aed22f48a77d9afa"
+    }
+  ],
+  "patchApplyGitConfig": {
+    "core.autocrlf": false
+  },
+  "patchCheckSnapshot": ".local/shared-schema-patch-check-v2"
+}

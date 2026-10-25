@@ -1,0 +1,65 @@
+{
+  "actualRead": [
+    {
+      "file": "NimbusJwtDecoder.java",
+      "ranges": "135-205 decode/createJwt/validateJwt",
+      "mechanism": "Signature processor precedes separate JWT validator."
+    },
+    {
+      "file": "DefaultJWTProcessor.java",
+      "ranges": "334-390 process(SignedJWT)",
+      "mechanism": "Type verifier/key selection/signature verification precede verifyClaims."
+    },
+    {
+      "file": "JWSObject.java",
+      "ranges": "360-395 verify",
+      "mechanism": "Verifier signature result updates VERIFIED state; not semantic authorization."
+    },
+    {
+      "file": "RSASSAVerifier.java",
+      "ranges": "154-181 verify",
+      "mechanism": "Pinned public RSA JCA verification."
+    },
+    {
+      "file": "Jdk21-Clock.java",
+      "ranges": "430-448 instant contract",
+      "mechanism": "Clock returns clock-defined instant; fixture Clock may move backward."
+    },
+    {
+      "file": "Jdk21-System.java",
+      "ranges": "510-571 wall clock and nanoTime contract",
+      "mechanism": "Elapsed subtraction, arbitrary origin, overflow caveat; no wall-time relation."
+    }
+  ],
+  "source": [
+    {
+      "file": "docs/evidence/iam-stage-5-n4b1-gateway-run-authorization/upstream/NimbusJwtDecoder.java",
+      "sha256": "9b416170f1713bd5ead6d45eba2282f6a85a20f4ab682ee46c00872bd094b769",
+      "license": "Apache-2.0"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n4b1-gateway-run-authorization/upstream/DefaultJWTProcessor.java",
+      "sha256": "6cd3ec9508b6027995ba3068afcc6aacb8087ea0efe55c9458ba50ff733e0b3e",
+      "license": "Apache-2.0"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n4b1-gateway-run-authorization/upstream/Jdk21-Clock.java",
+      "sha256": "d0057da8ab53bfd41450c1504b28f98c0646b5997d977f6cc416f6bf7fd809a4",
+      "license": "GPL-2.0-only WITH Classpath-exception-2.0; original header retained"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n4b1-gateway-run-authorization/upstream/Jdk21-System.java",
+      "sha256": "c51b88b6dc193b6447441769e24e89ebdbc3482796889a7506064bf07a7a8020",
+      "license": "GPL-2.0-only WITH Classpath-exception-2.0; original header retained"
+    }
+  ],
+  "projectActualRead": [
+    "HttpCurrentAuthorityClient.java",
+    "AuthorityResponseVerifier.java",
+    "TrustedJwtDecoder.java",
+    "AuthorityProtocol.java",
+    "MetadataSelectors.java",
+    "LoopbackAuthority.java"
+  ],
+  "inference": "Using nanoTime elapsed anchored before source validation and minimum signed deadlines capped at configured <=5 seconds is our conservative proof-lifetime design. It is not a Spring/Nimbus feature, revocation SLA, or runtime identity claim."
+}

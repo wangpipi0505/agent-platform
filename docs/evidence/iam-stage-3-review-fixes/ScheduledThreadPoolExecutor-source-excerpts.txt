@@ -1,0 +1,68 @@
+614:      * @throws IllegalArgumentException   {@inheritDoc}
+615:      */
+616:     public ScheduledFuture<?> scheduleAtFixedRate(Runnable command,
+617:                                                   long initialDelay,
+618:                                                   long period,
+619:                                                   TimeUnit unit) {
+620:         if (command == null || unit == null)
+621:             throw new NullPointerException();
+622:         if (period <= 0L)
+623:             throw new IllegalArgumentException();
+624:         ScheduledFutureTask<Void> sft =
+625:             new ScheduledFutureTask<Void>(command,
+626:                                           null,
+627:                                           triggerTime(initialDelay, unit),
+628:                                           unit.toNanos(period),
+629:                                           sequencer.getAndIncrement());
+630:         RunnableScheduledFuture<Void> t = decorateTask(command, sft);
+631:         sft.outerTask = t;
+632:         delayedExecute(t);
+633:         return t;
+634:     }
+635: 
+
+336:      * @param task the task
+337:      */
+338:     private void delayedExecute(RunnableScheduledFuture<?> task) {
+339:         if (isShutdown())
+340:             reject(task);
+341:         else {
+342:             super.getQueue().add(task);
+343:             if (!canRunInCurrentRunState(task) && remove(task))
+344:                 task.cancel(false);
+345:             else
+346:                 ensurePrestart();
+347:         }
+348:     }
+349: 
+350:     /**
+351:      * Requeues a periodic task unless current run state precludes it.
+352:      * Same idea as delayedExecute except drops task rather than rejecting.
+353:      *
+354:      * @param task the task
+355:      */
+356:     void reExecutePeriodic(RunnableScheduledFuture<?> task) {
+357:         if (canRunInCurrentRunState(task)) {
+
+867:      * @throws SecurityException {@inheritDoc}
+868:      */
+869:     public List<Runnable> shutdownNow() {
+870:         return super.shutdownNow();
+871:     }
+872: 
+873:     /**
+874:      * Returns the task queue used by this executor.  Access to the
+875:      * task queue is intended primarily for debugging and monitoring.
+876:      * This queue may be in active use.  Retrieving the task queue
+877:      * does not prevent queued tasks from executing.
+878:      *
+879:      * <p>Each element of this queue is a {@link ScheduledFuture}.
+880:      * For tasks submitted via one of the {@code schedule} methods, the
+881:      * element will be identical to the returned {@code ScheduledFuture}.
+882:      * For tasks submitted using {@link #execute execute}, the element
+883:      * will be a zero-delay {@code ScheduledFuture}.
+884:      *
+885:      * <p>Iteration over this queue is <em>not</em> guaranteed to traverse
+886:      * tasks in the order in which they will execute.
+887:      *
+888:      * @return the task queue

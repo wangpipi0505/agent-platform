@@ -1,0 +1,15 @@
+Compiled from "PortalRunEventsHttp.java"
+final class cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session$SseLease {
+  private cn.agentplatform.gateway.infra.PortalEventsPacketBudget$Reservation charge;
+  private boolean released;
+  private java.lang.Runnable cancellation;
+  private java.util.function.Function<java.time.Duration, java.lang.Boolean> exit;
+  final cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session this$0;
+  private cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session$SseLease(cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session, cn.agentplatform.gateway.infra.PortalEventsPacketBudget$Reservation);
+  long deadline();
+  synchronized void cancellation(java.lang.Runnable);
+  synchronized void exits(java.util.function.Function<java.time.Duration, java.lang.Boolean>);
+  void signal();
+  void reap(java.time.Duration);
+  void release();
+}

@@ -1,0 +1,47 @@
+# Spec Compliance
+
+- **Spec verdict: Compliant within the C2b1 component scope.** No missing or extra production behavior requiring a fix was found in the complete eight-path delta. **Critical 0 / Important 0 / Minor 2.**
+- Reviewed accepted source630 `6f61ed3ce5ce87fbafead1dd1434f2b1d9dc1b3c3692be81a51c19a7155e3b9d` to frozen source634 `c91a517192cb8caecf84da5726640d90c759793065dce9cbe0e94291a737d74d`. These are source-manifest identities, not commits. Package: `docs/evidence/review-iam-stage-4-o2b-f2c2b1-events-wiring-package.diff`, 76767 bytes, SHA256 `c053ccc440b17bf0ebb7f0058c011618443998bebf4ca3961bab5932b6e119c8`, 1026 split lines.
+- Requirements used: frozen task brief, typed-postasync authorization, Spring response-binding amendment, monotonic ownership authorization, and both diagnostic corrections. `GatewayIngressBoundary.java:109` keeps EVENTS distinct from RUN/STATUS/SESSION; `:262` introduces a privately constructed capability; `:287` binds the actual request and authorized framework response before claiming it. Cursor parsing accepts exactly one canonical decimal source, captures the long once, and does not broaden the other purposes' query rules.
+- `platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:64` routes IAM EVENTS through claimEvents and the optional real proxy before the independent STATUS/RUN branches. `GatewayIamAssembly.java:30` derives availability from the bean provider. Existing four/five argument Controller constructors remain usable; absence of the component denies EVENTS.
+- `platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsSse.java:41` uses the typed capture only during synchronous bootstrap. Its private core retains registration-before-Session ordering, obtains output from the supplied MVC response, and records successful startAsync ownership in a stack-local scalar. The owned failure branch at `:81` attempts stop, completion and Session close in finally order, contains cleanup RuntimeException/Error, and returns the existing Handle without routing the response to JSON. The raw entry preserves its throwing behavior.
+- `platform-gateway/src/main/java/cn/agentplatform/gateway/infra/GatewayPortalEventsConfiguration.java:10` supplies concrete production beans by explicit import and installs the actual ControlledProtocol/context valve using public Boot APIs. There is no new automatic scanning annotation, session registry, TLS clone, or application-owned thread collection.
+
+# Strengths
+
+- `admin-common/src/main/java/cn/agentplatform/common/authority/GatewayIngressBoundary.java:295`: the Spring adaptation requires the captured manager, exact StandardServletAsyncWebRequest class, exact request/current/native response, trusted LifecycleHttpServletResponse classloader and direct preHandle-response delegate together. The manager attribute alone cannot create permission. Subsequent live checks also bind the exact pair and current framework object, and clear cuts all five new reverse references.
+- `platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsSse.java:384`: wrapper traversal is bounded and confined to the typed capture path; the raw facade path is not broadened. Neither traversal obtains the raw response's output stream.
+- `platform-gateway/src/main/java/cn/agentplatform/gateway/application/RunEventsProxy.java:11`: the application adapter has three dependencies and only synchronous forwarding/error mapping. Ownership and asynchronous cleanup remain with the existing SSE implementation.
+- `platform-gateway/src/test/java/cn/agentplatform/gateway/infra/GatewayPortalEventsServletTest.java:153`: component tests import the actual Controller, assembly and new production configuration. The postasync cases use one physical Socket request and assert REQUEST=1, writer=0, actual async getter, real owner/budget restoration and worker exit. Separate JVM startup cases assert the concrete final profile and rejection causes. The common tests at `admin-common/src/test/java/cn/agentplatform/common/authority/GatewayEventsIngressBoundaryTest.java:10` additionally reject ordinary attributes and public construction as capability sources.
+- `docs/evidence/iam-stage-4-o2b-f2c2b1-events-wiring-report.md:40` and `:44` retain failed compile/runtime/parent-metadata epochs separately. The two old entry markers support an inference of distinct calls, not a measured original two-request count or proof that asyncOwned fixed the earlier failure. The final narrow result is bound to the frozen source634 identity and is not represented as a final full-suite pass.
+
+# Issues
+
+## Critical
+
+None.
+
+## Important
+
+None.
+
+## Minor
+
+1. **Diagnostic summaries omit compiler notes and preserve damaged text.** `docs/evidence/iam-stage-4-o2b-f2c2b1-events-wiring/stages/green-single-request-postasync/diagnostics.json:1` is empty, while the same stage's `raw.log:56` and `raw.log:65` contain deprecation diagnostics for PortalEventsMaterialVerifier and GatewayPublishedChainPostgresTest. Earlier `stages/green-first/raw.log:32` and `:41` also record deprecation/unchecked diagnostics. `stages/green-first/diagnostics.json:3` and `stages/green-gateway/diagnostics.json:12` retain garbled paths/messages. These are a reporting/readability limitation and inherited source warnings, not evidence of a failing final test. The final output is not pristine. In a future authorized runner epoch, classify compiler notes as diagnostics and preserve/decode the actual console encoding; track the underlying deprecated/unchecked APIs separately. Preserve these frozen historical artifacts and do not rerun green tests solely to remove the noise.
+
+2. **The raw regression JVM cannot perform two Tomcat leak diagnostics.** `.local/iam-o2b-f2c2b1-events-wiring/peers/raw-sequence-90ed9122-81c8-445e-a537-a9094b0884f9/client.out:51` and `:53` explicitly report missing opens for ThreadLocal and RMI Target leak detection. This limits those diagnostics; the observed worker/owner exit assertions still stand. For the next justified fixture run, consider the named `--add-opens=java.base/java.lang=ALL-UNNAMED` and `--add-opens=java.rmi/sun.rmi.transport=ALL-UNNAMED` options, keeping them fixture-scoped. Do not suppress the checks merely to hide warnings or treat this run as a general absence-of-leaks proof.
+
+# CannotVerify and Root Follow-up
+
+- **Inherited enforcement and accounting:** `GatewayIamAssembly.java:44` delegates to existing security/framework-installation mechanisms; `PortalRunEventsSse.java:81` delegates to existing stop/complete/Session-close and finisher gates. Their complete implementations, trusted decoder/TLS behavior, 64-scope bridge, 1536/1792/3MiB accounting, and helper/worker exit gates are not fully present in this delta. Root should bind these dependencies to accepted C2a/unchanged-source identities and existing narrow exit evidence. No new claim of whole-JVM memory or arbitrary lifecycle-error recovery follows from this review.
+- **Artifact and execution identity:** `.local/iam-o2b-f2c2b1-events-wiring-root-review/package.json:1` records the package/source binding. Root must finish its independent finite native-blob/replay/target/protected-index/inventory and actual Running/XML/22-child exit audit. This review checked code and selected existing metadata; it does not substitute for that audit or manufacture a final-head full-suite pass.
+- **Later delivery:** `docs/evidence/iam-stage-4-o2b-f2c2b1-events-wiring-report.md:3` correctly excludes a production E encoder/new-PG joined chain, default production launcher, external IAM/K8s, whole capacity acceptance, and frontend consumers. Root should carry those forward to C2b2/C2c and the later production acceptance tasks. A private TLS peer is component evidence only.
+- **Further tests:** No additional test is required by a concrete unresolved defect found here. If root needs proof of a lifecycle state not evidenced by the retained child records, coordinate a specifically scoped new source/fixture epoch; do not replay the historical green matrix. A startAsync call that itself fails before returning remains outside the authorized historical-ownership guarantee.
+
+# Assessment
+
+**Task quality: Approved.** The production delta implements the requested narrow trusted ingress and MVC-to-SSE bridge without exporting its capability into async state. The two Minor findings concern retained diagnostics and their evidentiary limits; neither establishes a functional or authorization defect in this task.
+
+Checks performed: read the requirement/amendment files, AGENTS/implementation brief/contracts/frozen inputs, author report/control/package metadata and diagnostic corrections; read all eight delta paths once through EOF; inspected existing selected stage metadata, component allocation model and root warning observations, and directly located the two raw-child warnings. A symbol-location search for the concrete inherited cleanup-gate risk found State stop/complete and Http close locations; their bodies were not reread, and that risk is explicitly recorded above. No changed-source body reread, unchanged dependency-body expansion, test, PG, GC, Git, replay, commit, deployment, or old-project access was performed.
+
+This report is frozen on handoff. Its exclusive write right is returned to root; no source/target/author-owned write right was exercised. Root's later acceptance decision remains separate.

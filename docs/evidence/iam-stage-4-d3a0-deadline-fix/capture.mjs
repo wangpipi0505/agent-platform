@@ -1,0 +1,60 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+
+const root=process.cwd(),out='docs/evidence/iam-stage-4-d3a0-deadline-fix';
+assert.equal(root.replaceAll('\\','/'),'G:/207/项目/算法重组工具/代码/agent-platform');
+const modules=['admin-common','app-management','platform-gateway','engine-runtime','skill-registry','model-gateway','monitor'];
+const report='docs/evidence/iam-stage-4-d3a0-report.md';
+const changedFile='platform-gateway/src/test/java/cn/agentplatform/gateway/application/PublishedMetadataClientTest.java';
+const stage='iam-stage-4-d3a0-deadline-fix';
+const command='node .tools/run-iam-module-tests.mjs '+stage+' platform-gateway PublishedMetadataClientTest#fullBodyDeadlineCancelsARealStalledHttpResponse';
+const walk=p=>fs.existsSync(p)?fs.readdirSync(p,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(p+'/'+e.name):[p+'/'+e.name]):[];
+const sha=b=>crypto.createHash('sha256').update(b).digest('hex');
+const hash=f=>sha(fs.readFileSync(f));
+const manifest=files=>files.sort().map(file=>({file,sha256:hash(file),bytes:fs.statSync(file).size}));
+const write=(f,v)=>{fs.mkdirSync(path.dirname(f),{recursive:true});fs.writeFileSync(f,JSON.stringify(v,null,2)+'\n');};
+const read=f=>JSON.parse(fs.readFileSync(f,'utf8'));
+const copy=(files,dest)=>{for(const f of files){fs.mkdirSync(path.dirname(dest+'/'+f),{recursive:true});fs.copyFileSync(f,dest+'/'+f);}};
+const sources=['pom.xml',...modules.flatMap(m=>[m+'/pom.xml',...walk(m+'/src')])];
+const targets=()=>modules.flatMap(m=>walk(m+'/target'));
+const differences=(before,after)=>{const a=new Map(before.map(r=>[r.file,r.sha256])),b=new Map(after.map(r=>[r.file,r.sha256]));return [...new Set([...a.keys(),...b.keys()])].filter(f=>a.get(f)!==b.get(f)).map(file=>({file,before:a.get(file)??null,after:b.get(file)??null}));};
+const mode=process.argv[2];
+if(mode==='before'){
+  assert.ok(!fs.existsSync(out+'/source-before.json'));
+  const original=read('docs/evidence/iam-stage-4-d3a0/source-after.json');
+  assert.equal(sources.length,344);assert.deepEqual(differences(original,manifest(sources)),[]);
+  for(const r of original)assert.ok(fs.readFileSync(r.file).equals(fs.readFileSync('docs/evidence/iam-stage-4-d3a0/frozen/'+r.file)),r.file);
+  const prefix=fs.readFileSync(report);assert.equal(prefix.length,15850);assert.equal(sha(prefix),'2d1c7d3cd6ab7bb0822be0eeee1da91640e92357a3ab7709079b709185325c00');
+  assert.equal(hash('docs/evidence/review-iam-stage-4-d3a0.md'),'cc9cb265a98327d2e39d95acdaf640d93979c80ddc0a90e7da7b189e7ac1a4bb');
+  fs.writeFileSync(out+'/original-report-prefix.bin',prefix);write(out+'/source-before.json',manifest(sources));copy(sources,out+'/baseline');write(out+'/target-before.json',manifest(targets()));
+  const protectedFiles=[...walk('docs').filter(f=>!f.startsWith(out+'/')&&f!==report),...walk('contracts'),...walk('web').filter(f=>!f.includes('/node_modules/')&&!f.includes('/dist/')),'.tools/run-iam-module-tests.mjs','AGENTS.md','.local/iam-stage-4-d3a0-root-handoff-check.json'];
+  write(out+'/protected-before.json',manifest(protectedFiles));write(out+'/baseline-check.json',{sources:344,originalFrozenByteEqual:true,reportBytes:prefix.length,reportSha256:sha(prefix),reviewSha256:hash('docs/evidence/review-iam-stage-4-d3a0.md'),protectedFiles:protectedFiles.length});
+  console.log(fs.readFileSync(out+'/baseline-check.json','utf8'));
+}else if(mode==='stage'){
+  const dest=out+'/run-01';assert.ok(!fs.existsSync(dest));
+  copy(sources,dest+'/source');write(dest+'/source-sha.json',manifest(sources));
+  fs.copyFileSync('.local/'+stage+'.log',dest+'/raw.log');
+  const raw=fs.readFileSync(dest+'/raw.log','utf8'),ran=[...raw.matchAll(/\[INFO\] Running ([^\s]+)/g)].map(m=>m[1]);
+  const reports=[];for(const module of modules)for(const file of walk(module+'/target/surefire-reports'))if(ran.some(name=>file.endsWith('/TEST-'+name+'.xml')||file.endsWith('/'+name+'.txt'))){const target=dest+'/reports/'+module+'/'+path.basename(file);fs.mkdirSync(path.dirname(target),{recursive:true});fs.copyFileSync(file,target);reports.push({file:target,sha256:hash(target)});}
+  write(dest+'/execution.json',{command,ran,reports,rawSha256:hash(dest+'/raw.log'),buildSuccess:raw.includes('BUILD SUCCESS'),warnings:raw.split(/\r?\n/).filter(l=>/\bWARN(?:ING)?\b/.test(l)),errors:raw.split(/\r?\n/).filter(l=>/\bERROR\b/.test(l))});
+  console.log(fs.readFileSync(dest+'/execution.json','utf8'));
+}else if(mode==='freeze'){
+  const before=read(out+'/source-before.json'),after=manifest(sources),changes=differences(before,after);
+  assert.deepEqual(changes.map(r=>r.file),[changedFile]);write(out+'/source-after.json',after);write(out+'/changed-files.json',changes);copy(sources,out+'/frozen');
+  assert.deepEqual(differences(read(out+'/run-01/source-sha.json'),after),[]);
+  const targetAfter=manifest(targets());write(out+'/target-after.json',targetAfter);const targetChanges=differences(read(out+'/target-before.json'),targetAfter);write(out+'/target-changes.json',targetChanges);assert.ok(targetChanges.every(r=>r.file.startsWith('platform-gateway/target/')));copy(targetAfter.filter(r=>r.file.startsWith('platform-gateway/target/')).map(r=>r.file),out+'/frozen-target');
+  const protectedBefore=read(out+'/protected-before.json'),protectedAfter=manifest(protectedBefore.map(r=>r.file));write(out+'/protected-after.json',protectedAfter);const protectedChanges=differences(protectedBefore,protectedAfter);write(out+'/protected-changes.json',protectedChanges);assert.deepEqual(protectedChanges,read(out+'/root-protection-disposition.json').changes);
+  const prefix=fs.readFileSync(out+'/original-report-prefix.bin'),current=fs.readFileSync(report);assert.ok(current.subarray(0,prefix.length).equals(prefix));
+  const gitEnv={...process.env,GIT_CEILING_DIRECTORIES:path.dirname(path.resolve(out)),GIT_CONFIG_NOSYSTEM:'1',GIT_CONFIG_GLOBAL:'NUL',GIT_ATTR_NOSYSTEM:'1'};for(const key of ['GIT_DIR','GIT_WORK_TREE','GIT_INDEX_FILE'])delete gitEnv[key];
+  const git=(args,cwd)=>spawnSync('git',['-c','core.autocrlf=false','-c','core.attributesFile=NUL',...args],{cwd:path.resolve(cwd),env:gitEnv,encoding:'utf8',windowsHide:true,maxBuffer:32*1024*1024});
+  const boundary=git(['rev-parse','--show-toplevel'],out);fs.writeFileSync(out+'/git-boundary.log',`exit=${boundary.status}\n${boundary.stdout??''}${boundary.stderr??''}`);assert.equal(boundary.status,128);
+  const diff=git(['diff','--no-index','--binary','--unified=100000','--no-ext-diff','--no-textconv','--','baseline','frozen'],out);fs.writeFileSync(out+'/diff.stderr.log',diff.stderr??'');assert.equal(diff.status,1);let patch=diff.stdout;for(const side of ['a','b'])for(const dir of ['baseline','frozen'])patch=patch.replaceAll(side+'/'+dir+'/',side+'/');fs.writeFileSync(out+'/change.patch',patch);
+  assert.ok(!fs.existsSync(out+'/replay'));fs.cpSync(out+'/baseline',out+'/replay',{recursive:true});const apply=git(['apply','--binary',path.resolve(out+'/change.patch')],out+'/replay');fs.writeFileSync(out+'/apply.log',`exit=${apply.status}\n${apply.stdout??''}${apply.stderr??''}`);assert.equal(apply.status,0);
+  const replay=after.map(r=>({...r,replaySha256:hash(out+'/replay/'+r.file),byteEqual:fs.readFileSync(out+'/replay/'+r.file).equals(fs.readFileSync(out+'/frozen/'+r.file))}));assert.ok(replay.every(r=>r.byteEqual));write(out+'/replay-check.json',replay);
+  const xml=fs.readFileSync(out+'/run-01/reports/platform-gateway/TEST-cn.agentplatform.gateway.application.PublishedMetadataClientTest.xml','utf8');const suite=xml.match(/<testsuite\b[^>]*>/)[0];assert.match(suite,/tests="1"/);for(const key of ['failures','errors','skipped'])assert.match(suite,new RegExp(key+'="0"'));assert.match(xml,/<testcase name="fullBodyDeadlineCancelsARealStalledHttpResponse"/);
+  write(out+'/handoff.json',{sourcesBefore:before.length,sourcesAfter:after.length,changedFiles:changes.map(r=>r.file),patchSha256:hash(out+'/change.patch'),replayByteEqual:replay.length,gitBoundaryExit:boundary.status,gitDiffExit:diff.status,gitApplyExit:apply.status,reportPrefixBytes:prefix.length,reportPrefixSha256:sha(prefix),reportPrefixByteEqual:true,protectedCount:protectedBefore.length,protectedChanges,targetCount:targetAfter.length,targetChanged:targetChanges.length,otherModuleTargetsUnchanged:true,gatewayFrozenTargetCount:targetAfter.filter(r=>r.file.startsWith('platform-gateway/target/')).length,command,suite,rawSha256:hash(out+'/run-01/raw.log'),xmlSha256:hash(out+'/run-01/reports/platform-gateway/TEST-cn.agentplatform.gateway.application.PublishedMetadataClientTest.xml'),sourceReturned:true,targetReturned:true,noHeadRemoteCommit:true});
+  console.log(fs.readFileSync(out+'/handoff.json','utf8'));
+}else throw new Error('before | stage | freeze');

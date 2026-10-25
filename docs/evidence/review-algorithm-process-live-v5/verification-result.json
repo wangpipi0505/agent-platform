@@ -1,0 +1,157 @@
+{
+  "status": "independent-readonly-evidence-matched",
+  "rawHashChecks": 41,
+  "historicalChecks": 305,
+  "sourceFilesUnchanged": 16,
+  "fixedJarShaMatched": 2,
+  "readonlyDatabase": "agent_platform_algorithm_live_ec8285eb1f44",
+  "cases": [
+    {
+      "mode": "complete",
+      "runId": "r_78455d30c3b34e879f895a8db4e3d7cf",
+      "callId": 1,
+      "originalAttempt": 2,
+      "localAttempts": [
+        {
+          "id": 2,
+          "no": 1,
+          "status": "SUCCEEDED"
+        }
+      ],
+      "committedAttempt": 2,
+      "status": "SUCCEEDED",
+      "factStatus": "SUCCEEDED",
+      "bindingStatus": "DONE",
+      "jobUid": "a8c2429f-a8e7-487a-8b73-23c099cec329",
+      "posts": 1,
+      "jobGets": 1,
+      "logicalCommits": 1,
+      "terminalNotes": 1,
+      "recheckCaptured": true,
+      "liveDatabaseMatchesRows": true
+    },
+    {
+      "mode": "ack-loss",
+      "runId": "r_6e081b156e86429e801bbaea898549b6",
+      "callId": 2,
+      "originalAttempt": 5,
+      "localAttempts": [
+        {
+          "id": 5,
+          "no": 1,
+          "status": "UNKNOWN"
+        },
+        {
+          "id": 6,
+          "no": 2,
+          "status": "SUCCEEDED"
+        }
+      ],
+      "committedAttempt": 6,
+      "status": "SUCCEEDED",
+      "factStatus": "SUCCEEDED",
+      "bindingStatus": "DONE",
+      "jobUid": "bf00e73e-1f87-4682-a7ad-1fad4b54f0cb",
+      "posts": 1,
+      "jobGets": 2,
+      "logicalCommits": 1,
+      "terminalNotes": 1,
+      "recheckCaptured": true,
+      "liveDatabaseMatchesRows": true
+    },
+    {
+      "mode": "failed",
+      "runId": "r_418b69e5e2a04dadaff3fa2995497e2d",
+      "callId": 4,
+      "originalAttempt": 9,
+      "localAttempts": [
+        {
+          "id": 9,
+          "no": 1,
+          "status": "FAILED"
+        }
+      ],
+      "committedAttempt": null,
+      "status": "FAILED",
+      "factStatus": "FAILED",
+      "bindingStatus": "DONE",
+      "jobUid": "57baf85a-a26b-4ae8-84c2-351ef63bb48f",
+      "posts": 1,
+      "jobGets": 1,
+      "logicalCommits": 0,
+      "terminalNotes": 1,
+      "recheckCaptured": true,
+      "liveDatabaseMatchesRows": true
+    },
+    {
+      "mode": "running",
+      "runId": "r_606c4879744346dc8320e3abebd78d3f",
+      "callId": 5,
+      "originalAttempt": 11,
+      "localAttempts": [
+        {
+          "id": 11,
+          "no": 1,
+          "status": "UNKNOWN"
+        }
+      ],
+      "committedAttempt": null,
+      "status": "CANCELLED",
+      "factStatus": "UNKNOWN",
+      "bindingStatus": "SUBMITTED",
+      "jobUid": "46d001d8-272e-4d10-914b-b4c03c96bf1a",
+      "posts": 1,
+      "jobGets": 199,
+      "logicalCommits": 0,
+      "terminalNotes": 0,
+      "recheckCaptured": false,
+      "liveDatabaseMatchesRows": true
+    },
+    {
+      "mode": "offload",
+      "runId": "r_6bd924a669174f2c9b9c0897334b95bf",
+      "callId": 6,
+      "originalAttempt": 13,
+      "localAttempts": [
+        {
+          "id": 13,
+          "no": 1,
+          "status": "SUCCEEDED"
+        }
+      ],
+      "committedAttempt": 13,
+      "status": "SUCCEEDED",
+      "factStatus": "SUCCEEDED",
+      "bindingStatus": "DONE",
+      "jobUid": "f8e23464-e04c-4a74-a488-d3c70f6d12d7",
+      "posts": 1,
+      "jobGets": 1,
+      "logicalCommits": 1,
+      "terminalNotes": 1,
+      "recheckCaptured": true,
+      "liveDatabaseMatchesRows": true
+    }
+  ],
+  "objectCheck": {
+    "method": "GET",
+    "status": 200,
+    "artifactId": "art_378961d017934f0789bfc77f50d40df6",
+    "ownerTenant": "algorithm-live-ec8285eb1f44",
+    "ownerRun": "r_6bd924a669174f2c9b9c0897334b95bf",
+    "callId": 6,
+    "state": "READY",
+    "bytes": 1212,
+    "sha256": "d0150502d84a1181a40bb6d26b8332e63c62f54283f056e0d1891fa866fc1d63",
+    "byteLimit": 8192,
+    "timeoutMs": 10000,
+    "exactlyMatchesOriginalJson": true,
+    "noListWriteOrDelete": true
+  },
+  "processInspection": {
+    "status": 0,
+    "recordedPids": 10,
+    "presentPids": 0,
+    "remainingListeners": 0
+  },
+  "noBusinessHttpJvmsOrWrites": true
+}

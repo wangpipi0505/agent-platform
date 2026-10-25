@@ -1,0 +1,1335 @@
+# O2b F2a complete-context task review package
+Base=Accepted F1 source612; head=.local/iam-o2b-f2a-tls/source-after.json source618. New files only; no commits.
+Requirements=docs/evidence/iam-stage-4-o2b-f2a-tls-brief.md
+Report=docs/evidence/iam-stage-4-o2b-f2a-tls-report.md
+Full new text files; binary PKCS12 fixture is summarized by exact identity below and Git binary notice, not rendered as opaque base85. The author full binary patch/replay is independently audited by root.
+Binary test fixture={"file":"platform-gateway/src/test/resources/iam-o2b-f2a/tls-fixtures.p12","bytes":106807,"sha256":"bfbe09360b7a2c4612480202d24714f725946ad1f86b0e1f49275010e2a8875d"}
+No test/PG/replay reruns. Scope is TLS foundation only; EVENTS remains closed.
+--- BEGIN FULL CONTEXT DIFF ---
+diff --git a/platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsTls.java b/platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsTls.java
+new file mode 100644
+index 0000000..85ce696
+--- /dev/null
++++ b/platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsTls.java
+@@ -0,0 +1,147 @@
++package cn.agentplatform.gateway.infra;
++
++import java.io.*;
++import java.net.*;
++import java.nio.charset.StandardCharsets;
++import java.nio.file.*;
++import java.security.*;
++import java.security.cert.*;
++import java.time.Duration;
++import java.util.*;
++import java.util.concurrent.*;
++import javax.net.ssl.*;
++
++/** Unassembled fixed-origin TLS transport. Two slots count physical, not logical, connections. */
++public final class PortalEventsTls implements AutoCloseable {
++    static final String PROTOCOL = "TLSv1.3";
++    static final String CIPHER = "TLS_AES_128_GCM_SHA256";
++    private static final Object SLOTS_LOCK = new Object();
++    private static final PortalEventsTlsConnection[] SLOTS = new PortalEventsTlsConnection[2];
++    private static final ThreadFactory DAEMON = r -> Thread.ofPlatform().daemon().name("portal-events-tls").unstarted(r);
++    private static final ThreadPoolExecutor CLOSERS = new ThreadPoolExecutor(2, 2, 0, TimeUnit.MILLISECONDS,
++            new ArrayBlockingQueue<>(2), DAEMON, new ThreadPoolExecutor.AbortPolicy());
++    static {
++        // A fixed scan of two slots; no per-read/per-factory timers or unbounded cancel queue.
++        Executors.newSingleThreadScheduledExecutor(DAEMON).scheduleAtFixedRate(() -> {
++            PortalEventsTlsConnection[] current;
++            synchronized (SLOTS_LOCK) { current = SLOTS.clone(); }
++            for (var handle : current) if (handle != null) handle.expire(System.nanoTime());
++        }, 50, 50, TimeUnit.MILLISECONDS);
++    }
++    final String hostname;
++    final int port;
++    final InetAddress address;
++    private final TrustManager[] trust;
++    private boolean closed;
++
++    public PortalEventsTls(URI origin, byte[] literalAddress, Path caFile) throws IOException {
++        Objects.requireNonNull(origin);
++        Objects.requireNonNull(literalAddress);
++        Objects.requireNonNull(caFile);
++        String host = origin.getHost();
++        if (!"https".equals(origin.getScheme()) || host == null || origin.getPort() < 1 || origin.getPort() > 65535
++                || origin.getRawUserInfo() != null || !origin.getRawPath().isEmpty() || origin.getRawQuery() != null
++                || origin.getRawFragment() != null || host.length() > 253 || !host.matches("[A-Za-z0-9.-]+")
++                || host.matches("[0-9.]+") || host.indexOf('.') < 0) throw new IOException("Invalid fixed TLS origin");
++        for (String label : host.split("\\.", -1)) {
++            if (label.isEmpty() || label.length() > 63 || !label.matches("[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?"))
++                throw new IOException("Invalid fixed TLS DNS hostname");
++        }
++        if (literalAddress.length != 4 && literalAddress.length != 16) throw new IOException("Invalid literal TLS address");
++        if (!"32768".equals(System.getProperty("jdk.tls.maxHandshakeMessageSize"))
++                || !"4".equals(System.getProperty("jdk.tls.maxCertificateChainLength")))
++            throw new IOException("TLS JVM startup profile declaration is required");
++        // This rejects an explicitly incompatible declaration; only a fresh launcher can establish static initialization order.
++        if (Boolean.parseBoolean(System.getProperty("com.sun.security.enableAIAcaIssuers")))
++            throw new IOException("TLS profile prohibits enabled AIA issuer fetching");
++        hostname = host;
++        port = origin.getPort();
++        address = InetAddress.getByAddress(literalAddress.clone());
++        trust = loadTrust(caFile);
++    }
++    private static TrustManager[] loadTrust(Path file) throws IOException {
++        if (Files.size(file) > 65536) throw new IOException("TLS CA file exceeds limit");
++        byte[] bytes;
++        try (var in = Files.newInputStream(file)) { bytes = in.readNBytes(65537); }
++        if (bytes.length > 65536) throw new IOException("TLS CA file grew beyond limit");
++        for (byte b : bytes) if (b < 0) throw new IOException("TLS CA PEM must be ASCII");
++        String pem = new String(bytes, StandardCharsets.US_ASCII);
++        String begin = "-----BEGIN CERTIFICATE-----", end = "-----END CERTIFICATE-----";
++        try {
++            var store = KeyStore.getInstance("PKCS12");
++            store.load(null, null);
++            var parser = CertificateFactory.getInstance("X.509");
++            int offset = 0, count = 0;
++            while (offset < pem.length()) {
++                while (offset < pem.length() && Character.isWhitespace(pem.charAt(offset))) offset++;
++                if (offset == pem.length()) break;
++                if (!pem.startsWith(begin, offset) || ++count > 4) throw new IOException("TLS CA block/count invalid");
++                int stop = pem.indexOf(end, offset + begin.length());
++                if (stop < 0) throw new IOException("Incomplete TLS CA PEM");
++                String payload = pem.substring(offset + begin.length(), stop);
++                if (!payload.matches("[A-Za-z0-9+/=\\s]+")) throw new IOException("Invalid TLS CA base64");
++                byte[] der = Base64.getDecoder().decode(payload.replaceAll("\\s", ""));
++                var input = new ByteArrayInputStream(der);
++                var cert = (X509Certificate) parser.generateCertificate(input);
++                if (input.available() != 0) throw new IOException("TLS CA DER trailing data");
++                cert.checkValidity();
++                boolean[] usage = cert.getKeyUsage();
++                if (cert.getBasicConstraints() < 0 || usage != null && (usage.length <= 5 || !usage[5]))
++                    throw new IOException("TLS trust material is not a signing CA");
++                store.setCertificateEntry("ca-" + count, cert);
++                offset = stop + end.length();
++            }
++            if (count == 0) throw new IOException("TLS CA file is empty");
++            var tmf = TrustManagerFactory.getInstance("PKIX");
++            var parameters = new PKIXBuilderParameters(store, new X509CertSelector());
++            parameters.setRevocationEnabled(false);
++            tmf.init(new CertPathTrustManagerParameters(parameters));
++            return tmf.getTrustManagers();
++        } catch (GeneralSecurityException | IllegalArgumentException e) {
++            throw new IOException("Invalid private TLS CA material", e);
++        }
++    }
++    SSLContext newContext() throws IOException {
++        try {
++            var context = SSLContext.getInstance(PROTOCOL, "SunJSSE");
++            context.init(null, trust, null);
++            context.getClientSessionContext().setSessionCacheSize(2);
++            context.getClientSessionContext().setSessionTimeout(55);
++            return context;
++        } catch (GeneralSecurityException e) { throw new IOException("Cannot initialize private TLS context", e); }
++    }
++    public Connection acquire(long callerDeadlineNanos) throws IOException {
++        synchronized (SLOTS_LOCK) {
++            if (closed) throw new IOException("TLS factory closed");
++            long now = System.nanoTime();
++            if (callerDeadlineNanos - now <= 0) throw new IOException("TLS caller deadline elapsed");
++            for (int i = 0; i < SLOTS.length; i++) {
++                if (SLOTS[i] == null) {
++                    var connection = new PortalEventsTlsConnection(this, now, callerDeadlineNanos);
++                    SLOTS[i] = connection;
++                    return connection;
++                }
++            }
++            throw new IOException("TLS physical slots exhausted");
++        }
++    }
++    static void scheduleClose(PortalEventsTlsConnection connection) { CLOSERS.execute(connection::closeResources); }
++    static void release(PortalEventsTlsConnection connection) {
++        synchronized (SLOTS_LOCK) {
++            for (int i = 0; i < SLOTS.length; i++) {
++                if (SLOTS[i] == connection) SLOTS[i] = null;
++            }
++        }
++    }
++    public interface Connection extends AutoCloseable {
++        SSLSocket connectAndHandshake() throws IOException;
++        void abort();
++        boolean awaitClosed(Duration timeout) throws InterruptedException;
++        void close();
++    }
++    public void close() {
++        PortalEventsTlsConnection[] current;
++        synchronized (SLOTS_LOCK) { closed = true; current = SLOTS.clone(); }
++        for (var connection : current) if (connection != null && connection.belongsTo(this)) connection.abort();
++    }
++}
+diff --git a/platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsTlsConnection.java b/platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsTlsConnection.java
+new file mode 100644
+index 0000000..19221cd
+--- /dev/null
++++ b/platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsTlsConnection.java
+@@ -0,0 +1,473 @@
++package cn.agentplatform.gateway.infra;
++
++import java.io.*;
++import java.net.*;
++import java.nio.channels.SocketChannel;
++import java.security.Principal;
++import java.security.cert.Certificate;
++import java.time.Duration;
++import java.util.*;
++import java.util.concurrent.atomic.AtomicBoolean;
++import java.util.function.BiFunction;
++import javax.net.ssl.*;
++
++final class PortalEventsTlsConnection implements PortalEventsTls.Connection {
++    private final PortalEventsTls owner;
++    private final PortalEventsTlsDebt debt = new PortalEventsTlsDebt();
++    private final long hardDeadline;
++    private final long openingDeadline;
++    private long lastDelivery;
++    private Socket bottom;
++    private RawSocket rawView;
++    private SSLContext context;
++    private SSLSocket ssl;
++    private SafeSsl publicView;
++    private InputStream applicationInput;
++    private OutputStream applicationOutput;
++    private boolean stopped;
++    private boolean closeScheduled;
++    private boolean terminated;
++    private boolean upgradeUsed;
++    private boolean connectUsed;
++    private boolean verified;
++    private int active;
++    private IOException closeFailure;
++    private Thread closeThread;
++    private final AtomicBoolean reading = new AtomicBoolean();
++    private final AtomicBoolean writing = new AtomicBoolean();
++
++    PortalEventsTlsConnection(PortalEventsTls owner, long now, long callerDeadline) {
++        this.owner = owner;
++        hardDeadline = now + Math.min(Duration.ofSeconds(55).toNanos(), callerDeadline - now);
++        openingDeadline = now + Math.min(Duration.ofSeconds(2).toNanos(), hardDeadline - now);
++    }
++    boolean belongsTo(PortalEventsTls factory) { return owner == factory; }
++    PortalEventsTlsDebt.Snapshot snapshot() { return debt.snapshot(); }
++    synchronized long hardDeadlineNanos() { return hardDeadline; }
++    synchronized long openingDeadlineNanos() { return openingDeadline; }
++    private void checkLive() throws IOException {
++        if (stopped) throw new IOException("TLS connection stopped", closeFailure);
++    }
++    private synchronized void begin() throws IOException {
++        checkLive();
++        active++;
++    }
++    private synchronized void end() {
++        active--;
++        notifyAll();
++    }
++    static int timeoutMillis(long deadline, int maximum) throws IOException {
++        long left = deadline - System.nanoTime();
++        if (left <= 0) throw new IOException("TLS deadline elapsed");
++        return (int) Math.min(maximum, (left + 999999) / 1000000);
++    }
++    void expire(long now) {
++        boolean expired;
++        synchronized (this) {
++            expired = !stopped && (now - hardDeadline >= 0 || !verified && now - openingDeadline >= 0
++                    || verified && now - lastDelivery >= Duration.ofSeconds(15).toNanos());
++        }
++        if (expired) abort();
++    }
++    synchronized Socket rawSocketForConnect() throws IOException {
++        checkLive();
++        if (bottom == null) {
++            // No hostname resolver, default SOCKS selection, channel or caller-supplied socket.
++            bottom = new Socket(Proxy.NO_PROXY);
++            rawView = new RawSocket(bottom);
++        }
++        return rawView;
++    }
++    // Mechanical lifecycle seam only. It cannot create a verified TLS connection.
++    synchronized void installRawForTest(Socket socket) throws IOException {
++        checkLive();
++        if (bottom != null || terminated) throw new IOException("TLS raw socket already installed or exited");
++        bottom = socket;
++        rawView = new RawSocket(socket);
++    }
++    SSLSocket upgradeConnectedSocket() throws IOException {
++        begin();
++        try {
++            RawSocket raw;
++            synchronized (this) {
++                checkLive();
++                if (upgradeUsed || bottom == null || !bottom.isConnected()) throw new IOException("TLS upgrade state invalid");
++                upgradeUsed = true;
++                raw = rawView;
++            }
++            var freshContext = owner.newContext();
++            var fresh = (SSLSocket) freshContext.getSocketFactory().createSocket(raw, owner.hostname, owner.port, true);
++            synchronized (this) {
++                context = freshContext;
++                ssl = fresh;
++                checkLive();
++            }
++            fresh.setEnabledProtocols(new String[]{PortalEventsTls.PROTOCOL});
++            fresh.setEnabledCipherSuites(new String[]{PortalEventsTls.CIPHER});
++            var parameters = fresh.getSSLParameters();
++            parameters.setEndpointIdentificationAlgorithm("HTTPS");
++            parameters.setServerNames(List.of(new SNIHostName(owner.hostname)));
++            parameters.setApplicationProtocols(new String[]{"http/1.1"});
++            fresh.setSSLParameters(parameters);
++            fresh.setSoTimeout(timeoutMillis(openingDeadline, 2000));
++            fresh.startHandshake();
++            var session = fresh.getSession();
++            if (!PortalEventsTls.PROTOCOL.equals(session.getProtocol()) || !PortalEventsTls.CIPHER.equals(session.getCipherSuite())
++                    || !(fresh.getApplicationProtocol().isEmpty() || "http/1.1".equals(fresh.getApplicationProtocol())))
++                throw new IOException("TLS negotiated profile rejected");
++            session.getPeerCertificates();
++            fresh.setSoTimeout(15000);
++            synchronized (this) {
++                checkLive();
++                if (System.nanoTime() - openingDeadline >= 0) throw new IOException("TLS opening deadline elapsed");
++                verified = true;
++                lastDelivery = System.nanoTime();
++                publicView = new SafeSsl();
++                applicationInput = new ApplicationInput();
++                applicationOutput = new ApplicationOutput();
++                return publicView;
++            }
++        } catch (IOException | RuntimeException e) { abort(); throw e; }
++        finally { end(); }
++    }
++    public SSLSocket connectAndHandshake() throws IOException {
++        Socket raw = rawSocketForConnect();
++        raw.connect(new InetSocketAddress(owner.address, owner.port), timeoutMillis(openingDeadline, 1000));
++        return upgradeConnectedSocket();
++    }
++    public void abort() {
++        boolean schedule;
++        synchronized (this) {
++            stopped = true;
++            schedule = !closeScheduled;
++            closeScheduled = true;
++        }
++        if (schedule) PortalEventsTls.scheduleClose(this);
++    }
++    void closeResources() {
++        boolean successful = false;
++        boolean closesSucceeded = true;
++        try {
++            Socket raw;
++            synchronized (this) { closeThread = Thread.currentThread(); raw = bottom; }
++            try { if (raw != null) raw.close(); }
++            catch (IOException | RuntimeException e) { closesSucceeded = false; rememberCloseFailure(e); }
++            // A cancel flag, close exception or timeout is not evidence that any I/O has exited.
++            synchronized (this) { while (active != 0) wait(); }
++            SSLSocket secure;
++            synchronized (this) { secure = ssl; }
++            try { if (secure != null) secure.close(); }
++            catch (IOException | RuntimeException e) { closesSucceeded = false; rememberCloseFailure(e); }
++            successful = closesSucceeded;
++        } catch (InterruptedException e) {
++            Thread.currentThread().interrupt(); successful = false; rememberCloseFailure(e);
++        } finally {
++            synchronized (this) {
++                bottom = null;
++                rawView = null;
++                ssl = null;
++                context = null;
++                publicView = null;
++                applicationInput = null;
++                applicationOutput = null;
++                terminated = successful && active == 0;
++                if (terminated) PortalEventsTls.release(this);
++                closeThread = null;
++                notifyAll();
++            }
++        }
++    }
++    private synchronized void rememberCloseFailure(Exception e) {
++        closeFailure = new IOException("TLS physical close failed; slot retained", e);
++    }
++    public synchronized boolean awaitClosed(Duration timeout) throws InterruptedException {
++        if (timeout.isNegative()) throw new IllegalArgumentException("Negative close wait");
++        long remaining = timeout.toNanos(), deadline = System.nanoTime() + remaining;
++        while (!terminated && remaining > 0) {
++            long millis = remaining / 1000000; int nanos = (int)(remaining % 1000000);
++            wait(millis, nanos); remaining = deadline - System.nanoTime();
++        }
++        return terminated;
++    }
++    @Override public void close() { abort(); }
++    private synchronized SSLSocket verifiedSocket() throws IOException {
++        checkLive();
++        if (!verified || ssl == null) throw new IOException("TLS identity not verified");
++        return ssl;
++    }
++    private synchronized SSLSocket stateSocket() {
++        if (ssl == null) throw new IllegalStateException("TLS connection exited");
++        return ssl;
++    }
++
++    private final class ApplicationInput extends InputStream {
++        @Override public int read() throws IOException {
++            byte[] one = new byte[1]; int n = read(one,0,1); return n < 0 ? -1 : n == 0 ? 0 : one[0] & 255;
++        }
++        @Override public int read(byte[] b,int off,int len) throws IOException {
++            Objects.checkFromIndexSize(off,len,b.length);
++            if (!reading.compareAndSet(false,true)) throw new IOException("Concurrent TLS application read");
++            boolean entered = false;
++            try {
++                begin();
++                entered = true;
++                SSLSocket socket = verifiedSocket();
++                if (len == 0) return 0;
++                int n = socket.getInputStream().read(b,off,len);
++                synchronized (PortalEventsTlsConnection.this) {
++                    checkLive();
++                    if (n > 0) {
++                        debt.credit(n);
++                        lastDelivery = System.nanoTime();
++                    }
++                    return n;
++                }
++            } catch (IOException | RuntimeException e) { abort(); throw e; }
++            finally { if (entered) end(); reading.set(false); }
++        }
++        @Override public int available() throws IOException { return verifiedSocket().getInputStream().available(); }
++        @Override public long skip(long n) throws IOException {
++            if (n > 0) throw new IOException("TLS application skip is unsupported"); return 0;
++        }
++        @Override public boolean markSupported() { return false; }
++        @Override public void reset() throws IOException { throw new IOException("TLS replay is unsupported"); }
++        @Override public byte[] readAllBytes() throws IOException { throw new IOException("TLS unbounded aggregation is unsupported"); }
++        @Override public byte[] readNBytes(int n) throws IOException { throw new IOException("TLS allocating aggregation is unsupported"); }
++        @Override public void close() { abort(); }
++    }
++    private final class ApplicationOutput extends OutputStream {
++        @Override public void write(int b) throws IOException { write(new byte[]{(byte)b},0,1); }
++        @Override public void write(byte[] b,int off,int len) throws IOException {
++            Objects.checkFromIndexSize(off,len,b.length);
++            perform(() -> verifiedSocket().getOutputStream().write(b,off,len));
++        }
++        @Override public void flush() throws IOException { perform(() -> verifiedSocket().getOutputStream().flush()); }
++        private void perform(Io action) throws IOException {
++            if (!writing.compareAndSet(false,true)) throw new IOException("Concurrent TLS application write");
++            boolean entered = false;
++            try {
++                begin();
++                entered = true;
++                action.run();
++                synchronized (PortalEventsTlsConnection.this) { checkLive(); }
++            } catch (IOException | RuntimeException e) { abort(); throw e; }
++            finally { if (entered) end(); writing.set(false); }
++        }
++        @Override public void close() { abort(); }
++    }
++    @FunctionalInterface private interface Io { void run() throws IOException; }
++    private synchronized void beginRaw() throws IOException {
++        if (Thread.currentThread() != closeThread) checkLive();
++        active++;
++    }
++
++    /** The JDK layered socket receives only this metered transport, never its physical delegate. */
++    private final class RawSocket extends Socket {
++        private final Socket delegate;
++        private InputStream input;
++        private OutputStream output;
++        RawSocket(Socket delegate) { this.delegate = delegate; }
++        @Override public void connect(SocketAddress endpoint, int timeout) throws IOException {
++            if (!(endpoint instanceof InetSocketAddress target) || target.isUnresolved()
++                    || !owner.address.equals(target.getAddress()) || target.getPort() != owner.port)
++                throw new IOException("TLS raw destination rejected");
++            begin();
++            try {
++                synchronized (PortalEventsTlsConnection.this) {
++                    checkLive(); if (connectUsed) throw new IOException("TLS raw connect already used"); connectUsed = true;
++                }
++                if (timeout <= 0) throw new IOException("Finite TLS connect timeout required");
++                delegate.connect(endpoint, Math.min(timeout, timeoutMillis(openingDeadline,1000)));
++                synchronized (PortalEventsTlsConnection.this) { checkLive(); }
++            } catch (IOException | RuntimeException e) { abort(); throw e; }
++            finally { end(); }
++        }
++        @Override public void connect(SocketAddress endpoint) throws IOException { connect(endpoint,1000); }
++        @Override public void bind(SocketAddress endpoint) throws IOException { throw new IOException("TLS local bind is unsupported"); }
++        @Override public synchronized InputStream getInputStream() throws IOException {
++            if (input == null) {
++                var counted = debt.input(delegate.getInputStream(), PortalEventsTlsConnection.this::abort);
++                input = new InputStream() {
++                    @Override public int read() throws IOException { byte[] one=new byte[1];int n=read(one,0,1);return n<0?-1:n==0?0:one[0]&255; }
++                    @Override public int read(byte[] b,int off,int len) throws IOException {
++                        beginRaw();
++                        try { int n=counted.read(b,off,len);synchronized(PortalEventsTlsConnection.this){checkLive();}return n; }
++                        finally { end(); }
++                    }
++                    @Override public int available() throws IOException { return counted.available(); }
++                    @Override public long skip(long n) throws IOException { return counted.skip(n); }
++                    @Override public void reset() throws IOException { counted.reset(); }
++                    @Override public byte[] readAllBytes() throws IOException { return counted.readAllBytes(); }
++                    @Override public byte[] readNBytes(int n) throws IOException { return counted.readNBytes(n); }
++                    @Override public void close() { abort(); }
++                };
++            }
++            return input;
++        }
++        @Override public synchronized OutputStream getOutputStream() throws IOException {
++            if (output == null) {
++                var counted = debt.output(delegate.getOutputStream(), PortalEventsTlsConnection.this::abort);
++                output = new OutputStream() {
++                    @Override public void write(int b) throws IOException { write(new byte[]{(byte)b},0,1); }
++                    @Override public void write(byte[] b,int off,int len) throws IOException { beginRaw();try{counted.write(b,off,len);}finally{end();} }
++                    @Override public void flush() throws IOException { beginRaw();try{counted.flush();}finally{end();} }
++                    @Override public void close() { abort(); }
++                };
++            }
++            return output;
++        }
++        @Override public void close() { abort(); }
++        @Override public void shutdownInput() { abort(); }
++        @Override public void shutdownOutput() { abort(); }
++        @Override public SocketChannel getChannel() { return null; }
++        @Override public InetAddress getInetAddress() { return delegate.getInetAddress(); }
++        @Override public InetAddress getLocalAddress() { return delegate.getLocalAddress(); }
++        @Override public int getPort() { return delegate.getPort(); }
++        @Override public int getLocalPort() { return delegate.getLocalPort(); }
++        @Override public SocketAddress getRemoteSocketAddress() { return delegate.getRemoteSocketAddress(); }
++        @Override public SocketAddress getLocalSocketAddress() { return delegate.getLocalSocketAddress(); }
++        @Override public boolean isConnected() { return delegate.isConnected(); }
++        @Override public boolean isBound() { return delegate.isBound(); }
++        @Override public boolean isClosed() { return delegate.isClosed(); }
++        @Override public boolean isInputShutdown() { return delegate.isInputShutdown(); }
++        @Override public boolean isOutputShutdown() { return delegate.isOutputShutdown(); }
++        @Override public void setTcpNoDelay(boolean b) throws SocketException { delegate.setTcpNoDelay(b); }
++        @Override public boolean getTcpNoDelay() throws SocketException { return delegate.getTcpNoDelay(); }
++        @Override public void setSoLinger(boolean b,int n) throws SocketException { if (b) throw new SocketException("TLS linger unsupported"); delegate.setSoLinger(false,n); }
++        @Override public int getSoLinger() throws SocketException { return delegate.getSoLinger(); }
++        @Override public void sendUrgentData(int n) throws IOException { throw new IOException("TLS urgent data unsupported"); }
++        @Override public void setOOBInline(boolean b) throws SocketException { if (b) throw new SocketException("TLS OOB unsupported"); }
++        @Override public boolean getOOBInline() { return false; }
++        @Override public void setSoTimeout(int n) throws SocketException { if (n<=0 || n>15000) throw new SocketException("Finite TLS read timeout required"); delegate.setSoTimeout(n); }
++        @Override public int getSoTimeout() throws SocketException { return delegate.getSoTimeout(); }
++        @Override public void setSendBufferSize(int n) throws SocketException { delegate.setSendBufferSize(n); }
++        @Override public int getSendBufferSize() throws SocketException { return delegate.getSendBufferSize(); }
++        @Override public void setReceiveBufferSize(int n) throws SocketException { delegate.setReceiveBufferSize(n); }
++        @Override public int getReceiveBufferSize() throws SocketException { return delegate.getReceiveBufferSize(); }
++        @Override public void setKeepAlive(boolean b) throws SocketException { delegate.setKeepAlive(b); }
++        @Override public boolean getKeepAlive() throws SocketException { return delegate.getKeepAlive(); }
++        @Override public void setTrafficClass(int n) throws SocketException { delegate.setTrafficClass(n); }
++        @Override public int getTrafficClass() throws SocketException { return delegate.getTrafficClass(); }
++        @Override public void setReuseAddress(boolean b) throws SocketException { delegate.setReuseAddress(b); }
++        @Override public boolean getReuseAddress() throws SocketException { return delegate.getReuseAddress(); }
++        @Override public void setPerformancePreferences(int a,int b,int c) { throw new UnsupportedOperationException("TLS performance preferences unsupported"); }
++        @Override public <T> Socket setOption(SocketOption<T> name,T value) { throw new UnsupportedOperationException("TLS generic option mutation unsupported"); }
++        @Override public <T> T getOption(SocketOption<T> name) throws IOException { return delegate.getOption(name); }
++        @Override public Set<SocketOption<?>> supportedOptions() { return delegate.supportedOptions(); }
++        @Override public String toString() { return "Metered portal TLS raw socket"; }
++    }
++
++    /** Public view has no delegate field, mutable security settings or implicit-handshake entry point. */
++    private final class SafeSsl extends SSLSocket {
++        private UnsupportedOperationException frozen() { return new UnsupportedOperationException("Fixed portal TLS profile"); }
++        @Override public InputStream getInputStream() throws IOException {
++            synchronized (PortalEventsTlsConnection.this) {
++                verifiedSocket();
++                return applicationInput;
++            }
++        }
++        @Override public OutputStream getOutputStream() throws IOException {
++            synchronized (PortalEventsTlsConnection.this) {
++                verifiedSocket();
++                return applicationOutput;
++            }
++        }
++        @Override public void startHandshake() throws IOException { throw new IOException("TLS application rehandshake prohibited"); }
++        @Override public SSLSession getSession() {
++            synchronized (PortalEventsTlsConnection.this) {
++                try { verifiedSocket(); }
++                catch (IOException e) { throw new IllegalStateException(e); }
++                return new ReadOnlySession();
++            }
++        }
++        @Override public SSLSession getHandshakeSession() { throw frozen(); }
++        @Override public String[] getSupportedCipherSuites() { return new String[]{PortalEventsTls.CIPHER}; }
++        @Override public String[] getEnabledCipherSuites() { return getSupportedCipherSuites(); }
++        @Override public String[] getSupportedProtocols() { return new String[]{PortalEventsTls.PROTOCOL}; }
++        @Override public String[] getEnabledProtocols() { return getSupportedProtocols(); }
++        @Override public void setEnabledCipherSuites(String[] s) { throw frozen(); }
++        @Override public void setEnabledProtocols(String[] s) { throw frozen(); }
++        @Override public void addHandshakeCompletedListener(HandshakeCompletedListener l) { throw frozen(); }
++        @Override public void removeHandshakeCompletedListener(HandshakeCompletedListener l) { throw frozen(); }
++        @Override public void setUseClientMode(boolean b) { throw frozen(); }
++        @Override public boolean getUseClientMode() { return true; }
++        @Override public void setNeedClientAuth(boolean b) { throw frozen(); }
++        @Override public boolean getNeedClientAuth() { return false; }
++        @Override public void setWantClientAuth(boolean b) { throw frozen(); }
++        @Override public boolean getWantClientAuth() { return false; }
++        @Override public void setEnableSessionCreation(boolean b) { throw frozen(); }
++        @Override public boolean getEnableSessionCreation() { return stateSocket().getEnableSessionCreation(); }
++        @Override public SSLParameters getSSLParameters() { return stateSocket().getSSLParameters(); }
++        @Override public void setSSLParameters(SSLParameters p) { throw frozen(); }
++        @Override public String getApplicationProtocol() { return stateSocket().getApplicationProtocol(); }
++        @Override public String getHandshakeApplicationProtocol() { throw frozen(); }
++        @Override public void setHandshakeApplicationProtocolSelector(BiFunction<SSLSocket,List<String>,String> f) { throw frozen(); }
++        @Override public BiFunction<SSLSocket,List<String>,String> getHandshakeApplicationProtocolSelector() { throw frozen(); }
++        @Override public void connect(SocketAddress e) throws IOException { throw new IOException("TLS already connected"); }
++        @Override public void connect(SocketAddress e,int n) throws IOException { throw new IOException("TLS already connected"); }
++        @Override public void bind(SocketAddress e) throws IOException { throw new IOException("TLS already bound"); }
++        @Override public void close() { abort(); }
++        @Override public void shutdownInput() { abort(); }
++        @Override public void shutdownOutput() { abort(); }
++        @Override public SocketChannel getChannel() { return null; }
++        @Override public InetAddress getInetAddress() { return owner.address; }
++        @Override public int getPort() { return owner.port; }
++        @Override public InetAddress getLocalAddress() { return stateSocket().getLocalAddress(); }
++        @Override public int getLocalPort() { return stateSocket().getLocalPort(); }
++        @Override public SocketAddress getRemoteSocketAddress() { return new InetSocketAddress(owner.address,owner.port); }
++        @Override public SocketAddress getLocalSocketAddress() { return stateSocket().getLocalSocketAddress(); }
++        @Override public boolean isConnected() { return true; }
++        @Override public boolean isBound() { return true; }
++        @Override public boolean isClosed() { synchronized(PortalEventsTlsConnection.this) { return ssl == null ? terminated : ssl.isClosed(); } }
++        @Override public boolean isInputShutdown() { synchronized(PortalEventsTlsConnection.this) { return ssl == null ? terminated : ssl.isInputShutdown(); } }
++        @Override public boolean isOutputShutdown() { synchronized(PortalEventsTlsConnection.this) { return ssl == null ? terminated : ssl.isOutputShutdown(); } }
++        @Override public void setTcpNoDelay(boolean b) throws SocketException { stateSocket().setTcpNoDelay(b); }
++        @Override public boolean getTcpNoDelay() throws SocketException { return stateSocket().getTcpNoDelay(); }
++        @Override public void setSoLinger(boolean b,int n) throws SocketException { throw new SocketException("TLS linger mutation unsupported"); }
++        @Override public int getSoLinger() throws SocketException { return stateSocket().getSoLinger(); }
++        @Override public void sendUrgentData(int n) throws IOException { throw new IOException("TLS urgent data unsupported"); }
++        @Override public void setOOBInline(boolean b) throws SocketException { throw new SocketException("TLS OOB mutation unsupported"); }
++        @Override public boolean getOOBInline() { return false; }
++        @Override public void setSoTimeout(int n) throws SocketException { throw new SocketException("TLS read timeout is fixed"); }
++        @Override public int getSoTimeout() throws SocketException { return stateSocket().getSoTimeout(); }
++        @Override public void setSendBufferSize(int n) throws SocketException { stateSocket().setSendBufferSize(n); }
++        @Override public int getSendBufferSize() throws SocketException { return stateSocket().getSendBufferSize(); }
++        @Override public void setReceiveBufferSize(int n) throws SocketException { stateSocket().setReceiveBufferSize(n); }
++        @Override public int getReceiveBufferSize() throws SocketException { return stateSocket().getReceiveBufferSize(); }
++        @Override public void setKeepAlive(boolean b) throws SocketException { stateSocket().setKeepAlive(b); }
++        @Override public boolean getKeepAlive() throws SocketException { return stateSocket().getKeepAlive(); }
++        @Override public void setTrafficClass(int n) throws SocketException { stateSocket().setTrafficClass(n); }
++        @Override public int getTrafficClass() throws SocketException { return stateSocket().getTrafficClass(); }
++        @Override public void setReuseAddress(boolean b) throws SocketException { stateSocket().setReuseAddress(b); }
++        @Override public boolean getReuseAddress() throws SocketException { return stateSocket().getReuseAddress(); }
++        @Override public void setPerformancePreferences(int a,int b,int c) { throw frozen(); }
++        @Override public <T> Socket setOption(SocketOption<T> n,T v) { throw frozen(); }
++        @Override public <T> T getOption(SocketOption<T> n) throws IOException { return verifiedSocket().getOption(n); }
++        @Override public Set<SocketOption<?>> supportedOptions() { return stateSocket().supportedOptions(); }
++        @Override public String toString() { return "Verified fixed-origin portal TLS socket"; }
++    }
++    private final class ReadOnlySession implements SSLSession {
++        private SSLSession session() { return stateSocket().getSession(); }
++        @Override public byte[] getId() { return session().getId(); }
++        @Override public SSLSessionContext getSessionContext() { return null; }
++        @Override public long getCreationTime() { return session().getCreationTime(); }
++        @Override public long getLastAccessedTime() { return session().getLastAccessedTime(); }
++        @Override public void invalidate() { throw new UnsupportedOperationException("TLS session is private"); }
++        @Override public boolean isValid() { synchronized(PortalEventsTlsConnection.this) { return !stopped && session().isValid(); } }
++        @Override public void putValue(String n,Object v) { throw new UnsupportedOperationException("TLS session is private"); }
++        @Override public Object getValue(String n) { return null; }
++        @Override public void removeValue(String n) { throw new UnsupportedOperationException("TLS session is private"); }
++        @Override public String[] getValueNames() { return new String[0]; }
++        @Override public Certificate[] getPeerCertificates() throws SSLPeerUnverifiedException { return session().getPeerCertificates(); }
++        @Override public Certificate[] getLocalCertificates() { return null; }
++        @SuppressWarnings("removal") @Override public javax.security.cert.X509Certificate[] getPeerCertificateChain() throws SSLPeerUnverifiedException { throw new SSLPeerUnverifiedException("Deprecated certificate API unsupported"); }
++        @Override public Principal getPeerPrincipal() throws SSLPeerUnverifiedException { return session().getPeerPrincipal(); }
++        @Override public Principal getLocalPrincipal() { return null; }
++        @Override public String getCipherSuite() { return session().getCipherSuite(); }
++        @Override public String getProtocol() { return session().getProtocol(); }
++        @Override public String getPeerHost() { return owner.hostname; }
++        @Override public int getPeerPort() { return owner.port; }
++        @Override public int getPacketBufferSize() { return session().getPacketBufferSize(); }
++        @Override public int getApplicationBufferSize() { return session().getApplicationBufferSize(); }
++    }
++}
+diff --git a/platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsTlsDebt.java b/platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsTlsDebt.java
+new file mode 100644
+index 0000000..7b915a5
+--- /dev/null
++++ b/platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsTlsDebt.java
+@@ -0,0 +1,108 @@
++package cn.agentplatform.gateway.infra;
++
++import java.io.*;
++import java.util.Objects;
++import java.util.concurrent.atomic.AtomicBoolean;
++
++/** One physical socket, including handshake and close traffic; never reset on application progress. */
++final class PortalEventsTlsDebt {
++    static final int C = 65536;
++    static final int W = 131072;
++    private long debt;
++    private long reserved;
++    private long output;
++    private long raw;
++    private long delivered;
++    record Snapshot(long debt, long reserved, long output, long raw, long delivered) { }
++    synchronized Snapshot snapshot() { return new Snapshot(debt, reserved, output, raw, delivered); }
++    private synchronized int reserve(int length) throws IOException {
++        long remaining = C - debt - reserved;
++        if (remaining <= 0) throw new IOException("TLS cumulative input capacity exhausted");
++        int grant = (int) Math.min(length, remaining);
++        reserved = Math.addExact(reserved, grant);
++        return grant;
++    }
++    private synchronized void settle(int grant, int n) throws IOException {
++        if (n < -1 || n > grant || reserved < grant) throw new IOException("TLS input accounting invariant");
++        long used = Math.max(0, n);
++        long nextRaw = Math.addExact(raw, used);
++        long nextDebt = Math.addExact(debt, used);
++        if (nextDebt > C) throw new IOException("TLS input accounting invariant");
++        reserved -= grant; raw = nextRaw; debt = nextDebt;
++    }
++    synchronized void credit(int bytes) throws IOException {
++        if (bytes < 0 || bytes > debt) throw new IOException("TLS application credit invariant");
++        long next = Math.addExact(delivered, bytes);
++        debt -= bytes; delivered = next;
++    }
++    private synchronized void chargeOutput(int length) throws IOException {
++        long next = Math.addExact(output, length);
++        if (next > W) throw new IOException("TLS cumulative output capacity exhausted");
++        output = next;
++    }
++    InputStream input(InputStream delegate, Runnable abort) {
++        return new InputStream() {
++            private final AtomicBoolean reading = new AtomicBoolean();
++            @Override public int read() throws IOException {
++                byte[] one = new byte[1]; int n = read(one, 0, 1);
++                return n < 0 ? -1 : n == 0 ? 0 : one[0] & 255;
++            }
++            @Override public int read(byte[] b, int off, int len) throws IOException {
++                Objects.checkFromIndexSize(off, len, b.length);
++                if (len == 0) return 0;
++                if (!reading.compareAndSet(false, true)) throw new IOException("Concurrent TLS raw read");
++                int grant = 0;
++                try {
++                    grant = reserve(len); int n;
++                    try { n = delegate.read(b, off, grant); }
++                    catch (IOException | RuntimeException e) {
++                        // The exception carries no reliable consumed-byte count; keep the whole charge.
++                        settle(grant, grant); grant = 0; throw e;
++                    }
++                    settle(grant, n); grant = 0; return n;
++                } catch (IOException | RuntimeException e) {
++                    try { if (grant != 0) settle(grant, grant); }
++                    catch (IOException | RuntimeException accountingFailure) { e.addSuppressed(accountingFailure); }
++                    finally { abort.run(); }
++                    throw e;
++                } finally { reading.set(false); }
++            }
++            @Override public long skip(long n) throws IOException {
++                if (n > 0) throw new IOException("TLS raw skip/deplete is unsupported"); return 0;
++            }
++            @Override public int available() throws IOException {
++                int available = Math.max(0, delegate.available());
++                synchronized (PortalEventsTlsDebt.this) {
++                    return (int) Math.min(available, C - debt - reserved);
++                }
++            }
++            @Override public boolean markSupported() { return false; }
++            @Override public void reset() throws IOException { throw new IOException("TLS replay is unsupported"); }
++            @Override public byte[] readAllBytes() throws IOException { throw new IOException("TLS unbounded aggregation is unsupported"); }
++            @Override public byte[] readNBytes(int n) throws IOException { throw new IOException("TLS allocating aggregation is unsupported"); }
++            @Override public void close() { abort.run(); }
++        };
++    }
++    OutputStream output(OutputStream delegate, Runnable abort) {
++        return new OutputStream() {
++            private final AtomicBoolean writing = new AtomicBoolean();
++            @Override public void write(int b) throws IOException { write(new byte[]{(byte)b}, 0, 1); }
++            @Override public void write(byte[] b, int off, int len) throws IOException {
++                Objects.checkFromIndexSize(off, len, b.length);
++                if (!writing.compareAndSet(false, true)) throw new IOException("Concurrent TLS raw write");
++                try { chargeOutput(len); delegate.write(b, off, len); }
++                catch (IOException | RuntimeException e) {
++                    // Successful and uncertain partial writes both keep their entire charge.
++                    abort.run(); throw e;
++                } finally { writing.set(false); }
++            }
++            @Override public void flush() throws IOException {
++                if (!writing.compareAndSet(false, true)) throw new IOException("Concurrent TLS raw write");
++                try { delegate.flush(); }
++                catch (IOException | RuntimeException e) { abort.run(); throw e; }
++                finally { writing.set(false); }
++            }
++            @Override public void close() { abort.run(); }
++        };
++    }
++}
+diff --git a/platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalEventsTlsDebtTest.java b/platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalEventsTlsDebtTest.java
+new file mode 100644
+index 0000000..6b26171
+--- /dev/null
++++ b/platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalEventsTlsDebtTest.java
+@@ -0,0 +1,103 @@
++package cn.agentplatform.gateway.infra;
++
++import org.junit.jupiter.api.Test;
++import java.io.ByteArrayInputStream;
++import java.io.ByteArrayOutputStream;
++import java.io.IOException;
++import java.io.InputStream;
++import java.io.OutputStream;
++import java.util.concurrent.*;
++import java.util.concurrent.atomic.*;
++import static org.junit.jupiter.api.Assertions.*;
++
++class PortalEventsTlsDebtTest {
++    @Test void rawBytesMinusOnlyDeliveredApplicationBytesRemainDebt() throws Exception {
++        var debt = new PortalEventsTlsDebt();
++        var raw = debt.input(new ByteArrayInputStream(new byte[100]), () -> { });
++        assertEquals(100, raw.read(new byte[100]));
++        debt.credit(60);
++        assertEquals(40, debt.snapshot().debt());
++        assertEquals(0, debt.snapshot().reserved());
++    }
++
++    @Test void capacityClipsDelegateReadAndFailsWithoutFalseEof() throws Exception {
++        var d = new PortalEventsTlsDebt(); var calls = new AtomicInteger(); var last = new AtomicInteger(); var abort = new AtomicInteger();
++        InputStream source = new InputStream() {
++            public int read() { throw new AssertionError("single path required"); }
++            public int read(byte[] b, int off, int len) { calls.incrementAndGet(); last.set(len); return len; }
++        };
++        var in = d.input(source, abort::incrementAndGet);
++        assertEquals(65535, in.read(new byte[65535]));
++        assertEquals(1, in.read(new byte[2])); assertEquals(1, last.get());
++        assertEquals(0, in.read(new byte[0]));
++        assertThrows(IOException.class, in::read); assertEquals(2, calls.get()); assertEquals(1, abort.get());
++        assertEquals(65536, d.snapshot().debt());
++    }
++
++    @Test void zeroAndEofRefundReservationButUnknownPartialExceptionKeepsIt() throws Exception {
++        var d = new PortalEventsTlsDebt(); var step = new AtomicInteger(); var abort = new AtomicInteger();
++        var in = d.input(new InputStream() {
++            public int read() { throw new AssertionError(); }
++            public int read(byte[] b, int off, int len) throws IOException {
++                return switch (step.getAndIncrement()) { case 0 -> 0; case 1 -> -1; default -> { b[off]=7; throw new IOException("unknown consumed prefix"); } };
++            }
++        }, abort::incrementAndGet);
++        assertEquals(0, in.read(new byte[17])); assertEquals(0, d.snapshot().reserved()); assertEquals(0, d.snapshot().debt());
++        assertEquals(-1, in.read(new byte[23])); assertEquals(0, d.snapshot().reserved()); assertEquals(0, d.snapshot().debt());
++        assertThrows(IOException.class, () -> in.read(new byte[41]));
++        assertEquals(41, d.snapshot().debt()); assertEquals(0, d.snapshot().reserved()); assertEquals(1, abort.get());
++    }
++
++    @Test void reservationIsVisibleWhileIoBlockedAndSameDirectionCannotOverlap() throws Exception {
++        var entered = new CountDownLatch(1); var release = new CountDownLatch(1); var d = new PortalEventsTlsDebt();
++        var in = d.input(new InputStream() {
++            public int read() { throw new AssertionError(); }
++            public int read(byte[] b, int off, int len) throws IOException {
++                entered.countDown(); try { if (!release.await(3, TimeUnit.SECONDS)) throw new IOException("test latch"); }
++                catch (InterruptedException e) { throw new IOException(e); } return 11;
++            }
++        }, () -> { });
++        try (var pool = Executors.newSingleThreadExecutor()) {
++            var read = pool.submit(() -> in.read(new byte[100]));
++            assertTrue(entered.await(2, TimeUnit.SECONDS)); assertEquals(100, d.snapshot().reserved());
++            assertThrows(IOException.class, in::read); release.countDown(); assertEquals(11, read.get(2, TimeUnit.SECONDS));
++            assertEquals(11, d.snapshot().debt()); assertEquals(0, d.snapshot().reserved());
++        } finally { release.countDown(); }
++    }
++
++    @Test void skipAvailableAndBulkHelpersDoNotBypassAccounting() throws Exception {
++        var d = new PortalEventsTlsDebt(); var in = d.input(new ByteArrayInputStream(new byte[65540]), () -> { });
++        assertEquals(65536, in.available()); assertEquals(0, in.skip(0));
++        assertThrows(IOException.class, () -> in.skip(1)); assertFalse(in.markSupported());
++        assertThrows(IOException.class, in::reset); assertThrows(IOException.class, in::readAllBytes);
++        assertThrows(IOException.class, () -> in.readNBytes(2));
++        byte[] b = new byte[10]; assertEquals(10, in.readNBytes(b,0,10)); assertEquals(10,d.snapshot().debt());
++        var other = new PortalEventsTlsDebt(); var small = other.input(new ByteArrayInputStream(new byte[123]), () -> { });
++        assertEquals(123, small.transferTo(new ByteArrayOutputStream())); assertEquals(123,other.snapshot().debt());
++        assertThrows(IOException.class, () -> d.credit(-1)); assertThrows(IOException.class, () -> d.credit(11));
++        assertEquals(10,d.snapshot().debt());
++    }
++
++    @Test void outputHasOneCumulativeHardBoundaryAndExceptionNeverRefunds() throws Exception {
++        var d = new PortalEventsTlsDebt(); var target = new ByteArrayOutputStream(); var abort = new AtomicInteger();
++        var out = d.output(target, abort::incrementAndGet);
++        out.write(new byte[131071]); out.write(5); assertEquals(131072,d.snapshot().output());
++        assertThrows(IOException.class, () -> out.write(6)); assertEquals(131072,target.size()); assertEquals(1,abort.get());
++        var failed = new PortalEventsTlsDebt(); var bad = failed.output(new OutputStream() {
++            public void write(int b) { throw new AssertionError("unified array path"); }
++            public void write(byte[] b,int off,int len) throws IOException { throw new IOException("unknown partial write"); }
++        }, () -> { });
++        assertThrows(IOException.class, () -> bad.write(new byte[19])); assertEquals(19,failed.snapshot().output());
++    }
++    @Test void checkedCounterOverflowAbortsWithoutGrantingCredit() throws Exception {
++        var d=new PortalEventsTlsDebt();var abort=new AtomicInteger();
++        // Reach an otherwise impractically distant counter boundary without adding a credit/reset API.
++        for(String name:new String[]{"raw","delivered"}){
++            var field=PortalEventsTlsDebt.class.getDeclaredField(name);field.setAccessible(true);field.setLong(d,Long.MAX_VALUE);
++        }
++        var in=d.input(new ByteArrayInputStream(new byte[1]),abort::incrementAndGet);
++        assertThrows(ArithmeticException.class,in::read);
++        assertEquals(1,abort.get());assertEquals(0,d.snapshot().debt());
++        assertEquals(1,d.snapshot().reserved());assertEquals(Long.MAX_VALUE,d.snapshot().delivered());
++    }
++}
+diff --git a/platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalEventsTlsTest.java b/platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalEventsTlsTest.java
+new file mode 100644
+index 0000000..93deda4
+--- /dev/null
++++ b/platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalEventsTlsTest.java
+@@ -0,0 +1,462 @@
++package cn.agentplatform.gateway.infra;
++
++import org.junit.jupiter.api.Test;
++import org.junit.jupiter.params.ParameterizedTest;
++import org.junit.jupiter.params.provider.ValueSource;
++import javax.net.ssl.*;
++import java.io.*;
++import java.net.*;
++import java.nio.charset.StandardCharsets;
++import java.nio.file.*;
++import java.security.*;
++import java.security.cert.X509Certificate;
++import java.time.Duration;
++import java.util.*;
++import java.util.concurrent.*;
++import static org.junit.jupiter.api.Assertions.*;
++
++public class PortalEventsTlsTest {
++    static final String HOST = "engine.f2a.test";
++    static final String CIPHER = "TLS_AES_128_GCM_SHA256";
++    static final char[] PASSWORD = "f2a-test-only".toCharArray();
++    static Path projectRoot() {
++        Path cwd=Path.of(System.getProperty("user.dir")).toAbsolutePath();
++        Path root=Files.exists(cwd.resolve("AGENTS.md"))?cwd:cwd.getParent();
++        if(!Files.exists(root.resolve("AGENTS.md"))||!root.getFileName().toString().equals("agent-platform"))throw new IllegalStateException("Isolated project root required");
++        return root;
++    }
++
++    @Test void normalTlsAuthenticatesAndEchoesWithPersistentRecordOverhead() throws Exception {
++        var result = scenario("normal");
++        assertEquals("true", result.client.getProperty("success"), result.client.toString());
++        assertEquals("TLSv1.3", result.client.getProperty("protocol"));
++        assertEquals(CIPHER, result.client.getProperty("cipher"));
++        assertEquals("5120", result.server.getProperty("application"));
++        assertEquals("true", result.client.getProperty("closed"));
++        assertTrue(Long.parseLong(result.client.getProperty("debtAfter")) >
++                Long.parseLong(result.client.getProperty("debtBefore")));
++    }
++    @Test void http11AlpnNegotiationIsAccepted() throws Exception {
++        var result=scenario("http11");assertEquals("true",result.client.getProperty("success"),result.client.toString());
++        assertEquals("http/1.1",result.client.getProperty("alpn"));
++    }
++    @ParameterizedTest @ValueSource(strings={"wrong-ca","wrong-san","expired","no-cert","plain","tls12","aes256","alpn"})
++    void credentialOrProfileFailureDeliversNoApplication(String name) throws Exception {
++        var r = scenario(name);
++        assertEquals("false",r.client.getProperty("success"),r.client.toString());
++        assertNotNull(r.client.getProperty("failure"));
++        assertEquals("0",r.server.getProperty("application"));
++        assertEquals("1",r.server.getProperty("accepted"));
++        assertEquals("true",r.client.getProperty("closed"));
++    }
++    @ParameterizedTest @ValueSource(strings={"four","five","h","h-plus"})
++    void validSignedPeerFixturesExerciseExactStaticThreshold(String name) throws Exception {
++        var r=scenario(name); boolean good=name.equals("four")||name.equals("h");
++        assertEquals(Boolean.toString(good),r.client.getProperty("success"),r.client.toString());
++        assertEquals(name.equals("four")?"4":name.equals("five")?"5":"2",r.server.getProperty("chain"));
++        if(name.startsWith("h"))assertEquals(name.equals("h")?"32768":"32769",r.server.getProperty("certificateBody"));
++        if(!good){
++            assertEquals("0",r.server.getProperty("application"));
++            assertTrue(r.client.getProperty("failure").contains(name.equals("five")?"maximum allowed length (4)":"maximum allowed size (32768)"),r.client.toString());
++        }
++        assertEquals("true",r.client.getProperty("closed"));
++    }
++    @Test void normalTicketsInterleaveWithoutReset() throws Exception { assertTraffic("nst"); }
++    @ParameterizedTest @ValueSource(strings={"tiny","keyupdate","output","reuse","concurrent-read","transfer","stream-close"})
++    void realTlsTrafficKeepsCumulativeDebtAndOutputBounded(String name) throws Exception {
++        assertTraffic(name);
++    }
++    void assertTraffic(String name) throws Exception {
++        var r=scenario(name); assertEquals("true",r.client.getProperty("checked"),r.client.toString());
++        assertEquals("true",r.client.getProperty("closed"));
++        if(name.equals("tiny")){
++            assertEquals("65536",r.client.getProperty("debtAfter"));
++            assertTrue(Long.parseLong(r.client.getProperty("delivered"))>1000);
++            assertEquals("false",r.client.getProperty("eof"));
++        }
++        if(name.equals("keyupdate")){
++            assertEquals("0",r.client.getProperty("delivered"));
++            assertTrue(Long.parseLong(r.client.getProperty("raw"))>10000,r.client.toString());
++            assertTrue(Integer.parseInt(r.server.getProperty("updates"))>100);
++        }
++        if(name.equals("output")) assertTrue(Long.parseLong(r.client.getProperty("output"))<=131072);
++        if(name.equals("nst")){
++            String server=Files.readString(Path.of(r.server.getProperty("run")).resolve("server.out"));
++            String client=Files.readString(Path.of(r.server.getProperty("run")).resolve("client.out"));
++            assertEquals(10,server.split("Produced NewSessionTicket",-1).length-1);
++            assertEquals(10,client.split("Consuming NewSessionTicket",-1).length-1);
++        }
++    }
++    @ParameterizedTest @ValueSource(strings={"stall","drip","idle","blocked-read","blocked-write","absolute","caller"})
++    void realEndpointsObserveFixedDeadlinesAndAbort(String name) throws Exception {
++        var r=scenario(name); assertEquals("true",r.client.getProperty("checked"),r.client.toString());
++        assertEquals("true",r.client.getProperty("closed"));
++        long ms=Long.parseLong(r.client.getProperty("elapsedMillis"));
++        if(name.equals("stall")||name.equals("drip"))assertTrue(ms>=1700&&ms<3500,"elapsed="+ms);
++        if(name.equals("idle")||name.equals("blocked-read"))assertTrue(ms>=14000&&ms<18000,"elapsed="+ms);
++        if(name.equals("absolute"))assertTrue(ms>=54000&&ms<58000,"elapsed="+ms);
++        if(name.equals("caller"))assertTrue(ms>=2300&&ms<4500,"elapsed="+ms);
++    }
++    @Test void mechanicalLifecycleAndConfigurationHaveNoAuthorityBypass() throws Exception {
++        Path run=projectRoot().resolve(Path.of(".local","iam-o2b-f2a-tls","peers","mechanics-"+UUID.randomUUID()));Files.createDirectories(run);
++        try(var child=child(run,"mechanics","mechanics","0")){child.await(15);assertEquals(0,child.process.exitValue(),child.output());}
++        assertEquals("true",properties(run.resolve("mechanics.properties")).getProperty("checked"));
++    }
++    @ParameterizedTest @ValueSource(strings={"missing-profile","aia-enabled"})
++    void missingOrNetworkEnabledJvmProfileFailsBeforeAcquire(String name) throws Exception {
++        Path run=projectRoot().resolve(Path.of(".local","iam-o2b-f2a-tls","peers","profile-"+UUID.randomUUID()));Files.createDirectories(run);
++        try(var child=child(run,"mechanics",name,"0")){child.await(10);assertEquals(0,child.process.exitValue(),child.output());}
++    }
++
++    record Result(Properties client, Properties server) { }
++    Result scenario(String name) throws Exception {
++        Path run = projectRoot().resolve(Path.of(".local", "iam-o2b-f2a-tls", "peers", name + "-" + UUID.randomUUID()));
++        Files.createDirectories(run);
++        try (Child server = child(run, "server", name, "0")) {
++            Path portFile = run.resolve("port");
++            long deadline = System.nanoTime() + Duration.ofSeconds(8).toNanos();
++            while ((!Files.exists(portFile) || Files.size(portFile)==0) && server.process.isAlive() && System.nanoTime() < deadline) Thread.sleep(10);
++            assertTrue(Files.exists(portFile) && Files.size(portFile)>0, "server port not published: " + server.output());
++            String port = Files.readString(portFile);
++            try (Child client = child(run, "client", name, port)) {
++                client.await(70);
++                server.await(5);
++                assertEquals(0, client.process.exitValue(), client.output());
++                assertEquals(0, server.process.exitValue(), server.output());
++                return new Result(properties(run.resolve("client.properties")), properties(run.resolve("server.properties")));
++            }
++        }
++    }
++    static Properties properties(Path file) throws IOException {
++        var p = new Properties();
++        try (var in = Files.newInputStream(file)) { p.load(in); }
++        return p;
++    }
++    static void store(Path file, Properties p) throws IOException {
++        try (var out = Files.newOutputStream(file)) { p.store(out, "isolated F2a test result; no credentials"); }
++    }
++    static Child child(Path run, String mode, String scenario, String port) throws Exception {
++        String cp = System.getProperty("surefire.test.class.path", System.getProperty("java.class.path"));
++        Path args = run.resolve(mode + ".args");
++        List<String> words = new ArrayList<>(List.of("-Djdk.tls.maxHandshakeMessageSize=32768", "-Djdk.tls.maxCertificateChainLength=4",
++                "-Dcom.sun.security.enableAIAcaIssuers=false",
++                "-Djdk.tls.server.newSessionTicketCount="+(scenario.startsWith("h")?"0":"10"), "-Djdk.tls.server.enableStatusRequestExtension=false",
++                "-cp", cp, PortalEventsTlsTest.class.getName(), mode, scenario, port, run.toAbsolutePath().toString()));
++        if(scenario.equals("nst"))words.addFirst("-Djavax.net.debug=ssl,handshake");
++        if(scenario.equals("missing-profile"))words.removeIf(s->s.startsWith("-Djdk.tls.maxHandshakeMessageSize="));
++        if(scenario.equals("aia-enabled")){words.remove("-Dcom.sun.security.enableAIAcaIssuers=false");words.addFirst("-Dcom.sun.security.enableAIAcaIssuers=true");}
++        Files.writeString(args, words.stream().map(s -> "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"") + "\"")
++                .reduce((a,b) -> a + "\n" + b).orElseThrow(), StandardCharsets.UTF_8);
++        String java = Path.of(System.getProperty("java.home"), "bin", "java.exe").toString();
++        var command = new ArrayList<String>(); command.add(java); command.addAll(words);
++        Process process=new ProcessBuilder(command).redirectErrorStream(true).start();
++        var launch=new Properties();launch.setProperty("pid",Long.toString(process.pid()));launch.setProperty("java",java);
++        launch.setProperty("cwd",System.getProperty("user.dir"));launch.setProperty("argumentsFile",args.toString());launch.setProperty("mergedStderr","true");
++        store(run.resolve(mode+".launch.properties"),launch);
++        return new Child(process, run.resolve(mode + ".out"),scenario.equals("nst")?1048576:131072);
++    }
++    static final class Child implements AutoCloseable {
++        final Process process;
++        final Path file;
++        final Thread collector;
++        volatile Throwable error;
++        Child(Process process, Path file, int limit) {
++            this.process = process;
++            this.file = file;
++            collector = Thread.ofPlatform().daemon().start(() -> {
++                try (var in = process.getInputStream(); var out = Files.newOutputStream(file)) {
++                    byte[] buffer = new byte[4096]; int n, total = 0;
++                    while ((n = in.read(buffer)) != -1) {
++                        total += n;
++                        if (total > limit) throw new IOException("child output limit");
++                        out.write(buffer, 0, n);
++                    }
++                } catch (Throwable e) { error = e; process.destroyForcibly(); }
++            });
++        }
++        void await(int seconds) throws Exception {
++            assertTrue(process.waitFor(seconds, TimeUnit.SECONDS), "child deadline");
++            collector.join(2000);
++            assertFalse(collector.isAlive());
++            assertNull(error);
++            persistExit();
++        }
++        String output() throws IOException { return Files.exists(file) ? new String(Files.readAllBytes(file), StandardCharsets.UTF_8) : ""; }
++        public void close() throws Exception {
++            if (process.isAlive()) process.destroyForcibly();
++            assertTrue(process.waitFor(3, TimeUnit.SECONDS), "child must actually exit");
++            collector.join(2000);
++            assertFalse(collector.isAlive());
++            persistExit();
++        }
++        void persistExit() throws IOException {
++            Path exit=file.resolveSibling(file.getFileName()+".exit.properties");
++            if(!Files.exists(exit)){
++                var p=new Properties();p.setProperty("pid",Long.toString(process.pid()));p.setProperty("exitCode",Integer.toString(process.exitValue()));
++                p.setProperty("alive",Boolean.toString(process.isAlive()));p.setProperty("collectorAlive",Boolean.toString(collector.isAlive()));store(exit,p);
++            }
++        }
++    }
++
++    public static void main(String[] args) throws Exception {
++        Path run = Path.of(args[3]);
++        if (args[0].equals("server")) server(args[1], run);
++        else if(args[0].equals("mechanics"))mechanics(args[1],run);
++        else client(args[1], Integer.parseInt(args[2]), run);
++    }
++    static KeyStore fixtures() throws Exception {
++        var ks = KeyStore.getInstance("PKCS12");
++        try (var in = PortalEventsTlsTest.class.getResourceAsStream("/iam-o2b-f2a/tls-fixtures.p12")) { ks.load(in, PASSWORD); }
++        return ks;
++    }
++    static Path ca(KeyStore ks, String alias, Path run) throws Exception {
++        byte[] der = ks.getCertificate(alias).getEncoded();
++        String pem = "-----BEGIN CERTIFICATE-----\n" + Base64.getMimeEncoder(64, new byte[]{'\n'}).encodeToString(der)
++                + "\n-----END CERTIFICATE-----\n";
++        return Files.writeString(run.resolve("ca.pem"), pem);
++    }
++    static void runtime(Properties p) throws Exception {
++        p.setProperty("runtime", System.getProperty("java.runtime.version"));
++        p.setProperty("vendor", System.getProperty("java.vendor"));
++        p.setProperty("provider", SSLContext.getInstance("TLSv1.3", "SunJSSE").getProvider().toString());
++        p.setProperty("H", System.getProperty("jdk.tls.maxHandshakeMessageSize"));
++        p.setProperty("chainLimit", System.getProperty("jdk.tls.maxCertificateChainLength"));
++        p.setProperty("tickets", System.getProperty("jdk.tls.server.newSessionTicketCount"));
++        p.setProperty("AIA",System.getProperty("com.sun.security.enableAIAcaIssuers"));
++    }
++    static void client(String scenario, int port, Path run) throws Exception {
++        var p = new Properties(); runtime(p); boolean success = false; long started=System.nanoTime();
++        try (var tls = new PortalEventsTls(URI.create("https://" + HOST + ":" + port), new byte[]{127,0,0,1}, ca(fixtures(), scenario.equals("wrong-ca")?"other":"root", run))) {
++            var c = (PortalEventsTlsConnection)tls.acquire(System.nanoTime() + Duration.ofMillis(scenario.equals("caller")?3000:60000).toNanos());
++            long hard=c.hardDeadlineNanos(),opening=c.openingDeadlineNanos();
++            try {
++                if(scenario.equals("blocked-write"))c.rawSocketForConnect().setSendBufferSize(1024);
++                SSLSocket s = c.connectAndHandshake();
++                p.setProperty("protocol", s.getSession().getProtocol()); p.setProperty("cipher", s.getSession().getCipherSuite());
++                p.setProperty("alpn",s.getApplicationProtocol());
++                // Snapshots are read-only and do not alter the ledger.
++                p.setProperty("debtBefore", Long.toString(((PortalEventsTlsConnection)c).snapshot().debt()));
++                if(scenario.equals("stream-close")){
++                    var input=s.getInputStream();var output=s.getOutputStream();
++                    input.close();output.close();assertTrue(c.awaitClosed(Duration.ofSeconds(2)));
++                    assertThrows(IOException.class,()->input.read());assertThrows(IOException.class,()->output.write(1));
++                    assertThrows(IOException.class,s::getInputStream);assertTrue(s.isClosed());
++                } else if(scenario.equals("concurrent-read")){
++                    try(var pool=Executors.newSingleThreadExecutor()){
++                        var read=pool.submit(()->{try{s.getInputStream().read();return false;}catch(IOException e){return true;}});
++                        long wait=System.nanoTime()+Duration.ofSeconds(1).toNanos();
++                        while(c.snapshot().reserved()==0&&System.nanoTime()<wait)Thread.sleep(5);
++                        assertTrue(c.snapshot().reserved()>0);
++                        assertThrows(IOException.class,()->s.getInputStream().read());c.abort();assertTrue(read.get(2,TimeUnit.SECONDS));
++                    }
++                } else if(scenario.equals("transfer")){
++                    var out=new ByteArrayOutputStream();assertEquals(1024,s.getInputStream().transferTo(out));assertEquals(1024,c.snapshot().delivered());
++                } else if(scenario.equals("tiny")||scenario.equals("keyupdate")){
++                    boolean eof=false;
++                    try { while(true){int n=s.getInputStream().read();if(n<0){eof=true;break;}} }
++                    catch(IOException e){p.setProperty("failure",failure(e));}
++                    p.setProperty("eof",Boolean.toString(eof));
++                    assertFalse(eof,"capacity/timeout must not masquerade as EOF");
++                    assertTrue(c.snapshot().debt()==65536||scenario.equals("keyupdate"));
++                } else if(scenario.equals("output")){
++                    boolean limited=false;
++                    try{for(int i=0;i<300;i++)s.getOutputStream().write(new byte[1024]);}
++                    catch(IOException e){limited=true;p.setProperty("failure",failure(e));}
++                    assertTrue(limited); assertTrue(c.snapshot().output()<=131072);
++                } else if(scenario.equals("idle")||scenario.equals("caller")){
++                    assertTrue(c.awaitClosed(Duration.ofSeconds(19)));
++                } else if(scenario.equals("blocked-read")){
++                    assertThrows(IOException.class,()->s.getInputStream().read());
++                } else if(scenario.equals("blocked-write")){
++                    try(var pool=Executors.newSingleThreadExecutor()){
++                        var entered=new CountDownLatch(1);var write=pool.submit(()->{entered.countDown();try{s.getOutputStream().write(new byte[120000]);return false;}catch(IOException e){return true;}});
++                        assertTrue(entered.await(1,TimeUnit.SECONDS));Thread.sleep(350);
++                        assertFalse(write.isDone(),"real peer must stop reading before W is reached");
++                        assertThrows(IOException.class,()->s.getOutputStream().flush());
++                        c.abort();assertTrue(write.get(3,TimeUnit.SECONDS));
++                    }
++                } else {
++                verifyPublicView(s,c,port);
++                byte[] message = new byte[64]; Arrays.fill(message, (byte) 42);
++                int rounds=scenario.equals("absolute")?650:80;
++                try{for (int i = 0; i < rounds; i++) {
++                    s.getOutputStream().write(message); s.getOutputStream().flush();
++                    byte[] echo = new byte[64]; assertEquals(64, s.getInputStream().readNBytes(echo, 0, echo.length));
++                    assertArrayEquals(message, echo);
++                    if(scenario.equals("absolute"))Thread.sleep(100);
++                    if(scenario.equals("reuse")&&i==39){long debt=c.snapshot().debt();Thread.sleep(100);assertEquals(debt,c.snapshot().debt());}
++                }}catch(IOException e){if(!scenario.equals("absolute"))throw e;}
++                if(!scenario.equals("absolute"))assertEquals(5120,c.snapshot().delivered());
++                }
++                success = true;
++                p.setProperty("checked","true");
++            } catch (IOException e) { p.setProperty("failure",failure(e));if(scenario.equals("stall")||scenario.equals("drip"))p.setProperty("checked","true"); }
++            finally {
++                assertEquals(hard,c.hardDeadlineNanos());assertEquals(opening,c.openingDeadlineNanos());
++                c.abort(); p.setProperty("closed", Boolean.toString(c.awaitClosed(Duration.ofSeconds(3))));
++                var snap=c.snapshot();p.setProperty("debtAfter",Long.toString(snap.debt()));p.setProperty("delivered",Long.toString(snap.delivered()));
++                p.setProperty("raw",Long.toString(snap.raw()));p.setProperty("output",Long.toString(snap.output()));
++                Files.writeString(run.resolve("client-done"),"exited I/O");
++            }
++        }
++        p.setProperty("elapsedMillis",Long.toString(TimeUnit.NANOSECONDS.toMillis(System.nanoTime()-started)));
++        p.setProperty("success", Boolean.toString(success)); store(run.resolve("client.properties"), p);
++    }
++    static String failure(Throwable e){var b=new StringBuilder();for(int n=0;e!=null&&n<8;n++,e=e.getCause())b.append(e.getClass().getSimpleName()).append(':').append(e.getMessage()).append(';');return b.substring(0,Math.min(b.length(),2048));}
++    static PortalEventsTls factory(Path ca)throws IOException{return new PortalEventsTls(URI.create("https://"+HOST+":443"),new byte[]{127,0,0,1},ca);}
++    static long deadline(){return System.nanoTime()+Duration.ofSeconds(30).toNanos();}
++    static void mechanics(String name,Path run)throws Exception{
++        Path ca=ca(fixtures(),"root",run);
++        if(name.equals("missing-profile")||name.equals("aia-enabled")){assertThrows(IOException.class,()->factory(ca));return;}
++        String pem=Files.readString(ca);
++        for(int n=1;n<=4;n++)try(var f=factory(Files.writeString(run.resolve("ca-"+n+".pem"),pem.repeat(n)))){ }
++        Path maximum=Files.writeString(run.resolve("ca-max.pem"),pem+" ".repeat(65536-pem.length()));try(var f=factory(maximum)){ }
++        assertThrows(IOException.class,()->factory(Files.writeString(run.resolve("ca-over.pem"),pem+" ".repeat(65537-pem.length()))));
++        assertThrows(IOException.class,()->factory(Files.writeString(run.resolve("ca-five.pem"),pem.repeat(5))));
++        assertThrows(IOException.class,()->factory(Files.writeString(run.resolve("ca-tail.pem"),pem+"garbage")));
++        assertThrows(IOException.class,()->factory(ca(fixtures(),"normal",Files.createDirectory(run.resolve("nonca")))));
++        assertThrows(IOException.class,()->factory(Files.writeString(run.resolve("empty.pem"),"")));
++        for(String origin:List.of("http://engine.f2a.test:443","https://engine.f2a.test","https://engine.f2a.test:0","https://engine.f2a.test:65536","https://engine.f2a.test:443/","https://user@engine.f2a.test:443","https://engine.f2a.test:443?q=x","https://engine.f2a.test:443#x","https://127.0.0.1:443","https://bad-.f2a.test:443"))
++            assertThrows(IOException.class,()->new PortalEventsTls(URI.create(origin),new byte[]{127,0,0,1},ca));
++        assertThrows(IOException.class,()->new PortalEventsTls(URI.create("https://"+HOST+":443"),new byte[5],ca));
++        try(var one=factory(ca);var two=factory(ca)){
++            assertThrows(IOException.class,()->one.acquire(System.nanoTime()-1));
++            var a=(PortalEventsTlsConnection)one.acquire(deadline());var b=(PortalEventsTlsConnection)two.acquire(deadline());
++            var rawA=new BlockingSocket();var rawB=new BlockingSocket();a.installRawForTest(rawA);b.installRawForTest(rawB);
++            Socket view=a.rawSocketForConnect();assertNull(view.getChannel());assertSame(view.getInputStream(),view.getInputStream());assertSame(view.getOutputStream(),view.getOutputStream());
++            try(var pool=Executors.newSingleThreadExecutor()){
++                var read=pool.submit(()->{try{view.getInputStream().read(new byte[20]);return false;}catch(IOException e){return true;}});
++                assertTrue(rawA.readEntered.await(2,TimeUnit.SECONDS));assertEquals(20,a.snapshot().reserved());
++                a.abort();a.close();a.abort();b.abort();
++                assertTrue(rawA.closeEntered.await(2,TimeUnit.SECONDS));assertTrue(rawB.closeEntered.await(2,TimeUnit.SECONDS));
++                assertFalse(a.awaitClosed(Duration.ofMillis(10)));assertThrows(IOException.class,()->one.acquire(deadline()));
++                rawA.closeRelease.countDown();rawB.closeRelease.countDown();
++                assertTrue(b.awaitClosed(Duration.ofSeconds(2)));
++                // Fill the newly released second slot while the first read still has not actually returned.
++                var replacement=two.acquire(deadline());assertThrows(IOException.class,()->one.acquire(deadline()));
++                assertFalse(a.awaitClosed(Duration.ofMillis(10)));rawA.readRelease.countDown();assertTrue(read.get(2,TimeUnit.SECONDS));
++                assertTrue(a.awaitClosed(Duration.ofSeconds(2)));assertEquals(1,rawA.closes.get());
++                replacement.abort();assertTrue(replacement.awaitClosed(Duration.ofSeconds(2)));
++            }finally{rawA.closeRelease.countDown();rawB.closeRelease.countDown();rawA.readRelease.countDown();}
++            var before=(PortalEventsTlsConnection)one.acquire(deadline());before.abort();assertThrows(IOException.class,before::rawSocketForConnect);assertTrue(before.awaitClosed(Duration.ofSeconds(2)));
++            var still=two.acquire(deadline());one.close();assertThrows(IOException.class,()->one.acquire(deadline()));
++            var another=two.acquire(deadline());still.abort();another.abort();assertTrue(still.awaitClosed(Duration.ofSeconds(2)));assertTrue(another.awaitClosed(Duration.ofSeconds(2)));
++        }
++        try(var f=factory(ca)){
++            // A close error deliberately poisons its physical slot until this isolated JVM exits.
++            var a=(PortalEventsTlsConnection)f.acquire(deadline());var b=(PortalEventsTlsConnection)f.acquire(deadline());
++            a.installRawForTest(new Socket(){@Override public void close()throws IOException{throw new IOException("deliberate close failure");}});
++            b.installRawForTest(new Socket(){@Override public void close()throws IOException{throw new IOException("deliberate close failure");}});
++            a.abort();b.abort();assertFalse(a.awaitClosed(Duration.ofMillis(100)));assertFalse(b.awaitClosed(Duration.ofMillis(100)));
++            assertThrows(IOException.class,()->f.acquire(deadline()));
++        }
++        var p=new Properties();p.setProperty("checked","true");store(run.resolve("mechanics.properties"),p);
++    }
++    static final class BlockingSocket extends Socket{
++        final CountDownLatch readEntered=new CountDownLatch(1),readRelease=new CountDownLatch(1),closeEntered=new CountDownLatch(1),closeRelease=new CountDownLatch(1);
++        final java.util.concurrent.atomic.AtomicInteger closes=new java.util.concurrent.atomic.AtomicInteger();
++        @Override public InputStream getInputStream(){return new InputStream(){public int read()throws IOException{return read(new byte[1],0,1);}public int read(byte[] b,int off,int len)throws IOException{readEntered.countDown();try{if(!readRelease.await(5,TimeUnit.SECONDS))throw new IOException("latch timeout");}catch(InterruptedException e){throw new IOException(e);}return 1;}};}
++        @Override public OutputStream getOutputStream(){return new ByteArrayOutputStream();}
++        @Override public boolean isConnected(){return true;}
++        @Override public void close()throws IOException{closes.incrementAndGet();closeEntered.countDown();try{if(!closeRelease.await(5,TimeUnit.SECONDS))throw new IOException("close latch timeout");}catch(InterruptedException e){throw new IOException(e);}}
++    }
++    static void verifyPublicView(SSLSocket s,PortalEventsTlsConnection c,int port)throws Exception{
++        assertSame(s.getInputStream(),s.getInputStream());assertSame(s.getOutputStream(),s.getOutputStream());assertNull(s.getChannel());
++        assertTrue(s.isConnected());assertTrue(s.isBound());assertFalse(s.isClosed());assertEquals(port,s.getPort());
++        assertEquals(InetAddress.getByAddress(new byte[]{127,0,0,1}),s.getInetAddress());assertTrue(s.getLocalPort()>0);
++        assertEquals("HTTPS",s.getSSLParameters().getEndpointIdentificationAlgorithm());
++        assertArrayEquals(new String[]{"http/1.1"},s.getSSLParameters().getApplicationProtocols());
++        assertEquals(HOST,((SNIHostName)s.getSSLParameters().getServerNames().getFirst()).getAsciiName());
++        assertThrows(IOException.class,s::startHandshake);assertThrows(UnsupportedOperationException.class,()->s.setEnabledProtocols(new String[]{"TLSv1.2"}));
++        assertThrows(UnsupportedOperationException.class,()->s.setSSLParameters(new SSLParameters()));assertNull(s.getSession().getSessionContext());
++        assertThrows(IOException.class,()->s.getInputStream().skip(1));assertThrows(IOException.class,()->s.getInputStream().readNBytes(2));
++        assertThrows(IOException.class,()->s.getInputStream().readAllBytes());assertThrows(IOException.class,()->s.getInputStream().reset());
++        assertFalse(s.getInputStream().markSupported());assertEquals(0,s.getInputStream().read(new byte[0]));
++        s.setTcpNoDelay(true);assertTrue(s.getTcpNoDelay());s.setKeepAlive(true);assertTrue(s.getKeepAlive());
++        assertThrows(IOException.class,()->s.setSoTimeout(0));assertTrue(s.getSoTimeout()>0);assertNotNull(s.supportedOptions());
++    }
++    static void server(String scenario, Path run) throws Exception {
++        if(Set.of("plain","stall","drip").contains(scenario)){rawServer(scenario,run);return;}
++        var p = new Properties(); runtime(p); int application = 0,accepted=0,updates=0;
++        var context = SSLContext.getInstance("TLSv1.3", "SunJSSE");
++        var kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm()); kmf.init(fixtures(), PASSWORD);
++        X509ExtendedKeyManager original = Arrays.stream(kmf.getKeyManagers()).filter(X509ExtendedKeyManager.class::isInstance)
++                .map(X509ExtendedKeyManager.class::cast).findFirst().orElseThrow();
++        String alias=Set.of("wrong-san","expired","four","five","h","h-plus").contains(scenario)?scenario:"normal";
++        var serverTrust=KeyStore.getInstance("PKCS12");serverTrust.load(null,null);serverTrust.setCertificateEntry("root",fixtures().getCertificate("root"));
++        var tmf=TrustManagerFactory.getInstance("PKIX");tmf.init(serverTrust);
++        context.init(new KeyManager[]{new FixedKey(original, scenario.equals("no-cert")?null:alias, p)}, tmf.getTrustManagers(), null);
++        try (var listener = (SSLServerSocket) context.getServerSocketFactory().createServerSocket(0, 1, InetAddress.getByAddress(new byte[]{127,0,0,1}))) {
++            listener.setEnabledProtocols(new String[]{scenario.equals("tls12")?"TLSv1.2":"TLSv1.3"});
++            listener.setEnabledCipherSuites(new String[]{scenario.equals("tls12")?"TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256":scenario.equals("aes256")?"TLS_AES_256_GCM_SHA384":CIPHER});
++            if(scenario.equals("blocked-write"))listener.setReceiveBufferSize(1024);
++            listener.setNeedClientAuth(false); listener.setSoTimeout(3000);
++            Files.writeString(run.resolve("port"), Integer.toString(listener.getLocalPort()));
++            try (var socket = (SSLSocket) listener.accept()) {
++                accepted++;
++                if(scenario.equals("alpn"))socket.setHandshakeApplicationProtocolSelector((s,offered)->"h2");
++                if(scenario.equals("http11")){var parameters=socket.getSSLParameters();parameters.setApplicationProtocols(new String[]{"http/1.1"});socket.setSSLParameters(parameters);}
++                socket.setSoTimeout(65000); socket.startHandshake();
++                p.setProperty("protocol", socket.getSession().getProtocol()); p.setProperty("cipher", socket.getSession().getCipherSuite());
++                p.setProperty("clientAuth", Boolean.toString(socket.getNeedClientAuth()));
++                assertEquals(Integer.parseInt(p.getProperty("chain")), socket.getSession().getLocalCertificates().length);
++                if(scenario.equals("tiny")){
++                    for(int i=0;i<4000;i++){socket.getOutputStream().write(7);socket.getOutputStream().flush();}
++                }else if(scenario.equals("keyupdate")){
++                    for(int i=0;i<10000;i++){socket.startHandshake();updates++;}
++                }else if(scenario.equals("blocked-write")){
++                    long deadline=System.nanoTime()+Duration.ofSeconds(18).toNanos();
++                    while(!Files.exists(run.resolve("client-done"))&&System.nanoTime()<deadline)Thread.sleep(10);
++                }else if(scenario.equals("output")){
++                    byte[] b=new byte[2048];int n;while((n=socket.getInputStream().read(b))!=-1)application+=n;
++                }else if(scenario.equals("transfer")){
++                    socket.getOutputStream().write(new byte[1024]);socket.getOutputStream().flush();socket.shutdownOutput();
++                }else if(Set.of("idle","caller","blocked-read","concurrent-read","stream-close").contains(scenario)){
++                    assertEquals(-1,socket.getInputStream().read());
++                }else{
++                byte[] b = new byte[64];int rounds=scenario.equals("absolute")?650:80;
++                for (int i = 0; i < rounds; i++) {
++                    int n = socket.getInputStream().readNBytes(b, 0, b.length); if (n == 0) break;
++                    application += n; socket.getOutputStream().write(b, 0, n); socket.getOutputStream().flush();
++                }
++                }
++            } catch (IOException e) { p.setProperty("failure",failure(e)); }
++            listener.setSoTimeout(200);
++            try(var unexpected=listener.accept()){accepted++;}catch(SocketTimeoutException expected){ }
++        } finally {p.setProperty("accepted",Integer.toString(accepted));p.setProperty("updates",Integer.toString(updates));p.setProperty("run",run.toString()); p.setProperty("application", Integer.toString(application)); store(run.resolve("server.properties"), p); }
++    }
++    static void rawServer(String name,Path run)throws Exception{
++        var p=new Properties();runtime(p);int sent=0;
++        try(var listener=new ServerSocket(0,1,InetAddress.getByAddress(new byte[]{127,0,0,1}))){
++            listener.setSoTimeout(3000);Files.writeString(run.resolve("port"),Integer.toString(listener.getLocalPort()));
++            try(var s=listener.accept()){
++                p.setProperty("accepted","1");s.setSoTimeout(3500);
++                if(name.equals("plain"))s.getOutputStream().write("HTTP/1.1 200 OK\r\n\r\n".getBytes(StandardCharsets.US_ASCII));
++                if(name.equals("drip")){
++                    byte[] record={22,3,3,0,64};
++                    for(int i=0;i<10;i++){s.getOutputStream().write(i<5?record[i]:0);s.getOutputStream().flush();sent++;Thread.sleep(350);}
++                }else {byte[] b=new byte[4096];while(s.getInputStream().read(b)!=-1){ }}
++            }catch(IOException e){p.setProperty("failure",failure(e));}
++        }finally{p.setProperty("application","0");p.setProperty("sent",Integer.toString(sent));store(run.resolve("server.properties"),p);}
++    }
++    static final class FixedKey extends X509ExtendedKeyManager {
++        final X509ExtendedKeyManager original; final String alias; final Properties p;
++        FixedKey(X509ExtendedKeyManager original, String alias, Properties p) { this.original=original;this.alias=alias;this.p=p; }
++        public String chooseServerAlias(String type, Principal[] issuers, Socket s) { return type.equals("RSA") ? alias : null; }
++        public String chooseEngineServerAlias(String type, Principal[] issuers, SSLEngine e) { return type.equals("RSA") ? alias : null; }
++        public X509Certificate[] getCertificateChain(String name) {
++            X509Certificate[] chain = original.getCertificateChain(name);
++            try {
++                int body = 4; var lengths = new ArrayList<Integer>();
++                for (var cert : chain) { int n=cert.getEncoded().length; lengths.add(n); body += n+5; }
++                p.setProperty("chain", Integer.toString(chain.length)); p.setProperty("certificateBody", Integer.toString(body));
++                p.setProperty("DER", lengths.toString()); p.setProperty("requestContext", "0"); p.setProperty("entryExtensions", "0");
++            } catch (Exception e) { throw new IllegalStateException(e); }
++            return chain;
++        }
++        public PrivateKey getPrivateKey(String name) { return original.getPrivateKey(name); }
++        public String[] getClientAliases(String t, Principal[] i) { return null; }
++        public String chooseClientAlias(String[] t, Principal[] i, Socket s) { return null; }
++        public String[] getServerAliases(String t, Principal[] i) { return new String[]{alias}; }
++    }
++}
+diff --git a/platform-gateway/src/test/resources/iam-o2b-f2a/tls-fixtures.p12 b/platform-gateway/src/test/resources/iam-o2b-f2a/tls-fixtures.p12
+new file mode 100644
+index 0000000..4bcea8f
+Binary files /dev/null and b/platform-gateway/src/test/resources/iam-o2b-f2a/tls-fixtures.p12 differ

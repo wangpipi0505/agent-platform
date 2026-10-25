@@ -1,0 +1,1150 @@
+# D4b combined focused fixes review
+No HEAD/commits. Base = original frozen D4b (before I1/I2 and lifecycle fixes).
+Head = frozen lifecycle handoff docs/evidence/iam-stage-4-d4b-lifecycle-fix/handoff.json
+Scope:9modified0new0deleted, inherited backend380+frontend192=572necessarysource; backendtarget1933 unchanged.
+I1/I2 report: docs/evidence/iam-stage-4-d4b-error-stop-fix-report.md
+I3/I4 report: docs/evidence/iam-stage-4-d4b-lifecycle-fix-report.md SHA256 076069cc78f2ff216c434d0d617f0046d079d9dc1550d3222840123fdb13e4ce
+Original findings: review-iam-stage-4-d4b.md + review-iam-stage-4-d4b-lifecycle-supplement.md
+Requirements: original D4b brief + error-stop-fix brief + lifecycle-fix brief.
+All9 original-before/current-after bytes/SHA independently compared before package creation.
+This is readable fullcontext diff, not an additional product build/test/replay. Separate author exact replay and root audits cover physical facts.
+
+--- BEGIN FULL CONTEXT DIFF ---
+diff --git a/web/debug-panel/events.ts b/web/debug-panel/events.ts
+index 09310b5..a130ff0 100644
+--- a/web/debug-panel/events.ts
++++ b/web/debug-panel/events.ts
+@@ -1,122 +1,128 @@
+ export type Frame = { id: string; event: string; data: string };
+ export function parseFrames(input: string) {
+   const text = input.replace(/\r\n/g, "\n");
+   const parts = text.split("\n\n");
+   const rest = parts.pop()!;
+   return {
+     frames: parts
+       .filter((p) => p.trim())
+       .map((p) => {
+         const f: Frame = { id: "", event: "message", data: "" };
+         const data: string[] = [];
+         for (const line of p.split("\n")) {
+           const i = line.indexOf(":");
+           const key = line.slice(0, i);
+           const value = line.slice(i + 1).replace(/^ /, "");
+           if (key === "data") data.push(value);
+           if (key === "id") f.id = value;
+           if (key === "event") f.event = value;
+         }
+         f.data = data.join("\n");
+         return f;
+       }),
+     rest,
+   };
+ }
+ export type EventState = {
+   watermark: number;
+   events: any[];
+   nodes: Record<string, string>;
+ };
+ export function applyEvent(s: EventState, e: any): EventState {
+   if (!Number.isFinite(e.seq) || e.seq <= s.watermark) return s;
+   const nodes = { ...s.nodes };
+   const id = e.nodeDefId || e.nodeId;
+   if (id)
+     nodes[id] =
+       (
+         {
+           NODE_STARTED: "RUNNING",
+           NODE_FINISHED: "SUCCEEDED",
+           NODE_FAILED: "FAILED",
+           WAITING_STEP: "WAITING_STEP",
+           WAITING_APPROVAL: "WAITING_APPROVAL",
+         } as any
+       )[e.type] || nodes[id];
+   return { watermark: e.seq, events: [...s.events, e], nodes };
+ }
+ export const terminal = (status: string) =>
+   [
+     "SUCCEEDED",
+     "SUCCESS",
+     "COMPLETED",
+     "FAILED",
+     "CANCELLED",
+     "FINISHED",
+   ].includes(status);
+ const authorityReasons=['AUTHORITY_EXPIRED','AUTHORITY_DENIED','AUTHORITY_UNAVAILABLE'];
+ export function authorityReset(event:any) {
+   if(event?.type!=='stream_reset'||!authorityReasons.includes(event.reason))return;
+   const reason=event.reason;
+   return Object.assign(Error(reason==='AUTHORITY_UNAVAILABLE'?'授权服务暂不可用，请手动恢复连接':reason==='AUTHORITY_DENIED'?'当前身份无权继续观察，请手动恢复连接':'观察授权已到期，请重新连接'),{reason,code:reason,status:reason==='AUTHORITY_UNAVAILABLE'?503:403});
+ }
+ export const authorityFailure=(error:any)=>error?.status===401||error?.status===403||authorityReasons.includes(error?.reason)
+   ||(error?.status===503&&['IAM_AUTHORITY_UNAVAILABLE','PORTAL_SESSION_UNAVAILABLE','AUTHORITY_UNAVAILABLE'].includes(error.code));
+ export async function streamEvents(
+   url: string,
+   token: () => string,
+   watermark: number,
+   onEvent: (e: any) => void,
+   signal: AbortSignal,
+   onUnauthorized?: () => void,
+   scope?: {signal:AbortSignal;current:()=>boolean},
+ ) {
+   // A disconnected viewer never cancels the run. The caller restores authoritative status before every reconnect.
+   if(scope)signal=signal===scope.signal?signal:AbortSignal.any([signal,scope.signal]);
+   const check=()=>{signal.throwIfAborted();if(scope&&!scope.current())throw new DOMException('观察已停止','AbortError');};
+   check();
+   const requestToken = token();
+   if (!requestToken) throw new Error("请先登录");
+   const response = await fetch(url, {
+     headers: {
+       Authorization: `Bearer ${requestToken}`,
+       "Last-Event-ID": String(watermark),
+       Accept: "text/event-stream",
+     },
+     signal,
+     credentials:'omit',
+   });
+   check();
+   if (response.status === 401 && token() === requestToken) onUnauthorized?.();
+   if (!response.ok) {
+     const envelope=await response.json().catch(()=>({}));check();
+     throw Object.assign(new Error(envelope.message||`事件连接失败 (${response.status})`), { status: response.status,code:envelope.code });
+   }
+   if (!response.body) throw new Error("服务未返回事件流");
+   const reader = response.body.getReader();
+   const stopReader=()=>{void reader.cancel().catch(()=>{});};
+   signal.addEventListener('abort',stopReader,{once:true});
+   const decoder = new TextDecoder();
+   let pending = "";
+   try { while (true) {
+     check();
+     const r = await reader.read();
+     check();
+     pending += decoder.decode(r.value, { stream: !r.done });
+     const { frames, rest } = parseFrames(pending);
+     pending = rest;
+     for (const f of frames) {
+       check();
+       if (!f.data) continue;
+       const payload = JSON.parse(f.data);
+       const event={
+         ...payload,
+         type: payload.type || (f.event === "chunk" ? "CHUNK" : f.event),
+         seq: Number(f.id || payload.seq),
+       };
+       const stopped=authorityReset(event);if(stopped)throw stopped;
+       check();onEvent(event);check();
+     }
+     if (r.done) return;
+-  } } finally {signal.removeEventListener('abort',stopReader);try{await reader.cancel();}finally{reader.releaseLock();}}
++  } } finally {
++    signal.removeEventListener('abort',stopReader);
++    // Cleanup must not turn an authority stop into a transient retry, nor
++    // replace the primary EOF, parser/network error or caller AbortError.
++    try {await reader.cancel();} catch { /* Best effort: the underlying source may reject cancellation. */ }
++    try {reader.releaseLock();} catch { /* Still attempt release without replacing the primary result. */ }
++  }
+ }
+diff --git a/web/shared/Artifacts.vue b/web/shared/Artifacts.vue
+index 777857e..f5d7d85 100644
+--- a/web/shared/Artifacts.vue
++++ b/web/shared/Artifacts.vue
+@@ -1,34 +1,36 @@
+ <script setup lang="ts">
+ import { ref, onBeforeUnmount } from "vue";
+ import { useAuth } from "./api";
+ import { downloadArtifact } from "./artifact";
+ const props = defineProps<{ files: any[]; runId: string; endpoint?: string; admin?:boolean }>();
+ const error = ref("");
+ const busy = ref(false);
+ const auth=useAuth(),session=auth.snapshot(),controller=new AbortController();
+ const scope={signal:AbortSignal.any([session.signal,controller.signal]),current:session.current};
+ onBeforeUnmount(()=>controller.abort());
+ async function download(file: any) {
+   busy.value = true;
+   error.value = "";
+   try {
+     await downloadArtifact(file, props.runId, auth.token, props.endpoint,props.admin,scope);
+   } catch (e: any) {
+-    if(!scope.signal.aborted&&scope.current()&&e.name!=='AbortError')error.value = e.message;
++    if(scope.signal.aborted||!scope.current()||e.name==='AbortError')return;
++    if(e.status===401){auth.invalidate(session.generation);return;}
++    error.value=e.status===403?'当前账号无权下载此附件，请联系管理员。':e.message;
+   } finally {
+     busy.value = false;
+   }
+ }
+ </script>
+ <template>
+   <section v-if="files.length" class="panel">
+     <h2>结果附件</h2>
+     <div v-for="file in files" :key="file.artifactId" class="row">
+       <span
+         >{{ file.summary || file.name || file.artifactId }} ·
+         {{ file.bytes }} 字节</span
+       ><el-button :loading="busy" @click="download(file)">下载附件</el-button>
+     </div>
+     <p v-if="error" class="error" role="alert">{{ error }}</p>
+   </section>
+ </template>
+diff --git a/web/shared/api.ts b/web/shared/api.ts
+index 2ea509d..f40a08e 100644
+--- a/web/shared/api.ts
++++ b/web/shared/api.ts
+@@ -1,165 +1,169 @@
+ import axios from "axios";
+ import { defineStore, getActivePinia } from "pinia";
+ import { ref, shallowRef, onScopeDispose, getCurrentScope } from "vue";
+ export type SessionScope = { signal: AbortSignal; current: () => boolean };
+ export type PortalIdentity = {tenantId:string;principalId:string;roles:string[];expiresAt:string};
+ export function checkScope(scope?: SessionScope) {
+   if (scope && (scope.signal.aborted || !scope.current()))
+     throw new DOMException('会话已停止，请重新连接', 'AbortError');
+ }
+ export function combinedSignal(a?: AbortSignal, b?: AbortSignal) {
+   return a && b && a !== b ? AbortSignal.any([a,b]) : a || b;
+ }
+ export const useAuth = defineStore("auth", () => {
+   const token = ref("");
+   const roles = ref<string[]>([]);
+   const user = ref<any>();
+   const generation=ref(0),controller=shallowRef(new AbortController());
+   const connection=ref('idle'),notice=ref('');
+   let timer: ReturnType<typeof setTimeout> | undefined;
+   function snapshot() {
+     const expected=generation.value,signal=controller.value.signal;
+     return {generation:expected,signal,current:()=>generation.value===expected&&!signal.aborted};
+   }
+   function invalidate(expected=generation.value,state='unauthenticated',message='会话已失效，请重新连接') {
+     if(expected!==generation.value)return false;
+     generation.value++;
+     controller.value.abort();controller.value=new AbortController();
+     clearTimeout(timer);timer=undefined;
+     token.value='';roles.value=[];user.value=undefined;
+     connection.value=state;notice.value=message;
+     return true;
+   }
+   function install(expected:number,candidate:string,identity:PortalIdentity) {
+     if(expected!==generation.value||controller.value.signal.aborted)return false;
++    const deadline=Date.parse(identity.expiresAt),lifetime=deadline-Date.now();
++    if(!Number.isFinite(lifetime)||lifetime<=0){invalidate(expected,'expired','会话已到期，请重新连接');return false;}
++    // Freeze the verified remaining lifetime at installation. A later wall-clock
++    // rollback cannot extend this monotonic upper bound; a forward jump may shorten it.
++    const monotonicDeadline=performance.now()+lifetime;
+     token.value=candidate;user.value=identity;roles.value=[...identity.roles];
+     connection.value='authenticated';notice.value='';
+-    const deadline=Date.parse(identity.expiresAt);
+     const expire=()=>{
+       if(expected!==generation.value)return;
+-      const remaining=deadline-Date.now();
++      const remaining=Math.min(deadline-Date.now(),monotonicDeadline-performance.now());
+       if(remaining<=0)invalidate(expected,'expired','会话已到期，请重新连接');
+       else timer=setTimeout(expire,Math.min(60_000,remaining));
+     };
+     clearTimeout(timer);expire();return true;
+   }
+   // UI visibility is not authorization. Every action is still verified by the backend Actor.
+   const can = (permission: string) =>
+     !!token.value &&
+     (roles.value.includes("ADMIN") ||
+       roles.value.includes(
+         (
+           { edit: "EDITOR", approve: "APPROVER", admin: "ADMIN" } as Record<
+             string,
+             string
+           >
+         )[permission],
+       ));
+   return { token, roles, user, can, generation, connection, notice, snapshot, invalidate, install };
+ });
+ export function createApi(
+   token: () => string,
+   transport: typeof fetch = axiosTransport,
+   onUnauthorized?: () => void,
+   scope?: SessionScope,
+ ) {
+   return async <T = any>(
+     path: string,
+     method = "GET",
+     body?: unknown,
+     signal?: AbortSignal,
+   ): Promise<T> => {
+     checkScope(scope);
+     signal=combinedSignal(signal,scope?.signal);
+     signal?.throwIfAborted();
+     const requestToken = token();
+     if (!requestToken) throw new Error("请先登录");
+     let response:Response;
+     try { response = await transport(path, {
+       method,
+       signal,
+       headers: {
+         Authorization: `Bearer ${requestToken}`,
+         "Content-Type": "application/json",
+       },
+       body: body === undefined ? undefined : JSON.stringify(body),
+       credentials:'omit',
+     }); } catch(error) { checkScope(scope);signal?.throwIfAborted();throw error; }
+     checkScope(scope);
+     signal?.throwIfAborted();
+     const envelope = await response
+       .json()
+       .catch(() => ({ message: `服务返回不可读响应 (${response.status})` }));
+     signal?.throwIfAborted();
+     checkScope(scope);
+     if (!response.ok || envelope.code !== "OK") {
+       // A stopped request or an earlier login must never revoke the current login.
+       if (response.status === 401 && token() === requestToken) onUnauthorized?.();
+       const error: any = new Error(
+         response.status===403?'当前账号没有此操作权限，请联系管理员。':
+         response.status===503&&['IAM_AUTHORITY_UNAVAILABLE','PORTAL_SESSION_UNAVAILABLE'].includes(envelope.code)?'授权服务暂不可用，请稍后手动重试':
+         String(envelope.code).startsWith("SYS-")
+           ? "系统繁忙，请稍后重试"
+           : envelope.message || `请求失败 (${response.status})`,
+       );
+       error.traceId = envelope.traceId;
+       error.status = response.status;
+       error.code = envelope.code;
+       throw error;
+     }
+     return envelope.data;
+   };
+ }
+ export function useApi() {
+   const auth = useAuth();
+   const session=auth.snapshot();
+   // An old component cannot use a new identity in a continuation after an await.
+   const disposed=new AbortController();
+   if(getCurrentScope())onScopeDispose(()=>disposed.abort());
+   const scope={signal:combinedSignal(session.signal,disposed.signal)!,current:session.current};
+   return createApi(
+     () => auth.token,
+     axiosTransport,
+     () => {
+       auth.invalidate(session.generation);
+     },scope,
+   );
+ }
+ export async function login() {
+   const pinia=getActivePinia(),auth=pinia?useAuth(pinia):undefined,scope=auth?.snapshot();
+   const r = await fetch("/auth/dev-token", { method: "POST",credentials:'omit',signal:scope?.signal });
+   checkScope(scope);
+   const e = await r.json().catch(() => {
+     throw new Error("网关登录服务不可用，请确认开发环境网关已启动后重试");
+   });
+   checkScope(scope);
+   if (!r.ok || e.code !== "OK") throw new Error(e.message || "开发登录失败");
+   const token = e.data?.accessToken || e.data?.token || e.data;
+   if (typeof token !== "string") throw new Error("登录接口没有返回 token");
+   if (auth) {
+     auth.roles = Array.isArray(e.data?.user?.roles) ? e.data.user.roles : [];
+     auth.user = e.data?.user;
+   }
+   return token;
+ }
+ 
+ export async function axiosTransport(
+   url: RequestInfo | URL,
+   options?: RequestInit,
+ ): Promise<Response> {
+   const response = await axios.request({
+     url: String(url),
+     method: options?.method || "GET",
+     headers: options?.headers as Record<string, string>,
+     data: options?.body,
+     signal: options?.signal ?? undefined,
+     responseType: "text",
+     validateStatus: () => true,
+     adapter:'fetch',
+     withCredentials:false,
+   });
+   return new Response(response.data, {
+     status: response.status,
+     headers: response.headers as Record<string, string>,
+   });
+ }
+diff --git a/web/shared/artifact.ts b/web/shared/artifact.ts
+index c8b8a25..858d038 100644
+--- a/web/shared/artifact.ts
++++ b/web/shared/artifact.ts
+@@ -1,42 +1,42 @@
+ export function artifactPath(file: any, runId: string) {
+   // A business ticket must never be sent to arbitrary URLs or to the admin download surface.
+   const path = file.externalDownloadUrl;
+   const prefix = "/v1/runs/" + encodeURIComponent(runId) + "/artifacts/";
+   if (
+     typeof path !== "string" ||
+     !path.startsWith(prefix) ||
+     !/^\/v1\/runs\/[^/]+\/artifacts\/[^/?#]+\/download$/.test(path)
+   )
+     throw Error("附件缺少当前运行的受控下载入口");
+   return path;
+ }
+ export async function downloadArtifact(
+   file: any,
+   runId: string,
+   token: string,
+   endpoint = "",
+   admin = false,
+   scope?:{signal:AbortSignal;current:()=>boolean},
+ ) {
+   const check=()=>{scope?.signal.throwIfAborted();if(scope&&!scope.current())throw new DOMException('下载已停止','AbortError');};
+   check();
+   const path = admin ? file.downloadUrl : artifactPath(file, runId);
+   if(admin&&!/^\/admin\/artifacts\/[^/?#]+\/download$/.test(path||''))throw Error('附件缺少受控下载入口');
+   const r = await fetch(endpoint + path, {
+     headers: { Authorization: "Bearer " + token },
+     signal:scope?.signal,
+     credentials:'omit',
+   });
+   check();
+-  if (!r.ok) throw Error("下载附件失败 (" + r.status + ")");
++  if (!r.ok) throw Object.assign(Error("下载附件失败 (" + r.status + ")"),{status:r.status});
+   const blob=await r.blob();check();
+   const url = URL.createObjectURL(blob);
+   try {
+   check();
+   const a = document.createElement("a");
+   a.href = url;
+   a.download = String(file.name || file.artifactId || "artifact");
+   check();
+   a.click();
+   } finally {URL.revokeObjectURL(url);}
+ }
+diff --git a/web/shared/portal-auth.ts b/web/shared/portal-auth.ts
+index a7572f8..ddedf91 100644
+--- a/web/shared/portal-auth.ts
++++ b/web/shared/portal-auth.ts
+@@ -1,60 +1,91 @@
+ import {createApi, checkScope, type PortalIdentity, type useAuth} from './api';
++import {watch} from 'vue';
+ export interface PortalTokenProvider {
+   getAccessToken(): Promise<string>;
+   onSessionChanged(listener: () => void): () => void;
+ }
+ export function portalMode(mode?:string):'portal'|'dev' {
+   if(mode===undefined||mode===''||mode==='portal')return 'portal';
+   if(mode==='dev')return 'dev';
+   throw Error('VITE_AUTH_MODE 无效，请配置 portal 或 dev');
+ }
+ // The same-origin embedding host is the trust boundary. The server verifies
+ // every token; URL, storage and postMessage are never identity providers.
+ export function trustedPortal(host:{agentPlatformPortal?:unknown}):PortalTokenProvider|undefined {
+   const value=host.agentPlatformPortal as PortalTokenProvider|undefined;
+   if(!value||typeof value.getAccessToken!=='function'||typeof value.onSessionChanged!=='function')return;
+   return {getAccessToken:value.getAccessToken.bind(value),onSessionChanged:value.onSessionChanged.bind(value)};
+ }
+ function identity(data:any):PortalIdentity {
+   if(!data||typeof data!=='object'||Array.isArray(data)||Object.keys(data).sort().join(',')!=='expiresAt,principalId,roles,tenantId'
+     ||![data.tenantId,data.principalId].every(x=>typeof x==='string'&&x.trim())
+     ||!Array.isArray(data.roles)||!data.roles.every((x:unknown)=>typeof x==='string'&&x.trim())
+     ||typeof data.expiresAt!=='string'||!/^\d{4}-\d\d-\d\dT.*(?:Z|[+-]\d\d:\d\d)$/.test(data.expiresAt)
+     ||!Number.isFinite(Date.parse(data.expiresAt))||Date.parse(data.expiresAt)<=Date.now())
+     throw Error('门户会话响应无效或已到期，请重新连接');
+   return {tenantId:data.tenantId,principalId:data.principalId,roles:[...data.roles],expiresAt:data.expiresAt};
+ }
+ export function createPortalSession(auth:ReturnType<typeof useAuth>,provider:PortalTokenProvider|undefined,options:{mode:'portal'|'dev';transport?:typeof fetch}) {
+-  let disposed=false,unsubscribe:(()=>void)|undefined;
+-  async function connect() {
+-    if(disposed)return;
++  let disposed=false,paused=false,subscribing=false,subscriptionEpoch=0,unsubscribe:(()=>void)|undefined;
++  function dropSubscription(){
++    // Invalidate queued callbacks before invoking an external cleanup which may
++    // itself synchronously notify the listener.
++    subscriptionEpoch++;
++    const cleanup=unsubscribe;unsubscribe=undefined;
++    try{cleanup?.();}catch{/* A failed host cleanup must not revive its old callback. */}
++  }
++  const stopWatching=watch(()=>auth.connection,state=>{
++    if(['signed-out','unauthenticated','expired'].includes(state)){paused=true;dropSubscription();}
++  },{flush:'sync',immediate:true});
++  function ensureSubscription(){
++    if(options.mode!=='portal'||!provider||unsubscribe||subscribing)return;
++    const epoch=++subscriptionEpoch;let ready=false;
++    subscribing=true;
++    try{
++      const cleanup=provider.onSessionChanged(()=>{
++        if(!ready||disposed||paused||epoch!==subscriptionEpoch||!['connecting','authenticated'].includes(auth.connection))return;
++        void reconnect(false);
++      });
++      if(typeof cleanup!=='function')throw Error('门户会话订阅无效');
++      if(disposed||paused||epoch!==subscriptionEpoch){try{cleanup();}catch{}return;}
++      unsubscribe=cleanup;
++      // Ignore only synchronous registration notifications: this same manual
++      // connection fetches the latest token immediately after registration.
++      ready=true;
++    }catch(error){subscriptionEpoch++;throw error;}
++    finally{subscribing=false;}
++  }
++  async function reconnect(manual:boolean) {
++    if(disposed||(!manual&&(paused||!['connecting','authenticated'].includes(auth.connection))))return;
++    if(manual)paused=false;
+     auth.invalidate(auth.generation,'connecting','正在连接门户会话…');
+     const scope=auth.snapshot();
+     try {
+       if(options.mode==='portal'&&!provider){auth.connection='missing';auth.notice='请从门户打开工作台';return;}
++      ensureSubscription();
++      if(disposed||paused)return;
++      checkScope(scope);
+       let token:string;
+       if(options.mode==='dev') {
+         // An explicit build/start choice, never a fallback from portal failure.
+         const r=await (options.transport??fetch)('/auth/dev-token',{method:'POST',credentials:'omit',signal:scope.signal});
+         checkScope(scope);const e=await r.json();checkScope(scope);
+         if(!r.ok||e.code!=='OK')throw Object.assign(Error(e.message||'开发登录失败'),{status:r.status});
+         token=e.data?.accessToken??e.data?.token??e.data;
+       } else token=await provider!.getAccessToken();
+       checkScope(scope);
+       if(typeof token!=='string'||!token.trim())throw Error('门户未提供有效访问票据，请重新连接');
+       const data=await createApi(()=>token,options.transport,undefined,scope)('/auth/session');
+       checkScope(scope);auth.install(scope.generation,token,identity(data));
+     } catch(e:any) {
+       if(!scope.current()||disposed||e.name==='AbortError')return;
+       auth.connection=e.status===401?'unauthenticated':e.status===403?'forbidden':e.status===503?'unavailable':'error';
+       auth.notice=e.status===401?'会话已失效，请重新连接':e.status===403?'当前账号无权访问工作台，请联系管理员':e.status===503?'会话暂不可用，请稍后手动重试':e.message||'门户连接失败，请重新连接';
+     }
+   }
+-  if(options.mode==='portal'&&provider) {
+-    try {
+-      unsubscribe=provider.onSessionChanged(()=>{void connect();});
+-      if(typeof unsubscribe!=='function')throw Error('门户会话订阅无效');
+-    } catch(e:any) {provider=undefined;auth.connection='error';auth.notice=e.message;}
+-  }
+-  return {connect,dispose(){if(disposed)return;disposed=true;unsubscribe?.();auth.invalidate(auth.generation,'signed-out','已退出，请重新连接');}};
++  return {connect:()=>reconnect(true),dispose(){
++    if(disposed)return;
++    disposed=true;paused=true;stopWatching();dropSubscription();
++    auth.invalidate(auth.generation,'signed-out','已退出，请重新连接');
++  }};
+ }
+diff --git a/web/tests/portal-auth.test.ts b/web/tests/portal-auth.test.ts
+index d52e918..57180c9 100644
+--- a/web/tests/portal-auth.test.ts
++++ b/web/tests/portal-auth.test.ts
+@@ -1,71 +1,138 @@
+ import {afterEach, beforeEach, expect, it, vi} from 'vitest';
+ import {createPinia, setActivePinia} from 'pinia';
+ import {useAuth, createApi} from '../shared/api';
+ import {createPortalSession, portalMode, trustedPortal} from '../shared/portal-auth';
+ import {downloadArtifact} from '../shared/artifact';
+ const session=(roles:string[]=[])=>({tenantId:'tenant',principalId:'person',roles,expiresAt:new Date(Date.now()+60_000).toISOString()});
+ const reply=(data:any,status=200,code='OK')=>new Response(JSON.stringify({code,data}),{status});
+ const deferred=<T>()=>{let resolve!:(value:T)=>void;const promise=new Promise<T>(r=>resolve=r);return {promise,resolve};};
+ beforeEach(()=>setActivePinia(createPinia()));
+-afterEach(()=>{vi.useRealTimers();vi.unstubAllGlobals();});
++afterEach(()=>{vi.restoreAllMocks();vi.useRealTimers();vi.unstubAllGlobals();});
++it('D4b lifecycle logout unsubscribes and old queued callbacks cannot revive or replace a later subscription',async()=>{
++ const auth=useAuth(),callbacks:Array<()=>void>=[],getAccessToken=vi.fn(async()=> 'same'),unsubscribe=vi.fn();
++ const subscribe=vi.fn((listener:()=>void)=>{callbacks.push(listener);return ()=>{unsubscribe();listener();};});
++ const portal=createPortalSession(auth,{getAccessToken,onSessionChanged:subscribe},{mode:'portal',transport:async()=>reply(session(['ADMIN']))});
++ await portal.connect();const old=callbacks[0];auth.invalidate(auth.generation,'signed-out');expect(unsubscribe).toHaveBeenCalledTimes(1);
++ old();await Promise.resolve();expect(getAccessToken).toHaveBeenCalledTimes(1);expect(auth.token).toBe('');
++ await portal.connect();expect(subscribe).toHaveBeenCalledTimes(2);const generation=auth.generation;old();await Promise.resolve();expect(getAccessToken).toHaveBeenCalledTimes(2);expect(auth.generation).toBe(generation);
++ callbacks[1]();await vi.waitFor(()=>expect(auth.generation).toBeGreaterThan(generation));await vi.waitFor(()=>expect(auth.token).toBe('same'));expect(subscribe).toHaveBeenCalledTimes(2);
++ portal.dispose();portal.dispose();expect(unsubscribe).toHaveBeenCalledTimes(2);
++});
++it('D4b lifecycle synchronous subscribe and unsubscribe notifications do not recursively connect',async()=>{
++ const auth=useAuth(),getAccessToken=vi.fn(async()=> 'latest'),unsubscribe=vi.fn();
++ const subscribe=vi.fn((listener:()=>void)=>{listener();return ()=>{unsubscribe();listener();};});
++ const portal=createPortalSession(auth,{getAccessToken,onSessionChanged:subscribe},{mode:'portal',transport:async()=>reply(session())});
++ await portal.connect();expect(getAccessToken).toHaveBeenCalledTimes(1);expect(auth.token).toBe('latest');
++ auth.invalidate(auth.generation,'signed-out');expect(unsubscribe).toHaveBeenCalledTimes(1);expect(getAccessToken).toHaveBeenCalledTimes(1);expect(auth.token).toBe('');portal.dispose();
++});
++it('D4b lifecycle current401 pauses host notifications until one explicit reconnect',async()=>{
++ const auth=useAuth(),getAccessToken=vi.fn(async()=> 'ticket'),subscribe=vi.fn();let notify!:()=>void;
++ subscribe.mockImplementation((listener:()=>void)=>{notify=listener;return ()=>{};});
++ const portal=createPortalSession(auth,{getAccessToken,onSessionChanged:subscribe},{mode:'portal',transport:async()=>reply(session(['ADMIN']))});
++ await portal.connect();auth.invalidate(auth.generation);const old=notify;old();await Promise.resolve();expect(getAccessToken).toHaveBeenCalledTimes(1);expect(auth.token).toBe('');expect(auth.roles).toEqual([]);
++ await portal.connect();expect(getAccessToken).toHaveBeenCalledTimes(2);expect(subscribe).toHaveBeenCalledTimes(2);old();await Promise.resolve();expect(getAccessToken).toHaveBeenCalledTimes(2);portal.dispose();
++});
++it.each([403,503])('D4b lifecycle session HTTP %s entry accepts only manual retry',async status=>{
++ const auth=useAuth(),getAccessToken=vi.fn(async()=> 'ticket');let notify!:()=>void,available=false;
++ const subscribe=vi.fn((listener:()=>void)=>{notify=listener;return ()=>{};});
++ const portal=createPortalSession(auth,{getAccessToken,onSessionChanged:subscribe},{mode:'portal',transport:async()=>reply(session(),available?200:status)});
++ await portal.connect();expect(auth.connection).toBe(status===403?'forbidden':'unavailable');notify();await Promise.resolve();expect(getAccessToken).toHaveBeenCalledTimes(1);expect(auth.token).toBe('');
++ available=true;await portal.connect();expect(auth.token).toBe('ticket');expect(getAccessToken).toHaveBeenCalledTimes(2);expect(subscribe).toHaveBeenCalledTimes(1);portal.dispose();
++});
++it('D4b lifecycle active host change supersedes pending provider while preserving a single subscription',async()=>{
++ const auth=useAuth(),first=deferred<string>();let notify!:()=>void,calls=0;
++ const subscribe=vi.fn((listener:()=>void)=>{notify=listener;return ()=>{};});
++ const portal=createPortalSession(auth,{getAccessToken:()=>++calls===1?first.promise:Promise.resolve('B'),onSessionChanged:subscribe},{mode:'portal',transport:async()=>reply(session())});
++ const pending=portal.connect();notify();await vi.waitFor(()=>expect(auth.token).toBe('B'));first.resolve('A');await pending;expect(auth.token).toBe('B');expect(subscribe).toHaveBeenCalledTimes(1);portal.dispose();
++});
++it('D4b lifecycle wall rollback cannot extend a sixty-second installed lifetime',async()=>{
++ vi.useFakeTimers({toFake:['setTimeout','clearTimeout','Date']});let monotonic=100;vi.spyOn(performance,'now').mockImplementation(()=>monotonic);
++ const auth=useAuth(),portal=createPortalSession(auth,{getAccessToken:async()=> 'ticket',onSessionChanged:()=>()=>{}},{mode:'portal',transport:async()=>reply(session(['ADMIN']))});
++ await portal.connect();vi.setSystemTime(Date.now()-3_600_000);monotonic+=60_001;await vi.advanceTimersByTimeAsync(60_001);
++ expect(auth.token).toBe('');expect(auth.user).toBeUndefined();expect(auth.roles).toEqual([]);expect(auth.connection).toBe('expired');portal.dispose();expect(vi.getTimerCount()).toBe(0);
++});
++it('D4b lifecycle stale expiry callback cannot clear a newer generation',async()=>{
++ vi.useFakeTimers();const timeout=vi.spyOn(globalThis,'setTimeout');let token='A',lifetime=60_000;
++ const auth=useAuth(),portal=createPortalSession(auth,{getAccessToken:async()=>token,onSessionChanged:()=>()=>{}},{mode:'portal',transport:async()=>reply({...session(['ADMIN']),expiresAt:new Date(Date.now()+lifetime).toISOString()})});
++ await portal.connect();const previous=timeout.mock.calls.find(x=>x[1]===60_000)?.[0] as ()=>void;expect(previous).toBeTypeOf('function');
++ token='B';lifetime=120_000;await portal.connect();const generation=auth.generation;vi.setSystemTime(Date.now()+60_001);previous();expect(auth.token).toBe('B');expect(auth.generation).toBe(generation);portal.dispose();expect(vi.getTimerCount()).toBe(0);
++});
++it.each([401,403,503])('D4b fix artifact preserves HTTP %s without reading error body or global auth',async status=>{
++ const response=new Response('not read',{status}),readBody=vi.fn();response.json=readBody;response.text=readBody;
++ vi.stubGlobal('fetch',async()=>response);const auth=useAuth();auth.token='current';auth.roles=['ADMIN'];auth.user={principalId:'current'};
++ await expect(downloadArtifact({downloadUrl:'/admin/artifacts/a/download'},'r','current','',true)).rejects.toMatchObject({status,message:`下载附件失败 (${status})`});
++ expect(readBody).not.toHaveBeenCalled();expect(auth.token).toBe('current');expect(auth.roles).toEqual(['ADMIN']);
++});
++it('D4b fix artifact late old 401 is aborted before it can be classified as current',async()=>{
++ const response=deferred<Response>(),controller=new AbortController();let current=true;
++ vi.stubGlobal('fetch',()=>response.promise);
++ const pending=downloadArtifact({downloadUrl:'/admin/artifacts/a/download'},'r','old','',true,{signal:controller.signal,current:()=>current});
++ current=false;response.resolve(new Response('',{status:401}));await expect(pending).rejects.toMatchObject({name:'AbortError'});
++});
++it('D4b fix artifact retains successful unscoped five-argument download',async()=>{
++ const click=vi.fn();vi.stubGlobal('document',{createElement:()=>({click})});vi.stubGlobal('fetch',async()=>new Response('file'));
++ const create=vi.spyOn(URL,'createObjectURL').mockReturnValue('blob:controlled'),revoke=vi.spyOn(URL,'revokeObjectURL').mockImplementation(()=>{});
++ try{await downloadArtifact({externalDownloadUrl:'/v1/runs/r/artifacts/a/download'},'r','ticket','',false);expect(click).toHaveBeenCalledTimes(1);expect(revoke).toHaveBeenCalledWith('blob:controlled');}finally{create.mockRestore();revoke.mockRestore();}
++});
+ it('D4b late artifact blob cannot create a download after session change',async()=>{
+  const blob=deferred<Blob>(),response=new Response('file');response.blob=()=>blob.promise;
+  const transport=vi.fn(async()=>response);vi.stubGlobal('fetch',transport);
+  const create=vi.spyOn(URL,'createObjectURL'),controller=new AbortController();let active=true;
+  const pending=downloadArtifact({downloadUrl:'/admin/artifacts/a/download'},'r','token','',true,{signal:controller.signal,current:()=>active});
+  await Promise.resolve();active=false;blob.resolve(new Blob(['old']));await expect(pending).rejects.toMatchObject({name:'AbortError'});expect(create).not.toHaveBeenCalled();expect(transport).toHaveBeenCalledWith('/admin/artifacts/a/download',expect.objectContaining({credentials:'omit',signal:controller.signal}));create.mockRestore();
+ });
+ it('defaults to portal, allows only explicit dev, and rejects unknown modes',()=>{
+  expect(portalMode(undefined)).toBe('portal');expect(portalMode('dev')).toBe('dev');expect(()=>portalMode('production')).toThrow('VITE_AUTH_MODE');
+ });
+ it('validates explicit host provider and preserves method this',async()=>{
+  const auth=useAuth(),data=session();
+  const host={marker:'host',getAccessToken(){expect(this.marker).toBe('host');return Promise.resolve('candidate');},onSessionChanged(){expect(this.marker).toBe('host');return ()=>{};}};
+  const portal=createPortalSession(auth,trustedPortal({agentPlatformPortal:host}),{mode:'portal',transport:async()=>reply(data)});
+  await portal.connect();expect(auth.token).toBe('candidate');expect(auth.roles).toEqual([]);expect(auth.user).toEqual(data);expect(auth.can('edit')).toBe(false);portal.dispose();
+  expect(trustedPortal({agentPlatformPortal:{getAccessToken:'bad'}})).toBeUndefined();
+ });
+ it('missing provider shows portal entry without fetching dev token',async()=>{
+  const transport=vi.fn();const auth=useAuth(),portal=createPortalSession(auth,undefined,{mode:'portal',transport});
+  await portal.connect();expect(auth.connection).toBe('missing');expect(auth.notice).toBe('请从门户打开工作台');expect(transport).not.toHaveBeenCalled();portal.dispose();
+ });
+ it.each([401,403,503])('session HTTP %s never installs a candidate or historical roles',async status=>{
+  const auth=useAuth();auth.token='old';auth.roles=['ADMIN'];auth.user={principalId:'old'};
+  const portal=createPortalSession(auth,{getAccessToken:async()=> 'candidate',onSessionChanged:()=>()=>{}},{mode:'portal',transport:async()=>reply(session(),status)});
+  await portal.connect();expect(auth.token).toBe('');expect(auth.roles).toEqual([]);expect(auth.user).toBeUndefined();expect(auth.connection).toBe(status===401?'unauthenticated':status===403?'forbidden':'unavailable');portal.dispose();
+ });
+ it.each([
+  {tenantId:'tenant',principalId:'person',roles:[],expiresAt:'bad'},
+  {tenantId:'tenant',principalId:'person',roles:[],expiresAt:'2020-01-01T00:00:00Z'},
+  {...session(),extra:'unexpected'}, {...session(),roles:['']}, {...session(),tenantId:''},
+ ])('rejects malformed/expired exact session contract %j',async data=>{
+  const auth=useAuth(),portal=createPortalSession(auth,{getAccessToken:async()=> 'candidate',onSessionChanged:()=>()=>{}},{mode:'portal',transport:async()=>reply(data)});
+  await portal.connect();expect(auth.token).toBe('');expect(auth.user).toBeUndefined();portal.dispose();
+ });
+ it('same token reconnect creates a new generation and aborts old API/body and old API factory',async()=>{
+  const auth=useAuth(),portal=createPortalSession(auth,{getAccessToken:async()=> 'same',onSessionChanged:()=>()=>{}},{mode:'portal',transport:async()=>reply(session())});
+  await portal.connect();const snapshot=auth.snapshot(),body=deferred<any>(),response=reply(null);response.json=()=>body.promise;
+  const transport=vi.fn(async()=>response),api=createApi(()=>auth.token,transport,()=>auth.invalidate(snapshot.generation),snapshot);
+  const pending=api('/late');await Promise.resolve();await portal.connect();body.resolve({code:'OK',data:'old'});
+  await expect(pending).rejects.toMatchObject({name:'AbortError'});expect(snapshot.signal.aborted).toBe(true);expect(auth.generation).toBeGreaterThan(snapshot.generation);
+  await expect(api('/new-post','POST')).rejects.toMatchObject({name:'AbortError'});expect(transport).toHaveBeenCalledTimes(1);expect(auth.token).toBe('same');portal.dispose();
+ });
+ it('late provider and late session cannot replace a later connected identity',async()=>{
+  const auth=useAuth(),first=deferred<string>(),sessionReply=deferred<Response>();let calls=0;
+  const portal=createPortalSession(auth,{getAccessToken:()=>++calls===1?first.promise:Promise.resolve('new'),onSessionChanged:()=>()=>{}},{mode:'portal',transport:async()=>reply(session(['EDITOR']))});
+  const old=portal.connect();await portal.connect();first.resolve('old');await old;expect(auth.token).toBe('new');
+  const second=createPortalSession(auth,{getAccessToken:async()=> 'older',onSessionChanged:()=>()=>{}},{mode:'portal',transport:()=>sessionReply.promise});
+  const late=second.connect();await Promise.resolve();await portal.connect();sessionReply.resolve(reply(session(['ADMIN'])));await late;expect(auth.token).toBe('new');expect(auth.roles).toEqual(['EDITOR']);second.dispose();portal.dispose();
+ });
+-it('expiry and logout invalidate without reconnecting, disposal unsubscribes and releases timers',async()=>{
++it('D4b lifecycle expiry waits for manual reconnect and logout unsubscribes before disposal',async()=>{
+  vi.useFakeTimers();const auth=useAuth(),unsubscribe=vi.fn(),getAccessToken=vi.fn(async()=> 'token');let changed!:()=>void;
+  const portal=createPortalSession(auth,{getAccessToken,onSessionChanged:fn=>{changed=fn;return unsubscribe;}},{mode:'portal',transport:async()=>reply(session())});
+  await portal.connect();await vi.advanceTimersByTimeAsync(60_001);expect(auth.token).toBe('');expect(auth.roles).toEqual([]);expect(getAccessToken).toHaveBeenCalledTimes(1);expect(auth.connection).toBe('expired');
+- changed();await vi.waitFor(()=>expect(auth.token).toBe('token'));auth.invalidate(auth.generation,'signed-out');expect(getAccessToken).toHaveBeenCalledTimes(2);
+- portal.dispose();expect(unsubscribe).toHaveBeenCalledTimes(1);expect(vi.getTimerCount()).toBe(0);
++ changed();await Promise.resolve();expect(auth.token).toBe('');expect(getAccessToken).toHaveBeenCalledTimes(1);
++ await portal.connect();expect(auth.token).toBe('token');auth.invalidate(auth.generation,'signed-out');expect(getAccessToken).toHaveBeenCalledTimes(2);
++ portal.dispose();expect(unsubscribe).toHaveBeenCalledTimes(2);expect(vi.getTimerCount()).toBe(0);
+ });
+ it('segments a far future deadline and rechecks actual time before expiring',async()=>{
+  vi.useFakeTimers();const auth=useAuth(),data={...session(),expiresAt:new Date(Date.now()+3_000_000_000).toISOString()};
+  const portal=createPortalSession(auth,{getAccessToken:async()=> 'token',onSessionChanged:()=>()=>{}},{mode:'portal',transport:async()=>reply(data)});
+  await portal.connect();await vi.advanceTimersByTimeAsync(60_000);expect(auth.token).toBe('token');vi.setSystemTime(new Date(data.expiresAt).getTime()+1);await vi.advanceTimersByTimeAsync(60_000);expect(auth.token).toBe('');portal.dispose();
+ });
+diff --git a/web/tests/portal-browser.mjs b/web/tests/portal-browser.mjs
+index c63da63..b8002ca 100644
+--- a/web/tests/portal-browser.mjs
++++ b/web/tests/portal-browser.mjs
+@@ -1,166 +1,194 @@
+ import {chromium,expect} from '@playwright/test';
+ import {createServer as viteServer} from 'vite';
+ import vue from '@vitejs/plugin-vue';
+ import http from 'node:http';
+ import fs from 'node:fs';
+ import path from 'node:path';
+ import {fileURLToPath} from 'node:url';
+ const root=path.resolve(fileURLToPath(new URL('../..',import.meta.url)));
+-const phase=process.argv[2]||'browser-1',out=path.join(root,'docs/evidence/iam-stage-4-d4b-portal-frontend',phase);
++const phase=process.argv[2]||'browser-1',out=path.join(root,phase.startsWith('lifecycle-')?'docs/evidence/iam-stage-4-d4b-lifecycle-fix':phase.startsWith('fix-')?'docs/evidence/iam-stage-4-d4b-error-stop-fix':'docs/evidence/iam-stage-4-d4b-portal-frontend',phase);
+ const selector=process.argv[3];
+ fs.mkdirSync(out,{recursive:true});
+ const raw=[],results=[],errors=[],gates=new Map();
+ let behavior={status:200,code:'OK',roles:['ADMIN'],reset:undefined,http:undefined,runStatus:'SUCCEEDED',expiry:60_000},statusReads=0;
+ const save=(f,x)=>fs.writeFileSync(path.join(out,f),JSON.stringify(x,null,2)+'\n');
+ const webRoot=path.join(root,'web/admin'),shared='/@fs/'+root.replaceAll('\\','/')+'/web/shared/';
+ const vite=await viteServer({configFile:false,root:webRoot,plugins:[vue()],server:{middlewareMode:true,hmr:false,fs:{allow:[root]}},appType:'custom',logLevel:'error'});
+ const appData=token=>({code:'app',name:'应用 '+token,type:'FLOW',status:'PUBLISHED',draftRev:1,draftId:1,currentVersionNo:1,config:{},definition:{inputs:[],nodes:[],edges:[]},layout:{}});
+ const server=http.createServer(async(req,res)=>{
+  const url=new URL(req.url,'http://local'),p=url.pathname;
+  if(p.endsWith('/web/shared/chart.ts')&&gates.has('chart')){const held=gates.get('chart');held.started();await held.promise;}
+  if(p==='/dev-main.js'){
+   const transformed=await vite.transformRequest('/src/main.ts');
+   if(!transformed.code.includes('import.meta.env.VITE_AUTH_MODE'))throw Error('main env expression changed');
+   res.setHeader('Content-Type','text/javascript');res.end(transformed.code.replace('import.meta.env.VITE_AUTH_MODE',JSON.stringify('dev')));return;
+  }
+  if(p==='/ambient'){raw.push({at:new Date().toISOString(),method:req.method,url:req.url,rawHeaders:req.rawHeaders,cookie:req.headers.cookie??null,kind:'ambient-positive-control'});res.end('ambient cookie positive control');return;}
+  if(p==='/probe.js'){
+   res.setHeader('Content-Type','text/javascript');res.end(`import {useAuth,createApi} from ${JSON.stringify(shared+'api.ts')};import {downloadArtifact} from ${JSON.stringify(shared+'artifact.ts')};
+   window.initD4b=()=>window.d4b={auth:useAuth(),createApi,downloadArtifact,capture:()=>document.querySelector('.shell')?.__vueParentComponent.setupState};`);return;
+  }
+  if(p==='/fixture.html'){
+   const dev=url.searchParams.get('mode')==='dev';
+   const module=dev?`import '/dev-main.js';`:`import '/src/main.ts';`;
+   const html=`<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>D4b controlled portal</title></head><body><div id="app"></div><script type="module">${module}import '/probe.js';window.initD4b();</script></body></html>`;
+   res.setHeader('Content-Type','text/html');res.end(html);return;
+  }
+  if(/^\/(auth|admin|v1)\//.test(p)){
+   const token=String(req.headers.authorization||'').replace(/^Bearer /,'');
+   const row={at:new Date().toISOString(),method:req.method,url:req.url,rawHeaders:req.rawHeaders,authorization:req.headers.authorization??null,cookie:req.headers.cookie??null};raw.push(row);
+   let chunks=[];for await(const chunk of req)chunks.push(chunk);row.body=Buffer.concat(chunks).toString();
+   const gate=gates.get(token+' '+p);if(gate){gate.started?.();await gate.promise;}
+   let status=200,code='OK',data=[];
+   if(p==='/auth/session'){status=behavior.status;code=behavior.code;data={tenantId:'tenant_'+token,principalId:token,roles:behavior.roles,expiresAt:new Date(Date.now()+behavior.expiry).toISOString()};}
+   else if(p==='/auth/dev-token')data={accessToken:'dev-ticket'};
+-  else if(p.endsWith('/download')){res.setHeader('Content-Type','application/octet-stream');res.end('controlled artifact');row.response={status:200,kind:'artifact',body:'controlled artifact'};return;}
++  else if(p.endsWith('/download')){const status=behavior.artifactStatus||200;res.writeHead(status,{'Content-Type':'application/octet-stream'});res.end('controlled artifact');row.response={status,kind:'artifact',body:'controlled artifact'};return;}
+   else if(p.endsWith('/events')){
+    if(behavior.http){status=behavior.http.status;code=behavior.http.code;data=null;}
+    else {const body=behavior.reset?`event: stream_reset\ndata: ${JSON.stringify({reason:behavior.reset})}\n\nid: 3\nevent: NODE_STARTED\ndata: {"seq":3}\n\n`:behavior.statusFailure?'id: 3\nevent: WAITING_STEP\ndata: {"seq":3,"type":"WAITING_STEP"}\n\n':'event: stream_status\ndata: {"chunkReplay":false}\n\n';res.setHeader('Content-Type','text/event-stream');res.end(body);row.response={status:200,kind:'sse',body};return;}
+   } else if(/\/debug-runs\/?$/.test(p)&&req.method==='POST')data={runId:'r_debug'};
+   else if(p==='/admin/debug-inputs')data={items:[],hasMore:false,nextAfterId:0};
+   else if(p.includes('/debug-runs/')&&p.endsWith('/status'))data={runId:'r_debug',status:'RUNNING',eventsWatermark:0,nodes:[],events:[]};
+   else if(/^\/admin\/runs\//.test(p))data={runId:p.split('/')[3],status:behavior.runStatus,eventsWatermark:0,nodes:[],fileRefs:[{artifactId:'file',name:'result.txt',bytes:19,downloadUrl:'/admin/artifacts/file/download'}]};
+   else if(p==='/admin/apps')data=[appData(token)];
+   else if(p==='/admin/apps/app/copy')data={code:'old_copy'};
+   else if(p==='/admin/apps/app/versions')data=[{versionNo:1}];
+   else if(p==='/admin/apps/app')data=appData(token);
+   else if(p==='/admin/flows/app')data={definition:appData(token).definition,layout:{}};
+   else if(p.endsWith('/input-schema'))data={type:'FLOW',inputs:[]};
+   if(behavior.statusFailure&&(p.endsWith('/status')||/^\/admin\/runs\/[^/]+$/.test(p))&&++statusReads>=behavior.statusFailure.after){status=behavior.statusFailure.status;code=behavior.statusFailure.code;data=null;}
+   row.response={status,kind:'json',envelope:{code,message:status===200?'OK':'controlled '+code,data}};
+   res.writeHead(status,{'Content-Type':'application/json'});res.end(JSON.stringify(row.response.envelope));return;
+  }
+  vite.middlewares(req,res,()=>{res.statusCode=404;res.end('not found');});
+ });
+ await new Promise(r=>server.listen(0,'127.0.0.1',r));
+ const port=server.address().port,origin='http://127.0.0.1:'+port;
+ save('lifecycle-start.json',{cwd:process.cwd(),pid:process.pid,origin,readyAt:new Date().toISOString(),owned:'node HTTP+Vite middleware; child Chromium launched by this test; no existing processes touched'});
+ const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});
+ const context=await browser.newContext({viewport:{width:1440,height:960},acceptDownloads:true});
+ context.setDefaultTimeout(8000);
+ const delay=ms=>new Promise(r=>setTimeout(r,ms));
+ const reset=()=>{behavior={status:200,code:'OK',roles:['ADMIN'],reset:undefined,http:undefined,runStatus:'SUCCEEDED',expiry:60_000};statusReads=0;};
+ async function pageFor({provider=true,token='A',dev=false,hash='/apps',held=false}={}){
+  const page=await context.newPage();page.on('pageerror',e=>{errors.push({message:e.message,url:page.url()});save('page-errors.json',errors);});
+  await page.addInitScript(({provider,token,held})=>{
+   const native=setTimeout;window.setTimeout=(fn,ms,...args)=>native(fn,[1000,2000].includes(ms)?50:ms,...args);
+-  window.host={token,calls:0,unsubscribed:0,listeners:[],held,release:undefined};
+-  if(provider)window.agentPlatformPortal={getAccessToken(){window.host.calls++;return window.host.held?new Promise(r=>window.host.release=r):Promise.resolve(window.host.token);},onSessionChanged(fn){window.host.listeners.push(fn);return ()=>{window.host.unsubscribed++;window.host.listeners=window.host.listeners.filter(x=>x!==fn);};}};
++  window.host={token,calls:0,unsubscribed:0,subscriptions:0,listeners:[],held,release:undefined};
++  if(provider)window.agentPlatformPortal={getAccessToken(){window.host.calls++;return window.host.held?new Promise(r=>window.host.release=r):Promise.resolve(window.host.token);},onSessionChanged(fn){window.host.subscriptions++;window.host.listeners.push(fn);return ()=>{window.host.unsubscribed++;window.host.listeners=window.host.listeners.filter(x=>x!==fn);};}};
+   window.switchIdentity=token=>{window.host.held=false;window.host.token=token;window.host.listeners.forEach(fn=>fn());};
+   window.downloadClicks=0;const click=HTMLAnchorElement.prototype.click;HTMLAnchorElement.prototype.click=function(){window.downloadClicks++;return click.call(this);};
+  },{provider,token,held});
+  await page.goto(origin+'/fixture.html'+(dev?'?mode=dev':'')+'#'+hash);
+  await page.waitForFunction(()=>window.d4b);
+  return page;
+ }
+ async function connected(page,token='A'){await expect(page.getByTestId('portal-identity')).toHaveText(token);await expect(page.locator('.shell')).toBeVisible();}
+ async function run(name,fn){if(selector&&!new RegExp(selector).test(name))return;reset();const start=raw.length;try{const data=await fn();results.push({name,passed:true,rawStart:start,rawEnd:raw.length,...data});}catch(e){results.push({name,passed:false,error:e.stack,rawStart:start,rawEnd:raw.length});save('cases.json',results);throw e;}save('cases.json',results);console.log(JSON.stringify(results.at(-1)));}
+ function gate(key){let resolve,started;const promise=new Promise(r=>resolve=r),ready=new Promise(r=>started=r);const value={promise,started};gates.set(key,value);return {ready,release:()=>{gates.delete(key);resolve();}};}
+ try{
++ await run('D4b lifecycle Shell logout ignores queued host notifications and manual reconnect restores one subscription',async()=>{
++  const start=raw.length,page=await pageFor();try{await connected(page);await page.evaluate(()=>window.queuedHost=window.host.listeners.slice());await page.getByRole('button',{name:'退出',exact:true}).click();await expect(page.getByTestId('portal-entry')).toBeVisible();await page.evaluate(()=>window.queuedHost.forEach(fn=>fn()));await delay(100);
++   const state=await page.evaluate(()=>({token:window.d4b.auth.token,user:window.d4b.auth.user??null,roles:window.d4b.auth.roles,providerCalls:window.host.calls,subscriptions:window.host.subscriptions,unsubscribed:window.host.unsubscribed,active:window.host.listeners.length}));save('logout-after-queued.json',state);await page.screenshot({path:path.join(out,'logout-host-event.png'),fullPage:true});expect(state).toEqual({token:'',user:null,roles:[],providerCalls:1,subscriptions:1,unsubscribed:1,active:0});
++   await page.getByTestId('portal-reconnect').click();await connected(page);const generation=await page.evaluate(()=>window.d4b.auth.generation);await page.evaluate(()=>window.queuedHost.forEach(fn=>fn()));await delay(100);expect(await page.evaluate(()=>window.d4b.auth.generation)).toBe(generation);await page.evaluate(()=>window.switchIdentity('B'));await connected(page,'B');expect(await page.evaluate(()=>({calls:window.host.calls,subscriptions:window.host.subscriptions,active:window.host.listeners.length}))).toEqual({calls:3,subscriptions:2,active:1});expect(raw.slice(start).filter(x=>x.method==='POST'||x.url.endsWith('/cancel'))).toHaveLength(0);return {afterLogout:state,manualSubscriptions:2,activeSubscriptions:1,activeHostSwitch:'B',postOrCancelCount:0};
++  }finally{await page.close();}
++ });
++ await run('D4b lifecycle Shell artifact401 stays invalid after host event until manual reconnect',async()=>{
++  behavior.artifactStatus=401;behavior.runStatus='RUNNING';const start=raw.length,page=await pageFor({hash:'/runs/r_lifecycle401'});try{await connected(page);await page.evaluate(()=>window.queuedHost=window.host.listeners.slice());await expect(page.getByRole('button',{name:'下载附件'})).toBeVisible();await page.getByRole('button',{name:'下载附件'}).click();await expect(page.getByTestId('portal-entry')).toBeVisible();const stopped=raw.length;await page.evaluate(()=>{window.queuedHost.forEach(fn=>fn());window.switchIdentity('B');});await delay(200);expect(raw.length).toBe(stopped);expect(await page.evaluate(()=>({token:window.d4b.auth.token,roles:window.d4b.auth.roles,calls:window.host.calls}))).toEqual({token:'',roles:[],calls:1});await page.getByTestId('portal-reconnect').click();await connected(page,'B');expect(raw.slice(start).filter(x=>x.response?.kind==='artifact')).toHaveLength(1);expect(raw.slice(start).filter(x=>x.method==='POST'||x.url.endsWith('/cancel'))).toHaveLength(0);return {currentArtifact401:true,hostDidNotReconnect:true,manualIdentity:'B',providerCalls:2,downloadCount:1,postOrCancelCount:0};}finally{await page.close();}
++ });
++ await run('D4b lifecycle Shell expiry bounds rollback and waits for manual recovery after host event',async()=>{
++  behavior.expiry=1200;const start=raw.length,page=await pageFor();try{await connected(page);await page.evaluate(()=>{window.queuedHost=window.host.listeners.slice();window.originalNow=Date.now;Date.now=()=>window.originalNow()-3_600_000;});await expect(page.getByTestId('portal-entry')).toBeVisible({timeout:3500});const stopped=raw.length;await page.evaluate(()=>{window.queuedHost.forEach(fn=>fn());window.switchIdentity('B');});await delay(100);expect(raw.length).toBe(stopped);expect(await page.evaluate(()=>({token:window.d4b.auth.token,user:window.d4b.auth.user??null,roles:window.d4b.auth.roles,calls:window.host.calls,connection:window.d4b.auth.connection}))).toEqual({token:'',user:null,roles:[],calls:1,connection:'expired'});await page.evaluate(()=>Date.now=window.originalNow);await page.getByTestId('portal-reconnect').click();await connected(page,'B');expect(raw.slice(start).filter(x=>x.method==='POST'||x.url.endsWith('/cancel'))).toHaveLength(0);return {wallRollbackMs:3_600_000,installedLifetimeMs:1200,expiredAtMonotonicBound:true,hostDidNotReconnect:true,manualIdentity:'B',providerCalls:2,postOrCancelCount:0};}finally{await page.close();}
++ });
++ await run('D4b fix artifact current 401 clears whole identity and stops observation without replay',async()=>{
++  behavior.artifactStatus=401;behavior.runStatus='RUNNING';const start=raw.length,page=await pageFor({hash:'/runs/r_current_artifact'});
++  try{await connected(page);await expect(page.getByRole('button',{name:'下载附件'})).toBeVisible();const previous=await page.evaluate(()=>window.d4b.auth.generation);await page.getByRole('button',{name:'下载附件'}).click();await expect.poll(()=>raw.slice(start).filter(x=>x.response?.kind==='artifact').length).toBe(1);await delay(100);
++   const state=await page.evaluate(()=>({token:window.d4b.auth.token,user:window.d4b.auth.user??null,roles:window.d4b.auth.roles,generation:window.d4b.auth.generation,providerCalls:window.host.calls,downloadClicks:window.downloadClicks}));save('current401-state.json',state);await page.screenshot({path:path.join(out,'current401-observed.png'),fullPage:true});
++   expect(state).toMatchObject({token:'',user:null,roles:[],providerCalls:1,downloadClicks:0});expect(state.generation).toBeGreaterThan(previous);await expect(page.getByTestId('portal-entry')).toBeVisible();const count=raw.length;await delay(220);expect(raw.length).toBe(count);expect(raw.slice(start).filter(x=>x.method==='POST')).toHaveLength(0);expect(raw.slice(start).filter(x=>x.response?.kind==='artifact')).toHaveLength(1);return {...state,previousGeneration:previous,requestsStable:true,postCount:0,downloadCount:1,screenshot:'current401-observed.png'};
++  }finally{await page.close();}
++ });
++ await run('D4b fix artifact delayed old 401 cannot invalidate new identity or show old error',async()=>{
++  behavior.artifactStatus=401;const start=raw.length,held=gate('A /admin/artifacts/file/download'),page=await pageFor({hash:'/runs/r_old_artifact'});
++  try{await connected(page);await expect(page.getByRole('button',{name:'下载附件'})).toBeVisible();await page.evaluate(()=>{const native=window.fetch;window.fetch=(input,options)=>String(input).includes('/artifacts/')?native(input,{...options,signal:undefined}):native(input,options);});await page.getByRole('button',{name:'下载附件'}).click();await held.ready;await page.evaluate(()=>window.switchIdentity('B'));await connected(page,'B');const generation=await page.evaluate(()=>window.d4b.auth.generation);held.release();await expect.poll(()=>raw.slice(start).filter(x=>x.response?.kind==='artifact').length).toBe(1);await delay(100);
++   const state=await page.evaluate(()=>({token:window.d4b.auth.token,user:window.d4b.auth.user,roles:window.d4b.auth.roles,generation:window.d4b.auth.generation,providerCalls:window.host.calls,downloadClicks:window.downloadClicks}));expect(state).toMatchObject({token:'B',user:{principalId:'B'},roles:['ADMIN'],generation,providerCalls:2,downloadClicks:0});await expect(page.getByText('下载附件失败 (401)',{exact:true})).toHaveCount(0);expect(raw.slice(start).filter(x=>x.method==='POST')).toHaveLength(0);return {...state,postCount:0,downloadCount:1,oldHTTP401ReturnedAfterNewSession:true};
++  }finally{held.release();await page.close();}
++ });
++ await run('D4b fix artifact 403 preserves current identity and explains denied download',async()=>{
++  behavior.artifactStatus=403;const start=raw.length,page=await pageFor({hash:'/runs/r_forbidden_artifact'});try{await connected(page);await expect(page.getByRole('button',{name:'下载附件'})).toBeVisible();const generation=await page.evaluate(()=>window.d4b.auth.generation);await page.getByRole('button',{name:'下载附件'}).click();await expect(page.getByRole('alert')).toContainText('无权下载');expect(await page.evaluate(()=>({token:window.d4b.auth.token,generation:window.d4b.auth.generation,roles:window.d4b.auth.roles,providerCalls:window.host.calls,downloadClicks:window.downloadClicks}))).toEqual({token:'A',generation,roles:['ADMIN'],providerCalls:1,downloadClicks:0});expect(raw.slice(start).filter(x=>x.response?.kind==='artifact')).toHaveLength(1);return {generation,preservedIdentity:true,providerCalls:1,downloadCount:1,deniedMessage:true};}finally{await page.close();}
++ });
+  await run('visual-only final missing and signed-out entry copy screenshots',async()=>{
+   const missing=await pageFor({provider:false});try{await expect(missing.getByTestId('portal-notice')).toHaveText('请从门户打开工作台');await missing.screenshot({path:path.join(out,'missing-desktop.png'),fullPage:true});await missing.setViewportSize({width:390,height:844});await missing.screenshot({path:path.join(out,'missing-narrow.png'),fullPage:true});}finally{await missing.close();}
+   const page=await pageFor();try{await connected(page);await page.getByRole('button',{name:'退出',exact:true}).click();await expect(page.getByTestId('portal-entry')).toBeVisible();await page.screenshot({path:path.join(out,'signed-out-desktop.png'),fullPage:true});await page.setViewportSize({width:390,height:844});await page.screenshot({path:path.join(out,'signed-out-narrow.png'),fullPage:true});}finally{await page.close();}
+   return {captureOnly:true,screenshots:['missing-desktop.png','missing-narrow.png','signed-out-desktop.png','signed-out-narrow.png']};
+  });
+  await run('missing provider uses portal entry with no development fallback',async()=>{const page=await pageFor({provider:false});try{await expect(page.getByTestId('portal-notice')).toHaveText('请从门户打开工作台');expect(raw.filter(x=>x.url.startsWith('/auth/dev-token'))).toHaveLength(0);await page.screenshot({path:path.join(out,'missing-desktop.png'),fullPage:true});return {screenshot:'missing-desktop.png'};}finally{await page.close();}});
+  await run('pending provider mounts connection entry immediately; same token identity switch clears drafts',async()=>{const page=await pageFor({held:true});try{await expect(page.getByTestId('portal-entry')).toBeVisible();await page.evaluate(()=>window.host.release('A'));await connected(page);await page.evaluate(()=>{window.old=window.d4b.capture();window.old.dialog='app';window.old.form={name:'old draft'};window.switchIdentity('A');});await connected(page);await expect(page.getByRole('dialog')).toHaveCount(0);expect(await page.evaluate(()=>window.d4b.auth.generation)).toBe(2);return {sameTokenNewGeneration:true,draftGone:true};}finally{await page.close();}});
+  await run('manual reconnect supersedes held provider while connecting and ignores late old provider',async()=>{
+   const page=await pageFor({held:true});try{await expect(page.getByTestId('portal-entry')).toBeVisible();await expect(page.getByTestId('portal-reconnect')).toBeEnabled({timeout:1000});await page.evaluate(()=>{window.oldRelease=window.host.release;window.host.held=false;window.host.token='B';});await page.getByTestId('portal-reconnect').click();await connected(page,'B');await page.evaluate(()=>window.oldRelease('A'));await delay(100);expect(await page.evaluate(()=>window.d4b.auth.token)).toBe('B');return {manualSupersededPendingProvider:true,lateProviderIgnored:true};}finally{await page.close();}
+  });
+  for(const [status,code,message] of [[401,'UNAUTHORIZED','会话已失效'],[403,'SYS-AUTH-403','无权访问'],[503,'IAM_AUTHORITY_UNAVAILABLE','会话暂不可用']])await run('session '+status+' entry and manual reconnect',async()=>{behavior.status=status;behavior.code=code;const page=await pageFor();try{await expect(page.getByTestId('portal-notice')).toContainText(message);expect(await page.evaluate(()=>window.d4b.auth.roles)).toEqual([]);expect(await page.evaluate(()=>window.host.calls)).toBe(1);behavior.status=200;behavior.code='OK';await page.getByTestId('portal-reconnect').click();await connected(page);return {status,manualRecovery:true};}finally{await page.close();}});
+  await run('explicit development mode is manual and verifies session before workspace',async()=>{const page=await pageFor({provider:false,dev:true});try{await expect(page.getByRole('button',{name:'进入开发工作台'})).toBeVisible();await page.getByRole('button',{name:'进入开发工作台'}).click();await connected(page,'dev-ticket');return {devOnly:true};}finally{await page.close();}});
+  await run('real axios session and business HTTP, fetch SSE and artifact omit same-origin Cookie',async()=>{
+   await context.addCookies([{name:'ambient',value:'portal-cookie',url:origin}]);behavior.runStatus='RUNNING';const start=raw.length,page=await pageFor({hash:'/runs/r_cookie'});
+   try{await connected(page);await page.evaluate(()=>fetch('/ambient'));await expect(page.getByRole('button',{name:'下载附件'})).toBeVisible();const download=page.waitForEvent('download');await page.getByRole('button',{name:'下载附件'}).click();const file=await download;await file.saveAs(path.join(out,'downloaded-result.txt'));await expect.poll(()=>raw.slice(start).filter(x=>x.url.endsWith('/events')).length).toBeGreaterThan(0);
+    const requests=raw.slice(start);for(const category of ['/auth/session','/admin/runs/r_cookie','/admin/runs/r_cookie/events','/admin/artifacts/file/download']){const rows=requests.filter(x=>new URL(x.url,origin).pathname===category);expect(rows.length).toBeGreaterThan(0);for(const row of rows){expect(row.cookie).toBeNull();expect(row.authorization).toBe('Bearer A');}}
+    expect(await page.evaluate(()=>document.cookie)).toContain('ambient=portal-cookie');return {cookiePresentInDocument:true,rawCategories:4,download:file.suggestedFilename()};
+   }finally{await page.close();}
+  });
+  await run('late App allSettled/finally and old closures cannot mutate new identity, navigation, message or network',async()=>{
+   const hold=gate('A /admin/model-entries'),page=await pageFor({hash:'/apps/app/orchestration/flow'});
+   try{await connected(page);await hold.ready;await page.evaluate(()=>{window.old=window.d4b.capture();window.old.form={secret:'draft'};window.switchIdentity('B');});await connected(page,'B');await expect.poll(()=>page.evaluate(()=>window.d4b.capture().busy)).toBe(false);hold.release();await delay(100);
+    const before=raw.length;await page.evaluate(async()=>{window.old.go('/stale');window.old.failure({status:401,message:'stale failure'});window.old.success('stale toast');await window.old.load();await window.old.operation(async()=>{throw Error('must not execute');});});
+    expect(raw.length).toBe(before);expect(await page.evaluate(()=>location.hash)).toBe('#/apps/app/orchestration/flow');expect(await page.evaluate(()=>window.d4b.auth.token)).toBe('B');expect(await page.evaluate(()=>window.d4b.auth.roles)).toEqual(['ADMIN']);expect(await page.evaluate(()=>window.d4b.capture().form.secret)).toBeUndefined();await expect(page.getByText('stale toast',{exact:true})).toHaveCount(0);return {oldAllSettledReleased:true,oldClosuresStopped:true,newBusy:false};
+   }finally{hold.release();await page.close();}
+  });
+  await run('late real App copy POST cannot navigate new identity or replay a POST',async()=>{
+   const page=await pageFor(),hold=gate('A /admin/apps/app/copy');try{await connected(page);await page.evaluate(()=>{window.old=window.d4b.capture();window.old.startCopy({code:'app',name:'old'});window.old.copyForm={code:'copy',name:'copy'};window.copyPromise=window.old.copyApplication();});await hold.ready;await page.evaluate(()=>window.switchIdentity('B'));await connected(page,'B');hold.release();await page.evaluate(()=>window.copyPromise);expect(await page.evaluate(()=>location.hash)).toBe('#/apps');expect(raw.filter(x=>x.url==='/admin/apps/app/copy')).toHaveLength(1);return {postCount:1,hash:'#/apps'};}finally{hold.release();await page.close();}
+  });
+  await run('late providerOptions and published input consumers remain inside old workspace',async()=>{
+   const page=await pageFor();try{await connected(page);const hold=gate('A /admin/model-providers');await page.evaluate(()=>{window.old=window.d4b.capture();window.old.create('entry');});await hold.ready;await page.evaluate(()=>window.switchIdentity('B'));await connected(page,'B');hold.release();await delay(100);expect(await page.evaluate(()=>window.d4b.capture().providerOptions)).toEqual([]);
+    const schema=gate('B /v1/apps/app/input-schema');await page.evaluate(()=>location.hash='/apps/app/run');await schema.ready;await page.evaluate(()=>window.switchIdentity('C'));await connected(page,'C');schema.release();await delay(100);expect(await page.evaluate(()=>window.d4b.auth.token)).toBe('C');expect(raw.filter(x=>x.method==='POST'&&x.authorization==='Bearer C')).toHaveLength(0);return {providerOptionsCleared:true,schemaIsolated:true};
+   }finally{for(const g of gates.values())g.started?.();gates.clear();await page.close();}
+  });
+  await run('late artifact blob from actual component cannot click after identity switch',async()=>{
+   const page=await pageFor({hash:'/runs/r_blob'});try{await connected(page);await expect(page.getByRole('button',{name:'下载附件'})).toBeVisible();await page.evaluate(()=>{const native=Response.prototype.blob;Response.prototype.blob=async function(){const value=await native.call(this);await new Promise(r=>window.releaseBlob=r);return value;};});await page.getByRole('button',{name:'下载附件'}).click();await page.waitForFunction(()=>window.releaseBlob);await page.evaluate(()=>window.switchIdentity('B'));await connected(page,'B');await page.evaluate(()=>window.releaseBlob());await delay(100);expect(await page.evaluate(()=>window.downloadClicks)).toBe(0);return {downloadClicks:0};}finally{await page.close();}
+  });
+  await run('late chart dynamic import does not restore old workspace or busy state',async()=>{
+   const held=gate('chart'),page=await pageFor({hash:'/runs'});try{await connected(page);await held.ready;await page.evaluate(()=>{window.old=window.d4b.capture();window.switchIdentity('B');});await connected(page,'B');held.release();await expect.poll(()=>page.evaluate(()=>window.d4b.capture().busy)).toBe(false);expect(await page.evaluate(()=>window.old===window.d4b.capture())).toBe(false);expect(await page.evaluate(()=>window.d4b.auth.token)).toBe('B');return {oldWorkspaceUnmounted:true,newBusy:false};}finally{held.release();await page.close();}
+  });
+  await run('empty roles authenticate without admin controls, expiry and unmount never auto reconnect',async()=>{
+   behavior.roles=[];behavior.expiry=1200;const page=await pageFor();try{await connected(page);await expect(page.getByRole('button',{name:'创建智能体',exact:true})).toHaveCount(0);await expect(page.getByTestId('portal-entry')).toBeVisible();expect(await page.evaluate(()=>window.d4b.auth.roles)).toEqual([]);expect(await page.evaluate(()=>window.host.calls)).toBe(1);await page.evaluate(()=>document.querySelector('#app').__vue_app__.unmount());expect(await page.evaluate(()=>window.host.unsubscribed)).toBe(1);return {emptyRoles:true,expired:true,hostCalls:1,unsubscribed:1};}finally{await page.close();}
+  });
+  for(const consumer of ['RunDetail','DebugPanel'])for(const reason of ['AUTHORITY_EXPIRED','AUTHORITY_DENIED','AUTHORITY_UNAVAILABLE'])await run(consumer+' stops '+reason+' without status/open/cancel/POST growth',async()=>{
+   behavior.reset=reason;behavior.runStatus='RUNNING';const page=await pageFor({hash:consumer==='RunDetail'?'/runs/r_control':'/apps/app/orchestration/debug'});
+   try{await connected(page);if(consumer==='DebugPanel'){await expect(page.getByRole('button',{name:'开始调试'})).toBeEnabled();await page.getByRole('button',{name:'开始调试'}).click();}await expect(page.getByRole('button',{name:'重新连接观察'})).toBeVisible();const count=raw.length,post=raw.filter(x=>x.method==='POST').length;await delay(220);expect(raw.length).toBe(count);expect(raw.filter(x=>x.method==='POST')).toHaveLength(post);return {reason,consumer,requestsStable:true,postStable:true};}finally{await page.close();}
+  });
+  for(const consumer of ['RunDetail','DebugPanel'])await run(consumer+' stops named IAM 503 with manual recovery entry',async()=>{
+   behavior.http={status:503,code:'IAM_AUTHORITY_UNAVAILABLE'};behavior.runStatus='RUNNING';const page=await pageFor({hash:consumer==='RunDetail'?'/runs/r_http':'/apps/app/orchestration/debug'});try{await connected(page);if(consumer==='DebugPanel'){await expect(page.getByRole('button',{name:'开始调试'})).toBeEnabled();await page.getByRole('button',{name:'开始调试'}).click();}await expect(page.getByRole('button',{name:'重新连接观察'})).toBeVisible();const count=raw.length;await delay(220);expect(raw.length).toBe(count);return {consumer,code:'IAM_AUTHORITY_UNAVAILABLE',requestsStable:true};}finally{await page.close();}
+  });
+  for(const consumer of ['RunDetail','DebugPanel'])for(const status of [401,403])await run(consumer+' stops HTTP '+status+' without retry or cancel',async()=>{
+   behavior.http={status,code:status===401?'UNAUTHORIZED':'SYS-AUTH-403'};behavior.runStatus='RUNNING';const page=await pageFor({hash:consumer==='RunDetail'?'/runs/r_denied':'/apps/app/orchestration/debug'});try{await connected(page);if(consumer==='DebugPanel'){await expect(page.getByRole('button',{name:'开始调试'})).toBeEnabled();await page.getByRole('button',{name:'开始调试'}).click();}await expect(status===401?page.getByTestId('portal-entry'):page.getByRole('button',{name:'重新连接观察'})).toBeVisible();const count=raw.length;await delay(220);expect(raw.length).toBe(count);if(status===401){expect(await page.evaluate(()=>window.d4b.auth.roles)).toEqual([]);expect(await page.evaluate(()=>window.d4b.auth.user)).toBeUndefined();}return {consumer,status,requestsStable:true};}finally{await page.close();}
+  });
+  for(const consumer of ['RunDetail','DebugPanel'])await run(consumer+' ordinary dependency 503 retains status/reopen recovery',async()=>{
+   behavior.http={status:503,code:'DEPENDENCY_UNAVAILABLE'};behavior.runStatus='RUNNING';const start=raw.length,page=await pageFor({hash:consumer==='RunDetail'?'/runs/r_transient':'/apps/app/orchestration/debug'});try{await connected(page);if(consumer==='DebugPanel'){await expect(page.getByRole('button',{name:'开始调试'})).toBeEnabled();await page.getByRole('button',{name:'开始调试'}).click();}await expect.poll(()=>raw.slice(start).filter(x=>x.url.endsWith('/events')).length).toBeGreaterThanOrEqual(2);await expect(page.getByRole('button',{name:'重新连接观察'})).toHaveCount(0);expect(raw.slice(start).filter(x=>x.url.endsWith('/cancel'))).toHaveLength(0);return {consumer,ordinary503Retried:true,cancelCount:0};}finally{await page.close();}
+  });
+  for(const consumer of ['RunDetail','DebugPanel'])await run(consumer+' status authorization denial after business frame stops observation',async()=>{
+   behavior.runStatus='RUNNING';behavior.statusFailure={after:consumer==='RunDetail'?3:2,status:403,code:'SYS-AUTH-403'};
+   const page=await pageFor({hash:consumer==='RunDetail'?'/runs/r_event_status':'/apps/app/orchestration/debug'});try{await connected(page);if(consumer==='DebugPanel'){await expect(page.getByRole('button',{name:'开始调试'})).toBeEnabled();await page.getByRole('button',{name:'开始调试'}).click();}await expect(page.getByRole('button',{name:'重新连接观察'})).toBeVisible();const count=raw.length;await delay(220);expect(raw.length).toBe(count);return {consumer,status403AfterFrame:true,requestsStable:true};}finally{await page.close();}
+  });
+  await run('logout clears identity and waits for explicit reconnect; desktop and narrow layout',async()=>{
+   const page=await pageFor();try{
+    await connected(page);await page.screenshot({path:path.join(out,'connected-desktop.png'),fullPage:true});await page.setViewportSize({width:390,height:844});
+    const layout=await page.evaluate(()=>({viewport:innerWidth,width:document.documentElement.scrollWidth,inheritedMinimum:parseFloat(getComputedStyle(document.querySelector('.shell')).minWidth)}));
+    expect(layout.width).toBeLessThanOrEqual(Math.max(layout.viewport,layout.inheritedMinimum));await page.screenshot({path:path.join(out,'connected-narrow.png'),fullPage:true});
+    await page.getByRole('button',{name:'退出',exact:true}).click();await expect(page.getByTestId('portal-entry')).toBeVisible();expect(await page.evaluate(()=>window.d4b.auth.roles)).toEqual([]);expect(await page.evaluate(()=>window.d4b.auth.user)).toBeUndefined();expect(await page.evaluate(()=>window.host.calls)).toBe(1);
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:path.join(out,'signed-out-narrow.png'),fullPage:true});await page.getByTestId('portal-reconnect').click();await connected(page);
+    return {screenshots:['connected-desktop.png','connected-narrow.png','signed-out-narrow.png'],layout,entryOverflow:false,manualReconnect:true};
+   }finally{await page.close();}
+  });
+ }finally{
+  for(const g of gates.values())g.started?.();
+  await context.close();await browser.close();await vite.close();server.closeAllConnections();await new Promise(r=>server.close(r));
+  save('raw-http.json',raw);save('page-errors.json',errors);save('lifecycle-end.json',{pid:process.pid,closedAt:new Date().toISOString(),httpClosed:!server.listening,viteClosed:true,chromiumClosed:!browser.isConnected()});
+  save('result.json',{phase,cwd:process.cwd(),origin,cases:results.length,passed:results.filter(x=>x.passed).length,failed:results.filter(x=>!x.passed).length,errors});
+ }
+ if(results.some(x=>!x.passed)||errors.length)process.exitCode=1;
+diff --git a/web/tests/run-observer.test.ts b/web/tests/run-observer.test.ts
+index 0eff28a..631b3f2 100644
+--- a/web/tests/run-observer.test.ts
++++ b/web/tests/run-observer.test.ts
+@@ -1,94 +1,104 @@
+-import { describe, it, expect } from 'vitest';
++import { describe, it, expect,vi } from 'vitest';
+ import { observeRun } from '../shared/run-observer';
++import {streamEvents} from '../debug-panel/events';
+ 
+ describe('authoritative run observation across transient SSE connections',()=>{
++  it('D4b fix real reset stream with rejected cancel stops before readStatus or reopen',async()=>{
++    let opens=0,reads=0,facts=0,cancels=0;const signal=new AbortController().signal;
++    const stream=new ReadableStream({start(c){c.enqueue(new TextEncoder().encode('event: stream_reset\ndata: {"reason":"AUTHORITY_DENIED"}\n\nid: 5\ndata: {"seq":5}\n\n'));},cancel(){cancels++;return Promise.reject(new TypeError('cleanup failed'));}});
++    vi.stubGlobal('fetch',async()=>new Response(stream));
++    try{
++      const outcome=await observeRun({signal,open:async(cursor,emit)=>{opens++;await streamEvents('/events',()=> 'token',cursor,emit,signal);},readStatus:async()=>{reads++;return {status:'SUCCEEDED'};},onEvent:()=>{facts++;},onStatus:()=>{}}).then(result=>({result:result.status}),error=>({error:{name:error.name,reason:error.reason,message:error.message}}));
++      expect({outcome,opens,reads,facts,cancels,locked:stream.locked}).toMatchObject({outcome:{error:{reason:'AUTHORITY_DENIED'}},opens:1,reads:0,facts:0,cancels:1,locked:false});
++    }finally{vi.unstubAllGlobals();}
++  });
+   it.each(['AUTHORITY_EXPIRED','AUTHORITY_DENIED','AUTHORITY_UNAVAILABLE'])('D4b stops %s reset without status or reopening',async reason=>{
+     let opens=0,reads=0;const facts:any[]=[];
+     await expect(observeRun({signal:new AbortController().signal,open:async(_,emit)=>{opens++;emit({type:'stream_reset',reason});emit({type:'NODE_STARTED',seq:1});},readStatus:async()=>{reads++;return {status:'SUCCEEDED'};},onStatus:()=>{},onEvent:e=>facts.push(e)})).rejects.toMatchObject({reason});
+     expect(opens).toBe(1);expect(reads).toBe(0);expect(facts).toEqual([]);
+   });
+   it('D4b stops named IAM 503 but retains ordinary 503 recovery',async()=>{
+     const base={signal:new AbortController().signal,pause:async()=>{},onStatus:()=>{},onEvent:()=>{}};let reads=0;
+     await expect(observeRun({...base,open:async()=>{throw Object.assign(Error('iam unavailable'),{status:503,code:'IAM_AUTHORITY_UNAVAILABLE'});},readStatus:async()=>{reads++;return {status:'SUCCEEDED'};}})).rejects.toMatchObject({code:'IAM_AUTHORITY_UNAVAILABLE'});expect(reads).toBe(0);
+     const result=await observeRun({...base,open:async()=>{throw Object.assign(Error('ordinary'),{status:503,code:'DEPENDENCY_UNAVAILABLE'});},readStatus:async()=>{reads++;return {status:'SUCCEEDED'};}});expect(result.status).toBe('SUCCEEDED');expect(reads).toBe(1);
+   });
+   it('keeps the accepted run through EOF and resumes from durable IDs, never chunk counters',async()=>{
+     const opened:number[]=[],events:any[]=[],states:any[]=[];let round=0;
+     const result=await observeRun({signal:new AbortController().signal,pause:async()=>{},
+       open:async(cursor,emit)=>{opened.push(cursor);round++;if(round===1){emit({type:'NODE_STARTED',seq:7});emit({type:'CHUNK',seq:900,text:'partial'});}else emit({type:'RUN_FINISHED',seq:9});},
+       readStatus:async()=>round===1?{status:'RUNNING',eventsWatermark:8}:{status:'SUCCEEDED',eventsWatermark:9,output:{text:'final'}},
+       onEvent:e=>events.push(e),onStatus:s=>states.push(s)});
+     expect(opened).toEqual([0,8]);expect(result.output!.text).toBe('final');
+     expect(states.map(s=>s.status)).toEqual(['RUNNING','SUCCEEDED']);expect(events).toHaveLength(3);
+   });
+ 
+   it('applies a reset snapshot before moving the cursor and drops replayed facts',async()=>{
+     const order:string[]=[],seen:number[]=[];let round=0;
+     await observeRun({signal:new AbortController().signal,pause:async()=>{},
+       open:async(cursor,emit)=>{order.push('open:'+cursor);round++;if(round===1)emit({type:'stream_reset',eventsWatermark:50,reason:'CURSOR_EXPIRED'});else{emit({type:'NODE_STARTED',seq:49});emit({type:'RUN_FINISHED',seq:51});}},
+       readStatus:async()=>{order.push('read');return {status:round===1?'RUNNING':'SUCCEEDED',eventsWatermark:round===1?50:51};},
+       onStatus:()=>order.push('snapshot'),onEvent:e=>{if(e.seq)seen.push(e.seq);}});
+     expect(order.slice(0,4)).toEqual(['open:0','read','snapshot','open:50']);expect(seen).toEqual([51]);
+   });
+ 
+   it('uses status while the transient channel fails without reissuing creation',async()=>{
+     let round=0;const states:string[]=[];
+     const result=await observeRun({signal:new AbortController().signal,pause:async()=>{},
+       open:async()=>{round++;throw new TypeError('network unavailable');},
+       readStatus:async()=>({status:round<2?'WAITING_APPROVAL':'SUCCEEDED',eventsWatermark:round}),
+       onStatus:s=>states.push(s.status),onEvent:()=>{}});
+     expect(round).toBe(2);expect(states).toEqual(['WAITING_APPROVAL','SUCCEEDED']);expect(result.status).toBe('SUCCEEDED');
+   });
+ 
+   it('stops on revoked authorization and bounds unavailable status retries',async()=>{
+     let reads=0;
+     const options={signal:new AbortController().signal,pause:async()=>{},open:async()=>{},onEvent:()=>{},onStatus:()=>{}};
+     await expect(observeRun({...options,readStatus:async()=>{reads++;throw Object.assign(new Error('revoked'),{status:401});}})).rejects.toThrow('revoked');
+     expect(reads).toBe(1);reads=0;
+     await expect(observeRun({...options,maxFailures:3,readStatus:async()=>{reads++;throw new TypeError('offline');}})).rejects.toThrow('offline');
+     expect(reads).toBe(3);
+   });
+ 
+   it('aborts a nonterminal observer without marking its backend run cancelled',async()=>{
+     const controller=new AbortController();let reads=0;
+     await expect(observeRun({signal:controller.signal,open:async()=>{},readStatus:async()=>{reads++;return {status:'RUNNING',eventsWatermark:1};},onStatus:()=>{},onEvent:()=>{},pause:async()=>{controller.abort();}})).rejects.toMatchObject({name:'AbortError'});
+     expect(reads).toBe(1);
+   });
+ 
+   it('does not reopen before an unavailable authoritative snapshot has been applied', async()=>{
+     const order:string[]=[];let reads=0;
+     await observeRun({signal:new AbortController().signal,pause:async()=>{},
+       open:async cursor=>{order.push('open:'+cursor);},
+       readStatus:async()=>{order.push('read');if(++reads===1)throw new TypeError('offline');return {status:'SUCCEEDED',eventsWatermark:4};},
+       onStatus:()=>{order.push('snapshot');},onEvent:()=>{}});
+     expect(order).toEqual(['open:0','read','read','snapshot']);
+   });
+ 
+   it('polls after EVENT_LIMIT without reopening the permanently oversized fact', async()=>{
+     let opens=0,reads=0;const delays:number[]=[];
+     await observeRun({signal:new AbortController().signal,pause:async ms=>{delays.push(ms);},
+       open:async(_,emit)=>{opens++;emit({type:'stream_reset',reason:'EVENT_LIMIT',lastEventId:500});},
+       readStatus:async()=>({status:++reads===3?'SUCCEEDED':'RUNNING',eventsWatermark:reads}),
+       onStatus:()=>{},onEvent:()=>{throw Error('control frame delivered as fact');}});
+     expect(opens).toBe(1);expect(reads).toBe(3);expect(delays).toEqual([750,750]);
+   });
+ 
+   it.each([400,401,403,404,422])('stops permanent stream HTTP %s without reading status', async status=>{
+     let reads=0;
+     await expect(observeRun({signal:new AbortController().signal,pause:async()=>{},
+       open:async()=>{throw Object.assign(Error('HTTP '+status),{status});},
+       readStatus:async()=>{reads++;return {status:'RUNNING'};},onStatus:()=>{},onEvent:()=>{}})).rejects.toThrow('HTTP '+status);
+     expect(reads).toBe(0);
+   });
+ 
+   it('aborts a hanging status read and ignores its late response and old stream callback',async()=>{
+     const controller=new AbortController();const states:any[]=[],events:any[]=[];
+     let resolve!:(value:any)=>void,late!:(event:any)=>void;
+     const observation=observeRun({signal:controller.signal,open:async(_,emit)=>{late=emit;},
+       readStatus:()=>new Promise<any>(r=>{resolve=r;controller.abort();}),
+       onStatus:s=>{states.push(s);},onEvent:e=>{events.push(e);}});
+     await expect(observation).rejects.toMatchObject({name:'AbortError'});
+     resolve({status:'SUCCEEDED',eventsWatermark:8});late({type:'RUN_FINISHED',seq:8});
+     await Promise.resolve();expect(states).toEqual([]);expect(events).toEqual([]);
+   });
+ });
+diff --git a/web/tests/stream-auth.test.ts b/web/tests/stream-auth.test.ts
+index 5b54fe9..ddb6dae 100644
+--- a/web/tests/stream-auth.test.ts
++++ b/web/tests/stream-auth.test.ts
+@@ -1,144 +1,167 @@
+ import { afterEach, expect, it, vi } from 'vitest';
+ import axios from 'axios';
+ import { createApi } from '../shared/api';
+ import { streamEvents } from '../debug-panel/events';
+ 
+ afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
++it.each(['AUTHORITY_EXPIRED','AUTHORITY_DENIED','AUTHORITY_UNAVAILABLE'])('D4b fix cleanup rejection preserves %s and releases reader without facts',async reason=>{
++ const cancel=vi.fn(()=>Promise.reject(new TypeError('cleanup failed')));
++ const stream=new ReadableStream({start(c){c.enqueue(new TextEncoder().encode(`event: stream_reset\ndata: {"reason":"${reason}"}\n\nid: 9\ndata: {"seq":9}\n\n`));},cancel});
++ vi.stubGlobal('fetch',async()=>new Response(stream));const events=vi.fn();
++ const outcome=await streamEvents('/events',()=> 'token',0,events,new AbortController().signal).then(()=>({resolved:true}),error=>({name:error.name,reason:error.reason,message:error.message}));
++ expect({outcome,cancels:cancel.mock.calls.length,locked:stream.locked,facts:events.mock.calls.length}).toMatchObject({outcome:{reason},cancels:1,locked:false,facts:0});
++});
++it('D4b fix cleanup rejection preserves caller AbortError and releases pending reader',async()=>{
++ const controller=new AbortController(),cancel=vi.fn(()=>Promise.reject(new TypeError('cleanup failed')));let ready!:()=>void;const reading=new Promise<void>(r=>ready=r);
++ const stream=new ReadableStream({pull(){ready();},cancel});vi.stubGlobal('fetch',async()=>new Response(stream));
++ const pending=streamEvents('/events',()=> 'token',0,vi.fn(),controller.signal);await reading;controller.abort();
++ await expect(pending).rejects.toMatchObject({name:'AbortError'});expect(stream.locked).toBe(false);expect(cancel).toHaveBeenCalledTimes(1);
++});
++it('D4b fix cleanup rejection never replaces primary parser failure',async()=>{
++ const stream=new ReadableStream({start(c){c.enqueue(new TextEncoder().encode('data: invalid-json\n\n'));},cancel:()=>Promise.reject(new TypeError('cleanup failed'))});
++ vi.stubGlobal('fetch',async()=>new Response(stream));await expect(streamEvents('/events',()=> 'token',0,vi.fn(),new AbortController().signal)).rejects.toMatchObject({name:'SyntaxError'});expect(stream.locked).toBe(false);
++});
++it('D4b fix cleanup preserves normal EOF and primary network read error',async()=>{
++ const cancel=vi.fn(()=>Promise.reject(new TypeError('cleanup failed'))),closed=new ReadableStream({start(c){c.close();},cancel});
++ vi.stubGlobal('fetch',async()=>new Response(closed));await expect(streamEvents('/events',()=> 'token',0,vi.fn(),new AbortController().signal)).resolves.toBeUndefined();expect(closed.locked).toBe(false);expect(cancel).not.toHaveBeenCalled();
++ const primary=new TypeError('network read failed'),errored=new ReadableStream({start(c){c.error(primary);}});vi.stubGlobal('fetch',async()=>new Response(errored));
++ await expect(streamEvents('/events',()=> 'token',0,vi.fn(),new AbortController().signal)).rejects.toBe(primary);expect(errored.locked).toBe(false);
++});
+ const ok = () => new Response(JSON.stringify({ code: 'OK', data: { status: 'RUNNING' } }));
+ const revoked = () => new Response('', { status: 401 });
+ const deferred = <T>() => {
+   let resolve!: (value: T) => void;
+   const promise = new Promise<T>(r => { resolve = r; });
+   return { promise, resolve };
+ };
+ 
+ it('keeps existing GET and POST call signatures and bodies', async () => {
+   const transport = vi.fn(async () => ok());
+   const api = createApi(() => 'current', transport);
+   await expect(api('/status')).resolves.toEqual({ status: 'RUNNING' });
+   await api('/decision', 'POST', { approved: true });
+   expect(transport.mock.calls[1]).toEqual(['/decision', expect.objectContaining({
+     method: 'POST', body: '{"approved":true}', headers: expect.objectContaining({ Authorization: 'Bearer current' }),
+   })]);
+ });
+ 
+ it('API rejects an already aborted request before transport', async () => {
+   const transport = vi.fn(async () => ok()), controller = new AbortController();
+   controller.abort();
+   const api = createApi(() => 'current', transport);
+   await expect(api('/status', 'GET', undefined, controller.signal)).rejects.toMatchObject({ name: 'AbortError' });
+   expect(transport).not.toHaveBeenCalled();
+ });
+ 
+ it('passes the observation signal to a fetch-compatible transport', async () => {
+   const transport = vi.fn(async () => ok()), controller = new AbortController();
+   await createApi(() => 'current', transport)('/status', 'GET', undefined, controller.signal);
+   expect(transport.mock.calls[0]).toEqual(['/status', expect.objectContaining({ signal: controller.signal })]);
+ });
+ 
+ it('passes the observation signal to the default axios transport', async () => {
+   const request = vi.spyOn(axios, 'request').mockResolvedValue({ status: 200, headers: {}, data: '{"code":"OK","data":1}' });
+   const controller = new AbortController();
+   await expect(createApi(() => 'current')('/status', 'GET', undefined, controller.signal)).resolves.toBe(1);
+   expect(request).toHaveBeenCalledWith(expect.objectContaining({ signal: controller.signal }));
+ });
+ 
+ it.each([200, 401])('ignores late API HTTP %s after abort even if the transport completes', async status => {
+   const reply = deferred<Response>(), unauthorized = vi.fn(), controller = new AbortController();
+   const api = createApi(() => 'current', () => reply.promise, unauthorized);
+   const pending = api('/status', 'GET', undefined, controller.signal);
+   controller.abort(); reply.resolve(status === 200 ? ok() : revoked());
+   await expect(pending).rejects.toMatchObject({ name: 'AbortError' });
+   expect(unauthorized).not.toHaveBeenCalled();
+ });
+ 
+ it('checks abort again after asynchronous API body decoding', async () => {
+   const body = deferred<any>(), unauthorized = vi.fn(), controller = new AbortController();
+   const response = revoked(); response.json = () => body.promise;
+   const pending = createApi(() => 'current', async () => response, unauthorized)('/status', 'GET', undefined, controller.signal);
+   await Promise.resolve(); controller.abort(); body.resolve({ code: 'UNAUTHORIZED' });
+   await expect(pending).rejects.toMatchObject({ name: 'AbortError' });
+   expect(unauthorized).not.toHaveBeenCalled();
+ });
+ 
+ it('does not clear a new login when the old API token receives 401', async () => {
+   const reply = deferred<Response>(); let token = 'old';
+   const unauthorized = vi.fn(() => { token = ''; });
+   const pending = createApi(() => token, () => reply.promise, unauthorized)('/status');
+   token = 'new'; reply.resolve(revoked());
+   await expect(pending).rejects.toMatchObject({ status: 401 });
+   expect(token).toBe('new'); expect(unauthorized).not.toHaveBeenCalled();
+ });
+ 
+ it('clears the current API token on an active 401 with an unreadable body', async () => {
+   let token = 'current'; const unauthorized = vi.fn(() => { token = ''; });
+   const pending = createApi(() => token, async () => revoked(), unauthorized)('/status');
+   await expect(pending).rejects.toMatchObject({ status: 401 });
+   expect(token).toBe(''); expect(unauthorized).toHaveBeenCalledTimes(1);
+ });
+ 
+ it('SSE rejects an already aborted request before fetch', async () => {
+   const transport = vi.fn(async () => revoked()), controller = new AbortController(); controller.abort();
+   vi.stubGlobal('fetch', transport);
+   await expect(streamEvents('/events', () => 'current', 0, vi.fn(), controller.signal)).rejects.toMatchObject({ name: 'AbortError' });
+   expect(transport).not.toHaveBeenCalled();
+ });
+ 
+ it('ignores late SSE 401 after abort before unauthorized side effects', async () => {
+   const reply = deferred<Response>(), unauthorized = vi.fn(), controller = new AbortController();
+   vi.stubGlobal('fetch', () => reply.promise);
+   const pending = streamEvents('/events', () => 'current', 0, vi.fn(), controller.signal, unauthorized);
+   controller.abort(); reply.resolve(revoked());
+   await expect(pending).rejects.toMatchObject({ name: 'AbortError' });
+   expect(unauthorized).not.toHaveBeenCalled();
+ });
+ 
+ it('does not clear a new login when the old SSE token receives 401', async () => {
+   const reply = deferred<Response>(), controller = new AbortController(); let token = 'old';
+   const unauthorized = vi.fn(() => { token = ''; }); vi.stubGlobal('fetch', () => reply.promise);
+   const pending = streamEvents('/events', () => token, 0, vi.fn(), controller.signal, unauthorized);
+   token = 'new'; reply.resolve(revoked());
+   await expect(pending).rejects.toMatchObject({ status: 401 });
+   expect(token).toBe('new'); expect(unauthorized).not.toHaveBeenCalled();
+ });
+ 
+ it('clears the current SSE token on an active 401', async () => {
+   let token = 'current'; const unauthorized = vi.fn(() => { token = ''; });
+   vi.stubGlobal('fetch', async () => revoked());
+   await expect(streamEvents('/events', () => token, 0, vi.fn(), new AbortController().signal, unauthorized)).rejects.toMatchObject({ status: 401 });
+   expect(token).toBe(''); expect(unauthorized).toHaveBeenCalledTimes(1);
+ });
+ 
+ it('D4b scopes same-token HTTP to generation, including late body and chained POST', async () => {
+   const body=deferred<any>(),response=ok();response.json=()=>body.promise;
+   const controller=new AbortController();let current=true;
+   const transport=vi.fn(async()=>response);
+   const api=createApi(()=> 'same',transport,vi.fn(),{signal:controller.signal,current:()=>current});
+   const pending=api('/late');await Promise.resolve();current=false;body.resolve({code:'OK',data:'old'});
+   await expect(pending).rejects.toMatchObject({name:'AbortError'});
+   await expect(api('/post','POST')).rejects.toMatchObject({name:'AbortError'});expect(transport).toHaveBeenCalledTimes(1);
+ });
+ it('D4b default axios fetch adapter explicitly omits ambient cookies',async()=>{
+   const request=vi.spyOn(axios,'request').mockResolvedValue({status:200,headers:{},data:'{"code":"OK","data":1}'});
+   await createApi(()=> 'token')('/session');
+   expect(request).toHaveBeenCalledWith(expect.objectContaining({adapter:'fetch',withCredentials:false}));
+ });
+ it('D4b names authorization denial and IAM unavailability without generic busy text',async()=>{
+  for(const [status,code,message] of [[403,'SYS-AUTH-403','没有此操作权限'],[503,'IAM_AUTHORITY_UNAVAILABLE','授权服务暂不可用']] as const){
+   await expect(createApi(()=> 'token',async()=>new Response(JSON.stringify({code,message:'internal'}),{status}))('/status')).rejects.toMatchObject({status,code,message:expect.stringContaining(message)});
+  }
+ });
+ it('D4b aborts a pending reader and releases it even if a custom body ignores fetch signal',async()=>{
+  const controller=new AbortController(),cancel=vi.fn();let started!:()=>void;const ready=new Promise<void>(r=>started=r);
+  vi.stubGlobal('fetch',async()=>new Response(new ReadableStream({pull(){started();},cancel})));
+  const observation=streamEvents('/events',()=> 'token',0,vi.fn(),controller.signal);await ready;controller.abort();await expect(observation).rejects.toMatchObject({name:'AbortError'});expect(cancel).toHaveBeenCalledTimes(1);
+ });
+ it.each(['AUTHORITY_EXPIRED','AUTHORITY_DENIED','AUTHORITY_UNAVAILABLE'])('D4b %s reset stops buffered facts and releases reader',async reason=>{
+   const cancelled=vi.fn();vi.stubGlobal('fetch',async()=>new Response(new ReadableStream({start(c){c.enqueue(new TextEncoder().encode(`event: stream_reset\ndata: {"reason":"${reason}"}\n\nid: 3\nevent: NODE_STARTED\ndata: {"seq":3}\n\n`));},cancel:cancelled})));
+   const events=vi.fn();await expect(streamEvents('/events',()=> 'token',0,events,new AbortController().signal)).rejects.toMatchObject({reason});expect(events).not.toHaveBeenCalled();expect(cancelled).toHaveBeenCalledTimes(1);
+ });
+ it('D4b stops after reader read abort and after callback abort within buffered frames',async()=>{
+  const controller=new AbortController(),cancel=vi.fn(),events=vi.fn(()=>controller.abort());
+  vi.stubGlobal('fetch',async()=>new Response(new ReadableStream({start(c){c.enqueue(new TextEncoder().encode('id: 1\ndata: {"seq":1}\n\nid: 2\ndata: {"seq":2}\n\n'));},cancel})));
+  await expect(streamEvents('/events',()=> 'token',0,events,controller.signal)).rejects.toMatchObject({name:'AbortError'});expect(events).toHaveBeenCalledTimes(1);expect(cancel).toHaveBeenCalledTimes(1);
+ });

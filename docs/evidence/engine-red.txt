@@ -1,0 +1,31 @@
+engine-runtime\src\test\java\cn\agentplatform\engine\domain\GraphRulesTest.java:5: ����: �Ҳ�������
+  assert GraphRules.join("ANY", List.of("FAILED","FAILED"),true).equals("FAILED");
+         ^
+  ����:   ���� GraphRules
+  λ��: �� GraphRulesTest
+engine-runtime\src\test\java\cn\agentplatform\engine\domain\GraphRulesTest.java:6: ����: �Ҳ�������
+  assert GraphRules.join("ANY", List.of("FAILED","SKIPPED"),true).equals("SKIPPED");
+         ^
+  ����:   ���� GraphRules
+  λ��: �� GraphRulesTest
+engine-runtime\src\test\java\cn\agentplatform\engine\domain\GraphRulesTest.java:7: ����: �Ҳ�������
+  assert GraphRules.join("ANY", List.of("SUCCEEDED","RUNNING"),true).equals("READY");
+         ^
+  ����:   ���� GraphRules
+  λ��: �� GraphRulesTest
+engine-runtime\src\test\java\cn\agentplatform\engine\domain\GraphRulesTest.java:8: ����: �Ҳ�������
+  assert GraphRules.join("ALL", List.of("SUCCEEDED","SKIPPED"),true).equals("READY");
+         ^
+  ����:   ���� GraphRules
+  λ��: �� GraphRulesTest
+engine-runtime\src\test\java\cn\agentplatform\engine\domain\GraphRulesTest.java:9: ����: �Ҳ�������
+  assert !GraphRules.exclusive("b","j",Map.of("b",List.of("j","k")));
+          ^
+  ����:   ���� GraphRules
+  λ��: �� GraphRulesTest
+engine-runtime\src\test\java\cn\agentplatform\engine\domain\GraphRulesTest.java:10: ����: �Ҳ�������
+  try { GraphRules.validateDag(List.of("a","b"),Map.of("a",List.of("b"),"b",List.of("a"))); throw new AssertionError("cycle accepted"); } catch(IllegalArgumentException expected){}
+        ^
+  ����:   ���� GraphRules
+  λ��: �� GraphRulesTest
+6 ������

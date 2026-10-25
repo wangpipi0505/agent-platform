@@ -1,0 +1,228 @@
+{
+  "status": "DONE_WITH_CONCERNS",
+  "accepted": false,
+  "identity": "/root/iam_o2a_c_fixes",
+  "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+  "sourceWriteOwnership": "returned after inventory seal; frozen",
+  "source": {
+    "status": "success",
+    "sourceBefore": {
+      "file": ".local/iam-o2a-c-fixes/source-before.json",
+      "bytes": 114375,
+      "sha256": "4bf838da425c655524614fa60fbe9eeba9d3cb892d1dd7347899d9cb1ac8cd3e"
+    },
+    "sourceAfter": {
+      "file": ".local/iam-o2a-c-fixes/source-after.json",
+      "bytes": 114375,
+      "sha256": "44192fbf077285773a9c8d35c9e89c1e6e9f1958184a16aee81ae0c211da9b54"
+    },
+    "sourceCount": 600,
+    "finalEpoch": {
+      "file": ".local/iam-o2a-c-fixes/final/source-epoch.json",
+      "bytes": 114375,
+      "sha256": "44192fbf077285773a9c8d35c9e89c1e6e9f1958184a16aee81ae0c211da9b54"
+    },
+    "delta": {
+      "file": "docs/evidence/iam-stage-4-o2a-c-fixes/source-delta.json",
+      "bytes": 2320,
+      "sha256": "e07cb87910328ae40e7881d6178ba61a43089e81dfb4054170778ca69a7b7ee0"
+    },
+    "deltaCount": 4,
+    "bUnchanged": {
+      "file": "docs/evidence/iam-stage-4-o2a-c-fixes/b-unchanged.json",
+      "bytes": 351,
+      "sha256": "495fac8180219e0e6e0ec6c7c70494b03b1abcbe5490d0592d36750cf5f0b356"
+    }
+  },
+  "target": {
+    "status": "success",
+    "targetBefore": {
+      "file": ".local/iam-o2a-c-fixes/target-before.json",
+      "bytes": 435939,
+      "sha256": "e738c822ad54067e44ce505c53c8810f84f445a554c9607914bf2c3287a7e198"
+    },
+    "overlay": {
+      "file": ".local/iam-o2a-c-fixes/target-overlay.json",
+      "bytes": 108880,
+      "sha256": "f5641971be3c0678502aeec1d263b443c28afd706999e550271b7c2b7e2cf542"
+    },
+    "overlayCount": 494,
+    "targetAfter": {
+      "file": ".local/iam-o2a-c-fixes/target-after.json",
+      "bytes": 435939,
+      "sha256": "65646da310fefd754a22b1284854291de3447551ff801a2b8da9f150473eebc9"
+    },
+    "logicalCount": 2096,
+    "compilerInputs": {
+      "file": ".local/iam-o2a-c-fixes/compiler-inputs.json",
+      "bytes": 71328,
+      "sha256": "dfb07056c06b8c31d3447200907c1b4f995388bea4b5933c88aefc5a8c0fff07"
+    },
+    "diagnostics": {
+      "file": "docs/evidence/iam-stage-4-o2a-c-fixes/diagnostics.json",
+      "bytes": 1728,
+      "sha256": "77d88a7a4dc64ff5b51539ce52aa5a6280840489750720bcc21486b1e0ef78c9"
+    },
+    "diagnosticCount": 5
+  },
+  "tests": {
+    "status": "success",
+    "results": {
+      "file": "docs/evidence/iam-stage-4-o2a-c-fixes/test-results.json",
+      "bytes": 28299,
+      "sha256": "dba04efb690ca339c70ad0cc64eef2ce45d0003e80416e09c7a72526f85f10ae"
+    },
+    "counts": {
+      "tests": 24,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "running": [
+      "cn.agentplatform.engine.infra.PortalRunEventsCapacityTest",
+      "cn.agentplatform.engine.infra.PortalRunEventsHttpTest",
+      "cn.agentplatform.engine.infra.PortalRunEventsLifecycleTest",
+      "cn.agentplatform.engine.infra.RunEventReaderBudgetTest"
+    ]
+  },
+  "finalStage": {
+    "phase": "final",
+    "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+    "command": "node .tools/run-iam-module-tests.mjs iam-stage-o2a-c-fixes-final engine-runtime PortalRunEventsLifecycleTest,PortalRunEventsCapacityTest,PortalRunEventsHttpTest,RunEventReaderBudgetTest#emissionAndBorrowCannotBeMintedPubliclyOrExportLargePayloadReferences,RunEventReaderBudgetTest#getterClosureExpiryAndGenerationFailureAreLocalAndSticky",
+    "started": "2026-10-21T04:58:07.789Z",
+    "finished": "2026-10-21T04:59:31.320Z",
+    "exit": 0,
+    "launcherError": null,
+    "sourceEpoch": {
+      "file": ".local/iam-o2a-c-fixes/final/source-epoch.json",
+      "bytes": 114375,
+      "sha256": "44192fbf077285773a9c8d35c9e89c1e6e9f1958184a16aee81ae0c211da9b54"
+    },
+    "raw": {
+      "file": ".local/iam-o2a-c-fixes/final/raw.log",
+      "bytes": 167820,
+      "sha256": "f1f6ff889c2d0f11e4077d53b3d41c1d72877f99f8d71faa732a8a5c75029225"
+    },
+    "running": [
+      "cn.agentplatform.engine.infra.PortalRunEventsCapacityTest",
+      "cn.agentplatform.engine.infra.PortalRunEventsHttpTest",
+      "cn.agentplatform.engine.infra.PortalRunEventsLifecycleTest",
+      "cn.agentplatform.engine.infra.RunEventReaderBudgetTest"
+    ],
+    "reports": [
+      {
+        "original": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.PortalRunEventsCapacityTest.xml",
+        "archive": {
+          "file": ".local/iam-o2a-c-fixes/final/engine-runtime-TEST-cn.agentplatform.engine.infra.PortalRunEventsCapacityTest.xml",
+          "bytes": 48513,
+          "sha256": "c5791160640482aaf629441c9d5226a0c428d0df84e8836fcba482c67708ba8f"
+        }
+      },
+      {
+        "original": "engine-runtime/target/surefire-reports/cn.agentplatform.engine.infra.PortalRunEventsCapacityTest.txt",
+        "archive": {
+          "file": ".local/iam-o2a-c-fixes/final/engine-runtime-cn.agentplatform.engine.infra.PortalRunEventsCapacityTest.txt",
+          "bytes": 368,
+          "sha256": "9352b44d8b7607a05000d417c434ede55ca9304f6da38345c6982e8663f1ab5d"
+        }
+      },
+      {
+        "original": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.PortalRunEventsHttpTest.xml",
+        "archive": {
+          "file": ".local/iam-o2a-c-fixes/final/engine-runtime-TEST-cn.agentplatform.engine.infra.PortalRunEventsHttpTest.xml",
+          "bytes": 47497,
+          "sha256": "eed431bd9b46d5997e4242ecf9fefb08020539ec0cbe05dd03702ebbd6b6d1c7"
+        }
+      },
+      {
+        "original": "engine-runtime/target/surefire-reports/cn.agentplatform.engine.infra.PortalRunEventsHttpTest.txt",
+        "archive": {
+          "file": ".local/iam-o2a-c-fixes/final/engine-runtime-cn.agentplatform.engine.infra.PortalRunEventsHttpTest.txt",
+          "bytes": 360,
+          "sha256": "0b0762c760fb43aff7065f85cc2a36f2549997df0b1786dcdaa36e74294414f6"
+        }
+      },
+      {
+        "original": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.PortalRunEventsLifecycleTest.xml",
+        "archive": {
+          "file": ".local/iam-o2a-c-fixes/final/engine-runtime-TEST-cn.agentplatform.engine.infra.PortalRunEventsLifecycleTest.xml",
+          "bytes": 207520,
+          "sha256": "da83422575878e68006e925a98e6c87151afc7d4a031201f4b8ee3ff6984cd07"
+        }
+      },
+      {
+        "original": "engine-runtime/target/surefire-reports/cn.agentplatform.engine.infra.PortalRunEventsLifecycleTest.txt",
+        "archive": {
+          "file": ".local/iam-o2a-c-fixes/final/engine-runtime-cn.agentplatform.engine.infra.PortalRunEventsLifecycleTest.txt",
+          "bytes": 371,
+          "sha256": "82a497b85924eb0c098e3735ba205da30785280c3c895880ad898f246ba80ca6"
+        }
+      },
+      {
+        "original": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RunEventReaderBudgetTest.xml",
+        "archive": {
+          "file": ".local/iam-o2a-c-fixes/final/engine-runtime-TEST-cn.agentplatform.engine.infra.RunEventReaderBudgetTest.xml",
+          "bytes": 46814,
+          "sha256": "84a3a457639664722692ac33eae5d70dff25e791d743a585e46bc4e98526e322"
+        }
+      },
+      {
+        "original": "engine-runtime/target/surefire-reports/cn.agentplatform.engine.infra.RunEventReaderBudgetTest.txt",
+        "archive": {
+          "file": ".local/iam-o2a-c-fixes/final/engine-runtime-cn.agentplatform.engine.infra.RunEventReaderBudgetTest.txt",
+          "bytes": 362,
+          "sha256": "56109cabcaaa933bfd6d377d72748f29f29a30047ec8a7d06dac128234bacea6"
+        }
+      }
+    ]
+  },
+  "report": {
+    "file": "docs/evidence/iam-stage-4-o2a-c-fixes-report.md",
+    "bytes": 11400,
+    "sha256": "8acfa373aa994a2430913f0ca497da9c07589e766582018f4520ef3d2f3d1625"
+  },
+  "replay": {
+    "status": "success",
+    "count": 600,
+    "manifest": {
+      "file": ".local/iam-o2a-c-fixes/replay-source.json",
+      "bytes": 114375,
+      "sha256": "44192fbf077285773a9c8d35c9e89c1e6e9f1958184a16aee81ae0c211da9b54"
+    },
+    "commands": {
+      "file": "docs/evidence/iam-stage-4-o2a-c-fixes/replay-commands.json",
+      "bytes": 24201,
+      "sha256": "cada24ffb0e86b83ab046b085d2e3b773f7db6ddd1f5a44e206a2ec6697328cd"
+    },
+    "patch": {
+      "file": "docs/evidence/iam-stage-4-o2a-c-fixes/source.patch",
+      "bytes": 18600,
+      "sha256": "4be741103980702d48e47cd20768a949850d29cddda017b62db898e20e821b39"
+    },
+    "firstCheckExit": 0,
+    "firstApplyExit": 0,
+    "commitsCreated": 0
+  },
+  "sourceWrites": [
+    "engine-runtime/src/main/java/cn/agentplatform/engine/infra/RunEventReader.java",
+    "engine-runtime/src/main/java/cn/agentplatform/engine/application/PortalRunEventsService.java",
+    "engine-runtime/src/test/java/cn/agentplatform/engine/infra/PortalRunEventsLifecycleTest.java",
+    "engine-runtime/src/test/java/cn/agentplatform/engine/infra/PortalRunEventsCapacityTest.java"
+  ],
+  "ownedRoots": [
+    ".local/iam-o2a-c-fixes",
+    "docs/evidence/iam-stage-4-o2a-c-fixes",
+    "docs/evidence/iam-stage-4-o2a-c-fixes-report.md",
+    ".tools/iam-o2a-c-fixes-run.mjs",
+    ".tools/iam-o2a-c-fixes-package.mjs"
+  ],
+  "journal": ".local/iam-o2a-c-fixes/journal.json",
+  "hashCache": ".local/iam-o2a-c-fixes/hash-cache.json",
+  "inventory": "docs/evidence/iam-stage-4-o2a-c-fixes/own-inventory.json",
+  "concerns": [
+    "Independent review and root finite new audit pending; not Accepted",
+    "Original C M1/M2 historical concerns unchanged; no reconstructed archives or historical reruns",
+    "Original production retention/active-run cleanup compatibility, full production IAM, Gateway/O2b and physical socket revocation SLA excluded"
+  ],
+  "commitsCreated": 0
+}

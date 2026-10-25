@@ -1,0 +1,20 @@
+-------------------------------------------------------------------------------
+Test set: cn.agentplatform.engine.infra.RunEventReaderPostgresTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 3.456 s <<< FAILURE! -- in cn.agentplatform.engine.infra.RunEventReaderPostgresTest
+cn.agentplatform.engine.infra.RunEventReaderPostgresTest.statementTimeoutUsesRemainingFloorAfterParameterPreparation -- Time elapsed: 3.444 s <<< ERROR!
+cn.agentplatform.common.PlatformException: 运行授权或材料范围不匹配
+	at cn.agentplatform.engine.infra.RunAuthorityStore.denied(RunAuthorityStore.java:227)
+	at cn.agentplatform.engine.infra.RunEventReader$Work.lambda$query$0(RunEventReader.java:157)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:346)
+	at cn.agentplatform.engine.infra.RunEventReader$Work.query(RunEventReader.java:149)
+	at cn.agentplatform.engine.infra.RunAuthorityStore.loadObservationBindingBounded(RunAuthorityStore.java:125)
+	at cn.agentplatform.engine.infra.RunEventReader.read(RunEventReader.java:56)
+	at cn.agentplatform.engine.infra.RunEventReader.lambda$readNext$0(RunEventReader.java:48)
+	at org.springframework.transaction.support.TransactionTemplate.execute(TransactionTemplate.java:140)
+	at cn.agentplatform.engine.infra.RunEventReader.readNext(RunEventReader.java:48)
+	at cn.agentplatform.engine.infra.RunEventReaderPostgresTest.statementTimeoutUsesRemainingFloorAfterParameterPreparation(RunEventReaderPostgresTest.java:199)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+

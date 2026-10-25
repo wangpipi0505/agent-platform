@@ -1,0 +1,71 @@
+[
+  {
+    "stage": "iam-stage-5-n4a-red01",
+    "command": [
+      "node",
+      ".tools/run-iam-module-tests.mjs",
+      "iam-stage-5-n4a-red01",
+      "admin-common",
+      "ServiceTokensDeploymentModeTest"
+    ],
+    "startedAt": "2026-10-20T16:00:26.222Z",
+    "endedAt": "2026-10-20T16:00:44.367Z",
+    "exitCode": 1,
+    "signal": null,
+    "error": null,
+    "runnerStdout": "{\"stage\":\"iam-stage-5-n4a-red01\",\"modules\":\"admin-common\",\"tests\":\"ServiceTokensDeploymentModeTest\",\"exitCode\":1,\"log\":\".local\\\\iam-stage-5-n4a-red01.log\",\"timedOut\":false}\n",
+    "runnerStderr": "",
+    "workdir": "G:/207/项目/算法重组工具/代码/agent-platform",
+    "raw": {
+      "file": "docs/evidence/iam-stage-5-n4a-deployment-mode/iam-stage-5-n4a-red01/raw.log",
+      "bytes": 13449,
+      "sha256": "a5df87ccac2381b3ceb3f8acb5655a09050b36164e2acd1dc8f41d718df2c8f8"
+    }
+  },
+  {
+    "stage": "iam-stage-5-n4a-final01",
+    "command": [
+      "node",
+      ".tools/run-iam-module-tests.mjs",
+      "iam-stage-5-n4a-final01",
+      "engine-runtime",
+      "AuthorityConfigurationTest,CommonBoundaryTest,ServiceTicketProviderTest,ServiceTokensDeploymentModeTest,RuntimeClientsPublishedHttpTest"
+    ],
+    "startedAt": "2026-10-20T16:04:08.911Z",
+    "endedAt": "2026-10-20T16:04:44.223Z",
+    "exitCode": 1,
+    "signal": null,
+    "error": null,
+    "runnerStdout": "{\"stage\":\"iam-stage-5-n4a-final01\",\"modules\":\"engine-runtime\",\"tests\":\"AuthorityConfigurationTest,CommonBoundaryTest,ServiceTicketProviderTest,ServiceTokensDeploymentModeTest,RuntimeClientsPublishedHttpTest\",\"exitCode\":1,\"log\":\".local\\\\iam-stage-5-n4a-final01.log\",\"timedOut\":false}\n",
+    "runnerStderr": "",
+    "workdir": "G:/207/项目/算法重组工具/代码/agent-platform",
+    "raw": {
+      "file": "docs/evidence/iam-stage-5-n4a-deployment-mode/iam-stage-5-n4a-final01/raw.log",
+      "bytes": 788680,
+      "sha256": "f87a1b0b1697c8eeb61e38b80e61ddea09b10c42696fb3c0942001aba63935b2"
+    }
+  },
+  {
+    "stage": "iam-stage-5-n4a-final02",
+    "command": [
+      "node",
+      ".tools/run-iam-module-tests.mjs",
+      "iam-stage-5-n4a-final02",
+      "engine-runtime",
+      "AuthorityConfigurationTest#explicitGatewayDevPreservesIntegration,AuthorityConfigurationTest#explicitDevelopmentModesKeepLegacyDecoder,ServiceTokensDeploymentModeTest#actualLegacySnapshotSurvivesJvmMutationsAndContextClose,ServiceTokensDeploymentModeTest#isolatedReceiverExplicitlyRegistersIamWithoutOpeningProductionChain,RuntimeClientsPublishedHttpTest"
+    ],
+    "startedAt": "2026-10-20T16:05:33.415Z",
+    "endedAt": "2026-10-20T16:06:12.015Z",
+    "exitCode": 0,
+    "signal": null,
+    "error": null,
+    "runnerStdout": "{\"stage\":\"iam-stage-5-n4a-final02\",\"modules\":\"engine-runtime\",\"tests\":\"AuthorityConfigurationTest#explicitGatewayDevPreservesIntegration,AuthorityConfigurationTest#explicitDevelopmentModesKeepLegacyDecoder,ServiceTokensDeploymentModeTest#actualLegacySnapshotSurvivesJvmMutationsAndContextClose,ServiceTokensDeploymentModeTest#isolatedReceiverExplicitlyRegistersIamWithoutOpeningProductionChain,RuntimeClientsPublishedHttpTest\",\"exitCode\":0,\"log\":\".local\\\\iam-stage-5-n4a-final02.log\",\"timedOut\":false}\n",
+    "runnerStderr": "",
+    "workdir": "G:/207/项目/算法重组工具/代码/agent-platform",
+    "raw": {
+      "file": "docs/evidence/iam-stage-5-n4a-deployment-mode/iam-stage-5-n4a-final02/raw.log",
+      "bytes": 9956,
+      "sha256": "1eea27600f6b8cc30693e00bc115ade5614a726f7c0d07fcfcc05696057e4ea8"
+    }
+  }
+]

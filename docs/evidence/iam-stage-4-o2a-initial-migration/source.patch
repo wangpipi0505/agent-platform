@@ -1,0 +1,76 @@
+diff --git a/engine-runtime/src/test/java/cn/agentplatform/engine/infra/InitialMaterialScopePostgresTest.java b/engine-runtime/src/test/java/cn/agentplatform/engine/infra/InitialMaterialScopePostgresTest.java
+index b1cfef733c66752bc05c00194dec4025efa45d2d..f5371eca9da827422d88a816f29428cc125a717d 100644
+--- a/engine-runtime/src/test/java/cn/agentplatform/engine/infra/InitialMaterialScopePostgresTest.java
++++ b/engine-runtime/src/test/java/cn/agentplatform/engine/infra/InitialMaterialScopePostgresTest.java
+@@ -1,6 +1,13 @@
+ package cn.agentplatform.engine.infra;
+ import cn.agentplatform.common.*;
+ import cn.agentplatform.common.authority.*;
++import cn.agentplatform.engine.api.RunController;
++import org.springframework.mock.web.*;
++import org.springframework.web.context.request.*;
++import org.springframework.web.method.HandlerMethod;
++import org.springframework.web.servlet.HandlerMapping;
++import org.springframework.security.core.context.SecurityContextHolder;
++import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+ import com.fasterxml.jackson.databind.*;
+ import java.time.*;
+ import java.util.*;
+@@ -127,10 +134,53 @@ class InitialMaterialScopePostgresTest {
+  }
+  @Test void sameRootStatusPurposeCannotReadInitialMaterial()throws Exception{
+   try(var f=new RunAuthorityFixture()){
+-   long id=f.admitted(p->f.tx.execute(t->f.create(p)));var ref=f.store.load(id).scopes().getFirst().material();
+-   var call=new ServiceCall("engine","proxy.engine.get.RunController.status",RunAuthorityFixture.ROOT);
+-   var current=f.engine.authorizeRetained(f.gateway.exchange(f.iam.portal(),call).value(),call);f.ds.payloadReads.set(0);
+-   assertThatThrownBy(()->new MaterialScopeStore(f.ds,f.iam.clock()).read(ref,current)).isInstanceOf(PlatformException.class);assertThat(f.ds.payloadReads.get()).isZero();
++   long id=f.admitted(p->f.tx.execute(t->f.create(p)));var b=f.store.load(id);
++   var ref=b.scopes().stream().filter(s->s.material().kind().equals("run-snapshot")).findFirst().orElseThrow().material();
++   var portal=f.iam.portal();
++   var malformed=new ServiceCall("engine",RunObservationSelectors.STATUS_ACTION,RunAuthorityFixture.ROOT);
++   assertThatExceptionOfType(PlatformException.class).isThrownBy(()->f.gateway.exchange(portal,malformed))
++    .satisfies(e->assertThat(e.status()).isEqualTo(403));
++   // The same accepted run has an observation resource distinct from its execution app-version.
++   f.iam.registerObservation(b.owner(),b.publicId(),b.snapshotSha());
++   var resource=RunObservationSelectors.status(b.publicId(),b.snapshotSha());
++   var call=new ServiceCall("engine",RunObservationSelectors.STATUS_ACTION,resource);
++   var ticket=f.gateway.exchange(portal,call);
++   try(var decoder=new TrustedJwtDecoder(f.iam.config("engine"),f.iam.clock(),true)){
++    var request=new MockHttpServletRequest("GET","/admin/runs/"+b.publicId());var response=new MockHttpServletResponse();
++    request.setServletPath("/admin/runs/"+b.publicId());
++    request.setAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE,"/admin/runs/{id}");
++    request.setAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE,Map.of("id",b.publicId()));
++    var handler=new HandlerMethod(new RunController(null,null,null,null),RunController.class.getMethod("status",String.class,jakarta.servlet.http.HttpServletRequest.class,jakarta.servlet.http.HttpServletResponse.class));
++    request.setAttribute(HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE,handler);
++    var guard=new ServiceAuthorization("engine",new ServiceRoutePolicy(),f.engine);
++    try{
++     RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
++     SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(decoder.decode(ticket.value()),List.of()));
++     assertThat(guard.preHandle(request,response,handler)).isTrue();
++     var proof=AuthorityContext.requireInitialFor(Actor.current(),resource);
++     proof.requireVerified();AuthorityContext.requireBound(proof);
++     var current=proof.current();
++     assertThat(current.call()).isEqualTo(call);assertThat(current.caller()).isEqualTo("gateway");
++     assertThat(current.operation().sourceKind()).isEqualTo("PORTAL");assertThat(current.operation().originKind()).isEqualTo("PORTAL");
++     assertThat(new SubjectKey(current.actor().tenantId(),current.actor().principalId())).isEqualTo(b.owner());
++     assertThat(current.operation().subject()).isEqualTo(b.owner());
++     assertThat(current.call().resource()).isEqualTo(resource);assertThat(current.operation().resource()).isEqualTo(resource);
++     f.ds.payloadReads.set(0);f.ds.payloadObservations.clear();var sql=new ArrayList<String>();var previousSql=f.ds.beforeSql;
++     f.ds.beforeSql=sql::add;
++     try{
++      assertThatExceptionOfType(PlatformException.class).isThrownBy(()->new MaterialScopeStore(f.ds,f.iam.clock()).read(ref,proof))
++       .satisfies(e->{assertThat(e.status()).isEqualTo(403);assertThat(e.code()).isEqualTo("RUN_AUTHORITY_DENIED");});
++     }finally{f.ds.beforeSql=previousSql;}
++     AuthorityContext.requireBound(proof);proof.requireVerified();
++     assertThat(f.ds.payloadReads.get()).isZero();assertThat(f.ds.payloadObservations).isEmpty();
++     // Locator/binding/scope metadata SQL is allowed; full material projections must never run.
++     assertThat(sql).isNotEmpty().allSatisfy(s->assertThat(s.toLowerCase(Locale.ROOT))
++      .doesNotContain("snapshot::text","inputs::text","version_refs::text","row_to_json"));
++    }finally{
++     try{guard.afterCompletion(request,response,handler,null);}
++     finally{try{SecurityContextHolder.clearContext();}finally{RequestContextHolder.resetRequestAttributes();}}
++    }
++   }
+   }
+  }
+  static void currentA(Map<String,Object> c){if(c.containsKey("attributes"))c.put("attributes",Map.of("region",Set.of("A"),"dataLabels",Set.of("initial")));}

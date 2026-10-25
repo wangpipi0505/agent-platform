@@ -1,0 +1,30 @@
+[
+  {
+    "file": "docs/evidence/iam-stage-4-d2/upstream/JdbcTemplate.java",
+    "version": "Spring Framework 6.2.7",
+    "url": "https://repo.maven.apache.org/maven2/org/springframework/spring-jdbc/6.2.7/spring-jdbc-6.2.7-sources.jar",
+    "read": "query PreparedStatementCreator/PreparedStatementSetter/ResultSetExtractor; executeQuery and finally closeResultSet",
+    "sha256": "d38e52695ae9ec104927e874307acfcd0595e005274c20eb8915a41be03fb832"
+  },
+  {
+    "file": "docs/evidence/iam-stage-4-d1/upstream/MappedInterceptor.java",
+    "version": "Spring Framework 6.2.7",
+    "url": "https://repo.maven.apache.org/maven2/org/springframework/spring-webmvc/6.2.7/spring-webmvc-6.2.7-sources.jar",
+    "read": "matches: empty includePatterns covers all; exclusion checked first",
+    "sha256": "6301d62596c6faa604140a70fbee6df4d02093daf27de171f883ba75964b553c"
+  },
+  {
+    "file": "docs/evidence/iam-stage-4-d3a0/upstream/HttpClientImpl.java",
+    "version": "OpenJDK jdk-21+35",
+    "url": "https://raw.githubusercontent.com/openjdk/jdk/jdk-21%2B35/src/java.net.http/share/classes/jdk/internal/net/http/HttpClientImpl.java",
+    "read": "shutdownNow: selector abort after shutdown; awaitTermination joins selector",
+    "sha256": "ca5291d2f137b9fdfa046415eaaba374594567d70268b55c5e04e15bd1f26835"
+  },
+  {
+    "file": "docs/evidence/iam-stage-4-d3a0/upstream/ResponseSubscribers.java",
+    "version": "OpenJDK jdk-21+35",
+    "url": "https://raw.githubusercontent.com/openjdk/jdk/jdk-21%2B35/src/java.net.http/share/classes/jdk/internal/net/http/ResponseSubscribers.java",
+    "read": "HttpResponseInputStream.close: cancel subscription and unblock body readers",
+    "sha256": "1df6f0101fde15a25ce3a58ede02c5ea0c31e8107c3ceff57cc80c35b48fcf3d"
+  }
+]

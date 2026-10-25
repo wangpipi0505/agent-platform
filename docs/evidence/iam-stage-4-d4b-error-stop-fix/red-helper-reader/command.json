@@ -1,0 +1,43 @@
+{
+  "at": "2026-10-20T20:44:32.814Z",
+  "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+  "command": [
+    "node",
+    "web/node_modules/vitest/vitest.mjs",
+    "run",
+    "--root",
+    "web",
+    "tests/portal-auth.test.ts",
+    "tests/stream-auth.test.ts",
+    "tests/run-observer.test.ts",
+    "-t",
+    "D4b fix"
+  ],
+  "source": {
+    "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/red-helper-reader/source-before.json",
+    "bytes": 108246,
+    "sha256": "38a8e5a10125d5466f297b515bdfd41a45146e066b1a8d3e983694881b9b7c2b"
+  },
+  "overlay": [
+    {
+      "file": "web/tests/portal-auth.test.ts",
+      "bytes": 9276,
+      "sha256": "641422f27a359195f4df59f2c070efac1702cc874f18e505b224b62aa85634b3"
+    },
+    {
+      "file": "web/tests/run-observer.test.ts",
+      "bytes": 8236,
+      "sha256": "ed0f51e1edad4d5ff55017c2497c700de521a7555d37b37124b8b1c9f94ee38f"
+    },
+    {
+      "file": "web/tests/stream-auth.test.ts",
+      "bytes": 12177,
+      "sha256": "9786851fc724cce3226a1e29ed7703ce91676fb209d2a6251ef3ade24f08c332"
+    }
+  ],
+  "unchangedComposition": {
+    "file": "docs/evidence/iam-stage-4-d4b-portal-frontend/composition.json",
+    "bytes": 3479,
+    "sha256": "3d4e73f7080859c2664e87ccee7d21fa645a305c52bf47ceae570ca1a45fd7db"
+  }
+}

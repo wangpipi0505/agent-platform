@@ -1,0 +1,19 @@
+<script setup lang="ts">
+import { ref, reactive, onMounted, watch } from 'vue';
+import { useApi, useAuth } from '../../shared/api';
+import { defaultStatisticsWindow, statisticsQuery, percentage, milliseconds } from '../../shared/statistics-lifecycle';
+import FailureSamples from './FailureSamples.vue';
+const props=defineProps<{code:string;versions?:any[]}>(),api=useApi(),auth=useAuth();
+const filters=reactive({...defaultStatisticsWindow(),version:undefined as number|undefined});
+const report=ref<any>(),busy=ref(false),error=ref('');
+async function load(){busy.value=true;error.value='';report.value=undefined;try{const params=new URLSearchParams(statisticsQuery(filters));params.delete('page');params.delete('pageSize');if(filters.version)params.set('version',String(filters.version));report.value=await api('/admin/skills/'+encodeURIComponent(props.code)+'/stats?'+params);}catch(e:any){error.value=e.message;}finally{busy.value=false;}}
+onMounted(load);watch(()=>props.code,load);
+</script>
+<template><div class="panel"><h2>技能调用统计</h2><p class="muted">{{auth.can('admin')?'当前租户的调用':'仅当前账号的调用'}}。Mock 独立计数，正式、调试与评测分别展示。</p>
+  <el-form label-position="top" class="skill-statistics-filters" @submit.prevent="load"><el-form-item label="开始日期（UTC，包含）"><input v-model="filters.from" type="date" aria-label="技能统计开始日期"/></el-form-item><el-form-item label="结束日期（UTC，不包含）"><input v-model="filters.to" type="date" aria-label="技能统计结束日期"/></el-form-item><el-form-item label="技能版本"><el-select v-model="filters.version" clearable placeholder="全部版本"><el-option v-for="v in versions||[]" :key="v.versionNo||v.version" :value="v.versionNo||v.version" :label="'v'+(v.versionNo||v.version)"/></el-select></el-form-item><el-button native-type="submit" type="primary" :loading="busy">查询调用</el-button></el-form>
+  <div v-if="error" class="error" role="alert">{{error}}</div><el-skeleton v-if="busy" :rows="4" animated/>
+  <template v-else-if="report"><p>逻辑调用 {{report.total.calls}} 次 · 正式 {{report.total.formal}} · 调试 {{report.total.debug}} · 评测 {{report.total.evaluation}} · Mock {{report.mock.calls}}</p><el-table :data="report.byMode" empty-text="此窗口没有调用"><el-table-column prop="callKind" label="用途"/><el-table-column prop="calls" label="调用数"/><el-table-column prop="mockCalls" label="Mock"/><el-table-column label="真实成功率"><template #default="{row}">{{percentage(row.successRate)}}</template></el-table-column><el-table-column label="平均耗时"><template #default="{row}">{{milliseconds(row.averageDurationMs)}}</template></el-table-column><el-table-column label="P95 耗时"><template #default="{row}">{{milliseconds(row.p95DurationMs)}}</template></el-table-column></el-table>
+  <details><summary>按日查看正式调用</summary><el-table :data="report.byDay" empty-text="暂无每日调用"><el-table-column prop="date" label="日期 UTC"/><el-table-column prop="realFormalCalls" label="真实正式调用"/><el-table-column label="正式成功率"><template #default="{row}">{{percentage(row.successRate)}}</template></el-table-column><el-table-column label="P95 耗时"><template #default="{row}">{{milliseconds(row.p95)}}</template></el-table-column></el-table></details>
+  <h3>失败原因与运行样本</h3><FailureSamples :failures="report.failures||[]"/><details><summary>统计口径</summary><p>时间窗口 {{report.from}} → {{report.to}}，UTC 左闭右开。快照 {{report.snapshotAt}}，{{report.consistency}}。成功率与业务耗时仅计算真实调用；正式日成功率只包含真实正式调用。</p></details></template>
+</div></template>
+<style scoped>.skill-statistics-filters{display:flex;gap:1rem;align-items:center;flex-wrap:wrap}.skill-statistics-filters .el-form-item{min-width:150px;flex:1}.skill-statistics-filters input{width:100%;padding:7px;border:1px solid var(--el-border-color);border-radius:4px;background:var(--el-fill-color-blank);font:inherit;color:var(--el-text-color-regular)}details{margin-top:1rem}summary{cursor:pointer}details p{line-height:1.7;overflow-wrap:anywhere}</style>

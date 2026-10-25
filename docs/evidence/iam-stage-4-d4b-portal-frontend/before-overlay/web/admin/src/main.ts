@@ -1,0 +1,10 @@
+import { installPermissions } from "../../shared/permission";
+import { createApp } from "vue";
+import { createPinia } from "pinia";
+import ElementPlus from "element-plus";
+import "element-plus/dist/index.css";
+import "../../shared/tokens.css";
+import App from "./App.vue";
+const app = createApp(App).use(createPinia()).use(ElementPlus);
+installPermissions(app);
+app.mount("#app");

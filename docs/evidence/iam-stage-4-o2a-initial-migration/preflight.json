@@ -1,0 +1,110 @@
+{
+  "protectedAcceptedEntries": [
+    {
+      "file": "engine-runtime/src/test/java/cn/agentplatform/engine/infra/RunAuthorityFixture.java",
+      "bytes": 9816,
+      "sha256": "4b019691c319ad97684e66420a560ffb266d72a8e1d2813f1972dd06629b74fb"
+    },
+    {
+      "file": "engine-runtime/src/main/java/cn/agentplatform/engine/infra/MaterialScopeStore.java",
+      "bytes": 43083,
+      "sha256": "2c7651e30ec2244fe588a11bc53a5b19af4015104d69be805b039d6d272aeb6e"
+    },
+    {
+      "file": "engine-runtime/src/main/java/cn/agentplatform/engine/infra/RunAuthorityStore.java",
+      "bytes": 24980,
+      "sha256": "933da9f9e7d113e1c137c2ddf30e0fbf5868e5521fa3f5f976d1ab9a8f9e75c5"
+    },
+    {
+      "file": "engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java",
+      "bytes": 27185,
+      "sha256": "06ee90387fb6fb47e82695f59d288a14c56783a34d53cfd3c8bb7ba3f46ba366"
+    },
+    {
+      "file": "admin-common/src/main/java/cn/agentplatform/common/authority/AuthorityContext.java",
+      "bytes": 6290,
+      "sha256": "770d9cdf06c7f4d757d4d96bcfd5f5fadd0991f2531edf53a6d948c91328678a"
+    },
+    {
+      "file": "admin-common/src/main/java/cn/agentplatform/common/authority/ServiceAuthorization.java",
+      "bytes": 9322,
+      "sha256": "8b97f99496135e8d3af0f874528f536a1164a7d285ad0b03c7feff4197727281"
+    },
+    {
+      "file": "admin-common/src/main/java/cn/agentplatform/common/authority/RunObservationSelectors.java",
+      "bytes": 3822,
+      "sha256": "cb31869195ddaace6608b8592af7ec9ed315f859c1c9c5df79c52a799b9bc10b"
+    },
+    {
+      "file": "admin-common/src/test/java/cn/agentplatform/common/authority/LoopbackAuthority.java",
+      "bytes": 58454,
+      "sha256": "e3eb6c286381bf74df6856e82da54b2c5435e96bdba6ff9364a4e8186dc9c5b2"
+    }
+  ],
+  "preparedNotes": {
+    "file": ".local/iam-o2a-b-initial-test-migration-notes.md",
+    "bytes": 12799,
+    "sha256": "bec015b38922e906f69d1917ce5051a4333368cba326f5dca2047f042ab067bb"
+  },
+  "formalBrief": {
+    "file": "docs/evidence/iam-stage-4-o2a-initial-migration-brief.md",
+    "bytes": 6121,
+    "sha256": "5a2c56199d2a11ae9635cf6ca77d8c3cdfa8983b951adfb9966ba98bab8706f6"
+  },
+  "inheritedRed": {
+    "status": "CONFIRMED_INHERITED_SETUP_ERROR",
+    "at": "2026-10-21T02:46:46.093Z",
+    "physicalVerified": [
+      {
+        "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-final01/iam-stage-o2a-b-final01.log",
+        "bytes": 38318,
+        "sha256": "268579ab99fad5b83276cc67e08b4d0c19c04ca9a08166b813cdcb922631a0ad"
+      },
+      {
+        "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-final01/TEST-cn.agentplatform.engine.infra.InitialMaterialScopePostgresTest.xml",
+        "bytes": 55936,
+        "sha256": "c743031e7e7cd218deae64e03017848d58a77a24f6e758ac96fe8ee56605fff7"
+      }
+    ],
+    "frozenOldTest": {
+      "file": "engine-runtime/src/test/java/cn/agentplatform/engine/infra/InitialMaterialScopePostgresTest.java",
+      "bytes": 12829,
+      "sha256": "923f157c28235d5bc58421997e8282de80a38ee6ed8b97f433e7ad7892aff5ed"
+    },
+    "oldTestRead": "116-137EOF, specifically128-133",
+    "immutableSelector": "Accepted A requirePurpose STATUS iff run-snapshot; oldmethod requests app-version RunAuthorityFixture.ROOT",
+    "suite": {
+      "name": "cn.agentplatform.engine.infra.InitialMaterialScopePostgresTest",
+      "tests": 12,
+      "failures": 0,
+      "errors": 1,
+      "skipped": 0
+    },
+    "errorMethod": "sameRootStatusPurposeCannotReadInitialMaterial",
+    "errorBeforeMaterialRead": true,
+    "running": [
+      "cn.agentplatform.engine.domain.GraphRulesTest",
+      "cn.agentplatform.engine.infra.FlowMaterialScopePostgresTest",
+      "cn.agentplatform.engine.infra.FlowMaterialStatusPostgresTest",
+      "cn.agentplatform.engine.infra.InitialMaterialScopePostgresTest",
+      "cn.agentplatform.engine.infra.RunEventReaderBudgetTest",
+      "cn.agentplatform.engine.infra.RunEventReaderPostgresTest"
+    ],
+    "rawSummaries": [
+      "[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.023 s -- in cn.agentplatform.engine.domain.GraphRulesTest",
+      "[INFO] Tests run: 11, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 11.80 s -- in cn.agentplatform.engine.infra.FlowMaterialScopePostgresTest",
+      "[INFO] Tests run: 11, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 13.94 s -- in cn.agentplatform.engine.infra.FlowMaterialStatusPostgresTest",
+      "[ERROR] Tests run: 12, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 12.57 s <<< FAILURE! -- in cn.agentplatform.engine.infra.InitialMaterialScopePostgresTest",
+      "[INFO] Tests run: 13, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.060 s -- in cn.agentplatform.engine.infra.RunEventReaderBudgetTest",
+      "[INFO] Tests run: 17, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 34.07 s -- in cn.agentplatform.engine.infra.RunEventReaderPostgresTest",
+      "[ERROR] Tests run: 65, Failures: 0, Errors: 1, Skipped: 0",
+      "[INFO] BUILD FAILURE"
+    ],
+    "decision": "Keep B source593/8 frozen and failedfinal65/64pass/1error immutable; no B rerun, no production weakening. Separate one-method legacy test migration after B code review/finite audit. No test/probe/replay executed."
+  },
+  "runner": {
+    "file": ".tools/run-iam-module-tests.mjs",
+    "bytes": 2884,
+    "sha256": "0a86ddfdf91bff1971cf41f9326ea0d0f23e0b0c32d3e02082f7290a26867de4"
+  }
+}

@@ -1,0 +1,1636 @@
+[
+  {
+    "stage": "iam-stage-5-n4a-red01",
+    "command": {
+      "command": [
+        "node",
+        ".tools/run-iam-module-tests.mjs",
+        "iam-stage-5-n4a-red01",
+        "admin-common",
+        "ServiceTokensDeploymentModeTest"
+      ],
+      "startedAt": "2026-10-20T16:00:26.222Z",
+      "endedAt": "2026-10-20T16:00:44.367Z",
+      "exitCode": 1,
+      "signal": null,
+      "error": null,
+      "runnerStdout": "{\"stage\":\"iam-stage-5-n4a-red01\",\"modules\":\"admin-common\",\"tests\":\"ServiceTokensDeploymentModeTest\",\"exitCode\":1,\"log\":\".local\\\\iam-stage-5-n4a-red01.log\",\"timedOut\":false}\n",
+      "runnerStderr": ""
+    },
+    "workdir": "G:/207/项目/算法重组工具/代码/agent-platform",
+    "raw": {
+      "file": "docs/evidence/iam-stage-5-n4a-deployment-mode/iam-stage-5-n4a-red01/raw.log",
+      "bytes": 13449,
+      "sha256": "a5df87ccac2381b3ceb3f8acb5655a09050b36164e2acd1dc8f41d718df2c8f8"
+    },
+    "running": [
+      "cn.agentplatform.common.authority.ServiceTokensDeploymentModeTest"
+    ],
+    "xml": [
+      {
+        "name": "cn.agentplatform.common.authority.ServiceTokensDeploymentModeTest",
+        "tests": 1,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0,
+        "cases": [
+          {
+            "name": "actualIamOverridesJvmTestAndClosesAllLegacySignersBeforeListener",
+            "failed": true,
+            "skipped": false
+          }
+        ],
+        "file": "docs/evidence/iam-stage-5-n4a-deployment-mode/iam-stage-5-n4a-red01/xml/admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.ServiceTokensDeploymentModeTest.xml",
+        "bytes": 41735,
+        "sha256": "839c28a20506c6b68d304b02ace55503299fe19cf16bb3fe5c8c50caa007b1f6"
+      }
+    ],
+    "totals": {
+      "tests": 1,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0
+    },
+    "incidentalXmlNotExecuted": [
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.AuthorityConfigurationTest.xml",
+        "sha256": "4688fc3fd9df1428ecbf6712a5990023f794f919d57074b5b2e215a986af747f",
+        "name": "cn.agentplatform.common.authority.AuthorityConfigurationTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.AuthorityContextRetainedTest.xml",
+        "sha256": "fcb375e11c3b9faf67c5d8e331207e20da0a0f598c9bfe4c839693a2d5fdd0b7",
+        "name": "cn.agentplatform.common.authority.AuthorityContextRetainedTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.AuthorityPolicyTest.xml",
+        "sha256": "eb80f969cd7f811a861f4adc86a151e89c7b61d166019a7a694af79646137629",
+        "name": "cn.agentplatform.common.authority.AuthorityPolicyTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.CurrentAuthorityClientTest.xml",
+        "sha256": "ee91715a3bfc73f39cdda42ac9f0aa1403954758a405a4416ca0d5c4107dd8ba",
+        "name": "cn.agentplatform.common.authority.CurrentAuthorityClientTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.IntegrationClaimsTest.xml",
+        "sha256": "0ff67837b373661818a4045278b18833e661835bcd1b18defc963a96dfcbf6e8",
+        "name": "cn.agentplatform.common.authority.IntegrationClaimsTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.LocalRunAdvanceAuthorityTest.xml",
+        "sha256": "4275fe4b5c6fd78fe2e66ebd25336ab54ea2aca14d2553e6fb73f62df55c55d8",
+        "name": "cn.agentplatform.common.authority.LocalRunAdvanceAuthorityTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.MetadataSelectorsTest.xml",
+        "sha256": "21ad2fbfa72e56ad0a793442344fca9ec46a1dfe5a1ed498753efff49545aed6",
+        "name": "cn.agentplatform.common.authority.MetadataSelectorsTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.PolicyRequestVerifierTest.xml",
+        "sha256": "0705e2394fa285caf207708b353376c10a7cee99a30f3c191c18c77537d423a3",
+        "name": "cn.agentplatform.common.authority.PolicyRequestVerifierTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.PortalClaimMapperTest.xml",
+        "sha256": "f7089d077cd9e155b8fa44bb5557a60206267473b2eb4211f7f1617cc2c21585",
+        "name": "cn.agentplatform.common.authority.PortalClaimMapperTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.ResponseAuthorityTest.xml",
+        "sha256": "4cfedbf55399772e471db3c2bb5d0992e7a10f4919d0981ffc058c30411ec7cd",
+        "name": "cn.agentplatform.common.authority.ResponseAuthorityTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.RetainedAuthorizationTest.xml",
+        "sha256": "062ddee681fdc3173562c3b91afa518e2c8639275fca8c7f05766ec9e8a3ee0e",
+        "name": "cn.agentplatform.common.authority.RetainedAuthorizationTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.RouteCoverageVerifierTest.xml",
+        "sha256": "98231a9ad0d9d5c1b72aca9b0bf85c1d7b62083a4eaac219bf540691e1e722f2",
+        "name": "cn.agentplatform.common.authority.RouteCoverageVerifierTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.ServiceAuthorizationTest.xml",
+        "sha256": "9df1584f5f773155f2c09b96f4b4d9971ce2fcdd8ec061fa83110ddd717c9ad2",
+        "name": "cn.agentplatform.common.authority.ServiceAuthorizationTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.ServiceTicketProviderTest.xml",
+        "sha256": "7cdfd265d65d541fcf32d80725dd93b2e5cdfca490cde85573cf60b849a1d642",
+        "name": "cn.agentplatform.common.authority.ServiceTicketProviderTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.TrustedJwtDecoderTest.xml",
+        "sha256": "63e4b76dffee1a5da0662b3d6505d2dc305790bc530fd725ab7f0c1c56b86d10",
+        "name": "cn.agentplatform.common.authority.TrustedJwtDecoderTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.CommonBoundaryTest.xml",
+        "sha256": "53c86e1e385a8016676cc9152cd0eefd4e15d356b36eeb84b97441bce8bb252c",
+        "name": "cn.agentplatform.common.CommonBoundaryTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.schema.SharedSchemaAdmissionTest.xml",
+        "sha256": "7ca6df602bb96420b4ff1594dde23ddfc5f320e5bebffbdb343f186bf39c9d7a",
+        "name": "cn.agentplatform.common.schema.SharedSchemaAdmissionTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.SecretVaultTest.xml",
+        "sha256": "a5fc32d803baa094de797cc9b95b95f9ea667d167351840122615c531981896b",
+        "name": "cn.agentplatform.common.SecretVaultTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.application.ContextAssemblerTest.xml",
+        "sha256": "7344fc86a6b9d164dfd1150af720f0dc552851ab41c001f1786e8f00d69183ab",
+        "name": "cn.agentplatform.engine.application.ContextAssemblerTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.application.ContextProjectionTest.xml",
+        "sha256": "733d1970362943463621b3f8992a40a7833ddacaa507bfe6bf987c6516dba5c7",
+        "name": "cn.agentplatform.engine.application.ContextProjectionTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.application.FrozenModelsTest.xml",
+        "sha256": "0712e220914a5aab8e52e4244d4c5660605267cf6a62bba5779075638421055c",
+        "name": "cn.agentplatform.engine.application.FrozenModelsTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.application.RunStatisticsPostgresTest.xml",
+        "sha256": "b01f3e11b6b853429ba46726000e3710d56b4b5b55e2dcbf063e4674ef562489",
+        "name": "cn.agentplatform.engine.application.RunStatisticsPostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.domain.GraphRulesTest.xml",
+        "sha256": "7a1f9210d5ec6dc582db2a6fed5dd323d59617ceda0975aecb7a2c742f952c68",
+        "name": "cn.agentplatform.engine.domain.GraphRulesTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.domain.GraphValidatorTest.xml",
+        "sha256": "8249cac49d1f9488259730ecc84524d0f8cd81c8eace0dca0734d4425212cb02",
+        "name": "cn.agentplatform.engine.domain.GraphValidatorTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.domain.InputDeclarationSchemaPositionsTest.xml",
+        "sha256": "918232d885ba7caad1bdf643e665064fcd10ab3197a0ba43b43d06b0779cf5e4",
+        "name": "cn.agentplatform.engine.domain.InputDeclarationSchemaPositionsTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.domain.InputDeclarationsTest.xml",
+        "sha256": "b0d473563c4ef144d39c8f4bd12e8ae400c3ac7424fdfb6bea0da8221d37cc02",
+        "name": "cn.agentplatform.engine.domain.InputDeclarationsTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.domain.JsonGateTest.xml",
+        "sha256": "733050b48498f69f987d3e3dff97c7ad0e02b8bdc04880be862e2b4bbeb08135",
+        "name": "cn.agentplatform.engine.domain.JsonGateTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.domain.OutputPolicyTest.xml",
+        "sha256": "450756606ab57ff6d81e0a9aa2a81b17564ab206344a3c0742aed9bd7304fca3",
+        "name": "cn.agentplatform.engine.domain.OutputPolicyTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.domain.SharedSchemaBudgetTest.xml",
+        "sha256": "e6f3165c9d892ab47f1622b2d7b1d1a46d2c417ca72ed7f683e64eb0d32cccbd",
+        "name": "cn.agentplatform.engine.domain.SharedSchemaBudgetTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.domain.ValuesTest.xml",
+        "sha256": "3854141cfa0d22168b2f5fe6ea46e5e81bfb6ab8413ea6ac965ba9651c2c439c",
+        "name": "cn.agentplatform.engine.domain.ValuesTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.ChatSessionsTest.xml",
+        "sha256": "2ab18a200a514de2fa3d999467788a79619dd53f905e8c1556b2af11eeda75a9",
+        "name": "cn.agentplatform.engine.infra.ChatSessionsTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.ChunkBusRedisTest.xml",
+        "sha256": "47de8e0c92a93f75120b82804ba2586af9e12f99e66bdc9b0125eafeb57ff152",
+        "name": "cn.agentplatform.engine.infra.ChunkBusRedisTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.ChunkBusTest.xml",
+        "sha256": "60fac37e0747841678221ff6dd41fd53c48373516d2c23b78c5bfb59379f4ac6",
+        "name": "cn.agentplatform.engine.infra.ChunkBusTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.ControlledDraftSkillTest.xml",
+        "sha256": "2a7e7a228d811138e256b4710b981a8b9a438b523348dac9b5ea16ad11d995b2",
+        "name": "cn.agentplatform.engine.infra.ControlledDraftSkillTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.ControlledReplayTest.xml",
+        "sha256": "f4c6aee3f7bb0a785e71f17758df3177ee9608967cb36bc5139e6cd2823663fe",
+        "name": "cn.agentplatform.engine.infra.ControlledReplayTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.DebugControlsTest.xml",
+        "sha256": "b18b52bfc8e8b469a3637cf33d43a3093a95a95d75d44cc5e0e79b9a271b4671",
+        "name": "cn.agentplatform.engine.infra.DebugControlsTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.EngineContextPostgresTest.xml",
+        "sha256": "70683899db52e1dba416b5067fc98d4e1298dc39354732c620e2597f05b40096",
+        "name": "cn.agentplatform.engine.infra.EngineContextPostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.ExecutionRecoveryTest.xml",
+        "sha256": "dbda4b182614052815c70ec171786d3396f3452adcd43b6c8400977c414690d7",
+        "name": "cn.agentplatform.engine.infra.ExecutionRecoveryTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.FlowMaterialDatabasePreflightTest.xml",
+        "sha256": "1597ab4384720b721c0c03c2354c2db55186b46793eae4f2d5e6d5ed9d7a1f11",
+        "name": "cn.agentplatform.engine.infra.FlowMaterialDatabasePreflightTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.FlowMaterialScopePostgresTest.xml",
+        "sha256": "d3188be8c902cd173e54a62267a7b9a2ce69a514e44537933f82826c82a4daa7",
+        "name": "cn.agentplatform.engine.infra.FlowMaterialScopePostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.FlowMaterialStatusPostgresTest.xml",
+        "sha256": "ed479df2eb66063b547d3375a36b4774b3d1dcff1657e87e4f46d071d769202c",
+        "name": "cn.agentplatform.engine.infra.FlowMaterialStatusPostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.FlowMaterialTransactionsPostgresTest.xml",
+        "sha256": "9d37c81385a7f2942ca4d06a55e1e8c87f6133d1d61047f4f0c3199937117f1e",
+        "name": "cn.agentplatform.engine.infra.FlowMaterialTransactionsPostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.InitialMaterialScopePostgresTest.xml",
+        "sha256": "b83b611e5d2ed6c147d9d1aa653794d0827632d71242b221e77eb9fa692af90b",
+        "name": "cn.agentplatform.engine.infra.InitialMaterialScopePostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.ModelExchangeTest.xml",
+        "sha256": "d47ff0cc6345d18d11def99aa10985bbd3befa52f49e88aed40d947cdd57246e",
+        "name": "cn.agentplatform.engine.infra.ModelExchangeTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.OutputPolicyPostgresTest.xml",
+        "sha256": "fbc25ef7a96a270db4acf7a646b4f91266e62d529e30ccd1de58fe86b421a17c",
+        "name": "cn.agentplatform.engine.infra.OutputPolicyPostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.OwnedFlowMaterialsPostgresTest.xml",
+        "sha256": "d6b9dcf0b0a6428a9e4498fd3341ad286d1bbe045bef46b74e67766ffdd4e6d5",
+        "name": "cn.agentplatform.engine.infra.OwnedFlowMaterialsPostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.OwnedFlowSchedulerPostgresTest.xml",
+        "sha256": "d23807292f278a09ce2b2f27979783980ac993c39112cdeb20fea7d5289e53a6",
+        "name": "cn.agentplatform.engine.infra.OwnedFlowSchedulerPostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.PublishedAdmissionHttpPostgresTest.xml",
+        "sha256": "5818ae0b6648682ef4796048b171766fc17932fbcd19b0fc699eb3d977fecfa5",
+        "name": "cn.agentplatform.engine.infra.PublishedAdmissionHttpPostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.ReplayBoundaryTest.xml",
+        "sha256": "cfb1833ea3e37acae47d1d7c72a28a4dfccbaf9722c68592245d198bf4e79bdc",
+        "name": "cn.agentplatform.engine.infra.ReplayBoundaryTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.ReplayServiceTest.xml",
+        "sha256": "41943e539f9bb28e1ac318eb928ac1ef127d397d265c81a50b5a38a64bd1b45c",
+        "name": "cn.agentplatform.engine.infra.ReplayServiceTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RunAdmissionBoundaryPostgresTest.xml",
+        "sha256": "d0bb6473e597a5eed1333618f242265ecc0161d8f86c5ff3202df914cdc737f8",
+        "name": "cn.agentplatform.engine.infra.RunAdmissionBoundaryPostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RunAdmissionHttpTest.xml",
+        "sha256": "accc6389134c78d1d875bb988893fec1b1d2eab18dcf313469ed386333c4b2c6",
+        "name": "cn.agentplatform.engine.infra.RunAdmissionHttpTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RunAuthorityDatabasePreflightTest.xml",
+        "sha256": "e15035d6bbb46d46c3523c7f2ddd9d69f16c2d386e09662d72fa4148df0e56fd",
+        "name": "cn.agentplatform.engine.infra.RunAuthorityDatabasePreflightTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RunAuthorityLocalCurrentPostgresTest.xml",
+        "sha256": "6cd9d4091b8adc28e18e46c6d1eb619929370b79e1880c22c406537762968309",
+        "name": "cn.agentplatform.engine.infra.RunAuthorityLocalCurrentPostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RunAuthorityPersistencePostgresTest.xml",
+        "sha256": "9c5eb17d19971ec12417fb426b5a3eb4c0b67f2fe24f0b63bb0c0ef8b4f3b380",
+        "name": "cn.agentplatform.engine.infra.RunAuthorityPersistencePostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RunEventResponseTest.xml",
+        "sha256": "01f9cd4e01c875f78eefdad1ccd944ce85256c04581f039de5c1f603fd82df49",
+        "name": "cn.agentplatform.engine.infra.RunEventResponseTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RunEventsHttpTest.xml",
+        "sha256": "fda437dbbd150781c6f9e811fbbbebf3d8fe0dc7781a208ac7a7b88b0e636d42",
+        "name": "cn.agentplatform.engine.infra.RunEventsHttpTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RunEventsPostgresTest.xml",
+        "sha256": "f172a33df62c47e9b4f0d790a2043e9fcc6cc5bb7957f93efd052c02d05930a4",
+        "name": "cn.agentplatform.engine.infra.RunEventsPostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RunInputValidationPostgresTest.xml",
+        "sha256": "32dff89e9ee09e8984ba9da109c548b845237b142885669de85d93ddf1d15729",
+        "name": "cn.agentplatform.engine.infra.RunInputValidationPostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RunSchedulerPostgresTest.xml",
+        "sha256": "f84aca7a6d3b35965de43aa01a8ce23a058dc8428e42277674f80048407ee24d",
+        "name": "cn.agentplatform.engine.infra.RunSchedulerPostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RunSchedulerReviewPostgresTest.xml",
+        "sha256": "088b624976dba599e7d1cb2437311f00b0c1f284407137679d1ce408fc4f7bb8",
+        "name": "cn.agentplatform.engine.infra.RunSchedulerReviewPostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RunSchedulerTimingTest.xml",
+        "sha256": "1176375ebc69b526ac641e6fca5243bbcd7105f82727f0bdb1e5413ad7cf53b4",
+        "name": "cn.agentplatform.engine.infra.RunSchedulerTimingTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RuntimeClientsPublishedHttpTest.xml",
+        "sha256": "0f09c97ce5aaedc93383e96c48b9fdd445153f548bead251e9006ce130c79e5e",
+        "name": "cn.agentplatform.engine.infra.RuntimeClientsPublishedHttpTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RuntimeStreamTest.xml",
+        "sha256": "dc1d539cbcd4934bb95ebe2148af6db4347e9da60737aac824af6ac1e254942e",
+        "name": "cn.agentplatform.engine.infra.RuntimeStreamTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.TestInputHttpTest.xml",
+        "sha256": "d4b995c6cd2b1163ee6495f7711a2d00fb308155e95327c3551831ae720484ec",
+        "name": "cn.agentplatform.engine.infra.TestInputHttpTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.ToolCancellationRaceTest.xml",
+        "sha256": "2f15f1343e738c261fc1c926806f2aef92b24844f8163d2dd49e48f01e305e0e",
+        "name": "cn.agentplatform.engine.infra.ToolCancellationRaceTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.TracePostgresTest.xml",
+        "sha256": "8a3c1e08f9fe07729aade285e9c232e64d7b53ef7430b66827c9810ccd0b24d0",
+        "name": "cn.agentplatform.engine.infra.TracePostgresTest"
+      }
+    ],
+    "executedMarkers": [],
+    "warnings": [
+      "[INFO] /G:/207/��Ŀ/�㷨���鹤��/����/agent-platform/admin-common/src/test/java/cn/agentplatform/common/authority/ServiceAuthorizationTest.java: �й���ϸ��Ϣ, ��ʹ�� -Xlint:unchecked ���±��롣"
+    ]
+  },
+  {
+    "stage": "iam-stage-5-n4a-final01",
+    "command": {
+      "command": [
+        "node",
+        ".tools/run-iam-module-tests.mjs",
+        "iam-stage-5-n4a-final01",
+        "engine-runtime",
+        "AuthorityConfigurationTest,CommonBoundaryTest,ServiceTicketProviderTest,ServiceTokensDeploymentModeTest,RuntimeClientsPublishedHttpTest"
+      ],
+      "startedAt": "2026-10-20T16:04:08.911Z",
+      "endedAt": "2026-10-20T16:04:44.223Z",
+      "exitCode": 1,
+      "signal": null,
+      "error": null,
+      "runnerStdout": "{\"stage\":\"iam-stage-5-n4a-final01\",\"modules\":\"engine-runtime\",\"tests\":\"AuthorityConfigurationTest,CommonBoundaryTest,ServiceTicketProviderTest,ServiceTokensDeploymentModeTest,RuntimeClientsPublishedHttpTest\",\"exitCode\":1,\"log\":\".local\\\\iam-stage-5-n4a-final01.log\",\"timedOut\":false}\n",
+      "runnerStderr": ""
+    },
+    "workdir": "G:/207/项目/算法重组工具/代码/agent-platform",
+    "raw": {
+      "file": "docs/evidence/iam-stage-5-n4a-deployment-mode/iam-stage-5-n4a-final01/raw.log",
+      "bytes": 788680,
+      "sha256": "f87a1b0b1697c8eeb61e38b80e61ddea09b10c42696fb3c0942001aba63935b2"
+    },
+    "running": [
+      "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+      "cn.agentplatform.common.authority.ServiceTicketProviderTest",
+      "cn.agentplatform.common.authority.ServiceTokensDeploymentModeTest",
+      "cn.agentplatform.common.CommonBoundaryTest"
+    ],
+    "xml": [
+      {
+        "name": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "tests": 40,
+        "failures": 3,
+        "errors": 0,
+        "skipped": 0,
+        "cases": [
+          {
+            "name": "configuredDomainBusinessRolesAreAcceptedAndReservedRolesRemainForbidden",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[1]",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[2]",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[3]",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[4]",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[5]",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[6]",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[7]",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[8]",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[9]",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[10]",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[11]",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[12]",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[13]",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[14]",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[15]",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[16]",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[17]",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[18]",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[19]",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[20]",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[21]",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[22]",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[23]",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[24]",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[25]",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[26]",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[27]",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[28]",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[29]",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[30]",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[31]",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[32]",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[33]",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "illegalConfigurationFailsBeforeCreatingListener(Invalid)[34]",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "portalCeilingsAreRequiredAndStrictlyBoundByTheDeploymentBinder",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "explicitGatewayDevPreservesIntegration",
+            "failed": true,
+            "skipped": false
+          },
+          {
+            "name": "explicitTestProfileMayUseOnlyLiteralLoopbackTrustEndpointsAndIamStaysClosed",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "explicitDevelopmentModesKeepLegacyDecoder(String)[1]",
+            "failed": true,
+            "skipped": false
+          },
+          {
+            "name": "explicitDevelopmentModesKeepLegacyDecoder(String)[2]",
+            "failed": true,
+            "skipped": false
+          }
+        ],
+        "file": "docs/evidence/iam-stage-5-n4a-deployment-mode/iam-stage-5-n4a-final01/xml/admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.AuthorityConfigurationTest.xml",
+        "bytes": 791321,
+        "sha256": "6682c4003e3eb0858b347be471be9e7abe6e3844b610d5a06de5d66a3ac2b96c"
+      },
+      {
+        "name": "cn.agentplatform.common.authority.ServiceTicketProviderTest",
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "cases": [
+          {
+            "name": "resolverRequiresOwnDeploymentCredentialAndTransportCannotSendItToJwks",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "actorCannotMintAnIamServiceTicketEvenWhenLegacyKeyExists",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "sharedStrictJwksParsingRejectsPrivateAndDuplicateKeys",
+            "failed": false,
+            "skipped": false
+          }
+        ],
+        "file": "docs/evidence/iam-stage-5-n4a-deployment-mode/iam-stage-5-n4a-final01/xml/admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.ServiceTicketProviderTest.xml",
+        "bytes": 34185,
+        "sha256": "7dd22c105998343b3952034b52f85fddf5f8b61a8e35e9a2857d7b97da7ab597"
+      },
+      {
+        "name": "cn.agentplatform.common.authority.ServiceTokensDeploymentModeTest",
+        "tests": 6,
+        "failures": 2,
+        "errors": 0,
+        "skipped": 0,
+        "cases": [
+          {
+            "name": "actualLegacySnapshotSurvivesJvmMutationsAndContextClose",
+            "failed": true,
+            "skipped": false
+          },
+          {
+            "name": "actualIamOverridesJvmTestAndClosesAllLegacySignersBeforeListener",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "invalidDeploymentDoesNotRegisterPermission",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "unregisteredJvmTestCannotIssue",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "legacyThenIamClosesSigningAcrossThreads",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "isolatedReceiverExplicitlyRegistersIamWithoutOpeningProductionChain",
+            "failed": true,
+            "skipped": false
+          }
+        ],
+        "file": "docs/evidence/iam-stage-5-n4a-deployment-mode/iam-stage-5-n4a-final01/xml/admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.ServiceTokensDeploymentModeTest.xml",
+        "bytes": 68343,
+        "sha256": "aab41e403bce8e08a3a03d7a8fd95a6f55a64d96fb4f6a592667f7d71a016189"
+      },
+      {
+        "name": "cn.agentplatform.common.CommonBoundaryTest",
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "cases": [
+          {
+            "name": "readsOnlyVerifiedJwtClaimsAndChecksRoles",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "validatesInternalTicketAndPreservesActorBoundary",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "usesCanonicalJsonForContentIdentity",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "rejectsMissingAuthenticatedIdentity",
+            "failed": false,
+            "skipped": false
+          }
+        ],
+        "file": "docs/evidence/iam-stage-5-n4a-deployment-mode/iam-stage-5-n4a-final01/xml/admin-common/target/surefire-reports/TEST-cn.agentplatform.common.CommonBoundaryTest.xml",
+        "bytes": 34312,
+        "sha256": "fcaedd417a8000bce2b393367d2e64dbc222d2f41228e0028b5f0627f2137b47"
+      }
+    ],
+    "totals": {
+      "tests": 53,
+      "failures": 5,
+      "errors": 0,
+      "skipped": 0
+    },
+    "incidentalXmlNotExecuted": [
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.AuthorityContextRetainedTest.xml",
+        "sha256": "fcb375e11c3b9faf67c5d8e331207e20da0a0f598c9bfe4c839693a2d5fdd0b7",
+        "name": "cn.agentplatform.common.authority.AuthorityContextRetainedTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.AuthorityPolicyTest.xml",
+        "sha256": "eb80f969cd7f811a861f4adc86a151e89c7b61d166019a7a694af79646137629",
+        "name": "cn.agentplatform.common.authority.AuthorityPolicyTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.CurrentAuthorityClientTest.xml",
+        "sha256": "ee91715a3bfc73f39cdda42ac9f0aa1403954758a405a4416ca0d5c4107dd8ba",
+        "name": "cn.agentplatform.common.authority.CurrentAuthorityClientTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.IntegrationClaimsTest.xml",
+        "sha256": "0ff67837b373661818a4045278b18833e661835bcd1b18defc963a96dfcbf6e8",
+        "name": "cn.agentplatform.common.authority.IntegrationClaimsTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.LocalRunAdvanceAuthorityTest.xml",
+        "sha256": "4275fe4b5c6fd78fe2e66ebd25336ab54ea2aca14d2553e6fb73f62df55c55d8",
+        "name": "cn.agentplatform.common.authority.LocalRunAdvanceAuthorityTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.MetadataSelectorsTest.xml",
+        "sha256": "21ad2fbfa72e56ad0a793442344fca9ec46a1dfe5a1ed498753efff49545aed6",
+        "name": "cn.agentplatform.common.authority.MetadataSelectorsTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.PolicyRequestVerifierTest.xml",
+        "sha256": "0705e2394fa285caf207708b353376c10a7cee99a30f3c191c18c77537d423a3",
+        "name": "cn.agentplatform.common.authority.PolicyRequestVerifierTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.PortalClaimMapperTest.xml",
+        "sha256": "f7089d077cd9e155b8fa44bb5557a60206267473b2eb4211f7f1617cc2c21585",
+        "name": "cn.agentplatform.common.authority.PortalClaimMapperTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.ResponseAuthorityTest.xml",
+        "sha256": "4cfedbf55399772e471db3c2bb5d0992e7a10f4919d0981ffc058c30411ec7cd",
+        "name": "cn.agentplatform.common.authority.ResponseAuthorityTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.RetainedAuthorizationTest.xml",
+        "sha256": "062ddee681fdc3173562c3b91afa518e2c8639275fca8c7f05766ec9e8a3ee0e",
+        "name": "cn.agentplatform.common.authority.RetainedAuthorizationTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.RouteCoverageVerifierTest.xml",
+        "sha256": "98231a9ad0d9d5c1b72aca9b0bf85c1d7b62083a4eaac219bf540691e1e722f2",
+        "name": "cn.agentplatform.common.authority.RouteCoverageVerifierTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.ServiceAuthorizationTest.xml",
+        "sha256": "9df1584f5f773155f2c09b96f4b4d9971ce2fcdd8ec061fa83110ddd717c9ad2",
+        "name": "cn.agentplatform.common.authority.ServiceAuthorizationTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.TrustedJwtDecoderTest.xml",
+        "sha256": "63e4b76dffee1a5da0662b3d6505d2dc305790bc530fd725ab7f0c1c56b86d10",
+        "name": "cn.agentplatform.common.authority.TrustedJwtDecoderTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.schema.SharedSchemaAdmissionTest.xml",
+        "sha256": "7ca6df602bb96420b4ff1594dde23ddfc5f320e5bebffbdb343f186bf39c9d7a",
+        "name": "cn.agentplatform.common.schema.SharedSchemaAdmissionTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.SecretVaultTest.xml",
+        "sha256": "a5fc32d803baa094de797cc9b95b95f9ea667d167351840122615c531981896b",
+        "name": "cn.agentplatform.common.SecretVaultTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.application.ContextAssemblerTest.xml",
+        "sha256": "7344fc86a6b9d164dfd1150af720f0dc552851ab41c001f1786e8f00d69183ab",
+        "name": "cn.agentplatform.engine.application.ContextAssemblerTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.application.ContextProjectionTest.xml",
+        "sha256": "733d1970362943463621b3f8992a40a7833ddacaa507bfe6bf987c6516dba5c7",
+        "name": "cn.agentplatform.engine.application.ContextProjectionTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.application.FrozenModelsTest.xml",
+        "sha256": "0712e220914a5aab8e52e4244d4c5660605267cf6a62bba5779075638421055c",
+        "name": "cn.agentplatform.engine.application.FrozenModelsTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.application.RunStatisticsPostgresTest.xml",
+        "sha256": "b01f3e11b6b853429ba46726000e3710d56b4b5b55e2dcbf063e4674ef562489",
+        "name": "cn.agentplatform.engine.application.RunStatisticsPostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.domain.GraphRulesTest.xml",
+        "sha256": "7a1f9210d5ec6dc582db2a6fed5dd323d59617ceda0975aecb7a2c742f952c68",
+        "name": "cn.agentplatform.engine.domain.GraphRulesTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.domain.GraphValidatorTest.xml",
+        "sha256": "8249cac49d1f9488259730ecc84524d0f8cd81c8eace0dca0734d4425212cb02",
+        "name": "cn.agentplatform.engine.domain.GraphValidatorTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.domain.InputDeclarationSchemaPositionsTest.xml",
+        "sha256": "918232d885ba7caad1bdf643e665064fcd10ab3197a0ba43b43d06b0779cf5e4",
+        "name": "cn.agentplatform.engine.domain.InputDeclarationSchemaPositionsTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.domain.InputDeclarationsTest.xml",
+        "sha256": "b0d473563c4ef144d39c8f4bd12e8ae400c3ac7424fdfb6bea0da8221d37cc02",
+        "name": "cn.agentplatform.engine.domain.InputDeclarationsTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.domain.JsonGateTest.xml",
+        "sha256": "733050b48498f69f987d3e3dff97c7ad0e02b8bdc04880be862e2b4bbeb08135",
+        "name": "cn.agentplatform.engine.domain.JsonGateTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.domain.OutputPolicyTest.xml",
+        "sha256": "450756606ab57ff6d81e0a9aa2a81b17564ab206344a3c0742aed9bd7304fca3",
+        "name": "cn.agentplatform.engine.domain.OutputPolicyTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.domain.SharedSchemaBudgetTest.xml",
+        "sha256": "e6f3165c9d892ab47f1622b2d7b1d1a46d2c417ca72ed7f683e64eb0d32cccbd",
+        "name": "cn.agentplatform.engine.domain.SharedSchemaBudgetTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.domain.ValuesTest.xml",
+        "sha256": "3854141cfa0d22168b2f5fe6ea46e5e81bfb6ab8413ea6ac965ba9651c2c439c",
+        "name": "cn.agentplatform.engine.domain.ValuesTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.ChatSessionsTest.xml",
+        "sha256": "2ab18a200a514de2fa3d999467788a79619dd53f905e8c1556b2af11eeda75a9",
+        "name": "cn.agentplatform.engine.infra.ChatSessionsTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.ChunkBusRedisTest.xml",
+        "sha256": "47de8e0c92a93f75120b82804ba2586af9e12f99e66bdc9b0125eafeb57ff152",
+        "name": "cn.agentplatform.engine.infra.ChunkBusRedisTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.ChunkBusTest.xml",
+        "sha256": "60fac37e0747841678221ff6dd41fd53c48373516d2c23b78c5bfb59379f4ac6",
+        "name": "cn.agentplatform.engine.infra.ChunkBusTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.ControlledDraftSkillTest.xml",
+        "sha256": "2a7e7a228d811138e256b4710b981a8b9a438b523348dac9b5ea16ad11d995b2",
+        "name": "cn.agentplatform.engine.infra.ControlledDraftSkillTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.ControlledReplayTest.xml",
+        "sha256": "f4c6aee3f7bb0a785e71f17758df3177ee9608967cb36bc5139e6cd2823663fe",
+        "name": "cn.agentplatform.engine.infra.ControlledReplayTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.DebugControlsTest.xml",
+        "sha256": "b18b52bfc8e8b469a3637cf33d43a3093a95a95d75d44cc5e0e79b9a271b4671",
+        "name": "cn.agentplatform.engine.infra.DebugControlsTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.EngineContextPostgresTest.xml",
+        "sha256": "70683899db52e1dba416b5067fc98d4e1298dc39354732c620e2597f05b40096",
+        "name": "cn.agentplatform.engine.infra.EngineContextPostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.ExecutionRecoveryTest.xml",
+        "sha256": "dbda4b182614052815c70ec171786d3396f3452adcd43b6c8400977c414690d7",
+        "name": "cn.agentplatform.engine.infra.ExecutionRecoveryTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.FlowMaterialDatabasePreflightTest.xml",
+        "sha256": "1597ab4384720b721c0c03c2354c2db55186b46793eae4f2d5e6d5ed9d7a1f11",
+        "name": "cn.agentplatform.engine.infra.FlowMaterialDatabasePreflightTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.FlowMaterialScopePostgresTest.xml",
+        "sha256": "d3188be8c902cd173e54a62267a7b9a2ce69a514e44537933f82826c82a4daa7",
+        "name": "cn.agentplatform.engine.infra.FlowMaterialScopePostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.FlowMaterialStatusPostgresTest.xml",
+        "sha256": "ed479df2eb66063b547d3375a36b4774b3d1dcff1657e87e4f46d071d769202c",
+        "name": "cn.agentplatform.engine.infra.FlowMaterialStatusPostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.FlowMaterialTransactionsPostgresTest.xml",
+        "sha256": "9d37c81385a7f2942ca4d06a55e1e8c87f6133d1d61047f4f0c3199937117f1e",
+        "name": "cn.agentplatform.engine.infra.FlowMaterialTransactionsPostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.InitialMaterialScopePostgresTest.xml",
+        "sha256": "b83b611e5d2ed6c147d9d1aa653794d0827632d71242b221e77eb9fa692af90b",
+        "name": "cn.agentplatform.engine.infra.InitialMaterialScopePostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.ModelExchangeTest.xml",
+        "sha256": "d47ff0cc6345d18d11def99aa10985bbd3befa52f49e88aed40d947cdd57246e",
+        "name": "cn.agentplatform.engine.infra.ModelExchangeTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.OutputPolicyPostgresTest.xml",
+        "sha256": "fbc25ef7a96a270db4acf7a646b4f91266e62d529e30ccd1de58fe86b421a17c",
+        "name": "cn.agentplatform.engine.infra.OutputPolicyPostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.OwnedFlowMaterialsPostgresTest.xml",
+        "sha256": "d6b9dcf0b0a6428a9e4498fd3341ad286d1bbe045bef46b74e67766ffdd4e6d5",
+        "name": "cn.agentplatform.engine.infra.OwnedFlowMaterialsPostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.OwnedFlowSchedulerPostgresTest.xml",
+        "sha256": "d23807292f278a09ce2b2f27979783980ac993c39112cdeb20fea7d5289e53a6",
+        "name": "cn.agentplatform.engine.infra.OwnedFlowSchedulerPostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.PublishedAdmissionHttpPostgresTest.xml",
+        "sha256": "5818ae0b6648682ef4796048b171766fc17932fbcd19b0fc699eb3d977fecfa5",
+        "name": "cn.agentplatform.engine.infra.PublishedAdmissionHttpPostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.ReplayBoundaryTest.xml",
+        "sha256": "cfb1833ea3e37acae47d1d7c72a28a4dfccbaf9722c68592245d198bf4e79bdc",
+        "name": "cn.agentplatform.engine.infra.ReplayBoundaryTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.ReplayServiceTest.xml",
+        "sha256": "41943e539f9bb28e1ac318eb928ac1ef127d397d265c81a50b5a38a64bd1b45c",
+        "name": "cn.agentplatform.engine.infra.ReplayServiceTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RunAdmissionBoundaryPostgresTest.xml",
+        "sha256": "d0bb6473e597a5eed1333618f242265ecc0161d8f86c5ff3202df914cdc737f8",
+        "name": "cn.agentplatform.engine.infra.RunAdmissionBoundaryPostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RunAdmissionHttpTest.xml",
+        "sha256": "accc6389134c78d1d875bb988893fec1b1d2eab18dcf313469ed386333c4b2c6",
+        "name": "cn.agentplatform.engine.infra.RunAdmissionHttpTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RunAuthorityDatabasePreflightTest.xml",
+        "sha256": "e15035d6bbb46d46c3523c7f2ddd9d69f16c2d386e09662d72fa4148df0e56fd",
+        "name": "cn.agentplatform.engine.infra.RunAuthorityDatabasePreflightTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RunAuthorityLocalCurrentPostgresTest.xml",
+        "sha256": "6cd9d4091b8adc28e18e46c6d1eb619929370b79e1880c22c406537762968309",
+        "name": "cn.agentplatform.engine.infra.RunAuthorityLocalCurrentPostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RunAuthorityPersistencePostgresTest.xml",
+        "sha256": "9c5eb17d19971ec12417fb426b5a3eb4c0b67f2fe24f0b63bb0c0ef8b4f3b380",
+        "name": "cn.agentplatform.engine.infra.RunAuthorityPersistencePostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RunEventResponseTest.xml",
+        "sha256": "01f9cd4e01c875f78eefdad1ccd944ce85256c04581f039de5c1f603fd82df49",
+        "name": "cn.agentplatform.engine.infra.RunEventResponseTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RunEventsHttpTest.xml",
+        "sha256": "fda437dbbd150781c6f9e811fbbbebf3d8fe0dc7781a208ac7a7b88b0e636d42",
+        "name": "cn.agentplatform.engine.infra.RunEventsHttpTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RunEventsPostgresTest.xml",
+        "sha256": "f172a33df62c47e9b4f0d790a2043e9fcc6cc5bb7957f93efd052c02d05930a4",
+        "name": "cn.agentplatform.engine.infra.RunEventsPostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RunInputValidationPostgresTest.xml",
+        "sha256": "32dff89e9ee09e8984ba9da109c548b845237b142885669de85d93ddf1d15729",
+        "name": "cn.agentplatform.engine.infra.RunInputValidationPostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RunSchedulerPostgresTest.xml",
+        "sha256": "f84aca7a6d3b35965de43aa01a8ce23a058dc8428e42277674f80048407ee24d",
+        "name": "cn.agentplatform.engine.infra.RunSchedulerPostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RunSchedulerReviewPostgresTest.xml",
+        "sha256": "088b624976dba599e7d1cb2437311f00b0c1f284407137679d1ce408fc4f7bb8",
+        "name": "cn.agentplatform.engine.infra.RunSchedulerReviewPostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RunSchedulerTimingTest.xml",
+        "sha256": "1176375ebc69b526ac641e6fca5243bbcd7105f82727f0bdb1e5413ad7cf53b4",
+        "name": "cn.agentplatform.engine.infra.RunSchedulerTimingTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RuntimeClientsPublishedHttpTest.xml",
+        "sha256": "0f09c97ce5aaedc93383e96c48b9fdd445153f548bead251e9006ce130c79e5e",
+        "name": "cn.agentplatform.engine.infra.RuntimeClientsPublishedHttpTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RuntimeStreamTest.xml",
+        "sha256": "dc1d539cbcd4934bb95ebe2148af6db4347e9da60737aac824af6ac1e254942e",
+        "name": "cn.agentplatform.engine.infra.RuntimeStreamTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.TestInputHttpTest.xml",
+        "sha256": "d4b995c6cd2b1163ee6495f7711a2d00fb308155e95327c3551831ae720484ec",
+        "name": "cn.agentplatform.engine.infra.TestInputHttpTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.ToolCancellationRaceTest.xml",
+        "sha256": "2f15f1343e738c261fc1c926806f2aef92b24844f8163d2dd49e48f01e305e0e",
+        "name": "cn.agentplatform.engine.infra.ToolCancellationRaceTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.TracePostgresTest.xml",
+        "sha256": "8a3c1e08f9fe07729aade285e9c232e64d7b53ef7430b66827c9810ccd0b24d0",
+        "name": "cn.agentplatform.engine.infra.TracePostgresTest"
+      }
+    ],
+    "executedMarkers": [
+      "N4A_EXECUTED=authority-complete-iam",
+      "N4A_CHILD_REAPED=authority-complete-iam:54724",
+      "N4A_EXECUTED=authority-portal",
+      "N4A_CHILD_REAPED=authority-portal:39068",
+      "N4A_EXECUTED=authority-loopback-iam",
+      "N4A_CHILD_REAPED=authority-loopback-iam:23748",
+      "N4A_EXECUTED=iam-before-listener",
+      "N4A_CHILD_REAPED=iam-before-listener:25720",
+      "N4A_EXECUTED=invalid-registration",
+      "N4A_CHILD_REAPED=invalid-registration:51900",
+      "N4A_EXECUTED=unregistered",
+      "N4A_CHILD_REAPED=unregistered:65476",
+      "N4A_EXECUTED=legacy-then-iam",
+      "N4A_CHILD_REAPED=legacy-then-iam:20520",
+      "N4A_EXECUTED=common-boundary",
+      "N4A_CHILD_REAPED=common-boundary:17016"
+    ],
+    "warnings": [
+      "[INFO] /G:/207/��Ŀ/�㷨���鹤��/����/agent-platform/admin-common/src/test/java/cn/agentplatform/common/authority/ServiceAuthorizationTest.java: �й���ϸ��Ϣ, ��ʹ�� -Xlint:unchecked ���±��롣"
+    ]
+  },
+  {
+    "stage": "iam-stage-5-n4a-final02",
+    "command": {
+      "command": [
+        "node",
+        ".tools/run-iam-module-tests.mjs",
+        "iam-stage-5-n4a-final02",
+        "engine-runtime",
+        "AuthorityConfigurationTest#explicitGatewayDevPreservesIntegration,AuthorityConfigurationTest#explicitDevelopmentModesKeepLegacyDecoder,ServiceTokensDeploymentModeTest#actualLegacySnapshotSurvivesJvmMutationsAndContextClose,ServiceTokensDeploymentModeTest#isolatedReceiverExplicitlyRegistersIamWithoutOpeningProductionChain,RuntimeClientsPublishedHttpTest"
+      ],
+      "startedAt": "2026-10-20T16:05:33.415Z",
+      "endedAt": "2026-10-20T16:06:12.015Z",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "runnerStdout": "{\"stage\":\"iam-stage-5-n4a-final02\",\"modules\":\"engine-runtime\",\"tests\":\"AuthorityConfigurationTest#explicitGatewayDevPreservesIntegration,AuthorityConfigurationTest#explicitDevelopmentModesKeepLegacyDecoder,ServiceTokensDeploymentModeTest#actualLegacySnapshotSurvivesJvmMutationsAndContextClose,ServiceTokensDeploymentModeTest#isolatedReceiverExplicitlyRegistersIamWithoutOpeningProductionChain,RuntimeClientsPublishedHttpTest\",\"exitCode\":0,\"log\":\".local\\\\iam-stage-5-n4a-final02.log\",\"timedOut\":false}\n",
+      "runnerStderr": ""
+    },
+    "workdir": "G:/207/项目/算法重组工具/代码/agent-platform",
+    "raw": {
+      "file": "docs/evidence/iam-stage-5-n4a-deployment-mode/iam-stage-5-n4a-final02/raw.log",
+      "bytes": 9956,
+      "sha256": "1eea27600f6b8cc30693e00bc115ade5614a726f7c0d07fcfcc05696057e4ea8"
+    },
+    "running": [
+      "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+      "cn.agentplatform.common.authority.ServiceTokensDeploymentModeTest",
+      "cn.agentplatform.engine.infra.RuntimeClientsPublishedHttpTest"
+    ],
+    "xml": [
+      {
+        "name": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "cases": [
+          {
+            "name": "explicitGatewayDevPreservesIntegration",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "explicitDevelopmentModesKeepLegacyDecoder(String)[1]",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "explicitDevelopmentModesKeepLegacyDecoder(String)[2]",
+            "failed": false,
+            "skipped": false
+          }
+        ],
+        "file": "docs/evidence/iam-stage-5-n4a-deployment-mode/iam-stage-5-n4a-final02/xml/admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.AuthorityConfigurationTest.xml",
+        "bytes": 34488,
+        "sha256": "56d109a233ca246f85cf340f53661496bfb2a124ce031ba521b1e8b5c6794f52"
+      },
+      {
+        "name": "cn.agentplatform.common.authority.ServiceTokensDeploymentModeTest",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "cases": [
+          {
+            "name": "actualLegacySnapshotSurvivesJvmMutationsAndContextClose",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "isolatedReceiverExplicitlyRegistersIamWithoutOpeningProductionChain",
+            "failed": false,
+            "skipped": false
+          }
+        ],
+        "file": "docs/evidence/iam-stage-5-n4a-deployment-mode/iam-stage-5-n4a-final02/xml/admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.ServiceTokensDeploymentModeTest.xml",
+        "bytes": 36699,
+        "sha256": "0fd1d71fd200dd7833bb298005c6476f718afa4be366be60bc2de6de3caa3689"
+      },
+      {
+        "name": "cn.agentplatform.engine.infra.RuntimeClientsPublishedHttpTest",
+        "tests": 20,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "cases": [
+          {
+            "name": "oversizedBodyCancelsBeforeUnboundedAllocation",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "unknownServiceNeverSignsOrSends",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "headersThenUnfinishedBodyHasCompleteDeadlineAndClientCloses",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "numericIdsVersionKeyAndStoredDigestAreAllValidated",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "proofExpiringWhileRealExecutorQueuedNeverSendsPublishedGet",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "publicVerifiedObjectAndUnboundCaptureCannotSend",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "completeResponseStillRequiresOriginalBoundFrame",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "appHttpFailureSemanticsRemainDistinct",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "explicitLegacyConstructionKeepsKnownAppSkillModelRoutes",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "iamActorGetPostStreamAndUnknownTargetsNeverSignOrSend",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "redirectIsNotFollowedOrRetried",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "disconnectedPublishedGetIsNeverAutomaticallyResent",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "forwardReturningAfterProofExpiryCannotSendAppRequest",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "trustedIamDoesNotFallBackWhenJvmModeSaysTest",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "nonIdentityEncodingIsRejectedWithoutAutomaticDecompression",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "boundMainForwardsExactOperationGrantOriginAndNeverPortalSource",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "malformedJsonIsUnavailableWithoutBodyEcho",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "trustedModeRejectsMissingCapabilityAndUnsafeOrigins",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "unsafeCodeAndWrongRootNeverSend",
+            "failed": false,
+            "skipped": false
+          },
+          {
+            "name": "interruptionAfterHeadersCancelsRequestAndPreservesInterrupt",
+            "failed": false,
+            "skipped": false
+          }
+        ],
+        "file": "docs/evidence/iam-stage-5-n4a-deployment-mode/iam-stage-5-n4a-final02/xml/engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RuntimeClientsPublishedHttpTest.xml",
+        "bytes": 49229,
+        "sha256": "8e55344cf10ece4326ebf226adad00e9c31f0ff3011a4ffd94a74f622ae7d75a"
+      }
+    ],
+    "totals": {
+      "tests": 25,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "incidentalXmlNotExecuted": [
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.AuthorityContextRetainedTest.xml",
+        "sha256": "fcb375e11c3b9faf67c5d8e331207e20da0a0f598c9bfe4c839693a2d5fdd0b7",
+        "name": "cn.agentplatform.common.authority.AuthorityContextRetainedTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.AuthorityPolicyTest.xml",
+        "sha256": "eb80f969cd7f811a861f4adc86a151e89c7b61d166019a7a694af79646137629",
+        "name": "cn.agentplatform.common.authority.AuthorityPolicyTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.CurrentAuthorityClientTest.xml",
+        "sha256": "ee91715a3bfc73f39cdda42ac9f0aa1403954758a405a4416ca0d5c4107dd8ba",
+        "name": "cn.agentplatform.common.authority.CurrentAuthorityClientTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.IntegrationClaimsTest.xml",
+        "sha256": "0ff67837b373661818a4045278b18833e661835bcd1b18defc963a96dfcbf6e8",
+        "name": "cn.agentplatform.common.authority.IntegrationClaimsTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.LocalRunAdvanceAuthorityTest.xml",
+        "sha256": "4275fe4b5c6fd78fe2e66ebd25336ab54ea2aca14d2553e6fb73f62df55c55d8",
+        "name": "cn.agentplatform.common.authority.LocalRunAdvanceAuthorityTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.MetadataSelectorsTest.xml",
+        "sha256": "21ad2fbfa72e56ad0a793442344fca9ec46a1dfe5a1ed498753efff49545aed6",
+        "name": "cn.agentplatform.common.authority.MetadataSelectorsTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.PolicyRequestVerifierTest.xml",
+        "sha256": "0705e2394fa285caf207708b353376c10a7cee99a30f3c191c18c77537d423a3",
+        "name": "cn.agentplatform.common.authority.PolicyRequestVerifierTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.PortalClaimMapperTest.xml",
+        "sha256": "f7089d077cd9e155b8fa44bb5557a60206267473b2eb4211f7f1617cc2c21585",
+        "name": "cn.agentplatform.common.authority.PortalClaimMapperTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.ResponseAuthorityTest.xml",
+        "sha256": "4cfedbf55399772e471db3c2bb5d0992e7a10f4919d0981ffc058c30411ec7cd",
+        "name": "cn.agentplatform.common.authority.ResponseAuthorityTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.RetainedAuthorizationTest.xml",
+        "sha256": "062ddee681fdc3173562c3b91afa518e2c8639275fca8c7f05766ec9e8a3ee0e",
+        "name": "cn.agentplatform.common.authority.RetainedAuthorizationTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.RouteCoverageVerifierTest.xml",
+        "sha256": "98231a9ad0d9d5c1b72aca9b0bf85c1d7b62083a4eaac219bf540691e1e722f2",
+        "name": "cn.agentplatform.common.authority.RouteCoverageVerifierTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.ServiceAuthorizationTest.xml",
+        "sha256": "9df1584f5f773155f2c09b96f4b4d9971ce2fcdd8ec061fa83110ddd717c9ad2",
+        "name": "cn.agentplatform.common.authority.ServiceAuthorizationTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.ServiceTicketProviderTest.xml",
+        "sha256": "7dd22c105998343b3952034b52f85fddf5f8b61a8e35e9a2857d7b97da7ab597",
+        "name": "cn.agentplatform.common.authority.ServiceTicketProviderTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.TrustedJwtDecoderTest.xml",
+        "sha256": "63e4b76dffee1a5da0662b3d6505d2dc305790bc530fd725ab7f0c1c56b86d10",
+        "name": "cn.agentplatform.common.authority.TrustedJwtDecoderTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.CommonBoundaryTest.xml",
+        "sha256": "fcaedd417a8000bce2b393367d2e64dbc222d2f41228e0028b5f0627f2137b47",
+        "name": "cn.agentplatform.common.CommonBoundaryTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.schema.SharedSchemaAdmissionTest.xml",
+        "sha256": "7ca6df602bb96420b4ff1594dde23ddfc5f320e5bebffbdb343f186bf39c9d7a",
+        "name": "cn.agentplatform.common.schema.SharedSchemaAdmissionTest"
+      },
+      {
+        "file": "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.SecretVaultTest.xml",
+        "sha256": "a5fc32d803baa094de797cc9b95b95f9ea667d167351840122615c531981896b",
+        "name": "cn.agentplatform.common.SecretVaultTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.application.ContextAssemblerTest.xml",
+        "sha256": "7344fc86a6b9d164dfd1150af720f0dc552851ab41c001f1786e8f00d69183ab",
+        "name": "cn.agentplatform.engine.application.ContextAssemblerTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.application.ContextProjectionTest.xml",
+        "sha256": "733d1970362943463621b3f8992a40a7833ddacaa507bfe6bf987c6516dba5c7",
+        "name": "cn.agentplatform.engine.application.ContextProjectionTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.application.FrozenModelsTest.xml",
+        "sha256": "0712e220914a5aab8e52e4244d4c5660605267cf6a62bba5779075638421055c",
+        "name": "cn.agentplatform.engine.application.FrozenModelsTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.application.RunStatisticsPostgresTest.xml",
+        "sha256": "b01f3e11b6b853429ba46726000e3710d56b4b5b55e2dcbf063e4674ef562489",
+        "name": "cn.agentplatform.engine.application.RunStatisticsPostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.domain.GraphRulesTest.xml",
+        "sha256": "7a1f9210d5ec6dc582db2a6fed5dd323d59617ceda0975aecb7a2c742f952c68",
+        "name": "cn.agentplatform.engine.domain.GraphRulesTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.domain.GraphValidatorTest.xml",
+        "sha256": "8249cac49d1f9488259730ecc84524d0f8cd81c8eace0dca0734d4425212cb02",
+        "name": "cn.agentplatform.engine.domain.GraphValidatorTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.domain.InputDeclarationSchemaPositionsTest.xml",
+        "sha256": "918232d885ba7caad1bdf643e665064fcd10ab3197a0ba43b43d06b0779cf5e4",
+        "name": "cn.agentplatform.engine.domain.InputDeclarationSchemaPositionsTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.domain.InputDeclarationsTest.xml",
+        "sha256": "b0d473563c4ef144d39c8f4bd12e8ae400c3ac7424fdfb6bea0da8221d37cc02",
+        "name": "cn.agentplatform.engine.domain.InputDeclarationsTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.domain.JsonGateTest.xml",
+        "sha256": "733050b48498f69f987d3e3dff97c7ad0e02b8bdc04880be862e2b4bbeb08135",
+        "name": "cn.agentplatform.engine.domain.JsonGateTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.domain.OutputPolicyTest.xml",
+        "sha256": "450756606ab57ff6d81e0a9aa2a81b17564ab206344a3c0742aed9bd7304fca3",
+        "name": "cn.agentplatform.engine.domain.OutputPolicyTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.domain.SharedSchemaBudgetTest.xml",
+        "sha256": "e6f3165c9d892ab47f1622b2d7b1d1a46d2c417ca72ed7f683e64eb0d32cccbd",
+        "name": "cn.agentplatform.engine.domain.SharedSchemaBudgetTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.domain.ValuesTest.xml",
+        "sha256": "3854141cfa0d22168b2f5fe6ea46e5e81bfb6ab8413ea6ac965ba9651c2c439c",
+        "name": "cn.agentplatform.engine.domain.ValuesTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.ChatSessionsTest.xml",
+        "sha256": "2ab18a200a514de2fa3d999467788a79619dd53f905e8c1556b2af11eeda75a9",
+        "name": "cn.agentplatform.engine.infra.ChatSessionsTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.ChunkBusRedisTest.xml",
+        "sha256": "47de8e0c92a93f75120b82804ba2586af9e12f99e66bdc9b0125eafeb57ff152",
+        "name": "cn.agentplatform.engine.infra.ChunkBusRedisTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.ChunkBusTest.xml",
+        "sha256": "60fac37e0747841678221ff6dd41fd53c48373516d2c23b78c5bfb59379f4ac6",
+        "name": "cn.agentplatform.engine.infra.ChunkBusTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.ControlledDraftSkillTest.xml",
+        "sha256": "2a7e7a228d811138e256b4710b981a8b9a438b523348dac9b5ea16ad11d995b2",
+        "name": "cn.agentplatform.engine.infra.ControlledDraftSkillTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.ControlledReplayTest.xml",
+        "sha256": "f4c6aee3f7bb0a785e71f17758df3177ee9608967cb36bc5139e6cd2823663fe",
+        "name": "cn.agentplatform.engine.infra.ControlledReplayTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.DebugControlsTest.xml",
+        "sha256": "b18b52bfc8e8b469a3637cf33d43a3093a95a95d75d44cc5e0e79b9a271b4671",
+        "name": "cn.agentplatform.engine.infra.DebugControlsTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.EngineContextPostgresTest.xml",
+        "sha256": "70683899db52e1dba416b5067fc98d4e1298dc39354732c620e2597f05b40096",
+        "name": "cn.agentplatform.engine.infra.EngineContextPostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.ExecutionRecoveryTest.xml",
+        "sha256": "dbda4b182614052815c70ec171786d3396f3452adcd43b6c8400977c414690d7",
+        "name": "cn.agentplatform.engine.infra.ExecutionRecoveryTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.FlowMaterialDatabasePreflightTest.xml",
+        "sha256": "1597ab4384720b721c0c03c2354c2db55186b46793eae4f2d5e6d5ed9d7a1f11",
+        "name": "cn.agentplatform.engine.infra.FlowMaterialDatabasePreflightTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.FlowMaterialScopePostgresTest.xml",
+        "sha256": "d3188be8c902cd173e54a62267a7b9a2ce69a514e44537933f82826c82a4daa7",
+        "name": "cn.agentplatform.engine.infra.FlowMaterialScopePostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.FlowMaterialStatusPostgresTest.xml",
+        "sha256": "ed479df2eb66063b547d3375a36b4774b3d1dcff1657e87e4f46d071d769202c",
+        "name": "cn.agentplatform.engine.infra.FlowMaterialStatusPostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.FlowMaterialTransactionsPostgresTest.xml",
+        "sha256": "9d37c81385a7f2942ca4d06a55e1e8c87f6133d1d61047f4f0c3199937117f1e",
+        "name": "cn.agentplatform.engine.infra.FlowMaterialTransactionsPostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.InitialMaterialScopePostgresTest.xml",
+        "sha256": "b83b611e5d2ed6c147d9d1aa653794d0827632d71242b221e77eb9fa692af90b",
+        "name": "cn.agentplatform.engine.infra.InitialMaterialScopePostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.ModelExchangeTest.xml",
+        "sha256": "d47ff0cc6345d18d11def99aa10985bbd3befa52f49e88aed40d947cdd57246e",
+        "name": "cn.agentplatform.engine.infra.ModelExchangeTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.OutputPolicyPostgresTest.xml",
+        "sha256": "fbc25ef7a96a270db4acf7a646b4f91266e62d529e30ccd1de58fe86b421a17c",
+        "name": "cn.agentplatform.engine.infra.OutputPolicyPostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.OwnedFlowMaterialsPostgresTest.xml",
+        "sha256": "d6b9dcf0b0a6428a9e4498fd3341ad286d1bbe045bef46b74e67766ffdd4e6d5",
+        "name": "cn.agentplatform.engine.infra.OwnedFlowMaterialsPostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.OwnedFlowSchedulerPostgresTest.xml",
+        "sha256": "d23807292f278a09ce2b2f27979783980ac993c39112cdeb20fea7d5289e53a6",
+        "name": "cn.agentplatform.engine.infra.OwnedFlowSchedulerPostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.PublishedAdmissionHttpPostgresTest.xml",
+        "sha256": "5818ae0b6648682ef4796048b171766fc17932fbcd19b0fc699eb3d977fecfa5",
+        "name": "cn.agentplatform.engine.infra.PublishedAdmissionHttpPostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.ReplayBoundaryTest.xml",
+        "sha256": "cfb1833ea3e37acae47d1d7c72a28a4dfccbaf9722c68592245d198bf4e79bdc",
+        "name": "cn.agentplatform.engine.infra.ReplayBoundaryTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.ReplayServiceTest.xml",
+        "sha256": "41943e539f9bb28e1ac318eb928ac1ef127d397d265c81a50b5a38a64bd1b45c",
+        "name": "cn.agentplatform.engine.infra.ReplayServiceTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RunAdmissionBoundaryPostgresTest.xml",
+        "sha256": "d0bb6473e597a5eed1333618f242265ecc0161d8f86c5ff3202df914cdc737f8",
+        "name": "cn.agentplatform.engine.infra.RunAdmissionBoundaryPostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RunAdmissionHttpTest.xml",
+        "sha256": "accc6389134c78d1d875bb988893fec1b1d2eab18dcf313469ed386333c4b2c6",
+        "name": "cn.agentplatform.engine.infra.RunAdmissionHttpTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RunAuthorityDatabasePreflightTest.xml",
+        "sha256": "e15035d6bbb46d46c3523c7f2ddd9d69f16c2d386e09662d72fa4148df0e56fd",
+        "name": "cn.agentplatform.engine.infra.RunAuthorityDatabasePreflightTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RunAuthorityLocalCurrentPostgresTest.xml",
+        "sha256": "6cd9d4091b8adc28e18e46c6d1eb619929370b79e1880c22c406537762968309",
+        "name": "cn.agentplatform.engine.infra.RunAuthorityLocalCurrentPostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RunAuthorityPersistencePostgresTest.xml",
+        "sha256": "9c5eb17d19971ec12417fb426b5a3eb4c0b67f2fe24f0b63bb0c0ef8b4f3b380",
+        "name": "cn.agentplatform.engine.infra.RunAuthorityPersistencePostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RunEventResponseTest.xml",
+        "sha256": "01f9cd4e01c875f78eefdad1ccd944ce85256c04581f039de5c1f603fd82df49",
+        "name": "cn.agentplatform.engine.infra.RunEventResponseTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RunEventsHttpTest.xml",
+        "sha256": "fda437dbbd150781c6f9e811fbbbebf3d8fe0dc7781a208ac7a7b88b0e636d42",
+        "name": "cn.agentplatform.engine.infra.RunEventsHttpTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RunEventsPostgresTest.xml",
+        "sha256": "f172a33df62c47e9b4f0d790a2043e9fcc6cc5bb7957f93efd052c02d05930a4",
+        "name": "cn.agentplatform.engine.infra.RunEventsPostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RunInputValidationPostgresTest.xml",
+        "sha256": "32dff89e9ee09e8984ba9da109c548b845237b142885669de85d93ddf1d15729",
+        "name": "cn.agentplatform.engine.infra.RunInputValidationPostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RunSchedulerPostgresTest.xml",
+        "sha256": "f84aca7a6d3b35965de43aa01a8ce23a058dc8428e42277674f80048407ee24d",
+        "name": "cn.agentplatform.engine.infra.RunSchedulerPostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RunSchedulerReviewPostgresTest.xml",
+        "sha256": "088b624976dba599e7d1cb2437311f00b0c1f284407137679d1ce408fc4f7bb8",
+        "name": "cn.agentplatform.engine.infra.RunSchedulerReviewPostgresTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RunSchedulerTimingTest.xml",
+        "sha256": "1176375ebc69b526ac641e6fca5243bbcd7105f82727f0bdb1e5413ad7cf53b4",
+        "name": "cn.agentplatform.engine.infra.RunSchedulerTimingTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.RuntimeStreamTest.xml",
+        "sha256": "dc1d539cbcd4934bb95ebe2148af6db4347e9da60737aac824af6ac1e254942e",
+        "name": "cn.agentplatform.engine.infra.RuntimeStreamTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.TestInputHttpTest.xml",
+        "sha256": "d4b995c6cd2b1163ee6495f7711a2d00fb308155e95327c3551831ae720484ec",
+        "name": "cn.agentplatform.engine.infra.TestInputHttpTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.ToolCancellationRaceTest.xml",
+        "sha256": "2f15f1343e738c261fc1c926806f2aef92b24844f8163d2dd49e48f01e305e0e",
+        "name": "cn.agentplatform.engine.infra.ToolCancellationRaceTest"
+      },
+      {
+        "file": "engine-runtime/target/surefire-reports/TEST-cn.agentplatform.engine.infra.TracePostgresTest.xml",
+        "sha256": "8a3c1e08f9fe07729aade285e9c232e64d7b53ef7430b66827c9810ccd0b24d0",
+        "name": "cn.agentplatform.engine.infra.TracePostgresTest"
+      }
+    ],
+    "executedMarkers": [
+      "N4A_EXECUTED=authority-gateway",
+      "N4A_CHILD_REAPED=authority-gateway:49044",
+      "N4A_EXECUTED=authority-dev-hmac",
+      "N4A_CHILD_REAPED=authority-dev-hmac:57032",
+      "N4A_EXECUTED=authority-test",
+      "N4A_CHILD_REAPED=authority-test:56492",
+      "N4A_EXECUTED=legacy-snapshot",
+      "N4A_CHILD_REAPED=legacy-snapshot:61928",
+      "N4A_RECEIVER_PORT=61719",
+      "N4A_EXECUTED=isolated-receiver",
+      "N4A_CHILD_REAPED=isolated-receiver:48444",
+      "N4A_ENGINE_EXECUTED=legacy-routes",
+      "N4A_ENGINE_CHILD_REAPED=33772"
+    ],
+    "warnings": [
+      "[INFO] /G:/207/��Ŀ/�㷨���鹤��/����/agent-platform/admin-common/src/test/java/cn/agentplatform/common/authority/ServiceAuthorizationTest.java: �й���ϸ��Ϣ, ��ʹ�� -Xlint:unchecked ���±��롣",
+      "[INFO] /G:/207/��Ŀ/�㷨���鹤��/����/agent-platform/engine-runtime/src/test/java/cn/agentplatform/engine/infra/FlowMaterialStatusPostgresTest.java: �й���ϸ��Ϣ, ��ʹ�� -Xlint:unchecked ���±��롣"
+    ]
+  }
+]

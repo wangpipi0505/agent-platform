@@ -1,0 +1,59 @@
+[
+  {
+    "file": "java.base/java/lang/ref/Reference.java",
+    "bytes": 26089,
+    "sha256": "cff5aaf74a5b62ffddcf03d60aa35b48fbb4ef0d54dc8a15972f5d04495f95db",
+    "selectedFieldLines": [
+      "private T referent;         /* Treated specially by GC */",
+      "volatile ReferenceQueue<? super T> queue;",
+      "volatile Reference next;",
+      "private transient Reference<?> discovered;"
+    ]
+  },
+  {
+    "file": "java.base/java/lang/ref/ReferenceQueue.java",
+    "bytes": 8908,
+    "sha256": "9f7afbbe9bd3e480ce2c0140e8b12675b20e0005a93db1841579e3432ee5e6d1",
+    "selectedFieldLines": [
+      "private volatile Reference<? extends T> head;",
+      "private long queueLength = 0;",
+      "private final ReentrantLock lock;"
+    ]
+  },
+  {
+    "file": "java.base/java/util/concurrent/locks/ReentrantLock.java",
+    "bytes": 30154,
+    "sha256": "3fa6f4aaf254b75355b1dffc993a64f3ae315098f98455ad68f48e46b5faf417",
+    "selectedFieldLines": [
+      "*   private final ReentrantLock lock = new ReentrantLock();",
+      "private final Sync sync;",
+      "*   final ReentrantLock lock = new ReentrantLock();",
+      "*   final ReentrantLock lock = new ReentrantLock();",
+      "*   final ReentrantLock lock = new ReentrantLock();"
+    ]
+  },
+  {
+    "file": "java.base/java/util/concurrent/locks/AbstractQueuedSynchronizer.java",
+    "bytes": 82921,
+    "sha256": "d283f30ede5819ac17f90e2f781198361bf1d528614f59a1eed2d85ff076847f",
+    "selectedFieldLines": [
+      "*   private final Sync sync = new Sync();",
+      "*   private final Sync sync = new Sync();",
+      "volatile Node next;       // visibly nonnull when signallable",
+      "volatile int status;      // written by owner, atomic bit ops by others",
+      "private transient volatile Node head;",
+      "private transient volatile Node tail;",
+      "private volatile int state;",
+      "private transient ConditionNode firstWaiter;",
+      "private transient ConditionNode lastWaiter;"
+    ]
+  },
+  {
+    "file": "java.base/java/util/concurrent/locks/AbstractOwnableSynchronizer.java",
+    "bytes": 3281,
+    "sha256": "1883e4f1e03d8926619e7d5588c59bceec8f5dafd401131fdf2fb7287c5d4592",
+    "selectedFieldLines": [
+      "private transient Thread exclusiveOwnerThread;"
+    ]
+  }
+]

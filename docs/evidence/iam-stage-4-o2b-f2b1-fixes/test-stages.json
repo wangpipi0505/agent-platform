@@ -1,0 +1,64 @@
+[
+  {
+    "stage": "iam-stage-o2b-f2b1-fixes-final",
+    "selector": "PortalRunEventsHttpTest",
+    "exit": 0,
+    "running": [
+      "cn.agentplatform.gateway.infra.PortalRunEventsHttpTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalRunEventsHttpTest",
+        "tests": 14,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2b1-fixes/stages/iam-stage-o2b-f2b1-fixes-final"
+  },
+  {
+    "stage": "iam-stage-o2b-f2b1-fixes-focused",
+    "selector": "PortalRunEventsHttpTest#concurrentClosersHaveOneCleanupExecutorAndRespectWaitBudgets+cleanupInterruptionAndExceptionRetainReferencesForRetry+realHttpsBody8192AndChunked8193RespectReadAndCloseBounds",
+    "exit": 1,
+    "running": [],
+    "suites": [],
+    "evidence": ".local/iam-o2b-f2b1-fixes/stages/iam-stage-o2b-f2b1-fixes-focused"
+  },
+  {
+    "stage": "iam-stage-o2b-f2b1-fixes-focused2",
+    "selector": "PortalRunEventsHttpTest#concurrentClosersHaveOneCleanupExecutorAndRespectWaitBudgets,PortalRunEventsHttpTest#cleanupInterruptionAndExceptionRetainReferencesForRetry,PortalRunEventsHttpTest#realHttpsBody8192AndChunked8193RespectReadAndCloseBounds",
+    "exit": 0,
+    "running": [
+      "cn.agentplatform.gateway.infra.PortalRunEventsHttpTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalRunEventsHttpTest",
+        "tests": 3,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2b1-fixes/stages/iam-stage-o2b-f2b1-fixes-focused2"
+  },
+  {
+    "stage": "iam-stage-o2b-f2b1-fixes-red-concurrent",
+    "selector": "PortalRunEventsHttpTest#concurrentClosersHaveOneCleanupExecutorAndRespectWaitBudgets",
+    "exit": 1,
+    "running": [
+      "cn.agentplatform.gateway.infra.PortalRunEventsHttpTest"
+    ],
+    "suites": [
+      {
+        "class": "cn.agentplatform.gateway.infra.PortalRunEventsHttpTest",
+        "tests": 1,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 1
+      }
+    ],
+    "evidence": ".local/iam-o2b-f2b1-fixes/stages/iam-stage-o2b-f2b1-fixes-red-concurrent"
+  }
+]

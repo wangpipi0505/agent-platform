@@ -1,0 +1,15 @@
+{
+  "at": "2026-10-20T18:20:48.068Z",
+  "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+  "command": [
+    "powershell.exe",
+    "-NoProfile",
+    "-NonInteractive",
+    "-Command",
+    "$taskMavenProcesses = @(Get-CimInstance Win32_Process -Filter \"Name = 'java.exe'\" | Where-Object { ($_.CommandLine -like '*agent-platform*' -or $_.CommandLine -match 'V:[/\\\\]') -and $_.CommandLine -match 'surefirebooter|maven[.]home|classworlds[.]launcher[.]Launcher' } | Select-Object ProcessId,CommandLine); ConvertTo-Json -InputObject $taskMavenProcesses -Depth 3 -Compress"
+  ],
+  "exit": 0,
+  "matches": [],
+  "stdout": "[]\r\n",
+  "stderr": ""
+}

@@ -1,0 +1,21 @@
+-------------------------------------------------------------------------------
+Test set: cn.agentplatform.app.application.PublishedPayloadHttpTest
+-------------------------------------------------------------------------------
+Tests run: 24, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 18.70 s <<< FAILURE! -- in cn.agentplatform.app.application.PublishedPayloadHttpTest
+cn.agentplatform.app.application.PublishedPayloadHttpTest.heldShareLockBlocksRealWriterThenReleasesAfterRead -- Time elapsed: 0.854 s <<< FAILURE!
+java.lang.AssertionError: 
+
+Expecting actual throwable to be an instance of:
+  org.springframework.dao.CannotAcquireLockException
+but was:
+  org.springframework.jdbc.UncategorizedSQLException: PreparedStatementCallback; uncategorized SQLException for SQL [update app.application set current_version_no=2 where tenant_id=? and code=?]; SQL state [55P03]; error code [0]; ERROR: canceling statement due to lock timeout
+  在位置：while updating tuple (1,40) in relation "application"
+	at org.springframework.jdbc.core.JdbcTemplate.translateException(JdbcTemplate.java:1557)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:677)
+	at org.springframework.jdbc.core.JdbcTemplate.update(JdbcTemplate.java:972)
+	...(85 remaining lines not displayed - this can be changed with Assertions.setMaxStackTraceElementsDisplayed)
+	at cn.agentplatform.app.application.PublishedPayloadHttpTest.heldShareLockBlocksRealWriterThenReleasesAfterRead(PublishedPayloadHttpTest.java:215)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+

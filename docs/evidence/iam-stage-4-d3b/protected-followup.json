@@ -1,0 +1,48 @@
+{
+  "at": "2026-10-20T10:57:29.728Z",
+  "originalAfterExit": 1,
+  "attempts": [
+    {
+      "attempt": 1,
+      "success": true,
+      "at": "2026-10-20T10:57:29.720Z"
+    }
+  ],
+  "jar": {
+    "file": ".local/artifacts/prior-675-20261020-0830/skill-registry.jar",
+    "bytes": 87276524,
+    "sha256": "ed9441321c2ac5a3e94f095865d9a6d2f430e3c6f20553f831360285af13c940",
+    "expected": {
+      "file": ".local/artifacts/prior-675-20261020-0830/skill-registry.jar",
+      "bytes": 87276524,
+      "sha256": "ed9441321c2ac5a3e94f095865d9a6d2f430e3c6f20553f831360285af13c940"
+    },
+    "unchanged": true
+  },
+  "log": {
+    "file": ".local/postgres.log",
+    "before": {
+      "file": ".local/postgres.log",
+      "bytes": 353992,
+      "sha256": "666fd79d1034fa0f9efd2807570061a09802ae2b5e92d050f4629ad3a2b4c555"
+    },
+    "afterSample": {
+      "file": ".local/postgres.log",
+      "bytes": 356050,
+      "sha256": "aa4eeeba4a416fb068f9f817ca0bc81fa4bf3268df3757b29eb0a579e86cfb0a"
+    },
+    "currentlyObservedBytes": 356416,
+    "afterSampleStillMatches": true,
+    "originalPrefixUnchanged": true,
+    "appendedBytes": 2058,
+    "appendedSha256": "fc4404a392d685020c07bd8df13f41dd109c908bc2ae225c3ecd1277d476ac58",
+    "eventCounts": {
+      "lockTimeout": 4,
+      "statementTimeout": 0,
+      "sqlUpdateApplication": 4,
+      "error": 4,
+      "fatal": 0
+    },
+    "note": "No log content/credentials printed or copied. This is a new narrow observation, not a rewrite of original failed final protection pass."
+  }
+}

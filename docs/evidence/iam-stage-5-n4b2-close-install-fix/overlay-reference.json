@@ -1,0 +1,60 @@
+{
+  "at": "2026-10-20T19:05:39.789Z",
+  "sourceBase": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/frozen/",
+  "sourceBaseManifest": {
+    "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/source-after.json",
+    "bytes": 77685,
+    "sha256": "cdc3f4a1151a57005aed2f9a605226bae7f6456d8c7d1c339af5a2476a11968a"
+  },
+  "targetBase": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/target-final/",
+  "targetBaseManifest": {
+    "file": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/target-after.json",
+    "bytes": 386918,
+    "sha256": "fbe26616ad550f9a78bb16700d815fc868d0053e6d99ebc177ca4b61924f5fb0"
+  },
+  "sourcePhysicalOverlay": [
+    "platform-gateway/src/main/java/cn/agentplatform/gateway/application/PublishedRunProxy.java",
+    "platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+    "admin-common/src/test/java/cn/agentplatform/common/authority/GatewayIngressBoundaryTest.java"
+  ],
+  "sourceFrozenOverlay": "docs/evidence/iam-stage-5-n4b2-close-install-fix/frozen-overlay/",
+  "replayPhysicalOverlay": "docs/evidence/iam-stage-5-n4b2-close-install-fix/replay-overlay/",
+  "targetPhysicalOverlay": "docs/evidence/iam-stage-5-n4b2-close-install-fix/frozen-target-overlay/",
+  "targetChangedFiles": [
+    "admin-common/target/surefire-reports/2026-10-21T03-01-36_168.dumpstream",
+    "platform-gateway/target/surefire-reports/2026-10-21T02-56-45_211.dumpstream",
+    "platform-gateway/target/surefire-reports/2026-10-21T02-59-23_565.dumpstream",
+    "platform-gateway/target/surefire-reports/2026-10-21T03-01-36_168.dumpstream",
+    "platform-gateway/target/surefire-reports/2026-10-21T03-03-59_110.dumpstream",
+    "platform-gateway/target/test-classes/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest$AsyncInstallWindow$1$1.class",
+    "platform-gateway/target/test-classes/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest$AsyncInstallWindow$1.class",
+    "platform-gateway/target/test-classes/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest$AsyncInstallWindow$2.class",
+    "platform-gateway/target/test-classes/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest$AsyncInstallWindow.class",
+    "admin-common/target/admin-common-0.1.0-SNAPSHOT-tests.jar",
+    "admin-common/target/surefire-reports/TEST-cn.agentplatform.common.authority.GatewayIngressBoundaryTest.xml",
+    "admin-common/target/surefire-reports/cn.agentplatform.common.authority.GatewayIngressBoundaryTest.txt",
+    "admin-common/target/test-classes/cn/agentplatform/common/authority/GatewayIngressBoundaryTest.class",
+    "platform-gateway/target/classes/cn/agentplatform/gateway/application/PublishedRunProxy$Exchange$1.class",
+    "platform-gateway/target/classes/cn/agentplatform/gateway/application/PublishedRunProxy$Exchange$2.class",
+    "platform-gateway/target/classes/cn/agentplatform/gateway/application/PublishedRunProxy$Exchange.class",
+    "platform-gateway/target/classes/cn/agentplatform/gateway/application/PublishedRunProxy$Observation.class",
+    "platform-gateway/target/classes/cn/agentplatform/gateway/application/PublishedRunProxy$State.class",
+    "platform-gateway/target/classes/cn/agentplatform/gateway/application/PublishedRunProxy.class",
+    "platform-gateway/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst",
+    "platform-gateway/target/surefire-reports/TEST-cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.xml",
+    "platform-gateway/target/surefire-reports/cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest.txt",
+    "platform-gateway/target/test-classes/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest$1.class",
+    "platform-gateway/target/test-classes/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest$2.class",
+    "platform-gateway/target/test-classes/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest$Receiver$1.class",
+    "platform-gateway/target/test-classes/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest$Receiver$2$1.class",
+    "platform-gateway/target/test-classes/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest$Receiver$2.class",
+    "platform-gateway/target/test-classes/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest$Receiver.class",
+    "platform-gateway/target/test-classes/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest$SecondaryMapping.class",
+    "platform-gateway/target/test-classes/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.class"
+  ],
+  "targetTombstones": [],
+  "effectiveSourceCount": 377,
+  "effectiveTargetCount": 1888,
+  "unchangedPhysicalBaseAndAllOverlayHashesVerified": true,
+  "notAFullNewCopy": true
+}

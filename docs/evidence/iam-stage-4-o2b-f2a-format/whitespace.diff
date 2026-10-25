@@ -1,0 +1,449 @@
+--- a/platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsTlsConnection.java
++++ b/platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsTlsConnection.java
+@@ -121,7 +121,7 @@
+             var session = fresh.getSession();
+             if (!PortalEventsTls.PROTOCOL.equals(session.getProtocol()) || !PortalEventsTls.CIPHER.equals(session.getCipherSuite())
+                     || !(fresh.getApplicationProtocol().isEmpty() || "http/1.1".equals(fresh.getApplicationProtocol())))
+-            throw new IOException("TLS negotiated profile rejected");
++                throw new IOException("TLS negotiated profile rejected");
+             session.getPeerCertificates();
+             fresh.setSoTimeout(15000);
+             synchronized (this) {
+@@ -384,7 +384,7 @@
+         @Override public void connect(SocketAddress endpoint, int timeout) throws IOException {
+             if (!(endpoint instanceof InetSocketAddress target) || target.isUnresolved()
+                     || !owner.address.equals(target.getAddress()) || target.getPort() != owner.port)
+-            throw new IOException("TLS raw destination rejected");
++                throw new IOException("TLS raw destination rejected");
+             begin();
+             try {
+                 synchronized (PortalEventsTlsConnection.this) {
+--- a/platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalEventsTlsTest.java
++++ b/platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalEventsTlsTest.java
+@@ -379,216 +379,216 @@
+         boolean success = false;
+         long started = System.nanoTime();
+         try (var tls = new PortalEventsTls(URI.create("https://" + HOST + ":" + port), new byte[] {
+-        127, 0, 0, 1
++                127, 0, 0, 1
+-    }, ca(fixtures(), scenario.equals("wrong-ca")?"other":"root", run))) {
++        }, ca(fixtures(), scenario.equals("wrong-ca")?"other":"root", run))) {
+-        var c = (PortalEventsTlsConnection)tls.acquire(System.nanoTime() + Duration.ofMillis(scenario.equals("caller")?3000:60000).toNanos());
++            var c = (PortalEventsTlsConnection)tls.acquire(System.nanoTime() + Duration.ofMillis(scenario.equals("caller")?3000:60000).toNanos());
+-        long hard = c.hardDeadlineNanos(), opening = c.openingDeadlineNanos();
++            long hard = c.hardDeadlineNanos(), opening = c.openingDeadlineNanos();
+-        try {
++            try {
+-            if (scenario.equals("blocked-write"))c.rawSocketForConnect().setSendBufferSize(1024);
++                if (scenario.equals("blocked-write"))c.rawSocketForConnect().setSendBufferSize(1024);
+-            SSLSocket s = c.connectAndHandshake();
++                SSLSocket s = c.connectAndHandshake();
+-            p.setProperty("protocol", s.getSession().getProtocol());
++                p.setProperty("protocol", s.getSession().getProtocol());
+-            p.setProperty("cipher", s.getSession().getCipherSuite());
++                p.setProperty("cipher", s.getSession().getCipherSuite());
+-            p.setProperty("alpn", s.getApplicationProtocol());
++                p.setProperty("alpn", s.getApplicationProtocol());
+-            // Snapshots are read-only and do not alter the ledger.
++                // Snapshots are read-only and do not alter the ledger.
+-            p.setProperty("debtBefore", Long.toString(((PortalEventsTlsConnection)c).snapshot().debt()));
++                p.setProperty("debtBefore", Long.toString(((PortalEventsTlsConnection)c).snapshot().debt()));
+-            if (scenario.equals("stream-close")) {
++                if (scenario.equals("stream-close")) {
+-                var input = s.getInputStream();
++                    var input = s.getInputStream();
+-                var output = s.getOutputStream();
++                    var output = s.getOutputStream();
+-                input.close();
++                    input.close();
+-                output.close();
++                    output.close();
+-                assertTrue(c.awaitClosed(Duration.ofSeconds(2)));
++                    assertTrue(c.awaitClosed(Duration.ofSeconds(2)));
+-                assertThrows(IOException.class, () -> input.read());
++                    assertThrows(IOException.class, () -> input.read());
+-                assertThrows(IOException.class, () -> output.write(1));
++                    assertThrows(IOException.class, () -> output.write(1));
+-                assertThrows(IOException.class, s::getInputStream);
++                    assertThrows(IOException.class, s::getInputStream);
+-                assertTrue(s.isClosed());
++                    assertTrue(s.isClosed());
+-            } else if (scenario.equals("concurrent-read")) {
++                } else if (scenario.equals("concurrent-read")) {
+-                try (var pool = Executors.newSingleThreadExecutor()) {
++                    try (var pool = Executors.newSingleThreadExecutor()) {
+-                    var read = pool.submit(() -> {
++                        var read = pool.submit(() -> {
+-                        try {
++                            try {
+-                            s.getInputStream().read();
++                                s.getInputStream().read();
+-                            return false;
++                                return false;
+-                        } catch (IOException e) {
++                            } catch (IOException e) {
+-                            return true;
++                                return true;
+-                        }
++                            }
+-                    });
++                        });
+-                    long wait = System.nanoTime()+Duration.ofSeconds(1).toNanos();
++                        long wait = System.nanoTime()+Duration.ofSeconds(1).toNanos();
+-                    while (c.snapshot().reserved() == 0 && System.nanoTime()<wait)Thread.sleep(5);
++                        while (c.snapshot().reserved() == 0 && System.nanoTime()<wait)Thread.sleep(5);
+-                    assertTrue(c.snapshot().reserved()>0);
++                        assertTrue(c.snapshot().reserved()>0);
+-                    assertThrows(IOException.class, () -> s.getInputStream().read());
++                        assertThrows(IOException.class, () -> s.getInputStream().read());
+-                    c.abort();
++                        c.abort();
+-                    assertTrue(read.get(2, TimeUnit.SECONDS));
++                        assertTrue(read.get(2, TimeUnit.SECONDS));
+-                }
++                    }
+-            } else if (scenario.equals("bulk-eof")) {
++                } else if (scenario.equals("bulk-eof")) {
+-                byte[] buffer = new byte[2048];
++                    byte[] buffer = new byte[2048];
+-                assertEquals(1024, s.getInputStream().readNBytes(buffer, 0, buffer.length));
++                    assertEquals(1024, s.getInputStream().readNBytes(buffer, 0, buffer.length));
+-                byte[] expected = new byte[1024];
++                    byte[] expected = new byte[1024];
+-                Arrays.fill(expected, (byte) 42);
++                    Arrays.fill(expected, (byte) 42);
+-                assertArrayEquals(expected, Arrays.copyOf(buffer, 1024));
++                    assertArrayEquals(expected, Arrays.copyOf(buffer, 1024));
+-                assertArrayEquals(new byte[1024], Arrays.copyOfRange(buffer, 1024, 2048));
++                    assertArrayEquals(new byte[1024], Arrays.copyOfRange(buffer, 1024, 2048));
+-                assertEquals(1024, c.snapshot().delivered());
++                    assertEquals(1024, c.snapshot().delivered());
+-            } else if (Set.of("transfer-owner", "transfer-abort", "transfer-target-failure").contains(scenario)) {
++                } else if (Set.of("transfer-owner", "transfer-abort", "transfer-target-failure").contains(scenario)) {
+-                var targetEntered = new CountDownLatch(1);
++                    var targetEntered = new CountDownLatch(1);
+-                var targetRelease = new CountDownLatch(1);
++                    var targetRelease = new CountDownLatch(1);
+-                var bytes = new ByteArrayOutputStream();
++                    var bytes = new ByteArrayOutputStream();
+-                var target = new OutputStream() {
++                    var target = new OutputStream() {
+-                    public void write(int value) throws IOException {
++                        public void write(int value) throws IOException {
+-                        throw new IOException("bulk write required");
++                            throw new IOException("bulk write required");
+-                    }
++                        }
+-                    public void write(byte[] data, int off, int len) throws IOException {
++                        public void write(byte[] data, int off, int len) throws IOException {
+-                        targetEntered.countDown();
++                            targetEntered.countDown();
+-                        try {
++                            try {
+-                            if (!targetRelease.await(4, TimeUnit.SECONDS)) throw new IOException("target latch deadline");
++                                if (!targetRelease.await(4, TimeUnit.SECONDS)) throw new IOException("target latch deadline");
+-                        } catch (InterruptedException e) {
++                            } catch (InterruptedException e) {
+-                            throw new IOException(e);
++                                throw new IOException(e);
+-                        }
++                            }
+-                        bytes.write(data, off, len);
++                            bytes.write(data, off, len);
+-                        if (scenario.equals("transfer-target-failure")) throw new IOException("deliberate target write failure");
++                            if (scenario.equals("transfer-target-failure")) throw new IOException("deliberate target write failure");
+-                    }
++                        }
+-                };
++                    };
+-                var input = s.getInputStream();
++                    var input = s.getInputStream();
+-                try (var pool = Executors.newSingleThreadExecutor()) {
++                    try (var pool = Executors.newSingleThreadExecutor()) {
+-                    var bulk = pool.submit(() -> input.transferTo(target));
++                        var bulk = pool.submit(() -> input.transferTo(target));
+-                    try {
++                        try {
+-                        assertTrue(targetEntered.await(2, TimeUnit.SECONDS));
++                            assertTrue(targetEntered.await(2, TimeUnit.SECONDS));
+-                        assertEquals(1024, c.snapshot().delivered());
++                            assertEquals(1024, c.snapshot().delivered());
+-                        assertThrows(IOException.class, input::read, "second reader while target.write is blocked");
++                            assertThrows(IOException.class, input::read, "second reader while target.write is blocked");
+-                        assertThrows(IOException.class, () -> input.readNBytes(new byte[1], 0, 1));
++                            assertThrows(IOException.class, () -> input.readNBytes(new byte[1], 0, 1));
+-                        assertThrows(IOException.class, () -> input.transferTo(new ByteArrayOutputStream()));
++                            assertThrows(IOException.class, () -> input.transferTo(new ByteArrayOutputStream()));
+-                        if (scenario.equals("transfer-abort")) {
++                            if (scenario.equals("transfer-abort")) {
+-                            var other = tls.acquire(deadline());
++                                var other = tls.acquire(deadline());
+-                            try {
++                                try {
+-                                c.abort();
++                                    c.abort();
+-                                assertFalse(c.awaitClosed(Duration.ofMillis(100)), "blocked bulk still owns active I/O");
++                                    assertFalse(c.awaitClosed(Duration.ofMillis(100)), "blocked bulk still owns active I/O");
+-                                assertThrows(IOException.class, () -> tls.acquire(deadline()));
++                                    assertThrows(IOException.class, () -> tls.acquire(deadline()));
+-                            } finally {
++                                } finally {
+-                                other.abort();
++                                    other.abort();
+-                                assertTrue(other.awaitClosed(Duration.ofSeconds(2)));
++                                    assertTrue(other.awaitClosed(Duration.ofSeconds(2)));
+-                            }
++                                }
+-                        }
++                            }
+-                    } finally {
++                        } finally {
+-                        targetRelease.countDown();
++                            targetRelease.countDown();
+-                    }
++                        }
+-                    if (scenario.equals("transfer-abort") || scenario.equals("transfer-target-failure")) {
++                        if (scenario.equals("transfer-abort") || scenario.equals("transfer-target-failure")) {
+-                        var failure = assertThrows(ExecutionException.class, () -> bulk.get(2, TimeUnit.SECONDS));
++                            var failure = assertThrows(ExecutionException.class, () -> bulk.get(2, TimeUnit.SECONDS));
+-                        assertInstanceOf(IOException.class, failure.getCause());
++                            assertInstanceOf(IOException.class, failure.getCause());
+-                    } else {
++                        } else {
+-                        assertEquals(1024L, bulk.get(2, TimeUnit.SECONDS));
++                            assertEquals(1024L, bulk.get(2, TimeUnit.SECONDS));
+-                        assertEquals(0, input.readNBytes(new byte[0], 0, 0));
++                            assertEquals(0, input.readNBytes(new byte[0], 0, 0));
+-                        assertThrows(IndexOutOfBoundsException.class, () -> input.readNBytes(new byte[1], 1, 1));
++                            assertThrows(IndexOutOfBoundsException.class, () -> input.readNBytes(new byte[1], 1, 1));
+-                        assertThrows(NullPointerException.class, () -> input.transferTo(null));
++                            assertThrows(NullPointerException.class, () -> input.transferTo(null));
+-                    }
++                        }
+-                } finally {
++                    } finally {
+-                    targetRelease.countDown();
++                        targetRelease.countDown();
+-                }
++                    }
+-                byte[] expected = new byte[1024];
++                    byte[] expected = new byte[1024];
+-                Arrays.fill(expected, (byte) 42);
++                    Arrays.fill(expected, (byte) 42);
+-                assertArrayEquals(expected, bytes.toByteArray());
++                    assertArrayEquals(expected, bytes.toByteArray());
+-                assertEquals(1024, c.snapshot().delivered(), "one credit per returned TLS byte");
++                    assertEquals(1024, c.snapshot().delivered(), "one credit per returned TLS byte");
+-            } else if (scenario.equals("transfer")) {
++                } else if (scenario.equals("transfer")) {
+-                var out = new ByteArrayOutputStream();
++                    var out = new ByteArrayOutputStream();
+-                assertEquals(1024, s.getInputStream().transferTo(out));
++                    assertEquals(1024, s.getInputStream().transferTo(out));
+-                assertEquals(1024, c.snapshot().delivered());
++                    assertEquals(1024, c.snapshot().delivered());
+-            } else if (scenario.equals("tiny") || scenario.equals("keyupdate")) {
++                } else if (scenario.equals("tiny") || scenario.equals("keyupdate")) {
+-                boolean eof = false;
++                    boolean eof = false;
+-                try {
++                    try {
+-                    while (true) {
++                        while (true) {
+-                        int n = s.getInputStream().read();
++                            int n = s.getInputStream().read();
+-                        if (n<0) {
++                            if (n<0) {
+-                            eof = true;
++                                eof = true;
+-                            break;
++                                break;
+-                        }
++                            }
+-                    }
++                        }
+-                } catch (IOException e) {
++                    } catch (IOException e) {
+-                    p.setProperty("failure", failure(e));
++                        p.setProperty("failure", failure(e));
+-                }
++                    }
+-                p.setProperty("eof", Boolean.toString(eof));
++                    p.setProperty("eof", Boolean.toString(eof));
+-                assertFalse(eof,"capacity/timeout must not masquerade as EOF");
++                    assertFalse(eof,"capacity/timeout must not masquerade as EOF");
+-                assertTrue(c.snapshot().debt() == 65536 || scenario.equals("keyupdate"));
++                    assertTrue(c.snapshot().debt() == 65536 || scenario.equals("keyupdate"));
+-            } else if (scenario.equals("output")) {
++                } else if (scenario.equals("output")) {
+-                boolean limited = false;
++                    boolean limited = false;
+-                try {
++                    try {
+-                    for (int i = 0; i<300; i++)s.getOutputStream().write(new byte[1024]);
++                        for (int i = 0; i<300; i++)s.getOutputStream().write(new byte[1024]);
+-                } catch (IOException e) {
++                    } catch (IOException e) {
+-                    limited = true;
++                        limited = true;
+-                    p.setProperty("failure", failure(e));
++                        p.setProperty("failure", failure(e));
+-                }
++                    }
+-                assertTrue(limited);
++                    assertTrue(limited);
+-                assertTrue(c.snapshot().output() <= 131072);
++                    assertTrue(c.snapshot().output() <= 131072);
+-            } else if (scenario.equals("idle") || scenario.equals("caller")) {
++                } else if (scenario.equals("idle") || scenario.equals("caller")) {
+-                assertTrue(c.awaitClosed(Duration.ofSeconds(19)));
++                    assertTrue(c.awaitClosed(Duration.ofSeconds(19)));
+-            } else if (scenario.equals("blocked-read")) {
++                } else if (scenario.equals("blocked-read")) {
+-                assertThrows(IOException.class, () -> s.getInputStream().read());
++                    assertThrows(IOException.class, () -> s.getInputStream().read());
+-            } else if (scenario.equals("blocked-write")) {
++                } else if (scenario.equals("blocked-write")) {
+-                try (var pool = Executors.newSingleThreadExecutor()) {
++                    try (var pool = Executors.newSingleThreadExecutor()) {
+-                    var entered = new CountDownLatch(1);
++                        var entered = new CountDownLatch(1);
+-                    var write = pool.submit(() -> {
++                        var write = pool.submit(() -> {
+-                        entered.countDown();
++                            entered.countDown();
+-                        try {
++                            try {
+-                            s.getOutputStream().write(new byte[120000]);
++                                s.getOutputStream().write(new byte[120000]);
+-                            return false;
++                                return false;
+-                        } catch (IOException e) {
++                            } catch (IOException e) {
+-                            return true;
++                                return true;
+-                        }
++                            }
+-                    });
++                        });
+-                    assertTrue(entered.await(1, TimeUnit.SECONDS));
++                        assertTrue(entered.await(1, TimeUnit.SECONDS));
+-                    Thread.sleep(350);
++                        Thread.sleep(350);
+-                    assertFalse(write.isDone(),"real peer must stop reading before W is reached");
++                        assertFalse(write.isDone(),"real peer must stop reading before W is reached");
+-                    assertThrows(IOException.class, () -> s.getOutputStream().flush());
++                        assertThrows(IOException.class, () -> s.getOutputStream().flush());
+-                    c.abort();
++                        c.abort();
+-                    assertTrue(write.get(3, TimeUnit.SECONDS));
++                        assertTrue(write.get(3, TimeUnit.SECONDS));
+-                }
++                    }
+-            } else {
++                } else {
+-                verifyPublicView(s, c, port);
++                    verifyPublicView(s, c, port);
+-                byte[] message = new byte[64];
++                    byte[] message = new byte[64];
+-                Arrays.fill(message, (byte) 42);
++                    Arrays.fill(message, (byte) 42);
+-                int rounds = scenario.equals("absolute")?650:80;
++                    int rounds = scenario.equals("absolute")?650:80;
+-                try {
++                    try {
+-                    for (int i = 0; i < rounds; i++) {
++                        for (int i = 0; i < rounds; i++) {
+-                        s.getOutputStream().write(message);
++                            s.getOutputStream().write(message);
+-                        s.getOutputStream().flush();
++                            s.getOutputStream().flush();
+-                        byte[] echo = new byte[64];
++                            byte[] echo = new byte[64];
+-                        assertEquals(64, s.getInputStream().readNBytes(echo, 0, echo.length));
++                            assertEquals(64, s.getInputStream().readNBytes(echo, 0, echo.length));
+-                        assertArrayEquals(message, echo);
++                            assertArrayEquals(message, echo);
+-                        if (scenario.equals("absolute"))Thread.sleep(100);
++                            if (scenario.equals("absolute"))Thread.sleep(100);
+-                        if (scenario.equals("reuse") && i == 39) {
++                            if (scenario.equals("reuse") && i == 39) {
+-                            long debt = c.snapshot().debt();
++                                long debt = c.snapshot().debt();
+-                            Thread.sleep(100);
++                                Thread.sleep(100);
+-                            assertEquals(debt, c.snapshot().debt());
++                                assertEquals(debt, c.snapshot().debt());
+-                        }
++                            }
+-                    }
++                        }
+-                } catch (IOException e) {
++                    } catch (IOException e) {
+-                    if (!scenario.equals("absolute"))throw e;
++                        if (!scenario.equals("absolute"))throw e;
+-                }
++                    }
+-                if (!scenario.equals("absolute"))assertEquals(5120, c.snapshot().delivered());
++                    if (!scenario.equals("absolute"))assertEquals(5120, c.snapshot().delivered());
+-            }
++                }
+-            success = true;
++                success = true;
+-            p.setProperty("checked","true");
++                p.setProperty("checked","true");
+-        } catch (IOException e) {
++            } catch (IOException e) {
+-            p.setProperty("failure", failure(e));
++                p.setProperty("failure", failure(e));
+-            if (scenario.equals("stall") || scenario.equals("drip"))p.setProperty("checked","true");
++                if (scenario.equals("stall") || scenario.equals("drip"))p.setProperty("checked","true");
+-        } finally {
++            } finally {
+-            assertEquals(hard, c.hardDeadlineNanos());
++                assertEquals(hard, c.hardDeadlineNanos());
+-            assertEquals(opening, c.openingDeadlineNanos());
++                assertEquals(opening, c.openingDeadlineNanos());
+-            c.abort();
++                c.abort();
+-            p.setProperty("closed", Boolean.toString(c.awaitClosed(Duration.ofSeconds(3))));
++                p.setProperty("closed", Boolean.toString(c.awaitClosed(Duration.ofSeconds(3))));
+-            var snap = c.snapshot();
++                var snap = c.snapshot();
+-            p.setProperty("debtAfter", Long.toString(snap.debt()));
++                p.setProperty("debtAfter", Long.toString(snap.debt()));
+-            p.setProperty("delivered", Long.toString(snap.delivered()));
++                p.setProperty("delivered", Long.toString(snap.delivered()));
+-            p.setProperty("raw", Long.toString(snap.raw()));
++                p.setProperty("raw", Long.toString(snap.raw()));
+-            p.setProperty("output", Long.toString(snap.output()));
++                p.setProperty("output", Long.toString(snap.output()));
+-            Files.writeString(run.resolve("client-done"),"exited I/O");
++                Files.writeString(run.resolve("client-done"),"exited I/O");
+-        }
++            }
+-    }
++        }
+-    p.setProperty("elapsedMillis", Long.toString(TimeUnit.NANOSECONDS.toMillis(System.nanoTime()-started)));
++        p.setProperty("elapsedMillis", Long.toString(TimeUnit.NANOSECONDS.toMillis(System.nanoTime()-started)));
+-    p.setProperty("success", Boolean.toString(success));
++        p.setProperty("success", Boolean.toString(success));
+-    store(run.resolve("client.properties"), p);
++        store(run.resolve("client.properties"), p);
+-}
++    }
+-static String failure(Throwable e) {
++    static String failure(Throwable e) {
+-    var b = new StringBuilder();
++        var b = new StringBuilder();
+-    for (int n = 0; e != null && n<8; n++, e = e.getCause())b.append(e.getClass().getSimpleName()).append(':').append(e.getMessage()).append(';');
++        for (int n = 0; e != null && n<8; n++, e = e.getCause())b.append(e.getClass().getSimpleName()).append(':').append(e.getMessage()).append(';');
+-    return b.substring(0, Math.min(b.length(), 2048));
++        return b.substring(0, Math.min(b.length(), 2048));
+-}
++    }
+-static PortalEventsTls factory(Path ca) throws IOException{return new PortalEventsTls(URI.create("https://"+HOST+":443"), new byte[]{127, 0, 0, 1}, ca); }
++    static PortalEventsTls factory(Path ca) throws IOException{return new PortalEventsTls(URI.create("https://"+HOST+":443"), new byte[]{127, 0, 0, 1}, ca); }
+     static long deadline(){return System.nanoTime()+Duration.ofSeconds(30).toNanos(); }
+     static void mechanics(String name, Path run) throws Exception{
+         Path ca = ca(fixtures(),"root", run);

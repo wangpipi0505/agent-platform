@@ -1,0 +1,134 @@
+{
+  "profile": "Temurin21.0.12+8, inherited conservative header16/ref8/array24/alignment8; not heap telemetry",
+  "fieldBodies": {
+    "file": "docs/evidence/iam-stage-4-o2b-f2c2a-http-exit-fixes/actual-field-bodies.json",
+    "bytes": 13920,
+    "sha256": "e028e3b1ceffe7f37d5c0b418974a0c4eb4e62d0498c27eacf7cfcffb0fc699b"
+  },
+  "actualCore": 888,
+  "coreBasis": {
+    "handleAndReferenceAndStateAndTwoMonitors": 296,
+    "anchoredClosedSession": 344,
+    "releasedLease": 56,
+    "closedOwner": 48,
+    "emptyGuardsMap": 56,
+    "objectArray8": 88
+  },
+  "declaredRows": [
+    {
+      "component": "Handle/HandleReference/State/two monitors",
+      "bytes": 384
+    },
+    {
+      "component": "one anchored closed Session",
+      "bytes": 384
+    },
+    {
+      "component": "released lease",
+      "bytes": 64
+    },
+    {
+      "component": "closed Owner",
+      "bytes": 64
+    },
+    {
+      "component": "cleared IdentityHashMap",
+      "bytes": 64
+    },
+    {
+      "component": "Object[8]",
+      "bytes": 96
+    },
+    {
+      "component": "two one-time callbacks",
+      "bytes": 64
+    },
+    {
+      "component": "one inert RequestSlot",
+      "bytes": 64
+    },
+    {
+      "component": "at most four released Reservation/failure tokens",
+      "bytes": 128
+    }
+  ],
+  "declaredGraph": 1312,
+  "bundleBytes": 1792,
+  "remainingEnumeratedMargin": 480,
+  "additions": "Session.transportStops int4 + transportCheckpointForTest ref8; actual Session body344 <= allowance384. Hook is null in production and cleared in successful heavy cleanup before refund; its arbitrary capture is never charged as an8B closed-shell edge.",
+  "fixedGraph": {
+    "referenceArray": 12312,
+    "stateArray": 1560,
+    "bridgeAndTwo64Arrays": 1104,
+    "queueLocksAndNodes": 512,
+    "protocolAndScalarReserve": 2048,
+    "literalOccurrenceUpperBytes": 7248,
+    "literalOccurrenceCount": 81,
+    "total": 24784,
+    "allowance": 131072,
+    "newHttpCheckpointLiterals": {
+      "values": [
+        "stop-snapshot",
+        "cleanup-snapshot",
+        "cleanup-tail"
+      ],
+      "conservativeBytesEach": 128,
+      "bytes": 384
+    }
+  },
+  "sharedSlots": 1536,
+  "retiredReferenceTails": 4,
+  "retiredBytes": 7168,
+  "ledgerTotal": 2890752,
+  "baseline": 3145728,
+  "baselineMargin": 254976,
+  "twoOwnerPlusBaseline": 200576852,
+  "globalLimit": 201326592,
+  "globalMargin": 749740,
+  "heavyExclusions": "Frame270374 backing, worker/Thread, async/output/window/transport/parser/material/authority/probe captures are covered until actual exits and reference-bearing helpers return; none are counted as an8B closed field",
+  "tls": "Inherited installed PortalEventsTls config/B2 shared treatment once; no per-Session tls clone; no universal singleton assertion",
+  "javapCommands": [
+    {
+      "file": "docs/evidence/iam-stage-4-o2b-f2c2a-http-exit-fixes/javap-PortalRunEventsSse-Handle.json",
+      "bytes": 499,
+      "sha256": "d3c55a131623a0222979fbc2b93db4e44f97a3c0b6b646d32c750de39e1f4019"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o2b-f2c2a-http-exit-fixes/javap-PortalRunEventsSse-HandleReference.json",
+      "bytes": 516,
+      "sha256": "0783e1cfb1aeb807c66707a19c072e9121bb40b40a6d48b73c94cee489551684"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o2b-f2c2a-http-exit-fixes/javap-PortalRunEventsSse-State.json",
+      "bytes": 497,
+      "sha256": "eca8d5b10d33d3aae1e1d0c61ec5e3d0b403a3627904073a3d36d7c036d94b14"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o2b-f2c2a-http-exit-fixes/javap-PortalRunEventsSse-RequestSlot.json",
+      "bytes": 509,
+      "sha256": "962d572d5178a12471b0ad97f16251c674ac37c23f6c37dd36b7eb627d6df936"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o2b-f2c2a-http-exit-fixes/javap-PortalRunEventsHttp-Session.json",
+      "bytes": 503,
+      "sha256": "599c6346ccdb029865a152b46620e2f40bc9fe3b45cd0221ffece92b23d7eae5"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o2b-f2c2a-http-exit-fixes/javap-PortalRunEventsHttp-Session-SseLease.json",
+      "bytes": 520,
+      "sha256": "3f6d326e5996abcee143fc64860c03a82fcbcea6e664656417542757e246209e"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o2b-f2c2a-http-exit-fixes/javap-PortalEventsPacketBudget-Owner.json",
+      "bytes": 508,
+      "sha256": "4d713215f486fd3934b3aef0e0faacfe68bf704be091a9f312ff0b699a329968"
+    }
+  ],
+  "fieldDiagnosticSourceEpoch": {
+    "file": "docs/evidence/iam-stage-4-o2b-f2c2a-http-exit-fixes/stages/green-affected/source.json",
+    "bytes": 124057,
+    "sha256": "ba94bc33eed1901d400321e00eb91f62d2879add03b0bc08d2b86ebc8b1435a4"
+  },
+  "finalSourceDifference": "Only post-snapshot hook condition c!=null&&r!=null differs from field-diagnostic epoch; no field or closure-layout change.",
+  "gate": "stop admission counter and unique cleanup election under Session monitor; actual heavy helpers return primitive booleans before stop counter/election release and transportClean publication"
+}

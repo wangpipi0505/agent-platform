@@ -1,0 +1,51 @@
+-------------------------------------------------------------------------------
+Test set: cn.agentplatform.app.application.PublishedMetadataHttpTest
+-------------------------------------------------------------------------------
+Tests run: 4, Failures: 0, Errors: 4, Skipped: 0, Time elapsed: 6.200 s <<< FAILURE! -- in cn.agentplatform.app.application.PublishedMetadataHttpTest
+cn.agentplatform.app.application.PublishedMetadataHttpTest.deliberatelySignedMetadataKindCannotEnterActualPayloadController -- Time elapsed: 0.306 s <<< ERROR!
+cn.agentplatform.common.PlatformException: 当前授权不允许此操作
+	at cn.agentplatform.common.authority.AuthorityProtocol.denied(AuthorityProtocol.java:11)
+	at cn.agentplatform.common.authority.AuthorityProtocol.within(AuthorityProtocol.java:51)
+	at cn.agentplatform.common.authority.HttpCurrentAuthorityClient.ticket(HttpCurrentAuthorityClient.java:110)
+	at cn.agentplatform.common.authority.HttpCurrentAuthorityClient.exchange(HttpCurrentAuthorityClient.java:45)
+	at cn.agentplatform.app.application.PublishedMetadataHttpTest.ticket(PublishedMetadataHttpTest.java:70)
+	at cn.agentplatform.app.application.PublishedMetadataHttpTest.deliberatelySignedMetadataKindCannotEnterActualPayloadController(PublishedMetadataHttpTest.java:87)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+cn.agentplatform.app.application.PublishedMetadataHttpTest.payloadKindCannotEnterMetadataController -- Time elapsed: 0.166 s <<< ERROR!
+cn.agentplatform.common.PlatformException: 当前授权不允许此操作
+	at cn.agentplatform.common.authority.AuthorityProtocol.denied(AuthorityProtocol.java:11)
+	at cn.agentplatform.common.authority.AuthorityProtocol.within(AuthorityProtocol.java:51)
+	at cn.agentplatform.common.authority.HttpCurrentAuthorityClient.ticket(HttpCurrentAuthorityClient.java:110)
+	at cn.agentplatform.common.authority.HttpCurrentAuthorityClient.exchange(HttpCurrentAuthorityClient.java:45)
+	at cn.agentplatform.app.application.PublishedMetadataHttpTest.ticket(PublishedMetadataHttpTest.java:70)
+	at cn.agentplatform.app.application.PublishedMetadataHttpTest.payloadKindCannotEnterMetadataController(PublishedMetadataHttpTest.java:91)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+cn.agentplatform.app.application.PublishedMetadataHttpTest.legalSelectorReturnsOnlyPersistedFourFieldsWithOneMetadataRead -- Time elapsed: 0.163 s <<< ERROR!
+cn.agentplatform.common.PlatformException: 当前授权不允许此操作
+	at cn.agentplatform.common.authority.AuthorityProtocol.denied(AuthorityProtocol.java:11)
+	at cn.agentplatform.common.authority.AuthorityProtocol.within(AuthorityProtocol.java:51)
+	at cn.agentplatform.common.authority.HttpCurrentAuthorityClient.ticket(HttpCurrentAuthorityClient.java:110)
+	at cn.agentplatform.common.authority.HttpCurrentAuthorityClient.exchange(HttpCurrentAuthorityClient.java:45)
+	at cn.agentplatform.app.application.PublishedMetadataHttpTest.legalSelectorReturnsOnlyPersistedFourFieldsWithOneMetadataRead(PublishedMetadataHttpTest.java:76)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+cn.agentplatform.app.application.PublishedMetadataHttpTest.forgedSelectorTenantCodeOrDigestCannotQueryPg -- Time elapsed: 0.170 s <<< ERROR!
+cn.agentplatform.common.PlatformException: 当前授权不允许此操作
+	at cn.agentplatform.common.authority.AuthorityProtocol.denied(AuthorityProtocol.java:11)
+	at cn.agentplatform.common.authority.AuthorityProtocol.within(AuthorityProtocol.java:51)
+	at cn.agentplatform.common.authority.HttpCurrentAuthorityClient.ticket(HttpCurrentAuthorityClient.java:110)
+	at cn.agentplatform.common.authority.HttpCurrentAuthorityClient.exchange(HttpCurrentAuthorityClient.java:45)
+	at cn.agentplatform.app.application.PublishedMetadataHttpTest.ticket(PublishedMetadataHttpTest.java:70)
+	at cn.agentplatform.app.application.PublishedMetadataHttpTest.forgedSelectorTenantCodeOrDigestCannotQueryPg(PublishedMetadataHttpTest.java:82)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+

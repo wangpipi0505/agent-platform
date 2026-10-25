@@ -1,0 +1,1376 @@
+diff --git a/admin-common/src/main/java/cn/agentplatform/common/authority/PortalEventsResponse.java b/admin-common/src/main/java/cn/agentplatform/common/authority/PortalEventsResponse.java
+index 4d3a8af34e67348c82ad7c4deee6117e7d6465ed..3e97da5a17ccef81a5b3c39b97a62081e527e416 100644
+--- a/admin-common/src/main/java/cn/agentplatform/common/authority/PortalEventsResponse.java
++++ b/admin-common/src/main/java/cn/agentplatform/common/authority/PortalEventsResponse.java
+@@ -37,6 +37,18 @@ public final class PortalEventsResponse implements AutoCloseable {
+         }
+     }
+ 
++    /** Classification only: healthy same-holder renewal is not permission to reuse old material. */
++    public boolean isSuperseded(Capture capture) {
++        synchronized (this) {
++            requireCurrent();
++            if (capture == null || capture.holder != this || capture.evidence.owner != owner
++                    || capture.generation > generation) throw AuthorityProtocol.denied();
++            if (capture.generation < generation) return true;
++            if (capture.evidence != evidence) throw AuthorityProtocol.denied();
++            return false;
++        }
++    }
++
+     private long requireCurrent() {
+         if (failure != null) throw failure;
+         try {
+diff --git a/admin-common/src/main/java/cn/agentplatform/common/authority/RunObservationSelectors.java b/admin-common/src/main/java/cn/agentplatform/common/authority/RunObservationSelectors.java
+index 0a7a8de9e61c65ca0aa0e4f262906bfac940f6d0..6b802b84826c2ddcf6e8e31e0443017ffa3a5ef2 100644
+--- a/admin-common/src/main/java/cn/agentplatform/common/authority/RunObservationSelectors.java
++++ b/admin-common/src/main/java/cn/agentplatform/common/authority/RunObservationSelectors.java
+@@ -18,7 +18,7 @@ public final class RunObservationSelectors {
+         return status(run, acceptedSha);
+     }
+ 
+-    /** Response profile only. The mapped receiver deliberately continues to use STATUS-only purpose. */
++    /** Fixed response profile and mapped receiver share the same strict EVENTS purpose. */
+     static void requirePortalEventsResponseCall(ServiceCall call, String caller, String mode,
+             String source, String origin) {
+         if (call == null || call.resource() == null || !"engine".equals(call.target())
+@@ -41,9 +41,9 @@ public final class RunObservationSelectors {
+     public static void requirePurpose(ServiceCall call,String caller,String mode,String source,String origin){
+         if(call==null||call.resource()==null)throw AuthorityProtocol.denied();
+         boolean kind=KIND.equals(call.resource().kind()),action=ACTION.equals(call.action());
+-        boolean snapshot="run-snapshot".equals(call.resource().kind()),status=STATUS_ACTION.equals(call.action());
+-        if(snapshot||status){
+-            if(!snapshot||!status||!"engine".equals(call.target())||!"gateway".equals(caller)
++        boolean snapshot="run-snapshot".equals(call.resource().kind()),status=STATUS_ACTION.equals(call.action()),events=EVENTS_ACTION.equals(call.action());
++        if(snapshot||status||events){
++            if(!snapshot||(!status&&!events)||!"engine".equals(call.target())||!"gateway".equals(caller)
+                     ||!"delegated".equals(mode)||!"PORTAL".equals(source)||!"PORTAL".equals(origin)
+                     ||!status(call.resource().id(),call.resource().versionDigest()).equals(call.resource()))throw AuthorityProtocol.denied();
+             return;
+diff --git a/admin-common/src/test/java/cn/agentplatform/common/authority/PortalEventsReceiverClosedTest.java b/admin-common/src/test/java/cn/agentplatform/common/authority/PortalEventsReceiverClosedTest.java
+index 7fc8dc975d71ecfa73b044df681f17fce5792e72..742f6f3a061a0b773ae9eec9f8e5563efc99eef0 100644
+--- a/admin-common/src/test/java/cn/agentplatform/common/authority/PortalEventsReceiverClosedTest.java
++++ b/admin-common/src/test/java/cn/agentplatform/common/authority/PortalEventsReceiverClosedTest.java
+@@ -1,137 +1,25 @@
+ package cn.agentplatform.common.authority;
+ 
+-import cn.agentplatform.common.PlatformErrors;
+-import java.net.URI;
+-import java.net.http.HttpClient;
+-import java.net.http.HttpRequest;
+-import java.net.http.HttpResponse;
+-import java.time.Duration;
+-import java.util.List;
+-import java.util.Map;
+-import java.util.concurrent.atomic.AtomicInteger;
++import static org.assertj.core.api.Assertions.*;
++import cn.agentplatform.common.*;
++import java.util.*;
+ import org.junit.jupiter.api.Test;
+-import org.springframework.boot.SpringApplication;
+-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+-import org.springframework.boot.web.servlet.FilterRegistrationBean;
+-import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
+-import org.springframework.context.annotation.Bean;
+-import org.springframework.context.annotation.Configuration;
+-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+-import org.springframework.security.oauth2.jwt.JwtDecoder;
+-import org.springframework.security.web.SecurityFilterChain;
+-import org.springframework.web.bind.annotation.GetMapping;
+-import org.springframework.web.bind.annotation.RestController;
+-import static org.assertj.core.api.Assertions.assertThat;
+ 
+-/** Real Servlet mapped receiver, with a sentinel handler; no engine SQL/SSE success is claimed. */
++/** C migrates the all-closed stage assertion. Missing handlers and aliases are verified by the
++ * real engine HTTP tests; this common test owns only the bidirectional fixed purpose rule. */
+ class PortalEventsReceiverClosedTest {
+-    static LoopbackAuthority iam;
+-    static final AtomicInteger handlers = new AtomicInteger();
+-    static final AtomicInteger frames = new AtomicInteger();
+-
+-    @Configuration(proxyBeanMethods = false)
+-    @EnableAutoConfiguration
+-    @EnableWebSecurity
+-    static class Receiver {
+-        @Bean(destroyMethod = "close")
+-        HttpCurrentAuthorityClient current() { return iam.client("engine"); }
+-
+-        @Bean
+-        JwtDecoder decoder() { return new TrustedJwtDecoder(iam.config("engine"), iam.clock, true); }
+-
+-        @Bean
+-        ServiceAuthorization authorization(HttpCurrentAuthorityClient current) {
+-            return new ServiceAuthorization("engine", new ServiceRoutePolicy(), current);
+-        }
+-
+-        @Bean
+-        SecurityFilterChain security(HttpSecurity http, JwtDecoder decoder,
+-                ServiceAuthorization authorization) throws Exception {
+-            return cn.agentplatform.common.SecurityConfiguration.serviceSecurity(http, decoder, authorization);
+-        }
+-
+-        @Bean
+-        org.springframework.web.servlet.handler.MappedInterceptor mapped(ServiceAuthorization authorization) {
+-            return authorization.mappedInterceptor();
+-        }
+-
+-        @Bean
+-        EventsController controller() { return new EventsController(); }
+-
+-        @Bean
+-        PlatformErrors errors() { return new PlatformErrors(); }
+-
+-        @Bean
+-        FilterRegistrationBean<jakarta.servlet.Filter> frameProbe() {
+-            var registration = new FilterRegistrationBean<jakarta.servlet.Filter>();
+-            registration.setFilter((request, response, chain) -> {
+-                try { chain.doFilter(request, response); }
+-                finally {
+-                    if (request.getAttribute(ServiceAuthorization.class.getName() + ".frame") != null) {
+-                        frames.incrementAndGet();
+-                    }
+-                    if (org.assertj.core.api.Assertions.catchThrowable(AuthorityContext::current) == null) {
+-                        frames.incrementAndGet();
+-                    }
+-                }
+-            });
+-            registration.setOrder(Integer.MAX_VALUE);
+-            return registration;
+-        }
+-    }
+-
+-    @RestController
+-    static class EventsController {
+-        @GetMapping({"/admin/runs/{id}/events", "/admin/debug-runs/{id}/events", "/v1/runs/{id}/events"})
+-        String events() {
+-            handlers.incrementAndGet();
+-            return "sentinel";
+-        }
++    private static final String RUN="r_"+"a".repeat(32),SHA=Digest.sha256("accepted");
++    @Test void fixedPortalEventsPurposeAndStatusRemainPairedInBothDirections(){
++        for(String action:List.of(RunObservationSelectors.EVENTS_ACTION,RunObservationSelectors.STATUS_ACTION))
++            RunObservationSelectors.requirePurpose(new ServiceCall("engine",action,RunObservationSelectors.events(RUN,SHA)),"gateway","delegated","PORTAL","PORTAL");
++        RunObservationSelectors.requirePurpose(new ServiceCall("engine",RunObservationSelectors.ACTION,RunObservationSelectors.metadata(new SubjectKey("tenant-a","alice"),RUN)),"gateway","delegated","PORTAL","PORTAL");
+     }
+-
+-    @Test
+-    void realSignedEventsRemainClosedBeforeOnlineAuthorizeFrameAndEveryAliasHandler() throws Exception {
+-        handlers.set(0);
+-        frames.set(0);
+-        try (var fixture = new LoopbackAuthority()) {
+-            iam = fixture;
+-            PortalEventsAuthorityProfileTest.setup(iam);
+-            try (var gateway = iam.client("gateway")) {
+-                String ticket = gateway.exchange(iam.portal(120), PortalEventsAuthorityProfileTest.call()).value();
+-                var app = new SpringApplication(Receiver.class);
+-                app.setAdditionalProfiles("test");
+-                app.setDefaultProperties(Map.of("server.address", "127.0.0.1", "server.port", "0",
+-                        "spring.main.banner-mode", "off", "spring.config.location", "optional:classpath:/o2a-no-config/",
+-                        "spring.jmx.enabled", false, "springdoc.api-docs.enabled", false, "logging.level.root", "ERROR"));
+-                try (var server = (ServletWebServerApplicationContext) app.run();
+-                        var client = HttpClient.newHttpClient()) {
+-                    int authorityCalls = iam.authorityCalls();
+-                    for (String prefix : List.of("/admin/runs/", "/admin/debug-runs/", "/v1/runs/")) {
+-                        request(client, server, prefix + PortalEventsAuthorityProfileTest.RUN + "/events", ticket, "GET");
+-                    }
+-                    for (String method : List.of("HEAD", "POST", "PUT", "DELETE", "OPTIONS")) {
+-                        request(client, server, "/admin/runs/" + PortalEventsAuthorityProfileTest.RUN + "/events", ticket, method);
+-                    }
+-                    request(client, server, "/admin/runs/r_" + "b".repeat(32) + "/events", ticket, "GET");
+-                    request(client, server, "/admin/runs/" + PortalEventsAuthorityProfileTest.RUN, ticket, "GET");
+-                    request(client, server, "/not-mapped", ticket, "GET");
+-                    assertThat(iam.authorityCalls()).isEqualTo(authorityCalls);
+-                    assertThat(iam.observedOperations()).containsExactly("exchange");
+-                    assertThat(handlers).hasValue(0);
+-                    assertThat(frames).hasValue(0);
+-                }
+-            }
+-        }
+-        System.out.println("O2A_RECEIVER_SERVLET_AND_HTTP_CLOSED=true");
+-    }
+-
+-    private static void request(HttpClient client, ServletWebServerApplicationContext server,
+-            String route, String ticket, String method) throws Exception {
+-        var response = client.send(HttpRequest.newBuilder(URI.create("http://127.0.0.1:"
+-                        + server.getWebServer().getPort() + route)).timeout(Duration.ofSeconds(5))
+-                .header("Authorization", "Bearer " + ticket)
+-                .method(method, HttpRequest.BodyPublishers.noBody()).build(), HttpResponse.BodyHandlers.ofString());
+-        assertThat(response.statusCode()).as(method + " " + route).isEqualTo(403);
++    @Test void wrongKindActionCallerModeSourceOriginTargetAndExecutionCannotBorrowEventsPurpose(){
++        var resource=RunObservationSelectors.events(RUN,SHA);
++        for(var call:List.of(new ServiceCall("engine",RunObservationSelectors.EVENTS_ACTION,new ResourceBinding("run",RUN,SHA)),new ServiceCall("engine",RunObservationSelectors.ACTION,resource),new ServiceCall("engine","proxy.engine.post.RunController.run",resource),new ServiceCall("app",RunObservationSelectors.EVENTS_ACTION,resource)))
++            assertThatThrownBy(()->RunObservationSelectors.requirePurpose(call,"gateway","delegated","PORTAL","PORTAL")).isInstanceOf(PlatformException.class);
++        var call=new ServiceCall("engine",RunObservationSelectors.EVENTS_ACTION,resource);
++        for(String[] route:List.of(new String[]{"app","delegated","PORTAL","PORTAL"},new String[]{"gateway","workload","PORTAL","PORTAL"},new String[]{"gateway","delegated","DELEGATED","PORTAL"},new String[]{"gateway","delegated","PORTAL","INTEGRATION"}))
++            assertThatThrownBy(()->RunObservationSelectors.requirePurpose(call,route[0],route[1],route[2],route[3])).isInstanceOf(PlatformException.class);
+     }
+ }
+diff --git a/engine-runtime/src/main/java/cn/agentplatform/engine/EnginePortalEventsAssembly.java b/engine-runtime/src/main/java/cn/agentplatform/engine/EnginePortalEventsAssembly.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..4f9910a5468b2a1cd0a8b9e2cd369af1c310f657
+--- /dev/null
++++ b/engine-runtime/src/main/java/cn/agentplatform/engine/EnginePortalEventsAssembly.java
+@@ -0,0 +1,14 @@
++package cn.agentplatform.engine;
++
++import cn.agentplatform.common.authority.HttpCurrentAuthorityClient;
++import cn.agentplatform.engine.application.PortalRunEventsService;
++import cn.agentplatform.engine.infra.*;
++import javax.sql.DataSource;
++import java.time.Clock;
++import org.springframework.context.annotation.Bean;
++
++/** Plain lite bean source; only an explicitly controlled receiver may import it. */
++public class EnginePortalEventsAssembly {
++    @Bean RunEventReader portalRunEventReader(DataSource source){return new RunEventReader(source);}
++    @Bean(destroyMethod="close") PortalRunEventsService portalRunEventsService(RunEventReader reader,HttpCurrentAuthorityClient authority,ChunkBus chunks,Clock clock){return new PortalRunEventsService(reader,authority,chunks,clock);}
++}
+diff --git a/engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java b/engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java
+index 02bd9a7f8b0fe6094c98eeec4700ed9b7934ced7..91de506d6119afa8b99d7382149277ada46045f4 100644
+--- a/engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java
++++ b/engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java
+@@ -18,6 +18,10 @@ public class RunController {
+     private final TraceStore store;
+     private final ChunkBus chunks;
+     private final ApprovalService approvals;
++    private PortalRunEventsService portalEvents;
++
++    @org.springframework.beans.factory.annotation.Autowired(required=false)
++    public void portalEvents(PortalRunEventsService service){portalEvents=service;}
+ 
+     public RunController(RunService s, TraceStore t, ChunkBus c, ApprovalService a) {
+         service = s;
+@@ -198,6 +202,14 @@ public class RunController {
+             @PathVariable String id,
+             @RequestHeader(value = "Last-Event-ID", required = false) String cursor,
+             @RequestParam(value = "Last-Event-ID", required = false) Long queryCursor) {
++        if(service!=null&&service.iamEnabled()){
++            var attributes=org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();
++            if(portalEvents==null||!(attributes instanceof org.springframework.web.context.request.ServletRequestAttributes servlet)||servlet.getResponse()==null)
++                throw new PlatformException(403,"IAM_EVENTS_UNAVAILABLE","运行事件观察尚未装配");
++            try{portalEvents.open(id,servlet.getRequest(),servlet.getResponse());}
++            catch(java.io.IOException failure){throw new java.io.UncheckedIOException(failure);}
++            return null;
++        }
+         Actor actor = Actor.current();
+         var run = store.run(id, actor);
+         long rid = TraceStore.number(run, "id"),
+diff --git a/engine-runtime/src/main/java/cn/agentplatform/engine/application/PortalRunEventsService.java b/engine-runtime/src/main/java/cn/agentplatform/engine/application/PortalRunEventsService.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..c26b2a100c2239c085dc807f3bc6795e6ef2ade1
+--- /dev/null
++++ b/engine-runtime/src/main/java/cn/agentplatform/engine/application/PortalRunEventsService.java
+@@ -0,0 +1,226 @@
++package cn.agentplatform.engine.application;
++
++import cn.agentplatform.common.*;
++import cn.agentplatform.common.authority.*;
++import cn.agentplatform.engine.api.RunController;
++import cn.agentplatform.engine.infra.*;
++import jakarta.servlet.*;
++import jakarta.servlet.http.*;
++import java.io.*;
++import java.time.Clock;
++import java.util.*;
++import java.util.concurrent.*;
++import java.util.concurrent.atomic.*;
++import org.springframework.web.method.HandlerMethod;
++import org.springframework.web.servlet.HandlerMapping;
++
++/** Explicit receiver assembly only. One connection owns one finite Servlet task, never an MVC
++ * streaming callback: Spring 6.2.7 otherwise obtains the stream before and flushes after it. */
++public final class PortalRunEventsService implements AutoCloseable {
++    private final RunEventReader reader;private final HttpCurrentAuthorityClient authority;
++    private final ChunkBus chunks;private final Clock clock;private final ThreadPoolExecutor writers;
++    private final Set<Owner> owners=ConcurrentHashMap.newKeySet();private volatile boolean closed;
++    public PortalRunEventsService(RunEventReader reader,HttpCurrentAuthorityClient authority,ChunkBus chunks,Clock clock){
++        this(reader,authority,chunks,clock,new ThreadPoolExecutor(2,2,0,TimeUnit.MILLISECONDS,new ArrayBlockingQueue<>(2),r->{var t=new Thread(r,"portal-events-writer");t.setDaemon(true);return t;},new ThreadPoolExecutor.AbortPolicy()));
++    }
++    /** Transfers the finite executor to this service, for controlled receiver assembly. */
++    public PortalRunEventsService(RunEventReader reader,HttpCurrentAuthorityClient authority,ChunkBus chunks,Clock clock,ThreadPoolExecutor writers){
++        this.reader=Objects.requireNonNull(reader);this.authority=Objects.requireNonNull(authority);this.chunks=Objects.requireNonNull(chunks);this.clock=Objects.requireNonNull(clock);this.writers=Objects.requireNonNull(writers);
++        if(writers.getMaximumPoolSize()>2||writers.getCorePoolSize()<1||writers.getQueue().remainingCapacity()+writers.getQueue().size()>2)throw new IllegalArgumentException("FINITE_EVENTS_EXECUTOR_REQUIRED");
++    }
++    public void open(String id,HttpServletRequest request,HttpServletResponse output)throws IOException{
++        long cursor=validate(id,request);
++        if(closed)throw capacity();
++        var current=AuthorityContext.current();var call=current.call();
++        RunObservationSelectors.requirePurpose(call,current.caller(),"delegated",current.operation().sourceKind(),current.operation().originKind());
++        if(!RunObservationSelectors.EVENTS_ACTION.equals(call.action())||!call.resource().equals(RunObservationSelectors.events(id,call.resource().versionDigest())))throw denied();
++        var owner=new Owner(output,cursor);owners.add(owner);
++        try{
++            owner.slot=chunks.reservePortalSlot(owner::stop);owner.check();
++            owner.frameLease=chunks.reservePortalFrame();if(owner.frameLease==null)throw capacity();
++            var initial=AuthorityContext.requireInitialFor(current.actor(),call.resource());
++            var binding=new PortalEventsBinding("events-"+UUID.randomUUID(),call.resource(),cursor,
++                    PortalEventsBinding.observationRequestSha256(new SubjectKey(current.actor().tenantId(),current.actor().principalId()),initial.requireOriginAuthenticationId(),call.resource(),cursor),clock.instant().plusSeconds(55));
++            owner.response=authority.openPortalEvents(initial,binding,owner::stop);owner.check();
++            owner.pending=owner.read();owner.check();
++            // Queue only a small connection owner. Keeping preflight results in the bounded
++            // task queue could consume both reader permits and starve the two active pollers.
++            // The actual writer obtains a fresh frame and a fresh complete RR before output.
++            close(owner.pending);owner.pending=null;close(owner.frameLease);owner.frameLease=null;
++            owner.superseded=0;
++            // First complete protected window precedes SSE success and async handoff.
++            owner.async=request.startAsync(request,output);
++            owner.async.setTimeout(55000);owner.async.addListener(owner);
++            output.setContentType("text/event-stream");output.setCharacterEncoding("UTF-8");
++            if(!owner.state.compareAndSet(0,1))throw denied();
++            owner.check();writers.execute(owner);
++        }catch(RuntimeException|Error failure){
++            if(owner.async!=null){
++                // Once Servlet async has taken ownership MVC cannot safely map a thrown
++                // exception: error redispatch would become a different protected route.
++                owner.abortOpening(failure instanceof PlatformException p?p:failure instanceof RejectedExecutionException?capacity():new PlatformException(500,"STREAM_UNAVAILABLE","事件观察不可用"));return;
++            }
++            owner.abortOpening(null);
++            if(failure instanceof RejectedExecutionException)throw capacity();throw failure;
++        }
++    }
++    private static long validate(String id,HttpServletRequest r)throws IOException{
++        Object actual=r.getAttribute(HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE);
++        if(!(actual instanceof HandlerMethod h)||h.getBeanType()!=RunController.class||h.getMethod().getDeclaringClass()!=RunController.class||!h.getMethod().getName().equals("events")
++                ||r.getDispatcherType()!=DispatcherType.REQUEST||!"GET".equals(r.getMethod())
++                ||!"/admin/runs/{id}/events".equals(r.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE))
++                ||!r.getRequestURI().equals(r.getContextPath()+"/admin/runs/"+id+"/events")||r.getContentLengthLong()>0||r.getInputStream().read()!=-1||!r.isAsyncSupported())throw invalid();
++        var parameters=r.getParameterMap();if(parameters.keySet().stream().anyMatch(k->!k.equals("Last-Event-ID")))throw invalid();
++        String selected;
++        if(parameters.containsKey("Last-Event-ID")){var values=parameters.get("Last-Event-ID");if(values==null||values.length!=1)throw invalid();selected=values[0];}
++        else{var headers=Collections.list(r.getHeaders("Last-Event-ID"));if(headers.size()>1)throw invalid();selected=headers.isEmpty()?"0":headers.getFirst();}
++        if(selected==null||!selected.matches("[0-9]{1,19}"))throw invalid();
++        try{return Long.parseLong(selected);}catch(NumberFormatException overflow){throw invalid();}
++    }
++    private static PlatformException invalid(){return new PlatformException(400,"EVENT_CURSOR","事件观察请求无效");}
++    private static PlatformException denied(){return new PlatformException(403,"RUN_AUTHORITY_DENIED","运行观察不可用");}
++    private static PlatformException capacity(){return new PlatformException(429,"STREAM_CAPACITY","实时观察已满，请稍后重连");}
++    private static void close(AutoCloseable value){if(value!=null)try{value.close();}catch(Exception ignored){}}
++
++    private final class Owner implements Runnable,AsyncListener {
++        // OPENING=0/PENDING=1/RUNNING=2/FINISHED=3. Notifications publish stop. Only
++        // actual running finally or the never-run CAS can become the release owner.
++        final AtomicInteger state=new AtomicInteger();final AtomicBoolean stopped=new AtomicBoolean(),completed=new AtomicBoolean();
++        final HttpServletResponse output;long after;boolean statusSent;int superseded;
++        volatile PortalEventsResponse response;ChunkBus.PortalSlot slot;AutoCloseable frameLease;
++        RunEventReader.WindowEmission pending;AsyncContext async;ServletOutputStream stream;
++        Owner(HttpServletResponse output,long after){this.output=output;this.after=after;}
++        void check(){if(stopped.get()||closed)throw denied();}
++        RunEventReader.WindowEmission read(){
++            while(true)try{check();return reader.readWindow(response,after);}
++            catch(RunEventReader.Superseded old){if(++superseded>2)throw old;}
++        }
++        void stop(){
++            stopped.set(true);var current=response;if(current!=null)current.close();
++            if(state.compareAndSet(1,3)){try{complete();}finally{release();}}
++        }
++        void abortOpening(PlatformException failure){
++            if(state.compareAndSet(0,3)||state.compareAndSet(1,3)){
++                try{
++                    if(failure!=null&&!stopped.get()&&!output.isCommitted()){
++                        output.setStatus(failure.status());output.setContentType("application/json");
++                        frameLease=chunks.reservePortalFrame();
++                        if(frameLease!=null){
++                            var capture=response.currentCapture();
++                            // Fixed generic envelope (<1KiB), charged to the reserved 8KiB
++                            // scratch. No exception detail or unverified run fact is exposed.
++                            byte[] error=Json.write(new ApiResponse<>(failure.code(),"事件观察不可用",null,null)).getBytes(java.nio.charset.StandardCharsets.UTF_8);
++                            response.requireLive(capture);var stream=output.getOutputStream();response.requireLive(capture);
++                            stream.write(error);response.requireLive(capture);stream.flush();response.requireLive(capture);
++                        }
++                    }
++                }catch(IOException|RuntimeException alreadyStopped){
++                    // A retired holder/Servlet response can only close at this boundary.
++                }finally{stopped.set(true);try{complete();}finally{release();}}
++            }
++        }
++        void complete(){if(async!=null&&completed.compareAndSet(false,true))try{async.complete();}catch(IllegalStateException alreadyCompleted){
++            // The container may already have completed after a real timeout/onComplete.
++            // The call has physically returned; it still precedes our resource finally.
++        }}
++        void release(){
++            close(pending);pending=null;close(frameLease);frameLease=null;close(response);close(slot);owners.remove(this);
++        }
++        @Override public void run(){
++            if(!state.compareAndSet(1,2))return;
++            try{
++                while(true){
++                    check();
++                    if(pending==null){
++                        frameLease=chunks.reservePortalFrame();
++                        if(frameLease==null){pause();continue;}
++                        try{pending=read();}catch(RunEventReader.CapacityFailure limit){
++                            if(limit.status()==429){close(frameLease);frameLease=null;pause();continue;}
++                            capacityReset(limit);return;
++                        }
++                    }
++                    var done=new AtomicBoolean();
++                    try{
++                        pending.consume(view->{
++                            try{
++                                check();var window=view.window();String reset=window.resetReason();var frame=new Frame();
++                                if(reset!=null){frame.controlInto("stream_reset",reset,window.status(),window.watermark(),after);send(view,frame);done.set(true);complete();return;}
++                                if(!statusSent){frame.controlInto("stream_status",null,null,0,after);send(view,frame);statusSent=true;}
++                                if(view.hasEvent()){
++                                    frame.count=0;frame.event(view);send(view,frame);after=view.info().seq();
++                                    if(Set.of("SUCCEEDED","FAILED","CANCELLED").contains(window.status())&&after>=window.watermark()){done.set(true);complete();}
++                                }else if(window.drained()){done.set(true);complete();}
++                            }catch(RunEventReader.Superseded old){
++                                if(superseded>=2){complete();throw old;}throw old;
++                            }catch(RuntimeException|Error failure){complete();throw failure;}
++                        });
++                        superseded=0; // A successful complete window starts the next bounded read round.
++                    }catch(RunEventReader.Superseded old){if(++superseded>2)throw old;}
++                    finally{close(pending);pending=null;close(frameLease);frameLease=null;}
++                    if(done.get())return;
++                    pause();
++                }
++            }catch(RuntimeException failure){
++                org.slf4j.LoggerFactory.getLogger(PortalRunEventsService.class).debug("Portal events owner stopped at cursor {}",after,failure);
++                try{if(!stopped.get()&&!completed.get()&&!output.isCommitted()&&failure instanceof PlatformException p)output.setStatus(p.status());}
++                catch(IllegalStateException alreadyCompleted){/* Container retired its response during a blocked call. */}
++            }finally{
++                // Getter/write/flush and final complete must physically return before any
++                // still-held reader/frame/slot can be returned to a different connection.
++                try{complete();}finally{state.set(3);release();}
++            }
++        }
++        void send(RunEventReader.WindowBorrow view,Frame frame){
++            try{
++                check();view.requireLive();
++                if(stream==null){stream=output.getOutputStream();check();view.requireLive();}
++                check();view.requireLive();stream.write(frame.bytes,0,frame.count);check();view.requireLive();
++                stream.flush();check();view.requireLive();
++            }catch(IOException io){throw new UncheckedIOException(io);}
++        }
++        void capacityReset(RunEventReader.CapacityFailure failure){
++            // No unvalidated status/watermark is included. The fresh local capture guards
++            // this fixed capacity control; a failed holder never authorizes a final reset.
++            var capture=response.currentCapture();check();var frame=Frame.control("stream_reset",failure.code(),null,0,after);
++            try{
++                response.requireLive(capture);if(stream==null){stream=output.getOutputStream();check();response.requireLive(capture);}
++                check();response.requireLive(capture);stream.write(frame.bytes,0,frame.count);check();response.requireLive(capture);
++                stream.flush();check();response.requireLive(capture);complete();
++            }catch(IOException io){throw new UncheckedIOException(io);}
++        }
++        void pause(){check();response.currentCapture();try{Thread.sleep(75);}catch(InterruptedException interrupted){Thread.currentThread().interrupt();throw denied();}}
++        @Override public void onTimeout(AsyncEvent event){stop();}
++        @Override public void onError(AsyncEvent event){stop();}
++        @Override public void onComplete(AsyncEvent event){stop();}
++        @Override public void onStartAsync(AsyncEvent event){stop();}
++    }
++    /** Single exact backing; never BAOS growth/toByteArray. All copies sent by the B borrow
++     * remain charged to B; this independent complete frame is charged to ChunkBus first. */
++    static final class Frame extends OutputStream {
++        final byte[] bytes=new byte[ChunkBus.MAX_FRAME_BYTES];int count;boolean payload;
++        private void admit(int n){if(n<0||n>bytes.length-count)throw new PlatformException(413,"EVENT_LIMIT","事件响应过大");}
++        @Override public void write(int value){admit(1);if(payload&&(value=='\r'||value=='\n'))throw denied();bytes[count++]=(byte)value;}
++        @Override public void write(byte[] value,int offset,int length){admit(length);if(payload)for(int i=offset;i<offset+length;i++)if(value[i]=='\r'||value[i]=='\n')throw denied();System.arraycopy(value,offset,bytes,count,length);count+=length;}
++        void ascii(String text){for(int i=0;i<text.length();i++){char c=text.charAt(i);if(c>127)throw denied();write(c);}}
++        void event(RunEventReader.WindowBorrow view){
++            var info=view.info();if(info.seq()<0||info.type()==null||!info.type().matches("[A-Za-z_]{1,64}"))throw denied();
++            ascii("id:");ascii(Long.toString(info.seq()));ascii("\nevent:");ascii(info.type());ascii("\ndata:");
++            int start=count;payload=true;try{view.writePayload(this);}catch(IOException failure){throw new UncheckedIOException(failure);}finally{payload=false;}
++            if(count-start>ChunkBus.MAX_EVENT_BYTES)throw new PlatformException(413,"EVENT_LIMIT","事件响应过大");ascii("\n\n");
++        }
++        static Frame control(String type,String reason,String status,long watermark,long after){
++            var f=new Frame();f.controlInto(type,reason,status,watermark,after);return f;
++        }
++        void controlInto(String type,String reason,String status,long watermark,long after){
++            var f=this;f.count=0;f.ascii("event:");f.ascii(type);f.ascii("\ndata:{");
++            if(reason==null)f.ascii("\"chunkAvailable\":false,\"chunkReplay\":false,\"recovery\":\"LAST_EVENT_ID_AND_FINAL_SNAPSHOT\"");
++            else{
++                if(!Set.of("CURSOR_AHEAD","CURSOR_EXPIRED","BUFFER_LIMIT","EVENT_LIMIT").contains(reason))throw denied();
++                f.ascii("\"reason\":\"");f.ascii(reason);f.ascii("\",\"chunkReplay\":false,\"recovery\":\"FINAL_SNAPSHOT\",\"lastEventId\":");f.ascii(Long.toString(after));
++                if(status!=null){if(!status.matches("[A-Z_]{1,32}"))throw denied();f.ascii(",\"status\":\"");f.ascii(status);f.ascii("\",\"eventsWatermark\":");f.ascii(Long.toString(watermark));}
++            }
++            f.ascii("}\n\n");
++        }
++    }
++    @Override public void close(){closed=true;for(var owner:owners)owner.stop();for(var task:writers.shutdownNow())if(task instanceof Owner owner)owner.stop();}
++}
+diff --git a/engine-runtime/src/main/java/cn/agentplatform/engine/infra/ChunkBus.java b/engine-runtime/src/main/java/cn/agentplatform/engine/infra/ChunkBus.java
+index 1a813cabf5a4042176362d145a499402c47bbc09..8b4c6114840a59ffce16c344f557337d65f469ab 100644
+--- a/engine-runtime/src/main/java/cn/agentplatform/engine/infra/ChunkBus.java
++++ b/engine-runtime/src/main/java/cn/agentplatform/engine/infra/ChunkBus.java
+@@ -21,6 +21,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
+ public class ChunkBus implements AutoCloseable {
+     public static final int MAX_CHUNK_BYTES = 8192;
+     public static final int MAX_EVENT_BYTES = 262144;
++    public static final int MAX_FRAME_BYTES = 262245;
++    // Fixed control/header scratch is charged separately from the full frame backing array.
++    public static final int FRAME_RESERVATION_BYTES = MAX_FRAME_BYTES + 8192;
++    private final Set<PortalSlot> portalSlots = new HashSet<>();
+     private final Map<Long, Set<Subscription>> subscribers = new HashMap<>();
+     private final Semaphore slots;
+     private final Semaphore bytes;
+@@ -103,6 +107,24 @@ public class ChunkBus implements AutoCloseable {
+                 : null;
+     }
+ 
++    /** Same subscription pool, without allocating/registering a transient chunk queue. */
++    public synchronized PortalSlot reservePortalSlot(Runnable stop) {
++        Objects.requireNonNull(stop);
++        if (closed || !slots.tryAcquire())
++            throw new PlatformException(429,"STREAM_CAPACITY","实时观察已满，请稍后重连或查询运行状态");
++        var slot=new PortalSlot(stop);portalSlots.add(slot);return slot;
++    }
++    /** Admission precedes reader/array allocation. A null result owns no reader permit. */
++    public AutoCloseable reservePortalFrame() {
++        return responseBytes.tryAcquire(FRAME_RESERVATION_BYTES)
++                ? new Reservation(responseBytes,FRAME_RESERVATION_BYTES) : null;
++    }
++    public final class PortalSlot implements AutoCloseable {
++        private final Runnable stop;private boolean released;
++        private PortalSlot(Runnable stop){this.stop=stop;}
++        @Override public void close(){synchronized(ChunkBus.this){if(released)return;released=true;portalSlots.remove(this);slots.release();}}
++    }
++
+     public final class Subscription implements AutoCloseable {
+         private final long run;
+         private final ArrayBlockingQueue<Frame> queue = new ArrayBlockingQueue<>(32);
+@@ -203,6 +225,9 @@ public class ChunkBus implements AutoCloseable {
+         synchronized (this) {
+             if (closed) return;
+             closed = true;
++            // Logical shutdown only signals the new owners. Their actual finally (or a
++            // successful never-run CAS) remains the sole release boundary.
++            for(var slot:new ArrayList<>(portalSlots))slot.stop.run();
+             transportLost();
+             for (var set : new ArrayList<>(subscribers.values()))
+                 for (var subscription : new ArrayList<>(set)) subscription.close();
+diff --git a/engine-runtime/src/main/java/cn/agentplatform/engine/infra/MaterialScopeStore.java b/engine-runtime/src/main/java/cn/agentplatform/engine/infra/MaterialScopeStore.java
+index 985a2128fe5a5c63fc64b42243f0a9aa98155dc6..897e0b88fd71a55aeaeeb95c5dbebe2c0984c195 100644
+--- a/engine-runtime/src/main/java/cn/agentplatform/engine/infra/MaterialScopeStore.java
++++ b/engine-runtime/src/main/java/cn/agentplatform/engine/infra/MaterialScopeStore.java
+@@ -573,6 +573,28 @@ public final class MaterialScopeStore {
+         if(!Set.of("snapshot","version_refs").contains(column))throw denied();w.live();
+         var value=w.jsonText("select case when octet_length("+column+"::text)<=8388608 and jsonb_typeof("+column+")='object' then "+column+"::text end as payload_text from engine.run where id=?",bytes,true,run);object(value);w.live();return value;
+     }
++    /** Missing physical rows are candidates only. The caller must prove the complete terminal
++     * state digest before accepting a historical, non-consumed event direct parent. */
++    static boolean observedHistoricalEventMissing(RunEventReader.Work w,Binding b,ObservedRow row){
++        same("run-event",row.kind());same(b.runId(),row.run());same("engine",row.producer());
++        long id;try{id=Long.parseLong(row.locator());}catch(NumberFormatException invalid){throw denied();}
++        if(id<1||!Long.toString(id).equals(row.locator()))throw denied();
++        var rows=w.query("select run_id from engine.run_event where id=?",2,id);
++        if(rows.isEmpty())return true;
++        if(rows.size()!=1||RunEventReader.num(rows.getFirst(),"run_id")!=b.runId())throw denied();
++        return false;
++    }
++    private static final String OBSERVED_STATE=" from (select id,public_id,app_code,status,event_seq,stop_reason,to_char(started_at at time zone 'UTC','YYYY-MM-DD\"T\"HH24:MI:SS.US\"Z\"') as started_at,to_char(ended_at at time zone 'UTC','YYYY-MM-DD\"T\"HH24:MI:SS.US\"Z\"') as ended_at,mode,trigger_type,output_ref from engine.run where id=?) material";
++    static long probeObservedState(RunEventReader.Work w,Binding b){
++        var rows=w.query("select octet_length(row_to_json(material)::text) as state_bytes"+OBSERVED_STATE,2,b.runId());
++        if(rows.size()!=1)throw denied();long bytes=RunEventReader.num(rows.getFirst(),"state_bytes");
++        RunEventReader.Limits.single(bytes,RunEventReader.JSON_BYTES,"STATE_ROW");return bytes;
++    }
++    static JsonNode readObservedState(RunEventReader.Work w,Binding b,MaterialScopeV1 scope,long bytes){
++        var state=w.jsonText("select case when octet_length(row_to_json(material)::text)<=1048576 then row_to_json(material)::text end as state_text"+OBSERVED_STATE,bytes,true,b.runId());
++        object(state);if(state.size()!=11)throw denied();same(b.runId(),state.path("id").longValue());same(b.publicId(),text(state,"public_id"));
++        same(scope.material().payloadSha256(),w.digest(state));w.live();return state;
++    }
+     static JsonNode readObservedEvent(RunEventReader.Work w,Binding b,long id,long seq,MaterialScopeV1 scope){
+         String material=" from (select row_to_json(e)::text as row_text,octet_length(e.payload::text) as public_bytes from (select id,run_id,seq,type,payload,to_char(created_at at time zone 'UTC','YYYY-MM-DD\"T\"HH24:MI:SS.US\"Z\"') as created_at from engine.run_event where id=? and run_id=? and seq=?) e) material";
+         var probe=w.query("select octet_length(row_text) as row_bytes,public_bytes"+material,2,id,b.runId(),seq);if(probe.size()!=1)throw denied();
+diff --git a/engine-runtime/src/main/java/cn/agentplatform/engine/infra/RunEventReader.java b/engine-runtime/src/main/java/cn/agentplatform/engine/infra/RunEventReader.java
+index ab2d9dabf82d9f3128f4c4be52162580102f41e1..28b097124262819ef50ddfdab946430a91f8348f 100644
+--- a/engine-runtime/src/main/java/cn/agentplatform/engine/infra/RunEventReader.java
++++ b/engine-runtime/src/main/java/cn/agentplatform/engine/infra/RunEventReader.java
+@@ -59,7 +59,7 @@ public final class RunEventReader {
+             var tx=new TransactionTemplate(new DataSourceTransactionManager(source));tx.setReadOnly(true);tx.setIsolationLevel(TransactionDefinition.ISOLATION_REPEATABLE_READ);
+             // Spring6.2.7 doBegin/doCommit owns this connection. Seconds timeouts cannot express
+             // the signed deadline; actual SQL uses floor(ms) of the same conservative anchor.
+-            var data=tx.execute(status->read(work,afterSeq));work.live();
++            var data=tx.execute(status->read(work,afterSeq,false).event());work.live();
+             if(data==null)return Optional.empty();
+             // Cleanup is before mint/transfer, so a cleanup failure cannot strand a pending permit.
+             clearCurrentThreadBuffers();work.live();
+@@ -69,7 +69,55 @@ public final class RunEventReader {
+         finally{if(!handed)try{cleanup(primary);}finally{lease.close();}}
+     }
+     private record EventData(Info info,byte[] payload,Set<String> labels){}
+-    private EventData read(Work w,long afterSeq){
++    private record ReadData(EventData event,WindowInfo window){}
++    /** Same finite owner and top-level RR as readNext; empty still carries verified state here. */
++    public WindowEmission readWindow(PortalEventsResponse response,long afterSeq){
++        long entered=System.nanoTime();
++        if(TransactionSynchronizationManager.isActualTransactionActive())throw new IllegalStateException("EVENT_READER_REQUIRES_NO_CALLER_TRANSACTION");
++        var capture=Objects.requireNonNull(response).currentCapture();
++        if(afterSeq<0||afterSeq<capture.initialCursor())throw denied();
++        var work=new Work(db,response,capture,entered,true);work.millis();
++        if(!workspaces.tryAcquire())throw finite("WORKSPACE");
++        var lease=new Lease(workspaces);boolean handed=false;Throwable primary=null;
++        try{
++            clearCurrentThreadBuffers();
++            var tx=new TransactionTemplate(new DataSourceTransactionManager(source));tx.setReadOnly(true);tx.setIsolationLevel(TransactionDefinition.ISOLATION_REPEATABLE_READ);
++            var data=tx.execute(status->read(work,afterSeq,true));work.live();
++            clearCurrentThreadBuffers();work.live();
++            var event=data.event();
++            var owner=new EventEmission(response,capture,lease,work.ledger,event==null?null:event.info(),event==null?null:event.payload(),event==null?Set.of():event.labels());
++            owner.window=true;var result=new WindowEmission(owner,data.window());handed=true;return result;
++        }catch(RuntimeException|Error failure){primary=failure;throw failure;}
++        finally{if(!handed)try{cleanup(primary);}finally{lease.close();}}
++    }
++    public record WindowInfo(String runId,String status,long watermark,Long oldest,long afterSeq){
++        public String resetReason(){return afterSeq>watermark?"CURSOR_AHEAD":(oldest==null?afterSeq<watermark:afterSeq<oldest-1)?"CURSOR_EXPIRED":null;}
++        public boolean drained(){return Set.of("SUCCEEDED","FAILED","CANCELLED").contains(status)&&afterSeq>=watermark;}
++    }
++    /** A value is descriptive only; only this private owner can authorize a synchronous borrow. */
++    public static final class WindowEmission implements AutoCloseable{
++        private final EventEmission owner;private final WindowInfo window;
++        private WindowEmission(EventEmission owner,WindowInfo window){this.owner=owner;this.window=window;}
++        public void consume(Consumer<WindowBorrow> action){owner.consume(borrow->action.accept(new WindowBorrow(borrow,window)));}
++        public void close(){owner.close();}
++    }
++    public static final class WindowBorrow{
++        private final Borrow event;private final WindowInfo window;
++        private WindowBorrow(Borrow event,WindowInfo window){this.event=event;this.window=window;}
++        public WindowInfo window(){event.requireLive();return window;}
++        public boolean hasEvent(){event.requireLive();return event.emission.info!=null;}
++        public Info info(){if(!hasEvent())throw denied();return event.info();}
++        public void requireLive(){event.requireLive();}
++        public void writePayload(OutputStream output)throws IOException{if(!hasEvent())throw denied();event.writePayload(output);}
++    }
++    /** Raised only by an exact local capture liveness guard, never by material/digest rejection. */
++    public static final class Superseded extends RuntimeException{private Superseded(){super("EVENT_CAPTURE_SUPERSEDED");}}
++    private static void live(PortalEventsResponse response,PortalEventsResponse.Capture capture,boolean window){
++        try{response.requireLive(capture);}catch(PlatformException failure){
++            if(window&&response.isSuperseded(capture))throw new Superseded();throw failure;
++        }
++    }
++    private ReadData read(Work w,long afterSeq,boolean window){
+         var b=RunAuthorityStore.loadObservationBindingBounded(w,w.capture.subject(),w.capture.resource().id());
+         same(w.capture.resource(),RunObservationSelectors.status(b.publicId(),b.snapshotSha()));
+         var roots=MaterialScopeStore.probeObserved(w,b.runId(),"kind in ('run-snapshot','run-inputs','run-version-refs')",4);
+@@ -88,24 +136,55 @@ public final class RunEventReader {
+             var found=MaterialScopeStore.probeObserved(w,b.runId(),"material_revision<? and scope_sha256 in ("+String.join(",",Collections.nCopies(parents.size(),"?"))+")",MAX_RECORDS+1,args.toArray());
+             var hashes=new HashSet<String>();for(var parent:found){if(!hashes.add(parent.sha())||!parents.contains(parent.sha()))throw denied();MaterialScopeStore.addObserved(plan,parent,w.limits);}same(hashes,new HashSet<>(parents));
+         }
++        MaterialScopeStore.ObservedRow stateRow=null;MaterialScopeV1 stateScope=null;
++        if(window){
++            var rows=MaterialScopeStore.probeObserved(w,b.runId(),"kind='run-state' and material_revision=(select max(material_revision) from engine.material_scope where run_id="+b.runId()+" and kind='run-state')",2);
++            if(rows.size()!=1)throw denied();stateRow=rows.getFirst();MaterialScopeStore.addObserved(plan,stateRow,w.limits);
++            stateScope=MaterialScopeStore.readObservedScope(w,b,stateRow);
++            var parents=stateScope.parentScopeSha256();if(parents.isEmpty())throw denied();
++            var args=new ArrayList<Object>();args.add(stateRow.revision());args.addAll(parents);
++            var found=MaterialScopeStore.probeObserved(w,b.runId(),"material_revision<? and scope_sha256 in ("+String.join(",",Collections.nCopies(parents.size(),"?"))+")",MAX_RECORDS+1,args.toArray());
++            var hashes=new HashSet<String>();for(var parent:found){if(!hashes.add(parent.sha())||!parents.contains(parent.sha()))throw denied();MaterialScopeStore.addObserved(plan,parent,w.limits);}same(hashes,new HashSet<>(parents));
++        }
+         // Probe and sum complete metadata, including every repeated parent array, before payload.
+         var scopes=new LinkedHashMap<String,MaterialScopeV1>();
+-        for(var row:plan.values()){var scope=row==selected?selectedScope:MaterialScopeStore.readObservedScope(w,b,row);scopes.put(row.sha(),scope);w.material(scope,row.bytes());w.live();}
++        for(var row:plan.values()){var scope=row==selected?selectedScope:row==stateRow?stateScope:MaterialScopeStore.readObservedScope(w,b,row);scopes.put(row.sha(),scope);w.material(scope,row.bytes());w.live();}
+         var rootScopes=roots.stream().map(r->scopes.get(r.sha())).toList();
+         try(var canonical=w.canonicalScratch(6*roots.stream().mapToLong(MaterialScopeStore.ObservedRow::bytes).max().orElseThrow())){b=MaterialScopeStore.requireObservedRoots(b,rootScopes);}
+-        for(var row:plan.values())MaterialScopeStore.requireObservedLocator(w,b,row);
++        boolean missingHistoricalEvent=false;
++        for(var row:plan.values()){
++            // Only a real direct-parent role can reach this helper. A selected event always
++            // wins consumption priority, even when it is also a run-state historical parent.
++            if(window&&row!=selected&&row.kind().equals("run-event")&&(stateScope.parentScopeSha256().contains(row.sha())||selectedScope!=null&&selectedScope.parentScopeSha256().contains(row.sha())))
++                missingHistoricalEvent|=MaterialScopeStore.observedHistoricalEventMissing(w,b,row);
++            else MaterialScopeStore.requireObservedLocator(w,b,row);
++        }
++        if(window)MaterialScopeStore.requireObservedFloor(stateScope,b,stateScope.parentScopeSha256().stream().map(scopes::get).toList());
+         if(selected!=null)MaterialScopeStore.requireObservedFloor(selectedScope,b,selectedScope.parentScopeSha256().stream().map(scopes::get).toList());
+         w.live();
+         // The inputs root is proved but its payload is never consumed by this reader.
+         var probe=w.query("select octet_length(snapshot::text) as snapshot_bytes,jsonb_typeof(snapshot) as snapshot_type,octet_length(version_refs::text) as refs_bytes,jsonb_typeof(version_refs) as refs_type from engine.run where id=?",1,b.runId()).getFirst();
+         same("object",probe.get("snapshot_type"));same("object",probe.get("refs_type"));w.limits.root(num(probe,"snapshot_bytes"));w.limits.root(num(probe,"refs_bytes"));
++        long stateBytes=window?MaterialScopeStore.probeObservedState(w,b):0;
++        if(window)w.limits.root(stateBytes); // State intersects the original root aggregate, not a new allowance.
+         var snapshot=MaterialScopeStore.readObservedRoot(w,b.runId(),"snapshot",num(probe,"snapshot_bytes"));
+         same(b.snapshotSha(),w.digest(snapshot));w.live();
+         var refs=MaterialScopeStore.readObservedRoot(w,b.runId(),"version_refs",num(probe,"refs_bytes"));
+         for(var scope:rootScopes){String kind=scope.material().kind();if(!kind.equals("run-inputs"))same(scope.material().payloadSha256(),w.digest(kind.equals("run-snapshot")?snapshot:refs));}
+         TraceStore.requireSnapshotRelations(b,snapshot,refs);GraphRules.requirePublishedFlow(snapshot);
+         if(!"FLOW".equals(text(snapshot,"type"))||snapshot.hasNonNull("debugSnapshot")||snapshot.hasNonNull("evalCandidate")||snapshot.hasNonNull("controlledDraftId")||snapshot.path("config").hasNonNull("dataSources")||refs.has("ontology")&&(!refs.path("ontology").isArray()||!refs.path("ontology").isEmpty()))throw denied();
+-        w.live();if(event==null)return null; // Empty never claims terminal run state.
++        WindowInfo facts=null;
++        if(window){
++            var state=MaterialScopeStore.readObservedState(w,b,stateScope,stateBytes);
++            if(!state.path("event_seq").isIntegralNumber()||!state.path("event_seq").canConvertToLong()||state.path("event_seq").longValue()<0)throw denied();
++            String status=text(state,"status");long watermark=state.path("event_seq").longValue();
++            if(missingHistoricalEvent&&!Set.of("SUCCEEDED","FAILED","CANCELLED").contains(status))throw denied();
++            var minimum=w.query("select min(seq) as oldest_seq from engine.run_event where run_id=?",1,b.runId()).getFirst().get("oldest_seq");
++            Long oldest=minimum==null?null:minimum instanceof Number n?n.longValue():null;
++            if(minimum!=null&&(oldest==null||oldest<1||oldest>watermark)||event!=null&&num(event,"seq")>watermark)throw denied();
++            facts=new WindowInfo(b.publicId(),status,watermark,oldest,afterSeq);
++        }
++        w.live();if(event==null)return new ReadData(null,facts); // B empty never claims terminal/window.
+         var value=MaterialScopeStore.readObservedEvent(w,b,num(event,"id"),num(event,"seq"),selectedScope);
+         same(value.path("run_id").longValue(),b.runId());same(value.path("id").longValue(),num(event,"id"));same(value.path("seq").longValue(),num(event,"seq"));same(text(value,"type"),event.get("event_type"));
+         byte[] payload;
+@@ -115,25 +194,25 @@ public final class RunEventReader {
+         // plus quotes/commas/brackets. The set and sort backing are in the existing model
+         // reservation; the borrowed generator has fixed small buffers in fixed8MiB scratch.
+         long labelBytes=2;for(var label:labels)labelBytes=Limits.add(labelBytes,6L*label.length()+3,MaterialScopeStore.OBSERVED_NORMALIZED_BYTES,"NORMALIZED_BYTES");w.live();
+-        return new EventData(new Info(b.publicId(),w.capture.resource(),w.capture.responseId(),afterSeq,num(event,"seq"),(String)event.get("event_type"),selectedScope.material().payloadSha256(),w.measurements(payload.length)),payload,labels);
++        return new ReadData(new EventData(new Info(b.publicId(),w.capture.resource(),w.capture.responseId(),afterSeq,num(event,"seq"),(String)event.get("event_type"),selectedScope.material().payloadSha256(),w.measurements(payload.length)),payload,labels),facts);
+     }
+     public record Measurements(long modelReserved,long totalReservedPeak,long rawReservedPeak,long canonicalReservedPeak,long canonicalActualUtf8Peak,long tokens,int parserBackingChars,int eventBackingBytes){}
+     public record Info(String runId,ResourceBinding resource,String responseId,long afterSeq,long seq,String type,String rowSha256,Measurements measurements){}
+     /** Pending, active callback and its actual finally all own the original reader permit. */
+     public static final class EventEmission implements AutoCloseable{
+         private final PortalEventsResponse response;private final PortalEventsResponse.Capture capture;private final Lease lease;private final Ledger ledger;private final Info info;
+-        private byte[] payload;private Set<String> labels;private boolean active,closing,finished;private Thread consumer;
++        private byte[] payload;private Set<String> labels;private boolean active,closing,finished,window;private Thread consumer;
+         private EventEmission(PortalEventsResponse r,PortalEventsResponse.Capture c,Lease l,Ledger ledger,Info i,byte[] p,Set<String> labels){response=r;capture=c;lease=l;this.ledger=ledger;info=i;payload=p;this.labels=labels;}
+         private void usable(){if(closing||finished)throw denied();}
+         public synchronized Info info(){usable();response.requireLive(capture);return info;}
+         public void consume(Consumer<Borrow> consume){
+             Objects.requireNonNull(consume);
+-            synchronized(this){usable();if(active)throw denied();try{response.requireLive(capture);}catch(RuntimeException failure){finish();throw failure;}active=true;consumer=Thread.currentThread();}
++            synchronized(this){usable();if(active)throw denied();try{live(response,capture,window);}catch(RuntimeException failure){finish();throw failure;}active=true;consumer=Thread.currentThread();}
+             Throwable primary=null;
+             try{consume.accept(new Borrow(this));guard();}catch(RuntimeException|Error failure){primary=failure;throw failure;}
+             finally{try{cleanup(primary);}finally{synchronized(this){active=false;consumer=null;finish();}}}
+         }
+-        private synchronized void guard(){usable();if(!active||consumer!=Thread.currentThread())throw denied();response.requireLive(capture);}
++        private synchronized void guard(){usable();if(!active||consumer!=Thread.currentThread())throw denied();live(response,capture,window);}
+         private void finish(){payload=null;labels=null;finished=true;lease.close();}
+         public synchronized void close(){if(finished)return;closing=true;if(!active)finish();}
+     }
+@@ -196,12 +275,13 @@ public final class RunEventReader {
+     }
+     /** No wall Clock: one conservative monotonic anchor survives all statements and parsing. */
+     static final class Work{
+-        final JdbcTemplate db;final PortalEventsResponse response;final PortalEventsResponse.Capture capture;final long entered,allowance;final Limits limits=new Limits();
++        final JdbcTemplate db;final PortalEventsResponse response;final PortalEventsResponse.Capture capture;final long entered,allowance;final Limits limits=new Limits();final boolean window;
+         long representationUnits;int maxParserBackingChars;
+         final Ledger ledger=new Ledger();long rawPeak,canonicalPeak,canonicalActualPeak,tokens;
+-        Work(JdbcTemplate d,PortalEventsResponse r,PortalEventsResponse.Capture c,long e){db=d;response=r;capture=c;entered=e;allowance=c.remainingNanos();ledger.reserve(8L*1024*1024);}
++        Work(JdbcTemplate d,PortalEventsResponse r,PortalEventsResponse.Capture c,long e){this(d,r,c,e,false);}
++        Work(JdbcTemplate d,PortalEventsResponse r,PortalEventsResponse.Capture c,long e,boolean window){this.window=window;db=d;response=r;capture=c;entered=e;allowance=c.remainingNanos();ledger.reserve(8L*1024*1024);}
+         long remaining(){return Math.min(capture.remainingNanos(),allowance-Math.max(0,System.nanoTime()-entered));}
+-        void live(){response.requireLive(capture);if(Thread.currentThread().isInterrupted()||remaining()<=0)throw denied();}
++        void live(){RunEventReader.live(response,capture,window);if(Thread.currentThread().isInterrupted()||remaining()<=0)throw denied();}
+         long millis(){live();long ms=remaining()/1000000L;if(ms<1)throw denied();return ms;}
+         List<Map<String,Object>> query(String sql,int rows,Object...args){
+             millis();return db.execute((ConnectionCallback<List<Map<String,Object>>>)c->{
+diff --git a/engine-runtime/src/test/java/cn/agentplatform/common/authority/PortalRunEventsAuthorityFixture.java b/engine-runtime/src/test/java/cn/agentplatform/common/authority/PortalRunEventsAuthorityFixture.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..42e46b9484e6c3740667d0d61cfab12af7feb92f
+--- /dev/null
++++ b/engine-runtime/src/test/java/cn/agentplatform/common/authority/PortalRunEventsAuthorityFixture.java
+@@ -0,0 +1,18 @@
++package cn.agentplatform.common.authority;
++
++import java.util.*;
++import org.springframework.security.oauth2.jwt.JwtDecoder;
++
++/** Same-package fixture bridge to the real trusted decoder and actual signed authority HTTP. */
++public final class PortalRunEventsAuthorityFixture {
++    private PortalRunEventsAuthorityFixture() {}
++    public static JwtDecoder decoder(RunEventReaderAuthorityFixture auth) {
++        return new TrustedJwtDecoder(auth.iam.config("engine"),auth.iam.clock(),true);
++    }
++    public static String ticket(RunEventReaderAuthorityFixture auth,SubjectKey owner,String run,String sha) {
++        auth.iam.registerObservation(owner,run,sha);
++        return auth.gateway.exchange(auth.iam.portal(120),new ServiceCall("engine",RunObservationSelectors.EVENTS_ACTION,RunObservationSelectors.events(run,sha))).value();
++    }
++    public static void onEvents(RunEventReaderAuthorityFixture auth,java.util.function.Consumer<String> hook){auth.iam.observeEventsRequest=hook;}
++    public static void shortEventsTicket(RunEventReaderAuthorityFixture auth){auth.iam.ticketMutation(c->{if(RunObservationSelectors.EVENTS_ACTION.equals(c.get("action")))c.put("exp",auth.iam.clock().instant().plusSeconds(2).getEpochSecond());});}
++}
+diff --git a/engine-runtime/src/test/java/cn/agentplatform/engine/infra/PortalRunEventWindowPostgresTest.java b/engine-runtime/src/test/java/cn/agentplatform/engine/infra/PortalRunEventWindowPostgresTest.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..64ae48e036dd6abf0abf63dd2a7adab836dfcd2a
+--- /dev/null
++++ b/engine-runtime/src/test/java/cn/agentplatform/engine/infra/PortalRunEventWindowPostgresTest.java
+@@ -0,0 +1,166 @@
++package cn.agentplatform.engine.infra;
++
++import static org.assertj.core.api.Assertions.*;
++import cn.agentplatform.common.*;
++import cn.agentplatform.common.authority.*;
++import cn.agentplatform.engine.application.*;
++import cn.agentplatform.engine.domain.GraphRules;
++import com.fasterxml.jackson.databind.JsonNode;
++import com.fasterxml.jackson.databind.node.ObjectNode;
++import org.flywaydb.core.Flyway;
++import org.junit.jupiter.api.Test;
++import org.springframework.jdbc.core.JdbcTemplate;
++import org.springframework.jdbc.datasource.*;
++import org.springframework.transaction.support.*;
++import java.lang.reflect.*;
++import java.sql.*;
++import java.util.*;
++import java.util.concurrent.*;
++import java.util.concurrent.atomic.*;
++import javax.sql.DataSource;
++
++class PortalRunEventWindowPostgresTest {
++    static final String DATABASE="agent_platform_iam_o2a_c_events_v12";
++    static final class Fixture implements AutoCloseable {
++        final RunEventReaderAuthorityFixture auth=new RunEventReaderAuthorityFixture();
++        final ObservedSource source; final JdbcTemplate db; final TransactionTemplate tx;
++        final RunAuthorityStore store; final TraceStore trace; final RunEventReader reader;
++        Fixture() throws Exception {
++            String password=System.getenv("AGENT_DB_PASSWORD");
++            if(password==null||password.isBlank())throw new IllegalStateException("OWN_PG_CREDENTIAL_REQUIRED");
++            var admin=new JdbcTemplate(new DriverManagerDataSource("jdbc:postgresql://127.0.0.1:25432/postgres","agent_v12",password));
++            if(!"postgres".equals(admin.queryForObject("select current_database()",String.class)))throw new AssertionError("ADMIN_DATABASE");
++            if(!Boolean.TRUE.equals(admin.queryForObject("select exists(select 1 from pg_database where datname=?)",Boolean.class,DATABASE)))admin.execute("create database "+DATABASE);
++            source=new ObservedSource(new DriverManagerDataSource("jdbc:postgresql://127.0.0.1:25432/"+DATABASE,"agent_v12",password));
++            db=new JdbcTemplate(source);
++            assertThat(db.queryForObject("select current_database()",String.class)).isEqualTo(DATABASE);
++            Flyway.configure().dataSource(source).schemas("engine").defaultSchema("engine").locations("classpath:db/migration").load().migrate();
++            tx=new TransactionTemplate(new DataSourceTransactionManager(source));
++            store=new RunAuthorityStore(source,auth.iam.clock());
++            trace=new TraceStore(db,new DataSourceTransactionManager(source),auth.iam.clock());reader=new RunEventReader(source);
++        }
++        JsonNode snapshot(int pad) {
++            ObjectNode snap=Json.object();snap.put("appCode","app-a");snap.put("type","FLOW");snap.put("versionNo",1);snap.put("appVersionId",4294967297L);snap.put("candidateSha256",RunEventReaderAuthorityFixture.ROOT.versionDigest());snap.set("config",Json.object());
++            var definition=Json.object();var nodes=definition.putArray("nodes");var edges=definition.putArray("edges");
++            for(int i=0;i<15;i++){String id=nodeId(i);var n=nodes.addObject().put("id",id).put("type",i==0?"START":i==14?"END":"CODE");if(i>0&&i<14)n.put("expression","1");if(i>0)edges.addObject().put("from",nodeId(i-1)).put("to",id);}
++            if(pad>0)((ObjectNode)nodes.get(1)).put("padding","x".repeat(pad));snap.set("definition",definition);return snap;
++        }
++        static String nodeId(int i){return i==0?"start":i==14?"end":"c%02d".formatted(i);}
++        RunAuthorityStore.Binding seed(int pad) {
++            var snap=snapshot(pad);GraphRules.requirePublishedFlow(snap);
++            var sentinel=new IllegalStateException("C_DAG_STORAGE_SENTINEL");
++            var validating=new TraceStore(db,new DataSourceTransactionManager(source),auth.iam.clock()){@Override public <T>T atomic(java.util.function.Supplier<T> w){throw sentinel;}};
++            try(var idle=new RunScheduler(validating){@Override public Admission reserveInteractive(){throw new AssertionError("NO_QUEUE");}@Override public void created(long id,Admission a){throw new AssertionError("NO_WAKE");}}){
++                var service=new RunService(validating,null,null,null,idle);var actor=new Actor("tenant-a","alice",Set.of("EDITOR"),Map.of());
++                assertThatThrownBy(()->service.createReservedSessionTurn("app-a",Json.read("{\"inputs\":{},\"mode\":\"FULL\"}"),snap,actor,null)).isSameAs(sentinel);
++                var wrong=snap.deepCopy();((ObjectNode)wrong.path("definition")).set("edges",Json.read("[{\"source\":\"start\",\"target\":\"end\"}]"));
++                assertThatThrownBy(()->service.createReservedSessionTurn("app-a",Json.read("{\"inputs\":{},\"mode\":\"FULL\"}"),wrong,actor,null)).isInstanceOfSatisfying(PlatformException.class,e->assertThat(e.code()).isEqualTo("UNKNOWN_EDGE"));
++            }
++            long run=auth.admitted(p->tx.execute(s->{
++                var budget=Json.tree(Map.of("limits",Map.of("maxSteps",25,"modelCalls",40,"totalTokens",200000,"totalDurationMs",600000,"maxDepth",2),"consumed",Map.of("steps",0,"modelCalls",0,"tokens",0,"depth",0),"deadline",auth.iam.clock().instant().plusSeconds(599).toString()));
++                long id=store.createPublished(p,snap,Json.read("{\"privateInput\":\"not-consumed\"}"),Json.read("{\"appVer\":1}"),budget,"FULL",UUID.randomUUID().toString(),Set.of("initial"));
++                for(int i=0;i<15;i++)trace.createNode(id,nodeId(i),i+1,i==0?"START":i==14?"END":"CODE",snap.path("definition").path("nodes").get(i),p);return id;
++            }));
++            append(run,"C_FIRST",Json.read("{\"integer\":123456789012345678901234567890,\"text\":\"观察\"}"));return store.load(run);
++        }
++        void append(long run,String type,Object value){var writer=new RunAuthority(store,auth.engine,auth.iam.clock(),java.time.Duration.ofSeconds(3)).currentRetained(run,new ServiceCall("engine","run.advance",RunEventReaderAuthorityFixture.ROOT));trace.event(run,type,value,writer);}
++        void finish(long run){
++            var repository=new RunScheduleRepository(trace,true);
++            var dispatch=repository.claimSpecific(run,cn.agentplatform.engine.domain.RunDispatch.Queue.INTERACTIVE,"c-terminal-"+UUID.randomUUID(),java.time.Duration.ofSeconds(60));
++            assertThat(dispatch).isNotNull();
++            var writer=new RunAuthority(store,auth.engine,auth.iam.clock(),java.time.Duration.ofSeconds(3)).currentRetained(run,new ServiceCall("engine","run.advance",RunEventReaderAuthorityFixture.ROOT));
++            trace.consume(run,"steps",25,25,writer);trace.stopFlowForBudget(dispatch,writer,"BUDGET_STEPS");
++            assertThat(db.queryForObject("select status from engine.run where id=?",String.class,run)).isEqualTo("FAILED");
++        }
++        PortalEventsResponse open(RunAuthorityStore.Binding b,long cursor){return auth.open(b.owner(),b.publicId(),b.snapshotSha(),cursor);}
++        public void close(){auth.close();}
++    }
++    static final class ObservedSource extends DelegatingDataSource {
++        final List<String> sql=new CopyOnWriteArrayList<>(),getters=new CopyOnWriteArrayList<>(),observations=new CopyOnWriteArrayList<>();
++        final List<String> scopeTexts=new CopyOnWriteArrayList<>();
++        volatile Runnable beforeQuery=()->{},afterCommit=()->{};volatile java.util.function.BiFunction<String,Object,Object> change=(k,v)->v;
++        volatile java.util.function.Consumer<String> onQuery=q->{};volatile boolean observe;
++        volatile Runnable duringBind=()->{};
++        final AtomicLong configuredTimeout=new AtomicLong();
++        ObservedSource(DataSource target){super(target);}
++        @Override public Connection getConnection()throws SQLException {
++            var c=super.getConnection();return (Connection)Proxy.newProxyInstance(getClass().getClassLoader(),new Class[]{Connection.class},(p,m,a)->{
++                try {var value=m.invoke(c,a);if(m.getName().equals("commit")&&observe)afterCommit.run();
++                    if(value instanceof PreparedStatement statement&&m.getName().equals("prepareStatement")){String query=(String)a[0];return Proxy.newProxyInstance(getClass().getClassLoader(),new Class[]{PreparedStatement.class},(sp,sm,sa)->{try{
++                        if(observe&&sm.getName().equals("setObject"))duringBind.run();
++                        if(observe&&query.startsWith("select set_config")&&sm.getName().equals("setString"))configuredTimeout.set(Long.parseLong((String)sa[1]));
++                        if(sm.getName().equals("executeQuery")&&observe){sql.add(query);observations.add(System.identityHashCode(c)+":"+c.getTransactionIsolation()+":"+c.isReadOnly()+":"+c.getAutoCommit());beforeQuery.run();onQuery.accept(query);}
++                        Object result=sm.invoke(statement,sa);if(result instanceof ResultSet rs)return Proxy.newProxyInstance(getClass().getClassLoader(),new Class[]{ResultSet.class},(rp,rm,ra)->{try{Object got=rm.invoke(rs,ra);if(observe&&rm.getName().startsWith("get")&&ra!=null&&ra.length>0){String key=ra[0] instanceof Integer index?rs.getMetaData().getColumnLabel(index):ra[0].toString();getters.add(key);if(key.equals("scope_text")&&got instanceof String s)scopeTexts.add(s);return change.apply(key,got);}return got;}catch(InvocationTargetException e){throw e.getCause();}});return result;
++                    }catch(InvocationTargetException e){throw e.getCause();}});}
++                    return value;
++                }catch(InvocationTargetException e){throw e.getCause();}
++            });
++        }
++        void start(){sql.clear();getters.clear();observations.clear();scopeTexts.clear();observe=true;}
++    }
++
++    @Test void protectedWindowExistsForNonterminalEmptyAndCarriesRealState() throws Exception {
++        try(var f=new Fixture()){var b=f.seed(0);try(var r=f.open(b,1)){
++            f.source.start();int calls=f.auth.iam.requestAttempts();
++            try(var result=f.reader.readWindow(r,1L)) {result.consume(view->{assertThat(view.hasEvent()).isFalse();assertThat(view.window().status()).isEqualTo("PENDING");assertThat(view.window().watermark()).isEqualTo(1);assertThat(view.window().oldest()).isEqualTo(1);assertThat(view.window().drained()).isFalse();assertThat(view.window().resetReason()).isNull();});}
++            assertThat(f.auth.iam.requestAttempts()).isEqualTo(calls);
++            assertThat(f.source.observations).allMatch(o->o.endsWith(":4:true:false"));
++            assertThat(f.source.getters).contains("state_text");
++        }}
++    }
++    @Test void fullStateAndEventDependencyUnionIsReadOnceAndSharesOriginalBudgets()throws Exception{
++        try(var f=new Fixture()){var b=f.seed(0);try(var r=f.open(b,0)){
++            f.source.start();try(var result=f.reader.readWindow(r,0)){result.consume(view->{assertThat(view.hasEvent()).isTrue();assertThat(view.info().seq()).isEqualTo(1);assertThat(view.info().measurements().totalReservedPeak()).isLessThanOrEqualTo(192L*1024*1024);});}
++            var scopes=f.source.scopeTexts.stream().map(raw->RunEventReader.scope(RunEventReader.parse(raw,false,()->{}))).toList();
++            assertThat(scopes.stream().filter(s->s.material().kind().equals("run-state")).toList()).anyMatch(s->s.parentScopeSha256().size()>64);
++            // The target state/event scope text is read once, even when shared as a parent.
++            assertThat(scopes.stream().map(MaterialScopeV1::scopeSha256).distinct().count()).isEqualTo(scopes.size());
++            var limit=new RunEventReader.Limits();limit.root(8388607);limit.root(1);assertThatThrownBy(()->limit.root(1)).isInstanceOf(RunEventReader.CapacityFailure.class);
++            java.nio.file.Files.writeString(java.nio.file.Path.of("..","docs","evidence","iam-stage-4-o2a-c-events","window-union-"+b.publicId()+".json"),Json.write(Map.of("run",b.publicId(),"database",DATABASE,"scopeCount",scopes.size(),"parentEntries",scopes.stream().mapToInt(s->s.parentScopeSha256().size()).sum(),"sql",f.source.sql,"transaction",f.source.observations.getFirst())));
++        }}
++    }
++    @Test void concurrentLegalTerminalWriterIsInvisibleUntilNextCompleteReadWindow()throws Exception{
++        try(var f=new Fixture()){var b=f.seed(0);try(var r=f.open(b,0)){
++            var once=new AtomicBoolean();f.source.start();f.source.onQuery=q->{if(q.contains("engine.material_scope")&&once.compareAndSet(false,true))outside(()->f.finish(b.runId()));};
++            try(var e=f.reader.readWindow(r,0)){e.consume(v->{assertThat(v.window().status()).isEqualTo("PENDING");assertThat(v.window().watermark()).isEqualTo(1);assertThat(v.info().seq()).isEqualTo(1);});}
++            f.source.onQuery=q->{};try(var e=f.reader.readWindow(r,1)){e.consume(v->{assertThat(v.window().status()).isEqualTo("FAILED");assertThat(v.window().watermark()).isEqualTo(2);assertThat(v.info().seq()).isEqualTo(2);assertThat(v.window().drained()).isFalse();});}
++            try(var e=f.reader.readWindow(r,2)){e.consume(v->{assertThat(v.hasEvent()).isFalse();assertThat(v.window().drained()).isTrue();});}
++        }}
++    }
++    @Test void terminalPartialAndFullPhysicalRetentionKeepsScopesAndBStrictness()throws Exception{
++        try(var f=new Fixture()){var b=f.seed(0);f.finish(b.runId());
++            long scopes=f.db.queryForObject("select count(*) from engine.material_scope where run_id=?",Long.class,b.runId());
++            // Test maintenance only after the real terminal producer. This proves observation
++            // semantics after deletion, not a production retention job or active writer support.
++            assertThat(f.db.update("delete from engine.run_event where run_id=? and seq=1",b.runId())).isEqualTo(1);
++            try(var r=f.open(b,0)){
++                try(var e=f.reader.readWindow(r,0)){e.consume(v->{assertThat(v.window().resetReason()).isEqualTo("CURSOR_EXPIRED");assertThat(v.window().oldest()).isEqualTo(2);});}
++                assertThatThrownBy(()->f.reader.readNext(r,1)).isInstanceOf(PlatformException.class);
++                try(var e=f.reader.readWindow(r,1)){e.consume(v->assertThat(v.info().seq()).isEqualTo(2));}
++                assertThat(f.db.update("delete from engine.run_event where run_id=?",b.runId())).isEqualTo(1);
++                for(long after:List.of(1L,2L,3L))try(var e=f.reader.readWindow(r,after)){e.consume(v->{assertThat(v.hasEvent()).isFalse();assertThat(v.window().oldest()).isNull();assertThat(v.window().watermark()).isEqualTo(2);assertThat(v.window().resetReason()).isEqualTo(after==1?"CURSOR_EXPIRED":after==3?"CURSOR_AHEAD":null);assertThat(v.window().drained()).isEqualTo(after>=2);});}
++            }
++            assertThat(f.db.queryForObject("select count(*) from engine.material_scope where run_id=?",Long.class,b.runId())).isEqualTo(scopes);
++        }
++    }
++    @Test void stateDigestMetadataCoverageAndCrossRunParentRemainClosedBeforeWindowMint()throws Exception{
++        try(var f=new Fixture()){var b=f.seed(0);
++            try(var r=f.open(b,0)){f.source.start();f.source.change=(k,v)->k.equals("scope_text")?v.toString().replace("\"sourceDecisionId\":","\"unknownField\":"):v;assertThatThrownBy(()->f.reader.readWindow(r,0)).isInstanceOf(PlatformException.class);assertThat(f.source.getters).doesNotContain("payload_text","event_text","state_text");}
++            f.source.change=(k,v)->v;f.auth.narrow();try(var r=f.open(b,0)){f.source.start();assertThatThrownBy(()->f.reader.readWindow(r,0)).isInstanceOf(PlatformException.class);assertThat(f.source.getters).doesNotContain("payload_text","event_text","state_text");}f.auth.resetCoverage();
++            try(var r=f.open(b,0)){f.source.start();f.source.change=(k,v)->k.equals("state_text")?v.toString().replace("\"output_ref\":null","\"output_ref\":\"tampered\""):v;assertThatThrownBy(()->f.reader.readWindow(r,0)).isInstanceOf(PlatformException.class);assertThat(f.source.getters).contains("state_text");assertThat(f.source.getters).doesNotContain("oldest_seq");}
++            try(var r=f.open(b,0)){f.source.start();f.source.change=(k,v)->k.equals("run_id")?b.runId()+100000:v;assertThatThrownBy(()->f.reader.readWindow(r,0)).isInstanceOf(PlatformException.class);}
++        }
++    }
++    @Test void explicitCaptureGuardClassifiesHealthySupersessionButNeverDigestFailure()throws Exception{
++        try(var f=new Fixture()){var b=f.seed(0);try(var r=f.open(b,0)){
++            var capture=r.currentCapture();assertThat(r.isSuperseded(capture)).isFalse();f.auth.renew(r);assertThat(r.isSuperseded(capture)).isTrue();
++            f.source.start();var once=new AtomicBoolean();f.source.afterCommit=()->{if(once.compareAndSet(false,true))outside(()->f.auth.renew(r));};
++            assertThatThrownBy(()->f.reader.readWindow(r,0)).isInstanceOf(RunEventReader.Superseded.class);f.source.afterCommit=()->{};
++            try(var e=f.reader.readWindow(r,0)){e.consume(v->assertThat(v.info().seq()).isEqualTo(1));}
++            f.source.change=(k,v)->k.equals("state_text")?v.toString().replace("\"output_ref\":null","\"output_ref\":\"bad\""):v;
++            assertThatThrownBy(()->f.reader.readWindow(r,0)).isInstanceOf(PlatformException.class).isNotInstanceOf(RunEventReader.Superseded.class);
++            r.close();assertThatThrownBy(()->r.isSuperseded(capture)).isInstanceOf(PlatformException.class);
++        }}
++    }
++    static void outside(Runnable action){try(var pool=Executors.newSingleThreadExecutor()){pool.submit(action).get(4,TimeUnit.SECONDS);}catch(Exception failure){throw new AssertionError(failure);}}
++}
+diff --git a/engine-runtime/src/test/java/cn/agentplatform/engine/infra/PortalRunEventsCapacityTest.java b/engine-runtime/src/test/java/cn/agentplatform/engine/infra/PortalRunEventsCapacityTest.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..8f626ce48c4c289b80b0fc0d86fddfaa14a3fa95
+--- /dev/null
++++ b/engine-runtime/src/test/java/cn/agentplatform/engine/infra/PortalRunEventsCapacityTest.java
+@@ -0,0 +1,58 @@
++package cn.agentplatform.engine.infra;
++
++import static org.assertj.core.api.Assertions.*;
++import cn.agentplatform.common.*;
++import cn.agentplatform.common.authority.*;
++import java.lang.reflect.*;
++import java.nio.charset.StandardCharsets;
++import java.util.*;
++import org.junit.jupiter.api.Test;
++
++class PortalRunEventsCapacityTest {
++    @Test void fullFrameExactMaximumAndPlusOneUseSingleExactBacking()throws Exception{
++        // Domain event_seq is currently int, so long19 framing is exercised on the actual
++        // encoder backing, without fabricating a signed event or exposing a proof constructor.
++        Class<?> type=Class.forName("cn.agentplatform.engine.application.PortalRunEventsService$Frame");var constructor=type.getDeclaredConstructor();constructor.setAccessible(true);var frame=constructor.newInstance();
++        var ascii=type.getDeclaredMethod("ascii",String.class);ascii.setAccessible(true);var write=type.getDeclaredMethod("write",byte[].class,int.class,int.class);write.setAccessible(true);
++        ascii.invoke(frame,"id:"+Long.MAX_VALUE+"\nevent:"+"A".repeat(64)+"\ndata:");var payload=new byte[262144];Arrays.fill(payload,(byte)'x');write.invoke(frame,payload,0,payload.length);ascii.invoke(frame,"\n\n");
++        var bytes=type.getDeclaredField("bytes");bytes.setAccessible(true);var count=type.getDeclaredField("count");count.setAccessible(true);
++        assertThat(((byte[])bytes.get(frame)).length).isEqualTo(262245);assertThat(count.getInt(frame)).isEqualTo(262245);
++        assertThatThrownBy(()->ascii.invoke(frame,"x")).isInstanceOfSatisfying(InvocationTargetException.class,e->assertThat(e.getCause()).isInstanceOfSatisfying(PlatformException.class,p->assertThat(p.code()).isEqualTo("EVENT_LIMIT")));
++    }
++    @Test void portalFramesAndOldResponseReservationsShareOneSixteenMiBPoolAndSlots()throws Exception{
++        try(var bus=new ChunkBus(2,8192)){
++            var stopped=new java.util.concurrent.atomic.AtomicInteger();var a=bus.reservePortalSlot(stopped::incrementAndGet);var b=bus.reservePortalSlot(stopped::incrementAndGet);
++            assertThatThrownBy(()->bus.subscribe(1)).isInstanceOf(PlatformException.class);a.close();try(var legacy=bus.subscribe(1)){assertThatThrownBy(()->bus.reservePortalSlot(()->{})).isInstanceOf(PlatformException.class);}
++            var leases=new ArrayList<AutoCloseable>();try(var legacy=bus.reserveResponse()){
++                AutoCloseable lease;while((lease=bus.reservePortalFrame())!=null)leases.add(lease);
++                assertThat(leases).hasSize((16*1024*1024-ChunkBus.MAX_EVENT_BYTES)/ChunkBus.FRAME_RESERVATION_BYTES);
++                assertThat(bus.reserveResponse()).isNull();
++            }finally{for(var lease:leases)lease.close();}
++            assertThat(PortalRunEventsLifecycleTest.availableFrames(bus)).isEqualTo(62);bus.close();assertThat(stopped).hasValue(1);b.close();b.close();
++        }
++    }
++    @Test void realHttpUtf8PayloadAtExactBudgetAndPlusOneResetRemainFinite()throws Exception{
++        for(int extra:List.of(0,1))try(var f=new PortalRunEventWindowPostgresTest.Fixture()){
++            PortalRunEventsHttpTest.fixture=f;var b=f.seed(0);String type="A".repeat(32);String payload="中"+"x".repeat(262139+extra);
++            assertThat(Json.write(payload).getBytes(StandardCharsets.UTF_8)).hasSize(262144+extra);f.append(b.runId(),type,payload);f.finish(b.runId());
++            String ticket=PortalRunEventsAuthorityFixture.ticket(f.auth,b.owner(),b.publicId(),b.snapshotSha());
++            try(var server=PortalRunEventsHttpTest.start(PortalRunEventsHttpTest.Receiver.class)){
++                var result=PortalRunEventsHttpTest.request(server,b.publicId(),ticket,"");assertThat(result.statusCode()).isEqualTo(200);
++                if(extra==0){assertThat(result.body()).contains("id:2\nevent:"+type+"\ndata:"+Json.write(payload)+"\n\n","event:RUN_FINISHED");}
++                else{assertThat(result.body()).contains("event:stream_reset","\"reason\":\"EVENT_LIMIT\"").doesNotContain("event:"+type);}
++                assertThat(PortalRunEventsLifecycleTest.availableFrames(server.getBean(ChunkBus.class))).isEqualTo(62);
++            }
++        }
++    }
++    @Test void stateCapAndCombinedRootCapFailBeforeStateTextGetter()throws Exception{
++        try(var f=new PortalRunEventWindowPostgresTest.Fixture()){var b=f.seed(0);
++            long refs=f.db.queryForObject("select octet_length(version_refs::text) from engine.run where id=?",Long.class,b.runId());
++            for(String dimension:List.of("STATE_ROW","ROOT_BYTES"))try(var r=f.open(b,0)){
++                f.source.start();f.source.change=(key,value)->key.equals("state_bytes")?1048577L:key.equals("snapshot_bytes")&&dimension.equals("ROOT_BYTES")?8388608L:value;
++                if(dimension.equals("ROOT_BYTES"))f.source.change=(key,value)->key.equals("snapshot_bytes")?8388608L-refs:value;
++                assertThatThrownBy(()->f.reader.readWindow(r,0)).isInstanceOfSatisfying(RunEventReader.CapacityFailure.class,e->assertThat(e.dimension()).isEqualTo(dimension));
++                assertThat(f.source.getters).doesNotContain("state_text");
++            }
++        }
++    }
++}
+diff --git a/engine-runtime/src/test/java/cn/agentplatform/engine/infra/PortalRunEventsHttpTest.java b/engine-runtime/src/test/java/cn/agentplatform/engine/infra/PortalRunEventsHttpTest.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..6e70a03ae11912e71f583cf8f45f8f26b4771530
+--- /dev/null
++++ b/engine-runtime/src/test/java/cn/agentplatform/engine/infra/PortalRunEventsHttpTest.java
+@@ -0,0 +1,199 @@
++package cn.agentplatform.engine.infra;
++
++import static org.assertj.core.api.Assertions.*;
++import cn.agentplatform.common.*;
++import cn.agentplatform.common.authority.*;
++import cn.agentplatform.engine.api.RunController;
++import cn.agentplatform.engine.application.*;
++import java.net.*;
++import java.net.http.*;
++import java.time.Duration;
++import java.util.*;
++import java.util.concurrent.atomic.*;
++import java.util.concurrent.*;
++import java.io.*;
++import jakarta.servlet.*;
++import jakarta.servlet.http.*;
++import org.junit.jupiter.api.Test;
++import org.springframework.boot.*;
++import org.springframework.boot.autoconfigure.*;
++import org.springframework.boot.web.servlet.*;
++import org.springframework.boot.web.servlet.context.*;
++import org.springframework.context.annotation.*;
++import org.springframework.security.config.annotation.web.builders.HttpSecurity;
++import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
++import org.springframework.security.oauth2.jwt.JwtDecoder;
++import org.springframework.security.web.SecurityFilterChain;
++import org.springframework.web.servlet.mvc.method.RequestMappingInfoHandlerMapping;
++
++class PortalRunEventsHttpTest {
++    static PortalRunEventWindowPostgresTest.Fixture fixture;
++    static final AtomicInteger frameLeaks=new AtomicInteger();
++    static volatile Hooks hooks;
++    static volatile int streamSlots=2;
++    static final class Hooks {
++        volatile String block;volatile Runnable afterGet=()->{},beforeWrite=()->{},afterFlush=()->{};
++        final CountDownLatch entered,release=new CountDownLatch(1);volatile CountDownLatch secondRelease;
++        final AtomicInteger blockCalls=new AtomicInteger();final List<AsyncContext> contexts=new CopyOnWriteArrayList<>();
++        final AtomicInteger gets=new AtomicInteger(),writes=new AtomicInteger(),flushes=new AtomicInteger(),completes=new AtomicInteger(),exits=new AtomicInteger();
++        final AtomicInteger timeouts=new AtomicInteger(),notifications=new AtomicInteger();
++        volatile AsyncContext context;volatile long timeout;
++        volatile boolean missingHandler,missingFrame,forward,failListener;
++        Hooks(){this(1);}Hooks(int count){entered=new CountDownLatch(count);}
++        void at(String stage){if(stage.equals(block)){var gate=blockCalls.incrementAndGet()>1&&secondRelease!=null?secondRelease:release;entered.countDown();boolean done=false;while(!done)try{done=gate.await(100,TimeUnit.MILLISECONDS);}catch(InterruptedException ignored){}}}
++    }
++    @Configuration(proxyBeanMethods=false) @EnableAutoConfiguration @EnableWebSecurity
++    @Import(cn.agentplatform.engine.EnginePortalEventsAssembly.class)
++    static class Receiver {
++        @Bean javax.sql.DataSource source(){return fixture.source;}
++        @Bean java.time.Clock clock(){return fixture.auth.iam.clock();}
++        @Bean(destroyMethod="") HttpCurrentAuthorityClient current(){return fixture.auth.engine;}
++        @Bean JwtDecoder decoder(){return PortalRunEventsAuthorityFixture.decoder(fixture.auth);}
++        @Bean ServiceAuthorization authorization(HttpCurrentAuthorityClient c){return new ServiceAuthorization("engine",new ServiceRoutePolicy(),c);}
++        @Bean SecurityFilterChain security(HttpSecurity h,JwtDecoder d,ServiceAuthorization a)throws Exception{return SecurityConfiguration.serviceSecurity(h,d,a);}
++        @Bean org.springframework.web.servlet.handler.MappedInterceptor mapped(ServiceAuthorization a){return a.mappedInterceptor();}
++        @Bean RouteCoverageVerifier coverage(List<RequestMappingInfoHandlerMapping> maps){return new RouteCoverageVerifier("engine",new ServiceRoutePolicy(),maps);}
++        @Bean PlatformErrors errors(){return new PlatformErrors();}
++        @Bean(destroyMethod="close") ChunkBus chunks(){return new ChunkBus(streamSlots,8192);}
++        @Bean(destroyMethod="close") RuntimeClients clients(){return new RuntimeClients(fixture.auth.iam.config("engine"),fixture.auth.engine,"http://127.0.0.1:1",true);}
++        @Bean(destroyMethod="close") RunScheduler scheduler(){return new RunScheduler(fixture.trace){@Override public void start(){}};}
++        @Bean RunService service(RuntimeClients clients,RunScheduler scheduler){return new RunService(fixture.trace,clients,null,null,scheduler);}
++        @Bean RunController controller(RunService s,ChunkBus c){return new RunController(s,fixture.trace,c,null);}
++        @Bean FilterRegistrationBean<jakarta.servlet.Filter> probe(){
++            var b=new FilterRegistrationBean<jakarta.servlet.Filter>();b.setAsyncSupported(true);b.setOrder(Integer.MAX_VALUE);
++            b.setFilter((r,s,c)->{
++                Hooks hook=hooks;
++                if(hook==null){try{c.doFilter(r,s);}finally{probeFrame(r);}return;}
++                if(hook.forward){try{((HttpServletRequest)r).getRequestDispatcher(((HttpServletRequest)r).getRequestURI()).forward(r,s);}finally{probeFrame(r);}return;}
++                var response=new HttpServletResponseWrapper((HttpServletResponse)s){
++                    @Override public ServletOutputStream getOutputStream()throws IOException{
++                        hook.gets.incrementAndGet();hook.at("get");var delegate=super.getOutputStream();hook.afterGet.run();
++                        return new ServletOutputStream(){
++                            public boolean isReady(){return delegate.isReady();}public void setWriteListener(WriteListener l){delegate.setWriteListener(l);}
++                            public void write(int v)throws IOException{hook.beforeWrite.run();hook.at("write");hook.writes.incrementAndGet();delegate.write(v);}
++                            @Override public void write(byte[] a,int o,int n)throws IOException{hook.beforeWrite.run();hook.at("write");hook.writes.incrementAndGet();delegate.write(a,o,n);}
++                            @Override public void flush()throws IOException{hook.at("flush");hook.flushes.incrementAndGet();delegate.flush();hook.afterFlush.run();}
++                        };
++                    }
++                };
++                var request=new HttpServletRequestWrapper((HttpServletRequest)r){
++                    @Override public AsyncContext startAsync(ServletRequest req,ServletResponse res){
++                        var actual=super.startAsync(req,res);hook.context=actual;hook.contexts.add(actual);
++                        return new AsyncContext(){
++                            public ServletRequest getRequest(){return actual.getRequest();}public ServletResponse getResponse(){return actual.getResponse();}public boolean hasOriginalRequestAndResponse(){return actual.hasOriginalRequestAndResponse();}
++                            public void dispatch(){actual.dispatch();}public void dispatch(String p){actual.dispatch(p);}public void dispatch(ServletContext x,String p){actual.dispatch(x,p);}
++                            public void complete(){hook.completes.incrementAndGet();hook.at("complete");try{actual.complete();}finally{hook.exits.incrementAndGet();}}
++                            public void start(Runnable t){actual.start(t);}public void addListener(AsyncListener l){if(hook.failListener)throw new IllegalStateException("LISTENER_INSTALL_FAILURE");actual.addListener(new AsyncListener(){public void onTimeout(AsyncEvent e)throws IOException{hook.timeouts.incrementAndGet();l.onTimeout(e);}public void onComplete(AsyncEvent e)throws IOException{hook.notifications.incrementAndGet();l.onComplete(e);}public void onError(AsyncEvent e)throws IOException{l.onError(e);}public void onStartAsync(AsyncEvent e)throws IOException{l.onStartAsync(e);}});}public void addListener(AsyncListener l,ServletRequest q,ServletResponse p){actual.addListener(l,q,p);}
++                            public <T extends AsyncListener>T createListener(Class<T> t)throws ServletException{return actual.createListener(t);}
++                            public void setTimeout(long t){actual.setTimeout(hook.timeout>0?hook.timeout:t);}public long getTimeout(){return actual.getTimeout();}
++                        };
++                    }
++                };
++                try{c.doFilter(request,response);}finally{probeFrame(r);}
++            });return b;
++        }
++        @Bean org.springframework.web.servlet.handler.MappedInterceptor negativeBoundaryProbe(){return new org.springframework.web.servlet.handler.MappedInterceptor(null,new org.springframework.web.servlet.HandlerInterceptor(){
++            @Override public boolean preHandle(HttpServletRequest request,HttpServletResponse response,Object handler)throws Exception{
++                var hook=hooks;if(hook!=null){if(hook.missingHandler)request.removeAttribute(org.springframework.web.servlet.HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE);
++                    if(hook.missingFrame&&request.getAttribute(ServiceAuthorization.class.getName()+".frame") instanceof AutoCloseable frame){frame.close();request.removeAttribute(ServiceAuthorization.class.getName()+".frame");}}
++                return true;
++            }
++        });}
++        static void probeFrame(ServletRequest r){if(r.getAttribute(ServiceAuthorization.class.getName()+".frame")!=null||catchThrowable(AuthorityContext::current)==null)frameLeaks.incrementAndGet();}
++    }
++    static ServletWebServerApplicationContext start(Class<?> receiver){
++        var app=new SpringApplication(receiver);app.setAdditionalProfiles("test");app.setDefaultProperties(Map.of("server.address","127.0.0.1","server.port","0","spring.main.banner-mode","off","spring.config.location","optional:classpath:/c-no-config/","spring.jmx.enabled",false,"spring.flyway.enabled",false,"springdoc.api-docs.enabled",false,"logging.level.root","ERROR","management.endpoints.web.exposure.exclude","*","management.endpoints.web.discovery.enabled",false));
++        return (ServletWebServerApplicationContext)app.run();
++    }
++    static HttpResponse<String> request(ServletWebServerApplicationContext server,String run,String ticket,String suffix)throws Exception{
++        try(var client=HttpClient.newHttpClient()) {return client.send(HttpRequest.newBuilder(URI.create("http://127.0.0.1:"+server.getWebServer().getPort()+"/admin/runs/"+run+"/events"+suffix)).timeout(Duration.ofSeconds(8)).header("Authorization","Bearer "+ticket).GET().build(),HttpResponse.BodyHandlers.ofString());}
++    }
++    @Test void realSignedMappedEngineEventsUseProtectedWindow() throws Exception {
++        try(var f=new PortalRunEventWindowPostgresTest.Fixture()){fixture=f;var b=f.seed(0);
++            String ticket=PortalRunEventsAuthorityFixture.ticket(f.auth,b.owner(),b.publicId(),b.snapshotSha());
++            try(var server=start(Receiver.class)){
++                var response=request(server,b.publicId(),ticket,"?Last-Event-ID=2");
++                assertThat(response.statusCode()).isEqualTo(200);assertThat(response.body()).contains("CURSOR_AHEAD");
++                assertThat(frameLeaks).hasValue(0);
++            }
++        }
++    }
++    @Test void actualWireDrainsFifteenNodeTerminalRunAndLastEventIdResumes()throws Exception{
++        try(var f=new PortalRunEventWindowPostgresTest.Fixture()){fixture=f;var b=f.seed(0);f.finish(b.runId());
++            String ticket=PortalRunEventsAuthorityFixture.ticket(f.auth,b.owner(),b.publicId(),b.snapshotSha());
++            try(var server=start(Receiver.class)){
++                var all=request(server,b.publicId(),ticket,"");assertThat(all.statusCode()).isEqualTo(200);
++                assertThat(all.body()).contains("event:stream_status\ndata:{\"chunkAvailable\":false,\"chunkReplay\":false","id:1\nevent:C_FIRST\ndata:","观察","id:2\nevent:RUN_FINISHED\ndata:");
++                var replay=send(server,"/admin/runs/"+b.publicId()+"/events",ticket,"GET",List.of("1"),null);
++                assertThat(replay.body()).contains("id:2\nevent:RUN_FINISHED").doesNotContain("event:C_FIRST");
++                var priority=send(server,"/admin/runs/"+b.publicId()+"/events?Last-Event-ID=0000000000000000000",ticket,"GET",List.of("bad","also-bad"),null);
++                assertThat(priority.statusCode()).isEqualTo(200);assertThat(priority.body()).contains("id:1\nevent:C_FIRST");
++            }
++        }
++    }
++    @Test void selectedCursorInvalidDuplicatesUnknownQueryAliasesAndMissingServiceHaveNoPayloadSql()throws Exception{
++        try(var f=new PortalRunEventWindowPostgresTest.Fixture()){fixture=f;var b=f.seed(0);String ticket=PortalRunEventsAuthorityFixture.ticket(f.auth,b.owner(),b.publicId(),b.snapshotSha());
++            try(var server=start(Receiver.class)){
++                String path="/admin/runs/"+b.publicId()+"/events";
++                for(String suffix:List.of("?Last-Event-ID=","?Last-Event-ID=-1","?Last-Event-ID=%2B1","?Last-Event-ID=%201","?Last-Event-ID=%EF%BC%91","?Last-Event-ID=9223372036854775808","?Last-Event-ID=1&Last-Event-ID=2","?unknown=1")){
++                    f.source.start();var result=request(server,b.publicId(),ticket,suffix);assertThat(result.statusCode()).as(suffix).isEqualTo(400);assertNoPayload(f);
++                }
++                f.source.start();assertThat(send(server,path,ticket,"GET",List.of("1","2"),null).statusCode()).isEqualTo(400);assertNoPayload(f);
++                f.source.start();assertThat(send(server,path,ticket,"GET",List.of(" "),null).statusCode()).isEqualTo(400);assertNoPayload(f);
++                for(String alias:List.of("/admin/debug-runs/","/v1/runs/")){f.source.start();assertThat(send(server,alias+b.publicId()+"/events",ticket,"GET",List.of(),null).statusCode()).isEqualTo(400);assertNoPayload(f);}
++                for(String method:List.of("HEAD","POST","PUT","DELETE")){f.source.start();assertThat(send(server,path,ticket,method,List.of(),null).statusCode()).isIn(403,405);assertNoPayload(f);}
++                f.source.start();assertThat(send(server,path,ticket,"GET",List.of(),"body").statusCode()).isEqualTo(400);assertNoPayload(f);
++                server.getBean(RunController.class).portalEvents(null);f.source.start();assertThat(request(server,b.publicId(),ticket,"").statusCode()).isEqualTo(403);assertNoPayload(f);
++                assertThat(frameLeaks).hasValue(0);
++            }
++        }
++    }
++    static void assertNoPayload(PortalRunEventWindowPostgresTest.Fixture f){assertThat(f.source.getters).doesNotContain("payload_text","event_text","state_text");}
++    @Test void realMappedHandlerDispatchAndFrameFailuresStayClosedAndUnknownOrOtherOwnerStay404()throws Exception{
++        try(var f=new PortalRunEventWindowPostgresTest.Fixture()){
++            fixture=f;var b=f.seed(0);String ticket=PortalRunEventsAuthorityFixture.ticket(f.auth,b.owner(),b.publicId(),b.snapshotSha());
++            try(var server=start(Receiver.class)){
++                for(String failure:List.of("handler","frame","forward")){
++                    var h=new Hooks();h.missingHandler=failure.equals("handler");h.missingFrame=failure.equals("frame");h.forward=failure.equals("forward");hooks=h;
++                    try{f.source.start();assertThat(request(server,b.publicId(),ticket,"").statusCode()).isIn(400,403);assertNoPayload(f);}finally{hooks=null;}
++                }
++                String unknown="r_"+UUID.randomUUID().toString().replace("-","");String unknownTicket=PortalRunEventsAuthorityFixture.ticket(f.auth,b.owner(),unknown,b.snapshotSha());
++                f.source.start();assertThat(request(server,unknown,unknownTicket,"").statusCode()).isEqualTo(404);assertNoPayload(f);
++                f.source.start();assertThat(request(server,b.publicId(),unknownTicket,"").statusCode()).isEqualTo(403);assertNoPayload(f);
++                f.auth.actor("tenant-a","bob",Set.of("A","B"));var other=f.seed(0);f.auth.actor("tenant-a","alice",Set.of("A","B"));
++                String otherTicket=PortalRunEventsAuthorityFixture.ticket(f.auth,b.owner(),other.publicId(),other.snapshotSha());
++                f.source.start();assertThat(request(server,other.publicId(),otherTicket,"").statusCode()).isEqualTo(404);assertNoPayload(f);
++            }
++        }
++    }
++    @Test void listenerInstallationFailureCompletesOnceAndReleasesItsRealOwnedResources()throws Exception{
++        try(var f=new PortalRunEventWindowPostgresTest.Fixture()){
++            fixture=f;var b=f.seed(0);String ticket=PortalRunEventsAuthorityFixture.ticket(f.auth,b.owner(),b.publicId(),b.snapshotSha());var h=new Hooks();h.failListener=true;hooks=h;
++            try(var server=start(Receiver.class)){
++                var result=request(server,b.publicId(),ticket,"");assertThat(result.statusCode()).isEqualTo(500);assertThat(result.body()).contains("STREAM_UNAVAILABLE");assertThat(h.completes).hasValue(1);assertThat(h.exits).hasValue(1);
++                var bus=server.getBean(ChunkBus.class);assertThat(PortalRunEventsLifecycleTest.availableFrames(bus)).isEqualTo(62);try(var one=bus.subscribe(1);var two=bus.subscribe(2)){}
++            }finally{hooks=null;}
++        }
++    }
++    @Test void realTcpDisconnectReleasesObservationAndDoesNotCancelPersistedRun()throws Exception{
++        try(var f=new PortalRunEventWindowPostgresTest.Fixture()){
++            fixture=f;var b=f.seed(0);String ticket=PortalRunEventsAuthorityFixture.ticket(f.auth,b.owner(),b.publicId(),b.snapshotSha());
++            try(var server=start(Receiver.class)){
++                try(var socket=new java.net.Socket(java.net.InetAddress.getLoopbackAddress(),server.getWebServer().getPort())){
++                    socket.setSoTimeout(3000);socket.setSoLinger(true,0);socket.getOutputStream().write(("GET /admin/runs/"+b.publicId()+"/events HTTP/1.1\r\nHost: localhost\r\nAuthorization: Bearer "+ticket+"\r\nConnection: close\r\n\r\n").getBytes(java.nio.charset.StandardCharsets.US_ASCII));
++                    var read=new ByteArrayOutputStream();while(read.size()<4096&&!read.toString(java.nio.charset.StandardCharsets.UTF_8).contains("event:stream_status")){int value=socket.getInputStream().read();if(value<0)break;read.write(value);}assertThat(read.toString(java.nio.charset.StandardCharsets.UTF_8)).contains("200","event:stream_status");
++                }
++                f.append(b.runId(),"C_AFTER_DISCONNECT",Map.of("stillWritable",true));
++                var bus=server.getBean(ChunkBus.class);PortalRunEventsLifecycleTest.await(()->{try(var one=bus.subscribe(100);var two=bus.subscribe(101)){return true;}catch(PlatformException occupied){return false;}});
++                assertThat(f.db.queryForObject("select status from engine.run where id=?",String.class,b.runId())).isEqualTo("PENDING");assertThat(f.db.queryForObject("select count(*) from engine.run_event where run_id=? and type='C_AFTER_DISCONNECT'",Integer.class,b.runId())).isEqualTo(1);
++            }
++        }
++    }
++    static HttpResponse<String> send(ServletWebServerApplicationContext server,String path,String ticket,String method,List<String> cursors,String body)throws Exception{
++        try(var client=HttpClient.newHttpClient()){
++            var request=HttpRequest.newBuilder(URI.create("http://127.0.0.1:"+server.getWebServer().getPort()+path)).timeout(Duration.ofSeconds(8)).header("Authorization","Bearer "+ticket);
++            cursors.forEach(value->request.header("Last-Event-ID",value));
++            return client.send(request.method(method,body==null?HttpRequest.BodyPublishers.noBody():HttpRequest.BodyPublishers.ofString(body)).build(),HttpResponse.BodyHandlers.ofString());
++        }
++    }
++}
+diff --git a/engine-runtime/src/test/java/cn/agentplatform/engine/infra/PortalRunEventsLifecycleTest.java b/engine-runtime/src/test/java/cn/agentplatform/engine/infra/PortalRunEventsLifecycleTest.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..e4f9993c0f32f7410c1f3f68f56c7c8306b645fb
+--- /dev/null
++++ b/engine-runtime/src/test/java/cn/agentplatform/engine/infra/PortalRunEventsLifecycleTest.java
+@@ -0,0 +1,156 @@
++package cn.agentplatform.engine.infra;
++
++import static org.assertj.core.api.Assertions.*;
++import cn.agentplatform.common.*;
++import cn.agentplatform.common.authority.*;
++import cn.agentplatform.engine.application.PortalRunEventsService;
++import java.net.http.HttpResponse;
++import java.util.*;
++import java.util.concurrent.*;
++import java.util.concurrent.atomic.*;
++import java.util.function.BooleanSupplier;
++import org.junit.jupiter.api.Test;
++import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
++
++class PortalRunEventsLifecycleTest {
++    static void await(BooleanSupplier condition){long end=System.nanoTime()+TimeUnit.SECONDS.toNanos(4);while(!condition.getAsBoolean()){if(System.nanoTime()>end)throw new AssertionError("BOUNDED_WAIT");try{Thread.sleep(10);}catch(InterruptedException e){throw new AssertionError(e);}}}
++    static void entered(PortalRunEventsHttpTest.Hooks h)throws Exception{assertThat(h.entered.await(4,TimeUnit.SECONDS)).isTrue();}
++    static ThreadPoolExecutor executor(PortalRunEventsService service)throws Exception{var field=PortalRunEventsService.class.getDeclaredField("writers");field.setAccessible(true);return (ThreadPoolExecutor)field.get(service);}
++    // Read the actual C-owned holder for deterministic actual-client renewals. No common
++    // evidence/capture constructor or foreign service/JAR/target reflection is involved.
++    static PortalEventsResponse heldResponse(PortalRunEventsService service){try{var field=PortalRunEventsService.class.getDeclaredField("owners");field.setAccessible(true);var owner=((Set<?>)field.get(service)).iterator().next();var response=owner.getClass().getDeclaredField("response");response.setAccessible(true);return (PortalEventsResponse)response.get(owner);}catch(ReflectiveOperationException failure){throw new AssertionError(failure);}}
++    static Future<HttpResponse<String>> request(ExecutorService caller,ServletWebServerApplicationContext server,String run,String ticket){return caller.submit(()->PortalRunEventsHttpTest.request(server,run,ticket,""));}
++    static int availableFrames(ChunkBus bus)throws Exception{var leases=new ArrayList<AutoCloseable>();try{AutoCloseable l;while((l=bus.reservePortalFrame())!=null)leases.add(l);return leases.size();}finally{for(var l:leases)l.close();}}
++    @Test void expiredOriginalTicketHealthyRenewalAfterRealGetterReturnsRereadsBeforeFirstWrite()throws Exception{
++        try(var f=new PortalRunEventWindowPostgresTest.Fixture();var callers=Executors.newSingleThreadExecutor()){
++            PortalRunEventsHttpTest.fixture=f;var b=f.seed(0);f.finish(b.runId());PortalRunEventsAuthorityFixture.shortEventsTicket(f.auth);
++            String ticket=PortalRunEventsAuthorityFixture.ticket(f.auth,b.owner(),b.publicId(),b.snapshotSha());
++            var h=new PortalRunEventsHttpTest.Hooks();h.block="get";PortalRunEventsHttpTest.hooks=h;
++            try(var server=PortalRunEventsHttpTest.start(PortalRunEventsHttpTest.Receiver.class)){
++                f.source.start();var future=request(callers,server,b.publicId(),ticket);entered(h);int checks=Collections.frequency(f.auth.iam.observedOperations(),"portal_events_check");
++                f.auth.advance(3);f.auth.renew(heldResponse(server.getBean(PortalRunEventsService.class)));assertThat(Collections.frequency(f.auth.iam.observedOperations(),"portal_events_check")).isGreaterThan(checks);
++                h.beforeWrite=()->assertThat(f.source.getters.stream().filter(k->k.equals("state_text")).count()).isGreaterThanOrEqualTo(3);
++                assertThat(h.writes).hasValue(0);h.release.countDown();var result=future.get(5,TimeUnit.SECONDS);
++                assertThat(result.statusCode()).isEqualTo(200);assertThat(result.body()).contains("event:C_FIRST","event:RUN_FINISHED");assertThat(h.exits).hasValue(1);
++                assertThat(f.auth.iam.observedOperations()).contains("portal_events_check");
++            }finally{h.release.countDown();PortalRunEventsHttpTest.hooks=null;}
++        }
++    }
++    @Test void renewedGenerationAfterStatusFlushCannotSendBusinessEventUntilFreshWindow()throws Exception{
++        try(var f=new PortalRunEventWindowPostgresTest.Fixture()){
++            PortalRunEventsHttpTest.fixture=f;var b=f.seed(0);f.finish(b.runId());String ticket=PortalRunEventsAuthorityFixture.ticket(f.auth,b.owner(),b.publicId(),b.snapshotSha());
++            var h=new PortalRunEventsHttpTest.Hooks();var once=new AtomicBoolean();PortalRunEventsHttpTest.hooks=h;
++            h.beforeWrite=()->{if(h.writes.get()>0)assertThat(f.source.getters.stream().filter(k->k.equals("state_text")).count()).isGreaterThanOrEqualTo(3);};
++            try(var server=PortalRunEventsHttpTest.start(PortalRunEventsHttpTest.Receiver.class)){
++                h.afterFlush=()->{if(once.compareAndSet(false,true)){f.auth.advance(3);f.auth.renew(heldResponse(server.getBean(PortalRunEventsService.class)));}};
++                f.source.start();var result=PortalRunEventsHttpTest.request(server,b.publicId(),ticket,"");assertThat(result.body()).contains("event:C_FIRST","event:RUN_FINISHED");assertThat(h.exits).hasValue(1);
++            }finally{PortalRunEventsHttpTest.hooks=null;}
++        }
++    }
++    @Test void hardBoundDuringActualGetterProducesNoBusinessWrite()throws Exception{
++        try(var f=new PortalRunEventWindowPostgresTest.Fixture();var callers=Executors.newSingleThreadExecutor()){
++            PortalRunEventsHttpTest.fixture=f;var b=f.seed(0);String ticket=PortalRunEventsAuthorityFixture.ticket(f.auth,b.owner(),b.publicId(),b.snapshotSha());
++            var h=new PortalRunEventsHttpTest.Hooks();h.block="get";PortalRunEventsHttpTest.hooks=h;
++            try(var server=PortalRunEventsHttpTest.start(PortalRunEventsHttpTest.Receiver.class)){
++                var future=request(callers,server,b.publicId(),ticket);entered(h);var response=heldResponse(server.getBean(PortalRunEventsService.class));var first=response.currentCapture();
++                for(int i=0;i<18;i++){f.auth.advance(3);f.auth.renew(response);response.currentCapture();}
++                assertThat(response.isSuperseded(first)).isTrue();f.auth.advance(2);assertThatThrownBy(response::currentCapture).isInstanceOf(PlatformException.class);h.release.countDown();future.get(4,TimeUnit.SECONDS);
++                assertThat(h.writes).hasValue(0);assertThat(h.exits).hasValue(1);
++                assertThat(f.db.queryForObject("select status from engine.run where id=?",String.class,b.runId())).isEqualTo("PENDING");
++            }finally{h.release.countDown();PortalRunEventsHttpTest.hooks=null;}
++        }
++    }
++    @Test void timeoutOnCompleteAndShutdownKeepTwoActualGetterOwnersUntilEachReturns()throws Exception{
++        try(var f=new PortalRunEventWindowPostgresTest.Fixture();var callers=Executors.newFixedThreadPool(2)){
++            PortalRunEventsHttpTest.fixture=f;var b=f.seed(0);String ticket=PortalRunEventsAuthorityFixture.ticket(f.auth,b.owner(),b.publicId(),b.snapshotSha());
++            var h=new PortalRunEventsHttpTest.Hooks(2);h.block="get";h.secondRelease=new CountDownLatch(1);h.timeout=250;PortalRunEventsHttpTest.hooks=h;
++            try(var server=PortalRunEventsHttpTest.start(PortalRunEventsHttpTest.Receiver.class);var fresh=f.open(b,0)){
++                var bus=server.getBean(ChunkBus.class);var first=request(callers,server,b.publicId(),ticket);var second=request(callers,server,b.publicId(),ticket);entered(h);
++                assertThatThrownBy(()->server.getBean(RunEventReader.class).readNext(fresh,0)).isInstanceOfSatisfying(RunEventReader.CapacityFailure.class,e->assertThat(e.dimension()).isEqualTo("WORKSPACE"));
++                assertThatThrownBy(()->bus.subscribe(100)).isInstanceOf(PlatformException.class);assertThat(availableFrames(bus)).isEqualTo(60);
++                await(()->h.timeouts.get()>0&&h.notifications.get()>0);server.getBean(PortalRunEventsService.class).close();
++                assertThatThrownBy(()->server.getBean(RunEventReader.class).readNext(fresh,0)).isInstanceOf(RunEventReader.CapacityFailure.class);assertThat(availableFrames(bus)).isEqualTo(60);assertThat(h.writes).hasValue(0);
++                h.release.countDown();await(()->h.exits.get()>=1);
++                try(var one=server.getBean(RunEventReader.class).readNext(fresh,0).orElseThrow()){assertThatThrownBy(()->server.getBean(RunEventReader.class).readNext(fresh,0)).isInstanceOf(RunEventReader.CapacityFailure.class);}
++                assertThat(availableFrames(bus)).isEqualTo(61);
++                h.secondRelease.countDown();first.get(4,TimeUnit.SECONDS);second.get(4,TimeUnit.SECONDS);await(()->h.exits.get()==2);
++                assertThat(availableFrames(bus)).isEqualTo(62);try(var one=bus.subscribe(100);var two=bus.subscribe(101)){}
++            }finally{h.release.countDown();h.secondRelease.countDown();PortalRunEventsHttpTest.hooks=null;}
++        }
++    }
++    @Test void actualCompleteCallRetainsCurrentReaderFrameAndSlotThroughItsFinally()throws Exception{
++        try(var f=new PortalRunEventWindowPostgresTest.Fixture();var callers=Executors.newSingleThreadExecutor()){
++            PortalRunEventsHttpTest.fixture=f;var b=f.seed(0);f.finish(b.runId());String ticket=PortalRunEventsAuthorityFixture.ticket(f.auth,b.owner(),b.publicId(),b.snapshotSha());
++            var h=new PortalRunEventsHttpTest.Hooks();h.block="complete";PortalRunEventsHttpTest.hooks=h;
++            try(var server=PortalRunEventsHttpTest.start(PortalRunEventsHttpTest.Receiver.class);var fresh=f.open(b,0)){
++                var future=request(callers,server,b.publicId(),ticket);entered(h);var bus=server.getBean(ChunkBus.class);server.getBean(PortalRunEventsService.class).close();
++                try(var one=server.getBean(RunEventReader.class).readNext(fresh,0).orElseThrow()){assertThatThrownBy(()->server.getBean(RunEventReader.class).readNext(fresh,0)).isInstanceOf(RunEventReader.CapacityFailure.class);}
++                try(var one=bus.subscribe(100)){assertThatThrownBy(()->bus.subscribe(101)).isInstanceOf(PlatformException.class);}
++                assertThat(availableFrames(bus)).isEqualTo(61);assertThat(h.exits).hasValue(0);h.release.countDown();future.get(4,TimeUnit.SECONDS);await(()->h.exits.get()==1);assertThat(availableFrames(bus)).isEqualTo(62);
++            }finally{h.release.countDown();PortalRunEventsHttpTest.hooks=null;}
++        }
++    }
++    @Test void queuedNeverRunOwnersHoldNoReaderOrFrameAndRealSubmissionRejectionReleasesSlot()throws Exception{
++        try(var f=new PortalRunEventWindowPostgresTest.Fixture();var callers=Executors.newFixedThreadPool(3)){
++            PortalRunEventsHttpTest.fixture=f;var b=f.seed(0);String ticket=PortalRunEventsAuthorityFixture.ticket(f.auth,b.owner(),b.publicId(),b.snapshotSha());
++            var h=new PortalRunEventsHttpTest.Hooks();PortalRunEventsHttpTest.hooks=h;var workers=new CountDownLatch(2);var release=new CountDownLatch(1);
++            try(var server=PortalRunEventsHttpTest.start(PortalRunEventsHttpTest.Receiver.class);var fresh=f.open(b,0)){
++                var pool=executor(server.getBean(PortalRunEventsService.class));for(int i=0;i<2;i++)pool.execute(()->{workers.countDown();try{release.await();}catch(InterruptedException ignored){}});assertThat(workers.await(2,TimeUnit.SECONDS)).isTrue();
++                var first=request(callers,server,b.publicId(),ticket);var second=request(callers,server,b.publicId(),ticket);await(()->pool.getQueue().size()==2);
++                try(var one=server.getBean(RunEventReader.class).readNext(fresh,0).orElseThrow();var two=server.getBean(RunEventReader.class).readNext(fresh,0).orElseThrow()){}
++                var bus=server.getBean(ChunkBus.class);assertThat(availableFrames(bus)).isEqualTo(62);h.contexts.getFirst().complete();await(()->h.notifications.get()>=1);
++                var rejected=PortalRunEventsHttpTest.request(server,b.publicId(),ticket,"");assertThat(rejected.statusCode()).isEqualTo(429);assertThat(rejected.body()).contains("STREAM_CAPACITY");assertThat(availableFrames(bus)).isEqualTo(62);
++                h.contexts.get(1).complete();first.get(4,TimeUnit.SECONDS);second.get(4,TimeUnit.SECONDS);release.countDown();await(()->pool.getQueue().isEmpty());assertThat(h.writes).hasValue(1); // Only the bounded rejection envelope; neither queued task ran.
++                try(var one=bus.subscribe(100);var two=bus.subscribe(101)){}
++            }finally{release.countDown();PortalRunEventsHttpTest.hooks=null;}
++        }
++    }
++    @Test void actualWriteAndFlushBlockingKeepResourcesAfterStopAndSendNoFollowingEvent()throws Exception{
++        for(String stage:List.of("write","flush"))try(var f=new PortalRunEventWindowPostgresTest.Fixture();var callers=Executors.newSingleThreadExecutor()){
++            PortalRunEventsHttpTest.fixture=f;var b=f.seed(0);f.finish(b.runId());String ticket=PortalRunEventsAuthorityFixture.ticket(f.auth,b.owner(),b.publicId(),b.snapshotSha());
++            var h=new PortalRunEventsHttpTest.Hooks();h.block=stage;PortalRunEventsHttpTest.hooks=h;
++            try(var server=PortalRunEventsHttpTest.start(PortalRunEventsHttpTest.Receiver.class);var fresh=f.open(b,0)){
++                var future=request(callers,server,b.publicId(),ticket);entered(h);var bus=server.getBean(ChunkBus.class);server.getBean(PortalRunEventsService.class).close();
++                try(var one=server.getBean(RunEventReader.class).readNext(fresh,0).orElseThrow()){assertThatThrownBy(()->server.getBean(RunEventReader.class).readNext(fresh,0)).isInstanceOf(RunEventReader.CapacityFailure.class);}
++                try(var one=bus.subscribe(100)){assertThatThrownBy(()->bus.subscribe(101)).isInstanceOf(PlatformException.class);}
++                assertThat(availableFrames(bus)).isEqualTo(61);h.release.countDown();var result=future.get(4,TimeUnit.SECONDS);assertThat(result.body()).doesNotContain("event:C_FIRST","event:RUN_FINISHED");await(()->h.exits.get()==1);assertThat(availableFrames(bus)).isEqualTo(62);
++            }finally{h.release.countDown();PortalRunEventsHttpTest.hooks=null;}
++        }
++    }
++    @Test void twoActivePollersObserveNewTerminalWhileTwoQueuedOwnersWaitWithoutReaderStarvation()throws Exception{
++        try(var f=new PortalRunEventWindowPostgresTest.Fixture();var callers=Executors.newFixedThreadPool(4)){
++            PortalRunEventsHttpTest.fixture=f;var b=f.seed(0);String ticket=PortalRunEventsAuthorityFixture.ticket(f.auth,b.owner(),b.publicId(),b.snapshotSha());
++            var h=new PortalRunEventsHttpTest.Hooks();PortalRunEventsHttpTest.hooks=h;PortalRunEventsHttpTest.streamSlots=4;
++            try(var server=PortalRunEventsHttpTest.start(PortalRunEventsHttpTest.Receiver.class)){
++                var tasks=new ArrayList<Future<HttpResponse<String>>>();var pool=executor(server.getBean(PortalRunEventsService.class));
++                for(int i=0;i<2;i++)tasks.add(callers.submit(()->PortalRunEventsHttpTest.request(server,b.publicId(),ticket,"?Last-Event-ID=1")));
++                await(()->h.flushes.get()>=2);
++                for(int target=1;target<=2;target++){
++                    boolean queued=false;for(int attempt=0;attempt<5&&!queued;attempt++){
++                        var next=callers.submit(()->PortalRunEventsHttpTest.request(server,b.publicId(),ticket,"?Last-Event-ID=1"));int expected=target;
++                        await(()->pool.getQueue().size()>=expected||next.isDone());
++                        if(next.isDone())assertThat(next.get().statusCode()).isEqualTo(429);
++                        else{tasks.add(next);queued=true;}
++                    }
++                    assertThat(queued).isTrue();
++                }
++                assertThat(pool.getQueue()).hasSize(2);f.finish(b.runId());
++                for(var task:tasks){var result=task.get(5,TimeUnit.SECONDS);assertThat(result.statusCode()).isEqualTo(200);assertThat(result.body()).contains("event:RUN_FINISHED").doesNotContain("event:C_FIRST");}
++                await(()->pool.getQueue().isEmpty());assertThat(availableFrames(server.getBean(ChunkBus.class))).isEqualTo(62);
++            }finally{PortalRunEventsHttpTest.streamSlots=2;PortalRunEventsHttpTest.hooks=null;}
++        }
++    }
++    @Test void supersededRetriesAreBoundedPerRoundAndSuccessfulCursorProgressStartsNextRound()throws Exception{
++        for(boolean exhaust:List.of(false,true))try(var f=new PortalRunEventWindowPostgresTest.Fixture()){
++            PortalRunEventsHttpTest.fixture=f;var b=f.seed(0);if(!exhaust){f.append(b.runId(),"C_SECOND",Map.of("n",2));f.append(b.runId(),"C_THIRD",Map.of("n",3));}f.finish(b.runId());
++            String ticket=PortalRunEventsAuthorityFixture.ticket(f.auth,b.owner(),b.publicId(),b.snapshotSha());var h=new PortalRunEventsHttpTest.Hooks();PortalRunEventsHttpTest.hooks=h;
++            try(var server=PortalRunEventsHttpTest.start(PortalRunEventsHttpTest.Receiver.class)){
++                h.afterFlush=()->{if(exhaust||Set.of(1,4,7).contains(h.flushes.get())){f.auth.advance(3);f.auth.renew(heldResponse(server.getBean(PortalRunEventsService.class)));}};
++                var result=PortalRunEventsHttpTest.request(server,b.publicId(),ticket,"");
++                if(exhaust){assertThat(h.flushes).hasValue(3);assertThat(result.body()).doesNotContain("event:C_FIRST","event:RUN_FINISHED");}
++                else{assertThat(h.flushes).hasValue(8);assertThat(result.body()).contains("event:C_FIRST","event:C_SECOND","event:C_THIRD","event:RUN_FINISHED");}
++                assertThat(availableFrames(server.getBean(ChunkBus.class))).isEqualTo(62);
++            }finally{PortalRunEventsHttpTest.hooks=null;}
++        }
++    }
++}

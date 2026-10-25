@@ -1,0 +1,439 @@
+{
+  "children": 14,
+  "childExitZero": 14,
+  "junitTests": 19,
+  "realTlsSessionsFromCases": 51,
+  "sessionCountBasis": "4 single boundary/fixture +13 schema +12 relations +6 floor +1 association +1 lifecycle +2 nonfacts +2 semantic +2 retention +4 generation +4 profile",
+  "summaries": [
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/association-bfe946d1-33ff-4352-90e1-f37769ecfc8e/rejection.properties",
+      "values": {
+        "code": "EVENT_MATERIAL_DENIED",
+        "reason": "receipt association",
+        "callbacks": "0"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/association-bfe946d1-33ff-4352-90e1-f37769ecfc8e/summary.properties",
+      "values": {
+        "group": "association",
+        "completed": "true"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/business-red-9e35eff6-e8a2-46a1-8920-26f340d96bbb/rejection.properties",
+      "values": {
+        "code": "EVENT_MATERIAL_DENIED",
+        "reason": "event business SHA",
+        "callbacks": "0"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/business-red-9e35eff6-e8a2-46a1-8920-26f340d96bbb/summary.properties",
+      "values": {
+        "group": "business-red",
+        "completed": "true"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/fixture-03ac11ed-cc4b-4251-80a8-8d7e689ba61e/summary.properties",
+      "values": {
+        "group": "fixture",
+        "completed": "true"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/floors-d2fbd3f8-ebba-48a1-9646-cb3ef5c5f594/summary.properties",
+      "values": {
+        "group": "floors",
+        "completed": "true"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/floors-d2fbd3f8-ebba-48a1-9646-cb3ef5c5f594/dynamic-version/rejection.properties",
+      "values": {
+        "code": "EVENT_MATERIAL_DENIED",
+        "reason": "dynamic revision/parents",
+        "callbacks": "0"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/floors-d2fbd3f8-ebba-48a1-9646-cb3ef5c5f594/parent-requires-more/rejection.properties",
+      "values": {
+        "code": "SYS-AUTH-403",
+        "reason": "当前授权不允许此操作",
+        "callbacks": "0"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/floors-d2fbd3f8-ebba-48a1-9646-cb3ef5c5f594/root-provenance/rejection.properties",
+      "values": {
+        "code": "EVENT_MATERIAL_DENIED",
+        "reason": "root provenance/floor",
+        "callbacks": "0"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/floors-d2fbd3f8-ebba-48a1-9646-cb3ef5c5f594/weak-event-attrs/rejection.properties",
+      "values": {
+        "code": "EVENT_MATERIAL_DENIED",
+        "reason": "target floor",
+        "callbacks": "0"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/floors-d2fbd3f8-ebba-48a1-9646-cb3ef5c5f594/weak-state-label/rejection.properties",
+      "values": {
+        "code": "EVENT_MATERIAL_DENIED",
+        "reason": "target floor",
+        "callbacks": "0"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/floors-d2fbd3f8-ebba-48a1-9646-cb3ef5c5f594/weak-state-roles/rejection.properties",
+      "values": {
+        "code": "EVENT_MATERIAL_DENIED",
+        "reason": "target floor",
+        "callbacks": "0"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/generations-cc6e6ef2-5df3-4bc7-a271-6616c31f6d05/summary.properties",
+      "values": {
+        "group": "generations",
+        "completed": "true"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/generations-cc6e6ef2-5df3-4bc7-a271-6616c31f6d05/digest/generation.properties",
+      "values": {
+        "starts": "3",
+        "verifiedScopeVisits": "207",
+        "actualChanges": "2",
+        "callbacks": "1"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/generations-cc6e6ef2-5df3-4bc7-a271-6616c31f6d05/exhaust/generation.properties",
+      "values": {
+        "starts": "3",
+        "verifiedScopeVisits": "207",
+        "actualChanges": "3",
+        "callbacks": "0"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/generations-cc6e6ef2-5df3-4bc7-a271-6616c31f6d05/first/generation.properties",
+      "values": {
+        "starts": "3",
+        "verifiedScopeVisits": "71",
+        "actualChanges": "2",
+        "callbacks": "1"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/generations-cc6e6ef2-5df3-4bc7-a271-6616c31f6d05/middle/generation.properties",
+      "values": {
+        "starts": "3",
+        "verifiedScopeVisits": "139",
+        "actualChanges": "2",
+        "callbacks": "1"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/lifecycle-12fa702a-7b0f-4da8-802c-f269314f3577/summary.properties",
+      "values": {
+        "group": "lifecycle",
+        "completed": "true"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/nested-red-a3ad7cb8-97f7-4f6b-a037-7be22c0423ed/rejection.properties",
+      "values": {
+        "code": "EVENT_MATERIAL_DENIED",
+        "reason": "unknown OWNER.unknown",
+        "callbacks": "0"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/nested-red-a3ad7cb8-97f7-4f6b-a037-7be22c0423ed/summary.properties",
+      "values": {
+        "group": "nested-red",
+        "completed": "true"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/nonfacts-6b3798cb-42e2-4eba-a2ea-5cdf5ad67ac1/summary.properties",
+      "values": {
+        "group": "nonfacts",
+        "completed": "true"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/profiles-05b0b84b-e8a8-44fd-a281-058e58e07e92/rejection.properties",
+      "values": {
+        "code": "EVENT_MATERIAL_CAPACITY",
+        "reason": "scope strings",
+        "callbacks": "0"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/profiles-05b0b84b-e8a8-44fd-a281-058e58e07e92/summary.properties",
+      "values": {
+        "group": "profiles",
+        "completed": "true"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/receipt-red-92d36ee6-4250-4613-9251-d2e400265980/rejection.properties",
+      "values": {
+        "code": "IAM_AUTHORITY_UNAVAILABLE",
+        "reason": "可信授权服务暂不可用",
+        "callbacks": "0"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/receipt-red-92d36ee6-4250-4613-9251-d2e400265980/summary.properties",
+      "values": {
+        "group": "receipt-red",
+        "completed": "true"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/relations-e2f7a88c-6f0a-4633-9220-4f824f5a4d78/summary.properties",
+      "values": {
+        "group": "relations",
+        "completed": "true"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/relations-e2f7a88c-6f0a-4633-9220-4f824f5a4d78/duplicate-revision/rejection.properties",
+      "values": {
+        "code": "EVENT_MATERIAL_DENIED",
+        "reason": "duplicate revision",
+        "callbacks": "0"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/relations-e2f7a88c-6f0a-4633-9220-4f824f5a4d78/event-run/rejection.properties",
+      "values": {
+        "code": "EVENT_MATERIAL_DENIED",
+        "reason": "event identity",
+        "callbacks": "0"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/relations-e2f7a88c-6f0a-4633-9220-4f824f5a4d78/event-SHA/rejection.properties",
+      "values": {
+        "code": "EVENT_MATERIAL_DENIED",
+        "reason": "event business SHA",
+        "callbacks": "0"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/relations-e2f7a88c-6f0a-4633-9220-4f824f5a4d78/initial-hash/rejection.properties",
+      "values": {
+        "code": "EVENT_MATERIAL_DENIED",
+        "reason": "initial ceiling",
+        "callbacks": "0"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/relations-e2f7a88c-6f0a-4633-9220-4f824f5a4d78/missing-parent/rejection.properties",
+      "values": {
+        "code": "EVENT_MATERIAL_DENIED",
+        "reason": "direct parent",
+        "callbacks": "0"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/relations-e2f7a88c-6f0a-4633-9220-4f824f5a4d78/Q-accepted/rejection.properties",
+      "values": {
+        "code": "EVENT_MATERIAL_DENIED",
+        "reason": "Q hashes",
+        "callbacks": "0"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/relations-e2f7a88c-6f0a-4633-9220-4f824f5a4d78/Q-initial/rejection.properties",
+      "values": {
+        "code": "EVENT_MATERIAL_DENIED",
+        "reason": "Q hashes",
+        "callbacks": "0"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/relations-e2f7a88c-6f0a-4633-9220-4f824f5a4d78/Q-owner/rejection.properties",
+      "values": {
+        "code": "EVENT_MATERIAL_DENIED",
+        "reason": "owner original Q",
+        "callbacks": "0"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/relations-e2f7a88c-6f0a-4633-9220-4f824f5a4d78/Q-version/rejection.properties",
+      "values": {
+        "code": "EVENT_MATERIAL_DENIED",
+        "reason": "provenance original Q",
+        "callbacks": "0"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/relations-e2f7a88c-6f0a-4633-9220-4f824f5a4d78/scope-SHA/rejection.properties",
+      "values": {
+        "code": "EVENT_MATERIAL_DENIED",
+        "reason": "scope digest/owner",
+        "callbacks": "0"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/relations-e2f7a88c-6f0a-4633-9220-4f824f5a4d78/state-row/rejection.properties",
+      "values": {
+        "code": "EVENT_MATERIAL_DENIED",
+        "reason": "state/window identity",
+        "callbacks": "0"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/relations-e2f7a88c-6f0a-4633-9220-4f824f5a4d78/state-SHA/rejection.properties",
+      "values": {
+        "code": "EVENT_MATERIAL_DENIED",
+        "reason": "state business SHA",
+        "callbacks": "0"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/retention-9b91e3d3-087f-4084-bbaa-996858dd8db8/retention.properties",
+      "values": {
+        "heldBytes": "176685742",
+        "thirdDenied": "true",
+        "actualWorkersExited": "true"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/retention-9b91e3d3-087f-4084-bbaa-996858dd8db8/summary.properties",
+      "values": {
+        "group": "retention",
+        "completed": "true"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/schema-e1576b72-8418-40cf-b160-32fb3acc4887/summary.properties",
+      "values": {
+        "group": "schema",
+        "completed": "true"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/schema-e1576b72-8418-40cf-b160-32fb3acc4887/attr-unknown/rejection.properties",
+      "values": {
+        "code": "EVENT_MATERIAL_DENIED",
+        "reason": "attribute key",
+        "callbacks": "0"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/schema-e1576b72-8418-40cf-b160-32fb3acc4887/identity-overflow/rejection.properties",
+      "values": {
+        "code": "EVENT_MATERIAL_DENIED",
+        "reason": "long range",
+        "callbacks": "0"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/schema-e1576b72-8418-40cf-b160-32fb3acc4887/initial-duplicate-role/rejection.properties",
+      "values": {
+        "code": "EVENT_MATERIAL_DENIED",
+        "reason": "duplicate/empty array value",
+        "callbacks": "0"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/schema-e1576b72-8418-40cf-b160-32fb3acc4887/material-unknown/rejection.properties",
+      "values": {
+        "code": "EVENT_MATERIAL_DENIED",
+        "reason": "unknown MATERIAL.x",
+        "callbacks": "0"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/schema-e1576b72-8418-40cf-b160-32fb3acc4887/output-object/rejection.properties",
+      "values": {
+        "code": "EVENT_MATERIAL_DENIED",
+        "reason": "JSON type",
+        "callbacks": "0"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/schema-e1576b72-8418-40cf-b160-32fb3acc4887/owner-unknown/rejection.properties",
+      "values": {
+        "code": "EVENT_MATERIAL_DENIED",
+        "reason": "unknown OWNER.x",
+        "callbacks": "0"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/schema-e1576b72-8418-40cf-b160-32fb3acc4887/parent-duplicate/rejection.properties",
+      "values": {
+        "code": "EVENT_MATERIAL_DENIED",
+        "reason": "duplicate/empty array value",
+        "callbacks": "0"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/schema-e1576b72-8418-40cf-b160-32fb3acc4887/provenance-type/rejection.properties",
+      "values": {
+        "code": "EVENT_MATERIAL_DENIED",
+        "reason": "JSON type",
+        "callbacks": "0"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/schema-e1576b72-8418-40cf-b160-32fb3acc4887/root-missing/rejection.properties",
+      "values": {
+        "code": "EVENT_MATERIAL_DENIED",
+        "reason": "missing ROOT",
+        "callbacks": "0"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/schema-e1576b72-8418-40cf-b160-32fb3acc4887/schema-not-one/rejection.properties",
+      "values": {
+        "code": "EVENT_MATERIAL_DENIED",
+        "reason": "integer range",
+        "callbacks": "0"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/schema-e1576b72-8418-40cf-b160-32fb3acc4887/scope-unknown/rejection.properties",
+      "values": {
+        "code": "EVENT_MATERIAL_DENIED",
+        "reason": "unknown SCOPE.x",
+        "callbacks": "0"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/schema-e1576b72-8418-40cf-b160-32fb3acc4887/state-missing-null/rejection.properties",
+      "values": {
+        "code": "EVENT_MATERIAL_DENIED",
+        "reason": "missing STATE",
+        "callbacks": "0"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/schema-e1576b72-8418-40cf-b160-32fb3acc4887/window-float/rejection.properties",
+      "values": {
+        "code": "EVENT_MATERIAL_DENIED",
+        "reason": "JSON type",
+        "callbacks": "0"
+      }
+    },
+    {
+      "file": ".local/iam-o2b-f2c1-material/peers/semantic-4345bfc3-56ae-431d-b737-fe48018de870/summary.properties",
+      "values": {
+        "group": "semantic",
+        "completed": "true"
+      }
+    }
+  ]
+}

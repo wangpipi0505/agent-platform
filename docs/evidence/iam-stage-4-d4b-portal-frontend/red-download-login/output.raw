@@ -1,0 +1,58 @@
+
+ RUN  v4.1.12 G:/207/项目/算法重组工具/代码/agent-platform/web
+
+ ❯ tests/login.test.ts (2 tests | 1 failed | 1 skipped) 7ms
+   × D4b late development login cannot mutate a later identity 6ms
+ ❯ tests/portal-auth.test.ts (16 tests | 1 failed | 15 skipped) 8ms
+   × D4b late artifact blob cannot create a download after session change 8ms
+
+ Test Files  2 failed (2)
+      Tests  2 failed | 16 skipped (18)
+   Start at  04:14:27
+   Duration  285ms (transform 88ms, setup 0ms, import 318ms, tests 15ms, environment 0ms)
+
+stderr | tests/login.test.ts > D4b late development login cannot mutate a later identity
+[🍍]: Pinia instance not found in context. This falls back to the global activePinia which exposes you to cross-request pollution on the server. Most of the time, it means you are calling "useStore()" in the wrong place.
+Read https://vuejs.org/guide/reusability/composables.html to learn more
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/login.test.ts > D4b late development login cannot mutate a later identity
+AssertionError: promise resolved "'old'" instead of rejecting
+
+- Expected:
+Error {
+  "message": "rejected promise",
+}
+
++ Received:
+"old"
+
+ ❯ tests/login.test.ts:14:22
+     12|  vi.stubGlobal('fetch',()=>new Promise<Response>(r=>resolve=r));const …
+     13|  resolve(new Response(JSON.stringify({code:'OK',data:{token:'old',user…
+     14|  await expect(pending).rejects.toMatchObject({name:'AbortError'});expe…
+       |                      ^
+     15| });
+     16|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/portal-auth.test.ts > D4b late artifact blob cannot create a download after session change
+AssertionError: expected ReferenceError: document is not defined to match object { name: 'AbortError' }
+
+- Expected
++ Received
+
+- {
+-   "name": "AbortError",
++ ReferenceError {
++   "message": "document is not defined",
+  }
+
+ ❯ tests/portal-auth.test.ts:16:91
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+

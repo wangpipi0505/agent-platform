@@ -1,0 +1,18 @@
+Compiled from "PortalRunEventsSse.java"
+final class cn.agentplatform.gateway.infra.PortalRunEventsSse$RequestSlot {
+  private org.apache.catalina.connector.Response response;
+  private cn.agentplatform.gateway.infra.PortalRunEventsSse$WrappedProcessor origin;
+  private org.apache.tomcat.util.net.SocketWrapperBase<?> originalSocket;
+  private cn.agentplatform.gateway.infra.PortalRunEventsSse$State state;
+  private java.lang.Thread requestThread;
+  private boolean armed;
+  private boolean used;
+  private boolean claimed;
+  cn.agentplatform.gateway.infra.PortalRunEventsSse$RequestSlot(org.apache.catalina.connector.Response, cn.agentplatform.gateway.infra.PortalRunEventsSse$WrappedProcessor, org.apache.tomcat.util.net.SocketWrapperBase<?>);
+  synchronized void requireOriginal(jakarta.servlet.http.HttpServletRequest, jakarta.servlet.http.HttpServletResponse);
+  synchronized void reject();
+  synchronized void arm(cn.agentplatform.gateway.infra.PortalRunEventsSse$State);
+  void abort(cn.agentplatform.gateway.infra.PortalRunEventsSse$State);
+  synchronized void disarm(cn.agentplatform.gateway.infra.PortalRunEventsSse$State);
+  synchronized void invalidate();
+}

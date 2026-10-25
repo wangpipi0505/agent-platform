@@ -1,0 +1,155 @@
+skill-registry/src/main/java\cn\agentplatform\skill\infra\SkillClients.java:9:import org.springframework.web.client.RestClient;
+skill-registry/src/main/java\cn\agentplatform\skill\infra\SkillClients.java:15:    private final RestClient client;
+skill-registry/src/main/java\cn\agentplatform\skill\infra\SkillClients.java:21:        client = RestClient.builder().requestFactory(factory).build();
+skill-registry/src/main/java\cn\agentplatform\skill\infra\SkillClients.java:41:                                    .uri(url)
+skill-registry/src/main/java\cn\agentplatform\skill\infra\SkillClients.java:46:                                    .uri(url)
+skill-registry/src/main/java\cn\agentplatform\skill\infra\HttpAsyncAdapter.java:13:import org.springframework.web.client.RestClient;
+skill-registry/src/main/java\cn\agentplatform\skill\infra\HttpAsyncAdapter.java:367:    private RestClient.RequestBodySpec request(
+skill-registry/src/main/java\cn\agentplatform\skill\infra\HttpAsyncAdapter.java:374:                RestClient.builder()
+skill-registry/src/main/java\cn\agentplatform\skill\infra\HttpAsyncAdapter.java:378:                        .uri(java.net.URI.create(endpoint))
+skill-registry/src/main/java\cn\agentplatform\skill\infra\SkillAdapters.java:13:import org.springframework.web.client.RestClient;
+skill-registry/src/main/java\cn\agentplatform\skill\infra\SkillAdapters.java:255:            var client = RestClient.builder().requestFactory(factory).build();
+skill-registry/src/main/java\cn\agentplatform\skill\infra\SkillAdapters.java:258:                            ? client.method(httpMethod).uri(java.net.URI.create(endpoint))
+skill-registry/src/main/java\cn\agentplatform\skill\infra\SkillAdapters.java:259:                            : client.method(httpMethod).uri(endpoint);
+model-gateway/src/main/java\cn\agentplatform\model\api\ModelController.java:80:    @GetMapping("/internal/model-entries/{id}")
+model-gateway/src/main/java\cn\agentplatform\model\api\ModelController.java:85:    @PostMapping("/internal/model-bindings/freeze")
+model-gateway/src/main/java\cn\agentplatform\model\api\ModelController.java:90:    @PostMapping("/internal/model-bindings/validate")
+model-gateway/src/main/java\cn\agentplatform\model\api\ModelController.java:96:    @GetMapping("/internal/statistics")
+model-gateway/src/main/java\cn\agentplatform\model\api\ModelController.java:101:    @PostMapping("/internal/statistics/query")
+model-gateway/src/main/java\cn\agentplatform\model\api\ModelController.java:106:    @PostMapping("/internal/model/measure")
+model-gateway/src/main/java\cn\agentplatform\model\api\ModelController.java:111:    @PostMapping("/internal/model/chat")
+model-gateway/src/main/java\cn\agentplatform\model\api\ModelController.java:117:            value = "/internal/model/chat/stream",
+platform-gateway/src/main/java\cn\agentplatform\gateway\application\IntegrationAccess.java:18:import org.springframework.web.client.RestClient;
+platform-gateway/src/main/java\cn\agentplatform\gateway\application\IntegrationAccess.java:27:    private final RestClient client;
+platform-gateway/src/main/java\cn\agentplatform\gateway\application\IntegrationAccess.java:43:        client = RestClient.builder().requestFactory(factory).build();
+platform-gateway/src/main/java\cn\agentplatform\gateway\application\IntegrationAccess.java:77:                    .uri(appUrl + "/internal/integration-credentials/" + id)
+platform-gateway/src/main/java\cn\agentplatform\gateway\application\IntegrationAccess.java:147:        if (!IntegrationPolicy.allowedPath(path, req.getMethod(), app))
+platform-gateway/src/main/java\cn\agentplatform\gateway\application\IntegrationAccess.java:154:                            .uri(engineUrl + "/v1/runs/" + runId)
+platform-gateway/src/main/java\cn\agentplatform\gateway\application\IntegrationAccess.java:170:                            .uri(appUrl + "/internal/integration-origins?origin={origin}", origin)
+skill-registry/src/main/java\cn\agentplatform\skill\application\SkillGovernance.java:61:                                    engineUrl + "/internal/skill-draft-tests",
+skill-registry/src/main/java\cn\agentplatform\skill\application\SkillGovernance.java:139:                            modelUrl + "/internal/model/chat",
+skill-registry/src/main/java\cn\agentplatform\skill\application\SkillExecution.java:57:        var registration = clients.get(engineUrl + "/internal/tool-calls/" + callId);
+skill-registry/src/main/java\cn\agentplatform\skill\application\SkillExecution.java:91:                var permission = clients.get(engineUrl + "/internal/tool-calls/" + callId);
+skill-registry/src/main/java\cn\agentplatform\skill\application\SkillExecution.java:127:            var approval = clients.get(engineUrl + "/internal/tool-calls/" + callId + "/approval");
+skill-registry/src/main/java\cn\agentplatform\skill\application\SkillExecution.java:151:                        engineUrl + "/internal/tool-calls/" + callId + "/claim",
+skill-registry/src/main/java\cn\agentplatform\skill\application\SkillExecution.java:275:                                engineUrl + "/internal/tool-calls/" + callId + "/submitted",
+skill-registry/src/main/java\cn\agentplatform\skill\application\SkillExecution.java:446:                        engineUrl + "/internal/tool-calls/" + call + "/claim",
+skill-registry/src/main/java\cn\agentplatform\skill\application\SkillExecution.java:599:        var authority = clients.get(engineUrl + "/internal/tool-calls/" + callId);
+skill-registry/src/main/java\cn\agentplatform\skill\application\SkillExecution.java:1077:                clients.get(engineUrl + "/internal/tool-calls/" + callId), fact, contract);
+skill-registry/src/main/java\cn\agentplatform\skill\application\SkillExecution.java:1165:                String url = engineUrl + "/internal/tool-calls/" + call + "/fact";
+skill-registry/src/main/java\cn\agentplatform\skill\application\SkillCatalog.java:549:        return clients.get(appUrl + "/internal/skills/" + code + "/references");
+monitor/src/main/java\cn\agentplatform\monitor\application\StatisticsService.java:11:import org.springframework.web.client.RestClient;
+monitor/src/main/java\cn\agentplatform\monitor\application\StatisticsService.java:27:    private final RestClient http;
+monitor/src/main/java\cn\agentplatform\monitor\application\StatisticsService.java:41:        http = RestClient.builder().requestFactory(factory).build();
+monitor/src/main/java\cn\agentplatform\monitor\application\StatisticsService.java:80:        var uri = UriComponentsBuilder.fromUriString(engineUrl + "/internal/statistics");
+monitor/src/main/java\cn\agentplatform\monitor\application\StatisticsService.java:101:                        modelUrl + "/internal/statistics/query",
+monitor/src/main/java\cn\agentplatform\monitor\application\StatisticsService.java:235:        return source("GET", engineUrl + "/internal/statistics/runs/" + id, null);
+monitor/src/main/java\cn\agentplatform\monitor\application\StatisticsService.java:260:            RestClient.RequestHeadersSpec<?> request;
+monitor/src/main/java\cn\agentplatform\monitor\application\StatisticsService.java:264:                                .uri(url)
+monitor/src/main/java\cn\agentplatform\monitor\application\StatisticsService.java:271:                                .uri(url)
+skill-registry/src/main/java\cn\agentplatform\skill\application\SkillCallbacks.java:225:        var authority = clients.get(engineUrl + "/internal/tool-calls/" + call);
+engine-runtime/src/main/java\cn\agentplatform\engine\infra\TestInputClient.java:14:    private final RestClient http;
+engine-runtime/src/main/java\cn\agentplatform\engine\infra\TestInputClient.java:25:        http = RestClient.builder().requestFactory(f).build();
+engine-runtime/src/main/java\cn\agentplatform\engine\infra\TestInputClient.java:29:        return call("GET", app + "/internal/app-drafts/" + id, null, actor);
+engine-runtime/src/main/java\cn\agentplatform\engine\infra\TestInputClient.java:33:        return call("POST", monitor + "/internal/datasets/promotions", payload, actor);
+engine-runtime/src/main/java\cn\agentplatform\engine\infra\TestInputClient.java:40:                            .uri(url)
+engine-runtime/src/main/java\cn\agentplatform\engine\infra\TestInputClient.java:49:        } catch (RestClientResponseException e) {
+engine-runtime/src/main/java\cn\agentplatform\engine\infra\TestInputClient.java:55:        } catch (RestClientException e) {
+platform-gateway/src/main/java\cn\agentplatform\gateway\domain\Routes.java:4:public final class Routes {
+platform-gateway/src/main/java\cn\agentplatform\gateway\domain\Routes.java:5:    private Routes() {}
+monitor/src/main/java\cn\agentplatform\monitor\application\EvaluationService.java:11:import org.springframework.web.client.RestClient;
+monitor/src/main/java\cn\agentplatform\monitor\application\EvaluationService.java:19:    private final RestClient http = client();
+monitor/src/main/java\cn\agentplatform\monitor\application\EvaluationService.java:33:    private static RestClient client() {
+monitor/src/main/java\cn\agentplatform\monitor\application\EvaluationService.java:37:        return RestClient.builder().requestFactory(factory).build();
+monitor/src/main/java\cn\agentplatform\monitor\application\EvaluationService.java:81:                                .uri(url)
+monitor/src/main/java\cn\agentplatform\monitor\application\EvaluationService.java:90:                                .uri(url)
+monitor/src/main/java\cn\agentplatform\monitor\application\EvaluationService.java:136:                                + "/internal/apps/"
+monitor/src/main/java\cn\agentplatform\monitor\application\EvaluationService.java:239:                                engineUrl + "/internal/evaluations/run",
+monitor/src/main/java\cn\agentplatform\monitor\application\EvaluationService.java:404:        return callRaw("GET", engineUrl + "/internal/" + kind, Map.of());
+monitor/src/main/java\cn\agentplatform\monitor\application\EvaluationService.java:414:        return call("POST", engineUrl + "/internal/runs/" + run + "/approvals/" + node, b);
+monitor/src/main/java\cn\agentplatform\monitor\api\EvaluationController.java:40:    @GetMapping("/internal/evaluations/accepted")
+skill-registry/src/main/java\cn\agentplatform\skill\api\SkillController.java:134:    @GetMapping("/internal/statistics")
+skill-registry/src/main/java\cn\agentplatform\skill\api\SkillController.java:146:    @GetMapping("/internal/skills/{code}")
+skill-registry/src/main/java\cn\agentplatform\skill\api\SkillController.java:153:    @GetMapping("/internal/skill-versions/{id}")
+skill-registry/src/main/java\cn\agentplatform\skill\api\SkillController.java:159:    @PostMapping("/internal/skills/{code}/execute")
+skill-registry/src/main/java\cn\agentplatform\skill\api\SkillController.java:164:    @GetMapping("/internal/skill-facts/{callId}")
+skill-registry/src/main/java\cn\agentplatform\skill\api\SkillController.java:169:    @PostMapping("/internal/skill-facts/{callId}/reconcile")
+skill-registry/src/main/java\cn\agentplatform\skill\api\SkillController.java:174:    @PostMapping("/internal/skill-facts/{callId}/retry")
+skill-registry/src/main/java\cn\agentplatform\skill\api\SkillController.java:179:    @PostMapping("/internal/skill-facts/{callId}/reproduce-artifacts")
+engine-runtime/src/main/java\cn\agentplatform\engine\infra\RuntimeClients.java:9:import org.springframework.web.client.RestClient;
+engine-runtime/src/main/java\cn\agentplatform\engine\infra\RuntimeClients.java:20:    private final RestClient http = RestClient.builder().requestFactory(requestFactory()).build();
+engine-runtime/src/main/java\cn\agentplatform\engine\infra\RuntimeClients.java:21:    private final RestClient probes = probeClient();
+engine-runtime/src/main/java\cn\agentplatform\engine\infra\RuntimeClients.java:23:    private static RestClient probeClient() {
+engine-runtime/src/main/java\cn\agentplatform\engine\infra\RuntimeClients.java:26:        return RestClient.builder().requestFactory(factory).build();
+engine-runtime/src/main/java\cn\agentplatform\engine\infra\RuntimeClients.java:40:                (path.startsWith("/internal/skill-facts/") ? probes : http)
+engine-runtime/src/main/java\cn\agentplatform\engine\infra\RuntimeClients.java:42:                        .uri(base(service) + path)
+engine-runtime/src/main/java\cn\agentplatform\engine\infra\RuntimeClients.java:51:                        .uri(base(service) + path)
+engine-runtime/src/main/java\cn\agentplatform\engine\infra\RuntimeClients.java:85:                                    .create(model + "/internal/model/chat/stream")
+skill-registry/src/main/java\cn\agentplatform\skill\api\SkillCallbackController.java:22:    @PostMapping("/internal/skill-jobs/{callId}/callback")
+skill-registry/src/main/java\cn\agentplatform\skill\api\ReconciliationProofController.java:17:    @GetMapping("/internal/skill-facts/{callId}/reconciliation-proofs/{attemptId}")
+monitor/src/main/java\cn\agentplatform\monitor\api\DatasetController.java:18:    @PostMapping("/internal/datasets/promotions")
+platform-gateway/src/main/java\cn\agentplatform\gateway\domain\IntegrationPolicy.java:67:    public static boolean allowedPath(String path, String method, String app) {
+platform-gateway/src/main/java\cn\agentplatform\gateway\api\GatewayController.java:5:import cn.agentplatform.gateway.domain.Routes;
+platform-gateway/src/main/java\cn\agentplatform\gateway\api\GatewayController.java:12:import org.springframework.web.client.RestClient;
+platform-gateway/src/main/java\cn\agentplatform\gateway\api\GatewayController.java:38:            service = Routes.service(req.getRequestURI());
+platform-gateway/src/main/java\cn\agentplatform\gateway\api\GatewayController.java:114:    @GetMapping("/v3/api-docs")
+platform-gateway/src/main/java\cn\agentplatform\gateway\api\GatewayController.java:120:        var client = RestClient.builder().requestFactory(factory).build();
+platform-gateway/src/main/java\cn\agentplatform\gateway\api\GatewayController.java:127:                                .uri(base(service) + "/v3/api-docs")
+engine-runtime/src/main/java\cn\agentplatform\engine\application\AgentDriver.java:255:            JsonNode definition = clients.get("skill", "/internal/skills/" + code, actor);
+engine-runtime/src/main/java\cn\agentplatform\engine\application\AgentDriver.java:292:            result = clients.post("skill", "/internal/skills/" + code + "/execute", req, actor);
+engine-runtime/src/main/java\cn\agentplatform\engine\application\AgentDriver.java:293:        } catch (org.springframework.web.client.RestClientException transport) {
+engine-runtime/src/main/java\cn\agentplatform\engine\application\ChatSessions.java:27:        JsonNode snapshot = clients.get("app", "/internal/apps/" + code + "/published", actor);
+engine-runtime/src/main/java\cn\agentplatform\engine\application\ChatSessions.java:81:            clients.get("app", "/internal/apps/" + code + "/published", actor);
+model-gateway/src/main/java\cn\agentplatform\model\application\ModelCalls.java:21:import org.springframework.web.client.RestClient;
+model-gateway/src/main/java\cn\agentplatform\model\application\ModelCalls.java:126:            var headers = client(10000).get().uri(url);
+model-gateway/src/main/java\cn\agentplatform\model\application\ModelCalls.java:153:                            .uri(
+model-gateway/src/main/java\cn\agentplatform\model\application\ModelCalls.java:332:            var restBuilder = RestClient.builder().requestFactory(factory);
+model-gateway/src/main/java\cn\agentplatform\model\application\ModelCalls.java:384:                            .restClientBuilder(restBuilder)
+model-gateway/src/main/java\cn\agentplatform\model\application\ModelCalls.java:522:            var outgoing = client(10000).post().uri(tokenizer);
+model-gateway/src/main/java\cn\agentplatform\model\application\ModelCalls.java:692:    private static RestClient client(int timeout) {
+model-gateway/src/main/java\cn\agentplatform\model\application\ModelCalls.java:696:        return RestClient.builder().requestFactory(f).build();
+engine-runtime/src/main/java\cn\agentplatform\engine\infra\ExecutionRecovery.java:61:        JsonNode proof = clients.get("skill", "/internal/skill-facts/" + id, actor);
+engine-runtime/src/main/java\cn\agentplatform\engine\application\ControlledReplay.java:329:                            "/internal/skill-facts/" + saved.get("id") + "/reproduce-artifacts",
+app-management/src/main/java\cn\agentplatform\app\application\AppService.java:11:import org.springframework.web.client.RestClient;
+app-management/src/main/java\cn\agentplatform\app\application\AppService.java:23:    private final RestClient http = client();
+app-management/src/main/java\cn\agentplatform\app\application\AppService.java:41:    private static RestClient client() {
+app-management/src/main/java\cn\agentplatform\app\application\AppService.java:45:        return RestClient.builder().requestFactory(factory).build();
+app-management/src/main/java\cn\agentplatform\app\application\AppService.java:627:                            "/internal/model-bindings/freeze",
+app-management/src/main/java\cn\agentplatform\app\application\AppService.java:686:                            .uri(base + path)
+app-management/src/main/java\cn\agentplatform\app\application\AppService.java:703:                            .uri(base + path)
+app-management/src/main/java\cn\agentplatform\app\application\AppService.java:736:                                        "/internal/graphs/validate",
+app-management/src/main/java\cn\agentplatform\app\application\AppService.java:753:                                "/internal/model-bindings/validate",
+app-management/src/main/java\cn\agentplatform\app\application\AppService.java:772:                                    "/internal/evaluations/accepted?appCode="
+app-management/src/main/java\cn\agentplatform\app\application\AppService.java:916:        var skill = remote(skillUrl, "/internal/skills/" + code);
+app-management/src/main/java\cn\agentplatform\app\application\AppService.java:964:            var model = remote(modelUrl, "/internal/model-entries/" + id);
+app-management/src/main/java\cn\agentplatform\app\application\AppService.java:1025:                        "/internal/model-bindings/validate",
+app-management/src/main/java\cn\agentplatform\app\api\AppController.java:125:    @GetMapping("/internal/apps/{code}/candidate")
+app-management/src/main/java\cn\agentplatform\app\api\AppController.java:133:    @GetMapping("/internal/apps/{code}/versions/{version}")
+app-management/src/main/java\cn\agentplatform\app\api\AppController.java:142:    @GetMapping("/internal/apps/{code}/snapshot")
+app-management/src/main/java\cn\agentplatform\app\api\AppController.java:154:    @GetMapping("/internal/apps/{code}/published")
+app-management/src/main/java\cn\agentplatform\app\api\AppController.java:159:    @GetMapping("/internal/skills/{code}/references")
+app-management/src/main/java\cn\agentplatform\app\api\AppController.java:175:    @GetMapping("/internal/prompt-templates/{code}/versions/{version}")
+app-management/src/main/java\cn\agentplatform\app\api\DraftMetadataController.java:16:    @GetMapping("/internal/app-drafts/{id}")
+app-management/src/main/java\cn\agentplatform\app\api\IntegrationController.java:42:    @GetMapping("/internal/integration-origins")
+app-management/src/main/java\cn\agentplatform\app\api\IntegrationController.java:47:    @GetMapping("/internal/integration-credentials/{id}")
+app-management/src/main/java\cn\agentplatform\app\api\IntegrationController.java:52:    @GetMapping("/internal/integration/{code}/{biz}")
+engine-runtime/src/main/java\cn\agentplatform\engine\application\ModelExchange.java:175:                                    r -> clients.post("model", "/internal/model/measure", r, actor),
+engine-runtime/src/main/java\cn\agentplatform\engine\application\ModelExchange.java:213:                                                        "/internal/model/measure",
+engine-runtime/src/main/java\cn\agentplatform\engine\api\RunController.java:40:    @PostMapping("/internal/evaluations/run")
+engine-runtime/src/main/java\cn\agentplatform\engine\api\RunController.java:360:    @PostMapping("/internal/runs/{id}/approvals/{nid}")
+engine-runtime/src/main/java\cn\agentplatform\engine\api\RunController.java:366:    @GetMapping("/internal/approvals")
+engine-runtime/src/main/java\cn\agentplatform\engine\api\RunController.java:371:    @GetMapping("/internal/statistics")
+engine-runtime/src/main/java\cn\agentplatform\engine\api\RunController.java:384:    @GetMapping("/internal/statistics/runs/{id}")
+engine-runtime/src/main/java\cn\agentplatform\engine\api\RunController.java:389:    @GetMapping("/internal/audit")
+engine-runtime/src/main/java\cn\agentplatform\engine\api\RunController.java:404:    @PostMapping("/internal/graphs/validate")
+engine-runtime/src/main/java\cn\agentplatform\engine\api\SkillDraftTestController.java:18:    @PostMapping("/internal/skill-draft-tests")
+engine-runtime/src/main/java\cn\agentplatform\engine\application\RunService.java:101:                        "app", "/internal/apps/" + original.get("app_code") + "/published", actor);
+engine-runtime/src/main/java\cn\agentplatform\engine\application\RunService.java:242:                            ? "/internal/apps/" + code + "/snapshot?draft=true"
+engine-runtime/src/main/java\cn\agentplatform\engine\application\RunService.java:244:                                    ? "/internal/apps/"
+engine-runtime/src/main/java\cn\agentplatform\engine\application\RunService.java:251:                                            ? "/internal/apps/"
+engine-runtime/src/main/java\cn\agentplatform\engine\application\RunService.java:255:                                            : "/internal/apps/" + code + "/published";
+engine-runtime/src/main/java\cn\agentplatform\engine\application\RunService.java:517:        JsonNode version = clients.get("skill", "/internal/skill-versions/" + id, actor);
+engine-runtime/src/main/java\cn\agentplatform\engine\application\RunService.java:696:                                "/internal/model-bindings/freeze",
+engine-runtime/src/main/java\cn\agentplatform\engine\application\RunService.java:775:                                    "/internal/skills/" + code + "?version=" + version,
+engine-runtime/src/main/java\cn\agentplatform\engine\application\RunService.java:868:                                "/internal/prompt-templates/" + code + "/versions/" + version,
+engine-runtime/src/main/java\cn\agentplatform\engine\api\ToolCallController.java:11:@RequestMapping("/internal/tool-calls")

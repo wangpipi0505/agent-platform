@@ -1,0 +1,1949 @@
+{
+  "O1B_BUDGET": [
+    {
+      "over": 2097153,
+      "exact": 2097152,
+      "bufferMaximum": 2097152,
+      "baseUtf8": 876,
+      "error": {
+        "code": "RUN_STATUS_TOO_LARGE",
+        "message": "��������״̬��Ӧ�������ӿ�������С",
+        "data": null,
+        "traceId": null
+      }
+    }
+  ],
+  "O1B_STREAM_WINDOW": [
+    {
+      "mode": "expiry",
+      "status": 403,
+      "error": {
+        "code": "AUTHORITY_EXPIRED",
+        "message": "��ǰ��Ȩ�ѹ���",
+        "data": null,
+        "traceId": null
+      },
+      "payloadReads": 16
+    },
+    {
+      "mode": "close",
+      "status": 403,
+      "error": {
+        "code": "AUTHORITY_CONTEXT_MISSING",
+        "message": "ȱ�ٵ�ǰ��Ȩ������",
+        "data": null,
+        "traceId": null
+      },
+      "payloadReads": 16
+    },
+    {
+      "mode": "replace",
+      "status": 403,
+      "error": {
+        "code": "SYS-AUTH-403",
+        "message": "��ǰ��Ȩ�������˲���",
+        "data": null,
+        "traceId": null
+      },
+      "payloadReads": 16
+    }
+  ],
+  "O1B_TERMINAL_WINDOW": [
+    {
+      "mode": "expiry",
+      "boundary": "manifest",
+      "payloadReads": 0
+    },
+    {
+      "mode": "close",
+      "boundary": "manifest",
+      "payloadReads": 0
+    },
+    {
+      "mode": "expiry",
+      "boundary": "payload",
+      "payloadReads": 1
+    },
+    {
+      "mode": "close",
+      "boundary": "payload",
+      "payloadReads": 1
+    },
+    {
+      "mode": "expiry",
+      "boundary": "commit",
+      "payloadReads": 16
+    },
+    {
+      "mode": "close",
+      "boundary": "commit",
+      "payloadReads": 16
+    },
+    {
+      "mode": "expiry",
+      "boundary": "compose",
+      "payloadReads": 16
+    },
+    {
+      "mode": "close",
+      "boundary": "compose",
+      "payloadReads": 16
+    },
+    {
+      "mode": "expiry",
+      "boundary": "serialized",
+      "payloadReads": 16
+    },
+    {
+      "mode": "close",
+      "boundary": "serialized",
+      "payloadReads": 16
+    }
+  ],
+  "O1B_PREFLIGHT": [
+    {
+      "mutation": "delete from engine.material_scope where run_id=? and kind='run-output'",
+      "sqlCount": 6,
+      "payloadReads": 0
+    },
+    {
+      "mutation": "delete from engine.material_scope where run_id=? and kind='node-error'",
+      "sqlCount": 24,
+      "payloadReads": 0
+    },
+    {
+      "mutation": "delete from engine.material_scope where run_id=? and kind='run-event'",
+      "sqlCount": 106,
+      "payloadReads": 0
+    },
+    {
+      "mutation": "update engine.material_scope set scope_sha256=repeat('c',64) where run_id=? and kind='run-event'",
+      "sqlCount": 92,
+      "payloadReads": 0
+    },
+    {
+      "mutation": "update engine.material_scope set material_revision=material_revision+100000,material_version=(material_revision+100000)::text where run_id=? and kind='run-event'",
+      "sqlCount": 92,
+      "payloadReads": 0
+    },
+    {
+      "mutation": "update engine.material_scope set scope=jsonb_set(scope,'{parentScopeSha256}','[]'::jsonb) where run_id=? and kind='run-event'",
+      "sqlCount": 92,
+      "payloadReads": 0
+    },
+    {
+      "mutation": "update engine.material_scope set scope=jsonb_set(scope,'{owner,principalId}',to_jsonb('bob'::text)) where run_id=? and kind='run-inputs'",
+      "sqlCount": 3,
+      "payloadReads": 0
+    },
+    {
+      "mutation": "update engine.run_authority set initial_ceiling_sha256=repeat('b',64) where run_id=?",
+      "sqlCount": 2,
+      "payloadReads": 0
+    },
+    {
+      "mutation": "update engine.run_authority set accepted_snapshot_sha256=repeat('a',64) where run_id=?",
+      "sqlCount": 3,
+      "payloadReads": 0
+    },
+    {
+      "mutation": "update engine.run set trigger_type='DEBUG',app_version_id=null,debug_snapshot='{}'::jsonb,controlled_draft_skill_version_id=1,controlled_draft_skill_digest=repeat('a',64) where id=?",
+      "sqlCount": 1,
+      "payloadReads": 0
+    },
+    {
+      "mutation": "update engine.run set trigger_type='EVALUATION' where id=?",
+      "sqlCount": 1,
+      "payloadReads": 0
+    }
+  ],
+  "O1B_PAYLOAD_REJECTION": [
+    {
+      "mutation": "update engine.run set snapshot=jsonb_set(snapshot,'{candidateSha256}',to_jsonb(repeat('d',64))) where id=?",
+      "payloadReads": 1
+    },
+    {
+      "mutation": "update engine.run_authority set resource_digest=repeat('e',64) where run_id=?",
+      "payloadReads": 2
+    },
+    {
+      "mutation": "update engine.run set version_refs='{\"appVer\":2}'::jsonb where id=?",
+      "payloadReads": 2
+    }
+  ],
+  "O1B_SIGNED_PURPOSE": [
+    {
+      "status": 401,
+      "field": "caller",
+      "authorityDelta": 0
+    },
+    {
+      "status": 401,
+      "field": "target",
+      "authorityDelta": 0
+    },
+    {
+      "status": 403,
+      "field": "action",
+      "authorityDelta": 0
+    },
+    {
+      "status": 401,
+      "field": "authority_mode",
+      "authorityDelta": 0
+    },
+    {
+      "status": 403,
+      "field": "source_kind",
+      "authorityDelta": 0
+    },
+    {
+      "status": 403,
+      "field": "origin_kind",
+      "authorityDelta": 0
+    },
+    {
+      "status": 403,
+      "field": "snapshotSha",
+      "authorityDelta": 1
+    }
+  ],
+  "O1B_PARTIAL_IO": [
+    {
+      "delegateClosed": false,
+      "actualRawUtf8Bytes": 456,
+      "peerBusinessBytes": 128,
+      "authorityDelta": 2,
+      "closeAttemptRejectedByMvc": true,
+      "injectedBusinessWriteBytes": 128,
+      "wire": "HTTP/1.1 200 \r\nX-Content-Type-Options: nosniff\r\nX-XSS-Protection: 0\r\nCache-Control: no-cache, no-store, max-age=0, must-revalidate\r\nPragma: no-cache\r\nExpires: 0\r\nX-Frame-Options: DENY\r\nContent-Type: application/json;charset=UTF-8\r\nTransfer-Encoding: chunked\r\nDate: Tue, 20 Oct 2026 22:09:49 GMT\r\nConnection: close\r\n\r\n80\r\n{\"code\":\"OK\",\"message\":\"\",\"data\":{\"runId\":\"r_0492a502184040d78c55afcf2a96f923\",\"appCode\":\"app-a\",\"status\":\"PENDING\",\"eventsWater\r\n0\r\n\r\n"
+    }
+  ],
+  "O1B_CONCURRENT_WRITER_EXCEPTION": [
+    {
+      "readerWatermark": 1,
+      "writerStatements": [
+        {
+          "sql": "select id from engine.run where id=? for update",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select r.id,r.public_id,r.tenant_id as run_tenant,r.principal_id as run_principal,r.app_code,r.app_version_id as run_version,a.* from engine.run r join engine.run_authority a on a.run_id=r.id where r.id=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select tenant_id,producer,kind,material_id,material_version,payload_sha256,scope_sha256,scope::text as scope from engine.material_scope where run_id=? and kind in ('run-snapshot','run-inputs','run-version-refs')",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select blocked_reason,last_decision_id from engine.run_authority where run_id=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select distinct on (kind,material_id) tenant_id,producer,kind,material_id,material_version,payload_sha256,scope_sha256,scope::text as scope,material_revision from engine.material_scope where run_id=? and kind not in ('run-snapshot','run-inputs','run-version-refs') order by kind,material_id,material_revision desc",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select run_id from engine.node_instance where id=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select run_id from engine.node_instance where id=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select run_id from engine.node_instance where id=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select run_id from engine.node_instance where id=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select run_id from engine.node_instance where id=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select run_id from engine.node_instance where id=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select run_id from engine.node_instance where id=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select run_id from engine.node_instance where id=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select public_id from engine.run where id=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select public_id from engine.run where id=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select run_id from engine.run_event where id=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select public_id from engine.run where id=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select public_id from engine.run where id=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "update engine.run set output='{\"generation\":\"after\"}'::jsonb,event_seq=event_seq+1 where id=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select event_seq from engine.run where id=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "insert into engine.run_event(run_id,seq,type,payload) values(?,?,'AFTER_SNAPSHOT','{\"generation\":\"after\"}'::jsonb) returning id",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select public_id from engine.run where id=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select nextval(pg_get_serial_sequence('engine.material_scope','material_revision'))",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select output::text from engine.run where id=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "insert into engine.material_scope(run_id,tenant_id,producer,kind,material_id,material_version,payload_sha256,scope_sha256,scope,material_revision) values(?,?,?,?,?,?,?,?,?::jsonb,?)",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select public_id from engine.run where id=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select nextval(pg_get_serial_sequence('engine.material_scope','material_revision'))",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select row_to_json(material)::text from (select id,public_id,app_code,status,event_seq,stop_reason,to_char(started_at at time zone 'UTC','YYYY-MM-DD\"T\"HH24:MI:SS.US\"Z\"') as started_at,to_char(ended_at at time zone 'UTC','YYYY-MM-DD\"T\"HH24:MI:SS.US\"Z\"') as ended_at,mode,trigger_type,output_ref from engine.run where id=?) material",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "insert into engine.material_scope(run_id,tenant_id,producer,kind,material_id,material_version,payload_sha256,scope_sha256,scope,material_revision) values(?,?,?,?,?,?,?,?,?::jsonb,?)",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select run_id from engine.run_event where id=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select scope::text from engine.material_scope where run_id=? and scope_sha256=?",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select nextval(pg_get_serial_sequence('engine.material_scope','material_revision'))",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "select row_to_json(material)::text from (select id,run_id,seq,type,payload,to_char(created_at at time zone 'UTC','YYYY-MM-DD\"T\"HH24:MI:SS.US\"Z\"') as created_at from engine.run_event where id=?) material",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        },
+        {
+          "sql": "insert into engine.material_scope(run_id,tenant_id,producer,kind,material_id,material_version,payload_sha256,scope_sha256,scope,material_revision) values(?,?,?,?,?,?,?,?,?::jsonb,?)",
+          "connection": 1867667237,
+          "isolation": 4,
+          "readOnly": false,
+          "autoCommit": false,
+          "authorityCalls": 13
+        }
+      ],
+      "readerEvents": 1,
+      "readerOutput": {
+        "generation": "before"
+      }
+    }
+  ],
+  "O1B_WIRE": [
+    {
+      "bytes": 855,
+      "status": 200,
+      "response": {
+        "code": "OK",
+        "message": "",
+        "data": {
+          "runId": "r_c929ec8ed10d4ec985aa44e18babf020",
+          "appCode": "app-a",
+          "status": "PENDING",
+          "eventsWatermark": 1,
+          "inputs": {
+            "privateInput": "do-not-return"
+          },
+          "output": {},
+          "fileRefs": [],
+          "error": {},
+          "versionRefs": {
+            "appVer": 1
+          },
+          "nodes": [
+            {
+              "id": 329,
+              "node_def_id": "start",
+              "node_type": "START",
+              "status": "READY",
+              "pause_seq": null,
+              "error": {},
+              "output": {},
+              "started_at": null,
+              "ended_at": null,
+              "nodeInstanceId": 329,
+              "nodeDefId": "start"
+            },
+            {
+              "id": 330,
+              "node_def_id": "end",
+              "node_type": "END",
+              "status": "READY",
+              "pause_seq": null,
+              "error": {},
+              "output": {},
+              "started_at": null,
+              "ended_at": null,
+              "nodeInstanceId": 330,
+              "nodeDefId": "end"
+            }
+          ],
+          "events": [
+            {
+              "seq": 1,
+              "type": "OBSERVATION_FIXTURE",
+              "payload": {
+                "text": "�۲�\n\"",
+                "decimal": 1.2345678901234567,
+                "precise": 1.2345678901234568e+29
+              },
+              "created_at": "2026-10-20T22:09:48.412+00:00"
+            }
+          ],
+          "paused": null
+        },
+        "traceId": null
+      },
+      "payloadReads": 16
+    }
+  ]
+}

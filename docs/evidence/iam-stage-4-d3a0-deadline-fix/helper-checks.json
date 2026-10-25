@@ -1,0 +1,11 @@
+{
+  "command": "node --check docs/evidence/iam-stage-4-d3a0-deadline-fix/finalize.mjs",
+  "firstExitCode": 1,
+  "firstActualError": "SyntaxError: Invalid or unexpected token",
+  "location": "finalize.mjs:15, over-escaped Markdown backticks in a JavaScript template literal",
+  "effect": "Syntax-only check before helper execution; report was untouched and no source/test/target changed.",
+  "correction": "Use plain SHA text and indented Markdown code block instead of backticks in the template.",
+  "secondExitCode": 0,
+  "secondOutput": "",
+  "provenance": "Actual two terminal syntax-check outcomes; no Maven rerun."
+}

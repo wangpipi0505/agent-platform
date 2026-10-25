@@ -1,0 +1,41 @@
+{"name":"explicit development mode is manual and verifies session before workspace","passed":true,"rawStart":0,"rawEnd":3,"devOnly":true}
+{"name":"real axios session and business HTTP, fetch SSE and artifact omit same-origin Cookie","passed":true,"rawStart":3,"rawEnd":16,"cookiePresentInDocument":true,"rawCategories":4,"download":"result.txt"}
+{"name":"late App allSettled/finally and old closures cannot mutate new identity, navigation, message or network","passed":true,"rawStart":16,"rawEnd":28,"oldAllSettledReleased":true,"oldClosuresStopped":true,"newBusy":false}
+{"name":"late real App copy POST cannot navigate new identity or replay a POST","passed":true,"rawStart":28,"rawEnd":33,"postCount":1,"hash":"#/apps"}
+{"name":"late providerOptions and published input consumers remain inside old workspace","passed":true,"rawStart":33,"rawEnd":45,"providerOptionsCleared":true,"schemaIsolated":true}
+{"name":"late artifact blob from actual component cannot click after identity switch","passed":true,"rawStart":45,"rawEnd":52,"downloadClicks":0}
+{"name":"RunDetail stops AUTHORITY_EXPIRED without status/open/cancel/POST growth","passed":true,"rawStart":52,"rawEnd":56,"reason":"AUTHORITY_EXPIRED","consumer":"RunDetail","requestsStable":true,"postStable":true}
+{"name":"RunDetail stops AUTHORITY_DENIED without status/open/cancel/POST growth","passed":true,"rawStart":56,"rawEnd":60,"reason":"AUTHORITY_DENIED","consumer":"RunDetail","requestsStable":true,"postStable":true}
+{"name":"RunDetail stops AUTHORITY_UNAVAILABLE without status/open/cancel/POST growth","passed":true,"rawStart":60,"rawEnd":64,"reason":"AUTHORITY_UNAVAILABLE","consumer":"RunDetail","requestsStable":true,"postStable":true}
+{"name":"DebugPanel stops AUTHORITY_EXPIRED without status/open/cancel/POST growth","passed":true,"rawStart":64,"rawEnd":71,"reason":"AUTHORITY_EXPIRED","consumer":"DebugPanel","requestsStable":true,"postStable":true}
+{"name":"DebugPanel stops AUTHORITY_DENIED without status/open/cancel/POST growth","passed":true,"rawStart":71,"rawEnd":78,"reason":"AUTHORITY_DENIED","consumer":"DebugPanel","requestsStable":true,"postStable":true}
+{"name":"DebugPanel stops AUTHORITY_UNAVAILABLE without status/open/cancel/POST growth","passed":true,"rawStart":78,"rawEnd":85,"reason":"AUTHORITY_UNAVAILABLE","consumer":"DebugPanel","requestsStable":true,"postStable":true}
+{"name":"RunDetail stops named IAM 503 with manual recovery entry","passed":true,"rawStart":85,"rawEnd":89,"consumer":"RunDetail","code":"IAM_AUTHORITY_UNAVAILABLE","requestsStable":true}
+{"name":"DebugPanel stops named IAM 503 with manual recovery entry","passed":true,"rawStart":89,"rawEnd":96,"consumer":"DebugPanel","code":"IAM_AUTHORITY_UNAVAILABLE","requestsStable":true}
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+ExpectError: expect(received).toBe(expected) // Object.is equality
+
+Expected: true
+Received: false
+    at captureRawStack (G:\207\项目\算法重组工具\代码\agent-platform\web\node_modules\playwright-core\lib\coreBundle.js:9282:17)
+    at callMatcherAsStep (G:\207\项目\算法重组工具\代码\agent-platform\web\node_modules\playwright\lib\matchers\expect.js:13316:57)
+    at Object.toBe (G:\207\项目\算法重组工具\代码\agent-platform\web\node_modules\playwright\lib\matchers\expect.js:13308:23)
+    at G:\207\项目\算法重组工具\代码\agent-platform\web\tests\portal-browser.mjs:124:272
+    at async run (G:\207\项目\算法重组工具\代码\agent-platform\web\tests\portal-browser.mjs:84:128)
+    at async file:///G:/207/%E9%A1%B9%E7%9B%AE/%E7%AE%97%E6%B3%95%E9%87%8D%E7%BB%84%E5%B7%A5%E5%85%B7/%E4%BB%A3%E7%A0%81/agent-platform/web/tests/portal-browser.mjs:123:2 {
+  matcherResult: {
+    actual: false,
+    expected: true,
+    message: 'expect(received).toBe(expected) // Object.is equality\n' +
+      '\n' +
+      'Expected: true\n' +
+      'Received: false',
+    name: 'toBe',
+    pass: false
+  }
+}
+
+Node.js v24.16.0

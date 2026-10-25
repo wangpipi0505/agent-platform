@@ -1,0 +1,1282 @@
+# O1b I1/I2 and bounded Minor fix review
+Base original frozen O1b579/target1968; original C0/I2/M5 review preserved.
+Head docs/evidence/iam-stage-4-o1b-review-fixes/handoff.json
+Only2 modified source;no add/delete; original10-file review is inherited, not rereviewed wholesale.
+Requirements docs/evidence/iam-stage-4-o1b-review-fixes-brief.md
+Originalreview docs/evidence/review-iam-stage-4-o1b-readonly-status.md
+Originalroot audit .local/iam-o1b-root-check.json799phys cached; fixroot finite audit separate.
+Before originals and after2 physical bytes/SHA verified.
+--- BEGIN FULL CONTEXT FIX DIFF ---
+diff --git a/engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java b/engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java
+index 6860470..02bd9a7 100644
+--- a/engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java
++++ b/engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java
+@@ -1,461 +1,496 @@
+ package cn.agentplatform.engine.api;
+ 
+ import cn.agentplatform.common.*;
+ import cn.agentplatform.engine.application.*;
+ import cn.agentplatform.engine.infra.*;
+ 
+ import com.fasterxml.jackson.databind.JsonNode;
+ 
+ import org.springframework.http.MediaType;
+ import org.springframework.web.bind.annotation.*;
+ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
+ 
+ import java.util.*;
+ 
+ @RestController
+ public class RunController {
+     private final RunService service;
+     private final TraceStore store;
+     private final ChunkBus chunks;
+     private final ApprovalService approvals;
+ 
+     public RunController(RunService s, TraceStore t, ChunkBus c, ApprovalService a) {
+         service = s;
+         store = t;
+         chunks = c;
+         approvals = a;
+     }
+ 
+     @PostMapping("/admin/debug-runs")
+     public Object debug(@RequestBody JsonNode req) {
+         return ApiResponse.ok(
+                 service.create(req.path("appCode").asText(), req, "DEBUG", Actor.current()));
+     }
+ 
+     @PostMapping({"/admin/apps/{code}/runs", "/v1/apps/{code}/runs"})
+     public Object run(@PathVariable String code, @RequestBody JsonNode req) {
+         if (service.iamEnabled()) {
+             var attributes =
+                     org.springframework.web.context.request.RequestContextHolder
+                             .getRequestAttributes();
+             if (!(attributes
+                             instanceof
+                             org.springframework.web.context.request.ServletRequestAttributes
+                                     servlet)
+                     || !"POST".equals(servlet.getRequest().getMethod())
+                     || !"/admin/apps/{code}/runs"
+                             .equals(
+                                     servlet.getRequest()
+                                             .getAttribute(
+                                                     org.springframework.web.servlet.HandlerMapping
+                                                             .BEST_MATCHING_PATTERN_ATTRIBUTE)))
+                 throw new PlatformException(403, "IAM_ADMISSION_ROUTE_DENIED", "当前受理入口未迁移");
+         }
+         return ApiResponse.ok(service.create(code, req, "TASK", Actor.current()));
+     }
+ 
+     @PostMapping("/internal/evaluations/run")
+     public Object eval(@RequestBody JsonNode req) {
+         Actor actor = Actor.current();
+         actor.requireRole("SERVICE");
+         return ApiResponse.ok(
+                 service.create(req.path("appCode").asText(), req, "EVALUATION", actor));
+     }
+ 
+     @GetMapping("/admin/runs")
+     public Object list() {
+         return ApiResponse.ok(service.list(Actor.current()));
+     }
+ 
+     @GetMapping({"/admin/runs/{id}", "/admin/debug-runs/{id}/status", "/v1/runs/{id}"})
+-    public Object status(@PathVariable String id,jakarta.servlet.http.HttpServletRequest request,jakarta.servlet.http.HttpServletResponse response)throws java.io.IOException {
+-        if(!service.iamEnabled())return ApiResponse.ok(service.status(id,Actor.current()));
+-        Object actual=request.getAttribute(org.springframework.web.servlet.HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE);
+-        if(!(actual instanceof org.springframework.web.method.HandlerMethod handler)||handler.getBeanType()!=RunController.class
+-                ||!handler.getMethod().getName().equals("status")||handler.getMethod().getDeclaringClass()!=RunController.class
+-                ||request.getDispatcherType()!=jakarta.servlet.DispatcherType.REQUEST||!"GET".equals(request.getMethod())
+-                ||!"/admin/runs/{id}".equals(request.getAttribute(org.springframework.web.servlet.HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE))
+-                ||!request.getRequestURI().equals(request.getContextPath()+"/admin/runs/"+id)
+-                ||request.getQueryString()!=null||request.getContentLengthLong()>0||request.getInputStream().read()!=-1)
+-            throw new PlatformException(400,"INVALID_RUN_OBSERVATION_REQUEST","运行状态观察请求无效");
+-        var observed=service.observeStatus(id,Actor.current());
+-        var buffer=new StatusBuffer();
+-        Json.mapper().writeValue(buffer,ApiResponse.ok(observed.value()));
+-        byte[] bytes=buffer.toByteArray();observed.requireCurrent();
+-        response.setContentType("application/json");response.setCharacterEncoding("UTF-8");
++    public Object status(
++            @PathVariable String id,
++            jakarta.servlet.http.HttpServletRequest request,
++            jakarta.servlet.http.HttpServletResponse response) throws java.io.IOException {
++        if (!service.iamEnabled()) return ApiResponse.ok(service.status(id, Actor.current()));
++        Object actual = request.getAttribute(
++                org.springframework.web.servlet.HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE);
++        if (!(actual instanceof org.springframework.web.method.HandlerMethod handler)
++                || handler.getBeanType() != RunController.class
++                || !handler.getMethod().getName().equals("status")
++                || handler.getMethod().getDeclaringClass() != RunController.class
++                || request.getDispatcherType() != jakarta.servlet.DispatcherType.REQUEST
++                || !"GET".equals(request.getMethod())
++                || !"/admin/runs/{id}".equals(request.getAttribute(
++                        org.springframework.web.servlet.HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE))
++                || !request.getRequestURI().equals(request.getContextPath() + "/admin/runs/" + id)
++                || request.getQueryString() != null
++                || request.getContentLengthLong() > 0
++                || request.getInputStream().read() != -1)
++            throw new PlatformException(400, "INVALID_RUN_OBSERVATION_REQUEST", "运行状态观察请求无效");
++        var observed = service.observeStatus(id, Actor.current());
++        var buffer = new StatusBuffer();
++        Json.mapper().writeValue(buffer, ApiResponse.ok(observed.value()));
++        byte[] bytes = buffer.toByteArray();
++        observed.requireCurrent();
++        response.setContentType("application/json");
++        response.setCharacterEncoding("UTF-8");
+         // MVC 6.2.7 supplies the actual response wrapper. Acquisition itself can block/retire M;
+         // headers and serialization precede the final same-frame check, then first business write.
+-        var output=response.getOutputStream();observed.requireCurrent();
+-        try{output.write(bytes);}
+-        catch(java.io.IOException failure){
++        var output = response.getOutputStream();
++        observed.requireCurrent();
++        try {
++            output.write(bytes);
++        } catch (java.io.IOException failure) {
+             // A failed write may already have committed part of the JSON. Never append an error
+             // envelope or retry it; physical bytes accepted below this stream are unknowable here.
+-            try{output.close();}catch(java.io.IOException closeFailure){failure.addSuppressed(closeFailure);}
++            try {
++                output.close();
++            } catch (java.io.IOException closeFailure) {
++                failure.addSuppressed(closeFailure);
++            }
+             org.slf4j.LoggerFactory.getLogger(RunController.class).warn(
+                     "Run status output interrupted: committed={}, attemptedBytes={}, actualBytes=unknown",
+-                    response.isCommitted(),bytes.length,failure);
+-            if(!response.isCommitted())throw failure;
++                    response.isCommitted(), bytes.length, failure);
++            if (!response.isCommitted()) throw failure;
+         }
+         return null;
+     }
+-    private static final int STATUS_MAX_BYTES=2*1024*1024;
++    private static final int STATUS_MAX_BYTES = 2 * 1024 * 1024;
+     private static final class StatusBuffer extends java.io.ByteArrayOutputStream {
+-        private void capacity(int amount){if(amount<0||amount>STATUS_MAX_BYTES-count)throw new PlatformException(403,"RUN_STATUS_TOO_LARGE","完整运行状态响应超出本接口允许大小");}
+-        @Override public synchronized void write(int value){capacity(1);super.write(value);}
+-        @Override public synchronized void write(byte[] value,int offset,int length){capacity(length);super.write(value,offset,length);}
++        private StatusBuffer() {
++            // Preallocation plus the count guard prevents inherited geometric growth. The
++            // response copy and already-read material graph are separate from this 2 MiB array.
++            super(STATUS_MAX_BYTES);
++        }
++
++        private void capacity(int amount) {
++            if (amount < 0 || amount > STATUS_MAX_BYTES - count)
++                throw new PlatformException(403, "RUN_STATUS_TOO_LARGE", "完整运行状态响应超出本接口允许大小");
++        }
++
++        @Override public synchronized void write(int value) {
++            capacity(1);
++            super.write(value);
++        }
++
++        @Override public synchronized void write(byte[] value, int offset, int length) {
++            capacity(length);
++            super.write(value, offset, length);
++        }
+     }
+ 
+     @PostMapping("/admin/debug-runs/{id}/resume")
+     public Object resume(@PathVariable String id, @RequestBody JsonNode req) {
+         return ApiResponse.ok(service.resume(id, req, Actor.current()));
+     }
+ 
+     @PostMapping({
+         "/admin/debug-runs/{id}/cancel",
+         "/admin/runs/{id}/cancel",
+         "/v1/runs/{id}/cancel"
+     })
+     public Object cancel(@PathVariable String id) {
+         return ApiResponse.ok(service.cancel(id, Actor.current()));
+     }
+ 
+     @GetMapping("/admin/debug-runs/{id}/variables")
+     public Object variables(@PathVariable String id) {
+         var run = store.run(id, Actor.current());
+         return ApiResponse.ok(
+                 Map.of(
+                         "inputs",
+                         TraceStore.json(run.get("inputs")),
+                         "nodes",
+                         service.status(id, Actor.current()).get("nodes")));
+     }
+ 
+     @GetMapping("/admin/debug-runs/{id}/node/{nid}/prompt")
+     public Object prompt(@PathVariable String id, @PathVariable long nid) {
+         var run = store.run(id, Actor.current());
+         var rows =
+                 store.db()
+                         .queryForList(
+                                 "select a.request_snapshot,a.response,a.checkpoint from"
+                                     + " engine.attempt a join engine.node_instance n on"
+                                     + " n.id=a.node_instance_id where n.run_id=? and n.id=? order"
+                                     + " by a.attempt_no desc limit 1",
+                                 run.get("id"),
+                                 nid);
+         if (rows.isEmpty())
+             return ApiResponse.ok(
+                     Map.of("messages", List.of(), "manifest", Map.of("state", "NOT_ASSEMBLED")));
+         return ApiResponse.ok(
+                 rows.getFirst().entrySet().stream()
+                         .collect(
+                                 java.util.stream.Collectors.toMap(
+                                         Map.Entry::getKey, e -> TraceStore.json(e.getValue()))));
+     }
+ 
+     @GetMapping(
+             value = {
+                 "/admin/runs/{id}/events",
+                 "/admin/debug-runs/{id}/events",
+                 "/v1/runs/{id}/events"
+             },
+             produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+     public org.springframework.http.ResponseEntity<StreamingResponseBody> events(
+             @PathVariable String id,
+             @RequestHeader(value = "Last-Event-ID", required = false) String cursor,
+             @RequestParam(value = "Last-Event-ID", required = false) Long queryCursor) {
+         Actor actor = Actor.current();
+         var run = store.run(id, actor);
+         long rid = TraceStore.number(run, "id"),
+                 after =
+                         queryCursor != null
+                                 ? queryCursor
+                                 : cursor == null ? 0 : Long.parseLong(cursor);
+         if (after < 0) throw new PlatformException(400, "EVENT_CURSOR", "事件游标不能为负数");
+         var subscription = chunks.subscribe(rid);
+         var started = new java.util.concurrent.atomic.AtomicBoolean();
+         if (org.springframework.web.context.request.RequestContextHolder.getRequestAttributes()
+                 instanceof
+                 org.springframework.web.context.request.ServletRequestAttributes attributes) {
+             org.springframework.web.context.request.async.WebAsyncUtils.getAsyncManager(
+                             attributes.getRequest())
+                     .registerCallableInterceptor(
+                             subscription,
+                             new org.springframework.web.context.request.async
+                                     .CallableProcessingInterceptor() {
+                                 @Override
+                                 public <T> void afterCompletion(
+                                         org.springframework.web.context.request.NativeWebRequest
+                                                 request,
+                                         java.util.concurrent.Callable<T> task) {
+                                     // Submission rejection/timeout before writer start must release
+                                     // admission too.
+                                     if (started.compareAndSet(false, true)) subscription.close();
+                                 }
+                             });
+         }
+         // MVC invokes this writer only after response initialization: no SseEmitter early-send
+         // cache.
+         // Admission precedes task submission; the one writer keeps its slot until actual exit.
+         StreamingResponseBody body =
+                 output -> {
+                     if (!started.compareAndSet(false, true)) return;
+                     long last = after;
+                     long until =
+                             System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(55);
+                     long nextPoll = 0;
+                     try (subscription) {
+                         var initial =
+                                 store.db()
+                                         .queryForMap(
+                                                 "select status,event_seq,(select min(seq) from"
+                                                     + " engine.run_event where run_id=r.id) as"
+                                                     + " oldest_seq from engine.run r where id=?",
+                                                 rid);
+                         Object oldest = initial.get("oldest_seq");
+                         long watermark = ((Number) initial.get("event_seq")).longValue();
+                         if ((oldest instanceof Number n
+                                         ? last < n.longValue() - 1
+                                         : last < watermark)
+                                 || last > watermark) {
+                             send(
+                                     output,
+                                     null,
+                                     "stream_reset",
+                                     Json.write(
+                                             Map.of(
+                                                     "reason",
+                                                     last > watermark
+                                                             ? "CURSOR_AHEAD"
+                                                             : "CURSOR_EXPIRED",
+                                                     "eventsWatermark",
+                                                     watermark,
+                                                     "status",
+                                                     initial.get("status"),
+                                                     "recovery",
+                                                     "FINAL_SNAPSHOT",
+                                                     "chunkReplay",
+                                                     false)));
+                             return;
+                         }
+                         send(
+                                 output,
+                                 null,
+                                 "stream_status",
+                                 Json.write(
+                                         Map.of(
+                                                 "chunkAvailable",
+                                                 chunks.chunkAvailable(),
+                                                 "chunkReplay",
+                                                 false,
+                                                 "recovery",
+                                                 "LAST_EVENT_ID_AND_FINAL_SNAPSHOT")));
+                         while (!Thread.currentThread().isInterrupted()
+                                 && System.nanoTime() < until) {
+                             if (subscription.stopped()) {
+                                 send(
+                                         output,
+                                         null,
+                                         "stream_reset",
+                                         Json.write(
+                                                 Map.of(
+                                                         "reason",
+                                                         subscription.resetReason(),
+                                                         "chunkReplay",
+                                                         false,
+                                                         "lastEventId",
+                                                         last,
+                                                         "recovery",
+                                                         "LAST_EVENT_ID_AND_FINAL_SNAPSHOT")));
+                                 break;
+                             }
+                             if (System.nanoTime() >= nextPoll) {
+                                 // Reserve globally before PG read, including bytes retained by a
+                                 // blocked
+                                 // send.
+                                 try (var reservation = chunks.reserveResponse()) {
+                                     if (reservation != null) {
+                                         var events =
+                                                 store.db()
+                                                         .queryForList(
+                                                                 "select seq,type,case when"
+                                                                     + " octet_length(payload::text)<=?"
+                                                                     + " then payload::text else"
+                                                                     + " null end as payload from"
+                                                                     + " engine.run_event where"
+                                                                     + " run_id=? and seq>? order by"
+                                                                     + " seq limit 1",
+                                                                 ChunkBus.MAX_EVENT_BYTES,
+                                                                 rid,
+                                                                 last);
+                                         if (!events.isEmpty()) {
+                                             var event = events.getFirst();
+                                             if (event.get("payload") == null) {
+                                                 send(
+                                                         output,
+                                                         null,
+                                                         "stream_reset",
+                                                         Json.write(
+                                                                 Map.of(
+                                                                         "reason",
+                                                                         "EVENT_LIMIT",
+                                                                         "lastEventId",
+                                                                         last,
+                                                                         "recovery",
+                                                                         "FINAL_SNAPSHOT",
+                                                                         "chunkReplay",
+                                                                         false)));
+                                                 break;
+                                             }
+                                             long seq = ((Number) event.get("seq")).longValue();
+                                             send(
+                                                     output,
+                                                     seq,
+                                                     event.get("type").toString(),
+                                                     event.get("payload").toString());
+                                             last = seq;
+                                             continue;
+                                         }
+                                         var state =
+                                                 store.db()
+                                                         .queryForMap(
+                                                                 "select status,event_seq,(select"
+                                                                     + " min(seq) from"
+                                                                     + " engine.run_event where"
+                                                                     + " run_id=r.id) as oldest_seq"
+                                                                     + " from engine.run r where"
+                                                                     + " id=?",
+                                                                 rid);
+                                         long stateWatermark =
+                                                 ((Number) state.get("event_seq")).longValue();
+                                         Object retained = state.get("oldest_seq");
+                                         // Retention may clear history after the initial snapshot.
+                                         // A status watermark is not a consumed fact cursor.
+                                         if (retained instanceof Number n
+                                                 ? last < n.longValue() - 1
+                                                 : last < stateWatermark) {
+                                             send(
+                                                     output,
+                                                     null,
+                                                     "stream_reset",
+                                                     Json.write(
+                                                             Map.of(
+                                                                     "reason",
+                                                                     "CURSOR_EXPIRED",
+                                                                     "eventsWatermark",
+                                                                     stateWatermark,
+                                                                     "status",
+                                                                     state.get("status"),
+                                                                     "recovery",
+                                                                     "FINAL_SNAPSHOT",
+                                                                     "chunkReplay",
+                                                                     false)));
+                                             break;
+                                         }
+                                         // A terminal commit may follow the event query: drain its
+                                         // PG
+                                         // watermark first.
+                                         if (Set.of("SUCCEEDED", "FAILED", "CANCELLED")
+                                                         .contains(state.get("status"))
+                                                 && last
+                                                         >= ((Number) state.get("event_seq"))
+                                                                 .longValue()) break;
+                                         if (last < ((Number) state.get("event_seq")).longValue())
+                                             continue;
+                                         nextPoll =
+                                                 System.nanoTime()
+                                                         + java.util.concurrent.TimeUnit.MILLISECONDS
+                                                                 .toNanos(450);
+                                     }
+                                 }
+                             }
+                             try (var frame = subscription.poll()) {
+                                 if (frame != null) {
+                                     send(
+                                             output,
+                                             null,
+                                             "chunk",
+                                             Json.write(Map.of("text", frame.text())));
+                                     continue;
+                                 }
+                             }
+                             Thread.sleep(20);
+                         }
+                     } catch (InterruptedException interrupted) {
+                         Thread.currentThread().interrupt();
+                     } catch (java.io.IOException failure) {
+                         throw failure;
+                     } catch (Exception failure) {
+                         throw new java.io.IOException("事件流中断，请按事实游标和最终快照恢复", failure);
+                     }
+                 };
+         return org.springframework.http.ResponseEntity.ok()
+                 .contentType(MediaType.TEXT_EVENT_STREAM)
+                 .header("Cache-Control", "no-store")
+                 .body(body);
+     }
+ 
+     private static void send(java.io.OutputStream output, Long seq, String type, String payload)
+             throws java.io.IOException {
+         if (!type.matches("[A-Za-z_]{1,64}")) throw new java.io.IOException("invalid event type");
+         if (seq != null)
+             output.write(("id:" + seq + "\n").getBytes(java.nio.charset.StandardCharsets.UTF_8));
+         output.write(("event:" + type + "\n").getBytes(java.nio.charset.StandardCharsets.UTF_8));
+         // PG JSONB text contains escaped string newlines, never raw framing separators.
+         output.write("data:".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+         output.write(payload.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+         output.write("\n\n".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+         output.flush();
+     }
+ 
+     @PostMapping("/internal/runs/{id}/approvals/{nid}")
+     public Object approval(
+             @PathVariable String id, @PathVariable long nid, @RequestBody JsonNode req) {
+         return ApiResponse.ok(approvals.approve(id, nid, req, Actor.current()));
+     }
+ 
+     @GetMapping("/internal/approvals")
+     public Object approvals() {
+         return ApiResponse.ok(approvals.list(Actor.current()));
+     }
+ 
+     @GetMapping("/internal/statistics")
+     public Object statistics(
+             @RequestParam(required = false) String from,
+             @RequestParam(required = false) String to,
+             @RequestParam(required = false) String appCode,
+             @RequestParam(required = false) String bizSystemCode,
+             @RequestParam(required = false) String callKind,
+             @RequestParam(defaultValue = "day") String groupBy) {
+         return ApiResponse.ok(
+                 new RunStatistics(store.db())
+                         .query(from, to, appCode, bizSystemCode, callKind, groupBy));
+     }
+ 
+     @GetMapping("/internal/statistics/runs/{id}")
+     public Object statisticsRun(@PathVariable String id) {
+         return ApiResponse.ok(new RunStatistics(store.db()).drilldown(id));
+     }
+ 
+     @GetMapping("/internal/audit")
+     public Object audit() {
+         var rows =
+                 store.db()
+                         .queryForList(
+                                 "select r.public_id as \"runId\",r.principal_id as"
+                                     + " \"principalId\",e.seq,e.type,e.payload,e.created_at as"
+                                     + " \"createdAt\" from engine.run_event e join engine.run r on"
+                                     + " r.id=e.run_id where r.tenant_id=? order by e.id desc limit"
+                                     + " 500",
+                                 Actor.current().tenantId());
+         rows.forEach(r -> r.put("payload", TraceStore.json(r.get("payload"))));
+         return ApiResponse.ok(rows);
+     }
+ 
+     @PostMapping("/internal/graphs/validate")
+     public Object validateGraph(@RequestBody JsonNode req) {
+         var errors =
+                 new cn.agentplatform.engine.domain.GraphValidator()
+                         .validate(req.path("definition"));
+         return ApiResponse.ok(Map.of("valid", errors.isEmpty(), "errors", errors));
+     }
+ }
+diff --git a/engine-runtime/src/test/java/cn/agentplatform/engine/infra/RunObservationStatusHttpPostgresTest.java b/engine-runtime/src/test/java/cn/agentplatform/engine/infra/RunObservationStatusHttpPostgresTest.java
+index 597c99b..8f11867 100644
+--- a/engine-runtime/src/test/java/cn/agentplatform/engine/infra/RunObservationStatusHttpPostgresTest.java
++++ b/engine-runtime/src/test/java/cn/agentplatform/engine/infra/RunObservationStatusHttpPostgresTest.java
+@@ -1,530 +1,700 @@
+ package cn.agentplatform.engine.infra;
+ 
+ import static org.assertj.core.api.Assertions.*;
+ 
+ import cn.agentplatform.common.*;
+ import cn.agentplatform.common.authority.*;
+ import cn.agentplatform.engine.api.RunController;
+ import cn.agentplatform.engine.api.RunObservationMetadataController;
+ import cn.agentplatform.engine.application.*;
+ import cn.agentplatform.engine.domain.*;
+ import cn.agentplatform.common.authority.HttpCurrentAuthorityClient.RetainedAuthorization;
+ import com.fasterxml.jackson.databind.JsonNode;
+ import java.io.*;
+ import java.net.*;
+ import java.net.http.*;
+ import java.nio.charset.StandardCharsets;
+ import java.sql.*;
+ import java.time.*;
+ import java.util.*;
+ import java.util.concurrent.CopyOnWriteArrayList;
+ import java.util.concurrent.atomic.*;
+ import java.util.function.*;
+ import javax.sql.DataSource;
+ import org.flywaydb.core.Flyway;
+ import org.junit.jupiter.api.*;
+ import org.springframework.boot.*;
+ import org.springframework.boot.autoconfigure.*;
+ import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
+ import org.springframework.context.annotation.*;
+ import org.springframework.jdbc.core.JdbcTemplate;
+ import org.springframework.jdbc.datasource.*;
+ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+ import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+ import org.springframework.security.oauth2.jwt.JwtDecoder;
+ import org.springframework.security.web.SecurityFilterChain;
+ import org.springframework.web.servlet.mvc.method.RequestMappingInfoHandlerMapping;
+ import org.springframework.mock.web.*;
+ import org.springframework.web.context.request.*;
+ import org.springframework.web.method.HandlerMethod;
+ import org.springframework.web.servlet.HandlerMapping;
+ import org.springframework.security.core.context.SecurityContextHolder;
+ import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+ import org.springframework.transaction.support.*;
+ 
+ /** Own engine HTTP, real signed authority, and a database used only by this class. */
+ class RunObservationStatusHttpPostgresTest {
+     static final String DATABASE="agent_platform_iam_o1b_status_v12";
+     static LoopbackAuthority iam;
+     static HttpCurrentAuthorityClient engine,gateway;
+     static DataSource ds;
+     static JdbcTemplate db;
+     static ServletWebServerApplicationContext context;
+     static final HttpClient http=HttpClient.newHttpClient();
+     static String tenant,source;
+     static TraceStore trace;
+     static RunService service;
+     static RuntimeClients runtime;
+     static RunScheduler scheduler;
+     static com.sun.net.httpserver.HttpServer dependency;
+     static final AtomicInteger dependencyCalls=new AtomicInteger();
+     static final String RUN="r_"+"a".repeat(32);
+     static final ResourceBinding ROOT=new ResourceBinding("app-version","app-a@1",Digest.sha256("candidate"));
+     static final ServiceCall MAIN=new ServiceCall("engine","proxy.engine.post.RunController.run",ROOT);
+     record Sql(String sql,int connection,int isolation,boolean readOnly,boolean autoCommit,int authorityCalls){}
+     static final List<Sql> statements=new CopyOnWriteArrayList<>();
+     static volatile Consumer<String> afterQuery=sql->{};
+     static volatile Runnable afterReadCommit=()->{};
+     static volatile Consumer<jakarta.servlet.http.HttpServletRequest> beforeController=r->{};
+     static final AtomicInteger controllerBoundaries=new AtomicInteger();
+     static volatile boolean omitGuard;
+     static volatile Runnable streamAcquired=()->{},afterSerialization=()->{};
+     static final AtomicInteger streamWindows=new AtomicInteger();
+     static boolean unsupportedFlow;
+     static volatile boolean failBusinessWrite;
+     static final AtomicBoolean partialClosed=new AtomicBoolean();
+     static final List<String> rawQueries=new CopyOnWriteArrayList<>();
+ 
+     @Configuration(proxyBeanMethods=false)
+     @EnableAutoConfiguration
+     @EnableWebSecurity
+     @Import(PlatformErrors.class)
+     static class Receiver {
+         @Bean org.springframework.boot.web.servlet.FilterRegistrationBean<jakarta.servlet.Filter> outputWindow(){
+             var filter=new org.springframework.boot.web.servlet.FilterRegistrationBean<jakarta.servlet.Filter>();
+             filter.setFilter((request,response,chain)->{try{chain.doFilter(request,new jakarta.servlet.http.HttpServletResponseWrapper((jakarta.servlet.http.HttpServletResponse)response){
+                 @Override public void setContentType(String value){if("application/json".equals(value))afterSerialization.run();super.setContentType(value);}
+                 @Override public jakarta.servlet.ServletOutputStream getOutputStream()throws IOException {
+                     var actual=super.getOutputStream();streamWindows.incrementAndGet();streamAcquired.run();
+                     if(!failBusinessWrite)return actual;
+                     return new jakarta.servlet.ServletOutputStream(){
+                         @Override public boolean isReady(){return actual.isReady();}
+                         @Override public void setWriteListener(jakarta.servlet.WriteListener listener){actual.setWriteListener(listener);}
+                         @Override public void write(int value)throws IOException{actual.write(value);}
+                         @Override public void write(byte[] bytes,int offset,int length)throws IOException{actual.write(bytes,offset,Math.min(128,length));actual.flush();throw new IOException("O1B_FINITE_PARTIAL_WRITE");}
+                         @Override public void close()throws IOException{partialClosed.set(true);actual.close();}
+                     };
+                 }
+             });}finally{if(request.getAttribute("o1b.replacement") instanceof AuthorityContext replacement)replacement.close();}});return filter;
+         }
+         @Bean AuthorityProperties authorityProperties(){return iam.config("engine");}
+         @Bean DataSource dataSource(){return ds;}
+         @Bean JdbcTemplate jdbc(){return db;}
+         @Bean RunController runs(){
+             if(omitGuard)return new RunController(service,trace,null,null);
+             trace=new TraceStore(db,new DataSourceTransactionManager(ds),iam.clock());
+             runtime=new RuntimeClients(iam.config("engine"),engine,"http://127.0.0.1:"+dependency.getAddress().getPort(),true);
+             runtime.model="http://127.0.0.1:"+dependency.getAddress().getPort();runtime.skill=runtime.model;
+             scheduler=new RunScheduler(trace);
+             service=new RunService(trace,runtime,null,null,scheduler,null,new RunAuthorityStore(ds,iam.clock()),iam.clock());
+             return new RunController(service,trace,null,null);
+         }
+         @Bean RunObservationMetadataService observations(){return new RunObservationMetadataService(db);}
+         @Bean RunObservationMetadataController metadata(RunObservationMetadataService service){return new RunObservationMetadataController(service);}
+         @Bean(destroyMethod="close") JwtDecoder decoder(){return new TrustedJwtDecoder(iam.config("engine"),iam.clock(),true);}
+         @Bean ServiceAuthorization authorization(){return new ServiceAuthorization("engine",new ServiceRoutePolicy(),engine);}
+         @Bean SecurityFilterChain security(HttpSecurity h,JwtDecoder d,ServiceAuthorization a)throws Exception{return SecurityConfiguration.serviceSecurity(h,d,a);}
+         @Bean org.springframework.web.servlet.handler.MappedInterceptor guard(ServiceAuthorization a){return omitGuard?new org.springframework.web.servlet.handler.MappedInterceptor(null,new org.springframework.web.servlet.HandlerInterceptor(){}):a.mappedInterceptor();}
+-        @Bean org.springframework.web.servlet.handler.MappedInterceptor requestBoundary(){return new org.springframework.web.servlet.handler.MappedInterceptor(null,new org.springframework.web.servlet.HandlerInterceptor(){
+-            @Override public boolean preHandle(jakarta.servlet.http.HttpServletRequest request,jakarta.servlet.http.HttpServletResponse response,Object handler){
+-                if(handler instanceof HandlerMethod h&&(h.getBeanType()==RunObservationMetadataController.class||h.getBeanType()==RunController.class)){
+-                    controllerBoundaries.incrementAndGet();rawQueries.add(request.getQueryString()==null?"<null>":request.getQueryString());beforeController.accept(request);
+-                }return true;
+-            }
+-        });}
++        @Bean org.springframework.web.servlet.handler.MappedInterceptor requestBoundary() {
++            return new org.springframework.web.servlet.handler.MappedInterceptor(null,
++                    new org.springframework.web.servlet.HandlerInterceptor() {
++                        @Override public boolean preHandle(
++                                jakarta.servlet.http.HttpServletRequest request,
++                                jakarta.servlet.http.HttpServletResponse response, Object handler) {
++                            if (handler instanceof HandlerMethod h
++                                    && (h.getBeanType() == RunObservationMetadataController.class
++                                            || h.getBeanType() == RunController.class)) {
++                                controllerBoundaries.incrementAndGet();
++                                rawQueries.add(request.getQueryString() == null
++                                        ? "<null>" : request.getQueryString());
++                                beforeController.accept(request);
++                            }
++                            // A completed nested forward owns the response; finish the original
++                            // dispatch instead of re-entering a handler with its closed stream.
++                            return !Boolean.TRUE.equals(request.getAttribute("o1b.forward-complete"));
++                        }
++                    });
++        }
+         @Bean RouteCoverageVerifier coverage(List<RequestMappingInfoHandlerMapping> mappings){return new RouteCoverageVerifier("engine",new ServiceRoutePolicy(),mappings);}
+     }
+     @BeforeAll static void start()throws Exception {
+         iam=new LoopbackAuthority();engine=iam.client("engine");
+         dependency=com.sun.net.httpserver.HttpServer.create(new InetSocketAddress("127.0.0.1",0),0);
+         dependency.createContext("/",x->{dependencyCalls.incrementAndGet();x.sendResponseHeaders(503,-1);x.close();});dependency.start();
+         String password=System.getenv("AGENT_DB_PASSWORD");assertThat(password).isNotBlank();
+         var admin=new JdbcTemplate(new DriverManagerDataSource("jdbc:postgresql://127.0.0.1:25432/postgres","agent_v12",password));
+         boolean existed=Boolean.TRUE.equals(admin.queryForObject("select exists(select 1 from pg_database where datname=?)",Boolean.class,DATABASE));
+         if(!existed)admin.execute("create database "+DATABASE);
+         ds=new DelegatingDataSource(new DriverManagerDataSource("jdbc:postgresql://127.0.0.1:25432/"+DATABASE,"agent_v12",password)){
+             @Override public Connection getConnection()throws SQLException{return observe(super.getConnection());}
+         };db=new JdbcTemplate(ds);
+         assertThat(db.queryForObject("select current_database()",String.class)).isEqualTo(DATABASE);
+         Flyway.configure().dataSource(ds).schemas("engine").defaultSchema("engine").locations("classpath:db/migration").target("217").load().migrate();
+         assertThat(db.queryForObject("select count(*) from engine.flyway_schema_history where success and version::integer between 200 and 217",Integer.class)).isEqualTo(18);
+         System.out.println("O1B_DB="+Json.write(Map.of("database",DATABASE,"existed",existed,"migrationCount",18)));
+         var app=new SpringApplication(Receiver.class);app.setAdditionalProfiles("test");
+         app.setDefaultProperties(Map.ofEntries(Map.entry("server.address","127.0.0.1"),Map.entry("server.port","0"),Map.entry("spring.config.location","optional:classpath:/o1b-no-config/"),Map.entry("spring.main.banner-mode","off"),Map.entry("springdoc.api-docs.enabled",false),Map.entry("spring.flyway.enabled",false),Map.entry("management.endpoints.web.exposure.exclude","*"),Map.entry("management.endpoints.web.discovery.enabled",false),Map.entry("logging.level.root","ERROR")));
+         context=(ServletWebServerApplicationContext)app.run();
+         System.out.println("O1B_HTTP_READY="+Json.write(Map.of("pid",ProcessHandle.current().pid(),"port",context.getWebServer().getPort())));
+     }
+     @BeforeEach void seed(){
+         tenant="o1b-"+UUID.randomUUID();iam.clearFiniteGrants();iam.revoked(false);iam.unavailable(false);iam.ticketMutation(c->{});iam.decisionMutation(c->{});
+         iam.portalActor(new Actor(tenant,"alice",Set.of("EDITOR"),Map.of("region",Set.of("A","B"),"dataLabels",Set.of("initial"))));
+         if(gateway!=null)gateway.close();gateway=iam.client("gateway");source=iam.portal();
+         afterQuery=s->{};afterReadCommit=()->{};beforeController=r->{};streamAcquired=()->{};afterSerialization=()->{};statements.clear();rawQueries.clear();controllerBoundaries.set(0);streamWindows.set(0);unsupportedFlow=false;failBusinessWrite=false;partialClosed.set(false);
+     }
+     @AfterEach void evidence(TestInfo info){
+         System.out.println("O1B_CASE="+Json.write(Map.of("test",info.getDisplayName(),"sql",List.copyOf(statements),"controllerBoundaries",controllerBoundaries.get(),"rawQueries",List.copyOf(rawQueries),"authorityCalls",iam.authorityCalls())));
+         afterQuery=s->{};afterReadCommit=()->{};beforeController=r->{};streamAcquired=()->{};afterSerialization=()->{};Json.mapper().getFactory().setOutputDecorator(null);
+     }
+     @AfterAll static void close(){if(context!=null)context.close();if(scheduler!=null)scheduler.close();if(runtime!=null)runtime.close();if(dependency!=null)dependency.stop(0);http.close();if(gateway!=null)gateway.close();if(engine!=null)engine.close();if(iam!=null)iam.close();System.out.println("O1B_RESOURCES_CLOSED=true");}
+     static ResourceBinding selector(String run){return RunObservationSelectors.metadata(new SubjectKey(tenant,"alice"),run);}
+     static ServiceCall query(String run){return new ServiceCall("engine",RunObservationSelectors.ACTION,selector(run));}
+     static String path(String run){return "/internal/runs/"+run+"/observation-metadata";}
+     static ServiceTicket ticket(String run){return gateway.exchange(source,query(run));}
+     static Connection observe(Connection connection){
+         return (Connection)java.lang.reflect.Proxy.newProxyInstance(RunObservationStatusHttpPostgresTest.class.getClassLoader(),new Class[]{Connection.class},(p,m,a)->{
+             try{
+                 Object result=m.invoke(connection,a);
+                 if(m.getName().equals("commit")&&connection.isReadOnly())afterReadCommit.run();
+                 if(result instanceof Statement statement&&(m.getName().equals("prepareStatement")||m.getName().equals("createStatement"))){
+                     String prepared=a!=null&&a.length>0&&a[0] instanceof String?(String)a[0]:null;
+                     Class<?> type=result instanceof PreparedStatement?PreparedStatement.class:Statement.class;
+                     return java.lang.reflect.Proxy.newProxyInstance(RunObservationStatusHttpPostgresTest.class.getClassLoader(),new Class[]{type},(sp,sm,sa)->{
+                         try{
+                             String sql=prepared!=null?prepared:sa!=null&&sa.length>0&&sa[0] instanceof String?(String)sa[0]:null;
+                             boolean execute=sm.getName().startsWith("execute")&&sql!=null;
+                             if(execute)statements.add(new Sql(sql,System.identityHashCode(connection),connection.getTransactionIsolation(),connection.isReadOnly(),connection.getAutoCommit(),iam.authorityCalls()));
+                             Object value=sm.invoke(statement,sa);
+                             if(execute&&sm.getName().equals("executeQuery"))afterQuery.accept(sql);
+                             return value;
+                         }catch(java.lang.reflect.InvocationTargetException e){throw e.getCause();}
+                     });
+                 }return result;
+             }catch(java.lang.reflect.InvocationTargetException e){throw e.getCause();}
+         });
+     }
+     static <T>T withFrame(ServiceTicket ticket,ServiceCall call,String method,String path,String template,Function<RetainedAuthorization,T> work)throws Exception {
+         try(var decoder=new TrustedJwtDecoder(iam.config("engine"),iam.clock(),true)){
+             var request=new MockHttpServletRequest(method,path);var response=new MockHttpServletResponse();request.setAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE,template);
+             RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(decoder.decode(ticket.value()),List.of()));
+             var guard=new ServiceAuthorization("engine",new ServiceRoutePolicy(),engine);
+             var handler=new HandlerMethod(new RunController(null,null,null,null),RunController.class.getMethod("run",String.class,JsonNode.class));
+             try{guard.preHandle(request,response,handler);return work.apply(AuthorityContext.requireInitialFor(Actor.current(),call.resource()));}
+             finally{guard.afterCompletion(request,response,handler,null);SecurityContextHolder.clearContext();RequestContextHolder.resetRequestAttributes();}
+         }
+     }
+     static long create()throws Exception {
+         return create(1);
+     }
+-    static long create(long versionNo)throws Exception {
+-        var root=new ResourceBinding("app-version","app-a@"+versionNo,ROOT.versionDigest());var call=new ServiceCall("engine",MAIN.action(),root);var admission=gateway.exchange(source,call);
+-        return withFrame(admission,call,"POST","/admin/apps/app-a/runs","/admin/apps/{code}/runs",proof->{
+-            var snapshot=Json.read("{\"appCode\":\"app-a\",\"type\":\"FLOW\",\"versionNo\":"+versionNo+",\"appVersionId\":4294967297,\"candidateSha256\":\""+ROOT.versionDigest()+"\",\"config\":{},\"definition\":{\"nodes\":[{\"id\":\"start\",\"type\":\"START\"},{\"id\":\"end\",\"type\":\"END\"}],\"edges\":[{\"source\":\"start\",\"target\":\"end\"}]}}");
+-            if(unsupportedFlow)((com.fasterxml.jackson.databind.node.ObjectNode)snapshot.path("definition").path("nodes").get(1)).put("type","LLM");
+-            var budget=Json.tree(Map.of("limits",Map.of("maxSteps",25,"modelCalls",40,"totalTokens",200000,"totalDurationMs",600000,"maxDepth",2),"consumed",Map.of("steps",0,"modelCalls",0,"tokens",0,"depth",0),"deadline",iam.clock().instant().plusSeconds(599).toString()));
+-            return new TransactionTemplate(new DataSourceTransactionManager(ds)).execute(s->{
+-                long id=new RunAuthorityStore(ds,iam.clock()).createPublished(proof,snapshot,Json.read("{\"privateInput\":\"do-not-return\"}"),Json.tree(Map.of("appVer",versionNo)),budget,"FULL",UUID.randomUUID().toString(),Set.of("initial"));
+-                trace.createNode(id,"start",1,"START",Json.read("{\"id\":\"start\",\"type\":\"START\"}"),proof);
+-                trace.createNode(id,"end",2,"END",Json.read("{\"id\":\"end\",\"type\":\"END\"}"),proof);
++    static JsonNode snapshot(long versionNo) {
++        return Json.read("""
++                {"appCode":"app-a","type":"FLOW","versionNo":%d,"appVersionId":4294967297,
++                 "candidateSha256":"%s","config":{},"definition":{
++                   "nodes":[{"id":"start","type":"START"},{"id":"end","type":"END"}],
++                   "edges":[{"from":"start","to":"end"}]}}
++                """.formatted(versionNo, ROOT.versionDigest()));
++    }
++    static long create(long versionNo) throws Exception {
++        var root = new ResourceBinding("app-version", "app-a@" + versionNo, ROOT.versionDigest());
++        var call = new ServiceCall("engine", MAIN.action(), root);
++        var admission = gateway.exchange(source, call);
++        return withFrame(admission, call, "POST", "/admin/apps/app-a/runs", "/admin/apps/{code}/runs", proof -> {
++            var snapshot = snapshot(versionNo);
++            if (unsupportedFlow)
++                ((com.fasterxml.jackson.databind.node.ObjectNode) snapshot.path("definition").path("nodes").get(1))
++                        .put("type", "LLM");
++            var budget = Json.tree(Map.of(
++                    "limits", Map.of("maxSteps", 25, "modelCalls", 40, "totalTokens", 200000,
++                            "totalDurationMs", 600000, "maxDepth", 2),
++                    "consumed", Map.of("steps", 0, "modelCalls", 0, "tokens", 0, "depth", 0),
++                    "deadline", iam.clock().instant().plusSeconds(599).toString()));
++            return new TransactionTemplate(new DataSourceTransactionManager(ds)).execute(s -> {
++                long id = new RunAuthorityStore(ds, iam.clock()).createPublished(
++                        proof, snapshot, Json.read("{\"privateInput\":\"do-not-return\"}"),
++                        Json.tree(Map.of("appVer", versionNo)), budget, "FULL",
++                        UUID.randomUUID().toString(), Set.of("initial"));
++                trace.createNode(id, "start", 1, "START", Json.read("{\"id\":\"start\",\"type\":\"START\"}"), proof);
++                trace.createNode(id, "end", 2, "END", Json.read("{\"id\":\"end\",\"type\":\"END\"}"), proof);
+                 return id;
+             });
+         });
+     }
+     static String publicId(long id){return db.queryForObject("select public_id from engine.run where id=?",String.class,id);}
+     static HttpResponse<String> request(String method,String path,ServiceTicket ticket,String body)throws Exception {
+         return http.send(HttpRequest.newBuilder(URI.create("http://127.0.0.1:"+context.getWebServer().getPort()+path)).timeout(Duration.ofSeconds(15)).header("Authorization","Bearer "+ticket.value()).header("Content-Type","application/json").method(method,body==null?HttpRequest.BodyPublishers.noBody():HttpRequest.BodyPublishers.ofString(body)).build(),HttpResponse.BodyHandlers.ofString());
+     }
+ 
+     static long completeRun()throws Exception {
+         long id=create();
+         var local=new RunAuthority(new RunAuthorityStore(ds,iam.clock()),engine,iam.clock(),Duration.ofSeconds(3))
+                 .currentRetained(id,new ServiceCall("engine","run.advance",ROOT));
+         trace.event(id,"OBSERVATION_FIXTURE",new com.fasterxml.jackson.databind.ObjectMapper().enable(com.fasterxml.jackson.databind.DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS).readTree("{\"precise\":123456789012345678901234567890,\"decimal\":1.2345678901234567890123456789,\"text\":\"观察\\n\\\"\"}"),local);
+         return id;
+     }
+     static ServiceTicket metadataThenStatus(String run)throws Exception {
+         var q=ticket(run);var response=request("GET",path(run),q,null);
+         assertThat(response.statusCode()).as(response.body()).isEqualTo(200);
+         var data=Json.read(response.body()).get("data");assertThat(data.size()).isEqualTo(7);
+         var binding=new RunAuthorityStore(ds,iam.clock()).load(db.queryForObject("select id from engine.run where public_id=?",Long.class,run));
+         iam.registerObservation(binding.owner(),binding.publicId(),binding.snapshotSha());
+         return gateway.exchange(source,new ServiceCall("engine","proxy.engine.get.RunController.status",
+                 new ResourceBinding("run-snapshot",run,data.get("acceptedSnapshotSha256").textValue())));
+     }
+     static Map<String,Object> facts(){return db.queryForMap("select (select count(*) from engine.run) as runs,(select count(*) from engine.node_instance) as nodes,(select count(*) from engine.attempt) as attempts,(select count(*) from engine.run_event) as events,(select count(*) from engine.tool_call) as tools");}
+     static boolean payload(String sql){return sql.startsWith("select row_to_json(material)::text")||sql.matches("select (snapshot|inputs|version_refs|budget|output|error|definition)::text from engine\\.(run|node_instance).* ".stripTrailing());}
+     static long payloadReads(){return statements.stream().filter(s->payload(s.sql())).count();}
+     static void noBusiness(HttpResponse<String> response,int status){assertThat(response.statusCode()).as(response.body()).isEqualTo(status);assertThat(response.body()).doesNotContain("\"runId\"","\"nodes\"","\"events\"");}
+     static void renew(){iam.clearFiniteGrants();source=iam.portal();}
+     static RetainedAuthorization local(long id){return new RunAuthority(new RunAuthorityStore(ds,iam.clock()),engine,iam.clock(),Duration.ofSeconds(3)).currentRetained(id,new ServiceCall("engine","run.advance",ROOT));}
+     static void output(long id,Object value,RetainedAuthorization proof){
+         var tx=new TransactionTemplate(new DataSourceTransactionManager(ds));tx.setIsolationLevel(4);
+         tx.execute(s->{var binding=RunAuthorityStore.load(db,id,true);var materials=new MaterialScopeStore(ds,iam.clock());materials.requireWriter(binding,proof,false);var parents=materials.currentScopes(binding);
+             db.update("update engine.run set output=?::jsonb where id=?",Json.write(value),id);materials.append(binding,"run-output",binding.publicId(),proof,parents);return null;});
+     }
+     static void bypass(String sql,long id){new TransactionTemplate(new DataSourceTransactionManager(ds)).execute(s->{
+         for(String table:List.of("run","run_authority","material_scope","node_instance","run_event"))db.execute("alter table engine."+table+" disable trigger user");
+         db.update(sql,id);for(String table:List.of("run_event","node_instance","material_scope","run_authority","run"))db.execute("alter table engine."+table+" enable trigger user");return null;});}
+     static void expireOrClose(String mode){if(mode.equals("expiry"))iam.advanceClock(Duration.ofSeconds(6));else if(mode.equals("replace"))((ServletRequestAttributes)RequestContextHolder.currentRequestAttributes()).getRequest().setAttribute("o1b.replacement",AuthorityContext.bind(AuthorityContext.current()));else{
+         var attrs=(ServletRequestAttributes)RequestContextHolder.currentRequestAttributes();((AuthorityContext)attrs.getRequest().getAttribute(ServiceAuthorization.class.getName()+".frame")).close();}}
+-    @Test void outputBudgetRejectsOneByteOverAndAcceptsExactUtf8Envelope()throws Exception {
+-        long id=completeRun();String run=publicId(id);var writer=local(id);output(id,Map.of("text","观察\n\"\\"),writer);
+-        var m=metadataThenStatus(run);var first=request("GET","/admin/runs/"+run,m,null);assertThat(first.statusCode()).isEqualTo(200);
+-        int base=first.body().getBytes(StandardCharsets.UTF_8).length;int padding=2*1024*1024-base;
+-        var retainedMaximum=new AtomicInteger();
+-        Json.mapper().getFactory().setOutputDecorator(new com.fasterxml.jackson.core.io.OutputDecorator(){
+-            public Writer decorate(com.fasterxml.jackson.core.io.IOContext c,Writer writer){return writer;}
+-            public OutputStream decorate(com.fasterxml.jackson.core.io.IOContext c,OutputStream output){return new FilterOutputStream(output){
+-                private void sample(){if(output instanceof ByteArrayOutputStream bytes)retainedMaximum.accumulateAndGet(bytes.size(),Math::max);}
+-                @Override public void write(int value)throws IOException{try{out.write(value);}finally{sample();}}
+-                @Override public void write(byte[] value,int offset,int length)throws IOException{try{out.write(value,offset,length);}finally{sample();}}
+-            };}
++    static ByteArrayOutputStream statusBuffer() throws ReflectiveOperationException {
++        var type = Class.forName(RunController.class.getName() + "$StatusBuffer");
++        var constructor = type.getDeclaredConstructor();
++        constructor.setAccessible(true);
++        return (ByteArrayOutputStream) constructor.newInstance();
++    }
++
++    static int backingCapacity(ByteArrayOutputStream buffer) throws IOException {
++        var capacity = new AtomicInteger();
++        // writeTo passes its real backing array to the sink, without a byte-array copy.
++        // Only our own constructor is reflected; no JDK internals or product diagnostics.
++        buffer.writeTo(new OutputStream() {
++            @Override public void write(int value) { throw new AssertionError("bulk write expected"); }
++            @Override public void write(byte[] bytes, int offset, int length) {
++                assertThat(length).isEqualTo(buffer.size());
++                capacity.set(bytes.length);
++            }
++        });
++        return capacity.get();
++    }
++
++    @Test void retainedBufferCapacityNeverExceedsBudgetForAdversarialWriteShapes() throws Exception {
++        int limit = 2 * 1024 * 1024;
++        for (int[] shape : List.of(new int[]{8000}, new int[]{1}, new int[]{31, 8000, 8191})) {
++            var buffer = statusBuffer();
++            byte[] chunk = new byte[8191];
++            int writes = 0;
++            while (buffer.size() < limit) {
++                int length = Math.min(shape[writes++ % shape.length], limit - buffer.size());
++                if (length == 1) buffer.write(7);
++                else buffer.write(chunk, 0, length);
++                int capacity = backingCapacity(buffer);
++                if (capacity > limit) {
++                    System.out.println("O1B_CAPACITY_VIOLATION=" + Json.write(Map.of(
++                            "shape", Arrays.toString(shape), "count", buffer.size(), "capacity", capacity, "limit", limit)));
++                }
++                assertThat(capacity).as("actual backing capacity at count=%s shape=%s", buffer.size(), Arrays.toString(shape))
++                        .isLessThanOrEqualTo(limit);
++            }
++            assertThat(buffer.size()).isEqualTo(limit);
++            assertThatThrownBy(() -> buffer.write(7)).isInstanceOf(PlatformException.class);
++            assertThatThrownBy(() -> buffer.write(chunk, 0, 1)).isInstanceOf(PlatformException.class);
++            assertThat(backingCapacity(buffer)).isLessThanOrEqualTo(limit);
++            System.out.println("O1B_CAPACITY=" + Json.write(Map.of(
++                    "shape", Arrays.toString(shape), "count", buffer.size(), "capacity", backingCapacity(buffer))));
++        }
++    }
++
++    @Test void sharedSnapshotPassesProductionFiniteFlowAndAdmissionDagGates() {
++        var snapshot = snapshot(1);
++        GraphRules.requirePublishedFlow(snapshot);
++        var reachedPersistence = new IllegalStateException("O1B_VALIDATION_REACHED_PERSISTENCE");
++        var validatingStore = new TraceStore(db, new DataSourceTransactionManager(ds), iam.clock()) {
++            @Override public <T> T atomic(Supplier<T> write) { throw reachedPersistence; }
++        };
++        var before = facts();
++        int calls = dependencyCalls.get();
++        var schedulerActions = new AtomicInteger();
++        statements.clear();
++        try (var idleScheduler = new RunScheduler(validatingStore) {
++            @Override public void start() { schedulerActions.incrementAndGet(); throw new AssertionError("no scheduler start"); }
++            @Override public Admission reserveInteractive() { schedulerActions.incrementAndGet(); throw new AssertionError("no queue claim"); }
++            @Override public void created(long id, Admission ticket) { schedulerActions.incrementAndGet(); throw new AssertionError("no worker wake"); }
++        }) {
++            var validation = new RunService(validatingStore, null, null, null, idleScheduler);
++            // Existing reserved path skips interactive queue claims. The sentinel stops before
++            // persistence/created; this proves real input/DAG gates, not public IAM admission.
++            assertThatThrownBy(() -> validation.createReservedSessionTurn(
++                    "app-a", Json.read("{\"inputs\":{},\"mode\":\"FULL\"}"), snapshot,
++                    new Actor(tenant, "alice", Set.of("EDITOR"), Map.of()), null))
++                    .isSameAs(reachedPersistence);
++            var wrongEdges = snapshot.deepCopy();
++            ((com.fasterxml.jackson.databind.node.ObjectNode) wrongEdges.path("definition")).set(
++                    "edges", Json.read("[{\"source\":\"start\",\"target\":\"end\"}]"));
++            assertThatThrownBy(() -> validation.createReservedSessionTurn(
++                    "app-a", Json.read("{\"inputs\":{},\"mode\":\"FULL\"}"), wrongEdges,
++                    new Actor(tenant, "alice", Set.of("EDITOR"), Map.of()), null))
++                    .isInstanceOfSatisfying(PlatformException.class,
++                            failure -> assertThat(failure.code()).isEqualTo("UNKNOWN_EDGE"));
++        }
++        assertThat(statements).isEmpty();
++        assertThat(schedulerActions).hasValue(0);
++        assertThat(facts()).isEqualTo(before);
++        assertThat(dependencyCalls.get()).isEqualTo(calls);
++        System.out.println("O1B_ADMISSION_GATE=finiteFlow+realCreateInternalDag; stopped-before-persistence");
++    }
++    @Test void outputBudgetRejectsOneByteOverAndAcceptsExactUtf8Envelope() throws Exception {
++        long id = completeRun();
++        String run = publicId(id);
++        var writer = local(id);
++        output(id, Map.of("text", "观察\n\"\\"), writer);
++        var m = metadataThenStatus(run);
++        var first = request("GET", "/admin/runs/" + run, m, null);
++        assertThat(first.statusCode()).isEqualTo(200);
++        int base = first.body().getBytes(StandardCharsets.UTF_8).length;
++        int padding = 2 * 1024 * 1024 - base;
++        var retainedMaximum = new AtomicInteger();
++        Json.mapper().getFactory().setOutputDecorator(new com.fasterxml.jackson.core.io.OutputDecorator() {
++            public Writer decorate(com.fasterxml.jackson.core.io.IOContext c, Writer writer) { return writer; }
++            public OutputStream decorate(com.fasterxml.jackson.core.io.IOContext c, OutputStream output) {
++                return new FilterOutputStream(output) {
++                    private void sample() throws IOException {
++                        if (output instanceof ByteArrayOutputStream bytes)
++                            retainedMaximum.accumulateAndGet(backingCapacity(bytes), Math::max);
++                    }
++                    @Override public void write(int value) throws IOException {
++                        try { out.write(value); } finally { sample(); }
++                    }
++                    @Override public void write(byte[] value, int offset, int length) throws IOException {
++                        try { out.write(value, offset, length); } finally { sample(); }
++                    }
++                };
++            }
+         });
+-        output(id,Map.of("text","观察\n\"\\"+"x".repeat(padding)),writer);
+-        var exact=request("GET","/admin/runs/"+run,m,null);assertThat(exact.statusCode()).as(exact.body().substring(0,Math.min(200,exact.body().length()))).isEqualTo(200);assertThat(exact.body().getBytes(StandardCharsets.UTF_8).length).isEqualTo(2*1024*1024);
+-        output(id,Map.of("text","观察\n\"\\"+"x".repeat(padding+1)),writer);statements.clear();
+-        var exceeded=request("GET","/admin/runs/"+run,m,null);noBusiness(exceeded,403);assertThat(Json.read(exceeded.body()).path("code").asText()).isEqualTo("RUN_STATUS_TOO_LARGE");assertThat(payloadReads()).isPositive();
+-        assertThat(retainedMaximum.get()).isEqualTo(2*1024*1024);Json.mapper().getFactory().setOutputDecorator(null);
+-        System.out.println("O1B_BUDGET="+Json.write(Map.of("exact",exact.body().getBytes(StandardCharsets.UTF_8).length,"over",exact.body().getBytes(StandardCharsets.UTF_8).length+1,"baseUtf8",base,"bufferMaximum",retainedMaximum.get(),"error",Json.read(exceeded.body()))));
++        output(id, Map.of("text", "观察\n\"\\" + "x".repeat(padding)), writer);
++        var exact = request("GET", "/admin/runs/" + run, m, null);
++        assertThat(exact.statusCode()).as(exact.body().substring(0, Math.min(200, exact.body().length()))).isEqualTo(200);
++        assertThat(exact.body().getBytes(StandardCharsets.UTF_8).length).isEqualTo(2 * 1024 * 1024);
++        output(id, Map.of("text", "观察\n\"\\" + "x".repeat(padding + 1)), writer);
++        statements.clear();
++        var exceeded = request("GET", "/admin/runs/" + run, m, null);
++        noBusiness(exceeded, 403);
++        assertThat(Json.read(exceeded.body()).path("code").asText()).isEqualTo("RUN_STATUS_TOO_LARGE");
++        assertThat(payloadReads()).isPositive();
++        assertThat(retainedMaximum.get()).isEqualTo(2 * 1024 * 1024);
++        Json.mapper().getFactory().setOutputDecorator(null);
++        System.out.println("O1B_BUDGET=" + Json.write(Map.of(
++                "exact", exact.body().getBytes(StandardCharsets.UTF_8).length,
++                "over", exact.body().getBytes(StandardCharsets.UTF_8).length + 1,
++                "baseUtf8", base, "actualBackingCapacityMaximum", retainedMaximum.get(),
++                "error", Json.read(exceeded.body()))));
+     }
+     @Test void expiryAfterActualStreamAcquisitionWritesNoStatus()throws Exception {
+         for(String mode:List.of("expiry","close","replace")){
+             renew();long id=completeRun();String run=publicId(id);var ticket=metadataThenStatus(run);var armed=new AtomicBoolean();
+             streamAcquired=()->{if(armed.compareAndSet(false,true))expireOrClose(mode);};statements.clear();
+             var response=request("GET","/admin/runs/"+run,ticket,null);noBusiness(response,403);assertThat(armed).isTrue();assertThat(payloadReads()).isPositive();assertThat(streamWindows.get()).isPositive();streamAcquired=()->{};
+             System.out.println("O1B_STREAM_WINDOW="+Json.write(Map.of("mode",mode,"status",response.statusCode(),"payloadReads",payloadReads(),"error",Json.read(response.body()))));
+         }
+     }
+     @Test void freshStatusDoesNotResumeExecutionGrant()throws Exception {
+         long id=completeRun();String run=publicId(id);
+         db.update("update engine.run_authority set blocked_reason='AUTHORITY_DENIED',retry_not_before=null where run_id=?",id);
+         bypass("update engine.run_authority set grant_expires_at=now()-interval '1 day' where run_id=?",id);
+         var before=db.queryForMap("select grant_ref,initial_ceiling,origin_authentication_id,blocked_reason,check_version from engine.run_authority where run_id=?",id);
+         iam.portalActor(new Actor(tenant,"alice",Set.of("EDITOR","VIEWER"),Map.of("region",Set.of("A","B","C"),"dataLabels",Set.of("new-observer"))));gateway.close();gateway=iam.client("gateway");source=iam.portal();
+         var m=metadataThenStatus(run);var effects=facts();int sends=dependencyCalls.get(),calls=iam.authorityCalls();statements.clear();
+         var response=request("GET","/admin/runs/"+run,m,null);
+         assertThat(response.statusCode()).as(response.body()).isEqualTo(200);
+         var result=Json.read(response.body()).get("data");
+         assertThat(result.size()).isEqualTo(12);assertThat(result.get("nodes").size()).isEqualTo(2);assertThat(result.get("events").size()).isEqualTo(1);
+         assertThat(result.get("events").get(0).path("payload").path("precise").bigIntegerValue().toString()).isEqualTo("123456789012345678901234567890");
+         assertThat(response.body()).contains("1.2345678901234567890123456789");
+         assertThat(result.get("output")).isEqualTo(Json.read("{}"));assertThat(result.get("error")).isEqualTo(Json.read("{}"));assertThat(result.get("fileRefs").isEmpty()).isTrue();
+         assertThat(payloadReads()).isPositive();
+         assertReadOnlySql();
+         assertThat(statements).allSatisfy(q->assertThat(q.authorityCalls()).isEqualTo(calls+2));assertThat(iam.authorityCalls()).isEqualTo(calls+2);
+         assertThat(statements.stream().map(Sql::connection).distinct().count()).isEqualTo(1);
+         System.out.println("O1B_WIRE="+Json.write(Map.of("status",response.statusCode(),"bytes",response.body().getBytes(StandardCharsets.UTF_8).length,"response",Json.read(response.body()),"payloadReads",payloadReads())));
+         assertThat(db.queryForMap("select grant_ref,initial_ceiling,origin_authentication_id,blocked_reason,check_version from engine.run_authority where run_id=?",id)).isEqualTo(before);
+         assertThat(facts()).isEqualTo(effects);assertThat(dependencyCalls.get()).isEqualTo(sends);
+     }
+     @Test void queryAndExecutionTicketsCannotBecomeStatusAndStatusCannotWriteOrAlias()throws Exception {
+         long id=completeRun();String run=publicId(id);var m=metadataThenStatus(run);
+         for(var ticket:List.of(ticket(run),gateway.exchange(source,MAIN))){
+             statements.clear();int before=iam.authorityCalls();noBusiness(request("GET","/admin/runs/"+run,ticket,null),403);
+             assertThat(statements).isEmpty();assertThat(iam.authorityCalls()).isEqualTo(before);
+         }
+         for(String path:List.of("/admin/runs/"+run+"/events","/v1/runs/"+run,"/admin/debug-runs/"+run+"/status")){
+             statements.clear();var response=request("GET",path,m,null);assertThat(response.statusCode()).isIn(400,403);assertThat(payloadReads()).isZero();
+         }
+         statements.clear();noBusiness(request("POST","/admin/apps/app-a/runs",m,"{}"),403);assertThat(statements).isEmpty();
+         var call=new ServiceCall("engine",RunObservationSelectors.STATUS_ACTION,RunObservationSelectors.status(run,new RunAuthorityStore(ds,iam.clock()).load(id).snapshotSha()));
+         assertThatThrownBy(()->gateway.resume(m.operation()==null?null:new DelegationRef("invalid",new SubjectKey(tenant,"alice"),iam.clock().instant().plusSeconds(30)),call)).isInstanceOf(RuntimeException.class);
+     }
+     @Test void sameAppDifferentRunsWrongShaOwnerAndMissingRunAreIsolated()throws Exception {
+         long id=completeRun(),other=completeRun();String run=publicId(id),otherRun=publicId(other);var m=metadataThenStatus(run);
+         statements.clear();noBusiness(request("GET","/admin/runs/"+otherRun,m,null),403);assertThat(payloadReads()).isZero();
+         assertThatThrownBy(()->gateway.exchange(source,new ServiceCall("engine",RunObservationSelectors.STATUS_ACTION,RunObservationSelectors.status(run,Digest.sha256("wrong"))))).isInstanceOf(PlatformException.class);
+         for(String change:List.of("principal_id='bob'","tenant_id='other-tenant'")){
+             bypass("update engine.run set "+change+" where id=?",id);statements.clear();noBusiness(request("GET","/admin/runs/"+run,m,null),404);assertThat(payloadReads()).isZero();
+             bypass("update engine.run set tenant_id='"+tenant+"',principal_id='alice' where id=?",id);
+         }
+         bypass("delete from engine.material_scope where run_id=?",id);bypass("delete from engine.run_authority where run_id=?",id);statements.clear();noBusiness(request("GET","/admin/runs/"+run,m,null),403);assertThat(payloadReads()).isZero();
+         bypass("update engine.run set public_id='r_"+UUID.randomUUID().toString().replace("-","")+"' where id=?",id);statements.clear();noBusiness(request("GET","/admin/runs/"+run,m,null),404);assertThat(payloadReads()).isZero();
+         iam.denyObservation(run);statements.clear();noBusiness(request("GET","/admin/runs/"+run,m,null),403);assertThat(statements).isEmpty();
+     }
+     @Test void everyRequiredScopeAndNarrowControlPrecedeFirstPayload()throws Exception {
+         for(String mutation:List.of(
+                 "delete from engine.material_scope where run_id=? and kind='run-output'",
+                 "delete from engine.material_scope where run_id=? and kind='node-error'",
+                 "delete from engine.material_scope where run_id=? and kind='run-event'",
+                 "update engine.material_scope set scope_sha256=repeat('c',64) where run_id=? and kind='run-event'",
+                 "update engine.material_scope set material_revision=material_revision+100000,material_version=(material_revision+100000)::text where run_id=? and kind='run-event'",
+                 "update engine.material_scope set scope=jsonb_set(scope,'{parentScopeSha256}','[]'::jsonb) where run_id=? and kind='run-event'",
+                 "update engine.material_scope set scope=jsonb_set(scope,'{owner,principalId}',to_jsonb('bob'::text)) where run_id=? and kind='run-inputs'",
+                 "update engine.run_authority set initial_ceiling_sha256=repeat('b',64) where run_id=?",
+                 "update engine.run_authority set accepted_snapshot_sha256=repeat('a',64) where run_id=?",
+                 "update engine.run set trigger_type='DEBUG',app_version_id=null,debug_snapshot='{}'::jsonb,controlled_draft_skill_version_id=1,controlled_draft_skill_digest=repeat('a',64) where id=?",
+                 "update engine.run set trigger_type='EVALUATION' where id=?")){
+             renew();long id=completeRun();String run=publicId(id);var m=metadataThenStatus(run);bypass(mutation,id);statements.clear();
+             noBusiness(request("GET","/admin/runs/"+run,m,null),403);assertThat(payloadReads()).as(mutation).isZero();
+             System.out.println("O1B_PREFLIGHT="+Json.write(Map.of("mutation",mutation,"payloadReads",payloadReads(),"sqlCount",statements.size())));
+         }
+         renew();long id=completeRun();String run=publicId(id);var m=metadataThenStatus(run);
+         iam.decisionMutation(c->{if(c.containsKey("roles"))c.put("roles",Set.of());});statements.clear();noBusiness(request("GET","/admin/runs/"+run,m,null),403);assertThat(payloadReads()).isZero();iam.decisionMutation(c->{});
+     }
+     @Test void snapshotAndCandidateDamageIsDetectedAfterPayloadWithoutStatus()throws Exception {
+         for(String mutation:List.of(
+                 "update engine.run set snapshot=jsonb_set(snapshot,'{candidateSha256}',to_jsonb(repeat('d',64))) where id=?",
+                 "update engine.run_authority set resource_digest=repeat('e',64) where run_id=?",
+                 "update engine.run set version_refs='{\"appVer\":2}'::jsonb where id=?")){
+             renew();long id=completeRun();String run=publicId(id);var m=metadataThenStatus(run);
+             var original=db.queryForMap("select snapshot::text,version_refs::text from engine.run where id=?",id);
+             var root=db.queryForObject("select resource_digest from engine.run_authority where run_id=?",String.class,id);
+             assertThatThrownBy(()->db.update(mutation,id)).isInstanceOf(org.springframework.dao.DataAccessException.class);
+             bypass(mutation,id);statements.clear();noBusiness(request("GET","/admin/runs/"+run,m,null),403);assertThat(payloadReads()).as(mutation).isPositive();
+             System.out.println("O1B_PAYLOAD_REJECTION="+Json.write(Map.of("mutation",mutation,"payloadReads",payloadReads())));
+             // Restore deliberately broken immutable rows only in this class's dedicated database.
+             bypass("update engine.run set snapshot='"+original.get("snapshot").toString().replace("'","''")+"'::jsonb,version_refs='"+original.get("version_refs").toString().replace("'","''")+"'::jsonb where id=?",id);
+             bypass("update engine.run_authority set resource_digest='"+root+"' where run_id=?",id);
+         }
+     }
+     @Test void oneReadOnlyRepeatableReadSnapshotSurvivesAnExplicitConcurrentWriter()throws Exception {
+         long id=completeRun();String run=publicId(id);var writer=local(id);output(id,Map.of("generation","before"),writer);var m=metadataThenStatus(run);
+         var fired=new AtomicBoolean();var writerSql=new ArrayList<Sql>();
+         afterQuery=sql->{if(sql.equals("select snapshot::text from engine.run where id=?")&&fired.compareAndSet(false,true)){
+             var task=new java.util.concurrent.FutureTask<Void>(()->{int start=statements.size();concurrentWrite(id,writer);writerSql.addAll(statements.subList(start,statements.size()));return null;});Thread.ofVirtual().start(task);
+             try{task.get(10,java.util.concurrent.TimeUnit.SECONDS);}catch(Exception e){throw new AssertionError(e);}
+         }};statements.clear();var response=request("GET","/admin/runs/"+run,m,null);assertThat(response.statusCode()).as(response.body()).isEqualTo(200);afterQuery=sql->{};
+         assertThat(fired).isTrue();var value=Json.read(response.body()).get("data");assertThat(value.path("output").path("generation").asText()).isEqualTo("before");assertThat(value.path("events").size()).isEqualTo(1);assertThat(value.path("eventsWatermark").longValue()).isEqualTo(1);
+         assertThat(db.queryForObject("select event_seq from engine.run where id=?",Integer.class,id)).isEqualTo(2);
+         var reads=statements.stream().filter(Sql::readOnly).toList();assertThat(reads.stream().map(Sql::connection).distinct().count()).isEqualTo(1);assertThat(reads).allSatisfy(q->assertThat(q.isolation()).isEqualTo(4));assertThat(writerSql).anySatisfy(q->assertThat(q.sql()).startsWith("update engine.run set output"));
+         System.out.println("O1B_CONCURRENT_WRITER_EXCEPTION="+Json.write(Map.of("writerStatements",writerSql,"readerOutput",value.path("output"),"readerEvents",value.path("events").size(),"readerWatermark",value.path("eventsWatermark"))));
+     }
+     static void concurrentWrite(long id,RetainedAuthorization proof){
+         var tx=new TransactionTemplate(new DataSourceTransactionManager(ds));tx.setIsolationLevel(4);
+         tx.execute(s->{
+             db.queryForObject("select id from engine.run where id=? for update",Long.class,id);
+             var binding=RunAuthorityStore.load(db,id,true);var materials=new MaterialScopeStore(ds,iam.clock());materials.requireWriter(binding,proof,false);var parents=materials.currentScopes(binding);
+             db.update("update engine.run set output='{\"generation\":\"after\"}'::jsonb,event_seq=event_seq+1 where id=?",id);
+             int seq=db.queryForObject("select event_seq from engine.run where id=?",Integer.class,id);
+             long event=db.queryForObject("insert into engine.run_event(run_id,seq,type,payload) values(?,?,'AFTER_SNAPSHOT','{\"generation\":\"after\"}'::jsonb) returning id",Long.class,id,seq);
+             materials.append(binding,"run-output",binding.publicId(),proof,parents);materials.append(binding,"run-state",binding.publicId(),proof,parents);materials.append(binding,"run-event",Long.toString(event),proof,parents);proof.requireVerified();return null;
+         });proof.requireVerified();
+     }
+     @Test void localRetirementAtManifestPayloadCommitAndSerializedWindowsWritesNoStatus()throws Exception {
+         for(String boundary:List.of("manifest","payload","commit","compose","serialized"))for(String mode:List.of("expiry","close")){
+             renew();long id=completeRun();String run=publicId(id);var m=metadataThenStatus(run);var fired=new AtomicBoolean();
+             Runnable invalidate=()->{if(fired.compareAndSet(false,true))expireOrClose(mode);};
+             if(boundary.equals("manifest"))afterQuery=sql->{if(sql.contains("from engine.material_scope"))invalidate.run();};
+             if(boundary.equals("payload"))afterQuery=sql->{if(sql.equals("select snapshot::text from engine.run where id=?"))invalidate.run();};
+             if(boundary.equals("commit"))afterReadCommit=invalidate;
+             if(boundary.equals("serialized"))afterSerialization=invalidate;
+             if(boundary.equals("compose"))Json.mapper().getFactory().setOutputDecorator(new com.fasterxml.jackson.core.io.OutputDecorator(){
+                 public Writer decorate(com.fasterxml.jackson.core.io.IOContext c,Writer writer){return writer;}
+                 public OutputStream decorate(com.fasterxml.jackson.core.io.IOContext c,OutputStream output){invalidate.run();return output;}
+             });
+             statements.clear();noBusiness(request("GET","/admin/runs/"+run,m,null),403);assertThat(fired).isTrue();
+             if(boundary.equals("manifest"))assertThat(payloadReads()).isZero();else assertThat(payloadReads()).isPositive();
+             System.out.println("O1B_TERMINAL_WINDOW="+Json.write(Map.of("boundary",boundary,"mode",mode,"payloadReads",payloadReads())));
+             afterQuery=sql->{};afterReadCommit=()->{};afterSerialization=()->{};Json.mapper().getFactory().setOutputDecorator(null);
+         }
+     }
+     @Test void onlineFailuresAndAmbientTransactionRejectBeforeRefreshOrPayload()throws Exception {
+         long id=completeRun();String run=publicId(id);var m=metadataThenStatus(run);
+         iam.revoked(true);statements.clear();noBusiness(request("GET","/admin/runs/"+run,m,null),403);assertThat(statements).isEmpty();iam.revoked(false);
+         iam.unavailable(true);statements.clear();noBusiness(request("GET","/admin/runs/"+run,m,null),503);assertThat(statements).isEmpty();iam.unavailable(false);
+         withStatusFrame(m,run,p->{
+             int before=iam.authorityCalls();var tx=new TransactionTemplate(new DataSourceTransactionManager(ds));tx.setReadOnly(true);tx.setIsolationLevel(4);statements.clear();
+             assertThatThrownBy(()->tx.execute(s->service.observeStatus(run,Actor.current()))).isInstanceOf(IllegalStateException.class).hasMessage("STATUS_REFRESH_REQUIRES_NO_TRANSACTION");assertThat(iam.authorityCalls()).isEqualTo(before);assertThat(statements).isEmpty();return null;
+         });
+         beforeController=request->{iam.revoked(true);};statements.clear();noBusiness(request("GET","/admin/runs/"+run,m,null),403);assertThat(statements).isEmpty();beforeController=r->{};iam.revoked(false);
+     }
+     static <T>T withStatusFrame(ServiceTicket ticket,String run,Function<RetainedAuthorization,T> work)throws Exception {
+         try(var decoder=new TrustedJwtDecoder(iam.config("engine"),iam.clock(),true)){
+             var request=new MockHttpServletRequest("GET","/admin/runs/"+run);var response=new MockHttpServletResponse();request.setAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE,"/admin/runs/{id}");
+             var handler=new HandlerMethod(new RunController(service,trace,null,null),RunController.class.getMethod("status",String.class,jakarta.servlet.http.HttpServletRequest.class,jakarta.servlet.http.HttpServletResponse.class));
+             request.setAttribute(HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE,handler);RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(decoder.decode(ticket.value()),List.of()));
+             var guard=new ServiceAuthorization("engine",new ServiceRoutePolicy(),engine);
+             try{guard.preHandle(request,response,handler);return work.apply(AuthorityContext.requireInitialFor(Actor.current(),AuthorityContext.current().call().resource()));}
+             finally{guard.afterCompletion(request,response,handler,null);SecurityContextHolder.clearContext();RequestContextHolder.resetRequestAttributes();}
+         }
+     }
+     static String raw(String target,String ticket,String body)throws Exception {
+         try(var socket=new Socket("127.0.0.1",context.getWebServer().getPort())){
+             socket.setSoTimeout(10000);var out=socket.getOutputStream();byte[] bytes=body.getBytes(StandardCharsets.UTF_8);
+             out.write(("GET "+target+" HTTP/1.1\r\nHost: 127.0.0.1\r\nAuthorization: Bearer "+ticket+"\r\nContent-Type: application/json\r\nContent-Length: "+bytes.length+"\r\nConnection: close\r\n\r\n").getBytes(StandardCharsets.US_ASCII));out.write(bytes);out.flush();return new String(socket.getInputStream().readAllBytes(),StandardCharsets.UTF_8);
+         }
+     }
+-    @Test void actualAdminHandlerRejectsRawQueryBareQuestionBodyAndDispatcher()throws Exception {
+-        long id=completeRun();String run=publicId(id);var m=metadataThenStatus(run);
+-        for(String suffix:List.of("?x=1","?","?id=a&id=b")){
+-            statements.clear();String response=raw("/admin/runs/"+run+suffix,m.value(),"");assertThat(response).startsWith("HTTP/1.1 400");assertThat(statements).isEmpty();assertThat(rawQueries.getLast()).isEqualTo(suffix.substring(1));
++    @Test void actualAdminHandlerRejectsRawQueryBareQuestionBodyAndDispatcher() throws Exception {
++        long id = completeRun();
++        String run = publicId(id);
++        var m = metadataThenStatus(run);
++        for (String suffix : List.of("?x=1", "?", "?id=a&id=b")) {
++            statements.clear();
++            String response = raw("/admin/runs/" + run + suffix, m.value(), "");
++            assertThat(response).startsWith("HTTP/1.1 400");
++            assertThat(statements).isEmpty();
++            assertThat(rawQueries.getLast()).isEqualTo(suffix.substring(1));
+         }
+-        statements.clear();assertThat(raw("/admin/runs/"+run,m.value(),"{}")).startsWith("HTTP/1.1 400");assertThat(statements).isEmpty();
+-        var fired=new AtomicBoolean();beforeController=r->{if(fired.compareAndSet(false,true))try{r.getRequestDispatcher("/admin/runs/"+run).forward(r,((ServletRequestAttributes)RequestContextHolder.currentRequestAttributes()).getResponse());}catch(Exception e){throw new IllegalStateException(e);}};
+-        statements.clear();noBusiness(request("GET","/admin/runs/"+run,m,null),403);assertThat(fired).isTrue();assertThat(statements).isEmpty();beforeController=r->{};
++        statements.clear();
++        assertThat(raw("/admin/runs/" + run, m.value(), "{}")).startsWith("HTTP/1.1 400");
++        assertThat(statements).isEmpty();
++        var fired = new AtomicBoolean();
++        var completed = new AtomicBoolean();
++        beforeController = r -> {
++            if (fired.compareAndSet(false, true)) {
++                try {
++                    r.getRequestDispatcher("/admin/runs/" + run).forward(r,
++                            ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getResponse());
++                    r.setAttribute("o1b.forward-complete", true);
++                    completed.set(true);
++                } catch (Exception e) {
++                    throw new IllegalStateException(e);
++                }
++            }
++        };
++        statements.clear();
++        noBusiness(request("GET", "/admin/runs/" + run, m, null), 403);
++        assertThat(fired).isTrue();
++        assertThat(completed).isTrue();
++        assertThat(statements).isEmpty();
++        beforeController = r -> {};
+     }
+     @Test void publicRecordsCannotMintObserverOrWriterAndLegacyAndPostStillUseOriginalPurpose()throws Exception {
+         long id=completeRun();String run=publicId(id);var m=metadataThenStatus(run);
+         assertThat(TraceStore.StatusReadProof.class.getDeclaredConstructors()).allSatisfy(c->assertThat(java.lang.reflect.Modifier.isPrivate(c.getModifiers())).isTrue());
+         assertThat(TraceStore.ObservedView.class.getDeclaredConstructors()).allSatisfy(c->assertThat(java.lang.reflect.Modifier.isPrivate(c.getModifiers())).isTrue());
+         withStatusFrame(m,run,p->{
+             var binding=new RunAuthorityStore(ds,iam.clock()).load(id);statements.clear();
+             assertThatThrownBy(()->new MaterialScopeStore(ds,iam.clock()).read(binding.scopes().getFirst().material(),p.current())).isInstanceOf(PlatformException.class);
+             assertThatThrownBy(()->new TransactionTemplate(new DataSourceTransactionManager(ds)).execute(s->{new MaterialScopeStore(ds,iam.clock()).requireWriter(binding,p,false);return null;})).isInstanceOf(PlatformException.class);
+             assertThatThrownBy(()->service.status(run,Actor.current())).isInstanceOf(PlatformException.class);assertThat(payloadReads()).isZero();
+             try(var frame=AuthorityContext.bind(p.current())){assertThatThrownBy(()->service.observeStatus(run,p.current().actor())).isInstanceOf(PlatformException.class);}
+             return null;
+         });
+         // Original POST-purpose reader remains concrete and returns the same complete status body.
+         var admission=gateway.exchange(source,MAIN);
+         withFrame(admission,MAIN,"POST","/admin/apps/app-a/runs","/admin/apps/{code}/runs",p->{assertThat(service.status(run,Actor.current()).keySet()).hasSize(12);return null;});
+         var legacy=new RunService(trace,null,null,null);assertThat(legacy.iamEnabled()).isFalse();
+     }
+     @Test void validDigestUnsupportedFlowAndActualToolExistenceFailAtTheirOwnBoundaries()throws Exception {
+         unsupportedFlow=true;long id=completeRun();unsupportedFlow=false;String run=publicId(id);var m=metadataThenStatus(run);statements.clear();
+         noBusiness(request("GET","/admin/runs/"+run,m,null),403);assertThat(payloadReads()).isEqualTo(2);
+         renew();id=completeRun();run=publicId(id);m=metadataThenStatus(run);long rid=id;
+         new TransactionTemplate(new DataSourceTransactionManager(ds)).execute(s->{
+             long node=db.queryForObject("select min(id) from engine.node_instance where run_id=?",Long.class,rid);
+             long attempt=db.queryForObject("insert into engine.attempt(node_instance_id,attempt_no,status,idempotency_key,request_snapshot_ref,request_snapshot) values(?,1,'SUCCEEDED',repeat('a',64),'fixture','{}'::jsonb) returning id",Long.class,node);
+             db.update("insert into engine.tool_call(run_id,node_instance_id,call_seq,skill_version_id,args_digest,idempotency_key,status,skill_code,args,result,attempt_id) values(?,?,1,1,repeat('a',64),?, 'SUCCEEDED','unsupported','{}'::jsonb,'{\"secret\":\"must-not-read\"}'::jsonb,?)",rid,node,Digest.sha256(UUID.randomUUID().toString()),attempt);return null;
+         });statements.clear();noBusiness(request("GET","/admin/runs/"+run,m,null),403);assertThat(payloadReads()).isZero();assertThat(statements).hasSize(1);assertThat(statements.getFirst().sql()).contains("exists(select 1 from engine.tool_call");
+     }
+     @Test void actualMappingWithoutGuardFailsStartup(){
+         omitGuard=true;var app=new SpringApplication(Receiver.class);app.setAdditionalProfiles("test");app.setDefaultProperties(Map.ofEntries(Map.entry("server.address","127.0.0.1"),Map.entry("server.port","0"),Map.entry("spring.config.location","optional:classpath:/o1b-no-config/"),Map.entry("spring.main.banner-mode","off"),Map.entry("springdoc.api-docs.enabled",false),Map.entry("spring.flyway.enabled",false),Map.entry("management.endpoints.web.exposure.exclude","*"),Map.entry("management.endpoints.web.discovery.enabled",false),Map.entry("logging.level.root","OFF")));
+         try{assertThatThrownBy(app::run).hasStackTraceContaining("ROUTE_GUARD_MISSING");}finally{omitGuard=false;}
+     }
+     static void assertReadOnlySql(){
+         var allowed=new HashSet<>(List.of(
+             "select r.id,r.public_id,r.tenant_id,r.principal_id,r.trigger_type,r.mode,(r.debug_snapshot is not null or r.eval_candidate is not null or r.controlled_draft_skill_version_id is not null or r.controlled_draft_skill_digest is not null or r.controlled_skill_test_version_id is not null or r.controlled_skill_test_digest is not null or r.controlled_skill_test_status is not null) as unsupported,exists(select 1 from engine.tool_call t where t.run_id=r.id) as has_tools from engine.run r where r.public_id=? and r.tenant_id=? and r.principal_id=?",
+             "select r.id,r.public_id,r.tenant_id as run_tenant,r.principal_id as run_principal,r.app_code,r.app_version_id as run_version,a.* from engine.run r join engine.run_authority a on a.run_id=r.id where r.id=?",
+             "select tenant_id,producer,kind,material_id,material_version,payload_sha256,scope_sha256,scope::text as scope from engine.material_scope where run_id=? and kind in ('run-snapshot','run-inputs','run-version-refs')",
+             "select distinct on (kind,material_id) tenant_id,producer,kind,material_id,material_version,payload_sha256,scope_sha256,scope::text as scope,material_revision from engine.material_scope where run_id=? and kind not in ('run-snapshot','run-inputs','run-version-refs') order by kind,material_id,material_revision desc",
+             "select run_id from engine.node_instance where id=?","select run_id from engine.run_event where id=?","select public_id from engine.run where id=?",
+             "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
+             "select id from engine.node_instance where run_id=? order by step_seq","select id from engine.run_event where run_id=? order by seq"));
+         for(String field:List.of("snapshot","inputs","version_refs","budget","output","error"))allowed.add("select "+field+"::text from engine.run where id=?");
+         for(String field:List.of("definition","output","error"))allowed.add("select "+field+"::text from engine.node_instance where id=?");
+         allowed.add(statusProjection("run","id,public_id,app_code,status,event_seq,stop_reason,started_at,ended_at,mode,trigger_type,output_ref"));
+         allowed.add(statusProjection("node_instance","id,run_id,node_def_id,step_seq,node_type,join_semantics,status,committed_attempt_id,committed_output_ref,input_digest,output_digest,started_at,ended_at,pause_seq,released,winner_node_id"));
+         allowed.add(statusProjection("run_event","id,run_id,seq,type,payload,created_at"));
+         assertThat(statements).isNotEmpty().allSatisfy(s->{assertThat(allowed).as("exact SQL allowlist").contains(s.sql());assertThat(s.isolation()).isEqualTo(4);assertThat(s.readOnly()).isTrue();assertThat(s.autoCommit()).isFalse();});
+     }
+     static String statusProjection(String table,String columns){
+         var fields=Arrays.stream(columns.split(",")).map(c->Set.of("started_at","ended_at","created_at").contains(c)?"to_char("+c+" at time zone 'UTC','YYYY-MM-DD\"T\"HH24:MI:SS.US\"Z\"') as "+c:c).toList();
+         return "select row_to_json(material)::text from (select "+String.join(",",fields)+" from engine."+table+" where id=?) material";
+     }
+     @Test void actualSignedWrongCallerTargetSourceOriginWorkloadAndShaFailBeforePayload()throws Exception {
+         long id=completeRun();String run=publicId(id);var ticket=metadataThenStatus(run);
+         for(String field:List.of("caller","target","action","authority_mode","source_kind","origin_kind","snapshotSha")){
+             var claims=Json.mapper().convertValue(Json.read(new String(Base64.getUrlDecoder().decode(ticket.value().split("\\.")[1]),StandardCharsets.UTF_8)),Map.class);
+             if(Set.of("source_kind","origin_kind").contains(field))((Map<String,Object>)claims.get("operation")).put(field,"INTEGRATION");
+             else if(field.equals("snapshotSha"))((Map<String,Object>)claims.get("resource")).put("version_digest",Digest.sha256("other"));
+             else claims.put(field,switch(field){case "caller","target"->"app";case "action"->"run.advance";default->"workload";});
+             var signed=iam.sign(claims,iam.authoritySigningKey(),"at+jwt");statements.clear();int count=iam.authorityCalls();
+             var response=http.send(HttpRequest.newBuilder(URI.create("http://127.0.0.1:"+context.getWebServer().getPort()+"/admin/runs/"+run)).timeout(Duration.ofSeconds(15)).header("Authorization","Bearer "+signed).GET().build(),HttpResponse.BodyHandlers.ofString());
+             assertThat(response.statusCode()).isIn(401,403);assertThat(response.body()).doesNotContain("\"runId\"","\"nodes\"","\"events\"");assertThat(statements).isEmpty();assertThat(iam.authorityCalls()-count).isLessThanOrEqualTo(1);
+             System.out.println("O1B_SIGNED_PURPOSE="+Json.write(Map.of("field",field,"authorityDelta",iam.authorityCalls()-count,"status",response.statusCode())));
+         }
+     }
+     @Test void movedPublishedFlowPureGateKeepsOriginalFiniteDependencies(){
+         var valid=Json.read("{\"type\":\"FLOW\",\"config\":{},\"definition\":{\"nodes\":[{\"id\":\"s\",\"type\":\"START\"},{\"id\":\"e\",\"type\":\"END\"}],\"edges\":[]}}");
+         GraphRules.requirePublishedFlow(valid);
+         for(String type:List.of("AGENT","LLM","SKILL","RETRIEVE","CONFIRM","UNKNOWN")){
+             var candidate=(com.fasterxml.jackson.databind.node.ObjectNode)valid.deepCopy();((com.fasterxml.jackson.databind.node.ObjectNode)candidate.path("definition").path("nodes").get(1)).put("type",type);
+             assertThatThrownBy(()->GraphRules.requirePublishedFlow(candidate)).isInstanceOf(PlatformException.class);
+         }
+         for(String key:List.of("skillRefs","promptRefs","modelEntryId","modelBinding","tools","frozenPrompts","dataSources")){
+             var candidate=(com.fasterxml.jackson.databind.node.ObjectNode)valid.deepCopy();((com.fasterxml.jackson.databind.node.ObjectNode)candidate.path("config")).set(key,Json.tree(List.of("external")));
+             assertThatThrownBy(()->GraphRules.requirePublishedFlow(candidate)).isInstanceOf(PlatformException.class);
+         }
+     }
+     @Test void partialBusinessWriteClosesActualStreamAndNeverRetriesStatus()throws Exception {
+         long id=completeRun();String run=publicId(id);var m=metadataThenStatus(run);
+         var logger=(ch.qos.logback.classic.Logger)org.slf4j.LoggerFactory.getLogger(RunController.class);var previous=logger.getLevel();
+         var appender=new ch.qos.logback.core.read.ListAppender<ch.qos.logback.classic.spi.ILoggingEvent>();appender.start();logger.addAppender(appender);logger.setLevel(ch.qos.logback.classic.Level.WARN);
+         try{
+             int count=iam.authorityCalls();statements.clear();failBusinessWrite=true;partialClosed.set(false);
+             String response=raw("/admin/runs/"+run,m.value(),"");failBusinessWrite=false;
+             assertThat(response).startsWith("HTTP/1.1 200");assertThat(response).contains("\"runId\"");assertThat(response).doesNotContain("RUN_STATUS_TOO_LARGE","O1B_FINITE_PARTIAL_WRITE","\"events\"");
+             String body=response.substring(response.indexOf("\r\n\r\n")+4);int boundary=body.indexOf("\r\n");int observed=Integer.parseInt(body.substring(0,boundary),16);String peerBody=body.substring(boundary+2,boundary+2+observed);
+             assertThat(peerBody.getBytes(StandardCharsets.UTF_8).length).isEqualTo(128);assertThatThrownBy(()->Json.mapper().readTree(peerBody)).isInstanceOf(com.fasterxml.jackson.core.JsonProcessingException.class);
+             assertThat(payloadReads()).isEqualTo(16);assertThat(iam.authorityCalls()-count).isEqualTo(2);
+             assertThat(appender.list).singleElement().satisfies(event->{assertThat(event.getFormattedMessage()).contains("committed=true","attemptedBytes=","actualBytes=unknown");assertThat(event.getThrowableProxy().getCause().getMessage()).contains("O1B_FINITE_PARTIAL_WRITE");assertThat(event.getThrowableProxy().getSuppressed()).hasSize(1);});
+             // Spring 6.2.7 retires its lifecycle stream on the failed write. The best-effort close
+             // is itself rejected before reaching our delegate; container EOF still ends peer I/O.
+             assertThat(partialClosed).isFalse();
+             System.out.println("O1B_PARTIAL_IO="+Json.write(Map.of("actualRawUtf8Bytes",response.getBytes(StandardCharsets.UTF_8).length,"peerBusinessBytes",peerBody.getBytes(StandardCharsets.UTF_8).length,"injectedBusinessWriteBytes",128,"delegateClosed",partialClosed.get(),"closeAttemptRejectedByMvc",true,"authorityDelta",iam.authorityCalls()-count,"wire",response)));
+         }finally{failBusinessWrite=false;logger.detachAppender(appender);logger.setLevel(previous);appender.stop();}
+     }
+ 
+ }

@@ -1,0 +1,2933 @@
+diff --git a/app-management/src/main/java/cn/agentplatform/app/api/AppController.java b/app-management/src/main/java/cn/agentplatform/app/api/AppController.java
+index 39781e8..749e406 100644
+--- a/app-management/src/main/java/cn/agentplatform/app/api/AppController.java
++++ b/app-management/src/main/java/cn/agentplatform/app/api/AppController.java
+@@ -1,218 +1,227 @@
+ package cn.agentplatform.app.api;
+ 
+ import cn.agentplatform.app.application.*;
+ import cn.agentplatform.common.*;
++import cn.agentplatform.common.authority.AuthorityProperties;
+ 
+ import org.springframework.web.bind.annotation.*;
+ 
+ import java.util.*;
+ 
+ @RestController
+ public class AppController {
+     private final AppService apps;
+     private final TemplateService templates;
++    private final AuthorityProperties authorityProperties;
+ 
+-    public AppController(AppService apps, TemplateService templates) {
++    public AppController(AppService apps, TemplateService templates, AuthorityProperties authorityProperties) {
+         this.apps = apps;
+         this.templates = templates;
++        this.authorityProperties = Objects.requireNonNull(authorityProperties);
+     }
+ 
+     private void edit() {
+         Actor.current().requireRole("EDITOR");
+     }
+ 
+     @GetMapping("/admin/apps")
+     public Object list(@RequestParam Map<String, String> filters) {
+         return ApiResponse.ok(apps.list(filters));
+     }
+ 
+     @PostMapping("/admin/apps")
+     public Object create(@RequestBody Map<String, Object> b) {
+         edit();
+         return ApiResponse.ok(apps.create(b));
+     }
+ 
+     @PostMapping("/admin/apps/{code}/copy")
+     public Object copy(@PathVariable String code, @RequestBody Map<String, Object> b) {
+         edit();
+         return ApiResponse.ok(apps.copy(code, b));
+     }
+ 
+     @GetMapping("/admin/apps/{code}/lifecycle-logs")
+     public Object lifecycleLogs(@PathVariable String code) {
+         return ApiResponse.ok(apps.lifecycleLogs(code));
+     }
+ 
+     @GetMapping("/admin/apps/{code}")
+     public Object get(@PathVariable String code) {
+         return ApiResponse.ok(apps.get(code));
+     }
+ 
+     @PutMapping("/admin/apps/{code}")
+     public Object metadata(@PathVariable String code, @RequestBody Map<String, Object> b) {
+         edit();
+         return ApiResponse.ok(apps.metadata(code, b));
+     }
+ 
+     @DeleteMapping("/admin/apps/{code}")
+     public Object delete(@PathVariable String code) {
+         edit();
+         apps.delete(code);
+         return ApiResponse.ok(Map.of("deleted", true));
+     }
+ 
+     @PutMapping("/admin/apps/{code}/config")
+     public Object config(@PathVariable String code, @RequestBody Map<String, Object> b) {
+         edit();
+         return ApiResponse.ok(apps.save(code, b, false));
+     }
+ 
+     @GetMapping("/admin/flows/{code}")
+     public Object flow(@PathVariable String code) {
+         return ApiResponse.ok(apps.get(code));
+     }
+ 
+     @PutMapping("/admin/flows/{code}")
+     public Object flowSave(@PathVariable String code, @RequestBody Map<String, Object> b) {
+         edit();
+         return ApiResponse.ok(apps.save(code, b, true));
+     }
+ 
+     @GetMapping("/admin/apps/{code}/versions")
+     public Object versions(@PathVariable String code) {
+         return ApiResponse.ok(apps.versions(code));
+     }
+ 
+     @GetMapping("/admin/apps/{code}/versions/diff")
+     public Object versionDiff(
+             @PathVariable String code, @RequestParam int fromVersion, @RequestParam int toVersion) {
+         return ApiResponse.ok(apps.versionDiff(code, fromVersion, toVersion));
+     }
+ 
+     @GetMapping("/admin/apps/{code}/versions/{versionNo}")
+     public Object adminVersion(@PathVariable String code, @PathVariable int versionNo) {
+         apps.get(code);
+         return ApiResponse.ok(apps.version(code, versionNo));
+     }
+ 
+     @GetMapping("/v1/apps/{code}/input-schema")
+     public Object inputSchema(
+             @PathVariable String code, @RequestParam(required = false) Integer versionNo) {
+         return ApiResponse.ok(apps.publishedInputs(code, versionNo));
+     }
+ 
+     @PostMapping("/admin/apps/{code}/publish/precheck")
+     public Object precheck(@PathVariable String code) {
+         edit();
+         return ApiResponse.ok(apps.precheck(code));
+     }
+ 
+     @PostMapping("/admin/apps/{code}/publish/commit")
+     public Object commit(@PathVariable String code, @RequestBody Map<String, Object> b) {
+         edit();
+         return ApiResponse.ok(apps.commit(code, b));
+     }
+ 
+     @PostMapping("/admin/apps/{code}/{action:disable|enable|archive|rollback}")
+     public Object lifecycle(
+             @PathVariable String code,
+             @PathVariable String action,
+             @RequestBody(required = false) Map<String, Object> b) {
+         edit();
+         return ApiResponse.ok(apps.lifecycle(code, action, b == null ? Map.of() : b));
+     }
+ 
+     @GetMapping("/internal/apps/{code}/candidate")
+     public Object candidate(
+             @PathVariable String code,
+             @RequestParam long draftRev,
+             @RequestParam String candidateSha256) {
+         return ApiResponse.ok(apps.frozenCandidate(code, draftRev, candidateSha256));
+     }
+ 
+     @GetMapping("/internal/apps/{code}/versions/{version}")
+     public Object version(@PathVariable String code, @PathVariable int version) {
+         var app = apps.get(code);
+         if (Set.of("DISABLED", "ARCHIVED").contains(app.get("status"))
+                 || app.get("currentVersionNo") == null)
+             throw AppService.error(409, "APP_UNAVAILABLE", "应用未发布或已停用，不能新建运行");
+         return ApiResponse.ok(apps.version(code, version));
+     }
+ 
+     @GetMapping("/internal/apps/{code}/snapshot")
+     public Object snapshot(
+             @PathVariable String code, @RequestParam(defaultValue = "false") boolean draft) {
+         if (!draft) return ApiResponse.ok(apps.published(code));
+         var a = apps.get(code);
+         return ApiResponse.ok(
+                 apps.frozenCandidate(
+                         code,
+                         ((Number) a.get("draftRev")).longValue(),
+                         a.get("candidateSha256").toString()));
+     }
+ 
+     @GetMapping("/internal/apps/{code}/published")
+     public Object published(@PathVariable String code) {
+-        return ApiResponse.ok(apps.published(code));
++        // Deployment input is validated by common security. A missing frame in IAM must fail;
++        // other draft/history handlers remain separate capabilities under the global IAM gate.
++        return ApiResponse.ok(switch (Objects.toString(authorityProperties.mode(), "")) {
++            case "iam" -> apps.publishedAuthorized(code);
++            case "dev-hmac", "test" -> apps.published(code);
++            default -> throw AppService.error(403, "SECURITY_MODE_INVALID", "安全模式未正确配置");
++        });
+     }
+ 
+     @GetMapping("/internal/skills/{code}/references")
+     public Object skillReferences(@PathVariable String code) {
+         return ApiResponse.ok(apps.references(code));
+     }
+ 
+     @GetMapping("/admin/classifications")
+     public Object classifications() {
+         return ApiResponse.ok(templates.classifications());
+     }
+ 
+     @PostMapping("/admin/classifications")
+     public Object classification(@RequestBody Map<String, Object> b) {
+         edit();
+         return ApiResponse.ok(templates.classification(b));
+     }
+ 
+     @GetMapping("/internal/prompt-templates/{code}/versions/{version}")
+     public Object templateVersion(@PathVariable String code, @PathVariable int version) {
+         var v = templates.version(code, version);
+         if (!"PUBLISHED".equals(v.get("status")))
+             throw AppService.error(409, "TEMPLATE_UNPUBLISHED", "模板版本未发布");
+         return ApiResponse.ok(v);
+     }
+ 
+     @GetMapping("/admin/prompt-templates")
+     public Object templateList() {
+         return ApiResponse.ok(templates.list());
+     }
+ 
+     @PostMapping("/admin/prompt-templates")
+     public Object templateCreate(@RequestBody Map<String, Object> b) {
+         edit();
+         return ApiResponse.ok(templates.create(b));
+     }
+ 
+     @PutMapping("/admin/prompt-templates/{code}")
+     public Object templateRevise(@PathVariable String code, @RequestBody Map<String, Object> b) {
+         edit();
+         return ApiResponse.ok(templates.revise(code, b));
+     }
+ 
+     @GetMapping("/admin/prompt-templates/{code}/versions")
+     public Object templateVersions(@PathVariable String code) {
+         return ApiResponse.ok(templates.versions(code));
+     }
+ 
+     @PostMapping("/admin/prompt-templates/{code}/versions/{version}/publish")
+     public Object templatePublish(@PathVariable String code, @PathVariable int version) {
+         edit();
+         return ApiResponse.ok(templates.publish(code, version));
+     }
+ 
+     @PostMapping("/admin/prompt-templates/{code}/versions/{version}/render")
+     public Object templateRender(
+             @PathVariable String code,
+             @PathVariable int version,
+             @RequestBody Map<String, Object> b) {
+         return ApiResponse.ok(templates.render(code, version, b));
+     }
+ }
+diff --git a/app-management/src/main/java/cn/agentplatform/app/application/AppService.java b/app-management/src/main/java/cn/agentplatform/app/application/AppService.java
+index 1a2e49c..ddf781b 100644
+--- a/app-management/src/main/java/cn/agentplatform/app/application/AppService.java
++++ b/app-management/src/main/java/cn/agentplatform/app/application/AppService.java
+@@ -1,1226 +1,1351 @@
+ package cn.agentplatform.app.application;
+ 
+ import cn.agentplatform.app.domain.AppRules;
+ import cn.agentplatform.common.*;
++import cn.agentplatform.common.authority.*;
+ 
+ import org.springframework.beans.factory.annotation.Value;
+ import org.springframework.dao.DuplicateKeyException;
+ import org.springframework.jdbc.core.JdbcTemplate;
+ import org.springframework.stereotype.Service;
+ import org.springframework.transaction.support.TransactionTemplate;
++import org.springframework.transaction.TransactionDefinition;
++import org.springframework.transaction.support.TransactionSynchronizationManager;
+ import org.springframework.web.client.RestClient;
+ 
+ import java.sql.ResultSet;
+ import java.sql.SQLException;
+ import java.time.Instant;
+ import java.util.*;
+ 
+ /** 应用草稿与发布事务。业务定义进入候选摘要，画布布局只用于展示；运行时始终读取不可变版本。 */
+ @Service
+ public class AppService {
+     private final JdbcTemplate db;
+     private final TransactionTemplate tx;
++    private final TransactionTemplate publishedReadTx;
+     private final RestClient http = client();
+     private final String skillUrl, modelUrl, monitorUrl, engineUrl;
+ 
+     public AppService(
+             JdbcTemplate db,
+             org.springframework.transaction.PlatformTransactionManager manager,
+             @Value("${agent.services.skill:http://127.0.0.1:18083}") String skillUrl,
+             @Value("${agent.services.model:http://127.0.0.1:18084}") String modelUrl,
+             @Value("${agent.services.monitor:http://127.0.0.1:18085}") String monitorUrl,
+             @Value("${agent.services.engine:http://127.0.0.1:18082}") String engineUrl) {
+         this.engineUrl = engineUrl;
+         this.db = db;
+         this.tx = new TransactionTemplate(manager);
++        this.publishedReadTx = new TransactionTemplate(manager);
++        this.publishedReadTx.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);
++        this.publishedReadTx.setTimeout(3);
+         this.skillUrl = skillUrl;
+         this.modelUrl = modelUrl;
+         this.monitorUrl = monitorUrl;
+     }
+ 
+     private static RestClient client() {
+         var factory = new org.springframework.http.client.SimpleClientHttpRequestFactory();
+         factory.setConnectTimeout(3000);
+         factory.setReadTimeout(60000);
+         return RestClient.builder().requestFactory(factory).build();
+     }
+ 
+     private String tenant() {
+         return Actor.current().tenantId();
+     }
+ 
+     public static PlatformException error(int status, String code, String message) {
+         return new PlatformException(status, code, message);
+     }
+ 
+     public static String text(Map<String, Object> body, String field) {
+         String v = Objects.toString(body.get(field), "");
+         if (v.isBlank() || v.length() > 128) throw error(400, "INVALID_INPUT", "缺少或无效字段: " + field);
+         return v;
+     }
+ 
+     @SuppressWarnings("unchecked")
+     public static Map<String, Object> object(Object v) {
+         if (!(v instanceof Map<?, ?>)) throw error(400, "INVALID_INPUT", "必须提供JSON对象");
+         return (Map<String, Object>) v;
+     }
+ 
+     @SuppressWarnings("unchecked")
+     public static List<Map<String, Object>> objects(Object v) {
+         if (v == null) return List.of();
+         if (!(v instanceof List<?> list) || list.stream().anyMatch(x -> !(x instanceof Map)))
+             throw error(400, "INVALID_INPUT", "必须提供对象数组");
+         return (List<Map<String, Object>>) v;
+     }
+ 
+     public static long number(Map<String, Object> body, String field) {
+         Object v = body.get(field);
+         if (!(v instanceof Number n) || n.longValue() < 1)
+             throw error(400, "INVALID_INPUT", "缺少或无效数字: " + field);
+         return n.longValue();
+     }
+ 
+     private Map<String, Object> row(ResultSet r, int n) throws SQLException {
+         var v = new LinkedHashMap<String, Object>();
+         for (String k : List.of("code", "name", "type", "description", "domain", "status"))
+             v.put(k, r.getString(k));
+         v.put("id", r.getLong("id"));
+         v.put("draftId", r.getLong("draft_id"));
+         v.put("draftNo", r.getInt("draft_no"));
+         v.put("bizCategory", r.getString("biz_category"));
+         v.put("draftRev", r.getLong("draft_rev"));
+         v.put("currentVersionNo", r.getObject("current_version_no"));
+         v.put("updatedAt", r.getTimestamp("updated_at").toInstant().toString());
+         for (String k : List.of("tags", "config", "definition", "layout"))
+             v.put(k, Json.read(r.getString(k), Object.class));
+         v.put("candidateSha256", sha(v));
+         return v;
+     }
+ 
+     public static Map<String, Object> candidate(Map<String, Object> v) {
+         var c = new LinkedHashMap<String, Object>();
+         c.put("appCode", v.get("code"));
+         for (String k :
+                 List.of(
+                         "type",
+                         "name",
+                         "description",
+                         "domain",
+                         "bizCategory",
+                         "tags",
+                         "config",
+                         "definition")) c.put(k, v.get(k));
+         return c;
+     }
+ 
+     public static String sha(Map<String, Object> v) {
+         return Digest.sha256(AppRules.canonical(candidate(v)));
+     }
+ 
+     public Map<String, Object> get(String code) {
+         return get(code, false);
+     }
+ 
+     private Map<String, Object> get(String code, boolean lock) {
+         var rows =
+                 db.query(
+                         "select a.*,d.id as"
+                             + " draft_id,d.draft_no,d.draft_rev,d.config,d.definition,d.layout from"
+                             + " app.application a join app.app_draft d on d.tenant_id=a.tenant_id"
+                             + " and d.app_code=a.code where a.tenant_id=? and a.code=?"
+                                 + (lock ? " for update of d" : ""),
+                         this::row,
+                         tenant(),
+                         code);
+         if (rows.isEmpty()) throw error(404, "APP_NOT_FOUND", "应用不存在");
+         return rows.getFirst();
+     }
+ 
+     public List<Map<String, Object>> list() {
+         return list(Map.of());
+     }
+ 
+     public List<Map<String, Object>> list(Map<String, String> filters) {
+         var sql =
+                 new StringBuilder(
+                         "select a.*,d.id as"
+                             + " draft_id,d.draft_no,d.draft_rev,d.config,d.definition,d.layout from"
+                             + " app.application a join app.app_draft d on d.tenant_id=a.tenant_id"
+                             + " and d.app_code=a.code where a.tenant_id=?");
+         var args = new ArrayList<Object>();
+         args.add(tenant());
+         String status = filters.getOrDefault("status", "").trim();
+         if (status.isEmpty()) sql.append(" and a.status<>'ARCHIVED'");
+         else {
+             if (!Set.of("DRAFT", "PUBLISHED", "DISABLED", "ARCHIVED").contains(status))
+                 throw error(400, "INVALID_INPUT", "应用状态无效");
+             sql.append(" and a.status=?");
+             args.add(status);
+         }
+         for (String key : List.of("q", "code", "domain", "bizCategory", "tag")) {
+             String value = filters.getOrDefault(key, "").trim();
+             if (value.length() > 128) throw error(400, "INVALID_INPUT", "检索条件过长: " + key);
+             if (value.isEmpty()) continue;
+             switch (key) {
+                 case "q" -> {
+                     // position treats %, _ and backslashes as literal search text, not SQL
+                     // wildcards.
+                     sql.append(
+                             " and (position(lower(?) in lower(a.name))>0"
+                                     + " or position(lower(?) in lower(a.code))>0)");
+                     args.add(value);
+                     args.add(value);
+                 }
+                 case "tag" -> {
+                     sql.append(" and jsonb_exists(a.tags,?)");
+                     args.add(value);
+                 }
+                 default -> {
+                     sql.append(" and a.")
+                             .append(key.equals("bizCategory") ? "biz_category" : key)
+                             .append("=?");
+                     args.add(value);
+                 }
+             }
+         }
+         sql.append(" order by a.updated_at desc,a.code");
+         return db.query(sql.toString(), this::row, args.toArray());
+     }
+ 
+     public Map<String, Object> copy(String sourceCode, Map<String, Object> body) {
+         if (!(body.get("code") instanceof String) || !(body.get("name") instanceof String))
+             throw error(400, "INVALID_INPUT", "新应用编码和名称必须为字符串");
+         String code = text(body, "code"), name = text(body, "name");
+         try {
+             return tx.execute(
+                     s -> {
+                         get(sourceCode, true);
+                         // READ COMMITTED 下等待 d 锁的 join 可能保留旧 a；持有既有草稿锁后，
+                         // 用新语句快照读取完整来源，保证复制内容与来源修订/发布状态一致。
+                         var source = get(sourceCode);
+                         var input = new LinkedHashMap<String, Object>();
+                         input.put("code", code);
+                         input.put("name", name);
+                         for (String field :
+                                 List.of("type", "description", "domain", "bizCategory", "tags"))
+                             input.put(field, source.get(field));
+                         create(input);
+                         // 只复制编排输入并保留用户模型/技能引用；冻结模型、评测/预检/发布证据及集成凭据
+                         // 绑定源应用身份，新草稿必须重新生成，不能据此继承发布许可。
+                         db.update(
+                                 "update app.app_draft set"
+                                     + " config=?::jsonb,definition=?::jsonb,layout=?::jsonb where"
+                                     + " tenant_id=? and app_code=?",
+                                 Json.write(source.get("config")),
+                                 Json.write(source.get("definition")),
+                                 Json.write(source.get("layout")),
+                                 tenant(),
+                                 code);
+                         var detail = new LinkedHashMap<String, Object>();
+                         detail.put("sourceAppCode", sourceCode);
+                         detail.put("sourceDraftRev", source.get("draftRev"));
+                         detail.put("sourceCurrentVersionNo", source.get("currentVersionNo"));
+                         log(code, "COPY", source.get("status").toString(), "DRAFT", detail);
+                         return get(code);
+                     });
+         } catch (DuplicateKeyException ex) {
+             throw error(409, "APP_CODE_CONFLICT", "应用编码已存在，请更换编码");
+         }
+     }
+ 
+     public Map<String, Object> create(Map<String, Object> body) {
+         String code = text(body, "code"), name = text(body, "name"), type = text(body, "type");
+         if (!code.matches("[A-Za-z][A-Za-z0-9_-]{0,63}") || !Set.of("CHAT", "FLOW").contains(type))
+             throw error(400, "INVALID_INPUT", "应用编码或类型无效");
+         return tx.execute(
+                 status -> {
+                     db.update(
+                             "insert into"
+                                 + " app.application(tenant_id,code,name,type,description,domain,biz_category,tags,created_by)"
+                                 + " values(?,?,?,?,?,?,?,?::jsonb,?)",
+                             tenant(),
+                             code,
+                             name,
+                             type,
+                             Objects.toString(body.get("description"), ""),
+                             Objects.toString(body.get("domain"), ""),
+                             Objects.toString(body.get("bizCategory"), ""),
+                             Json.write(body.getOrDefault("tags", List.of())),
+                             Actor.current().principalId());
+                     db.update(
+                             "insert into app.app_draft(tenant_id,app_id,app_code) select"
+                                 + " tenant_id,id,code from app.application where tenant_id=? and"
+                                 + " code=?",
+                             tenant(),
+                             code);
+                     log(code, "CREATE", "DRAFT", "DRAFT", Map.of());
+                     return get(code);
+                 });
+     }
+ 
+     public Map<String, Object> save(String code, Map<String, Object> body, boolean flow) {
+         return tx.execute(
+                 s -> {
+                     var old = get(code, true);
+                     long rev = number(body, "draftRev");
+                     if (((Number) old.get("draftRev")).longValue() != rev)
+                         throw error(409, "DRAFT_CONFLICT", "草稿已被更新，请刷新");
+                     if (Set.of("DISABLED", "ARCHIVED").contains(old.get("status")))
+                         throw error(409, "APP_STATE", "请先重新启用应用");
+                     if (flow && !"FLOW".equals(old.get("type")))
+                         throw error(409, "APP_TYPE", "仅流程应用可保存流程图");
+                     String field = flow ? "definition" : "config";
+                     Map<String, Object> value = object(body.get(field));
+                     boolean changed =
+                             !AppRules.canonical(value).equals(AppRules.canonical(old.get(field)));
+                     Object layout =
+                             flow
+                                     ? body.getOrDefault("layout", old.get("layout"))
+                                     : old.get("layout");
+                     if (!(layout instanceof Map)) throw error(400, "INVALID_INPUT", "layout必须为对象");
+                     db.update(
+                             "update app.app_draft set "
+                                     + field
+                                     + "=?::jsonb,layout=?::jsonb,draft_rev=draft_rev+?,draft_no=draft_no+?,updated_at=now()"
+                                     + " where tenant_id=? and app_code=?",
+                             Json.write(value),
+                             Json.write(layout),
+                             changed ? 1 : 0,
+                             changed && old.get("status").equals("PUBLISHED") ? 1 : 0,
+                             tenant(),
+                             code);
+                     db.update(
+                             "update app.application set status=case when ? then 'DRAFT' else status"
+                                     + " end,updated_at=now() where tenant_id=? and code=?",
+                             changed,
+                             tenant(),
+                             code);
+                     if (changed)
+                         log(
+                                 code,
+                                 "MODIFY",
+                                 old.get("status").toString(),
+                                 "DRAFT",
+                                 Map.of("previousDraftRev", rev));
+                     return get(code);
+                 });
+     }
+ 
+     public Map<String, Object> metadata(String code, Map<String, Object> body) {
+         return tx.execute(
+                 status -> {
+                     var old = get(code, true);
+                     if (number(body, "draftRev") != ((Number) old.get("draftRev")).longValue())
+                         throw error(409, "DRAFT_CONFLICT", "请刷新草稿");
+                     if (Set.of("DISABLED", "ARCHIVED").contains(old.get("status")))
+                         throw error(409, "APP_STATE", "请先启用应用");
+                     db.update(
+                             "update app.application set"
+                                 + " name=?,description=?,domain=?,biz_category=?,tags=?::jsonb,status='DRAFT',updated_at=now()"
+                                 + " where tenant_id=? and code=?",
+                             text(body, "name"),
+                             Objects.toString(body.get("description"), ""),
+                             Objects.toString(body.get("domain"), ""),
+                             Objects.toString(body.get("bizCategory"), ""),
+                             Json.write(body.getOrDefault("tags", List.of())),
+                             tenant(),
+                             code);
+                     db.update(
+                             "update app.app_draft set"
+                                     + " draft_rev=draft_rev+1,draft_no=draft_no+?,updated_at=now()"
+                                     + " where tenant_id=? and app_code=?",
+                             old.get("status").equals("PUBLISHED") ? 1 : 0,
+                             tenant(),
+                             code);
+                     log(
+                             code,
+                             "MODIFY",
+                             old.get("status").toString(),
+                             "DRAFT",
+                             Map.of("previousDraftRev", old.get("draftRev"), "scope", "METADATA"));
+                     return get(code);
+                 });
+     }
+ 
+     private void log(String code, String action, String from, String to, Object detail) {
+         db.update(
+                 "insert into"
+                     + " app.lifecycle_log(tenant_id,app_code,actor,action,from_state,to_state,detail)"
+                     + " values(?,?,?,?,?,?,?::jsonb)",
+                 tenant(),
+                 code,
+                 Actor.current().principalId(),
+                 action,
+                 from,
+                 to,
+                 Json.write(detail));
+     }
+ 
+     public List<Map<String, Object>> lifecycleLogs(String code) {
+         get(code);
+         return db.query(
+                 "select id,actor,action,from_state,to_state,detail::text,created_at from"
+                         + " app.lifecycle_log where tenant_id=? and app_code=? order by id desc",
+                 (r, n) ->
+                         Map.<String, Object>of(
+                                 "id",
+                                 r.getLong("id"),
+                                 "actor",
+                                 r.getString("actor"),
+                                 "action",
+                                 r.getString("action"),
+                                 "fromState",
+                                 r.getString("from_state"),
+                                 "toState",
+                                 r.getString("to_state"),
+                                 "detail",
+                                 Json.read(r.getString("detail"), Map.class),
+                                 "createdAt",
+                                 r.getTimestamp("created_at").toInstant().toString()),
+                 tenant(),
+                 code);
+     }
+ 
+     public Map<String, Object> lifecycle(String code, String action, Map<String, Object> body) {
+         return tx.execute(
+                 s -> {
+                     var old = get(code, true);
+                     String from = old.get("status").toString();
+                     String to =
+                             switch (action) {
+                                 case "disable" -> {
+                                     if (!Set.of("PUBLISHED", "DRAFT").contains(from)
+                                             || old.get("currentVersionNo") == null)
+                                         throw error(409, "APP_STATE", "仅已发布应用可停用");
+                                     yield "DISABLED";
+                                 }
+                                 case "enable" -> {
+                                     if (!from.equals("DISABLED")
+                                             || old.get("currentVersionNo") == null)
+                                         throw error(409, "APP_STATE", "仅停用应用可启用");
+                                     yield "PUBLISHED";
+                                 }
+                                 case "archive" -> {
+                                     if (!from.equals("DISABLED"))
+                                         throw error(409, "APP_STATE", "仅停用应用可归档");
+                                     yield "ARCHIVED";
+                                 }
+                                 case "rollback" -> {
+                                     int version = (int) number(body, "versionNo");
+                                     version(code, version);
+                                     if (!Set.of("PUBLISHED", "DRAFT").contains(from))
+                                         throw error(409, "APP_STATE", "当前状态不能回滚");
+                                     db.update(
+                                             "update app.application set current_version_no=? where"
+                                                     + " tenant_id=? and code=?",
+                                             version,
+                                             tenant(),
+                                             code);
+                                     yield "PUBLISHED";
+                                 }
+                                 default -> throw error(400, "INVALID_ACTION", "未知生命周期操作");
+                             };
+                     db.update(
+                             "update app.application set status=?,updated_at=now() where tenant_id=?"
+                                     + " and code=?",
+                             to,
+                             tenant(),
+                             code);
+                     log(code, action.toUpperCase(Locale.ROOT), from, to, body);
+                     return get(code);
+                 });
+     }
+ 
+     public void delete(String code) {
+         tx.executeWithoutResult(
+                 s -> {
+                     var old = get(code, true);
+                     if (!old.get("status").equals("DRAFT") || old.get("currentVersionNo") != null)
+                         throw error(409, "APP_STATE", "只能删除从未发布的草稿");
+                     db.update(
+                             "delete from app.publish_report where tenant_id=? and app_code=?",
+                             tenant(),
+                             code);
+                     db.update(
+                             "delete from app.app_draft where tenant_id=? and app_code=?",
+                             tenant(),
+                             code);
+                     db.update(
+                             "delete from app.application where tenant_id=? and code=?",
+                             tenant(),
+                             code);
+                     log(code, "DELETE", "DRAFT", "DRAFT", Map.of());
+                 });
+     }
+ 
+     public List<Map<String, Object>> references(String code) {
+         return db.queryForList(
+                 "select app_code,app_version_no,skill_code,skill_version from app.skill_reference"
+                         + " where tenant_id=? and skill_code=? order by app_code,app_version_no",
+                 tenant(),
+                 code);
+     }
+ 
+     public List<Map<String, Object>> versions(String code) {
+         get(code);
+         return db.query(
+                 "select version_no,draft_rev,candidate_sha256,published_at,eval_report_id from"
+                     + " app.app_version where tenant_id=? and app_code=? order by version_no desc",
+                 (r, n) ->
+                         Map.<String, Object>of(
+                                 "versionNo",
+                                 r.getInt(1),
+                                 "draftRev",
+                                 r.getLong(2),
+                                 "candidateSha256",
+                                 r.getString(3),
+                                 "publishedAt",
+                                 r.getTimestamp(4).toInstant().toString(),
+                                 "evalReportId",
+                                 r.getString(5)),
+                 tenant(),
+                 code);
+     }
+ 
+     public Map<String, Object> version(String code, int version) {
+         var rows =
+                 db.query(
+                         "select id,snapshot::text from app.app_version where tenant_id=? and"
+                                 + " app_code=? and version_no=?",
+                         (r, n) -> {
+                             var snapshot =
+                                     new LinkedHashMap<String, Object>(
+                                             Json.read(r.getString(2), Map.class));
+                             snapshot.put("appVersionKey", snapshot.get("appVersionId"));
+                             snapshot.put("appVersionId", r.getLong(1));
+                             snapshot.put("versionId", r.getLong(1));
+                             return snapshot;
+                         },
+                         tenant(),
+                         code,
+                         version);
+         if (rows.isEmpty()) throw error(404, "VERSION_NOT_FOUND", "版本不存在");
+         return object(rows.getFirst());
+     }
+ 
+     public Map<String, Object> versionDiff(String code, int fromVersion, int toVersion) {
+         if (fromVersion < 1 || toVersion < 1) throw error(400, "INVALID_INPUT", "版本号必须为正整数");
+         get(code);
+         var from = version(code, fromVersion);
+         var to = version(code, toVersion);
+         var changes = new ArrayList<Map<String, Object>>();
+         // Compare business configuration only; generated publication identities and evidence are
+         // deliberately excluded, and neither immutable snapshot nor the current draft is changed.
+         diff("", candidate(from), candidate(to), changes);
+         return Map.of(
+                 "appCode",
+                 code,
+                 "fromVersion",
+                 fromVersion,
+                 "toVersion",
+                 toVersion,
+                 "fromSha256",
+                 from.get("candidateSha256"),
+                 "toSha256",
+                 to.get("candidateSha256"),
+                 "changes",
+                 changes);
+     }
+ 
+     private static void diff(
+             String path, Object before, Object after, List<Map<String, Object>> changes) {
+         if (Objects.equals(before, after)) return;
+         if (before instanceof Map<?, ?> left && after instanceof Map<?, ?> right) {
+             var keys = new TreeSet<String>();
+             left.keySet().forEach(k -> keys.add(k.toString()));
+             right.keySet().forEach(k -> keys.add(k.toString()));
+             for (String key : keys) {
+                 String child = path + "/" + key.replace("~", "~0").replace("/", "~1");
+                 if (left.containsKey(key) && right.containsKey(key))
+                     diff(child, left.get(key), right.get(key), changes);
+                 else {
+                     var change = new LinkedHashMap<String, Object>();
+                     change.put("path", child);
+                     change.put("operation", left.containsKey(key) ? "REMOVE" : "ADD");
+                     if (left.containsKey(key)) change.put("before", left.get(key));
+                     if (right.containsKey(key)) change.put("after", right.get(key));
+                     changes.add(change);
+                 }
+             }
+         } else {
+             var change = new LinkedHashMap<String, Object>();
+             change.put("path", path);
+             change.put("operation", "REPLACE");
+             change.put("before", before);
+             change.put("after", after);
+             changes.add(change);
+         }
+     }
+ 
+     public Map<String, Object> published(String code) {
+         var app = get(code);
+         if (Set.of("DISABLED", "ARCHIVED").contains(app.get("status"))
+                 || app.get("currentVersionNo") == null)
+             throw error(409, "APP_UNAVAILABLE", "应用未发布或已停用");
+         return version(code, ((Number) app.get("currentVersionNo")).intValue());
+     }
+ 
++    /** Current published payload only. Other draft/history capabilities need their own migration. */
++    public Map<String, Object> publishedAuthorized(String code) {
++        // Never perform online current inside a caller's transaction/locks, including REQUIRED
++        // participation. Spring 6.2.7 DataSourceTransactionManager binds one connection per DS;
++        // explicit RC below therefore has meaning only after rejecting an ambient transaction.
++        if (TransactionSynchronizationManager.isActualTransactionActive())
++            throw error(403, "AUTHORITY_TRANSACTION_FORBIDDEN", "授权刷新不能位于业务事务内");
++        var current = AuthorityContext.current();
++        var actor = Actor.current();
++        if (!"engine".equals(current.caller())
++                || !"app".equals(current.call().target())
++                || !"app.published.read".equals(current.call().action())
++                || !"app-version".equals(current.call().resource().kind())
++                || current.operation() == null
++                || !"PORTAL".equals(current.operation().originKind())
++                || !Set.of("PORTAL", "DELEGATED").contains(current.operation().sourceKind()))
++            throw error(403, "AUTHORITY_RESOURCE_MISMATCH", "发布读取能力不匹配");
++        MetadataSelectors.code(code);
++        var observed = publishedMetadata(actor.tenantId(), code);
++        if (observed == null) throw error(404, "APP_NOT_FOUND", "应用不存在");
++        requirePublishedAvailable(observed);
++        var root = new ResourceBinding("app-version", code + "@" + observed.versionNo(), observed.sha());
++        var received = current.call().resource();
++        if (!root.equals(received)) {
++            // An old positive version for this code is a publication conflict; do not silently
++            // exchange/retarget to the newer pointer. Wrong code/kind/current SHA is forbidden.
++            String prefix = code + "@";
++            if (received.id().startsWith(prefix)
++                    && !root.id().equals(received.id())
++                    && received.id().substring(prefix.length()).matches("[1-9][0-9]*"))
++                throw error(409, "APP_PUBLICATION_CHANGED", "应用发布版本已变化，请重新发起请求");
++            throw error(403, "AUTHORITY_RESOURCE_MISMATCH", "发布资源与授权不匹配");
++        }
++        // The only explicit refresh is outside the transaction. Preserve this exact refreshed
++        // retained object; every lock/payload/commit boundary below is local-only and cannot renew it.
++        var retained = AuthorityContext.requireInitialFor(actor, root);
++        String tenantId = retained.current().actor().tenantId();
++        Map<String, Object> snapshot = publishedReadTx.execute(status -> {
++            // Spring's transaction deadline is applied to JDBC statements by DataSourceUtils.
++            // PG also bounds server-side statement/lock waits. FOR SHARE requires a writable tx.
++            db.execute("set local statement_timeout='2000ms'");
++            db.execute("set local lock_timeout='1500ms'");
++            var locked = db.query(
++                    "select a.id,a.code,a.status,a.current_version_no from app.application a"
++                            + " where a.tenant_id=? and a.code=? for share of a",
++                    (r, n) -> r.getLong("id"), tenantId, code);
++            AuthorityContext.requireBound(retained);
++            if (locked.isEmpty())
++                throw error(409, "APP_PUBLICATION_CHANGED", "应用发布状态已变化");
++            // Separate READ_COMMITTED statement after the lock wait: a LEFT JOIN in the waiting
++            // lock statement cannot establish a fresh snapshot of its joined version columns.
++            var latest = publishedMetadata(tenantId, code);
++            if (!observed.equals(latest))
++                throw error(409, "APP_PUBLICATION_CHANGED", "应用发布状态已变化");
++            requirePublishedAvailable(latest);
++            AuthorityContext.requireBound(retained);
++            var rows = db.query(
++                    "select snapshot::text from app.app_version where tenant_id=? and app_id=?"
++                            + " and app_code=? and id=? and version_no=? and candidate_sha256=?",
++                    (r, n) -> authorizedSnapshot(r.getString(1), latest),
++                    tenantId, latest.appId(), code, latest.versionId(), latest.versionNo(), latest.sha());
++            if (rows.size() != 1)
++                throw error(409, "APP_PUBLICATION_CHANGED", "发布快照不存在或身份不一致");
++            AuthorityContext.requireBound(retained);
++            return rows.getFirst();
++        });
++        // TransactionTemplate returns only after actual commit/cleanup. A materialized Map must
++        // still pass this local check; no stale partial result escapes an expired request frame.
++        // Linearization is the locked payload read, not Servlet serialization or the last byte.
++        AuthorityContext.requireBound(retained);
++        return snapshot;
++    }
++
++    private record PublishedReadMetadata(
++            long appId, String code, String status, Integer pointer,
++            Long versionId, Integer versionNo, String sha) {}
++
++    private PublishedReadMetadata publishedMetadata(String tenantId, String code) {
++        var rows = db.query(
++                "select a.id,a.code,a.status,a.current_version_no,v.id as version_id,v.version_no,v.candidate_sha256"
++                        + " from app.application a left join app.app_version v on v.tenant_id=a.tenant_id"
++                        + " and v.app_code=a.code and v.app_id=a.id and v.version_no=a.current_version_no"
++                        + " where a.tenant_id=? and a.code=?",
++                (r, n) -> new PublishedReadMetadata(r.getLong("id"), r.getString("code"), r.getString("status"),
++                        (Integer) r.getObject("current_version_no"), (Long) r.getObject("version_id"),
++                        (Integer) r.getObject("version_no"), r.getString("candidate_sha256")),
++                tenantId, code);
++        return rows.isEmpty() ? null : rows.getFirst();
++    }
++
++    private static void requirePublishedAvailable(PublishedReadMetadata metadata) {
++        if (Set.of("DISABLED", "ARCHIVED").contains(metadata.status())
++                || metadata.pointer() == null || metadata.versionId() == null || metadata.versionNo() == null)
++            throw error(409, "APP_UNAVAILABLE", "应用未发布或已停用");
++    }
++
++    @SuppressWarnings("unchecked")
++    private static Map<String, Object> authorizedSnapshot(String json, PublishedReadMetadata metadata) {
++        var node = Json.read(json);
++        String key = metadata.code() + "@" + metadata.versionNo();
++        // candidate_sha256 is the persisted candidate digest, not a hash of this returned JSON.
++        // config.guard remains embedded payload; this check does not claim a pre-read guard policy.
++        if (!node.isObject() || !node.path("appCode").isTextual()
++                || !metadata.code().equals(node.path("appCode").textValue())
++                || !node.path("versionNo").isIntegralNumber() || !node.path("versionNo").canConvertToInt()
++                || node.path("versionNo").intValue() != metadata.versionNo()
++                || !node.path("candidateSha256").isTextual()
++                || !metadata.sha().equals(node.path("candidateSha256").textValue())
++                || !node.path("appVersionId").isTextual()
++                || !key.equals(node.path("appVersionId").textValue()))
++            throw error(409, "APP_SNAPSHOT_IDENTITY_MISMATCH", "发布快照身份不一致");
++        var snapshot = new LinkedHashMap<String, Object>(Json.read(json, Map.class));
++        snapshot.put("appVersionKey", key);
++        snapshot.put("appVersionId", metadata.versionId());
++        snapshot.put("versionId", metadata.versionId());
++        return snapshot;
++    }
++
+     public Map<String, Object> publishedInputs(String code, Integer requestedVersion) {
+         var app = get(code);
+         if (Set.of("DISABLED", "ARCHIVED").contains(app.get("status"))
+                 || app.get("currentVersionNo") == null)
+             throw error(409, "APP_UNAVAILABLE", "应用未发布或已停用");
+         int version =
+                 requestedVersion == null
+                         ? ((Number) app.get("currentVersionNo")).intValue()
+                         : requestedVersion;
+         if (version < 1) throw error(400, "INVALID_INPUT", "发布版本号无效");
+         var snapshot = version(code, version);
+         var config = object(snapshot.get("config"));
+         var definition = object(snapshot.get("definition"));
+         var result = new LinkedHashMap<String, Object>();
+         result.put("appCode", code);
+         result.put("versionNo", version);
+         result.put("type", snapshot.get("type"));
+         result.put(
+                 "inputs",
+                 definition.getOrDefault("inputs", config.getOrDefault("inputs", List.of())));
+         if (config.get("inputSchema") instanceof Map<?, ?>)
+             result.put("inputSchema", config.get("inputSchema"));
+         return result;
+     }
+ 
+     public Map<String, Object> frozenCandidate(String code, long rev, String hash) {
+         var app = get(code);
+         if (rev != ((Number) app.get("draftRev")).longValue() || !sha(app).equals(hash))
+             throw error(412, "CANDIDATE_CHANGED", "草稿已变更，请重新评测");
+         var result = candidate(app);
+         result.put("draftRev", rev);
+         result.put("candidateSha256", hash);
+         result.put("appVersionId", code + "@draft:" + rev + ":" + hash);
+         result.put("versionNo", 0);
+         attachModels(result, frozenModels(app, rev, hash));
+         return result;
+     }
+ 
+     /** 外部冻结不持应用锁；唯一键使同一候选的并发评测/发布选择同一组依赖。 */
+     private List<Map<String, Object>> frozenModels(Map<String, Object> app, long rev, String hash) {
+         String code = app.get("code").toString();
+         var rows =
+                 db.queryForList(
+                         "select model_refs::text from app.candidate_model_snapshot where"
+                             + " tenant_id=? and app_code=? and draft_rev=? and candidate_sha256=?",
+                         tenant(),
+                         code,
+                         rev,
+                         hash);
+         if (!rows.isEmpty())
+             return objects(Json.read(rows.getFirst().get("model_refs").toString(), Object.class));
+         var ids = new LinkedHashSet<Long>();
+         collectModelIds(object(app.get("config")), ids);
+         collectModelIds(object(app.get("definition")), ids);
+         var refs = new ArrayList<Map<String, Object>>();
+         for (long id : ids) {
+             var frozen =
+                     remotePost(
+                             modelUrl,
+                             "/internal/model-bindings/freeze",
+                             Map.of("modelEntryId", id));
+             refs.add(
+                     Map.of(
+                             "modelEntryId",
+                             id,
+                             "modelBindingRef",
+                             Map.of(
+                                     "bindingId",
+                                     frozen.get("bindingId"),
+                                     "sha256",
+                                     frozen.get("sha256")),
+                             "entry",
+                             frozen.get("entry")));
+         }
+         String stored =
+                 db.queryForObject(
+                         "insert into"
+                             + " app.candidate_model_snapshot(tenant_id,app_code,draft_rev,candidate_sha256,model_refs)"
+                             + " values(?,?,?,?,?::jsonb) on"
+                             + " conflict(tenant_id,app_code,draft_rev,candidate_sha256) do update"
+                             + " set model_refs=app.candidate_model_snapshot.model_refs returning"
+                             + " model_refs::text",
+                         String.class,
+                         tenant(),
+                         code,
+                         rev,
+                         hash,
+                         Json.write(refs));
+         return objects(Json.read(stored, Object.class));
+     }
+ 
+     private void collectModelIds(Object value, Set<Long> ids) {
+         if (value instanceof Map<?, ?> map) {
+             if (map.get("modelEntryId") instanceof Number n && n.longValue() > 0)
+                 ids.add(n.longValue());
+             for (String binding : List.of("modelBinding", "modelOverride"))
+                 collectModelIds(map.get(binding), ids);
+             if (map.get("nodeOverrides") instanceof Map<?, ?> overrides)
+                 overrides.values().forEach(v -> collectModelIds(v, ids));
+             collectModelIds(map.get("nodes"), ids);
+         } else if (value instanceof Collection<?> list) list.forEach(v -> collectModelIds(v, ids));
+     }
+ 
+     private void attachModels(Map<String, Object> snapshot, List<Map<String, Object>> refs) {
+         snapshot.put(
+                 "dependencyVersions",
+                 Map.of(
+                         "skillRefs",
+                         skillRefs(
+                                 object(snapshot.get("config")), object(snapshot.get("definition"))),
+                         "modelRefs",
+                         refs));
+     }
+ 
+     public Map<String, Object> remote(String base, String path) {
+         try {
+             var result =
+                     http.get()
+                             .uri(base + path)
+                             .header(
+                                     "Authorization",
+                                     "Bearer " + ServiceTokens.issue(Actor.current()))
+                             .retrieve()
+                             .body(Map.class);
+             if (result == null) throw new IllegalStateException("空响应");
+             return object(result.containsKey("data") ? result.get("data") : result);
+         } catch (Exception ex) {
+             throw error(502, "DEPENDENCY_UNAVAILABLE", "依赖服务校验失败: " + path);
+         }
+     }
+ 
+     public Map<String, Object> remotePost(String base, String path, Map<String, Object> body) {
+         try {
+             var result =
+                     http.post()
+                             .uri(base + path)
+                             .header(
+                                     "Authorization",
+                                     "Bearer " + ServiceTokens.issue(Actor.current()))
+                             .body(body)
+                             .retrieve()
+                             .body(Map.class);
+             if (result == null) throw new IllegalStateException("空响应");
+             return object(result.containsKey("data") ? result.get("data") : result);
+         } catch (Exception ex) {
+             throw error(502, "DEPENDENCY_UNAVAILABLE", "依赖服务校验失败: " + path);
+         }
+     }
+ 
+     public Map<String, Object> precheck(String code) {
+         var app = get(code);
+         var config = object(app.get("config"));
+         var definition = object(app.get("definition"));
+         String hash = sha(app);
+         long rev = ((Number) app.get("draftRev")).longValue();
+         var checks = new ArrayList<Map<String, Object>>();
+         var models = new ArrayList<Map<String, Object>>();
+         check(
+                 checks,
+                 "结构",
+                 () -> {
+                     if (app.get("type").equals("FLOW")) {
+                         var errors = AppRules.graphErrors(definition);
+                         if (!errors.isEmpty())
+                             throw new IllegalArgumentException(String.join("; ", errors));
+                         var engineCheck =
+                                 remotePost(
+                                         engineUrl,
+                                         "/internal/graphs/validate",
+                                         Map.of("definition", definition));
+                         if (!Boolean.TRUE.equals(engineCheck.get("valid")))
+                             throw new IllegalArgumentException(
+                                     Json.write(engineCheck.get("errors")));
+                     }
+                 });
+         check(checks, "参数", () -> parameterChecks(app, config, definition));
+         check(checks, "类型与无效引用", () -> typeChecks(config, definition));
+         check(
+                 checks,
+                 "引用有效性",
+                 () -> {
+                     models.addAll(frozenModels(app, rev, hash));
+                     for (var ref : models) {
+                         remotePost(
+                                 modelUrl,
+                                 "/internal/model-bindings/validate",
+                                 object(ref.get("modelBindingRef")));
+                         var entry = object(ref.get("entry"));
+                         if (!skillRefs(config, definition).isEmpty()
+                                 && !((Collection<?>) entry.getOrDefault("capabilities", List.of()))
+                                         .contains("tools"))
+                             throw new IllegalArgumentException("模型不支持工具调用");
+                     }
+                     referenceChecks(config, definition, false);
+                 });
+         check(checks, "守卫声明", () -> referenceChecks(config, definition, true));
+         var evalHolder = new HashMap<String, Object>();
+         check(
+                 checks,
+                 "评测门禁",
+                 () -> {
+                     var eval =
+                             remote(
+                                     monitorUrl,
+                                     "/internal/evaluations/accepted?appCode="
+                                             + code
+                                             + "&draftRev="
+                                             + rev
+                                             + "&candidateSha256="
+                                             + hash);
+                     if (!Boolean.TRUE.equals(eval.get("accepted")))
+                         throw new IllegalArgumentException("缺少满足安全100%、通过率及无新增回归的候选报告");
+                     evalHolder.putAll(eval);
+                 });
+         String id = "pc_" + UUID.randomUUID();
+         boolean passed = checks.stream().allMatch(c -> c.get("result").equals("PASS"));
+         String evalId = Objects.toString(evalHolder.get("evalReportId"), "");
+         db.update(
+                 "insert into"
+                     + " app.publish_report(tenant_id,id,app_draft_id,app_code,draft_rev,candidate_sha256,eval_report_id,checks,passed,expires_at,model_refs)"
+                     + " values(?,?,?,?,?,?,?,?::jsonb,?,?,?::jsonb)",
+                 tenant(),
+                 id,
+                 app.get("draftId"),
+                 code,
+                 rev,
+                 hash,
+                 evalId,
+                 Json.write(checks),
+                 passed,
+                 java.sql.Timestamp.from(Instant.now().plusSeconds(900)),
+                 Json.write(models));
+         return Map.of(
+                 "precheckId",
+                 id,
+                 "draftRev",
+                 rev,
+                 "candidateSha256",
+                 hash,
+                 "evalReportId",
+                 evalId,
+                 "passed",
+                 passed,
+                 "result",
+                 passed ? "PASS" : "BLOCKED",
+                 "report",
+                 Map.of("checks", checks, "warnings", List.of()));
+     }
+ 
+     private void check(List<Map<String, Object>> checks, String group, Runnable check) {
+         try {
+             check.run();
+             checks.add(Map.of("group", group, "result", "PASS"));
+         } catch (Exception ex) {
+             checks.add(
+                     Map.of(
+                             "group",
+                             group,
+                             "result",
+                             "ERROR",
+                             "detail",
+                             Objects.toString(ex.getMessage(), "校验失败")));
+         }
+     }
+ 
+     private void parameterChecks(
+             Map<String, Object> app, Map<String, Object> config, Map<String, Object> definition) {
+         if (app.get("type").equals("CHAT") && !config.containsKey("modelBinding"))
+             throw new IllegalArgumentException("对话应用缺少modelBinding");
+         for (var node : objects(definition.get("nodes"))) {
+             String type = Objects.toString(node.get("type"), "");
+             if (type.isBlank()) throw new IllegalArgumentException("节点缺少type");
+             if (Set.of("SKILL", "TOOL").contains(type)) {
+                 if (!node.containsKey("skillRef"))
+                     throw new IllegalArgumentException("技能节点缺少skillRef");
+                 var skill = resolveSkill(object(node.get("skillRef")));
+                 AppRules.validateValue(
+                         object(skill.get("inputSchema")),
+                         node.getOrDefault("args", Map.of()),
+                         Objects.toString(node.get("id")) + ".args",
+                         true);
+             }
+         }
+     }
+ 
+     private void typeChecks(Map<String, Object> config, Map<String, Object> definition) {
+         Set<String> allowed =
+                 Set.of(
+                         "START",
+                         "END",
+                         "LLM",
+                         "SKILL",
+                         "CONDITION",
+                         "CODE",
+                         "RETRIEVE",
+                         "CONFIRM",
+                         "AGENT",
+                         "ONTOLOGY");
+         var ids = new HashSet<String>();
+         for (var n : objects(definition.get("nodes"))) ids.add(Objects.toString(n.get("id"), ""));
+         for (var n : objects(definition.get("nodes"))) {
+             if (!allowed.contains(Objects.toString(n.get("type"), "")))
+                 throw new IllegalArgumentException("未知节点类型: " + n.get("type"));
+             for (var mapping : objects(n.get("inputMappings"))) {
+                 String source = Objects.toString(mapping.get("sourceNodeId"), "");
+                 if (!source.isEmpty() && !ids.contains(source))
+                     throw new IllegalArgumentException("参数引用不存在节点: " + source);
+                 if (mapping.containsKey("sourceType")
+                         && mapping.containsKey("targetType")
+                         && !mapping.get("sourceType").equals(mapping.get("targetType")))
+                     throw new IllegalArgumentException("参数映射类型不兼容");
+             }
+         }
+         var referencePattern = java.util.regex.Pattern.compile("\\$\\{([A-Za-z_][A-Za-z0-9_]*)\\.");
+         for (var node : objects(definition.get("nodes"))) {
+             var matcher = referencePattern.matcher(Json.write(node));
+             while (matcher.find()) {
+                 String scope = matcher.group(1);
+                 if (!Set.of("input", "context", "error").contains(scope) && !ids.contains(scope))
+                     throw new IllegalArgumentException("变量引用不存在节点或作用域: " + scope);
+             }
+         }
+         validateSchema(config.get("inputSchema"));
+         validateSchema(config.get("outputSchema"));
+     }
+ 
+     private void validateSchema(Object raw) {
+         if (raw == null) return;
+         var schema = object(raw);
+         String type = Objects.toString(schema.get("type"), "");
+         if (!Set.of("object", "array", "string", "integer", "number", "boolean", "null")
+                 .contains(type)) throw new IllegalArgumentException("Schema缺少有效type");
+         if (schema.get("properties") instanceof Map<?, ?> properties)
+             properties.values().forEach(this::validateSchema);
+         if (schema.containsKey("items")) validateSchema(schema.get("items"));
+     }
+ 
+     public List<Map<String, Object>> skillRefs(
+             Map<String, Object> config, Map<String, Object> definition) {
+         var refs = new ArrayList<Map<String, Object>>(objects(config.get("skillRefs")));
+         for (var node : objects(definition.get("nodes")))
+             if (node.get("skillRef") instanceof Map) refs.add(object(node.get("skillRef")));
+         return refs;
+     }
+ 
+     private Map<String, Object> resolveSkill(Map<String, Object> ref) {
+         String code = text(ref, "code");
+         long version = number(ref, "version");
+         var skill = remote(skillUrl, "/internal/skills/" + code);
+         if ("DISABLED".equals(skill.get("status")))
+             throw new IllegalArgumentException("技能已停用: " + code);
+         return objects(skill.get("versions")).stream()
+                 .filter(
+                         v ->
+                                 v.getOrDefault("versionNo", v.getOrDefault("version", 0))
+                                                 instanceof Number n
+                                         && n.longValue() == version
+                                         && Set.of("PUBLISHED", "ARCHIVED")
+                                                 .contains(v.get("status")))
+                 .findFirst()
+                 .orElseThrow(
+                         () -> new IllegalArgumentException("技能版本未发布: " + code + "@" + version));
+     }
+ 
+     private void referenceChecks(
+             Map<String, Object> config, Map<String, Object> definition, boolean guards) {
+         for (var ref : skillRefs(config, definition)) {
+             String skillCode = text(ref, "code");
+             long version = number(ref, "version");
+             var skill = resolveSkill(ref);
+             if (guards) {
+                 var guard = object(skill.getOrDefault("guard", Map.of()));
+                 var declared = object(config.getOrDefault("guard", Map.of()));
+                 var needRoles =
+                         new HashSet<>((Collection<?>) guard.getOrDefault("roles", List.of()));
+                 var haveRoles =
+                         new HashSet<>((Collection<?>) declared.getOrDefault("roles", List.of()));
+                 if (!haveRoles.containsAll(needRoles))
+                     throw new IllegalArgumentException("应用未声明技能所需角色: " + skillCode);
+                 var attributes = object(guard.getOrDefault("attributes", Map.of()));
+                 var have = object(declared.getOrDefault("attributes", Map.of()));
+                 for (var e : attributes.entrySet()) {
+                     if (!(e.getValue() instanceof Collection<?> required)
+                             || !(have.get(e.getKey()) instanceof Collection<?> actual)
+                             || !actual.containsAll(required))
+                         throw new IllegalArgumentException("应用未声明技能所需属性: " + e.getKey());
+                 }
+             } else {
+                 validateSchema(skill.get("inputSchema"));
+                 validateSchema(skill.get("outputSchema"));
+             }
+         }
+         if (guards) return;
+         if (config.get("modelBinding") instanceof Map<?, ?> binding) {
+             Object id = binding.get("modelEntryId");
+             if (id == null) throw new IllegalArgumentException("模型绑定需显式modelEntryId");
+             var model = remote(modelUrl, "/internal/model-entries/" + id);
+             if (!"ENABLED".equals(object(model.get("provider")).get("status")))
+                 throw new IllegalArgumentException("模型供应商不可用");
+         }
+         var promptRefs = new ArrayList<>(objects(config.get("promptRefs")));
+         for (var node : objects(definition.get("nodes")))
+             if (node.get("promptRef") instanceof Map) {
+                 var prompt = object(node.get("promptRef"));
+                 promptRefs.add(
+                         Map.of(
+                                 "code",
+                                 prompt.getOrDefault(
+                                         "templateCode", prompt.getOrDefault("code", "")),
+                                 "version",
+                                 prompt.getOrDefault("version", 0)));
+             }
+         for (var ref : promptRefs) {
+             var rows =
+                     db.queryForList(
+                             "select status from app.prompt_template_version where tenant_id=? and"
+                                     + " template_code=? and version_no=?",
+                             tenant(),
+                             text(ref, "code"),
+                             number(ref, "version"));
+             if (rows.isEmpty() || !"PUBLISHED".equals(rows.getFirst().get("status")))
+                 throw new IllegalArgumentException("模板引用未发布");
+         }
+     }
+ 
+     public Map<String, Object> commit(String code, Map<String, Object> body) {
+         String request = text(body, "idempotencyRequestNo"),
+                 precheck = text(body, "precheckId"),
+                 hash = text(body, "candidateSha256");
+         long rev = number(body, "draftRev");
+         // 当前禁用策略在事务外复核；事务内只读已持久快照，绝不持应用锁等待HTTP。
+         var frozenReports =
+                 db.queryForList(
+                         "select model_refs::text from app.publish_report where tenant_id=? and id=?"
+                                 + " and app_code=? and draft_rev=? and candidate_sha256=? and"
+                                 + " passed=true and expires_at>now()",
+                         tenant(),
+                         precheck,
+                         code,
+                         rev,
+                         hash);
+         boolean replay =
+                 !db.queryForList(
+                                 "select 1 from app.publish_commit where tenant_id=? and app_code=?"
+                                         + " and request_no=?",
+                                 tenant(),
+                                 code,
+                                 request)
+                         .isEmpty();
+         if (!replay && !frozenReports.isEmpty())
+             for (var ref :
+                     objects(
+                             Json.read(
+                                     frozenReports.getFirst().get("model_refs").toString(),
+                                     Object.class)))
+                 remotePost(
+                         modelUrl,
+                         "/internal/model-bindings/validate",
+                         object(ref.get("modelBindingRef")));
+         // 发布事务仅使用预检已固定的报告编号，不在持锁期间进行HTTP；15分钟有效期限制依赖校验结果的使用窗口。
+         return tx.execute(
+                 s -> {
+                     // 所有改稿与发布都锁同一草稿行：复核与固化之间不能插入未经检查的修改。
+                     var app = get(code, true);
+                     var prior =
+                             db.queryForList(
+                                     "select version_no,draft_rev,candidate_sha256 from"
+                                         + " app.publish_commit where tenant_id=? and app_code=? and"
+                                         + " request_no=?",
+                                     tenant(),
+                                     code,
+                                     request);
+                     if (!prior.isEmpty()) {
+                         var old = prior.getFirst();
+                         if (((Number) old.get("draft_rev")).longValue() != rev
+                                 || !hash.equals(old.get("candidate_sha256")))
+                             throw error(409, "IDEMPOTENCY_CONFLICT", "请求号已用于其他候选");
+                         return publication(code, ((Number) old.get("version_no")).intValue(), hash);
+                     }
+                     if (((Number) app.get("draftRev")).longValue() != rev || !sha(app).equals(hash))
+                         throw error(412, "CANDIDATE_CHANGED", "草稿已变更，请重新预检");
+                     var reports =
+                             db.queryForList(
+                                     "select * from app.publish_report where tenant_id=? and id=?"
+                                         + " and app_code=? and draft_rev=? and candidate_sha256=?"
+                                         + " and passed=true and expires_at>now()",
+                                     tenant(),
+                                     precheck,
+                                     code,
+                                     rev,
+                                     hash);
+                     if (reports.isEmpty())
+                         throw error(412, "PRECHECK_INVALID", "预检无效、已过期或被阻断，请重新预检");
+                     var ids = new LinkedHashSet<Long>();
+                     collectModelIds(app.get("config"), ids);
+                     collectModelIds(app.get("definition"), ids);
+                     if (!ids.isEmpty()) {
+                         var frozen =
+                                 db.queryForList(
+                                         "select model_refs::text from app.candidate_model_snapshot"
+                                             + " where tenant_id=? and app_code=? and draft_rev=?"
+                                             + " and candidate_sha256=?",
+                                         tenant(),
+                                         code,
+                                         rev,
+                                         hash);
+                         if (frozen.isEmpty()
+                                 || !Json.canonical(
+                                                 Json.read(
+                                                         frozen.getFirst()
+                                                                 .get("model_refs")
+                                                                 .toString()))
+                                         .equals(
+                                                 Json.canonical(
+                                                         Json.read(
+                                                                 reports.getFirst()
+                                                                         .get("model_refs")
+                                                                         .toString()))))
+                             throw error(412, "MODEL_SNAPSHOT_MISMATCH", "候选与预检模型快照不一致，请重新评测预检");
+                     }
+                     if (!Set.of("DRAFT", "PUBLISHED").contains(app.get("status")))
+                         throw error(409, "APP_STATE", "应用不可发布");
+                     var existing =
+                             db.queryForList(
+                                     "select version_no from app.app_version where tenant_id=? and"
+                                             + " app_code=? and draft_rev=? and candidate_sha256=?",
+                                     tenant(),
+                                     code,
+                                     rev,
+                                     hash);
+                     int version;
+                     // 内容身份是(应用,修订,摘要)。不同请求号也复用已固化版本，不为并发重复发号。
+                     if (existing.isEmpty()) {
+                         version =
+                                 db.queryForObject(
+                                         "select coalesce(max(version_no),0)+1 from app.app_version"
+                                                 + " where tenant_id=? and app_code=?",
+                                         Integer.class,
+                                         tenant(),
+                                         code);
+                         var snapshot = candidate(app);
+                         snapshot.put("versionNo", version);
+                         snapshot.put("draftRev", rev);
+                         snapshot.put("candidateSha256", hash);
+                         snapshot.put("appVersionId", code + "@" + version);
+                         snapshot.put("interpreterVersion", "1.0");
+                         attachModels(
+                                 snapshot,
+                                 objects(
+                                         Json.read(
+                                                 reports.getFirst().get("model_refs").toString(),
+                                                 Object.class)));
+                         db.update(
+                                 "insert into"
+                                     + " app.app_version(tenant_id,app_id,app_draft_id,app_code,version_no,draft_rev,candidate_sha256,snapshot,eval_report_id,published_by)"
+                                     + " values(?,?,?,?,?,?,?,?::jsonb,?,?)",
+                                 tenant(),
+                                 app.get("id"),
+                                 app.get("draftId"),
+                                 code,
+                                 version,
+                                 rev,
+                                 hash,
+                                 Json.write(snapshot),
+                                 reports.getFirst().get("eval_report_id"),
+                                 Actor.current().principalId());
+                         for (var ref :
+                                 skillRefs(object(app.get("config")), object(app.get("definition"))))
+                             db.update(
+                                     "insert into"
+                                         + " app.skill_reference(tenant_id,app_code,app_version_no,app_version_id,skill_code,skill_version)"
+                                         + " values(?,?,?,(select id from app.app_version where"
+                                         + " tenant_id=? and app_code=? and version_no=?),?,?) on"
+                                         + " conflict do nothing",
+                                     tenant(),
+                                     code,
+                                     version,
+                                     tenant(),
+                                     code,
+                                     version,
+                                     text(ref, "code"),
+                                     number(ref, "version"));
+                     } else version = ((Number) existing.getFirst().get("version_no")).intValue();
+                     // 版本、当前指针、引用与幂等凭据处于同一事务，任一写失败全部回滚。
+                     db.update(
+                             "update app.application set"
+                                 + " current_version_no=?,status='PUBLISHED',updated_at=now() where"
+                                 + " tenant_id=? and code=?",
+                             version,
+                             tenant(),
+                             code);
+                     db.update(
+                             "insert into"
+                                 + " app.publish_commit(tenant_id,app_id,app_version_id,app_code,request_no,precheck_id,version_no,draft_rev,candidate_sha256)"
+                                 + " values(?,?,(select id from app.app_version where tenant_id=?"
+                                 + " and app_code=? and version_no=?),?,?,?,?,?,?)",
+                             tenant(),
+                             app.get("id"),
+                             tenant(),
+                             code,
+                             version,
+                             code,
+                             request,
+                             precheck,
+                             version,
+                             rev,
+                             hash);
+                     log(
+                             code,
+                             "PUBLISH",
+                             app.get("status").toString(),
+                             "PUBLISHED",
+                             Map.of("versionNo", version, "candidateSha256", hash));
+                     return publication(code, version, hash);
+                 });
+     }
+ 
+     private Map<String, Object> publication(String code, int version, String hash) {
+         String base =
+                 System.getenv()
+                         .getOrDefault("AGENT_WEBAPP_URL", "http://127.0.0.1:15174")
+                         .replaceAll("/+$", "");
+         String gateway =
+                 System.getenv()
+                         .getOrDefault("AGENT_PUBLIC_GATEWAY_URL", "http://127.0.0.1:18080")
+                         .replaceAll("/+$", "");
+         String snippet =
+                 "<script src="
+                         + Json.write(base + "/assistant.js")
+                         + "></script>\n<script>\nAIAssistant.init({endpoint:"
+                         + Json.write(gateway)
+                         + ",appCode:"
+                         + Json.write(code)
+                         + ",ticket:async()=>{const response=await"
+                         + " fetch('/your-backend/ticket',{method:'POST'});if(!response.ok)throw new"
+                         + " Error('ticket exchange failed');const body=await response.json();return"
+                         + " body.data.ticket;}});\n"
+                         + "</script>";
+         return Map.of(
+                 "versionNo",
+                 version,
+                 "sha256",
+                 hash,
+                 "appCode",
+                 code,
+                 "artifacts",
+                 Map.of(
+                         "webAppUrl",
+                         base + "/w/" + code,
+                         "apiDocUrl",
+                         "/admin/apps/" + code + "/integration",
+                         "embedSnippet",
+                         snippet,
+                         "ticketUrl",
+                         "/your-backend/ticket",
+                         "ticketInstructions",
+                         "宿主后端持有 ApiKey 并向网关换取短期应用票据；浏览器仅接收 ticket，禁止嵌入长期 ApiKey。"));
+     }
+ }
+diff --git a/app-management/src/test/java/cn/agentplatform/app/application/ApplicationLifecycleTest.java b/app-management/src/test/java/cn/agentplatform/app/application/ApplicationLifecycleTest.java
+index 493aa31..6d54c89 100644
+--- a/app-management/src/test/java/cn/agentplatform/app/application/ApplicationLifecycleTest.java
++++ b/app-management/src/test/java/cn/agentplatform/app/application/ApplicationLifecycleTest.java
+@@ -1,415 +1,416 @@
+ package cn.agentplatform.app.application;
+ 
+ import static org.junit.jupiter.api.Assertions.*;
+ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+ 
+ import cn.agentplatform.app.api.AppController;
+ import cn.agentplatform.common.*;
+ 
+ import org.junit.jupiter.api.*;
+ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
+ import org.springframework.http.MediaType;
+ import org.springframework.jdbc.core.JdbcTemplate;
+ import org.springframework.security.core.context.SecurityContextHolder;
+ import org.springframework.security.oauth2.jwt.Jwt;
+ import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+ import org.springframework.test.web.servlet.MockMvc;
+ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+ 
+ import java.time.Instant;
+ import java.util.*;
+ 
+ /**
+  * HTTP contracts backed by the independent PostgreSQL test database, including tenant isolation.
+  */
+ @EnabledIfEnvironmentVariable(named = "AGENT_DB_PASSWORD", matches = ".+")
+ class ApplicationLifecycleTest {
+     static AppService apps;
+     static JdbcTemplate db;
+     MockMvc mvc;
+     String tenant;
+     String code;
+ 
+     @BeforeAll
+     static void database() {
+         PublishTransactionTest.database();
+         apps = PublishTransactionTest.apps;
+         db = PublishTransactionTest.db;
+     }
+ 
+     @BeforeEach
+     void setup() {
+         tenant = "lifecycle-" + UUID.randomUUID();
+         code = "source";
+         actor(tenant, "EDITOR");
+         apps.create(
+                 Map.of(
+                         "code",
+                         code,
+                         "name",
+                         "Source",
+                         "type",
+                         "FLOW",
+                         "domain",
+                         "finance",
+                         "bizCategory",
+                         "report",
+                         "tags",
+                         List.of("daily")));
+         mvc =
+-                MockMvcBuilders.standaloneSetup(new AppController(apps, new TemplateService(db)))
++                MockMvcBuilders.standaloneSetup(new AppController(apps, new TemplateService(db),
++                        new cn.agentplatform.common.authority.AuthorityProperties("test", "app", null, null, null, null, null, false, null)))
+                         .setControllerAdvice(new PlatformErrors())
+                         .build();
+     }
+ 
+     @AfterEach
+     void clear() {
+         SecurityContextHolder.clearContext();
+     }
+ 
+     void actor(String tenantId, String role) {
+         var jwt =
+                 Jwt.withTokenValue("verified-test")
+                         .header("alg", "HS256")
+                         .subject("lifecycle-editor")
+                         .claim("tenant_id", tenantId)
+                         .claim("roles", List.of(role))
+                         .issuedAt(Instant.now())
+                         .expiresAt(Instant.now().plusSeconds(120))
+                         .build();
+         SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(jwt));
+     }
+ 
+     Map<String, Object> publish() {
+         var app = apps.get(code);
+         String id = "pc_" + UUID.randomUUID();
+         db.update(
+                 "insert into"
+                     + " app.publish_report(tenant_id,id,app_draft_id,app_code,draft_rev,candidate_sha256,eval_report_id,checks,passed,expires_at)"
+                     + " values(?,?,?,?,?,?,'report-evidence','[]',true,now()+interval '10"
+                     + " minutes')",
+                 tenant,
+                 id,
+                 app.get("draftId"),
+                 code,
+                 app.get("draftRev"),
+                 app.get("candidateSha256"));
+         return apps.commit(
+                 code,
+                 Map.of(
+                         "precheckId",
+                         id,
+                         "draftRev",
+                         app.get("draftRev"),
+                         "candidateSha256",
+                         app.get("candidateSha256"),
+                         "idempotencyRequestNo",
+                         id));
+     }
+ 
+     Object data(MockHttpServletRequestBuilder request) throws Exception {
+         String body =
+                 mvc.perform(request)
+                         .andExpect(status().isOk())
+                         .andReturn()
+                         .getResponse()
+                         .getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
+         return AppService.object(Json.read(body, Map.class)).get("data");
+     }
+ 
+     MockHttpServletRequestBuilder copy(String target) {
+         return post("/admin/apps/{code}/copy", code)
+                 .contentType(MediaType.APPLICATION_JSON)
+                 .content(Json.write(Map.of("code", target, "name", "Copied")));
+     }
+ 
+     int count(String table, String target) {
+         return db.queryForObject(
+                 "select count(*) from app." + table + " where tenant_id=? and app_code=?",
+                 Integer.class,
+                 tenant,
+                 target);
+     }
+ 
+     @Test
+     void publishedApplicationCopyResetsPublicationAndKeepsCurrentDraftInputs() throws Exception {
+         publish();
+         var config =
+                 Map.of(
+                         "modelBinding",
+                         Map.of("modelEntryId", 41),
+                         "skillRefs",
+                         List.of(Map.of("code", "search", "version", 2)));
+         apps.save(code, Map.of("draftRev", 1, "config", config), false);
+         var definition = Map.of("inputs", List.of(Map.of("name", "question", "type", "string")));
+         apps.save(
+                 code,
+                 Map.of("draftRev", 2, "definition", definition, "layout", Map.of("zoom", 2)),
+                 true);
+         var source = apps.get(code);
+         db.update(
+                 "insert into app.candidate_model_snapshot(tenant_id,app_code,draft_rev,"
+                         + "candidate_sha256,model_refs) values(?,?,?,?, '[]')",
+                 tenant,
+                 code,
+                 source.get("draftRev"),
+                 source.get("candidateSha256"));
+         db.update(
+                 "insert into app.integration_credential(tenant_id,app_code,biz_system_code,"
+                         + "secret_ref,secret_sha256,status,claim_limits,allowed_origins,issued_by)"
+                         + " values(?,?,'partner','secret_ref:test',?,'ACTIVE','{}','[]','tester')",
+                 tenant,
+                 code,
+                 "a".repeat(64));
+ 
+         var result = AppService.object(data(copy("copied")));
+         assertEquals("DRAFT", result.get("status"));
+         assertNull(result.get("currentVersionNo"));
+         assertEquals(1, ((Number) result.get("draftRev")).intValue());
+         assertEquals(1, ((Number) result.get("draftNo")).intValue());
+         for (String field :
+                 List.of("config", "definition", "layout", "domain", "bizCategory", "tags"))
+             assertEquals(source.get(field), result.get(field), field);
+         assertEquals(config, result.get("config"));
+         for (String table :
+                 List.of(
+                         "app_version",
+                         "publish_report",
+                         "publish_commit",
+                         "candidate_model_snapshot",
+                         "integration_credential",
+                         "skill_reference")) assertEquals(0, count(table, "copied"), table);
+         assertEquals(source, apps.get(code));
+         var logs = AppService.objects(data(get("/admin/apps/copied/lifecycle-logs")));
+         var detail = AppService.object(logs.getFirst().get("detail"));
+         assertEquals("COPY", logs.getFirst().get("action"));
+         assertEquals(code, detail.get("sourceAppCode"));
+         assertEquals(source.get("draftRev"), ((Number) detail.get("sourceDraftRev")).longValue());
+         assertEquals(1, detail.get("sourceCurrentVersionNo"));
+     }
+ 
+     @Test
+     void copySupportsPublishedDisabledAndArchivedSources() throws Exception {
+         publish();
+         data(copy("publishedCopy"));
+         apps.lifecycle(code, "disable", Map.of());
+         data(copy("disabledCopy"));
+         apps.lifecycle(code, "archive", Map.of());
+         assertEquals("DRAFT", AppService.object(data(copy("archivedCopy"))).get("status"));
+     }
+ 
+     @Test
+     void duplicateOrInvalidCopyIdentityReturnsBusinessErrorWithoutPartialDraft() throws Exception {
+         mvc.perform(copy(code)).andExpect(status().isConflict());
+         mvc.perform(copy("invalid.code")).andExpect(status().isBadRequest());
+         mvc.perform(
+                         post("/admin/apps/source/copy")
+                                 .contentType(MediaType.APPLICATION_JSON)
+                                 .content("{\"code\":12,\"name\":\"Copy\"}"))
+                 .andExpect(status().isBadRequest());
+         assertEquals(1, apps.list().size());
+     }
+ 
+     @Test
+     void readerCannotCopyAndOtherTenantCannotFindSource() throws Exception {
+         actor(tenant, "READER");
+         mvc.perform(copy("blocked")).andExpect(status().isForbidden());
+         actor("other-" + tenant, "EDITOR");
+         mvc.perform(copy("blocked")).andExpect(status().isNotFound());
+         assertTrue(apps.list().isEmpty());
+     }
+ 
+     @Test
+     void listFiltersAreCombinedAndArchivedNeedsExplicitStatus() throws Exception {
+         publish();
+         apps.lifecycle(code, "disable", Map.of());
+         apps.lifecycle(code, "archive", Map.of());
+         apps.create(Map.of("code", "another", "name", "Another", "type", "CHAT"));
+         assertTrue(AppService.objects(data(get("/admin/apps").param("q", "Source"))).isEmpty());
+         var request =
+                 get("/admin/apps")
+                         .param("q", "sOuRcE")
+                         .param("code", code)
+                         .param("domain", "finance")
+                         .param("bizCategory", "report")
+                         .param("tag", "daily")
+                         .param("status", "ARCHIVED");
+         assertEquals(1, AppService.objects(data(request)).size());
+         assertTrue(
+                 AppService.objects(
+                                 data(
+                                         get("/admin/apps")
+                                                 .param("status", "ARCHIVED")
+                                                 .param("tag", "missing")))
+                         .isEmpty());
+         assertTrue(AppService.objects(data(get("/admin/apps").param("q", "%"))).isEmpty());
+         assertTrue(AppService.objects(data(get("/admin/apps").param("code", "sour"))).isEmpty());
+         mvc.perform(get("/admin/apps").param("status", "UNRECOGNIZED"))
+                 .andExpect(status().isBadRequest());
+         actor("other-" + tenant, "READER");
+         assertTrue(
+                 AppService.objects(data(get("/admin/apps").param("status", "ARCHIVED"))).isEmpty());
+     }
+ 
+     @Test
+     void lifecycleLogsAreReadOnlyAndTenantScoped() throws Exception {
+         publish();
+         apps.lifecycle(code, "disable", Map.of());
+         actor("other-" + tenant, "EDITOR");
+         apps.create(Map.of("code", code, "name", "Other", "type", "CHAT"));
+         actor(tenant, "READER");
+         var logs = AppService.objects(data(get("/admin/apps/{code}/lifecycle-logs", code)));
+         assertTrue(logs.stream().anyMatch(log -> "DISABLE".equals(log.get("action"))));
+         assertTrue(logs.stream().allMatch(log -> "lifecycle-editor".equals(log.get("actor"))));
+         actor("other-" + tenant, "READER");
+         var other = AppService.objects(data(get("/admin/apps/{code}/lifecycle-logs", code)));
+         assertFalse(other.stream().anyMatch(log -> "DISABLE".equals(log.get("action"))));
+         mvc.perform(get("/admin/apps/missing/lifecycle-logs")).andExpect(status().isNotFound());
+     }
+ 
+     @Test
+     void creationAndMetadataDraftTransitionAreRecordedInStableOrder() throws Exception {
+         publish();
+         apps.metadata(code, Map.of("draftRev", 1, "name", "Edited"));
+         var logs = AppService.objects(data(get("/admin/apps/source/lifecycle-logs")));
+         assertEquals(
+                 List.of("MODIFY", "PUBLISH", "CREATE"),
+                 logs.stream().map(log -> log.get("action")).toList());
+         assertEquals("PUBLISHED", logs.getFirst().get("fromState"));
+         assertEquals("DRAFT", logs.getFirst().get("toState"));
+         assertTrue(
+                 ((Number) logs.get(0).get("id")).longValue()
+                         > ((Number) logs.get(1).get("id")).longValue());
+     }
+ 
+     @Test
+     void draftCopyIgnoresIdentityAndStateOverrides() throws Exception {
+         var request = new LinkedHashMap<String, Object>();
+         request.put("code", "safeCopy");
+         request.put("name", "Safe Copy");
+         request.put("tenantId", "injected-tenant");
+         request.put("status", "PUBLISHED");
+         request.put("currentVersionNo", 100);
+         request.put("draftRev", 100);
+         request.put("config", Map.of("injected", true));
+         var result =
+                 AppService.object(
+                         data(
+                                 post("/admin/apps/source/copy")
+                                         .contentType(MediaType.APPLICATION_JSON)
+                                         .content(Json.write(request))));
+         assertEquals("safeCopy", result.get("code"));
+         assertEquals("Safe Copy", result.get("name"));
+         assertEquals("DRAFT", result.get("status"));
+         assertNull(result.get("currentVersionNo"));
+         assertEquals(Map.of(), result.get("config"));
+         assertEquals(1, ((Number) result.get("draftRev")).intValue());
+         assertTrue(apps.versions("safeCopy").isEmpty());
+         actor("injected-tenant", "EDITOR");
+         assertThrows(PlatformException.class, () -> apps.get("safeCopy"));
+     }
+ 
+     @Test
+     void versionDiffUsesImmutableVersionsAndStructuredPaths() throws Exception {
+         apps.save(
+                 code,
+                 Map.of(
+                         "draftRev",
+                         1,
+                         "config",
+                         Map.of(
+                                 "temperature",
+                                 0.1,
+                                 "a/b",
+                                 Map.of("~value", "old"),
+                                 "removed",
+                                 true)),
+                 false);
+         publish();
+         var secondConfig = new LinkedHashMap<String, Object>();
+         secondConfig.put("temperature", 0.7);
+         secondConfig.put("a/b", Map.of("~value", "new"));
+         secondConfig.put("added", null);
+         apps.save(code, Map.of("draftRev", 2, "config", secondConfig), false);
+         publish();
+         var before = apps.version(code, 1);
+         var after = apps.version(code, 2);
+         apps.save(code, Map.of("draftRev", 3, "config", Map.of("unpublished", true)), false);
+         actor(tenant, "READER");
+         var result =
+                 AppService.object(
+                         data(
+                                 get("/admin/apps/{code}/versions/diff", code)
+                                         .param("fromVersion", "1")
+                                         .param("toVersion", "2")));
+         var changes = AppService.objects(result.get("changes"));
+         assertEquals(4, changes.size());
+         assertTrue(
+                 changes.stream()
+                         .anyMatch(
+                                 c ->
+                                         "/config/a~1b/~0value".equals(c.get("path"))
+                                                 && "REPLACE".equals(c.get("operation"))
+                                                 && "old".equals(c.get("before"))
+                                                 && "new".equals(c.get("after"))));
+         assertTrue(
+                 changes.stream()
+                         .anyMatch(
+                                 c ->
+                                         "/config/added".equals(c.get("path"))
+                                                 && "ADD".equals(c.get("operation"))
+                                                 && c.containsKey("after")
+                                                 && c.get("after") == null));
+         assertEquals(before, apps.version(code, 1));
+         assertEquals(after, apps.version(code, 2));
+         assertTrue(
+                 AppService.objects(
+                                 AppService.object(
+                                                 data(
+                                                         get(
+                                                                         "/admin/apps/{code}/versions/diff",
+                                                                         code)
+                                                                 .param("fromVersion", "1")
+                                                                 .param("toVersion", "1")))
+                                         .get("changes"))
+                         .isEmpty());
+     }
+ 
+     @Test
+     void versionDiffCannotReadAnotherTenantOrApplicationVersion() throws Exception {
+         publish();
+         apps.create(Map.of("code", "otherApp", "name", "Other", "type", "CHAT"));
+         code = "otherApp";
+         publish();
+         apps.save(code, Map.of("draftRev", 1, "config", Map.of("other", true)), false);
+         publish();
+         mvc.perform(
+                         get("/admin/apps/source/versions/diff")
+                                 .param("fromVersion", "1")
+                                 .param("toVersion", "2"))
+                 .andExpect(status().isNotFound());
+         actor("other-" + tenant, "EDITOR");
+         apps.create(Map.of("code", "source", "name", "Hidden", "type", "CHAT"));
+         mvc.perform(
+                         get("/admin/apps/source/versions/diff")
+                                 .param("fromVersion", "1")
+                                 .param("toVersion", "1"))
+                 .andExpect(status().isNotFound());
+     }
+ 
+     @Test
+     void versionDiffRejectsNonPositiveVersionNumbers() throws Exception {
+         mvc.perform(
+                         get("/admin/apps/source/versions/diff")
+                                 .param("fromVersion", "0")
+                                 .param("toVersion", "1"))
+                 .andExpect(status().isBadRequest());
+         mvc.perform(
+                         get("/admin/apps/source/versions/diff")
+                                 .param("fromVersion", "1")
+                                 .param("toVersion", "-1"))
+                 .andExpect(status().isBadRequest());
+     }
+ }
+diff --git a/app-management/src/test/java/cn/agentplatform/app/application/PublishTransactionTest.java b/app-management/src/test/java/cn/agentplatform/app/application/PublishTransactionTest.java
+index d06993d..b68618e 100644
+--- a/app-management/src/test/java/cn/agentplatform/app/application/PublishTransactionTest.java
++++ b/app-management/src/test/java/cn/agentplatform/app/application/PublishTransactionTest.java
+@@ -1,457 +1,458 @@
+ package cn.agentplatform.app.application;
+ 
+ import static org.junit.jupiter.api.Assertions.*;
+ 
+ import cn.agentplatform.common.*;
+ 
+ import org.flywaydb.core.Flyway;
+ import org.junit.jupiter.api.*;
+ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
+ import org.springframework.jdbc.core.JdbcTemplate;
+ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+ import org.springframework.jdbc.datasource.DriverManagerDataSource;
+ import org.springframework.security.core.context.SecurityContextHolder;
+ import org.springframework.security.oauth2.jwt.Jwt;
+ import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+ 
+ import java.time.Instant;
+ import java.util.*;
+ import java.util.concurrent.*;
+ 
+ /**
+  * Runs only against the explicitly provisioned independent PostgreSQL instance; never substitutes
+  * an in-memory DB.
+  */
+ @EnabledIfEnvironmentVariable(named = "AGENT_DB_PASSWORD", matches = ".+")
+ class PublishTransactionTest {
+     static JdbcTemplate db;
+     static AppService apps;
+     String code;
+ 
+     @BeforeAll
+     static void database() {
+         var ds =
+                 new DriverManagerDataSource(
+                         "jdbc:postgresql://127.0.0.1:25432/agent_platform_v12",
+                         "agent_v12",
+                         System.getenv("AGENT_DB_PASSWORD"));
+         Flyway.configure()
+                 .dataSource(ds)
+                 .schemas("app")
+                 .defaultSchema("app")
+                 .locations("classpath:db/migration")
+                 .load()
+                 .migrate();
+         db = new JdbcTemplate(ds);
+         apps =
+                 new AppService(
+                         db,
+                         new DataSourceTransactionManager(ds),
+                         "http://127.0.0.1:1",
+                         "http://127.0.0.1:1",
+                         "http://127.0.0.1:1",
+                         "http://127.0.0.1:1");
+     }
+ 
+     static void actor(String tenant) {
+         var jwt =
+                 Jwt.withTokenValue("test-verified")
+                         .header("alg", "HS256")
+                         .subject("publisher")
+                         .claim("tenant_id", tenant)
+                         .claim("roles", List.of("EDITOR", "ADMIN"))
+                         .issuedAt(Instant.now())
+                         .expiresAt(Instant.now().plusSeconds(120))
+                         .build();
+         SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(jwt));
+     }
+ 
+     @BeforeEach
+     void create() {
+         actor("application-tests");
+         code = "test_" + UUID.randomUUID().toString().replace("-", "");
+         apps.create(Map.of("code", code, "name", "发布事务测试", "type", "FLOW"));
+     }
+ 
+     @AfterEach
+     void clear() {
+         SecurityContextHolder.clearContext();
+     }
+ 
+     Map<String, Object> permit() {
+         var app = apps.get(code);
+         String pc = "pc_" + UUID.randomUUID();
+         String sha = app.get("candidateSha256").toString();
+         long rev = ((Number) app.get("draftRev")).longValue();
+         db.update(
+                 "insert into"
+                     + " app.publish_report(tenant_id,id,app_draft_id,app_code,draft_rev,candidate_sha256,eval_report_id,checks,passed,expires_at)"
+                     + " values(?,?,(select id from app.app_draft where tenant_id=? and"
+                     + " app_code=?),?,?,?,'test-report','[]',true,now()+interval '10 minutes')",
+                 "application-tests",
+                 pc,
+                 "application-tests",
+                 code,
+                 code,
+                 rev,
+                 sha);
+         return Map.of(
+                 "precheckId",
+                 pc,
+                 "draftRev",
+                 rev,
+                 "candidateSha256",
+                 sha,
+                 "idempotencyRequestNo",
+                 "req-1");
+     }
+ 
+     @Test
+     void candidateAndPublishedVersionUseIdenticalFrozenModels() throws Exception {
+         var hits = new java.util.concurrent.atomic.AtomicInteger();
+         var server =
+                 com.sun.net.httpserver.HttpServer.create(
+                         new java.net.InetSocketAddress("127.0.0.1", 0), 0);
+         server.createContext(
+                 "/internal/model-bindings/freeze",
+                 e -> {
+                     int n = hits.incrementAndGet();
+                     byte[] bytes =
+                             Json.write(
+                                             Map.of(
+                                                     "data",
+                                                     Map.of(
+                                                             "modelEntryId",
+                                                             41,
+                                                             "bindingId",
+                                                             n,
+                                                             "sha256",
+                                                             "freeze-" + n,
+                                                             "entry",
+                                                             Map.of(
+                                                                     "id",
+                                                                     41,
+                                                                     "modelName",
+                                                                     "original"))))
+                                     .getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                     e.getResponseHeaders().set("Content-Type", "application/json");
+                     e.sendResponseHeaders(200, bytes.length);
+                     e.getResponseBody().write(bytes);
+                     e.close();
+                 });
+         server.createContext(
+                 "/internal/model-bindings/validate",
+                 e -> {
+                     byte[] bytes = "{\"data\":{\"valid\":true}}".getBytes();
+                     e.getResponseHeaders().set("Content-Type", "application/json");
+                     e.sendResponseHeaders(200, bytes.length);
+                     e.getResponseBody().write(bytes);
+                     e.close();
+                 });
+         server.start();
+         try {
+             var ds = db.getDataSource();
+             var instance =
+                     new AppService(
+                             db,
+                             new DataSourceTransactionManager(ds),
+                             "http://127.0.0.1:1",
+                             "http://127.0.0.1:" + server.getAddress().getPort(),
+                             "http://127.0.0.1:1",
+                             "http://127.0.0.1:1");
+             instance.save(
+                     code,
+                     Map.of(
+                             "draftRev",
+                             1,
+                             "config",
+                             Map.of("modelBinding", Map.of("modelEntryId", 41))),
+                     false);
+             var app = instance.get(code);
+             long rev = ((Number) app.get("draftRev")).longValue();
+             String hash = app.get("candidateSha256").toString();
+             var candidate = instance.frozenCandidate(code, rev, hash);
+             var second = instance.frozenCandidate(code, rev, hash);
+             assertNotNull(candidate.get("dependencyVersions"));
+             assertEquals(candidate.get("dependencyVersions"), second.get("dependencyVersions"));
+             assertEquals(1, hits.get());
+             var request = permit();
+             db.update(
+                     "update app.publish_report set model_refs=?::jsonb where tenant_id=? and id=?",
+                     Json.write(
+                             AppService.object(candidate.get("dependencyVersions"))
+                                     .get("modelRefs")),
+                     "application-tests",
+                     request.get("precheckId"));
+             db.update(
+                     "update app.publish_report set model_refs='[]' where tenant_id=? and id=?",
+                     "application-tests",
+                     request.get("precheckId"));
+             assertThrows(PlatformException.class, () -> instance.commit(code, request));
+             assertTrue(instance.versions(code).isEmpty());
+             db.update(
+                     "update app.publish_report set model_refs=?::jsonb where tenant_id=? and id=?",
+                     Json.write(
+                             AppService.object(candidate.get("dependencyVersions"))
+                                     .get("modelRefs")),
+                     "application-tests",
+                     request.get("precheckId"));
+             instance.commit(code, request);
+             assertEquals(
+                     candidate.get("dependencyVersions"),
+                     instance.version(code, 1).get("dependencyVersions"));
+         } finally {
+             server.stop(0);
+         }
+     }
+ 
+     @Test
+     void draftStoredSeparatelyWithRealIdentity() {
+         var app = apps.get(code);
+         assertTrue(((Number) app.get("id")).longValue() > 0);
+         assertTrue(((Number) app.get("draftId")).longValue() > 0);
+         assertEquals(
+                 1,
+                 db.queryForObject(
+                         "select count(*) from app.app_draft where tenant_id=? and app_id=? and"
+                                 + " app_code=?",
+                         Integer.class,
+                         "application-tests",
+                         app.get("id"),
+                         code));
+     }
+ 
+     @Test
+     void inputDefaultsNamedModelEntryIdAreNotModelBindings() {
+         var inputs =
+                 List.of(Map.of("name", "payload", "defaultValue", Map.of("modelEntryId", 999999)));
+         apps.save(code, Map.of("draftRev", 1, "config", Map.of("inputs", inputs)), false);
+         var app = apps.get(code);
+         var snapshot =
+                 apps.frozenCandidate(
+                         code,
+                         ((Number) app.get("draftRev")).longValue(),
+                         app.get("candidateSha256").toString());
+         assertEquals(
+                 List.of(), AppService.object(snapshot.get("dependencyVersions")).get("modelRefs"));
+     }
+ 
+     @Test
+     void staleDraftNeverPublishes() {
+         var request = permit();
+         apps.save(code, Map.of("draftRev", 1, "config", Map.of("changed", true)), false);
+         assertThrows(PlatformException.class, () -> apps.commit(code, request));
+         assertTrue(apps.versions(code).isEmpty());
+     }
+ 
+     @Test
+     void sameAndDifferentRequestNumbersReuseCandidate() {
+         var request = permit();
+         assertEquals(1, apps.commit(code, request).get("versionNo"));
+         assertEquals(1, apps.commit(code, request).get("versionNo"));
+         var other = new HashMap<>(request);
+         other.put("idempotencyRequestNo", "req-2");
+         assertEquals(1, apps.commit(code, other).get("versionNo"));
+         assertEquals(1, apps.versions(code).size());
+         assertEquals(
+                 2,
+                 db.queryForObject(
+                         "select count(*) from app.publish_commit where tenant_id=? and app_code=?",
+                         Integer.class,
+                         "application-tests",
+                         code));
+     }
+ 
+     @Test
+     void tenantCannotReadOrPublishAnotherTenantDraft() {
+         var request = permit();
+         actor("other-tests");
+         assertThrows(PlatformException.class, () -> apps.get(code));
+         assertThrows(PlatformException.class, () -> apps.commit(code, request));
+     }
+ 
+     @Test
+     void layoutOnlyEditKeepsRevisionAndDigest() {
+         var old = apps.get(code);
+         var now =
+                 apps.save(
+                         code,
+                         Map.of("draftRev", 1, "definition", Map.of(), "layout", Map.of("x", 123)),
+                         true);
+         assertEquals(old.get("draftRev"), now.get("draftRev"));
+         assertEquals(old.get("candidateSha256"), now.get("candidateSha256"));
+     }
+ 
+     @Test
+     void failedReferenceWriteRollsBackVersionAndPointer() {
+         apps.save(
+                 code,
+                 Map.of(
+                         "draftRev",
+                         1,
+                         "config",
+                         Map.of(
+                                 "skillRefs",
+                                 List.of(Map.of("code", "broken", "version", "not-a-number")))),
+                 false);
+         var request = permit();
+         assertThrows(PlatformException.class, () -> apps.commit(code, request));
+         assertTrue(apps.versions(code).isEmpty());
+         assertNull(apps.get(code).get("currentVersionNo"));
+         assertEquals(
+                 0,
+                 db.queryForObject(
+                         "select count(*) from app.publish_commit where tenant_id=? and app_code=?",
+                         Integer.class,
+                         "application-tests",
+                         code));
+     }
+ 
+     @Test
+     void integrationSecretOnlyShownOnceAndRevocationPersists() {
+         apps.commit(code, permit());
+         var service = new IntegrationService(db, apps);
+         var issued =
+                 service.issue(
+                         code,
+                         Map.of(
+                                 "bizSystemCode",
+                                 "partner",
+                                 "allowedOrigins",
+                                 List.of("https://partner.example"),
+                                 "claimLimits",
+                                 Map.of(
+                                         "principalIds",
+                                         List.of("alice"),
+                                         "roles",
+                                         List.of("operator"),
+                                         "attributes",
+                                         Map.of("region", List.of("A")))));
+         assertNotNull(issued.get("secretOnce"));
+         assertFalse(issued.containsKey("secretRef"));
+         var publicValue = service.get(code, "partner", false);
+         assertFalse(publicValue.containsKey("secretOnce"));
+         assertFalse(publicValue.containsKey("secretRef"));
+         var internal = service.get(code, "partner", true);
+         assertEquals(
+                 issued.get("secretOnce"),
+                 SecretVault.resolve(internal.get("secretRef").toString()));
+         assertEquals("REVOKED", service.revoke(code, "partner").get("status"));
+     }
+ 
+     @Test
+     void globalCredentialLookupRequiresDedicatedGatewayIdentity() {
+         apps.commit(code, permit());
+         var service = new IntegrationService(db, apps);
+         var issued =
+                 service.issue(
+                         code,
+                         Map.of(
+                                 "bizSystemCode",
+                                 "gateway-test",
+                                 "allowedOrigins",
+                                 List.of("https://partner.example"),
+                                 "claimLimits",
+                                 Map.of(
+                                         "principalIds",
+                                         List.of("alice"),
+                                         "roles",
+                                         List.of("operator"),
+                                         "attributes",
+                                         Map.of())));
+         long id = ((Number) issued.get("id")).longValue();
+         assertTrue(issued.get("apiKeyOnce").toString().startsWith(id + ":"));
+         assertThrows(PlatformException.class, () -> service.authenticate(id));
+         assertThrows(PlatformException.class, () -> service.origins("https://partner.example"));
+         var jwt =
+                 Jwt.withTokenValue("gateway-verified-test")
+                         .header("alg", "HS256")
+                         .subject("_gateway")
+                         .claim("tenant_id", "_gateway")
+                         .claim("roles", List.of("SERVICE", "GATEWAY_AUTH"))
+                         .issuedAt(Instant.now())
+                         .expiresAt(Instant.now().plusSeconds(120))
+                         .build();
+         SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(jwt));
+         assertEquals("application-tests", service.authenticate(id).get("tenantId"));
+         assertEquals(true, service.origins("https://partner.example").get("allowed"));
+         assertEquals(
+                 false,
+                 service.origins("https://unregistered-" + UUID.randomUUID() + ".example")
+                         .get("allowed"));
+         assertThrows(PlatformException.class, () -> service.get(code, "gateway-test", true));
+     }
+ 
+     @Test
+     void explicitHistoryVersionCannotBypassDisabledApplication() {
+         apps.commit(code, permit());
+-        var controller = new cn.agentplatform.app.api.AppController(apps, new TemplateService(db));
++        var controller = new cn.agentplatform.app.api.AppController(apps, new TemplateService(db),
++                new cn.agentplatform.common.authority.AuthorityProperties("test", "app", null, null, null, null, null, false, null));
+         assertNotNull(controller.version(code, 1));
+         apps.lifecycle(code, "disable", Map.of());
+         assertThrows(PlatformException.class, () -> controller.version(code, 1));
+         assertNotNull(apps.version(code, 1));
+         apps.lifecycle(code, "archive", Map.of());
+         assertThrows(PlatformException.class, () -> controller.version(code, 1));
+     }
+ 
+     @Test
+     void publishedInputDeclarationsComeOnlyFromExactPublishedVersion() {
+         var inputs = List.of(Map.of("name", "question", "type", "string", "required", true));
+         apps.save(code, Map.of("draftRev", 1, "definition", Map.of("inputs", inputs)), true);
+         apps.commit(code, permit());
+         var result = apps.publishedInputs(code, null);
+         assertEquals(inputs, result.get("inputs"));
+         assertEquals(1, result.get("versionNo"));
+         assertFalse(result.containsKey("dependencyVersions"));
+         apps.save(
+                 code,
+                 Map.of(
+                         "draftRev",
+                         2,
+                         "config",
+                         Map.of("inputs", List.of(Map.of("name", "unpublished")))),
+                 false);
+         assertEquals(inputs, apps.publishedInputs(code, null).get("inputs"));
+         assertEquals(1, apps.published(code).get("versionNo"));
+         apps.lifecycle(code, "rollback", Map.of("versionNo", 1));
+         apps.lifecycle(code, "disable", Map.of());
+         assertThrows(PlatformException.class, () -> apps.publishedInputs(code, 1));
+     }
+ 
+     @Test
+     void concurrentDistinctRequestsPublishSingleVersion() throws Exception {
+         var request = permit();
+         try (var executor = Executors.newFixedThreadPool(2)) {
+             var latch = new CountDownLatch(1);
+             var first =
+                     executor.submit(
+                             () -> {
+                                 actor("application-tests");
+                                 latch.await();
+                                 try {
+                                     return apps.commit(code, request);
+                                 } finally {
+                                     SecurityContextHolder.clearContext();
+                                 }
+                             });
+             var second =
+                     executor.submit(
+                             () -> {
+                                 actor("application-tests");
+                                 latch.await();
+                                 try {
+                                     var b = new HashMap<>(request);
+                                     b.put("idempotencyRequestNo", "req-2");
+                                     return apps.commit(code, b);
+                                 } finally {
+                                     SecurityContextHolder.clearContext();
+                                 }
+                             });
+             latch.countDown();
+             assertEquals(
+                     first.get(10, TimeUnit.SECONDS).get("versionNo"),
+                     second.get(10, TimeUnit.SECONDS).get("versionNo"));
+         }
+         assertEquals(1, apps.versions(code).size());
+     }
+ }
+diff --git a/app-management/src/test/java/cn/agentplatform/app/application/PublishedMetadataHttpTest.java b/app-management/src/test/java/cn/agentplatform/app/application/PublishedMetadataHttpTest.java
+index 7e72e59..e9dcd8c 100644
+--- a/app-management/src/test/java/cn/agentplatform/app/application/PublishedMetadataHttpTest.java
++++ b/app-management/src/test/java/cn/agentplatform/app/application/PublishedMetadataHttpTest.java
+@@ -1,147 +1,148 @@
+ package cn.agentplatform.app.application;
+ 
+ import cn.agentplatform.app.api.*;
+ import cn.agentplatform.common.*;
+ import cn.agentplatform.common.authority.*;
+ import java.net.*;
+ import java.net.http.*;
+ import java.time.*;
+ import java.util.*;
+ import java.util.concurrent.atomic.AtomicInteger;
+ import javax.sql.DataSource;
+ import org.junit.jupiter.api.*;
+ import org.flywaydb.core.Flyway;
+ import org.springframework.boot.*;
+ import org.springframework.boot.autoconfigure.*;
+ import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
+ import org.springframework.context.annotation.*;
+ import org.springframework.jdbc.core.*;
+ import org.springframework.jdbc.datasource.*;
+ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+ import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+ import org.springframework.security.oauth2.jwt.JwtDecoder;
+ import org.springframework.security.web.SecurityFilterChain;
+ import org.springframework.web.servlet.mvc.method.RequestMappingInfoHandlerMapping;
+ import static org.assertj.core.api.Assertions.*;
+ 
+ class PublishedMetadataHttpTest {
+     static LoopbackAuthority fixture;
+     static DataSource ds;static JdbcTemplate db;
+     static ServletWebServerApplicationContext app;
+     static String tenant;
+     static final String CODE="published-demo", SHA=Digest.sha256("immutable-stored-candidate");
+     static final AtomicInteger metadataReads=new AtomicInteger(),payloadReads=new AtomicInteger();
+     static final List<String> statements=new ArrayList<>();
+     @Configuration(proxyBeanMethods=false) @EnableAutoConfiguration @EnableWebSecurity
+     @Import({PublishedMetadataController.class,PublishedMetadataService.class,AppController.class,TemplateService.class,PlatformErrors.class})
+     static class Receiver {
++        @Bean AuthorityProperties authorityProperties(){return fixture.config("app");}
+         @Bean DataSource dataSource(){return ds;}
+         @Bean JdbcTemplate jdbc(){return new JdbcTemplate(ds){@Override public <T> List<T> query(String sql,RowMapper<T> mapper,Object...args){statements.add(sql);if(sql.contains("candidate_sha256")&&sql.contains("left join"))metadataReads.incrementAndGet();else payloadReads.incrementAndGet();return super.query(sql,mapper,args);}};}
+         @Bean AppService apps(JdbcTemplate jdbc){return new AppService(jdbc,new DataSourceTransactionManager(ds),"http://127.0.0.1:1","http://127.0.0.1:1","http://127.0.0.1:1","http://127.0.0.1:1");}
+         @Bean JwtDecoder decoder(){return new TrustedJwtDecoder(fixture.config("app"),fixture.clock(),true);}
+         @Bean(destroyMethod="close") HttpCurrentAuthorityClient current(){return fixture.client("app");}
+         @Bean ServiceAuthorization authorization(CurrentAuthorityClient current){return new ServiceAuthorization("app",new ServiceRoutePolicy(),current);}
+         @Bean SecurityFilterChain security(HttpSecurity http,JwtDecoder decoder,ServiceAuthorization receiver)throws Exception{return SecurityConfiguration.serviceSecurity(http,decoder,receiver);}
+         @Bean org.springframework.web.servlet.handler.MappedInterceptor guard(ServiceAuthorization receiver){return receiver.mappedInterceptor();}
+         @Bean RouteCoverageVerifier coverage(List<RequestMappingInfoHandlerMapping> mappings){return new RouteCoverageVerifier("app",new ServiceRoutePolicy(),mappings);}
+     }
+     @BeforeAll static void start()throws Exception {
+         String password=System.getenv("AGENT_DB_PASSWORD");assertThat(password).isNotBlank();
+         var admin=new JdbcTemplate(new DriverManagerDataSource("jdbc:postgresql://127.0.0.1:25432/postgres","agent_v12",password));
+         boolean exists=Boolean.TRUE.equals(admin.queryForObject("select exists(select 1 from pg_database where datname='agent_platform_iam_metadata_v12')",Boolean.class));
+         System.out.println("D3A0_DATABASE_EXISTED="+exists);
+         if(!exists)admin.execute("CREATE DATABASE agent_platform_iam_metadata_v12");
+         ds=new DriverManagerDataSource("jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_metadata_v12","agent_v12",password);
+         Flyway.configure().dataSource(ds).schemas("app").defaultSchema("app").locations("classpath:db/migration").target("104").load().migrate();db=new JdbcTemplate(ds);
+         assertThat(db.queryForObject("select current_database()",String.class)).isEqualTo("agent_platform_iam_metadata_v12");
+         fixture=new LoopbackAuthority();fixture.portalActor(new Actor("initial","alice",Set.of("EDITOR"),Map.of("dataLabels",Set.of("confidential","restricted"),"region",Set.of("A"))));
+         var application=new SpringApplication(Receiver.class);application.setAdditionalProfiles("test");
+         application.setDefaultProperties(Map.ofEntries(Map.entry("server.address","127.0.0.1"),Map.entry("server.port","0"),Map.entry("spring.config.location","optional:classpath:/d3a0-no-config/"),Map.entry("spring.main.banner-mode","off"),Map.entry("springdoc.api-docs.enabled",false),Map.entry("spring.flyway.enabled",false),Map.entry("management.endpoints.web.exposure.exclude","*"),Map.entry("management.endpoints.web.discovery.enabled",false),Map.entry("logging.level.root","ERROR")));
+         app=(ServletWebServerApplicationContext)application.run();
+     }
+     @AfterAll static void close(){if(app!=null)app.close();if(fixture!=null)fixture.close();}
+     @BeforeEach void seed(){fixture.clearFiniteGrants();tenant="d3a0-"+UUID.randomUUID();fixture.portalActor(new Actor(tenant,"alice",Set.of("EDITOR"),Map.of("dataLabels",Set.of("confidential","restricted"),"region",Set.of("A"))));seedApp(tenant,CODE,"PUBLISHED",1);seedApp(tenant,"other","PUBLISHED",1);metadataReads.set(0);payloadReads.set(0);statements.clear();}
+     static void seedApp(String tenant,String code,String status,Integer version){
+         db.update("insert into app.application(tenant_id,code,name,type,status,current_version_no,created_by) values(?,?,'Metadata test','CHAT',?,?,'alice')",tenant,code,status,version);
+         db.update("insert into app.app_draft(tenant_id,app_id,app_code,config) select tenant_id,id,code,'{\"private\":\"payload-secret\"}'::jsonb from app.application where tenant_id=? and code=?",tenant,code);
+         if(version!=null)db.update("insert into app.app_version(tenant_id,app_code,version_no,draft_rev,candidate_sha256,snapshot,eval_report_id,published_by,app_id,app_draft_id) select a.tenant_id,a.code,1,1,?,'{\"private\":\"snapshot-secret\"}','finite','alice',a.id,d.id from app.application a join app.app_draft d on d.tenant_id=a.tenant_id and d.app_code=a.code where a.tenant_id=? and a.code=?",SHA,tenant,code);
+     }
+     static ServiceCall query(String code){return new ServiceCall("app",MetadataSelectors.ACTION,MetadataSelectors.published(tenant,code));}
+     static String ticket(ServiceCall call){try(var gateway=fixture.client("gateway")){return gateway.exchange(fixture.portal(),call).value();}}
+     static String path(String code){return "/internal/apps/"+code+"/published-metadata";}
+     static HttpResponse<String> request(String method,String path,String token)throws Exception{
+         try(var http=HttpClient.newHttpClient()){var r=HttpRequest.newBuilder(URI.create("http://127.0.0.1:"+app.getWebServer().getPort()+path)).timeout(Duration.ofSeconds(8));if(token!=null)r.header("Authorization","Bearer "+token);return http.send(r.method(method,HttpRequest.BodyPublishers.noBody()).build(),HttpResponse.BodyHandlers.ofString());}
+     }
+     @Test void legalSelectorReturnsOnlyPersistedFourFieldsWithOneMetadataRead()throws Exception{
+         String source=fixture.portal();try(var gateway=fixture.client("gateway")){var t=gateway.exchange(source,query(CODE));assertThat(t.value()).isNotEqualTo(source);
+         var r=request("GET",path(CODE),t.value());assertThat(r.statusCode()).as(r.body()).isEqualTo(200);
+         var data=Json.read(r.body()).path("data");assertThat(data.fieldNames()).toIterable().containsExactlyInAnyOrder("appCode","versionId","versionNo","versionSha256");assertThat(data.path("versionSha256").asText()).isEqualTo(SHA);assertThat(data.path("versionId").asLong()).isPositive();assertThat(data.path("versionNo").asInt()).isEqualTo(1);assertThat(metadataReads).hasValue(1);assertThat(payloadReads).hasValue(0);assertThat(statements).allSatisfy(sql->assertThat(sql).doesNotContain("snapshot","config","definition","layout","select a.*"));}
+     }
+     @Test void forgedSelectorTenantCodeOrDigestCannotQueryPg()throws Exception{
+         for(var resource:List.of(MetadataSelectors.published(tenant,"other"),MetadataSelectors.published("wrong-tenant",CODE),new ResourceBinding(MetadataSelectors.KIND,MetadataSelectors.published(tenant,CODE).id(),Digest.sha256("fake-descriptor")))){
+             var r=request("GET",path(CODE),ticket(new ServiceCall("app",MetadataSelectors.ACTION,resource)));assertThat(r.statusCode()).as(r.body()).isEqualTo(403);assertThat(metadataReads).hasValue(0);
+         }
+     }
+     @Test void deliberatelySignedMetadataKindCannotEnterActualPayloadController()throws Exception{
+         String action=new ServiceRoutePolicy().require("gateway","app","GET","/admin/apps/{code}").action();
+         var r=request("GET","/admin/apps/"+CODE,ticket(new ServiceCall("app",action,MetadataSelectors.published(tenant,CODE))));
+         assertThat(r.statusCode()).as(r.body()).isEqualTo(403);assertThat(payloadReads).hasValue(0);assertThat(metadataReads).hasValue(0);
+     }
+     @Test void payloadKindCannotEnterMetadataController()throws Exception{
+         var r=request("GET",path(CODE),ticket(new ServiceCall("app",MetadataSelectors.ACTION,new ResourceBinding("app-version",CODE+"@1",SHA))));
+         assertThat(r.statusCode()).as(r.body()).isEqualTo(403);assertThat(metadataReads).hasValue(0);
+     }
+ 
+     static String changed(String token,java.util.function.Consumer<Map<String,Object>> change){
+         var c=Json.mapper().convertValue(Json.read(new String(Base64.getUrlDecoder().decode(token.split("\\.")[1]),java.nio.charset.StandardCharsets.UTF_8)),new com.fasterxml.jackson.core.type.TypeReference<Map<String,Object>>(){});change.accept(c);return fixture.sign(c,fixture.authoritySigningKey(),"at+jwt");
+     }
+     @Test void missingContextCallerTargetActionMethodAndDirectTokensNeverReadBusiness()throws Exception{
+         String t=ticket(query(CODE));
+         assertThat(request("GET",path(CODE),null).statusCode()).isEqualTo(401);
+         for(String raw:List.of(fixture.portal(),fixture.integration(fixture.integrationClaims()),"not-a-jwt"))assertThat(request("GET",path(CODE),raw).statusCode()).isIn(401,403);
+         for(String field:List.of("caller","target","action","aud","tenant_id")){
+             var raw=changed(t,c->c.put(field,"wrong"));assertThat(request("GET",path(CODE),raw).statusCode()).as(field).isIn(401,403);
+         }
+         for(String method:List.of("POST","HEAD","PUT"))assertThat(request(method,path(CODE),t).statusCode()).isIn(401,403);
+         assertThatThrownBy(()->new PublishedMetadataService(db).published(CODE)).isInstanceOf(PlatformException.class);
+         assertThat(metadataReads).hasValue(0);assertThat(payloadReads).hasValue(0);
+     }
+     @Test void workloadIntegrationAndDelegatedResumeNeverBecomeInitialLookup()throws Exception{
+         String t=ticket(query(CODE));
+         try(var gateway=fixture.client("gateway");var appClient=fixture.client("app")){
+             var proof=appClient.authorize(t,query(CODE));var resumed=gateway.resume(proof.delegation(),query(CODE));
+             assertThat(request("GET",path(CODE),resumed.value()).statusCode()).isEqualTo(403);
+             var integration=fixture.integrationClaims();integration.put("tenant_id",tenant);
+             var integrationTicket=gateway.exchange(fixture.integration(integration),query(CODE));
+             assertThat(request("GET",path(CODE),integrationTicket.value()).statusCode()).isEqualTo(403);
+             var workload=gateway.client(new ServiceCall("app","integration.origin.check",new ResourceBinding("credential","7",SHA)));
+             String wrong=changed(workload.value(),c->{c.put("action",MetadataSelectors.ACTION);c.put("scope",MetadataSelectors.ACTION);c.put("resource",Map.of("kind",MetadataSelectors.KIND,"id",query(CODE).resource().id(),"version_digest",query(CODE).resource().versionDigest()));});
+             assertThat(request("GET",path(CODE),wrong).statusCode()).isIn(401,403);
+         }
+         assertThat(metadataReads).hasValue(0);assertThat(payloadReads).hasValue(0);
+     }
+     @Test void unknownExtraParametersAndInvalidCodeFailBeforePg()throws Exception{
+         String t=ticket(query(CODE));
+         assertThat(request("GET",path(CODE)+"?tenant_id=other",t).statusCode()).isEqualTo(400);
+         assertThat(request("GET",path("1bad"),t).statusCode()).isEqualTo(400);
+         assertThat(metadataReads).hasValue(0);assertThat(payloadReads).hasValue(0);
+     }
+     @Test void unknownAndUnavailablePublishedStatesPreserve404And409()throws Exception{
+         assertThat(request("GET",path("missing"),ticket(query("missing"))).statusCode()).isEqualTo(404);
+         for(String state:List.of("DISABLED","ARCHIVED","DRAFT")){
+             String code="app"+state;seedApp(tenant,code,state,null);
+             assertThat(request("GET",path(code),ticket(query(code))).statusCode()).as(state).isEqualTo(409);
+         }
+         seedApp(tenant,"noPointer","PUBLISHED",null);
+         assertThat(request("GET",path("noPointer"),ticket(query("noPointer"))).statusCode()).isEqualTo(409);
+         seedApp(tenant+"-other","hidden","PUBLISHED",1);
+         assertThat(request("GET",path("hidden"),ticket(query("hidden"))).statusCode()).isEqualTo(404);
+         assertThat(payloadReads).hasValue(0);
+     }
+     @Test void narrowedCurrentProjectionRemainsMetadataOnly()throws Exception{
+         String t=ticket(query(CODE));fixture.narrowAdminAtResourceCheck();
+         // This fixture drops all roles on the second authorize: the recheck must return the
+         // narrowed projection rather than reusing the original actor. No role grants payload.
+         var r=request("GET",path(CODE),t);assertThat(r.statusCode()).isEqualTo(200);assertThat(metadataReads).hasValue(1);assertThat(payloadReads).hasValue(0);
+     }
+ }
+diff --git a/app-management/src/test/java/cn/agentplatform/app/application/PublishedPayloadHttpTest.java b/app-management/src/test/java/cn/agentplatform/app/application/PublishedPayloadHttpTest.java
+new file mode 100644
+index 0000000..5285752
+--- /dev/null
++++ b/app-management/src/test/java/cn/agentplatform/app/application/PublishedPayloadHttpTest.java
+@@ -0,0 +1,234 @@
++package cn.agentplatform.app.application;
++
++import cn.agentplatform.app.api.*;
++import cn.agentplatform.common.*;
++import cn.agentplatform.common.authority.*;
++import java.net.*;
++import java.net.http.*;
++import java.time.*;
++import java.util.*;
++import java.util.concurrent.*;
++import java.util.concurrent.atomic.*;
++import java.util.function.*;
++import javax.sql.DataSource;
++import org.junit.jupiter.api.*;
++import org.flywaydb.core.Flyway;
++import org.springframework.boot.*;
++import org.springframework.boot.autoconfigure.*;
++import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
++import org.springframework.context.annotation.*;
++import org.springframework.jdbc.core.*;
++import org.springframework.jdbc.datasource.*;
++import org.springframework.security.config.annotation.web.builders.HttpSecurity;
++import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
++import org.springframework.security.oauth2.jwt.JwtDecoder;
++import org.springframework.security.web.SecurityFilterChain;
++import org.springframework.transaction.*;
++import org.springframework.transaction.support.*;
++import org.springframework.web.servlet.mvc.method.RequestMappingInfoHandlerMapping;
++import static org.assertj.core.api.Assertions.*;
++
++/** Real app receiver + actual signed authority HTTP + dedicated PG. No Gateway/RunController execution. */
++class PublishedPayloadHttpTest {
++    static final String CODE="payload-demo", SHA=Digest.sha256("stored-candidate-one"), SHA2=Digest.sha256("stored-candidate-two");
++    static LoopbackAuthority fixture;
++    static DataSource ds;
++    static JdbcTemplate db;
++    static ServletWebServerApplicationContext app;
++    static String tenant, source;
++    static long versionId;
++    static final AtomicInteger currents=new AtomicInteger(), writes=new AtomicInteger(), commits=new AtomicInteger();
++    record Sql(String category,String sql,boolean transaction,boolean autoCommit,int connection,int isolation,boolean readOnly,int backendPid){}
++    static final List<Sql> statements=new CopyOnWriteArrayList<>();
++    static volatile Runnable beforeCurrent=()->{}, afterCurrent=()->{}, afterPayload=()->{}, afterCommit=()->{};
++    static volatile Consumer<String> beforeSql=s->{}, afterSql=s->{};
++    static volatile String mode="iam";
++
++    @Configuration(proxyBeanMethods=false) @EnableAutoConfiguration @EnableWebSecurity
++    @Import({PublishedMetadataController.class,PublishedMetadataService.class,AppController.class,TemplateService.class,PlatformErrors.class})
++    static class Receiver {
++        @Bean DataSource dataSource(){return ds;}
++        @Bean AuthorityProperties authorityProperties(){return mode.equals("iam")?fixture.config("app"):new AuthorityProperties(mode,"app",null,null,null,null,null,false,null);}
++        @Bean JdbcTemplate jdbc(){return new JdbcTemplate(ds){
++            @Override public <T> List<T> query(String sql,RowMapper<T> mapper,Object...args){
++                String category=classify(sql);var con=DataSourceUtils.getConnection(ds);
++                try{statements.add(new Sql(category,sql,TransactionSynchronizationManager.isActualTransactionActive(),con.getAutoCommit(),System.identityHashCode(con),con.getTransactionIsolation(),con.isReadOnly(),con.unwrap(org.postgresql.PGConnection.class).getBackendPID()));}
++                catch(java.sql.SQLException e){throw new IllegalStateException(e);}finally{DataSourceUtils.releaseConnection(con,ds);}
++                beforeSql.accept(category);var rows=super.query(sql,mapper,args);afterSql.accept(category);if(category.equals("payload"))afterPayload.run();return rows;
++            }
++            @Override public int update(String sql,Object...args){writes.incrementAndGet();return super.update(sql,args);}
++        };}
++        @Bean AppService apps(JdbcTemplate jdbc){
++            // Pause only after actual PostgreSQL commit; commit() itself is final in Spring.
++            var manager=new DataSourceTransactionManager(ds){@Override protected void doCommit(DefaultTransactionStatus status){super.doCommit(status);commits.incrementAndGet();afterCommit.run();}};
++            return new AppService(jdbc,manager,"http://127.0.0.1:1","http://127.0.0.1:1","http://127.0.0.1:1","http://127.0.0.1:1");
++        }
++        @Bean JwtDecoder decoder(){return new TrustedJwtDecoder(fixture.config("app"),fixture.clock(),true);}
++        @Bean(destroyMethod="close") HttpCurrentAuthorityClient wireCurrent(){return fixture.client("app");}
++        @Bean ServiceAuthorization authorization(HttpCurrentAuthorityClient actual){
++            // Observe timing around the real client. Every result still comes from verified HTTP.
++            CurrentAuthorityClient observed=(CurrentAuthorityClient)java.lang.reflect.Proxy.newProxyInstance(CurrentAuthorityClient.class.getClassLoader(),new Class<?>[]{CurrentAuthorityClient.class},(p,m,a)->{
++                boolean current=m.getName().equals("authorizeRetained");int n=current?currents.incrementAndGet():0;
++                if(current&&n==2)beforeCurrent.run();
++                try{Object result=m.invoke(actual,a);if(current&&n==2)afterCurrent.run();return result;}
++                catch(java.lang.reflect.InvocationTargetException e){throw e.getCause();}
++            });
++            return new ServiceAuthorization("app",new ServiceRoutePolicy(),observed);
++        }
++        @Bean SecurityFilterChain security(HttpSecurity http,JwtDecoder decoder,ServiceAuthorization receiver)throws Exception{return SecurityConfiguration.serviceSecurity(http,decoder,receiver);}
++        @Bean org.springframework.web.servlet.handler.MappedInterceptor guard(ServiceAuthorization receiver){return receiver.mappedInterceptor();}
++        @Bean RouteCoverageVerifier coverage(List<RequestMappingInfoHandlerMapping> mappings){return new RouteCoverageVerifier("app",new ServiceRoutePolicy(),mappings);}
++    }
++    static String classify(String sql){
++        String s=sql.toLowerCase(Locale.ROOT);
++        if(s.contains("snapshot")||s.contains("app_draft")||s.contains("a.*")||s.contains("definition")||s.contains("layout"))return "payload";
++        if(s.contains("for share of a"))return "application-lock";
++        if(s.contains("left join app.app_version"))return TransactionSynchronizationManager.isActualTransactionActive()?"locked-metadata":"initial-metadata";
++        return "other";
++    }
++    static long count(String category){return statements.stream().filter(s->s.category.equals(category)).count();}
++    @BeforeAll static void start()throws Exception{
++        String password=System.getenv("AGENT_DB_PASSWORD");assertThat(password).isNotBlank();
++        var admin=new JdbcTemplate(new DriverManagerDataSource("jdbc:postgresql://127.0.0.1:25432/postgres","agent_v12",password));
++        boolean existed=Boolean.TRUE.equals(admin.queryForObject("select exists(select 1 from pg_database where datname='agent_platform_iam_app_payload_v12')",Boolean.class));
++        System.out.println("D3B_DATABASE_EXISTED="+existed);if(!existed)admin.execute("CREATE DATABASE agent_platform_iam_app_payload_v12");
++        ds=new DriverManagerDataSource("jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_app_payload_v12","agent_v12",password);
++        Flyway.configure().dataSource(ds).schemas("app").defaultSchema("app").locations("classpath:db/migration").target("104").load().migrate();db=new JdbcTemplate(ds);
++        assertThat(db.queryForObject("select current_database()",String.class)).isEqualTo("agent_platform_iam_app_payload_v12");
++        fixture=new LoopbackAuthority();startReceiver();
++    }
++    static void startReceiver(){
++        var application=new SpringApplication(Receiver.class);application.setAdditionalProfiles("test");
++        application.setDefaultProperties(Map.ofEntries(Map.entry("server.address","127.0.0.1"),Map.entry("server.port","0"),Map.entry("spring.config.location","optional:classpath:/d3b-no-config/"),Map.entry("spring.main.banner-mode","off"),Map.entry("springdoc.api-docs.enabled",false),Map.entry("spring.flyway.enabled",false),Map.entry("management.endpoints.web.exposure.exclude","*"),Map.entry("management.endpoints.web.discovery.enabled",false),Map.entry("logging.level.root","ERROR")));
++        app=(ServletWebServerApplicationContext)application.run();
++    }
++    @AfterAll static void close(){if(app!=null)app.close();if(fixture!=null)fixture.close();}
++    @BeforeEach void seed(){
++        fixture.clearFiniteGrants();fixture.ticketMutation(c->{});fixture.revoked(false);fixture.unavailable(false);tenant="d3b-"+UUID.randomUUID();fixture.portalActor(new Actor(tenant,"alice",Set.of("EDITOR"),Map.of("dataLabels",Set.of("confidential","restricted"),"region",Set.of("A"))));
++        source=fixture.portal();seedApp(CODE,"PUBLISHED",1);seedApp("other","PUBLISHED",1);versionId=db.queryForObject("select id from app.app_version where tenant_id=? and app_code=? and version_no=1",Long.class,tenant,CODE);resetObservers();
++    }
++    static void resetObservers(){currents.set(0);writes.set(0);commits.set(0);statements.clear();beforeCurrent=()->{};afterCurrent=()->{};afterPayload=()->{};afterCommit=()->{};beforeSql=s->{};afterSql=s->{};}
++    @AfterEach void audit(TestInfo info){
++        beforeCurrent=()->{};afterCurrent=()->{};afterPayload=()->{};afterCommit=()->{};beforeSql=s->{};afterSql=s->{};fixture.revoked(false);fixture.unavailable(false);
++        System.out.println("D3B_CASE="+Json.write(Map.of("test",info.getDisplayName(),"current",currents.get(),"businessWrites",writes.get(),"commits",commits.get(),"sql",statements)));
++        // Finite same-row write proves no leaked FOR SHARE lock after success/failure.
++        lockBoundedUpdate("status=status");assertThat(writes).hasValue(0);System.out.println("D3B_LOCK_RELEASED="+info.getDisplayName());
++    }
++    static void seedApp(String code,String state,Integer pointer){
++        db.update("insert into app.application(tenant_id,code,name,type,status,current_version_no,created_by) values(?,?,'Payload fixture','FLOW',?,?,'alice')",tenant,code,state,pointer);
++        db.update("insert into app.app_draft(tenant_id,app_id,app_code,config) select tenant_id,id,code,'{\"private\":\"draft-secret\"}'::jsonb from app.application where tenant_id=? and code=?",tenant,code);
++        if(pointer!=null){seedVersion(code,1,SHA,Map.of());seedVersion(code,2,SHA2,Map.of());}
++    }
++    static void seedVersion(String code,int version,String sha,Map<String,Object> overrides){
++        var snapshot=new LinkedHashMap<String,Object>();snapshot.put("appCode",code);snapshot.put("versionNo",version);snapshot.put("candidateSha256",sha);snapshot.put("appVersionId",code+"@"+version);snapshot.put("type","FLOW");snapshot.put("config",Map.of("private","snapshot-secret","guard",Map.of("roles",List.of("EDITOR"))));snapshot.put("definition",Map.of("nodes",List.of(Map.of("id","start"))));snapshot.put("layout",Map.of("x",12));snapshot.putAll(overrides);
++        db.update("insert into app.app_version(tenant_id,app_code,version_no,draft_rev,candidate_sha256,snapshot,eval_report_id,published_by,app_id,app_draft_id) select a.tenant_id,a.code,?,?,?,?::jsonb,'finite','alice',a.id,d.id from app.application a join app.app_draft d on d.tenant_id=a.tenant_id and d.app_code=a.code where a.tenant_id=? and a.code=?",version,version,sha,Json.write(snapshot),tenant,code);
++    }
++    static ResourceBinding root(String code,int no,String sha){return new ResourceBinding("app-version",code+"@"+no,sha);}
++    static String path(String code){return "/internal/apps/"+code+"/published";}
++    static ServiceCall payload(ResourceBinding root){return new ServiceCall("app","app.published.read",root);}
++    static String ticket(ResourceBinding root){try(var gateway=fixture.client("gateway");var engine=fixture.client("engine")){
++        var main=new ServiceCall("engine","proxy.engine.post.RunController.run",root);var initial=engine.authorizeRetained(gateway.exchange(source,main).value(),main);return engine.forward(initial.current(),payload(root)).value();
++    }}
++    static String ticket(){return ticket(root(CODE,1,SHA));}
++    static HttpResponse<String> request(String method,String path,String token)throws Exception{
++        try(var http=HttpClient.newHttpClient()){var r=HttpRequest.newBuilder(URI.create("http://127.0.0.1:"+app.getWebServer().getPort()+path)).timeout(Duration.ofSeconds(12));if(token!=null)r.header("Authorization","Bearer "+token);return http.send(r.method(method,HttpRequest.BodyPublishers.noBody()).build(),HttpResponse.BodyHandlers.ofString());}
++    }
++    static HttpResponse<String> read(String token)throws Exception{return request("GET",path(CODE),token);}
++    static void denied(HttpResponse<String> r,int...statuses){assertThat(r.statusCode()).as(r.body()).isIn(Arrays.stream(statuses).boxed().toList());assertThat(Json.read(r.body()).path("data").isNull()||Json.read(r.body()).path("data").isMissingNode()).isTrue();}
++    static void success(HttpResponse<String> r,int no,long id,String sha){assertThat(r.statusCode()).as(r.body()).isEqualTo(200);var n=Json.read(r.body()).path("data");assertThat(n.path("appCode").asText()).isEqualTo(CODE);assertThat(n.path("versionNo").asInt()).isEqualTo(no);assertThat(n.path("appVersionId").isIntegralNumber()).isTrue();assertThat(n.path("appVersionId").asLong()).isEqualTo(id);assertThat(n.path("versionId").asLong()).isEqualTo(id);assertThat(n.path("appVersionKey").asText()).isEqualTo(CODE+"@"+no);assertThat(n.path("candidateSha256").asText()).isEqualTo(sha);assertThat(n.path("config").path("private").asText()).isEqualTo("snapshot-secret");assertThat(n.path("definition").path("nodes").size()).isEqualTo(1);assertThat(n.path("layout").path("x").asInt()).isEqualTo(12);}
++    static void await(CountDownLatch latch){try{if(!latch.await(5,TimeUnit.SECONDS))throw new AssertionError("finite latch timed out");}catch(InterruptedException e){Thread.currentThread().interrupt();throw new AssertionError(e);}}
++    static void lockBoundedUpdate(String clause){new TransactionTemplate(new DataSourceTransactionManager(ds)).execute(s->{db.execute("set local lock_timeout='350ms'");return db.update("update app.application set "+clause+" where tenant_id=? and code=?",tenant,CODE);});}
++    static String changed(String token,Consumer<Map<String,Object>> change){var c=Json.mapper().convertValue(Json.read(new String(Base64.getUrlDecoder().decode(token.split("\\.")[1]),java.nio.charset.StandardCharsets.UTF_8)),new com.fasterxml.jackson.core.type.TypeReference<Map<String,Object>>(){});change.accept(c);return fixture.sign(c,fixture.authoritySigningKey(),"at+jwt");}
++
++    @Test void normalSavedPortalMetadataThenIndependentMainAndForwardReadsOnlyCurrentSnapshot()throws Exception{
++        try(var gateway=fixture.client("gateway")){
++            var query=new ServiceCall("app",MetadataSelectors.ACTION,MetadataSelectors.published(tenant,CODE));var metadata=gateway.exchange(source,query);var r=request("GET","/internal/apps/"+CODE+"/published-metadata",metadata.value());assertThat(r.statusCode()).isEqualTo(200);var n=Json.read(r.body()).path("data");assertThat(n.path("versionId").asLong()).isEqualTo(versionId);assertThat(n.path("versionSha256").asText()).isEqualTo(SHA);
++            String t=ticket();assertThat(Json.read(new String(Base64.getUrlDecoder().decode(t.split("\\.")[1]))).path("grant_ref").asText()).isNotEqualTo(metadata.operation().grantRef());resetObservers();success(read(t),1,versionId,SHA);
++        }
++        assertThat(currents).hasValue(2);assertThat(count("initial-metadata")).isEqualTo(1);assertThat(count("application-lock")).isEqualTo(1);assertThat(count("locked-metadata")).isEqualTo(1);assertThat(count("payload")).isEqualTo(1);
++        assertThat(statements.stream().filter(s->!s.category.equals("initial-metadata")).map(Sql::connection).distinct().count()).isEqualTo(1);assertThat(statements.getFirst().transaction).isFalse();
++        assertThat(statements.stream().skip(1)).allSatisfy(s->{assertThat(s.transaction).isTrue();assertThat(s.autoCommit).isFalse();assertThat(s.isolation).isEqualTo(java.sql.Connection.TRANSACTION_READ_COMMITTED);assertThat(s.readOnly).isFalse();});assertThat(commits).hasValue(1);
++    }
++    @Test void secondCurrentDenialDoesNotTouchPayload()throws Exception{String t=ticket();beforeCurrent=()->fixture.revoked(true);denied(read(t),403);assertThat(currents).hasValue(2);assertThat(count("payload")).isZero();}
++    @Test void secondCurrentOutageDoesNotTouchPayload()throws Exception{String t=ticket();beforeCurrent=()->fixture.unavailable(true);denied(read(t),503);assertThat(currents).hasValue(2);assertThat(count("payload")).isZero();}
++    @Test void secondCurrentExpirationDoesNotTouchPayload()throws Exception{String t=ticket();beforeCurrent=()->fixture.advanceClock(Duration.ofSeconds(41));denied(read(t),403);assertThat(currents).hasValue(2);assertThat(count("payload")).isZero();}
++    @Test void authorizedNarrowerCurrentProjectionStillReadsPayload()throws Exception{String t=ticket();fixture.narrowAdminAtResourceCheck();success(read(t),1,versionId,SHA);assertThat(currents).hasValue(2);}
++    @Test void actualResumeWithDelegatedSourceAndPortalOriginRemainsLegal()throws Exception{
++        try(var gateway=fixture.client("gateway");var engine=fixture.client("engine")){
++            var main=new ServiceCall("engine","proxy.engine.post.RunController.run",root(CODE,1,SHA));var first=engine.authorizeRetained(gateway.exchange(source,main).value(),main);fixture.advanceClock(Duration.ofSeconds(41));var resumed=engine.authorizeRetained(gateway.resume(first.current().delegation(),main).value(),main);assertThat(resumed.current().operation().sourceKind()).isEqualTo("DELEGATED");assertThat(resumed.current().operation().originKind()).isEqualTo("PORTAL");success(read(engine.forward(resumed.current(),payload(main.resource())).value()),1,versionId,SHA);
++        }
++    }
++    @Test void missingInitialOriginProofCannotReadPayload()throws Exception{
++        fixture.ticketMutation(c->c.remove("origin_authentication_id"));fixture.decisionMutation(c->c.remove("origin_authentication_id"));String t=ticket();denied(read(t),403);assertThat(count("payload")).isZero();
++    }
++    @Test void forgedRootCodeKindAndShaNeverReadPayload()throws Exception{
++        for(var r:List.of(root("other",1,SHA),root(CODE,1,Digest.sha256("wrong")),new ResourceBinding("run",CODE+"@1",SHA))){denied(read(ticket(r)),403);assertThat(count("payload")).isZero();}
++    }
++    @Test void oldVersionTicketConflictsRatherThanSelectingNewSnapshot()throws Exception{String t=ticket();lockBoundedUpdate("current_version_no=2");denied(read(t),409);assertThat(count("payload")).isZero();}
++    @Test void portalAndInvalidSignatureCallerTargetActionMethodAndMetadataTicketsStopBeforeBusinessSql()throws Exception{
++        String t=ticket();denied(read(null),401);for(String raw:List.of(source,"not-a-jwt",t.substring(0,t.length()-8)+"deadbeef"))denied(read(raw),401,403);
++        for(String field:List.of("caller","target","action","aud","tenant_id"))denied(read(changed(t,c->c.put(field,"wrong"))),401,403);
++        for(String method:List.of("HEAD","POST","PUT")){var r=request(method,path(CODE),t);assertThat(r.statusCode()).isIn(401,403);}
++        try(var gateway=fixture.client("gateway")){var q=new ServiceCall("app",MetadataSelectors.ACTION,MetadataSelectors.published(tenant,CODE));denied(read(gateway.exchange(source,q).value()),403);}
++        assertThat(statements).isEmpty();
++    }
++    @Test void publishedTicketCannotEnterOtherActualAppAliases()throws Exception{String t=ticket();for(String p:List.of("/internal/apps/"+CODE+"/snapshot?draft=false","/internal/apps/"+CODE+"/snapshot?draft=true","/internal/apps/"+CODE+"/candidate?draftRev=1&candidateSha256="+SHA,"/internal/apps/"+CODE+"/versions/1","/admin/apps/"+CODE,"/admin/apps/"+CODE+"/versions/1","/v1/apps/"+CODE+"/input-schema"))denied(request("GET",p,t),403);assertThat(statements).isEmpty();}
++    @Test void unknownTenantAndBusinessUnavailableStatesKeepOriginalStatuses()throws Exception{
++        for(String state:List.of("DISABLED","ARCHIVED")){lockBoundedUpdate("status='"+state+"'");denied(read(ticket()),409);}
++        lockBoundedUpdate("status='DRAFT',current_version_no=null");denied(read(ticket()),409);lockBoundedUpdate("current_version_no=99");denied(read(ticket()),409);
++        denied(request("GET",path("missing"),ticket(root("missing",1,SHA))),404);
++        fixture.portalActor(new Actor(tenant+"-hidden","alice",Set.of("EDITOR"),Map.of("dataLabels",Set.of("confidential","restricted"),"region",Set.of("A"))));source=fixture.portal();denied(read(ticket()),404);assertThat(count("payload")).isZero();
++    }
++    @Test void draftWithPublishedPointerRemainsLegal()throws Exception{lockBoundedUpdate("status='DRAFT'");success(read(ticket()),1,versionId,SHA);}
++    @Test void missingRequestFrameCannotFallBackToLegacyPayload()throws Exception{
++        String t=ticket();var jwt=new TrustedJwtDecoder(fixture.config("app"),fixture.clock(),true).decode(t);
++        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(new org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken(jwt));
++        try{assertThatThrownBy(()->app.getBean(AppController.class).published(CODE)).isInstanceOf(PlatformException.class).satisfies(e->assertThat(((PlatformException)e).status()).isEqualTo(403));assertThat(statements).isEmpty();}
++        finally{org.springframework.security.core.context.SecurityContextHolder.clearContext();}
++    }
++    @Test void ambientBusinessTransactionIsRejectedBeforeAnyRefreshOrSql(){
++        new TransactionTemplate(new DataSourceTransactionManager(ds)).execute(s->{
++            assertThatThrownBy(()->app.getBean(AppService.class).publishedAuthorized(CODE)).isInstanceOf(PlatformException.class).satisfies(e->assertThat(((PlatformException)e).code()).isEqualTo("AUTHORITY_TRANSACTION_FORBIDDEN"));
++            assertThat(statements).isEmpty();assertThat(currents).hasValue(0);return null;
++        });
++    }
++    @Test void explicitLegacyTestModePreservesExistingSnapshotProjection()throws Exception{
++        String t=ticket();app.close();mode="test";
++        try{startReceiver();success(read(t),1,versionId,SHA);assertThat(currents).hasValue(1);assertThat(count("payload")).isEqualTo(2);
++            app.close();mode="dev-hmac";resetObservers();startReceiver();success(read(t),1,versionId,SHA);assertThat(currents).hasValue(1);assertThat(count("payload")).isEqualTo(2);
++            app.close();mode="unknown";resetObservers();startReceiver();denied(read(t),403);assertThat(statements).isEmpty();
++        }
++        finally{app.close();mode="iam";startReceiver();}
++    }
++    @Test void onlineCurrentWaitHoldsNoApplicationLockAndPointerChangeRejectsOldRequest()throws Exception{
++        String t=ticket();var reached=new CountDownLatch(1);var release=new CountDownLatch(1);beforeCurrent=()->{reached.countDown();await(release);};
++        try(var pool=Executors.newVirtualThreadPerTaskExecutor()){var response=pool.submit(()->read(t));try{await(reached);lockBoundedUpdate("current_version_no=2");}finally{release.countDown();}denied(response.get(8,TimeUnit.SECONDS),409);}
++        assertThat(count("payload")).isZero();resetObservers();long id=db.queryForObject("select id from app.app_version where tenant_id=? and app_code=? and version_no=2",Long.class,tenant,CODE);success(read(ticket(root(CODE,2,SHA2))),2,id,SHA2);
++    }
++    @Test void statusChangeAfterRefreshBeforeLockRejectsWithoutPayload()throws Exception{String t=ticket();afterCurrent=()->lockBoundedUpdate("status='DISABLED'");denied(read(t),409);assertThat(count("payload")).isZero();}
++    @Test void actualAuthorityResponseWaitAlsoHoldsNoPgLock()throws Exception{
++        String t=ticket();var reached=new CountDownLatch(1);var release=new CountDownLatch(1);var n=new AtomicInteger();fixture.decisionMutation(c->{if(c.containsKey("roles")&&n.incrementAndGet()==2){reached.countDown();await(release);}});
++        try(var pool=Executors.newVirtualThreadPerTaskExecutor()){var response=pool.submit(()->read(t));try{await(reached);lockBoundedUpdate("status='ARCHIVED'");}finally{release.countDown();}denied(response.get(8,TimeUnit.SECONDS),409);}assertThat(count("payload")).isZero();
++    }
++    @Test void heldShareLockBlocksRealWriterThenReleasesAfterRead()throws Exception{
++        String t=ticket();var reached=new CountDownLatch(1);var release=new CountDownLatch(1);afterSql=c->{if(c.equals("application-lock")){reached.countDown();await(release);}};
++        try(var pool=Executors.newVirtualThreadPerTaskExecutor()){var response=pool.submit(()->read(t));try{await(reached);for(String change:List.of("current_version_no=2","status='DISABLED'"))assertThatThrownBy(()->lockBoundedUpdate(change)).isInstanceOf(org.springframework.dao.DataAccessException.class).satisfies(e->{var cause=((org.springframework.dao.DataAccessException)e).getMostSpecificCause();assertThat(cause).isInstanceOf(java.sql.SQLException.class);assertThat(((java.sql.SQLException)cause).getSQLState()).isEqualTo("55P03");System.out.println("D3B_WRITER_LOCK_TIMEOUT="+change+":55P03");});}finally{release.countDown();}success(response.get(8,TimeUnit.SECONDS),1,versionId,SHA);}lockBoundedUpdate("current_version_no=2");assertThat(currents).hasValue(2);
++    }
++    @Test void proofExpiryWhileWaitingForShareLockRejectsBeforePayload()throws Exception{
++        String t=ticket();var attempting=new CountDownLatch(1);beforeSql=c->{if(c.equals("application-lock"))attempting.countDown();};
++        try(var writer=ds.getConnection();var pool=Executors.newVirtualThreadPerTaskExecutor()){
++            writer.setAutoCommit(false);try(var p=writer.prepareStatement("update app.application set status=status where tenant_id=? and code=?")){p.setString(1,tenant);p.setString(2,CODE);p.executeUpdate();}
++            var response=pool.submit(()->read(t));try{await(attempting);int pid=statements.stream().filter(s->s.category.equals("application-lock")).findFirst().orElseThrow().backendPid();var waiting=db.queryForMap("select wait_event_type,cardinality(pg_blocking_pids(pid)) as blockers from pg_stat_activity where pid=?",pid);System.out.println("D3B_SHARE_WAIT="+Json.write(waiting));assertThat(waiting.get("wait_event_type")).isEqualTo("Lock");assertThat(((Number)waiting.get("blockers")).intValue()).isPositive();fixture.advanceClock(Duration.ofSeconds(6));}finally{writer.rollback();}denied(response.get(8,TimeUnit.SECONDS),403);
++        }assertThat(count("payload")).isZero();assertThat(currents).hasValue(2);
++    }
++    @Test void expiryAfterPayloadBeforeCallbackEndsRejectsWithoutSuccessData()throws Exception{String t=ticket();afterPayload=()->fixture.advanceClock(Duration.ofSeconds(6));denied(read(t),403);assertThat(count("payload")).isEqualTo(1);assertThat(commits).hasValue(0);assertThat(currents).hasValue(2);}
++    @Test void expiryAfterActualCommitBeforeServiceReturnsRejectsWithoutSuccessData()throws Exception{
++        String t=ticket();var committed=new CountDownLatch(1);var release=new CountDownLatch(1);afterCommit=()->{committed.countDown();await(release);};
++        try(var pool=Executors.newVirtualThreadPerTaskExecutor()){var response=pool.submit(()->read(t));try{await(committed);lockBoundedUpdate("status='DISABLED'");fixture.advanceClock(Duration.ofSeconds(6));}finally{release.countDown();}denied(response.get(8,TimeUnit.SECONDS),403);}assertThat(commits).hasValue(1);assertThat(count("payload")).isEqualTo(1);assertThat(currents).hasValue(2);
++    }
++    @Test void malformedPersistedSnapshotIdentityIsRejectedAfterItsSinglePayloadRead()throws Exception{
++        for(var patch:List.<Map<String,Object>>of(Map.of("appCode","wrong"),Map.of("versionNo",4),Map.of("candidateSha256",Digest.sha256("wrong")),Map.of("appVersionId","wrong@1"))){
++            String code="bad"+UUID.randomUUID().toString().replace("-","").substring(0,10);seedApp(code,"DRAFT",null);seedVersion(code,1,SHA,patch);db.update("update app.application set current_version_no=1 where tenant_id=? and code=?",tenant,code);denied(request("GET",path(code),ticket(root(code,1,SHA))),409);
++        }assertThat(count("payload")).isEqualTo(4);
++    }
++}
+diff --git a/app-management/src/test/java/cn/agentplatform/common/authority/PublishedMetadataFixtureMain.java b/app-management/src/test/java/cn/agentplatform/common/authority/PublishedMetadataFixtureMain.java
+index 1efe0e1..b65c8ac 100644
+--- a/app-management/src/test/java/cn/agentplatform/common/authority/PublishedMetadataFixtureMain.java
++++ b/app-management/src/test/java/cn/agentplatform/common/authority/PublishedMetadataFixtureMain.java
+@@ -1,58 +1,59 @@
+ package cn.agentplatform.common.authority;
+ 
+ import cn.agentplatform.app.api.*;
+ import cn.agentplatform.app.application.*;
+ import cn.agentplatform.common.*;
+ import java.io.*;
+ import java.time.*;
+ import java.util.*;
+ import java.util.concurrent.atomic.AtomicInteger;
+ import javax.sql.DataSource;
+ import org.springframework.boot.*;
+ import org.springframework.boot.autoconfigure.*;
+ import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
+ import org.springframework.context.annotation.*;
+ import org.springframework.jdbc.core.*;
+ import org.springframework.jdbc.datasource.*;
+ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+ import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+ import org.springframework.security.oauth2.jwt.JwtDecoder;
+ import org.springframework.security.web.SecurityFilterChain;
+ import org.springframework.web.servlet.mvc.method.RequestMappingInfoHandlerMapping;
+ 
+ /** Finite smoke fixture: real app controller/SQL/global guard; no authority implementation here. */
+ public final class PublishedMetadataFixtureMain {
+     static AuthorityProperties trust;static String secret;static Clock clock;static DataSource ds;
+     static final AtomicInteger metadata=new AtomicInteger(),payload=new AtomicInteger();
+     @Configuration(proxyBeanMethods=false) @EnableAutoConfiguration @EnableWebSecurity
+     @Import({PublishedMetadataController.class,PublishedMetadataService.class,AppController.class,TemplateService.class,PlatformErrors.class})
+     static class Receiver {
++        @Bean AuthorityProperties authorityProperties(){return trust;}
+         @Bean DataSource dataSource(){return ds;}
+         @Bean JdbcTemplate jdbc(){return new JdbcTemplate(ds){@Override public <T> List<T> query(String sql,RowMapper<T> row,Object...args){if(sql.contains("left join")&&sql.contains("candidate_sha256"))metadata.incrementAndGet();else payload.incrementAndGet();return super.query(sql,row,args);}};}
+         @Bean AppService apps(JdbcTemplate db){return new AppService(db,new DataSourceTransactionManager(ds),"http://127.0.0.1:1","http://127.0.0.1:1","http://127.0.0.1:1","http://127.0.0.1:1");}
+         @Bean JwtDecoder decoder(){return new TrustedJwtDecoder(trust,clock,true);}
+         @Bean(destroyMethod="close") HttpCurrentAuthorityClient current(){return new HttpCurrentAuthorityClient(trust,clock,new WorkloadCredentialResolver(trust,n->secret,true),true);}
+         @Bean ServiceAuthorization authorization(CurrentAuthorityClient c){return new ServiceAuthorization("app",new ServiceRoutePolicy(),c);}
+         @Bean SecurityFilterChain security(HttpSecurity h,JwtDecoder d,ServiceAuthorization a)throws Exception{return SecurityConfiguration.serviceSecurity(h,d,a);}
+         @Bean org.springframework.web.servlet.handler.MappedInterceptor guard(ServiceAuthorization a){return a.mappedInterceptor();}
+         @Bean RouteCoverageVerifier coverage(List<RequestMappingInfoHandlerMapping> mappings){return new RouteCoverageVerifier("app",new ServiceRoutePolicy(),mappings);}
+     }
+     public static void main(String[] args)throws Exception{
+         try(var input=new BufferedReader(new InputStreamReader(System.in,java.nio.charset.StandardCharsets.UTF_8))){
+             var init=Json.read(Objects.requireNonNull(input.readLine()));trust=Json.read(init.get("trust").toString(),AuthorityProperties.class);secret=init.path("secret").textValue();clock=Clock.fixed(Instant.parse(init.path("now").textValue()),ZoneOffset.UTC);
+             String tenant=init.path("tenant").textValue();
+             ds=new DriverManagerDataSource("jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_metadata_v12","agent_v12",System.getenv("AGENT_DB_PASSWORD"));var db=new JdbcTemplate(ds);
+             if(!"agent_platform_iam_metadata_v12".equals(db.queryForObject("select current_database()",String.class))||db.queryForObject("select count(*) from app.flyway_schema_history where success and version in ('100','101','102','103','104')",Integer.class)!=5)throw new IllegalStateException("SMOKE_DATABASE_PREREQUISITE_REQUIRED");
+             db.update("insert into app.application(tenant_id,code,name,type,status,current_version_no,created_by) values(?,'Smoke','Smoke','CHAT','PUBLISHED',1,'alice')",tenant);
+             db.update("insert into app.app_draft(tenant_id,app_id,app_code) select tenant_id,id,code from app.application where tenant_id=? and code='Smoke'",tenant);
+             db.update("insert into app.app_version(tenant_id,app_code,version_no,draft_rev,candidate_sha256,snapshot,eval_report_id,published_by,app_id,app_draft_id) select a.tenant_id,a.code,1,1,?,'{\"private\":\"never-read\"}','smoke','alice',a.id,d.id from app.application a join app.app_draft d on d.tenant_id=a.tenant_id and d.app_code=a.code where a.tenant_id=? and a.code='Smoke'",Digest.sha256("smoke-stored-candidate"),tenant);
+             var application=new SpringApplication(Receiver.class);application.setAdditionalProfiles("test");application.setDefaultProperties(Map.ofEntries(Map.entry("server.address","127.0.0.1"),Map.entry("server.port","0"),Map.entry("spring.config.location","optional:classpath:/d3a0-smoke-no-config/"),Map.entry("spring.main.banner-mode","off"),Map.entry("springdoc.api-docs.enabled",false),Map.entry("spring.flyway.enabled",false),Map.entry("management.endpoints.web.exposure.exclude","*"),Map.entry("management.endpoints.web.discovery.enabled",false),Map.entry("logging.level.root","ERROR")));
+             try(var app=(ServletWebServerApplicationContext)application.run()){
+                 System.out.println("D3A0_READY="+Json.write(Map.of("port",app.getWebServer().getPort())));System.out.flush();
+                 if(!"STOP".equals(input.readLine()))throw new IllegalStateException("SMOKE_CONTROL_CLOSED");
+                 if(metadata.get()!=1||payload.get()!=0)throw new IllegalStateException("SMOKE_READ_COUNTS_INVALID");
+                 System.out.println("D3A0_APP_RESULT="+Json.write(Map.of("metadataReads",metadata.get(),"payloadReads",payload.get(),"globalGuard",true,"runtimeCoverage",true)));
+             }
+         }finally{secret=null;}
+     }
+ }

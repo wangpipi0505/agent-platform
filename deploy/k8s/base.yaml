@@ -1,0 +1,1393 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: agent-platform-v12
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: v1.33
+    app.kubernetes.io/part-of: agent-platform-v12
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: agent-platform-v12-ops
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: v1.33
+    app.kubernetes.io/part-of: agent-platform-v12
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: release-gate
+  namespace: agent-platform-v12
+data:
+  AGENT_RELEASE_GATE: BLOCKED_IAM_SCOPE_ACCEPTANCE
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: agent-platform
+  namespace: agent-platform-v12
+automountServiceAccountToken: false
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: agent-platform-v12
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-cluster-dns
+  namespace: agent-platform-v12
+spec:
+  podSelector: {}
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system
+      podSelector:
+        matchLabels:
+          k8s-app: kube-dns
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: agent-platform
+  namespace: agent-platform-v12-ops
+automountServiceAccountToken: false
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: agent-platform-v12-ops
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-cluster-dns
+  namespace: agent-platform-v12-ops
+spec:
+  podSelector: {}
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system
+      podSelector:
+        matchLabels:
+          k8s-app: kube-dns
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: platform-gateway
+  namespace: agent-platform-v12
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: platform-gateway
+  template:
+    metadata:
+      labels:
+        app: platform-gateway
+        tier: backend
+    spec:
+      serviceAccountName: agent-platform
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      terminationGracePeriodSeconds: 60
+      containers:
+      - name: platform-gateway
+        image: registry.invalid/agent-platform/platform-gateway@sha256:0000000000000000000000000000000000000000000000000000000000000000
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        ports:
+        - name: http
+          containerPort: 8080
+        envFrom:
+        - secretRef:
+            name: agent-runtime
+        env:
+        - name: AGENT_BIND_ADDRESS
+          value: 0.0.0.0
+        - name: SERVER_PORT
+          value: '8080'
+        - name: AGENT_DEV_AUTH
+          value: 'false'
+        - name: JAVA_TOOL_OPTIONS
+          value: -XX:+UseZGC -XX:+ZGenerational -XX:MaxRAMPercentage=70 -XX:MaxDirectMemorySize=128m
+            -XX:+ExitOnOutOfMemoryError
+        - name: SERVER_SHUTDOWN
+          value: graceful
+        - name: SPRING_LIFECYCLE_TIMEOUT_PER_SHUTDOWN_PHASE
+          value: 45s
+        - name: MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED
+          value: 'true'
+        - name: MANAGEMENT_ENDPOINT_HEALTH_PROBES_ADD_ADDITIONAL_PATHS
+          value: 'true'
+        - name: MANAGEMENT_ENDPOINT_HEALTH_GROUP_READINESS_INCLUDE
+          value: readinessState,db
+        - name: AGENT_SECRET_DIR
+          value: /var/lib/agent-vault
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: http://otel-collector.agent-platform-v12-ops.svc.cluster.local:4317
+        - name: OTEL_EXPORTER_OTLP_PROTOCOL
+          value: grpc
+        - name: OTEL_LOGS_EXPORTER
+          value: otlp
+        - name: OTEL_METRICS_EXPORTER
+          value: otlp
+        - name: OTEL_TRACES_EXPORTER
+          value: otlp
+        - name: OTEL_INSTRUMENTATION_HTTP_SERVER_CAPTURE_REQUEST_HEADERS
+          value: ''
+        - name: OTEL_INSTRUMENTATION_HTTP_SERVER_CAPTURE_RESPONSE_HEADERS
+          value: ''
+        - name: OTEL_INSTRUMENTATION_HTTP_CLIENT_CAPTURE_REQUEST_HEADERS
+          value: ''
+        - name: OTEL_INSTRUMENTATION_HTTP_CLIENT_CAPTURE_RESPONSE_HEADERS
+          value: ''
+        - name: OTEL_INSTRUMENTATION_JDBC_STATEMENT_SANITIZER_ENABLED
+          value: 'true'
+        - name: OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT
+          value: 'false'
+        - name: AGENT_GATEWAY_URL
+          value: http://platform-gateway:8080
+        - name: AGENT_APP_URL
+          value: http://app-management:8080
+        - name: AGENT_ENGINE_URL
+          value: http://engine-runtime:8080
+        - name: AGENT_SKILL_URL
+          value: http://skill-registry:8080
+        - name: AGENT_MODEL_URL
+          value: http://model-gateway:8080
+        - name: AGENT_MONITOR_URL
+          value: http://monitor:8080
+        - name: OTEL_SERVICE_NAME
+          value: platform-gateway
+        - name: AGENT_RELEASE_GATE
+          valueFrom:
+            configMapKeyRef:
+              name: release-gate
+              key: AGENT_RELEASE_GATE
+        - name: AGENT_DB_URL
+          valueFrom:
+            secretKeyRef:
+              name: agent-database-urls
+              key: platform-gateway
+        - name: AGENT_MASTER_KEY
+          valueFrom:
+            secretKeyRef:
+              name: agent-vault-master-key
+              key: AGENT_MASTER_KEY
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+            cpu: '1'
+            memory: 1Gi
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: vault
+          mountPath: /var/lib/agent-vault
+        startupProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: http
+          timeoutSeconds: 3
+          failureThreshold: 30
+          periodSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: http
+          timeoutSeconds: 3
+          periodSeconds: 15
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: http
+          timeoutSeconds: 3
+          periodSeconds: 5
+          failureThreshold: 2
+      volumes:
+      - name: tmp
+        emptyDir:
+          medium: Memory
+          sizeLimit: 128Mi
+      - name: vault
+        persistentVolumeClaim:
+          claimName: agent-vault-rwx
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: platform-gateway
+  namespace: agent-platform-v12
+spec:
+  type: ClusterIP
+  selector:
+    app: platform-gateway
+  ports:
+  - name: http
+    port: 8080
+    targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-management
+  namespace: agent-platform-v12
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: app-management
+  template:
+    metadata:
+      labels:
+        app: app-management
+        tier: backend
+    spec:
+      serviceAccountName: agent-platform
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      terminationGracePeriodSeconds: 60
+      containers:
+      - name: app-management
+        image: registry.invalid/agent-platform/app-management@sha256:0000000000000000000000000000000000000000000000000000000000000000
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        ports:
+        - name: http
+          containerPort: 8080
+        envFrom:
+        - secretRef:
+            name: agent-runtime
+        env:
+        - name: AGENT_BIND_ADDRESS
+          value: 0.0.0.0
+        - name: SERVER_PORT
+          value: '8080'
+        - name: AGENT_DEV_AUTH
+          value: 'false'
+        - name: JAVA_TOOL_OPTIONS
+          value: -XX:+UseZGC -XX:+ZGenerational -XX:MaxRAMPercentage=70 -XX:MaxDirectMemorySize=128m
+            -XX:+ExitOnOutOfMemoryError
+        - name: SERVER_SHUTDOWN
+          value: graceful
+        - name: SPRING_LIFECYCLE_TIMEOUT_PER_SHUTDOWN_PHASE
+          value: 45s
+        - name: MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED
+          value: 'true'
+        - name: MANAGEMENT_ENDPOINT_HEALTH_PROBES_ADD_ADDITIONAL_PATHS
+          value: 'true'
+        - name: MANAGEMENT_ENDPOINT_HEALTH_GROUP_READINESS_INCLUDE
+          value: readinessState,db
+        - name: AGENT_SECRET_DIR
+          value: /var/lib/agent-vault
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: http://otel-collector.agent-platform-v12-ops.svc.cluster.local:4317
+        - name: OTEL_EXPORTER_OTLP_PROTOCOL
+          value: grpc
+        - name: OTEL_LOGS_EXPORTER
+          value: otlp
+        - name: OTEL_METRICS_EXPORTER
+          value: otlp
+        - name: OTEL_TRACES_EXPORTER
+          value: otlp
+        - name: OTEL_INSTRUMENTATION_HTTP_SERVER_CAPTURE_REQUEST_HEADERS
+          value: ''
+        - name: OTEL_INSTRUMENTATION_HTTP_SERVER_CAPTURE_RESPONSE_HEADERS
+          value: ''
+        - name: OTEL_INSTRUMENTATION_HTTP_CLIENT_CAPTURE_REQUEST_HEADERS
+          value: ''
+        - name: OTEL_INSTRUMENTATION_HTTP_CLIENT_CAPTURE_RESPONSE_HEADERS
+          value: ''
+        - name: OTEL_INSTRUMENTATION_JDBC_STATEMENT_SANITIZER_ENABLED
+          value: 'true'
+        - name: OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT
+          value: 'false'
+        - name: AGENT_GATEWAY_URL
+          value: http://platform-gateway:8080
+        - name: AGENT_APP_URL
+          value: http://app-management:8080
+        - name: AGENT_ENGINE_URL
+          value: http://engine-runtime:8080
+        - name: AGENT_SKILL_URL
+          value: http://skill-registry:8080
+        - name: AGENT_MODEL_URL
+          value: http://model-gateway:8080
+        - name: AGENT_MONITOR_URL
+          value: http://monitor:8080
+        - name: OTEL_SERVICE_NAME
+          value: app-management
+        - name: AGENT_RELEASE_GATE
+          valueFrom:
+            configMapKeyRef:
+              name: release-gate
+              key: AGENT_RELEASE_GATE
+        - name: AGENT_DB_URL
+          valueFrom:
+            secretKeyRef:
+              name: agent-database-urls
+              key: app-management
+        - name: AGENT_MASTER_KEY
+          valueFrom:
+            secretKeyRef:
+              name: agent-vault-master-key
+              key: AGENT_MASTER_KEY
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+            cpu: '1'
+            memory: 1Gi
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: vault
+          mountPath: /var/lib/agent-vault
+        startupProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: http
+          timeoutSeconds: 3
+          failureThreshold: 30
+          periodSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: http
+          timeoutSeconds: 3
+          periodSeconds: 15
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: http
+          timeoutSeconds: 3
+          periodSeconds: 5
+          failureThreshold: 2
+      volumes:
+      - name: tmp
+        emptyDir:
+          medium: Memory
+          sizeLimit: 128Mi
+      - name: vault
+        persistentVolumeClaim:
+          claimName: agent-vault-rwx
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-management
+  namespace: agent-platform-v12
+spec:
+  type: ClusterIP
+  selector:
+    app: app-management
+  ports:
+  - name: http
+    port: 8080
+    targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: engine-runtime
+  namespace: agent-platform-v12
+spec:
+  replicas: 2
+  revisionHistoryLimit: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: engine-runtime
+  template:
+    metadata:
+      labels:
+        app: engine-runtime
+        tier: backend
+    spec:
+      serviceAccountName: agent-platform
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      terminationGracePeriodSeconds: 60
+      containers:
+      - name: engine-runtime
+        image: registry.invalid/agent-platform/engine-runtime@sha256:0000000000000000000000000000000000000000000000000000000000000000
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        ports:
+        - name: http
+          containerPort: 8080
+        envFrom:
+        - secretRef:
+            name: agent-runtime
+        env:
+        - name: AGENT_BIND_ADDRESS
+          value: 0.0.0.0
+        - name: SERVER_PORT
+          value: '8080'
+        - name: AGENT_DEV_AUTH
+          value: 'false'
+        - name: JAVA_TOOL_OPTIONS
+          value: -XX:+UseZGC -XX:+ZGenerational -XX:MaxRAMPercentage=70 -XX:MaxDirectMemorySize=128m
+            -XX:+ExitOnOutOfMemoryError
+        - name: SERVER_SHUTDOWN
+          value: graceful
+        - name: SPRING_LIFECYCLE_TIMEOUT_PER_SHUTDOWN_PHASE
+          value: 45s
+        - name: MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED
+          value: 'true'
+        - name: MANAGEMENT_ENDPOINT_HEALTH_PROBES_ADD_ADDITIONAL_PATHS
+          value: 'true'
+        - name: MANAGEMENT_ENDPOINT_HEALTH_GROUP_READINESS_INCLUDE
+          value: readinessState,db
+        - name: AGENT_SECRET_DIR
+          value: /var/lib/agent-vault
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: http://otel-collector.agent-platform-v12-ops.svc.cluster.local:4317
+        - name: OTEL_EXPORTER_OTLP_PROTOCOL
+          value: grpc
+        - name: OTEL_LOGS_EXPORTER
+          value: otlp
+        - name: OTEL_METRICS_EXPORTER
+          value: otlp
+        - name: OTEL_TRACES_EXPORTER
+          value: otlp
+        - name: OTEL_INSTRUMENTATION_HTTP_SERVER_CAPTURE_REQUEST_HEADERS
+          value: ''
+        - name: OTEL_INSTRUMENTATION_HTTP_SERVER_CAPTURE_RESPONSE_HEADERS
+          value: ''
+        - name: OTEL_INSTRUMENTATION_HTTP_CLIENT_CAPTURE_REQUEST_HEADERS
+          value: ''
+        - name: OTEL_INSTRUMENTATION_HTTP_CLIENT_CAPTURE_RESPONSE_HEADERS
+          value: ''
+        - name: OTEL_INSTRUMENTATION_JDBC_STATEMENT_SANITIZER_ENABLED
+          value: 'true'
+        - name: OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT
+          value: 'false'
+        - name: AGENT_GATEWAY_URL
+          value: http://platform-gateway:8080
+        - name: AGENT_APP_URL
+          value: http://app-management:8080
+        - name: AGENT_ENGINE_URL
+          value: http://engine-runtime:8080
+        - name: AGENT_SKILL_URL
+          value: http://skill-registry:8080
+        - name: AGENT_MODEL_URL
+          value: http://model-gateway:8080
+        - name: AGENT_MONITOR_URL
+          value: http://monitor:8080
+        - name: OTEL_SERVICE_NAME
+          value: engine-runtime
+        - name: AGENT_RELEASE_GATE
+          valueFrom:
+            configMapKeyRef:
+              name: release-gate
+              key: AGENT_RELEASE_GATE
+        - name: AGENT_DB_URL
+          valueFrom:
+            secretKeyRef:
+              name: agent-database-urls
+              key: engine-runtime
+        - name: AGENT_MASTER_KEY
+          valueFrom:
+            secretKeyRef:
+              name: agent-vault-master-key
+              key: AGENT_MASTER_KEY
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+            cpu: '1'
+            memory: 1Gi
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: vault
+          mountPath: /var/lib/agent-vault
+        startupProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: http
+          timeoutSeconds: 3
+          failureThreshold: 30
+          periodSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: http
+          timeoutSeconds: 3
+          periodSeconds: 15
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: http
+          timeoutSeconds: 3
+          periodSeconds: 5
+          failureThreshold: 2
+      volumes:
+      - name: tmp
+        emptyDir:
+          medium: Memory
+          sizeLimit: 128Mi
+      - name: vault
+        persistentVolumeClaim:
+          claimName: agent-vault-rwx
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app: engine-runtime
+              topologyKey: kubernetes.io/hostname
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: engine-runtime
+  namespace: agent-platform-v12
+spec:
+  type: ClusterIP
+  selector:
+    app: engine-runtime
+  ports:
+  - name: http
+    port: 8080
+    targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: skill-registry
+  namespace: agent-platform-v12
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: skill-registry
+  template:
+    metadata:
+      labels:
+        app: skill-registry
+        tier: backend
+    spec:
+      serviceAccountName: agent-platform
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      terminationGracePeriodSeconds: 60
+      containers:
+      - name: skill-registry
+        image: registry.invalid/agent-platform/skill-registry@sha256:0000000000000000000000000000000000000000000000000000000000000000
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        ports:
+        - name: http
+          containerPort: 8080
+        envFrom:
+        - secretRef:
+            name: agent-runtime
+        env:
+        - name: AGENT_BIND_ADDRESS
+          value: 0.0.0.0
+        - name: SERVER_PORT
+          value: '8080'
+        - name: AGENT_DEV_AUTH
+          value: 'false'
+        - name: JAVA_TOOL_OPTIONS
+          value: -XX:+UseZGC -XX:+ZGenerational -XX:MaxRAMPercentage=70 -XX:MaxDirectMemorySize=128m
+            -XX:+ExitOnOutOfMemoryError
+        - name: SERVER_SHUTDOWN
+          value: graceful
+        - name: SPRING_LIFECYCLE_TIMEOUT_PER_SHUTDOWN_PHASE
+          value: 45s
+        - name: MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED
+          value: 'true'
+        - name: MANAGEMENT_ENDPOINT_HEALTH_PROBES_ADD_ADDITIONAL_PATHS
+          value: 'true'
+        - name: MANAGEMENT_ENDPOINT_HEALTH_GROUP_READINESS_INCLUDE
+          value: readinessState,db
+        - name: AGENT_SECRET_DIR
+          value: /var/lib/agent-vault
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: http://otel-collector.agent-platform-v12-ops.svc.cluster.local:4317
+        - name: OTEL_EXPORTER_OTLP_PROTOCOL
+          value: grpc
+        - name: OTEL_LOGS_EXPORTER
+          value: otlp
+        - name: OTEL_METRICS_EXPORTER
+          value: otlp
+        - name: OTEL_TRACES_EXPORTER
+          value: otlp
+        - name: OTEL_INSTRUMENTATION_HTTP_SERVER_CAPTURE_REQUEST_HEADERS
+          value: ''
+        - name: OTEL_INSTRUMENTATION_HTTP_SERVER_CAPTURE_RESPONSE_HEADERS
+          value: ''
+        - name: OTEL_INSTRUMENTATION_HTTP_CLIENT_CAPTURE_REQUEST_HEADERS
+          value: ''
+        - name: OTEL_INSTRUMENTATION_HTTP_CLIENT_CAPTURE_RESPONSE_HEADERS
+          value: ''
+        - name: OTEL_INSTRUMENTATION_JDBC_STATEMENT_SANITIZER_ENABLED
+          value: 'true'
+        - name: OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT
+          value: 'false'
+        - name: AGENT_GATEWAY_URL
+          value: http://platform-gateway:8080
+        - name: AGENT_APP_URL
+          value: http://app-management:8080
+        - name: AGENT_ENGINE_URL
+          value: http://engine-runtime:8080
+        - name: AGENT_SKILL_URL
+          value: http://skill-registry:8080
+        - name: AGENT_MODEL_URL
+          value: http://model-gateway:8080
+        - name: AGENT_MONITOR_URL
+          value: http://monitor:8080
+        - name: OTEL_SERVICE_NAME
+          value: skill-registry
+        - name: AGENT_RELEASE_GATE
+          valueFrom:
+            configMapKeyRef:
+              name: release-gate
+              key: AGENT_RELEASE_GATE
+        - name: AGENT_DB_URL
+          valueFrom:
+            secretKeyRef:
+              name: agent-database-urls
+              key: skill-registry
+        - name: AGENT_MASTER_KEY
+          valueFrom:
+            secretKeyRef:
+              name: agent-vault-master-key
+              key: AGENT_MASTER_KEY
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+            cpu: '1'
+            memory: 1Gi
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: vault
+          mountPath: /var/lib/agent-vault
+        startupProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: http
+          timeoutSeconds: 3
+          failureThreshold: 30
+          periodSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: http
+          timeoutSeconds: 3
+          periodSeconds: 15
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: http
+          timeoutSeconds: 3
+          periodSeconds: 5
+          failureThreshold: 2
+      volumes:
+      - name: tmp
+        emptyDir:
+          medium: Memory
+          sizeLimit: 128Mi
+      - name: vault
+        persistentVolumeClaim:
+          claimName: agent-vault-rwx
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: skill-registry
+  namespace: agent-platform-v12
+spec:
+  type: ClusterIP
+  selector:
+    app: skill-registry
+  ports:
+  - name: http
+    port: 8080
+    targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: model-gateway
+  namespace: agent-platform-v12
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: model-gateway
+  template:
+    metadata:
+      labels:
+        app: model-gateway
+        tier: backend
+    spec:
+      serviceAccountName: agent-platform
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      terminationGracePeriodSeconds: 60
+      containers:
+      - name: model-gateway
+        image: registry.invalid/agent-platform/model-gateway@sha256:0000000000000000000000000000000000000000000000000000000000000000
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        ports:
+        - name: http
+          containerPort: 8080
+        envFrom:
+        - secretRef:
+            name: agent-runtime
+        env:
+        - name: AGENT_BIND_ADDRESS
+          value: 0.0.0.0
+        - name: SERVER_PORT
+          value: '8080'
+        - name: AGENT_DEV_AUTH
+          value: 'false'
+        - name: JAVA_TOOL_OPTIONS
+          value: -XX:+UseZGC -XX:+ZGenerational -XX:MaxRAMPercentage=70 -XX:MaxDirectMemorySize=128m
+            -XX:+ExitOnOutOfMemoryError
+        - name: SERVER_SHUTDOWN
+          value: graceful
+        - name: SPRING_LIFECYCLE_TIMEOUT_PER_SHUTDOWN_PHASE
+          value: 45s
+        - name: MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED
+          value: 'true'
+        - name: MANAGEMENT_ENDPOINT_HEALTH_PROBES_ADD_ADDITIONAL_PATHS
+          value: 'true'
+        - name: MANAGEMENT_ENDPOINT_HEALTH_GROUP_READINESS_INCLUDE
+          value: readinessState,db
+        - name: AGENT_SECRET_DIR
+          value: /var/lib/agent-vault
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: http://otel-collector.agent-platform-v12-ops.svc.cluster.local:4317
+        - name: OTEL_EXPORTER_OTLP_PROTOCOL
+          value: grpc
+        - name: OTEL_LOGS_EXPORTER
+          value: otlp
+        - name: OTEL_METRICS_EXPORTER
+          value: otlp
+        - name: OTEL_TRACES_EXPORTER
+          value: otlp
+        - name: OTEL_INSTRUMENTATION_HTTP_SERVER_CAPTURE_REQUEST_HEADERS
+          value: ''
+        - name: OTEL_INSTRUMENTATION_HTTP_SERVER_CAPTURE_RESPONSE_HEADERS
+          value: ''
+        - name: OTEL_INSTRUMENTATION_HTTP_CLIENT_CAPTURE_REQUEST_HEADERS
+          value: ''
+        - name: OTEL_INSTRUMENTATION_HTTP_CLIENT_CAPTURE_RESPONSE_HEADERS
+          value: ''
+        - name: OTEL_INSTRUMENTATION_JDBC_STATEMENT_SANITIZER_ENABLED
+          value: 'true'
+        - name: OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT
+          value: 'false'
+        - name: AGENT_GATEWAY_URL
+          value: http://platform-gateway:8080
+        - name: AGENT_APP_URL
+          value: http://app-management:8080
+        - name: AGENT_ENGINE_URL
+          value: http://engine-runtime:8080
+        - name: AGENT_SKILL_URL
+          value: http://skill-registry:8080
+        - name: AGENT_MODEL_URL
+          value: http://model-gateway:8080
+        - name: AGENT_MONITOR_URL
+          value: http://monitor:8080
+        - name: OTEL_SERVICE_NAME
+          value: model-gateway
+        - name: AGENT_RELEASE_GATE
+          valueFrom:
+            configMapKeyRef:
+              name: release-gate
+              key: AGENT_RELEASE_GATE
+        - name: AGENT_DB_URL
+          valueFrom:
+            secretKeyRef:
+              name: agent-database-urls
+              key: model-gateway
+        - name: AGENT_MASTER_KEY
+          valueFrom:
+            secretKeyRef:
+              name: agent-vault-master-key
+              key: AGENT_MASTER_KEY
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+            cpu: '1'
+            memory: 1Gi
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: vault
+          mountPath: /var/lib/agent-vault
+        startupProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: http
+          timeoutSeconds: 3
+          failureThreshold: 30
+          periodSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: http
+          timeoutSeconds: 3
+          periodSeconds: 15
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: http
+          timeoutSeconds: 3
+          periodSeconds: 5
+          failureThreshold: 2
+      volumes:
+      - name: tmp
+        emptyDir:
+          medium: Memory
+          sizeLimit: 128Mi
+      - name: vault
+        persistentVolumeClaim:
+          claimName: agent-vault-rwx
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: model-gateway
+  namespace: agent-platform-v12
+spec:
+  type: ClusterIP
+  selector:
+    app: model-gateway
+  ports:
+  - name: http
+    port: 8080
+    targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: monitor
+  namespace: agent-platform-v12
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: monitor
+  template:
+    metadata:
+      labels:
+        app: monitor
+        tier: backend
+    spec:
+      serviceAccountName: agent-platform
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      terminationGracePeriodSeconds: 60
+      containers:
+      - name: monitor
+        image: registry.invalid/agent-platform/monitor@sha256:0000000000000000000000000000000000000000000000000000000000000000
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        ports:
+        - name: http
+          containerPort: 8080
+        envFrom:
+        - secretRef:
+            name: agent-runtime
+        env:
+        - name: AGENT_BIND_ADDRESS
+          value: 0.0.0.0
+        - name: SERVER_PORT
+          value: '8080'
+        - name: AGENT_DEV_AUTH
+          value: 'false'
+        - name: JAVA_TOOL_OPTIONS
+          value: -XX:+UseZGC -XX:+ZGenerational -XX:MaxRAMPercentage=70 -XX:MaxDirectMemorySize=128m
+            -XX:+ExitOnOutOfMemoryError
+        - name: SERVER_SHUTDOWN
+          value: graceful
+        - name: SPRING_LIFECYCLE_TIMEOUT_PER_SHUTDOWN_PHASE
+          value: 45s
+        - name: MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED
+          value: 'true'
+        - name: MANAGEMENT_ENDPOINT_HEALTH_PROBES_ADD_ADDITIONAL_PATHS
+          value: 'true'
+        - name: MANAGEMENT_ENDPOINT_HEALTH_GROUP_READINESS_INCLUDE
+          value: readinessState,db
+        - name: AGENT_SECRET_DIR
+          value: /var/lib/agent-vault
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: http://otel-collector.agent-platform-v12-ops.svc.cluster.local:4317
+        - name: OTEL_EXPORTER_OTLP_PROTOCOL
+          value: grpc
+        - name: OTEL_LOGS_EXPORTER
+          value: otlp
+        - name: OTEL_METRICS_EXPORTER
+          value: otlp
+        - name: OTEL_TRACES_EXPORTER
+          value: otlp
+        - name: OTEL_INSTRUMENTATION_HTTP_SERVER_CAPTURE_REQUEST_HEADERS
+          value: ''
+        - name: OTEL_INSTRUMENTATION_HTTP_SERVER_CAPTURE_RESPONSE_HEADERS
+          value: ''
+        - name: OTEL_INSTRUMENTATION_HTTP_CLIENT_CAPTURE_REQUEST_HEADERS
+          value: ''
+        - name: OTEL_INSTRUMENTATION_HTTP_CLIENT_CAPTURE_RESPONSE_HEADERS
+          value: ''
+        - name: OTEL_INSTRUMENTATION_JDBC_STATEMENT_SANITIZER_ENABLED
+          value: 'true'
+        - name: OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT
+          value: 'false'
+        - name: AGENT_GATEWAY_URL
+          value: http://platform-gateway:8080
+        - name: AGENT_APP_URL
+          value: http://app-management:8080
+        - name: AGENT_ENGINE_URL
+          value: http://engine-runtime:8080
+        - name: AGENT_SKILL_URL
+          value: http://skill-registry:8080
+        - name: AGENT_MODEL_URL
+          value: http://model-gateway:8080
+        - name: AGENT_MONITOR_URL
+          value: http://monitor:8080
+        - name: OTEL_SERVICE_NAME
+          value: monitor
+        - name: AGENT_RELEASE_GATE
+          valueFrom:
+            configMapKeyRef:
+              name: release-gate
+              key: AGENT_RELEASE_GATE
+        - name: AGENT_DB_URL
+          valueFrom:
+            secretKeyRef:
+              name: agent-database-urls
+              key: monitor
+        - name: AGENT_MASTER_KEY
+          valueFrom:
+            secretKeyRef:
+              name: agent-vault-master-key
+              key: AGENT_MASTER_KEY
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+            cpu: '1'
+            memory: 1Gi
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: vault
+          mountPath: /var/lib/agent-vault
+        startupProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: http
+          timeoutSeconds: 3
+          failureThreshold: 30
+          periodSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: http
+          timeoutSeconds: 3
+          periodSeconds: 15
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: http
+          timeoutSeconds: 3
+          periodSeconds: 5
+          failureThreshold: 2
+      volumes:
+      - name: tmp
+        emptyDir:
+          medium: Memory
+          sizeLimit: 128Mi
+      - name: vault
+        persistentVolumeClaim:
+          claimName: agent-vault-rwx
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: monitor
+  namespace: agent-platform-v12
+spec:
+  type: ClusterIP
+  selector:
+    app: monitor
+  ports:
+  - name: http
+    port: 8080
+    targetPort: http
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: engine-runtime
+  namespace: agent-platform-v12
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: engine-runtime
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: agent-platform-v12
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+        tier: frontend
+    spec:
+      serviceAccountName: agent-platform
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      terminationGracePeriodSeconds: 30
+      containers:
+      - name: frontend
+        image: registry.invalid/agent-platform/frontend@sha256:0000000000000000000000000000000000000000000000000000000000000000
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        ports:
+        - name: http
+          containerPort: 8080
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 500m
+            memory: 128Mi
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: http
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: http
+      volumes:
+      - name: tmp
+        emptyDir:
+          sizeLimit: 64Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: agent-platform-v12
+spec:
+  type: ClusterIP
+  selector:
+    app: frontend
+  ports:
+  - name: http
+    port: 8080
+    targetPort: http
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: backend-http
+  namespace: agent-platform-v12
+spec:
+  podSelector:
+    matchLabels:
+      tier: backend
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - &id001
+      namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: agent-platform-v12
+      podSelector:
+        matchLabels:
+          tier: backend
+    ports:
+    - port: 8080
+  egress:
+  - to:
+    - *id001
+    ports:
+    - port: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: frontend-to-gateway
+  namespace: agent-platform-v12
+spec:
+  podSelector:
+    matchLabels:
+      app: platform-gateway
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: frontend
+    ports:
+    - port: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: frontend-egress
+  namespace: agent-platform-v12
+spec:
+  podSelector:
+    matchLabels:
+      app: frontend
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: platform-gateway
+    ports:
+    - port: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: business-ingress
+  namespace: agent-platform-v12
+spec:
+  podSelector:
+    matchLabels:
+      app: frontend
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          agent-platform.access: business-ingress
+    ports:
+    - port: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: otlp-egress
+  namespace: agent-platform-v12
+spec:
+  podSelector:
+    matchLabels:
+      tier: backend
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: agent-platform-v12-ops
+      podSelector:
+        matchLabels:
+          app: otel-collector
+    ports:
+    - port: 4317
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: agent-vault-rwx
+  namespace: agent-platform-v12
+spec:
+  accessModes:
+  - ReadWriteMany
+  volumeMode: Filesystem
+  storageClassName: required-dedicated-rwx-csi
+  resources:
+    requests:
+      storage: 1Gi

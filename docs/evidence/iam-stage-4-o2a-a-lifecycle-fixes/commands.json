@@ -1,0 +1,106 @@
+[
+  {
+    "stage": "iam-stage-o2a-a-fix-red01",
+    "command": [
+      "node",
+      ".tools/run-iam-module-tests.mjs",
+      "iam-stage-o2a-a-fix-red01",
+      "admin-common",
+      "PortalEventsAuthorityProfileTest#clientCloseDeliversCancellationWhileHolderStopIsPublishedButNotSubmitted,PortalEventsAuthorityProfileTest#rejectedCancellationRunsOutsideLifecycleLocksAndRetainsSlotUntilActualReturn,PortalEventsAuthorityProfileTest#expiryBeforeRenewalPublicationLeavesNoReservationAndCapacityIsReusable,PortalEventsAuthorityProfileTest#cancelledPublishedRenewalCannotRegisterTimerOrQueueAfterItsSlotWasReleased,PortalEventsAuthorityProfileTest#cancellationDuringTimerHandoffRemovesBothTimerAndQueuedWorkerExactlyOnce"
+    ],
+    "exitCode": 1,
+    "stdout": "{\"stage\":\"iam-stage-o2a-a-fix-red01\",\"modules\":\"admin-common\",\"tests\":\"PortalEventsAuthorityProfileTest#clientCloseDeliversCancellationWhileHolderStopIsPublishedButNotSubmitted,PortalEventsAuthorityProfileTest#rejectedCancellationRunsOutsideLifecycleLocksAndRetainsSlotUntilActualReturn,PortalEventsAuthorityProfileTest#expiryBeforeRenewalPublicationLeavesNoReservationAndCapacityIsReusable,PortalEventsAuthorityProfileTest#cancelledPublishedRenewalCannotRegisterTimerOrQueueAfterItsSlotWasReleased,PortalEventsAuthorityProfileTest#cancellationDuringTimerHandoffRemovesBothTimerAndQueuedWorkerExactlyOnce\",\"exitCode\":1,\"log\":\".local\\\\iam-stage-o2a-a-fix-red01.log\",\"timedOut\":false}\n",
+    "stderr": "",
+    "running": [
+      "cn.agentplatform.common.authority.PortalEventsAuthorityProfileTest"
+    ],
+    "at": "2026-10-21T01:03:59.161Z",
+    "actualRunning": [
+      {
+        "cls": "cn.agentplatform.common.authority.PortalEventsAuthorityProfileTest",
+        "tests": 5,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 5
+      }
+    ]
+  },
+  {
+    "stage": "iam-stage-o2a-a-fix-green01",
+    "command": [
+      "node",
+      ".tools/run-iam-module-tests.mjs",
+      "iam-stage-o2a-a-fix-green01",
+      "admin-common",
+      "PortalEventsAuthorityProfileTest#clientCloseDeliversCancellationWhileHolderStopIsPublishedButNotSubmitted,PortalEventsAuthorityProfileTest#rejectedCancellationRunsOutsideLifecycleLocksAndRetainsSlotUntilActualReturn,PortalEventsAuthorityProfileTest#expiryBeforeRenewalPublicationLeavesNoReservationAndCapacityIsReusable,PortalEventsAuthorityProfileTest#cancelledPublishedRenewalCannotRegisterTimerOrQueueAfterItsSlotWasReleased,PortalEventsAuthorityProfileTest#cancellationDuringTimerHandoffRemovesBothTimerAndQueuedWorkerExactlyOnce"
+    ],
+    "exitCode": 0,
+    "stdout": "{\"stage\":\"iam-stage-o2a-a-fix-green01\",\"modules\":\"admin-common\",\"tests\":\"PortalEventsAuthorityProfileTest#clientCloseDeliversCancellationWhileHolderStopIsPublishedButNotSubmitted,PortalEventsAuthorityProfileTest#rejectedCancellationRunsOutsideLifecycleLocksAndRetainsSlotUntilActualReturn,PortalEventsAuthorityProfileTest#expiryBeforeRenewalPublicationLeavesNoReservationAndCapacityIsReusable,PortalEventsAuthorityProfileTest#cancelledPublishedRenewalCannotRegisterTimerOrQueueAfterItsSlotWasReleased,PortalEventsAuthorityProfileTest#cancellationDuringTimerHandoffRemovesBothTimerAndQueuedWorkerExactlyOnce\",\"exitCode\":0,\"log\":\".local\\\\iam-stage-o2a-a-fix-green01.log\",\"timedOut\":false}\n",
+    "stderr": "",
+    "running": [
+      "cn.agentplatform.common.authority.PortalEventsAuthorityProfileTest"
+    ],
+    "at": "2026-10-21T01:05:16.256Z",
+    "actualRunning": [
+      {
+        "cls": "cn.agentplatform.common.authority.PortalEventsAuthorityProfileTest",
+        "tests": 5,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0
+      }
+    ]
+  },
+  {
+    "stage": "iam-stage-o2a-a-fix-red02",
+    "command": [
+      "node",
+      ".tools/run-iam-module-tests.mjs",
+      "iam-stage-o2a-a-fix-red02",
+      "admin-common",
+      "PortalEventsAuthorityProfileTest#saturatedWatchdogDefersCancellationWithoutBlockingOtherDeadlines"
+    ],
+    "exitCode": 1,
+    "stdout": "{\"stage\":\"iam-stage-o2a-a-fix-red02\",\"modules\":\"admin-common\",\"tests\":\"PortalEventsAuthorityProfileTest#saturatedWatchdogDefersCancellationWithoutBlockingOtherDeadlines\",\"exitCode\":1,\"log\":\".local\\\\iam-stage-o2a-a-fix-red02.log\",\"timedOut\":false}\n",
+    "stderr": "",
+    "running": [
+      "cn.agentplatform.common.authority.PortalEventsAuthorityProfileTest"
+    ],
+    "at": "2026-10-21T01:06:11.763Z",
+    "actualRunning": [
+      {
+        "cls": "cn.agentplatform.common.authority.PortalEventsAuthorityProfileTest",
+        "tests": 1,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 1
+      }
+    ]
+  },
+  {
+    "stage": "iam-stage-o2a-a-fix-final01",
+    "command": [
+      "node",
+      ".tools/run-iam-module-tests.mjs",
+      "iam-stage-o2a-a-fix-final01",
+      "admin-common",
+      "PortalEventsAuthorityProfileTest"
+    ],
+    "exitCode": 0,
+    "stdout": "{\"stage\":\"iam-stage-o2a-a-fix-final01\",\"modules\":\"admin-common\",\"tests\":\"PortalEventsAuthorityProfileTest\",\"exitCode\":0,\"log\":\".local\\\\iam-stage-o2a-a-fix-final01.log\",\"timedOut\":false}\n",
+    "stderr": "",
+    "running": [
+      "cn.agentplatform.common.authority.PortalEventsAuthorityProfileTest"
+    ],
+    "at": "2026-10-21T01:07:56.049Z",
+    "actualRunning": [
+      {
+        "cls": "cn.agentplatform.common.authority.PortalEventsAuthorityProfileTest",
+        "tests": 28,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0
+      }
+    ]
+  }
+]

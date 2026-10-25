@@ -1,0 +1,1984 @@
+{
+  "mode": "failed",
+  "phase": "passed",
+  "namespace": "alg-live-ec8285eb1f44-failed",
+  "skillCode": "alg_live_ec8285eb1f44_failed",
+  "skillVersionId": 3,
+  "connection": {
+    "runId": "r_418b69e5e2a04dadaff3fa2995497e2d",
+    "status": "RUNNING",
+    "action": "WAIT_AND_RECHECK",
+    "reason": "实际只读连接、权限或Schema检查未通过",
+    "ok": false,
+    "latencyMs": 201,
+    "candidateSha256": "ae8a900c9881d999cb496eb12153b73123aee244fc16ededb092fbf72ec31345"
+  },
+  "runId": "r_418b69e5e2a04dadaff3fa2995497e2d",
+  "callId": 4,
+  "before": {
+    "run": {
+      "id": 3,
+      "publicId": "r_418b69e5e2a04dadaff3fa2995497e2d",
+      "status": "FAILED",
+      "tenantId": "algorithm-live-ec8285eb1f44",
+      "principalId": "algorithm-live"
+    },
+    "node": {
+      "id": 8,
+      "error": {
+        "message": "NON_RETRYABLE_FAILURE",
+        "semantic": "NON_RETRYABLE_FAILURE"
+      },
+      "output": null,
+      "run_id": 3,
+      "status": "FAILED",
+      "ended_at": "2026-10-20T12:00:57.909572+08:00",
+      "released": false,
+      "step_seq": 2,
+      "node_type": "SKILL",
+      "pause_seq": null,
+      "definition": {
+        "id": "draft_skill",
+        "args": {
+          "message": "failed"
+        },
+        "type": "SKILL",
+        "skillRef": {
+          "code": "alg_live_ec8285eb1f44_failed",
+          "version": 1,
+          "execution": {
+            "readonly": true,
+            "idempotent": true,
+            "sideEffect": false,
+            "cancellable": false
+          },
+          "skillVersionId": 3
+        }
+      },
+      "started_at": "2026-10-20T12:00:57.306616+08:00",
+      "lease_owner": "6b1d200d-47c6-45df-8189-73f7d7ad33a1_669516a6",
+      "lease_until": "2026-10-20T12:02:27.712275+08:00",
+      "node_def_id": "draft_skill",
+      "input_digest": null,
+      "output_digest": null,
+      "join_semantics": null,
+      "winner_node_id": null,
+      "approval_context": null,
+      "committed_attempt_id": null,
+      "committed_output_ref": null
+    },
+    "tenantRuns": [
+      {
+        "id": 1,
+        "publicId": "r_78455d30c3b34e879f895a8db4e3d7cf"
+      },
+      {
+        "id": 2,
+        "publicId": "r_6e081b156e86429e801bbaea898549b6"
+      },
+      {
+        "id": 3,
+        "publicId": "r_418b69e5e2a04dadaff3fa2995497e2d"
+      }
+    ],
+    "calls": [
+      {
+        "id": 4,
+        "args": {
+          "message": "failed"
+        },
+        "result": {
+          "error": {
+            "reason": "原算法Job已核实Failed；不表示未生效或允许重新发送",
+            "semantic": "NON_RETRYABLE_FAILURE"
+          },
+          "owner": {
+            "runId": "r_418b69e5e2a04dadaff3fa2995497e2d",
+            "callId": 4,
+            "tenantId": "algorithm-live-ec8285eb1f44",
+            "attemptId": 9,
+            "skillCode": "alg_live_ec8285eb1f44_failed",
+            "principalId": "algorithm-live",
+            "nodeInstanceId": 8,
+            "skillVersionId": 3
+          },
+          "isMock": false,
+          "status": "FAILED",
+          "fileRefs": [],
+          "guardTrace": {
+            "roles": [
+              "SERVICE",
+              "EDITOR",
+              "ADMIN"
+            ],
+            "argsDigest": "f08ad0ad6a0220bd0b2a620f73cde0e54470877b0a9b7e260ca36e3263a6c786"
+          },
+          "structured": null,
+          "modelSummary": "原算法Job已核实Failed；不表示未生效或允许重新发送",
+          "cardPayloadJson": ""
+        },
+        "run_id": 3,
+        "status": "FAILED",
+        "is_mock": false,
+        "args_ref": "pg:call/6e04a48a51a371abc9270625c03758456b4e1bd236c3f1243914fdf32acb3f02/args",
+        "call_seq": 1,
+        "attempt_id": 9,
+        "claimed_at": "2026-10-20T12:00:57.382588+08:00",
+        "claimed_by": "6b1d200d-47c6-45df-8189-73f7d7ad33a1_669516a6",
+        "created_at": "2026-10-20T12:00:57.316242+08:00",
+        "result_ref": "pg:call/4/result",
+        "skill_code": "alg_live_ec8285eb1f44_failed",
+        "args_digest": "f08ad0ad6a0220bd0b2a620f73cde0e54470877b0a9b7e260ca36e3263a6c786",
+        "duration_ms": 465,
+        "claimed_lease": "2026-10-20T12:02:27.712275+08:00",
+        "mock_snapshot": {},
+        "error_semantic": "NON_RETRYABLE_FAILURE",
+        "recovery_error": null,
+        "idempotency_key": "6e04a48a51a371abc9270625c03758456b4e1bd236c3f1243914fdf32acb3f02",
+        "approval_context": null,
+        "node_instance_id": 8,
+        "recovery_next_at": null,
+        "skill_version_id": 3,
+        "recovery_attempts": 0,
+        "mock_source_digest": null,
+        "mock_source_call_id": null,
+        "readonly_retry_count": 0,
+        "skill_contract_sha256": "ae8a900c9881d999cb496eb12153b73123aee244fc16ededb092fbf72ec31345",
+        "debug_controls_revision": 0
+      }
+    ],
+    "facts": [
+      {
+        "result": {
+          "error": {
+            "reason": "原算法Job已核实Failed；不表示未生效或允许重新发送",
+            "semantic": "NON_RETRYABLE_FAILURE"
+          },
+          "owner": {
+            "runId": "r_418b69e5e2a04dadaff3fa2995497e2d",
+            "callId": 4,
+            "tenantId": "algorithm-live-ec8285eb1f44",
+            "attemptId": 9,
+            "skillCode": "alg_live_ec8285eb1f44_failed",
+            "principalId": "algorithm-live",
+            "nodeInstanceId": 8,
+            "skillVersionId": 3
+          },
+          "isMock": false,
+          "status": "FAILED",
+          "fileRefs": [],
+          "guardTrace": {
+            "roles": [
+              "SERVICE",
+              "EDITOR",
+              "ADMIN"
+            ],
+            "argsDigest": "f08ad0ad6a0220bd0b2a620f73cde0e54470877b0a9b7e260ca36e3263a6c786"
+          },
+          "structured": null,
+          "modelSummary": "原算法Job已核实Failed；不表示未生效或允许重新发送",
+          "cardPayloadJson": ""
+        },
+        "run_id": "r_418b69e5e2a04dadaff3fa2995497e2d",
+        "status": "FAILED",
+        "call_id": 4,
+        "is_mock": false,
+        "call_kind": "DEBUG",
+        "tenant_id": "algorithm-live-ec8285eb1f44",
+        "attempt_id": 9,
+        "created_at": "2026-10-20T12:00:57.39244+08:00",
+        "updated_at": "2026-10-20T12:00:57.905742+08:00",
+        "args_digest": "f08ad0ad6a0220bd0b2a620f73cde0e54470877b0a9b7e260ca36e3263a6c786",
+        "duration_ms": 465,
+        "principal_id": "algorithm-live",
+        "callback_error": null,
+        "callback_state": "DELIVERED",
+        "delivery_owner": null,
+        "execution_owner": "6b1d200d-47c6-45df-8189-73f7d7ad33a1_669516a6",
+        "next_delivery_at": "2026-10-20T12:00:57.88375+08:00",
+        "request_snapshot": {
+          "mock": {},
+          "runId": "r_418b69e5e2a04dadaff3fa2995497e2d",
+          "callId": 4,
+          "callSeq": 1,
+          "arguments": {
+            "message": "failed"
+          },
+          "attemptId": 9,
+          "skillCode": "alg_live_ec8285eb1f44_failed",
+          "leaseOwner": "6b1d200d-47c6-45df-8189-73f7d7ad33a1_669516a6",
+          "leaseUntil": "2026-10-20T04:02:27.306616Z",
+          "triggerType": "DEBUG",
+          "idempotencyKey": "6e04a48a51a371abc9270625c03758456b4e1bd236c3f1243914fdf32acb3f02",
+          "nodeInstanceId": 8,
+          "skillVersionId": 3,
+          "guardedArguments": {
+            "message": "failed"
+          },
+          "authorityTriggerType": "DEBUG"
+        },
+        "skill_version_id": 3,
+        "delivery_attempts": 0,
+        "attempt_duration_ms": 465,
+        "delivery_lease_until": null,
+        "skill_contract_sha256": "ae8a900c9881d999cb496eb12153b73123aee244fc16ededb092fbf72ec31345"
+      }
+    ],
+    "bindings": [
+      {
+        "run_id": "r_418b69e5e2a04dadaff3fa2995497e2d",
+        "status": "DONE",
+        "call_id": 4,
+        "metadata": {
+          "image": "algorithm-proof:finite",
+          "protocol": "ALGORITHM",
+          "contractSha256": "ae8a900c9881d999cb496eb12153b73123aee244fc16ededb092fbf72ec31345",
+          "serviceAccount": "algorithm-proof",
+          "terminalEvidence": {
+            "apiSha256": "0525f43283d07b36b1f30a888e559e25b3b8d47fe9ac7540a7ea04b726a77cd7",
+            "condition": "Failed",
+            "namespace": "alg-live-ec8285eb1f44-failed",
+            "sourceKind": "K8S_JOB",
+            "sourceSha256": "1a5a76e203ad339d9727b7cdf60c59df4a2ddcff1e620defd2212e8c0220fbd5",
+            "externalJobId": "alg-020eedda3925f66ea82e8434ae12bb948483bebb",
+            "externalJobUid": "57baf85a-a26b-4ae8-84c2-351ef63bb48f",
+            "identitySha256": "33553591abff2e82427ad51888a0c17b0b0d7546ad1c4fb20197bcac73d3876b"
+          }
+        },
+        "tenant_id": "algorithm-live-ec8285eb1f44",
+        "attempt_id": 9,
+        "updated_at": "2026-10-20T12:00:57.88375+08:00",
+        "principal_id": "algorithm-live",
+        "send_started": true,
+        "external_job_id": "alg-020eedda3925f66ea82e8434ae12bb948483bebb",
+        "idempotency_key": "6e04a48a51a371abc9270625c03758456b4e1bd236c3f1243914fdf32acb3f02",
+        "external_job_uid": "57baf85a-a26b-4ae8-84c2-351ef63bb48f",
+        "request_snapshot": {
+          "mock": {},
+          "runId": "r_418b69e5e2a04dadaff3fa2995497e2d",
+          "callId": 4,
+          "callSeq": 1,
+          "arguments": {
+            "message": "failed"
+          },
+          "attemptId": 9,
+          "skillCode": "alg_live_ec8285eb1f44_failed",
+          "leaseOwner": "6b1d200d-47c6-45df-8189-73f7d7ad33a1_669516a6",
+          "leaseUntil": "2026-10-20T04:02:27.306616Z",
+          "triggerType": "DEBUG",
+          "idempotencyKey": "6e04a48a51a371abc9270625c03758456b4e1bd236c3f1243914fdf32acb3f02",
+          "nodeInstanceId": 8,
+          "skillVersionId": 3,
+          "guardedArguments": {
+            "message": "failed"
+          },
+          "authorityTriggerType": "DEBUG"
+        },
+        "skill_version_id": 3,
+        "external_namespace": "alg-live-ec8285eb1f44-failed",
+        "external_api_sha256": "0525f43283d07b36b1f30a888e559e25b3b8d47fe9ac7540a7ea04b726a77cd7",
+        "external_identity_sha256": "33553591abff2e82427ad51888a0c17b0b0d7546ad1c4fb20197bcac73d3876b"
+      }
+    ],
+    "toolCommits": 0,
+    "attempts": 1,
+    "runCalls": 1,
+    "runFacts": 1,
+    "runBindings": 1,
+    "attemptRows": [
+      {
+        "id": 9,
+        "error": {
+          "message": "NON_RETRYABLE_FAILURE",
+          "semantic": "NON_RETRYABLE_FAILURE"
+        },
+        "status": "FAILED",
+        "ended_at": "2026-10-20T12:00:57.909572+08:00",
+        "response": null,
+        "attempt_no": 1,
+        "checkpoint": {},
+        "started_at": "2026-10-20T12:00:57.306616+08:00",
+        "response_ref": null,
+        "routed_model": null,
+        "idempotency_key": "3b840c12d9c419a52d3c2277bb0df2e53869459649734be7276eefa6d8104245",
+        "node_instance_id": 8,
+        "request_snapshot": {},
+        "request_snapshot_ref": "pg:attempt/9"
+      }
+    ],
+    "terminalNotes": [
+      {
+        "id": 4,
+        "kind": "TOOL_EXECUTION_FACT",
+        "payload": {
+          "owner": "6b1d200d-47c6-45df-8189-73f7d7ad33a1_669516a6",
+          "callId": 4,
+          "isMock": false,
+          "result": {
+            "error": {
+              "reason": "原算法Job已核实Failed；不表示未生效或允许重新发送",
+              "semantic": "NON_RETRYABLE_FAILURE"
+            },
+            "owner": {
+              "runId": "r_418b69e5e2a04dadaff3fa2995497e2d",
+              "callId": 4,
+              "tenantId": "algorithm-live-ec8285eb1f44",
+              "attemptId": 9,
+              "skillCode": "alg_live_ec8285eb1f44_failed",
+              "principalId": "algorithm-live",
+              "nodeInstanceId": 8,
+              "skillVersionId": 3
+            },
+            "isMock": false,
+            "status": "FAILED",
+            "fileRefs": [],
+            "guardTrace": {
+              "roles": [
+                "SERVICE",
+                "EDITOR",
+                "ADMIN"
+              ],
+              "argsDigest": "f08ad0ad6a0220bd0b2a620f73cde0e54470877b0a9b7e260ca36e3263a6c786"
+            },
+            "structured": null,
+            "modelSummary": "原算法Job已核实Failed；不表示未生效或允许重新发送",
+            "cardPayloadJson": ""
+          },
+          "status": "FAILED",
+          "accepted": true,
+          "attemptId": 9,
+          "durationMs": 465,
+          "factDigest": "7c21b142d473644ccb06c1b4358001c604db484ea805b709d491e29aa44650a7",
+          "errorSemantic": "NON_RETRYABLE_FAILURE"
+        },
+        "attempt_id": 9,
+        "created_at": "2026-10-20T12:00:57.898034+08:00",
+        "node_instance_id": 8
+      }
+    ],
+    "acceptedTerminalFacts": 1,
+    "events": [
+      {
+        "id": 26,
+        "seq": 1,
+        "type": "RUN_STARTED",
+        "run_id": 3,
+        "payload": {
+          "runId": "r_418b69e5e2a04dadaff3fa2995497e2d",
+          "triggerType": "DEBUG"
+        },
+        "created_at": "2026-10-20T12:00:57.270344+08:00"
+      },
+      {
+        "id": 27,
+        "seq": 2,
+        "type": "NODE_STARTED",
+        "run_id": 3,
+        "payload": {
+          "attemptId": 8,
+          "attemptNo": 1,
+          "nodeInstanceId": 7
+        },
+        "created_at": "2026-10-20T12:00:57.286831+08:00"
+      },
+      {
+        "id": 28,
+        "seq": 3,
+        "type": "LOGIC_RESULT_COMMITTED",
+        "run_id": 3,
+        "payload": {
+          "attemptId": 8,
+          "nodeInstanceId": 7
+        },
+        "created_at": "2026-10-20T12:00:57.300713+08:00"
+      },
+      {
+        "id": 29,
+        "seq": 4,
+        "type": "NODE_FINISHED",
+        "run_id": 3,
+        "payload": {
+          "status": "SUCCEEDED",
+          "nodeInstanceId": 7
+        },
+        "created_at": "2026-10-20T12:00:57.300713+08:00"
+      },
+      {
+        "id": 30,
+        "seq": 5,
+        "type": "NODE_STARTED",
+        "run_id": 3,
+        "payload": {
+          "attemptId": 9,
+          "attemptNo": 1,
+          "nodeInstanceId": 8
+        },
+        "created_at": "2026-10-20T12:00:57.306616+08:00"
+      },
+      {
+        "id": 31,
+        "seq": 6,
+        "type": "NODE_FAILED",
+        "run_id": 3,
+        "payload": {
+          "error": {
+            "message": "NON_RETRYABLE_FAILURE",
+            "semantic": "NON_RETRYABLE_FAILURE"
+          },
+          "nodeInstanceId": 8
+        },
+        "created_at": "2026-10-20T12:00:57.909572+08:00"
+      },
+      {
+        "id": 32,
+        "seq": 7,
+        "type": "NODE_FAILED",
+        "run_id": 3,
+        "payload": {
+          "status": "FAILED",
+          "nodeInstanceId": 9
+        },
+        "created_at": "2026-10-20T12:00:57.913344+08:00"
+      },
+      {
+        "id": 33,
+        "seq": 8,
+        "type": "RUN_FINISHED",
+        "run_id": 3,
+        "payload": {
+          "status": "FAILED"
+        },
+        "created_at": "2026-10-20T12:00:57.915841+08:00"
+      }
+    ],
+    "call": {
+      "id": 4,
+      "args": {
+        "message": "failed"
+      },
+      "result": {
+        "error": {
+          "reason": "原算法Job已核实Failed；不表示未生效或允许重新发送",
+          "semantic": "NON_RETRYABLE_FAILURE"
+        },
+        "owner": {
+          "runId": "r_418b69e5e2a04dadaff3fa2995497e2d",
+          "callId": 4,
+          "tenantId": "algorithm-live-ec8285eb1f44",
+          "attemptId": 9,
+          "skillCode": "alg_live_ec8285eb1f44_failed",
+          "principalId": "algorithm-live",
+          "nodeInstanceId": 8,
+          "skillVersionId": 3
+        },
+        "isMock": false,
+        "status": "FAILED",
+        "fileRefs": [],
+        "guardTrace": {
+          "roles": [
+            "SERVICE",
+            "EDITOR",
+            "ADMIN"
+          ],
+          "argsDigest": "f08ad0ad6a0220bd0b2a620f73cde0e54470877b0a9b7e260ca36e3263a6c786"
+        },
+        "structured": null,
+        "modelSummary": "原算法Job已核实Failed；不表示未生效或允许重新发送",
+        "cardPayloadJson": ""
+      },
+      "run_id": 3,
+      "status": "FAILED",
+      "is_mock": false,
+      "args_ref": "pg:call/6e04a48a51a371abc9270625c03758456b4e1bd236c3f1243914fdf32acb3f02/args",
+      "call_seq": 1,
+      "attempt_id": 9,
+      "claimed_at": "2026-10-20T12:00:57.382588+08:00",
+      "claimed_by": "6b1d200d-47c6-45df-8189-73f7d7ad33a1_669516a6",
+      "created_at": "2026-10-20T12:00:57.316242+08:00",
+      "result_ref": "pg:call/4/result",
+      "skill_code": "alg_live_ec8285eb1f44_failed",
+      "args_digest": "f08ad0ad6a0220bd0b2a620f73cde0e54470877b0a9b7e260ca36e3263a6c786",
+      "duration_ms": 465,
+      "claimed_lease": "2026-10-20T12:02:27.712275+08:00",
+      "mock_snapshot": {},
+      "error_semantic": "NON_RETRYABLE_FAILURE",
+      "recovery_error": null,
+      "idempotency_key": "6e04a48a51a371abc9270625c03758456b4e1bd236c3f1243914fdf32acb3f02",
+      "approval_context": null,
+      "node_instance_id": 8,
+      "recovery_next_at": null,
+      "skill_version_id": 3,
+      "recovery_attempts": 0,
+      "mock_source_digest": null,
+      "mock_source_call_id": null,
+      "readonly_retry_count": 0,
+      "skill_contract_sha256": "ae8a900c9881d999cb496eb12153b73123aee244fc16ededb092fbf72ec31345",
+      "debug_controls_revision": 0
+    },
+    "fact": {
+      "result": {
+        "error": {
+          "reason": "原算法Job已核实Failed；不表示未生效或允许重新发送",
+          "semantic": "NON_RETRYABLE_FAILURE"
+        },
+        "owner": {
+          "runId": "r_418b69e5e2a04dadaff3fa2995497e2d",
+          "callId": 4,
+          "tenantId": "algorithm-live-ec8285eb1f44",
+          "attemptId": 9,
+          "skillCode": "alg_live_ec8285eb1f44_failed",
+          "principalId": "algorithm-live",
+          "nodeInstanceId": 8,
+          "skillVersionId": 3
+        },
+        "isMock": false,
+        "status": "FAILED",
+        "fileRefs": [],
+        "guardTrace": {
+          "roles": [
+            "SERVICE",
+            "EDITOR",
+            "ADMIN"
+          ],
+          "argsDigest": "f08ad0ad6a0220bd0b2a620f73cde0e54470877b0a9b7e260ca36e3263a6c786"
+        },
+        "structured": null,
+        "modelSummary": "原算法Job已核实Failed；不表示未生效或允许重新发送",
+        "cardPayloadJson": ""
+      },
+      "run_id": "r_418b69e5e2a04dadaff3fa2995497e2d",
+      "status": "FAILED",
+      "call_id": 4,
+      "is_mock": false,
+      "call_kind": "DEBUG",
+      "tenant_id": "algorithm-live-ec8285eb1f44",
+      "attempt_id": 9,
+      "created_at": "2026-10-20T12:00:57.39244+08:00",
+      "updated_at": "2026-10-20T12:00:57.905742+08:00",
+      "args_digest": "f08ad0ad6a0220bd0b2a620f73cde0e54470877b0a9b7e260ca36e3263a6c786",
+      "duration_ms": 465,
+      "principal_id": "algorithm-live",
+      "callback_error": null,
+      "callback_state": "DELIVERED",
+      "delivery_owner": null,
+      "execution_owner": "6b1d200d-47c6-45df-8189-73f7d7ad33a1_669516a6",
+      "next_delivery_at": "2026-10-20T12:00:57.88375+08:00",
+      "request_snapshot": {
+        "mock": {},
+        "runId": "r_418b69e5e2a04dadaff3fa2995497e2d",
+        "callId": 4,
+        "callSeq": 1,
+        "arguments": {
+          "message": "failed"
+        },
+        "attemptId": 9,
+        "skillCode": "alg_live_ec8285eb1f44_failed",
+        "leaseOwner": "6b1d200d-47c6-45df-8189-73f7d7ad33a1_669516a6",
+        "leaseUntil": "2026-10-20T04:02:27.306616Z",
+        "triggerType": "DEBUG",
+        "idempotencyKey": "6e04a48a51a371abc9270625c03758456b4e1bd236c3f1243914fdf32acb3f02",
+        "nodeInstanceId": 8,
+        "skillVersionId": 3,
+        "guardedArguments": {
+          "message": "failed"
+        },
+        "authorityTriggerType": "DEBUG"
+      },
+      "skill_version_id": 3,
+      "delivery_attempts": 0,
+      "attempt_duration_ms": 465,
+      "delivery_lease_until": null,
+      "skill_contract_sha256": "ae8a900c9881d999cb496eb12153b73123aee244fc16ededb092fbf72ec31345"
+    },
+    "binding": {
+      "run_id": "r_418b69e5e2a04dadaff3fa2995497e2d",
+      "status": "DONE",
+      "call_id": 4,
+      "metadata": {
+        "image": "algorithm-proof:finite",
+        "protocol": "ALGORITHM",
+        "contractSha256": "ae8a900c9881d999cb496eb12153b73123aee244fc16ededb092fbf72ec31345",
+        "serviceAccount": "algorithm-proof",
+        "terminalEvidence": {
+          "apiSha256": "0525f43283d07b36b1f30a888e559e25b3b8d47fe9ac7540a7ea04b726a77cd7",
+          "condition": "Failed",
+          "namespace": "alg-live-ec8285eb1f44-failed",
+          "sourceKind": "K8S_JOB",
+          "sourceSha256": "1a5a76e203ad339d9727b7cdf60c59df4a2ddcff1e620defd2212e8c0220fbd5",
+          "externalJobId": "alg-020eedda3925f66ea82e8434ae12bb948483bebb",
+          "externalJobUid": "57baf85a-a26b-4ae8-84c2-351ef63bb48f",
+          "identitySha256": "33553591abff2e82427ad51888a0c17b0b0d7546ad1c4fb20197bcac73d3876b"
+        }
+      },
+      "tenant_id": "algorithm-live-ec8285eb1f44",
+      "attempt_id": 9,
+      "updated_at": "2026-10-20T12:00:57.88375+08:00",
+      "principal_id": "algorithm-live",
+      "send_started": true,
+      "external_job_id": "alg-020eedda3925f66ea82e8434ae12bb948483bebb",
+      "idempotency_key": "6e04a48a51a371abc9270625c03758456b4e1bd236c3f1243914fdf32acb3f02",
+      "external_job_uid": "57baf85a-a26b-4ae8-84c2-351ef63bb48f",
+      "request_snapshot": {
+        "mock": {},
+        "runId": "r_418b69e5e2a04dadaff3fa2995497e2d",
+        "callId": 4,
+        "callSeq": 1,
+        "arguments": {
+          "message": "failed"
+        },
+        "attemptId": 9,
+        "skillCode": "alg_live_ec8285eb1f44_failed",
+        "leaseOwner": "6b1d200d-47c6-45df-8189-73f7d7ad33a1_669516a6",
+        "leaseUntil": "2026-10-20T04:02:27.306616Z",
+        "triggerType": "DEBUG",
+        "idempotencyKey": "6e04a48a51a371abc9270625c03758456b4e1bd236c3f1243914fdf32acb3f02",
+        "nodeInstanceId": 8,
+        "skillVersionId": 3,
+        "guardedArguments": {
+          "message": "failed"
+        },
+        "authorityTriggerType": "DEBUG"
+      },
+      "skill_version_id": 3,
+      "external_namespace": "alg-live-ec8285eb1f44-failed",
+      "external_api_sha256": "0525f43283d07b36b1f30a888e559e25b3b8d47fe9ac7540a7ea04b726a77cd7",
+      "external_identity_sha256": "33553591abff2e82427ad51888a0c17b0b0d7546ad1c4fb20197bcac73d3876b"
+    }
+  },
+  "fixtureBefore": {
+    "posts": 1,
+    "jobGets": 1,
+    "podLists": 0,
+    "logGets": 0,
+    "denied": 0,
+    "authRejected": 0,
+    "mode": "failed",
+    "jobName": "alg-020eedda3925f66ea82e8434ae12bb948483bebb",
+    "jobUid": "57baf85a-a26b-4ae8-84c2-351ef63bb48f",
+    "routes": [
+      "GET /apis/batch/v1/namespaces/alg-live-ec8285eb1f44-failed/jobs/alg-020eedda3925f66ea82e8434ae12bb948483bebb",
+      "POST /apis/batch/v1/namespaces/alg-live-ec8285eb1f44-failed/jobs"
+    ],
+    "evidenceLevel": "finite-api-reception-only",
+    "clusterOrContainerExecution": false,
+    "logicalEngineCommitVerified": false
+  },
+  "reconcile": {
+    "status": "FAILED",
+    "result": {
+      "error": {
+        "reason": "原算法Job已核实Failed；不表示未生效或允许重新发送",
+        "semantic": "NON_RETRYABLE_FAILURE"
+      },
+      "owner": {
+        "runId": "r_418b69e5e2a04dadaff3fa2995497e2d",
+        "callId": 4,
+        "tenantId": "algorithm-live-ec8285eb1f44",
+        "attemptId": 9,
+        "skillCode": "alg_live_ec8285eb1f44_failed",
+        "principalId": "algorithm-live",
+        "nodeInstanceId": 8,
+        "skillVersionId": 3
+      },
+      "isMock": false,
+      "status": "FAILED",
+      "fileRefs": [],
+      "guardTrace": {
+        "roles": [
+          "SERVICE",
+          "EDITOR",
+          "ADMIN"
+        ],
+        "argsDigest": "f08ad0ad6a0220bd0b2a620f73cde0e54470877b0a9b7e260ca36e3263a6c786"
+      },
+      "structured": null,
+      "modelSummary": "原算法Job已核实Failed；不表示未生效或允许重新发送",
+      "cardPayloadJson": ""
+    },
+    "errorSemantic": "NON_RETRYABLE_FAILURE"
+  },
+  "after": {
+    "run": {
+      "id": 3,
+      "publicId": "r_418b69e5e2a04dadaff3fa2995497e2d",
+      "status": "FAILED",
+      "tenantId": "algorithm-live-ec8285eb1f44",
+      "principalId": "algorithm-live"
+    },
+    "node": {
+      "id": 8,
+      "error": {
+        "message": "NON_RETRYABLE_FAILURE",
+        "semantic": "NON_RETRYABLE_FAILURE"
+      },
+      "output": null,
+      "run_id": 3,
+      "status": "FAILED",
+      "ended_at": "2026-10-20T12:00:57.909572+08:00",
+      "released": false,
+      "step_seq": 2,
+      "node_type": "SKILL",
+      "pause_seq": null,
+      "definition": {
+        "id": "draft_skill",
+        "args": {
+          "message": "failed"
+        },
+        "type": "SKILL",
+        "skillRef": {
+          "code": "alg_live_ec8285eb1f44_failed",
+          "version": 1,
+          "execution": {
+            "readonly": true,
+            "idempotent": true,
+            "sideEffect": false,
+            "cancellable": false
+          },
+          "skillVersionId": 3
+        }
+      },
+      "started_at": "2026-10-20T12:00:57.306616+08:00",
+      "lease_owner": "6b1d200d-47c6-45df-8189-73f7d7ad33a1_669516a6",
+      "lease_until": "2026-10-20T12:02:27.712275+08:00",
+      "node_def_id": "draft_skill",
+      "input_digest": null,
+      "output_digest": null,
+      "join_semantics": null,
+      "winner_node_id": null,
+      "approval_context": null,
+      "committed_attempt_id": null,
+      "committed_output_ref": null
+    },
+    "tenantRuns": [
+      {
+        "id": 1,
+        "publicId": "r_78455d30c3b34e879f895a8db4e3d7cf"
+      },
+      {
+        "id": 2,
+        "publicId": "r_6e081b156e86429e801bbaea898549b6"
+      },
+      {
+        "id": 3,
+        "publicId": "r_418b69e5e2a04dadaff3fa2995497e2d"
+      }
+    ],
+    "calls": [
+      {
+        "id": 4,
+        "args": {
+          "message": "failed"
+        },
+        "result": {
+          "error": {
+            "reason": "原算法Job已核实Failed；不表示未生效或允许重新发送",
+            "semantic": "NON_RETRYABLE_FAILURE"
+          },
+          "owner": {
+            "runId": "r_418b69e5e2a04dadaff3fa2995497e2d",
+            "callId": 4,
+            "tenantId": "algorithm-live-ec8285eb1f44",
+            "attemptId": 9,
+            "skillCode": "alg_live_ec8285eb1f44_failed",
+            "principalId": "algorithm-live",
+            "nodeInstanceId": 8,
+            "skillVersionId": 3
+          },
+          "isMock": false,
+          "status": "FAILED",
+          "fileRefs": [],
+          "guardTrace": {
+            "roles": [
+              "SERVICE",
+              "EDITOR",
+              "ADMIN"
+            ],
+            "argsDigest": "f08ad0ad6a0220bd0b2a620f73cde0e54470877b0a9b7e260ca36e3263a6c786"
+          },
+          "structured": null,
+          "modelSummary": "原算法Job已核实Failed；不表示未生效或允许重新发送",
+          "cardPayloadJson": ""
+        },
+        "run_id": 3,
+        "status": "FAILED",
+        "is_mock": false,
+        "args_ref": "pg:call/6e04a48a51a371abc9270625c03758456b4e1bd236c3f1243914fdf32acb3f02/args",
+        "call_seq": 1,
+        "attempt_id": 9,
+        "claimed_at": "2026-10-20T12:00:57.382588+08:00",
+        "claimed_by": "6b1d200d-47c6-45df-8189-73f7d7ad33a1_669516a6",
+        "created_at": "2026-10-20T12:00:57.316242+08:00",
+        "result_ref": "pg:call/4/result",
+        "skill_code": "alg_live_ec8285eb1f44_failed",
+        "args_digest": "f08ad0ad6a0220bd0b2a620f73cde0e54470877b0a9b7e260ca36e3263a6c786",
+        "duration_ms": 465,
+        "claimed_lease": "2026-10-20T12:02:27.712275+08:00",
+        "mock_snapshot": {},
+        "error_semantic": "NON_RETRYABLE_FAILURE",
+        "recovery_error": null,
+        "idempotency_key": "6e04a48a51a371abc9270625c03758456b4e1bd236c3f1243914fdf32acb3f02",
+        "approval_context": null,
+        "node_instance_id": 8,
+        "recovery_next_at": null,
+        "skill_version_id": 3,
+        "recovery_attempts": 0,
+        "mock_source_digest": null,
+        "mock_source_call_id": null,
+        "readonly_retry_count": 0,
+        "skill_contract_sha256": "ae8a900c9881d999cb496eb12153b73123aee244fc16ededb092fbf72ec31345",
+        "debug_controls_revision": 0
+      }
+    ],
+    "facts": [
+      {
+        "result": {
+          "error": {
+            "reason": "原算法Job已核实Failed；不表示未生效或允许重新发送",
+            "semantic": "NON_RETRYABLE_FAILURE"
+          },
+          "owner": {
+            "runId": "r_418b69e5e2a04dadaff3fa2995497e2d",
+            "callId": 4,
+            "tenantId": "algorithm-live-ec8285eb1f44",
+            "attemptId": 9,
+            "skillCode": "alg_live_ec8285eb1f44_failed",
+            "principalId": "algorithm-live",
+            "nodeInstanceId": 8,
+            "skillVersionId": 3
+          },
+          "isMock": false,
+          "status": "FAILED",
+          "fileRefs": [],
+          "guardTrace": {
+            "roles": [
+              "SERVICE",
+              "EDITOR",
+              "ADMIN"
+            ],
+            "argsDigest": "f08ad0ad6a0220bd0b2a620f73cde0e54470877b0a9b7e260ca36e3263a6c786"
+          },
+          "structured": null,
+          "modelSummary": "原算法Job已核实Failed；不表示未生效或允许重新发送",
+          "cardPayloadJson": ""
+        },
+        "run_id": "r_418b69e5e2a04dadaff3fa2995497e2d",
+        "status": "FAILED",
+        "call_id": 4,
+        "is_mock": false,
+        "call_kind": "DEBUG",
+        "tenant_id": "algorithm-live-ec8285eb1f44",
+        "attempt_id": 9,
+        "created_at": "2026-10-20T12:00:57.39244+08:00",
+        "updated_at": "2026-10-20T12:00:57.905742+08:00",
+        "args_digest": "f08ad0ad6a0220bd0b2a620f73cde0e54470877b0a9b7e260ca36e3263a6c786",
+        "duration_ms": 465,
+        "principal_id": "algorithm-live",
+        "callback_error": null,
+        "callback_state": "DELIVERED",
+        "delivery_owner": null,
+        "execution_owner": "6b1d200d-47c6-45df-8189-73f7d7ad33a1_669516a6",
+        "next_delivery_at": "2026-10-20T12:00:57.88375+08:00",
+        "request_snapshot": {
+          "mock": {},
+          "runId": "r_418b69e5e2a04dadaff3fa2995497e2d",
+          "callId": 4,
+          "callSeq": 1,
+          "arguments": {
+            "message": "failed"
+          },
+          "attemptId": 9,
+          "skillCode": "alg_live_ec8285eb1f44_failed",
+          "leaseOwner": "6b1d200d-47c6-45df-8189-73f7d7ad33a1_669516a6",
+          "leaseUntil": "2026-10-20T04:02:27.306616Z",
+          "triggerType": "DEBUG",
+          "idempotencyKey": "6e04a48a51a371abc9270625c03758456b4e1bd236c3f1243914fdf32acb3f02",
+          "nodeInstanceId": 8,
+          "skillVersionId": 3,
+          "guardedArguments": {
+            "message": "failed"
+          },
+          "authorityTriggerType": "DEBUG"
+        },
+        "skill_version_id": 3,
+        "delivery_attempts": 0,
+        "attempt_duration_ms": 465,
+        "delivery_lease_until": null,
+        "skill_contract_sha256": "ae8a900c9881d999cb496eb12153b73123aee244fc16ededb092fbf72ec31345"
+      }
+    ],
+    "bindings": [
+      {
+        "run_id": "r_418b69e5e2a04dadaff3fa2995497e2d",
+        "status": "DONE",
+        "call_id": 4,
+        "metadata": {
+          "image": "algorithm-proof:finite",
+          "protocol": "ALGORITHM",
+          "contractSha256": "ae8a900c9881d999cb496eb12153b73123aee244fc16ededb092fbf72ec31345",
+          "serviceAccount": "algorithm-proof",
+          "terminalEvidence": {
+            "apiSha256": "0525f43283d07b36b1f30a888e559e25b3b8d47fe9ac7540a7ea04b726a77cd7",
+            "condition": "Failed",
+            "namespace": "alg-live-ec8285eb1f44-failed",
+            "sourceKind": "K8S_JOB",
+            "sourceSha256": "1a5a76e203ad339d9727b7cdf60c59df4a2ddcff1e620defd2212e8c0220fbd5",
+            "externalJobId": "alg-020eedda3925f66ea82e8434ae12bb948483bebb",
+            "externalJobUid": "57baf85a-a26b-4ae8-84c2-351ef63bb48f",
+            "identitySha256": "33553591abff2e82427ad51888a0c17b0b0d7546ad1c4fb20197bcac73d3876b"
+          }
+        },
+        "tenant_id": "algorithm-live-ec8285eb1f44",
+        "attempt_id": 9,
+        "updated_at": "2026-10-20T12:00:57.88375+08:00",
+        "principal_id": "algorithm-live",
+        "send_started": true,
+        "external_job_id": "alg-020eedda3925f66ea82e8434ae12bb948483bebb",
+        "idempotency_key": "6e04a48a51a371abc9270625c03758456b4e1bd236c3f1243914fdf32acb3f02",
+        "external_job_uid": "57baf85a-a26b-4ae8-84c2-351ef63bb48f",
+        "request_snapshot": {
+          "mock": {},
+          "runId": "r_418b69e5e2a04dadaff3fa2995497e2d",
+          "callId": 4,
+          "callSeq": 1,
+          "arguments": {
+            "message": "failed"
+          },
+          "attemptId": 9,
+          "skillCode": "alg_live_ec8285eb1f44_failed",
+          "leaseOwner": "6b1d200d-47c6-45df-8189-73f7d7ad33a1_669516a6",
+          "leaseUntil": "2026-10-20T04:02:27.306616Z",
+          "triggerType": "DEBUG",
+          "idempotencyKey": "6e04a48a51a371abc9270625c03758456b4e1bd236c3f1243914fdf32acb3f02",
+          "nodeInstanceId": 8,
+          "skillVersionId": 3,
+          "guardedArguments": {
+            "message": "failed"
+          },
+          "authorityTriggerType": "DEBUG"
+        },
+        "skill_version_id": 3,
+        "external_namespace": "alg-live-ec8285eb1f44-failed",
+        "external_api_sha256": "0525f43283d07b36b1f30a888e559e25b3b8d47fe9ac7540a7ea04b726a77cd7",
+        "external_identity_sha256": "33553591abff2e82427ad51888a0c17b0b0d7546ad1c4fb20197bcac73d3876b"
+      }
+    ],
+    "toolCommits": 0,
+    "attempts": 1,
+    "runCalls": 1,
+    "runFacts": 1,
+    "runBindings": 1,
+    "attemptRows": [
+      {
+        "id": 9,
+        "error": {
+          "message": "NON_RETRYABLE_FAILURE",
+          "semantic": "NON_RETRYABLE_FAILURE"
+        },
+        "status": "FAILED",
+        "ended_at": "2026-10-20T12:00:57.909572+08:00",
+        "response": null,
+        "attempt_no": 1,
+        "checkpoint": {},
+        "started_at": "2026-10-20T12:00:57.306616+08:00",
+        "response_ref": null,
+        "routed_model": null,
+        "idempotency_key": "3b840c12d9c419a52d3c2277bb0df2e53869459649734be7276eefa6d8104245",
+        "node_instance_id": 8,
+        "request_snapshot": {},
+        "request_snapshot_ref": "pg:attempt/9"
+      }
+    ],
+    "terminalNotes": [
+      {
+        "id": 4,
+        "kind": "TOOL_EXECUTION_FACT",
+        "payload": {
+          "owner": "6b1d200d-47c6-45df-8189-73f7d7ad33a1_669516a6",
+          "callId": 4,
+          "isMock": false,
+          "result": {
+            "error": {
+              "reason": "原算法Job已核实Failed；不表示未生效或允许重新发送",
+              "semantic": "NON_RETRYABLE_FAILURE"
+            },
+            "owner": {
+              "runId": "r_418b69e5e2a04dadaff3fa2995497e2d",
+              "callId": 4,
+              "tenantId": "algorithm-live-ec8285eb1f44",
+              "attemptId": 9,
+              "skillCode": "alg_live_ec8285eb1f44_failed",
+              "principalId": "algorithm-live",
+              "nodeInstanceId": 8,
+              "skillVersionId": 3
+            },
+            "isMock": false,
+            "status": "FAILED",
+            "fileRefs": [],
+            "guardTrace": {
+              "roles": [
+                "SERVICE",
+                "EDITOR",
+                "ADMIN"
+              ],
+              "argsDigest": "f08ad0ad6a0220bd0b2a620f73cde0e54470877b0a9b7e260ca36e3263a6c786"
+            },
+            "structured": null,
+            "modelSummary": "原算法Job已核实Failed；不表示未生效或允许重新发送",
+            "cardPayloadJson": ""
+          },
+          "status": "FAILED",
+          "accepted": true,
+          "attemptId": 9,
+          "durationMs": 465,
+          "factDigest": "7c21b142d473644ccb06c1b4358001c604db484ea805b709d491e29aa44650a7",
+          "errorSemantic": "NON_RETRYABLE_FAILURE"
+        },
+        "attempt_id": 9,
+        "created_at": "2026-10-20T12:00:57.898034+08:00",
+        "node_instance_id": 8
+      }
+    ],
+    "acceptedTerminalFacts": 1,
+    "events": [
+      {
+        "id": 26,
+        "seq": 1,
+        "type": "RUN_STARTED",
+        "run_id": 3,
+        "payload": {
+          "runId": "r_418b69e5e2a04dadaff3fa2995497e2d",
+          "triggerType": "DEBUG"
+        },
+        "created_at": "2026-10-20T12:00:57.270344+08:00"
+      },
+      {
+        "id": 27,
+        "seq": 2,
+        "type": "NODE_STARTED",
+        "run_id": 3,
+        "payload": {
+          "attemptId": 8,
+          "attemptNo": 1,
+          "nodeInstanceId": 7
+        },
+        "created_at": "2026-10-20T12:00:57.286831+08:00"
+      },
+      {
+        "id": 28,
+        "seq": 3,
+        "type": "LOGIC_RESULT_COMMITTED",
+        "run_id": 3,
+        "payload": {
+          "attemptId": 8,
+          "nodeInstanceId": 7
+        },
+        "created_at": "2026-10-20T12:00:57.300713+08:00"
+      },
+      {
+        "id": 29,
+        "seq": 4,
+        "type": "NODE_FINISHED",
+        "run_id": 3,
+        "payload": {
+          "status": "SUCCEEDED",
+          "nodeInstanceId": 7
+        },
+        "created_at": "2026-10-20T12:00:57.300713+08:00"
+      },
+      {
+        "id": 30,
+        "seq": 5,
+        "type": "NODE_STARTED",
+        "run_id": 3,
+        "payload": {
+          "attemptId": 9,
+          "attemptNo": 1,
+          "nodeInstanceId": 8
+        },
+        "created_at": "2026-10-20T12:00:57.306616+08:00"
+      },
+      {
+        "id": 31,
+        "seq": 6,
+        "type": "NODE_FAILED",
+        "run_id": 3,
+        "payload": {
+          "error": {
+            "message": "NON_RETRYABLE_FAILURE",
+            "semantic": "NON_RETRYABLE_FAILURE"
+          },
+          "nodeInstanceId": 8
+        },
+        "created_at": "2026-10-20T12:00:57.909572+08:00"
+      },
+      {
+        "id": 32,
+        "seq": 7,
+        "type": "NODE_FAILED",
+        "run_id": 3,
+        "payload": {
+          "status": "FAILED",
+          "nodeInstanceId": 9
+        },
+        "created_at": "2026-10-20T12:00:57.913344+08:00"
+      },
+      {
+        "id": 33,
+        "seq": 8,
+        "type": "RUN_FINISHED",
+        "run_id": 3,
+        "payload": {
+          "status": "FAILED"
+        },
+        "created_at": "2026-10-20T12:00:57.915841+08:00"
+      }
+    ],
+    "call": {
+      "id": 4,
+      "args": {
+        "message": "failed"
+      },
+      "result": {
+        "error": {
+          "reason": "原算法Job已核实Failed；不表示未生效或允许重新发送",
+          "semantic": "NON_RETRYABLE_FAILURE"
+        },
+        "owner": {
+          "runId": "r_418b69e5e2a04dadaff3fa2995497e2d",
+          "callId": 4,
+          "tenantId": "algorithm-live-ec8285eb1f44",
+          "attemptId": 9,
+          "skillCode": "alg_live_ec8285eb1f44_failed",
+          "principalId": "algorithm-live",
+          "nodeInstanceId": 8,
+          "skillVersionId": 3
+        },
+        "isMock": false,
+        "status": "FAILED",
+        "fileRefs": [],
+        "guardTrace": {
+          "roles": [
+            "SERVICE",
+            "EDITOR",
+            "ADMIN"
+          ],
+          "argsDigest": "f08ad0ad6a0220bd0b2a620f73cde0e54470877b0a9b7e260ca36e3263a6c786"
+        },
+        "structured": null,
+        "modelSummary": "原算法Job已核实Failed；不表示未生效或允许重新发送",
+        "cardPayloadJson": ""
+      },
+      "run_id": 3,
+      "status": "FAILED",
+      "is_mock": false,
+      "args_ref": "pg:call/6e04a48a51a371abc9270625c03758456b4e1bd236c3f1243914fdf32acb3f02/args",
+      "call_seq": 1,
+      "attempt_id": 9,
+      "claimed_at": "2026-10-20T12:00:57.382588+08:00",
+      "claimed_by": "6b1d200d-47c6-45df-8189-73f7d7ad33a1_669516a6",
+      "created_at": "2026-10-20T12:00:57.316242+08:00",
+      "result_ref": "pg:call/4/result",
+      "skill_code": "alg_live_ec8285eb1f44_failed",
+      "args_digest": "f08ad0ad6a0220bd0b2a620f73cde0e54470877b0a9b7e260ca36e3263a6c786",
+      "duration_ms": 465,
+      "claimed_lease": "2026-10-20T12:02:27.712275+08:00",
+      "mock_snapshot": {},
+      "error_semantic": "NON_RETRYABLE_FAILURE",
+      "recovery_error": null,
+      "idempotency_key": "6e04a48a51a371abc9270625c03758456b4e1bd236c3f1243914fdf32acb3f02",
+      "approval_context": null,
+      "node_instance_id": 8,
+      "recovery_next_at": null,
+      "skill_version_id": 3,
+      "recovery_attempts": 0,
+      "mock_source_digest": null,
+      "mock_source_call_id": null,
+      "readonly_retry_count": 0,
+      "skill_contract_sha256": "ae8a900c9881d999cb496eb12153b73123aee244fc16ededb092fbf72ec31345",
+      "debug_controls_revision": 0
+    },
+    "fact": {
+      "result": {
+        "error": {
+          "reason": "原算法Job已核实Failed；不表示未生效或允许重新发送",
+          "semantic": "NON_RETRYABLE_FAILURE"
+        },
+        "owner": {
+          "runId": "r_418b69e5e2a04dadaff3fa2995497e2d",
+          "callId": 4,
+          "tenantId": "algorithm-live-ec8285eb1f44",
+          "attemptId": 9,
+          "skillCode": "alg_live_ec8285eb1f44_failed",
+          "principalId": "algorithm-live",
+          "nodeInstanceId": 8,
+          "skillVersionId": 3
+        },
+        "isMock": false,
+        "status": "FAILED",
+        "fileRefs": [],
+        "guardTrace": {
+          "roles": [
+            "SERVICE",
+            "EDITOR",
+            "ADMIN"
+          ],
+          "argsDigest": "f08ad0ad6a0220bd0b2a620f73cde0e54470877b0a9b7e260ca36e3263a6c786"
+        },
+        "structured": null,
+        "modelSummary": "原算法Job已核实Failed；不表示未生效或允许重新发送",
+        "cardPayloadJson": ""
+      },
+      "run_id": "r_418b69e5e2a04dadaff3fa2995497e2d",
+      "status": "FAILED",
+      "call_id": 4,
+      "is_mock": false,
+      "call_kind": "DEBUG",
+      "tenant_id": "algorithm-live-ec8285eb1f44",
+      "attempt_id": 9,
+      "created_at": "2026-10-20T12:00:57.39244+08:00",
+      "updated_at": "2026-10-20T12:00:57.905742+08:00",
+      "args_digest": "f08ad0ad6a0220bd0b2a620f73cde0e54470877b0a9b7e260ca36e3263a6c786",
+      "duration_ms": 465,
+      "principal_id": "algorithm-live",
+      "callback_error": null,
+      "callback_state": "DELIVERED",
+      "delivery_owner": null,
+      "execution_owner": "6b1d200d-47c6-45df-8189-73f7d7ad33a1_669516a6",
+      "next_delivery_at": "2026-10-20T12:00:57.88375+08:00",
+      "request_snapshot": {
+        "mock": {},
+        "runId": "r_418b69e5e2a04dadaff3fa2995497e2d",
+        "callId": 4,
+        "callSeq": 1,
+        "arguments": {
+          "message": "failed"
+        },
+        "attemptId": 9,
+        "skillCode": "alg_live_ec8285eb1f44_failed",
+        "leaseOwner": "6b1d200d-47c6-45df-8189-73f7d7ad33a1_669516a6",
+        "leaseUntil": "2026-10-20T04:02:27.306616Z",
+        "triggerType": "DEBUG",
+        "idempotencyKey": "6e04a48a51a371abc9270625c03758456b4e1bd236c3f1243914fdf32acb3f02",
+        "nodeInstanceId": 8,
+        "skillVersionId": 3,
+        "guardedArguments": {
+          "message": "failed"
+        },
+        "authorityTriggerType": "DEBUG"
+      },
+      "skill_version_id": 3,
+      "delivery_attempts": 0,
+      "attempt_duration_ms": 465,
+      "delivery_lease_until": null,
+      "skill_contract_sha256": "ae8a900c9881d999cb496eb12153b73123aee244fc16ededb092fbf72ec31345"
+    },
+    "binding": {
+      "run_id": "r_418b69e5e2a04dadaff3fa2995497e2d",
+      "status": "DONE",
+      "call_id": 4,
+      "metadata": {
+        "image": "algorithm-proof:finite",
+        "protocol": "ALGORITHM",
+        "contractSha256": "ae8a900c9881d999cb496eb12153b73123aee244fc16ededb092fbf72ec31345",
+        "serviceAccount": "algorithm-proof",
+        "terminalEvidence": {
+          "apiSha256": "0525f43283d07b36b1f30a888e559e25b3b8d47fe9ac7540a7ea04b726a77cd7",
+          "condition": "Failed",
+          "namespace": "alg-live-ec8285eb1f44-failed",
+          "sourceKind": "K8S_JOB",
+          "sourceSha256": "1a5a76e203ad339d9727b7cdf60c59df4a2ddcff1e620defd2212e8c0220fbd5",
+          "externalJobId": "alg-020eedda3925f66ea82e8434ae12bb948483bebb",
+          "externalJobUid": "57baf85a-a26b-4ae8-84c2-351ef63bb48f",
+          "identitySha256": "33553591abff2e82427ad51888a0c17b0b0d7546ad1c4fb20197bcac73d3876b"
+        }
+      },
+      "tenant_id": "algorithm-live-ec8285eb1f44",
+      "attempt_id": 9,
+      "updated_at": "2026-10-20T12:00:57.88375+08:00",
+      "principal_id": "algorithm-live",
+      "send_started": true,
+      "external_job_id": "alg-020eedda3925f66ea82e8434ae12bb948483bebb",
+      "idempotency_key": "6e04a48a51a371abc9270625c03758456b4e1bd236c3f1243914fdf32acb3f02",
+      "external_job_uid": "57baf85a-a26b-4ae8-84c2-351ef63bb48f",
+      "request_snapshot": {
+        "mock": {},
+        "runId": "r_418b69e5e2a04dadaff3fa2995497e2d",
+        "callId": 4,
+        "callSeq": 1,
+        "arguments": {
+          "message": "failed"
+        },
+        "attemptId": 9,
+        "skillCode": "alg_live_ec8285eb1f44_failed",
+        "leaseOwner": "6b1d200d-47c6-45df-8189-73f7d7ad33a1_669516a6",
+        "leaseUntil": "2026-10-20T04:02:27.306616Z",
+        "triggerType": "DEBUG",
+        "idempotencyKey": "6e04a48a51a371abc9270625c03758456b4e1bd236c3f1243914fdf32acb3f02",
+        "nodeInstanceId": 8,
+        "skillVersionId": 3,
+        "guardedArguments": {
+          "message": "failed"
+        },
+        "authorityTriggerType": "DEBUG"
+      },
+      "skill_version_id": 3,
+      "external_namespace": "alg-live-ec8285eb1f44-failed",
+      "external_api_sha256": "0525f43283d07b36b1f30a888e559e25b3b8d47fe9ac7540a7ea04b726a77cd7",
+      "external_identity_sha256": "33553591abff2e82427ad51888a0c17b0b0d7546ad1c4fb20197bcac73d3876b"
+    }
+  },
+  "recheck": {
+    "reason": "实际只读连接、权限或Schema检查未通过",
+    "ok": false,
+    "latencyMs": 1,
+    "candidateSha256": "ae8a900c9881d999cb496eb12153b73123aee244fc16ededb092fbf72ec31345"
+  },
+  "afterRecheck": {
+    "run": {
+      "id": 3,
+      "publicId": "r_418b69e5e2a04dadaff3fa2995497e2d",
+      "status": "FAILED",
+      "tenantId": "algorithm-live-ec8285eb1f44",
+      "principalId": "algorithm-live"
+    },
+    "node": {
+      "id": 8,
+      "error": {
+        "message": "NON_RETRYABLE_FAILURE",
+        "semantic": "NON_RETRYABLE_FAILURE"
+      },
+      "output": null,
+      "run_id": 3,
+      "status": "FAILED",
+      "ended_at": "2026-10-20T12:00:57.909572+08:00",
+      "released": false,
+      "step_seq": 2,
+      "node_type": "SKILL",
+      "pause_seq": null,
+      "definition": {
+        "id": "draft_skill",
+        "args": {
+          "message": "failed"
+        },
+        "type": "SKILL",
+        "skillRef": {
+          "code": "alg_live_ec8285eb1f44_failed",
+          "version": 1,
+          "execution": {
+            "readonly": true,
+            "idempotent": true,
+            "sideEffect": false,
+            "cancellable": false
+          },
+          "skillVersionId": 3
+        }
+      },
+      "started_at": "2026-10-20T12:00:57.306616+08:00",
+      "lease_owner": "6b1d200d-47c6-45df-8189-73f7d7ad33a1_669516a6",
+      "lease_until": "2026-10-20T12:02:27.712275+08:00",
+      "node_def_id": "draft_skill",
+      "input_digest": null,
+      "output_digest": null,
+      "join_semantics": null,
+      "winner_node_id": null,
+      "approval_context": null,
+      "committed_attempt_id": null,
+      "committed_output_ref": null
+    },
+    "tenantRuns": [
+      {
+        "id": 1,
+        "publicId": "r_78455d30c3b34e879f895a8db4e3d7cf"
+      },
+      {
+        "id": 2,
+        "publicId": "r_6e081b156e86429e801bbaea898549b6"
+      },
+      {
+        "id": 3,
+        "publicId": "r_418b69e5e2a04dadaff3fa2995497e2d"
+      }
+    ],
+    "calls": [
+      {
+        "id": 4,
+        "args": {
+          "message": "failed"
+        },
+        "result": {
+          "error": {
+            "reason": "原算法Job已核实Failed；不表示未生效或允许重新发送",
+            "semantic": "NON_RETRYABLE_FAILURE"
+          },
+          "owner": {
+            "runId": "r_418b69e5e2a04dadaff3fa2995497e2d",
+            "callId": 4,
+            "tenantId": "algorithm-live-ec8285eb1f44",
+            "attemptId": 9,
+            "skillCode": "alg_live_ec8285eb1f44_failed",
+            "principalId": "algorithm-live",
+            "nodeInstanceId": 8,
+            "skillVersionId": 3
+          },
+          "isMock": false,
+          "status": "FAILED",
+          "fileRefs": [],
+          "guardTrace": {
+            "roles": [
+              "SERVICE",
+              "EDITOR",
+              "ADMIN"
+            ],
+            "argsDigest": "f08ad0ad6a0220bd0b2a620f73cde0e54470877b0a9b7e260ca36e3263a6c786"
+          },
+          "structured": null,
+          "modelSummary": "原算法Job已核实Failed；不表示未生效或允许重新发送",
+          "cardPayloadJson": ""
+        },
+        "run_id": 3,
+        "status": "FAILED",
+        "is_mock": false,
+        "args_ref": "pg:call/6e04a48a51a371abc9270625c03758456b4e1bd236c3f1243914fdf32acb3f02/args",
+        "call_seq": 1,
+        "attempt_id": 9,
+        "claimed_at": "2026-10-20T12:00:57.382588+08:00",
+        "claimed_by": "6b1d200d-47c6-45df-8189-73f7d7ad33a1_669516a6",
+        "created_at": "2026-10-20T12:00:57.316242+08:00",
+        "result_ref": "pg:call/4/result",
+        "skill_code": "alg_live_ec8285eb1f44_failed",
+        "args_digest": "f08ad0ad6a0220bd0b2a620f73cde0e54470877b0a9b7e260ca36e3263a6c786",
+        "duration_ms": 465,
+        "claimed_lease": "2026-10-20T12:02:27.712275+08:00",
+        "mock_snapshot": {},
+        "error_semantic": "NON_RETRYABLE_FAILURE",
+        "recovery_error": null,
+        "idempotency_key": "6e04a48a51a371abc9270625c03758456b4e1bd236c3f1243914fdf32acb3f02",
+        "approval_context": null,
+        "node_instance_id": 8,
+        "recovery_next_at": null,
+        "skill_version_id": 3,
+        "recovery_attempts": 0,
+        "mock_source_digest": null,
+        "mock_source_call_id": null,
+        "readonly_retry_count": 0,
+        "skill_contract_sha256": "ae8a900c9881d999cb496eb12153b73123aee244fc16ededb092fbf72ec31345",
+        "debug_controls_revision": 0
+      }
+    ],
+    "facts": [
+      {
+        "result": {
+          "error": {
+            "reason": "原算法Job已核实Failed；不表示未生效或允许重新发送",
+            "semantic": "NON_RETRYABLE_FAILURE"
+          },
+          "owner": {
+            "runId": "r_418b69e5e2a04dadaff3fa2995497e2d",
+            "callId": 4,
+            "tenantId": "algorithm-live-ec8285eb1f44",
+            "attemptId": 9,
+            "skillCode": "alg_live_ec8285eb1f44_failed",
+            "principalId": "algorithm-live",
+            "nodeInstanceId": 8,
+            "skillVersionId": 3
+          },
+          "isMock": false,
+          "status": "FAILED",
+          "fileRefs": [],
+          "guardTrace": {
+            "roles": [
+              "SERVICE",
+              "EDITOR",
+              "ADMIN"
+            ],
+            "argsDigest": "f08ad0ad6a0220bd0b2a620f73cde0e54470877b0a9b7e260ca36e3263a6c786"
+          },
+          "structured": null,
+          "modelSummary": "原算法Job已核实Failed；不表示未生效或允许重新发送",
+          "cardPayloadJson": ""
+        },
+        "run_id": "r_418b69e5e2a04dadaff3fa2995497e2d",
+        "status": "FAILED",
+        "call_id": 4,
+        "is_mock": false,
+        "call_kind": "DEBUG",
+        "tenant_id": "algorithm-live-ec8285eb1f44",
+        "attempt_id": 9,
+        "created_at": "2026-10-20T12:00:57.39244+08:00",
+        "updated_at": "2026-10-20T12:00:57.905742+08:00",
+        "args_digest": "f08ad0ad6a0220bd0b2a620f73cde0e54470877b0a9b7e260ca36e3263a6c786",
+        "duration_ms": 465,
+        "principal_id": "algorithm-live",
+        "callback_error": null,
+        "callback_state": "DELIVERED",
+        "delivery_owner": null,
+        "execution_owner": "6b1d200d-47c6-45df-8189-73f7d7ad33a1_669516a6",
+        "next_delivery_at": "2026-10-20T12:00:57.88375+08:00",
+        "request_snapshot": {
+          "mock": {},
+          "runId": "r_418b69e5e2a04dadaff3fa2995497e2d",
+          "callId": 4,
+          "callSeq": 1,
+          "arguments": {
+            "message": "failed"
+          },
+          "attemptId": 9,
+          "skillCode": "alg_live_ec8285eb1f44_failed",
+          "leaseOwner": "6b1d200d-47c6-45df-8189-73f7d7ad33a1_669516a6",
+          "leaseUntil": "2026-10-20T04:02:27.306616Z",
+          "triggerType": "DEBUG",
+          "idempotencyKey": "6e04a48a51a371abc9270625c03758456b4e1bd236c3f1243914fdf32acb3f02",
+          "nodeInstanceId": 8,
+          "skillVersionId": 3,
+          "guardedArguments": {
+            "message": "failed"
+          },
+          "authorityTriggerType": "DEBUG"
+        },
+        "skill_version_id": 3,
+        "delivery_attempts": 0,
+        "attempt_duration_ms": 465,
+        "delivery_lease_until": null,
+        "skill_contract_sha256": "ae8a900c9881d999cb496eb12153b73123aee244fc16ededb092fbf72ec31345"
+      }
+    ],
+    "bindings": [
+      {
+        "run_id": "r_418b69e5e2a04dadaff3fa2995497e2d",
+        "status": "DONE",
+        "call_id": 4,
+        "metadata": {
+          "image": "algorithm-proof:finite",
+          "protocol": "ALGORITHM",
+          "contractSha256": "ae8a900c9881d999cb496eb12153b73123aee244fc16ededb092fbf72ec31345",
+          "serviceAccount": "algorithm-proof",
+          "terminalEvidence": {
+            "apiSha256": "0525f43283d07b36b1f30a888e559e25b3b8d47fe9ac7540a7ea04b726a77cd7",
+            "condition": "Failed",
+            "namespace": "alg-live-ec8285eb1f44-failed",
+            "sourceKind": "K8S_JOB",
+            "sourceSha256": "1a5a76e203ad339d9727b7cdf60c59df4a2ddcff1e620defd2212e8c0220fbd5",
+            "externalJobId": "alg-020eedda3925f66ea82e8434ae12bb948483bebb",
+            "externalJobUid": "57baf85a-a26b-4ae8-84c2-351ef63bb48f",
+            "identitySha256": "33553591abff2e82427ad51888a0c17b0b0d7546ad1c4fb20197bcac73d3876b"
+          }
+        },
+        "tenant_id": "algorithm-live-ec8285eb1f44",
+        "attempt_id": 9,
+        "updated_at": "2026-10-20T12:00:57.88375+08:00",
+        "principal_id": "algorithm-live",
+        "send_started": true,
+        "external_job_id": "alg-020eedda3925f66ea82e8434ae12bb948483bebb",
+        "idempotency_key": "6e04a48a51a371abc9270625c03758456b4e1bd236c3f1243914fdf32acb3f02",
+        "external_job_uid": "57baf85a-a26b-4ae8-84c2-351ef63bb48f",
+        "request_snapshot": {
+          "mock": {},
+          "runId": "r_418b69e5e2a04dadaff3fa2995497e2d",
+          "callId": 4,
+          "callSeq": 1,
+          "arguments": {
+            "message": "failed"
+          },
+          "attemptId": 9,
+          "skillCode": "alg_live_ec8285eb1f44_failed",
+          "leaseOwner": "6b1d200d-47c6-45df-8189-73f7d7ad33a1_669516a6",
+          "leaseUntil": "2026-10-20T04:02:27.306616Z",
+          "triggerType": "DEBUG",
+          "idempotencyKey": "6e04a48a51a371abc9270625c03758456b4e1bd236c3f1243914fdf32acb3f02",
+          "nodeInstanceId": 8,
+          "skillVersionId": 3,
+          "guardedArguments": {
+            "message": "failed"
+          },
+          "authorityTriggerType": "DEBUG"
+        },
+        "skill_version_id": 3,
+        "external_namespace": "alg-live-ec8285eb1f44-failed",
+        "external_api_sha256": "0525f43283d07b36b1f30a888e559e25b3b8d47fe9ac7540a7ea04b726a77cd7",
+        "external_identity_sha256": "33553591abff2e82427ad51888a0c17b0b0d7546ad1c4fb20197bcac73d3876b"
+      }
+    ],
+    "toolCommits": 0,
+    "attempts": 1,
+    "runCalls": 1,
+    "runFacts": 1,
+    "runBindings": 1,
+    "attemptRows": [
+      {
+        "id": 9,
+        "error": {
+          "message": "NON_RETRYABLE_FAILURE",
+          "semantic": "NON_RETRYABLE_FAILURE"
+        },
+        "status": "FAILED",
+        "ended_at": "2026-10-20T12:00:57.909572+08:00",
+        "response": null,
+        "attempt_no": 1,
+        "checkpoint": {},
+        "started_at": "2026-10-20T12:00:57.306616+08:00",
+        "response_ref": null,
+        "routed_model": null,
+        "idempotency_key": "3b840c12d9c419a52d3c2277bb0df2e53869459649734be7276eefa6d8104245",
+        "node_instance_id": 8,
+        "request_snapshot": {},
+        "request_snapshot_ref": "pg:attempt/9"
+      }
+    ],
+    "terminalNotes": [
+      {
+        "id": 4,
+        "kind": "TOOL_EXECUTION_FACT",
+        "payload": {
+          "owner": "6b1d200d-47c6-45df-8189-73f7d7ad33a1_669516a6",
+          "callId": 4,
+          "isMock": false,
+          "result": {
+            "error": {
+              "reason": "原算法Job已核实Failed；不表示未生效或允许重新发送",
+              "semantic": "NON_RETRYABLE_FAILURE"
+            },
+            "owner": {
+              "runId": "r_418b69e5e2a04dadaff3fa2995497e2d",
+              "callId": 4,
+              "tenantId": "algorithm-live-ec8285eb1f44",
+              "attemptId": 9,
+              "skillCode": "alg_live_ec8285eb1f44_failed",
+              "principalId": "algorithm-live",
+              "nodeInstanceId": 8,
+              "skillVersionId": 3
+            },
+            "isMock": false,
+            "status": "FAILED",
+            "fileRefs": [],
+            "guardTrace": {
+              "roles": [
+                "SERVICE",
+                "EDITOR",
+                "ADMIN"
+              ],
+              "argsDigest": "f08ad0ad6a0220bd0b2a620f73cde0e54470877b0a9b7e260ca36e3263a6c786"
+            },
+            "structured": null,
+            "modelSummary": "原算法Job已核实Failed；不表示未生效或允许重新发送",
+            "cardPayloadJson": ""
+          },
+          "status": "FAILED",
+          "accepted": true,
+          "attemptId": 9,
+          "durationMs": 465,
+          "factDigest": "7c21b142d473644ccb06c1b4358001c604db484ea805b709d491e29aa44650a7",
+          "errorSemantic": "NON_RETRYABLE_FAILURE"
+        },
+        "attempt_id": 9,
+        "created_at": "2026-10-20T12:00:57.898034+08:00",
+        "node_instance_id": 8
+      }
+    ],
+    "acceptedTerminalFacts": 1,
+    "events": [
+      {
+        "id": 26,
+        "seq": 1,
+        "type": "RUN_STARTED",
+        "run_id": 3,
+        "payload": {
+          "runId": "r_418b69e5e2a04dadaff3fa2995497e2d",
+          "triggerType": "DEBUG"
+        },
+        "created_at": "2026-10-20T12:00:57.270344+08:00"
+      },
+      {
+        "id": 27,
+        "seq": 2,
+        "type": "NODE_STARTED",
+        "run_id": 3,
+        "payload": {
+          "attemptId": 8,
+          "attemptNo": 1,
+          "nodeInstanceId": 7
+        },
+        "created_at": "2026-10-20T12:00:57.286831+08:00"
+      },
+      {
+        "id": 28,
+        "seq": 3,
+        "type": "LOGIC_RESULT_COMMITTED",
+        "run_id": 3,
+        "payload": {
+          "attemptId": 8,
+          "nodeInstanceId": 7
+        },
+        "created_at": "2026-10-20T12:00:57.300713+08:00"
+      },
+      {
+        "id": 29,
+        "seq": 4,
+        "type": "NODE_FINISHED",
+        "run_id": 3,
+        "payload": {
+          "status": "SUCCEEDED",
+          "nodeInstanceId": 7
+        },
+        "created_at": "2026-10-20T12:00:57.300713+08:00"
+      },
+      {
+        "id": 30,
+        "seq": 5,
+        "type": "NODE_STARTED",
+        "run_id": 3,
+        "payload": {
+          "attemptId": 9,
+          "attemptNo": 1,
+          "nodeInstanceId": 8
+        },
+        "created_at": "2026-10-20T12:00:57.306616+08:00"
+      },
+      {
+        "id": 31,
+        "seq": 6,
+        "type": "NODE_FAILED",
+        "run_id": 3,
+        "payload": {
+          "error": {
+            "message": "NON_RETRYABLE_FAILURE",
+            "semantic": "NON_RETRYABLE_FAILURE"
+          },
+          "nodeInstanceId": 8
+        },
+        "created_at": "2026-10-20T12:00:57.909572+08:00"
+      },
+      {
+        "id": 32,
+        "seq": 7,
+        "type": "NODE_FAILED",
+        "run_id": 3,
+        "payload": {
+          "status": "FAILED",
+          "nodeInstanceId": 9
+        },
+        "created_at": "2026-10-20T12:00:57.913344+08:00"
+      },
+      {
+        "id": 33,
+        "seq": 8,
+        "type": "RUN_FINISHED",
+        "run_id": 3,
+        "payload": {
+          "status": "FAILED"
+        },
+        "created_at": "2026-10-20T12:00:57.915841+08:00"
+      }
+    ],
+    "call": {
+      "id": 4,
+      "args": {
+        "message": "failed"
+      },
+      "result": {
+        "error": {
+          "reason": "原算法Job已核实Failed；不表示未生效或允许重新发送",
+          "semantic": "NON_RETRYABLE_FAILURE"
+        },
+        "owner": {
+          "runId": "r_418b69e5e2a04dadaff3fa2995497e2d",
+          "callId": 4,
+          "tenantId": "algorithm-live-ec8285eb1f44",
+          "attemptId": 9,
+          "skillCode": "alg_live_ec8285eb1f44_failed",
+          "principalId": "algorithm-live",
+          "nodeInstanceId": 8,
+          "skillVersionId": 3
+        },
+        "isMock": false,
+        "status": "FAILED",
+        "fileRefs": [],
+        "guardTrace": {
+          "roles": [
+            "SERVICE",
+            "EDITOR",
+            "ADMIN"
+          ],
+          "argsDigest": "f08ad0ad6a0220bd0b2a620f73cde0e54470877b0a9b7e260ca36e3263a6c786"
+        },
+        "structured": null,
+        "modelSummary": "原算法Job已核实Failed；不表示未生效或允许重新发送",
+        "cardPayloadJson": ""
+      },
+      "run_id": 3,
+      "status": "FAILED",
+      "is_mock": false,
+      "args_ref": "pg:call/6e04a48a51a371abc9270625c03758456b4e1bd236c3f1243914fdf32acb3f02/args",
+      "call_seq": 1,
+      "attempt_id": 9,
+      "claimed_at": "2026-10-20T12:00:57.382588+08:00",
+      "claimed_by": "6b1d200d-47c6-45df-8189-73f7d7ad33a1_669516a6",
+      "created_at": "2026-10-20T12:00:57.316242+08:00",
+      "result_ref": "pg:call/4/result",
+      "skill_code": "alg_live_ec8285eb1f44_failed",
+      "args_digest": "f08ad0ad6a0220bd0b2a620f73cde0e54470877b0a9b7e260ca36e3263a6c786",
+      "duration_ms": 465,
+      "claimed_lease": "2026-10-20T12:02:27.712275+08:00",
+      "mock_snapshot": {},
+      "error_semantic": "NON_RETRYABLE_FAILURE",
+      "recovery_error": null,
+      "idempotency_key": "6e04a48a51a371abc9270625c03758456b4e1bd236c3f1243914fdf32acb3f02",
+      "approval_context": null,
+      "node_instance_id": 8,
+      "recovery_next_at": null,
+      "skill_version_id": 3,
+      "recovery_attempts": 0,
+      "mock_source_digest": null,
+      "mock_source_call_id": null,
+      "readonly_retry_count": 0,
+      "skill_contract_sha256": "ae8a900c9881d999cb496eb12153b73123aee244fc16ededb092fbf72ec31345",
+      "debug_controls_revision": 0
+    },
+    "fact": {
+      "result": {
+        "error": {
+          "reason": "原算法Job已核实Failed；不表示未生效或允许重新发送",
+          "semantic": "NON_RETRYABLE_FAILURE"
+        },
+        "owner": {
+          "runId": "r_418b69e5e2a04dadaff3fa2995497e2d",
+          "callId": 4,
+          "tenantId": "algorithm-live-ec8285eb1f44",
+          "attemptId": 9,
+          "skillCode": "alg_live_ec8285eb1f44_failed",
+          "principalId": "algorithm-live",
+          "nodeInstanceId": 8,
+          "skillVersionId": 3
+        },
+        "isMock": false,
+        "status": "FAILED",
+        "fileRefs": [],
+        "guardTrace": {
+          "roles": [
+            "SERVICE",
+            "EDITOR",
+            "ADMIN"
+          ],
+          "argsDigest": "f08ad0ad6a0220bd0b2a620f73cde0e54470877b0a9b7e260ca36e3263a6c786"
+        },
+        "structured": null,
+        "modelSummary": "原算法Job已核实Failed；不表示未生效或允许重新发送",
+        "cardPayloadJson": ""
+      },
+      "run_id": "r_418b69e5e2a04dadaff3fa2995497e2d",
+      "status": "FAILED",
+      "call_id": 4,
+      "is_mock": false,
+      "call_kind": "DEBUG",
+      "tenant_id": "algorithm-live-ec8285eb1f44",
+      "attempt_id": 9,
+      "created_at": "2026-10-20T12:00:57.39244+08:00",
+      "updated_at": "2026-10-20T12:00:57.905742+08:00",
+      "args_digest": "f08ad0ad6a0220bd0b2a620f73cde0e54470877b0a9b7e260ca36e3263a6c786",
+      "duration_ms": 465,
+      "principal_id": "algorithm-live",
+      "callback_error": null,
+      "callback_state": "DELIVERED",
+      "delivery_owner": null,
+      "execution_owner": "6b1d200d-47c6-45df-8189-73f7d7ad33a1_669516a6",
+      "next_delivery_at": "2026-10-20T12:00:57.88375+08:00",
+      "request_snapshot": {
+        "mock": {},
+        "runId": "r_418b69e5e2a04dadaff3fa2995497e2d",
+        "callId": 4,
+        "callSeq": 1,
+        "arguments": {
+          "message": "failed"
+        },
+        "attemptId": 9,
+        "skillCode": "alg_live_ec8285eb1f44_failed",
+        "leaseOwner": "6b1d200d-47c6-45df-8189-73f7d7ad33a1_669516a6",
+        "leaseUntil": "2026-10-20T04:02:27.306616Z",
+        "triggerType": "DEBUG",
+        "idempotencyKey": "6e04a48a51a371abc9270625c03758456b4e1bd236c3f1243914fdf32acb3f02",
+        "nodeInstanceId": 8,
+        "skillVersionId": 3,
+        "guardedArguments": {
+          "message": "failed"
+        },
+        "authorityTriggerType": "DEBUG"
+      },
+      "skill_version_id": 3,
+      "delivery_attempts": 0,
+      "attempt_duration_ms": 465,
+      "delivery_lease_until": null,
+      "skill_contract_sha256": "ae8a900c9881d999cb496eb12153b73123aee244fc16ededb092fbf72ec31345"
+    },
+    "binding": {
+      "run_id": "r_418b69e5e2a04dadaff3fa2995497e2d",
+      "status": "DONE",
+      "call_id": 4,
+      "metadata": {
+        "image": "algorithm-proof:finite",
+        "protocol": "ALGORITHM",
+        "contractSha256": "ae8a900c9881d999cb496eb12153b73123aee244fc16ededb092fbf72ec31345",
+        "serviceAccount": "algorithm-proof",
+        "terminalEvidence": {
+          "apiSha256": "0525f43283d07b36b1f30a888e559e25b3b8d47fe9ac7540a7ea04b726a77cd7",
+          "condition": "Failed",
+          "namespace": "alg-live-ec8285eb1f44-failed",
+          "sourceKind": "K8S_JOB",
+          "sourceSha256": "1a5a76e203ad339d9727b7cdf60c59df4a2ddcff1e620defd2212e8c0220fbd5",
+          "externalJobId": "alg-020eedda3925f66ea82e8434ae12bb948483bebb",
+          "externalJobUid": "57baf85a-a26b-4ae8-84c2-351ef63bb48f",
+          "identitySha256": "33553591abff2e82427ad51888a0c17b0b0d7546ad1c4fb20197bcac73d3876b"
+        }
+      },
+      "tenant_id": "algorithm-live-ec8285eb1f44",
+      "attempt_id": 9,
+      "updated_at": "2026-10-20T12:00:57.88375+08:00",
+      "principal_id": "algorithm-live",
+      "send_started": true,
+      "external_job_id": "alg-020eedda3925f66ea82e8434ae12bb948483bebb",
+      "idempotency_key": "6e04a48a51a371abc9270625c03758456b4e1bd236c3f1243914fdf32acb3f02",
+      "external_job_uid": "57baf85a-a26b-4ae8-84c2-351ef63bb48f",
+      "request_snapshot": {
+        "mock": {},
+        "runId": "r_418b69e5e2a04dadaff3fa2995497e2d",
+        "callId": 4,
+        "callSeq": 1,
+        "arguments": {
+          "message": "failed"
+        },
+        "attemptId": 9,
+        "skillCode": "alg_live_ec8285eb1f44_failed",
+        "leaseOwner": "6b1d200d-47c6-45df-8189-73f7d7ad33a1_669516a6",
+        "leaseUntil": "2026-10-20T04:02:27.306616Z",
+        "triggerType": "DEBUG",
+        "idempotencyKey": "6e04a48a51a371abc9270625c03758456b4e1bd236c3f1243914fdf32acb3f02",
+        "nodeInstanceId": 8,
+        "skillVersionId": 3,
+        "guardedArguments": {
+          "message": "failed"
+        },
+        "authorityTriggerType": "DEBUG"
+      },
+      "skill_version_id": 3,
+      "external_namespace": "alg-live-ec8285eb1f44-failed",
+      "external_api_sha256": "0525f43283d07b36b1f30a888e559e25b3b8d47fe9ac7540a7ea04b726a77cd7",
+      "external_identity_sha256": "33553591abff2e82427ad51888a0c17b0b0d7546ad1c4fb20197bcac73d3876b"
+    }
+  },
+  "fixtureAfter": {
+    "posts": 1,
+    "jobGets": 1,
+    "podLists": 0,
+    "logGets": 0,
+    "denied": 0,
+    "authRejected": 0,
+    "mode": "failed",
+    "jobName": "alg-020eedda3925f66ea82e8434ae12bb948483bebb",
+    "jobUid": "57baf85a-a26b-4ae8-84c2-351ef63bb48f",
+    "routes": [
+      "GET /apis/batch/v1/namespaces/alg-live-ec8285eb1f44-failed/jobs/alg-020eedda3925f66ea82e8434ae12bb948483bebb",
+      "POST /apis/batch/v1/namespaces/alg-live-ec8285eb1f44-failed/jobs"
+    ],
+    "evidenceLevel": "finite-api-reception-only",
+    "clusterOrContainerExecution": false,
+    "logicalEngineCommitVerified": false
+  }
+}

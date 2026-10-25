@@ -1,0 +1,170 @@
+{
+  "status": "DONE_WITH_CONCERNS",
+  "accepted": false,
+  "identity": "/root/iam_o2a_c_events",
+  "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+  "finalStage": "iam-stage-o2a-c-events-final",
+  "sourceEpoch": {
+    "file": ".local/iam-o2a-c-events/final/source-epoch.json",
+    "bytes": 2978,
+    "sha256": "252050fd62edafca014750183e6c17b56ce97ac3fc7e71077a253fe70a69b1c5"
+  },
+  "report": {
+    "file": "docs/evidence/iam-stage-4-o2a-c-events-report.md",
+    "bytes": 21947,
+    "sha256": "f5cf18e8dc407cac8d8578168027665407b2675731323b1ff85f8e2af75c88fc"
+  },
+  "source": {
+    "status": "success",
+    "sourceBefore": {
+      "file": ".local/iam-o2a-c-events/source-before.json",
+      "bytes": 112856,
+      "sha256": "e9791749f842e9403604f5fc3ff354e596536746577c65eb7b610374d7d69d16"
+    },
+    "sourceAfter": {
+      "file": ".local/iam-o2a-c-events/source-after.json",
+      "bytes": 114375,
+      "sha256": "4bf838da425c655524614fa60fbe9eeba9d3cb892d1dd7347899d9cb1ac8cd3e"
+    },
+    "sourceCount": 600,
+    "delta": {
+      "file": "docs/evidence/iam-stage-4-o2a-c-events/source-delta.json",
+      "bytes": 6535,
+      "sha256": "0db3a9d89b5a252ef66e52ebdc8ba09d3df8711f5a665ca03c6e00ee71671493"
+    },
+    "deltaCount": 14,
+    "targetBefore": {
+      "file": ".local/iam-o2a-c-events/target-before.json",
+      "bytes": 427782,
+      "sha256": "9dd29bc3bd986d324a94dd100fa1c30e46518c715c0215aba555e8a644c4e98d"
+    },
+    "targetCount": 2060
+  },
+  "target": {
+    "status": "success",
+    "overlay": {
+      "file": ".local/iam-o2a-c-events/target-overlay.json",
+      "bytes": 109802,
+      "sha256": "a8bdaafe0ab275ac1f0592e4a2d2de7feb66d5d43c4ae847fc9155c71b50bb34"
+    },
+    "overlayCount": 498,
+    "targetAfter": {
+      "file": ".local/iam-o2a-c-events/target-after.json",
+      "bytes": 435939,
+      "sha256": "e738c822ad54067e44ce505c53c8810f84f445a554c9607914bf2c3287a7e198"
+    },
+    "logicalCount": 2096,
+    "compilerInputs": {
+      "file": ".local/iam-o2a-c-events/compiler-inputs.json",
+      "bytes": 71332,
+      "sha256": "4a198aae5304b5f98dd1095e6a206b64c0c947e36079d8c6cf5668975cdc744b"
+    },
+    "diagnostics": {
+      "file": "docs/evidence/iam-stage-4-o2a-c-events/diagnostics.json",
+      "bytes": 4497,
+      "sha256": "aa527a438e177cd12f55870ac72432b87ea7498f0a12e3049672d7521f794228"
+    },
+    "diagnosticCount": 13
+  },
+  "testResults": {
+    "status": "success",
+    "results": {
+      "file": "docs/evidence/iam-stage-4-o2a-c-events/test-results.json",
+      "bytes": 38408,
+      "sha256": "230d20314d15479eedefdd252dc71b5590bdb6359ed998ed9bcede1e3537e731"
+    },
+    "counts": {
+      "tests": 29,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "running": [
+      "cn.agentplatform.common.authority.PortalEventsReceiverClosedTest",
+      "cn.agentplatform.engine.infra.PortalRunEventsCapacityTest",
+      "cn.agentplatform.engine.infra.PortalRunEventsHttpTest",
+      "cn.agentplatform.engine.infra.PortalRunEventsLifecycleTest",
+      "cn.agentplatform.engine.infra.PortalRunEventWindowPostgresTest",
+      "cn.agentplatform.engine.infra.RunEventResponseTest"
+    ]
+  },
+  "replay": {
+    "status": "success",
+    "sourceCount": 600,
+    "manifest": {
+      "file": ".local/iam-o2a-c-events/replay-source.json",
+      "bytes": 114375,
+      "sha256": "4bf838da425c655524614fa60fbe9eeba9d3cb892d1dd7347899d9cb1ac8cd3e"
+    },
+    "commands": {
+      "file": "docs/evidence/iam-stage-4-o2a-c-events/replay-commands.json",
+      "bytes": 133005,
+      "sha256": "e059cf51be29ccaabeaf071cbab409f860c82bd9244a495bdfa3fcb5ba678364"
+    },
+    "patch": {
+      "file": "docs/evidence/iam-stage-4-o2a-c-events/source.patch",
+      "bytes": 122360,
+      "sha256": "352e0d3c00e8bf79fae751f6f4bdf62e118d63f0ab8bccf6242461529b5d57a5"
+    },
+    "firstCheckExit": 0,
+    "firstApplyExit": 0,
+    "commitsCreated": 0
+  },
+  "sourceWrites": [
+    "admin-common/src/main/java/cn/agentplatform/common/authority/RunObservationSelectors.java",
+    "admin-common/src/main/java/cn/agentplatform/common/authority/PortalEventsResponse.java",
+    "engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java",
+    "engine-runtime/src/main/java/cn/agentplatform/engine/infra/RunEventReader.java",
+    "engine-runtime/src/main/java/cn/agentplatform/engine/infra/MaterialScopeStore.java",
+    "engine-runtime/src/main/java/cn/agentplatform/engine/infra/ChunkBus.java",
+    "admin-common/src/test/java/cn/agentplatform/common/authority/PortalEventsReceiverClosedTest.java",
+    "engine-runtime/src/main/java/cn/agentplatform/engine/application/PortalRunEventsService.java",
+    "engine-runtime/src/main/java/cn/agentplatform/engine/EnginePortalEventsAssembly.java",
+    "engine-runtime/src/test/java/cn/agentplatform/common/authority/PortalRunEventsAuthorityFixture.java",
+    "engine-runtime/src/test/java/cn/agentplatform/engine/infra/PortalRunEventWindowPostgresTest.java",
+    "engine-runtime/src/test/java/cn/agentplatform/engine/infra/PortalRunEventsHttpTest.java",
+    "engine-runtime/src/test/java/cn/agentplatform/engine/infra/PortalRunEventsLifecycleTest.java",
+    "engine-runtime/src/test/java/cn/agentplatform/engine/infra/PortalRunEventsCapacityTest.java"
+  ],
+  "beforeRoot": ".local/iam-o2a-c-events/before",
+  "afterRoot": ".local/iam-o2a-c-events/after",
+  "targetOverlayRoot": ".local/iam-o2a-c-events/target-overlay",
+  "finalRaw": ".local/iam-o2a-c-events/final/raw.log",
+  "finalXmlRoot": ".local/iam-o2a-c-events/final",
+  "actualRunning": [
+    "cn.agentplatform.common.authority.PortalEventsReceiverClosedTest",
+    "cn.agentplatform.engine.infra.PortalRunEventsCapacityTest",
+    "cn.agentplatform.engine.infra.PortalRunEventsHttpTest",
+    "cn.agentplatform.engine.infra.PortalRunEventsLifecycleTest",
+    "cn.agentplatform.engine.infra.PortalRunEventWindowPostgresTest",
+    "cn.agentplatform.engine.infra.RunEventResponseTest"
+  ],
+  "diagnostics": "docs/evidence/iam-stage-4-o2a-c-events/diagnostics.json",
+  "runnerRelocations": "docs/evidence/iam-stage-4-o2a-c-events/runner-relocations.json",
+  "journal": ".local/iam-o2a-c-events/journal.json",
+  "hashCache": ".local/iam-o2a-c-events/hash-cache.json",
+  "inventory": "docs/evidence/iam-stage-4-o2a-c-events/own-inventory.json",
+  "ownedRoots": [
+    ".local/iam-o2a-c-events",
+    "docs/evidence/iam-stage-4-o2a-c-events",
+    "docs/evidence/iam-stage-4-o2a-c-events-report.md",
+    ".tools/iam-o2a-c-events-prepare.mjs",
+    ".tools/iam-o2a-c-events-reader.mjs",
+    ".tools/iam-o2a-c-events-common-test.mjs",
+    ".tools/iam-o2a-c-events-run.mjs",
+    ".tools/iam-o2a-c-events-package.mjs",
+    ".tools/iam-o2a-c-events-primary.ps1",
+    ".tools/iam-o2a-c-events-finish.mjs"
+  ],
+  "commitsCreated": 0,
+  "sourceWriteOwnership": "returned after inventory seal; frozen",
+  "concerns": [
+    "Fresh independent review/root audit pending",
+    "Early RED/setup/first-green raw only; original early XML/source snapshots were not archived",
+    "Production retention job/active-run cleanup compatibility remain gaps",
+    "Mechanical max64 type/long19 framing is not a reachable PG int/varchar32 event",
+    "Actual bottom-layer accepted bytes are not retractable; no physical revocation SLA",
+    "Timeout protected error-route denial and standard compiler/Mockito/dumpstream diagnostics retained",
+    "Gateway/O2b/CHAT/chunk/skill/model/full production IAM excluded"
+  ]
+}

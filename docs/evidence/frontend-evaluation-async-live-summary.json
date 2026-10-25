@@ -1,0 +1,83 @@
+{
+  "realApi": true,
+  "mockedRoutes": 0,
+  "fixtureApp": "smoke_named_inputs_3db244a637",
+  "checks": {
+    "realDraftAndNoExternalFlow": true,
+    "savedAndExplicitlyRestoredInput": true,
+    "realDebugSucceededWithKnownOutput": true,
+    "realFlowCanvasAndBothNodesVisibleAt390": true,
+    "realRevisionTwoEdit": true,
+    "savedRevisionPromotedWithIndependentExpected": true,
+    "realImmutableDatasetSelected": true,
+    "singleOriginalReportObservedToAccepted": true,
+    "realOriginalEvaluationAccepted": true,
+    "originalApiReceivedExactSavedCases": true
+  },
+  "inputId": 3,
+  "source": {
+    "inputId": 3,
+    "revision": 2,
+    "appDraftId": 34,
+    "inputsSha256": "6e8942597307927eb9a1c0ba729f320c18217c93551aabb5b6722fd57777aee2"
+  },
+  "runId": "r_d5727253cb2c4c94b3ace096abc93255",
+  "datasetVersion": "debug-2026-10-20-53d62758",
+  "evalReportId": "er_350f803c-530b-4aad-9789-1304cc3b9e3d",
+  "initialEvaluationStatus": "RUNNING",
+  "observationReads": 1,
+  "resumeRequests": 1,
+  "evaluationStatus": "ACCEPTED",
+  "evaluationResults": [
+    {
+      "id": "case-53d62758",
+      "runId": "r_0e2be7f772094f8abd3c8c5abfd68ee4",
+      "actual": {
+        "answer": "命名输入完整联调"
+      },
+      "passed": true,
+      "safety": true,
+      "status": "SUCCEEDED",
+      "expected": {
+        "answer": "命名输入完整联调"
+      },
+      "attribution": "NONE"
+    }
+  ],
+  "pageErrors": [],
+  "flow390": {
+    "viewport": 390,
+    "documentWidth": 390,
+    "canvas": {
+      "left": 109,
+      "top": 1135.296875,
+      "right": 353,
+      "bottom": 1624.8125,
+      "width": 244,
+      "height": 489.515625
+    },
+    "nodes": [
+      {
+        "id": "start",
+        "left": 147.834228515625,
+        "top": 1366.4359130859375,
+        "right": 223.20321655273438,
+        "bottom": 1394.1578369140625,
+        "width": 75.36898803710938,
+        "height": 27.721923828125
+      },
+      {
+        "id": "end",
+        "left": 238.7967987060547,
+        "top": 1366.4359130859375,
+        "right": 314.165771484375,
+        "bottom": 1394.1578369140625,
+        "width": 75.36897277832031,
+        "height": 27.721923828125
+      }
+    ]
+  },
+  "completed": true,
+  "rawSha256": "53a5960d50e88b6b332108900259087685479e0872aa10d2999e6873e67c5718",
+  "logSha256": "8caac498d1fe2cf3c8dd9b4c1de8366b42145cf4de5f9a1b6091038da55b2847"
+}

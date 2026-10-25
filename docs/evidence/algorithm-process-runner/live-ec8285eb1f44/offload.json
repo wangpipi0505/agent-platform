@@ -1,0 +1,2177 @@
+{
+  "mode": "offload",
+  "phase": "passed",
+  "namespace": "alg-live-ec8285eb1f44-offload",
+  "skillCode": "alg_live_ec8285eb1f44_offload",
+  "skillVersionId": 5,
+  "connection": {
+    "runId": "r_6bd924a669174f2c9b9c0897334b95bf",
+    "status": "RUNNING",
+    "action": "WAIT_AND_RECHECK",
+    "reason": "实际只读连接、权限或Schema检查未通过",
+    "ok": false,
+    "latencyMs": 193,
+    "candidateSha256": "108baf5a5750890044db3a4ccd2251c449e4c9c5e7a13aed95ad30643c9c8dda"
+  },
+  "runId": "r_6bd924a669174f2c9b9c0897334b95bf",
+  "callId": 6,
+  "before": {
+    "run": {
+      "id": 5,
+      "publicId": "r_6bd924a669174f2c9b9c0897334b95bf",
+      "status": "SUCCEEDED",
+      "tenantId": "algorithm-live-ec8285eb1f44",
+      "principalId": "algorithm-live"
+    },
+    "node": {
+      "id": 14,
+      "error": null,
+      "output": null,
+      "run_id": 5,
+      "status": "SUCCEEDED",
+      "ended_at": "2026-10-20T12:02:17.124346+08:00",
+      "released": false,
+      "step_seq": 2,
+      "node_type": "SKILL",
+      "pause_seq": null,
+      "definition": {
+        "id": "draft_skill",
+        "args": {
+          "message": "offload"
+        },
+        "type": "SKILL",
+        "skillRef": {
+          "code": "alg_live_ec8285eb1f44_offload",
+          "version": 1,
+          "execution": {
+            "readonly": true,
+            "idempotent": true,
+            "sideEffect": false,
+            "cancellable": false
+          },
+          "skillVersionId": 5
+        }
+      },
+      "started_at": "2026-10-20T12:02:16.343037+08:00",
+      "lease_owner": "a66f2abc-9a22-4f22-bbe6-c16a71c06092_77e6988a",
+      "lease_until": "2026-10-20T12:03:47.044951+08:00",
+      "node_def_id": "draft_skill",
+      "input_digest": null,
+      "output_digest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+      "join_semantics": null,
+      "winner_node_id": null,
+      "approval_context": null,
+      "committed_attempt_id": 13,
+      "committed_output_ref": "pg:node/14"
+    },
+    "tenantRuns": [
+      {
+        "id": 1,
+        "publicId": "r_78455d30c3b34e879f895a8db4e3d7cf"
+      },
+      {
+        "id": 2,
+        "publicId": "r_6e081b156e86429e801bbaea898549b6"
+      },
+      {
+        "id": 3,
+        "publicId": "r_418b69e5e2a04dadaff3fa2995497e2d"
+      },
+      {
+        "id": 4,
+        "publicId": "r_606c4879744346dc8320e3abebd78d3f"
+      },
+      {
+        "id": 5,
+        "publicId": "r_6bd924a669174f2c9b9c0897334b95bf"
+      }
+    ],
+    "calls": [
+      {
+        "id": 6,
+        "args": {
+          "message": "offload"
+        },
+        "result": {
+          "error": null,
+          "owner": {
+            "runId": "r_6bd924a669174f2c9b9c0897334b95bf",
+            "callId": 6,
+            "tenantId": "algorithm-live-ec8285eb1f44",
+            "attemptId": 13,
+            "skillCode": "alg_live_ec8285eb1f44_offload",
+            "principalId": "algorithm-live",
+            "nodeInstanceId": 14,
+            "skillVersionId": 5
+          },
+          "isMock": false,
+          "status": "SUCCEEDED",
+          "fileRefs": [
+            {
+              "bytes": 1212,
+              "sha256": "d0150502d84a1181a40bb6d26b8332e63c62f54283f056e0d1891fa866fc1d63",
+              "summary": "结果已转存，请使用受控下载查看",
+              "artifactId": "art_378961d017934f0789bfc77f50d40df6",
+              "contentType": "application/json",
+              "downloadUrl": "/admin/artifacts/art_378961d017934f0789bfc77f50d40df6/download",
+              "externalDownloadUrl": "/v1/runs/r_6bd924a669174f2c9b9c0897334b95bf/artifacts/art_378961d017934f0789bfc77f50d40df6/download"
+            }
+          ],
+          "guardTrace": {
+            "roles": [
+              "ADMIN",
+              "SERVICE",
+              "EDITOR"
+            ],
+            "argsDigest": "38f0c7acd1bad65a850729e525d6f545a012b6b6dd59f3175fe016e0d2a3315a"
+          },
+          "structured": null,
+          "modelSummary": "结果已流式转存，请使用受控文件引用查看",
+          "cardPayloadJson": ""
+        },
+        "run_id": 5,
+        "status": "SUCCEEDED",
+        "is_mock": false,
+        "args_ref": "pg:call/7758011299f303be4be0bb54fcaabb0d79dda9eef6eec6f8dd64b5cc15c9e111/args",
+        "call_seq": 1,
+        "attempt_id": 13,
+        "claimed_at": "2026-10-20T12:02:16.404845+08:00",
+        "claimed_by": "a66f2abc-9a22-4f22-bbe6-c16a71c06092_77e6988a",
+        "created_at": "2026-10-20T12:02:16.352705+08:00",
+        "result_ref": "pg:call/6/result",
+        "skill_code": "alg_live_ec8285eb1f44_offload",
+        "args_digest": "38f0c7acd1bad65a850729e525d6f545a012b6b6dd59f3175fe016e0d2a3315a",
+        "duration_ms": 657,
+        "claimed_lease": "2026-10-20T12:03:47.044951+08:00",
+        "mock_snapshot": {},
+        "error_semantic": null,
+        "recovery_error": null,
+        "idempotency_key": "7758011299f303be4be0bb54fcaabb0d79dda9eef6eec6f8dd64b5cc15c9e111",
+        "approval_context": null,
+        "node_instance_id": 14,
+        "recovery_next_at": null,
+        "skill_version_id": 5,
+        "recovery_attempts": 0,
+        "mock_source_digest": null,
+        "mock_source_call_id": null,
+        "readonly_retry_count": 0,
+        "skill_contract_sha256": "108baf5a5750890044db3a4ccd2251c449e4c9c5e7a13aed95ad30643c9c8dda",
+        "debug_controls_revision": 0
+      }
+    ],
+    "facts": [
+      {
+        "result": {
+          "error": null,
+          "owner": {
+            "runId": "r_6bd924a669174f2c9b9c0897334b95bf",
+            "callId": 6,
+            "tenantId": "algorithm-live-ec8285eb1f44",
+            "attemptId": 13,
+            "skillCode": "alg_live_ec8285eb1f44_offload",
+            "principalId": "algorithm-live",
+            "nodeInstanceId": 14,
+            "skillVersionId": 5
+          },
+          "isMock": false,
+          "status": "SUCCEEDED",
+          "fileRefs": [
+            {
+              "bytes": 1212,
+              "sha256": "d0150502d84a1181a40bb6d26b8332e63c62f54283f056e0d1891fa866fc1d63",
+              "summary": "结果已转存，请使用受控下载查看",
+              "artifactId": "art_378961d017934f0789bfc77f50d40df6",
+              "contentType": "application/json",
+              "downloadUrl": "/admin/artifacts/art_378961d017934f0789bfc77f50d40df6/download",
+              "externalDownloadUrl": "/v1/runs/r_6bd924a669174f2c9b9c0897334b95bf/artifacts/art_378961d017934f0789bfc77f50d40df6/download"
+            }
+          ],
+          "guardTrace": {
+            "roles": [
+              "ADMIN",
+              "SERVICE",
+              "EDITOR"
+            ],
+            "argsDigest": "38f0c7acd1bad65a850729e525d6f545a012b6b6dd59f3175fe016e0d2a3315a"
+          },
+          "structured": null,
+          "modelSummary": "结果已流式转存，请使用受控文件引用查看",
+          "cardPayloadJson": ""
+        },
+        "run_id": "r_6bd924a669174f2c9b9c0897334b95bf",
+        "status": "SUCCEEDED",
+        "call_id": 6,
+        "is_mock": false,
+        "call_kind": "DEBUG",
+        "tenant_id": "algorithm-live-ec8285eb1f44",
+        "attempt_id": 13,
+        "created_at": "2026-10-20T12:02:16.415589+08:00",
+        "updated_at": "2026-10-20T12:02:17.1218+08:00",
+        "args_digest": "38f0c7acd1bad65a850729e525d6f545a012b6b6dd59f3175fe016e0d2a3315a",
+        "duration_ms": 657,
+        "principal_id": "algorithm-live",
+        "callback_error": null,
+        "callback_state": "DELIVERED",
+        "delivery_owner": null,
+        "execution_owner": "a66f2abc-9a22-4f22-bbe6-c16a71c06092_77e6988a",
+        "next_delivery_at": "2026-10-20T12:02:17.099229+08:00",
+        "request_snapshot": {
+          "mock": {},
+          "runId": "r_6bd924a669174f2c9b9c0897334b95bf",
+          "callId": 6,
+          "callSeq": 1,
+          "arguments": {
+            "message": "offload"
+          },
+          "attemptId": 13,
+          "skillCode": "alg_live_ec8285eb1f44_offload",
+          "leaseOwner": "a66f2abc-9a22-4f22-bbe6-c16a71c06092_77e6988a",
+          "leaseUntil": "2026-10-20T04:03:46.343037Z",
+          "triggerType": "DEBUG",
+          "idempotencyKey": "7758011299f303be4be0bb54fcaabb0d79dda9eef6eec6f8dd64b5cc15c9e111",
+          "nodeInstanceId": 14,
+          "skillVersionId": 5,
+          "guardedArguments": {
+            "message": "offload"
+          },
+          "authorityTriggerType": "DEBUG"
+        },
+        "skill_version_id": 5,
+        "delivery_attempts": 0,
+        "attempt_duration_ms": 657,
+        "delivery_lease_until": null,
+        "skill_contract_sha256": "108baf5a5750890044db3a4ccd2251c449e4c9c5e7a13aed95ad30643c9c8dda"
+      }
+    ],
+    "bindings": [
+      {
+        "run_id": "r_6bd924a669174f2c9b9c0897334b95bf",
+        "status": "DONE",
+        "call_id": 6,
+        "metadata": {
+          "image": "algorithm-proof:finite",
+          "protocol": "ALGORITHM",
+          "contractSha256": "108baf5a5750890044db3a4ccd2251c449e4c9c5e7a13aed95ad30643c9c8dda",
+          "serviceAccount": "algorithm-proof",
+          "terminalEvidence": {
+            "apiSha256": "2f2ffdbd519e1b4130893d982bf451326f1dd5b0b118fdba3d6dc378fe6f2304",
+            "condition": "Complete",
+            "namespace": "alg-live-ec8285eb1f44-offload",
+            "sourceKind": "K8S_JOB",
+            "sourceSha256": "f5e563dfca15af2101a7540f2dc854265a29c1daf54ec7bc85cd40048b0a4c51",
+            "externalJobId": "alg-78c7ea6067da862c25a20c06a86fe276da9d4028",
+            "externalJobUid": "f8e23464-e04c-4a74-a488-d3c70f6d12d7",
+            "identitySha256": "70a94af59891db2b92273abfd96fec4ed4bacbada084407c258123960d3b002c"
+          }
+        },
+        "tenant_id": "algorithm-live-ec8285eb1f44",
+        "attempt_id": 13,
+        "updated_at": "2026-10-20T12:02:17.099229+08:00",
+        "principal_id": "algorithm-live",
+        "send_started": true,
+        "external_job_id": "alg-78c7ea6067da862c25a20c06a86fe276da9d4028",
+        "idempotency_key": "7758011299f303be4be0bb54fcaabb0d79dda9eef6eec6f8dd64b5cc15c9e111",
+        "external_job_uid": "f8e23464-e04c-4a74-a488-d3c70f6d12d7",
+        "request_snapshot": {
+          "mock": {},
+          "runId": "r_6bd924a669174f2c9b9c0897334b95bf",
+          "callId": 6,
+          "callSeq": 1,
+          "arguments": {
+            "message": "offload"
+          },
+          "attemptId": 13,
+          "skillCode": "alg_live_ec8285eb1f44_offload",
+          "leaseOwner": "a66f2abc-9a22-4f22-bbe6-c16a71c06092_77e6988a",
+          "leaseUntil": "2026-10-20T04:03:46.343037Z",
+          "triggerType": "DEBUG",
+          "idempotencyKey": "7758011299f303be4be0bb54fcaabb0d79dda9eef6eec6f8dd64b5cc15c9e111",
+          "nodeInstanceId": 14,
+          "skillVersionId": 5,
+          "guardedArguments": {
+            "message": "offload"
+          },
+          "authorityTriggerType": "DEBUG"
+        },
+        "skill_version_id": 5,
+        "external_namespace": "alg-live-ec8285eb1f44-offload",
+        "external_api_sha256": "2f2ffdbd519e1b4130893d982bf451326f1dd5b0b118fdba3d6dc378fe6f2304",
+        "external_identity_sha256": "70a94af59891db2b92273abfd96fec4ed4bacbada084407c258123960d3b002c"
+      }
+    ],
+    "toolCommits": 1,
+    "attempts": 1,
+    "runCalls": 1,
+    "runFacts": 1,
+    "runBindings": 1,
+    "attemptRows": [
+      {
+        "id": 13,
+        "error": null,
+        "status": "SUCCEEDED",
+        "ended_at": "2026-10-20T12:02:17.124346+08:00",
+        "response": null,
+        "attempt_no": 1,
+        "checkpoint": {},
+        "started_at": "2026-10-20T12:02:16.343037+08:00",
+        "response_ref": null,
+        "routed_model": null,
+        "idempotency_key": "9e0d4d334e897ecad403fe17f75dc1a58eebde69aaeed48f6f36ecd23db51f50",
+        "node_instance_id": 14,
+        "request_snapshot": {},
+        "request_snapshot_ref": "pg:attempt/13"
+      }
+    ],
+    "terminalNotes": [
+      {
+        "id": 6,
+        "kind": "TOOL_EXECUTION_FACT",
+        "payload": {
+          "owner": "a66f2abc-9a22-4f22-bbe6-c16a71c06092_77e6988a",
+          "callId": 6,
+          "isMock": false,
+          "result": {
+            "error": null,
+            "owner": {
+              "runId": "r_6bd924a669174f2c9b9c0897334b95bf",
+              "callId": 6,
+              "tenantId": "algorithm-live-ec8285eb1f44",
+              "attemptId": 13,
+              "skillCode": "alg_live_ec8285eb1f44_offload",
+              "principalId": "algorithm-live",
+              "nodeInstanceId": 14,
+              "skillVersionId": 5
+            },
+            "isMock": false,
+            "status": "SUCCEEDED",
+            "fileRefs": [
+              {
+                "bytes": 1212,
+                "sha256": "d0150502d84a1181a40bb6d26b8332e63c62f54283f056e0d1891fa866fc1d63",
+                "summary": "结果已转存，请使用受控下载查看",
+                "artifactId": "art_378961d017934f0789bfc77f50d40df6",
+                "contentType": "application/json",
+                "downloadUrl": "/admin/artifacts/art_378961d017934f0789bfc77f50d40df6/download",
+                "externalDownloadUrl": "/v1/runs/r_6bd924a669174f2c9b9c0897334b95bf/artifacts/art_378961d017934f0789bfc77f50d40df6/download"
+              }
+            ],
+            "guardTrace": {
+              "roles": [
+                "ADMIN",
+                "SERVICE",
+                "EDITOR"
+              ],
+              "argsDigest": "38f0c7acd1bad65a850729e525d6f545a012b6b6dd59f3175fe016e0d2a3315a"
+            },
+            "structured": null,
+            "modelSummary": "结果已流式转存，请使用受控文件引用查看",
+            "cardPayloadJson": ""
+          },
+          "status": "SUCCEEDED",
+          "accepted": true,
+          "attemptId": 13,
+          "durationMs": 657,
+          "factDigest": "d991b0decdb15a97c2d49a621b7e16dfe889f0229bbe1409e0b7673e8e825455"
+        },
+        "attempt_id": 13,
+        "created_at": "2026-10-20T12:02:17.112832+08:00",
+        "node_instance_id": 14
+      }
+    ],
+    "acceptedTerminalFacts": 1,
+    "events": [
+      {
+        "id": 41,
+        "seq": 1,
+        "type": "RUN_STARTED",
+        "run_id": 5,
+        "payload": {
+          "runId": "r_6bd924a669174f2c9b9c0897334b95bf",
+          "triggerType": "DEBUG"
+        },
+        "created_at": "2026-10-20T12:02:16.306476+08:00"
+      },
+      {
+        "id": 42,
+        "seq": 2,
+        "type": "NODE_STARTED",
+        "run_id": 5,
+        "payload": {
+          "attemptId": 12,
+          "attemptNo": 1,
+          "nodeInstanceId": 13
+        },
+        "created_at": "2026-10-20T12:02:16.321559+08:00"
+      },
+      {
+        "id": 43,
+        "seq": 3,
+        "type": "LOGIC_RESULT_COMMITTED",
+        "run_id": 5,
+        "payload": {
+          "attemptId": 12,
+          "nodeInstanceId": 13
+        },
+        "created_at": "2026-10-20T12:02:16.335791+08:00"
+      },
+      {
+        "id": 44,
+        "seq": 4,
+        "type": "NODE_FINISHED",
+        "run_id": 5,
+        "payload": {
+          "status": "SUCCEEDED",
+          "nodeInstanceId": 13
+        },
+        "created_at": "2026-10-20T12:02:16.335791+08:00"
+      },
+      {
+        "id": 45,
+        "seq": 5,
+        "type": "NODE_STARTED",
+        "run_id": 5,
+        "payload": {
+          "attemptId": 13,
+          "attemptNo": 1,
+          "nodeInstanceId": 14
+        },
+        "created_at": "2026-10-20T12:02:16.343037+08:00"
+      },
+      {
+        "id": 46,
+        "seq": 6,
+        "type": "LOGIC_RESULT_COMMITTED",
+        "run_id": 5,
+        "payload": {
+          "attemptId": 13,
+          "nodeInstanceId": 14
+        },
+        "created_at": "2026-10-20T12:02:17.124346+08:00"
+      },
+      {
+        "id": 47,
+        "seq": 7,
+        "type": "NODE_FINISHED",
+        "run_id": 5,
+        "payload": {
+          "status": "SUCCEEDED",
+          "nodeInstanceId": 14
+        },
+        "created_at": "2026-10-20T12:02:17.124346+08:00"
+      },
+      {
+        "id": 48,
+        "seq": 8,
+        "type": "NODE_STARTED",
+        "run_id": 5,
+        "payload": {
+          "attemptId": 14,
+          "attemptNo": 1,
+          "nodeInstanceId": 15
+        },
+        "created_at": "2026-10-20T12:02:17.128269+08:00"
+      },
+      {
+        "id": 49,
+        "seq": 9,
+        "type": "LOGIC_RESULT_COMMITTED",
+        "run_id": 5,
+        "payload": {
+          "attemptId": 14,
+          "nodeInstanceId": 15
+        },
+        "created_at": "2026-10-20T12:02:17.136817+08:00"
+      },
+      {
+        "id": 50,
+        "seq": 10,
+        "type": "NODE_FINISHED",
+        "run_id": 5,
+        "payload": {
+          "status": "SUCCEEDED",
+          "nodeInstanceId": 15
+        },
+        "created_at": "2026-10-20T12:02:17.136817+08:00"
+      },
+      {
+        "id": 51,
+        "seq": 11,
+        "type": "RUN_FINISHED",
+        "run_id": 5,
+        "payload": {
+          "status": "SUCCEEDED"
+        },
+        "created_at": "2026-10-20T12:02:17.139505+08:00"
+      }
+    ],
+    "call": {
+      "id": 6,
+      "args": {
+        "message": "offload"
+      },
+      "result": {
+        "error": null,
+        "owner": {
+          "runId": "r_6bd924a669174f2c9b9c0897334b95bf",
+          "callId": 6,
+          "tenantId": "algorithm-live-ec8285eb1f44",
+          "attemptId": 13,
+          "skillCode": "alg_live_ec8285eb1f44_offload",
+          "principalId": "algorithm-live",
+          "nodeInstanceId": 14,
+          "skillVersionId": 5
+        },
+        "isMock": false,
+        "status": "SUCCEEDED",
+        "fileRefs": [
+          {
+            "bytes": 1212,
+            "sha256": "d0150502d84a1181a40bb6d26b8332e63c62f54283f056e0d1891fa866fc1d63",
+            "summary": "结果已转存，请使用受控下载查看",
+            "artifactId": "art_378961d017934f0789bfc77f50d40df6",
+            "contentType": "application/json",
+            "downloadUrl": "/admin/artifacts/art_378961d017934f0789bfc77f50d40df6/download",
+            "externalDownloadUrl": "/v1/runs/r_6bd924a669174f2c9b9c0897334b95bf/artifacts/art_378961d017934f0789bfc77f50d40df6/download"
+          }
+        ],
+        "guardTrace": {
+          "roles": [
+            "ADMIN",
+            "SERVICE",
+            "EDITOR"
+          ],
+          "argsDigest": "38f0c7acd1bad65a850729e525d6f545a012b6b6dd59f3175fe016e0d2a3315a"
+        },
+        "structured": null,
+        "modelSummary": "结果已流式转存，请使用受控文件引用查看",
+        "cardPayloadJson": ""
+      },
+      "run_id": 5,
+      "status": "SUCCEEDED",
+      "is_mock": false,
+      "args_ref": "pg:call/7758011299f303be4be0bb54fcaabb0d79dda9eef6eec6f8dd64b5cc15c9e111/args",
+      "call_seq": 1,
+      "attempt_id": 13,
+      "claimed_at": "2026-10-20T12:02:16.404845+08:00",
+      "claimed_by": "a66f2abc-9a22-4f22-bbe6-c16a71c06092_77e6988a",
+      "created_at": "2026-10-20T12:02:16.352705+08:00",
+      "result_ref": "pg:call/6/result",
+      "skill_code": "alg_live_ec8285eb1f44_offload",
+      "args_digest": "38f0c7acd1bad65a850729e525d6f545a012b6b6dd59f3175fe016e0d2a3315a",
+      "duration_ms": 657,
+      "claimed_lease": "2026-10-20T12:03:47.044951+08:00",
+      "mock_snapshot": {},
+      "error_semantic": null,
+      "recovery_error": null,
+      "idempotency_key": "7758011299f303be4be0bb54fcaabb0d79dda9eef6eec6f8dd64b5cc15c9e111",
+      "approval_context": null,
+      "node_instance_id": 14,
+      "recovery_next_at": null,
+      "skill_version_id": 5,
+      "recovery_attempts": 0,
+      "mock_source_digest": null,
+      "mock_source_call_id": null,
+      "readonly_retry_count": 0,
+      "skill_contract_sha256": "108baf5a5750890044db3a4ccd2251c449e4c9c5e7a13aed95ad30643c9c8dda",
+      "debug_controls_revision": 0
+    },
+    "fact": {
+      "result": {
+        "error": null,
+        "owner": {
+          "runId": "r_6bd924a669174f2c9b9c0897334b95bf",
+          "callId": 6,
+          "tenantId": "algorithm-live-ec8285eb1f44",
+          "attemptId": 13,
+          "skillCode": "alg_live_ec8285eb1f44_offload",
+          "principalId": "algorithm-live",
+          "nodeInstanceId": 14,
+          "skillVersionId": 5
+        },
+        "isMock": false,
+        "status": "SUCCEEDED",
+        "fileRefs": [
+          {
+            "bytes": 1212,
+            "sha256": "d0150502d84a1181a40bb6d26b8332e63c62f54283f056e0d1891fa866fc1d63",
+            "summary": "结果已转存，请使用受控下载查看",
+            "artifactId": "art_378961d017934f0789bfc77f50d40df6",
+            "contentType": "application/json",
+            "downloadUrl": "/admin/artifacts/art_378961d017934f0789bfc77f50d40df6/download",
+            "externalDownloadUrl": "/v1/runs/r_6bd924a669174f2c9b9c0897334b95bf/artifacts/art_378961d017934f0789bfc77f50d40df6/download"
+          }
+        ],
+        "guardTrace": {
+          "roles": [
+            "ADMIN",
+            "SERVICE",
+            "EDITOR"
+          ],
+          "argsDigest": "38f0c7acd1bad65a850729e525d6f545a012b6b6dd59f3175fe016e0d2a3315a"
+        },
+        "structured": null,
+        "modelSummary": "结果已流式转存，请使用受控文件引用查看",
+        "cardPayloadJson": ""
+      },
+      "run_id": "r_6bd924a669174f2c9b9c0897334b95bf",
+      "status": "SUCCEEDED",
+      "call_id": 6,
+      "is_mock": false,
+      "call_kind": "DEBUG",
+      "tenant_id": "algorithm-live-ec8285eb1f44",
+      "attempt_id": 13,
+      "created_at": "2026-10-20T12:02:16.415589+08:00",
+      "updated_at": "2026-10-20T12:02:17.1218+08:00",
+      "args_digest": "38f0c7acd1bad65a850729e525d6f545a012b6b6dd59f3175fe016e0d2a3315a",
+      "duration_ms": 657,
+      "principal_id": "algorithm-live",
+      "callback_error": null,
+      "callback_state": "DELIVERED",
+      "delivery_owner": null,
+      "execution_owner": "a66f2abc-9a22-4f22-bbe6-c16a71c06092_77e6988a",
+      "next_delivery_at": "2026-10-20T12:02:17.099229+08:00",
+      "request_snapshot": {
+        "mock": {},
+        "runId": "r_6bd924a669174f2c9b9c0897334b95bf",
+        "callId": 6,
+        "callSeq": 1,
+        "arguments": {
+          "message": "offload"
+        },
+        "attemptId": 13,
+        "skillCode": "alg_live_ec8285eb1f44_offload",
+        "leaseOwner": "a66f2abc-9a22-4f22-bbe6-c16a71c06092_77e6988a",
+        "leaseUntil": "2026-10-20T04:03:46.343037Z",
+        "triggerType": "DEBUG",
+        "idempotencyKey": "7758011299f303be4be0bb54fcaabb0d79dda9eef6eec6f8dd64b5cc15c9e111",
+        "nodeInstanceId": 14,
+        "skillVersionId": 5,
+        "guardedArguments": {
+          "message": "offload"
+        },
+        "authorityTriggerType": "DEBUG"
+      },
+      "skill_version_id": 5,
+      "delivery_attempts": 0,
+      "attempt_duration_ms": 657,
+      "delivery_lease_until": null,
+      "skill_contract_sha256": "108baf5a5750890044db3a4ccd2251c449e4c9c5e7a13aed95ad30643c9c8dda"
+    },
+    "binding": {
+      "run_id": "r_6bd924a669174f2c9b9c0897334b95bf",
+      "status": "DONE",
+      "call_id": 6,
+      "metadata": {
+        "image": "algorithm-proof:finite",
+        "protocol": "ALGORITHM",
+        "contractSha256": "108baf5a5750890044db3a4ccd2251c449e4c9c5e7a13aed95ad30643c9c8dda",
+        "serviceAccount": "algorithm-proof",
+        "terminalEvidence": {
+          "apiSha256": "2f2ffdbd519e1b4130893d982bf451326f1dd5b0b118fdba3d6dc378fe6f2304",
+          "condition": "Complete",
+          "namespace": "alg-live-ec8285eb1f44-offload",
+          "sourceKind": "K8S_JOB",
+          "sourceSha256": "f5e563dfca15af2101a7540f2dc854265a29c1daf54ec7bc85cd40048b0a4c51",
+          "externalJobId": "alg-78c7ea6067da862c25a20c06a86fe276da9d4028",
+          "externalJobUid": "f8e23464-e04c-4a74-a488-d3c70f6d12d7",
+          "identitySha256": "70a94af59891db2b92273abfd96fec4ed4bacbada084407c258123960d3b002c"
+        }
+      },
+      "tenant_id": "algorithm-live-ec8285eb1f44",
+      "attempt_id": 13,
+      "updated_at": "2026-10-20T12:02:17.099229+08:00",
+      "principal_id": "algorithm-live",
+      "send_started": true,
+      "external_job_id": "alg-78c7ea6067da862c25a20c06a86fe276da9d4028",
+      "idempotency_key": "7758011299f303be4be0bb54fcaabb0d79dda9eef6eec6f8dd64b5cc15c9e111",
+      "external_job_uid": "f8e23464-e04c-4a74-a488-d3c70f6d12d7",
+      "request_snapshot": {
+        "mock": {},
+        "runId": "r_6bd924a669174f2c9b9c0897334b95bf",
+        "callId": 6,
+        "callSeq": 1,
+        "arguments": {
+          "message": "offload"
+        },
+        "attemptId": 13,
+        "skillCode": "alg_live_ec8285eb1f44_offload",
+        "leaseOwner": "a66f2abc-9a22-4f22-bbe6-c16a71c06092_77e6988a",
+        "leaseUntil": "2026-10-20T04:03:46.343037Z",
+        "triggerType": "DEBUG",
+        "idempotencyKey": "7758011299f303be4be0bb54fcaabb0d79dda9eef6eec6f8dd64b5cc15c9e111",
+        "nodeInstanceId": 14,
+        "skillVersionId": 5,
+        "guardedArguments": {
+          "message": "offload"
+        },
+        "authorityTriggerType": "DEBUG"
+      },
+      "skill_version_id": 5,
+      "external_namespace": "alg-live-ec8285eb1f44-offload",
+      "external_api_sha256": "2f2ffdbd519e1b4130893d982bf451326f1dd5b0b118fdba3d6dc378fe6f2304",
+      "external_identity_sha256": "70a94af59891db2b92273abfd96fec4ed4bacbada084407c258123960d3b002c"
+    }
+  },
+  "fixtureBefore": {
+    "posts": 1,
+    "jobGets": 1,
+    "podLists": 1,
+    "logGets": 1,
+    "denied": 0,
+    "authRejected": 0,
+    "mode": "complete",
+    "jobName": "alg-78c7ea6067da862c25a20c06a86fe276da9d4028",
+    "jobUid": "f8e23464-e04c-4a74-a488-d3c70f6d12d7",
+    "routes": [
+      "GET /apis/batch/v1/namespaces/alg-live-ec8285eb1f44-offload/jobs/alg-78c7ea6067da862c25a20c06a86fe276da9d4028",
+      "POST /apis/batch/v1/namespaces/alg-live-ec8285eb1f44-offload/jobs",
+      "GET /api/v1/namespaces/alg-live-ec8285eb1f44-offload/pods",
+      "GET /api/v1/namespaces/alg-live-ec8285eb1f44-offload/pods/algorithm-proof-pod/log"
+    ],
+    "evidenceLevel": "finite-api-reception-only",
+    "clusterOrContainerExecution": false,
+    "logicalEngineCommitVerified": false
+  },
+  "after": {
+    "run": {
+      "id": 5,
+      "publicId": "r_6bd924a669174f2c9b9c0897334b95bf",
+      "status": "SUCCEEDED",
+      "tenantId": "algorithm-live-ec8285eb1f44",
+      "principalId": "algorithm-live"
+    },
+    "node": {
+      "id": 14,
+      "error": null,
+      "output": null,
+      "run_id": 5,
+      "status": "SUCCEEDED",
+      "ended_at": "2026-10-20T12:02:17.124346+08:00",
+      "released": false,
+      "step_seq": 2,
+      "node_type": "SKILL",
+      "pause_seq": null,
+      "definition": {
+        "id": "draft_skill",
+        "args": {
+          "message": "offload"
+        },
+        "type": "SKILL",
+        "skillRef": {
+          "code": "alg_live_ec8285eb1f44_offload",
+          "version": 1,
+          "execution": {
+            "readonly": true,
+            "idempotent": true,
+            "sideEffect": false,
+            "cancellable": false
+          },
+          "skillVersionId": 5
+        }
+      },
+      "started_at": "2026-10-20T12:02:16.343037+08:00",
+      "lease_owner": "a66f2abc-9a22-4f22-bbe6-c16a71c06092_77e6988a",
+      "lease_until": "2026-10-20T12:03:47.044951+08:00",
+      "node_def_id": "draft_skill",
+      "input_digest": null,
+      "output_digest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+      "join_semantics": null,
+      "winner_node_id": null,
+      "approval_context": null,
+      "committed_attempt_id": 13,
+      "committed_output_ref": "pg:node/14"
+    },
+    "tenantRuns": [
+      {
+        "id": 1,
+        "publicId": "r_78455d30c3b34e879f895a8db4e3d7cf"
+      },
+      {
+        "id": 2,
+        "publicId": "r_6e081b156e86429e801bbaea898549b6"
+      },
+      {
+        "id": 3,
+        "publicId": "r_418b69e5e2a04dadaff3fa2995497e2d"
+      },
+      {
+        "id": 4,
+        "publicId": "r_606c4879744346dc8320e3abebd78d3f"
+      },
+      {
+        "id": 5,
+        "publicId": "r_6bd924a669174f2c9b9c0897334b95bf"
+      }
+    ],
+    "calls": [
+      {
+        "id": 6,
+        "args": {
+          "message": "offload"
+        },
+        "result": {
+          "error": null,
+          "owner": {
+            "runId": "r_6bd924a669174f2c9b9c0897334b95bf",
+            "callId": 6,
+            "tenantId": "algorithm-live-ec8285eb1f44",
+            "attemptId": 13,
+            "skillCode": "alg_live_ec8285eb1f44_offload",
+            "principalId": "algorithm-live",
+            "nodeInstanceId": 14,
+            "skillVersionId": 5
+          },
+          "isMock": false,
+          "status": "SUCCEEDED",
+          "fileRefs": [
+            {
+              "bytes": 1212,
+              "sha256": "d0150502d84a1181a40bb6d26b8332e63c62f54283f056e0d1891fa866fc1d63",
+              "summary": "结果已转存，请使用受控下载查看",
+              "artifactId": "art_378961d017934f0789bfc77f50d40df6",
+              "contentType": "application/json",
+              "downloadUrl": "/admin/artifacts/art_378961d017934f0789bfc77f50d40df6/download",
+              "externalDownloadUrl": "/v1/runs/r_6bd924a669174f2c9b9c0897334b95bf/artifacts/art_378961d017934f0789bfc77f50d40df6/download"
+            }
+          ],
+          "guardTrace": {
+            "roles": [
+              "ADMIN",
+              "SERVICE",
+              "EDITOR"
+            ],
+            "argsDigest": "38f0c7acd1bad65a850729e525d6f545a012b6b6dd59f3175fe016e0d2a3315a"
+          },
+          "structured": null,
+          "modelSummary": "结果已流式转存，请使用受控文件引用查看",
+          "cardPayloadJson": ""
+        },
+        "run_id": 5,
+        "status": "SUCCEEDED",
+        "is_mock": false,
+        "args_ref": "pg:call/7758011299f303be4be0bb54fcaabb0d79dda9eef6eec6f8dd64b5cc15c9e111/args",
+        "call_seq": 1,
+        "attempt_id": 13,
+        "claimed_at": "2026-10-20T12:02:16.404845+08:00",
+        "claimed_by": "a66f2abc-9a22-4f22-bbe6-c16a71c06092_77e6988a",
+        "created_at": "2026-10-20T12:02:16.352705+08:00",
+        "result_ref": "pg:call/6/result",
+        "skill_code": "alg_live_ec8285eb1f44_offload",
+        "args_digest": "38f0c7acd1bad65a850729e525d6f545a012b6b6dd59f3175fe016e0d2a3315a",
+        "duration_ms": 657,
+        "claimed_lease": "2026-10-20T12:03:47.044951+08:00",
+        "mock_snapshot": {},
+        "error_semantic": null,
+        "recovery_error": null,
+        "idempotency_key": "7758011299f303be4be0bb54fcaabb0d79dda9eef6eec6f8dd64b5cc15c9e111",
+        "approval_context": null,
+        "node_instance_id": 14,
+        "recovery_next_at": null,
+        "skill_version_id": 5,
+        "recovery_attempts": 0,
+        "mock_source_digest": null,
+        "mock_source_call_id": null,
+        "readonly_retry_count": 0,
+        "skill_contract_sha256": "108baf5a5750890044db3a4ccd2251c449e4c9c5e7a13aed95ad30643c9c8dda",
+        "debug_controls_revision": 0
+      }
+    ],
+    "facts": [
+      {
+        "result": {
+          "error": null,
+          "owner": {
+            "runId": "r_6bd924a669174f2c9b9c0897334b95bf",
+            "callId": 6,
+            "tenantId": "algorithm-live-ec8285eb1f44",
+            "attemptId": 13,
+            "skillCode": "alg_live_ec8285eb1f44_offload",
+            "principalId": "algorithm-live",
+            "nodeInstanceId": 14,
+            "skillVersionId": 5
+          },
+          "isMock": false,
+          "status": "SUCCEEDED",
+          "fileRefs": [
+            {
+              "bytes": 1212,
+              "sha256": "d0150502d84a1181a40bb6d26b8332e63c62f54283f056e0d1891fa866fc1d63",
+              "summary": "结果已转存，请使用受控下载查看",
+              "artifactId": "art_378961d017934f0789bfc77f50d40df6",
+              "contentType": "application/json",
+              "downloadUrl": "/admin/artifacts/art_378961d017934f0789bfc77f50d40df6/download",
+              "externalDownloadUrl": "/v1/runs/r_6bd924a669174f2c9b9c0897334b95bf/artifacts/art_378961d017934f0789bfc77f50d40df6/download"
+            }
+          ],
+          "guardTrace": {
+            "roles": [
+              "ADMIN",
+              "SERVICE",
+              "EDITOR"
+            ],
+            "argsDigest": "38f0c7acd1bad65a850729e525d6f545a012b6b6dd59f3175fe016e0d2a3315a"
+          },
+          "structured": null,
+          "modelSummary": "结果已流式转存，请使用受控文件引用查看",
+          "cardPayloadJson": ""
+        },
+        "run_id": "r_6bd924a669174f2c9b9c0897334b95bf",
+        "status": "SUCCEEDED",
+        "call_id": 6,
+        "is_mock": false,
+        "call_kind": "DEBUG",
+        "tenant_id": "algorithm-live-ec8285eb1f44",
+        "attempt_id": 13,
+        "created_at": "2026-10-20T12:02:16.415589+08:00",
+        "updated_at": "2026-10-20T12:02:17.1218+08:00",
+        "args_digest": "38f0c7acd1bad65a850729e525d6f545a012b6b6dd59f3175fe016e0d2a3315a",
+        "duration_ms": 657,
+        "principal_id": "algorithm-live",
+        "callback_error": null,
+        "callback_state": "DELIVERED",
+        "delivery_owner": null,
+        "execution_owner": "a66f2abc-9a22-4f22-bbe6-c16a71c06092_77e6988a",
+        "next_delivery_at": "2026-10-20T12:02:17.099229+08:00",
+        "request_snapshot": {
+          "mock": {},
+          "runId": "r_6bd924a669174f2c9b9c0897334b95bf",
+          "callId": 6,
+          "callSeq": 1,
+          "arguments": {
+            "message": "offload"
+          },
+          "attemptId": 13,
+          "skillCode": "alg_live_ec8285eb1f44_offload",
+          "leaseOwner": "a66f2abc-9a22-4f22-bbe6-c16a71c06092_77e6988a",
+          "leaseUntil": "2026-10-20T04:03:46.343037Z",
+          "triggerType": "DEBUG",
+          "idempotencyKey": "7758011299f303be4be0bb54fcaabb0d79dda9eef6eec6f8dd64b5cc15c9e111",
+          "nodeInstanceId": 14,
+          "skillVersionId": 5,
+          "guardedArguments": {
+            "message": "offload"
+          },
+          "authorityTriggerType": "DEBUG"
+        },
+        "skill_version_id": 5,
+        "delivery_attempts": 0,
+        "attempt_duration_ms": 657,
+        "delivery_lease_until": null,
+        "skill_contract_sha256": "108baf5a5750890044db3a4ccd2251c449e4c9c5e7a13aed95ad30643c9c8dda"
+      }
+    ],
+    "bindings": [
+      {
+        "run_id": "r_6bd924a669174f2c9b9c0897334b95bf",
+        "status": "DONE",
+        "call_id": 6,
+        "metadata": {
+          "image": "algorithm-proof:finite",
+          "protocol": "ALGORITHM",
+          "contractSha256": "108baf5a5750890044db3a4ccd2251c449e4c9c5e7a13aed95ad30643c9c8dda",
+          "serviceAccount": "algorithm-proof",
+          "terminalEvidence": {
+            "apiSha256": "2f2ffdbd519e1b4130893d982bf451326f1dd5b0b118fdba3d6dc378fe6f2304",
+            "condition": "Complete",
+            "namespace": "alg-live-ec8285eb1f44-offload",
+            "sourceKind": "K8S_JOB",
+            "sourceSha256": "f5e563dfca15af2101a7540f2dc854265a29c1daf54ec7bc85cd40048b0a4c51",
+            "externalJobId": "alg-78c7ea6067da862c25a20c06a86fe276da9d4028",
+            "externalJobUid": "f8e23464-e04c-4a74-a488-d3c70f6d12d7",
+            "identitySha256": "70a94af59891db2b92273abfd96fec4ed4bacbada084407c258123960d3b002c"
+          }
+        },
+        "tenant_id": "algorithm-live-ec8285eb1f44",
+        "attempt_id": 13,
+        "updated_at": "2026-10-20T12:02:17.099229+08:00",
+        "principal_id": "algorithm-live",
+        "send_started": true,
+        "external_job_id": "alg-78c7ea6067da862c25a20c06a86fe276da9d4028",
+        "idempotency_key": "7758011299f303be4be0bb54fcaabb0d79dda9eef6eec6f8dd64b5cc15c9e111",
+        "external_job_uid": "f8e23464-e04c-4a74-a488-d3c70f6d12d7",
+        "request_snapshot": {
+          "mock": {},
+          "runId": "r_6bd924a669174f2c9b9c0897334b95bf",
+          "callId": 6,
+          "callSeq": 1,
+          "arguments": {
+            "message": "offload"
+          },
+          "attemptId": 13,
+          "skillCode": "alg_live_ec8285eb1f44_offload",
+          "leaseOwner": "a66f2abc-9a22-4f22-bbe6-c16a71c06092_77e6988a",
+          "leaseUntil": "2026-10-20T04:03:46.343037Z",
+          "triggerType": "DEBUG",
+          "idempotencyKey": "7758011299f303be4be0bb54fcaabb0d79dda9eef6eec6f8dd64b5cc15c9e111",
+          "nodeInstanceId": 14,
+          "skillVersionId": 5,
+          "guardedArguments": {
+            "message": "offload"
+          },
+          "authorityTriggerType": "DEBUG"
+        },
+        "skill_version_id": 5,
+        "external_namespace": "alg-live-ec8285eb1f44-offload",
+        "external_api_sha256": "2f2ffdbd519e1b4130893d982bf451326f1dd5b0b118fdba3d6dc378fe6f2304",
+        "external_identity_sha256": "70a94af59891db2b92273abfd96fec4ed4bacbada084407c258123960d3b002c"
+      }
+    ],
+    "toolCommits": 1,
+    "attempts": 1,
+    "runCalls": 1,
+    "runFacts": 1,
+    "runBindings": 1,
+    "attemptRows": [
+      {
+        "id": 13,
+        "error": null,
+        "status": "SUCCEEDED",
+        "ended_at": "2026-10-20T12:02:17.124346+08:00",
+        "response": null,
+        "attempt_no": 1,
+        "checkpoint": {},
+        "started_at": "2026-10-20T12:02:16.343037+08:00",
+        "response_ref": null,
+        "routed_model": null,
+        "idempotency_key": "9e0d4d334e897ecad403fe17f75dc1a58eebde69aaeed48f6f36ecd23db51f50",
+        "node_instance_id": 14,
+        "request_snapshot": {},
+        "request_snapshot_ref": "pg:attempt/13"
+      }
+    ],
+    "terminalNotes": [
+      {
+        "id": 6,
+        "kind": "TOOL_EXECUTION_FACT",
+        "payload": {
+          "owner": "a66f2abc-9a22-4f22-bbe6-c16a71c06092_77e6988a",
+          "callId": 6,
+          "isMock": false,
+          "result": {
+            "error": null,
+            "owner": {
+              "runId": "r_6bd924a669174f2c9b9c0897334b95bf",
+              "callId": 6,
+              "tenantId": "algorithm-live-ec8285eb1f44",
+              "attemptId": 13,
+              "skillCode": "alg_live_ec8285eb1f44_offload",
+              "principalId": "algorithm-live",
+              "nodeInstanceId": 14,
+              "skillVersionId": 5
+            },
+            "isMock": false,
+            "status": "SUCCEEDED",
+            "fileRefs": [
+              {
+                "bytes": 1212,
+                "sha256": "d0150502d84a1181a40bb6d26b8332e63c62f54283f056e0d1891fa866fc1d63",
+                "summary": "结果已转存，请使用受控下载查看",
+                "artifactId": "art_378961d017934f0789bfc77f50d40df6",
+                "contentType": "application/json",
+                "downloadUrl": "/admin/artifacts/art_378961d017934f0789bfc77f50d40df6/download",
+                "externalDownloadUrl": "/v1/runs/r_6bd924a669174f2c9b9c0897334b95bf/artifacts/art_378961d017934f0789bfc77f50d40df6/download"
+              }
+            ],
+            "guardTrace": {
+              "roles": [
+                "ADMIN",
+                "SERVICE",
+                "EDITOR"
+              ],
+              "argsDigest": "38f0c7acd1bad65a850729e525d6f545a012b6b6dd59f3175fe016e0d2a3315a"
+            },
+            "structured": null,
+            "modelSummary": "结果已流式转存，请使用受控文件引用查看",
+            "cardPayloadJson": ""
+          },
+          "status": "SUCCEEDED",
+          "accepted": true,
+          "attemptId": 13,
+          "durationMs": 657,
+          "factDigest": "d991b0decdb15a97c2d49a621b7e16dfe889f0229bbe1409e0b7673e8e825455"
+        },
+        "attempt_id": 13,
+        "created_at": "2026-10-20T12:02:17.112832+08:00",
+        "node_instance_id": 14
+      }
+    ],
+    "acceptedTerminalFacts": 1,
+    "events": [
+      {
+        "id": 41,
+        "seq": 1,
+        "type": "RUN_STARTED",
+        "run_id": 5,
+        "payload": {
+          "runId": "r_6bd924a669174f2c9b9c0897334b95bf",
+          "triggerType": "DEBUG"
+        },
+        "created_at": "2026-10-20T12:02:16.306476+08:00"
+      },
+      {
+        "id": 42,
+        "seq": 2,
+        "type": "NODE_STARTED",
+        "run_id": 5,
+        "payload": {
+          "attemptId": 12,
+          "attemptNo": 1,
+          "nodeInstanceId": 13
+        },
+        "created_at": "2026-10-20T12:02:16.321559+08:00"
+      },
+      {
+        "id": 43,
+        "seq": 3,
+        "type": "LOGIC_RESULT_COMMITTED",
+        "run_id": 5,
+        "payload": {
+          "attemptId": 12,
+          "nodeInstanceId": 13
+        },
+        "created_at": "2026-10-20T12:02:16.335791+08:00"
+      },
+      {
+        "id": 44,
+        "seq": 4,
+        "type": "NODE_FINISHED",
+        "run_id": 5,
+        "payload": {
+          "status": "SUCCEEDED",
+          "nodeInstanceId": 13
+        },
+        "created_at": "2026-10-20T12:02:16.335791+08:00"
+      },
+      {
+        "id": 45,
+        "seq": 5,
+        "type": "NODE_STARTED",
+        "run_id": 5,
+        "payload": {
+          "attemptId": 13,
+          "attemptNo": 1,
+          "nodeInstanceId": 14
+        },
+        "created_at": "2026-10-20T12:02:16.343037+08:00"
+      },
+      {
+        "id": 46,
+        "seq": 6,
+        "type": "LOGIC_RESULT_COMMITTED",
+        "run_id": 5,
+        "payload": {
+          "attemptId": 13,
+          "nodeInstanceId": 14
+        },
+        "created_at": "2026-10-20T12:02:17.124346+08:00"
+      },
+      {
+        "id": 47,
+        "seq": 7,
+        "type": "NODE_FINISHED",
+        "run_id": 5,
+        "payload": {
+          "status": "SUCCEEDED",
+          "nodeInstanceId": 14
+        },
+        "created_at": "2026-10-20T12:02:17.124346+08:00"
+      },
+      {
+        "id": 48,
+        "seq": 8,
+        "type": "NODE_STARTED",
+        "run_id": 5,
+        "payload": {
+          "attemptId": 14,
+          "attemptNo": 1,
+          "nodeInstanceId": 15
+        },
+        "created_at": "2026-10-20T12:02:17.128269+08:00"
+      },
+      {
+        "id": 49,
+        "seq": 9,
+        "type": "LOGIC_RESULT_COMMITTED",
+        "run_id": 5,
+        "payload": {
+          "attemptId": 14,
+          "nodeInstanceId": 15
+        },
+        "created_at": "2026-10-20T12:02:17.136817+08:00"
+      },
+      {
+        "id": 50,
+        "seq": 10,
+        "type": "NODE_FINISHED",
+        "run_id": 5,
+        "payload": {
+          "status": "SUCCEEDED",
+          "nodeInstanceId": 15
+        },
+        "created_at": "2026-10-20T12:02:17.136817+08:00"
+      },
+      {
+        "id": 51,
+        "seq": 11,
+        "type": "RUN_FINISHED",
+        "run_id": 5,
+        "payload": {
+          "status": "SUCCEEDED"
+        },
+        "created_at": "2026-10-20T12:02:17.139505+08:00"
+      }
+    ],
+    "call": {
+      "id": 6,
+      "args": {
+        "message": "offload"
+      },
+      "result": {
+        "error": null,
+        "owner": {
+          "runId": "r_6bd924a669174f2c9b9c0897334b95bf",
+          "callId": 6,
+          "tenantId": "algorithm-live-ec8285eb1f44",
+          "attemptId": 13,
+          "skillCode": "alg_live_ec8285eb1f44_offload",
+          "principalId": "algorithm-live",
+          "nodeInstanceId": 14,
+          "skillVersionId": 5
+        },
+        "isMock": false,
+        "status": "SUCCEEDED",
+        "fileRefs": [
+          {
+            "bytes": 1212,
+            "sha256": "d0150502d84a1181a40bb6d26b8332e63c62f54283f056e0d1891fa866fc1d63",
+            "summary": "结果已转存，请使用受控下载查看",
+            "artifactId": "art_378961d017934f0789bfc77f50d40df6",
+            "contentType": "application/json",
+            "downloadUrl": "/admin/artifacts/art_378961d017934f0789bfc77f50d40df6/download",
+            "externalDownloadUrl": "/v1/runs/r_6bd924a669174f2c9b9c0897334b95bf/artifacts/art_378961d017934f0789bfc77f50d40df6/download"
+          }
+        ],
+        "guardTrace": {
+          "roles": [
+            "ADMIN",
+            "SERVICE",
+            "EDITOR"
+          ],
+          "argsDigest": "38f0c7acd1bad65a850729e525d6f545a012b6b6dd59f3175fe016e0d2a3315a"
+        },
+        "structured": null,
+        "modelSummary": "结果已流式转存，请使用受控文件引用查看",
+        "cardPayloadJson": ""
+      },
+      "run_id": 5,
+      "status": "SUCCEEDED",
+      "is_mock": false,
+      "args_ref": "pg:call/7758011299f303be4be0bb54fcaabb0d79dda9eef6eec6f8dd64b5cc15c9e111/args",
+      "call_seq": 1,
+      "attempt_id": 13,
+      "claimed_at": "2026-10-20T12:02:16.404845+08:00",
+      "claimed_by": "a66f2abc-9a22-4f22-bbe6-c16a71c06092_77e6988a",
+      "created_at": "2026-10-20T12:02:16.352705+08:00",
+      "result_ref": "pg:call/6/result",
+      "skill_code": "alg_live_ec8285eb1f44_offload",
+      "args_digest": "38f0c7acd1bad65a850729e525d6f545a012b6b6dd59f3175fe016e0d2a3315a",
+      "duration_ms": 657,
+      "claimed_lease": "2026-10-20T12:03:47.044951+08:00",
+      "mock_snapshot": {},
+      "error_semantic": null,
+      "recovery_error": null,
+      "idempotency_key": "7758011299f303be4be0bb54fcaabb0d79dda9eef6eec6f8dd64b5cc15c9e111",
+      "approval_context": null,
+      "node_instance_id": 14,
+      "recovery_next_at": null,
+      "skill_version_id": 5,
+      "recovery_attempts": 0,
+      "mock_source_digest": null,
+      "mock_source_call_id": null,
+      "readonly_retry_count": 0,
+      "skill_contract_sha256": "108baf5a5750890044db3a4ccd2251c449e4c9c5e7a13aed95ad30643c9c8dda",
+      "debug_controls_revision": 0
+    },
+    "fact": {
+      "result": {
+        "error": null,
+        "owner": {
+          "runId": "r_6bd924a669174f2c9b9c0897334b95bf",
+          "callId": 6,
+          "tenantId": "algorithm-live-ec8285eb1f44",
+          "attemptId": 13,
+          "skillCode": "alg_live_ec8285eb1f44_offload",
+          "principalId": "algorithm-live",
+          "nodeInstanceId": 14,
+          "skillVersionId": 5
+        },
+        "isMock": false,
+        "status": "SUCCEEDED",
+        "fileRefs": [
+          {
+            "bytes": 1212,
+            "sha256": "d0150502d84a1181a40bb6d26b8332e63c62f54283f056e0d1891fa866fc1d63",
+            "summary": "结果已转存，请使用受控下载查看",
+            "artifactId": "art_378961d017934f0789bfc77f50d40df6",
+            "contentType": "application/json",
+            "downloadUrl": "/admin/artifacts/art_378961d017934f0789bfc77f50d40df6/download",
+            "externalDownloadUrl": "/v1/runs/r_6bd924a669174f2c9b9c0897334b95bf/artifacts/art_378961d017934f0789bfc77f50d40df6/download"
+          }
+        ],
+        "guardTrace": {
+          "roles": [
+            "ADMIN",
+            "SERVICE",
+            "EDITOR"
+          ],
+          "argsDigest": "38f0c7acd1bad65a850729e525d6f545a012b6b6dd59f3175fe016e0d2a3315a"
+        },
+        "structured": null,
+        "modelSummary": "结果已流式转存，请使用受控文件引用查看",
+        "cardPayloadJson": ""
+      },
+      "run_id": "r_6bd924a669174f2c9b9c0897334b95bf",
+      "status": "SUCCEEDED",
+      "call_id": 6,
+      "is_mock": false,
+      "call_kind": "DEBUG",
+      "tenant_id": "algorithm-live-ec8285eb1f44",
+      "attempt_id": 13,
+      "created_at": "2026-10-20T12:02:16.415589+08:00",
+      "updated_at": "2026-10-20T12:02:17.1218+08:00",
+      "args_digest": "38f0c7acd1bad65a850729e525d6f545a012b6b6dd59f3175fe016e0d2a3315a",
+      "duration_ms": 657,
+      "principal_id": "algorithm-live",
+      "callback_error": null,
+      "callback_state": "DELIVERED",
+      "delivery_owner": null,
+      "execution_owner": "a66f2abc-9a22-4f22-bbe6-c16a71c06092_77e6988a",
+      "next_delivery_at": "2026-10-20T12:02:17.099229+08:00",
+      "request_snapshot": {
+        "mock": {},
+        "runId": "r_6bd924a669174f2c9b9c0897334b95bf",
+        "callId": 6,
+        "callSeq": 1,
+        "arguments": {
+          "message": "offload"
+        },
+        "attemptId": 13,
+        "skillCode": "alg_live_ec8285eb1f44_offload",
+        "leaseOwner": "a66f2abc-9a22-4f22-bbe6-c16a71c06092_77e6988a",
+        "leaseUntil": "2026-10-20T04:03:46.343037Z",
+        "triggerType": "DEBUG",
+        "idempotencyKey": "7758011299f303be4be0bb54fcaabb0d79dda9eef6eec6f8dd64b5cc15c9e111",
+        "nodeInstanceId": 14,
+        "skillVersionId": 5,
+        "guardedArguments": {
+          "message": "offload"
+        },
+        "authorityTriggerType": "DEBUG"
+      },
+      "skill_version_id": 5,
+      "delivery_attempts": 0,
+      "attempt_duration_ms": 657,
+      "delivery_lease_until": null,
+      "skill_contract_sha256": "108baf5a5750890044db3a4ccd2251c449e4c9c5e7a13aed95ad30643c9c8dda"
+    },
+    "binding": {
+      "run_id": "r_6bd924a669174f2c9b9c0897334b95bf",
+      "status": "DONE",
+      "call_id": 6,
+      "metadata": {
+        "image": "algorithm-proof:finite",
+        "protocol": "ALGORITHM",
+        "contractSha256": "108baf5a5750890044db3a4ccd2251c449e4c9c5e7a13aed95ad30643c9c8dda",
+        "serviceAccount": "algorithm-proof",
+        "terminalEvidence": {
+          "apiSha256": "2f2ffdbd519e1b4130893d982bf451326f1dd5b0b118fdba3d6dc378fe6f2304",
+          "condition": "Complete",
+          "namespace": "alg-live-ec8285eb1f44-offload",
+          "sourceKind": "K8S_JOB",
+          "sourceSha256": "f5e563dfca15af2101a7540f2dc854265a29c1daf54ec7bc85cd40048b0a4c51",
+          "externalJobId": "alg-78c7ea6067da862c25a20c06a86fe276da9d4028",
+          "externalJobUid": "f8e23464-e04c-4a74-a488-d3c70f6d12d7",
+          "identitySha256": "70a94af59891db2b92273abfd96fec4ed4bacbada084407c258123960d3b002c"
+        }
+      },
+      "tenant_id": "algorithm-live-ec8285eb1f44",
+      "attempt_id": 13,
+      "updated_at": "2026-10-20T12:02:17.099229+08:00",
+      "principal_id": "algorithm-live",
+      "send_started": true,
+      "external_job_id": "alg-78c7ea6067da862c25a20c06a86fe276da9d4028",
+      "idempotency_key": "7758011299f303be4be0bb54fcaabb0d79dda9eef6eec6f8dd64b5cc15c9e111",
+      "external_job_uid": "f8e23464-e04c-4a74-a488-d3c70f6d12d7",
+      "request_snapshot": {
+        "mock": {},
+        "runId": "r_6bd924a669174f2c9b9c0897334b95bf",
+        "callId": 6,
+        "callSeq": 1,
+        "arguments": {
+          "message": "offload"
+        },
+        "attemptId": 13,
+        "skillCode": "alg_live_ec8285eb1f44_offload",
+        "leaseOwner": "a66f2abc-9a22-4f22-bbe6-c16a71c06092_77e6988a",
+        "leaseUntil": "2026-10-20T04:03:46.343037Z",
+        "triggerType": "DEBUG",
+        "idempotencyKey": "7758011299f303be4be0bb54fcaabb0d79dda9eef6eec6f8dd64b5cc15c9e111",
+        "nodeInstanceId": 14,
+        "skillVersionId": 5,
+        "guardedArguments": {
+          "message": "offload"
+        },
+        "authorityTriggerType": "DEBUG"
+      },
+      "skill_version_id": 5,
+      "external_namespace": "alg-live-ec8285eb1f44-offload",
+      "external_api_sha256": "2f2ffdbd519e1b4130893d982bf451326f1dd5b0b118fdba3d6dc378fe6f2304",
+      "external_identity_sha256": "70a94af59891db2b92273abfd96fec4ed4bacbada084407c258123960d3b002c"
+    }
+  },
+  "recheck": {
+    "ok": true,
+    "latencyMs": 1,
+    "candidateSha256": "108baf5a5750890044db3a4ccd2251c449e4c9c5e7a13aed95ad30643c9c8dda"
+  },
+  "afterRecheck": {
+    "run": {
+      "id": 5,
+      "publicId": "r_6bd924a669174f2c9b9c0897334b95bf",
+      "status": "SUCCEEDED",
+      "tenantId": "algorithm-live-ec8285eb1f44",
+      "principalId": "algorithm-live"
+    },
+    "node": {
+      "id": 14,
+      "error": null,
+      "output": null,
+      "run_id": 5,
+      "status": "SUCCEEDED",
+      "ended_at": "2026-10-20T12:02:17.124346+08:00",
+      "released": false,
+      "step_seq": 2,
+      "node_type": "SKILL",
+      "pause_seq": null,
+      "definition": {
+        "id": "draft_skill",
+        "args": {
+          "message": "offload"
+        },
+        "type": "SKILL",
+        "skillRef": {
+          "code": "alg_live_ec8285eb1f44_offload",
+          "version": 1,
+          "execution": {
+            "readonly": true,
+            "idempotent": true,
+            "sideEffect": false,
+            "cancellable": false
+          },
+          "skillVersionId": 5
+        }
+      },
+      "started_at": "2026-10-20T12:02:16.343037+08:00",
+      "lease_owner": "a66f2abc-9a22-4f22-bbe6-c16a71c06092_77e6988a",
+      "lease_until": "2026-10-20T12:03:47.044951+08:00",
+      "node_def_id": "draft_skill",
+      "input_digest": null,
+      "output_digest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+      "join_semantics": null,
+      "winner_node_id": null,
+      "approval_context": null,
+      "committed_attempt_id": 13,
+      "committed_output_ref": "pg:node/14"
+    },
+    "tenantRuns": [
+      {
+        "id": 1,
+        "publicId": "r_78455d30c3b34e879f895a8db4e3d7cf"
+      },
+      {
+        "id": 2,
+        "publicId": "r_6e081b156e86429e801bbaea898549b6"
+      },
+      {
+        "id": 3,
+        "publicId": "r_418b69e5e2a04dadaff3fa2995497e2d"
+      },
+      {
+        "id": 4,
+        "publicId": "r_606c4879744346dc8320e3abebd78d3f"
+      },
+      {
+        "id": 5,
+        "publicId": "r_6bd924a669174f2c9b9c0897334b95bf"
+      }
+    ],
+    "calls": [
+      {
+        "id": 6,
+        "args": {
+          "message": "offload"
+        },
+        "result": {
+          "error": null,
+          "owner": {
+            "runId": "r_6bd924a669174f2c9b9c0897334b95bf",
+            "callId": 6,
+            "tenantId": "algorithm-live-ec8285eb1f44",
+            "attemptId": 13,
+            "skillCode": "alg_live_ec8285eb1f44_offload",
+            "principalId": "algorithm-live",
+            "nodeInstanceId": 14,
+            "skillVersionId": 5
+          },
+          "isMock": false,
+          "status": "SUCCEEDED",
+          "fileRefs": [
+            {
+              "bytes": 1212,
+              "sha256": "d0150502d84a1181a40bb6d26b8332e63c62f54283f056e0d1891fa866fc1d63",
+              "summary": "结果已转存，请使用受控下载查看",
+              "artifactId": "art_378961d017934f0789bfc77f50d40df6",
+              "contentType": "application/json",
+              "downloadUrl": "/admin/artifacts/art_378961d017934f0789bfc77f50d40df6/download",
+              "externalDownloadUrl": "/v1/runs/r_6bd924a669174f2c9b9c0897334b95bf/artifacts/art_378961d017934f0789bfc77f50d40df6/download"
+            }
+          ],
+          "guardTrace": {
+            "roles": [
+              "ADMIN",
+              "SERVICE",
+              "EDITOR"
+            ],
+            "argsDigest": "38f0c7acd1bad65a850729e525d6f545a012b6b6dd59f3175fe016e0d2a3315a"
+          },
+          "structured": null,
+          "modelSummary": "结果已流式转存，请使用受控文件引用查看",
+          "cardPayloadJson": ""
+        },
+        "run_id": 5,
+        "status": "SUCCEEDED",
+        "is_mock": false,
+        "args_ref": "pg:call/7758011299f303be4be0bb54fcaabb0d79dda9eef6eec6f8dd64b5cc15c9e111/args",
+        "call_seq": 1,
+        "attempt_id": 13,
+        "claimed_at": "2026-10-20T12:02:16.404845+08:00",
+        "claimed_by": "a66f2abc-9a22-4f22-bbe6-c16a71c06092_77e6988a",
+        "created_at": "2026-10-20T12:02:16.352705+08:00",
+        "result_ref": "pg:call/6/result",
+        "skill_code": "alg_live_ec8285eb1f44_offload",
+        "args_digest": "38f0c7acd1bad65a850729e525d6f545a012b6b6dd59f3175fe016e0d2a3315a",
+        "duration_ms": 657,
+        "claimed_lease": "2026-10-20T12:03:47.044951+08:00",
+        "mock_snapshot": {},
+        "error_semantic": null,
+        "recovery_error": null,
+        "idempotency_key": "7758011299f303be4be0bb54fcaabb0d79dda9eef6eec6f8dd64b5cc15c9e111",
+        "approval_context": null,
+        "node_instance_id": 14,
+        "recovery_next_at": null,
+        "skill_version_id": 5,
+        "recovery_attempts": 0,
+        "mock_source_digest": null,
+        "mock_source_call_id": null,
+        "readonly_retry_count": 0,
+        "skill_contract_sha256": "108baf5a5750890044db3a4ccd2251c449e4c9c5e7a13aed95ad30643c9c8dda",
+        "debug_controls_revision": 0
+      }
+    ],
+    "facts": [
+      {
+        "result": {
+          "error": null,
+          "owner": {
+            "runId": "r_6bd924a669174f2c9b9c0897334b95bf",
+            "callId": 6,
+            "tenantId": "algorithm-live-ec8285eb1f44",
+            "attemptId": 13,
+            "skillCode": "alg_live_ec8285eb1f44_offload",
+            "principalId": "algorithm-live",
+            "nodeInstanceId": 14,
+            "skillVersionId": 5
+          },
+          "isMock": false,
+          "status": "SUCCEEDED",
+          "fileRefs": [
+            {
+              "bytes": 1212,
+              "sha256": "d0150502d84a1181a40bb6d26b8332e63c62f54283f056e0d1891fa866fc1d63",
+              "summary": "结果已转存，请使用受控下载查看",
+              "artifactId": "art_378961d017934f0789bfc77f50d40df6",
+              "contentType": "application/json",
+              "downloadUrl": "/admin/artifacts/art_378961d017934f0789bfc77f50d40df6/download",
+              "externalDownloadUrl": "/v1/runs/r_6bd924a669174f2c9b9c0897334b95bf/artifacts/art_378961d017934f0789bfc77f50d40df6/download"
+            }
+          ],
+          "guardTrace": {
+            "roles": [
+              "ADMIN",
+              "SERVICE",
+              "EDITOR"
+            ],
+            "argsDigest": "38f0c7acd1bad65a850729e525d6f545a012b6b6dd59f3175fe016e0d2a3315a"
+          },
+          "structured": null,
+          "modelSummary": "结果已流式转存，请使用受控文件引用查看",
+          "cardPayloadJson": ""
+        },
+        "run_id": "r_6bd924a669174f2c9b9c0897334b95bf",
+        "status": "SUCCEEDED",
+        "call_id": 6,
+        "is_mock": false,
+        "call_kind": "DEBUG",
+        "tenant_id": "algorithm-live-ec8285eb1f44",
+        "attempt_id": 13,
+        "created_at": "2026-10-20T12:02:16.415589+08:00",
+        "updated_at": "2026-10-20T12:02:17.1218+08:00",
+        "args_digest": "38f0c7acd1bad65a850729e525d6f545a012b6b6dd59f3175fe016e0d2a3315a",
+        "duration_ms": 657,
+        "principal_id": "algorithm-live",
+        "callback_error": null,
+        "callback_state": "DELIVERED",
+        "delivery_owner": null,
+        "execution_owner": "a66f2abc-9a22-4f22-bbe6-c16a71c06092_77e6988a",
+        "next_delivery_at": "2026-10-20T12:02:17.099229+08:00",
+        "request_snapshot": {
+          "mock": {},
+          "runId": "r_6bd924a669174f2c9b9c0897334b95bf",
+          "callId": 6,
+          "callSeq": 1,
+          "arguments": {
+            "message": "offload"
+          },
+          "attemptId": 13,
+          "skillCode": "alg_live_ec8285eb1f44_offload",
+          "leaseOwner": "a66f2abc-9a22-4f22-bbe6-c16a71c06092_77e6988a",
+          "leaseUntil": "2026-10-20T04:03:46.343037Z",
+          "triggerType": "DEBUG",
+          "idempotencyKey": "7758011299f303be4be0bb54fcaabb0d79dda9eef6eec6f8dd64b5cc15c9e111",
+          "nodeInstanceId": 14,
+          "skillVersionId": 5,
+          "guardedArguments": {
+            "message": "offload"
+          },
+          "authorityTriggerType": "DEBUG"
+        },
+        "skill_version_id": 5,
+        "delivery_attempts": 0,
+        "attempt_duration_ms": 657,
+        "delivery_lease_until": null,
+        "skill_contract_sha256": "108baf5a5750890044db3a4ccd2251c449e4c9c5e7a13aed95ad30643c9c8dda"
+      }
+    ],
+    "bindings": [
+      {
+        "run_id": "r_6bd924a669174f2c9b9c0897334b95bf",
+        "status": "DONE",
+        "call_id": 6,
+        "metadata": {
+          "image": "algorithm-proof:finite",
+          "protocol": "ALGORITHM",
+          "contractSha256": "108baf5a5750890044db3a4ccd2251c449e4c9c5e7a13aed95ad30643c9c8dda",
+          "serviceAccount": "algorithm-proof",
+          "terminalEvidence": {
+            "apiSha256": "2f2ffdbd519e1b4130893d982bf451326f1dd5b0b118fdba3d6dc378fe6f2304",
+            "condition": "Complete",
+            "namespace": "alg-live-ec8285eb1f44-offload",
+            "sourceKind": "K8S_JOB",
+            "sourceSha256": "f5e563dfca15af2101a7540f2dc854265a29c1daf54ec7bc85cd40048b0a4c51",
+            "externalJobId": "alg-78c7ea6067da862c25a20c06a86fe276da9d4028",
+            "externalJobUid": "f8e23464-e04c-4a74-a488-d3c70f6d12d7",
+            "identitySha256": "70a94af59891db2b92273abfd96fec4ed4bacbada084407c258123960d3b002c"
+          }
+        },
+        "tenant_id": "algorithm-live-ec8285eb1f44",
+        "attempt_id": 13,
+        "updated_at": "2026-10-20T12:02:17.099229+08:00",
+        "principal_id": "algorithm-live",
+        "send_started": true,
+        "external_job_id": "alg-78c7ea6067da862c25a20c06a86fe276da9d4028",
+        "idempotency_key": "7758011299f303be4be0bb54fcaabb0d79dda9eef6eec6f8dd64b5cc15c9e111",
+        "external_job_uid": "f8e23464-e04c-4a74-a488-d3c70f6d12d7",
+        "request_snapshot": {
+          "mock": {},
+          "runId": "r_6bd924a669174f2c9b9c0897334b95bf",
+          "callId": 6,
+          "callSeq": 1,
+          "arguments": {
+            "message": "offload"
+          },
+          "attemptId": 13,
+          "skillCode": "alg_live_ec8285eb1f44_offload",
+          "leaseOwner": "a66f2abc-9a22-4f22-bbe6-c16a71c06092_77e6988a",
+          "leaseUntil": "2026-10-20T04:03:46.343037Z",
+          "triggerType": "DEBUG",
+          "idempotencyKey": "7758011299f303be4be0bb54fcaabb0d79dda9eef6eec6f8dd64b5cc15c9e111",
+          "nodeInstanceId": 14,
+          "skillVersionId": 5,
+          "guardedArguments": {
+            "message": "offload"
+          },
+          "authorityTriggerType": "DEBUG"
+        },
+        "skill_version_id": 5,
+        "external_namespace": "alg-live-ec8285eb1f44-offload",
+        "external_api_sha256": "2f2ffdbd519e1b4130893d982bf451326f1dd5b0b118fdba3d6dc378fe6f2304",
+        "external_identity_sha256": "70a94af59891db2b92273abfd96fec4ed4bacbada084407c258123960d3b002c"
+      }
+    ],
+    "toolCommits": 1,
+    "attempts": 1,
+    "runCalls": 1,
+    "runFacts": 1,
+    "runBindings": 1,
+    "attemptRows": [
+      {
+        "id": 13,
+        "error": null,
+        "status": "SUCCEEDED",
+        "ended_at": "2026-10-20T12:02:17.124346+08:00",
+        "response": null,
+        "attempt_no": 1,
+        "checkpoint": {},
+        "started_at": "2026-10-20T12:02:16.343037+08:00",
+        "response_ref": null,
+        "routed_model": null,
+        "idempotency_key": "9e0d4d334e897ecad403fe17f75dc1a58eebde69aaeed48f6f36ecd23db51f50",
+        "node_instance_id": 14,
+        "request_snapshot": {},
+        "request_snapshot_ref": "pg:attempt/13"
+      }
+    ],
+    "terminalNotes": [
+      {
+        "id": 6,
+        "kind": "TOOL_EXECUTION_FACT",
+        "payload": {
+          "owner": "a66f2abc-9a22-4f22-bbe6-c16a71c06092_77e6988a",
+          "callId": 6,
+          "isMock": false,
+          "result": {
+            "error": null,
+            "owner": {
+              "runId": "r_6bd924a669174f2c9b9c0897334b95bf",
+              "callId": 6,
+              "tenantId": "algorithm-live-ec8285eb1f44",
+              "attemptId": 13,
+              "skillCode": "alg_live_ec8285eb1f44_offload",
+              "principalId": "algorithm-live",
+              "nodeInstanceId": 14,
+              "skillVersionId": 5
+            },
+            "isMock": false,
+            "status": "SUCCEEDED",
+            "fileRefs": [
+              {
+                "bytes": 1212,
+                "sha256": "d0150502d84a1181a40bb6d26b8332e63c62f54283f056e0d1891fa866fc1d63",
+                "summary": "结果已转存，请使用受控下载查看",
+                "artifactId": "art_378961d017934f0789bfc77f50d40df6",
+                "contentType": "application/json",
+                "downloadUrl": "/admin/artifacts/art_378961d017934f0789bfc77f50d40df6/download",
+                "externalDownloadUrl": "/v1/runs/r_6bd924a669174f2c9b9c0897334b95bf/artifacts/art_378961d017934f0789bfc77f50d40df6/download"
+              }
+            ],
+            "guardTrace": {
+              "roles": [
+                "ADMIN",
+                "SERVICE",
+                "EDITOR"
+              ],
+              "argsDigest": "38f0c7acd1bad65a850729e525d6f545a012b6b6dd59f3175fe016e0d2a3315a"
+            },
+            "structured": null,
+            "modelSummary": "结果已流式转存，请使用受控文件引用查看",
+            "cardPayloadJson": ""
+          },
+          "status": "SUCCEEDED",
+          "accepted": true,
+          "attemptId": 13,
+          "durationMs": 657,
+          "factDigest": "d991b0decdb15a97c2d49a621b7e16dfe889f0229bbe1409e0b7673e8e825455"
+        },
+        "attempt_id": 13,
+        "created_at": "2026-10-20T12:02:17.112832+08:00",
+        "node_instance_id": 14
+      }
+    ],
+    "acceptedTerminalFacts": 1,
+    "events": [
+      {
+        "id": 41,
+        "seq": 1,
+        "type": "RUN_STARTED",
+        "run_id": 5,
+        "payload": {
+          "runId": "r_6bd924a669174f2c9b9c0897334b95bf",
+          "triggerType": "DEBUG"
+        },
+        "created_at": "2026-10-20T12:02:16.306476+08:00"
+      },
+      {
+        "id": 42,
+        "seq": 2,
+        "type": "NODE_STARTED",
+        "run_id": 5,
+        "payload": {
+          "attemptId": 12,
+          "attemptNo": 1,
+          "nodeInstanceId": 13
+        },
+        "created_at": "2026-10-20T12:02:16.321559+08:00"
+      },
+      {
+        "id": 43,
+        "seq": 3,
+        "type": "LOGIC_RESULT_COMMITTED",
+        "run_id": 5,
+        "payload": {
+          "attemptId": 12,
+          "nodeInstanceId": 13
+        },
+        "created_at": "2026-10-20T12:02:16.335791+08:00"
+      },
+      {
+        "id": 44,
+        "seq": 4,
+        "type": "NODE_FINISHED",
+        "run_id": 5,
+        "payload": {
+          "status": "SUCCEEDED",
+          "nodeInstanceId": 13
+        },
+        "created_at": "2026-10-20T12:02:16.335791+08:00"
+      },
+      {
+        "id": 45,
+        "seq": 5,
+        "type": "NODE_STARTED",
+        "run_id": 5,
+        "payload": {
+          "attemptId": 13,
+          "attemptNo": 1,
+          "nodeInstanceId": 14
+        },
+        "created_at": "2026-10-20T12:02:16.343037+08:00"
+      },
+      {
+        "id": 46,
+        "seq": 6,
+        "type": "LOGIC_RESULT_COMMITTED",
+        "run_id": 5,
+        "payload": {
+          "attemptId": 13,
+          "nodeInstanceId": 14
+        },
+        "created_at": "2026-10-20T12:02:17.124346+08:00"
+      },
+      {
+        "id": 47,
+        "seq": 7,
+        "type": "NODE_FINISHED",
+        "run_id": 5,
+        "payload": {
+          "status": "SUCCEEDED",
+          "nodeInstanceId": 14
+        },
+        "created_at": "2026-10-20T12:02:17.124346+08:00"
+      },
+      {
+        "id": 48,
+        "seq": 8,
+        "type": "NODE_STARTED",
+        "run_id": 5,
+        "payload": {
+          "attemptId": 14,
+          "attemptNo": 1,
+          "nodeInstanceId": 15
+        },
+        "created_at": "2026-10-20T12:02:17.128269+08:00"
+      },
+      {
+        "id": 49,
+        "seq": 9,
+        "type": "LOGIC_RESULT_COMMITTED",
+        "run_id": 5,
+        "payload": {
+          "attemptId": 14,
+          "nodeInstanceId": 15
+        },
+        "created_at": "2026-10-20T12:02:17.136817+08:00"
+      },
+      {
+        "id": 50,
+        "seq": 10,
+        "type": "NODE_FINISHED",
+        "run_id": 5,
+        "payload": {
+          "status": "SUCCEEDED",
+          "nodeInstanceId": 15
+        },
+        "created_at": "2026-10-20T12:02:17.136817+08:00"
+      },
+      {
+        "id": 51,
+        "seq": 11,
+        "type": "RUN_FINISHED",
+        "run_id": 5,
+        "payload": {
+          "status": "SUCCEEDED"
+        },
+        "created_at": "2026-10-20T12:02:17.139505+08:00"
+      }
+    ],
+    "call": {
+      "id": 6,
+      "args": {
+        "message": "offload"
+      },
+      "result": {
+        "error": null,
+        "owner": {
+          "runId": "r_6bd924a669174f2c9b9c0897334b95bf",
+          "callId": 6,
+          "tenantId": "algorithm-live-ec8285eb1f44",
+          "attemptId": 13,
+          "skillCode": "alg_live_ec8285eb1f44_offload",
+          "principalId": "algorithm-live",
+          "nodeInstanceId": 14,
+          "skillVersionId": 5
+        },
+        "isMock": false,
+        "status": "SUCCEEDED",
+        "fileRefs": [
+          {
+            "bytes": 1212,
+            "sha256": "d0150502d84a1181a40bb6d26b8332e63c62f54283f056e0d1891fa866fc1d63",
+            "summary": "结果已转存，请使用受控下载查看",
+            "artifactId": "art_378961d017934f0789bfc77f50d40df6",
+            "contentType": "application/json",
+            "downloadUrl": "/admin/artifacts/art_378961d017934f0789bfc77f50d40df6/download",
+            "externalDownloadUrl": "/v1/runs/r_6bd924a669174f2c9b9c0897334b95bf/artifacts/art_378961d017934f0789bfc77f50d40df6/download"
+          }
+        ],
+        "guardTrace": {
+          "roles": [
+            "ADMIN",
+            "SERVICE",
+            "EDITOR"
+          ],
+          "argsDigest": "38f0c7acd1bad65a850729e525d6f545a012b6b6dd59f3175fe016e0d2a3315a"
+        },
+        "structured": null,
+        "modelSummary": "结果已流式转存，请使用受控文件引用查看",
+        "cardPayloadJson": ""
+      },
+      "run_id": 5,
+      "status": "SUCCEEDED",
+      "is_mock": false,
+      "args_ref": "pg:call/7758011299f303be4be0bb54fcaabb0d79dda9eef6eec6f8dd64b5cc15c9e111/args",
+      "call_seq": 1,
+      "attempt_id": 13,
+      "claimed_at": "2026-10-20T12:02:16.404845+08:00",
+      "claimed_by": "a66f2abc-9a22-4f22-bbe6-c16a71c06092_77e6988a",
+      "created_at": "2026-10-20T12:02:16.352705+08:00",
+      "result_ref": "pg:call/6/result",
+      "skill_code": "alg_live_ec8285eb1f44_offload",
+      "args_digest": "38f0c7acd1bad65a850729e525d6f545a012b6b6dd59f3175fe016e0d2a3315a",
+      "duration_ms": 657,
+      "claimed_lease": "2026-10-20T12:03:47.044951+08:00",
+      "mock_snapshot": {},
+      "error_semantic": null,
+      "recovery_error": null,
+      "idempotency_key": "7758011299f303be4be0bb54fcaabb0d79dda9eef6eec6f8dd64b5cc15c9e111",
+      "approval_context": null,
+      "node_instance_id": 14,
+      "recovery_next_at": null,
+      "skill_version_id": 5,
+      "recovery_attempts": 0,
+      "mock_source_digest": null,
+      "mock_source_call_id": null,
+      "readonly_retry_count": 0,
+      "skill_contract_sha256": "108baf5a5750890044db3a4ccd2251c449e4c9c5e7a13aed95ad30643c9c8dda",
+      "debug_controls_revision": 0
+    },
+    "fact": {
+      "result": {
+        "error": null,
+        "owner": {
+          "runId": "r_6bd924a669174f2c9b9c0897334b95bf",
+          "callId": 6,
+          "tenantId": "algorithm-live-ec8285eb1f44",
+          "attemptId": 13,
+          "skillCode": "alg_live_ec8285eb1f44_offload",
+          "principalId": "algorithm-live",
+          "nodeInstanceId": 14,
+          "skillVersionId": 5
+        },
+        "isMock": false,
+        "status": "SUCCEEDED",
+        "fileRefs": [
+          {
+            "bytes": 1212,
+            "sha256": "d0150502d84a1181a40bb6d26b8332e63c62f54283f056e0d1891fa866fc1d63",
+            "summary": "结果已转存，请使用受控下载查看",
+            "artifactId": "art_378961d017934f0789bfc77f50d40df6",
+            "contentType": "application/json",
+            "downloadUrl": "/admin/artifacts/art_378961d017934f0789bfc77f50d40df6/download",
+            "externalDownloadUrl": "/v1/runs/r_6bd924a669174f2c9b9c0897334b95bf/artifacts/art_378961d017934f0789bfc77f50d40df6/download"
+          }
+        ],
+        "guardTrace": {
+          "roles": [
+            "ADMIN",
+            "SERVICE",
+            "EDITOR"
+          ],
+          "argsDigest": "38f0c7acd1bad65a850729e525d6f545a012b6b6dd59f3175fe016e0d2a3315a"
+        },
+        "structured": null,
+        "modelSummary": "结果已流式转存，请使用受控文件引用查看",
+        "cardPayloadJson": ""
+      },
+      "run_id": "r_6bd924a669174f2c9b9c0897334b95bf",
+      "status": "SUCCEEDED",
+      "call_id": 6,
+      "is_mock": false,
+      "call_kind": "DEBUG",
+      "tenant_id": "algorithm-live-ec8285eb1f44",
+      "attempt_id": 13,
+      "created_at": "2026-10-20T12:02:16.415589+08:00",
+      "updated_at": "2026-10-20T12:02:17.1218+08:00",
+      "args_digest": "38f0c7acd1bad65a850729e525d6f545a012b6b6dd59f3175fe016e0d2a3315a",
+      "duration_ms": 657,
+      "principal_id": "algorithm-live",
+      "callback_error": null,
+      "callback_state": "DELIVERED",
+      "delivery_owner": null,
+      "execution_owner": "a66f2abc-9a22-4f22-bbe6-c16a71c06092_77e6988a",
+      "next_delivery_at": "2026-10-20T12:02:17.099229+08:00",
+      "request_snapshot": {
+        "mock": {},
+        "runId": "r_6bd924a669174f2c9b9c0897334b95bf",
+        "callId": 6,
+        "callSeq": 1,
+        "arguments": {
+          "message": "offload"
+        },
+        "attemptId": 13,
+        "skillCode": "alg_live_ec8285eb1f44_offload",
+        "leaseOwner": "a66f2abc-9a22-4f22-bbe6-c16a71c06092_77e6988a",
+        "leaseUntil": "2026-10-20T04:03:46.343037Z",
+        "triggerType": "DEBUG",
+        "idempotencyKey": "7758011299f303be4be0bb54fcaabb0d79dda9eef6eec6f8dd64b5cc15c9e111",
+        "nodeInstanceId": 14,
+        "skillVersionId": 5,
+        "guardedArguments": {
+          "message": "offload"
+        },
+        "authorityTriggerType": "DEBUG"
+      },
+      "skill_version_id": 5,
+      "delivery_attempts": 0,
+      "attempt_duration_ms": 657,
+      "delivery_lease_until": null,
+      "skill_contract_sha256": "108baf5a5750890044db3a4ccd2251c449e4c9c5e7a13aed95ad30643c9c8dda"
+    },
+    "binding": {
+      "run_id": "r_6bd924a669174f2c9b9c0897334b95bf",
+      "status": "DONE",
+      "call_id": 6,
+      "metadata": {
+        "image": "algorithm-proof:finite",
+        "protocol": "ALGORITHM",
+        "contractSha256": "108baf5a5750890044db3a4ccd2251c449e4c9c5e7a13aed95ad30643c9c8dda",
+        "serviceAccount": "algorithm-proof",
+        "terminalEvidence": {
+          "apiSha256": "2f2ffdbd519e1b4130893d982bf451326f1dd5b0b118fdba3d6dc378fe6f2304",
+          "condition": "Complete",
+          "namespace": "alg-live-ec8285eb1f44-offload",
+          "sourceKind": "K8S_JOB",
+          "sourceSha256": "f5e563dfca15af2101a7540f2dc854265a29c1daf54ec7bc85cd40048b0a4c51",
+          "externalJobId": "alg-78c7ea6067da862c25a20c06a86fe276da9d4028",
+          "externalJobUid": "f8e23464-e04c-4a74-a488-d3c70f6d12d7",
+          "identitySha256": "70a94af59891db2b92273abfd96fec4ed4bacbada084407c258123960d3b002c"
+        }
+      },
+      "tenant_id": "algorithm-live-ec8285eb1f44",
+      "attempt_id": 13,
+      "updated_at": "2026-10-20T12:02:17.099229+08:00",
+      "principal_id": "algorithm-live",
+      "send_started": true,
+      "external_job_id": "alg-78c7ea6067da862c25a20c06a86fe276da9d4028",
+      "idempotency_key": "7758011299f303be4be0bb54fcaabb0d79dda9eef6eec6f8dd64b5cc15c9e111",
+      "external_job_uid": "f8e23464-e04c-4a74-a488-d3c70f6d12d7",
+      "request_snapshot": {
+        "mock": {},
+        "runId": "r_6bd924a669174f2c9b9c0897334b95bf",
+        "callId": 6,
+        "callSeq": 1,
+        "arguments": {
+          "message": "offload"
+        },
+        "attemptId": 13,
+        "skillCode": "alg_live_ec8285eb1f44_offload",
+        "leaseOwner": "a66f2abc-9a22-4f22-bbe6-c16a71c06092_77e6988a",
+        "leaseUntil": "2026-10-20T04:03:46.343037Z",
+        "triggerType": "DEBUG",
+        "idempotencyKey": "7758011299f303be4be0bb54fcaabb0d79dda9eef6eec6f8dd64b5cc15c9e111",
+        "nodeInstanceId": 14,
+        "skillVersionId": 5,
+        "guardedArguments": {
+          "message": "offload"
+        },
+        "authorityTriggerType": "DEBUG"
+      },
+      "skill_version_id": 5,
+      "external_namespace": "alg-live-ec8285eb1f44-offload",
+      "external_api_sha256": "2f2ffdbd519e1b4130893d982bf451326f1dd5b0b118fdba3d6dc378fe6f2304",
+      "external_identity_sha256": "70a94af59891db2b92273abfd96fec4ed4bacbada084407c258123960d3b002c"
+    }
+  },
+  "artifact": {
+    "artifact_id": "art_378961d017934f0789bfc77f50d40df6",
+    "tenant_id": "algorithm-live-ec8285eb1f44",
+    "principal_id": "algorithm-live",
+    "run_id": "r_6bd924a669174f2c9b9c0897334b95bf",
+    "call_id": 6,
+    "bucket": "agent-platform",
+    "object_key": "[tenant/run owned key retained in PG]",
+    "state": "READY",
+    "content_type": "application/json",
+    "size_bytes": 1212,
+    "sha256": "d0150502d84a1181a40bb6d26b8332e63c62f54283f056e0d1891fa866fc1d63",
+    "created_at": "2026-10-20T12:02:16.963427+08:00",
+    "updated_at": "2026-10-20T12:02:17.094289+08:00",
+    "expires_at": "2026-10-27T12:02:16.963427+08:00",
+    "cleanup_after": "2026-10-20T13:02:16.963427+08:00",
+    "cleanup_attempts": 0,
+    "cleanup_owner": null,
+    "cleanup_lease_until": null,
+    "last_error_code": null,
+    "deleted_at": null
+  },
+  "downloadSha256": "d0150502d84a1181a40bb6d26b8332e63c62f54283f056e0d1891fa866fc1d63",
+  "fixtureAfter": {
+    "posts": 1,
+    "jobGets": 1,
+    "podLists": 1,
+    "logGets": 1,
+    "denied": 0,
+    "authRejected": 0,
+    "mode": "complete",
+    "jobName": "alg-78c7ea6067da862c25a20c06a86fe276da9d4028",
+    "jobUid": "f8e23464-e04c-4a74-a488-d3c70f6d12d7",
+    "routes": [
+      "GET /apis/batch/v1/namespaces/alg-live-ec8285eb1f44-offload/jobs/alg-78c7ea6067da862c25a20c06a86fe276da9d4028",
+      "POST /apis/batch/v1/namespaces/alg-live-ec8285eb1f44-offload/jobs",
+      "GET /api/v1/namespaces/alg-live-ec8285eb1f44-offload/pods",
+      "GET /api/v1/namespaces/alg-live-ec8285eb1f44-offload/pods/algorithm-proof-pod/log"
+    ],
+    "evidenceLevel": "finite-api-reception-only",
+    "clusterOrContainerExecution": false,
+    "logicalEngineCommitVerified": false
+  }
+}

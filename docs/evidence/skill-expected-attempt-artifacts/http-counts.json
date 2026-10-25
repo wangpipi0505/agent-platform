@@ -1,0 +1,274 @@
+{
+  "entries": [
+    {
+      "suite": "ASYNC_EXECUTION_HTTP",
+      "test": "concurrentKeyLookupCannotAdoptResultForLosingJobBinding()",
+      "post": 1,
+      "get": 1
+    },
+    {
+      "suite": "ASYNC_EXECUTION_HTTP",
+      "test": "foreignJobNeverBecomesSuccessAndDoesNotResubmit()",
+      "post": 1,
+      "get": 2
+    },
+    {
+      "suite": "ASYNC_EXECUTION_HTTP",
+      "test": "expandedEffectiveScopeStillCoversOriginalTask()",
+      "post": 1,
+      "get": 2
+    },
+    {
+      "suite": "ASYNC_EXECUTION_HTTP",
+      "test": "missingCurrentAuthorizationEvidenceIsAuditedAndDenied()",
+      "post": 1,
+      "get": 0
+    },
+    {
+      "suite": "ASYNC_EXECUTION_HTTP",
+      "test": "unsupportedHttpMappingCannotSilentlyLoseItsRequestSemantics()",
+      "post": 0,
+      "get": 0
+    },
+    {
+      "suite": "ASYNC_EXECUTION_HTTP",
+      "test": "actualUnknownOutboxUsesPostgresSkipLockedAndNeverReexecutesBusiness()",
+      "post": 1,
+      "get": 1
+    },
+    {
+      "suite": "ASYNC_EXECUTION_HTTP",
+      "test": "interruptedBeforeSubmittedRecordsNotSentOnlyAfterAuthorityBecomesUnknown()",
+      "post": 0,
+      "get": 0
+    },
+    {
+      "suite": "ASYNC_EXECUTION_HTTP",
+      "test": "unknownAuthorityFencesLateSubmittedAcknowledgementBeforeAnyBusinessSend()",
+      "post": 0,
+      "get": 0
+    },
+    {
+      "suite": "ASYNC_EXECUTION_HTTP",
+      "test": "malformedFinalResultStaysUnknownWithoutResubmit()",
+      "post": 1,
+      "get": 2
+    },
+    {
+      "suite": "ASYNC_EXECUTION_HTTP",
+      "test": "[1] returnedAttempt=0",
+      "post": 0,
+      "get": 0
+    },
+    {
+      "suite": "ASYNC_EXECUTION_HTTP",
+      "test": "[2] returnedAttempt=457",
+      "post": 0,
+      "get": 0
+    },
+    {
+      "suite": "ASYNC_EXECUTION_HTTP",
+      "test": "largeAsyncResultUsesControlledArtifactInsteadOfProtocolBuffer()",
+      "post": 1,
+      "get": 2
+    },
+    {
+      "suite": "ASYNC_EXECUTION_HTTP",
+      "test": "roleRevocationIsAuditedWithoutChangingExternalUnknown()",
+      "post": 1,
+      "get": 0
+    },
+    {
+      "suite": "ASYNC_EXECUTION_HTTP",
+      "test": "lostAcknowledgementRecoversByExactKeyWithoutSecondSubmission()",
+      "post": 1,
+      "get": 1
+    },
+    {
+      "suite": "ASYNC_EXECUTION_HTTP",
+      "test": "explicitSubmitDenialIsPermissionFailureRatherThanUnknown()",
+      "post": 1,
+      "get": 0
+    },
+    {
+      "suite": "ASYNC_EXECUTION_HTTP",
+      "test": "completedFactIsQueuedAndLateDeliveryNeverRevivesCancelledAuthority()",
+      "post": 1,
+      "get": 1
+    },
+    {
+      "suite": "ASYNC_EXECUTION_HTTP",
+      "test": "outboxCannotDeliverRegistrationBeforeSubmittedRpcAndOnlyOneBusinessSend()",
+      "post": 1,
+      "get": 2
+    },
+    {
+      "suite": "ASYNC_EXECUTION_HTTP",
+      "test": "nonemptyScopeNarrowingCannotQueryOrAdoptWideHistoricalResult()",
+      "post": 1,
+      "get": 0
+    },
+    {
+      "suite": "ASYNC_EXECUTION_HTTP",
+      "test": "sentPreparationCrashImageRecoversByOriginalKeyUnderExpiredLease()",
+      "post": 1,
+      "get": 1
+    },
+    {
+      "suite": "ASYNC_EXECUTION_HTTP",
+      "test": "submitOnceAndReconcileOriginalJobWithRealResult()",
+      "post": 1,
+      "get": 2
+    },
+    {
+      "suite": "ASYNC_EXECUTION_HTTP",
+      "test": "missingFrozenGuardEvidenceIsDenied()",
+      "post": 1,
+      "get": 0
+    },
+    {
+      "suite": "ASYNC_EXECUTION_HTTP",
+      "test": "oldSubmittedAckCannotDispatchNewRegisteredAttempt()",
+      "post": 0,
+      "get": 0
+    },
+    {
+      "suite": "ASYNC_EXECUTION_HTTP",
+      "test": "cancelledPreparationCannotDeliverQueryOrResubmit()",
+      "post": 0,
+      "get": 0
+    },
+    {
+      "suite": "ASYNC_EXECUTION_HTTP",
+      "test": "reorderedFrozenScopeAndExpandedAuthorizationStillRecover()",
+      "post": 1,
+      "get": 1
+    },
+    {
+      "suite": "ATTEMPT_FENCE_HTTP",
+      "test": "concurrentSameAttemptSendsOnlyOnce()",
+      "post": 1,
+      "get": 2
+    },
+    {
+      "suite": "ATTEMPT_FENCE_HTTP",
+      "test": "[1] field=attemptId",
+      "post": 0,
+      "get": 0
+    },
+    {
+      "suite": "ATTEMPT_FENCE_HTTP",
+      "test": "[2] field=skillVersionId",
+      "post": 0,
+      "get": 0
+    },
+    {
+      "suite": "ATTEMPT_FENCE_HTTP",
+      "test": "[3] field=runId",
+      "post": 0,
+      "get": 0
+    },
+    {
+      "suite": "ATTEMPT_FENCE_HTTP",
+      "test": "[4] field=idempotencyKey",
+      "post": 0,
+      "get": 0
+    },
+    {
+      "suite": "ATTEMPT_FENCE_HTTP",
+      "test": "[5] field=arguments",
+      "post": 0,
+      "get": 0
+    },
+    {
+      "suite": "ATTEMPT_FENCE_HTTP",
+      "test": "[6] field=guardedArguments",
+      "post": 0,
+      "get": 0
+    },
+    {
+      "suite": "ATTEMPT_FENCE_HTTP",
+      "test": "[7] field=snapshot",
+      "post": 0,
+      "get": 0
+    },
+    {
+      "suite": "ATTEMPT_FENCE_HTTP",
+      "test": "[8] field=contract",
+      "post": 0,
+      "get": 0
+    },
+    {
+      "suite": "ATTEMPT_FENCE_HTTP",
+      "test": "[9] field=principal",
+      "post": 0,
+      "get": 0
+    },
+    {
+      "suite": "ATTEMPT_FENCE_HTTP",
+      "test": "queryOnlyNeverPostsAndWrongAttemptNeverQueriesOrWrites()",
+      "post": 0,
+      "get": 1
+    },
+    {
+      "suite": "ATTEMPT_FENCE_HTTP",
+      "test": "[1] field=principal_id",
+      "post": 0,
+      "get": 0
+    },
+    {
+      "suite": "ATTEMPT_FENCE_HTTP",
+      "test": "[2] field=run_id",
+      "post": 0,
+      "get": 0
+    },
+    {
+      "suite": "ATTEMPT_FENCE_HTTP",
+      "test": "[3] field=skill_version_id",
+      "post": 0,
+      "get": 0
+    },
+    {
+      "suite": "ATTEMPT_FENCE_HTTP",
+      "test": "[4] field=idempotency_key",
+      "post": 0,
+      "get": 0
+    },
+    {
+      "suite": "ATTEMPT_FENCE_HTTP",
+      "test": "[5] field=request_snapshot",
+      "post": 0,
+      "get": 0
+    },
+    {
+      "suite": "ATTEMPT_FENCE_HTTP",
+      "test": "[6] field=metadata",
+      "post": 0,
+      "get": 0
+    },
+    {
+      "suite": "ATTEMPT_FENCE_HTTP",
+      "test": "generationChangeAfterReadBeforeCasNeverPosts()",
+      "post": 0,
+      "get": 0
+    },
+    {
+      "suite": "ATTEMPT_FENCE_HTTP",
+      "test": "lateOriginalSenderDoesNotPostToNewRegisteredAttempt()",
+      "post": 0,
+      "get": 0
+    }
+  ],
+  "fenceTotals": {
+    "post": 1,
+    "get": 3
+  },
+  "databases": [
+    "jdbc:postgresql://127.0.0.1:25432/agent_platform_skill_async_test",
+    "jdbc:postgresql://127.0.0.1:25432/agent_platform_skill_callback_test",
+    "jdbc:postgresql://127.0.0.1:25432/agent_platform_skill_mcp_test",
+    "jdbc:postgresql://127.0.0.1:25432/agent_platform_skill_proof_test",
+    "jdbc:postgresql://127.0.0.1:25432/agent_platform_statistics_test",
+    "jdbc:postgresql://127.0.0.1:25432/agent_platform_v12"
+  ]
+}

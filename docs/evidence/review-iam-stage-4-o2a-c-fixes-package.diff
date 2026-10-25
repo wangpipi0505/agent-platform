@@ -1,0 +1,950 @@
+# O2a C fixes full-context review package
+Base=C frozen source600 (pre-fix; not yet Accepted); head=C frozen source manifest .local/iam-o2a-c-fixes/source-after.json. No commits.
+Requirements=docs/evidence/iam-stage-4-o2a-c-fixes-brief.md
+Report=docs/evidence/iam-stage-4-o2a-c-fixes-report.md
+All changed source files with complete context. This is review text, not executable patch. Reviewer/root do not rerun author green tests, PG or replay.
+--- BEGIN FULL CONTEXT DIFF ---
+diff --git a/engine-runtime/src/main/java/cn/agentplatform/engine/application/PortalRunEventsService.java b/engine-runtime/src/main/java/cn/agentplatform/engine/application/PortalRunEventsService.java
+index c26b2a1..aa6fbf9 100644
+--- a/engine-runtime/src/main/java/cn/agentplatform/engine/application/PortalRunEventsService.java
++++ b/engine-runtime/src/main/java/cn/agentplatform/engine/application/PortalRunEventsService.java
+@@ -1,226 +1,236 @@
+ package cn.agentplatform.engine.application;
+ 
+ import cn.agentplatform.common.*;
+ import cn.agentplatform.common.authority.*;
+ import cn.agentplatform.engine.api.RunController;
+ import cn.agentplatform.engine.infra.*;
+ import jakarta.servlet.*;
+ import jakarta.servlet.http.*;
+ import java.io.*;
+ import java.time.Clock;
+ import java.util.*;
+ import java.util.concurrent.*;
+ import java.util.concurrent.atomic.*;
+ import org.springframework.web.method.HandlerMethod;
+ import org.springframework.web.servlet.HandlerMapping;
+ 
+ /** Explicit receiver assembly only. One connection owns one finite Servlet task, never an MVC
+  * streaming callback: Spring 6.2.7 otherwise obtains the stream before and flushes after it. */
+ public final class PortalRunEventsService implements AutoCloseable {
+     private final RunEventReader reader;private final HttpCurrentAuthorityClient authority;
+     private final ChunkBus chunks;private final Clock clock;private final ThreadPoolExecutor writers;
+     private final Set<Owner> owners=ConcurrentHashMap.newKeySet();private volatile boolean closed;
+     public PortalRunEventsService(RunEventReader reader,HttpCurrentAuthorityClient authority,ChunkBus chunks,Clock clock){
+         this(reader,authority,chunks,clock,new ThreadPoolExecutor(2,2,0,TimeUnit.MILLISECONDS,new ArrayBlockingQueue<>(2),r->{var t=new Thread(r,"portal-events-writer");t.setDaemon(true);return t;},new ThreadPoolExecutor.AbortPolicy()));
+     }
+     /** Transfers the finite executor to this service, for controlled receiver assembly. */
+     public PortalRunEventsService(RunEventReader reader,HttpCurrentAuthorityClient authority,ChunkBus chunks,Clock clock,ThreadPoolExecutor writers){
+         this.reader=Objects.requireNonNull(reader);this.authority=Objects.requireNonNull(authority);this.chunks=Objects.requireNonNull(chunks);this.clock=Objects.requireNonNull(clock);this.writers=Objects.requireNonNull(writers);
+         if(writers.getMaximumPoolSize()>2||writers.getCorePoolSize()<1||writers.getQueue().remainingCapacity()+writers.getQueue().size()>2)throw new IllegalArgumentException("FINITE_EVENTS_EXECUTOR_REQUIRED");
+     }
+     public void open(String id,HttpServletRequest request,HttpServletResponse output)throws IOException{
+         long cursor=validate(id,request);
+         if(closed)throw capacity();
+         var current=AuthorityContext.current();var call=current.call();
+         RunObservationSelectors.requirePurpose(call,current.caller(),"delegated",current.operation().sourceKind(),current.operation().originKind());
+         if(!RunObservationSelectors.EVENTS_ACTION.equals(call.action())||!call.resource().equals(RunObservationSelectors.events(id,call.resource().versionDigest())))throw denied();
+         var owner=new Owner(output,cursor);owners.add(owner);
+         try{
+             owner.slot=chunks.reservePortalSlot(owner::stop);owner.check();
+             owner.frameLease=chunks.reservePortalFrame();if(owner.frameLease==null)throw capacity();
+             var initial=AuthorityContext.requireInitialFor(current.actor(),call.resource());
+             var binding=new PortalEventsBinding("events-"+UUID.randomUUID(),call.resource(),cursor,
+                     PortalEventsBinding.observationRequestSha256(new SubjectKey(current.actor().tenantId(),current.actor().principalId()),initial.requireOriginAuthenticationId(),call.resource(),cursor),clock.instant().plusSeconds(55));
+             owner.response=authority.openPortalEvents(initial,binding,owner::stop);owner.check();
+             owner.pending=owner.read();owner.check();
+             // Queue only a small connection owner. Keeping preflight results in the bounded
+             // task queue could consume both reader permits and starve the two active pollers.
+             // The actual writer obtains a fresh frame and a fresh complete RR before output.
+             close(owner.pending);owner.pending=null;close(owner.frameLease);owner.frameLease=null;
+             owner.superseded=0;
+             // First complete protected window precedes SSE success and async handoff.
+             owner.async=request.startAsync(request,output);
+             owner.async.setTimeout(55000);owner.async.addListener(owner);
+             output.setContentType("text/event-stream");output.setCharacterEncoding("UTF-8");
+             if(!owner.state.compareAndSet(0,1))throw denied();
+             owner.check();writers.execute(owner);
+         }catch(RuntimeException|Error failure){
+             if(owner.async!=null){
+                 // Once Servlet async has taken ownership MVC cannot safely map a thrown
+                 // exception: error redispatch would become a different protected route.
+                 owner.abortOpening(failure instanceof PlatformException p?p:failure instanceof RejectedExecutionException?capacity():new PlatformException(500,"STREAM_UNAVAILABLE","事件观察不可用"));return;
+             }
+             owner.abortOpening(null);
+             if(failure instanceof RejectedExecutionException)throw capacity();throw failure;
+         }
+     }
+     private static long validate(String id,HttpServletRequest r)throws IOException{
+         Object actual=r.getAttribute(HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE);
+         if(!(actual instanceof HandlerMethod h)||h.getBeanType()!=RunController.class||h.getMethod().getDeclaringClass()!=RunController.class||!h.getMethod().getName().equals("events")
+                 ||r.getDispatcherType()!=DispatcherType.REQUEST||!"GET".equals(r.getMethod())
+                 ||!"/admin/runs/{id}/events".equals(r.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE))
+                 ||!r.getRequestURI().equals(r.getContextPath()+"/admin/runs/"+id+"/events")||r.getContentLengthLong()>0||r.getInputStream().read()!=-1||!r.isAsyncSupported())throw invalid();
+         var parameters=r.getParameterMap();if(parameters.keySet().stream().anyMatch(k->!k.equals("Last-Event-ID")))throw invalid();
+         String selected;
+         if(parameters.containsKey("Last-Event-ID")){var values=parameters.get("Last-Event-ID");if(values==null||values.length!=1)throw invalid();selected=values[0];}
+         else{var headers=Collections.list(r.getHeaders("Last-Event-ID"));if(headers.size()>1)throw invalid();selected=headers.isEmpty()?"0":headers.getFirst();}
+         if(selected==null||!selected.matches("[0-9]{1,19}"))throw invalid();
+         try{return Long.parseLong(selected);}catch(NumberFormatException overflow){throw invalid();}
+     }
+     private static PlatformException invalid(){return new PlatformException(400,"EVENT_CURSOR","事件观察请求无效");}
+     private static PlatformException denied(){return new PlatformException(403,"RUN_AUTHORITY_DENIED","运行观察不可用");}
+     private static PlatformException capacity(){return new PlatformException(429,"STREAM_CAPACITY","实时观察已满，请稍后重连");}
+     private static void close(AutoCloseable value){if(value!=null)try{value.close();}catch(Exception ignored){}}
+ 
+     private final class Owner implements Runnable,AsyncListener {
+         // OPENING=0/PENDING=1/RUNNING=2/FINISHED=3. Notifications publish stop. Only
+         // actual running finally or the never-run CAS can become the release owner.
+         final AtomicInteger state=new AtomicInteger();final AtomicBoolean stopped=new AtomicBoolean(),completed=new AtomicBoolean();
+         final HttpServletResponse output;long after;boolean statusSent;int superseded;
+         volatile PortalEventsResponse response;ChunkBus.PortalSlot slot;AutoCloseable frameLease;
+         RunEventReader.WindowEmission pending;AsyncContext async;ServletOutputStream stream;
+         Owner(HttpServletResponse output,long after){this.output=output;this.after=after;}
+         void check(){if(stopped.get()||closed)throw denied();}
+         RunEventReader.WindowEmission read(){
+             while(true)try{check();return reader.readWindow(response,after);}
+             catch(RunEventReader.Superseded old){if(++superseded>2)throw old;}
+         }
+         void stop(){
+             stopped.set(true);var current=response;if(current!=null)current.close();
+             if(state.compareAndSet(1,3)){try{complete();}finally{release();}}
+         }
+         void abortOpening(PlatformException failure){
+             if(state.compareAndSet(0,3)||state.compareAndSet(1,3)){
+                 try{
+                     if(failure!=null&&!stopped.get()&&!output.isCommitted()){
+                         output.setStatus(failure.status());output.setContentType("application/json");
+                         frameLease=chunks.reservePortalFrame();
+                         if(frameLease!=null){
+                             var capture=response.currentCapture();
+                             // Fixed generic envelope (<1KiB), charged to the reserved 8KiB
+                             // scratch. No exception detail or unverified run fact is exposed.
+                             byte[] error=Json.write(new ApiResponse<>(failure.code(),"事件观察不可用",null,null)).getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                             response.requireLive(capture);var stream=output.getOutputStream();response.requireLive(capture);
+                             stream.write(error);response.requireLive(capture);stream.flush();response.requireLive(capture);
+                         }
+                     }
+                 }catch(IOException|RuntimeException alreadyStopped){
+                     // A retired holder/Servlet response can only close at this boundary.
+                 }finally{stopped.set(true);try{complete();}finally{release();}}
+             }
+         }
+         void complete(){if(async!=null&&completed.compareAndSet(false,true))try{async.complete();}catch(IllegalStateException alreadyCompleted){
+             // The container may already have completed after a real timeout/onComplete.
+             // The call has physically returned; it still precedes our resource finally.
+         }}
+         void release(){
+             close(pending);pending=null;close(frameLease);frameLease=null;close(response);close(slot);owners.remove(this);
+         }
+         @Override public void run(){
+             if(!state.compareAndSet(1,2))return;
+             try{
+                 while(true){
+                     check();
+                     if(pending==null){
+                         frameLease=chunks.reservePortalFrame();
+                         if(frameLease==null){pause();continue;}
+                         try{pending=read();}catch(RunEventReader.CapacityFailure limit){
+                             if(limit.status()==429){close(frameLease);frameLease=null;pause();continue;}
+                             capacityReset(limit);return;
+                         }
+                     }
+                     var done=new AtomicBoolean();
+                     try{
+                         pending.consume(view->{
+-                            try{
+-                                check();var window=view.window();String reset=window.resetReason();var frame=new Frame();
+-                                if(reset!=null){frame.controlInto("stream_reset",reset,window.status(),window.watermark(),after);send(view,frame);done.set(true);complete();return;}
+-                                if(!statusSent){frame.controlInto("stream_status",null,null,0,after);send(view,frame);statusSent=true;}
+-                                if(view.hasEvent()){
+-                                    frame.count=0;frame.event(view);send(view,frame);after=view.info().seq();
+-                                    if(Set.of("SUCCEEDED","FAILED","CANCELLED").contains(window.status())&&after>=window.watermark()){done.set(true);complete();}
+-                                }else if(window.drained()){done.set(true);complete();}
+-                            }catch(RunEventReader.Superseded old){
+-                                if(superseded>=2){complete();throw old;}throw old;
+-                            }catch(RuntimeException|Error failure){complete();throw failure;}
++                            check();var window=view.window();String reset=window.resetReason();var frame=new Frame();
++                            if(reset!=null){frame.controlInto("stream_reset",reset,window.status(),window.watermark(),after);send(view,frame);done.set(true);return;}
++                            if(!statusSent){frame.controlInto("stream_status",null,null,0,after);send(view,frame);statusSent=true;}
++                            if(view.hasEvent()){
++                                frame.count=0;frame.event(view);send(view,frame);after=view.info().seq();
++                                if(Set.of("SUCCEEDED","FAILED","CANCELLED").contains(window.status())&&after>=window.watermark())done.set(true);
++                            }else if(window.drained())done.set(true);
++                        },failure->{
++                            // This seam includes entry and final guard failures. A healthy
++                            // bounded retry alone may release the old window before reread;
++                            // termination must complete while B and this frame are still held.
++                            if(failure instanceof RunEventReader.Superseded&&!done.get()&&superseded<2){
++                                try{check();response.currentCapture();return;}catch(RuntimeException retired){/* Complete below while still owning this window. */}
++                            }
++                            if(failure!=null||done.get())complete();
+                         });
+                         superseded=0; // A successful complete window starts the next bounded read round.
+                     }catch(RunEventReader.Superseded old){if(++superseded>2)throw old;}
+                     finally{close(pending);pending=null;close(frameLease);frameLease=null;}
+                     if(done.get())return;
+                     pause();
+                 }
+             }catch(RuntimeException failure){
+                 org.slf4j.LoggerFactory.getLogger(PortalRunEventsService.class).debug("Portal events owner stopped at cursor {}",after,failure);
+                 try{if(!stopped.get()&&!completed.get()&&!output.isCommitted()&&failure instanceof PlatformException p)output.setStatus(p.status());}
+                 catch(IllegalStateException alreadyCompleted){/* Container retired its response during a blocked call. */}
+             }finally{
+                 // Getter/write/flush and final complete must physically return before any
+                 // still-held reader/frame/slot can be returned to a different connection.
+                 try{complete();}finally{state.set(3);release();}
+             }
+         }
+         void send(RunEventReader.WindowBorrow view,Frame frame){
+             try{
+                 check();view.requireLive();
+                 if(stream==null){stream=output.getOutputStream();check();view.requireLive();}
+                 check();view.requireLive();stream.write(frame.bytes,0,frame.count);check();view.requireLive();
+                 stream.flush();check();view.requireLive();
+             }catch(IOException io){throw new UncheckedIOException(io);}
+         }
+         void capacityReset(RunEventReader.CapacityFailure failure){
+             // No unvalidated status/watermark is included. The fresh local capture guards
+             // this fixed capacity control; a failed holder never authorizes a final reset.
+-            var capture=response.currentCapture();check();var frame=Frame.control("stream_reset",failure.code(),null,0,after);
++            var capture=response.currentCapture();check();byte[] bytes;int count;
++            // Opening preflight is not an output proof. Only the actual Servlet commit
++            // decides whether fresh-window capacity is an HTTP error or a bounded reset.
++            if(!output.isCommitted()){
++                output.setStatus(failure.status());output.setContentType("application/json");
++                bytes=Json.write(new ApiResponse<>(failure.code(),"事件观察不可用",null,null)).getBytes(java.nio.charset.StandardCharsets.UTF_8);count=bytes.length;
++            }else{var frame=Frame.control("stream_reset",failure.code(),null,0,after);bytes=frame.bytes;count=frame.count;}
+             try{
+                 response.requireLive(capture);if(stream==null){stream=output.getOutputStream();check();response.requireLive(capture);}
+-                check();response.requireLive(capture);stream.write(frame.bytes,0,frame.count);check();response.requireLive(capture);
++                check();response.requireLive(capture);stream.write(bytes,0,count);check();response.requireLive(capture);
+                 stream.flush();check();response.requireLive(capture);complete();
+             }catch(IOException io){throw new UncheckedIOException(io);}
+         }
+         void pause(){check();response.currentCapture();try{Thread.sleep(75);}catch(InterruptedException interrupted){Thread.currentThread().interrupt();throw denied();}}
+         @Override public void onTimeout(AsyncEvent event){stop();}
+         @Override public void onError(AsyncEvent event){stop();}
+         @Override public void onComplete(AsyncEvent event){stop();}
+         @Override public void onStartAsync(AsyncEvent event){stop();}
+     }
+     /** Single exact backing; never BAOS growth/toByteArray. All copies sent by the B borrow
+      * remain charged to B; this independent complete frame is charged to ChunkBus first. */
+     static final class Frame extends OutputStream {
+         final byte[] bytes=new byte[ChunkBus.MAX_FRAME_BYTES];int count;boolean payload;
+         private void admit(int n){if(n<0||n>bytes.length-count)throw new PlatformException(413,"EVENT_LIMIT","事件响应过大");}
+         @Override public void write(int value){admit(1);if(payload&&(value=='\r'||value=='\n'))throw denied();bytes[count++]=(byte)value;}
+         @Override public void write(byte[] value,int offset,int length){admit(length);if(payload)for(int i=offset;i<offset+length;i++)if(value[i]=='\r'||value[i]=='\n')throw denied();System.arraycopy(value,offset,bytes,count,length);count+=length;}
+         void ascii(String text){for(int i=0;i<text.length();i++){char c=text.charAt(i);if(c>127)throw denied();write(c);}}
+         void event(RunEventReader.WindowBorrow view){
+             var info=view.info();if(info.seq()<0||info.type()==null||!info.type().matches("[A-Za-z_]{1,64}"))throw denied();
+             ascii("id:");ascii(Long.toString(info.seq()));ascii("\nevent:");ascii(info.type());ascii("\ndata:");
+             int start=count;payload=true;try{view.writePayload(this);}catch(IOException failure){throw new UncheckedIOException(failure);}finally{payload=false;}
+             if(count-start>ChunkBus.MAX_EVENT_BYTES)throw new PlatformException(413,"EVENT_LIMIT","事件响应过大");ascii("\n\n");
+         }
+         static Frame control(String type,String reason,String status,long watermark,long after){
+             var f=new Frame();f.controlInto(type,reason,status,watermark,after);return f;
+         }
+         void controlInto(String type,String reason,String status,long watermark,long after){
+             var f=this;f.count=0;f.ascii("event:");f.ascii(type);f.ascii("\ndata:{");
+             if(reason==null)f.ascii("\"chunkAvailable\":false,\"chunkReplay\":false,\"recovery\":\"LAST_EVENT_ID_AND_FINAL_SNAPSHOT\"");
+             else{
+                 if(!Set.of("CURSOR_AHEAD","CURSOR_EXPIRED","BUFFER_LIMIT","EVENT_LIMIT").contains(reason))throw denied();
+                 f.ascii("\"reason\":\"");f.ascii(reason);f.ascii("\",\"chunkReplay\":false,\"recovery\":\"FINAL_SNAPSHOT\",\"lastEventId\":");f.ascii(Long.toString(after));
+                 if(status!=null){if(!status.matches("[A-Z_]{1,32}"))throw denied();f.ascii(",\"status\":\"");f.ascii(status);f.ascii("\",\"eventsWatermark\":");f.ascii(Long.toString(watermark));}
+             }
+             f.ascii("}\n\n");
+         }
+     }
+     @Override public void close(){closed=true;for(var owner:owners)owner.stop();for(var task:writers.shutdownNow())if(task instanceof Owner owner)owner.stop();}
+ }
+diff --git a/engine-runtime/src/main/java/cn/agentplatform/engine/infra/RunEventReader.java b/engine-runtime/src/main/java/cn/agentplatform/engine/infra/RunEventReader.java
+index 28b0971..182d7ce 100644
+--- a/engine-runtime/src/main/java/cn/agentplatform/engine/infra/RunEventReader.java
++++ b/engine-runtime/src/main/java/cn/agentplatform/engine/infra/RunEventReader.java
+@@ -1,381 +1,400 @@
+ package cn.agentplatform.engine.infra;
+ 
+ import static cn.agentplatform.engine.infra.RunAuthorityStore.*;
+ import cn.agentplatform.common.*;
+ import cn.agentplatform.common.authority.*;
+ import cn.agentplatform.engine.domain.GraphRules;
+ import com.fasterxml.jackson.core.*;
+ import com.fasterxml.jackson.core.exc.StreamConstraintsException;
+ import com.fasterxml.jackson.databind.*;
+ import org.springframework.jdbc.core.*;
+ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+ import org.springframework.transaction.TransactionDefinition;
+ import org.springframework.transaction.support.*;
+ import javax.sql.DataSource;
+ import java.io.*;
+ import java.nio.charset.StandardCharsets;
+ import java.util.*;
+ import java.util.concurrent.Semaphore;
+ import java.util.concurrent.atomic.AtomicBoolean;
+ import java.util.function.Consumer;
+ 
+ /** One unregistered finite PG owner. C must share this owner; old status/writer loaders are not finite event plans. */
+ public final class RunEventReader {
+     static final long JSON_BYTES=1048576,METADATA_BYTES=8388608,ROOT_BYTES=8388608,CONTROL_BYTES=262144;
+     static final int MAX_RECORDS=4096,MAX_PARENTS=4096,EVENT_BYTES=262144;
+     // Root's budget-decision: these are additional intersecting representation limits. Model
+     // 64MiB includes 512/token for DOM+DTO+normalization/sort/collection backing slack and 8/raw
+     // byte for decoded strings/full parent arrays. Before fetching each text reserve 6/raw byte
+     // for JDBC UTF-8 row, decoded UTF-16, raw length-check copy and driver slack; max48MiB.
+     // Streaming preflight+DOM parser scratch reserves64MiB (duplicate detection/name/text buffers
+     // and segment/consolidation slack). Canonical<=8MiB reserves5x for UTF-16 segments/result and
+     // UTF-8 digest copy, max40MiB. Fixed scalar plan/maps reserve8MiB. Parser and canonical phases
+     // never overlap: parsed DOM returns after both parsers close, before canonicalScratch begins.
+     // Their worst phases are64+48+64+8=184MiB and64+48+40+8=160MiB. The total ledger still caps
+     // all reservations at192MiB before allocation. Two permits
+     // therefore own <=384MiB accounted representations; this is not an exact object-heap claim.
+     static final long MODEL_UNITS=64L*1024*1024,REPRESENTATION_UPPER_PER_WORKSPACE=192L*1024*1024;
+     static final class Ledger {
+         long current,peak;
+         final class Reservation implements AutoCloseable {
+             final long bytes;boolean closed;Reservation(long bytes){this.bytes=bytes;}
+             public void close(){if(!closed){closed=true;current-=bytes;}}
+         }
+         Reservation reserve(long bytes){current=Limits.add(current,bytes,REPRESENTATION_UPPER_PER_WORKSPACE,"REPRESENTATION_TOTAL");peak=Math.max(peak,current);return new Reservation(bytes);}
+     }
+     private final DataSource source;private final JdbcTemplate db;
+     private final Semaphore workspaces=new Semaphore(2);
+     public RunEventReader(DataSource source){this.source=Objects.requireNonNull(source);db=new JdbcTemplate(source);}
+     public Optional<EventEmission> readNext(PortalEventsResponse response,long afterSeq){
+         long entered=System.nanoTime();
+         if(TransactionSynchronizationManager.isActualTransactionActive())throw new IllegalStateException("EVENT_READER_REQUIRES_NO_CALLER_TRANSACTION");
+         var capture=Objects.requireNonNull(response).currentCapture();
+         if(afterSeq<0||afterSeq<capture.initialCursor())throw denied();
+         var work=new Work(db,response,capture,entered);work.millis();
+         if(!workspaces.tryAcquire())throw finite("WORKSPACE");
+         var lease=new Lease(workspaces);boolean handed=false;Throwable primary=null;
+         try{
+             clearCurrentThreadBuffers();
+             var tx=new TransactionTemplate(new DataSourceTransactionManager(source));tx.setReadOnly(true);tx.setIsolationLevel(TransactionDefinition.ISOLATION_REPEATABLE_READ);
+             // Spring6.2.7 doBegin/doCommit owns this connection. Seconds timeouts cannot express
+             // the signed deadline; actual SQL uses floor(ms) of the same conservative anchor.
+             var data=tx.execute(status->read(work,afterSeq,false).event());work.live();
+             if(data==null)return Optional.empty();
+             // Cleanup is before mint/transfer, so a cleanup failure cannot strand a pending permit.
+             clearCurrentThreadBuffers();work.live();
+             var emission=new EventEmission(response,capture,lease,work.ledger,data.info(),data.payload(),data.labels());
+             var result=Optional.of(emission);handed=true;return result;
+         }catch(RuntimeException|Error failure){primary=failure;throw failure;}
+         finally{if(!handed)try{cleanup(primary);}finally{lease.close();}}
+     }
+     private record EventData(Info info,byte[] payload,Set<String> labels){}
+     private record ReadData(EventData event,WindowInfo window){}
+     /** Same finite owner and top-level RR as readNext; empty still carries verified state here. */
+     public WindowEmission readWindow(PortalEventsResponse response,long afterSeq){
+         long entered=System.nanoTime();
+         if(TransactionSynchronizationManager.isActualTransactionActive())throw new IllegalStateException("EVENT_READER_REQUIRES_NO_CALLER_TRANSACTION");
+         var capture=Objects.requireNonNull(response).currentCapture();
+         if(afterSeq<0||afterSeq<capture.initialCursor())throw denied();
+         var work=new Work(db,response,capture,entered,true);work.millis();
+         if(!workspaces.tryAcquire())throw finite("WORKSPACE");
+         var lease=new Lease(workspaces);boolean handed=false;Throwable primary=null;
+         try{
+             clearCurrentThreadBuffers();
+             var tx=new TransactionTemplate(new DataSourceTransactionManager(source));tx.setReadOnly(true);tx.setIsolationLevel(TransactionDefinition.ISOLATION_REPEATABLE_READ);
+             var data=tx.execute(status->read(work,afterSeq,true));work.live();
+             clearCurrentThreadBuffers();work.live();
+             var event=data.event();
+             var owner=new EventEmission(response,capture,lease,work.ledger,event==null?null:event.info(),event==null?null:event.payload(),event==null?Set.of():event.labels());
+             owner.window=true;var result=new WindowEmission(owner,data.window());handed=true;return result;
+         }catch(RuntimeException|Error failure){primary=failure;throw failure;}
+         finally{if(!handed)try{cleanup(primary);}finally{lease.close();}}
+     }
+     public record WindowInfo(String runId,String status,long watermark,Long oldest,long afterSeq){
+         public String resetReason(){return afterSeq>watermark?"CURSOR_AHEAD":(oldest==null?afterSeq<watermark:afterSeq<oldest-1)?"CURSOR_EXPIRED":null;}
+         public boolean drained(){return Set.of("SUCCEEDED","FAILED","CANCELLED").contains(status)&&afterSeq>=watermark;}
+     }
+     /** A value is descriptive only; only this private owner can authorize a synchronous borrow. */
+     public static final class WindowEmission implements AutoCloseable{
+         private final EventEmission owner;private final WindowInfo window;
+         private WindowEmission(EventEmission owner,WindowInfo window){this.owner=owner;this.window=window;}
+         public void consume(Consumer<WindowBorrow> action){owner.consume(borrow->action.accept(new WindowBorrow(borrow,window)));}
++        /** C's actual exit runs after either guard/action failure, before the original lease
++         * finally. Ordinary B borrows retain their existing consume/close contract. */
++        public void consume(Consumer<WindowBorrow> action,Consumer<Throwable> beforeRelease){
++            Objects.requireNonNull(action);owner.consumeWindow(borrow->action.accept(new WindowBorrow(borrow,window)),beforeRelease);
++        }
+         public void close(){owner.close();}
+     }
+     public static final class WindowBorrow{
+         private final Borrow event;private final WindowInfo window;
+         private WindowBorrow(Borrow event,WindowInfo window){this.event=event;this.window=window;}
+         public WindowInfo window(){event.requireLive();return window;}
+         public boolean hasEvent(){event.requireLive();return event.emission.info!=null;}
+         public Info info(){if(!hasEvent())throw denied();return event.info();}
+         public void requireLive(){event.requireLive();}
+         public void writePayload(OutputStream output)throws IOException{if(!hasEvent())throw denied();event.writePayload(output);}
+     }
+     /** Raised only by an exact local capture liveness guard, never by material/digest rejection. */
+     public static final class Superseded extends RuntimeException{private Superseded(){super("EVENT_CAPTURE_SUPERSEDED");}}
+     private static void live(PortalEventsResponse response,PortalEventsResponse.Capture capture,boolean window){
+         try{response.requireLive(capture);}catch(PlatformException failure){
+             if(window&&response.isSuperseded(capture))throw new Superseded();throw failure;
+         }
+     }
+     private ReadData read(Work w,long afterSeq,boolean window){
+         var b=RunAuthorityStore.loadObservationBindingBounded(w,w.capture.subject(),w.capture.resource().id());
+         same(w.capture.resource(),RunObservationSelectors.status(b.publicId(),b.snapshotSha()));
+         var roots=MaterialScopeStore.probeObserved(w,b.runId(),"kind in ('run-snapshot','run-inputs','run-version-refs')",4);
+         if(roots.size()!=3)throw denied();
+         var events=w.query("select id,seq,octet_length(type) as type_bytes,case when octet_length(type)<=262144 then type end as event_type from engine.run_event where run_id=? and seq>? order by seq limit 1",1,b.runId(),afterSeq);
+         MaterialScopeStore.ObservedRow selected=null;MaterialScopeV1 selectedScope=null;
+         var plan=new LinkedHashMap<String,MaterialScopeStore.ObservedRow>();
+         for(var root:roots)MaterialScopeStore.addObserved(plan,root,w.limits);
+         Map<String,Object> event=events.isEmpty()?null:events.getFirst();
+         if(event!=null){
+             if(num(event,"seq")<=afterSeq)throw denied();Limits.single(num(event,"type_bytes"),CONTROL_BYTES,"CONTROL_BYTES");nonblank((String)event.get("event_type"));
+             var rows=MaterialScopeStore.probeObserved(w,b.runId(),"kind='run-event' and material_id=?",2,Long.toString(num(event,"id")));
+             if(rows.size()!=1)throw denied();selected=rows.getFirst();MaterialScopeStore.addObserved(plan,selected,w.limits);
+             selectedScope=MaterialScopeStore.readObservedScope(w,b,selected);var parents=selectedScope.parentScopeSha256();if(parents.isEmpty())throw denied();
+             var args=new ArrayList<Object>();args.add(selected.revision());args.addAll(parents);
+             var found=MaterialScopeStore.probeObserved(w,b.runId(),"material_revision<? and scope_sha256 in ("+String.join(",",Collections.nCopies(parents.size(),"?"))+")",MAX_RECORDS+1,args.toArray());
+             var hashes=new HashSet<String>();for(var parent:found){if(!hashes.add(parent.sha())||!parents.contains(parent.sha()))throw denied();MaterialScopeStore.addObserved(plan,parent,w.limits);}same(hashes,new HashSet<>(parents));
+         }
+         MaterialScopeStore.ObservedRow stateRow=null;MaterialScopeV1 stateScope=null;
+         if(window){
+             var rows=MaterialScopeStore.probeObserved(w,b.runId(),"kind='run-state' and material_revision=(select max(material_revision) from engine.material_scope where run_id="+b.runId()+" and kind='run-state')",2);
+             if(rows.size()!=1)throw denied();stateRow=rows.getFirst();MaterialScopeStore.addObserved(plan,stateRow,w.limits);
+             stateScope=MaterialScopeStore.readObservedScope(w,b,stateRow);
+             var parents=stateScope.parentScopeSha256();if(parents.isEmpty())throw denied();
+             var args=new ArrayList<Object>();args.add(stateRow.revision());args.addAll(parents);
+             var found=MaterialScopeStore.probeObserved(w,b.runId(),"material_revision<? and scope_sha256 in ("+String.join(",",Collections.nCopies(parents.size(),"?"))+")",MAX_RECORDS+1,args.toArray());
+             var hashes=new HashSet<String>();for(var parent:found){if(!hashes.add(parent.sha())||!parents.contains(parent.sha()))throw denied();MaterialScopeStore.addObserved(plan,parent,w.limits);}same(hashes,new HashSet<>(parents));
+         }
+         // Probe and sum complete metadata, including every repeated parent array, before payload.
+         var scopes=new LinkedHashMap<String,MaterialScopeV1>();
+         for(var row:plan.values()){var scope=row==selected?selectedScope:row==stateRow?stateScope:MaterialScopeStore.readObservedScope(w,b,row);scopes.put(row.sha(),scope);w.material(scope,row.bytes());w.live();}
+         var rootScopes=roots.stream().map(r->scopes.get(r.sha())).toList();
+         try(var canonical=w.canonicalScratch(6*roots.stream().mapToLong(MaterialScopeStore.ObservedRow::bytes).max().orElseThrow())){b=MaterialScopeStore.requireObservedRoots(b,rootScopes);}
+         boolean missingHistoricalEvent=false;
+         for(var row:plan.values()){
+             // Only a real direct-parent role can reach this helper. A selected event always
+             // wins consumption priority, even when it is also a run-state historical parent.
+             if(window&&row!=selected&&row.kind().equals("run-event")&&(stateScope.parentScopeSha256().contains(row.sha())||selectedScope!=null&&selectedScope.parentScopeSha256().contains(row.sha())))
+                 missingHistoricalEvent|=MaterialScopeStore.observedHistoricalEventMissing(w,b,row);
+             else MaterialScopeStore.requireObservedLocator(w,b,row);
+         }
+         if(window)MaterialScopeStore.requireObservedFloor(stateScope,b,stateScope.parentScopeSha256().stream().map(scopes::get).toList());
+         if(selected!=null)MaterialScopeStore.requireObservedFloor(selectedScope,b,selectedScope.parentScopeSha256().stream().map(scopes::get).toList());
+         w.live();
+         // The inputs root is proved but its payload is never consumed by this reader.
+         var probe=w.query("select octet_length(snapshot::text) as snapshot_bytes,jsonb_typeof(snapshot) as snapshot_type,octet_length(version_refs::text) as refs_bytes,jsonb_typeof(version_refs) as refs_type from engine.run where id=?",1,b.runId()).getFirst();
+         same("object",probe.get("snapshot_type"));same("object",probe.get("refs_type"));w.limits.root(num(probe,"snapshot_bytes"));w.limits.root(num(probe,"refs_bytes"));
+         long stateBytes=window?MaterialScopeStore.probeObservedState(w,b):0;
+         if(window)w.limits.root(stateBytes); // State intersects the original root aggregate, not a new allowance.
+         var snapshot=MaterialScopeStore.readObservedRoot(w,b.runId(),"snapshot",num(probe,"snapshot_bytes"));
+         same(b.snapshotSha(),w.digest(snapshot));w.live();
+         var refs=MaterialScopeStore.readObservedRoot(w,b.runId(),"version_refs",num(probe,"refs_bytes"));
+         for(var scope:rootScopes){String kind=scope.material().kind();if(!kind.equals("run-inputs"))same(scope.material().payloadSha256(),w.digest(kind.equals("run-snapshot")?snapshot:refs));}
+         TraceStore.requireSnapshotRelations(b,snapshot,refs);GraphRules.requirePublishedFlow(snapshot);
+         if(!"FLOW".equals(text(snapshot,"type"))||snapshot.hasNonNull("debugSnapshot")||snapshot.hasNonNull("evalCandidate")||snapshot.hasNonNull("controlledDraftId")||snapshot.path("config").hasNonNull("dataSources")||refs.has("ontology")&&(!refs.path("ontology").isArray()||!refs.path("ontology").isEmpty()))throw denied();
+         WindowInfo facts=null;
+         if(window){
+             var state=MaterialScopeStore.readObservedState(w,b,stateScope,stateBytes);
+             if(!state.path("event_seq").isIntegralNumber()||!state.path("event_seq").canConvertToLong()||state.path("event_seq").longValue()<0)throw denied();
+             String status=text(state,"status");long watermark=state.path("event_seq").longValue();
+             if(missingHistoricalEvent&&!Set.of("SUCCEEDED","FAILED","CANCELLED").contains(status))throw denied();
+             var minimum=w.query("select min(seq) as oldest_seq from engine.run_event where run_id=?",1,b.runId()).getFirst().get("oldest_seq");
+             Long oldest=minimum==null?null:minimum instanceof Number n?n.longValue():null;
+             if(minimum!=null&&(oldest==null||oldest<1||oldest>watermark)||event!=null&&num(event,"seq")>watermark)throw denied();
+             facts=new WindowInfo(b.publicId(),status,watermark,oldest,afterSeq);
+         }
+         w.live();if(event==null)return new ReadData(null,facts); // B empty never claims terminal/window.
+         var value=MaterialScopeStore.readObservedEvent(w,b,num(event,"id"),num(event,"seq"),selectedScope);
+         same(value.path("run_id").longValue(),b.runId());same(value.path("id").longValue(),num(event,"id"));same(value.path("seq").longValue(),num(event,"seq"));same(text(value,"type"),event.get("event_type"));
+         byte[] payload;
+         try(var encoding=w.canonicalScratch(6L*EVENT_BYTES)){payload=encode(value.get("payload"));Limits.single(payload.length,EVENT_BYTES,"EVENT_PAYLOAD");}
+         var labels=new TreeSet<String>();scopes.values().forEach(s->labels.addAll(s.requiredDataLabels()));
+         // Admission before borrow encoding: at most six UTF-8 bytes per UTF-16 code unit,
+         // plus quotes/commas/brackets. The set and sort backing are in the existing model
+         // reservation; the borrowed generator has fixed small buffers in fixed8MiB scratch.
+         long labelBytes=2;for(var label:labels)labelBytes=Limits.add(labelBytes,6L*label.length()+3,MaterialScopeStore.OBSERVED_NORMALIZED_BYTES,"NORMALIZED_BYTES");w.live();
+         return new ReadData(new EventData(new Info(b.publicId(),w.capture.resource(),w.capture.responseId(),afterSeq,num(event,"seq"),(String)event.get("event_type"),selectedScope.material().payloadSha256(),w.measurements(payload.length)),payload,labels),facts);
+     }
+     public record Measurements(long modelReserved,long totalReservedPeak,long rawReservedPeak,long canonicalReservedPeak,long canonicalActualUtf8Peak,long tokens,int parserBackingChars,int eventBackingBytes){}
+     public record Info(String runId,ResourceBinding resource,String responseId,long afterSeq,long seq,String type,String rowSha256,Measurements measurements){}
+     /** Pending, active callback and its actual finally all own the original reader permit. */
+     public static final class EventEmission implements AutoCloseable{
+         private final PortalEventsResponse response;private final PortalEventsResponse.Capture capture;private final Lease lease;private final Ledger ledger;private final Info info;
+         private byte[] payload;private Set<String> labels;private boolean active,closing,finished,window;private Thread consumer;
+         private EventEmission(PortalEventsResponse r,PortalEventsResponse.Capture c,Lease l,Ledger ledger,Info i,byte[] p,Set<String> labels){response=r;capture=c;lease=l;this.ledger=ledger;info=i;payload=p;this.labels=labels;}
+         private void usable(){if(closing||finished)throw denied();}
+         public synchronized Info info(){usable();response.requireLive(capture);return info;}
+         public void consume(Consumer<Borrow> consume){
+             Objects.requireNonNull(consume);
+             synchronized(this){usable();if(active)throw denied();try{live(response,capture,window);}catch(RuntimeException failure){finish();throw failure;}active=true;consumer=Thread.currentThread();}
+             Throwable primary=null;
+             try{consume.accept(new Borrow(this));guard();}catch(RuntimeException|Error failure){primary=failure;throw failure;}
+             finally{try{cleanup(primary);}finally{synchronized(this){active=false;consumer=null;finish();}}}
+         }
++        private void consumeWindow(Consumer<Borrow> consume,Consumer<Throwable> beforeRelease){
++            Objects.requireNonNull(beforeRelease);
++            synchronized(this){usable();if(active)throw denied();active=true;consumer=Thread.currentThread();}
++            Throwable primary=null;
++            // Claim actual ownership before the entry guard: stop/close cannot recycle a
++            // C window while its terminal Servlet complete is still physically executing.
++            try{guard();consume.accept(new Borrow(this));guard();}
++            catch(RuntimeException|Error failure){primary=failure;throw failure;}
++            finally{
++                // No holder or emission monitor is held over application write/complete.
++                try{beforeRelease.accept(primary);}
++                finally{try{cleanup(primary);}finally{synchronized(this){active=false;consumer=null;finish();}}}
++            }
++        }
+         private synchronized void guard(){usable();if(!active||consumer!=Thread.currentThread())throw denied();live(response,capture,window);}
+         private void finish(){payload=null;labels=null;finished=true;lease.close();}
+         public synchronized void close(){if(finished)return;closing=true;if(!active)finish();}
+     }
+     /** C must keep encoding, actual stream acquisition and write/flush inside synchronous consume. */
+     public static final class Borrow{
+         private final EventEmission emission;private boolean outputActive;private Borrow(EventEmission e){emission=e;}
+         // One synchronous output at a time bounds both payload copies and label generators,
+         // including cross-method sink callbacks. Sequential outputs remain legal.
+         private void beginOutput(){emission.guard();if(outputActive)throw denied();outputActive=true;}
+         public Info info(){emission.guard();return emission.info;}
+         public void requireLive(){emission.guard();}
+         public void writeRequiredDataLabels(OutputStream output)throws IOException{
+             Objects.requireNonNull(output);beginOutput();try{
+             var finiteOutput=new OutputStream(){
+                 long bytes;
+                 private void admit(int n){emission.guard();bytes=Limits.add(bytes,n,MaterialScopeStore.OBSERVED_NORMALIZED_BYTES,"NORMALIZED_BYTES");}
+                 @Override public void write(int value)throws IOException{admit(1);output.write(value);emission.guard();}
+                 @Override public void write(byte[] value,int offset,int length)throws IOException{admit(length);output.write(value,offset,length);emission.guard();}
+             };
+             // No set/string/byte[] escapes. Do not close or flush the caller's stream: C owns
+             // complete framing and the actual flush inside this same synchronous borrow.
+             try(var generator=ROOT.createGenerator(finiteOutput)){
+                 generator.disable(JsonGenerator.Feature.AUTO_CLOSE_TARGET).disable(JsonGenerator.Feature.FLUSH_PASSED_TO_STREAM);
+                 ROOT.writeValue(generator,emission.labels);
+             }
+             emission.guard();
+             }finally{outputActive=false;}
+         }
+         public void writePayload(OutputStream output)throws IOException{
+             Objects.requireNonNull(output);beginOutput();
+             // Transfer the original ledger with the permit: its retained model reservation
+             // includes the original encoded payload. Charge a separate array (+24B for
+             // header and alignment slack under the deployment's standard object alignment)
+             // before clone, throughout actual write, within the same 192MiB total. No reuse
+             // of fixed8MiB scratch; the sink receives only this disposable copy. The output
+             // guard also excludes overlapping label generators/copies, even during callbacks.
+             try(var copy=emission.ledger.reserve(emission.payload.length+24L)){
+                 byte[] payload=emission.payload.clone();emission.guard();output.write(payload);emission.guard();
+             }finally{outputActive=false;}
+         }
+     }
+     private static final class Lease implements AutoCloseable{
+         private final Semaphore permits;private final AtomicBoolean released=new AtomicBoolean();Lease(Semaphore p){permits=p;}public void close(){if(released.compareAndSet(false,true))permits.release();}
+     }
+     public static final class CapacityFailure extends PlatformException{
+         private final String dimension;
+         private CapacityFailure(String d){super(d.equals("WORKSPACE")?429:413,d.equals("WORKSPACE")?"STREAM_CAPACITY":d.equals("EVENT_PAYLOAD")?"EVENT_LIMIT":"BUFFER_LIMIT","有限事件材料容量不足");dimension=d;}
+         public String dimension(){return dimension;}
+     }
+     static CapacityFailure finite(String d){return new CapacityFailure(d);}
+     static long num(Map<String,Object> r,String k){var v=r.get(k);if(!(v instanceof Number n))throw denied();return n.longValue();}
+     static final class Limits{
+         long metadata,roots,records;
+         static long add(long current,long amount,long cap,String d){if(amount<0||current<0||current>cap||amount>cap-current)throw finite(d);return current+amount;}
+         static void single(long bytes,long cap,String d){add(0,bytes,cap,d);}
+         void metadata(long bytes){metadata=add(metadata,bytes,METADATA_BYTES,"METADATA_BYTES");}
+         void root(long bytes){roots=add(roots,bytes,ROOT_BYTES,"ROOT_BYTES");}
+         void record(long bytes){single(bytes,JSON_BYTES,"SCOPE_BYTES");records=add(records,1,MAX_RECORDS,"RECORDS");metadata(bytes);}
+         static void parents(long count){single(count,MAX_PARENTS,"PARENTS");}
+     }
+     /** No wall Clock: one conservative monotonic anchor survives all statements and parsing. */
+     static final class Work{
+         final JdbcTemplate db;final PortalEventsResponse response;final PortalEventsResponse.Capture capture;final long entered,allowance;final Limits limits=new Limits();final boolean window;
+         long representationUnits;int maxParserBackingChars;
+         final Ledger ledger=new Ledger();long rawPeak,canonicalPeak,canonicalActualPeak,tokens;
+         Work(JdbcTemplate d,PortalEventsResponse r,PortalEventsResponse.Capture c,long e){this(d,r,c,e,false);}
+         Work(JdbcTemplate d,PortalEventsResponse r,PortalEventsResponse.Capture c,long e,boolean window){this.window=window;db=d;response=r;capture=c;entered=e;allowance=c.remainingNanos();ledger.reserve(8L*1024*1024);}
+         long remaining(){return Math.min(capture.remainingNanos(),allowance-Math.max(0,System.nanoTime()-entered));}
+         void live(){RunEventReader.live(response,capture,window);if(Thread.currentThread().isInterrupted()||remaining()<=0)throw denied();}
+         long millis(){live();long ms=remaining()/1000000L;if(ms<1)throw denied();return ms;}
+         List<Map<String,Object>> query(String sql,int rows,Object...args){
+             millis();return db.execute((ConnectionCallback<List<Map<String,Object>>>)c->{
+                 var result=new ArrayList<Map<String,Object>>(rows);
+                 try(var statement=c.prepareStatement(sql)){
+                 for(int i=0;i<args.length;i++)statement.setObject(i+1,args[i]);
+                 long timeout=millis();boolean installed=false;
+                 // PG zero disables the timeout. Floor only. If the floor changes while setting
+                 // LOCAL timeout, reinstall at most three times or refuse; never restart a budget.
+                 for(int i=0;i<3;i++){
+                     try(var setting=c.prepareStatement("select set_config('statement_timeout', ?, true)")){setting.setString(1,Long.toString(timeout));millis();setting.executeQuery().close();}
+                     long now=millis();if(now>=timeout){installed=true;break;}timeout=now;
+                 }
+                 // The successful loop's millis() is the final execution check, after closing
+                 // SET and after all parameter preparation. There is inevitably a small gap to
+                 // executeQuery; do not turn a second millisecond-boundary race into false denial.
+                 if(!installed)throw denied();
+                     try(var rs=statement.executeQuery()){var meta=rs.getMetaData();while(rs.next()){if(result.size()>=rows)throw finite("RECORDS");var row=new LinkedHashMap<String,Object>();for(int i=1;i<=meta.getColumnCount();i++)row.put(meta.getColumnLabel(i),rs.getObject(i));result.add(row);}}
+                 }live();return result;
+             });
+         }
+         JsonNode json(String raw,boolean root){
+             live();try(var parser=ledger.reserve(64L*1024*1024)){
+                 var parsed=parseMeasured(raw,root,this::live,(count,bytes)->{
+                     long cost=512L*count+8L*bytes;long next=Limits.add(representationUnits,cost,MODEL_UNITS,"REPRESENTATION_MODEL");ledger.reserve(cost);representationUnits=next;tokens+=count;
+                 });maxParserBackingChars=Math.max(maxParserBackingChars,parsed.maxBackingChars());live();return parsed.value();
+             }
+         }
+         JsonNode jsonText(String sql,long bytes,boolean root,Object...args){
+             long cost=6*bytes;try(var text=ledger.reserve(cost)){
+                 rawPeak=Math.max(rawPeak,cost);var rows=query(sql,2,args);if(rows.size()!=1||rows.getFirst().size()!=1)throw denied();
+                 var raw=(String)rows.getFirst().values().iterator().next();if(raw==null)throw denied();same((long)raw.getBytes(StandardCharsets.UTF_8).length,bytes);return json(raw,root);
+             }
+         }
+         Ledger.Reservation canonicalScratch(long bytes){Limits.single(bytes,MaterialScopeStore.OBSERVED_NORMALIZED_BYTES,"NORMALIZED_BYTES");long cost=5*bytes;var reserved=ledger.reserve(cost);canonicalPeak=Math.max(canonicalPeak,cost);return reserved;}
+         String digest(JsonNode value){
+             long bytes=MaterialScopeStore.observedCanonicalCost(value);try(var canonical=canonicalScratch(bytes)){
+                 var measured=MaterialScopeStore.observedDigestMeasured(value);canonicalActualPeak=Math.max(canonicalActualPeak,measured.utf8Bytes());live();return measured.sha();
+             }
+         }
+         String ceiling(Actor actor,long bytes){try(var canonical=canonicalScratch(6*bytes)){return MaterialAuthorization.ceilingSha256(actor);}}
+         void material(MaterialScopeV1 scope,long bytes){try(var canonical=canonicalScratch(6*bytes)){capture.requireMaterial(scope);}}
+         Measurements measurements(int backing){return new Measurements(representationUnits,ledger.peak,rawPeak,canonicalPeak,canonicalActualPeak,tokens,maxParserBackingChars,backing);}
+     }
+     private static ObjectMapper mapper(boolean root){
+         var constraints=StreamReadConstraints.builder().maxNestingDepth(root?64:32).maxNumberLength(1000).maxStringLength(root?1048576:65536).maxNameLength(root?1048576:65536).build();
+         return new ObjectMapper(JsonFactory.builder().streamReadConstraints(constraints).enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION)
+                 .disable(JsonFactory.Feature.USE_THREAD_LOCAL_FOR_BUFFER_RECYCLING).disable(JsonFactory.Feature.CANONICALIZE_FIELD_NAMES).disable(JsonFactory.Feature.INTERN_FIELD_NAMES).build())
+                 .enable(DeserializationFeature.USE_BIG_INTEGER_FOR_INTS).enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS).enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS);
+     }
+     private static final ObjectMapper META=mapper(false),ROOT=mapper(true);
+     /** Jackson2.19 JsonRecyclerPools.ThreadLocalPool.acquirePooled calls this same public
+      * BufferRecyclers accessor; Json.mapper().copy() retains that pool. Only mandatory common
+      * material/ceiling validation uses it. BufferRecycler has four byte+four char slots; alloc
+      * atomically takes a slot and clears it. Empty defaults total<=36,800B (charged to fixed8MiB
+      * scratch). Drop, never return, those arrays; do not globally release or touch another thread.
+      * Entry drain also prevents borrowing a large buffer left by unrelated earlier work.
+      */
+     @SuppressWarnings("deprecation")
+     private static void clearCurrentThreadBuffers(){
+         var recycler=com.fasterxml.jackson.core.util.BufferRecyclers.getBufferRecycler();
+         for(int i=0;i<4;i++){recycler.allocByteBuffer(i);recycler.allocCharBuffer(i);}
+     }
+     private static void cleanup(Throwable primary){
+         try{clearCurrentThreadBuffers();}catch(RuntimeException|Error failure){if(primary==null)throw failure;primary.addSuppressed(failure);}
+     }
+     static String encodeText(JsonNode value){try{return ROOT.writeValueAsString(value);}catch(IOException failure){throw denied();}}
+     private static byte[] encode(JsonNode value){try{return ROOT.writeValueAsBytes(value);}catch(IOException failure){throw denied();}}
+     record Parsed(JsonNode value,int tokens,int utf8Bytes,int maxBackingChars){}
+     @FunctionalInterface private interface BeforeDom{void admit(int tokens,int bytes);}
+     static JsonNode parse(String raw,boolean root,Runnable live){
+         return parseMeasured(raw,root,live,(tokens,bytes)->{}).value();
+     }
+     static Parsed parseMeasured(String raw,boolean root,Runnable live){return parseMeasured(raw,root,live,(tokens,bytes)->{});}
+     private static Parsed parseMeasured(String raw,boolean root,Runnable live,BeforeDom admission){
+         if(raw==null)throw denied();var mapper=root?ROOT:META;int count=0,depth=0,maxBacking=0;boolean complete=false;
+         // Jackson2.19 ReaderBasedJsonParser lazily finishes strings: force text length during
+         // the streaming pass, before DOM, with field-name tokens and duplicate detection too.
+         try(var parser=mapper.createParser(raw)){JsonToken token;while((token=parser.nextToken())!=null){
+             if(complete)throw denied();if(++count>(root?262144:65536))throw finite("PARSER_TOKENS");if((count&255)==0)live.run();
+             if(token==JsonToken.FIELD_NAME||token==JsonToken.VALUE_STRING){if(parser.getTextLength()>(root?1048576:65536))throw finite("PARSER_STRING");maxBacking=Math.max(maxBacking,parser.getTextCharacters().length);}
+             if(token.isNumeric()&&parser.getTextLength()>1000)throw finite("PARSER_NUMBER");
+             if(token.isStructStart())depth++;if(token.isStructEnd())depth--;if(depth==0&&token!=JsonToken.FIELD_NAME)complete=true;
+         }if(!complete)throw denied();live.run();int bytes=raw.getBytes(StandardCharsets.UTF_8).length;admission.admit(count,bytes);var result=mapper.readTree(raw);live.run();return new Parsed(result,count,bytes,maxBacking);
+         }catch(StreamConstraintsException capacity){throw finite("PARSER_CONSTRAINT");}catch(IOException invalid){throw denied();}
+     }
+     static MaterialScopeV1 scope(JsonNode n){
+         object(n);if(n.size()!=11||!n.path("schemaVersion").isIntegralNumber()||!n.path("schemaVersion").canConvertToInt()||n.path("schemaVersion").intValue()!=1)throw denied();
+         var material=n.get("material");object(material);if(material.size()!=5)throw denied();for(String k:List.of("producer","kind","id","version","payloadSha256"))text(material,k);
+         var owner=n.get("owner");object(owner);if(owner.size()!=2)throw denied();text(owner,"tenantId");text(owner,"principalId");
+         for(String k:List.of("sourceDecisionId","sourceAuthorizationVersion","initialCeilingSha256","scopeSha256"))text(n,k);
+         for(String k:List.of("requiredRoles","requiredDataLabels","parentScopeSha256"))strings(n.get(k),k.equals("parentScopeSha256"));
+         var attrs=n.get("requiredEntitlements");object(attrs);attrs.fields().forEachRemaining(e->strings(e.getValue(),false));
+         try{return META.treeToValue(n,MaterialScopeV1.class);}catch(IOException|IllegalArgumentException invalid){throw denied();}
+     }
+     private static void strings(JsonNode n,boolean parents){if(n==null||!n.isArray())throw denied();if(parents)Limits.parents(n.size());var unique=new HashSet<String>();for(var v:n){if(!v.isTextual()||v.textValue().isBlank()||!unique.add(v.textValue()))throw denied();if(parents)hash(v.textValue());}}
+ }
+diff --git a/engine-runtime/src/test/java/cn/agentplatform/engine/infra/PortalRunEventsCapacityTest.java b/engine-runtime/src/test/java/cn/agentplatform/engine/infra/PortalRunEventsCapacityTest.java
+index 8f626ce..74fd23d 100644
+--- a/engine-runtime/src/test/java/cn/agentplatform/engine/infra/PortalRunEventsCapacityTest.java
++++ b/engine-runtime/src/test/java/cn/agentplatform/engine/infra/PortalRunEventsCapacityTest.java
+@@ -1,58 +1,81 @@
+ package cn.agentplatform.engine.infra;
+ 
+ import static org.assertj.core.api.Assertions.*;
+ import cn.agentplatform.common.*;
+ import cn.agentplatform.common.authority.*;
+ import java.lang.reflect.*;
+ import java.nio.charset.StandardCharsets;
+ import java.util.*;
+ import org.junit.jupiter.api.Test;
+ 
+ class PortalRunEventsCapacityTest {
++    @Test void freshQueuedFirstReadCapacityFailureBeforeCommitMapsToGenericHttp413()throws Exception{
++        try(var f=new PortalRunEventWindowPostgresTest.Fixture();var callers=java.util.concurrent.Executors.newSingleThreadExecutor()){
++            PortalRunEventsHttpTest.fixture=f;var b=f.seed(0);String ticket=PortalRunEventsAuthorityFixture.ticket(f.auth,b.owner(),b.publicId(),b.snapshotSha());
++            var h=new PortalRunEventsHttpTest.Hooks();h.block="complete";PortalRunEventsHttpTest.hooks=h;var workers=new java.util.concurrent.CountDownLatch(2);var release=new java.util.concurrent.CountDownLatch(1);
++            try(var server=PortalRunEventsHttpTest.start(PortalRunEventsHttpTest.Receiver.class);var fresh=f.open(b,0)){
++                var service=server.getBean(cn.agentplatform.engine.application.PortalRunEventsService.class);var pool=PortalRunEventsLifecycleTest.executor(service);
++                for(int i=0;i<2;i++)pool.execute(()->{workers.countDown();boolean done=false;while(!done)try{done=release.await(100,java.util.concurrent.TimeUnit.MILLISECONDS);}catch(InterruptedException ignored){}});
++                assertThat(workers.await(2,java.util.concurrent.TimeUnit.SECONDS)).isTrue();
++                var future=callers.submit(()->PortalRunEventsHttpTest.request(server,b.publicId(),ticket,"?Last-Event-ID=1"));PortalRunEventsLifecycleTest.await(()->pool.getQueue().size()==1);
++                assertThat(h.writes).hasValue(0); // Opening's real successful preflight did not commit.
++                f.append(b.runId(),"C_LARGE_FRESH","x".repeat(262143));release.countDown();PortalRunEventsLifecycleTest.entered(h);
++                var bus=server.getBean(ChunkBus.class);assertThat(PortalRunEventsLifecycleTest.availableFrames(bus)).isEqualTo(61);
++                try(var one=server.getBean(RunEventReader.class).readNext(fresh,0).orElseThrow();var two=server.getBean(RunEventReader.class).readNext(fresh,0).orElseThrow()){}
++                try(var one=bus.subscribe(100)){assertThatThrownBy(()->bus.subscribe(101)).isInstanceOf(PlatformException.class);}
++                assertThat(h.exits).hasValue(0);h.release.countDown();var result=future.get(4,java.util.concurrent.TimeUnit.SECONDS);
++                assertThat(result.statusCode()).isEqualTo(413);assertThat(result.headers().firstValue("content-type").orElse("")).startsWith("application/json");
++                assertThat(Json.read(result.body()).path("code").asText()).isEqualTo("EVENT_LIMIT");assertThat(Json.read(result.body()).path("message").asText()).isEqualTo("事件观察不可用");
++                assertThat(result.body()).doesNotContain("stream_reset","EVENT_PAYLOAD","有限事件材料容量不足");
++                PortalRunEventsLifecycleTest.await(()->h.exits.get()==1);PortalRunEventsLifecycleTest.await(()->{try{return PortalRunEventsLifecycleTest.availableFrames(bus)==62;}catch(Exception e){throw new AssertionError(e);}});
++                try(var one=bus.subscribe(100);var two=bus.subscribe(101)){}
++            }finally{release.countDown();h.release.countDown();PortalRunEventsHttpTest.hooks=null;}
++        }
++    }
+     @Test void fullFrameExactMaximumAndPlusOneUseSingleExactBacking()throws Exception{
+         // Domain event_seq is currently int, so long19 framing is exercised on the actual
+         // encoder backing, without fabricating a signed event or exposing a proof constructor.
+         Class<?> type=Class.forName("cn.agentplatform.engine.application.PortalRunEventsService$Frame");var constructor=type.getDeclaredConstructor();constructor.setAccessible(true);var frame=constructor.newInstance();
+         var ascii=type.getDeclaredMethod("ascii",String.class);ascii.setAccessible(true);var write=type.getDeclaredMethod("write",byte[].class,int.class,int.class);write.setAccessible(true);
+         ascii.invoke(frame,"id:"+Long.MAX_VALUE+"\nevent:"+"A".repeat(64)+"\ndata:");var payload=new byte[262144];Arrays.fill(payload,(byte)'x');write.invoke(frame,payload,0,payload.length);ascii.invoke(frame,"\n\n");
+         var bytes=type.getDeclaredField("bytes");bytes.setAccessible(true);var count=type.getDeclaredField("count");count.setAccessible(true);
+         assertThat(((byte[])bytes.get(frame)).length).isEqualTo(262245);assertThat(count.getInt(frame)).isEqualTo(262245);
+         assertThatThrownBy(()->ascii.invoke(frame,"x")).isInstanceOfSatisfying(InvocationTargetException.class,e->assertThat(e.getCause()).isInstanceOfSatisfying(PlatformException.class,p->assertThat(p.code()).isEqualTo("EVENT_LIMIT")));
+     }
+     @Test void portalFramesAndOldResponseReservationsShareOneSixteenMiBPoolAndSlots()throws Exception{
+         try(var bus=new ChunkBus(2,8192)){
+             var stopped=new java.util.concurrent.atomic.AtomicInteger();var a=bus.reservePortalSlot(stopped::incrementAndGet);var b=bus.reservePortalSlot(stopped::incrementAndGet);
+             assertThatThrownBy(()->bus.subscribe(1)).isInstanceOf(PlatformException.class);a.close();try(var legacy=bus.subscribe(1)){assertThatThrownBy(()->bus.reservePortalSlot(()->{})).isInstanceOf(PlatformException.class);}
+             var leases=new ArrayList<AutoCloseable>();try(var legacy=bus.reserveResponse()){
+                 AutoCloseable lease;while((lease=bus.reservePortalFrame())!=null)leases.add(lease);
+                 assertThat(leases).hasSize((16*1024*1024-ChunkBus.MAX_EVENT_BYTES)/ChunkBus.FRAME_RESERVATION_BYTES);
+                 assertThat(bus.reserveResponse()).isNull();
+             }finally{for(var lease:leases)lease.close();}
+             assertThat(PortalRunEventsLifecycleTest.availableFrames(bus)).isEqualTo(62);bus.close();assertThat(stopped).hasValue(1);b.close();b.close();
+         }
+     }
+     @Test void realHttpUtf8PayloadAtExactBudgetAndPlusOneResetRemainFinite()throws Exception{
+         for(int extra:List.of(0,1))try(var f=new PortalRunEventWindowPostgresTest.Fixture()){
+             PortalRunEventsHttpTest.fixture=f;var b=f.seed(0);String type="A".repeat(32);String payload="中"+"x".repeat(262139+extra);
+             assertThat(Json.write(payload).getBytes(StandardCharsets.UTF_8)).hasSize(262144+extra);f.append(b.runId(),type,payload);f.finish(b.runId());
+             String ticket=PortalRunEventsAuthorityFixture.ticket(f.auth,b.owner(),b.publicId(),b.snapshotSha());
+             try(var server=PortalRunEventsHttpTest.start(PortalRunEventsHttpTest.Receiver.class)){
+                 var result=PortalRunEventsHttpTest.request(server,b.publicId(),ticket,"");assertThat(result.statusCode()).isEqualTo(200);
+                 if(extra==0){assertThat(result.body()).contains("id:2\nevent:"+type+"\ndata:"+Json.write(payload)+"\n\n","event:RUN_FINISHED");}
+                 else{assertThat(result.body()).contains("event:stream_reset","\"reason\":\"EVENT_LIMIT\"").doesNotContain("event:"+type);}
+                 assertThat(PortalRunEventsLifecycleTest.availableFrames(server.getBean(ChunkBus.class))).isEqualTo(62);
+             }
+         }
+     }
+     @Test void stateCapAndCombinedRootCapFailBeforeStateTextGetter()throws Exception{
+         try(var f=new PortalRunEventWindowPostgresTest.Fixture()){var b=f.seed(0);
+             long refs=f.db.queryForObject("select octet_length(version_refs::text) from engine.run where id=?",Long.class,b.runId());
+             for(String dimension:List.of("STATE_ROW","ROOT_BYTES"))try(var r=f.open(b,0)){
+                 f.source.start();f.source.change=(key,value)->key.equals("state_bytes")?1048577L:key.equals("snapshot_bytes")&&dimension.equals("ROOT_BYTES")?8388608L:value;
+                 if(dimension.equals("ROOT_BYTES"))f.source.change=(key,value)->key.equals("snapshot_bytes")?8388608L-refs:value;
+                 assertThatThrownBy(()->f.reader.readWindow(r,0)).isInstanceOfSatisfying(RunEventReader.CapacityFailure.class,e->assertThat(e.dimension()).isEqualTo(dimension));
+                 assertThat(f.source.getters).doesNotContain("state_text");
+             }
+         }
+     }
+ }
+diff --git a/engine-runtime/src/test/java/cn/agentplatform/engine/infra/PortalRunEventsLifecycleTest.java b/engine-runtime/src/test/java/cn/agentplatform/engine/infra/PortalRunEventsLifecycleTest.java
+index e4f9993..4a4ff7a 100644
+--- a/engine-runtime/src/test/java/cn/agentplatform/engine/infra/PortalRunEventsLifecycleTest.java
++++ b/engine-runtime/src/test/java/cn/agentplatform/engine/infra/PortalRunEventsLifecycleTest.java
+@@ -1,156 +1,194 @@
+ package cn.agentplatform.engine.infra;
+ 
+ import static org.assertj.core.api.Assertions.*;
+ import cn.agentplatform.common.*;
+ import cn.agentplatform.common.authority.*;
+ import cn.agentplatform.engine.application.PortalRunEventsService;
+ import java.net.http.HttpResponse;
+ import java.util.*;
+ import java.util.concurrent.*;
+ import java.util.concurrent.atomic.*;
+ import java.util.function.BooleanSupplier;
+ import org.junit.jupiter.api.Test;
+ import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
+ 
+ class PortalRunEventsLifecycleTest {
+     static void await(BooleanSupplier condition){long end=System.nanoTime()+TimeUnit.SECONDS.toNanos(4);while(!condition.getAsBoolean()){if(System.nanoTime()>end)throw new AssertionError("BOUNDED_WAIT");try{Thread.sleep(10);}catch(InterruptedException e){throw new AssertionError(e);}}}
+     static void entered(PortalRunEventsHttpTest.Hooks h)throws Exception{assertThat(h.entered.await(4,TimeUnit.SECONDS)).isTrue();}
+     static ThreadPoolExecutor executor(PortalRunEventsService service)throws Exception{var field=PortalRunEventsService.class.getDeclaredField("writers");field.setAccessible(true);return (ThreadPoolExecutor)field.get(service);}
+     // Read the actual C-owned holder for deterministic actual-client renewals. No common
+     // evidence/capture constructor or foreign service/JAR/target reflection is involved.
+     static PortalEventsResponse heldResponse(PortalRunEventsService service){try{var field=PortalRunEventsService.class.getDeclaredField("owners");field.setAccessible(true);var owner=((Set<?>)field.get(service)).iterator().next();var response=owner.getClass().getDeclaredField("response");response.setAccessible(true);return (PortalEventsResponse)response.get(owner);}catch(ReflectiveOperationException failure){throw new AssertionError(failure);}}
+     static Future<HttpResponse<String>> request(ExecutorService caller,ServletWebServerApplicationContext server,String run,String ticket){return caller.submit(()->PortalRunEventsHttpTest.request(server,run,ticket,""));}
+     static int availableFrames(ChunkBus bus)throws Exception{var leases=new ArrayList<AutoCloseable>();try{AutoCloseable l;while((l=bus.reservePortalFrame())!=null)leases.add(l);return leases.size();}finally{for(var l:leases)l.close();}}
++    @Test void invalidatedBetweenFreshReadAndConsumeEntryRetainsBothOwnersThroughComplete()throws Exception{guardBoundaryOwners(false);}
++    @Test void invalidatedAfterCallbackBeforeFinalGuardRetainsBothOwnersThroughComplete()throws Exception{guardBoundaryOwners(true);}
++    static void guardBoundaryOwners(boolean afterCallback)throws Exception{
++        try(var f=new PortalRunEventWindowPostgresTest.Fixture();var callers=Executors.newFixedThreadPool(2)){
++            PortalRunEventsHttpTest.fixture=f;var b=f.seed(0);String ticket=PortalRunEventsAuthorityFixture.ticket(f.auth,b.owner(),b.publicId(),b.snapshotSha());
++            var h=new PortalRunEventsHttpTest.Hooks(2);h.block="complete";h.secondRelease=new CountDownLatch(1);PortalRunEventsHttpTest.hooks=h;
++            try(var server=PortalRunEventsHttpTest.start(PortalRunEventsHttpTest.Receiver.class);var fresh=f.open(b,0)){
++                var service=server.getBean(PortalRunEventsService.class);var actual=server.getBean(RunEventReader.class);var timed=org.mockito.Mockito.spy(actual);var cutoffs=new AtomicInteger();
++                // Mockito changes only the call timing. Every RR, mint, borrow, guard and
++                // resource finally delegates to the actual reader and its actual result.
++                org.mockito.Mockito.doAnswer(call->{
++                    var result=(RunEventReader.WindowEmission)call.callRealMethod();
++                    if(!Thread.currentThread().getName().equals("portal-events-writer"))return result;
++                    var holder=(PortalEventsResponse)call.getArgument(0);
++                    if(!afterCallback){cutoffs.incrementAndGet();holder.close();return result;}
++                    return org.mockito.Mockito.mock(RunEventReader.WindowEmission.class,invoke->{
++                        var args=invoke.getArguments().clone();
++                        if(invoke.getMethod().getName().equals("consume")){
++                            @SuppressWarnings("unchecked") var action=(java.util.function.Consumer<RunEventReader.WindowBorrow>)args[0];
++                            args[0]=(java.util.function.Consumer<RunEventReader.WindowBorrow>)view->{action.accept(view);cutoffs.incrementAndGet();holder.close();};
++                        }
++                        try{return invoke.getMethod().invoke(result,args);}catch(java.lang.reflect.InvocationTargetException failure){throw failure.getCause();}
++                    });
++                }).when(timed).readWindow(org.mockito.ArgumentMatchers.any(PortalEventsResponse.class),org.mockito.ArgumentMatchers.anyLong());
++                var readerField=PortalRunEventsService.class.getDeclaredField("reader");readerField.setAccessible(true);readerField.set(service,timed);
++                var first=callers.submit(()->PortalRunEventsHttpTest.request(server,b.publicId(),ticket,"?Last-Event-ID=1"));var second=callers.submit(()->PortalRunEventsHttpTest.request(server,b.publicId(),ticket,"?Last-Event-ID=1"));
++                entered(h);assertThat(cutoffs).hasValue(2);var bus=server.getBean(ChunkBus.class);service.close();
++                assertThat(catchThrowable(()->{try(var unexpected=actual.readNext(fresh,0).orElseThrow()) {}})).isInstanceOf(RunEventReader.CapacityFailure.class);
++                assertThatThrownBy(()->bus.subscribe(100)).isInstanceOf(PlatformException.class);assertThat(availableFrames(bus)).isEqualTo(60);assertThat(h.exits).hasValue(0);
++                if(!afterCallback)assertThat(h.writes).hasValue(0);
++                h.release.countDown();await(()->h.exits.get()==1);await(()->{try{return availableFrames(bus)==61;}catch(Exception e){throw new AssertionError(e);}});
++                try(var one=actual.readNext(fresh,0).orElseThrow()){assertThatThrownBy(()->actual.readNext(fresh,0)).isInstanceOf(RunEventReader.CapacityFailure.class);}
++                try(var one=bus.subscribe(100)){assertThatThrownBy(()->bus.subscribe(101)).isInstanceOf(PlatformException.class);}
++                h.secondRelease.countDown();first.get(4,TimeUnit.SECONDS);second.get(4,TimeUnit.SECONDS);await(()->h.exits.get()==2);await(()->{try{return availableFrames(bus)==62;}catch(Exception e){throw new AssertionError(e);}});
++                try(var one=actual.readNext(fresh,0).orElseThrow();var two=actual.readNext(fresh,0).orElseThrow();var slotOne=bus.subscribe(100);var slotTwo=bus.subscribe(101)){}
++            }finally{h.release.countDown();h.secondRelease.countDown();PortalRunEventsHttpTest.hooks=null;}
++        }
++    }
+     @Test void expiredOriginalTicketHealthyRenewalAfterRealGetterReturnsRereadsBeforeFirstWrite()throws Exception{
+         try(var f=new PortalRunEventWindowPostgresTest.Fixture();var callers=Executors.newSingleThreadExecutor()){
+             PortalRunEventsHttpTest.fixture=f;var b=f.seed(0);f.finish(b.runId());PortalRunEventsAuthorityFixture.shortEventsTicket(f.auth);
+             String ticket=PortalRunEventsAuthorityFixture.ticket(f.auth,b.owner(),b.publicId(),b.snapshotSha());
+             var h=new PortalRunEventsHttpTest.Hooks();h.block="get";PortalRunEventsHttpTest.hooks=h;
+             try(var server=PortalRunEventsHttpTest.start(PortalRunEventsHttpTest.Receiver.class)){
+                 f.source.start();var future=request(callers,server,b.publicId(),ticket);entered(h);int checks=Collections.frequency(f.auth.iam.observedOperations(),"portal_events_check");
+                 f.auth.advance(3);f.auth.renew(heldResponse(server.getBean(PortalRunEventsService.class)));assertThat(Collections.frequency(f.auth.iam.observedOperations(),"portal_events_check")).isGreaterThan(checks);
+                 h.beforeWrite=()->assertThat(f.source.getters.stream().filter(k->k.equals("state_text")).count()).isGreaterThanOrEqualTo(3);
+                 assertThat(h.writes).hasValue(0);h.release.countDown();var result=future.get(5,TimeUnit.SECONDS);
+                 assertThat(result.statusCode()).isEqualTo(200);assertThat(result.body()).contains("event:C_FIRST","event:RUN_FINISHED");assertThat(h.exits).hasValue(1);
+                 assertThat(f.auth.iam.observedOperations()).contains("portal_events_check");
+             }finally{h.release.countDown();PortalRunEventsHttpTest.hooks=null;}
+         }
+     }
+     @Test void renewedGenerationAfterStatusFlushCannotSendBusinessEventUntilFreshWindow()throws Exception{
+         try(var f=new PortalRunEventWindowPostgresTest.Fixture()){
+             PortalRunEventsHttpTest.fixture=f;var b=f.seed(0);f.finish(b.runId());String ticket=PortalRunEventsAuthorityFixture.ticket(f.auth,b.owner(),b.publicId(),b.snapshotSha());
+             var h=new PortalRunEventsHttpTest.Hooks();var once=new AtomicBoolean();PortalRunEventsHttpTest.hooks=h;
+             h.beforeWrite=()->{if(h.writes.get()>0)assertThat(f.source.getters.stream().filter(k->k.equals("state_text")).count()).isGreaterThanOrEqualTo(3);};
+             try(var server=PortalRunEventsHttpTest.start(PortalRunEventsHttpTest.Receiver.class)){
+                 h.afterFlush=()->{if(once.compareAndSet(false,true)){f.auth.advance(3);f.auth.renew(heldResponse(server.getBean(PortalRunEventsService.class)));}};
+                 f.source.start();var result=PortalRunEventsHttpTest.request(server,b.publicId(),ticket,"");assertThat(result.body()).contains("event:C_FIRST","event:RUN_FINISHED");assertThat(h.exits).hasValue(1);
+             }finally{PortalRunEventsHttpTest.hooks=null;}
+         }
+     }
+     @Test void hardBoundDuringActualGetterProducesNoBusinessWrite()throws Exception{
+         try(var f=new PortalRunEventWindowPostgresTest.Fixture();var callers=Executors.newSingleThreadExecutor()){
+             PortalRunEventsHttpTest.fixture=f;var b=f.seed(0);String ticket=PortalRunEventsAuthorityFixture.ticket(f.auth,b.owner(),b.publicId(),b.snapshotSha());
+             var h=new PortalRunEventsHttpTest.Hooks();h.block="get";PortalRunEventsHttpTest.hooks=h;
+             try(var server=PortalRunEventsHttpTest.start(PortalRunEventsHttpTest.Receiver.class)){
+                 var future=request(callers,server,b.publicId(),ticket);entered(h);var response=heldResponse(server.getBean(PortalRunEventsService.class));var first=response.currentCapture();
+                 for(int i=0;i<18;i++){f.auth.advance(3);f.auth.renew(response);response.currentCapture();}
+                 assertThat(response.isSuperseded(first)).isTrue();f.auth.advance(2);assertThatThrownBy(response::currentCapture).isInstanceOf(PlatformException.class);h.release.countDown();future.get(4,TimeUnit.SECONDS);
+                 assertThat(h.writes).hasValue(0);assertThat(h.exits).hasValue(1);
+                 assertThat(f.db.queryForObject("select status from engine.run where id=?",String.class,b.runId())).isEqualTo("PENDING");
+             }finally{h.release.countDown();PortalRunEventsHttpTest.hooks=null;}
+         }
+     }
+     @Test void timeoutOnCompleteAndShutdownKeepTwoActualGetterOwnersUntilEachReturns()throws Exception{
+         try(var f=new PortalRunEventWindowPostgresTest.Fixture();var callers=Executors.newFixedThreadPool(2)){
+             PortalRunEventsHttpTest.fixture=f;var b=f.seed(0);String ticket=PortalRunEventsAuthorityFixture.ticket(f.auth,b.owner(),b.publicId(),b.snapshotSha());
+             var h=new PortalRunEventsHttpTest.Hooks(2);h.block="get";h.secondRelease=new CountDownLatch(1);h.timeout=250;PortalRunEventsHttpTest.hooks=h;
+             try(var server=PortalRunEventsHttpTest.start(PortalRunEventsHttpTest.Receiver.class);var fresh=f.open(b,0)){
+                 var bus=server.getBean(ChunkBus.class);var first=request(callers,server,b.publicId(),ticket);var second=request(callers,server,b.publicId(),ticket);entered(h);
+                 assertThatThrownBy(()->server.getBean(RunEventReader.class).readNext(fresh,0)).isInstanceOfSatisfying(RunEventReader.CapacityFailure.class,e->assertThat(e.dimension()).isEqualTo("WORKSPACE"));
+                 assertThatThrownBy(()->bus.subscribe(100)).isInstanceOf(PlatformException.class);assertThat(availableFrames(bus)).isEqualTo(60);
+                 await(()->h.timeouts.get()>0&&h.notifications.get()>0);server.getBean(PortalRunEventsService.class).close();
+                 assertThatThrownBy(()->server.getBean(RunEventReader.class).readNext(fresh,0)).isInstanceOf(RunEventReader.CapacityFailure.class);assertThat(availableFrames(bus)).isEqualTo(60);assertThat(h.writes).hasValue(0);
+                 h.release.countDown();await(()->h.exits.get()>=1);
+                 try(var one=server.getBean(RunEventReader.class).readNext(fresh,0).orElseThrow()){assertThatThrownBy(()->server.getBean(RunEventReader.class).readNext(fresh,0)).isInstanceOf(RunEventReader.CapacityFailure.class);}
+                 assertThat(availableFrames(bus)).isEqualTo(61);
+                 h.secondRelease.countDown();first.get(4,TimeUnit.SECONDS);second.get(4,TimeUnit.SECONDS);await(()->h.exits.get()==2);
+                 assertThat(availableFrames(bus)).isEqualTo(62);try(var one=bus.subscribe(100);var two=bus.subscribe(101)){}
+             }finally{h.release.countDown();h.secondRelease.countDown();PortalRunEventsHttpTest.hooks=null;}
+         }
+     }
+     @Test void actualCompleteCallRetainsCurrentReaderFrameAndSlotThroughItsFinally()throws Exception{
+         try(var f=new PortalRunEventWindowPostgresTest.Fixture();var callers=Executors.newSingleThreadExecutor()){
+             PortalRunEventsHttpTest.fixture=f;var b=f.seed(0);f.finish(b.runId());String ticket=PortalRunEventsAuthorityFixture.ticket(f.auth,b.owner(),b.publicId(),b.snapshotSha());
+             var h=new PortalRunEventsHttpTest.Hooks();h.block="complete";PortalRunEventsHttpTest.hooks=h;
+             try(var server=PortalRunEventsHttpTest.start(PortalRunEventsHttpTest.Receiver.class);var fresh=f.open(b,0)){
+                 var future=request(callers,server,b.publicId(),ticket);entered(h);var bus=server.getBean(ChunkBus.class);server.getBean(PortalRunEventsService.class).close();
+                 try(var one=server.getBean(RunEventReader.class).readNext(fresh,0).orElseThrow()){assertThatThrownBy(()->server.getBean(RunEventReader.class).readNext(fresh,0)).isInstanceOf(RunEventReader.CapacityFailure.class);}
+                 try(var one=bus.subscribe(100)){assertThatThrownBy(()->bus.subscribe(101)).isInstanceOf(PlatformException.class);}
+                 assertThat(availableFrames(bus)).isEqualTo(61);assertThat(h.exits).hasValue(0);h.release.countDown();future.get(4,TimeUnit.SECONDS);await(()->h.exits.get()==1);assertThat(availableFrames(bus)).isEqualTo(62);
+             }finally{h.release.countDown();PortalRunEventsHttpTest.hooks=null;}
+         }
+     }
+     @Test void queuedNeverRunOwnersHoldNoReaderOrFrameAndRealSubmissionRejectionReleasesSlot()throws Exception{
+         try(var f=new PortalRunEventWindowPostgresTest.Fixture();var callers=Executors.newFixedThreadPool(3)){
+             PortalRunEventsHttpTest.fixture=f;var b=f.seed(0);String ticket=PortalRunEventsAuthorityFixture.ticket(f.auth,b.owner(),b.publicId(),b.snapshotSha());
+             var h=new PortalRunEventsHttpTest.Hooks();PortalRunEventsHttpTest.hooks=h;var workers=new CountDownLatch(2);var release=new CountDownLatch(1);
+             try(var server=PortalRunEventsHttpTest.start(PortalRunEventsHttpTest.Receiver.class);var fresh=f.open(b,0)){
+                 var pool=executor(server.getBean(PortalRunEventsService.class));for(int i=0;i<2;i++)pool.execute(()->{workers.countDown();try{release.await();}catch(InterruptedException ignored){}});assertThat(workers.await(2,TimeUnit.SECONDS)).isTrue();
+                 var first=request(callers,server,b.publicId(),ticket);var second=request(callers,server,b.publicId(),ticket);await(()->pool.getQueue().size()==2);
+                 try(var one=server.getBean(RunEventReader.class).readNext(fresh,0).orElseThrow();var two=server.getBean(RunEventReader.class).readNext(fresh,0).orElseThrow()){}
+                 var bus=server.getBean(ChunkBus.class);assertThat(availableFrames(bus)).isEqualTo(62);h.contexts.getFirst().complete();await(()->h.notifications.get()>=1);
+                 var rejected=PortalRunEventsHttpTest.request(server,b.publicId(),ticket,"");assertThat(rejected.statusCode()).isEqualTo(429);assertThat(rejected.body()).contains("STREAM_CAPACITY");assertThat(availableFrames(bus)).isEqualTo(62);
+                 h.contexts.get(1).complete();first.get(4,TimeUnit.SECONDS);second.get(4,TimeUnit.SECONDS);release.countDown();await(()->pool.getQueue().isEmpty());assertThat(h.writes).hasValue(1); // Only the bounded rejection envelope; neither queued task ran.
+                 try(var one=bus.subscribe(100);var two=bus.subscribe(101)){}
+             }finally{release.countDown();PortalRunEventsHttpTest.hooks=null;}
+         }
+     }
+     @Test void actualWriteAndFlushBlockingKeepResourcesAfterStopAndSendNoFollowingEvent()throws Exception{
+         for(String stage:List.of("write","flush"))try(var f=new PortalRunEventWindowPostgresTest.Fixture();var callers=Executors.newSingleThreadExecutor()){
+             PortalRunEventsHttpTest.fixture=f;var b=f.seed(0);f.finish(b.runId());String ticket=PortalRunEventsAuthorityFixture.ticket(f.auth,b.owner(),b.publicId(),b.snapshotSha());
+             var h=new PortalRunEventsHttpTest.Hooks();h.block=stage;PortalRunEventsHttpTest.hooks=h;
+             try(var server=PortalRunEventsHttpTest.start(PortalRunEventsHttpTest.Receiver.class);var fresh=f.open(b,0)){
+                 var future=request(callers,server,b.publicId(),ticket);entered(h);var bus=server.getBean(ChunkBus.class);server.getBean(PortalRunEventsService.class).close();
+                 try(var one=server.getBean(RunEventReader.class).readNext(fresh,0).orElseThrow()){assertThatThrownBy(()->server.getBean(RunEventReader.class).readNext(fresh,0)).isInstanceOf(RunEventReader.CapacityFailure.class);}
+                 try(var one=bus.subscribe(100)){assertThatThrownBy(()->bus.subscribe(101)).isInstanceOf(PlatformException.class);}
+                 assertThat(availableFrames(bus)).isEqualTo(61);h.release.countDown();var result=future.get(4,TimeUnit.SECONDS);assertThat(result.body()).doesNotContain("event:C_FIRST","event:RUN_FINISHED");await(()->h.exits.get()==1);assertThat(availableFrames(bus)).isEqualTo(62);
+             }finally{h.release.countDown();PortalRunEventsHttpTest.hooks=null;}
+         }
+     }
+     @Test void twoActivePollersObserveNewTerminalWhileTwoQueuedOwnersWaitWithoutReaderStarvation()throws Exception{
+         try(var f=new PortalRunEventWindowPostgresTest.Fixture();var callers=Executors.newFixedThreadPool(4)){
+             PortalRunEventsHttpTest.fixture=f;var b=f.seed(0);String ticket=PortalRunEventsAuthorityFixture.ticket(f.auth,b.owner(),b.publicId(),b.snapshotSha());
+             var h=new PortalRunEventsHttpTest.Hooks();PortalRunEventsHttpTest.hooks=h;PortalRunEventsHttpTest.streamSlots=4;
+             try(var server=PortalRunEventsHttpTest.start(PortalRunEventsHttpTest.Receiver.class)){
+                 var tasks=new ArrayList<Future<HttpResponse<String>>>();var pool=executor(server.getBean(PortalRunEventsService.class));
+                 for(int i=0;i<2;i++)tasks.add(callers.submit(()->PortalRunEventsHttpTest.request(server,b.publicId(),ticket,"?Last-Event-ID=1")));
+                 await(()->h.flushes.get()>=2);
+                 for(int target=1;target<=2;target++){
+                     boolean queued=false;for(int attempt=0;attempt<5&&!queued;attempt++){
+                         var next=callers.submit(()->PortalRunEventsHttpTest.request(server,b.publicId(),ticket,"?Last-Event-ID=1"));int expected=target;
+                         await(()->pool.getQueue().size()>=expected||next.isDone());
+                         if(next.isDone())assertThat(next.get().statusCode()).isEqualTo(429);
+                         else{tasks.add(next);queued=true;}
+                     }
+                     assertThat(queued).isTrue();
+                 }
+                 assertThat(pool.getQueue()).hasSize(2);f.finish(b.runId());
+                 for(var task:tasks){var result=task.get(5,TimeUnit.SECONDS);assertThat(result.statusCode()).isEqualTo(200);assertThat(result.body()).contains("event:RUN_FINISHED").doesNotContain("event:C_FIRST");}
+                 await(()->pool.getQueue().isEmpty());assertThat(availableFrames(server.getBean(ChunkBus.class))).isEqualTo(62);
+             }finally{PortalRunEventsHttpTest.streamSlots=2;PortalRunEventsHttpTest.hooks=null;}
+         }
+     }
+     @Test void supersededRetriesAreBoundedPerRoundAndSuccessfulCursorProgressStartsNextRound()throws Exception{
+         for(boolean exhaust:List.of(false,true))try(var f=new PortalRunEventWindowPostgresTest.Fixture()){
+             PortalRunEventsHttpTest.fixture=f;var b=f.seed(0);if(!exhaust){f.append(b.runId(),"C_SECOND",Map.of("n",2));f.append(b.runId(),"C_THIRD",Map.of("n",3));}f.finish(b.runId());
+             String ticket=PortalRunEventsAuthorityFixture.ticket(f.auth,b.owner(),b.publicId(),b.snapshotSha());var h=new PortalRunEventsHttpTest.Hooks();PortalRunEventsHttpTest.hooks=h;
+             try(var server=PortalRunEventsHttpTest.start(PortalRunEventsHttpTest.Receiver.class)){
+                 h.afterFlush=()->{if(exhaust||Set.of(1,4,7).contains(h.flushes.get())){f.auth.advance(3);f.auth.renew(heldResponse(server.getBean(PortalRunEventsService.class)));}};
+                 var result=PortalRunEventsHttpTest.request(server,b.publicId(),ticket,"");
+                 if(exhaust){assertThat(h.flushes).hasValue(3);assertThat(result.body()).doesNotContain("event:C_FIRST","event:RUN_FINISHED");}
+                 else{assertThat(h.flushes).hasValue(8);assertThat(result.body()).contains("event:C_FIRST","event:C_SECOND","event:C_THIRD","event:RUN_FINISHED");}
+                 assertThat(availableFrames(server.getBean(ChunkBus.class))).isEqualTo(62);
+             }finally{PortalRunEventsHttpTest.hooks=null;}
+         }
+     }
+ }

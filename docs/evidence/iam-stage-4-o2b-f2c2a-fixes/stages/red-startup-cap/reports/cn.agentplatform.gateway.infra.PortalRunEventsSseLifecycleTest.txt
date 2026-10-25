@@ -1,0 +1,435 @@
+-------------------------------------------------------------------------------
+Test set: cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest
+-------------------------------------------------------------------------------
+Tests run: 5, Failures: 5, Errors: 0, Skipped: 0, Time elapsed: 23.76 s <<< FAILURE! -- in cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest
+cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest.originalRequestScopeAndDispatcherAreRequiredBeforeQuery -- Time elapsed: 3.138 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+10�� 22, 2026 1:00:40 ���� org.apache.coyote.AbstractProtocol init
+��Ϣ: Initializing ProtocolHandler ["http-nio-127.0.0.1-auto-1"]
+10�� 22, 2026 1:00:40 ���� org.apache.catalina.core.StandardService startInternal
+��Ϣ: Starting service [Tomcat]
+10�� 22, 2026 1:00:40 ���� org.apache.catalina.core.StandardEngine startInternal
+��Ϣ: Starting Servlet engine: [Apache Tomcat/10.1.41]
+10�� 22, 2026 1:00:40 ���� org.apache.coyote.AbstractProtocol start
+��Ϣ: Starting ProtocolHandler ["http-nio-127.0.0.1-auto-1-53448"]
+10�� 22, 2026 1:00:41 ���� org.apache.coyote.AbstractProtocol pause
+��Ϣ: Pausing ProtocolHandler ["http-nio-127.0.0.1-auto-1-53448"]
+10�� 22, 2026 1:00:41 ���� org.apache.catalina.core.StandardService stopInternal
+��Ϣ: Stopping service [Tomcat]
+10�� 22, 2026 1:00:41 ���� org.apache.catalina.loader.WebappClassLoaderBase clearReferencesThreads
+����: The web application [ROOT] appears to have started a thread named [iam-portal-events-watchdog] but has failed to stop it. This is very likely to create a memory leak. Stack trace of thread:
+ java.base/jdk.internal.misc.Unsafe.park(Native Method)
+ java.base/java.util.concurrent.locks.LockSupport.parkNanos(LockSupport.java:269)
+ java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.awaitNanos(AbstractQueuedSynchronizer.java:1797)
+ java.base/java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(ScheduledThreadPoolExecutor.java:1182)
+ java.base/java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(ScheduledThreadPoolExecutor.java:899)
+ java.base/java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1070)
+ java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1130)
+ java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+ java.base/java.lang.Thread.run(Thread.java:1583)
+10�� 22, 2026 1:00:41 ���� org.apache.catalina.loader.WebappClassLoaderBase clearReferencesThreads
+����: The web application [ROOT] appears to have started a thread named [iam-portal-events-worker-1] but has failed to stop it. This is very likely to create a memory leak. Stack trace of thread:
+ java.base/jdk.internal.misc.Unsafe.park(Native Method)
+ java.base/java.util.concurrent.locks.LockSupport.park(LockSupport.java:371)
+ java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionNode.block(AbstractQueuedSynchronizer.java:519)
+ java.base/java.util.concurrent.ForkJoinPool.unmanagedBlock(ForkJoinPool.java:3780)
+ java.base/java.util.concurrent.ForkJoinPool.managedBlock(ForkJoinPool.java:3725)
+ java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:1746)
+ java.base/java.util.concurrent.ArrayBlockingQueue.take(ArrayBlockingQueue.java:420)
+ java.base/java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1070)
+ java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1130)
+ java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+ java.base/java.lang.Thread.run(Thread.java:1583)
+10�� 22, 2026 1:00:41 ���� org.apache.catalina.loader.WebappClassLoaderBase clearReferencesThreads
+����: The web application [ROOT] appears to have started a thread named [portal-events-tls] but has failed to stop it. This is very likely to create a memory leak. Stack trace of thread:
+ java.base/jdk.internal.misc.Unsafe.park(Native Method)
+ java.base/java.util.concurrent.locks.LockSupport.park(LockSupport.java:371)
+ java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionNode.block(AbstractQueuedSynchronizer.java:519)
+ java.base/java.util.concurrent.ForkJoinPool.unmanagedBlock(ForkJoinPool.java:3780)
+ java.base/java.util.concurrent.ForkJoinPool.managedBlock(ForkJoinPool.java:3725)
+ java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:1746)
+ java.base/java.util.concurrent.ArrayBlockingQueue.take(ArrayBlockingQueue.java:420)
+ java.base/java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1070)
+ java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1130)
+ java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+ java.base/java.lang.Thread.run(Thread.java:1583)
+10�� 22, 2026 1:00:41 ���� org.apache.catalina.loader.WebappClassLoaderBase checkThreadLocalsForLeaks
+����: You need to add "--add-opens=java.base/java.lang=ALL-UNNAMED" to the JVM command line arguments to enable ThreadLocal memory leak detection. Alternatively, you can suppress this warning by disabling ThreadLocal memory leak detection.
+10�� 22, 2026 1:00:41 ���� org.apache.catalina.loader.WebappClassLoaderBase clearReferencesRmiTargets
+����: You need to add "--add-opens=java.rmi/sun.rmi.transport=ALL-UNNAMED" to the JVM command line arguments to enable RMI Target memory leak detection. Alternatively, you can suppress this warning by disabling RMI Target memory leak detection.
+10�� 22, 2026 1:00:41 ���� org.apache.coyote.AbstractProtocol stop
+��Ϣ: Stopping ProtocolHandler ["http-nio-127.0.0.1-auto-1-53448"]
+10�� 22, 2026 1:00:41 ���� org.apache.coyote.AbstractProtocol destroy
+��Ϣ: Destroying ProtocolHandler ["http-nio-127.0.0.1-auto-1-53448"]
+Exception in thread "main" org.opentest4j.AssertionFailedError: expected: not <null>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:152)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertNotNull.failNull(AssertNotNull.java:49)
+	at org.junit.jupiter.api.AssertNotNull.assertNotNull(AssertNotNull.java:35)
+	at org.junit.jupiter.api.AssertNotNull.assertNotNull(AssertNotNull.java:30)
+	at org.junit.jupiter.api.Assertions.assertNotNull(Assertions.java:304)
+	at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest.startupScope(PortalRunEventsSseLifecycleTest.java:268)
+	at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest.scenario(PortalRunEventsSseLifecycleTest.java:200)
+	at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest.main(PortalRunEventsSseLifecycleTest.java:100)
+ ==> expected: <0> but was: <1>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:563)
+	at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest.child(PortalRunEventsSseLifecycleTest.java:84)
+	at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest.originalRequestScopeAndDispatcherAreRequiredBeforeQuery(PortalRunEventsSseLifecycleTest.java:98)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest.transferredServletCannotClaimTheOriginalRequestFromWorker -- Time elapsed: 15.91 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+10�� 22, 2026 1:00:43 ���� org.apache.coyote.AbstractProtocol init
+��Ϣ: Initializing ProtocolHandler ["http-nio-127.0.0.1-auto-1"]
+10�� 22, 2026 1:00:43 ���� org.apache.catalina.core.StandardService startInternal
+��Ϣ: Starting service [Tomcat]
+10�� 22, 2026 1:00:43 ���� org.apache.catalina.core.StandardEngine startInternal
+��Ϣ: Starting Servlet engine: [Apache Tomcat/10.1.41]
+10�� 22, 2026 1:00:43 ���� org.apache.coyote.AbstractProtocol start
+��Ϣ: Starting ProtocolHandler ["http-nio-127.0.0.1-auto-1-60731"]
+10�� 22, 2026 1:00:57 ���� org.apache.coyote.AbstractProtocol pause
+��Ϣ: Pausing ProtocolHandler ["http-nio-127.0.0.1-auto-1-60731"]
+10�� 22, 2026 1:00:57 ���� org.apache.catalina.core.StandardService stopInternal
+��Ϣ: Stopping service [Tomcat]
+10�� 22, 2026 1:00:57 ���� org.apache.catalina.loader.WebappClassLoaderBase clearReferencesThreads
+����: The web application [ROOT] appears to have started a thread named [iam-portal-events-watchdog] but has failed to stop it. This is very likely to create a memory leak. Stack trace of thread:
+ java.base/jdk.internal.misc.Unsafe.park(Native Method)
+ java.base/java.util.concurrent.locks.LockSupport.parkNanos(LockSupport.java:269)
+ java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.awaitNanos(AbstractQueuedSynchronizer.java:1797)
+ java.base/java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(ScheduledThreadPoolExecutor.java:1182)
+ java.base/java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(ScheduledThreadPoolExecutor.java:899)
+ java.base/java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1070)
+ java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1130)
+ java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+ java.base/java.lang.Thread.run(Thread.java:1583)
+10�� 22, 2026 1:00:57 ���� org.apache.catalina.loader.WebappClassLoaderBase clearReferencesThreads
+����: The web application [ROOT] appears to have started a thread named [iam-portal-events-worker-1] but has failed to stop it. This is very likely to create a memory leak. Stack trace of thread:
+ java.base/jdk.internal.misc.Unsafe.park(Native Method)
+ java.base/java.util.concurrent.locks.LockSupport.park(LockSupport.java:371)
+ java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionNode.block(AbstractQueuedSynchronizer.java:519)
+ java.base/java.util.concurrent.ForkJoinPool.unmanagedBlock(ForkJoinPool.java:3780)
+ java.base/java.util.concurrent.ForkJoinPool.managedBlock(ForkJoinPool.java:3725)
+ java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:1746)
+ java.base/java.util.concurrent.ArrayBlockingQueue.take(ArrayBlockingQueue.java:420)
+ java.base/java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1070)
+ java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1130)
+ java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+ java.base/java.lang.Thread.run(Thread.java:1583)
+10�� 22, 2026 1:00:57 ���� org.apache.catalina.loader.WebappClassLoaderBase clearReferencesThreads
+����: The web application [ROOT] appears to have started a thread named [portal-events-tls] but has failed to stop it. This is very likely to create a memory leak. Stack trace of thread:
+ java.base/jdk.internal.misc.Unsafe.park(Native Method)
+ java.base/java.util.concurrent.locks.LockSupport.park(LockSupport.java:371)
+ java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionNode.block(AbstractQueuedSynchronizer.java:519)
+ java.base/java.util.concurrent.ForkJoinPool.unmanagedBlock(ForkJoinPool.java:3780)
+ java.base/java.util.concurrent.ForkJoinPool.managedBlock(ForkJoinPool.java:3725)
+ java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:1746)
+ java.base/java.util.concurrent.ArrayBlockingQueue.take(ArrayBlockingQueue.java:420)
+ java.base/java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1070)
+ java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1130)
+ java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+ java.base/java.lang.Thread.run(Thread.java:1583)
+10�� 22, 2026 1:00:57 ���� org.apache.catalina.loader.WebappClassLoaderBase clearReferencesThreads
+����: The web application [ROOT] appears to have started a thread named [portal-events-tls] but has failed to stop it. This is very likely to create a memory leak. Stack trace of thread:
+ java.base/jdk.internal.misc.Unsafe.park(Native Method)
+ java.base/java.util.concurrent.locks.LockSupport.park(LockSupport.java:371)
+ java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionNode.block(AbstractQueuedSynchronizer.java:519)
+ java.base/java.util.concurrent.ForkJoinPool.unmanagedBlock(ForkJoinPool.java:3780)
+ java.base/java.util.concurrent.ForkJoinPool.managedBlock(ForkJoinPool.java:3725)
+ java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:1746)
+ java.base/java.util.concurrent.ArrayBlockingQueue.take(ArrayBlockingQueue.java:420)
+ java.base/java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1070)
+ java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1130)
+ java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+ java.base/java.lang.Thread.run(Thread.java:1583)
+10�� 22, 2026 1:00:57 ���� org.apache.catalina.loader.WebappClassLoaderBase checkThreadLocalsForLeaks
+����: You need to add "--add-opens=java.base/java.lang=ALL-UNNAMED" to the JVM command line arguments to enable ThreadLocal memory leak detection. Alternatively, you can suppress this warning by disabling ThreadLocal memory leak detection.
+10�� 22, 2026 1:00:57 ���� org.apache.catalina.loader.WebappClassLoaderBase clearReferencesRmiTargets
+����: You need to add "--add-opens=java.rmi/sun.rmi.transport=ALL-UNNAMED" to the JVM command line arguments to enable RMI Target memory leak detection. Alternatively, you can suppress this warning by disabling RMI Target memory leak detection.
+10�� 22, 2026 1:00:57 ���� org.apache.coyote.AbstractProtocol stop
+��Ϣ: Stopping ProtocolHandler ["http-nio-127.0.0.1-auto-1-60731"]
+10�� 22, 2026 1:00:57 ���� org.apache.coyote.AbstractProtocol destroy
+��Ϣ: Destroying ProtocolHandler ["http-nio-127.0.0.1-auto-1-60731"]
+Exception in thread "main" java.net.SocketTimeoutException: Read timed out
+	at java.base/sun.nio.ch.NioSocketImpl.timedRead(NioSocketImpl.java:278)
+	at java.base/sun.nio.ch.NioSocketImpl.implRead(NioSocketImpl.java:304)
+	at java.base/sun.nio.ch.NioSocketImpl.read(NioSocketImpl.java:346)
+	at java.base/sun.nio.ch.NioSocketImpl$1.read(NioSocketImpl.java:796)
+	at java.base/java.net.Socket$SocketInputStream.read(Socket.java:1099)
+	at java.base/java.io.InputStream.readNBytes(InputStream.java:412)
+	at java.base/java.io.InputStream.readAllBytes(InputStream.java:349)
+	at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest.startupScope(PortalRunEventsSseLifecycleTest.java:267)
+	at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest.scenario(PortalRunEventsSseLifecycleTest.java:200)
+	at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest.main(PortalRunEventsSseLifecycleTest.java:100)
+ ==> expected: <0> but was: <1>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:563)
+	at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest.child(PortalRunEventsSseLifecycleTest.java:84)
+	at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest.transferredServletCannotClaimTheOriginalRequestFromWorker(PortalRunEventsSseLifecycleTest.java:97)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest.q403FailureClosesTransferredSessionBeforeReturningCapacity -- Time elapsed: 1.968 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+10�� 22, 2026 1:00:59 ���� org.apache.coyote.AbstractProtocol init
+��Ϣ: Initializing ProtocolHandler ["http-nio-127.0.0.1-auto-1"]
+10�� 22, 2026 1:00:59 ���� org.apache.catalina.core.StandardService startInternal
+��Ϣ: Starting service [Tomcat]
+10�� 22, 2026 1:00:59 ���� org.apache.catalina.core.StandardEngine startInternal
+��Ϣ: Starting Servlet engine: [Apache Tomcat/10.1.41]
+10�� 22, 2026 1:00:59 ���� org.apache.coyote.AbstractProtocol start
+��Ϣ: Starting ProtocolHandler ["http-nio-127.0.0.1-auto-1-53342"]
+10�� 22, 2026 1:00:59 ���� org.apache.coyote.AbstractProtocol pause
+��Ϣ: Pausing ProtocolHandler ["http-nio-127.0.0.1-auto-1-53342"]
+10�� 22, 2026 1:00:59 ���� org.apache.catalina.core.StandardService stopInternal
+��Ϣ: Stopping service [Tomcat]
+10�� 22, 2026 1:00:59 ���� org.apache.catalina.loader.WebappClassLoaderBase clearReferencesThreads
+����: The web application [ROOT] appears to have started a thread named [iam-portal-events-watchdog] but has failed to stop it. This is very likely to create a memory leak. Stack trace of thread:
+ java.base/jdk.internal.misc.Unsafe.park(Native Method)
+ java.base/java.util.concurrent.locks.LockSupport.parkNanos(LockSupport.java:269)
+ java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.awaitNanos(AbstractQueuedSynchronizer.java:1797)
+ java.base/java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(ScheduledThreadPoolExecutor.java:1182)
+ java.base/java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(ScheduledThreadPoolExecutor.java:899)
+ java.base/java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1070)
+ java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1130)
+ java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+ java.base/java.lang.Thread.run(Thread.java:1583)
+10�� 22, 2026 1:00:59 ���� org.apache.catalina.loader.WebappClassLoaderBase clearReferencesThreads
+����: The web application [ROOT] appears to have started a thread named [iam-portal-events-worker-1] but has failed to stop it. This is very likely to create a memory leak. Stack trace of thread:
+ java.base/jdk.internal.misc.Unsafe.park(Native Method)
+ java.base/java.util.concurrent.locks.LockSupport.park(LockSupport.java:371)
+ java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionNode.block(AbstractQueuedSynchronizer.java:519)
+ java.base/java.util.concurrent.ForkJoinPool.unmanagedBlock(ForkJoinPool.java:3780)
+ java.base/java.util.concurrent.ForkJoinPool.managedBlock(ForkJoinPool.java:3725)
+ java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:1746)
+ java.base/java.util.concurrent.ArrayBlockingQueue.take(ArrayBlockingQueue.java:420)
+ java.base/java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1070)
+ java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1130)
+ java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+ java.base/java.lang.Thread.run(Thread.java:1583)
+10�� 22, 2026 1:00:59 ���� org.apache.catalina.loader.WebappClassLoaderBase clearReferencesThreads
+����: The web application [ROOT] appears to have started a thread named [portal-events-tls] but has failed to stop it. This is very likely to create a memory leak. Stack trace of thread:
+ java.base/jdk.internal.misc.Unsafe.park(Native Method)
+ java.base/java.util.concurrent.locks.LockSupport.park(LockSupport.java:371)
+ java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionNode.block(AbstractQueuedSynchronizer.java:519)
+ java.base/java.util.concurrent.ForkJoinPool.unmanagedBlock(ForkJoinPool.java:3780)
+ java.base/java.util.concurrent.ForkJoinPool.managedBlock(ForkJoinPool.java:3725)
+ java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:1746)
+ java.base/java.util.concurrent.ArrayBlockingQueue.take(ArrayBlockingQueue.java:420)
+ java.base/java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1070)
+ java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1130)
+ java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+ java.base/java.lang.Thread.run(Thread.java:1583)
+10�� 22, 2026 1:00:59 ���� org.apache.catalina.loader.WebappClassLoaderBase checkThreadLocalsForLeaks
+����: You need to add "--add-opens=java.base/java.lang=ALL-UNNAMED" to the JVM command line arguments to enable ThreadLocal memory leak detection. Alternatively, you can suppress this warning by disabling ThreadLocal memory leak detection.
+10�� 22, 2026 1:00:59 ���� org.apache.catalina.loader.WebappClassLoaderBase clearReferencesRmiTargets
+����: You need to add "--add-opens=java.rmi/sun.rmi.transport=ALL-UNNAMED" to the JVM command line arguments to enable RMI Target memory leak detection. Alternatively, you can suppress this warning by disabling RMI Target memory leak detection.
+10�� 22, 2026 1:00:59 ���� org.apache.coyote.AbstractProtocol stop
+��Ϣ: Stopping ProtocolHandler ["http-nio-127.0.0.1-auto-1-53342"]
+10�� 22, 2026 1:00:59 ���� org.apache.coyote.AbstractProtocol destroy
+��Ϣ: Destroying ProtocolHandler ["http-nio-127.0.0.1-auto-1-53342"]
+Exception in thread "main" org.opentest4j.AssertionFailedError: start owns failed Q Session before test cleanup ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest.startupFailure(PortalRunEventsSseLifecycleTest.java:255)
+	at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest.scenario(PortalRunEventsSseLifecycleTest.java:199)
+	at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest.main(PortalRunEventsSseLifecycleTest.java:100)
+	Suppressed: java.lang.AssertionError: receiver peer
+		at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest$SequencePeer.close(PortalRunEventsSseLifecycleTest.java:636)
+		at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest.startupFailure(PortalRunEventsSseLifecycleTest.java:249)
+		... 2 more
+	Caused by: java.net.SocketException: Socket closed
+		at java.base/sun.nio.ch.NioSocketImpl.endAccept(NioSocketImpl.java:682)
+		at java.base/sun.nio.ch.NioSocketImpl.accept(NioSocketImpl.java:755)
+		at java.base/java.net.ServerSocket.implAccept(ServerSocket.java:698)
+		at java.base/java.net.ServerSocket.platformImplAccept(ServerSocket.java:663)
+		at java.base/java.net.ServerSocket.implAccept(ServerSocket.java:612)
+		at java.base/sun.security.ssl.SSLServerSocketImpl.accept(SSLServerSocketImpl.java:271)
+		at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest$SequencePeer.lambda$new$1(PortalRunEventsSseLifecycleTest.java:535)
+		at java.base/java.lang.Thread.run(Thread.java:1583)
+	Suppressed: java.lang.AssertionError: receiver peer
+		at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest$SequencePeer.close(PortalRunEventsSseLifecycleTest.java:636)
+		at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest.startupFailure(PortalRunEventsSseLifecycleTest.java:249)
+		... 2 more
+	Caused by: java.net.SocketException: Socket closed
+		at java.base/sun.nio.ch.NioSocketImpl.endAccept(NioSocketImpl.java:682)
+		at java.base/sun.nio.ch.NioSocketImpl.accept(NioSocketImpl.java:755)
+		at java.base/java.net.ServerSocket.implAccept(ServerSocket.java:698)
+		at java.base/java.net.ServerSocket.platformImplAccept(ServerSocket.java:663)
+		at java.base/java.net.ServerSocket.implAccept(ServerSocket.java:612)
+		at java.base/sun.security.ssl.SSLServerSocketImpl.accept(SSLServerSocketImpl.java:271)
+		at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest$SequencePeer.lambda$new$1(PortalRunEventsSseLifecycleTest.java:535)
+		at java.base/java.lang.Thread.run(Thread.java:1583)
+ ==> expected: <0> but was: <1>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:563)
+	at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest.child(PortalRunEventsSseLifecycleTest.java:84)
+	at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest.q403FailureClosesTransferredSessionBeforeReturningCapacity(PortalRunEventsSseLifecycleTest.java:95)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest.actualProcessorFactoryRefusesBeyondFixedStrongPopulation -- Time elapsed: 0.779 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+10�� 22, 2026 1:01:00 ���� org.apache.coyote.AbstractProtocol init
+��Ϣ: Initializing ProtocolHandler ["http-nio-auto-1"]
+10�� 22, 2026 1:01:00 ���� org.apache.catalina.core.StandardService startInternal
+��Ϣ: Starting service [Tomcat]
+10�� 22, 2026 1:01:00 ���� org.apache.catalina.core.StandardEngine startInternal
+��Ϣ: Starting Servlet engine: [Apache Tomcat/10.1.41]
+10�� 22, 2026 1:01:00 ���� org.apache.coyote.AbstractProtocol start
+��Ϣ: Starting ProtocolHandler ["http-nio-auto-1-53348"]
+10�� 22, 2026 1:01:00 ���� org.apache.coyote.AbstractProtocol pause
+��Ϣ: Pausing ProtocolHandler ["http-nio-auto-1-53348"]
+10�� 22, 2026 1:01:00 ���� org.apache.catalina.core.StandardService stopInternal
+��Ϣ: Stopping service [Tomcat]
+10�� 22, 2026 1:01:00 ���� org.apache.catalina.loader.WebappClassLoaderBase checkThreadLocalsForLeaks
+����: You need to add "--add-opens=java.base/java.lang=ALL-UNNAMED" to the JVM command line arguments to enable ThreadLocal memory leak detection. Alternatively, you can suppress this warning by disabling ThreadLocal memory leak detection.
+10�� 22, 2026 1:01:00 ���� org.apache.catalina.loader.WebappClassLoaderBase clearReferencesRmiTargets
+����: You need to add "--add-opens=java.rmi/sun.rmi.transport=ALL-UNNAMED" to the JVM command line arguments to enable RMI Target memory leak detection. Alternatively, you can suppress this warning by disabling RMI Target memory leak detection.
+10�� 22, 2026 1:01:00 ���� org.apache.coyote.AbstractProtocol stop
+��Ϣ: Stopping ProtocolHandler ["http-nio-auto-1-53348"]
+10�� 22, 2026 1:01:00 ���� org.apache.coyote.AbstractProtocol destroy
+��Ϣ: Destroying ProtocolHandler ["http-nio-auto-1-53348"]
+Exception in thread "main" org.opentest4j.AssertionFailedError: only last allocation slot admitted ==> expected: <1> but was: <2>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:563)
+	at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest.allocationCap(PortalRunEventsSseLifecycleTest.java:284)
+	at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest.scenario(PortalRunEventsSseLifecycleTest.java:201)
+	at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest.main(PortalRunEventsSseLifecycleTest.java:100)
+ ==> expected: <0> but was: <1>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:563)
+	at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest.child(PortalRunEventsSseLifecycleTest.java:84)
+	at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest.actualProcessorFactoryRefusesBeyondFixedStrongPopulation(PortalRunEventsSseLifecycleTest.java:99)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest.qTransportFailureClosesTransferredSessionBeforeReturningCapacity -- Time elapsed: 1.940 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+10�� 22, 2026 1:01:01 ���� org.apache.coyote.AbstractProtocol init
+��Ϣ: Initializing ProtocolHandler ["http-nio-127.0.0.1-auto-1"]
+10�� 22, 2026 1:01:02 ���� org.apache.catalina.core.StandardService startInternal
+��Ϣ: Starting service [Tomcat]
+10�� 22, 2026 1:01:02 ���� org.apache.catalina.core.StandardEngine startInternal
+��Ϣ: Starting Servlet engine: [Apache Tomcat/10.1.41]
+10�� 22, 2026 1:01:02 ���� org.apache.coyote.AbstractProtocol start
+��Ϣ: Starting ProtocolHandler ["http-nio-127.0.0.1-auto-1-53359"]
+10�� 22, 2026 1:01:02 ���� org.apache.coyote.AbstractProtocol pause
+��Ϣ: Pausing ProtocolHandler ["http-nio-127.0.0.1-auto-1-53359"]
+10�� 22, 2026 1:01:02 ���� org.apache.catalina.core.StandardService stopInternal
+��Ϣ: Stopping service [Tomcat]
+10�� 22, 2026 1:01:02 ���� org.apache.catalina.loader.WebappClassLoaderBase clearReferencesThreads
+����: The web application [ROOT] appears to have started a thread named [iam-portal-events-watchdog] but has failed to stop it. This is very likely to create a memory leak. Stack trace of thread:
+ java.base/jdk.internal.misc.Unsafe.park(Native Method)
+ java.base/java.util.concurrent.locks.LockSupport.parkNanos(LockSupport.java:269)
+ java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.awaitNanos(AbstractQueuedSynchronizer.java:1797)
+ java.base/java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(ScheduledThreadPoolExecutor.java:1182)
+ java.base/java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(ScheduledThreadPoolExecutor.java:899)
+ java.base/java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1070)
+ java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1130)
+ java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+ java.base/java.lang.Thread.run(Thread.java:1583)
+10�� 22, 2026 1:01:02 ���� org.apache.catalina.loader.WebappClassLoaderBase clearReferencesThreads
+����: The web application [ROOT] appears to have started a thread named [iam-portal-events-worker-1] but has failed to stop it. This is very likely to create a memory leak. Stack trace of thread:
+ java.base/jdk.internal.misc.Unsafe.park(Native Method)
+ java.base/java.util.concurrent.locks.LockSupport.park(LockSupport.java:371)
+ java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionNode.block(AbstractQueuedSynchronizer.java:519)
+ java.base/java.util.concurrent.ForkJoinPool.unmanagedBlock(ForkJoinPool.java:3780)
+ java.base/java.util.concurrent.ForkJoinPool.managedBlock(ForkJoinPool.java:3725)
+ java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:1746)
+ java.base/java.util.concurrent.ArrayBlockingQueue.take(ArrayBlockingQueue.java:420)
+ java.base/java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1070)
+ java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1130)
+ java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+ java.base/java.lang.Thread.run(Thread.java:1583)
+10�� 22, 2026 1:01:02 ���� org.apache.catalina.loader.WebappClassLoaderBase clearReferencesThreads
+����: The web application [ROOT] appears to have started a thread named [portal-events-tls] but has failed to stop it. This is very likely to create a memory leak. Stack trace of thread:
+ java.base/jdk.internal.misc.Unsafe.park(Native Method)
+ java.base/java.util.concurrent.locks.LockSupport.park(LockSupport.java:371)
+ java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionNode.block(AbstractQueuedSynchronizer.java:519)
+ java.base/java.util.concurrent.ForkJoinPool.unmanagedBlock(ForkJoinPool.java:3780)
+ java.base/java.util.concurrent.ForkJoinPool.managedBlock(ForkJoinPool.java:3725)
+ java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:1746)
+ java.base/java.util.concurrent.ArrayBlockingQueue.take(ArrayBlockingQueue.java:420)
+ java.base/java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1070)
+ java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1130)
+ java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+ java.base/java.lang.Thread.run(Thread.java:1583)
+10�� 22, 2026 1:01:02 ���� org.apache.catalina.loader.WebappClassLoaderBase checkThreadLocalsForLeaks
+����: You need to add "--add-opens=java.base/java.lang=ALL-UNNAMED" to the JVM command line arguments to enable ThreadLocal memory leak detection. Alternatively, you can suppress this warning by disabling ThreadLocal memory leak detection.
+10�� 22, 2026 1:01:02 ���� org.apache.catalina.loader.WebappClassLoaderBase clearReferencesRmiTargets
+����: You need to add "--add-opens=java.rmi/sun.rmi.transport=ALL-UNNAMED" to the JVM command line arguments to enable RMI Target memory leak detection. Alternatively, you can suppress this warning by disabling RMI Target memory leak detection.
+10�� 22, 2026 1:01:02 ���� org.apache.coyote.AbstractProtocol stop
+��Ϣ: Stopping ProtocolHandler ["http-nio-127.0.0.1-auto-1-53359"]
+10�� 22, 2026 1:01:02 ���� org.apache.coyote.AbstractProtocol destroy
+��Ϣ: Destroying ProtocolHandler ["http-nio-127.0.0.1-auto-1-53359"]
+Exception in thread "main" org.opentest4j.AssertionFailedError: start owns failed Q Session before test cleanup ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest.startupFailure(PortalRunEventsSseLifecycleTest.java:255)
+	at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest.scenario(PortalRunEventsSseLifecycleTest.java:199)
+	at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest.main(PortalRunEventsSseLifecycleTest.java:100)
+	Suppressed: java.lang.AssertionError: receiver peer
+		at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest$SequencePeer.close(PortalRunEventsSseLifecycleTest.java:636)
+		at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest.startupFailure(PortalRunEventsSseLifecycleTest.java:249)
+		... 2 more
+	Caused by: java.net.SocketException: Socket closed
+		at java.base/sun.nio.ch.NioSocketImpl.endAccept(NioSocketImpl.java:682)
+		at java.base/sun.nio.ch.NioSocketImpl.accept(NioSocketImpl.java:755)
+		at java.base/java.net.ServerSocket.implAccept(ServerSocket.java:698)
+		at java.base/java.net.ServerSocket.platformImplAccept(ServerSocket.java:663)
+		at java.base/java.net.ServerSocket.implAccept(ServerSocket.java:612)
+		at java.base/sun.security.ssl.SSLServerSocketImpl.accept(SSLServerSocketImpl.java:271)
+		at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest$SequencePeer.lambda$new$1(PortalRunEventsSseLifecycleTest.java:535)
+		at java.base/java.lang.Thread.run(Thread.java:1583)
+	Suppressed: java.lang.AssertionError: receiver peer
+		at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest$SequencePeer.close(PortalRunEventsSseLifecycleTest.java:636)
+		at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest.startupFailure(PortalRunEventsSseLifecycleTest.java:249)
+		... 2 more
+	Caused by: java.net.SocketException: Socket closed
+		at java.base/sun.nio.ch.NioSocketImpl.endAccept(NioSocketImpl.java:682)
+		at java.base/sun.nio.ch.NioSocketImpl.accept(NioSocketImpl.java:755)
+		at java.base/java.net.ServerSocket.implAccept(ServerSocket.java:698)
+		at java.base/java.net.ServerSocket.platformImplAccept(ServerSocket.java:663)
+		at java.base/java.net.ServerSocket.implAccept(ServerSocket.java:612)
+		at java.base/sun.security.ssl.SSLServerSocketImpl.accept(SSLServerSocketImpl.java:271)
+		at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest$SequencePeer.lambda$new$1(PortalRunEventsSseLifecycleTest.java:535)
+		at java.base/java.lang.Thread.run(Thread.java:1583)
+ ==> expected: <0> but was: <1>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:563)
+	at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest.child(PortalRunEventsSseLifecycleTest.java:84)
+	at cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest.qTransportFailureClosesTransferredSessionBeforeReturningCapacity(PortalRunEventsSseLifecycleTest.java:96)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+

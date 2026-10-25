@@ -1,0 +1,880 @@
+diff --git a/admin-common/src/main/java/cn/agentplatform/common/authority/PortalEventsResponse.java b/admin-common/src/main/java/cn/agentplatform/common/authority/PortalEventsResponse.java
+index 7db0173e3b04451339a39574e59c4f2d4bd3102d..4d3a8af34e67348c82ad7c4deee6117e7d6465ed 100644
+--- a/admin-common/src/main/java/cn/agentplatform/common/authority/PortalEventsResponse.java
++++ b/admin-common/src/main/java/cn/agentplatform/common/authority/PortalEventsResponse.java
+@@ -163,6 +163,20 @@ public final class PortalEventsResponse implements AutoCloseable {
+             return evidence.binding.responseId();
+         }
+ 
++        public long initialCursor() {
++            synchronized (holder) {
++                holder.requireLive(this);
++                return evidence.binding.effectiveCursor();
++            }
++        }
++
++        public long remainingNanos() {
++            synchronized (holder) {
++                holder.requireLive(this);
++                return holder.requireCurrent();
++            }
++        }
++
+         /** Coverage is not PG provenance. The domain reader still binds and hashes its real rows. */
+         public void requireMaterial(MaterialScopeV1 scope) {
+             holder.requireLive(this);
+diff --git a/engine-runtime/src/main/java/cn/agentplatform/engine/infra/MaterialScopeStore.java b/engine-runtime/src/main/java/cn/agentplatform/engine/infra/MaterialScopeStore.java
+index e7132c428b554cc828a9a16e0b039cb7541dd930..985a2128fe5a5c63fc64b42243f0a9aa98155dc6 100644
+--- a/engine-runtime/src/main/java/cn/agentplatform/engine/infra/MaterialScopeStore.java
++++ b/engine-runtime/src/main/java/cn/agentplatform/engine/infra/MaterialScopeStore.java
+@@ -527,6 +527,84 @@ public final class MaterialScopeStore {
+         return payloadValue(db, kind, locator, run).value();
+     }
+ 
++    /** Finite event plan: identity scalars are schema-bounded; full scope text is a later query. */
++    record ObservedRow(long run,long revision,String tenant,String producer,String kind,String locator,String version,String payload,String sha,long bytes,long parents){}
++    static List<ObservedRow> probeObserved(RunEventReader.Work w,long run,String predicate,int limit,Object...args){
++        if(limit<1||limit>RunEventReader.MAX_RECORDS+1)throw denied();
++        var parameters=new ArrayList<Object>();parameters.add(run);parameters.addAll(Arrays.asList(args));
++        var rows=w.query("select material_revision,tenant_id,producer,kind,material_id,material_version,payload_sha256,scope_sha256,octet_length(scope::text) as scope_bytes,jsonb_typeof(scope) as scope_type,jsonb_typeof(scope->'parentScopeSha256') as parent_type,case when jsonb_typeof(scope->'parentScopeSha256')='array' then jsonb_array_length(scope->'parentScopeSha256') end as parent_count from engine.material_scope where run_id=? and ("+predicate+") order by material_revision limit "+limit,limit,parameters.toArray());
++        var result=new ArrayList<ObservedRow>();
++        for(var row:rows){
++            same("object",row.get("scope_type"));same("array",row.get("parent_type"));
++            long bytes=RunEventReader.num(row,"scope_bytes"),parents=RunEventReader.num(row,"parent_count"),revision=RunEventReader.num(row,"material_revision");
++            RunEventReader.Limits.single(bytes,RunEventReader.JSON_BYTES,"SCOPE_BYTES");RunEventReader.Limits.parents(parents);if(revision<1)throw denied();
++            hash(str(row,"payload_sha256"));hash(str(row,"scope_sha256"));String kind=str(row,"kind");if(!known(kind))throw denied();
++            // V216/217 constrain these scalar columns (tenant64, locator80, fixed kind/producer,
++            // hash64 or positive bigint revision). They never carry arbitrary payload JSON.
++            result.add(new ObservedRow(run,revision,str(row,"tenant_id"),str(row,"producer"),kind,str(row,"material_id"),str(row,"material_version"),str(row,"payload_sha256"),str(row,"scope_sha256"),bytes,parents));
++        }w.live();return result;
++    }
++    static void addObserved(Map<String,ObservedRow> plan,ObservedRow row,RunEventReader.Limits limits){
++        var previous=plan.putIfAbsent(row.sha(),row);if(previous!=null){same(previous,row);return;}limits.record(row.bytes());
++    }
++    static MaterialScopeV1 readObservedScope(RunEventReader.Work w,Binding b,ObservedRow row){
++        w.live();var node=w.jsonText("select case when octet_length(scope::text)<=1048576 and jsonb_typeof(scope)='object' then case when jsonb_typeof(scope->'parentScopeSha256')='array' then case when jsonb_array_length(scope->'parentScopeSha256')<=4096 then scope::text end end end as scope_text from engine.material_scope where run_id=? and scope_sha256=? and material_revision=?",row.bytes(),false,b.runId(),row.sha(),row.revision());
++        var s=RunEventReader.scope(node);same((long)s.parentScopeSha256().size(),row.parents());
++        try(var canonical=w.canonicalScratch(6*row.bytes())){
++        var r=s.material();same(new MaterialRef(row.producer(),row.kind(),row.locator(),row.version(),row.payload()),r);same(row.sha(),s.scopeSha256());same(row.tenant(),b.owner().tenantId());same(b.owner(),s.owner());same(b.initialSha(),s.initialCeilingSha256());same(MaterialAuthorization.scopeDigest(s),s.scopeSha256());
++        if(KINDS.contains(r.kind()))validate(s,b);
++        else{if(!known(r.kind())||s.parentScopeSha256().isEmpty())throw denied();same("engine",r.producer());same(Long.toString(row.revision()),r.version());nonblank(s.sourceDecisionId());nonblank(s.sourceAuthorizationVersion());}
++        w.live();return s;}
++    }
++    static Binding requireObservedRoots(Binding b,List<MaterialScopeV1> scopes){
++        if(scopes.size()!=3||scopes.stream().map(s->s.material().kind()).distinct().count()!=3)throw denied();
++        var snapshot=scopes.stream().filter(s->s.material().kind().equals("run-snapshot")).findFirst().orElseThrow(RunAuthorityStore::denied);
++        for(var s:scopes){validate(s,b);same(s.parentScopeSha256(),s.material().kind().equals("run-version-refs")?List.of(snapshot.scopeSha256()):List.of());if(s.material().kind().equals("run-version-refs")&&!s.requiredDataLabels().containsAll(snapshot.requiredDataLabels()))throw denied();}
++        return new Binding(b.runId(),b.publicId(),b.owner(),b.delegation(),b.initial(),b.root(),b.appVersionId(),b.appVersionNo(),b.initialSha(),b.snapshotSha(),b.originId(),b.admissionDecision(),b.authorizationVersion(),b.operationId(),b.checkVersion(),b.blockedReason(),b.retryNotBefore(),scopes);
++    }
++    static void requireObservedFloor(MaterialScopeV1 s,Binding b,List<MaterialScopeV1> parents){requireFloor(s,b,parents);}
++    static void requireObservedLocator(RunEventReader.Work w,Binding b,ObservedRow row){
++        if(KINDS.contains(row.kind())||RUN_KINDS.contains(row.kind())){same(b.publicId(),row.locator());return;}
++        long id;try{id=Long.parseLong(row.locator());if(id<1||!Long.toString(id).equals(row.locator()))throw denied();}catch(NumberFormatException invalid){throw denied();}
++        String sql=NODE_KINDS.contains(row.kind())?"select run_id from engine.node_instance where id=?":ATTEMPT_KINDS.contains(row.kind())?"select n.run_id from engine.attempt a join engine.node_instance n on n.id=a.node_instance_id where a.id=?":"select run_id from engine.run_event where id=?";
++        var rows=w.query(sql,2,id);if(rows.size()!=1||RunEventReader.num(rows.getFirst(),"run_id")!=b.runId())throw denied();
++    }
++    static JsonNode readObservedRoot(RunEventReader.Work w,long run,String column,long bytes){
++        if(!Set.of("snapshot","version_refs").contains(column))throw denied();w.live();
++        var value=w.jsonText("select case when octet_length("+column+"::text)<=8388608 and jsonb_typeof("+column+")='object' then "+column+"::text end as payload_text from engine.run where id=?",bytes,true,run);object(value);w.live();return value;
++    }
++    static JsonNode readObservedEvent(RunEventReader.Work w,Binding b,long id,long seq,MaterialScopeV1 scope){
++        String material=" from (select row_to_json(e)::text as row_text,octet_length(e.payload::text) as public_bytes from (select id,run_id,seq,type,payload,to_char(created_at at time zone 'UTC','YYYY-MM-DD\"T\"HH24:MI:SS.US\"Z\"') as created_at from engine.run_event where id=? and run_id=? and seq=?) e) material";
++        var probe=w.query("select octet_length(row_text) as row_bytes,public_bytes"+material,2,id,b.runId(),seq);if(probe.size()!=1)throw denied();
++        long bytes=RunEventReader.num(probe.getFirst(),"row_bytes");RunEventReader.Limits.single(bytes,RunEventReader.JSON_BYTES,"EVENT_ROW");RunEventReader.Limits.single(RunEventReader.num(probe.getFirst(),"public_bytes"),RunEventReader.EVENT_BYTES,"EVENT_PAYLOAD");w.live();
++        var value=w.jsonText("select case when octet_length(row_text)<=1048576 and public_bytes<=262144 then row_text end as event_text"+material,bytes,true,id,b.runId(),seq);object(value);if(value.size()!=6)throw denied();same(scope.material().payloadSha256(),w.digest(value));w.live();return value;
++    }
++    static final long OBSERVED_NORMALIZED_BYTES=8L*1024*1024;
++    record ObservedDigest(String sha,int utf8Bytes){}
++    static long observedCanonicalCost(JsonNode value){return normalizedCost(value,0);}
++    static ObservedDigest observedDigestMeasured(JsonNode value){
++        observedCanonicalCost(value);String normalized=RunEventReader.encodeText(normalize(value));
++        // Count UTF-8 without a second encoded array. PG/parser provide valid Unicode; UTF-8
++        // replacement for any unpaired surrogate follows String.getBytes (one replacement byte).
++        int bytes=0;for(int i=0;i<normalized.length();i++){char c=normalized.charAt(i);if(c<128)bytes++;else if(c<2048)bytes+=2;else if(Character.isHighSurrogate(c)&&i+1<normalized.length()&&Character.isLowSurrogate(normalized.charAt(i+1))){bytes+=4;i++;}else bytes+=Character.isSurrogate(c)?1:3;}
++        return new ObservedDigest(Digest.sha256(normalized),bytes);
++    }
++    static String observedDigest(JsonNode value){
++        return observedDigestMeasured(value).sha();
++    }
++    /** Short exponents can expand during normalize/toBigIntegerExact. Admit that representation
++     * before allocating it; this bound is separate from raw PG bytes and does not alter writers. */
++    private static long normalizedCost(JsonNode value,long used){
++        if(value.isObject()){
++            used=RunEventReader.Limits.add(used,2,OBSERVED_NORMALIZED_BYTES,"NORMALIZED_BYTES");
++            var fields=value.fields();while(fields.hasNext()){var entry=fields.next();used=RunEventReader.Limits.add(used,6L*entry.getKey().length()+4,OBSERVED_NORMALIZED_BYTES,"NORMALIZED_BYTES");used=normalizedCost(entry.getValue(),used);}return used;
++        }
++        if(value.isArray()){used=RunEventReader.Limits.add(used,2,OBSERVED_NORMALIZED_BYTES,"NORMALIZED_BYTES");for(var child:value){used=RunEventReader.Limits.add(used,1,OBSERVED_NORMALIZED_BYTES,"NORMALIZED_BYTES");used=normalizedCost(child,used);}return used;}
++        long bytes=value.isTextual()?6L*value.textValue().length()+2:5;
++        if(value.isNumber()){var decimal=value.decimalValue();bytes=decimal.scale()<=0?(long)decimal.precision()-decimal.scale()+2:(long)decimal.precision()+24;}
++        return RunEventReader.Limits.add(used,bytes,OBSERVED_NORMALIZED_BYTES,"NORMALIZED_BYTES");
++    }
++
+     private static Payload payloadValue(JdbcTemplate db, String kind, String locator, long run) {
+         String sql =
+                 switch (kind) {
+diff --git a/engine-runtime/src/main/java/cn/agentplatform/engine/infra/RunAuthorityStore.java b/engine-runtime/src/main/java/cn/agentplatform/engine/infra/RunAuthorityStore.java
+index aa57fa9ea5da2abd8d126163846b0ba4f79b2a67..d02542e6fe1936d8072a8fe329dfdf263725ad8d 100644
+--- a/engine-runtime/src/main/java/cn/agentplatform/engine/infra/RunAuthorityStore.java
++++ b/engine-runtime/src/main/java/cn/agentplatform/engine/infra/RunAuthorityStore.java
+@@ -119,6 +119,35 @@ public final class RunAuthorityStore {
+         same(owner,binding.owner());same(publicId,binding.publicId());
+         return binding;
+     }
++
++    /** Event-only bounded control path. Never calls load/scopes or resumes the historical grant. */
++    static Binding loadObservationBindingBounded(RunEventReader.Work w,SubjectKey owner,String publicId){
++        var ownerRows=w.query("select id,trigger_type,mode,(debug_snapshot is not null or eval_candidate is not null or controlled_draft_skill_version_id is not null or controlled_draft_skill_digest is not null or controlled_skill_test_version_id is not null or controlled_skill_test_digest is not null or controlled_skill_test_status is not null) as unsupported,exists(select 1 from engine.tool_call t where t.run_id=r.id) as has_tools from engine.run r where public_id=? and tenant_id=? and principal_id=?",2,publicId,owner.tenantId(),owner.principalId());
++        if(ownerRows.isEmpty())throw new PlatformException(404,"RUN_NOT_FOUND","运行不存在");
++        if(ownerRows.size()!=1)throw denied();var row=ownerRows.getFirst();
++        same("TASK",row.get("trigger_type"));same("FULL",row.get("mode"));same(false,row.get("unsupported"));same(false,row.get("has_tools"));
++        long run=RunEventReader.num(row,"id");
++        // Fixed projection, not a.*. Both initial and every variable control field are measured
++        // in PG before JDBC can obtain text; CASE is also retained on the subsequent text read.
++        String control="select r.public_id,r.tenant_id as run_tenant,r.principal_id as run_principal,r.app_code,r.app_version_id as run_version,a.tenant_id,a.principal_id,a.grant_ref,to_char(a.grant_expires_at at time zone 'UTC','YYYY-MM-DD\"T\"HH24:MI:SS.US\"Z\"') as grant_expires_at,a.resource_digest,a.source_kind,a.origin_authentication_id,a.app_version_id,a.app_version_no,a.root_kind,a.root_id,a.initial_ceiling_sha256,a.accepted_snapshot_sha256,a.admission_decision_id,a.authorization_version,a.operation_id,a.check_version,a.blocked_reason,to_char(a.retry_not_before at time zone 'UTC','YYYY-MM-DD\"T\"HH24:MI:SS.US\"Z\"') as retry_not_before from engine.run r join engine.run_authority a on a.run_id=r.id where r.id=?";
++        String from=" from (select row_to_json(c)::text as control_text from ("+control+") c) q";
++        var sizes=w.query("select octet_length(control_text) as control_bytes"+from,2,run);
++        if(sizes.size()!=1)throw denied();long bytes=RunEventReader.num(sizes.getFirst(),"control_bytes");
++        RunEventReader.Limits.single(bytes,RunEventReader.CONTROL_BYTES,"CONTROL_BYTES");w.limits.metadata(bytes);
++        var initialProbe=w.query("select octet_length(initial_ceiling::text) as initial_bytes,jsonb_typeof(initial_ceiling) as initial_type from engine.run_authority where run_id=?",2,run);
++        if(initialProbe.size()!=1)throw denied();same("object",initialProbe.getFirst().get("initial_type"));
++        long initialBytes=RunEventReader.num(initialProbe.getFirst(),"initial_bytes");RunEventReader.Limits.single(initialBytes,RunEventReader.JSON_BYTES,"INITIAL_BYTES");w.limits.metadata(initialBytes);
++        var c=w.jsonText("select case when octet_length(control_text)<=262144 then control_text end as control_text"+from,bytes,false,run);
++        Actor initial=parseInitial(w.jsonText("select case when octet_length(initial_ceiling::text)<=1048576 and jsonb_typeof(initial_ceiling)='object' then initial_ceiling::text end as initial_text from engine.run_authority where run_id=?",initialBytes,false,run));
++        same(publicId,text(c,"public_id"));same(owner,new SubjectKey(text(c,"tenant_id"),text(c,"principal_id")));same(owner,new SubjectKey(text(c,"run_tenant"),text(c,"run_principal")));same(owner,new SubjectKey(initial.tenantId(),initial.principalId()));
++        long version=positive(c.get("app_version_id")),no=positive(c.get("app_version_no"));same(version,positive(c.get("run_version")));same("app-version",text(c,"root_kind"));same(text(c,"app_code")+"@"+no,text(c,"root_id"));same("PORTAL",text(c,"source_kind"));
++        String initialSha=text(c,"initial_ceiling_sha256"),snapshotSha=text(c,"accepted_snapshot_sha256"),candidate=text(c,"resource_digest");hash(initialSha);hash(snapshotSha);hash(candidate);same(initialSha,w.ceiling(initial,initialBytes));
++        if(!c.path("check_version").isIntegralNumber()||!c.path("check_version").canConvertToLong()||c.path("check_version").longValue()<0)throw denied();
++        try{
++            var binding=new Binding(run,publicId,owner,new DelegationRef(text(c,"grant_ref"),owner,Instant.parse(text(c,"grant_expires_at"))),initial,new ResourceBinding("app-version",text(c,"root_id"),candidate),version,no,initialSha,snapshotSha,text(c,"origin_authentication_id"),text(c,"admission_decision_id"),text(c,"authorization_version"),text(c,"operation_id"),c.path("check_version").longValue(),c.path("blocked_reason").isNull()?null:text(c,"blocked_reason"),c.path("retry_not_before").isNull()?null:Instant.parse(text(c,"retry_not_before")),List.of());
++            w.live();return binding;
++        }catch(DateTimeException invalid){throw denied();}
++    }
+     static Binding load(JdbcTemplate db,long runId,boolean complete){
+         var rows=db.queryForList("select r.id,r.public_id,r.tenant_id as run_tenant,r.principal_id as run_principal,r.app_code,r.app_version_id as run_version,a.* from engine.run r join engine.run_authority a on a.run_id=r.id where r.id=?",runId);
+         if(rows.size()!=1)throw denied();var r=rows.getFirst();
+diff --git a/engine-runtime/src/main/java/cn/agentplatform/engine/infra/RunEventReader.java b/engine-runtime/src/main/java/cn/agentplatform/engine/infra/RunEventReader.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..afa92a3f1b33aa1dfd2b570bd8c2d4b1faf9ee39
+--- /dev/null
++++ b/engine-runtime/src/main/java/cn/agentplatform/engine/infra/RunEventReader.java
+@@ -0,0 +1,266 @@
++package cn.agentplatform.engine.infra;
++
++import static cn.agentplatform.engine.infra.RunAuthorityStore.*;
++import cn.agentplatform.common.*;
++import cn.agentplatform.common.authority.*;
++import cn.agentplatform.engine.domain.GraphRules;
++import com.fasterxml.jackson.core.*;
++import com.fasterxml.jackson.core.exc.StreamConstraintsException;
++import com.fasterxml.jackson.databind.*;
++import org.springframework.jdbc.core.*;
++import org.springframework.jdbc.datasource.DataSourceTransactionManager;
++import org.springframework.transaction.TransactionDefinition;
++import org.springframework.transaction.support.*;
++import javax.sql.DataSource;
++import java.io.*;
++import java.nio.charset.StandardCharsets;
++import java.util.*;
++import java.util.concurrent.Semaphore;
++import java.util.concurrent.atomic.AtomicBoolean;
++import java.util.function.Consumer;
++
++/** One unregistered finite PG owner. C must share this owner; old status/writer loaders are not finite event plans. */
++public final class RunEventReader {
++    static final long JSON_BYTES=1048576,METADATA_BYTES=8388608,ROOT_BYTES=8388608,CONTROL_BYTES=262144;
++    static final int MAX_RECORDS=4096,MAX_PARENTS=4096,EVENT_BYTES=262144;
++    // Root's budget-decision: these are additional intersecting representation limits. Model
++    // 64MiB includes 512/token for DOM+DTO+normalization/sort/collection backing slack and 8/raw
++    // byte for decoded strings/full parent arrays. Before fetching each text reserve 6/raw byte
++    // for JDBC UTF-8 row, decoded UTF-16, raw length-check copy and driver slack; max48MiB.
++    // Streaming preflight+DOM parser scratch reserves64MiB (duplicate detection/name/text buffers
++    // and segment/consolidation slack). Canonical<=8MiB reserves5x for UTF-16 segments/result and
++    // UTF-8 digest copy, max40MiB. Fixed scalar plan/maps reserve8MiB. Parser and canonical phases
++    // never overlap: parsed DOM returns after both parsers close, before canonicalScratch begins.
++    // Their worst phases are64+48+64+8=184MiB and64+48+40+8=160MiB. The total ledger still caps
++    // all reservations at192MiB before allocation. Two permits
++    // therefore own <=384MiB accounted representations; this is not an exact object-heap claim.
++    static final long MODEL_UNITS=64L*1024*1024,REPRESENTATION_UPPER_PER_WORKSPACE=192L*1024*1024;
++    static final class Ledger {
++        long current,peak;
++        final class Reservation implements AutoCloseable {
++            final long bytes;boolean closed;Reservation(long bytes){this.bytes=bytes;}
++            public void close(){if(!closed){closed=true;current-=bytes;}}
++        }
++        Reservation reserve(long bytes){current=Limits.add(current,bytes,REPRESENTATION_UPPER_PER_WORKSPACE,"REPRESENTATION_TOTAL");peak=Math.max(peak,current);return new Reservation(bytes);}
++    }
++    private final DataSource source;private final JdbcTemplate db;
++    private final Semaphore workspaces=new Semaphore(2);
++    public RunEventReader(DataSource source){this.source=Objects.requireNonNull(source);db=new JdbcTemplate(source);}
++    public Optional<EventEmission> readNext(PortalEventsResponse response,long afterSeq){
++        long entered=System.nanoTime();
++        if(TransactionSynchronizationManager.isActualTransactionActive())throw new IllegalStateException("EVENT_READER_REQUIRES_NO_CALLER_TRANSACTION");
++        var capture=Objects.requireNonNull(response).currentCapture();
++        if(afterSeq<0||afterSeq<capture.initialCursor())throw denied();
++        var work=new Work(db,response,capture,entered);work.millis();
++        if(!workspaces.tryAcquire())throw finite("WORKSPACE");
++        var lease=new Lease(workspaces);boolean handed=false;Throwable primary=null;
++        try{
++            clearCurrentThreadBuffers();
++            var tx=new TransactionTemplate(new DataSourceTransactionManager(source));tx.setReadOnly(true);tx.setIsolationLevel(TransactionDefinition.ISOLATION_REPEATABLE_READ);
++            // Spring6.2.7 doBegin/doCommit owns this connection. Seconds timeouts cannot express
++            // the signed deadline; actual SQL uses floor(ms) of the same conservative anchor.
++            var data=tx.execute(status->read(work,afterSeq));work.live();
++            if(data==null)return Optional.empty();
++            // Cleanup is before mint/transfer, so a cleanup failure cannot strand a pending permit.
++            clearCurrentThreadBuffers();work.live();
++            var emission=new EventEmission(response,capture,lease,data.info(),data.payload());
++            var result=Optional.of(emission);handed=true;return result;
++        }catch(RuntimeException|Error failure){primary=failure;throw failure;}
++        finally{if(!handed)try{cleanup(primary);}finally{lease.close();}}
++    }
++    private record EventData(Info info,byte[] payload){}
++    private EventData read(Work w,long afterSeq){
++        var b=RunAuthorityStore.loadObservationBindingBounded(w,w.capture.subject(),w.capture.resource().id());
++        same(w.capture.resource(),RunObservationSelectors.status(b.publicId(),b.snapshotSha()));
++        var roots=MaterialScopeStore.probeObserved(w,b.runId(),"kind in ('run-snapshot','run-inputs','run-version-refs')",4);
++        if(roots.size()!=3)throw denied();
++        var events=w.query("select id,seq,octet_length(type) as type_bytes,case when octet_length(type)<=262144 then type end as event_type from engine.run_event where run_id=? and seq>? order by seq limit 1",1,b.runId(),afterSeq);
++        MaterialScopeStore.ObservedRow selected=null;MaterialScopeV1 selectedScope=null;
++        var plan=new LinkedHashMap<String,MaterialScopeStore.ObservedRow>();
++        for(var root:roots)MaterialScopeStore.addObserved(plan,root,w.limits);
++        Map<String,Object> event=events.isEmpty()?null:events.getFirst();
++        if(event!=null){
++            if(num(event,"seq")<=afterSeq)throw denied();Limits.single(num(event,"type_bytes"),CONTROL_BYTES,"CONTROL_BYTES");nonblank((String)event.get("event_type"));
++            var rows=MaterialScopeStore.probeObserved(w,b.runId(),"kind='run-event' and material_id=?",2,Long.toString(num(event,"id")));
++            if(rows.size()!=1)throw denied();selected=rows.getFirst();MaterialScopeStore.addObserved(plan,selected,w.limits);
++            selectedScope=MaterialScopeStore.readObservedScope(w,b,selected);var parents=selectedScope.parentScopeSha256();if(parents.isEmpty())throw denied();
++            var args=new ArrayList<Object>();args.add(selected.revision());args.addAll(parents);
++            var found=MaterialScopeStore.probeObserved(w,b.runId(),"material_revision<? and scope_sha256 in ("+String.join(",",Collections.nCopies(parents.size(),"?"))+")",MAX_RECORDS+1,args.toArray());
++            var hashes=new HashSet<String>();for(var parent:found){if(!hashes.add(parent.sha())||!parents.contains(parent.sha()))throw denied();MaterialScopeStore.addObserved(plan,parent,w.limits);}same(hashes,new HashSet<>(parents));
++        }
++        // Probe and sum complete metadata, including every repeated parent array, before payload.
++        var scopes=new LinkedHashMap<String,MaterialScopeV1>();
++        for(var row:plan.values()){var scope=row==selected?selectedScope:MaterialScopeStore.readObservedScope(w,b,row);scopes.put(row.sha(),scope);w.material(scope,row.bytes());w.live();}
++        var rootScopes=roots.stream().map(r->scopes.get(r.sha())).toList();
++        try(var canonical=w.canonicalScratch(6*roots.stream().mapToLong(MaterialScopeStore.ObservedRow::bytes).max().orElseThrow())){b=MaterialScopeStore.requireObservedRoots(b,rootScopes);}
++        for(var row:plan.values())MaterialScopeStore.requireObservedLocator(w,b,row);
++        if(selected!=null)MaterialScopeStore.requireObservedFloor(selectedScope,b,selectedScope.parentScopeSha256().stream().map(scopes::get).toList());
++        w.live();
++        // The inputs root is proved but its payload is never consumed by this reader.
++        var probe=w.query("select octet_length(snapshot::text) as snapshot_bytes,jsonb_typeof(snapshot) as snapshot_type,octet_length(version_refs::text) as refs_bytes,jsonb_typeof(version_refs) as refs_type from engine.run where id=?",1,b.runId()).getFirst();
++        same("object",probe.get("snapshot_type"));same("object",probe.get("refs_type"));w.limits.root(num(probe,"snapshot_bytes"));w.limits.root(num(probe,"refs_bytes"));
++        var snapshot=MaterialScopeStore.readObservedRoot(w,b.runId(),"snapshot",num(probe,"snapshot_bytes"));
++        same(b.snapshotSha(),w.digest(snapshot));w.live();
++        var refs=MaterialScopeStore.readObservedRoot(w,b.runId(),"version_refs",num(probe,"refs_bytes"));
++        for(var scope:rootScopes){String kind=scope.material().kind();if(!kind.equals("run-inputs"))same(scope.material().payloadSha256(),w.digest(kind.equals("run-snapshot")?snapshot:refs));}
++        TraceStore.requireSnapshotRelations(b,snapshot,refs);GraphRules.requirePublishedFlow(snapshot);
++        if(!"FLOW".equals(text(snapshot,"type"))||snapshot.hasNonNull("debugSnapshot")||snapshot.hasNonNull("evalCandidate")||snapshot.hasNonNull("controlledDraftId")||snapshot.path("config").hasNonNull("dataSources")||refs.has("ontology")&&(!refs.path("ontology").isArray()||!refs.path("ontology").isEmpty()))throw denied();
++        w.live();if(event==null)return null; // Empty never claims terminal run state.
++        var value=MaterialScopeStore.readObservedEvent(w,b,num(event,"id"),num(event,"seq"),selectedScope);
++        same(value.path("run_id").longValue(),b.runId());same(value.path("id").longValue(),num(event,"id"));same(value.path("seq").longValue(),num(event,"seq"));same(text(value,"type"),event.get("event_type"));
++        byte[] payload;
++        try(var encoding=w.canonicalScratch(6L*EVENT_BYTES)){payload=encode(value.get("payload"));Limits.single(payload.length,EVENT_BYTES,"EVENT_PAYLOAD");}
++        var labels=new TreeSet<String>();scopes.values().forEach(s->labels.addAll(s.requiredDataLabels()));w.live();
++        return new EventData(new Info(b.publicId(),w.capture.resource(),w.capture.responseId(),afterSeq,num(event,"seq"),(String)event.get("event_type"),selectedScope.material().payloadSha256(),Set.copyOf(labels),w.measurements(payload.length)),payload);
++    }
++    public record Measurements(long modelReserved,long totalReservedPeak,long rawReservedPeak,long canonicalReservedPeak,long canonicalActualUtf8Peak,long tokens,int parserBackingChars,int eventBackingBytes){}
++    public record Info(String runId,ResourceBinding resource,String responseId,long afterSeq,long seq,String type,String rowSha256,Set<String> requiredDataLabels,Measurements measurements){public Info{requiredDataLabels=Set.copyOf(requiredDataLabels);}}
++    /** Pending, active callback and its actual finally all own the original reader permit. */
++    public static final class EventEmission implements AutoCloseable{
++        private final PortalEventsResponse response;private final PortalEventsResponse.Capture capture;private final Lease lease;private final Info info;
++        private byte[] payload;private boolean active,closing,finished;private Thread consumer;
++        private EventEmission(PortalEventsResponse r,PortalEventsResponse.Capture c,Lease l,Info i,byte[] p){response=r;capture=c;lease=l;info=i;payload=p;}
++        private void usable(){if(closing||finished)throw denied();}
++        public synchronized Info info(){usable();response.requireLive(capture);return info;}
++        public void consume(Consumer<Borrow> consume){
++            Objects.requireNonNull(consume);
++            synchronized(this){usable();if(active)throw denied();try{response.requireLive(capture);}catch(RuntimeException failure){finish();throw failure;}active=true;consumer=Thread.currentThread();}
++            Throwable primary=null;
++            try{consume.accept(new Borrow(this));guard();}catch(RuntimeException|Error failure){primary=failure;throw failure;}
++            finally{try{cleanup(primary);}finally{synchronized(this){active=false;consumer=null;finish();}}}
++        }
++        private synchronized void guard(){usable();if(!active||consumer!=Thread.currentThread())throw denied();response.requireLive(capture);}
++        private void finish(){payload=null;finished=true;lease.close();}
++        public synchronized void close(){if(finished)return;closing=true;if(!active)finish();}
++    }
++    /** C must keep encoding, actual stream acquisition and write/flush inside synchronous consume. */
++    public static final class Borrow{
++        private final EventEmission emission;private Borrow(EventEmission e){emission=e;}
++        public Info info(){emission.guard();return emission.info;}
++        public void requireLive(){emission.guard();}
++        public void writePayload(OutputStream output)throws IOException{Objects.requireNonNull(output);emission.guard();output.write(emission.payload);emission.guard();}
++    }
++    private static final class Lease implements AutoCloseable{
++        private final Semaphore permits;private final AtomicBoolean released=new AtomicBoolean();Lease(Semaphore p){permits=p;}public void close(){if(released.compareAndSet(false,true))permits.release();}
++    }
++    public static final class CapacityFailure extends PlatformException{
++        private final String dimension;
++        private CapacityFailure(String d){super(d.equals("WORKSPACE")?429:413,d.equals("WORKSPACE")?"STREAM_CAPACITY":d.equals("EVENT_PAYLOAD")?"EVENT_LIMIT":"BUFFER_LIMIT","有限事件材料容量不足");dimension=d;}
++        public String dimension(){return dimension;}
++    }
++    static CapacityFailure finite(String d){return new CapacityFailure(d);}
++    static long num(Map<String,Object> r,String k){var v=r.get(k);if(!(v instanceof Number n))throw denied();return n.longValue();}
++    static final class Limits{
++        long metadata,roots,records;
++        static long add(long current,long amount,long cap,String d){if(amount<0||current<0||current>cap||amount>cap-current)throw finite(d);return current+amount;}
++        static void single(long bytes,long cap,String d){add(0,bytes,cap,d);}
++        void metadata(long bytes){metadata=add(metadata,bytes,METADATA_BYTES,"METADATA_BYTES");}
++        void root(long bytes){roots=add(roots,bytes,ROOT_BYTES,"ROOT_BYTES");}
++        void record(long bytes){single(bytes,JSON_BYTES,"SCOPE_BYTES");records=add(records,1,MAX_RECORDS,"RECORDS");metadata(bytes);}
++        static void parents(long count){single(count,MAX_PARENTS,"PARENTS");}
++    }
++    /** No wall Clock: one conservative monotonic anchor survives all statements and parsing. */
++    static final class Work{
++        final JdbcTemplate db;final PortalEventsResponse response;final PortalEventsResponse.Capture capture;final long entered,allowance;final Limits limits=new Limits();
++        long representationUnits;int maxParserBackingChars;
++        final Ledger ledger=new Ledger();long rawPeak,canonicalPeak,canonicalActualPeak,tokens;
++        Work(JdbcTemplate d,PortalEventsResponse r,PortalEventsResponse.Capture c,long e){db=d;response=r;capture=c;entered=e;allowance=c.remainingNanos();ledger.reserve(8L*1024*1024);}
++        long remaining(){return Math.min(capture.remainingNanos(),allowance-Math.max(0,System.nanoTime()-entered));}
++        void live(){response.requireLive(capture);if(Thread.currentThread().isInterrupted()||remaining()<=0)throw denied();}
++        long millis(){live();long ms=remaining()/1000000L;if(ms<1)throw denied();return ms;}
++        List<Map<String,Object>> query(String sql,int rows,Object...args){
++            millis();return db.execute((ConnectionCallback<List<Map<String,Object>>>)c->{
++                var result=new ArrayList<Map<String,Object>>(rows);
++                try(var statement=c.prepareStatement(sql)){
++                for(int i=0;i<args.length;i++)statement.setObject(i+1,args[i]);
++                long timeout=millis();boolean installed=false;
++                // PG zero disables the timeout. Floor only. If the floor changes while setting
++                // LOCAL timeout, reinstall at most three times or refuse; never restart a budget.
++                for(int i=0;i<3;i++){
++                    try(var setting=c.prepareStatement("select set_config('statement_timeout', ?, true)")){setting.setString(1,Long.toString(timeout));millis();setting.executeQuery().close();}
++                    long now=millis();if(now>=timeout){installed=true;break;}timeout=now;
++                }
++                // The successful loop's millis() is the final execution check, after closing
++                // SET and after all parameter preparation. There is inevitably a small gap to
++                // executeQuery; do not turn a second millisecond-boundary race into false denial.
++                if(!installed)throw denied();
++                    try(var rs=statement.executeQuery()){var meta=rs.getMetaData();while(rs.next()){if(result.size()>=rows)throw finite("RECORDS");var row=new LinkedHashMap<String,Object>();for(int i=1;i<=meta.getColumnCount();i++)row.put(meta.getColumnLabel(i),rs.getObject(i));result.add(row);}}
++                }live();return result;
++            });
++        }
++        JsonNode json(String raw,boolean root){
++            live();try(var parser=ledger.reserve(64L*1024*1024)){
++                var parsed=parseMeasured(raw,root,this::live,(count,bytes)->{
++                    long cost=512L*count+8L*bytes;long next=Limits.add(representationUnits,cost,MODEL_UNITS,"REPRESENTATION_MODEL");ledger.reserve(cost);representationUnits=next;tokens+=count;
++                });maxParserBackingChars=Math.max(maxParserBackingChars,parsed.maxBackingChars());live();return parsed.value();
++            }
++        }
++        JsonNode jsonText(String sql,long bytes,boolean root,Object...args){
++            long cost=6*bytes;try(var text=ledger.reserve(cost)){
++                rawPeak=Math.max(rawPeak,cost);var rows=query(sql,2,args);if(rows.size()!=1||rows.getFirst().size()!=1)throw denied();
++                var raw=(String)rows.getFirst().values().iterator().next();if(raw==null)throw denied();same((long)raw.getBytes(StandardCharsets.UTF_8).length,bytes);return json(raw,root);
++            }
++        }
++        Ledger.Reservation canonicalScratch(long bytes){Limits.single(bytes,MaterialScopeStore.OBSERVED_NORMALIZED_BYTES,"NORMALIZED_BYTES");long cost=5*bytes;var reserved=ledger.reserve(cost);canonicalPeak=Math.max(canonicalPeak,cost);return reserved;}
++        String digest(JsonNode value){
++            long bytes=MaterialScopeStore.observedCanonicalCost(value);try(var canonical=canonicalScratch(bytes)){
++                var measured=MaterialScopeStore.observedDigestMeasured(value);canonicalActualPeak=Math.max(canonicalActualPeak,measured.utf8Bytes());live();return measured.sha();
++            }
++        }
++        String ceiling(Actor actor,long bytes){try(var canonical=canonicalScratch(6*bytes)){return MaterialAuthorization.ceilingSha256(actor);}}
++        void material(MaterialScopeV1 scope,long bytes){try(var canonical=canonicalScratch(6*bytes)){capture.requireMaterial(scope);}}
++        Measurements measurements(int backing){return new Measurements(representationUnits,ledger.peak,rawPeak,canonicalPeak,canonicalActualPeak,tokens,maxParserBackingChars,backing);}
++    }
++    private static ObjectMapper mapper(boolean root){
++        var constraints=StreamReadConstraints.builder().maxNestingDepth(root?64:32).maxNumberLength(1000).maxStringLength(root?1048576:65536).maxNameLength(root?1048576:65536).build();
++        return new ObjectMapper(JsonFactory.builder().streamReadConstraints(constraints).enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION)
++                .disable(JsonFactory.Feature.USE_THREAD_LOCAL_FOR_BUFFER_RECYCLING).disable(JsonFactory.Feature.CANONICALIZE_FIELD_NAMES).disable(JsonFactory.Feature.INTERN_FIELD_NAMES).build())
++                .enable(DeserializationFeature.USE_BIG_INTEGER_FOR_INTS).enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS).enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS);
++    }
++    private static final ObjectMapper META=mapper(false),ROOT=mapper(true);
++    /** Jackson2.19 JsonRecyclerPools.ThreadLocalPool.acquirePooled calls this same public
++     * BufferRecyclers accessor; Json.mapper().copy() retains that pool. Only mandatory common
++     * material/ceiling validation uses it. BufferRecycler has four byte+four char slots; alloc
++     * atomically takes a slot and clears it. Empty defaults total<=36,800B (charged to fixed8MiB
++     * scratch). Drop, never return, those arrays; do not globally release or touch another thread.
++     * Entry drain also prevents borrowing a large buffer left by unrelated earlier work.
++     */
++    @SuppressWarnings("deprecation")
++    private static void clearCurrentThreadBuffers(){
++        var recycler=com.fasterxml.jackson.core.util.BufferRecyclers.getBufferRecycler();
++        for(int i=0;i<4;i++){recycler.allocByteBuffer(i);recycler.allocCharBuffer(i);}
++    }
++    private static void cleanup(Throwable primary){
++        try{clearCurrentThreadBuffers();}catch(RuntimeException|Error failure){if(primary==null)throw failure;primary.addSuppressed(failure);}
++    }
++    static String encodeText(JsonNode value){try{return ROOT.writeValueAsString(value);}catch(IOException failure){throw denied();}}
++    private static byte[] encode(JsonNode value){try{return ROOT.writeValueAsBytes(value);}catch(IOException failure){throw denied();}}
++    record Parsed(JsonNode value,int tokens,int utf8Bytes,int maxBackingChars){}
++    @FunctionalInterface private interface BeforeDom{void admit(int tokens,int bytes);}
++    static JsonNode parse(String raw,boolean root,Runnable live){
++        return parseMeasured(raw,root,live,(tokens,bytes)->{}).value();
++    }
++    static Parsed parseMeasured(String raw,boolean root,Runnable live){return parseMeasured(raw,root,live,(tokens,bytes)->{});}
++    private static Parsed parseMeasured(String raw,boolean root,Runnable live,BeforeDom admission){
++        if(raw==null)throw denied();var mapper=root?ROOT:META;int count=0,depth=0,maxBacking=0;boolean complete=false;
++        // Jackson2.19 ReaderBasedJsonParser lazily finishes strings: force text length during
++        // the streaming pass, before DOM, with field-name tokens and duplicate detection too.
++        try(var parser=mapper.createParser(raw)){JsonToken token;while((token=parser.nextToken())!=null){
++            if(complete)throw denied();if(++count>(root?262144:65536))throw finite("PARSER_TOKENS");if((count&255)==0)live.run();
++            if(token==JsonToken.FIELD_NAME||token==JsonToken.VALUE_STRING){if(parser.getTextLength()>(root?1048576:65536))throw finite("PARSER_STRING");maxBacking=Math.max(maxBacking,parser.getTextCharacters().length);}
++            if(token.isNumeric()&&parser.getTextLength()>1000)throw finite("PARSER_NUMBER");
++            if(token.isStructStart())depth++;if(token.isStructEnd())depth--;if(depth==0&&token!=JsonToken.FIELD_NAME)complete=true;
++        }if(!complete)throw denied();live.run();int bytes=raw.getBytes(StandardCharsets.UTF_8).length;admission.admit(count,bytes);var result=mapper.readTree(raw);live.run();return new Parsed(result,count,bytes,maxBacking);
++        }catch(StreamConstraintsException capacity){throw finite("PARSER_CONSTRAINT");}catch(IOException invalid){throw denied();}
++    }
++    static MaterialScopeV1 scope(JsonNode n){
++        object(n);if(n.size()!=11||!n.path("schemaVersion").isIntegralNumber()||!n.path("schemaVersion").canConvertToInt()||n.path("schemaVersion").intValue()!=1)throw denied();
++        var material=n.get("material");object(material);if(material.size()!=5)throw denied();for(String k:List.of("producer","kind","id","version","payloadSha256"))text(material,k);
++        var owner=n.get("owner");object(owner);if(owner.size()!=2)throw denied();text(owner,"tenantId");text(owner,"principalId");
++        for(String k:List.of("sourceDecisionId","sourceAuthorizationVersion","initialCeilingSha256","scopeSha256"))text(n,k);
++        for(String k:List.of("requiredRoles","requiredDataLabels","parentScopeSha256"))strings(n.get(k),k.equals("parentScopeSha256"));
++        var attrs=n.get("requiredEntitlements");object(attrs);attrs.fields().forEachRemaining(e->strings(e.getValue(),false));
++        try{return META.treeToValue(n,MaterialScopeV1.class);}catch(IOException|IllegalArgumentException invalid){throw denied();}
++    }
++    private static void strings(JsonNode n,boolean parents){if(n==null||!n.isArray())throw denied();if(parents)Limits.parents(n.size());var unique=new HashSet<String>();for(var v:n){if(!v.isTextual()||v.textValue().isBlank()||!unique.add(v.textValue()))throw denied();if(parents)hash(v.textValue());}}
++}
+diff --git a/engine-runtime/src/main/java/cn/agentplatform/engine/infra/TraceStore.java b/engine-runtime/src/main/java/cn/agentplatform/engine/infra/TraceStore.java
+index 369c9fc7e5f104f9f2da796de8465c99ef656a8c..ec150b25689e2af5c6199bf7abaa430a78953333 100644
+--- a/engine-runtime/src/main/java/cn/agentplatform/engine/infra/TraceStore.java
++++ b/engine-runtime/src/main/java/cn/agentplatform/engine/infra/TraceStore.java
+@@ -417,7 +417,7 @@ public class TraceStore {
+         // A callback-only check misses expiry/retirement during that completion window.
+         view.requireCurrent();return view;
+     }
+-    private static void requireSnapshotRelations(Binding b,JsonNode snapshot,JsonNode refs){
++    static void requireSnapshotRelations(Binding b,JsonNode snapshot,JsonNode refs){
+         object(snapshot);object(refs);
+         String code=MetadataSelectors.code(text(snapshot,"appCode"));long no=positive(snapshot.get("versionNo"));
+         long version=snapshot.has("appVersionId")?positive(snapshot.get("appVersionId")):positive(snapshot.get("versionId"));
+diff --git a/engine-runtime/src/test/java/cn/agentplatform/common/authority/RunEventReaderAuthorityFixture.java b/engine-runtime/src/test/java/cn/agentplatform/common/authority/RunEventReaderAuthorityFixture.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..9f3b3315ff5e219f72a09ca0d9d38cb6b25cdd7b
+--- /dev/null
++++ b/engine-runtime/src/test/java/cn/agentplatform/common/authority/RunEventReaderAuthorityFixture.java
+@@ -0,0 +1,46 @@
++package cn.agentplatform.common.authority;
++
++import cn.agentplatform.common.*;
++import java.time.*;
++import java.util.*;
++import java.util.function.Function;
++
++/** Test-only trusted frame seam; uses real E/JWKS/JWT/current HTTP, never opens an EVENTS route. */
++public final class RunEventReaderAuthorityFixture implements AutoCloseable {
++    public final LoopbackAuthority iam = new LoopbackAuthority();
++    public final HttpCurrentAuthorityClient gateway, engine;
++    public static final ResourceBinding ROOT = new ResourceBinding("app-version", "app-a@1", Digest.sha256("o2a-b-candidate"));
++    public String lastOpeningOrigin;
++    public RunEventReaderAuthorityFixture() throws Exception { actor("tenant-a", "alice", Set.of("A", "B")); gateway=iam.client("gateway");engine=iam.client("engine"); }
++    public void actor(String tenant, String principal, Set<String> regions) {
++        iam.portalActor(new Actor(tenant, principal, Set.of("EDITOR"), Map.of("region", regions, "dataLabels", Set.of("initial"))));
++    }
++    public <T> T admitted(Function<HttpCurrentAuthorityClient.RetainedAuthorization,T> work) {
++        var call = new ServiceCall("engine", "proxy.engine.post.RunController.run", ROOT);
++        String ticket = gateway.exchange(iam.portal(120), call).value();
++        var initial = engine.authorizeRetained(ticket, call);
++        lastOpeningOrigin=initial.requireOriginAuthenticationId();
++        try (var frame = AuthorityContext.bindRetained(initial, () -> engine.authorizeRetained(ticket, call))) {
++            return work.apply(initial);
++        }
++    }
++    public PortalEventsResponse open(SubjectKey owner, String run, String snapshot, long cursor) {
++        iam.registerObservation(owner, run, snapshot);
++        var resource = RunObservationSelectors.status(run, snapshot);
++        var call = new ServiceCall("engine", "proxy.engine.get.RunController.events", resource);
++        String ticket = gateway.exchange(iam.portal(120), call).value();
++        var initial = engine.authorizeRetained(ticket, call);
++        lastOpeningOrigin=initial.requireOriginAuthenticationId();
++        var binding = new PortalEventsBinding("b-"+UUID.randomUUID(), resource, cursor,
++                PortalEventsBinding.observationRequestSha256(owner, initial.requireOriginAuthenticationId(), resource, cursor),
++                iam.clock().instant().plusSeconds(30));
++        try (var frame = AuthorityContext.bindRetained(initial, () -> engine.authorizeRetained(ticket, call))) {
++            return engine.openPortalEvents(initial, binding, () -> {});
++        }
++    }
++    public void advance(long seconds) { iam.advanceClock(Duration.ofSeconds(seconds)); }
++    public void renew(PortalEventsResponse response) { engine.checkPortalEvents(response); }
++    public void narrow() { iam.eventsCurrentAttributes = Map.of("region", Set.of("A"), "dataLabels", Set.of("initial")); }
++    public void resetCoverage() { iam.eventsCurrentAttributes=null; }
++    public void close() { engine.close(); gateway.close(); iam.close(); }
++}
+diff --git a/engine-runtime/src/test/java/cn/agentplatform/engine/infra/RunEventReaderBudgetTest.java b/engine-runtime/src/test/java/cn/agentplatform/engine/infra/RunEventReaderBudgetTest.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..466efe2ca127212451f9007a3680a515e8fde32b
+--- /dev/null
++++ b/engine-runtime/src/test/java/cn/agentplatform/engine/infra/RunEventReaderBudgetTest.java
+@@ -0,0 +1,125 @@
++package cn.agentplatform.engine.infra;
++
++import static org.assertj.core.api.Assertions.*;
++import cn.agentplatform.common.authority.*;
++import cn.agentplatform.common.PlatformException;
++import java.util.*;
++import org.junit.jupiter.api.Test;
++
++class RunEventReaderBudgetTest {
++    static void rejected(Runnable read) { assertThatThrownBy(read::run).isInstanceOf(PlatformException.class); }
++    static String nested(int depth) { return "[".repeat(depth)+"0"+"]".repeat(depth); }
++    @Test void metadataStreamingParserChecksEverySingleConstraintBeforeDom() {
++        RunEventReader.parse(nested(32),false,()->{});rejected(()->RunEventReader.parse(nested(33),false,()->{}));
++        RunEventReader.parse("\""+"x".repeat(65536)+"\"",false,()->{});rejected(()->RunEventReader.parse("\""+"x".repeat(65537)+"\"",false,()->{}));
++        RunEventReader.parse("{\""+"x".repeat(65536)+"\":0}",false,()->{});rejected(()->RunEventReader.parse("{\""+"x".repeat(65537)+"\":0}",false,()->{}));
++        RunEventReader.parse("1".repeat(1000),false,()->{});rejected(()->RunEventReader.parse("1".repeat(1001),false,()->{}));
++        String exact="["+"0,".repeat(65533)+"0]";RunEventReader.parse(exact,false,()->{});rejected(()->RunEventReader.parse("["+"0,".repeat(65534)+"0]",false,()->{}));
++        rejected(()->RunEventReader.parse("{\"x\":1,\"x\":2}",false,()->{}));rejected(()->RunEventReader.parse("{}{}",false,()->{}));
++    }
++    @Test void rootParserHasItsOwnFiniteDepthTokensStringAndNumberLimits() {
++        RunEventReader.parse(nested(64),true,()->{});rejected(()->RunEventReader.parse(nested(65),true,()->{}));
++        RunEventReader.parse("\""+"x".repeat(1048576)+"\"",true,()->{});rejected(()->RunEventReader.parse("\""+"x".repeat(1048577)+"\"",true,()->{}));
++        RunEventReader.parse("["+"0,".repeat(262141)+"0]",true,()->{});rejected(()->RunEventReader.parse("["+"0,".repeat(262142)+"0]",true,()->{}));
++        RunEventReader.parse("1".repeat(1000),true,()->{});rejected(()->RunEventReader.parse("1".repeat(1001),true,()->{}));
++    }
++    @Test void cumulativeByteRecordAndParentBudgetsRejectOverflowAndNeverSilentlyTruncate() {
++        var l=new RunEventReader.Limits();l.metadata(8388608);rejected(()->l.metadata(1));
++        var r=new RunEventReader.Limits();r.root(8388608);rejected(()->r.root(1));
++        var record=new RunEventReader.Limits();for(int i=0;i<4096;i++)record.record(0);rejected(()->record.record(0));
++        RunEventReader.Limits.parents(4096);rejected(()->RunEventReader.Limits.parents(4097));
++        rejected(()->new RunEventReader.Limits().metadata(Long.MAX_VALUE));rejected(()->new RunEventReader.Limits().metadata(-1));
++        rejected(()->new RunEventReader.Limits().record(1048577));
++    }
++    @Test void normalizationExpansionHasIndependentBudgetBeforeDecimalToIntegerExpansion() {
++        // Preserve real precision/scale while intercepting the dangerous expansion itself. RED
++        // must fail without allocating the 67MB integer; this is a mechanical digest guard test.
++        var decimal=new java.math.BigDecimal("1e67108865"){
++            @Override public java.math.BigDecimal stripTrailingZeros(){return this;}
++            @Override public java.math.BigInteger toBigIntegerExact(){throw new AssertionError("UNBOUNDED_EXPANSION_REACHED");}
++        };
++        var value=com.fasterxml.jackson.databind.node.DecimalNode.valueOf(decimal);
++        assertThatThrownBy(()->MaterialScopeStore.observedDigest(value)).isInstanceOf(RunEventReader.CapacityFailure.class);
++    }
++    @Test void scopeArraysRejectDuplicateHashesWrongTypesAndParentCountBeyond4096() {
++        var n=cn.agentplatform.common.Json.read("""
++                {"schemaVersion":1,"material":{"producer":"engine","kind":"run-event","id":"1","version":"1","payloadSha256":"%s"},"owner":{"tenantId":"tenant-a","principalId":"alice"},"sourceDecisionId":"old","sourceAuthorizationVersion":"old","initialCeilingSha256":"%s","requiredRoles":[],"requiredEntitlements":{},"requiredDataLabels":[],"parentScopeSha256":[],"scopeSha256":"%s"}
++                """.formatted("a".repeat(64),"b".repeat(64),"c".repeat(64)));
++        var parents=((com.fasterxml.jackson.databind.node.ObjectNode)n).putArray("parentScopeSha256");
++        for(int i=0;i<4096;i++)parents.add("%064x".formatted(i));
++        assertThat(RunEventReader.scope(RunEventReader.parse(n.toString(),false,()->{})).parentScopeSha256()).hasSize(4096);
++        parents.add("d".repeat(64));rejected(()->RunEventReader.scope(RunEventReader.parse(n.toString(),false,()->{})));
++        parents.removeAll().add("a".repeat(64)).add("a".repeat(64));rejected(()->RunEventReader.scope(n));
++        ((com.fasterxml.jackson.databind.node.ObjectNode)n).put("parentScopeSha256",true);rejected(()->RunEventReader.scope(n));
++        ((com.fasterxml.jackson.databind.node.ObjectNode)n).putArray("parentScopeSha256");((com.fasterxml.jackson.databind.node.ObjectNode)n.path("material")).put("id",7);rejected(()->RunEventReader.scope(n));
++    }
++    @Test void parserCancellationChecksRealCaptureAndFieldNamesConsumeTokenBudget() throws Exception {
++        try(var f=new RunEventReaderAuthorityFixture();var r=f.open(new SubjectKey("tenant-a","alice"),"r_"+"c".repeat(32),cn.agentplatform.common.Digest.sha256("c"),0)){
++            var c=r.currentCapture();var calls=new java.util.concurrent.atomic.AtomicInteger();
++            rejected(()->RunEventReader.parse("["+"0,".repeat(4000)+"0]",false,()->{if(calls.incrementAndGet()==2)r.close();r.requireLive(c);}));
++            assertThat(calls).hasValue(2);
++        }
++        // 2 structural + 2 per field. 32767 pairs gives exactly 65536 including names.
++        var fields=new StringBuilder("{");for(int i=0;i<32767;i++){if(i>0)fields.append(',');fields.append('"').append(i).append("\":0");}fields.append('}');
++        RunEventReader.parse(fields.toString(),false,()->{});fields.insert(fields.length()-1,",\"extra\":0");rejected(()->RunEventReader.parse(fields.toString(),false,()->{}));
++    }
++    @Test void getterClosureExpiryAndGenerationFailureAreLocalAndSticky() throws Exception {
++        try(var f=new RunEventReaderAuthorityFixture()){
++            var owner=new SubjectKey("tenant-a","alice");String run="r_"+"d".repeat(32),sha=cn.agentplatform.common.Digest.sha256("d");
++            try(var r=f.open(owner,run,sha,0)){
++                var old=r.currentCapture();f.renew(r);int calls=f.iam.requestAttempts();
++                rejected(old::initialCursor);rejected(old::remainingNanos);
++                var fresh=r.currentCapture();r.close();rejected(fresh::initialCursor);rejected(fresh::remainingNanos);assertThat(f.iam.requestAttempts()).isEqualTo(calls);
++            }
++            try(var r=f.open(owner,run,sha,0)){
++                var c=r.currentCapture();int calls=f.iam.requestAttempts();f.advance(6);rejected(c::initialCursor);rejected(c::remainingNanos);f.advance(-6);rejected(c::remainingNanos);assertThat(f.iam.requestAttempts()).isEqualTo(calls);
++            }
++        }
++    }
++    @Test void subMillisecondConservativeBudgetNeverRequestsAConnectionOrDisablesTimeout() throws Exception {
++        try(var f=new RunEventReaderAuthorityFixture();var r=f.open(new SubjectKey("tenant-a","alice"),"r_"+"e".repeat(32),cn.agentplatform.common.Digest.sha256("e"),0)){
++            var c=r.currentCapture();var ds=new org.springframework.jdbc.datasource.AbstractDataSource(){public java.sql.Connection getConnection(){throw new AssertionError("NO_SQL_BELOW_ONE_MS");}public java.sql.Connection getConnection(String u,String p){return getConnection();}};
++            var w=new RunEventReader.Work(new org.springframework.jdbc.core.JdbcTemplate(ds),r,c,System.nanoTime()-c.remainingNanos()+500000);
++            rejected(()->w.query("select 1",1));
++        }
++    }
++    @Test void emissionAndBorrowCannotBeMintedPubliclyOrExportLargePayloadReferences() {
++        assertThat(java.util.Arrays.stream(RunEventReader.EventEmission.class.getDeclaredConstructors())).allSatisfy(c->assertThat(java.lang.reflect.Modifier.isPrivate(c.getModifiers())).isTrue());
++        for(Class<?> type:List.of(RunEventReader.EventEmission.class,RunEventReader.Borrow.class))for(var method:type.getMethods())if(method.getDeclaringClass()!=Object.class)assertThat(method.getReturnType()).isNotIn(String.class,byte[].class,com.fasterxml.jackson.databind.JsonNode.class);
++        assertThat(RunEventReader.class.getAnnotations()).isEmpty();
++    }
++    @Test void deploymentRepresentationModelCanonicalAndTotalBudgetsAreIndependentHardLimits() {
++        assertThat(RunEventReader.MODEL_UNITS).isEqualTo(64L*1024*1024);
++        assertThat(MaterialScopeStore.OBSERVED_NORMALIZED_BYTES).isEqualTo(8L*1024*1024);
++        assertThat(RunEventReader.REPRESENTATION_UPPER_PER_WORKSPACE).isEqualTo(192L*1024*1024);
++        var ledger=new RunEventReader.Ledger();try(var reservation=ledger.reserve(192L*1024*1024)){
++            capacity(()->ledger.reserve(1),"REPRESENTATION_TOTAL");assertThat(ledger.current).isEqualTo(192L*1024*1024);
++        }assertThat(ledger.current).isZero();capacity(()->ledger.reserve(Long.MAX_VALUE),"REPRESENTATION_TOTAL");
++    }
++    static void capacity(Runnable r,String dimension){assertThatThrownBy(r::run).isInstanceOfSatisfying(RunEventReader.CapacityFailure.class,e->assertThat(e.dimension()).isEqualTo(dimension));}
++    @Test void modelIntersectionIsAdmittedBeforeSecondDomAndTemporaryReservationsUnwind() throws Exception {
++        try(var f=new RunEventReaderAuthorityFixture();var r=f.open(new SubjectKey("tenant-a","alice"),"r_"+"f".repeat(32),cn.agentplatform.common.Digest.sha256("f"),0)){
++            var w=new RunEventReader.Work(null,r,r.currentCapture(),System.nanoTime());String raw="["+"0,".repeat(65533)+"0]";
++            w.json(raw,false);long held=w.ledger.current;
++            capacity(()->w.json(raw,false),"REPRESENTATION_MODEL");assertThat(w.ledger.current).isEqualTo(held);assertThat(w.representationUnits).isLessThanOrEqualTo(64L*1024*1024);
++            assertThat(w.maxParserBackingChars).isZero(); // Numeric array: no string backing buffer requested.
++        }
++    }
++    @Test void canonicalExactBoundaryAndLongAccumulationOverflowFailBeforeExpansion() {
++        var exact=com.fasterxml.jackson.databind.node.DecimalNode.valueOf(new java.math.BigDecimal("1e8388605"));assertThat(MaterialScopeStore.observedCanonicalCost(exact)).isEqualTo(8388608);
++        var extra=com.fasterxml.jackson.databind.node.DecimalNode.valueOf(new java.math.BigDecimal("1e8388606"));capacity(()->MaterialScopeStore.observedCanonicalCost(extra),"NORMALIZED_BYTES");
++        capacity(()->RunEventReader.Limits.add(Long.MAX_VALUE-1,2,Long.MAX_VALUE,"OVERFLOW"),"OVERFLOW");
++    }
++    @Test void captureInitialCursorAndRemainingAreLiveLocalOperations() throws Exception {
++        try(var f=new RunEventReaderAuthorityFixture()) {
++            var owner=new SubjectKey("tenant-a","alice");
++            try(var response=f.open(owner,"r_"+"b".repeat(32),cn.agentplatform.common.Digest.sha256("b"),7)) {
++                var c=response.currentCapture();int calls=f.iam.requestAttempts();
++                assertThat(java.util.Arrays.stream(c.getClass().getMethods()).map(java.lang.reflect.Method::getName)).as("live signed cursor getter").contains("initialCursor","remainingNanos");
++                assertThat(c.getClass().getMethod("initialCursor").invoke(c)).isEqualTo(7L);
++                assertThat((Long)c.getClass().getMethod("remainingNanos").invoke(c)).isPositive();
++                assertThat(f.iam.requestAttempts()).isEqualTo(calls);
++            }
++        }
++    }
++}
+diff --git a/engine-runtime/src/test/java/cn/agentplatform/engine/infra/RunEventReaderPostgresTest.java b/engine-runtime/src/test/java/cn/agentplatform/engine/infra/RunEventReaderPostgresTest.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..3398ff0e1fbdcf93558b66fb8a19019d8fd4180d
+--- /dev/null
++++ b/engine-runtime/src/test/java/cn/agentplatform/engine/infra/RunEventReaderPostgresTest.java
+@@ -0,0 +1,252 @@
++package cn.agentplatform.engine.infra;
++
++import static org.assertj.core.api.Assertions.*;
++import cn.agentplatform.common.*;
++import cn.agentplatform.common.authority.*;
++import cn.agentplatform.engine.application.*;
++import cn.agentplatform.engine.domain.GraphRules;
++import com.fasterxml.jackson.databind.JsonNode;
++import com.fasterxml.jackson.databind.node.ObjectNode;
++import org.flywaydb.core.Flyway;
++import org.junit.jupiter.api.Test;
++import org.springframework.jdbc.core.JdbcTemplate;
++import org.springframework.jdbc.datasource.*;
++import org.springframework.transaction.support.*;
++import java.lang.reflect.*;
++import java.sql.*;
++import java.util.*;
++import java.util.concurrent.*;
++import java.util.concurrent.atomic.*;
++import javax.sql.DataSource;
++
++class RunEventReaderPostgresTest {
++    static final String DATABASE="agent_platform_iam_o2a_b_material_v12";
++    static final class Fixture implements AutoCloseable {
++        final RunEventReaderAuthorityFixture auth=new RunEventReaderAuthorityFixture();
++        final ObservedSource source; final JdbcTemplate db; final TransactionTemplate tx;
++        final RunAuthorityStore store; final TraceStore trace; final RunEventReader reader;
++        Fixture() throws Exception {
++            String password=System.getenv("AGENT_DB_PASSWORD");
++            if(password==null||password.isBlank())throw new IllegalStateException("OWN_PG_CREDENTIAL_REQUIRED");
++            var admin=new JdbcTemplate(new DriverManagerDataSource("jdbc:postgresql://127.0.0.1:25432/postgres","agent_v12",password));
++            if(!"postgres".equals(admin.queryForObject("select current_database()",String.class)))throw new AssertionError("ADMIN_DATABASE");
++            if(!Boolean.TRUE.equals(admin.queryForObject("select exists(select 1 from pg_database where datname=?)",Boolean.class,DATABASE)))admin.execute("create database "+DATABASE);
++            source=new ObservedSource(new DriverManagerDataSource("jdbc:postgresql://127.0.0.1:25432/"+DATABASE,"agent_v12",password));
++            db=new JdbcTemplate(source);
++            assertThat(db.queryForObject("select current_database()",String.class)).isEqualTo(DATABASE);
++            Flyway.configure().dataSource(source).schemas("engine").defaultSchema("engine").locations("classpath:db/migration").load().migrate();
++            tx=new TransactionTemplate(new DataSourceTransactionManager(source));
++            store=new RunAuthorityStore(source,auth.iam.clock());
++            trace=new TraceStore(db,new DataSourceTransactionManager(source),auth.iam.clock());reader=new RunEventReader(source);
++        }
++        JsonNode snapshot(int pad) {
++            ObjectNode snap=Json.object();snap.put("appCode","app-a");snap.put("type","FLOW");snap.put("versionNo",1);snap.put("appVersionId",4294967297L);snap.put("candidateSha256",RunEventReaderAuthorityFixture.ROOT.versionDigest());snap.set("config",Json.object());
++            var definition=Json.object();var nodes=definition.putArray("nodes");var edges=definition.putArray("edges");
++            for(int i=0;i<15;i++){String id=nodeId(i);var n=nodes.addObject().put("id",id).put("type",i==0?"START":i==14?"END":"CODE");if(i>0&&i<14)n.put("expression","1");if(i>0)edges.addObject().put("from",nodeId(i-1)).put("to",id);}
++            if(pad>0)((ObjectNode)nodes.get(1)).put("padding","x".repeat(pad));snap.set("definition",definition);return snap;
++        }
++        static String nodeId(int i){return i==0?"start":i==14?"end":"c%02d".formatted(i);}
++        RunAuthorityStore.Binding seed(int pad) {
++            var snap=snapshot(pad);GraphRules.requirePublishedFlow(snap);
++            var sentinel=new IllegalStateException("B_DAG_STORAGE_SENTINEL");
++            var validating=new TraceStore(db,new DataSourceTransactionManager(source),auth.iam.clock()){@Override public <T>T atomic(java.util.function.Supplier<T> w){throw sentinel;}};
++            try(var idle=new RunScheduler(validating){@Override public Admission reserveInteractive(){throw new AssertionError("NO_QUEUE");}@Override public void created(long id,Admission a){throw new AssertionError("NO_WAKE");}}){
++                var service=new RunService(validating,null,null,null,idle);var actor=new Actor("tenant-a","alice",Set.of("EDITOR"),Map.of());
++                assertThatThrownBy(()->service.createReservedSessionTurn("app-a",Json.read("{\"inputs\":{},\"mode\":\"FULL\"}"),snap,actor,null)).isSameAs(sentinel);
++                var wrong=snap.deepCopy();((ObjectNode)wrong.path("definition")).set("edges",Json.read("[{\"source\":\"start\",\"target\":\"end\"}]"));
++                assertThatThrownBy(()->service.createReservedSessionTurn("app-a",Json.read("{\"inputs\":{},\"mode\":\"FULL\"}"),wrong,actor,null)).isInstanceOfSatisfying(PlatformException.class,e->assertThat(e.code()).isEqualTo("UNKNOWN_EDGE"));
++            }
++            long run=auth.admitted(p->tx.execute(s->{
++                var budget=Json.tree(Map.of("limits",Map.of("maxSteps",25,"modelCalls",40,"totalTokens",200000,"totalDurationMs",600000,"maxDepth",2),"consumed",Map.of("steps",0,"modelCalls",0,"tokens",0,"depth",0),"deadline",auth.iam.clock().instant().plusSeconds(599).toString()));
++                long id=store.createPublished(p,snap,Json.read("{\"privateInput\":\"not-consumed\"}"),Json.read("{\"appVer\":1}"),budget,"FULL",UUID.randomUUID().toString(),Set.of("initial"));
++                for(int i=0;i<15;i++)trace.createNode(id,nodeId(i),i+1,i==0?"START":i==14?"END":"CODE",snap.path("definition").path("nodes").get(i),p);return id;
++            }));
++            append(run,"B_FIRST",Json.read("{\"integer\":123456789012345678901234567890,\"text\":\"观察\"}"));return store.load(run);
++        }
++        void append(long run,String type,Object value){var writer=new RunAuthority(store,auth.engine,auth.iam.clock(),java.time.Duration.ofSeconds(3)).currentRetained(run,new ServiceCall("engine","run.advance",RunEventReaderAuthorityFixture.ROOT));trace.event(run,type,value,writer);}
++        PortalEventsResponse open(RunAuthorityStore.Binding b,long cursor){return auth.open(b.owner(),b.publicId(),b.snapshotSha(),cursor);}
++        public void close(){auth.close();}
++    }
++    static final class ObservedSource extends DelegatingDataSource {
++        final List<String> sql=new CopyOnWriteArrayList<>(),getters=new CopyOnWriteArrayList<>(),observations=new CopyOnWriteArrayList<>();
++        final List<String> scopeTexts=new CopyOnWriteArrayList<>();
++        volatile Runnable beforeQuery=()->{},afterCommit=()->{};volatile java.util.function.BiFunction<String,Object,Object> change=(k,v)->v;
++        volatile java.util.function.Consumer<String> onQuery=q->{};volatile boolean observe;
++        volatile Runnable duringBind=()->{};
++        final AtomicLong configuredTimeout=new AtomicLong();
++        ObservedSource(DataSource target){super(target);}
++        @Override public Connection getConnection()throws SQLException {
++            var c=super.getConnection();return (Connection)Proxy.newProxyInstance(getClass().getClassLoader(),new Class[]{Connection.class},(p,m,a)->{
++                try {var value=m.invoke(c,a);if(m.getName().equals("commit")&&observe)afterCommit.run();
++                    if(value instanceof PreparedStatement statement&&m.getName().equals("prepareStatement")){String query=(String)a[0];return Proxy.newProxyInstance(getClass().getClassLoader(),new Class[]{PreparedStatement.class},(sp,sm,sa)->{try{
++                        if(observe&&sm.getName().equals("setObject"))duringBind.run();
++                        if(observe&&query.startsWith("select set_config")&&sm.getName().equals("setString"))configuredTimeout.set(Long.parseLong((String)sa[1]));
++                        if(sm.getName().equals("executeQuery")&&observe){sql.add(query);observations.add(System.identityHashCode(c)+":"+c.getTransactionIsolation()+":"+c.isReadOnly()+":"+c.getAutoCommit());beforeQuery.run();onQuery.accept(query);}
++                        Object result=sm.invoke(statement,sa);if(result instanceof ResultSet rs)return Proxy.newProxyInstance(getClass().getClassLoader(),new Class[]{ResultSet.class},(rp,rm,ra)->{try{Object got=rm.invoke(rs,ra);if(observe&&rm.getName().startsWith("get")&&ra!=null&&ra.length>0){String key=ra[0] instanceof Integer index?rs.getMetaData().getColumnLabel(index):ra[0].toString();getters.add(key);if(key.equals("scope_text")&&got instanceof String s)scopeTexts.add(s);return change.apply(key,got);}return got;}catch(InvocationTargetException e){throw e.getCause();}});return result;
++                    }catch(InvocationTargetException e){throw e.getCause();}});}
++                    return value;
++                }catch(InvocationTargetException e){throw e.getCause();}
++            });
++        }
++        void start(){sql.clear();getters.clear();observations.clear();scopeTexts.clear();observe=true;}
++    }
++    @Test void realFifteenNodeWriterEventIsReadWithoutOnlineAuthorityInsideReadTransaction() throws Exception {
++        try(var f=new Fixture()) {var b=f.seed(0);try(var response=f.open(b,0)){
++            int calls=f.auth.iam.requestAttempts();f.source.start();
++            try(var emission=f.reader.readNext(response,0).orElseThrow()){assertThat(emission.info().seq()).isEqualTo(1);}
++            assertThat(f.auth.iam.requestAttempts()).isEqualTo(calls);
++        }}
++    }
++    static void deniedRead(Runnable action){assertThatThrownBy(action::run).isInstanceOf(PlatformException.class);}
++    static void capacity(Runnable action,String dimension){assertThatThrownBy(action::run).isInstanceOfSatisfying(RunEventReader.CapacityFailure.class,e->assertThat(e.dimension()).isEqualTo(dimension));}
++    static long payloadGetters(Fixture f){return f.source.getters.stream().filter(s->s.equals("payload_text")||s.equals("event_text")).count();}
++    @Test void realSampleMeasuresCompleteRepeatedParentArraysAndPayloadGetterOrder() throws Exception {
++        try(var f=new Fixture()){var b=f.seed(0);try(var response=f.open(b,0)){
++            f.source.start();var emission=f.reader.readNext(response,0).orElseThrow();
++            assertThat(f.source.scopeTexts).hasSize(68);assertThat(f.source.getters.indexOf("payload_text")).isGreaterThan(f.source.getters.lastIndexOf("scope_text"));
++            assertThat(new HashSet<>(f.source.observations)).hasSize(1);assertThat(f.source.observations.getFirst()).endsWith(":4:true:false");
++            assertThat(f.source.sql).noneMatch(s->s.contains("a.*")||s.contains("r.*")||s.contains("inputs::text"));
++            var scopes=f.source.scopeTexts.stream().map(s->RunEventReader.scope(RunEventReader.parse(s,false,()->{}))).toList();
++            var selected=scopes.stream().filter(s->s.material().kind().equals("run-event")).findFirst().orElseThrow();assertThat(selected.parentScopeSha256()).hasSize(67);
++            var entries=new ArrayList<Map<String,Object>>();long total=0,parents=0,max=0;
++            for(int i=0;i<scopes.size();i++){var s=scopes.get(i);long bytes=f.source.scopeTexts.get(i).getBytes(java.nio.charset.StandardCharsets.UTF_8).length;total+=bytes;parents+=s.parentScopeSha256().size();max=Math.max(max,bytes);entries.add(Map.of("kind",s.material().kind(),"locator",s.material().id(),"version",s.material().version(),"sha256",s.scopeSha256(),"parents",s.parentScopeSha256().size(),"utf8Bytes",bytes));}
++            assertThat(emission.info().requiredDataLabels()).contains("initial");var encoded=new java.io.ByteArrayOutputStream();emission.consume(borrow->{try{borrow.writePayload(encoded);}catch(java.io.IOException e){throw new AssertionError(e);}});
++            assertThat(encoded.toString(java.nio.charset.StandardCharsets.UTF_8)).contains("123456789012345678901234567890","观察");
++            var sample=new LinkedHashMap<String,Object>();sample.put("database",DATABASE);sample.put("run",b.publicId());sample.put("N",15);sample.put("A",0);sample.put("E",1);sample.put("U",0);sample.put("C",67);sample.put("D_required_including_target",68);sample.put("H",parents);sample.put("scopeUtf8Bytes",total);sample.put("maxScopeUtf8Bytes",max);sample.put("eventEncodedBackingBytes",encoded.size());sample.put("metadata",entries);sample.put("sql",f.source.sql);sample.put("getters",f.source.getters);sample.put("connection",f.source.observations.getFirst());
++            var out=java.nio.file.Path.of("..","docs","evidence","iam-stage-4-o2a-b-material-reader","writer-sample-"+UUID.randomUUID()+".json");java.nio.file.Files.writeString(out,Json.write(sample));
++        }}
++    }
++    @Test void cursorBoundsAreCheckedBeforePermitAndSqlAndProgressCanAdvance() throws Exception {
++        try(var f=new Fixture()){var b=f.seed(0);f.append(b.runId(),"B_SECOND",Map.of("n",2));try(var response=f.open(b,1)){
++            f.source.start();deniedRead(()->f.reader.readNext(response,0));deniedRead(()->f.reader.readNext(response,-1));assertThat(f.source.sql).isEmpty();
++            try(var event=f.reader.readNext(response,1).orElseThrow()){assertThat(event.info().seq()).isEqualTo(2);assertThat(event.info().afterSeq()).isEqualTo(1);}
++            assertThat(f.reader.readNext(response,2)).isEmpty();assertThat(f.reader.readNext(response,10)).isEmpty();
++        }}
++    }
++    @Test void historicalGrantExpiryDifferentLoginAndWrongOwnersOrResourceStaySeparated() throws Exception {
++        try(var f=new Fixture()){var b=f.seed(0);f.auth.advance(301);f.auth.actor("tenant-a","alice",Set.of("A","B"));try(var r=f.open(b,0);var emission=f.reader.readNext(r,0).orElseThrow()){assertThat(emission.info().runId()).isEqualTo(b.publicId());assertThat(f.auth.lastOpeningOrigin).isNotEqualTo(b.originId());assertThat(b.delegation().expiresAt()).isBefore(f.auth.iam.clock().instant());}
++            for(var owner:List.of(new SubjectKey("tenant-a","bob"),new SubjectKey("tenant-b","alice"))){try(var other=new RunEventReaderAuthorityFixture()){other.actor(owner.tenantId(),owner.principalId(),Set.of("A","B"));try(var r=other.open(owner,b.publicId(),b.snapshotSha(),0)){f.source.start();assertThatThrownBy(()->f.reader.readNext(r,0)).isInstanceOfSatisfying(PlatformException.class,e->assertThat(e.code()).isEqualTo("RUN_NOT_FOUND"));assertThat(payloadGetters(f)).isZero();}}}
++            f.auth.actor("tenant-a","alice",Set.of("A","B"));
++            // Adversarial getter comparison, never a PG immutable-history rewrite or authority positive.
++            try(var r=f.open(b,0)){f.source.start();f.source.change=(k,v)->k.equals("control_text")?v.toString().replace(b.snapshotSha(),Digest.sha256("wrong-resource")):v;deniedRead(()->f.reader.readNext(r,0));assertThat(payloadGetters(f)).isZero();}
++        }
++    }
++    @Test void metadataTamperingAndCoverageFailBeforePayloadButActualPayloadTamperingReadsIt() throws Exception {
++        try(var f=new Fixture()){var b=f.seed(0);
++            try(var r=f.open(b,0)){f.source.start();f.source.change=(k,v)->k.equals("scope_text")?v.toString().replace("\"sourceDecisionId\":", "\"unknownField\":"):v;deniedRead(()->f.reader.readNext(r,0));assertThat(payloadGetters(f)).isZero();}
++            f.source.change=(k,v)->v;f.auth.narrow();try(var r=f.open(b,0)){f.source.start();deniedRead(()->f.reader.readNext(r,0));assertThat(payloadGetters(f)).isZero();}f.auth.resetCoverage();
++            try(var r=f.open(b,0)){f.source.start();f.source.change=(k,v)->k.equals("event_text")?v.toString().replace("观察","篡改"):v;deniedRead(()->f.reader.readNext(r,0));assertThat(payloadGetters(f)).isGreaterThan(0);}
++        }
++    }
++    @Test void ambientReadCommittedAndRepeatableReadAreBothRejected() throws Exception {
++        try(var f=new Fixture()){var b=f.seed(0);try(var r=f.open(b,0)){for(int isolation:List.of(2,4)){f.tx.setIsolationLevel(isolation);f.source.start();f.tx.execute(s->{assertThatThrownBy(()->f.reader.readNext(r,0)).isInstanceOf(IllegalStateException.class);return null;});assertThat(f.source.sql).isEmpty();}}}
++    }
++    @Test void concurrentAppendDoesNotMixReadSnapshotAndNextRoundSeesIt() throws Exception {
++        try(var f=new Fixture()){var b=f.seed(0);try(var r=f.open(b,0)){var once=new AtomicBoolean();f.source.start();f.source.onQuery=q->{if(q.contains("engine.material_scope")&&once.compareAndSet(false,true))outside(()->f.append(b.runId(),"B_CONCURRENT",Map.of("n",2)));};
++            try(var e=f.reader.readNext(r,0).orElseThrow()){assertThat(e.info().seq()).isEqualTo(1);}f.source.onQuery=q->{};
++            try(var e=f.reader.readNext(r,1).orElseThrow()){assertThat(e.info().seq()).isEqualTo(2);}
++        }}
++    }
++    @Test void stopGenerationExpiryAndCommitAfterRevocationNeverMintAnEmission() throws Exception {
++        try(var f=new Fixture()){var b=f.seed(0);for(String mode:List.of("stop","generation","expiry","commit")){try(var r=f.open(b,0)){f.source.start();var once=new AtomicBoolean();Runnable stop=()->{if(once.compareAndSet(false,true)){if(mode.equals("generation"))outside(()->f.auth.renew(r));else if(mode.equals("expiry"))f.auth.advance(6);else r.close();}};
++                if(mode.equals("commit"))f.source.afterCommit=stop;else f.source.onQuery=q->{if(q.contains("engine.material_scope"))stop.run();};deniedRead(()->f.reader.readNext(r,0));f.source.afterCommit=()->{};f.source.onQuery=q->{};
++                if(mode.equals("expiry"))f.auth.advance(-6);
++            }}
++        }
++    }
++    @Test void twoPendingOrActiveEmissionsOwnPermitsUntilActualConsumerFinally() throws Exception {
++        try(var f=new Fixture()){var b=f.seed(0);try(var r=f.open(b,0);var pool=Executors.newSingleThreadExecutor()){
++            var first=f.reader.readNext(r,0).orElseThrow();var second=f.reader.readNext(r,0).orElseThrow();capacity(()->f.reader.readNext(r,0),"WORKSPACE");
++            var entered=new CountDownLatch(1);var release=new CountDownLatch(1);var borrowed=new AtomicReference<RunEventReader.Borrow>();
++            var active=pool.submit(()->assertThatThrownBy(()->first.consume(view->{borrowed.set(view);entered.countDown();await(release);view.requireLive();})).isInstanceOf(PlatformException.class));
++            assertThat(entered.await(2,TimeUnit.SECONDS)).isTrue();first.close();first.close();capacity(()->f.reader.readNext(r,0),"WORKSPACE");release.countDown();active.get(2,TimeUnit.SECONDS);deniedRead(()->borrowed.get().requireLive());
++            second.close();second.close();try(var next=f.reader.readNext(r,0).orElseThrow()){assertThatThrownBy(()->next.consume(v->{throw new IllegalStateException("consumer");})).isInstanceOf(IllegalStateException.class);}
++            try(var next=f.reader.readNext(r,0).orElseThrow()){f.auth.renew(r);deniedRead(()->next.consume(v->{}));}
++            try(var next=f.reader.readNext(r,0).orElseThrow()){assertThat(next.info().seq()).isEqualTo(1);}
++        }}
++    }
++    static void await(CountDownLatch latch){try{if(!latch.await(3,TimeUnit.SECONDS))throw new AssertionError("LATCH_TIMEOUT");}catch(InterruptedException e){Thread.currentThread().interrupt();throw new AssertionError(e);}}
++    static void outside(Runnable work){try(var pool=Executors.newSingleThreadExecutor()){pool.submit(work).get(3,TimeUnit.SECONDS);}catch(Exception e){throw new AssertionError(e);}}
++    @Test void logicalCancellationWhileTwoRealJdbcQueriesWaitDoesNotReturnPermitsEarly() throws Exception {
++        try(var f=new Fixture()){var b=f.seed(0);try(var r=f.open(b,0);var callers=Executors.newFixedThreadPool(2);var lock=f.source.getTargetDataSource().getConnection()){
++            lock.setAutoCommit(false);try(var s=lock.createStatement()){s.execute("lock table engine.run in access exclusive mode");}
++            var entered=new CountDownLatch(2);var exited=new CountDownLatch(2);f.source.start();f.source.onQuery=q->{if(q.startsWith("select id,trigger_type"))entered.countDown();};
++            var tasks=new ArrayList<Future<?>>();for(int i=0;i<2;i++)tasks.add(callers.submit(()->{try{deniedRead(()->f.reader.readNext(r,0));}finally{exited.countDown();}}));
++            assertThat(entered.await(2,TimeUnit.SECONDS)).isTrue();r.close();tasks.forEach(t->t.cancel(false));
++            try(var fresh=f.open(b,0)){capacity(()->f.reader.readNext(fresh,0),"WORKSPACE");assertThat(exited.getCount()).isEqualTo(2);lock.commit();assertThat(exited.await(3,TimeUnit.SECONDS)).isTrue();f.source.onQuery=q->{};try(var e=f.reader.readNext(fresh,0).orElseThrow()){assertThat(e.info().seq()).isEqualTo(1);}}
++        }}
++    }
++    @Test void realWriterEventOverPublicBudgetHasDistinctCapacityAndNoEventTextGetter() throws Exception {
++        try(var f=new Fixture()){var b=f.seed(0);f.append(b.runId(),"B_OVERSIZED",Map.of("padding","x".repeat(262144)));try(var r=f.open(b,0)){f.source.start();capacity(()->f.reader.readNext(r,1),"EVENT_PAYLOAD");assertThat(f.source.getters).doesNotContain("event_text");}}
++    }
++    @Test void realPostgresValuesUseSameProbeAndCaseAtExactUtf8ByteBudgets() throws Exception {
++        try(var f=new Fixture()){
++            var cases=new ArrayList<Map<String,Object>>();for(int cap:List.of(1048576,8388608))for(int extra:List.of(0,1)){
++                String value="\"中"+"x".repeat(cap-5+extra)+"\"";assertThat(value.getBytes(java.nio.charset.StandardCharsets.UTF_8)).hasSize(cap+extra);
++                var probe=f.db.queryForMap("select octet_length(value::text) as bytes,jsonb_typeof(value) as type from (values (?::jsonb)) material(value)",value);assertThat(((Number)probe.get("bytes")).longValue()).isEqualTo(cap+extra);assertThat(probe.get("type")).isEqualTo("string");
++                var row=f.db.queryForMap("select case when octet_length(value::text)<=? then value::text end as limited from (values (?::jsonb)) material(value)",cap,value);if(extra==0)assertThat(row.get("limited")).isEqualTo(value);else assertThat(row.get("limited")).isNull();cases.add(Map.of("cap",cap,"extra",extra,"actualBytes",cap+extra,"textReturned",row.get("limited")!=null));
++            }
++            // Complete repeated records, not unique-hash accounting, hit 8MiB and +1 in PG.
++            var sums=f.db.queryForList("select sum(octet_length(value::text)) as bytes from (values (?::jsonb),(?::jsonb)) material(value)","\""+"x".repeat(4194302)+"\"","\""+"x".repeat(4194302)+"\"");assertThat(((Number)sums.getFirst().get("bytes")).longValue()).isEqualTo(8388608);
++            java.nio.file.Files.writeString(java.nio.file.Path.of("..","docs","evidence","iam-stage-4-o2a-b-material-reader","sql-boundaries-"+UUID.randomUUID()+".json"),Json.write(cases));
++        }
++    }
++    @Test void statementTimeoutUsesRemainingFloorAfterParameterPreparation() throws Exception {
++        try(var f=new Fixture()){var b=f.seed(0);try(var response=f.open(b,0)){
++            var captured=response.currentCapture();f.source.start();var delayed=new AtomicBoolean();var trajectory=new ArrayList<Map<String,Object>>();
++            f.source.duringBind=()->{if(delayed.compareAndSet(false,true))try{Thread.sleep(30);}catch(InterruptedException e){throw new AssertionError(e);}};
++            f.source.onQuery=q->{if(!q.startsWith("select set_config")){long remaining=captured.remainingNanos();trajectory.add(Map.of("sql",q,"configuredTimeoutMs",f.source.configuredTimeout.get(),"remainingNanosAtDriverInvocation",remaining));assertThat(f.source.configuredTimeout.get()).isPositive().isLessThanOrEqualTo(remaining/1000000+1);}};
++            try(var e=f.reader.readNext(response,0).orElseThrow()){assertThat(e.info().seq()).isEqualTo(1);}
++            java.nio.file.Files.writeString(java.nio.file.Path.of("..","docs","evidence","iam-stage-4-o2a-b-material-reader","timeout-trajectory-"+UUID.randomUUID()+".json"),Json.write(trajectory));
++        }}
++    }
++    @Test void newMeasurementRecordsTokenBackingCanonicalModelAndTotalPeaks() throws Exception {
++        try(var f=new Fixture()){var b=f.seed(0);try(var r=f.open(b,0)){
++            f.source.start();try(var emission=f.reader.readNext(r,0).orElseThrow()){
++                var measured=emission.info().measurements();assertThat(measured.modelReserved()).isPositive().isLessThanOrEqualTo(64L*1024*1024);assertThat(measured.totalReservedPeak()).isLessThanOrEqualTo(192L*1024*1024);assertThat(measured.canonicalActualUtf8Peak()).isPositive().isLessThanOrEqualTo(8L*1024*1024);assertThat(measured.tokens()).isPositive();assertThat(measured.parserBackingChars()).isPositive();
++                var backing=new AtomicInteger();emission.consume(view->{try{view.writePayload(new java.io.OutputStream(){public void write(int c){}@Override public void write(byte[] data){backing.set(data.length);}});}catch(java.io.IOException e){throw new AssertionError(e);}});assertThat(backing.get()).isEqualTo(measured.eventBackingBytes());
++                long parents=0,bytes=0,max=0;var revisions=new ArrayList<Map<String,Object>>();for(String raw:f.source.scopeTexts){var s=RunEventReader.scope(RunEventReader.parse(raw,false,()->{}));parents+=s.parentScopeSha256().size();long length=raw.getBytes(java.nio.charset.StandardCharsets.UTF_8).length;bytes+=length;max=Math.max(max,length);revisions.add(Map.of("kind",s.material().kind(),"locator",s.material().id(),"revision",s.material().version(),"parents",s.parentScopeSha256().size(),"bytes",length));}
++                var report=new LinkedHashMap<String,Object>();report.put("run",b.publicId());report.put("database",DATABASE);report.put("N",15);report.put("A",0);report.put("E",1);report.put("U",0);report.put("D",f.source.scopeTexts.size());report.put("H",parents);report.put("scopeUtf8Bytes",bytes);report.put("maxScopeUtf8Bytes",max);report.put("measurements",measured);report.put("actualEventArrayBacking",backing.get());report.put("revisions",revisions);report.put("accountedOwnerUpperBytes",2*RunEventReader.REPRESENTATION_UPPER_PER_WORKSPACE);report.put("heapMeaning","reserved conservative representations; not measured exact JVM heap");
++                java.nio.file.Files.writeString(java.nio.file.Path.of("..","docs","evidence","iam-stage-4-o2a-b-material-reader","representation-sample-"+UUID.randomUUID()+".json"),Json.write(report));
++            }
++        }}
++    }
++    @Test void realPostgresAggregateBudgetsAcceptExactEightMiBAndRefusePlusOneBeforeText() throws Exception {
++        try(var f=new Fixture()){
++            var evidence=new ArrayList<Map<String,Object>>();
++            for(boolean root:List.of(false,true))for(int extra:List.of(0,1)){
++                var lengths=new ArrayList<Integer>();if(root){lengths.add(4194304);lengths.add(4194304+extra);}else{for(int i=0;i<7;i++)lengths.add(1048576);lengths.add(1048572);lengths.add(4+extra);}
++                var values=lengths.stream().map(n->"\""+"x".repeat(n-2)+"\"").toArray();String from=" from (values "+String.join(",",Collections.nCopies(values.length,"(?::jsonb)"))+") material(value)";
++                f.source.start();var rows=f.db.queryForList("select octet_length(value::text) as bytes,jsonb_typeof(value) as type"+from,values);var limit=new RunEventReader.Limits();long actual=rows.stream().mapToLong(r->((Number)r.get("bytes")).longValue()).sum();assertThat(actual).isEqualTo(8388608+extra);
++                Runnable admit=()->{for(var row:rows)if(root)limit.root(((Number)row.get("bytes")).longValue());else limit.metadata(((Number)row.get("bytes")).longValue());};
++                if(extra==1){capacity(admit,root?"ROOT_BYTES":"METADATA_BYTES");assertThat(f.source.getters).doesNotContain("limited_text");}
++                else{admit.run();var texts=f.db.queryForList("select case when octet_length(value::text)<="+(root?8388608:1048576)+" then value::text end as limited_text"+from,values);assertThat(texts).allSatisfy(row->assertThat(row.get("limited_text")).isNotNull());}
++                evidence.add(Map.of("dimension",root?"ROOT_BYTES":"METADATA_BYTES","actualUtf8Bytes",actual,"extra",extra,"textGetters",f.source.getters.stream().filter(s->s.equals("limited_text")).count()));
++            }
++            java.nio.file.Files.writeString(java.nio.file.Path.of("..","docs","evidence","iam-stage-4-o2a-b-material-reader","aggregate-boundaries-"+UUID.randomUUID()+".json"),Json.write(evidence));
++        }
++    }
++    @Test void pendingCloseWinsBeginAndOnceOnlyConsumerCannotExportOrReuseBorrow() throws Exception {
++        try(var f=new Fixture()){var b=f.seed(0);try(var response=f.open(b,0)){
++            var closed=f.reader.readNext(response,0).orElseThrow();closed.close();deniedRead(()->closed.consume(v->{}));
++            var first=f.reader.readNext(response,0).orElseThrow();var second=f.reader.readNext(response,0).orElseThrow();var borrow=new AtomicReference<RunEventReader.Borrow>();first.consume(borrow::set);deniedRead(()->first.consume(v->{}));deniedRead(()->borrow.get().info());second.close();
++            try(var next=f.reader.readNext(response,0).orElseThrow()){assertThat(next.info().seq()).isEqualTo(1);}
++        }}
++    }
++    @Test void commonRecyclerLargeBuffersDoNotSurviveBFinallyAndOtherThreadsAreUntouched() throws Exception {
++        try(var f=new Fixture()){var b=f.seed(0);try(var response=f.open(b,0);var pool=Executors.newSingleThreadExecutor()){
++            var recycler=com.fasterxml.jackson.core.util.BufferRecyclers.getBufferRecycler();
++            assertThat(Json.mapper().getFactory()._getBufferRecycler()).isSameAs(recycler);
++            assertThat(Json.mapper().copy().getFactory()._getBufferRecycler()).isSameAs(recycler);
++            var ready=new CountDownLatch(1);var release=new CountDownLatch(1);
++            var other=pool.submit(()->{var own=com.fasterxml.jackson.core.util.BufferRecyclers.getBufferRecycler();own.releaseCharBuffer(com.fasterxml.jackson.core.util.BufferRecycler.CHAR_TEXT_BUFFER,new char[262145]);ready.countDown();await(release);return own.allocCharBuffer(com.fasterxml.jackson.core.util.BufferRecycler.CHAR_TEXT_BUFFER).length;});
++            assertThat(ready.await(2,TimeUnit.SECONDS)).isTrue();
++            try{
++                recycler.releaseCharBuffer(com.fasterxml.jackson.core.util.BufferRecycler.CHAR_TEXT_BUFFER,new char[262144]);
++                assertThat(f.reader.readNext(response,1)).isEmpty();
++                assertThat(recycler.allocCharBuffer(com.fasterxml.jackson.core.util.BufferRecycler.CHAR_TEXT_BUFFER)).hasSize(200);
++            }finally{release.countDown();}
++            assertThat(other.get(2,TimeUnit.SECONDS)).isEqualTo(262145);
++        }}
++    }
++}

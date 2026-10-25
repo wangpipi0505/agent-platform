@@ -1,0 +1,16 @@
+**/.git
+.local
+.env
+**/*.env
+**/*secret*
+**/node_modules
+**/target/*
+!**/target/*.jar
+**/dist
+**/*.log
+.tools/*
+!.tools/deployment
+.tools/deployment/*
+!.tools/deployment/opentelemetry-javaagent-2.20.1.jar
+docs
+contracts

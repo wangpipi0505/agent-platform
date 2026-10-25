@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><title>长任务观察恢复组件验证</title></head>
+<body><div id="app"></div><script type="module">
+import { createApp, h } from 'vue';
+import { createPinia } from 'pinia';
+import ElementPlus from 'element-plus';
+import 'element-plus/dist/index.css';
+import '../shared/tokens.css';
+import Chat from '../shared/Chat.vue';
+import { useAuth } from '../shared/api';
+import { init } from '../assistant.js/src/main';
+window.fixtureTickets = 0;
+if (new URLSearchParams(location.search).get('sdk') === '1') {
+  const assistant = init({endpoint:location.origin,appCode:'stream_fixture',
+    ticket:async()=> 'fixture-short-ticket-' + (++window.fixtureTickets)});
+  window.disposeFixture = ()=>assistant.destroy();
+} else {
+  const app = createApp({render:()=>h(Chat,{appCode:'stream_fixture'})});
+  const pinia = createPinia(); app.use(pinia).use(ElementPlus);
+  const auth = useAuth(pinia);auth.token='component-fixture-only';
+  window.fixtureAuth = ()=>auth.token;
+  window.disposeFixture = ()=>app.unmount();
+  app.mount('#app');
+}
+</script></body></html>

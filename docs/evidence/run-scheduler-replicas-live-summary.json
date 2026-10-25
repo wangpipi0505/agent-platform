@@ -1,0 +1,99 @@
+{
+  "actualTwoEngineJvms": true,
+  "freshDatabase": "agent_platform_scheduler_live_4410c11fe3",
+  "artifactSha256": "4fb6f8e3856f73098bac0b8ca6c743f8bbf9ceaf692c6a8c14fce319e6e010e7",
+  "fixtureRowsOnly": true,
+  "providerCalls": 0,
+  "handover": {
+    "runId": "r_scheduler_handover_4410c11fe3",
+    "original": {
+      "owner": "0867709e-0c18-4ab4-b1d5-a52f01e5b072",
+      "generation": 1,
+      "until": "2026-10-20T08:38:33.847498+08:00",
+      "valid": true
+    },
+    "final": {
+      "status": "SUCCEEDED",
+      "generation": 2,
+      "startedEvents": 1,
+      "commits": 2,
+      "attempts": 2
+    },
+    "ownerProcessStopped": true,
+    "dispatchWaitedForRealExpiry": true,
+    "nodeWasNotYetClaimed": true
+  },
+  "fairness": {
+    "liveHeadRows": 101,
+    "readyTailRows": 200,
+    "cohort": {
+      "total": 200,
+      "succeeded": 200,
+      "failed": 0,
+      "maxGeneration": 1
+    },
+    "uniqueness": {
+      "starts": 200,
+      "commits": 400,
+      "attempts": 400,
+      "workerOwners": 2,
+      "headAttempts": 0
+    }
+  },
+  "upstreamReads": 2,
+  "httpChecks": [
+    {
+      "port": 18086,
+      "runId": "r_525e8b0e7afe4908ae3104c5630f5fbe",
+      "capacityRejectionsBeforeAcceptance": 0,
+      "acceptedStatus": "RUNNING",
+      "finalStatus": "SUCCEEDED"
+    },
+    {
+      "port": 18087,
+      "runId": "r_518454fecfbe4f248c60eb12f86b4ace",
+      "capacityRejectionsBeforeAcceptance": 0,
+      "acceptedStatus": "RUNNING",
+      "finalStatus": "SUCCEEDED"
+    }
+  ],
+  "processRecords": [
+    {
+      "pid": 58892,
+      "port": 18086,
+      "jar": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\artifacts\\schema-scheduler-20261020-0830\\engine-runtime.jar",
+      "database": "agent_platform_scheduler_live_4410c11fe3",
+      "outPath": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\logs\\scheduler-live-4410c11fe3-18086-0.out.log",
+      "errPath": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\logs\\scheduler-live-4410c11fe3-18086-0.err.log",
+      "owner": "0867709e-0c18-4ab4-b1d5-a52f01e5b072",
+      "stopped": true
+    },
+    {
+      "pid": 21032,
+      "port": 18087,
+      "jar": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\artifacts\\schema-scheduler-20261020-0830\\engine-runtime.jar",
+      "database": "agent_platform_scheduler_live_4410c11fe3",
+      "outPath": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\logs\\scheduler-live-4410c11fe3-18087-1.out.log",
+      "errPath": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\logs\\scheduler-live-4410c11fe3-18087-1.err.log",
+      "owner": "869a9f15-d8b2-4a62-aae3-fc4c2f1eb554"
+    },
+    {
+      "pid": 47224,
+      "port": 18086,
+      "jar": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\artifacts\\schema-scheduler-20261020-0830\\engine-runtime.jar",
+      "database": "agent_platform_scheduler_live_4410c11fe3",
+      "outPath": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\logs\\scheduler-live-4410c11fe3-18086-2.out.log",
+      "errPath": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\logs\\scheduler-live-4410c11fe3-18086-2.err.log",
+      "owner": "503475b9-bcf6-4b1f-ac20-59dd4df89168"
+    }
+  ],
+  "exclusions": [
+    "provider cancellation",
+    "in-flight node lease takeover",
+    "distributed resource permits",
+    "capacity benchmark",
+    "graceful OS stop"
+  ],
+  "rawSha256": "7198ed29918fa43c6270fed89d2d96fc30ef3f05995c9c874470e94908586a42",
+  "logSha256": "af7ccc10444bf911be600a9d307513ef0060c271c44d406c98ad4e1a9a1bcfb4"
+}

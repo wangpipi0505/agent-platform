@@ -1,0 +1,17 @@
+{
+  "phase": "first finalize after final03 archive, before immutable final source freeze existed",
+  "observedExecExitCode": 1,
+  "error": {
+    "code": "ENOENT",
+    "errno": -4058,
+    "syscall": "open",
+    "path": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\iam-stage-5-n2-owned-flow\\iam-stage-5-n2-final03\\manifest.json",
+    "sourceLocation": ".local/iam-n2-owned-flow/finalize.mjs:15:30"
+  },
+  "recordKind": "structured transcription of the actual tool-returned failure; original full output remains in this task tool transcript",
+  "notAReproductionRun": true,
+  "cause": "archive helper used iam-stage-5-n2-flow-material-status instead of authorized iam-stage-5-n2-owned-flow",
+  "recovery": "relocation.json with per-file native rename mapping and SHA equality; original manifests/raw preserved",
+  "productionAndTargetChangedByRecovery": false,
+  "mavenRerun": false
+}

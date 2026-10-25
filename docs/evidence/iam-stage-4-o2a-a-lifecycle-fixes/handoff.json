@@ -1,0 +1,105 @@
+{
+  "status": "IMPLEMENTED_VERIFIED_PENDING_NARROW_REVIEW_AND_ROOT_AUDIT",
+  "allWriteRightsReturned": true,
+  "stopWritingAfterThisHandoff": true,
+  "report": {
+    "file": "docs/evidence/iam-stage-4-o2a-a-lifecycle-fixes-report.md",
+    "bytes": 13443,
+    "sha256": "0bdb36435d7e1323c2818d18e779edbd6e59a62f662a5420ba8cd09b911e6f55"
+  },
+  "source": {
+    "file": "docs/evidence/iam-stage-4-o2a-a-lifecycle-fixes/source-after.json",
+    "bytes": 111999,
+    "sha256": "3ad9c38b06e8ddc637f6ef4a36a5c2e474d15cf306ba1af341a3d6fad01ae7e4"
+  },
+  "target": {
+    "file": "docs/evidence/iam-stage-4-o2a-a-lifecycle-fixes/final/target-after.json",
+    "bytes": 419611,
+    "sha256": "b5bedc4fe8a66f1e4ee171adafd823d72cae3fb576e2e8e3358b82a827e2a335"
+  },
+  "targetLineage": {
+    "file": "docs/evidence/iam-stage-4-o2a-a-lifecycle-fixes/final/target-lineage.json",
+    "bytes": 4121,
+    "sha256": "5fffe76826db77cfca03b3eb544952e8595f733eecc2f150e6e83be19d1dadd8"
+  },
+  "inventory": {
+    "file": "docs/evidence/iam-stage-4-o2a-a-lifecycle-fixes/inventory.json",
+    "bytes": 472808,
+    "sha256": "14a2cb8393f0303d37b77a374c4ab65eafb4eaf9f71f44371a1ea066dc4634ff"
+  },
+  "patch": {
+    "file": "docs/evidence/iam-stage-4-o2a-a-lifecycle-fixes/lifecycle-fixes.patch",
+    "bytes": 31121,
+    "sha256": "24db27119ab4e366003781433b414bf5d290d090749fcada3bf1724d2f83e4bc"
+  },
+  "replay": {
+    "file": "docs/evidence/iam-stage-4-o2a-a-lifecycle-fixes/freeze/replay.json",
+    "bytes": 688,
+    "sha256": "693b6020c390f71130b03fb64041a0405c1e5ee84b536aa23099e37746988ed6"
+  },
+  "replaySource": {
+    "file": "docs/evidence/iam-stage-4-o2a-a-lifecycle-fixes/replay-source.json",
+    "bytes": 111999,
+    "sha256": "3ad9c38b06e8ddc637f6ef4a36a5c2e474d15cf306ba1af341a3d6fad01ae7e4"
+  },
+  "commands": {
+    "file": "docs/evidence/iam-stage-4-o2a-a-lifecycle-fixes/commands.json",
+    "bytes": 5514,
+    "sha256": "7728ed641171cee61d0169a9154e8e23fd5038b15d8ad5b1d9092f02df0909ab"
+  },
+  "finalActualRunning": {
+    "file": "docs/evidence/iam-stage-4-o2a-a-lifecycle-fixes/iam-stage-o2a-a-fix-final01/after/actual-running.json",
+    "bytes": 163,
+    "sha256": "e12fca78098bebc8fa336b62e24ad053dc50d2e2548385e7acc629c781b532ee"
+  },
+  "metadataFailures": {
+    "file": "docs/evidence/iam-stage-4-o2a-a-lifecycle-fixes/metadata-failures.json",
+    "bytes": 2578,
+    "sha256": "08d8789acd867de66794200dc2e2b32e7da60df4dc28e9965b13520ca94e9776"
+  },
+  "metadataCorrection": {
+    "file": "docs/evidence/iam-stage-4-o2a-a-lifecycle-fixes/final/target-metadata-correction.json",
+    "bytes": 1658,
+    "sha256": "b2287789990ac70f54d4cf1866b3501cccd0d46b84f75e8cafa4f71a9ccbcf25"
+  },
+  "diagnostics": {
+    "file": "docs/evidence/iam-stage-4-o2a-a-lifecycle-fixes/diagnostic-attribution.json",
+    "bytes": 1407,
+    "sha256": "039651eb6cef4fa3181c0de43c7917ca6bf6975fa6cc73276aafa4702658a69d"
+  },
+  "sourceFiles": [
+    {
+      "file": "admin-common/src/main/java/cn/agentplatform/common/authority/HttpCurrentAuthorityClient.java",
+      "bytes": 72236,
+      "sha256": "1636a6c3388d3eb7f3dae55ce36f00be488f64768fcb6d087b89db51979e6b0b"
+    },
+    {
+      "file": "admin-common/src/main/java/cn/agentplatform/common/authority/PortalEventsResponse.java",
+      "bytes": 6338,
+      "sha256": "042ca6ff04bb7076dde3ae7a2dfcd9467945274ca95846c2f20b8c81658ac6c6"
+    },
+    {
+      "file": "admin-common/src/test/java/cn/agentplatform/common/authority/PortalEventsAuthorityProfileTest.java",
+      "bytes": 51138,
+      "sha256": "dcf8f89d690599a8287f838550e47ddb1c0969b1314e88411ced34b1d922b988"
+    }
+  ],
+  "modified": 3,
+  "added": 0,
+  "deleted": 0,
+  "sourceCount": 589,
+  "logicalTarget": 2023,
+  "finalTests": {
+    "classes": 1,
+    "methods": 28,
+    "pass": 28,
+    "failures": 0,
+    "errors": 0
+  },
+  "original85Tests": "72PASS/13ERROR unchanged; later original green04 Profile22/22 inherited separately",
+  "finalFixtureUnchanged": true,
+  "receiverClosedNotRerun": true,
+  "resourcesExited": true,
+  "accepted": false,
+  "EOF": true
+}

@@ -1,0 +1,74 @@
+[
+  {
+    "name": "late chart dynamic import does not restore old workspace or busy state",
+    "passed": true,
+    "rawStart": 0,
+    "rawEnd": 4,
+    "oldWorkspaceUnmounted": true,
+    "newBusy": false
+  },
+  {
+    "name": "empty roles authenticate without admin controls, expiry and unmount never auto reconnect",
+    "passed": true,
+    "rawStart": 4,
+    "rawEnd": 6,
+    "emptyRoles": true,
+    "expired": true,
+    "hostCalls": 1,
+    "unsubscribed": 1
+  },
+  {
+    "name": "RunDetail stops HTTP 401 without retry or cancel",
+    "passed": true,
+    "rawStart": 6,
+    "rawEnd": 10,
+    "consumer": "RunDetail",
+    "status": 401,
+    "requestsStable": true
+  },
+  {
+    "name": "RunDetail stops HTTP 403 without retry or cancel",
+    "passed": true,
+    "rawStart": 10,
+    "rawEnd": 14,
+    "consumer": "RunDetail",
+    "status": 403,
+    "requestsStable": true
+  },
+  {
+    "name": "DebugPanel stops HTTP 401 without retry or cancel",
+    "passed": true,
+    "rawStart": 14,
+    "rawEnd": 21,
+    "consumer": "DebugPanel",
+    "status": 401,
+    "requestsStable": true
+  },
+  {
+    "name": "DebugPanel stops HTTP 403 without retry or cancel",
+    "passed": true,
+    "rawStart": 21,
+    "rawEnd": 28,
+    "consumer": "DebugPanel",
+    "status": 403,
+    "requestsStable": true
+  },
+  {
+    "name": "RunDetail ordinary dependency 503 retains status/reopen recovery",
+    "passed": true,
+    "rawStart": 28,
+    "rawEnd": 34,
+    "consumer": "RunDetail",
+    "ordinary503Retried": true,
+    "cancelCount": 0
+  },
+  {
+    "name": "DebugPanel ordinary dependency 503 retains status/reopen recovery",
+    "passed": true,
+    "rawStart": 34,
+    "rawEnd": 43,
+    "consumer": "DebugPanel",
+    "ordinary503Retried": true,
+    "cancelCount": 0
+  }
+]

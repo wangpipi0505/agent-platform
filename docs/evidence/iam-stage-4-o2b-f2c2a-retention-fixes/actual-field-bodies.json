@@ -1,0 +1,758 @@
+[
+  {
+    "name": "PortalRunEventsSse$Handle",
+    "instanceFields": [
+      {
+        "name": "state",
+        "type": "cn.agentplatform.gateway.infra.PortalRunEventsSse$State",
+        "bytes": 8
+      },
+      {
+        "name": "after",
+        "type": "long",
+        "bytes": 8
+      },
+      {
+        "name": "terminal",
+        "type": "boolean",
+        "bytes": 1
+      },
+      {
+        "name": "sessionAttempted",
+        "type": "boolean",
+        "bytes": 1
+      },
+      {
+        "name": "stateAttempted",
+        "type": "boolean",
+        "bytes": 1
+      }
+    ],
+    "header": 16,
+    "inheritedReferenceFields": 0,
+    "conservativeBody": 40
+  },
+  {
+    "name": "PortalRunEventsSse$HandleReference",
+    "instanceFields": [
+      {
+        "name": "index",
+        "type": "int",
+        "bytes": 4
+      }
+    ],
+    "header": 16,
+    "inheritedReferenceFields": 32,
+    "conservativeBody": 56
+  },
+  {
+    "name": "PortalRunEventsSse$State",
+    "instanceFields": [
+      {
+        "name": "cell",
+        "type": "java.lang.Object",
+        "bytes": 8
+      },
+      {
+        "name": "io",
+        "type": "java.lang.Object",
+        "bytes": 8
+      },
+      {
+        "name": "token",
+        "type": "cn.agentplatform.gateway.infra.PortalRunEventsSse$RequestSlot",
+        "bytes": 8
+      },
+      {
+        "name": "handle",
+        "type": "cn.agentplatform.gateway.infra.PortalRunEventsSse$Handle",
+        "bytes": 8
+      },
+      {
+        "name": "probe",
+        "type": "java.lang.Long>",
+        "bytes": 8
+      },
+      {
+        "name": "session",
+        "type": "cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session",
+        "bytes": 8
+      },
+      {
+        "name": "lease",
+        "type": "cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session$SseLease",
+        "bytes": 8
+      },
+      {
+        "name": "async",
+        "type": "jakarta.servlet.AsyncContext",
+        "bytes": 8
+      },
+      {
+        "name": "output",
+        "type": "jakarta.servlet.ServletOutputStream",
+        "bytes": 8
+      },
+      {
+        "name": "frame",
+        "type": "cn.agentplatform.gateway.infra.PortalRunEventsSse$Frame",
+        "bytes": 8
+      },
+      {
+        "name": "worker",
+        "type": "java.lang.Thread",
+        "bytes": 8
+      },
+      {
+        "name": "slot",
+        "type": "cn.agentplatform.gateway.infra.PortalEventsMaterialVerifier$VerifiedWindow",
+        "bytes": 8
+      },
+      {
+        "name": "deadline",
+        "type": "long",
+        "bytes": 8
+      },
+      {
+        "name": "idleDeadline",
+        "type": "long",
+        "bytes": 8
+      },
+      {
+        "name": "after",
+        "type": "long",
+        "bytes": 8
+      },
+      {
+        "name": "installed",
+        "type": "boolean",
+        "bytes": 1
+      },
+      {
+        "name": "stopping",
+        "type": "boolean",
+        "bytes": 1
+      },
+      {
+        "name": "abortIssued",
+        "type": "boolean",
+        "bytes": 1
+      },
+      {
+        "name": "eof",
+        "type": "boolean",
+        "bytes": 1
+      },
+      {
+        "name": "completed",
+        "type": "boolean",
+        "bytes": 1
+      },
+      {
+        "name": "completeRequested",
+        "type": "boolean",
+        "bytes": 1
+      },
+      {
+        "name": "finalizing",
+        "type": "boolean",
+        "bytes": 1
+      },
+      {
+        "name": "finished",
+        "type": "boolean",
+        "bytes": 1
+      },
+      {
+        "name": "terminal",
+        "type": "boolean",
+        "bytes": 1
+      },
+      {
+        "name": "statusSent",
+        "type": "boolean",
+        "bytes": 1
+      },
+      {
+        "name": "event",
+        "type": "boolean",
+        "bytes": 1
+      },
+      {
+        "name": "done",
+        "type": "boolean",
+        "bytes": 1
+      },
+      {
+        "name": "frameDone",
+        "type": "boolean",
+        "bytes": 1
+      },
+      {
+        "name": "attempted",
+        "type": "boolean",
+        "bytes": 1
+      },
+      {
+        "name": "flushed",
+        "type": "boolean",
+        "bytes": 1
+      },
+      {
+        "name": "offset",
+        "type": "int",
+        "bytes": 4
+      },
+      {
+        "name": "heavy",
+        "type": "int",
+        "bytes": 4
+      },
+      {
+        "name": "actions",
+        "type": "int",
+        "bytes": 4
+      }
+    ],
+    "header": 16,
+    "inheritedReferenceFields": 0,
+    "conservativeBody": 168
+  },
+  {
+    "name": "PortalRunEventsSse$RequestSlot",
+    "instanceFields": [
+      {
+        "name": "response",
+        "type": "org.apache.catalina.connector.Response",
+        "bytes": 8
+      },
+      {
+        "name": "origin",
+        "type": "cn.agentplatform.gateway.infra.PortalRunEventsSse$WrappedProcessor",
+        "bytes": 8
+      },
+      {
+        "name": "originalSocket",
+        "type": "org.apache.tomcat.util.net.SocketWrapperBase<?>",
+        "bytes": 8
+      },
+      {
+        "name": "state",
+        "type": "cn.agentplatform.gateway.infra.PortalRunEventsSse$State",
+        "bytes": 8
+      },
+      {
+        "name": "requestThread",
+        "type": "java.lang.Thread",
+        "bytes": 8
+      },
+      {
+        "name": "armed",
+        "type": "boolean",
+        "bytes": 1
+      },
+      {
+        "name": "used",
+        "type": "boolean",
+        "bytes": 1
+      },
+      {
+        "name": "claimed",
+        "type": "boolean",
+        "bytes": 1
+      }
+    ],
+    "header": 16,
+    "inheritedReferenceFields": 0,
+    "conservativeBody": 64
+  },
+  {
+    "name": "PortalRunEventsSse$WrappedProcessor",
+    "instanceFields": [
+      {
+        "name": "protocol",
+        "type": "cn.agentplatform.gateway.infra.PortalRunEventsSse$ControlledProtocol",
+        "bytes": 8
+      },
+      {
+        "name": "delegate",
+        "type": "org.apache.coyote.Processor",
+        "bytes": 8
+      },
+      {
+        "name": "id",
+        "type": "long",
+        "bytes": 8
+      },
+      {
+        "name": "socket",
+        "type": "org.apache.tomcat.util.net.SocketWrapperBase<?>",
+        "bytes": 8
+      },
+      {
+        "name": "slot",
+        "type": "cn.agentplatform.gateway.infra.PortalRunEventsSse$RequestSlot",
+        "bytes": 8
+      }
+    ],
+    "header": 16,
+    "inheritedReferenceFields": 0,
+    "conservativeBody": 56
+  },
+  {
+    "name": "PortalRunEventsSse$SlotReference",
+    "instanceFields": [
+      {
+        "name": "index",
+        "type": "int",
+        "bytes": 4
+      }
+    ],
+    "header": 16,
+    "inheritedReferenceFields": 32,
+    "conservativeBody": 56
+  },
+  {
+    "name": "PortalRunEventsSse$ControlledProtocol",
+    "instanceFields": [
+      {
+        "name": "creations",
+        "type": "long",
+        "bytes": 8
+      },
+      {
+        "name": "recycles",
+        "type": "long",
+        "bytes": 8
+      },
+      {
+        "name": "processes",
+        "type": "long",
+        "bytes": 8
+      },
+      {
+        "name": "lastProcessor",
+        "type": "long",
+        "bytes": 8
+      },
+      {
+        "name": "allocations",
+        "type": "long",
+        "bytes": 8
+      },
+      {
+        "name": "returned",
+        "type": "long",
+        "bytes": 8
+      },
+      {
+        "name": "references",
+        "type": "java.lang.ref.Reference<?>[]",
+        "bytes": 8
+      },
+      {
+        "name": "slots",
+        "type": "byte[]",
+        "bytes": 8
+      },
+      {
+        "name": "queue",
+        "type": "java.lang.ref.ReferenceQueue<java.lang.Object>",
+        "bytes": 8
+      },
+      {
+        "name": "corrupt",
+        "type": "boolean",
+        "bytes": 1
+      },
+      {
+        "name": "failurePoint",
+        "type": "int",
+        "bytes": 4
+      },
+      {
+        "name": "handleFailurePoint",
+        "type": "int",
+        "bytes": 4
+      },
+      {
+        "name": "handleAllocations",
+        "type": "long",
+        "bytes": 8
+      },
+      {
+        "name": "handleReturned",
+        "type": "long",
+        "bytes": 8
+      },
+      {
+        "name": "processorReturned",
+        "type": "long",
+        "bytes": 8
+      }
+    ],
+    "header": 16,
+    "inheritedReferenceFields": 0,
+    "conservativeBody": 128
+  },
+  {
+    "name": "PortalRunEventsSse$Bridge",
+    "instanceFields": [
+      {
+        "name": "threads",
+        "type": "java.lang.Thread[]",
+        "bytes": 8
+      },
+      {
+        "name": "processors",
+        "type": "cn.agentplatform.gateway.infra.PortalRunEventsSse$WrappedProcessor[]",
+        "bytes": 8
+      }
+    ],
+    "header": 16,
+    "inheritedReferenceFields": 0,
+    "conservativeBody": 32
+  },
+  {
+    "name": "PortalRunEventsHttp$Session",
+    "instanceFields": [
+      {
+        "name": "lifecycleAnchor",
+        "type": "cn.agentplatform.gateway.infra.PortalRunEventsSse$Handle",
+        "bytes": 8
+      },
+      {
+        "name": "tls",
+        "type": "cn.agentplatform.gateway.infra.PortalEventsTls",
+        "bytes": 8
+      },
+      {
+        "name": "owner",
+        "type": "cn.agentplatform.gateway.infra.PortalEventsPacketBudget$Owner",
+        "bytes": 8
+      },
+      {
+        "name": "fee",
+        "type": "cn.agentplatform.gateway.infra.PortalEventsPacketBudget$Reservation",
+        "bytes": 8
+      },
+      {
+        "name": "opening",
+        "type": "cn.agentplatform.common.authority.HttpCurrentAuthorityClient$GatewayEventsOpening",
+        "bytes": 8
+      },
+      {
+        "name": "query",
+        "type": "cn.agentplatform.common.authority.HttpCurrentAuthorityClient$GatewayObservationQueryAuthorization",
+        "bytes": 8
+      },
+      {
+        "name": "authority",
+        "type": "cn.agentplatform.common.authority.CurrentAuthorityClient",
+        "bytes": 8
+      },
+      {
+        "name": "originalPortalSource",
+        "type": "java.lang.String",
+        "bytes": 8
+      },
+      {
+        "name": "privateFee",
+        "type": "cn.agentplatform.gateway.infra.PortalEventsPacketBudget$Reservation",
+        "bytes": 8
+      },
+      {
+        "name": "saved",
+        "type": "cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session$SavedFacts",
+        "bytes": 8
+      },
+      {
+        "name": "gatewayResponse",
+        "type": "cn.agentplatform.common.authority.GatewayPortalEventsResponse",
+        "bytes": 8
+      },
+      {
+        "name": "child",
+        "type": "cn.agentplatform.common.authority.HttpCurrentAuthorityClient$PortalEventsChildAuthorization",
+        "bytes": 8
+      },
+      {
+        "name": "decoder",
+        "type": "cn.agentplatform.gateway.infra.PortalEventsPacketDecoder",
+        "bytes": 8
+      },
+      {
+        "name": "privateInput",
+        "type": "java.io.InputStream",
+        "bytes": 8
+      },
+      {
+        "name": "qReady",
+        "type": "boolean",
+        "bytes": 1
+      },
+      {
+        "name": "privateUsed",
+        "type": "boolean",
+        "bytes": 1
+      },
+      {
+        "name": "privatePhase",
+        "type": "boolean",
+        "bytes": 1
+      },
+      {
+        "name": "bodyPhase",
+        "type": "boolean",
+        "bytes": 1
+      },
+      {
+        "name": "alarmEpoch",
+        "type": "long",
+        "bytes": 8
+      },
+      {
+        "name": "t0",
+        "type": "long",
+        "bytes": 8
+      },
+      {
+        "name": "openingDeadline",
+        "type": "long",
+        "bytes": 8
+      },
+      {
+        "name": "lifetimeDeadline",
+        "type": "long",
+        "bytes": 8
+      },
+      {
+        "name": "hopDeadline",
+        "type": "long",
+        "bytes": 8
+      },
+      {
+        "name": "used",
+        "type": "boolean",
+        "bytes": 1
+      },
+      {
+        "name": "active",
+        "type": "boolean",
+        "bytes": 1
+      },
+      {
+        "name": "stopped",
+        "type": "boolean",
+        "bytes": 1
+      },
+      {
+        "name": "closing",
+        "type": "boolean",
+        "bytes": 1
+      },
+      {
+        "name": "closed",
+        "type": "boolean",
+        "bytes": 1
+      },
+      {
+        "name": "transportClean",
+        "type": "boolean",
+        "bytes": 1
+      },
+      {
+        "name": "cleanupActive",
+        "type": "boolean",
+        "bytes": 1
+      },
+      {
+        "name": "operationThread",
+        "type": "java.lang.Thread",
+        "bytes": 8
+      },
+      {
+        "name": "handle",
+        "type": "cn.agentplatform.gateway.infra.PortalEventsTlsConnection",
+        "bytes": 8
+      },
+      {
+        "name": "raw",
+        "type": "java.net.Socket",
+        "bytes": 8
+      },
+      {
+        "name": "ssl",
+        "type": "javax.net.ssl.SSLSocket",
+        "bytes": 8
+      },
+      {
+        "name": "sslId",
+        "type": "byte[]",
+        "bytes": 8
+      },
+      {
+        "name": "request",
+        "type": "org.apache.hc.client5.http.classic.methods.HttpGet",
+        "bytes": 8
+      },
+      {
+        "name": "context",
+        "type": "org.apache.hc.client5.http.protocol.HttpClientContext",
+        "bytes": 8
+      },
+      {
+        "name": "manager",
+        "type": "org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager",
+        "bytes": 8
+      },
+      {
+        "name": "client",
+        "type": "org.apache.hc.client5.http.impl.classic.CloseableHttpClient",
+        "bytes": 8
+      },
+      {
+        "name": "facts",
+        "type": "cn.agentplatform.gateway.application.RunObservationMetadataClient$EventsMetadata",
+        "bytes": 8
+      },
+      {
+        "name": "connection",
+        "type": "org.apache.hc.client5.http.io.ManagedHttpClientConnection",
+        "bytes": 8
+      },
+      {
+        "name": "timer",
+        "type": "java.util.concurrent.ScheduledThreadPoolExecutor",
+        "bytes": 8
+      },
+      {
+        "name": "alarm",
+        "type": "java.util.concurrent.ScheduledFuture<?>",
+        "bytes": 8
+      },
+      {
+        "name": "guards",
+        "type": "cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session>",
+        "bytes": 8
+      },
+      {
+        "name": "beforeOutputForTest",
+        "type": "java.lang.Runnable",
+        "bytes": 8
+      },
+      {
+        "name": "identityMatched",
+        "type": "boolean",
+        "bytes": 1
+      },
+      {
+        "name": "materialChild",
+        "type": "java.lang.String",
+        "bytes": 8
+      },
+      {
+        "name": "materialCheckpointForTest",
+        "type": "java.lang.Integer>",
+        "bytes": 8
+      },
+      {
+        "name": "sseLease",
+        "type": "cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session$SseLease",
+        "bytes": 8
+      },
+      {
+        "name": "publicAfter",
+        "type": "long",
+        "bytes": 8
+      }
+    ],
+    "header": 16,
+    "inheritedReferenceFields": 0,
+    "conservativeBody": 336
+  },
+  {
+    "name": "PortalRunEventsHttp$Session$SseLease",
+    "instanceFields": [
+      {
+        "name": "charge",
+        "type": "cn.agentplatform.gateway.infra.PortalEventsPacketBudget$Reservation",
+        "bytes": 8
+      },
+      {
+        "name": "released",
+        "type": "boolean",
+        "bytes": 1
+      },
+      {
+        "name": "cancellation",
+        "type": "java.lang.Runnable",
+        "bytes": 8
+      },
+      {
+        "name": "exit",
+        "type": "java.lang.Boolean>",
+        "bytes": 8
+      },
+      {
+        "name": "this$0",
+        "type": "cn.agentplatform.gateway.infra.PortalRunEventsHttp$Session",
+        "bytes": 8
+      }
+    ],
+    "header": 16,
+    "inheritedReferenceFields": 0,
+    "conservativeBody": 56
+  },
+  {
+    "name": "PortalEventsPacketBudget$Owner",
+    "instanceFields": [
+      {
+        "name": "budget",
+        "type": "cn.agentplatform.gateway.infra.PortalEventsPacketBudget",
+        "bytes": 8
+      },
+      {
+        "name": "reserved",
+        "type": "long",
+        "bytes": 8
+      },
+      {
+        "name": "closed",
+        "type": "boolean",
+        "bytes": 1
+      },
+      {
+        "name": "claimed",
+        "type": "boolean",
+        "bytes": 1
+      },
+      {
+        "name": "decoder",
+        "type": "cn.agentplatform.gateway.infra.PortalEventsPacketDecoder",
+        "bytes": 8
+      }
+    ],
+    "header": 16,
+    "inheritedReferenceFields": 0,
+    "conservativeBody": 48
+  },
+  {
+    "name": "PortalEventsPacketBudget$Reservation",
+    "instanceFields": [
+      {
+        "name": "owner",
+        "type": "cn.agentplatform.gateway.infra.PortalEventsPacketBudget$Owner",
+        "bytes": 8
+      },
+      {
+        "name": "bytes",
+        "type": "long",
+        "bytes": 8
+      }
+    ],
+    "header": 16,
+    "inheritedReferenceFields": 0,
+    "conservativeBody": 32
+  }
+]

@@ -1,0 +1,118 @@
+{
+  "schema": "iam-o1b-review-fixes-handoff-v1",
+  "status": "DONE; requires independent re-review/root audit",
+  "frozenAtUtc": "2026-10-20T22:34:13.781Z",
+  "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+  "source": {
+    "count": 579,
+    "totalBytes": 4885507,
+    "deltaCount": 2,
+    "manifest": {
+      "file": "docs/evidence/iam-stage-4-o1b-review-fixes/source-after.json",
+      "bytes": 109789,
+      "sha256": "d5fd1b495a0a447b6a786d47869c590dca18908f488401dddb149b73afc88648"
+    },
+    "delta": {
+      "file": "docs/evidence/iam-stage-4-o1b-review-fixes/source-delta.json",
+      "bytes": 430,
+      "sha256": "c1b334b70953f2b64a8c9066f871315bcf08ff01b96fd83b093b957bd28254a7"
+    }
+  },
+  "target": {
+    "count": 1972,
+    "totalBytes": 325254275,
+    "inheritedBaseCount": 1968,
+    "candidateCount": 234,
+    "deltaCount": 16,
+    "manifest": {
+      "file": "docs/evidence/iam-stage-4-o1b-review-fixes/target-after.json",
+      "bytes": 407584,
+      "sha256": "bc35d56e8de50731422e17f2a2fbfe176aa8ecf3b48478a5832fe92f147a189c"
+    },
+    "delta": {
+      "file": "docs/evidence/iam-stage-4-o1b-review-fixes/target-delta.json",
+      "bytes": 3686,
+      "sha256": "ddbff41226f43b2b4df6ebb067ef8177e4e2efda3e83d9e33abadf055f4ea9b6"
+    },
+    "candidates": {
+      "file": "docs/evidence/iam-stage-4-o1b-review-fixes/target-candidates.json",
+      "bytes": 51065,
+      "sha256": "a7934a81da7366db2b6ced62a4225b118b946471893fed208aa52385ef1147b2"
+    }
+  },
+  "inventory": {
+    "count": 86,
+    "totalBytes": 3073742,
+    "manifest": {
+      "file": "docs/evidence/iam-stage-4-o1b-review-fixes/inventory.json",
+      "bytes": 18905,
+      "sha256": "5908231b5e0ed1c8bc02839c243631b070d4177037b7cf1b7804c04e30d9da25"
+    },
+    "excludedSelfReferences": [
+      "docs/evidence/iam-stage-4-o1b-review-fixes/inventory.json",
+      "docs/evidence/iam-stage-4-o1b-review-fixes/handoff.json"
+    ]
+  },
+  "report": {
+    "file": "docs/evidence/iam-stage-4-o1b-review-fixes-report.md",
+    "bytes": 11000,
+    "sha256": "c08043623434c9beb8123bb01b20e0bd37c5a50c64a75cfd700cb3df0f91cc6d"
+  },
+  "patch": {
+    "file": "docs/evidence/iam-stage-4-o1b-review-fixes/source.patch",
+    "bytes": 29728,
+    "sha256": "48c7f98c2cc221f03b2718dbbb179f997c418e04748c1ae473731498be1b6b26"
+  },
+  "commands": {
+    "file": "docs/evidence/iam-stage-4-o1b-review-fixes/commands.json",
+    "bytes": 3173,
+    "sha256": "ec68dbe12d8d5314e1ae39036ba14ede8d245ba5f1edd23f491d2f938d839503"
+  },
+  "coverage": {
+    "file": "docs/evidence/iam-stage-4-o1b-review-fixes/last-applicable-coverage.json",
+    "bytes": 1279,
+    "sha256": "62268d6060799f028b98eda6877537318e6e38be5787f8c9007bbd647c952f8e"
+  },
+  "replay": {
+    "file": "docs/evidence/iam-stage-4-o1b-review-fixes/replay-summary.json",
+    "bytes": 933,
+    "sha256": "0b1580f8341f0610370ad285ef45341260746d8b0496033994a2e89059e5fb57"
+  },
+  "resources": {
+    "file": "docs/evidence/iam-stage-4-o1b-review-fixes/resources.json",
+    "bytes": 601,
+    "sha256": "1321c6ecabd79d7bbae7b29a2490273c82c6272d552cc03b7b319b48a5d083c2"
+  },
+  "historicalCorrection": {
+    "file": "docs/evidence/iam-stage-4-o1b-review-fixes/historical-evidence-supplement.md",
+    "bytes": 2623,
+    "sha256": "c0fdde570952f1e3301b621ad282cab4cd6b74f47736f18caf76900b52358218"
+  },
+  "tests": {
+    "red01": {
+      "tests": 2,
+      "failures": 2,
+      "errors": 0,
+      "skipped": 0
+    },
+    "final01": {
+      "tests": 19,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "ownershipReturned": [
+    "all source579 and source delta2",
+    "all applicable targets and target delta16",
+    "own .local/iam-o1b-review-fixes plus actual new stage logs",
+    "own evidence directory/report"
+  ],
+  "limits": [
+    "M3 retained deprecated decorator/encoding and existing compile diagnostics",
+    "M4 individual post-digest relationship branches remain uncovered",
+    "M5 untouched TraceStore/RunService readability debt",
+    "No full public IAM admission/O1c/O2/fullBoot/global approval"
+  ],
+  "commitsCreated": 0
+}

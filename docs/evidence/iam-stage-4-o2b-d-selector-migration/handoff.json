@@ -1,0 +1,144 @@
+{
+  "status": "AUTHOR_COMPLETE_FROZEN_REVIEW_PENDING",
+  "sourceBefore": {
+    "count": 603,
+    "schema": {
+      "type": "array",
+      "entry": {
+        "file": "project-relative path",
+        "bytes": "integer",
+        "sha256": "hex SHA256"
+      }
+    },
+    "file": ".local/iam-o2b-d-selector-migration/source-before.json",
+    "bytes": 115043,
+    "sha256": "ab4a97cab7548de056a5548e129b49c6e19c0c4692ac82fa8f4857e19ec0087c"
+  },
+  "sourceAfter": {
+    "count": 603,
+    "schema": {
+      "type": "array",
+      "entry": {
+        "file": "project-relative path",
+        "bytes": "integer",
+        "sha256": "hex SHA256"
+      }
+    },
+    "file": ".local/iam-o2b-d-selector-migration/source-after.json",
+    "bytes": 115043,
+    "sha256": "ab0310201aff0a59e87f73b0692bf6e89b050591d7f33c2b4f099da3a97283c4"
+  },
+  "targetBefore": {
+    "count": 2118,
+    "schema": {
+      "type": "array",
+      "entry": {
+        "file": "project-relative path",
+        "bytes": "integer",
+        "sha256": "hex SHA256"
+      }
+    },
+    "file": ".local/iam-o2b-d-selector-migration/target-before.json",
+    "bytes": 441041,
+    "sha256": "5f425586d177676f2a205b5330ef9ffa63ef21ce9fd1cdd2405529aef6ce1191"
+  },
+  "targetAfter": {
+    "count": 2118,
+    "schema": {
+      "type": "array",
+      "entry": {
+        "file": "project-relative path",
+        "bytes": "integer",
+        "sha256": "hex SHA256"
+      }
+    },
+    "file": ".local/iam-o2b-d-selector-migration/target-after.json",
+    "bytes": 441041,
+    "sha256": "f04cd892a8842083b1d546795a5ce146aa3b4edec794f90f3fa0f2e58035a893"
+  },
+  "finiteTargetOverlay": {
+    "count": 203,
+    "schema": {
+      "type": "array",
+      "entry": {
+        "file": "project-relative path",
+        "bytes": "integer",
+        "sha256": "hex SHA256"
+      }
+    },
+    "file": ".local/iam-o2b-d-selector-migration/finite-target-overlay.json",
+    "bytes": 45109,
+    "sha256": "beaf8225cd4836bbf5839d45abaf76a4d75c15a29418c6c9e9e8fe229525bafa"
+  },
+  "finalEpoch": {
+    "count": 603,
+    "schema": {
+      "type": "array",
+      "entry": {
+        "file": "project-relative path",
+        "bytes": "integer",
+        "sha256": "hex SHA256"
+      }
+    },
+    "file": ".local/iam-o2b-d-selector-migration/iam-stage-o2b-d-selector-migration-final/source-epoch.json",
+    "bytes": 115043,
+    "sha256": "ab0310201aff0a59e87f73b0692bf6e89b050591d7f33c2b4f099da3a97283c4"
+  },
+  "testResults": {
+    "file": "docs/evidence/iam-stage-4-o2b-d-selector-migration/test-results.json",
+    "bytes": 1636,
+    "sha256": "2af053fd3669e6bf66b301a3d5342aba00b36add391bbbcf141555766d10d5c4"
+  },
+  "scope": {
+    "file": "docs/evidence/iam-stage-4-o2b-d-selector-migration/scope.json",
+    "bytes": 1143,
+    "sha256": "5730cad5070d9a8954bab22cc649d528afe30c4d4dd8c71b582b29f4baf90397"
+  },
+  "patch": {
+    "file": "docs/evidence/iam-stage-4-o2b-d-selector-migration/source.patch",
+    "bytes": 5515,
+    "sha256": "adc78ae984e87721302cbb14ad544960cbd7470a1b0b7ace2e0b44661feb7619"
+  },
+  "replayCommands": {
+    "count": 7,
+    "schema": {
+      "type": "array",
+      "entry": {
+        "file": "project-relative path",
+        "bytes": "integer",
+        "sha256": "hex SHA256"
+      }
+    },
+    "file": "docs/evidence/iam-stage-4-o2b-d-selector-migration/replay-commands.json",
+    "bytes": 13408,
+    "sha256": "a37e872a2be4ffc376b83c176d3c495a612400d4c19a0dfd13c13f9956aba705"
+  },
+  "replayRoot": ".local/iam-o2b-d-selector-migration/replay",
+  "replayComplete": {
+    "file": ".local/iam-o2b-d-selector-migration/replay-complete.json",
+    "bytes": 815,
+    "sha256": "cf9cbda93448599d6432033792e9f8338fec73c06741cff7a89ae14bc899755f"
+  },
+  "ownInventory": {
+    "file": "docs/evidence/iam-stage-4-o2b-d-selector-migration/own-inventory.json",
+    "soleExcludedSelf": true,
+    "includesPrivateGit": true
+  },
+  "journal": {
+    "file": ".local/iam-o2b-d-selector-migration/journal.jsonl",
+    "bytes": 2987,
+    "sha256": "e64533582c6690c1b53dafa485a14655a74729723a55fb2f8a361f1d5f6cec93"
+  },
+  "report": {
+    "file": "docs/evidence/iam-stage-4-o2b-d-selector-migration-report.md",
+    "bytes": 6009,
+    "sha256": "076ae86dccdf3401d228e696b201df06b00e0982896c233b9d9fa3a37d5f07ff"
+  },
+  "writeAuthority": {
+    "source": "returned and frozen",
+    "target": "returned and frozen",
+    "localEvidenceHelpersReport": "returned and frozen",
+    "noFurtherAuthorWrites": true
+  },
+  "limits": "Original final87/1F retained; this independent stage3 green only; no PG/HTTP/SSE/E/F acceptance; indexes left to root."
+}

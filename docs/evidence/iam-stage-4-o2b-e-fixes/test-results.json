@@ -1,0 +1,133 @@
+{
+  "status": "FOCUSED_CORRECTION_PASSED_WITH_THREE_INHERITED_FINAL_PASSES",
+  "initialFinal": {
+    "stage": ".local/iam-o2b-e-fixes/iam-stage-o2b-e-fixes-final",
+    "command": {
+      "file": ".local/iam-o2b-e-fixes/iam-stage-o2b-e-fixes-final/command.json",
+      "bytes": 726,
+      "sha256": "4ae694825cebcf514ed93ddbc9e946fa94b5ad3840b09ac968bc7c73ea4d976f"
+    },
+    "raw": {
+      "file": ".local/iam-o2b-e-fixes/iam-stage-o2b-e-fixes-final/raw.log",
+      "bytes": 10660,
+      "sha256": "5db6d06e61f0f166441cc1ac7ed0b5996cbbf082158282630147281a78632ca4"
+    },
+    "exit": 1,
+    "running": [
+      "cn.agentplatform.engine.application.PortalChildEventsHttpTest"
+    ],
+    "suites": [
+      {
+        "xml": {
+          "file": ".local/iam-o2b-e-fixes/iam-stage-o2b-e-fixes-final/reports/TEST-cn.agentplatform.engine.application.PortalChildEventsHttpTest.xml",
+          "bytes": 50732,
+          "sha256": "7b7d14aceb63299d25745f0eccd4b08de8a6bb3da91e2ac041e7328046979652"
+        },
+        "tests": 4,
+        "failures": 0,
+        "errors": 1,
+        "skipped": 0,
+        "methods": [
+          "privateFreshQueuedCapacityBeforeHelloReturnsBoundedJsonUntilCompleteExits",
+          "privateCapacityWriteFailureCompletesBeforeRealBorrowRelease",
+          "privateActiveIdleHasNoPacketAndNewTerminalCarriesProof",
+          "privateCapacityFlushFailureCompletesBeforeRealBorrowRelease"
+        ]
+      }
+    ],
+    "counts": {
+      "tests": 4,
+      "failures": 0,
+      "errors": 1,
+      "skipped": 0
+    },
+    "recompiledProduction": true,
+    "recompiledTests": true
+  },
+  "corrected": {
+    "stage": ".local/iam-o2b-e-fixes/iam-stage-o2b-e-fixes-write-corrected",
+    "command": {
+      "file": ".local/iam-o2b-e-fixes/iam-stage-o2b-e-fixes-write-corrected/command.json",
+      "bytes": 459,
+      "sha256": "5db9983caf25e61a30f2a0b7436faae6c7026b2d19ecdfc5f9c9812234eeb278"
+    },
+    "raw": {
+      "file": ".local/iam-o2b-e-fixes/iam-stage-o2b-e-fixes-write-corrected/raw.log",
+      "bytes": 7751,
+      "sha256": "85bb5a5b7368575d21d325ae247da3500f914a673f910205c4b9a0bf0148b0cd"
+    },
+    "exit": 0,
+    "running": [
+      "cn.agentplatform.engine.application.PortalChildEventsHttpTest"
+    ],
+    "suites": [
+      {
+        "xml": {
+          "file": ".local/iam-o2b-e-fixes/iam-stage-o2b-e-fixes-write-corrected/reports/TEST-cn.agentplatform.engine.application.PortalChildEventsHttpTest.xml",
+          "bytes": 48168,
+          "sha256": "eccb1f8330aa8c4503a01c85827a42b203c9edb8b5c8438aab6e08870e528845"
+        },
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "methods": [
+          "privateCapacityWriteFailureCompletesBeforeRealBorrowRelease"
+        ]
+      }
+    ],
+    "counts": {
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "recompiledProduction": true,
+    "recompiledTests": true
+  },
+  "acceptedDistinct": {
+    "tests": 4,
+    "passed": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "warning": "Not a single 4-green run. Three successful initial-final cases inherited with unchanged production bytes; failed write testcase corrected alone."
+  },
+  "functionalRed": {
+    "stage": ".local/iam-o2b-e-fixes/iam-stage-o2b-e-fixes-red-2",
+    "exit": 1,
+    "running": [
+      "cn.agentplatform.engine.application.PortalChildEventsHttpTest"
+    ],
+    "suites": [
+      {
+        "xml": {
+          "file": ".local/iam-o2b-e-fixes/iam-stage-o2b-e-fixes-red-2/reports/TEST-cn.agentplatform.engine.application.PortalChildEventsHttpTest.xml",
+          "bytes": 50834,
+          "sha256": "a166d8ed27305588777347faf2d57299c97173b0d15fc687e347117c20370d91"
+        },
+        "tests": 3,
+        "failures": 3,
+        "errors": 0,
+        "skipped": 0,
+        "methods": [
+          "privateFreshQueuedCapacityBeforeHelloReturnsBoundedJsonUntilCompleteExits",
+          "privateCapacityWriteFailureCompletesBeforeRealBorrowRelease",
+          "privateCapacityFlushFailureCompletesBeforeRealBorrowRelease"
+        ]
+      }
+    ],
+    "counts": {
+      "tests": 3,
+      "failures": 3,
+      "errors": 0,
+      "skipped": 0
+    },
+    "recompiledProduction": true,
+    "recompiledTests": true
+  },
+  "invalidZeroRun": {
+    "stage": ".local/iam-o2b-e-fixes/iam-stage-o2b-e-fixes-red",
+    "reason": "Edit helper LF match assertion failed before source mutation; shell mistakenly continued to selector with absent methods. 0 Running/0 testcase, INVALID; not RED."
+  }
+}

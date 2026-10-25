@@ -1,0 +1,75 @@
+{
+  "status": "DONE_WITH_CONCERNS",
+  "completedAt": "2026-10-20T11:02:49.209Z",
+  "root": "G:/207/项目/算法重组工具/代码/agent-platform",
+  "sourceTargetOwnership": "returned-to-root",
+  "exclusiveWriter": "D3b author until this handoff; no active Maven/fixture writer remains",
+  "report": "docs/evidence/iam-stage-4-d3b-report.md",
+  "verification": {
+    "file": "docs/evidence/iam-stage-4-d3b/verification.json",
+    "bytes": 3378,
+    "sha256": "b0c3b17b56598fbede2c30e2d0482739bc056726f3701cdffc9d18cfc7538b10"
+  },
+  "sourceManifest": {
+    "file": "docs/evidence/iam-stage-4-d3b/source-after.json",
+    "bytes": 73294,
+    "sha256": "bdd8d926e3aed39bc4812d3a2ca9ee73651de7446b7bc03f35667fcbda1d4ced"
+  },
+  "targetManifest": {
+    "file": "docs/evidence/iam-stage-4-d3b/target-after.json",
+    "bytes": 350300,
+    "sha256": "d49ed3864f336bd48d552cc562f34a8857a3c28e89660bbe0759a3800436d68a"
+  },
+  "patch": {
+    "file": "docs/evidence/iam-stage-4-d3b/change.patch",
+    "bytes": 172477,
+    "sha256": "e38bd6ed9e762843011ef6bcfcf66dfed6319020571aa7465a73c3d007541ab6"
+  },
+  "protectedBefore": {
+    "file": "docs/evidence/iam-stage-4-d3b/protected-before.jsonl",
+    "bytes": 26856269,
+    "sha256": "e65e69854c1cb40273ccfcda73d3e908379d145babe92f020d5b07a93e57d453"
+  },
+  "protectedAfter": {
+    "file": "docs/evidence/iam-stage-4-d3b/protected-after.jsonl",
+    "bytes": 26856105,
+    "sha256": "ba44cc480e5fe14abcb886d86abdcd2e1e3157a5979fe6fbef714d1d0a78d04d"
+  },
+  "originalAfterFailure": {
+    "file": "docs/evidence/iam-stage-4-d3b/protected-final-result.json",
+    "bytes": 6240,
+    "sha256": "f36007f68f0f85d4e96dd3e8e9390e8d6129ec7d69bac8ee12fd39f97c5b6292"
+  },
+  "narrowFollowup": {
+    "file": "docs/evidence/iam-stage-4-d3b/protected-followup.json",
+    "bytes": 1524,
+    "sha256": "dd3bd73e53716c4d50a4123472ac991d9ecda9de0edd5d219c3214607609a98a"
+  },
+  "authorizedConcurrentNew": {
+    "file": "docs/evidence/iam-next-published-chain-seam-proposal.md",
+    "bytes": 29262,
+    "sha256": "5a7bef43ea57290367895cef38a029437f66733e0c6a3a636e34d1fc9aa9d308"
+  },
+  "authorizedSmokeAdditions": [
+    {
+      "file": "docs/evidence/iam-stage-4-d3a0/smoke-process-f456419e-d46f-4cc4-8d17-9f6516864359.log",
+      "bytes": 367,
+      "sha256": "c30936ae726b31814225c36a587fb4a9420c0c1d32df3cc0a05a312fab33af77"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-d3a0/smoke-result-f456419e-d46f-4cc4-8d17-9f6516864359.json",
+      "bytes": 455,
+      "sha256": "504ea4b7faa88653bd474eba8f02261d227c2c2a2d679b4edb3d6633b73e1005"
+    }
+  ],
+  "actualFinalPayloadTests": 24,
+  "priorApplicableMetadataTests": 9,
+  "soleAffectedSmokeLauncherTests": 1,
+  "notOneCombinedSameSourceRun": true,
+  "concerns": [
+    "Original incomplete MinIO sampling and final protected pass exit1 preserved; exact runtime append and root update accepted separately, EBUSY original artifact reread equals.",
+    "Actual setup/test-translation/helper/classpath noise preserved.",
+    "Only published component; global IAM gate and remaining D3/E integration/other handler migrations still required."
+  ],
+  "newNestedAgents": 0
+}

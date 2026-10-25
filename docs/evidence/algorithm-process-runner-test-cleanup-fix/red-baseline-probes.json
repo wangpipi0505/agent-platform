@@ -1,0 +1,32 @@
+[
+  {
+    "mode": "ps-rejection",
+    "exit": 0,
+    "stdout": "{\"mode\":\"ps-rejection\",\"noRealResourcesStarted\":true,\"closeCalls\":[],\"unhandled\":[],\"errors\":[{\"message\":\"synthetic PowerShell failure\"}],\"originalHttpRetained\":false,\"originalPsRetained\":true,\"destroyErrorRetained\":false,\"closeErrorRetained\":false,\"httpIsPrimary\":false}\n",
+    "stderr": ""
+  },
+  {
+    "mode": "double-failure",
+    "exit": 0,
+    "stdout": "{\"mode\":\"double-failure\",\"noRealResourcesStarted\":true,\"closeCalls\":[],\"unhandled\":[],\"errors\":[{\"message\":\"synthetic PowerShell failure\"}],\"originalHttpRetained\":false,\"originalPsRetained\":true,\"destroyErrorRetained\":false,\"closeErrorRetained\":false,\"httpIsPrimary\":false}\n",
+    "stderr": ""
+  },
+  {
+    "mode": "fast-rejection",
+    "exit": 0,
+    "stdout": "{\"mode\":\"fast-rejection\",\"noRealResourcesStarted\":true,\"closeCalls\":[],\"unhandled\":[\"synthetic PowerShell failure\"],\"errors\":[{\"message\":\"synthetic PowerShell failure\"}],\"originalHttpRetained\":false,\"originalPsRetained\":true,\"destroyErrorRetained\":false,\"closeErrorRetained\":false,\"httpIsPrimary\":false}\n",
+    "stderr": "(node:56572) PromiseRejectionHandledWarning: Promise rejection was handled asynchronously (rejection id: 2)\n(Use `node --trace-warnings ...` to show where the warning was created)\n"
+  },
+  {
+    "mode": "all-close-errors",
+    "exit": 0,
+    "stdout": "{\"mode\":\"all-close-errors\",\"noRealResourcesStarted\":true,\"closeCalls\":[],\"unhandled\":[],\"errors\":[{\"message\":\"synthetic PowerShell failure\"}],\"originalHttpRetained\":false,\"originalPsRetained\":true,\"destroyErrorRetained\":false,\"closeErrorRetained\":false,\"httpIsPrimary\":false}\n",
+    "stderr": ""
+  },
+  {
+    "mode": "close-never-settles",
+    "exit": 13,
+    "stdout": "",
+    "stderr": "Warning: Detected unsettled top-level await at file:///G:/207/%E9%A1%B9%E7%9B%AE/%E7%AE%97%E6%B3%95%E9%87%8D%E7%BB%84%E5%B7%A5%E5%85%B7/%E4%BB%A3%E7%A0%81/agent-platform/tests/algorithm-process-runner-async-cleanup-probe.mjs:26\r\ntry { await callback(); } catch (error) { observed = error; }\r\n      ^\r\n\r\n\r\n\r\n"
+  }
+]

@@ -1,0 +1,70 @@
+{
+  "status": "DONE",
+  "at": "2026-10-20T22:15:29.210Z",
+  "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+  "ownership": "All own source, corresponding target and own evidence/local/report writes frozen and returned to root; no further writes by implementer.",
+  "source": {
+    "file": "docs/evidence/iam-stage-4-o1b-readonly-status/source-after.json",
+    "bytes": 109789,
+    "sha256": "a956230f2e97c552e026196748fb67519c77acc1bcfaeee747df744cac25f8de"
+  },
+  "sourceDelta": {
+    "file": "docs/evidence/iam-stage-4-o1b-readonly-status/source-delta.json",
+    "bytes": 2094,
+    "sha256": "5396f32bcb533d3bfb6050555ddcd5fe378f5ef7e110dd3e97c1019dc0311720"
+  },
+  "sourceCount": 579,
+  "sourceDeltaCount": 10,
+  "target": {
+    "file": "docs/evidence/iam-stage-4-o1b-readonly-status/target-after.json",
+    "bytes": 406646,
+    "sha256": "06e1fa0bd59c8e95e0f54a11cc59960d48f5f3d6670d958be4950decc49932f6"
+  },
+  "targetDelta": {
+    "file": "docs/evidence/iam-stage-4-o1b-readonly-status/target-delta.json",
+    "bytes": 11671,
+    "sha256": "f41b812e59a61539861de9aa144049870d01c74dda6a80c6da1d3e079bda76b7"
+  },
+  "targetCount": 1968,
+  "targetDeltaCount": 52,
+  "targetActualCompilerReportCandidates": 383,
+  "report": {
+    "file": "docs/evidence/iam-stage-4-o1b-readonly-status-report.md",
+    "bytes": 16075,
+    "sha256": "6a4665f2807788b4a1c6c2938e6d43b278bdb0fc3a945bf6f07d260b105ab33c"
+  },
+  "replay": {
+    "file": "docs/evidence/iam-stage-4-o1b-readonly-status/replay.json",
+    "bytes": 662,
+    "sha256": "9027b8cd528b5d1dfd9e01775f797b6ce1ab21604d1ad5d70781532a40b79bde"
+  },
+  "patch": {
+    "file": "docs/evidence/iam-stage-4-o1b-readonly-status/source.patch",
+    "bytes": 107724,
+    "sha256": "53e1ff6bf4ee2a433c78feccb158f87801cbf81b2f596906111a9e92f0c7c599"
+  },
+  "inventory": {
+    "file": "docs/evidence/iam-stage-4-o1b-readonly-status/own-inventory.json",
+    "bytes": 83341,
+    "sha256": "13e1b751c334a0256ce131802d89d4fd4ded89a761e39b271fec599615ae8b67"
+  },
+  "inventoryCount": 338,
+  "inventoryBytes": 16863563,
+  "lastCoverage": "final04 new status17/0/0; final01 unchanged common3 + GraphRules1 + originalStatus2 + metadata4, not one combined green run.",
+  "resources": {
+    "at": "2026-10-20T22:12:38.485Z",
+    "database": "agent_platform_iam_o1b_status_v12",
+    "postgres": "127.0.0.1:25432; existing dedicated project PostgreSQL16.15, V200–217, not stopped or dropped",
+    "finalReady": {
+      "port": 65250,
+      "pid": 50120
+    },
+    "explicitCloseMarker": true,
+    "processAlive": false,
+    "processProbe": "ESRCH",
+    "engineSocketProbe": "ECONNREFUSED",
+    "ownership": "All authority/JWKS/resolver/dependency servers, runtime HTTP clients/decoder and service scheduler objects are owned in this single test JVM and explicitly closed. Scheduler was constructed/bound, never started. No child application process.",
+    "limitation": "Only the engine ready port was printed/probed; individual authority/resolver/dependency ports were not logged. JVM termination independently retires those in-process listeners."
+  },
+  "limits": "Real external IAM/model/ontology/K8s and O1c/O2/RR1/RR2 not accepted; MVC refused best-effort delegate close after IO error, peer got128 bytes/EOF; buffer cap does not bound existing object graph."
+}

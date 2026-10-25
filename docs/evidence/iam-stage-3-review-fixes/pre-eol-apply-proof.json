@@ -1,0 +1,33 @@
+{
+  "commands": [
+    {
+      "argv": [
+        "git",
+        "-c",
+        "core.autocrlf=false",
+        "apply",
+        "--check",
+        "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\iam-stage-3-review-fixes\\full.patch"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "-c",
+        "core.autocrlf=false",
+        "apply",
+        "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\iam-stage-3-review-fixes\\full.patch"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": "G:/207/项目/算法重组工具/代码/agent-platform/docs/evidence/iam-stage-3-review-fixes/full.patch:27: trailing whitespace.\npackage cn.agentplatform.common.authority;\r\nG:/207/项目/算法重组工具/代码/agent-platform/docs/evidence/iam-stage-3-review-fixes/full.patch:28: trailing whitespace.\n\r\nG:/207/项目/算法重组工具/代码/agent-platform/docs/evidence/iam-stage-3-review-fixes/full.patch:29: trailing whitespace.\nimport cn.agentplatform.common.PlatformException;\r\nG:/207/项目/算法重组工具/代码/agent-platform/docs/evidence/iam-stage-3-review-fixes/full.patch:30: trailing whitespace.\nimport java.util.Objects;\r\nG:/207/项目/算法重组工具/代码/agent-platform/docs/evidence/iam-stage-3-review-fixes/full.patch:31: trailing whitespace.\n\r\nwarning: squelched 889 whitespace errors\nwarning: 894 lines add whitespace errors.\n"
+    }
+  ],
+  "files": 63,
+  "baseline_sha_matches": true,
+  "applied_frozen_live_bytes_equal": true,
+  "patch_sha256": "2ed4e9a72d005e43084ea2e3fda0d8346a374024126eda7c8e5ebfd6ec05b8a3"
+}

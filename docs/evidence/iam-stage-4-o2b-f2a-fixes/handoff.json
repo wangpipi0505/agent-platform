@@ -1,0 +1,310 @@
+{
+  "schema": "f2a-fixes-handoff-v1",
+  "scope": "F2a review corrections only; independent rereview and finite root audit pending",
+  "projectRoot": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+  "sourceWrites": [
+    "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsTlsConnection.java",
+    "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalEventsTlsTest.java"
+  ],
+  "ownedRoots": [
+    ".local/iam-o2b-f2a-fixes",
+    "docs/evidence/iam-stage-4-o2b-f2a-fixes"
+  ],
+  "ownedHelperFiles": [
+    ".tools/iam-o2b-f2a-fix-evidence.mjs",
+    ".tools/iam-o2b-f2a-fix-finalize.mjs",
+    ".tools/iam-o2b-f2a-fix-format.mjs",
+    ".tools/iam-o2b-f2a-fix-package.mjs",
+    ".tools/iam-o2b-f2a-fix-report.mjs"
+  ],
+  "externalStageArtifacts": [
+    ".local/iam-stage-o2b-f2a-fix-bulk-collector-green.log",
+    ".local/iam-stage-o2b-f2a-fix-eof-collector-green.log",
+    ".local/iam-stage-o2b-f2a-fix-final.log",
+    ".local/iam-stage-o2b-f2a-fix-focused-green.log",
+    ".local/iam-stage-o2b-f2a-fix-functional-red.log",
+    ".local/iam-stage-o2b-f2a-fix-observer-state-red.log"
+  ],
+  "sourceCount": 618,
+  "changedExistingSources": 2,
+  "newSources": 0,
+  "unchangedSources": 616,
+  "controls": [
+    {
+      "file": ".local/iam-o2b-f2a-fixes/source-before.json",
+      "bytes": 118270,
+      "sha256": "b64fbebf0a650bb8d9cc6988c78752560f657679e3f6bce3f157b17370a339c2",
+      "count": 618,
+      "schema": "array"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-fixes/source-after.json",
+      "bytes": 118270,
+      "sha256": "b0c594e9e4e66748f517b3acd983d402afc1c9982d43b5b038e352f65a6e7853",
+      "count": 618,
+      "schema": "array"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-fixes/source-delta.json",
+      "bytes": 1003,
+      "sha256": "94d2e092b35e83222f03e32df32e337e3cf52b348e598e5a1dde790935a5c0b0",
+      "count": 2,
+      "schema": "array"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-fixes/source-new.json",
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "count": 0,
+      "schema": "array"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-fixes/source-snapshot.json",
+      "bytes": 141754,
+      "sha256": "15e2436db93bd026fe7a719c0da1a36837d7406323e7c50bae8ea5cba8862422",
+      "count": 618,
+      "schema": "array"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-fixes/target-before.json",
+      "bytes": 459636,
+      "sha256": "2c0dc655b7664f3e1dd4efe965a71cd10590edea1ab3ec06c4df69a4566450b8",
+      "count": 2200,
+      "schema": "array"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-fixes/target-after.json",
+      "bytes": 460075,
+      "sha256": "95313cf613f9b3045eb85b524740a77b2fb36fc6a6148ce83b43cce75d3d8067",
+      "count": 2202,
+      "schema": "array"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-fixes/target-delta.json",
+      "bytes": 5486,
+      "sha256": "575255518ba3e2430395c60d31e65f8b6de2fbd19082cb2e2f271b84c7a362b7",
+      "count": 22,
+      "schema": "array"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-fixes/target-overlay.json",
+      "bytes": 70901,
+      "sha256": "5f2a005e2a79fb78b61f327b306acd89cfd86ec71713eeb05fc69c5e9dc01d55",
+      "count": 316,
+      "schema": "array"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-fixes/resource-copies.json",
+      "bytes": 2360,
+      "sha256": "40c5373e00a214b057214647b9154f5dd5f44483ba623e81f8b31b9913868440",
+      "count": 3,
+      "schema": "array"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-fixes/diagnostics-new.json",
+      "bytes": 1197,
+      "sha256": "7abaf3a5e530cd2ee8fa59940f451437a7c53b7b34ee623a37fbd911e99e6f44",
+      "count": 6,
+      "schema": "array"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-fixes/replay-after.json",
+      "bytes": 118270,
+      "sha256": "b0c594e9e4e66748f517b3acd983d402afc1c9982d43b5b038e352f65a6e7853",
+      "count": 618,
+      "schema": "array"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-fixes/baseline-index-blobs.json",
+      "bytes": 118270,
+      "sha256": "b64fbebf0a650bb8d9cc6988c78752560f657679e3f6bce3f157b17370a339c2",
+      "count": 618,
+      "schema": "array"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-fixes/replay-index-blobs.json",
+      "bytes": 118270,
+      "sha256": "b64fbebf0a650bb8d9cc6988c78752560f657679e3f6bce3f157b17370a339c2",
+      "count": 618,
+      "schema": "array"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o2b-f2a-fixes-report.md",
+      "bytes": 15211,
+      "sha256": "7f1c7a56985fd3424de2995b2b7e21ccb74cb81f02d0b2fbbd7e45833fd0a9f2"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o2b-f2a-fixes/source.binary.patch",
+      "bytes": 30553,
+      "sha256": "42556c82f636d9b822da94b84f99fe41da5fcb27f12e02ded7e47212fe347712"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o2b-f2a-fixes/test-stages.json",
+      "bytes": 4277,
+      "sha256": "880bec846158154bab2075715c206e162666bb43ede81c9e34b3dcccd809f343"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o2b-f2a-fixes/stage-catalog.json",
+      "bytes": 32202,
+      "sha256": "9a6e3dc3ac1580ae11ef96c179c51891e316ca5fa6621a48aec2cb481880b0ad"
+    },
+    {
+      "file": "docs/evidence/iam-stage-4-o2b-f2a-fixes/peer-exits.json",
+      "bytes": 137143,
+      "sha256": "0bb290687939199aa0aaeaf27a864daa9a0c7000b75cd98227bccffe9d3d00ff"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-fixes/baseline-tree.json",
+      "bytes": 316,
+      "sha256": "96c1f0c639dcf8bc8170d3ef2af9939f121a6abfadc1336b875cef0b470d94e4"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-fixes/patch-after-tree.json",
+      "bytes": 316,
+      "sha256": "43dd5bbe00d78ce068744e09a0f64c7969c2910566cc5bebbbb7b21ab4025e7f"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-fixes/replay-check.json",
+      "bytes": 413,
+      "sha256": "757eaccc221932ec6c69c260544c39bd89242b0db433851015438c90cbc7d439"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-fixes/replay-apply.json",
+      "bytes": 398,
+      "sha256": "a3a61d835fa3197ec5f768310b325b922d4cfbdab31f94e7e73e1f909571096f"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-fixes/replay-name-closure.json",
+      "bytes": 46323,
+      "sha256": "fccc1f67bb3ebd925ab4b64705d1e99e038927c4fd8db3bfd4082eb9f73e6268"
+    },
+    {
+      "file": ".local/iam-o2b-f2a-fixes/metadata-corrections.json",
+      "bytes": 2808,
+      "sha256": "da031d40d860c46b253e3703ef397511a1c76ccc957909e01af4d9390813a20c"
+    }
+  ],
+  "controlIdentities": {
+    "file": "docs/evidence/iam-stage-4-o2b-f2a-fixes/control-identities.json",
+    "bytes": 4873,
+    "sha256": "dd8ad284526ff22db0991609277e4ff7b07bb20fee267e2110b7ad151d009a4d"
+  },
+  "report": {
+    "file": "docs/evidence/iam-stage-4-o2b-f2a-fixes-report.md",
+    "bytes": 15211,
+    "sha256": "7f1c7a56985fd3424de2995b2b7e21ccb74cb81f02d0b2fbbd7e45833fd0a9f2"
+  },
+  "stages": {
+    "file": "docs/evidence/iam-stage-4-o2b-f2a-fixes/stage-catalog.json",
+    "bytes": 32202,
+    "sha256": "9a6e3dc3ac1580ae11ef96c179c51891e316ca5fa6621a48aec2cb481880b0ad"
+  },
+  "peerExits": {
+    "file": "docs/evidence/iam-stage-4-o2b-f2a-fixes/peer-exits.json",
+    "bytes": 137143,
+    "sha256": "0bb290687939199aa0aaeaf27a864daa9a0c7000b75cd98227bccffe9d3d00ff"
+  },
+  "compilation": {
+    "stage": "iam-stage-o2b-f2a-fix-eof-collector-green",
+    "sourceEpoch": {
+      "file": ".local/iam-o2b-f2a-fixes/stages/iam-stage-o2b-f2a-fix-eof-collector-green/source.json",
+      "bytes": 118270,
+      "sha256": "b0c594e9e4e66748f517b3acd983d402afc1c9982d43b5b038e352f65a6e7853"
+    },
+    "compiler": [
+      {
+        "file": ".local/iam-o2b-f2a-fixes/stages/iam-stage-o2b-f2a-fix-eof-collector-green/compiler/admin-common/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst",
+        "bytes": 6917,
+        "sha256": "4de727ce102cd93188b72e2dd752e03c8dfc150f327ad92eee1040589c1941b2"
+      },
+      {
+        "file": ".local/iam-o2b-f2a-fixes/stages/iam-stage-o2b-f2a-fix-eof-collector-green/compiler/admin-common/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst",
+        "bytes": 8001,
+        "sha256": "e203729ab966bdef4bed127a344a896a19cd0a5ceb41cf615f32ae170a514ca9"
+      },
+      {
+        "file": ".local/iam-o2b-f2a-fixes/stages/iam-stage-o2b-f2a-fix-eof-collector-green/compiler/admin-common/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst",
+        "bytes": 6374,
+        "sha256": "4c013d6419baa7d39876e14d08c2c7b2e37a68e2e56ea283cc20cc7875d0ba55"
+      },
+      {
+        "file": ".local/iam-o2b-f2a-fixes/stages/iam-stage-o2b-f2a-fix-eof-collector-green/compiler/admin-common/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst",
+        "bytes": 4544,
+        "sha256": "dcf9f2347467a015748da291f1930b66c828a7ee27a8089b67a887ed88e686dd"
+      },
+      {
+        "file": ".local/iam-o2b-f2a-fixes/stages/iam-stage-o2b-f2a-fix-eof-collector-green/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst",
+        "bytes": 3097,
+        "sha256": "8df8500d2b6f4ff7e5ce43e40b5fdec9b8d2f8b3fba4bd096a0258efea70cd51"
+      },
+      {
+        "file": ".local/iam-o2b-f2a-fixes/stages/iam-stage-o2b-f2a-fix-eof-collector-green/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst",
+        "bytes": 2734,
+        "sha256": "b287a807c3db956f9bfb6cf8dff20435c643c21939f9595c18fdf921a7354f4d"
+      },
+      {
+        "file": ".local/iam-o2b-f2a-fixes/stages/iam-stage-o2b-f2a-fix-eof-collector-green/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst",
+        "bytes": 4810,
+        "sha256": "e405b1322e6f4b1aeadaaa9ee5cb1e2151e7ce0f2a0bebaeabcc74d81c848064"
+      },
+      {
+        "file": ".local/iam-o2b-f2a-fixes/stages/iam-stage-o2b-f2a-fix-eof-collector-green/compiler/platform-gateway/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst",
+        "bytes": 2277,
+        "sha256": "bc8a31593272de7858ec849cf57723bff72293116571be85353128f46e4b928e"
+      }
+    ],
+    "raw": {
+      "file": ".local/iam-o2b-f2a-fixes/stages/iam-stage-o2b-f2a-fix-eof-collector-green/raw.log",
+      "bytes": 5862,
+      "sha256": "c1ae5663f5319902d15668e55b6c38aa3ad7433186d14caba78af6e8d4bebb74"
+    },
+    "actualGatewayMainSources": 19,
+    "actualGatewayTestSources": 15,
+    "finalSourceEpoch": {
+      "file": ".local/iam-o2b-f2a-fixes/stages/iam-stage-o2b-f2a-fix-final/source.json",
+      "bytes": 118270,
+      "sha256": "b0c594e9e4e66748f517b3acd983d402afc1c9982d43b5b038e352f65a6e7853"
+    },
+    "full618SourceRowsExactlyEqual": true,
+    "finalRunning": [
+      "cn.agentplatform.gateway.infra.PortalEventsTlsDebtTest",
+      "cn.agentplatform.gateway.infra.PortalEventsTlsTest"
+    ],
+    "finalBehavior": "Maven reported up-to-date and ran both named classes using the unchanged compiled bytes. No forced mtime change or rerun."
+  },
+  "tests": [
+    {
+      "class": "cn.agentplatform.gateway.infra.PortalEventsTlsDebtTest",
+      "tests": 7,
+      "errors": 0,
+      "skipped": 0,
+      "failures": 0
+    },
+    {
+      "class": "cn.agentplatform.gateway.infra.PortalEventsTlsTest",
+      "tests": 40,
+      "errors": 0,
+      "skipped": 0,
+      "failures": 0
+    }
+  ],
+  "ownInventory": {
+    "file": "docs/evidence/iam-stage-4-o2b-f2a-fixes/own-inventory.json",
+    "count": 5338,
+    "schema": "array of file/bytes/sha256; excludes only itself",
+    "identity": "Final message supplies bytes/SHA; no cyclic self-reference"
+  },
+  "frozen": true,
+  "returnedWriteRights": {
+    "source": true,
+    "target": true,
+    "owned": true
+  },
+  "limits": [
+    "Original epoch artifacts immutable; original plain independent-observation claim was not supported and is superseded only by new bounded evidence.",
+    "M3 Windows classpath diagnostic and existing deprecation retained; no JDK checks disabled.",
+    "M4 historical failed thresholds epoch remains excluded as a compiled-byte proof.",
+    "Early RED recorded parent cwd is not an independent child OS cwd observation; source requests projectRoot. Later metadata records requested root.",
+    "EVENTS remains off; F2b/F2c/production launcher and full TLS capacity remain pending."
+  ]
+}

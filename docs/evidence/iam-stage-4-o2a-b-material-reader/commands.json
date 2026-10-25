@@ -1,0 +1,487 @@
+{
+  "runner": {
+    "file": ".tools/run-iam-module-tests.mjs",
+    "bytes": 2884,
+    "sha256": "0a86ddfdf91bff1971cf41f9326ea0d0f23e0b0c32d3e02082f7290a26867de4"
+  },
+  "commands": [
+    {
+      "stage": "iam-stage-o2a-b-red01",
+      "command": [
+        "node",
+        ".tools/run-iam-module-tests.mjs",
+        "iam-stage-o2a-b-red01",
+        "engine-runtime",
+        "RunEventReaderPostgresTest#realFifteenNodeWriterEventIsReadWithoutOnlineAuthorityInsideReadTransaction,RunEventReaderBudgetTest#captureInitialCursorAndRemainingAreLiveLocalOperations"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "exitCode": 1,
+      "classification": "fixture configuration error",
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-red01/iam-stage-o2a-b-red01.log",
+        "bytes": 14578,
+        "sha256": "7235df5ab4410d1ba0c888711bdc7524e4f5f30961ca44aaaf3e9fe286a95eba"
+      },
+      "actualRunning": [
+        "cn.agentplatform.engine.infra.RunEventReaderBudgetTest",
+        "cn.agentplatform.engine.infra.RunEventReaderPostgresTest"
+      ],
+      "xml": [
+        {
+          "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-red01/TEST-cn.agentplatform.engine.infra.RunEventReaderPostgresTest.xml",
+          "bytes": 50891,
+          "sha256": "ef23bc8bc92291793d133a3994b911421e12c2c8892c5d130246c6f7c6997170"
+        },
+        {
+          "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-red01/TEST-cn.agentplatform.engine.infra.RunEventReaderBudgetTest.xml",
+          "bytes": 47134,
+          "sha256": "1d7fb300248943f104bd0c804e031021b1b637ef65804f8e3dc96f6fbb24804f"
+        }
+      ]
+    },
+    {
+      "stage": "iam-stage-o2a-b-red02",
+      "command": [
+        "node",
+        ".tools/run-iam-module-tests.mjs",
+        "iam-stage-o2a-b-red02",
+        "engine-runtime",
+        "RunEventReaderPostgresTest#realFifteenNodeWriterEventIsReadWithoutOnlineAuthorityInsideReadTransaction,RunEventReaderBudgetTest#captureInitialCursorAndRemainingAreLiveLocalOperations"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "exitCode": 1,
+      "classification": "behavior test run",
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-red02/iam-stage-o2a-b-red02.log",
+        "bytes": 10090,
+        "sha256": "6daa08d4113801a5982aca1834dec785b00649b6e0a2609f51093f10bb953b8e"
+      },
+      "actualRunning": [
+        "cn.agentplatform.engine.infra.RunEventReaderBudgetTest",
+        "cn.agentplatform.engine.infra.RunEventReaderPostgresTest"
+      ],
+      "xml": [
+        {
+          "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-red02/TEST-cn.agentplatform.engine.infra.RunEventReaderPostgresTest.xml",
+          "bytes": 47383,
+          "sha256": "5d219752b616255fa8df0aa8870d93a1943e27872b3e44c1114286d2db770002"
+        },
+        {
+          "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-red02/TEST-cn.agentplatform.engine.infra.RunEventReaderBudgetTest.xml",
+          "bytes": 47441,
+          "sha256": "a29346b869d01df1de56ad727cdb75e61fcc4fda057effe792d992178d83187f"
+        }
+      ]
+    },
+    {
+      "stage": "iam-stage-o2a-b-red03",
+      "command": [
+        "node",
+        ".tools/run-iam-module-tests.mjs",
+        "iam-stage-o2a-b-red03",
+        "engine-runtime",
+        "RunEventReaderBudgetTest#metadataStreamingParserChecksEverySingleConstraintBeforeDom,RunEventReaderBudgetTest#rootParserHasItsOwnFiniteDepthTokensStringAndNumberLimits,RunEventReaderBudgetTest#cumulativeByteRecordAndParentBudgetsRejectOverflowAndNeverSilentlyTruncate"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "exitCode": 1,
+      "classification": "behavior test run",
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-red03/iam-stage-o2a-b-red03.log",
+        "bytes": 10462,
+        "sha256": "0fd27ffe61e39b4b68fb8a7242d6cb4a6f2d45a564b843b0a0684db96ad6a329"
+      },
+      "actualRunning": [
+        "cn.agentplatform.engine.infra.RunEventReaderBudgetTest"
+      ],
+      "xml": [
+        {
+          "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-red03/TEST-cn.agentplatform.engine.infra.RunEventReaderBudgetTest.xml",
+          "bytes": 48323,
+          "sha256": "a6ac7fd8634525ba560c2d1603ac25da335340884dd426f9689ed4ba19fb176b"
+        }
+      ]
+    },
+    {
+      "stage": "iam-stage-o2a-b-green01",
+      "command": [
+        "node",
+        ".tools/run-iam-module-tests.mjs",
+        "iam-stage-o2a-b-green01",
+        "engine-runtime",
+        "RunEventReaderBudgetTest#metadataStreamingParserChecksEverySingleConstraintBeforeDom,RunEventReaderBudgetTest#rootParserHasItsOwnFiniteDepthTokensStringAndNumberLimits,RunEventReaderBudgetTest#cumulativeByteRecordAndParentBudgetsRejectOverflowAndNeverSilentlyTruncate,RunEventReaderBudgetTest#captureInitialCursorAndRemainingAreLiveLocalOperations,RunEventReaderPostgresTest#realFifteenNodeWriterEventIsReadWithoutOnlineAuthorityInsideReadTransaction"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "exitCode": 0,
+      "classification": "behavior test run",
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-green01/iam-stage-o2a-b-green01.log",
+        "bytes": 8996,
+        "sha256": "c04a24b3bd50aeb436cdd667e3306df9f148ffa5afebcece0d5850230ca23163"
+      },
+      "actualRunning": [
+        "cn.agentplatform.engine.infra.RunEventReaderBudgetTest",
+        "cn.agentplatform.engine.infra.RunEventReaderPostgresTest"
+      ],
+      "xml": [
+        {
+          "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-green01/TEST-cn.agentplatform.engine.infra.RunEventReaderBudgetTest.xml",
+          "bytes": 46705,
+          "sha256": "50c55346317faf5117d0ab2322a2af1a9331c437db7e2ebfdb57f1e1528a3b70"
+        },
+        {
+          "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-green01/TEST-cn.agentplatform.engine.infra.RunEventReaderPostgresTest.xml",
+          "bytes": 46908,
+          "sha256": "889eab959cf017043d714a8e6c7dffabb10876952c3dec87ab3f13c0f209c12c"
+        }
+      ]
+    },
+    {
+      "stage": "iam-stage-o2a-b-red04",
+      "command": [
+        "node",
+        ".tools/run-iam-module-tests.mjs",
+        "iam-stage-o2a-b-red04",
+        "engine-runtime",
+        "RunEventReaderBudgetTest#normalizationExpansionHasIndependentBudgetBeforeDecimalToIntegerExpansion"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "exitCode": 1,
+      "classification": "test compilation error",
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-red04/iam-stage-o2a-b-red04.log",
+        "bytes": 6891,
+        "sha256": "be08b08dc05508dc2f5cdce053f420cd0e5409deb25adda5fef7e7003bbbcd05"
+      },
+      "actualRunning": [],
+      "xml": []
+    },
+    {
+      "stage": "iam-stage-o2a-b-red05",
+      "command": [
+        "node",
+        ".tools/run-iam-module-tests.mjs",
+        "iam-stage-o2a-b-red05",
+        "engine-runtime",
+        "RunEventReaderBudgetTest#normalizationExpansionHasIndependentBudgetBeforeDecimalToIntegerExpansion"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "exitCode": 1,
+      "classification": "behavior test run",
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-red05/iam-stage-o2a-b-red05.log",
+        "bytes": 8722,
+        "sha256": "fc412a41c6ed2b088faa3e42f58e364f352bb086e1881cda94f8a1dae08c9189"
+      },
+      "actualRunning": [
+        "cn.agentplatform.engine.infra.RunEventReaderBudgetTest"
+      ],
+      "xml": [
+        {
+          "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-red05/TEST-cn.agentplatform.engine.infra.RunEventReaderBudgetTest.xml",
+          "bytes": 47557,
+          "sha256": "2f6f222b1e72f3ba9dd40d2c2bd1d5857e33f97e2400f6bf02e27f8c1fc1cfbc"
+        }
+      ]
+    },
+    {
+      "stage": "iam-stage-o2a-b-green02",
+      "command": [
+        "node",
+        ".tools/run-iam-module-tests.mjs",
+        "iam-stage-o2a-b-green02",
+        "engine-runtime",
+        "RunEventReaderBudgetTest#normalizationExpansionHasIndependentBudgetBeforeDecimalToIntegerExpansion,RunEventReaderBudgetTest#scopeArraysRejectDuplicateHashesWrongTypesAndParentCountBeyond4096,RunEventReaderBudgetTest#parserCancellationChecksRealCaptureAndFieldNamesConsumeTokenBudget,RunEventReaderBudgetTest#getterClosureExpiryAndGenerationFailureAreLocalAndSticky,RunEventReaderBudgetTest#subMillisecondConservativeBudgetNeverRequestsAConnectionOrDisablesTimeout,RunEventReaderBudgetTest#emissionAndBorrowCannotBeMintedPubliclyOrExportLargePayloadReferences,RunEventReaderPostgresTest#realSampleMeasuresCompleteRepeatedParentArraysAndPayloadGetterOrder,RunEventReaderPostgresTest#cursorBoundsAreCheckedBeforePermitAndSqlAndProgressCanAdvance,RunEventReaderPostgresTest#historicalGrantExpiryDifferentLoginAndWrongOwnersOrResourceStaySeparated,RunEventReaderPostgresTest#metadataTamperingAndCoverageFailBeforePayloadButActualPayloadTamperingReadsIt,RunEventReaderPostgresTest#ambientReadCommittedAndRepeatableReadAreBothRejected,RunEventReaderPostgresTest#concurrentAppendDoesNotMixReadSnapshotAndNextRoundSeesIt,RunEventReaderPostgresTest#stopGenerationExpiryAndCommitAfterRevocationNeverMintAnEmission,RunEventReaderPostgresTest#twoPendingOrActiveEmissionsOwnPermitsUntilActualConsumerFinally,RunEventReaderPostgresTest#logicalCancellationWhileTwoRealJdbcQueriesWaitDoesNotReturnPermitsEarly,RunEventReaderPostgresTest#realWriterEventOverPublicBudgetHasDistinctCapacityAndNoEventTextGetter,RunEventReaderPostgresTest#realPostgresValuesUseSameProbeAndCaseAtExactUtf8ByteBudgets"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "exitCode": 0,
+      "classification": "behavior test run",
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-green02/iam-stage-o2a-b-green02.log",
+        "bytes": 13166,
+        "sha256": "b708ec8c14298dfe61960bd732824814aac740b4ebb37d199cdfa86a36a5a9a8"
+      },
+      "actualRunning": [
+        "cn.agentplatform.engine.infra.RunEventReaderBudgetTest",
+        "cn.agentplatform.engine.infra.RunEventReaderPostgresTest"
+      ],
+      "xml": [
+        {
+          "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-green02/TEST-cn.agentplatform.engine.infra.RunEventReaderBudgetTest.xml",
+          "bytes": 48195,
+          "sha256": "d263db989a6373f1b2f12848c4aab4adb79478b251d46ed342f46d282867261b"
+        },
+        {
+          "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-green02/TEST-cn.agentplatform.engine.infra.RunEventReaderPostgresTest.xml",
+          "bytes": 55721,
+          "sha256": "d91e748932c5bd1cadb4ae346ba253dd996b27c66535cfbca9e1be18e9ce02fe"
+        }
+      ]
+    },
+    {
+      "stage": "iam-stage-o2a-b-red06",
+      "command": [
+        "node",
+        ".tools/run-iam-module-tests.mjs",
+        "iam-stage-o2a-b-red06",
+        "engine-runtime",
+        "RunEventReaderPostgresTest#statementTimeoutUsesRemainingFloorAfterParameterPreparation"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "exitCode": 1,
+      "classification": "behavior test run",
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-red06/iam-stage-o2a-b-red06.log",
+        "bytes": 8981,
+        "sha256": "cb8cd253c8dd07528d9ab954326af72394d744dfad54eca7cd685b89808a1384"
+      },
+      "actualRunning": [
+        "cn.agentplatform.engine.infra.RunEventReaderPostgresTest"
+      ],
+      "xml": [
+        {
+          "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-red06/TEST-cn.agentplatform.engine.infra.RunEventReaderPostgresTest.xml",
+          "bytes": 47901,
+          "sha256": "38b9c13fcb13a63564aeff17d3300ac6bc7bfbe9e52e961796c396a3aa9ce1b9"
+        }
+      ]
+    },
+    {
+      "stage": "iam-stage-o2a-b-red07",
+      "command": [
+        "node",
+        ".tools/run-iam-module-tests.mjs",
+        "iam-stage-o2a-b-red07",
+        "engine-runtime",
+        "RunEventReaderBudgetTest#deploymentRepresentationModelCanonicalAndTotalBudgetsAreIndependentHardLimits"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "exitCode": 1,
+      "classification": "behavior test run",
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-red07/iam-stage-o2a-b-red07.log",
+        "bytes": 8720,
+        "sha256": "91ba5aa89705bddf4c18526e5023027f5c66c848883f23ec75c0f0d72e4b9f52"
+      },
+      "actualRunning": [
+        "cn.agentplatform.engine.infra.RunEventReaderBudgetTest"
+      ],
+      "xml": [
+        {
+          "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-red07/TEST-cn.agentplatform.engine.infra.RunEventReaderBudgetTest.xml",
+          "bytes": 46480,
+          "sha256": "0747ff7c1744b77ce304c44da14f35bb005a07ef884ecdd6d210aa517072a366"
+        }
+      ]
+    },
+    {
+      "stage": "iam-stage-o2a-b-green03",
+      "command": [
+        "node",
+        ".tools/run-iam-module-tests.mjs",
+        "iam-stage-o2a-b-green03",
+        "engine-runtime",
+        "RunEventReaderPostgresTest#statementTimeoutUsesRemainingFloorAfterParameterPreparation,RunEventReaderBudgetTest#deploymentRepresentationModelCanonicalAndTotalBudgetsAreIndependentHardLimits,RunEventReaderBudgetTest#modelIntersectionIsAdmittedBeforeSecondDomAndTemporaryReservationsUnwind,RunEventReaderPostgresTest#newMeasurementRecordsTokenBackingCanonicalModelAndTotalPeaks"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "exitCode": 1,
+      "classification": "two budget passes; two PG errors (floor race)",
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-green03/iam-stage-o2a-b-green03.log",
+        "bytes": 12482,
+        "sha256": "64857428cb37abc74ad520ffdc260800aa14467986a04009266ba77544d99cbc"
+      },
+      "actualRunning": [
+        "cn.agentplatform.engine.infra.RunEventReaderBudgetTest",
+        "cn.agentplatform.engine.infra.RunEventReaderPostgresTest"
+      ],
+      "xml": [
+        {
+          "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-green03/TEST-cn.agentplatform.engine.infra.RunEventReaderBudgetTest.xml",
+          "bytes": 46321,
+          "sha256": "fb8511157128e93d695aa1ba1fa03fc393a7c3b550b0005e07d62222bcaa1d3b"
+        },
+        {
+          "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-green03/TEST-cn.agentplatform.engine.infra.RunEventReaderPostgresTest.xml",
+          "bytes": 50399,
+          "sha256": "77d6bbcf8feb384df26a6eb2d67cfe8dfedb20c0f5bba9fcf5284aac4229b438"
+        }
+      ]
+    },
+    {
+      "stage": "iam-stage-o2a-b-green04",
+      "command": [
+        "node",
+        ".tools/run-iam-module-tests.mjs",
+        "iam-stage-o2a-b-green04",
+        "engine-runtime",
+        "RunEventReaderPostgresTest#statementTimeoutUsesRemainingFloorAfterParameterPreparation,RunEventReaderPostgresTest#newMeasurementRecordsTokenBackingCanonicalModelAndTotalPeaks"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "exitCode": 0,
+      "classification": "behavior test run",
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-green04/iam-stage-o2a-b-green04.log",
+        "bytes": 8038,
+        "sha256": "b5084605687c212ef7a887bbe2ae134cc06faf688648ef3e7069d5ff5683e666"
+      },
+      "actualRunning": [
+        "cn.agentplatform.engine.infra.RunEventReaderPostgresTest"
+      ],
+      "xml": [
+        {
+          "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-green04/TEST-cn.agentplatform.engine.infra.RunEventReaderPostgresTest.xml",
+          "bytes": 47378,
+          "sha256": "bfc2eec8b4f055a68812d6422b2be5555db1fbb4677ed3610ac0d92715ac8e07"
+        }
+      ]
+    },
+    {
+      "stage": "iam-stage-o2a-b-green05",
+      "command": [
+        "node",
+        ".tools/run-iam-module-tests.mjs",
+        "iam-stage-o2a-b-green05",
+        "engine-runtime",
+        "RunEventReaderPostgresTest#realPostgresAggregateBudgetsAcceptExactEightMiBAndRefusePlusOneBeforeText,RunEventReaderPostgresTest#pendingCloseWinsBeginAndOnceOnlyConsumerCannotExportOrReuseBorrow,RunEventReaderBudgetTest#canonicalExactBoundaryAndLongAccumulationOverflowFailBeforeExpansion"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "exitCode": 0,
+      "classification": "behavior test run",
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-green05/iam-stage-o2a-b-green05.log",
+        "bytes": 8250,
+        "sha256": "c3cc0141ee84493e39c4aef11197b938f50c6548a7392a66e7d22dab21ee65db"
+      },
+      "actualRunning": [
+        "cn.agentplatform.engine.infra.RunEventReaderBudgetTest",
+        "cn.agentplatform.engine.infra.RunEventReaderPostgresTest"
+      ],
+      "xml": [
+        {
+          "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-green05/TEST-cn.agentplatform.engine.infra.RunEventReaderBudgetTest.xml",
+          "bytes": 46057,
+          "sha256": "82dc33ed7161af8c11808161f7ecc2039d71ff7077bd72cb231505b8280e107e"
+        },
+        {
+          "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-green05/TEST-cn.agentplatform.engine.infra.RunEventReaderPostgresTest.xml",
+          "bytes": 47510,
+          "sha256": "033b692af11bc88bc1af376966725bd5f56671013b27a77e93121240395ec9d7"
+        }
+      ]
+    },
+    {
+      "stage": "iam-stage-o2a-b-red08",
+      "command": [
+        "node",
+        ".tools/run-iam-module-tests.mjs",
+        "iam-stage-o2a-b-red08",
+        "engine-runtime",
+        "RunEventReaderPostgresTest#commonRecyclerLargeBuffersDoNotSurviveBFinallyAndOtherThreadsAreUntouched"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "exitCode": 1,
+      "classification": "behavior test run",
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-red08/iam-stage-o2a-b-red08.log",
+        "bytes": 18029,
+        "sha256": "f39203a9edc7ca201781de1ad711b2eb8624a3bf8036b12493e8f4319dec33f4"
+      },
+      "actualRunning": [
+        "cn.agentplatform.engine.infra.RunEventReaderPostgresTest"
+      ],
+      "xml": [
+        {
+          "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-red08/TEST-cn.agentplatform.engine.infra.RunEventReaderPostgresTest.xml",
+          "bytes": 74214,
+          "sha256": "718d94d70e43623cd701eba00562accb5121fe34f92110ce8dfbacb6a4af5652"
+        }
+      ]
+    },
+    {
+      "stage": "iam-stage-o2a-b-green06",
+      "command": [
+        "node",
+        ".tools/run-iam-module-tests.mjs",
+        "iam-stage-o2a-b-green06",
+        "engine-runtime",
+        "RunEventReaderPostgresTest#commonRecyclerLargeBuffersDoNotSurviveBFinallyAndOtherThreadsAreUntouched"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "exitCode": 0,
+      "classification": "behavior test run",
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-green06/iam-stage-o2a-b-green06.log",
+        "bytes": 7327,
+        "sha256": "9bc4c67e7add7d5db8a41e25e744efbe8aa79d4d675fb641f153366da1528cc1"
+      },
+      "actualRunning": [
+        "cn.agentplatform.engine.infra.RunEventReaderPostgresTest"
+      ],
+      "xml": [
+        {
+          "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-green06/TEST-cn.agentplatform.engine.infra.RunEventReaderPostgresTest.xml",
+          "bytes": 46555,
+          "sha256": "8f41641bed901d636d5ee00d0bd173f13a72546d0198f72b7dbc52bc49b9633d"
+        }
+      ]
+    },
+    {
+      "stage": "iam-stage-o2a-b-final01",
+      "command": [
+        "node",
+        ".tools/run-iam-module-tests.mjs",
+        "iam-stage-o2a-b-final01",
+        "engine-runtime",
+        "RunEventReaderPostgresTest,RunEventReaderBudgetTest,FlowMaterialScopePostgresTest,FlowMaterialStatusPostgresTest,InitialMaterialScopePostgresTest,GraphRulesTest"
+      ],
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "exitCode": 1,
+      "classification": "one frozen legacy test setup error",
+      "raw": {
+        "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-final01/iam-stage-o2a-b-final01.log",
+        "bytes": 38318,
+        "sha256": "268579ab99fad5b83276cc67e08b4d0c19c04ca9a08166b813cdcb922631a0ad"
+      },
+      "actualRunning": [
+        "cn.agentplatform.engine.domain.GraphRulesTest",
+        "cn.agentplatform.engine.infra.FlowMaterialScopePostgresTest",
+        "cn.agentplatform.engine.infra.FlowMaterialStatusPostgresTest",
+        "cn.agentplatform.engine.infra.InitialMaterialScopePostgresTest",
+        "cn.agentplatform.engine.infra.RunEventReaderBudgetTest",
+        "cn.agentplatform.engine.infra.RunEventReaderPostgresTest"
+      ],
+      "xml": [
+        {
+          "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-final01/TEST-cn.agentplatform.engine.domain.GraphRulesTest.xml",
+          "bytes": 45935,
+          "sha256": "605d1786310cc3c8644d40102f67fd5b125379ddee5e390d285e15398c017609"
+        },
+        {
+          "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-final01/TEST-cn.agentplatform.engine.infra.FlowMaterialScopePostgresTest.xml",
+          "bytes": 54318,
+          "sha256": "febd0b07509bca6bea1e99e7998603ea3685aff50434506193ed1dfc27752877"
+        },
+        {
+          "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-final01/TEST-cn.agentplatform.engine.infra.FlowMaterialStatusPostgresTest.xml",
+          "bytes": 57084,
+          "sha256": "db292077d1b2a259dcd1c0b5b3f443a27855f253fa863f1340f2b45f7fdfe90b"
+        },
+        {
+          "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-final01/TEST-cn.agentplatform.engine.infra.InitialMaterialScopePostgresTest.xml",
+          "bytes": 55936,
+          "sha256": "c743031e7e7cd218deae64e03017848d58a77a24f6e758ac96fe8ee56605fff7"
+        },
+        {
+          "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-final01/TEST-cn.agentplatform.engine.infra.RunEventReaderBudgetTest.xml",
+          "bytes": 48021,
+          "sha256": "1a9eb97460ce1dc2f426b54d395afe020401f9e340080213ea6c31e188eae508"
+        },
+        {
+          "file": "docs/evidence/iam-stage-4-o2a-b-material-reader/iam-stage-o2a-b-final01/TEST-cn.agentplatform.engine.infra.RunEventReaderPostgresTest.xml",
+          "bytes": 58938,
+          "sha256": "cb4bb3392925468ed52c678fca8a879b9868ec13a14ad31f4bd04c27277fc5a3"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+  "args": [
+    "mvn.cmd",
+    "-o",
+    "-B",
+    "-ntp",
+    "-pl",
+    "platform-gateway",
+    "-am",
+    "test",
+    "-Dtest=PortalRunEventsJoinedChainTest#exactPayloadRenewalNarrowingExpiryAndRealSlowReader",
+    "-Dsurefire.failIfNoSpecifiedTests=false",
+    "-Dmaven.repo.local=.tools/m2",
+    "-Djdk.net.unixdomain.tmpdir=V:/.local/tmp"
+  ],
+  "sourceEpoch": {
+    "file": "docs/evidence/iam-stage-4-o2b-f2c2b2-joined-chain/stages/test-07/source.json",
+    "bytes": 122452,
+    "sha256": "158f79d574d0174594a0319ec58a577611597468bb771006d5726fc387b07db7"
+  }
+}

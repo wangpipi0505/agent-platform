@@ -1,0 +1,405 @@
+--- a/platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsMaterialVerifier.java
++++ b/platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsMaterialVerifier.java
+@@ -389,20 +389,22 @@
+         boolean drained() {
+             return eventSeq()==null&&resetReason()==null&&live().context.cursor()>=watermark()&&Set.of("SUCCEEDED", "FAILED",
+             "CANCELLED").contains(status());
+         }
+         // Emits reserialized, sorted/number-normalized JSON, never the original payload bytes.
+         void writePayload(JsonGenerator generator)throws IOException {
+             PortalEventsMaterialVerifier v;
+             synchronized(this) {
+                 v=live();
+                 if(v.event==null)throw denied("no payload");
++                // The single F fee covers one heavy traversal, including generator reentry.
++                if(activeWriters!=0)throw denied("window writer active");
+                 activeWriters++;
+             }
+             try {
+                 write(generator, v.payload);
+                 live();
+             }
+             finally {
+                 synchronized(this) {
+                     activeWriters--;
+                     notifyAll();
+@@ -679,65 +681,155 @@
+     private static final Set<String> WINDOW=Set.of("runDbId", "owner", "acceptedSnapshotSha", "initialCeiling", "initialCeilingSha256",
+     "provenance", "rootScopes", "stateScope", "eventScope", "scopes", "state", "eventIdentity", "window", "hasEvent");
+     private enum Shape {
+         WINDOW, OWNER, INITIAL, ATTR, ENTITLEMENT, PROVENANCE, ROOT, ROOTS, ROW, SCOPE, MATERIAL, STATE, IDENTITY, CURSOR,
+         HELLO, RECEIPT
+     }
+     private enum Scalar {
+         TEXT, STRING, NULLABLE_STRING, HASH, NULLABLE_HASH, POSITIVE, NONNEGATIVE, NULLABLE_POSITIVE, ONE, BOOLEAN, STRINGS,
+         HASHES, NULLABLE_IDENTITY
+     }
+-    private static final Map<Shape, Map<String, Object>> SCHEMA=Map.ofEntries( Map.entry(Shape.WINDOW, shape("runDbId",
+-    Scalar.POSITIVE, "owner", Shape.OWNER, "acceptedSnapshotSha", Scalar.HASH, "initialCeiling", Shape.INITIAL, "initialCeilingSha256",
+-    Scalar.HASH, "provenance", Shape.PROVENANCE, "rootScopes", Shape.ROOTS, "stateScope", Scalar.HASH, "eventScope",
+-    Scalar.NULLABLE_HASH, "state", Shape.STATE, "eventIdentity", Scalar.NULLABLE_IDENTITY, "window", Shape.CURSOR, "hasEvent",
+-    Scalar.BOOLEAN)), Map.entry(Shape.OWNER, shape("tenantId", Scalar.TEXT, "principalId", Scalar.TEXT)), Map.entry(Shape.INITIAL,
+-    shape("tenantId", Scalar.TEXT, "principalId", Scalar.TEXT, "roles", Scalar.STRINGS, "attributes", Shape.ATTR)),
+-    Map.entry(Shape.PROVENANCE, shape("admissionDecisionId", Scalar.TEXT, "appVersionId", Scalar.POSITIVE, "appVersionNo",
+-    Scalar.POSITIVE, "authorizationVersion", Scalar.TEXT, "executionRoot", Shape.ROOT, "grantRef", Scalar.TEXT, "operationId",
+-    Scalar.TEXT, "originAuthenticationId", Scalar.TEXT)), Map.entry(Shape.ROOT, shape("kind", Scalar.TEXT, "id", Scalar.TEXT,
+-    "versionDigest", Scalar.HASH)), Map.entry(Shape.ROOTS, shape("run-inputs", Scalar.HASH, "run-snapshot", Scalar.HASH,
+-    "run-version-refs", Scalar.HASH)), Map.entry(Shape.ROW, shape("revision", Scalar.POSITIVE, "scope", Shape.SCOPE)),
+-    Map.entry(Shape.SCOPE, shape("schemaVersion", Scalar.ONE, "material", Shape.MATERIAL, "owner", Shape.OWNER, "sourceDecisionId",
+-    Scalar.TEXT, "sourceAuthorizationVersion", Scalar.TEXT, "initialCeilingSha256", Scalar.HASH, "requiredRoles", Scalar.STRINGS,
+-    "requiredEntitlements", Shape.ENTITLEMENT, "requiredDataLabels", Scalar.STRINGS, "parentScopeSha256", Scalar.HASHES,
+-    "scopeSha256", Scalar.HASH)), Map.entry(Shape.MATERIAL, shape("producer", Scalar.TEXT, "kind", Scalar.TEXT, "id",
+-    Scalar.TEXT, "version", Scalar.TEXT, "payloadSha256", Scalar.HASH)), Map.entry(Shape.STATE, shape("id", Scalar.POSITIVE,
+-    "public_id", Scalar.TEXT, "app_code", Scalar.STRING, "status", Scalar.STRING, "event_seq", Scalar.NONNEGATIVE, "stop_reason",
+-    Scalar.NULLABLE_STRING, "started_at", Scalar.NULLABLE_STRING, "ended_at", Scalar.NULLABLE_STRING, "mode", Scalar.STRING,
+-    "trigger_type", Scalar.STRING, "output_ref", Scalar.NULLABLE_STRING)), Map.entry(Shape.IDENTITY, shape("created_at",
+-    Scalar.STRING, "id", Scalar.POSITIVE, "run_id", Scalar.POSITIVE, "seq", Scalar.POSITIVE, "type", Scalar.STRING)),
+-    Map.entry(Shape.CURSOR, shape("afterSeq", Scalar.NONNEGATIVE, "oldest", Scalar.NULLABLE_POSITIVE, "status", Scalar.STRING,
+-    "watermark", Scalar.NONNEGATIVE)), Map.entry(Shape.HELLO, shape("receipt", Scalar.TEXT)), Map.entry(Shape.RECEIPT,
+-    shape("iss", Scalar.TEXT, "aud", Scalar.TEXT, "token_use", Scalar.TEXT, "iat", Scalar.NONNEGATIVE, "nbf", Scalar.NONNEGATIVE,
+-    "exp", Scalar.NONNEGATIVE, "jti", Scalar.TEXT, "association_sha256", Scalar.HASH, "parent_response_id", Scalar.TEXT,
+-    "child_response_id", Scalar.TEXT, "child_immutable_sha256", Scalar.HASH, "engine_opening_decision_id", Scalar.TEXT,
+-    "engine_admission_nonce", Scalar.TEXT, "engine_admission_request_sha256", Scalar.HASH)));
++    private static final Map<Shape, Map<String, Object>> SCHEMA=Map.ofEntries(
++        Map.entry(Shape.WINDOW, shape(
++            "runDbId", Scalar.POSITIVE,
++            "owner", Shape.OWNER,
++            "acceptedSnapshotSha", Scalar.HASH,
++            "initialCeiling", Shape.INITIAL,
++            "initialCeilingSha256", Scalar.HASH,
++            "provenance", Shape.PROVENANCE,
++            "rootScopes", Shape.ROOTS,
++            "stateScope", Scalar.HASH,
++            "eventScope", Scalar.NULLABLE_HASH,
++            "state", Shape.STATE,
++            "eventIdentity", Scalar.NULLABLE_IDENTITY,
++            "window", Shape.CURSOR,
++            "hasEvent", Scalar.BOOLEAN)),
++        Map.entry(Shape.OWNER, shape(
++            "tenantId", Scalar.TEXT,
++            "principalId", Scalar.TEXT)),
++        Map.entry(Shape.INITIAL, shape(
++            "tenantId", Scalar.TEXT,
++            "principalId", Scalar.TEXT,
++            "roles", Scalar.STRINGS,
++            "attributes", Shape.ATTR)),
++        Map.entry(Shape.PROVENANCE, shape(
++            "admissionDecisionId", Scalar.TEXT,
++            "appVersionId", Scalar.POSITIVE,
++            "appVersionNo", Scalar.POSITIVE,
++            "authorizationVersion", Scalar.TEXT,
++            "executionRoot", Shape.ROOT,
++            "grantRef", Scalar.TEXT,
++            "operationId", Scalar.TEXT,
++            "originAuthenticationId", Scalar.TEXT)),
++        Map.entry(Shape.ROOT, shape(
++            "kind", Scalar.TEXT,
++            "id", Scalar.TEXT,
++            "versionDigest", Scalar.HASH)),
++        Map.entry(Shape.ROOTS, shape(
++            "run-inputs", Scalar.HASH,
++            "run-snapshot", Scalar.HASH,
++            "run-version-refs", Scalar.HASH)),
++        Map.entry(Shape.ROW, shape(
++            "revision", Scalar.POSITIVE,
++            "scope", Shape.SCOPE)),
++        Map.entry(Shape.SCOPE, shape(
++            "schemaVersion", Scalar.ONE,
++            "material", Shape.MATERIAL,
++            "owner", Shape.OWNER,
++            "sourceDecisionId", Scalar.TEXT,
++            "sourceAuthorizationVersion", Scalar.TEXT,
++            "initialCeilingSha256", Scalar.HASH,
++            "requiredRoles", Scalar.STRINGS,
++            "requiredEntitlements", Shape.ENTITLEMENT,
++            "requiredDataLabels", Scalar.STRINGS,
++            "parentScopeSha256", Scalar.HASHES,
++            "scopeSha256", Scalar.HASH)),
++        Map.entry(Shape.MATERIAL, shape(
++            "producer", Scalar.TEXT,
++            "kind", Scalar.TEXT,
++            "id", Scalar.TEXT,
++            "version", Scalar.TEXT,
++            "payloadSha256", Scalar.HASH)),
++        Map.entry(Shape.STATE, shape(
++            "id", Scalar.POSITIVE,
++            "public_id", Scalar.TEXT,
++            "app_code", Scalar.STRING,
++            "status", Scalar.STRING,
++            "event_seq", Scalar.NONNEGATIVE,
++            "stop_reason", Scalar.NULLABLE_STRING,
++            "started_at", Scalar.NULLABLE_STRING,
++            "ended_at", Scalar.NULLABLE_STRING,
++            "mode", Scalar.STRING,
++            "trigger_type", Scalar.STRING,
++            "output_ref", Scalar.NULLABLE_STRING)),
++        Map.entry(Shape.IDENTITY, shape(
++            "created_at", Scalar.STRING,
++            "id", Scalar.POSITIVE,
++            "run_id", Scalar.POSITIVE,
++            "seq", Scalar.POSITIVE,
++            "type", Scalar.STRING)),
++        Map.entry(Shape.CURSOR, shape(
++            "afterSeq", Scalar.NONNEGATIVE,
++            "oldest", Scalar.NULLABLE_POSITIVE,
++            "status", Scalar.STRING,
++            "watermark", Scalar.NONNEGATIVE)),
++        Map.entry(Shape.HELLO, shape(
++            "receipt", Scalar.TEXT)),
++        Map.entry(Shape.RECEIPT, shape(
++            "iss", Scalar.TEXT,
++            "aud", Scalar.TEXT,
++            "token_use", Scalar.TEXT,
++            "iat", Scalar.NONNEGATIVE,
++            "nbf", Scalar.NONNEGATIVE,
++            "exp", Scalar.NONNEGATIVE,
++            "jti", Scalar.TEXT,
++            "association_sha256", Scalar.HASH,
++            "parent_response_id", Scalar.TEXT,
++            "child_response_id", Scalar.TEXT,
++            "child_immutable_sha256", Scalar.HASH,
++            "engine_opening_decision_id", Scalar.TEXT,
++            "engine_admission_nonce", Scalar.TEXT,
++            "engine_admission_request_sha256", Scalar.HASH)));
+     private static Map<String, Object> shape(Object... a) {
+         var m=new HashMap<String, Object>();
+         for(int i=0; i<a.length; i+=2)m.put((String)a[i], a[i+1]);
+         return Map.copyOf(m);
+     }
+     private static Object field(Shape s, String k) {
+         if(s==Shape.ATTR||s==Shape.ENTITLEMENT) {
+             if(!(s==Shape.ATTR?ATTRS:ENTITLEMENTS).contains(k))throw denied("attribute key");
+             return Scalar.STRINGS;
+         }
+         Object v=SCHEMA.get(s).get(k);
+         if(v==null)throw denied("unknown "+s+"."+k);
+         return v;
+     }
+     private Parser parser(InputStream in, boolean payload)throws IOException {
+         return new Parser(in, payload, context::live);
+     }
+     private static JsonFactory factory(boolean payload) {
+-        return JsonFactory.builder().enable(com.fasterxml.jackson.core.json.JsonWriteFeature.COMBINE_UNICODE_SURROGATES_IN_UTF8).disable(JsonFactory.Feature.CANONICALIZE_FIELD_NAMES).disable(JsonFactory.Feature.INTERN_FIELD_NAMES).disable(JsonFactory.Feature.USE_THREAD_LOCAL_FOR_BUFFER_RECYCLING).enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION).disable(StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION).streamReadConstraints(StreamReadConstraints.builder().maxNestingDepth(payload?64:80).maxTokenCount(payload?32768:65536).maxStringLength(payload?262144:65536).maxNameLength(payload?262144:256).maxNumberLength(1000).maxDocumentLength(8388608).build()).build();
++        return JsonFactory.builder()
++            .enable(com.fasterxml.jackson.core.json.JsonWriteFeature.COMBINE_UNICODE_SURROGATES_IN_UTF8)
++            .disable(JsonFactory.Feature.CANONICALIZE_FIELD_NAMES)
++            .disable(JsonFactory.Feature.INTERN_FIELD_NAMES)
++            .disable(JsonFactory.Feature.USE_THREAD_LOCAL_FOR_BUFFER_RECYCLING)
++            .enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION)
++            .disable(StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION)
++            .streamReadConstraints(StreamReadConstraints.builder()
++                .maxNestingDepth(payload?64:80)
++                .maxTokenCount(payload?32768:65536)
++                .maxStringLength(payload?262144:65536)
++                .maxNameLength(payload?262144:256)
++                .maxNumberLength(1000)
++                .maxDocumentLength(8388608)
++                .build())
++            .build();
+     }
+     private static final class Parser implements AutoCloseable {
+         final JsonParser p;
+         final Reader reader;
+         final boolean payload;
+         final Runnable live;
+         int tokens, localStart;
+         long names, localStrings;
+         boolean local;
+         Parser(InputStream in, boolean payload, Runnable live)throws IOException {
+--- a/platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalEventsMaterialAuthorityTest.java
++++ b/platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalEventsMaterialAuthorityTest.java
+@@ -52,21 +52,21 @@
+     static byte[] utf(String s) {
+         return s.getBytes(StandardCharsets.UTF_8);
+     }
+     static String sha(byte[] b) throws Exception {
+         return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(b));
+     }
+     static Path root() {
+         return PortalRunEventsHttpTest.root();
+     }
+     static Path runs() throws IOException {
+-        return Files.createDirectories(root().resolve(".local/iam-o2b-f2c1-material/peers"));
++        return Files.createDirectories(root().resolve(".local/iam-o2b-f2c1-fixes/peers"));
+     }
+     @Test void signedReceiptTamperingNeverReachesWindow() throws Exception {
+         child("receipt-red");
+     }
+     @Test void nestedUnknownFieldWithValidCommitNeverReachesWindow() throws Exception {
+         child("nested-red");
+     }
+     @Test void changedBusinessPayloadWithValidWireShaNeverReachesWindow() throws Exception {
+         child("business-red");
+     }
+@@ -284,20 +284,148 @@
+                 var id=(ObjectNode)m.get("eventIdentity");
+                 id.put("type", type);
+                 String canonical="{\"created_at\":"+JSON.writeValueAsString(id.get("created_at").asText())+",\"id\":"+id.get("id")+",\"payload\":null,\"run_id\":"+id.get("run_id")+",\"seq\":"+id.get("seq")+",\"type\":"+JSON.writeValueAsString(type)+"}";
+                 ((ObjectNode)selected(m, "eventScope").get("material")).put("payloadSha256", sha(utf(canonical)));
+                 rehash(m);
+             }
+             catch(Exception e) {
+                 throw new AssertionError(e);
+             }
+         }, utf("null"), false);
++    }
++
++    @Test void sameWindowConcurrentWriterIsRejected() throws Exception {
++        child("single-writer");
++    }
++    @Test void sameWindowReentrantWriterIsRejected() throws Exception {
++        child("reentrant-writer");
++    }
++    static void singleWriter(Path run) throws Exception {
++        try (var f=new Fixture(); var peer=new Peer(f, run, m->{}, "normal", null);
++             var tls=peer.tls(); var workers=Executors.newFixedThreadPool(2)) {
++            var session=new PortalRunEventsHttp(tls).begin(f.observed, f.source, f.run, 0);
++            var entered=new CountDownLatch(1);
++            var release=new CountDownLatch(1);
++            try {
++                session.lookupMetadata();
++                session.consumeVerified(w->{
++                    var first=workers.submit(()->{
++                        try (var g=new com.fasterxml.jackson.core.util.JsonGeneratorDelegate(
++                                new com.fasterxml.jackson.core.JsonFactory().createGenerator(OutputStream.nullOutputStream())) {
++                            @Override public void writeString(String value) throws IOException {
++                                entered.countDown();
++                                try {
++                                    if(!release.await(12, TimeUnit.SECONDS))throw new IOException("writer release deadline");
++                                }
++                                catch(InterruptedException e) { throw new IOException(e); }
++                                super.writeString(value);
++                            }
++                        }) { w.writePayload(g); }
++                        return null;
++                    });
++                    var secondCalls=new AtomicInteger();
++                    try {
++                        assertTrue(entered.await(3, TimeUnit.SECONDS));
++                        long held=PortalEventsPacketBudget.SHARED.reservedBytes();
++                        assertTrue(held>83886080L);
++                        assertEquals(1, PortalEventsPacketBudget.SHARED.owners());
++                        var second=workers.submit(()->{
++                            try (var g=new com.fasterxml.jackson.core.util.JsonGeneratorDelegate(
++                                    new com.fasterxml.jackson.core.JsonFactory().createGenerator(OutputStream.nullOutputStream())) {
++                                @Override public void writeStartObject() throws IOException {
++                                    secondCalls.incrementAndGet();
++                                    super.writeStartObject();
++                                }
++                            }) { return assertThrows(PlatformException.class, ()->w.writePayload(g)); }
++                        });
++                        var denied=second.get(2, TimeUnit.SECONDS);
++                        assertEquals("EVENT_MATERIAL_DENIED", denied.code());
++                        assertEquals("window writer active", denied.getMessage());
++                        assertEquals(0, secondCalls.get());
++                        assertFalse(first.isDone());
++                        assertEquals(held, PortalEventsPacketBudget.SHARED.reservedBytes());
++                        release.countDown();
++                        first.get(3, TimeUnit.SECONDS);
++                        // An admitted writer's exception must release admission exactly once.
++                        try (var g=new com.fasterxml.jackson.core.util.JsonGeneratorDelegate(
++                                new com.fasterxml.jackson.core.JsonFactory().createGenerator(OutputStream.nullOutputStream())) {
++                            @Override public void writeString(String value) throws IOException { throw new IOException("writer sentinel"); }
++                        }) { assertEquals("writer sentinel", assertThrows(IOException.class, ()->w.writePayload(g)).getMessage()); }
++                        try (var g=new com.fasterxml.jackson.core.JsonFactory().createGenerator(OutputStream.nullOutputStream())) {
++                            w.writePayload(g);
++                        }
++                        Files.writeString(run.resolve("writer.properties"), "secondGeneratorCalls="+secondCalls.get()
++                                +"\nheldBytes="+held+"\nfirstCrossThreadExited=true\nexceptionThenSequentialWrite=true\n");
++                    }
++                    catch(ExecutionException e) {
++                        throw new AssertionError("second writer entered traversal; generatorCalls="+secondCalls.get(), e.getCause());
++                    }
++                    catch(InterruptedException|TimeoutException e) { throw new IOException(e); }
++                    finally {
++                        release.countDown();
++                        try { first.get(3, TimeUnit.SECONDS); }
++                        catch(InterruptedException|ExecutionException|TimeoutException e) { throw new IOException(e); }
++                    }
++                });
++            }
++            finally {
++                release.countDown();
++                session.close();
++                assertTrue(session.awaitClosed(Duration.ofSeconds(3)));
++                assertEquals(0, PortalEventsPacketBudget.SHARED.reservedBytes());
++            }
++        }
++    }
++    static void reentrantWriter(Path run) throws Exception {
++        try (var f=new Fixture(); var peer=new Peer(f, run, m->{}, "normal", null); var tls=peer.tls()) {
++            var session=new PortalRunEventsHttp(tls).begin(f.observed, f.source, f.run, 0);
++            var attempted=new AtomicBoolean();
++            var innerCalls=new AtomicInteger();
++            try {
++                session.lookupMetadata();
++                session.consumeVerified(w->{
++                    long held=PortalEventsPacketBudget.SHARED.reservedBytes();
++                    try (var g=new com.fasterxml.jackson.core.util.JsonGeneratorDelegate(
++                            new com.fasterxml.jackson.core.JsonFactory().createGenerator(OutputStream.nullOutputStream())) {
++                        @Override public void writeString(String value) throws IOException {
++                            if(attempted.compareAndSet(false, true)) {
++                                try (var inner=new com.fasterxml.jackson.core.util.JsonGeneratorDelegate(
++                                        new com.fasterxml.jackson.core.JsonFactory().createGenerator(OutputStream.nullOutputStream())) {
++                                    @Override public void writeStartObject() throws IOException {
++                                        innerCalls.incrementAndGet();
++                                        super.writeStartObject();
++                                    }
++                                }) {
++                                    var denied=assertThrows(PlatformException.class, ()->w.writePayload(inner));
++                                    assertEquals("EVENT_MATERIAL_DENIED", denied.code());
++                                    assertEquals("window writer active", denied.getMessage());
++                                }
++                                assertEquals(0, innerCalls.get());
++                                assertEquals(held, PortalEventsPacketBudget.SHARED.reservedBytes());
++                            }
++                            super.writeString(value);
++                        }
++                    }) { w.writePayload(g); }
++                    assertTrue(attempted.get());
++                    try (var g=new com.fasterxml.jackson.core.JsonFactory().createGenerator(OutputStream.nullOutputStream())) {
++                        w.writePayload(g);
++                    }
++                    Files.writeString(run.resolve("writer.properties"), "reentrantAttempted=true\ninnerGeneratorCalls="
++                            +innerCalls.get()+"\nheldBytes="+held+"\nouterAndSequentialExited=true\n");
++                });
++            }
++            finally {
++                session.close();
++                assertTrue(session.awaitClosed(Duration.ofSeconds(3)));
++                assertEquals(0, PortalEventsPacketBudget.SHARED.reservedBytes());
++            }
++        }
+     }
+     static void retention(Path run)throws Exception {
+         try(var f=new Fixture(); var a=new Peer(f, run, m-> {
+         }, "normal", null); var b=new Peer(f, run, m-> {
+         }, "normal", null); var ta=a.tls(); var tb=b.tls(); var workers=Executors.newFixedThreadPool(4)) {
+             var sa=new PortalRunEventsHttp(ta).begin(f.observed, f.source, f.run, 0);
+             sa.lookupMetadata();
+             var sb=new PortalRunEventsHttp(tb).begin(f.observed, f.source, f.run, 0);
+             sb.lookupMetadata();
+             var entered=new CountDownLatch(2);
+@@ -731,20 +859,22 @@
+             case "nonfacts" -> {
+                 exercise(run, "hello-only", m-> {
+                 }, null, false);
+                 exercise(run, "capacity", m-> {
+                 }, null, false);
+             }
+             case "generations" -> generations(run);
+             case "profiles" -> profiles(run);
+             case "semantic" -> semantic(run);
+             case "retention" -> retention(run);
++            case "single-writer" -> singleWriter(run);
++            case "reentrant-writer" -> reentrantWriter(run);
+             case "schema" -> schema(run);
+             case "relations" -> relations(run);
+             case "floors" -> floors(run);
+             case "association" -> exercise(run, "wrong-child", m-> {
+             }, null, true, "receipt association");
+             case "lifecycle" -> lifecycle(run);
+             case "fixture" -> exercise(run, "normal", m -> {
+                 assertEquals(69, m.get("scopes").size());
+                 assertTrue(PortalEventsPacketDecoderTest.parentCount(m) >= 65);
+             }, null, false);

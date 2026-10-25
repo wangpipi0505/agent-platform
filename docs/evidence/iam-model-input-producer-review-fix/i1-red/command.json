@@ -1,0 +1,25 @@
+{
+  "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+  "args": [
+    "mvn.cmd",
+    "-o",
+    "-B",
+    "-ntp",
+    "-pl",
+    "engine-runtime",
+    "-am",
+    "test",
+    "-Dmaven.repo.local=.tools/m2",
+    "-Djdk.net.unixdomain.tmpdir=V:/.local/tmp",
+    "-Dsurefire.failIfNoSpecifiedTests=false",
+    "-Dmodel.input.evidence=G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\iam-model-input-producer-review-fix\\i1-red\\observer",
+    "-Dmodel.input.registry=G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\iam-model-input-producer-review-fix\\databases.jsonl",
+    "-Dtest=ModelInputMaterialPostgresTest#latestSuccessfulDecisionRejectsOlderWriterBeforePayload",
+    "-Dmodel.input.tls=G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\iam-model-input-producer\\tls\\engine.p12"
+  ],
+  "source": {
+    "file": "docs/evidence/iam-model-input-producer-review-fix/i1-red/source.json",
+    "bytes": 125471,
+    "sha256": "976d61239f23ff4346ea1ed1d709ae6c8a9b380ae129208e816a7ad13bb0deda"
+  }
+}

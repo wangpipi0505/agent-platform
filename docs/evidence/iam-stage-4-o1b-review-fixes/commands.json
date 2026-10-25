@@ -1,0 +1,87 @@
+{
+  "runner": {
+    "file": ".tools/run-iam-module-tests.mjs",
+    "bytes": 2884,
+    "sha256": "0a86ddfdf91bff1971cf41f9326ea0d0f23e0b0c32d3e02082f7290a26867de4"
+  },
+  "commands": [
+    {
+      "stage": "red01",
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "command": [
+        "node",
+        ".tools/run-iam-module-tests.mjs",
+        "iam-stage-4-o1b-review-fixes-red01",
+        "engine-runtime",
+        "RunObservationStatusHttpPostgresTest#retainedBufferCapacityNeverExceedsBudgetForAdversarialWriteShapes,RunObservationStatusHttpPostgresTest#sharedSnapshotPassesProductionFiniteFlowAndAdmissionDagGates"
+      ],
+      "exitCode": 1,
+      "error": null,
+      "log": {
+        "file": ".local/iam-stage-4-o1b-review-fixes-red01.log",
+        "bytes": 12313,
+        "sha256": "b64718e9c4872ee9611db4667968b5e28d77fcb6d0ad2d2b6d864474536d41d0"
+      },
+      "launcher": {
+        "file": ".local/iam-o1b-review-fixes/red01/launcher.log",
+        "bytes": 370,
+        "sha256": "d810ff7657f0f07df8ac4c48e6bc8b64c25336ebf4b7472441335a852853f7cf"
+      },
+      "running": [
+        "cn.agentplatform.engine.infra.RunObservationStatusHttpPostgresTest"
+      ],
+      "xml": [
+        {
+          "file": ".local/iam-o1b-review-fixes/red01/TEST-cn.agentplatform.engine.infra.RunObservationStatusHttpPostgresTest.xml",
+          "bytes": 51900,
+          "sha256": "29b0893e9e599785e3b08c60b3209a3f49a3d3906c523745f5891b767b0bb8d3"
+        }
+      ],
+      "source": {
+        "file": ".local/iam-o1b-review-fixes/red01/source.json",
+        "bytes": 109789,
+        "sha256": "7f7e36c43551df509acfdd841fec1d4a0a2e09e0cc982b57127afc74a0e8f3e9"
+      },
+      "finishedAt": "2026-10-20T22:27:11.444Z"
+    },
+    {
+      "stage": "final01",
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "command": [
+        "node",
+        ".tools/run-iam-module-tests.mjs",
+        "iam-stage-4-o1b-review-fixes-final01",
+        "engine-runtime",
+        "RunObservationStatusHttpPostgresTest"
+      ],
+      "exitCode": 0,
+      "error": null,
+      "log": {
+        "file": ".local/iam-stage-4-o1b-review-fixes-final01.log",
+        "bytes": 408464,
+        "sha256": "7c2b6bc3416a7707ab5433820720e5af11232e2c13a42bfbe2911761b643821a"
+      },
+      "launcher": {
+        "file": ".local/iam-o1b-review-fixes/final01/launcher.log",
+        "bytes": 210,
+        "sha256": "aba34919ffb7b6ee006a89abfe97c4f5c11de5548d87e8394edd1edae619b5f8"
+      },
+      "running": [
+        "cn.agentplatform.engine.infra.RunObservationStatusHttpPostgresTest"
+      ],
+      "xml": [
+        {
+          "file": ".local/iam-o1b-review-fixes/final01/TEST-cn.agentplatform.engine.infra.RunObservationStatusHttpPostgresTest.xml",
+          "bytes": 452041,
+          "sha256": "1ca5bcaed51e7b3a609a4639d1b97301f46d53e528582a3a0fb3c4824d54010b"
+        }
+      ],
+      "source": {
+        "file": ".local/iam-o1b-review-fixes/final01/source.json",
+        "bytes": 109789,
+        "sha256": "d5fd1b495a0a447b6a786d47869c590dca18908f488401dddb149b73afc88648"
+      },
+      "finishedAt": "2026-10-20T22:30:18.158Z"
+    }
+  ]
+}

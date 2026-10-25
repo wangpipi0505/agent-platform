@@ -1,0 +1,214 @@
+
+ RUN  v4.1.12 G:/207/项目/算法重组工具/代码/agent-platform/web
+
+ ❯ tests/run-observer.test.ts (18 tests | 1 failed | 17 skipped) 19ms
+     × D4b fix real reset stream with rejected cancel stops before readStatus or reopen 18ms
+ ❯ tests/stream-auth.test.ts (27 tests | 4 failed | 21 skipped) 13ms
+   × D4b fix cleanup rejection preserves AUTHORITY_EXPIRED and releases reader without facts 8ms
+   × D4b fix cleanup rejection preserves AUTHORITY_DENIED and releases reader without facts 1ms
+   × D4b fix cleanup rejection preserves AUTHORITY_UNAVAILABLE and releases reader without facts 1ms
+   × D4b fix cleanup rejection never replaces primary parser failure 1ms
+ ❯ tests/portal-auth.test.ts (21 tests | 3 failed | 16 skipped) 12ms
+   × D4b fix artifact preserves HTTP 401 without reading error body or global auth 8ms
+   × D4b fix artifact preserves HTTP 403 without reading error body or global auth 1ms
+   × D4b fix artifact preserves HTTP 503 without reading error body or global auth 1ms
+
+ Test Files  3 failed (3)
+      Tests  8 failed | 4 passed | 54 skipped (66)
+   Start at  04:44:33
+   Duration  311ms (transform 182ms, setup 0ms, import 439ms, tests 44ms, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/portal-auth.test.ts > D4b fix artifact preserves HTTP 401 without reading error body or global auth
+AssertionError: expected Error: 下载附件失败 (401) to match object { Object (status, message) }
+
+- Expected
++ Received
+
+- {
++ Error {
+    "message": "下载附件失败 (401)",
+-   "status": 401,
+  }
+
+ ❯ tests/portal-auth.test.ts:14:98
+     12|  const response=new Response('not read',{status}),readBody=vi.fn();res…
+     13|  vi.stubGlobal('fetch',async()=>response);const auth=useAuth();auth.to…
+     14|  await expect(downloadArtifact({downloadUrl:'/admin/artifacts/a/downlo…
+       |                                                                                                  ^
+     15|  expect(readBody).not.toHaveBeenCalled();expect(auth.token).toBe('curr…
+     16| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯
+
+ FAIL  tests/portal-auth.test.ts > D4b fix artifact preserves HTTP 403 without reading error body or global auth
+AssertionError: expected Error: 下载附件失败 (403) to match object { Object (status, message) }
+
+- Expected
++ Received
+
+- {
++ Error {
+    "message": "下载附件失败 (403)",
+-   "status": 403,
+  }
+
+ ❯ tests/portal-auth.test.ts:14:98
+     12|  const response=new Response('not read',{status}),readBody=vi.fn();res…
+     13|  vi.stubGlobal('fetch',async()=>response);const auth=useAuth();auth.to…
+     14|  await expect(downloadArtifact({downloadUrl:'/admin/artifacts/a/downlo…
+       |                                                                                                  ^
+     15|  expect(readBody).not.toHaveBeenCalled();expect(auth.token).toBe('curr…
+     16| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/8]⎯
+
+ FAIL  tests/portal-auth.test.ts > D4b fix artifact preserves HTTP 503 without reading error body or global auth
+AssertionError: expected Error: 下载附件失败 (503) to match object { Object (status, message) }
+
+- Expected
++ Received
+
+- {
++ Error {
+    "message": "下载附件失败 (503)",
+-   "status": 503,
+  }
+
+ ❯ tests/portal-auth.test.ts:14:98
+     12|  const response=new Response('not read',{status}),readBody=vi.fn();res…
+     13|  vi.stubGlobal('fetch',async()=>response);const auth=useAuth();auth.to…
+     14|  await expect(downloadArtifact({downloadUrl:'/admin/artifacts/a/downlo…
+       |                                                                                                  ^
+     15|  expect(readBody).not.toHaveBeenCalled();expect(auth.token).toBe('curr…
+     16| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/8]⎯
+
+ FAIL  tests/run-observer.test.ts > authoritative run observation across transient SSE connections > D4b fix real reset stream with rejected cancel stops before readStatus or reopen
+AssertionError: expected { …(6) } to match object { outcome: { error: { …(1) } }, …(5) }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+@@ -2,11 +2,9 @@
+    "cancels": 1,
+    "facts": 0,
+    "locked": false,
+    "opens": 1,
+    "outcome": {
+-     "error": {
+-       "reason": "AUTHORITY_DENIED",
+-     },
++     "result": "SUCCEEDED",
+    },
+-   "reads": 0,
++   "reads": 1,
+  }
+
+ ❯ tests/run-observer.test.ts:12:72
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/8]⎯
+
+ FAIL  tests/stream-auth.test.ts > D4b fix cleanup rejection preserves AUTHORITY_EXPIRED and releases reader without facts
+AssertionError: expected { outcome: { …(3) }, cancels: 1, …(2) } to match object { …(4) }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "cancels": 1,
+    "facts": 0,
+    "locked": false,
+    "outcome": {
+-     "reason": "AUTHORITY_EXPIRED",
++     "reason": undefined,
+    },
+  }
+
+ ❯ tests/stream-auth.test.ts:12:105
+     10|  vi.stubGlobal('fetch',async()=>new Response(stream));const events=vi.…
+     11|  const outcome=await streamEvents('/events',()=> 'token',0,events,new …
+     12|  expect({outcome,cancels:cancel.mock.calls.length,locked:stream.locked…
+       |                                                                                                         ^
+     13| });
+     14| it('D4b fix cleanup rejection preserves caller AbortError and releases…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/8]⎯
+
+ FAIL  tests/stream-auth.test.ts > D4b fix cleanup rejection preserves AUTHORITY_DENIED and releases reader without facts
+AssertionError: expected { outcome: { …(3) }, cancels: 1, …(2) } to match object { …(4) }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "cancels": 1,
+    "facts": 0,
+    "locked": false,
+    "outcome": {
+-     "reason": "AUTHORITY_DENIED",
++     "reason": undefined,
+    },
+  }
+
+ ❯ tests/stream-auth.test.ts:12:105
+     10|  vi.stubGlobal('fetch',async()=>new Response(stream));const events=vi.…
+     11|  const outcome=await streamEvents('/events',()=> 'token',0,events,new …
+     12|  expect({outcome,cancels:cancel.mock.calls.length,locked:stream.locked…
+       |                                                                                                         ^
+     13| });
+     14| it('D4b fix cleanup rejection preserves caller AbortError and releases…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/8]⎯
+
+ FAIL  tests/stream-auth.test.ts > D4b fix cleanup rejection preserves AUTHORITY_UNAVAILABLE and releases reader without facts
+AssertionError: expected { outcome: { …(3) }, cancels: 1, …(2) } to match object { …(4) }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "cancels": 1,
+    "facts": 0,
+    "locked": false,
+    "outcome": {
+-     "reason": "AUTHORITY_UNAVAILABLE",
++     "reason": undefined,
+    },
+  }
+
+ ❯ tests/stream-auth.test.ts:12:105
+     10|  vi.stubGlobal('fetch',async()=>new Response(stream));const events=vi.…
+     11|  const outcome=await streamEvents('/events',()=> 'token',0,events,new …
+     12|  expect({outcome,cancels:cancel.mock.calls.length,locked:stream.locked…
+       |                                                                                                         ^
+     13| });
+     14| it('D4b fix cleanup rejection preserves caller AbortError and releases…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/8]⎯
+
+ FAIL  tests/stream-auth.test.ts > D4b fix cleanup rejection never replaces primary parser failure
+AssertionError: expected TypeError: cleanup failed to match object { name: 'SyntaxError' }
+
+- Expected
++ Received
+
+- {
+-   "name": "SyntaxError",
++ TypeError {
++   "message": "cleanup failed",
+  }
+
+ ❯ tests/stream-auth.test.ts:22:143
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/8]⎯
+

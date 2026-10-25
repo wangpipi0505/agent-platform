@@ -1,0 +1,1266 @@
+[
+  {
+    "target": "gateway",
+    "method": "POST",
+    "template": "/auth/dev-token",
+    "handler": "DevAuthentication.token",
+    "source": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/DevAuthentication.java:16",
+    "sourceSha256": "eb7d2609e0b4c1e5afd008ea1cc0d126dd11fcb5af649de9aeec6dcfa250648f"
+  },
+  {
+    "target": "gateway",
+    "method": "ANY",
+    "template": "/admin/**",
+    "handler": "GatewayController.proxy",
+    "source": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34",
+    "sourceSha256": "2e6b6e2bd9a0bc7189e55271fa4784748c96b03f8f81361c322f8b482e660447"
+  },
+  {
+    "target": "gateway",
+    "method": "ANY",
+    "template": "/v1/**",
+    "handler": "GatewayController.proxy",
+    "source": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34",
+    "sourceSha256": "2e6b6e2bd9a0bc7189e55271fa4784748c96b03f8f81361c322f8b482e660447"
+  },
+  {
+    "target": "gateway",
+    "method": "GET",
+    "template": "/v3/api-docs",
+    "handler": "GatewayController.openapi",
+    "source": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:114",
+    "sourceSha256": "2e6b6e2bd9a0bc7189e55271fa4784748c96b03f8f81361c322f8b482e660447"
+  },
+  {
+    "target": "gateway",
+    "method": "GET",
+    "template": "/assistant.js",
+    "handler": "GatewayController.assistant",
+    "source": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:196",
+    "sourceSha256": "2e6b6e2bd9a0bc7189e55271fa4784748c96b03f8f81361c322f8b482e660447"
+  },
+  {
+    "target": "gateway",
+    "method": "POST",
+    "template": "/embed/ticket",
+    "handler": "IntegrationController.ticket",
+    "source": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/IntegrationController.java:18",
+    "sourceSha256": "3a1428e59640285bf2754aaf22693e51e4dc82aa9e1f4a638dec0e16c430558e"
+  },
+  {
+    "target": "app",
+    "method": "GET",
+    "template": "/admin/apps",
+    "handler": "AppController.list",
+    "source": "app-management/src/main/java/cn/agentplatform/app/api/AppController.java:24",
+    "sourceSha256": "9d7c884027c12b904c7b585cbe0334004312641835d7638fc9f875a10df6f361"
+  },
+  {
+    "target": "app",
+    "method": "POST",
+    "template": "/admin/apps",
+    "handler": "AppController.create",
+    "source": "app-management/src/main/java/cn/agentplatform/app/api/AppController.java:29",
+    "sourceSha256": "9d7c884027c12b904c7b585cbe0334004312641835d7638fc9f875a10df6f361"
+  },
+  {
+    "target": "app",
+    "method": "POST",
+    "template": "/admin/apps/{code}/copy",
+    "handler": "AppController.copy",
+    "source": "app-management/src/main/java/cn/agentplatform/app/api/AppController.java:35",
+    "sourceSha256": "9d7c884027c12b904c7b585cbe0334004312641835d7638fc9f875a10df6f361"
+  },
+  {
+    "target": "app",
+    "method": "GET",
+    "template": "/admin/apps/{code}/lifecycle-logs",
+    "handler": "AppController.lifecycleLogs",
+    "source": "app-management/src/main/java/cn/agentplatform/app/api/AppController.java:41",
+    "sourceSha256": "9d7c884027c12b904c7b585cbe0334004312641835d7638fc9f875a10df6f361"
+  },
+  {
+    "target": "app",
+    "method": "GET",
+    "template": "/admin/apps/{code}",
+    "handler": "AppController.get",
+    "source": "app-management/src/main/java/cn/agentplatform/app/api/AppController.java:46",
+    "sourceSha256": "9d7c884027c12b904c7b585cbe0334004312641835d7638fc9f875a10df6f361"
+  },
+  {
+    "target": "app",
+    "method": "PUT",
+    "template": "/admin/apps/{code}",
+    "handler": "AppController.metadata",
+    "source": "app-management/src/main/java/cn/agentplatform/app/api/AppController.java:51",
+    "sourceSha256": "9d7c884027c12b904c7b585cbe0334004312641835d7638fc9f875a10df6f361"
+  },
+  {
+    "target": "app",
+    "method": "DELETE",
+    "template": "/admin/apps/{code}",
+    "handler": "AppController.delete",
+    "source": "app-management/src/main/java/cn/agentplatform/app/api/AppController.java:57",
+    "sourceSha256": "9d7c884027c12b904c7b585cbe0334004312641835d7638fc9f875a10df6f361"
+  },
+  {
+    "target": "app",
+    "method": "PUT",
+    "template": "/admin/apps/{code}/config",
+    "handler": "AppController.config",
+    "source": "app-management/src/main/java/cn/agentplatform/app/api/AppController.java:64",
+    "sourceSha256": "9d7c884027c12b904c7b585cbe0334004312641835d7638fc9f875a10df6f361"
+  },
+  {
+    "target": "app",
+    "method": "GET",
+    "template": "/admin/flows/{code}",
+    "handler": "AppController.flow",
+    "source": "app-management/src/main/java/cn/agentplatform/app/api/AppController.java:70",
+    "sourceSha256": "9d7c884027c12b904c7b585cbe0334004312641835d7638fc9f875a10df6f361"
+  },
+  {
+    "target": "app",
+    "method": "PUT",
+    "template": "/admin/flows/{code}",
+    "handler": "AppController.flowSave",
+    "source": "app-management/src/main/java/cn/agentplatform/app/api/AppController.java:75",
+    "sourceSha256": "9d7c884027c12b904c7b585cbe0334004312641835d7638fc9f875a10df6f361"
+  },
+  {
+    "target": "app",
+    "method": "GET",
+    "template": "/admin/apps/{code}/versions",
+    "handler": "AppController.versions",
+    "source": "app-management/src/main/java/cn/agentplatform/app/api/AppController.java:81",
+    "sourceSha256": "9d7c884027c12b904c7b585cbe0334004312641835d7638fc9f875a10df6f361"
+  },
+  {
+    "target": "app",
+    "method": "GET",
+    "template": "/admin/apps/{code}/versions/diff",
+    "handler": "AppController.versionDiff",
+    "source": "app-management/src/main/java/cn/agentplatform/app/api/AppController.java:86",
+    "sourceSha256": "9d7c884027c12b904c7b585cbe0334004312641835d7638fc9f875a10df6f361"
+  },
+  {
+    "target": "app",
+    "method": "GET",
+    "template": "/admin/apps/{code}/versions/{versionNo}",
+    "handler": "AppController.adminVersion",
+    "source": "app-management/src/main/java/cn/agentplatform/app/api/AppController.java:92",
+    "sourceSha256": "9d7c884027c12b904c7b585cbe0334004312641835d7638fc9f875a10df6f361"
+  },
+  {
+    "target": "app",
+    "method": "GET",
+    "template": "/v1/apps/{code}/input-schema",
+    "handler": "AppController.inputSchema",
+    "source": "app-management/src/main/java/cn/agentplatform/app/api/AppController.java:98",
+    "sourceSha256": "9d7c884027c12b904c7b585cbe0334004312641835d7638fc9f875a10df6f361"
+  },
+  {
+    "target": "app",
+    "method": "POST",
+    "template": "/admin/apps/{code}/publish/precheck",
+    "handler": "AppController.precheck",
+    "source": "app-management/src/main/java/cn/agentplatform/app/api/AppController.java:104",
+    "sourceSha256": "9d7c884027c12b904c7b585cbe0334004312641835d7638fc9f875a10df6f361"
+  },
+  {
+    "target": "app",
+    "method": "POST",
+    "template": "/admin/apps/{code}/publish/commit",
+    "handler": "AppController.commit",
+    "source": "app-management/src/main/java/cn/agentplatform/app/api/AppController.java:110",
+    "sourceSha256": "9d7c884027c12b904c7b585cbe0334004312641835d7638fc9f875a10df6f361"
+  },
+  {
+    "target": "app",
+    "method": "POST",
+    "template": "/admin/apps/{code}/{action:disable|enable|archive|rollback}",
+    "handler": "AppController.lifecycle",
+    "source": "app-management/src/main/java/cn/agentplatform/app/api/AppController.java:116",
+    "sourceSha256": "9d7c884027c12b904c7b585cbe0334004312641835d7638fc9f875a10df6f361"
+  },
+  {
+    "target": "app",
+    "method": "GET",
+    "template": "/internal/apps/{code}/candidate",
+    "handler": "AppController.candidate",
+    "source": "app-management/src/main/java/cn/agentplatform/app/api/AppController.java:125",
+    "sourceSha256": "9d7c884027c12b904c7b585cbe0334004312641835d7638fc9f875a10df6f361"
+  },
+  {
+    "target": "app",
+    "method": "GET",
+    "template": "/internal/apps/{code}/versions/{version}",
+    "handler": "AppController.version",
+    "source": "app-management/src/main/java/cn/agentplatform/app/api/AppController.java:133",
+    "sourceSha256": "9d7c884027c12b904c7b585cbe0334004312641835d7638fc9f875a10df6f361"
+  },
+  {
+    "target": "app",
+    "method": "GET",
+    "template": "/internal/apps/{code}/snapshot",
+    "handler": "AppController.snapshot",
+    "source": "app-management/src/main/java/cn/agentplatform/app/api/AppController.java:142",
+    "sourceSha256": "9d7c884027c12b904c7b585cbe0334004312641835d7638fc9f875a10df6f361"
+  },
+  {
+    "target": "app",
+    "method": "GET",
+    "template": "/internal/apps/{code}/published",
+    "handler": "AppController.published",
+    "source": "app-management/src/main/java/cn/agentplatform/app/api/AppController.java:154",
+    "sourceSha256": "9d7c884027c12b904c7b585cbe0334004312641835d7638fc9f875a10df6f361"
+  },
+  {
+    "target": "app",
+    "method": "GET",
+    "template": "/internal/skills/{code}/references",
+    "handler": "AppController.skillReferences",
+    "source": "app-management/src/main/java/cn/agentplatform/app/api/AppController.java:159",
+    "sourceSha256": "9d7c884027c12b904c7b585cbe0334004312641835d7638fc9f875a10df6f361"
+  },
+  {
+    "target": "app",
+    "method": "GET",
+    "template": "/admin/classifications",
+    "handler": "AppController.classifications",
+    "source": "app-management/src/main/java/cn/agentplatform/app/api/AppController.java:164",
+    "sourceSha256": "9d7c884027c12b904c7b585cbe0334004312641835d7638fc9f875a10df6f361"
+  },
+  {
+    "target": "app",
+    "method": "POST",
+    "template": "/admin/classifications",
+    "handler": "AppController.classification",
+    "source": "app-management/src/main/java/cn/agentplatform/app/api/AppController.java:169",
+    "sourceSha256": "9d7c884027c12b904c7b585cbe0334004312641835d7638fc9f875a10df6f361"
+  },
+  {
+    "target": "app",
+    "method": "GET",
+    "template": "/internal/prompt-templates/{code}/versions/{version}",
+    "handler": "AppController.templateVersion",
+    "source": "app-management/src/main/java/cn/agentplatform/app/api/AppController.java:175",
+    "sourceSha256": "9d7c884027c12b904c7b585cbe0334004312641835d7638fc9f875a10df6f361"
+  },
+  {
+    "target": "app",
+    "method": "GET",
+    "template": "/admin/prompt-templates",
+    "handler": "AppController.templateList",
+    "source": "app-management/src/main/java/cn/agentplatform/app/api/AppController.java:183",
+    "sourceSha256": "9d7c884027c12b904c7b585cbe0334004312641835d7638fc9f875a10df6f361"
+  },
+  {
+    "target": "app",
+    "method": "POST",
+    "template": "/admin/prompt-templates",
+    "handler": "AppController.templateCreate",
+    "source": "app-management/src/main/java/cn/agentplatform/app/api/AppController.java:188",
+    "sourceSha256": "9d7c884027c12b904c7b585cbe0334004312641835d7638fc9f875a10df6f361"
+  },
+  {
+    "target": "app",
+    "method": "PUT",
+    "template": "/admin/prompt-templates/{code}",
+    "handler": "AppController.templateRevise",
+    "source": "app-management/src/main/java/cn/agentplatform/app/api/AppController.java:194",
+    "sourceSha256": "9d7c884027c12b904c7b585cbe0334004312641835d7638fc9f875a10df6f361"
+  },
+  {
+    "target": "app",
+    "method": "GET",
+    "template": "/admin/prompt-templates/{code}/versions",
+    "handler": "AppController.templateVersions",
+    "source": "app-management/src/main/java/cn/agentplatform/app/api/AppController.java:200",
+    "sourceSha256": "9d7c884027c12b904c7b585cbe0334004312641835d7638fc9f875a10df6f361"
+  },
+  {
+    "target": "app",
+    "method": "POST",
+    "template": "/admin/prompt-templates/{code}/versions/{version}/publish",
+    "handler": "AppController.templatePublish",
+    "source": "app-management/src/main/java/cn/agentplatform/app/api/AppController.java:205",
+    "sourceSha256": "9d7c884027c12b904c7b585cbe0334004312641835d7638fc9f875a10df6f361"
+  },
+  {
+    "target": "app",
+    "method": "POST",
+    "template": "/admin/prompt-templates/{code}/versions/{version}/render",
+    "handler": "AppController.templateRender",
+    "source": "app-management/src/main/java/cn/agentplatform/app/api/AppController.java:211",
+    "sourceSha256": "9d7c884027c12b904c7b585cbe0334004312641835d7638fc9f875a10df6f361"
+  },
+  {
+    "target": "app",
+    "method": "GET",
+    "template": "/internal/app-drafts/{id}",
+    "handler": "DraftMetadataController.get",
+    "source": "app-management/src/main/java/cn/agentplatform/app/api/DraftMetadataController.java:16",
+    "sourceSha256": "bc1a56f634b72af182dc683d86b3f505bda1035739bd7e3d7991d8532791a8a8"
+  },
+  {
+    "target": "app",
+    "method": "GET",
+    "template": "/admin/apps/{code}/integration",
+    "handler": "IntegrationController.list",
+    "source": "app-management/src/main/java/cn/agentplatform/app/api/IntegrationController.java:18",
+    "sourceSha256": "8066a053de20149e7b98fb7026cb211c3567cf7a8e305d6826e548e09fd79ddc"
+  },
+  {
+    "target": "app",
+    "method": "POST",
+    "template": "/admin/apps/{code}/integration/credentials",
+    "handler": "IntegrationController.issue",
+    "source": "app-management/src/main/java/cn/agentplatform/app/api/IntegrationController.java:24",
+    "sourceSha256": "8066a053de20149e7b98fb7026cb211c3567cf7a8e305d6826e548e09fd79ddc"
+  },
+  {
+    "target": "app",
+    "method": "POST",
+    "template": "/admin/apps/{code}/integration/credentials/{biz}/revoke",
+    "handler": "IntegrationController.revoke",
+    "source": "app-management/src/main/java/cn/agentplatform/app/api/IntegrationController.java:29",
+    "sourceSha256": "8066a053de20149e7b98fb7026cb211c3567cf7a8e305d6826e548e09fd79ddc"
+  },
+  {
+    "target": "app",
+    "method": "PUT",
+    "template": "/admin/apps/{code}/integration/credentials/{biz}",
+    "handler": "IntegrationController.policy",
+    "source": "app-management/src/main/java/cn/agentplatform/app/api/IntegrationController.java:34",
+    "sourceSha256": "8066a053de20149e7b98fb7026cb211c3567cf7a8e305d6826e548e09fd79ddc"
+  },
+  {
+    "target": "app",
+    "method": "GET",
+    "template": "/internal/integration-origins",
+    "handler": "IntegrationController.origins",
+    "source": "app-management/src/main/java/cn/agentplatform/app/api/IntegrationController.java:42",
+    "sourceSha256": "8066a053de20149e7b98fb7026cb211c3567cf7a8e305d6826e548e09fd79ddc"
+  },
+  {
+    "target": "app",
+    "method": "GET",
+    "template": "/internal/integration-credentials/{id}",
+    "handler": "IntegrationController.authenticate",
+    "source": "app-management/src/main/java/cn/agentplatform/app/api/IntegrationController.java:47",
+    "sourceSha256": "8066a053de20149e7b98fb7026cb211c3567cf7a8e305d6826e548e09fd79ddc"
+  },
+  {
+    "target": "app",
+    "method": "GET",
+    "template": "/internal/integration/{code}/{biz}",
+    "handler": "IntegrationController.get",
+    "source": "app-management/src/main/java/cn/agentplatform/app/api/IntegrationController.java:52",
+    "sourceSha256": "8066a053de20149e7b98fb7026cb211c3567cf7a8e305d6826e548e09fd79ddc"
+  },
+  {
+    "target": "engine",
+    "method": "POST",
+    "template": "/v1/apps/{code}/sessions",
+    "handler": "ChatSessionController.create",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/ChatSessionController.java:18",
+    "sourceSha256": "66c6319b58cb0c9a80225d2681178290d2bbb84a7379572384dc39e3def71d45"
+  },
+  {
+    "target": "engine",
+    "method": "POST",
+    "template": "/admin/apps/{code}/sessions",
+    "handler": "ChatSessionController.create",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/ChatSessionController.java:18",
+    "sourceSha256": "66c6319b58cb0c9a80225d2681178290d2bbb84a7379572384dc39e3def71d45"
+  },
+  {
+    "target": "engine",
+    "method": "GET",
+    "template": "/v1/apps/{code}/sessions/{id}",
+    "handler": "ChatSessionController.get",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/ChatSessionController.java:23",
+    "sourceSha256": "66c6319b58cb0c9a80225d2681178290d2bbb84a7379572384dc39e3def71d45"
+  },
+  {
+    "target": "engine",
+    "method": "GET",
+    "template": "/admin/apps/{code}/sessions/{id}",
+    "handler": "ChatSessionController.get",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/ChatSessionController.java:23",
+    "sourceSha256": "66c6319b58cb0c9a80225d2681178290d2bbb84a7379572384dc39e3def71d45"
+  },
+  {
+    "target": "engine",
+    "method": "POST",
+    "template": "/v1/apps/{code}/sessions/{id}/turns",
+    "handler": "ChatSessionController.turn",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/ChatSessionController.java:28",
+    "sourceSha256": "66c6319b58cb0c9a80225d2681178290d2bbb84a7379572384dc39e3def71d45"
+  },
+  {
+    "target": "engine",
+    "method": "POST",
+    "template": "/admin/apps/{code}/sessions/{id}/turns",
+    "handler": "ChatSessionController.turn",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/ChatSessionController.java:28",
+    "sourceSha256": "66c6319b58cb0c9a80225d2681178290d2bbb84a7379572384dc39e3def71d45"
+  },
+  {
+    "target": "engine",
+    "method": "GET",
+    "template": "/admin/debug-runs/{id}/controls",
+    "handler": "DebugControlsController.get",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/DebugControlsController.java:19",
+    "sourceSha256": "6d1b9258e8b6327494895ff4c724a216b87c2636068b123799d0dac5c1828287"
+  },
+  {
+    "target": "engine",
+    "method": "PUT",
+    "template": "/admin/debug-runs/{id}/controls",
+    "handler": "DebugControlsController.update",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/DebugControlsController.java:24",
+    "sourceSha256": "6d1b9258e8b6327494895ff4c724a216b87c2636068b123799d0dac5c1828287"
+  },
+  {
+    "target": "engine",
+    "method": "GET",
+    "template": "/v1/runs/{id}/approvals",
+    "handler": "InlineApprovalController.list",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/InlineApprovalController.java:24",
+    "sourceSha256": "a7ec1af20cd8d19d18c325b5fc5a03c76ba4f731a9e768654baa3a0cac682244"
+  },
+  {
+    "target": "engine",
+    "method": "POST",
+    "template": "/v1/runs/{id}/approvals/{nodeId}/decision",
+    "handler": "InlineApprovalController.decide",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/InlineApprovalController.java:34",
+    "sourceSha256": "a7ec1af20cd8d19d18c325b5fc5a03c76ba4f731a9e768654baa3a0cac682244"
+  },
+  {
+    "target": "engine",
+    "method": "GET",
+    "template": "/admin/runs/{id}/replay",
+    "handler": "ReplayController.log",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/ReplayController.java:18",
+    "sourceSha256": "31ee8b7dcc9e099a708602cf67b9e9cf38ebd6da9a622824204c3a2ff3216b5e"
+  },
+  {
+    "target": "engine",
+    "method": "POST",
+    "template": "/admin/runs/{id}/reproduce",
+    "handler": "ReplayController.reproduce",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/ReplayController.java:23",
+    "sourceSha256": "31ee8b7dcc9e099a708602cf67b9e9cf38ebd6da9a622824204c3a2ff3216b5e"
+  },
+  {
+    "target": "engine",
+    "method": "POST",
+    "template": "/admin/runs/{id}/reexecute",
+    "handler": "ReplayController.reexecute",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/ReplayController.java:28",
+    "sourceSha256": "31ee8b7dcc9e099a708602cf67b9e9cf38ebd6da9a622824204c3a2ff3216b5e"
+  },
+  {
+    "target": "engine",
+    "method": "GET",
+    "template": "/admin/reproductions/{id}",
+    "handler": "ReplayController.get",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/ReplayController.java:33",
+    "sourceSha256": "31ee8b7dcc9e099a708602cf67b9e9cf38ebd6da9a622824204c3a2ff3216b5e"
+  },
+  {
+    "target": "engine",
+    "method": "POST",
+    "template": "/admin/debug-runs",
+    "handler": "RunController.debug",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java:29",
+    "sourceSha256": "0f2ef9cf57a52e328b452ec63c5d833f92d21f963ad44752ae4d4fd72c900b29"
+  },
+  {
+    "target": "engine",
+    "method": "POST",
+    "template": "/admin/apps/{code}/runs",
+    "handler": "RunController.run",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java:35",
+    "sourceSha256": "0f2ef9cf57a52e328b452ec63c5d833f92d21f963ad44752ae4d4fd72c900b29"
+  },
+  {
+    "target": "engine",
+    "method": "POST",
+    "template": "/v1/apps/{code}/runs",
+    "handler": "RunController.run",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java:35",
+    "sourceSha256": "0f2ef9cf57a52e328b452ec63c5d833f92d21f963ad44752ae4d4fd72c900b29"
+  },
+  {
+    "target": "engine",
+    "method": "POST",
+    "template": "/internal/evaluations/run",
+    "handler": "RunController.eval",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java:40",
+    "sourceSha256": "0f2ef9cf57a52e328b452ec63c5d833f92d21f963ad44752ae4d4fd72c900b29"
+  },
+  {
+    "target": "engine",
+    "method": "GET",
+    "template": "/admin/runs",
+    "handler": "RunController.list",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java:48",
+    "sourceSha256": "0f2ef9cf57a52e328b452ec63c5d833f92d21f963ad44752ae4d4fd72c900b29"
+  },
+  {
+    "target": "engine",
+    "method": "GET",
+    "template": "/admin/runs/{id}",
+    "handler": "RunController.status",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java:53",
+    "sourceSha256": "0f2ef9cf57a52e328b452ec63c5d833f92d21f963ad44752ae4d4fd72c900b29"
+  },
+  {
+    "target": "engine",
+    "method": "GET",
+    "template": "/admin/debug-runs/{id}/status",
+    "handler": "RunController.status",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java:53",
+    "sourceSha256": "0f2ef9cf57a52e328b452ec63c5d833f92d21f963ad44752ae4d4fd72c900b29"
+  },
+  {
+    "target": "engine",
+    "method": "GET",
+    "template": "/v1/runs/{id}",
+    "handler": "RunController.status",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java:53",
+    "sourceSha256": "0f2ef9cf57a52e328b452ec63c5d833f92d21f963ad44752ae4d4fd72c900b29"
+  },
+  {
+    "target": "engine",
+    "method": "POST",
+    "template": "/admin/debug-runs/{id}/resume",
+    "handler": "RunController.resume",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java:58",
+    "sourceSha256": "0f2ef9cf57a52e328b452ec63c5d833f92d21f963ad44752ae4d4fd72c900b29"
+  },
+  {
+    "target": "engine",
+    "method": "POST",
+    "template": "/admin/debug-runs/{id}/cancel",
+    "handler": "RunController.cancel",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java:63",
+    "sourceSha256": "0f2ef9cf57a52e328b452ec63c5d833f92d21f963ad44752ae4d4fd72c900b29"
+  },
+  {
+    "target": "engine",
+    "method": "POST",
+    "template": "/admin/runs/{id}/cancel",
+    "handler": "RunController.cancel",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java:63",
+    "sourceSha256": "0f2ef9cf57a52e328b452ec63c5d833f92d21f963ad44752ae4d4fd72c900b29"
+  },
+  {
+    "target": "engine",
+    "method": "POST",
+    "template": "/v1/runs/{id}/cancel",
+    "handler": "RunController.cancel",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java:63",
+    "sourceSha256": "0f2ef9cf57a52e328b452ec63c5d833f92d21f963ad44752ae4d4fd72c900b29"
+  },
+  {
+    "target": "engine",
+    "method": "GET",
+    "template": "/admin/debug-runs/{id}/variables",
+    "handler": "RunController.variables",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java:72",
+    "sourceSha256": "0f2ef9cf57a52e328b452ec63c5d833f92d21f963ad44752ae4d4fd72c900b29"
+  },
+  {
+    "target": "engine",
+    "method": "GET",
+    "template": "/admin/debug-runs/{id}/node/{nid}/prompt",
+    "handler": "RunController.prompt",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java:83",
+    "sourceSha256": "0f2ef9cf57a52e328b452ec63c5d833f92d21f963ad44752ae4d4fd72c900b29"
+  },
+  {
+    "target": "engine",
+    "method": "GET",
+    "template": "/admin/runs/{id}/events",
+    "handler": "RunController.events",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java:105",
+    "sourceSha256": "0f2ef9cf57a52e328b452ec63c5d833f92d21f963ad44752ae4d4fd72c900b29"
+  },
+  {
+    "target": "engine",
+    "method": "GET",
+    "template": "/admin/debug-runs/{id}/events",
+    "handler": "RunController.events",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java:105",
+    "sourceSha256": "0f2ef9cf57a52e328b452ec63c5d833f92d21f963ad44752ae4d4fd72c900b29"
+  },
+  {
+    "target": "engine",
+    "method": "GET",
+    "template": "/v1/runs/{id}/events",
+    "handler": "RunController.events",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java:105",
+    "sourceSha256": "0f2ef9cf57a52e328b452ec63c5d833f92d21f963ad44752ae4d4fd72c900b29"
+  },
+  {
+    "target": "engine",
+    "method": "POST",
+    "template": "/internal/runs/{id}/approvals/{nid}",
+    "handler": "RunController.approval",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java:360",
+    "sourceSha256": "0f2ef9cf57a52e328b452ec63c5d833f92d21f963ad44752ae4d4fd72c900b29"
+  },
+  {
+    "target": "engine",
+    "method": "GET",
+    "template": "/internal/approvals",
+    "handler": "RunController.approvals",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java:366",
+    "sourceSha256": "0f2ef9cf57a52e328b452ec63c5d833f92d21f963ad44752ae4d4fd72c900b29"
+  },
+  {
+    "target": "engine",
+    "method": "GET",
+    "template": "/internal/statistics",
+    "handler": "RunController.statistics",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java:371",
+    "sourceSha256": "0f2ef9cf57a52e328b452ec63c5d833f92d21f963ad44752ae4d4fd72c900b29"
+  },
+  {
+    "target": "engine",
+    "method": "GET",
+    "template": "/internal/statistics/runs/{id}",
+    "handler": "RunController.statisticsRun",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java:384",
+    "sourceSha256": "0f2ef9cf57a52e328b452ec63c5d833f92d21f963ad44752ae4d4fd72c900b29"
+  },
+  {
+    "target": "engine",
+    "method": "GET",
+    "template": "/internal/audit",
+    "handler": "RunController.audit",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java:389",
+    "sourceSha256": "0f2ef9cf57a52e328b452ec63c5d833f92d21f963ad44752ae4d4fd72c900b29"
+  },
+  {
+    "target": "engine",
+    "method": "POST",
+    "template": "/internal/graphs/validate",
+    "handler": "RunController.validateGraph",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java:404",
+    "sourceSha256": "0f2ef9cf57a52e328b452ec63c5d833f92d21f963ad44752ae4d4fd72c900b29"
+  },
+  {
+    "target": "engine",
+    "method": "POST",
+    "template": "/internal/skill-draft-tests",
+    "handler": "SkillDraftTestController.create",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/SkillDraftTestController.java:18",
+    "sourceSha256": "309f56afeefb24a0e3d8561caf4612b4d18ab766c7e149e4e998a09190b73eaf"
+  },
+  {
+    "target": "engine",
+    "method": "POST",
+    "template": "/admin/debug-inputs",
+    "handler": "TestInputController.create",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/TestInputController.java:21",
+    "sourceSha256": "f24e5ecac0194ae70c4978d169b51bd72a23c84de67cd0b359896d0db519f6c8"
+  },
+  {
+    "target": "engine",
+    "method": "GET",
+    "template": "/admin/debug-inputs",
+    "handler": "TestInputController.list",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/TestInputController.java:26",
+    "sourceSha256": "f24e5ecac0194ae70c4978d169b51bd72a23c84de67cd0b359896d0db519f6c8"
+  },
+  {
+    "target": "engine",
+    "method": "GET",
+    "template": "/admin/debug-inputs/{id}",
+    "handler": "TestInputController.get",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/TestInputController.java:34",
+    "sourceSha256": "f24e5ecac0194ae70c4978d169b51bd72a23c84de67cd0b359896d0db519f6c8"
+  },
+  {
+    "target": "engine",
+    "method": "PUT",
+    "template": "/admin/debug-inputs/{id}",
+    "handler": "TestInputController.update",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/TestInputController.java:39",
+    "sourceSha256": "f24e5ecac0194ae70c4978d169b51bd72a23c84de67cd0b359896d0db519f6c8"
+  },
+  {
+    "target": "engine",
+    "method": "DELETE",
+    "template": "/admin/debug-inputs/{id}",
+    "handler": "TestInputController.delete",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/TestInputController.java:44",
+    "sourceSha256": "f24e5ecac0194ae70c4978d169b51bd72a23c84de67cd0b359896d0db519f6c8"
+  },
+  {
+    "target": "engine",
+    "method": "POST",
+    "template": "/admin/debug-inputs/{id}/promote",
+    "handler": "TestInputController.promote",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/TestInputController.java:50",
+    "sourceSha256": "f24e5ecac0194ae70c4978d169b51bd72a23c84de67cd0b359896d0db519f6c8"
+  },
+  {
+    "target": "engine",
+    "method": "POST",
+    "template": "/internal/tool-calls/register",
+    "handler": "ToolCallController.register",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/ToolCallController.java:19",
+    "sourceSha256": "b7e69acd8f78ab2d244f8f32090f55e279c5a45c022523a02bda2d150bcce600"
+  },
+  {
+    "target": "engine",
+    "method": "POST",
+    "template": "/internal/tool-calls/{id}/claim",
+    "handler": "ToolCallController.claim",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/ToolCallController.java:24",
+    "sourceSha256": "b7e69acd8f78ab2d244f8f32090f55e279c5a45c022523a02bda2d150bcce600"
+  },
+  {
+    "target": "engine",
+    "method": "POST",
+    "template": "/internal/tool-calls/{id}/submitted",
+    "handler": "ToolCallController.submitted",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/ToolCallController.java:29",
+    "sourceSha256": "b7e69acd8f78ab2d244f8f32090f55e279c5a45c022523a02bda2d150bcce600"
+  },
+  {
+    "target": "engine",
+    "method": "POST",
+    "template": "/internal/tool-calls/{id}/fact",
+    "handler": "ToolCallController.fact",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/ToolCallController.java:34",
+    "sourceSha256": "b7e69acd8f78ab2d244f8f32090f55e279c5a45c022523a02bda2d150bcce600"
+  },
+  {
+    "target": "engine",
+    "method": "GET",
+    "template": "/internal/tool-calls/{id}",
+    "handler": "ToolCallController.get",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/ToolCallController.java:39",
+    "sourceSha256": "b7e69acd8f78ab2d244f8f32090f55e279c5a45c022523a02bda2d150bcce600"
+  },
+  {
+    "target": "engine",
+    "method": "GET",
+    "template": "/internal/tool-calls/{id}/approval",
+    "handler": "ToolCallController.approval",
+    "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/ToolCallController.java:44",
+    "sourceSha256": "b7e69acd8f78ab2d244f8f32090f55e279c5a45c022523a02bda2d150bcce600"
+  },
+  {
+    "target": "skill",
+    "method": "GET",
+    "template": "/admin/artifacts/{id}/download",
+    "handler": "ArtifactController.portal",
+    "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/ArtifactController.java:18",
+    "sourceSha256": "29a46fa6094e24cc463c11612199b9860df0bf2b95c303dff01b44d249551a3c"
+  },
+  {
+    "target": "skill",
+    "method": "GET",
+    "template": "/v1/runs/{runId}/artifacts/{id}/download",
+    "handler": "ArtifactController.external",
+    "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/ArtifactController.java:23",
+    "sourceSha256": "29a46fa6094e24cc463c11612199b9860df0bf2b95c303dff01b44d249551a3c"
+  },
+  {
+    "target": "skill",
+    "method": "POST",
+    "template": "/admin/skills/import-openapi/preview",
+    "handler": "OpenApiImportController.preview",
+    "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/OpenApiImportController.java:20",
+    "sourceSha256": "d3b67f9c7eceb6f7842f4de5d8cd82d0fe9e0a9b3cbd2afd54df04b4a88e5bd4"
+  },
+  {
+    "target": "skill",
+    "method": "POST",
+    "template": "/admin/skills/import-openapi",
+    "handler": "OpenApiImportController.create",
+    "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/OpenApiImportController.java:25",
+    "sourceSha256": "d3b67f9c7eceb6f7842f4de5d8cd82d0fe9e0a9b3cbd2afd54df04b4a88e5bd4"
+  },
+  {
+    "target": "skill",
+    "method": "GET",
+    "template": "/internal/skill-facts/{callId}/reconciliation-proofs/{attemptId}",
+    "handler": "ReconciliationProofController.get",
+    "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/ReconciliationProofController.java:17",
+    "sourceSha256": "75a8e7b1a1868af3ae065b9fb064fabe77d52d89e7dd45e2220618a05612d37e"
+  },
+  {
+    "target": "skill",
+    "method": "POST",
+    "template": "/internal/skill-jobs/{callId}/callback",
+    "handler": "SkillCallbackController.receive",
+    "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/SkillCallbackController.java:22",
+    "sourceSha256": "117f8e72657c134eaf59b4337057690d6f7f75fffc8cc2277a2314d9037192b8"
+  },
+  {
+    "target": "skill",
+    "method": "GET",
+    "template": "/admin/skills",
+    "handler": "SkillController.list",
+    "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/SkillController.java:46",
+    "sourceSha256": "64977fc4e25a1d1c8ff554658b00e546666edcb8103bf744382d0b3d912a5261"
+  },
+  {
+    "target": "skill",
+    "method": "POST",
+    "template": "/admin/skills",
+    "handler": "SkillController.create",
+    "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/SkillController.java:51",
+    "sourceSha256": "64977fc4e25a1d1c8ff554658b00e546666edcb8103bf744382d0b3d912a5261"
+  },
+  {
+    "target": "skill",
+    "method": "GET",
+    "template": "/admin/skills/{code}",
+    "handler": "SkillController.get",
+    "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/SkillController.java:57",
+    "sourceSha256": "64977fc4e25a1d1c8ff554658b00e546666edcb8103bf744382d0b3d912a5261"
+  },
+  {
+    "target": "skill",
+    "method": "PUT",
+    "template": "/admin/skills/{code}",
+    "handler": "SkillController.save",
+    "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/SkillController.java:62",
+    "sourceSha256": "64977fc4e25a1d1c8ff554658b00e546666edcb8103bf744382d0b3d912a5261"
+  },
+  {
+    "target": "skill",
+    "method": "PUT",
+    "template": "/admin/skills/{code}/draft",
+    "handler": "SkillController.save",
+    "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/SkillController.java:62",
+    "sourceSha256": "64977fc4e25a1d1c8ff554658b00e546666edcb8103bf744382d0b3d912a5261"
+  },
+  {
+    "target": "skill",
+    "method": "DELETE",
+    "template": "/admin/skills/{code}",
+    "handler": "SkillController.delete",
+    "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/SkillController.java:68",
+    "sourceSha256": "64977fc4e25a1d1c8ff554658b00e546666edcb8103bf744382d0b3d912a5261"
+  },
+  {
+    "target": "skill",
+    "method": "GET",
+    "template": "/admin/skills/{code}/versions",
+    "handler": "SkillController.versions",
+    "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/SkillController.java:75",
+    "sourceSha256": "64977fc4e25a1d1c8ff554658b00e546666edcb8103bf744382d0b3d912a5261"
+  },
+  {
+    "target": "skill",
+    "method": "POST",
+    "template": "/admin/skills/{code}/versions/{version}/publish",
+    "handler": "SkillController.publish",
+    "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/SkillController.java:80",
+    "sourceSha256": "64977fc4e25a1d1c8ff554658b00e546666edcb8103bf744382d0b3d912a5261"
+  },
+  {
+    "target": "skill",
+    "method": "POST",
+    "template": "/admin/skills/{code}/drafts/{version}/publish",
+    "handler": "SkillController.publish",
+    "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/SkillController.java:80",
+    "sourceSha256": "64977fc4e25a1d1c8ff554658b00e546666edcb8103bf744382d0b3d912a5261"
+  },
+  {
+    "target": "skill",
+    "method": "POST",
+    "template": "/admin/skills/{code}/drafts/{version}/connection-test",
+    "handler": "SkillController.connection",
+    "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/SkillController.java:89",
+    "sourceSha256": "64977fc4e25a1d1c8ff554658b00e546666edcb8103bf744382d0b3d912a5261"
+  },
+  {
+    "target": "skill",
+    "method": "POST",
+    "template": "/admin/skills/{code}/drafts/{version}/acceptance",
+    "handler": "SkillController.acceptance",
+    "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/SkillController.java:98",
+    "sourceSha256": "64977fc4e25a1d1c8ff554658b00e546666edcb8103bf744382d0b3d912a5261"
+  },
+  {
+    "target": "skill",
+    "method": "POST",
+    "template": "/admin/skills/{code}/drafts/{version}/mcp-tools",
+    "handler": "SkillController.mcpTools",
+    "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/SkillController.java:107",
+    "sourceSha256": "64977fc4e25a1d1c8ff554658b00e546666edcb8103bf744382d0b3d912a5261"
+  },
+  {
+    "target": "skill",
+    "method": "POST",
+    "template": "/admin/skills/{code}/disable",
+    "handler": "SkillController.disable",
+    "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/SkillController.java:113",
+    "sourceSha256": "64977fc4e25a1d1c8ff554658b00e546666edcb8103bf744382d0b3d912a5261"
+  },
+  {
+    "target": "skill",
+    "method": "GET",
+    "template": "/admin/skills/{code}/referenced-by",
+    "handler": "SkillController.references",
+    "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/SkillController.java:119",
+    "sourceSha256": "64977fc4e25a1d1c8ff554658b00e546666edcb8103bf744382d0b3d912a5261"
+  },
+  {
+    "target": "skill",
+    "method": "GET",
+    "template": "/admin/skills/{code}/stats",
+    "handler": "SkillController.stats",
+    "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/SkillController.java:124",
+    "sourceSha256": "64977fc4e25a1d1c8ff554658b00e546666edcb8103bf744382d0b3d912a5261"
+  },
+  {
+    "target": "skill",
+    "method": "GET",
+    "template": "/internal/statistics",
+    "handler": "SkillController.statistics",
+    "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/SkillController.java:134",
+    "sourceSha256": "64977fc4e25a1d1c8ff554658b00e546666edcb8103bf744382d0b3d912a5261"
+  },
+  {
+    "target": "skill",
+    "method": "GET",
+    "template": "/internal/skills/{code}",
+    "handler": "SkillController.internal",
+    "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/SkillController.java:146",
+    "sourceSha256": "64977fc4e25a1d1c8ff554658b00e546666edcb8103bf744382d0b3d912a5261"
+  },
+  {
+    "target": "skill",
+    "method": "GET",
+    "template": "/internal/skill-versions/{id}",
+    "handler": "SkillController.internalVersion",
+    "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/SkillController.java:153",
+    "sourceSha256": "64977fc4e25a1d1c8ff554658b00e546666edcb8103bf744382d0b3d912a5261"
+  },
+  {
+    "target": "skill",
+    "method": "POST",
+    "template": "/internal/skills/{code}/execute",
+    "handler": "SkillController.execute",
+    "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/SkillController.java:159",
+    "sourceSha256": "64977fc4e25a1d1c8ff554658b00e546666edcb8103bf744382d0b3d912a5261"
+  },
+  {
+    "target": "skill",
+    "method": "GET",
+    "template": "/internal/skill-facts/{callId}",
+    "handler": "SkillController.proof",
+    "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/SkillController.java:164",
+    "sourceSha256": "64977fc4e25a1d1c8ff554658b00e546666edcb8103bf744382d0b3d912a5261"
+  },
+  {
+    "target": "skill",
+    "method": "POST",
+    "template": "/internal/skill-facts/{callId}/reconcile",
+    "handler": "SkillController.reconcile",
+    "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/SkillController.java:169",
+    "sourceSha256": "64977fc4e25a1d1c8ff554658b00e546666edcb8103bf744382d0b3d912a5261"
+  },
+  {
+    "target": "skill",
+    "method": "POST",
+    "template": "/internal/skill-facts/{callId}/retry",
+    "handler": "SkillController.retry",
+    "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/SkillController.java:174",
+    "sourceSha256": "64977fc4e25a1d1c8ff554658b00e546666edcb8103bf744382d0b3d912a5261"
+  },
+  {
+    "target": "skill",
+    "method": "POST",
+    "template": "/internal/skill-facts/{callId}/reproduce-artifacts",
+    "handler": "SkillController.reproduceArtifacts",
+    "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/SkillController.java:179",
+    "sourceSha256": "64977fc4e25a1d1c8ff554658b00e546666edcb8103bf744382d0b3d912a5261"
+  },
+  {
+    "target": "model",
+    "method": "GET",
+    "template": "/admin/model-providers",
+    "handler": "ModelController.providers",
+    "source": "model-gateway/src/main/java/cn/agentplatform/model/api/ModelController.java:25",
+    "sourceSha256": "76da193f9dadb372a53377cc648a26381f7cb1659bf8568aa5738b524ecacb40"
+  },
+  {
+    "target": "model",
+    "method": "POST",
+    "template": "/admin/model-providers",
+    "handler": "ModelController.provider",
+    "source": "model-gateway/src/main/java/cn/agentplatform/model/api/ModelController.java:30",
+    "sourceSha256": "76da193f9dadb372a53377cc648a26381f7cb1659bf8568aa5738b524ecacb40"
+  },
+  {
+    "target": "model",
+    "method": "POST",
+    "template": "/admin/model-providers/{id}/test",
+    "handler": "ModelController.test",
+    "source": "model-gateway/src/main/java/cn/agentplatform/model/api/ModelController.java:35",
+    "sourceSha256": "76da193f9dadb372a53377cc648a26381f7cb1659bf8568aa5738b524ecacb40"
+  },
+  {
+    "target": "model",
+    "method": "PUT",
+    "template": "/admin/model-providers/{id}",
+    "handler": "ModelController.updateProvider",
+    "source": "model-gateway/src/main/java/cn/agentplatform/model/api/ModelController.java:40",
+    "sourceSha256": "76da193f9dadb372a53377cc648a26381f7cb1659bf8568aa5738b524ecacb40"
+  },
+  {
+    "target": "model",
+    "method": "POST",
+    "template": "/admin/model-providers/{id}/disable",
+    "handler": "ModelController.disableProvider",
+    "source": "model-gateway/src/main/java/cn/agentplatform/model/api/ModelController.java:45",
+    "sourceSha256": "76da193f9dadb372a53377cc648a26381f7cb1659bf8568aa5738b524ecacb40"
+  },
+  {
+    "target": "model",
+    "method": "POST",
+    "template": "/admin/model-providers/{id}/credentials/rotate",
+    "handler": "ModelController.rotate",
+    "source": "model-gateway/src/main/java/cn/agentplatform/model/api/ModelController.java:50",
+    "sourceSha256": "76da193f9dadb372a53377cc648a26381f7cb1659bf8568aa5738b524ecacb40"
+  },
+  {
+    "target": "model",
+    "method": "PUT",
+    "template": "/admin/model-providers/{id}/quota",
+    "handler": "ModelController.quota",
+    "source": "model-gateway/src/main/java/cn/agentplatform/model/api/ModelController.java:55",
+    "sourceSha256": "76da193f9dadb372a53377cc648a26381f7cb1659bf8568aa5738b524ecacb40"
+  },
+  {
+    "target": "model",
+    "method": "GET",
+    "template": "/admin/model-entries",
+    "handler": "ModelController.entries",
+    "source": "model-gateway/src/main/java/cn/agentplatform/model/api/ModelController.java:60",
+    "sourceSha256": "76da193f9dadb372a53377cc648a26381f7cb1659bf8568aa5738b524ecacb40"
+  },
+  {
+    "target": "model",
+    "method": "POST",
+    "template": "/admin/model-entries",
+    "handler": "ModelController.entry",
+    "source": "model-gateway/src/main/java/cn/agentplatform/model/api/ModelController.java:65",
+    "sourceSha256": "76da193f9dadb372a53377cc648a26381f7cb1659bf8568aa5738b524ecacb40"
+  },
+  {
+    "target": "model",
+    "method": "PUT",
+    "template": "/admin/model-entries/{id}",
+    "handler": "ModelController.updateEntry",
+    "source": "model-gateway/src/main/java/cn/agentplatform/model/api/ModelController.java:70",
+    "sourceSha256": "76da193f9dadb372a53377cc648a26381f7cb1659bf8568aa5738b524ecacb40"
+  },
+  {
+    "target": "model",
+    "method": "GET",
+    "template": "/admin/model-entries/{id}/metering",
+    "handler": "ModelController.metering",
+    "source": "model-gateway/src/main/java/cn/agentplatform/model/api/ModelController.java:75",
+    "sourceSha256": "76da193f9dadb372a53377cc648a26381f7cb1659bf8568aa5738b524ecacb40"
+  },
+  {
+    "target": "model",
+    "method": "GET",
+    "template": "/internal/model-entries/{id}",
+    "handler": "ModelController.internal",
+    "source": "model-gateway/src/main/java/cn/agentplatform/model/api/ModelController.java:80",
+    "sourceSha256": "76da193f9dadb372a53377cc648a26381f7cb1659bf8568aa5738b524ecacb40"
+  },
+  {
+    "target": "model",
+    "method": "POST",
+    "template": "/internal/model-bindings/freeze",
+    "handler": "ModelController.freeze",
+    "source": "model-gateway/src/main/java/cn/agentplatform/model/api/ModelController.java:85",
+    "sourceSha256": "76da193f9dadb372a53377cc648a26381f7cb1659bf8568aa5738b524ecacb40"
+  },
+  {
+    "target": "model",
+    "method": "POST",
+    "template": "/internal/model-bindings/validate",
+    "handler": "ModelController.validate",
+    "source": "model-gateway/src/main/java/cn/agentplatform/model/api/ModelController.java:90",
+    "sourceSha256": "76da193f9dadb372a53377cc648a26381f7cb1659bf8568aa5738b524ecacb40"
+  },
+  {
+    "target": "model",
+    "method": "GET",
+    "template": "/internal/statistics",
+    "handler": "ModelController.stats",
+    "source": "model-gateway/src/main/java/cn/agentplatform/model/api/ModelController.java:96",
+    "sourceSha256": "76da193f9dadb372a53377cc648a26381f7cb1659bf8568aa5738b524ecacb40"
+  },
+  {
+    "target": "model",
+    "method": "POST",
+    "template": "/internal/statistics/query",
+    "handler": "ModelController.statistics",
+    "source": "model-gateway/src/main/java/cn/agentplatform/model/api/ModelController.java:101",
+    "sourceSha256": "76da193f9dadb372a53377cc648a26381f7cb1659bf8568aa5738b524ecacb40"
+  },
+  {
+    "target": "model",
+    "method": "POST",
+    "template": "/internal/model/measure",
+    "handler": "ModelController.measure",
+    "source": "model-gateway/src/main/java/cn/agentplatform/model/api/ModelController.java:106",
+    "sourceSha256": "76da193f9dadb372a53377cc648a26381f7cb1659bf8568aa5738b524ecacb40"
+  },
+  {
+    "target": "model",
+    "method": "POST",
+    "template": "/internal/model/chat",
+    "handler": "ModelController.chat",
+    "source": "model-gateway/src/main/java/cn/agentplatform/model/api/ModelController.java:111",
+    "sourceSha256": "76da193f9dadb372a53377cc648a26381f7cb1659bf8568aa5738b524ecacb40"
+  },
+  {
+    "target": "model",
+    "method": "POST",
+    "template": "/internal/model/chat/stream",
+    "handler": "ModelController.stream",
+    "source": "model-gateway/src/main/java/cn/agentplatform/model/api/ModelController.java:116",
+    "sourceSha256": "76da193f9dadb372a53377cc648a26381f7cb1659bf8568aa5738b524ecacb40"
+  },
+  {
+    "target": "monitor",
+    "method": "POST",
+    "template": "/internal/datasets/promotions",
+    "handler": "DatasetController.promote",
+    "source": "monitor/src/main/java/cn/agentplatform/monitor/api/DatasetController.java:18",
+    "sourceSha256": "970f9e36d14ab11546b97204510088ed793b8c513d8add3177412aa526bbe161"
+  },
+  {
+    "target": "monitor",
+    "method": "GET",
+    "template": "/admin/evaluation-datasets/{appCode}/{version}",
+    "handler": "DatasetController.get",
+    "source": "monitor/src/main/java/cn/agentplatform/monitor/api/DatasetController.java:23",
+    "sourceSha256": "970f9e36d14ab11546b97204510088ed793b8c513d8add3177412aa526bbe161"
+  },
+  {
+    "target": "monitor",
+    "method": "GET",
+    "template": "/admin/evaluation-datasets",
+    "handler": "DatasetController.list",
+    "source": "monitor/src/main/java/cn/agentplatform/monitor/api/DatasetController.java:28",
+    "sourceSha256": "970f9e36d14ab11546b97204510088ed793b8c513d8add3177412aa526bbe161"
+  },
+  {
+    "target": "monitor",
+    "method": "POST",
+    "template": "/admin/evaluations",
+    "handler": "EvaluationController.evaluate",
+    "source": "monitor/src/main/java/cn/agentplatform/monitor/api/EvaluationController.java:18",
+    "sourceSha256": "e9d61b2844dc05c705391ee96be88e7dce2d211de50848fd58a6ae7b5dcb5c5a"
+  },
+  {
+    "target": "monitor",
+    "method": "GET",
+    "template": "/admin/evaluations",
+    "handler": "EvaluationController.list",
+    "source": "monitor/src/main/java/cn/agentplatform/monitor/api/EvaluationController.java:24",
+    "sourceSha256": "e9d61b2844dc05c705391ee96be88e7dce2d211de50848fd58a6ae7b5dcb5c5a"
+  },
+  {
+    "target": "monitor",
+    "method": "POST",
+    "template": "/admin/evaluations/{id}/resume",
+    "handler": "EvaluationController.resume",
+    "source": "monitor/src/main/java/cn/agentplatform/monitor/api/EvaluationController.java:29",
+    "sourceSha256": "e9d61b2844dc05c705391ee96be88e7dce2d211de50848fd58a6ae7b5dcb5c5a"
+  },
+  {
+    "target": "monitor",
+    "method": "GET",
+    "template": "/admin/evaluations/{id}",
+    "handler": "EvaluationController.report",
+    "source": "monitor/src/main/java/cn/agentplatform/monitor/api/EvaluationController.java:35",
+    "sourceSha256": "e9d61b2844dc05c705391ee96be88e7dce2d211de50848fd58a6ae7b5dcb5c5a"
+  },
+  {
+    "target": "monitor",
+    "method": "GET",
+    "template": "/internal/evaluations/accepted",
+    "handler": "EvaluationController.accepted",
+    "source": "monitor/src/main/java/cn/agentplatform/monitor/api/EvaluationController.java:40",
+    "sourceSha256": "e9d61b2844dc05c705391ee96be88e7dce2d211de50848fd58a6ae7b5dcb5c5a"
+  },
+  {
+    "target": "monitor",
+    "method": "GET",
+    "template": "/admin/{kind:approvals|audit}",
+    "handler": "EvaluationController.projection",
+    "source": "monitor/src/main/java/cn/agentplatform/monitor/api/EvaluationController.java:48",
+    "sourceSha256": "e9d61b2844dc05c705391ee96be88e7dce2d211de50848fd58a6ae7b5dcb5c5a"
+  },
+  {
+    "target": "monitor",
+    "method": "POST",
+    "template": "/admin/approvals/{runId}/{nodeId}",
+    "handler": "EvaluationController.approve",
+    "source": "monitor/src/main/java/cn/agentplatform/monitor/api/EvaluationController.java:53",
+    "sourceSha256": "e9d61b2844dc05c705391ee96be88e7dce2d211de50848fd58a6ae7b5dcb5c5a"
+  },
+  {
+    "target": "monitor",
+    "method": "GET",
+    "template": "/admin/statistics",
+    "handler": "StatisticsController.query",
+    "source": "monitor/src/main/java/cn/agentplatform/monitor/api/StatisticsController.java:18",
+    "sourceSha256": "a2bad66048f583e9b4f47bd79bc9e9affa413514fd743ac899e96f66b9beff7e"
+  },
+  {
+    "target": "monitor",
+    "method": "POST",
+    "template": "/admin/statistics/rebuild",
+    "handler": "StatisticsController.rebuild",
+    "source": "monitor/src/main/java/cn/agentplatform/monitor/api/StatisticsController.java:30",
+    "sourceSha256": "a2bad66048f583e9b4f47bd79bc9e9affa413514fd743ac899e96f66b9beff7e"
+  },
+  {
+    "target": "monitor",
+    "method": "GET",
+    "template": "/admin/statistics/snapshots",
+    "handler": "StatisticsController.snapshots",
+    "source": "monitor/src/main/java/cn/agentplatform/monitor/api/StatisticsController.java:35",
+    "sourceSha256": "a2bad66048f583e9b4f47bd79bc9e9affa413514fd743ac899e96f66b9beff7e"
+  },
+  {
+    "target": "monitor",
+    "method": "GET",
+    "template": "/admin/statistics/snapshots/{id}",
+    "handler": "StatisticsController.snapshot",
+    "source": "monitor/src/main/java/cn/agentplatform/monitor/api/StatisticsController.java:40",
+    "sourceSha256": "a2bad66048f583e9b4f47bd79bc9e9affa413514fd743ac899e96f66b9beff7e"
+  },
+  {
+    "target": "monitor",
+    "method": "GET",
+    "template": "/admin/statistics/runs/{id}",
+    "handler": "StatisticsController.drilldown",
+    "source": "monitor/src/main/java/cn/agentplatform/monitor/api/StatisticsController.java:49",
+    "sourceSha256": "a2bad66048f583e9b4f47bd79bc9e9affa413514fd743ac899e96f66b9beff7e"
+  }
+]

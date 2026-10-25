@@ -1,0 +1,4 @@
+import {it,expect} from 'vitest';import {rowsFromMap,mapFromRows,nodeIssues} from '../flow-designer/node-metadata';
+it('structured mappings preserve primitive types, references and nested values',()=>{const value={name:'x',count:3,enabled:false,source:'${input.region}',nested:{items:[1,2]}};expect(mapFromRows(rowsFromMap(value))).toEqual(value);});
+it('duplicate mapping keys and malformed typed literals are rejected',()=>{expect(()=>mapFromRows([{key:'x',type:'NUMBER',value:'bad',source:'literal'}])).toThrow();expect(()=>mapFromRows([{key:'x',type:'STRING',value:'a',source:'literal'},{key:'x',type:'STRING',value:'b',source:'literal'}])).toThrow('重复');});
+it('validation issues carry node identity for focus instead of only a raw JSON path',()=>{const d={nodes:[{id:'n1',type:'SKILL',skillRef:{code:'query'}}],edges:[]};expect(nodeIssues(d).some(x=>x.nodeId==='n1')).toBe(true);});

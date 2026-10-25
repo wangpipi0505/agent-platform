@@ -1,0 +1,161 @@
+diff --git a/engine-runtime/src/main/java/cn/agentplatform/engine/application/PortalRunEventsService.java b/engine-runtime/src/main/java/cn/agentplatform/engine/application/PortalRunEventsService.java
+index 0058955beb5e845f592319adf1b6d9007bc39388..dffba90461edcc9e894e31454cc7bafcedf10872 100644
+--- a/engine-runtime/src/main/java/cn/agentplatform/engine/application/PortalRunEventsService.java
++++ b/engine-runtime/src/main/java/cn/agentplatform/engine/application/PortalRunEventsService.java
+@@ -219,27 +219,38 @@ public final class PortalRunEventsService implements AutoCloseable {
+             }catch(IOException io){throw new UncheckedIOException(io);}
+         }
+         void capacityReset(RunEventReader.CapacityFailure failure){
+-            if(privatePackets){
+-                if(packetStarted||capacitySent||!statusSent){if(!output.isCommitted()){output.setStatus(failure.status());output.setContentType("application/json");}complete();return;}
+-                capacitySent=true;
+-                try{check();var c=response.currentCapture();if(stream==null){stream=output.getOutputStream();check();response.requireLive(c);}
+-                    PortalEventsPacketWriter.capacity(stream,response,authority,ordinal,after,failure.code());complete();return;
++            try{
++                if(privatePackets){
++                    if(packetStarted||capacitySent)return;
++                    if(statusSent){
++                        capacitySent=true;
++                        try{check();var c=response.currentCapture();if(stream==null){stream=output.getOutputStream();check();response.requireLive(c);}
++                            PortalEventsPacketWriter.capacity(stream,response,authority,ordinal,after,failure.code());return;
++                        }catch(IOException io){throw new UncheckedIOException(io);}
++                    }
++                    if(output.isCommitted())return;
++                    // No private packet has begun: reuse the charged fixed JSON envelope below.
++                }
++                // No unvalidated status/watermark is included. The fresh local capture guards
++                // this fixed capacity control; a failed holder never authorizes a final reset.
++                var capture=response.currentCapture();check();byte[] bytes;int count;
++                // Opening preflight is not an output proof. Only the actual Servlet commit
++                // decides whether fresh-window capacity is an HTTP error or a bounded reset.
++                if(!output.isCommitted()){
++                    output.setStatus(failure.status());output.setContentType("application/json");
++                    bytes=Json.write(new ApiResponse<>(failure.code(),"事件观察不可用",null,null)).getBytes(java.nio.charset.StandardCharsets.UTF_8);count=bytes.length;
++                }else if(privatePackets)return;
++                else{var frame=Frame.control("stream_reset",failure.code(),null,0,after);bytes=frame.bytes;count=frame.count;}
++                try{
++                    response.requireLive(capture);if(stream==null){stream=output.getOutputStream();check();response.requireLive(capture);}
++                    check();response.requireLive(capture);stream.write(bytes,0,count);check();response.requireLive(capture);
++                    stream.flush();check();response.requireLive(capture);complete();
+                 }catch(IOException io){throw new UncheckedIOException(io);}
++            }finally{
++                // Capacity can fail at export/current/get/write/flush. Complete must physically
++                // return here, inside beforeRelease while this RR's B permit and frame are held.
++                if(privatePackets)complete();
+             }
+-            // No unvalidated status/watermark is included. The fresh local capture guards
+-            // this fixed capacity control; a failed holder never authorizes a final reset.
+-            var capture=response.currentCapture();check();byte[] bytes;int count;
+-            // Opening preflight is not an output proof. Only the actual Servlet commit
+-            // decides whether fresh-window capacity is an HTTP error or a bounded reset.
+-            if(!output.isCommitted()){
+-                output.setStatus(failure.status());output.setContentType("application/json");
+-                bytes=Json.write(new ApiResponse<>(failure.code(),"事件观察不可用",null,null)).getBytes(java.nio.charset.StandardCharsets.UTF_8);count=bytes.length;
+-            }else{var frame=Frame.control("stream_reset",failure.code(),null,0,after);bytes=frame.bytes;count=frame.count;}
+-            try{
+-                response.requireLive(capture);if(stream==null){stream=output.getOutputStream();check();response.requireLive(capture);}
+-                check();response.requireLive(capture);stream.write(bytes,0,count);check();response.requireLive(capture);
+-                stream.flush();check();response.requireLive(capture);complete();
+-            }catch(IOException io){throw new UncheckedIOException(io);}
+         }
+         void pause(){check();response.currentCapture();try{Thread.sleep(75);}catch(InterruptedException interrupted){Thread.currentThread().interrupt();throw denied();}}
+         @Override public void onTimeout(AsyncEvent event){stop();}
+diff --git a/engine-runtime/src/test/java/cn/agentplatform/engine/application/PortalChildEventsHttpTest.java b/engine-runtime/src/test/java/cn/agentplatform/engine/application/PortalChildEventsHttpTest.java
+index 3ef3c84bd3573e55dbf5e0b6e4563f6bad79b880..d6682dbcfcfeb4e54daaa7ed043f644a2de754aa 100644
+--- a/engine-runtime/src/test/java/cn/agentplatform/engine/application/PortalChildEventsHttpTest.java
++++ b/engine-runtime/src/test/java/cn/agentplatform/engine/application/PortalChildEventsHttpTest.java
+@@ -31,8 +31,9 @@ class PortalChildEventsHttpTest {
+     static PortalChildEventsPostgresTest.Fixture fixture;
+     static volatile Hooks hooks;
+     static final class Hooks {
+-        final String stage;final CountDownLatch entered=new CountDownLatch(2),release=new CountDownLatch(1),firstWindow=new CountDownLatch(1);final AtomicInteger exits=new AtomicInteger(),flushes=new AtomicInteger();
+-        Hooks(String stage){this.stage=stage;}
++        final String stage;final CountDownLatch entered,release=new CountDownLatch(1),firstWindow=new CountDownLatch(1);final AtomicInteger exits=new AtomicInteger(),flushes=new AtomicInteger(),capacityAttempts=new AtomicInteger();
++        final List<ByteArrayOutputStream> wires=new CopyOnWriteArrayList<>();String capacityFailure;
++        Hooks(String stage){this(stage,2);}Hooks(String stage,int connections){this.stage=stage;entered=new CountDownLatch(connections);}
+         void block(String point){if(!stage.equals(point))return;entered.countDown();boolean done=false;while(!done)try{done=release.await(100,TimeUnit.MILLISECONDS);}catch(InterruptedException ignored){}}
+     }
+     @Configuration(proxyBeanMethods=false) @EnableAutoConfiguration @EnableWebSecurity
+@@ -57,11 +58,13 @@ class PortalChildEventsHttpTest {
+             registration.setFilter((request,response,chain)->{
+                 var h=hooks;if(h==null){chain.doFilter(request,response);return;}
+                 var wrapped=new HttpServletResponseWrapper((HttpServletResponse)response){
+-                    public ServletOutputStream getOutputStream()throws IOException{h.block("get");var actual=super.getOutputStream();return new ServletOutputStream(){
++                    public ServletOutputStream getOutputStream()throws IOException{h.block("get");var actual=super.getOutputStream();var wire=new ByteArrayOutputStream();h.wires.add(wire);return new ServletOutputStream(){int kind;
+                         public boolean isReady(){return actual.isReady();}public void setWriteListener(WriteListener listener){actual.setWriteListener(listener);}
+-                        public void write(int value)throws IOException{h.block("write");actual.write(value);}
+-                        public void write(byte[] bytes,int offset,int length)throws IOException{h.block("write");actual.write(bytes,offset,length);}
+-                        public void flush()throws IOException{h.block("flush");actual.flush();if(h.flushes.incrementAndGet()>=2)h.firstWindow.countDown();}
++                        public void write(int value)throws IOException{h.block("write");actual.write(value);wire.write(value);}
++                        public void write(byte[] bytes,int offset,int length)throws IOException{h.block("write");
++                            if(length>=24&&bytes[offset]=='A'&&bytes[offset+1]=='P'&&bytes[offset+2]=='E'&&bytes[offset+3]=='V'){kind=bytes[offset+7];if(kind==3){h.capacityAttempts.incrementAndGet();if("write".equals(h.capacityFailure))throw new IOException("injected CAPACITY write");}}
++                            actual.write(bytes,offset,length);wire.write(bytes,offset,length);}
++                        public void flush()throws IOException{h.block("flush");if(kind==3&&"flush".equals(h.capacityFailure))throw new IOException("injected CAPACITY flush");actual.flush();if(h.flushes.incrementAndGet()>=2)h.firstWindow.countDown();}
+                     };}
+                 };
+                 var wrappedRequest=new HttpServletRequestWrapper((HttpServletRequest)request){
+@@ -146,6 +149,64 @@ class PortalChildEventsHttpTest {
+             }finally{h.release.countDown();hooks=null;}
+         }
+     }
++    static ThreadPoolExecutor executor(PortalRunEventsService service)throws Exception{var field=PortalRunEventsService.class.getDeclaredField("writers");field.setAccessible(true);return(ThreadPoolExecutor)field.get(service);}
++    static void await(java.util.function.BooleanSupplier condition)throws Exception{long until=System.nanoTime()+TimeUnit.SECONDS.toNanos(5);while(!condition.getAsBoolean()){if(System.nanoTime()>until)throw new AssertionError("BOUNDED_WAIT");Thread.sleep(10);}}
++    @Test void privateFreshQueuedCapacityBeforeHelloReturnsBoundedJsonUntilCompleteExits()throws Exception{
++        try(var f=new PortalChildEventsPostgresTest.Fixture();var callers=Executors.newSingleThreadExecutor()){
++            fixture=f;var b=f.seed();var h=new Hooks("complete",1);hooks=h;var workers=new CountDownLatch(2);var release=new CountDownLatch(1);
++            try(var child=new PortalChildEventsAuthorityFixture(f.auth,b.owner(),b.publicId(),b.snapshotSha(),1);var probe=f.auth.open(b.owner(),b.publicId(),b.snapshotSha(),0);var server=start()){
++                try{
++                var pool=executor(server.getBean(PortalRunEventsService.class));
++                for(int i=0;i<2;i++)pool.execute(()->{workers.countDown();boolean done=false;while(!done)try{done=release.await(100,TimeUnit.MILLISECONDS);}catch(InterruptedException ignored){}});
++                assertThat(workers.await(3,TimeUnit.SECONDS)).isTrue();var future=callers.submit(()->requestCursor(server,b.publicId(),child.ticket,1));await(()->pool.getQueue().size()==1);assertThat(h.wires).isEmpty();
++                // Opening preflight succeeded and released its RR; the queued writer must
++                // independently see the real writer's newly oversized payload on fresh RR.
++                f.append(b.runId(),"LARGE_FRESH","x".repeat(262144));release.countDown();assertThat(h.entered.await(6,TimeUnit.SECONDS)).isTrue();
++                var bus=server.getBean(ChunkBus.class);var reader=server.getBean(RunEventReader.class);assertThat(PortalChildEventsPostgresTest.frames(bus)).isEqualTo(61);assertThat(h.exits).hasValue(0);
++                try(var one=reader.readNext(probe,0).orElseThrow();var two=reader.readNext(probe,0).orElseThrow();var slot=bus.subscribe(100)){assertThatThrownBy(()->bus.subscribe(101)).isInstanceOf(PlatformException.class);}
++                var expected=Json.write(new ApiResponse<>("EVENT_LIMIT","事件观察不可用",null,null));
++                // The fixed small JSON has physically written/flushed before complete;
++                // no packet, receipt, state or watermark may be exposed on this branch.
++                assertThat(h.wires).hasSize(1);assertThat(h.wires.getFirst().toString(java.nio.charset.StandardCharsets.UTF_8)).isEqualTo(expected);
++                h.release.countDown();var result=future.get(8,TimeUnit.SECONDS);assertThat(result.statusCode()).isEqualTo(413);assertThat(result.headers().firstValue("Content-Type")).hasValue("application/json");assertThat(new String(result.body(),java.nio.charset.StandardCharsets.UTF_8)).isEqualTo(expected).doesNotContain("APEV","APCM","receipt","watermark","state");
++                await(()->h.exits.get()==1);await(()->{try{return PortalChildEventsPostgresTest.frames(bus)==62;}catch(Exception x){throw new AssertionError(x);}});try(var a=bus.subscribe(100);var c=bus.subscribe(101)){}
++                }finally{release.countDown();h.release.countDown();}
++            }finally{release.countDown();h.release.countDown();hooks=null;}
++        }
++    }
++    @Test void privateCapacityWriteFailureCompletesBeforeRealBorrowRelease()throws Exception{capacityFailureBeforeRelease("write");}
++    @Test void privateCapacityFlushFailureCompletesBeforeRealBorrowRelease()throws Exception{capacityFailureBeforeRelease("flush");}
++    static void capacityFailureBeforeRelease(String exit)throws Exception{
++        try(var f=new PortalChildEventsPostgresTest.Fixture();var callers=Executors.newFixedThreadPool(2)){
++            fixture=f;var b=f.seed();f.append(b.runId(),"LARGE_FOR_FAILURE","x".repeat(262144));var h=new Hooks("complete");h.capacityFailure=exit;hooks=h;
++            try(var a=new PortalChildEventsAuthorityFixture(f.auth,b.owner(),b.publicId(),b.snapshotSha(),0);var c=new PortalChildEventsAuthorityFixture(f.auth,b.owner(),b.publicId(),b.snapshotSha(),0);var probe=f.auth.open(b.owner(),b.publicId(),b.snapshotSha(),0);var server=start()){
++                try{
++                var actual=server.getBean(RunEventReader.class);var service=server.getBean(PortalRunEventsService.class);var fault=catchThrowable(()->actual.readNext(probe,1));assertThat(fault).isInstanceOf(RunEventReader.CapacityFailure.class);var faults=new AtomicInteger();var timed=org.mockito.Mockito.spy(actual);
++                // Negative fault injection on an actual minted borrow, not BUFFER_LIMIT
++                // pressure or a capability factory. All real RR/consume/guards/cleanup run.
++                // Only WINDOW encoding is cut before its prefix; HELLO encodes normally.
++                org.mockito.Mockito.doAnswer(call->{var result=(RunEventReader.WindowEmission)call.callRealMethod();if(!Thread.currentThread().getName().equals("portal-events-writer"))return result;
++                    return org.mockito.Mockito.mock(RunEventReader.WindowEmission.class,invoke->{var args=invoke.getArguments().clone();
++                        if(invoke.getMethod().getName().equals("consume")){
++                            @SuppressWarnings("unchecked") var action=(java.util.function.Consumer<RunEventReader.WindowBorrow>)args[0];
++                            args[0]=(java.util.function.Consumer<RunEventReader.WindowBorrow>)view->{var wrapped=org.mockito.Mockito.mock(RunEventReader.WindowBorrow.class,encoding->{if(encoding.getMethod().getName().equals("writePrivatePacket")&&Boolean.FALSE.equals(encoding.getArgument(2))){faults.incrementAndGet();throw fault;}try{return encoding.getMethod().invoke(view,encoding.getArguments());}catch(java.lang.reflect.InvocationTargetException x){throw x.getCause();}});action.accept(wrapped);};
++                        }try{return invoke.getMethod().invoke(result,args);}catch(java.lang.reflect.InvocationTargetException x){throw x.getCause();}
++                    });
++                }).when(timed).readChildWindow(org.mockito.ArgumentMatchers.any(PortalEventsResponse.class),org.mockito.ArgumentMatchers.anyLong(),org.mockito.ArgumentMatchers.same(f.auth.engine));
++                var field=PortalRunEventsService.class.getDeclaredField("reader");field.setAccessible(true);field.set(service,timed);
++                var first=callers.submit(()->request(server,b.publicId(),a.ticket,MIME));var second=callers.submit(()->request(server,b.publicId(),c.ticket,MIME));assertThat(h.entered.await(7,TimeUnit.SECONDS)).as(exit).isTrue();assertThat(faults).hasValue(2);assertThat(h.capacityAttempts).hasValue(2);assertThat(h.exits).hasValue(0);
++                var bus=server.getBean(ChunkBus.class);
++                assertThat(catchThrowable(()->{try(var unexpected=actual.readNext(probe,0).orElseThrow()) {}})).as("both B permits until physical complete exit: %s",exit).isInstanceOf(RunEventReader.CapacityFailure.class);
++                assertThat(PortalChildEventsPostgresTest.frames(bus)).isEqualTo(60);assertThatThrownBy(()->bus.subscribe(999)).isInstanceOf(PlatformException.class);
++                for(var wire:h.wires){var packets=PortalChildEventsPostgresTest.packets(wire.toByteArray());assertThat(packets.stream().map(PortalChildEventsPostgresTest.Packet::kind).toList()).containsExactlyElementsOf(exit.equals("write")?List.of(1):List.of(1,3));for(var p:packets){assertThat(p.header().path("afterSeq").longValue()).isZero();assertThat(p.header().path("eventSeq").isNull()).isTrue();}if(exit.equals("flush"))assertThat(packets.getLast().metadata().toString()).isEqualTo("{\"code\":\"EVENT_LIMIT\"}");}
++                assertThat(h.wires).hasSize(2);h.release.countDown();first.get(8,TimeUnit.SECONDS);second.get(8,TimeUnit.SECONDS);await(()->h.exits.get()==2);await(()->{try{return PortalChildEventsPostgresTest.frames(bus)==62;}catch(Exception x){throw new AssertionError(x);}});assertThat(faults).hasValue(2);assertThat(h.capacityAttempts).hasValue(2);
++                // A long-lived standalone probe may renew between two B captures. Use a new
++                // normal holder for the independent post-release admission recovery check.
++                try(var fresh=f.auth.open(b.owner(),b.publicId(),b.snapshotSha(),0);var one=actual.readNext(fresh,0).orElseThrow();var two=actual.readNext(fresh,0).orElseThrow();var x=bus.subscribe(998);var y=bus.subscribe(999)){}
++                }finally{h.release.countDown();}
++            }finally{h.release.countDown();hooks=null;}
++        }
++    }
+     @Test void privateActualResourceHeaderLimitRejectsOversizeAtContainerBoundary()throws Exception{
+         try(var f=new PortalChildEventsPostgresTest.Fixture()){fixture=f;var b=f.seed();try(var server=start();var socket=new java.net.Socket(java.net.InetAddress.getLoopbackAddress(),server.getWebServer().getPort())){
+             assertThat(server.getBean(org.springframework.boot.autoconfigure.web.ServerProperties.class).getMaxHttpRequestHeaderSize().toBytes()).isEqualTo(32768);socket.setSoTimeout(4000);socket.getOutputStream().write(("GET /admin/runs/"+b.publicId()+"/events HTTP/1.1\r\nHost: localhost\r\nX-Bounded-Probe: "+"x".repeat(33000)+"\r\nConnection: close\r\n\r\n").getBytes(java.nio.charset.StandardCharsets.US_ASCII));String body=new String(socket.getInputStream().readAllBytes(),java.nio.charset.StandardCharsets.UTF_8);assertThat(body).startsWith("HTTP/1.1 400").doesNotContain("APEV","RUN_AUTHORITY_DENIED");

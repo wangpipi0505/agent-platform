@@ -1,0 +1,17 @@
+-------------------------------------------------------------------------------
+Test set: cn.agentplatform.engine.infra.RunEventReaderBudgetTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 0.742 s <<< FAILURE! -- in cn.agentplatform.engine.infra.RunEventReaderBudgetTest
+cn.agentplatform.engine.infra.RunEventReaderBudgetTest.captureInitialCursorAndRemainingAreLiveLocalOperations -- Time elapsed: 0.723 s <<< ERROR!
+cn.agentplatform.common.PlatformException: 当前授权不允许此操作
+	at cn.agentplatform.common.authority.AuthorityProtocol.denied(AuthorityProtocol.java:11)
+	at cn.agentplatform.common.authority.AuthorityProtocol.within(AuthorityProtocol.java:50)
+	at cn.agentplatform.common.authority.HttpCurrentAuthorityClient.verifiedTicket(HttpCurrentAuthorityClient.java:414)
+	at cn.agentplatform.common.authority.HttpCurrentAuthorityClient.portalExchange(HttpCurrentAuthorityClient.java:152)
+	at cn.agentplatform.common.authority.HttpCurrentAuthorityClient.exchange(HttpCurrentAuthorityClient.java:140)
+	at cn.agentplatform.common.authority.RunEventReaderAuthorityFixture.open(RunEventReaderAuthorityFixture.java:29)
+	at cn.agentplatform.engine.infra.RunEventReaderBudgetTest.captureInitialCursorAndRemainingAreLiveLocalOperations(RunEventReaderBudgetTest.java:11)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+

@@ -1,0 +1,81 @@
+{
+  "profile": "Temurin21.0.12+8, inherited conservative header16/ref8/array24/alignment8; not heap telemetry",
+  "fieldBodies": {
+    "file": "docs/evidence/iam-stage-4-o2b-f2c2a-retention-fixes/actual-field-bodies.json",
+    "bytes": 17314,
+    "sha256": "1813132abef1756e1141f7fbc53acdc5b55aaba9916e189546fadcbeb0046ce8"
+  },
+  "actualCore": 880,
+  "coreBasis": {
+    "handleAndReferenceAndStateAndTwoMonitors": 296,
+    "anchoredClosedSession": 336,
+    "releasedLease": 56,
+    "closedOwner": 48,
+    "emptyGuardsMap": 56,
+    "objectArray8": 88
+  },
+  "declaredRows": [
+    {
+      "component": "Handle/HandleReference/State/two monitors",
+      "bytes": 384
+    },
+    {
+      "component": "one anchored closed Session",
+      "bytes": 384
+    },
+    {
+      "component": "released lease",
+      "bytes": 64
+    },
+    {
+      "component": "closed Owner",
+      "bytes": 64
+    },
+    {
+      "component": "cleared IdentityHashMap",
+      "bytes": 64
+    },
+    {
+      "component": "Object[8]",
+      "bytes": 96
+    },
+    {
+      "component": "two one-time callbacks",
+      "bytes": 64
+    },
+    {
+      "component": "one inert RequestSlot",
+      "bytes": 64
+    },
+    {
+      "component": "at most four released Reservation/failure tokens",
+      "bytes": 128
+    }
+  ],
+  "declaredGraph": 1312,
+  "bundleBytes": 1792,
+  "remainingEnumeratedMargin": 480,
+  "additions": "Handle two one-shot boolean fields and RequestSlot claimed boolean fit unchanged bodies; Session anchor fits336<=384; shared protocol counters fit128B fixed protocol body",
+  "fixedGraph": {
+    "referenceArray": 12312,
+    "stateArray": 1560,
+    "bridgeAndTwo64Arrays": 1104,
+    "queueLocksAndNodes": 512,
+    "protocolAndScalarReserve": 2048,
+    "literalOccurrenceUpperBytes": 6864,
+    "literalOccurrenceCount": 78,
+    "total": 24400,
+    "allowance": 131072
+  },
+  "sharedSlots": 1536,
+  "retiredReferenceTails": 4,
+  "retiredBytes": 7168,
+  "ledgerTotal": 2890752,
+  "baseline": 3145728,
+  "baselineMargin": 254976,
+  "twoOwnerPlusBaseline": 200576852,
+  "globalLimit": 201326592,
+  "globalMargin": 749740,
+  "heavyExclusions": "Frame270374 backing, worker/Thread, async/output/window/transport/parser/material/authority/probe captures are covered until actual exits and reference-bearing helpers return; none are counted as an8B closed field",
+  "tls": "Inherited installed PortalEventsTls config/B2 shared treatment once; no per-Session tls clone; no universal singleton assertion"
+}

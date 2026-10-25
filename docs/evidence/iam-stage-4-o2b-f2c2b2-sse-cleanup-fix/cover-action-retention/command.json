@@ -1,0 +1,30 @@
+{
+  "java": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/java.exe",
+  "args": [
+    "-Djdk.net.unixdomain.tmpdir=V:/.local/tmp",
+    "-Djdk.tls.maxHandshakeMessageSize=32768",
+    "-Djdk.tls.maxCertificateChainLength=4",
+    "-Dcom.sun.security.enableAIAcaIssuers=false",
+    "-Djdk.tls.server.newSessionTicketCount=0",
+    "-Djdk.tls.server.enableStatusRequestExtension=false",
+    "-cp",
+    "[exact frozen surefire.test.class.path]",
+    "cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest",
+    "action-retention",
+    "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\iam-stage-4-o2b-f2c2b2-sse-cleanup-fix\\cover-action-retention\\observer"
+  ],
+  "classpathFrom": {
+    "file": "docs/evidence/iam-stage-4-o2b-f2c2b2-sse-cleanup-fix/green-02/finite-target/platform-gateway/target/surefire-reports/TEST-cn.agentplatform.gateway.infra.PortalRunEventsSseAutomaticCleanupTest.xml",
+    "bytes": 39136,
+    "sha256": "5df59b05b8f5fa4f205a5315ec92026e750358ff878eca4d1f5b64c31ff31813"
+  },
+  "classpathSha256": "1c64b319fc6d0be4bb317e3bfeb3aeb457409af921172f7813ffd1f75d50e3e1",
+  "method": "stalledActualActionRetainsTwoOwnersUntilActionAndCompletionExit",
+  "scenario": "action-retention",
+  "sourceEpoch": {
+    "file": "docs/evidence/iam-stage-4-o2b-f2c2b2-sse-cleanup-fix/green-02/source.json",
+    "bytes": 122910,
+    "sha256": "a130f4d746f3573d49ced035022086914fb397bfe223c05edd0c959bb2d1421a"
+  },
+  "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform"
+}

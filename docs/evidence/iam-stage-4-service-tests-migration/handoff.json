@@ -1,0 +1,140 @@
+{
+  "status": "FROZEN_FOR_FRESH_REVIEW_NOT_ACCEPTED",
+  "at": "2026-10-21T01:37:23.197Z",
+  "scope": {
+    "source": "admin-common/src/test/java/cn/agentplatform/common/authority/ServiceAuthorizationTest.java",
+    "modified": 1,
+    "added": 0,
+    "deleted": 0,
+    "tests": 14,
+    "productionChanged": false
+  },
+  "source": {
+    "sourceCount": 589,
+    "backend": 397,
+    "frontend": 192,
+    "modified": 1,
+    "added": 0,
+    "deleted": 0,
+    "methods": [
+      "signedOldAdminCannotOverrideOnlineEditorInRealController",
+      "integrationOriginCannotUseAdminAliasesEvenAfterDelegatedResume",
+      "exactIdentityCapabilityAndResolvedDomainResourceMatrixNeverEntersBusiness",
+      "resourceRefreshRevocationExpiryAndUnavailableNeverReuseInitialSuccess",
+      "requireForChecksLocalOwnerAndRejectsWiderActorWithoutUsingItAsAuthorityInput",
+      "exceptionsAsyncHandoffAndConcurrentRequestsLeaveNoAmbientFrame",
+      "bothWorkloadRowsAreUsableAndCannotBecomeDelegatedUserCapabilities",
+      "catchingFailedResourceRefreshCannotRecoverThePreviousActorProjection",
+      "explicitlyRegisteredExactHealthNeedsNoBearerAndGrantsNoSiblingPath",
+      "freshSignedDecisionCannotChangeAnyOriginalSubjectGrantOperationOrCallBinding",
+      "actorProjectionRequiresContextWithSameTenantAndSubject",
+      "nestedServletDispatchCannotOverwriteTheRequestCleanupFrame",
+      "secondaryMappingUsesTheSameRealHttpCurrentAuthorityGuard",
+      "retainedInitialUsesOnePreHandleQueryAndOneExplicitRefreshThenClosesOnHttpAndAsync"
+    ],
+    "healthUnchanged": true,
+    "executedSourceEqualsFinalSource": true,
+    "indexesUnchanged": 8,
+    "manifest": {
+      "file": "docs/evidence/iam-stage-4-service-tests-migration/source-after.json",
+      "bytes": 111999,
+      "sha256": "01121a4739ff5a0299cce9e5ecaa0ab5d433cd0be177ffd5d03f9410c67fe346"
+    },
+    "task": {
+      "file": "admin-common/src/test/java/cn/agentplatform/common/authority/ServiceAuthorizationTest.java",
+      "bytes": 37995,
+      "sha256": "0200c3923ca520237013f895db6ba000d10787e86477aa1da4c465285528592f"
+    }
+  },
+  "target": {
+    "logical": 2023,
+    "overlay": 187,
+    "newDiagnosticsSeparate": 1,
+    "physicalOverlayVerified": true,
+    "manifest": {
+      "file": "docs/evidence/iam-stage-4-service-tests-migration/target-after.json",
+      "bytes": 419609,
+      "sha256": "244535cb02df60585217088e321f2b6ac44aaca20de22821a080d66d41967e20"
+    }
+  },
+  "replay": {
+    "source": 589,
+    "originalLfPatchCheck": 1,
+    "originalLfPatchApplied": false,
+    "byteExactPatchFirstCheck": 0,
+    "firstActualApply": 0,
+    "noCommit": true,
+    "allNamesBytesSha256Equal": true,
+    "finalBytesCopiedAfterApply": false,
+    "patch": {
+      "file": "docs/evidence/iam-stage-4-service-tests-migration/service-tests-migration-byte-exact.patch",
+      "bytes": 30684,
+      "sha256": "c169d8be46034fde40b41344a6124fd089250bb09765719b3d721d9a0cd57ed0"
+    },
+    "failedOriginalPatch": {
+      "file": "docs/evidence/iam-stage-4-service-tests-migration/service-tests-migration.patch",
+      "bytes": 30345,
+      "sha256": "83e383c1e0bbfcf985ec75b90fb460343419e8fef6724f91fec8a1941c0d40de"
+    },
+    "manifest": {
+      "file": "docs/evidence/iam-stage-4-service-tests-migration/replay-source.json",
+      "bytes": 111999,
+      "sha256": "01121a4739ff5a0299cce9e5ecaa0ab5d433cd0be177ffd5d03f9410c67fe346"
+    },
+    "recovery": "Only unsuccessful replay stage resumed; source/target physical phases reused their successful cached records. No tests repeated."
+  },
+  "test": {
+    "executions": 1,
+    "stage": "iam-stage-service-migration-final01",
+    "command": [
+      "node",
+      ".tools/run-iam-module-tests.mjs",
+      "iam-stage-service-migration-final01",
+      "admin-common",
+      "ServiceAuthorizationTest"
+    ],
+    "exitCode": 0,
+    "running": [
+      {
+        "cls": "cn.agentplatform.common.authority.ServiceAuthorizationTest",
+        "tests": 14,
+        "errors": 0,
+        "skipped": 0,
+        "failures": 0
+      }
+    ],
+    "raw": {
+      "file": "docs/evidence/iam-stage-4-service-tests-migration/iam-stage-service-migration-final01/after/raw.log",
+      "bytes": 4007,
+      "sha256": "98dcd4d368dc3d29f2de0fda7a52e816ebbfa22a951f106ca26587ff54934d72"
+    },
+    "xml": {
+      "file": "docs/evidence/iam-stage-4-service-tests-migration/iam-stage-service-migration-final01/after/TEST-cn.agentplatform.common.authority.ServiceAuthorizationTest.xml",
+      "bytes": 36272,
+      "sha256": "ebcc68cde46f02cdf1012a201cccb807cee642415bd7eb51bae5919109a0e714"
+    },
+    "commandRecord": {
+      "file": "docs/evidence/iam-stage-4-service-tests-migration/iam-stage-service-migration-final01/after/command.json",
+      "bytes": 577,
+      "sha256": "3ca1099303eb4a220155c2f68ce90b13c29a84b584e4d487f0c05a615ee74f74"
+    }
+  },
+  "report": {
+    "file": "docs/evidence/iam-stage-4-service-tests-migration-report.md",
+    "bytes": 8966,
+    "sha256": "6acbf76fd878a96e13ed17c44fe15ea71f3369af23cd4040b169100ddbf3f3bd"
+  },
+  "inventory": {
+    "file": "docs/evidence/iam-stage-4-service-tests-migration/own-inventory.json",
+    "selfExclusion": "Only inventory itself; final identity returned in author handoff response"
+  },
+  "returnedWriteRights": [
+    "admin-common/src/test/java/cn/agentplatform/common/authority/ServiceAuthorizationTest.java",
+    "admin-common/target and backend classes",
+    ".local/iam-service-tests-migration",
+    "docs/evidence/iam-stage-4-service-tests-migration",
+    "docs/evidence/iam-stage-4-service-tests-migration-report.md"
+  ],
+  "next": "Fresh reviewer and root audit determine acceptance; B preparation remains separate",
+  "eof": "EOF"
+}

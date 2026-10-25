@@ -1,0 +1,198 @@
+{
+  "at": "2026-10-20T19:10:36.199Z",
+  "status": "FIX_IMPLEMENTED_FROZEN_OWNERSHIP_RETURNED_PENDING_ORIGINAL_REVIEWER",
+  "ownershipReturned": true,
+  "independentReview": "Pending; original C0/I1/M1 report not rewritten by author; not fullTask5 approval.",
+  "sourceCount": 377,
+  "modifiedSource": 3,
+  "targetCount": 1888,
+  "targetDelta": {
+    "added": 9,
+    "modified": 21,
+    "deleted": 0,
+    "businessJar": 0
+  },
+  "coverage": {
+    "selectedCases": 5,
+    "lastValid": "three green03 +two green04; not final-source same-run5green",
+    "stages": 4,
+    "newRacesFinalPass": 2,
+    "realReds": [
+      "red01 before actualcompletion missing",
+      "red02 after nativeclose1s Timeout; cleanup suppressed"
+    ],
+    "resources": "green04 context/HTTPclient/caller cleanup pass; current exactown JVM0; historical red02 cleanup failures retained"
+  },
+  "brief": {
+    "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix-brief.md",
+    "bytes": 6843,
+    "sha256": "4ee98c9637bac111efb5c038c3d3913f541d6212a4a50b93c816bd041536fba2"
+  },
+  "priorReview": {
+    "file": "docs/evidence/review-iam-stage-5-n4b2.md",
+    "bytes": 13364,
+    "sha256": "12281551feffd03506c6b5ce9b07cb87f4dabf98c7473c81f619b7cd55b68f57"
+  },
+  "report": {
+    "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix-report.md",
+    "bytes": 12005,
+    "sha256": "b684b95301688762d88ad3547e284092b3fd60847634b3fe332f4f0bfe94bc28"
+  },
+  "humanHandoff": {
+    "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/handoff.md",
+    "bytes": 1516,
+    "sha256": "92d1db64a7b84a703ca34332c12c265bd84838e1e86b46a34f7e5cbc81c5d3bf"
+  },
+  "evidenceManifest": {
+    "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/evidence-manifest.json",
+    "bytes": 29426,
+    "sha256": "179e60769d6376afe1863cd060d389a4a3108d751f4294aff6299c17875e15f3"
+  },
+  "descriptors": [
+    {
+      "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/baseline-check.json",
+      "bytes": 759,
+      "sha256": "0fca671a9f71792e79b06b0d6efc643e4f007571dddee5d469b2292350ec6c45"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/source-before.json",
+      "bytes": 77685,
+      "sha256": "cdc3f4a1151a57005aed2f9a605226bae7f6456d8c7d1c339af5a2476a11968a"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/target-before.json",
+      "bytes": 386918,
+      "sha256": "fbe26616ad550f9a78bb16700d815fc868d0053e6d99ebc177ca4b61924f5fb0"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/source-after.json",
+      "bytes": 77685,
+      "sha256": "6caf11a109ae9812af0d6994cfc11761923c40ecd943dfa793a9b900ea6bbba6"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/source-current.json",
+      "bytes": 77685,
+      "sha256": "6caf11a109ae9812af0d6994cfc11761923c40ecd943dfa793a9b900ea6bbba6"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/source-frozen-effective.json",
+      "bytes": 77685,
+      "sha256": "6caf11a109ae9812af0d6994cfc11761923c40ecd943dfa793a9b900ea6bbba6"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/source-replay-effective.json",
+      "bytes": 77685,
+      "sha256": "6caf11a109ae9812af0d6994cfc11761923c40ecd943dfa793a9b900ea6bbba6"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/target-after.json",
+      "bytes": 388925,
+      "sha256": "a427d87c1ca9c131d5b7d27e65c3d4aa208ca5dedd3fb5aaff9be08786bc07c7"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/target-current.json",
+      "bytes": 388925,
+      "sha256": "a427d87c1ca9c131d5b7d27e65c3d4aa208ca5dedd3fb5aaff9be08786bc07c7"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/target-frozen-effective.json",
+      "bytes": 388925,
+      "sha256": "a427d87c1ca9c131d5b7d27e65c3d4aa208ca5dedd3fb5aaff9be08786bc07c7"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/overlay-reference.json",
+      "bytes": 4838,
+      "sha256": "e6bca9f0f8c1a02fe1eaa8cec5d4badab654ba08ed2ba6a2961de9e10263901c"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/freeze.json",
+      "bytes": 1124,
+      "sha256": "c4a5e7e318ed7dfe432d906a60ecc76dda4565fae9ff35aadcb48a74208dd979"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/source-delta.json",
+      "bytes": 1588,
+      "sha256": "79aeafadaa61ebadff563f6c4bfb024f2f039fd7bc1631c5924cd099eceff472"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/target-delta.json",
+      "bytes": 13355,
+      "sha256": "01f1bda550e2eb758061a6e7255ae15a8cfb71a1c22c8470f074bdb0430a0420"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/target-attribution.json",
+      "bytes": 18180,
+      "sha256": "be5117f08d7b877208474f12507d6e8befa1453e1676ddce8ca592265d569461"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/source-fullcontext.patch",
+      "bytes": 125475,
+      "sha256": "c90f098e3ac77e2b2b5fe23e69f081e2fcfbd3da099646e6e673f3a3b1473aa9"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/replay-check.json",
+      "bytes": 2635,
+      "sha256": "1e691355986a4f3ac43bbba7988f22bdfdfa4bc943f5394657877f2008030a88"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/stage-ledger.json",
+      "bytes": 11474,
+      "sha256": "f9116ad2c461a3065fea4ca8be0554b97f0da57f916f60837ad5ce98485db6d3"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/coverage-ledger.json",
+      "bytes": 9977,
+      "sha256": "66e834d81af8aa29e7eb2d703e7ff37f3775fbaecefe24b4453ec650323b18e9"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/key-protection-before.json",
+      "bytes": 9881,
+      "sha256": "902256ff3c401a41a6bc2cf23cf9d47c795450cb40c1ca3d92f94f49e02dd11b"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/key-protection-before-design-supplement.json",
+      "bytes": 743,
+      "sha256": "deef0601cdb1a6e4e9250359c5a68d99adf622a15bd10c5a05be4c0a80f5fc79"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/key-protection-after.json",
+      "bytes": 11862,
+      "sha256": "1c30279a1712f819f1655579d17a715f76c2b2a043f67bab364f43e2d286fdf6"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/resource-check.json",
+      "bytes": 1164,
+      "sha256": "a9e871fab6c852a1a69d26f4a05fd0287a9239bfc0293110a9379ffe3c1ce142"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/root-async-unowned-decision.json",
+      "bytes": 783,
+      "sha256": "ff509ba41eb4edbb4e421c3fe3a032d43b3fd9c55ea1753a27f8a6d61c1b00e3"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/tool-events.json",
+      "bytes": 2303,
+      "sha256": "01ff3e9e37d02befe5e40b821f76f44569d9f9ea732537cc195202946d64efa6"
+    },
+    {
+      "file": "docs/evidence/iam-stage-5-n4b2-close-install-fix/format.json",
+      "bytes": 1127,
+      "sha256": "b16165ba8ef79daed66ba3a10d79fa5ef5bf643f852623c983e37935a913a8e3"
+    }
+  ],
+  "protection": {
+    "physicalRunners": 28,
+    "physicalLatestIndexes": 8,
+    "physicalOriginalDesign": 1,
+    "physicalNamedAnchors": 13,
+    "mismatches": 0,
+    "old123837FullPhysical": "Inherited original author result/root descriptor lineage; not rescanned",
+    "old16347NewSealed": "Inherited root prior actual verification; not rescanned"
+  },
+  "limits": [
+    "Safe empty503 body in unownedasync close window, not full ApiResponse.",
+    "Real onComplete observed once; only actualMVC timeout/error callbacks manually replayed afterward.",
+    "Original slowreader73728bytes/5500ms selfclose/proxy16 historicalappPIDgap/commonJDK retry/close limits unchanged.",
+    "Root next-stageD4a brief is authorizedexternal addition, not fix content."
+  ]
+}

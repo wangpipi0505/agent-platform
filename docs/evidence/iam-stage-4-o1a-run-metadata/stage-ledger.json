@@ -1,0 +1,302 @@
+{
+  "at": "2026-10-20T21:26:53.487Z",
+  "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+  "stages": [
+    {
+      "stage": "iam-stage-o1a-red01",
+      "exitCode": 1,
+      "classification": "real behavior red: missing pre-authorize purpose guard",
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-o1a-red01 engine-runtime RunObservationMetadataHttpPostgresTest#querySelectorCannotBecomeExistingRunWritePermission",
+      "sourceCount": 573,
+      "sourceBefore": {
+        "file": "docs/evidence/iam-stage-4-o1a-run-metadata/iam-stage-o1a-red01/source-before.json",
+        "bytes": 108474,
+        "sha256": "f0ef13f7349c39145c1da23ae2b7d7825bb6883776336fb2488f1551f275db7f"
+      },
+      "log": {
+        "file": "docs/evidence/iam-stage-4-o1a-run-metadata/iam-stage-o1a-red01/runner.log",
+        "bytes": 33438,
+        "sha256": "8a0cb9ee80104dab8bd4a295cdde218701314a3ecd80ec2f76e2990fdbb1aafb"
+      },
+      "xml": [
+        {
+          "module": "engine-runtime",
+          "file": {
+            "file": "docs/evidence/iam-stage-4-o1a-run-metadata/iam-stage-o1a-red01/engine-runtime/TEST-cn.agentplatform.engine.infra.RunObservationMetadataHttpPostgresTest.xml",
+            "bytes": 73400,
+            "sha256": "0fb10f53b461d48d1bcb56edae65d494abcc155580309d6ae185c2f44306aa3b"
+          },
+          "executedThisCommand": true,
+          "name": "cn.agentplatform.engine.infra.RunObservationMetadataHttpPostgresTest",
+          "tests": 1,
+          "failures": 1,
+          "errors": 0,
+          "skipped": 0,
+          "testcases": [
+            "querySelectorCannotBecomeExistingRunWritePermission"
+          ]
+        }
+      ],
+      "unexecutedXmlCopiedByInitialCollector": [
+        {
+          "module": "admin-common",
+          "file": {
+            "file": "docs/evidence/iam-stage-4-o1a-run-metadata/iam-stage-o1a-red01/admin-common/TEST-cn.agentplatform.common.authority.MetadataSelectorsTest.xml",
+            "bytes": 34623,
+            "sha256": "21ad2fbfa72e56ad0a793442344fca9ec46a1dfe5a1ed498753efff49545aed6"
+          },
+          "executedThisCommand": false,
+          "name": "cn.agentplatform.common.authority.MetadataSelectorsTest",
+          "tests": 5,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "testcases": [
+            "queryPurposeIsBidirectionalAndPortalOnly",
+            "catalogGrantsOnlyExactGatewayQueryAndKeepsIntegrationClosed",
+            "currentPermissionNarrowingAfterQueryBlocksSecondExchangeAndMainCurrentCheck",
+            "canonicalTupleAndDescriptorAreDeterministicAndTenantBound",
+            "codesAreBoundedBeforeAnyUrlCanBeConstructed"
+          ]
+        }
+      ]
+    },
+    {
+      "stage": "iam-stage-o1a-green01",
+      "exitCode": 1,
+      "classification": "two oracle failures: existing authentication 401 was asserted as 403",
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-o1a-green01 admin-common,engine-runtime RunObservationSelectorsTest,RunObservationMetadataHttpPostgresTest,MetadataSelectorsTest",
+      "sourceCount": 578,
+      "sourceBefore": {
+        "file": "docs/evidence/iam-stage-4-o1a-run-metadata/iam-stage-o1a-green01/source-before.json",
+        "bytes": 109562,
+        "sha256": "0fc9a2f8e65200f5d98b28babd4e33e339413da0b29d53dda7ed83fa8d71f144"
+      },
+      "log": {
+        "file": "docs/evidence/iam-stage-4-o1a-run-metadata/iam-stage-o1a-green01/runner.log",
+        "bytes": 36366,
+        "sha256": "b2a7b30de389faccda58e51c3ada92e0806f2fbad74b50aca92b5b806610db4d"
+      },
+      "xml": [
+        {
+          "module": "admin-common",
+          "file": {
+            "file": "docs/evidence/iam-stage-4-o1a-run-metadata/iam-stage-o1a-green01/admin-common/TEST-cn.agentplatform.common.authority.MetadataSelectorsTest.xml",
+            "bytes": 34152,
+            "sha256": "44e1746f029143d0c8053b11262ab3c37a6a0aefbaa5dbb14baaf24488ca7775"
+          },
+          "executedThisCommand": true,
+          "name": "cn.agentplatform.common.authority.MetadataSelectorsTest",
+          "tests": 5,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "testcases": [
+            "queryPurposeIsBidirectionalAndPortalOnly",
+            "catalogGrantsOnlyExactGatewayQueryAndKeepsIntegrationClosed",
+            "currentPermissionNarrowingAfterQueryBlocksSecondExchangeAndMainCurrentCheck",
+            "canonicalTupleAndDescriptorAreDeterministicAndTenantBound",
+            "codesAreBoundedBeforeAnyUrlCanBeConstructed"
+          ]
+        },
+        {
+          "module": "admin-common",
+          "file": {
+            "file": "docs/evidence/iam-stage-4-o1a-run-metadata/iam-stage-o1a-green01/admin-common/TEST-cn.agentplatform.common.authority.RunObservationSelectorsTest.xml",
+            "bytes": 33682,
+            "sha256": "130c89eb4d09909824c9ec2d215d9d4ff0c8b1ab64a7984fb8c3dea9d00cd5c0"
+          },
+          "executedThisCommand": true,
+          "name": "cn.agentplatform.common.authority.RunObservationSelectorsTest",
+          "tests": 2,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "testcases": [
+            "canonicalQueryBindsVerifiedSubjectPathAndProjection",
+            "invalidInputIs400AndPurposeIsBidirectional"
+          ]
+        },
+        {
+          "module": "engine-runtime",
+          "file": {
+            "file": "docs/evidence/iam-stage-4-o1a-run-metadata/iam-stage-o1a-green01/engine-runtime/TEST-cn.agentplatform.engine.infra.RunObservationMetadataHttpPostgresTest.xml",
+            "bytes": 75439,
+            "sha256": "aca0c7695767d5ee5ca88a865c01ca4991b169aec16494a81c3d56512bce3171"
+          },
+          "executedThisCommand": true,
+          "name": "cn.agentplatform.engine.infra.RunObservationMetadataHttpPostgresTest",
+          "tests": 11,
+          "failures": 2,
+          "errors": 0,
+          "skipped": 0,
+          "testcases": [
+            "wrongPurposeClaimsAndQueryTicketOnOtherRoutesFailBeforeMetadata",
+            "actualHttpProjectsSevenFieldsFromReadOnlyRepeatableReadWithoutPayload",
+            "actualMappingWithoutInstalledGuardFailsStartupBeforeListening",
+            "rawQueryBareQuestionBodyAndDispatcherAreRejectedAtRealHandlerBoundary",
+            "ambientTransactionIsRejectedBeforeOnlineRefreshAndLegacyAssemblyNeedsNoIamBean",
+            "querySelectorCannotBecomeExistingRunWritePermission",
+            "damagedControlMetadataAndMissingOrInconsistentRootManifestsFailClosed",
+            "currentRevocationOutageAndExpiryBlockBeforeSqlAndNoLegacyFallback",
+            "selectorPathOwnerTenantAndDigestCannotSubstituteAnotherRun",
+            "notFoundAndOtherOwnerHaveTheSame404WhileOwnedLegacyHas403",
+            "localExpiryOrClosedFrameAfterReadAndCommitPreventsAValidProjection"
+          ]
+        }
+      ],
+      "unexecutedXmlCopiedByInitialCollector": []
+    },
+    {
+      "stage": "iam-stage-o1a-green02",
+      "exitCode": 0,
+      "classification": "common7 + engine13; one command, 20 tests",
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-o1a-green02 admin-common,engine-runtime RunObservationSelectorsTest,RunObservationMetadataHttpPostgresTest,MetadataSelectorsTest",
+      "sourceCount": 578,
+      "sourceBefore": {
+        "file": "docs/evidence/iam-stage-4-o1a-run-metadata/iam-stage-o1a-green02/source-before.json",
+        "bytes": 109562,
+        "sha256": "d321d5c88321db51ecebe01029b3f5b299986a2f8f5cb9bf0fbe9502566c4263"
+      },
+      "log": {
+        "file": "docs/evidence/iam-stage-4-o1a-run-metadata/iam-stage-o1a-green02/runner.log",
+        "bytes": 32653,
+        "sha256": "39633e5da91218561adc581499e52f2f8b235fe999215ec8b3be67d10b367174"
+      },
+      "xml": [
+        {
+          "module": "admin-common",
+          "file": {
+            "file": "docs/evidence/iam-stage-4-o1a-run-metadata/iam-stage-o1a-green02/admin-common/TEST-cn.agentplatform.common.authority.MetadataSelectorsTest.xml",
+            "bytes": 34154,
+            "sha256": "dcf0b99e762c80a6fce9ad49d220155487b215b731a4482dc1da9eb021735f39"
+          },
+          "executedThisCommand": true,
+          "name": "cn.agentplatform.common.authority.MetadataSelectorsTest",
+          "tests": 5,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "testcases": [
+            "queryPurposeIsBidirectionalAndPortalOnly",
+            "catalogGrantsOnlyExactGatewayQueryAndKeepsIntegrationClosed",
+            "currentPermissionNarrowingAfterQueryBlocksSecondExchangeAndMainCurrentCheck",
+            "canonicalTupleAndDescriptorAreDeterministicAndTenantBound",
+            "codesAreBoundedBeforeAnyUrlCanBeConstructed"
+          ]
+        },
+        {
+          "module": "admin-common",
+          "file": {
+            "file": "docs/evidence/iam-stage-4-o1a-run-metadata/iam-stage-o1a-green02/admin-common/TEST-cn.agentplatform.common.authority.RunObservationSelectorsTest.xml",
+            "bytes": 33681,
+            "sha256": "7eac096e39319f433d3144a089831050eb00b955c01d743fca804b96babee204"
+          },
+          "executedThisCommand": true,
+          "name": "cn.agentplatform.common.authority.RunObservationSelectorsTest",
+          "tests": 2,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "testcases": [
+            "canonicalQueryBindsVerifiedSubjectPathAndProjection",
+            "invalidInputIs400AndPurposeIsBidirectional"
+          ]
+        },
+        {
+          "module": "engine-runtime",
+          "file": {
+            "file": "docs/evidence/iam-stage-4-o1a-run-metadata/iam-stage-o1a-green02/engine-runtime/TEST-cn.agentplatform.engine.infra.RunObservationMetadataHttpPostgresTest.xml",
+            "bytes": 75948,
+            "sha256": "146c301c28d339b261e4819ef7a35ff6510b2d88a578530de5d76cabed662707"
+          },
+          "executedThisCommand": true,
+          "name": "cn.agentplatform.engine.infra.RunObservationMetadataHttpPostgresTest",
+          "tests": 13,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "testcases": [
+            "wrongPurposeClaimsAndQueryTicketOnOtherRoutesFailBeforeMetadata",
+            "actualHttpProjectsSevenFieldsFromReadOnlyRepeatableReadWithoutPayload",
+            "actualMappingWithoutInstalledGuardFailsStartupBeforeListening",
+            "currentRefreshInsideServiceFailsBeforeOpeningDatabaseSnapshot",
+            "rawQueryBareQuestionBodyAndDispatcherAreRejectedAtRealHandlerBoundary",
+            "ambientTransactionIsRejectedBeforeOnlineRefreshAndLegacyAssemblyNeedsNoIamBean",
+            "querySelectorCannotBecomeExistingRunWritePermission",
+            "damagedControlMetadataAndMissingOrInconsistentRootManifestsFailClosed",
+            "currentRevocationOutageAndExpiryBlockBeforeSqlAndNoLegacyFallback",
+            "selectorPathOwnerTenantAndDigestCannotSubstituteAnotherRun",
+            "notFoundAndOtherOwnerHaveTheSame404WhileOwnedLegacyHas403",
+            "localExpiryOrClosedFrameAfterReadAndCommitPreventsAValidProjection",
+            "invalidPublicIdAndRawDuplicateQueryAre400BeforeMetadata"
+          ]
+        }
+      ],
+      "unexecutedXmlCopiedByInitialCollector": []
+    },
+    {
+      "stage": "iam-stage-o1a-green03",
+      "exitCode": 0,
+      "classification": "engine16 only; common7 not rerun",
+      "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-o1a-green03 engine-runtime RunObservationMetadataHttpPostgresTest",
+      "sourceCount": 578,
+      "sourceBefore": {
+        "file": "docs/evidence/iam-stage-4-o1a-run-metadata/iam-stage-o1a-green03/source-before.json",
+        "bytes": 109562,
+        "sha256": "719caa92b7dc1c33ee620e923247bb57bad45cee5c0b9c210401dc9fde463510"
+      },
+      "log": {
+        "file": "docs/evidence/iam-stage-4-o1a-run-metadata/iam-stage-o1a-green03/runner.log",
+        "bytes": 41085,
+        "sha256": "9b7bb6c1a765e92aa222ba9d7e6ba2c07a98a9e253efcceb6f3d6e2f6cc7aad4"
+      },
+      "xml": [
+        {
+          "module": "engine-runtime",
+          "file": {
+            "file": "docs/evidence/iam-stage-4-o1a-run-metadata/iam-stage-o1a-green03/engine-runtime/TEST-cn.agentplatform.engine.infra.RunObservationMetadataHttpPostgresTest.xml",
+            "bytes": 85066,
+            "sha256": "37ba0b655ad10dfa38eca46e2442bf94979965cf5b60e77a01e08fe08dd2e2b8"
+          },
+          "executedThisCommand": true,
+          "name": "cn.agentplatform.engine.infra.RunObservationMetadataHttpPostgresTest",
+          "tests": 16,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "testcases": [
+            "wrongPurposeClaimsAndQueryTicketOnOtherRoutesFailBeforeMetadata",
+            "actualHttpProjectsSevenFieldsFromReadOnlyRepeatableReadWithoutPayload",
+            "actualMappingWithoutInstalledGuardFailsStartupBeforeListening",
+            "actualInvalidDigestAndRootKindInPostgresAreDeniedWithoutReadingPayload",
+            "currentRefreshInsideServiceFailsBeforeOpeningDatabaseSnapshot",
+            "rawQueryBareQuestionBodyAndDispatcherAreRejectedAtRealHandlerBoundary",
+            "ambientTransactionIsRejectedBeforeOnlineRefreshAndLegacyAssemblyNeedsNoIamBean",
+            "querySelectorCannotBecomeExistingRunWritePermission",
+            "damagedControlMetadataAndMissingOrInconsistentRootManifestsFailClosed",
+            "selfConsistentLegalRootDigestReplacementIsTheDocumentedStorageTrustBoundary",
+            "currentRevocationOutageAndExpiryBlockBeforeSqlAndNoLegacyFallback",
+            "selectorPathOwnerTenantAndDigestCannotSubstituteAnotherRun",
+            "notFoundAndOtherOwnerHaveTheSame404WhileOwnedLegacyHas403",
+            "longVersionNumbersRemainPinnedWhenLaterRunsAreAccepted",
+            "localExpiryOrClosedFrameAfterReadAndCommitPreventsAValidProjection",
+            "invalidPublicIdAndRawDuplicateQueryAre400BeforeMetadata"
+          ]
+        }
+      ],
+      "unexecutedXmlCopiedByInitialCollector": []
+    }
+  ],
+  "lastApplicable": {
+    "common": "green02: MetadataSelectorsTest5 + RunObservationSelectorsTest2",
+    "engine": "green03: RunObservationMetadataHttpPostgresTest16",
+    "notOne23TestCommand": true
+  },
+  "testSourceFrozenDuringActualSubprocesses": true,
+  "discoveryErrors": "Read-only PowerShell rg wildcard invocation and accidental rg -ErrorAction flag errors occurred during context discovery; no test/setup failure or behavior-red credit."
+}

@@ -1,0 +1,26 @@
+import fs from 'node:fs';import path from 'node:path';import crypto from 'node:crypto';import assert from 'node:assert/strict';import {spawnSync} from 'node:child_process';
+const base='.local/iam-d3b/',out='docs/evidence/iam-stage-4-d3b';
+const walk=p=>fs.readdirSync(p,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(p+'/'+e.name):[p+'/'+e.name]);
+const item=p=>{const b=fs.readFileSync(p);return {file:p,bytes:b.length,sha256:crypto.createHash('sha256').update(b).digest('hex')}};
+const write=(p,v)=>{fs.mkdirSync(path.dirname(p),{recursive:true});fs.writeFileSync(p,JSON.stringify(v,null,2)+'\n')};const cp=(p,d)=>{fs.mkdirSync(path.dirname(d),{recursive:true});fs.copyFileSync(p,d)};
+if(fs.existsSync(out+'/source-after.json'))throw Error('Single final source/target freeze');
+const startedAt=new Date().toISOString();const modules=['admin-common','app-management','engine-runtime','platform-gateway','skill-registry','model-gateway','monitor'];
+const src=['pom.xml',...modules.flatMap(m=>[m+'/pom.xml',...walk(m+'/src')])].sort().map(item);const before=JSON.parse(fs.readFileSync(base+'source-before.json'));
+const bm=new Map(before.map(r=>[r.file,r]));const changed=src.filter(r=>bm.get(r.file)?.sha256!==r.sha256);const deleted=before.filter(r=>!fs.existsSync(r.file));
+const approved=new Set(['app-management/src/main/java/cn/agentplatform/app/api/AppController.java','app-management/src/main/java/cn/agentplatform/app/application/AppService.java','app-management/src/test/java/cn/agentplatform/app/application/PublishedPayloadHttpTest.java','app-management/src/test/java/cn/agentplatform/app/application/PublishedMetadataHttpTest.java','app-management/src/test/java/cn/agentplatform/common/authority/PublishedMetadataFixtureMain.java','app-management/src/test/java/cn/agentplatform/app/application/ApplicationLifecycleTest.java','app-management/src/test/java/cn/agentplatform/app/application/PublishTransactionTest.java']);
+assert.equal(deleted.length,0);assert.ok(changed.every(r=>approved.has(r.file)));assert.equal(changed.length,7);
+for(const e of before)cp(base+'before/'+e.file,out+'/baseline/'+e.file);
+for(const e of src)cp(e.file,out+'/frozen/'+e.file);
+write(out+'/source-before.json',before);write(out+'/source-after.json',src);write(out+'/changed-files.json',changed);
+const env={...process.env,GIT_CEILING_DIRECTORIES:path.resolve(out),GIT_CONFIG_NOSYSTEM:'1',GIT_CONFIG_GLOBAL:'NUL',GIT_ATTR_NOSYSTEM:'1'};for(const k of ['GIT_DIR','GIT_WORK_TREE','GIT_INDEX_FILE'])delete env[k];
+const diff=spawnSync('git',['-c','core.autocrlf=false','-c','core.attributesFile=NUL','diff','--no-index','--binary','--no-ext-diff','--no-textconv','--no-color','-U100000','--','baseline','frozen'],{cwd:path.resolve(out),env,encoding:'utf8',windowsHide:true,maxBuffer:32*1024*1024});
+fs.writeFileSync(out+'/diff.stderr.log',diff.stderr??'');assert.equal(diff.status,1,diff.stderr);let patch=diff.stdout;for(const s of ['a','b'])for(const d of ['baseline','frozen'])patch=patch.replaceAll(s+'/'+d+'/',s+'/');fs.writeFileSync(out+'/change.patch',patch);
+for(const e of before)cp(base+'before/'+e.file,out+'/replay/'+e.file);
+const apply=spawnSync('git',['-c','core.autocrlf=false','-c','core.attributesFile=NUL','apply','--binary','--whitespace=nowarn',path.resolve(out+'/change.patch')],{cwd:path.resolve(out+'/replay'),env,encoding:'utf8',windowsHide:true});fs.writeFileSync(out+'/apply.log',(apply.stdout??'')+(apply.stderr??''));assert.equal(apply.status,0,apply.stderr);
+for(const e of src){const b=fs.readFileSync(e.file);assert.ok(b.equals(fs.readFileSync(out+'/frozen/'+e.file)));assert.ok(b.equals(fs.readFileSync(out+'/replay/'+e.file)));}
+const targets=modules.flatMap(m=>fs.existsSync(m+'/target')?walk(m+'/target'):[]).map(item);for(const e of targets)cp(e.file,out+'/frozen-target/'+e.file);
+const tb=JSON.parse(fs.readFileSync(base+'target-before.json')),tm=new Map(tb.map(e=>[e.file,e]));const targetChanges=targets.filter(e=>tm.get(e.file)?.sha256!==e.sha256);write(out+'/target-before.json',tb);write(out+'/target-after.json',targets);write(out+'/target-changes.json',targetChanges);
+const stages=['iam-stage-4-d3b-red01','iam-stage-4-d3b-green01','iam-stage-4-d3b-green02','iam-stage-4-d3b-green03','iam-stage-4-d3b-final01','iam-stage-4-d3b-smoke01'];
+const comparison=stages.map(stage=>{const s=JSON.parse(fs.readFileSync(out+'/'+stage+'/source-sha.json'));return {stage,sourceFiles:s.length,finalDifferences:s.filter(e=>src.find(a=>a.file===e.file)?.sha256!==e.sha256).map(e=>e.file)}});write(out+'/test-final-source-comparison.json',comparison);
+write(out+'/replay-check.json',{startedAt,endedAt:new Date().toISOString(),sourceBefore:before.length,sourceAfter:src.length,changed:changed.map(e=>e.file),diffExit:diff.status,applyExit:apply.status,byteEqualLiveFrozenReplay:src.length,patch:item(out+'/change.patch'),targetBefore:tb.length,targetAfter:targets.length,targetChanged:targetChanges.length,noHeadRemoteCommitUsed:true,comparison});
+console.log(JSON.stringify({sourceBefore:before.length,sourceAfter:src.length,changed:changed.map(e=>e.file),applyExit:apply.status,targets:targets.length,targetChanged:targetChanges.length}));

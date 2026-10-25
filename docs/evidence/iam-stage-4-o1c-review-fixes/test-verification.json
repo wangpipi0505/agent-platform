@@ -1,0 +1,113 @@
+{
+  "greenMethods": 12,
+  "transport": 10,
+  "chainControls": 2,
+  "singleFinalCommand": true,
+  "redMethods": 2,
+  "redFailures": 2,
+  "redErrors": 0,
+  "methodResults": {
+    "file": "docs/evidence/iam-stage-4-o1c-review-fixes/xml-method-results.json",
+    "bytes": 3356,
+    "sha256": "19b4f3ef26adcfc9c67a4430510b27a4f852e0126df61711956b6a2b32ee7fae"
+  },
+  "sourceAttribution": "executedSource is per-command source-before + physical pre snapshots, finalSource is independent. Green executes exact final585. Red production original and test final; no historical source attribution rewritten.",
+  "commands": {
+    "file": "docs/evidence/iam-stage-4-o1c-review-fixes/commands.json",
+    "bytes": 9209,
+    "sha256": "25a1710305728dda76f3bcd3486c0968b4afebedfb70ff082e691779465bfac9"
+  },
+  "earlyRows": [
+    {
+      "elapsedMs": 1,
+      "cancelledHandles": 1,
+      "requests": 1,
+      "policy": "Q",
+      "reason": "status-599",
+      "cancelled": true,
+      "installedHandles": 1
+    },
+    {
+      "elapsedMs": 0,
+      "cancelledHandles": 1,
+      "requests": 1,
+      "policy": "Q",
+      "reason": "status-401",
+      "cancelled": true,
+      "installedHandles": 1
+    },
+    {
+      "elapsedMs": 0,
+      "cancelledHandles": 1,
+      "requests": 1,
+      "policy": "Q",
+      "reason": "unsafe-header",
+      "cancelled": true,
+      "installedHandles": 1
+    },
+    {
+      "elapsedMs": 0,
+      "cancelledHandles": 1,
+      "requests": 1,
+      "policy": "Q",
+      "reason": "wrong-type",
+      "cancelled": true,
+      "installedHandles": 1
+    },
+    {
+      "elapsedMs": 1,
+      "cancelledHandles": 1,
+      "requests": 1,
+      "policy": "M",
+      "reason": "status-599",
+      "cancelled": true,
+      "installedHandles": 1
+    },
+    {
+      "elapsedMs": 0,
+      "cancelledHandles": 1,
+      "requests": 1,
+      "policy": "M",
+      "reason": "status-401",
+      "cancelled": true,
+      "installedHandles": 1
+    },
+    {
+      "elapsedMs": 0,
+      "cancelledHandles": 1,
+      "requests": 1,
+      "policy": "M",
+      "reason": "unsafe-header",
+      "cancelled": true,
+      "installedHandles": 1
+    },
+    {
+      "elapsedMs": 0,
+      "cancelledHandles": 1,
+      "requests": 1,
+      "policy": "M",
+      "reason": "wrong-type",
+      "cancelled": true,
+      "installedHandles": 1
+    },
+    {
+      "elapsedMs": 1,
+      "cancelledHandles": 1,
+      "requests": 1,
+      "policy": "Q",
+      "reason": "declared-length",
+      "cancelled": true,
+      "installedHandles": 1
+    },
+    {
+      "elapsedMs": 0,
+      "cancelledHandles": 1,
+      "requests": 1,
+      "policy": "M",
+      "reason": "declared-length",
+      "cancelled": true,
+      "installedHandles": 1
+    }
+  ],
+  "guardCoverage": "Every observation handler IOException/RuntimeException; status/header/type/content-length acquisition + final check + strict error envelope. Existing inner read catch precedes InputStream close; outer catch uses cancelled state to avoid duplicate nested cancellation."
+}

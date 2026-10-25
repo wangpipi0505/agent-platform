@@ -1,0 +1,6 @@
+async page => {
+ await page.getByRole('link',{name:'发布集成',exact:true}).click();let response=page.waitForResponse(r=>r.url().endsWith('/publish/precheck'));await page.getByRole('button',{name:'运行发布预检'}).click();const before=await(await response).json();if(before.code!=='OK')throw new Error(JSON.stringify(before));
+ await page.getByRole('textbox',{name:'数据集版本'}).fill('frontend_browser_dataset_v2');await page.getByRole('textbox',{name:/用例数组/}).fill('[{"id":"browser-safe","inputs":{},"expected":null,"safety":true}]');response=page.waitForResponse(r=>r.url().endsWith('/admin/evaluations')&&r.request().method()==='POST');await page.getByRole('button',{name:'执行候选评测'}).click();const evaluated=await(await response).json();if(evaluated.code!=='OK'||evaluated.data.status!=='ACCEPTED')throw new Error(JSON.stringify(evaluated));
+ response=page.waitForResponse(r=>r.url().endsWith('/publish/precheck'));await page.getByRole('button',{name:'重新预检并绑定报告'}).click();const after=await(await response).json();if(!after.data.passed)throw new Error(JSON.stringify(after));return {evalReportId:evaluated.data.evalReportId||evaluated.data.id,status:evaluated.data.status,precheck:after.data.result,groups:after.data.report.checks.length,digest:after.data.candidateSha256};
+}
+

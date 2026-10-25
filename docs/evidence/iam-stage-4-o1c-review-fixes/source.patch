@@ -1,0 +1,70 @@
+diff --git a/platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PublishedRunHttp.java b/platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PublishedRunHttp.java
+index a902f40..77b4fa2 100644
+--- a/platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PublishedRunHttp.java
++++ b/platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PublishedRunHttp.java
+@@ -242,6 +242,7 @@ public final class PublishedRunHttp implements AutoCloseable {
+                     request,
+                     context,
+                     response -> {
++                        try {
+                         int status = response.getCode();
+                         if (status != 200) {
+                             if(policy!=Policy.LEGACY){if(status!=403&&status!=404)throw unavailable();}
+@@ -276,7 +277,7 @@ public final class PublishedRunHttp implements AutoCloseable {
+                             }catch(IOException|RuntimeException failure){
+                                 // Core's chunk stream close drains unread frames. Abort a terminal
+                                 // observation before that close; preserve legacy POST/get mechanics.
+-                                if(policy!=Policy.LEGACY)cancellation.cancel();
++                                if(policy!=Policy.LEGACY&&!cancellation.cancelled())cancellation.cancel();
+                                 throw failure;
+                             }
+                         }
+@@ -284,6 +285,12 @@ public final class PublishedRunHttp implements AutoCloseable {
+                         byte[] body=output.toByteArray();
+                         if(status!=200)throw observationError(status,body,policy);
+                         return new Response(status, body);
++                        } catch(IOException|RuntimeException failure) {
++                            // Apache closes its response after this handler returns or throws.
++                            // Abort rejected observations before graceful close drains an unread body.
++                            if(policy!=Policy.LEGACY&&!cancellation.cancelled())cancellation.cancel();
++                            throw failure;
++                        }
+                     });
+         } catch (PlatformException e) {
+             throw e;
+diff --git a/platform-gateway/src/test/java/cn/agentplatform/gateway/application/RunObservationGetTransportTest.java b/platform-gateway/src/test/java/cn/agentplatform/gateway/application/RunObservationGetTransportTest.java
+index 6720409..e48510f 100644
+--- a/platform-gateway/src/test/java/cn/agentplatform/gateway/application/RunObservationGetTransportTest.java
++++ b/platform-gateway/src/test/java/cn/agentplatform/gateway/application/RunObservationGetTransportTest.java
+@@ -81,6 +81,31 @@ class RunObservationGetTransportTest {
+             assertThat(Duration.ofNanos(elapsed)).isLessThan(Duration.ofSeconds(1));assertThat(p.accepts.get()).isEqualTo(1);
+         }
+     }
++    @Test void declaredExcessiveLengthAbortsBeforeClosingStalledBody()throws Exception {
++        for(boolean metadata:List.of(true,false)){
++            int limit=metadata?8192:2*1024*1024;
++            earlyRejection("declared-length",metadata,response(200,"Content-Length: "+(limit+1)+"\r\n",new byte[0]));
++        }
++    }
++    @Test void preBodyRejectionsAbortBeforeClosingStalledBody()throws Exception {
++        for(boolean metadata:List.of(true,false)){
++            for(int status:List.of(599,401))earlyRejection("status-"+status,metadata,response(status,"Content-Length: 32\r\n",new byte[0]));
++            earlyRejection("unsafe-header",metadata,response(200,"Set-Cookie: private=yes\r\nContent-Length: 32\r\n",new byte[0]));
++            earlyRejection("wrong-type",metadata,utf("HTTP/1.1 200 Finite\r\nContent-Type: text/plain\r\nContent-Length: 32\r\n\r\n"));
++        }
++    }
++    static void earlyRejection(String reason,boolean metadata,byte[] response)throws Exception {
++        // An unfinished declared body forces graceful close to wait unless the installed handle aborts first.
++        try(var p=new Peer(response,true);var h=new PublishedRunHttp()){
++            var cancel=new PublishedRunHttp.Cancellation();long begin=System.nanoTime();
++            unavailable(()->{if(metadata)h.getRunObservationMetadata(p.origin(),RUN,"t",deadline(),cancel,()->{});else h.getRunStatus(p.origin(),RUN,"t",deadline(),cancel,()->{});});
++            long elapsed=System.nanoTime()-begin;
++            System.out.println("O1C_EARLY_REJECTION="+Json.write(Map.of("reason",reason,"policy",metadata?"Q":"M","elapsedMs",TimeUnit.NANOSECONDS.toMillis(elapsed),"requests",p.accepts.get(),"installedHandles",cancel.installedHandles(),"cancelledHandles",cancel.cancelledHandles(),"cancelled",cancel.cancelled())));
++            assertThat(Duration.ofNanos(elapsed)).isLessThan(Duration.ofSeconds(1));
++            assertThat(p.request()).startsWith("GET "+(metadata?"/internal/runs/"+RUN+"/observation-metadata":"/admin/runs/"+RUN)+" HTTP/1.1");
++            assertThat(p.accepts.get()).isEqualTo(1);assertThat(cancel.installedHandles()).isEqualTo(1);assertThat(cancel.cancelled()).isTrue();assertThat(cancel.cancelledHandles()).isEqualTo(1);
++        }
++    }
+     static void unavailable(Runnable r){assertThatThrownBy(r::run).isInstanceOfSatisfying(PlatformException.class,e->assertThat(e.status()).isEqualTo(503));}
+     static final class Peer implements AutoCloseable {
+         final ServerSocket server=new ServerSocket();final AtomicInteger accepts=new AtomicInteger();final CountDownLatch accepted=new CountDownLatch(1),read=new CountDownLatch(1);final Thread thread;volatile Socket socket;volatile String request="";

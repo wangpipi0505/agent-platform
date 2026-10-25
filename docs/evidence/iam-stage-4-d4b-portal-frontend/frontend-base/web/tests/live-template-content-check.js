@@ -1,0 +1,1 @@
+async page => {const content=await page.getByRole('textbox',{name:'模板正文（变量使用双花括号）'}).inputValue();if(content!=='你好，{{name}}。')throw new Error('Loaded template version content missing: '+JSON.stringify(content));return {versionContentLoaded:true};}

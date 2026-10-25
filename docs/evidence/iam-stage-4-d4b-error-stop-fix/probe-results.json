@@ -1,0 +1,66 @@
+{
+  "at": "2026-10-20T20:48:49.933Z",
+  "provenance": "Values below are the exact assertions exercised by the named real-ReadableStream tests and confirmed by green-helper-reader exit0; detailed per-test variable logs were not separately emitted. Red raw contains actual readStatus=1/SUCCEEDED diff. No fake raw probe output.",
+  "red": {
+    "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/red-helper-reader/output.raw",
+    "bytes": 8142,
+    "sha256": "882ea92017eb492625d204d2357533be4eeeff4e1b978355470ba9a99eb7609e"
+  },
+  "green": {
+    "file": "docs/evidence/iam-stage-4-d4b-error-stop-fix/green-helper-reader/output.raw",
+    "bytes": 257,
+    "sha256": "e251564cd370da57935886105ddb9883b2f6965f8c39e0fbd9fda9ac0c3c293b"
+  },
+  "tests": [
+    {
+      "name": "D4b fix real reset stream with rejected cancel stops before readStatus or reopen",
+      "assertedAndPassed": {
+        "reason": "AUTHORITY_DENIED",
+        "opens": 1,
+        "reads": 0,
+        "facts": 0,
+        "cancels": 1,
+        "locked": false
+      }
+    },
+    {
+      "name": "D4b fix cleanup rejection preserves AUTHORITY_* and releases reader without facts",
+      "variants": [
+        "AUTHORITY_EXPIRED",
+        "AUTHORITY_DENIED",
+        "AUTHORITY_UNAVAILABLE"
+      ],
+      "assertedAndPassed": {
+        "reasonPreserved": true,
+        "facts": 0,
+        "cancels": 1,
+        "locked": false
+      }
+    },
+    {
+      "name": "D4b fix cleanup rejection preserves caller AbortError and releases pending reader",
+      "assertedAndPassed": {
+        "name": "AbortError",
+        "cancels": 1,
+        "locked": false
+      }
+    },
+    {
+      "name": "D4b fix cleanup rejection never replaces primary parser failure",
+      "assertedAndPassed": {
+        "name": "SyntaxError",
+        "locked": false
+      }
+    },
+    {
+      "name": "D4b fix cleanup preserves normal EOF and primary network read error",
+      "assertedAndPassed": {
+        "normalEOF": true,
+        "closedStreamUnderlyingCancelNotCalled": true,
+        "networkErrorSameInstance": true,
+        "locked": false
+      }
+    }
+  ],
+  "physicalSocketClosedWhenUnderlyingCancelRejects": "Not guaranteed and not claimed"
+}

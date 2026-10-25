@@ -1,0 +1,23 @@
+{
+  "at": "2026-10-22T06:55:07.059871+00:00",
+  "source": {
+    "file": ".local/iam-model-frozen-prompt/final-source/source.json",
+    "bytes": 133708,
+    "sha256": "ff96b04ef3131a95552d84545c770be8066012057577fcf7fb6a70959b9e196d"
+  },
+  "nativePatch": {
+    "file": ".local/iam-model-frozen-prompt/native/frozen-prompt-reviewed.diff",
+    "bytes": 35093,
+    "sha256": "f49bdb78b533384dd77965b1f1708ddf11f445a8c8b1ff930785d5ddb0e70772"
+  },
+  "scope": [
+    "model-gateway/src/main/java/cn/agentplatform/model/application/ModelCalls.java",
+    "model-gateway/src/test/java/cn/agentplatform/model/application/FrozenInitialPromptFixture.java",
+    "model-gateway/src/test/java/cn/agentplatform/model/application/FrozenInitialPromptHttpTest.java",
+    "model-gateway/src/test/java/cn/agentplatform/model/application/FrozenInitialPromptTest.java"
+  ],
+  "readFullPatch": true,
+  "noAdditionalSourceChanges": true,
+  "independentReview": "pending",
+  "historicalPythonGuardCompliance": false
+}

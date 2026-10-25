@@ -1,0 +1,338 @@
+{
+  "red-xml": {
+    "suites": [
+      {
+        "name": "cn.agentplatform.common.authority.CurrentAuthorityClientTest",
+        "sha256": "6c52911d979771c6dca890cbcaf2fede23cd89321a58c97fae11204097490f28",
+        "tests": 2,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0,
+        "methods": [
+          "reviewI3ApproverCurrentTrustAndBindingsRemainMandatory",
+          "reviewI3CurrentEditorApproverProofDoesNotImposeFrozenBusinessRoles"
+        ]
+      }
+    ],
+    "total": {
+      "tests": 2,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "green-named-xml": {
+    "suites": [
+      {
+        "name": "cn.agentplatform.common.authority.CurrentAuthorityClientTest",
+        "sha256": "02f9125e334f4230be5b363f498f53d485869a6a80af60c04fc66bd6b5650670",
+        "tests": 19,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "methods": [
+          "signedPortalExchangePreservesLocalCeilingAndIndependentClientAuthentication",
+          "reviewI3ApproverCurrentTrustAndBindingsRemainMandatory",
+          "workloadCannotBecomeAUserAndContextIsNotInherited",
+          "rr2ResumeCannotReintroduceRolesOutsideOriginalSignedGrantCeiling",
+          "integrationPolicyUsesIndependentHttpAssertionOnEveryDecisionWithoutRecursion",
+          "authenticatedEngineCannotChooseAnotherTenantSubjectResourceActionOrMissingGrant",
+          "portalCannotHideBroaderInitialCeilingBehindNarrowCurrentRoles",
+          "rr2NewDelegatedOperationSurvivesOriginalPortalExpiryButForwardCannotResetItsDeadline",
+          "noCachedTicketAfterScopeRoleVersionGrantOrNetworkFailureAndExplicitRecoveryWorks",
+          "signedReplyTamperNonceTicketJtiCallerResourceAndExpiryAreNotAccepted",
+          "integrationBadMacCrossUseClientAndTtlNeverExchange",
+          "reviewI2LifoExceptionOwnerAndChildBoundaries",
+          "reviewI3CurrentEditorApproverProofDoesNotImposeFrozenBusinessRoles",
+          "rr2MissingOperationPolicyOrSignedOperationFieldAndForwardDeadlineChangeFail",
+          "r3ResolverStringActiveCannotBeCoercedIntoPermission",
+          "integrationResolverMissingInactiveOldVersionWrongTrustDomainAndBindingsDeny",
+          "issuerCannotRestoreLocallyRemovedAdminOrRegion",
+          "approvalUsesRecordedApproverAndRevocationIsLive",
+          "reviewI2NonLifoSameAuthorityNeverRestoresClosedFrame"
+        ]
+      },
+      {
+        "name": "cn.agentplatform.common.authority.ResponseAuthorityTest",
+        "sha256": "7339ded3d290d98115ec835e7b52891ea8e50325c5d5790ed69a8a3e7b07f490",
+        "tests": 19,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "methods": [
+          "reviewI1ClosedSseLeaseCannotReplayConsumedSequence",
+          "rr1CompletionRequiresAcceptedResponseAndCannotExtendDeadlineOrSwitchOwnerVersionPayload",
+          "reviewI1ActiveRenewedAndClosedLeasesCannotClaimAnotherHolder",
+          "portalNeverHasCompletionPermitAndIntegrationPermitBindingsAreVerifiedAtOpen",
+          "r1BlockedWriterCannotReleaseQueuedChunkAfterDecisionExpiryAndRevocation",
+          "modelCompletionAcceptsOriginalFinalOnceAndRejectsConflictingReplay",
+          "reviewI1FailedConstructorTerminatesClaimAndShutsScheduler",
+          "validContinuationChecksOnlineWithoutRenewingOriginalBindingOrSource",
+          "validManifestDigestDoesNotAllowWrongVersionOwnerCeilingOrLabels",
+          "closeMarksStopBeforeWaitingForAnInFlightRenewal",
+          "signedPermitBindingMatrixAndContinuationMisuseFail",
+          "unacceptedIntegrationAndDelegatedResponsesCannotDrain",
+          "integrationOpenAndCheckUsePolicyThenDrainingDoesNotQueryOrSendAgain",
+          "reviewI1PublicCopiesCannotClaimOrLaunderSamePermit",
+          "reviewI1ClosedModelLeaseCannotReplayFinal",
+          "idleWatchdogCancelsAndCloseIsIdempotent",
+          "signedCompletionPermitCannotBeReplayedAsAnyServiceOrNewResponseCredential",
+          "rr1ExpiredOrdinaryCurrentFailsWhileOnlyOriginalAcceptedIntegrationResponseCanDrain",
+          "reviewI1RenewalPreservesCursorAcceptanceAndFinalReservation"
+        ]
+      },
+      {
+        "name": "cn.agentplatform.common.authority.ServiceTicketProviderTest",
+        "sha256": "9775ad49108b8bacc5cdc5922f5119fc5d3361a8a87a68407d643fdd47cf65d0",
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "methods": [
+          "resolverRequiresOwnDeploymentCredentialAndTransportCannotSendItToJwks",
+          "actorCannotMintAnIamServiceTicketEvenWhenLegacyKeyExists",
+          "sharedStrictJwksParsingRejectsPrivateAndDuplicateKeys"
+        ]
+      }
+    ],
+    "total": {
+      "tests": 41,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "final-common-xml": {
+    "suites": [
+      {
+        "name": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+        "sha256": "31143f5957fe0ec175318d75aa34596056adef721dddadc892b65d14ebe9dfe6",
+        "tests": 40,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "methods": [
+          "configuredDomainBusinessRolesAreAcceptedAndReservedRolesRemainForbidden",
+          "illegalConfigurationFailsBeforeCreatingListener(Invalid)[1]",
+          "illegalConfigurationFailsBeforeCreatingListener(Invalid)[2]",
+          "illegalConfigurationFailsBeforeCreatingListener(Invalid)[3]",
+          "illegalConfigurationFailsBeforeCreatingListener(Invalid)[4]",
+          "illegalConfigurationFailsBeforeCreatingListener(Invalid)[5]",
+          "illegalConfigurationFailsBeforeCreatingListener(Invalid)[6]",
+          "illegalConfigurationFailsBeforeCreatingListener(Invalid)[7]",
+          "illegalConfigurationFailsBeforeCreatingListener(Invalid)[8]",
+          "illegalConfigurationFailsBeforeCreatingListener(Invalid)[9]",
+          "illegalConfigurationFailsBeforeCreatingListener(Invalid)[10]",
+          "illegalConfigurationFailsBeforeCreatingListener(Invalid)[11]",
+          "illegalConfigurationFailsBeforeCreatingListener(Invalid)[12]",
+          "illegalConfigurationFailsBeforeCreatingListener(Invalid)[13]",
+          "illegalConfigurationFailsBeforeCreatingListener(Invalid)[14]",
+          "illegalConfigurationFailsBeforeCreatingListener(Invalid)[15]",
+          "illegalConfigurationFailsBeforeCreatingListener(Invalid)[16]",
+          "illegalConfigurationFailsBeforeCreatingListener(Invalid)[17]",
+          "illegalConfigurationFailsBeforeCreatingListener(Invalid)[18]",
+          "illegalConfigurationFailsBeforeCreatingListener(Invalid)[19]",
+          "illegalConfigurationFailsBeforeCreatingListener(Invalid)[20]",
+          "illegalConfigurationFailsBeforeCreatingListener(Invalid)[21]",
+          "illegalConfigurationFailsBeforeCreatingListener(Invalid)[22]",
+          "illegalConfigurationFailsBeforeCreatingListener(Invalid)[23]",
+          "illegalConfigurationFailsBeforeCreatingListener(Invalid)[24]",
+          "illegalConfigurationFailsBeforeCreatingListener(Invalid)[25]",
+          "illegalConfigurationFailsBeforeCreatingListener(Invalid)[26]",
+          "illegalConfigurationFailsBeforeCreatingListener(Invalid)[27]",
+          "illegalConfigurationFailsBeforeCreatingListener(Invalid)[28]",
+          "illegalConfigurationFailsBeforeCreatingListener(Invalid)[29]",
+          "illegalConfigurationFailsBeforeCreatingListener(Invalid)[30]",
+          "illegalConfigurationFailsBeforeCreatingListener(Invalid)[31]",
+          "illegalConfigurationFailsBeforeCreatingListener(Invalid)[32]",
+          "illegalConfigurationFailsBeforeCreatingListener(Invalid)[33]",
+          "illegalConfigurationFailsBeforeCreatingListener(Invalid)[34]",
+          "portalCeilingsAreRequiredAndStrictlyBoundByTheDeploymentBinder",
+          "explicitGatewayDevPreservesIntegration",
+          "explicitTestProfileMayUseOnlyLiteralLoopbackTrustEndpointsAndIamStaysClosed",
+          "explicitDevelopmentModesKeepLegacyDecoder(String)[1]",
+          "explicitDevelopmentModesKeepLegacyDecoder(String)[2]"
+        ]
+      },
+      {
+        "name": "cn.agentplatform.common.authority.AuthorityPolicyTest",
+        "sha256": "574c9280fdfcf6e17aa6583f273eae956ebb6f46b83fa23635bb8933d371f658",
+        "tests": 14,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "methods": [
+          "labelsRemainObligationsAndMissingPermissionDoesNotAddAuthority",
+          "blankOrNullOwnershipCannotPassEquality(String, String)[1]",
+          "blankOrNullOwnershipCannotPassEquality(String, String)[2]",
+          "blankOrNullOwnershipCannotPassEquality(String, String)[3]",
+          "blankOrNullOwnershipCannotPassEquality(String, String)[4]",
+          "blankOrNullOwnershipCannotPassEquality(String, String)[5]",
+          "blankOrNullOwnershipCannotPassEquality(String, String)[6]",
+          "routeCannotBorrowCallerOrMethod",
+          "catalogSeparatesActionsAndModesAndKeepsUnusedEntrypointsDisabled",
+          "duplicateAndUnknownCatalogEntriesFailClosed",
+          "catalogCoversEveryActualControllerTemplateWithoutGrantingGatewayWildcards",
+          "adminCannotGrantServiceCapability",
+          "ownershipMustMatchAndCannotBeCompletedFromOneSide",
+          "cannotRestoreRemovedRegion"
+        ]
+      },
+      {
+        "name": "cn.agentplatform.common.authority.CurrentAuthorityClientTest",
+        "sha256": "7de5341690c7672b361996fa3c25ed4a51f89c8389ab43bfff986dd67f7979f4",
+        "tests": 19,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "methods": [
+          "signedPortalExchangePreservesLocalCeilingAndIndependentClientAuthentication",
+          "reviewI3ApproverCurrentTrustAndBindingsRemainMandatory",
+          "workloadCannotBecomeAUserAndContextIsNotInherited",
+          "rr2ResumeCannotReintroduceRolesOutsideOriginalSignedGrantCeiling",
+          "integrationPolicyUsesIndependentHttpAssertionOnEveryDecisionWithoutRecursion",
+          "authenticatedEngineCannotChooseAnotherTenantSubjectResourceActionOrMissingGrant",
+          "portalCannotHideBroaderInitialCeilingBehindNarrowCurrentRoles",
+          "rr2NewDelegatedOperationSurvivesOriginalPortalExpiryButForwardCannotResetItsDeadline",
+          "noCachedTicketAfterScopeRoleVersionGrantOrNetworkFailureAndExplicitRecoveryWorks",
+          "signedReplyTamperNonceTicketJtiCallerResourceAndExpiryAreNotAccepted",
+          "integrationBadMacCrossUseClientAndTtlNeverExchange",
+          "reviewI2LifoExceptionOwnerAndChildBoundaries",
+          "reviewI3CurrentEditorApproverProofDoesNotImposeFrozenBusinessRoles",
+          "rr2MissingOperationPolicyOrSignedOperationFieldAndForwardDeadlineChangeFail",
+          "r3ResolverStringActiveCannotBeCoercedIntoPermission",
+          "integrationResolverMissingInactiveOldVersionWrongTrustDomainAndBindingsDeny",
+          "issuerCannotRestoreLocallyRemovedAdminOrRegion",
+          "approvalUsesRecordedApproverAndRevocationIsLive",
+          "reviewI2NonLifoSameAuthorityNeverRestoresClosedFrame"
+        ]
+      },
+      {
+        "name": "cn.agentplatform.common.authority.PortalClaimMapperTest",
+        "sha256": "0c7642f42681d70eb584895465eb49d54443be7dcc6bd8f989c30a669dd6b13a",
+        "tests": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "methods": [
+          "signedConfiguredDomainRolesArePreservedWithoutAdminSubstitution",
+          "clientAndClaimTypesMustMatchAndMissingScopeAddsNoPermission",
+          "actorNeverGrantsServiceBusinessRolesFromTrustedRsaClaims",
+          "issuerClientCeilingClipsPermissionsAndPreservesSensitivityObligations",
+          "knownOwnershipValuesRequireExactSingleSignedValuesAndLabelsCannotDisappear",
+          "iterativeScopeParsingPreservesAsciiTokensAndExactSpaceRules"
+        ]
+      },
+      {
+        "name": "cn.agentplatform.common.authority.ResponseAuthorityTest",
+        "sha256": "fd25816052deb58ee7ab097096e0f444352b63c90fed6c260c0b7a584786b756",
+        "tests": 19,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "methods": [
+          "reviewI1ClosedSseLeaseCannotReplayConsumedSequence",
+          "rr1CompletionRequiresAcceptedResponseAndCannotExtendDeadlineOrSwitchOwnerVersionPayload",
+          "reviewI1ActiveRenewedAndClosedLeasesCannotClaimAnotherHolder",
+          "portalNeverHasCompletionPermitAndIntegrationPermitBindingsAreVerifiedAtOpen",
+          "r1BlockedWriterCannotReleaseQueuedChunkAfterDecisionExpiryAndRevocation",
+          "modelCompletionAcceptsOriginalFinalOnceAndRejectsConflictingReplay",
+          "reviewI1FailedConstructorTerminatesClaimAndShutsScheduler",
+          "validContinuationChecksOnlineWithoutRenewingOriginalBindingOrSource",
+          "validManifestDigestDoesNotAllowWrongVersionOwnerCeilingOrLabels",
+          "closeMarksStopBeforeWaitingForAnInFlightRenewal",
+          "signedPermitBindingMatrixAndContinuationMisuseFail",
+          "unacceptedIntegrationAndDelegatedResponsesCannotDrain",
+          "integrationOpenAndCheckUsePolicyThenDrainingDoesNotQueryOrSendAgain",
+          "reviewI1PublicCopiesCannotClaimOrLaunderSamePermit",
+          "reviewI1ClosedModelLeaseCannotReplayFinal",
+          "idleWatchdogCancelsAndCloseIsIdempotent",
+          "signedCompletionPermitCannotBeReplayedAsAnyServiceOrNewResponseCredential",
+          "rr1ExpiredOrdinaryCurrentFailsWhileOnlyOriginalAcceptedIntegrationResponseCanDrain",
+          "reviewI1RenewalPreservesCursorAcceptanceAndFinalReservation"
+        ]
+      },
+      {
+        "name": "cn.agentplatform.common.authority.ServiceTicketProviderTest",
+        "sha256": "dbfd4efafdec62b7ad8ba56a0b1a40cb4bd8febe96814a933ea84bc8d3ca513c",
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "methods": [
+          "resolverRequiresOwnDeploymentCredentialAndTransportCannotSendItToJwks",
+          "actorCannotMintAnIamServiceTicketEvenWhenLegacyKeyExists",
+          "sharedStrictJwksParsingRejectsPrivateAndDuplicateKeys"
+        ]
+      },
+      {
+        "name": "cn.agentplatform.common.authority.TrustedJwtDecoderTest",
+        "sha256": "b76b6a862c47f426e02dfe9e99422b534cbae8b43b19744245a3861b7cb3e1ca",
+        "tests": 12,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "methods": [
+          "invalidClaimMatrixIsRejectedWithoutClaimCoercion",
+          "trustedInputRequiresExplicitTestProfileForHttp",
+          "realHttpRejectsPortalServiceRoleMissingScopeAndJwksOutageBeforeHandler",
+          "bodyDeadlineCancelsReadingAfterHeadersAndChunkedOverflowIsBounded",
+          "fixedHttpEndpointsNoRedirectAndFiniteBodySizes",
+          "validRsaSignatureWorksButWrongSignatureNeverPasses",
+          "malformedJwksIsUnavailableNotAKeyFallback",
+          "signedUnregisteredActionAndInsufficientScopeAreForbiddenAfterIdentityValidation",
+          "signedFixed2500ShortScopesWithinJwtLimitProduceTheConfiguredIntersection",
+          "rotationOutageRecoveryAndClockNeverReuseAStaleKeyOrExpiredToken",
+          "tokenUrlsAndDuplicateRawClaimsNeverDriveNetworkDiscovery",
+          "delegatedAndWorkloadTicketsHaveDisjointSignedBindings"
+        ]
+      },
+      {
+        "name": "cn.agentplatform.common.CommonBoundaryTest",
+        "sha256": "613fc30f80f99650bd72d0846a31cc4bac0c02f6c4dd198b692cd80dbc2be2d7",
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "methods": [
+          "readsOnlyVerifiedJwtClaimsAndChecksRoles",
+          "validatesInternalTicketAndPreservesActorBoundary",
+          "usesCanonicalJsonForContentIdentity",
+          "rejectsMissingAuthenticatedIdentity"
+        ]
+      },
+      {
+        "name": "cn.agentplatform.common.schema.SharedSchemaAdmissionTest",
+        "sha256": "36d564e3fcf71ece01c9db30137f6a4384425100c8db50a82b0277bee19c0af2",
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "methods": [
+          "lowerGraphLimitRefusesSmallSchemaAndCannotRaiseHardCeiling",
+          "nestedDeadlineNeverExtendsCallerAndRestoresPreviousScope",
+          "rawDeclarationArrayIsBoundedWithoutInterpretingItsMetadata",
+          "ordinaryLocalAnchorAndLiteralDataRemainDistinct",
+          "lowerInstanceLimitRefusesFewNodesAndCannotRaiseHardCeiling"
+        ]
+      },
+      {
+        "name": "cn.agentplatform.common.SecretVaultTest",
+        "sha256": "ab3547a54d4dd04b2dad6973df914928bfe3c29aba71146b1aa11f76cee28dc9",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "methods": [
+          "encryptsAtRestAndRejectsEscapedReferences"
+        ]
+      }
+    ],
+    "total": {
+      "tests": 123,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  }
+}

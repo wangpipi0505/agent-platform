@@ -1,0 +1,145 @@
+
+ RUN  v4.1.12 G:/207/项目/算法重组工具/代码/agent-platform/web
+
+ ❯ tests/run-observer.test.ts (17 tests | 4 failed | 13 skipped) 8ms
+     × D4b stops AUTHORITY_EXPIRED reset without status or reopening 6ms
+     × D4b stops AUTHORITY_DENIED reset without status or reopening 1ms
+     × D4b stops AUTHORITY_UNAVAILABLE reset without status or reopening 0ms
+     × D4b stops named IAM 503 but retains ordinary 503 recovery 0ms
+ ❯ tests/stream-auth.test.ts (19 tests | 6 failed | 13 skipped) 15048ms
+   × D4b scopes same-token HTTP to generation, including late body and chained POST 6ms
+   × D4b default axios fetch adapter explicitly omits ambient cookies 3ms
+   × D4b AUTHORITY_EXPIRED reset stops buffered facts and releases reader 5011ms
+   × D4b AUTHORITY_DENIED reset stops buffered facts and releases reader 5014ms
+   × D4b AUTHORITY_UNAVAILABLE reset stops buffered facts and releases reader 5013ms
+   × D4b stops after reader read abort and after callback abort within buffered frames 1ms
+
+ Test Files  2 failed (2)
+      Tests  10 failed | 26 skipped (36)
+   Start at  04:11:58
+   Duration  21.14s (transform 2.42s, setup 0ms, import 6.57s, tests 15.06s, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 10 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/run-observer.test.ts > authoritative run observation across transient SSE connections > D4b stops AUTHORITY_EXPIRED reset without status or reopening
+ FAIL  tests/run-observer.test.ts > authoritative run observation across transient SSE connections > D4b stops AUTHORITY_DENIED reset without status or reopening
+ FAIL  tests/run-observer.test.ts > authoritative run observation across transient SSE connections > D4b stops AUTHORITY_UNAVAILABLE reset without status or reopening
+AssertionError: promise resolved "{ status: 'SUCCEEDED' }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "status": "SUCCEEDED",
+  }
+
+ ❯ tests/run-observer.test.ts:7:267
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/10]⎯
+
+ FAIL  tests/run-observer.test.ts > authoritative run observation across transient SSE connections > D4b stops named IAM 503 but retains ordinary 503 recovery
+AssertionError: promise resolved "{ status: 'SUCCEEDED' }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "status": "SUCCEEDED",
+  }
+
+ ❯ tests/run-observer.test.ts:12:207
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/10]⎯
+
+ FAIL  tests/stream-auth.test.ts > D4b scopes same-token HTTP to generation, including late body and chained POST
+AssertionError: promise resolved "'old'" instead of rejecting
+
+- Expected:
+Error {
+  "message": "rejected promise",
+}
+
++ Received:
+"old"
+
+ ❯ tests/stream-auth.test.ts:118:23
+    116|   const api=createApi(()=> 'same',transport,vi.fn(),{signal:controller…
+    117|   const pending=api('/late');await Promise.resolve();current=false;bod…
+    118|   await expect(pending).rejects.toMatchObject({name:'AbortError'});
+       |                       ^
+    119|   await expect(api('/post','POST')).rejects.toMatchObject({name:'Abort…
+    120| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/10]⎯
+
+ FAIL  tests/stream-auth.test.ts > D4b default axios fetch adapter explicitly omits ambient cookies
+AssertionError: expected "wrap" to be called with arguments: [ ObjectContaining{…} ]
+
+Received:
+
+  1st wrap call:
+
+  [
+-   ObjectContaining {
+-     "adapter": "fetch",
+-     "withCredentials": false,
++   {
++     "data": undefined,
++     "headers": {
++       "Authorization": "Bearer token",
++       "Content-Type": "application/json",
++     },
++     "method": "GET",
++     "responseType": "text",
++     "signal": undefined,
++     "url": "/session",
++     "validateStatus": [Function validateStatus],
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ tests/stream-auth.test.ts:124:19
+    122|   const request=vi.spyOn(axios,'request').mockResolvedValue({status:20…
+    123|   await createApi(()=> 'token')('/session');
+    124|   expect(request).toHaveBeenCalledWith(expect.objectContaining({adapte…
+       |                   ^
+    125| });
+    126| it.each(['AUTHORITY_EXPIRED','AUTHORITY_DENIED','AUTHORITY_UNAVAILABLE…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/10]⎯
+
+ FAIL  tests/stream-auth.test.ts > D4b AUTHORITY_EXPIRED reset stops buffered facts and releases reader
+ FAIL  tests/stream-auth.test.ts > D4b AUTHORITY_DENIED reset stops buffered facts and releases reader
+ FAIL  tests/stream-auth.test.ts > D4b AUTHORITY_UNAVAILABLE reset stops buffered facts and releases reader
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ tests/stream-auth.test.ts:126:73
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/10]⎯
+
+ FAIL  tests/stream-auth.test.ts > D4b stops after reader read abort and after callback abort within buffered frames
+AssertionError: promise resolved "undefined" instead of rejecting
+
+- Expected:
+Error {
+  "message": "rejected promise",
+}
+
++ Received:
+undefined
+
+ ❯ tests/stream-auth.test.ts:133:78
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/10]⎯
+

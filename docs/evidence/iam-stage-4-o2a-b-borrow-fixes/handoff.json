@@ -1,0 +1,139 @@
+{
+  "status": "DONE_WITH_CONCERNS",
+  "accepted": false,
+  "epoch": "borrow-fixes",
+  "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+  "commitsCreated": 0,
+  "sourceWriteOwnership": "returned after inventory seal; no further mutations",
+  "report": {
+    "file": "docs/evidence/iam-stage-4-o2a-b-borrow-fixes-report.md",
+    "bytes": 16445,
+    "sha256": "b0efc3968e2a9ad51b0c3ef4877f34d3427130e19e14b72de02b6f0d19ed21b4"
+  },
+  "source": {
+    "status": "success",
+    "count": 593,
+    "changed": 3,
+    "sourceBefore": {
+      "file": ".local/iam-o2a-b-borrow-fixes/source-before.json",
+      "bytes": 112856,
+      "sha256": "21fc2a4425e5d0767cb3627719ddfce395c97b9ca3718ebb205a18c90e0e9439"
+    },
+    "sourceAfter": {
+      "file": ".local/iam-o2a-b-borrow-fixes/source-after.json",
+      "bytes": 112856,
+      "sha256": "83e1fc79f72a4b21bdeb75a3cc41b7d0406797070f25e4242fc74407b42f1a20"
+    },
+    "changedFiles": {
+      "file": "docs/evidence/iam-stage-4-o2a-b-borrow-fixes/changed-files.json",
+      "bytes": 1716,
+      "sha256": "3dab89482e5d7e75701cc71d13cbd1e6ad2d6d54f4f3b45bc1119588280b41f8"
+    }
+  },
+  "target": {
+    "status": "success",
+    "inherited": {
+      "file": ".local/iam-o2a-b-material-reader/labels-fix/target-after.json",
+      "bytes": 426441,
+      "sha256": "273eedad6e9767d8508abf0cd0639d66dd7429fc2ea24a2983bbcff620187b3f"
+    },
+    "inheritedCount": 2054,
+    "overlay": {
+      "file": ".local/iam-o2a-b-borrow-fixes/target-overlay.json",
+      "bytes": 102123,
+      "sha256": "462b615e5757f7c202310bb19c67afdef645e39b4d412f5279289b3c17a72ef2"
+    },
+    "overlayCount": 464,
+    "targetAfter": {
+      "file": ".local/iam-o2a-b-borrow-fixes/target-after.json",
+      "bytes": 427783,
+      "sha256": "a23b333e7e0efd1f4d74cfac75804d9c791a3f9bbc4905c3ca92b132009e1fac"
+    },
+    "logicalCount": 2060,
+    "compilerInputs": {
+      "file": ".local/iam-o2a-b-borrow-fixes/compiler-inputs.json",
+      "bytes": 66786,
+      "sha256": "58a344157c0aa141170fdf81d145147963e1708ae9d7d75526820a3230f23add"
+    },
+    "diagnostics": {
+      "file": "docs/evidence/iam-stage-4-o2a-b-borrow-fixes/diagnostics.json",
+      "bytes": 1059,
+      "sha256": "538e7ad1495884ae3e40686185c3e578b310a2525d2151ab9299c89451880de9"
+    },
+    "note": "Budget XML/txt from GREEN01 (14); Postgres XML/txt from GREEN02 (3). Distinct physical stages, no aggregate suite claim."
+  },
+  "replay": {
+    "status": "success",
+    "patch": {
+      "file": "docs/evidence/iam-stage-4-o2a-b-borrow-fixes/source.patch",
+      "bytes": 15166,
+      "sha256": "3ea1fc2987146cd79b1cbc004c01ead042785f1fc7a582ad78860da67d0773f5"
+    },
+    "commands": {
+      "file": "docs/evidence/iam-stage-4-o2a-b-borrow-fixes/replay-commands.json",
+      "bytes": 20852,
+      "sha256": "b00262f5ee8d3e3b7aee66d3dbcca07ea196cfe82a4fddd7dd73d75e43dffe4e"
+    },
+    "manifest": {
+      "file": ".local/iam-o2a-b-borrow-fixes/replay-source.json",
+      "bytes": 112856,
+      "sha256": "83e1fc79f72a4b21bdeb75a3cc41b7d0406797070f25e4242fc74407b42f1a20"
+    },
+    "sourceCount": 593,
+    "firstCheckExit": 0,
+    "firstApplyExit": 0,
+    "commitsCreated": 0
+  },
+  "testResults": {
+    "file": "docs/evidence/iam-stage-4-o2a-b-borrow-fixes/test-results.json",
+    "bytes": 7057,
+    "sha256": "f8b543df31bb62a39b819908f2a278fe981936bb161991b74be60b6570fa7ceb"
+  },
+  "stageCounts": [
+    {
+      "stage": "iam-stage-o2a-b-borrow-fixes-red01",
+      "exit": 1,
+      "tests": 4,
+      "failures": 2,
+      "errors": 0
+    },
+    {
+      "stage": "iam-stage-o2a-b-borrow-fixes-green01",
+      "exit": 0,
+      "tests": 17,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "stage": "iam-stage-o2a-b-borrow-fixes-green02",
+      "exit": 0,
+      "tests": 3,
+      "failures": 0,
+      "errors": 0
+    }
+  ],
+  "m2": {
+    "file": "docs/evidence/iam-stage-4-o2a-b-borrow-fixes/m2-correction.json",
+    "bytes": 4652,
+    "sha256": "8e95bf068b7128520aaf278635eda2dfc3743afa339dc3ce77ffbf7f105deb90"
+  },
+  "beforeRoot": ".local/iam-o2a-b-borrow-fixes/before",
+  "afterRoot": ".local/iam-o2a-b-borrow-fixes/after",
+  "targetOverlayRoot": ".local/iam-o2a-b-borrow-fixes/target-overlay",
+  "inventory": "docs/evidence/iam-stage-4-o2a-b-borrow-fixes/own-inventory.json",
+  "journal": ".local/iam-o2a-b-borrow-fixes/journal.json",
+  "hashCache": ".local/iam-o2a-b-borrow-fixes/hash-cache.json",
+  "ownedRoots": [
+    ".local/iam-o2a-b-borrow-fixes",
+    "docs/evidence/iam-stage-4-o2a-b-borrow-fixes",
+    "docs/evidence/iam-stage-4-o2a-b-borrow-fixes-report.md",
+    ".tools/iam-o2a-b-borrow-fixes-evidence.mjs",
+    ".tools/iam-o2a-b-borrow-fixes-package.mjs"
+  ],
+  "concerns": [
+    "Independent acceptance pending",
+    "Old Initial test migration / final01 error unchanged",
+    "C HTTP/SSE and production capacity outside scope",
+    "Measurements read-stage only; output copies separately precharged, not heap measured"
+  ]
+}

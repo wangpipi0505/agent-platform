@@ -1,0 +1,24 @@
+{
+  "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+  "args": [
+    "mvn.cmd",
+    "-o",
+    "-B",
+    "-ntp",
+    "-pl",
+    "engine-runtime",
+    "-am",
+    "test",
+    "-Dmaven.repo.local=.tools/m2",
+    "-Djdk.net.unixdomain.tmpdir=V:/.local/tmp",
+    "-Dsurefire.failIfNoSpecifiedTests=false",
+    "-Dmodel.input.evidence=G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\iam-model-input-producer\\common-regression-01\\observer",
+    "-Dtest=RouteCoverageVerifierTest",
+    "-Dmodel.input.tls=G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\iam-model-input-producer\\tls\\engine.p12"
+  ],
+  "source": {
+    "file": "docs/evidence/iam-model-input-producer/common-regression-01/source.json",
+    "bytes": 125471,
+    "sha256": "7483ca8074a7330f965430e1822050c4d6bc8ee98188b847404e40ff34291703"
+  }
+}

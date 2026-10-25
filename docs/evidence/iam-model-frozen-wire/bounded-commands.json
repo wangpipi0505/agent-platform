@@ -1,0 +1,3605 @@
+[
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/baseline-red-command.json",
+      "bytes": 1273,
+      "sha256": "a67919d845a6bbe36ee4f7e5ff73bd6c5af0b8f193d0eb3969c3edf4becc0980"
+    },
+    "executable": "C:\\Python314\\python.exe",
+    "arguments": [
+      "V:/.tools/iam-model-frozen-wire-tools.py",
+      "baseline",
+      "red",
+      ""
+    ],
+    "startedUtc": "2026-10-22T07:49:44.1471200Z",
+    "endedUtc": "2026-10-22T07:49:56.1375039Z",
+    "elapsedMs": 11991,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "alive": false,
+        "pid": 31248,
+        "role": "own-wire-helper",
+        "startTicks": 639282521841562605,
+        "parent": 0
+      },
+      {
+        "alive": false,
+        "pid": 58868,
+        "role": "descendant",
+        "startTicks": 639282521842300030,
+        "parent": 31248
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/final-acl-command.json",
+      "bytes": 1139,
+      "sha256": "ed2e08e5ebe5b107f350cfc49798519428df6ededd7282d77d29fc828f1667d9"
+    },
+    "executable": "C:\\WINDOWS/System32/icacls.exe",
+    "arguments": [
+      "G:/207/项目/算法重组工具/代码/agent-platform/.local/iam-model-frozen-wire/final-runtime",
+      "/inheritance:r",
+      "/grant:r",
+      "\"*S-1-5-21-2362812570-2618363083-3646905477-500:(OI)(CI)F\"",
+      "\"SYSTEM:(OI)(CI)F\""
+    ],
+    "startedUtc": "2026-10-22T08:08:20.4409640Z",
+    "endedUtc": "2026-10-22T08:08:20.8276305Z",
+    "elapsedMs": 388,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "parent": 0,
+        "startTicks": 639282533004509123,
+        "pid": 61352,
+        "alive": false,
+        "role": "own-epoch-acl"
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/final-close-1-command.json",
+      "bytes": 1291,
+      "sha256": "4cbf8a58c1efa44d52056d4996fd7fd0813691d397c3fbae1436802e237ad57e"
+    },
+    "executable": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/java.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-final-close-1.args"
+    ],
+    "startedUtc": "2026-10-22T08:18:44.1686995Z",
+    "endedUtc": "2026-10-22T08:18:46.4352025Z",
+    "elapsedMs": 2268,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "parent": 0,
+        "pid": 26824,
+        "startTicks": 639282539241937509,
+        "role": "own-final-db-close",
+        "alive": false
+      },
+      {
+        "parent": 26824,
+        "pid": 20540,
+        "startTicks": 639282539242022000,
+        "role": "descendant",
+        "alive": false
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/final-close-2-command.json",
+      "bytes": 1290,
+      "sha256": "33ed75ba79b6f4a0e4bee9da2db2d69f92e4812eae41c22a1f2866fb898677f9"
+    },
+    "executable": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/java.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-final-close-2.args"
+    ],
+    "startedUtc": "2026-10-22T08:18:46.5257532Z",
+    "endedUtc": "2026-10-22T08:18:48.9830885Z",
+    "elapsedMs": 2457,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "parent": 0,
+        "pid": 23964,
+        "startTicks": 639282539265292238,
+        "role": "own-final-db-close",
+        "alive": false
+      },
+      {
+        "parent": 23964,
+        "pid": 55304,
+        "startTicks": 639282539265447397,
+        "role": "descendant",
+        "alive": false
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/final-close-3-command.json",
+      "bytes": 1288,
+      "sha256": "fa5783f710caf12fc2d55231c2556b351bfcaa71b264c7f490ef9332c4791e5e"
+    },
+    "executable": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/java.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-final-close-3.args"
+    ],
+    "startedUtc": "2026-10-22T08:18:49.0195921Z",
+    "endedUtc": "2026-10-22T08:18:51.1646105Z",
+    "elapsedMs": 2145,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "parent": 0,
+        "pid": 59984,
+        "startTicks": 639282539290228368,
+        "role": "own-final-db-close",
+        "alive": false
+      },
+      {
+        "parent": 59984,
+        "pid": 3924,
+        "startTicks": 639282539290270251,
+        "role": "descendant",
+        "alive": false
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/final-close-4-command.json",
+      "bytes": 1290,
+      "sha256": "ca026cc375f35047537329d69fc70a16f6d7985241e9294db160a5b33221d791"
+    },
+    "executable": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/java.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-final-close-4.args"
+    ],
+    "startedUtc": "2026-10-22T08:18:51.1859584Z",
+    "endedUtc": "2026-10-22T08:18:53.9643270Z",
+    "elapsedMs": 2778,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "parent": 0,
+        "pid": 56960,
+        "startTicks": 639282539311886742,
+        "role": "own-final-db-close",
+        "alive": false
+      },
+      {
+        "parent": 56960,
+        "pid": 35824,
+        "startTicks": 639282539311927656,
+        "role": "descendant",
+        "alive": false
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/final-compile-common-reactor-cont1.json",
+      "bytes": 1306,
+      "sha256": "c83de91c1951ae9754ca4e2cf634244ba81f004d8f8eb9bfe67327e964b70777"
+    },
+    "executable": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/java.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-final-compile-common-reactor-cont1.args"
+    ],
+    "startedUtc": "2026-10-22T08:06:23.3805987Z",
+    "endedUtc": "2026-10-22T08:06:35.9305479Z",
+    "elapsedMs": 12550,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "parent": 0,
+        "startTicks": 639282531834120568,
+        "alive": false,
+        "pid": 31708,
+        "role": "maven-launcher"
+      },
+      {
+        "parent": 31708,
+        "startTicks": 639282531834386568,
+        "alive": false,
+        "pid": 7344,
+        "role": "descendant"
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/final-compile-engine-reactor-cont1.json",
+      "bytes": 1309,
+      "sha256": "6f60058a05090e625d6f298b290702042497a67f73be72a11b8bc176e633d5e3"
+    },
+    "executable": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/java.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-final-compile-engine-reactor-cont1.args"
+    ],
+    "startedUtc": "2026-10-22T08:07:33.5702840Z",
+    "endedUtc": "2026-10-22T08:07:50.9706296Z",
+    "elapsedMs": 17401,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "startTicks": 639282532535792583,
+        "parent": 0,
+        "pid": 17600,
+        "role": "maven-launcher",
+        "alive": false
+      },
+      {
+        "startTicks": 639282532535835577,
+        "parent": 17600,
+        "pid": 37152,
+        "role": "descendant",
+        "alive": false
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/final-compile-model-reactor-cont1.json",
+      "bytes": 1308,
+      "sha256": "aa1c6d4f47cd2dcd3fd66dc49b210f4316c1d09ba4a57d82245ecab31a8ada32"
+    },
+    "executable": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/java.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-final-compile-model-reactor-cont1.args"
+    ],
+    "startedUtc": "2026-10-22T08:06:49.0277050Z",
+    "endedUtc": "2026-10-22T08:07:04.5087006Z",
+    "elapsedMs": 15482,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "alive": false,
+        "role": "maven-launcher",
+        "parent": 0,
+        "pid": 38748,
+        "startTicks": 639282532090368508
+      },
+      {
+        "alive": false,
+        "role": "descendant",
+        "parent": 38748,
+        "pid": 26336,
+        "startTicks": 639282532090415322
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/final-group-1.json",
+      "bytes": 2161,
+      "sha256": "db2fa5128513d544a4fa9ffefbe5c55ec7f640e27694057cd96c6116ff1e2572"
+    },
+    "executable": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/java.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-final-group-1.args"
+    ],
+    "startedUtc": "2026-10-22T08:08:36.5561544Z",
+    "endedUtc": "2026-10-22T08:08:55.7414980Z",
+    "elapsedMs": 19185,
+    "exit": 1,
+    "timedOut": false,
+    "identities": [
+      {
+        "parent": 0,
+        "startTicks": 639282533165604396,
+        "pid": 45168,
+        "alive": false,
+        "role": "maven-launcher"
+      },
+      {
+        "parent": 45168,
+        "startTicks": 639282533165653676,
+        "pid": 60740,
+        "alive": false,
+        "role": "descendant"
+      },
+      {
+        "parent": 45168,
+        "startTicks": 639282533208121076,
+        "pid": 52844,
+        "alive": false,
+        "role": "descendant"
+      },
+      {
+        "parent": 52844,
+        "startTicks": 639282533208245452,
+        "pid": 9392,
+        "alive": false,
+        "role": "descendant"
+      },
+      {
+        "parent": 52844,
+        "startTicks": 639282533208417555,
+        "pid": 65180,
+        "alive": false,
+        "role": "descendant"
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/final2-compile-model-reactor-cont1.json",
+      "bytes": 1308,
+      "sha256": "c47f0d99d934c10b93256990de67d50c983aad0d8f7557835b13d12379abedd6"
+    },
+    "executable": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/java.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-final2-compile-model-reactor-cont1.args"
+    ],
+    "startedUtc": "2026-10-22T08:11:23.6697531Z",
+    "endedUtc": "2026-10-22T08:11:37.9360526Z",
+    "elapsedMs": 14266,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "parent": 0,
+        "pid": 24808,
+        "startTicks": 639282534836735768,
+        "alive": false,
+        "role": "maven-launcher"
+      },
+      {
+        "parent": 24808,
+        "pid": 10500,
+        "startTicks": 639282534836779539,
+        "alive": false,
+        "role": "descendant"
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/final2-http-acl-command.json",
+      "bytes": 1145,
+      "sha256": "7e287b8e29d49b379704926172f09eb05d9f061e2e547655072ea0f2bb1a8c64"
+    },
+    "executable": "C:\\WINDOWS/System32/icacls.exe",
+    "arguments": [
+      "G:/207/项目/算法重组工具/代码/agent-platform/.local/iam-model-frozen-wire/final2-http-runtime",
+      "/inheritance:r",
+      "/grant:r",
+      "\"*S-1-5-21-2362812570-2618363083-3646905477-500:(OI)(CI)F\"",
+      "\"SYSTEM:(OI)(CI)F\""
+    ],
+    "startedUtc": "2026-10-22T08:16:14.2616380Z",
+    "endedUtc": "2026-10-22T08:16:14.6871886Z",
+    "elapsedMs": 427,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "parent": 0,
+        "role": "own-epoch-acl",
+        "alive": false,
+        "startTicks": 639282537742978800,
+        "pid": 55996
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/final2-http-group-1.json",
+      "bytes": 2166,
+      "sha256": "a5dfae9cf182ad269362b121eceafb3abb0acb960fd641ee924a6545ddc43118"
+    },
+    "executable": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/java.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-final2-http-group-1.args"
+    ],
+    "startedUtc": "2026-10-22T08:16:36.6341070Z",
+    "endedUtc": "2026-10-22T08:16:46.1306356Z",
+    "elapsedMs": 9496,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "parent": 0,
+        "role": "maven-launcher",
+        "alive": false,
+        "startTicks": 639282537966389452,
+        "pid": 43708
+      },
+      {
+        "parent": 43708,
+        "role": "descendant",
+        "alive": false,
+        "startTicks": 639282537966438003,
+        "pid": 2268
+      },
+      {
+        "parent": 43708,
+        "role": "descendant",
+        "alive": false,
+        "startTicks": 639282538016739382,
+        "pid": 64604
+      },
+      {
+        "parent": 64604,
+        "role": "descendant",
+        "alive": false,
+        "startTicks": 639282538016962900,
+        "pid": 64516
+      },
+      {
+        "parent": 64604,
+        "role": "descendant",
+        "alive": false,
+        "startTicks": 639282538017134438,
+        "pid": 59356
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/final2-local-acl-command.json",
+      "bytes": 1146,
+      "sha256": "a185fe564ac32ede1fc33d0db60e20b5c8d880cd7ad5f0c10b3cc2a547813204"
+    },
+    "executable": "C:\\WINDOWS/System32/icacls.exe",
+    "arguments": [
+      "G:/207/项目/算法重组工具/代码/agent-platform/.local/iam-model-frozen-wire/final2-local-runtime",
+      "/inheritance:r",
+      "/grant:r",
+      "\"*S-1-5-21-2362812570-2618363083-3646905477-500:(OI)(CI)F\"",
+      "\"SYSTEM:(OI)(CI)F\""
+    ],
+    "startedUtc": "2026-10-22T08:11:57.1414083Z",
+    "endedUtc": "2026-10-22T08:11:57.5347337Z",
+    "elapsedMs": 394,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "alive": false,
+        "role": "own-epoch-acl",
+        "startTicks": 639282535171505725,
+        "parent": 0,
+        "pid": 45084
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/final2-local-group-1.json",
+      "bytes": 2171,
+      "sha256": "485bb008de0b448d3622e716396bd8fbf3d554068ee3dce0817d80721e46cbbe"
+    },
+    "executable": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/java.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-final2-local-group-1.args"
+    ],
+    "startedUtc": "2026-10-22T08:12:03.0445746Z",
+    "endedUtc": "2026-10-22T08:12:17.6707307Z",
+    "elapsedMs": 14626,
+    "exit": 1,
+    "timedOut": false,
+    "identities": [
+      {
+        "alive": false,
+        "role": "maven-launcher",
+        "startTicks": 639282535230478695,
+        "parent": 0,
+        "pid": 35184
+      },
+      {
+        "alive": false,
+        "role": "descendant",
+        "startTicks": 639282535230523062,
+        "parent": 35184,
+        "pid": 16936
+      },
+      {
+        "alive": false,
+        "role": "descendant",
+        "startTicks": 639282535264265283,
+        "parent": 35184,
+        "pid": 56948
+      },
+      {
+        "alive": false,
+        "role": "descendant",
+        "startTicks": 639282535264359101,
+        "parent": 56948,
+        "pid": 38804
+      },
+      {
+        "alive": false,
+        "role": "descendant",
+        "startTicks": 639282535264556393,
+        "parent": 56948,
+        "pid": 49616
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/final2-local-retry1-acl-command.json",
+      "bytes": 1153,
+      "sha256": "59756d5ddbe360fc723730d56387b5e553e90fc35ce7c30ce942966d3b94bddf"
+    },
+    "executable": "C:\\WINDOWS/System32/icacls.exe",
+    "arguments": [
+      "G:/207/项目/算法重组工具/代码/agent-platform/.local/iam-model-frozen-wire/final2-local-retry1-runtime",
+      "/inheritance:r",
+      "/grant:r",
+      "\"*S-1-5-21-2362812570-2618363083-3646905477-500:(OI)(CI)F\"",
+      "\"SYSTEM:(OI)(CI)F\""
+    ],
+    "startedUtc": "2026-10-22T08:15:29.9097388Z",
+    "endedUtc": "2026-10-22T08:15:30.3031974Z",
+    "elapsedMs": 395,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "alive": false,
+        "pid": 15600,
+        "startTicks": 639282537299204408,
+        "role": "own-epoch-acl",
+        "parent": 0
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/final2-local-retry1-group-1.json",
+      "bytes": 2177,
+      "sha256": "82ebb137c8709da326d38f5c30da08963a6ae8aefd4fd7550acd676f43c6899d"
+    },
+    "executable": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/java.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-final2-local-retry1-group-1.args"
+    ],
+    "startedUtc": "2026-10-22T08:15:31.9797312Z",
+    "endedUtc": "2026-10-22T08:15:48.6233294Z",
+    "elapsedMs": 16643,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "alive": false,
+        "pid": 45420,
+        "startTicks": 639282537319935371,
+        "role": "maven-launcher",
+        "parent": 0
+      },
+      {
+        "alive": false,
+        "pid": 43836,
+        "startTicks": 639282537320018240,
+        "role": "descendant",
+        "parent": 45420
+      },
+      {
+        "alive": false,
+        "pid": 47340,
+        "startTicks": 639282537370139426,
+        "role": "descendant",
+        "parent": 45420
+      },
+      {
+        "alive": false,
+        "pid": 47412,
+        "startTicks": 639282537370351722,
+        "role": "descendant",
+        "parent": 47340
+      },
+      {
+        "alive": false,
+        "pid": 14344,
+        "startTicks": 639282537370513478,
+        "role": "descendant",
+        "parent": 47340
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/final3-compile-model-reactor-cont1.json",
+      "bytes": 1308,
+      "sha256": "ed46e3b230249992fff785e648efc94f7596694f4601c5f9e5c0735a80f2f5d8"
+    },
+    "executable": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/java.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-final3-compile-model-reactor-cont1.args"
+    ],
+    "startedUtc": "2026-10-22T08:15:08.3629764Z",
+    "endedUtc": "2026-10-22T08:15:32.2955314Z",
+    "elapsedMs": 23932,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "pid": 35896,
+        "alive": false,
+        "startTicks": 639282537083730017,
+        "parent": 0,
+        "role": "maven-launcher"
+      },
+      {
+        "pid": 25184,
+        "alive": false,
+        "startTicks": 639282537083913079,
+        "parent": 35896,
+        "role": "descendant"
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/finite-final3-command.json",
+      "bytes": 1274,
+      "sha256": "4275cc0526f95ccd14b70ee038ff238c8c05a94c3b5bc08da420df81f5df64a7"
+    },
+    "executable": "C:\\Python314\\python.exe",
+    "arguments": [
+      "V:/.tools/iam-model-frozen-wire-tools.py",
+      "finite",
+      "final3",
+      ""
+    ],
+    "startedUtc": "2026-10-22T08:19:11.8272234Z",
+    "endedUtc": "2026-10-22T08:19:24.3815335Z",
+    "elapsedMs": 12555,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "role": "own-wire-helper",
+        "alive": false,
+        "parent": 0,
+        "startTicks": 639282539518368034,
+        "pid": 21452
+      },
+      {
+        "role": "descendant",
+        "alive": false,
+        "parent": 21452,
+        "startTicks": 639282539518465893,
+        "pid": 59560
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/freeze-final-command.json",
+      "bytes": 1272,
+      "sha256": "df910b4867364c20de010afe882ea51e2e3f07d6fcb918be975327023a2d63e7"
+    },
+    "executable": "C:\\Python314\\python.exe",
+    "arguments": [
+      "V:/.tools/iam-model-frozen-wire-tools.py",
+      "freeze",
+      "final",
+      ""
+    ],
+    "startedUtc": "2026-10-22T08:06:12.9480681Z",
+    "endedUtc": "2026-10-22T08:06:16.0123250Z",
+    "elapsedMs": 3066,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "parent": 0,
+        "startTicks": 639282531729677800,
+        "alive": false,
+        "pid": 57620,
+        "role": "own-wire-helper"
+      },
+      {
+        "parent": 57620,
+        "startTicks": 639282531729964706,
+        "alive": false,
+        "pid": 32912,
+        "role": "descendant"
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/freeze-final2-command.json",
+      "bytes": 1273,
+      "sha256": "984a2d922c6ff82669a4310b242b41f9923fe76c91fd3ac49a274e8ded63794f"
+    },
+    "executable": "C:\\Python314\\python.exe",
+    "arguments": [
+      "V:/.tools/iam-model-frozen-wire-tools.py",
+      "freeze",
+      "final2",
+      ""
+    ],
+    "startedUtc": "2026-10-22T08:10:56.8629740Z",
+    "endedUtc": "2026-10-22T08:10:58.1493997Z",
+    "elapsedMs": 1288,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "parent": 0,
+        "pid": 61392,
+        "alive": false,
+        "role": "own-wire-helper",
+        "startTicks": 639282534568717687
+      },
+      {
+        "parent": 61392,
+        "pid": 62484,
+        "alive": false,
+        "role": "descendant",
+        "startTicks": 639282534568784033
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/freeze-final3-command.json",
+      "bytes": 1273,
+      "sha256": "d7a5a7f8c60ca7fcb8146988bc5e14b6064b90395d4cf9be29759f9d7775e681"
+    },
+    "executable": "C:\\Python314\\python.exe",
+    "arguments": [
+      "V:/.tools/iam-model-frozen-wire-tools.py",
+      "freeze",
+      "final3",
+      ""
+    ],
+    "startedUtc": "2026-10-22T08:14:57.8653643Z",
+    "endedUtc": "2026-10-22T08:15:07.6515002Z",
+    "elapsedMs": 9787,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "pid": 64768,
+        "alive": false,
+        "startTicks": 639282536979495819,
+        "parent": 0,
+        "role": "own-wire-helper"
+      },
+      {
+        "pid": 49784,
+        "alive": false,
+        "startTicks": 639282536980018985,
+        "parent": 64768,
+        "role": "descendant"
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/freeze-red-command.json",
+      "bytes": 1268,
+      "sha256": "dd01413436b8ee212f98a2c81c2d2d95037814084bda7d3e475f90088363892d"
+    },
+    "executable": "C:\\Python314\\python.exe",
+    "arguments": [
+      "V:/.tools/iam-model-frozen-wire-tools.py",
+      "freeze",
+      "red",
+      ""
+    ],
+    "startedUtc": "2026-10-22T07:51:04.2827085Z",
+    "endedUtc": "2026-10-22T07:51:05.4144279Z",
+    "elapsedMs": 1133,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "pid": 52280,
+        "startTicks": 639282522642948461,
+        "parent": 0,
+        "role": "own-wire-helper",
+        "alive": false
+      },
+      {
+        "pid": 6764,
+        "startTicks": 639282522643020934,
+        "parent": 52280,
+        "role": "descendant",
+        "alive": false
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/freeze-red2-command.json",
+      "bytes": 1271,
+      "sha256": "c01d76c500d5d42d1768c298ac805fe9b4267ff0902880dd725849f160b0d2a6"
+    },
+    "executable": "C:\\Python314\\python.exe",
+    "arguments": [
+      "V:/.tools/iam-model-frozen-wire-tools.py",
+      "freeze",
+      "red2",
+      ""
+    ],
+    "startedUtc": "2026-10-22T07:58:31.1808432Z",
+    "endedUtc": "2026-10-22T07:58:32.8188702Z",
+    "elapsedMs": 1639,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "parent": 0,
+        "alive": false,
+        "pid": 57404,
+        "role": "own-wire-helper",
+        "startTicks": 639282527112147044
+      },
+      {
+        "parent": 57404,
+        "alive": false,
+        "pid": 63868,
+        "role": "descendant",
+        "startTicks": 639282527112237050
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/freeze-red3-command.json",
+      "bytes": 1270,
+      "sha256": "d5d74bccfdc2f6e65464fa983b8ce45db5525b8ede6a707bb7e77b7741ecbd2a"
+    },
+    "executable": "C:\\Python314\\python.exe",
+    "arguments": [
+      "V:/.tools/iam-model-frozen-wire-tools.py",
+      "freeze",
+      "red3",
+      ""
+    ],
+    "startedUtc": "2026-10-22T08:02:02.6371907Z",
+    "endedUtc": "2026-10-22T08:02:04.1883763Z",
+    "elapsedMs": 1553,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "role": "own-wire-helper",
+        "parent": 0,
+        "alive": false,
+        "startTicks": 639282529226464308,
+        "pid": 59148
+      },
+      {
+        "role": "descendant",
+        "parent": 59148,
+        "alive": false,
+        "startTicks": 639282529226591274,
+        "pid": 58800
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/group-final-command.json",
+      "bytes": 979,
+      "sha256": "4269cba6d9c36f397d1627480b56b07a74853a9a39cfcd68a7b6e087afb02f73"
+    },
+    "executable": "C:\\Python314\\python.exe",
+    "arguments": [
+      "V:/.tools/iam-model-frozen-wire-tools.py",
+      "group",
+      "final",
+      "1"
+    ],
+    "startedUtc": "2026-10-22T08:10:14.8368441Z",
+    "endedUtc": "2026-10-22T08:10:15.3498553Z",
+    "elapsedMs": 514,
+    "exit": 1,
+    "timedOut": false,
+    "identities": [
+      {
+        "parent": 0,
+        "pid": 46668,
+        "startTicks": 639282534148480835,
+        "alive": false,
+        "role": "own-wire-helper"
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/native-change-final2-command.json",
+      "bytes": 986,
+      "sha256": "343780d6ed938292fde0594fcf35262e9f04ce3da55440eca1a736fcc75ee671"
+    },
+    "executable": "C:\\Python314\\python.exe",
+    "arguments": [
+      "V:/.tools/iam-model-frozen-wire-tools.py",
+      "native-change",
+      "final2",
+      ""
+    ],
+    "startedUtc": "2026-10-22T08:23:43.9119479Z",
+    "endedUtc": "2026-10-22T08:23:44.2822300Z",
+    "elapsedMs": 370,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "alive": false,
+        "role": "own-wire-helper",
+        "pid": 51296,
+        "startTicks": 639282542239146006,
+        "parent": 0
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/native-prepare-final3-command.json",
+      "bytes": 1283,
+      "sha256": "4361c3df265cce1bb97cc0864c93ae4ac1f0d2c0cb793fa259ffa6a8bce6e8b0"
+    },
+    "executable": "C:\\Python314\\python.exe",
+    "arguments": [
+      "V:/.tools/iam-model-frozen-wire-tools.py",
+      "native-prepare",
+      "final3",
+      ""
+    ],
+    "startedUtc": "2026-10-22T08:22:38.0195550Z",
+    "endedUtc": "2026-10-22T08:23:07.9923905Z",
+    "elapsedMs": 29975,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "alive": false,
+        "role": "own-wire-helper",
+        "pid": 64188,
+        "startTicks": 639282541580581494,
+        "parent": 0
+      },
+      {
+        "alive": false,
+        "role": "descendant",
+        "pid": 30488,
+        "startTicks": 639282541580983190,
+        "parent": 64188
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/native-verify-final2-command.json",
+      "bytes": 1279,
+      "sha256": "8106b41b8fb5e60a066a628bd4e55d644370bfafe7b96c77ee9d3c6287126994"
+    },
+    "executable": "C:\\Python314\\python.exe",
+    "arguments": [
+      "V:/.tools/iam-model-frozen-wire-tools.py",
+      "native-verify",
+      "final2",
+      ""
+    ],
+    "startedUtc": "2026-10-22T08:23:47.0405677Z",
+    "endedUtc": "2026-10-22T08:23:55.0809222Z",
+    "elapsedMs": 8040,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "alive": false,
+        "role": "own-wire-helper",
+        "pid": 20964,
+        "startTicks": 639282542270440260,
+        "parent": 0
+      },
+      {
+        "alive": false,
+        "role": "descendant",
+        "pid": 49416,
+        "startTicks": 639282542270514120,
+        "parent": 20964
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/options-api.json",
+      "bytes": 22906,
+      "sha256": "3cf4f774b9860dff3a092563619020046966c36ae6cfd8199903bfc4862caefa"
+    },
+    "executable": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/javap.exe",
+    "arguments": [
+      "-classpath",
+      "\"G:/207/项目/算法重组工具/代码/agent-platform/model-gateway/target/test-classes;G:/207/项目/算法重组工具/代码/agent-platform/model-gateway/target/classes;G:/207/项目/算法重组工具/代码/agent-platform/admin-common/target/test-classes;G:/207/项目/算法重组工具/代码/agent-platform/admin-common/target/classes;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/boot/spring-boot-starter-web/3.5.0/spring-boot-starter-web-3.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/boot/spring-boot-starter-json/3.5.0/spring-boot-starter-json-3.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/fasterxml/jackson/datatype/jackson-datatype-jdk8/2.19.0/jackson-datatype-jdk8-2.19.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/fasterxml/jackson/module/jackson-module-parameter-names/2.19.0/jackson-module-parameter-names-2.19.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/boot/spring-boot-starter-tomcat/3.5.0/spring-boot-starter-tomcat-3.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/apache/tomcat/embed/tomcat-embed-core/10.1.41/tomcat-embed-core-10.1.41.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/apache/tomcat/embed/tomcat-embed-websocket/10.1.41/tomcat-embed-websocket-10.1.41.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/spring-web/6.2.7/spring-web-6.2.7.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/spring-webmvc/6.2.7/spring-webmvc-6.2.7.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/spring-expression/6.2.7/spring-expression-6.2.7.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/boot/spring-boot-starter-validation/3.5.0/spring-boot-starter-validation-3.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/apache/tomcat/embed/tomcat-embed-el/10.1.41/tomcat-embed-el-10.1.41.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/hibernate/validator/hibernate-validator/8.0.2.Final/hibernate-validator-8.0.2.Final.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/jakarta/validation/jakarta.validation-api/3.0.2/jakarta.validation-api-3.0.2.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/jboss/logging/jboss-logging/3.6.1.Final/jboss-logging-3.6.1.Final.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/boot/spring-boot-starter-oauth2-resource-server/3.5.0/spring-boot-starter-oauth2-resource-server-3.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/security/spring-security-config/6.5.0/spring-security-config-6.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/security/spring-security-core/6.5.0/spring-security-core-6.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/security/spring-security-crypto/6.5.0/spring-security-crypto-6.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/security/spring-security-oauth2-resource-server/6.5.0/spring-security-oauth2-resource-server-6.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/security/spring-security-oauth2-core/6.5.0/spring-security-oauth2-core-6.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/security/spring-security-web/6.5.0/spring-security-web-6.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/security/spring-security-oauth2-jose/6.5.0/spring-security-oauth2-jose-6.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/nimbusds/nimbus-jose-jwt/9.37.3/nimbus-jose-jwt-9.37.3.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/github/stephenc/jcip/jcip-annotations/1.0-1/jcip-annotations-1.0-1.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springdoc/springdoc-openapi-starter-webmvc-api/2.8.9/springdoc-openapi-starter-webmvc-api-2.8.9.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springdoc/springdoc-openapi-starter-common/2.8.9/springdoc-openapi-starter-common-2.8.9.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/swagger/core/v3/swagger-core-jakarta/2.2.30/swagger-core-jakarta-2.2.30.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/apache/commons/commons-lang3/3.17.0/commons-lang3-3.17.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/swagger/core/v3/swagger-annotations-jakarta/2.2.30/swagger-annotations-jakarta-2.2.30.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/swagger/core/v3/swagger-models-jakarta/2.2.30/swagger-models-jakarta-2.2.30.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/networknt/json-schema-validator/1.5.6/json-schema-validator-1.5.6.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/ethlo/time/itu/1.10.3/itu-1.10.3.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/fasterxml/jackson/core/jackson-databind/2.19.0/jackson-databind-2.19.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/fasterxml/jackson/dataformat/jackson-dataformat-yaml/2.19.0/jackson-dataformat-yaml-2.19.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/google/re2j/re2j/1.8/re2j-1.8.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/boot/spring-boot-starter-jdbc/3.5.0/spring-boot-starter-jdbc-3.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/boot/spring-boot-starter/3.5.0/spring-boot-starter-3.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/boot/spring-boot/3.5.0/spring-boot-3.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/boot/spring-boot-autoconfigure/3.5.0/spring-boot-autoconfigure-3.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/boot/spring-boot-starter-logging/3.5.0/spring-boot-starter-logging-3.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/ch/qos/logback/logback-classic/1.5.18/logback-classic-1.5.18.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/ch/qos/logback/logback-core/1.5.18/logback-core-1.5.18.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/apache/logging/log4j/log4j-to-slf4j/2.24.3/log4j-to-slf4j-2.24.3.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/apache/logging/log4j/log4j-api/2.24.3/log4j-api-2.24.3.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/slf4j/jul-to-slf4j/2.0.17/jul-to-slf4j-2.0.17.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/jakarta/annotation/jakarta.annotation-api/2.1.1/jakarta.annotation-api-2.1.1.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/yaml/snakeyaml/2.4/snakeyaml-2.4.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/zaxxer/HikariCP/6.3.0/HikariCP-6.3.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/spring-jdbc/6.2.7/spring-jdbc-6.2.7.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/spring-beans/6.2.7/spring-beans-6.2.7.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/spring-tx/6.2.7/spring-tx-6.2.7.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/boot/spring-boot-starter-actuator/3.5.0/spring-boot-starter-actuator-3.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/boot/spring-boot-actuator-autoconfigure/3.5.0/spring-boot-actuator-autoconfigure-3.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/boot/spring-boot-actuator/3.5.0/spring-boot-actuator-3.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/micrometer/micrometer-observation/1.15.0/micrometer-observation-1.15.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/micrometer/micrometer-commons/1.15.0/micrometer-commons-1.15.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/micrometer/micrometer-jakarta9/1.15.0/micrometer-jakarta9-1.15.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/micrometer/micrometer-registry-prometheus/1.15.0/micrometer-registry-prometheus-1.15.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/micrometer/micrometer-core/1.15.0/micrometer-core-1.15.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/hdrhistogram/HdrHistogram/2.2.2/HdrHistogram-2.2.2.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/latencyutils/LatencyUtils/2.0.3/LatencyUtils-2.0.3.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/prometheus/prometheus-metrics-core/1.3.6/prometheus-metrics-core-1.3.6.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/prometheus/prometheus-metrics-model/1.3.6/prometheus-metrics-model-1.3.6.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/prometheus/prometheus-metrics-config/1.3.6/prometheus-metrics-config-1.3.6.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/prometheus/prometheus-metrics-tracer-common/1.3.6/prometheus-metrics-tracer-common-1.3.6.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/prometheus/prometheus-metrics-exposition-formats/1.3.6/prometheus-metrics-exposition-formats-1.3.6.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/prometheus/prometheus-metrics-exposition-textformats/1.3.6/prometheus-metrics-exposition-textformats-1.3.6.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/flywaydb/flyway-core/11.7.2/flyway-core-11.7.2.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/fasterxml/jackson/dataformat/jackson-dataformat-toml/2.19.0/jackson-dataformat-toml-2.19.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/fasterxml/jackson/core/jackson-core/2.19.0/jackson-core-2.19.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/fasterxml/jackson/datatype/jackson-datatype-jsr310/2.19.0/jackson-datatype-jsr310-2.19.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/fasterxml/jackson/core/jackson-annotations/2.19.0/jackson-annotations-2.19.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/flywaydb/flyway-database-postgresql/11.7.2/flyway-database-postgresql-11.7.2.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/postgresql/postgresql/42.7.5/postgresql-42.7.5.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/checkerframework/checker-qual/3.48.3/checker-qual-3.48.3.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/boot/spring-boot-starter-test/3.5.0/spring-boot-starter-test-3.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/boot/spring-boot-test/3.5.0/spring-boot-test-3.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/boot/spring-boot-test-autoconfigure/3.5.0/spring-boot-test-autoconfigure-3.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/jayway/jsonpath/json-path/2.9.0/json-path-2.9.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/jakarta/xml/bind/jakarta.xml.bind-api/4.0.2/jakarta.xml.bind-api-4.0.2.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/jakarta/activation/jakarta.activation-api/2.1.3/jakarta.activation-api-2.1.3.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/net/minidev/json-smart/2.5.2/json-smart-2.5.2.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/net/minidev/accessors-smart/2.5.2/accessors-smart-2.5.2.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/ow2/asm/asm/9.7.1/asm-9.7.1.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/assertj/assertj-core/3.27.3/assertj-core-3.27.3.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/net/bytebuddy/byte-buddy/1.17.5/byte-buddy-1.17.5.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/awaitility/awaitility/4.3.0/awaitility-4.3.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/hamcrest/hamcrest/3.0/hamcrest-3.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/junit/jupiter/junit-jupiter/5.12.2/junit-jupiter-5.12.2.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/junit/jupiter/junit-jupiter-api/5.12.2/junit-jupiter-api-5.12.2.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/junit/platform/junit-platform-commons/1.12.2/junit-platform-commons-1.12.2.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/junit/jupiter/junit-jupiter-params/5.12.2/junit-jupiter-params-5.12.2.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/junit/jupiter/junit-jupiter-engine/5.12.2/junit-jupiter-engine-5.12.2.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/junit/platform/junit-platform-engine/1.12.2/junit-platform-engine-1.12.2.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/mockito/mockito-core/5.17.0/mockito-core-5.17.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/net/bytebuddy/byte-buddy-agent/1.17.5/byte-buddy-agent-1.17.5.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/objenesis/objenesis/3.3/objenesis-3.3.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/mockito/mockito-junit-jupiter/5.17.0/mockito-junit-jupiter-5.17.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/skyscreamer/jsonassert/1.5.3/jsonassert-1.5.3.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/vaadin/external/google/android-json/0.0.20131108.vaadin1/android-json-0.0.20131108.vaadin1.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/spring-core/6.2.7/spring-core-6.2.7.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/spring-jcl/6.2.7/spring-jcl-6.2.7.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/spring-test/6.2.7/spring-test-6.2.7.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/xmlunit/xmlunit-core/2.10.1/xmlunit-core-2.10.1.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/ai/spring-ai-openai/1.0.0/spring-ai-openai-1.0.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/ai/spring-ai-model/1.0.0/spring-ai-model-1.0.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/ai/spring-ai-commons/1.0.0/spring-ai-commons-1.0.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/micrometer/context-propagation/1.1.3/context-propagation-1.1.3.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/fasterxml/jackson/module/jackson-module-jsonSchema/2.19.0/jackson-module-jsonSchema-2.19.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/javax/validation/validation-api/1.1.0.Final/validation-api-1.1.0.Final.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/ai/spring-ai-template-st/1.0.0/spring-ai-template-st-1.0.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/antlr/ST4/4.3.4/ST4-4.3.4.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/antlr/antlr-runtime/3.5.3/antlr-runtime-3.5.3.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/spring-messaging/6.2.7/spring-messaging-6.2.7.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/projectreactor/reactor-core/3.7.6/reactor-core-3.7.6.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/reactivestreams/reactive-streams/1.0.4/reactive-streams-1.0.4.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/antlr/antlr4-runtime/4.13.1/antlr4-runtime-4.13.1.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/github/victools/jsonschema-module-swagger-2/4.37.0/jsonschema-module-swagger-2-4.37.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/swagger/core/v3/swagger-annotations/2.2.25/swagger-annotations-2.2.25.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/ai/spring-ai-retry/1.0.0/spring-ai-retry-1.0.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/retry/spring-retry/2.0.12/spring-retry-2.0.12.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/spring-webflux/6.2.7/spring-webflux-6.2.7.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/github/victools/jsonschema-generator/4.37.0/jsonschema-generator-4.37.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/fasterxml/classmate/1.7.0/classmate-1.7.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/github/victools/jsonschema-module-jackson/4.37.0/jsonschema-module-jackson-4.37.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/spring-context-support/6.2.7/spring-context-support-6.2.7.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/spring-context/6.2.7/spring-context-6.2.7.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/slf4j/slf4j-api/2.0.17/slf4j-api-2.0.17.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/knuddels/jtokkit/1.1.0/jtokkit-1.1.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/boot/spring-boot-starter-data-redis/3.5.0/spring-boot-starter-data-redis-3.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/lettuce/lettuce-core/6.5.5.RELEASE/lettuce-core-6.5.5.RELEASE.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/netty/netty-common/4.1.121.Final/netty-common-4.1.121.Final.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/netty/netty-handler/4.1.121.Final/netty-handler-4.1.121.Final.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/netty/netty-resolver/4.1.121.Final/netty-resolver-4.1.121.Final.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/netty/netty-buffer/4.1.121.Final/netty-buffer-4.1.121.Final.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/netty/netty-transport-native-unix-common/4.1.121.Final/netty-transport-native-unix-common-4.1.121.Final.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/netty/netty-codec/4.1.121.Final/netty-codec-4.1.121.Final.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/netty/netty-transport/4.1.121.Final/netty-transport-4.1.121.Final.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/data/spring-data-redis/3.5.0/spring-data-redis-3.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/data/spring-data-keyvalue/3.5.0/spring-data-keyvalue-3.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/data/spring-data-commons/3.5.0/spring-data-commons-3.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/spring-oxm/6.2.7/spring-oxm-6.2.7.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/spring-aop/6.2.7/spring-aop-6.2.7.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/github/resilience4j/resilience4j-circuitbreaker/2.3.0/resilience4j-circuitbreaker-2.3.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/github/resilience4j/resilience4j-core/2.3.0/resilience4j-core-2.3.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/jetbrains/kotlin/kotlin-stdlib-jdk8/1.9.25/kotlin-stdlib-jdk8-1.9.25.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/jetbrains/kotlin/kotlin-stdlib/1.9.25/kotlin-stdlib-1.9.25.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/jetbrains/annotations/13.0/annotations-13.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/jetbrains/kotlin/kotlin-stdlib-jdk7/1.9.25/kotlin-stdlib-jdk7-1.9.25.jar;\"",
+      "org.springframework.ai.openai.OpenAiChatOptions"
+    ],
+    "startedUtc": "2026-10-22T08:01:09.4166794Z",
+    "endedUtc": "2026-10-22T08:01:10.6428983Z",
+    "elapsedMs": 1227,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "alive": false,
+        "role": "own-public-api",
+        "startTicks": 639282528694405302,
+        "pid": 24860,
+        "parent": 0
+      },
+      {
+        "alive": false,
+        "role": "descendant",
+        "startTicks": 639282528695100022,
+        "pid": 54552,
+        "parent": 24860
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/package-common-command.json",
+      "bytes": 1282,
+      "sha256": "31cff0b41d71427d311c83da68b12f78405985c8970b29dbacd58ce3ce02e932"
+    },
+    "executable": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/java.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-package-common.args"
+    ],
+    "startedUtc": "2026-10-22T08:19:58.8483067Z",
+    "endedUtc": "2026-10-22T08:20:02.8346080Z",
+    "elapsedMs": 3987,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "alive": false,
+        "role": "own-package",
+        "parent": 0,
+        "startTicks": 639282539988559587,
+        "pid": 24316
+      },
+      {
+        "alive": false,
+        "role": "descendant",
+        "parent": 24316,
+        "startTicks": 639282539988723793,
+        "pid": 9232
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/package-common-compile-command.json",
+      "bytes": 1293,
+      "sha256": "e538ce97a3e42b125df4130be03374f7e8568bd83cf35b4a1f730d7dd6c20510"
+    },
+    "executable": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/java.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-package-common-compile.args"
+    ],
+    "startedUtc": "2026-10-22T08:19:31.5902422Z",
+    "endedUtc": "2026-10-22T08:19:47.8008895Z",
+    "elapsedMs": 16210,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "role": "own-package",
+        "alive": false,
+        "parent": 0,
+        "startTicks": 639282539716795358,
+        "pid": 62264
+      },
+      {
+        "role": "descendant",
+        "alive": false,
+        "parent": 62264,
+        "startTicks": 639282539716957604,
+        "pid": 42772
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/package-engine-command.json",
+      "bytes": 1285,
+      "sha256": "c9381a63c3806c5b945a68199997e4ffa4970d56d47f0d4fb32644719fe25b76"
+    },
+    "executable": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/java.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-package-engine.args"
+    ],
+    "startedUtc": "2026-10-22T08:20:44.7113186Z",
+    "endedUtc": "2026-10-22T08:20:52.4877631Z",
+    "elapsedMs": 7778,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "role": "own-package",
+        "pid": 12984,
+        "parent": 0,
+        "startTicks": 639282540447196757,
+        "alive": false
+      },
+      {
+        "role": "descendant",
+        "pid": 37500,
+        "parent": 12984,
+        "startTicks": 639282540447356823,
+        "alive": false
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/package-engine-compile-command.json",
+      "bytes": 1293,
+      "sha256": "1bd7e2fa7ef0b3dacb9e271e676b0e5e9b015246cb764648649b29a5bdbb66da"
+    },
+    "executable": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/java.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-package-engine-compile.args"
+    ],
+    "startedUtc": "2026-10-22T08:20:02.9010278Z",
+    "endedUtc": "2026-10-22T08:20:16.9052434Z",
+    "elapsedMs": 14004,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "alive": false,
+        "role": "own-package",
+        "parent": 0,
+        "startTicks": 639282540029033860,
+        "pid": 59996
+      },
+      {
+        "alive": false,
+        "role": "descendant",
+        "parent": 59996,
+        "startTicks": 639282540029228709,
+        "pid": 59784
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/package-model-command.json",
+      "bytes": 1284,
+      "sha256": "84aabd83d09f60d32d4a12efbfd574b05a40e3e9c8af9dd11ad6a7e9e8db96eb"
+    },
+    "executable": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/java.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-package-model.args"
+    ],
+    "startedUtc": "2026-10-22T08:21:52.4746703Z",
+    "endedUtc": "2026-10-22T08:21:59.9458486Z",
+    "elapsedMs": 7472,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "pid": 37028,
+        "alive": false,
+        "role": "own-package",
+        "startTicks": 639282541124881271,
+        "parent": 0
+      },
+      {
+        "pid": 50912,
+        "alive": false,
+        "role": "descendant",
+        "startTicks": 639282541125064163,
+        "parent": 37028
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/package-model-compile-command.json",
+      "bytes": 1292,
+      "sha256": "2779e8606e54e659121a89d186db6b1db46d44469e5e1fdcc2ee882d68d655c6"
+    },
+    "executable": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/java.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-package-model-compile.args"
+    ],
+    "startedUtc": "2026-10-22T08:20:52.5811966Z",
+    "endedUtc": "2026-10-22T08:21:08.5428632Z",
+    "elapsedMs": 15961,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "role": "own-package",
+        "pid": 32912,
+        "parent": 0,
+        "startTicks": 639282540525853707,
+        "alive": false
+      },
+      {
+        "role": "descendant",
+        "pid": 55336,
+        "parent": 32912,
+        "startTicks": 639282540525894047,
+        "alive": false
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/package-prepare-final3-command.json",
+      "bytes": 1281,
+      "sha256": "9da3b3f569ae3baed2897a722f64577471da087e7c4583807f798ee311e4bf3c"
+    },
+    "executable": "C:\\Python314\\python.exe",
+    "arguments": [
+      "V:/.tools/iam-model-frozen-wire-tools.py",
+      "package-prepare",
+      "final3",
+      ""
+    ],
+    "startedUtc": "2026-10-22T08:19:24.5112533Z",
+    "endedUtc": "2026-10-22T08:19:31.2635812Z",
+    "elapsedMs": 6752,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "role": "own-wire-helper",
+        "alive": false,
+        "parent": 0,
+        "startTicks": 639282539645151861,
+        "pid": 42728
+      },
+      {
+        "role": "descendant",
+        "alive": false,
+        "parent": 42728,
+        "startTicks": 639282539645608776,
+        "pid": 58924
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/package-verify-final3-command.json",
+      "bytes": 1279,
+      "sha256": "888244433a3a0e990ecd4ed3ed5f69692e56d6a38e1f9d9a887dc355802c1da9"
+    },
+    "executable": "C:\\Python314\\python.exe",
+    "arguments": [
+      "V:/.tools/iam-model-frozen-wire-tools.py",
+      "package-verify",
+      "final3",
+      ""
+    ],
+    "startedUtc": "2026-10-22T08:22:00.1842285Z",
+    "endedUtc": "2026-10-22T08:22:17.0993513Z",
+    "elapsedMs": 16915,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "pid": 57520,
+        "alive": false,
+        "role": "own-wire-helper",
+        "startTicks": 639282541201912273,
+        "parent": 0
+      },
+      {
+        "pid": 9788,
+        "alive": false,
+        "role": "descendant",
+        "startTicks": 639282541202160179,
+        "parent": 57520
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/public-api.json",
+      "bytes": 22975,
+      "sha256": "a2a7dc62c1cd6b8802c34895c49264854759731c7e378dbfe22bda143f4dbb3e"
+    },
+    "executable": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/javap.exe",
+    "arguments": [
+      "-classpath",
+      "\"G:/207/项目/算法重组工具/代码/agent-platform/model-gateway/target/test-classes;G:/207/项目/算法重组工具/代码/agent-platform/model-gateway/target/classes;G:/207/项目/算法重组工具/代码/agent-platform/admin-common/target/test-classes;G:/207/项目/算法重组工具/代码/agent-platform/admin-common/target/classes;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/boot/spring-boot-starter-web/3.5.0/spring-boot-starter-web-3.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/boot/spring-boot-starter-json/3.5.0/spring-boot-starter-json-3.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/fasterxml/jackson/datatype/jackson-datatype-jdk8/2.19.0/jackson-datatype-jdk8-2.19.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/fasterxml/jackson/module/jackson-module-parameter-names/2.19.0/jackson-module-parameter-names-2.19.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/boot/spring-boot-starter-tomcat/3.5.0/spring-boot-starter-tomcat-3.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/apache/tomcat/embed/tomcat-embed-core/10.1.41/tomcat-embed-core-10.1.41.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/apache/tomcat/embed/tomcat-embed-websocket/10.1.41/tomcat-embed-websocket-10.1.41.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/spring-web/6.2.7/spring-web-6.2.7.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/spring-webmvc/6.2.7/spring-webmvc-6.2.7.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/spring-expression/6.2.7/spring-expression-6.2.7.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/boot/spring-boot-starter-validation/3.5.0/spring-boot-starter-validation-3.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/apache/tomcat/embed/tomcat-embed-el/10.1.41/tomcat-embed-el-10.1.41.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/hibernate/validator/hibernate-validator/8.0.2.Final/hibernate-validator-8.0.2.Final.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/jakarta/validation/jakarta.validation-api/3.0.2/jakarta.validation-api-3.0.2.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/jboss/logging/jboss-logging/3.6.1.Final/jboss-logging-3.6.1.Final.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/boot/spring-boot-starter-oauth2-resource-server/3.5.0/spring-boot-starter-oauth2-resource-server-3.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/security/spring-security-config/6.5.0/spring-security-config-6.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/security/spring-security-core/6.5.0/spring-security-core-6.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/security/spring-security-crypto/6.5.0/spring-security-crypto-6.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/security/spring-security-oauth2-resource-server/6.5.0/spring-security-oauth2-resource-server-6.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/security/spring-security-oauth2-core/6.5.0/spring-security-oauth2-core-6.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/security/spring-security-web/6.5.0/spring-security-web-6.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/security/spring-security-oauth2-jose/6.5.0/spring-security-oauth2-jose-6.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/nimbusds/nimbus-jose-jwt/9.37.3/nimbus-jose-jwt-9.37.3.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/github/stephenc/jcip/jcip-annotations/1.0-1/jcip-annotations-1.0-1.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springdoc/springdoc-openapi-starter-webmvc-api/2.8.9/springdoc-openapi-starter-webmvc-api-2.8.9.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springdoc/springdoc-openapi-starter-common/2.8.9/springdoc-openapi-starter-common-2.8.9.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/swagger/core/v3/swagger-core-jakarta/2.2.30/swagger-core-jakarta-2.2.30.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/apache/commons/commons-lang3/3.17.0/commons-lang3-3.17.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/swagger/core/v3/swagger-annotations-jakarta/2.2.30/swagger-annotations-jakarta-2.2.30.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/swagger/core/v3/swagger-models-jakarta/2.2.30/swagger-models-jakarta-2.2.30.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/networknt/json-schema-validator/1.5.6/json-schema-validator-1.5.6.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/ethlo/time/itu/1.10.3/itu-1.10.3.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/fasterxml/jackson/core/jackson-databind/2.19.0/jackson-databind-2.19.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/fasterxml/jackson/dataformat/jackson-dataformat-yaml/2.19.0/jackson-dataformat-yaml-2.19.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/google/re2j/re2j/1.8/re2j-1.8.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/boot/spring-boot-starter-jdbc/3.5.0/spring-boot-starter-jdbc-3.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/boot/spring-boot-starter/3.5.0/spring-boot-starter-3.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/boot/spring-boot/3.5.0/spring-boot-3.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/boot/spring-boot-autoconfigure/3.5.0/spring-boot-autoconfigure-3.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/boot/spring-boot-starter-logging/3.5.0/spring-boot-starter-logging-3.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/ch/qos/logback/logback-classic/1.5.18/logback-classic-1.5.18.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/ch/qos/logback/logback-core/1.5.18/logback-core-1.5.18.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/apache/logging/log4j/log4j-to-slf4j/2.24.3/log4j-to-slf4j-2.24.3.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/apache/logging/log4j/log4j-api/2.24.3/log4j-api-2.24.3.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/slf4j/jul-to-slf4j/2.0.17/jul-to-slf4j-2.0.17.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/jakarta/annotation/jakarta.annotation-api/2.1.1/jakarta.annotation-api-2.1.1.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/yaml/snakeyaml/2.4/snakeyaml-2.4.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/zaxxer/HikariCP/6.3.0/HikariCP-6.3.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/spring-jdbc/6.2.7/spring-jdbc-6.2.7.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/spring-beans/6.2.7/spring-beans-6.2.7.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/spring-tx/6.2.7/spring-tx-6.2.7.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/boot/spring-boot-starter-actuator/3.5.0/spring-boot-starter-actuator-3.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/boot/spring-boot-actuator-autoconfigure/3.5.0/spring-boot-actuator-autoconfigure-3.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/boot/spring-boot-actuator/3.5.0/spring-boot-actuator-3.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/micrometer/micrometer-observation/1.15.0/micrometer-observation-1.15.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/micrometer/micrometer-commons/1.15.0/micrometer-commons-1.15.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/micrometer/micrometer-jakarta9/1.15.0/micrometer-jakarta9-1.15.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/micrometer/micrometer-registry-prometheus/1.15.0/micrometer-registry-prometheus-1.15.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/micrometer/micrometer-core/1.15.0/micrometer-core-1.15.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/hdrhistogram/HdrHistogram/2.2.2/HdrHistogram-2.2.2.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/latencyutils/LatencyUtils/2.0.3/LatencyUtils-2.0.3.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/prometheus/prometheus-metrics-core/1.3.6/prometheus-metrics-core-1.3.6.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/prometheus/prometheus-metrics-model/1.3.6/prometheus-metrics-model-1.3.6.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/prometheus/prometheus-metrics-config/1.3.6/prometheus-metrics-config-1.3.6.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/prometheus/prometheus-metrics-tracer-common/1.3.6/prometheus-metrics-tracer-common-1.3.6.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/prometheus/prometheus-metrics-exposition-formats/1.3.6/prometheus-metrics-exposition-formats-1.3.6.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/prometheus/prometheus-metrics-exposition-textformats/1.3.6/prometheus-metrics-exposition-textformats-1.3.6.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/flywaydb/flyway-core/11.7.2/flyway-core-11.7.2.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/fasterxml/jackson/dataformat/jackson-dataformat-toml/2.19.0/jackson-dataformat-toml-2.19.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/fasterxml/jackson/core/jackson-core/2.19.0/jackson-core-2.19.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/fasterxml/jackson/datatype/jackson-datatype-jsr310/2.19.0/jackson-datatype-jsr310-2.19.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/fasterxml/jackson/core/jackson-annotations/2.19.0/jackson-annotations-2.19.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/flywaydb/flyway-database-postgresql/11.7.2/flyway-database-postgresql-11.7.2.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/postgresql/postgresql/42.7.5/postgresql-42.7.5.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/checkerframework/checker-qual/3.48.3/checker-qual-3.48.3.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/boot/spring-boot-starter-test/3.5.0/spring-boot-starter-test-3.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/boot/spring-boot-test/3.5.0/spring-boot-test-3.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/boot/spring-boot-test-autoconfigure/3.5.0/spring-boot-test-autoconfigure-3.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/jayway/jsonpath/json-path/2.9.0/json-path-2.9.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/jakarta/xml/bind/jakarta.xml.bind-api/4.0.2/jakarta.xml.bind-api-4.0.2.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/jakarta/activation/jakarta.activation-api/2.1.3/jakarta.activation-api-2.1.3.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/net/minidev/json-smart/2.5.2/json-smart-2.5.2.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/net/minidev/accessors-smart/2.5.2/accessors-smart-2.5.2.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/ow2/asm/asm/9.7.1/asm-9.7.1.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/assertj/assertj-core/3.27.3/assertj-core-3.27.3.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/net/bytebuddy/byte-buddy/1.17.5/byte-buddy-1.17.5.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/awaitility/awaitility/4.3.0/awaitility-4.3.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/hamcrest/hamcrest/3.0/hamcrest-3.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/junit/jupiter/junit-jupiter/5.12.2/junit-jupiter-5.12.2.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/junit/jupiter/junit-jupiter-api/5.12.2/junit-jupiter-api-5.12.2.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/junit/platform/junit-platform-commons/1.12.2/junit-platform-commons-1.12.2.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/junit/jupiter/junit-jupiter-params/5.12.2/junit-jupiter-params-5.12.2.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/junit/jupiter/junit-jupiter-engine/5.12.2/junit-jupiter-engine-5.12.2.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/junit/platform/junit-platform-engine/1.12.2/junit-platform-engine-1.12.2.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/mockito/mockito-core/5.17.0/mockito-core-5.17.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/net/bytebuddy/byte-buddy-agent/1.17.5/byte-buddy-agent-1.17.5.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/objenesis/objenesis/3.3/objenesis-3.3.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/mockito/mockito-junit-jupiter/5.17.0/mockito-junit-jupiter-5.17.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/skyscreamer/jsonassert/1.5.3/jsonassert-1.5.3.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/vaadin/external/google/android-json/0.0.20131108.vaadin1/android-json-0.0.20131108.vaadin1.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/spring-core/6.2.7/spring-core-6.2.7.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/spring-jcl/6.2.7/spring-jcl-6.2.7.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/spring-test/6.2.7/spring-test-6.2.7.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/xmlunit/xmlunit-core/2.10.1/xmlunit-core-2.10.1.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/ai/spring-ai-openai/1.0.0/spring-ai-openai-1.0.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/ai/spring-ai-model/1.0.0/spring-ai-model-1.0.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/ai/spring-ai-commons/1.0.0/spring-ai-commons-1.0.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/micrometer/context-propagation/1.1.3/context-propagation-1.1.3.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/fasterxml/jackson/module/jackson-module-jsonSchema/2.19.0/jackson-module-jsonSchema-2.19.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/javax/validation/validation-api/1.1.0.Final/validation-api-1.1.0.Final.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/ai/spring-ai-template-st/1.0.0/spring-ai-template-st-1.0.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/antlr/ST4/4.3.4/ST4-4.3.4.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/antlr/antlr-runtime/3.5.3/antlr-runtime-3.5.3.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/spring-messaging/6.2.7/spring-messaging-6.2.7.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/projectreactor/reactor-core/3.7.6/reactor-core-3.7.6.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/reactivestreams/reactive-streams/1.0.4/reactive-streams-1.0.4.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/antlr/antlr4-runtime/4.13.1/antlr4-runtime-4.13.1.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/github/victools/jsonschema-module-swagger-2/4.37.0/jsonschema-module-swagger-2-4.37.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/swagger/core/v3/swagger-annotations/2.2.25/swagger-annotations-2.2.25.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/ai/spring-ai-retry/1.0.0/spring-ai-retry-1.0.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/retry/spring-retry/2.0.12/spring-retry-2.0.12.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/spring-webflux/6.2.7/spring-webflux-6.2.7.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/github/victools/jsonschema-generator/4.37.0/jsonschema-generator-4.37.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/fasterxml/classmate/1.7.0/classmate-1.7.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/github/victools/jsonschema-module-jackson/4.37.0/jsonschema-module-jackson-4.37.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/spring-context-support/6.2.7/spring-context-support-6.2.7.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/spring-context/6.2.7/spring-context-6.2.7.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/slf4j/slf4j-api/2.0.17/slf4j-api-2.0.17.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/com/knuddels/jtokkit/1.1.0/jtokkit-1.1.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/boot/spring-boot-starter-data-redis/3.5.0/spring-boot-starter-data-redis-3.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/lettuce/lettuce-core/6.5.5.RELEASE/lettuce-core-6.5.5.RELEASE.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/netty/netty-common/4.1.121.Final/netty-common-4.1.121.Final.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/netty/netty-handler/4.1.121.Final/netty-handler-4.1.121.Final.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/netty/netty-resolver/4.1.121.Final/netty-resolver-4.1.121.Final.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/netty/netty-buffer/4.1.121.Final/netty-buffer-4.1.121.Final.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/netty/netty-transport-native-unix-common/4.1.121.Final/netty-transport-native-unix-common-4.1.121.Final.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/netty/netty-codec/4.1.121.Final/netty-codec-4.1.121.Final.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/netty/netty-transport/4.1.121.Final/netty-transport-4.1.121.Final.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/data/spring-data-redis/3.5.0/spring-data-redis-3.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/data/spring-data-keyvalue/3.5.0/spring-data-keyvalue-3.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/data/spring-data-commons/3.5.0/spring-data-commons-3.5.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/spring-oxm/6.2.7/spring-oxm-6.2.7.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/springframework/spring-aop/6.2.7/spring-aop-6.2.7.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/github/resilience4j/resilience4j-circuitbreaker/2.3.0/resilience4j-circuitbreaker-2.3.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/io/github/resilience4j/resilience4j-core/2.3.0/resilience4j-core-2.3.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/jetbrains/kotlin/kotlin-stdlib-jdk8/1.9.25/kotlin-stdlib-jdk8-1.9.25.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/jetbrains/kotlin/kotlin-stdlib/1.9.25/kotlin-stdlib-1.9.25.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/jetbrains/annotations/13.0/annotations-13.0.jar;G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2/org/jetbrains/kotlin/kotlin-stdlib-jdk7/1.9.25/kotlin-stdlib-jdk7-1.9.25.jar;\"",
+      "org.springframework.ai.openai.api.ResponseFormat",
+      "org.springframework.ai.openai.api.ResponseFormat$JsonSchema"
+    ],
+    "startedUtc": "2026-10-22T07:59:13.5064138Z",
+    "endedUtc": "2026-10-22T07:59:15.0938267Z",
+    "elapsedMs": 1589,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "role": "own-public-api",
+        "startTicks": 639282527535585473,
+        "alive": false,
+        "parent": 0,
+        "pid": 50508
+      },
+      {
+        "role": "descendant",
+        "startTicks": 639282527537073122,
+        "alive": false,
+        "parent": 50508,
+        "pid": 54336
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/red-acl-command.json",
+      "bytes": 1137,
+      "sha256": "9dba8d5ce66990950bd8f04bb09f761ac6bb6362a56029513746e87a5eb3a568"
+    },
+    "executable": "C:\\WINDOWS/System32/icacls.exe",
+    "arguments": [
+      "G:/207/项目/算法重组工具/代码/agent-platform/.local/iam-model-frozen-wire/red-runtime",
+      "/inheritance:r",
+      "/grant:r",
+      "\"*S-1-5-21-2362812570-2618363083-3646905477-500:(OI)(CI)F\"",
+      "\"SYSTEM:(OI)(CI)F\""
+    ],
+    "startedUtc": "2026-10-22T07:57:08.1628417Z",
+    "endedUtc": "2026-10-22T07:57:08.5520029Z",
+    "elapsedMs": 390,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "alive": false,
+        "pid": 19620,
+        "startTicks": 639282526281731240,
+        "role": "own-epoch-acl",
+        "parent": 0
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/red-compile-model-reactor-cont1.json",
+      "bytes": 1306,
+      "sha256": "f2a766fc2e531b37d30b4672edea9b14de739925b51ac82d31cfea2ab2464266"
+    },
+    "executable": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/java.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-red-compile-model-reactor-cont1.args"
+    ],
+    "startedUtc": "2026-10-22T07:55:47.1231446Z",
+    "endedUtc": "2026-10-22T07:56:04.3603458Z",
+    "elapsedMs": 17238,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "alive": false,
+        "role": "maven-launcher",
+        "pid": 30980,
+        "parent": 0,
+        "startTicks": 639282525471356371
+      },
+      {
+        "alive": false,
+        "role": "descendant",
+        "pid": 48116,
+        "parent": 30980,
+        "startTicks": 639282525471437268
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/red-compile-model-reactor.json",
+      "bytes": 1327,
+      "sha256": "9c31bc08b7b707d4b886566cb3a071343fe9ba1159df3555b37f0e9ecb3275c6"
+    },
+    "executable": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/java.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-red-compile-model-reactor.args"
+    ],
+    "startedUtc": "2026-10-22T07:54:53.0028129Z",
+    "endedUtc": "2026-10-22T07:55:23.1679389Z",
+    "elapsedMs": 30166,
+    "exit": -1,
+    "timedOut": true,
+    "identities": [
+      {
+        "startTicks": 639282524930158091,
+        "parent": 0,
+        "alive": false,
+        "pid": 46076,
+        "role": "maven-launcher"
+      },
+      {
+        "startTicks": 639282524930245009,
+        "parent": 46076,
+        "alive": false,
+        "pid": 47328,
+        "role": "descendant"
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/red-compile-model.json",
+      "bytes": 1283,
+      "sha256": "85604b2e223f236138afa6e81e3e25bdfdbda0755e5776e4d4d5bda5f4ee0d8e"
+    },
+    "executable": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/java.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-red-compile-model.args"
+    ],
+    "startedUtc": "2026-10-22T07:54:26.5476044Z",
+    "endedUtc": "2026-10-22T07:54:30.4063155Z",
+    "elapsedMs": 3860,
+    "exit": 1,
+    "timedOut": false,
+    "identities": [
+      {
+        "alive": false,
+        "pid": 2496,
+        "parent": 0,
+        "startTicks": 639282524665727642,
+        "role": "maven-launcher"
+      },
+      {
+        "alive": false,
+        "pid": 772,
+        "parent": 2496,
+        "startTicks": 639282524665933485,
+        "role": "descendant"
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/red-compile.json",
+      "bytes": 1313,
+      "sha256": "bf8d685721b03e2aac04e60d78ceb3e587e3b589b8902b8b761fbf41b7ba97e1"
+    },
+    "executable": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/java.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-red-compile.args"
+    ],
+    "startedUtc": "2026-10-22T07:52:51.6607414Z",
+    "endedUtc": "2026-10-22T07:53:22.0685632Z",
+    "elapsedMs": 30409,
+    "exit": -1,
+    "timedOut": true,
+    "identities": [
+      {
+        "pid": 62352,
+        "startTicks": 639282523716700555,
+        "role": "maven-launcher",
+        "alive": false,
+        "parent": 0
+      },
+      {
+        "pid": 42756,
+        "startTicks": 639282523724543036,
+        "role": "descendant",
+        "alive": false,
+        "parent": 62352
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/red-group-1.json",
+      "bytes": 1312,
+      "sha256": "722f6c6c84b34995a0c4850968dbdf6d74f6ec6e73d77dea0c76c741f4f2c15f"
+    },
+    "executable": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/java.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-red-group-1.args"
+    ],
+    "startedUtc": "2026-10-22T07:57:16.3783142Z",
+    "endedUtc": "2026-10-22T07:57:46.6136025Z",
+    "elapsedMs": 30235,
+    "exit": -1,
+    "timedOut": true,
+    "identities": [
+      {
+        "alive": false,
+        "pid": 52240,
+        "startTicks": 639282526363837563,
+        "role": "maven-launcher",
+        "parent": 0
+      },
+      {
+        "alive": false,
+        "pid": 59488,
+        "startTicks": 639282526364102023,
+        "role": "descendant",
+        "parent": 52240
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/red2-acl-command.json",
+      "bytes": 1139,
+      "sha256": "8a910ef42de7483ce9ed188aa742d63b221b1f04d6789454c99212191f9baecf"
+    },
+    "executable": "C:\\WINDOWS/System32/icacls.exe",
+    "arguments": [
+      "G:/207/项目/算法重组工具/代码/agent-platform/.local/iam-model-frozen-wire/red2-runtime",
+      "/inheritance:r",
+      "/grant:r",
+      "\"*S-1-5-21-2362812570-2618363083-3646905477-500:(OI)(CI)F\"",
+      "\"SYSTEM:(OI)(CI)F\""
+    ],
+    "startedUtc": "2026-10-22T07:58:45.2657789Z",
+    "endedUtc": "2026-10-22T07:58:45.7326495Z",
+    "elapsedMs": 468,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "role": "own-epoch-acl",
+        "pid": 62412,
+        "alive": false,
+        "startTicks": 639282527253005338,
+        "parent": 0
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/red2-group-1.json",
+      "bytes": 1577,
+      "sha256": "3e9b7f66264684973d91a2991e6587079a4b315a1bae330efcd64038d8e9e3ad"
+    },
+    "executable": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/java.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-red2-group-1.args"
+    ],
+    "startedUtc": "2026-10-22T07:58:52.2887318Z",
+    "endedUtc": "2026-10-22T07:58:58.5845034Z",
+    "elapsedMs": 6295,
+    "exit": 1,
+    "timedOut": false,
+    "identities": [
+      {
+        "role": "maven-launcher",
+        "pid": 40656,
+        "alive": false,
+        "startTicks": 639282527322925679,
+        "parent": 0
+      },
+      {
+        "role": "descendant",
+        "pid": 48116,
+        "alive": false,
+        "startTicks": 639282527322987687,
+        "parent": 40656
+      },
+      {
+        "role": "descendant",
+        "pid": 58300,
+        "alive": false,
+        "startTicks": 639282527370554327,
+        "parent": 40656
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/red3-acl-command.json",
+      "bytes": 1430,
+      "sha256": "898f89180847c679c44aa0434cb2c3dae217011158926dc874b154fcf6773457"
+    },
+    "executable": "C:\\WINDOWS/System32/icacls.exe",
+    "arguments": [
+      "G:/207/项目/算法重组工具/代码/agent-platform/.local/iam-model-frozen-wire/red3-runtime",
+      "/inheritance:r",
+      "/grant:r",
+      "\"*S-1-5-21-2362812570-2618363083-3646905477-500:(OI)(CI)F\"",
+      "\"SYSTEM:(OI)(CI)F\""
+    ],
+    "startedUtc": "2026-10-22T08:02:04.4291381Z",
+    "endedUtc": "2026-10-22T08:02:04.8566534Z",
+    "elapsedMs": 427,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "role": "own-epoch-acl",
+        "parent": 0,
+        "alive": false,
+        "startTicks": 639282529244468911,
+        "pid": 58656
+      },
+      {
+        "role": "descendant",
+        "parent": 58656,
+        "alive": false,
+        "startTicks": 639282529244542881,
+        "pid": 44888
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/red3-group-1.json",
+      "bytes": 2160,
+      "sha256": "a40ba737c279ab1f9b6f2a0f3e592a9a8617b5991ebd19ccc9927d2186e65691"
+    },
+    "executable": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/java.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-red3-group-1.args"
+    ],
+    "startedUtc": "2026-10-22T08:02:10.2628577Z",
+    "endedUtc": "2026-10-22T08:02:20.5392716Z",
+    "elapsedMs": 10276,
+    "exit": 1,
+    "timedOut": false,
+    "identities": [
+      {
+        "role": "maven-launcher",
+        "parent": 0,
+        "alive": false,
+        "startTicks": 639282529302675749,
+        "pid": 30676
+      },
+      {
+        "role": "descendant",
+        "parent": 30676,
+        "alive": false,
+        "startTicks": 639282529302826855,
+        "pid": 1236
+      },
+      {
+        "role": "descendant",
+        "parent": 30676,
+        "alive": false,
+        "startTicks": 639282529341926893,
+        "pid": 35920
+      },
+      {
+        "role": "descendant",
+        "parent": 35920,
+        "alive": false,
+        "startTicks": 639282529342123103,
+        "pid": 62708
+      },
+      {
+        "role": "descendant",
+        "parent": 35920,
+        "alive": false,
+        "startTicks": 639282529342295649,
+        "pid": 18788
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/refresh-final2-command.json",
+      "bytes": 980,
+      "sha256": "8f5c892471572f8d0d743e8c8db1274e8404abf4ff25d699a7fd52d4418643de"
+    },
+    "executable": "C:\\Python314\\python.exe",
+    "arguments": [
+      "V:/.tools/iam-model-frozen-wire-tools.py",
+      "refresh",
+      "final2",
+      ""
+    ],
+    "startedUtc": "2026-10-22T08:10:58.1799789Z",
+    "endedUtc": "2026-10-22T08:10:58.5188800Z",
+    "elapsedMs": 338,
+    "exit": 1,
+    "timedOut": false,
+    "identities": [
+      {
+        "parent": 0,
+        "pid": 42132,
+        "alive": false,
+        "role": "own-wire-helper",
+        "startTicks": 639282534581841577
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/refresh2-final2-command.json",
+      "bytes": 1275,
+      "sha256": "98dba3cd6b30bab73dcc755f77ef828dbace77befe9cc9e157ea1666d524accc"
+    },
+    "executable": "C:\\Python314\\python.exe",
+    "arguments": [
+      "V:/.tools/iam-model-frozen-wire-tools.py",
+      "refresh2",
+      "final2",
+      ""
+    ],
+    "startedUtc": "2026-10-22T08:11:18.6156253Z",
+    "endedUtc": "2026-10-22T08:11:23.4043356Z",
+    "elapsedMs": 4790,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "parent": 0,
+        "pid": 52968,
+        "startTicks": 639282534786251753,
+        "alive": false,
+        "role": "own-wire-helper"
+      },
+      {
+        "parent": 52968,
+        "pid": 51296,
+        "startTicks": 639282534786333335,
+        "alive": false,
+        "role": "descendant"
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/refresh3-final3-command.json",
+      "bytes": 1279,
+      "sha256": "4ff2390cdbdd180278eb2b1b5096a9cc4e04efce35ee821f97ff59545fb6857f"
+    },
+    "executable": "C:\\Python314\\python.exe",
+    "arguments": [
+      "V:/.tools/iam-model-frozen-wire-tools.py",
+      "refresh3",
+      "final3",
+      "final2"
+    ],
+    "startedUtc": "2026-10-22T08:15:07.7131918Z",
+    "endedUtc": "2026-10-22T08:15:08.1031071Z",
+    "elapsedMs": 389,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "pid": 48084,
+        "alive": false,
+        "startTicks": 639282537077188722,
+        "parent": 0,
+        "role": "own-wire-helper"
+      },
+      {
+        "pid": 21080,
+        "alive": false,
+        "startTicks": 639282537077251189,
+        "parent": 48084,
+        "role": "descendant"
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/workcopy-final-command.json",
+      "bytes": 1273,
+      "sha256": "45d594fba85398ad8ec9b4cbea938541bd62c76779ac4c284c2bd9966b211344"
+    },
+    "executable": "C:\\Python314\\python.exe",
+    "arguments": [
+      "V:/.tools/iam-model-frozen-wire-tools.py",
+      "workcopy",
+      "final",
+      ""
+    ],
+    "startedUtc": "2026-10-22T08:06:16.0686038Z",
+    "endedUtc": "2026-10-22T08:06:23.1497376Z",
+    "elapsedMs": 7081,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "parent": 0,
+        "startTicks": 639282531760725570,
+        "alive": false,
+        "pid": 54840,
+        "role": "own-wire-helper"
+      },
+      {
+        "parent": 54840,
+        "startTicks": 639282531760795823,
+        "alive": false,
+        "pid": 14436,
+        "role": "descendant"
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/native/apply-check.json",
+      "bytes": 1336,
+      "sha256": "7cb6fd17c516961b15b8d97c12dbb04c93bd171b96178aeb8ca0897cd865bec0"
+    },
+    "executable": "C:/Program Files/Git/cmd/git.exe",
+    "arguments": [
+      "-C",
+      "V:/.local/iam-model-frozen-wire/native/replay",
+      "-c",
+      "core.autocrlf=false",
+      "-c",
+      "core.safecrlf=false",
+      "-c",
+      "core.whitespace=cr-at-eol",
+      "-c",
+      "core.quotepath=false",
+      "-c",
+      "core.fsmonitor=false",
+      "-c",
+      "core.attributesFile=NUL",
+      "-c",
+      "diff.external=",
+      "apply",
+      "--check",
+      "V:/.local/iam-model-frozen-wire/native/frozen-wire.diff"
+    ],
+    "startedUtc": "2026-10-22T08:23:46.3910801Z",
+    "endedUtc": "2026-10-22T08:23:46.6977719Z",
+    "elapsedMs": 306,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "alive": false,
+        "role": "own-native-git",
+        "pid": 54460,
+        "startTicks": 639282542263999033,
+        "parent": 0
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/native/apply.json",
+      "bytes": 1348,
+      "sha256": "419b80936fc9be23563cb117bb0709cf640c164e17da9b39480978a5d8955702"
+    },
+    "executable": "C:/Program Files/Git/cmd/git.exe",
+    "arguments": [
+      "-C",
+      "V:/.local/iam-model-frozen-wire/native/replay",
+      "-c",
+      "core.autocrlf=false",
+      "-c",
+      "core.safecrlf=false",
+      "-c",
+      "core.whitespace=cr-at-eol",
+      "-c",
+      "core.quotepath=false",
+      "-c",
+      "core.fsmonitor=false",
+      "-c",
+      "core.attributesFile=NUL",
+      "-c",
+      "diff.external=",
+      "apply",
+      "--whitespace=nowarn",
+      "V:/.local/iam-model-frozen-wire/native/frozen-wire.diff"
+    ],
+    "startedUtc": "2026-10-22T08:23:46.6994570Z",
+    "endedUtc": "2026-10-22T08:23:47.0065781Z",
+    "elapsedMs": 307,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "alive": false,
+        "role": "own-native-git",
+        "pid": 31600,
+        "startTicks": 639282542267088990,
+        "parent": 0
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/native/diff-check.json",
+      "bytes": 1313,
+      "sha256": "f349396d3ba7ac73c4e6c3a23fa7bba736b3d81a35259b935af8e9df03e946d1"
+    },
+    "executable": "C:/Program Files/Git/cmd/git.exe",
+    "arguments": [
+      "-C",
+      "V:/.local/iam-model-frozen-wire/native/diff",
+      "-c",
+      "core.autocrlf=false",
+      "-c",
+      "core.safecrlf=false",
+      "-c",
+      "core.whitespace=cr-at-eol",
+      "-c",
+      "core.quotepath=false",
+      "-c",
+      "core.fsmonitor=false",
+      "-c",
+      "core.attributesFile=NUL",
+      "-c",
+      "diff.external=",
+      "diff",
+      "--check",
+      "--no-ext-diff",
+      "--no-textconv"
+    ],
+    "startedUtc": "2026-10-22T08:23:44.8902540Z",
+    "endedUtc": "2026-10-22T08:23:45.1894192Z",
+    "elapsedMs": 299,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "alive": false,
+        "role": "own-native-git",
+        "pid": 41088,
+        "startTicks": 639282542248972776,
+        "parent": 0
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/native/diff.json",
+      "bytes": 1408,
+      "sha256": "f521a2c1126fb75e6bda8e668e8643ae2b24156a077f6ac4d4b7ce416cd493f0"
+    },
+    "executable": "C:/Program Files/Git/cmd/git.exe",
+    "arguments": [
+      "-C",
+      "V:/.local/iam-model-frozen-wire/native/diff",
+      "-c",
+      "core.autocrlf=false",
+      "-c",
+      "core.safecrlf=false",
+      "-c",
+      "core.whitespace=cr-at-eol",
+      "-c",
+      "core.quotepath=false",
+      "-c",
+      "core.fsmonitor=false",
+      "-c",
+      "core.attributesFile=NUL",
+      "-c",
+      "diff.external=",
+      "diff",
+      "--binary",
+      "--full-index",
+      "--no-ext-diff",
+      "--no-textconv",
+      "--output=V:/.local/iam-model-frozen-wire/native/frozen-wire.diff"
+    ],
+    "startedUtc": "2026-10-22T08:23:45.1908355Z",
+    "endedUtc": "2026-10-22T08:23:45.4827558Z",
+    "elapsedMs": 291,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "alive": false,
+        "role": "own-native-git",
+        "pid": 60504,
+        "startTicks": 639282542251949449,
+        "parent": 0
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/native/index-batch-1.json",
+      "bytes": 1945,
+      "sha256": "6b19581b90b3688f8f71ac7a56b64c452b085c3c2dc3b1aaa8193942fb48e780"
+    },
+    "executable": "C:/Program Files/Git/cmd/git.exe",
+    "arguments": [
+      "-C",
+      "V:/.local/iam-model-frozen-wire/native/diff",
+      "-c",
+      "core.autocrlf=false",
+      "-c",
+      "core.safecrlf=false",
+      "-c",
+      "core.whitespace=cr-at-eol",
+      "-c",
+      "core.quotepath=false",
+      "-c",
+      "core.fsmonitor=false",
+      "-c",
+      "core.attributesFile=NUL",
+      "-c",
+      "diff.external=",
+      "add",
+      "--pathspec-from-file=V:/.local/iam-model-frozen-wire/native/index-1.nul",
+      "--pathspec-file-nul"
+    ],
+    "startedUtc": "2026-10-22T08:23:08.8049269Z",
+    "endedUtc": "2026-10-22T08:23:13.4526507Z",
+    "elapsedMs": 4647,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "alive": false,
+        "role": "own-native-git",
+        "pid": 53880,
+        "startTicks": 639282541888082725,
+        "parent": 0
+      },
+      {
+        "alive": false,
+        "role": "descendant",
+        "pid": 60656,
+        "startTicks": 639282541888126837,
+        "parent": 53880
+      },
+      {
+        "alive": false,
+        "role": "descendant",
+        "pid": 50240,
+        "startTicks": 639282541888684313,
+        "parent": 53880
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/native/index-batch-2.json",
+      "bytes": 1945,
+      "sha256": "7ae84a2a2a2a0f454e5bb3bae24fc8ad142587041e141a4f8e84b96cf96d6ddf"
+    },
+    "executable": "C:/Program Files/Git/cmd/git.exe",
+    "arguments": [
+      "-C",
+      "V:/.local/iam-model-frozen-wire/native/diff",
+      "-c",
+      "core.autocrlf=false",
+      "-c",
+      "core.safecrlf=false",
+      "-c",
+      "core.whitespace=cr-at-eol",
+      "-c",
+      "core.quotepath=false",
+      "-c",
+      "core.fsmonitor=false",
+      "-c",
+      "core.attributesFile=NUL",
+      "-c",
+      "diff.external=",
+      "add",
+      "--pathspec-from-file=V:/.local/iam-model-frozen-wire/native/index-2.nul",
+      "--pathspec-file-nul"
+    ],
+    "startedUtc": "2026-10-22T08:23:13.5183682Z",
+    "endedUtc": "2026-10-22T08:23:18.5356997Z",
+    "elapsedMs": 5017,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "alive": false,
+        "role": "own-native-git",
+        "pid": 61864,
+        "startTicks": 639282541935213085,
+        "parent": 0
+      },
+      {
+        "alive": false,
+        "role": "descendant",
+        "pid": 25196,
+        "startTicks": 639282541935260086,
+        "parent": 61864
+      },
+      {
+        "alive": false,
+        "role": "descendant",
+        "pid": 14724,
+        "startTicks": 639282541935757580,
+        "parent": 61864
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/native/index-batch-3.json",
+      "bytes": 1945,
+      "sha256": "ab8e47ffd11280d9bc0d64b425f668f88dec82a458112ce8c2d028e51539602f"
+    },
+    "executable": "C:/Program Files/Git/cmd/git.exe",
+    "arguments": [
+      "-C",
+      "V:/.local/iam-model-frozen-wire/native/diff",
+      "-c",
+      "core.autocrlf=false",
+      "-c",
+      "core.safecrlf=false",
+      "-c",
+      "core.whitespace=cr-at-eol",
+      "-c",
+      "core.quotepath=false",
+      "-c",
+      "core.fsmonitor=false",
+      "-c",
+      "core.attributesFile=NUL",
+      "-c",
+      "diff.external=",
+      "add",
+      "--pathspec-from-file=V:/.local/iam-model-frozen-wire/native/index-3.nul",
+      "--pathspec-file-nul"
+    ],
+    "startedUtc": "2026-10-22T08:23:18.5372919Z",
+    "endedUtc": "2026-10-22T08:23:23.7060957Z",
+    "elapsedMs": 5168,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "alive": false,
+        "role": "own-native-git",
+        "pid": 21472,
+        "startTicks": 639282541985451046,
+        "parent": 0
+      },
+      {
+        "alive": false,
+        "role": "descendant",
+        "pid": 10660,
+        "startTicks": 639282541985502882,
+        "parent": 21472
+      },
+      {
+        "alive": false,
+        "role": "descendant",
+        "pid": 42732,
+        "startTicks": 639282541985935856,
+        "parent": 21472
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/native/index-batch-4.json",
+      "bytes": 1945,
+      "sha256": "44e51cfa3ea21e14f3f07306466bffb4a319263300bc05adc8964385882abc35"
+    },
+    "executable": "C:/Program Files/Git/cmd/git.exe",
+    "arguments": [
+      "-C",
+      "V:/.local/iam-model-frozen-wire/native/diff",
+      "-c",
+      "core.autocrlf=false",
+      "-c",
+      "core.safecrlf=false",
+      "-c",
+      "core.whitespace=cr-at-eol",
+      "-c",
+      "core.quotepath=false",
+      "-c",
+      "core.fsmonitor=false",
+      "-c",
+      "core.attributesFile=NUL",
+      "-c",
+      "diff.external=",
+      "add",
+      "--pathspec-from-file=V:/.local/iam-model-frozen-wire/native/index-4.nul",
+      "--pathspec-file-nul"
+    ],
+    "startedUtc": "2026-10-22T08:23:23.7077578Z",
+    "endedUtc": "2026-10-22T08:23:28.4123649Z",
+    "elapsedMs": 4704,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "alive": false,
+        "role": "own-native-git",
+        "pid": 45932,
+        "startTicks": 639282542037287340,
+        "parent": 0
+      },
+      {
+        "alive": false,
+        "role": "descendant",
+        "pid": 19948,
+        "startTicks": 639282542037327362,
+        "parent": 45932
+      },
+      {
+        "alive": false,
+        "role": "descendant",
+        "pid": 49176,
+        "startTicks": 639282542037805437,
+        "parent": 45932
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/native/index-batch-5.json",
+      "bytes": 1945,
+      "sha256": "278b2f007b7698b3093be9ba2e9a5bccad441239f44d2b0280c6073cfb948899"
+    },
+    "executable": "C:/Program Files/Git/cmd/git.exe",
+    "arguments": [
+      "-C",
+      "V:/.local/iam-model-frozen-wire/native/diff",
+      "-c",
+      "core.autocrlf=false",
+      "-c",
+      "core.safecrlf=false",
+      "-c",
+      "core.whitespace=cr-at-eol",
+      "-c",
+      "core.quotepath=false",
+      "-c",
+      "core.fsmonitor=false",
+      "-c",
+      "core.attributesFile=NUL",
+      "-c",
+      "diff.external=",
+      "add",
+      "--pathspec-from-file=V:/.local/iam-model-frozen-wire/native/index-5.nul",
+      "--pathspec-file-nul"
+    ],
+    "startedUtc": "2026-10-22T08:23:28.4142335Z",
+    "endedUtc": "2026-10-22T08:23:31.5897042Z",
+    "elapsedMs": 3175,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "alive": false,
+        "role": "own-native-git",
+        "pid": 45804,
+        "startTicks": 639282542084171674,
+        "parent": 0
+      },
+      {
+        "alive": false,
+        "role": "descendant",
+        "pid": 50380,
+        "startTicks": 639282542084222076,
+        "parent": 45804
+      },
+      {
+        "alive": false,
+        "role": "descendant",
+        "pid": 61328,
+        "startTicks": 639282542084698987,
+        "parent": 45804
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/native/index-batch-6.json",
+      "bytes": 1945,
+      "sha256": "c97a01fca21935355c055fd741b497880e2bafcba68a52555fd5cc678a915a64"
+    },
+    "executable": "C:/Program Files/Git/cmd/git.exe",
+    "arguments": [
+      "-C",
+      "V:/.local/iam-model-frozen-wire/native/diff",
+      "-c",
+      "core.autocrlf=false",
+      "-c",
+      "core.safecrlf=false",
+      "-c",
+      "core.whitespace=cr-at-eol",
+      "-c",
+      "core.quotepath=false",
+      "-c",
+      "core.fsmonitor=false",
+      "-c",
+      "core.attributesFile=NUL",
+      "-c",
+      "diff.external=",
+      "add",
+      "--pathspec-from-file=V:/.local/iam-model-frozen-wire/native/index-6.nul",
+      "--pathspec-file-nul"
+    ],
+    "startedUtc": "2026-10-22T08:23:31.5913453Z",
+    "endedUtc": "2026-10-22T08:23:34.7863718Z",
+    "elapsedMs": 3195,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "alive": false,
+        "role": "own-native-git",
+        "pid": 57544,
+        "startTicks": 639282542115946105,
+        "parent": 0
+      },
+      {
+        "alive": false,
+        "role": "descendant",
+        "pid": 24808,
+        "startTicks": 639282542116006830,
+        "parent": 57544
+      },
+      {
+        "alive": false,
+        "role": "descendant",
+        "pid": 42312,
+        "startTicks": 639282542116527096,
+        "parent": 57544
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/native/index-batch-7.json",
+      "bytes": 1945,
+      "sha256": "5f5d6bff5ba959a69c63785c33411ef820fd3b68cfd05fa8c65d7aeb72b7dec7"
+    },
+    "executable": "C:/Program Files/Git/cmd/git.exe",
+    "arguments": [
+      "-C",
+      "V:/.local/iam-model-frozen-wire/native/diff",
+      "-c",
+      "core.autocrlf=false",
+      "-c",
+      "core.safecrlf=false",
+      "-c",
+      "core.whitespace=cr-at-eol",
+      "-c",
+      "core.quotepath=false",
+      "-c",
+      "core.fsmonitor=false",
+      "-c",
+      "core.attributesFile=NUL",
+      "-c",
+      "diff.external=",
+      "add",
+      "--pathspec-from-file=V:/.local/iam-model-frozen-wire/native/index-7.nul",
+      "--pathspec-file-nul"
+    ],
+    "startedUtc": "2026-10-22T08:23:34.7878443Z",
+    "endedUtc": "2026-10-22T08:23:38.1078006Z",
+    "elapsedMs": 3319,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "alive": false,
+        "role": "own-native-git",
+        "pid": 21056,
+        "startTicks": 639282542147915129,
+        "parent": 0
+      },
+      {
+        "alive": false,
+        "role": "descendant",
+        "pid": 56936,
+        "startTicks": 639282542147965975,
+        "parent": 21056
+      },
+      {
+        "alive": false,
+        "role": "descendant",
+        "pid": 29388,
+        "startTicks": 639282542148556769,
+        "parent": 21056
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/native/index-batch-8.json",
+      "bytes": 1945,
+      "sha256": "9179942c8cf88cd6595c5a391480b55e9d5d51e99d3ef31ab0f5092085e37ae3"
+    },
+    "executable": "C:/Program Files/Git/cmd/git.exe",
+    "arguments": [
+      "-C",
+      "V:/.local/iam-model-frozen-wire/native/diff",
+      "-c",
+      "core.autocrlf=false",
+      "-c",
+      "core.safecrlf=false",
+      "-c",
+      "core.whitespace=cr-at-eol",
+      "-c",
+      "core.quotepath=false",
+      "-c",
+      "core.fsmonitor=false",
+      "-c",
+      "core.attributesFile=NUL",
+      "-c",
+      "diff.external=",
+      "add",
+      "--pathspec-from-file=V:/.local/iam-model-frozen-wire/native/index-8.nul",
+      "--pathspec-file-nul"
+    ],
+    "startedUtc": "2026-10-22T08:23:38.1093949Z",
+    "endedUtc": "2026-10-22T08:23:41.6698688Z",
+    "elapsedMs": 3560,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "alive": false,
+        "role": "own-native-git",
+        "pid": 15648,
+        "startTicks": 639282542181125829,
+        "parent": 0
+      },
+      {
+        "alive": false,
+        "role": "descendant",
+        "pid": 52984,
+        "startTicks": 639282542181182915,
+        "parent": 15648
+      },
+      {
+        "alive": false,
+        "role": "descendant",
+        "pid": 16240,
+        "startTicks": 639282542181693561,
+        "parent": 15648
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/native/index-batch-9.json",
+      "bytes": 1945,
+      "sha256": "dd27f84355c2e67fcdc9c36e83bc82633170cd1fdf0b520913c1c78a8ce938d2"
+    },
+    "executable": "C:/Program Files/Git/cmd/git.exe",
+    "arguments": [
+      "-C",
+      "V:/.local/iam-model-frozen-wire/native/diff",
+      "-c",
+      "core.autocrlf=false",
+      "-c",
+      "core.safecrlf=false",
+      "-c",
+      "core.whitespace=cr-at-eol",
+      "-c",
+      "core.quotepath=false",
+      "-c",
+      "core.fsmonitor=false",
+      "-c",
+      "core.attributesFile=NUL",
+      "-c",
+      "diff.external=",
+      "add",
+      "--pathspec-from-file=V:/.local/iam-model-frozen-wire/native/index-9.nul",
+      "--pathspec-file-nul"
+    ],
+    "startedUtc": "2026-10-22T08:23:41.6710323Z",
+    "endedUtc": "2026-10-22T08:23:43.8479748Z",
+    "elapsedMs": 2176,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "alive": false,
+        "role": "own-native-git",
+        "pid": 49372,
+        "startTicks": 639282542216782081,
+        "parent": 0
+      },
+      {
+        "alive": false,
+        "role": "descendant",
+        "pid": 56204,
+        "startTicks": 639282542216825859,
+        "parent": 49372
+      },
+      {
+        "alive": false,
+        "role": "descendant",
+        "pid": 43236,
+        "startTicks": 639282542217328187,
+        "parent": 49372
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/native/index-stage-audit.json",
+      "bytes": 1284,
+      "sha256": "4aeec858a4284c9ccb9d1401469d68e4ce02bfd3737977a1455fce1e17890e22"
+    },
+    "executable": "C:/Program Files/Git/cmd/git.exe",
+    "arguments": [
+      "-C",
+      "V:/.local/iam-model-frozen-wire/native/diff",
+      "-c",
+      "core.autocrlf=false",
+      "-c",
+      "core.safecrlf=false",
+      "-c",
+      "core.whitespace=cr-at-eol",
+      "-c",
+      "core.quotepath=false",
+      "-c",
+      "core.fsmonitor=false",
+      "-c",
+      "core.attributesFile=NUL",
+      "-c",
+      "diff.external=",
+      "ls-files",
+      "--stage",
+      "-z"
+    ],
+    "startedUtc": "2026-10-22T08:23:44.5859868Z",
+    "endedUtc": "2026-10-22T08:23:44.8885595Z",
+    "elapsedMs": 302,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "alive": false,
+        "role": "own-native-git",
+        "pid": 33020,
+        "startTicks": 639282542246007613,
+        "parent": 0
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/native/init-diff.json",
+      "bytes": 1269,
+      "sha256": "e2612451be9d1b0e283ca53bcc3c12dc5a8916337fafdc5900e09b68976fa870"
+    },
+    "executable": "C:/Program Files/Git/cmd/git.exe",
+    "arguments": [
+      "-C",
+      "V:/.local/iam-model-frozen-wire/native/diff",
+      "-c",
+      "core.autocrlf=false",
+      "-c",
+      "core.safecrlf=false",
+      "-c",
+      "core.whitespace=cr-at-eol",
+      "-c",
+      "core.quotepath=false",
+      "-c",
+      "core.fsmonitor=false",
+      "-c",
+      "core.attributesFile=NUL",
+      "-c",
+      "diff.external=",
+      "init",
+      "--quiet"
+    ],
+    "startedUtc": "2026-10-22T08:23:08.1626202Z",
+    "endedUtc": "2026-10-22T08:23:08.5753002Z",
+    "elapsedMs": 412,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "alive": false,
+        "role": "own-native-git",
+        "pid": 13508,
+        "startTicks": 639282541882042895,
+        "parent": 0
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/native/init-replay.json",
+      "bytes": 1271,
+      "sha256": "184b4cf10ba6c86d7cb95f0c07fd3703064d0c80297ba3d9fcb28ce0aac75d2e"
+    },
+    "executable": "C:/Program Files/Git/cmd/git.exe",
+    "arguments": [
+      "-C",
+      "V:/.local/iam-model-frozen-wire/native/replay",
+      "-c",
+      "core.autocrlf=false",
+      "-c",
+      "core.safecrlf=false",
+      "-c",
+      "core.whitespace=cr-at-eol",
+      "-c",
+      "core.quotepath=false",
+      "-c",
+      "core.fsmonitor=false",
+      "-c",
+      "core.attributesFile=NUL",
+      "-c",
+      "diff.external=",
+      "init",
+      "--quiet"
+    ],
+    "startedUtc": "2026-10-22T08:23:46.0877709Z",
+    "endedUtc": "2026-10-22T08:23:46.3896113Z",
+    "elapsedMs": 301,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "alive": false,
+        "role": "own-native-git",
+        "pid": 19236,
+        "startTicks": 639282542260910230,
+        "parent": 0
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/native/name-status.json",
+      "bytes": 1275,
+      "sha256": "4c3650dab3b37e2fb7e1b5582f67e409a1c158547ad7a1d104d1d86b8d9b56eb"
+    },
+    "executable": "C:/Program Files/Git/cmd/git.exe",
+    "arguments": [
+      "-C",
+      "V:/.local/iam-model-frozen-wire/native/diff",
+      "-c",
+      "core.autocrlf=false",
+      "-c",
+      "core.safecrlf=false",
+      "-c",
+      "core.whitespace=cr-at-eol",
+      "-c",
+      "core.quotepath=false",
+      "-c",
+      "core.fsmonitor=false",
+      "-c",
+      "core.attributesFile=NUL",
+      "-c",
+      "diff.external=",
+      "diff",
+      "--name-status"
+    ],
+    "startedUtc": "2026-10-22T08:23:45.7866007Z",
+    "endedUtc": "2026-10-22T08:23:46.0861335Z",
+    "elapsedMs": 299,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "alive": false,
+        "role": "own-native-git",
+        "pid": 31760,
+        "startTicks": 639282542257894911,
+        "parent": 0
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/native/new-intent.json",
+      "bytes": 1596,
+      "sha256": "318c32b8e92ea2a98a272895b28e29ed821ce242cb4a5fb4076991d8b43060e9"
+    },
+    "executable": "C:/Program Files/Git/cmd/git.exe",
+    "arguments": [
+      "-C",
+      "V:/.local/iam-model-frozen-wire/native/diff",
+      "-c",
+      "core.autocrlf=false",
+      "-c",
+      "core.safecrlf=false",
+      "-c",
+      "core.whitespace=cr-at-eol",
+      "-c",
+      "core.quotepath=false",
+      "-c",
+      "core.fsmonitor=false",
+      "-c",
+      "core.attributesFile=NUL",
+      "-c",
+      "diff.external=",
+      "add",
+      "--intent-to-add",
+      "--",
+      "model-gateway/src/main/java/cn/agentplatform/model/application/FrozenInitialWireGuard.java",
+      "model-gateway/src/test/java/cn/agentplatform/model/application/FrozenInitialWireGuardTest.java",
+      "model-gateway/src/test/java/cn/agentplatform/model/application/FrozenInitialWireGuardHttpTest.java"
+    ],
+    "startedUtc": "2026-10-22T08:23:44.2842379Z",
+    "endedUtc": "2026-10-22T08:23:44.5845305Z",
+    "elapsedMs": 300,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "alive": false,
+        "role": "own-native-git",
+        "pid": 55264,
+        "startTicks": 639282542242879754,
+        "parent": 0
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/native/reviewed-diff.json",
+      "bytes": 1417,
+      "sha256": "53866e8a101be0aab417bb2842f4ac32ee63ab53f8eb9b41e99694e66ece66bb"
+    },
+    "executable": "C:/Program Files/Git/cmd/git.exe",
+    "arguments": [
+      "-C",
+      "V:/.local/iam-model-frozen-wire/native/diff",
+      "-c",
+      "core.autocrlf=false",
+      "-c",
+      "core.safecrlf=false",
+      "-c",
+      "core.whitespace=cr-at-eol",
+      "-c",
+      "core.quotepath=false",
+      "-c",
+      "core.fsmonitor=false",
+      "-c",
+      "core.attributesFile=NUL",
+      "-c",
+      "diff.external=",
+      "diff",
+      "--binary",
+      "--full-index",
+      "--no-ext-diff",
+      "--no-textconv",
+      "--output=V:/.local/iam-model-frozen-wire/native/frozen-wire-reviewed.diff"
+    ],
+    "startedUtc": "2026-10-22T08:23:45.4842050Z",
+    "endedUtc": "2026-10-22T08:23:45.7842938Z",
+    "elapsedMs": 300,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "alive": false,
+        "role": "own-native-git",
+        "pid": 41716,
+        "startTicks": 639282542254868078,
+        "parent": 0
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/red-runtime/close-command.json",
+      "bytes": 1282,
+      "sha256": "df239355205bdfe5458a086b0afea72ad9499e606180726ea132d362941ab2b8"
+    },
+    "executable": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/java.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-red-close.args"
+    ],
+    "startedUtc": "2026-10-22T07:57:47.6771393Z",
+    "endedUtc": "2026-10-22T07:57:51.3759458Z",
+    "elapsedMs": 3698,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "alive": false,
+        "pid": 61784,
+        "startTicks": 639282526677121171,
+        "role": "own-db-control",
+        "parent": 0
+      },
+      {
+        "alive": false,
+        "pid": 32368,
+        "startTicks": 639282526678369521,
+        "role": "descendant",
+        "parent": 61784
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/red-runtime/helper-compile-command.json",
+      "bytes": 1299,
+      "sha256": "3e9b2f2cc0dbe995ac30d11b4f8c4c2662ce51f606b445ffbb7b17eaba6cdf76"
+    },
+    "executable": "C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.12.8-hotspot/bin/javac.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-red-helper-compile.args"
+    ],
+    "startedUtc": "2026-10-22T07:57:08.5955719Z",
+    "endedUtc": "2026-10-22T07:57:10.1354043Z",
+    "elapsedMs": 1539,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "alive": false,
+        "pid": 29664,
+        "startTicks": 639282526285988013,
+        "role": "own-helper-compile",
+        "parent": 0
+      },
+      {
+        "alive": false,
+        "pid": 33772,
+        "startTicks": 639282526288982960,
+        "role": "descendant",
+        "parent": 29664
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/red-runtime/setup-command.json",
+      "bytes": 1282,
+      "sha256": "0f145e8a1103c7581561a11a58cb22ecd0b676562514faef49351d2037829ad0"
+    },
+    "executable": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/java.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-red-setup.args"
+    ],
+    "startedUtc": "2026-10-22T07:57:10.1875368Z",
+    "endedUtc": "2026-10-22T07:57:16.3287171Z",
+    "elapsedMs": 6141,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "alive": false,
+        "pid": 47880,
+        "startTicks": 639282526301911774,
+        "role": "own-db-control",
+        "parent": 0
+      },
+      {
+        "alive": false,
+        "pid": 35416,
+        "startTicks": 639282526301983524,
+        "role": "descendant",
+        "parent": 47880
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/red2-runtime/close-command.json",
+      "bytes": 1283,
+      "sha256": "cadc5f06ad9a384ed9d61014f438b8fff28c6fddcfcd0dfe27ccf404f6113705"
+    },
+    "executable": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/java.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-red2-close.args"
+    ],
+    "startedUtc": "2026-10-22T07:58:59.6260561Z",
+    "endedUtc": "2026-10-22T07:59:02.9034948Z",
+    "elapsedMs": 3277,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "role": "own-db-control",
+        "pid": 31632,
+        "alive": false,
+        "startTicks": 639282527396785958,
+        "parent": 0
+      },
+      {
+        "role": "descendant",
+        "pid": 53400,
+        "alive": false,
+        "startTicks": 639282527396858901,
+        "parent": 31632
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/red2-runtime/helper-compile-command.json",
+      "bytes": 1300,
+      "sha256": "b7cf6dae4e76822ba31c33e7eeec6f361759ae23171dbd25964e131396d7a03a"
+    },
+    "executable": "C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.12.8-hotspot/bin/javac.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-red2-helper-compile.args"
+    ],
+    "startedUtc": "2026-10-22T07:58:45.8019887Z",
+    "endedUtc": "2026-10-22T07:58:47.4242990Z",
+    "elapsedMs": 1622,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "role": "own-helper-compile",
+        "pid": 14924,
+        "alive": false,
+        "startTicks": 639282527258061718,
+        "parent": 0
+      },
+      {
+        "role": "descendant",
+        "pid": 63884,
+        "alive": false,
+        "startTicks": 639282527259107120,
+        "parent": 14924
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/red2-runtime/setup-command.json",
+      "bytes": 1283,
+      "sha256": "ad32f348919ff94653730a063b4cc908af1b18a21f359f1eda529fbefd16f57d"
+    },
+    "executable": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/java.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-red2-setup.args"
+    ],
+    "startedUtc": "2026-10-22T07:58:47.4719242Z",
+    "endedUtc": "2026-10-22T07:58:52.2509717Z",
+    "elapsedMs": 4779,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "role": "own-db-control",
+        "pid": 38724,
+        "alive": false,
+        "startTicks": 639282527274771695,
+        "parent": 0
+      },
+      {
+        "role": "descendant",
+        "pid": 46860,
+        "alive": false,
+        "startTicks": 639282527274824109,
+        "parent": 38724
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/red3-runtime/helper-compile-command.json",
+      "bytes": 1300,
+      "sha256": "2bcda27afc9677a40c5e5fa6d03cf6aa4d8499b4f00fc1b7cd41a1e9193df776"
+    },
+    "executable": "C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.12.8-hotspot/bin/javac.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-red3-helper-compile.args"
+    ],
+    "startedUtc": "2026-10-22T08:02:04.8957301Z",
+    "endedUtc": "2026-10-22T08:02:06.5331068Z",
+    "elapsedMs": 1637,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "role": "own-helper-compile",
+        "parent": 0,
+        "alive": false,
+        "startTicks": 639282529249124440,
+        "pid": 39740
+      },
+      {
+        "role": "descendant",
+        "parent": 39740,
+        "alive": false,
+        "startTicks": 639282529250541570,
+        "pid": 24512
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/red3-runtime/setup-command.json",
+      "bytes": 1283,
+      "sha256": "871d01b5b73f78bf2e4e5f279b22664ebabfb51c8ae48f0ed66e466bf1214722"
+    },
+    "executable": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/java.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-red3-setup.args"
+    ],
+    "startedUtc": "2026-10-22T08:02:06.5596064Z",
+    "endedUtc": "2026-10-22T08:02:10.2253411Z",
+    "elapsedMs": 3665,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "role": "own-db-control",
+        "parent": 0,
+        "alive": false,
+        "startTicks": 639282529265629792,
+        "pid": 25644
+      },
+      {
+        "role": "descendant",
+        "parent": 25644,
+        "alive": false,
+        "startTicks": 639282529265807643,
+        "pid": 40444
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/final-runtime/close-command.json",
+      "bytes": 1284,
+      "sha256": "e575bc033595b7088ef2e503688298441bc4af2d75b0b9c3b0799d496b10b640"
+    },
+    "executable": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/java.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-final-close.args"
+    ],
+    "startedUtc": "2026-10-22T08:08:56.1154009Z",
+    "endedUtc": "2026-10-22T08:08:58.9960615Z",
+    "elapsedMs": 2880,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "parent": 0,
+        "startTicks": 639282533361187332,
+        "pid": 48820,
+        "alive": false,
+        "role": "own-db-control"
+      },
+      {
+        "parent": 48820,
+        "startTicks": 639282533361239711,
+        "pid": 36528,
+        "alive": false,
+        "role": "descendant"
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/final-runtime/engine-command.json",
+      "bytes": 1310,
+      "sha256": "99097a5158064b7c63fbf099a9f9554cb0db556e9635e87ef4ab69045fc6d58f"
+    },
+    "executable": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/java.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-final-engine.args"
+    ],
+    "startedUtc": "2026-10-22T08:08:23.8041209Z",
+    "endedUtc": "2026-10-22T08:08:53.9187990Z",
+    "elapsedMs": 30114,
+    "exit": -1,
+    "timedOut": true,
+    "identities": [
+      {
+        "parent": 0,
+        "startTicks": 639282533038082772,
+        "pid": 61528,
+        "alive": false,
+        "role": "own-fixture"
+      },
+      {
+        "parent": 61528,
+        "startTicks": 639282533038123818,
+        "pid": 23056,
+        "alive": false,
+        "role": "descendant"
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/final-runtime/helper-compile-command.json",
+      "bytes": 1301,
+      "sha256": "7ffcc0739ce99d06a9f9716ef4cb3ea49cd04146852e07775d1bf480305dfe72"
+    },
+    "executable": "C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.12.8-hotspot/bin/javac.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-final-helper-compile.args"
+    ],
+    "startedUtc": "2026-10-22T08:08:20.8711486Z",
+    "endedUtc": "2026-10-22T08:08:22.2903668Z",
+    "elapsedMs": 1419,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "parent": 0,
+        "startTicks": 639282533008741659,
+        "pid": 50364,
+        "alive": false,
+        "role": "own-helper-compile"
+      },
+      {
+        "parent": 50364,
+        "startTicks": 639282533010357245,
+        "pid": 50172,
+        "alive": false,
+        "role": "descendant"
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/final-runtime/seed-command.json",
+      "bytes": 1308,
+      "sha256": "2e91699f63df8b80cadd5edac1dc820fc3e99039efb4b772167d0ef05653904d"
+    },
+    "executable": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/java.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-final-seed.args"
+    ],
+    "startedUtc": "2026-10-22T08:08:22.3733057Z",
+    "endedUtc": "2026-10-22T08:08:52.6901536Z",
+    "elapsedMs": 30316,
+    "exit": -1,
+    "timedOut": true,
+    "identities": [
+      {
+        "parent": 0,
+        "startTicks": 639282533023769708,
+        "pid": 59620,
+        "alive": false,
+        "role": "own-fixture"
+      },
+      {
+        "parent": 59620,
+        "startTicks": 639282533023805643,
+        "pid": 31352,
+        "alive": false,
+        "role": "descendant"
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/final2-local-runtime/helper-compile-command.json",
+      "bytes": 1308,
+      "sha256": "ad2bcaf0eeb78e6df5ba2417145dbe432e1cf0a5f3457aed5e4553e6dbee1e38"
+    },
+    "executable": "C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.12.8-hotspot/bin/javac.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-final2-local-helper-compile.args"
+    ],
+    "startedUtc": "2026-10-22T08:11:57.5772018Z",
+    "endedUtc": "2026-10-22T08:11:59.0162954Z",
+    "elapsedMs": 1439,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "alive": false,
+        "role": "own-helper-compile",
+        "startTicks": 639282535175821512,
+        "parent": 0,
+        "pid": 21440
+      },
+      {
+        "alive": false,
+        "role": "descendant",
+        "startTicks": 639282535175864883,
+        "parent": 21440,
+        "pid": 11160
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/final2-local-runtime/setup-command.json",
+      "bytes": 1291,
+      "sha256": "48e5059533039cb025f78828a4c98d7eb6ba99c2e61c53305d9716eaec5e8bc8"
+    },
+    "executable": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/java.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-final2-local-setup.args"
+    ],
+    "startedUtc": "2026-10-22T08:11:59.0365556Z",
+    "endedUtc": "2026-10-22T08:12:03.0048617Z",
+    "elapsedMs": 3968,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "alive": false,
+        "role": "own-db-control",
+        "startTicks": 639282535190390437,
+        "parent": 0,
+        "pid": 60104
+      },
+      {
+        "alive": false,
+        "role": "descendant",
+        "startTicks": 639282535190426825,
+        "parent": 60104,
+        "pid": 39492
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/final2-local-retry1-runtime/helper-compile-command.json",
+      "bytes": 1315,
+      "sha256": "e7e75ee09f467afdfde7a76e6c96262252b2be5433b73096a3c94a0e4a9273ba"
+    },
+    "executable": "C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.12.8-hotspot/bin/javac.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-final2-local-retry1-helper-compile.args"
+    ],
+    "startedUtc": "2026-10-22T08:15:30.3521854Z",
+    "endedUtc": "2026-10-22T08:15:31.8623444Z",
+    "elapsedMs": 1510,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "alive": false,
+        "pid": 28536,
+        "startTicks": 639282537303554270,
+        "role": "own-helper-compile",
+        "parent": 0
+      },
+      {
+        "alive": false,
+        "pid": 33588,
+        "startTicks": 639282537305090303,
+        "role": "descendant",
+        "parent": 28536
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/final2-http-runtime/engine-command.json",
+      "bytes": 1289,
+      "sha256": "ee23e4d31a2c13d6ad43be9b421b6853c9b67aae781f6aca40c380203fa59f30"
+    },
+    "executable": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/java.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-final2-http-engine.args"
+    ],
+    "startedUtc": "2026-10-22T08:16:18.2217085Z",
+    "endedUtc": "2026-10-22T08:16:47.8473314Z",
+    "elapsedMs": 29625,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "parent": 0,
+        "role": "own-fixture",
+        "alive": false,
+        "startTicks": 639282537782383781,
+        "pid": 49100
+      },
+      {
+        "parent": 49100,
+        "role": "descendant",
+        "alive": false,
+        "startTicks": 639282537782437227,
+        "pid": 29908
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/final2-http-runtime/helper-compile-command.json",
+      "bytes": 1307,
+      "sha256": "44eeb99695caceedd2f0c372d57562bf99b615ee962cf322056265e1c10bb7ed"
+    },
+    "executable": "C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.12.8-hotspot/bin/javac.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-final2-http-helper-compile.args"
+    ],
+    "startedUtc": "2026-10-22T08:16:14.7447206Z",
+    "endedUtc": "2026-10-22T08:16:16.1987047Z",
+    "elapsedMs": 1454,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "parent": 0,
+        "role": "own-helper-compile",
+        "alive": false,
+        "startTicks": 639282537747488345,
+        "pid": 32912
+      },
+      {
+        "parent": 32912,
+        "role": "descendant",
+        "alive": false,
+        "startTicks": 639282537749864587,
+        "pid": 31660
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/final2-http-runtime/seed-command.json",
+      "bytes": 1314,
+      "sha256": "ff00d718e427296a9fd3db063a90df35a0bf7b34df360d231ba46ad4bcb64cbc"
+    },
+    "executable": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/java.exe",
+    "arguments": [
+      "@V:/.tools/iam-model-frozen-wire-final2-http-seed.args"
+    ],
+    "startedUtc": "2026-10-22T08:16:16.2474471Z",
+    "endedUtc": "2026-10-22T08:16:46.4256892Z",
+    "elapsedMs": 30178,
+    "exit": -1,
+    "timedOut": true,
+    "identities": [
+      {
+        "parent": 0,
+        "role": "own-fixture",
+        "alive": false,
+        "startTicks": 639282537763030199,
+        "pid": 53136
+      },
+      {
+        "parent": 53136,
+        "role": "descendant",
+        "alive": false,
+        "startTicks": 639282537763072451,
+        "pid": 53148
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/red-runtime/group-1/capture-command.json",
+      "bytes": 1264,
+      "sha256": "b616a85767c527542615a318556520c3378a787b05a7cff6cbf2a6f97b5a6804"
+    },
+    "executable": "C:\\Python314\\python.exe",
+    "arguments": [
+      "V:/.tools/iam-model-frozen-wire-tools.py",
+      "group",
+      "red",
+      "1"
+    ],
+    "startedUtc": "2026-10-22T07:57:46.6188945Z",
+    "endedUtc": "2026-10-22T07:57:47.3198341Z",
+    "elapsedMs": 701,
+    "exit": 1,
+    "timedOut": false,
+    "identities": [
+      {
+        "alive": false,
+        "pid": 51680,
+        "startTicks": 639282526666375816,
+        "role": "own-capture",
+        "parent": 0
+      },
+      {
+        "alive": false,
+        "pid": 39396,
+        "startTicks": 639282526667016853,
+        "role": "descendant",
+        "parent": 51680
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/red2-runtime/group-1/capture-command.json",
+      "bytes": 1265,
+      "sha256": "73f510bb6f6838f09b1b29f9e8b92d27d33991f0cb1544a8dfa95f569f27f305"
+    },
+    "executable": "C:\\Python314\\python.exe",
+    "arguments": [
+      "V:/.tools/iam-model-frozen-wire-tools.py",
+      "group",
+      "red2",
+      "1"
+    ],
+    "startedUtc": "2026-10-22T07:58:58.5918505Z",
+    "endedUtc": "2026-10-22T07:58:59.3654521Z",
+    "elapsedMs": 773,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "role": "own-capture",
+        "pid": 10572,
+        "alive": false,
+        "startTicks": 639282527386340821,
+        "parent": 0
+      },
+      {
+        "role": "descendant",
+        "pid": 57444,
+        "alive": false,
+        "startTicks": 639282527387156383,
+        "parent": 10572
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/red3-runtime/group-1/capture-command.json",
+      "bytes": 973,
+      "sha256": "e16d414f00d17aadb5c83ae096c4dfd218266c08b77ed0c102e87cdc3a091a73"
+    },
+    "executable": "C:\\Python314\\python.exe",
+    "arguments": [
+      "V:/.tools/iam-model-frozen-wire-tools.py",
+      "group",
+      "red3",
+      "1"
+    ],
+    "startedUtc": "2026-10-22T08:02:20.5431595Z",
+    "endedUtc": "2026-10-22T08:02:20.8755945Z",
+    "elapsedMs": 332,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "role": "own-capture",
+        "parent": 0,
+        "alive": false,
+        "startTicks": 639282529405459956,
+        "pid": 56296
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/final-runtime/group-1/capture-command.json",
+      "bytes": 974,
+      "sha256": "65bbae5d7e780db79a4906f7fc5cf4c904971a4428bdf9a5b7ef093a4f526598"
+    },
+    "executable": "C:\\Python314\\python.exe",
+    "arguments": [
+      "V:/.tools/iam-model-frozen-wire-tools.py",
+      "group",
+      "final",
+      "1"
+    ],
+    "startedUtc": "2026-10-22T08:08:55.7454103Z",
+    "endedUtc": "2026-10-22T08:08:56.0680472Z",
+    "elapsedMs": 322,
+    "exit": 1,
+    "timedOut": false,
+    "identities": [
+      {
+        "parent": 0,
+        "startTicks": 639282533357491388,
+        "pid": 18140,
+        "alive": false,
+        "role": "own-capture"
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/final2-local-runtime/group-1/capture-command.json",
+      "bytes": 1273,
+      "sha256": "f1644126be23b95aa1c39ad642b039f84a05aafe2069452c98ae68d0405f65f2"
+    },
+    "executable": "C:\\Python314\\python.exe",
+    "arguments": [
+      "V:/.tools/iam-model-frozen-wire-tools.py",
+      "group",
+      "final2-local",
+      "1"
+    ],
+    "startedUtc": "2026-10-22T08:12:17.6775070Z",
+    "endedUtc": "2026-10-22T08:12:18.0044135Z",
+    "elapsedMs": 326,
+    "exit": 1,
+    "timedOut": false,
+    "identities": [
+      {
+        "alive": false,
+        "role": "own-capture",
+        "startTicks": 639282535376805577,
+        "parent": 0,
+        "pid": 49496
+      },
+      {
+        "alive": false,
+        "role": "descendant",
+        "startTicks": 639282535376871859,
+        "parent": 49496,
+        "pid": 62100
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/final2-local-retry1-runtime/group-1/capture-command.json",
+      "bytes": 988,
+      "sha256": "304ee97f4d508fb84cfe14364d4c6e520dc42426e902e6dba2eb042bb6b64d4a"
+    },
+    "executable": "C:\\Python314\\python.exe",
+    "arguments": [
+      "V:/.tools/iam-model-frozen-wire-tools.py",
+      "group",
+      "final2-local-retry1",
+      "1"
+    ],
+    "startedUtc": "2026-10-22T08:15:48.6313475Z",
+    "endedUtc": "2026-10-22T08:15:48.9414563Z",
+    "elapsedMs": 310,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "alive": false,
+        "pid": 16008,
+        "startTicks": 639282537486358969,
+        "role": "own-capture",
+        "parent": 0
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".local/iam-model-frozen-wire/final2-http-runtime/group-1/capture-command.json",
+      "bytes": 980,
+      "sha256": "1a936d399dcea798cdadaa7122cb45007e298897049e259fd2a7c13912c3f475"
+    },
+    "executable": "C:\\Python314\\python.exe",
+    "arguments": [
+      "V:/.tools/iam-model-frozen-wire-tools.py",
+      "group",
+      "final2-http",
+      "1"
+    ],
+    "startedUtc": "2026-10-22T08:16:46.1387575Z",
+    "endedUtc": "2026-10-22T08:16:46.5253194Z",
+    "elapsedMs": 386,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "parent": 0,
+        "role": "own-capture",
+        "alive": false,
+        "startTicks": 639282538061422654,
+        "pid": 37692
+      }
+    ]
+  },
+  {
+    "evidence": {
+      "file": ".tools/iam-model-frozen-wire-acl-repair.json",
+      "bytes": 1104,
+      "sha256": "8c481fd0d4bf906a92ea31659ae26ce80120fc8e542faf7febfa12640843422e"
+    },
+    "executable": "C:\\WINDOWS/System32/icacls.exe",
+    "arguments": [
+      "G:/207/项目/算法重组工具/代码/agent-platform/.local/iam-model-frozen-wire",
+      "/grant:r",
+      "\"*S-1-5-21-2362812570-2618363083-3646905477-500:(OI)(CI)F\"",
+      "\"SYSTEM:(OI)(CI)F\""
+    ],
+    "startedUtc": "2026-10-22T07:49:15.6853809Z",
+    "endedUtc": "2026-10-22T07:49:16.1306889Z",
+    "elapsedMs": 447,
+    "exit": 0,
+    "timedOut": false,
+    "identities": [
+      {
+        "pid": 20236,
+        "role": "own-acl-repair",
+        "parent": 0,
+        "startTicks": 639282521556970713,
+        "alive": false
+      }
+    ]
+  }
+]

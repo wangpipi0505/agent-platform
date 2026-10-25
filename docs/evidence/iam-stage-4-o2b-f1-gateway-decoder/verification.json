@@ -1,0 +1,217 @@
+{
+  "status": "PASS",
+  "sourceBefore": 608,
+  "sourceAfter": 612,
+  "delta": 4,
+  "new": 4,
+  "sourceEpoch": {
+    "file": ".local/iam-o2b-f1-gateway-decoder/iam-stage-o2b-f1-final/source-epoch.json",
+    "bytes": 117016,
+    "sha256": "b391ee9fe99f69b51066006bdb468bcf4750cf2f6bd16a2dc22ae458fae301f4"
+  },
+  "sourceAfterManifest": {
+    "file": ".local/iam-o2b-f1-gateway-decoder/source-after.json",
+    "bytes": 117016,
+    "sha256": "b391ee9fe99f69b51066006bdb468bcf4750cf2f6bd16a2dc22ae458fae301f4"
+  },
+  "actualFinal": {
+    "exit": 0,
+    "running": [
+      "cn.agentplatform.gateway.infra.PortalEventsPacketBudgetTest",
+      "cn.agentplatform.gateway.infra.PortalEventsPacketDecoderTest"
+    ],
+    "suites": [
+      {
+        "xml": {
+          "file": ".local/iam-o2b-f1-gateway-decoder/iam-stage-o2b-f1-final/reports/TEST-cn.agentplatform.gateway.infra.PortalEventsPacketBudgetTest.xml",
+          "bytes": 40678,
+          "sha256": "f0b66c3d370c7c355de00040e71f62ef1b477483166bf6859e758c6fbbf8f985"
+        },
+        "tests": 9,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "methods": [
+          "twoOwnersThirdRejectedAndCloseRestoresSlots",
+          "ownerLimitIsExactGlobalLedgerIsSharedAndFailedAllocationRollsBack",
+          "selectedJacksonProviderActuallyAllocatesBoundedReaderBackingAndNoSharedCaches",
+          "inputIsBoundOnceAndClosingDecoderDoesNotCloseUpstream",
+          "realWireAllocationIsPrechargedAndNoNextPacketIsRead",
+          "oneOwnerHasOneDecoderForItsEntireLifetime",
+          "packetMustCloseBeforeNextReadAndBorrowRejectsClose",
+          "blockedInputAndInterruptDoNotReleaseUntilRealExit",
+          "invalidHugeLengthNeverAllocatesOrReadsDeclaredBody"
+        ]
+      },
+      {
+        "xml": {
+          "file": ".local/iam-o2b-f1-gateway-decoder/iam-stage-o2b-f1-final/reports/TEST-cn.agentplatform.gateway.infra.PortalEventsPacketDecoderTest.xml",
+          "bytes": 40481,
+          "sha256": "377e408d1dbe29b3c60f575e7121c5574bb5e2ba08c719d6918509ca7470070e"
+        },
+        "tests": 11,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "methods": [
+          "windowRootShapeAndNullnessAreOnlyStructuralChecks",
+          "capacityHasExactCodeAndEndsResponse",
+          "strictJsonRejectsDuplicateUnknownTrailingAndEncodingsWithCorrectHashes",
+          "maximumWireAndUnsignedLengthLimits",
+          "everyPartialSegmentFailsAndBoundaryEofIsEmpty",
+          "acceptedTwelveEncoderVectorsRemainUntrustedWithSmallReads",
+          "exactStructureDepthTokenStringNameAndNumberLimits",
+          "prefixOrderingAndAllDigestFieldsAreChecked",
+          "eventTypeUtf16AndHeaderIntegerLimitsPreserveOriginalText",
+          "exactHeaderSchemaTypesAndScalarBoundaries",
+          "magicFailureIsTerminal"
+        ]
+      }
+    ],
+    "counts": {
+      "tests": 20,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "compilerLines": [
+      "[INFO] Nothing to compile - all classes are up to date.",
+      "[INFO] Nothing to compile - all classes are up to date.",
+      "[INFO] Recompiling the module because of changed source code.",
+      "[INFO] Compiling 16 source files with javac [debug parameters release 21] to target\\classes",
+      "[INFO] Recompiling the module because of changed dependency.",
+      "[INFO] Compiling 13 source files with javac [debug parameters release 21] to target\\test-classes"
+    ]
+  },
+  "finiteTargetOverlayCount": 293,
+  "logicalTargetCount": 2167,
+  "replay": {
+    "status": "BYTE_CORRECTIVE_ARTIFACT_FULL612_EXACT",
+    "files": 612,
+    "namesBytesShaExact": true,
+    "delta": 4,
+    "new": 4,
+    "patch": {
+      "file": "docs/evidence/iam-stage-4-o2b-f1-gateway-decoder/source-byte-corrected.patch",
+      "bytes": 22378,
+      "sha256": "84170b4f2c090cc051e4f9c50b7c1d9ab66fcd1ecb873ede327b453bb7348101"
+    },
+    "commands": {
+      "file": "docs/evidence/iam-stage-4-o2b-f1-gateway-decoder/byte-corrected-replay-commands.json",
+      "bytes": 41838,
+      "sha256": "0a1c5dbf108f490438d5e2cdb7205500bd186fc8af3f470e3327f886e44d52d5"
+    },
+    "source": {
+      "file": ".local/iam-o2b-f1-gateway-decoder/byte-corrected-replay-source.json",
+      "bytes": 117016,
+      "sha256": "b391ee9fe99f69b51066006bdb468bcf4750cf2f6bd16a2dc22ae458fae301f4"
+    },
+    "replayRoot": ".local/iam-o2b-f1-gateway-decoder/byte-corrected-replay",
+    "check": 0,
+    "apply": 0,
+    "checkAttempts": 1,
+    "applyAttempts": 1,
+    "noSourceCopiesAfterBaseline": true,
+    "noSourceCopiesAfterApply": true,
+    "commitsCreated": 0,
+    "originalFailedReplay": {
+      "root": ".local/iam-o2b-f1-gateway-decoder/replay",
+      "incident": {
+        "file": "docs/evidence/iam-stage-4-o2b-f1-gateway-decoder/original-replay-incident.json",
+        "bytes": 2596,
+        "sha256": "98252f1ee1ec22e46c8cc92d0e0f74f197695dc88bb120b9b64041499b18f661"
+      },
+      "patch": {
+        "file": "docs/evidence/iam-stage-4-o2b-f1-gateway-decoder/source.patch",
+        "bytes": 52743,
+        "sha256": "d443c66e6f47668c07d01d4794ea29c747d31cc80d7cc561bc5c6ef754cc8a6e"
+      },
+      "commands": {
+        "file": "docs/evidence/iam-stage-4-o2b-f1-gateway-decoder/replay-commands.json",
+        "bytes": 79423,
+        "sha256": "878801a4cf47f866077075a43b2d0494edd12a7441dd831dbab2fbfbaf9617ea"
+      },
+      "source": {
+        "file": ".local/iam-o2b-f1-gateway-decoder/original-failed-replay-source.json",
+        "bytes": 117016,
+        "sha256": "47b8d5d27974fb0094ab2a6cc4073bd85b32462f7da0b4fa0fe661e0492a3c3f"
+      }
+    },
+    "noSourceTargetTestChanges": true,
+    "noTestRerun": true
+  },
+  "originalFailedReplay": {
+    "status": "ORIGINAL_REPLAY_FULL_BYTES_FAILED",
+    "originalPatch": {
+      "file": "docs/evidence/iam-stage-4-o2b-f1-gateway-decoder/source.patch",
+      "bytes": 52743,
+      "sha256": "d443c66e6f47668c07d01d4794ea29c747d31cc80d7cc561bc5c6ef754cc8a6e"
+    },
+    "originalCheck": {
+      "file": ".local/iam-o2b-f1-gateway-decoder/git/first-check.json",
+      "bytes": 1134,
+      "sha256": "dcc5650e74d4b3bbabbd90f99b5ec1987fabce6dbe1489ac6d62a635fbed2044"
+    },
+    "originalApply": {
+      "file": ".local/iam-o2b-f1-gateway-decoder/git/first-apply.json",
+      "bytes": 1119,
+      "sha256": "3b58c07cf1824750b6097eb27feea4686661d904b69132ba9735bdbe6c558b3d"
+    },
+    "checkExit": 0,
+    "applyExit": 0,
+    "firstCheckAttempts": 1,
+    "firstApplyAttempts": 1,
+    "sourceCount": 612,
+    "mismatchCount": 2,
+    "mismatch": [
+      {
+        "expected": {
+          "file": "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsPacketBudget.java",
+          "bytes": 3537,
+          "sha256": "c59d9add3cd90b98d51472489a9e596db7aaf01eb322bec6699849760251ebbd"
+        },
+        "actual": {
+          "file": "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsPacketBudget.java",
+          "bytes": 3536,
+          "sha256": "9a51d39c10491857a1126cb2eb51a62b16639e76a513128dc624afee3dc0425b"
+        }
+      },
+      {
+        "expected": {
+          "file": "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsPacketDecoder.java",
+          "bytes": 19120,
+          "sha256": "0ecf83482fde638be4dd4ad7ae0fefb4ed932bd0ff6347c86334e7100388ba1e"
+        },
+        "actual": {
+          "file": "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsPacketDecoder.java",
+          "bytes": 19119,
+          "sha256": "03ee910d8f61b7374749bda2eebac23b71ab83aca42e9d300b9ed1582f6321ce"
+        }
+      }
+    ],
+    "actualManifest": {
+      "file": ".local/iam-o2b-f1-gateway-decoder/original-failed-replay-source.json",
+      "bytes": 117016,
+      "sha256": "47b8d5d27974fb0094ab2a6cc4073bd85b32462f7da0b4fa0fe661e0492a3c3f"
+    },
+    "reason": "Project .gitattributes text=auto eol=lf normalized the sole final CRLF in two new production files during git diff. core.autocrlf=false did not override repository attribute. Source/target/final epoch remain untouched. Original successful process exits do not prove full612 bytes.",
+    "recoveryAuthority": "Root explicit message authorizes a separate private byte-corrected baseline/patch and exactly one first check/apply there. Original patch/replay/commands remain unchanged; no commit, no after-apply copy, no source/test changes or test reruns."
+  },
+  "recoveryRuling": {
+    "file": "docs/evidence/iam-stage-4-o2b-f1-byte-replay-recovery.md",
+    "bytes": 2871,
+    "sha256": "d355760e725da552003f3f83ad401cfc9b21c7409388cb92ffa4a7306e0fa1f7"
+  },
+  "originalSuccessfulStagesNotRerun": true,
+  "originalEightIndexesNotWritten": true,
+  "noBroadTargetScan": true,
+  "inputVectorFiles": 12,
+  "inputVectorPackets": 25,
+  "provider": {
+    "file": "docs/evidence/iam-stage-4-o2b-f1-gateway-decoder/provider-evidence.json",
+    "bytes": 8707,
+    "sha256": "801d6eae881f467bda81f07a00aea25efa5c4706fe498628e57faf9f8ca0ecfc"
+  },
+  "providerModelIsNotHeapMeasurement": true,
+  "boundaries": "UntrustedPacket wire integrity only. Source/receipt/current/material verification/public SSE/HTTP/TLS remain F2."
+}

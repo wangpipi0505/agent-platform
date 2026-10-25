@@ -1,0 +1,37 @@
+{
+  "cwd": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+  "commands": [
+    {
+      "command": "node --test tests/algorithm-process-attempt-time.test.mjs",
+      "phase": "old oracle red",
+      "oracleSha256": "f6a78f20554d75994abfc16a4e49ac72def2ab86bd28ff254a35eddc0b4fe9cb",
+      "exit": 1,
+      "tests": 11,
+      "pass": 7,
+      "fail": 4,
+      "log": "red.log",
+      "logSha256": "fe530707d11cf06e25f5f1e1c9be267ede2673dc310bdeb174b54d8b5e01a704"
+    },
+    {
+      "command": "node --test tests/algorithm-process-attempt-time.test.mjs",
+      "phase": "fixed oracle green",
+      "exit": 0,
+      "tests": 11,
+      "pass": 11,
+      "fail": 0,
+      "log": "green-time.log",
+      "logSha256": "4ec9d02e5cc053537bab7340bf01692a2450fc9dd7d3dea5b70c359347397640"
+    },
+    {
+      "command": "node --test tests/algorithm-process-runner.test.mjs tests/algorithm-process-runner-fixes.test.mjs tests/algorithm-process-runner-redis.test.mjs tests/algorithm-process-runner-async.test.mjs tests/algorithm-process-runner-async-cleanup.test.mjs tests/algorithm-process-attempt-scope.test.mjs tests/algorithm-process-attempt-time.test.mjs",
+      "phase": "full coverage green",
+      "exit": 0,
+      "tests": 135,
+      "pass": 135,
+      "fail": 0,
+      "log": "green-all.log",
+      "logSha256": "c4554143ee453e2826daa60b870b46a0db12dfb11e05f2c7c4ad408403799f16"
+    }
+  ],
+  "fifthLiveExecution": false
+}

@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" version="3.0.2" name="cn.agentplatform.common.authority.AuthorityPolicyTest" time="0.226" tests="14" errors="0" skipped="0" failures="1">
+  <properties>
+    <property name="java.specification.version" value="21"/>
+    <property name="sun.cpu.isalist" value="amd64"/>
+    <property name="sun.jnu.encoding" value="GBK"/>
+    <property name="java.class.path" value="G:\207\项目\算法重组工具\代码\agent-platform\admin-common\target\test-classes;G:\207\项目\算法重组工具\代码\agent-platform\admin-common\target\classes;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\boot\spring-boot-starter-web\3.5.0\spring-boot-starter-web-3.5.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\boot\spring-boot-starter\3.5.0\spring-boot-starter-3.5.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\boot\spring-boot\3.5.0\spring-boot-3.5.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\boot\spring-boot-autoconfigure\3.5.0\spring-boot-autoconfigure-3.5.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\boot\spring-boot-starter-logging\3.5.0\spring-boot-starter-logging-3.5.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\ch\qos\logback\logback-classic\1.5.18\logback-classic-1.5.18.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\ch\qos\logback\logback-core\1.5.18\logback-core-1.5.18.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\apache\logging\log4j\log4j-to-slf4j\2.24.3\log4j-to-slf4j-2.24.3.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\apache\logging\log4j\log4j-api\2.24.3\log4j-api-2.24.3.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\slf4j\jul-to-slf4j\2.0.17\jul-to-slf4j-2.0.17.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\jakarta\annotation\jakarta.annotation-api\2.1.1\jakarta.annotation-api-2.1.1.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\yaml\snakeyaml\2.4\snakeyaml-2.4.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\boot\spring-boot-starter-json\3.5.0\spring-boot-starter-json-3.5.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\com\fasterxml\jackson\datatype\jackson-datatype-jdk8\2.19.0\jackson-datatype-jdk8-2.19.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\com\fasterxml\jackson\datatype\jackson-datatype-jsr310\2.19.0\jackson-datatype-jsr310-2.19.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\com\fasterxml\jackson\module\jackson-module-parameter-names\2.19.0\jackson-module-parameter-names-2.19.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\boot\spring-boot-starter-tomcat\3.5.0\spring-boot-starter-tomcat-3.5.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\apache\tomcat\embed\tomcat-embed-core\10.1.41\tomcat-embed-core-10.1.41.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\apache\tomcat\embed\tomcat-embed-websocket\10.1.41\tomcat-embed-websocket-10.1.41.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\spring-web\6.2.7\spring-web-6.2.7.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\spring-beans\6.2.7\spring-beans-6.2.7.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\io\micrometer\micrometer-observation\1.15.0\micrometer-observation-1.15.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\io\micrometer\micrometer-commons\1.15.0\micrometer-commons-1.15.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\spring-webmvc\6.2.7\spring-webmvc-6.2.7.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\spring-aop\6.2.7\spring-aop-6.2.7.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\spring-context\6.2.7\spring-context-6.2.7.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\spring-expression\6.2.7\spring-expression-6.2.7.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\boot\spring-boot-starter-validation\3.5.0\spring-boot-starter-validation-3.5.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\apache\tomcat\embed\tomcat-embed-el\10.1.41\tomcat-embed-el-10.1.41.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\hibernate\validator\hibernate-validator\8.0.2.Final\hibernate-validator-8.0.2.Final.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\jakarta\validation\jakarta.validation-api\3.0.2\jakarta.validation-api-3.0.2.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\jboss\logging\jboss-logging\3.6.1.Final\jboss-logging-3.6.1.Final.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\com\fasterxml\classmate\1.7.0\classmate-1.7.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\boot\spring-boot-starter-oauth2-resource-server\3.5.0\spring-boot-starter-oauth2-resource-server-3.5.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\security\spring-security-config\6.5.0\spring-security-config-6.5.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\security\spring-security-core\6.5.0\spring-security-core-6.5.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\security\spring-security-crypto\6.5.0\spring-security-crypto-6.5.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\security\spring-security-oauth2-resource-server\6.5.0\spring-security-oauth2-resource-server-6.5.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\security\spring-security-oauth2-core\6.5.0\spring-security-oauth2-core-6.5.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\security\spring-security-web\6.5.0\spring-security-web-6.5.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\security\spring-security-oauth2-jose\6.5.0\spring-security-oauth2-jose-6.5.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\com\nimbusds\nimbus-jose-jwt\9.37.3\nimbus-jose-jwt-9.37.3.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\com\github\stephenc\jcip\jcip-annotations\1.0-1\jcip-annotations-1.0-1.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springdoc\springdoc-openapi-starter-webmvc-api\2.8.9\springdoc-openapi-starter-webmvc-api-2.8.9.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springdoc\springdoc-openapi-starter-common\2.8.9\springdoc-openapi-starter-common-2.8.9.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\io\swagger\core\v3\swagger-core-jakarta\2.2.30\swagger-core-jakarta-2.2.30.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\apache\commons\commons-lang3\3.17.0\commons-lang3-3.17.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\io\swagger\core\v3\swagger-annotations-jakarta\2.2.30\swagger-annotations-jakarta-2.2.30.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\io\swagger\core\v3\swagger-models-jakarta\2.2.30\swagger-models-jakarta-2.2.30.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\boot\spring-boot-starter-test\3.5.0\spring-boot-starter-test-3.5.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\boot\spring-boot-test\3.5.0\spring-boot-test-3.5.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\boot\spring-boot-test-autoconfigure\3.5.0\spring-boot-test-autoconfigure-3.5.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\com\jayway\jsonpath\json-path\2.9.0\json-path-2.9.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\jakarta\xml\bind\jakarta.xml.bind-api\4.0.2\jakarta.xml.bind-api-4.0.2.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\jakarta\activation\jakarta.activation-api\2.1.3\jakarta.activation-api-2.1.3.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\net\minidev\json-smart\2.5.2\json-smart-2.5.2.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\net\minidev\accessors-smart\2.5.2\accessors-smart-2.5.2.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\ow2\asm\asm\9.7.1\asm-9.7.1.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\assertj\assertj-core\3.27.3\assertj-core-3.27.3.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\net\bytebuddy\byte-buddy\1.17.5\byte-buddy-1.17.5.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\awaitility\awaitility\4.3.0\awaitility-4.3.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\hamcrest\hamcrest\3.0\hamcrest-3.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\junit\jupiter\junit-jupiter\5.12.2\junit-jupiter-5.12.2.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\junit\jupiter\junit-jupiter-api\5.12.2\junit-jupiter-api-5.12.2.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\opentest4j\opentest4j\1.3.0\opentest4j-1.3.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\junit\platform\junit-platform-commons\1.12.2\junit-platform-commons-1.12.2.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\apiguardian\apiguardian-api\1.1.2\apiguardian-api-1.1.2.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\junit\jupiter\junit-jupiter-params\5.12.2\junit-jupiter-params-5.12.2.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\junit\jupiter\junit-jupiter-engine\5.12.2\junit-jupiter-engine-5.12.2.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\junit\platform\junit-platform-engine\1.12.2\junit-platform-engine-1.12.2.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\mockito\mockito-core\5.17.0\mockito-core-5.17.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\net\bytebuddy\byte-buddy-agent\1.17.5\byte-buddy-agent-1.17.5.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\objenesis\objenesis\3.3\objenesis-3.3.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\mockito\mockito-junit-jupiter\5.17.0\mockito-junit-jupiter-5.17.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\skyscreamer\jsonassert\1.5.3\jsonassert-1.5.3.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\com\vaadin\external\google\android-json\0.0.20131108.vaadin1\android-json-0.0.20131108.vaadin1.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\spring-core\6.2.7\spring-core-6.2.7.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\spring-jcl\6.2.7\spring-jcl-6.2.7.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\spring-test\6.2.7\spring-test-6.2.7.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\xmlunit\xmlunit-core\2.10.1\xmlunit-core-2.10.1.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\com\networknt\json-schema-validator\1.5.6\json-schema-validator-1.5.6.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\com\ethlo\time\itu\1.10.3\itu-1.10.3.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\com\fasterxml\jackson\core\jackson-databind\2.19.0\jackson-databind-2.19.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\com\fasterxml\jackson\core\jackson-annotations\2.19.0\jackson-annotations-2.19.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\com\fasterxml\jackson\core\jackson-core\2.19.0\jackson-core-2.19.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\com\fasterxml\jackson\dataformat\jackson-dataformat-yaml\2.19.0\jackson-dataformat-yaml-2.19.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\slf4j\slf4j-api\2.0.17\slf4j-api-2.0.17.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\com\google\re2j\re2j\1.8\re2j-1.8.jar;"/>
+    <property name="java.vm.vendor" value="Eclipse Adoptium"/>
+    <property name="sun.arch.data.model" value="64"/>
+    <property name="user.variant" value=""/>
+    <property name="catalina.useNaming" value="false"/>
+    <property name="java.vendor.url" value="https://adoptium.net/"/>
+    <property name="user.timezone" value="Asia/Shanghai"/>
+    <property name="org.jboss.logging.provider" value="slf4j"/>
+    <property name="os.name" value="Windows 11"/>
+    <property name="java.vm.specification.version" value="21"/>
+    <property name="sun.java.launcher" value="SUN_STANDARD"/>
+    <property name="user.country" value="CN"/>
+    <property name="sun.boot.library.path" value="C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot\bin"/>
+    <property name="sun.java.command" value="C:\Users\Administrator\AppData\Local\Temp\surefire7925492462726358972\surefirebooter-20261020151827868_3.jar C:\Users\Administrator\AppData\Local\Temp\surefire7925492462726358972 2026-10-20T15-18-27_753-jvmRun1 surefire-20261020151827868_1tmp surefire_0-20261020151827868_2tmp"/>
+    <property name="jdk.debug" value="release"/>
+    <property name="test" value="*"/>
+    <property name="surefire.test.class.path" value="G:\207\项目\算法重组工具\代码\agent-platform\admin-common\target\test-classes;G:\207\项目\算法重组工具\代码\agent-platform\admin-common\target\classes;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\boot\spring-boot-starter-web\3.5.0\spring-boot-starter-web-3.5.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\boot\spring-boot-starter\3.5.0\spring-boot-starter-3.5.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\boot\spring-boot\3.5.0\spring-boot-3.5.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\boot\spring-boot-autoconfigure\3.5.0\spring-boot-autoconfigure-3.5.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\boot\spring-boot-starter-logging\3.5.0\spring-boot-starter-logging-3.5.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\ch\qos\logback\logback-classic\1.5.18\logback-classic-1.5.18.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\ch\qos\logback\logback-core\1.5.18\logback-core-1.5.18.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\apache\logging\log4j\log4j-to-slf4j\2.24.3\log4j-to-slf4j-2.24.3.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\apache\logging\log4j\log4j-api\2.24.3\log4j-api-2.24.3.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\slf4j\jul-to-slf4j\2.0.17\jul-to-slf4j-2.0.17.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\jakarta\annotation\jakarta.annotation-api\2.1.1\jakarta.annotation-api-2.1.1.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\yaml\snakeyaml\2.4\snakeyaml-2.4.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\boot\spring-boot-starter-json\3.5.0\spring-boot-starter-json-3.5.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\com\fasterxml\jackson\datatype\jackson-datatype-jdk8\2.19.0\jackson-datatype-jdk8-2.19.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\com\fasterxml\jackson\datatype\jackson-datatype-jsr310\2.19.0\jackson-datatype-jsr310-2.19.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\com\fasterxml\jackson\module\jackson-module-parameter-names\2.19.0\jackson-module-parameter-names-2.19.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\boot\spring-boot-starter-tomcat\3.5.0\spring-boot-starter-tomcat-3.5.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\apache\tomcat\embed\tomcat-embed-core\10.1.41\tomcat-embed-core-10.1.41.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\apache\tomcat\embed\tomcat-embed-websocket\10.1.41\tomcat-embed-websocket-10.1.41.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\spring-web\6.2.7\spring-web-6.2.7.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\spring-beans\6.2.7\spring-beans-6.2.7.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\io\micrometer\micrometer-observation\1.15.0\micrometer-observation-1.15.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\io\micrometer\micrometer-commons\1.15.0\micrometer-commons-1.15.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\spring-webmvc\6.2.7\spring-webmvc-6.2.7.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\spring-aop\6.2.7\spring-aop-6.2.7.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\spring-context\6.2.7\spring-context-6.2.7.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\spring-expression\6.2.7\spring-expression-6.2.7.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\boot\spring-boot-starter-validation\3.5.0\spring-boot-starter-validation-3.5.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\apache\tomcat\embed\tomcat-embed-el\10.1.41\tomcat-embed-el-10.1.41.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\hibernate\validator\hibernate-validator\8.0.2.Final\hibernate-validator-8.0.2.Final.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\jakarta\validation\jakarta.validation-api\3.0.2\jakarta.validation-api-3.0.2.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\jboss\logging\jboss-logging\3.6.1.Final\jboss-logging-3.6.1.Final.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\com\fasterxml\classmate\1.7.0\classmate-1.7.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\boot\spring-boot-starter-oauth2-resource-server\3.5.0\spring-boot-starter-oauth2-resource-server-3.5.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\security\spring-security-config\6.5.0\spring-security-config-6.5.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\security\spring-security-core\6.5.0\spring-security-core-6.5.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\security\spring-security-crypto\6.5.0\spring-security-crypto-6.5.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\security\spring-security-oauth2-resource-server\6.5.0\spring-security-oauth2-resource-server-6.5.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\security\spring-security-oauth2-core\6.5.0\spring-security-oauth2-core-6.5.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\security\spring-security-web\6.5.0\spring-security-web-6.5.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\security\spring-security-oauth2-jose\6.5.0\spring-security-oauth2-jose-6.5.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\com\nimbusds\nimbus-jose-jwt\9.37.3\nimbus-jose-jwt-9.37.3.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\com\github\stephenc\jcip\jcip-annotations\1.0-1\jcip-annotations-1.0-1.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springdoc\springdoc-openapi-starter-webmvc-api\2.8.9\springdoc-openapi-starter-webmvc-api-2.8.9.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springdoc\springdoc-openapi-starter-common\2.8.9\springdoc-openapi-starter-common-2.8.9.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\io\swagger\core\v3\swagger-core-jakarta\2.2.30\swagger-core-jakarta-2.2.30.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\apache\commons\commons-lang3\3.17.0\commons-lang3-3.17.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\io\swagger\core\v3\swagger-annotations-jakarta\2.2.30\swagger-annotations-jakarta-2.2.30.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\io\swagger\core\v3\swagger-models-jakarta\2.2.30\swagger-models-jakarta-2.2.30.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\boot\spring-boot-starter-test\3.5.0\spring-boot-starter-test-3.5.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\boot\spring-boot-test\3.5.0\spring-boot-test-3.5.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\boot\spring-boot-test-autoconfigure\3.5.0\spring-boot-test-autoconfigure-3.5.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\com\jayway\jsonpath\json-path\2.9.0\json-path-2.9.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\jakarta\xml\bind\jakarta.xml.bind-api\4.0.2\jakarta.xml.bind-api-4.0.2.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\jakarta\activation\jakarta.activation-api\2.1.3\jakarta.activation-api-2.1.3.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\net\minidev\json-smart\2.5.2\json-smart-2.5.2.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\net\minidev\accessors-smart\2.5.2\accessors-smart-2.5.2.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\ow2\asm\asm\9.7.1\asm-9.7.1.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\assertj\assertj-core\3.27.3\assertj-core-3.27.3.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\net\bytebuddy\byte-buddy\1.17.5\byte-buddy-1.17.5.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\awaitility\awaitility\4.3.0\awaitility-4.3.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\hamcrest\hamcrest\3.0\hamcrest-3.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\junit\jupiter\junit-jupiter\5.12.2\junit-jupiter-5.12.2.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\junit\jupiter\junit-jupiter-api\5.12.2\junit-jupiter-api-5.12.2.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\opentest4j\opentest4j\1.3.0\opentest4j-1.3.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\junit\platform\junit-platform-commons\1.12.2\junit-platform-commons-1.12.2.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\apiguardian\apiguardian-api\1.1.2\apiguardian-api-1.1.2.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\junit\jupiter\junit-jupiter-params\5.12.2\junit-jupiter-params-5.12.2.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\junit\jupiter\junit-jupiter-engine\5.12.2\junit-jupiter-engine-5.12.2.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\junit\platform\junit-platform-engine\1.12.2\junit-platform-engine-1.12.2.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\mockito\mockito-core\5.17.0\mockito-core-5.17.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\net\bytebuddy\byte-buddy-agent\1.17.5\byte-buddy-agent-1.17.5.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\objenesis\objenesis\3.3\objenesis-3.3.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\mockito\mockito-junit-jupiter\5.17.0\mockito-junit-jupiter-5.17.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\skyscreamer\jsonassert\1.5.3\jsonassert-1.5.3.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\com\vaadin\external\google\android-json\0.0.20131108.vaadin1\android-json-0.0.20131108.vaadin1.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\spring-core\6.2.7\spring-core-6.2.7.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\spring-jcl\6.2.7\spring-jcl-6.2.7.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\springframework\spring-test\6.2.7\spring-test-6.2.7.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\xmlunit\xmlunit-core\2.10.1\xmlunit-core-2.10.1.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\com\networknt\json-schema-validator\1.5.6\json-schema-validator-1.5.6.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\com\ethlo\time\itu\1.10.3\itu-1.10.3.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\com\fasterxml\jackson\core\jackson-databind\2.19.0\jackson-databind-2.19.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\com\fasterxml\jackson\core\jackson-annotations\2.19.0\jackson-annotations-2.19.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\com\fasterxml\jackson\core\jackson-core\2.19.0\jackson-core-2.19.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\com\fasterxml\jackson\dataformat\jackson-dataformat-yaml\2.19.0\jackson-dataformat-yaml-2.19.0.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\org\slf4j\slf4j-api\2.0.17\slf4j-api-2.0.17.jar;G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2\com\google\re2j\re2j\1.8\re2j-1.8.jar;"/>
+    <property name="sun.cpu.endian" value="little"/>
+    <property name="user.home" value="C:\Users\Administrator"/>
+    <property name="user.language" value="zh"/>
+    <property name="java.specification.vendor" value="Oracle Corporation"/>
+    <property name="java.version.date" value="2026-07-21"/>
+    <property name="java.home" value="C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot"/>
+    <property name="file.separator" value="\"/>
+    <property name="basedir" value="G:\207\项目\算法重组工具\代码\agent-platform\admin-common"/>
+    <property name="java.vm.compressedOopsMode" value="Zero based"/>
+    <property name="line.separator" value="&#10;"/>
+    <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
+    <property name="java.specification.name" value="Java Platform API Specification"/>
+    <property name="FILE_LOG_CHARSET" value="UTF-8"/>
+    <property name="java.awt.headless" value="true"/>
+    <property name="surefire.real.class.path" value="C:\Users\Administrator\AppData\Local\Temp\surefire7925492462726358972\surefirebooter-20261020151827868_3.jar"/>
+    <property name="user.script" value=""/>
+    <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
+    <property name="java.runtime.version" value="21.0.12+8-LTS"/>
+    <property name="jdk.net.unixdomain.tmpdir" value="V:/.local/tmp"/>
+    <property name="user.name" value="Administrator"/>
+    <property name="stdout.encoding" value="GBK"/>
+    <property name="path.separator" value=";"/>
+    <property name="os.version" value="10.0"/>
+    <property name="java.runtime.name" value="OpenJDK Runtime Environment"/>
+    <property name="file.encoding" value="UTF-8"/>
+    <property name="surefire.failIfNoSpecifiedTests" value="false"/>
+    <property name="java.vm.name" value="OpenJDK 64-Bit Server VM"/>
+    <property name="java.vendor.version" value="Temurin-21.0.12+8"/>
+    <property name="localRepository" value="G:\207\项目\算法重组工具\代码\agent-platform\.tools\m2"/>
+    <property name="java.vendor.url.bug" value="https://github.com/adoptium/adoptium-support/issues"/>
+    <property name="java.io.tmpdir" value="C:\Users\ADMINI~1\AppData\Local\Temp\"/>
+    <property name="catalina.home" value="C:\Users\Administrator\AppData\Local\Temp\tomcat.0.7619853906556956727"/>
+    <property name="java.version" value="21.0.12"/>
+    <property name="user.dir" value="G:\207\项目\算法重组工具\代码\agent-platform\admin-common"/>
+    <property name="os.arch" value="amd64"/>
+    <property name="java.vm.specification.name" value="Java Virtual Machine Specification"/>
+    <property name="PID" value="55892"/>
+    <property name="sun.os.patch.level" value=""/>
+    <property name="CONSOLE_LOG_CHARSET" value="UTF-8"/>
+    <property name="catalina.base" value="C:\Users\Administrator\AppData\Local\Temp\tomcat.0.8871836234544195379"/>
+    <property name="native.encoding" value="GBK"/>
+    <property name="java.library.path" value="C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot\bin;C:\WINDOWS\Sun\Java\bin;C:\WINDOWS\system32;C:\WINDOWS;C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin;C:\Users\Administrator\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\powershell;C:\Users\Administrator\.codex\tmp\arg0\codex-arg0avvVdl;C:\Users\Administrator\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\libheif\libheif\bin;C:\Users\Administrator\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\jxrlib\jxrlib\bin;C:\Users\Administrator\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\poppler\Library\bin;C:\Users\Administrator\.cache\codex-runtimes\codex-primary-runtime\dependencies\bin\override;C:\Program Files\Eclipse Adoptium\jdk-17.0.20.101-hotspot\bin;C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot\bin;C:\Program Files\ImageMagick-7.1.2-Q16-HDRI;C:\ProgramData\chocolatey\lib\maven\apache-maven-3.9.16\bin;C:\Program Files\Eclipse Adoptium\jdk-8.0.472.8-hotspot\bin;C:\Python314\Scripts\;C:\Python314\;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Program Files\Git\cmd;C:\Users\Administrator\AppData\Roaming\nvm;C:\Program Files\nodejs;C:\Program Files\nodejs\;C:\ProgramData\chocolatey\bin;C:\Program Files\Docker\Docker\resources\bin;C:\Program Files (x86)\Subversion\bin;C:\Program Files\SlikSvn\bin;C:\Program Files\NVIDIA Corporation\NVIDIA App\NvDLISR;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\dotnet\;C:\Program Files\CMake\bin;C:\Program Files\GitHub CLI\;C:\Program Files\k6\;C:\Program Files\WSL\;C:\Users\Administrator\.local\bin;D:\00-Work\02-Application\01-CodeIDE\Hermes\bin;C:\Users\Administrator\AppData\Local\hermes\bin;C:\Users\Administrator\AppData\Local\Programs\Python\Python311\Scripts\;C:\Users\Administrator\AppData\Local\Programs\Python\Python311\;C:\Users\Administrator\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\powershell;C:\Users\Administrator\AppData\Local\Microsoft\WindowsApps;C:\Program Files\JetBrains\IntelliJ IDEA 2026.1.2\bin;C:\Program Files\JetBrains\WebStorm 2026.1.2\bin;C:\Users\Administrator\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\Administrator\AppData\Roaming\npm;C:\Users\Administrator\AppData\Local\Python\bin;C:\Users\Administrator\AppData\Local\Apps\Tcl90\bin;D:\00-Work\02-Application\01-CodeIDE\PyCharm 2026.2.0.1\bin;C:\Users\Administrator\AppData\Local\Programs\Ollama;C:\Users\Administrator\AppData\Local\Microsoft\WinGet\Packages\MoonshotAI.KimiCodeCLI_Microsoft.Winget.Source_8wekyb3d8bbwe;C:\Users\Administrator\.dotnet\tools;C:\Users\Administrator\AppData\Local\Microsoft\WinGet\Packages\BurntSushi.ripgrep.MSVC_Microsoft.Winget.Source_8wekyb3d8bbwe\ripgrep-15.2.0-x86_64-pc-windows-msvc;C:\Users\Administrator\AppData\Local\Programs\Cua\cua-driver\bin;C:\Users\Administrator\AppData\Local\Microsoft\WinGet\Packages\astral-sh.uv_Microsoft.Winget.Source_8wekyb3d8bbwe;D:\00-Work\02-Application\01-CodeIDE\cursor\resources\app\bin;D:\00-Work\02-Application\00-BaseEnv\GitLab-Runner;C:\Users\Administrator\.cache\codex-runtimes\codex-primary-runtime\dependencies\bin\fallback;C:\Users\Administrator\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin;C:\Users\Administrator\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\git\cmd;C:\Users\Administrator\AppData\Local\OpenAI\Codex\bin\9a7ba4b9ea0c44a3;C:\Users\Administrator\AppData\Local\OpenAI\Codex\bin\2e5e00daee91c61d;."/>
+    <property name="java.vm.info" value="mixed mode, sharing"/>
+    <property name="stderr.encoding" value="GBK"/>
+    <property name="java.vendor" value="Eclipse Adoptium"/>
+    <property name="java.vm.version" value="21.0.12+8-LTS"/>
+    <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
+    <property name="maven.repo.local" value=".tools/m2"/>
+    <property name="java.class.version" value="65.0"/>
+  </properties>
+  <testcase name="labelsRemainObligationsAndMissingPermissionDoesNotAddAuthority" classname="cn.agentplatform.common.authority.AuthorityPolicyTest" time="0.035"/>
+  <testcase name="blankOrNullOwnershipCannotPassEquality(String, String)[1]" classname="cn.agentplatform.common.authority.AuthorityPolicyTest" time="0.005"/>
+  <testcase name="blankOrNullOwnershipCannotPassEquality(String, String)[2]" classname="cn.agentplatform.common.authority.AuthorityPolicyTest" time="0.001"/>
+  <testcase name="blankOrNullOwnershipCannotPassEquality(String, String)[3]" classname="cn.agentplatform.common.authority.AuthorityPolicyTest" time="0.001"/>
+  <testcase name="blankOrNullOwnershipCannotPassEquality(String, String)[4]" classname="cn.agentplatform.common.authority.AuthorityPolicyTest" time="0.0"/>
+  <testcase name="blankOrNullOwnershipCannotPassEquality(String, String)[5]" classname="cn.agentplatform.common.authority.AuthorityPolicyTest" time="0.0"/>
+  <testcase name="blankOrNullOwnershipCannotPassEquality(String, String)[6]" classname="cn.agentplatform.common.authority.AuthorityPolicyTest" time="0.001"/>
+  <testcase name="routeCannotBorrowCallerOrMethod" classname="cn.agentplatform.common.authority.AuthorityPolicyTest" time="0.084"/>
+  <testcase name="catalogSeparatesActionsAndModesAndKeepsUnusedEntrypointsDisabled" classname="cn.agentplatform.common.authority.AuthorityPolicyTest" time="0.019"/>
+  <testcase name="duplicateAndUnknownCatalogEntriesFailClosed" classname="cn.agentplatform.common.authority.AuthorityPolicyTest" time="0.002"/>
+  <testcase name="catalogCoversEveryActualControllerTemplateWithoutGrantingGatewayWildcards" classname="cn.agentplatform.common.authority.AuthorityPolicyTest" time="0.062">
+    <failure message="&#10;Expected size: 158 but was: 159 in:&#10;[&quot;monitor|GET|/admin/evaluations&quot;,&#10;    &quot;app|POST|/admin/prompt-templates/{code}/versions/{version}/publish&quot;,&#10;    &quot;gateway|ANY|/admin/**&quot;,&#10;    &quot;skill|GET|/admin/artifacts/{id}/download&quot;,&#10;    &quot;skill|POST|/admin/skills/{code}/drafts/{version}/connection-test&quot;,&#10;    &quot;monitor|GET|/admin/statistics&quot;,&#10;    &quot;engine|POST|/admin/runs/{id}/cancel&quot;,&#10;    &quot;skill|GET|/internal/statistics&quot;,&#10;    &quot;skill|POST|/internal/skill-facts/{callId}/reconcile&quot;,&#10;    &quot;engine|GET|/admin/debug-inputs&quot;,&#10;    &quot;app|POST|&quot;,&#10;    &quot;skill|POST|/admin/skills/import-openapi&quot;,&#10;    &quot;model|PUT|/admin/model-providers/{id}/quota&quot;,&#10;    &quot;app|GET|/internal/apps/{code}/snapshot&quot;,&#10;    &quot;skill|GET|/internal/skill-versions/{id}&quot;,&#10;    &quot;model|POST|/admin/model-providers/{id}/credentials/rotate&quot;,&#10;    &quot;app|POST|/admin/apps/{code}/integration/credentials/{biz}/revoke&quot;,&#10;    &quot;model|POST|/admin/model-providers&quot;,&#10;    &quot;engine|GET|/v1/runs/{id}&quot;,&#10;    &quot;gateway|ANY|/v1/**&quot;,&#10;    &quot;engine|GET|/admin/runs&quot;,&#10;    &quot;engine|POST|/internal/runs/{id}/approvals/{nid}&quot;,&#10;    &quot;skill|GET|/admin/skills/{code}/versions&quot;,&#10;    &quot;app|PUT|/admin/apps/{code}/config&quot;,&#10;    &quot;monitor|POST|/internal/datasets/promotions&quot;,&#10;    &quot;engine|GET|/admin/debug-runs/{id}/controls&quot;,&#10;    &quot;app|GET|/admin/apps/{code}/versions/diff&quot;,&#10;    &quot;model|GET|/admin/model-entries/{id}/metering&quot;,&#10;    &quot;app|GET|/internal/integration-origins&quot;,&#10;    &quot;gateway|GET|/assistant.js&quot;,&#10;    &quot;engine|GET|/internal/approvals&quot;,&#10;    &quot;skill|GET|/admin/skills/{code}/stats&quot;,&#10;    &quot;model|PUT|/admin/model-entries/{id}&quot;,&#10;    &quot;app|GET|/internal/prompt-templates/{code}/versions/{version}&quot;,&#10;    &quot;engine|DELETE|/admin/debug-inputs/{id}&quot;,&#10;    &quot;engine|GET|/v1/apps/{code}/sessions/{id}&quot;,&#10;    &quot;skill|GET|/v1/runs/{runId}/artifacts/{id}/download&quot;,&#10;    &quot;model|PUT|/admin/model-providers/{id}&quot;,&#10;    &quot;app|GET|/admin/prompt-templates&quot;,&#10;    &quot;engine|POST|/internal/graphs/validate&quot;,&#10;    &quot;app|GET|/admin/flows/{code}&quot;,&#10;    &quot;engine|GET|/internal/audit&quot;,&#10;    &quot;engine|POST|/internal/tool-calls/{id}/submitted&quot;,&#10;    &quot;monitor|GET|/admin/evaluation-datasets/{appCode}/{version}&quot;,&#10;    &quot;app|PUT|/admin/apps/{code}/integration/credentials/{biz}&quot;,&#10;    &quot;engine|GET|/admin/runs/{id}/events&quot;,&#10;    &quot;engine|GET|/admin/runs/{id}/replay&quot;,&#10;    &quot;app|GET|/internal/apps/{code}/versions/{version}&quot;,&#10;    &quot;app|POST|/admin/apps&quot;,&#10;    &quot;skill|PUT|/admin/skills/{code}/draft&quot;,&#10;    &quot;engine|POST|/admin/debug-inputs/{id}/promote&quot;,&#10;    &quot;engine|PUT|/admin/debug-inputs/{id}&quot;,&#10;    &quot;monitor|POST|/admin/evaluations/{id}/resume&quot;,&#10;    &quot;monitor|GET|/admin/statistics/snapshots/{id}&quot;,&#10;    &quot;monitor|GET|/admin/statistics/runs/{id}&quot;,&#10;    &quot;skill|GET|/internal/skills/{code}&quot;,&#10;    &quot;skill|POST|/admin/skills&quot;,&#10;    &quot;skill|POST|/admin/skills/{code}/drafts/{version}/publish&quot;,&#10;    &quot;model|POST|/internal/model/chat/stream&quot;,&#10;    &quot;app|PUT|/admin/prompt-templates/{code}&quot;,&#10;    &quot;app|GET|/admin/apps&quot;,&#10;    &quot;engine|POST|/admin/runs/{id}/reproduce&quot;,&#10;    &quot;app|GET|/internal/skills/{code}/references&quot;,&#10;    &quot;monitor|GET|/admin/evaluations/{id}&quot;,&#10;    &quot;app|POST|/admin/apps/{code}/copy&quot;,&#10;    &quot;engine|GET|/admin/debug-runs/{id}/node/{nid}/prompt&quot;,&#10;    &quot;engine|GET|/admin/debug-runs/{id}/events&quot;,&#10;    &quot;app|DELETE|/admin/apps/{code}&quot;,&#10;    &quot;skill|GET|/admin/skills&quot;,&#10;    &quot;model|POST|/internal/model-bindings/freeze&quot;,&#10;    &quot;model|GET|/internal/model-entries/{id}&quot;,&#10;    &quot;engine|POST|/v1/apps/{code}/runs&quot;,&#10;    &quot;skill|POST|/internal/skill-facts/{callId}/reproduce-artifacts&quot;,&#10;    &quot;app|POST|/admin/apps/{code}/integration/credentials&quot;,&#10;    &quot;engine|GET|/v1/runs/{id}/events&quot;,&#10;    &quot;skill|POST|/admin/skills/import-openapi/preview&quot;,&#10;    &quot;skill|POST|/internal/skills/{code}/execute&quot;,&#10;    &quot;engine|POST|/internal/evaluations/run&quot;,&#10;    &quot;engine|POST|/v1/apps/{code}/sessions&quot;,&#10;    &quot;app|GET|/internal/apps/{code}/published&quot;,&#10;    &quot;app|GET|/internal/app-drafts/{id}&quot;,&#10;    &quot;app|POST|/admin/prompt-templates&quot;,&#10;    &quot;engine|POST|/admin/debug-inputs&quot;,&#10;    &quot;engine|GET|/internal/tool-calls/{id}/approval&quot;,&#10;    &quot;skill|GET|/internal/skill-facts/{callId}/reconciliation-proofs/{attemptId}&quot;,&#10;    &quot;engine|GET|/internal/statistics/runs/{id}&quot;,&#10;    &quot;engine|POST|/admin/apps/{code}/sessions&quot;,&#10;    &quot;model|POST|/internal/statistics/query&quot;,&#10;    &quot;app|POST|/admin/apps/{code}/{action:disable|enable|archive|rollback}&quot;,&#10;    &quot;model|POST|/internal/model/measure&quot;,&#10;    &quot;monitor|GET|/internal/evaluations/accepted&quot;,&#10;    &quot;model|GET|/admin/model-providers&quot;,&#10;    &quot;engine|GET|/admin/runs/{id}&quot;,&#10;    &quot;engine|GET|/admin/debug-runs/{id}/variables&quot;,&#10;    &quot;engine|POST|/internal/tool-calls/{id}/fact&quot;,&#10;    &quot;app|POST|/admin/prompt-templates/{code}/versions/{version}/render&quot;,&#10;    &quot;model|POST|/internal/model/chat&quot;,&#10;    &quot;model|POST|/admin/model-providers/{id}/disable&quot;,&#10;    &quot;app|GET|/internal/integration-credentials/{id}&quot;,&#10;    &quot;app|PUT|/admin/apps/{code}&quot;,&#10;    &quot;monitor|POST|/admin/statistics/rebuild&quot;,&#10;    &quot;engine|GET|/internal/tool-calls/{id}&quot;,&#10;    &quot;gateway|POST|/embed/ticket&quot;,&#10;    &quot;engine|GET|/admin/reproductions/{id}&quot;,&#10;    &quot;monitor|GET|/admin/{kind:approvals|audit}&quot;,&#10;    &quot;engine|POST|/admin/debug-runs&quot;,&#10;    &quot;skill|POST|/admin/skills/{code}/versions/{version}/publish&quot;,&#10;    &quot;skill|POST|/admin/skills/{code}/drafts/{version}/acceptance&quot;,&#10;    &quot;app|GET|/admin/classifications&quot;,&#10;    &quot;engine|GET|/admin/debug-inputs/{id}&quot;,&#10;    &quot;model|POST|/admin/model-entries&quot;,&#10;    &quot;app|GET|/admin/apps/{code}/versions&quot;,&#10;    &quot;engine|POST|/admin/debug-runs/{id}/cancel&quot;,&#10;    &quot;engine|POST|/admin/debug-runs/{id}/resume&quot;,&#10;    &quot;model|POST|/admin/model-providers/{id}/test&quot;,&#10;    &quot;engine|GET|/internal/statistics&quot;,&#10;    &quot;monitor|GET|/admin/evaluation-datasets&quot;,&#10;    &quot;app|GET|/internal/integration/{code}/{biz}&quot;,&#10;    &quot;app|GET|/admin/apps/{code}&quot;,&#10;    &quot;engine|GET|/admin/apps/{code}/sessions/{id}&quot;,&#10;    &quot;skill|GET|/internal/skill-facts/{callId}&quot;,&#10;    &quot;engine|POST|/v1/runs/{id}/cancel&quot;,&#10;    &quot;skill|POST|/admin/skills/{code}/drafts/{version}/mcp-tools&quot;,&#10;    &quot;app|PUT|/admin/flows/{code}&quot;,&#10;    &quot;engine|POST|/admin/apps/{code}/sessions/{id}/turns&quot;,&#10;    &quot;gateway|POST|/auth/dev-token&quot;,&#10;    &quot;engine|POST|/v1/apps/{code}/sessions/{id}/turns&quot;,&#10;    &quot;model|GET|/admin/model-entries&quot;,&#10;    &quot;skill|POST|/admin/skills/{code}/disable&quot;,&#10;    &quot;engine|POST|/internal/skill-draft-tests&quot;,&#10;    &quot;engine|POST|/v1/runs/{id}/approvals/{nodeId}/decision&quot;,&#10;    &quot;app|POST|/admin/classifications&quot;,&#10;    &quot;monitor|POST|/admin/approvals/{runId}/{nodeId}&quot;,&#10;    &quot;gateway|GET|/v3/api-docs&quot;,&#10;    &quot;engine|GET|/v1/runs/{id}/approvals&quot;,&#10;    &quot;engine|POST|/internal/tool-calls/register&quot;,&#10;    &quot;app|POST|/admin/apps/{code}/publish/precheck&quot;,&#10;    &quot;skill|POST|/internal/skill-jobs/{callId}/callback&quot;,&#10;    &quot;skill|PUT|/admin/skills/{code}&quot;,&#10;    &quot;app|GET|/admin/apps/{code}/versions/{versionNo}&quot;,&#10;    &quot;monitor|POST|/admin/evaluations&quot;,&#10;    &quot;skill|GET|/admin/skills/{code}&quot;,&#10;    &quot;engine|GET|/admin/debug-runs/{id}/status&quot;,&#10;    &quot;app|GET|/v1/apps/{code}/input-schema&quot;,&#10;    &quot;app|GET|/internal/apps/{code}/candidate&quot;,&#10;    &quot;skill|GET|/admin/skills/{code}/referenced-by&quot;,&#10;    &quot;monitor|GET|/admin/statistics/snapshots&quot;,&#10;    &quot;model|POST|/internal/model-bindings/validate&quot;,&#10;    &quot;app|GET|/admin/apps/{code}/integration&quot;,&#10;    &quot;model|GET|/internal/statistics&quot;,&#10;    &quot;app|GET|/admin/prompt-templates/{code}/versions&quot;,&#10;    &quot;engine|PUT|/admin/debug-runs/{id}/controls&quot;,&#10;    &quot;engine|POST|/admin/runs/{id}/reexecute&quot;,&#10;    &quot;engine|POST|/admin/apps/{code}/runs&quot;,&#10;    &quot;engine|POST|/internal/tool-calls/{id}/claim&quot;,&#10;    &quot;skill|DELETE|/admin/skills/{code}&quot;,&#10;    &quot;app|GET|/admin/apps/{code}/lifecycle-logs&quot;,&#10;    &quot;app|POST|/admin/apps/{code}/publish/commit&quot;,&#10;    &quot;skill|POST|/internal/skill-facts/{callId}/retry&quot;]" type="java.lang.AssertionError"><![CDATA[java.lang.AssertionError: 
+
+Expected size: 158 but was: 159 in:
+["monitor|GET|/admin/evaluations",
+    "app|POST|/admin/prompt-templates/{code}/versions/{version}/publish",
+    "gateway|ANY|/admin/**",
+    "skill|GET|/admin/artifacts/{id}/download",
+    "skill|POST|/admin/skills/{code}/drafts/{version}/connection-test",
+    "monitor|GET|/admin/statistics",
+    "engine|POST|/admin/runs/{id}/cancel",
+    "skill|GET|/internal/statistics",
+    "skill|POST|/internal/skill-facts/{callId}/reconcile",
+    "engine|GET|/admin/debug-inputs",
+    "app|POST|",
+    "skill|POST|/admin/skills/import-openapi",
+    "model|PUT|/admin/model-providers/{id}/quota",
+    "app|GET|/internal/apps/{code}/snapshot",
+    "skill|GET|/internal/skill-versions/{id}",
+    "model|POST|/admin/model-providers/{id}/credentials/rotate",
+    "app|POST|/admin/apps/{code}/integration/credentials/{biz}/revoke",
+    "model|POST|/admin/model-providers",
+    "engine|GET|/v1/runs/{id}",
+    "gateway|ANY|/v1/**",
+    "engine|GET|/admin/runs",
+    "engine|POST|/internal/runs/{id}/approvals/{nid}",
+    "skill|GET|/admin/skills/{code}/versions",
+    "app|PUT|/admin/apps/{code}/config",
+    "monitor|POST|/internal/datasets/promotions",
+    "engine|GET|/admin/debug-runs/{id}/controls",
+    "app|GET|/admin/apps/{code}/versions/diff",
+    "model|GET|/admin/model-entries/{id}/metering",
+    "app|GET|/internal/integration-origins",
+    "gateway|GET|/assistant.js",
+    "engine|GET|/internal/approvals",
+    "skill|GET|/admin/skills/{code}/stats",
+    "model|PUT|/admin/model-entries/{id}",
+    "app|GET|/internal/prompt-templates/{code}/versions/{version}",
+    "engine|DELETE|/admin/debug-inputs/{id}",
+    "engine|GET|/v1/apps/{code}/sessions/{id}",
+    "skill|GET|/v1/runs/{runId}/artifacts/{id}/download",
+    "model|PUT|/admin/model-providers/{id}",
+    "app|GET|/admin/prompt-templates",
+    "engine|POST|/internal/graphs/validate",
+    "app|GET|/admin/flows/{code}",
+    "engine|GET|/internal/audit",
+    "engine|POST|/internal/tool-calls/{id}/submitted",
+    "monitor|GET|/admin/evaluation-datasets/{appCode}/{version}",
+    "app|PUT|/admin/apps/{code}/integration/credentials/{biz}",
+    "engine|GET|/admin/runs/{id}/events",
+    "engine|GET|/admin/runs/{id}/replay",
+    "app|GET|/internal/apps/{code}/versions/{version}",
+    "app|POST|/admin/apps",
+    "skill|PUT|/admin/skills/{code}/draft",
+    "engine|POST|/admin/debug-inputs/{id}/promote",
+    "engine|PUT|/admin/debug-inputs/{id}",
+    "monitor|POST|/admin/evaluations/{id}/resume",
+    "monitor|GET|/admin/statistics/snapshots/{id}",
+    "monitor|GET|/admin/statistics/runs/{id}",
+    "skill|GET|/internal/skills/{code}",
+    "skill|POST|/admin/skills",
+    "skill|POST|/admin/skills/{code}/drafts/{version}/publish",
+    "model|POST|/internal/model/chat/stream",
+    "app|PUT|/admin/prompt-templates/{code}",
+    "app|GET|/admin/apps",
+    "engine|POST|/admin/runs/{id}/reproduce",
+    "app|GET|/internal/skills/{code}/references",
+    "monitor|GET|/admin/evaluations/{id}",
+    "app|POST|/admin/apps/{code}/copy",
+    "engine|GET|/admin/debug-runs/{id}/node/{nid}/prompt",
+    "engine|GET|/admin/debug-runs/{id}/events",
+    "app|DELETE|/admin/apps/{code}",
+    "skill|GET|/admin/skills",
+    "model|POST|/internal/model-bindings/freeze",
+    "model|GET|/internal/model-entries/{id}",
+    "engine|POST|/v1/apps/{code}/runs",
+    "skill|POST|/internal/skill-facts/{callId}/reproduce-artifacts",
+    "app|POST|/admin/apps/{code}/integration/credentials",
+    "engine|GET|/v1/runs/{id}/events",
+    "skill|POST|/admin/skills/import-openapi/preview",
+    "skill|POST|/internal/skills/{code}/execute",
+    "engine|POST|/internal/evaluations/run",
+    "engine|POST|/v1/apps/{code}/sessions",
+    "app|GET|/internal/apps/{code}/published",
+    "app|GET|/internal/app-drafts/{id}",
+    "app|POST|/admin/prompt-templates",
+    "engine|POST|/admin/debug-inputs",
+    "engine|GET|/internal/tool-calls/{id}/approval",
+    "skill|GET|/internal/skill-facts/{callId}/reconciliation-proofs/{attemptId}",
+    "engine|GET|/internal/statistics/runs/{id}",
+    "engine|POST|/admin/apps/{code}/sessions",
+    "model|POST|/internal/statistics/query",
+    "app|POST|/admin/apps/{code}/{action:disable|enable|archive|rollback}",
+    "model|POST|/internal/model/measure",
+    "monitor|GET|/internal/evaluations/accepted",
+    "model|GET|/admin/model-providers",
+    "engine|GET|/admin/runs/{id}",
+    "engine|GET|/admin/debug-runs/{id}/variables",
+    "engine|POST|/internal/tool-calls/{id}/fact",
+    "app|POST|/admin/prompt-templates/{code}/versions/{version}/render",
+    "model|POST|/internal/model/chat",
+    "model|POST|/admin/model-providers/{id}/disable",
+    "app|GET|/internal/integration-credentials/{id}",
+    "app|PUT|/admin/apps/{code}",
+    "monitor|POST|/admin/statistics/rebuild",
+    "engine|GET|/internal/tool-calls/{id}",
+    "gateway|POST|/embed/ticket",
+    "engine|GET|/admin/reproductions/{id}",
+    "monitor|GET|/admin/{kind:approvals|audit}",
+    "engine|POST|/admin/debug-runs",
+    "skill|POST|/admin/skills/{code}/versions/{version}/publish",
+    "skill|POST|/admin/skills/{code}/drafts/{version}/acceptance",
+    "app|GET|/admin/classifications",
+    "engine|GET|/admin/debug-inputs/{id}",
+    "model|POST|/admin/model-entries",
+    "app|GET|/admin/apps/{code}/versions",
+    "engine|POST|/admin/debug-runs/{id}/cancel",
+    "engine|POST|/admin/debug-runs/{id}/resume",
+    "model|POST|/admin/model-providers/{id}/test",
+    "engine|GET|/internal/statistics",
+    "monitor|GET|/admin/evaluation-datasets",
+    "app|GET|/internal/integration/{code}/{biz}",
+    "app|GET|/admin/apps/{code}",
+    "engine|GET|/admin/apps/{code}/sessions/{id}",
+    "skill|GET|/internal/skill-facts/{callId}",
+    "engine|POST|/v1/runs/{id}/cancel",
+    "skill|POST|/admin/skills/{code}/drafts/{version}/mcp-tools",
+    "app|PUT|/admin/flows/{code}",
+    "engine|POST|/admin/apps/{code}/sessions/{id}/turns",
+    "gateway|POST|/auth/dev-token",
+    "engine|POST|/v1/apps/{code}/sessions/{id}/turns",
+    "model|GET|/admin/model-entries",
+    "skill|POST|/admin/skills/{code}/disable",
+    "engine|POST|/internal/skill-draft-tests",
+    "engine|POST|/v1/runs/{id}/approvals/{nodeId}/decision",
+    "app|POST|/admin/classifications",
+    "monitor|POST|/admin/approvals/{runId}/{nodeId}",
+    "gateway|GET|/v3/api-docs",
+    "engine|GET|/v1/runs/{id}/approvals",
+    "engine|POST|/internal/tool-calls/register",
+    "app|POST|/admin/apps/{code}/publish/precheck",
+    "skill|POST|/internal/skill-jobs/{callId}/callback",
+    "skill|PUT|/admin/skills/{code}",
+    "app|GET|/admin/apps/{code}/versions/{versionNo}",
+    "monitor|POST|/admin/evaluations",
+    "skill|GET|/admin/skills/{code}",
+    "engine|GET|/admin/debug-runs/{id}/status",
+    "app|GET|/v1/apps/{code}/input-schema",
+    "app|GET|/internal/apps/{code}/candidate",
+    "skill|GET|/admin/skills/{code}/referenced-by",
+    "monitor|GET|/admin/statistics/snapshots",
+    "model|POST|/internal/model-bindings/validate",
+    "app|GET|/admin/apps/{code}/integration",
+    "model|GET|/internal/statistics",
+    "app|GET|/admin/prompt-templates/{code}/versions",
+    "engine|PUT|/admin/debug-runs/{id}/controls",
+    "engine|POST|/admin/runs/{id}/reexecute",
+    "engine|POST|/admin/apps/{code}/runs",
+    "engine|POST|/internal/tool-calls/{id}/claim",
+    "skill|DELETE|/admin/skills/{code}",
+    "app|GET|/admin/apps/{code}/lifecycle-logs",
+    "app|POST|/admin/apps/{code}/publish/commit",
+    "skill|POST|/internal/skill-facts/{callId}/retry"]
+	at cn.agentplatform.common.authority.AuthorityPolicyTest.catalogCoversEveryActualControllerTemplateWithoutGrantingGatewayWildcards(AuthorityPolicyTest.java:180)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+]]></failure>
+  </testcase>
+  <testcase name="adminCannotGrantServiceCapability" classname="cn.agentplatform.common.authority.AuthorityPolicyTest" time="0.002"/>
+  <testcase name="ownershipMustMatchAndCannotBeCompletedFromOneSide" classname="cn.agentplatform.common.authority.AuthorityPolicyTest" time="0.006"/>
+  <testcase name="cannotRestoreRemovedRegion" classname="cn.agentplatform.common.authority.AuthorityPolicyTest" time="0.001"/>
+</testsuite>

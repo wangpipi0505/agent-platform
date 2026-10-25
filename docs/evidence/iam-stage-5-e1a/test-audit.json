@@ -1,0 +1,776 @@
+{
+  "runs": [
+    {
+      "stage": "iam-stage-5-e1a-red-01",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-5-e1a-red-01 admin-common RetainedAuthorizationTest",
+      "buildSuccess": false,
+      "rawSha256": "08652f9d37cdd025c487475c27309c6cd4f0cbd688c359d30dccbb136bbf2bfc",
+      "totals": {
+        "tests": 4,
+        "failures": 4,
+        "errors": 0,
+        "skipped": 0
+      },
+      "suites": [
+        {
+          "name": "cn.agentplatform.common.authority.RetainedAuthorizationTest",
+          "tests": 4,
+          "failures": 4,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            "singleSidedOriginCannotBeSilentlyIgnored",
+            "legacyIntegrationSourceMustHaveFixedVerifiedIssuerAndBoundedJti",
+            "samePortalAuthenticationCannotChangeOriginalRolesOnAnotherGrant",
+            "receivedSignedTicketInitialCannotDisagreeWithItsOperationHash"
+          ],
+          "sha256": "703491c67f55806b73b67ad2c22a1e6682f52e0b07582d9e74b381bef56281fa"
+        }
+      ],
+      "warningCount": 0,
+      "errorLogLines": 25
+    },
+    {
+      "stage": "iam-stage-5-e1a-targeted-01",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-5-e1a-targeted-01 admin-common RetainedAuthorizationTest,AuthorityContextRetainedTest,ServiceAuthorizationTest,CurrentAuthorityClientTest",
+      "buildSuccess": false,
+      "rawSha256": "345c27feda358c3a8294367a0e783f35f3cecaf0d7f85b60c1d092f596a1e811",
+      "totals": {
+        "tests": 50,
+        "failures": 3,
+        "errors": 0,
+        "skipped": 0
+      },
+      "suites": [
+        {
+          "name": "cn.agentplatform.common.authority.AuthorityContextRetainedTest",
+          "tests": 5,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            "everyRefreshFailureRemainsTerminalAfterTheCauseIsRemoved",
+            "currentOnlyBindingAndMissingProofCannotUpgradeThroughRefresh",
+            "closedNonLifoFramesAndDifferentThreadsCannotReuseCapturedProof",
+            "expiryFoundByLocalBoundOrCurrentReadRetiresFrameEvenIfClockLaterMovesBack",
+            "successfulRefreshReplacesSnapshotAndOldIdentityFailureRetiresTheCurrentFrame"
+          ],
+          "sha256": "9814642ded0d64c4e01a04d6e14905097a6c2e55bd2b3382b48c909aed5674b8"
+        },
+        {
+          "name": "cn.agentplatform.common.authority.CurrentAuthorityClientTest",
+          "tests": 19,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            "signedPortalExchangePreservesLocalCeilingAndIndependentClientAuthentication",
+            "reviewI3ApproverCurrentTrustAndBindingsRemainMandatory",
+            "workloadCannotBecomeAUserAndContextIsNotInherited",
+            "rr2ResumeCannotReintroduceRolesOutsideOriginalSignedGrantCeiling",
+            "integrationPolicyUsesIndependentHttpAssertionOnEveryDecisionWithoutRecursion",
+            "authenticatedEngineCannotChooseAnotherTenantSubjectResourceActionOrMissingGrant",
+            "portalCannotHideBroaderInitialCeilingBehindNarrowCurrentRoles",
+            "rr2NewDelegatedOperationSurvivesOriginalPortalExpiryButForwardCannotResetItsDeadline",
+            "noCachedTicketAfterScopeRoleVersionGrantOrNetworkFailureAndExplicitRecoveryWorks",
+            "signedReplyTamperNonceTicketJtiCallerResourceAndExpiryAreNotAccepted",
+            "integrationBadMacCrossUseClientAndTtlNeverExchange",
+            "reviewI2LifoExceptionOwnerAndChildBoundaries",
+            "reviewI3CurrentEditorApproverProofDoesNotImposeFrozenBusinessRoles",
+            "rr2MissingOperationPolicyOrSignedOperationFieldAndForwardDeadlineChangeFail",
+            "r3ResolverStringActiveCannotBeCoercedIntoPermission",
+            "integrationResolverMissingInactiveOldVersionWrongTrustDomainAndBindingsDeny",
+            "issuerCannotRestoreLocallyRemovedAdminOrRegion",
+            "approvalUsesRecordedApproverAndRevocationIsLive",
+            "reviewI2NonLifoSameAuthorityNeverRestoresClosedFrame"
+          ],
+          "sha256": "ece9df975f1ef75750380c201ddcbc6f723d39a0c893b85552fb97ff66269017"
+        },
+        {
+          "name": "cn.agentplatform.common.authority.RetainedAuthorizationTest",
+          "tests": 12,
+          "failures": 1,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            "singleSidedOriginCannotBeSilentlyIgnored",
+            "signedTicketAndDecisionTamperingCannotMintProof",
+            "legacyIntegrationSourceMustHaveFixedVerifiedIssuerAndBoundedJti",
+            "samePortalAuthenticationCannotChangeOriginalRolesOnAnotherGrant",
+            "receivedSignedTicketInitialCannotDisagreeWithItsOperationHash",
+            "originBothAbsentIsCurrentOnlyAndEveryPartialOrMalformedPairDenies",
+            "proofUsesSameClientClockAndEarliestSignedDeadline",
+            "verifiedSourceRepresentationDoesNotResetInitialOrPolicyAnchor",
+            "originalAuthenticationSurvivesDistinctGrantsForwardAndRealResumeButFreshJtiDiffers",
+            "fixtureChecksFixedSourceDomainsTypesAndTimeBeforeComputingOrigin",
+            "legacyDefaultAndPublicValuesCannotMintInitialProof",
+            "sameMappingRetainsFullInitialWhileCurrentNarrowsWithExactlyOneQuery"
+          ],
+          "sha256": "1a93f18c24daba004b4666066ba3814f2140db3b21b716e97bd5213ecf9d430b"
+        },
+        {
+          "name": "cn.agentplatform.common.authority.ServiceAuthorizationTest",
+          "tests": 14,
+          "failures": 2,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            "explicitlyRegisteredExactHealthNeedsNoBearerAndGrantsNoSiblingPath",
+            "actorProjectionRequiresContextWithSameTenantAndSubject",
+            "signedOldAdminCannotOverrideOnlineEditorInRealController",
+            "exceptionsAsyncHandoffAndConcurrentRequestsLeaveNoAmbientFrame",
+            "bothWorkloadRowsAreUsableAndCannotBecomeDelegatedUserCapabilities",
+            "resourceRefreshRevocationExpiryAndUnavailableNeverReuseInitialSuccess",
+            "retainedInitialUsesOnePreHandleQueryAndOneExplicitRefreshThenClosesOnHttpAndAsync",
+            "exactIdentityCapabilityAndResolvedDomainResourceMatrixNeverEntersBusiness",
+            "freshSignedDecisionCannotChangeAnyOriginalSubjectGrantOperationOrCallBinding",
+            "catchingFailedResourceRefreshCannotRecoverThePreviousActorProjection",
+            "requireForChecksLocalOwnerAndRejectsWiderActorWithoutUsingItAsAuthorityInput",
+            "nestedServletDispatchCannotOverwriteTheRequestCleanupFrame",
+            "integrationOriginCannotUseAdminAliasesEvenAfterDelegatedResume",
+            "secondaryMappingUsesTheSameRealHttpCurrentAuthorityGuard"
+          ],
+          "sha256": "16f9527af17aa028bd909af45132f114c5533e31773c8853d7b5d8cae2144011"
+        }
+      ],
+      "warningCount": 0,
+      "errorLogLines": 24
+    },
+    {
+      "stage": "iam-stage-5-e1a-targeted-02",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-5-e1a-targeted-02 admin-common RetainedAuthorizationTest,AuthorityContextRetainedTest,ServiceAuthorizationTest,CurrentAuthorityClientTest",
+      "buildSuccess": true,
+      "rawSha256": "c03632447100a4488e8b75d619e0d2bebcc7b0857fc23330383f64d8ae02d0ec",
+      "totals": {
+        "tests": 50,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "suites": [
+        {
+          "name": "cn.agentplatform.common.authority.AuthorityContextRetainedTest",
+          "tests": 5,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            "everyRefreshFailureRemainsTerminalAfterTheCauseIsRemoved",
+            "currentOnlyBindingAndMissingProofCannotUpgradeThroughRefresh",
+            "closedNonLifoFramesAndDifferentThreadsCannotReuseCapturedProof",
+            "expiryFoundByLocalBoundOrCurrentReadRetiresFrameEvenIfClockLaterMovesBack",
+            "successfulRefreshReplacesSnapshotAndOldIdentityFailureRetiresTheCurrentFrame"
+          ],
+          "sha256": "06877be80f29811e6d4686ab3c59974f5a270bd9fd090151ab818c01be54bd6b"
+        },
+        {
+          "name": "cn.agentplatform.common.authority.CurrentAuthorityClientTest",
+          "tests": 19,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            "signedPortalExchangePreservesLocalCeilingAndIndependentClientAuthentication",
+            "reviewI3ApproverCurrentTrustAndBindingsRemainMandatory",
+            "workloadCannotBecomeAUserAndContextIsNotInherited",
+            "rr2ResumeCannotReintroduceRolesOutsideOriginalSignedGrantCeiling",
+            "integrationPolicyUsesIndependentHttpAssertionOnEveryDecisionWithoutRecursion",
+            "authenticatedEngineCannotChooseAnotherTenantSubjectResourceActionOrMissingGrant",
+            "portalCannotHideBroaderInitialCeilingBehindNarrowCurrentRoles",
+            "rr2NewDelegatedOperationSurvivesOriginalPortalExpiryButForwardCannotResetItsDeadline",
+            "noCachedTicketAfterScopeRoleVersionGrantOrNetworkFailureAndExplicitRecoveryWorks",
+            "signedReplyTamperNonceTicketJtiCallerResourceAndExpiryAreNotAccepted",
+            "integrationBadMacCrossUseClientAndTtlNeverExchange",
+            "reviewI2LifoExceptionOwnerAndChildBoundaries",
+            "reviewI3CurrentEditorApproverProofDoesNotImposeFrozenBusinessRoles",
+            "rr2MissingOperationPolicyOrSignedOperationFieldAndForwardDeadlineChangeFail",
+            "r3ResolverStringActiveCannotBeCoercedIntoPermission",
+            "integrationResolverMissingInactiveOldVersionWrongTrustDomainAndBindingsDeny",
+            "issuerCannotRestoreLocallyRemovedAdminOrRegion",
+            "approvalUsesRecordedApproverAndRevocationIsLive",
+            "reviewI2NonLifoSameAuthorityNeverRestoresClosedFrame"
+          ],
+          "sha256": "23cc5cab652270f3154560643928c5b0d3045821db72a4147486166e5dcc23a8"
+        },
+        {
+          "name": "cn.agentplatform.common.authority.RetainedAuthorizationTest",
+          "tests": 12,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            "singleSidedOriginCannotBeSilentlyIgnored",
+            "signedTicketAndDecisionTamperingCannotMintProof",
+            "legacyIntegrationSourceMustHaveFixedVerifiedIssuerAndBoundedJti",
+            "samePortalAuthenticationCannotChangeOriginalRolesOnAnotherGrant",
+            "receivedSignedTicketInitialCannotDisagreeWithItsOperationHash",
+            "originBothAbsentIsCurrentOnlyAndEveryPartialOrMalformedPairDenies",
+            "proofUsesSameClientClockAndEarliestSignedDeadline",
+            "verifiedSourceRepresentationDoesNotResetInitialOrPolicyAnchor",
+            "originalAuthenticationSurvivesDistinctGrantsForwardAndRealResumeButFreshJtiDiffers",
+            "fixtureChecksFixedSourceDomainsTypesAndTimeBeforeComputingOrigin",
+            "legacyDefaultAndPublicValuesCannotMintInitialProof",
+            "sameMappingRetainsFullInitialWhileCurrentNarrowsWithExactlyOneQuery"
+          ],
+          "sha256": "dff5e67347789157f79621a7048e2102726774e089cd4e924e31bf03ded9100f"
+        },
+        {
+          "name": "cn.agentplatform.common.authority.ServiceAuthorizationTest",
+          "tests": 14,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            "explicitlyRegisteredExactHealthNeedsNoBearerAndGrantsNoSiblingPath",
+            "actorProjectionRequiresContextWithSameTenantAndSubject",
+            "signedOldAdminCannotOverrideOnlineEditorInRealController",
+            "exceptionsAsyncHandoffAndConcurrentRequestsLeaveNoAmbientFrame",
+            "bothWorkloadRowsAreUsableAndCannotBecomeDelegatedUserCapabilities",
+            "resourceRefreshRevocationExpiryAndUnavailableNeverReuseInitialSuccess",
+            "retainedInitialUsesOnePreHandleQueryAndOneExplicitRefreshThenClosesOnHttpAndAsync",
+            "exactIdentityCapabilityAndResolvedDomainResourceMatrixNeverEntersBusiness",
+            "freshSignedDecisionCannotChangeAnyOriginalSubjectGrantOperationOrCallBinding",
+            "catchingFailedResourceRefreshCannotRecoverThePreviousActorProjection",
+            "requireForChecksLocalOwnerAndRejectsWiderActorWithoutUsingItAsAuthorityInput",
+            "nestedServletDispatchCannotOverwriteTheRequestCleanupFrame",
+            "integrationOriginCannotUseAdminAliasesEvenAfterDelegatedResume",
+            "secondaryMappingUsesTheSameRealHttpCurrentAuthorityGuard"
+          ],
+          "sha256": "2d9feca3a5639830a5a3906448cc8d322e2b033d6b2608bda822c82c98d725bb"
+        }
+      ],
+      "warningCount": 0,
+      "errorLogLines": 0
+    },
+    {
+      "stage": "iam-stage-5-e1a-red-02",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-5-e1a-red-02 admin-common RetainedAuthorizationTest#ticketExpiringDuringTheSingleCurrentQueryCannotProduceAUsableMapping",
+      "buildSuccess": false,
+      "rawSha256": "b3e8160b3a585a788ccec9ecc7f1b4a277144a7d5634ec9d4c8a02a1b3896b79",
+      "totals": {
+        "tests": 1,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0
+      },
+      "suites": [
+        {
+          "name": "cn.agentplatform.common.authority.RetainedAuthorizationTest",
+          "tests": 1,
+          "failures": 1,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            "ticketExpiringDuringTheSingleCurrentQueryCannotProduceAUsableMapping"
+          ],
+          "sha256": "708f6994abb96ac23e34d30f60e40f73cd2458a5937736a1abc802010928364e"
+        }
+      ],
+      "warningCount": 0,
+      "errorLogLines": 19
+    },
+    {
+      "stage": "iam-stage-5-e1a-targeted-03",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-5-e1a-targeted-03 admin-common RetainedAuthorizationTest#ticketExpiringDuringTheSingleCurrentQueryCannotProduceAUsableMapping",
+      "buildSuccess": true,
+      "rawSha256": "56d19a08c593ebfda7614a2a62b89819198da5434a4ebd83498ca1c89470ee64",
+      "totals": {
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "suites": [
+        {
+          "name": "cn.agentplatform.common.authority.RetainedAuthorizationTest",
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            "ticketExpiringDuringTheSingleCurrentQueryCannotProduceAUsableMapping"
+          ],
+          "sha256": "f9f2460c790b7d841b1998ee1491aadd797e802fc3b9468314f190ee4cbec0d1"
+        }
+      ],
+      "warningCount": 0,
+      "errorLogLines": 0
+    },
+    {
+      "stage": "iam-stage-5-e1a-full-01",
+      "command": "node .tools/run-iam-module-tests.mjs iam-stage-5-e1a-full-01 admin-common *",
+      "buildSuccess": true,
+      "rawSha256": "e8cca1faa6fdfa864001fc3477a5303f1042c564d2a0371f70a66623d35f6ac2",
+      "totals": {
+        "tests": 174,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "suites": [
+        {
+          "name": "cn.agentplatform.common.CommonBoundaryTest",
+          "tests": 4,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            "readsOnlyVerifiedJwtClaimsAndChecksRoles",
+            "validatesInternalTicketAndPreservesActorBoundary",
+            "usesCanonicalJsonForContentIdentity",
+            "rejectsMissingAuthenticatedIdentity"
+          ],
+          "sha256": "b9f8a3e3202401750a9085e9b4aed91d8e9eedd5dc120f3d81e5bf2c5afe50c5"
+        },
+        {
+          "name": "cn.agentplatform.common.SecretVaultTest",
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            "encryptsAtRestAndRejectsEscapedReferences"
+          ],
+          "sha256": "a6203778ea54bd852aa771eb808c91407a31cf9f2c2652650c348fa9d2f2e077"
+        },
+        {
+          "name": "cn.agentplatform.common.authority.AuthorityConfigurationTest",
+          "tests": 40,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            "configuredDomainBusinessRolesAreAcceptedAndReservedRolesRemainForbidden",
+            "illegalConfigurationFailsBeforeCreatingListener(Invalid)[1]",
+            "illegalConfigurationFailsBeforeCreatingListener(Invalid)[2]",
+            "illegalConfigurationFailsBeforeCreatingListener(Invalid)[3]",
+            "illegalConfigurationFailsBeforeCreatingListener(Invalid)[4]",
+            "illegalConfigurationFailsBeforeCreatingListener(Invalid)[5]",
+            "illegalConfigurationFailsBeforeCreatingListener(Invalid)[6]",
+            "illegalConfigurationFailsBeforeCreatingListener(Invalid)[7]",
+            "illegalConfigurationFailsBeforeCreatingListener(Invalid)[8]",
+            "illegalConfigurationFailsBeforeCreatingListener(Invalid)[9]",
+            "illegalConfigurationFailsBeforeCreatingListener(Invalid)[10]",
+            "illegalConfigurationFailsBeforeCreatingListener(Invalid)[11]",
+            "illegalConfigurationFailsBeforeCreatingListener(Invalid)[12]",
+            "illegalConfigurationFailsBeforeCreatingListener(Invalid)[13]",
+            "illegalConfigurationFailsBeforeCreatingListener(Invalid)[14]",
+            "illegalConfigurationFailsBeforeCreatingListener(Invalid)[15]",
+            "illegalConfigurationFailsBeforeCreatingListener(Invalid)[16]",
+            "illegalConfigurationFailsBeforeCreatingListener(Invalid)[17]",
+            "illegalConfigurationFailsBeforeCreatingListener(Invalid)[18]",
+            "illegalConfigurationFailsBeforeCreatingListener(Invalid)[19]",
+            "illegalConfigurationFailsBeforeCreatingListener(Invalid)[20]",
+            "illegalConfigurationFailsBeforeCreatingListener(Invalid)[21]",
+            "illegalConfigurationFailsBeforeCreatingListener(Invalid)[22]",
+            "illegalConfigurationFailsBeforeCreatingListener(Invalid)[23]",
+            "illegalConfigurationFailsBeforeCreatingListener(Invalid)[24]",
+            "illegalConfigurationFailsBeforeCreatingListener(Invalid)[25]",
+            "illegalConfigurationFailsBeforeCreatingListener(Invalid)[26]",
+            "illegalConfigurationFailsBeforeCreatingListener(Invalid)[27]",
+            "illegalConfigurationFailsBeforeCreatingListener(Invalid)[28]",
+            "illegalConfigurationFailsBeforeCreatingListener(Invalid)[29]",
+            "illegalConfigurationFailsBeforeCreatingListener(Invalid)[30]",
+            "illegalConfigurationFailsBeforeCreatingListener(Invalid)[31]",
+            "illegalConfigurationFailsBeforeCreatingListener(Invalid)[32]",
+            "illegalConfigurationFailsBeforeCreatingListener(Invalid)[33]",
+            "illegalConfigurationFailsBeforeCreatingListener(Invalid)[34]",
+            "portalCeilingsAreRequiredAndStrictlyBoundByTheDeploymentBinder",
+            "explicitGatewayDevPreservesIntegration",
+            "explicitTestProfileMayUseOnlyLiteralLoopbackTrustEndpointsAndIamStaysClosed",
+            "explicitDevelopmentModesKeepLegacyDecoder(String)[1]",
+            "explicitDevelopmentModesKeepLegacyDecoder(String)[2]"
+          ],
+          "sha256": "65b5b206353023580084aeb2ab2f7053f59225518fc26945530e583ffd18ee79"
+        },
+        {
+          "name": "cn.agentplatform.common.authority.AuthorityContextRetainedTest",
+          "tests": 5,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            "everyRefreshFailureRemainsTerminalAfterTheCauseIsRemoved",
+            "currentOnlyBindingAndMissingProofCannotUpgradeThroughRefresh",
+            "closedNonLifoFramesAndDifferentThreadsCannotReuseCapturedProof",
+            "expiryFoundByLocalBoundOrCurrentReadRetiresFrameEvenIfClockLaterMovesBack",
+            "successfulRefreshReplacesSnapshotAndOldIdentityFailureRetiresTheCurrentFrame"
+          ],
+          "sha256": "3cc112d512dd41a716b05bbeb34b62a9731fc9547db80b2dfd3ddcbede39db66"
+        },
+        {
+          "name": "cn.agentplatform.common.authority.AuthorityPolicyTest",
+          "tests": 14,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            "labelsRemainObligationsAndMissingPermissionDoesNotAddAuthority",
+            "blankOrNullOwnershipCannotPassEquality(String, String)[1]",
+            "blankOrNullOwnershipCannotPassEquality(String, String)[2]",
+            "blankOrNullOwnershipCannotPassEquality(String, String)[3]",
+            "blankOrNullOwnershipCannotPassEquality(String, String)[4]",
+            "blankOrNullOwnershipCannotPassEquality(String, String)[5]",
+            "blankOrNullOwnershipCannotPassEquality(String, String)[6]",
+            "routeCannotBorrowCallerOrMethod",
+            "catalogSeparatesActionsAndModesAndKeepsUnusedEntrypointsDisabled",
+            "duplicateAndUnknownCatalogEntriesFailClosed",
+            "catalogCoversEveryActualControllerTemplateWithoutGrantingGatewayWildcards",
+            "adminCannotGrantServiceCapability",
+            "ownershipMustMatchAndCannotBeCompletedFromOneSide",
+            "cannotRestoreRemovedRegion"
+          ],
+          "sha256": "01402a983faeec1edec8b7fb6f876b0495f35a9388cb29690a779cadb4c1d927"
+        },
+        {
+          "name": "cn.agentplatform.common.authority.CurrentAuthorityClientTest",
+          "tests": 19,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            "signedPortalExchangePreservesLocalCeilingAndIndependentClientAuthentication",
+            "reviewI3ApproverCurrentTrustAndBindingsRemainMandatory",
+            "workloadCannotBecomeAUserAndContextIsNotInherited",
+            "rr2ResumeCannotReintroduceRolesOutsideOriginalSignedGrantCeiling",
+            "integrationPolicyUsesIndependentHttpAssertionOnEveryDecisionWithoutRecursion",
+            "authenticatedEngineCannotChooseAnotherTenantSubjectResourceActionOrMissingGrant",
+            "portalCannotHideBroaderInitialCeilingBehindNarrowCurrentRoles",
+            "rr2NewDelegatedOperationSurvivesOriginalPortalExpiryButForwardCannotResetItsDeadline",
+            "noCachedTicketAfterScopeRoleVersionGrantOrNetworkFailureAndExplicitRecoveryWorks",
+            "signedReplyTamperNonceTicketJtiCallerResourceAndExpiryAreNotAccepted",
+            "integrationBadMacCrossUseClientAndTtlNeverExchange",
+            "reviewI2LifoExceptionOwnerAndChildBoundaries",
+            "reviewI3CurrentEditorApproverProofDoesNotImposeFrozenBusinessRoles",
+            "rr2MissingOperationPolicyOrSignedOperationFieldAndForwardDeadlineChangeFail",
+            "r3ResolverStringActiveCannotBeCoercedIntoPermission",
+            "integrationResolverMissingInactiveOldVersionWrongTrustDomainAndBindingsDeny",
+            "issuerCannotRestoreLocallyRemovedAdminOrRegion",
+            "approvalUsesRecordedApproverAndRevocationIsLive",
+            "reviewI2NonLifoSameAuthorityNeverRestoresClosedFrame"
+          ],
+          "sha256": "aa5c2c8ef852601d8d7bd35d59ce3f54d94524bc1f180fbbc5de09fef3ce655a"
+        },
+        {
+          "name": "cn.agentplatform.common.authority.IntegrationClaimsTest",
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            "shortLongPrincipalAndCanonicalDigestRetainIssuedTicketContract"
+          ],
+          "sha256": "7f19741a0126d64f4f48c084cc7158d8437c4f0abd9cd7e2c859767805683406"
+        },
+        {
+          "name": "cn.agentplatform.common.authority.MetadataSelectorsTest",
+          "tests": 5,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            "queryPurposeIsBidirectionalAndPortalOnly",
+            "catalogGrantsOnlyExactGatewayQueryAndKeepsIntegrationClosed",
+            "currentPermissionNarrowingAfterQueryBlocksSecondExchangeAndMainCurrentCheck",
+            "canonicalTupleAndDescriptorAreDeterministicAndTenantBound",
+            "codesAreBoundedBeforeAnyUrlCanBeConstructed"
+          ],
+          "sha256": "e67feb1b40a43cf408f09855025074c6293c00b1f293076aa589ec0104a3073c"
+        },
+        {
+          "name": "cn.agentplatform.common.authority.PolicyRequestVerifierTest",
+          "tests": 4,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            "signedPolicyProofIsBoundToExactRequestBodyTimeAndVerifier",
+            "wrongDomainClaimsMethodPathAndBodyFailLocallyWithout503",
+            "missingPrivateDuplicateOrTooManyPinnedKeysRejectAtConstruction",
+            "globalGuardRequiresRegisteredMethodAndUnforgeableProof"
+          ],
+          "sha256": "5c08a65af8b78e55471d67cdf3a696d08dc9691d4c0140650d8e4f2c1a6a8a5c"
+        },
+        {
+          "name": "cn.agentplatform.common.authority.PortalClaimMapperTest",
+          "tests": 6,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            "signedConfiguredDomainRolesArePreservedWithoutAdminSubstitution",
+            "clientAndClaimTypesMustMatchAndMissingScopeAddsNoPermission",
+            "actorNeverGrantsServiceBusinessRolesFromTrustedRsaClaims",
+            "issuerClientCeilingClipsPermissionsAndPreservesSensitivityObligations",
+            "knownOwnershipValuesRequireExactSingleSignedValuesAndLabelsCannotDisappear",
+            "iterativeScopeParsingPreservesAsciiTokensAndExactSpaceRules"
+          ],
+          "sha256": "34a5b2028c90ac76268b7ef4ea339637c4e263610b0cfa9faf63ce5ffee7827c"
+        },
+        {
+          "name": "cn.agentplatform.common.authority.ResponseAuthorityTest",
+          "tests": 19,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            "reviewI1ClosedSseLeaseCannotReplayConsumedSequence",
+            "rr1CompletionRequiresAcceptedResponseAndCannotExtendDeadlineOrSwitchOwnerVersionPayload",
+            "reviewI1ActiveRenewedAndClosedLeasesCannotClaimAnotherHolder",
+            "portalNeverHasCompletionPermitAndIntegrationPermitBindingsAreVerifiedAtOpen",
+            "r1BlockedWriterCannotReleaseQueuedChunkAfterDecisionExpiryAndRevocation",
+            "modelCompletionAcceptsOriginalFinalOnceAndRejectsConflictingReplay",
+            "reviewI1FailedConstructorTerminatesClaimAndShutsScheduler",
+            "validContinuationChecksOnlineWithoutRenewingOriginalBindingOrSource",
+            "validManifestDigestDoesNotAllowWrongVersionOwnerCeilingOrLabels",
+            "closeMarksStopBeforeWaitingForAnInFlightRenewal",
+            "signedPermitBindingMatrixAndContinuationMisuseFail",
+            "unacceptedIntegrationAndDelegatedResponsesCannotDrain",
+            "integrationOpenAndCheckUsePolicyThenDrainingDoesNotQueryOrSendAgain",
+            "reviewI1PublicCopiesCannotClaimOrLaunderSamePermit",
+            "reviewI1ClosedModelLeaseCannotReplayFinal",
+            "idleWatchdogCancelsAndCloseIsIdempotent",
+            "signedCompletionPermitCannotBeReplayedAsAnyServiceOrNewResponseCredential",
+            "rr1ExpiredOrdinaryCurrentFailsWhileOnlyOriginalAcceptedIntegrationResponseCanDrain",
+            "reviewI1RenewalPreservesCursorAcceptanceAndFinalReservation"
+          ],
+          "sha256": "7b30954a52fb29e587be468ad95f89f40dae48ff03805c56b8358757d85c5c12"
+        },
+        {
+          "name": "cn.agentplatform.common.authority.RetainedAuthorizationTest",
+          "tests": 13,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            "singleSidedOriginCannotBeSilentlyIgnored",
+            "signedTicketAndDecisionTamperingCannotMintProof",
+            "legacyIntegrationSourceMustHaveFixedVerifiedIssuerAndBoundedJti",
+            "samePortalAuthenticationCannotChangeOriginalRolesOnAnotherGrant",
+            "receivedSignedTicketInitialCannotDisagreeWithItsOperationHash",
+            "originBothAbsentIsCurrentOnlyAndEveryPartialOrMalformedPairDenies",
+            "proofUsesSameClientClockAndEarliestSignedDeadline",
+            "verifiedSourceRepresentationDoesNotResetInitialOrPolicyAnchor",
+            "originalAuthenticationSurvivesDistinctGrantsForwardAndRealResumeButFreshJtiDiffers",
+            "fixtureChecksFixedSourceDomainsTypesAndTimeBeforeComputingOrigin",
+            "legacyDefaultAndPublicValuesCannotMintInitialProof",
+            "sameMappingRetainsFullInitialWhileCurrentNarrowsWithExactlyOneQuery",
+            "ticketExpiringDuringTheSingleCurrentQueryCannotProduceAUsableMapping"
+          ],
+          "sha256": "3607153e300fdc774f67b219e56132aac7987956d4734d357f00f8056c08d025"
+        },
+        {
+          "name": "cn.agentplatform.common.authority.RouteCoverageVerifierTest",
+          "tests": 9,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            "partialGuardDoesNotCountAsCoverageOfRegisteredCapabilities",
+            "secondaryRequestMappingInfoBeanIsAlsoCheckedBeforeListenerStarts",
+            "customDocsHaveNoFrameworkPackageOrPathExemption",
+            "everyRuntimeAliasMustBeCoveredBeforeListening",
+            "everyRuntimeMethodMustBeCoveredBeforeListening",
+            "unknownRuntimeHandlerFailsBeforeWebServerStart",
+            "explicitIngressRequiresExactHandlerMethodAndCannotBeAnUnusedBypass",
+            "fullyRegisteredRuntimeAliasesStartAndServeActualHttp",
+            "disabledOnlyMappingAlsoNeedsARealDenialGuard"
+          ],
+          "sha256": "d82390344cf5bfc32215156bcfe0fe063a5237e4799485953851893c5aad375a"
+        },
+        {
+          "name": "cn.agentplatform.common.authority.ServiceAuthorizationTest",
+          "tests": 14,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            "explicitlyRegisteredExactHealthNeedsNoBearerAndGrantsNoSiblingPath",
+            "actorProjectionRequiresContextWithSameTenantAndSubject",
+            "signedOldAdminCannotOverrideOnlineEditorInRealController",
+            "exceptionsAsyncHandoffAndConcurrentRequestsLeaveNoAmbientFrame",
+            "bothWorkloadRowsAreUsableAndCannotBecomeDelegatedUserCapabilities",
+            "resourceRefreshRevocationExpiryAndUnavailableNeverReuseInitialSuccess",
+            "retainedInitialUsesOnePreHandleQueryAndOneExplicitRefreshThenClosesOnHttpAndAsync",
+            "exactIdentityCapabilityAndResolvedDomainResourceMatrixNeverEntersBusiness",
+            "freshSignedDecisionCannotChangeAnyOriginalSubjectGrantOperationOrCallBinding",
+            "catchingFailedResourceRefreshCannotRecoverThePreviousActorProjection",
+            "requireForChecksLocalOwnerAndRejectsWiderActorWithoutUsingItAsAuthorityInput",
+            "nestedServletDispatchCannotOverwriteTheRequestCleanupFrame",
+            "integrationOriginCannotUseAdminAliasesEvenAfterDelegatedResume",
+            "secondaryMappingUsesTheSameRealHttpCurrentAuthorityGuard"
+          ],
+          "sha256": "8288e2d8016263aa2b2d5fb093f1f06ab2c0d6406c57016804c356159a56f964"
+        },
+        {
+          "name": "cn.agentplatform.common.authority.ServiceTicketProviderTest",
+          "tests": 3,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            "resolverRequiresOwnDeploymentCredentialAndTransportCannotSendItToJwks",
+            "actorCannotMintAnIamServiceTicketEvenWhenLegacyKeyExists",
+            "sharedStrictJwksParsingRejectsPrivateAndDuplicateKeys"
+          ],
+          "sha256": "1d33e7b199596dbb1c489166df0a8c38f3ddfdcef118e567f0b3e7b393eb13b3"
+        },
+        {
+          "name": "cn.agentplatform.common.authority.TrustedJwtDecoderTest",
+          "tests": 12,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            "invalidClaimMatrixIsRejectedWithoutClaimCoercion",
+            "trustedInputRequiresExplicitTestProfileForHttp",
+            "realHttpRejectsPortalServiceRoleMissingScopeAndJwksOutageBeforeHandler",
+            "bodyDeadlineCancelsReadingAfterHeadersAndChunkedOverflowIsBounded",
+            "fixedHttpEndpointsNoRedirectAndFiniteBodySizes",
+            "validRsaSignatureWorksButWrongSignatureNeverPasses",
+            "malformedJwksIsUnavailableNotAKeyFallback",
+            "signedUnregisteredActionAndInsufficientScopeAreForbiddenAfterIdentityValidation",
+            "signedFixed2500ShortScopesWithinJwtLimitProduceTheConfiguredIntersection",
+            "rotationOutageRecoveryAndClockNeverReuseAStaleKeyOrExpiredToken",
+            "tokenUrlsAndDuplicateRawClaimsNeverDriveNetworkDiscovery",
+            "delegatedAndWorkloadTicketsHaveDisjointSignedBindings"
+          ],
+          "sha256": "442f31ee2ee31f4251bbd0f05e8cbed5e0537aaa60c5f4d502bfc22edb268c04"
+        },
+        {
+          "name": "cn.agentplatform.common.schema.SharedSchemaAdmissionTest",
+          "tests": 5,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "cases": [
+            "lowerGraphLimitRefusesSmallSchemaAndCannotRaiseHardCeiling",
+            "nestedDeadlineNeverExtendsCallerAndRestoresPreviousScope",
+            "rawDeclarationArrayIsBoundedWithoutInterpretingItsMetadata",
+            "ordinaryLocalAnchorAndLiteralDataRemainDistinct",
+            "lowerInstanceLimitRefusesFewNodesAndCannotRaiseHardCeiling"
+          ],
+          "sha256": "e3765de261a7ebefd4c6e4cdeb78b8adb6b7e6f11aff144d51966b254fe99be3"
+        }
+      ],
+      "warningCount": 0,
+      "errorLogLines": 39
+    }
+  ],
+  "targetsBefore": 1633,
+  "targetsAfter": 1648,
+  "targetChanged": 62,
+  "commonFrozenTargetCount": 335,
+  "otherModuleTargetsUnchanged": true,
+  "preservedPublicFixtureHooks": [
+    "void externalPolicy(URI endpoint)",
+    "void clearFiniteGrants()",
+    "void narrowAdminAtResourceCheck()",
+    "void portalActor(Actor actor)",
+    "LoopbackAuthority() throws Exception",
+    "String issuer()",
+    "String policyIssuer()",
+    "AuthorityProperties config(String service)",
+    "HttpCurrentAuthorityClient client(String service)",
+    "String portal()",
+    "String portal(long ttl)",
+    "Map<String,Object> integrationClaims()",
+    "String integration(Map<String,Object> c)",
+    "Map<String,Object> base(String use,String audience,long ttl)",
+    "String sign(Map<String,Object> claims,RSAKey key,String typ)",
+    "String testClientSecret(String service)",
+    "Clock clock()",
+    "void advanceClock(Duration elapsed)",
+    "RSAKey policySigningKey()",
+    "RSAKey authoritySigningKey()",
+    "int grantCount()",
+    "int authorityCalls()",
+    "int policyCalls()",
+    "int resolverToAuthorityCalls()"
+  ],
+  "dumps": [
+    {
+      "file": "admin-common/target/surefire-reports/2026-10-20T16-55-04_667.dumpstream",
+      "sha256": "e0fa5f9d6f2741610dd3c369f4df107044e0785368ac2fcfcca65ba39a5b0de1",
+      "content": "# Created at 2026-10-20T16:55:04.829\r\nBoot Manifest-JAR contains absolute paths in classpath 'G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.tools\\m2\\org\\apache\\maven\\surefire\\surefire-booter\\3.5.3\\surefire-booter-3.5.3.jar'\r\nHint: <argLine>-Djdk.net.URLClassPath.disableClassPathURLCheck=true</argLine>\r\n'other' has different root\r\n\r\n"
+    },
+    {
+      "file": "admin-common/target/surefire-reports/2026-10-20T17-00-05_523.dumpstream",
+      "sha256": "045e2fcf20f54d54f233ed58d7ce7e75a53285ec8e0e2f720d77b22de77ccbcf",
+      "content": "# Created at 2026-10-20T17:00:05.710\r\nBoot Manifest-JAR contains absolute paths in classpath 'G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.tools\\m2\\org\\apache\\maven\\surefire\\surefire-booter\\3.5.3\\surefire-booter-3.5.3.jar'\r\nHint: <argLine>-Djdk.net.URLClassPath.disableClassPathURLCheck=true</argLine>\r\n'other' has different root\r\n\r\n"
+    },
+    {
+      "file": "admin-common/target/surefire-reports/2026-10-20T17-01-26_083.dumpstream",
+      "sha256": "12a09f8132d9499dc5f11be7ca3475182ce0ea3a4be7b1a6765fced5b1773cd1",
+      "content": "# Created at 2026-10-20T17:01:26.274\r\nBoot Manifest-JAR contains absolute paths in classpath 'G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.tools\\m2\\org\\apache\\maven\\surefire\\surefire-booter\\3.5.3\\surefire-booter-3.5.3.jar'\r\nHint: <argLine>-Djdk.net.URLClassPath.disableClassPathURLCheck=true</argLine>\r\n'other' has different root\r\n\r\n"
+    },
+    {
+      "file": "admin-common/target/surefire-reports/2026-10-20T17-02-47_780.dumpstream",
+      "sha256": "e8b0d7d975574b3fbd44746a28d7a02a7d11ac369dd8b866726ceba0c26cf348",
+      "content": "# Created at 2026-10-20T17:02:47.947\r\nBoot Manifest-JAR contains absolute paths in classpath 'G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.tools\\m2\\org\\apache\\maven\\surefire\\surefire-booter\\3.5.3\\surefire-booter-3.5.3.jar'\r\nHint: <argLine>-Djdk.net.URLClassPath.disableClassPathURLCheck=true</argLine>\r\n'other' has different root\r\n\r\n"
+    },
+    {
+      "file": "admin-common/target/surefire-reports/2026-10-20T17-03-17_776.dumpstream",
+      "sha256": "a078c1398c4adab0176e0aac202228e7404d9c0509e10a0bbf176be133da1760",
+      "content": "# Created at 2026-10-20T17:03:17.936\r\nBoot Manifest-JAR contains absolute paths in classpath 'G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.tools\\m2\\org\\apache\\maven\\surefire\\surefire-booter\\3.5.3\\surefire-booter-3.5.3.jar'\r\nHint: <argLine>-Djdk.net.URLClassPath.disableClassPathURLCheck=true</argLine>\r\n'other' has different root\r\n\r\n"
+    },
+    {
+      "file": "admin-common/target/surefire-reports/2026-10-20T17-03-33_983.dumpstream",
+      "sha256": "c26e94c10cb2ffa6178c63bb59011670d601b6d09ed56c8a70a0a684db950ca6",
+      "content": "# Created at 2026-10-20T17:03:34.139\r\nBoot Manifest-JAR contains absolute paths in classpath 'G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.tools\\m2\\org\\apache\\maven\\surefire\\surefire-booter\\3.5.3\\surefire-booter-3.5.3.jar'\r\nHint: <argLine>-Djdk.net.URLClassPath.disableClassPathURLCheck=true</argLine>\r\n'other' has different root\r\n\r\n"
+    }
+  ],
+  "fullExpectedStartupErrorLines": [
+    "2026-10-20T17:03:36.179+08:00 ERROR 37264 --- [           main] o.s.boot.SpringApplication               : Application run failed",
+    "2026-10-20T17:03:36.328+08:00 ERROR 37264 --- [           main] o.s.boot.SpringApplication               : Application run failed",
+    "2026-10-20T17:03:36.466+08:00 ERROR 37264 --- [           main] o.s.boot.SpringApplication               : Application run failed",
+    "2026-10-20T17:03:36.583+08:00 ERROR 37264 --- [           main] o.s.boot.SpringApplication               : Application run failed",
+    "2026-10-20T17:03:36.684+08:00 ERROR 37264 --- [           main] o.s.boot.SpringApplication               : Application run failed",
+    "2026-10-20T17:03:36.777+08:00 ERROR 37264 --- [           main] o.s.boot.SpringApplication               : Application run failed",
+    "2026-10-20T17:03:36.865+08:00 ERROR 37264 --- [           main] o.s.boot.SpringApplication               : Application run failed",
+    "2026-10-20T17:03:36.952+08:00 ERROR 37264 --- [           main] o.s.boot.SpringApplication               : Application run failed",
+    "2026-10-20T17:03:37.041+08:00 ERROR 37264 --- [           main] o.s.boot.SpringApplication               : Application run failed",
+    "2026-10-20T17:03:37.124+08:00 ERROR 37264 --- [           main] o.s.boot.SpringApplication               : Application run failed",
+    "2026-10-20T17:03:37.203+08:00 ERROR 37264 --- [           main] o.s.boot.SpringApplication               : Application run failed",
+    "2026-10-20T17:03:37.311+08:00 ERROR 37264 --- [           main] o.s.boot.SpringApplication               : Application run failed",
+    "2026-10-20T17:03:37.422+08:00 ERROR 37264 --- [           main] o.s.boot.SpringApplication               : Application run failed",
+    "2026-10-20T17:03:37.529+08:00 ERROR 37264 --- [           main] o.s.boot.SpringApplication               : Application run failed",
+    "2026-10-20T17:03:37.626+08:00 ERROR 37264 --- [           main] o.s.boot.SpringApplication               : Application run failed",
+    "2026-10-20T17:03:37.727+08:00 ERROR 37264 --- [           main] o.s.boot.SpringApplication               : Application run failed",
+    "2026-10-20T17:03:37.816+08:00 ERROR 37264 --- [           main] o.s.boot.SpringApplication               : Application run failed",
+    "2026-10-20T17:03:37.913+08:00 ERROR 37264 --- [           main] o.s.boot.SpringApplication               : Application run failed",
+    "2026-10-20T17:03:38.009+08:00 ERROR 37264 --- [           main] o.s.boot.SpringApplication               : Application run failed",
+    "2026-10-20T17:03:38.103+08:00 ERROR 37264 --- [           main] o.s.boot.SpringApplication               : Application run failed",
+    "2026-10-20T17:03:38.200+08:00 ERROR 37264 --- [           main] o.s.boot.SpringApplication               : Application run failed",
+    "2026-10-20T17:03:38.293+08:00 ERROR 37264 --- [           main] o.s.boot.SpringApplication               : Application run failed",
+    "2026-10-20T17:03:38.384+08:00 ERROR 37264 --- [           main] o.s.boot.SpringApplication               : Application run failed",
+    "2026-10-20T17:03:38.476+08:00 ERROR 37264 --- [           main] o.s.boot.SpringApplication               : Application run failed",
+    "2026-10-20T17:03:38.544+08:00 ERROR 37264 --- [           main] o.s.boot.SpringApplication               : Application run failed",
+    "2026-10-20T17:03:38.632+08:00 ERROR 37264 --- [           main] o.s.boot.SpringApplication               : Application run failed",
+    "2026-10-20T17:03:38.707+08:00 ERROR 37264 --- [           main] o.s.boot.SpringApplication               : Application run failed",
+    "2026-10-20T17:03:38.794+08:00 ERROR 37264 --- [           main] o.s.boot.SpringApplication               : Application run failed",
+    "2026-10-20T17:03:38.881+08:00 ERROR 37264 --- [           main] o.s.boot.SpringApplication               : Application run failed",
+    "2026-10-20T17:03:38.950+08:00 ERROR 37264 --- [           main] o.s.boot.SpringApplication               : Application run failed",
+    "2026-10-20T17:03:39.016+08:00 ERROR 37264 --- [           main] o.s.boot.SpringApplication               : Application run failed",
+    "2026-10-20T17:03:39.076+08:00 ERROR 37264 --- [           main] o.s.boot.SpringApplication               : Application run failed",
+    "2026-10-20T17:03:39.125+08:00 ERROR 37264 --- [           main] o.s.boot.SpringApplication               : Application run failed",
+    "2026-10-20T17:03:39.199+08:00 ERROR 37264 --- [           main] o.s.b.d.LoggingFailureAnalysisReporter   : ",
+    "2026-10-20T17:03:39.259+08:00 ERROR 37264 --- [           main] o.s.boot.SpringApplication               : Application run failed",
+    "2026-10-20T17:03:39.316+08:00 ERROR 37264 --- [           main] o.s.boot.SpringApplication               : Application run failed",
+    "2026-10-20T17:03:39.382+08:00 ERROR 37264 --- [           main] o.s.boot.SpringApplication               : Application run failed",
+    "2026-10-20T17:03:40.799+08:00 ERROR 37264 --- [           main] o.s.boot.SpringApplication               : Application run failed",
+    "2026-10-20T17:03:40.875+08:00 ERROR 37264 --- [           main] o.s.boot.SpringApplication               : Application run failed"
+  ],
+  "productionFilesChanged": [
+    "admin-common/src/main/java/cn/agentplatform/common/authority/AuthorityContext.java",
+    "admin-common/src/main/java/cn/agentplatform/common/authority/CurrentAuthorityClient.java",
+    "admin-common/src/main/java/cn/agentplatform/common/authority/HttpCurrentAuthorityClient.java",
+    "admin-common/src/main/java/cn/agentplatform/common/authority/ServiceAuthorization.java"
+  ],
+  "testFilesChanged": [
+    "admin-common/src/test/java/cn/agentplatform/common/authority/LoopbackAuthority.java",
+    "admin-common/src/test/java/cn/agentplatform/common/authority/ServiceAuthorizationTest.java",
+    "admin-common/src/test/java/cn/agentplatform/common/authority/AuthorityContextRetainedTest.java",
+    "admin-common/src/test/java/cn/agentplatform/common/authority/RetainedAuthorizationTest.java"
+  ]
+}

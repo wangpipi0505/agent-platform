@@ -1,0 +1,156 @@
+diff --git a/engine-runtime/src/main/java/cn/agentplatform/engine/infra/RunEventReader.java b/engine-runtime/src/main/java/cn/agentplatform/engine/infra/RunEventReader.java
+index 88a3fa989e8e951787d1958776f9135311105d12..ab2d9dabf82d9f3128f4c4be52162580102f41e1 100644
+--- a/engine-runtime/src/main/java/cn/agentplatform/engine/infra/RunEventReader.java
++++ b/engine-runtime/src/main/java/cn/agentplatform/engine/infra/RunEventReader.java
+@@ -63,7 +63,7 @@ public final class RunEventReader {
+             if(data==null)return Optional.empty();
+             // Cleanup is before mint/transfer, so a cleanup failure cannot strand a pending permit.
+             clearCurrentThreadBuffers();work.live();
+-            var emission=new EventEmission(response,capture,lease,data.info(),data.payload(),data.labels());
++            var emission=new EventEmission(response,capture,lease,work.ledger,data.info(),data.payload(),data.labels());
+             var result=Optional.of(emission);handed=true;return result;
+         }catch(RuntimeException|Error failure){primary=failure;throw failure;}
+         finally{if(!handed)try{cleanup(primary);}finally{lease.close();}}
+@@ -121,9 +121,9 @@ public final class RunEventReader {
+     public record Info(String runId,ResourceBinding resource,String responseId,long afterSeq,long seq,String type,String rowSha256,Measurements measurements){}
+     /** Pending, active callback and its actual finally all own the original reader permit. */
+     public static final class EventEmission implements AutoCloseable{
+-        private final PortalEventsResponse response;private final PortalEventsResponse.Capture capture;private final Lease lease;private final Info info;
++        private final PortalEventsResponse response;private final PortalEventsResponse.Capture capture;private final Lease lease;private final Ledger ledger;private final Info info;
+         private byte[] payload;private Set<String> labels;private boolean active,closing,finished;private Thread consumer;
+-        private EventEmission(PortalEventsResponse r,PortalEventsResponse.Capture c,Lease l,Info i,byte[] p,Set<String> labels){response=r;capture=c;lease=l;info=i;payload=p;this.labels=labels;}
++        private EventEmission(PortalEventsResponse r,PortalEventsResponse.Capture c,Lease l,Ledger ledger,Info i,byte[] p,Set<String> labels){response=r;capture=c;lease=l;this.ledger=ledger;info=i;payload=p;this.labels=labels;}
+         private void usable(){if(closing||finished)throw denied();}
+         public synchronized Info info(){usable();response.requireLive(capture);return info;}
+         public void consume(Consumer<Borrow> consume){
+@@ -139,11 +139,14 @@ public final class RunEventReader {
+     }
+     /** C must keep encoding, actual stream acquisition and write/flush inside synchronous consume. */
+     public static final class Borrow{
+-        private final EventEmission emission;private Borrow(EventEmission e){emission=e;}
++        private final EventEmission emission;private boolean outputActive;private Borrow(EventEmission e){emission=e;}
++        // One synchronous output at a time bounds both payload copies and label generators,
++        // including cross-method sink callbacks. Sequential outputs remain legal.
++        private void beginOutput(){emission.guard();if(outputActive)throw denied();outputActive=true;}
+         public Info info(){emission.guard();return emission.info;}
+         public void requireLive(){emission.guard();}
+         public void writeRequiredDataLabels(OutputStream output)throws IOException{
+-            Objects.requireNonNull(output);emission.guard();
++            Objects.requireNonNull(output);beginOutput();try{
+             var finiteOutput=new OutputStream(){
+                 long bytes;
+                 private void admit(int n){emission.guard();bytes=Limits.add(bytes,n,MaterialScopeStore.OBSERVED_NORMALIZED_BYTES,"NORMALIZED_BYTES");}
+@@ -157,8 +160,20 @@ public final class RunEventReader {
+                 ROOT.writeValue(generator,emission.labels);
+             }
+             emission.guard();
++            }finally{outputActive=false;}
++        }
++        public void writePayload(OutputStream output)throws IOException{
++            Objects.requireNonNull(output);beginOutput();
++            // Transfer the original ledger with the permit: its retained model reservation
++            // includes the original encoded payload. Charge a separate array (+24B for
++            // header and alignment slack under the deployment's standard object alignment)
++            // before clone, throughout actual write, within the same 192MiB total. No reuse
++            // of fixed8MiB scratch; the sink receives only this disposable copy. The output
++            // guard also excludes overlapping label generators/copies, even during callbacks.
++            try(var copy=emission.ledger.reserve(emission.payload.length+24L)){
++                byte[] payload=emission.payload.clone();emission.guard();output.write(payload);emission.guard();
++            }finally{outputActive=false;}
+         }
+-        public void writePayload(OutputStream output)throws IOException{Objects.requireNonNull(output);emission.guard();output.write(emission.payload);emission.guard();}
+     }
+     private static final class Lease implements AutoCloseable{
+         private final Semaphore permits;private final AtomicBoolean released=new AtomicBoolean();Lease(Semaphore p){permits=p;}public void close(){if(released.compareAndSet(false,true))permits.release();}
+diff --git a/engine-runtime/src/test/java/cn/agentplatform/engine/infra/RunEventReaderBudgetTest.java b/engine-runtime/src/test/java/cn/agentplatform/engine/infra/RunEventReaderBudgetTest.java
+index 466efe2ca127212451f9007a3680a515e8fde32b..6f05c73ef81a866635edc237be4196f7ccbe65d7 100644
+--- a/engine-runtime/src/test/java/cn/agentplatform/engine/infra/RunEventReaderBudgetTest.java
++++ b/engine-runtime/src/test/java/cn/agentplatform/engine/infra/RunEventReaderBudgetTest.java
+@@ -23,6 +23,13 @@ class RunEventReaderBudgetTest {
+         RunEventReader.parse("["+"0,".repeat(262141)+"0]",true,()->{});rejected(()->RunEventReader.parse("["+"0,".repeat(262142)+"0]",true,()->{}));
+         RunEventReader.parse("1".repeat(1000),true,()->{});rejected(()->RunEventReader.parse("1".repeat(1001),true,()->{}));
+     }
++    @Test void rootFieldNameParserAccepts1048576CharactersAndRejects1048577() {
++        // Parser-only mechanical boundary: this does not admit the same document under
++        // the independent business raw/model/total representation intersections.
++        String exact="x".repeat(1048576);
++        assertThat(RunEventReader.parse("{\""+exact+"\":0}",true,()->{}).has(exact)).isTrue();
++        rejected(()->RunEventReader.parse("{\""+exact+"x\":0}",true,()->{}));
++    }
+     @Test void cumulativeByteRecordAndParentBudgetsRejectOverflowAndNeverSilentlyTruncate() {
+         var l=new RunEventReader.Limits();l.metadata(8388608);rejected(()->l.metadata(1));
+         var r=new RunEventReader.Limits();r.root(8388608);rejected(()->r.root(1));
+diff --git a/engine-runtime/src/test/java/cn/agentplatform/engine/infra/RunEventReaderPostgresTest.java b/engine-runtime/src/test/java/cn/agentplatform/engine/infra/RunEventReaderPostgresTest.java
+index 4a4077bedfedd3cc4e772e2866da419c4073a85e..8ffca88ac4445c3a1ba1bbc4c80616dfd05adf91 100644
+--- a/engine-runtime/src/test/java/cn/agentplatform/engine/infra/RunEventReaderPostgresTest.java
++++ b/engine-runtime/src/test/java/cn/agentplatform/engine/infra/RunEventReaderPostgresTest.java
+@@ -100,6 +100,69 @@ class RunEventReaderPostgresTest {
+     static void deniedRead(Runnable action){assertThatThrownBy(action::run).isInstanceOf(PlatformException.class);}
+     static void capacity(Runnable action,String dimension){assertThatThrownBy(action::run).isInstanceOfSatisfying(RunEventReader.CapacityFailure.class,e->assertThat(e.dimension()).isEqualTo(dimension));}
+     static long payloadGetters(Fixture f){return f.source.getters.stream().filter(s->s.equals("payload_text")||s.equals("event_text")).count();}
++    @Test void payloadSinkMutationCannotChangeLaterWritesInTheSameRealBorrow() throws Exception {
++        try(var f=new Fixture()){var b=f.seed(0);try(var response=f.open(b,0);var emission=f.reader.readNext(response,0).orElseThrow()){
++            var retained=new AtomicReference<byte[]>();var original=new AtomicReference<byte[]>();var later=new java.io.ByteArrayOutputStream();
++            emission.consume(view->{try{
++                view.writePayload(new java.io.OutputStream(){public void write(int value){throw new AssertionError("ARRAY_WRITE_REQUIRED");}
++                    @Override public void write(byte[] data){retained.set(data);original.set(data.clone());Arrays.fill(data,(byte)'!');}
++                    @Override public void flush(){throw new AssertionError("CALLER_OWNS_FLUSH");}
++                    @Override public void close(){throw new AssertionError("CALLER_OWNS_CLOSE");}});
++                assertThat(Json.read(new String(original.get(),java.nio.charset.StandardCharsets.UTF_8))).isEqualTo(Json.read("{\"integer\":123456789012345678901234567890,\"text\":\"观察\"}"));
++                view.writePayload(later);assertThat(later.toByteArray()).isEqualTo(original.get());
++                retained.get()[0]='?';var third=new java.io.ByteArrayOutputStream();view.writePayload(third);assertThat(third.toByteArray()).isEqualTo(original.get());
++            }catch(java.io.IOException failure){throw new AssertionError(failure);}});
++            Arrays.fill(retained.get(),(byte)'#');assertThat(later.toByteArray()).isEqualTo(original.get());
++        }}
++    }
++    @Test void bothOutputMethodsRejectCrossReentryAndRecoverAfterSinkIOException() throws Exception {
++        try(var f=new Fixture()){var b=f.seed(0);try(var response=f.open(b,0);var emission=f.reader.readNext(response,0).orElseThrow()){
++            var retained=new AtomicReference<RunEventReader.Borrow>();var io=new java.io.IOException("BORROW_OUTPUT_IO");
++            emission.consume(view->{retained.set(view);try{
++                var rejectNested=new java.io.OutputStream(){public void write(int value){throw new AssertionError("NESTED_OUTPUT_REACHED");}};
++                var reenter=new java.io.OutputStream(){public void write(int value){throw new AssertionError("ARRAY_WRITE_REQUIRED");}
++                    @Override public void write(byte[] data){check();}
++                    @Override public void write(byte[] data,int offset,int length){check();}
++                    void check(){assertThatThrownBy(()->view.writePayload(rejectNested)).isInstanceOf(PlatformException.class);assertThatThrownBy(()->view.writeRequiredDataLabels(rejectNested)).isInstanceOf(PlatformException.class);}};
++                view.writePayload(reenter);view.writeRequiredDataLabels(reenter);
++                for(boolean labels:List.of(false,true)){
++                    var failing=new java.io.OutputStream(){public void write(int value)throws java.io.IOException{throw io;}
++                        @Override public void write(byte[] data)throws java.io.IOException{throw io;}
++                        @Override public void write(byte[] data,int offset,int length)throws java.io.IOException{throw io;}};
++                    assertThatThrownBy(()->{if(labels)view.writeRequiredDataLabels(failing);else view.writePayload(failing);}).isSameAs(io);
++                    var recovered=new java.io.ByteArrayOutputStream();view.writePayload(recovered);assertThat(Json.read(recovered.toString(java.nio.charset.StandardCharsets.UTF_8)).path("text").textValue()).isEqualTo("观察");
++                    view.writeRequiredDataLabels(new java.io.ByteArrayOutputStream());
++                }
++            }catch(java.io.IOException failure){throw new AssertionError(failure);}});
++            assertThatThrownBy(()->retained.get().writePayload(new java.io.ByteArrayOutputStream())).isInstanceOf(PlatformException.class);
++            // Uncaught output failure must also unwind the actual consumer finally and its permit.
++            try(var failed=f.reader.readNext(response,0).orElseThrow()){
++                assertThatThrownBy(()->failed.consume(view->{try{view.writePayload(new java.io.OutputStream(){public void write(int value)throws java.io.IOException{throw io;}});}catch(java.io.IOException failure){throw new java.io.UncheckedIOException(failure);}})).isInstanceOf(java.io.UncheckedIOException.class);
++            }
++            try(var first=f.reader.readNext(response,0).orElseThrow();var second=f.reader.readNext(response,0).orElseThrow()){capacity(()->f.reader.readNext(response,0),"WORKSPACE");}
++        }}
++    }
++    @Test void blockingActualPayloadWritesKeepBothPermitsUntilConsumerFinallyReturns() throws Exception {
++        try(var f=new Fixture()){var b=f.seed(0);try(var response=f.open(b,0);var pool=Executors.newFixedThreadPool(2)){
++            var first=f.reader.readNext(response,0).orElseThrow();var second=f.reader.readNext(response,0).orElseThrow();
++            var entered=new CountDownLatch(2);var releaseFirst=new CountDownLatch(1);var releaseSecond=new CountDownLatch(1);
++            var actualFinally=new AtomicInteger();var tasks=new ArrayList<Future<?>>();
++            int index=0;for(var emission:List.of(first,second)){var release=index++==0?releaseFirst:releaseSecond;
++                tasks.add(pool.submit(()->{try{assertThatThrownBy(()->emission.consume(view->{try{
++                    view.writePayload(new java.io.OutputStream(){public void write(int value){throw new AssertionError("ARRAY_WRITE_REQUIRED");}
++                        @Override public void write(byte[] data){entered.countDown();await(release);}});
++                }catch(java.io.IOException failure){throw new AssertionError(failure);}})).isInstanceOf(PlatformException.class);}finally{actualFinally.incrementAndGet();}}));
++            }
++            try{
++                assertThat(entered.await(2,TimeUnit.SECONDS)).isTrue();first.close();second.close();
++                capacity(()->f.reader.readNext(response,0),"WORKSPACE");assertThat(actualFinally).hasValue(0);
++                releaseFirst.countDown();tasks.get(0).get(2,TimeUnit.SECONDS);assertThat(actualFinally).hasValue(1);
++                try(var pending=f.reader.readNext(response,0).orElseThrow()){capacity(()->f.reader.readNext(response,0),"WORKSPACE");}
++                releaseSecond.countDown();tasks.get(1).get(2,TimeUnit.SECONDS);assertThat(actualFinally).hasValue(2);
++                try(var next=f.reader.readNext(response,0).orElseThrow();var other=f.reader.readNext(response,0).orElseThrow()){capacity(()->f.reader.readNext(response,0),"WORKSPACE");}
++            }finally{releaseFirst.countDown();releaseSecond.countDown();first.close();second.close();}
++        }}
++    }
+     @Test void requiredLabelsAreWritableOnlyDuringTheLiveBorrowAndNeverAfterConsumeOrClose() throws Exception {
+         try(var f=new Fixture()){var b=f.seed(0);try(var response=f.open(b,0)){
+             var retained=new AtomicReference<RunEventReader.Borrow>();var labels=new java.io.ByteArrayOutputStream();
