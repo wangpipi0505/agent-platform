@@ -65,10 +65,12 @@ public class ContextAssembler {
                 config.path("output")
                         .path("maxTokens")
                         .asInt(config.path("maxOutputTokens").asInt(2048));
-        // Never split tool call/result pairs. Reject overflow until a configured summarizer exists.
-        // Density is an estimate for inspection only. The model gateway performs
-        // tokenizer-calibrated
-        // admission.
+        // Never split tool call/result pairs. Overflow is NOT rejected here: ModelExchange
+        // routes every dispatch through ContextProjection's four-stage pipeline
+        // (§31.6.2 tool-output trim → whole-turn drop → model summary → hard truncate),
+        // which projects a bounded copy and never rewrites these assembled rows.
+        // Density below is an estimate for inspection only; the model gateway performs
+        // tokenizer-calibrated admission.
         Map<String, Object> request = new LinkedHashMap<>();
         request.put(
                 "modelEntryId",
