@@ -77,7 +77,7 @@ export function createApi(
     checkScope(scope);
     signal=combinedSignal(signal,scope?.signal);
     signal?.throwIfAborted();
-    const requestToken = token();
+    const requestToken = token() || (typeof import.meta.env?.VITE_MOCK === 'string' && import.meta.env.VITE_MOCK !== 'false' ? 'mock-token-demo' : '');
     if (!requestToken) throw new Error("请先登录");
     let response:Response;
     try { response = await transport(path, {
@@ -144,6 +144,15 @@ export function useApi() {
   );
 }
 export async function login() {
+  // A28/Mock：VITE_MOCK=true 跳过真实登录，返回演示 token + 身份。
+  if (typeof import.meta.env?.VITE_MOCK === 'string' && import.meta.env.VITE_MOCK !== 'false') {
+    const pinia=getActivePinia(),auth=pinia?useAuth(pinia):undefined;
+    if (auth) {
+      auth.roles=['ADMIN','EDITOR','APPROVER'];
+      auth.user={id:'u-demo',displayName:'演示用户'};
+    }
+    return 'mock-token-demo';
+  }
   const pinia=getActivePinia(),auth=pinia?useAuth(pinia):undefined,scope=auth?.snapshot();
   const r = await fetch("/auth/dev-token", { method: "POST",credentials:'omit',signal:scope?.signal });
   checkScope(scope);
