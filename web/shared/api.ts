@@ -127,9 +127,17 @@ export function useApi() {
   const disposed=new AbortController();
   if(getCurrentScope())onScopeDispose(()=>disposed.abort());
   const scope={signal:combinedSignal(session.signal,disposed.signal)!,current:session.current};
+  // A28/Mock：VITE_MOCK=true 时替换传输层为 mock，全页面脱离后端可用。
+  const mock = typeof import.meta.env?.VITE_MOCK === 'string' && import.meta.env.VITE_MOCK !== 'false';
+  const transport = mock
+    ? async (...args: Parameters<typeof fetch>) => {
+        const { mockTransport } = await import('./mock-transport');
+        return mockTransport(...args);
+      }
+    : axiosTransport;
   return createApi(
     () => auth.token,
-    axiosTransport,
+    transport,
     () => {
       auth.invalidate(session.generation);
     },scope,
