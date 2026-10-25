@@ -153,7 +153,12 @@ onMounted(() => {
     width: host.value!.clientWidth,
     height: host.value!.clientHeight,
     background: { color: "var(--surface)" },
-    grid: true,
+    grid: {
+      // VIS-2：点阵网格（n8n/dify 画布同款 16px 规格），替代默认线网格
+      type: "dot",
+      size: 16,
+      args: { color: "color-mix(in srgb, var(--muted, #64748b) 30%, transparent)", thickness: 1.5 },
+    },
     interacting: props.readOnly ? false : undefined,
     panning: true,
     mousewheel: { enabled: true, modifiers: ["ctrl", "meta"] },
@@ -214,9 +219,13 @@ watch(
         body: {
           stroke: colorOf(id),
           strokeWidth: running ? 2.5 : 2,
-          // 等待态虚线 + CSS 呼吸动画类；运行态实线加粗；其余静止。
+          // 等待态虚线+呼吸类；运行态实线+旋转流光类；其余静止。
           strokeDasharray: waiting ? "6 4" : null,
-          class: waiting ? "node-waiting-breath" : null,
+          class: waiting
+            ? "node-waiting-breath"
+            : running
+              ? "node-running-spin"
+              : null,
         },
       });
     }
@@ -355,6 +364,27 @@ defineExpose({ focusNode });
   50% {
     stroke-dashoffset: 10;
     opacity: 0.72;
+  }
+}
+/* VIS-2：运行态 conic-gradient 旋转描边（RUNNING 专用，@property 驱动角度，
+   纯 CSS 无 JS 动画循环；与呼吸动画互斥——等待用虚线呼吸，运行用旋转流光）。 */
+:deep(.node-running-spin) {
+  animation:
+    running-spin-border 1.5s linear infinite,
+    waiting-breath 1.6s ease-in-out infinite;
+}
+:deep(.node-running-spin) .x6-node > body,
+:deep(.node-running-spin) rect {
+  stroke-dasharray: none;
+}
+@property --spin-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+@keyframes running-spin-border {
+  to {
+    --spin-angle: 360deg;
   }
 }
 @media (prefers-reduced-motion: reduce) {
