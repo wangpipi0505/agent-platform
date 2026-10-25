@@ -26,11 +26,13 @@
   --st-run: #2563eb;
   --st-run-text: #1d4ed8;
   --st-ok: #16a34a;
-  --st-ok-text: #15803d;
+  /* P2-18：状态文字色相对 10% 底色的对比度实测需 ≥4.5:1；ok/suspend 原值恰在
+     4.50 临界，加深留余量（wait/run/fail 原值实测 5.5~7.0 已达标）。 */
+  --st-ok-text: #166534;
   --st-fail: #dc2626;
-  --st-fail-text: #b91c1c;
+  --st-fail-text: #991b1b;
   --st-suspend: #d97706;
-  --st-suspend-text: #b45309;
+  --st-suspend-text: #92400e;
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
