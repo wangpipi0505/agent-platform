@@ -240,8 +240,10 @@ onBeforeUnmount(() => {
       :endpoint="endpoint"
     />
     <Artifacts :files="files" :run-id="runId" :endpoint="endpoint" />
+    <!-- UIF-A7：审批等待期 takeover——审批卡替换输入区，用户视线不移出对话流 -->
     <SchemaInputs
       v-if="
+        !awaitingApproval &&
         ready &&
         inputFields(declaration.inputSchema ?? declaration.inputs).length
       "
@@ -249,13 +251,14 @@ onBeforeUnmount(() => {
       :declaration="declaration.inputSchema ?? declaration.inputs"
     />
     <el-input
-      v-else
+      v-else-if="!awaitingApproval"
       v-model="draft"
       type="textarea"
       :rows="3"
       placeholder="输入问题，Shift+Enter 换行"
       @keydown.enter.exact.prevent="send"
     />
+    <p v-else class="muted" role="status">等待确认后继续运行；输入区已由确认卡接管。</p>
     <div class="row" style="margin-top: 0.75rem">
       <span class="muted">{{ runId }}</span
       ><el-button v-if="busy" @click="stop">停止运行</el-button
