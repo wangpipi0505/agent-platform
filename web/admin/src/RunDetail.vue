@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
+import FlowDesigner from "../../flow-designer/FlowDesigner.vue";
 import { useAuth, useApi } from "../../shared/api";
 import { terminal, streamEvents,authorityFailure } from "../../debug-panel/events";
 import Artifacts from '../../shared/Artifacts.vue';
@@ -26,6 +27,40 @@ const deepNode = (() => {
 })();
 const nodeFilter = ref(deepNode);
 let deepApplied = false;
+// UIF-A5：画布 states 映射（nodeDefId→status），与状态接口 nodes 同源。
+const nodeStates = computed(() =>
+  Object.fromEntries(
+    (value.value.nodes || []).map((n: any) => [n.nodeDefId || n.id, n.status]),
+  ),
+);
+// UIF-A5：执行时间线行（nodeInstanceId 顺序 = 执行顺序；耗时仅用持久起止值，
+// 缺失显示 —，绝不推算）；点行联动画布选中与节点检查器。
+const timeline = computed(() =>
+  (value.value.nodes || []).map((n: any) => {
+    const started = n.started_at ? Date.parse(n.started_at) : null;
+    const ended = n.ended_at ? Date.parse(n.ended_at) : null;
+    const duration =
+      started && ended
+        ? Math.max(ended - started, 0) >= 1000
+          ? Math.round((ended - started) / 100) / 10 + "s"
+          : ended - started + "ms"
+        : "—";
+    return {
+      label: n.nodeDefId,
+      status: n.status,
+      duration,
+      errorMessage: n.error && n.error !== "{}" ? String(n.error).slice(0, 200) : "",
+      raw: n,
+    };
+  }),
+);
+function timelineSelect(row: any) {
+  selected.value = row.raw;
+  if (value.value.graph) nodeFilter.value = "";
+}
+function timelineRowClass({ row }: { row: any }) {
+  return row.status === "FAILED" ? "timeline-failed" : "";
+}
 const visibleNodes = computed(() =>
   nodeFilter.value
     ? (value.value.nodes || []).filter((n: any) => n.nodeDefId === nodeFilter.value)
@@ -123,12 +158,22 @@ onBeforeUnmount(() => {
     </div>
     <el-tabs v-model="active"
       ><el-tab-pane label="节点摘要" name="summary"
-        ><!-- 深链/过滤条：来自 ?nodeId= 或手动筛选，提示当前只看单节点并可一键清除 -->
+        ><!-- UIF-A5：只读画布复用主设计器组件（provide 隔离由组件自身 readOnly 保证），
+             节点状态来自本次运行快照；点击节点行联动选中。 -->
+        <FlowDesigner
+          v-if="value.graph"
+          :definition="value.graph"
+          :layout="value.graph.layout || {}"
+          :states="nodeStates"
+          :run-nodes="value.nodes || []"
+          read-only
+        />
+        <!-- 深链/过滤条：来自 ?nodeId= 或手动筛选，提示当前只看单节点并可一键清除 -->
         <p v-if="nodeFilter" class="muted" role="status">
           只看节点 <code>{{ nodeFilter }}</code>（来自链接定位）
           <el-button link type="primary" @click="nodeFilter = ''">查看全部节点</el-button>
         </p>
-        <el-table :data="visibleNodes" @row-click="selected = $event"
+        <el-table :data="visibleNodes" highlight-current-row @row-click="selected = $event"
           ><el-table-column prop="nodeDefId" label="节点" /><el-table-column
             prop="node_type"
             label="类型" /><el-table-column label="状态"
@@ -183,7 +228,29 @@ onBeforeUnmount(() => {
         <pre>{{
           JSON.stringify(value.events?.[replay] || "暂无事件", null, 2)
         }}</pre>
-      </el-tab-pane></el-tabs
+      </el-tab-pane
+      ><el-tab-pane label="执行时间线" name="timeline"
+        ><!-- UIF-A5：树形时间线——行=节点（状态/耗时），点行联动画布选中与检查器 -->
+        <el-table
+          :data="timeline"
+          highlight-current-row
+          :row-class-name="timelineRowClass"
+          @row-click="timelineSelect"
+          ><el-table-column prop="label" label="节点"
+            ><template #default="{ row }"
+              ><span :class="['status', row.status]" style="margin-right: 0.5rem"
+                >{{ row.status }}</span
+              >{{ row.label }}</template
+            ></el-table-column
+          ><el-table-column label="耗时"
+            ><template #default="{ row }">{{ row.duration }}</template></el-table-column
+          ><el-table-column label="错误"
+            ><template #default="{ row }"
+              ><span v-if="row.errorMessage" class="error-text">{{ row.errorMessage }}</span
+              ><span v-else class="muted">—</span></template
+            ></el-table-column
+          ></el-table
+        ></el-tab-pane></el-tabs
     ><el-collapse v-if="selected"
       ><el-collapse-item
         :title="'节点检查器 · ' + selected.nodeDefId"
@@ -194,3 +261,8 @@ onBeforeUnmount(() => {
     >
   </div>
 </template>
+<style scoped>
+:deep(.timeline-failed) {
+  --el-table-tr-bg-color: color-mix(in srgb, var(--st-fail) 6%, white);
+}
+</style>

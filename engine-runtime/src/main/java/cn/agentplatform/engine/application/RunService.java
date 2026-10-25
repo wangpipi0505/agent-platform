@@ -1688,6 +1688,11 @@ public class RunService {
         result.put("fileRefs", protectedView ? List.of() : artifactRefs(rid, id));
         result.put("error", TraceStore.json(run.get("error")));
         result.put("versionRefs", TraceStore.json(run.get("version_refs")));
+        // UIF-A5：执行详情只读画布复用需要本次运行钉定的图定义——来自运行快照
+        // （创建即冻结），与节点状态表同源，不存在"画布与记录不一致"的第二事实源。
+        var snapshotJson = TraceStore.json(run.get("snapshot"));
+        if (snapshotJson.has("definition"))
+            result.put("graph", snapshotJson.path("definition"));
         result.put("nodes", nodes.stream().map(this::nodeView).toList());
         result.put("events", events);
         result.put(
