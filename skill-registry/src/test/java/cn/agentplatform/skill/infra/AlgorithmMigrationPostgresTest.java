@@ -217,19 +217,20 @@ class AlgorithmMigrationPostgresTest {
                             .locations("classpath:db/migration")
                             .load();
             flyway.validate();
-            assertEquals("311", flyway.info().current().getVersion().getVersion());
+            // AP-S06 新增 V312（fixture 审计表）后最新迁移版本为 312；V311 的行级校验在下一用例。
+            assertEquals("312", flyway.info().current().getVersion().getVersion());
         } finally {
             SecurityContextHolder.clearContext();
         }
     }
 
     @Test
-    void completeMigrationDatabaseIsAtV311() {
+    void completeMigrationDatabaseIsAtV312() {
         var database = new AlgorithmTestDatabase("agent_platform_skill_algorithm_test", null);
         assertEquals(
                 1,
                 database.db.queryForObject(
-                        "select count(*) from skill.flyway_schema_history where version='311' and"
+                        "select count(*) from skill.flyway_schema_history where version='312' and"
                                 + " success",
                         Integer.class));
     }

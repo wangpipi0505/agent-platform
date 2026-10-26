@@ -12,12 +12,24 @@ public class SkillController {
     private final SkillCatalog catalog;
     private final SkillExecution execution;
     private final SkillGovernance governance;
+    private final FixtureSkills fixtures;
 
+    /** 兼容既有测试构造；生产装配必须走四参构造注入 FixtureSkills，创建守卫才生效。 */
     public SkillController(
             SkillCatalog catalog, SkillExecution execution, SkillGovernance governance) {
+        this(catalog, execution, governance, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public SkillController(
+            SkillCatalog catalog,
+            SkillExecution execution,
+            SkillGovernance governance,
+            FixtureSkills fixtures) {
         this.catalog = catalog;
         this.execution = execution;
         this.governance = governance;
+        this.fixtures = fixtures;
     }
 
     private void edit() {
@@ -45,18 +57,22 @@ public class SkillController {
 
     @GetMapping("/admin/skills")
     public Object list() {
-        return ApiResponse.ok(publicView(catalog.list()));
+        // AP-S06：列表携带 source=FIXTURE|MANAGED，前端据此区分演示数据，不误标“可用”。
+        return ApiResponse.ok(FixtureSkills.withSource(publicView(catalog.list())));
     }
 
     @PostMapping("/admin/skills")
     public Object create(@RequestBody Map<String, Object> b) {
         edit();
-        return ApiResponse.ok(publicView(catalog.create(b)));
+        // AP-S06：非演示模式禁止注入 fixture 命名约定的新技能（demo-mode 为唯一开关）。
+        if (fixtures != null)
+            fixtures.assertCreatable(java.util.Objects.toString(b.get("code"), ""));
+        return ApiResponse.ok(FixtureSkills.withSource(publicView(catalog.create(b))));
     }
 
     @GetMapping("/admin/skills/{code}")
     public Object get(@PathVariable String code) {
-        return ApiResponse.ok(publicView(catalog.get(code, null)));
+        return ApiResponse.ok(FixtureSkills.withSource(publicView(catalog.get(code, null))));
     }
 
     @PutMapping({"/admin/skills/{code}", "/admin/skills/{code}/draft"})

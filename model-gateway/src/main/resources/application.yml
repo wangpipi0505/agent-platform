@@ -26,6 +26,9 @@ spring:
     locations: classpath:db/migration
     create-schemas: true
 agent:
+  # AP-S06：演示数据隔离开关。默认（生产）禁止 fixture 注入与真实调用；本地演示/冒烟
+  # 环境显式置 AGENT_DEMO_MODE=true 打开，见 model/infra/FixtureEgressGuard。
+  demo-mode: ${AGENT_DEMO_MODE:false}
   security:
     jwt-secret: ${AGENT_JWT_SECRET}
     issuer: agent-platform-v12

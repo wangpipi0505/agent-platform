@@ -2038,5 +2038,53 @@
     "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/RunObservationMetadataController.java",
     "callerSource": "admin-common/src/main/java/cn/agentplatform/common/authority/RunObservationSelectors.java",
     "reason": "Finite independent portal run observation metadata query"
+  },
+  {
+    "method": "GET",
+    "template": "/admin/model-providers/fixture",
+    "caller": "gateway",
+    "target": "model",
+    "action": "proxy.model.get.FixtureAdminController.fixtureSummary",
+    "mode": "delegated",
+    "integrationAllowed": false,
+    "source": "model-gateway/src/main/java/cn/agentplatform/model/api/FixtureAdminController.java:24",
+    "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:53;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:29",
+    "reason": "AP-S06：fixture 演示供应商隔离汇总（只读，状态页与供应商列表的来源标识）"
+  },
+  {
+    "method": "POST",
+    "template": "/admin/model-providers/fixture/purge",
+    "caller": "gateway",
+    "target": "model",
+    "action": "proxy.model.post.FixtureAdminController.fixturePurge",
+    "mode": "delegated",
+    "integrationAllowed": false,
+    "source": "model-gateway/src/main/java/cn/agentplatform/model/api/FixtureAdminController.java:29",
+    "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:53;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:29",
+    "reason": "AP-S06：清理被隔离的 fixture 供应商（ADMIN，写 model.fixture_audit 审计）"
+  },
+  {
+    "method": "GET",
+    "template": "/admin/skills/fixture",
+    "caller": "gateway",
+    "target": "skill",
+    "action": "proxy.skill.get.FixtureAdminController.fixtureSummary",
+    "mode": "delegated",
+    "integrationAllowed": false,
+    "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/FixtureAdminController.java:24",
+    "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:53;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:29",
+    "reason": "AP-S06：fixture 演示技能隔离汇总（只读，状态页与技能列表的来源标识）"
+  },
+  {
+    "method": "POST",
+    "template": "/admin/skills/fixture/purge",
+    "caller": "gateway",
+    "target": "skill",
+    "action": "proxy.skill.post.FixtureAdminController.fixturePurge",
+    "mode": "delegated",
+    "integrationAllowed": false,
+    "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/FixtureAdminController.java:29",
+    "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:53;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:29",
+    "reason": "AP-S06：清理被隔离的 fixture 技能（ADMIN，写 skill.fixture_audit 审计）"
   }
 ]

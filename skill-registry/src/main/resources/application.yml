@@ -19,6 +19,9 @@ spring:
     locations: classpath:db/migration
     create-schemas: true
 agent:
+  # AP-S06：演示数据隔离开关。默认（生产）禁止 fixture 技能注入；本地演示/冒烟环境
+  # 显式置 AGENT_DEMO_MODE=true 打开，见 skill/application/FixtureSkills。
+  demo-mode: ${AGENT_DEMO_MODE:false}
   security:
     jwt-secret: ${AGENT_JWT_SECRET}
     issuer: agent-platform-v12
