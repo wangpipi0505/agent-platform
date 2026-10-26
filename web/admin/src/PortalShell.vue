@@ -12,7 +12,11 @@ const transport=mock?async(...args:Parameters<typeof fetch>)=>{
   return mockTransport(...args);
 }:undefined;
 const portal=createPortalSession(auth,props.provider,{mode:props.mode,transport});
-onMounted(()=>{if(!props.configurationError&&props.mode==='portal')void portal.connect();});
+onMounted(()=>{
+  if(props.configurationError)return;
+  // A28/Mock：演示模式免手动确认，打开即进入工作台；真实 portal/dev 模式行为不变。
+  if(mock||props.mode==='portal')void portal.connect();
+});
 onBeforeUnmount(portal.dispose);
 </script>
 <template>
