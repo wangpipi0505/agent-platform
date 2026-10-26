@@ -16,7 +16,8 @@
     "build": "vue-tsc --noEmit && vite build --config admin/vite.config.ts && vite build --config webapp/vite.config.ts && vite build --config assistant.js/vite.config.ts && node shared/copy-assistant.mjs",
     "api:generate": "node shared/generate-api.mjs",
     "dev:webapp": "vite --config webapp/vite.config.ts",
-    "dev:fixtures": "vite --config tests/vite.config.ts"
+    "dev:fixtures": "vite --config tests/vite.config.ts",
+    "dev:mock": "vite --config admin/vite.config.ts --mode mock"
   },
   "dependencies": {
     "@antv/x6": "^2.18.0",
