@@ -26,13 +26,24 @@ public final class OpenApiHttpMapping {
         if (!contract.containsKey("httpMapping")) return;
         if (!"HTTP".equals(contract.get("type"))) throw invalid("参数映射仅支持HTTP");
         var mapping = object(contract.get("httpMapping"));
-        if (!mapping.keySet().equals(Set.of("path", "query", "body")))
+        // multipart与JSON体互斥：multipart可与可选path/query组合，body键必须缺席。
+        boolean multipartForm = mapping.containsKey("multipart");
+        if (multipartForm) {
+            if (mapping.containsKey("body")
+                    || !mapping.keySet().stream()
+                            .allMatch(k -> Set.of("path", "query", "multipart").contains(k))
+                    || mapping.keySet().stream().noneMatch("multipart"::equals))
+                throw invalid("multipart映射只能与可选path/query组合，且与body互斥");
+            MultipartFormMapping.validate(contract, mapping);
+        } else if (!mapping.keySet().equals(Set.of("path", "query", "body")))
             throw invalid("映射只能包含path/query/body");
         String endpoint = Objects.toString(contract.get("endpoint"), "");
         var names = new HashSet<String>();
         String replaced = endpoint;
         for (String kind : List.of("path", "query")) {
-            if (!(mapping.get(kind) instanceof List<?> list) || list.size() > 64)
+            var kindValue = mapping.get(kind);
+            if (kindValue == null) continue;
+            if (!(kindValue instanceof List<?> list) || list.size() > 64)
                 throw invalid("参数映射必须为至多64项数组");
             for (Object name : list) {
                 if (!(name instanceof String field)
@@ -44,9 +55,15 @@ public final class OpenApiHttpMapping {
                 }
             }
         }
-        if (!(mapping.get("body") instanceof String body)
-                || (!body.isEmpty() && !body.equals("body"))
-                || (!body.isEmpty() && !names.add(body))) throw invalid("JSON请求体只支持保留参数body");
+        Object bodySpec = mapping.get("body");
+        String body = bodySpec == null ? "" : bodySpec.toString();
+        if (!multipartForm
+                && (!body.isEmpty() && !body.equals("body")
+                || (!body.isEmpty() && !names.add(body)))) throw invalid("JSON请求体只支持保留参数body");
+        if (multipartForm) {
+            for (String inputName : MultipartFormMapping.inputNames(contract))
+                if (!names.add(inputName)) throw invalid("multipart参数名与path/query重复");
+        }
         var uri = SkillRules.endpoint(replaced);
         if (uri.getRawQuery() != null
                 || replaced.contains("{")
@@ -55,8 +72,8 @@ public final class OpenApiHttpMapping {
             throw invalid("路径参数只能位于HTTP路径");
         if (!Set.of("GET", "POST", "PUT", "PATCH", "DELETE").contains(contract.get("httpMethod")))
             throw invalid("映射方法无效");
-        if ("GET".equals(contract.get("httpMethod")) && !body.isEmpty())
-            throw invalid("GET不能携带JSON体");
+        if ("GET".equals(contract.get("httpMethod")) && (!body.isEmpty() || multipartForm))
+            throw invalid("GET不能携带请求体");
         if (contract.containsKey("inputSchema")) {
             var schema = object(contract.get("inputSchema"));
             var properties = object(schema.getOrDefault("properties", Map.of()));
@@ -64,8 +81,10 @@ public final class OpenApiHttpMapping {
                 throw invalid("输入Schema属性必须与path/query/body映射一致");
             var required = schema.getOrDefault("required", List.of());
             if (!(required instanceof List<?> fields)) throw invalid("required必须为数组");
-            for (String kind : List.of("path", "query"))
-                for (Object name : (List<?>) mapping.get(kind)) {
+            for (String kind : List.of("path", "query")) {
+                var kindValue = mapping.get(kind);
+                if (kindValue == null) continue;
+                for (Object name : (List<?>) kindValue) {
                     var parameter = object(properties.get(name));
                     if (!Set.of("string", "integer", "number", "boolean")
                             .contains(parameter.get("type")))
@@ -73,6 +92,7 @@ public final class OpenApiHttpMapping {
                     if (kind.equals("path") && !fields.contains(name))
                         throw invalid("path映射要求required参数");
                 }
+            }
             if (!body.isEmpty() && !fields.contains(body))
                 throw invalid("JSON请求体映射要求required body");
         }
@@ -81,27 +101,33 @@ public final class OpenApiHttpMapping {
     public static Request request(Map<String, Object> contract, Map<String, Object> args) {
         validate(contract);
         var mapping = object(contract.get("httpMapping"));
+        boolean multipartForm = mapping.containsKey("multipart");
         String endpoint = contract.get("endpoint").toString();
         var allowed = new HashSet<String>();
-        for (Object name : (List<?>) mapping.get("path")) {
+        var pathNames = mapping.get("path");
+        for (Object name : pathNames == null ? List.of() : (List<?>) pathNames) {
             String key = name.toString();
             allowed.add(key);
             if (!args.containsKey(key)) throw invalid("缺少path参数");
             endpoint = endpoint.replace("{" + key + "}", encode(scalar(args.get(key)), true));
         }
         var query = new StringJoiner("&");
-        for (Object name : (List<?>) mapping.get("query")) {
+        var queryNames = mapping.get("query");
+        for (Object name : queryNames == null ? List.of() : (List<?>) queryNames) {
             String key = name.toString();
             allowed.add(key);
             if (args.containsKey(key))
                 query.add(encode(key, false) + "=" + encode(scalar(args.get(key)), false));
         }
-        String body = mapping.get("body").toString();
+        Object bodySpec = mapping.get("body");
+        String body = bodySpec == null ? "" : bodySpec.toString();
         if (!body.isEmpty()) allowed.add(body);
+        if (multipartForm) allowed.addAll(MultipartFormMapping.inputNames(contract));
         if (!allowed.containsAll(args.keySet())) throw invalid("输入包含未映射参数");
         if (!query.toString().isEmpty()) endpoint += "?" + query;
         SkillRules.endpoint(endpoint);
-        return new Request(endpoint, body.isEmpty() ? null : args.get(body));
+        // multipart契约在此只解析endpoint；表单部件由适配器经MultipartFormMapping.build组装。
+        return new Request(endpoint, multipartForm || body.isEmpty() ? null : args.get(body));
     }
 
     private static String scalar(Object value) {

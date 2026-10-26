@@ -2,6 +2,7 @@ package cn.agentplatform.skill.application;
 
 import cn.agentplatform.common.*;
 import cn.agentplatform.skill.domain.SkillRules;
+import cn.agentplatform.skill.infra.MultipartFormMapping;
 import cn.agentplatform.skill.infra.OpenApiHttpMapping;
 
 import com.fasterxml.jackson.core.StreamReadConstraints;
@@ -348,24 +349,75 @@ public class OpenApiImports {
         if (replaced.contains("{") || replaced.contains("}"))
             throw error("OPENAPI_PARAMETER", "路径模板缺少匹配参数");
         boolean hasBody = op.has("requestBody");
+        List<Map<String, Object>> multipartFields = null, multipartFiles = null;
         if (hasBody) {
             if (method.equals("GET")) throw error("OPENAPI_BODY", "GET不支持requestBody");
             var body = ref(root, op.get("requestBody"), new HashSet<>());
             var content = body.path("content");
-            if (content.size() != 1 || !content.has("application/json"))
-                throw error("OPENAPI_BODY", "requestBody只支持单一application/json媒体类型");
+            boolean json = content.has("application/json");
+            boolean multipartForm = content.has("multipart/form-data");
+            if (content.size() != 1 || (!json && !multipartForm))
+                throw error(
+                        "OPENAPI_BODY", "requestBody只支持单一application/json或multipart/form-data媒体类型");
             if (!body.path("required").asBoolean(false))
-                throw error("OPENAPI_BODY", "当前只支持required JSON请求体");
-            var bodySchema =
-                    schema(
-                            root,
-                            content.path("application/json").path("schema"),
-                            new HashSet<>(),
-                            0);
-            properties.put("body", bodySchema);
-            required.add("body");
-            if (pathNames.contains("body") || queryNames.contains("body"))
-                throw error("OPENAPI_BODY", "参数body与JSON体保留名称冲突");
+                throw error("OPENAPI_BODY", "当前只支持required请求体");
+            if (json) {
+                var bodySchema =
+                        schema(
+                                root,
+                                content.path("application/json").path("schema"),
+                                new HashSet<>(),
+                                0);
+                properties.put("body", bodySchema);
+                required.add("body");
+                if (pathNames.contains("body") || queryNames.contains("body"))
+                    throw error("OPENAPI_BODY", "参数body与JSON体保留名称冲突");
+            } else {
+                // multipart/form-data：标量属性→fields文本部分；string+format:binary→files文件部分。
+                // 文件类型白名单无法从OpenAPI推导，统一以application/octet-stream占位，
+                // 发布前必须在契约评审中按业务收紧（MultipartFormMapping默认拒绝未声明类型）。
+                var formSchema = content.path("multipart/form-data").path("schema");
+                var requiredParts = new ArrayList<String>();
+                formSchema.path("required").forEach(name -> requiredParts.add(name.asText()));
+                // lambda内引用的集合必须事实终态，先建局部集合再转手。
+                var fields = new ArrayList<Map<String, Object>>();
+                var files = new ArrayList<Map<String, Object>>();
+                var partNames = new HashSet<String>();
+                var partProperties = new LinkedHashMap<String, Object>();
+                var partRequired = new ArrayList<String>();
+                var parts = formSchema.path("properties");
+                parts.fields().forEachRemaining(entry -> {
+                    String name = entry.getKey();
+                    if (!name.matches("[A-Za-z_][A-Za-z0-9_-]{0,63}")
+                            || !partNames.add(name)
+                            || pathNames.contains(name)
+                            || queryNames.contains(name))
+                        throw error("OPENAPI_BODY", "multipart部分名无效或与path/query参数冲突");
+                    if (!requiredParts.contains(name))
+                        throw error("OPENAPI_BODY", "multipart导入要求所有部分required");
+                    var raw = entry.getValue();
+                    partProperties.put(name, schema(root, raw, new HashSet<>(), 0));
+                    partRequired.add(name);
+                    var part = Map.<String, Object>of("name", name, "from", name);
+                    if ("binary".equals(raw.path("format").asText()))
+                        files.add(
+                                new LinkedHashMap<>(
+                                        Map.of(
+                                                "name", name,
+                                                "from", name,
+                                                "filename", name + ".bin",
+                                                "maxBytes", MultipartFormMapping.MAX_FILE_BYTES,
+                                                "allowedContentTypes",
+                                                        List.of("application/octet-stream"))));
+                    else fields.add(part);
+                });
+                if (fields.isEmpty() && files.isEmpty())
+                    throw error("OPENAPI_BODY", "multipart必须至少有一个部分");
+                properties.putAll(partProperties);
+                required.addAll(partRequired);
+                multipartFields = fields;
+                multipartFiles = files;
+            }
         }
         var input = new LinkedHashMap<String, Object>();
         input.put("type", "object");
@@ -395,9 +447,16 @@ public class OpenApiImports {
         SkillRules.schema(successes.getFirst());
         out.put("inputSchema", input);
         out.put("outputSchema", successes.getFirst());
+        // multipart导入的文件白名单为占位值（octet-stream），四道门的契约评审必须收紧后才可发布。
         out.put(
                 "httpMapping",
-                Map.of("path", pathNames, "query", queryNames, "body", hasBody ? "body" : ""));
+                multipartFields == null
+                        ? Map.of("path", pathNames, "query", queryNames, "body", hasBody ? "body" : "")
+                        : Map.of(
+                                "path", pathNames,
+                                "query", queryNames,
+                                "multipart",
+                                        Map.of("fields", multipartFields, "files", multipartFiles)));
     }
 
     private static boolean security(JsonNode root, JsonNode op) {

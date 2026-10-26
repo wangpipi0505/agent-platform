@@ -259,8 +259,16 @@ public class SkillAdapters {
                             : client.method(httpMethod).uri(endpoint);
             request.header("Idempotency-Key", key).header("Accept", "application/json");
             if (authorization != null) request.header("Authorization", authorization);
+            if (mapped && MultipartFormMapping.declared(contract)) {
+                // multipart表单：文件字节经产物存储按租户/主体解析（runId传null与/admin下载语义一致，
+                // 允许引用此前运行的产物）；重发同一坏引用不会有不同结果，失败按PARAM_ERROR处理。
+                request.contentType(org.springframework.http.MediaType.MULTIPART_FORM_DATA)
+                        .body(
+                                MultipartFormMapping.build(
+                                        contract, arguments, id -> artifacts.download(id, null)));
+            }
             // JsonNode强制Jackson编码；Java String直接交给默认转换器会变为裸text/plain，破坏OpenAPI JSON标量契约。
-            if (!method.equals("GET") && requestBody != null)
+            else if (!method.equals("GET") && requestBody != null)
                 request.contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                         .body(Json.tree(requestBody));
             return request.exchange(
