@@ -5,7 +5,13 @@ import {useAuth} from '../../shared/api';
 import {createPortalSession,type PortalTokenProvider} from '../../shared/portal-auth';
 const props=defineProps<{provider?:PortalTokenProvider;mode:'portal'|'dev';configurationError?:string}>();
 const auth=useAuth();
-const portal=createPortalSession(auth,props.provider,{mode:props.mode});
+// A28/Mock：演示模式下 dev 登录与身份读取改由 mock 传输器应答；正常构建保持原生 fetch。
+const mock=typeof import.meta.env?.VITE_MOCK==='string'&&import.meta.env.VITE_MOCK!=='false';
+const transport=mock?async(...args:Parameters<typeof fetch>)=>{
+  const {mockTransport}=await import('../../shared/mock-transport');
+  return mockTransport(...args);
+}:undefined;
+const portal=createPortalSession(auth,props.provider,{mode:props.mode,transport});
 onMounted(()=>{if(!props.configurationError&&props.mode==='portal')void portal.connect();});
 onBeforeUnmount(portal.dispose);
 </script>
