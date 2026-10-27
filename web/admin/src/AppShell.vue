@@ -12,6 +12,7 @@ const menus = [
   ["模型条目", "/model/entries"],
   ["提示词模板", "/model/prompt-templates"],
   ["技能管理", "/skills"],
+  ["服务管理", "/services"],
   ["运行监控", "/runs"],
   ["确认中心", "/approvals"],
   ["评测中心", "/evaluations"],

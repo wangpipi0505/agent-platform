@@ -27,6 +27,7 @@ public final class Routes {
                 || path.startsWith("/admin/classifications")
                 || path.startsWith("/admin/system")) return "app";
         if (path.startsWith("/admin/skills")) return "skill";
+        if (path.startsWith("/admin/services")) return "skill";
         if (path.startsWith("/admin/model-providers")
                 || path.startsWith("/admin/model-entries")
                 || path.startsWith("/admin/model-health"))

@@ -32,6 +32,12 @@ const routes: RouteRecordRaw[] = [
     component: () => import("./pages/SkillsPage.vue"),
     meta: { title: "技能库" },
   },
+  {
+    path: "/services",
+    name: "services",
+    component: () => import("./pages/ServiceManagementPage.vue"),
+    meta: { title: "服务管理" },
+  },
   { path: "/skills/new", redirect: "/skills" },
   {
     path: "/skills/:code",
