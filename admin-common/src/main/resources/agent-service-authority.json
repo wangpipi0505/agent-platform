@@ -2098,5 +2098,16 @@
   "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/OntologyImportController.java:18",
   "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:62;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:28",
   "reason": "OR-S01：本体发布manifest导入为技能草稿（整批DRAFT，发布走四道门；guard_attrs对OR-S02绑定属性）"
+ } ,{
+  "method": "POST",
+  "template": "/internal/runs/{id}/wake",
+  "caller": null,
+  "target": "engine",
+  "action": "run.wake",
+  "mode": "disabled",
+  "integrationAllowed": false,
+  "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java:495",
+  "callerSource": "",
+  "reason": "R-A6 外部事件唤醒：调用方（算法回调/集成系统经哪条通道唤醒）尚未定，先登记为 disabled——覆盖校验通过但不授予任何服务能力；定稿后改为对应 caller 与 delegated"
  }
 ]
