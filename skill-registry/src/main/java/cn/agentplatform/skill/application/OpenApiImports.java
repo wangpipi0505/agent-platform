@@ -376,7 +376,12 @@ public class OpenApiImports {
                 // multipart/form-data：标量属性→fields文本部分；string+format:binary→files文件部分。
                 // 文件类型白名单无法从OpenAPI推导，统一以application/octet-stream占位，
                 // 发布前必须在契约评审中按业务收紧（MultipartFormMapping默认拒绝未声明类型）。
-                var formSchema = content.path("multipart/form-data").path("schema");
+                // schema常为$ref形态（真实合同即如此），先解引用再取properties。
+                var formSchema =
+                        ref(
+                                root,
+                                content.path("multipart/form-data").path("schema"),
+                                new HashSet<>());
                 var requiredParts = new ArrayList<String>();
                 formSchema.path("required").forEach(name -> requiredParts.add(name.asText()));
                 // lambda内引用的集合必须事实终态，先建局部集合再转手。
@@ -393,8 +398,19 @@ public class OpenApiImports {
                             || pathNames.contains(name)
                             || queryNames.contains(name))
                         throw error("OPENAPI_BODY", "multipart部分名无效或与path/query参数冲突");
-                    if (!requiredParts.contains(name))
-                        throw error("OPENAPI_BODY", "multipart导入要求所有部分required");
+                    // 契约不变量：已声明的部分构建期全部必填。OpenAPI可选部分不进契约
+                    // （调用时不发送该部分，服务端按可选处理），避免引入可空部分语义。
+                    // 跳过记录进 skippedMultipartParts 供契约评审对照，不影响supported判定。
+                    if (!requiredParts.contains(name)) {
+                        if (!(out.get("skippedMultipartParts") instanceof List<?> skips)) {
+                            var list = new ArrayList<String>();
+                            list.add(name);
+                            out.put("skippedMultipartParts", list);
+                        } else {
+                            ((List<String>) skips).add(name);
+                        }
+                        return;
+                    }
                     var raw = entry.getValue();
                     partProperties.put(name, schema(root, raw, new HashSet<>(), 0));
                     partRequired.add(name);
