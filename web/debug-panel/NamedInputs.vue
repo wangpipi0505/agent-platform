@@ -1,6 +1,17 @@
 <script setup lang="ts">
 import { ref, watch, onBeforeUnmount, nextTick } from 'vue';
 import SchemaInputs from '../shared/SchemaInputs.vue';
+import AssertionEditor from '../shared/AssertionEditor.vue';
+import {
+  SAFETY_HINT,
+  assertionKey,
+  buildAssertion,
+  canUseAssertionMode,
+  describeAssertion,
+  emptyAssertionDraft,
+  type AssertionDraft,
+  type AssertionValue,
+} from '../shared/assertion';
 import { useApi, useAuth } from '../shared/api';
 const props = defineProps<{ appCode: string; draftId: number; declaration?: any }>();
 const api = useApi(), auth = useAuth();
@@ -9,7 +20,8 @@ const raw = ref('{}'), error = ref(''), notice = ref(''), loading = ref(false), 
 const items = ref<any[]>([]), selected = ref<number>(), hasMore = ref(false), nextAfter = ref(0), after = ref(0), history = ref<number[]>([]);
 const editor = ref(false), editing = ref<any>(), name = ref(''), editRaw = ref('{}');
 const repairAvailable = ref(false);
-const promotion = ref(false), source = ref<any>(), expected = ref(''), safety = ref<boolean>(), datasetVersion = ref(''), caseId = ref('');
+const promotion = ref(false), source = ref<any>(), safety = ref<boolean>(), datasetVersion = ref(''), caseId = ref('');
+const assertionDraft = ref<AssertionDraft>(emptyAssertionDraft()), assertionNotice = ref('');
 let scope = 0, listSequence = 0, detailSequence = 0, edits = 0, alive = true;
 let requests = new AbortController();
 let promotionAttempt: { fingerprint: string; body: any } | undefined;
@@ -87,37 +99,87 @@ async function remove() {
 }
 function openPromotion() {
   const item = items.value.find(item => item.id === selected.value); if (!item) return;
-  source.value = {...item}; expected.value = ''; safety.value = undefined;
+  source.value = {...item}; safety.value = undefined; assertionDraft.value = emptyAssertionDraft(); assertionNotice.value = '';
   const suffix = crypto.randomUUID().slice(0,8);
   datasetVersion.value = `debug-${new Date().toISOString().slice(0,10)}-${suffix}`; caseId.value = `case-${suffix}`;
   promotionAttempt = undefined; error.value = ''; promotion.value = true;
+}
+// 创建成功后回读服务器冻结的用例，展示真实断言而不是本地推测。
+async function readBack(version: string, submitted: AssertionValue) {
+  const current = scope;
+  if (!props.appCode) {
+    error.value = `版本 ${version} 已创建，但缺少应用编码，无法回读服务器用例；请到评测面板核对。`;
+    return;
+  }
+  try {
+    const frozen = await api(`/admin/evaluation-datasets/${encodeURIComponent(props.appCode)}/${encodeURIComponent(version)}`, 'GET', undefined, requests.signal);
+    if (!alive || current !== scope) return;
+    const rows = Array.isArray(frozen?.cases) ? frozen.cases : [];
+    const saved = rows.find((item: any) => item?.id === caseId.value.trim());
+    if (!saved) {
+      error.value = `版本 ${version} 已创建，但服务器返回中找不到用例 ${caseId.value.trim()}；请到评测面板刷新核对，勿重复提交。`;
+      return;
+    }
+    notice.value = `已创建不可变数据集版本 ${version}；服务器冻结断言：${describeAssertion(saved.assertion)}。`;
+    if (assertionKey(saved.assertion) !== assertionKey(submitted)) {
+      error.value = `版本已创建，但服务器保存的断言与提交不一致（提交 ${describeAssertion(submitted)}，服务器 ${describeAssertion(saved.assertion)}）。请勿重复提交，到评测面板核对。`;
+    }
+  } catch (e: any) {
+    if (e.name === 'AbortError') return;
+    error.value = `版本 ${version} 已创建，但读取服务器用例详情失败：${e.message}。请到评测面板选择该版本核对。`;
+  }
 }
 async function promote() {
   if (busy.value || !auth.can('edit')) return;
   const current = scope; busy.value = true; error.value = '';
   try {
-    if (!expected.value.trim()) throw Error('请独立填写预期值，不能使用运行实际输出自动评分');
     if (typeof safety.value !== 'boolean') throw Error('请选择普通用例或安全用例');
     if (!/^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$/.test(datasetVersion.value) || !caseId.value.trim()) throw Error('请填写有效数据集版本与用例标识');
-    const payload = {revision: source.value.revision, datasetVersion: datasetVersion.value, caseId: caseId.value.trim(), expected: JSON.parse(expected.value), safety: safety.value};
+    // 期望值/正则/Schema/容差都在这里按模式校验；失败时不会发出任何请求。
+    const { expected, assertion } = buildAssertion(assertionDraft.value, safety.value);
+    const payload: Record<string, unknown> = {revision: source.value.revision, datasetVersion: datasetVersion.value, caseId: caseId.value.trim(), expected, safety: safety.value};
+    // 缺失等价 EXACT（EvaluationAssertions.java:41,49）：EXACT 不带 assertion，保持既有提升链路兼容；
+    // 其它模式按契约规范形状提交（模式名字符串，或 {mode,tolerance}）。
+    if (assertion !== 'EXACT') payload.assertion = assertion;
     const fingerprint = JSON.stringify({id:source.value.id,...payload});
     // A failed delivery retains this exact body, even if the saved source later changes.
     if (promotionAttempt?.fingerprint !== fingerprint) promotionAttempt = {fingerprint, body:{requestId: crypto.randomUUID(), ...payload}};
     const result = await api(`/admin/debug-inputs/${source.value.id}/promote`, 'POST', promotionAttempt.body, requests.signal);
     if (!alive || current !== scope) return;
-    promotion.value = false; notice.value = `已创建不可变数据集版本 ${result.datasetVersion}，可在候选评测中选择。`;
-  } catch(e) { if (alive && current === scope) failure(e); }
+    const version = result?.datasetVersion;
+    if (typeof version !== 'string' || !version) {
+      promotion.value = false;
+      error.value = '创建响应缺少数据集版本，无法确认结果。请刷新评测面板核对，勿重复提交。';
+      return;
+    }
+    promotion.value = false; notice.value = `已创建不可变数据集版本 ${version}，可在候选评测中选择。`;
+    await readBack(version, assertion);
+  } catch(e: any) {
+    if (!alive || current !== scope) return;
+    // 提升接口的白名单尚未接收 assertion（后端契约缺口）；给出可恢复的下一步，而不是只抛原始字段错误。
+    if (e.status === 400 && typeof e.message === 'string' && e.message.includes('不支持字段: assertion'))
+      error.value = `${e.message}：当前提升接口还不能保存断言配置。可先改用 EXACT（严格相等）保存，或请后端在提升链路接收 assertion 后重试。`;
+    else failure(e);
+  }
   finally { if (alive && current === scope) busy.value = false; }
 }
 watch(() => [props.appCode, props.draftId, props.declaration], () => {
   scope++; requests.abort(); requests = new AbortController(); detailSequence++; listSequence++; edits++;
   items.value = []; selected.value = undefined; history.value = []; after.value = 0; hasMore.value = false;
   editor.value = false; promotion.value = false; busy.value = false; notice.value = ''; raw.value = '{}'; repairAvailable.value = false;
+  assertionDraft.value = emptyAssertionDraft(); assertionNotice.value = '';
   if (props.draftId) void list();
 }, {immediate:true});
 watch(selected, () => { detailSequence++; busy.value = false; repairAvailable.value = false; });
 watch(raw, () => edits++, {flush:'sync'});
-watch([expected, safety, datasetVersion, caseId], () => { if (promotion.value) error.value = ''; });
+watch(safety, (value) => {
+  if (value !== true) { assertionNotice.value = ''; return; }
+  if (canUseAssertionMode(assertionDraft.value.mode, true)) { assertionNotice.value = ''; return; }
+  const previous = assertionDraft.value.mode;
+  assertionDraft.value = {...assertionDraft.value, mode:'EXACT'};
+  assertionNotice.value = `${SAFETY_HINT}，已将断言模式从 ${previous} 改为 EXACT。`;
+});
+watch([assertionDraft, safety, datasetVersion, caseId], () => { if (promotion.value) error.value = ''; });
 onBeforeUnmount(() => { alive = false; scope++; requests.abort(); });
 defineExpose({collect});
 </script>
@@ -140,8 +202,9 @@ defineExpose({collect});
     <div v-if="error" class="error" role="alert">{{error}}</div><template #footer><el-button :disabled="busy" @click="editor=false">取消</el-button><el-button type="primary" :loading="busy" @click="save">保存测试输入</el-button></template>
   </el-dialog>
   <el-dialog v-model="promotion" class="named-input-dialog" title="提升为评测用例" width="min(560px, 94vw)" :close-on-click-modal="!busy" :show-close="!busy" :close-on-press-escape="!busy" destroy-on-close>
-    <p>来源：{{source?.name}} · 保存版本 {{source?.revision}}</p><p class="muted">使用已保存的输入版本。按完整输出精确比较，请独立填写预期值；不会自动采用运行实际输出。</p>
-    <el-form label-position="top"><el-form-item label="预期完整输出 JSON" required><el-input v-model="expected" type="textarea" :rows="6" aria-label="预期完整输出 JSON" placeholder="请独立填写预期值" /></el-form-item><el-form-item label="用例类型" required><el-select v-model="safety" aria-label="用例类型" placeholder="请选择"><el-option :value="false" label="普通用例"/><el-option :value="true" label="安全用例（失败阻断发布）"/></el-select></el-form-item>
+    <p>来源：{{source?.name}} · 保存版本 {{source?.revision}}</p><p class="muted">使用已保存的输入版本。按所选断言模式判分；请独立填写期望值，不会自动采用运行实际输出。</p>
+    <el-form label-position="top"><el-form-item label="用例类型" required><el-select v-model="safety" aria-label="用例类型" placeholder="请选择"><el-option :value="false" label="普通用例"/><el-option :value="true" label="安全用例（失败阻断发布）"/></el-select></el-form-item>
+      <AssertionEditor v-model:draft="assertionDraft" :safety="safety === true" :disabled="busy" :notice="assertionNotice" />
       <details><summary>版本与用例标识</summary><el-form-item label="数据集版本"><el-input v-model="datasetVersion" aria-label="数据集版本" maxlength="128"/></el-form-item><el-form-item label="用例标识"><el-input v-model="caseId" aria-label="用例标识" maxlength="128"/></el-form-item></details></el-form>
     <div v-if="error" class="error" role="alert">{{error}}</div><template #footer><el-button :disabled="busy" @click="promotion=false">取消</el-button><el-button type="primary" :loading="busy" @click="promote">创建评测版本</el-button></template>
   </el-dialog>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, onBeforeUnmount } from 'vue';
 import { useApi } from '../../shared/api';
+import { describeAssertion } from '../../shared/assertion';
 const props = defineProps<{appCode:string}>();
 const api = useApi();
 const items = ref<any[]>([]), version = ref(''), dataset = ref<any>(), loading = ref(false), error = ref(''), manual = ref(false), manualVersion = ref(''), raw = ref('[]');
@@ -35,7 +36,8 @@ onBeforeUnmount(()=>{active=false;generation++;controller.abort();});defineExpos
   <el-form v-if="!manual" label-position="top"><el-form-item label="已保存的数据集版本"><el-select v-model="version" aria-label="已保存的数据集版本" placeholder="选择由测试输入提升的版本" :disabled="loading" @change="select"><el-option v-for="item in items" :key="item.datasetVersion" :value="item.datasetVersion" :label="item.datasetVersion" /></el-select></el-form-item></el-form>
   <div v-if="!manual" class="actions"><el-button :disabled="loading" @click="load()">刷新数据集</el-button><el-button v-if="hasMore" :disabled="loading" @click="load(true)">载入更多版本</el-button></div>
   <p v-if="loading" class="muted" role="status">正在载入数据集…</p><p v-else-if="!manual && !items.length && !error" class="muted">暂无已保存数据集。可在调试页将命名输入提升为评测用例。</p>
-  <p v-if="dataset && !manual" class="muted" role="status">已载入 {{dataset.cases.length}} 条不可变用例，执行时使用此版本保存的输入与预期值。</p>
+  <p v-if="dataset && !manual" class="muted" role="status">已载入 {{dataset.cases.length}} 条不可变用例，执行时使用此版本保存的输入、预期值与断言。</p>
+  <ul v-if="dataset && !manual" class="muted" aria-label="已保存用例与断言"><li v-for="(item,index) in dataset.cases" :key="item.id ?? index">{{item.id ?? '（无标识）'}} · {{item.safety ? '安全用例' : '普通用例'}} · {{describeAssertion(item.assertion)}}</li></ul>
   <div v-if="error" class="error" role="alert">{{error}}</div>
-  <details @toggle="manual=($event.target as HTMLDetailsElement).open"><summary>高级：手工填写用例数组</summary><p class="muted">按完整输出精确比较，请独立填写预期值。相同版本不能覆盖已有内容。</p><el-form label-position="top"><el-form-item label="手工数据集版本"><el-input v-model="manualVersion" aria-label="手工数据集版本"/></el-form-item><el-form-item label="用例数组（inputs / expected / safety）"><el-input v-model="raw" type="textarea" :rows="6" aria-label="手工用例数组" placeholder='[{"inputs":{},"expected":{},"safety":false}]'/></el-form-item></el-form></details>
+  <details @toggle="manual=($event.target as HTMLDetailsElement).open"><summary>高级：手工填写用例数组</summary><p class="muted">未写 assertion 的用例按整份输出逐字段相等判分；请独立填写预期值。相同版本不能覆盖已有内容。</p><el-form label-position="top"><el-form-item label="手工数据集版本"><el-input v-model="manualVersion" aria-label="手工数据集版本"/></el-form-item><el-form-item label="用例数组（inputs / expected / safety / assertion）"><el-input v-model="raw" type="textarea" :rows="6" aria-label="手工用例数组" placeholder='[{"inputs":{},"expected":{},"safety":false,"assertion":"JSON_SUBSET"}]'/></el-form-item></el-form></details>
 </template>
