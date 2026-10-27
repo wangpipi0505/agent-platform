@@ -3,6 +3,7 @@ package cn.agentplatform.skill.application;
 import cn.agentplatform.common.*;
 import cn.agentplatform.common.auth.AuthScheme;
 import cn.agentplatform.skill.domain.ProcessContract;
+import cn.agentplatform.skill.domain.SkillDigest;
 import cn.agentplatform.skill.domain.SkillRules;
 import cn.agentplatform.skill.infra.McpAdapter;
 import cn.agentplatform.skill.infra.OpenApiHttpMapping;
@@ -34,20 +35,38 @@ public class SkillCatalog {
     private final SkillClients clients;
     private final String appUrl;
     private final boolean legacyBearer;
+    private final boolean evidenceDigestGate;
 
-    /** 单测直连四参构造：等价于默认 legacy-bearer=true，既有测试无需感知本卡开关。 */
+    /** 单测直连四参构造：等价于默认 legacy-bearer=true、digest 门禁开启，既有测试无需感知本卡开关。 */
     public SkillCatalog(
             JdbcTemplate db,
             PlatformTransactionManager manager,
             SkillClients clients,
             String appUrl) {
-        this(db, manager, clients, appUrl, true);
+        this(db, manager, clients, appUrl, true, true);
+    }
+
+    /**
+     * 兼容既有测试的五参构造（T10 之前只有 legacy-bearer 一个开关）。测试里需要验证回滚时改用六参，
+     * 语义与容器注入完全一致，不允许出现“测试构造 = 另一套行为”。
+     */
+    public SkillCatalog(
+            JdbcTemplate db,
+            PlatformTransactionManager manager,
+            SkillClients clients,
+            String appUrl,
+            boolean legacyBearer) {
+        this(db, manager, clients, appUrl, legacyBearer, true);
     }
 
     /**
      * 容器注入的正式构造。legacy-bearer 只影响注册期归一化（未声明 authScheme 时补 BEARER 还是
      * 拒绝），见 {@link cn.agentplatform.common.auth.AuthScheme} 的兼容窗口说明；默认 true 保证
      * 升级瞬间存量技能的对外凭据形态不变。
+     *
+     * <p>evidence-digest-gate 是 T10 的回滚开关：关闭后发布门禁退回只比 candidate_sha256（与
+     * V315 之前逐字一致），已写入的 semantic_digest 列与新端点全部保留。开关只影响“是否额外要求
+     * 摘要相等”，不会放行未通过的证据；默认 true，升级后立即获得“展示文案改动不再要求重测”。
      */
     @Autowired
     public SkillCatalog(
@@ -55,12 +74,14 @@ public class SkillCatalog {
             PlatformTransactionManager manager,
             SkillClients clients,
             @Value("${agent.services.app:http://127.0.0.1:18081}") String appUrl,
-            @Value("${agent.skill.auth.legacy-bearer:true}") boolean legacyBearer) {
+            @Value("${agent.skill.auth.legacy-bearer:true}") boolean legacyBearer,
+            @Value("${agent.skill.evidence-digest-gate:true}") boolean evidenceDigestGate) {
         this.db = db;
         this.tx = new TransactionTemplate(manager);
         this.clients = clients;
         this.appUrl = appUrl;
         this.legacyBearer = legacyBearer;
+        this.evidenceDigestGate = evidenceDigestGate;
     }
 
     private String tenant() {
@@ -111,6 +132,10 @@ public class SkillCatalog {
         result.put("status", row.getString("status"));
         result.put("sha256", row.getString("sha256"));
         result.put("digest", row.getString("sha256"));
+        // T10：digest 沿用旧字段名指向 sha256（历史前端用它做“草稿字节指纹”），语义摘要另开字段，
+        // 两个指纹含义不同，不能互相顶替：sha 证明字节未变，semanticDigest 证明语义未变。
+        result.put("semanticDigest", row.getString("semantic_digest"));
+        result.put("digestVersion", SkillDigest.VERSION);
         result.put("definition", Json.read(row.getString("contract"), Object.class));
         result.put("code", row.getString("skill_code"));
         return result;
@@ -229,14 +254,17 @@ public class SkillCatalog {
                             body.containsKey("type") || body.containsKey("invocation")
                                     ? normalize(body)
                                     : Map.<String, Object>of();
+                    // 两个指纹一起写、取同一个规范化对象：sha 覆盖整份契约（含展示文案），
+                    // semanticDigest 只覆盖语义字段（排除集在 SkillDigest 内唯一实现）。
                     db.update(
                             "insert into"
-                                + " skill.skill_version(tenant_id,skill_code,version_no,contract,sha256)"
-                                + " values(?,?,1,?::jsonb,?)",
+                                + " skill.skill_version(tenant_id,skill_code,version_no,contract,sha256,semantic_digest)"
+                                + " values(?,?,1,?::jsonb,?,?)",
                             tenant(),
                             code,
                             Json.write(contract),
-                            Digest.sha256(Json.canonical(contract)));
+                            Digest.sha256(Json.canonical(contract)),
+                            SkillDigest.of(contract));
                     return get(code, null);
                 });
     }
@@ -267,13 +295,18 @@ public class SkillCatalog {
                             && !effective.containsKey(AuthScheme.FIELD))
                         effective.put(AuthScheme.FIELD, previous.get(AuthScheme.FIELD));
                     var contract = normalize(effective);
+                    String sha = Digest.sha256(Json.canonical(contract));
+                    String semanticDigest = SkillDigest.of(contract);
                     if (all.getFirst().get("status").equals("DRAFT")) {
+                        // 草稿原地保存会同时换掉两个指纹：只改展示文案时 sha 变、semanticDigest 不变，
+                        // 已通过的证据仍然有效；改了语义则两者都变，旧证据被门禁挡住。
                         db.update(
-                                "update skill.skill_version set contract=?::jsonb,sha256=? where"
+                                "update skill.skill_version set contract=?::jsonb,sha256=?,semantic_digest=? where"
                                         + " tenant_id=? and skill_code=? and version_no=? and"
                                         + " status='DRAFT'",
                                 Json.write(contract),
-                                Digest.sha256(Json.canonical(contract)),
+                                sha,
+                                semanticDigest,
                                 tenant(),
                                 code,
                                 version);
@@ -281,13 +314,14 @@ public class SkillCatalog {
                         version++;
                         db.update(
                                 "insert into"
-                                    + " skill.skill_version(tenant_id,skill_code,version_no,contract,sha256)"
-                                    + " values(?,?,?,?::jsonb,?)",
+                                    + " skill.skill_version(tenant_id,skill_code,version_no,contract,sha256,semantic_digest)"
+                                    + " values(?,?,?,?::jsonb,?,?)",
                                 tenant(),
                                 code,
                                 version,
                                 Json.write(contract),
-                                Digest.sha256(Json.canonical(contract)));
+                                sha,
+                                semanticDigest);
                     }
                     db.update(
                             "update skill.skill set updated_at=now() where tenant_id=? and code=?",
@@ -627,25 +661,67 @@ public class SkillCatalog {
                     if (Boolean.TRUE.equals(execution.get("readonly"))
                             && object(guard.getOrDefault("attributes", Map.of())).isEmpty())
                         throw error(409, "QUERY_GUARD_REQUIRED", "查询技能必须声明守卫属性");
-                    if (db.queryForObject(
-                                    "select count(*) from skill.connection_test where tenant_id=?"
-                                            + " and skill_version_id=? and candidate_sha256=? and"
-                                            + " passed",
-                                    Integer.class,
-                                    tenant(),
-                                    id,
-                                    candidate.get("sha256"))
-                            == 0)
-                        throw error(409, "CONNECTION_TEST_REQUIRED", "当前草稿尚无通过的真实连接/受控调试报告");
-                    if (db.queryForObject(
-                                    "select count(*) from skill.acceptance where tenant_id=? and"
-                                        + " skill_version_id=? and candidate_sha256=? and passed"
-                                        + " and hit_rate>=0.8",
-                                    Integer.class,
-                                    tenant(),
-                                    id,
-                                    candidate.get("sha256"))
-                            == 0) throw error(409, "ACCEPTANCE_REQUIRED", "当前草稿选型验收尚未通过");
+                    // T10：门禁从“只比 candidate_sha256”升级为“sha + semanticDigest + passed”三条同时成立。
+                    // 理由：sha 覆盖整份契约，只改 description/title 也会让证据失效；只比 sha 又无法识别
+                    // “拿旧字节的通过记录冒充新语义”。两个指纹分别证明“同一份草稿字节”和“同一份语义”。
+                    // 回滚开关只放宽 digest 这一条，sha 与 passed 仍然必须满足（绝不静默放行未通过证据）。
+                    Object digest = candidate.get("semanticDigest");
+                    if (digest == null)
+                        throw error(
+                                409,
+                                "CONNECTION_TEST_REQUIRED",
+                                "当前草稿缺少语义摘要（semantic_digest 为空，疑似手工写入）；下一步：重新保存草稿后重跑连接测试");
+                    String connectionSql =
+                            "select count(*) from skill.connection_test where tenant_id=?"
+                                    + " and skill_version_id=? and candidate_sha256=? and passed";
+                    if (evidenceDigestGate) connectionSql += " and semantic_digest=?";
+                    Integer connections =
+                            evidenceDigestGate
+                                    ? db.queryForObject(
+                                            connectionSql,
+                                            Integer.class,
+                                            tenant(),
+                                            id,
+                                            candidate.get("sha256"),
+                                            digest)
+                                    : db.queryForObject(
+                                            connectionSql,
+                                            Integer.class,
+                                            tenant(),
+                                            id,
+                                            candidate.get("sha256"));
+                    if (connections == 0)
+                        throw error(
+                                409,
+                                "CONNECTION_TEST_REQUIRED",
+                                "当前草稿尚无通过的真实连接/受控调试报告；下一步：对 v"
+                                        + version
+                                        + " 重跑连接测试");
+                    String acceptanceSql =
+                            "select count(*) from skill.acceptance where tenant_id=?"
+                                    + " and skill_version_id=? and candidate_sha256=? and passed"
+                                    + " and hit_rate>=0.8";
+                    if (evidenceDigestGate) acceptanceSql += " and semantic_digest=?";
+                    Integer acceptances =
+                            evidenceDigestGate
+                                    ? db.queryForObject(
+                                            acceptanceSql,
+                                            Integer.class,
+                                            tenant(),
+                                            id,
+                                            candidate.get("sha256"),
+                                            digest)
+                                    : db.queryForObject(
+                                            acceptanceSql,
+                                            Integer.class,
+                                            tenant(),
+                                            id,
+                                            candidate.get("sha256"));
+                    if (acceptances == 0)
+                        throw error(
+                                409,
+                                "ACCEPTANCE_REQUIRED",
+                                "当前草稿选型验收尚未通过；下一步：对 v" + version + " 重跑选型验收");
                     db.update(
                             "update skill.skill_version set status='ARCHIVED' where tenant_id=? and"
                                     + " skill_code=? and status='PUBLISHED'",
@@ -666,6 +742,139 @@ public class SkillCatalog {
                             tenant(),
                             code);
                     return version(code, version);
+                });
+    }
+
+    /**
+     * T10 受控证据重绑定：把来源版本已通过的连接测试/选型验收复制到目标草稿。
+     *
+     * <p>不变量一：历史证据行一字不改。已发布版本受 {@code protect_published_contract()} 保护，本方法
+     * 也不对 connection_test/acceptance 做任何 UPDATE/DELETE——只 insert 新行，report 里追加
+     * {@code reboundFrom}，让“这份证据原本属于谁”在目标行自身可读，不依赖审计表 join。
+     *
+     * <p>不变量二：只有语义摘要相同才可复制。展示文案（description/title 等）改动让 sha 变化但
+     * semanticDigest 不变，此时允许复用证据；端点/Schema/执行语义变化则摘要变化，必须重跑真实测试，
+     * 返回 409 SEMANTIC_CHANGE_REQUIRES_RETEST 并给出下一步。
+     *
+     * <p>不变量三：同一目标草稿只绑定一次。审计表 UNIQUE(tenant_id,to_version_id) 是并发下的唯一
+     * 裁决者：两个请求都过了预检时，数据库只允许一个提交，另一个得到 409 EVIDENCE_ALREADY_BOUND，
+     * 而不是静默成功或复制两份证据。审计与复制在同一个事务里，任一步失败整体回滚。
+     *
+     * <p>复制行的 candidate_sha256 一律改写为目标草稿当前的 sha256（证据从此证明的是目标字节），
+     * semantic_digest 保持来源摘要（两版本相等才允许走到这里）；旧 report 保留，另加 reboundFrom。
+     */
+    public Map<String, Object> rebindEvidence(String code, int version, Map<String, Object> body) {
+        if (!(body.get("fromVersion") instanceof Number from) || from.longValue() < 1)
+            throw error(400, "INVALID_REBIND", "fromVersion 必须是正整数版本号");
+        int fromVersion = from.intValue();
+        String reason = Objects.toString(body.get("reason"), "").trim();
+        if (reason.length() < 10 || reason.length() > 500)
+            throw error(400, "INVALID_REBIND", "reason 需为10至500字符，写明为什么语义没有变化");
+        Actor actor = Actor.current();
+        return tx.execute(
+                status -> {
+                    main(code, true);
+                    var target = version(code, version);
+                    long targetId = ((Number) target.get("skillVersionId")).longValue();
+                    if (!"DRAFT".equals(target.get("status")))
+                        throw error(409, "SKILL_STATE", "只有草稿可重绑定证据；下一步：先保存为目标草稿");
+                    if (fromVersion == version)
+                        throw error(400, "INVALID_REBIND", "来源版本不能是目标版本本身");
+                    var source = version(code, fromVersion);
+                    long sourceId = ((Number) source.get("skillVersionId")).longValue();
+                    String targetDigest = Objects.toString(target.get("semanticDigest"), "");
+                    String sourceDigest = Objects.toString(source.get("semanticDigest"), "");
+                    if (targetDigest.isBlank() || !targetDigest.equals(sourceDigest))
+                        throw error(
+                                409,
+                                "SEMANTIC_CHANGE_REQUIRES_RETEST",
+                                "来源版本 v"
+                                        + fromVersion
+                                        + " 与目标草稿 v"
+                                        + version
+                                        + " 的语义摘要不同，旧证据不能为新契约放行；下一步：对该版本重跑连接测试与选型验收");
+                    String at = java.time.Instant.now().toString();
+                    try {
+                        db.update(
+                                "insert into"
+                                    + " skill.evidence_rebind(tenant_id,skill_code,from_version_id,to_version_id,semantic_digest,reason,operator)"
+                                    + " values(?,?,?,?,?,?,?)",
+                                tenant(),
+                                code,
+                                sourceId,
+                                targetId,
+                                targetDigest,
+                                reason,
+                                actor.principalId());
+                    } catch (org.springframework.dao.DuplicateKeyException duplicate) {
+                        // 唯一约束比“先查再插”更可靠：并发时只有一个事务能提交，其余显式失败。
+                        throw error(
+                                409,
+                                "EVIDENCE_ALREADY_BOUND",
+                                "目标草稿已绑定过证据，不能重复绑定；下一步：直接发布，或修改契约后重新测试");
+                    }
+                    var reboundFrom =
+                            Map.of(
+                                    "version", fromVersion,
+                                    "sha256", Objects.toString(source.get("sha256"), ""),
+                                    "at", at,
+                                    "operator", actor.principalId(),
+                                    "reason", reason);
+                    int connections =
+                            db.update(
+                                    "insert into"
+                                        + " skill.connection_test(tenant_id,skill_version_id,candidate_sha256,passed,report,semantic_digest)"
+                                        + " select tenant_id,?,?,true,report||jsonb_build_object('reboundFrom',?::jsonb),?"
+                                        + " from skill.connection_test where tenant_id=?"
+                                        + " and skill_version_id=? and passed and semantic_digest=?",
+                                    targetId,
+                                    target.get("sha256"),
+                                    Json.write(reboundFrom),
+                                    targetDigest,
+                                    tenant(),
+                                    sourceId,
+                                    sourceDigest);
+                    // acceptance 的主键是业务 id（sa_...），复制必须换新 id，否则同租户下必然主键冲突；
+                    // 原 id 仍留在旧行，新行的 report.reboundFrom 记录来源版本，可反查。
+                    int acceptances = 0;
+                    for (var evidence :
+                            db.queryForList(
+                                    "select id,hit_rate,report from skill.acceptance where tenant_id=?"
+                                            + " and skill_version_id=? and passed and hit_rate>=0.8"
+                                            + " and semantic_digest=?",
+                                    tenant(),
+                                    sourceId,
+                                    sourceDigest)) {
+                        var report =
+                                new LinkedHashMap<String, Object>(
+                                        Json.read(
+                                                Objects.toString(evidence.get("report"), "{}"),
+                                                Map.class));
+                        report.put("reboundFrom", reboundFrom);
+                        db.update(
+                                "insert into"
+                                    + " skill.acceptance(id,tenant_id,skill_version_id,candidate_sha256,passed,hit_rate,report,semantic_digest)"
+                                    + " values(?,?,?,?,true,?,?::jsonb,?)",
+                                "sa_" + UUID.randomUUID().toString().replace("-", ""),
+                                tenant(),
+                                targetId,
+                                target.get("sha256"),
+                                evidence.get("hit_rate"),
+                                Json.write(report),
+                                targetDigest);
+                        acceptances++;
+                    }
+                    if (connections == 0 || acceptances == 0)
+                        throw error(
+                                409,
+                                "EVIDENCE_INCOMPLETE",
+                                "来源版本缺少可复用的通过证据（连接测试与选型验收必须都存在）；下一步：对该版本重跑连接测试与选型验收");
+                    return Map.of(
+                            "rebound", true,
+                            "fromVersion", fromVersion,
+                            "semanticDigest", targetDigest,
+                            "connectionTest", true,
+                            "acceptance", true);
                 });
     }
 

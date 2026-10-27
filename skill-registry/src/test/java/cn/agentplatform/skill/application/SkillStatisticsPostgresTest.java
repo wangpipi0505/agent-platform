@@ -57,11 +57,14 @@ class SkillStatisticsPostgresTest {
         version =
                 db.queryForObject(
                         "insert into"
-                            + " skill.skill_version(tenant_id,skill_code,version_no,contract,sha256)"
-                            + " values(?,?,1,'{}',?) returning id",
+                            + " skill.skill_version(tenant_id,skill_code,version_no,contract,sha256,semantic_digest)"
+                            + " values(?,?,1,'{}',?,?) returning id",
                         Long.class,
                         tenant,
                         code,
+                        "a".repeat(64),
+                        // T10/V315 起该列 NOT NULL：统计测试不关心摘要，用与 sha 相同的值保持“迁移回填”
+                        // 的语义（旧证据一律 digest=sha），无需为本测试构造真实契约。
                         "a".repeat(64));
         var execution = new SkillExecution(db, manager, null, null, null, "http://unused");
         mvc =

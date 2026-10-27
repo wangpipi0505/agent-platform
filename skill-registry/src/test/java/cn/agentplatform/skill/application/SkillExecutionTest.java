@@ -849,17 +849,19 @@ class SkillExecutionTest {
         String sha = created.get("sha256").toString();
         db.update(
                 "insert into"
-                    + " skill.connection_test(tenant_id,skill_version_id,candidate_sha256,passed,report)"
-                    + " values('skill-tests',?,?,true,'{}')",
+                    + " skill.connection_test(tenant_id,skill_version_id,candidate_sha256,passed,report,semantic_digest)"
+                    + " values('skill-tests',?,?,true,'{}',?)",
                 id,
-                sha);
+                sha,
+                created.get("semanticDigest"));
         db.update(
                 "insert into"
-                    + " skill.acceptance(id,tenant_id,skill_version_id,candidate_sha256,passed,hit_rate,report)"
-                    + " values(?,'skill-tests',?,?,true,1,'{}')",
+                    + " skill.acceptance(id,tenant_id,skill_version_id,candidate_sha256,passed,hit_rate,report,semantic_digest)"
+                    + " values(?,'skill-tests',?,?,true,1,'{}',?)",
                 "test-" + UUID.randomUUID(),
                 id,
-                sha);
+                sha,
+                created.get("semanticDigest"));
         body.put("description", "修改后的契约：能力说明与使用边界发生变化，旧验收必须失效。");
         catalog.save(draftCode, body);
         assertThrows(PlatformException.class, () -> catalog.publish(draftCode, 1));

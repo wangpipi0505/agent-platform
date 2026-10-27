@@ -99,15 +99,20 @@ public class SkillGovernance {
         report.put("ok", passed);
         report.put("latencyMs", Math.max(0, (System.nanoTime() - start) / 1_000_000));
         report.put("candidateSha256", candidate.get("sha256"));
+        // T10：证据同时记录“被测字节”（sha）与“被测语义”（digest）。发布门禁要求两者都与草稿
+        // 当前值相等；只改 description 时 sha 变而 digest 不变，受控重绑定即可复用这份报告。
+        report.put("semanticDigest", candidate.get("semanticDigest"));
+        report.put("digestVersion", candidate.get("digestVersion"));
         db.update(
                 "insert into"
-                    + " skill.connection_test(tenant_id,skill_version_id,candidate_sha256,passed,report)"
-                    + " values(?,?,?,?,?::jsonb)",
+                    + " skill.connection_test(tenant_id,skill_version_id,candidate_sha256,passed,report,semantic_digest)"
+                    + " values(?,?,?,?,?::jsonb,?)",
                 Actor.current().tenantId(),
                 id,
                 candidate.get("sha256"),
                 passed,
-                Json.write(report));
+                Json.write(report),
+                candidate.get("semanticDigest"));
         return report;
     }
 
@@ -199,18 +204,24 @@ public class SkillGovernance {
                         "gate",
                         Map.of("minHitRate", 0.8),
                         "candidateSha256",
-                        candidate.get("sha256"));
+                        candidate.get("sha256"),
+                        // T10：验收报告与列都带语义摘要，发布门禁按“版本+sha+digest+passed”匹配证据。
+                        "semanticDigest",
+                        candidate.get("semanticDigest"),
+                        "digestVersion",
+                        candidate.get("digestVersion"));
         db.update(
                 "insert into"
-                    + " skill.acceptance(id,tenant_id,skill_version_id,candidate_sha256,passed,hit_rate,report)"
-                    + " values(?,?,?,?,?,?,?::jsonb)",
+                    + " skill.acceptance(id,tenant_id,skill_version_id,candidate_sha256,passed,hit_rate,report,semantic_digest)"
+                    + " values(?,?,?,?,?,?,?::jsonb,?)",
                 id,
                 Actor.current().tenantId(),
                 candidate.get("skillVersionId"),
                 candidate.get("sha256"),
                 rate >= 0.8,
                 rate,
-                Json.write(report));
+                Json.write(report),
+                candidate.get("semanticDigest"));
         return report;
     }
 }

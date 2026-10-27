@@ -293,4 +293,13 @@ public final class SkillRules {
         }
         return secured;
     }
+
+    /**
+     * 语义摘要的规范化入口（PLAT-03/10）：谁算“契约语义”只在 {@link SkillDigest} 里定义一次，
+     * 注册/保存、发布门禁与证据重绑定都从这里取同一份规范化结果，不在调用方另写排除集。
+     * 本方法保持纯函数性质（不读 DB、不碰 SecurityContext），因此单元测试可直接对 Map 断言。
+     */
+    public static String semanticCanonical(Object contract) {
+        return SkillDigest.canonical(contract);
+    }
 }
