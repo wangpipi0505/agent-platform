@@ -2133,5 +2133,16 @@
   "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java:495",
   "callerSource": "skill-registry/src/main/java/cn/agentplatform/skill/application/SkillCallbacks.java:355",
   "reason": "skill 采纳外部事实后唤醒，免一次调度退避；事实判定仍由引擎 resumeExternalFacts 完成"
+ } ,{
+  "method": "GET",
+  "template": "/health/data",
+  "caller": null,
+  "target": "app",
+  "action": "app.DataHealthController.data",
+  "mode": "disabled",
+  "integrationAllowed": false,
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/DataHealthController.java:24",
+  "callerSource": "",
+  "reason": "ADMIN 人工运维端点（T20.1）：门户 Bearer 鉴权 Actor.requireRole(ADMIN)，非服务票据路由，无服务调用方；disabled=零服务授权，明细不进公开 /actuator/health"
  }
 ]
