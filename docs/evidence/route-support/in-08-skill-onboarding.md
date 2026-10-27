@@ -97,6 +97,20 @@ submit 补 `execution.confirmRoles=["ADMIN","APPROVER"]` 后重测，**确认中
 snapshotDigest）。经网关不可达 /internal（有意边界），联调时用 JWT secret 签发的
 内部 SERVICE/确认角色 token 直连 engine。submit 技能本身链路判定：**已验证至确认环节**。
 
+## 7.2 options 技能处置与 AP-S02/07 部署（2026-10-27 晚）
+
+- **AP-S02/07 完成态部署确认**：工作区改动（model-gateway 深度健康、engine 错误可观测）已构建
+  （jar 09:58/09:59），skill-registry 与 engine-runtime 重启加载。复测 options：错误呈现仍为语义码
+  （OUTPUT_INVALID）——呈现口径属实现方验收范围，本项仅确认部署与功能路径无回归。
+- **space-satellite-options 处置：DISABLED（产品决策，有依据）**。5414 项全量星目录（~550KB）无论
+  直读或转存都超平台输出校验工作预算——该预算是防止超大实例拖垮校验的**有意防护**；而全量原始
+  目录对 LLM 工具调用本无价值。查询需求由 space-target-query（分页、SUCCEEDED）覆盖。若业务确需
+  全量目录，正确路径是空间服务提供分页（外部 owner），而非绕预算。
+
+**最终台账**：SUCCEEDED 4（simulate / fit102 / target-query / visibility-status）+ WAITING_APPROVAL 1
+（submit，确认流已验证）+ DISABLED 1（options，上述依据）+ 链路已证 1（file-preview）+ 待件 5
+（plan/downlink×2 等 owner 数据、upload/result 等 IN-07 真实产物与数据修复）。
+
 ## 6. 未尽事项
 
 1. 12/12 全绿的收敛（A 类可空字段 schema 修剪脚本 + B 类等 owner 修数据 + C 类样例更新）；
