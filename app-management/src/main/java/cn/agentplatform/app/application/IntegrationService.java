@@ -158,8 +158,9 @@ public class IntegrationService {
                 Json.write(limits),
                 Json.write(origins),
                 Actor.current().principalId());
-        audit(code, "INTEGRATION_ISSUE", biz);
         var result = new LinkedHashMap<>(get(code, biz, false));
+        // PLAT-12 审计三元组：凭据生命周期审计带上 credential_id，可从凭据反查
+        audit(Actor.current(), code, "INTEGRATION_ISSUE", biz, result.get("id").toString());
         result.put("secretOnce", secret);
         result.put("apiKeyOnce", result.get("id") + ":" + secret);
         return result;
@@ -168,21 +169,21 @@ public class IntegrationService {
     @Transactional
     public Map<String, Object> revoke(String code, String biz) {
         Actor.current().requireRole("ADMIN");
-        requireCredential(code, biz);
+        long credentialId = requireCredential(code, biz);
         db.update(
                 "update app.integration_credential set status='REVOKED',revoked_at=now(),policy_revision=policy_revision+1 where"
                     + " tenant_id=? and app_code=? and biz_system_code=?",
                 tenant(),
                 code,
                 biz);
-        audit(code, "INTEGRATION_REVOKE", biz);
+        audit(Actor.current(), code, "INTEGRATION_REVOKE", biz, Long.toString(credentialId));
         return get(code, biz, false);
     }
 
     @Transactional
     public Map<String, Object> policy(String code, String biz, Map<String, Object> body) {
         Actor.current().requireRole("ADMIN");
-        requireCredential(code, biz);
+        long credentialId = requireCredential(code, biz);
         var limits = object(body.get("claimLimits"));
         Object origins = body.get("allowedOrigins");
         try {
@@ -200,7 +201,7 @@ public class IntegrationService {
                 tenant(),
                 code,
                 biz);
-        audit(code, "INTEGRATION_POLICY", biz);
+        audit(Actor.current(), code, "INTEGRATION_POLICY", biz, Long.toString(credentialId));
         return get(code, biz, false);
     }
 
@@ -213,25 +214,29 @@ public class IntegrationService {
         AuthorityContext.requireFor(Actor.current(),new ResourceBinding("app-version",code+"@"+row.get("current_version_no"),row.get("candidate_sha256").toString())).actor().requireRole("ADMIN");
     }
     /** Policy metadata is read under the row lock. The same transaction verifies the old exact
-     * resource, mutates policy and increments revision; concurrent updates cannot lose increments. */
-    private void requireCredential(String code,String biz) {
+     * resource, mutates policy and increments revision; concurrent updates cannot lose increments.
+     * 返回凭据 id 供审计三元组（runId↔principalId↔credentialId）落关联列。 */
+    private long requireCredential(String code,String biz) {
         var rows=db.queryForList("select id,policy_revision,secret_ref,claim_limits,allowed_origins from app.integration_credential where tenant_id=? and app_code=? and biz_system_code=? for update",tenant(),code,biz);
         if(rows.isEmpty())throw error(404,"INTEGRATION_NOT_FOUND","集成凭据不存在");
         var row=rows.getFirst();long id=((Number)row.get("id")).longValue();
         String digest=IntegrationClaims.digest(Json.tree(Map.of("secretRef",row.get("secret_ref"),"claimLimits",Json.read(row.get("claim_limits").toString()),"allowedOrigins",Json.read(row.get("allowed_origins").toString()))));
         String version=Digest.sha256(Json.canonical(Map.of("credentialId",id,"policyVersion",id+":"+row.get("policy_revision"),"policyDigest",digest)));
         AuthorityContext.requireFor(Actor.current(),new ResourceBinding("integration-credential",Long.toString(id),version)).actor().requireRole("ADMIN");
+        return id;
     }
 
-    private void audit(String code, String action, String biz) {
+    /** PLAT-12 审计写入：credential_id 可空，给出即落关联列（V107），支持从凭据反查；包内可见以便直验写入形状。 */
+    void audit(Actor actor, String code, String action, String biz, String credentialId) {
         db.update(
                 "insert into"
-                    + " app.lifecycle_log(tenant_id,app_code,actor,action,from_state,to_state,detail)"
-                    + " values(?,?,?,?,'PUBLISHED','PUBLISHED',?::jsonb)",
-                tenant(),
+                    + " app.lifecycle_log(tenant_id,app_code,actor,action,from_state,to_state,detail,credential_id)"
+                    + " values(?,?,?,?,'PUBLISHED','PUBLISHED',?::jsonb,?)",
+                actor.tenantId(),
                 code,
-                Actor.current().principalId(),
+                actor.principalId(),
                 action,
-                Json.write(Map.of("bizSystemCode", biz)));
+                Json.write(Map.of("bizSystemCode", biz)),
+                credentialId);
     }
 }

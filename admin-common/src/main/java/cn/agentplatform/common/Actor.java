@@ -59,4 +59,12 @@ public record Actor(
         if (!roles.contains("ADMIN") && !roles.contains(role))
             throw new PlatformException(403, "SYS-APP-4031", "当前账号没有此操作权限");
     }
+
+    /**
+     * PLAT-12：验签主体快照。guard、审计与出站注入共用同一不可变副本；
+     * 只固化身份 claims，不改变既有 claims 校验行为。
+     */
+    public SubjectSnapshot subject() {
+        return new SubjectSnapshot(tenantId, principalId, roles, attributes);
+    }
 }
