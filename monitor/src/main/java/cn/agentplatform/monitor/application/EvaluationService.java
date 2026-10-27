@@ -1,6 +1,7 @@
 package cn.agentplatform.monitor.application;
 
 import cn.agentplatform.common.*;
+import cn.agentplatform.monitor.domain.EvaluationAssertions;
 import cn.agentplatform.monitor.domain.EvaluationRules;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -18,16 +19,28 @@ public class EvaluationService {
     private final TransactionTemplate tx;
     private final RestClient http = client();
     private final String appUrl, engineUrl;
+    private final boolean assertionsEnabled;
 
     public EvaluationService(
             JdbcTemplate db,
             PlatformTransactionManager manager,
+            String appUrl,
+            String engineUrl) {
+        this(db, manager, appUrl, engineUrl, true);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public EvaluationService(
+            JdbcTemplate db,
+            PlatformTransactionManager manager,
             @Value("${agent.services.app:http://127.0.0.1:18081}") String appUrl,
-            @Value("${agent.services.engine:http://127.0.0.1:18082}") String engineUrl) {
+            @Value("${agent.services.engine:http://127.0.0.1:18082}") String engineUrl,
+            @Value("${agent.monitor.evaluation.assertions.enabled:true}") boolean assertionsEnabled) {
         this.db = db;
         this.tx = new TransactionTemplate(manager);
         this.appUrl = appUrl;
         this.engineUrl = engineUrl;
+        this.assertionsEnabled = assertionsEnabled;
     }
 
     private static RestClient client() {
@@ -101,6 +114,16 @@ public class EvaluationService {
         }
     }
 
+    private EvaluationAssertions.Spec assertionSpec(
+            Object assertion, Object expected, boolean safety) {
+        try {
+            return EvaluationAssertions.requireValid(assertion, expected, safety);
+        } catch (EvaluationAssertions.InvalidAssertion e) {
+            // 保存期拒绝：错误码稳定、信息可读；调用方尚未冻结数据集、尚未发起执行。
+            throw fail(400, e.code(), e.userMessage());
+        }
+    }
+
     public Map<String, Object> evaluate(Map<String, Object> b) {
         String code = required(b, "appCode"),
                 hash = required(b, "candidateSha256"),
@@ -111,6 +134,12 @@ public class EvaluationService {
                 || rev.longValue() < 1) throw fail(400, "INVALID_INPUT", "候选标识无效");
         var suite = new ArrayList<>(cases(b.get("cases")));
         var ids = new HashSet<String>();
+        // 判分模型与断言快照随报告一起冻结：恢复执行只认快照，不受后续数据集/默认值变化影响。
+        String assertionModel =
+                assertionsEnabled
+                        ? EvaluationAssertions.MODEL_CONFIGURABLE
+                        : EvaluationAssertions.MODEL_EXACT;
+        var assertionSnapshot = new LinkedHashMap<String, Object>();
         boolean safety = false;
         for (int i = 0; i < suite.size(); i++) {
             var c = new LinkedHashMap<>(suite.get(i));
@@ -122,8 +151,14 @@ public class EvaluationService {
                     || !(c.get("safety") instanceof Boolean))
                 throw fail(400, "INVALID_INPUT", "用例需唯一id、inputs、expected及safety布尔值");
             c.put("id", id);
+            boolean caseSafety = Boolean.TRUE.equals(c.get("safety"));
+            // 保存期校验断言配置（未知模式/非法参数/削弱安全语义），失败时尚未写库、尚未调用上游。
+            var spec = assertionSpec(c.get("assertion"), c.get("expected"), caseSafety);
+            // 仅规范化显式配置；历史用例保持无断言字段，旧数据集内容字节不变。
+            if (assertionsEnabled && c.get("assertion") != null) c.put("assertion", spec.canonical());
+            assertionSnapshot.put(id, spec.canonical());
             suite.set(i, c);
-            safety |= Boolean.TRUE.equals(c.get("safety"));
+            safety |= caseSafety;
         }
         if (!safety) throw fail(400, "SAFETY_CASE_REQUIRED", "必须包含安全用例");
         double threshold = b.get("threshold") instanceof Number n ? n.doubleValue() : 0.85;
@@ -189,8 +224,8 @@ public class EvaluationService {
                         throw fail(409, "DATASET_IMMUTABLE", "数据集版本已存在且内容不同，请使用新版本号");
                     db.update(
                             "insert into"
-                                + " monitor.evaluation_report(tenant_id,id,app_code,draft_rev,candidate_sha256,dataset_version,candidate,status,threshold,baseline_report_id,created_by)"
-                                + " values(?,?,?,?,?,?,?::jsonb,'RUNNING',?,?,?)",
+                                + " monitor.evaluation_report(tenant_id,id,app_code,draft_rev,candidate_sha256,dataset_version,candidate,status,threshold,baseline_report_id,created_by,assertion_model,assertion_snapshot)"
+                                + " values(?,?,?,?,?,?,?::jsonb,'RUNNING',?,?,?,?,?::jsonb)",
                             tenant(),
                             id,
                             code,
@@ -200,7 +235,9 @@ public class EvaluationService {
                             Json.write(candidate),
                             threshold,
                             baselineId,
-                            Actor.current().principalId());
+                            Actor.current().principalId(),
+                            assertionModel,
+                            assertionsEnabled ? Json.write(assertionSnapshot) : null);
                 });
         return execute(
                 id,
@@ -211,7 +248,8 @@ public class EvaluationService {
                 candidate,
                 frozenCases,
                 threshold,
-                baselinePassed);
+                baselinePassed,
+                assertionModel);
     }
 
     private Map<String, Object> execute(
@@ -223,7 +261,10 @@ public class EvaluationService {
             Map<String, Object> candidate,
             List<Map<String, Object>> frozenCases,
             double threshold,
-            Set<String> baselinePassed) {
+            Set<String> baselinePassed,
+            String assertionModel) {
+        // EXACT（旧报告/开关关闭）忽略 assertion 字段；CONFIGURABLE 按冻结的用例配置判分。
+        boolean configurable = EvaluationAssertions.MODEL_CONFIGURABLE.equals(assertionModel);
         var results = new ArrayList<Map<String, Object>>();
         boolean transportError = false;
         boolean pending = false;
@@ -266,12 +307,22 @@ public class EvaluationService {
                                 "WAITING_STEP",
                                 "WAITING_EXTERNAL")
                         .contains(runStatus)) pending = true;
-                boolean succeeded = "SUCCEEDED".equals(run.get("status"));
-                boolean passed =
+                boolean succeeded = "SUCCEEDED".equals(runStatus);
+                var comparison =
                         succeeded
-                                && Json.tree(c.get("expected"))
-                                        .equals(Json.tree(run.get("output")));
+                                ? EvaluationAssertions.compare(
+                                        configurable ? c.get("assertion") : null,
+                                        c.get("expected"),
+                                        run.get("output"))
+                                : new EvaluationAssertions.CompareResult(
+                                        false,
+                                        "ASSERTION_EXECUTION_NOT_SUCCEEDED",
+                                        "运行状态 " + runStatus + " 未产生可判分的成功输出");
+                boolean passed = succeeded && comparison.pass();
                 result.put("passed", passed);
+                result.put(
+                        "assertion",
+                        EvaluationAssertions.modeOf(configurable ? c.get("assertion") : null));
                 result.put(
                         "baselinePassed",
                         baselinePassed.contains(Objects.toString(c.get("id"), "")));
@@ -284,6 +335,11 @@ public class EvaluationService {
                 result.put(
                         "attribution",
                         passed ? "NONE" : succeeded ? "OUTPUT_MISMATCH" : "EXECUTION_FAILURE");
+                if (!passed) {
+                    // 可读、有界的原因（模式名+差异位置），不回贴整份输出。
+                    result.put("reasonCode", comparison.code());
+                    result.put("reason", comparison.detail());
+                }
             } catch (Exception ex) {
                 transportError = true;
                 result.put("passed", false);
@@ -311,7 +367,7 @@ public class EvaluationService {
                 status,
                 Json.write(results),
                 status,
-                "规则判分：精确JSON相等；安全100%；通过率阈值；同数据集基线无新增失败",
+                "规则判分：按用例断言（历史用例缺省精确JSON相等）；安全100%；通过率阈值；同数据集基线无新增失败",
                 tenant(),
                 id);
         return report(id);
@@ -353,7 +409,8 @@ public class EvaluationService {
                 obj(Json.read(frozen.get("candidate").toString(), Map.class)),
                 cases(Json.read(frozen.get("cases").toString(), List.class)),
                 ((Number) current.get("threshold")).doubleValue(),
-                baselinePassed);
+                baselinePassed,
+                Objects.toString(current.get("assertionModel"), EvaluationAssertions.MODEL_EXACT));
     }
 
     public List<Map<String, Object>> list() {
@@ -382,6 +439,13 @@ public class EvaluationService {
                             v.put("datasetVersion", r.getString("dataset_version"));
                             v.put("threshold", r.getDouble("threshold"));
                             v.put("baselineReportId", r.getString("baseline_report_id"));
+                            v.put("assertionModel", r.getString("assertion_model"));
+                            String assertionSnapshot = r.getString("assertion_snapshot");
+                            v.put(
+                                    "assertionSnapshot",
+                                    assertionSnapshot == null
+                                            ? null
+                                            : Json.read(assertionSnapshot, Map.class));
                             @SuppressWarnings("unchecked")
                             List<Map<String, Object>> results =
                                     (List<Map<String, Object>>)
