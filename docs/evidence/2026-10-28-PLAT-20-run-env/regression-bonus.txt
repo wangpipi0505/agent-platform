@@ -1,0 +1,385 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ------------------< cn.agentplatform:engine-runtime >-------------------
+[INFO] Building engine-runtime 0.1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- enforcer:3.5.0:enforce (default) @ engine-runtime ---
+[INFO] Rule 0: org.apache.maven.enforcer.rules.version.RequireJavaVersion passed
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ engine-runtime ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 22 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.0:compile (default-compile) @ engine-runtime ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ engine-runtime ---
+[INFO] skip non existing resourceDirectory G:\207\项目\算法重组工具\代码\agent-platform\engine-runtime\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.14.0:testCompile (default-testCompile) @ engine-runtime ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- surefire:3.5.3:test (default-test) @ engine-runtime ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running cn.agentplatform.engine.infra.PortalRunEventsHttpTest
+05:41:07.966 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_o2a_c_events_v12 (PostgreSQL 16.15)
+05:41:08.302 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 24 migrations (execution time 00:00.079s)
+05:41:08.332 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "engine": 219
+05:41:08.343 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "220 - run error structured"
+05:41:08.484 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "222 - run context pack"
+05:41:08.510 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "223 - engine quota window"
+05:41:08.747 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Successfully applied 3 migrations to schema "engine", now at version v223 (execution time 00:00.385s)
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 25.73 s -- in cn.agentplatform.engine.infra.PortalRunEventsHttpTest
+[INFO] Running cn.agentplatform.engine.infra.PublishedAdmissionHttpPostgresTest
+N3_ENGINE_DB_EXISTED=true
+N3_ENGINE_SOURCE_MAX=223
+N3_ENGINE_HISTORY_BEFORE=[{"version":null,"description":"<< Flyway Schema Creation >>","checksum":null,"success":true},{"version":"200","description":"engine","checksum":-1129590471,"success":true},{"version":"201","description":"engine tool approval","checksum":580067347,"success":true},{"version":"202","description":"engine controlled draft test","checksum":707443294,"success":true},{"version":"203","description":"engine frozen call contract","checksum":646965935,"success":true},{"version":"204","description":"engine fact recovery schedule","checksum":-2044828041,"success":true},{"version":"205","description":"engine model projection","checksum":1045032642,"success":true},{"version":"206","description":"engine debug controls","checksum":-1028316638,"success":true},{"version":"207","description":"engine model usage ledger","checksum":1934542204,"success":true},{"version":"208","description":"engine chat sessions","checksum":768495068,"success":true},{"version":"209","description":"engine readonly retry budget","checksum":1867923543,"success":true},{"version":"210","description":"engine controlled reproduction","checksum":-137714443,"success":true},{"version":"211","description":"engine controlled model provenance","checksum":-400208876,"success":true},{"version":"212","description":"engine exact skill connection","checksum":281983426,"success":true},{"version":"213","description":"engine model output policy","checksum":1552686261,"success":true},{"version":"214","description":"named test inputs","checksum":2054032904,"success":true},{"version":"215","description":"run scheduler","checksum":1323767709,"success":true},{"version":"216","description":"run authority initial materials","checksum":-762860462,"success":true},{"version":"217","description":"run flow materials","checksum":-1329318129,"success":true},{"version":"218","description":"initial model input material","checksum":-1618362922,"success":true},{"version":"219","description":"initial request utf8","checksum":1572542507,"success":true},{"version":"220","description":"run error structured","checksum":-1513129480,"success":true}]
+N3_ENGINE_HISTORY_AFTER=[{"version":null,"description":"<< Flyway Schema Creation >>","checksum":null,"success":true},{"version":"200","description":"engine","checksum":-1129590471,"success":true},{"version":"201","description":"engine tool approval","checksum":580067347,"success":true},{"version":"202","description":"engine controlled draft test","checksum":707443294,"success":true},{"version":"203","description":"engine frozen call contract","checksum":646965935,"success":true},{"version":"204","description":"engine fact recovery schedule","checksum":-2044828041,"success":true},{"version":"205","description":"engine model projection","checksum":1045032642,"success":true},{"version":"206","description":"engine debug controls","checksum":-1028316638,"success":true},{"version":"207","description":"engine model usage ledger","checksum":1934542204,"success":true},{"version":"208","description":"engine chat sessions","checksum":768495068,"success":true},{"version":"209","description":"engine readonly retry budget","checksum":1867923543,"success":true},{"version":"210","description":"engine controlled reproduction","checksum":-137714443,"success":true},{"version":"211","description":"engine controlled model provenance","checksum":-400208876,"success":true},{"version":"212","description":"engine exact skill connection","checksum":281983426,"success":true},{"version":"213","description":"engine model output policy","checksum":1552686261,"success":true},{"version":"214","description":"named test inputs","checksum":2054032904,"success":true},{"version":"215","description":"run scheduler","checksum":1323767709,"success":true},{"version":"216","description":"run authority initial materials","checksum":-762860462,"success":true},{"version":"217","description":"run flow materials","checksum":-1329318129,"success":true},{"version":"218","description":"initial model input material","checksum":-1618362922,"success":true},{"version":"219","description":"initial request utf8","checksum":1572542507,"success":true},{"version":"220","description":"run error structured","checksum":-1513129480,"success":true},{"version":"222","description":"run context pack","checksum":701700386,"success":true},{"version":"223","description":"engine quota window","checksum":-1544326013,"success":true}]
+N3_APP_STARTED={"port":57512,"pid":57116,"database":"agent_platform_iam_admission_app_v12"}
+N3_ENGINE_STARTED=57533
+N3_CASE={"nodes":0,"test":"explicitVersionDebugStepAndV1AliasAreClosedBeforeAppSend()","legacyExternalCalls":0,"attempts":0,"runs":0,"tenant":"n3-91286cd7-0f41-4643-947a-cb62e53fd583","createdCalls":0,"scopes":0}
+N3_ENGINE_STARTED=57576
+N3_CASE={"nodes":2,"test":"repeatedPostUsesOneProtectedRrViewAndPreservesOriginalGrant()","legacyExternalCalls":0,"attempts":2,"runs":1,"tenant":"n3-bb312862-890b-4bd3-bd2f-6ac789ba52be","createdCalls":1,"scopes":52}
+N3_ENGINE_STARTED=57667
+N3_CASE={"nodes":2,"test":"actualPublishedAdmissionAndOwnedWorkerReturnFullStatus()","legacyExternalCalls":0,"attempts":2,"runs":1,"tenant":"n3-eb061b09-aae8-4d42-a2d5-b4d88a32c2dd","createdCalls":1,"scopes":52}
+N3_ENGINE_STARTED=57783
+N3_CASE={"nodes":0,"test":"everyAdmissionWriteFailureRollsBackRunAuthorityNodesAndScopes()","legacyExternalCalls":0,"attempts":0,"runs":0,"tenant":"n3-30d3290d-2ed4-46b7-89e2-f32fcc170176","createdCalls":0,"scopes":0}
+N3_ENGINE_STARTED=57901
+N3_CASE={"nodes":2,"test":"narrowedCurrentCannotAdmitInitialABOrReadItsAcceptedMaterials()","legacyExternalCalls":0,"attempts":2,"runs":1,"tenant":"n3-44ffcb8f-2d94-4989-8361-395316fd8314","createdCalls":1,"scopes":52}
+N3_ENGINE_STARTED=57979
+N3_CASE={"nodes":2,"test":"expiryAfterCommittedResponseMetadataNeverNotifiesSchedulerAndFreshPollRecovers()","legacyExternalCalls":0,"attempts":2,"runs":1,"tenant":"n3-1e881d80-72f6-422f-a4b2-8258c3622b0b","createdCalls":0,"scopes":52}
+N3_ENGINE_STARTED=58058
+2026-10-28T05:41:56.821+08:00 ERROR 38800 --- [-auto-13-exec-3] o.a.c.c.C.[.[.[/].[dispatcherServlet]    : Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception [Request processing failed: org.springframework.jdbc.UncategorizedSQLException: PreparedStatementCallback; uncategorized SQLException for SQL [select pg_advisory_xact_lock(hashtextextended(?,0))]; SQL state [55P03]; error code [0]; ERROR: canceling statement due to lock timeout] with root cause
+
+org.postgresql.util.PSQLException: ERROR: canceling statement due to lock timeout
+	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2733) ~[postgresql-42.7.5.jar:42.7.5]
+	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2420) ~[postgresql-42.7.5.jar:42.7.5]
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:372) ~[postgresql-42.7.5.jar:42.7.5]
+	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:517) ~[postgresql-42.7.5.jar:42.7.5]
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:434) ~[postgresql-42.7.5.jar:42.7.5]
+	at org.postgresql.jdbc.PgPreparedStatement.executeWithFlags(PgPreparedStatement.java:194) ~[postgresql-42.7.5.jar:42.7.5]
+	at org.postgresql.jdbc.PgPreparedStatement.executeQuery(PgPreparedStatement.java:137) ~[postgresql-42.7.5.jar:42.7.5]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+	at cn.agentplatform.engine.infra.PublishedAdmissionHttpPostgresTest.lambda$observe$21(PublishedAdmissionHttpPostgresTest.java:565) ~[test-classes/:na]
+	at jdk.proxy2/jdk.proxy2.$Proxy16.executeQuery(Unknown Source) ~[na:na]
+	at org.springframework.jdbc.core.JdbcTemplate$1.doInPreparedStatement(JdbcTemplate.java:732) ~[spring-jdbc-6.2.7.jar:6.2.7]
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:658) ~[spring-jdbc-6.2.7.jar:6.2.7]
+	at org.springframework.jdbc.core.JdbcTemplate.query(JdbcTemplate.java:723) ~[spring-jdbc-6.2.7.jar:6.2.7]
+	at org.springframework.jdbc.core.JdbcTemplate.query(JdbcTemplate.java:754) ~[spring-jdbc-6.2.7.jar:6.2.7]
+	at org.springframework.jdbc.core.JdbcTemplate.query(JdbcTemplate.java:767) ~[spring-jdbc-6.2.7.jar:6.2.7]
+	at org.springframework.jdbc.core.JdbcTemplate.query(JdbcTemplate.java:820) ~[spring-jdbc-6.2.7.jar:6.2.7]
+	at org.springframework.jdbc.core.JdbcTemplate.queryForList(JdbcTemplate.java:954) ~[spring-jdbc-6.2.7.jar:6.2.7]
+	at cn.agentplatform.engine.application.RunService.lambda$createInternal$2(RunService.java:665) ~[classes/:na]
+	at cn.agentplatform.engine.infra.TraceStore.lambda$atomic$0(TraceStore.java:62) ~[classes/:na]
+	at org.springframework.transaction.support.TransactionTemplate.execute(TransactionTemplate.java:140) ~[spring-tx-6.2.7.jar:6.2.7]
+	at cn.agentplatform.engine.infra.TraceStore.atomic(TraceStore.java:62) ~[classes/:na]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359) ~[spring-aop-6.2.7.jar:6.2.7]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:196) ~[spring-aop-6.2.7.jar:6.2.7]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163) ~[spring-aop-6.2.7.jar:6.2.7]
+	at org.springframework.dao.support.PersistenceExceptionTranslationInterceptor.invoke(PersistenceExceptionTranslationInterceptor.java:138) ~[spring-tx-6.2.7.jar:6.2.7]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184) ~[spring-aop-6.2.7.jar:6.2.7]
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:728) ~[spring-aop-6.2.7.jar:6.2.7]
+	at cn.agentplatform.engine.infra.TraceStore$$SpringCGLIB$$0.atomic(<generated>) ~[classes/:na]
+	at cn.agentplatform.engine.application.RunService.lambda$createInternal$3(RunService.java:659) ~[classes/:na]
+	at cn.agentplatform.engine.application.RunScheduler$Admission.persist(RunScheduler.java:174) ~[classes/:na]
+	at cn.agentplatform.engine.application.RunScheduler$Admission.persist(RunScheduler.java:152) ~[classes/:na]
+	at cn.agentplatform.engine.application.RunService.createInternal(RunService.java:884) ~[classes/:na]
+	at cn.agentplatform.engine.application.RunService.createInternal(RunService.java:436) ~[classes/:na]
+	at cn.agentplatform.engine.application.RunService.createInternal(RunService.java:425) ~[classes/:na]
+	at cn.agentplatform.engine.application.RunService.create(RunService.java:135) ~[classes/:na]
+	at cn.agentplatform.engine.api.RunController.run(RunController.java:68) ~[classes/:na]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+	at org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:258) ~[spring-web-6.2.7.jar:6.2.7]
+	at org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:191) ~[spring-web-6.2.7.jar:6.2.7]
+	at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:118) ~[spring-webmvc-6.2.7.jar:6.2.7]
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:986) ~[spring-webmvc-6.2.7.jar:6.2.7]
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:891) ~[spring-webmvc-6.2.7.jar:6.2.7]
+	at org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:87) ~[spring-webmvc-6.2.7.jar:6.2.7]
+	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1089) ~[spring-webmvc-6.2.7.jar:6.2.7]
+	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:979) ~[spring-webmvc-6.2.7.jar:6.2.7]
+	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1014) ~[spring-webmvc-6.2.7.jar:6.2.7]
+	at org.springframework.web.servlet.FrameworkServlet.doPost(FrameworkServlet.java:914) ~[spring-webmvc-6.2.7.jar:6.2.7]
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:590) ~[tomcat-embed-core-10.1.41.jar:6.0]
+	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:885) ~[spring-webmvc-6.2.7.jar:6.2.7]
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:658) ~[tomcat-embed-core-10.1.41.jar:6.0]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:195) ~[tomcat-embed-core-10.1.41.jar:10.1.41]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140) ~[tomcat-embed-core-10.1.41.jar:10.1.41]
+	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:51) ~[tomcat-embed-websocket-10.1.41.jar:10.1.41]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164) ~[tomcat-embed-core-10.1.41.jar:10.1.41]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140) ~[tomcat-embed-core-10.1.41.jar:10.1.41]
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:108) ~[spring-web-6.2.7.jar:6.2.7]
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:108) ~[spring-web-6.2.7.jar:6.2.7]
+	at org.springframework.security.web.FilterChainProxy.lambda$doFilterInternal$3(FilterChainProxy.java:231) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.ObservationFilterChainDecorator$FilterObservation$SimpleFilterObservation.lambda$wrap$1(ObservationFilterChainDecorator.java:479) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.ObservationFilterChainDecorator$AroundFilterObservation$SimpleAroundFilterObservation.lambda$wrap$1(ObservationFilterChainDecorator.java:340) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.ObservationFilterChainDecorator.lambda$wrapSecured$0(ObservationFilterChainDecorator.java:82) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:128) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.access.intercept.AuthorizationFilter.doFilter(AuthorizationFilter.java:101) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.access.ExceptionTranslationFilter.doFilter(ExceptionTranslationFilter.java:125) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.access.ExceptionTranslationFilter.doFilter(ExceptionTranslationFilter.java:119) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.session.SessionManagementFilter.doFilter(SessionManagementFilter.java:131) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.session.SessionManagementFilter.doFilter(SessionManagementFilter.java:85) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.authentication.AnonymousAuthenticationFilter.doFilter(AnonymousAuthenticationFilter.java:100) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter.doFilter(SecurityContextHolderAwareRequestFilter.java:179) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.savedrequest.RequestCacheAwareFilter.doFilter(RequestCacheAwareFilter.java:63) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.authentication.AuthenticationFilter.doFilterInternal(AuthenticationFilter.java:176) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.7.jar:6.2.7]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter.doFilterInternal(BearerTokenAuthenticationFilter.java:158) ~[spring-security-oauth2-resource-server-6.5.0.jar:6.5.0]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.7.jar:6.2.7]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at cn.agentplatform.common.SecurityConfiguration$3.doFilterInternal(SecurityConfiguration.java:222) ~[admin-common-0.1.0-SNAPSHOT.jar:0.1.0-SNAPSHOT]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.7.jar:6.2.7]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:107) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:93) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.header.HeaderWriterFilter.doHeadersAfter(HeaderWriterFilter.java:90) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.header.HeaderWriterFilter.doFilterInternal(HeaderWriterFilter.java:75) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.7.jar:6.2.7]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:82) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:69) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter.doFilterInternal(WebAsyncManagerIntegrationFilter.java:62) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.7.jar:6.2.7]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.session.DisableEncodeUrlFilter.doFilterInternal(DisableEncodeUrlFilter.java:42) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.7.jar:6.2.7]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.ObservationFilterChainDecorator$AroundFilterObservation$SimpleAroundFilterObservation.lambda$wrap$0(ObservationFilterChainDecorator.java:323) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:224) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.FilterChainProxy.doFilterInternal(FilterChainProxy.java:233) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.security.web.FilterChainProxy.doFilter(FilterChainProxy.java:191) ~[spring-security-web-6.5.0.jar:6.5.0]
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113) ~[spring-web-6.2.7.jar:6.2.7]
+	at org.springframework.web.filter.ServletRequestPathFilter.doFilter(ServletRequestPathFilter.java:52) ~[spring-web-6.2.7.jar:6.2.7]
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113) ~[spring-web-6.2.7.jar:6.2.7]
+	at org.springframework.web.filter.CompositeFilter.doFilter(CompositeFilter.java:74) ~[spring-web-6.2.7.jar:6.2.7]
+	at org.springframework.security.config.annotation.web.configuration.WebSecurityConfiguration$CompositeFilterChainProxy.doFilter(WebSecurityConfiguration.java:319) ~[spring-security-config-6.5.0.jar:6.5.0]
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113) ~[spring-web-6.2.7.jar:6.2.7]
+	at org.springframework.web.servlet.handler.HandlerMappingIntrospector.lambda$createCacheFilter$3(HandlerMappingIntrospector.java:243) ~[spring-webmvc-6.2.7.jar:6.2.7]
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113) ~[spring-web-6.2.7.jar:6.2.7]
+	at org.springframework.web.filter.CompositeFilter.doFilter(CompositeFilter.java:74) ~[spring-web-6.2.7.jar:6.2.7]
+	at org.springframework.security.config.annotation.web.configuration.WebMvcSecurityConfiguration$CompositeFilterChainProxy.doFilter(WebMvcSecurityConfiguration.java:240) ~[spring-security-config-6.5.0.jar:6.5.0]
+	at org.springframework.web.filter.DelegatingFilterProxy.invokeDelegate(DelegatingFilterProxy.java:362) ~[spring-web-6.2.7.jar:6.2.7]
+	at org.springframework.web.filter.DelegatingFilterProxy.doFilter(DelegatingFilterProxy.java:278) ~[spring-web-6.2.7.jar:6.2.7]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164) ~[tomcat-embed-core-10.1.41.jar:10.1.41]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140) ~[tomcat-embed-core-10.1.41.jar:10.1.41]
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100) ~[spring-web-6.2.7.jar:6.2.7]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.7.jar:6.2.7]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164) ~[tomcat-embed-core-10.1.41.jar:10.1.41]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140) ~[tomcat-embed-core-10.1.41.jar:10.1.41]
+	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93) ~[spring-web-6.2.7.jar:6.2.7]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.7.jar:6.2.7]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164) ~[tomcat-embed-core-10.1.41.jar:10.1.41]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140) ~[tomcat-embed-core-10.1.41.jar:10.1.41]
+	at org.springframework.web.filter.ServerHttpObservationFilter.doFilterInternal(ServerHttpObservationFilter.java:114) ~[spring-web-6.2.7.jar:6.2.7]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.7.jar:6.2.7]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164) ~[tomcat-embed-core-10.1.41.jar:10.1.41]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140) ~[tomcat-embed-core-10.1.41.jar:10.1.41]
+	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201) ~[spring-web-6.2.7.jar:6.2.7]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.7.jar:6.2.7]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164) ~[tomcat-embed-core-10.1.41.jar:10.1.41]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140) ~[tomcat-embed-core-10.1.41.jar:10.1.41]
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:167) ~[tomcat-embed-core-10.1.41.jar:10.1.41]
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:90) ~[tomcat-embed-core-10.1.41.jar:10.1.41]
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:483) ~[tomcat-embed-core-10.1.41.jar:10.1.41]
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:116) ~[tomcat-embed-core-10.1.41.jar:10.1.41]
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:93) ~[tomcat-embed-core-10.1.41.jar:10.1.41]
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74) ~[tomcat-embed-core-10.1.41.jar:10.1.41]
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:344) ~[tomcat-embed-core-10.1.41.jar:10.1.41]
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:398) ~[tomcat-embed-core-10.1.41.jar:10.1.41]
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63) ~[tomcat-embed-core-10.1.41.jar:10.1.41]
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:903) ~[tomcat-embed-core-10.1.41.jar:10.1.41]
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1740) ~[tomcat-embed-core-10.1.41.jar:10.1.41]
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52) ~[tomcat-embed-core-10.1.41.jar:10.1.41]
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1189) ~[tomcat-embed-core-10.1.41.jar:10.1.41]
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:658) ~[tomcat-embed-core-10.1.41.jar:10.1.41]
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:63) ~[tomcat-embed-core-10.1.41.jar:10.1.41]
+	at java.base/java.lang.Thread.run(Thread.java:1583) ~[na:na]
+
+N3_CASE={"nodes":0,"test":"actualAdvisoryWaitCannotOutliveBoundProofAndLockTimeoutIsFinite()","legacyExternalCalls":0,"attempts":0,"runs":0,"tenant":"n3-c05c75a9-297b-403c-b0b3-c53b2afe1d8c","createdCalls":0,"scopes":0}
+N3_ENGINE_STARTED=58103
+N3_CASE={"nodes":4,"test":"publishedCodeConditionAndOutputMappingUseOriginalFlowDriver()","legacyExternalCalls":0,"attempts":4,"runs":1,"tenant":"n3-5ac60425-3b07-4d6e-b5a3-f4fdabe003f3","createdCalls":1,"scopes":90}
+N3_ENGINE_STARTED=58190
+N3_CASE={"nodes":0,"test":"ambientTransactionAndMissingFrameRejectBeforeAnyAuthorityOrAppIo()","legacyExternalCalls":0,"attempts":0,"runs":0,"tenant":"n3-cba814f5-5c69-4872-a236-af16fd7cee57","createdCalls":0,"scopes":0}
+N3_ENGINE_STARTED=58211
+N3_CASE={"nodes":2,"test":"expiryDuringNodeMaterialsRollsBackButAfterActualCommitPreservesPendingAndSlot()","legacyExternalCalls":0,"attempts":2,"runs":1,"tenant":"n3-29664531-0ffe-4cab-8a90-6be311471b5f","createdCalls":0,"scopes":52}
+N3_ENGINE_STARTED=58301
+N3_CASE={"nodes":0,"test":"legacyAcceptedRowWithoutAuthorityIsNeverReadOrBackfilled()","legacyExternalCalls":0,"attempts":0,"runs":1,"tenant":"n3-dcbaa295-53a1-417a-898b-8155ccabfeea","createdCalls":0,"scopes":0}
+N3_ENGINE_STARTED=58327
+N3_CASE={"nodes":0,"test":"remainingOwnedWorkerDependenciesAreRejectedBeforeAdmission()","legacyExternalCalls":0,"attempts":0,"runs":0,"tenant":"n3-5d3cef45-d003-4337-8aed-3aab7c9879b4","createdCalls":0,"scopes":0}
+N3_ENGINE_STARTED=58533
+N3_CASE={"nodes":2,"test":"workerCanFinishBeforeCreationStatusAndNarrowingStillLeaksNoPayload()","legacyExternalCalls":0,"attempts":2,"runs":1,"tenant":"n3-606172fc-8f3b-4a3b-819a-db125c755162","createdCalls":2,"scopes":52}
+N3_ENGINE_STARTED=58752
+N3_CASE={"nodes":2,"test":"emptyDependencyContainersAndNullsAreLegalPublishedStructure()","legacyExternalCalls":0,"attempts":2,"runs":1,"tenant":"n3-516ccad6-0511-45b3-96e8-811783199929","createdCalls":1,"scopes":52}
+N3_ENGINE_STARTED=58821
+N3_CASE={"nodes":0,"test":"unsupportedGraphAndEveryDependencyAreRejectedBeforeLegacyPreparation()","legacyExternalCalls":0,"attempts":0,"runs":0,"tenant":"n3-d85ca9b7-eef1-4cf0-95e6-a272f46c43ee","createdCalls":0,"scopes":0}
+N3_ENGINE_STARTED=59126
+N3_CASE={"nodes":0,"test":"explicitFlowNonemptyGraphAndOriginalInputDagBudgetGuardRemainRequired()","legacyExternalCalls":0,"attempts":0,"runs":0,"tenant":"n3-a4eaf632-6548-4dd9-8d8c-01592fc62f9a","createdCalls":0,"scopes":0}
+N3_ENGINE_STARTED=59273
+N3_CASE={"nodes":2,"test":"persistLockRaceReturnsSameRunOutsideRcWithoutDuplicateNudge()","legacyExternalCalls":0,"attempts":2,"runs":1,"tenant":"n3-bf71de83-3e36-48e2-8492-29bed76b2716","createdCalls":1,"scopes":52}
+N3_ENGINE_STARTED=59450
+N3_CASE={"nodes":0,"test":"actualAppPointerChangeAndDisableCreateNothing()","legacyExternalCalls":0,"attempts":0,"runs":0,"tenant":"n3-20238783-e530-4b80-a826-fa35486156f0","createdCalls":0,"scopes":0}
+N3_ENGINE_STARTED=59694
+N3_CASE={"nodes":2,"test":"capacityFullRecheckWaitsForCommittedSameRequestAndReadsOnlyAfterLock()","legacyExternalCalls":0,"attempts":2,"runs":1,"tenant":"n3-f22d263c-17d7-4623-8f7c-1e95d438f11e","createdCalls":1,"scopes":52}
+N3_ENGINE_STARTED=59797
+N3_CASE={"nodes":2,"test":"changedMainRootAndMissingScopesRejectBeforeEnginePayload()","legacyExternalCalls":0,"attempts":2,"runs":1,"tenant":"n3-afd4da03-2892-475e-8529-421c50fcb9e8","createdCalls":1,"scopes":51}
+N3_CHILD_EXIT=57116:0
+N3_APP_DB_EXISTED=true
+N3_APP_SOURCE_MAX=107
+N3_APP_HISTORY_BEFORE=[{"version":null,"description":"<< Flyway Schema Creation >>","checksum":null,"success":true},{"version":"100","description":"application","checksum":1064274284,"success":true},{"version":"101","description":"integration","checksum":123537960,"success":true},{"version":"102","description":"separate application draft","checksum":1415506777,"success":true},{"version":"103","description":"freeze candidate models","checksum":-452534077,"success":true},{"version":"104","description":"integration policy revision","checksum":-47184097,"success":true}]
+05:41:35.024 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_admission_app_v12 (PostgreSQL 16.15)
+05:41:35.362 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 9 migrations (execution time 00:00.118s)
+05:41:35.391 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 104
+05:41:35.393 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+N3_APP_HISTORY_AFTER=[{"version":null,"description":"<< Flyway Schema Creation >>","checksum":null,"success":true},{"version":"100","description":"application","checksum":1064274284,"success":true},{"version":"101","description":"integration","checksum":123537960,"success":true},{"version":"102","description":"separate application draft","checksum":1415506777,"success":true},{"version":"103","description":"freeze candidate models","checksum":-452534077,"success":true},{"version":"104","description":"integration policy revision","checksum":-47184097,"success":true}]
+N3_APP_READY={"port":57512,"pid":57116,"database":"agent_platform_iam_admission_app_v12"}
+N3_APP_REPLY={"clock":"2026-10-20T00:00:00Z"}
+N3_APP_REPLY={"versionId":1}
+N3_APP_REPLY={"publishedRequests":0,"payloadReads":0}
+N3_APP_REPLY={"publishedRequests":0,"payloadReads":0}
+N3_APP_REPLY={"clock":"2026-10-20T00:00:00Z"}
+N3_APP_REPLY={"versionId":3}
+N3_APP_REPLY={"publishedRequests":1,"payloadReads":1}
+N3_APP_REPLY={"publishedRequests":1,"payloadReads":1}
+N3_APP_REPLY={"clock":"2026-10-20T00:00:00Z"}
+N3_APP_REPLY={"versionId":5}
+N3_APP_REPLY={"clock":"2026-10-20T00:00:00Z"}
+N3_APP_REPLY={"versionId":7}
+N3_APP_REPLY={"clock":"2026-10-20T00:00:00Z"}
+N3_APP_REPLY={"versionId":9}
+N3_APP_REPLY={"clock":"2026-10-20T00:00:00Z"}
+N3_APP_REPLY={"versionId":11}
+N3_APP_REPLY={"clock":"2026-10-20T00:00:06Z"}
+N3_APP_REPLY={"clock":"2026-10-20T00:00:06Z"}
+N3_APP_REPLY={"versionId":13}
+N3_APP_REPLY={"clock":"2026-10-20T00:00:12Z"}
+N3_APP_REPLY={"clock":"2026-10-20T00:00:12Z"}
+N3_APP_REPLY={"versionId":15}
+N3_APP_REPLY={"versionId":17}
+N3_APP_REPLY={"clock":"2026-10-20T00:00:12Z"}
+N3_APP_REPLY={"versionId":19}
+N3_APP_REPLY={"publishedRequests":16,"payloadReads":16}
+N3_APP_REPLY={"publishedRequests":16,"payloadReads":16}
+N3_APP_REPLY={"clock":"2026-10-20T00:00:12Z"}
+N3_APP_REPLY={"versionId":21}
+N3_APP_REPLY={"clock":"2026-10-20T00:00:18Z"}
+N3_APP_REPLY={"clock":"2026-10-20T00:00:24Z"}
+N3_APP_REPLY={"versionId":23}
+N3_APP_REPLY={"publishedRequests":18,"payloadReads":18}
+N3_APP_REPLY={"publishedRequests":18,"payloadReads":18}
+N3_APP_REPLY={"clock":"2026-10-20T00:00:24Z"}
+N3_APP_REPLY={"versionId":25}
+N3_APP_REPLY={"versionId":27}
+N3_APP_REPLY={"versionId":29}
+N3_APP_REPLY={"versionId":31}
+N3_APP_REPLY={"versionId":33}
+N3_APP_REPLY={"versionId":35}
+N3_APP_REPLY={"versionId":37}
+N3_APP_REPLY={"versionId":39}
+N3_APP_REPLY={"versionId":41}
+N3_APP_REPLY={"versionId":43}
+N3_APP_REPLY={"versionId":45}
+N3_APP_REPLY={"versionId":47}
+N3_APP_REPLY={"clock":"2026-10-20T00:00:24Z"}
+N3_APP_REPLY={"versionId":49}
+N3_APP_REPLY={"versionId":51}
+N3_APP_REPLY={"clock":"2026-10-20T00:00:24Z"}
+N3_APP_REPLY={"versionId":53}
+N3_APP_REPLY={"versionId":55}
+N3_APP_REPLY={"clock":"2026-10-20T00:00:24Z"}
+N3_APP_REPLY={"versionId":57}
+N3_APP_REPLY={"versionId":59}
+N3_APP_REPLY={"versionId":61}
+N3_APP_REPLY={"versionId":63}
+N3_APP_REPLY={"versionId":65}
+N3_APP_REPLY={"versionId":67}
+N3_APP_REPLY={"versionId":69}
+N3_APP_REPLY={"versionId":71}
+N3_APP_REPLY={"versionId":73}
+N3_APP_REPLY={"versionId":75}
+N3_APP_REPLY={"versionId":77}
+N3_APP_REPLY={"versionId":79}
+N3_APP_REPLY={"versionId":81}
+N3_APP_REPLY={"versionId":83}
+N3_APP_REPLY={"versionId":85}
+N3_APP_REPLY={"versionId":87}
+N3_APP_REPLY={"versionId":89}
+N3_APP_REPLY={"versionId":91}
+N3_APP_REPLY={"clock":"2026-10-20T00:00:24Z"}
+N3_APP_REPLY={"versionId":93}
+N3_APP_REPLY={"versionId":95}
+N3_APP_REPLY={"versionId":97}
+N3_APP_REPLY={"versionId":99}
+N3_APP_REPLY={"versionId":101}
+N3_APP_REPLY={"versionId":103}
+N3_APP_REPLY={"versionId":105}
+N3_APP_REPLY={"versionId":107}
+N3_APP_REPLY={"versionId":109}
+N3_APP_REPLY={"clock":"2026-10-20T00:00:24Z"}
+N3_APP_REPLY={"versionId":111}
+N3_APP_REPLY={"clock":"2026-10-20T00:00:24Z"}
+N3_APP_REPLY={"versionId":113}
+N3_APP_REPLY={"updated":true}
+N3_APP_REPLY={"updated":true}
+N3_APP_REPLY={"clock":"2026-10-20T00:00:24Z"}
+N3_APP_REPLY={"versionId":115}
+N3_APP_REPLY={"clock":"2026-10-20T00:00:24Z"}
+N3_APP_REPLY={"versionId":117}
+N3_APP_STOPPED=57116
+[INFO] Tests run: 20, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 60.63 s -- in cn.agentplatform.engine.infra.PublishedAdmissionHttpPostgresTest
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 26, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  01:29 min
+[INFO] Finished at: 2026-10-28T05:42:33+08:00
+[INFO] ------------------------------------------------------------------------

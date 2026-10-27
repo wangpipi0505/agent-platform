@@ -177,6 +177,51 @@ public class RunService {
                 environment == null || environment.isBlank() ? "production" : environment.trim();
     }
 
+    /**
+     * PLAT-20 T20.1：运行环境标注开关，取值与 /health/data（DataHealthService）同源——
+     * AGENT_DEMO_MODE=true 即 DEMO，否则 REAL；只做标注，不做任何行为分支。
+     * 字段初始 false，使大量直接 new RunService(...) 的夹具保持 REAL 语义。
+     */
+    private boolean demoMode = false;
+
+    @Autowired
+    public void demoMode(@Value("${AGENT_DEMO_MODE:false}") String demoMode) {
+        this.demoMode = Boolean.parseBoolean(demoMode == null ? "" : demoMode.trim());
+    }
+
+    /**
+     * PLAT-20 T20.1：运行创建即冻结的标注——写入快照顶层 runtime 对象（与 T13 的 contextPack
+     * 同层级，不另造并行结构），随 run 记录不可变。environment 缺省语义定死为 REAL：无演示
+     * 标记（AGENT_DEMO_MODE 缺失/false）的环境一律标 REAL，与 /health/data 取值同源；旧运行
+     * 记录不回填。dataset 引用只在入参携带非空 datasetVersion 时透传，缺失不落键、不伪造。
+     */
+    static void annotateRuntime(
+            com.fasterxml.jackson.databind.node.ObjectNode snapshot,
+            boolean demoMode,
+            JsonNode req) {
+        var runtime = snapshot.putObject("runtime");
+        runtime.put("environment", demoMode ? "DEMO" : "REAL");
+        runtime.put("demoMode", demoMode);
+        String datasetVersion = req == null ? null : req.path("datasetVersion").asText("").trim();
+        if (!datasetVersion.isBlank()) runtime.put("datasetVersion", datasetVersion);
+    }
+
+    /**
+     * PLAT-20 T20.1：把冻结快照里的运行环境标注铺到运行详情顶层，演示运行借此区分。
+     * 旧运行快照没有 runtime 对象时一个键都不铺——详情形状与历史版本逐键兼容，不补 null。
+     */
+    public static void surfaceRuntimeAnnotation(
+            Map<String, Object> status, JsonNode snapshotJson) {
+        var runtime = snapshotJson.path("runtime");
+        if (!runtime.isObject()) return;
+        if (runtime.hasNonNull("environment"))
+            status.put("environment", runtime.path("environment").asText());
+        if (runtime.hasNonNull("demoMode"))
+            status.put("demoMode", runtime.path("demoMode").asBoolean());
+        if (runtime.hasNonNull("datasetVersion"))
+            status.put("datasetVersion", runtime.path("datasetVersion").asText());
+    }
+
     private static final String REPLAY_METADATA =
             "select id,public_id,app_code,trigger_type,mode,tenant_id,principal_id from engine.run"
                 + " where tenant_id=? and principal_id=? and request_id=?";
@@ -568,6 +613,11 @@ public class RunService {
                                                 req.path("breakpoints"),
                                                 "mocks",
                                                 req.path("mocks"))));
+            // PLAT-20 T20.1：环境标注必须在冻结前写入。放在这里（而非 prepareSnapshot）是为了
+            // 覆盖全部创建路径——录制重放与首发 CHAT 不走 prepareSnapshot；重放产生的是新 run
+            // 记录，按当前进程环境标注。引擎对 runtime 键有所有权，应用快照同名键被有意覆盖。
+            if (snapshot instanceof com.fasterxml.jackson.databind.node.ObjectNode annotated)
+                annotateRuntime(annotated, demoMode, req);
             final JsonNode frozen = snapshot, graph = snapshot.path("definition");
             if (trigger.equals("EVALUATION")
                     && req.has("candidateSha256")
@@ -1826,6 +1876,8 @@ public class RunService {
         var snapshotJson = TraceStore.json(run.get("snapshot"));
         if (snapshotJson.has("definition"))
             result.put("graph", snapshotJson.path("definition"));
+        // PLAT-20 T20.1：environment/dataset 标注随冻结快照铺到详情顶层；旧运行无标注时不落键。
+        surfaceRuntimeAnnotation(result, snapshotJson);
         result.put("nodes", nodes.stream().map(this::nodeView).toList());
         result.put("events", events);
         result.put(

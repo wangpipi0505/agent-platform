@@ -105,15 +105,20 @@ public class RunScheduleRepository {
                                     Boolean.TRUE.equals(row.get("protected")),
                                     rid);
                     if (row.get("status").equals("PENDING")
-                            && !Boolean.TRUE.equals(row.get("protected")))
-                        store.event(
-                                rid,
-                                "RUN_STARTED",
-                                Map.of(
-                                        "runId",
-                                        row.get("public_id"),
-                                        "triggerType",
-                                        row.get("trigger_type")));
+                            && !Boolean.TRUE.equals(row.get("protected"))) {
+                        // PLAT-20 T20.1：RUN_STARTED 载荷带运行环境标注（SSE/详情 events 同源）。
+                        // 快照列未随 claim 选择（扫描热路径不加宽行），仅在真正发车的这一次按主键补读。
+                        var startedPayload = new LinkedHashMap<String, Object>();
+                        startedPayload.put("runId", row.get("public_id"));
+                        startedPayload.put("triggerType", row.get("trigger_type"));
+                        TraceStore.putRuntimeAnnotation(
+                                startedPayload,
+                                store.db()
+                                        .queryForMap(
+                                                "select snapshot from engine.run where id=?", rid)
+                                        .get("snapshot"));
+                        store.event(rid, "RUN_STARTED", startedPayload);
+                    }
                     return new RunDispatch(rid, owner, generation, queue);
                 });
     }

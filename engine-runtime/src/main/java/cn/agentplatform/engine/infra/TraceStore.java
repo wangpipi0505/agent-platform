@@ -1172,7 +1172,11 @@ public class TraceStore {
                             + " and dispatch_owner=? and dispatch_generation=? and dispatch_until>clock_timestamp()",
                             dispatch.runId(), dispatch.owner(), dispatch.generation()) != 1) throw new DispatchLost();
                     append(view, "run-state", view.binding().publicId(), proof);
-                    appendEvent(view, "RUN_STARTED", Map.of("runId", view.binding().publicId(), "triggerType", flowRun(view).get("trigger_type")), proof);
+                    var startedPayload = new LinkedHashMap<String, Object>();
+                    startedPayload.put("runId", view.binding().publicId());
+                    startedPayload.put("triggerType", flowRun(view).get("trigger_type"));
+                    putRuntimeAnnotation(startedPayload, flowRun(view).get("snapshot"));
+                    appendEvent(view, "RUN_STARTED", startedPayload, proof);
                 }
                 claim = claim(view, node, worker, proof, dispatch);
                 if (claim == null) throw new DispatchLost();
@@ -1524,15 +1528,11 @@ public class TraceStore {
                                         dispatch.generation());
                         if (changed != 1) throw new DispatchLost();
                         append(view, "run-state", view.binding().publicId(), proof);
-                        appendEvent(
-                                view,
-                                "RUN_STARTED",
-                                Map.of(
-                                        "runId",
-                                        view.binding().publicId(),
-                                        "triggerType",
-                                        run.get("trigger_type")),
-                                proof);
+                        var startedPayload = new LinkedHashMap<String, Object>();
+                        startedPayload.put("runId", view.binding().publicId());
+                        startedPayload.put("triggerType", run.get("trigger_type"));
+                        putRuntimeAnnotation(startedPayload, run.get("snapshot"));
+                        appendEvent(view, "RUN_STARTED", startedPayload, proof);
                     }
                     requireDispatch(dispatch);
                     return flowNodes(view).stream()
@@ -1838,6 +1838,20 @@ public class TraceStore {
 
     public static com.fasterxml.jackson.databind.JsonNode json(Object value) {
         return value == null ? Json.read("{}") : Json.read(value.toString());
+    }
+
+    /**
+     * PLAT-20 T20.1：RUN_STARTED 事件载荷追加运行环境标注，使 SSE 流与详情 events 读到与
+     * 快照相同的 environment/dataset 事实。旧运行快照无 runtime 对象时不落键；demoMode 是
+     * environment 的冗余布尔，事件载荷不重复携带。
+     */
+    public static void putRuntimeAnnotation(Map<String, Object> payload, Object snapshot) {
+        var runtime = json(snapshot).path("runtime");
+        if (!runtime.isObject()) return;
+        if (runtime.hasNonNull("environment"))
+            payload.put("environment", runtime.path("environment").asText());
+        if (runtime.hasNonNull("datasetVersion"))
+            payload.put("datasetVersion", runtime.path("datasetVersion").asText());
     }
 
     public void consume(long run, String metric, long amount, long defaultLimit) {
