@@ -64,6 +64,23 @@ real_input_results.json）保存在联调临时目录；关键 API 序列：
 `POST /auth/dev-token` → `POST /admin/skills/import-openapi/preview` → `POST /admin/skills/import-openapi`
 → `POST /admin/skills/{code}/drafts/1/connection-test`（body: {inputs, requestId}）→ `GET /v1/runs/{runId}`。
 
+## 7. 收敛第二轮（2026-10-27 下午，真实响应反向推断法）
+
+方法升级：不再逐字段修剪，直接**从 8080 真实响应反向推导 outputSchema**（类型自实际值生成、null 字段不声明、无 additionalProperties 约束），PUT draft 更新后重测。
+
+| 技能 | 终态 | 说明 |
+| --- | --- | --- |
+| space-target-query | **SUCCEEDED** | 真实样例输入，95 条目标返回 |
+| space-visibility-status | **SUCCEEDED** | 用新受理的真实 taskId 端到端（任务本身因演示数据 FAILED，但技能链路全通——调用/响应/校验/回传） |
+| trajectory-simulate / trajectory-fit-package102 | **SUCCEEDED**（维持） | 真实计算产出 CSV |
+| space-visibility-submit | 输入 schema 细节待解 | 8080 受理真实成功（返回 taskId），契约校验仍拒——下一轮逐字段对 |
+| space-satellite-options | offload 链路待查 | 5414 项大响应超校验预算；调 outputMaxBytes=262144 触发转存路径后报 RETRYABLE_FAILURE——offload 内部异常被 http() 兜底吞掉（artifact 表有 16 行历史成功，疑与新租户/配置相关）。**又一条 AP-S07 必要性证据** |
+| space-visibility-plan | 服务端 500 | 演示数据（owner） |
+| space-downlink-plan/validate | 服务端 400 | A02 样例时效（联调输入适配） |
+| ballistic-file-upload | 待真实产物 | IN-07 |
+
+**当前 4/12 SUCCEEDED + 1 链路已证**。剩余阻塞已全部具体化，无一属于平台管道缺陷。顺带确认：visibility 异步受理对部分星真实成功（返回 taskId），演示数据问题限于特定星（B 类阻塞范围收窄）。
+
 ## 6. 未尽事项
 
 1. 12/12 全绿的收敛（A 类可空字段 schema 修剪脚本 + B 类等 owner 修数据 + C 类样例更新）；
