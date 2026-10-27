@@ -70,7 +70,19 @@ public class ExecutionRecovery {
      */
     private void requestReconcile(long id, Actor actor) {
         try {
-            clients.post("skill", "/internal/skill-facts/" + id + "/reconcile", Map.of(), actor);
+            JsonNode reply =
+                    clients.post(
+                            "skill", "/internal/skill-facts/" + id + "/reconcile", Map.of(), actor);
+            // PLAT-04：对账回执携带技能侧最新的 externalJob。它不参与事实采纳判定，正是
+            // "未终结但可见"的刷新通道：WAITING_EXTERNAL 的调用没有活跃租约，拿不到 /fact
+            // 写入权，只能靠这里让 GET /internal/tool-calls 与 run.error 看到 lastPolledAt。
+            JsonNode externalJob = reply.path("result").path("externalJob");
+            if (!externalJob.isNull() && !externalJob.isMissingNode())
+                store.db()
+                        .update(
+                                "update engine.tool_call set external_job=?::jsonb where id=?",
+                                Json.write(externalJob),
+                                id);
         } catch (PlatformException failure) {
             if (failure.status() != 409) throw failure;
         }
@@ -147,10 +159,13 @@ public class ExecutionRecovery {
                     if (!run.get("status").equals("WAITING_EXTERNAL")
                             || !node.get("status").equals("WAITING_EXTERNAL"))
                         return Map.of("adopted", false, "status", run.get("status"));
+                    // PLAT-04：等待窗口结束，run.error 里的 externalJob 快照必须在同一 CAS
+                    // 里清空；否则已恢复的运行会一直带着"结果未知"的结构化错误。
                     store.db()
                             .update(
-                                    "update engine.run set status='RUNNING',dispatch_next_at=now()"
-                                            + " where id=?",
+                                    "update engine.run set"
+                                        + " status='RUNNING',dispatch_next_at=now(),error=null"
+                                        + " where id=? and status='WAITING_EXTERNAL'",
                                     rid);
                     store.db()
                             .update(
@@ -183,7 +198,7 @@ public class ExecutionRecovery {
                     store.db()
                             .update(
                                     "update engine.tool_call set"
-                                        + " status=?,result=?::jsonb,result_ref=?,error_semantic=?,duration_ms=greatest(coalesce(duration_ms,0),?),is_mock=?,attempt_id=?,claimed_by=?,claimed_lease=?,recovery_error=null,recovery_next_at=null"
+                                        + " status=?,result=?::jsonb,result_ref=?,error_semantic=?,duration_ms=greatest(coalesce(duration_ms,0),?),is_mock=?,attempt_id=?,claimed_by=?,claimed_lease=?,recovery_error=null,recovery_next_at=null,external_job=?::jsonb"
                                         + " where id=?",
                                     status,
                                     Json.write(proof.path("result")),
@@ -194,6 +209,7 @@ public class ExecutionRecovery {
                                     attempt,
                                     lease.get("lease_owner"),
                                     lease.get("lease_until"),
+                                    Json.write(proof.path("result").path("externalJob")),
                                     id);
                     store.db()
                             .update(

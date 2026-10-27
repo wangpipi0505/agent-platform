@@ -1321,39 +1321,7 @@ public class RunService {
                     // ToolCalls persisted the exact call/args/roles and WAITING_APPROVAL
                     // atomically.
                 } else if (error.get("semantic").equals("RESULT_UNKNOWN")) {
-                    store.atomic(
-                            () -> {
-                                store.lockRun(rid);
-                                int changed =
-                                        store.db()
-                                                .update(
-                                                        "update engine.node_instance set"
-                                                            + " status='WAITING_EXTERNAL',error=?::jsonb"
-                                                            + " where id=? and status='RUNNING' and"
-                                                            + " lease_owner=? and"
-                                                            + " lease_until>clock_timestamp()",
-                                                        Json.write(error),
-                                                        node.get("id"),
-                                                        node.get("lease_owner"));
-                                if (changed > 0) {
-                                    store.db()
-                                            .update(
-                                                    "update engine.attempt set"
-                                                        + " status='UNKNOWN',error=?::jsonb where"
-                                                        + " id=?",
-                                                    Json.write(error),
-                                                    node.get("attemptId"));
-                                    store.event(
-                                            rid,
-                                            "WAITING_EXTERNAL",
-                                            Map.of(
-                                                    "nodeInstanceId",
-                                                    node.get("id"),
-                                                    "error",
-                                                    error));
-                                }
-                                return null;
-                            });
+                    markWaitingExternal(rid, node, error);
                 } else if (def.path("errorPolicy")
                         .path("onFail")
                         .asText()
@@ -2353,6 +2321,88 @@ public class RunService {
         }
     }
 
+    /**
+     * PLAT-04：把一次 RESULT_UNKNOWN 故障落成可观测的等待态。
+     *
+     * <p>除了节点与执行代次，还把最近确认过的外部任务快照写进 run.error，使界面在
+     * "结果未知"之外能看到远端任务 id、状态与最后轮询时刻；没有快照时保持旧结构。
+     *
+     * <p>恢复窗口：run.error 只在等待期间承载该快照，采纳终态（ExecutionRecovery.adopt）
+     * 或回调唤醒（resumeExternalFacts）在同一 CAS 里清空。公开为恢复通道与验收测试的稳定
+     * 入口，语义与故障分支完全一致。
+     */
+    public void markWaitingExternal(long rid, Map<String, Object> node, Map<String, Object> error) {
+        store.atomic(
+                () -> {
+                    store.lockRun(rid);
+                    // PLAT-04：等待外部任务时不再只写裸的 RESULT_UNKNOWN。
+                    // 快照来自 /fact 与对账回执，缺失时保持旧结构，绝不因此改变等待或终结判定。
+                    Map<String, Object> waiting = externalWaitingError(node, error);
+                    int changed =
+                            store.db()
+                                    .update(
+                                            "update engine.node_instance set"
+                                                + " status='WAITING_EXTERNAL',error=?::jsonb"
+                                                + " where id=? and status='RUNNING' and"
+                                                + " lease_owner=? and"
+                                                + " lease_until>clock_timestamp()",
+                                            Json.write(waiting),
+                                            node.get("id"),
+                                            node.get("lease_owner"));
+                    if (changed > 0) {
+                        store.db()
+                                .update(
+                                        "update engine.attempt set"
+                                            + " status='UNKNOWN',error=?::jsonb where"
+                                            + " id=?",
+                                        Json.write(waiting),
+                                        node.get("attemptId"));
+                        // 故障发生时 run 仍是 RUNNING，WAITING_EXTERNAL 由调度器随后推导，
+                        // 因此这里两种状态都允许承载快照；终态运行绝不回写。
+                        store.db()
+                                .update(
+                                        "update engine.run set error=?::jsonb where"
+                                            + " id=? and status in"
+                                            + " ('RUNNING','WAITING_EXTERNAL')",
+                                        Json.write(waiting),
+                                        rid);
+                        store.event(
+                                rid,
+                                "WAITING_EXTERNAL",
+                                Map.of(
+                                        "nodeInstanceId",
+                                        node.get("id"),
+                                        "error",
+                                        waiting));
+                    }
+                    return null;
+                });
+    }
+
+    /**
+     * PLAT-04：把最近的外部任务快照并入 RESULT_UNKNOWN 错误结构。
+     *
+     * <p>恢复窗口：快照由技能事实投递与对账回执写入，本方法只读最近一条；读到之前仍返回
+     * 旧结构，等待窗口的判定与超时完全不受影响。
+     */
+    private Map<String, Object> externalWaitingError(
+            Map<String, Object> node, Map<String, Object> error) {
+        var rows =
+                store.db()
+                        .queryForList(
+                                "select external_job from engine.tool_call where"
+                                    + " node_instance_id=? and external_job is not null"
+                                    + " order by id desc limit 1",
+                                node.get("id"));
+        if (rows.isEmpty()) return error;
+        Object job = rows.getFirst().get("external_job");
+        if (job == null) return error;
+        var enriched = new java.util.LinkedHashMap<String, Object>(error);
+        enriched.put("externalJob", Json.read(job.toString(), Map.class));
+        enriched.put("message", "外部任务未终结，等待远端终态");
+        return enriched;
+    }
+
     public void resumeExternalFacts() {
         // W3 (§31.2): consume durable successful/failed execution facts without repeating the
         // skill.
@@ -2382,8 +2432,8 @@ public class RunService {
                         if (changed > 0) {
                             store.db()
                                     .update(
-                                            "update engine.run set status='RUNNING' where id=? and"
-                                                    + " status='WAITING_EXTERNAL'",
+                                            "update engine.run set status='RUNNING',error=null where"
+                                            + " id=? and status='WAITING_EXTERNAL'",
                                             rid);
                             scheduler.wake(rid);
                             store.event(

@@ -25,6 +25,13 @@ public class SkillExecution {
     private final String engineUrl;
     private final ReconciliationProofs reconciliationProofs;
 
+    /**
+     * PLAT-04 回滚开关。关闭时不向 envelope 暴露 externalJob，且 SUBMIT_NO_TASK_ID 仍按旧语义
+     * 落 RESULT_UNKNOWN，使上游看到的行为与改造前完全一致（绑定行仍保留审计列）。
+     */
+    @Value("${agent.skill.external-job-enabled:true}")
+    boolean externalJobEnabled = true;
+
     public SkillExecution(
             JdbcTemplate db,
             org.springframework.transaction.PlatformTransactionManager manager,
@@ -296,8 +303,10 @@ public class SkillExecution {
                     reason = ex.getMessage();
                     algorithmSource = ex.source;
                 } catch (SkillAdapters.Failure ex) {
-                    status = ex.unknown ? "UNKNOWN" : "FAILED";
-                    semantic = ex.semantic;
+                    // 回滚开关关闭时保持改造前语义：提交未拿到任务标识仍是 RESULT_UNKNOWN。
+                    boolean legacy = !externalJobEnabled && "SUBMIT_NO_TASK_ID".equals(ex.semantic);
+                    status = legacy || ex.unknown ? "UNKNOWN" : "FAILED";
+                    semantic = legacy ? "RESULT_UNKNOWN" : ex.semantic;
                     reason = ex.getMessage();
                 } catch (Exception ex) {
                     boolean sideEffect = Boolean.TRUE.equals(execution.get("sideEffect"));
@@ -526,6 +535,9 @@ public class SkillExecution {
         result.put("fileRefs", raw == null ? List.of() : raw.fileRefs());
         result.put("cardPayloadJson", raw == null ? "" : raw.cardPayloadJson());
         result.put("isMock", mock);
+        // PLAT-04：外部任务态与执行事实同源落库。无绑定时显式 null，避免上游把"缺字段"
+        // 误当成"没有外部任务风险"；关闭回滚开关时同样返回 null。
+        result.put("externalJob", externalJob(request));
         result.put(
                 "guardTrace",
                 Map.of(
@@ -547,7 +559,80 @@ public class SkillExecution {
         return result;
     }
 
-    private Map<String, Object> fact(long callId) {
+    /**
+     * 外部任务快照：远端任务标识、可核实状态、提交时刻与最后轮询时刻。
+     *
+     * <p>绑定行是唯一权威源，这里永远读 PG，不从请求参数或内存推断；这正是改造前丢失的
+     * "远端任务 id"。没有绑定、开关关闭或调用并非异步技能时返回 null，调用方必须显式渲染
+     * "无外部任务"，不得猜测。
+     */
+    Map<String, Object> externalJob(Map<String, Object> request) {
+        if (!externalJobEnabled || request == null || request.get("callId") == null) return null;
+        long callId;
+        try {
+            callId = number(request, "callId");
+        } catch (RuntimeException ex) {
+            return null;
+        }
+        var rows =
+                db.queryForList(
+                        "select external_job_id,status,external_state,submitted_at::text as"
+                            + " submitted_at,last_polled_at::text as last_polled_at,"
+                            + " remote_error_code,remote_error_message from"
+                            + " skill.external_job_binding where tenant_id=? and call_id=?"
+                            + " order by updated_at desc limit 1",
+                        tenant(),
+                        callId);
+        if (rows.isEmpty()) return null;
+        var row = rows.get(0);
+        var job = new LinkedHashMap<String, Object>();
+        job.put("remoteJobId", row.get("external_job_id"));
+        job.put("state", externalState(row));
+        job.put("submittedAt", row.get("submitted_at"));
+        job.put("lastPolledAt", row.get("last_polled_at"));
+        job.put("remoteCode", row.get("remote_error_code"));
+        job.put("remoteMessage", row.get("remote_error_message"));
+        return job;
+    }
+
+    /** 远端状态原文优先；旧行没有 external_state 时按绑定状态映射，绝不返回空白状态。 */
+    private static String externalState(Map<String, Object> row) {
+        Object observed = row.get("external_state");
+        if (observed != null && !observed.toString().isBlank()) return observed.toString();
+        Object status = row.get("status");
+        String value = status == null ? "UNKNOWN" : status.toString();
+        return switch (value) {
+            case "DONE" -> "SUCCEEDED";
+            case "SENDING" -> "SUBMITTING";
+            default -> value;
+        };
+    }
+
+    /**
+     * 把最新 externalJob 合并进未终结的执行事实，并返回合并后的 envelope。
+     *
+     * <p>恢复窗口：CAS 条件 status='UNKNOWN' 保证迟到的轮询永远不会覆盖已终结事实；
+     * 这里不重投引擎事实（引擎侧由 ExecutionRecovery 的轮询回执刷新 tool_call.external_job），
+     * 避免每次轮询都产生一条新的投递审计并放大事实行。
+     */
+    private Map<String, Object> refreshExternalJob(long callId) {
+        var current = fact(callId);
+        if (current == null) return Map.of();
+        var envelope = Json.read(current.get("result").toString(), Map.class);
+        var job = externalJob(Map.of("callId", callId));
+        // 显式 null 而不是删键：上游据此区分"没有外部任务"与"字段缺失"。
+        envelope.put("externalJob", job);
+        db.update(
+                "update skill.execution_fact set result=?::jsonb,updated_at=now()"
+                    + " where tenant_id=? and call_id=? and principal_id=? and status='UNKNOWN'",
+                Json.write(envelope),
+                tenant(),
+                callId,
+                Actor.current().principalId());
+        return envelope;
+    }
+
+    Map<String, Object> fact(long callId) {
         var rows =
                 db.queryForList(
                         "select * from skill.execution_fact where tenant_id=? and call_id=? and"
@@ -941,16 +1026,20 @@ public class SkillExecution {
                 throw error(409, "RECONCILE_FACT_STALE", "原代事实已改变，未采纳或投递旧查询结果");
             return deliver(Objects.requireNonNull(fact(callId)));
         }
-        if (raw == null)
-            return Map.of(
-                    "status",
-                    "UNKNOWN",
-                    "outcome",
-                    outcome,
-                    "callId",
-                    callId,
-                    "retryBusinessAllowed",
-                    false);
+        if (raw == null) {
+            // 远端尚未终结：轮询已把 external_state/last_polled_at 写回绑定行。这里把最新
+            // externalJob 注入原事实（状态仍为 UNKNOWN），使引擎与 GET /internal/tool-calls
+            // 能展示"已提交/处理中"而不需要新的业务请求；不回写事实状态，避免把等待态
+            // 伪装成终态。
+            var refreshed = refreshExternalJob(callId);
+            var waiting = new LinkedHashMap<String, Object>();
+            waiting.put("status", "UNKNOWN");
+            waiting.put("outcome", outcome);
+            waiting.put("callId", callId);
+            waiting.put("result", refreshed);
+            waiting.put("retryBusinessAllowed", false);
+            return waiting;
+        }
         var envelope = Json.read(recorded.get("result").toString(), Map.class);
         envelope.put("status", "SUCCEEDED");
         envelope.put("error", null);

@@ -31,6 +31,9 @@ public class HttpAsyncAdapter {
         }
     }
 
+    /** 远端失败原文进入 varchar(512)：超出即截断，避免一条脏响应撑爆事实行。 */
+    private static final int MAX_ERROR_MESSAGE = 512;
+
     private final JdbcTemplate db;
 
     public HttpAsyncAdapter(JdbcTemplate db) {
@@ -163,8 +166,29 @@ public class HttpAsyncAdapter {
                                                         contract.getOrDefault(
                                                                 "jobIdPath", "$.jobId"))))
                                 .asText();
-                if (job.isBlank()
-                        || job.length() > 128
+                if (job.isBlank()) {
+                    // 远端接受了请求却没有给出任务标识：平台再也无法按原任务对账。
+                    // 这不是"结果未知"（UNKNOWN 会被无限轮询且永远无法收敛），而是一次
+                    // 可证明的提交失败，必须落 FAILED 并保留稳定错误码供界面直接展示。
+                    db.update(
+                            "update skill.external_job_binding set status='FAILED',"
+                                + " external_state='SUBMIT_NO_TASK_ID',updated_at=now(),"
+                                + " remote_error_code='SUBMIT_NO_TASK_ID',remote_error_message=?"
+                                + " where tenant_id=? and call_id=? and external_job_id is null"
+                                + " and principal_id=? and run_id=? and attempt_id=?"
+                                + " and skill_version_id=? and idempotency_key=?"
+                                + " and send_started=true",
+                            noTaskIdMessage(),
+                            Actor.current().tenantId(),
+                            callId,
+                            Actor.current().principalId(),
+                            runId,
+                            expectedAttempt,
+                            b.get("skill_version_id"),
+                            key);
+                    throw new SkillAdapters.Failure("SUBMIT_NO_TASK_ID", false, noTaskIdMessage());
+                }
+                if (job.length() > 128
                         || (echoRequired(contract)
                                 && !path(
                                                 ack,
@@ -177,7 +201,9 @@ public class HttpAsyncAdapter {
                     throw unknown("提交响应未证明原幂等键与任务归属");
                 db.update(
                         "update skill.external_job_binding set"
-                            + " external_job_id=?,status='SUBMITTED',updated_at=now() where"
+                            + " external_job_id=?,status='SUBMITTED',external_state='SUBMITTED',"
+                            + " submitted_at=coalesce(submitted_at,now()),last_polled_at=now(),"
+                            + " updated_at=now() where"
                             + " tenant_id=? and call_id=? and external_job_id is null and"
                             + " principal_id=? and run_id=? and attempt_id=? and skill_version_id=?"
                             + " and idempotency_key=? and request_snapshot=?::jsonb and"
@@ -247,7 +273,9 @@ public class HttpAsyncAdapter {
             if (job.isBlank())
                 db.update(
                         "update skill.external_job_binding set"
-                            + " external_job_id=?,status='SUBMITTED',updated_at=now() where"
+                            + " external_job_id=?,status='SUBMITTED',external_state='SUBMITTED',"
+                            + " submitted_at=coalesce(submitted_at,now()),last_polled_at=now(),"
+                            + " updated_at=now() where"
                             + " tenant_id=? and call_id=? and external_job_id is null and"
                             + " principal_id=? and run_id=? and attempt_id=? and skill_version_id=?"
                             + " and idempotency_key=? and request_snapshot=?::jsonb and"
@@ -269,6 +297,20 @@ public class HttpAsyncAdapter {
             if (!observedJob.equals(resolvedBinding.get("external_job_id")))
                 throw unknown("查询期间原任务绑定已由其他事实确定，拒绝采纳不同job结果");
             JsonNode state = path(response, text(policy, "donePath"));
+            String remoteState = boundedState(state);
+            // 轮询只刷新可观测活性（last_polled_at / external_state），不改变事实状态；
+            // 已终结的绑定（DONE/FAILED）不允许被迟到的 RUNNING 覆盖，否则界面会把
+            // 已收敛的任务重新显示为"处理中"。
+            db.update(
+                    "update skill.external_job_binding set last_polled_at=now(),"
+                        + " external_state=?,updated_at=now() where tenant_id=? and call_id=?"
+                        + " and principal_id=? and external_job_id=?"
+                        + " and status in ('SENDING','SUBMITTED')",
+                    remoteState,
+                    Actor.current().tenantId(),
+                    callId,
+                    Actor.current().principalId(),
+                    observedJob);
             if (queryOnly
                     && policy.containsKey("notAppliedValue")
                     && policy.get("notAppliedValue") != null
@@ -297,9 +339,24 @@ public class HttpAsyncAdapter {
             if (!state.equals(Json.tree(policy.get("doneValue")))) {
                 // A trustworthy terminal failure is not uncertainty: it must surface the service's
                 // own reason instead of parking the call in UNKNOWN forever.
-                if (failedState(policy, state))
-                    throw new SkillAdapters.Failure(
-                            "REMOTE_FAILED", false, failureMessage(policy, response));
+                if (failedState(policy, state)) {
+                    String message = failureMessage(policy, response);
+                    // 远端终态失败是可核实事实：错误码与有界原文落在绑定行上，
+                    // 引擎/网关无需再猜"未知"，也不再无限轮询。
+                    db.update(
+                            "update skill.external_job_binding set status='FAILED',"
+                                + " external_state=?,remote_error_code='REMOTE_FAILED',"
+                                + " remote_error_message=?,last_polled_at=now(),updated_at=now()"
+                                + " where tenant_id=? and call_id=? and principal_id=?"
+                                + " and external_job_id=? and status in ('SENDING','SUBMITTED')",
+                            remoteState,
+                            message,
+                            Actor.current().tenantId(),
+                            callId,
+                            Actor.current().principalId(),
+                            observedJob);
+                    throw new SkillAdapters.Failure("REMOTE_FAILED", false, message);
+                }
                 throw unknown("原任务尚未确认完成，保持UNKNOWN等待查询");
             }
             SkillAdapters.Raw raw;
@@ -327,7 +384,8 @@ public class HttpAsyncAdapter {
             }
             int changed =
                     db.update(
-                            "update skill.external_job_binding set status='DONE',updated_at=now()"
+                            "update skill.external_job_binding set status='DONE',"
+                            + " external_state='SUCCEEDED',last_polled_at=now(),updated_at=now()"
                                 + " where tenant_id=? and call_id=? and principal_id=? and run_id=?"
                                 + " and attempt_id=? and skill_version_id=? and idempotency_key=?"
                                 + " and external_job_id=? and request_snapshot=?::jsonb and"
@@ -450,7 +508,25 @@ public class HttpAsyncAdapter {
     private static String failureMessage(Map<String, Object> policy, JsonNode response) {
         String messagePath = Objects.toString(policy.get("failureMessagePath"), "");
         String reason = messagePath.isBlank() ? "" : path(response, messagePath).asText("");
-        return reason.isBlank() ? "外部任务终态失败，服务未提供失败原因" : "外部任务终态失败：" + reason;
+        return bound(
+                reason.isBlank() ? "外部任务终态失败，服务未提供失败原因" : "外部任务终态失败：" + reason);
+    }
+
+    private static String noTaskIdMessage() {
+        return "外部异步提交未返回任务标识，无法证明提交成功";
+    }
+
+    /** 远端状态原文进入 varchar(32)；超长即截断，保证绑定行永远可写。 */
+    private static String boundedState(JsonNode state) {
+        String value = state.isTextual() ? state.asText() : state.toString();
+        return value.length() <= 32 ? value : value.substring(0, 32);
+    }
+
+    /** 远端原文有界（含省略号仍不超过 varchar(512)），避免一条脏响应撑爆事实行。 */
+    private static String bound(String message) {
+        return message.length() <= MAX_ERROR_MESSAGE
+                ? message
+                : message.substring(0, MAX_ERROR_MESSAGE - 1) + "…";
     }
 
     public static JsonNode path(JsonNode value, String path) {

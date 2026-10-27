@@ -354,6 +354,18 @@ public class ToolCalls {
                                             id,
                                             req.path("owner").asText(),
                                             req.path("attemptId").asLong());
+                    // PLAT-04：外部任务快照独立于事实终态保存。只接受被采纳的事实写入，
+                    // 迟到的 /fact 投递不得覆盖已采纳的 externalJob；未绑定外部任务时保持 NULL，
+                    // GET 对外仍返回显式 null，调用方用字段是否存在区分两者。
+                    if (n == 1) {
+                        var externalJob = req.path("result").path("externalJob");
+                        if (!externalJob.isNull() && !externalJob.isMissingNode())
+                            store.db()
+                                    .update(
+                                            "update engine.tool_call set external_job=?::jsonb where id=?",
+                                            Json.write(externalJob),
+                                            id);
+                    }
                     // W01: sum actual execution per attempt, not outbox deliveries or
                     // reconciliation waiting.
                     var evidence = (com.fasterxml.jackson.databind.node.ObjectNode) req.deepCopy();
@@ -574,6 +586,15 @@ public class ToolCalls {
         result.put("mock_snapshot", TraceStore.json(call.get("mock_snapshot")));
         result.put("callId", call.get("id"));
         result.put("result", TraceStore.json(call.get("result")));
+        // PLAT-04：externalJob 是引擎对外的唯一任务态投影（远端 id / 状态 / 提交与最近轮询
+        // 时刻）。没有外部任务时显式 null，调用方不会把它误读成字段缺失。
+        // TraceStore.json(null) 返回 {} 而不是 null；这里显式构造 null 节点，保证
+        // "没有外部任务"在协议上是 null，而不是一个空对象。
+        result.put(
+                "externalJob",
+                call.get("external_job") == null
+                        ? Json.read("null")
+                        : TraceStore.json(call.get("external_job")));
         result.put("arguments", TraceStore.json(call.get("args")));
         return result;
     }
