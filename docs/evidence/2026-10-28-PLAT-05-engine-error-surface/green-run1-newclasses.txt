@@ -1,0 +1,111 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ------------------< cn.agentplatform:engine-runtime >-------------------
+[INFO] Building engine-runtime 0.1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- enforcer:3.5.0:enforce (default) @ engine-runtime ---
+[INFO] Rule 0: org.apache.maven.enforcer.rules.version.RequireJavaVersion passed
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ engine-runtime ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 21 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.0:compile (default-compile) @ engine-runtime ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 65 source files with javac [debug parameters release 21] to target\classes
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/engine-runtime/src/main/java/cn/agentplatform/engine/infra/RunAuthorityStore.java: 某些输入文件使用或覆盖了已过时的 API。
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/engine-runtime/src/main/java/cn/agentplatform/engine/infra/RunAuthorityStore.java: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/engine-runtime/src/main/java/cn/agentplatform/engine/application/ContextProjection.java: 某些输入文件使用了未经检查或不安全的操作。
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/engine-runtime/src/main/java/cn/agentplatform/engine/application/ContextProjection.java: 有关详细信息, 请使用 -Xlint:unchecked 重新编译。
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ engine-runtime ---
+[INFO] skip non existing resourceDirectory G:\207\项目\算法重组工具\代码\agent-platform\engine-runtime\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.14.0:testCompile (default-testCompile) @ engine-runtime ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 100 source files with javac [debug parameters release 21] to target\test-classes
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/engine-runtime/src/test/java/cn/agentplatform/engine/infra/ModelInputMaterialPostgresTest.java: 某些输入文件使用或覆盖了已过时的 API。
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/engine-runtime/src/test/java/cn/agentplatform/engine/infra/ModelInputMaterialPostgresTest.java: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/engine-runtime/src/test/java/cn/agentplatform/engine/infra/FlowMaterialStatusPostgresTest.java: 某些输入文件使用了未经检查或不安全的操作。
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/engine-runtime/src/test/java/cn/agentplatform/engine/infra/FlowMaterialStatusPostgresTest.java: 有关详细信息, 请使用 -Xlint:unchecked 重新编译。
+[INFO] 
+[INFO] --- surefire:3.5.3:test (default-test) @ engine-runtime ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running cn.agentplatform.engine.application.SkillErrorSurfaceTest
+[ERROR] Tests run: 4, Failures: 2, Errors: 0, Skipped: 0, Time elapsed: 0.190 s <<< FAILURE! -- in cn.agentplatform.engine.application.SkillErrorSurfaceTest
+[ERROR] cn.agentplatform.engine.application.SkillErrorSurfaceTest.normalizedErrorExplicitRetryableTrueIsHonoredOverSemanticInference -- Time elapsed: 0.157 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+
+expected: ""调用频次超限，请稍后重试" (String@22295ec4)"
+ but was: ""调用频次超限，请稍后重试" (TextNode@61a88b8c)"
+	at cn.agentplatform.engine.application.SkillErrorSurfaceTest.normalizedErrorExplicitRetryableTrueIsHonoredOverSemanticInference(SkillErrorSurfaceTest.java:65)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.engine.application.SkillErrorSurfaceTest.normalizedErrorSurfacesUnifiedEnvelopeFields -- Time elapsed: 0.002 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+
+expected: ""外部任务失败：TLE 校验和错误" (String@74960bfa)"
+ but was: ""外部任务失败：TLE 校验和错误" (TextNode@22ffa91a)"
+	at cn.agentplatform.engine.application.SkillErrorSurfaceTest.normalizedErrorSurfacesUnifiedEnvelopeFields(SkillErrorSurfaceTest.java:38)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] Running cn.agentplatform.engine.infra.EngineErrorSurfacePostgresTest
+03:17:11.213 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_engine_test (PostgreSQL 16.15)
+03:17:11.264 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 23 migrations (execution time 00:00.030s)
+03:17:11.297 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "engine": 222
+03:17:11.299 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "engine" is up to date. No migration necessary.
+[ERROR] Tests run: 4, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 7.514 s <<< FAILURE! -- in cn.agentplatform.engine.infra.EngineErrorSurfacePostgresTest
+[ERROR] cn.agentplatform.engine.infra.EngineErrorSurfacePostgresTest.sevenFieldErrorIsIdenticalAcrossNodeAttemptEventAndRunDetail -- Time elapsed: 1.642 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <BUSINESS> but was: <"BUSINESS">
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:177)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1145)
+	at cn.agentplatform.engine.infra.EngineErrorSurfacePostgresTest.sevenFieldErrorIsIdenticalAcrossNodeAttemptEventAndRunDetail(EngineErrorSurfacePostgresTest.java:231)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Failures: 
+[ERROR]   SkillErrorSurfaceTest.normalizedErrorExplicitRetryableTrueIsHonoredOverSemanticInference:65 
+expected: ""调用频次超限，请稍后重试" (String@22295ec4)"
+ but was: ""调用频次超限，请稍后重试" (TextNode@61a88b8c)"
+[ERROR]   SkillErrorSurfaceTest.normalizedErrorSurfacesUnifiedEnvelopeFields:38 
+expected: ""外部任务失败：TLE 校验和错误" (String@74960bfa)"
+ but was: ""外部任务失败：TLE 校验和错误" (TextNode@22ffa91a)"
+[ERROR]   EngineErrorSurfacePostgresTest.sevenFieldErrorIsIdenticalAcrossNodeAttemptEventAndRunDetail:231 expected: <BUSINESS> but was: <"BUSINESS">
+[INFO] 
+[ERROR] Tests run: 8, Failures: 3, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  17.624 s
+[INFO] Finished at: 2026-10-28T03:17:18+08:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.3:test (default-test) on project engine-runtime: There are test failures.
+[ERROR] 
+[ERROR] See G:\207\项目\算法重组工具\代码\agent-platform\engine-runtime\target\surefire-reports for the individual test results.
+[ERROR] See dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

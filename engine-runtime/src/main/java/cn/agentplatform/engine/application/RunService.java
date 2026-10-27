@@ -1495,7 +1495,10 @@ public class RunService {
                                             node.get("attemptId"));
                     // §30.3.4: one engine retry layer, contract-gated read-only failures only.
                     // Structural faults and uncertain writes never take this retry path.
+                    // PLAT-05（契约 §11.1）：显式 retryable=false 的错误不得被自动重试；
+                    // 缺省键（旧形态）仍按 semantic 既有判据走。
                     if (error.get("semantic").equals("RETRYABLE_FAILURE")
+                            && !explicitNonRetryable(error)
                             && def.path("skillRef").path("execution").path("readonly").asBoolean()
                             && store.db()
                                             .queryForObject(
@@ -1866,7 +1869,8 @@ public class RunService {
     }
 
     // 纯函数：无数据库/时钟依赖，便于直接验证“失败运行必须有根因”的契约。
-    static JsonNode effectiveError(
+    // PLAT-05：公开给跨包测试（infra 的运行链路验收）直接断言三处错误表面同构。
+    public static JsonNode effectiveError(
             Map<String, Object> run, List<Map<String, Object>> nodes, List<Map<String, Object>> events) {
         var runError = TraceStore.json(run.get("error"));
         if (!runError.isEmpty()) return runError;
@@ -1925,7 +1929,7 @@ public class RunService {
         return result;
     }
 
-    static Map<String, Object> normalizedError(
+    public static Map<String, Object> normalizedError(
             Map<String, Object> run,
             List<Map<String, Object>> nodes,
             List<Map<String, Object>> calls,
@@ -1937,7 +1941,8 @@ public class RunService {
         String message =
                 error.path("message").asText(
                         error.path("reason").asText(
-                                "运行失败，但没有可读的错误说明"));
+                                error.path("userMessage").asText(
+                                        "运行失败，但没有可读的错误说明")));
         var failedCall = calls.stream()
                 .filter(c -> "FAILED".equals(c.get("status")))
                 .findFirst();
@@ -1955,8 +1960,20 @@ public class RunService {
         result.put("semantic", semantic);
         result.put("stage", stage);
         result.put("message", message);
-        result.put("retryable", errorRetryable(semantic));
+        // PLAT-05（契约 §11.1）：错误对象自带显式 retryable 时按声明呈现，不得由 semantic
+        // 推断覆盖；旧形态无该键仍走语义推断。
+        result.put(
+                "retryable",
+                error.path("retryable").isBoolean()
+                        ? error.path("retryable").asBoolean()
+                        : errorRetryable(semantic));
         result.put("hint", errorHint(semantic, stage));
+        // 统一错误对象的新字段原样透传（转成普通 Java 值，与 map 其余键同型）；
+        // 旧形态没有这些键时保持既有渲染，不发明字段值。
+        for (String field : List.of("userMessage", "traceId", "category", "detail"))
+            if (error.hasNonNull(field))
+                result.put(field, Json.mapper().convertValue(error.path(field), Object.class));
+        if (error.hasNonNull("code")) result.put("errorCode", error.path("code").asText());
         Object nodeId = error.path("nodeInstanceId").isNumber()
                 ? error.path("nodeInstanceId").asLong()
                 : nodes.stream()
@@ -2087,6 +2104,17 @@ public class RunService {
                 || semantic.contains("_401")
                 || semantic.contains("_403")
                 || semantic.contains("_422"));
+    }
+
+    /**
+     * PLAT-05（契约 §11.1）：错误对象显式携带 retryable=false 时，任何自动重试判据都必须
+     * 尊重声明（{@code RESULT_UNKNOWN} 恒不可重试、远端声明的确定性失败不重试）。键缺省
+     * （旧形态）返回 false，保持既有"按 semantic 推断"的行为不变。
+     */
+    static boolean explicitNonRetryable(Map<String, Object> error) {
+        Object value = error.get("retryable");
+        if (value instanceof Boolean retryable) return !retryable;
+        return "false".equalsIgnoreCase(Objects.toString(value, ""));
     }
 
     private static String errorHint(String semantic, String stage) {

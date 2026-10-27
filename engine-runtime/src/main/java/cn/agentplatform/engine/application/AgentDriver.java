@@ -194,6 +194,28 @@ public class AgentDriver {
                                     call.path("arguments"),
                                     ++seq,
                                     actor);
+                } catch (cn.agentplatform.engine.domain.RuntimeFault fault) {
+                    // 等待确认与结果未知是状态机信号，必须继续走各自的状态转移，不进模型反馈。
+                    if (fault.semantic.equals("WAITING_APPROVAL")
+                            || fault.semantic.equals("RESULT_UNKNOWN")) throw fault;
+                    Map<String, Object> error = fault.structuredError();
+                    boolean param = fault.semantic.equals("PARAM_ERROR");
+                    // PLAT-05（方案 §4.16）：可解释拒绝（retryable=false 且带 userMessage）要以
+                    // 工具结果交给模型解释，而不是让运行带着裸语义失败；模型不重试不可重试错误，
+                    // 同参数重复由既有 NO_PROGRESS 指纹熔断兜底。corrections 上限约束吸收轮数。
+                    boolean explainable =
+                            error != null
+                                    && !Objects.toString(error.get("userMessage"), "").isBlank()
+                                    && !Boolean.TRUE.equals(error.get("retryable"));
+                    if (corrections++ < 2 && (param || explainable)) {
+                        var payload =
+                                error != null
+                                        ? new LinkedHashMap<String, Object>(error)
+                                        : new LinkedHashMap<String, Object>();
+                        payload.putIfAbsent("semantic", fault.semantic);
+                        payload.putIfAbsent("message", "请修正工具参数");
+                        result = Json.tree(Map.of("error", payload));
+                    } else throw fault;
                 } catch (IllegalArgumentException error) {
                     if (error.getMessage().equals("PARAM_ERROR") && corrections++ < 2)
                         result =
@@ -307,9 +329,24 @@ public class AgentDriver {
         if (ControlledReplay.enabled(run) && registration.get("status").equals("REGISTERED"))
             return ControlledReplay.skill(
                     store, run, node, code, version, args, seq, registration, actor, clients);
-        if (registration.get("status").equals("FAILED"))
-            throw new IllegalArgumentException(
-                    Objects.toString(registration.get("error_semantic"), "NON_RETRYABLE_FAILURE"));
+        if (registration.get("status").equals("FAILED")) {
+            // PLAT-05：登记即 FAILED（既有事实/对账采纳）——统一错误对象原样携带，
+            // 不再降级成裸 error_semantic；旧 {semantic,reason} 形态同样原样保留。
+            var structured =
+                    envelopeError(
+                            (JsonNode) registration.get("result"),
+                            Objects.toString(registration.get("error_semantic"), null));
+            String semantic =
+                    structured != null
+                            ? Objects.toString(structured.get("semantic"), "")
+                            : Objects.toString(
+                                    registration.get("error_semantic"), "NON_RETRYABLE_FAILURE");
+            throw new cn.agentplatform.engine.domain.RuntimeFault(
+                    semantic.isBlank() ? "NON_RETRYABLE_FAILURE" : semantic,
+                    "toolCall." + registration.get("callId"),
+                    readable(structured, "既有调用已失败"),
+                    structured);
+        }
         if (registration.get("status").equals("SUCCEEDED"))
             return interceptors.postResult(
                     code, Json.tree(registration.get("result")), actor);
@@ -344,12 +381,78 @@ public class AgentDriver {
         }
         if (result.path("status").asText().equals("UNKNOWN"))
             throw new cn.agentplatform.engine.domain.RuntimeFault(
-                    "RESULT_UNKNOWN", "toolCall." + registration.get("callId"), "技能执行结果未知，等待对账");
-        if (!result.path("status").asText().equals("SUCCEEDED"))
-            throw new IllegalArgumentException(
-                    result.path("errorSemantic").asText("SKILL_" + result.path("status").asText()));
+                    "RESULT_UNKNOWN",
+                    "toolCall." + registration.get("callId"),
+                    "技能执行结果未知，等待对账",
+                    envelopeError(result.path("result"), "RESULT_UNKNOWN"));
+        if (!result.path("status").asText().equals("SUCCEEDED")) {
+            // PLAT-05：执行响应 wrap 为 {status, result: envelope, errorSemantic?}。七字段错误
+            // 对象在 result.error，顶层 errorSemantic 只是兼容键；这里解析并原样携带，
+            // 不再丢弃成单个语义字符串（那会让 run.error/SSE/详情丢掉 userMessage 与 traceId）。
+            var structured =
+                    envelopeError(result.path("result"), result.path("errorSemantic").asText(null));
+            String semantic =
+                    structured != null
+                            ? Objects.toString(structured.get("semantic"), "")
+                            : result.path("errorSemantic")
+                                    .asText("SKILL_" + result.path("status").asText());
+            throw new cn.agentplatform.engine.domain.RuntimeFault(
+                    semantic.isBlank()
+                            ? "SKILL_" + result.path("status").asText()
+                            : semantic,
+                    "toolCall." + registration.get("callId"),
+                    readable(
+                            structured,
+                            "技能调用失败（" + result.path("status").asText() + "）"),
+                    structured);
+        }
         return interceptors.postResult(
                 code, result.has("result") ? result.path("result") : result.path("output"), actor);
+    }
+
+    /**
+     * PLAT-05（contracts/skill-invocation.md §11.1）：解析技能 envelope 的统一错误对象。
+     * 七字段（semantic/code/category/retryable/userMessage/detail/traceId）与兼容键
+     * reason/message 原样保留（含显式 null，不补发明字段）；旧 {semantic,reason} 形态
+     * 原样保留。envelope 没有 error 对象时回退到调用方给出的兼容语义键
+     * （wrap 的 errorSemantic / 调用视图的 error_semantic）；两者皆无返回 null，
+     * 由调用方用 SKILL_&lt;status&gt; 兜底。纯函数，便于直接验证解析契约。
+     */
+    static Map<String, Object> envelopeError(JsonNode envelope, String fallbackSemantic) {
+        var error = envelope.path("error");
+        if (error.isObject() && !error.isEmpty()) {
+            var parsed = new LinkedHashMap<String, Object>();
+            String semantic = error.path("semantic").asText("");
+            parsed.put(
+                    "semantic",
+                    semantic.isBlank() ? Objects.toString(fallbackSemantic, "") : semantic);
+            for (String field :
+                    List.of(
+                            "code",
+                            "category",
+                            "retryable",
+                            "userMessage",
+                            "detail",
+                            "traceId",
+                            "reason",
+                            "message"))
+                if (error.has(field))
+                    parsed.put(field, Json.mapper().convertValue(error.path(field), Object.class));
+            if (!Objects.toString(parsed.get("semantic"), "").isBlank()) return parsed;
+        }
+        if (fallbackSemantic != null && !fallbackSemantic.isBlank())
+            return new LinkedHashMap<>(Map.of("semantic", fallbackSemantic));
+        return null;
+    }
+
+    /** 可读原因：统一错误对象优先 userMessage，其次 reason/message；缺失时用兜底文案。 */
+    private static String readable(Map<String, Object> error, String fallback) {
+        if (error != null)
+            for (String key : List.of("userMessage", "reason", "message")) {
+                String value = Objects.toString(error.get(key), "");
+                if (!value.isBlank()) return value;
+            }
+        return fallback;
     }
 
     public Map<String, Object> preview(JsonNode config, JsonNode inputs) {
