@@ -1,5 +1,6 @@
 package cn.agentplatform.app.application;
 
+import cn.agentplatform.app.domain.AppDigest;
 import cn.agentplatform.app.domain.AppRules;
 import cn.agentplatform.app.domain.PublishGate;
 import cn.agentplatform.app.domain.PublishWaiver;
@@ -18,6 +19,8 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import org.springframework.web.client.RestClient;
 
 import java.sql.ResultSet;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.util.*;
@@ -123,7 +126,11 @@ public class AppService {
         v.put("updatedAt", r.getTimestamp("updated_at").toInstant().toString());
         for (String k : List.of("tags", "config", "definition", "layout"))
             v.put(k, Json.read(r.getString(k), Object.class));
-        v.put("candidateSha256", sha(v));
+        // 先算哈希再写派生字段：candidateSha256 覆盖快照内容，semanticDigest 是更窄的身份。
+        String candidateSha = sha(v);
+        String semanticDigest = AppDigest.semantic(candidate(v));
+        v.put("candidateSha256", candidateSha);
+        v.put("semanticDigest", semanticDigest);
         return v;
     }
 
@@ -743,6 +750,8 @@ public class AppService {
         if (rev != ((Number) app.get("draftRev")).longValue() || !sha(app).equals(hash))
             throw error(412, "CANDIDATE_CHANGED", "草稿已变更，请重新评测");
         var result = candidate(app);
+        // 语义摘要必须在加 draftRev/versionNo 这些调用上下文之前算：它只描述候选内容本身。
+        result.put("semanticDigest", AppDigest.semantic(result));
         result.put("draftRev", rev);
         result.put("candidateSha256", hash);
         result.put("appVersionId", code + "@draft:" + rev + ":" + hash);
@@ -924,12 +933,17 @@ public class AppService {
                                         + "&draftRev="
                                         + rev
                                         + "&candidateSha256="
-                                        + hash);
+                                        + hash
+                                        + "&semanticDigest="
+                                        + URLEncoder.encode(AppDigest.semantic(candidate(app)), StandardCharsets.UTF_8));
             } catch (PlatformException ex) {
                 evalFailure[0] = Objects.toString(ex.getMessage(), "评测依赖不可用");
             }
         }
         boolean accepted = eval != null && Boolean.TRUE.equals(eval.get("accepted"));
+        // 语义摘要命中说明候选结构没变、只是描述类字段变了：证据可复用，但必须在检查快照里留下痕迹，
+        // 否则事后无法分辨"这次是重新评测通过"还是"复用了旧报告"。
+        String matchedBy = eval == null ? null : Objects.toString(eval.get("matchedBy"), null);
         // 依赖故障不允许用豁免绕过：拿不到候选状态时无法确认风险范围，只能阻断或告警。
         PublishWaiver waiver = null;
         if (waiverEnabled && gate != PublishGate.OFF && !accepted && evalFailure[0] == null)
@@ -944,6 +958,13 @@ public class AppService {
             gateDetail = evalFailure[0];
         } else if (accepted) {
             gateResult = "PASS";
+            if ("SEMANTIC_DIGEST".equals(matchedBy)) {
+                gateDetail =
+                        "语义摘要一致：候选仅展示性字段变化，复用评测报告 "
+                                + Objects.toString(eval.get("evalReportId"), "")
+                                + "（matchedBy=SEMANTIC_DIGEST）";
+                gateCheck.put("evidence", "SEMANTIC_DIGEST");
+            }
         } else if (gate == PublishGate.OFF) {
             gateResult = "SKIPPED";
             gateDetail = "门禁已关闭（gate-mode=OFF），不评估评测结论";
@@ -968,6 +989,8 @@ public class AppService {
         if ("WAIVED".equals(gateResult))
             warnings.add("评测门禁：本次发布使用 ADMIN 豁免 " + waiverId + "，到期 " + waiver.expiresAt());
         if ("SKIPPED".equals(gateResult)) warnings.add("评测门禁：已由 gate-mode=OFF 关闭，发布不带评测结论");
+        if ("PASS".equals(gateResult) && "SEMANTIC_DIGEST".equals(matchedBy))
+            warnings.add("评测门禁：本次复用旧评测报告（仅描述字段变化），报告编号 " + Objects.toString(eval.get("evalReportId"), ""));
         String id = "pc_" + UUID.randomUUID();
         // 被阻断的预检同样落审计行：事后可还原是谁、在什么模式、凭哪次豁免尝试过发布。
         boolean passed =

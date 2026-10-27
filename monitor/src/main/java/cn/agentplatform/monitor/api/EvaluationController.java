@@ -41,8 +41,10 @@ public class EvaluationController {
     public Object accepted(
             @RequestParam String appCode,
             @RequestParam long draftRev,
-            @RequestParam String candidateSha256) {
-        return ApiResponse.ok(evaluations.accepted(appCode, draftRev, candidateSha256));
+            @RequestParam String candidateSha256,
+            @RequestParam(required = false) String semanticDigest) {
+        return ApiResponse.ok(
+                evaluations.accepted(appCode, draftRev, candidateSha256, semanticDigest));
     }
 
     @GetMapping("/admin/{kind:approvals|audit}")

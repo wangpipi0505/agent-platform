@@ -175,6 +175,7 @@ public class EvaluationService {
                                 + "&candidateSha256="
                                 + hash,
                         Map.of());
+        String semanticDigest = candidateDigest(candidate);
         if (!hash.equals(candidate.get("candidateSha256"))
                 || !(candidate.get("draftRev") instanceof Number candidateRev)
                 || candidateRev.longValue() != rev.longValue())
@@ -224,13 +225,14 @@ public class EvaluationService {
                         throw fail(409, "DATASET_IMMUTABLE", "数据集版本已存在且内容不同，请使用新版本号");
                     db.update(
                             "insert into"
-                                + " monitor.evaluation_report(tenant_id,id,app_code,draft_rev,candidate_sha256,dataset_version,candidate,status,threshold,baseline_report_id,created_by,assertion_model,assertion_snapshot)"
-                                + " values(?,?,?,?,?,?,?::jsonb,'RUNNING',?,?,?,?,?::jsonb)",
+                                + " monitor.evaluation_report(tenant_id,id,app_code,draft_rev,candidate_sha256,candidate_semantic_digest,dataset_version,candidate,status,threshold,baseline_report_id,created_by,assertion_model,assertion_snapshot)"
+                                + " values(?,?,?,?,?,?,?,?::jsonb,'RUNNING',?,?,?,?,?::jsonb)",
                             tenant(),
                             id,
                             code,
                             rev.longValue(),
                             hash,
+                            semanticDigest,
                             dataset,
                             Json.write(candidate),
                             threshold,
@@ -436,6 +438,9 @@ public class EvaluationService {
                             v.put("appCode", r.getString("app_code"));
                             v.put("draftRev", r.getLong("draft_rev"));
                             v.put("candidateSha256", r.getString("candidate_sha256"));
+                            v.put(
+                                    "candidateSemanticDigest",
+                                    r.getString("candidate_semantic_digest"));
                             v.put("datasetVersion", r.getString("dataset_version"));
                             v.put("threshold", r.getDouble("threshold"));
                             v.put("baselineReportId", r.getString("baseline_report_id"));
@@ -468,19 +473,56 @@ public class EvaluationService {
         return rows.getFirst();
     }
 
-    public Map<String, Object> accepted(String code, long rev, String hash) {
+    /**
+     * 候选是否已有可用证据。
+     *
+     * <p>两条路：sha 精确匹配（快照身份一致）与语义摘要匹配（只有描述类字段变化）。**sha 优先**——同一候选
+     * 既可能有多份报告，也可能新旧报告都命中；顺序固定，调用方才能稳定判断"这次是不是复用"。
+     * 两者都不命中一律 {@code accepted=false}，绝不回落到"最近一次通过的报告"。
+     *
+     * @param semanticDigest 调用方当前候选的语义摘要；不知道就传 null，此时只走 sha 精确匹配
+     */
+    public Map<String, Object> accepted(String code, long rev, String hash, String semanticDigest) {
         var rows =
                 db.queryForList(
-                        "select id from monitor.evaluation_report where tenant_id=? and app_code=?"
-                            + " and draft_rev=? and candidate_sha256=? and status='ACCEPTED' order"
-                            + " by completed_at desc limit 1",
+                        "select id,candidate_sha256,candidate_semantic_digest from"
+                            + " monitor.evaluation_report where tenant_id=? and app_code=? and"
+                            + " draft_rev=? and status='ACCEPTED' and (candidate_sha256=?"
+                            + " or (candidate_semantic_digest is not null and"
+                            + " candidate_semantic_digest=?)) order by completed_at desc",
                         tenant(),
                         code,
                         rev,
-                        hash);
-        return rows.isEmpty()
-                ? Map.of("accepted", false)
-                : report(rows.getFirst().get("id").toString());
+                        hash,
+                        semanticDigest);
+        if (rows.isEmpty()) return Map.of("accepted", false);
+        var exact =
+                rows.stream()
+                        .filter(r -> Objects.equals(r.get("candidate_sha256"), hash))
+                        .findFirst();
+        var chosen = exact.orElse(rows.getFirst());
+        var result = new LinkedHashMap<>(report(chosen.get("id").toString()));
+        result.put("matchedBy", exact.isPresent() ? "SHA256" : "SEMANTIC_DIGEST");
+        return result;
+    }
+
+    /** 历史调用方（只给 sha）保持原行为。 */
+    public Map<String, Object> accepted(String code, long rev, String hash) {
+        return accepted(code, rev, hash, null);
+    }
+
+    /**
+     * 从候选里读语义摘要：缺省返回 null（历史候选、只读技能都不带），存在则必须是 64 位小写十六进制。
+     *
+     * <p>不在这里重算摘要：候选由应用侧构造，监控侧重算等于把两套规则耦合在一起；传上来的是声明，
+     * 与 sha 一样属于调用方必须保持一致的输入。
+     */
+    static String candidateDigest(Map<String, Object> candidate) {
+        Object value = candidate.get("semanticDigest");
+        if (value == null) return null;
+        if (!(value instanceof String digest) || !digest.matches("[0-9a-f]{64}"))
+            throw new PlatformException(400, "INVALID_CANDIDATE_DIGEST", "候选语义摘要必须是64位小写十六进制");
+        return digest;
     }
 
     public Object project(String kind) {
