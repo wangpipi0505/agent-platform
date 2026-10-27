@@ -502,3 +502,55 @@ external_job_binding(id, tenant_id, idempotency_key UK, adapter_type,
 - 已终态任务返回 `{callId, status, result}`，失败任务的 `result.error` 为 11.1 完整错误对象；
 - 不存在 → 可读 404 `FACT_NOT_FOUND`；未终态（`UNKNOWN` 或执行准备中）→ 可读 409 `TASK_NOT_FINAL`；
 - `callId` 是平台任务身份；`externalJobId` 只是远端任务标识，不作为寻址键。
+
+---
+
+## 12. 工程增补（PLAT-06，2026-10-28）：SUBMIT_QUERY 声明式路径映射（pathParams）与查询错误可读化
+
+> 本节为平台侧优化的工程增补，依据《平台侧优化方案与实施细则-20261027》§4.6（PLAT-06），经优化台账 T06 派发实施；**不属于 v1.2 原文提取**，`contracts/snapshot/` 保持 v1.2 原文快照不变。与上文冲突时以本节为准。
+
+### 12.1 reconciliation.pathParams 声明
+
+SUBMIT_QUERY 对账端点可用声明式映射表达"平台字段 → 远端占位符"，远端字段叫 `taskId` 不必再写成 `{jobId}`：
+
+```json
+{
+  "execution": { "kind": "HTTP_ASYNC" },
+  "reconciliation": {
+    "endpoint": "http://host/tasks/{remoteTaskId}",
+    "pathParams": {
+      "remoteTaskId": { "from": "externalJobId" },
+      "remoteKey": { "from": "idempotencyKey" }
+    },
+    "jobIdPath": "$.taskId",
+    "donePath": "$.status",
+    "doneValue": "SUCCEEDED",
+    "failedValue": "FAILED",
+    "failureMessagePath": "$.errorMessage",
+    "resultEndpoint": "http://host/tasks/{remoteTaskId}/result",
+    "resultEndpointPath": "$"
+  }
+}
+```
+
+- `pathParams` 键 = 端点里的占位符名（`{name}`，字母开头的标识符）；值必须为 `{"from": 平台字段}`，`from` 只允许 `externalJobId`（已核实的外部任务标识，来自提交 ACK 或按幂等键的查询确认）与 `idempotencyKey`（原调用的幂等键原文）；
+- 占位符可出现在 `endpoint`、`resultEndpoint`、`lookupEndpoint` 的路径或查询串任意位置；替换值按 URL 段编码；
+- **保存期一一对应校验**：`endpoint`/`resultEndpoint`/`lookupEndpoint` 中出现的全部占位符与 `pathParams` 必须一一对应。占位符缺映射 → `400 ASYNC_PATH_PARAM_MISSING`，报错带字段路径（如 `reconciliation.pathParams.remoteTaskId`）与修复建议（声明 `{"from":"externalJobId"}` 或改用旧占位符）；声明了端点未使用的占位符 → `400 ASYNC_PATH_PARAM_UNMATCHED`；`from` 非法、值形态错误或重定义旧占位符 → `400 INVALID_ASYNC_PROTOCOL`（同样带字段路径）；
+- 任务标识未知（提交 ACK 丢失且未配置 `lookupEndpoint`）时，需要 `externalJobId` 的查询端点构造不出可寻址 URL——平台不发送请求，保持结果未知等待对账；旧 `{jobId}` 端点保持既有行为不变。
+
+### 12.2 占位符兼容与 jobIdPath 双源优先级
+
+- **旧契约零回归**：`{jobId}` / `{idempotencyKey}` 字符串替换继续可用，等价于内置默认映射（`jobId`→`externalJobId`、`idempotencyKey`→`idempotencyKey`），语义固定，不需要也不允许写进 `pathParams`；
+- 新旧可混用：同一契约里 `{jobId}` 走内置映射、其余占位符由 `pathParams` 声明；
+- **空 `httpMapping` 对 SUBMIT_QUERY 视为缺省**：保存时移除，不再报非法；非空 `httpMapping` 与异步提交仍互斥（`INVALID_ASYNC_PROTOCOL`）；
+- **`jobIdPath` 双源优先级（现状行为，本次文档化）**：任务标识读取路径为 `reconciliation.jobIdPath` 优先，其次顶层 `jobIdPath`，两者都缺省为 `$.jobId`；`idempotencyKeyPath` 仅在 `reconciliation` 上声明（缺省 `$.idempotencyKey`）。
+
+### 12.3 查询阶段 4xx 错误语义（T06.2）
+
+对账/轮询查询阶段的远端 4xx 不再一律折叠成 `RESULT_UNKNOWN`：
+
+- 状态端点 `401/403` → `NO_PERMISSION` 可读失败（不可重试）：凭证问题不会因轮询消失，错误对象携带远端业务码（§11.2 默认读取路径）与原文；**查询失败不是外部任务的终态**，`external_job_binding` 行保持 `SUBMITTED` 原状；
+- 其余 4xx（404/409 等）与 5xx → 仍为 `RESULT_UNKNOWN` 继续对账（任务可能尚未可见），但错误原因携带 HTTP 状态与远端业务码/原文，被折叠的底层异常以 `cause` 保留；
+- 结果端点 409/4xx 先复查状态端点的行为沿用 §11（T05）不变；
+- 提交阶段 4xx 语义沿用 §11.2 平台默认映射（401/403→`NO_PERMISSION`、429→`QUOTA`、其余→`PARAM_ERROR`），携带远端码/原文；
+- 异步协议拒绝（`ASYNC_*`，如 `ASYNC_MULTIPART_UNSUPPORTED` 400）在执行器不再折叠为 `UNKNOWN`/`OUTPUT_INVALID`，按原码原状态透出——它们是"本次调用为何没有运行"的结论，在任何出站请求之前即已成立。

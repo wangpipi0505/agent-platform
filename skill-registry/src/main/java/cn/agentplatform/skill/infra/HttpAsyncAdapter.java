@@ -47,6 +47,26 @@ public class HttpAsyncAdapter {
         }
     }
 
+    /**
+     * T06.2：状态端点对查询的明确拒绝（401/403）是“本次调用为何无法继续”的已核实结论——凭证
+     * 问题不会因轮询消失，折叠成 RESULT_UNKNOWN 只会无限对账。它与 REMOTE_FAILED 一样必须
+     * 穿透查询路径的兜底 catch；但查询失败不是外部任务的终态，绑定行保持原状，由调用方按
+     * 可读错误处置。远端业务码/原文按 T05 默认语义随错误对象携带。
+     */
+    private static final class QueryRejected extends SkillAdapters.Failure {
+        QueryRejected(int status, String code, String raw) {
+            super(
+                    "NO_PERMISSION",
+                    false,
+                    "外部任务查询被拒绝 HTTP "
+                            + status
+                            + "；请检查该技能的出站凭据与权限"
+                            + (code == null || code.isBlank() ? "" : "，远端业务码=" + code),
+                    code,
+                    raw);
+        }
+    }
+
     /** 远端失败原文进入 varchar(512)：超出即截断，避免一条脏响应撑爆事实行。 */
     private static final int MAX_ERROR_MESSAGE = 512;
 
@@ -261,12 +281,28 @@ public class HttpAsyncAdapter {
             throw unknown("原任务已提交，等待可信回调；不重新发送业务请求");
         var policy = object(contract.getOrDefault("reconciliation", Map.of()));
         String job = Objects.toString(b.get("external_job_id"), "");
+        var pathParams = declaredPathParams(policy);
+        var pathValues = pathParamValues(pathParams, job, key);
         String endpoint = text(policy, "endpoint");
-        if (job.isBlank() && endpoint.contains("{jobId}"))
+        if (job.isBlank()
+                && (endpoint.contains("{jobId}") || mapsExternalJobId(endpoint, pathParams)))
             endpoint = Objects.toString(policy.getOrDefault("lookupEndpoint", ""));
         if (endpoint.isBlank()) throw unknown("提交响应未取得jobId，需配置原幂等键查询或人工对账");
-        endpoint =
-                endpoint.replace("{jobId}", segment(job)).replace("{idempotencyKey}", segment(key));
+        // 任务标识未知时，声明式映射构造不出可寻址的查询：宁可不发请求等待对账，也不用空串拼出
+        // 可能命中列表类端点的URL（响应归属校验依赖幂等键回显，契约禁用echo时没有第二道防线）。
+        // 旧 {jobId} 不受此保护，保持既有空串替换行为不变。
+        if (job.isBlank() && mapsExternalJobId(endpoint, pathParams))
+            throw unknown(
+                    "提交响应未取得jobId且查询端点需要任务标识，请配置原幂等键查询(lookupEndpoint)或人工对账");
+        for (String name : placeholders(endpoint))
+            if (!legacyPlaceholder(name) && !pathParams.containsKey(name))
+                throw unknown(
+                        "查询端点占位符 {"
+                                + name
+                                + "} 缺少映射（reconciliation.pathParams."
+                                + name
+                                + "），无法构造查询；请修正契约");
+        endpoint = substitute(endpoint, pathValues);
         try (var streamed =
                 exchangeStream(
                         contract,
@@ -373,7 +409,16 @@ public class HttpAsyncAdapter {
             if (!resultEndpoint.isBlank()) {
                 // Some services split status and result. The result endpoint is derived from the
                 // job id already proven above and never widens the binding.
-                String resultSource = resultEndpoint.replace("{jobId}", segment(observedJob));
+                for (String name : placeholders(resultEndpoint))
+                    if (!legacyPlaceholder(name) && !pathParams.containsKey(name))
+                        throw unknown(
+                                "结果端点占位符 {"
+                                        + name
+                                        + "} 缺少映射（reconciliation.pathParams."
+                                        + name
+                                        + "），无法构造查询；请修正契约");
+                String resultSource =
+                        substitute(resultEndpoint, pathParamValues(pathParams, observedJob, key));
                 // 状态响应与结果响应常是两套结构，结果侧独立声明读取路径，默认取整个响应体。
                 String resultReadPath = Objects.toString(policy.get("resultEndpointPath"), "");
                 try (var finalResponse =
@@ -399,7 +444,10 @@ public class HttpAsyncAdapter {
                                 boundedState(path(rechecked, text(policy, "donePath"))),
                                 callId,
                                 observedJob);
-                    throw unknown("结果端点拒绝且状态端点未能核实终态失败，保留绑定等待对账");
+                    throw unknown(
+                            "结果端点拒绝 HTTP "
+                                    + rejected.status
+                                    + " 且状态端点未能核实终态失败，保留绑定等待对账");
                 }
             } else {
                 try (var result = streamed.result()) {
@@ -429,11 +477,34 @@ public class HttpAsyncAdapter {
         } catch (NotApplied evidence) {
             throw evidence;
         } catch (SkillAdapters.Failure failure) {
-            // 只有"服务端已核实终态失败"这一显式协议结论可以穿透；本地验收异常仍是不确定证据。
-            if ("REMOTE_FAILED".equals(failure.semantic)) throw failure;
-            throw unknown("原任务查询或结果验收尚未完成，保留绑定等待对账");
+            // T06.2：只有“已核实结论”（服务端终态失败、查询被401/403明确拒绝）可以穿透；
+            // 本地验收异常与“任务暂不可见”仍是不确定证据——折叠保留绑定等待对账，但消息必须
+            // 携带原始语义与原因，cause 保留，不能把一次404折叠成无法定位的“尚未完成”。
+            if ("REMOTE_FAILED".equals(failure.semantic) || failure instanceof QueryRejected)
+                throw failure;
+            throw unknown(
+                    "原任务查询或结果验收尚未完成（"
+                            + failure.semantic
+                            + "："
+                            + failure.getMessage()
+                            + "）；保留绑定等待对账",
+                    failure);
+        } catch (PlatformException ex) {
+            throw unknown(
+                    "原任务查询或结果验收尚未完成（"
+                            + ex.code()
+                            + "："
+                            + ex.getMessage()
+                            + "）；保留绑定等待对账",
+                    ex);
         } catch (Exception ex) {
-            throw unknown("原任务查询或结果验收尚未完成，保留绑定等待对账");
+            throw unknown(
+                    "原任务查询或结果验收尚未完成（"
+                            + ex.getClass().getSimpleName()
+                            + "："
+                            + ex.getMessage()
+                            + "）；保留绑定等待对账",
+                    ex);
         }
     }
 
@@ -460,10 +531,34 @@ public class HttpAsyncAdapter {
         return request(contract, endpoint, "GET", null, key)
                 .exchange(
                         (sent, response) -> {
+                            int status = response.getStatusCode().value();
+                            if (status >= 400 && status < 500) {
+                                // T06.2：查询被明确拒绝时区分两类结论——401/403 是“凭证无法通过”，
+                                // 轮询永远解决不了，按 T05 默认语义改判 NO_PERMISSION；其余4xx
+                                // （404/409…）只是“任务此刻不可见”，仍属结果未知继续对账。两类都
+                                // 携带远端业务码与原文，不再折叠成一句无法定位的“未返回确认”。
+                                var remote =
+                                        SkillAdapters.remoteRejection(
+                                                contract, response.getBody());
+                                if (status == 401 || status == 403)
+                                    throw new QueryRejected(
+                                            status, remote.code(), remote.message());
+                                throw unknown(
+                                        "异步查询未返回确认 HTTP " + status + remoteHint(remote));
+                            }
                             if (!response.getStatusCode().is2xxSuccessful())
-                                throw unknown("异步查询未返回确认");
+                                throw unknown("异步查询未返回确认 HTTP " + status);
                             return AsyncHttpResponse.read(response.getBody(), resultPath);
                         });
+    }
+
+    /** 远端业务码/原文的短摘要，用于不确定类错误的可读化；远端未提供时为空串。 */
+    private static String remoteHint(ErrorSemantics.Remote remote) {
+        String code = ErrorSemantics.bound(remote.code());
+        String message = ErrorSemantics.bound(remote.message());
+        if (code == null && message == null) return "";
+        return "（code=" + Objects.toString(code, "")
+                + (message == null ? "" : " message=" + message) + "）";
     }
 
     /**
@@ -558,6 +653,169 @@ public class HttpAsyncAdapter {
 
     private static String segment(String value) {
         return java.net.URLEncoder.encode(value, StandardCharsets.UTF_8).replace("+", "%20");
+    }
+
+    /** 占位符语法：{name}，name 为字母开头的标识符。 */
+    private static final java.util.regex.Pattern PLACEHOLDER =
+            java.util.regex.Pattern.compile("\\{([A-Za-z_][A-Za-z0-9_]*)\\}");
+
+    /** pathParams.from 允许的平台字段；远端命名自由度只存在于占位符一侧（PLAT-06）。 */
+    private static final Set<String> PATH_PARAM_SOURCES = Set.of("externalJobId", "idempotencyKey");
+
+    /**
+     * 旧契约占位符：等价于内置默认映射（jobId→外部任务标识、idempotencyKey→原幂等键），永远可用、
+     * 语义固定。新契约应改用 pathParams 声明远端自己的占位符名，避免“远端叫 taskId 却必须写
+     * jobId”的平台内部知识泄漏。
+     */
+    public static boolean legacyPlaceholder(String name) {
+        return name.equals("jobId") || name.equals("idempotencyKey");
+    }
+
+    /** 端点里的占位符集合（按出现顺序去重）。 */
+    public static LinkedHashSet<String> placeholders(String url) {
+        var names = new LinkedHashSet<String>();
+        var matcher = PLACEHOLDER.matcher(Objects.toString(url, ""));
+        while (matcher.find()) names.add(matcher.group(1));
+        return names;
+    }
+
+    /**
+     * PLAT-06：校验 reconciliation.pathParams 与查询端点占位符一一对应，返回 占位符名→平台字段。
+     * 必须在端点 URI 形状检查之前调用：否则 {remoteTaskId} 会先在 URI.create 报出无法定位的
+     * 参数错误，接入方无从得知需要声明映射。端点里的非旧占位符缺少声明 → 400
+     * ASYNC_PATH_PARAM_MISSING（带字段路径与修复建议）；声明了端点没有的占位符 → 400
+     * ASYNC_PATH_PARAM_UNMATCHED；from 非法或重定义旧占位符 → 400 INVALID_ASYNC_PROTOCOL。
+     */
+    public static Map<String, String> validatedPathParams(
+            Map<String, Object> policy, String... endpoints) {
+        var holes = new LinkedHashSet<String>();
+        for (String endpoint : endpoints)
+            if (endpoint != null && !endpoint.isBlank()) holes.addAll(placeholders(endpoint));
+        var mappings = new LinkedHashMap<String, String>();
+        Object declared = policy.get("pathParams");
+        if (declared != null) {
+            if (!(declared instanceof Map<?, ?> raw) || raw.isEmpty())
+                throw error(
+                        400,
+                        "INVALID_ASYNC_PROTOCOL",
+                        "reconciliation.pathParams必须为非空对象，形如 {\"占位符\":{\"from\":\"externalJobId\"}}");
+            for (var entry : raw.entrySet()) {
+                String name = Objects.toString(entry.getKey(), "");
+                if (!name.matches("[A-Za-z_][A-Za-z0-9_]*"))
+                    throw error(
+                            400,
+                            "INVALID_ASYNC_PROTOCOL",
+                            "reconciliation.pathParams键必须为字母开头的占位符名，收到: " + name);
+                if (legacyPlaceholder(name))
+                    throw error(
+                            400,
+                            "INVALID_ASYNC_PROTOCOL",
+                            "reconciliation.pathParams不得重定义旧占位符 {"
+                                    + name
+                                    + "}（其默认映射已内置且语义固定）");
+                if (!(entry.getValue() instanceof Map<?, ?> binding)
+                        || binding.isEmpty()
+                        || !(binding.get("from") instanceof String from)
+                        || from.isBlank())
+                    throw error(
+                            400,
+                            "INVALID_ASYNC_PROTOCOL",
+                            "reconciliation.pathParams."
+                                    + name
+                                    + " 必须为对象且携带from字段，形如 {\"from\":\"externalJobId\"}");
+                if (!PATH_PARAM_SOURCES.contains(from))
+                    throw error(
+                            400,
+                            "INVALID_ASYNC_PROTOCOL",
+                            "reconciliation.pathParams."
+                                    + name
+                                    + ".from 只能为 externalJobId 或 idempotencyKey，收到: "
+                                    + from);
+                if (!holes.contains(name))
+                    throw error(
+                            400,
+                            "ASYNC_PATH_PARAM_UNMATCHED",
+                            "reconciliation.pathParams."
+                                    + name
+                                    + " 未出现在任何查询端点中：请在 reconciliation.endpoint 或"
+                                    + " resultEndpoint 使用 {"
+                                    + name
+                                    + "}，或删除该映射");
+                mappings.put(name, from);
+            }
+        }
+        // 缺映射校验独立于是否声明了pathParams：只要端点用了远端自己的占位符就必须补映射。
+        for (String name : holes) {
+            if (legacyPlaceholder(name) || mappings.containsKey(name)) continue;
+            throw error(
+                    400,
+                    "ASYNC_PATH_PARAM_MISSING",
+                    "查询端点占位符 {"
+                            + name
+                            + "} 缺少映射：请声明 reconciliation.pathParams."
+                            + name
+                            + "（例如 {\"from\":\"externalJobId\"}），或改用旧占位符"
+                            + " {jobId}/{idempotencyKey}");
+        }
+        return mappings;
+    }
+
+    /** 运行期容忍读取：畸形声明按空映射处理；保存期已拒绝，这里只为历史脏数据保底。 */
+    private static Map<String, String> declaredPathParams(Map<String, Object> policy) {
+        if (!(policy.get("pathParams") instanceof Map<?, ?> raw)) return Map.of();
+        var mappings = new LinkedHashMap<String, String>();
+        for (var entry : raw.entrySet()) {
+            String from =
+                    entry.getValue() instanceof Map<?, ?> binding
+                            ? Objects.toString(binding.get("from"), "")
+                            : "";
+            if (!from.isBlank()) mappings.put(Objects.toString(entry.getKey(), ""), from);
+        }
+        return mappings;
+    }
+
+    /** 旧占位符 + 声明式 pathParams 的取值表（值已URL段编码）；旧占位符永远存在且语义固定。 */
+    private static Map<String, String> pathParamValues(
+            Map<String, String> pathParams, String job, String key) {
+        var values = new LinkedHashMap<String, String>();
+        values.put("jobId", segment(job));
+        values.put("idempotencyKey", segment(key));
+        for (var entry : pathParams.entrySet()) {
+            if (legacyPlaceholder(entry.getKey())) continue;
+            values.put(
+                    entry.getKey(),
+                    segment("idempotencyKey".equals(entry.getValue()) ? key : job));
+        }
+        return values;
+    }
+
+    /** 保存期URL形状校验用：把全部占位符替换为哑段，之后 URI.create 才有意义。 */
+    public static String dummyUrl(String url, Map<String, String> mappings) {
+        var values = new LinkedHashMap<String, String>();
+        values.put("jobId", "job");
+        values.put("idempotencyKey", "key");
+        for (String name : placeholders(url)) if (mappings.containsKey(name)) values.put(name, "p");
+        return substitute(url, values);
+    }
+
+    /** 按 values 替换 {name}；未知的名字替换为空串（调用方必须先做缺映射检查）。 */
+    static String substitute(String url, Map<String, String> values) {
+        var matcher = PLACEHOLDER.matcher(Objects.toString(url, ""));
+        var result = new StringBuilder();
+        while (matcher.find())
+            matcher.appendReplacement(
+                    result,
+                    java.util.regex.Matcher.quoteReplacement(
+                            Objects.toString(values.get(matcher.group(1)), "")));
+        matcher.appendTail(result);
+        return result.toString();
+    }
+
+    /** 端点是否依赖“外部任务标识”占位符（旧 {jobId} 由调用点单独判断，保持旧分支行为不变）。 */
+    private static boolean mapsExternalJobId(String url, Map<String, String> pathParams) {
+        for (String name : placeholders(url))
+            if ("externalJobId".equals(pathParams.get(name))) return true;
+        return false;
     }
 
     /** 终态失败只认显式配置的标记，绝不把普通状态文本当成失败。 */
@@ -658,5 +916,12 @@ public class HttpAsyncAdapter {
 
     private static SkillAdapters.Failure unknown(String message) {
         return new SkillAdapters.Failure("RESULT_UNKNOWN", true, message);
+    }
+
+    /** 折叠为结果未知时保留被吞掉的异常为 cause，保证诊断链不中断（T06.2）。 */
+    private static SkillAdapters.Failure unknown(String message, Throwable cause) {
+        var failure = unknown(message);
+        failure.initCause(cause);
+        return failure;
     }
 }

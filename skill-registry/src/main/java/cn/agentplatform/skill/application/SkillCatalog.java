@@ -456,11 +456,31 @@ public class SkillCatalog {
             if (echo != null && !(echo instanceof Boolean))
                 throw error(400, "INVALID_ASYNC_PROTOCOL", "idempotencyKeyEcho必须为布尔值");
             String query = text(policy, "endpoint");
-            SkillRules.endpoint(query.replace("{jobId}", "job").replace("{idempotencyKey}", "key"));
+            // PLAT-06：先校验声明式映射（错误带字段路径与修复建议），再做端点形状检查——否则
+            // {remoteTaskId} 会在 URI.create 报出无法定位的参数错误，接入方无从得知要配 pathParams。
+            // resultEndpoint/lookupEndpoint 是可选字段，必须用容忍读取而不是text()（缺键即400）。
+            var pathParams =
+                    cn.agentplatform.skill.infra.HttpAsyncAdapter.validatedPathParams(
+                            policy,
+                            query,
+                            Objects.toString(policy.get("resultEndpoint"), ""),
+                            Objects.toString(policy.get("lookupEndpoint"), ""));
+            SkillRules.endpoint(
+                    cn.agentplatform.skill.infra.HttpAsyncAdapter.dummyUrl(query, pathParams));
+            boolean addressable =
+                    cn.agentplatform.skill.infra.HttpAsyncAdapter.placeholders(query).stream()
+                            .anyMatch(
+                                    name ->
+                                            cn.agentplatform.skill.infra.HttpAsyncAdapter.legacyPlaceholder(
+                                                    name)
+                                                    || pathParams.containsKey(name));
             if (!Objects.toString(policy.getOrDefault("method", "GET")).equals("GET")
-                    || !query.contains("{jobId}") && !query.contains("{idempotencyKey}")
+                    || !addressable
                     || !policy.containsKey("doneValue"))
-                throw error(400, "INVALID_ASYNC_PROTOCOL", "异步查询需要GET、原jobId或幂等键占位符及完成标记");
+                throw error(
+                        400,
+                        "INVALID_ASYNC_PROTOCOL",
+                        "异步查询需要GET、可解析的任务占位符（{jobId}或pathParams映射）及完成标记");
             cn.agentplatform.skill.infra.HttpAsyncAdapter.path(
                     Json.tree(Map.of()), text(policy, "donePath"));
             result.put(
@@ -478,7 +498,19 @@ public class SkillCatalog {
                 String lookup = text(policy, "lookupEndpoint");
                 if (!lookup.contains("{idempotencyKey}") || lookup.contains("{jobId}"))
                     throw error(400, "INVALID_ASYNC_PROTOCOL", "丢失提交响应后的查询必须仅使用原幂等键");
-                SkillRules.endpoint(lookup.replace("{idempotencyKey}", "key"));
+                // 该查询只在任务标识未知时可达：映射到 externalJobId 的占位符在这里永远取不到值。
+                for (String name :
+                        cn.agentplatform.skill.infra.HttpAsyncAdapter.placeholders(lookup))
+                    if (!cn.agentplatform.skill.infra.HttpAsyncAdapter.legacyPlaceholder(name)
+                            && "externalJobId".equals(pathParams.get(name)))
+                        throw error(
+                                400,
+                                "INVALID_ASYNC_PROTOCOL",
+                                "丢失提交响应后的查询不能依赖任务标识占位符 {"
+                                        + name
+                                        + "}：该场景下任务标识未知，请改用幂等键映射");
+                SkillRules.endpoint(
+                        cn.agentplatform.skill.infra.HttpAsyncAdapter.dummyUrl(lookup, pathParams));
             }
             if (policy.containsKey("failedValue") || policy.containsKey("failedValues")) {
                 Object raw =
@@ -502,11 +534,17 @@ public class SkillCatalog {
                         Json.tree(Map.of()), text(policy, "failureMessagePath"));
             if (policy.containsKey("resultEndpoint")) {
                 String resultEndpoint = text(policy, "resultEndpoint");
-                if (!resultEndpoint.contains("{jobId}")
-                        && !resultEndpoint.contains("{idempotencyKey}"))
-                    throw error(400, "INVALID_ASYNC_PROTOCOL", "结果端点需要原jobId或幂等键占位符");
+                // 占位符与 pathParams 的一一对应已由 validatedPathParams 统一校验（含本端点）；
+                // 这里只要求至少存在一个可解析的任务占位符，否则结果端点寻址不到原任务。
+                if (cn.agentplatform.skill.infra.HttpAsyncAdapter.placeholders(resultEndpoint)
+                        .isEmpty())
+                    throw error(
+                            400,
+                            "INVALID_ASYNC_PROTOCOL",
+                            "结果端点需要任务占位符（{jobId}或pathParams映射）");
                 SkillRules.endpoint(
-                        resultEndpoint.replace("{jobId}", "job").replace("{idempotencyKey}", "key"));
+                        cn.agentplatform.skill.infra.HttpAsyncAdapter.dummyUrl(
+                                resultEndpoint, pathParams));
             }
             if (policy.containsKey("resultPath"))
                 cn.agentplatform.skill.infra.HttpAsyncAdapter.path(
