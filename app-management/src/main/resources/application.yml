@@ -30,6 +30,17 @@ agent:
     monitor: ${AGENT_MONITOR_URL:http://127.0.0.1:18085}
   system:
     redis-address: ${AGENT_SYSTEM_REDIS_ADDRESS:127.0.0.1:26379}
+  ontology:
+    # 未配置时发布绑定记 DISABLED：不发请求、不阻断发布。
+    base-url: ${AGENT_ONTOLOGY_URL:}
+    # 只接受 vault:/env: 引用；密钥值不得写入本文件或日志。
+    api-key-ref: ${AGENT_ONTOLOGY_API_KEY_REF:}
+  pin:
+    # 回滚开关：false 时零网络副作用。
+    enabled: ${AGENT_PIN_ENABLED:true}
+    # true 时绑定失败拒绝本次发布响应（502 PIN_FAILED）；版本已提交，重放会再次尝试绑定。
+    fail-closed: ${AGENT_PIN_FAIL_CLOSED:false}
+    environment: ${AGENT_PIN_ENVIRONMENT:production}
 management:
   endpoints:
     web:

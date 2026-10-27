@@ -4,11 +4,13 @@ import cn.agentplatform.app.domain.AppDigest;
 import cn.agentplatform.app.domain.AppRules;
 import cn.agentplatform.app.domain.PublishGate;
 import cn.agentplatform.app.domain.PublishWaiver;
+import cn.agentplatform.app.infra.ReleasePins;
 import cn.agentplatform.common.*;
 import cn.agentplatform.common.authority.*;
 import cn.agentplatform.common.schema.SchemaDialect;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -24,6 +26,7 @@ import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 /** 应用草稿与发布事务。业务定义进入候选摘要，画布布局只用于展示；运行时始终读取不可变版本。 */
 @Service
@@ -43,6 +46,17 @@ public class AppService {
 
     @Value("${agent.publish.waiver-enabled:true}")
     private boolean waiverEnabled = true;
+
+    /**
+     * 本体发布绑定客户端。构造签名被大量手工构造（测试/诊断）固定，改用可选 setter 注入；未装配时发布
+     * 照常成功并返回 pin=DISABLED，绝不因为缺少可选集成阻断既有发布路径。
+     */
+    private ReleasePins pins;
+
+    @Autowired(required = false)
+    public void pins(ReleasePins pins) {
+        this.pins = pins;
+    }
 
     /** 豁免查询集中在此：撤销/到期过滤与"最新窗口优先"只在这两处生效，避免多处各写一份条件。 */
     private static final String WAIVER_BY_ID =
@@ -1385,7 +1399,10 @@ public class AppService {
                         "/internal/model-bindings/validate",
                         object(ref.get("modelBindingRef")));
         // 发布事务仅使用预检已固定的报告编号，不在持锁期间进行HTTP；15分钟有效期限制依赖校验结果的使用窗口。
-        return tx.execute(
+        // 本体绑定是事务提交后的外部副作用（事务内禁止 HTTP）：lambda 只把候选带出事务，
+        // 重放分支读已固化快照，普通分支用刚校验过的候选。
+        var released = new AtomicReference<Map<String, Object>>();
+        var committed = tx.execute(
                 s -> {
                     // 所有改稿与发布都锁同一草稿行：复核与固化之间不能插入未经检查的修改。
                     var app = get(code, true);
@@ -1402,6 +1419,7 @@ public class AppService {
                         if (((Number) old.get("draft_rev")).longValue() != rev
                                 || !hash.equals(old.get("candidate_sha256")))
                             throw error(409, "IDEMPOTENCY_CONFLICT", "请求号已用于其他候选");
+                        released.set(releasedCandidate(code, ((Number) old.get("version_no")).intValue()));
                         return publication(code, ((Number) old.get("version_no")).intValue(), hash);
                     }
                     if (((Number) app.get("draftRev")).longValue() != rev || !sha(app).equals(hash))
@@ -1452,6 +1470,7 @@ public class AppService {
                     }
                     if (!Set.of("DRAFT", "PUBLISHED").contains(app.get("status")))
                         throw error(409, "APP_STATE", "应用不可发布");
+                    released.set(candidate(app));
                     var existing =
                             db.queryForList(
                                     "select version_no from app.app_version where tenant_id=? and"
@@ -1545,6 +1564,43 @@ public class AppService {
                             Map.of("versionNo", version, "candidateSha256", hash));
                     return publication(code, version, hash);
                 });
+        // 绑定失败不回滚已提交版本（fail-open 默认）；结果只并入返回副本，不改事务产出的不可变发布凭据。
+        var result = new LinkedHashMap<String, Object>(committed);
+        result.put("pin", pin(released.get(), code));
+        return result;
+    }
+
+    /**
+     * 事务提交后调用一次绑定；结果只在这里并入返回值。fail-open 时 FAILED 供调用方观测，
+     * fail-closed 由客户端抛 502，语义是拒绝本次响应，而事务内的发布已经不可回滚。
+     */
+    private Map<String, Object> pin(Map<String, Object> candidate, String code) {
+        var client = pins;
+        if (client == null) return Map.of("state", "DISABLED", "reason", "未装配发布绑定客户端");
+        return client.pin(Actor.current(), code, candidate == null ? Map.of() : candidate);
+    }
+
+    /**
+     * 重放时按版本号读回不可变快照：同一请求号可能在草稿被继续修改后重放，绑定必须描述当次发布的
+     * 版本内容，而不是重放时刻的草稿。
+     */
+    private Map<String, Object> releasedCandidate(String code, int version) {
+        var rows =
+                db.query(
+                        "select snapshot::text from app.app_version where tenant_id=? and app_code=?"
+                                + " and version_no=?",
+                        (r, n) -> {
+                            var snapshot =
+                                    new LinkedHashMap<String, Object>(
+                                            Json.read(r.getString(1), Map.class));
+                            snapshot.put("code", code);
+                            return candidate(snapshot);
+                        },
+                        tenant(),
+                        code,
+                        version);
+        if (rows.isEmpty()) throw error(404, "VERSION_NOT_FOUND", "版本不存在");
+        return rows.getFirst();
     }
 
     private Map<String, Object> publication(String code, int version, String hash) {
