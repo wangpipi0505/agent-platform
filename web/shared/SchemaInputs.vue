@@ -1,10 +1,15 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
+import { ElMessage } from "element-plus";
 import { inputFields, buildDeclaredInputs } from "./input-schema";
-const props = defineProps<{ declaration: any }>();
+const props = defineProps<{
+  declaration: any;
+  uploadArtifact?: (file: File) => Promise<string>;
+}>();
 const emit = defineEmits<{ change: [] }>();
 const values = ref<Record<string, any>>({});
 const issue = ref("");
+const uploading = ref<Record<string, boolean>>({});
 const fields = computed(() => inputFields(props.declaration));
 watch(
   () => props.declaration,
@@ -18,6 +23,32 @@ watch(
   },
   { deep: true, immediate: true },
 );
+async function pickFile(name: string, event: Event) {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  if (!file) return;
+  if (!props.uploadArtifact) {
+    issue.value = "当前页面未提供文件上传入口，请填写已有 artifactId";
+    input.value = "";
+    return;
+  }
+  if (file.size > 64 * 1024 * 1024) {
+    issue.value = "文件超过 64MB 上限";
+    input.value = "";
+    return;
+  }
+  uploading.value = { ...uploading.value, [name]: true };
+  issue.value = "";
+  try {
+    values.value[name] = await props.uploadArtifact(file);
+    ElMessage.success(`已上传 ${file.name}`);
+  } catch (e: any) {
+    issue.value = e?.message || "文件上传失败";
+  } finally {
+    uploading.value = { ...uploading.value, [name]: false };
+    input.value = "";
+  }
+}
 function collect() {
   try {
     const result = buildDeclaredInputs(props.declaration, values.value);
@@ -69,6 +100,20 @@ defineExpose({ collect, replace });
         ><el-option label="是" :value="true" /><el-option
           label="否"
           :value="false" /></el-select
+      ><div v-else-if="f.format === 'binary'" class="artifact-input"
+        ><input
+          type="file"
+          :aria-label="f.name"
+          :disabled="!uploadArtifact || uploading[f.name]"
+          @change="pickFile(f.name, $event)"
+        /><el-input
+          v-model="values[f.name]"
+          :aria-label="f.name"
+          :placeholder="uploadArtifact ? '上传后自动填入 artifactId，也可粘贴已有 ID' : '填写已有 artifactId'"
+        /><span v-if="uploading[f.name]" class="muted">上传中…</span
+        ><span v-else-if="!uploadArtifact" class="muted"
+          >此入口只接受已有产物标识；请在运行页上传文件。</span
+        ></div
       ><el-input
         v-else-if="['object', 'array'].includes(f.type)"
         v-model="values[f.name]"

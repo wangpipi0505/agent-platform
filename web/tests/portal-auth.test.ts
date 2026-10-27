@@ -131,6 +131,21 @@ it('D4b lifecycle expiry waits for manual reconnect and logout unsubscribes befo
  await portal.connect();expect(auth.token).toBe('token');auth.invalidate(auth.generation,'signed-out');expect(getAccessToken).toHaveBeenCalledTimes(2);
  portal.dispose();expect(unsubscribe).toHaveBeenCalledTimes(2);expect(vi.getTimerCount()).toBe(0);
 });
+it('dev login installs the signed dev identity without calling the IAM session endpoint',async()=>{
+ const auth=useAuth(),transport=vi.fn(async(_url:URL|RequestInfo)=>reply({accessToken:'dev-token',expiresIn:3600,user:{tenantId:'local-v12',principalId:'developer-v12',roles:['ADMIN']}}));
+ const portal=createPortalSession(auth,undefined,{mode:'dev',transport});
+ await portal.connect();
+ expect(transport).toHaveBeenCalledTimes(1);expect(transport.mock.calls[0][0]).toBe('/auth/dev-token');
+ expect(auth.token).toBe('dev-token');expect(auth.user).toMatchObject({principalId:'developer-v12',tenantId:'local-v12',roles:['ADMIN']});
+ expect(auth.roles).toEqual(['ADMIN']);expect(auth.connection).toBe('authenticated');portal.dispose();
+});
+it('dev login rejects a token response without a usable identity and installs nothing',async()=>{
+ const auth=useAuth(),transport=vi.fn(async()=>reply({accessToken:'dev-token',expiresIn:3600}));
+ const portal=createPortalSession(auth,undefined,{mode:'dev',transport});
+ await portal.connect();
+ expect(auth.token).toBe('');expect(auth.user).toBeUndefined();expect(auth.connection).toBe('error');
+ expect(auth.notice).toContain('缺少身份字段');portal.dispose();
+});
 it('segments a far future deadline and rechecks actual time before expiring',async()=>{
  vi.useFakeTimers();const auth=useAuth(),data={...session(),expiresAt:new Date(Date.now()+3_000_000_000).toISOString()};
  const portal=createPortalSession(auth,{getAccessToken:async()=> 'token',onSessionChanged:()=>()=>{}},{mode:'portal',transport:async()=>reply(data)});

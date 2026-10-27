@@ -1,8 +1,8 @@
 /**
  * A28/Mock：纯前端演示模式。
  * VITE_MOCK=true 时替换 transport + auth + SSE，全页面脱离后端可用。
- * 路由按 /admin 资源段匹配中文示例数据；未匹配读请求返回空集合、
- * 写请求返回空对象，保证任何页面可进、按钮可点。
+ * 路由按 /admin 资源段匹配中文示例数据；未匹配读请求返回空集合，
+ * 写请求一律返回 MOCK_WRITE_DISABLED，避免演示模式假装保存成功。
  * 生产构建不含本模块（tree-shaking 剔除未引用路径）。
  */
 
@@ -16,6 +16,12 @@ function envelope(data: unknown) {
 function envelope404() {
   return new Response(JSON.stringify({ code: 'NOT_FOUND', message: '记录不存在', data: null }), {
     status: 404,
+    headers: { 'Content-Type': 'application/json' },
+  })
+}
+function envelopeWriteBlocked() {
+  return new Response(JSON.stringify({ code: 'MOCK_WRITE_DISABLED', message: '演示模式不保存写入，请连接真实后端', data: null }), {
+    status: 405,
     headers: { 'Content-Type': 'application/json' },
   })
 }
@@ -65,9 +71,9 @@ const modelProviders = [
   { id: 'mp-002', code: 'local-vllm', name: '内网 vLLM 网关', protocol: 'OPENAI_COMPATIBLE', baseUrl: 'http://127.0.0.1:18090/v1', status: 'ACTIVE', credentialStatus: 'SET', quota: { tpm: 60000, rpd: 6000 }, updatedAt: '2026-10-20T08:00:00Z' },
 ]
 const modelEntries = [
-  { id: 'me-001', providerId: 'mp-001', providerCode: 'deepseek', modelId: 'deepseek-chat', displayName: 'DeepSeek Chat', contextWindow: 65536, maxOutputTokens: 8192, capabilities: ['CHAT', 'TOOL_CALL'], status: 'ACTIVE', metering: { inputPer1k: 0.001, outputPer1k: 0.002 } },
-  { id: 'me-002', providerId: 'mp-001', providerCode: 'deepseek', modelId: 'deepseek-reasoner', displayName: 'DeepSeek Reasoner', contextWindow: 65536, maxOutputTokens: 8192, capabilities: ['CHAT', 'REASONING'], status: 'ACTIVE', metering: { inputPer1k: 0.002, outputPer1k: 0.004 } },
-  { id: 'me-003', providerId: 'mp-002', providerCode: 'local-vllm', modelId: 'qwen2.5-32b-instruct', displayName: 'Qwen2.5-32B（内网）', contextWindow: 32768, maxOutputTokens: 4096, capabilities: ['CHAT'], status: 'ACTIVE', metering: { inputPer1k: 0, outputPer1k: 0 } },
+  { id: 'me-001', providerId: 'mp-001', providerCode: 'deepseek', modelId: 'deepseek-chat', displayName: 'DeepSeek Chat', contextWindow: 65536, maxOutputTokens: 8192, capabilities: ['chat', 'tools'], status: 'ACTIVE', metering: { inputPer1k: 0.001, outputPer1k: 0.002 } },
+  { id: 'me-002', providerId: 'mp-001', providerCode: 'deepseek', modelId: 'deepseek-reasoner', displayName: 'DeepSeek Reasoner', contextWindow: 65536, maxOutputTokens: 8192, capabilities: ['chat', 'json_mode'], status: 'ACTIVE', metering: { inputPer1k: 0.002, outputPer1k: 0.004 } },
+  { id: 'me-003', providerId: 'mp-002', providerCode: 'local-vllm', modelId: 'qwen2.5-32b-instruct', displayName: 'Qwen2.5-32B（内网）', contextWindow: 32768, maxOutputTokens: 4096, capabilities: ['chat'], status: 'ACTIVE', metering: { inputPer1k: 0, outputPer1k: 0 } },
 ]
 
 // ── 提示词模板 ──
@@ -178,7 +184,7 @@ const byId = <T extends { id?: string; code?: string }>(list: T[], key: string) 
 type Handler = (m: RegExpMatchArray, method: string) => Response
 const routes: [RegExp, Handler][] = [
   // ── 会话 ──
-  [/^\/auth\/dev-token$/, () => envelope({ accessToken: 'mock-token-demo' })],
+  [/^\/auth\/dev-token$/, () => envelope({ accessToken: 'mock-token-demo', expiresIn: 86400, user: { tenantId: 't-demo', principalId: 'u-demo', roles: ['ADMIN', 'EDITOR', 'APPROVER'] } })],
   [/^\/auth\/session$/, () => envelope(SESSION_IDENTITY())],
 
   // ── 智能体应用 ──
@@ -240,6 +246,7 @@ const routes: [RegExp, Handler][] = [
   }],
 
   // ── 运行与调试 ──
+  [/^\/admin\/runs\/page$/, (_m, method) => (method === 'GET' ? envelope({ items: runs, total: runs.length, page: 1, size: 20 }) : envelope(null))],
   [/^\/admin\/runs$/, (_m, method) => (method === 'GET' ? envelope(runs) : envelope({ id: 'run-new', status: 'QUEUED' }))],
   [/^\/admin\/debug-runs$/, (_m, method) => (method === 'GET' ? envelope(debugRuns) : envelope(debugRuns[0]))],
   [/^\/admin\/debug-runs\/([^/]+)\/events$/, () => sse(mockRunEvents())],
@@ -274,6 +281,14 @@ const routes: [RegExp, Handler][] = [
   [/^\/admin\/statistics\/runs/, () => envelope(runs)],
   [/^\/admin\/statistics\/rebuild$/, () => envelope({ ...statisticsSummary, snapshotId: 'ss-new', page: 1, pageSize: 20, groups: statisticsGroups, groupsTotal: statisticsGroups.length, skillGroups: statisticsSkillGroups, skillGroupsTotal: statisticsSkillGroups.length })],
   [/^\/admin\/statistics$/, () => envelope({ ...statisticsSummary, page: 1, pageSize: 20, groups: statisticsGroups, groupsTotal: statisticsGroups.length, skillGroups: statisticsSkillGroups, skillGroupsTotal: statisticsSkillGroups.length })],
+  [/^\/admin\/system\/status$/, () => envelope({
+    ok: false, checkedAt: now, version: 'demo',
+    checks: [
+      { name: 'PostgreSQL', ok: true, detail: 'mock 数据库可用' },
+      { name: 'Redis', ok: false, detail: '演示模式未连接 Redis' },
+      { name: 'model-gateway', ok: true, detail: 'HTTP 200' },
+    ],
+  })],
   [/^\/admin\/audit$/, () => envelope(auditLogs)],
   [/^\/admin\/classifications$/, () => envelope(classifications)],
 ]
@@ -286,6 +301,8 @@ export async function mockTransport(
   const method = (options?.method ?? 'GET').toUpperCase()
   const parsed = new URL(String(url), 'http://mock.local')
   const path = parsed.pathname
+  // 演示模式只有会话签发是合法的 POST；业务写请求必须显式失败，不能假装保存成功。
+  if (method !== 'GET' && method !== 'HEAD' && !path.startsWith('/auth/')) return envelopeWriteBlocked()
   // handler 已返回封装好的 Response，直接透传；不得再包一层信封。
   for (const [pattern, handler] of routes) {
     const match = path.match(pattern)

@@ -25,6 +25,18 @@ function identity(data:any):PortalIdentity {
     throw Error('门户会话响应无效或已到期，请重新连接');
   return {tenantId:data.tenantId,principalId:data.principalId,roles:[...data.roles],expiresAt:data.expiresAt};
 }
+function devIdentity(data:any):PortalIdentity {
+  const user=data?.user,expiresIn=Number(data?.expiresIn);
+  if(!user||typeof user!=='object'||Array.isArray(user)
+    ||typeof user.tenantId!=='string'||typeof user.principalId!=='string'||!Array.isArray(user.roles))
+    throw Error('开发登录响应缺少身份字段，请确认网关为支持本地开发身份的版本');
+  if(!Number.isFinite(expiresIn)||expiresIn<=0)
+    throw Error('开发登录响应缺少有效期，请确认网关为支持本地开发身份的版本');
+  // The roles here only drive UI visibility. Every request is still verified
+  // against the signed token's Actor by the gateway and downstream services.
+  return identity({tenantId:user.tenantId,principalId:user.principalId,roles:user.roles,
+    expiresAt:new Date(Date.now()+expiresIn*1000).toISOString()});
+}
 export function createPortalSession(auth:ReturnType<typeof useAuth>,provider:PortalTokenProvider|undefined,options:{mode:'portal'|'dev';transport?:typeof fetch}) {
   let disposed=false,paused=false,subscribing=false,subscriptionEpoch=0,unsubscribe:(()=>void)|undefined;
   function dropSubscription(){
@@ -66,17 +78,21 @@ export function createPortalSession(auth:ReturnType<typeof useAuth>,provider:Por
       if(disposed||paused)return;
       checkScope(scope);
       let token:string;
+      let asserted:PortalIdentity|undefined;
       if(options.mode==='dev') {
         // An explicit build/start choice, never a fallback from portal failure.
         const r=await (options.transport??fetch)('/auth/dev-token',{method:'POST',credentials:'omit',signal:scope.signal});
         checkScope(scope);const e=await r.json();checkScope(scope);
         if(!r.ok||e.code!=='OK')throw Object.assign(Error(e.message||'开发登录失败'),{status:r.status});
         token=e.data?.accessToken??e.data?.token??e.data;
+        // Dev mode has no IAM session endpoint. The token endpoint already
+        // returns the signed local identity; authorization still uses the JWT.
+        asserted=devIdentity(e.data);
       } else token=await provider!.getAccessToken();
       checkScope(scope);
       if(typeof token!=='string'||!token.trim())throw Error('门户未提供有效访问票据，请重新连接');
-      const data=await createApi(()=>token,options.transport,undefined,scope)('/auth/session');
-      checkScope(scope);auth.install(scope.generation,token,identity(data));
+      const session=asserted??identity(await createApi(()=>token,options.transport,undefined,scope)('/auth/session'));
+      checkScope(scope);auth.install(scope.generation,token,session);
     } catch(e:any) {
       if(!scope.current()||disposed||e.name==='AbortError')return;
       auth.connection=e.status===401?'unauthenticated':e.status===403?'forbidden':e.status===503?'unavailable':'error';

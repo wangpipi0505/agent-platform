@@ -41,6 +41,7 @@ value.value.modelBinding ||= {};
 value.value.promptRefs ||= [];
 value.value.skillRefs ||= [];
 value.value.guard ||= { roles: [], attributes: {} };
+value.value.requiredLabels ||= [];
 onMounted(async () => {
   try {
     const results = await Promise.allSettled([
@@ -146,7 +147,22 @@ function save() {
           ><el-option
             v-for="r in ['ADMIN', 'EDITOR', 'APPROVER']"
             :key="r"
-            :value="r" /></el-select></el-form-item></el-form
+            :value="r" /></el-select></el-form-item
+      ><el-form-item label="数据分类要求"
+        ><el-select
+          v-model="value.requiredLabels"
+          multiple
+          allow-create
+          filterable
+          placeholder="留空时仅允许 LOCAL 数据"
+          ><el-option
+            v-for="l in ['LOCAL', 'INTERNAL', 'PUBLIC']"
+            :key="l"
+            :value="l" /></el-select></el-form-item
+      ><p class="muted">
+        所选模型的供应商信任标签必须覆盖这里的要求。云端端点通常配置 PUBLIC；留空时服务端只允许
+        LOCAL 端点，云端调用会返回 SYS-EGRESS-4031。
+      </p></el-form
     ><el-collapse @change="advanced = JSON.stringify(value, null, 2)"
       ><el-collapse-item title="高级策略与完整配置"
         ><el-switch

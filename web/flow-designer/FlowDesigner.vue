@@ -99,19 +99,21 @@ function focusNode(id?: string) {
     node.setAttrs({ body: { stroke: "var(--st-fail)", strokeWidth: 3 } });
   }
 }
+function persistDraft() {
+  if (loading || props.readOnly || !props.draftKey || !graph) return;
+  try {
+    writeDraft(props.draftKey!, props.draftRev!, {
+      graph: graph.toJSON(),
+      definition: metadata.value,
+    });
+  } catch {
+    error.value = "本地草稿空间不足，请及时保存";
+  }
+}
 function remember() {
   if (loading || props.readOnly || !props.draftKey || !graph) return;
   clearTimeout(draftTimer);
-  draftTimer = setTimeout(() => {
-    try {
-      writeDraft(props.draftKey!, props.draftRev!, {
-        graph: graph.toJSON(),
-        definition: metadata.value,
-      });
-    } catch {
-      error.value = "本地草稿空间不足，请及时保存";
-    }
-  }, 400);
+  draftTimer = setTimeout(persistDraft, 400);
 }
 function recover() {
   if (!recoverable.value) return;
@@ -181,6 +183,7 @@ onMounted(() => {
   });
   observer.observe(host.value!);
   window.addEventListener("keydown", key);
+  window.addEventListener("beforeunload", persistDraft);
 });
 watch(metadata, remember, { deep: true });
 watch(
@@ -267,9 +270,12 @@ function itemCountLabel(nodeDefId: string): string | null {
 }
 onBeforeUnmount(() => {
   clearTimeout(draftTimer);
+  // 路由切换不会触发 beforeunload；卸载前把 400ms 防抖窗口内的最后一次修改落盘。
+  persistDraft();
   observer?.disconnect();
   graph?.dispose();
   window.removeEventListener("keydown", key);
+  window.removeEventListener("beforeunload", persistDraft);
 });
 defineExpose({ focusNode });
 </script>
