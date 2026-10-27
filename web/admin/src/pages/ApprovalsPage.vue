@@ -4,6 +4,8 @@ import PageError from "../PageError.vue";
 import PageHeader from "../PageHeader.vue";
 import { usePageTitle } from "../usePageOperation";
 import ResourceDetailPanel from "./resources/ResourceDetailPanel.vue";
+import ActionPlanPanel from "./ActionPlanPanel.vue";
+import { approvePayload } from "../../../shared/approval";
 import { statusLabel } from "./resources/resource-format";
 import { useResourceList } from "./resources/useResourceList";
 
@@ -24,16 +26,25 @@ const {
 } = useResourceList("approvals");
 
 const detail = ref<any>();
+// PLAT-15：高危计划（risk=HIGH 且确认角色不足两个）需要二次确认；按节点实例记录勾选状态。
+const doubleConfirmedBy = ref<Record<string, boolean>>({});
+
+function confirmKey(row: any): string {
+  return `${row.runId}/${row.nodeInstanceId || row.nodeId}`;
+}
 
 async function approval(row: any, action: string) {
   await operation(async () => {
-    if (!row.snapshotDigest) {
-      throw new Error("待办缺少服务端参数摘要，请刷新后重试；未提交确认决定。");
-    }
+    const payload = approvePayload(
+      row,
+      action === "APPROVE",
+      crypto.randomUUID(),
+      doubleConfirmedBy.value[confirmKey(row)] === true,
+    );
     if (
       !confirm(
         action === "APPROVE"
-          ? `确认执行此待办？当前服务端快照：\n${JSON.stringify(row, null, 2)}`
+          ? `确认按上述行动计划执行？当前服务端快照：\n${JSON.stringify(row, null, 2)}`
           : "确认拒绝此次执行？",
       )
     )
@@ -41,11 +52,7 @@ async function approval(row: any, action: string) {
     await api(
       `/admin/approvals/${row.runId}/${row.nodeInstanceId || row.nodeId}`,
       "POST",
-      {
-        approved: action === "APPROVE",
-        requestId: crypto.randomUUID(),
-        snapshotDigest: row.snapshotDigest,
-      },
+      payload,
     );
     success(action === "APPROVE" ? "已确认执行" : "已拒绝执行");
     await load();
@@ -56,7 +63,7 @@ async function approval(row: any, action: string) {
 <template>
   <PageHeader
     title="确认中心"
-    subtitle="核对服务端快照后确认或拒绝等待中的执行。"
+    subtitle="核对服务端行动计划与快照后确认或拒绝等待中的执行。"
     :busy="busy"
     @refresh="load"
   />
@@ -71,6 +78,16 @@ async function approval(row: any, action: string) {
     </div>
     <el-skeleton v-if="busy" :rows="5" animated />
     <el-table v-else :data="paginated" stripe>
+      <el-table-column type="expand">
+        <template #default="{ row }">
+          <ActionPlanPanel
+            :row="row"
+            @update:doubleConfirmed="
+              (value: boolean) => (doubleConfirmedBy[confirmKey(row)] = value)
+            "
+          />
+        </template>
+      </el-table-column>
       <el-table-column prop="runId" label="运行编码" min-width="300" />
       <el-table-column prop="nodeDefId" label="待确认节点" min-width="130" />
       <el-table-column label="状态" width="100">

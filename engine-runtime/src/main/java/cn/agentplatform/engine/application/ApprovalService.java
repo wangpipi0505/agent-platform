@@ -129,6 +129,38 @@ public class ApprovalService {
                             .equals(request.path("snapshotDigest").asText()))
                         throw new PlatformException(409, "APPROVAL_SNAPSHOT_CHANGED", "确认参数摘要不匹配");
                     boolean approved = request.path("approved").asBoolean();
+                    // PLAT-15（契约 §14.5）：两段计划的审批门。先校验计划与审批节点一致，再校验高危
+                    // 确认强度——任何拒绝都发生在任何状态写入之前，副作用不发生。plan 为 null 表示
+                    // 旧一段审批（SINGLE_STEP / CONFIRM 节点），沿用既有语义。
+                    Map<String, Object> plan = null;
+                    if (context.has("actionPlanId")) {
+                        var plans =
+                                store.db()
+                                        .queryForList(
+                                                "select * from engine.action_plan where id=? for"
+                                                    + " update",
+                                                context.path("actionPlanId").asLong());
+                        if (plans.isEmpty()
+                                || !context
+                                        .path("actionPlanDigest")
+                                        .asText()
+                                        .equals(plans.getFirst().get("digest")))
+                            throw new PlatformException(
+                                    409,
+                                    "ACTION_PLAN_DIGEST_MISMATCH",
+                                    "确认计划与审批节点不一致，请刷新确认列表后重试");
+                        plan = plans.getFirst();
+                    }
+                    if (approved && plan != null && "HIGH".equals(plan.get("risk"))) {
+                        int declaredRoles =
+                                (tool ? context.path("roles") : definition.path("confirmRoles"))
+                                        .size();
+                        if (declaredRoles < 2 && !request.path("doubleConfirmed").asBoolean(false))
+                            throw new PlatformException(
+                                    403,
+                                    "CONFIRM_STRENGTH_INSUFFICIENT",
+                                    "高危操作需要至少两个不同确认角色，或勾选二次确认后再批准");
+                    }
                     if (tool) {
                         ObjectNode decision = (ObjectNode) context.deepCopy();
                         decision.put("status", approved ? "APPROVED" : "REJECTED");
@@ -183,6 +215,20 @@ public class ApprovalService {
                     event.put("requestId", request.path("requestId").asText());
                     event.put("approvedBy", actor.principalId());
                     if (tool) event.put("callId", context.path("callId").asLong());
+                    // PLAT-15 审计：confirmBy/confirmAt 落计划行，actionPlanId/risk 随 APPROVAL_DONE
+                    // 事件进运行事件流（方案 §4.15 第5项 runId/actionPlanId/confirmBy/confirmAt/result）。
+                    if (plan != null) {
+                        store.db()
+                                .update(
+                                        "update engine.action_plan set status=?,confirmed_by=?,confirmed_at=now(),double_confirmed=?"
+                                            + " where id=?",
+                                        approved ? "APPROVED" : "REJECTED",
+                                        actor.principalId(),
+                                        request.path("doubleConfirmed").asBoolean(false),
+                                        plan.get("id"));
+                        event.put("actionPlanId", TraceStore.number(plan, "id"));
+                        event.put("risk", plan.get("risk"));
+                    }
                     store.event(rid, "APPROVAL_DONE", event);
                     store.db()
                             .update(

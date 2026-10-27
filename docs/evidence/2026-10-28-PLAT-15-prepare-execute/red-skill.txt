@@ -1,0 +1,16 @@
+红阶段记录（实现落地前，会话内实测输出摘录，命令：
+mvn test -Dtest=SkillPrepareExecuteTest -DfailIfNoTests=true -Dsurefire.runOrder=reversealphabetical）
+
+[ERROR] Tests run: 7, Failures: 6, Errors: 1, Skipped: 0 -- in cn.agentplatform.skill.application.SkillPrepareExecuteTest
+[ERROR]   SkillPrepareExecuteTest.approvedExecuteUsesStampedKeyAndCarriesItToClaim:296 expected: <plan-key-123> but was: <>
+[ERROR]   SkillPrepareExecuteTest.mockDebugRunBuildsPlaceholderPlanWithoutCallingPrepare:331 expected: <true> but was: <false>
+[ERROR]   SkillPrepareExecuteTest.prepareFailureIsReadableWithoutSideEffectOrWaiting:308 Expected cn.agentplatform.common.PlatformException to be thrown, but nothing was thrown.
+[ERROR]   SkillPrepareExecuteTest.prepareReturnsActionPlanWithoutBusinessSideEffect:276 两段技能的 WAITING_APPROVAL 必须携带 actionPlan ==> expected: <true> but was: <false>
+[ERROR]   SkillPrepareExecuteTest.registrationRejectsInvalidApprovalDeclarations:395 Unexpected exception type thrown, expected: <PlatformException> but was: <DuplicateKeyException>
+[ERROR]   SkillPrepareExecuteTest.registrationRejectsTwoPhaseOnAsyncSubmitQuerySkill:482 Expected cn.agentplatform.common.PlatformException to be thrown, but nothing was thrown.
+[ERROR]   SkillPrepareExecuteTest.legacyContractWithoutApprovalKeepsSingleStepFlow:370 ? Platform 请求与引擎登记的调用归属或参数不一致
+[ERROR] Tests run: 7, Failures: 6, Errors: 1, Skipped: 0
+[INFO] BUILD FAILURE
+
+（其中两例为红阶段即发现的夹具问题并在红期修正：claim 桩回显的 skill_version_id 需跟随用例
+版本、registration 用例各自独立 code——create 是"新技能首版"入口。修正后 7 例仍红。）

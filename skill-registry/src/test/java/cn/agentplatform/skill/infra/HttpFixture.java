@@ -15,6 +15,8 @@ public class HttpFixture implements AutoCloseable {
     public volatile int delayMs;
     public volatile byte[] response = "{\"value\":7}".getBytes(StandardCharsets.UTF_8);
     public volatile String lastBody;
+    /** PLAT-15：最近一次请求携带的出站 Idempotency-Key（PREPARE/EXECUTE 键来源验收用）。 */
+    public volatile String lastIdempotencyKey;
 
     public HttpFixture() throws IOException {
         server = new ServerSocket(0, 16, InetAddress.getByName("127.0.0.1"));
@@ -59,6 +61,7 @@ public class HttpFixture implements AutoCloseable {
                         input.readNBytes(
                                 Integer.parseInt(headers.getOrDefault("content-length", "0"))));
             lastBody = body.toString(StandardCharsets.UTF_8);
+            lastIdempotencyKey = headers.get("idempotency-key");
             calls.incrementAndGet();
             if (delayMs > 0) Thread.sleep(delayMs);
             var output = socket.getOutputStream();

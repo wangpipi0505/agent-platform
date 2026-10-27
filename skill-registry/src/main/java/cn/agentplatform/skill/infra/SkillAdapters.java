@@ -324,6 +324,41 @@ public class SkillAdapters {
                 source.path("cardPayloadJson").asText(""));
     }
 
+    /**
+     * PLAT-15（契约 §14.2）：PREPARE 段——以守卫后参数调用契约声明的独立预演入口（POST + 同一
+     * Idempotency-Key），只读、无业务副作用；复用同步 HTTP 通道，鉴权/身份头/大小硬闸同一套语义。
+     * 失败一律归一为 ACTION_PLAN_UNAVAILABLE（可读 502）：预演失败绝不进入 WAITING_APPROVAL，
+     * 确认人不会审批一份没有依据的计划。仅 HTTP 同步技能可达此路径（注册期已拒绝其它适配器）。
+     */
+    public Raw prepare(
+            Map<String, Object> contract,
+            Map<String, Object> arguments,
+            String key,
+            long callId,
+            String runId,
+            long expectedAttempt) {
+        var prepare = SkillRules.prepareDeclaration(contract);
+        if (prepare == null)
+            throw new Failure("ACTION_PLAN_UNAVAILABLE", false, "技能未声明 PREPARE 入口，无法生成执行计划");
+        var dry = new LinkedHashMap<String, Object>(contract);
+        dry.put("endpoint", prepare.get("endpoint").toString());
+        dry.put("httpMethod", "POST");
+        // 预演是平台发起的只读调用：不携带业务映射（httpMapping/returnSpec 是 EXECUTE 的投影），
+        // 输出按"预演摘要对象"验收，与 EXECUTE 的 outputSchema 无关。
+        dry.remove("httpMapping");
+        dry.remove("returnSpec");
+        dry.put("outputSchema", Map.of("type", "object"));
+        dry.put("execution", Map.of("readonly", true, "sideEffect", false));
+        try {
+            return http(dry, arguments, key, callId, runId, expectedAttempt);
+        } catch (Failure failure) {
+            throw new Failure(
+                    "ACTION_PLAN_UNAVAILABLE",
+                    false,
+                    "PREPARE 预演调用失败（未产生业务副作用）: " + failure.getMessage());
+        }
+    }
+
     public Raw invoke(
             Map<String, Object> contract,
             Map<String, Object> arguments,

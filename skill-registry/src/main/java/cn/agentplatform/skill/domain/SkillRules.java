@@ -444,6 +444,53 @@ public final class SkillRules {
         return uri;
     }
 
+    /**
+     * PLAT-15（契约 §14）execution.approval 的唯一解释入口：模式、风险与 PREPARE 入口都只在本类
+     * 读取，其他模块不得自行解释该字段，否则同一契约会在不同入口被解释成不同审批流程。
+     *
+     * <p>兼容口径（定死 D1）：approval 键缺省 = SINGLE_STEP——存量技能不落键，行为零变化；
+     * 显式声明 PREPARE_EXECUTE 才进入两段，显式 SINGLE_STEP 等价缺省（旧技能自述用）。
+     */
+    public static final String APPROVAL_FIELD = "approval";
+    public static final String APPROVAL_MODE_TWO_PHASE = "PREPARE_EXECUTE";
+    public static final String APPROVAL_MODE_SINGLE_STEP = "SINGLE_STEP";
+    public static final String APPROVAL_RISK_HIGH = "HIGH";
+
+    /** 高危判别（定死 D4）：只认契约声明 execution.approval.risk=HIGH，不从 URL/方法猜测。 */
+    public static String approvalMode(Map<String, Object> contract) {
+        var declared = declaredApproval(contract);
+        return declared != null
+                        && APPROVAL_MODE_TWO_PHASE.equals(
+                                Objects.toString(declared.get("mode"), ""))
+                ? APPROVAL_MODE_TWO_PHASE
+                : APPROVAL_MODE_SINGLE_STEP;
+    }
+
+    public static String approvalRisk(Map<String, Object> contract) {
+        var declared = declaredApproval(contract);
+        return declared != null && APPROVAL_RISK_HIGH.equals(declared.get("risk"))
+                ? APPROVAL_RISK_HIGH
+                : "STANDARD";
+    }
+
+    /** PREPARE 独立入口声明（定死 D2）：{endpoint, httpMethod?}；未声明两段时返回 null。 */
+    public static Map<?, ?> prepareDeclaration(Map<String, Object> contract) {
+        var declared = declaredApproval(contract);
+        if (declared == null
+                || !APPROVAL_MODE_TWO_PHASE.equals(Objects.toString(declared.get("mode"), "")))
+            return null;
+        return declared.get("prepare") instanceof Map<?, ?> prepare ? prepare : null;
+    }
+
+    private static Map<?, ?> declaredApproval(Map<String, Object> contract) {
+        var execution = contract.get("execution");
+        return execution instanceof Map<?, ?> e
+                        && e.get(APPROVAL_FIELD) instanceof Map<?, ?> a
+                        && !((Map<?, ?>) a).isEmpty()
+                ? a
+                : null;
+    }
+
     @SuppressWarnings("unchecked")
     public static Map<String, Object> guard(
             Actor actor, Map<String, Object> guard, Map<String, Object> arguments) {

@@ -25,8 +25,8 @@
       "file": "contracts/skill-invocation.md",
       "sourceLineStart": 940,
       "sourceLineEnd": 1399,
-      "sha256": "a41502f2a141bd594cf74f975f711dc688c905127bac98da8774e52fe4d42eb4",
-      "engineeringAddendum": "2026-10-28 PLAT-05 增补 §11（统一错误对象/errorSemantics/任务结果端点）；2026-10-28 PLAT-06 增补 §12（SUBMIT_QUERY pathParams 声明式映射、占位符一一对应校验与查询 4xx 可读化）；2026-10-28 PLAT-12 增补 §13（技能契约 identity 声明与出站 X-User-* 注入：mode 只允许 PLATFORM_SUBJECT、headers 值只允许主体快照字段白名单、与 AuthScheme 鉴权头叠加、无主体跳过注入并随运行详情可见），依据平台侧优化方案 §4.5/§4.6/§4.12/§4.16，snapshot 保持 v1.2 原文"
+      "sha256": "e3abb23311c8d0e499cb659e33704d2f1d8fea4d1fa1943029b5f854f0022556",
+      "engineeringAddendum": "2026-10-28 PLAT-05 增补 §11（统一错误对象/errorSemantics/任务结果端点）；2026-10-28 PLAT-06 增补 §12（SUBMIT_QUERY pathParams 声明式映射、占位符一一对应校验与查询 4xx 可读化）；2026-10-28 PLAT-12 增补 §13（技能契约 identity 声明与出站 X-User-* 注入：mode 只允许 PLATFORM_SUBJECT、headers 值只允许主体快照字段白名单、与 AuthScheme 鉴权头叠加、无主体跳过注入并随运行详情可见），依据平台侧优化方案 §4.5/§4.6/§4.12/§4.16，snapshot 保持 v1.2 原文；2026-10-28 PLAT-15 增补 §14（写操作 PREPARE/EXECUTE 两段与人工确认：execution.approval 声明与缺省 SINGLE_STEP 兼容口径、独立 prepare 入口、引擎盖章 actionPlanDigest/幂等键、V221 execute_key 唯一约束、高危 risk=HIGH 双角色或二次确认、digest/过期/强度三重执行门、错误码登记），依据平台侧优化方案 §4.15，snapshot 保持 v1.2 原文"
     },
     {
       "name": "authorization-confirmation",

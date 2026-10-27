@@ -1,0 +1,61 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.12 [39m[90mG:/207/项目/算法重组工具/代码/agent-platform/web[39m
+
+ [31m❯[39m tests/approval.test.ts [2m([22m[2m4 tests[22m[2m | [22m[31m3 failed[39m[2m)[22m[32m 6[2mms[22m[39m
+   [32m✓[39m confirmation binds the displayed server snapshot digest and rejects missing or expired snapshots[32m 1[2mms[22m[39m
+[31m   [31m×[31m actionPlanView extracts plan fields and derives the second-confirm gate[39m[32m 2[2mms[22m[39m
+[31m   [31m×[31m approvePayload blocks high-risk approval without double confirm and stamps it when confirmed[39m[32m 2[2mms[22m[39m
+[31m   [31m×[31m confirmation panel exposes the stamped plan (summary/target/diff/risk) and the double-confirm state[39m[32m 1[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 3 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/approval.test.ts[2m > [22mactionPlanView extracts plan fields and derives the second-confirm gate
+[31m[1mTypeError[22m: actionPlanView is not a function[39m
+[36m [2m❯[22m tests/approval.test.ts:[2m30:31[22m[39m
+    [90m 28|[39m
+    [90m 29|[39m it('actionPlanView extracts plan fields and derives the second-confirm…
+    [90m 30|[39m   [35mconst[39m view [33m=[39m approvalModule[33m.[39m[34mactionPlanView[39m([33mHIGH_PLAN[39m)[33m![39m[33m;[39m
+    [90m   |[39m                               [31m^[39m
+    [90m 31|[39m   [34mexpect[39m(view[33m.[39msummary)[33m.[39m[34mtoBe[39m([32m'创建用户 user-42 并启用'[39m)[33m;[39m
+    [90m 32|[39m   [34mexpect[39m(view[33m.[39mtarget)[33m.[39m[34mtoBe[39m([32m'user-42'[39m)[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/approval.test.ts[2m > [22mapprovePayload blocks high-risk approval without double confirm and stamps it when confirmed
+[31m[1mAssertionError[22m: expected [Function] to throw error matching /二次确认/ but got '__vite_ssr_import_7__.approvePayload …'[39m
+
+[32m- Expected:[39m
+/二次确认/
+
+[31m+ Received:[39m
+"__vite_ssr_import_7__.approvePayload is not a function"
+
+[36m [2m❯[22m tests/approval.test.ts:[2m47:76[22m[39m
+    [90m 45|[39m
+    [90m 46|[39m it('approvePayload blocks high-risk approval without double confirm an…
+    [90m 47|[39m   expect(() => approvalModule.approvePayload(HIGH_PLAN, true, 'r', fal…
+    [90m   |[39m                                                                            [31m^[39m
+    [90m 48|[39m   const confirmed = approvalModule.approvePayload(HIGH_PLAN, true, 'r'…
+    [90m 49|[39m   expect(confirmed).toEqual({ approved: true, requestId: 'r', snapshot…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/approval.test.ts[2m > [22mconfirmation panel exposes the stamped plan (summary/target/diff/risk) and the double-confirm state
+[31m[1mError[22m: ENOENT: no such file or directory, open 'G:\207\项目\算法重组工具\代码\agent-platform\web\admin\src\pages\ActionPlanPanel.vue'[39m
+[36m [2m❯[22m mountPanel tests/approval.test.ts:[2m57:5[22m[39m
+    [90m 55|[39m [35mfunction[39m [34mmountPanel[39m(row[33m:[39m any) {
+    [90m 56|[39m   [35mconst[39m { descriptor[33m,[39m errors } [33m=[39m [34mparse[39m(
+    [90m 57|[39m     readFileSync(new URL('../admin/src/pages/ActionPlanPanel.vue', imp…
+    [90m   |[39m     [31m^[39m
+    [90m 58|[39m   )[33m;[39m
+    [90m 59|[39m   [34mexpect[39m(errors)[33m.[39m[34mtoEqual[39m([])[33m;[39m
+[90m [2m❯[22m tests/approval.test.ts:[2m75:17[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m3 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (4)[39m
+[2m   Start at [22m 07:00:40
+[2m   Duration [22m 393ms[2m (transform 75ms, setup 0ms, import 283ms, tests 6ms, environment 0ms)[22m
+

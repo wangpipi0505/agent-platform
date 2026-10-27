@@ -1,0 +1,54 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.12 [39m[90mG:/207/项目/算法重组工具/代码/agent-platform/web[39m
+
+ [32m✓[39m tests/openapi-import.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m tests/schema-dialect.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m tests/expiry.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 25[2mms[22m[39m
+ [32m✓[39m tests/chunk.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 27[2mms[22m[39m
+ [32m✓[39m tests/evaluation-observer.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m tests/mock-transport.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 22[2mms[22m[39m
+ [32m✓[39m tests/run-observer.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 32[2mms[22m[39m
+ [32m✓[39m tests/input-form.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 99[2mms[22m[39m
+ [32m✓[39m tests/stream-auth.test.ts [2m([22m[2m27 tests[22m[2m)[22m[32m 31[2mms[22m[39m
+[90mstderr[2m | tests/login.test.ts[2m > [22m[2mlogin explains unavailable gateway instead of leaking JSON parser error
+[22m[39m[🍍]: Pinia instance not found in context. This falls back to the global activePinia which exposes you to cross-request pollution on the server. Most of the time, it means you are calling "useStore()" in the wrong place.
+Read https://vuejs.org/guide/reusability/composables.html to learn more
+
+[90mstderr[2m | tests/login.test.ts[2m > [22m[2mD4b late development login cannot mutate a later identity
+[22m[39m[🍍]: Pinia instance not found in context. This falls back to the global activePinia which exposes you to cross-request pollution on the server. Most of the time, it means you are calling "useStore()" in the wrong place.
+Read https://vuejs.org/guide/reusability/composables.html to learn more
+
+ [32m✓[39m tests/login.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m tests/stream.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 21[2mms[22m[39m
+ [32m✓[39m tests/run-protocol.test.ts [2m([22m[2m51 tests[22m[2m)[22m[32m 29[2mms[22m[39m
+ [32m✓[39m tests/portal-auth.test.ts [2m([22m[2m31 tests[22m[2m)[22m[32m 160[2mms[22m[39m
+ [32m✓[39m tests/statistics-lifecycle.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m tests/mock-rules.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m tests/operations.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/control.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m tests/service-access.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/graph.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m tests/approval.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 149[2mms[22m[39m
+ [32m✓[39m tests/service-admin.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/permission.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/publish-gate.test.ts [2m([22m[2m21 tests[22m[2m)[22m[32m 256[2mms[22m[39m
+ [32m✓[39m tests/core.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m tests/error.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/draft.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m tests/output.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m tests/artifact.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m tests/session.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m tests/frontend-query-state.test.ts [2m([22m[2m9 tests[22m[2m)[22m[33m 373[2mms[22m[39m
+ [32m✓[39m tests/evaluation-panel-review-fixes.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 371[2mms[22m[39m
+ [32m✓[39m tests/drafts.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m tests/node-form.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/controlled-test.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m tests/assertion-editor.test.ts [2m([22m[2m11 tests[22m[2m)[22m[33m 438[2mms[22m[39m
+ [32m✓[39m tests/validation.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m tests/mcp-registration.test.ts [2m([22m[2m25 tests[22m[2m)[22m[33m 524[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m37 passed[39m[22m[90m (37)[39m
+[2m      Tests [22m [1m[32m295 passed[39m[22m[90m (295)[39m
+[2m   Start at [22m 06:59:45
+[2m   Duration [22m 1.30s[2m (transform 3.39s, setup 0ms, import 8.54s, tests 2.68s, environment 4ms)[22m
+

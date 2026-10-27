@@ -632,13 +632,16 @@ public class SkillCatalog {
         }
         result.put("inputSchema", input);
         result.put("outputSchema", output);
-        var execution = object(body.get("execution"));
+        // PLAT-15：normalizeApproval 会在"空 approval 视为缺省"时移除该键，这里落库的是归一化副本，
+        // 不改写调用方传入的（可能不可变的）契约 Map。
+        var execution = new LinkedHashMap<>(object(body.get("execution")));
         for (String flag : List.of("readonly", "sideEffect", "idempotent", "cancellable"))
             if (!(execution.get(flag) instanceof Boolean))
                 throw error(400, "INVALID_SKILL", "execution需显式布尔字段: " + flag);
         if (Boolean.TRUE.equals(execution.get("readonly"))
                 && Boolean.TRUE.equals(execution.get("sideEffect")))
             throw error(400, "INVALID_SKILL", "只读与副作用互斥");
+        normalizeApproval(execution, type, kind);
         String risk =
                 Boolean.TRUE.equals(execution.get("readonly"))
                                 && !"CONFIRM_REQUIRED".equals(body.get("riskLevel"))
@@ -708,6 +711,67 @@ public class SkillCatalog {
             result.put("importSource", source);
         }
         return result;
+    }
+
+    /**
+     * PLAT-15（契约 §14.1）execution.approval 的注册期归一化。兼容口径（定死 D1）：缺省不落键 =
+     * SINGLE_STEP，存量契约与执行行为零变化；显式 PREPARE_EXECUTE 才进入两段。两段只支持
+     * HTTP 同步写技能（定死 D2）：prepare 必须声明无明文凭据的 POST 预演入口；risk 只允许
+     * STANDARD/HIGH（定死 D4，高危判别以契约为准）。校验通过后 approval 原样随 execution 落库，
+     * 进入语义摘要——发布门禁照常要求重测。
+     */
+    private static void normalizeApproval(Map<String, Object> execution, String type, String kind) {
+        Object rawApproval = execution.get("approval");
+        if (!(rawApproval instanceof Map<?, ?> rawMap) || rawMap.isEmpty()) {
+            // 缺省（或空对象）= SINGLE_STEP：不落键，存量契约与执行行为零变化。
+            execution.remove("approval");
+            return;
+        }
+        var approval = object(rawApproval);
+        String mode = Objects.toString(approval.get("mode"), SkillRules.APPROVAL_MODE_SINGLE_STEP);
+        if (!Set.of(SkillRules.APPROVAL_MODE_TWO_PHASE, SkillRules.APPROVAL_MODE_SINGLE_STEP)
+                .contains(mode))
+            throw error(
+                    400,
+                    "APPROVAL_MODE_INVALID",
+                    "execution.approval.mode 只允许 PREPARE_EXECUTE 或 SINGLE_STEP，收到: " + mode);
+        if (!SkillRules.APPROVAL_MODE_TWO_PHASE.equals(mode)) return;
+        if (!"HTTP".equals(type) || !"SYNC".equals(kind))
+            throw error(
+                    400,
+                    "APPROVAL_PREPARE_UNSUPPORTED",
+                    "两段审批（PREPARE_EXECUTE）仅支持 HTTP 同步技能，当前: "
+                            + type
+                            + "/"
+                            + kind);
+        if (!Boolean.TRUE.equals(execution.get("sideEffect")))
+            throw error(
+                    400,
+                    "APPROVAL_PREPARE_INVALID",
+                    "两段审批只对有副作用的写操作有意义，请声明 execution.sideEffect=true");
+        if (!(approval.get("prepare") instanceof Map<?, ?> declared)
+                || Objects.toString(declared.get("endpoint"), "").isBlank())
+            throw error(
+                    400,
+                    "APPROVAL_PREPARE_INVALID",
+                    "两段审批需要 execution.approval.prepare.endpoint（业务侧无副作用预演入口）");
+        try {
+            SkillRules.endpoint(declared.get("endpoint").toString());
+        } catch (IllegalArgumentException invalid) {
+            throw error(400, "APPROVAL_PREPARE_INVALID", "prepare.endpoint 无效: " + invalid.getMessage());
+        }
+        if (declared.containsKey("httpMethod") && !"POST".equals(declared.get("httpMethod")))
+            throw error(
+                    400,
+                    "APPROVAL_PREPARE_INVALID",
+                    "prepare.httpMethod 只允许 POST（预演以请求体承载参数），收到: "
+                            + declared.get("httpMethod"));
+        Object risk = approval.get("risk");
+        if (risk != null && !Set.of("STANDARD", SkillRules.APPROVAL_RISK_HIGH).contains(risk.toString()))
+            throw error(
+                    400,
+                    "APPROVAL_RISK_INVALID",
+                    "execution.approval.risk 只允许 STANDARD 或 HIGH，收到: " + risk);
     }
 
     /**

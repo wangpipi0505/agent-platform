@@ -150,8 +150,115 @@ public class ToolCalls {
                 });
     }
 
-    private void validateLease(long nid, long rid, long attempt, String owner) {
-        Boolean valid =
+    /**
+     * PLAT-15 EXECUTE 门（契约 §14.4）：两段调用的 EXECUTE（claim）必须携带引擎盖章的 executeKey，
+     * 与持久化计划（V221）一致且未过期；高危计划（risk=HIGH）复查确认强度。任一不满足即抛可读
+     * 4xx——claim 未授予，业务调用不发出，副作用不发生。SINGLE_STEP 旧调用无 actionPlanId，
+     * 直接通过（零回归锚点：writeApproval 既有用例与 ActionPlanPostgresTest.legacySingleStep）。
+     */
+    private void requireExecutablePlan(Map<String, Object> call, JsonNode req) {
+        var context = TraceStore.json(call.get("approval_context"));
+        if (!context.has("actionPlanId")) return;
+        var plans =
+                store.db()
+                        .queryForList(
+                                "select * from engine.action_plan where id=? for update",
+                                context.path("actionPlanId").asLong());
+        if (plans.isEmpty())
+            throw new PlatformException(
+                    409, "ACTION_PLAN_DIGEST_MISMATCH", "审批计划记录缺失，请重新发起调用与确认");
+        var plan = plans.getFirst();
+        String executeKey = req.path("executeKey").asText("");
+        if (executeKey.isBlank())
+            throw new PlatformException(
+                    409,
+                    "EXECUTE_KEY_REQUIRED",
+                    "两段执行的 EXECUTE 必须携带审批计划盖章的 executeKey（来自批准后的调用授权）");
+        if (!executeKey.equals(Objects.toString(plan.get("execute_key"), ""))
+                || !context.path("actionPlanDigest").asText().equals(plan.get("digest")))
+            throw new PlatformException(
+                    409,
+                    "ACTION_PLAN_DIGEST_MISMATCH",
+                    "EXECUTE 与批准的计划不一致（计划可能已被重新生成），副作用未发生，请重新走确认流程");
+        if (!((java.sql.Timestamp) plan.get("expires_at")).toInstant().isAfter(java.time.Instant.now()))
+            throw new PlatformException(
+                    409,
+                    "ACTION_PLAN_EXPIRED",
+                    "批准的执行计划已过期，副作用未发生，请重新发起调用与确认");
+        if ("HIGH".equals(plan.get("risk"))
+                && context.path("roles").size() < 2
+                && !Boolean.TRUE.equals(plan.get("double_confirmed")))
+            throw new PlatformException(
+                    403,
+                    "CONFIRM_STRENGTH_INSUFFICIENT",
+                    "高危操作需要两个不同确认角色，或审批时勾选二次确认后才能执行");
+        // 首次授予才落 execute_granted_at：重复 EXECUTE 复用同一授权时间，审计上只有一次执行授权。
+        store.db()
+                .update(
+                        "update engine.action_plan set"
+                            + " execute_granted_at=coalesce(execute_granted_at, now()) where id=?",
+                        plan.get("id"));
+    }
+
+    /**
+     * PLAT-15（契约 §14.3）：两段审批的 actionPlan 引擎盖章与持久化。幂等键来源唯一是引擎：
+     * executeKey = sha256("EXECUTE:" + callId + ":" + 去键核心摘要)；digest = 盖章后完整计划
+     * （含 idempotencyKey/expiresAt）的 canonical SHA-256。技能侧提供的 idempotencyKey/expiresAt
+     * 一律覆盖。同一调用重复 PREPARE 相同内容 → 复用同一行（V221 execute_key 唯一约束），仅刷新
+     * 盖章字段；内容变化 → 新 digest 新行，旧行保留审计。确认人与执行结果经 approve/fact 回写。
+     */
+    private void stampActionPlan(
+            long callId,
+            long runId,
+            long nodeId,
+            com.fasterxml.jackson.databind.JsonNode planNode,
+            java.time.Instant expiry,
+            com.fasterxml.jackson.databind.node.ObjectNode context) {
+        if (!(planNode instanceof com.fasterxml.jackson.databind.node.ObjectNode source)
+                || source.isEmpty()) return;
+        String declaredRisk = source.path("risk").asText("STANDARD");
+        if (!Set.of("STANDARD", "HIGH").contains(declaredRisk))
+            throw new PlatformException(
+                    400,
+                    "APPROVAL_RISK_INVALID",
+                    "actionPlan.risk 只允许 STANDARD 或 HIGH，收到: " + declaredRisk);
+        var core = source.deepCopy();
+        core.remove("idempotencyKey");
+        core.remove("expiresAt");
+        core.put("risk", declaredRisk);
+        String coreDigest = Digest.sha256(Json.canonical(core));
+        String executeKey = Digest.sha256("EXECUTE:" + callId + ":" + coreDigest);
+        var stamped = core.deepCopy();
+        stamped.put("idempotencyKey", executeKey);
+        stamped.put("expiresAt", expiry.toString());
+        String digest = Digest.sha256(Json.canonical(stamped));
+        store.db()
+                .update(
+                        "insert into"
+                            + " engine.action_plan(run_id,call_id,node_instance_id,digest,plan,execute_key,risk,expires_at)"
+                            + " values(?,?,?,?,?::jsonb,?,?,?) on conflict(execute_key) do update"
+                            + " set digest=excluded.digest,plan=excluded.plan,expires_at=excluded.expires_at,risk=excluded.risk",
+                        runId,
+                        callId,
+                        nodeId,
+                        digest,
+                        Json.write(stamped),
+                        executeKey,
+                        declaredRisk,
+                        java.sql.Timestamp.from(expiry));
+        long planId =
+                store.db()
+                        .queryForObject(
+                                "select id from engine.action_plan where execute_key=?",
+                                Long.class,
+                                executeKey);
+        context.put("actionPlanId", planId);
+        context.put("actionPlanDigest", digest);
+        context.put("risk", declaredRisk);
+        context.set("actionPlan", stamped);
+    }
+
+    private void validateLease(long nid, long rid, long attempt, String owner) {        Boolean valid =
                 store.db()
                         .queryForObject(
                                 "select exists(select 1 from engine.node_instance n join engine.run"
@@ -217,6 +324,7 @@ public class ToolCalls {
                     if (TraceStore.json(call.get("approval_context")).has("roles")
                             && !Boolean.TRUE.equals(approval(id, actor).get("approved")))
                         throw new PlatformException(403, "APPROVAL_REQUIRED", "调用尚未取得有效参数确认");
+                    requireExecutablePlan(call, req);
                     if (call.get("status").equals("SUCCEEDED")
                             || call.get("status").equals("FAILED"))
                         return withClaim(view(call), false);
@@ -365,6 +473,22 @@ public class ToolCalls {
                                             "update engine.tool_call set external_job=?::jsonb where id=?",
                                             Json.write(externalJob),
                                             id);
+                        // PLAT-15 审计（方案 §4.15 第5项）：执行结果回写计划行
+                        // （runId/actionPlanId/confirmBy/confirmAt/result 全链在 engine.action_plan 与
+                        // APPROVAL_DONE 事件上），只随被采纳的事实前进，迟到投递不覆盖。
+                        var planContext = TraceStore.json(call.get("approval_context"));
+                        if (planContext.has("actionPlanId"))
+                            store.db()
+                                    .update(
+                                            "update engine.action_plan set status=?,executed_status=?,result_digest=?"
+                                                + " where id=? and status in"
+                                                + " ('APPROVED','EXECUTED','EXECUTE_FAILED')",
+                                            "SUCCEEDED".equals(status)
+                                                    ? "EXECUTED"
+                                                    : "EXECUTE_FAILED",
+                                            status,
+                                            Digest.sha256(Json.canonical(req.path("result"))),
+                                            planContext.path("actionPlanId").asLong());
                     }
                     // W01: sum actual execution per attempt, not outbox deliveries or
                     // reconciliation waiting.
@@ -431,17 +555,37 @@ public class ToolCalls {
                                             .equals(call.get("args_digest"))
                                     && java.time.Instant.parse(context.path("expiresAt").asText())
                                             .isAfter(java.time.Instant.now());
-                    return Map.of(
-                            "approved",
-                            approved,
-                            "callId",
-                            id,
-                            "skillVersionId",
-                            call.get("skill_version_id"),
-                            "parametersDigest",
-                            call.get("args_digest"),
+                    // PLAT-15：批准后的调用授权随行动计划下发——EXECUTE 幂等键与 digest 门槛的
+                    // 唯一权威是 engine.action_plan（契约 §14.3），技能据此出站并回传 executeKey。
+                    Map<String, Object> result = new LinkedHashMap<>();
+                    result.put("approved", approved);
+                    result.put("callId", id);
+                    result.put("skillVersionId", call.get("skill_version_id"));
+                    result.put("parametersDigest", call.get("args_digest"));
+                    result.put(
                             "roles",
                             context.path("roles").isArray() ? context.path("roles") : List.of());
+                    if (approved && context.has("actionPlanId")) {
+                        var plan =
+                                store.db()
+                                        .queryForMap(
+                                                "select digest,plan,execute_key,risk,expires_at"
+                                                    + " from engine.action_plan where id=?",
+                                                context.path("actionPlanId").asLong());
+                        var stamped = TraceStore.json(plan.get("plan"));
+                        var issued = new LinkedHashMap<String, Object>();
+                        issued.put("id", context.path("actionPlanId").asLong());
+                        issued.put("idempotencyKey", plan.get("execute_key"));
+                        issued.put("digest", plan.get("digest"));
+                        issued.put("risk", plan.get("risk"));
+                        issued.put(
+                                "expiresAt",
+                                ((java.sql.Timestamp) plan.get("expires_at")).toInstant().toString());
+                        issued.put("summary", stamped.path("summary").asText(null));
+                        issued.put("target", stamped.path("target").asText(null));
+                        result.put("actionPlan", issued);
+                    }
+                    return result;
                 });
     }
 
@@ -510,8 +654,11 @@ public class ToolCalls {
                     context.put("parametersDigest", call.get("args_digest").toString());
                     context.set("args", TraceStore.json(call.get("args")));
                     context.set("roles", confirmation.path("roles"));
-                    context.put("expiresAt", java.time.Instant.now().plusSeconds(3600).toString());
+                    java.time.Instant expiry = java.time.Instant.now().plusSeconds(3600);
+                    context.put("expiresAt", expiry.toString());
                     context.put("status", "PENDING");
+                    stampActionPlan(id, rid, TraceStore.number(call, "node_instance_id"),
+                            confirmation.path("actionPlan"), expiry, context);
                     store.db()
                             .update(
                                     "update engine.tool_call set approval_context=?::jsonb where"

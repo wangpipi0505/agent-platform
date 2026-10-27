@@ -598,3 +598,78 @@ SUBMIT_QUERY 对账端点可用声明式映射表达"平台字段 → 远端占�
 ### 13.3 与桥接层身份的边界
 
 方案 §4.12 明令禁止桥接层自定义身份：出站身份由平台适配器按本节统一注入，技能接入方不得在 URL、请求体或自定义头里自行携带身份替换语义；本节与 PLAT-04/05/06 的对账与错误语义正交，不改变任何既有错误码与状态机。
+
+---
+
+## 14. 工程增补（PLAT-15，2026-10-28）：写操作 PREPARE/EXECUTE 两段与人工确认（execution.approval）
+
+> 本节为平台侧优化的工程增补，依据《平台侧优化方案与实施细则-20261027》§4.15（PLAT-15），经优化台账 T15.1/T15.2 派发实施；**不属于 v1.2 原文提取**，`contracts/snapshot/` 保持 v1.2 原文快照不变。与上文冲突时以本节为准。
+
+### 14.1 契约声明与兼容口径（定死）
+
+技能契约在 `execution.approval` 上声明写操作的两段审批模式：
+
+```json
+{
+  "execution": {
+    "sideEffect": true,
+    "confirmRoles": ["OP_ADMIN", "SEC_AUDITOR"],
+    "approval": {
+      "mode": "PREPARE_EXECUTE",
+      "risk": "HIGH",
+      "prepare": { "endpoint": "https://host.example/users/prepare", "httpMethod": "POST" }
+    }
+  }
+}
+```
+
+- **向后兼容口径（定死，D1）**：`execution.approval` 键**缺省 = `SINGLE_STEP`**——存量技能不落该键，执行流程与信封形状零变化。方案 §4.15"默认 PREPARE_EXECUTE"的口径落为：**新契约必须显式声明 `mode=PREPARE_EXECUTE` 才进入两段**；平台不做缺省即两段的行为迁移，避免存量技能行为漂移。显式声明 `mode=SINGLE_STEP` 等价于缺省（供旧技能自述）。其他取值 → `400 APPROVAL_MODE_INVALID`；
+- `mode=PREPARE_EXECUTE` 仅支持 **HTTP 同步技能**（`type=HTTP` 且调用方式为同步）：PREPARE 的出站点与 EXECUTE 一样是 HTTP 适配器；MCP（SSE transport）、ALGORITHM（SDK）、PROCESS（stdin）、异步 HTTP（SUBMIT_QUERY/CALLBACK 自带任务态语义）声明两段 → `400 APPROVAL_PREPARE_UNSUPPORTED`（与 §13 identity 的适配器边界同一裁决）；
+- `prepare.endpoint` 必填，且必须是 `SkillRules.endpoint` 接受的无明文凭据 HTTP(S) 地址，否则 `400 APPROVAL_PREPARE_INVALID`；`prepare.httpMethod` 只允许 `POST`（缺省 `POST`）——PREPARE 语义是"以同一组参数做一次无副作用的预演"，载体是请求体，GET 会让参数进 URL 日志；
+- `mode=PREPARE_EXECUTE` 要求 `sideEffect=true` 且 `confirmRoles` 非空（只读技能没有可确认的写，缺确认角色的写技能被既有发布门禁拦截）；
+- `risk` 可选，只允许 `STANDARD`（缺省）| `HIGH`，其他取值 → `400 APPROVAL_RISK_INVALID`。**高危判别（定死，D4）**：删除、改状态、发 Key 等高危写操作以工具契约声明的 `risk=HIGH` 为准——平台不从 URL/方法猜测危险级别，声明权在技能接入方；`approval` 变化随 `execution` 进入语义摘要（`SkillDigest`），发布门禁照常要求重测。
+
+### 14.2 PREPARE 段（调用形态定死，D2）
+
+- **PREPARE 调用形态 = 独立入口**：适配器以守卫后的参数（与 EXECUTE 同一 JSON 形态）POST 调用 `prepare.endpoint`，携带与 EXECUTE 相同的 `Idempotency-Key` 头与鉴权/身份头（§11/§13 语义不变）；业务系统在该入口实现"无副作用的预演"（预检、dry-run、diff 计算），平台按契约把它当只读调用对待；
+- prepare 响应必须是 JSON 对象，平台读取顶层 `summary`（操作摘要）、`target`（目标对象）、`diff`（将要发生的变化）、`risk`（风险提示，声明 `risk` 时以契约为准）四个字段；缺省字段平台补默认（`summary` 缺省"对目标对象的写操作"，`diff`/`target` 允许 null）——prepare 响应里的 `idempotencyKey`/`expiresAt` **不是权威**；
+- PREPARE 失败（远端 4xx/5xx/超时/输出非 JSON 对象）→ `502 ACTION_PLAN_UNAVAILABLE` 可读错误，**不产生任何业务副作用，也不进入 WAITING_APPROVAL**：确认人绝不审批一份没有依据的计划；PREPARE 在每次"未批准的重派发"中都会重调（业务预演应当幂等）；
+- 调试 Mock 运行（引擎登记的 `mock_snapshot` 非空）跳过业务 PREPARE 调用，actionPlan 以"调试替身调用"占位——Mock 路径本来就不会触达业务系统。
+
+### 14.3 actionPlan 与引擎盖章（幂等键来源定死，D3）
+
+- actionPlan 形状：`{summary, target, diff, risk, idempotencyKey, expiresAt}`；
+- **`idempotencyKey` 与 `expiresAt` 由引擎在 `requestApproval` 时统一盖章**（技能侧若提供将被覆盖）：`idempotencyKey = sha256("EXECUTE:" + callId + ":" + actionPlanDigest)`，`expiresAt = 审批上下文 expiresAt`（申请确认时刻 + 3600s，单一过期语义）；`actionPlanDigest = sha256(canonical(盖章后的 actionPlan))`——幂等键来源唯一是引擎，技能侧提供的键不进协议，避免伪造或碰撞；
+- 引擎 `engine.action_plan`（V221）逐份持久化盖章后的计划：`execute_key` **唯一约束**是"同一份计划只有一条 EXECUTE 授权记录"的硬保证；同一调用重复 PREPARE 出相同内容 → 相同 execute_key → 复用同一行；内容变化 → 新 digest → 新行（旧行保留审计）；
+- 审批节点（`approval_context`）保存 `actionPlanId`/`actionPlanDigest`/`actionPlan`/`risk`，确认中心与运行详情展示的就是引擎盖章后的这份。
+
+### 14.4 EXECUTE 段：digest + 未过期 + 幂等
+
+- 批准后的 EXECUTE（技能重新执行到达 claim）**必须**携带引擎盖章的 `executeKey`，引擎按以下顺序拒绝（全部可读 4xx，**副作用不发生**——claim 未授予，业务调用不发出）：
+  - 缺少 executeKey → `409 EXECUTE_KEY_REQUIRED`；
+  - executeKey 与 `engine.action_plan.execute_key` 不一致，或 plan digest 与审批节点 `actionPlanDigest` 不一致（计划被替换/篡改）→ `409 ACTION_PLAN_DIGEST_MISMATCH`；
+  - 计划已过期（`expiresAt <= now`，即使批准动作本身在窗口内完成）→ `409 ACTION_PLAN_EXPIRED`；
+  - 高危计划（`risk=HIGH`）确认强度不足（confirmRoles 少于 2 个不同角色且审批时无 `doubleConfirmed` 二次确认标记）→ `403 CONFIRM_STRENGTH_INSUFFICIENT`；
+- 业务幂等键 = 盖章的 `idempotencyKey`（经 `GET /internal/tool-calls/{id}/approval` 下发），替换原"逻辑调用键"作为 EXECUTE 的出站 `Idempotency-Key`；同一计划重复 EXECUTE：引擎 claim CAS 只授予权一次，执行事实按 callId 去重——**重复提交返回首次结果，不重复执行业务**（方案验收"同一幂等键重试不重复创建"）；
+- `SINGLE_STEP` 技能（含全部存量）不携带 executeKey，claim 不做上述校验——旧行为零回归（既有 writeApproval 用例为锚点）。
+
+### 14.5 高危二次确认与审计
+
+- `risk=HIGH` 的确认强度（定死，D4）：**confirmRoles 至少 2 个不同角色，或单角色 + 审批请求 `doubleConfirmed=true`（前端二次确认勾选）**；审批时（`ApprovalService.approve`）与 EXECUTE 时（claim 复查）双重把关，任一不满足即 403 `CONFIRM_STRENGTH_INSUFFICIENT`，副作用不发生；越权确认（无 confirmRoles 角色）沿用既有 `403 APPROVAL_ROLE_REQUIRED`；
+- 审计沿既有结构：`engine.action_plan` 行携带 `run_id/call_id/digest/status/confirmed_by/confirmed_at/execute_granted_at/executed_status/result_digest`（runId/actionPlanId/confirmBy/confirmAt/result）；`APPROVAL_DONE` 运行事件带 `actionPlanId` 与 `risk`；执行结果经既有 fact 路径回写 plan 状态——运行中心可查，不新造审计流。
+
+### 14.6 错误码登记（触发条件）
+
+| 错误码 | 状态 | 触发条件 |
+| --- | --- | --- |
+| `APPROVAL_MODE_INVALID` | 400 | 注册期 `execution.approval.mode` 不是 `PREPARE_EXECUTE`/`SINGLE_STEP` |
+| `APPROVAL_PREPARE_UNSUPPORTED` | 400 | 非 HTTP 同步技能声明 `mode=PREPARE_EXECUTE` |
+| `APPROVAL_PREPARE_INVALID` | 400 | `prepare` 缺 endpoint、endpoint 非法或 `httpMethod` 非 POST |
+| `APPROVAL_RISK_INVALID` | 400 | `risk` 不是 `STANDARD`/`HIGH` |
+| `ACTION_PLAN_UNAVAILABLE` | 502 | PREPARE 调用失败（远端错误/超时/输出非 JSON 对象）；无副作用 |
+| `EXECUTE_KEY_REQUIRED` | 409 | 两段调用的 EXECUTE 未携带 executeKey |
+| `ACTION_PLAN_DIGEST_MISMATCH` | 409 | executeKey 或 plan digest 与引擎持久化计划不一致 |
+| `ACTION_PLAN_EXPIRED` | 409 | 计划 `expiresAt` 已过 |
+| `CONFIRM_STRENGTH_INSUFFICIENT` | 403 | `risk=HIGH` 且（confirmRoles 少于 2 个不同角色 且 无 `doubleConfirmed`） |
+
+全部错误经既有 `PlatformException`/`ErrorSemantics` 信封携带 `code + userMessage + traceId`；模型对不可重试的拒绝收到可解释工具结果（不重试），人不重试已过期/被替换的计划。

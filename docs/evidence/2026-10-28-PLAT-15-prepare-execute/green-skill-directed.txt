@@ -1,0 +1,134 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ------------------< cn.agentplatform:skill-registry >-------------------
+[INFO] Building skill-registry 0.1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- enforcer:3.5.0:enforce (default) @ skill-registry ---
+[INFO] Rule 0: org.apache.maven.enforcer.rules.version.RequireJavaVersion passed
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ skill-registry ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 16 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.0:compile (default-compile) @ skill-registry ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ skill-registry ---
+[INFO] skip non existing resourceDirectory G:\207\项目\算法重组工具\代码\agent-platform\skill-registry\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.14.0:testCompile (default-testCompile) @ skill-registry ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- surefire:3.5.3:test (default-test) @ skill-registry ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running cn.agentplatform.skill.infra.ProcessAdapterTest
+10月 28, 2026 6:59:14 上午 cn.agentplatform.skill.infra.ProcessAdapter logFailureFact
+警告: PROCESS 执行失败事实: code=PROCESS_TIMEOUT, command=[C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot\bin\java.exe, -cp, G:\207\项目\算法重组工具\代码\agent-platform\skill-registry\target\test-classes, cn.agentplatform.skill.infra.FakeProcessWorker, sleep, C:\Users\ADMINI~1\AppData\Local\Temp\junit-9897748312843944004\timeout-pid.txt, 10000], workDir=C:\Users\Administrator\AppData\Local\Temp\junit-9897748312843944004\allowed-root\call-9707438059751920538, killReason=TIMEOUT, dumpDir=C:\Users\Administrator\AppData\Local\Temp\junit-9897748312843944004\allowed-root\failed-call-9707438059751920538, message=进程在 800ms 内未退出，已终止进程树
+10月 28, 2026 6:59:15 上午 cn.agentplatform.skill.infra.ProcessAdapter logFailureFact
+警告: PROCESS 执行失败事实: code=PROCESS_CALCULATION_FAILED, command=[C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot\bin\java.exe, -cp, G:\207\项目\算法重组工具\代码\agent-platform\skill-registry\target\test-classes, cn.agentplatform.skill.infra.FakeProcessWorker, exit3], workDir=C:\Users\Administrator\AppData\Local\Temp\junit-10719840815181784300\allowed-root\call-16707159740714718106, killReason=null, dumpDir=C:\Users\Administrator\AppData\Local\Temp\junit-10719840815181784300\allowed-root\failed-call-16707159740714718106, message=算法进程计算失败（exitCode=3），stderr 尾部: boom-stderr: 故意退出 3
+
+10月 28, 2026 6:59:15 上午 cn.agentplatform.skill.infra.ProcessAdapter logFailureFact
+警告: PROCESS 执行失败事实: code=PROCESS_OUTPUT_TOO_LARGE, command=[C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot\bin\java.exe, -cp, G:\207\项目\算法重组工具\代码\agent-platform\skill-registry\target\test-classes, cn.agentplatform.skill.infra.FakeProcessWorker, flood], workDir=C:\Users\Administrator\AppData\Local\Temp\junit-2885584977802946862\allowed-root\call-10047193534769304127, killReason=OUTPUT_OVERFLOW, dumpDir=C:\Users\Administrator\AppData\Local\Temp\junit-2885584977802946862\allowed-root\failed-call-10047193534769304127, message=stdout 超过上限 1048576 字节，已终止进程树
+10月 28, 2026 6:59:15 上午 cn.agentplatform.skill.infra.ProcessAdapter logFailureFact
+警告: PROCESS 执行失败事实: code=PROCESS_WORKDIR_DENIED, command=[C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot\bin\java.exe, -cp, G:\207\项目\算法重组工具\代码\agent-platform\skill-registry\target\test-classes, cn.agentplatform.skill.infra.FakeProcessWorker, ok], workDir=null, killReason=null, dumpDir=null, message=workDirRoot 必须位于允许根 C:\Users\Administrator\AppData\Local\Temp\junit-8169707526707237478\allowed-root 之内，实际: C:\Users\Administrator\AppData\Local\Temp\junit-8169707526707237478\outside-root
+10月 28, 2026 6:59:15 上午 cn.agentplatform.skill.infra.ProcessAdapter logFailureFact
+警告: PROCESS 执行失败事实: code=PROCESS_WORKDIR_DENIED, command=[C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot\bin\java.exe, -cp, G:\207\项目\算法重组工具\代码\agent-platform\skill-registry\target\test-classes, cn.agentplatform.skill.infra.FakeProcessWorker, ok], workDir=null, killReason=null, dumpDir=null, message=workDirRoot 必须位于允许根 C:\Users\Administrator\AppData\Local\Temp\junit-8169707526707237478\allowed-root 之内，实际: C:\Users\Administrator\AppData\Local\Temp\junit-8169707526707237478\outside-root
+[INFO] Tests run: 11, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.246 s -- in cn.agentplatform.skill.infra.ProcessAdapterTest
+[INFO] Running cn.agentplatform.skill.infra.HttpAsyncAdapterTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.006 s -- in cn.agentplatform.skill.infra.HttpAsyncAdapterTest
+[INFO] Running cn.agentplatform.skill.domain.SkillRulesTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.098 s -- in cn.agentplatform.skill.domain.SkillRulesTest
+[INFO] Running cn.agentplatform.skill.domain.SkillDigestTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.012 s -- in cn.agentplatform.skill.domain.SkillDigestTest
+[INFO] Running cn.agentplatform.skill.domain.ErrorSemanticsTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.016 s -- in cn.agentplatform.skill.domain.ErrorSemanticsTest
+[INFO] Running cn.agentplatform.skill.application.SkillTaskResultTest
+06:59:16.092 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_v12 (PostgreSQL 16.15)
+06:59:16.141 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 17 migrations (execution time 00:00.031s)
+06:59:16.177 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "skill": 315
+06:59:16.178 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "skill" is up to date. No migration necessary.
+Mockito is currently self-attaching to enable the inline-mock-maker. This will no longer work in future releases of the JDK. Please add Mockito as an agent to your build as described in Mockito's documentation: https://javadoc.io/doc/org.mockito/mockito-core/latest/org.mockito/org/mockito/Mockito.html#0.3
+OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+WARNING: A Java agent has been loaded dynamically (C:\Users\Administrator\.m2\repository\net\bytebuddy\byte-buddy-agent\1.17.5\byte-buddy-agent-1.17.5.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.813 s -- in cn.agentplatform.skill.application.SkillTaskResultTest
+[INFO] Running cn.agentplatform.skill.application.SkillPublishDigestPostgresTest
+06:59:17.846 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_skill_digest_test (PostgreSQL 16.15)
+06:59:17.859 [main] INFO org.flywaydb.core.internal.database.base.Schema -- Creating schema "skill" ...
+06:59:17.863 [main] INFO org.flywaydb.core.internal.schemahistory.JdbcTableSchemaHistory -- Creating Schema History table "skill"."flyway_schema_history" ...
+06:59:17.997 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "skill": null
+06:59:18.011 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "skill" to version "300 - skill"
+06:59:18.016 [main] WARN org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor -- DB: schema "skill" already exists, skipping (SQL State: 42P06 - Error Code: 0)
+06:59:18.435 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "skill" to version "301 - reconciliation"
+06:59:18.519 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "skill" to version "302 - skill immutability"
+06:59:18.635 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "skill" to version "303 - execution fact generation"
+06:59:18.794 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "skill" to version "304 - fact delivery lease"
+06:59:18.841 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "skill" to version "305 - controlled contract digest"
+06:59:18.847 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "skill" to version "306 - controlled artifacts"
+06:59:19.001 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "skill" to version "307 - http async binding"
+06:59:19.069 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "skill" to version "308 - async preparation delivery"
+06:59:19.075 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "skill" to version "309 - signed callback receipt"
+06:59:19.167 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "skill" to version "310 - reconciliation proof"
+06:59:19.276 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "skill" to version "311 - algorithm job identity"
+06:59:19.399 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "skill" to version "312 - fixture audit"
+06:59:19.483 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "skill" to version "313 - service lifecycle"
+06:59:19.692 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "skill" to version "314 - external job state"
+06:59:19.761 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Successfully applied 15 migrations to schema "skill", now at version v314 (execution time 00:01.623s)
+06:59:19.875 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_skill_digest_test (PostgreSQL 16.15)
+06:59:19.891 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 17 migrations (execution time 00:00.010s)
+06:59:19.914 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "skill": 314
+06:59:19.916 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "skill" to version "315 - skill semantic digest"
+06:59:20.214 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Successfully applied 1 migration to schema "skill", now at version v315 (execution time 00:00.289s)
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.345 s -- in cn.agentplatform.skill.application.SkillPublishDigestPostgresTest
+[INFO] Running cn.agentplatform.skill.application.SkillProcessAuditTest
+06:59:21.085 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_v12 (PostgreSQL 16.15)
+06:59:21.096 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 17 migrations (execution time 00:00.006s)
+06:59:21.117 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "skill": 315
+06:59:21.117 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "skill" is up to date. No migration necessary.
+10月 28, 2026 6:59:21 上午 cn.agentplatform.skill.infra.ProcessAdapter logFailureFact
+警告: PROCESS 执行失败事实: code=PROCESS_CALCULATION_FAILED, command=[C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot\bin\java.exe, -cp, G:\207\项目\算法重组工具\代码\agent-platform\skill-registry\target\test-classes, cn.agentplatform.skill.infra.FakeProcessWorker, exit3], workDir=C:\Users\Administrator\AppData\Local\Temp\junit-17224448016570125888\process-root\call-3104856343938489793, killReason=null, dumpDir=C:\Users\Administrator\AppData\Local\Temp\junit-17224448016570125888\process-root\failed-call-3104856343938489793, message=算法进程计算失败（exitCode=3），stderr 尾部: boom-stderr: 故意退出 3
+
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.722 s -- in cn.agentplatform.skill.application.SkillProcessAuditTest
+[INFO] Running cn.agentplatform.skill.application.SkillPrepareExecuteTest
+06:59:21.812 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_v12 (PostgreSQL 16.15)
+06:59:21.822 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 17 migrations (execution time 00:00.006s)
+06:59:21.846 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "skill": 315
+06:59:21.846 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "skill" is up to date. No migration necessary.
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.321 s -- in cn.agentplatform.skill.application.SkillPrepareExecuteTest
+[INFO] Running cn.agentplatform.skill.application.SkillExecutionTest
+06:59:23.132 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_v12 (PostgreSQL 16.15)
+06:59:23.142 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 17 migrations (execution time 00:00.006s)
+06:59:23.164 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "skill": 315
+06:59:23.164 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "skill" is up to date. No migration necessary.
+[INFO] Tests run: 25, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 9.805 s -- in cn.agentplatform.skill.application.SkillExecutionTest
+[INFO] Running cn.agentplatform.skill.application.SkillErrorEnvelopeTest
+06:59:32.937 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_v12 (PostgreSQL 16.15)
+06:59:32.949 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 17 migrations (execution time 00:00.006s)
+06:59:32.970 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "skill": 315
+06:59:32.970 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "skill" is up to date. No migration necessary.
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.731 s -- in cn.agentplatform.skill.application.SkillErrorEnvelopeTest
+[INFO] Running cn.agentplatform.skill.application.PathParamsAsyncMappingTest
+06:59:33.668 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_skill_async_test (PostgreSQL 16.15)
+06:59:33.679 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 17 migrations (execution time 00:00.007s)
+06:59:33.700 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "skill": 315
+06:59:33.700 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "skill" is up to date. No migration necessary.
+[INFO] Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 4.331 s -- in cn.agentplatform.skill.application.PathParamsAsyncMappingTest
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 85, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  26.847 s
+[INFO] Finished at: 2026-10-28T06:59:38+08:00
+[INFO] ------------------------------------------------------------------------

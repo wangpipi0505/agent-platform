@@ -1,0 +1,26 @@
+红阶段记录（实现落地前，会话内实测输出摘录，命令：
+mvn test -Dtest=ActionPlanPostgresTest -DfailIfNoTests=true -Dsurefire.runOrder=reversealphabetical）
+
+阶段0（引导）：共享 engine 测试库（agent_platform_engine_test）已被并行泳道的 V223 先行迁移，
+V221 首跑触发 Flyway 乱序拒绝（随后在 ActionPlanPostgresTest 夹具中以 outOfOrder(true) 一次性补齐，
+注释已写明"一次性引导"）：
+  ActionPlanPostgresTest.connect:46 ? FlywayValidate Validate failed: Migrations have failed validation
+  Detected resolved migration not applied to database: 221.
+
+阶段1（行为红，V221 已应用、实现未落地）：
+[ERROR] Tests run: 8, Failures: 3, Errors: 5, Skipped: 0 -- in cn.agentplatform.engine.infra.ActionPlanPostgresTest
+[ERROR]   ActionPlanPostgresTest.executeWithMismatchedKeyIsRejectedWithoutSideEffect:277 expected: <ACTION_PLAN_DIGEST_MISMATCH> but was: <APPROVAL_REQUIRED>
+[ERROR]   ActionPlanPostgresTest.highRiskRequiresTwoRolesOrDoubleConfirmBeforeAndAtExecute:453 Expected cn.agentplatform.common.PlatformException to be thrown, but nothing was thrown.
+[ERROR]   ActionPlanPostgresTest.prepareApprovalPersistsStampedPlanUnderUniqueExecuteKey:183 expected: <1> but was: <0>
+[ERROR]   ActionPlanPostgresTest.duplicateExecuteReturnsFirstResultWithSinglePlanRow:357 ? EmptyResultDataAccess Incorrect result size: expected 1, actual 0
+[ERROR]   ActionPlanPostgresTest.expiredPlanRejectsExecuteEvenAfterApproval:321 ? EmptyResultDataAccess Incorrect result size: expected 1, actual 0
+[ERROR]   ActionPlanPostgresTest.legacySingleStepCallIgnoresExecuteKeyGate:592 ? Platform 调用租约已失效
+[ERROR]   ActionPlanPostgresTest.twoDeclaredRolesSatisfyHighRiskWithoutDoubleConfirm:560 ? EmptyResultDataAccess Incorrect result size: expected 1, actual 0
+[ERROR]   ActionPlanPostgresTest.unauthorizedConfirmLeavesPlanAndCallUntouched:427 ? EmptyResultDataAccess Incorrect result size: expected 1, actual 0
+[ERROR] Tests run: 8, Failures: 3, Errors: 5, Skipped: 0
+[INFO] BUILD FAILURE
+
+红阶段含测试夹具自身的三处"执行段时序"修正（approve 重排 READY 后必须重新取得租约并
+幂等重登记推进 attempt 归属——镜像 AgentDriver 真实重派发），修正后仍为红：
+  Tests run: 8, Failures: 1, Errors: 0
+  ActionPlanPostgresTest.highRiskRequiresTwoRolesOrDoubleConfirmBeforeAndAtExecute:497 expected: <EXECUTE_KEY_REQUIRED> but was: <APPROVAL_REQUIRED>

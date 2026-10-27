@@ -142,36 +142,49 @@ public class SkillExecution {
         boolean needsApproval =
                 Boolean.TRUE.equals(executionPolicy.get("sideEffect"))
                         || "CONFIRM_REQUIRED".equals(contract.get("riskLevel"));
+        // PLAT-15（契约 §14）：approvalMode 是 SkillRules 的唯一解释入口；缺省 SINGLE_STEP，
+        // 存量契约不落键零回归。两段时未批准的执行先走 PREPARE 生成 actionPlan（无业务副作用）。
+        boolean prepareMode =
+                SkillRules.APPROVAL_MODE_TWO_PHASE.equals(SkillRules.approvalMode(contract));
+        // 批准态的盖章计划键提升到方法作用域：claim 的 executeKey 与业务出站键同源（契约 §14.4）。
+        String stampedKey = "";
         if (failure == null && needsApproval) {
             Object roles = executionPolicy.get("confirmRoles");
             if (!(roles instanceof Collection<?> declared) || declared.isEmpty())
                 throw error(409, "CONFIRM_ROLES_REQUIRED", "写技能必须声明明确确认角色");
             var approval = clients.get(engineUrl + "/internal/tool-calls/" + callId + "/approval");
-            if (!approval.path("approved").asBoolean())
-                return Map.of(
-                        "status",
-                        "WAITING_APPROVAL",
-                        "confirmation",
-                        Map.of(
-                                "roles",
-                                roles,
-                                "parametersDigest",
-                                digest,
-                                "args",
-                                arguments,
-                                "callId",
-                                callId,
-                                "skillVersionId",
-                                versionId));
+            // SINGLE_STEP（含存量）忽略 approval.actionPlan：两段键只对显式 PREPARE_EXECUTE 生效。
+            stampedKey =
+                    prepareMode
+                            ? approval.path("actionPlan").path("idempotencyKey").asText("")
+                            : "";
+            if (!approval.path("approved").asBoolean()) {
+                var confirmation = new LinkedHashMap<String, Object>();
+                confirmation.put("roles", roles);
+                confirmation.put("parametersDigest", digest);
+                confirmation.put("args", arguments);
+                confirmation.put("callId", callId);
+                confirmation.put("skillVersionId", versionId);
+                if (prepareMode)
+                    confirmation.put(
+                            "actionPlan",
+                            actionPlan(contract, secured, request, registration, callId));
+                return Map.of("status", "WAITING_APPROVAL", "confirmation", confirmation);
+            }
             if (approval.path("skillVersionId").asLong() != versionId
                     || !approval.path("parametersDigest").asText().equals(digest))
                 throw error(409, "APPROVAL_MISMATCH", "批准快照与当前技能或参数不一致，请重新确认");
         }
         // 先完成参数/守卫判断，再认领失败事实或实际执行的交付权；校验失败绝不会发送SUBMITTED或触发外部调用。
+        // PLAT-15：两段调用的业务出站键与 claim executeKey 都取引擎盖章的 actionPlan.idempotencyKey
+        // （GET approval 下发，唯一权威是 engine.action_plan）；SINGLE_STEP 沿用逻辑调用键。
+        String businessKey = stampedKey.isEmpty() ? text(request, "idempotencyKey") : stampedKey;
+        var claimBody = new LinkedHashMap<String, Object>();
+        claimBody.put("owner", owner);
+        claimBody.put("attemptId", attempt);
+        if (!stampedKey.isEmpty()) claimBody.put("executeKey", stampedKey);
         JsonNode authority =
-                clients.post(
-                        engineUrl + "/internal/tool-calls/" + callId + "/claim",
-                        Map.of("owner", owner, "attemptId", attempt));
+                clients.post(engineUrl + "/internal/tool-calls/" + callId + "/claim", claimBody);
         if (authority.path("attempt_id").asLong() != attempt
                 || authority.path("skill_version_id").asLong() != versionId
                 || !authority.path("skill_code").asText().equals(code)
@@ -307,7 +320,7 @@ public class SkillExecution {
                             adapters.observe(
                                     contract,
                                     secured,
-                                    text(request, "idempotencyKey"),
+                                    businessKey,
                                     callId,
                                     false,
                                     authority.path("runId").asText(),
@@ -351,6 +364,9 @@ public class SkillExecution {
         var frozenRequest = new LinkedHashMap<String, Object>(request);
         frozenRequest.put("guardedArguments", secured);
         frozenRequest.put("authorityTriggerType", authorityTrigger);
+        // PLAT-15：两段 EXECUTE 的业务键与逻辑调用键不同；对账与证据必须按真实出站键查询。
+        if (!businessKey.equals(text(request, "idempotencyKey")))
+            frozenRequest.put("businessIdempotencyKey", businessKey);
         // callId为唯一统计与交付键。事务提交后的回调可失败，业务事实仍在PG，不能为修复回调再次执行适配器。
         String finalStatus = status;
         long actualDuration = duration;
@@ -528,6 +544,64 @@ public class SkillExecution {
                 "fileRefs",
                 adapters.recorded(recorded, contract, call, runId, source.get("run_id").toString())
                         .fileRefs());
+    }
+
+    /**
+     * PLAT-15：PREPARE 段组装 actionPlan（契约 §14.2/§14.3）。summary/target/diff 来自业务预演
+     * 入口，risk 以契约声明为准（定死 D4）；idempotencyKey 在技能侧只是占位——引擎在
+     * requestApproval 统一盖章并重写 expiresAt，摘要与幂等键以引擎存储值为准（定死 D3）。
+     * 调试 Mock 运行不触达业务系统（也不调用业务预演），计划以占位摘要生成。
+     */
+    private Map<String, Object> actionPlan(
+            Map<String, Object> contract,
+            Map<String, Object> secured,
+            Map<String, Object> request,
+            JsonNode registration,
+            long callId) {
+        var plan = new LinkedHashMap<String, Object>();
+        if (registration.path("mock_snapshot").isObject()
+                && !registration.path("mock_snapshot").isEmpty()) {
+            plan.put("summary", "调试替身调用（Mock）：未执行业务预演");
+            plan.put("target", null);
+            plan.put("diff", null);
+        } else {
+            SkillAdapters.Raw raw;
+            try {
+                raw =
+                        adapters.prepare(
+                                contract,
+                                secured,
+                                text(request, "idempotencyKey"),
+                                callId,
+                                text(request, "runId"),
+                                number(request, "attemptId"));
+            } catch (SkillAdapters.Failure failure) {
+                // 预演失败是可读结论（无副作用、也不进入 WAITING_APPROVAL）：确认人不会审批
+                // 一份没有依据的计划；模型侧经错误信封获得 userMessage 后不重试不可重试错误。
+                throw error(
+                        502,
+                        "ACTION_PLAN_UNAVAILABLE",
+                        "PREPARE 预演调用失败（未产生业务副作用）: " + failure.getMessage());
+            }
+            var structured =
+                    raw == null || raw.structured() == null
+                            ? Json.tree(Map.of())
+                            : raw.structured();
+            plan.put("summary", structured.path("summary").asText("对目标对象的写操作"));
+            plan.put(
+                    "target",
+                    structured.path("target").isMissingNode() || structured.path("target").isNull()
+                            ? null
+                            : structured.get("target"));
+            plan.put(
+                    "diff",
+                    structured.path("diff").isMissingNode() || structured.path("diff").isNull()
+                            ? null
+                            : structured.get("diff"));
+        }
+        plan.put("risk", SkillRules.approvalRisk(contract));
+        plan.put("idempotencyKey", text(request, "idempotencyKey"));
+        return plan;
     }
 
     /**
@@ -765,7 +839,10 @@ public class SkillExecution {
             throw error(409, "RECONCILE_STATE", "请等待引擎确认原调用为UNKNOWN后对账");
         var contract = catalog.versionId(((Number) recorded.get("skill_version_id")).longValue());
         var original = Json.read(recorded.get("request_snapshot").toString(), Map.class);
-        String key = text(original, "idempotencyKey");
+        // PLAT-15：两段 EXECUTE 的对账按真实出站键查询；旧事实无该键时沿用逻辑调用键。
+        // 缺键不报错（text 会拒空）——存量事实恒无该键，回退是常态而非异常。
+        String key = Objects.toString(original.get("businessIdempotencyKey"), "");
+        if (key.isBlank()) key = text(original, "idempotencyKey");
         String outcome = "UNKNOWN";
         SkillAdapters.Raw raw = null;
         Map<String, Object> evidence = null;
