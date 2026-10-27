@@ -35,6 +35,12 @@ public class RunService {
      */
     private OntologyContextPacks contextPacks;
     private boolean promptDigestCheck = true;
+    /**
+     * 运行期发布绑定解析开关与环境。默认开启、production：关闭即退回"只有显式 releaseId 才注入"的
+     * 旧行为，作为本卡唯一的运行时回滚面；环境决定查询哪份绑定。
+     */
+    private boolean pinResolutionEnabled = true;
+    private String pinEnvironment = "production";
 
     private final ModelInputMaterials initialMaterials;
     private final ChunkBus initialChunks;
@@ -144,6 +150,20 @@ public class RunService {
     @Autowired
     public void promptDigestCheck(@Value("${agent.prompt.digest-check:true}") boolean enabled) {
         this.promptDigestCheck = enabled;
+    }
+
+    /** 绑定解析开关：字段初始 true，使直接 new RunService(...) 的夹具默认走绑定解析。 */
+    @Autowired
+    public void pinResolutionEnabled(
+            @Value("${agent.pin.resolution-enabled:true}") boolean enabled) {
+        this.pinResolutionEnabled = enabled;
+    }
+
+    /** 查询哪份发布绑定；空值回落到 production，避免空属性把查询打成 environment=。 */
+    @Autowired
+    public void pinEnvironment(@Value("${agent.pin.environment:production}") String environment) {
+        this.pinEnvironment =
+                environment == null || environment.isBlank() ? "production" : environment.trim();
     }
 
     private static final String REPLAY_METADATA =
@@ -1262,24 +1282,64 @@ public class RunService {
         if (declared.isEmpty()) return;
         String space = declared.path("space").asText("").trim();
         String releaseId = declared.path("releaseId").asText("").trim();
-        if (!UUID_PATTERN.matcher(space).matches() || !UUID_PATTERN.matcher(releaseId).matches())
+        if (!UUID_PATTERN.matcher(space).matches()
+                || (!releaseId.isBlank() && !UUID_PATTERN.matcher(releaseId).matches()))
             throw new PlatformException(
                     400,
                     "CONTEXT_PACK_CONFIG_INVALID",
                     "本体上下文必须声明 space 与 releaseId，且均为 UUID");
+        // 只有缺 releaseId 时才解析绑定：显式指定永远优先，且不受回滚开关影响。
+        boolean resolveByBinding = releaseId.isBlank();
+        String appCode = snapshot.path("appCode").asText("").trim();
+        if (resolveByBinding && (!pinResolutionEnabled || appCode.isBlank()))
+            throw new PlatformException(
+                    400,
+                    "CONTEXT_PACK_CONFIG_INVALID",
+                    pinResolutionEnabled
+                            ? "本体上下文缺少 releaseId，且运行快照没有 appCode，无法解析发布绑定"
+                            : "本体上下文必须声明 space 与 releaseId，且均为 UUID");
         if (contextPacks == null)
             throw new PlatformException(503, "CONTEXT_PACK_UNAVAILABLE", "本体上下文暂不可用，请稍后重试");
+        String bindingId = null;
+        boolean pinResolved = false;
+        if (resolveByBinding) {
+            try {
+                var binding =
+                        contextPacks.resolveBinding(
+                                actor.tenantId(), appCode, pinEnvironment, actor);
+                releaseId = binding.releaseId();
+                bindingId = binding.bindingId();
+                pinResolved = true;
+            } catch (PlatformException e) {
+                // 只有"确实没有生效绑定"才跳过：那是应用尚未发布到本环境的事实，不该让运行失败。
+                // 网关 404、5xx、连接失败、坏响应在客户端里都归为 503，照常向上抛。
+                if (!OntologyContextPacks.BINDING_NOT_FOUND.equals(e.code())) throw e;
+                var skipped = snapshot.putObject("contextPack");
+                skipped.put("space", space);
+                skipped.put("appCode", appCode);
+                skipped.put("environment", pinEnvironment);
+                skipped.put("pinResolved", false);
+                skipped.put("pinFailure", OntologyContextPacks.BINDING_NOT_FOUND);
+                skipped.put("reason", "该应用在本环境没有生效的发布绑定，按默认策略跳过本体上下文注入");
+                return;
+            }
+        }
         // 冻结阶段唯一取包点；包文本写进 config 后，assemble 只读不触网。
         var pack = contextPacks.fetch(actor.tenantId(), space, releaseId, actor);
         var rendered = ContextPackText.renderDetailed(pack.body());
         if (!rendered.text().isBlank()) config.put("ontologyContext", rendered.text());
-        // 审计四字段只落 snapshot，不存正文；context_pack 列由统一迁移提供，写入路径不在本卡范围内。
+        // 审计只落 snapshot，不存正文；context_pack 列由统一迁移提供，写入路径不在本卡范围内。
         var audit = snapshot.putObject("contextPack");
         audit.put("space", space);
         audit.put("releaseId", releaseId);
         audit.put("sha256", pack.sha256());
         audit.put("fetchedAt", clock.instant().toString());
         audit.put("truncated", rendered.truncated());
+        // 解析来的版本必须留痕来源：事后要能回答"这次运行用的是哪个绑定"。
+        if (pinResolved) {
+            audit.put("pinResolved", true);
+            audit.put("bindingId", bindingId == null ? "" : bindingId);
+        }
     }
 
     public void drive(long rid, Actor actor) {

@@ -206,4 +206,206 @@ class RunServiceContextPackTest {
             assertEquals(0, stub.count.get(), "配置非法时不得发出取包请求");
         }
     }
+
+    // === T18.2 运行期按发布绑定解析 releaseId =================================================
+    //
+    // 发布时 pin 写进了本体绑定，运行期必须按绑定取 releaseId；否则"发布了 A 版、运行时读最新版"。
+    // 双端点桩把绑定查询与取包分开计数，"显式 releaseId 不走绑定"才是可断言的。
+
+    private static final String BINDING_ID = "55555555-5555-5555-5555-555555555555";
+    private static final String APP = "app_demo";
+
+    private static String bindingEnvelope(String releaseId, String bindingId) {
+        var data = Json.object();
+        data.put("releaseId", releaseId);
+        data.put("bindingId", bindingId);
+        data.put("status", "ACTIVE");
+        var envelope = Json.object();
+        envelope.put("code", "OK");
+        envelope.put("message", "");
+        envelope.set("data", data);
+        return Json.write(envelope);
+    }
+
+    private static void reply(
+            com.sun.net.httpserver.HttpExchange exchange, int status, String body) {
+        try {
+            byte[] out = body.getBytes(StandardCharsets.UTF_8);
+            exchange.getResponseHeaders().add("Content-Type", "application/json");
+            exchange.sendResponseHeaders(status, out.length);
+            exchange.getResponseBody().write(out);
+        } catch (java.io.IOException e) {
+            // 桩端写失败只影响该请求，不掩盖被测代码的断言。
+        } finally {
+            exchange.close();
+        }
+    }
+
+    /** 同一个 base-url 同时提供绑定查询与取包，分别计数与记录路径。 */
+    private static final class BindingStub implements AutoCloseable {
+        private final HttpServer server;
+        private final AtomicInteger bindingCalls = new AtomicInteger();
+        private final AtomicInteger packCalls = new AtomicInteger();
+        private final List<String> packPaths = new java.util.concurrent.CopyOnWriteArrayList<>();
+        private final AtomicInteger bindingStatus = new AtomicInteger(200);
+        private final AtomicReference<String> bindingBody =
+                new AtomicReference<>(bindingEnvelope(RELEASE, BINDING_ID));
+
+        private BindingStub() throws Exception {
+            server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+            server.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
+            server.createContext(
+                    "/onto/",
+                    exchange -> {
+                        String path = exchange.getRequestURI().getPath();
+                        if (path.equals("/onto/internal/release-bindings")) {
+                            bindingCalls.incrementAndGet();
+                            reply(exchange, bindingStatus.get(), bindingBody.get());
+                            return;
+                        }
+                        packCalls.incrementAndGet();
+                        packPaths.add(path);
+                        reply(exchange, 200, packBody());
+                    });
+            server.start();
+        }
+
+        private String baseUrl() {
+            return "http://127.0.0.1:" + server.getAddress().getPort();
+        }
+
+        @Override
+        public void close() {
+            server.stop(0);
+        }
+    }
+
+    private static RunService serviceWith(BindingStub stub) {
+        return serviceWithBase(stub.baseUrl());
+    }
+
+    private static RunService serviceWithBase(String baseUrl) {
+        var service = new RunService(null, null, null, null);
+        service.contextPacks(OntologyContextPacks.forApiKey(baseUrl, "k-1", Clock.systemUTC()));
+        return service;
+    }
+
+    private static JsonNode snapshotWithApp(String space, String releaseId, String appCode) {
+        var config = Json.object();
+        config.put("modelEntryId", 1);
+        var ontology = config.putObject("ontology");
+        if (space != null) ontology.put("space", space);
+        if (releaseId != null) ontology.put("releaseId", releaseId);
+        var snapshot = Json.object();
+        if (appCode != null) snapshot.put("appCode", appCode);
+        snapshot.set("config", config);
+        snapshot.set("definition", Json.read("{\"nodes\":[]}"));
+        return snapshot;
+    }
+
+    @Test
+    void explicitReleaseIdWinsWithoutBindingCall() throws Exception {
+        try (var stub = new BindingStub()) {
+            var service = serviceWith(stub);
+            var frozen = freeze(service, snapshotWithApp(SPACE, RELEASE, APP));
+
+            assertEquals(0, stub.bindingCalls.get(), "显式 releaseId 必须先于绑定查询被采纳");
+            assertEquals(1, stub.packCalls.get());
+            assertEquals(List.of("/onto/releases/" + RELEASE + "/context-pack"), stub.packPaths);
+            var audit = frozen.path("contextPack");
+            assertEquals(RELEASE, audit.path("releaseId").asText());
+            // 显式路径的审计形状与 T13 逐字段一致：不额外写绑定解析字段。
+            assertFalse(audit.has("pinResolved"));
+            assertFalse(audit.has("bindingId"));
+        }
+    }
+
+    @Test
+    void missingReleaseIdResolvesFromBinding() throws Exception {
+        try (var stub = new BindingStub()) {
+            var service = serviceWith(stub);
+            var frozen = freeze(service, snapshotWithApp(SPACE, null, APP));
+
+            assertEquals(1, stub.bindingCalls.get());
+            assertEquals(List.of("/onto/releases/" + RELEASE + "/context-pack"), stub.packPaths);
+            assertTrue(frozen.path("config").path("ontologyContext").asText().contains("学生"));
+
+            var audit = frozen.path("contextPack");
+            assertTrue(audit.path("pinResolved").asBoolean());
+            assertEquals(BINDING_ID, audit.path("bindingId").asText());
+            assertEquals(RELEASE, audit.path("releaseId").asText());
+            assertEquals(SPACE, audit.path("space").asText());
+            assertFalse(audit.path("sha256").asText().isBlank());
+        }
+    }
+
+    @Test
+    void bindingNotFoundSkipsContextButRunContinues() throws Exception {
+        try (var stub = new BindingStub()) {
+            stub.bindingStatus.set(404);
+            stub.bindingBody.set("{\"code\":\"BINDING_NOT_FOUND\",\"message\":\"没有生效的发布绑定\"}");
+            var service = serviceWith(stub);
+
+            // 不抛异常即为"运行继续"：冻结结果仍然完整可下发。
+            var frozen = freeze(service, snapshotWithApp(SPACE, null, APP));
+
+            assertEquals(1, stub.bindingCalls.get());
+            assertEquals(0, stub.packCalls.get(), "没有绑定就没有可取的包");
+            assertFalse(frozen.path("config").has("ontologyContext"));
+            assertTrue(frozen.path("config").path("tools").isArray());
+
+            var audit = frozen.path("contextPack");
+            assertEquals("BINDING_NOT_FOUND", audit.path("pinFailure").asText());
+            assertFalse(audit.path("pinResolved").asBoolean());
+            assertFalse(audit.path("reason").asText().isBlank());
+            assertEquals(SPACE, audit.path("space").asText());
+        }
+    }
+
+    @Test
+    void bindingFailureFailsRunWithDependencyCode() throws Exception {
+        try (var stub = new BindingStub()) {
+            stub.bindingStatus.set(500);
+            stub.bindingBody.set("{\"code\":\"INTERNAL\",\"message\":\"boom\"}");
+            var service = serviceWith(stub);
+
+            var failure = freezeFailure(service, snapshotWithApp(SPACE, null, APP));
+            assertEquals(503, failure.status());
+            assertEquals("CONTEXT_PACK_UNAVAILABLE", failure.code());
+            assertTrue(failure.getMessage().contains("绑定"), failure.getMessage());
+            assertEquals(0, stub.packCalls.get());
+
+            // 故障不得被缓存：下一次运行必须重新解析，而不是被 30 秒窗口钉住。
+            freezeFailure(service, snapshotWithApp(SPACE, null, APP));
+            assertEquals(2, stub.bindingCalls.get());
+        }
+        String deadUrl;
+        try (var closure = new BindingStub()) {
+            deadUrl = closure.baseUrl();
+        }
+        var refused = freezeFailure(serviceWithBase(deadUrl), snapshotWithApp(SPACE, null, APP));
+        assertEquals(503, refused.status());
+        assertEquals("CONTEXT_PACK_UNAVAILABLE", refused.code());
+        assertTrue(refused.getMessage().contains("绑定"), refused.getMessage());
+    }
+
+    @Test
+    void resolutionDisabledKeepsLegacyBehaviour() throws Exception {
+        try (var stub = new BindingStub()) {
+            var service = serviceWith(stub);
+            service.pinResolutionEnabled(false);
+
+            // 关闭开关：缺 releaseId 时不查询绑定，退回 T13 的既有拒绝（既有用例已锁定该码）。
+            var failure = freezeFailure(service, snapshotWithApp(SPACE, null, APP));
+            assertEquals(400, failure.status());
+            assertEquals("CONTEXT_PACK_CONFIG_INVALID", failure.code());
+            assertEquals(0, stub.bindingCalls.get());
+
+            // 显式 releaseId 与开关无关，照旧注入。
+            var frozen = freeze(service, snapshotWithApp(SPACE, RELEASE, APP));
+            assertEquals(1, stub.packCalls.get());
+            assertEquals(0, stub.bindingCalls.get());
+            assertEquals(RELEASE, frozen.path("contextPack").path("releaseId").asText());
+        }
+    }
 }

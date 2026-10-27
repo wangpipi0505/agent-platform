@@ -55,6 +55,11 @@ agent:
     base-url: ${AGENT_ONTOLOGY_URL:}
     # 只接受 vault: 引用；密钥值不得进入 yml 或日志。
     api-key-ref: ${AGENT_ONTOLOGY_API_KEY_REF:}
+  pin:
+    # 运行期按发布绑定解析 releaseId。关闭即回滚为"只有显式 releaseId 才注入"。
+    resolution-enabled: ${AGENT_PIN_RESOLUTION_ENABLED:true}
+    # 查询哪份发布绑定：与发布时写入的 environment 必须一致。
+    environment: ${AGENT_PIN_ENVIRONMENT:production}
 management:
   endpoints:
     web:
