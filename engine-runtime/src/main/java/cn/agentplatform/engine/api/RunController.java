@@ -520,6 +520,12 @@ public class RunController {
         return ApiResponse.ok(new RunStatistics(store.db()).drilldown(id));
     }
 
+    /** Monitor's operations card reads this authority projection; it is not a public endpoint. */
+    @GetMapping("/internal/operations/overview")
+    public Object operationsOverview(@RequestParam(defaultValue = "60") int windowMinutes) {
+        return ApiResponse.ok(new RunOperations(store.db()).overview(windowMinutes));
+    }
+
     @GetMapping("/internal/audit")
     public Object audit() {
         var rows =

@@ -38,6 +38,7 @@ public final class Routes {
         if (path.startsWith("/admin/evaluations")
                 || path.startsWith("/admin/approvals")
                 || path.startsWith("/admin/statistics")
+                || path.startsWith("/admin/operations")
                 || path.startsWith("/admin/audit")) return "monitor";
         throw new IllegalArgumentException("此入口不存在");
     }

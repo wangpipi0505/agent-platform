@@ -97,6 +97,7 @@ public class GatewayController {
         upstream.setReadTimeout(650000);
         upstream.setRequestMethod(req.getMethod());
         upstream.setRequestProperty("Authorization", "Bearer " + ServiceTokens.issue(actor));
+        upstream.setRequestProperty(TraceContextFilter.HEADER, TraceContextFilter.current());
         if (req.getContentType() != null)
             upstream.setRequestProperty("Content-Type", req.getContentType());
         String cursor = req.getHeader("Last-Event-ID");
@@ -112,6 +113,8 @@ public class GatewayController {
             int status = upstream.getResponseCode();
             res.setStatus(status);
             if (upstream.getContentType() != null) res.setContentType(upstream.getContentType());
+            String upstreamTrace = upstream.getHeaderField(TraceContextFilter.HEADER);
+            if (upstreamTrace != null) res.setHeader(TraceContextFilter.HEADER, upstreamTrace);
             for (String header : List.of("Content-Disposition", "ETag", "Retry-After")) {
                 String value = upstream.getHeaderField(header);
                 if (value != null) res.setHeader(header, value);

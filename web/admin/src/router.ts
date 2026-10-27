@@ -15,6 +15,12 @@ const routes: RouteRecordRaw[] = [
     meta: { title: "应用工作区" },
   },
   {
+    path: "/operations",
+    name: "operations",
+    component: () => import("./pages/OperationsPage.vue"),
+    meta: { title: "运行中心" },
+  },
+  {
     path: "/runs",
     name: "runs",
     component: () => import("./pages/RunsPage.vue"),
