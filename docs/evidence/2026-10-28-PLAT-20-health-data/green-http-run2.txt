@@ -1,0 +1,86 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ------------------< cn.agentplatform:app-management >-------------------
+[INFO] Building app-management 0.1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- enforcer:3.5.0:enforce (default) @ app-management ---
+[INFO] Rule 0: org.apache.maven.enforcer.rules.version.RequireJavaVersion passed
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ app-management ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 8 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.0:compile (default-compile) @ app-management ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 31 source files with javac [debug parameters release 21] to target\classes
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/app-management/src/main/java/cn/agentplatform/app/application/IntegrationPolicyResolver.java: 某些输入文件使用或覆盖了已过时的 API。
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/app-management/src/main/java/cn/agentplatform/app/application/IntegrationPolicyResolver.java: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/app-management/src/main/java/cn/agentplatform/app/application/AppService.java: G:\207\项目\算法重组工具\代码\agent-platform\app-management\src\main\java\cn\agentplatform\app\application\AppService.java使用了未经检查或不安全的操作。
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/app-management/src/main/java/cn/agentplatform/app/application/AppService.java: 有关详细信息, 请使用 -Xlint:unchecked 重新编译。
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ app-management ---
+[INFO] skip non existing resourceDirectory G:\207\项目\算法重组工具\代码\agent-platform\app-management\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.14.0:testCompile (default-testCompile) @ app-management ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 25 source files with javac [debug parameters release 21] to target\test-classes
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/app-management/src/test/java/cn/agentplatform/app/application/PublishPinAuditPostgresTest.java: 某些输入文件使用了未经检查或不安全的操作。
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/app-management/src/test/java/cn/agentplatform/app/application/PublishPinAuditPostgresTest.java: 有关详细信息, 请使用 -Xlint:unchecked 重新编译。
+[INFO] 
+[INFO] --- surefire:3.5.3:test (default-test) @ app-management ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running cn.agentplatform.app.api.DataHealthHttpTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.0)
+
+2026-10-28T04:43:24.960+08:00  INFO 15396 --- [app-management] [           main] c.a.app.api.DataHealthHttpTest           : Starting DataHealthHttpTest using Java 21.0.12 with PID 15396 (started by Administrator in G:\207\项目\算法重组工具\代码\agent-platform\app-management)
+2026-10-28T04:43:24.962+08:00  INFO 15396 --- [app-management] [           main] c.a.app.api.DataHealthHttpTest           : No active profile set, falling back to 1 default profile: "default"
+2026-10-28T04:43:26.182+08:00  INFO 15396 --- [app-management] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 0 (http)
+2026-10-28T04:43:26.205+08:00  INFO 15396 --- [app-management] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-10-28T04:43:26.205+08:00  INFO 15396 --- [app-management] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.41]
+2026-10-28T04:43:26.246+08:00  INFO 15396 --- [app-management] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-10-28T04:43:26.247+08:00  INFO 15396 --- [app-management] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1271 ms
+2026-10-28T04:43:27.066+08:00  INFO 15396 --- [app-management] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-10-28T04:43:27.123+08:00  INFO 15396 --- [app-management] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@554d040d
+2026-10-28T04:43:27.124+08:00  INFO 15396 --- [app-management] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-10-28T04:43:27.143+08:00  INFO 15396 --- [app-management] [           main] org.flywaydb.core.FlywayExecutor         : Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_health_data_v12 (PostgreSQL 16.15)
+2026-10-28T04:43:27.184+08:00  INFO 15396 --- [app-management] [           main] o.f.core.internal.command.DbValidate     : Successfully validated 9 migrations (execution time 00:00.026s)
+2026-10-28T04:43:27.230+08:00  INFO 15396 --- [app-management] [           main] o.f.core.internal.command.DbMigrate      : Current version of schema "app": 107
+2026-10-28T04:43:27.236+08:00  INFO 15396 --- [app-management] [           main] o.f.core.internal.command.DbMigrate      : Schema "app" is up to date. No migration necessary.
+2026-10-28T04:43:27.334+08:00  INFO 15396 --- [app-management] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 2 endpoints beneath base path '/actuator'
+2026-10-28T04:43:27.740+08:00  INFO 15396 --- [app-management] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 62705 (http) with context path '/'
+2026-10-28T04:43:27.748+08:00  INFO 15396 --- [app-management] [           main] c.a.app.api.DataHealthHttpTest           : Started DataHealthHttpTest in 3.29 seconds (process running for 3.835)
+Mockito is currently self-attaching to enable the inline-mock-maker. This will no longer work in future releases of the JDK. Please add Mockito as an agent to your build as described in Mockito's documentation: https://javadoc.io/doc/org.mockito/mockito-core/latest/org.mockito/org/mockito/Mockito.html#0.3
+OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+WARNING: A Java agent has been loaded dynamically (C:\Users\Administrator\.m2\repository\net\bytebuddy\byte-buddy-agent\1.17.5\byte-buddy-agent-1.17.5.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+2026-10-28T04:43:28.319+08:00  INFO 15396 --- [app-management] [omcat-handler-0] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-10-28T04:43:28.319+08:00  INFO 15396 --- [app-management] [omcat-handler-0] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-10-28T04:43:28.319+08:00  INFO 15396 --- [app-management] [omcat-handler-0] o.s.web.servlet.DispatcherServlet        : Completed initialization in 0 ms
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 4.236 s -- in cn.agentplatform.app.api.DataHealthHttpTest
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  12.856 s
+[INFO] Finished at: 2026-10-28T04:43:29+08:00
+[INFO] ------------------------------------------------------------------------
