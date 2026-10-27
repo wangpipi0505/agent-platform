@@ -41,6 +41,13 @@ agent:
   stream:
     max-subscriptions: ${AGENT_STREAM_MAX_SUBSCRIPTIONS:256}
     buffer-bytes: ${AGENT_STREAM_BUFFER_BYTES:16777216}
+  tool:
+    # PLAT-14 T14.2：工具输出注入模型上下文的字节上限（UTF-8 序列化字节数）。超限不静默
+    # 截断、不整块塞给模型：替换为 OUTPUT_TOO_LARGE 可读错误（含实际大小与上限）；
+    # 契约声明了分页（contract.pagination）的工具附分页元信息供模型带页参续拉。原始
+    # 输出完整保留在调用事实/trace。默认 256KiB，低于 P2-11 的 550KB 场景。调参方式：
+    # 调小即收紧（更快拒绝）、调大即放宽；置极大值等价关闭检查（不建议）。
+    output-max-bytes: ${AGENT_TOOL_OUTPUT_MAX_BYTES:262144}
   security:
     jwt-secret: ${AGENT_JWT_SECRET}
     issuer: agent-platform-v12

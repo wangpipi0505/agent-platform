@@ -1,0 +1,31 @@
+红阶段 ②（编译红）— 2026-10-28 06:00 本地时间，逐字转录自会话命令输出。
+新增单测类 ToolOutputPolicyTest 与集成类 ④⑤ 用例引用尚不存在的 ToolOutputPolicy，
+test-compile 失败共 14 处"找不到符号: 变量 ToolOutputPolicy"（与 T21a/T21c 的
+"基线编译红"同型）：
+
+$ export JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot"
+$ mvn -B -pl engine-runtime test-compile -DskipTests
+
+[ERROR] COMPILATION ERROR :
+[ERROR] /G:/207/项目/算法重组工具/代码/agent-platform/engine-runtime/src/test/java/cn/agentplatform/engine/application/ToolOutputPolicyTest.java:[48,22] 找不到符号
+[ERROR] /G:/207/项目/算法重组工具/代码/agent-platform/engine-runtime/src/test/java/cn/agentplatform/engine/application/ToolOutputPolicyTest.java:[56,20] 找不到符号
+[ERROR] /G:/207/项目/算法重组工具/代码/agent-platform/engine-runtime/src/test/java/cn/agentplatform/engine/application/ToolOutputPolicyTest.java:[57,20] 找不到符号
+[ERROR] /G:/207/项目/算法重组工具/代码/agent-platform/engine-runtime/src/test/java/cn/agentplatform/engine/application/ToolOutputPolicyTest.java:[64,22] 找不到符号
+[ERROR] /G:/207/项目/算法重组工具/代码/agent-platform/engine-runtime/src/test/java/cn/agentplatform/engine/application/ToolOutputPolicyTest.java:[99,22] 找不到符号
+[ERROR] /G:/207/项目/算法重组工具/代码/agent-platform/engine-runtime/src/test/java/cn/agentplatform/engine/application/ToolOutputPolicyTest.java:[123,22] 找不到符号
+[ERROR] /G:/207/项目/算法重组工具/代码/agent-platform/engine-runtime/src/test/java/cn/agentplatform/engine/application/ToolOutputPolicyTest.java:[136,22] 找不到符号
+[ERROR] /G:/207/项目/算法重组工具/代码/agent-platform/engine-runtime/src/test/java/cn/agentplatform/engine/application/ToolOutputPolicyTest.java:[152,26] 找不到符号
+[ERROR] /G:/207/项目/算法重组工具/代码/agent-platform/engine-runtime/src/test/java/cn/agentplatform/engine/application/ToolOutputPolicyTest.java:[158,28] 找不到符号
+[ERROR] /G:/207/项目/算法重组工具/代码/agent-platform/engine-runtime/src/test/java/cn/agentplatform/engine/application/ToolOutputPolicyTest.java:[163,64] 找不到符号
+[ERROR] /G:/207/项目/算法重组工具/代码/agent-platform/engine-runtime/src/test/java/cn/agentplatform/engine/application/ToolOutputPolicyTest.java:[164,64] 找不到符号
+[ERROR] /G:/207/项目/算法重组工具/代码/agent-platform/engine-runtime/src/test/java/cn/agentplatform/engine/application/ToolOutputPolicyTest.java:[172,26] 找不到符号
+[ERROR] /G:/207/项目/算法重组工具/代码/agent-platform/engine-runtime/src/test/java/cn/agentplatform/engine/application/ToolOutputPolicyTest.java:[181,22] 找不到符号
+[ERROR] /G:/207/项目/算法重组工具/代码/agent-platform/engine-runtime/src/test/java/cn/agentplatform/engine/infra/ToolOutputLargeResponsePostgresTest.java:[306,32] 找不到符号
+[INFO] BUILD FAILURE
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.14.0:testCompile (default-testCompile) on project engine-runtime: Compilation failure
+（每个出错点的符号明细均为：符号: 变量 ToolOutputPolicy）
+
+补充（实现后的实时回退验证，非转录，全文见 revert-check-disabled.txt）：
+将 AgentDriver.drive 中 outputPolicy.enforce(...) 调用临时注释后复跑两类，
+14 例中 3 例回红（① 550KB 锚点、③ 分页续拉、⑤ 驱动级自定义阈值），证明绿状态
+确由本卡实现承载；恢复调用后 14/14 复绿（green-new-classes.txt）。

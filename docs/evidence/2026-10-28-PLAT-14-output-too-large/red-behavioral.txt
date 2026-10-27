@@ -1,0 +1,43 @@
+红阶段 ①（行为红）— 2026-10-28 05:58 本地时间，逐字转录自会话命令输出。
+命令（当时测试类仅含 ①②③ 三例，④⑤ 与单测类随后才加入，见红阶段 ②）：
+
+$ export JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot"
+$ source .tools/env-load.sh
+$ mvn -B -pl engine-runtime test -Dtest='ToolOutputLargeResponsePostgresTest' "-DargLine=-Xmx1024m"
+
+[INFO] Running cn.agentplatform.engine.infra.ToolOutputLargeResponsePostgresTest
+05:58:24.794 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_engine_test (PostgreSQL 16.15)
+05:58:24.848 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 24 migrations (execution time 00:00.034s)
+05:58:24.882 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "engine": 223
+05:58:24.885 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "engine" is up to date. No migration necessary.
+[ERROR] Tests run: 3, Failures: 2, Errors: 0, Skipped: 0, Time elapsed: 4.842 s <<< FAILURE! -- in cn.agentplatform.engine.infra.ToolOutputLargeResponsePostgresTest
+[ERROR] cn.agentplatform.engine.infra.ToolOutputLargeResponsePostgresTest.oversizedOutputBecomesReadableErrorNeverModelBlob -- Time elapsed: 1.491 s <<< FAILURE!
+org.opentest4j.AssertionFailedError:
+
+expected: "OUTPUT_TOO_LARGE"
+ but was: ""
+	at cn.agentplatform.engine.infra.ToolOutputLargeResponsePostgresTest.oversizedOutputBecomesReadableErrorNeverModelBlob(ToolOutputLargeResponsePostgresTest.java:193)
+[ERROR] cn.agentplatform.engine.infra.ToolOutputLargeResponsePostgresTest.declaredPaginationLetsModelRepullByPage -- Time elapsed: 1.707 s <<< FAILURE!
+org.opentest4j.AssertionFailedError:
+
+expected: "OUTPUT_TOO_LARGE"
+ but was: ""
+	at cn.agentplatform.engine.infra.ToolOutputLargeResponsePostgresTest.declaredPaginationLetsModelRepullByPage(ToolOutputLargeResponsePostgresTest.java:275)
+[INFO]
+[INFO] Results:
+[INFO]
+[ERROR] Failures:
+[ERROR]   ToolOutputLargeResponsePostgresTest.declaredPaginationLetsModelRepullByPage:275
+expected: "OUTPUT_TOO_LARGE"
+ but was: ""
+[ERROR]   ToolOutputLargeResponsePostgresTest.oversizedOutputBecomesReadableErrorNeverModelBlob:193
+expected: "OUTPUT_TOO_LARGE"
+ but was: ""
+[INFO]
+[ERROR] Tests run: 3, Failures: 2, Errors: 0, Skipped: 0
+[INFO] BUILD FAILURE    Total time:  11.997 s
+
+解读：实现落地前，556KB 全量工具输出被逐字塞进模型上下文（error.code 为空串即
+模型可见内容不是错误信封），声明分页的工具同样整块透传、无任何分页提示——
+两条定死语义均未满足，为真实行为红（非编译红）。② 阈值内零变化锚点当轮已绿
+（该例是回归锚点，不依赖新实现）。

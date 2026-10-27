@@ -39,6 +39,17 @@ public class AgentDriver {
         this.interceptors = chain;
     }
 
+    /**
+     * PLAT-14 T14.2：工具输出注入模型上下文前的大响应策略，可选装配。手工构造（测试
+     * 夹具）未注入时用引擎默认阈值（256KiB）；Spring 装配读 agent.tool.output-max-bytes。
+     */
+    private ToolOutputPolicy outputPolicy = ToolOutputPolicy.defaults();
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    public void outputPolicy(ToolOutputPolicy policy) {
+        this.outputPolicy = policy;
+    }
+
     public JsonNode drive(
             Map<String, Object> run,
             Map<String, Object> node,
@@ -229,6 +240,21 @@ public class AgentDriver {
                                                         "请修正工具参数")));
                     else throw error;
                 }
+                // PLAT-14 T14.2：大响应在进入模型上下文前按引擎策略替换（超限不整块塞给
+                // 模型、不静默截断）：无分页声明替换为 OUTPUT_TOO_LARGE 可读错误；声明了
+                // 分页（contract.pagination）附分页元信息供模型带页参续拉。阈值内零变化。
+                // 仅作用于模型可见面；调用事实（tool_call/技能侧 trace）保留原始完整结果。
+                result =
+                        outputPolicy.enforce(
+                                tool,
+                                result,
+                                run.get("public_id")
+                                        + ":"
+                                        + nid
+                                        + ":round"
+                                        + round
+                                        + ":"
+                                        + call.path("id").asText());
                 history.add(
                         Map.of(
                                 "role",
