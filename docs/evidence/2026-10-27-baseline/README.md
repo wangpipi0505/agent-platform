@@ -39,9 +39,9 @@ mvn -B -ntp -pl skill-registry test \
 | engine-runtime | 540（部分） | 26 | 115 | 0 | **未跑完** | 在 `RuntimeStreamTest` 挂起后被我终止；已产出 74 个类报告 |
 | skill-registry | 440 | 8 | 112 | 17 | 跑完 | 64 次 `依赖服务暂不可用`（见 Y-3） |
 | model-gateway | 173 | 7 | 83 | 72 | 跑完 | 需 Redis；未载入 `.env` 时为 175/6/129/13 |
-| monitor | — | — | — | — | **未取到基线** | 被 T01 改动覆盖；T01 定向 36/36 绿，既有 `EvaluationPersistenceTest` 9/9、`EvaluationRulesTest` 7/7 |
+| monitor | 50 | 0 | 3 | 0 | 跑完（补跑于 T01 提交后） | 唯一坏类 `monitor.application.DatasetHttpTest`（3 Error，既有）；含 T01 新增 20 例 |
 
-> monitor 基线缺失是排程错误（T01 先于基线完成），已按"定向 36 例 + 既有两类回归"补记；模块级 baseline 待下一轮补跑。
+> monitor 首轮缺失是排程错误（T01 先于基线完成）；21:00 已在 `dde22f4` 之后补跑模块级基线：`50/0F/3E`，坏类只有 `DatasetHttpTest`，与 T01 前既有的 3 个 Error 同类同数，因此 T01 未引入新增坏类。补跑命令与原始输出见 `docs/evidence/2026-10-27-PLAT-01-assertions/` 的回归段。
 
 ## 4. 失败分类与根因（按可修复性排序）
 
