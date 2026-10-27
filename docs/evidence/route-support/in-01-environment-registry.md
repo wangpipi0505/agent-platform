@@ -18,7 +18,8 @@
 | 本地算法 visibility-trajectory | 18090 | 仓库根（JDK8）：`java -jar target/alg-toolkit-1.0.0.jar --server.port=18090` | `GET /api/orbit/health` → OK | 本地算法 owner | ✅（含 HTTP 流式修复） |
 | user-mgmt 后端 | 18070 | `scripts\start-backend.bat`（user-mgmt-system） | `GET /captchaImage` | 本体侧 | ✅ |
 | user-mgmt 前端 | 18071 | `scripts\start-frontend.bat` | `GET /` 200 | 本体侧 | ✅ |
-| ontorepo | 未启动 | 仓库脚本 | — | 本体侧 | ⏸ 路线三接入时启动 |
+| ontorepo 后端 | 18182 | **顺序敏感**：先 `deploy/Start-Storage.ps1`（MinIO 15184）→ PG 15472 存活 → 再 `deploy/Start-Local.ps1`。就绪判定：`GET /onto/platform-actors` 返回 401（非 404/拒绝连接） | 同左 | 本体侧 | ✅（10-27 就绪，含 OR-S02） |
+| ontorepo PostgreSQL | 15472 | **必须以持久方式运行**（如 `postgres.exe -D .runtime/pgsql -p 15472` 常驻任务）；普通工具调用内 `pg_ctl start` 的进程树会随调用结束被清理（10-27 教训：PG"自愈式死亡"三次的根因）。端口错传会静默起在 5432（postgresql.conf 无 port 行时用默认） | psql SELECT 1（user onto，凭据 .runtime/local-env.json） | 本体侧 | ✅ |
 | PostgreSQL（agent） | 25432 | `scripts/start-database.ps1`（.tools/postgresql-16.15） | psql SELECT 1（user agent_v12，凭据 .env） | 智能体侧 | ✅ |
 | PostgreSQL（onto） | 15472 | ontorepo `.runtime/local-env.json` / postgres-16.15 | psql SELECT 1（user onto） | 本体侧 | ✅ |
 | MySQL | 3306 | Windows 服务 MySQL80 | `mysql -uroot -p -e "select 1"` | 机器公共 | ✅ |
