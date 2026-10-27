@@ -49,6 +49,8 @@ class AsyncHttpExecutionTest {
     boolean lookupByKey;
     int submitStatus = 202;
     volatile boolean bindDifferentJobDuringQuery;
+    volatile boolean spaceTaskEnvelope;
+    volatile boolean omitEchoContract;
     Map<String, Object> arguments = Map.of("region", "A");
     Map<String, Object> guard =
             Map.of("roles", List.of("SERVICE"), "attributes", Map.of("region", List.of("A")));
@@ -107,9 +109,16 @@ class AsyncHttpExecutionTest {
                         exchange.close();
                         return;
                     }
+                    Map<String, Object> acknowledgement = new LinkedHashMap<>();
+                    if (spaceTaskEnvelope) {
+                        // Real 8080 async acceptance: only taskId, no idempotencyKey echo.
+                        acknowledgement.put("taskId", "task-1");
+                    } else {
+                        acknowledgement.put("jobId", "job-1");
+                        acknowledgement.put("idempotencyKey", key);
+                    }
                     byte[] body =
-                            Json.write(Map.of("jobId", "job-1", "idempotencyKey", key))
-                                    .getBytes(StandardCharsets.UTF_8);
+                            Json.write(acknowledgement).getBytes(StandardCharsets.UTF_8);
                     exchange.getResponseHeaders().set("Content-Type", "application/json");
                     exchange.sendResponseHeaders(submitStatus, body.length);
                     exchange.getResponseBody().write(body);
@@ -126,18 +135,16 @@ class AsyncHttpExecutionTest {
                                         + " call_id=?",
                                 tenant,
                                 call);
-                    byte[] body =
-                            Json.write(
-                                            Map.of(
-                                                    "jobId",
-                                                    wrongJob ? "other-job" : "job-1",
-                                                    "idempotencyKey",
-                                                    key,
-                                                    "status",
-                                                    state,
-                                                    "result",
-                                                    actualResult))
-                                    .getBytes(StandardCharsets.UTF_8);
+                    Map<String, Object> poll = new LinkedHashMap<>();
+                    if (spaceTaskEnvelope) {
+                        poll.put("taskId", wrongJob ? "other-task" : "task-1");
+                    } else {
+                        poll.put("jobId", wrongJob ? "other-job" : "job-1");
+                        poll.put("idempotencyKey", key);
+                    }
+                    poll.put("status", state);
+                    poll.put("result", actualResult);
+                    byte[] body = Json.write(poll).getBytes(StandardCharsets.UTF_8);
                     exchange.getResponseHeaders().set("Content-Type", "application/json");
                     exchange.sendResponseHeaders(200, body.length);
                     exchange.getResponseBody().write(body);
@@ -187,20 +194,20 @@ class AsyncHttpExecutionTest {
                         "cancellable",
                         false));
         c.put("guard", guard);
-        c.put(
-                "reconciliation",
-                Map.of(
-                        "endpoint",
-                        "http://127.0.0.1:"
-                                + server.getAddress().getPort()
-                                + "/jobs/"
-                                + (lookupByKey ? "{idempotencyKey}" : "{jobId}"),
-                        "method",
-                        "GET",
-                        "donePath",
-                        "$.status",
-                        "doneValue",
-                        "DONE"));
+        var reconciliation = new LinkedHashMap<String, Object>();
+        reconciliation.put(
+                "endpoint",
+                "http://127.0.0.1:"
+                        + server.getAddress().getPort()
+                        + "/jobs/"
+                        + (lookupByKey ? "{idempotencyKey}" : "{jobId}"));
+        reconciliation.put("method", "GET");
+        reconciliation.put("donePath", "$.status");
+        reconciliation.put("doneValue", spaceTaskEnvelope ? "SUCCEEDED" : "DONE");
+        if (spaceTaskEnvelope && !omitEchoContract)
+            reconciliation.put("idempotencyKeyEcho", false);
+        c.put("reconciliation", reconciliation);
+        if (spaceTaskEnvelope) c.put("jobIdPath", "$.taskId");
         return c;
     }
 
@@ -322,6 +329,40 @@ class AsyncHttpExecutionTest {
         executor.execute(code, request);
         assertEquals(1, submits.get());
         assertTrue(queries.get() > 0);
+    }
+
+    @Test
+    void realSpaceTaskEnvelopeNeedsExplicitlyDisabledIdempotencyEcho() {
+        spaceTaskEnvelope = true;
+        prepareExecution();
+        assertEquals("UNKNOWN", executor.execute(code, request).get("status"));
+        state = "SUCCEEDED";
+        var result = executor.reconcile(call);
+        assertEquals("SUCCEEDED", result.get("status"));
+        assertEquals(
+                7, Json.tree(result.get("result")).path("structured").path("value").asInt());
+        assertEquals(1, submits.get());
+    }
+
+    @Test
+    void idempotencyEchoSwitchMustBeBoolean() {
+        var bad = contract();
+        @SuppressWarnings("unchecked")
+        var reconciliation = (Map<String, Object>) bad.get("reconciliation");
+        reconciliation.put("idempotencyKeyEcho", "false");
+        var ex = assertThrows(PlatformException.class, () -> catalog.create(bad));
+        assertEquals("INVALID_ASYNC_PROTOCOL", ex.code());
+    }
+
+    @Test
+    void taskEnvelopeWithoutExplicitOptOutStillRequiresIdempotencyEcho() {
+        spaceTaskEnvelope = true;
+        omitEchoContract = true;
+        prepareExecution();
+        assertEquals("UNKNOWN", executor.execute(code, request).get("status"));
+        state = "SUCCEEDED";
+        assertEquals("UNKNOWN", executor.reconcile(call).get("status"));
+        assertEquals(1, submits.get());
     }
 
     @Test

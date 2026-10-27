@@ -34,8 +34,12 @@
 
 ## 对 AP-S03 的结论（决策输入）
 
-1. 受理响应仅 taskId 单字段 → SUBMIT_QUERY 契约的 jobIdPath=`$.taskId` 现有默认值即可覆盖，
-   **不需要改框架代码**（AP-S03 走"联调确认+配置"路线成立）；
+1. 受理响应仅 taskId 单字段 → SUBMIT_QUERY 契约的 jobIdPath=`$.taskId` 可提取任务；
+   **但 2026-10-27 后续用真实响应复跑适配器时发现**：适配器默认要求受理与轮询响应回显
+   `idempotencyKey`，而 8080 两个响应都没有该字段，原结论"不需要改框架代码"不成立。
+   AP-S03 已增加显式契约开关 `reconciliation.idempotencyKeyEcho=false`：仅当服务合同
+   明确只返回自身任务 ID 时才关闭回显校验；默认仍严格校验，见
+   [ap-s03-async-task-envelope.md](ap-s03-async-task-envelope.md)。
 2. 失败判定必须映射轮询体的 `status` 字段（FAILED→终态失败）而非 HTTP 状态码，
    errorMessage 透传给运行错误观测（AP-S07 的输入之一）；
 3. 进度字段（completedPairs/totalPairs 等）可映射到技能执行事实的进度展示。

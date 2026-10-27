@@ -159,13 +159,16 @@ public class HttpAsyncAdapter {
                                 .asText();
                 if (job.isBlank()
                         || job.length() > 128
-                        || !path(
-                                        ack,
-                                        Objects.toString(
-                                                policy.getOrDefault(
-                                                        "idempotencyKeyPath", "$.idempotencyKey")))
-                                .asText()
-                                .equals(key)) throw unknown("提交响应未证明原幂等键与任务归属");
+                        || (echoRequired(contract)
+                                && !path(
+                                                ack,
+                                                Objects.toString(
+                                                        policy.getOrDefault(
+                                                                "idempotencyKeyPath",
+                                                                "$.idempotencyKey")))
+                                        .asText()
+                                        .equals(key)))
+                    throw unknown("提交响应未证明原幂等键与任务归属");
                 db.update(
                         "update skill.external_job_binding set"
                             + " external_job_id=?,status='SUBMITTED',updated_at=now() where"
@@ -220,13 +223,16 @@ public class HttpAsyncAdapter {
             if (observedJob.isBlank()
                     || observedJob.length() > 128
                     || (!job.isBlank() && !job.equals(observedJob))
-                    || !path(
-                                    response,
-                                    Objects.toString(
-                                            policy.getOrDefault(
-                                                    "idempotencyKeyPath", "$.idempotencyKey")))
-                            .asText()
-                            .equals(key)) throw unknown("查询响应的jobId或幂等键不属于原调用");
+                    || (echoRequired(contract)
+                            && !path(
+                                            response,
+                                            Objects.toString(
+                                                    policy.getOrDefault(
+                                                            "idempotencyKeyPath",
+                                                            "$.idempotencyKey")))
+                                    .asText()
+                                    .equals(key)))
+                throw unknown("查询响应的jobId或幂等键不属于原调用");
             if (job.isBlank())
                 db.update(
                         "update skill.external_job_binding set"
@@ -394,6 +400,17 @@ public class HttpAsyncAdapter {
             throw error(400, "ASYNC_PATH_INVALID", "异步协议路径仅支持点路径");
         for (String part : path.substring(2).split("\\.")) value = value.path(part);
         return value;
+    }
+
+    /**
+     * Most services echo the caller's idempotency key. A service that instead returns only its own
+     * task id can opt out explicitly; job id, immutable binding and the idempotency header still
+     * bind the exchange to this call, but the weaker acknowledgement contract must be visible.
+     */
+    private static boolean echoRequired(Map<String, Object> contract) {
+        Object reconciliation = contract.get("reconciliation");
+        if (!(reconciliation instanceof Map<?, ?> policy)) return true;
+        return !Boolean.FALSE.equals(policy.get("idempotencyKeyEcho"));
     }
 
     private static SkillAdapters.Failure unknown(String message) {

@@ -338,6 +338,9 @@ public class SkillCatalog {
                 throw error(
                         400, "INVALID_ASYNC_PROTOCOL", "异步HTTP提交当前仅支持POST JSON参数，不能混用OpenAPI映射");
             var policy = object(body.getOrDefault("reconciliation", Map.of()));
+            Object echo = policy.get("idempotencyKeyEcho");
+            if (echo != null && !(echo instanceof Boolean))
+                throw error(400, "INVALID_ASYNC_PROTOCOL", "idempotencyKeyEcho必须为布尔值");
             String query = text(policy, "endpoint");
             SkillRules.endpoint(query.replace("{jobId}", "job").replace("{idempotencyKey}", "key"));
             if (!Objects.toString(policy.getOrDefault("method", "GET")).equals("GET")
