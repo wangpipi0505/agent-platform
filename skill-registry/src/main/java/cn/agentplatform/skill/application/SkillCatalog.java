@@ -2,6 +2,7 @@ package cn.agentplatform.skill.application;
 
 import cn.agentplatform.common.*;
 import cn.agentplatform.common.auth.AuthScheme;
+import cn.agentplatform.skill.domain.ProcessContract;
 import cn.agentplatform.skill.domain.SkillRules;
 import cn.agentplatform.skill.infra.McpAdapter;
 import cn.agentplatform.skill.infra.OpenApiHttpMapping;
@@ -301,14 +302,29 @@ public class SkillCatalog {
         String type =
                 Objects.toString(
                         body.getOrDefault("type", invocation.getOrDefault("adapterType", "")), "");
-        if (!Set.of("HTTP", "MCP", "ALGORITHM").contains(type))
+        if (!Set.of("HTTP", "MCP", "ALGORITHM", "PROCESS").contains(type))
             throw error(400, "INVALID_SKILL", "适配器类型无效");
         var result = new LinkedHashMap<String, Object>();
         result.put("type", type);
         result.put("description", text(body, "description"));
+        boolean process = type.equals("PROCESS");
         String endpoint =
                 Objects.toString(
                         body.getOrDefault("endpoint", invocation.getOrDefault("endpoint", "")), "");
+        // PROCESS在本机执行、不出站：endpoint是HTTP寻址，httpMapping是OpenAPI参数映射，二者与process
+        // 子契约互斥。这里点名冲突字段而不是笼统报“契约无效”，编辑器才能把错误定位到具体输入项。
+        if (process) {
+            if (!endpoint.isBlank())
+                throw error(
+                        400,
+                        "INVALID_SKILL",
+                        "PROCESS 技能不能携带 endpoint：本地进程不发起 HTTP 请求，请移除端点");
+            if (body.containsKey("httpMapping"))
+                throw error(
+                        400,
+                        "INVALID_SKILL",
+                        "PROCESS 技能不能携带 httpMapping：本地进程不走 OpenAPI 参数映射");
+        }
         if (body.containsKey("httpMapping")) {
             var mapped = new LinkedHashMap<String, Object>(body);
             mapped.put("type", type);
@@ -317,7 +333,7 @@ public class SkillCatalog {
                     "httpMethod",
                     body.getOrDefault("httpMethod", invocation.getOrDefault("httpMethod", "POST")));
             OpenApiHttpMapping.validate(mapped);
-        } else if (!type.equals("ALGORITHM")) SkillRules.endpoint(endpoint);
+        } else if (!type.equals("ALGORITHM") && !process) SkillRules.endpoint(endpoint);
         result.put("endpoint", endpoint);
         String auth =
                 Objects.toString(
@@ -350,10 +366,24 @@ public class SkillCatalog {
                                 body.getOrDefault(
                                         "invocationKind",
                                         type.equals("ALGORITHM") ? "SUBMIT_QUERY" : "SYNC")));
+        if (process && !kind.equals("SYNC"))
+            throw error(
+                    400,
+                    "UNSUPPORTED_INVOCATION_KIND",
+                    "PROCESS 仅支持 SYNC 调用形态（本地进程没有异步提交或回调通道），收到: " + kind);
         if (!(type.equals("HTTP") && Set.of("SYNC", "SUBMIT_QUERY", "CALLBACK").contains(kind)
                 || type.equals("MCP") && kind.equals("SYNC")
-                || type.equals("ALGORITHM") && kind.equals("SUBMIT_QUERY")))
+                || type.equals("ALGORITHM") && kind.equals("SUBMIT_QUERY")
+                || process && kind.equals("SYNC")))
             throw error(400, "UNSUPPORTED_INVOCATION_KIND", "该适配器与调用形态组合尚未支持");
+        // PROCESS子契约只由ProcessContract.parse解释（绝对路径可执行文件、参数个数、超时、stdin/env、
+        // 输出上限），目录层负责把规范化结果写回持久化契约：缺省值在注册期落库，执行期不再猜默认值，
+        // 草稿读回的取值就是执行时的取值（与HTTP契约用OpenApiHttpMapping归一化同一做法）。
+        Map<String, Object> processContract = null;
+        if (process) {
+            processContract = normalizedProcess(body);
+            result.put("process", processContract);
+        }
         if (type.equals("HTTP") && kind.equals("CALLBACK")) {
             if (!"POST".equals(result.get("httpMethod")) || body.containsKey("httpMapping"))
                 throw error(400, "INVALID_ASYNC_PROTOCOL", "回调提交仅支持POST JSON参数");
@@ -446,13 +476,21 @@ public class SkillCatalog {
                         Json.tree(Map.of()), text(policy, "resultEndpointPath"));
         }
         result.put("invocationKind", kind);
-        long timeout =
-                ((Number)
-                                body.getOrDefault(
-                                        "timeoutMs", invocation.getOrDefault("timeoutMs", 30000)))
-                        .longValue();
-        if (timeout < 100 || timeout > 600000)
-            throw error(400, "INVALID_SKILL", "timeoutMs必须为100至600000");
+        long timeout;
+        if (process) {
+            // PROCESS只有一个真实超时：process.timeoutMs（缺省60s、上限30min）。顶层timeoutMs是所有
+            // 适配器共用的形状字段，这里派生而不是再独立声明——否则编辑页显示30s、执行器按60s跑，
+            // 同一契约里两个互相矛盾的数。通用100..600000是HTTP调用时长的上界，不适用于本地进程。
+            timeout = ((Number) processContract.get("timeoutMs")).longValue();
+        } else {
+            timeout =
+                    ((Number)
+                                    body.getOrDefault(
+                                            "timeoutMs", invocation.getOrDefault("timeoutMs", 30000)))
+                            .longValue();
+            if (timeout < 100 || timeout > 600000)
+                throw error(400, "INVALID_SKILL", "timeoutMs必须为100至600000");
+        }
         result.put("timeoutMs", timeout);
         var input = object(body.get("inputSchema"));
         var output = object(body.getOrDefault("outputSchema", Map.of("type", "object")));
@@ -528,6 +566,24 @@ public class SkillCatalog {
             result.put("importSource", source);
         }
         return result;
+    }
+
+    /**
+     * PROCESS 子契约的唯一解释器是 {@link ProcessContract#parse}。目录层不复写它的边界（命令首元素绝对路径、
+     * 参数个数上限、超时范围、stdin/env/输出上限），只把规范化结果整理成可持久化的 JSON 形状：缺省值在注册期
+     * 落库而不是执行期再补，可选字段未声明时不写空值，避免草稿里出现一串无意义的 null。
+     */
+    private static Map<String, Object> normalizedProcess(Map<String, Object> body) {
+        ProcessContract contract = ProcessContract.parse(Json.tree(body.get("process")));
+        var normalized = new LinkedHashMap<String, Object>();
+        normalized.put("command", contract.command());
+        normalized.put("timeoutMs", contract.timeout().toMillis());
+        if (contract.workDirRoot() != null) normalized.put("workDirRoot", contract.workDirRoot());
+        if (contract.stdinJson() != null)
+            normalized.put("stdin", Json.mapper().convertValue(contract.stdinJson(), Object.class));
+        if (!contract.allowedEnv().isEmpty()) normalized.put("env", contract.allowedEnv());
+        normalized.put("maxOutputBytes", contract.maxOutputBytes());
+        return normalized;
     }
 
     public Map<String, Object> publish(String code, int version) {

@@ -27,6 +27,16 @@ agent:
   # AP-S06：演示数据隔离开关。默认（生产）禁止 fixture 技能注入；本地演示/冒烟环境
   # 显式置 AGENT_DEMO_MODE=true 打开，见 skill/application/FixtureSkills。
   demo-mode: ${AGENT_DEMO_MODE:false}
+  # PLAT-21b 本地进程执行（PROCESS 适配器），由 skill/infra/ProcessAdapter 读取。
+  # enabled 默认关闭：注册/编辑 PROCESS 技能不受影响，但执行前即返回 403 PROCESS_DISABLED，
+  # 不创建进程、也不创建调用目录（开关只在执行期生效，目录层永远可以做契约校验）。
+  # work-dir 是唯一的允许根：执行期对它做 realpath 归一化后比较，契约里的 workDirRoot 必须落在
+  # 其下（防 symlink/.. 逃逸），并且该目录必须预先存在——执行器不会替你创建允许根。
+  # 默认值放在 java.io.tmpdir 只适合开发/CI；生产必须指向独立数据盘上的专用目录
+  # （例如 /data/agent-process 或 D:/agent-process），不要指向系统临时目录或代码仓库。
+  process:
+    enabled: ${AGENT_PROCESS_ENABLED:false}
+    work-dir: ${AGENT_PROCESS_WORK_DIR:${java.io.tmpdir}/agent-process}
   security:
     jwt-secret: ${AGENT_JWT_SECRET}
     issuer: agent-platform-v12

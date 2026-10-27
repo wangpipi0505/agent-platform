@@ -4,6 +4,7 @@ import static cn.agentplatform.skill.application.SkillCatalog.*;
 
 import cn.agentplatform.common.*;
 import cn.agentplatform.common.auth.AuthScheme;
+import cn.agentplatform.skill.domain.ProcessContract;
 import cn.agentplatform.skill.domain.SkillRules;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -69,17 +70,32 @@ public class SkillAdapters {
     private final ArtifactStore artifacts;
     private final AlgorithmAdapter algorithm;
     private final HttpAsyncAdapter asyncHttp;
+    private final ProcessAdapter process;
 
     public SkillAdapters(ArtifactStore artifacts, AlgorithmAdapter algorithm) {
-        this(artifacts, algorithm, null);
+        this(artifacts, algorithm, null, null);
     }
 
-    @org.springframework.beans.factory.annotation.Autowired
     public SkillAdapters(
             ArtifactStore artifacts, AlgorithmAdapter algorithm, HttpAsyncAdapter asyncHttp) {
+        this(artifacts, algorithm, asyncHttp, null);
+    }
+
+    /**
+     * 容器注入的正式构造。PROCESS 是适配器的一支而不是旁路：只有装配了 {@link ProcessAdapter} 的进程才能执行
+     * 本地进程技能，未装配时该类型按配置错误拒绝，而不是静默回退成别的调用方式。短构造保留给既有单测，
+     * 它们只覆盖 HTTP/MCP/ALGORITHM。
+     */
+    @org.springframework.beans.factory.annotation.Autowired
+    public SkillAdapters(
+            ArtifactStore artifacts,
+            AlgorithmAdapter algorithm,
+            HttpAsyncAdapter asyncHttp,
+            ProcessAdapter process) {
         this.artifacts = artifacts;
         this.algorithm = algorithm;
         this.asyncHttp = asyncHttp;
+        this.process = process;
     }
 
     public boolean asynchronous(Map<String, Object> contract) {
@@ -177,6 +193,14 @@ public class SkillAdapters {
                     throw new Failure("RESULT_UNKNOWN", true, "MCP SSE不提供原调用结果查询，禁止以对账名义重新调用工具");
                 yield mcp(contract, arguments, callId, runId, expectedAttempt);
             }
+            case "PROCESS" -> {
+                // 与原调用对账必须读回“已发生的结果”。本地进程没有结果查询通道，重跑一次不是对账，
+                // 而是第二次副作用；与 MCP 同一裁决，按“结果未知”拒绝。
+                if (queryOnly)
+                    throw new Failure(
+                            "RESULT_UNKNOWN", true, "本地进程没有可查询的原调用结果，禁止以对账名义重新执行");
+                yield localProcess(contract);
+            }
             case "ALGORITHM" ->
                     algorithm.invoke(
                             contract,
@@ -197,6 +221,34 @@ public class SkillAdapters {
      */
     static void requireAttempt(long expectedAttempt) {
         if (expectedAttempt < 1) throw new Failure("PARAM_ERROR", false, "业务调用必须提供已核实的原尝试身份");
+    }
+
+    /**
+     * PROCESS 分支只做“契约→进程→Raw”的搬运，不做语义加工：stdout 是原始证据，本卡不把它强解成
+     * outputSchema 对象（那是 T21c）。ProcessAdapter 已用 PlatformException 区分 403（开关关闭/允许根越界）、
+     * 502（启动失败/非0退出）、504（超时）；这里刻意不 catch 任何异常——包成通用的依赖不可用会把“配置错误”
+     * 与“上游抖动”混为一谈，调用方据此重试只会再执行一次本地进程（Y-3 的教训）。
+     *
+     * <p>调用参数本卡不注入：arguments→stdin/argv 的绑定属于 T21c。在此之前带 inputSchema 的 PROCESS 技能会
+     * 忽略入参执行，这一点作为未覆盖项如实记录，而不是在适配器里塞一个不完整的映射假装支持。
+     */
+    private Raw localProcess(Map<String, Object> contract) {
+        if (process == null)
+            throw new Failure("PARAM_ERROR", false, "当前进程未装配本地进程执行器，拒绝执行PROCESS技能");
+        ProcessContract parsed = ProcessContract.parse(Json.tree(contract.get("process")));
+        ProcessAdapter.Result executed = process.execute(parsed);
+        var structured = Json.object();
+        structured.put("exitCode", executed.exitCode());
+        structured.put("stdout", executed.stdoutTail());
+        structured.put("stderr", executed.stderrTail());
+        structured.put("truncStdout", executed.truncStdout());
+        structured.put("truncStderr", executed.truncStderr());
+        structured.put("durationMs", executed.durationMs());
+        return new Raw(
+                structured,
+                List.of(),
+                "本地进程退出码 " + executed.exitCode() + "，耗时 " + executed.durationMs() + "ms",
+                Json.tree(null));
     }
 
     private Raw http(
