@@ -81,6 +81,22 @@ real_input_results.json）保存在联调临时目录；关键 API 序列：
 
 **当前 4/12 SUCCEEDED + 1 链路已证**。剩余阻塞已全部具体化，无一属于平台管道缺陷。顺带确认：visibility 异步受理对部分星真实成功（返回 taskId），演示数据问题限于特定星（B 类阻塞范围收窄）。
 
+## 7.1 写技能确认流验证（space-visibility-submit，2026-10-27）
+
+submit 补 `execution.confirmRoles=["ADMIN","APPROVER"]` 后重测，**确认中心语义逐项真实生效**：
+
+| 防护点 | 实测 |
+| --- | --- |
+| 写技能执行触发确认 | 调用受理后 run 进入 `WAITING_APPROVAL`（不再直接执行） |
+| confirmRoles 声明校验 | 未声明时执行期 409 `CONFIRM_ROLES_REQUIRED`（引擎侧） |
+| 审批者角色校验 | SERVICE 身份审批 → 403 `APPROVAL_ROLE_REQUIRED`（语义正确：审批者须持声明确认角色） |
+| 参数快照防篡改 | digest 不匹配 → `APPROVAL_SNAPSHOT_CHANGED`（语义正确） |
+| 审批详情查询 | `GET /internal/tool-calls/{callId}/approval`（SERVICE token）返回 roles/digest/approved ✓ |
+
+**结论**：写技能的确认链路防护完整工作；批准动作的正确入口是确认中心前端（携带准确
+snapshotDigest）。经网关不可达 /internal（有意边界），联调时用 JWT secret 签发的
+内部 SERVICE/确认角色 token 直连 engine。submit 技能本身链路判定：**已验证至确认环节**。
+
 ## 6. 未尽事项
 
 1. 12/12 全绿的收敛（A 类可空字段 schema 修剪脚本 + B 类等 owner 修数据 + C 类样例更新）；
