@@ -1686,7 +1686,11 @@ public class RunService {
         result.put("inputs", TraceStore.json(run.get("inputs")));
         result.put("output", TraceStore.json(run.get("output")));
         result.put("fileRefs", protectedView ? List.of() : artifactRefs(rid, id));
-        result.put("error", TraceStore.json(run.get("error")));
+        var error = effectiveError(run, nodes, events);
+        result.put("error", error);
+        result.put("errorRaw", TraceStore.json(run.get("error")));
+        // 发布快照只暴露冻结状态；工具入参/出参属于运行内证词，不能越过发布边界。
+        if (!protectedView) result.put("diagnostics", diagnostics(rid, run, nodes, events, error));
         result.put("versionRefs", TraceStore.json(run.get("version_refs")));
         // UIF-A5：执行详情只读画布复用需要本次运行钉定的图定义——来自运行快照
         // （创建即冻结），与节点状态表同源，不存在"画布与记录不一致"的第二事实源。
@@ -1750,6 +1754,244 @@ public class RunService {
         return List.copyOf(files.values());
     }
 
+    // 纯函数：无数据库/时钟依赖，便于直接验证“失败运行必须有根因”的契约。
+    static JsonNode effectiveError(
+            Map<String, Object> run, List<Map<String, Object>> nodes, List<Map<String, Object>> events) {
+        var runError = TraceStore.json(run.get("error"));
+        if (!runError.isEmpty()) return runError;
+        for (var node : nodes) {
+            var nodeError = TraceStore.json(node.get("error"));
+            if (!nodeError.isEmpty()) return nodeError;
+        }
+        for (var event : events) {
+            String type = String.valueOf(event.get("type"));
+            if (!type.equals("MODEL_DISPATCH_FAILED") && !type.equals("NODE_FAILED")) continue;
+            var payload = TraceStore.json(event.get("payload"));
+            var nested = payload.path("error");
+            if (nested.isObject() && !nested.isEmpty()) return nested;
+            if (!payload.isEmpty()) return payload;
+        }
+        if ("FAILED".equals(run.get("status")))
+            return Json.tree(
+                    Map.of(
+                            "semantic",
+                            "RUN_FAILED_WITHOUT_ERROR",
+                            "message",
+                            "运行失败，但引擎没有记录可诊断的错误详情",
+                            "reason",
+                            "请管理员检查节点事件与工具调用记录"));
+        return Json.tree(Map.of());
+    }
+
+    private Map<String, Object> diagnostics(
+            long rid,
+            Map<String, Object> run,
+            List<Map<String, Object>> nodes,
+            List<Map<String, Object>> events,
+            JsonNode error) {
+        var attempts = attempts(rid);
+        var calls = toolCalls(rid);
+        var result = new LinkedHashMap<String, Object>();
+        result.put("error", normalizedError(run, nodes, calls, error));
+        result.put("attempts", attempts);
+        result.put("toolCalls", calls);
+        result.put("timeline", events.stream().map(this::eventRow).toList());
+        int failedCalls = (int) calls.stream().filter(c -> "FAILED".equals(c.get("status"))).count();
+        int retries = calls.stream()
+                .mapToInt(c -> ((Number) c.getOrDefault("retryCount", 0)).intValue())
+                .sum();
+        int failedAttempts =
+                (int) attempts.stream().filter(a -> "FAILED".equals(a.get("status"))).count();
+        result.put(
+                "counts",
+                Map.of(
+                        "attempts", attempts.size(),
+                        "failedAttempts", failedAttempts,
+                        "toolCalls", calls.size(),
+                        "failedToolCalls", failedCalls,
+                        "toolRetries", retries,
+                        "events", events.size()));
+        return result;
+    }
+
+    static Map<String, Object> normalizedError(
+            Map<String, Object> run,
+            List<Map<String, Object>> nodes,
+            List<Map<String, Object>> calls,
+            JsonNode error) {
+        // 成功运行也带 diagnostics，不能把空错误渲染成 RUN_FAILED。
+        if (error.isEmpty() && !"FAILED".equals(run.get("status"))) return null;
+        String semantic = error.path("semantic").asText(error.path("code").asText(""));
+        String stage = errorStage(semantic);
+        String message =
+                error.path("message").asText(
+                        error.path("reason").asText(
+                                "运行失败，但没有可读的错误说明"));
+        var failedCall = calls.stream()
+                .filter(c -> "FAILED".equals(c.get("status")))
+                .findFirst();
+        if (failedCall.isPresent()) {
+            var callResult = TraceStore.json(failedCall.get().get("result"));
+            String reason = callResult.path("error").path("reason").asText("");
+            if (reason.isBlank()) reason = callResult.path("modelSummary").asText("");
+            // 引擎常把工具失败收敛成 RETRYABLE_FAILURE；工具结果里的原因才是可读根因。
+            if (!reason.isBlank() && (message.isBlank() || message.equals(semantic)))
+                message = reason;
+            if ("执行".equals(stage)) stage = "工具调用";
+        }
+        var result = new LinkedHashMap<String, Object>();
+        result.put("code", semantic.isBlank() ? "RUN_FAILED" : semantic);
+        result.put("semantic", semantic);
+        result.put("stage", stage);
+        result.put("message", message);
+        result.put("retryable", errorRetryable(semantic));
+        result.put("hint", errorHint(semantic, stage));
+        Object nodeId = error.path("nodeInstanceId").isNumber()
+                ? error.path("nodeInstanceId").asLong()
+                : nodes.stream()
+                        .filter(n -> "FAILED".equals(n.get("status")))
+                        .map(n -> n.get("id"))
+                        .findFirst()
+                        .orElse(null);
+        if (nodeId != null) result.put("nodeInstanceId", nodeId);
+        Object callId = error.path("callId").isNumber() ? error.path("callId").asLong()
+                : calls.stream()
+                        .filter(c -> "FAILED".equals(c.get("status")))
+                        .map(c -> c.get("id"))
+                        .findFirst()
+                        .orElse(null);
+        if (callId != null) result.put("toolCallId", callId);
+        result.put("at", run.get("ended_at") == null ? null : run.get("ended_at"));
+        result.put("path", error.path("path").asText(""));
+        result.put("raw", error);
+        return result;
+    }
+
+    private List<Map<String, Object>> attempts(long rid) {
+        return store.db()
+                .queryForList(
+                        "select a.id,a.node_instance_id,a.attempt_no,a.status,a.error,"
+                                + "a.started_at,a.ended_at,a.routed_model,"
+                                + "greatest(0,extract(epoch from (a.ended_at-a.started_at))*1000)::bigint as duration_ms"
+                                + " from engine.attempt a join engine.node_instance n"
+                                + " on n.id=a.node_instance_id where n.run_id=? order by a.id",
+                        rid)
+                .stream()
+                .map(
+                        row -> {
+                            Map<String, Object> value = new LinkedHashMap<>();
+                            value.put("id", row.get("id"));
+                            value.put("nodeInstanceId", row.get("node_instance_id"));
+                            value.put("attemptNo", row.get("attempt_no"));
+                            value.put("status", row.get("status"));
+                            value.put("error", TraceStore.json(row.get("error")));
+                            value.put("routedModel", TraceStore.json(row.get("routed_model")));
+                            value.put("startedAt", row.get("started_at"));
+                            value.put("endedAt", row.get("ended_at"));
+                            value.put("durationMs", row.get("duration_ms"));
+                            return value;
+                        })
+                .toList();
+    }
+
+    private List<Map<String, Object>> toolCalls(long rid) {
+        return store.db()
+                .queryForList(
+                        "select t.id,t.node_instance_id,t.attempt_id,t.call_seq,t.skill_code,"
+                                + "t.status,t.args,t.result,t.error_semantic,t.duration_ms,t.is_mock,"
+                                + "t.readonly_retry_count,t.recovery_error,t.created_at"
+                                + " from engine.tool_call t where t.run_id=? order by t.id",
+                        rid)
+                .stream()
+                .map(
+                        row -> {
+                            Map<String, Object> value = new LinkedHashMap<>();
+                            value.put("id", row.get("id"));
+                            value.put("nodeInstanceId", row.get("node_instance_id"));
+                            value.put("attemptId", row.get("attempt_id"));
+                            value.put("callSeq", row.get("call_seq"));
+                            value.put("skillCode", row.get("skill_code"));
+                            value.put("status", row.get("status"));
+                            value.put("args", TraceStore.json(row.get("args")));
+                            value.put("result", TraceStore.json(row.get("result")));
+                            value.put("errorSemantic", row.get("error_semantic"));
+                            value.put("durationMs", row.get("duration_ms"));
+                            value.put("isMock", row.get("is_mock"));
+                            value.put("retryCount", row.get("readonly_retry_count"));
+                            value.put("recoveryError", row.get("recovery_error"));
+                            value.put("createdAt", row.get("created_at"));
+                            return value;
+                        })
+                .toList();
+    }
+
+    private Map<String, Object> eventRow(Map<String, Object> event) {
+        String type = String.valueOf(event.get("type"));
+        var row = new LinkedHashMap<String, Object>();
+        row.put("seq", event.get("seq"));
+        row.put("type", type);
+        row.put("label", eventLabel(type));
+        row.put("at", event.get("created_at"));
+        row.put("severity", type.contains("FAILED") || type.equals("RUN_FINISHED")
+                && "FAILED".equals(TraceStore.json(event.get("payload")).path("status").asText())
+                ? "error" : type.contains("RETRY") ? "warning" : "info");
+        row.put("payload", TraceStore.json(event.get("payload")));
+        return row;
+    }
+
+    private static String eventLabel(String type) {
+        return switch (type) {
+            case "RUN_STARTED" -> "运行开始";
+            case "NODE_STARTED" -> "节点开始";
+            case "MODEL_RETURN_RECORDED" -> "模型返回";
+            case "MODEL_DISPATCH_FAILED" -> "模型调用失败";
+            case "LOGIC_RESULT_COMMITTED" -> "节点结果提交";
+            case "NODE_FINISHED" -> "节点完成";
+            case "NODE_FAILED" -> "节点失败";
+            case "TOOL_CALL_REGISTERED" -> "工具调用登记";
+            case "TOOL_CALL_STARTED" -> "工具执行开始";
+            case "TOOL_CALL_FINISHED" -> "工具执行完成";
+            case "TOOL_CALL_FAILED" -> "工具执行失败";
+            case "RUN_FINISHED" -> "运行结束";
+            default -> type.replace('_', ' ');
+        };
+    }
+
+    private static String errorStage(String semantic) {
+        if (semantic.startsWith("MODEL")) return "模型调用";
+        if (semantic.startsWith("TOOL")) return "工具调用";
+        if (semantic.startsWith("PARAM") || semantic.startsWith("INPUT")) return "输入校验";
+        if (semantic.startsWith("APPROVAL")) return "人工确认";
+        if (semantic.startsWith("AUTH")) return "鉴权";
+        return "执行";
+    }
+
+    private static boolean errorRetryable(String semantic) {
+        if (semantic.startsWith("PARAM")
+                || semantic.startsWith("INPUT")
+                || semantic.startsWith("AUTH")
+                || semantic.startsWith("APPROVAL")) return false;
+        // 供应商返回的 4xx 是请求/凭据本身不合法，自动重试只会重复失败。
+        return !(semantic.contains("_400")
+                || semantic.contains("_401")
+                || semantic.contains("_403")
+                || semantic.contains("_422"));
+    }
+
+    private static String errorHint(String semantic, String stage) {
+        if ("工具调用".equals(stage))
+            return "查看工具调用的输入、输出与错误语义；确认外部服务可用后再重试。";
+        if (semantic.startsWith("MODEL"))
+            return "检查模型供应商地址、凭据、模型名称与工具能力；模型错误不应重试业务写操作。";
+        if (semantic.startsWith("PARAM") || semantic.startsWith("INPUT"))
+            return "修正输入后重新发起；参数错误重试不会成功。";
+        if (semantic.startsWith("APPROVAL"))
+            return "人工确认已超时或被拒绝；请重新发起并完成确认。";
+        if (semantic.startsWith("AUTH"))
+            return "检查登录身份、权限和凭据；鉴权失败不应自动重试。";
+        return "查看节点事件与工具调用记录，按错误阶段定位；不要盲目重试写操作。";
+    }
+
     private Map<String, Object> nodeView(Map<String, Object> n) {
         Map<String, Object> v = new LinkedHashMap<>();
         for (String k :
@@ -1767,6 +2009,9 @@ public class RunService {
         v.put("output", TraceStore.json(n.get("output")));
         v.put("nodeInstanceId", n.get("id"));
         v.put("nodeDefId", n.get("node_def_id"));
+        if (n.get("started_at") instanceof java.sql.Timestamp start
+                && n.get("ended_at") instanceof java.sql.Timestamp end)
+            v.put("durationMs", Math.max(0, end.getTime() - start.getTime()));
         return v;
     }
 
@@ -1881,6 +2126,96 @@ public class RunService {
                             + " order by id desc limit 200",
                         actor.tenantId(),
                         actor.principalId());
+    }
+
+    /** 运行监控：服务端检索 + 分页，避免管理台只能看到最近 200 条后在前端盲目过滤。 */
+    public Map<String, Object> page(Actor actor, Map<String, String> filters) {
+        int page = Math.max(1, parsePositive(filters.get("page"), 1));
+        int size = Math.min(100, Math.max(1, parsePositive(filters.get("size"), 20)));
+        var where = new StringBuilder(
+                " from engine.run r where r.tenant_id=? and r.principal_id=?"
+                        + " and r.trigger_type in ('CHAT','TASK')");
+        var args = new ArrayList<Object>();
+        args.add(actor.tenantId());
+        args.add(actor.principalId());
+        String q = filters.getOrDefault("q", "").trim();
+        if (q.length() > 128) throw new PlatformException(400, "INVALID_INPUT", "检索条件过长");
+        if (!q.isEmpty()) {
+            where.append(" and (position(lower(?) in lower(r.public_id))>0"
+                    + " or position(lower(?) in lower(r.app_code))>0)");
+            args.add(q);
+            args.add(q);
+        }
+        String status = filters.getOrDefault("status", "").trim();
+        if (!status.isEmpty()) {
+            if (!Set.of("QUEUED", "RUNNING", "WAITING_APPROVAL", "WAITING_EXTERNAL",
+                    "SUCCEEDED", "FAILED", "CANCELLED").contains(status))
+                throw new PlatformException(400, "INVALID_INPUT", "运行状态无效");
+            where.append(" and r.status=?");
+            args.add(status);
+        }
+        String appCode = filters.getOrDefault("appCode", "").trim();
+        if (!appCode.isEmpty()) {
+            if (appCode.length() > 128) throw new PlatformException(400, "INVALID_INPUT", "应用编码过长");
+            where.append(" and r.app_code=?");
+            args.add(appCode);
+        }
+        String from = filters.getOrDefault("from", "").trim();
+        String to = filters.getOrDefault("to", "").trim();
+        if (!from.isEmpty()) {
+            if (!from.matches("\\d{4}-\\d{2}-\\d{2}([T ].*)?"))
+                throw new PlatformException(400, "INVALID_INPUT", "开始时间格式无效");
+            where.append(" and r.started_at >= ?::timestamptz");
+            args.add(from);
+        }
+        if (!to.isEmpty()) {
+            if (!to.matches("\\d{4}-\\d{2}-\\d{2}([T ].*)?"))
+                throw new PlatformException(400, "INVALID_INPUT", "结束时间格式无效");
+            where.append(" and r.started_at < (?::date + interval '1 day')");
+            args.add(to);
+        }
+        Long total = store.db().queryForObject("select count(*)" + where, Long.class, args.toArray());
+        var pageArgs = new ArrayList<Object>(args);
+        pageArgs.add(size);
+        pageArgs.add((page - 1) * size);
+        List<Map<String, Object>> items = store.db().queryForList(
+                "select r.public_id as \"runId\",r.app_code as \"appCode\",r.trigger_type as"
+                    + " \"triggerType\",r.status,r.started_at as \"startedAt\",r.ended_at as"
+                    + " \"endedAt\",r.stop_reason as \"stopReason\""
+                    + where
+                    + " order by r.id desc limit ? offset ?",
+                pageArgs.toArray());
+        for (var item : items) {
+            item.put("statusLabel", runStatusLabel(String.valueOf(item.get("status"))));
+        }
+        var result = new LinkedHashMap<String, Object>();
+        result.put("items", items);
+        result.put("total", total == null ? 0 : total);
+        result.put("page", page);
+        result.put("size", size);
+        return result;
+    }
+
+    private static int parsePositive(String value, int fallback) {
+        if (value == null || value.isBlank()) return fallback;
+        try {
+            return Integer.parseInt(value.trim());
+        } catch (NumberFormatException failure) {
+            throw new PlatformException(400, "INVALID_INPUT", "分页参数无效");
+        }
+    }
+
+    private static String runStatusLabel(String status) {
+        return switch (status) {
+            case "QUEUED" -> "排队中";
+            case "RUNNING" -> "运行中";
+            case "WAITING_APPROVAL" -> "等待确认";
+            case "WAITING_EXTERNAL" -> "等待外部";
+            case "SUCCEEDED" -> "成功";
+            case "FAILED" -> "失败";
+            case "CANCELLED" -> "已取消";
+            default -> status;
+        };
     }
 
     public void recover() {

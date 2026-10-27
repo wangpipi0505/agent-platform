@@ -1788,11 +1788,14 @@ public class TraceStore {
                     String state = GraphRules.aggregate(nodes, runnable);
                     boolean terminal = Set.of("SUCCEEDED", "FAILED", "CANCELLED").contains(state);
                     Object output = GraphRules.aggregateOutput(nodes);
+                    Object runError = state.equals("FAILED") ? firstFailure(nodes) : null;
                     if (db.update(
                                     "update engine.run set"
                                         + " status=?,output=?::jsonb,output_ref=?,ended_at=case"
                                         + " when ? then now() else null end,stop_reason=case when ?"
-                                        + " then ? else stop_reason end where id=? and"
+                                        + " then ? else stop_reason end,"
+                                        + " error=case when error is null or error='{}'::jsonb"
+                                        + " then ?::jsonb else error end where id=? and"
                                         + " dispatch_owner=? and dispatch_generation=? and"
                                         + " dispatch_until>clock_timestamp()",
                                     state,
@@ -1803,6 +1806,7 @@ public class TraceStore {
                                     terminal,
                                     terminal,
                                     state.equals("FAILED") ? "NODE_FAILED" : "FINAL_ANSWER",
+                                    runError,
                                     dispatch.runId(),
                                     dispatch.owner(),
                                     dispatch.generation())
@@ -1813,6 +1817,14 @@ public class TraceStore {
                     requireDispatch(dispatch);
                     return state;
                 });
+    }
+
+    private static Object firstFailure(List<Map<String, Object>> nodes) {
+        for (var node : nodes) {
+            var error = json(node.get("error"));
+            if (!error.isEmpty()) return Json.write(error);
+        }
+        return null;
     }
 
     public static long number(Map<String, Object> row, String key) {
