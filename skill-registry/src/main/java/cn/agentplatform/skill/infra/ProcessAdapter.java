@@ -1,7 +1,12 @@
 package cn.agentplatform.skill.infra;
 
+import cn.agentplatform.common.Json;
 import cn.agentplatform.common.PlatformException;
 import cn.agentplatform.skill.domain.ProcessContract;
+import cn.agentplatform.skill.domain.SkillRules;
+
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -9,6 +14,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CharsetDecoder;
@@ -19,8 +25,10 @@ import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * 本地算法进程的一次性执行适配器（PLAT-21 / 方案 §12）。
@@ -41,8 +49,10 @@ import java.util.Objects;
  *   <li>开关关闭 403 PROCESS_DISABLED，且不产生任何副作用（不建目录、不起进程）。
  * </ol>
  *
- * <p>v1 有意不读取 stdin 中的 artifact 引用（防 SSRF 的解析属于 T21b），也不注入代理；
- * 取消（cancel）不在本卡范围。
+ * <p>PLAT-21c 起每次调用都是一次协议交换（方案 §4.4–§4.6）：stdin 写入请求信封后立即关闭，
+ * stdout 只接受唯一一个响应信封，退出码 2/3/4 分别映射为输入非法、计算失败、写输出失败，
+ * 其余非 0 仍是 502 PROCESS_EXITED。stdout 超过上限不是“截断就好”，信封已不可信，必须
+ * 杀树并判协议违规——算法被要求只回 SUMMARY，大结果走文件。
  */
 @Component
 public class ProcessAdapter {
@@ -70,16 +80,45 @@ public class ProcessAdapter {
         this.allowedRoot = allowedRoot;
     }
 
+    /** 请求信封（§4.4）：requestId 由调用事实的 callId 派生，算法必须原样回显。 */
+    public record Request(String requestId, String operation, JsonNode parameters) {
+
+        public Request {
+            Objects.requireNonNull(requestId, "requestId");
+            operation = operation == null ? "" : operation;
+            parameters = parameters == null ? Json.object() : parameters;
+        }
+    }
+
+    /** 成功响应里平台需要继续处理的部分（§4.5）；文件转存由调用方完成。 */
+    public record Output(
+            JsonNode result,
+            JsonNode files,
+            JsonNode warnings,
+            JsonNode metrics,
+            int exitCode,
+            long durationMs) {}
+
     /**
-     * 执行一次进程调用。成功（exitCode=0）返回捕获结果；非 0 退出返回 502 并带 stderr 尾部，
-     * 超时 504，工作目录越界 403，开关关闭 403。任何异常路径都不会留下存活的子进程树。
+     * PLAT-21a 兼容入口：不携带业务参数，等价于 {@code operation=""}、{@code parameters={}}。
+     * 生产接线走 {@link #execute(ProcessContract, Request)}。
      */
-    public Result execute(ProcessContract contract) {
+    public Output execute(ProcessContract contract) {
+        return execute(contract, new Request(UUID.randomUUID().toString(), "", Json.object()));
+    }
+
+    /**
+     * 执行一次契约化进程调用。开关关闭 403、允许根越界 403、超时 504、输入信封超限 400、
+     * 退出码 2/3/4 与其它非 0 按 §4.6 映射、stdout 协议违规 502；任何异常路径都不留存活子进程树。
+     */
+    public Output execute(ProcessContract contract, Request request) {
         Objects.requireNonNull(contract, "contract");
+        Objects.requireNonNull(request, "request");
         if (!enabled)
             throw new PlatformException(
                     403, "PROCESS_DISABLED", "本地进程执行未启用（agent.process.enabled=false）");
 
+        byte[] envelope = envelope(contract, request);
         long started = System.nanoTime();
         Path callDir = null;
         Process process = null;
@@ -102,9 +141,11 @@ public class ProcessAdapter {
                         502, "PROCESS_START_FAILED", "进程启动失败: " + message);
             }
 
-            Capture stdout = new Capture(contract.maxOutputBytes());
-            Capture stderr = new Capture(contract.maxOutputBytes());
             Process running = process;
+            // stdout 超限意味着信封不可能完整，直接杀树；stderr 超限仍只截断（诊断用途）。
+            Capture stdout =
+                    new Capture(contract.maxOutputBytes(), () -> ProcessTree.killTree(running));
+            Capture stderr = new Capture(contract.maxOutputBytes(), null);
             Thread stdoutReader =
                     Thread.ofVirtual()
                             .name("process-stdout-" + process.pid())
@@ -113,6 +154,8 @@ public class ProcessAdapter {
                     Thread.ofVirtual()
                             .name("process-stderr-" + process.pid())
                             .start(() -> stderr.drain(running.getErrorStream()));
+
+            writeEnvelope(process, envelope);
 
             boolean exited;
             try {
@@ -135,25 +178,220 @@ public class ProcessAdapter {
             join(stderrReader);
 
             long durationMs = Math.max(0, (System.nanoTime() - started) / 1_000_000);
-            int exitCode = process.exitValue();
-            if (exitCode != 0)
+            if (stdout.truncated())
                 throw new PlatformException(
                         502,
-                        "PROCESS_EXITED",
-                        "进程非 0 退出，exitCode=" + exitCode + "，stderr 尾部: " + stderr.tailText());
-            return new Result(
-                    exitCode,
-                    stdout.text(),
-                    stderr.text(),
-                    durationMs,
-                    stdout.truncated(),
-                    stderr.truncated());
+                        "PROCESS_OUTPUT_TOO_LARGE",
+                        "stdout 超过上限 " + contract.maxOutputBytes() + " 字节，已终止进程树");
+            int exitCode = process.exitValue();
+            if (exitCode != 0) throw exitFailure(exitCode, stderr, stdout);
+            return success(contract, request, stdout, exitCode, durationMs);
         } finally {
             if (process != null && process.isAlive()) {
                 ProcessTree.killTree(process);
             }
             deleteCallDir(callDir);
         }
+    }
+
+    /**
+     * 请求信封（§4.4）。参数只放业务入参，凭据一律不进信封；{@code files} 目前是空对象——
+     * artifact 引用到相对路径的映射属于后续卡，本卡不假装支持。
+     */
+    static byte[] envelope(ProcessContract contract, Request request) {
+        var node = Json.object();
+        node.put("protocol", contract.protocol());
+        node.put("requestId", request.requestId());
+        node.put("operation", request.operation());
+        node.set("parameters", request.parameters());
+        node.set("files", Json.object());
+        byte[] bytes = Json.write(node).getBytes(StandardCharsets.UTF_8);
+        if (bytes.length > ProcessContract.MAX_REQUEST_BYTES)
+            throw new PlatformException(
+                    400,
+                    "PROCESS_INPUT_TOO_LARGE",
+                    "请求信封序列化后 " + bytes.length + " 字节，超过上限 "
+                            + ProcessContract.MAX_REQUEST_BYTES + " 字节");
+        return bytes;
+    }
+
+    /**
+     * 写入信封后立刻关闭 stdin：算法以 EOF 作为“参数已完整”的开始信号（§4.4）。子进程可能
+     * 在读完之前就退出（例如立刻 exit 2），此时写失败不应该覆盖真实退出码，因此只记日志。
+     */
+    private static void writeEnvelope(Process process, byte[] envelope) {
+        try (OutputStream stdin = process.getOutputStream()) {
+            stdin.write(envelope);
+            stdin.flush();
+        } catch (IOException ex) {
+            LOG.log(System.Logger.Level.DEBUG, "写入请求信封失败: " + ex.getMessage());
+        }
+    }
+
+    /**
+     * 非 0 退出的语义（§4.6）：2=输入/数据非法、3=计算失败、4=写输出失败，其余维持
+     * PROCESS_EXITED。退出码是机器可判定的契约，因此优先于 stdout 里的自述；只有“其它非 0”
+     * 才会在进程仍按协议给出 {@code ok=false} 时透出它自己的 error.message。
+     */
+    private static PlatformException exitFailure(int exitCode, Capture stderr, Capture stdout) {
+        String tail = stderr.tailText();
+        String suffix = tail.isEmpty() ? "" : "，stderr 尾部: " + tail;
+        return switch (exitCode) {
+            case 2 ->
+                    new PlatformException(
+                            422, "PROCESS_INPUT_INVALID", "算法进程判定输入或数据非法（exitCode=2）" + suffix);
+            case 3 ->
+                    new PlatformException(
+                            502, "PROCESS_CALCULATION_FAILED", "算法进程计算失败（exitCode=3）" + suffix);
+            case 4 ->
+                    new PlatformException(
+                            502, "PROCESS_OUTPUT_WRITE_FAILED", "算法进程写输出失败（exitCode=4）" + suffix);
+            default -> {
+                PlatformException rejected = rejectedEnvelope(stdout);
+                yield rejected != null
+                        ? rejected
+                        : new PlatformException(
+                                502, "PROCESS_EXITED", "进程非 0 退出，exitCode=" + exitCode + suffix);
+            }
+        };
+    }
+
+    /** 其它非 0 退出时，尽力解析 stdout 信封；解析不了就返回 null，绝不覆盖真实退出原因。 */
+    private static PlatformException rejectedEnvelope(Capture stdout) {
+        try {
+            JsonNode root = singleObject(strictText(stdout));
+            JsonNode ok = root.get("ok");
+            if (ok != null && ok.isBoolean() && !ok.booleanValue()) {
+                JsonNode protocol = root.get("protocol");
+                if (protocol == null
+                        || !protocol.isTextual()
+                        || !ProcessContract.PROTOCOL.equals(protocol.asText())) return null;
+                return rejected(root);
+            }
+        } catch (PlatformException ignored) {
+            // 不是信封 = 以退出码为准。
+        }
+        return null;
+    }
+
+    /**
+     * 退出码 0 的唯一成功路径（§4.5）：恰好一个 JSON 对象 → protocol → ok → requestId →
+     * outputSchema。任何一项不成立都说明算法与平台不在同一份契约上，不能当作“输出验收失败”重试。
+     */
+    private static Output success(
+            ProcessContract contract,
+            Request request,
+            Capture stdout,
+            int exitCode,
+            long durationMs) {
+        JsonNode root = singleObject(strictText(stdout));
+
+        JsonNode protocol = root.get("protocol");
+        if (protocol == null || !protocol.isTextual() || !contract.protocol().equals(protocol.asText()))
+            throw mismatch(
+                    "响应 protocol 与请求不一致: 期望 " + contract.protocol() + "，实际 "
+                            + (protocol == null || protocol.isNull() ? "null" : protocol.asText()));
+
+        JsonNode okNode = root.get("ok");
+        if (okNode == null || !okNode.isBoolean()) throw mismatch("响应缺少布尔字段 ok");
+        if (!okNode.booleanValue())
+            throw mismatch("退出码 0 却声明 ok=false，算法必须以 exitCode=2/3/4 表达拒绝");
+
+        JsonNode requestId = root.get("requestId");
+        if (requestId == null
+                || !requestId.isTextual()
+                || !request.requestId().equals(requestId.asText()))
+            throw mismatch(
+                    "响应 requestId 与请求不一致: 期望 " + request.requestId() + "，实际 "
+                            + (requestId == null || requestId.isNull() ? "null" : requestId.asText()));
+
+        JsonNode result = root.get("result");
+        if (result == null || !result.isObject()) throw invalid("成功响应缺少 result 对象");
+        validateResult(contract, result);
+
+        return new Output(
+                result.deepCopy(),
+                arrayOrEmpty(root.get("files")),
+                arrayOrEmpty(root.get("warnings")),
+                objectOrEmpty(root.get("metrics")),
+                exitCode,
+                durationMs);
+    }
+
+    private static void validateResult(ProcessContract contract, JsonNode result) {
+        if (!contract.hasOutputSchema()) return;
+        try {
+            SkillRules.validate(
+                    Json.mapper().convertValue(contract.outputSchema(), Object.class),
+                    Json.mapper().convertValue(result, Object.class));
+        } catch (IllegalArgumentException ex) {
+            throw new PlatformException(
+                    502, "PROCESS_OUTPUT_SCHEMA_INVALID", "result 不满足 outputSchema: " + ex.getMessage());
+        }
+    }
+
+    /** ok=false 且退出码不属于 2/3/4 时使用：保留算法自己的业务错误，而不是笼统的“非 0 退出”。 */
+    private static PlatformException rejected(JsonNode root) {
+        JsonNode error = root.get("error");
+        String message = error == null ? "" : error.path("message").asText("");
+        if (message.isBlank()) message = "算法进程拒绝了本次调用";
+        if (message.length() > 512) message = message.substring(0, 512);
+        return new PlatformException(502, "PROCESS_REJECTED", message);
+    }
+
+    private static JsonNode arrayOrEmpty(JsonNode node) {
+        if (node == null || node.isNull()) return Json.mapper().createArrayNode();
+        if (!node.isArray()) throw invalid("响应字段 files/warnings 必须是数组");
+        return node.deepCopy();
+    }
+
+    private static JsonNode objectOrEmpty(JsonNode node) {
+        if (node == null || node.isNull()) return Json.object();
+        if (!node.isObject()) throw invalid("响应字段 metrics 必须是对象");
+        return node.deepCopy();
+    }
+
+    /**
+     * 恰好一个 JSON 对象：前后多余文本（Banner、进度条、日志行）都是协议违规。先看有没有
+     * 第一个 token，再要求读完整个对象后不存在第二个 token。
+     */
+    private static JsonNode singleObject(String text) {
+        int first = 0;
+        while (first < text.length() && Character.isWhitespace(text.charAt(first))) first++;
+        if (first < text.length() && text.charAt(first) != '{')
+            throw invalid("stdout 除响应信封外还包含多余文本（必须以 JSON 对象开始）");
+        try (JsonParser parser = Json.mapper().createParser(text)) {
+            if (parser.nextToken() == null) throw invalid("stdout 为空，没有响应信封");
+            JsonNode node = Json.mapper().readTree(parser);
+            if (parser.nextToken() != null) throw invalid("stdout 除响应信封外还包含多余文本");
+            if (node == null || !node.isObject()) throw invalid("stdout 的响应信封不是 JSON 对象");
+            return node;
+        } catch (IOException ex) {
+            throw invalid("stdout 不是合法 JSON: " + ex.getMessage());
+        }
+    }
+
+    private static String strictText(Capture capture) {
+        byte[] bytes = capture.bytesCopy();
+        if (bytes.length == 0) throw invalid("stdout 为空，没有响应信封");
+        CharsetDecoder decoder =
+                StandardCharsets.UTF_8
+                        .newDecoder()
+                        .onMalformedInput(CodingErrorAction.REPORT)
+                        .onUnmappableCharacter(CodingErrorAction.REPORT);
+        try {
+            return decoder.decode(ByteBuffer.wrap(bytes)).toString();
+        } catch (CharacterCodingException ex) {
+            throw invalid("stdout 不是合法 UTF-8");
+        }
+    }
+
+    private static PlatformException mismatch(String message) {
+        return new PlatformException(502, "PROCESS_PROTOCOL_MISMATCH", message);
+    }
+
+    private static PlatformException invalid(String message) {
+        return new PlatformException(502, "PROCESS_OUTPUT_INVALID", message);
     }
 
     /**
@@ -220,30 +458,25 @@ public class ProcessAdapter {
         return value == null || value.isBlank() ? null : value;
     }
 
-    /** 一次调用的可观测结果；stdoutTail/stderrTail 是各自保留窗口内的文本。 */
-    public record Result(
-            int exitCode,
-            String stdoutTail,
-            String stderrTail,
-            long durationMs,
-            boolean truncStdout,
-            boolean truncStderr) {}
-
     /**
      * 定长尾部缓冲：无论子进程输出多少，只保留最后 capacity 字节；总量超过 capacity 时
      * trunc=true。使用环形数组而非无限 ByteArrayOutputStream，保证 2MiB 甚至更大洪泛也不 OOM。
+     * onOverflow 在首次超限时触发一次（stdout 用它杀树；stderr 只截断）。
      */
     private static final class Capture {
 
         private final int capacity;
         private final byte[] ring;
+        private final Runnable onOverflow;
         private int start;
         private int size;
         private long total;
+        private boolean overflowFired;
 
-        private Capture(int capacity) {
+        private Capture(int capacity, Runnable onOverflow) {
             this.capacity = capacity;
             this.ring = new byte[capacity];
+            this.onOverflow = onOverflow;
         }
 
         private synchronized void drain(InputStream in) {
@@ -264,6 +497,7 @@ public class ProcessAdapter {
                 System.arraycopy(bytes, length - capacity, ring, 0, capacity);
                 start = 0;
                 size = capacity;
+                fireOverflow();
                 return;
             }
             int overflow = Math.max(0, size + length - capacity);
@@ -276,14 +510,25 @@ public class ProcessAdapter {
             System.arraycopy(bytes, 0, ring, end, first);
             if (length > first) System.arraycopy(bytes, first, ring, 0, length - first);
             size += length;
+            fireOverflow();
+        }
+
+        private void fireOverflow() {
+            if (onOverflow == null || overflowFired || total <= capacity) return;
+            overflowFired = true;
+            try {
+                onOverflow.run();
+            } catch (RuntimeException ex) {
+                LOG.log(System.Logger.Level.DEBUG, "处理输出超限失败: " + ex.getMessage());
+            }
         }
 
         private synchronized boolean truncated() {
             return total > capacity;
         }
 
-        private synchronized String text() {
-            return decode(bytes(), truncated());
+        private synchronized byte[] bytesCopy() {
+            return bytes();
         }
 
         private synchronized String tailText() {

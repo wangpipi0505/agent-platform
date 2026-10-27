@@ -2,7 +2,9 @@ package cn.agentplatform.skill.infra;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import cn.agentplatform.common.Json;
 import cn.agentplatform.common.PlatformException;
+import cn.agentplatform.skill.domain.ProcessContract;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,11 +19,11 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * PLAT-21b 执行层：SkillAdapters 的 PROCESS 分支只做“契约→进程→Raw”的搬运。
+ * PLAT-21b/21c 执行层：SkillAdapters 的 PROCESS 分支负责“契约+调用参数 → 请求信封 → 进程 → Raw”。
  *
- * <p>两条硬约束在这里被钉住：进程失败的 403/502/504 原样冒泡（不能折叠成 DEPENDENCY_UNAVAILABLE 之类的
- * 通用依赖错误，否则调用方会把“本地开关没开/工作目录越界”误判为可重试的上游故障）；开关关闭时在创建任何
- * 调用目录之前就拒绝，不留半截现场。
+ * <p>这里钉住三件事：worker 确实收到 {@code protocol/requestId/operation/parameters} 四键（T21c）；交给下游的
+ * Raw 是响应 {@code result} 而不是整段 stdout（否则 protocol/ok/metrics 会污染下游 schema）；进程失败的
+ * 403/502/504 原样冒泡，不折叠成通用依赖错误，否则调用方会把“开关没开/目录越界”误判为可重试的上游故障。
  */
 @Timeout(120)
 class SkillProcessRoutingTest {
@@ -46,48 +48,42 @@ class SkillProcessRoutingTest {
         }
     }
 
-    private static Map<String, Object> contract(String... workerArgs) {
-        var process = new LinkedHashMap<String, Object>();
-        process.put("command", FakeProcessWorker.command(workerArgs));
-        process.put("timeoutMs", 5000);
-        var contract = new LinkedHashMap<String, Object>();
-        contract.put("type", "PROCESS");
-        contract.put("description", "本地执行测试进程");
-        contract.put("invocationKind", "SYNC");
-        contract.put("process", process);
-        contract.put("inputSchema", Map.of("type", "object"));
-        contract.put("outputSchema", Map.of("type", "object"));
-        contract.put(
-                "execution",
-                Map.of(
-                        "readonly", true,
-                        "sideEffect", false,
-                        "idempotent", false,
-                        "cancellable", false));
-        return contract;
+    @Test
+    void workerReceivesProtocolEnvelopeBuiltFromCallArguments() {
+        Map<String, Object> arguments = Map.of("month", "2026-10", "topN", 5);
+
+        var raw = adapters.invoke(contract("envelope"), arguments, "idem-1", 7L, false, "run-1", 1L);
+
+        // worker 把读到的 stdin 原文放进 result.stdin；先断言 Raw 就是 result，再逐键验证信封。
+        var envelope = Json.read(raw.structured().path("stdin").asText());
+        assertEquals(ProcessContract.PROTOCOL, envelope.path("protocol").asText());
+        assertEquals("7", envelope.path("requestId").asText(), "requestId 必须是 callId");
+        assertEquals("revenue.forecast", envelope.path("operation").asText(), "operation 必须是技能 code");
+        assertEquals(arguments, Json.mapper().convertValue(envelope.path("parameters"), Map.class));
+        assertTrue(envelope.path("files").isObject(), "files 必须是对象");
+        assertFalse(raw.structured().has("protocol"), "Raw 只能是 result，不能是整段 stdout");
+        assertFalse(raw.structured().has("ok"));
     }
 
     @Test
-    void processSkillReturnsExitCodeAndStdoutTailAsStructuredOutput() {
-        var raw = adapters.invoke(contract("ok"), Map.of(), "idem-1", 1L, false, "run-1", 1L);
+    void rawOutputIsResultNodeNotTheWholeEnvelope() {
+        var raw = adapters.invoke(contract("ok"), Map.of(), "idem-2", 2L, false, "run-2", 1L);
 
-        var structured = raw.structured();
-        assertNotNull(structured, "PROCESS 必须给出结构化输出，不能只有摘要文本");
-        assertEquals(0, structured.path("exitCode").asInt());
-        assertTrue(
-                structured.path("stdout").asText().contains("ok-stdout"),
-                "stdout 尾部要保留进程输出: " + structured.path("stdout").asText());
-        assertTrue(structured.path("stdout").asText().contains("中文-正常退出"));
-        assertEquals("", structured.path("stderr").asText());
-        assertFalse(structured.path("truncStdout").asBoolean());
-        assertFalse(structured.path("truncStderr").asBoolean());
-        assertTrue(structured.path("durationMs").isIntegralNumber());
+        java.util.List<String> lines = new java.util.ArrayList<>();
+        raw.structured().path("lines").forEach(node -> lines.add(node.asText()));
+        assertEquals(
+                java.util.List.of("ok-stdout", "中文-正常退出"),
+                lines,
+                "result.lines 应原样成为 Raw 的内容");
+        assertFalse(raw.structured().has("protocol"));
+        assertFalse(raw.structured().has("requestId"));
+        assertFalse(raw.structured().has("metrics"));
         assertTrue(raw.fileRefs().isEmpty(), "PROCESS 不产生文件引用");
         assertFalse(raw.summary().isBlank());
     }
 
     @Test
-    void nonZeroExitPropagatesProcessExitedInsteadOfDependencyUnavailable() {
+    void calculationFailureIsNotFoldedIntoDependencyUnavailable() {
         var ex =
                 assertThrows(
                         PlatformException.class,
@@ -95,16 +91,15 @@ class SkillProcessRoutingTest {
                                 adapters.invoke(
                                         contract("exit3"),
                                         Map.of(),
-                                        "idem-2",
-                                        2L,
+                                        "idem-3",
+                                        3L,
                                         false,
-                                        "run-2",
+                                        "run-3",
                                         1L));
 
         assertEquals(502, ex.status());
-        assertEquals("PROCESS_EXITED", ex.code());
+        assertEquals("PROCESS_CALCULATION_FAILED", ex.code());
         assertTrue(ex.getMessage().contains("boom-stderr"), "异常消息要带 stderr 尾部");
-        assertTrue(ex.getMessage().contains("3"), "异常消息要带 exitCode");
     }
 
     @Test
@@ -116,7 +111,7 @@ class SkillProcessRoutingTest {
                         PlatformException.class,
                         () ->
                                 disabled.invoke(
-                                        contract("ok"), Map.of(), "idem-3", 3L, false, "run-3", 1L));
+                                        contract("ok"), Map.of(), "idem-4", 4L, false, "run-4", 1L));
 
         assertEquals(403, ex.status());
         assertEquals("PROCESS_DISABLED", ex.code());
@@ -132,9 +127,31 @@ class SkillProcessRoutingTest {
                         SkillAdapters.Failure.class,
                         () ->
                                 adapters.invoke(
-                                        contract("ok"), Map.of(), "idem-4", 4L, true, "run-4", 1L));
+                                        contract("ok"), Map.of(), "idem-5", 5L, true, "run-5", 1L));
 
         assertEquals("RESULT_UNKNOWN", ex.semantic);
         assertTrue(ex.unknown, "本地进程没有可查询的原调用结果，必须标记为结果未知");
+    }
+
+    private static Map<String, Object> contract(String... workerArgs) {
+        var process = new LinkedHashMap<String, Object>();
+        process.put("command", FakeProcessWorker.command(workerArgs));
+        process.put("timeoutMs", 5000);
+        var contract = new LinkedHashMap<String, Object>();
+        contract.put("code", "revenue.forecast");
+        contract.put("type", "PROCESS");
+        contract.put("description", "本地执行测试进程");
+        contract.put("invocationKind", "SYNC");
+        contract.put("process", process);
+        contract.put("inputSchema", Map.of("type", "object"));
+        contract.put("outputSchema", Map.of("type", "object"));
+        contract.put(
+                "execution",
+                Map.of(
+                        "readonly", true,
+                        "sideEffect", false,
+                        "idempotent", false,
+                        "cancellable", false));
+        return contract;
     }
 }

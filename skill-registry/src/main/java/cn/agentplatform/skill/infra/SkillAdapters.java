@@ -199,7 +199,7 @@ public class SkillAdapters {
                 if (queryOnly)
                     throw new Failure(
                             "RESULT_UNKNOWN", true, "本地进程没有可查询的原调用结果，禁止以对账名义重新执行");
-                yield localProcess(contract);
+                yield localProcess(contract, arguments, callId);
             }
             case "ALGORITHM" ->
                     algorithm.invoke(
@@ -224,30 +224,29 @@ public class SkillAdapters {
     }
 
     /**
-     * PROCESS 分支只做“契约→进程→Raw”的搬运，不做语义加工：stdout 是原始证据，本卡不把它强解成
-     * outputSchema 对象（那是 T21c）。ProcessAdapter 已用 PlatformException 区分 403（开关关闭/允许根越界）、
-     * 502（启动失败/非0退出）、504（超时）；这里刻意不 catch 任何异常——包成通用的依赖不可用会把“配置错误”
-     * 与“上游抖动”混为一谈，调用方据此重试只会再执行一次本地进程（Y-3 的教训）。
+     * PROCESS 分支只做“契约+调用参数→进程→Raw”的搬运。请求信封由 ProcessAdapter 按 §4.4 写 stdin
+     * （protocol/requestId/operation/parameters/files），本方法只提供 requestId=callId、operation=技能 code、
+     * parameters=已校验的 arguments；Raw 的输出取响应 {@code result}，而不是整段 stdout——stdout 是协议信封，
+     * 把它当业务结果会把 requestId/ok/metrics 混进下游 schema。
      *
-     * <p>调用参数本卡不注入：arguments→stdin/argv 的绑定属于 T21c。在此之前带 inputSchema 的 PROCESS 技能会
-     * 忽略入参执行，这一点作为未覆盖项如实记录，而不是在适配器里塞一个不完整的映射假装支持。
+     * <p>ProcessAdapter 已用 PlatformException 区分 403（开关关闭/允许根越界）、400（信封超限）、502（启动失败/
+     * 退出码/协议违规/输出 schema）、504（超时）；这里刻意不 catch 任何异常——包成通用的依赖不可用会把“配置错误”
+     * 与“上游抖动”混为一谈，调用方据此重试只会再执行一次本地进程（Y-3 的教训）。
      */
-    private Raw localProcess(Map<String, Object> contract) {
+    private Raw localProcess(Map<String, Object> contract, Map<String, Object> arguments, long callId) {
         if (process == null)
             throw new Failure("PARAM_ERROR", false, "当前进程未装配本地进程执行器，拒绝执行PROCESS技能");
         ProcessContract parsed = ProcessContract.parse(Json.tree(contract.get("process")));
-        ProcessAdapter.Result executed = process.execute(parsed);
-        var structured = Json.object();
-        structured.put("exitCode", executed.exitCode());
-        structured.put("stdout", executed.stdoutTail());
-        structured.put("stderr", executed.stderrTail());
-        structured.put("truncStdout", executed.truncStdout());
-        structured.put("truncStderr", executed.truncStderr());
-        structured.put("durationMs", executed.durationMs());
+        String operation = String.valueOf(contract.get("code"));
+        ProcessAdapter.Output executed =
+                process.execute(
+                        parsed,
+                        new ProcessAdapter.Request(
+                                Long.toString(callId), operation, Json.tree(arguments)));
         return new Raw(
-                structured,
+                executed.result(),
                 List.of(),
-                "本地进程退出码 " + executed.exitCode() + "，耗时 " + executed.durationMs() + "ms",
+                "本地进程返回成功，耗时 " + executed.durationMs() + "ms",
                 Json.tree(null));
     }
 

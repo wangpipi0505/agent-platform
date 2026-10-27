@@ -309,6 +309,9 @@ public class SkillExecution {
                     semantic = legacy ? "RESULT_UNKNOWN" : ex.semantic;
                     reason = ex.getMessage();
                 } catch (Exception ex) {
+                    // 本地进程的失败是“本次调用为什么没跑成”的结论，不是“外部输出不合法”：403 开关关闭、
+                    // 403 允许根越界、504 超时都必须原样透出，否则调用方会把配置错误当可重试的验收失败。
+                    if (ex instanceof PlatformException pe && pe.code().startsWith("PROCESS_")) throw pe;
                     boolean sideEffect = Boolean.TRUE.equals(execution.get("sideEffect"));
                     status = sideEffect ? "UNKNOWN" : "FAILED";
                     semantic = sideEffect ? "RESULT_UNKNOWN" : "OUTPUT_INVALID";

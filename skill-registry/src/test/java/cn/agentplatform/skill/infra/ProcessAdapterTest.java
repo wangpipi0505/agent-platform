@@ -20,6 +20,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -28,7 +29,8 @@ import java.util.Set;
 /**
  * PLAT-21 执行原语的行为测试：真实起进程，不用 mock。
  *
- * <p>每个用例都断言允许根下不留 {@code call-*} 目录，确保 finally 清理生效。
+ * <p>T21c 起，worker 必须按 {@code algorithm-process/1} 在 stdout 写响应信封，因此诊断信息从
+ * {@code result.lines} 读取；每个用例都断言允许根下不留 {@code call-*} 目录，确保 finally 清理生效。
  */
 @Timeout(120)
 class ProcessAdapterTest {
@@ -75,26 +77,33 @@ class ProcessAdapterTest {
 
     @Test
     void executesAndReturnsZeroExit() {
-        ProcessAdapter.Result result = adapter.execute(ProcessContract.parse(contract("ok")));
+        ProcessAdapter.Output output = adapter.execute(ProcessContract.parse(contract("ok")));
 
-        assertEquals(0, result.exitCode());
-        assertTrue(result.stdoutTail().contains("ok-stdout"));
-        assertTrue(result.stdoutTail().contains("中文-正常退出"));
-        assertEquals("", result.stderrTail());
-        assertFalse(result.truncStdout());
-        assertFalse(result.truncStderr());
-        assertTrue(result.durationMs() >= 0);
+        assertEquals(0, output.exitCode());
+        assertEquals(List.of("ok-stdout", "中文-正常退出"), lines(output));
+        assertTrue(output.durationMs() >= 0);
+        assertTrue(output.files().isEmpty());
+        assertTrue(output.warnings().isEmpty());
     }
 
     @Test
-    void nonZeroExitCarriesStderrTail() {
+    void legacyEntryWithoutRequestStillWorks() {
+        // T21a 的调用点仍走 execute(contract)：没有 operation/parameters 时信封必须仍然合法。
+        ProcessAdapter.Output output = adapter.execute(ProcessContract.parse(contract("ok")));
+
+        assertEquals(0, output.exitCode());
+        assertEquals(List.of("ok-stdout", "中文-正常退出"), lines(output));
+    }
+
+    @Test
+    void calculationFailureIsNotReportedAsGenericExit() {
         PlatformException ex =
                 assertThrows(
                         PlatformException.class,
                         () -> adapter.execute(ProcessContract.parse(contract("exit3"))));
 
         assertEquals(502, ex.status());
-        assertEquals("PROCESS_EXITED", ex.code());
+        assertEquals("PROCESS_CALCULATION_FAILED", ex.code());
         assertTrue(ex.getMessage().contains("boom-stderr"), "异常消息应带 stderr 尾部");
         assertTrue(ex.getMessage().contains("3"), "异常消息应带 exitCode");
     }
@@ -117,29 +126,23 @@ class ProcessAdapterTest {
     }
 
     @Test
-    void floodIsTruncatedAtOneMiB() {
-        ProcessAdapter.Result result = adapter.execute(ProcessContract.parse(contract("flood")));
+    void stdoutBeyondLimitKillsTheTree() {
+        PlatformException ex =
+                assertThrows(
+                        PlatformException.class,
+                        () -> adapter.execute(ProcessContract.parse(contract("flood"))));
 
-        assertEquals(0, result.exitCode());
-        assertTrue(result.truncStdout(), "2 MiB 输出必须标记截断");
-        assertEquals(
-                ProcessContract.DEFAULT_MAX_OUTPUT_BYTES,
-                result.stdoutTail().getBytes(StandardCharsets.UTF_8).length);
-        assertFalse(result.truncStderr());
-        assertEquals("", result.stderrTail());
+        assertEquals(502, ex.status());
+        assertEquals("PROCESS_OUTPUT_TOO_LARGE", ex.code());
     }
 
     @Test
-    void stderrFloodIsAlsoTruncatedAtOneMiB() {
-        ProcessAdapter.Result result = adapter.execute(ProcessContract.parse(contract("flooderr")));
+    void stderrFloodIsTruncatedWithoutFailingTheCall() {
+        ProcessAdapter.Output output = adapter.execute(ProcessContract.parse(contract("flooderr")));
 
-        assertEquals(0, result.exitCode());
-        assertTrue(result.truncStderr(), "stderr 2 MiB 也必须标记截断");
-        assertEquals(
-                ProcessContract.DEFAULT_MAX_OUTPUT_BYTES,
-                result.stderrTail().getBytes(StandardCharsets.UTF_8).length);
-        assertFalse(result.truncStdout());
-        assertEquals("", result.stdoutTail());
+        // stderr 只是诊断：2 MiB 必须被截断丢弃，而不是让调用失败或让读取线程 OOM。
+        assertEquals(0, output.exitCode());
+        assertEquals(List.of("flooderr-ok"), lines(output));
     }
 
     @Test
@@ -149,15 +152,13 @@ class ProcessAdapterTest {
         // 与是否过 shell 无关；空格、中文、$、% 已足以证明 argv 是原样传递的。
         ObjectNode json = contract("echoargs", "a b", "中文 参数", "$HOME;%PATH%");
 
-        ProcessAdapter.Result result = adapter.execute(ProcessContract.parse(json));
+        ProcessAdapter.Output output = adapter.execute(ProcessContract.parse(json));
 
-        List<String> lines = result.stdoutTail().lines().toList();
-        assertTrue(lines.contains("argc=3"), "实际输出: " + result.stdoutTail());
-        assertTrue(lines.contains("arg=a b"), "含空格参数必须原样到达，实际输出: " + result.stdoutTail());
-        assertTrue(lines.contains("arg=中文 参数"), "中文参数必须原样到达，实际输出: " + result.stdoutTail());
-        assertTrue(
-                lines.contains("arg=$HOME;%PATH%"),
-                "shell 元字符不得被解释，实际输出: " + result.stdoutTail());
+        List<String> lines = lines(output);
+        assertTrue(lines.contains("argc=3"), "实际输出: " + lines);
+        assertTrue(lines.contains("arg=a b"), "含空格参数必须原样到达，实际输出: " + lines);
+        assertTrue(lines.contains("arg=中文 参数"), "中文参数必须原样到达，实际输出: " + lines);
+        assertTrue(lines.contains("arg=$HOME;%PATH%"), "shell 元字符不得被解释，实际输出: " + lines);
         String cwdLine =
                 lines.stream().filter(line -> line.startsWith("cwd=")).findFirst().orElseThrow();
         Path cwd = Path.of(cwdLine.substring("cwd=".length()));
@@ -175,13 +176,13 @@ class ProcessAdapterTest {
         ObjectNode json = contract("echoargs", "x");
         json.put("workDirRoot", chineseRoot.toString());
 
-        ProcessAdapter.Result result = local.execute(ProcessContract.parse(json));
+        ProcessAdapter.Output output = local.execute(ProcessContract.parse(json));
 
-        List<String> lines = result.stdoutTail().lines().toList();
+        List<String> lines = lines(output);
         String cwd = lines.stream().filter(line -> line.startsWith("cwd=")).findFirst().orElseThrow();
         assertTrue(cwd.contains("中文 允许根"), "cwd 应保留中文目录名: " + cwd);
         assertTrue(cwd.contains("call-"), "cwd 应是允许根下的 callDir: " + cwd);
-        assertTrue(lines.contains("argc=1"), result.stdoutTail());
+        assertTrue(lines.contains("argc=1"), lines.toString());
     }
 
     @Test
@@ -204,9 +205,10 @@ class ProcessAdapterTest {
         ObjectNode json = contract("env");
         json.putObject("env").put("AGENT_PROCESS_ALLOWED", "yes-中文");
 
-        ProcessAdapter.Result result = adapter.execute(ProcessContract.parse(json));
+        ProcessAdapter.Output output = adapter.execute(ProcessContract.parse(json));
 
-        Map<String, String> environment = FakeProcessWorker.parseEnvironment(result.stdoutTail());
+        Map<String, String> environment =
+                FakeProcessWorker.parseEnvironment(String.join("\n", lines(output)));
         assertEquals("yes-中文", environment.get("AGENT_PROCESS_ALLOWED"));
         assertFalse(
                 environment.containsKey(parentOnly),
@@ -257,6 +259,12 @@ class ProcessAdapterTest {
         FakeProcessWorker.command(workerArgs).forEach(command::add);
         json.put("timeoutMs", 5000);
         return json;
+    }
+
+    private static List<String> lines(ProcessAdapter.Output output) {
+        List<String> lines = new ArrayList<>();
+        output.result().path("lines").forEach(node -> lines.add(node.asText()));
+        return lines;
     }
 
     private void assertNoCallDirs() {

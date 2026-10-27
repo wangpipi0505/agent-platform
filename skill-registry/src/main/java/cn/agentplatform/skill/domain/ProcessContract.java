@@ -33,6 +33,9 @@ import java.util.regex.Pattern;
  *       执行器保底注入的最小必需变量（否则子进程可被指向任意可执行文件）。
  *   <li>{@code stdinJson} v1 只允许 artifact 引用形态；读取与解析属于 T21b，
  *       本卡只校验其结构与非空大小上限。
+ *   <li>{@code protocol} 只接受 {@link #PROTOCOL}；{@code outputSchema} 是可选的成功响应
+ *       {@code result} 校验器（方案 §4.5），本卡只校验它是 JSON 对象，Schema 的结构校验
+ *       在发布预检（{@link cn.agentplatform.skill.application.SkillCatalog#publish}）里做。
  * </ul>
  */
 public record ProcessContract(
@@ -41,12 +44,23 @@ public record ProcessContract(
         Duration timeout,
         JsonNode stdinJson,
         Map<String, String> allowedEnv,
-        int maxOutputBytes) {
+        int maxOutputBytes,
+        String protocol,
+        JsonNode outputSchema) {
+
+    /** 算法进程与平台之间的唯一线协议标识（方案 §4.4）。 */
+    public static final String PROTOCOL = "algorithm-process/1";
 
     public static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(60);
     public static final Duration MAX_TIMEOUT = Duration.ofMinutes(30);
     public static final int DEFAULT_MAX_OUTPUT_BYTES = 1024 * 1024;
     public static final int HARD_MAX_OUTPUT_BYTES = 1024 * 1024;
+
+    /**
+     * 请求信封 {protocol, requestId, operation, parameters, files} 序列化后的上限（契约 §4.4）。
+     * 超过即 400：这不是算法能自行处理的输入，继续执行只会让算法读到半截 JSON。
+     */
+    public static final int MAX_REQUEST_BYTES = 1024 * 1024;
 
     private static final int MAX_COMMAND_ARGS = 64;
     private static final int MAX_ARG_LENGTH = 4096;
@@ -98,6 +112,8 @@ public record ProcessContract(
         stdinJson = validStdin(stdinJson);
         allowedEnv = validEnvironment(allowedEnv);
         maxOutputBytes = validMaxOutput(maxOutputBytes);
+        protocol = validProtocol(protocol);
+        outputSchema = validOutputSchema(outputSchema);
     }
 
     /**
@@ -115,7 +131,27 @@ public record ProcessContract(
         if (stdin == null || stdin.isNull()) stdin = null;
         Map<String, String> env = parseEnvironment(contract.get("env"));
         int maxOutput = parseMaxOutput(contract.get("maxOutputBytes"));
-        return new ProcessContract(command, workDirRoot, timeout, stdin, env, maxOutput);
+        String protocol = parseProtocol(contract.get("protocol"));
+        JsonNode outputSchema = parseOutputSchema(contract.get("outputSchema"));
+        return new ProcessContract(
+                command, workDirRoot, timeout, stdin, env, maxOutput, protocol, outputSchema);
+    }
+
+    /** 是否声明了成功响应 {@code result} 的校验器；没有时只要求 result 是对象。 */
+    public boolean hasOutputSchema() {
+        return outputSchema != null;
+    }
+
+    private static String parseProtocol(JsonNode node) {
+        if (node == null || node.isNull()) return PROTOCOL;
+        if (!node.isTextual())
+            throw invalid("字段 protocol 必须是字符串 \"" + PROTOCOL + "\"，实际类型: " + node.getNodeType());
+        return validProtocol(node.asText());
+    }
+
+    private static JsonNode parseOutputSchema(JsonNode node) {
+        if (node == null || node.isNull()) return null;
+        return validOutputSchema(node);
     }
 
     private static List<String> parseCommand(JsonNode node) {
@@ -251,6 +287,23 @@ public record ProcessContract(
         return maxOutputBytes;
     }
 
+    /**
+     * 线协议只能有一个：写死 v1 而不是“任意字符串”，是让算法侧与平台侧的协议版本漂移在
+     * 发布期就变成显式错误，而不是运行期静默降级。
+     */
+    private static String validProtocol(String protocol) {
+        if (protocol == null) return PROTOCOL;
+        if (!PROTOCOL.equals(protocol))
+            throw invalid("字段 protocol 只支持 \"" + PROTOCOL + "\"，实际: " + protocol);
+        return protocol;
+    }
+
+    private static JsonNode validOutputSchema(JsonNode outputSchema) {
+        if (outputSchema == null || outputSchema.isNull()) return null;
+        if (!outputSchema.isObject()) throw invalid("字段 outputSchema 必须是 JSON 对象（JSON Schema）");
+        return outputSchema.deepCopy();
+    }
+
     private static boolean isAbsolute(String value) {
         try {
             return Path.of(value).isAbsolute();
@@ -277,6 +330,10 @@ public record ProcessContract(
                 + allowedEnv.keySet()
                 + ", maxOutputBytes="
                 + maxOutputBytes
+                + ", protocol="
+                + protocol
+                + ", outputSchema="
+                + (outputSchema == null ? "none" : outputSchema.getNodeType())
                 + "]";
     }
 }

@@ -22,7 +22,7 @@ class ProcessTreeTest {
     void startsAndWaitsForExit() throws Exception {
         Process process =
                 ProcessTree.start(
-                        ProcessTree.builder(FakeProcessWorker.command("ok"), temp, null));
+                        ProcessTree.builder(FakeProcessWorker.command("plain"), temp, null));
 
         assertTrue(
                 ProcessTree.awaitExit(process, Duration.ofSeconds(30)),

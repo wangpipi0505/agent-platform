@@ -9,6 +9,8 @@ import cn.agentplatform.skill.infra.OpenApiHttpMapping;
 import cn.agentplatform.skill.infra.SkillAdapters;
 import cn.agentplatform.skill.infra.SkillClients;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -16,6 +18,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
@@ -595,6 +601,9 @@ public class SkillCatalog {
                     if (candidate.get("status").equals("PUBLISHED")) return candidate;
                     if (!candidate.get("status").equals("DRAFT"))
                         throw error(409, "SKILL_STATE", "只有草稿可发布");
+                    // PROCESS 的自检放在发布口：command 指向不存在文件、workDirRoot 不可达是配置错误，
+                    // 放它进 PUBLISHED 只会把失败推迟到第一次真实调用（而且那次可能已经产生外部影响）。
+                    processPrecheck(candidate);
                     var execution = object(candidate.get("execution"));
                     var guard = object(candidate.get("guard"));
                     if ("CONFIRM_REQUIRED".equals(candidate.get("riskLevel"))
@@ -649,6 +658,82 @@ public class SkillCatalog {
                             code);
                     return version(code, version);
                 });
+    }
+
+    /**
+     * PLAT-21c 发布预检（方案 §4.4–§4.6）。只检查“静态可判定”的事项：command[0] 是绝对路径且
+     * 指向存在的普通文件、workDirRoot 是绝对路径且可创建、timeoutMs 落在 1..1800000（由
+     * {@link ProcessContract#parse} 强制）、outputSchema 能被 {@link SkillRules#schema} 加载。
+     *
+     * <p>这里不做 true 值校验（跑一次进程），因为发布动作不应产生外部副作用；真实可用性由连接/受控
+     * 调试报告与选型验收负责。失败统一 400：调用方需要改契约，重试发布没有意义。
+     */
+    void processPrecheck(Map<String, Object> candidate) {
+        if (!"PROCESS".equals(candidate.get("type"))) return;
+        var raw = Json.tree(candidate.get("process"));
+        // 先按原始 JSON 检查路径字段，再交给 ProcessContract.parse：parse 的 400 语义是
+        // “契约字段非法”，而发布口需要明确区分“契约语法没问题但指向的文件不可用”。
+        precheckCommand(raw.get("command"));
+        var workDirRoot = raw.get("workDirRoot");
+        if (workDirRoot != null && workDirRoot.isTextual())
+            precheckWorkDirRoot(workDirRoot.asText());
+        ProcessContract contract = ProcessContract.parse(raw);
+        if (contract.hasOutputSchema()) {
+            try {
+                SkillRules.schema(
+                        Json.mapper().convertValue(contract.outputSchema(), Object.class));
+            } catch (IllegalArgumentException ex) {
+                throw precheckError("outputSchema 无效: " + ex.getMessage());
+            }
+        }
+    }
+
+    private void precheckCommand(JsonNode command) {
+        if (command == null || !command.isArray() || command.isEmpty()) return;
+        JsonNode first = command.get(0);
+        if (!first.isTextual()) return;
+        Path executable;
+        try {
+            executable = Path.of(first.asText());
+        } catch (InvalidPathException ex) {
+            throw precheckError("command[0] 不是合法的路径: " + first.asText());
+        }
+        if (!executable.isAbsolute())
+            throw precheckError("command[0] 必须是绝对路径，不依赖 PATH 解析: " + executable);
+        if (!Files.exists(executable))
+            throw precheckError("command[0] 指向的文件不存在: " + executable);
+        if (!Files.isRegularFile(executable))
+            throw precheckError("command[0] 必须是普通文件（可执行文件或脚本）: " + executable);
+    }
+
+    private void precheckWorkDirRoot(String workDirRoot) {
+        if (workDirRoot == null) return;
+        Path dir;
+        try {
+            dir = Path.of(workDirRoot);
+        } catch (InvalidPathException ex) {
+            throw precheckError("workDirRoot 不是合法的路径: " + workDirRoot);
+        }
+        if (!dir.isAbsolute()) throw precheckError("workDirRoot 必须是绝对路径: " + dir);
+        if (Files.exists(dir)) {
+            if (!Files.isDirectory(dir)) throw precheckError("workDirRoot 存在但不是目录: " + dir);
+            return;
+        }
+        // 不在这里真的建目录：发布事务回滚会留下空目录；只验证最近的已存在祖先可写即可。
+        Path ancestor = dir.getParent();
+        while (ancestor != null && !Files.exists(ancestor)) ancestor = ancestor.getParent();
+        if (ancestor == null || !Files.isDirectory(ancestor) || !Files.isWritable(ancestor))
+            throw precheckError("workDirRoot 及其祖先都不可创建: " + dir);
+        try {
+            Path probe = Files.createTempDirectory(ancestor, ".precheck-");
+            Files.deleteIfExists(probe);
+        } catch (IOException ex) {
+            throw precheckError("workDirRoot 不可创建: " + dir + " (" + ex.getMessage() + ")");
+        }
+    }
+
+    private static PlatformException precheckError(String message) {
+        return error(400, "PROCESS_PRECHECK_FAILED", message);
     }
 
     public void delete(String code) {
