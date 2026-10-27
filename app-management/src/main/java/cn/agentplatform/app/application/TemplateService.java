@@ -13,6 +13,9 @@ import java.util.*;
 
 @Service
 public class TemplateService {
+    private static final java.util.regex.Pattern PUBLISHED_SHA =
+            java.util.regex.Pattern.compile("[0-9a-f]{64}");
+
     private final JdbcTemplate db;
 
     public TemplateService(JdbcTemplate db) {
@@ -152,7 +155,35 @@ public class TemplateService {
                         code,
                         version);
         if (rows.isEmpty()) throw error(404, "TEMPLATE_VERSION_NOT_FOUND", "模板版本不存在");
-        return rows.getFirst();
+        var row = rows.getFirst();
+        verifyDigest(version, row);
+        return row;
+    }
+
+    /**
+     * 读取即校验：正文/变量/输出契约必须与发布时写入的摘要一致。
+     *
+     * <p>校验落在唯一读方法上，内部端点与 admin 读端点因此同时受保护；写路径（insert）用的是同一份
+     * canonical 材料，读写两侧可复算出同一摘要。历史坏数据（摘要缺失、非 64 位小写 hex、正文被改）
+     * 一律返回 409，而不是被当成正常版本渲染或提供给引擎冻结。
+     */
+    private void verifyDigest(int version, Map<String, Object> row) {
+        String sha = Objects.toString(row.get("sha256"), "");
+        if (!PUBLISHED_SHA.matcher(sha).matches())
+            throw error(
+                    409,
+                    "TEMPLATE_DIGEST_MISMATCH",
+                    "模板 v" + version + " 摘要缺失或格式非法（需64位小写hex），请重新发布或回滚");
+        Map<String, Object> material = new LinkedHashMap<>();
+        material.put("content", Objects.toString(row.get("content"), ""));
+        material.put("variables", Objects.requireNonNullElse(row.get("variables"), List.of()));
+        material.put(
+                "outputContract", Objects.requireNonNullElse(row.get("outputContract"), Map.of()));
+        if (!sha.equals(Digest.sha256(AppRules.canonical(material))))
+            throw error(
+                    409,
+                    "TEMPLATE_DIGEST_MISMATCH",
+                    "模板 v" + version + " 内容与发布摘要不一致，请重新发布或回滚");
     }
 
     @Transactional

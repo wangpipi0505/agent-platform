@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -33,6 +34,7 @@ public class RunService {
      * 可选装配：未配置本体地址的环境不注入。冻结阶段是唯一取包点，之后 assemble 只读文本。
      */
     private OntologyContextPacks contextPacks;
+    private boolean promptDigestCheck = true;
 
     private final ModelInputMaterials initialMaterials;
     private final ChunkBus initialChunks;
@@ -41,6 +43,9 @@ public class RunService {
     private static final java.util.regex.Pattern UUID_PATTERN =
             java.util.regex.Pattern.compile(
                     "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}");
+    /** 模板摘要形状：只有校验通过的摘要才允许进入不可变运行的引用记录。 */
+    private static final java.util.regex.Pattern PROMPT_SHA_PATTERN =
+            java.util.regex.Pattern.compile("[0-9a-f]{64}");
 
     public RunService(TraceStore s, RuntimeClients c, FlowDriver f, AgentDriver a) {
         this(s, c, f, a, new RunScheduler(s));
@@ -130,6 +135,15 @@ public class RunService {
     @Autowired(required = false)
     public void contextPacks(OntologyContextPacks packs) {
         this.contextPacks = packs;
+    }
+
+    /**
+     * 摘要兜底开关由部署属性注入；字段初始 true，使大量直接 new RunService(...) 的夹具保持严格语义。
+     * 仅升级过渡期允许显式关闭引擎侧校验，关闭时也不把未通过校验的摘要写进运行留痕。
+     */
+    @Autowired
+    public void promptDigestCheck(@Value("${agent.prompt.digest-check:true}") boolean enabled) {
+        this.promptDigestCheck = enabled;
     }
 
     private static final String REPLAY_METADATA =
@@ -946,14 +960,26 @@ public class RunService {
     private Object versionRefs(JsonNode source, JsonNode frozen, JsonNode req) {
         Map<String, Object> refs = new LinkedHashMap<>(),
                 skills = new TreeMap<>(),
-                prompts = new TreeMap<>();
+                prompts = new TreeMap<>(),
+                promptShas = new TreeMap<>();
         for (JsonNode skill : frozen.path("config").path("tools"))
             skills.put(skill.path("code").asText(), skill.path("skillVersionId"));
-        for (JsonNode prompt : frozen.path("config").path("frozenPrompts"))
-            prompts.put(prompt.path("code").asText(), prompt.path("version"));
+        for (JsonNode prompt : frozen.path("config").path("frozenPrompts")) {
+            String code = prompt.path("code").asText();
+            prompts.put(code, prompt.path("version"));
+            // 只留痕校验通过的摘要：关闭兜底开关时库里的无效摘要也不会被写成运行证据。
+            String sha = prompt.path("sha256").asText();
+            if (PROMPT_SHA_PATTERN.matcher(sha).matches()) {
+                Map<String, Object> pinned = new LinkedHashMap<>();
+                pinned.put("version", prompt.path("version").asInt());
+                pinned.put("sha256", sha);
+                promptShas.put(code, pinned);
+            }
+        }
         refs.put("appVer", frozen.path("versionNo"));
         refs.put("flowDefSha", Digest.sha256(Json.canonical(source.path("definition"))));
         refs.put("promptVers", prompts);
+        refs.put("promptShas", promptShas);
         refs.put("skillVers", skills);
         refs.put("modelCfg", frozen.path("config").path("modelBinding"));
         refs.put("interpreterVer", "1.0");
@@ -1203,6 +1229,13 @@ public class RunService {
                                 "app",
                                 "/internal/prompt-templates/" + code + "/versions/" + version,
                                 actor);
+                // 摘要缺失或形状非法的模板不得进入冻结：冻结后模板正文不可再取，留痕必须自证一致。
+                if (promptDigestCheck
+                        && !PROMPT_SHA_PATTERN.matcher(template.path("sha256").asText()).matches())
+                    throw new PlatformException(
+                            409,
+                            "PROMPT_TEMPLATE_SHA_INVALID",
+                            "提示词模板 " + code + " v" + version + " 摘要缺失或格式非法（需64位小写hex）");
                 var pinnedPrompt =
                         (com.fasterxml.jackson.databind.node.ObjectNode) template.deepCopy();
                 pinnedPrompt.put("code", code);
