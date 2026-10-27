@@ -4,6 +4,7 @@ import static cn.agentplatform.skill.application.SkillCatalog.*;
 
 import cn.agentplatform.common.*;
 import cn.agentplatform.common.auth.AuthScheme;
+import cn.agentplatform.skill.domain.ErrorSemantics;
 import cn.agentplatform.skill.domain.SkillRules;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -29,6 +30,20 @@ public class HttpAsyncAdapter {
         NotApplied(Map<String, Object> source) {
             super("RESULT_UNKNOWN", true, "原任务明确报告未生效，等待引擎核实证明");
             this.source = Map.copyOf(source);
+        }
+    }
+
+    /**
+     * PLAT-05 实现点3：结果端点对已终结任务返回 409/4xx 是“去查状态端点”的信号而不是失败结论。
+     * 该信号必须先回流到状态端点复核，能确定终态失败才产出 REMOTE_FAILED；因此它必须与普通
+     * RESULT_UNKNOWN 区分——本类型只在独立结果端点的响应上抛出，invoke 捕获后复查。
+     */
+    private static final class ResultRejected extends SkillAdapters.Failure {
+        final int status;
+
+        ResultRejected(int status) {
+            super("RESULT_UNKNOWN", true, "结果端点拒绝 HTTP " + status);
+            this.status = status;
         }
     }
 
@@ -195,7 +210,8 @@ public class HttpAsyncAdapter {
                             expectedAttempt,
                             b.get("skill_version_id"),
                             key);
-                    throw new SkillAdapters.Failure("SUBMIT_NO_TASK_ID", false, noTaskIdMessage());
+                    throw new SkillAdapters.Failure(
+                            "SUBMIT_NO_TASK_ID", false, noTaskIdMessage(), null, noTaskIdMessage());
                 }
                 if (job.length() > 128
                         || (echoRequired(contract)
@@ -348,24 +364,8 @@ public class HttpAsyncAdapter {
             if (!state.equals(Json.tree(policy.get("doneValue")))) {
                 // A trustworthy terminal failure is not uncertainty: it must surface the service's
                 // own reason instead of parking the call in UNKNOWN forever.
-                if (failedState(policy, state)) {
-                    String message = failureMessage(policy, response);
-                    // 远端终态失败是可核实事实：错误码与有界原文落在绑定行上，
-                    // 引擎/网关无需再猜"未知"，也不再无限轮询。
-                    db.update(
-                            "update skill.external_job_binding set status='FAILED',"
-                                + " external_state=?,remote_error_code='REMOTE_FAILED',"
-                                + " remote_error_message=?,last_polled_at=now(),updated_at=now()"
-                                + " where tenant_id=? and call_id=? and principal_id=?"
-                                + " and external_job_id=? and status in ('SENDING','SUBMITTED')",
-                            remoteState,
-                            message,
-                            Actor.current().tenantId(),
-                            callId,
-                            Actor.current().principalId(),
-                            observedJob);
-                    throw new SkillAdapters.Failure("REMOTE_FAILED", false, message);
-                }
+                if (failedState(policy, state))
+                    throw remoteFailed(contract, policy, response, remoteState, callId, observedJob);
                 throw unknown("原任务尚未确认完成，保持UNKNOWN等待查询");
             }
             SkillAdapters.Raw raw;
@@ -377,7 +377,7 @@ public class HttpAsyncAdapter {
                 // 状态响应与结果响应常是两套结构，结果侧独立声明读取路径，默认取整个响应体。
                 String resultReadPath = Objects.toString(policy.get("resultEndpointPath"), "");
                 try (var finalResponse =
-                        exchangeStream(
+                        resultEndpointStream(
                                 contract,
                                 resultSource,
                                 key,
@@ -385,6 +385,21 @@ public class HttpAsyncAdapter {
                     try (var result = finalResponse.result()) {
                         raw = outputs.read(result, contract, callId, runId);
                     }
+                } catch (ResultRejected rejected) {
+                    // PLAT-05 实现点3：结果端点 409/4xx 常见于“结果已清理/任务已失败，请查状态”。
+                    // 复查同一状态端点：能确定终态失败才改判 REMOTE_FAILED；仍不能确定就保持
+                    // RESULT_UNKNOWN 走对账，绝不把 409 直接抛给用户或当成业务结果。
+                    var rechecked = statusResponse(contract, endpoint, key);
+                    if (rechecked != null
+                            && failedState(policy, path(rechecked, text(policy, "donePath"))))
+                        throw remoteFailed(
+                                contract,
+                                policy,
+                                rechecked,
+                                boundedState(path(rechecked, text(policy, "donePath"))),
+                                callId,
+                                observedJob);
+                    throw unknown("结果端点拒绝且状态端点未能核实终态失败，保留绑定等待对账");
                 }
             } else {
                 try (var result = streamed.result()) {
@@ -451,6 +466,32 @@ public class HttpAsyncAdapter {
                         });
     }
 
+    /**
+     * PLAT-05 实现点3：独立结果端点与状态端点的错误处理不同。状态端点的 4xx（如任务尚未可见）
+     * 仍是“结果未知”；结果端点的 4xx 是需要复查状态端点的信号（{@link ResultRejected}）。
+     */
+    private AsyncHttpResponse resultEndpointStream(
+            Map<String, Object> contract, String endpoint, String key, String resultPath) {
+        return request(contract, endpoint, "GET", null, key)
+                .exchange(
+                        (sent, response) -> {
+                            int status = response.getStatusCode().value();
+                            if (status >= 400 && status < 500) throw new ResultRejected(status);
+                            if (!response.getStatusCode().is2xxSuccessful())
+                                throw unknown("异步查询未返回确认");
+                            return AsyncHttpResponse.read(response.getBody(), resultPath);
+                        });
+    }
+
+    /** 结果端点被拒后的状态端点复核；任何不确定（非2xx/解析失败）都返回 null 表示无法核实。 */
+    private JsonNode statusResponse(Map<String, Object> contract, String endpoint, String key) {
+        try {
+            return exchange(contract, endpoint, "GET", null, key, 65536);
+        } catch (Exception rejected) {
+            return null;
+        }
+    }
+
     private JsonNode exchange(
             Map<String, Object> contract,
             String endpoint,
@@ -462,13 +503,21 @@ public class HttpAsyncAdapter {
                 .exchange(
                         (sent, response) -> {
                             int status = response.getStatusCode().value();
-                            if (status >= 400 && status < 500)
+                            if (status >= 400 && status < 500) {
+                                // PLAT-05：提交被明确拒绝时读取远端业务码与原文（如路线三桥
+                                // ok:false envelope 的 code/message），不再只留下裸 HTTP 状态。
+                                var remote =
+                                        SkillAdapters.remoteRejection(
+                                                contract, response.getBody());
                                 throw new SkillAdapters.Failure(
                                         status == 403 || status == 401
                                                 ? "NO_PERMISSION"
                                                 : status == 429 ? "QUOTA" : "PARAM_ERROR",
                                         false,
-                                        "外部提交被明确拒绝 HTTP " + status);
+                                        "外部提交被明确拒绝 HTTP " + status,
+                                        remote.code(),
+                                        remote.message());
+                            }
                             if (!response.getStatusCode().is2xxSuccessful())
                                 throw unknown("异步端点未返回确认");
                             byte[] bytes = response.getBody().readNBytes(limit + 1);
@@ -528,6 +577,47 @@ public class HttpAsyncAdapter {
         String reason = messagePath.isBlank() ? "" : path(response, messagePath).asText("");
         return bound(
                 reason.isBlank() ? "外部任务终态失败，服务未提供失败原因" : "外部任务终态失败：" + reason);
+    }
+
+    /**
+     * 远端已核实终态失败（PLAT-05）：绑定行收敛为 FAILED，失败对象携带契约声明的业务码
+     * （errorSemantics.codePath）与有界原文（reconciliation.failureMessagePath 优先，其次
+     * errorSemantics.messagePath）。引擎、运行详情与模型看到的都是同一份可读原因。
+     */
+    private SkillAdapters.Failure remoteFailed(
+            Map<String, Object> contract,
+            Map<String, Object> policy,
+            JsonNode response,
+            String remoteState,
+            long callId,
+            String job) {
+        var declared = SkillAdapters.declaredMapping(contract);
+        String policyPath = Objects.toString(policy.get("failureMessagePath"), "");
+        String raw = policyPath.isBlank() ? "" : path(response, policyPath).asText("");
+        if ((raw.isBlank() || "null".equals(raw)) && declared.messagePath() != null) {
+            String declaredMessage = path(response, declared.messagePath()).asText("");
+            if (!declaredMessage.isBlank() && !"null".equals(declaredMessage)) raw = declaredMessage;
+        }
+        String code = declared.codePath() == null ? null : path(response, declared.codePath()).asText("");
+        String message = failureMessage(policy, response);
+        db.update(
+                "update skill.external_job_binding set status='FAILED',"
+                    + " external_state=?,remote_error_code='REMOTE_FAILED',"
+                    + " remote_error_message=?,last_polled_at=now(),updated_at=now()"
+                    + " where tenant_id=? and call_id=? and principal_id=?"
+                    + " and external_job_id=? and status in ('SENDING','SUBMITTED')",
+                remoteState,
+                message,
+                Actor.current().tenantId(),
+                callId,
+                Actor.current().principalId(),
+                job);
+        return new SkillAdapters.Failure(
+                "REMOTE_FAILED",
+                false,
+                message,
+                ErrorSemantics.bound(code),
+                ErrorSemantics.bound(raw));
     }
 
     private static String noTaskIdMessage() {

@@ -581,7 +581,16 @@ public class SkillCatalog {
                     || values.stream().anyMatch(value -> !(value instanceof String)))
                 throw error(400, "INVALID_GUARD", "守卫属性值必须为字符串数组");
         result.put("guard", guard);
-        result.put("errorSemantics", body.getOrDefault("errorSemantics", List.of()));
+        // PLAT-05：对象形态的 errorSemantics（codePath/messagePath/retryableCodes）在注册期完成
+        // 路径与类型校验，执行期只按已验证声明解释，畸形声明不可能流进运行时；v1.2 数组形态
+        // （match 列表）原样透传，执行侧按平台默认映射处理。
+        var errorSemantics = body.getOrDefault("errorSemantics", List.of());
+        try {
+            cn.agentplatform.skill.domain.ErrorSemantics.Declared.parse(errorSemantics);
+        } catch (IllegalArgumentException malformed) {
+            throw error(400, "INVALID_SKILL", malformed.getMessage());
+        }
+        result.put("errorSemantics", errorSemantics);
         result.put("returnSpec", body.getOrDefault("returnSpec", Map.of()));
         var constraints = object(body.getOrDefault("constraints", Map.of()));
         int max = ((Number) constraints.getOrDefault("outputMaxBytes", 1048576)).intValue();

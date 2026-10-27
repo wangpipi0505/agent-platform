@@ -5,6 +5,7 @@ import static cn.agentplatform.skill.application.SkillCatalog.*;
 import cn.agentplatform.common.*;
 import cn.agentplatform.common.auth.AuthScheme;
 import cn.agentplatform.common.schema.SchemaWorkBudget;
+import cn.agentplatform.skill.domain.ErrorSemantics;
 import cn.agentplatform.skill.domain.ProcessContract;
 import cn.agentplatform.skill.domain.SkillRules;
 
@@ -74,14 +75,32 @@ public class SkillAdapters {
         }
     }
 
+    /**
+     * PLAT-05：失败除了语义与诊断消息外，还携带远端业务码（code）与有界原文（raw），最终由
+     * {@link #error(String)} 规范化成方案 §4.5 的七字段结构。code/raw 为 null 表示远端未提供。
+     */
     public static class Failure extends RuntimeException {
         public final String semantic;
         public final boolean unknown;
+        public final String code;
+        public final String raw;
 
         public Failure(String semantic, boolean unknown, String message) {
+            this(semantic, unknown, message, null, null);
+        }
+
+        public Failure(
+                String semantic, boolean unknown, String message, String code, String raw) {
             super(message);
             this.semantic = semantic;
             this.unknown = unknown;
+            this.code = code;
+            this.raw = raw;
+        }
+
+        /** 七字段错误对象；traceId 由调用方按请求上下文显式传入，域模型不做 IO。 */
+        public Map<String, Object> error(String traceId) {
+            return ErrorSemantics.error(semantic, code, getMessage(), raw, traceId);
         }
     }
 
@@ -90,6 +109,35 @@ public class SkillAdapters {
         public Observation {
             source = Map.copyOf(source);
         }
+    }
+
+    /** 契约 errorSemantics 声明（PLAT-05）。历史脏数据按未声明处理，注册期校验负责挡新增。 */
+    public static ErrorSemantics.Declared declaredMapping(Map<String, Object> contract) {
+        try {
+            return ErrorSemantics.Declared.parse(contract.get("errorSemantics"));
+        } catch (IllegalArgumentException malformed) {
+            return ErrorSemantics.Declared.NONE;
+        }
+    }
+
+    /**
+     * 错误响应原文的有界读取与业务码/原因提取（PLAT-05）。64KB 读取上限与提交确认一致；
+     * 非 JSON、读失败、声明畸形一律按“远端未提供”处理，语义退回 HTTP 状态默认分类。
+     */
+    static ErrorSemantics.Remote remoteRejection(Map<String, Object> contract, InputStream body) {
+        byte[] prefix;
+        try {
+            prefix = body.readNBytes(65537);
+        } catch (IOException ignored) {
+            return ErrorSemantics.Remote.NONE;
+        }
+        JsonNode parsed;
+        try {
+            parsed = ArtifactStore.readJson(new ByteArrayInputStream(prefix));
+        } catch (Exception ignored) {
+            return ErrorSemantics.Remote.NONE;
+        }
+        return ErrorSemantics.extract(parsed, declaredMapping(contract));
     }
 
     public static final class TerminalFailure extends Failure {
@@ -413,19 +461,33 @@ public class SkillAdapters {
             return request.exchange(
                     (sent, response) -> {
                         int code = response.getStatusCode().value();
-                        if (code >= 400)
+                        if (code >= 400) {
+                            // PLAT-05：错误响应不再是黑盒。先按契约声明（或平台缺省 $.code/$.message）
+                            // 读取远端业务码与原文；声明的 retryableCodes 命中时把 4xx 的确定性失败
+                            // 改判为可重试。带副作用的 5xx 仍然结果未知——任何业务码都不能把“未确认
+                            // 是否已生效”洗成“已确认失败”。
+                            var remote = remoteRejection(contract, response.getBody());
+                            var declared = declaredMapping(contract);
+                            boolean undetermined = sideEffect && code >= 500;
                             throw new Failure(
-                                    code == 403
-                                            ? "NO_PERMISSION"
-                                            : code == 429
-                                                    ? "QUOTA"
-                                                    : code < 500
-                                                            ? "PARAM_ERROR"
-                                                            : sideEffect
-                                                                    ? "RESULT_UNKNOWN"
-                                                                    : "RETRYABLE_FAILURE",
-                                    sideEffect && code >= 500,
-                                    "外部端点HTTP " + code);
+                                    !undetermined
+                                                    && ErrorSemantics.retryableCode(
+                                                            declared, remote)
+                                            ? "RETRYABLE_FAILURE"
+                                            : code == 403 || code == 401
+                                                    ? "NO_PERMISSION"
+                                                    : code == 429
+                                                            ? "QUOTA"
+                                                            : code < 500
+                                                                    ? "PARAM_ERROR"
+                                                                    : undetermined
+                                                                            ? "RESULT_UNKNOWN"
+                                                                            : "RETRYABLE_FAILURE",
+                                    undetermined,
+                                    "外部端点HTTP " + code,
+                                    remote.code(),
+                                    remote.message());
+                        }
                         return read(response.getBody(), contract, callId, runId);
                     });
         } catch (Failure ex) {

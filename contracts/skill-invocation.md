@@ -458,3 +458,47 @@ external_job_binding(id, tenant_id, idempotency_key UK, adapter_type,
 
 ---
 
+
+---
+
+## 11. 工程增补（PLAT-05，2026-10-28）：统一错误对象、errorSemantics 声明与任务结果端点
+
+> 本节为平台侧优化的工程增补，依据《平台侧优化方案与实施细则-20261027》§4.5（PLAT-05）与 §4.16（PLAT-16 拆入 T05 落地），经优化台账 T05 派发实施；**不属于 v1.2 原文提取**，`contracts/snapshot/` 保持 v1.2 原文快照不变。与上文冲突时以本节为准。
+
+### 11.1 统一错误对象（七字段）
+
+技能执行失败时，`ResultEnvelope.error` 统一为以下结构，API、SSE、运行详情与模型工具结果使用同一套语义：
+
+| 字段 | 说明 |
+|---|---|
+| `semantic` | 五类错误语义（§4.2 ⑥）及 `REMOTE_FAILED` / `SUBMIT_NO_TASK_ID` / `OUTPUT_INVALID` / `NON_RETRYABLE_FAILURE` |
+| `code` | 远端业务错误码（如 `DATA_SCOPE_DENIED`、`TLE_CHECKSUM_INVALID`）；远端未提供为 `null` |
+| `category` | `semantic` 的派生分类：`PARAM` / `AUTH` / `QUOTA` / `TRANSPORT` / `BUSINESS` / `SYSTEM` |
+| `retryable` | 是否可重试；`RESULT_UNKNOWN` 恒为 `false`（必须走对账，不允许盲目重试） |
+| `userMessage` | 中文可读原因（有界），供对话、页面与审计直接展示 |
+| `detail` | `{"raw": "<远端原文，有界 512>"}`；远端未提供原文为 `null` |
+| `traceId` | 请求上下文 traceId，与 API 错误信封同源 |
+
+`reason` 键保留为兼容（诊断原文）。`RESULT_UNKNOWN` 属 `TRANSPORT` 且不可重试；`REMOTE_FAILED` 属 `BUSINESS` 且不可重试。
+
+### 11.2 契约 errorSemantics 声明（对象形态）
+
+技能契约（§5.2 表单 `errorSemantics` 键）可声明远端错误读取与改判规则：
+
+```json
+{ "codePath": "$.code", "messagePath": "$.message", "retryableCodes": ["TIMEOUT"] }
+```
+
+- `codePath` / `messagePath`：远端错误响应体中业务码/原因的点路径（仅支持 `$.a.b` 点路径）；
+- `retryableCodes`：命中所列业务码时，4xx 确定性失败改判 `RETRYABLE_FAILURE`（可重试）；副作用调用的 5xx（结果未知）不受声明影响；
+- **未声明时用平台默认映射**：读取 `$.code`/`$.message`；HTTP 401/403 → `NO_PERMISSION`，429 → `QUOTA`，其余 4xx → `PARAM_ERROR`，5xx 只读 → `RETRYABLE_FAILURE`，副作用 5xx → `RESULT_UNKNOWN`。路线三桥 envelope（`ok:false`）随 HTTP 403 映射为 `NO_PERMISSION` + 远端中文原因（`category=AUTH`、`retryable=false`），平台不把 403 当"系统错误"，模型应看到可解释拒绝而不是重试；
+- 对象形态在注册期校验（路径仅支持点路径、`retryableCodes` 必须为字符串数组）；v1.2 数组形态（match 列表）原样透传，执行侧按平台默认映射处理；
+- 异步终态失败（`REMOTE_FAILED`）按 `errorSemantics.codePath` 携带稳定业务码，原文按 `reconciliation.failureMessagePath`（缺省回退 `errorSemantics.messagePath`）读取，有界落绑定行。
+
+### 11.3 任务结果读取端点（T05.2）
+
+`GET /admin/skills/tasks/{callId}/result`（门户面，经网关 `/admin/skills/**` 代理）：
+
+- 已终态任务返回 `{callId, status, result}`，失败任务的 `result.error` 为 11.1 完整错误对象；
+- 不存在 → 可读 404 `FACT_NOT_FOUND`；未终态（`UNKNOWN` 或执行准备中）→ 可读 409 `TASK_NOT_FINAL`；
+- `callId` 是平台任务身份；`externalJobId` 只是远端任务标识，不作为寻址键。

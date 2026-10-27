@@ -3,6 +3,7 @@ package cn.agentplatform.skill.application;
 import static cn.agentplatform.skill.application.SkillCatalog.*;
 
 import cn.agentplatform.common.*;
+import cn.agentplatform.skill.domain.ErrorSemantics;
 import cn.agentplatform.skill.domain.SkillRules;
 import cn.agentplatform.skill.infra.*;
 
@@ -172,6 +173,13 @@ public class SkillCallbacks {
                         raw = adapters.read(result, contract, call, bound.get("run_id").toString());
                     }
                 }
+                // PLAT-05：失败回调同样按契约声明读取远端业务码/原文，落成统一七字段错误对象；
+                // 未携带时 code/raw 为 null，语义仍来自已声明的 errorSemantic。
+                var remote =
+                        status.equals("FAILED")
+                                ? ErrorSemantics.extract(
+                                        body, SkillAdapters.declaredMapping(contract))
+                                : ErrorSemantics.Remote.NONE;
                 var envelope =
                         execution.envelope(
                                 original,
@@ -179,6 +187,8 @@ public class SkillCallbacks {
                                 status,
                                 semantic,
                                 status.equals("FAILED") ? "外部任务报告有效失败" : null,
+                                remote.code(),
+                                remote.message(),
                                 raw,
                                 false,
                                 secured);

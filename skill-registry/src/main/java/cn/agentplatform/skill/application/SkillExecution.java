@@ -3,6 +3,7 @@ package cn.agentplatform.skill.application;
 import static cn.agentplatform.skill.application.SkillCatalog.*;
 
 import cn.agentplatform.common.*;
+import cn.agentplatform.skill.domain.ErrorSemantics;
 import cn.agentplatform.skill.domain.SkillRules;
 import cn.agentplatform.skill.infra.*;
 
@@ -106,6 +107,8 @@ public class SkillExecution {
             if (!retry) return deliver(existing);
         }
         String failure = null, reason = null;
+        // PLAT-05：远端业务码与有界原文由适配器失败携带，终经 envelope 落成七字段错误对象。
+        String errorCode = null, errorRaw = null;
         Map<String, Object> secured = arguments;
         try {
             SkillRules.validate(contract.get("inputSchema"), arguments);
@@ -222,6 +225,7 @@ public class SkillExecution {
                 } catch (PlatformException ex) {
                     semantic = ex.status() == 403 ? "NO_PERMISSION" : "OUTPUT_INVALID";
                     reason = ex.getMessage();
+                    errorCode = ex.code();
                 } catch (Exception ex) {
                     semantic = "OUTPUT_INVALID";
                     reason = "Mock输出不符合Schema";
@@ -238,6 +242,8 @@ public class SkillExecution {
                                     "UNKNOWN",
                                     "RESULT_UNKNOWN",
                                     "已登记异步调用，等待原任务事实",
+                                    null,
+                                    null,
                                     null,
                                     false,
                                     secured);
@@ -301,6 +307,8 @@ public class SkillExecution {
                     status = "FAILED";
                     semantic = ex.semantic;
                     reason = ex.getMessage();
+                    errorCode = ex.code;
+                    errorRaw = ex.raw;
                     algorithmSource = ex.source;
                 } catch (SkillAdapters.Failure ex) {
                     // 回滚开关关闭时保持改造前语义：提交未拿到任务标识仍是 RESULT_UNKNOWN。
@@ -308,6 +316,8 @@ public class SkillExecution {
                     status = legacy || ex.unknown ? "UNKNOWN" : "FAILED";
                     semantic = legacy ? "RESULT_UNKNOWN" : ex.semantic;
                     reason = ex.getMessage();
+                    errorCode = ex.code;
+                    errorRaw = ex.raw;
                 } catch (Exception ex) {
                     // 本地进程的失败是“本次调用为什么没跑成”的结论，不是“外部输出不合法”：403 开关关闭、
                     // 403 允许根越界、504 超时都必须原样透出，否则调用方会把配置错误当可重试的验收失败。
@@ -321,7 +331,7 @@ public class SkillExecution {
                 }
             }
         }
-        var envelope = envelope(request, contract, status, semantic, reason, raw, mock, secured);
+        var envelope = envelope(request, contract, status, semantic, reason, errorCode, errorRaw, raw, mock, secured);
         var frozenRequest = new LinkedHashMap<String, Object>(request);
         frozenRequest.put("guardedArguments", secured);
         frozenRequest.put("authorityTriggerType", authorityTrigger);
@@ -504,12 +514,19 @@ public class SkillExecution {
                         .fileRefs());
     }
 
+    /**
+     * 执行事实信封（PLAT-05）。错误对象统一为七字段结构（semantic/code/category/retryable/
+     * userMessage/detail/traceId，另含兼容键 reason）；code/raw 来自适配器携带的远端业务码与
+     * 有界原文，没有远端证据时为 null。traceId 取自请求上下文 MDC，与 API 错误信封同源。
+     */
     Map<String, Object> envelope(
             Map<String, Object> request,
             Map<String, Object> contract,
             String status,
             String semantic,
             String reason,
+            String code,
+            String remoteRaw,
             SkillAdapters.Raw raw,
             boolean mock,
             Map<String, Object> guarded) {
@@ -527,11 +544,12 @@ public class SkillExecution {
                 "error",
                 semantic == null
                         ? null
-                        : Map.of(
-                                "semantic",
+                        : ErrorSemantics.error(
                                 semantic,
-                                "reason",
-                                Objects.toString(reason, "技能调用失败")));
+                                code,
+                                Objects.toString(reason, "技能调用失败"),
+                                remoteRaw,
+                                org.slf4j.MDC.get("traceId")));
         result.put(
                 "modelSummary", raw == null ? Objects.toString(reason, "技能调用失败") : raw.summary());
         result.put("structured", raw == null ? null : raw.structured());
@@ -650,9 +668,38 @@ public class SkillExecution {
         return rows.isEmpty() ? null : rows.getFirst();
     }
 
+    /**
+     * PLAT-05 T05.2：任务结果读取（GET /admin/skills/tasks/{callId}/result）。门户运行详情口径：
+     * 租户内任意主体的事实可读（callId 是本仓任务身份，external_job_id 只是远端任务标识）。
+     * 失败任务的 result.error 是完整七字段错误对象；不存在返回可读 404，未终态（UNKNOWN 或
+     * 执行准备中）返回可读 409——端点永不伪造结果，也不把空白 output 当结论。
+     */
+    public Map<String, Object> taskResult(long callId) {
+        var rows =
+                db.queryForList(
+                        "select * from skill.execution_fact where tenant_id=? and call_id=?"
+                                + " order by updated_at desc limit 1",
+                        tenant(),
+                        callId);
+        if (rows.isEmpty()) throw error(404, "FACT_NOT_FOUND", "任务不存在或不可见");
+        var row = rows.getFirst();
+        String status = row.get("status").toString();
+        if ("UNKNOWN".equals(status) || "PREPARING".equals(row.get("callback_state")))
+            throw error(
+                    409,
+                    "TASK_NOT_FINAL",
+                    "PREPARING".equals(row.get("callback_state"))
+                            ? "任务尚未开始外部执行，请稍后查询"
+                            : "任务结果未知，正在对账核实，请稍后查询");
+        var result = new LinkedHashMap<String, Object>();
+        result.put("callId", callId);
+        result.put("status", status);
+        result.put("result", Json.read(row.get("result").toString(), Map.class));
+        return result;
+    }
+
     /** 恢复器只读取已落库证据；租户和原主体均由服务票据限定，读取绝不重发业务。 */
-    public Map<String, Object> proof(long callId) {
-        Actor.current().requireRole("SERVICE");
+    public Map<String, Object> proof(long callId) {        Actor.current().requireRole("SERVICE");
         var row = fact(callId);
         if (row == null) throw error(404, "FACT_NOT_FOUND", "执行事实不存在");
         var request = Json.read(row.get("request_snapshot").toString());
@@ -756,11 +803,12 @@ public class SkillExecution {
                 unknown.put("modelSummary", sent ? "提交已开始，原任务结果待对账" : "未开始外部发送，等待引擎授权恢复");
                 unknown.put(
                         "error",
-                        Map.of(
-                                "semantic",
+                        ErrorSemantics.error(
                                 "RESULT_UNKNOWN",
-                                "reason",
-                                unknown.get("modelSummary")));
+                                null,
+                                unknown.get("modelSummary").toString(),
+                                null,
+                                org.slf4j.MDC.get("traceId")));
                 db.update(
                         "update skill.execution_fact set"
                             + " result=?::jsonb,callback_state='PENDING',next_delivery_at=now(),updated_at=now()"
@@ -969,6 +1017,8 @@ public class SkillExecution {
                             terminalStatus,
                             terminalFailure == null ? null : terminalFailure.semantic,
                             terminalFailure == null ? null : terminalFailure.getMessage(),
+                            terminalFailure == null ? null : terminalFailure.code,
+                            terminalFailure == null ? null : terminalFailure.raw,
                             raw,
                             false,
                             object(requestSnapshot.get("guardedArguments")));
@@ -991,6 +1041,8 @@ public class SkillExecution {
                             "FAILED",
                             verifiedFailure.semantic,
                             verifiedFailure.getMessage(),
+                            verifiedFailure.code,
+                            verifiedFailure.raw,
                             null,
                             false,
                             object(failedSnapshot.get("guardedArguments")));

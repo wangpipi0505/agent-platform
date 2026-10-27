@@ -1,0 +1,155 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ------------------< cn.agentplatform:skill-registry >-------------------
+[INFO] Building skill-registry 0.1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/bouncycastle/bcutil-jdk18on/maven-metadata.xml
+[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/bouncycastle/bcutil-jdk18on/maven-metadata.xml (912 B at 987 B/s)
+[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/bouncycastle/bcprov-jdk18on/maven-metadata.xml
+[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/bouncycastle/bcprov-jdk18on/maven-metadata.xml (944 B at 3.6 kB/s)
+[INFO] 
+[INFO] --- enforcer:3.5.0:enforce (default) @ skill-registry ---
+[INFO] Rule 0: org.apache.maven.enforcer.rules.version.RequireJavaVersion passed
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ skill-registry ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 16 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.0:compile (default-compile) @ skill-registry ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ skill-registry ---
+[INFO] skip non existing resourceDirectory G:\207\项目\算法重组工具\代码\agent-platform\skill-registry\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.14.0:testCompile (default-testCompile) @ skill-registry ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 65 source files with javac [debug parameters release 21] to target\test-classes
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/skill-registry/src/test/java/cn/agentplatform/skill/application/AlgorithmExecutionPostgresTest.java: 某些输入文件使用了未经检查或不安全的操作。
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/skill-registry/src/test/java/cn/agentplatform/skill/application/AlgorithmExecutionPostgresTest.java: 有关详细信息, 请使用 -Xlint:unchecked 重新编译。
+[INFO] 
+[INFO] --- surefire:3.5.3:test (default-test) @ skill-registry ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running cn.agentplatform.skill.application.AsyncResultEndpointFailureTest
+02:20:48.997 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_skill_async_test (PostgreSQL 16.15)
+02:20:49.255 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 17 migrations (execution time 00:00.197s)
+02:20:49.287 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "skill": 314
+02:20:49.303 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "skill" to version "315 - skill semantic digest"
+02:20:50.050 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Successfully applied 1 migration to schema "skill", now at version v315 (execution time 00:00.668s)
+Mockito is currently self-attaching to enable the inline-mock-maker. This will no longer work in future releases of the JDK. Please add Mockito as an agent to your build as described in Mockito's documentation: https://javadoc.io/doc/org.mockito/mockito-core/latest/org.mockito/org/mockito/Mockito.html#0.3
+OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+WARNING: A Java agent has been loaded dynamically (C:\Users\Administrator\.m2\repository\net\bytebuddy\byte-buddy-agent\1.17.5\byte-buddy-agent-1.17.5.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+[ERROR] Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 3.414 s <<< FAILURE! -- in cn.agentplatform.skill.application.AsyncResultEndpointFailureTest
+[ERROR] cn.agentplatform.skill.application.AsyncResultEndpointFailureTest.resultEndpoint409RechecksStatusAndReportsRemoteFailed -- Time elapsed: 1.933 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 结果端点 409 不能折叠成 RESULT_UNKNOWN，必须复查状态端点后给终态失败 ==> expected: <REMOTE_FAILED> but was: <RESULT_UNKNOWN>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1156)
+	at cn.agentplatform.skill.application.AsyncResultEndpointFailureTest.resultEndpoint409RechecksStatusAndReportsRemoteFailed(AsyncResultEndpointFailureTest.java:296)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	Suppressed: org.springframework.jdbc.UncategorizedSQLException: PreparedStatementCallback; uncategorized SQLException for SQL [delete from skill.skill_version where tenant_id=?]; SQL state [P0001]; error code [0]; ERROR: published skill version cannot be deleted
+  在位置：PL/pgSQL function skill.protect_published_contract() line 3 at RAISE
+		at org.springframework.jdbc.core.JdbcTemplate.translateException(JdbcTemplate.java:1557)
+		at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:677)
+		at org.springframework.jdbc.core.JdbcTemplate.update(JdbcTemplate.java:972)
+		at org.springframework.jdbc.core.JdbcTemplate.update(JdbcTemplate.java:1016)
+		at org.springframework.jdbc.core.JdbcTemplate.update(JdbcTemplate.java:1026)
+		at cn.agentplatform.skill.application.AsyncResultEndpointFailureTest.cleanup(AsyncResultEndpointFailureTest.java:156)
+		... 3 more
+	Caused by: org.postgresql.util.PSQLException: ERROR: published skill version cannot be deleted
+  在位置：PL/pgSQL function skill.protect_published_contract() line 3 at RAISE
+		at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2733)
+		at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2420)
+		at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:372)
+		at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:517)
+		at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:434)
+		at org.postgresql.jdbc.PgPreparedStatement.executeWithFlags(PgPreparedStatement.java:194)
+		at org.postgresql.jdbc.PgPreparedStatement.executeUpdate(PgPreparedStatement.java:155)
+		at org.springframework.jdbc.core.JdbcTemplate.lambda$update$2(JdbcTemplate.java:977)
+		at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:658)
+		... 7 more
+
+[INFO] Running cn.agentplatform.skill.application.SkillErrorEnvelopeTest
+02:20:52.045 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_v12 (PostgreSQL 16.15)
+02:20:52.097 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 17 migrations (execution time 00:00.032s)
+02:20:52.119 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "skill": 315
+02:20:52.119 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "skill" is up to date. No migration necessary.
+[ERROR] Tests run: 3, Failures: 3, Errors: 0, Skipped: 0, Time elapsed: 0.981 s <<< FAILURE! -- in cn.agentplatform.skill.application.SkillErrorEnvelopeTest
+[ERROR] cn.agentplatform.skill.application.SkillErrorEnvelopeTest.bridgeEnvelope403BecomesReadableAuthRejection -- Time elapsed: 0.373 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 错误对象缺少字段: code ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at cn.agentplatform.skill.application.SkillErrorEnvelopeTest.assertSevenFields(SkillErrorEnvelopeTest.java:220)
+	at cn.agentplatform.skill.application.SkillErrorEnvelopeTest.bridgeEnvelope403BecomesReadableAuthRejection(SkillErrorEnvelopeTest.java:234)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.skill.application.SkillErrorEnvelopeTest.declaredErrorSemanticsRetryableCodeOverridesHttpDefault -- Time elapsed: 0.247 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <RETRYABLE_FAILURE> but was: <PARAM_ERROR>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:177)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1145)
+	at cn.agentplatform.skill.application.SkillErrorEnvelopeTest.declaredErrorSemanticsRetryableCodeOverridesHttpDefault(SkillErrorEnvelopeTest.java:260)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.skill.application.SkillErrorEnvelopeTest.untrackedBusinessCodeKeepsHttpDefaultSemantics -- Time elapsed: 0.243 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <PARAM> but was: <>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:177)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1145)
+	at cn.agentplatform.skill.application.SkillErrorEnvelopeTest.untrackedBusinessCodeKeepsHttpDefaultSemantics(SkillErrorEnvelopeTest.java:287)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Failures: 
+[ERROR]   AsyncResultEndpointFailureTest.resultEndpoint409RechecksStatusAndReportsRemoteFailed:296 结果端点 409 不能折叠成 RESULT_UNKNOWN，必须复查状态端点后给终态失败 ==> expected: <REMOTE_FAILED> but was: <RESULT_UNKNOWN>
+[ERROR]   SkillErrorEnvelopeTest.bridgeEnvelope403BecomesReadableAuthRejection:234->assertSevenFields:220 错误对象缺少字段: code ==> expected: <true> but was: <false>
+[ERROR]   SkillErrorEnvelopeTest.declaredErrorSemanticsRetryableCodeOverridesHttpDefault:260 expected: <RETRYABLE_FAILURE> but was: <PARAM_ERROR>
+[ERROR]   SkillErrorEnvelopeTest.untrackedBusinessCodeKeepsHttpDefaultSemantics:287 expected: <PARAM> but was: <>
+[INFO] 
+[ERROR] Tests run: 4, Failures: 4, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  11.872 s
+[INFO] Finished at: 2026-10-28T02:20:53+08:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.3:test (default-test) on project skill-registry: There are test failures.
+[ERROR] 
+[ERROR] See G:\207\项目\算法重组工具\代码\agent-platform\skill-registry\target\surefire-reports for the individual test results.
+[ERROR] See dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

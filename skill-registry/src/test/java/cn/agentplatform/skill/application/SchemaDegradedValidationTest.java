@@ -297,7 +297,16 @@ class SchemaDegradedValidationTest {
                         "http://unused");
         var envelope =
                 execution.envelope(
-                        Map.of(), Map.of("code", "wide"), "OK", null, null, raw, false, Map.of());
+                        Map.of(),
+                        Map.of("code", "wide"),
+                        "OK",
+                        null,
+                        null,
+                        null,
+                        null,
+                        raw,
+                        false,
+                        Map.of());
         @SuppressWarnings("unchecked")
         var validation = (Map<String, Object>) envelope.get("validation");
         assertNotNull(validation, "降级必须出现在工具结果 envelope 中");
