@@ -9,10 +9,12 @@ import org.springframework.http.MediaType;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.LinkedMultiValueMap;
 
-import java.io.ByteArrayOutputStream;
+import java.io.FilterInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * multipart表单映射是声明式数据，与JSON体互斥（默认拒绝）：契约未声明multipart时，
@@ -138,7 +140,14 @@ public final class MultipartFormMapping {
         }
     }
 
-    /** 组装multipart表单。运行期错误统一为PARAM_ERROR类Failure，缺参数/非法引用/超限/类型不符均拒绝。 */
+    /**
+     * 组装multipart表单。运行期错误统一为PARAM_ERROR类Failure，缺参数/非法引用/超限/类型不符均拒绝。
+     *
+     * <p>T09：文件部分不再在构建期读取字节。{@link ArtifactStore.Download#source()} 是okhttp/MinIO
+     * 的一次性流，构建期读取既会把整份文件搬进堆（64MB上限×4个部分），也让后续重试无法复用流。
+     * 这里只登记“如何打开流”与声明长度，真正的读取发生在HTTP写出层，由
+     * {@link FilePartBody} 负责一次性消费、计数、限额与关闭。</p>
+     */
     public static MultiValueMap<String, Object> build(
             Map<String, Object> contract, Map<String, Object> args, FileSource source) {
         var mapping = object(contract.get("httpMapping"));
@@ -150,44 +159,196 @@ public final class MultipartFormMapping {
             if (!args.containsKey(name)) throw missing(name);
             parts.add(field.get("name").toString(), scalar(name, args.get(name)));
         }
-        for (Object spec : specs(form, "files")) {
-            var file = object(spec);
-            String name = file.get("from").toString();
-            if (!args.containsKey(name)) throw missing(name);
-            Object value = args.get(name);
-            if (!(value instanceof String reference))
-                throw new SkillAdapters.Failure("PARAM_ERROR", false, "文件参数必须为产物引用字符串");
-            long maxBytes = ((Number) file.get("maxBytes")).longValue();
-            var download = load(source, reference);
-            if (download.bytes() > maxBytes)
-                throw new SkillAdapters.Failure(
-                        "PARAM_ERROR", false, "文件超过契约上限" + maxBytes + "字节");
-            var allowed = ((List<?>) file.get("allowedContentTypes"))
-                    .stream().map(Object::toString).toList();
-            if (!allowed.contains(baseType(download.contentType())))
-                throw new SkillAdapters.Failure(
-                        "PARAM_ERROR",
-                        false,
-                        "文件类型" + download.contentType() + "不在契约白名单内");
-            byte[] bytes = readBounded(download.source(), download.bytes());
-            var headers = new HttpHeaders();
-            headers.setContentType(MediaType.parseMediaType(download.contentType()));
-            parts.add(
-                    file.get("name").toString(),
-                    new HttpEntity<>(named(bytes, file.get("filename").toString()), headers));
+        // 已装载但尚未写出的流：后续部分校验失败时必须关闭，否则这些MinIO句柄无人回收。
+        var opened = new ArrayList<FilePartBody>();
+        try {
+            for (Object spec : specs(form, "files")) {
+                var file = object(spec);
+                String name = file.get("from").toString();
+                if (!args.containsKey(name)) throw missing(name);
+                Object value = args.get(name);
+                if (!(value instanceof String reference))
+                    throw new SkillAdapters.Failure("PARAM_ERROR", false, "文件参数必须为产物引用字符串");
+                long maxBytes = ((Number) file.get("maxBytes")).longValue();
+                var download = load(source, reference);
+                FilePartBody body;
+                try {
+                    if (download.bytes() > maxBytes)
+                        throw new SkillAdapters.Failure(
+                                "PARAM_ERROR", false, "文件超过契约上限" + maxBytes + "字节");
+                    var allowed = ((List<?>) file.get("allowedContentTypes"))
+                            .stream().map(Object::toString).toList();
+                    if (!allowed.contains(baseType(download.contentType())))
+                        throw new SkillAdapters.Failure(
+                                "PARAM_ERROR",
+                                false,
+                                "文件类型" + download.contentType() + "不在契约白名单内");
+                    body =
+                            new FilePartBody(
+                                    download,
+                                    file.get("name").toString(),
+                                    file.get("filename").toString());
+                } catch (RuntimeException rejected) {
+                    // 被拒绝的部分不会进入表单，写出层永远看不到它，流只能在这里关闭。
+                    closeQuietly(download);
+                    throw rejected;
+                }
+                var headers = new HttpHeaders();
+                headers.setContentType(MediaType.parseMediaType(download.contentType()));
+                opened.add(body);
+                parts.add(
+                        file.get("name").toString(), new HttpEntity<>(body, headers));
+            }
+        } catch (RuntimeException failure) {
+            opened.forEach(FilePartBody::close);
+            throw failure;
         }
         return parts;
     }
 
-    /** 带文件名的字节资源；FormHttpMessageConverter以它生成Content-Disposition的filename。 */
-    private static ByteArrayResource named(byte[] bytes, String filename) {
-        return new ByteArrayResource(bytes) {
-            @Override
-            public String getFilename() {
-                return filename;
-            }
-        };
+    /**
+     * 文件部分载体：保存产物流的“打开方式”，首次（也唯一一次）{@link #getInputStream()} 时才把
+     * okhttp/MinIO 流交给HTTP写出器，边写边计数——堆占用与文件大小无关，也不做base64/byte[]中转。
+     *
+     * <p>继承 {@link ByteArrayResource} 只为沿用“部分体是 ByteArrayResource”的既有类型契约
+     * （{@code MultipartFormMappingTest} 直接强转）；字节永不加载，超类内容恒为空数组。</p>
+     *
+     * <p>关闭不变量：正常写完（写出器 finally 关闭流）、超限中止、读取/写出抛异常、以及构建中途
+     * 失败（上面 {@code opened.forEach}）四条路径都汇聚到 {@link #close()}，由 CAS 保证源流只关一次。</p>
+     */
+    static final class FilePartBody extends ByteArrayResource {
+        private final ArtifactStore.Download download;
+        private final String partName;
+        private final String filename;
+        private final long limit;
+        private final AtomicBoolean opened = new AtomicBoolean();
+        private final AtomicBoolean closed = new AtomicBoolean();
+
+        FilePartBody(ArtifactStore.Download download, String partName, String filename) {
+            super(new byte[0]);
+            this.download = download;
+            this.partName = partName;
+            this.filename = filename;
+            // 双重上限：契约声明(≤64MB)与全局硬上限取小者，二者任一被绕过都不会超发。
+            this.limit = Math.min(download.bytes(), MAX_FILE_BYTES);
+        }
+
+        @Override
+        public InputStream getInputStream() {
+            if (!opened.compareAndSet(false, true))
+                throw new IllegalStateException("multipart文件流只能消费一次：" + partName);
+            return new BoundedStream(download.source(), partName, download.bytes(), limit, this::close);
+        }
+
+        @Override
+        public long contentLength() {
+            // 声明长度作为部分的Content-Length；实际字节数在写出时再次核对，短流不会静默截断。
+            return download.bytes();
+        }
+
+        @Override
+        public String getFilename() {
+            return filename;
+        }
+
+        @Override
+        public String getDescription() {
+            return "流式产物部分[" + partName + "]，声明" + download.bytes() + "字节";
+        }
+
+        /** 幂等关闭。关闭失败不覆盖已经确定的写出结果；句柄最终由连接池回收。 */
+        void close() {
+            if (!closed.compareAndSet(false, true)) return;
+            closeQuietly(download);
+        }
     }
+
+    private static void closeQuietly(ArtifactStore.Download download) {
+        try {
+            download.close();
+        } catch (IOException ignored) {
+        }
+    }
+
+    /**
+     * 一次性计数流：字节上限取 {@code min(登记字节数, MAX_FILE_BYTES)}，多读的第1字节即中止
+     * （400 INVALID_HTTP_MAPPING，消息含部分名与上限数字）；流自身IOException同样映射为400
+     * （该部分不可用，重发同一产物也不会不同）；读到EOF时核对声明字节数，短流按RESULT_UNKNOWN
+     * 可重试失败，保持T09之前的防静默截断语义。关闭责任在调用方的try-with-resources，
+     * 本类只做计数与语义映射。
+     */
+    private static final class BoundedStream extends FilterInputStream {
+        private final String partName;
+        private final long declared;
+        private final long limit;
+        private final Runnable onClose;
+        private long count;
+
+        BoundedStream(InputStream source, String partName, long declared, long limit, Runnable onClose) {
+            super(source);
+            this.partName = partName;
+            this.declared = declared;
+            this.limit = limit;
+            this.onClose = onClose;
+        }
+
+        @Override
+        public int read() throws IOException {
+            int value;
+            try {
+                value = super.read();
+            } catch (IOException ex) {
+                throw readFailure(ex);
+            }
+            if (value < 0) {
+                ensureComplete();
+            } else {
+                count++;
+                ensureLimit();
+            }
+            return value;
+        }
+
+        @Override
+        public int read(byte[] buffer, int offset, int length) throws IOException {
+            int read;
+            try {
+                read = super.read(buffer, offset, length);
+            } catch (IOException ex) {
+                throw readFailure(ex);
+            }
+            if (read < 0) {
+                ensureComplete();
+            } else {
+                count += read;
+                ensureLimit();
+            }
+            return read;
+        }
+
+        @Override
+        public void close() throws IOException {
+            // 关闭下载流（幂等）；不调用super.close()，避免同一源流被FilterInputStream与本类各关一次。
+            onClose.run();
+        }
+
+        private void ensureLimit() {
+            if (count > limit)
+                throw invalid("文件部分" + partName + "超过字节上限" + limit + "字节");
+        }
+
+        private void ensureComplete() {
+            if (count != declared)
+                throw new SkillAdapters.Failure("RESULT_UNKNOWN", true, "产物字节数与登记不一致");
+        }
+
+        private PlatformException readFailure(IOException cause) {
+            var failure = invalid("文件部分" + partName + "读取失败");
+            failure.initCause(cause);
+            return failure;
+        }
+    }
+
 
     private static ArtifactStore.Download load(FileSource source, String reference) {
         String id;
@@ -213,27 +374,6 @@ public final class MultipartFormMapping {
             // 产物解析失败语义等同PARAM_ERROR：重发同样的坏引用不会有不同结果。
             throw new SkillAdapters.Failure("PARAM_ERROR", false, "产物不存在、已过期或无权访问");
         }
-    }
-
-    /** 按声明字节数读取并多读1字节校验，防止元数据与实际流不一致导致静默截断。 */
-    private static byte[] readBounded(InputStream source, long declared) {
-        int budget = (int) Math.min(declared + 1, Integer.MAX_VALUE);
-        var out = new ByteArrayOutputStream(Math.max(0, budget));
-        byte[] buffer = new byte[8192];
-        int total = 0;
-        try (source) {
-            int read;
-            while ((read = source.read(buffer)) >= 0) {
-                total += read;
-                if (total > budget) break;
-                out.write(buffer, 0, read);
-            }
-        } catch (Exception ex) {
-            throw new SkillAdapters.Failure("RESULT_UNKNOWN", true, "产物字节读取失败");
-        }
-        if (total != declared)
-            throw new SkillAdapters.Failure("RESULT_UNKNOWN", true, "产物字节数与登记不一致");
-        return out.toByteArray();
     }
 
     private static Object scalar(String name, Object value) {

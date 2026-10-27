@@ -151,7 +151,7 @@ class MultipartFormMappingTest {
     }
 
     @Test
-    void 非法产物引用与未登记字节数在构建期拒绝() {
+    void 非法产物引用在构建期拒绝与未登记字节数在写出期拒绝() {
         var contract = contract("POST", form(List.of(), List.of(fileSpec("file", List.of("text/csv")))), schemaWith("file"));
         var badRef = assertThrows(
                 SkillAdapters.Failure.class,
@@ -159,13 +159,26 @@ class MultipartFormMappingTest {
                         contract, Map.of("file", "http://evil/artifacts/x"), source("text/csv", 8)));
         assertEquals("PARAM_ERROR", badRef.semantic);
         // 元数据字节数与实际流不一致：防静默截断，按RESULT_UNKNOWN处理。
+        // T09 起文件部分改为流式写出，构建期不再预读字节，故不一致的失败点从 build 移到写出，
+        // 异常类型与语义不变（RESULT_UNKNOWN、可重试）。
+        var shortEntity =
+                (HttpEntity<?>)
+                        MultipartFormMapping.build(
+                                        contract,
+                                        Map.of("file", "art_" + "a".repeat(32)),
+                                        id ->
+                                                new ArtifactStore.Download(
+                                                        new ByteArrayInputStream(new byte[3]),
+                                                        8,
+                                                        "text/csv",
+                                                        "sha"))
+                                .getFirst("file");
+        var shortBody = (org.springframework.core.io.Resource) shortEntity.getBody();
         assertThrows(
                 SkillAdapters.Failure.class,
-                () -> MultipartFormMapping.build(
-                        contract,
-                        Map.of("file", "art_" + "a".repeat(32)),
-                        id -> new ArtifactStore.Download(
-                                new ByteArrayInputStream(new byte[3]), 8, "text/csv", "sha")));
+                () ->
+                        shortBody.getInputStream()
+                                .transferTo(java.io.OutputStream.nullOutputStream()));
     }
 
     @Test

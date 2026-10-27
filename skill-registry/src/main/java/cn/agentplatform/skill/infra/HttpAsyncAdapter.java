@@ -103,6 +103,14 @@ public class HttpAsyncAdapter {
             String runId,
             long expectedAttempt,
             SkillAdapters outputs) {
+        // 异步契约没有可重放的请求体：multipart 若被降级成 JSON 体发出，会得到一个形态错误的
+        // 请求，再由下面的兜底 catch 折叠成“结果未知”，既不可重试也不可诊断。故在读绑定/落库
+        // 之前显式拒绝；放到 try 之内会被吞成 RESULT_UNKNOWN，所以必须是 invoke 的第一条语句。
+        if (MultipartFormMapping.declared(contract))
+            throw new PlatformException(
+                    400,
+                    "ASYNC_MULTIPART_UNSUPPORTED",
+                    "异步调用不支持multipart表单，请改用同步技能，或先上传产物并以引用传入");
         SkillAdapters.requireAttempt(expectedAttempt);
         var b = binding(callId);
         var generation = b;
