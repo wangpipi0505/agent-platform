@@ -5,7 +5,9 @@ import cn.agentplatform.app.domain.PublishGate;
 import cn.agentplatform.app.domain.PublishWaiver;
 import cn.agentplatform.common.*;
 import cn.agentplatform.common.authority.*;
+import cn.agentplatform.common.schema.SchemaDialect;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -1209,15 +1211,32 @@ public class AppService {
         validateSchema(config.get("outputSchema"));
     }
 
-    private void validateSchema(Object raw) {
+    /**
+     * 应用预检的 Schema 方言：先归一再统一判定（{@link SchemaDialect}），聚合全部错误而不是只报首个。
+     * 错误保留旧前缀 {@code Schema缺少有效type} 并追加 JSON Pointer，既有调用方/前端按前缀识别，不需要新协议。
+     *
+     * <p>有意保留的旧约束：根 Schema 仍必须声明 type，且根必须是对象（旧实现要求每个 properties/items
+     * 子 Schema 都显式声明 type，本实现只要求根，嵌套缺 type 是合法 JSON Schema）。放宽原因与兼容性证据见
+     * docs/evidence/2026-10-27-PLAT-08a-dialect/README.md。
+     *
+     * <p>包级可见：仅供同包单测直接覆盖预检规则，业务调用点（typeChecks/referenceChecks）不变。
+     */
+    void validateSchema(Object raw) {
         if (raw == null) return;
-        var schema = object(raw);
-        String type = Objects.toString(schema.get("type"), "");
-        if (!Set.of("object", "array", "string", "integer", "number", "boolean", "null")
-                .contains(type)) throw new IllegalArgumentException("Schema缺少有效type");
-        if (schema.get("properties") instanceof Map<?, ?> properties)
-            properties.values().forEach(this::validateSchema);
-        if (schema.containsKey("items")) validateSchema(schema.get("items"));
+        JsonNode schema;
+        try {
+            schema = Json.tree(raw);
+        } catch (RuntimeException ex) {
+            // 保留序列化失败的原因而不是静默丢弃；数组/标量根能转换，会在下方 validate 中带 pointer 拒绝。
+            throw new IllegalArgumentException("Schema缺少有效type: /: Schema必须为JSON对象", ex);
+        }
+        var normalized = SchemaDialect.normalize(schema);
+        var errors = new ArrayList<>(SchemaDialect.validate(normalized));
+        if (!normalized.isObject() || !normalized.has("type"))
+            errors.add(
+                    "/type: 缺少有效type（object/array/string/integer/number/boolean/null 或 [T,\"null\"]）");
+        if (!errors.isEmpty())
+            throw new IllegalArgumentException("Schema缺少有效type: " + String.join("; ", errors));
     }
 
     public List<Map<String, Object>> skillRefs(

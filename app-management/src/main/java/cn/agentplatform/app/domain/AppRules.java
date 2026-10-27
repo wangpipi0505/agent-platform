@@ -57,12 +57,17 @@ public final class AppRules {
                 && value instanceof String expression
                 && expression.startsWith("${")
                 && expression.endsWith("}")) return;
-        String type = Objects.toString(schema.get("type"), "");
+        // 运行期与预检必须同判：预检（SchemaDialect）接受 type:[T,"null"] 与 nullable:true，
+        // 运行期若仍按单字符串 type 比较，放行过的 schema 会在执行时才失败。
+        List<String> types = declaredTypes(schema);
         if (value == null) {
-            if (!type.equals("null")) throw new IllegalArgumentException(path + ": 不允许null");
+            boolean nullable = types.contains("null") || Boolean.TRUE.equals(schema.get("nullable"));
+            if (!nullable) throw new IllegalArgumentException(path + ": 不允许null");
             return;
         }
-        if (!typeMatches(type, value)) throw new IllegalArgumentException(path + ": 需要" + type);
+        if (types.isEmpty() || types.stream().noneMatch(type -> typeMatches(type, value)))
+            throw new IllegalArgumentException(
+                    path + ": 需要" + (types.isEmpty() ? "" : String.join("|", types)));
         if (schema.get("enum") instanceof List<?> allowed && !allowed.contains(value))
             throw new IllegalArgumentException(path + ": 不在枚举范围");
         if (value instanceof Map<?, ?> object) {
@@ -105,6 +110,21 @@ public final class AppRules {
             if (schema.get("maximum") instanceof Number max && n.doubleValue() > max.doubleValue())
                 throw new IllegalArgumentException(path + ": 大于上限");
         }
+    }
+
+    /**
+     * 声明式 type 的两种写法（`"T"` / `[T,"null"]`）归一成列表；不在校验里拒绝非法写法——那是
+     * SchemaDialect 的职责，运行期只按已接受的表示判值。
+     */
+    public static List<String> declaredTypes(Map<String, Object> schema) {
+        Object raw = schema.get("type");
+        if (raw instanceof String type) return List.of(type);
+        if (raw instanceof List<?> list)
+            return list.stream()
+                    .filter(String.class::isInstance)
+                    .map(String.class::cast)
+                    .toList();
+        return List.of();
     }
 
     public static boolean typeMatches(String type, Object value) {
