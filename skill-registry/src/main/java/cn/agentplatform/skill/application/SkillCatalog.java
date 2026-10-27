@@ -1,12 +1,14 @@
 package cn.agentplatform.skill.application;
 
 import cn.agentplatform.common.*;
+import cn.agentplatform.common.auth.AuthScheme;
 import cn.agentplatform.skill.domain.SkillRules;
 import cn.agentplatform.skill.infra.McpAdapter;
 import cn.agentplatform.skill.infra.OpenApiHttpMapping;
 import cn.agentplatform.skill.infra.SkillAdapters;
 import cn.agentplatform.skill.infra.SkillClients;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -24,16 +26,34 @@ public class SkillCatalog {
     private final TransactionTemplate tx;
     private final SkillClients clients;
     private final String appUrl;
+    private final boolean legacyBearer;
 
+    /** 单测直连四参构造：等价于默认 legacy-bearer=true，既有测试无需感知本卡开关。 */
     public SkillCatalog(
             JdbcTemplate db,
             PlatformTransactionManager manager,
             SkillClients clients,
-            @Value("${agent.services.app:http://127.0.0.1:18081}") String appUrl) {
+            String appUrl) {
+        this(db, manager, clients, appUrl, true);
+    }
+
+    /**
+     * 容器注入的正式构造。legacy-bearer 只影响注册期归一化（未声明 authScheme 时补 BEARER 还是
+     * 拒绝），见 {@link cn.agentplatform.common.auth.AuthScheme} 的兼容窗口说明；默认 true 保证
+     * 升级瞬间存量技能的对外凭据形态不变。
+     */
+    @Autowired
+    public SkillCatalog(
+            JdbcTemplate db,
+            PlatformTransactionManager manager,
+            SkillClients clients,
+            @Value("${agent.services.app:http://127.0.0.1:18081}") String appUrl,
+            @Value("${agent.skill.auth.legacy-bearer:true}") boolean legacyBearer) {
         this.db = db;
         this.tx = new TransactionTemplate(manager);
         this.clients = clients;
         this.appUrl = appUrl;
+        this.legacyBearer = legacyBearer;
     }
 
     private String tenant() {
@@ -233,6 +253,12 @@ public class SkillCatalog {
                     if (previous.containsKey("httpMapping")
                             && !effective.containsKey("httpMapping"))
                         effective.put("httpMapping", previous.get("httpMapping"));
+                    // authScheme 同属“旧编辑器省略不等于删除”的字段：局部保存若把 API_KEY 静默降级成
+                    // 默认 BEARER，出站凭据形态会在一次无关编辑后改变且不留痕迹；显式声明过的契约
+                    // 以旧值为准，本次提交若带新值仍以新值为准（putIfAbsent 语义）。
+                    if (previous.containsKey(AuthScheme.FIELD)
+                            && !effective.containsKey(AuthScheme.FIELD))
+                        effective.put(AuthScheme.FIELD, previous.get(AuthScheme.FIELD));
                     var contract = normalize(effective);
                     if (all.getFirst().get("status").equals("DRAFT")) {
                         db.update(
@@ -302,6 +328,18 @@ public class SkillCatalog {
             throw error(400, "INVALID_SECRET_REF", "认证只能使用已配置secret_ref");
         if (!auth.isBlank()) Actor.current().requireRole("ADMIN");
         result.put("authRef", auth);
+        // authScheme 放在 authRef 校验之后归一化：组合规则（NONE 不得带凭据、API_KEY 必须带凭据）
+        // 只有在 authRef 已是合法 secret_ref 之后才有意义，否则两类错误会互相掩盖。
+        // 归一化结果一律显式落库，执行侧不再回读 legacy 开关，避免同一契约因部署配置不同而被解释成
+        // 不同鉴权方式。缺省补 BEARER 的兼容窗口由 SkillRules/AuthScheme 统一裁决。
+        AuthScheme scheme =
+                SkillRules.authScheme(
+                        body.getOrDefault(
+                                AuthScheme.FIELD, invocation.getOrDefault(AuthScheme.FIELD, "")),
+                        auth,
+                        type,
+                        legacyBearer);
+        result.put(AuthScheme.FIELD, scheme.name());
         result.put(
                 "httpMethod",
                 body.getOrDefault("httpMethod", invocation.getOrDefault("httpMethod", "POST")));

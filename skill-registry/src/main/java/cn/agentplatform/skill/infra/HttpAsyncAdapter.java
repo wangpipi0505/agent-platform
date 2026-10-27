@@ -3,6 +3,7 @@ package cn.agentplatform.skill.infra;
 import static cn.agentplatform.skill.application.SkillCatalog.*;
 
 import cn.agentplatform.common.*;
+import cn.agentplatform.common.auth.AuthScheme;
 import cn.agentplatform.skill.domain.SkillRules;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -468,7 +469,12 @@ public class HttpAsyncAdapter {
                         });
     }
 
-    private RestClient.RequestBodySpec request(
+    /**
+     * 异步提交/查询共用的请求构造。包内可见是为了让测试直接断言真实出站头：鉴权方式属于安全相关
+     * 行为，同步与异步必须由同一份契约映射驱动，而 invoke() 依赖 external_job_binding 表，无法在
+     * 纯单测里轻量到达这里。
+     */
+    RestClient.RequestBodySpec request(
             Map<String, Object> contract, String endpoint, String method, Object body, String key) {
         SkillRules.endpoint(endpoint);
         var factory = new SimpleClientHttpRequestFactory();
@@ -482,8 +488,12 @@ public class HttpAsyncAdapter {
                         .uri(java.net.URI.create(endpoint))
                         .header("Idempotency-Key", key)
                         .header("Accept", "application/json");
-        String auth = Objects.toString(contract.get("authRef"), "");
-        if (!auth.isBlank()) request.header("Authorization", "Bearer " + SecretVault.resolve(auth));
+        // 与同步适配器共用同一份契约→头的映射：异步只多了提交/查询两步，鉴权方式不能有两套实现，
+        // 否则同一技能在 SYNC 与 SUBMIT_QUERY 之间会发出不同凭据。凭据解析失败同样在发请求前抛出。
+        AuthScheme.headers(
+                        contract.get(AuthScheme.FIELD),
+                        Objects.toString(contract.get("authRef"), ""))
+                .forEach(request::header);
         if (body != null)
             request.contentType(org.springframework.http.MediaType.APPLICATION_JSON).body(body);
         return request;

@@ -3,6 +3,7 @@ package cn.agentplatform.skill.infra;
 import static cn.agentplatform.skill.application.SkillCatalog.*;
 
 import cn.agentplatform.common.*;
+import cn.agentplatform.common.auth.AuthScheme;
 import cn.agentplatform.skill.domain.SkillRules;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -224,8 +225,13 @@ public class SkillAdapters {
                                     name, value instanceof String ? value : Json.write(value)));
             endpoint = uri.build().encode().toUriString();
         }
-        String auth = Objects.toString(contract.get("authRef"), "");
-        String authorization = auth.isBlank() ? null : "Bearer " + SecretVault.resolve(auth);
+        // 鉴权头由契约 authScheme 决定（缺省 BEARER，见 AuthScheme 的兼容窗口）；凭据解析失败必须
+        // 在发请求之前抛出。这段刻意留在下面的 try 之外：try 内的 catch 会把任意异常折叠成
+        // “外部端点连接失败”，那会把配置错误伪装成可重试的传输故障，还可能让有副作用的端点先执行一次。
+        Map<String, String> authorization =
+                AuthScheme.headers(
+                        contract.get(AuthScheme.FIELD),
+                        Objects.toString(contract.get("authRef"), ""));
         HttpMethod httpMethod = HttpMethod.valueOf(method);
         boolean sideEffect =
                 Boolean.TRUE.equals(object(contract.get("execution")).get("sideEffect"));
@@ -258,7 +264,7 @@ public class SkillAdapters {
                             ? client.method(httpMethod).uri(java.net.URI.create(endpoint))
                             : client.method(httpMethod).uri(endpoint);
             request.header("Idempotency-Key", key).header("Accept", "application/json");
-            if (authorization != null) request.header("Authorization", authorization);
+            authorization.forEach(request::header);
             if (mapped && MultipartFormMapping.declared(contract)) {
                 // multipart表单：文件字节经产物存储按租户/主体解析（runId传null与/admin下载语义一致，
                 // 允许引用此前运行的产物）；重发同一坏引用不会有不同结果，失败按PARAM_ERROR处理。

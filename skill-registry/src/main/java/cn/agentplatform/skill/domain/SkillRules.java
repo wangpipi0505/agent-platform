@@ -2,6 +2,7 @@ package cn.agentplatform.skill.domain;
 
 import cn.agentplatform.common.Actor;
 import cn.agentplatform.common.Json;
+import cn.agentplatform.common.auth.AuthScheme;
 import cn.agentplatform.common.schema.BoundedRegexFactory;
 import cn.agentplatform.common.schema.SchemaDeadline;
 import cn.agentplatform.common.schema.SchemaWorkBudget;
@@ -91,6 +92,21 @@ public final class SkillRules {
         SchemaDeadline.check();
         if (!errors.isEmpty())
             throw new IllegalArgumentException(errors.iterator().next().toString());
+    }
+
+    /**
+     * 注册期 authScheme 归一化与组合校验的唯一入口（PLAT-11）：目录层只调用本方法，不自行比较
+     * 字符串，也不在别处复制“NONE 不得带凭据/API_KEY 必须带凭据”这类规则。
+     *
+     * <p>归一化的结果必须显式落库：执行侧只按存储值发头，不再回头读 legacy 开关，否则同一契约
+     * 会因部署配置不同而在运行期被解释成不同鉴权方式。未声明时是否补 BEARER 由
+     * {@code legacy-bearer} 决定，默认 true 保持存量技能行为不变。
+     */
+    public static AuthScheme authScheme(
+            Object declared, String authRef, String adapterType, boolean legacyBearer) {
+        AuthScheme scheme = AuthScheme.registration(declared, legacyBearer);
+        AuthScheme.checkCombination(scheme, authRef, adapterType);
+        return scheme;
     }
 
     public static URI endpoint(String endpoint) {
