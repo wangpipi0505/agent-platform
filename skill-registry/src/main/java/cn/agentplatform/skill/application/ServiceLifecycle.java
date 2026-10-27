@@ -4,6 +4,7 @@ import cn.agentplatform.common.Actor;
 import cn.agentplatform.common.Json;
 import cn.agentplatform.common.PlatformException;
 import cn.agentplatform.skill.domain.ServiceManifest;
+import cn.agentplatform.skill.infra.ProcessTree;
 
 import jakarta.annotation.PreDestroy;
 
@@ -344,11 +345,10 @@ public class ServiceLifecycle {
         try {
             Files.createDirectories(logDir);
             Files.createDirectories(Path.of(manifest.workDir()));
-            ProcessBuilder builder = new ProcessBuilder(manifest.command());
-            builder.directory(Path.of(manifest.workDir()).toFile());
+            ProcessBuilder builder = ProcessTree.builder(manifest.command(), Path.of(manifest.workDir()));
             builder.redirectErrorStream(true);
             builder.redirectOutput(ProcessBuilder.Redirect.appendTo(manifest.logFile(logDir).toFile()));
-            Process process = builder.start();
+            Process process = ProcessTree.start(builder);
             ensureShutdownHook();
             Running current = new Running(tenant, manifest, process, Instant.now());
             running.put(manifest.code(), current);
@@ -391,7 +391,7 @@ public class ServiceLifecycle {
                 return health;
             }
             if (System.nanoTime() > deadline) {
-                killTree(current.process);
+                ProcessTree.killTree(current.process);
                 throw error(504, "SERVICE_START_TIMEOUT",
                         "等待健康检查超时(" + manifest.startupTimeoutMs() + "ms)，日志尾部: "
                                 + logTail(manifest));
@@ -400,7 +400,7 @@ public class ServiceLifecycle {
                 Thread.sleep(250);
             } catch (InterruptedException ex) {
                 Thread.currentThread().interrupt();
-                killTree(current.process);
+                ProcessTree.killTree(current.process);
                 throw error(500, "SERVICE_START_INTERRUPTED", "启动等待被中断");
             }
         }
@@ -408,7 +408,7 @@ public class ServiceLifecycle {
 
     private void stopInternal(
             String tenant, String actor, ServiceManifest manifest, Running current, String action) {
-        killTree(current.process);
+        ProcessTree.killTree(current.process);
         boolean exited = true;
         try {
             exited = current.process.waitFor(manifest.stopTimeoutMs(), TimeUnit.MILLISECONDS);
@@ -442,7 +442,7 @@ public class ServiceLifecycle {
             current = new Running(tenant, manifest, null, Instant.now());
             current.pid = -1;
         }
-        if (current.process != null) killTree(current.process);
+        if (current.process != null) ProcessTree.killTree(current.process);
         current.state = State.FAILED;
         current.lastError = truncate(message, 2000);
         current.exitCode = current.process == null ? -1 : exitCode(current.process);
@@ -459,7 +459,7 @@ public class ServiceLifecycle {
         if (pid > 0) {
             var handle = ProcessHandle.of(pid);
             if (handle.isPresent() && handle.get().isAlive() && sameStart(row, handle.get())) {
-                killTree(handle.get());
+                ProcessTree.killTree(handle.get());
                 killed = true;
             }
         }
@@ -654,7 +654,7 @@ public class ServiceLifecycle {
         for (var entry : List.copyOf(running.entrySet())) {
             Running current = entry.getValue();
             try {
-                killTree(current.process);
+                ProcessTree.killTree(current.process);
                 current.state = State.STOPPED;
                 current.exitCode = exitCode(current.process);
                 current.lastError = "平台退出时停止";
@@ -697,56 +697,6 @@ public class ServiceLifecycle {
         } catch (IOException ex) {
             return false;
         }
-    }
-
-    private void killTree(Process process) {
-        if (process == null || !process.isAlive()) return;
-        if (isWindows()) {
-            try {
-                Process kill = new ProcessBuilder(
-                                "taskkill", "/T", "/F", "/PID", String.valueOf(process.pid()))
-                        .redirectErrorStream(true)
-                        .start();
-                kill.getInputStream().readAllBytes();
-                kill.waitFor(10, TimeUnit.SECONDS);
-            } catch (Exception ignored) {
-                // taskkill 失败时继续走 destroy/destroyForcibly 兜底。
-            }
-        } else {
-            process.descendants().forEach(ProcessHandle::destroy);
-        }
-        try {
-            if (!process.waitFor(3, TimeUnit.SECONDS)) process.destroy();
-            if (!process.waitFor(2, TimeUnit.SECONDS)) process.destroyForcibly();
-        } catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
-            process.destroyForcibly();
-        }
-    }
-
-    private void killTree(ProcessHandle handle) {
-        if (handle == null || !handle.isAlive()) return;
-        if (isWindows()) {
-            try {
-                Process kill = new ProcessBuilder(
-                                "taskkill", "/T", "/F", "/PID", String.valueOf(handle.pid()))
-                        .redirectErrorStream(true)
-                        .start();
-                kill.getInputStream().readAllBytes();
-                kill.waitFor(10, TimeUnit.SECONDS);
-            } catch (Exception ignored) {
-                // 继续尝试 destroy。
-            }
-        } else {
-            handle.children().forEach(this::destroyHandleTree);
-        }
-        handle.destroy();
-        if (handle.isAlive()) handle.destroyForcibly();
-    }
-
-    private void destroyHandleTree(ProcessHandle handle) {
-        handle.children().forEach(this::destroyHandleTree);
-        handle.destroy();
     }
 
     private String logTail(ServiceManifest manifest) {
@@ -821,10 +771,6 @@ public class ServiceLifecycle {
         } catch (Exception ex) {
             return "localhost";
         }
-    }
-
-    private static boolean isWindows() {
-        return System.getProperty("os.name", "").toLowerCase(Locale.ROOT).contains("win");
     }
 
     private static PlatformException error(int status, String code, String message) {

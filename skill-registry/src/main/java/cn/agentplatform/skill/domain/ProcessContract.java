@@ -1,0 +1,282 @@
+package cn.agentplatform.skill.domain;
+
+import cn.agentplatform.common.Json;
+import cn.agentplatform.common.PlatformException;
+
+import com.fasterxml.jackson.databind.JsonNode;
+
+import java.nio.charset.StandardCharsets;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+/**
+ * 算法本地进程调用的不可变契约（方案 §4.21 / §12）。
+ *
+ * <p>本对象只描述“允许调用什么”，不携带任何凭据：命令是 argv 数组而非 shell 字符串，
+ * 执行器不得再做字符串拼接，从结构上杜绝命令注入。首元素必须是绝对路径，
+ * 由发布期（T21b）校验文件存在且属于允许目录；执行期只负责按绝对路径启动。
+ *
+ * <p>不变量：
+ *
+ * <ul>
+ *   <li>{@code timeout} 在 (0, 30min] 内，缺省 60s；超时由执行器杀整棵进程树并按 504 返回。
+ *   <li>{@code maxOutputBytes} 在 [1, 1MiB] 内，缺省 1MiB；执行器对每条流硬截断。
+ *   <li>{@code allowedEnv} 只允许新增/覆盖白名单变量，禁止覆盖 PATH、SystemRoot 等
+ *       执行器保底注入的最小必需变量（否则子进程可被指向任意可执行文件）。
+ *   <li>{@code stdinJson} v1 只允许 artifact 引用形态；读取与解析属于 T21b，
+ *       本卡只校验其结构与非空大小上限。
+ * </ul>
+ */
+public record ProcessContract(
+        List<String> command,
+        String workDirRoot,
+        Duration timeout,
+        JsonNode stdinJson,
+        Map<String, String> allowedEnv,
+        int maxOutputBytes) {
+
+    public static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(60);
+    public static final Duration MAX_TIMEOUT = Duration.ofMinutes(30);
+    public static final int DEFAULT_MAX_OUTPUT_BYTES = 1024 * 1024;
+    public static final int HARD_MAX_OUTPUT_BYTES = 1024 * 1024;
+
+    private static final int MAX_COMMAND_ARGS = 64;
+    private static final int MAX_ARG_LENGTH = 4096;
+    private static final int MAX_WORKDIR_LENGTH = 4096;
+    private static final int MAX_STDIN_BYTES = 1024 * 1024;
+    private static final int MAX_ENV_ENTRIES = 32;
+    private static final int MAX_ENV_VALUE_LENGTH = 4096;
+    private static final Pattern ENV_NAME = Pattern.compile("[A-Za-z_][A-Za-z0-9_]{0,63}");
+
+    /**
+     * 这些变量由执行器按宿主最小必需集注入，契约不得覆盖；否则调用方可改写 PATH 或
+     * 动态库搜索路径，等同于绕过“首元素绝对路径”的约束。
+     */
+    private static final Set<String> RESERVED_ENV =
+            Set.of(
+                    "PATH",
+                    "PATHEXT",
+                    "SYSTEMROOT",
+                    "SYSTEMDRIVE",
+                    "WINDIR",
+                    "TEMP",
+                    "TMP",
+                    "COMSPEC",
+                    "NUMBER_OF_PROCESSORS",
+                    "PROCESSOR_ARCHITECTURE",
+                    "PROCESSOR_IDENTIFIER",
+                    "OS",
+                    "HOME",
+                    "USERPROFILE",
+                    "APPDATA",
+                    "LOCALAPPDATA",
+                    "PROGRAMDATA",
+                    "PROGRAMFILES",
+                    "PROGRAMFILES(X86)",
+                    "JAVA_HOME",
+                    "CLASSPATH",
+                    "TMPDIR",
+                    "LANG",
+                    "LC_ALL",
+                    "HTTP_PROXY",
+                    "HTTPS_PROXY",
+                    "NO_PROXY",
+                    "ALL_PROXY");
+
+    public ProcessContract {
+        command = validCommand(command);
+        workDirRoot = validWorkDirRoot(workDirRoot);
+        timeout = validTimeout(timeout);
+        stdinJson = validStdin(stdinJson);
+        allowedEnv = validEnvironment(allowedEnv);
+        maxOutputBytes = validMaxOutput(maxOutputBytes);
+    }
+
+    /**
+     * 从发布记录/调用请求中的 JSON 解析契约。只做结构与范围校验，不检查可执行文件是否存在
+     * （发布期校验）也不解析 stdin 引用（T21b）；所有失败统一为 400 / PROCESS_CONTRACT_INVALID。
+     */
+    public static ProcessContract parse(JsonNode contract) {
+        if (contract == null || !contract.isObject())
+            throw invalid("字段 process 必须是 JSON 对象");
+
+        List<String> command = parseCommand(contract.get("command"));
+        String workDirRoot = parseWorkDirRoot(contract.get("workDirRoot"));
+        Duration timeout = parseTimeout(contract.get("timeoutMs"));
+        JsonNode stdin = contract.get("stdin");
+        if (stdin == null || stdin.isNull()) stdin = null;
+        Map<String, String> env = parseEnvironment(contract.get("env"));
+        int maxOutput = parseMaxOutput(contract.get("maxOutputBytes"));
+        return new ProcessContract(command, workDirRoot, timeout, stdin, env, maxOutput);
+    }
+
+    private static List<String> parseCommand(JsonNode node) {
+        if (node == null || !node.isArray() || node.isEmpty())
+            throw invalid("字段 command 必须是至少包含一个元素的字符串数组");
+        List<String> args = new ArrayList<>(node.size());
+        for (JsonNode item : node) {
+            if (!item.isTextual())
+                throw invalid("字段 command 的每个元素都必须是字符串");
+            args.add(item.asText());
+        }
+        return args;
+    }
+
+    private static String parseWorkDirRoot(JsonNode node) {
+        if (node == null || node.isNull()) return null;
+        if (!node.isTextual()) throw invalid("字段 workDirRoot 必须是绝对路径字符串");
+        return node.asText();
+    }
+
+    private static Duration parseTimeout(JsonNode node) {
+        if (node == null || node.isNull()) return DEFAULT_TIMEOUT;
+        if (!node.isIntegralNumber())
+            throw invalid("字段 timeoutMs 必须是整数毫秒（实际类型: " + node.getNodeType() + "）");
+        return Duration.ofMillis(node.longValue());
+    }
+
+    private static Map<String, String> parseEnvironment(JsonNode node) {
+        if (node == null || node.isNull()) return Map.of();
+        if (!node.isObject()) throw invalid("字段 env 必须是字符串到字符串的对象");
+        Map<String, String> env = new LinkedHashMap<>();
+        var fields = node.fields();
+        while (fields.hasNext()) {
+            var entry = fields.next();
+            if (!entry.getValue().isTextual())
+                throw invalid("字段 env 的变量 " + entry.getKey() + " 的值必须是字符串");
+            env.put(entry.getKey(), entry.getValue().asText());
+        }
+        return env;
+    }
+
+    private static int parseMaxOutput(JsonNode node) {
+        if (node == null || node.isNull()) return DEFAULT_MAX_OUTPUT_BYTES;
+        if (!node.isIntegralNumber())
+            throw invalid("字段 maxOutputBytes 必须是整数（实际类型: " + node.getNodeType() + "）");
+        long value = node.longValue();
+        if (value < 1 || value > HARD_MAX_OUTPUT_BYTES)
+            throw invalid("字段 maxOutputBytes 必须在 1 到 " + HARD_MAX_OUTPUT_BYTES + " 之间，实际: " + value);
+        return (int) value;
+    }
+
+    private static List<String> validCommand(List<String> command) {
+        if (command == null || command.isEmpty())
+            throw invalid("字段 command 必须至少包含一个参数");
+        if (command.size() > MAX_COMMAND_ARGS)
+            throw invalid("字段 command 参数个数不能超过 " + MAX_COMMAND_ARGS + "，实际: " + command.size());
+        List<String> copy = new ArrayList<>(command.size());
+        for (int i = 0; i < command.size(); i++) {
+            String arg = command.get(i);
+            if (arg == null) throw invalid("字段 command 的第 " + (i + 1) + " 个参数为 null");
+            if (arg.length() > MAX_ARG_LENGTH)
+                throw invalid("字段 command 的第 " + (i + 1) + " 个参数超过 " + MAX_ARG_LENGTH + " 字符");
+            if (arg.indexOf('\0') >= 0 || arg.indexOf('\n') >= 0 || arg.indexOf('\r') >= 0)
+                throw invalid("字段 command 的第 " + (i + 1) + " 个参数包含控制字符");
+            copy.add(arg);
+        }
+        String executable = copy.getFirst();
+        if (executable.isBlank() || !isAbsolute(executable))
+            throw invalid("字段 command 的首元素必须是可执行文件绝对路径，实际: " + executable);
+        return List.copyOf(copy);
+    }
+
+    private static String validWorkDirRoot(String workDirRoot) {
+        if (workDirRoot == null) return null;
+        String value = workDirRoot;
+        if (value.isBlank()) throw invalid("字段 workDirRoot 不能为空字符串");
+        if (value.length() > MAX_WORKDIR_LENGTH)
+            throw invalid("字段 workDirRoot 不能超过 " + MAX_WORKDIR_LENGTH + " 字符");
+        if (value.indexOf('\0') >= 0 || !isAbsolute(value))
+            throw invalid("字段 workDirRoot 必须是绝对路径，实际: " + value);
+        return value;
+    }
+
+    private static Duration validTimeout(Duration timeout) {
+        if (timeout == null) return DEFAULT_TIMEOUT;
+        if (timeout.isNegative() || timeout.isZero() || timeout.compareTo(MAX_TIMEOUT) > 0)
+            throw invalid(
+                    "字段 timeoutMs 必须在 1 到 " + MAX_TIMEOUT.toMillis() + " 之间，实际: "
+                            + timeout.toMillis());
+        return timeout;
+    }
+
+    private static JsonNode validStdin(JsonNode stdin) {
+        if (stdin == null || stdin.isNull()) return null;
+        int bytes;
+        try {
+            bytes = Json.write(stdin).getBytes(StandardCharsets.UTF_8).length;
+        } catch (RuntimeException ex) {
+            throw invalid("字段 stdin 不是可序列化的 JSON: " + ex.getMessage());
+        }
+        if (bytes > MAX_STDIN_BYTES)
+            throw invalid("字段 stdin 序列化后不能超过 " + MAX_STDIN_BYTES + " 字节，实际: " + bytes);
+        return stdin.deepCopy();
+    }
+
+    private static Map<String, String> validEnvironment(Map<String, String> allowedEnv) {
+        if (allowedEnv == null || allowedEnv.isEmpty()) return Map.of();
+        if (allowedEnv.size() > MAX_ENV_ENTRIES)
+            throw invalid("字段 env 变量个数不能超过 " + MAX_ENV_ENTRIES + "，实际: " + allowedEnv.size());
+        Map<String, String> copy = new LinkedHashMap<>();
+        for (Map.Entry<String, String> entry : allowedEnv.entrySet()) {
+            String name = entry.getKey();
+            String value = entry.getValue();
+            if (name == null || !ENV_NAME.matcher(name).matches())
+                throw invalid("字段 env 的变量名不合法: " + name + "（只允许字母、数字、下划线且不以数字开头）");
+            if (RESERVED_ENV.contains(name.toUpperCase(Locale.ROOT)))
+                throw invalid("字段 env 不允许覆盖执行器保留变量 " + name);
+            if (value == null) throw invalid("字段 env 的变量 " + name + " 值不能为 null");
+            if (value.length() > MAX_ENV_VALUE_LENGTH)
+                throw invalid("字段 env 的变量 " + name + " 值不能超过 " + MAX_ENV_VALUE_LENGTH + " 字符");
+            if (value.indexOf('\0') >= 0 || value.indexOf('\n') >= 0 || value.indexOf('\r') >= 0)
+                throw invalid("字段 env 的变量 " + name + " 值包含控制字符");
+            copy.put(name, value);
+        }
+        return Map.copyOf(copy);
+    }
+
+    private static int validMaxOutput(int maxOutputBytes) {
+        if (maxOutputBytes < 1 || maxOutputBytes > HARD_MAX_OUTPUT_BYTES)
+            throw invalid(
+                    "字段 maxOutputBytes 必须在 1 到 " + HARD_MAX_OUTPUT_BYTES + " 之间，实际: "
+                            + maxOutputBytes);
+        return maxOutputBytes;
+    }
+
+    private static boolean isAbsolute(String value) {
+        try {
+            return Path.of(value).isAbsolute();
+        } catch (InvalidPathException ex) {
+            return false;
+        }
+    }
+
+    private static PlatformException invalid(String message) {
+        return new PlatformException(400, "PROCESS_CONTRACT_INVALID", message);
+    }
+
+    @Override
+    public String toString() {
+        return "ProcessContract[command="
+                + command
+                + ", workDirRoot="
+                + workDirRoot
+                + ", timeout="
+                + timeout
+                + ", stdin="
+                + (stdinJson == null ? "none" : stdinJson.getNodeType())
+                + ", envKeys="
+                + allowedEnv.keySet()
+                + ", maxOutputBytes="
+                + maxOutputBytes
+                + "]";
+    }
+}
