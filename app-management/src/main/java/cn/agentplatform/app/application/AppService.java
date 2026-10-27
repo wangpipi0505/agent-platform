@@ -1,6 +1,8 @@
 package cn.agentplatform.app.application;
 
 import cn.agentplatform.app.domain.AppRules;
+import cn.agentplatform.app.domain.PublishGate;
+import cn.agentplatform.app.domain.PublishWaiver;
 import cn.agentplatform.common.*;
 import cn.agentplatform.common.authority.*;
 
@@ -26,6 +28,25 @@ public class AppService {
     private final TransactionTemplate publishedReadTx;
     private final RestClient http = client();
     private final String skillUrl, modelUrl, monitorUrl, engineUrl;
+
+    /**
+     * 发布门禁模式与豁免回滚开关。用字段注入而不是构造参数，保持既有装配签名不变；手工构造（测试/诊断）时
+     * 取初始值 BLOCKING + 开启，等价于生产默认的失败关闭。
+     */
+    @Value("${agent.publish.gate-mode:BLOCKING}")
+    private String configuredGateMode = "BLOCKING";
+
+    @Value("${agent.publish.waiver-enabled:true}")
+    private boolean waiverEnabled = true;
+
+    /** 豁免查询集中在此：撤销/到期过滤与"最新窗口优先"只在这两处生效，避免多处各写一份条件。 */
+    private static final String WAIVER_BY_ID =
+            "select * from app.publish_waiver where tenant_id=? and app_code=? and id=?";
+
+    private static final String WAIVER_ACTIVE =
+            "select * from app.publish_waiver where tenant_id=? and app_code=? and draft_rev=?"
+                    + " and candidate_sha256=? and revoked_at is null and expires_at>now()"
+                    + " order by expires_at desc limit 1";
 
     public AppService(
             JdbcTemplate db,
@@ -886,31 +907,78 @@ public class AppService {
                     referenceChecks(config, definition, false);
                 });
         check(checks, "守卫声明", () -> referenceChecks(config, definition, true));
-        var evalHolder = new HashMap<String, Object>();
-        check(
-                checks,
-                "评测门禁",
-                () -> {
-                    var eval =
-                            remote(
-                                    monitorUrl,
-                                    "/internal/evaluations/accepted?appCode="
-                                            + code
-                                            + "&draftRev="
-                                            + rev
-                                            + "&candidateSha256="
-                                            + hash);
-                    if (!Boolean.TRUE.equals(eval.get("accepted")))
-                        throw new IllegalArgumentException("缺少满足安全100%、通过率及无新增回归的候选报告");
-                    evalHolder.putAll(eval);
-                });
+        // 门禁在其余检查之后评估：即使阻断，也先落一份完整检查快照，供 ADMIN 判断是否值得豁免。
+        PublishGate gate = publishGate();
+        Map<String, Object> eval = null;
+        var evalFailure = new String[1];
+        // OFF 是真正的关闭：不再咨询评测服务，监控侧故障不得阻断已明确关闭门禁的发布通道。
+        if (gate != PublishGate.OFF) {
+            try {
+                eval =
+                        remote(
+                                monitorUrl,
+                                "/internal/evaluations/accepted?appCode="
+                                        + code
+                                        + "&draftRev="
+                                        + rev
+                                        + "&candidateSha256="
+                                        + hash);
+            } catch (PlatformException ex) {
+                evalFailure[0] = Objects.toString(ex.getMessage(), "评测依赖不可用");
+            }
+        }
+        boolean accepted = eval != null && Boolean.TRUE.equals(eval.get("accepted"));
+        // 依赖故障不允许用豁免绕过：拿不到候选状态时无法确认风险范围，只能阻断或告警。
+        PublishWaiver waiver = null;
+        if (waiverEnabled && gate != PublishGate.OFF && !accepted && evalFailure[0] == null)
+            waiver = activeWaiver(code, rev, hash);
+        String waiverId = waiver == null ? null : waiver.id();
+        var gateCheck = new LinkedHashMap<String, Object>();
+        gateCheck.put("group", "评测门禁");
+        String gateResult;
+        String gateDetail = null;
+        if (evalFailure[0] != null) {
+            gateResult = "ERROR";
+            gateDetail = evalFailure[0];
+        } else if (accepted) {
+            gateResult = "PASS";
+        } else if (gate == PublishGate.OFF) {
+            gateResult = "SKIPPED";
+            gateDetail = "门禁已关闭（gate-mode=OFF），不评估评测结论";
+        } else if (waiver != null) {
+            gateResult = "WAIVED";
+            gateDetail = "ADMIN 显式豁免：" + waiver.reason();
+            gateCheck.put("waiverId", waiver.id());
+            gateCheck.put("expiresAt", waiver.expiresAt().toString());
+        } else if (gate == PublishGate.ADVISORY) {
+            gateResult = "ADVISORY";
+            gateDetail = "缺少满足安全100%、通过率及无新增回归的候选报告";
+        } else {
+            gateResult = "BLOCKED";
+            gateDetail = "缺少满足安全100%、通过率及无新增回归的候选报告";
+        }
+        gateCheck.put("result", gateResult);
+        if (gateDetail != null) gateCheck.put("detail", gateDetail);
+        checks.add(gateCheck);
+        var warnings = new ArrayList<String>();
+        if ("ADVISORY".equals(gateResult))
+            warnings.add("评测门禁：" + gateDetail + "（ADVISORY 仅告警，发布风险由发布人承担）");
+        if ("WAIVED".equals(gateResult))
+            warnings.add("评测门禁：本次发布使用 ADMIN 豁免 " + waiverId + "，到期 " + waiver.expiresAt());
+        if ("SKIPPED".equals(gateResult)) warnings.add("评测门禁：已由 gate-mode=OFF 关闭，发布不带评测结论");
         String id = "pc_" + UUID.randomUUID();
-        boolean passed = checks.stream().allMatch(c -> c.get("result").equals("PASS"));
-        String evalId = Objects.toString(evalHolder.get("evalReportId"), "");
+        // 被阻断的预检同样落审计行：事后可还原是谁、在什么模式、凭哪次豁免尝试过发布。
+        boolean passed =
+                checks.stream()
+                        .allMatch(
+                                c ->
+                                        Set.of("PASS", "WAIVED", "ADVISORY", "SKIPPED")
+                                                .contains(c.get("result")));
+        String evalId = eval == null ? "" : Objects.toString(eval.get("evalReportId"), "");
         db.update(
                 "insert into"
-                    + " app.publish_report(tenant_id,id,app_draft_id,app_code,draft_rev,candidate_sha256,eval_report_id,checks,passed,expires_at,model_refs)"
-                    + " values(?,?,?,?,?,?,?,?::jsonb,?,?,?::jsonb)",
+                    + " app.publish_report(tenant_id,id,app_draft_id,app_code,draft_rev,candidate_sha256,eval_report_id,checks,passed,expires_at,model_refs,gate_mode,waiver_id)"
+                    + " values(?,?,?,?,?,?,?,?::jsonb,?,?,?::jsonb,?,?)",
                 tenant(),
                 id,
                 app.get("draftId"),
@@ -921,22 +989,147 @@ public class AppService {
                 Json.write(checks),
                 passed,
                 java.sql.Timestamp.from(Instant.now().plusSeconds(900)),
-                Json.write(models));
-        return Map.of(
-                "precheckId",
-                id,
-                "draftRev",
-                rev,
-                "candidateSha256",
-                hash,
-                "evalReportId",
-                evalId,
-                "passed",
-                passed,
-                "result",
-                passed ? "PASS" : "BLOCKED",
-                "report",
-                Map.of("checks", checks, "warnings", List.of()));
+                Json.write(models),
+                gate.name(),
+                waiverId);
+        // 依赖故障在任何模式都拦截：不确定候选状态时的"放宽"等于没有门禁，且豁免不得代替可用性判断。
+        if ("ERROR".equals(gateResult) || (gate.blocking() && "BLOCKED".equals(gateResult)))
+            throw error(409, "EVAL_GATE_BLOCKED", gateDetail);
+        var result = new LinkedHashMap<String, Object>();
+        result.put("precheckId", id);
+        result.put("draftRev", rev);
+        result.put("candidateSha256", hash);
+        result.put("evalReportId", evalId);
+        result.put("passed", passed);
+        result.put("result", passed ? "PASS" : "BLOCKED");
+        result.put("gateMode", gate.name());
+        result.put("waiverId", waiverId);
+        result.put("report", Map.of("checks", checks, "warnings", warnings));
+        return result;
+    }
+
+    /** 测试/诊断入口：覆盖门禁模式与豁免开关，不改动事务与 HTTP 依赖。 */
+    void configurePublishGate(String mode, boolean waiverEnabled) {
+        this.configuredGateMode = mode;
+        this.waiverEnabled = waiverEnabled;
+    }
+
+    /** 回滚开关关闭时放宽模式一律降级为 BLOCKING：保留历史数据，但不再接受新的放行。 */
+    private PublishGate publishGate() {
+        return waiverEnabled ? PublishGate.parse(configuredGateMode) : PublishGate.BLOCKING;
+    }
+
+    /**
+     * 授予一次显式豁免。豁免不是"跳过检查"，而是把"缺评测报告"这一条从阻断改记为 WAIVED 并绑定候选指纹：
+     * 草稿再保存一次（draft_rev 或 candidate_sha256 变化）豁免即自动失效，避免旧豁免被挪用到新候选上。
+     */
+    public Map<String, Object> createWaiver(String code, Map<String, Object> body) {
+        requireWaiverEnabled();
+        var app = get(code);
+        var waiver =
+                PublishWaiver.grant(
+                        "pw_" + UUID.randomUUID(),
+                        tenant(),
+                        code,
+                        object(body),
+                        Actor.current().principalId(),
+                        Instant.now());
+        db.update(
+                "insert into"
+                    + " app.publish_waiver(id,tenant_id,app_code,draft_rev,candidate_sha256,reason,approved_by,approved_at,expires_at)"
+                    + " values(?,?,?,?,?,?,?,?,?)",
+                waiver.id(),
+                waiver.tenantId(),
+                waiver.appCode(),
+                waiver.draftRev(),
+                waiver.candidateSha256(),
+                waiver.reason(),
+                waiver.approvedBy(),
+                java.sql.Timestamp.from(waiver.approvedAt()),
+                java.sql.Timestamp.from(waiver.expiresAt()));
+        // 豁免是高风险放行：授予人、理由、候选与窗口同时写生命周期日志，审计不必回查业务表。
+        log(
+                code,
+                "PUBLISH_WAIVER_GRANT",
+                Objects.toString(app.get("status"), ""),
+                Objects.toString(app.get("status"), ""),
+                Map.of(
+                        "waiverId", waiver.id(),
+                        "draftRev", waiver.draftRev(),
+                        "candidateSha256", waiver.candidateSha256(),
+                        "reason", waiver.reason(),
+                        "expiresAt", waiver.expiresAt().toString()));
+        return waiver.view(Instant.now());
+    }
+
+    /** 撤销幂等：重复撤销保留首次 revoked_at/revoked_by，不改写既有审计事实。 */
+    public Map<String, Object> revokeWaiver(String code, String waiverId) {
+        requireWaiverEnabled();
+        var app = get(code);
+        if (waiverId == null || !waiverId.matches("[A-Za-z0-9_-]{1,64}"))
+            throw error(400, "PUBLISH_WAIVER_INVALID", "豁免标识无效");
+        if (waivers(WAIVER_BY_ID, tenant(), code, waiverId).isEmpty())
+            throw error(404, "PUBLISH_WAIVER_NOT_FOUND", "发布豁免不存在");
+        db.update(
+                "update app.publish_waiver set revoked_at=coalesce(revoked_at,now()),"
+                        + " revoked_by=coalesce(revoked_by,?) where tenant_id=? and app_code=? and id=?",
+                Actor.current().principalId(),
+                tenant(),
+                code,
+                waiverId);
+        var revoked = waivers(WAIVER_BY_ID, tenant(), code, waiverId).getFirst();
+        log(
+                code,
+                "PUBLISH_WAIVER_REVOKE",
+                Objects.toString(app.get("status"), ""),
+                Objects.toString(app.get("status"), ""),
+                Map.of("waiverId", waiverId, "reason", revoked.reason()));
+        return revoked.view(Instant.now());
+    }
+
+    private void requireWaiverEnabled() {
+        if (!waiverEnabled)
+            throw error(
+                    403,
+                    "PUBLISH_WAIVER_DISABLED",
+                    "发布豁免已被回滚开关 agent.publish.waiver-enabled=false 关闭");
+    }
+
+    /** 只认同时命中租户、应用、草稿版本与候选指纹，且未撤销、未过期的豁免。 */
+    private PublishWaiver activeWaiver(String code, long rev, String hash) {
+        var rows = waivers(WAIVER_ACTIVE, tenant(), code, rev, hash);
+        return rows.isEmpty() ? null : rows.getFirst();
+    }
+
+    /** 提交时复核：报告引用的豁免必须仍然有效，防止 15 分钟报告窗口掩盖更短的豁免窗口。 */
+    private boolean waiverActive(String waiverId) {
+        return !db.queryForList(
+                        "select 1 from app.publish_waiver where tenant_id=? and id=?"
+                                + " and revoked_at is null and expires_at>now()",
+                        tenant(),
+                        waiverId)
+                .isEmpty();
+    }
+
+    private List<PublishWaiver> waivers(String sql, Object... args) {
+        return db.query(
+                sql,
+                (r, n) ->
+                        new PublishWaiver(
+                                r.getString("id"),
+                                r.getString("tenant_id"),
+                                r.getString("app_code"),
+                                r.getLong("draft_rev"),
+                                // char(64) 会右补空格，比较前必须裁剪，否则指纹永远匹配不上。
+                                r.getString("candidate_sha256").trim(),
+                                r.getString("reason"),
+                                r.getString("approved_by"),
+                                r.getTimestamp("approved_at").toInstant(),
+                                r.getTimestamp("expires_at").toInstant(),
+                                r.getTimestamp("revoked_at") == null
+                                        ? null
+                                        : r.getTimestamp("revoked_at").toInstant()),
+                args);
     }
 
     private void check(List<Map<String, Object>> checks, String group, Runnable check) {
@@ -1183,6 +1376,11 @@ public class AppService {
                                     hash);
                     if (reports.isEmpty())
                         throw error(412, "PRECHECK_INVALID", "预检无效、已过期或被阻断，请重新预检");
+                    // 报告有效期 15 分钟，豁免窗口可能更短或已被撤销：提交时重查一次，
+                    // 否则撤销/到期后仍能用旧报告发布，撤销语义会被报告窗口吞掉。
+                    var waiverRef = reports.getFirst().get("waiver_id");
+                    if (waiverRef != null && !waiverActive(waiverRef.toString()))
+                        throw error(409, "EVAL_GATE_BLOCKED", "发布豁免已撤销或过期，请重新预检或重新申请豁免");
                     var ids = new LinkedHashSet<Long>();
                     collectModelIds(app.get("config"), ids);
                     collectModelIds(app.get("definition"), ids);
