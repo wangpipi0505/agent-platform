@@ -53,6 +53,18 @@ public class SkillExecution {
         return Actor.current().tenantId();
     }
 
+    /**
+     * PLAT-12：与出站注入同一裁决的主体解析——401/403（机器票据）都表示没有可出站的用户主体，
+     * 返回 null 让 identity trace 记录"跳过"，而不是让信封构建或注入伪造一个服务账号身份。
+     */
+    private static SubjectSnapshot subjectOrNull() {
+        try {
+            return Actor.current().subject();
+        } catch (PlatformException unresolvable) {
+            return null;
+        }
+    }
+
     public Map<String, Object> execute(String code, Map<String, Object> request) {
         Actor.current().requireRole("SERVICE");
         long callId = number(request, "callId"),
@@ -574,6 +586,11 @@ public class SkillExecution {
                         Actor.current().roles(),
                         "argsDigest",
                         Digest.sha256(Json.canonical(guarded))));
+        // PLAT-12：声明了 identity 的技能在运行详情可见的注入结论（哪些头、值来自哪个快照字段、
+        // 本次是否注入/因何跳过）；未声明返回 null 不落键，信封形状对存量技能零变化。
+        // trace 与出站头共用同一份快照裁决（subjectOrNull），跳过注入时这里可见原因而不是缺键。
+        var identityTrace = SkillRules.identityTrace(contract, subjectOrNull());
+        if (identityTrace != null) result.put("identity", identityTrace);
         if (raw != null && raw.ontologyMeta() != null && raw.ontologyMeta().isObject()) {
             JsonNode meta = raw.ontologyMeta();
             boolean complete = true;

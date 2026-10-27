@@ -646,6 +646,9 @@ public class HttpAsyncAdapter {
                         contract.get(AuthScheme.FIELD),
                         Objects.toString(contract.get("authRef"), ""))
                 .forEach(request::header);
+        // 身份头与鉴权头叠加（PLAT-12 §4.12）：与同步适配器共用 SkillAdapters.identityHeaders，
+        // 声明了 identity 的技能在提交与查询请求上都带同一组 X-User-*；无可用主体时跳过不伪造。
+        SkillAdapters.identityHeaders(contract).forEach(request::header);
         if (body != null)
             request.contentType(org.springframework.http.MediaType.APPLICATION_JSON).body(body);
         return request;

@@ -2,6 +2,8 @@ package cn.agentplatform.skill.domain;
 
 import cn.agentplatform.common.Actor;
 import cn.agentplatform.common.Json;
+import cn.agentplatform.common.PlatformException;
+import cn.agentplatform.common.SubjectSnapshot;
 import cn.agentplatform.common.auth.AuthScheme;
 import cn.agentplatform.common.schema.BoundedRegexFactory;
 import cn.agentplatform.common.schema.SchemaDeadline;
@@ -242,6 +244,194 @@ public final class SkillRules {
         AuthScheme scheme = AuthScheme.registration(declared, legacyBearer);
         AuthScheme.checkCombination(scheme, authRef, adapterType);
         return scheme;
+    }
+
+    /**
+     * identity 出站声明（PLAT-12，方案 §4.12）的唯一解释入口：注册期校验、执行期头构造与运行详情
+     * trace 都在本类，其他模块不得自行解释该字段，否则同一契约会在不同入口被注入不同身份头。
+     *
+     * <p>不变量一：mode 只接受 {@link #IDENTITY_MODE}（PLATFORM_SUBJECT）——出站身份只有一个来源，
+     * 就是进程内已验主体快照；引入第二种 mode 等于在契约里承诺一个实现不存在的身份通道。
+     *
+     * <p>不变量二：headers 的值只允许主体快照字段白名单（{@link #IDENTITY_SOURCES}）。声明任意
+     * header→值的映射会把出站头变成自由写入通道（伪造 X-User-*、覆盖对端语义头），这正是方案
+     * “伪造 X-User-* 被网关拒绝”要堵的口子；header 名为 HTTP token 子集且拒绝与鉴权/幂等/内容
+     * 语义冲突的保留名。
+     *
+     * <p>不变量三：只有 HTTP 适配器接受声明。同步与异步的发头点都在 HTTP 适配器内；MCP 的 SSE
+     * transport、ALGORITHM 的 SDK、PROCESS 的 stdin 都没有 X-User-* 通道，接受声明等于承诺一个
+     * 不兑现的行为（与 AuthScheme 对 API_KEY 的适配器限制同一裁决）。
+     */
+    public static final String IDENTITY_FIELD = "identity";
+    public static final String IDENTITY_MODE = "PLATFORM_SUBJECT";
+    /** 允许映射为出站头的主体快照字段白名单。 */
+    public static final Set<String> IDENTITY_SOURCES =
+            Set.of("principalId", "tenantId", "roles", "attributes");
+    /** 与适配器固定头或鉴权语义冲突的保留头名（比较不区分大小写）。 */
+    private static final Set<String> IDENTITY_RESERVED_HEADERS =
+            Set.of("authorization", "x-api-key", "idempotency-key", "accept", "content-type",
+                    "host", "cookie", "set-cookie");
+
+    public static final String CODE_IDENTITY_INVALID = "SKILL_IDENTITY_INVALID";
+    public static final String CODE_IDENTITY_MODE_INVALID = "SKILL_IDENTITY_MODE_INVALID";
+    public static final String CODE_IDENTITY_HEADER_INVALID = "SKILL_IDENTITY_HEADER_INVALID";
+    public static final String CODE_IDENTITY_UNSUPPORTED = "SKILL_IDENTITY_UNSUPPORTED";
+
+    /**
+     * 注册期校验并归一化 identity 声明；非法声明一律 400 可读错误（带字段路径与收到的值）。
+     * 归一化结果原样落库（mode + headers），执行期与摘要都只读存储值。
+     *
+     * @param declared 契约里的 identity 原始值（非 null，调用方保证缺省时不进入本方法）
+     * @param adapterType 适配器类型；仅 HTTP 有出站头注入点
+     */
+    public static Map<String, Object> identity(Object declared, String adapterType) {
+        if (!"HTTP".equals(adapterType))
+            throw new PlatformException(
+                    400,
+                    CODE_IDENTITY_UNSUPPORTED,
+                    "identity出站身份声明仅支持HTTP技能：同步与异步适配器才有X-User-*发头点，"
+                            + "MCP/ALGORITHM/PROCESS没有出站HTTP头通道，收到适配器类型: "
+                            + adapterType);
+        if (!(declared instanceof Map<?, ?> declaration) || declaration.isEmpty())
+            throw new PlatformException(
+                    400, CODE_IDENTITY_INVALID, "identity必须为对象，形如 {\"mode\":\"PLATFORM_SUBJECT\",\"headers\":{\"X-User-Id\":\"principalId\"}}");
+        Object mode = declaration.get("mode");
+        if (!IDENTITY_MODE.equals(Objects.toString(mode, "")))
+            throw new PlatformException(
+                    400,
+                    CODE_IDENTITY_MODE_INVALID,
+                    "identity.mode只能是PLATFORM_SUBJECT（出站身份只来自进程内已验主体快照），收到: "
+                            + Objects.toString(mode, ""));
+        Object rawHeaders = declaration.get("headers");
+        if (!(rawHeaders instanceof Map<?, ?> headers) || headers.isEmpty())
+            throw new PlatformException(
+                    400,
+                    CODE_IDENTITY_INVALID,
+                    "identity.headers必须为非空对象，键为出站头名，值为主体快照字段（principalId/tenantId/roles/attributes）");
+        var normalized = new LinkedHashMap<String, Object>();
+        for (var entry : headers.entrySet()) {
+            String name = Objects.toString(entry.getKey(), "");
+            String source = entry.getValue() == null ? "" : entry.getValue().toString();
+            checkIdentityHeader(name, source);
+            normalized.put(name, source);
+        }
+        var result = new LinkedHashMap<String, Object>();
+        result.put("mode", IDENTITY_MODE);
+        result.put("headers", normalized);
+        return result;
+    }
+
+    private static void checkIdentityHeader(String name, String source) {
+        if (!name.matches("[A-Za-z0-9-]{1,128}"))
+            throw new PlatformException(
+                    400,
+                    CODE_IDENTITY_HEADER_INVALID,
+                    "identity.headers的键必须为合法HTTP头名（字母/数字/连字符），收到: " + name);
+        if (IDENTITY_RESERVED_HEADERS.contains(name.toLowerCase(Locale.ROOT)))
+            throw new PlatformException(
+                    400,
+                    CODE_IDENTITY_HEADER_INVALID,
+                    "identity.headers不得声明与鉴权/幂等/传输语义冲突的保留头: " + name);
+        if (!IDENTITY_SOURCES.contains(source))
+            throw new PlatformException(
+                    400,
+                    CODE_IDENTITY_HEADER_INVALID,
+                    "identity.headers."
+                            + name
+                            + " 的值只能是主体快照字段 principalId/tenantId/roles/attributes，收到: "
+                            + source);
+    }
+
+    /**
+     * 执行期把已验主体快照翻译成出站身份头；未声明或声明畸形返回空表（历史脏数据按未声明处理，
+     * 注册期校验负责挡新增）。声明了 identity 但 {@code subject} 为 null（系统级调用没有可用主体）
+     * 时同样返回空表——注入是补充可读身份而不是鉴权依据，跳过不伪造，结论经 {@link #identityTrace}
+     * 落运行详情。空集合不发送空串头：对端按逗号拆分 roles 会得到幽灵角色。
+     */
+    public static Map<String, String> identityHeaders(
+            Map<String, Object> contract, SubjectSnapshot subject) {
+        var declared = declaredIdentity(contract);
+        if (declared == null || subject == null) return Map.of();
+        @SuppressWarnings("unchecked")
+        var headers = (Map<String, Object>) declared.get("headers");
+        if (headers == null) return Map.of();
+        var result = new LinkedHashMap<String, String>();
+        for (var entry : headers.entrySet()) {
+            String value = subjectValue(subject, entry.getValue().toString());
+            if (value != null) result.put(entry.getKey().toString(), value);
+        }
+        return Collections.unmodifiableMap(result);
+    }
+
+    /** 快照字段取值与序列化（定死）：principalId/tenantId 原文，roles 字典序逗号连接，attributes 键排序 JSON。 */
+    private static String subjectValue(SubjectSnapshot subject, String source) {
+        return switch (source) {
+            case "principalId" -> blankToNull(subject.principalId());
+            case "tenantId" -> blankToNull(subject.tenantId());
+            case "roles" ->
+                    subject.roles().isEmpty()
+                            ? null
+                            : subject.roles().stream().sorted().reduce((a, b) -> a + "," + b).orElseThrow();
+            case "attributes" ->
+                    subject.attributes().isEmpty() ? null : attributesJson(subject.attributes());
+            default -> null;
+        };
+    }
+
+    /** attributes 的出站格式：键字典序、值排序字符串数组的紧凑JSON（同一主体序列化结果恒定）。 */
+    private static String attributesJson(Map<String, Set<String>> attributes) {
+        var sorted = new TreeMap<String, Object>();
+        attributes.forEach((key, values) -> sorted.put(key, values.stream().sorted().toList()));
+        return Json.write(sorted);
+    }
+
+    private static String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value;
+    }
+
+    /** 容忍读取契约上的 identity 声明；畸形（历史脏数据）按未声明处理返回 null。 */
+    private static Map<?, ?> declaredIdentity(Map<String, Object> contract) {
+        Object declared = contract.get(IDENTITY_FIELD);
+        return declared instanceof Map<?, ?> declaration
+                        && "PLATFORM_SUBJECT".equals(Objects.toString(declaration.get("mode"), ""))
+                ? declaration
+                : null;
+    }
+
+    /**
+     * 运行详情可见的注入结论：声明了 identity 的技能在执行事实信封里记录 声明了哪些头、值来自
+     * 哪个快照字段、本次是否真的注入；未声明返回 null，信封形状零变化。trace 只带头名/来源/布尔，
+     * 不带头值——身份明细不向运行详情扩散。
+     */
+    public static Map<String, Object> identityTrace(
+            Map<String, Object> contract, SubjectSnapshot subject) {
+        Map<?, ?> declared = declaredIdentity(contract);
+        if (declared == null) return null;
+        @SuppressWarnings("unchecked")
+        var headers =
+                declared.get("headers") instanceof Map<?, ?> raw
+                        ? (Map<String, Object>) raw
+                        : Map.<String, Object>of();
+        var rows = new ArrayList<Map<String, Object>>();
+        boolean anySent = false;
+        for (var entry : headers.entrySet()) {
+            boolean sent =
+                    subject != null && subjectValue(subject, entry.getValue().toString()) != null;
+            anySent |= sent;
+            var row = new LinkedHashMap<String, Object>();
+            row.put("name", entry.getKey().toString());
+            row.put("from", entry.getValue().toString());
+            row.put("sent", sent);
+            rows.add(row);
+        }
+        var trace = new LinkedHashMap<String, Object>();
+        trace.put("mode", IDENTITY_MODE);
+        trace.put("headers", rows);
+        trace.put("injected", anySent);
+        trace.put(
+                "skipReason",
+                anySent ? null : subject == null ? "NO_ACTOR_SUBJECT" : "SUBJECT_VALUES_EMPTY");
+        return trace;
     }
 
     public static URI endpoint(String endpoint) {

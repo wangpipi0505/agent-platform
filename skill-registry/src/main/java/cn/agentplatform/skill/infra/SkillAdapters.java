@@ -111,6 +111,23 @@ public class SkillAdapters {
         }
     }
 
+    /**
+     * PLAT-12：当前调用上下文的出站身份头。同步与异步两个发头点共用本方法，保证同一契约在两种
+     * 调用形态下注入同一组身份头；主体不可用（无验签上下文、机器 workload 票据）时返回空表——
+     * 跳过注入不伪造值，字段映射与序列化规则统一在 {@link SkillRules#identityHeaders}。
+     */
+    static Map<String, String> identityHeaders(Map<String, Object> contract) {
+        SubjectSnapshot subject;
+        try {
+            subject = Actor.current().subject();
+        } catch (PlatformException unresolvable) {
+            // 401（无验签身份）/403（机器能力不映射为用户身份）都表示"没有可出站的用户主体"：
+            // 身份头是补充可读身份而非鉴权依据，跳过比伪造服务账号身份诚实。
+            return Map.of();
+        }
+        return SkillRules.identityHeaders(contract, subject);
+    }
+
     /** 契约 errorSemantics 声明（PLAT-05）。历史脏数据按未声明处理，注册期校验负责挡新增。 */
     public static ErrorSemantics.Declared declaredMapping(Map<String, Object> contract) {
         try {
@@ -446,6 +463,9 @@ public class SkillAdapters {
                             : client.method(httpMethod).uri(endpoint);
             request.header("Idempotency-Key", key).header("Accept", "application/json");
             authorization.forEach(request::header);
+            // 身份头与鉴权头叠加（PLAT-12 §4.12）：声明了 identity 的技能出站追加 X-User-*，值
+            // 只来自进程内已验主体快照；无可用主体（系统级调用）时跳过注入不伪造，不改变鉴权语义。
+            identityHeaders(contract).forEach(request::header);
             if (mapped && MultipartFormMapping.declared(contract)) {
                 // multipart表单：文件字节经产物存储按租户/主体解析（runId传null与/admin下载语义一致，
                 // 允许引用此前运行的产物）；重发同一坏引用不会有不同结果，失败按PARAM_ERROR处理。

@@ -294,6 +294,12 @@ public class SkillCatalog {
                     if (previous.containsKey(AuthScheme.FIELD)
                             && !effective.containsKey(AuthScheme.FIELD))
                         effective.put(AuthScheme.FIELD, previous.get(AuthScheme.FIELD));
+                    // identity 出站声明同理（PLAT-12）：旧编辑器局部保存静默丢掉 identity，出站
+                    // X-User-* 会在一次无关编辑后消失且不留痕；已保存的声明以旧值为准补回。
+                    if (previous.containsKey(SkillRules.IDENTITY_FIELD)
+                            && !effective.containsKey(SkillRules.IDENTITY_FIELD))
+                        effective.put(
+                                SkillRules.IDENTITY_FIELD, previous.get(SkillRules.IDENTITY_FIELD));
                     var contract = normalize(effective);
                     String sha = Digest.sha256(Json.canonical(contract));
                     String semanticDigest = SkillDigest.of(contract);
@@ -396,6 +402,16 @@ public class SkillCatalog {
                         type,
                         legacyBearer);
         result.put(AuthScheme.FIELD, scheme.name());
+        // identity 出站声明（PLAT-12 §4.12）与 authScheme 同期校验：mode/headers 白名单在注册期
+        // 拒绝，错误配置从未被发布。未声明不落键——契约形状与出站行为对存量技能零变化。
+        Object declaredIdentity =
+                body.containsKey(SkillRules.IDENTITY_FIELD)
+                        ? body.get(SkillRules.IDENTITY_FIELD)
+                        : invocation.get(SkillRules.IDENTITY_FIELD);
+        if (declaredIdentity != null)
+            result.put(
+                    SkillRules.IDENTITY_FIELD,
+                    SkillRules.identity(declaredIdentity, type));
         result.put(
                 "httpMethod",
                 body.getOrDefault("httpMethod", invocation.getOrDefault("httpMethod", "POST")));

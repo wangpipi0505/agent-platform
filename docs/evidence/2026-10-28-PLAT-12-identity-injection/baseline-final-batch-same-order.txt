@@ -1,0 +1,1190 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ------------------< cn.agentplatform:skill-registry >-------------------
+[INFO] Building skill-registry 0.1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- enforcer:3.5.0:enforce (default) @ skill-registry ---
+[INFO] Rule 0: org.apache.maven.enforcer.rules.version.RequireJavaVersion passed
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ skill-registry ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 16 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.0:compile (default-compile) @ skill-registry ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 48 source files with javac [debug parameters release 21] to target\classes
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/skill-registry/src/main/java/cn/agentplatform/skill/application/OpenApiImports.java: 某些输入文件使用或覆盖了已过时的 API。
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/skill-registry/src/main/java/cn/agentplatform/skill/application/OpenApiImports.java: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/skill-registry/src/main/java/cn/agentplatform/skill/application/SkillCatalog.java: 某些输入文件使用了未经检查或不安全的操作。
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/skill-registry/src/main/java/cn/agentplatform/skill/application/SkillCatalog.java: 有关详细信息, 请使用 -Xlint:unchecked 重新编译。
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ skill-registry ---
+[INFO] skip non existing resourceDirectory G:\207\项目\算法重组工具\代码\agent-platform\skill-registry\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.14.0:testCompile (default-testCompile) @ skill-registry ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 69 source files with javac [debug parameters release 21] to target\test-classes
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/skill-registry/src/test/java/cn/agentplatform/skill/application/AlgorithmExecutionPostgresTest.java: 某些输入文件使用了未经检查或不安全的操作。
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/skill-registry/src/test/java/cn/agentplatform/skill/application/AlgorithmExecutionPostgresTest.java: 有关详细信息, 请使用 -Xlint:unchecked 重新编译。
+[INFO] 
+[INFO] --- surefire:3.5.3:test (default-test) @ skill-registry ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running cn.agentplatform.skill.infra.SkillClientsErrorTest
+G8B_TICKET_FAILURE=403/AUTHORITY_CONTEXT_MISSING
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.139 s -- in cn.agentplatform.skill.infra.SkillClientsErrorTest
+[INFO] Running cn.agentplatform.skill.infra.HttpAsyncAdapterTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.012 s -- in cn.agentplatform.skill.infra.HttpAsyncAdapterTest
+[INFO] Running cn.agentplatform.skill.infra.AuthSchemeOutboundTest
+Mockito is currently self-attaching to enable the inline-mock-maker. This will no longer work in future releases of the JDK. Please add Mockito as an agent to your build as described in Mockito's documentation: https://javadoc.io/doc/org.mockito/mockito-core/latest/org.mockito/org/mockito/Mockito.html#0.3
+WARNING: A Java agent has been loaded dynamically (C:\Users\Administrator\.m2\repository\net\bytebuddy\byte-buddy-agent\1.17.5\byte-buddy-agent-1.17.5.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.902 s -- in cn.agentplatform.skill.infra.AuthSchemeOutboundTest
+[INFO] Running cn.agentplatform.skill.domain.SkillRulesTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.045 s -- in cn.agentplatform.skill.domain.SkillRulesTest
+[INFO] Running cn.agentplatform.skill.domain.ErrorSemanticsTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.022 s -- in cn.agentplatform.skill.domain.ErrorSemanticsTest
+[INFO] Running cn.agentplatform.skill.application.SkillTaskResultTest
+05:07:13.979 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_v12 (PostgreSQL 16.15)
+05:07:14.040 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 17 migrations (execution time 00:00.037s)
+05:07:14.079 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "skill": 315
+05:07:14.086 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "skill" is up to date. No migration necessary.
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.352 s -- in cn.agentplatform.skill.application.SkillTaskResultTest
+[INFO] Running cn.agentplatform.skill.application.SkillExecutionTest
+05:07:15.044 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_v12 (PostgreSQL 16.15)
+05:07:15.057 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 17 migrations (execution time 00:00.007s)
+05:07:15.080 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "skill": 315
+05:07:15.080 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "skill" is up to date. No migration necessary.
+[INFO] Tests run: 25, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 13.98 s -- in cn.agentplatform.skill.application.SkillExecutionTest
+[INFO] Running cn.agentplatform.skill.application.SkillErrorEnvelopeTest
+05:07:29.019 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_v12 (PostgreSQL 16.15)
+05:07:29.031 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 17 migrations (execution time 00:00.007s)
+05:07:29.052 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "skill": 315
+05:07:29.052 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "skill" is up to date. No migration necessary.
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.990 s -- in cn.agentplatform.skill.application.SkillErrorEnvelopeTest
+[INFO] Running cn.agentplatform.skill.application.SkillCallbackWakeTest
+05:07:30.041 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_skill_wake_test (PostgreSQL 16.15)
+05:07:30.053 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 17 migrations (execution time 00:00.007s)
+05:07:30.076 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "skill": 315
+05:07:30.076 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "skill" is up to date. No migration necessary.
+05:07:31.497 [main] WARN org.springframework.web.context.support.GenericWebApplicationContext -- Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'cn.agentplatform.skill.infra.SkillClients': Unsatisfied dependency expressed through method 'setServiceTickets' parameter 0: No qualifying bean of type 'cn.agentplatform.skill.infra.ServiceTickets' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {}
+05:07:31.567 [main] WARN org.springframework.web.context.support.GenericWebApplicationContext -- Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'cn.agentplatform.skill.infra.SkillClients': Unsatisfied dependency expressed through method 'setServiceTickets' parameter 0: No qualifying bean of type 'cn.agentplatform.skill.infra.ServiceTickets' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {}
+05:07:31.612 [main] WARN org.springframework.web.context.support.GenericWebApplicationContext -- Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'cn.agentplatform.skill.infra.SkillClients': Unsatisfied dependency expressed through method 'setServiceTickets' parameter 0: No qualifying bean of type 'cn.agentplatform.skill.infra.ServiceTickets' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {}
+[ERROR] Tests run: 3, Failures: 0, Errors: 3, Skipped: 0, Time elapsed: 1.620 s <<< FAILURE! -- in cn.agentplatform.skill.application.SkillCallbackWakeTest
+[ERROR] cn.agentplatform.skill.application.SkillCallbackWakeTest.replayAndSupersededDeliveryDoNotWakeAgain -- Time elapsed: 1.425 s <<< ERROR!
+org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'cn.agentplatform.skill.infra.SkillClients': Unsatisfied dependency expressed through method 'setServiceTickets' parameter 0: No qualifying bean of type 'cn.agentplatform.skill.infra.ServiceTickets' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {}
+	at org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor$AutowiredMethodElement.resolveMethodArguments(AutowiredAnnotationBeanPostProcessor.java:896)
+	at org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor$AutowiredMethodElement.inject(AutowiredAnnotationBeanPostProcessor.java:849)
+	at org.springframework.beans.factory.annotation.InjectionMetadata.inject(InjectionMetadata.java:146)
+	at org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor.postProcessProperties(AutowiredAnnotationBeanPostProcessor.java:509)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.populateBean(AbstractAutowireCapableBeanFactory.java:1459)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:606)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:529)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:339)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:373)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:337)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:202)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.instantiateSingleton(DefaultListableBeanFactory.java:1222)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingleton(DefaultListableBeanFactory.java:1188)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingletons(DefaultListableBeanFactory.java:1123)
+	at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:987)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:627)
+	at cn.agentplatform.skill.application.SkillCallbackWakeTest.setup(SkillCallbackWakeTest.java:216)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+Caused by: org.springframework.beans.factory.NoSuchBeanDefinitionException: No qualifying bean of type 'cn.agentplatform.skill.infra.ServiceTickets' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {}
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.raiseNoMatchingBeanFound(DefaultListableBeanFactory.java:2280)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1703)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveDependency(DefaultListableBeanFactory.java:1628)
+	at org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor$AutowiredMethodElement.resolveMethodArguments(AutowiredAnnotationBeanPostProcessor.java:888)
+	... 19 more
+
+[ERROR] cn.agentplatform.skill.application.SkillCallbackWakeTest.adoptedFactSendsOneSignedWake -- Time elapsed: 0.065 s <<< ERROR!
+org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'cn.agentplatform.skill.infra.SkillClients': Unsatisfied dependency expressed through method 'setServiceTickets' parameter 0: No qualifying bean of type 'cn.agentplatform.skill.infra.ServiceTickets' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {}
+	at org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor$AutowiredMethodElement.resolveMethodArguments(AutowiredAnnotationBeanPostProcessor.java:896)
+	at org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor$AutowiredMethodElement.inject(AutowiredAnnotationBeanPostProcessor.java:849)
+	at org.springframework.beans.factory.annotation.InjectionMetadata.inject(InjectionMetadata.java:146)
+	at org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor.postProcessProperties(AutowiredAnnotationBeanPostProcessor.java:509)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.populateBean(AbstractAutowireCapableBeanFactory.java:1459)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:606)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:529)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:339)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:373)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:337)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:202)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.instantiateSingleton(DefaultListableBeanFactory.java:1222)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingleton(DefaultListableBeanFactory.java:1188)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingletons(DefaultListableBeanFactory.java:1123)
+	at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:987)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:627)
+	at cn.agentplatform.skill.application.SkillCallbackWakeTest.setup(SkillCallbackWakeTest.java:216)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+Caused by: org.springframework.beans.factory.NoSuchBeanDefinitionException: No qualifying bean of type 'cn.agentplatform.skill.infra.ServiceTickets' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {}
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.raiseNoMatchingBeanFound(DefaultListableBeanFactory.java:2280)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1703)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveDependency(DefaultListableBeanFactory.java:1628)
+	at org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor$AutowiredMethodElement.resolveMethodArguments(AutowiredAnnotationBeanPostProcessor.java:888)
+	... 19 more
+
+[ERROR] cn.agentplatform.skill.application.SkillCallbackWakeTest.wakeFailureKeepsCallbackSuccessful -- Time elapsed: 0.044 s <<< ERROR!
+org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'cn.agentplatform.skill.infra.SkillClients': Unsatisfied dependency expressed through method 'setServiceTickets' parameter 0: No qualifying bean of type 'cn.agentplatform.skill.infra.ServiceTickets' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {}
+	at org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor$AutowiredMethodElement.resolveMethodArguments(AutowiredAnnotationBeanPostProcessor.java:896)
+	at org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor$AutowiredMethodElement.inject(AutowiredAnnotationBeanPostProcessor.java:849)
+	at org.springframework.beans.factory.annotation.InjectionMetadata.inject(InjectionMetadata.java:146)
+	at org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor.postProcessProperties(AutowiredAnnotationBeanPostProcessor.java:509)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.populateBean(AbstractAutowireCapableBeanFactory.java:1459)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:606)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:529)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:339)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:373)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:337)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:202)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.instantiateSingleton(DefaultListableBeanFactory.java:1222)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingleton(DefaultListableBeanFactory.java:1188)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingletons(DefaultListableBeanFactory.java:1123)
+	at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:987)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:627)
+	at cn.agentplatform.skill.application.SkillCallbackWakeTest.setup(SkillCallbackWakeTest.java:216)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+Caused by: org.springframework.beans.factory.NoSuchBeanDefinitionException: No qualifying bean of type 'cn.agentplatform.skill.infra.ServiceTickets' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {}
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.raiseNoMatchingBeanFound(DefaultListableBeanFactory.java:2280)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1703)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveDependency(DefaultListableBeanFactory.java:1628)
+	at org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor$AutowiredMethodElement.resolveMethodArguments(AutowiredAnnotationBeanPostProcessor.java:888)
+	... 19 more
+
+[INFO] Running cn.agentplatform.skill.application.SkillAuthSchemeRegistrationTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.006 s -- in cn.agentplatform.skill.application.SkillAuthSchemeRegistrationTest
+[INFO] Running cn.agentplatform.skill.application.SchemaDegradedValidationTest
+[INFO] Tests run: 14, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.342 s -- in cn.agentplatform.skill.application.SchemaDegradedValidationTest
+[INFO] Running cn.agentplatform.skill.application.ReconciliationProofTest
+05:07:32.020 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_skill_proof_test (PostgreSQL 16.15)
+05:07:32.037 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 17 migrations (execution time 00:00.010s)
+05:07:32.069 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "skill": 315
+05:07:32.069 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "skill" is up to date. No migration necessary.
+05:07:32.411 [main] WARN org.springframework.web.context.support.GenericWebApplicationContext -- Exception encountered during context initialization - cancelling refresh attempt: java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+05:07:33.725 [main] WARN org.springframework.web.context.support.GenericWebApplicationContext -- Exception encountered during context initialization - cancelling refresh attempt: java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+05:07:54.568 [main] WARN org.springframework.web.context.support.GenericWebApplicationContext -- Exception encountered during context initialization - cancelling refresh attempt: java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+05:07:57.309 [main] WARN org.springframework.web.context.support.GenericWebApplicationContext -- Exception encountered during context initialization - cancelling refresh attempt: java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+05:07:58.853 [main] WARN org.springframework.web.context.support.GenericWebApplicationContext -- Exception encountered during context initialization - cancelling refresh attempt: java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+05:08:13.231 [main] WARN org.springframework.web.context.support.GenericWebApplicationContext -- Exception encountered during context initialization - cancelling refresh attempt: java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+[ERROR] Tests run: 34, Failures: 1, Errors: 6, Skipped: 0, Time elapsed: 42.44 s <<< FAILURE! -- in cn.agentplatform.skill.application.ReconciliationProofTest
+[ERROR] cn.agentplatform.skill.application.ReconciliationProofTest.portalServiceRoleCannotCreateNotSentProofOrFenceSender -- Time elapsed: 0.342 s <<< ERROR!
+java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+	at cn.agentplatform.common.authority.AuthorityProperties.invalid(AuthorityProperties.java:102)
+	at cn.agentplatform.common.authority.AuthorityProperties.validate(AuthorityProperties.java:30)
+	at cn.agentplatform.common.authority.AuthorityProperties.validateDeployment(AuthorityProperties.java:80)
+	at cn.agentplatform.common.SecurityConfiguration.bindDeployment(SecurityConfiguration.java:60)
+	at cn.agentplatform.common.SecurityConfiguration.lambda$authorityModeGuard$0(SecurityConfiguration.java:46)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:363)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:204)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:791)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:609)
+	at cn.agentplatform.skill.application.ReconciliationProofTest.proofHttpContext(ReconciliationProofTest.java:981)
+	at cn.agentplatform.skill.application.ReconciliationProofTest.portalServiceRoleCannotCreateNotSentProofOrFenceSender(ReconciliationProofTest.java:1141)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.skill.application.ReconciliationProofTest.mixedAudiencePortalPurposeCannotReadProof -- Time elapsed: 1.313 s <<< ERROR!
+java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+	at cn.agentplatform.common.authority.AuthorityProperties.invalid(AuthorityProperties.java:102)
+	at cn.agentplatform.common.authority.AuthorityProperties.validate(AuthorityProperties.java:30)
+	at cn.agentplatform.common.authority.AuthorityProperties.validateDeployment(AuthorityProperties.java:80)
+	at cn.agentplatform.common.SecurityConfiguration.bindDeployment(SecurityConfiguration.java:60)
+	at cn.agentplatform.common.SecurityConfiguration.lambda$authorityModeGuard$0(SecurityConfiguration.java:46)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:363)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:204)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:791)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:609)
+	at cn.agentplatform.skill.application.ReconciliationProofTest.proofHttpContext(ReconciliationProofTest.java:981)
+	at cn.agentplatform.skill.application.ReconciliationProofTest.mixedAudiencePortalPurposeCannotReadProof(ReconciliationProofTest.java:1052)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.skill.application.ReconciliationProofTest.proofHttpRequiresVerifiedInternalTicketAndExactOriginalOwner -- Time elapsed: 0.931 s <<< ERROR!
+java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+	at cn.agentplatform.common.authority.AuthorityProperties.invalid(AuthorityProperties.java:102)
+	at cn.agentplatform.common.authority.AuthorityProperties.validate(AuthorityProperties.java:30)
+	at cn.agentplatform.common.authority.AuthorityProperties.validateDeployment(AuthorityProperties.java:80)
+	at cn.agentplatform.common.SecurityConfiguration.bindDeployment(SecurityConfiguration.java:60)
+	at cn.agentplatform.common.SecurityConfiguration.lambda$authorityModeGuard$0(SecurityConfiguration.java:46)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:363)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:204)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:791)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:609)
+	at cn.agentplatform.skill.application.ReconciliationProofTest.proofHttpRequiresVerifiedInternalTicketAndExactOriginalOwner(ReconciliationProofTest.java:745)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.skill.application.ReconciliationProofTest.portalTokenWithServiceRoleCannotReadOriginalOwnerProof -- Time elapsed: 1.092 s <<< ERROR!
+java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+	at cn.agentplatform.common.authority.AuthorityProperties.invalid(AuthorityProperties.java:102)
+	at cn.agentplatform.common.authority.AuthorityProperties.validate(AuthorityProperties.java:30)
+	at cn.agentplatform.common.authority.AuthorityProperties.validateDeployment(AuthorityProperties.java:80)
+	at cn.agentplatform.common.SecurityConfiguration.bindDeployment(SecurityConfiguration.java:60)
+	at cn.agentplatform.common.SecurityConfiguration.lambda$authorityModeGuard$0(SecurityConfiguration.java:46)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:363)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:204)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:791)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:609)
+	at cn.agentplatform.skill.application.ReconciliationProofTest.proofHttpContext(ReconciliationProofTest.java:981)
+	at cn.agentplatform.skill.application.ReconciliationProofTest.portalTokenWithServiceRoleCannotReadOriginalOwnerProof(ReconciliationProofTest.java:1028)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.skill.application.ReconciliationProofTest.portalServiceRoleCannotCreateExternalNotAppliedProof -- Time elapsed: 0.769 s <<< ERROR!
+java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+	at cn.agentplatform.common.authority.AuthorityProperties.invalid(AuthorityProperties.java:102)
+	at cn.agentplatform.common.authority.AuthorityProperties.validate(AuthorityProperties.java:30)
+	at cn.agentplatform.common.authority.AuthorityProperties.validateDeployment(AuthorityProperties.java:80)
+	at cn.agentplatform.common.SecurityConfiguration.bindDeployment(SecurityConfiguration.java:60)
+	at cn.agentplatform.common.SecurityConfiguration.lambda$authorityModeGuard$0(SecurityConfiguration.java:46)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:363)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:204)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:791)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:609)
+	at cn.agentplatform.skill.application.ReconciliationProofTest.proofHttpContext(ReconciliationProofTest.java:981)
+	at cn.agentplatform.skill.application.ReconciliationProofTest.portalServiceRoleCannotCreateExternalNotAppliedProof(ReconciliationProofTest.java:1109)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.skill.application.ReconciliationProofTest.ordinaryHttp404And5xxRemainUnknown -- Time elapsed: 0.570 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <UNKNOWN> but was: <null>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:177)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1145)
+	at cn.agentplatform.skill.application.ReconciliationProofTest.ordinaryHttp404And5xxRemainUnknown(ReconciliationProofTest.java:469)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.skill.application.ReconciliationProofTest.nonProofAppliedReconcileRetainsExistingTicketPolicyInThisLimitedFix -- Time elapsed: 0.660 s <<< ERROR!
+java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+	at cn.agentplatform.common.authority.AuthorityProperties.invalid(AuthorityProperties.java:102)
+	at cn.agentplatform.common.authority.AuthorityProperties.validate(AuthorityProperties.java:30)
+	at cn.agentplatform.common.authority.AuthorityProperties.validateDeployment(AuthorityProperties.java:80)
+	at cn.agentplatform.common.SecurityConfiguration.bindDeployment(SecurityConfiguration.java:60)
+	at cn.agentplatform.common.SecurityConfiguration.lambda$authorityModeGuard$0(SecurityConfiguration.java:46)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:363)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:204)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:791)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:609)
+	at cn.agentplatform.skill.application.ReconciliationProofTest.proofHttpContext(ReconciliationProofTest.java:981)
+	at cn.agentplatform.skill.application.ReconciliationProofTest.nonProofAppliedReconcileRetainsExistingTicketPolicyInThisLimitedFix(ReconciliationProofTest.java:1177)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] Running cn.agentplatform.skill.application.PathParamsAsyncMappingTest
+05:08:14.429 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_skill_async_test (PostgreSQL 16.15)
+05:08:14.441 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 17 migrations (execution time 00:00.007s)
+05:08:14.463 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "skill": 315
+05:08:14.463 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "skill" is up to date. No migration necessary.
+[INFO] Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 6.577 s -- in cn.agentplatform.skill.application.PathParamsAsyncMappingTest
+[INFO] Running cn.agentplatform.skill.application.ExternalJobStateTest
+05:08:21.008 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_skill_async_test (PostgreSQL 16.15)
+05:08:21.019 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 17 migrations (execution time 00:00.006s)
+05:08:21.039 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "skill": 315
+05:08:21.039 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "skill" is up to date. No migration necessary.
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 9.281 s -- in cn.agentplatform.skill.application.ExternalJobStateTest
+[INFO] Running cn.agentplatform.skill.application.CallbackHttpTest
+05:08:30.308 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_skill_callback_test (PostgreSQL 16.15)
+05:08:30.318 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 17 migrations (execution time 00:00.006s)
+05:08:30.339 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "skill": 315
+05:08:30.339 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "skill" is up to date. No migration necessary.
+05:08:30.370 [main] WARN org.springframework.web.context.support.GenericWebApplicationContext -- Exception encountered during context initialization - cancelling refresh attempt: java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+05:08:30.441 [main] WARN org.springframework.web.context.support.GenericWebApplicationContext -- Exception encountered during context initialization - cancelling refresh attempt: java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+05:08:30.469 [main] WARN org.springframework.web.context.support.GenericWebApplicationContext -- Exception encountered during context initialization - cancelling refresh attempt: java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+05:08:30.491 [main] WARN org.springframework.web.context.support.GenericWebApplicationContext -- Exception encountered during context initialization - cancelling refresh attempt: java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+05:08:30.516 [main] WARN org.springframework.web.context.support.GenericWebApplicationContext -- Exception encountered during context initialization - cancelling refresh attempt: java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+05:08:30.540 [main] WARN org.springframework.web.context.support.GenericWebApplicationContext -- Exception encountered during context initialization - cancelling refresh attempt: java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+05:08:30.565 [main] WARN org.springframework.web.context.support.GenericWebApplicationContext -- Exception encountered during context initialization - cancelling refresh attempt: java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+05:08:30.589 [main] WARN org.springframework.web.context.support.GenericWebApplicationContext -- Exception encountered during context initialization - cancelling refresh attempt: java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+05:08:30.613 [main] WARN org.springframework.web.context.support.GenericWebApplicationContext -- Exception encountered during context initialization - cancelling refresh attempt: java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+05:08:30.638 [main] WARN org.springframework.web.context.support.GenericWebApplicationContext -- Exception encountered during context initialization - cancelling refresh attempt: java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+05:08:30.660 [main] WARN org.springframework.web.context.support.GenericWebApplicationContext -- Exception encountered during context initialization - cancelling refresh attempt: java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+05:08:30.683 [main] WARN org.springframework.web.context.support.GenericWebApplicationContext -- Exception encountered during context initialization - cancelling refresh attempt: java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+05:08:30.718 [main] WARN org.springframework.web.context.support.GenericWebApplicationContext -- Exception encountered during context initialization - cancelling refresh attempt: java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+05:08:30.751 [main] WARN org.springframework.web.context.support.GenericWebApplicationContext -- Exception encountered during context initialization - cancelling refresh attempt: java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+05:08:30.779 [main] WARN org.springframework.web.context.support.GenericWebApplicationContext -- Exception encountered during context initialization - cancelling refresh attempt: java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+05:08:30.804 [main] WARN org.springframework.web.context.support.GenericWebApplicationContext -- Exception encountered during context initialization - cancelling refresh attempt: java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+05:08:30.825 [main] WARN org.springframework.web.context.support.GenericWebApplicationContext -- Exception encountered during context initialization - cancelling refresh attempt: java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+05:08:30.845 [main] WARN org.springframework.web.context.support.GenericWebApplicationContext -- Exception encountered during context initialization - cancelling refresh attempt: java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+05:08:30.865 [main] WARN org.springframework.web.context.support.GenericWebApplicationContext -- Exception encountered during context initialization - cancelling refresh attempt: java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+05:08:30.886 [main] WARN org.springframework.web.context.support.GenericWebApplicationContext -- Exception encountered during context initialization - cancelling refresh attempt: java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+05:08:30.905 [main] WARN org.springframework.web.context.support.GenericWebApplicationContext -- Exception encountered during context initialization - cancelling refresh attempt: java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+05:08:30.926 [main] WARN org.springframework.web.context.support.GenericWebApplicationContext -- Exception encountered during context initialization - cancelling refresh attempt: java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+05:08:30.949 [main] WARN org.springframework.web.context.support.GenericWebApplicationContext -- Exception encountered during context initialization - cancelling refresh attempt: java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+05:08:30.967 [main] WARN org.springframework.web.context.support.GenericWebApplicationContext -- Exception encountered during context initialization - cancelling refresh attempt: java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+05:08:30.986 [main] WARN org.springframework.web.context.support.GenericWebApplicationContext -- Exception encountered during context initialization - cancelling refresh attempt: java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+05:08:31.007 [main] WARN org.springframework.web.context.support.GenericWebApplicationContext -- Exception encountered during context initialization - cancelling refresh attempt: java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+05:08:31.027 [main] WARN org.springframework.web.context.support.GenericWebApplicationContext -- Exception encountered during context initialization - cancelling refresh attempt: java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+05:08:31.048 [main] WARN org.springframework.web.context.support.GenericWebApplicationContext -- Exception encountered during context initialization - cancelling refresh attempt: java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+05:08:31.068 [main] WARN org.springframework.web.context.support.GenericWebApplicationContext -- Exception encountered during context initialization - cancelling refresh attempt: java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+05:08:31.086 [main] WARN org.springframework.web.context.support.GenericWebApplicationContext -- Exception encountered during context initialization - cancelling refresh attempt: java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+05:08:31.106 [main] WARN org.springframework.web.context.support.GenericWebApplicationContext -- Exception encountered during context initialization - cancelling refresh attempt: java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+05:08:31.125 [main] WARN org.springframework.web.context.support.GenericWebApplicationContext -- Exception encountered during context initialization - cancelling refresh attempt: java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+[ERROR] Tests run: 32, Failures: 0, Errors: 32, Skipped: 0, Time elapsed: 0.860 s <<< FAILURE! -- in cn.agentplatform.skill.application.CallbackHttpTest
+[ERROR] cn.agentplatform.skill.application.CallbackHttpTest.serviceJwtAndOriginalPrincipalAreMandatoryEvenWithCorrectHmac -- Time elapsed: 0.031 s <<< ERROR!
+java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+	at cn.agentplatform.common.authority.AuthorityProperties.invalid(AuthorityProperties.java:102)
+	at cn.agentplatform.common.authority.AuthorityProperties.validate(AuthorityProperties.java:30)
+	at cn.agentplatform.common.authority.AuthorityProperties.validateDeployment(AuthorityProperties.java:80)
+	at cn.agentplatform.common.SecurityConfiguration.bindDeployment(SecurityConfiguration.java:60)
+	at cn.agentplatform.common.SecurityConfiguration.lambda$authorityModeGuard$0(SecurityConfiguration.java:46)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:363)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:204)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:791)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:609)
+	at cn.agentplatform.skill.application.CallbackHttpTest.setup(CallbackHttpTest.java:244)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.skill.application.CallbackHttpTest.largeCallbackUsesControlledArtifactInsteadOfUnboundedResultTree -- Time elapsed: 0.071 s <<< ERROR!
+java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+	at cn.agentplatform.common.authority.AuthorityProperties.invalid(AuthorityProperties.java:102)
+	at cn.agentplatform.common.authority.AuthorityProperties.validate(AuthorityProperties.java:30)
+	at cn.agentplatform.common.authority.AuthorityProperties.validateDeployment(AuthorityProperties.java:80)
+	at cn.agentplatform.common.SecurityConfiguration.bindDeployment(SecurityConfiguration.java:60)
+	at cn.agentplatform.common.SecurityConfiguration.lambda$authorityModeGuard$0(SecurityConfiguration.java:46)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:363)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:204)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:791)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:609)
+	at cn.agentplatform.skill.application.CallbackHttpTest.setup(CallbackHttpTest.java:244)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.skill.application.CallbackHttpTest.cancelledRunAndOldAttemptAreOnlyAudited -- Time elapsed: 0.028 s <<< ERROR!
+java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+	at cn.agentplatform.common.authority.AuthorityProperties.invalid(AuthorityProperties.java:102)
+	at cn.agentplatform.common.authority.AuthorityProperties.validate(AuthorityProperties.java:30)
+	at cn.agentplatform.common.authority.AuthorityProperties.validateDeployment(AuthorityProperties.java:80)
+	at cn.agentplatform.common.SecurityConfiguration.bindDeployment(SecurityConfiguration.java:60)
+	at cn.agentplatform.common.SecurityConfiguration.lambda$authorityModeGuard$0(SecurityConfiguration.java:46)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:363)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:204)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:791)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:609)
+	at cn.agentplatform.skill.application.CallbackHttpTest.setup(CallbackHttpTest.java:244)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.skill.application.CallbackHttpTest.failureDoesNotMaterializeProviderErrorPayloadAsSuccessfulOutput -- Time elapsed: 0.022 s <<< ERROR!
+java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+	at cn.agentplatform.common.authority.AuthorityProperties.invalid(AuthorityProperties.java:102)
+	at cn.agentplatform.common.authority.AuthorityProperties.validate(AuthorityProperties.java:30)
+	at cn.agentplatform.common.authority.AuthorityProperties.validateDeployment(AuthorityProperties.java:80)
+	at cn.agentplatform.common.SecurityConfiguration.bindDeployment(SecurityConfiguration.java:60)
+	at cn.agentplatform.common.SecurityConfiguration.lambda$authorityModeGuard$0(SecurityConfiguration.java:46)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:363)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:204)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:791)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:609)
+	at cn.agentplatform.skill.application.CallbackHttpTest.setup(CallbackHttpTest.java:244)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.skill.application.CallbackHttpTest.concurrentSameEventIsIdempotent -- Time elapsed: 0.025 s <<< ERROR!
+java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+	at cn.agentplatform.common.authority.AuthorityProperties.invalid(AuthorityProperties.java:102)
+	at cn.agentplatform.common.authority.AuthorityProperties.validate(AuthorityProperties.java:30)
+	at cn.agentplatform.common.authority.AuthorityProperties.validateDeployment(AuthorityProperties.java:80)
+	at cn.agentplatform.common.SecurityConfiguration.bindDeployment(SecurityConfiguration.java:60)
+	at cn.agentplatform.common.SecurityConfiguration.lambda$authorityModeGuard$0(SecurityConfiguration.java:46)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:363)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:204)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:791)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:609)
+	at cn.agentplatform.skill.application.CallbackHttpTest.setup(CallbackHttpTest.java:244)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.skill.application.CallbackHttpTest.unknownOrMissingFailureSemanticCannotCreateConfirmedFailure -- Time elapsed: 0.024 s <<< ERROR!
+java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+	at cn.agentplatform.common.authority.AuthorityProperties.invalid(AuthorityProperties.java:102)
+	at cn.agentplatform.common.authority.AuthorityProperties.validate(AuthorityProperties.java:30)
+	at cn.agentplatform.common.authority.AuthorityProperties.validateDeployment(AuthorityProperties.java:80)
+	at cn.agentplatform.common.SecurityConfiguration.bindDeployment(SecurityConfiguration.java:60)
+	at cn.agentplatform.common.SecurityConfiguration.lambda$authorityModeGuard$0(SecurityConfiguration.java:46)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:363)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:204)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:791)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:609)
+	at cn.agentplatform.skill.application.CallbackHttpTest.setup(CallbackHttpTest.java:244)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.skill.application.CallbackHttpTest.independentKeyLookupCanProveBindingAfterLostAck -- Time elapsed: 0.025 s <<< ERROR!
+java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+	at cn.agentplatform.common.authority.AuthorityProperties.invalid(AuthorityProperties.java:102)
+	at cn.agentplatform.common.authority.AuthorityProperties.validate(AuthorityProperties.java:30)
+	at cn.agentplatform.common.authority.AuthorityProperties.validateDeployment(AuthorityProperties.java:80)
+	at cn.agentplatform.common.SecurityConfiguration.bindDeployment(SecurityConfiguration.java:60)
+	at cn.agentplatform.common.SecurityConfiguration.lambda$authorityModeGuard$0(SecurityConfiguration.java:46)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:363)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:204)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:791)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:609)
+	at cn.agentplatform.skill.application.CallbackHttpTest.setup(CallbackHttpTest.java:244)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.skill.application.CallbackHttpTest.currentScopeMustCoverOriginalTaskAndDenialIsAudited -- Time elapsed: 0.024 s <<< ERROR!
+java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+	at cn.agentplatform.common.authority.AuthorityProperties.invalid(AuthorityProperties.java:102)
+	at cn.agentplatform.common.authority.AuthorityProperties.validate(AuthorityProperties.java:30)
+	at cn.agentplatform.common.authority.AuthorityProperties.validateDeployment(AuthorityProperties.java:80)
+	at cn.agentplatform.common.SecurityConfiguration.bindDeployment(SecurityConfiguration.java:60)
+	at cn.agentplatform.common.SecurityConfiguration.lambda$authorityModeGuard$0(SecurityConfiguration.java:46)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:363)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:204)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:791)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:609)
+	at cn.agentplatform.skill.application.CallbackHttpTest.setup(CallbackHttpTest.java:244)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.skill.application.CallbackHttpTest.duplicateEventWithDifferentDigestIsRejected -- Time elapsed: 0.024 s <<< ERROR!
+java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+	at cn.agentplatform.common.authority.AuthorityProperties.invalid(AuthorityProperties.java:102)
+	at cn.agentplatform.common.authority.AuthorityProperties.validate(AuthorityProperties.java:30)
+	at cn.agentplatform.common.authority.AuthorityProperties.validateDeployment(AuthorityProperties.java:80)
+	at cn.agentplatform.common.SecurityConfiguration.bindDeployment(SecurityConfiguration.java:60)
+	at cn.agentplatform.common.SecurityConfiguration.lambda$authorityModeGuard$0(SecurityConfiguration.java:46)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:363)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:204)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:791)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:609)
+	at cn.agentplatform.skill.application.CallbackHttpTest.setup(CallbackHttpTest.java:244)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.skill.application.CallbackHttpTest.inFlightUnknownAcknowledgementCannotMarkNewSuccessDelivered(String)[1] -- Time elapsed: 0.023 s <<< ERROR!
+java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+	at cn.agentplatform.common.authority.AuthorityProperties.invalid(AuthorityProperties.java:102)
+	at cn.agentplatform.common.authority.AuthorityProperties.validate(AuthorityProperties.java:30)
+	at cn.agentplatform.common.authority.AuthorityProperties.validateDeployment(AuthorityProperties.java:80)
+	at cn.agentplatform.common.SecurityConfiguration.bindDeployment(SecurityConfiguration.java:60)
+	at cn.agentplatform.common.SecurityConfiguration.lambda$authorityModeGuard$0(SecurityConfiguration.java:46)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:363)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:204)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:791)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:609)
+	at cn.agentplatform.skill.application.CallbackHttpTest.setup(CallbackHttpTest.java:244)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:184)
+	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:184)
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:184)
+	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+	at java.base/java.util.Spliterators$ArraySpliterator.forEachRemaining(Spliterators.java:1024)
+	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+	at java.base/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:151)
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:174)
+	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+	at java.base/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596)
+	at java.base/java.util.stream.ReferencePipeline$7$1.accept(ReferencePipeline.java:276)
+	at java.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1708)
+	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+	at java.base/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:151)
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:174)
+	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+	at java.base/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596)
+	at java.base/java.util.stream.ReferencePipeline$7$1.accept(ReferencePipeline.java:276)
+	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+	at java.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1708)
+	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+	at java.base/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:151)
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:174)
+	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+	at java.base/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.skill.application.CallbackHttpTest.inFlightUnknownAcknowledgementCannotMarkNewSuccessDelivered(String)[2] -- Time elapsed: 0.022 s <<< ERROR!
+java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+	at cn.agentplatform.common.authority.AuthorityProperties.invalid(AuthorityProperties.java:102)
+	at cn.agentplatform.common.authority.AuthorityProperties.validate(AuthorityProperties.java:30)
+	at cn.agentplatform.common.authority.AuthorityProperties.validateDeployment(AuthorityProperties.java:80)
+	at cn.agentplatform.common.SecurityConfiguration.bindDeployment(SecurityConfiguration.java:60)
+	at cn.agentplatform.common.SecurityConfiguration.lambda$authorityModeGuard$0(SecurityConfiguration.java:46)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:363)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:204)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:791)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:609)
+	at cn.agentplatform.skill.application.CallbackHttpTest.setup(CallbackHttpTest.java:244)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:184)
+	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:184)
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:184)
+	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+	at java.base/java.util.Spliterators$ArraySpliterator.forEachRemaining(Spliterators.java:1024)
+	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+	at java.base/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:151)
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:174)
+	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+	at java.base/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596)
+	at java.base/java.util.stream.ReferencePipeline$7$1.accept(ReferencePipeline.java:276)
+	at java.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1708)
+	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+	at java.base/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:151)
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:174)
+	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+	at java.base/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596)
+	at java.base/java.util.stream.ReferencePipeline$7$1.accept(ReferencePipeline.java:276)
+	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+	at java.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1708)
+	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+	at java.base/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:151)
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:174)
+	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+	at java.base/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.skill.application.CallbackHttpTest.inFlightUnknownAcknowledgementCannotMarkNewSuccessDelivered(String)[3] -- Time elapsed: 0.022 s <<< ERROR!
+java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+	at cn.agentplatform.common.authority.AuthorityProperties.invalid(AuthorityProperties.java:102)
+	at cn.agentplatform.common.authority.AuthorityProperties.validate(AuthorityProperties.java:30)
+	at cn.agentplatform.common.authority.AuthorityProperties.validateDeployment(AuthorityProperties.java:80)
+	at cn.agentplatform.common.SecurityConfiguration.bindDeployment(SecurityConfiguration.java:60)
+	at cn.agentplatform.common.SecurityConfiguration.lambda$authorityModeGuard$0(SecurityConfiguration.java:46)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:363)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:204)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:791)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:609)
+	at cn.agentplatform.skill.application.CallbackHttpTest.setup(CallbackHttpTest.java:244)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:184)
+	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:184)
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:184)
+	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+	at java.base/java.util.Spliterators$ArraySpliterator.forEachRemaining(Spliterators.java:1024)
+	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+	at java.base/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:151)
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:174)
+	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+	at java.base/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596)
+	at java.base/java.util.stream.ReferencePipeline$7$1.accept(ReferencePipeline.java:276)
+	at java.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1708)
+	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+	at java.base/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:151)
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:174)
+	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+	at java.base/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596)
+	at java.base/java.util.stream.ReferencePipeline$7$1.accept(ReferencePipeline.java:276)
+	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+	at java.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1708)
+	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+	at java.base/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:151)
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:174)
+	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+	at java.base/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.skill.application.CallbackHttpTest.validCallbackIsDurableAndDuplicateCannotRepeatBusiness -- Time elapsed: 0.035 s <<< ERROR!
+java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+	at cn.agentplatform.common.authority.AuthorityProperties.invalid(AuthorityProperties.java:102)
+	at cn.agentplatform.common.authority.AuthorityProperties.validate(AuthorityProperties.java:30)
+	at cn.agentplatform.common.authority.AuthorityProperties.validateDeployment(AuthorityProperties.java:80)
+	at cn.agentplatform.common.SecurityConfiguration.bindDeployment(SecurityConfiguration.java:60)
+	at cn.agentplatform.common.SecurityConfiguration.lambda$authorityModeGuard$0(SecurityConfiguration.java:46)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:363)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:204)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:791)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:609)
+	at cn.agentplatform.skill.application.CallbackHttpTest.setup(CallbackHttpTest.java:244)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.skill.application.CallbackHttpTest.earlyCallbackWaitsForAckAndSameEventCanBeRetried -- Time elapsed: 0.032 s <<< ERROR!
+java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+	at cn.agentplatform.common.authority.AuthorityProperties.invalid(AuthorityProperties.java:102)
+	at cn.agentplatform.common.authority.AuthorityProperties.validate(AuthorityProperties.java:30)
+	at cn.agentplatform.common.authority.AuthorityProperties.validateDeployment(AuthorityProperties.java:80)
+	at cn.agentplatform.common.SecurityConfiguration.bindDeployment(SecurityConfiguration.java:60)
+	at cn.agentplatform.common.SecurityConfiguration.lambda$authorityModeGuard$0(SecurityConfiguration.java:46)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:363)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:204)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:791)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:609)
+	at cn.agentplatform.skill.application.CallbackHttpTest.setup(CallbackHttpTest.java:244)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.skill.application.CallbackHttpTest.returnMappingUsesOriginalRawSchemaThenProjectsResult -- Time elapsed: 0.027 s <<< ERROR!
+java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+	at cn.agentplatform.common.authority.AuthorityProperties.invalid(AuthorityProperties.java:102)
+	at cn.agentplatform.common.authority.AuthorityProperties.validate(AuthorityProperties.java:30)
+	at cn.agentplatform.common.authority.AuthorityProperties.validateDeployment(AuthorityProperties.java:80)
+	at cn.agentplatform.common.SecurityConfiguration.bindDeployment(SecurityConfiguration.java:60)
+	at cn.agentplatform.common.SecurityConfiguration.lambda$authorityModeGuard$0(SecurityConfiguration.java:46)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:363)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:204)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:791)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:609)
+	at cn.agentplatform.skill.application.CallbackHttpTest.setup(CallbackHttpTest.java:244)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.skill.application.CallbackHttpTest.notSentFenceRejectsCallbackWithoutResultMaterialization -- Time elapsed: 0.025 s <<< ERROR!
+java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+	at cn.agentplatform.common.authority.AuthorityProperties.invalid(AuthorityProperties.java:102)
+	at cn.agentplatform.common.authority.AuthorityProperties.validate(AuthorityProperties.java:30)
+	at cn.agentplatform.common.authority.AuthorityProperties.validateDeployment(AuthorityProperties.java:80)
+	at cn.agentplatform.common.SecurityConfiguration.bindDeployment(SecurityConfiguration.java:60)
+	at cn.agentplatform.common.SecurityConfiguration.lambda$authorityModeGuard$0(SecurityConfiguration.java:46)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:363)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:204)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:791)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:609)
+	at cn.agentplatform.skill.application.CallbackHttpTest.setup(CallbackHttpTest.java:244)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.skill.application.CallbackHttpTest.atomicallyRollbackFactWhenReceiptUpdateFails -- Time elapsed: 0.021 s <<< ERROR!
+java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+	at cn.agentplatform.common.authority.AuthorityProperties.invalid(AuthorityProperties.java:102)
+	at cn.agentplatform.common.authority.AuthorityProperties.validate(AuthorityProperties.java:30)
+	at cn.agentplatform.common.authority.AuthorityProperties.validateDeployment(AuthorityProperties.java:80)
+	at cn.agentplatform.common.SecurityConfiguration.bindDeployment(SecurityConfiguration.java:60)
+	at cn.agentplatform.common.SecurityConfiguration.lambda$authorityModeGuard$0(SecurityConfiguration.java:46)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:363)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:204)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:791)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:609)
+	at cn.agentplatform.skill.application.CallbackHttpTest.setup(CallbackHttpTest.java:244)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.skill.application.CallbackHttpTest.deliveredReceiptReportsAcceptedDeliveryWithoutGlobalLogicalAcceptanceField -- Time elapsed: 0.019 s <<< ERROR!
+java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+	at cn.agentplatform.common.authority.AuthorityProperties.invalid(AuthorityProperties.java:102)
+	at cn.agentplatform.common.authority.AuthorityProperties.validate(AuthorityProperties.java:30)
+	at cn.agentplatform.common.authority.AuthorityProperties.validateDeployment(AuthorityProperties.java:80)
+	at cn.agentplatform.common.SecurityConfiguration.bindDeployment(SecurityConfiguration.java:60)
+	at cn.agentplatform.common.SecurityConfiguration.lambda$authorityModeGuard$0(SecurityConfiguration.java:46)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:363)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:204)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:791)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:609)
+	at cn.agentplatform.skill.application.CallbackHttpTest.setup(CallbackHttpTest.java:244)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.skill.application.CallbackHttpTest.callbackOptionalLookupMustStillBeReadOnly -- Time elapsed: 0.020 s <<< ERROR!
+java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+	at cn.agentplatform.common.authority.AuthorityProperties.invalid(AuthorityProperties.java:102)
+	at cn.agentplatform.common.authority.AuthorityProperties.validate(AuthorityProperties.java:30)
+	at cn.agentplatform.common.authority.AuthorityProperties.validateDeployment(AuthorityProperties.java:80)
+	at cn.agentplatform.common.SecurityConfiguration.bindDeployment(SecurityConfiguration.java:60)
+	at cn.agentplatform.common.SecurityConfiguration.lambda$authorityModeGuard$0(SecurityConfiguration.java:46)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:363)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:204)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:791)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:609)
+	at cn.agentplatform.skill.application.CallbackHttpTest.setup(CallbackHttpTest.java:244)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.skill.application.CallbackHttpTest.callbackContractRetainsFrozenSecretReference -- Time elapsed: 0.020 s <<< ERROR!
+java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+	at cn.agentplatform.common.authority.AuthorityProperties.invalid(AuthorityProperties.java:102)
+	at cn.agentplatform.common.authority.AuthorityProperties.validate(AuthorityProperties.java:30)
+	at cn.agentplatform.common.authority.AuthorityProperties.validateDeployment(AuthorityProperties.java:80)
+	at cn.agentplatform.common.SecurityConfiguration.bindDeployment(SecurityConfiguration.java:60)
+	at cn.agentplatform.common.SecurityConfiguration.lambda$authorityModeGuard$0(SecurityConfiguration.java:46)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:363)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:204)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:791)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:609)
+	at cn.agentplatform.skill.application.CallbackHttpTest.setup(CallbackHttpTest.java:244)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.skill.application.CallbackHttpTest.expiredReceiptProcessorIsSupersededWhenIndependentRecoveryAlreadyStoredFact -- Time elapsed: 0.019 s <<< ERROR!
+java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+	at cn.agentplatform.common.authority.AuthorityProperties.invalid(AuthorityProperties.java:102)
+	at cn.agentplatform.common.authority.AuthorityProperties.validate(AuthorityProperties.java:30)
+	at cn.agentplatform.common.authority.AuthorityProperties.validateDeployment(AuthorityProperties.java:80)
+	at cn.agentplatform.common.SecurityConfiguration.bindDeployment(SecurityConfiguration.java:60)
+	at cn.agentplatform.common.SecurityConfiguration.lambda$authorityModeGuard$0(SecurityConfiguration.java:46)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:363)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:204)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:791)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:609)
+	at cn.agentplatform.skill.application.CallbackHttpTest.setup(CallbackHttpTest.java:244)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.skill.application.CallbackHttpTest.wrongBindingFieldsNeverCreateOrReplaceFacts -- Time elapsed: 0.022 s <<< ERROR!
+java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+	at cn.agentplatform.common.authority.AuthorityProperties.invalid(AuthorityProperties.java:102)
+	at cn.agentplatform.common.authority.AuthorityProperties.validate(AuthorityProperties.java:30)
+	at cn.agentplatform.common.authority.AuthorityProperties.validateDeployment(AuthorityProperties.java:80)
+	at cn.agentplatform.common.SecurityConfiguration.bindDeployment(SecurityConfiguration.java:60)
+	at cn.agentplatform.common.SecurityConfiguration.lambda$authorityModeGuard$0(SecurityConfiguration.java:46)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:363)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:204)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:791)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:609)
+	at cn.agentplatform.skill.application.CallbackHttpTest.setup(CallbackHttpTest.java:244)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.skill.application.CallbackHttpTest.rejectsSignatureTimestampAndPayloadMutation -- Time elapsed: 0.021 s <<< ERROR!
+java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+	at cn.agentplatform.common.authority.AuthorityProperties.invalid(AuthorityProperties.java:102)
+	at cn.agentplatform.common.authority.AuthorityProperties.validate(AuthorityProperties.java:30)
+	at cn.agentplatform.common.authority.AuthorityProperties.validateDeployment(AuthorityProperties.java:80)
+	at cn.agentplatform.common.SecurityConfiguration.bindDeployment(SecurityConfiguration.java:60)
+	at cn.agentplatform.common.SecurityConfiguration.lambda$authorityModeGuard$0(SecurityConfiguration.java:46)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:363)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:204)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:791)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:609)
+	at cn.agentplatform.skill.application.CallbackHttpTest.setup(CallbackHttpTest.java:244)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.skill.application.CallbackHttpTest.lostAckDoesNotAllowCallbackToInventBindingOrResubmit -- Time elapsed: 0.018 s <<< ERROR!
+java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+	at cn.agentplatform.common.authority.AuthorityProperties.invalid(AuthorityProperties.java:102)
+	at cn.agentplatform.common.authority.AuthorityProperties.validate(AuthorityProperties.java:30)
+	at cn.agentplatform.common.authority.AuthorityProperties.validateDeployment(AuthorityProperties.java:80)
+	at cn.agentplatform.common.SecurityConfiguration.bindDeployment(SecurityConfiguration.java:60)
+	at cn.agentplatform.common.SecurityConfiguration.lambda$authorityModeGuard$0(SecurityConfiguration.java:46)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:363)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:204)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:791)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:609)
+	at cn.agentplatform.skill.application.CallbackHttpTest.setup(CallbackHttpTest.java:244)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.skill.application.CallbackHttpTest.abandonedProcessingLeaseCanBeRetriedButLiveLeaseCannot -- Time elapsed: 0.019 s <<< ERROR!
+java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+	at cn.agentplatform.common.authority.AuthorityProperties.invalid(AuthorityProperties.java:102)
+	at cn.agentplatform.common.authority.AuthorityProperties.validate(AuthorityProperties.java:30)
+	at cn.agentplatform.common.authority.AuthorityProperties.validateDeployment(AuthorityProperties.java:80)
+	at cn.agentplatform.common.SecurityConfiguration.bindDeployment(SecurityConfiguration.java:60)
+	at cn.agentplatform.common.SecurityConfiguration.lambda$authorityModeGuard$0(SecurityConfiguration.java:46)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:363)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:204)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:791)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:609)
+	at cn.agentplatform.skill.application.CallbackHttpTest.setup(CallbackHttpTest.java:244)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.skill.application.CallbackHttpTest.malformedResultDoesNotBecomeAFinalFact -- Time elapsed: 0.021 s <<< ERROR!
+java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+	at cn.agentplatform.common.authority.AuthorityProperties.invalid(AuthorityProperties.java:102)
+	at cn.agentplatform.common.authority.AuthorityProperties.validate(AuthorityProperties.java:30)
+	at cn.agentplatform.common.authority.AuthorityProperties.validateDeployment(AuthorityProperties.java:80)
+	at cn.agentplatform.common.SecurityConfiguration.bindDeployment(SecurityConfiguration.java:60)
+	at cn.agentplatform.common.SecurityConfiguration.lambda$authorityModeGuard$0(SecurityConfiguration.java:46)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:363)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:204)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:791)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:609)
+	at cn.agentplatform.skill.application.CallbackHttpTest.setup(CallbackHttpTest.java:244)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.skill.application.CallbackHttpTest.trailingJsonAndDuplicateKeysAreRejectedWithoutChangingFact -- Time elapsed: 0.020 s <<< ERROR!
+java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+	at cn.agentplatform.common.authority.AuthorityProperties.invalid(AuthorityProperties.java:102)
+	at cn.agentplatform.common.authority.AuthorityProperties.validate(AuthorityProperties.java:30)
+	at cn.agentplatform.common.authority.AuthorityProperties.validateDeployment(AuthorityProperties.java:80)
+	at cn.agentplatform.common.SecurityConfiguration.bindDeployment(SecurityConfiguration.java:60)
+	at cn.agentplatform.common.SecurityConfiguration.lambda$authorityModeGuard$0(SecurityConfiguration.java:46)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:363)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:204)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:791)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:609)
+	at cn.agentplatform.skill.application.CallbackHttpTest.setup(CallbackHttpTest.java:244)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.skill.application.CallbackHttpTest.receiptReportsDeliveryAcceptanceWithoutClaimingGlobalLogicalAcceptance -- Time elapsed: 0.021 s <<< ERROR!
+java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+	at cn.agentplatform.common.authority.AuthorityProperties.invalid(AuthorityProperties.java:102)
+	at cn.agentplatform.common.authority.AuthorityProperties.validate(AuthorityProperties.java:30)
+	at cn.agentplatform.common.authority.AuthorityProperties.validateDeployment(AuthorityProperties.java:80)
+	at cn.agentplatform.common.SecurityConfiguration.bindDeployment(SecurityConfiguration.java:60)
+	at cn.agentplatform.common.SecurityConfiguration.lambda$authorityModeGuard$0(SecurityConfiguration.java:46)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:363)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:204)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:791)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:609)
+	at cn.agentplatform.skill.application.CallbackHttpTest.setup(CallbackHttpTest.java:244)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.skill.application.CallbackHttpTest.validFailurePersistsDeclaredSemantic -- Time elapsed: 0.019 s <<< ERROR!
+java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+	at cn.agentplatform.common.authority.AuthorityProperties.invalid(AuthorityProperties.java:102)
+	at cn.agentplatform.common.authority.AuthorityProperties.validate(AuthorityProperties.java:30)
+	at cn.agentplatform.common.authority.AuthorityProperties.validateDeployment(AuthorityProperties.java:80)
+	at cn.agentplatform.common.SecurityConfiguration.bindDeployment(SecurityConfiguration.java:60)
+	at cn.agentplatform.common.SecurityConfiguration.lambda$authorityModeGuard$0(SecurityConfiguration.java:46)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:363)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:204)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:791)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:609)
+	at cn.agentplatform.skill.application.CallbackHttpTest.setup(CallbackHttpTest.java:244)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.skill.application.CallbackHttpTest.validFailureWithoutSuccessPayloadPersistsAnEmptyFailureEnvelope -- Time elapsed: 0.018 s <<< ERROR!
+java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+	at cn.agentplatform.common.authority.AuthorityProperties.invalid(AuthorityProperties.java:102)
+	at cn.agentplatform.common.authority.AuthorityProperties.validate(AuthorityProperties.java:30)
+	at cn.agentplatform.common.authority.AuthorityProperties.validateDeployment(AuthorityProperties.java:80)
+	at cn.agentplatform.common.SecurityConfiguration.bindDeployment(SecurityConfiguration.java:60)
+	at cn.agentplatform.common.SecurityConfiguration.lambda$authorityModeGuard$0(SecurityConfiguration.java:46)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:363)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:204)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:791)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:609)
+	at cn.agentplatform.skill.application.CallbackHttpTest.setup(CallbackHttpTest.java:244)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.skill.application.CallbackHttpTest.callbackSecretReferenceIsRedactedFromManagementView -- Time elapsed: 0.019 s <<< ERROR!
+java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+	at cn.agentplatform.common.authority.AuthorityProperties.invalid(AuthorityProperties.java:102)
+	at cn.agentplatform.common.authority.AuthorityProperties.validate(AuthorityProperties.java:30)
+	at cn.agentplatform.common.authority.AuthorityProperties.validateDeployment(AuthorityProperties.java:80)
+	at cn.agentplatform.common.SecurityConfiguration.bindDeployment(SecurityConfiguration.java:60)
+	at cn.agentplatform.common.SecurityConfiguration.lambda$authorityModeGuard$0(SecurityConfiguration.java:46)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:363)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:204)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:791)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:609)
+	at cn.agentplatform.skill.application.CallbackHttpTest.setup(CallbackHttpTest.java:244)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.skill.application.CallbackHttpTest.responseLostAndOutboxFailureKeepDurableFactWithoutNewSubmission -- Time elapsed: 0.018 s <<< ERROR!
+java.lang.IllegalStateException: SECURITY_MODE_REQUIRED
+	at cn.agentplatform.common.authority.AuthorityProperties.invalid(AuthorityProperties.java:102)
+	at cn.agentplatform.common.authority.AuthorityProperties.validate(AuthorityProperties.java:30)
+	at cn.agentplatform.common.authority.AuthorityProperties.validateDeployment(AuthorityProperties.java:80)
+	at cn.agentplatform.common.SecurityConfiguration.bindDeployment(SecurityConfiguration.java:60)
+	at cn.agentplatform.common.SecurityConfiguration.lambda$authorityModeGuard$0(SecurityConfiguration.java:46)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:363)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:204)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:791)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:609)
+	at cn.agentplatform.skill.application.CallbackHttpTest.setup(CallbackHttpTest.java:244)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] Running cn.agentplatform.skill.application.AsyncResultEndpointFailureTest
+05:08:31.266 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_skill_async_test (PostgreSQL 16.15)
+05:08:31.278 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 17 migrations (execution time 00:00.006s)
+05:08:31.299 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "skill": 315
+05:08:31.300 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "skill" is up to date. No migration necessary.
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.003 s -- in cn.agentplatform.skill.application.AsyncResultEndpointFailureTest
+[INFO] Running cn.agentplatform.skill.application.AsyncHttpExecutionTest
+05:08:32.150 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_skill_async_test (PostgreSQL 16.15)
+05:08:32.161 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 17 migrations (execution time 00:00.005s)
+05:08:32.191 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "skill": 315
+05:08:32.191 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "skill" is up to date. No migration necessary.
+ASYNC_EXECUTION_HTTP concurrentKeyLookupCannotAdoptResultForLosingJobBinding() POST=1 GET=1
+ASYNC_EXECUTION_HTTP successReadsDedicatedResultEndpointAfterTerminalState() POST=1 GET=2
+ASYNC_EXECUTION_HTTP foreignJobNeverBecomesSuccessAndDoesNotResubmit() POST=1 GET=2
+ASYNC_EXECUTION_HTTP expandedEffectiveScopeStillCoversOriginalTask() POST=1 GET=2
+ASYNC_EXECUTION_HTTP missingCurrentAuthorizationEvidenceIsAuditedAndDenied() POST=1 GET=0
+ASYNC_EXECUTION_HTTP unsupportedHttpMappingCannotSilentlyLoseItsRequestSemantics() POST=0 GET=0
+ASYNC_EXECUTION_HTTP actualUnknownOutboxUsesPostgresSkipLockedAndNeverReexecutesBusiness() POST=1 GET=1
+ASYNC_EXECUTION_HTTP idempotencyEchoSwitchMustBeBoolean() POST=0 GET=0
+ASYNC_EXECUTION_HTTP interruptedBeforeSubmittedRecordsNotSentOnlyAfterAuthorityBecomesUnknown() POST=0 GET=0
+ASYNC_EXECUTION_HTTP unknownAuthorityFencesLateSubmittedAcknowledgementBeforeAnyBusinessSend() POST=0 GET=0
+ASYNC_EXECUTION_HTTP malformedFinalResultStaysUnknownWithoutResubmit() POST=1 GET=2
+ASYNC_EXECUTION_HTTP [1] returnedAttempt=0 POST=0 GET=0
+ASYNC_EXECUTION_HTTP [2] returnedAttempt=457 POST=0 GET=0
+ASYNC_EXECUTION_HTTP largeAsyncResultUsesControlledArtifactInsteadOfProtocolBuffer() POST=1 GET=2
+ASYNC_EXECUTION_HTTP terminalFailedStateIsReadableFailureNotUnknown() POST=1 GET=2
+ASYNC_EXECUTION_HTTP roleRevocationIsAuditedWithoutChangingExternalUnknown() POST=1 GET=0
+ASYNC_EXECUTION_HTTP lostAcknowledgementRecoversByExactKeyWithoutSecondSubmission() POST=1 GET=1
+ASYNC_EXECUTION_HTTP realSpaceTaskEnvelopeNeedsExplicitlyDisabledIdempotencyEcho() POST=1 GET=2
+ASYNC_EXECUTION_HTTP explicitSubmitDenialIsPermissionFailureRatherThanUnknown() POST=1 GET=0
+ASYNC_EXECUTION_HTTP completedFactIsQueuedAndLateDeliveryNeverRevivesCancelledAuthority() POST=1 GET=1
+ASYNC_EXECUTION_HTTP outboxCannotDeliverRegistrationBeforeSubmittedRpcAndOnlyOneBusinessSend() POST=1 GET=2
+ASYNC_EXECUTION_HTTP nonemptyScopeNarrowingCannotQueryOrAdoptWideHistoricalResult() POST=1 GET=0
+ASYNC_EXECUTION_HTTP sentPreparationCrashImageRecoversByOriginalKeyUnderExpiredLease() POST=1 GET=1
+ASYNC_EXECUTION_HTTP submitOnceAndReconcileOriginalJobWithRealResult() POST=1 GET=2
+ASYNC_EXECUTION_HTTP missingFrozenGuardEvidenceIsDenied() POST=1 GET=0
+ASYNC_EXECUTION_HTTP oldSubmittedAckCannotDispatchNewRegisteredAttempt() POST=0 GET=0
+ASYNC_EXECUTION_HTTP cancelledPreparationCannotDeliverQueryOrResubmit() POST=0 GET=0
+ASYNC_EXECUTION_HTTP reorderedFrozenScopeAndExpandedAuthorizationStillRecover() POST=1 GET=1
+ASYNC_EXECUTION_HTTP taskEnvelopeWithoutExplicitOptOutStillRequiresIdempotencyEcho() POST=1 GET=0
+[INFO] Tests run: 29, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 28.86 s -- in cn.agentplatform.skill.application.AsyncHttpExecutionTest
+[INFO] Running cn.agentplatform.skill.api.TaskResultControllerTest
+05:09:01.087 [main] INFO org.hibernate.validator.internal.util.Version -- HV000001: Hibernate Validator 8.0.2.Final
+05:09:01.240 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+05:09:01.240 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+05:09:01.241 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 1 ms
+05:09:01.305 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+05:09:01.305 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+05:09:01.305 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+05:09:01.314 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+05:09:01.314 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+05:09:01.314 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 0 ms
+05:09:01.317 [main] WARN cn.agentplatform.common.PlatformErrors -- INVALID_INPUT_CAUSE
+org.springframework.web.method.annotation.MethodArgumentTypeMismatchException: Method parameter 'callId': Failed to convert value of type 'java.lang.String' to required type 'long'; For input string: "abc"
+	at org.springframework.web.method.annotation.AbstractNamedValueMethodArgumentResolver.convertIfNecessary(AbstractNamedValueMethodArgumentResolver.java:301)
+	at org.springframework.web.method.annotation.AbstractNamedValueMethodArgumentResolver.resolveArgument(AbstractNamedValueMethodArgumentResolver.java:136)
+	at org.springframework.web.method.support.HandlerMethodArgumentResolverComposite.resolveArgument(HandlerMethodArgumentResolverComposite.java:122)
+	at org.springframework.web.method.support.InvocableHandlerMethod.getMethodArgumentValues(InvocableHandlerMethod.java:227)
+	at org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:181)
+	at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:118)
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:986)
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:891)
+	at org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:87)
+	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1089)
+	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:979)
+	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1014)
+	at org.springframework.web.servlet.FrameworkServlet.doGet(FrameworkServlet.java:903)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:564)
+	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:885)
+	at org.springframework.test.web.servlet.TestDispatcherServlet.service(TestDispatcherServlet.java:72)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:658)
+	at org.springframework.mock.web.MockFilterChain$ServletFilterProxy.doFilter(MockFilterChain.java:165)
+	at org.springframework.mock.web.MockFilterChain.doFilter(MockFilterChain.java:132)
+	at org.springframework.test.web.servlet.MockMvc.perform(MockMvc.java:201)
+	at cn.agentplatform.skill.api.TaskResultControllerTest.nonNumericTaskIdIsRejectedAsBadRequest(TaskResultControllerTest.java:87)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:775)
+	at org.junit.platform.commons.support.ReflectionSupport.invokeMethod(ReflectionSupport.java:479)
+	at org.junit.jupiter.engine.execution.MethodInvocation.proceed(MethodInvocation.java:60)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$ValidatingInvocation.proceed(InvocationInterceptorChain.java:131)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.intercept(TimeoutExtension.java:161)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestableMethod(TimeoutExtension.java:152)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestMethod(TimeoutExtension.java:91)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker$ReflectiveInterceptorCall.lambda$ofVoidMethod$0(InterceptingExecutableInvoker.java:112)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.lambda$invoke$0(InterceptingExecutableInvoker.java:94)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$InterceptedInvocation.proceed(InvocationInterceptorChain.java:106)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.proceed(InvocationInterceptorChain.java:64)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.chainAndInvoke(InvocationInterceptorChain.java:45)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.invoke(InvocationInterceptorChain.java:37)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:93)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:87)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeTestMethod$7(TestMethodTestDescriptor.java:216)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeTestMethod(TestMethodTestDescriptor.java:212)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:137)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:69)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:156)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:146)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:144)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:143)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:100)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:160)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:146)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:144)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:143)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:100)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:160)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:146)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:144)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:143)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:100)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:35)
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:57)
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:54)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:201)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:170)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:94)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:59)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:142)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:58)
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:103)
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:85)
+	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:47)
+	at org.junit.platform.launcher.core.InterceptingLauncher.lambda$execute$1(InterceptingLauncher.java:39)
+	at org.junit.platform.launcher.core.ClasspathAlignmentCheckingLauncherInterceptor.intercept(ClasspathAlignmentCheckingLauncherInterceptor.java:25)
+	at org.junit.platform.launcher.core.InterceptingLauncher.execute(InterceptingLauncher.java:38)
+	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:47)
+	at org.apache.maven.surefire.junitplatform.LazyLauncher.execute(LazyLauncher.java:56)
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.execute(JUnitPlatformProvider.java:194)
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invokeAllTests(JUnitPlatformProvider.java:150)
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invoke(JUnitPlatformProvider.java:124)
+	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:385)
+	at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:162)
+	at org.apache.maven.surefire.booter.ForkedBooter.run(ForkedBooter.java:507)
+	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:495)
+Caused by: java.lang.NumberFormatException: For input string: "abc"
+	at java.base/java.lang.NumberFormatException.forInputString(NumberFormatException.java:67)
+	at java.base/java.lang.Long.parseLong(Long.java:709)
+	at java.base/java.lang.Long.valueOf(Long.java:1157)
+	at org.springframework.util.NumberUtils.parseNumber(NumberUtils.java:204)
+	at org.springframework.beans.propertyeditors.CustomNumberEditor.setAsText(CustomNumberEditor.java:115)
+	at org.springframework.beans.TypeConverterDelegate.doConvertTextValue(TypeConverterDelegate.java:439)
+	at org.springframework.beans.TypeConverterDelegate.doConvertValue(TypeConverterDelegate.java:412)
+	at org.springframework.beans.TypeConverterDelegate.convertIfNecessary(TypeConverterDelegate.java:161)
+	at org.springframework.beans.TypeConverterSupport.convertIfNecessary(TypeConverterSupport.java:80)
+	at org.springframework.beans.TypeConverterSupport.convertIfNecessary(TypeConverterSupport.java:53)
+	at org.springframework.validation.DataBinder.convertIfNecessary(DataBinder.java:867)
+	at org.springframework.web.method.annotation.AbstractNamedValueMethodArgumentResolver.convertIfNecessary(AbstractNamedValueMethodArgumentResolver.java:293)
+	... 94 common frames omitted
+05:09:01.325 [main] INFO org.springframework.mock.web.MockServletContext -- Initializing Spring TestDispatcherServlet ''
+05:09:01.325 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Initializing Servlet ''
+05:09:01.326 [main] INFO org.springframework.test.web.servlet.TestDispatcherServlet -- Completed initialization in 1 ms
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.339 s -- in cn.agentplatform.skill.api.TaskResultControllerTest
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Failures: 
+[ERROR]   ReconciliationProofTest.ordinaryHttp404And5xxRemainUnknown:469 expected: <UNKNOWN> but was: <null>
+[ERROR] Errors: 
+[ERROR]   CallbackHttpTest.setup:244 ? IllegalState SECURITY_MODE_REQUIRED
+[ERROR]   CallbackHttpTest.setup:244 ? IllegalState SECURITY_MODE_REQUIRED
+[ERROR]   CallbackHttpTest.setup:244 ? IllegalState SECURITY_MODE_REQUIRED
+[ERROR]   CallbackHttpTest.setup:244 ? IllegalState SECURITY_MODE_REQUIRED
+[ERROR]   CallbackHttpTest.setup:244 ? IllegalState SECURITY_MODE_REQUIRED
+[ERROR]   CallbackHttpTest.setup:244 ? IllegalState SECURITY_MODE_REQUIRED
+[ERROR]   CallbackHttpTest.setup:244 ? IllegalState SECURITY_MODE_REQUIRED
+[ERROR]   CallbackHttpTest.setup:244 ? IllegalState SECURITY_MODE_REQUIRED
+[ERROR]   CallbackHttpTest.setup:244 ? IllegalState SECURITY_MODE_REQUIRED
+[ERROR]   CallbackHttpTest.setup:244 ? IllegalState SECURITY_MODE_REQUIRED
+[ERROR]   CallbackHttpTest.setup:244 ? IllegalState SECURITY_MODE_REQUIRED
+[ERROR]   CallbackHttpTest.setup:244 ? IllegalState SECURITY_MODE_REQUIRED
+[ERROR]   CallbackHttpTest.setup:244 ? IllegalState SECURITY_MODE_REQUIRED
+[ERROR]   CallbackHttpTest.setup:244 ? IllegalState SECURITY_MODE_REQUIRED
+[ERROR]   CallbackHttpTest.setup:244 ? IllegalState SECURITY_MODE_REQUIRED
+[ERROR]   CallbackHttpTest.setup:244 ? IllegalState SECURITY_MODE_REQUIRED
+[ERROR]   CallbackHttpTest.setup:244 ? IllegalState SECURITY_MODE_REQUIRED
+[ERROR]   CallbackHttpTest.setup:244 ? IllegalState SECURITY_MODE_REQUIRED
+[ERROR]   CallbackHttpTest.setup:244 ? IllegalState SECURITY_MODE_REQUIRED
+[ERROR]   CallbackHttpTest.setup:244 ? IllegalState SECURITY_MODE_REQUIRED
+[ERROR]   CallbackHttpTest.setup:244 ? IllegalState SECURITY_MODE_REQUIRED
+[ERROR]   CallbackHttpTest.setup:244 ? IllegalState SECURITY_MODE_REQUIRED
+[ERROR]   CallbackHttpTest.setup:244 ? IllegalState SECURITY_MODE_REQUIRED
+[ERROR]   CallbackHttpTest.setup:244 ? IllegalState SECURITY_MODE_REQUIRED
+[ERROR]   CallbackHttpTest.setup:244 ? IllegalState SECURITY_MODE_REQUIRED
+[ERROR]   CallbackHttpTest.setup:244 ? IllegalState SECURITY_MODE_REQUIRED
+[ERROR]   CallbackHttpTest.setup:244 ? IllegalState SECURITY_MODE_REQUIRED
+[ERROR]   CallbackHttpTest.setup:244 ? IllegalState SECURITY_MODE_REQUIRED
+[ERROR]   CallbackHttpTest.setup:244 ? IllegalState SECURITY_MODE_REQUIRED
+[ERROR]   CallbackHttpTest.setup:244 ? IllegalState SECURITY_MODE_REQUIRED
+[ERROR]   CallbackHttpTest.setup:244 ? IllegalState SECURITY_MODE_REQUIRED
+[ERROR]   CallbackHttpTest.setup:244 ? IllegalState SECURITY_MODE_REQUIRED
+[ERROR]   ReconciliationProofTest.mixedAudiencePortalPurposeCannotReadProof:1052->proofHttpContext:981 ? IllegalState SECURITY_MODE_REQUIRED
+[ERROR]   ReconciliationProofTest.nonProofAppliedReconcileRetainsExistingTicketPolicyInThisLimitedFix:1177->proofHttpContext:981 ? IllegalState SECURITY_MODE_REQUIRED
+[ERROR]   ReconciliationProofTest.portalServiceRoleCannotCreateExternalNotAppliedProof:1109->proofHttpContext:981 ? IllegalState SECURITY_MODE_REQUIRED
+[ERROR]   ReconciliationProofTest.portalServiceRoleCannotCreateNotSentProofOrFenceSender:1141->proofHttpContext:981 ? IllegalState SECURITY_MODE_REQUIRED
+[ERROR]   ReconciliationProofTest.portalTokenWithServiceRoleCannotReadOriginalOwnerProof:1028->proofHttpContext:981 ? IllegalState SECURITY_MODE_REQUIRED
+[ERROR]   ReconciliationProofTest.proofHttpRequiresVerifiedInternalTicketAndExactOriginalOwner:745 ? IllegalState SECURITY_MODE_REQUIRED
+[ERROR]   SkillCallbackWakeTest.setup:216 ? UnsatisfiedDependency Error creating bean with name 'cn.agentplatform.skill.infra.SkillClients': Unsatisfied dependency expressed through method 'setServiceTickets' parameter 0: No qualifying bean of type 'cn.agentplatform.skill.infra.ServiceTickets' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {}
+[ERROR]   SkillCallbackWakeTest.setup:216 ? UnsatisfiedDependency Error creating bean with name 'cn.agentplatform.skill.infra.SkillClients': Unsatisfied dependency expressed through method 'setServiceTickets' parameter 0: No qualifying bean of type 'cn.agentplatform.skill.infra.ServiceTickets' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {}
+[ERROR]   SkillCallbackWakeTest.setup:216 ? UnsatisfiedDependency Error creating bean with name 'cn.agentplatform.skill.infra.SkillClients': Unsatisfied dependency expressed through method 'setServiceTickets' parameter 0: No qualifying bean of type 'cn.agentplatform.skill.infra.ServiceTickets' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {}
+[INFO] 
+[ERROR] Tests run: 198, Failures: 1, Errors: 41, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  02:02 min
+[INFO] Finished at: 2026-10-28T05:09:01+08:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.3:test (default-test) on project skill-registry: There are test failures.
+[ERROR] 
+[ERROR] See G:\207\项目\算法重组工具\代码\agent-platform\skill-registry\target\surefire-reports for the individual test results.
+[ERROR] See dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

@@ -554,3 +554,47 @@ SUBMIT_QUERY 对账端点可用声明式映射表达"平台字段 → 远端占�
 - 结果端点 409/4xx 先复查状态端点的行为沿用 §11（T05）不变；
 - 提交阶段 4xx 语义沿用 §11.2 平台默认映射（401/403→`NO_PERMISSION`、429→`QUOTA`、其余→`PARAM_ERROR`），携带远端码/原文；
 - 异步协议拒绝（`ASYNC_*`，如 `ASYNC_MULTIPART_UNSUPPORTED` 400）在执行器不再折叠为 `UNKNOWN`/`OUTPUT_INVALID`，按原码原状态透出——它们是"本次调用为何没有运行"的结论，在任何出站请求之前即已成立。
+
+---
+
+## 13. 工程增补（PLAT-12，2026-10-28）：技能契约 identity 声明与出站 X-User-* 注入
+
+> 本节为平台侧优化的工程增补，依据《平台侧优化方案与实施细则-20261027》§4.12（PLAT-12），经优化台账 T12.1 派发实施；**不属于 v1.2 原文提取**，`contracts/snapshot/` 保持 v1.2 原文快照不变。与上文冲突时以本节为准。
+
+### 13.1 契约 identity 声明
+
+技能契约（顶层 `identity` 键）可声明出站身份注入：
+
+```json
+{
+  "identity": {
+    "mode": "PLATFORM_SUBJECT",
+    "headers": {
+      "X-User-Id": "principalId",
+      "X-User-Tenant": "tenantId",
+      "X-User-Roles": "roles",
+      "X-User-Attributes": "attributes"
+    }
+  }
+}
+```
+
+- `mode` 只允许 `PLATFORM_SUBJECT`：出站身份只有一个来源，就是进程内已验主体快照（`Actor.current().subject()`，T12a）；引入第二种 mode 等于承诺一个不存在的身份通道。其他值 → `400 SKILL_IDENTITY_MODE_INVALID`（可读错误，带收到的值）；
+- `headers` 的**值**只允许主体快照字段白名单 `principalId` / `tenantId` / `roles` / `attributes`——声明任意 header→值的映射会把出站头变成自由写入通道，这正是方案"伪造 `X-User-*` 被网关拒绝"要堵的口子。白名单外取值 → `400 SKILL_IDENTITY_HEADER_INVALID`；
+- `headers` 的**键**为出站头名，必须是合法 HTTP 头名（字母/数字/连字符），且不得与鉴权/幂等/传输语义的保留头冲突（`Authorization`、`X-API-Key`、`Idempotency-Key`、`Accept`、`Content-Type`、`Host`、`Cookie`、`Set-Cookie`），否则 `400 SKILL_IDENTITY_HEADER_INVALID`；
+- `identity` 仅支持 HTTP 技能：同步与异步两个发头点都在 HTTP 适配器内，MCP（SSE transport）、ALGORITHM（SDK）、PROCESS（stdin）没有 `X-User-*` 通道，非 HTTP 声明 → `400 SKILL_IDENTITY_UNSUPPORTED`；
+- 声明形态错误（非对象、headers 为空/非对象、值非字符串）→ `400 SKILL_IDENTITY_INVALID`；
+- **向后兼容**：未声明 `identity` 的契约不产生该键，出站行为与执行事实信封形状零变化；旧编辑器局部保存若省略 `identity`，已保存的声明以旧值为准补回（与 authScheme 同一"省略不等于删除"语义）；identity 变化会改变语义摘要（`identity` 不在展示字段排除集内），发布门禁照常要求重测。
+
+### 13.2 出站注入语义
+
+- **与鉴权头叠加而非替换**（§11 PLAT-11 的 `AuthScheme` 语义零改动）：鉴权头照发，身份头追加在同一请求上；组合 `authScheme=API_KEY` 时 `X-API-Key` 与 `X-User-*` 并存；
+- 注入点为 SkillAdapters 同步发头点与 HttpAsyncAdapter 异步 `request()`（提交与查询请求都注入），两处共用同一份契约映射，同一技能在 SYNC 与 SUBMIT_QUERY 间发出同一组身份头；
+- **取值唯一权威是进程内主体快照**：`X-User-Id`←`principalId`、`X-User-Tenant`←`tenantId`、`X-User-Roles`←`roles`、`X-User-Attributes`←`attributes`。与 V107 `app.identity_mapping` 的关系：映射表经 `SubjectSnapshot.mappingKey()`（canonical SHA-256）与快照对齐，是"平台主体→外部 subject"的持久登记面；出站值不读表——跨服务以映射表为源的反查属后续卡，不在本节实现；
+- **序列化格式（定死）**：`roles` 按字典序排序后逗号连接（如 `EDITOR,USER_ADMIN`——集合迭代序不进协议，同一主体序列化结果恒定）；`attributes` 为键字典序、值排序字符串数组的紧凑 JSON（如 `{"dept":["103"],"region":["LOCAL"]}`）；
+- **空值不发头**：`roles`/`attributes` 为空集合、`principalId`/`tenantId` 空白时该头不发送——HTTP 头没有空集合表达，空串会让对端按逗号拆分出幽灵角色；跳过比伪造空值诚实；
+- **无可用主体（系统级调用）时跳过注入，不伪造值**：无验签上下文（401）或机器 workload 票据（403，机器能力不能映射为用户身份）时，身份头整体缺省，出站请求照常发出（身份头是补充可读身份，不是鉴权依据）；跳过结论随执行事实信封 `result.identity` 落运行详情——`{mode, headers:[{name, from, sent}], injected, skipReason}`，`skipReason=NO_ACTOR_SUBJECT|SUBJECT_VALUES_EMPTY`；**trace 只带头名/来源字段/布尔，不带头值**，身份明细不向运行详情扩散；未声明 `identity` 的技能信封无 `identity` 键。
+
+### 13.3 与桥接层身份的边界
+
+方案 §4.12 明令禁止桥接层自定义身份：出站身份由平台适配器按本节统一注入，技能接入方不得在 URL、请求体或自定义头里自行携带身份替换语义；本节与 PLAT-04/05/06 的对账与错误语义正交，不改变任何既有错误码与状态机。

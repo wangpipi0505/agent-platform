@@ -1,0 +1,10 @@
+file:///G:/207/%E9%A1%B9%E7%9B%AE/%E7%AE%97%E6%B3%95%E9%87%8D%E7%BB%84%E5%B7%A5%E5%85%B7/%E4%BB%A3%E7%A0%81/agent-platform/scripts/verify-contracts.mjs:34
+ throw new Error(`G-9 路由目录漂移：${routes.missing.length} 个服务票据面 handler 没有目录行（运行期会抛 ROUTE_COVERAGE_MISSING）\n${lines}\n补 \`agent-service-authority.json\` 对应行：有真实调用方的按 delegated+caller 登记，无调用方的登记为 disabled+caller null+reason。`);
+       ^
+
+Error: G-9 路由目录漂移：1 个服务票据面 handler 没有目录行（运行期会抛 ROUTE_COVERAGE_MISSING）
+  app GET /health/data  <= app-management/src/main/java/cn/agentplatform/app/api/DataHealthController.java:24 data()
+补 `agent-service-authority.json` 对应行：有真实调用方的按 delegated+caller 登记，无调用方的登记为 disabled+caller null+reason。
+    at file:///G:/207/%E9%A1%B9%E7%9B%AE/%E7%AE%97%E6%B3%95%E9%87%8D%E7%BB%84%E5%B7%A5%E5%85%B7/%E4%BB%A3%E7%A0%81/agent-platform/scripts/verify-contracts.mjs:34:8
+
+Node.js v24.16.0
