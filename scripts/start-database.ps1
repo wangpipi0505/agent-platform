@@ -1,4 +1,4 @@
-$ErrorActionPreference='Stop'
+﻿$ErrorActionPreference='Stop'
 $agentRoot=Split-Path -Parent $PSScriptRoot
 $agentLocal=Join-Path $agentRoot '.local'
 New-Item -ItemType Directory -Path $agentLocal -Force | Out-Null

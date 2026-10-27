@@ -1,4 +1,4 @@
-param([switch]$Stop)
+﻿param([switch]$Stop)
 $ErrorActionPreference='Stop'
 $env:WSL_UTF8='1'
 $agentRoot=Split-Path -Parent $PSScriptRoot

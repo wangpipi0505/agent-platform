@@ -1,4 +1,4 @@
-param([ValidateSet('agent_platform_dev_v12')][string]$Database='agent_platform_dev_v12')
+﻿param([ValidateSet('agent_platform_dev_v12')][string]$Database='agent_platform_dev_v12')
 $ErrorActionPreference='Stop'
 $agentRoot=Split-Path -Parent $PSScriptRoot
 & (Join-Path $PSScriptRoot 'start-database.ps1')

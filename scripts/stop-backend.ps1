@@ -1,9 +1,9 @@
-param([string[]]$Services=@('platform-gateway','app-management','engine-runtime','skill-registry','model-gateway','monitor'))
+﻿param([string[]]$Services=@('platform-gateway','app-management','engine-runtime','skill-registry','model-gateway','monitor'))
 $ErrorActionPreference='Stop'
 $agentRoot=Split-Path -Parent $PSScriptRoot
 $agentManifest=Join-Path $agentRoot '.local/services.json'
 if(-not(Test-Path -LiteralPath $agentManifest)){Write-Output '没有本工程登记的服务进程';return}
-$agentRegistered=@(Get-Content -LiteralPath $agentManifest -Raw | ConvertFrom-Json)
+$agentRegistered=[object[]](Get-Content -LiteralPath $agentManifest -Raw | ConvertFrom-Json)
 foreach($agentEntry in $agentRegistered){
  if($agentEntry.service -notin $Services){continue}
  $agentTargetPid=[int]$agentEntry.pid

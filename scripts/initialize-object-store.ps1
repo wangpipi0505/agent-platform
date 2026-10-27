@@ -1,4 +1,4 @@
-$ErrorActionPreference='Stop'
+﻿$ErrorActionPreference='Stop'
 $agentRoot=Split-Path -Parent $PSScriptRoot
 Set-Location -LiteralPath $agentRoot
 Get-Content -LiteralPath (Join-Path $agentRoot '.env')|ForEach-Object {if($_ -match '^([^#=]+)=(.*)$'){[Environment]::SetEnvironmentVariable($Matches[1],$Matches[2],'Process')}}

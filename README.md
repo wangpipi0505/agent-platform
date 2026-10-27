@@ -19,23 +19,26 @@
 
 ```powershell
 # 需Java21、Maven、Node和新工程.tools中的专用PostgreSQL；不使用任何已有项目依赖。
-./scripts/bootstrap.ps1 -WithObjectStore -WithCache
-./scripts/start-backend.ps1
-Set-Location web
-npm ci
-# 隔离本地开发：新工程.env中的AGENT_DEV_AUTH须显式为true。
-$env:VITE_AUTH_MODE = 'dev'
-npm run dev
-# WebApp可另开终端执行 npm run dev:webapp
+./scripts/bootstrap.ps1
+# 默认启动最小 5 服务（gateway/app/engine/skill/model）+ PostgreSQL + 管理台，并等待健康检查。
+./scripts/dev-up.ps1 -WithWeb
+# 发布、审批、统计、审计还需要 Redis 和 monitor：先启动缓存，再加 -WithMonitor。
+# ./scripts/start-cache.ps1
+# ./scripts/dev-up.ps1 -WithWeb -WithMonitor
+# 停止：./scripts/dev-down.ps1（默认连 PostgreSQL 一起停；-KeepDatabase 保留）
 ```
 
-管理前端默认采用 `portal` 模式，由同源可信宿主注入 `window.agentPlatformPortal`，提供 `getAccessToken(): Promise<string>` 与 `onSessionChanged(listener): () => void`；后端 `/auth/session` 验证会话并投影身份。未提供宿主时页面显示连接提示。隔离本地开发才显式设置上例的 `VITE_AUTH_MODE=dev`，并同时在新工程后端 `.env` 启用 `AGENT_DEV_AUTH=true`。恢复门户入口时移除该前端环境变量或设为 `portal` 后重新启动开发进程；其他值显示配置错误。Vite会把该变量嵌入构建，dev构建仅用于隔离开发，生产使用portal构建并关闭后端开发认证。
+`dev-up.ps1` 默认每次构建，避免旧 JAR 被静默复用；`-SkipBuild` 会校验 JAR 是否落后于 `src/main`，落后即拒绝启动。启动日志在 `.local/logs`，失败时会打印尾部。默认不启动 monitor，因此发布/审批/统计/审计不可用；这是有意的能力边界，不是“服务已全部就绪”。
 
-上述dev启动命令是配置说明，本轮未执行新的dev环境完整进程启动；浏览器的dev分支验证使用隔离harness，不能替代该启动验证。门户及身份切换的验证范围见 [D4b复审](docs/evidence/review-iam-stage-4-d4b-combined-fixes.md)。
+管理前端默认采用 `portal` 模式，由同源可信宿主注入 `window.agentPlatformPortal`，提供 `getAccessToken(): Promise<string>` 与 `onSessionChanged(listener): () => void`；后端 `/auth/session` 验证会话并投影身份。未提供宿主时页面显示连接提示。隔离本地开发才显式设置 `VITE_AUTH_MODE=dev`，并同时在新工程后端 `.env` 启用 `AGENT_DEV_AUTH=true`；`dev-up.ps1` 已为管理台设置该变量。恢复门户入口时移除该前端环境变量或设为 `portal` 后重新启动开发进程；其他值显示配置错误。Vite会把该变量嵌入构建，dev构建仅用于隔离开发，生产使用portal构建并关闭后端开发认证。
+
+`VITE_MOCK=true` 时管理台可脱离后端演示，但页面顶部会显示“演示模式”标识，所有业务写请求返回 `MOCK_WRITE_DISABLED`，不会假装保存成功；它不能替代真实登录与真实服务验收。
+
+需要可运行示例时，在后端已启动、至少有一个启用且供应商正常的 chat 模型条目后执行 `./scripts/seed-sample-agent.ps1`。脚本通过管理 API 创建“示例：告警分诊助手”（`sample_triage`），重复执行不会覆盖；它只创建草稿，发布仍需预检与评测。
 
 启动脚本仅创建新工程自己的 `.env` 和随机密钥，不改变全局 JDK。中文路径下为本目录建立专用 V: 路径别名；若 V: 已属于其他路径，明确失败，不覆盖。Windows JDK NIO临时路径属性也仅传给本工程进程。
 
-停止服务使用 `scripts/stop-backend.ps1`，脚本复核登记PID与本工程JAR绝对路径后操作。遇到端口占用不接管其他进程。
+停止服务使用 `scripts/dev-down.ps1`（默认连 PostgreSQL 一起停，`-KeepDatabase` 保留），底层仍由 `scripts/stop-backend.ps1` 复核登记 PID 与本工程 JAR 绝对路径后操作。遇到端口占用不接管其他进程。
 
 本地登录入口仅在显式 `AGENT_DEV_AUTH=true` 且loopback主机可用，固定开发身份；生产须关闭并配置专用IAM。外部助手由宿主后端使用一次性显示的 `ApiKey <id>:<secret>` 调用 `POST /embed/ticket`，浏览器只接收不超过300秒的短票据。票据不能访问管理API，实时校验吊销、应用绑定和来源。
 

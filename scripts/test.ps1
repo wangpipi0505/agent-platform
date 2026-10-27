@@ -1,4 +1,4 @@
-param([string[]]$Modules=@(),[switch]$Frontend)
+﻿param([string[]]$Modules=@(),[switch]$Frontend)
 $ErrorActionPreference='Stop'
 $agentRoot=Split-Path -Parent $PSScriptRoot
 Set-Location -LiteralPath $agentRoot

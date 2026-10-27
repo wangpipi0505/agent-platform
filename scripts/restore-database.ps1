@@ -1,4 +1,4 @@
-param(
+﻿param(
     [Parameter(Mandatory)][string]$BackupDirectory,
     [ValidatePattern('^agent_platform_restore_[a-z0-9_]{1,40}$')][string]$TargetDatabase=('agent_platform_restore_'+(Get-Date -Format 'yyyyMMdd_HHmmss'))
 )

@@ -1,4 +1,4 @@
-param([string]$Tests='AlgorithmProtocolTest,AlgorithmExecutionPostgresTest,AlgorithmMigrationPostgresTest',[string]$Log='algorithm-directed.log')
+﻿param([string]$Tests='AlgorithmProtocolTest,AlgorithmExecutionPostgresTest,AlgorithmMigrationPostgresTest',[string]$Log='algorithm-directed.log')
 $ErrorActionPreference='Stop'
 $algorithmRoot=Split-Path -Parent $PSScriptRoot
 Set-Location -LiteralPath $algorithmRoot

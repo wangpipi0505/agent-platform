@@ -1,4 +1,4 @@
-$ErrorActionPreference='Stop'
+﻿$ErrorActionPreference='Stop'
 $env:WSL_UTF8='1'
 $agentRoot=Split-Path -Parent $PSScriptRoot
 if(-not(Test-Path -LiteralPath (Join-Path $agentRoot '.local/wsl/ext4.vhdx'))){throw '缺少本工程新建WSL；不使用其他发行版'}

@@ -1,4 +1,4 @@
-$ErrorActionPreference='Stop'
+﻿$ErrorActionPreference='Stop'
 $agentRoot=Split-Path -Parent $PSScriptRoot
 $agentEnv=Join-Path $agentRoot '.env'
 if(-not(Test-Path -LiteralPath $agentEnv)){throw '先运行新工程start-database.ps1生成独立配置'}

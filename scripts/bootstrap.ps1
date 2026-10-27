@@ -1,4 +1,4 @@
-param([switch]$WithObjectStore,[switch]$WithCache)
+﻿param([switch]$WithObjectStore,[switch]$WithCache)
 $ErrorActionPreference='Stop'
 $env:WSL_UTF8='1'
 $agentRoot=Split-Path -Parent $PSScriptRoot

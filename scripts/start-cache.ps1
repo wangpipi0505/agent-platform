@@ -1,4 +1,4 @@
-$ErrorActionPreference='Stop'
+﻿$ErrorActionPreference='Stop'
 $env:WSL_UTF8='1'
 $agentRoot=Split-Path -Parent $PSScriptRoot
 $agentEnv=Join-Path $agentRoot '.env'
@@ -27,9 +27,16 @@ New-Item -ItemType Directory -Path $agentDirectory -Force|Out-Null
 $agentConfig=Join-Path $agentDirectory 'redis.conf'
 $agentLines=@('bind 127.0.0.1','port 26379','protected-mode yes',"requirepass $($agentKeys.AGENT_REDIS_PASSWORD)",'daemonize yes','dir /var/lib/agent-platform-redis7','pidfile /var/lib/agent-platform-redis7/agent-platform.pid','logfile /var/lib/agent-platform-redis7/agent-platform.log','appendonly yes','maxmemory 128mb','maxmemory-policy noeviction')
 [IO.File]::WriteAllLines($agentConfig,$agentLines,[Text.UTF8Encoding]::new($false))
-$agentLinuxConfig=((& wsl.exe -d $agentDistro -- wslpath -a -u $agentConfig.Replace('\','/'))|Out-String).Trim()
-if($LASTEXITCODE -ne 0){throw '专用配置路径转换失败'}
-& wsl.exe -d $agentDistro --user redis --exec /opt/agent-platform/redis-7.2.16/src/redis-server $agentLinuxConfig
-if($LASTEXITCODE -ne 0){throw '专用Redis启动失败'}
+$agentOldEap=$ErrorActionPreference
+$ErrorActionPreference='Continue'
+$agentLinuxConfig=((& wsl.exe -d $agentDistro -- wslpath -a -u $agentConfig.Replace('\','/') 2>$null)|Out-String).Trim()
+if($LASTEXITCODE -ne 0){$ErrorActionPreference=$agentOldEap;throw '专用配置路径转换失败'}
+# 专用发行版里的 redis 账户使用 nologin；WSL 直接 --user redis 会拒绝登录。
+# 以 root 进入后通过 su 显式切换，仍以 redis 身份运行，不把缓存进程提升为 root。
+$agentRedisCommand="/opt/agent-platform/redis-7.2.16/src/redis-server $agentLinuxConfig"
+& wsl.exe -d $agentDistro --user root --exec /bin/su -s /bin/sh redis -c $agentRedisCommand 2>$null
+$agentRedisExit=$LASTEXITCODE
+$ErrorActionPreference=$agentOldEap
+if($agentRedisExit -ne 0){throw '专用Redis启动失败'}
 [pscustomobject]@{distribution=$agentDistro;root=$agentWslRoot;port=26379;user='redis'}|ConvertTo-Json|Set-Content -LiteralPath (Join-Path $agentRoot '.local/redis-process.json') -Encoding utf8
 Write-Output 'Redis已在专用WSL启动：127.0.0.1:26379；数据仅在本工程.local/wsl，随机凭据在本工程.env'
