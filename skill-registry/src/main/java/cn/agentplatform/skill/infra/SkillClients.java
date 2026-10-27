@@ -4,6 +4,7 @@ import cn.agentplatform.common.*;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -15,6 +16,17 @@ import java.util.Map;
 @Component
 public class SkillClients {
     private final RestClient client;
+    /**
+     * G-8c 签发缝。默认 LEGACY：与改动前逐字相同（ServiceTokens 的 HS256 自签），构造签名不变，
+     * 手工 new 的夹具不注入也不改行为；只有容器把它换成 {@code AUTHORITY} 的实例才走授权模式。
+     */
+    private ServiceTickets serviceTickets = new ServiceTickets(ServiceTickets.LEGACY, null, null, null);
+
+    /** 容器注入（设值注入，避免改动被多处夹具依赖的构造签名）。 */
+    @Autowired
+    void setServiceTickets(ServiceTickets serviceTickets) {
+        this.serviceTickets = serviceTickets;
+    }
 
     public SkillClients() {
         var factory = new SimpleClientHttpRequestFactory();
@@ -36,10 +48,10 @@ public class SkillClients {
     }
 
     private JsonNode request(String method, String url, Object body, Actor actor) {
-        // 票据先于传输签发：ServiceTokens 的 403 AUTHORITY_CONTEXT_MISSING 是"当前没有可信授权
-        // 上下文"（Y-3/Y-8 根因），不是下游不可用；折成 502 会让运维误判依赖、重试策略也失去依据。
-        // 因此 issue 放在传输 try 之外，授权/配置失败一律原样上抛。
-        String ticket = ServiceTokens.issue(actor);
+        // 票据先于传输签发：签发失败（LEGACY 的 403 AUTHORITY_CONTEXT_MISSING、AUTHORITY 的未绑定
+        // 授权或目录未登记）是"当前没有可信授权"（Y-3/Y-8 根因），不是下游不可用；折成 502 会让
+        // 运维误判依赖、重试策略也失去依据。因此签发放在传输 try 之外，授权/配置失败一律原样上抛。
+        String ticket = serviceTickets.ticket(actor, "skill", method, url);
         String response;
         try {
             response =

@@ -2,6 +2,7 @@ package cn.agentplatform.skill.infra;
 
 import cn.agentplatform.common.*;
 import cn.agentplatform.common.SecurityConfiguration;
+import cn.agentplatform.common.authority.ServiceRoutePolicy;
 
 import com.sun.net.httpserver.HttpServer;
 
@@ -201,6 +202,25 @@ class SkillClientsErrorTest {
         STUB.set(new Stub(200, "application/json", "{\"value\":2}"));
         assertThat(clients.post(url, Map.of("code", "skill-a"), ACTOR).path("value").asInt())
                 .isEqualTo(2);
+    }
+
+    /**
+     * G-8c：签发缝真的接在 {@link SkillClients} 上——AUTHORITY 且没有可验证授权时，失败必须发生在
+     * 传输之前（桩服务器零请求）。若缝隙没接上，LEGACY 路径会照常出票并打到桩，用例即失败。
+     */
+    @Test
+    void authorityModeWithoutBoundContextFailsBeforeTransport() {
+        clients.setServiceTickets(
+                new ServiceTickets(
+                        ServiceTickets.AUTHORITY, null, new ServiceRoutePolicy(), Map.of("engine", url)));
+        try {
+            var error = failure(() -> clients.post(url, Map.of("code", "skill-a"), ACTOR));
+            assertThat(error.status()).isEqualTo(403);
+            assertThat(error.code()).isEqualTo("AUTHORITY_CONTEXT_MISSING");
+            assertThat(REQUESTS).isEmpty();
+        } finally {
+            clients.setServiceTickets(new ServiceTickets(ServiceTickets.LEGACY));
+        }
     }
 
     /**

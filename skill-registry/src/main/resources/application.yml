@@ -53,6 +53,11 @@ agent:
     skill: ${AGENT_SKILL_URL:http://127.0.0.1:18083}
     model: ${AGENT_MODEL_URL:http://127.0.0.1:18084}
     monitor: ${AGENT_MONITOR_URL:http://127.0.0.1:18085}
+  # G-8c 服务票据签发缝（skill/infra/ServiceTickets）：LEGACY（默认）逐字沿用 ServiceTokens 的
+  # HS256 自签；AUTHORITY 只认"已绑定授权 + 目录登记 + 已装配的 ServiceTicketProvider"，缺任何
+  # 一环都直接失败且绝不回落 LEGACY。回滚就是把该键改回 LEGACY（默认值本身就是回滚目标）。
+  skill:
+    service-ticket-mode: ${AGENT_SKILL_SERVICE_TICKET_MODE:LEGACY}
 management:
   endpoints:
     web:
