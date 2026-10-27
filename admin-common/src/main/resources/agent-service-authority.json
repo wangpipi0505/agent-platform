@@ -805,6 +805,18 @@
  },
  {
   "method": "GET",
+  "template": "/admin/runs/page",
+  "caller": "gateway",
+  "target": "engine",
+  "action": "proxy.engine.get.RunController.page",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java:84",
+  "callerSource": "web/admin/src/RunList.vue:41",
+  "reason": ""
+ },
+ {
+  "method": "GET",
   "template": "/admin/runs/{id}",
   "caller": "gateway",
   "target": "engine",
@@ -2098,6 +2110,18 @@
   "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/OntologyImportController.java:18",
   "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:62;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:28",
   "reason": "OR-S01：本体发布manifest导入为技能草稿（整批DRAFT，发布走四道门；guard_attrs对OR-S02绑定属性）"
+ },
+ {
+  "method": "GET",
+  "template": "/internal/operations/overview",
+  "caller": null,
+  "target": "engine",
+  "action": "operations.overview",
+  "mode": "disabled",
+  "integrationAllowed": false,
+  "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java:524",
+  "callerSource": "",
+  "reason": "无服务调用方：运维总览由 monitor 的 /admin/operations/overview 提供，engine 侧该只读统计暂无调用者；先登记为 disabled（覆盖校验通过、零授权），接入方确定后再改为对应 caller 与 delegated"
  } ,{
   "method": "POST",
   "template": "/internal/runs/{id}/wake",
