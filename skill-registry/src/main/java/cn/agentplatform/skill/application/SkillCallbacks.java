@@ -8,6 +8,8 @@ import cn.agentplatform.skill.infra.*;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -24,6 +26,7 @@ import java.util.*;
  */
 @Service
 public class SkillCallbacks {
+    private static final Logger log = LoggerFactory.getLogger(SkillCallbacks.class);
     private final JdbcTemplate db;
     private final TransactionTemplate tx;
     private final SkillCatalog catalog;
@@ -180,7 +183,9 @@ public class SkillCallbacks {
                                 false,
                                 secured);
                 boolean active = current(call, bound);
-                store(call, event, owner, bound, status, envelope, active);
+                // The fact is durable at this point (skill receipt + engine adoption). Waking the
+                // engine is only a scheduling hint for the run, never part of the receipt outcome.
+                wakeEngine(event, bound, store(call, event, owner, bound, status, envelope, active));
             } catch (SkillAdapters.Failure | IllegalArgumentException ex) {
                 finishOwned(call, event, owner, "OUTPUT_REJECTED");
                 throw error(422, "CALLBACK_OUTPUT_INVALID", "回调结果不符合Schema或返回映射");
@@ -297,7 +302,7 @@ public class SkillCallbacks {
                         }));
     }
 
-    private void store(
+    private String store(
             long call,
             String event,
             String owner,
@@ -305,7 +310,7 @@ public class SkillCallbacks {
             String status,
             Map<String, Object> envelope,
             boolean active) {
-        tx.executeWithoutResult(
+        return tx.execute(
                 t -> {
                     var f = fact(call, true);
                     var r = receipt(call, event);
@@ -336,7 +341,31 @@ public class SkillCallbacks {
                                 call,
                                 b.get("attempt_id"));
                     finishOwned(call, event, owner, outcome);
+                    return outcome;
                 });
+    }
+
+    /**
+     * X-10: ask the engine to bring one dispatch of this run forward. The wake endpoint only
+     * shortens the pending backoff; whether the external fact is adopted stays with the engine's
+     * resumeExternalFacts path. Best-effort by contract: the receipt is already durable and the
+     * engine owns the logical state, so a failed wake only means the run keeps its original
+     * schedule — it never changes the callback outcome nor rolls anything back.
+     */
+    private void wakeEngine(String event, Map<String, Object> bound, String outcome) {
+        if (!"STORED".equals(outcome)) return;
+        // V307 left run_id nullable for bindings created before runs were linked; a wake without
+        // a run would be a 400 on the engine and only add log noise, so skip those rows.
+        Object linked = bound.get("run_id");
+        if (linked == null || String.valueOf(linked).isBlank()) return;
+        String runId = String.valueOf(linked);
+        try {
+            clients.post(
+                    engineUrl + "/internal/runs/" + runId + "/wake",
+                    Map.of("requestId", event, "source", "SKILL_CALLBACK"));
+        } catch (RuntimeException failed) {
+            log.warn("wake run {} after callback {} failed: {}", runId, event, failed.toString());
+        }
     }
 
     private void finishOwned(long call, String event, String owner, String outcome) {
