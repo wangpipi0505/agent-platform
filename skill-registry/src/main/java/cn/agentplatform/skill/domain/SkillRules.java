@@ -71,20 +71,41 @@ public final class SkillRules {
         normalizedSchema(raw);
     }
 
+    /**
+     * 输出校验模式（PLAT-07）。预算拒绝是安全边界，不因模式而消失：STRICT 保持“超预算即失败”，
+     * DEGRADED 只把“实例工作量超限”降级为顶层校验并显式告警，类型/必填/引用错误仍全部失败。
+     * 回调、治理与产物入库走无 mode 的 {@link #validate(Object, Object)}，语义恒为 STRICT。
+     */
+    public enum SchemaMode {
+        STRICT,
+        DEGRADED
+    }
+
     private record Prepared(
-            JsonSchema validator, SchemaWorkBudget.Plan plan, BoundedRegexFactory regex) {}
+            JsonSchema validator,
+            SchemaWorkBudget.Plan plan,
+            BoundedRegexFactory regex,
+            JsonNode schema) {}
 
     private static Prepared prepare(Object raw) {
+        return prepare(raw, SchemaWorkBudget.MAX_EXPANDED_WORK);
+    }
+
+    private static Prepared prepare(Object raw, long maxExpandedWork) {
         SchemaDeadline.check();
         if (!(raw instanceof Map<?, ?> map) || map.isEmpty())
             throw new IllegalArgumentException("Schema必须为非空对象");
-        return build(Json.tree(raw));
+        return build(Json.tree(raw), maxExpandedWork);
+    }
+
+    private static Prepared build(JsonNode json) {
+        return build(json, SchemaWorkBudget.MAX_EXPANDED_WORK);
     }
 
     /** networknt 编译与预算：只接受已归一的规范形；方言判定在 {@link #normalizedSchema} 之前完成。 */
-    private static Prepared build(JsonNode json) {
+    private static Prepared build(JsonNode json, long maxExpandedWork) {
         // Pure admission precedes every networknt construction, including ordinary HTTP.
-        var plan = SchemaWorkBudget.inspect(json);
+        var plan = SchemaWorkBudget.inspect(json, maxExpandedWork);
         var regex = new BoundedRegexFactory(plan.expressions());
         try {
             var config = new SchemaValidatorsConfig();
@@ -114,21 +135,98 @@ public final class SkillRules {
                         .initializeValidators();
             }
             SchemaDeadline.check();
-            return new Prepared(validator, plan, regex);
+            return new Prepared(validator, plan, regex, json);
         } catch (RuntimeException invalid) {
             throw new IllegalArgumentException("技能Schema无效或包含不可加载的引用");
         }
     }
 
     public static void validate(Object schema, Object value) {
-        var prepared = prepare(schema);
+        validate(schema, value, SchemaMode.STRICT);
+    }
+
+    /** 默认展开上限的 STRICT/DEGRADED 重载；只有输出校验路径需要显式模式。 */
+    public static SchemaWorkBudget.Admission validate(
+            Object schema, Object value, SchemaMode mode) {
+        return validate(schema, value, mode, SchemaWorkBudget.MAX_EXPANDED_WORK);
+    }
+
+    /**
+     * 一次输出校验并返回准入结论（PLAT-07）。
+     *
+     * <p>STRICT 与旧行为完全一致：预算拒绝抛 {@code Schema预算拒绝：} 异常。DEGRADED 只在
+     * “节点数 × 展开工作量”这一主维度超限时降级（{@link SchemaWorkBudget.Admission#degradable()}）：
+     * 跳过 networknt 的全量递归，只做两条顶层检查——根 type 与根 required 是否存在——然后把
+     * 未通过（admitted=false）的结论交还调用方去告警。正则/比较/扫描/数字/唯一性这五类
+     * “校验自身成本”上限不属于可降级范围，DEGRADED 下仍拒绝。未被降级的失败（类型不符、
+     * 必填缺失、引用非法、展开超限）也仍抛 {@link IllegalArgumentException}，所以降级永远不会
+     * 被读成“通过严格校验”。
+     */
+    public static SchemaWorkBudget.Admission validate(
+            Object schema, Object value, SchemaMode mode, long maxExpandedWork) {
+        Objects.requireNonNull(mode, "Schema校验模式不能为空");
+        var prepared = prepare(schema, maxExpandedWork);
         SchemaDeadline.check();
         var instance = Json.tree(value);
-        prepared.plan.admitInstance(instance, prepared.regex.programUnits());
+        var admission =
+                prepared
+                        .plan
+                        .admission(
+                                instance,
+                                prepared.regex.programUnits(),
+                                SchemaWorkBudget.MAX_INSTANCE_WORK);
+        if (!admission.admitted()) {
+            // 只有主维度（节点数 × 展开工作量）可降级；regex/comparison/scan/numeric/unique
+            // 是“校验本身的成本”边界，跳过后等于放弃资源保护，DEGRADED 下也照常拒绝。
+            if (mode == SchemaMode.STRICT || !admission.degradable()) admission.require();
+            topLevel(prepared.schema, instance);
+            SchemaDeadline.check();
+            return admission;
+        }
         var errors = prepared.validator.validate(instance);
         SchemaDeadline.check();
         if (!errors.isEmpty())
             throw new IllegalArgumentException(errors.iterator().next().toString());
+        return admission;
+    }
+
+    /**
+     * DEGRADED 的顶层检查：只做“根 type 对实例类型”与“根 required 的键存在”两件事，不递归深层。
+     *
+     * <p>这是有意限制：它保证形状明显错误（把数组当对象、缺主键）仍然失败，但不承诺深层语义；
+     * 告警字段 {@code SCHEMA_BUDGET_EXCEEDED} 就是告诉调用方“未做严格校验”，不能省略。
+     */
+    private static void topLevel(JsonNode schema, JsonNode instance) {
+        var type = schema.path("type");
+        if (!type.isMissingNode() && !type.isNull() && !matchesType(type, instance))
+            throw new IllegalArgumentException("实例不符合Schema根类型：" + type);
+        var required = schema.path("required");
+        if (required.isArray() && instance.isObject())
+            for (JsonNode name : required)
+                if (!instance.has(name.asText()))
+                    throw new IllegalArgumentException("实例缺少根必填字段：" + name.asText());
+    }
+
+    private static boolean matchesType(JsonNode declared, JsonNode instance) {
+        if (declared.isArray()) {
+            for (JsonNode type : declared)
+                if (type.isTextual() && matchesTypeName(type.asText(), instance)) return true;
+            return false;
+        }
+        return declared.isTextual() && matchesTypeName(declared.asText(), instance);
+    }
+
+    private static boolean matchesTypeName(String type, JsonNode instance) {
+        return switch (type) {
+            case "object" -> instance.isObject();
+            case "array" -> instance.isArray();
+            case "string" -> instance.isTextual();
+            case "number" -> instance.isNumber();
+            case "integer" -> instance.isIntegralNumber();
+            case "boolean" -> instance.isBoolean();
+            case "null" -> instance.isNull();
+            default -> false;
+        };
     }
 
     /**

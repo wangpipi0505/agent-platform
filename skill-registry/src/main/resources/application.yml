@@ -27,6 +27,13 @@ agent:
   # AP-S06：演示数据隔离开关。默认（生产）禁止 fixture 技能注入；本地演示/冒烟环境
   # 显式置 AGENT_DEMO_MODE=true 打开，见 skill/application/FixtureSkills。
   demo-mode: ${AGENT_DEMO_MODE:false}
+  # PLAT-07：输出 Schema 的实例校验预算。DEGRADED 只在“实例工作量超限”时降级为根 type/required
+  # 两条顶层检查并告警（validation.warning=SCHEMA_BUDGET_EXCEEDED）；类型/必填/引用失败仍然拒绝。
+  # STRICT 保留原预算拒绝（消息带 estimatedWork 与上限）。回调、治理、产物入库恒为 STRICT。
+  schema:
+    mode: ${AGENT_SCHEMA_MODE:DEGRADED}
+    # 只允许调低共享展开硬上限 8192（1..8192）；越界启动即失败，不能靠配置抬高安全边界。
+    max-expanded-work: ${AGENT_SCHEMA_MAX_EXPANDED_WORK:8192}
   # PLAT-21b 本地进程执行（PROCESS 适配器），由 skill/infra/ProcessAdapter 读取。
   # enabled 默认关闭：注册/编辑 PROCESS 技能不受影响，但执行前即返回 403 PROCESS_DISABLED，
   # 不创建进程、也不创建调用目录（开关只在执行期生效，目录层永远可以做契约校验）。

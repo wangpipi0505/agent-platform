@@ -10,6 +10,8 @@ import java.util.*;
  */
 public final class SchemaWorkBudget {
     public static final long MAX_EXPANDED_WORK = 8192;
+    /** 实例侧硬上限：调用方可以调低，任何配置或参数都不能抬高它。 */
+    public static final long MAX_INSTANCE_WORK = 2_000_000L;
     private static final List<String> MAPS =
             List.of(
                     "$defs",
@@ -239,6 +241,33 @@ public final class SchemaWorkBudget {
 
     private record Position(JsonNode node, List<String> children, long weight) {}
 
+    /**
+     * 一次实例校验的准入结论（PLAT-07）。预算拒绝是安全边界而不是异常情形：调用方要先拿到
+     * “未通过 + 估计工作量”才能自行降级为顶层校验并告警；{@link #require()} 保留 STRICT 路径的
+     * 原有异常语义与消息前缀，回调和治理等既有调用点不必改动。
+     */
+    public record Admission(boolean admitted, long estimatedWork, String reason) {
+        public Admission {
+            if (!admitted && reason == null) throw new IllegalArgumentException("预算拒绝必须说明原因");
+        }
+
+        /** STRICT：未通过时抛出既有 {@code Schema预算拒绝：} 异常。 */
+        public void require() {
+            if (!admitted) throw denied(reason);
+        }
+
+        /**
+         * 是否只因“节点数 × 展开工作量”这一主维度超限（PLAT-07 允许 DEGRADED 跳过的唯一一类）。
+         *
+         * <p>其余五维约束的是“执行校验本身的成本”（正则程序、比较、字符扫描、数字运算、唯一性），
+         * 它们被跳过就等于把资源保护降级掉，因此即使 DEGRADED 也必须照常拒绝。用 reason 里唯一
+         * 属于主维度的 {@code estimatedWork=} 判定，避免为降级另造第二套限额模型。
+         */
+        public boolean degradable() {
+            return !admitted && reason != null && reason.contains("estimatedWork=");
+        }
+    }
+
     public record Plan(
             List<String> locations,
             Set<String> expressions,
@@ -248,26 +277,51 @@ public final class SchemaWorkBudget {
             boolean characterScans,
             boolean numericOperations) {
         public void admitInstance(JsonNode instance, long regexPrograms) {
-            admitInstance(instance, regexPrograms, 2_000_000L);
+            admitInstance(instance, regexPrograms, MAX_INSTANCE_WORK);
         }
 
-        public void admitInstance(JsonNode instance, long regexPrograms, long maxInstanceWork) {
-            if (maxInstanceWork < 1 || maxInstanceWork > 2_000_000L)
+        /**
+         * 与 {@link #admitInstance(JsonNode, long, long)} 同一判定，但不抛异常：每次拒绝都带上
+         * estimatedWork 与触发的上限，供 DEGRADED 模式把“为什么降级”如实写进调用结果。
+         */
+        public Admission admission(JsonNode instance, long regexPrograms, long maxInstanceWork) {
+            if (maxInstanceWork < 1 || maxInstanceWork > MAX_INSTANCE_WORK)
                 throw new IllegalArgumentException("Schema实例限额无效");
             // Match the existing ArtifactStore receive ceiling. Lowering it to the
             // MCP transport ceiling would break valid offloaded HTTP results.
             var size = statistics(instance, 250000, 64 * 1024 * 1024, 100);
             // Bound all schema branches times instance positions. Large plain strings
             // need no character scanning by regex/comparison and remain admissible.
-            if (expandedWork * size.nodes > maxInstanceWork
-                    || regexPrograms * expandedWork * (size.chars + size.nodes) > 4_000_000L
-                    || (comparisons && expandedWork * (size.chars + size.nodes) > 4_000_000L)
-                    || (characterScans && expandedWork * size.chars > 4_000_000L)
-                    || (numericOperations
-                            && expandedWork * size.nodes * size.maxDigits * size.maxDigits
-                                    > 4_000_000L)
-                    || (uniqueItems && expandedWork * size.nodes * size.nodes > 2_000_000L))
-                throw denied("本次实例的校验工作量超过上限");
+            long estimatedWork = expandedWork * size.nodes;
+            if (estimatedWork > maxInstanceWork)
+                return refused(
+                        estimatedWork, "estimatedWork=" + estimatedWork + "，上限=" + maxInstanceWork);
+            long regexWork = regexPrograms * expandedWork * (size.chars + size.nodes);
+            if (regexWork > 4_000_000L)
+                return refused(estimatedWork, "regexWork=" + regexWork + "，上限=4000000");
+            long comparisonWork = expandedWork * (size.chars + size.nodes);
+            if (comparisons && comparisonWork > 4_000_000L)
+                return refused(estimatedWork, "comparisonWork=" + comparisonWork + "，上限=4000000");
+            long scanWork = expandedWork * size.chars;
+            if (characterScans && scanWork > 4_000_000L)
+                return refused(estimatedWork, "scanWork=" + scanWork + "，上限=4000000");
+            long numericWork =
+                    expandedWork * size.nodes * size.maxDigits * size.maxDigits;
+            if (numericOperations && numericWork > 4_000_000L)
+                return refused(estimatedWork, "numericWork=" + numericWork + "，上限=4000000");
+            long uniqueWork = expandedWork * size.nodes * size.nodes;
+            if (uniqueItems && uniqueWork > 2_000_000L)
+                return refused(estimatedWork, "uniqueWork=" + uniqueWork + "，上限=2000000");
+            return new Admission(true, estimatedWork, null);
+        }
+
+        private Admission refused(long estimatedWork, String workload) {
+            return new Admission(
+                    false, estimatedWork, "本次实例的校验工作量超过上限：" + workload);
+        }
+
+        public void admitInstance(JsonNode instance, long regexPrograms, long maxInstanceWork) {
+            admission(instance, regexPrograms, maxInstanceWork).require();
         }
     }
 

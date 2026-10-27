@@ -4,6 +4,7 @@ import static cn.agentplatform.skill.application.SkillCatalog.*;
 
 import cn.agentplatform.common.*;
 import cn.agentplatform.common.auth.AuthScheme;
+import cn.agentplatform.common.schema.SchemaWorkBudget;
 import cn.agentplatform.skill.domain.ProcessContract;
 import cn.agentplatform.skill.domain.SkillRules;
 
@@ -26,13 +27,50 @@ public class SkillAdapters {
             List<Map<String, Object>> fileRefs,
             String summary,
             JsonNode ontologyMeta,
-            String cardPayloadJson) {
+            String cardPayloadJson,
+            Validation validation) {
+        public Raw(
+                JsonNode structured,
+                List<Map<String, Object>> refs,
+                String summary,
+                JsonNode ontology,
+                String cardPayloadJson) {
+            this(structured, refs, summary, ontology, cardPayloadJson, null);
+        }
+
         public Raw(
                 JsonNode structured,
                 List<Map<String, Object>> refs,
                 String summary,
                 JsonNode ontology) {
-            this(structured, refs, summary, ontology, "");
+            this(structured, refs, summary, ontology, "", null);
+        }
+    }
+
+    /**
+     * 一次输出校验的可见结论（PLAT-07）：{@code mode=OK|DEGRADED}，降级时附
+     * {@code warning=SCHEMA_BUDGET_EXCEEDED} 与估计工作量。它随工具结果 envelope 落
+     * {@code skill.execution_fact.result}，调用方据此区分“严格通过”与“只做了顶层校验”。
+     */
+    public record Validation(String mode, String warning, long estimatedWork) {
+        public static final String OK = "OK";
+        public static final String DEGRADED = "DEGRADED";
+        public static final String BUDGET_EXCEEDED = "SCHEMA_BUDGET_EXCEEDED";
+
+        public static Validation of(SchemaWorkBudget.Admission admission) {
+            Objects.requireNonNull(admission, "Schema准入结论不能为空");
+            return admission.admitted()
+                    ? new Validation(OK, null, admission.estimatedWork())
+                    : new Validation(DEGRADED, BUDGET_EXCEEDED, admission.estimatedWork());
+        }
+
+        /** 通过时不写 warning 键：空告警会被前端读成“有告警但未说明”。 */
+        public Map<String, Object> asMap() {
+            var map = new LinkedHashMap<String, Object>();
+            map.put("mode", mode);
+            if (warning != null) map.put("warning", warning);
+            map.put("estimatedWork", estimatedWork);
+            return map;
         }
     }
 
@@ -71,6 +109,8 @@ public class SkillAdapters {
     private final AlgorithmAdapter algorithm;
     private final HttpAsyncAdapter asyncHttp;
     private final ProcessAdapter process;
+    private final SkillRules.SchemaMode schemaMode;
+    private final long maxExpandedWork;
 
     public SkillAdapters(ArtifactStore artifacts, AlgorithmAdapter algorithm) {
         this(artifacts, algorithm, null, null);
@@ -81,21 +121,63 @@ public class SkillAdapters {
         this(artifacts, algorithm, asyncHttp, null);
     }
 
+    /** 短构造保留给既有单测：输出校验按默认 DEGRADED 与共享展开上限运行。 */
+    public SkillAdapters(
+            ArtifactStore artifacts,
+            AlgorithmAdapter algorithm,
+            HttpAsyncAdapter asyncHttp,
+            ProcessAdapter process) {
+        this(
+                artifacts,
+                algorithm,
+                asyncHttp,
+                process,
+                SkillRules.SchemaMode.DEGRADED.name(),
+                SchemaWorkBudget.MAX_EXPANDED_WORK);
+    }
+
     /**
      * 容器注入的正式构造。PROCESS 是适配器的一支而不是旁路：只有装配了 {@link ProcessAdapter} 的进程才能执行
      * 本地进程技能，未装配时该类型按配置错误拒绝，而不是静默回退成别的调用方式。短构造保留给既有单测，
      * 它们只覆盖 HTTP/MCP/ALGORITHM。
+     *
+     * <p>PLAT-07：输出校验模式与展开预算在启动时校验。非法值直接让进程起不来，而不是静默回退到
+     * STRICT 或上限；{@code max-expanded-work} 只允许调低（1..8192），共享硬上限不能靠配置抬高。
      */
     @org.springframework.beans.factory.annotation.Autowired
     public SkillAdapters(
             ArtifactStore artifacts,
             AlgorithmAdapter algorithm,
             HttpAsyncAdapter asyncHttp,
-            ProcessAdapter process) {
+            ProcessAdapter process,
+            @org.springframework.beans.factory.annotation.Value("${agent.schema.mode:DEGRADED}")
+                    String schemaMode,
+            @org.springframework.beans.factory.annotation.Value(
+                            "${agent.schema.max-expanded-work:8192}")
+                    long maxExpandedWork) {
         this.artifacts = artifacts;
         this.algorithm = algorithm;
         this.asyncHttp = asyncHttp;
         this.process = process;
+        this.schemaMode = schemaMode(schemaMode);
+        this.maxExpandedWork = expansionLimit(maxExpandedWork);
+    }
+
+    private static SkillRules.SchemaMode schemaMode(String value) {
+        var text = Objects.toString(value, "").trim().toUpperCase(Locale.ROOT);
+        try {
+            return SkillRules.SchemaMode.valueOf(text);
+        } catch (IllegalArgumentException invalid) {
+            throw new IllegalStateException(
+                    "agent.schema.mode 只能为 STRICT 或 DEGRADED，当前=" + value);
+        }
+    }
+
+    private static long expansionLimit(long value) {
+        if (value < 1 || value > SchemaWorkBudget.MAX_EXPANDED_WORK)
+            throw new IllegalStateException(
+                    "agent.schema.max-expanded-work 必须在 1..8192 之间，当前=" + value);
+        return value;
     }
 
     public boolean asynchronous(Map<String, Object> contract) {
@@ -402,9 +484,14 @@ public class SkillAdapters {
         }
         JsonNode output = ArtifactStore.readJson(new ByteArrayInputStream(prefix));
         if (output == null) throw new Failure("OUTPUT_INVALID", false, "外部响应为空");
+        SchemaWorkBudget.Admission admission;
         try {
-            SkillRules.validate(
-                    contract.get("outputSchema"), Json.read(output.toString(), Object.class));
+            admission =
+                    SkillRules.validate(
+                            contract.get("outputSchema"),
+                            Json.read(output.toString(), Object.class),
+                            schemaMode,
+                            maxExpandedWork);
         } catch (IllegalArgumentException ex) {
             throw new Failure("OUTPUT_INVALID", false, "外部响应不符合输出Schema");
         }
@@ -432,7 +519,7 @@ public class SkillAdapters {
                 if (!json.isContainerNode()) throw new IllegalArgumentException("卡片模板必须为JSON对象或数组");
                 card = Json.write(renderCard(json, output));
             }
-            return new Raw(structured, refs, summary, ontology, card);
+            return new Raw(structured, refs, summary, ontology, card, Validation.of(admission));
         } catch (Failure ex) {
             throw ex;
         } catch (Exception ex) {

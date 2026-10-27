@@ -537,6 +537,10 @@ public class SkillExecution {
         result.put("structured", raw == null ? null : raw.structured());
         result.put("fileRefs", raw == null ? List.of() : raw.fileRefs());
         result.put("cardPayloadJson", raw == null ? "" : raw.cardPayloadJson());
+        // PLAT-07：校验结论跟随工具结果一起落 skill.execution_fact.result。DEGRADED 必须显式可见，
+        // 否则调用方会把“只做了顶层校验”误读成严格通过；通过时省略 warning 键。
+        if (raw != null && raw.validation() != null)
+            result.put("validation", raw.validation().asMap());
         result.put("isMock", mock);
         // PLAT-04：外部任务态与执行事实同源落库。无绑定时显式 null，避免上游把"缺字段"
         // 误当成"没有外部任务风险"；关闭回滚开关时同样返回 null。
