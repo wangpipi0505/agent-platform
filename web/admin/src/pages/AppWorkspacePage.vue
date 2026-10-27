@@ -6,6 +6,7 @@ import PageError from "../PageError.vue";
 import PageHeader from "../PageHeader.vue";
 import RunDetail from "../RunDetail.vue";
 import { usePageOperation, usePageTitle } from "../usePageOperation";
+import { isGateRejection, type GateRejection } from "../publish-gate";
 import AppOverviewPanel from "./workspace/AppOverviewPanel.vue";
 import AppPublishPanel from "./workspace/AppPublishPanel.vue";
 import AppRunPanel from "./workspace/AppRunPanel.vue";
@@ -40,6 +41,7 @@ const config = ref("{}");
 const refreshKey = ref(0);
 const precheck = ref<any>();
 const precheckStale = ref(false);
+const gateBlocked = ref<GateRejection | null>(null);
 const published = ref<any>();
 const evaluation = ref<any>();
 const evaluationNeedsCheck = ref(false);
@@ -85,6 +87,7 @@ async function load() {
 function detailReset() {
   precheck.value = null;
   precheckStale.value = false;
+  gateBlocked.value = null;
   published.value = null;
   evaluation.value = null;
   evaluationNeedsCheck.value = false;
@@ -129,10 +132,31 @@ async function check() {
   const requestedCode = code.value;
   const requestedRev = app.value?.draftRev;
   await operation(async () => {
-    const result = await api(
-      `/admin/apps/${requestedCode}/publish/precheck`,
-      "POST",
-    );
+    let result;
+    try {
+      result = await api(
+        `/admin/apps/${requestedCode}/publish/precheck`,
+        "POST",
+      );
+    } catch (e) {
+      if (isGateRejection(e)) {
+        // 门禁 409 是发布面板"为何被拦"的同屏素材：在此消费，不再弹全局错误条。
+        // 后端在抛 409 前已落完整检查快照，但响应体只带 code/message/traceId。
+        if (
+          route.fullPath === requestedPath &&
+          code.value === requestedCode &&
+          app.value?.draftRev === requestedRev
+        )
+          gateBlocked.value = {
+            status: e.status,
+            code: e.code,
+            message: e.message,
+            traceId: e.traceId,
+          };
+        return;
+      }
+      throw e;
+    }
     if (
       route.fullPath !== requestedPath ||
       code.value !== requestedCode ||
@@ -146,6 +170,7 @@ async function check() {
     )
       evaluation.value = null;
     precheck.value = result;
+    gateBlocked.value = null;
     evaluationNeedsCheck.value = false;
     precheckStale.value = false;
     requestNo.value = crypto.randomUUID();
@@ -177,16 +202,31 @@ async function commit() {
           evaluation.value.draftRev !== current.draftRev))
     )
       throw Error("评测尚未完成或报告未重新绑定，请重新预检");
-    published.value = await api(
-      `/admin/apps/${code.value}/publish/commit`,
-      "POST",
-      {
-        precheckId: current.precheckId,
-        draftRev: current.draftRev,
-        candidateSha256: current.candidateSha256,
-        idempotencyRequestNo: requestNo.value,
-      },
-    );
+    try {
+      published.value = await api(
+        `/admin/apps/${code.value}/publish/commit`,
+        "POST",
+        {
+          precheckId: current.precheckId,
+          draftRev: current.draftRev,
+          candidateSha256: current.candidateSha256,
+          idempotencyRequestNo: requestNo.value,
+        },
+      );
+    } catch (e) {
+      if (isGateRejection(e)) {
+        // commit 复核豁免（撤销/过期）返回同一 409：预检结果已不可用，交给面板说明。
+        gateBlocked.value = {
+          status: e.status,
+          code: e.code,
+          message: e.message,
+          traceId: e.traceId,
+        };
+        precheckStale.value = true;
+        return;
+      }
+      throw e;
+    }
     success("发布成功");
   });
 }
@@ -287,6 +327,8 @@ onMounted(() => void load());
       :evaluation="evaluation"
       :evaluation-working="evaluationWorking"
       :evaluation-needs-check="evaluationNeedsCheck"
+      :gate-blocked="gateBlocked"
+      :is-admin="auth.roles.includes('ADMIN')"
       @check="check"
       @commit="commit"
       @report="onEvaluationReport"

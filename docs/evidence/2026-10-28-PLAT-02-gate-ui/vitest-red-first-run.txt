@@ -1,0 +1,29 @@
+命令：npx vitest run tests/publish-gate.test.ts（web/ 下）
+时点：实现 publish-gate.ts 之前（测试先行）
+结果原文：
+
+ RUN  v4.1.12 G:/207/项目/算法重组工具/代码/agent-platform/web
+
+  ❯ tests/publish-gate.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/publish-gate.test.ts [ tests/publish-gate.test.ts ]
+Error: Cannot find module '../admin/src/publish-gate' imported from G:/207/项目/算法重组工具/代码/agent-platform/web/tests/publish-gate.test.ts
+  ❯ tests/publish-gate.test.ts:7:1
+    5| import { describe, expect, it, vi } from "vitest";
+    6| import * as Vue from "vue";
+    7| import * as gate from "../admin/src/publish-gate";
+    |        ^
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+
+ Test Files  1 failed (1)
+      Tests  no tests
+
+第二次中间态（publish-gate.ts 已实现、面板已改，SFC 挂载用例尚未过环境关）：
+ Tests  6 failed | 15 passed (21)
+其中：5 例因面板既有 import.meta.env 无法 CJS 化（测试挂载器替换后消除）、
+1 例断言红（"lists failed checks…" 期望提示含"不可"，实现文案为"不适用"，属用例措辞修正）；
+随后 4 例因面板用 window.confirm 在 node 环境未定义而红，按 AppWorkspacePage 既有裸
+confirm 惯例改为 confirm() 后转绿（危险确认仍保留，经 vi.stubGlobal 桩定验证）。
