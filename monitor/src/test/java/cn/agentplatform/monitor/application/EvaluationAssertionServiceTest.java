@@ -379,6 +379,52 @@ class EvaluationAssertionServiceTest {
         assertEquals(4, calls.get(), "恢复沿用冻结用例的原有run");
     }
 
+    /**
+     * 断言确实参与判分：同一份 CHAT 输出（比 expected 多出 usage/actualModel）分别用 CONTAINS 与 EXACT
+     * 判分，只有模式不同——CONTAINS 通过、EXACT 失败，排除“实际仍按 EXACT 判”的假通过。
+     */
+    @Test
+    void containsAcceptsSupersetOutputThatExactRejects() {
+        var chatOutput =
+                obj("text", "ok", "usage", Map.of("total_tokens", 12), "actualModel", "m-1");
+        outputs.put("contains", chatOutput);
+        outputs.put("exact", chatOutput);
+        var cases =
+                List.of(
+                        safeCase(),
+                        Map.of(
+                                "id",
+                                "contains",
+                                "inputs",
+                                Map.of(),
+                                "expected",
+                                "ok",
+                                "safety",
+                                false,
+                                "assertion",
+                                "CONTAINS"),
+                        Map.of(
+                                "id",
+                                "exact",
+                                "inputs",
+                                Map.of(),
+                                "expected",
+                                "ok",
+                                "safety",
+                                false,
+                                "assertion",
+                                "EXACT"));
+        var report = service.evaluate(request("9".repeat(64), cases));
+
+        var results = results(report);
+        assertTrue((Boolean) results.get("contains").get("passed"));
+        assertEquals("CONTAINS", results.get("contains").get("assertion"));
+        assertFalse((Boolean) results.get("exact").get("passed"));
+        assertEquals("EXACT", results.get("exact").get("assertion"));
+        assertEquals("ASSERTION_EXACT_MISMATCH", results.get("exact").get("reasonCode"));
+        assertEquals(3, calls.get(), "每个用例各执行一次，判定差异只能来自断言模式");
+    }
+
     private static Map<String, Object> obj(Object... kv) {
         var map = new LinkedHashMap<String, Object>();
         for (int i = 0; i < kv.length; i += 2) map.put(kv[i].toString(), kv[i + 1]);

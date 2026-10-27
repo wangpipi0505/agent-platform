@@ -228,7 +228,14 @@ public class TestInputService {
         var a = actor();
         fields(
                 body,
-                Set.of("requestId", "revision", "datasetVersion", "caseId", "expected", "safety"));
+                Set.of(
+                        "requestId",
+                        "revision",
+                        "datasetVersion",
+                        "caseId",
+                        "expected",
+                        "safety",
+                        "assertion"));
         String request = text(body, "requestId"),
                 version = text(body, "datasetVersion"),
                 caseId = text(body, "caseId");
@@ -254,6 +261,14 @@ public class TestInputService {
         if (((Number) input.get("revision")).longValue() != rev)
             throw fail(409, "TEST_INPUT_REVISION_CONFLICT", "待提升的输入修订号已变更");
         validate(d, Json.tree(input.get("inputs")));
+        // 断言配置与 expected/safety 同权透传；缺失时绝不补写 assertion 键，
+        // 让历史用例继续走 EXACT 语义（契约在 monitor 保存期统一校验）。
+        var promotedCase = new LinkedHashMap<String, Object>();
+        promotedCase.put("id", caseId);
+        promotedCase.put("inputs", input.get("inputs"));
+        promotedCase.put("expected", body.path("expected"));
+        promotedCase.put("safety", body.path("safety").asBoolean());
+        if (body.has("assertion")) promotedCase.put("assertion", body.get("assertion"));
         var payload =
                 Json.tree(
                         Map.of(
@@ -274,16 +289,7 @@ public class TestInputService {
                                         "inputsSha256",
                                         Digest.sha256(Json.canonical(input.get("inputs")))),
                                 "cases",
-                                List.of(
-                                        Map.of(
-                                                "id",
-                                                caseId,
-                                                "inputs",
-                                                input.get("inputs"),
-                                                "expected",
-                                                body.path("expected"),
-                                                "safety",
-                                                body.path("safety").asBoolean()))));
+                                List.of(promotedCase)));
         // Optimistic PG snapshot: INSERT ... SELECT verifies revision at the same statement
         // snapshot.
         // PostgreSQL ON CONFLICT arbitrates parallel retries; neither local transaction spans HTTP.

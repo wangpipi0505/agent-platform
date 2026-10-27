@@ -1,6 +1,7 @@
 package cn.agentplatform.monitor.application;
 
 import cn.agentplatform.common.*;
+import cn.agentplatform.monitor.domain.EvaluationAssertions;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -14,7 +15,8 @@ import java.sql.*;
 import java.util.*;
 
 /**
- * M4 single-case promotion. Cases retain EvaluationService's exact id/inputs/expected/safety shape.
+ * M4 single-case promotion. Cases retain EvaluationService's id/inputs/expected/safety/assertion
+ * shape; assertion is validated with the same contract and frozen in canonical form.
  */
 @Service
 public class DatasetService {
@@ -71,6 +73,36 @@ public class DatasetService {
             throw fail(400, "INVALID_DATASET", "应用编码或数据集版本无效");
     }
 
+    /** JsonNode 转 Java 值：断言契约按 Object 形状（模式名/Map/数值）校验，不直接吃 JsonNode。 */
+    private static Object plain(JsonNode node) {
+        return Json.read(Json.write(node), Object.class);
+    }
+
+    /**
+     * 保存期断言校验。错误码与文案原样来自 EvaluationAssertions（EVALUATION_ASSERTION_INVALID /
+     * EVALUATION_ASSERTION_SAFETY_CONSTRAINT / EVALUATION_ASSERTION_UNKNOWN），不包装成通用数据集错误。
+     */
+    private static EvaluationAssertions.Spec assertionSpec(JsonNode c) {
+        try {
+            return EvaluationAssertions.requireValid(
+                    c.has("assertion") ? plain(c.get("assertion")) : null,
+                    plain(c.get("expected")),
+                    c.path("safety").asBoolean());
+        } catch (EvaluationAssertions.InvalidAssertion e) {
+            throw fail(400, e.code(), e.userMessage());
+        }
+    }
+
+    /** 仅显式 assertion 才规范化重写；缺失时原样保留数组，历史数据集字节不变。 */
+    private static JsonNode canonicalCases(
+            JsonNode cases, JsonNode c, EvaluationAssertions.Spec spec) {
+        if (!c.has("assertion")) return cases;
+        var normalized = new LinkedHashMap<String, Object>();
+        c.fields().forEachRemaining(e -> normalized.put(e.getKey(), plain(e.getValue())));
+        normalized.put("assertion", spec.canonical());
+        return Json.tree(List.of(normalized));
+    }
+
     public Map<String, Object> promote(JsonNode b) {
         var a = actor(true);
         fields(b, Set.of("appCode", "datasetVersion", "requestId", "source", "cases"));
@@ -87,10 +119,14 @@ public class DatasetService {
         if (!cases.isArray() || cases.size() != 1)
             throw fail(400, "INVALID_DATASET", "提升必须包含一个明确用例");
         var c = cases.get(0);
-        fields(c, Set.of("id", "inputs", "expected", "safety"));
+        fields(c, Set.of("id", "inputs", "expected", "safety", "assertion"));
         text(c, "id");
         if (!c.path("inputs").isObject() || !c.has("expected") || !c.path("safety").isBoolean())
             throw fail(400, "INVALID_DATASET", "用例必须包含inputs对象、显式expected和safety布尔值");
+        // 断言与用例字段同权进入白名单：保存期用评测契约校验，非法配置在这里拒绝，
+        // 数据集与用例请求摘要都尚未写入。缺失 assertion 保持缺失（EXACT 语义），不补写字段。
+        var spec = assertionSpec(c);
+        JsonNode frozen = canonicalCases(cases, c, spec);
         if (!Digest.sha256(Json.canonical(c.path("inputs"))).equals(text(source, "inputsSha256")))
             throw fail(400, "SOURCE_DIGEST_MISMATCH", "来源输入摘要不匹配");
         String digest = Digest.sha256(Json.canonical(b));
@@ -105,8 +141,8 @@ public class DatasetService {
                             a.tenantId(),
                             code,
                             version,
-                            Json.write(cases),
-                            Digest.sha256(Json.canonical(cases)),
+                            Json.write(frozen),
+                            Digest.sha256(Json.canonical(frozen)),
                             a.principalId(),
                             request,
                             digest,
