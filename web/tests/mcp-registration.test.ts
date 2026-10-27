@@ -5,6 +5,17 @@ import ts from 'typescript';
 import * as Vue from 'vue';
 import { describe, expect, it, vi } from 'vitest';
 
+// SFC 的相对导入本应相对组件文件（admin/src）解析，但这里把组件转成 CommonJS 后从 tests/
+// 调 require，相对路径会错位到 agent-platform/shared。shared 模块零依赖，单独按 web/shared 解析并转译。
+function sharedModule(id: string, fallback: NodeRequire): Record<string, unknown> {
+  const name = id.slice(id.lastIndexOf('/shared/') + '/shared/'.length).replace(/\.ts$/, '');
+  const source = readFileSync(new URL(`../shared/${name}.ts`, import.meta.url), 'utf8');
+  const code = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
+  const loaded: { exports: Record<string, unknown> } = { exports: {} };
+  new Function('require', 'exports', code)(fallback, loaded.exports);
+  return loaded.exports;
+}
+
 // Real SFC setup/watchers; the browser fixture separately exercises rendered controls.
 function mount(name: string, props: any, api: any = vi.fn(async (..._args: any[]) => ({}))) {
   const { descriptor, errors } = parse(readFileSync(new URL('../admin/src/' + name + '.vue', import.meta.url), 'utf8'));
@@ -12,7 +23,7 @@ function mount(name: string, props: any, api: any = vi.fn(async (..._args: any[]
   const code = ts.transpileModule(compileScript(descriptor, { id: name }).content, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
   const auth = Vue.reactive({ token: 'fixture-one', roles: ['EDITOR', 'ADMIN'], user: { tenantId: 'tenant-one', principalId: 'owner' }, edit: true, admin: true, can(permission: string) { return !!this.token && (permission === 'admin' ? this.admin : this.edit); } });
   const exports: any = {}, require = createRequire(import.meta.url);
-  new Function('require', 'exports', code)((id: string) => id === 'vue' ? Vue : id.endsWith('/api') ? { useApi: () => api, useAuth: () => auth } : id.endsWith('.vue') ? {} : id.endsWith('/controlled-test') ? { completedControlledCall: () => false } : id.endsWith('/service-access') ? { serviceAccess: () => null, probeView: () => ({ label: '尚未探测', type: 'info', detail: '' }) } : require(id), exports);
+  new Function('require', 'exports', code)((id: string) => id === 'vue' ? Vue : id.endsWith('/api') ? { useApi: () => api, useAuth: () => auth } : id.endsWith('.vue') ? {} : id.endsWith('/controlled-test') ? { completedControlledCall: () => false } : id.endsWith('/service-access') ? { serviceAccess: () => null, probeView: () => ({ label: '尚未探测', type: 'info', detail: '' }) } : id.includes('/shared/') ? sharedModule(id, require) : require(id), exports);
   exports.default.render = () => null;
   const renderer = Vue.createRenderer<any, any>({ createComment: () => ({}), insert() {}, remove() {}, parentNode: () => null, nextSibling: () => null, createElement: () => ({}), createText: () => ({}), setText() {}, setElementText() {}, patchProp() {} });
   const input = Vue.reactive(props), app = renderer.createApp({ render: () => Vue.h(exports.default, input) });

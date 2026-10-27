@@ -1,13 +1,17 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import OpenApiImport from "./OpenApiImport.vue";
+import { analyzeSchema } from "../../shared/schema-dialect";
 const props = defineProps<{ initial: any }>();
 const emit = defineEmits<{ save: [value: any]; "open-imported": [code: string] }>();
 const mode = ref("manual");
 const step = ref(0);
 const value = ref(JSON.parse(JSON.stringify(props.initial)));
-const input = ref(JSON.stringify(value.value.inputSchema, null, 2));
-const output = ref(JSON.stringify(value.value.outputSchema, null, 2));
+const input = ref(JSON.stringify(value.value.inputSchema, null, 2) ?? "");
+const output = ref(JSON.stringify(value.value.outputSchema, null, 2) ?? "");
+// 只读方言提示：不改变 input/output 的解析时机与提交路径，只把可空写法与明显问题显示出来。
+const inputAnalysis = computed(() => analyzeSchema(input.value));
+const outputAnalysis = computed(() => analyzeSchema(output.value));
 const roles = ref<string>((value.value.guard?.roles || []).join(", "));
 const attributes = ref(JSON.stringify(value.value.guard?.attributes || {}, null, 2));
 const steps = [
@@ -98,12 +102,38 @@ function next() {
           :max="300000" /></el-form-item></template
     ><template v-if="step === 2"
       ><el-form-item label="输入 JSON Schema"
-        ><el-input v-model="input" type="textarea" :rows="7" /></el-form-item
+        ><el-input v-model="input" type="textarea" :rows="7" />
+        <div style="width: 100%; margin-top: 0.5rem">
+          <el-alert
+            v-for="(problem, index) in inputAnalysis.problems.slice(0, 5)"
+            :key="index"
+            :title="problem.path ? `${problem.path}: ${problem.message}` : problem.message"
+            :type="inputAnalysis.ok ? 'warning' : 'error'"
+            :closable="false"
+            show-icon
+          />
+          <el-text v-if="inputAnalysis.nullable.length" size="small" type="info"
+            >已识别 {{ inputAnalysis.nullable.length }} 个可空字段</el-text
+          >
+        </div></el-form-item
       ><el-form-item label="输出 JSON Schema"
         ><el-input
           v-model="output"
           type="textarea"
-          :rows="7" /></el-form-item></template
+          :rows="7" />
+        <div style="width: 100%; margin-top: 0.5rem">
+          <el-alert
+            v-for="(problem, index) in outputAnalysis.problems.slice(0, 5)"
+            :key="index"
+            :title="problem.path ? `${problem.path}: ${problem.message}` : problem.message"
+            :type="outputAnalysis.ok ? 'warning' : 'error'"
+            :closable="false"
+            show-icon
+          />
+          <el-text v-if="outputAnalysis.nullable.length" size="small" type="info"
+            >已识别 {{ outputAnalysis.nullable.length }} 个可空字段</el-text
+          >
+        </div></el-form-item></template
     ><template v-if="step === 3"
       ><el-form-item
         v-for="[k, label] in [
