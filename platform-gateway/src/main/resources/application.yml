@@ -7,6 +7,10 @@ spring:
   threads:
     virtual:
       enabled: true
+  servlet:
+    multipart:
+      # 网关只做字节流转发，绝不解析 multipart；否则上游收不到 part 边界。
+      enabled: false
   datasource:
     url: ${AGENT_DB_URL:jdbc:postgresql://127.0.0.1:25432/agent_platform_v12?currentSchema=gateway}
     username: ${AGENT_DB_USER:agent_v12}

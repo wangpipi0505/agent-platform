@@ -479,6 +479,80 @@ public class ArtifactStore implements AutoCloseable {
                 "结果已转存，请使用受控下载查看");
     }
 
+    /**
+     * 上传的是调用输入，不是某次运行的结果。使用独立的 r_upload_* 归属域，避免把输入伪装成执行产物；
+     * download/cleanup 仍复用同一张表，保证租户、principal、有效期和物理键只有一条权威记录。
+     */
+    public Map<String, Object> upload(String contentType, long size, InputStream source) {
+        var client = client();
+        var actor = Actor.current();
+        if (db == null) throw new IllegalStateException("ARTIFACT_UPLOAD_UNAVAILABLE");
+        if (size < 0 || size > MAX_ARTIFACT_BYTES)
+            throw new PlatformException(413, "ARTIFACT_TOO_LARGE", "文件超过 64MB 上限");
+        String type = contentType == null || contentType.isBlank() ? "application/octet-stream" : contentType;
+        if (type.length() > 128)
+            throw new PlatformException(400, "ARTIFACT_CONTENT_TYPE_INVALID", "文件类型过长");
+        String id = "art_" + UUID.randomUUID().toString().replace("-", "");
+        String runId = "r_upload_" + UUID.randomUUID().toString().replace("-", "");
+        String bucket = configuration.get("AGENT_MINIO_BUCKET");
+        String key = Digest.sha256(actor.tenantId()) + "/artifacts/" + id + ".bin";
+        db.update(
+                "insert into"
+                    + " skill.artifact(artifact_id,tenant_id,principal_id,run_id,call_id,bucket,object_key,state,content_type,expires_at,cleanup_after)"
+                    + " values(?,?,?,?,?,?,?,'UPLOADING',?,now()+interval '7"
+                    + " days',now()+interval '7 days')",
+                id,
+                actor.tenantId(),
+                actor.principalId(),
+                runId,
+                1L,
+                bucket,
+                key,
+                type);
+        try {
+            var digest = MessageDigest.getInstance("SHA-256");
+            var bounded = new BoundedStream(source, MAX_ARTIFACT_BYTES);
+            try (var checked = new DigestInputStream(bounded, digest)) {
+                client.putObject(
+                        PutObjectArgs.builder()
+                                .bucket(bucket)
+                                .object(key)
+                                .contentType(type)
+                                .stream(checked, size, 5 * 1024 * 1024)
+                                .build());
+            }
+            String sha = HexFormat.of().formatHex(digest.digest());
+            int changed =
+                    db.update(
+                            "update skill.artifact set state='READY',sha256=?,size_bytes=?,updated_at=now()"
+                                    + " where tenant_id=? and artifact_id=? and state='UPLOADING'",
+                            sha,
+                            bounded.count,
+                            actor.tenantId(),
+                            id);
+            if (changed != 1) throw new IllegalStateException("ARTIFACT_STATE_CHANGED");
+            return Map.of(
+                    "artifactId", id,
+                    "downloadUrl", "/admin/artifacts/" + id + "/download",
+                    "sha256", sha,
+                    "bytes", bounded.count,
+                    "contentType", type);
+        } catch (Exception ex) {
+            try {
+                db.update(
+                        "update skill.artifact set state='CLEANUP_PENDING',last_error_code='UPLOAD_FAILED',"
+                                + "cleanup_after=now(),updated_at=now() where tenant_id=? and artifact_id=?",
+                        actor.tenantId(),
+                        id);
+                deleteObject(actor.tenantId(), id, bucket, key);
+            } catch (Exception cleanupFailure) {
+                // 清理失败保留 CLEANUP_PENDING，由有界恢复任务重试同一键。
+            }
+            if (ex instanceof PlatformException platform) throw platform;
+            throw new PlatformException(503, "ARTIFACT_STORAGE_UNAVAILABLE", "文件暂不可上传，请稍后重试");
+        }
+    }
+
     /** 外部结果只可引用同tenant/principal/run的既有opaque产物；URL/物理键均不是授权凭据。 */
     public Map<String, Object> controlledReference(Map<String, Object> value, String runId) {
         if (!value.keySet().equals(Set.of("artifactId")) || runId == null)

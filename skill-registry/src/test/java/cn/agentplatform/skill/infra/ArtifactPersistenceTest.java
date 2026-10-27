@@ -91,6 +91,28 @@ class ArtifactPersistenceTest {
     }
 
     @Test
+    void uploadedInputIsOwnerScopedAndDownloadableWithoutAnExecution() throws Exception {
+        byte[] body = "satellite,tle\n1,line".getBytes(StandardCharsets.UTF_8);
+        var ref = store.upload("text/csv", body.length, new ByteArrayInputStream(body));
+        String id = ref.get("artifactId").toString();
+        assertEquals("/admin/artifacts/" + id + "/download", ref.get("downloadUrl"));
+        var row =
+                db.queryForMap(
+                        "select * from skill.artifact where tenant_id=? and artifact_id=?",
+                        tenant,
+                        id);
+        assertEquals("READY", row.get("state"));
+        assertTrue(row.get("run_id").toString().startsWith("r_upload_"));
+        assertEquals("text/csv", row.get("content_type"));
+        try (var download = store.download(id, null)) {
+            assertArrayEquals(body, download.source().readAllBytes());
+            assertEquals("text/csv", download.contentType());
+        }
+        identity(tenant, "other");
+        assertThrows(PlatformException.class, () -> store.download(id, null));
+    }
+
+    @Test
     void fiveMegabyteArtifactIsOpaquePersistentAndDownloadableOnlyByOwnerAndRun() throws Exception {
         var ref = upload(5 * 1024 * 1024);
         String id = ref.get("artifactId").toString();

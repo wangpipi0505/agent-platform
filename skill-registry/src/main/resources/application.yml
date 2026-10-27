@@ -7,6 +7,11 @@ spring:
   threads:
     virtual:
       enabled: true
+  servlet:
+    multipart:
+      # 与 ArtifactStore 的 64MiB 硬上限一致；请求体留 1MiB 给 multipart 边界。
+      max-file-size: 64MB
+      max-request-size: 65MB
   datasource:
     url: ${AGENT_DB_URL:jdbc:postgresql://127.0.0.1:25432/agent_platform_v12?currentSchema=skill}
     username: ${AGENT_DB_USER:agent_v12}
