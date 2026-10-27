@@ -33,6 +33,10 @@ public class ContextAssembler {
                                 Json.tree(prompt), Json.tree(Map.of("input", inputs)))
                         .asText();
         if (prompt.contains("${")) throw new IllegalArgumentException("PROMPT_VARIABLE_MISSING");
+        // 本体文本是数据而非模板：必须在 Values.resolve 与 ${ 守卫之后追加，
+        // 否则示例问答里的 ${...} 会被当作变量替换或触发 PROMPT_VARIABLE_MISSING。
+        String ontology = config.path("ontologyContext").asText("");
+        if (!ontology.isBlank()) prompt += "\n\n[本体上下文]\n" + ontology;
         List<Map<String, Object>> messages = new ArrayList<>();
         messages.add(Map.of("role", "system", "content", prompt));
         messages.addAll(sessionHistory);

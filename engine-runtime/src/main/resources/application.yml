@@ -50,6 +50,11 @@ agent:
     skill: ${AGENT_SKILL_URL:http://127.0.0.1:18083}
     model: ${AGENT_MODEL_URL:http://127.0.0.1:18084}
     monitor: ${AGENT_MONITOR_URL:http://127.0.0.1:18085}
+  ontology:
+    # 未配置时启动不报错；声明了 config.ontology 的运行会在冻结阶段得到 503。
+    base-url: ${AGENT_ONTOLOGY_URL:}
+    # 只接受 vault: 引用；密钥值不得进入 yml 或日志。
+    api-key-ref: ${AGENT_ONTOLOGY_API_KEY_REF:}
 management:
   endpoints:
     web:

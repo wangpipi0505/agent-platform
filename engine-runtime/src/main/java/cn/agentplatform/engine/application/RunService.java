@@ -29,10 +29,18 @@ public class RunService {
     private final RunAuthority runAuthority;
     private final RunAuthorityStore admissionStore;
     private final Clock clock;
+    /**
+     * 可选装配：未配置本体地址的环境不注入。冻结阶段是唯一取包点，之后 assemble 只读文本。
+     */
+    private OntologyContextPacks contextPacks;
+
     private final ModelInputMaterials initialMaterials;
     private final ChunkBus initialChunks;
     private final String owner = UUID.randomUUID().toString();
     private final Set<Long> activeNodes = java.util.concurrent.ConcurrentHashMap.newKeySet();
+    private static final java.util.regex.Pattern UUID_PATTERN =
+            java.util.regex.Pattern.compile(
+                    "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}");
 
     public RunService(TraceStore s, RuntimeClients c, FlowDriver f, AgentDriver a) {
         this(s, c, f, a, new RunScheduler(s));
@@ -113,6 +121,15 @@ public class RunService {
 
     public boolean iamEnabled() {
         return clients != null && clients.iamEnabled();
+    }
+
+    /**
+     * Setter 注入保持既有构造器夹具不变（测试大量直接 new RunService(...)）。
+     * required=false：未配置本体地址时不阻断启动，但声明 ontology 的运行会得到 503。
+     */
+    @Autowired(required = false)
+    public void contextPacks(OntologyContextPacks packs) {
+        this.contextPacks = packs;
     }
 
     private static final String REPLAY_METADATA =
@@ -1195,8 +1212,41 @@ public class RunService {
         }
         config.set("frozenPrompts", prompts);
         config.set("tools", tools);
+        applyOntologyContext(config, snapshot, actor);
         snapshot.set("config", config);
         return snapshot;
+    }
+
+    private void applyOntologyContext(
+            com.fasterxml.jackson.databind.node.ObjectNode config,
+            com.fasterxml.jackson.databind.node.ObjectNode snapshot,
+            Actor actor) {
+        JsonNode declared = config.path("ontology");
+        if (declared.isMissingNode() || declared.isNull()) return;
+        if (!declared.isObject())
+            throw new PlatformException(400, "CONTEXT_PACK_CONFIG_INVALID", "本体上下文配置必须是对象");
+        // 空占位对象视为未声明，保持既有无本体应用的冻结结果逐字节不变。
+        if (declared.isEmpty()) return;
+        String space = declared.path("space").asText("").trim();
+        String releaseId = declared.path("releaseId").asText("").trim();
+        if (!UUID_PATTERN.matcher(space).matches() || !UUID_PATTERN.matcher(releaseId).matches())
+            throw new PlatformException(
+                    400,
+                    "CONTEXT_PACK_CONFIG_INVALID",
+                    "本体上下文必须声明 space 与 releaseId，且均为 UUID");
+        if (contextPacks == null)
+            throw new PlatformException(503, "CONTEXT_PACK_UNAVAILABLE", "本体上下文暂不可用，请稍后重试");
+        // 冻结阶段唯一取包点；包文本写进 config 后，assemble 只读不触网。
+        var pack = contextPacks.fetch(actor.tenantId(), space, releaseId, actor);
+        var rendered = ContextPackText.renderDetailed(pack.body());
+        if (!rendered.text().isBlank()) config.put("ontologyContext", rendered.text());
+        // 审计四字段只落 snapshot，不存正文；context_pack 列由统一迁移提供，写入路径不在本卡范围内。
+        var audit = snapshot.putObject("contextPack");
+        audit.put("space", space);
+        audit.put("releaseId", releaseId);
+        audit.put("sha256", pack.sha256());
+        audit.put("fetchedAt", clock.instant().toString());
+        audit.put("truncated", rendered.truncated());
     }
 
     public void drive(long rid, Actor actor) {
