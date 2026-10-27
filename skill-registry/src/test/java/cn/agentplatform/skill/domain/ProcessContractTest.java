@@ -141,6 +141,86 @@ class ProcessContractTest {
         assertInvalid(Json.read("null"), "process");
     }
 
+    // ---- 与契约 §4.2 的 executable + args 形态对齐（T21c-fix）----
+
+    @Test
+    void executableAndArgsAreNormalizedToCommand() {
+        ObjectNode json = Json.object();
+        json.put("executable", javaExecutable());
+        json.putArray("args").add("-jar").add("worker.jar").add("--mode").add("search");
+
+        ProcessContract contract = ProcessContract.parse(json);
+
+        assertEquals(
+                java.util.List.of(javaExecutable(), "-jar", "worker.jar", "--mode", "search"),
+                contract.command());
+    }
+
+    @Test
+    void executableWithoutArgsIsSingleElementCommand() {
+        ObjectNode json = Json.object();
+        json.put("executable", javaExecutable());
+
+        assertEquals(java.util.List.of(javaExecutable()), ProcessContract.parse(json).command());
+    }
+
+    @Test
+    void commandWinsWhenBothFormsArePresent() {
+        ObjectNode json = Json.object();
+        json.putArray("command").add(javaExecutable()).add("-version");
+        json.put("executable", "C:/nowhere/other.exe");
+
+        assertEquals(2, ProcessContract.parse(json).command().size());
+    }
+
+    @Test
+    void documentedAliasesAreAccepted() {
+        ObjectNode json = Json.object();
+        json.put("executable", javaExecutable());
+        json.put("workDir", root.toAbsolutePath().toString());
+        json.put("maxStdoutBytes", 65536);
+        json.putObject("envAllowlist").put("AGENT_PROCESS_X", root.toString());
+        json.put("cleanup", "ALWAYS");
+
+        ProcessContract contract = ProcessContract.parse(json);
+
+        assertEquals(root.toAbsolutePath().toString(), contract.workDirRoot());
+        assertEquals(65536, contract.maxOutputBytes());
+        assertEquals(root.toString(), contract.allowedEnv().get("AGENT_PROCESS_X"));
+    }
+
+    @Test
+    void unknownCleanupValueIsRejected() {
+        ObjectNode json = base();
+        json.put("cleanup", "NEVER");
+
+        assertInvalid(json, "cleanup");
+    }
+
+    @Test
+    void envAllowlistArrayIsRejectedWithGuidance() {
+        ObjectNode json = base();
+        json.putArray("envAllowlist").add("JAVA_HOME").add("TEMP");
+
+        assertInvalid(json, "envAllowlist");
+    }
+
+    @Test
+    void maxStderrBytesIsRangeChecked() {
+        ObjectNode ok = base();
+        ok.put("maxStderrBytes", 65536);
+        ProcessContract.parse(ok);
+
+        ObjectNode bad = base();
+        bad.put("maxStderrBytes", 0);
+        assertInvalid(bad, "maxStderrBytes");
+    }
+
+    @Test
+    void missingCommandAndExecutableIsRejected() {
+        assertInvalid(Json.object(), "executable");
+    }
+
     private ObjectNode base() {
         ObjectNode json = Json.object();
         json.putArray("command").add(javaExecutable());

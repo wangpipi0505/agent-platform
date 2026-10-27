@@ -173,3 +173,18 @@ mvn -B -ntp -pl skill-registry test \
 - `docs/evidence/2026-10-27-PLAT-21c-protocol/{README.md,red-baseline.log,red-mutation.log,green.log,regression.log}`
 
 未改动：`SkillRules`、`pom.xml`、V 迁移、`application.yml`、前端、其它模块。
+
+## 7. 契约形态对齐（2026-10-27 22:2x，T21c-fix）
+
+提交后复核发现契约文档 §4.1/§4.2 与实现用了两套字段名，算法侧按文档写清单会发布失败：
+
+| 契约文档（旧） | 实现 | 处理 |
+| --- | --- | --- |
+| `protocol: "JSON_STDIO_V1"` | `algorithm-process/1`（§4.4 信封） | 文档统一为 `algorithm-process/1`，删掉 `protocolVersion` 双字段 |
+| `executable` + `args` | `command` 数组 | 代码两种都收，归一到同一 argv；新交付用 `command` |
+| `workDir` / `maxStdoutBytes` | `workDirRoot` / `maxOutputBytes` | 代码接受别名；文档改为规范名 |
+| `envAllowlist`（继承名单） | `env` 对象（显式值） | 数组形态**明确拒绝**并提示改用 `env`，不实现"允许继承" |
+| `maxStderrBytes` | 固定保留尾部 2 KiB | 只做范围校验，不改变保留策略（文档已注明） |
+
+测试：`ProcessContractTest` 15→17 例（新增 `executable+args` 归一、无 args、两形态并存 command 胜出、文档别名、`cleanup` 非法值、`envAllowlist` 数组拒绝、`maxStderrBytes` 越界），
+连同 `ProcessAdapterTest` 共 28/28；T21c 全套 8 类 **64/64** 绿，BUILD SUCCESS。

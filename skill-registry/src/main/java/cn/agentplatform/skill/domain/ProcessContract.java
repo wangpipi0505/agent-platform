@@ -124,17 +124,70 @@ public record ProcessContract(
         if (contract == null || !contract.isObject())
             throw invalid("字段 process 必须是 JSON 对象");
 
-        List<String> command = parseCommand(contract.get("command"));
-        String workDirRoot = parseWorkDirRoot(contract.get("workDirRoot"));
+        // 与《算法进程接入-平台侧方案与契约》§4.2 对齐：契约写 executable + args，自测清单写 command 数组。
+        // 两种写法归一到同一个 argv，避免"按文档写的清单发布不了、按平台写法写的清单算法侧不认"。
+        List<String> command =
+                contract.has("command")
+                        ? parseCommand(contract.get("command"))
+                        : parseExecutable(contract.get("executable"), contract.get("args"));
+        String workDirRoot =
+                parseWorkDirRoot(
+                        contract.has("workDirRoot")
+                                ? contract.get("workDirRoot")
+                                : contract.get("workDir"));
         Duration timeout = parseTimeout(contract.get("timeoutMs"));
         JsonNode stdin = contract.get("stdin");
         if (stdin == null || stdin.isNull()) stdin = null;
-        Map<String, String> env = parseEnvironment(contract.get("env"));
-        int maxOutput = parseMaxOutput(contract.get("maxOutputBytes"));
+        Map<String, String> env =
+                parseEnvironment(
+                        contract.has("env") ? contract.get("env") : contract.get("envAllowlist"));
+        int maxOutput =
+                parseMaxOutput(
+                        contract.has("maxOutputBytes")
+                                ? contract.get("maxOutputBytes")
+                                : contract.get("maxStdoutBytes"));
+        checkMaxStderr(contract.get("maxStderrBytes"));
+        requireCleanup(contract.get("cleanup"));
         String protocol = parseProtocol(contract.get("protocol"));
         JsonNode outputSchema = parseOutputSchema(contract.get("outputSchema"));
         return new ProcessContract(
                 command, workDirRoot, timeout, stdin, env, maxOutput, protocol, outputSchema);
+    }
+
+    /** §4.2 的 {@code executable + args} 形态：executable 必须绝对路径，args 可省略。 */
+    private static List<String> parseExecutable(JsonNode executable, JsonNode args) {
+        if (executable == null || !executable.isTextual())
+            throw invalid("字段 executable 必须是绝对路径字符串（或改用具名 command 数组）");
+        if (args != null && (!args.isArray() || args.size() > MAX_COMMAND_ARGS))
+            throw invalid("字段 args 必须是最多 " + MAX_COMMAND_ARGS + " 项的字符串数组");
+        List<String> command = new ArrayList<>(1 + (args == null ? 0 : args.size()));
+        command.add(executable.asText());
+        if (args != null)
+            for (JsonNode item : args) {
+                if (!item.isTextual()) throw invalid("字段 args 的每个元素都必须是字符串");
+                command.add(item.asText());
+            }
+        return command;
+    }
+
+    /**
+     * §4.2 的 {@code maxStderrBytes}：平台 v1 统一只保留 stderr 尾部 2 KiB 写执行事实，该字段接受但不改变
+     * 保留策略；这里只做范围校验，避免算法侧写了越界值却在运行期静默忽略。
+     */
+    private static void checkMaxStderr(JsonNode node) {
+        if (node == null || node.isNull()) return;
+        if (!node.isIntegralNumber()) throw invalid("字段 maxStderrBytes 必须是整数");
+        long value = node.asLong();
+        if (value < 1 || value > HARD_MAX_OUTPUT_BYTES)
+            throw invalid(
+                    "字段 maxStderrBytes 必须在 1 到 " + HARD_MAX_OUTPUT_BYTES + " 之间，实际: " + value);
+    }
+
+    /** §4.2 的 cleanup：v1 只允许 ALWAYS（不留残留目录），显式写别的值直接拒绝。 */
+    private static void requireCleanup(JsonNode node) {
+        if (node == null || node.isNull()) return;
+        if (!node.isTextual() || !"ALWAYS".equals(node.asText()))
+            throw invalid("字段 cleanup 在 v1 只允许 ALWAYS，实际: " + node);
     }
 
     /** 是否声明了成功响应 {@code result} 的校验器；没有时只要求 result 是对象。 */
@@ -181,6 +234,10 @@ public record ProcessContract(
 
     private static Map<String, String> parseEnvironment(JsonNode node) {
         if (node == null || node.isNull()) return Map.of();
+        // 契约 §4.2 早期写的 envAllowlist 是"允许继承的变量名"，与平台保留变量策略冲突：允许继承等于让子进程
+        // 拿到平台自己都不允许覆盖的变量。这里明确拒绝并指路，避免换个写法悄悄放宽。
+        if (node.isArray())
+            throw invalid("字段 envAllowlist 的继承语义不受支持：请改用 env 对象显式声明变量与值");
         if (!node.isObject()) throw invalid("字段 env 必须是字符串到字符串的对象");
         Map<String, String> env = new LinkedHashMap<>();
         var fields = node.fields();
