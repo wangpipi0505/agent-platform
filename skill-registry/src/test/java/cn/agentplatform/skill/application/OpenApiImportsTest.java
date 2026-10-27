@@ -238,6 +238,21 @@ class OpenApiImportsTest {
     }
 
     @Test
+    void convertsOpenApiNullableIntoTheCanonicalUnionInsteadOfRejectingIt() {
+        // OpenAPI 3.0 的 nullable 是方言输入写法，不是契约形状：导入只负责把它变成 [T,"null"]，
+        // 归一与落库形状由技能侧统一入口决定，避免导入器里再写一份可空语义。
+        var doc = document().replace("schema: {type: object}", "schema: {type: string, nullable: true}");
+        var op =
+                ((List<Map<String, Object>>)
+                                imports.preview(Map.of("document", doc)).get("operations"))
+                        .getFirst();
+        assertEquals(true, op.get("supported"));
+        var output = SkillCatalog.object(op.get("outputSchema"));
+        assertEquals(List.of("string", "null"), output.get("type"));
+        assertFalse(output.containsKey("nullable"), "nullable 必须在归一后被 type 联合取代");
+    }
+
+    @Test
     void givesDiagnosticsForUnsupportedSchemaAndSecurity() {
         for (String doc :
                 List.of(

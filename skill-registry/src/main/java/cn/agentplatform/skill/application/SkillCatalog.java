@@ -498,11 +498,20 @@ public class SkillCatalog {
                 throw error(400, "INVALID_SKILL", "timeoutMs必须为100至600000");
         }
         result.put("timeoutMs", timeout);
+        // 所有适配器（HTTP/MCP/ALGORITHM/PROCESS）的契约 Schema 都走同一个方言入口，返回的规范形
+        // 就是下面落库的契约值：nullable 与多具体类型联合在注册期收敛，读回/执行期不再解释旧写法。
+        // 从前这里按 type 分支只给 MCP 调 mcpSchema、其余走 schema，两者其实共用同一份规则
+        // （mcp 参数从未参与判定），分支只会让同一契约在不同适配器下被两套标准检查。
         var input = object(body.get("inputSchema"));
         var output = object(body.getOrDefault("outputSchema", Map.of("type", "object")));
-        if (type.equals("MCP")) SkillRules.mcpSchema(input);
-        else SkillRules.schema(input);
-        SkillRules.schema(output);
+        try {
+            input = SkillRules.normalizedSchema(input);
+            output = SkillRules.normalizedSchema(output);
+        } catch (IllegalArgumentException invalid) {
+            // 保持 schema 失败既有的 400 契约错误码；IllegalArgumentException 的 message 会被
+            // PlatformErrors 统一吞成固定文案，方言 pointer 只有走 PlatformException 才到得了前端。
+            throw error(400, "INVALID_INPUT", invalid.getMessage());
+        }
         result.put("inputSchema", input);
         result.put("outputSchema", output);
         var execution = object(body.get("execution"));

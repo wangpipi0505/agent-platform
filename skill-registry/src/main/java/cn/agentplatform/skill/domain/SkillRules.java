@@ -5,8 +5,10 @@ import cn.agentplatform.common.Json;
 import cn.agentplatform.common.auth.AuthScheme;
 import cn.agentplatform.common.schema.BoundedRegexFactory;
 import cn.agentplatform.common.schema.SchemaDeadline;
+import cn.agentplatform.common.schema.SchemaDialect;
 import cn.agentplatform.common.schema.SchemaWorkBudget;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.networknt.schema.*;
 
 import java.net.URI;
@@ -29,23 +31,58 @@ public final class SkillRules {
 
     private SkillRules() {}
 
-    public static void schema(Object raw) {
-        prepare(raw, false);
+    /**
+     * 注册期 Schema 唯一入口（PLAT-08b）：先按 {@link SchemaDialect} 把可空写法归一为规范形并一次性
+     * 判定方言，再交给 networknt 编译与资源预算。
+     *
+     * <p>返回值就是 {@code skill_version.contract} 必须落库的形状：归一后不会再有 {@code nullable}
+     * 或多具体类型联合，执行期 {@link #validate} 直接编译存储值，不必在运行期把旧写法重新解释一遍
+     * （否则同一份契约会因入口不同而有不同语义，摘要也随读回路径漂移）。方言的改写与判定只存在于
+     * admin-common 的 SchemaDialect，这里不维护第二份 type 白名单。
+     *
+     * <p>错误仍是 {@link IllegalArgumentException}（目录层映射为既有 400 契约错误），消息保留
+     * Schema 关键字供前端识别，方言错误带 JSON Pointer 精确定位并追加在消息尾部。
+     */
+    public static Map<String, Object> normalizedSchema(Object raw) {
+        SchemaDeadline.check();
+        if (!(raw instanceof Map<?, ?> map) || map.isEmpty())
+            throw new IllegalArgumentException("Schema必须为非空对象");
+        var canonical = SchemaDialect.normalize(Json.tree(raw));
+        var errors = SchemaDialect.validate(canonical);
+        if (!errors.isEmpty())
+            throw new IllegalArgumentException(
+                    "Schema方言无效（不接受多具体类型联合与远程引用）: "
+                            + String.join("; ", errors));
+        build(canonical);
+        @SuppressWarnings("unchecked")
+        var normalized = (Map<String, Object>) Json.mapper().convertValue(canonical, Map.class);
+        return normalized;
     }
 
-    /** Fixed MCP 2024-11-05 client uses 2020-12 references, never ignored recursiveRef. */
+    public static void schema(Object raw) {
+        normalizedSchema(raw);
+    }
+
+    /**
+     * MCP 2024-11-05 客户端使用 2020-12 引用；它与其它适配器共用同一方言入口（PLAT-08b），
+     * 保留方法名是因为 MCP 注册与远端工具目录按它调用，不应该有两套 Schema 规则。
+     */
     public static void mcpSchema(Object raw) {
-        prepare(raw, true);
+        normalizedSchema(raw);
     }
 
     private record Prepared(
             JsonSchema validator, SchemaWorkBudget.Plan plan, BoundedRegexFactory regex) {}
 
-    private static Prepared prepare(Object raw, boolean mcp) {
+    private static Prepared prepare(Object raw) {
         SchemaDeadline.check();
         if (!(raw instanceof Map<?, ?> map) || map.isEmpty())
             throw new IllegalArgumentException("Schema必须为非空对象");
-        var json = Json.tree(raw);
+        return build(Json.tree(raw));
+    }
+
+    /** networknt 编译与预算：只接受已归一的规范形；方言判定在 {@link #normalizedSchema} 之前完成。 */
+    private static Prepared build(JsonNode json) {
         // Pure admission precedes every networknt construction, including ordinary HTTP.
         var plan = SchemaWorkBudget.inspect(json);
         var regex = new BoundedRegexFactory(plan.expressions());
@@ -84,7 +121,7 @@ public final class SkillRules {
     }
 
     public static void validate(Object schema, Object value) {
-        var prepared = prepare(schema, false);
+        var prepared = prepare(schema);
         SchemaDeadline.check();
         var instance = Json.tree(value);
         prepared.plan.admitInstance(instance, prepared.regex.programUnits());

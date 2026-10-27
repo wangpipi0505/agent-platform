@@ -459,10 +459,11 @@ public class OpenApiImports {
         if (successes.isEmpty()) throw error("OPENAPI_RESPONSE", "需要明确的2xx JSON成功响应Schema");
         if (successes.stream().map(Json::canonical).distinct().count() != 1)
             throw error("OPENAPI_RESPONSE", "多个成功响应Schema不同，需人工拆分operation");
-        SkillRules.schema(input);
-        SkillRules.schema(successes.getFirst());
-        out.put("inputSchema", input);
-        out.put("outputSchema", successes.getFirst());
+        // 导入产出直接就是方言规范形：preview 里看到的 input/outputSchema 与 catalog.create 最终
+        // 落库的形状一致，nullable 在这一步被改写成 [T,"null"]。远程 $ref 早在 bound() 入口拒绝，
+        // 这里只做归一，不引入任何引用解析。
+        out.put("inputSchema", SkillRules.normalizedSchema(input));
+        out.put("outputSchema", SkillRules.normalizedSchema(successes.getFirst()));
         // multipart导入的文件白名单为占位值（octet-stream），四道门的契约评审必须收紧后才可发布。
         out.put(
                 "httpMapping",
@@ -528,12 +529,16 @@ public class OpenApiImports {
         String type = node.path("type").asText();
         if (!Set.of("object", "array", "string", "integer", "number", "boolean").contains(type))
             throw error("OPENAPI_SCHEMA", "Schema需要明确的单一type");
-        if (node.path("nullable").asBoolean(false)
-                || node.path("readOnly").asBoolean(false)
-                || node.path("writeOnly").asBoolean(false))
-            throw error("OPENAPI_SCHEMA", "不支持nullable/readOnly/writeOnly自动转换，请先拆分输入输出Schema");
+        // OpenAPI 3.0 的 nullable 是文档方言，而契约只存 SchemaDialect 规范形。这里只保留原始
+        // 布尔，由 convert 末尾的统一入口把它改写成 [T,"null"]——导入器不再复制一份可空语义，
+        // 否则导入契约与手工注册契约会因入口不同而落成两种形状。
+        if (node.has("nullable") && !node.path("nullable").isBoolean())
+            throw error("OPENAPI_SCHEMA", "nullable必须为布尔值");
+        if (node.path("readOnly").asBoolean(false) || node.path("writeOnly").asBoolean(false))
+            throw error("OPENAPI_SCHEMA", "不支持readOnly/writeOnly自动转换，请先拆分输入输出Schema");
         var result = new LinkedHashMap<String, Object>();
         result.put("type", type);
+        if (node.path("nullable").asBoolean(false)) result.put("nullable", true);
         for (String key :
                 List.of(
                         "required",
