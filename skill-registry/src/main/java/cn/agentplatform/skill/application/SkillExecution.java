@@ -591,6 +591,10 @@ public class SkillExecution {
         // trace 与出站头共用同一份快照裁决（subjectOrNull），跳过注入时这里可见原因而不是缺键。
         var identityTrace = SkillRules.identityTrace(contract, subjectOrNull());
         if (identityTrace != null) result.put("identity", identityTrace);
+        // PLAT-21d：PROCESS 的执行事实（命令模板/退出码/时长/工作目录/截断标志）随 Raw 落
+        // execution_fact.result.process，经 taskResult 运行详情可查；复用既有事实写入路径，
+        // 不新造表。环境变量的键与值在适配器层就被排除，不会到达这里。
+        if (raw != null && raw.processFact() != null) result.put("process", raw.processFact());
         if (raw != null && raw.ontologyMeta() != null && raw.ontologyMeta().isObject()) {
             JsonNode meta = raw.ontologyMeta();
             boolean complete = true;

@@ -36,7 +36,10 @@ import java.util.stream.Collectors;
  *
  * <p>非协议模式（不读 stdin，只用于超时/杀树/退出码等“信封之外”的路径）：{@code plain}（只打印两行
  * 纯文本，供进程树原语测试）、{@code exit2}/{@code exit3}/{@code exit4}（stderr 打印一行后按码退出）、
- * {@code sleep <pidFile|""> <millis>}、{@code tree}。
+ * {@code sleep <pidFile|""> <millis>}（stdout 打印一行 pid=，用于“不在乎 stdout 校验”的杀树/超时路径）、
+ * {@code sleepquiet <pidFile|""> <millis>}（完全不写 stdout，取消/杀树路径的 PID 观测）、
+ * {@code sleepok <pidFile|""> <millis>}（读信封→睡眠→按协议回响应，并发用例的名额持有者）、
+ * {@code tree}。
  */
 public final class FakeProcessWorker {
 
@@ -140,6 +143,28 @@ public final class FakeProcessWorker {
                 out.println("pid=" + ProcessHandle.current().pid());
                 out.flush();
                 Thread.sleep(millis);
+            }
+            case "sleepquiet" -> {
+                // 与 sleep 等同但不写任何 stdout：用于“不在乎 stdout 校验”的取消/杀树路径。
+                if (args.length > 1 && !args[1].isBlank())
+                    Files.writeString(
+                            Path.of(args[1]),
+                            Long.toString(ProcessHandle.current().pid()),
+                            StandardCharsets.UTF_8);
+                Thread.sleep(args.length > 2 ? Long.parseLong(args[2]) : 10_000L);
+            }
+            case "sleepok" -> {
+                // 并发用例的名额持有者：读信封 → 写 PID 文件 → 睡眠 → 按协议正常回响应，
+                // 使“排队者在窗口内等到名额”时持有者的退出不影响断言。
+                String requestId = field(readStdin(), "requestId");
+                if (args.length > 1 && !args[1].isBlank())
+                    Files.writeString(
+                            Path.of(args[1]),
+                            Long.toString(ProcessHandle.current().pid()),
+                            StandardCharsets.UTF_8);
+                Thread.sleep(args.length > 2 ? Long.parseLong(args[2]) : 10_000L);
+                out.println(success(requestId, lines("sleepok")));
+                out.flush();
             }
             case "tree" -> {
                 out.println("parent=" + ProcessHandle.current().pid());

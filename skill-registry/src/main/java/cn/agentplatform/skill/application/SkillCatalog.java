@@ -7,6 +7,7 @@ import cn.agentplatform.skill.domain.SkillDigest;
 import cn.agentplatform.skill.domain.SkillRules;
 import cn.agentplatform.skill.infra.McpAdapter;
 import cn.agentplatform.skill.infra.OpenApiHttpMapping;
+import cn.agentplatform.skill.infra.ProcessWhitelist;
 import cn.agentplatform.skill.infra.SkillAdapters;
 import cn.agentplatform.skill.infra.SkillClients;
 
@@ -36,6 +37,8 @@ public class SkillCatalog {
     private final String appUrl;
     private final boolean legacyBearer;
     private final boolean evidenceDigestGate;
+    /** PLAT-21d：PROCESS 可执行文件白名单（归一化后的绝对路径集；空集=未配置=不限制）。 */
+    private final Set<String> allowedExecutables;
 
     /** 单测直连四参构造：等价于默认 legacy-bearer=true、digest 门禁开启，既有测试无需感知本卡开关。 */
     public SkillCatalog(
@@ -59,6 +62,17 @@ public class SkillCatalog {
         this(db, manager, clients, appUrl, legacyBearer, true);
     }
 
+    /** 兼容 T10 时代的六参构造：白名单未配置（T21d 兼容窗口，登记期不做白名单约束）。 */
+    public SkillCatalog(
+            JdbcTemplate db,
+            PlatformTransactionManager manager,
+            SkillClients clients,
+            String appUrl,
+            boolean legacyBearer,
+            boolean evidenceDigestGate) {
+        this(db, manager, clients, appUrl, legacyBearer, evidenceDigestGate, "");
+    }
+
     /**
      * 容器注入的正式构造。legacy-bearer 只影响注册期归一化（未声明 authScheme 时补 BEARER 还是
      * 拒绝），见 {@link cn.agentplatform.common.auth.AuthScheme} 的兼容窗口说明；默认 true 保证
@@ -67,6 +81,10 @@ public class SkillCatalog {
      * <p>evidence-digest-gate 是 T10 的回滚开关：关闭后发布门禁退回只比 candidate_sha256（与
      * V315 之前逐字一致），已写入的 semantic_digest 列与新端点全部保留。开关只影响“是否额外要求
      * 摘要相等”，不会放行未通过的证据；默认 true，升级后立即获得“展示文案改动不再要求重测”。
+     *
+     * <p>PLAT-21d：allowed-executables 是 PROCESS 可执行文件白名单（逗号分隔绝对路径）。
+     * 已配置时注册期即拒绝白名单外的可执行文件（400 可读，见 {@link #normalize}）；
+     * 未配置时保持兼容行为（ADMIN 登记 + 发布预检兜底），执行期由 ProcessAdapter 的第二道闸兜住。
      */
     @Autowired
     public SkillCatalog(
@@ -75,13 +93,15 @@ public class SkillCatalog {
             SkillClients clients,
             @Value("${agent.services.app:http://127.0.0.1:18081}") String appUrl,
             @Value("${agent.skill.auth.legacy-bearer:true}") boolean legacyBearer,
-            @Value("${agent.skill.evidence-digest-gate:true}") boolean evidenceDigestGate) {
+            @Value("${agent.skill.evidence-digest-gate:true}") boolean evidenceDigestGate,
+            @Value("${agent.process.allowed-executables:}") String allowedExecutables) {
         this.db = db;
         this.tx = new TransactionTemplate(manager);
         this.clients = clients;
         this.appUrl = appUrl;
         this.legacyBearer = legacyBearer;
         this.evidenceDigestGate = evidenceDigestGate;
+        this.allowedExecutables = ProcessWhitelist.parse(allowedExecutables);
     }
 
     private String tenant() {
@@ -438,6 +458,16 @@ public class SkillCatalog {
         Map<String, Object> processContract = null;
         if (process) {
             processContract = normalizedProcess(body);
+            // PLAT-21d：白名单已配置时，注册期即拒绝白名单外的可执行文件（400 可读），
+            // 不把“发布后发现跑不了”推迟到第一次真实调用。空集=未配置=兼容窗口，由
+            // ADMIN 登记 + 发布预检 + 执行期第二道闸兜底。
+            if (!ProcessWhitelist.contains(
+                    allowedExecutables, ((List<?>) processContract.get("command")).get(0).toString()))
+                throw error(
+                        400,
+                        "PROCESS_EXECUTABLE_FORBIDDEN",
+                        "可执行文件不在白名单 agent.process.allowed-executables 内: "
+                                + processContract.get("command").toString());
             result.put("process", processContract);
         }
         if (type.equals("HTTP") && kind.equals("CALLBACK")) {
@@ -942,9 +972,10 @@ public class SkillCatalog {
     }
 
     /**
-     * PLAT-21c 发布预检（方案 §4.4–§4.6）。只检查“静态可判定”的事项：command[0] 是绝对路径且
-     * 指向存在的普通文件、workDirRoot 是绝对路径且可创建、timeoutMs 落在 1..1800000（由
-     * {@link ProcessContract#parse} 强制）、outputSchema 能被 {@link SkillRules#schema} 加载。
+     * PLAT-21c 发布预检（方案 §4.4–§4.6）。只检查“静态可判定”的事项：command[0] 是绝对路径、
+     * 指向存在的普通文件且可执行（T21d 补上可执行位校验）、白名单命中（已配置时）、workDirRoot
+     * 是绝对路径且可创建、timeoutMs 落在 1..1800000（由 {@link ProcessContract#parse} 强制）、
+     * outputSchema 能被 {@link SkillRules#schema} 加载。
      *
      * <p>这里不做 true 值校验（跑一次进程），因为发布动作不应产生外部副作用；真实可用性由连接/受控
      * 调试报告与选型验收负责。失败统一 400：调用方需要改契约，重试发布没有意义。
@@ -959,6 +990,13 @@ public class SkillCatalog {
         if (workDirRoot != null && workDirRoot.isTextual())
             precheckWorkDirRoot(workDirRoot.asText());
         ProcessContract contract = ProcessContract.parse(raw);
+        // 发布是最后的人类可读关口：白名单在注册期之后收紧的情况在这里再挡一次。
+        if (!ProcessWhitelist.contains(allowedExecutables, contract.command().get(0)))
+            throw error(
+                    400,
+                    "PROCESS_EXECUTABLE_FORBIDDEN",
+                    "可执行文件不在白名单 agent.process.allowed-executables 内: "
+                            + contract.command().get(0));
         if (contract.hasOutputSchema()) {
             try {
                 SkillRules.schema(
@@ -985,6 +1023,10 @@ public class SkillCatalog {
             throw precheckError("command[0] 指向的文件不存在: " + executable);
         if (!Files.isRegularFile(executable))
             throw precheckError("command[0] 必须是普通文件（可执行文件或脚本）: " + executable);
+        // T21d（契约 §4.3）：补可执行位校验。Windows 没有独立 exec 位，JDK 对普通文件按 ACL
+        // 判定（正常都返回 true）；Unix 上能拦住“传了脚本但忘了 chmod +x”的配置错误。
+        if (!Files.isExecutable(executable))
+            throw precheckError("command[0] 不可执行（缺少可执行权限）: " + executable);
     }
 
     private void precheckWorkDirRoot(String workDirRoot) {

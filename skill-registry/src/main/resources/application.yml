@@ -41,9 +41,20 @@ agent:
   # 其下（防 symlink/.. 逃逸），并且该目录必须预先存在——执行器不会替你创建允许根。
   # 默认值放在 java.io.tmpdir 只适合开发/CI；生产必须指向独立数据盘上的专用目录
   # （例如 /data/agent-process 或 D:/agent-process），不要指向系统临时目录或代码仓库。
+  # PLAT-21d 加固（契约 §5.5）：
+  #   max-concurrent / max-concurrent-per-tenant 是全局与每租户并发进程数上限，超限排队
+  #   queue-wait-ms 后返回 429 PROCESS_BUSY；
+  #   keep-failed-dirs 是失败/杀树/取消现场（failed-* 转储）的保留个数，0=失败也彻底回收；
+  #   allowed-executables 是可执行文件白名单（逗号分隔绝对路径），enabled=true 时必须非空，
+  #   已配置时注册期/发布期/执行期三道闸共同强制。
   process:
     enabled: ${AGENT_PROCESS_ENABLED:false}
     work-dir: ${AGENT_PROCESS_WORK_DIR:${java.io.tmpdir}/agent-process}
+    max-concurrent: ${AGENT_PROCESS_MAX_CONCURRENT:4}
+    max-concurrent-per-tenant: ${AGENT_PROCESS_MAX_CONCURRENT_PER_TENANT:1}
+    queue-wait-ms: ${AGENT_PROCESS_QUEUE_WAIT_MS:30000}
+    keep-failed-dirs: ${AGENT_PROCESS_KEEP_FAILED_DIRS:5}
+    allowed-executables: ${AGENT_PROCESS_ALLOWED_EXECUTABLES:}
   security:
     jwt-secret: ${AGENT_JWT_SECRET}
     issuer: agent-platform-v12

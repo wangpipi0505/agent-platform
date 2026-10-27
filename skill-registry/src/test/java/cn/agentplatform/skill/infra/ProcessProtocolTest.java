@@ -46,7 +46,34 @@ class ProcessProtocolTest {
     @AfterEach
     void cleanUp() throws IOException {
         try (var entries = Files.list(root)) {
-            assertEquals(0, entries.count(), "callDir 必须在 finally 中删除");
+            assertEquals(
+                    0,
+                    entries.filter(p -> p.getFileName().toString().startsWith("call-")).count(),
+                    "callDir 必须在 finally 中删除（failed-* 失败转储是 T21d 的有意保留，用后清理）");
+        }
+        deleteFailureDumps();
+    }
+
+    private void deleteFailureDumps() throws IOException {
+        try (var entries = Files.list(root)) {
+            entries
+                    .filter(p -> p.getFileName().toString().startsWith("failed-"))
+                    .forEach(
+                            dump -> {
+                                try (var walk = Files.walk(dump)) {
+                                    walk.sorted(java.util.Comparator.reverseOrder())
+                                            .forEach(
+                                                    path -> {
+                                                        try {
+                                                            Files.deleteIfExists(path);
+                                                        } catch (IOException ignored) {
+                                                            // 兜底清理
+                                                        }
+                                                    });
+                                } catch (IOException ignored) {
+                                    // 兜底清理
+                                }
+                            });
         }
     }
 

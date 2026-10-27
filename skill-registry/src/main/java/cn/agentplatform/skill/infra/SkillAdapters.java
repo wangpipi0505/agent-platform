@@ -29,14 +29,25 @@ public class SkillAdapters {
             String summary,
             JsonNode ontologyMeta,
             String cardPayloadJson,
-            Validation validation) {
+            Validation validation,
+            Map<String, Object> processFact) {
+        public Raw(
+                JsonNode structured,
+                List<Map<String, Object>> refs,
+                String summary,
+                JsonNode ontology,
+                String cardPayloadJson,
+                Validation validation) {
+            this(structured, refs, summary, ontology, cardPayloadJson, validation, null);
+        }
+
         public Raw(
                 JsonNode structured,
                 List<Map<String, Object>> refs,
                 String summary,
                 JsonNode ontology,
                 String cardPayloadJson) {
-            this(structured, refs, summary, ontology, cardPayloadJson, null);
+            this(structured, refs, summary, ontology, cardPayloadJson, null, null);
         }
 
         public Raw(
@@ -44,7 +55,7 @@ public class SkillAdapters {
                 List<Map<String, Object>> refs,
                 String summary,
                 JsonNode ontology) {
-            this(structured, refs, summary, ontology, "", null);
+            this(structured, refs, summary, ontology, "", null, null);
         }
     }
 
@@ -376,25 +387,45 @@ public class SkillAdapters {
      * parameters=已校验的 arguments；Raw 的输出取响应 {@code result}，而不是整段 stdout——stdout 是协议信封，
      * 把它当业务结果会把 requestId/ok/metrics 混进下游 schema。
      *
-     * <p>ProcessAdapter 已用 PlatformException 区分 403（开关关闭/允许根越界）、400（信封超限）、502（启动失败/
-     * 退出码/协议违规/输出 schema）、504（超时）；这里刻意不 catch 任何异常——包成通用的依赖不可用会把“配置错误”
-     * 与“上游抖动”混为一谈，调用方据此重试只会再执行一次本地进程（Y-3 的教训）。
+     * <p>ProcessAdapter 已用 PlatformException 区分 403（开关关闭/白名单外/允许根越界）、429（并发配额）、
+     * 400（信封超限）、502（启动失败/退出码/协议违规/输出 schema/取消）、504（超时）；这里刻意不 catch 任何
+     * 异常——包成通用的依赖不可用会把“配置错误”与“上游抖动”混为一谈，调用方据此重试只会再执行一次本地
+     * 进程（Y-3 的教训）。租户 ID 来自已验签上下文，仅用于每租户并发配额；解析不出（系统级调用）就跳过该层。
      */
     private Raw localProcess(Map<String, Object> contract, Map<String, Object> arguments, long callId) {
         if (process == null)
             throw new Failure("PARAM_ERROR", false, "当前进程未装配本地进程执行器，拒绝执行PROCESS技能");
         ProcessContract parsed = ProcessContract.parse(Json.tree(contract.get("process")));
         String operation = String.valueOf(contract.get("code"));
+        String tenantId;
+        try {
+            tenantId = Actor.current().tenantId();
+        } catch (PlatformException unresolvable) {
+            tenantId = null;
+        }
         ProcessAdapter.Output executed =
                 process.execute(
                         parsed,
                         new ProcessAdapter.Request(
-                                Long.toString(callId), operation, Json.tree(arguments)));
+                                Long.toString(callId), operation, Json.tree(arguments)),
+                        tenantId);
         return new Raw(
                 executed.result(),
                 List.of(),
                 "本地进程返回成功，耗时 " + executed.durationMs() + "ms",
-                Json.tree(null));
+                Json.tree(null),
+                "",
+                null,
+                executed.fact());
+    }
+
+    /**
+     * T21d 取消句柄：按 callId 终止进行中的本地进程树。引擎的 run/node 取消目前只在 engine-runtime
+     * 落库，没有出站事件到达 skill-registry（接线缺口已登记），因此本方法暂时没有生产调用方；
+     * 接通方案与缺口说明见 {@link ProcessAdapter#cancel(String)} 与证据 README。
+     */
+    public boolean cancelLocalProcess(long callId) {
+        return process != null && process.cancel(callId);
     }
 
     private Raw http(
