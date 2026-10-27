@@ -40,6 +40,7 @@ class ModelCallsPostgresTest {
     AtomicReference<com.fasterxml.jackson.databind.JsonNode> tokenizerMaterial =
             new AtomicReference<>();
     AtomicBoolean rejectWire = new AtomicBoolean();
+    AtomicBoolean modelsUnauthorized = new AtomicBoolean();
     long userDailyBefore;
 
     @BeforeAll
@@ -74,6 +75,7 @@ class ModelCallsPostgresTest {
     void fixture() throws Exception {
         store = new ModelStore(db);
         service = new ModelCalls(store, quota);
+        modelsUnauthorized.set(false);
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         server.createContext(
                 "/tokenize",
@@ -111,6 +113,11 @@ class ModelCallsPostgresTest {
         server.createContext(
                 "/v1/models",
                 exchange -> {
+                    if (modelsUnauthorized.get()) {
+                        exchange.sendResponseHeaders(401, -1);
+                        exchange.close();
+                        return;
+                    }
                     if (probeEntered.get() != null) {
                         probeEntered.get().countDown();
                         try {
@@ -555,6 +562,70 @@ class ModelCallsPostgresTest {
         behavior = "FAIL";
         assertThat(service.testProvider(id, admin).get("ok")).isEqualTo(false);
         assertThat(store.provider(id, actor).get("status")).isEqualTo("DISABLED");
+    }
+
+    @Test
+    void deepHealthProbesCatalogChatAndToolsWithoutSpendingQuota() {
+        behavior = "TOOLS";
+        var health = service.entryHealth(modelId, admin);
+        assertThat(health.get("status")).isEqualTo("HEALTHY");
+        assertThat(health.get("stage")).isEqualTo("OK");
+        assertThat(health.get("ok")).isEqualTo(true);
+        @SuppressWarnings("unchecked")
+        var checks = (List<Map<String, Object>>) health.get("checks");
+        assertThat(checks).extracting(c -> c.get("key"))
+                .contains("config", "circuit", "quota", "endpoint", "auth", "model", "tools",
+                        "tokenizer", "latency");
+        assertThat(checks.stream().filter(c -> "FAIL".equals(c.get("status")))).isEmpty();
+        // requests 只统计 chat；本次探测恰好一次带 tool 声明的对话，不占用户配额。
+        assertThat(requests.get()).isEqualTo(1);
+        var fixtureRedis =
+                new org.springframework.data.redis.core.StringRedisTemplate(redisConnection);
+        String userKey =
+                "agent:model:{"
+                        + Digest.sha256(actor.tenantId())
+                        + "}:user-daily:"
+                        + java.time.LocalDate.now(java.time.ZoneOffset.UTC)
+                        + ":"
+                        + Digest.sha256(actor.principalId());
+        assertThat(
+                        Long.parseLong(
+                                Objects.toString(fixtureRedis.opsForValue().get(userKey), "0")))
+                .isEqualTo(userDailyBefore);
+    }
+
+    @Test
+    void forcedProbeBypassesCachedSnapshot() {
+        var health = new ModelHealthService(store, service, 60, 8);
+        int before = requests.get();
+        health.probe(admin, modelId, true);
+        int afterFirst = requests.get();
+        assertThat(afterFirst).isGreaterThan(before);
+        // 第二次显式探测必须再次访问上游；若返回缓存，页面上的“重新探测”就是假的。
+        health.probe(admin, modelId, true);
+        assertThat(requests.get()).isGreaterThan(afterFirst);
+    }
+
+    @Test
+    void deepHealthTreatsDisabledProviderAsConfigFailureAndNotRetryable() {
+        long provider = ((Number) store.entry(modelId, admin, true).get("providerId")).longValue();
+        db.update("update model.provider set status='DISABLED' where id=?", provider);
+        var health = service.entryHealth(modelId, admin);
+        assertThat(health.get("status")).isEqualTo("UNHEALTHY");
+        assertThat(health.get("stage")).isEqualTo("CONFIG");
+        assertThat(health.get("retryable")).isEqualTo(false);
+        assertThat(health.get("reason")).asString().contains("供应商未启用");
+        assertThat(requests.get()).isZero();
+    }
+
+    @Test
+    void deepHealthAttributesUnauthorizedCatalogToAuthAndMarksItNotRetryable() {
+        modelsUnauthorized.set(true);
+        var health = service.entryHealth(modelId, admin);
+        assertThat(health.get("status")).isEqualTo("UNHEALTHY");
+        assertThat(health.get("stage")).isEqualTo("AUTH");
+        assertThat(health.get("retryable")).isEqualTo(false);
+        assertThat(requests.get()).isZero();
     }
 
     @Test
@@ -1021,6 +1092,16 @@ class ModelCallsPostgresTest {
     void functionCallsAreReturnedRatherThanExecuted() {
         behavior = "TOOLS";
         var response = service.call(request(), actor, null);
+        assertThat(Json.tree(response).path("toolCalls").get(0).path("name").asText())
+                .isEqualTo("weather");
+        assertThat(requests.get()).isEqualTo(1);
+    }
+
+    @Test
+    void streamingToolCallsAreNotLostByChunkAggregation() {
+        behavior = "TOOLS";
+        List<String> chunks = new ArrayList<>();
+        var response = service.call(request(), actor, chunks::add);
         assertThat(Json.tree(response).path("toolCalls").get(0).path("name").asText())
                 .isEqualTo("weather");
         assertThat(requests.get()).isEqualTo(1);

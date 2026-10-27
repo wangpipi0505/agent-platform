@@ -115,6 +115,402 @@ public class ModelCalls {
         return probeProvider(id, actor, false);
     }
 
+    /**
+     * Management-plane self test: one bounded tokenizer call (when configured) plus one
+     * one-token chat completion. It deliberately bypasses quota/circuit/logging because it
+     * is an explicit ADMIN diagnostic, not an application run.
+     */
+    public Map<String, Object> testEntry(long id, Actor actor) {
+        actor.requireRole("ADMIN");
+        var entry = store.entry(id, actor, true);
+        String base = Objects.toString(entry.get("baseUrl"), "").replaceAll("/+$", "");
+        String model = Objects.toString(entry.get("modelName"), "");
+        String tokenizer = Objects.toString(entry.get("tokenizerUrl"), "");
+        String secretRef = Objects.toString(entry.get("secretRef"), "");
+        if (base.isBlank() || model.isBlank())
+            return Map.of("ok", false, "stage", "ENDPOINT", "reason", "模型条目缺少地址或模型名称");
+        String stage = "ENDPOINT";
+        long started = System.nanoTime();
+        try {
+            String tokenizerMode = "JTOKKIT";
+            if (!tokenizer.isBlank()) {
+                stage = "TOKENIZER";
+                var probe = Json.tree(Map.of("messages", List.of(Map.of("role", "user", "content", "ping"))));
+                int tokens = countTokens(probe, entry, actor);
+                if (tokens < 1) throw new IllegalArgumentException("tokenizer未返回有效token数");
+                tokenizerMode = "MODEL_TOKENIZER";
+            }
+            stage = "CHAT";
+            var ping =
+                    client(10000)
+                            .post()
+                            .uri(base.endsWith("/v1") ? base + "/chat/completions" : base + "/v1/chat/completions");
+            if (!secretRef.isBlank())
+                ping.header("Authorization", "Bearer " + SecretVault.resolve(secretRef, actor));
+            JsonNode answer =
+                    ping.body(
+                                    Map.of(
+                                            "model",
+                                            model,
+                                            "messages",
+                                            List.of(Map.of("role", "user", "content", "ping")),
+                                            "max_tokens",
+                                            1,
+                                            "stream",
+                                            false))
+                            .exchange(
+                                    (request, response) -> {
+                                        if (!response.getStatusCode().is2xxSuccessful())
+                                            throw ModelErrors.status(response.getStatusCode().value());
+                                        byte[] bytes = response.getBody().readNBytes(65537);
+                                        if (bytes.length > 65536)
+                                            throw new IllegalStateException("自检响应超限");
+                                        return Json.read(new String(bytes, java.nio.charset.StandardCharsets.UTF_8));
+                                    });
+            if (!answer.path("choices").isArray() || answer.path("choices").isEmpty())
+                throw new IllegalStateException("模型未返回有效choices");
+            return Map.of(
+                    "ok",
+                    true,
+                    "stage",
+                    "OK",
+                    "latencyMs",
+                    (System.nanoTime() - started) / 1_000_000,
+                    "model",
+                    model,
+                    "tokenizer",
+                    tokenizerMode);
+        } catch (Exception e) {
+            String reason =
+                    e instanceof PlatformException platform
+                            ? platform.getMessage()
+                            : e.getMessage() == null || e.getMessage().isBlank()
+                                    ? "连接或响应校验未通过"
+                                    : e.getMessage();
+            return Map.of("ok", false, "stage", stage, "reason", reason);
+        }
+    }
+
+    public Map<String, Object> entryHealth(long id, Actor actor) {
+        actor.requireRole("ADMIN");
+        return health(store.entry(id, actor, true), actor);
+    }
+
+    private Map<String, Object> health(Map<String, Object> entry, Actor actor) {
+        long started = System.nanoTime();
+        String base = Objects.toString(entry.get("baseUrl"), "").replaceAll("/+$", "");
+        String model = Objects.toString(entry.get("modelName"), "");
+        String tokenizer = Objects.toString(entry.get("tokenizerUrl"), "");
+        String secretRef = Objects.toString(entry.get("secretRef"), "");
+        var provider = (Map<String, Object>) entry.getOrDefault("provider", Map.of());
+        // store.entry 把 jsonb 原样返回为 ArrayNode；兼容测试/其他调用方传入 List。
+        Object caps = entry.get("capabilities");
+        boolean tools = false;
+        if (caps instanceof JsonNode node && node.isArray()) {
+            for (JsonNode cap : node) if ("tools".equals(cap.asText())) tools = true;
+        } else if (caps instanceof List<?> list) {
+            tools = list.stream().anyMatch("tools"::equals);
+        }
+        List<Map<String, Object>> checks = new ArrayList<>();
+        boolean critical = false, warning = false;
+
+        String configProblem = null;
+        if (base.isBlank() || model.isBlank()) configProblem = "模型条目缺少地址或模型名称";
+        else if (!"ENABLED".equals(entry.get("status"))) configProblem = "模型条目未启用";
+        else if (!"ENABLED".equals(provider.get("status"))) configProblem = "模型供应商未启用";
+        if (configProblem == null && !secretRef.isBlank()) {
+            try {
+                SecretVault.resolve(secretRef, actor);
+            } catch (RuntimeException failure) {
+                configProblem = "凭据引用不可解析，请管理员检查";
+            }
+        }
+        checks.add(check("config", "配置与凭据", configProblem == null ? "PASS" : "FAIL",
+                elapsed(started), configProblem == null ? "地址、模型与凭据引用可解析" : configProblem,
+                configProblem == null ? null : "MODEL_CONFIG_INVALID"));
+        if (configProblem != null) {
+            return healthResult(entry, model, tokenizer, checks, started, true, warning, configProblem);
+        }
+
+        long providerId = ((Number) entry.get("providerId")).longValue();
+        String circuitState = circuits.circuit(providerId, actor).getState().name();
+        if ("OPEN".equals(circuitState)) {
+            critical = true;
+            checks.add(check("circuit", "熔断状态", "FAIL", 0,
+                    "供应商熔断已打开，避免继续放大故障", "MODEL_CIRCUIT_OPEN"));
+            return healthResult(entry, model, tokenizer, checks, started, true, warning,
+                    "供应商熔断中，等待恢复窗口");
+        }
+        if ("HALF_OPEN".equals(circuitState)) {
+            warning = true;
+            checks.add(check("circuit", "熔断状态", "WARN", 0,
+                    "供应商处于半开恢复期，只允许受控探测", "MODEL_CIRCUIT_HALF_OPEN"));
+        } else if ("CLOSED".equals(circuitState)) {
+            checks.add(check("circuit", "熔断状态", "PASS", 0,
+                    "供应商熔断关闭", null));
+        } else {
+            warning = true;
+            checks.add(check("circuit", "熔断状态", "WARN", 0,
+                    "供应商熔断状态为 " + circuitState, "MODEL_CIRCUIT_UNKNOWN"));
+        }
+
+        // Quota is a Redis bucket shared by all replicas. Health only reads it; a page refresh
+        // must not reserve tokens or requests. The provider default bucket is shown here; app/
+        // user-specific limits remain enforced on the real call path.
+        try {
+            Map<String, Object> limits = store.quota(providerId, "", actor);
+            int tpm = ((Number) limits.getOrDefault("tpm", 60000)).intValue();
+            int rpm = ((Number) limits.getOrDefault("rpm", 60)).intValue();
+            Map<String, Object> usage = quota.snapshot(actor, providerId, tpm, rpm);
+            int tokensLeft = ((Number) usage.get("tokensRemaining")).intValue();
+            int requestsLeft = ((Number) usage.get("requestsRemaining")).intValue();
+            if (tokensLeft <= 0 || requestsLeft <= 0) {
+                warning = true;
+                checks.add(check("quota", "配额余量", "WARN", 0,
+                        "默认配额桶余量不足：tokens=" + tokensLeft + "，requests=" + requestsLeft,
+                        "MODEL_QUOTA_EXHAUSTED"));
+            } else {
+                checks.add(check("quota", "配额余量", "PASS", 0,
+                        "默认桶剩余 tokens=" + tokensLeft + "，requests=" + requestsLeft, null));
+            }
+        } catch (RuntimeException failure) {
+            // A quota read failure is a degraded observability signal, not a reason to hide a
+            // working model behind a hard UNHEALTHY result.
+            warning = true;
+            checks.add(check("quota", "配额余量", "WARN", 0,
+                    "配额状态不可读，真实调用仍由配额闸门拒绝", "MODEL_QUOTA_UNREADABLE"));
+        }
+
+        String modelsUrl = base.endsWith("/v1") ? base + "/models" : base + "/v1/models";
+        long mark = System.nanoTime();
+        try {
+            JsonNode catalog = getJson(modelsUrl, secretRef, actor, 512 * 1024);
+            int count = catalog.path("data").isArray() ? catalog.path("data").size() : 0;
+            checks.add(check("endpoint", "供应商端点", "PASS", elapsed(mark),
+                    count > 0 ? "模型清单可读（" + count + " 个模型）" : "端点可达", null));
+        } catch (PlatformException failure) {
+            int status = failure.status();
+            if (status == 404 || status == 405) {
+                warning = true;
+                checks.add(check("endpoint", "供应商端点", "WARN", elapsed(mark),
+                        "供应商未提供 /v1/models，继续用对话探测", "MODEL_CATALOG_UNSUPPORTED"));
+            } else if (status == 401 || status == 403) {
+                // 401/403 是鉴权阶段失败，不再记 endpoint 失败：否则 stage 会被首个
+                // FAIL 误判为 ENDPOINT，前端会把不可自动重试的凭据问题标成“可重试”。
+                checks.add(check("auth", "鉴权", "FAIL", elapsed(mark),
+                        "鉴权失败，请核对凭据引用与供应商权限", "SYS-MODEL-401"));
+                return healthResult(entry, model, tokenizer, checks, started, true, warning,
+                        "鉴权失败，请核对凭据引用与供应商权限");
+            } else {
+                checks.add(check("endpoint", "供应商端点", "FAIL", elapsed(mark),
+                        safeReason(failure), "SYS-MODEL-" + status));
+                return healthResult(entry, model, tokenizer, checks, started, true, warning,
+                        safeReason(failure));
+            }
+        } catch (RuntimeException failure) {
+            var normalized = ModelErrors.normalize(failure);
+            checks.add(check("endpoint", "供应商端点", "FAIL", elapsed(mark),
+                    safeReason(normalized), normalized.code()));
+            return healthResult(entry, model, tokenizer, checks, started, true, warning,
+                    safeReason(normalized));
+        }
+
+        mark = System.nanoTime();
+        boolean toolAccepted = false, modelOk = false;
+        String chatProblem = null;
+        try {
+            JsonNode answer = chatProbe(base, model, secretRef, actor, tools);
+            modelOk = true;
+            if (tools)
+                toolAccepted = answer.path("choices").path(0).path("message").path("tool_calls").isArray()
+                        && !answer.path("choices").path(0).path("message").path("tool_calls").isEmpty();
+        } catch (PlatformException failure) {
+            if (failure.status() == 401 || failure.status() == 403) {
+                checks.add(check("auth", "鉴权", "FAIL", elapsed(mark),
+                        "对话探测鉴权失败，请核对凭据引用与供应商权限", "SYS-MODEL-401"));
+                return healthResult(entry, model, tokenizer, checks, started, true, warning,
+                        "对话探测鉴权失败，请核对凭据引用与供应商权限");
+            }
+            if (tools && (failure.status() == 400 || failure.status() == 404 || failure.status() == 422)) {
+                try {
+                    chatProbe(base, model, secretRef, actor, false);
+                    modelOk = true;
+                    warning = true;
+                    checks.add(check("tools", "工具调用", "WARN", elapsed(mark),
+                            "供应商拒绝工具声明；模型本身可用", "MODEL_TOOLS_UNSUPPORTED"));
+                } catch (RuntimeException retry) {
+                    chatProblem = safeReason(ModelErrors.normalize(retry));
+                }
+            } else {
+                chatProblem = safeReason(failure);
+            }
+        } catch (RuntimeException failure) {
+            chatProblem = safeReason(ModelErrors.normalize(failure));
+        }
+        if (chatProblem != null || !modelOk) {
+            checks.add(check("model", "模型与对话", "FAIL", elapsed(mark),
+                    chatProblem == null ? "模型未返回有效响应" : chatProblem, "SYS-MODEL-503"));
+            return healthResult(entry, model, tokenizer, checks, started, true, warning,
+                    chatProblem == null ? "模型未返回有效响应" : chatProblem);
+        }
+        checks.add(check("auth", "鉴权", "PASS", elapsed(mark),
+                "凭据可访问模型", null));
+        checks.add(check("model", "模型与对话", "PASS", elapsed(mark),
+                "模型返回有效 choices", null));
+        if (tools) {
+            if (toolAccepted) {
+                checks.add(check("tools", "工具调用", "PASS", elapsed(mark),
+                        "模型返回了受控工具调用", null));
+            } else if (checks.stream().noneMatch(c -> "tools".equals(c.get("key")))) {
+                warning = true;
+                checks.add(check("tools", "工具调用", "WARN", elapsed(mark),
+                        "模型接受了工具声明，但本次未触发工具调用", "MODEL_TOOLS_NOT_OBSERVED"));
+            }
+        }
+
+        if (!tokenizer.isBlank()) {
+            mark = System.nanoTime();
+            try {
+                var probe = Json.tree(Map.of("messages", List.of(Map.of("role", "user", "content", "ping"))));
+                int count = countTokens(probe, entry, actor);
+                if (count < 1) throw new IllegalArgumentException("tokenizer未返回有效token数");
+                checks.add(check("tokenizer", "专用计量", "PASS", elapsed(mark),
+                        "tokenizer 返回 " + count + " tokens", null));
+            } catch (RuntimeException failure) {
+                warning = true;
+                checks.add(check("tokenizer", "专用计量", "WARN", elapsed(mark),
+                        "专用 tokenizer 未通过，计费可能回退到保守估算", "MODEL_TOKENIZER_FAILED"));
+            }
+        } else {
+            checks.add(check("tokenizer", "专用计量", "SKIP", elapsed(mark),
+                    "未配置专用 tokenizer，使用本地保守计量", null));
+        }
+        long total = elapsed(started);
+        if (total > 6000) {
+            warning = true;
+            checks.add(check("latency", "响应延迟", "WARN", total,
+                    "深度探测总耗时 " + total + " ms，超过 6s", "MODEL_HEALTH_SLOW"));
+        } else {
+            checks.add(check("latency", "响应延迟", "PASS", total,
+                    "深度探测总耗时 " + total + " ms", null));
+        }
+        return healthResult(entry, model, tokenizer, checks, started, false, warning, null);
+    }
+
+    private JsonNode getJson(String url, String secretRef, Actor actor, int limit) {
+        var request = client(6000).get().uri(url);
+        if (!secretRef.isBlank())
+            request.header("Authorization", "Bearer " + SecretVault.resolve(secretRef, actor));
+        return request.exchange((req, response) -> {
+            if (!response.getStatusCode().is2xxSuccessful())
+                throw ModelErrors.status(response.getStatusCode().value());
+            byte[] bytes = response.getBody().readNBytes(limit + 1);
+            if (bytes.length > limit) throw new IllegalStateException("模型清单超出安全大小");
+            return Json.read(new String(bytes, java.nio.charset.StandardCharsets.UTF_8));
+        });
+    }
+
+    private JsonNode chatProbe(String base, String model, String secretRef, Actor actor, boolean tools) {
+        var body = new LinkedHashMap<String, Object>();
+        body.put("model", model);
+        body.put(
+                "messages",
+                List.of(
+                        Map.of(
+                                "role",
+                                "user",
+                                "content",
+                                tools
+                                        ? "Call health_probe now. Do not answer with plain text."
+                                        : "Respond with one short word.")));
+        body.put("max_tokens", tools ? 512 : 1);
+        body.put("temperature", 0);
+        body.put("stream", false);
+        if (tools) {
+            body.put("tools", List.of(Map.of(
+                    "type", "function",
+                    "function", Map.of(
+                            "name", "health_probe",
+                            "description", "Return the health probe acknowledgement.",
+                            "parameters", Map.of("type", "object", "properties", Map.of(), "additionalProperties", false)))));
+            // 不发送 tool_choice=required：DeepSeek thinking 等模型会直接拒绝；
+            // 用明确的调用指令让模型自行选择工具，兼容性更好。
+        }
+        var request = client(8000)
+                .post()
+                .uri(base.endsWith("/v1") ? base + "/chat/completions" : base + "/v1/chat/completions");
+        if (!secretRef.isBlank())
+            request.header("Authorization", "Bearer " + SecretVault.resolve(secretRef, actor));
+        JsonNode answer = request.body(body).exchange((req, response) -> {
+            if (!response.getStatusCode().is2xxSuccessful()) {
+                // 保留 400，供工具能力探测判断“供应商拒绝工具声明”并回退；
+                // 不能直接走 ModelErrors.status，否则 400 会被归一成 503，回退分支永远不成立。
+                if (response.getStatusCode().value() == 400)
+                    throw new cn.agentplatform.common.PlatformException(
+                            400, "SYS-MODEL-400", "模型请求被供应商拒绝");
+                throw ModelErrors.status(response.getStatusCode().value());
+            }
+            byte[] bytes = response.getBody().readNBytes(65537);
+            if (bytes.length > 65536) throw new IllegalStateException("模型响应超出安全大小");
+            return Json.read(new String(bytes, java.nio.charset.StandardCharsets.UTF_8));
+        });
+        if (answer == null || !answer.path("choices").isArray() || answer.path("choices").isEmpty())
+            throw new IllegalStateException("模型未返回有效choices");
+        return answer;
+    }
+
+    private Map<String, Object> healthResult(
+            Map<String, Object> entry,
+            String model,
+            String tokenizer,
+            List<Map<String, Object>> checks,
+            long started,
+            boolean critical,
+            boolean warning,
+            String reason) {
+        String status = critical ? "UNHEALTHY" : warning ? "DEGRADED" : "HEALTHY";
+        String stage = checks.stream()
+                .filter(c -> "FAIL".equals(c.get("status")))
+                .map(c -> Objects.toString(c.get("key"), "").toUpperCase(Locale.ROOT))
+                .findFirst()
+                .orElse(status.equals("HEALTHY") ? "OK" : "WARN");
+        var result = new LinkedHashMap<String, Object>();
+        result.put("entryId", entry.get("id"));
+        result.put("providerId", entry.get("providerId"));
+        result.put("model", model);
+        result.put("status", status);
+        result.put("ok", "HEALTHY".equals(status));
+        result.put("stage", stage);
+        result.put("reason", reason);
+        result.put("retryable", !"AUTH".equals(stage) && !"CONFIG".equals(stage));
+        result.put("latencyMs", elapsed(started));
+        result.put("checkedAt", java.time.Instant.now().toString());
+        result.put("tokenizer", tokenizer.isBlank() ? "JTOKKIT" : "MODEL_TOKENIZER");
+        result.put("checks", checks);
+        return result;
+    }
+
+    private Map<String, Object> check(
+            String key, String label, String status, long latencyMs, String message, String code) {
+        var value = new LinkedHashMap<String, Object>();
+        value.put("key", key);
+        value.put("label", label);
+        value.put("status", status);
+        value.put("latencyMs", latencyMs);
+        value.put("message", message);
+        if (code != null) value.put("code", code);
+        return value;
+    }
+
+    private static long elapsed(long started) {
+        return Math.max(0, (System.nanoTime() - started) / 1_000_000);
+    }
+
+    private static String safeReason(PlatformException failure) {
+        String message = failure.getMessage();
+        return message == null || message.isBlank() ? "模型供应商暂时不可用" : message;
+    }
+
     public void probeDegraded() {
         for (var row : store.degradedProviders()) {
             var actor =
@@ -416,7 +812,10 @@ public class ModelCalls {
                             .retryTemplate(RetryTemplate.builder().maxAttempts(1).build())
                             .build();
             ChatResponse response;
-            if (chunks == null) {
+            // 工具调用必须拿到完整的 assistant tool_calls 才能继续下一轮；模型供应商的流式
+            // tool_calls 分片并不保证携带 id/name（DeepSeek 只在首片给出），聚合后可能丢失调用。
+            // 因此只要本请求携带工具就使用非流式，文本流式路径保持不变。
+            if (chunks == null || !((OpenAiChatOptions) prompt.getOptions()).getTools().isEmpty()) {
                 response = model.call(prompt);
             } else {
                 // 流式实际请求由FrozenRequestConnector在发送字节前持久化；不以近似Prompt替代实际材料。

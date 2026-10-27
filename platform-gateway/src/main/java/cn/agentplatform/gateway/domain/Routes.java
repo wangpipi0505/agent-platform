@@ -16,16 +16,20 @@ public final class Routes {
         if (path.matches("/(?:admin|v1)/apps/[^/]+/sessions(?:/.*)?"))
             throw new IllegalArgumentException("此会话入口不存在");
         if (path.matches("/admin/reproductions/[A-Za-z0-9_-]+")) return "engine";
-        if (path.matches("/admin/artifacts/[A-Za-z0-9_-]+/download")
+        if (path.equals("/admin/artifacts")
+                || path.matches("/admin/artifacts/[A-Za-z0-9_-]+/download")
                 || path.matches("/v1/runs/[A-Za-z0-9_-]+/artifacts/[A-Za-z0-9_-]+/download"))
             return "skill";
         if (path.matches("/(?:admin|v1)/apps/[^/]+/runs")) return "engine";
         if (path.startsWith("/admin/apps")
                 || path.startsWith("/admin/flows")
                 || path.startsWith("/admin/prompt-templates")
-                || path.startsWith("/admin/classifications")) return "app";
+                || path.startsWith("/admin/classifications")
+                || path.startsWith("/admin/system")) return "app";
         if (path.startsWith("/admin/skills")) return "skill";
-        if (path.startsWith("/admin/model-providers") || path.startsWith("/admin/model-entries"))
+        if (path.startsWith("/admin/model-providers")
+                || path.startsWith("/admin/model-entries")
+                || path.startsWith("/admin/model-health"))
             return "model";
         if (path.startsWith("/admin/debug-runs")
                 || path.startsWith("/admin/runs")

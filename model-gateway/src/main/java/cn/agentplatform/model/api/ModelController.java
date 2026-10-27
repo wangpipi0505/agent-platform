@@ -72,6 +72,11 @@ public class ModelController {
         return ApiResponse.ok(store.updateEntry(id, body, Actor.current()));
     }
 
+    @PostMapping("/admin/model-entries/{id}/test")
+    public Object testEntry(@PathVariable long id) {
+        return ApiResponse.ok(calls.entryHealth(id, Actor.current()));
+    }
+
     @GetMapping("/admin/model-entries/{id}/metering")
     public Object metering(@PathVariable long id) {
         return ApiResponse.ok(store.calibrations(id, Actor.current()));

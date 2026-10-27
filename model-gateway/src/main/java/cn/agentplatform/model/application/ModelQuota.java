@@ -19,6 +19,41 @@ public class ModelQuota {
         this.redis = redis;
     }
 
+    /**
+     * Read-only quota snapshot for health output. It must never reserve, refill or write the
+     * Redis bucket: a page refresh is not a model request and must not consume capacity.
+     */
+    public Map<String, Object> snapshot(Actor actor, long provider, int tpm, int rpm) {
+        String key = "agent:model:{" + Digest.sha256(actor.tenantId()) + "}:provider:" + provider;
+        Map<Object, Object> state = redis.opsForHash().entries(key);
+        long now = System.currentTimeMillis();
+        long updated = number(state.get("updated"), now);
+        long elapsed = Math.max(0, now - updated);
+        double tokens = state.get("tokens") == null
+                ? tpm
+                : Math.min(tpm, number(state.get("tokens"), tpm) + elapsed * tpm / 60000.0);
+        double requests = state.get("requests") == null
+                ? rpm
+                : Math.min(rpm, number(state.get("requests"), rpm) + elapsed * rpm / 60000.0);
+        var result = new LinkedHashMap<String, Object>();
+        result.put("tpm", tpm);
+        result.put("rpm", rpm);
+        result.put("tokensRemaining", Math.max(0, (int) Math.floor(tokens)));
+        result.put("requestsRemaining", Math.max(0, (int) Math.floor(requests)));
+        result.put("updatedAt", java.time.Instant.ofEpochMilli(updated).toString());
+        result.put("generation", state.get("generation"));
+        return result;
+    }
+
+    private static long number(Object value, long fallback) {
+        if (value == null) return fallback;
+        try {
+            return Long.parseLong(String.valueOf(value));
+        } catch (NumberFormatException ignored) {
+            return fallback;
+        }
+    }
+
     private static final DefaultRedisScript<List> ACQUIRE =
             new DefaultRedisScript<>(
                     """
