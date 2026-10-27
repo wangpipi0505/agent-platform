@@ -12,7 +12,7 @@ function mount(name: string, props: any, api: any = vi.fn(async (..._args: any[]
   const code = ts.transpileModule(compileScript(descriptor, { id: name }).content, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
   const auth = Vue.reactive({ token: 'fixture-one', roles: ['EDITOR', 'ADMIN'], user: { tenantId: 'tenant-one', principalId: 'owner' }, edit: true, admin: true, can(permission: string) { return !!this.token && (permission === 'admin' ? this.admin : this.edit); } });
   const exports: any = {}, require = createRequire(import.meta.url);
-  new Function('require', 'exports', code)((id: string) => id === 'vue' ? Vue : id.endsWith('/api') ? { useApi: () => api, useAuth: () => auth } : id.endsWith('.vue') ? {} : id.endsWith('/controlled-test') ? { completedControlledCall: () => false } : require(id), exports);
+  new Function('require', 'exports', code)((id: string) => id === 'vue' ? Vue : id.endsWith('/api') ? { useApi: () => api, useAuth: () => auth } : id.endsWith('.vue') ? {} : id.endsWith('/controlled-test') ? { completedControlledCall: () => false } : id.endsWith('/service-access') ? { serviceAccess: () => null, probeView: () => ({ label: '尚未探测', type: 'info', detail: '' }) } : require(id), exports);
   exports.default.render = () => null;
   const renderer = Vue.createRenderer<any, any>({ createComment: () => ({}), insert() {}, remove() {}, parentNode: () => null, nextSibling: () => null, createElement: () => ({}), createText: () => ({}), setText() {}, setElementText() {}, patchProp() {} });
   const input = Vue.reactive(props), app = renderer.createApp({ render: () => Vue.h(exports.default, input) });

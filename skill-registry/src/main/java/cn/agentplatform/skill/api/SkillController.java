@@ -126,6 +126,17 @@ public class SkillController {
         return ApiResponse.ok(catalog.mcpTools(code, version));
     }
 
+    /** AP-S12：管理台服务接入卡片只探测已保存端点，不接受请求自带 URL，避免把探测变成任意网络访问。 */
+    @PostMapping("/admin/skills/{code}/versions/{version}/service-probe")
+    public Object serviceProbe(@PathVariable String code, @PathVariable int version) {
+        edit();
+        var definition = catalog.version(code, version);
+        return ApiResponse.ok(
+                ServiceProbe.probeOrigin(
+                        Objects.toString(definition.get("endpoint"), ""),
+                        Objects.toString(definition.get("httpMethod"), "")));
+    }
+
     @PostMapping("/admin/skills/{code}/disable")
     public Object disable(@PathVariable String code) {
         edit();

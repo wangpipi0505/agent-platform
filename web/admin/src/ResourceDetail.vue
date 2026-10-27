@@ -3,6 +3,7 @@ import { ref, computed, watch, onBeforeUnmount } from "vue";
 import SchemaInputs from "../../shared/SchemaInputs.vue";
 import McpToolsPanel from "./McpToolsPanel.vue";
 import { completedControlledCall } from "../../shared/controlled-test";
+import { probeView, serviceAccess } from "../../shared/service-access";
 import { useAuth, useApi } from "../../shared/api";
 const props = defineProps<{ resource: any; kind: "skill" | "template" }>();
 const api = useApi();
@@ -20,6 +21,30 @@ const modelId = ref<number>();
 const connectionInput = ref("{}");
 const connectionForm = ref<InstanceType<typeof SchemaInputs>>();
 const advancedInput = ref(false);
+const service = computed(() => serviceAccess(selectedDefinition.value));
+const probeResult = ref<any>();
+const probing = ref(false);
+const probeError = ref("");
+const probeMeta = computed(() => probeView(probeResult.value));
+watch(selected, () => {
+  probeResult.value = undefined;
+  probeError.value = "";
+});
+async function probeService() {
+  if (!selected.value) return;
+  probing.value = true;
+  probeError.value = "";
+  try {
+    probeResult.value = await api(
+      base() + "/versions/" + selected.value + "/service-probe",
+      "POST",
+    );
+  } catch (e: any) {
+    probeError.value = e.message;
+  } finally {
+    probing.value = false;
+  }
+}
 // The resource's published pointer may differ from the selected draft. Version
 // metadata owns status; a nested full definition owns the actual contract.
 const selectedDefinition = computed(() => {
@@ -102,6 +127,19 @@ async function load() {
   } catch (e: any) {
     if (!disposed && generation === loadGeneration && e.name !== "AbortError") error.value = e.message;
   }
+}
+async function uploadArtifact(file: File): Promise<string> {
+  const body = new FormData();
+  body.append("file", file);
+  const response = await fetch("/admin/artifacts", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${auth.token}` },
+    body,
+  });
+  const envelope = await response.json().catch(() => ({}));
+  if (!response.ok || envelope.code !== "OK")
+    throw new Error(envelope.message || `文件上传失败 (${response.status})`);
+  return envelope.data.artifactId;
 }
 async function execute(action: string) {
   busy.value = true;
@@ -237,7 +275,53 @@ watch(() => [props.resource.code, props.kind, auth.token, auth.user?.tenantId, a
         >试渲染所选版本</el-button
       ></template
     ><template v-else
-      ><McpToolsPanel v-if="selectedDefinition?.type === 'MCP'" :code="resource.code" :version="selected" :definition="selectedDefinition" />
+      ><section v-if="service" class="service-access" aria-labelledby="service-access-title">
+        <div class="service-head">
+          <div>
+            <h2 id="service-access-title">服务接入</h2>
+            <p class="muted">
+              真实接入地址与只读探测；卡片不执行技能，也不代替连接测试和验收。
+            </p>
+          </div>
+          <el-tag :type="probeMeta.type" effect="light">{{ probeMeta.label }}</el-tag>
+        </div>
+        <code class="service-url">{{ service.endpoint }}</code>
+        <dl class="service-meta">
+          <div>
+            <dt>调用方式</dt>
+            <dd>{{ service.type }} · {{ service.method }}</dd>
+          </div>
+          <div>
+            <dt>鉴权 / 超时</dt>
+            <dd>{{ service.authConfigured ? "已配置凭据" : "未配置凭据" }} · {{ service.timeoutMs ? service.timeoutMs + " ms" : "默认超时" }}</dd>
+          </div>
+          <div>
+            <dt>最近检查</dt>
+            <dd>
+              {{ probeResult?.checkedAt || "尚未探测" }}
+              <span v-if="probeResult" class="muted"> · {{ probeMeta.detail }}</span>
+            </dd>
+          </div>
+        </dl>
+        <div class="service-links">
+          <a :href="service.endpoint" target="_blank" rel="noopener">打开接口地址</a>
+          <template v-if="service.origin">
+            <a :href="service.origin" target="_blank" rel="noopener">服务根地址</a>
+            <a :href="service.origin + '/v3/api-docs'" target="_blank" rel="noopener">OpenAPI 文档</a>
+          </template>
+          <el-button size="small" :loading="probing" v-permission="'edit'" @click="probeService">
+            探测端点
+          </el-button>
+          <el-button size="small" disabled title="生命周期脚本属于 AP-S05，本页不直接杀进程">
+            重启服务（待配置）
+          </el-button>
+        </div>
+        <p v-if="probeError" class="error" role="alert">{{ probeError }}</p>
+        <p class="muted">
+          探测只发 HEAD，不跟随重定向、不读取响应体；最近一次检查时间来自本次页面探测，不伪装成历史监控。
+        </p>
+      </section>
+      <McpToolsPanel v-if="selectedDefinition?.type === 'MCP'" :code="resource.code" :version="selected" :definition="selectedDefinition" />
       <h2>执行属性与权限守卫</h2>
       <pre>{{
         JSON.stringify(
@@ -257,6 +341,7 @@ watch(() => [props.resource.code, props.kind, auth.token, auth.user?.tenantId, a
             v-if="connectionSchema && !advancedInput"
             ref="connectionForm"
             :declaration="connectionSchema"
+            :upload-artifact="uploadArtifact"
           />
           <el-checkbox v-model="advancedInput">高级 JSON 输入</el-checkbox>
           <el-form
@@ -337,4 +422,19 @@ watch(() => [props.resource.code, props.kind, auth.token, auth.user?.tenantId, a
 .resource-detail > .row, .resource-detail .actions { flex-wrap: wrap; }
 .resource-detail .actions { display: flex; gap: .75rem; max-width: 100%; min-width: 0; }
 .resource-detail .actions :deep(.el-button) { margin-left: 0; }
+.service-access { margin: 1rem 0 1.25rem; padding: 1rem 1.1rem; border: 1px solid var(--line, #e3e8ef); border-radius: .75rem; background: var(--surface, #fff); }
+.service-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.service-head h2 { margin: 0 0 .25rem; }
+.service-head .muted { margin: 0; }
+.service-url { display: block; margin: .75rem 0; padding: .55rem .7rem; border-radius: .45rem; background: #f6f8fb; color: #1f2a44; font-size: .82rem; overflow-wrap: anywhere; }
+.service-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: .65rem .9rem; margin: .75rem 0; }
+.service-meta div { min-width: 0; }
+.service-meta dt { color: #64748b; font-size: .74rem; margin-bottom: .15rem; }
+.service-meta dd { margin: 0; font-size: .84rem; overflow-wrap: anywhere; }
+.service-links { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem .9rem; margin-top: .6rem; }
+.service-links :deep(.el-button) { margin-left: 0; }
+@media (max-width: 720px) {
+  .service-head { flex-direction: column; }
+  .service-links { align-items: flex-start; }
+}
 </style>
