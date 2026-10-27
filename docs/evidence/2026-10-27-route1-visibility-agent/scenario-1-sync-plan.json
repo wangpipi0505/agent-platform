@@ -1,0 +1,28 @@
+{
+  "runId": "r_3902cf0a84b844c9b858f49a01717864",
+  "status": "SUCCEEDED",
+  "error": {},
+  "toolCalls": [
+    {
+      "id": 219,
+      "skill": "space-visibility-plan",
+      "status": "SUCCEEDED",
+      "arguments": null,
+      "semantic": null
+    }
+  ],
+  "output": {
+    "text": "**结论：可见，共 4 段可见弧段**；这些弧段均落在 2026-08-11 的 12:19 至 16:45 之间（UTC）。\n\n**弧段明细（观测星 2067 SHIYAN 20B → 目标 10752 COSMOS 2499 DEB）**\n\n| # | 起始时刻 (UTC) | 结束时刻 (UTC) | 时长 | 观测星光照 | 目标光照 |\n|---|---|---|---|---|---|\n| 1 | 2026-08-11T12:19:58Z | 2026-08-11T12:22:21Z | 143 s | 阳照 (SUNLIT) | 阳照 (SUNLIT) |\n| 2 | 2026-08-11T13:12:23Z | 2026-08-11T13:14:22Z | 119 s | 本影 (UMBRA) | 阳照 (SUNLIT) |\n| 3 | 2026-08-11T14:57:11Z | 2026-08-11T15:01:19Z | 248 s | 阳照 (SUNLIT) | 阳照 (SUNLIT) |\n| 4 | 2026-08-11T16:42:12Z | 2026-08-11T16:44:59Z | 167 s | 阳照 (SUNLIT) | 阳照 (SUNLIT) |\n\n总可见时长 677 s（约 11 分 17 秒），单段最长 248 s（第 3 段）。目标全程处于阳照，观测星在第 2 段处于本影。\n\n**关键参数**\n- 观测星：2067（SHIYAN 20B / SY-20B），载荷 SPACE\n- 目标：10752（COSMOS 2499 DEB，NORAD 55732，质量约 0.534 kg）\n- 规划窗口：2026-08-10T22:40:00Z — 2026-08-11T22:40:00Z\n- 步长：coarseStepSec=60，fineStepSec=1\n- 观测类型：单星观测（SINGLE）；无跳过目标对（totalSkippedPairs=0），无星历风险提示",
+    "usage": {
+      "totalTokens": 7048,
+      "promptTokens": 6516,
+      "completionTokens": 532
+    },
+    "actualModel": {
+      "endpoint": "http://127.0.0.1:28400/v1",
+      "modelName": "deepseek-flash",
+      "providerId": 13,
+      "modelEntryId": 13
+    }
+  }
+}

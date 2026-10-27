@@ -265,6 +265,12 @@ public class SkillCatalog {
     }
 
     public Map<String, Object> normalize(Map<String, Object> body) {
+        // 编辑既有SYNC技能时，清空httpMapping即表示改为无映射的异步提交；空映射按缺省处理，
+        // 否则OpenAPI映射校验会把“已清空”误判为形状不一致，导入来源的技能就无法收敛为SUBMIT_QUERY。
+        if (body.containsKey("httpMapping") && object(body.get("httpMapping")).isEmpty()) {
+            body = new LinkedHashMap<>(body);
+            body.remove("httpMapping");
+        }
         var invocation = object(body.getOrDefault("invocation", Map.of()));
         String type =
                 Objects.toString(
@@ -366,6 +372,40 @@ public class SkillCatalog {
                     throw error(400, "INVALID_ASYNC_PROTOCOL", "丢失提交响应后的查询必须仅使用原幂等键");
                 SkillRules.endpoint(lookup.replace("{idempotencyKey}", "key"));
             }
+            if (policy.containsKey("failedValue") || policy.containsKey("failedValues")) {
+                Object raw =
+                        policy.containsKey("failedValues")
+                                ? policy.get("failedValues")
+                                : policy.get("failedValue");
+                var failed = Json.tree(raw);
+                if (!(failed.isArray() || failed.isValueNode()))
+                    throw error(400, "INVALID_ASYNC_PROTOCOL", "失败终态必须为标量或标量数组");
+                if (failed.isArray() && failed.isEmpty())
+                    throw error(400, "INVALID_ASYNC_PROTOCOL", "失败终态数组不能为空");
+                var values = failed.isArray() ? failed : Json.mapper().createArrayNode().add(failed);
+                for (var value : values)
+                    if (!value.isValueNode())
+                        throw error(400, "INVALID_ASYNC_PROTOCOL", "失败终态元素必须为标量");
+                if (Json.tree(policy.get("doneValue")).equals(failed))
+                    throw error(400, "INVALID_ASYNC_PROTOCOL", "失败终态不能与完成终态相同");
+            }
+            if (policy.containsKey("failureMessagePath"))
+                cn.agentplatform.skill.infra.HttpAsyncAdapter.path(
+                        Json.tree(Map.of()), text(policy, "failureMessagePath"));
+            if (policy.containsKey("resultEndpoint")) {
+                String resultEndpoint = text(policy, "resultEndpoint");
+                if (!resultEndpoint.contains("{jobId}")
+                        && !resultEndpoint.contains("{idempotencyKey}"))
+                    throw error(400, "INVALID_ASYNC_PROTOCOL", "结果端点需要原jobId或幂等键占位符");
+                SkillRules.endpoint(
+                        resultEndpoint.replace("{jobId}", "job").replace("{idempotencyKey}", "key"));
+            }
+            if (policy.containsKey("resultPath"))
+                cn.agentplatform.skill.infra.HttpAsyncAdapter.path(
+                        Json.tree(Map.of()), text(policy, "resultPath"));
+            if (policy.containsKey("resultEndpointPath"))
+                cn.agentplatform.skill.infra.HttpAsyncAdapter.path(
+                        Json.tree(Map.of()), text(policy, "resultEndpointPath"));
         }
         result.put("invocationKind", kind);
         long timeout =

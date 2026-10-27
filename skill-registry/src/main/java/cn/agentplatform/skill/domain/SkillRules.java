@@ -124,6 +124,9 @@ public final class SkillRules {
                 allowed.retainAll(declared.stream().map(Object::toString).toList());
             if (allowed.isEmpty()) throw new IllegalArgumentException("用户无该范围权限");
             Object proposed = arguments.get(entry.getKey());
+            // 仅声明属性名（没有静态值清单）时只校验调用者持有该范围，不要求上游参数重复携带：
+            // 这类查询技能的远端接口没有对应参数，缺失参数不代表越权，授权边界已由已验Actor收窄。
+            if (proposed == null && declared.isEmpty()) continue;
             if (proposed instanceof Collection<?> values) {
                 var intersection =
                         values.stream()

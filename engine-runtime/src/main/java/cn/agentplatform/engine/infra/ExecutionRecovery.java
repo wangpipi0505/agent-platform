@@ -26,7 +26,7 @@ public class ExecutionRecovery {
         var candidates =
                 store.db()
                         .queryForList(
-                                "select t.id,r.tenant_id,r.principal_id from engine.tool_call t"
+                                "select t.id,t.status,t.approval_context,r.tenant_id,r.principal_id from engine.tool_call t"
                                     + " join engine.run r on r.id=t.run_id join"
                                     + " engine.node_instance n on n.id=t.node_instance_id where"
                                     + " r.status='WAITING_EXTERNAL' and n.status='WAITING_EXTERNAL'"
@@ -35,25 +35,44 @@ public class ExecutionRecovery {
                                     + " order by t.recovery_next_at nulls first,t.id limit 16");
         for (var row : candidates) {
             long id = TraceStore.number(row, "id");
-            // Retain the original ownership, but reconstruct no business approval privileges.
+            // 保留原调用人与租户；角色取该调用被批准时记录的角色，恢复只用于查询原外部任务，
+            // 不能据此获得新的业务重发权。审批上下文缺失时角色为空，技能侧会拒绝越界对账。
+            Set<String> roles = new HashSet<>();
+            if (row.get("approval_context") != null)
+                for (JsonNode role : Json.read(row.get("approval_context").toString()).path("roles"))
+                    if (role.isTextual() && !role.asText().isBlank()) roles.add(role.asText());
             Actor actor =
                     new Actor(
                             row.get("tenant_id").toString(),
                             row.get("principal_id").toString(),
-                            Set.of(),
+                            Set.copyOf(roles),
                             Map.of());
             try {
+                // 异步外部任务只有技能服务持有原幂等键与绑定；引擎先请求一次受控对账，
+                // 再由adopt按事实摘要采纳。对账失败不授予任何业务重发权。
+                if ("UNKNOWN".equals(row.get("status").toString())) requestReconcile(id, actor);
                 adopt(id, null, actor);
             } catch (Exception failure) {
                 store.db()
                         .update(
                                 "update engine.tool_call set"
                                     + " recovery_attempts=recovery_attempts+1,recovery_next_at=now()+interval"
-                                    + " '30 seconds',recovery_error=? where id=? and status in"
+                                    + " '5 seconds',recovery_error=? where id=? and status in"
                                     + " ('SUBMITTED','EXECUTING','UNKNOWN')",
                                 failure.getClass().getSimpleName(),
                                 id);
             }
+        }
+    }
+
+    /**
+     * 受控对账只读原外部任务；409表示当前证据不足以对账（未到终态或代次已变），继续按退避等待。
+     */
+    private void requestReconcile(long id, Actor actor) {
+        try {
+            clients.post("skill", "/internal/skill-facts/" + id + "/reconcile", Map.of(), actor);
+        } catch (PlatformException failure) {
+            if (failure.status() != 409) throw failure;
         }
     }
 

@@ -155,7 +155,13 @@ public class HttpAsyncAdapter {
                                 65536);
                 var policy = object(contract.getOrDefault("reconciliation", Map.of()));
                 String job =
-                        path(ack, Objects.toString(contract.getOrDefault("jobIdPath", "$.jobId")))
+                        path(
+                                        ack,
+                                        Objects.toString(
+                                                policy.getOrDefault(
+                                                        "jobIdPath",
+                                                        contract.getOrDefault(
+                                                                "jobIdPath", "$.jobId"))))
                                 .asText();
                 if (job.isBlank()
                         || job.length() > 128
@@ -218,7 +224,12 @@ public class HttpAsyncAdapter {
                         Objects.toString(policy.getOrDefault("resultPath", "$.result")))) {
             var response = streamed.metadata;
             String observedJob =
-                    path(response, Objects.toString(contract.getOrDefault("jobIdPath", "$.jobId")))
+                    path(
+                                    response,
+                                    Objects.toString(
+                                            policy.getOrDefault(
+                                                    "jobIdPath",
+                                                    contract.getOrDefault("jobIdPath", "$.jobId"))))
                             .asText();
             if (observedJob.isBlank()
                     || observedJob.length() > 128
@@ -283,11 +294,36 @@ public class HttpAsyncAdapter {
                                 "sendStatus",
                                 resolvedBinding.get("status")));
             }
-            if (!state.equals(Json.tree(policy.get("doneValue"))))
+            if (!state.equals(Json.tree(policy.get("doneValue")))) {
+                // A trustworthy terminal failure is not uncertainty: it must surface the service's
+                // own reason instead of parking the call in UNKNOWN forever.
+                if (failedState(policy, state))
+                    throw new SkillAdapters.Failure(
+                            "REMOTE_FAILED", false, failureMessage(policy, response));
                 throw unknown("原任务尚未确认完成，保持UNKNOWN等待查询");
+            }
             SkillAdapters.Raw raw;
-            try (var result = streamed.result()) {
-                raw = outputs.read(result, contract, callId, runId);
+            String resultEndpoint = Objects.toString(policy.get("resultEndpoint"), "");
+            if (!resultEndpoint.isBlank()) {
+                // Some services split status and result. The result endpoint is derived from the
+                // job id already proven above and never widens the binding.
+                String resultSource = resultEndpoint.replace("{jobId}", segment(observedJob));
+                // 状态响应与结果响应常是两套结构，结果侧独立声明读取路径，默认取整个响应体。
+                String resultReadPath = Objects.toString(policy.get("resultEndpointPath"), "");
+                try (var finalResponse =
+                        exchangeStream(
+                                contract,
+                                resultSource,
+                                key,
+                                resultReadPath.isBlank() ? "$" : resultReadPath)) {
+                    try (var result = finalResponse.result()) {
+                        raw = outputs.read(result, contract, callId, runId);
+                    }
+                }
+            } else {
+                try (var result = streamed.result()) {
+                    raw = outputs.read(result, contract, callId, runId);
+                }
             }
             int changed =
                     db.update(
@@ -310,6 +346,10 @@ public class HttpAsyncAdapter {
             return raw;
         } catch (NotApplied evidence) {
             throw evidence;
+        } catch (SkillAdapters.Failure failure) {
+            // 只有"服务端已核实终态失败"这一显式协议结论可以穿透；本地验收异常仍是不确定证据。
+            if ("REMOTE_FAILED".equals(failure.semantic)) throw failure;
+            throw unknown("原任务查询或结果验收尚未完成，保留绑定等待对账");
         } catch (Exception ex) {
             throw unknown("原任务查询或结果验收尚未完成，保留绑定等待对账");
         }
@@ -395,9 +435,28 @@ public class HttpAsyncAdapter {
         return java.net.URLEncoder.encode(value, StandardCharsets.UTF_8).replace("+", "%20");
     }
 
+    /** 终态失败只认显式配置的标记，绝不把普通状态文本当成失败。 */
+    private static boolean failedState(Map<String, Object> policy, JsonNode state) {
+        Object raw = policy.containsKey("failedValues")
+                ? policy.get("failedValues")
+                : policy.get("failedValue");
+        if (raw == null) return false;
+        JsonNode failed = Json.tree(raw);
+        if (!failed.isArray()) failed = Json.mapper().createArrayNode().add(failed);
+        for (JsonNode value : failed) if (state.equals(value)) return true;
+        return false;
+    }
+
+    private static String failureMessage(Map<String, Object> policy, JsonNode response) {
+        String messagePath = Objects.toString(policy.get("failureMessagePath"), "");
+        String reason = messagePath.isBlank() ? "" : path(response, messagePath).asText("");
+        return reason.isBlank() ? "外部任务终态失败，服务未提供失败原因" : "外部任务终态失败：" + reason;
+    }
+
     public static JsonNode path(JsonNode value, String path) {
-        if (!path.matches("\\$\\.[A-Za-z_][A-Za-z0-9_.]*"))
-            throw error(400, "ASYNC_PATH_INVALID", "异步协议路径仅支持点路径");
+        if (!path.equals("$") && !path.matches("\\$\\.[A-Za-z_][A-Za-z0-9_.]*"))
+            throw error(400, "ASYNC_PATH_INVALID", "异步协议路径仅支持根路径或点路径");
+        if (path.equals("$")) return value;
         for (String part : path.substring(2).split("\\.")) value = value.path(part);
         return value;
     }

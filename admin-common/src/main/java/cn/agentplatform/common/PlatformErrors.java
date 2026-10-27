@@ -15,6 +15,8 @@ public class PlatformErrors {
 
     @ExceptionHandler({MethodArgumentNotValidException.class, IllegalArgumentException.class})
     ResponseEntity<ApiResponse<Object>> invalid(Exception e) {
+        // 参数形状错误对调用方只暴露统一提示；服务端保留原因，便于定位是哪个字段被拒。
+        org.slf4j.LoggerFactory.getLogger(PlatformErrors.class).warn("INVALID_INPUT_CAUSE", e);
         return ResponseEntity.badRequest()
                 .body(new ApiResponse<>("INVALID_INPUT", "请检查必填参数及数据格式", null, MDC.get("traceId")));
     }

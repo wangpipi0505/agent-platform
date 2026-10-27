@@ -608,6 +608,7 @@ public class SkillExecution {
         Map<String, Object> queriedBinding = null;
         Map<String, Object> algorithmSource = Map.of();
         SkillAdapters.TerminalFailure terminalFailure = null;
+        SkillAdapters.Failure verifiedFailure = null;
         String algorithmReason = null;
         long started = System.nanoTime();
         try {
@@ -817,10 +818,15 @@ public class SkillExecution {
             outcome = "NOT_APPLIED";
             evidence = observed.source;
         } catch (SkillAdapters.Failure ex) {
-            // An incomplete/foreign async response is evidence of uncertainty, never retry
-            // permission.
-            outcome = "UNKNOWN";
-            if ("ALGORITHM".equals(contract.get("type"))) algorithmReason = ex.getMessage();
+            if (ex.unknown) {
+                // 未完成的观测只是不确定证据，绝不因此获得重试许可。
+                outcome = "UNKNOWN";
+                if ("ALGORITHM".equals(contract.get("type"))) algorithmReason = ex.getMessage();
+            } else {
+                // 外部服务已给出可核实的终态失败：真实原因必须落成可读事实，不能永久UNKNOWN。
+                outcome = "FAILED";
+                verifiedFailure = ex;
+            }
         } finally {
             // 对账查询是独立审计段，不累计进原业务执行时长；统计仍以同一个callId重算终态。
             var detail = new LinkedHashMap<String, Object>();
@@ -881,6 +887,58 @@ public class SkillExecution {
                     result,
                     terminalStatus,
                     ((Number) recorded.get("attempt_duration_ms")).longValue());
+            return deliver(Objects.requireNonNull(fact(callId)));
+        }
+        if (verifiedFailure != null) {
+            // 终态失败同样是一条已核实事实：写入可读原因并投递，不允许再次重发业务请求。
+            var failedSnapshot = Json.read(recorded.get("request_snapshot").toString(), Map.class);
+            var failed =
+                    envelope(
+                            failedSnapshot,
+                            contract,
+                            "FAILED",
+                            verifiedFailure.semantic,
+                            verifiedFailure.getMessage(),
+                            null,
+                            false,
+                            object(failedSnapshot.get("guardedArguments")));
+            String failedFence =
+                    queriedBinding == null
+                            ? ""
+                            : " and exists(select 1 from skill.external_job_binding b where"
+                                    + " b.tenant_id=f.tenant_id and b.call_id=f.call_id and"
+                                    + " b.principal_id=f.principal_id and"
+                                    + " b.skill_version_id=f.skill_version_id and"
+                                    + " b.idempotency_key=? and b.request_snapshot=?::jsonb)";
+            var failedValues =
+                    new ArrayList<Object>(
+                            List.of(
+                                    Json.write(failed),
+                                    tenant(),
+                                    callId,
+                                    Actor.current().principalId(),
+                                    recorded.get("run_id"),
+                                    recorded.get("attempt_id"),
+                                    recorded.get("skill_version_id"),
+                                    recorded.get("args_digest"),
+                                    recorded.get("skill_contract_sha256"),
+                                    recorded.get("request_snapshot").toString()));
+            if (queriedBinding != null) {
+                failedValues.add(key);
+                failedValues.add(queriedBinding.get("request_snapshot").toString());
+            }
+            int failedChanged =
+                    db.update(
+                            "update skill.execution_fact f set"
+                                + " status='FAILED',result=?::jsonb,callback_state='PENDING',next_delivery_at=now(),updated_at=now()"
+                                + " where f.tenant_id=? and f.call_id=? and f.status='UNKNOWN' and"
+                                + " f.principal_id=? and f.run_id=? and f.attempt_id=? and"
+                                + " f.skill_version_id=? and f.args_digest=? and"
+                                + " f.skill_contract_sha256=? and f.request_snapshot=?::jsonb"
+                                + failedFence,
+                            failedValues.toArray());
+            if (failedChanged != 1)
+                throw error(409, "RECONCILE_FACT_STALE", "原代事实已改变，未采纳或投递旧查询结果");
             return deliver(Objects.requireNonNull(fact(callId)));
         }
         if (raw == null)

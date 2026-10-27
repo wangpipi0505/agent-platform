@@ -1,0 +1,141 @@
+[
+  {
+    "callId": 219,
+    "runId": 272,
+    "skill": "space-visibility-plan",
+    "status": "SUCCEEDED",
+    "semantic": null,
+    "isMock": false,
+    "args": {
+      "body": {
+        "endTime": "2026-08-11T22:40:00Z",
+        "startTime": "2026-08-10T22:40:00Z",
+        "targetIds": [
+          10752
+        ],
+        "fineStepSec": 1,
+        "coarseStepSec": 60,
+        "observerSatelliteIds": [
+          2067
+        ]
+      }
+    },
+    "error": null,
+    "guardRoles": [
+      "SERVICE",
+      "EDITOR",
+      "APPROVER",
+      "ADMIN"
+    ],
+    "recoveryAttempts": 0
+  },
+  {
+    "callId": 220,
+    "runId": 273,
+    "skill": "space-target-query",
+    "status": "SUCCEEDED",
+    "semantic": null,
+    "isMock": false,
+    "args": {
+      "body": {
+        "pageSize": 10,
+        "targetIds": [
+          10752
+        ],
+        "pageNumber": 1
+      }
+    },
+    "error": null,
+    "guardRoles": [
+      "SERVICE",
+      "EDITOR",
+      "APPROVER",
+      "ADMIN"
+    ],
+    "recoveryAttempts": 0
+  },
+  {
+    "callId": 221,
+    "runId": 274,
+    "skill": "space-visibility-submit",
+    "status": "SUCCEEDED",
+    "semantic": null,
+    "isMock": false,
+    "args": {
+      "endTime": "2026-08-11T22:40:00Z",
+      "startTime": "2026-08-10T22:40:00Z",
+      "targetIds": [
+        10752
+      ],
+      "fineStepSec": 1,
+      "coarseStepSec": 60,
+      "observerSatelliteIds": [
+        2067
+      ]
+    },
+    "error": null,
+    "guardRoles": [
+      "SERVICE",
+      "EDITOR",
+      "APPROVER",
+      "ADMIN"
+    ],
+    "recoveryAttempts": 0
+  },
+  {
+    "callId": 224,
+    "runId": 275,
+    "skill": "space-target-query",
+    "status": "SUCCEEDED",
+    "semantic": null,
+    "isMock": false,
+    "args": {
+      "body": {
+        "pageSize": 10,
+        "targetIds": [
+          10752
+        ],
+        "pageNumber": 1
+      }
+    },
+    "error": null,
+    "guardRoles": [
+      "SERVICE",
+      "EDITOR",
+      "APPROVER",
+      "ADMIN"
+    ],
+    "recoveryAttempts": 0
+  },
+  {
+    "callId": 225,
+    "runId": 275,
+    "skill": "space-visibility-submit",
+    "status": "FAILED",
+    "semantic": "REMOTE_FAILED",
+    "isMock": false,
+    "args": {
+      "endTime": "2026-08-11T22:40:00Z",
+      "startTime": "2026-08-10T22:40:00Z",
+      "targetIds": [
+        10752
+      ],
+      "fineStepSec": 1,
+      "coarseStepSec": 60,
+      "observerSatelliteIds": [
+        1
+      ]
+    },
+    "error": {
+      "reason": "外部任务终态失败：wrong checksum of TLE line 1, expected 3 but got 6 (1 00000U 26178B   26222.88891793  .00000041  00000-0  32242-4 0  9996)",
+      "semantic": "REMOTE_FAILED"
+    },
+    "guardRoles": [
+      "SERVICE",
+      "EDITOR",
+      "APPROVER",
+      "ADMIN"
+    ],
+    "recoveryAttempts": 0
+  }
+]

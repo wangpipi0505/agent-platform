@@ -50,6 +50,7 @@ class AsyncHttpExecutionTest {
     int submitStatus = 202;
     volatile boolean bindDifferentJobDuringQuery;
     volatile boolean spaceTaskEnvelope;
+    volatile boolean resultEndpoint;
     volatile boolean omitEchoContract;
     Map<String, Object> arguments = Map.of("region", "A");
     Map<String, Object> guard =
@@ -143,8 +144,25 @@ class AsyncHttpExecutionTest {
                         poll.put("idempotencyKey", key);
                     }
                     poll.put("status", state);
+                    if (spaceTaskEnvelope && "FAILED".equals(state))
+                        poll.put("errorMessage", "wrong checksum of TLE line 1, expected 3 but got 6 (1 00000U)");
                     poll.put("result", actualResult);
                     byte[] body = Json.write(poll).getBytes(StandardCharsets.UTF_8);
+                    exchange.getResponseHeaders().set("Content-Type", "application/json");
+                    exchange.sendResponseHeaders(200, body.length);
+                    exchange.getResponseBody().write(body);
+                    exchange.close();
+                });
+        server.createContext(
+                "/jobs-result",
+                exchange -> {
+                    // Real 8080 shape: the finished result lives on its own endpoint and carries no
+                    // taskId/status, so it is only reachable after the poll proved the terminal state.
+                    Map<String, Object> result = new LinkedHashMap<>();
+                    result.put("value", 7);
+                    result.put("results", List.of(Map.of("id", 1), Map.of("id", 2)));
+                    result.put("skippedPairs", List.of());
+                    byte[] body = Json.write(result).getBytes(StandardCharsets.UTF_8);
                     exchange.getResponseHeaders().set("Content-Type", "application/json");
                     exchange.sendResponseHeaders(200, body.length);
                     exchange.getResponseBody().write(body);
@@ -206,6 +224,14 @@ class AsyncHttpExecutionTest {
         reconciliation.put("doneValue", spaceTaskEnvelope ? "SUCCEEDED" : "DONE");
         if (spaceTaskEnvelope && !omitEchoContract)
             reconciliation.put("idempotencyKeyEcho", false);
+        if (resultEndpoint) {
+            reconciliation.put(
+                    "resultEndpoint",
+                    "http://127.0.0.1:" + server.getAddress().getPort() + "/jobs-result/{jobId}");
+            reconciliation.put("resultEndpointPath", "$");
+            reconciliation.put("failedValue", "FAILED");
+            reconciliation.put("failureMessagePath", "$.errorMessage");
+        }
         c.put("reconciliation", reconciliation);
         if (spaceTaskEnvelope) c.put("jobIdPath", "$.taskId");
         return c;
@@ -341,6 +367,36 @@ class AsyncHttpExecutionTest {
         assertEquals("SUCCEEDED", result.get("status"));
         assertEquals(
                 7, Json.tree(result.get("result")).path("structured").path("value").asInt());
+        assertEquals(1, submits.get());
+    }
+
+    @Test
+    void successReadsDedicatedResultEndpointAfterTerminalState() {
+        spaceTaskEnvelope = true;
+        resultEndpoint = true;
+        prepareExecution();
+        assertEquals("UNKNOWN", executor.execute(code, request).get("status"));
+        state = "SUCCEEDED";
+        var result = executor.reconcile(call);
+        assertEquals("SUCCEEDED", result.get("status"), Json.write(result));
+        var structured = Json.tree(result.get("result")).path("structured");
+        assertEquals(2, structured.path("results").size());
+        assertEquals(7, structured.path("value").asInt());
+        assertEquals(1, submits.get());
+    }
+
+    @Test
+    void terminalFailedStateIsReadableFailureNotUnknown() {
+        spaceTaskEnvelope = true;
+        resultEndpoint = true;
+        prepareExecution();
+        assertEquals("UNKNOWN", executor.execute(code, request).get("status"));
+        state = "FAILED";
+        var result = executor.reconcile(call);
+        assertEquals("FAILED", result.get("status"), Json.write(result));
+        String envelope = Json.write(result.get("result"));
+        assertTrue(envelope.contains("REMOTE_FAILED"));
+        assertTrue(envelope.contains("wrong checksum of TLE line 1"));
         assertEquals(1, submits.get());
     }
 

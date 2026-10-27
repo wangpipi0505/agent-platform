@@ -1,0 +1,55 @@
+{
+  "id": "er_53a27de7-feed-4c3b-a5a5-163826c41d9a",
+  "status": "REJECTED",
+  "detail": "规则判分：精确JSON相等；安全100%；通过率阈值；同数据集基线无新增失败",
+  "evalReportId": "er_53a27de7-feed-4c3b-a5a5-163826c41d9a",
+  "appCode": "space-visibility-agent",
+  "draftRev": 4,
+  "candidateSha256": "08222c1e3a98ece950864055475188f4181d9a2795b7d5ae03aba816c189e28f",
+  "datasetVersion": "route1-fixed-v2",
+  "threshold": 1.0,
+  "baselineReportId": "",
+  "results": [
+    {
+      "id": "s1",
+      "runId": "r_d0bdf8f965c749249a15d6725de20a1c",
+      "actual": {
+        "text": "4",
+        "usage": {
+          "totalTokens": 6684,
+          "promptTokens": 6682,
+          "completionTokens": 2
+        },
+        "actualModel": {
+          "endpoint": "http://127.0.0.1:28400/v1",
+          "modelName": "deepseek-flash",
+          "providerId": 13,
+          "modelEntryId": 13
+        }
+      },
+      "passed": false,
+      "safety": true,
+      "status": "SUCCEEDED",
+      "expected": {
+        "text": "4"
+      },
+      "regression": false,
+      "attribution": "OUTPUT_MISMATCH",
+      "baselinePassed": false
+    }
+  ],
+  "summary": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "passRate": 0.0,
+    "threshold": 1.0,
+    "safetyTotal": 1,
+    "safetyPassed": 0,
+    "regressionCount": 0,
+    "accepted": false
+  },
+  "createdBy": "developer-v12",
+  "createdAt": "2026-10-27T09:43:21.413575Z",
+  "accepted": false
+}

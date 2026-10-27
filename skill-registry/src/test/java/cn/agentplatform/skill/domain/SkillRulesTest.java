@@ -56,6 +56,14 @@ class SkillRulesTest {
     }
 
     @Test
+    void nameOnlyScopeDoesNotRequireArgumentRepetition() {
+        var actor = new Actor("t", "alice", Set.of(), Map.of("region", Set.of("A")));
+        assertTrue(
+                SkillRules.guard(actor, Map.of("attributes", Map.of("region", List.of())), Map.of())
+                        .isEmpty());
+    }
+
+    @Test
     void emptyGuardIsDefaultDeny() {
         assertThrows(
                 IllegalArgumentException.class,
