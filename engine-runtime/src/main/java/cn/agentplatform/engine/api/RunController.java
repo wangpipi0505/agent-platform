@@ -81,6 +81,11 @@ public class RunController {
         return ApiResponse.ok(service.list(Actor.current()));
     }
 
+    @GetMapping("/admin/runs/page")
+    public Object page(@RequestParam Map<String, String> filters) {
+        return ApiResponse.ok(service.page(Actor.current(), filters));
+    }
+
     @GetMapping({"/admin/runs/{id}", "/admin/debug-runs/{id}/status", "/v1/runs/{id}"})
     public Object status(
             @PathVariable String id,

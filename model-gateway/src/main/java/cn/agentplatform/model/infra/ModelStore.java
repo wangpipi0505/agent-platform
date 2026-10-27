@@ -229,10 +229,10 @@ public class ModelStore {
             throw new IllegalArgumentException("模型窗口与输出上限无效");
         if (!tokenizer.isBlank()) ModelPolicy.endpoint(tokenizer);
         JsonNode caps =
-                body.has("capabilities")
-                        ? body.path("capabilities")
-                        : Json.tree(old.get("capabilities"));
-        if (!caps.isArray()) throw new IllegalArgumentException("capabilities必须为数组");
+                capabilities(
+                        body.has("capabilities")
+                                ? body.path("capabilities")
+                                : Json.tree(old.get("capabilities")));
         String status = body.path("status").asText(old.get("status").toString());
         if (!Set.of("ENABLED", "DISABLED").contains(status))
             throw new IllegalArgumentException("模型状态无效");
@@ -272,6 +272,11 @@ public class ModelStore {
             throw new IllegalArgumentException("请填写模型名称、窗口与有效输出上限");
         String tokenizer = body.path("tokenizerUrl").asText("");
         if (!tokenizer.isBlank()) ModelPolicy.endpoint(tokenizer);
+        JsonNode capabilities =
+                capabilities(
+                        body.has("capabilities")
+                                ? body.path("capabilities")
+                                : Json.tree(List.of("chat")));
         Long id =
                 db.queryForObject(
                         "insert into"
@@ -284,7 +289,7 @@ public class ModelStore {
                         body.path("displayName").asText(name),
                         window,
                         max,
-                        Json.write(body.path("capabilities")),
+                        Json.write(capabilities),
                         tokenizer.isBlank() ? null : tokenizer,
                         actor.principalId());
         return entry(id, actor, false);
@@ -306,7 +311,7 @@ public class ModelStore {
         result.put("displayName", r.get("display_name"));
         result.put("contextWindow", r.get("context_window"));
         result.put("maxOutputTokens", r.get("max_output_tokens"));
-        result.put("capabilities", Json.read(r.get("capabilities").toString()));
+        result.put("capabilities", storedCapabilities(Json.read(r.get("capabilities").toString())));
         result.put("status", r.get("status"));
         result.put(
                 "provider",
@@ -747,5 +752,49 @@ public class ModelStore {
         return db.queryForList(
                 "select tenant_id,id from model.provider where status='DEGRADED' and not deleted"
                         + " order by updated_at limit 100");
+    }
+
+    private static final Set<String> SUPPORTED_CAPABILITIES =
+            Set.of("chat", "tools", "vision", "json_mode");
+
+    /**
+     * Capabilities are a closed, lower-case vocabulary. Older clients sent upper-case values
+     * (CHAT/TOOL_CALL) which made every managed call fail the chat check, so accept and
+     * canonicalize the historical aliases at the write boundary.
+     */
+    static JsonNode capabilities(JsonNode raw) {
+        if (raw == null || !raw.isArray())
+            throw new IllegalArgumentException("capabilities必须为数组");
+        var values = new LinkedHashSet<String>();
+        for (var node : raw) {
+            String value = canonicalCapability(node.asText(""));
+            if (!SUPPORTED_CAPABILITIES.contains(value))
+                throw new IllegalArgumentException("不支持的模型能力: " + value);
+            values.add(value);
+        }
+        if (!values.contains("chat"))
+            throw new IllegalArgumentException("capabilities必须包含chat");
+        return Json.tree(values);
+    }
+
+    /** Read-side normalization keeps historical rows usable without a migration. */
+    static JsonNode storedCapabilities(JsonNode raw) {
+        if (raw == null || !raw.isArray()) return Json.tree(List.of("chat"));
+        var values = new LinkedHashSet<String>();
+        for (var node : raw) {
+            String value = canonicalCapability(node.asText(""));
+            if (!value.isBlank()) values.add(value);
+        }
+        if (values.isEmpty()) values.add("chat");
+        return Json.tree(values);
+    }
+
+    private static String canonicalCapability(String raw) {
+        String value = raw == null ? "" : raw.trim().toLowerCase(Locale.ROOT);
+        return switch (value) {
+            case "tool_call", "function_calling", "functions" -> "tools";
+            case "json" -> "json_mode";
+            default -> value;
+        };
     }
 }
