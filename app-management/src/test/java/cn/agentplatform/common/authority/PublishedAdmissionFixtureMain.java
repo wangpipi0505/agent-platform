@@ -187,7 +187,10 @@ public final class PublishedAdmissionFixtureMain {
                                 .mapToInt(n -> Integer.parseInt(n.substring(1, n.indexOf("__"))))
                                 .max()
                                 .orElseThrow();
-                if (max != 104) throw new AssertionError("APP_SOURCE_MAX");
+                // G-8/Y-6：这里只需证明"能在源码里找到迁移并取到最大值"，再把值交给父进程与库比对。
+                // 原先写死 max != 104，每加一条迁移（现在已有 V105）都会让整个夹具假红，掩盖真正的
+                // 失败点；改成只要求不低于历史基线 104，具体 head 由父进程与目标库比对。
+                if (max < 104) throw new AssertionError("APP_SOURCE_MAX");
                 System.out.println("N3_APP_SOURCE_MAX=" + max);
             }
             boolean history =

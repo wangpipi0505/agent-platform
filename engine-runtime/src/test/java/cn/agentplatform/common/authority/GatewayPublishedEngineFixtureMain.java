@@ -200,7 +200,7 @@ public final class GatewayPublishedEngineFixtureMain {
                                 .mapToInt(n -> Integer.parseInt(n.substring(1, n.indexOf("__"))))
                                 .max()
                                 .orElseThrow();
-                if (max != 217) throw new AssertionError("ENGINE_MAX");
+                if (max != EngineMigrations.max()) throw new AssertionError("ENGINE_MAX");
                 System.out.println("N4B2_ENGINE_SOURCE_MAX=" + max);
             }
             System.out.println(
@@ -215,14 +215,15 @@ public final class GatewayPublishedEngineFixtureMain {
                     .schemas("engine")
                     .defaultSchema("engine")
                     .locations("classpath:db/migration")
-                    .target("217")
+                    .target(String.valueOf(EngineMigrations.max()))
                     .load()
                     .migrate();
             var history =
                     db.queryForList(
                             "select version,description,checksum,success from"
                                 + " engine.flyway_schema_history order by installed_rank");
-            if (history.stream().filter(r -> r.get("version") != null).count() != 18)
+            if (history.stream().filter(r -> r.get("version") != null).count()
+                    != EngineMigrations.count(200, EngineMigrations.max()))
                 throw new AssertionError("ENGINE_HISTORY");
             System.out.println("N4B2_ENGINE_HISTORY_AFTER=" + Json.write(history));
             var boot = new SpringApplication(Receiver.class);

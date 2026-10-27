@@ -507,7 +507,7 @@ class FlowMaterialTransactionsPostgresTest {
                                     "select max(version::int) from engine.flyway_schema_history"
                                             + " where version is not null and success",
                                     Integer.class))
-                    .isEqualTo(218);
+                    .isEqualTo(EngineMigrations.max());
             var rows =
                     f.db.queryForList(
                             "select kind,material_version,material_revision from"

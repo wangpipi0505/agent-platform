@@ -15,7 +15,7 @@ class RunAuthorityPersistencePostgresTest {
    long before=f.count();
    assertThatCode(()->f.admitted(p->f.tx.execute(s->{long id=f.create(p);assertThat(f.db.queryForObject("select count(*) from engine.run_authority where run_id=?",Integer.class,id)).isEqualTo(1);assertThat(f.db.queryForObject("select count(*) from engine.material_scope where run_id=? and kind in ('run-snapshot','run-inputs','run-version-refs')",Integer.class,id)).isEqualTo(3);assertThat(f.db.queryForObject("select count(*) from engine.material_scope where run_id=? and kind in ('run-state','run-budget','run-output','run-error')",Integer.class,id)).isEqualTo(4);return id;}))).doesNotThrowAnyException();
    assertThat(f.count()).isEqualTo(before+1);
-   assertThat(f.db.queryForObject("select max(version::int) from engine.flyway_schema_history where version is not null and success",Integer.class)).isEqualTo(218);
+   assertThat(f.db.queryForObject("select max(version::int) from engine.flyway_schema_history where version is not null and success",Integer.class)).isEqualTo(EngineMigrations.max());
    System.out.println("N1_E1B_HISTORY_AFTER="+f.db.queryForList("select version,description,success from engine.flyway_schema_history order by installed_rank"));
    System.out.println("N1_E1B_CONSTRAINTS_AFTER="+f.db.queryForList("select conname,pg_get_constraintdef(oid) as definition from pg_constraint where conrelid='engine.material_scope'::regclass order by conname"));
    assertThat(f.db.queryForList("select tgname from pg_trigger where tgrelid in ('engine.material_scope'::regclass,'engine.run_authority'::regclass) and not tgisinternal and tgenabled='O'",String.class)).containsExactlyInAnyOrder("material_scope_immutable","run_authority_immutable");

@@ -231,9 +231,9 @@ class PublishedAdmissionHttpPostgresTest {
                                             n -> Integer.parseInt(n.substring(1, n.indexOf("__"))))
                                     .max()
                                     .orElseThrow())
-                    .isEqualTo(217);
+                    .isEqualTo(EngineMigrations.max());
         }
-        System.out.println("N3_ENGINE_SOURCE_MAX=217");
+        System.out.println("N3_ENGINE_SOURCE_MAX=" + EngineMigrations.max());
         boolean history =
                 db.queryForObject(
                         "select to_regclass('engine.flyway_schema_history') is not null",
@@ -252,7 +252,7 @@ class PublishedAdmissionHttpPostgresTest {
                 .schemas("engine")
                 .defaultSchema("engine")
                 .locations("classpath:db/migration")
-                .target("217")
+                .target(String.valueOf(EngineMigrations.max()))
                 .load()
                 .migrate();
         System.out.println(
@@ -265,9 +265,10 @@ class PublishedAdmissionHttpPostgresTest {
         assertThat(
                         db.queryForObject(
                                 "select count(*) from engine.flyway_schema_history where success"
-                                    + " and version::integer between 200 and 217",
-                                Integer.class))
-                .isEqualTo(18);
+                                    + " and version::integer between 200 and ?",
+                                Integer.class,
+                                EngineMigrations.max()))
+                .isEqualTo(EngineMigrations.count(200, EngineMigrations.max()));
         var cp =
                 Files.readString(
                         ROOT.resolve(".local/iam-n3-admission-app-client/app-classpath.txt"));

@@ -149,9 +149,9 @@ class RunObservationStatusHttpPostgresTest {
             @Override public Connection getConnection()throws SQLException{return observe(super.getConnection());}
         };db=new JdbcTemplate(ds);
         assertThat(db.queryForObject("select current_database()",String.class)).isEqualTo(DATABASE);
-        Flyway.configure().dataSource(ds).schemas("engine").defaultSchema("engine").locations("classpath:db/migration").target("217").load().migrate();
-        assertThat(db.queryForObject("select count(*) from engine.flyway_schema_history where success and version::integer between 200 and 217",Integer.class)).isEqualTo(18);
-        System.out.println("O1B_DB="+Json.write(Map.of("database",DATABASE,"existed",existed,"migrationCount",18)));
+        Flyway.configure().dataSource(ds).schemas("engine").defaultSchema("engine").locations("classpath:db/migration").target(String.valueOf(EngineMigrations.max())).load().migrate();
+        assertThat(db.queryForObject("select count(*) from engine.flyway_schema_history where success and version::integer between 200 and ?",Integer.class,EngineMigrations.max())).isEqualTo(EngineMigrations.count(200,EngineMigrations.max()));
+        System.out.println("O1B_DB="+Json.write(Map.of("database",DATABASE,"existed",existed,"migrationCount",EngineMigrations.count(200,EngineMigrations.max()))));
         var app=new SpringApplication(Receiver.class);app.setAdditionalProfiles("test");
         app.setDefaultProperties(Map.ofEntries(Map.entry("server.address","127.0.0.1"),Map.entry("server.port","0"),Map.entry("spring.config.location","optional:classpath:/o1b-no-config/"),Map.entry("spring.main.banner-mode","off"),Map.entry("springdoc.api-docs.enabled",false),Map.entry("spring.flyway.enabled",false),Map.entry("management.endpoints.web.exposure.exclude","*"),Map.entry("management.endpoints.web.discovery.enabled",false),Map.entry("logging.level.root","ERROR")));
         context=(ServletWebServerApplicationContext)app.run();
