@@ -1,0 +1,211 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ------------------< cn.agentplatform:app-management >-------------------
+[INFO] Building app-management 0.1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- enforcer:3.5.0:enforce (default) @ app-management ---
+[INFO] Rule 0: org.apache.maven.enforcer.rules.version.RequireJavaVersion passed
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ app-management ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 7 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.0:compile (default-compile) @ app-management ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ app-management ---
+[INFO] skip non existing resourceDirectory G:\207\项目\算法重组工具\代码\agent-platform-baseline\app-management\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.14.0:testCompile (default-testCompile) @ app-management ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- surefire:3.5.3:test (default-test) @ app-management ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running cn.agentplatform.app.application.AppCopyConcurrencyTest
+[ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 0.351 s <<< FAILURE! -- in cn.agentplatform.app.application.AppCopyConcurrencyTest
+[ERROR] cn.agentplatform.app.application.AppCopyConcurrencyTest -- Time elapsed: 0.351 s <<< ERROR!
+org.flywaydb.core.internal.exception.FlywaySqlException: 
+Unable to obtain connection from database: FATAL: database "agent_platform_app_copy_test" does not exist
+--------------------------------------------------------------------------------------------------------
+SQL State  : 3D000
+Error Code : 0
+Message    : FATAL: database "agent_platform_app_copy_test" does not exist
+
+	at org.flywaydb.core.internal.jdbc.JdbcUtils.openConnection(JdbcUtils.java:71)
+	at org.flywaydb.core.internal.jdbc.JdbcConnectionFactory.<init>(JdbcConnectionFactory.java:76)
+	at org.flywaydb.core.FlywayExecutor.execute(FlywayExecutor.java:136)
+	at org.flywaydb.core.Flyway.migrate(Flyway.java:188)
+	at cn.agentplatform.app.application.AppCopyConcurrencyTest.database(AppCopyConcurrencyTest.java:40)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+Caused by: org.postgresql.util.PSQLException: FATAL: database "agent_platform_app_copy_test" does not exist
+	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2733)
+	at org.postgresql.core.v3.QueryExecutorImpl.readStartupMessages(QueryExecutorImpl.java:2845)
+	at org.postgresql.core.v3.QueryExecutorImpl.<init>(QueryExecutorImpl.java:176)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:323)
+	at org.postgresql.core.ConnectionFactory.openConnection(ConnectionFactory.java:54)
+	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:273)
+	at org.postgresql.Driver.makeConnection(Driver.java:446)
+	at org.postgresql.Driver.connect(Driver.java:298)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:683)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:191)
+	at org.springframework.jdbc.datasource.DriverManagerDataSource.getConnectionFromDriverManager(DriverManagerDataSource.java:155)
+	at org.springframework.jdbc.datasource.DriverManagerDataSource.getConnectionFromDriver(DriverManagerDataSource.java:146)
+	at org.springframework.jdbc.datasource.AbstractDriverBasedDataSource.getConnectionFromDriver(AbstractDriverBasedDataSource.java:205)
+	at org.springframework.jdbc.datasource.AbstractDriverBasedDataSource.getConnection(AbstractDriverBasedDataSource.java:169)
+	at org.flywaydb.core.internal.jdbc.JdbcUtils.openConnection(JdbcUtils.java:59)
+	... 6 more
+
+[INFO] Running cn.agentplatform.app.application.AuditLinkPostgresTest
+04:37:00.387 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+04:37:00.433 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.024s)
+04:37:00.465 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+04:37:00.470 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+04:37:00.826 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+04:37:00.837 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.006s)
+04:37:00.862 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+04:37:00.862 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+04:37:01.271 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+04:37:01.282 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.006s)
+04:37:01.307 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+04:37:01.307 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+04:37:01.603 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+04:37:01.616 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.007s)
+04:37:01.640 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+04:37:01.640 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.530 s -- in cn.agentplatform.app.application.AuditLinkPostgresTest
+[INFO] Running cn.agentplatform.app.application.IdentityMappingPostgresTest
+04:37:01.815 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+04:37:01.826 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.006s)
+04:37:01.949 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+04:37:01.949 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+04:37:02.000 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+04:37:02.012 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.005s)
+04:37:02.034 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+04:37:02.034 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+04:37:02.297 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+04:37:02.306 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.005s)
+04:37:02.327 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+04:37:02.327 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+04:37:02.457 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+04:37:02.468 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.006s)
+04:37:02.490 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+04:37:02.490 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+04:37:02.542 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+04:37:02.552 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.005s)
+04:37:02.574 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+04:37:02.574 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+04:37:02.664 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+04:37:02.674 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.005s)
+04:37:02.695 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+04:37:02.695 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+04:37:02.742 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+04:37:02.751 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.005s)
+04:37:02.774 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+04:37:02.774 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+04:37:02.859 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+04:37:02.869 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.005s)
+04:37:02.893 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+04:37:02.894 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+04:37:02.942 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+04:37:02.952 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.004s)
+04:37:02.976 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+04:37:02.977 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+04:37:03.241 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+04:37:03.250 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.005s)
+04:37:03.274 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+04:37:03.274 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+04:37:03.318 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+04:37:03.330 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.007s)
+04:37:03.351 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+04:37:03.351 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.642 s -- in cn.agentplatform.app.application.IdentityMappingPostgresTest
+[INFO] Running cn.agentplatform.app.application.IntegrationPolicyDatabaseTest
+D2_DATABASE_EXISTED=true
+04:37:03.458 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_policy_v12 (PostgreSQL 16.15)
+04:37:03.466 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.004s)
+04:37:03.488 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+04:37:03.488 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.125 s -- in cn.agentplatform.app.application.IntegrationPolicyDatabaseTest
+[INFO] Running cn.agentplatform.app.application.PublishGateTest
+04:37:03.620 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_v12 (PostgreSQL 16.15)
+04:37:03.629 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.005s)
+04:37:03.651 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+04:37:03.651 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+[INFO] Tests run: 11, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.894 s -- in cn.agentplatform.app.application.PublishGateTest
+[INFO] Running cn.agentplatform.app.application.PublishPinTest
+04:37:07.459 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_v12 (PostgreSQL 16.15)
+04:37:07.467 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.004s)
+04:37:07.492 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+04:37:07.492 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.752 s -- in cn.agentplatform.app.application.PublishPinTest
+[INFO] Running cn.agentplatform.app.application.PublishTransactionTest
+04:37:09.211 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_v12 (PostgreSQL 16.15)
+04:37:09.221 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.005s)
+04:37:09.246 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+04:37:09.246 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+[ERROR] Tests run: 13, Failures: 0, Errors: 2, Skipped: 0, Time elapsed: 2.926 s <<< FAILURE! -- in cn.agentplatform.app.application.PublishTransactionTest
+[ERROR] cn.agentplatform.app.application.PublishTransactionTest.globalCredentialLookupRequiresDedicatedGatewayIdentity -- Time elapsed: 0.155 s <<< ERROR!
+cn.agentplatform.common.PlatformException: 缺少当前授权上下文
+	at cn.agentplatform.common.authority.AuthorityContext.frame(AuthorityContext.java:70)
+	at cn.agentplatform.common.authority.AuthorityContext.refresh(AuthorityContext.java:74)
+	at cn.agentplatform.common.authority.AuthorityContext.requireFor(AuthorityContext.java:41)
+	at cn.agentplatform.app.application.IntegrationService.requirePublishedVersion(IntegrationService.java:214)
+	at cn.agentplatform.app.application.IntegrationService.issue(IntegrationService.java:131)
+	at cn.agentplatform.app.application.PublishTransactionTest.globalCredentialLookupRequiresDedicatedGatewayIdentity(PublishTransactionTest.java:347)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.app.application.PublishTransactionTest.integrationSecretOnlyShownOnceAndRevocationPersists -- Time elapsed: 0.163 s <<< ERROR!
+cn.agentplatform.common.PlatformException: 缺少当前授权上下文
+	at cn.agentplatform.common.authority.AuthorityContext.frame(AuthorityContext.java:70)
+	at cn.agentplatform.common.authority.AuthorityContext.refresh(AuthorityContext.java:74)
+	at cn.agentplatform.common.authority.AuthorityContext.requireFor(AuthorityContext.java:41)
+	at cn.agentplatform.app.application.IntegrationService.requirePublishedVersion(IntegrationService.java:214)
+	at cn.agentplatform.app.application.IntegrationService.issue(IntegrationService.java:131)
+	at cn.agentplatform.app.application.PublishTransactionTest.integrationSecretOnlyShownOnceAndRevocationPersists(PublishTransactionTest.java:315)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] Running cn.agentplatform.app.infra.ReleasePinsTest
+[INFO] Tests run: 10, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.036 s -- in cn.agentplatform.app.infra.ReleasePinsTest
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Errors: 
+[ERROR]   AppCopyConcurrencyTest.database:40 ? FlywaySql Unable to obtain connection from database: FATAL: database "agent_platform_app_copy_test" does not exist
+--------------------------------------------------------------------------------------------------------
+SQL State  : 3D000
+Error Code : 0
+Message    : FATAL: database "agent_platform_app_copy_test" does not exist
+
+[ERROR]   PublishTransactionTest.globalCredentialLookupRequiresDedicatedGatewayIdentity:347 ? Platform 缺少当前授权上下文
+[ERROR]   PublishTransactionTest.integrationSecretOnlyShownOnceAndRevocationPersists:315 ? Platform 缺少当前授权上下文
+[INFO] 
+[ERROR] Tests run: 54, Failures: 0, Errors: 3, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  14.649 s
+[INFO] Finished at: 2026-10-28T04:37:12+08:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.3:test (default-test) on project app-management: 
+[ERROR] 
+[ERROR] See G:\207\项目\算法重组工具\代码\agent-platform-baseline\app-management\target\surefire-reports for the individual test results.
+[ERROR] See dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

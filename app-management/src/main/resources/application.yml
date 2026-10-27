@@ -40,6 +40,8 @@ agent:
     enabled: ${AGENT_PIN_ENABLED:true}
     # true 时绑定失败拒绝本次发布响应（502 PIN_FAILED）；版本已提交，重放会再次尝试绑定。
     fail-closed: ${AGENT_PIN_FAIL_CLOSED:false}
+    # T18.3 观测落库开关：false 只停写 app.publish_pin，发布响应与绑定行为不变。
+    record-enabled: ${AGENT_PIN_RECORD_ENABLED:true}
     environment: ${AGENT_PIN_ENVIRONMENT:production}
 management:
   endpoints:

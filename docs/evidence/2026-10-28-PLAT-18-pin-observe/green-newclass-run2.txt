@@ -1,0 +1,103 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ------------------< cn.agentplatform:app-management >-------------------
+[INFO] Building app-management 0.1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- enforcer:3.5.0:enforce (default) @ app-management ---
+[INFO] Rule 0: org.apache.maven.enforcer.rules.version.RequireJavaVersion passed
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ app-management ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 8 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.0:compile (default-compile) @ app-management ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ app-management ---
+[INFO] skip non existing resourceDirectory G:\207\项目\算法重组工具\代码\agent-platform\app-management\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.14.0:testCompile (default-testCompile) @ app-management ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 23 source files with javac [debug parameters release 21] to target\test-classes
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/app-management/src/test/java/cn/agentplatform/app/application/PublishPinAuditPostgresTest.java: 某些输入文件使用了未经检查或不安全的操作。
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/app-management/src/test/java/cn/agentplatform/app/application/PublishPinAuditPostgresTest.java: 有关详细信息, 请使用 -Xlint:unchecked 重新编译。
+[INFO] 
+[INFO] --- surefire:3.5.3:test (default-test) @ app-management ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running cn.agentplatform.app.application.PublishPinAuditPostgresTest
+04:26:57.372 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_pin_audit_v12 (PostgreSQL 16.15)
+04:26:57.413 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 9 migrations (execution time 00:00.023s)
+04:26:57.450 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+04:26:57.452 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+[ERROR] Tests run: 9, Failures: 3, Errors: 0, Skipped: 0, Time elapsed: 2.689 s <<< FAILURE! -- in cn.agentplatform.app.application.PublishPinAuditPostgresTest
+[ERROR] cn.agentplatform.app.application.PublishPinAuditPostgresTest.v106LandsPublishPinTableWithStateContractAndOrderedHistory -- Time elapsed: 0.181 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: publish_pin.environment 必须可空 ==> expected: <YES> but was: <NO>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1156)
+	at cn.agentplatform.app.application.PublishPinAuditPostgresTest.v106LandsPublishPinTableWithStateContractAndOrderedHistory(PublishPinAuditPostgresTest.java:199)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.app.application.PublishPinAuditPostgresTest.republishOverwritesCurrentRowSoReverseLookupReturnsLatest -- Time elapsed: 0.115 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <8a1f2b3c-4d5e-4f60-9a71-b2c3d4e5f607> but was: <null>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:177)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1145)
+	at cn.agentplatform.app.application.PublishPinAuditPostgresTest.republishOverwritesCurrentRowSoReverseLookupReturnsLatest(PublishPinAuditPostgresTest.java:306)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.app.application.PublishPinAuditPostgresTest.failedResultIsPersistedButKeepsLastKnownPinnedBinding -- Time elapsed: 0.094 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <PINNED> but was: <null>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:177)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1145)
+	at cn.agentplatform.app.application.PublishPinAuditPostgresTest.failedResultIsPersistedButKeepsLastKnownPinnedBinding(PublishPinAuditPostgresTest.java:263)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Failures: 
+[ERROR]   PublishPinAuditPostgresTest.failedResultIsPersistedButKeepsLastKnownPinnedBinding:263 expected: <PINNED> but was: <null>
+[ERROR]   PublishPinAuditPostgresTest.republishOverwritesCurrentRowSoReverseLookupReturnsLatest:306 expected: <8a1f2b3c-4d5e-4f60-9a71-b2c3d4e5f607> but was: <null>
+[ERROR]   PublishPinAuditPostgresTest.v106LandsPublishPinTableWithStateContractAndOrderedHistory:199 publish_pin.environment 必须可空 ==> expected: <YES> but was: <NO>
+[INFO] 
+[ERROR] Tests run: 9, Failures: 3, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  7.816 s
+[INFO] Finished at: 2026-10-28T04:27:00+08:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.3:test (default-test) on project app-management: There are test failures.
+[ERROR] 
+[ERROR] See G:\207\项目\算法重组工具\代码\agent-platform\app-management\target\surefire-reports for the individual test results.
+[ERROR] See dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

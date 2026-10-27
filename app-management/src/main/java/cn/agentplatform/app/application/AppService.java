@@ -10,6 +10,7 @@ import cn.agentplatform.common.authority.*;
 import cn.agentplatform.common.schema.SchemaDialect;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
@@ -24,6 +25,7 @@ import java.sql.ResultSet;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -31,6 +33,27 @@ import java.util.concurrent.atomic.AtomicReference;
 /** 应用草稿与发布事务。业务定义进入候选摘要，画布布局只用于展示；运行时始终读取不可变版本。 */
 @Service
 public class AppService {
+    private static final org.slf4j.Logger log = LoggerFactory.getLogger(AppService.class);
+
+    /**
+     * pin 结果落库 UPSERT：每应用一行最近一次尝试结果；last_pinned_* 只在 PINNED 时推进，
+     * 失败/跳过不抹掉"远端当前仍指向哪个绑定"的已知事实。与 V106 迁移头注释的语义一一对应。
+     */
+    private static final String PIN_UPSERT =
+            "insert into app.publish_pin(tenant_id,app_code,app_version_no,state,release_id,"
+                    + "binding_id,reason,environment,last_pinned_release_id,last_pinned_binding_id,last_pinned_at)"
+                    + " values(?,?,?,?,?,?,?,?,?,?,?)"
+                    + " on conflict(tenant_id,app_code) do update set"
+                    + " app_version_no=excluded.app_version_no,state=excluded.state,"
+                    + " release_id=excluded.release_id,binding_id=excluded.binding_id,"
+                    + " reason=excluded.reason,environment=excluded.environment,updated_at=now(),"
+                    + " last_pinned_release_id=coalesce(case when excluded.state='PINNED' then"
+                    + " excluded.release_id end, app.publish_pin.last_pinned_release_id),"
+                    + " last_pinned_binding_id=coalesce(case when excluded.state='PINNED' then"
+                    + " excluded.binding_id end, app.publish_pin.last_pinned_binding_id),"
+                    + " last_pinned_at=coalesce(case when excluded.state='PINNED' then now() end,"
+                    + " app.publish_pin.last_pinned_at)";
+
     private final JdbcTemplate db;
     private final TransactionTemplate tx;
     private final TransactionTemplate publishedReadTx;
@@ -46,6 +69,22 @@ public class AppService {
 
     @Value("${agent.publish.waiver-enabled:true}")
     private boolean waiverEnabled = true;
+
+    /**
+     * pin 结果落库开关与本体环境名。T18.3：绑定状态机结果在发布事务提交后落 app.publish_pin，
+     * 反查不再依赖日志。落库失败不阻断已提交的发布（与 T-pin fail-open 同一取向）；
+     * {@code agent.pin.record-enabled=false} 是回滚开关，只停写、不改发布响应。
+     */
+    @Value("${agent.pin.record-enabled:true}")
+    private boolean pinRecordEnabled = true;
+
+    @Value("${agent.pin.environment:production}")
+    private String pinEnvironment = "production";
+
+    /** 测试/诊断入口：覆盖 pin 落库开关，不改装配与依赖。 */
+    void pinRecord(boolean enabled) {
+        this.pinRecordEnabled = enabled;
+    }
 
     /**
      * 本体发布绑定客户端。构造签名被大量手工构造（测试/诊断）固定，改用可选 setter 注入；未装配时发布
@@ -1566,8 +1605,95 @@ public class AppService {
                 });
         // 绑定失败不回滚已提交版本（fail-open 默认）；结果只并入返回副本，不改事务产出的不可变发布凭据。
         var result = new LinkedHashMap<String, Object>(committed);
-        result.put("pin", pin(released.get(), code));
+        var pin = pin(released.get(), code);
+        // T18.3：落库发生在发布事务提交之后、与返回值组装同一处——发布事务内禁止 HTTP，pin 结果
+        // 只在提交后才存在；落库自身是单条 UPSERT 自动提交，失败只告警，绝不影响已提交的发布与响应。
+        recordPin(code, released.get(), pin, committed.get("versionNo"));
+        result.put("pin", pin);
         return result;
+    }
+
+    /**
+     * 事务提交后的观测写入（T18.3）：复用 {@link ReleasePins} 状态机结果，只读其返回 Map 与候选里的
+     * config.ontology 声明，不改客户端本体。fail-closed 时 {@link #pin} 已抛 502，本方法不会被调用，
+     * 与"拒绝本次响应"语义一致（版本已落库，重放同一请求号会再次尝试绑定并写观测行）。
+     */
+    private void recordPin(
+            String code, Map<String, Object> candidate, Map<String, Object> pin, Object versionNo) {
+        if (!pinRecordEnabled) return;
+        try {
+            String state = Objects.toString(pin.get("state"), "");
+            String releaseId = ontologyReleaseId(candidate);
+            String bindingId = Objects.toString(pin.get("bindingId"), null);
+            boolean pinned = "PINNED".equals(state);
+            db.update(
+                    PIN_UPSERT,
+                    tenant(),
+                    code,
+                    ((Number) Objects.requireNonNull(versionNo, "发布版本号缺失")).intValue(),
+                    state,
+                    releaseId,
+                    bindingId,
+                    Objects.toString(pin.get("reason"), null),
+                    pinEnvironment,
+                    pinned ? releaseId : null,
+                    pinned ? bindingId : null,
+                    pinned ? new Timestamp(System.currentTimeMillis()) : null);
+        } catch (RuntimeException failure) {
+            // 观测不得破坏发布：已提交的版本与响应照常返回；traceId 走 MDC（TraceContextFilter），
+            // 日志模式自动带上，这里补记应用与状态供事后补偿。
+            log.warn(
+                    "pin 结果落库失败（不影响已提交发布）app={} state={} cause={}",
+                    code,
+                    pin.get("state"),
+                    failure.getClass().getSimpleName());
+        }
+    }
+
+    /** 候选里声明的目标 release（尽力记录，非远端回执）；未声明或为空返回 null。 */
+    private static String ontologyReleaseId(Map<String, Object> candidate) {
+        if (candidate == null || !(candidate.get("config") instanceof Map<?, ?> config)) return null;
+        if (!(config.get("ontology") instanceof Map<?, ?> ontology)) return null;
+        Object releaseId = ontology.get("releaseId");
+        if (releaseId == null) return null;
+        String value = releaseId.toString().trim();
+        return value.isEmpty() ? null : value;
+    }
+
+    /**
+     * 按应用反查当前 pin 状态（管理面/运维用，T18.3）。应用不存在显式 404；
+     * V106 之前的旧发布记录没有 pin 行，返回空 Map 而不是报错或静默造数据。
+     */
+    public Map<String, Object> pinStatus(String code) {
+        get(code);
+        var rows =
+                db.queryForList(
+                        "select * from app.publish_pin where tenant_id=? and app_code=?",
+                        tenant(),
+                        code);
+        if (rows.isEmpty()) return new LinkedHashMap<>();
+        var r = rows.getFirst();
+        var view = new LinkedHashMap<String, Object>();
+        view.put("appCode", code);
+        view.put("versionNo", r.get("app_version_no"));
+        view.put("state", r.get("state"));
+        view.put("releaseId", r.get("release_id"));
+        view.put("bindingId", r.get("binding_id"));
+        view.put("reason", r.get("reason"));
+        view.put("environment", r.get("environment"));
+        view.put("lastPinnedReleaseId", r.get("last_pinned_release_id"));
+        view.put("lastPinnedBindingId", r.get("last_pinned_binding_id"));
+        view.put(
+                "lastPinnedAt",
+                r.get("last_pinned_at") == null
+                        ? null
+                        : ((Timestamp) r.get("last_pinned_at")).toInstant().toString());
+        view.put(
+                "updatedAt",
+                r.get("updated_at") == null
+                        ? null
+                        : ((Timestamp) r.get("updated_at")).toInstant().toString());
+        return view;
     }
 
     /**
