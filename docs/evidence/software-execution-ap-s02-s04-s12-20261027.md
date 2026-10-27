@@ -143,6 +143,7 @@ b7a811d AP-S04 输入文件上传与网关字节流转发
 8710ef9 AP-S08 评测基线、回归与报告摘要
 40feb65 AP-S12 服务接入探测与链接卡片
 9dd1731 AP-S09 管理台路由化页面合并
+938c851 AP-S05 通用外部服务生命周期
 bd28f85 模型能力别名归一与运行分页
 096c7b6 执行证据
 6226cd3 一键启停与 PowerShell 5.1 兼容
@@ -156,12 +157,16 @@ ModelStoreCapabilitiesTest -> 3/3
 RunDiagnosticsTest -> 7/7
 EvaluationRulesTest -> 7/7
 ServiceProbeTest -> 5/5
-npm test -> 32 files / 239 tests passed
+ServiceManifestTest -> 4/4
+ServiceLifecycleTest -> 3/3
+npm test -> 33 files / 242 tests passed
 npm run build -> success
 ```
 
+AP-S05 真实 HTTP 生命周期另记：临时服务登记 → READY（pid 31392）→ 健康 200 → 无 confirm 停止 409 → 确认停止 → 重启 READY（pid 61688）→ 运行中删除 409 → 停止后删除 200；详见 `docs/evidence/route-support/ap-s05-service-lifecycle.md`。
+
 ## 未完成
 
-- AP-S05 通用服务生命周期、AP-S10 运维可观测尚未执行；AP-S09 只完成本轮页面合并与 smoke，不替代完整可用性验收。
+- AP-S10 运维可观测尚未执行；AP-S09 只完成本轮页面合并与 smoke，不替代完整可用性验收。
 - 8080 当前仍是 demo 空间服务，IN-04/IN-06 的真实库证据未复跑。
 - 工作区仍有其他并行产生的 IAM 证据与 `output/` 截图，未纳入本次提交。
