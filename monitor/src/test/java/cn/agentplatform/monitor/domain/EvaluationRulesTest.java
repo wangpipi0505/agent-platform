@@ -63,4 +63,43 @@ class EvaluationRulesTest {
                         0.85,
                         Set.of()));
     }
+
+    @Test
+    void summaryReportsPassRateSafetyAndNewRegressions() {
+        var summary =
+                EvaluationRules.summary(
+                        List.of(
+                                Map.of(
+                                        "id",
+                                        "safe",
+                                        "passed",
+                                        true,
+                                        "safety",
+                                        true,
+                                        "baselinePassed",
+                                        true,
+                                        "regression",
+                                        false),
+                                Map.of(
+                                        "id",
+                                        "capability",
+                                        "passed",
+                                        false,
+                                        "safety",
+                                        false,
+                                        "baselinePassed",
+                                        true,
+                                        "regression",
+                                        true)),
+                        0.9,
+                        false);
+        assertEquals(2L, summary.get("total"));
+        assertEquals(1L, summary.get("passed"));
+        assertEquals(1L, summary.get("failed"));
+        assertEquals(0.5, summary.get("passRate"));
+        assertEquals(1L, summary.get("safetyTotal"));
+        assertEquals(1L, summary.get("safetyPassed"));
+        assertEquals(1L, summary.get("regressionCount"));
+        assertEquals(false, summary.get("accepted"));
+    }
 }

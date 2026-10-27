@@ -272,6 +272,12 @@ public class EvaluationService {
                                 && Json.tree(c.get("expected"))
                                         .equals(Json.tree(run.get("output")));
                 result.put("passed", passed);
+                result.put(
+                        "baselinePassed",
+                        baselinePassed.contains(Objects.toString(c.get("id"), "")));
+                result.put(
+                        "regression",
+                        baselinePassed.contains(Objects.toString(c.get("id"), "")) && !passed);
                 result.put("runId", Objects.toString(run.get("runId"), ""));
                 result.put("actual", run.get("output"));
                 result.put("status", Objects.toString(run.get("status"), "UNKNOWN"));
@@ -281,6 +287,12 @@ public class EvaluationService {
             } catch (Exception ex) {
                 transportError = true;
                 result.put("passed", false);
+                result.put(
+                        "baselinePassed",
+                        baselinePassed.contains(Objects.toString(c.get("id"), "")));
+                result.put(
+                        "regression",
+                        baselinePassed.contains(Objects.toString(c.get("id"), "")));
                 result.put("attribution", "DEPENDENCY_FAILURE");
                 result.put("error", Objects.toString(ex.getMessage(), "引擎调用失败"));
             }
@@ -370,10 +382,20 @@ public class EvaluationService {
                             v.put("datasetVersion", r.getString("dataset_version"));
                             v.put("threshold", r.getDouble("threshold"));
                             v.put("baselineReportId", r.getString("baseline_report_id"));
-                            v.put("results", Json.read(r.getString("results"), Object.class));
+                            @SuppressWarnings("unchecked")
+                            List<Map<String, Object>> results =
+                                    (List<Map<String, Object>>)
+                                            (List<?>) Json.read(r.getString("results"), List.class);
+                            if (results == null) results = List.of();
+                            boolean accepted = r.getString("status").equals("ACCEPTED");
+                            v.put("results", results);
+                            v.put(
+                                    "summary",
+                                    EvaluationRules.summary(
+                                            results, r.getDouble("threshold"), accepted));
                             v.put("createdBy", r.getString("created_by"));
                             v.put("createdAt", r.getTimestamp("created_at").toInstant().toString());
-                            v.put("accepted", r.getString("status").equals("ACCEPTED"));
+                            v.put("accepted", accepted);
                             return v;
                         },
                         tenant(),

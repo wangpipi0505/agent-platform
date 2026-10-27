@@ -3,9 +3,13 @@ export function evaluationSummary(report: any) {
   const rows = report?.results || [];
   const passed = (r:any) => r.status === 'SUCCEEDED' && r.passed === true;
   const failed = (r:any) => !pendingCase(r.status) && (!!r.error || ['SUCCEEDED','FAILED','CANCELLED','ERROR'].includes(r.status)) && !passed(r);
+  const summary = report?.summary || {};
   return { total: rows.length, passed: rows.filter(passed).length, failed: rows.filter(failed).length,
     pending: rows.filter((r:any)=>pendingCase(r.status)).length, safety:rows.filter((r:any)=>r.safety).length,
-    safetyPassed:rows.filter((r:any)=>r.safety&&passed(r)).length, safetyFailed:rows.filter((r:any)=>r.safety&&failed(r)).length };
+    safetyPassed:rows.filter((r:any)=>r.safety&&passed(r)).length, safetyFailed:rows.filter((r:any)=>r.safety&&failed(r)).length,
+    regressions: Number(summary.regressionCount ?? rows.filter((r:any)=>r.regression).length),
+    passRate: Number(summary.passRate ?? (rows.length ? rows.filter(passed).length / rows.length : 0)),
+    threshold: Number(summary.threshold ?? report?.threshold ?? 0) };
 }
 export function evaluationLabel(report:any) {
   if(report?.status==='ACCEPTED')return '评测已通过';

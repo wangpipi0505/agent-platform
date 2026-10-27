@@ -5,6 +5,10 @@ describe('frozen evaluation observer', () => {
   it('counts dependency errors as failed safety cases without calling waiting cases failures',()=>{
     expect(evaluationSummary({results:[{id:'error',safety:true,passed:false,error:'unavailable',attribution:'DEPENDENCY_FAILURE'},{id:'waiting',safety:true,status:'WAITING_EXTERNAL',passed:false}]})).toMatchObject({passed:0,failed:1,pending:1,safetyFailed:1});
   });
+  it('surfaces baseline regressions and pass rate without inventing a baseline',()=>{
+    expect(evaluationSummary({summary:{passRate:0.5,regressionCount:1,threshold:0.9},results:[{id:'one',passed:true,safety:true},{id:'two',passed:false,safety:false,regression:true}]})).toMatchObject({regressions:1,passRate:0.5,threshold:0.9});
+    expect(evaluationSummary({results:[{id:'one',status:'SUCCEEDED',passed:true}]})).toMatchObject({regressions:0,passRate:1,threshold:0});
+  });
   it('serially resumes the same report through multiple pending states to accepted', async()=>{
     let resumes=0,active=0,max=0;const seen:any[]=[];
     const api=vi.fn(async(path:string)=>{active++;max=Math.max(max,active);await Promise.resolve();active--;return path.endsWith('/resume')?{...frozen,status:++resumes===3?'ACCEPTED':'RUNNING'}:frozen;});
