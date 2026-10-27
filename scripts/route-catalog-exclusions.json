@@ -1,0 +1,11 @@
+{
+  "comment": "G-9 路由校验排除表：只登记「不是服务票据路由、因此不需要 agent-service-authority.json 目录行」的端点。每条 reason 必须非空，空 reason 视为失败（防止用排除表掩盖真漂移）。判权面三类见 docs/evidence/2026-10-27-G9-route-drift/README.md。",
+  "exclusions": [
+    {
+      "service": "app",
+      "method": "POST",
+      "template": "/internal/iam/integration-policy/resolve",
+      "reason": "平台权威签发端点，不是服务票据路由：凭据是 policy-request JWT（路径定义见 admin-common/src/main/java/cn/agentplatform/common/authority/PolicyRequestVerifier.java:13），platform-gateway/src/test/java/cn/agentplatform/gateway/domain/IntegrationPolicyTest.java:127 明确断言服务票据不得命中该路径；运行期本 handler 已由 RouteCoverageVerifier.Ingress（app-management/src/main/java/cn/agentplatform/app/infra/PolicyResolverSecurity.java 的 ingress()）显式豁免，因此目录不登记它。"
+    }
+  ]
+}

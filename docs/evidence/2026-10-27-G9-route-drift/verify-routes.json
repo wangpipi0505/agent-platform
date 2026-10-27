@@ -1,0 +1,372 @@
+{
+  "ok": true,
+  "blocking": false,
+  "strictPortal": false,
+  "services": [
+    {
+      "module": "app-management",
+      "target": "app",
+      "skipped": null,
+      "handlers": 45,
+      "catalog": 42,
+      "portalCatalog": 28,
+      "missing": 0,
+      "portalSurface": 4,
+      "excluded": 1,
+      "stale": 1,
+      "outsideApiMappings": 0
+    },
+    {
+      "module": "engine-runtime",
+      "target": "engine",
+      "skipped": null,
+      "handlers": 55,
+      "catalog": 56,
+      "portalCatalog": 28,
+      "missing": 0,
+      "portalSurface": 0,
+      "excluded": 0,
+      "stale": 1,
+      "outsideApiMappings": 0
+    },
+    {
+      "module": "skill-registry",
+      "target": "skill",
+      "skipped": null,
+      "handlers": 44,
+      "catalog": 34,
+      "portalCatalog": 21,
+      "missing": 0,
+      "portalSurface": 12,
+      "excluded": 0,
+      "stale": 1,
+      "outsideApiMappings": 0
+    },
+    {
+      "module": "monitor",
+      "target": "monitor",
+      "skipped": null,
+      "handlers": 20,
+      "catalog": 16,
+      "portalCatalog": 13,
+      "missing": 0,
+      "portalSurface": 5,
+      "excluded": 0,
+      "stale": 1,
+      "outsideApiMappings": 0
+    },
+    {
+      "module": "model-gateway",
+      "target": "model",
+      "skipped": null,
+      "handlers": 26,
+      "catalog": 23,
+      "portalCatalog": 13,
+      "missing": 0,
+      "portalSurface": 4,
+      "excluded": 0,
+      "stale": 1,
+      "outsideApiMappings": 0
+    },
+    {
+      "module": "platform-gateway",
+      "target": "gateway",
+      "skipped": null,
+      "handlers": 7,
+      "catalog": 7,
+      "portalCatalog": 1,
+      "missing": 0,
+      "portalSurface": 0,
+      "excluded": 0,
+      "stale": 0,
+      "outsideApiMappings": 0
+    }
+  ],
+  "missing": [],
+  "portalSurface": [
+    {
+      "service": "app",
+      "module": "app-management",
+      "method": "POST",
+      "template": "/admin/apps/{}/publish-waivers",
+      "handler": "create",
+      "file": "app-management/src/main/java/cn/agentplatform/app/api/PublishWaiverController.java",
+      "line": 28
+    },
+    {
+      "service": "app",
+      "module": "app-management",
+      "method": "DELETE",
+      "template": "/admin/apps/{}/publish-waivers",
+      "handler": "revoke",
+      "file": "app-management/src/main/java/cn/agentplatform/app/api/PublishWaiverController.java",
+      "line": 34
+    },
+    {
+      "service": "app",
+      "module": "app-management",
+      "method": "DELETE",
+      "template": "/admin/apps/{}/publish-waivers/{}",
+      "handler": "revoke",
+      "file": "app-management/src/main/java/cn/agentplatform/app/api/PublishWaiverController.java",
+      "line": 34
+    },
+    {
+      "service": "app",
+      "module": "app-management",
+      "method": "GET",
+      "template": "/admin/system/status",
+      "handler": "status",
+      "file": "app-management/src/main/java/cn/agentplatform/app/api/SystemStatusController.java",
+      "line": 62
+    },
+    {
+      "service": "skill",
+      "module": "skill-registry",
+      "method": "POST",
+      "template": "/admin/artifacts",
+      "handler": "upload",
+      "file": "skill-registry/src/main/java/cn/agentplatform/skill/api/ArtifactController.java",
+      "line": 25
+    },
+    {
+      "service": "skill",
+      "module": "skill-registry",
+      "method": "GET",
+      "template": "/admin/services",
+      "handler": "list",
+      "file": "skill-registry/src/main/java/cn/agentplatform/skill/api/ServiceController.java",
+      "line": 22
+    },
+    {
+      "service": "skill",
+      "module": "skill-registry",
+      "method": "GET",
+      "template": "/admin/services/{}",
+      "handler": "get",
+      "file": "skill-registry/src/main/java/cn/agentplatform/skill/api/ServiceController.java",
+      "line": 27
+    },
+    {
+      "service": "skill",
+      "module": "skill-registry",
+      "method": "POST",
+      "template": "/admin/services",
+      "handler": "create",
+      "file": "skill-registry/src/main/java/cn/agentplatform/skill/api/ServiceController.java",
+      "line": 32
+    },
+    {
+      "service": "skill",
+      "module": "skill-registry",
+      "method": "PUT",
+      "template": "/admin/services/{}",
+      "handler": "update",
+      "file": "skill-registry/src/main/java/cn/agentplatform/skill/api/ServiceController.java",
+      "line": 37
+    },
+    {
+      "service": "skill",
+      "module": "skill-registry",
+      "method": "DELETE",
+      "template": "/admin/services/{}",
+      "handler": "delete",
+      "file": "skill-registry/src/main/java/cn/agentplatform/skill/api/ServiceController.java",
+      "line": 42
+    },
+    {
+      "service": "skill",
+      "module": "skill-registry",
+      "method": "POST",
+      "template": "/admin/services/{}/start",
+      "handler": "start",
+      "file": "skill-registry/src/main/java/cn/agentplatform/skill/api/ServiceController.java",
+      "line": 49
+    },
+    {
+      "service": "skill",
+      "module": "skill-registry",
+      "method": "POST",
+      "template": "/admin/services/{}/stop",
+      "handler": "stop",
+      "file": "skill-registry/src/main/java/cn/agentplatform/skill/api/ServiceController.java",
+      "line": 54
+    },
+    {
+      "service": "skill",
+      "module": "skill-registry",
+      "method": "POST",
+      "template": "/admin/services/{}/restart",
+      "handler": "restart",
+      "file": "skill-registry/src/main/java/cn/agentplatform/skill/api/ServiceController.java",
+      "line": 61
+    },
+    {
+      "service": "skill",
+      "module": "skill-registry",
+      "method": "GET",
+      "template": "/admin/services/{}/health",
+      "handler": "health",
+      "file": "skill-registry/src/main/java/cn/agentplatform/skill/api/ServiceController.java",
+      "line": 68
+    },
+    {
+      "service": "skill",
+      "module": "skill-registry",
+      "method": "GET",
+      "template": "/admin/services/{}/logs",
+      "handler": "logs",
+      "file": "skill-registry/src/main/java/cn/agentplatform/skill/api/ServiceController.java",
+      "line": 73
+    },
+    {
+      "service": "skill",
+      "module": "skill-registry",
+      "method": "POST",
+      "template": "/admin/skills/{}/versions/{}/service-probe",
+      "handler": "serviceProbe",
+      "file": "skill-registry/src/main/java/cn/agentplatform/skill/api/SkillController.java",
+      "line": 130
+    },
+    {
+      "service": "monitor",
+      "module": "monitor",
+      "method": "GET",
+      "template": "/admin/operations/overview",
+      "handler": "overview",
+      "file": "monitor/src/main/java/cn/agentplatform/monitor/api/OperationsController.java",
+      "line": 16
+    },
+    {
+      "service": "monitor",
+      "module": "monitor",
+      "method": "GET",
+      "template": "/admin/operations/alerts",
+      "handler": "alerts",
+      "file": "monitor/src/main/java/cn/agentplatform/monitor/api/OperationsController.java",
+      "line": 21
+    },
+    {
+      "service": "monitor",
+      "module": "monitor",
+      "method": "POST",
+      "template": "/admin/operations/alerts/evaluate",
+      "handler": "evaluate",
+      "file": "monitor/src/main/java/cn/agentplatform/monitor/api/OperationsController.java",
+      "line": 26
+    },
+    {
+      "service": "monitor",
+      "module": "monitor",
+      "method": "POST",
+      "template": "/admin/operations/alerts/{}/ack",
+      "handler": "acknowledge",
+      "file": "monitor/src/main/java/cn/agentplatform/monitor/api/OperationsController.java",
+      "line": 31
+    },
+    {
+      "service": "monitor",
+      "module": "monitor",
+      "method": "POST",
+      "template": "/admin/operations/retention/purge",
+      "handler": "purge",
+      "file": "monitor/src/main/java/cn/agentplatform/monitor/api/OperationsController.java",
+      "line": 36
+    },
+    {
+      "service": "model",
+      "module": "model-gateway",
+      "method": "POST",
+      "template": "/admin/model-entries/{}/test",
+      "handler": "testEntry",
+      "file": "model-gateway/src/main/java/cn/agentplatform/model/api/ModelController.java",
+      "line": 75
+    },
+    {
+      "service": "model",
+      "module": "model-gateway",
+      "method": "GET",
+      "template": "/admin/model-health",
+      "handler": "summary",
+      "file": "model-gateway/src/main/java/cn/agentplatform/model/api/ModelHealthController.java",
+      "line": 22
+    },
+    {
+      "service": "model",
+      "module": "model-gateway",
+      "method": "GET",
+      "template": "/admin/model-health/{}",
+      "handler": "detail",
+      "file": "model-gateway/src/main/java/cn/agentplatform/model/api/ModelHealthController.java",
+      "line": 29
+    },
+    {
+      "service": "model",
+      "module": "model-gateway",
+      "method": "POST",
+      "template": "/admin/model-health/{}/probe",
+      "handler": "probe",
+      "file": "model-gateway/src/main/java/cn/agentplatform/model/api/ModelHealthController.java",
+      "line": 34
+    }
+  ],
+  "excluded": [
+    {
+      "service": "app",
+      "module": "app-management",
+      "method": "POST",
+      "template": "/internal/iam/integration-policy/resolve",
+      "handler": "resolve",
+      "file": "app-management/src/main/java/cn/agentplatform/app/api/IntegrationPolicyResolverController.java",
+      "line": 14,
+      "reason": "平台权威签发端点，不是服务票据路由：凭据是 policy-request JWT（路径定义见 admin-common/src/main/java/cn/agentplatform/common/authority/PolicyRequestVerifier.java:13），platform-gateway/src/test/java/cn/agentplatform/gateway/domain/IntegrationPolicyTest.java:127 明确断言服务票据不得命中该路径；运行期本 handler 已由 RouteCoverageVerifier.Ingress（app-management/src/main/java/cn/agentplatform/app/infra/PolicyResolverSecurity.java 的 ingress()）显式豁免，因此目录不登记它。"
+    }
+  ],
+  "stale": [
+    {
+      "service": "app",
+      "method": "GET",
+      "template": "/v3/api-docs",
+      "mode": "delegated",
+      "source": "springdoc-openapi-starter-webmvc-api:2.8.9 (conditional framework handler)"
+    },
+    {
+      "service": "engine",
+      "method": "GET",
+      "template": "/v3/api-docs",
+      "mode": "delegated",
+      "source": "springdoc-openapi-starter-webmvc-api:2.8.9 (conditional framework handler)"
+    },
+    {
+      "service": "skill",
+      "method": "GET",
+      "template": "/v3/api-docs",
+      "mode": "delegated",
+      "source": "springdoc-openapi-starter-webmvc-api:2.8.9 (conditional framework handler)"
+    },
+    {
+      "service": "monitor",
+      "method": "GET",
+      "template": "/v3/api-docs",
+      "mode": "delegated",
+      "source": "springdoc-openapi-starter-webmvc-api:2.8.9 (conditional framework handler)"
+    },
+    {
+      "service": "model",
+      "method": "GET",
+      "template": "/v3/api-docs",
+      "mode": "delegated",
+      "source": "springdoc-openapi-starter-webmvc-api:2.8.9 (conditional framework handler)"
+    }
+  ],
+  "unusedExclusions": [],
+  "warnings": [],
+  "totals": {
+    "handlers": 197,
+    "catalog": 178,
+    "missing": 0,
+    "portalSurface": 25,
+    "excluded": 1,
+    "stale": 5
+  }
+}
