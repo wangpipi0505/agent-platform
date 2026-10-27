@@ -60,6 +60,16 @@ agent:
     resolution-enabled: ${AGENT_PIN_RESOLUTION_ENABLED:true}
     # 查询哪份发布绑定：与发布时写入的 environment 必须一致。
     environment: ${AGENT_PIN_ENVIRONMENT:production}
+  engine:
+    # PLAT-19 T19.1（X-6 缩水版）：tenant/app/credential 三级 token 滑动窗口配额。
+    # 默认关闭；上限 0=该级不限，开启后须显式配置上限。回滚：置 false 即整体旁路
+    # （V223 只增索引，无需回滚）；聚合读路径 /admin/usage/summary 为纯只读，不受此开关控制。
+    quota-enabled: ${AGENT_ENGINE_QUOTA_ENABLED:false}
+    quota:
+      window-seconds: ${AGENT_ENGINE_QUOTA_WINDOW_SECONDS:3600}
+      tenant-tokens: ${AGENT_ENGINE_QUOTA_TENANT_TOKENS:0}
+      app-tokens: ${AGENT_ENGINE_QUOTA_APP_TOKENS:0}
+      credential-tokens: ${AGENT_ENGINE_QUOTA_CREDENTIAL_TOKENS:0}
 management:
   endpoints:
     web:

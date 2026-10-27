@@ -1,0 +1,26 @@
+-------------------------------------------------------------------------------
+Test set: cn.agentplatform.engine.infra.RunQuotaAdmissionPostgresTest
+-------------------------------------------------------------------------------
+Tests run: 3, Failures: 2, Errors: 0, Skipped: 0, Time elapsed: 5.176 s <<< FAILURE! -- in cn.agentplatform.engine.infra.RunQuotaAdmissionPostgresTest
+cn.agentplatform.engine.infra.RunQuotaAdmissionPostgresTest.tenantOverrunRejectsBeforeRunInsertAndReleasesAdmissionSlot -- Time elapsed: 1.686 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Expected cn.agentplatform.common.PlatformException to be thrown, but nothing was thrown.
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:152)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:73)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:35)
+	at org.junit.jupiter.api.Assertions.assertThrows(Assertions.java:3128)
+	at cn.agentplatform.engine.infra.RunQuotaAdmissionPostgresTest.tenantOverrunRejectsBeforeRunInsertAndReleasesAdmissionSlot(RunQuotaAdmissionPostgresTest.java:226)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+cn.agentplatform.engine.infra.RunQuotaAdmissionPostgresTest.appLevelOverrunRejectsReadableBeforeRunInsert -- Time elapsed: 1.442 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Expected cn.agentplatform.common.PlatformException to be thrown, but nothing was thrown.
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:152)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:73)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:35)
+	at org.junit.jupiter.api.Assertions.assertThrows(Assertions.java:3128)
+	at cn.agentplatform.engine.infra.RunQuotaAdmissionPostgresTest.appLevelOverrunRejectsReadableBeforeRunInsert(RunQuotaAdmissionPostgresTest.java:256)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+

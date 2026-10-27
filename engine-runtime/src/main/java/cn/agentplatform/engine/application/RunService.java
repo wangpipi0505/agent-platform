@@ -36,6 +36,11 @@ public class RunService {
     private OntologyContextPacks contextPacks;
     private boolean promptDigestCheck = true;
     /**
+     * 可选装配：三级 token 配额闸门（PLAT-19 T19.1，agent.engine.quota-enabled 默认 false）。
+     * 夹具未装配（null）即旁路，保持既有构造器不变。
+     */
+    private RunQuota runQuota;
+    /**
      * 运行期发布绑定解析开关与环境。默认开启、production：关闭即退回"只有显式 releaseId 才注入"的
      * 旧行为，作为本卡唯一的运行时回滚面；环境决定查询哪份绑定。
      */
@@ -141,6 +146,12 @@ public class RunService {
     @Autowired(required = false)
     public void contextPacks(OntologyContextPacks packs) {
         this.contextPacks = packs;
+    }
+
+    /** Setter 注入保持既有构造器夹具不变（测试大量直接 new RunService(...)）。 */
+    @Autowired(required = false)
+    public void runQuota(RunQuota quota) {
+        this.runQuota = quota;
     }
 
     /**
@@ -581,6 +592,10 @@ public class RunService {
                 }
                 GraphRules.validateDag(ids, out);
             }
+            // PLAT-19 T19.1：三级 token 配额在 engine.run 插入前、受理事务外判定（只读窗口求和），
+            // 超限以 QUOTA 完整信封拒绝；protected/legacy 两个插入路径都经过此处，被拒运行不落库，
+            // admission 槽位由外层 finally 释放。开关关闭（默认）或夹具未装配时旁路。
+            if (runQuota != null) runQuota.requireRunAdmission(actor, code, frozen);
             final RetainedAuthorization admissionProof =
                     protectedAdmission ? admissionProof(code, actor) : null;
             if (protectedAdmission) requireInitialCoverage(admissionProof);
