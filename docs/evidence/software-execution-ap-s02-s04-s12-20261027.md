@@ -119,7 +119,49 @@ npm test -> 32 files / 239 tests passed
 npm run build -> success
 ```
 
+## AP-S09 管理台合并与 smoke
+
+按用户要求以本工作区版本合并 AP-S09 前端重构，未回滚协作者文件。实际路由 smoke（15173，7 条）：
+
+```text
+/apps /runs /system /model/providers /evaluations
+/skills/space_visibility
+/apps/smoke_named_inputs_3db244a637/orchestration/publish
+-> 每条页面均有内容，0 pageerror；发布页预检后出现数据集/报告/发布控件
+```
+
+截图：`.local/tmp/ap-s02-s07/ap-s09-system-smoke.png`、`ap-s09-publish-after.png`、`ap-s09-shell-smoke.png`。
+
+## 提交与复跑
+
+提交（`feat/v1.2-implementation`）：
+
+```text
+4cf9b00 AP-S02 模型深度健康与系统状态
+b7a811d AP-S04 输入文件上传与网关字节流转发
+81995e1 AP-S07 运行诊断、工具调用与时间线
+8710ef9 AP-S08 评测基线、回归与报告摘要
+40feb65 AP-S12 服务接入探测与链接卡片
+9dd1731 AP-S09 管理台路由化页面合并
+bd28f85 模型能力别名归一与运行分页
+096c7b6 执行证据
+6226cd3 一键启停与 PowerShell 5.1 兼容
+```
+
+提交后定向复跑：
+
+```text
+ModelCallsPostgresTest#deepHealth*+forcedProbeBypassesCachedSnapshot -> 4/4
+ModelStoreCapabilitiesTest -> 3/3
+RunDiagnosticsTest -> 7/7
+EvaluationRulesTest -> 7/7
+ServiceProbeTest -> 5/5
+npm test -> 32 files / 239 tests passed
+npm run build -> success
+```
+
 ## 未完成
 
-- 本轮代码未提交；工作区混有其他并行改动，需按文件拆分提交。
-- AP-S05、AP-S09 尚未执行；AP-S08 已完成基线/摘要与真实预检绑定，但代码未提交。
+- AP-S05 通用服务生命周期、AP-S10 运维可观测尚未执行；AP-S09 只完成本轮页面合并与 smoke，不替代完整可用性验收。
+- 8080 当前仍是 demo 空间服务，IN-04/IN-06 的真实库证据未复跑。
+- 工作区仍有其他并行产生的 IAM 证据与 `output/` 截图，未纳入本次提交。
