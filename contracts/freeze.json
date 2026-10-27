@@ -39,5 +39,21 @@
         "snapshot/detailed-design-v1.2.md 第一/七部分"
       ]
     }
+  ],
+  "engineeringAddenda": [
+    {
+      "date": "2026-10-28",
+      "card": "T22A（PLAT-22 A 段）",
+      "artifact": "contracts/capability-package.schema.json",
+      "sha256": "0456799d04deb57dfb114d169d8a37c7b57a49cad3996fee917a93efa704a634",
+      "schemaId": "urn:agent-platform:capability-package:1.0",
+      "declarations": [
+        "contracts/capability-packages/route1-visibility.json"
+      ],
+      "verifier": "scripts/verify-capability-package.mjs",
+      "basis": "平台侧优化方案与实施细则-20261027 §11.2（能力包：软件接入的唯一声明入口）与 §11.9 A 段（先冻结 schema 再实现，不写平台代码）",
+      "changeControl": "schema v1 冻结；变更须走计划 §6.5 契约纪律：本条目 sha256 更新 + contracts/snapshot/ 同步 + 变更记录（台账 §7.3 追加），版本不可原地覆盖（演进 = 新 schemaId）；声明文件不是代码分支。冻结记录与字段出处映射见 docs/evidence/2026-10-28-PLAT-22A-capability-schema/README.md",
+      "note": "本条目只登记冻结事实，不改变 verify-contracts.mjs 既有门禁行为（登记是否接入门禁由 T22D 控制面收口决策）；contracts/skill-invocation.md 及四契约原文保持不动。PROCESS 适配器等未实现能力在 schema 中为冻结留白（实现归 T22C），不构成已上线能力。"
+    }
   ]
 }
