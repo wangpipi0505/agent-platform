@@ -60,7 +60,7 @@ agent:
   ontology:
     # 未配置时启动不报错；声明了 config.ontology 的运行会在冻结阶段得到 503。
     base-url: ${AGENT_ONTOLOGY_URL:}
-    # 只接受 vault: 引用；密钥值不得进入 yml 或日志。
+    # 只接受 vault:/env:AGENT_SECRET_* 引用；env 引用必须显式绑定验签租户，密钥值不得进入 yml 或日志。
     api-key-ref: ${AGENT_ONTOLOGY_API_KEY_REF:}
   pin:
     # 运行期按发布绑定解析 releaseId。关闭即回滚为"只有显式 releaseId 才注入"。

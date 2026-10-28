@@ -1,0 +1,77 @@
+{
+  "status": "EX01_ENGINE_SUPPLEMENT_PASS_SHARED_GATE_REFERENCED_FINAL_REVIEW_PENDING",
+  "wholeCardPassed": false,
+  "partialRun": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\2026-10-28-EX-01\\runs\\live-partial-20261028-225338-553\\run.json",
+  "previousFullRun": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\2026-10-28-EX-01\\runs\\live-ex01-20261028-223728-310\\run.json",
+  "privateEnvironmentFiles": {
+    "app-management": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\ex01-private\\ex01-20261028-223728-310\\app.env",
+    "engine-runtime": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\ex01-private\\ex01-20261028-223728-310\\engine.env",
+    "platform-gateway": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\ex01-private\\ex01-20261028-223728-310\\gateway.env",
+    "skill-registry": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\ex01-private\\ex01-20261028-223728-310\\skill.env"
+  },
+  "isolatedDatabase": "agent_platform_ex01_20261028_223728_310",
+  "publicFixture": {
+    "spaceId": "9d9966e7-4fd3-4b14-8dbd-362fc4092af5",
+    "releaseId": "2497efb6-c19d-46f7-b9a0-dcecf7bf77d3",
+    "platformTenant": "local-v12",
+    "environment": "ex02",
+    "appCode": "ex01-20261028-223728-310"
+  },
+  "safeClientFacts": [
+    {
+      "stage": "readonly-negative",
+      "exitCode": 0,
+      "safeFacts": [
+        "EX01_CLIENT_PASS stage=readonly-negative http=403 code=NO_PERMISSION"
+      ]
+    },
+    {
+      "stage": "app-pin",
+      "exitCode": 0,
+      "safeFacts": [
+        "EX01_CLIENT_PASS stage=app-pin state=PINNED firstChanged=true againChanged=false bindingId=c94c828b-5734-4474-8209-195a83ba5354"
+      ]
+    }
+  ],
+  "expectedEngineConfiguration": {
+    "credentialTokens": 101,
+    "foreignBinderKeyAbsent": true,
+    "serviceId": "engine",
+    "reference": "env:AGENT_SECRET_ONTO_ENGINE_READ_KEY",
+    "quotaEnabled": true,
+    "tenantTokens": 301,
+    "windowSeconds": 97,
+    "tenant": "local-v12",
+    "pinEnvironment": "ex02",
+    "appTokens": 211,
+    "thenZeroAllThree": true
+  },
+  "packageRecordContract": {
+    "jars": "array with module/path/sha256; require engine-runtime, optional admin-common; no other business module",
+    "exitCode": 0,
+    "sourceSha256": "flat relative-path to SHA256 map, only engine-runtime/src/main and admin-common/src/main"
+  },
+  "remaining": [
+    "校验EX36仅engine/common新包源与JAR摘要",
+    "只启动engine，核正式JAR配置/私有key与引用隔离/三级配额非零阈值",
+    "真实Spring注入OntologyContextPacks读回既有app pin并取真实context-pack",
+    "只重启engine为配额三阈值0，核true/0实际配置与既有配额0语义证据关联",
+    "保留gateway原EX00新增SSE红与独立评审门，不promote基线"
+  ],
+  "doNotRepeat": [
+    "Maven已归档各轮",
+    "legacy skill兼容入口",
+    "正式PROCESS空白名单退出1",
+    "app/skill/gateway正向JMX",
+    "app binder首写与幂等",
+    "gateway非零/0配置与限流器"
+  ],
+  "scope": "仅后续engine新增候选核验；旧app/skill/gateway为历史轮引用，不冒同轮全绿",
+  "engineSupplementRun": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\2026-10-28-EX-01\\runs\\live-engine-20261028-232216-804\\run.json",
+  "continuationCompleted": true,
+  "finalRemaining": [
+    "最终显式候选index冻结",
+    "独立只读终评及提交/台账回填"
+  ],
+  "gatewaySharedRegression": "gateway-shared-regression.json"
+}

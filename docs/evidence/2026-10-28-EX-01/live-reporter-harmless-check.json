@@ -1,0 +1,16 @@
+﻿{
+    "status":  "PASS",
+    "powershell":  "5.1.26100.9711",
+    "scope":  "实际生产环境包装函数与实际采集函数，只将可执行文件替换为普通powershell子进程；无Java/PG/HTTP、无真实.env或凭据",
+    "facts":  [
+                  {
+                      "stage":  "ordinary-powershell-child",
+                      "service":  "skill-registry",
+                      "exitCode":  0,
+                      "safeFacts":  [
+                                        "EX01_SYNTHETIC_PASS"
+                                    ]
+                  }
+              ],
+    "failure":  null
+}

@@ -1,0 +1,24 @@
+{
+  "status": "COLLECTOR_FAILED",
+  "scriptExitCode": 1,
+  "runId": "ex01-20261028-221520-103",
+  "sourceScript": "executed-run-live.ps1",
+  "sourceJava": "executed-ServiceConfigurationProbe.java",
+  "observedServicePid": 28160,
+  "observedService": "skill-registry",
+  "observedServiceStoppedByRepositoryScript": true,
+  "isolatedDatabase": "agent_platform_ex01_20261028_221520_103",
+  "legacyJmxSafeFacts": [
+    "EX01_JMX_PASS service=skill checks=6 valuesLogged=false"
+  ],
+  "diagnosticProcessRecord": {
+    "stage": "jmx-skill-legacy",
+    "pid": 68352,
+    "sourceDirectory": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\2026-10-28-EX-01",
+    "startedAt": "2026-10-28T22:15:38.7984717+08:00"
+  },
+  "diagnosticOutputWrittenAt": "2026-10-28T22:15:39.4005275+08:00",
+  "finalReporterException": "System.ArgumentException: Argument types do not match",
+  "isolatedReproducer": "Windows PowerShell5.1 @([List[object]]) fails; List[object].ToArray succeeds",
+  "limitation": "First-stage safe output is retained. Generic-list final-report failure masked any preceding exception; do not infer remaining stages or clean completion. No Maven rerun."
+}

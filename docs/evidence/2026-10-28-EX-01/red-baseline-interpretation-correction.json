@@ -1,0 +1,11 @@
+{
+  "originalRecord": "red-baseline.json",
+  "retainedFacts": [
+    "ServiceEnvironmentFiles parameter absent",
+    "Start-AgentServiceProcess function absent",
+    "gateway YAML explicit environment placeholders absent"
+  ],
+  "unsupportedOriginalInference": "gateway rate-limit ignores environment overrides",
+  "correction": "The initial collection was static only. Absence of a YAML placeholder does not establish how Spring environment source precedence behaves. No pre-change gateway startup with those overrides was run. Treat this as explicit configuration wiring absent, not an observed runtime rejection of environment overrides.",
+  "actualRedCheck": "Windows PowerShell 5.1 test failed before implementation because the production environment parsing function was missing."
+}

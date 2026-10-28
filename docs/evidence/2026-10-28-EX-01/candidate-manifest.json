@@ -1,0 +1,39 @@
+{
+  "card": "EX-01",
+  "status": "IN_PROGRESS_FINAL_INDEX_FREEZE_AND_INDEPENDENT_REVIEW_PENDING",
+  "headAtManifest": "0cc967278007343bd5ab09faf9953d86cd573bf8",
+  "author": "/root/ex01_service_environment",
+  "productFiles": [
+    {
+      "path": "scripts/start-backend.ps1",
+      "sha256": "542CC2BB88FADF93B7EF6C847B5FC67A42D0F03D27AB29D672DF959E8980530F"
+    },
+    {
+      "path": ".env.example",
+      "sha256": "2722AA085361FF7D256250127ADACE8A071E6906CD5AFC5A5B071AD4B87860FC"
+    },
+    {
+      "path": "scripts/Test-ServiceEnvironment.ps1",
+      "sha256": "0DCDC836BED01060D27AC814162D0CEDA278C2A122573E062386B2CCE9723FCD"
+    },
+    {
+      "path": "engine-runtime/src/main/resources/application.yml",
+      "sha256": "562054834CC0B726BA445D3035EF05D908397CC121B892254EFC33C034E1664C"
+    },
+    {
+      "path": "platform-gateway/src/main/resources/application.yml",
+      "sha256": "3EA5DB6975B4278F0375A37D5E7F4144B25C1EEAF7E038227CBFB2897171AD06"
+    }
+  ],
+  "independentReview": "pending; author self-check is not review",
+  "commitOrIndexOperationsByAuthor": false,
+  "engineContinuationContext": "engine-continuation-context.json",
+  "engineSupplement": "runs/live-engine-20261028-232216-804/run.json",
+  "gatewaySharedRegression": "gateway-shared-regression.json",
+  "engineReportScopeCorrection": "engine-report-scope-correction.json",
+  "explicitStageList": "stage-files.txt",
+  "sensitiveScan": "sensitive-scan.json",
+  "commandIndex": "command-index.json",
+  "existingIndependentPreReview": "review.md；独立审阅者维护，终评尚待index冻结后窄补",
+  "headAtDocumentationCloseout": "0cc967278007343bd5ab09faf9953d86cd573bf8"
+}

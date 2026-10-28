@@ -1,0 +1,29 @@
+﻿{
+    "startedAt":  "2026-10-28T21:46:12.8175615+08:00",
+    "endedAt":  "2026-10-28T21:57:32.5252083+08:00",
+    "exitCode":  0,
+    "arguments":  [
+                      "-B",
+                      "-ntp",
+                      "-pl",
+                      "platform-gateway",
+                      "test",
+                      "-Dmaven.repo.local=G:\\207\\项目\\算法重组工具\\代码\\agent-platform/.tools/m2",
+                      "-DargLine=-Xmx1024m -Djdk.net.unixdomain.tmpdir=V:/.local/tmp",
+                      "-Dsurefire.timeout=900",
+                      "-Dsurefire.failIfNoSpecifiedTests=true",
+                      "-DreuseForks=false",
+                      "-Dmaven.test.failure.ignore=true"
+                  ],
+    "headAtStart":  "0cc967278007343bd5ab09faf9953d86cd573bf8",
+    "sourceSha256":  {
+                         "platform-gateway/src/main/java/cn/agentplatform/gateway/application/PublishedRunProxy.java":  "B4AFF02FFC69CBDC5697A5B7D1B9BC6151B6D75D180791AD5B05E5926C92E129",
+                         "scripts/Test-ServiceEnvironment.ps1":  "0DCDC836BED01060D27AC814162D0CEDA278C2A122573E062386B2CCE9723FCD",
+                         "platform-gateway/src/main/resources/application.yml":  "3EA5DB6975B4278F0375A37D5E7F4144B25C1EEAF7E038227CBFB2897171AD06",
+                         "engine-runtime/src/main/resources/application.yml":  "562054834CC0B726BA445D3035EF05D908397CC121B892254EFC33C034E1664C",
+                         "platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java":  "03533FDD869AC48D3F1036871FCA76F0EE4CDB05B98A03FA8D62C78F00E376D6",
+                         ".env.example":  "2722AA085361FF7D256250127ADACE8A071E6906CD5AFC5A5B071AD4B87860FC",
+                         "app-management/src/main/java/cn/agentplatform/app/infra/ReleasePins.java":  "8B7CA57C9161F505CFA68120A7AA101CC7949A4A0A4D037315677E00F43AAE44",
+                         "scripts/start-backend.ps1":  "542CC2BB88FADF93B7EF6C847B5FC67A42D0F03D27AB29D672DF959E8980530F"
+                     }
+}

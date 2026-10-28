@@ -1,0 +1,111 @@
+﻿{
+    "status":  "ENGINE_SUPPLEMENT_PASS",
+    "wholeCardPassed":  false,
+    "sourceRun":  "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\2026-10-28-EX-01\\runs\\live-ex01-20261028-223728-310\\run.json",
+    "historicalPartialRun":  "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\2026-10-28-EX-01\\runs\\live-partial-20261028-225338-553\\run.json",
+    "headAtStart":  "0cc967278007343bd5ab09faf9953d86cd573bf8",
+    "headAtEnd":  "0cc967278007343bd5ab09faf9953d86cd573bf8",
+    "packageRecord":  "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\2026-10-28-EX-36\\runs\\package-engine-20261028-231712-740\\run.json",
+    "runnerSha256AtStart":  {
+                                "run-live.ps1":  "09A5DBEF246042D5DC37A7924C9A9371A84DD1635B17A9A133D67E7F810B5B9F",
+                                "ServiceConfigurationProbe.java":  "0F42DB5DFF40AB93E52D01223857CC0EFFE28B18544662A5CCEAAE44A4CECE48",
+                                "run-live-engine.ps1":  "39B406950CDC1646F7DD566B0AC9CA0E6F53CDD96F84EA8CC55C5EE1A5BB2538",
+                                "ConfiguredOntologyClientProbe.java":  "9A12DF33C2BAF8ECE1B00B101BDB53C701FB44F3EA9DF3A8AA41992493EC2E03"
+                            },
+    "packageSourceAndJarHashesMatchedBeforeStart":  true,
+    "engineCommonSourceCount":  154,
+    "engineCommonSourceMatchedAfter":  true,
+    "engineJarSha256Before":  "76AB67C3A72CD1931E2DC64E053CAE8A11A86A850CFA9DA5EB95FEE1132B419C",
+    "engineJarSha256After":  "76AB67C3A72CD1931E2DC64E053CAE8A11A86A850CFA9DA5EB95FEE1132B419C",
+    "facts":  [
+                  {
+                      "stage":  "historical-green-reference",
+                      "sourceRun":  "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\2026-10-28-EX-01\\runs\\live-partial-20261028-225338-553\\run.json",
+                      "reExecuted":  false,
+                      "scope":  "legacy/PROCESS/app/skill/gateway/binder/rate-limit已绿阶段仅引用历史轮"
+                  },
+                  {
+                      "stage":  "registered-start",
+                      "service":  "engine-runtime",
+                      "pid":  50360,
+                      "jarSha256":  "76AB67C3A72CD1931E2DC64E053CAE8A11A86A850CFA9DA5EB95FEE1132B419C",
+                      "startedAt":  "2026-10-28T23:22:19.6401660+08:00",
+                      "head":  "0cc967278007343bd5ab09faf9953d86cd573bf8"
+                  },
+                  {
+                      "stage":  "http-ready",
+                      "service":  "engine-runtime",
+                      "httpStatus":  200
+                  },
+                  {
+                      "stage":  "jmx-engine-bounded",
+                      "service":  "engine-runtime",
+                      "exitCode":  0,
+                      "safeFacts":  [
+                                        "EX01_JMX_PASS service=engine checks=9 valuesLogged=false"
+                                    ]
+                  },
+                  {
+                      "stage":  "engine-launch-parent-restored",
+                      "bothOriginalKeysAndReferencePreserved":  true
+                  },
+                  {
+                      "stage":  "engine-read",
+                      "service":  "engine-runtime",
+                      "exitCode":  0,
+                      "safeFacts":  [
+                                        "EX01_CLIENT_PASS stage=engine-read bindingMatches=true contextPackFetched=true bindingId=c94c828b-5734-4474-8209-195a83ba5354"
+                                    ]
+                  },
+                  {
+                      "stage":  "registered-start",
+                      "service":  "engine-runtime",
+                      "pid":  6276,
+                      "jarSha256":  "76AB67C3A72CD1931E2DC64E053CAE8A11A86A850CFA9DA5EB95FEE1132B419C",
+                      "startedAt":  "2026-10-28T23:22:31.0170100+08:00",
+                      "head":  "0cc967278007343bd5ab09faf9953d86cd573bf8"
+                  },
+                  {
+                      "stage":  "http-ready",
+                      "service":  "engine-runtime",
+                      "httpStatus":  200
+                  },
+                  {
+                      "stage":  "jmx-engine-unlimited",
+                      "service":  "engine-runtime",
+                      "exitCode":  0,
+                      "safeFacts":  [
+                                        "EX01_JMX_PASS service=engine checks=9 valuesLogged=false"
+                                    ]
+                  },
+                  {
+                      "stage":  "zero-semantics-existing-proof",
+                      "realConfigurationVerified":  true,
+                      "quotaEnabled":  true,
+                      "allThreeLimits":  0,
+                      "semanticTest":  "cn.agentplatform.engine.infra.RunQuotaPostgresTest#zeroLimitMeansUnlimitedAndUnknownModelSkipsCredentialLevel",
+                      "targetedRun":  "runs/engine-runtime-targeted-20261028-213039-849",
+                      "newEngineModuleRun":  "EX36完整engine模块907方法；原方法PASS保留",
+                      "meaning":  "正式JAR的true/0配置与既有真实PG不限语义关联，不冒充新业务运行"
+                  }
+              ],
+    "publicFixture":  {
+                          "spaceId":  "9d9966e7-4fd3-4b14-8dbd-362fc4092af5",
+                          "releaseId":  "2497efb6-c19d-46f7-b9a0-dcecf7bf77d3",
+                          "platformTenant":  "local-v12",
+                          "environment":  "ex02",
+                          "appCode":  "ex01-20261028-223728-310"
+                      },
+    "privateDirectory":  "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\ex01-private\\ex01-20261028-223728-310",
+    "isolatedDatabase":  "agent_platform_ex01_20261028_223728_310",
+    "databaseCreatedThisContinuation":  false,
+    "ownedServicesCleanupSucceeded":  true,
+    "environmentSha256Before":  "AF038F68E0CA2E3EEEEB0C5240B2C2DA1EF647D680500F63AF1564975EBAFD4A",
+    "environmentSha256After":  "AF038F68E0CA2E3EEEEB0C5240B2C2DA1EF647D680500F63AF1564975EBAFD4A",
+    "issuedKeyFoundInLogsOrVersionableText":  false,
+    "scannedFiles":  75,
+    "engineStartupVerified":  true,
+    "gatewayOriginalBaselineGatePassed":  false,
+    "knownGatewayNewNonPass":  "EX35/EX27 forcedRelease SSE，未豁免/未promote基线",
+    "scope":  "仅EX36新engine/common源码与engine正式JAR；真实生产启动/JMX、双凭据隔离、Spring客户端真实pin/context-pack读取、true/0配置；其余服务引用历史已绿轮，不冒同轮全绿"
+}

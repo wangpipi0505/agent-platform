@@ -1,0 +1,165 @@
+﻿{
+    "status":  "PARTIAL_PASS_ENGINE_BLOCKED",
+    "wholeCardPassed":  false,
+    "sourceRun":  "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\2026-10-28-EX-01\\runs\\live-ex01-20261028-223728-310\\run.json",
+    "headAtStart":  "0cc967278007343bd5ab09faf9953d86cd573bf8",
+    "headAtEnd":  "0cc967278007343bd5ab09faf9953d86cd573bf8",
+    "packageRecord":  "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\2026-10-28-EX-01\\runs\\package-20261028-215851-805\\run.json",
+    "runnerSha256AtStart":  {
+                                "run-live.ps1":  "09A5DBEF246042D5DC37A7924C9A9371A84DD1635B17A9A133D67E7F810B5B9F",
+                                "ServiceConfigurationProbe.java":  "0F42DB5DFF40AB93E52D01223857CC0EFFE28B18544662A5CCEAAE44A4CECE48",
+                                "ConfiguredRateLimitProbe.java":  "A901D7F13D535492AFCBE5EB98B631EDDB751198028398EF8E0D5E42418E5F01",
+                                "run-live-partial.ps1":  "268FC1B0A9863C20956E9BC8BBB8C4FCEC5F27F022ACBE3746F7040B91FAF766",
+                                "ConfiguredOntologyClientProbe.java":  "9A12DF33C2BAF8ECE1B00B101BDB53C701FB44F3EA9DF3A8AA41992493EC2E03"
+                            },
+    "packageSourceAndJarHashesMatchedBeforeStart":  true,
+    "facts":  [
+                  {
+                      "stage":  "reused-green-prerequisites",
+                      "sourceRun":  "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\2026-10-28-EX-01\\runs\\live-ex01-20261028-223728-310\\run.json",
+                      "legacyPassed":  true,
+                      "formalProcessRejected":  true,
+                      "reExecuted":  false
+                  },
+                  {
+                      "stage":  "registered-start",
+                      "service":  "app-management",
+                      "pid":  18836,
+                      "jarSha256":  "F36BB449ADBAA5C723272D57C1D6ABA0A0ADC8296E814B413AA34466D891DF0E",
+                      "startedAt":  "2026-10-28T22:53:42.2086930+08:00",
+                      "head":  "0cc967278007343bd5ab09faf9953d86cd573bf8"
+                  },
+                  {
+                      "stage":  "registered-start",
+                      "service":  "skill-registry",
+                      "pid":  37348,
+                      "jarSha256":  "C6CA0B9DE8C8141F1036E6FA3B2497B6420C8AC8F1A30B4AF599BBF4B585CDF3",
+                      "startedAt":  "2026-10-28T22:53:42.9045920+08:00",
+                      "head":  "0cc967278007343bd5ab09faf9953d86cd573bf8"
+                  },
+                  {
+                      "stage":  "registered-start",
+                      "service":  "platform-gateway",
+                      "pid":  67748,
+                      "jarSha256":  "F4DE495B6352606D03727479DB0716B269ED2E40C94D16176BB44052675810C8",
+                      "startedAt":  "2026-10-28T22:53:43.6575490+08:00",
+                      "head":  "0cc967278007343bd5ab09faf9953d86cd573bf8"
+                  },
+                  {
+                      "stage":  "http-ready",
+                      "service":  "app-management",
+                      "httpStatus":  200
+                  },
+                  {
+                      "stage":  "http-ready",
+                      "service":  "skill-registry",
+                      "httpStatus":  200
+                  },
+                  {
+                      "stage":  "http-ready",
+                      "service":  "platform-gateway",
+                      "httpStatus":  200
+                  },
+                  {
+                      "stage":  "jmx-app-bounded",
+                      "service":  "app-management",
+                      "exitCode":  0,
+                      "safeFacts":  [
+                                        "EX01_JMX_PASS service=app checks=4 valuesLogged=false"
+                                    ]
+                  },
+                  {
+                      "stage":  "jmx-skill-bounded",
+                      "service":  "skill-registry",
+                      "exitCode":  0,
+                      "safeFacts":  [
+                                        "EX01_JMX_PASS service=skill checks=6 valuesLogged=false"
+                                    ]
+                  },
+                  {
+                      "stage":  "jmx-gateway-bounded",
+                      "service":  "platform-gateway",
+                      "exitCode":  0,
+                      "safeFacts":  [
+                                        "EX01_JMX_PASS service=gateway checks=5 valuesLogged=false"
+                                    ]
+                  },
+                  {
+                      "stage":  "actual-launch-parent-restored",
+                      "bothOriginalKeysPreserved":  true
+                  },
+                  {
+                      "stage":  "readonly-negative",
+                      "service":  "engine-runtime",
+                      "exitCode":  0,
+                      "safeFacts":  [
+                                        "EX01_CLIENT_PASS stage=readonly-negative http=403 code=NO_PERMISSION"
+                                    ]
+                  },
+                  {
+                      "stage":  "app-pin",
+                      "service":  "app-management",
+                      "exitCode":  0,
+                      "safeFacts":  [
+                                        "EX01_CLIENT_PASS stage=app-pin state=PINNED firstChanged=true againChanged=false bindingId=c94c828b-5734-4474-8209-195a83ba5354"
+                                    ]
+                  },
+                  {
+                      "stage":  "configured-rate-bounded",
+                      "service":  "platform-gateway",
+                      "exitCode":  0,
+                      "safeFacts":  [
+                                        "EX01_RATE_PASS enabled=true thirdRejected=true configuredWindowMatched=true scope=configured-bean-only"
+                                    ]
+                  },
+                  {
+                      "stage":  "registered-start",
+                      "service":  "platform-gateway",
+                      "pid":  47528,
+                      "jarSha256":  "F4DE495B6352606D03727479DB0716B269ED2E40C94D16176BB44052675810C8",
+                      "startedAt":  "2026-10-28T22:53:59.9857130+08:00",
+                      "head":  "0cc967278007343bd5ab09faf9953d86cd573bf8"
+                  },
+                  {
+                      "stage":  "http-ready",
+                      "service":  "platform-gateway",
+                      "httpStatus":  200
+                  },
+                  {
+                      "stage":  "jmx-gateway-unlimited",
+                      "service":  "platform-gateway",
+                      "exitCode":  0,
+                      "safeFacts":  [
+                                        "EX01_JMX_PASS service=gateway checks=5 valuesLogged=false"
+                                    ]
+                  },
+                  {
+                      "stage":  "configured-rate-unlimited",
+                      "service":  "platform-gateway",
+                      "exitCode":  0,
+                      "safeFacts":  [
+                                        "EX01_RATE_PASS enabled=true zeroLimitBypasses=true admitted=32 scope=configured-bean-only"
+                                    ]
+                  }
+              ],
+    "publicFixture":  {
+                          "spaceId":  "9d9966e7-4fd3-4b14-8dbd-362fc4092af5",
+                          "releaseId":  "2497efb6-c19d-46f7-b9a0-dcecf7bf77d3",
+                          "platformTenant":  "local-v12",
+                          "environment":  "ex02",
+                          "appCode":  "ex01-20261028-223728-310"
+                      },
+    "privateDirectory":  "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\ex01-private\\ex01-20261028-223728-310",
+    "isolatedDatabase":  "agent_platform_ex01_20261028_223728_310",
+    "databaseCreatedThisContinuation":  false,
+    "ownedServicesCleanupSucceeded":  true,
+    "environmentSha256Before":  "AF038F68E0CA2E3EEEEB0C5240B2C2DA1EF647D680500F63AF1564975EBAFD4A",
+    "environmentSha256After":  "AF038F68E0CA2E3EEEEB0C5240B2C2DA1EF647D680500F63AF1564975EBAFD4A",
+    "issuedKeyFoundInLogsOrVersionableText":  false,
+    "scannedFiles":  71,
+    "engineStartupVerified":  false,
+    "engineBlocker":  "原run/engine-startup-blocker.json；EX36独立修复后仅补engine及必要关联",
+    "gatewayOriginalBaselineGatePassed":  false,
+    "knownGatewayNewNonPass":  "EX35/EX27 forcedRelease SSE；未豁免/未promote基线",
+    "scope":  "app/skill/gateway真实当前JAR配置、父进程双密钥隔离、真实Spring装配app binder客户端；只读凭据403与配置限流器；不含engine Bean绕过或J9"
+}

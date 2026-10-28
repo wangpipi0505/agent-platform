@@ -1,0 +1,21 @@
+{
+  "scope": "EX01正式当前JAR启动发现，Java不在EX01白名单；由EX36独立补修",
+  "exactExpectedNoArgConstructorTarget": "java.lang.NoSuchMethodException: cn.agentplatform.engine.infra.OntologyContextPacks.<init>()",
+  "exactTargetObserved": true,
+  "causeClasses": [
+    "org.springframework.beans.factory.UnsatisfiedDependencyException",
+    "org.springframework.beans.factory.BeanCreationException",
+    "org.springframework.beans.BeanInstantiationException",
+    "java.lang.NoSuchMethodException"
+  ],
+  "source": "engine-runtime/src/main/java/cn/agentplatform/engine/infra/OntologyContextPacks.java",
+  "sourceSha256": "290495341D58D2574C68912837DDA70A36EF279DA9916DE3CB40731EAAA56550",
+  "jarSha256": "B15763C5E81269B7A131D06FD87D5ACF43A29ACCC219F36F103CDAA2FF6FF875",
+  "rawLogSha256": {
+    "err": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+    "out": "C9A02835BD41E912B50DEFFC28CE4BFE1426ACE4AB8BF08F29020C69DCFFA61C"
+  },
+  "rawLogsRetained": "本轮受限privateDirectory中的engine-startup-blocker.*.raw.log，不入Git",
+  "unchangedSource": true,
+  "engineRuntimeConfigurationVerified": false
+}

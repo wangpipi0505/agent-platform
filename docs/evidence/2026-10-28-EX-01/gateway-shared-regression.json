@@ -1,0 +1,119 @@
+{
+  "card": "EX-01",
+  "kind": "SHARED_GATE_REFERENCE_ONLY",
+  "checkedAt": "2026-10-28T23:56:22.5220565+08:00",
+  "run": "docs/evidence/2026-10-28-EX-27/runs/safety-module-20261028-233458-012",
+  "nativeMavenExit": 1,
+  "regressionGate": true,
+  "collectionComplete": true,
+  "allTestsPassed": false,
+  "reports": 27,
+  "methods": 288,
+  "passed": 273,
+  "failed": 7,
+  "errors": 8,
+  "skipped": 0,
+  "baseline254": true,
+  "restoredOriginalProxy30": true,
+  "newProxy3": true,
+  "newSse1": true,
+  "proxy33Pass": true,
+  "sse38Pass": true,
+  "nativeChildren49AllZero": true,
+  "newNonpass": 0,
+  "missingMethods": 0,
+  "duplicates": 0,
+  "badOrMissingClasses": 0,
+  "retainedNonpass": 15,
+  "retainedCauseSetUnchanged": true,
+  "tlsFailureToPass": "单列观测：PortalEventsTlsTest#plainObserverDetectsApplicationAndAdditionalConnectionNegativeControl；不归为EX01修复",
+  "fingerprints": [
+    {
+      "path": "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseLifecycleTest.java",
+      "sha256": "6B144C0033CE22556996897824B2F0D864A862E39F6E12EF2C21B5212B5199C1",
+      "beforeAfterMatch": true,
+      "currentMatch": true
+    },
+    {
+      "path": "platform-gateway/src/main/java/cn/agentplatform/gateway/application/PublishedRunProxy.java",
+      "sha256": "B4AFF02FFC69CBDC5697A5B7D1B9BC6151B6D75D180791AD5B05E5926C92E129",
+      "beforeAfterMatch": true,
+      "currentMatch": true
+    },
+    {
+      "path": "platform-gateway/src/test/java/cn/agentplatform/gateway/application/GatewayPublishedRunProxyTest.java",
+      "sha256": "03533FDD869AC48D3F1036871FCA76F0EE4CDB05B98A03FA8D62C78F00E376D6",
+      "beforeAfterMatch": true,
+      "currentMatch": true
+    },
+    {
+      "path": "platform-gateway/src/main/resources/application.yml",
+      "sha256": "3EA5DB6975B4278F0375A37D5E7F4144B25C1EEAF7E038227CBFB2897171AD06",
+      "beforeAfterMatch": true,
+      "currentMatch": true
+    },
+    {
+      "path": "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsSse.java",
+      "sha256": "FC8BE0858320406141479087B4A147C845AF14B917AAED9A0FC991BEB520414F",
+      "beforeAfterMatch": true,
+      "currentMatch": true
+    },
+    {
+      "path": "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsHttp.java",
+      "sha256": "97DFCC1A4B77872D3BCD15442EC23C72DF771E982CDA2758BC97EB742B1A03E6",
+      "beforeAfterMatch": true,
+      "currentMatch": true
+    },
+    {
+      "path": "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsPacketBudget.java",
+      "sha256": "02D47D9C16CEF94B9DBD3D7B8B7B85B4E4751B8B5BADBE6CADC5C8792A0A9375",
+      "beforeAfterMatch": true,
+      "currentMatch": true
+    },
+    {
+      "path": ".env",
+      "sha256": "AF038F68E0CA2E3EEEEB0C5240B2C2DA1EF647D680500F63AF1564975EBAFD4A",
+      "beforeAfterMatch": true,
+      "currentMatch": true
+    }
+  ],
+  "sourceRecords": [
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/runs/safety-module-20261028-233458-012/run.json",
+      "sha256": "90217C54CE8086BE190AA6864124AA8C37C774026530AE2FB0F3FA6D75CC4501"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/runs/safety-module-20261028-233458-012/stage-gate.json",
+      "sha256": "B43F37759431097A06F3AFF8490E4EA2AC28CF761FFC5A51016F8EF371FA1C4C"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/runs/safety-module-20261028-233458-012/comparison.json",
+      "sha256": "82FB5EC31CB9A2E35F9B64F43F9CFF25CBF42DBB2158D5A7F4EC645D1AFE86FE"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/runs/safety-module-20261028-233458-012/nonpass-cause-comparison.json",
+      "sha256": "E771814E5569821C2AB311754F0D489E97DA91D05353A5DB52CB2C4F9CCA4BCC"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/runs/safety-module-20261028-233458-012/fingerprints-before.json",
+      "sha256": "2FC63FAAF7AB6FDE0652BD779912C5E4C9199D52451C19D64B665290D3EF40F0"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/runs/safety-module-20261028-233458-012/fingerprints-after.json",
+      "sha256": "2FC63FAAF7AB6FDE0652BD779912C5E4C9199D52451C19D64B665290D3EF40F0"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/runs/safety-module-20261028-233458-012/execution.json",
+      "sha256": "CF277BD6DD7E77AF75B257F4E919E0D9E7699F943F781B153C6C84BE7183198A"
+    }
+  ],
+  "historicalFailuresPreserved": [
+    "EX01/runs/platform-gateway-module-20261028-214612-758",
+    "EX35原模块新增SSE红",
+    "EX27诊断红",
+    "EX27早期夹具编译错误"
+  ],
+  "commandsExecutedForThisCloseout": [],
+  "indexOperations": false,
+  "meaning": "共享回归差异门已具证，本卡没有重跑/修改共享Java，不等于全部测试通过或整卡最终接受"
+}

@@ -1,0 +1,18 @@
+{
+  "status": "FAIL",
+  "powershell": "5.1.26100.9711",
+  "scope": "ordinary PowerShell child only; no Java/PG/HTTP or real.env/credentials",
+  "facts": [
+    {
+      "stage": "ordinary-powershell-child",
+      "service": "skill-registry",
+      "exitCode": null,
+      "safePrefixFound": true
+    }
+  ],
+  "failure": {
+    "type": "System.Management.Automation.RuntimeException",
+    "stack": "at Invoke-PrivateProbe, <No file>: line 19\r\nat <ScriptBlock>, G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\2026-10-28-EX-01\\check-live-reporter.ps1: line 20"
+  },
+  "observation": "Child printed success, but native ExitCode was null through exact collector function with bounded WaitForExit; provider decoration caused oversized JSON and is excluded from versioned evidence."
+}

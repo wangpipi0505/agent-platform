@@ -1,0 +1,175 @@
+{
+  "workingDirectory": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform",
+  "javaHome": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot",
+  "testEnvironment": [
+    "授权加载本仓.env但不回显值",
+    "AGENT_DEV_AUTH=true",
+    "ENGINE_PG_TEST=true"
+  ],
+  "mavenCommands": [
+    {
+      "record": "docs/evidence/2026-10-28-EX-01/runs/engine-runtime-module-20261028-215906-700/run.json",
+      "executable": "mvn.cmd",
+      "arguments": [
+        "-B",
+        "-ntp",
+        "-pl",
+        "engine-runtime",
+        "test",
+        "-Dmaven.repo.local=G:\\207\\项目\\算法重组工具\\代码\\agent-platform/.tools/m2",
+        "-DargLine=-Xmx1024m -Djdk.net.unixdomain.tmpdir=V:/.local/tmp",
+        "-Dsurefire.timeout=900",
+        "-Dsurefire.failIfNoSpecifiedTests=true",
+        "-Dmaven.test.failure.ignore=true"
+      ],
+      "powerShellCommand": "& mvn.cmd '-B' '-ntp' '-pl' 'engine-runtime' 'test' '-Dmaven.repo.local=G:\\207\\项目\\算法重组工具\\代码\\agent-platform/.tools/m2' '-DargLine=-Xmx1024m -Djdk.net.unixdomain.tmpdir=V:/.local/tmp' '-Dsurefire.timeout=900' '-Dsurefire.failIfNoSpecifiedTests=true' '-Dmaven.test.failure.ignore=true'",
+      "representation": "根据原run参数数组加PowerShell引号还原，未在本轮执行",
+      "nativeExitCode": 0
+    },
+    {
+      "record": "docs/evidence/2026-10-28-EX-01/runs/engine-runtime-targeted-20261028-213039-849/run.json",
+      "executable": "mvn.cmd",
+      "arguments": [
+        "-B",
+        "-ntp",
+        "-pl",
+        "engine-runtime",
+        "test",
+        "-Dmaven.repo.local=G:\\207\\项目\\算法重组工具\\代码\\agent-platform/.tools/m2",
+        "-DargLine=-Xmx1024m -Djdk.net.unixdomain.tmpdir=V:/.local/tmp",
+        "-Dsurefire.timeout=900",
+        "-Dsurefire.failIfNoSpecifiedTests=true",
+        "-Dtest=RunQuotaPostgresTest,RunQuotaAdmissionPostgresTest,OntologyContextPacksTest,OntologyBindingResolutionTest"
+      ],
+      "powerShellCommand": "& mvn.cmd '-B' '-ntp' '-pl' 'engine-runtime' 'test' '-Dmaven.repo.local=G:\\207\\项目\\算法重组工具\\代码\\agent-platform/.tools/m2' '-DargLine=-Xmx1024m -Djdk.net.unixdomain.tmpdir=V:/.local/tmp' '-Dsurefire.timeout=900' '-Dsurefire.failIfNoSpecifiedTests=true' '-Dtest=RunQuotaPostgresTest,RunQuotaAdmissionPostgresTest,OntologyContextPacksTest,OntologyBindingResolutionTest'",
+      "representation": "根据原run参数数组加PowerShell引号还原，未在本轮执行",
+      "nativeExitCode": 0
+    },
+    {
+      "record": "docs/evidence/2026-10-28-EX-01/runs/package-20261028-215851-805/run.json",
+      "executable": "mvn.cmd",
+      "arguments": [
+        "-B",
+        "-ntp",
+        "-pl",
+        "app-management,engine-runtime,skill-registry,platform-gateway",
+        "-am",
+        "package",
+        "-Dmaven.test.skip=true",
+        "-Dmaven.repo.local=G:\\207\\项目\\算法重组工具\\代码\\agent-platform/.tools/m2"
+      ],
+      "powerShellCommand": "& mvn.cmd '-B' '-ntp' '-pl' 'app-management,engine-runtime,skill-registry,platform-gateway' '-am' 'package' '-Dmaven.test.skip=true' '-Dmaven.repo.local=G:\\207\\项目\\算法重组工具\\代码\\agent-platform/.tools/m2'",
+      "representation": "根据原run参数数组加PowerShell引号还原，未在本轮执行",
+      "nativeExitCode": 0
+    },
+    {
+      "record": "docs/evidence/2026-10-28-EX-01/runs/platform-gateway-module-20261028-214612-758/run.json",
+      "executable": "mvn.cmd",
+      "arguments": [
+        "-B",
+        "-ntp",
+        "-pl",
+        "platform-gateway",
+        "test",
+        "-Dmaven.repo.local=G:\\207\\项目\\算法重组工具\\代码\\agent-platform/.tools/m2",
+        "-DargLine=-Xmx1024m -Djdk.net.unixdomain.tmpdir=V:/.local/tmp",
+        "-Dsurefire.timeout=900",
+        "-Dsurefire.failIfNoSpecifiedTests=true",
+        "-DreuseForks=false",
+        "-Dmaven.test.failure.ignore=true"
+      ],
+      "powerShellCommand": "& mvn.cmd '-B' '-ntp' '-pl' 'platform-gateway' 'test' '-Dmaven.repo.local=G:\\207\\项目\\算法重组工具\\代码\\agent-platform/.tools/m2' '-DargLine=-Xmx1024m -Djdk.net.unixdomain.tmpdir=V:/.local/tmp' '-Dsurefire.timeout=900' '-Dsurefire.failIfNoSpecifiedTests=true' '-DreuseForks=false' '-Dmaven.test.failure.ignore=true'",
+      "representation": "根据原run参数数组加PowerShell引号还原，未在本轮执行",
+      "nativeExitCode": 0
+    },
+    {
+      "record": "docs/evidence/2026-10-28-EX-01/runs/platform-gateway-targeted-20261028-213346-767/run.json",
+      "executable": "mvn.cmd",
+      "arguments": [
+        "-B",
+        "-ntp",
+        "-pl",
+        "platform-gateway",
+        "test",
+        "-Dmaven.repo.local=G:\\207\\项目\\算法重组工具\\代码\\agent-platform/.tools/m2",
+        "-DargLine=-Xmx1024m -Djdk.net.unixdomain.tmpdir=V:/.local/tmp",
+        "-Dsurefire.timeout=900",
+        "-Dsurefire.failIfNoSpecifiedTests=true",
+        "-DreuseForks=false",
+        "-Dtest=IntegrationRateLimitTest"
+      ],
+      "powerShellCommand": "& mvn.cmd '-B' '-ntp' '-pl' 'platform-gateway' 'test' '-Dmaven.repo.local=G:\\207\\项目\\算法重组工具\\代码\\agent-platform/.tools/m2' '-DargLine=-Xmx1024m -Djdk.net.unixdomain.tmpdir=V:/.local/tmp' '-Dsurefire.timeout=900' '-Dsurefire.failIfNoSpecifiedTests=true' '-DreuseForks=false' '-Dtest=IntegrationRateLimitTest'",
+      "representation": "根据原run参数数组加PowerShell引号还原，未在本轮执行",
+      "nativeExitCode": 0
+    },
+    {
+      "record": "docs/evidence/2026-10-28-EX-01/runs/skill-registry-module-20261028-213410-422/run.json",
+      "executable": "mvn.cmd",
+      "arguments": [
+        "-B",
+        "-ntp",
+        "-pl",
+        "skill-registry",
+        "test",
+        "-Dmaven.repo.local=G:\\207\\项目\\算法重组工具\\代码\\agent-platform/.tools/m2",
+        "-DargLine=-Xmx1024m -Djdk.net.unixdomain.tmpdir=V:/.local/tmp",
+        "-Dsurefire.timeout=900",
+        "-Dsurefire.failIfNoSpecifiedTests=true",
+        "-Dmaven.test.failure.ignore=true"
+      ],
+      "powerShellCommand": "& mvn.cmd '-B' '-ntp' '-pl' 'skill-registry' 'test' '-Dmaven.repo.local=G:\\207\\项目\\算法重组工具\\代码\\agent-platform/.tools/m2' '-DargLine=-Xmx1024m -Djdk.net.unixdomain.tmpdir=V:/.local/tmp' '-Dsurefire.timeout=900' '-Dsurefire.failIfNoSpecifiedTests=true' '-Dmaven.test.failure.ignore=true'",
+      "representation": "根据原run参数数组加PowerShell引号还原，未在本轮执行",
+      "nativeExitCode": null
+    },
+    {
+      "record": "docs/evidence/2026-10-28-EX-01/runs/skill-registry-targeted-20261028-212920-848/run.json",
+      "executable": "mvn.cmd",
+      "arguments": [
+        "-B",
+        "-ntp",
+        "-pl",
+        "skill-registry",
+        "test",
+        "-Dmaven.repo.local=G:\\207\\项目\\算法重组工具\\代码\\agent-platform/.tools/m2",
+        "-DargLine=-Xmx1024m -Djdk.net.unixdomain.tmpdir=V:/.local/tmp",
+        "-Dsurefire.timeout=900",
+        "-Dsurefire.failIfNoSpecifiedTests=true",
+        "-Dtest=SchemaDegradedValidationTest,ServiceTicketsTest,ProcessAdapterTest,ProcessAdapterHardeningTest"
+      ],
+      "powerShellCommand": "& mvn.cmd '-B' '-ntp' '-pl' 'skill-registry' 'test' '-Dmaven.repo.local=G:\\207\\项目\\算法重组工具\\代码\\agent-platform/.tools/m2' '-DargLine=-Xmx1024m -Djdk.net.unixdomain.tmpdir=V:/.local/tmp' '-Dsurefire.timeout=900' '-Dsurefire.failIfNoSpecifiedTests=true' '-Dtest=SchemaDegradedValidationTest,ServiceTicketsTest,ProcessAdapterTest,ProcessAdapterHardeningTest'",
+      "representation": "根据原run参数数组加PowerShell引号还原，未在本轮执行",
+      "nativeExitCode": 0
+    },
+    {
+      "record": "docs/evidence/2026-10-28-EX-27/runs/safety-module-20261028-233458-012/run.json",
+      "recordedCommand": "mvn.cmd -B -ntp -pl platform-gateway test -Dmaven.repo.local=G:\\207\\项目\\算法重组工具\\代码\\agent-platform/.tools/m2 -DargLine=-Xmx1024m -Djdk.net.unixdomain.tmpdir=V:/.local/tmp -DreuseForks=false -Dsurefire.timeout=900 -Dsurefire.failIfNoSpecifiedTests=true",
+      "nativeExitCode": 1,
+      "representation": "共享原记录原样引用，未在本卡重跑"
+    }
+  ],
+  "entryCommands": [
+    {
+      "stage": "PS46",
+      "command": "& 'C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe' -NoProfile -NonInteractive -ExecutionPolicy Bypass -File './scripts/Test-ServiceEnvironment.ps1' -EvidenceDirectory './docs/evidence/2026-10-28-EX-01'",
+      "record": "powershell-isolation-results.json"
+    },
+    {
+      "stage": "historical-full-live",
+      "command": "& 'C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe' -NoProfile -ExecutionPolicy Bypass -File './docs/evidence/2026-10-28-EX-01/run-live.ps1' -PrivateFixture 'G:/207/项目/算法重组工具/代码/ontorepo/.runtime/ex02-private/mvs3szui.json'",
+      "record": "runs/live-ex01-20261028-223728-310/run.json",
+      "executedHistoricalSource": "源摘要及首轮执行副本各自归档；不是把现版脚本冒作原版"
+    },
+    {
+      "stage": "historical-partial-live",
+      "command": "& 'C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe' -NoProfile -ExecutionPolicy Bypass -File './docs/evidence/2026-10-28-EX-01/run-live-partial.ps1' -FromRun './docs/evidence/2026-10-28-EX-01/runs/live-ex01-20261028-223728-310/run.json' -PrivateFixture 'G:/207/项目/算法重组工具/代码/ontorepo/.runtime/ex02-private/mvs3szui.json'",
+      "record": "runs/live-partial-20261028-225338-553/run.json"
+    },
+    {
+      "stage": "engine-only",
+      "command": "& 'C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe' -NoProfile -ExecutionPolicy Bypass -File './docs/evidence/2026-10-28-EX-01/run-live-engine.ps1' -PackageRecord './docs/evidence/2026-10-28-EX-36/runs/package-engine-20261028-231712-740/run.json' -PrivateFixture 'G:/207/项目/算法重组工具/代码/ontorepo/.runtime/ex02-private/mvs3szui.json'",
+      "record": "runs/live-engine-20261028-232216-804/run.json"
+    }
+  ],
+  "serviceStartMeaning": "真实启动均由run-live共享函数调用scripts/start-backend.ps1 -Services <本轮服务> -SkipBuild -ServiceEnvironmentFiles <本仓受限绝对路径Hashtable>；legacy/PROCESS无服务文件，独立库标准覆盖见README/原记录",
+  "scope": "完整参数与入口导航；私钥仅存在授权受限文件，命令不含值；当前收口仅文件读写，没有执行上述命令"
+}

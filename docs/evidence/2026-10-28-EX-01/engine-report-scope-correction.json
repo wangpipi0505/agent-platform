@@ -1,0 +1,50 @@
+{
+  "kind": "DOCUMENTATION_SCOPE_CORRECTION",
+  "originalRecordsUnchanged": true,
+  "historicalRecord": "runs/engine-runtime-module-20261028-215906-700/run.json",
+  "comparison": "runs/engine-runtime-module-20261028-215906-700/comparison.json",
+  "reportedItems": 906,
+  "namedMethods": 904,
+  "classLevelEvents": [
+    {
+      "module": "engine-runtime",
+      "classname": "cn.agentplatform.engine.infra.ModelInputMaterialHttpTest",
+      "method": "",
+      "status": "FAIL",
+      "seconds": "0.329"
+    },
+    {
+      "module": "engine-runtime",
+      "classname": "cn.agentplatform.engine.infra.RunEventReaderTimeoutBudgetPostgresTest",
+      "method": "",
+      "status": "ERROR",
+      "seconds": "1.513"
+    }
+  ],
+  "collectionComplete": false,
+  "allSourceTestsExecuted": false,
+  "knownUnexecutedSourceTests": 14,
+  "unexecutedByClass": [
+    {
+      "classname": "cn.agentplatform.engine.infra.ModelInputMaterialHttpTest",
+      "sourceTestCount": 11,
+      "reportedClassEvent": "FAIL"
+    },
+    {
+      "classname": "cn.agentplatform.engine.infra.RunEventReaderTimeoutBudgetPostgresTest",
+      "sourceTestCount": 3,
+      "reportedClassEvent": "ERROR"
+    }
+  ],
+  "missingReportedIdentities": 0,
+  "duplicates": 0,
+  "newNonpass": 0,
+  "identityOrStatusChanges": 0,
+  "newEx36Record": "docs/evidence/2026-10-28-EX-36/runs/after-module-20261028-230322-842/method-summary/summary.json",
+  "newEx36ReportedItems": 907,
+  "newEx36NamedMethods": 905,
+  "newEx36SameClassLevelEvents": 2,
+  "newEx36OnlyAddedMethodPass": "OntologyContextPacksTest#springInjectsProductionConstructorAndUsesConfiguredSecretReference(Path)",
+  "newEx36CollectionComplete": false,
+  "meaning": "报告身份差异为0与方法采集不完整可同时成立；906/907不能写成全部具名方法数量，raw/CSV及原comparison均不修改"
+}
