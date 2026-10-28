@@ -1,0 +1,31 @@
+platform-gateway 模块全量失败清单（2026-10-28，HEAD 9f3cdab，串行）
+总计原文：[ERROR] Tests run: 278, Failures: 10, Errors: 14, Skipped: 0
+对照基准：docs/evidence/2026-10-28-PLAT-18-rate-limit/README.md（T18.1，IntegrationSecurityTest 6E、GatewayRunStatusChain 14 跑 1F、GatewayPublishedChain 1 跑 1F）
+        ＋ docs/evidence/2026-10-27-baseline/README.md（Y-6：GatewayPublishedChainPostgresTest 库缺失、PublishedMetadataSmokeLauncherTest app fixture 退出、PortalRunEventsJoinedChainTest engine-ready.json 缺失）
+
+逐类（run 摘录）：
+[ERROR] Tests run: 6,  Failures: 0, Errors: 6, Skipped: 0 -- in cn.agentplatform.gateway.IntegrationSecurityTest
+[ERROR] Tests run: 6,  Failures: 0, Errors: 6, Skipped: 0 -- in cn.agentplatform.gateway.IntegrationRateLimitTest
+[ERROR] Tests run: 14, Failures: 1, Errors: 0, Skipped: 0 -- in cn.agentplatform.common.authority.GatewayRunStatusChainPostgresTest
+[ERROR] Tests run: 1,  Failures: 1, Errors: 0, Skipped: 0 -- in cn.agentplatform.common.authority.GatewayPublishedChainPostgresTest
+[ERROR] Tests run: 1,  Failures: 1, Errors: 0, Skipped: 0 -- in cn.agentplatform.gateway.application.PublishedMetadataSmokeLauncherTest
+[ERROR] Tests run: 40, Failures: 1, Errors: 0, Skipped: 0 -- in cn.agentplatform.gateway.infra.PortalEventsTlsTest
+[ERROR] Tests run: 5,  Failures: 5, Errors: 0, Skipped: 0 -- in cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest
+[ERROR] Tests run: 9,  Failures: 1, Errors: 0, Skipped: 0 -- in cn.agentplatform.gateway.infra.PortalRunEventsPrivateHttpTest
+[ERROR] Tests run: 1,  Failures: 0, Errors: 1, Skipped: 0 -- in cn.agentplatform.gateway.infra.PortalRunEventsSseAutomaticCleanupTest
+[ERROR] Tests run: 1,  Failures: 0, Errors: 1, Skipped: 0 -- in cn.agentplatform.gateway.infra.PortalRunEventsSseResetCleanupTest
+
+逐名归桶：
+1. IntegrationSecurityTest 6E —— T18.1 基线红（同因同数）：SECURITY_MODE_REQUIRED，运行方式缺 agent.security.mode；本次 surefire Caused by 同为 IllegalStateException: SECURITY_MODE_REQUIRED。
+2. IntegrationRateLimitTest 6E —— 单 JVM 静态闩顺序效应：全量中 iam 模式 PG 链两类（GatewayPublishedChain/GatewayRunStatusChain，runOrder 前 2 位）先注册 ServiceTokens.deploymentMode="iam"，本类 dev-hmac 上下文随后加载即抛"IAM部署已关闭旧票据签发"（surefire Caused by 原文）。T18.1 证据明载该运行纪律（"PG 链两类与 dev-hmac 上下文不能同 JVM 共跑…绿批 3 单独 JVM 跑"）。隔离复跑 6/6 绿（gateway-ratelimit-isolated-verify.txt）→ 非产品回归。
+3. GatewayRunStatusChainPostgresTest 1F（realGatewayQueryAndStatusReturnOriginalBytes）—— T18.1 基线红，同因同数：状态投影 13 键 vs oracle 12 键（errorRaw 多键，T18.1 green-pg-pair.txt 第 291-295 行原文同签名）。
+4. GatewayPublishedChainPostgresTest 1F —— T18.1 基线红，同因同数：Finite child missing N4B2_ENGINE_READY（子进程夹具契约，Y-6 桶）。
+5. PublishedMetadataSmokeLauncherTest 1F —— Y-6 桶（旧基线明载"app fixture exited before ready"）；本次子进程死因 NoClassDefFoundError: org/apache/hc/core5/http/io/HttpMessageParserFactory（子进程 classpath 缺依赖；platform-gateway/pom.xml 自基线 1563353 后零改动，非本轮引入）。
+6. PortalRunEventsJoinedChainTest 5F —— Y-6 桶（旧基线明载 5/5："missing … engine-ready.json; child alive=false"）；本次同签名（missing .local\iam-o2b-f2c2b2-joined-chain\runs\...\engine-ready.json）。
+7. PortalEventsTlsTest 1/40F —— 环境敏感偶发：negative control 断言遇 SocketException"你的主机中的软件中止了一个已建立的连接"；隔离复跑 40/40 绿（gateway-tls-privatehttp-isolated-verify.txt）。
+8. PortalRunEventsPrivateHttpTest 1/9F —— 子进程 helper 断言失败（child main 退出码 1）；隔离复跑 9/9 绿 → 全量负载下偶发。
+9. PortalRunEventsSseAutomaticCleanupTest 1E —— harness 属性契约缺失：Path.of(System.getProperty("cleanup.fix.evidence")) NPE（PortalRunEventsSseAutomaticCleanupTest.java:19），需 iam-o2b-f2c2b2 harness 传参运行。
+10. PortalRunEventsSseResetCleanupTest 1E —— 同上（同类同属性）。
+
+结论：T18.1 三基线红类同因同数复现；其余 7 类全部归入既有桶（Y-6 子进程夹具 / iam 静态闩运行纪律 / 环境敏感偶发 / harness 属性契约），且 4 类经隔离复跑证明可绿。
+相对 T18.1 录得口径：IntegrationRateLimitTest 6E 为"未记载"但机制为 T18.1 明载运行纪律、隔离 6/6 绿。新增失败（产品回归口径）= 0。

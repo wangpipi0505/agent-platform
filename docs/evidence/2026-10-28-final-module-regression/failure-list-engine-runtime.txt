@@ -1,0 +1,43 @@
+engine-runtime 模块全量失败清单（2026-10-28，HEAD 9f3cdab，串行；两轮 + 运修 + 隔离验证）
+第 1 轮原文：[ERROR] Tests run: 842, Failures: 32, Errors: 130, Skipped: 0   （09:01 min）
+V221 运修后第 2 轮原文：[ERROR] Tests run: 865, Failures: 32, Errors: 85, Skipped: 0   （11:03 min）
+对照基准：本轮各卡模块级证据（PLAT-05-engine-error-surface / PLAT-14-output-too-large / PLAT-14-tool-profile / PLAT-15-prepare-execute / PLAT-17-prompt-digest / PLAT-19-token-quota，定向验收全部绿）＋ 旧台账（2026-10-27-baseline G-4 540 部分/26F/115E、optimization-ledger-ra8-ra2-ra5 预存 4 条、Y-2 RuntimeStreamTest 挂起）
+
+【第 1 轮 130E 逐桶】
+A. harness 属性缺失（System.getProperty("initial.fixture") NPE，需 engine-initial-sender / initial-chat-admission harness 传参）＝ 63E：
+   InitialSenderFactsPostgresTest 48E、InitialChatAdmissionHttpPostgresTest 9E、InitialChatObservationPostgresTest 3E、InitialSenderIntegrationTest 2E、RunEventReaderTimeoutBudgetPostgresTest 1E
+   （另 InitialChatAdmissionHttpPostgresTest 1E 为 ExecutionException，同类同缺因）
+B. 共享测试库 Flyway 乱序漂移（"Detected resolved migration not applied to database: 221"）＝ 46E：
+   涉 4 库：agent_platform_iam_o2a_c_events_v12 / agent_platform_iam_admission_engine_v12 / agent_platform_statistics_test / agent_platform_iam_o1b_status_v12（schema engine，max=223 而 v221 缺失——V223 由 T19.1 先入库、V221 由 T15 后到，存量库常规 migrate 校验失败）
+   PortalRunEventsLifecycleTest 11E、PortalChildEventsHttpTest 10E、PortalChildEventsPostgresTest 7E、PortalRunEventsHttpTest 6E、PortalRunEventWindowPostgresTest 6E、PortalRunEventsCapacityTest 3E、RunStatisticsPostgresTest 1E、PublishedAdmissionHttpPostgresTest 1E、RunObservationStatusHttpPostgresTest 1E
+C. 单 JVM 全量 Bean 冲突级联（PortalRunEventsJoinedEngine$Receiver.decoder 与 InitialChatAdmissionFixture$Receiver.decoder 重复定义 → BeanDefinitionOverrideException，Spring 上下文缓存被污染）＝ 16E：
+   TestInputHttpTest 9E、RunAdmissionHttpTest 5E、EngineContextPostgresTest 2E（EngineContextPostgresTest×2 已由 optimization-ledger RA8 记为预存环境签名）
+D. JDBC 连接 ＝ 3E：OwnedFlowMaterialsPostgresTest 1E、OwnedFlowSchedulerPostgresTest 1E（FATAL: database "agent_platform_iam_owned_flow_v12" does not exist，Y-6 桶；RA8 台账已载 OwnedFlowMaterials 预存）、ControlledReplayTest 1E（CannotGetJdbcConnection 10.5s，负载偶发）
+E. 负载超时偶发 ＝ 1E：ValuesTest.functionsAreExplicit（EXPRESSION_INVALID_OR_TIMEOUT ← TimeoutException）
+
+【第 1 轮 32F 逐桶】
+F. run-mode 契约属性缺失（-Dmodel.input.registry，夹具 ModelInputMaterialFixture:58 明文要求；该卡按 .tools/iam-model-input-producer-review-fix-run.mjs:10 以专用参数运行且全绿）＝ 22F：
+   ModelInputMaterialPostgresTest 21F、ModelInputMaterialHttpTest 1F（"owned database registry required"）
+G. 状态投影 errorRaw 多键 oracle 漂移（commit 81995e1 AP-S07 2026-10-27 引入 errorRaw 第 13 键，oracle 固定 12 键未同步）＝ 1F：
+   FlowMaterialStatusPostgresTest.actualRunServiceStatusReadsOriginalMap…（13 键含 errorRaw vs 12 键期望）
+H. 共享库 schema 版本 pin 漂移 ＝ 1F：FlowMaterialDatabasePreflightTest（期望库版本 ≤216，实际 220+；该 pin 早于本轮迁移）
+I. SQL 度量 oracle 漂移 ＝ 1F：RunEventReaderPostgresTest.realSampleMeasures…（payload SQL 序列谓词不匹配；相关 8MB cap SQL 自基线 1563353）
+J. 元数据 SQL oracle 漂移 ＝ 7F：RunObservationMetadataHttpPostgresTest.assertMetadataOnly×7（run 摘要 SQL 含 invalid_chat/has_tools 计数子查询触碰 node_instance 禁项；invalid_chat SQL 自基线 1563353；该类最后绿色记录为 iam-stage-4-o1a green03，2026-10-21，V217 时代）
+
+【V221 运修（先例：PLAT-18-pin-observe RepairOutOfOrderV106 三库运修、PLAT-15 夹具 outOfOrder 引导）】
+outOfOrder=true 补 V221 至 4 库，各 applied=1 success=true（engine-db-v221-repair.txt）。仅存量测试库运维，零代码改动。
+
+【第 2 轮（运修后）结果】
+- 桶 B 的 46E 全部消失：842→865（+23 例为原被 Flyway 挡住的用例首次真正运行）；PortalRunEventsLifecycle/Http/Capacity、PortalChildEventsHttp、RunStatistics、PublishedAdmission 全绿。
+- 桶 A 63+1E、桶 C 16E、桶 D 3E、桶 F 22F、G 1F、H 1F、I 1F、J 7F 原样复现（逐类同数）。
+- 新暴露 3E（原先被 Flyway 挡住）：PortalChildEventsPostgresTest 1E（EVENT_CAPTURE_SUPERSEDED，并发时序）、PortalRunEventWindowPostgresTest 1E（当前授权不允许此操作，并发窗口时序）、RunObservationStatusHttpPostgresTest 1E（其库 o1b_status 第 4 个补 V221 后 Flyway 通过）。
+- 定向复跑：PortalChildEventsPostgresTest 7/7 绿、PortalRunEventWindowPostgresTest 6/6 绿（engine-postrepair-focused-verify.txt）→ 两例为并发时序偶发；RunObservationStatusHttpPostgresTest 19 跑 2F（errorRaw 13 vs 12 ×2，即桶 G 同族——该类因 Flyway 漂移自 81995e1 后首次能跑，oracle 漂移随即暴露）。
+- 定向复跑：ValuesTest 6/6 绿、ControlledReplayTest 2/2 绿（engine-scattered-isolated-verify.txt）→ 桶 D/E 偶发坐实。
+- Y-2 旧挂起类 RuntimeStreamTest：本次全量 1/1 绿（0.053s，Tests run 原文），旧挂起未复现。
+
+【各卡定向验收类全量复绿核验】（各卡证据绿 → 本次全量绿，无一转红）
+SkillErrorSurfaceTest 9、EngineErrorSurfacePostgresTest 4、RunDiagnosticsTest 7、ExecutionRecoveryTest 4、ExternalJobStateTest 6、AgentLoopBudgetPostgresTest 3、TracePostgresTest 24、ControlledDraftSkillTest 5、DebugControlsTest 4、ToolCancellationRaceTest 2、ToolInterceptorChainTest 1、RunEventsPostgresTest 9、RunOperationsTest 1、OutputPolicyPostgresTest 24、RunOrphanConvergencePostgresTest 4、RunEventsHttpTest 1、ToolOutputPolicyTest 10、ToolOutputLargeResponsePostgresTest 4、RunToolProfileTest 12、RunEnvironmentAnnotationTest 11、RunServiceContextPackTest 9、PromptFreezeDigestTest 4、ActionPlanPostgresTest 8、EngineMigrationsTest 3、InitialMaterialScopePostgresTest 12、RuntimeClientsPublishedHttpTest 20 —— 全部 Failures: 0, Errors: 0。
+
+【新增失败判定】
+- 可归因于本轮产品改动的失败：0 例（全部红面的引入点均在基线 1563353 / 81995e1（2026-10-25/27）或环境/运行方式，逐名见上）。
+- 各卡证据未记载的全量红面：第 2 轮口径 117 例（32F+85E），已逐名归桶 A–J；其中桶 G+J+RunObservationStatus 的 2F 同族（errorRaw 13 键漂移）为"基线时代产品变更 vs 未同步 oracle"，被 V221 漂移掩盖、本轮运修后首次暴露——如实上报，留待 oracle 收口卡，非本轮回归。

@@ -1,0 +1,17 @@
+app-management 模块全量失败清单（2026-10-28，HEAD 9f3cdab，串行）
+总计原文：[ERROR] Tests run: 177, Failures: 0, Errors: 19, Skipped: 0
+对照基准：docs/evidence/2026-10-28-G8-y4y5-disposition/README.md §2.1（4b26625 实测 177/19E/4 坏类）
+
+逐类（run 摘录）：
+[ERROR] Tests run: 19, Failures: 0, Errors: 15, Skipped: 0 -- in cn.agentplatform.app.application.IntegrationPolicyResolverHttpTest
+[ERROR] Tests run: 13, Failures: 0, Errors: 2, Skipped: 0 -- in cn.agentplatform.app.application.PublishTransactionTest
+[ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0 -- in cn.agentplatform.app.application.AppCopyConcurrencyTest
+[ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0 -- in cn.agentplatform.app.application.DraftMetadataHttpTest
+
+逐名归桶（与 G-8 §2.1 表逐名比对）：
+1. IntegrationPolicyResolverHttpTest 15E —— Y-4 桶（容器级 PORTAL_CEILING_INVALID，夹具键集 {dataLabels} 无效）。G-8 记载 15E，本次 15E，同因同数。
+2. PublishTransactionTest 2E —— Y-3 桶（PlatformException 缺少当前授权上下文：globalCredentialLookupRequiresDedicatedGatewayIdentity / integrationSecretOnlyShownOnceAndRevocationPersists）。G-8 记载 2E，同因同数；PLAT-18-pin-observe 证据（同签名两条）亦载。
+3. AppCopyConcurrencyTest 1E —— Y-6 桶（database "agent_platform_app_copy_test" does not exist，夹具自建库缺失）。G-8 记载 1E，同因同数。
+4. DraftMetadataHttpTest 1E —— 夹具 Bean 冲突桶（BeanDefinitionOverrideException：PublishedMetadataFixtureMain$Receiver 与 PublishedAdmissionFixtureMain$Receiver 重复定义 authorityProperties）。G-8 记载 1E，同因同数。
+
+结论：坏类 4/4 逐名一致、每类 Error 数逐一同数（15+2+1+1=19）。新增失败 = 0。
