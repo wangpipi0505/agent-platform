@@ -28,6 +28,12 @@ agent:
     allow-embed: true
     jwt-secret: ${AGENT_JWT_SECRET}
     issuer: agent-platform-v12
+  integration:
+    # T18.1 业务入口限流：按集成凭据滑动窗口计数；默认关闭（回滚=恢复 false），max-requests<=0 表示不限。
+    rate-limit-enabled: false
+    rate-limit:
+      window-seconds: 60
+      max-requests: 0
   services:
     app: ${AGENT_APP_URL:http://127.0.0.1:18081}
     engine: ${AGENT_ENGINE_URL:http://127.0.0.1:18082}

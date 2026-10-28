@@ -20,6 +20,6 @@ public class IntegrationController {
             @RequestHeader(value = "Authorization", required = false) String authorization,
             @RequestHeader(value = "Origin", required = false) String origin,
             @RequestBody JsonNode body) {
-        return ApiResponse.ok(access.ticket(authorization, body, origin));
+        return ApiResponse.ok(access.embedTicket(authorization, body, origin));
     }
 }

@@ -1,0 +1,77 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -----------------< cn.agentplatform:platform-gateway >------------------
+[INFO] Building platform-gateway 0.1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- enforcer:3.5.0:enforce (default) @ platform-gateway ---
+[INFO] Rule 0: org.apache.maven.enforcer.rules.version.RequireJavaVersion passed
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ platform-gateway ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 0 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.0:compile (default-compile) @ platform-gateway ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 25 source files with javac [debug parameters release 21] to target\classes
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsMaterialVerifier.java: 某些输入文件使用或覆盖了已过时的 API。
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalEventsMaterialVerifier.java: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ platform-gateway ---
+[INFO] Copying 2 resources from src\test\resources to target\test-classes
+[INFO] 
+[INFO] --- compiler:3.14.0:testCompile (default-testCompile) @ platform-gateway ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 28 source files with javac [debug parameters release 21] to target\test-classes
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayPublishedChainPostgresTest.java: 某些输入文件使用或覆盖了已过时的 API。
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/platform-gateway/src/test/java/cn/agentplatform/common/authority/GatewayPublishedChainPostgresTest.java: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+[INFO] 
+[INFO] --- surefire:3.5.3:test (default-test) @ platform-gateway ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running cn.agentplatform.gateway.IntegrationRateLimitTest
+09:13:14.473 [main] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [cn.agentplatform.gateway.IntegrationRateLimitTest]: IntegrationRateLimitTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+09:13:14.545 [main] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration cn.agentplatform.gateway.GatewayApplication for test class cn.agentplatform.gateway.IntegrationRateLimitTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.0)
+
+2026-10-28T09:13:14.915+08:00  INFO 38072 --- [platform-gateway] [           main] c.a.gateway.IntegrationRateLimitTest     : Starting IntegrationRateLimitTest using Java 21.0.12 with PID 38072 (started by Administrator in G:\207\项目\算法重组工具\代码\agent-platform\platform-gateway)
+2026-10-28T09:13:14.916+08:00  INFO 38072 --- [platform-gateway] [           main] c.a.gateway.IntegrationRateLimitTest     : No active profile set, falling back to 1 default profile: "default"
+2026-10-28T09:13:16.722+08:00  INFO 38072 --- [platform-gateway] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 2 endpoints beneath base path '/actuator'
+2026-10-28T09:13:17.139+08:00  INFO 38072 --- [platform-gateway] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-10-28T09:13:17.139+08:00  INFO 38072 --- [platform-gateway] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-10-28T09:13:17.141+08:00  INFO 38072 --- [platform-gateway] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 1 ms
+2026-10-28T09:13:17.223+08:00  INFO 38072 --- [platform-gateway] [           main] c.a.gateway.IntegrationRateLimitTest     : Started IntegrationRateLimitTest in 2.587 seconds (process running for 3.165)
+Mockito is currently self-attaching to enable the inline-mock-maker. This will no longer work in future releases of the JDK. Please add Mockito as an agent to your build as described in Mockito's documentation: https://javadoc.io/doc/org.mockito/mockito-core/latest/org.mockito/org/mockito/Mockito.html#0.3
+WARNING: A Java agent has been loaded dynamically (C:\Users\Administrator\.m2\repository\net\bytebuddy\byte-buddy-agent\1.17.5\byte-buddy-agent-1.17.5.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+2026-10-28T09:13:18.386+08:00  WARN 38072 --- [platform-gateway] [           main] c.a.gateway.domain.IntegrationRateLimit  : INTEGRATION_RATE_LIMITED credential=1 keyTail=0001 path=/v1/apps/ops/runs windowSeconds=60 limit=2 used=2 traceId=a4406f1a-6d73-4359-b8fe-d9fe02c8d108
+2026-10-28T09:13:18.478+08:00  WARN 38072 --- [platform-gateway] [           main] c.a.gateway.domain.IntegrationRateLimit  : INTEGRATION_RATE_LIMITED credential=1 keyTail=0001 path=/v1/apps/ops/runs windowSeconds=60 limit=2 used=2 traceId=d4ad9304-7d00-406c-801c-4087a8fb99e4
+2026-10-28T09:13:18.568+08:00  WARN 38072 --- [platform-gateway] [           main] c.a.gateway.domain.IntegrationRateLimit  : INTEGRATION_RATE_LIMITED credential=1 keyTail=0001 path=/v1/apps/ops/runs windowSeconds=60 limit=3 used=3 traceId=trace-rate-limit-1
+2026-10-28T09:13:18.766+08:00  WARN 38072 --- [platform-gateway] [           main] c.a.gateway.domain.IntegrationRateLimit  : INTEGRATION_RATE_LIMITED credential=1 keyTail=0001 path=/v1/apps/ops/runs windowSeconds=60 limit=3 used=3 traceId=null
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 4.382 s -- in cn.agentplatform.gateway.IntegrationRateLimitTest
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  15.775 s
+[INFO] Finished at: 2026-10-28T09:13:18+08:00
+[INFO] ------------------------------------------------------------------------
