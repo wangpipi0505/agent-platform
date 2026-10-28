@@ -1,0 +1,108 @@
+[
+  {
+    "name": "standalone-default",
+    "command": "node scripts/verify-capability-package.mjs",
+    "nativeExit": 0,
+    "signal": null,
+    "expectedExit": 0,
+    "fieldPathFound": null,
+    "stdoutSha256": "a7ba5ff8248bf6a30a186a94222d94f00b8970624d95867e02eb97a89a3908e9",
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "standalone-missing-tool-binding",
+    "command": "node scripts/verify-capability-package.mjs --file docs/evidence/2026-10-29-EX-09/fixtures/invalid-missing-tool-binding.json",
+    "nativeExit": 1,
+    "signal": null,
+    "expectedExit": 1,
+    "fieldPath": "能力包.tools[0].binding",
+    "fieldPathFound": true,
+    "stdoutSha256": "0b6454640e08cd331d70f6f7a4c974ead32ac399293939ae781e696cfe0cbf34",
+    "stderrSha256": "9bcbc69f8e4396908c0ac804afc572ddd1706a8d1f254d5b5586ae6fe56e0311"
+  },
+  {
+    "name": "standalone-identity-plaintext",
+    "command": "node scripts/verify-capability-package.mjs --file docs/evidence/2026-10-29-EX-09/fixtures/invalid-identity-plaintext.json",
+    "nativeExit": 1,
+    "signal": null,
+    "expectedExit": 1,
+    "fieldPath": "能力包.identity.secrets[0].ref",
+    "fieldPathFound": true,
+    "stdoutSha256": "9dcf6edb7c8ed41952db0482a0425bc31c8d05a22862a71a3fa45e1d8a804294",
+    "stderrSha256": "ae22fc48c99541fedc4ca072721ff5c959e25cab0d03c6da3c30185dfacf5a1a"
+  },
+  {
+    "name": "standalone-unknown-kind",
+    "command": "node scripts/verify-capability-package.mjs --file docs/evidence/2026-10-29-EX-09/fixtures/invalid-unknown-kind.json",
+    "nativeExit": 1,
+    "signal": null,
+    "expectedExit": 1,
+    "fieldPath": "能力包.interfaces[0].kind",
+    "fieldPathFound": true,
+    "stdoutSha256": "6e125dedbddc00d10ddab1bd15b43eee57153b0e7439d74100e14b5e4c6f14a3",
+    "stderrSha256": "74b6fd31a2eb9f1ffda98fd53b4b25348409ee6b1d1c65a6bb783facb07f3c09"
+  },
+  {
+    "name": "gate-default",
+    "command": "node scripts/verify-contracts.mjs",
+    "nativeExit": 0,
+    "signal": null,
+    "expectedExit": 0,
+    "fieldPathFound": null,
+    "stdoutSha256": "3e2fcf84d6d7454628f607c093e9bfcee3566d6c5fe7974144e6528b3cd7ec23",
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "gate-missing-tool-binding",
+    "command": "node scripts/verify-contracts.mjs --file docs/evidence/2026-10-29-EX-09/fixtures/invalid-missing-tool-binding.json",
+    "nativeExit": 1,
+    "signal": null,
+    "expectedExit": 1,
+    "fieldPath": "能力包.tools[0].binding",
+    "fieldPathFound": true,
+    "stdoutSha256": "0984682a24fe41b2a62f05661faf74966035c731d473068911bc682253c662de",
+    "stderrSha256": "9bcbc69f8e4396908c0ac804afc572ddd1706a8d1f254d5b5586ae6fe56e0311"
+  },
+  {
+    "name": "gate-identity-plaintext",
+    "command": "node scripts/verify-contracts.mjs --file docs/evidence/2026-10-29-EX-09/fixtures/invalid-identity-plaintext.json",
+    "nativeExit": 1,
+    "signal": null,
+    "expectedExit": 1,
+    "fieldPath": "能力包.identity.secrets[0].ref",
+    "fieldPathFound": true,
+    "stdoutSha256": "f32d291f0284134b1bc9243e025375e8ef8727ee8a3bc8683ad0180db6636044",
+    "stderrSha256": "ae22fc48c99541fedc4ca072721ff5c959e25cab0d03c6da3c30185dfacf5a1a"
+  },
+  {
+    "name": "gate-unknown-kind",
+    "command": "node scripts/verify-contracts.mjs --file docs/evidence/2026-10-29-EX-09/fixtures/invalid-unknown-kind.json",
+    "nativeExit": 1,
+    "signal": null,
+    "expectedExit": 1,
+    "fieldPath": "能力包.interfaces[0].kind",
+    "fieldPathFound": true,
+    "stdoutSha256": "ad92ed8518e004e258966cebfcd6d47fa64125b88814b7f05ec983df1f8a0775",
+    "stderrSha256": "74b6fd31a2eb9f1ffda98fd53b4b25348409ee6b1d1c65a6bb783facb07f3c09"
+  },
+  {
+    "name": "syntax-verify-contracts",
+    "command": "node --check scripts/verify-contracts.mjs",
+    "nativeExit": 0,
+    "signal": null,
+    "expectedExit": 0,
+    "fieldPathFound": null,
+    "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "syntax-verify-capability-package",
+    "command": "node --check scripts/verify-capability-package.mjs",
+    "nativeExit": 0,
+    "signal": null,
+    "expectedExit": 0,
+    "fieldPathFound": null,
+    "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+]

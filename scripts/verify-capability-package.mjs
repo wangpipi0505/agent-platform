@@ -25,8 +25,8 @@
  * 有意边界：
  * - 本脚本只做声明文件校验，不触网、不校验本体发布 READY、不校验密钥系统——
  *   这些是运行期/平台侧能力（T22B/T22D），本卡不写平台产品代码。
- * - 未接入 verify-contracts.mjs（避免改变既有门禁行为）；门禁接入决策归 T22D。
- *   在接入前，schema sha256 以 contracts/freeze.json engineeringAddenda 登记为冻结记录。
+ * - 已由 verify-contracts.mjs 接入构建门禁，任一声明错误向上游传播非零退出码。
+ *   schema sha256 以 contracts/freeze.json engineeringAddenda 登记为冻结记录。
  *
  * 用法：
  *   node scripts/verify-capability-package.mjs                 # 校验 contracts/capability-packages/ 全集
@@ -93,8 +93,8 @@ function validateNode(value, schema, path, errors) {
     if (typeof schema !== 'object' || Array.isArray(schema)) return true;
 
     let ok = true;
-    const fail = (message) => {
-        errors.push({path, message});
+    const fail = (message, errorPath = path) => {
+        errors.push({path: errorPath, message});
         ok = false;
     };
 
@@ -129,7 +129,7 @@ function validateNode(value, schema, path, errors) {
         const keys = Object.keys(value);
         if ('minProperties' in schema && keys.length < schema.minProperties) fail(`键数 ${keys.length} 小于 minProperties=${schema.minProperties}`);
         for (const key of schema.required || []) {
-            if (!(key in value)) fail(`缺少必需字段 ${key}`);
+            if (!(key in value)) fail(`缺少必需字段 ${key}`, `${path}.${key}`);
         }
         if (schema.propertyNames) {
             for (const key of keys) {

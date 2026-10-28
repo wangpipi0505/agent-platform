@@ -1,0 +1,318 @@
+{
+  "apiVersion": "platform/v1",
+  "kind": "CapabilityPackage",
+  "metadata": {
+    "name": "route1-visibility",
+    "domain": "space-visibility",
+    "owner": "algorithm-team",
+    "version": "1.0.0",
+    "description": "路线一（HTTP 服务技能化 + 智能体工具调用编排）用能力包对既有真实配置的重新声明：空间—地面目标可见窗口计算系统 space-ground-visible。本文件是纯声明文件（T22A，PLAT-22 A 段），不接入任何运行链路，不改变任何线上行为；字段全部取自 2026-10-27 路线一验证的真实技能/应用配置，出处映射见 docs/evidence/2026-10-28-PLAT-22A-capability-schema/README.md。"
+  },
+  "software": {
+    "system": "space-ground-visible",
+    "version": "space-target-visible-1.0.0-SNAPSHOT（JDK17 jar）",
+    "environments": {
+      "dev": "http://127.0.0.1:8080"
+    },
+    "notes": "真实 MySQL 库 space_target_visible（Flyway v10）+ Orekit backend/orekit-data，非 demo/H2；35 个操作（24 空间 + 6 弹道原计算 + 5 辅助），机器合同 OpenAPI 3.0.3（其仓库 docs/openapi/openapi.json，经技能中心 OpenAPI 导入）。出处：落地验证方案-三路线本体与智能体-20261026 §2.3/§4.1、docs/evidence/2026-10-27-route1-visibility-agent/README.md §1。"
+  },
+  "interfaces": [
+    {
+      "id": "space-http-sync",
+      "kind": "HTTP_SYNC",
+      "endpoint": "http://127.0.0.1:8080",
+      "timeoutMs": 30000,
+      "description": "同步只读入口：目标目录查询、同步可见性规划、任务状态/结果读取。timeoutMs 为 v1.2 技能契约缺省（skill_version.timeout_ms DEFAULT 30000，OpenAPI 导入 defaults 同值），5 个已发布同步技能未显式覆盖。"
+    },
+    {
+      "id": "space-http-async",
+      "kind": "HTTP_ASYNC",
+      "endpoint": "http://127.0.0.1:8080/api/v1/space/visibility/tasks",
+      "httpMethod": "POST",
+      "timeoutMs": 120000,
+      "reconciliation": {
+        "endpoint": "http://127.0.0.1:8080/api/v1/space/visibility/tasks/{jobId}",
+        "method": "GET",
+        "jobIdPath": "$.taskId",
+        "donePath": "$.status",
+        "doneValue": "SUCCEEDED",
+        "failedValue": "FAILED",
+        "failureMessagePath": "$.errorMessage",
+        "resultEndpoint": "http://127.0.0.1:8080/api/v1/space/visibility/tasks/{jobId}/result",
+        "resultEndpointPath": "$",
+        "idempotencyKeyEcho": false
+      },
+      "description": "异步受理 + 自动对账取结果。对账契约与已发布技能 space-visibility-submit@1（sha256 213b4d46…）逐字段一致（路线一验证报告 §2 关键契约原文）；resultEndpoint/failedValue/failureMessagePath 为 PLAT-04/T05 增补形态（contracts/skill-invocation.md §11–§12）。"
+    }
+  ],
+  "ontology": {
+    "mode": "NONE",
+    "notes": "按 §11.2.4 如实声明 NONE：ontorepo 未部署（无进程、库中无『可见性规划域』），概念卡/术语口径/技能使用规则组成的 context pack 为按本体设计手写成文，经应用 systemPrompt 注入（1396 字符）；ContextAssembler 无 contextPack 字段，路线一只能以 literal 注入（路线一验证报告 §4 限制原文）。mode=NONE 不得声明 contextPack，故此处不声明；自动注入/工具投影绑定归 T22B（A-03），见 implementationGaps。"
+  },
+  "tools": [
+    {
+      "id": "space-target-query",
+      "operation": "queryTargets",
+      "description": "筛选目标目录（目标库 25870 条，按 ID/条件查询）。",
+      "exposure": "READ_ONLY",
+      "readonly": true,
+      "sideEffect": false,
+      "idempotent": true,
+      "pagination": "page",
+      "skillRef": {
+        "code": "space-target-query",
+        "version": 1,
+        "sha256": "0f2db9df779cf468f86b98425107c1c1080bfdf32076c37849c113fd32cb3762"
+      },
+      "notes": "端点 POST /api/v1/space/targets/query（落地验证方案 §4.1 技能资产表）。"
+    },
+    {
+      "id": "space-visibility-plan",
+      "operation": "planVisibility",
+      "description": "同步可见性规划：观测星对目标的可见弧段（results[].arcs[]，含光照段）。",
+      "binding": "space-http-sync",
+      "exposure": "READ_ONLY",
+      "readonly": true,
+      "sideEffect": false,
+      "idempotent": true,
+      "pagination": "none",
+      "skillRef": {
+        "code": "space-visibility-plan",
+        "version": 1,
+        "sha256": "80889e9e0a1a180b81cbdb815465e4acdfd2b102f6925792bfc42b13652a4969"
+      },
+      "notes": "端点 POST /api/v1/space/visibility/plan（direct-http-plan.json 直连基线同 URL，场景 1 模型调用与基线逐字段一致）。"
+    },
+    {
+      "id": "space-visibility-submit",
+      "operation": "submitVisibilityTask",
+      "description": "受理异步观测规划任务，返回 taskId；平台自动对账取结果。",
+      "binding": "space-http-async",
+      "exposure": "WRITE_WITH_APPROVAL",
+      "confirmRoles": [
+        "ADMIN",
+        "APPROVER"
+      ],
+      "readonly": false,
+      "sideEffect": true,
+      "idempotent": true,
+      "pagination": "none",
+      "skillRef": {
+        "code": "space-visibility-submit",
+        "version": 1,
+        "sha256": "213b4d463a8cb189e186c1be7ac2b9de1cfbbde1432d3330d6f7c2e20c24492b"
+      },
+      "notes": "端点 POST /api/v1/space/visibility/tasks（落地验证方案 §4.1）。确认角色 ADMIN/APPROVER 取自场景 2 实测审批节点（nodeInstanceId 571，confirmRoles [\"ADMIN\",\"APPROVER\"]，scenario-2-async-submit.json/README §3）；本轮验证早于 PLAT-15，契约未声明 execution.approval，能力包如实只登记确认角色，不虚构两段声明。"
+    },
+    {
+      "id": "space-visibility-status",
+      "operation": "queryVisibilityTaskStatus",
+      "description": "查询异步任务状态（SUCCEEDED/FAILED/CANCELLED，失败原因 errorMessage）。",
+      "binding": "space-http-sync",
+      "exposure": "READ_ONLY",
+      "readonly": true,
+      "sideEffect": false,
+      "idempotent": true,
+      "pagination": "none",
+      "skillRef": {
+        "code": "space-visibility-status",
+        "version": 2,
+        "sha256": "0756fa0d303c23101fbf02aa60222f6faee7b3e8dc6f24c6ba984107c814d732"
+      },
+      "notes": "端点 GET /api/v1/space/visibility/tasks/{jobId}（与异步对账端点同一资源）。钉 v2：v1 已 ARCHIVED（skills-state.json）。"
+    },
+    {
+      "id": "space-visibility-result",
+      "operation": "getVisibilityTaskResult",
+      "description": "读取异步任务规划结果。",
+      "binding": "space-http-sync",
+      "exposure": "READ_ONLY",
+      "readonly": true,
+      "sideEffect": false,
+      "idempotent": true,
+      "pagination": "none",
+      "skillRef": {
+        "code": "space-visibility-result",
+        "version": 1,
+        "sha256": "e601a7bc5f1f3407f57dbb85353708e588e48eef1e1ae4b897f555d192ac5521"
+      },
+      "notes": "端点 GET /api/v1/space/visibility/tasks/{jobId}/result（落地验证方案 §4.1）。"
+    },
+    {
+      "id": "space-satellite-options",
+      "operation": "listSatelliteOptions",
+      "description": "查询观测星目录（5414 颗星 TLE 目录）。",
+      "binding": "space-http-sync",
+      "exposure": "READ_ONLY",
+      "readonly": true,
+      "sideEffect": false,
+      "idempotent": true,
+      "pagination": "none",
+      "enabled": false,
+      "skillRef": {
+        "code": "space-satellite-options",
+        "version": 1,
+        "sha256": "dbb33f82e69655f74f4d56f1a3f0c1802e60912c3f7d60df7557977509c79ffe"
+      },
+      "notes": "端点 GET /api/v1/space/satellites/options。当前停用（DISABLED）：『5414 条 / ~550 KB 响应超输出预算』（docs/evidence/2026-10-27-route1-visibility-agent/README.md §2 原文），导致场景 1 的『查星』步缺失。"
+    }
+  ],
+  "identity": {
+    "subjectMapping": "platform_user -> Actor.subject()（v1.2 技能执行三件套；引擎以已验 JWT 主体调用技能中心）",
+    "scopes": [
+      "region=LOCAL"
+    ],
+    "guard": {
+      "roles": [
+        "ADMIN",
+        "EDITOR",
+        "APPROVER",
+        "SERVICE"
+      ],
+      "attributes": {
+        "region": [
+          "LOCAL"
+        ]
+      }
+    },
+    "secrets": [],
+    "notes": "空间服务在验证环境为回环地址无鉴权直连（连接测试/直连基线均未携带凭据，无 authRef/authScheme 声明），故 secrets 为空——这不是『无身份』：平台侧守卫（上述 roles/attributes）与提交人工确认（space-visibility-submit 确认角色）是路线一的真实身份控制面。出站 X-User-* 身份头（PLAT-12 §13）在本包冻结时未在技能契约上声明，能力包如实不声明 outboundIdentity；统一主体映射（agent JWT ↔ ontology consumer 一张映射）归 T22B/T22D（O-07/A-06）。"
+  },
+  "agents": [
+    {
+      "code": "space-visibility-agent",
+      "name": "可见性规划智能体",
+      "type": "CHAT",
+      "skillRefs": [
+        {
+          "tool": "space-target-query",
+          "skillCode": "space-target-query",
+          "version": 1,
+          "sha256": "0f2db9df779cf468f86b98425107c1c1080bfdf32076c37849c113fd32cb3762"
+        },
+        {
+          "tool": "space-visibility-plan",
+          "skillCode": "space-visibility-plan",
+          "version": 1,
+          "sha256": "80889e9e0a1a180b81cbdb815465e4acdfd2b102f6925792bfc42b13652a4969"
+        },
+        {
+          "tool": "space-visibility-submit",
+          "skillCode": "space-visibility-submit",
+          "version": 1,
+          "sha256": "213b4d463a8cb189e186c1be7ac2b9de1cfbbde1432d3330d6f7c2e20c24492b"
+        },
+        {
+          "tool": "space-visibility-status",
+          "skillCode": "space-visibility-status",
+          "version": 2,
+          "sha256": "0756fa0d303c23101fbf02aa60222f6faee7b3e8dc6f24c6ba984107c814d732"
+        },
+        {
+          "tool": "space-visibility-result",
+          "skillCode": "space-visibility-result",
+          "version": 1,
+          "sha256": "e601a7bc5f1f3407f57dbb85353708e588e48eef1e1ae4b897f555d192ac5521"
+        }
+      ],
+      "modelBinding": {
+        "modelEntryId": 13,
+        "entry": "deepseek-flash（capabilities chat,tools，经 28400 代理真实调用）"
+      },
+      "guard": {
+        "roles": [
+          "ADMIN",
+          "EDITOR",
+          "APPROVER",
+          "SERVICE"
+        ],
+        "attributes": {
+          "region": [
+            "LOCAL"
+          ]
+        }
+      },
+      "promptRef": "应用 draftRev 4，candidateSha256 08222c1e3a98ece950864055475188f4181d9a2795b7d5ae03aba816c189e28f；systemPrompt 1396 字符（含手写可见性规划域 context pack），全文见 docs/evidence/2026-10-27-route1-visibility-agent/app-config.json——此处按 §11.4 第 6 步只留出处引用，不内联长文。",
+      "requiredLabels": [
+        "PUBLIC"
+      ],
+      "notes": "应用状态 DRAFT（draftRev 4）；tools=[]（工具调用全部经 skillRefs 技能链路，未配独立工具）。应用发布预检 6 组中 5 PASS、评测门禁 ERROR（评测断言为整份 run output 精确 JSON 全等，usage/actualModel 易变字段必拒——路线一验证报告 §5 判定为产品缺陷而非应用配置问题），故应用未发布上线；此为验证期状态快照，能力包声明不改变它。"
+    }
+  ],
+  "verification": {
+    "connection": true,
+    "contract": true,
+    "model": true,
+    "evaluation": false,
+    "safety": true,
+    "concurrency": false,
+    "exemptions": [
+      {
+        "gate": "evaluation",
+        "reason": "应用层评测门禁对自由文本 CHAT 智能体不可用：monitor.EvaluationService 按整份 run output 精确 JSON 相等断言（含易变 usage/actualModel 字段），实测 expected {\"text\":\"4\"} 与完全正确的模型答案仍判 REJECTED（app-evaluation-report.json）——路线一验证报告 §5 结论为产品缺陷。技能层选型验收（model 门）已 5 项全过。",
+        "until": "评测断言支持按 output.text/忽略易变字段比较后重新过门（应用评测门禁修复未排卡）"
+      },
+      {
+        "gate": "concurrency",
+        "reason": "路线一轮验证未覆盖并发隔离用例（技能级并发上限/信号量/隔离性未实测，验证范围见路线一验证报告 §3 三场景）。",
+        "until": "T22D 控制面收口（A-07 运行归因）或下一轮路线一验证补并发用例"
+      }
+    ],
+    "notes": "connection=5 项已发布技能连接测试 SUCCEEDED（真实 DEBUG 调用非 mock，call 215–218，README §2）；contract=契约收敛（shallow output schema、扁平异步 submit）+ Schema 校验通过；model=选型验收命中率全部 1.0（≥0.8 门禁）；safety=守卫声明通过 + 提交人工确认链路实测走通（场景 2：WAITING_APPROVAL → POST /admin/approvals/{runId}/{nodeId} → 对账采纳，call 221 SUCCEEDED）+ 失败可读（场景 2b REMOTE_FAILED 携带 TLE 校验和原因）。"
+  },
+  "operations": {
+    "notes": "本轮验证未采集 SLO/成本/保留期数据，不编造数值。已知的运行口径事实：单次尝试超时上限同步 30000ms（契约缺省）/异步提交 120000ms（契约声明）；输出硬闸 1MiB（space-satellite-options 因 ~550KB 响应被停用为旁证，README §2）；异步任务缓存服务重启不恢复（落地验证方案 §2.3 运维注记）。SLO/告警接收方/成本归属按能力包/路线/工具/release 的归因登记归 T22D（A-07/O-08），见 implementationGaps。"
+  },
+  "routeProfiles": [
+    {
+      "id": "http-sync",
+      "execution": "space-http-sync",
+      "ontology": "none",
+      "tools": [
+        "space-target-query",
+        "space-visibility-plan",
+        "space-visibility-status",
+        "space-visibility-result"
+      ],
+      "identity": "platform-user-guarded（应用守卫 roles+region=LOCAL；只读直执行）",
+      "notes": "§11.3 路线配置 http-sync 实例：简单查询与即时计算。停用的 space-satellite-options 不进路线组合（停用工具不得被引用）；恢复启用须以输出预算/分页方案解决为前提。"
+    },
+    {
+      "id": "http-async",
+      "execution": "space-http-async",
+      "ontology": "none",
+      "tools": [
+        "space-visibility-submit"
+      ],
+      "identity": "platform-user-guarded + approval（提交走确认角色 ADMIN/APPROVER，平台自动对账）",
+      "notes": "§11.3 路线配置 http-async 实例：长任务 + externalJob 对账（PLAT-04/T05/T06 已落契约）。"
+    }
+  ],
+  "implementationGaps": [
+    {
+      "area": "本体协同：工具投影注册表、传输中立工具描述、consumer 注册、contextPack 自动注入、统一主体映射",
+      "description": "本包 ontology.mode=NONE、context pack 手写进 systemPrompt、工具目录靠技能中心手工建（105 接口只挂 2 只读工具的现状）；本体发布解析（READY）、contextPack digest 冻结与自动注入、工具从 release operation 投影生成均未实现。",
+      "ownerCard": "T22B（O-02/O-03/O-05/O-07；A-03）"
+    },
+    {
+      "area": "执行适配器：PROCESS 适配器注册表与通用契约层",
+      "description": "interfaces kind 枚举中的 PROCESS 为冻结留白：skill-registry SkillCatalog 现只允许 HTTP/MCP/ALGORITHM，PROCESS 一次性进程（stdio、超时杀树、产物回收）未注册；本包未声明 PROCESS 入口，路线二接入时按已冻结枚举声明即可。",
+      "ownerCard": "T22C（A-01/A-02 + PLAT-21）"
+    },
+    {
+      "area": "控制面收口：共享对象 ID、统一身份、按 package/route/tool/release 的观测与成本归因、SLO 登记",
+      "description": "operations 区块缺实测 SLO/成本数据；capability_package_id/software_system_id 等共享对象（§11.7）未落库；§11.9 六条演示未执行。",
+      "ownerCard": "T22D（A-06/A-07；O-07/O-08）"
+    },
+    {
+      "area": "工具档案与 toolProfile 选择（能力包驱动）",
+      "description": "引擎侧工具选择目前由应用 skillRefs 钉版本承担，无能力包驱动的工具档案/toolProfile 机制；本卡只冻结声明形态。",
+      "ownerCard": "T14.1（门控：T22A 冻结后）"
+    },
+    {
+      "area": "应用发布评测门禁对自由文本智能体不可用（产品缺陷）",
+      "description": "整份 run output 精确 JSON 相等断言使 CHAT 应用无法通过发布评测门（verification.evaluation 豁免的根因）；非 22B/C/D 范围，已在路线一验证报告 §5 登记并附修复建议（按 output.text 比较/允许忽略易变字段）。",
+      "ownerCard": "未排卡（路线一验证报告 §5 登记）"
+    }
+  ]
+}

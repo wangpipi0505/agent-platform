@@ -1,0 +1,88 @@
+[
+  {
+    "name": "standalone-default",
+    "command": "node scripts/verify-capability-package.mjs",
+    "nativeExit": 0,
+    "signal": null,
+    "expectedExit": 0,
+    "fieldPathFound": null,
+    "stdoutSha256": "a7ba5ff8248bf6a30a186a94222d94f00b8970624d95867e02eb97a89a3908e9",
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "standalone-missing-tool-binding",
+    "command": "node scripts/verify-capability-package.mjs --file docs/evidence/2026-10-29-EX-09/fixtures/invalid-missing-tool-binding.json",
+    "nativeExit": 1,
+    "signal": null,
+    "expectedExit": 1,
+    "fieldPath": "能力包.tools[0].binding",
+    "fieldPathFound": false,
+    "stdoutSha256": "0b6454640e08cd331d70f6f7a4c974ead32ac399293939ae781e696cfe0cbf34",
+    "stderrSha256": "33baafb24fd83f18cf1cb0712a6a5794ce5c210206ec63658398ae881304ff39"
+  },
+  {
+    "name": "standalone-identity-plaintext",
+    "command": "node scripts/verify-capability-package.mjs --file docs/evidence/2026-10-29-EX-09/fixtures/invalid-identity-plaintext.json",
+    "nativeExit": 1,
+    "signal": null,
+    "expectedExit": 1,
+    "fieldPath": "能力包.identity.secrets[0].ref",
+    "fieldPathFound": true,
+    "stdoutSha256": "9dcf6edb7c8ed41952db0482a0425bc31c8d05a22862a71a3fa45e1d8a804294",
+    "stderrSha256": "ae22fc48c99541fedc4ca072721ff5c959e25cab0d03c6da3c30185dfacf5a1a"
+  },
+  {
+    "name": "standalone-unknown-kind",
+    "command": "node scripts/verify-capability-package.mjs --file docs/evidence/2026-10-29-EX-09/fixtures/invalid-unknown-kind.json",
+    "nativeExit": 1,
+    "signal": null,
+    "expectedExit": 1,
+    "fieldPath": "能力包.interfaces[0].kind",
+    "fieldPathFound": true,
+    "stdoutSha256": "6e125dedbddc00d10ddab1bd15b43eee57153b0e7439d74100e14b5e4c6f14a3",
+    "stderrSha256": "74b6fd31a2eb9f1ffda98fd53b4b25348409ee6b1d1c65a6bb783facb07f3c09"
+  },
+  {
+    "name": "gate-default",
+    "command": "node scripts/verify-contracts.mjs",
+    "nativeExit": 0,
+    "signal": null,
+    "expectedExit": 0,
+    "fieldPathFound": null,
+    "stdoutSha256": "a4b49e7f62d1b3a6c1b7264f5e2b0439205bedac19c163ae48b30da27b0d2b6d",
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "gate-missing-tool-binding",
+    "command": "node scripts/verify-contracts.mjs --file docs/evidence/2026-10-29-EX-09/fixtures/invalid-missing-tool-binding.json",
+    "nativeExit": 0,
+    "signal": null,
+    "expectedExit": 1,
+    "fieldPath": "能力包.tools[0].binding",
+    "fieldPathFound": false,
+    "stdoutSha256": "a4b49e7f62d1b3a6c1b7264f5e2b0439205bedac19c163ae48b30da27b0d2b6d",
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "gate-identity-plaintext",
+    "command": "node scripts/verify-contracts.mjs --file docs/evidence/2026-10-29-EX-09/fixtures/invalid-identity-plaintext.json",
+    "nativeExit": 0,
+    "signal": null,
+    "expectedExit": 1,
+    "fieldPath": "能力包.identity.secrets[0].ref",
+    "fieldPathFound": false,
+    "stdoutSha256": "a4b49e7f62d1b3a6c1b7264f5e2b0439205bedac19c163ae48b30da27b0d2b6d",
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "gate-unknown-kind",
+    "command": "node scripts/verify-contracts.mjs --file docs/evidence/2026-10-29-EX-09/fixtures/invalid-unknown-kind.json",
+    "nativeExit": 0,
+    "signal": null,
+    "expectedExit": 1,
+    "fieldPath": "能力包.interfaces[0].kind",
+    "fieldPathFound": false,
+    "stdoutSha256": "a4b49e7f62d1b3a6c1b7264f5e2b0439205bedac19c163ae48b30da27b0d2b6d",
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+]

@@ -1,0 +1,9 @@
+== 能力包声明校验（T22A 冻结口径，schema urn:agent-platform:capability-package:1.0）==
+schema: contracts\capability-package.schema.json  sha256=0456799d04deb57dfb114d169d8a37c7b57a49cad3996fee917a93efa704a634
+[1/1] docs\evidence\2026-10-29-EX-09\fixtures\invalid-unknown-kind.json v1.0.0  software=space-ground-visible
+  interfaces(2): space-http-sync[EX09_UNKNOWN_KIND] space-http-async[HTTP_ASYNC]
+  tools(6): space-target-query->space-http-sync[READ_ONLY] space-visibility-plan->space-http-sync[READ_ONLY] space-visibility-submit->space-http-async[WRITE_WITH_APPROVAL] space-visibility-status->space-http-sync[READ_ONLY] space-visibility-result->space-http-sync[READ_ONLY] space-satellite-options->space-http-sync[READ_ONLY,停用]
+  ontology: NONE
+  routeProfiles(2): http-sync http-async
+  verification: connection=通过  contract=通过  model=通过  evaluation=关闭(豁免留痕)  safety=通过  concurrency=关闭(豁免留痕)
+  错误 1 条，警告 1 条

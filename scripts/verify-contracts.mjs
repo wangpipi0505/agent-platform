@@ -1,6 +1,7 @@
 import {readFile,readdir} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
+import {spawnSync} from 'node:child_process';
 import path from 'node:path';
 import {verifyRoutes} from './verify-routes.mjs';
 
@@ -34,4 +35,8 @@ if(routes.blocking){
  throw new Error(`G-9 路由目录漂移：${routes.missing.length} 个服务票据面 handler 没有目录行（运行期会抛 ROUTE_COVERAGE_MISSING）\n${lines}\n补 \`agent-service-authority.json\` 对应行：有真实调用方的按 delegated+caller 登记，无调用方的登记为 disabled+caller null+reason。`);
 }
 if(routes.portalSurface.length+routes.stale.length>0)console.log(`G-9 路由目录：服务票据面 0 MISSING；门户面缺行告警 ${routes.portalSurface.length} 条、STALE ${routes.stale.length} 条（均不阻断，清单见 docs/evidence/2026-10-27-G9-route-drift/README.md）`);
+// EX-09：复用独立校验器的默认全集与 --file 夹具入口，保留诊断和原生失败退出码。
+const capability=spawnSync(process.execPath,[path.join(root,'scripts/verify-capability-package.mjs'),...process.argv.slice(2)],{stdio:'inherit',windowsHide:true});
+if(capability.error)throw capability.error;
+if(capability.status!==0)process.exit(capability.status??1);
 console.log('v1.2快照、四契约原文哈希与七模块依赖边界通过');
