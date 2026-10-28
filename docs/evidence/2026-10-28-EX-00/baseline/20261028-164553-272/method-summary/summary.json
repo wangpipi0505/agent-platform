@@ -1,0 +1,276 @@
+{
+  "repository": "AP",
+  "run_id": "20261028-164553-272",
+  "supplement_runs": [
+    "20261028-173319-158"
+  ],
+  "modules": [
+    "admin-common",
+    "platform-gateway",
+    "app-management",
+    "engine-runtime",
+    "skill-registry",
+    "model-gateway",
+    "monitor"
+  ],
+  "source_pattern": "*Test.java",
+  "groups": [
+    {
+      "module": "admin-common",
+      "database": "AP",
+      "expected_classes": 34,
+      "exit_code": 0,
+      "command_status": "COLLECTED",
+      "commands": [
+        {
+          "attempt": "20261028-164553-272",
+          "exitCode": 0,
+          "status": "COLLECTED",
+          "testExecutionStatus": null,
+          "testProcessExitCode": null
+        }
+      ],
+      "fresh_xml": 34,
+      "cases": 363,
+      "counts": {
+        "passed": 352,
+        "failure": 10,
+        "error": 1,
+        "skipped": 0
+      },
+      "not_reported": [],
+      "collection_complete": true,
+      "tests_all_passed": false
+    },
+    {
+      "module": "platform-gateway",
+      "database": "AP",
+      "expected_classes": 27,
+      "exit_code": 0,
+      "command_status": "COLLECTED",
+      "commands": [
+        {
+          "attempt": "20261028-164553-272",
+          "exitCode": 0,
+          "status": "COLLECTED",
+          "testExecutionStatus": "INCOMPLETE_FORK_TERMINATED",
+          "testProcessExitCode": "-1"
+        },
+        {
+          "attempt": "20261028-173319-158",
+          "exitCode": 0,
+          "status": "COLLECTED",
+          "testExecutionStatus": null,
+          "testProcessExitCode": null
+        }
+      ],
+      "fresh_xml": 26,
+      "cases": 254,
+      "counts": {
+        "passed": 238,
+        "failure": 8,
+        "error": 8,
+        "skipped": 0
+      },
+      "not_reported": [
+        "cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest"
+      ],
+      "collection_complete": false,
+      "tests_all_passed": false
+    },
+    {
+      "module": "app-management",
+      "database": "AP",
+      "expected_classes": 23,
+      "exit_code": 0,
+      "command_status": "COLLECTED",
+      "commands": [
+        {
+          "attempt": "20261028-164553-272",
+          "exitCode": 0,
+          "status": "COLLECTED",
+          "testExecutionStatus": null,
+          "testProcessExitCode": null
+        }
+      ],
+      "fresh_xml": 23,
+      "cases": 177,
+      "counts": {
+        "passed": 158,
+        "failure": 0,
+        "error": 19,
+        "skipped": 0
+      },
+      "not_reported": [],
+      "collection_complete": true,
+      "tests_all_passed": false
+    },
+    {
+      "module": "engine-runtime",
+      "database": "AP",
+      "expected_classes": 93,
+      "exit_code": 0,
+      "command_status": "COLLECTED",
+      "commands": [
+        {
+          "attempt": "20261028-164553-272",
+          "exitCode": 0,
+          "status": "COLLECTED",
+          "testExecutionStatus": null,
+          "testProcessExitCode": null
+        }
+      ],
+      "fresh_xml": 93,
+      "cases": 883,
+      "counts": {
+        "passed": 766,
+        "failure": 35,
+        "error": 82,
+        "skipped": 0
+      },
+      "not_reported": [],
+      "collection_complete": true,
+      "tests_all_passed": false
+    },
+    {
+      "module": "skill-registry",
+      "database": "AP",
+      "expected_classes": 70,
+      "exit_code": 0,
+      "command_status": "COLLECTED",
+      "commands": [
+        {
+          "attempt": "20261028-164553-272",
+          "exitCode": 0,
+          "status": "COLLECTED",
+          "testExecutionStatus": null,
+          "testProcessExitCode": null
+        }
+      ],
+      "fresh_xml": 70,
+      "cases": 664,
+      "counts": {
+        "passed": 548,
+        "failure": 6,
+        "error": 106,
+        "skipped": 4
+      },
+      "not_reported": [],
+      "collection_complete": true,
+      "tests_all_passed": false
+    },
+    {
+      "module": "model-gateway",
+      "database": "AP",
+      "expected_classes": 22,
+      "exit_code": 0,
+      "command_status": "COLLECTED",
+      "commands": [
+        {
+          "attempt": "20261028-164553-272",
+          "exitCode": 0,
+          "status": "COLLECTED",
+          "testExecutionStatus": null,
+          "testProcessExitCode": null
+        }
+      ],
+      "fresh_xml": 22,
+      "cases": 175,
+      "counts": {
+        "passed": 84,
+        "failure": 7,
+        "error": 84,
+        "skipped": 0
+      },
+      "not_reported": [],
+      "collection_complete": true,
+      "tests_all_passed": false
+    },
+    {
+      "module": "monitor",
+      "database": "AP",
+      "expected_classes": 9,
+      "exit_code": 0,
+      "command_status": "COLLECTED",
+      "commands": [
+        {
+          "attempt": "20261028-164553-272",
+          "exitCode": 0,
+          "status": "COLLECTED",
+          "testExecutionStatus": null,
+          "testProcessExitCode": null
+        }
+      ],
+      "fresh_xml": 9,
+      "cases": 63,
+      "counts": {
+        "passed": 60,
+        "failure": 0,
+        "error": 3,
+        "skipped": 0
+      },
+      "not_reported": [],
+      "collection_complete": true,
+      "tests_all_passed": false
+    }
+  ],
+  "cases": 2579,
+  "counts": {
+    "passed": 2206,
+    "failure": 66,
+    "error": 303,
+    "skipped": 4
+  },
+  "error_classes": [
+    "cn.agentplatform.app.application.AppCopyConcurrencyTest",
+    "cn.agentplatform.app.application.DraftMetadataHttpTest",
+    "cn.agentplatform.app.application.IntegrationPolicyResolverHttpTest",
+    "cn.agentplatform.app.application.PublishTransactionTest",
+    "cn.agentplatform.common.authority.LocalRunAdvanceAuthorityTest",
+    "cn.agentplatform.engine.infra.EngineContextPostgresTest",
+    "cn.agentplatform.engine.infra.InitialChatAdmissionHttpPostgresTest",
+    "cn.agentplatform.engine.infra.InitialChatObservationPostgresTest",
+    "cn.agentplatform.engine.infra.InitialSenderFactsPostgresTest",
+    "cn.agentplatform.engine.infra.InitialSenderIntegrationTest",
+    "cn.agentplatform.engine.infra.OwnedFlowMaterialsPostgresTest",
+    "cn.agentplatform.engine.infra.OwnedFlowSchedulerPostgresTest",
+    "cn.agentplatform.engine.infra.RunAdmissionHttpTest",
+    "cn.agentplatform.engine.infra.RunEventReaderTimeoutBudgetPostgresTest",
+    "cn.agentplatform.engine.infra.TestInputHttpTest",
+    "cn.agentplatform.gateway.IntegrationSecurityTest",
+    "cn.agentplatform.gateway.infra.PortalRunEventsSseAutomaticCleanupTest",
+    "cn.agentplatform.gateway.infra.PortalRunEventsSseResetCleanupTest",
+    "cn.agentplatform.model.application.FrozenInitialInputMeterTest",
+    "cn.agentplatform.model.application.FrozenInitialPromptTest",
+    "cn.agentplatform.model.application.FrozenInitialWireGuardTest",
+    "cn.agentplatform.model.application.FrozenModelBindingVerifierTest",
+    "cn.agentplatform.model.application.InitialModelInputVerifierTest",
+    "cn.agentplatform.model.application.InitialStreamIntegrationTest",
+    "cn.agentplatform.model.application.ModelCallsPostgresTest",
+    "cn.agentplatform.model.infra.EngineModelInputManifestClientHttpTest",
+    "cn.agentplatform.model.infra.FrozenModelBindingStorePostgresTest",
+    "cn.agentplatform.model.infra.InitialStreamSendFactsPostgresTest",
+    "cn.agentplatform.monitor.application.DatasetHttpTest",
+    "cn.agentplatform.skill.application.AlgorithmExecutionPostgresTest",
+    "cn.agentplatform.skill.application.AsyncHttpExecutionTest",
+    "cn.agentplatform.skill.application.CallbackHttpTest",
+    "cn.agentplatform.skill.application.ReconciliationProofTest",
+    "cn.agentplatform.skill.application.SkillCallbackWakeTest",
+    "cn.agentplatform.skill.infra.McpManagementTest"
+  ],
+  "class_level_error_events": 4,
+  "class_level_error_classes": [
+    "cn.agentplatform.app.application.AppCopyConcurrencyTest",
+    "cn.agentplatform.engine.infra.OwnedFlowMaterialsPostgresTest",
+    "cn.agentplatform.engine.infra.OwnedFlowSchedulerPostgresTest",
+    "cn.agentplatform.engine.infra.RunEventReaderTimeoutBudgetPostgresTest"
+  ],
+  "not_reported": 1,
+  "issues": [],
+  "no_source_modules": [],
+  "collection_complete": false,
+  "tested_groups_all_passed": false,
+  "tests_all_passed": false,
+  "display_name_note": "仅保留XML显式displayName属性；缺失时留空，原case name保留，不反推展示名。",
+  "scope_note": "仅汇总本轮命令与XML。NOT_REPORTED须归因；无源测试模块单列不适用，采集完整不代表全部测试通过。"
+}

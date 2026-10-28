@@ -1,0 +1,40 @@
+{
+  "oldRunId": "20261028-164553-272",
+  "newRunId": "20261028-184530-895",
+  "scope": [
+    "app-management",
+    "engine-runtime"
+  ],
+  "onlyDeclaredAPPreconditionChanges": [
+    "new agent_platform_app_copy_test",
+    "new agent_platform_iam_owned_flow_v12"
+  ],
+  "sourceHead": "ebbfd62ca1d19efc4d172804efb5ac79453ceb64",
+  "mergeIntoOriginalBaseline": false,
+  "modules": [
+    {
+      "module": "app-management",
+      "oldNonpassEvents": 19,
+      "newNonpassEvents": 18,
+      "newlyObservedNonpass": [],
+      "noLongerNonpass": [
+        "cn.agentplatform.app.application.AppCopyConcurrencyTest#"
+      ],
+      "interpretation": "Observed method-set difference only; original baseline retained; no product-code change or asserted repair"
+    },
+    {
+      "module": "engine-runtime",
+      "oldNonpassEvents": 117,
+      "newNonpassEvents": 115,
+      "newlyObservedNonpass": [
+        "cn.agentplatform.engine.infra.OwnedFlowMaterialsPostgresTest#lastNodePostCommitProofExpiryLeavesGrantUsableAndAggregateOnlyNewCurrentNeverRerunsNode"
+      ],
+      "noLongerNonpass": [
+        "cn.agentplatform.engine.infra.OwnedFlowMaterialsPostgresTest#",
+        "cn.agentplatform.engine.infra.OwnedFlowSchedulerPostgresTest#",
+        "cn.agentplatform.engine.infra.PortalRunEventsLifecycleTest#timeoutOnCompleteAndShutdownKeepTwoActualGetterOwnersUntilEachReturns"
+      ],
+      "interpretation": "Observed method-set difference only; original baseline retained; no product-code change or asserted repair"
+    }
+  ]
+}

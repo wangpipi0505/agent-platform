@@ -1,0 +1,29 @@
+{
+  "name": "engine-runtime",
+  "kind": "environment-recheck",
+  "root": "G:/207/项目/算法重组工具/代码/agent-platform",
+  "executable": "mvn.cmd",
+  "arguments": [
+    "-B",
+    "-ntp",
+    "-pl",
+    "engine-runtime",
+    "test",
+    "-Dmaven.repo.local=G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2",
+    "-DargLine=-Xmx1024m -Djdk.net.unixdomain.tmpdir=V:/.local/tmp",
+    "-Dsurefire.timeout=900",
+    "-Dsurefire.failIfNoSpecifiedTests=true",
+    "-Dtest=OwnedFlowSchedulerPostgresTest,OwnedFlowMaterialsPostgresTest"
+  ],
+  "selectedClasses": [
+    "OwnedFlowSchedulerPostgresTest",
+    "OwnedFlowMaterialsPostgresTest"
+  ],
+  "startedAt": "2026-10-28T18:18:00.9986411+08:00",
+  "endedAt": "2026-10-28T18:20:28.6115775+08:00",
+  "exitCode": 1,
+  "status": "COMMAND_FAILED",
+  "sourceHead": "ebbfd62ca1d19efc4d172804efb5ac79453ceb64",
+  "primaryRunId": "20261028-164553-272",
+  "mergeIntoPrimaryBaseline": false
+}

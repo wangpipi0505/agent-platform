@@ -1,0 +1,18 @@
+{
+  "module": "platform-gateway",
+  "class": "cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest",
+  "phase": "AfterAll stop",
+  "surefirePid": 40868,
+  "threadDumpPath": "platform-gateway-thread-20261028-1704.raw.txt",
+  "capturedAt": "2026-10-28T17:02:54.9818410+08:00",
+  "detectedDeadlock": [
+    "Found one Java-level deadlock:",
+    "Found 1 deadlock."
+  ],
+  "mainFrames": [
+    "PublishedRunProxy$Exchange.fail:361",
+    "PublishedRunProxy.close:445",
+    "GatewayPublishedRunProxyTest.stop:429"
+  ],
+  "action": "Preserve dump, wait configured 900-second fork timeout, continue remaining modules; no code changes"
+}

@@ -1,0 +1,70 @@
+{
+  "capturedAt": "2026-10-28T17:02:54.9818410+08:00",
+  "relationships": [
+    "main waits for PublishedRunProxy$Exchange monitor held by gateway-published-timeout",
+    "gateway-published-timeout waits for ReentrantLock$NonfairSync held by http-nio-127.0.0.1-auto-19-exec-4",
+    "http-nio-127.0.0.1-auto-19-exec-4 waits for the same PublishedRunProxy$Exchange monitor held by gateway-published-timeout"
+  ],
+  "threads": [
+    {
+      "thread": "main",
+      "frames": [
+        "at cn.agentplatform.gateway.application.PublishedRunProxy$Exchange.fail(PublishedRunProxy.java:361)",
+        "at cn.agentplatform.gateway.application.PublishedRunProxy.lambda$close$2(PublishedRunProxy.java:447)",
+        "at cn.agentplatform.gateway.application.PublishedRunProxy$$Lambda/0x0000022b9080e080.accept(Unknown Source)",
+        "at java.util.concurrent.ConcurrentHashMap$KeySetView.forEach(java.base@21.0.12/ConcurrentHashMap.java:4709)",
+        "at cn.agentplatform.gateway.application.PublishedRunProxy.close(PublishedRunProxy.java:445)",
+        "at org.springframework.beans.factory.support.DisposableBeanAdapter.destroy(DisposableBeanAdapter.java:232)",
+        "at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.destroyBean(DefaultSingletonBeanRegistry.java:798)",
+        "at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.destroySingleton(DefaultSingletonBeanRegistry.java:748)",
+        "at org.springframework.beans.factory.support.DefaultListableBeanFactory.destroySingleton(DefaultListableBeanFactory.java:1474)",
+        "at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.destroySingletons(DefaultSingletonBeanRegistry.java:707)",
+        "at org.springframework.beans.factory.support.DefaultListableBeanFactory.destroySingletons(DefaultListableBeanFactory.java:1467)",
+        "at org.springframework.context.support.AbstractApplicationContext.destroyBeans(AbstractApplicationContext.java:1219)",
+        "at org.springframework.context.support.AbstractApplicationContext.doClose(AbstractApplicationContext.java:1180)",
+        "at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.doClose(ServletWebServerApplicationContext.java:179)",
+        "at org.springframework.context.support.AbstractApplicationContext.close(AbstractApplicationContext.java:1126)"
+      ]
+    },
+    {
+      "thread": "gateway-published-timeout",
+      "frames": [
+        "at jdk.internal.misc.Unsafe.park(java.base@21.0.12/Native Method)",
+        "at java.util.concurrent.locks.LockSupport.park(java.base@21.0.12/LockSupport.java:221)",
+        "at java.util.concurrent.locks.AbstractQueuedSynchronizer.acquire(java.base@21.0.12/AbstractQueuedSynchronizer.java:788)",
+        "at java.util.concurrent.locks.AbstractQueuedSynchronizer.acquire(java.base@21.0.12/AbstractQueuedSynchronizer.java:1024)",
+        "at java.util.concurrent.locks.ReentrantLock$Sync.lock(java.base@21.0.12/ReentrantLock.java:153)",
+        "at java.util.concurrent.locks.ReentrantLock.lock(java.base@21.0.12/ReentrantLock.java:322)",
+        "at org.apache.coyote.AbstractProcessor.executeDispatches(AbstractProcessor.java:925)",
+        "at org.apache.coyote.AbstractProcessor.action(AbstractProcessor.java:610)",
+        "at org.apache.coyote.Response.action(Response.java:208)",
+        "at org.apache.coyote.Response.setWriteListener(Response.java:754)",
+        "at org.apache.catalina.connector.OutputBuffer.setWriteListener(OutputBuffer.java:645)",
+        "at org.apache.catalina.connector.CoyoteOutputStream.setWriteListener(CoyoteOutputStream.java:189)",
+        "at cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest$Receiver$2$1.setWriteListener(GatewayPublishedRunProxyTest.java:138)",
+        "at org.springframework.security.web.util.OnCommittedResponseWrapper$SaveContextServletOutputStream.setWriteListener(OnCommittedResponseWrapper.java:649)",
+        "at org.springframework.web.context.request.async.StandardServletAsyncWebRequest$LifecycleServletOutputStream.setWriteListener(StandardServletAsyncWebRequest.java:381)"
+      ]
+    },
+    {
+      "thread": "http-nio-127.0.0.1-auto-19-exec-4",
+      "frames": [
+        "at cn.agentplatform.gateway.application.PublishedRunProxy$Exchange.fail(PublishedRunProxy.java:361)",
+        "at cn.agentplatform.gateway.application.PublishedRunProxy.lambda$start$0(PublishedRunProxy.java:85)",
+        "at cn.agentplatform.gateway.application.PublishedRunProxy$$Lambda/0x0000022b907d9060.run(Unknown Source)",
+        "at org.springframework.web.context.request.async.StandardServletAsyncWebRequest$$Lambda/0x0000022b90854ec0.accept(Unknown Source)",
+        "at java.util.ArrayList.forEach(java.base@21.0.12/ArrayList.java:1596)",
+        "at org.springframework.web.context.request.async.StandardServletAsyncWebRequest.onTimeout(StandardServletAsyncWebRequest.java:186)",
+        "at org.apache.catalina.core.AsyncListenerWrapper.fireOnTimeout(AsyncListenerWrapper.java:44)",
+        "at org.apache.catalina.core.AsyncContextImpl.timeout(AsyncContextImpl.java:136)",
+        "at org.apache.catalina.connector.CoyoteAdapter.asyncDispatch(CoyoteAdapter.java:135)",
+        "at org.apache.coyote.AbstractProcessor.dispatch(AbstractProcessor.java:243)",
+        "at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:57)",
+        "at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:903)",
+        "at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1740)",
+        "at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)",
+        "at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1189)"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "name": "platform-gateway",
+  "root": "G:/207/项目/算法重组工具/代码/agent-platform",
+  "executable": "mvn.cmd",
+  "arguments": [
+    "-B",
+    "-ntp",
+    "-pl",
+    "platform-gateway",
+    "test",
+    "-Dmaven.repo.local=G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2",
+    "-DargLine=-Xmx1024m -Djdk.net.unixdomain.tmpdir=V:/.local/tmp",
+    "-Dsurefire.timeout=900",
+    "-Dmaven.test.failure.ignore=true"
+  ],
+  "startedAt": "2026-10-28T16:58:52.6796762+08:00",
+  "endedAt": "2026-10-28T17:15:26.1821626+08:00",
+  "exitCode": 0,
+  "status": "COLLECTED",
+  "testExecutionStatus": "INCOMPLETE_FORK_TERMINATED",
+  "testProcessExitCode": "-1",
+  "interruptionEvidence": "platform-gateway-fork-stop.json",
+  "incompleteReason": "Java-level deadlock in GatewayPublishedRunProxyTest AfterAll; 900-second timeout ineffective; verified fork terminated after 991 seconds"
+}

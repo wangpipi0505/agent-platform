@@ -1,0 +1,108 @@
+{
+  "repository": "AP",
+  "run_id": "20261028-184530-895",
+  "supplement_runs": [],
+  "modules": [
+    "app-management",
+    "engine-runtime"
+  ],
+  "scope": "SELECTED_MODULES",
+  "reactor_modules": [
+    "admin-common",
+    "platform-gateway",
+    "app-management",
+    "engine-runtime",
+    "skill-registry",
+    "model-gateway",
+    "monitor"
+  ],
+  "source_pattern": "*Test.java",
+  "groups": [
+    {
+      "module": "app-management",
+      "database": "AP",
+      "expected_classes": 23,
+      "exit_code": 0,
+      "command_status": "COLLECTED",
+      "commands": [
+        {
+          "attempt": "20261028-184530-895",
+          "exitCode": 0,
+          "status": "COLLECTED",
+          "testExecutionStatus": null,
+          "testProcessExitCode": null
+        }
+      ],
+      "fresh_xml": 23,
+      "cases": 177,
+      "counts": {
+        "passed": 159,
+        "failure": 0,
+        "error": 18,
+        "skipped": 0
+      },
+      "not_reported": [],
+      "collection_complete": true,
+      "tests_all_passed": false
+    },
+    {
+      "module": "engine-runtime",
+      "database": "AP",
+      "expected_classes": 93,
+      "exit_code": 0,
+      "command_status": "COLLECTED",
+      "commands": [
+        {
+          "attempt": "20261028-184530-895",
+          "exitCode": 0,
+          "status": "COLLECTED",
+          "testExecutionStatus": null,
+          "testProcessExitCode": null
+        }
+      ],
+      "fresh_xml": 93,
+      "cases": 906,
+      "counts": {
+        "passed": 791,
+        "failure": 35,
+        "error": 80,
+        "skipped": 0
+      },
+      "not_reported": [],
+      "collection_complete": true,
+      "tests_all_passed": false
+    }
+  ],
+  "cases": 1083,
+  "counts": {
+    "passed": 950,
+    "failure": 35,
+    "error": 98,
+    "skipped": 0
+  },
+  "error_classes": [
+    "cn.agentplatform.app.application.DraftMetadataHttpTest",
+    "cn.agentplatform.app.application.IntegrationPolicyResolverHttpTest",
+    "cn.agentplatform.app.application.PublishTransactionTest",
+    "cn.agentplatform.engine.infra.EngineContextPostgresTest",
+    "cn.agentplatform.engine.infra.InitialChatAdmissionHttpPostgresTest",
+    "cn.agentplatform.engine.infra.InitialChatObservationPostgresTest",
+    "cn.agentplatform.engine.infra.InitialSenderFactsPostgresTest",
+    "cn.agentplatform.engine.infra.InitialSenderIntegrationTest",
+    "cn.agentplatform.engine.infra.RunAdmissionHttpTest",
+    "cn.agentplatform.engine.infra.RunEventReaderTimeoutBudgetPostgresTest",
+    "cn.agentplatform.engine.infra.TestInputHttpTest"
+  ],
+  "class_level_error_events": 1,
+  "class_level_error_classes": [
+    "cn.agentplatform.engine.infra.RunEventReaderTimeoutBudgetPostgresTest"
+  ],
+  "not_reported": 0,
+  "issues": [],
+  "no_source_modules": [],
+  "collection_complete": true,
+  "tested_groups_all_passed": false,
+  "tests_all_passed": false,
+  "display_name_note": "仅保留XML显式displayName属性；缺失时留空，原case name保留，不反推展示名。",
+  "scope_note": "仅汇总本轮命令与XML。NOT_REPORTED须归因；无源测试模块单列不适用，采集完整不代表全部测试通过。"
+}

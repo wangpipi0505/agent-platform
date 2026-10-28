@@ -1,0 +1,23 @@
+{
+  "name": "app-management",
+  "root": "G:/207/项目/算法重组工具/代码/agent-platform",
+  "executable": "mvn.cmd",
+  "arguments": [
+    "-B",
+    "-ntp",
+    "-pl",
+    "app-management",
+    "test",
+    "-Dmaven.repo.local=G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2",
+    "-DargLine=-Xmx1024m -Djdk.net.unixdomain.tmpdir=V:/.local/tmp",
+    "-Dsurefire.timeout=900",
+    "-Dmaven.test.failure.ignore=true"
+  ],
+  "startedAt": "2026-10-28T18:45:31.0311333+08:00",
+  "endedAt": "2026-10-28T18:46:27.4156949+08:00",
+  "exitCode": 0,
+  "status": "COLLECTED",
+  "kind": "baseline-module-recollection",
+  "primaryRunId": "20261028-164553-272",
+  "mergeIntoOriginalBaseline": false
+}

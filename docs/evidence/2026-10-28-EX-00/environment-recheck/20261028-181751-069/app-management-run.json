@@ -1,0 +1,28 @@
+{
+  "name": "app-management",
+  "kind": "environment-recheck",
+  "root": "G:/207/项目/算法重组工具/代码/agent-platform",
+  "executable": "mvn.cmd",
+  "arguments": [
+    "-B",
+    "-ntp",
+    "-pl",
+    "app-management",
+    "test",
+    "-Dmaven.repo.local=G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2",
+    "-DargLine=-Xmx1024m -Djdk.net.unixdomain.tmpdir=V:/.local/tmp",
+    "-Dsurefire.timeout=900",
+    "-Dsurefire.failIfNoSpecifiedTests=true",
+    "-Dtest=AppCopyConcurrencyTest"
+  ],
+  "selectedClasses": [
+    "AppCopyConcurrencyTest"
+  ],
+  "startedAt": "2026-10-28T18:17:52.6381729+08:00",
+  "endedAt": "2026-10-28T18:18:00.2127640+08:00",
+  "exitCode": 0,
+  "status": "COLLECTED",
+  "sourceHead": "ebbfd62ca1d19efc4d172804efb5ac79453ceb64",
+  "primaryRunId": "20261028-164553-272",
+  "mergeIntoPrimaryBaseline": false
+}

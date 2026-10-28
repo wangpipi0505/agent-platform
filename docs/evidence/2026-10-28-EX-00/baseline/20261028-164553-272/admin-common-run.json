@@ -1,0 +1,20 @@
+{
+  "name": "admin-common",
+  "root": "G:/207/项目/算法重组工具/代码/agent-platform",
+  "executable": "mvn.cmd",
+  "arguments": [
+    "-B",
+    "-ntp",
+    "-pl",
+    "admin-common",
+    "test",
+    "-Dmaven.repo.local=G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2",
+    "-DargLine=-Xmx1024m -Djdk.net.unixdomain.tmpdir=V:/.local/tmp",
+    "-Dsurefire.timeout=900",
+    "-Dmaven.test.failure.ignore=true"
+  ],
+  "startedAt": "2026-10-28T16:57:07.9675045+08:00",
+  "endedAt": "2026-10-28T16:58:52.2620909+08:00",
+  "exitCode": 0,
+  "status": "COLLECTED"
+}

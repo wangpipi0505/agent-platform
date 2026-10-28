@@ -1,0 +1,31 @@
+{
+  "purpose": "后续按受影响模块选择明确基线；不是混合统计整仓全绿",
+  "source_head": "ebbfd62ca1d19efc4d172804efb5ac79453ceb64",
+  "original_campaign": "baseline/20261028-164553-272/method-summary",
+  "gateway_supplement": "baseline/20261028-173319-158",
+  "module_baselines": {
+    "admin-common": "baseline/20261028-164553-272/method-summary",
+    "platform-gateway": "baseline/20261028-164553-272/method-summary",
+    "app-management": "baseline/20261028-184530-895/method-summary",
+    "engine-runtime": "baseline/20261028-184530-895/method-summary",
+    "skill-registry": "baseline/20261028-164553-272/method-summary",
+    "model-gateway": "baseline/20261028-164553-272/method-summary",
+    "monitor": "baseline/20261028-164553-272/method-summary"
+  },
+  "new_environment_scope": [
+    "仅新建此前不存在的agent_platform_app_copy_test",
+    "仅新建此前不存在的agent_platform_iam_owned_flow_v12"
+  ],
+  "unchanged_flags": {
+    "AGENT_DEV_AUTH": "true",
+    "ENGINE_PG_TEST": "true",
+    "AGENT_SECURITY_MODE": "not explicitly set"
+  },
+  "required_disclosures": [
+    "GatewayPublishedRunProxyTest未完整报告，产品死锁由EX-35承接，不作通过",
+    "四个LocalSpikeLifecycleLiveTest因AGENT_SPIKE_JDK8缺失仍条件跳过",
+    "engine failure总数35与35相等但方法集合替换：新增观测OwnedFlowMaterials的计数失败，PortalRunEventsLifecycle旧瞬时时序失败本次未出现；保留历史不稳定记录，不能报方法零变化",
+    "原始观察、环境单类重验、环境就绪后的整模块基线均独立保留；环境前提修复不是产品代码修复",
+    "后续逐方法比较并由独立审阅核定剩余/新观察，不能只用总数或把历史失败当自动豁免"
+  ]
+}
