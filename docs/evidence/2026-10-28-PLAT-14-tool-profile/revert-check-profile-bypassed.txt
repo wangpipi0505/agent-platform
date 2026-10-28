@@ -1,0 +1,117 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ------------------< cn.agentplatform:engine-runtime >-------------------
+[INFO] Building engine-runtime 0.1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- enforcer:3.5.0:enforce (default) @ engine-runtime ---
+[INFO] Rule 0: org.apache.maven.enforcer.rules.version.RequireJavaVersion passed
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ engine-runtime ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 23 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.0:compile (default-compile) @ engine-runtime ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 68 source files with javac [debug parameters release 21] to target\classes
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/engine-runtime/src/main/java/cn/agentplatform/engine/infra/RunAuthorityStore.java: 某些输入文件使用或覆盖了已过时的 API。
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/engine-runtime/src/main/java/cn/agentplatform/engine/infra/RunAuthorityStore.java: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/engine-runtime/src/main/java/cn/agentplatform/engine/application/ContextProjection.java: 某些输入文件使用了未经检查或不安全的操作。
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/engine-runtime/src/main/java/cn/agentplatform/engine/application/ContextProjection.java: 有关详细信息, 请使用 -Xlint:unchecked 重新编译。
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ engine-runtime ---
+[INFO] skip non existing resourceDirectory G:\207\项目\算法重组工具\代码\agent-platform\engine-runtime\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.14.0:testCompile (default-testCompile) @ engine-runtime ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 108 source files with javac [debug parameters release 21] to target\test-classes
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/engine-runtime/src/test/java/cn/agentplatform/engine/infra/ModelInputMaterialPostgresTest.java: 某些输入文件使用或覆盖了已过时的 API。
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/engine-runtime/src/test/java/cn/agentplatform/engine/infra/ModelInputMaterialPostgresTest.java: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/engine-runtime/src/test/java/cn/agentplatform/engine/infra/FlowMaterialStatusPostgresTest.java: 某些输入文件使用了未经检查或不安全的操作。
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/engine-runtime/src/test/java/cn/agentplatform/engine/infra/FlowMaterialStatusPostgresTest.java: 有关详细信息, 请使用 -Xlint:unchecked 重新编译。
+[INFO] 
+[INFO] --- surefire:3.5.3:test (default-test) @ engine-runtime ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running cn.agentplatform.engine.application.RunToolProfileTest
+[ERROR] Tests run: 12, Failures: 4, Errors: 0, Skipped: 0, Time elapsed: 0.262 s <<< FAILURE! -- in cn.agentplatform.engine.application.RunToolProfileTest
+[ERROR] cn.agentplatform.engine.application.RunToolProfileTest.profileWithoutAnyMatchRunsEmptyToolSetWithVisibleWarning -- Time elapsed: 0.219 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 无命中时不得回退为全量装载 ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at cn.agentplatform.engine.application.RunToolProfileTest.profileWithoutAnyMatchRunsEmptyToolSetWithVisibleWarning(RunToolProfileTest.java:244)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.engine.application.RunToolProfileTest.toolOutsideDeclaredProfileIsExcludedWithReason -- Time elapsed: 0.004 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 未列 profiles 的工具不属于任何档案 ==> expected: <[demo_read]> but was: <[demo_read, demo_write]>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1156)
+	at cn.agentplatform.engine.application.RunToolProfileTest.toolOutsideDeclaredProfileIsExcludedWithReason(RunToolProfileTest.java:225)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.engine.application.RunToolProfileTest.profilePredicateReadsOnlyRefDeclarationAndProfileString -- Time elapsed: 0.001 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 未列 profiles 的工具不属于任何档案 ==> expected: <false> but was: <true>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertFalse.failNotFalse(AssertFalse.java:63)
+	at org.junit.jupiter.api.AssertFalse.assertFalse(AssertFalse.java:36)
+	at org.junit.jupiter.api.Assertions.assertFalse(Assertions.java:239)
+	at cn.agentplatform.engine.application.RunToolProfileTest.profilePredicateReadsOnlyRefDeclarationAndProfileString(RunToolProfileTest.java:332)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.engine.application.RunToolProfileTest.selectionDependsOnlyOnDeclaredMembershipNotProfileName -- Time elapsed: 0.003 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 选择只能由成员声明决定，不得对档案名特判: route-one ==> expected: <false> but was: <true>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1156)
+	at cn.agentplatform.engine.application.RunToolProfileTest.selectionDependsOnlyOnDeclaredMembershipNotProfileName(RunToolProfileTest.java:311)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Failures: 
+[ERROR]   RunToolProfileTest.profilePredicateReadsOnlyRefDeclarationAndProfileString:332 未列 profiles 的工具不属于任何档案 ==> expected: <false> but was: <true>
+[ERROR]   RunToolProfileTest.profileWithoutAnyMatchRunsEmptyToolSetWithVisibleWarning:244 无命中时不得回退为全量装载 ==> expected: <true> but was: <false>
+[ERROR]   RunToolProfileTest.selectionDependsOnlyOnDeclaredMembershipNotProfileName:311 选择只能由成员声明决定，不得对档案名特判: route-one ==> expected: <false> but was: <true>
+[ERROR]   RunToolProfileTest.toolOutsideDeclaredProfileIsExcludedWithReason:225 未列 profiles 的工具不属于任何档案 ==> expected: <[demo_read]> but was: <[demo_read, demo_write]>
+[INFO] 
+[ERROR] Tests run: 12, Failures: 4, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  15.894 s
+[INFO] Finished at: 2026-10-28T09:03:08+08:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.3:test (default-test) on project engine-runtime: There are test failures.
+[ERROR] 
+[ERROR] See G:\207\项目\算法重组工具\代码\agent-platform\engine-runtime\target\surefire-reports for the individual test results.
+[ERROR] See dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

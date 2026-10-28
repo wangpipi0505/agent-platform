@@ -222,6 +222,56 @@ public class RunService {
             status.put("datasetVersion", runtime.path("datasetVersion").asText());
     }
 
+    /**
+     * PLAT-14 T14.1：工具是否属于所选档案。选择只读两条声明数据——工具引用上的 profiles 数组
+     * 与应用配置的 toolProfile 字符串；profile 名是自由约定的标签（任意字符串都合法），不存在
+     * 按路线或软件名分支的代码路径（开发计划 §6.1 禁止路线特判）。profile 未声明（空白）→
+     * 任何工具都可见，等价既有行为；未声明 profiles 的工具不属于任何档案。
+     */
+    static boolean toolInProfile(JsonNode ref, String profile) {
+        if (profile == null || profile.isBlank()) return true;
+        for (JsonNode name : ref.path("profiles"))
+            if (profile.equals(name.asText())) return true;
+        return false;
+    }
+
+    /**
+     * PLAT-14 T14.1：档案选择留痕——写快照顶层 toolSelection（与 T13 contextPack、T20 runtime
+     * 同层级，不另造并行结构），随 run 记录不可变，运行详情经 surfaceToolSelection 透出。
+     * 语义定死：声明了 profile 但没有任何工具命中时放行空工具集继续运行（不拒绝启动），
+     * warning 显式留痕。存量应用未使用任何档案键（toolProfile/profiles/enabled）时不落键，
+     * 冻结快照与历史版本逐键一致。
+     */
+    static void annotateToolSelection(
+            com.fasterxml.jackson.databind.node.ObjectNode snapshot,
+            String profile,
+            List<String> selected,
+            List<Map<String, String>> excluded,
+            boolean declared) {
+        if (!declared) return;
+        var trace = snapshot.putObject("toolSelection");
+        if (profile != null && !profile.isBlank()) trace.put("profile", profile);
+        var picked = trace.putArray("selected");
+        selected.forEach(picked::add);
+        if (!excluded.isEmpty()) {
+            var skipped = trace.putArray("excluded");
+            for (Map<String, String> item : excluded) skipped.add(Json.tree(item));
+        }
+        if (profile != null && !profile.isBlank() && selected.isEmpty())
+            trace.put(
+                    "warning",
+                    "已声明工具档案 " + profile + " 但没有任何工具命中，本次运行以空工具集执行");
+    }
+
+    /**
+     * PLAT-14 T14.1：把冻结快照里的工具档案留痕铺到运行详情顶层。旧运行快照没有
+     * toolSelection 对象时一个键都不铺——详情形状与历史版本逐键兼容，不补 null。
+     */
+    public static void surfaceToolSelection(Map<String, Object> status, JsonNode snapshotJson) {
+        var selection = snapshotJson.path("toolSelection");
+        if (selection.isObject()) status.put("toolSelection", selection.deepCopy());
+    }
+
     private static final String REPLAY_METADATA =
             "select id,public_id,app_code,trigger_type,mode,tenant_id,principal_id from engine.run"
                 + " where tenant_id=? and principal_id=? and request_id=?";
@@ -1195,6 +1245,13 @@ public class RunService {
                                 throw new PlatformException(403, "APP_GUARD_DENIED", "应用属性授权不足");
                         });
         var tools = com.fasterxml.jackson.databind.node.JsonNodeFactory.instance.arrayNode();
+        // PLAT-14 T14.1：工具档案选择。profile 与归属都是声明式数据（config.toolProfile 与
+        // 工具引用上的 profiles/enabled），本段没有任何路线/软件名分支；停用工具按 22A schema
+        // tools[].enabled 语义不装载。停用优先于档案排除被记录。
+        String toolProfile = config.path("toolProfile").asText("").trim();
+        List<String> selectedTools = new ArrayList<>();
+        List<Map<String, String>> excludedTools = new ArrayList<>();
+        boolean memberDeclared = false;
         Map<String, JsonNode> pinned = new HashMap<>();
         List<JsonNode> refs = new ArrayList<>();
         config.path("skillRefs").forEach(refs::add);
@@ -1248,40 +1305,58 @@ public class RunService {
                             .contains(allowed.asText())) match = true;
                 if (!match) visible = false;
             }
-            if (visible)
-                tools.add(
-                        Json.tree(
-                                Map.of(
-                                        "code",
-                                        code,
-                                        "name",
-                                        code,
-                                        "skillVersionId",
-                                        skill.path("skillVersionId").asLong(),
-                                        "execution",
-                                        skill.path("execution"),
-                                        "guard",
-                                        skill.path("guard"),
-                                        "contract",
-                                        skill.path("definition"),
-                                        "inputSchema",
-                                        skill.path("inputSchema"),
-                                        "outputSchema",
-                                        skill.path("outputSchema"),
-                                        "contractDigest",
-                                        skill.path("digest").asText(skill.path("sha256").asText()),
-                                        "definition",
-                                        Map.of(
-                                                "type",
-                                                "function",
-                                                "function",
-                                                Map.of(
-                                                        "name",
-                                                        code,
-                                                        "description",
-                                                        skill.path("description").asText(code),
-                                                        "parameters",
-                                                        skill.path("inputSchema"))))));
+            if (visible) {
+                boolean enabled = ref.path("enabled").asBoolean(true);
+                boolean member = toolInProfile(ref, toolProfile);
+                if (ref.path("profiles").isArray() && !ref.path("profiles").isEmpty())
+                    memberDeclared = true;
+                if (ref.has("enabled")) memberDeclared = true;
+                if (enabled && member) {
+                    JsonNode entry =
+                            Json.tree(
+                                    Map.of(
+                                            "code",
+                                            code,
+                                            "name",
+                                            code,
+                                            "skillVersionId",
+                                            skill.path("skillVersionId").asLong(),
+                                            "execution",
+                                            skill.path("execution"),
+                                            "guard",
+                                            skill.path("guard"),
+                                            "contract",
+                                            skill.path("definition"),
+                                            "inputSchema",
+                                            skill.path("inputSchema"),
+                                            "outputSchema",
+                                            skill.path("outputSchema"),
+                                            "contractDigest",
+                                            skill.path("digest").asText(skill.path("sha256").asText()),
+                                            "definition",
+                                            Map.of(
+                                                    "type",
+                                                    "function",
+                                                    "function",
+                                                    Map.of(
+                                                            "name",
+                                                            code,
+                                                            "description",
+                                                            skill.path("description").asText(code),
+                                                            "parameters",
+                                                            skill.path("inputSchema")))));
+                    // 档案归属声明随工具冻结（config.tools[].profiles），未声明不落键。
+                    if (ref.path("profiles").isArray() && !ref.path("profiles").isEmpty())
+                        ((com.fasterxml.jackson.databind.node.ObjectNode) entry)
+                                .set("profiles", ref.path("profiles").deepCopy());
+                    tools.add(entry);
+                    selectedTools.add(code);
+                } else if (!enabled) {
+                    excludedTools.add(Map.of("code", code, "reason", "DISABLED"));
+                } else {
+                    excludedTools.add(Map.of("code", code, "reason", "PROFILE_NOT_MEMBER"));
+                }
+            }
         }
         if (snapshot.path("definition").path("nodes").isArray())
             for (JsonNode n : snapshot.path("definition").path("nodes"))
@@ -1330,6 +1405,12 @@ public class RunService {
         }
         config.set("frozenPrompts", prompts);
         config.set("tools", tools);
+        annotateToolSelection(
+                snapshot,
+                toolProfile,
+                selectedTools,
+                excludedTools,
+                !toolProfile.isBlank() || memberDeclared || !excludedTools.isEmpty());
         applyOntologyContext(config, snapshot, actor);
         snapshot.set("config", config);
         return snapshot;
@@ -1878,6 +1959,8 @@ public class RunService {
             result.put("graph", snapshotJson.path("definition"));
         // PLAT-20 T20.1：environment/dataset 标注随冻结快照铺到详情顶层；旧运行无标注时不落键。
         surfaceRuntimeAnnotation(result, snapshotJson);
+        // PLAT-14 T14.1：工具档案选择留痕（生效清单/所选档案/排除原因）同规则透出。
+        surfaceToolSelection(result, snapshotJson);
         result.put("nodes", nodes.stream().map(this::nodeView).toList());
         result.put("events", events);
         result.put(

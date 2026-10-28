@@ -1,0 +1,23 @@
+红阶段（编译红，2026-10-28 会话内首次运行，实现未落地时）——摘录自当次命令输出
+（实现已落地后未回滚重跑以免扰动并发协作者的工作树；错误行逐字来自当次 mvn 输出）：
+
+$ export JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot"
+$ mvn -B -pl engine-runtime test -Dtest='RunToolProfileTest' "-DargLine=-Xmx1024m"
+
+[ERROR] /G:/207/项目/算法重组工具/代码/agent-platform/engine-runtime/src/test/java/cn/agentplatform/engine/application/RunToolProfileTest.java:[326,34] 找不到符号
+[ERROR]   符号:   方法 toolInProfile(com.fasterxml.jackson.databind.JsonNode,java.lang.String)
+[ERROR]   位置: 类 cn.agentplatform.engine.application.RunService
+[ERROR]   ...（toolInProfile 共 6 处引用同型报错：329/330/331/333 行等）...
+[ERROR] /G:/207/项目/算法重组工具/代码/agent-platform/engine-runtime/src/test/java/cn/agentplatform/engine/application/RunToolProfileTest.java:[403,19] 找不到符号
+[ERROR]   符号:   方法 surfaceToolSelection(java.util.LinkedHashMap<java.lang.Object,...>,com.fasterxml.jackson.databind.node.ObjectNode)
+[ERROR]   位置: 类 cn.agentplatform.engine.application.RunService
+[ERROR] /G:/207/项目/算法重组工具/代码/agent-platform/engine-runtime/src/test/java/cn/agentplatform/engine/application/RunToolProfileTest.java:[412,19] 找不到符号
+[ERROR]   符号:   方法 surfaceToolSelection(java.util.LinkedHashMap<java.lang.Object,...>,com.fasterxml.jackson.databind.JsonNode)
+[ERROR]   位置: 类 cn.agentplatform.engine.application.RunService
+[ERROR] -> [Help 1]
+[ERROR] BUILD FAILURE
+
+即：12 个用例引用的档案选择 API（toolInProfile/surfaceToolSelection）在实现前不存在，全部用例编译红。
+实现后复绿见 regression-multi.txt（RunToolProfileTest 12/12）。
+行为级回退验证（证明绿由实现承载）见 revert-check-profile-bypassed.txt：
+toolInProfile 被临时改为恒真后，4 例回红（档案选择语义全部失守），还原后复绿。
