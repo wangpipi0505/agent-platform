@@ -1,0 +1,11 @@
+== 能力包声明校验（T22A 冻结口径，schema urn:agent-platform:capability-package:1.0）==
+schema: contracts\capability-package.schema.json  sha256=0456799d04deb57dfb114d169d8a37c7b57a49cad3996fee917a93efa704a634
+[1/1] docs\evidence\2026-10-28-PLAT-22D-control-plane\fixtures\demo2-local-algorithm-process.json v0.1.0  software=demo-matrix-worker
+  interfaces(1): demo-local-process[PROCESS]
+  tools(1): demo-eigen-decompose->demo-local-process[READ_ONLY]
+  ontology: NONE
+  routeProfiles(1): local-process
+  verification: connection=通过  contract=关闭(豁免留痕)  model=关闭(豁免留痕)  evaluation=关闭(豁免留痕)  safety=关闭(豁免留痕)  concurrency=关闭(豁免留痕)
+  错误 0 条，警告 0 条
+能力包校验通过：1 个声明，0 条错误，0 条警告
+EXIT=0

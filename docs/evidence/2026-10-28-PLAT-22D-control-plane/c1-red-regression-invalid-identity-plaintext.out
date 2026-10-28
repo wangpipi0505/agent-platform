@@ -1,0 +1,14 @@
+== 能力包声明校验（T22A 冻结口径，schema urn:agent-platform:capability-package:1.0）==
+schema: contracts\capability-package.schema.json  sha256=0456799d04deb57dfb114d169d8a37c7b57a49cad3996fee917a93efa704a634
+[1/1] docs\evidence\2026-10-28-PLAT-22A-capability-schema\fixtures\invalid-identity-plaintext.json v1.0.0  software=space-ground-visible
+  interfaces(2): space-http-sync[HTTP_SYNC] space-http-async[HTTP_ASYNC]
+  tools(6): space-target-query->space-http-sync[READ_ONLY] space-visibility-plan->space-http-sync[READ_ONLY] space-visibility-submit->space-http-async[WRITE_WITH_APPROVAL] space-visibility-status->space-http-sync[READ_ONLY] space-visibility-result->space-http-sync[READ_ONLY] space-satellite-options->space-http-sync[READ_ONLY,停用]
+  ontology: NONE
+  routeProfiles(2): http-sync http-async
+  verification: connection=通过  contract=通过  model=通过  evaluation=关闭(豁免留痕)  safety=通过  concurrency=关闭(豁免留痕)
+  错误 3 条，警告 0 条
+  错误 [docs\evidence\2026-10-28-PLAT-22A-capability-schema\fixtures\invalid-identity-plaintext.json] 能力包.identity.secrets[0].ref：不匹配模式 ^(secret|cred)://（收到 "admin123456"）
+  错误 [docs\evidence\2026-10-28-PLAT-22A-capability-schema\fixtures\invalid-identity-plaintext.json] 能力包.identity：未知字段 apiToken（additionalProperties=false，schema 冻结不允许自由扩展）
+  错误 [docs\evidence\2026-10-28-PLAT-22A-capability-schema\fixtures\invalid-identity-plaintext.json] identity.apiToken：疑似明文凭据：键 apiToken 的值不是 secret:// 或 cred:// 密钥引用（§11.2.4 禁止明文）
+能力包校验失败：1 个声明，3 条错误，0 条警告
+EXIT=1

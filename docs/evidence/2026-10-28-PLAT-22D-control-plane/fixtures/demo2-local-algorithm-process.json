@@ -1,0 +1,95 @@
+{
+  "apiVersion": "platform/v1",
+  "kind": "CapabilityPackage",
+  "metadata": {
+    "name": "demo2-local-algorithm-process",
+    "domain": "matrix-numerics",
+    "owner": "algorithm-team",
+    "version": "0.1.0",
+    "description": "T22D 演示夹具（§11.9 验收口径第 2 条『新本地算法』的声明形态演示）：一个不存在的示例本地算法（矩阵特征分解）按路线二（interfaces=[PROCESS]、ontology.mode=NONE）用能力包声明。本文件只证明『声明机制接受 PROCESS kind 且分发语义由已注册适配器承载』，不是真实接入：command/workDir 指向不存在的示例 worker，六门布尔值仅满足 schema 必填形态、不代表任何真实门禁执行结果（见 verification.notes）。真实路线二接入须以真实 worker + 成功/超时/崩溃/产物四类用例验收取代本夹具（T21a–T21d 测试证据见证据 README §2）。"
+  },
+  "software": {
+    "system": "demo-matrix-worker",
+    "version": "0.0.0-demo（不存在，演示夹具）",
+    "environments": {
+      "dev": "process://local"
+    }
+  },
+  "interfaces": [
+    {
+      "id": "demo-local-process",
+      "kind": "PROCESS",
+      "command": ["python", "demo_worker.py"],
+      "workDir": "./demo-worker",
+      "protocol": "algorithm-process/1",
+      "timeoutMs": 30000,
+      "notes": "§11.8 路线二行：interfaces=[PROCESS]、protocol=algorithm-process/1（PLAT-21c 冻结值）。command/workDir 为示意形态，不指向真实可执行。"
+    }
+  ],
+  "ontology": {
+    "mode": "NONE",
+    "notes": "§11.8 路线二行：ontology.mode=NONE——本地算法不引用本体发布，mode=NONE 不得声明 contextPack。"
+  },
+  "tools": [
+    {
+      "id": "demo-eigen-decompose",
+      "operation": "eigenDecompose",
+      "description": "示例：对称矩阵特征分解（演示夹具，无真实实现）。",
+      "binding": "demo-local-process",
+      "exposure": "READ_ONLY",
+      "readonly": true,
+      "sideEffect": false,
+      "idempotent": true,
+      "pagination": "none",
+      "artifacts": ["result.json"],
+      "notes": "artifacts 为 §11.2.3 产物引用名形态（T21a 产物回收/1MiB 截断由 ProcessAdapter 承载）。无 skillRef：演示『新本地算法只新增能力包声明』——不引用技能中心既有条目；真实接入时运行层仍需按 T21b 形态在技能中心注册 PROCESS 技能（运行层装载归下轮，见 implementationGaps）。"
+    }
+  ],
+  "identity": {
+    "subjectMapping": "platform_user -> Actor.subject()（v1.2 技能执行三件套）",
+    "guard": {
+      "roles": ["ADMIN", "EDITOR"],
+      "attributes": {
+        "region": ["LOCAL"]
+      }
+    },
+    "secrets": [],
+    "notes": "本地进程无出站身份；进程环境白名单由 T21a/d（ProcessContract envAllowlist，禁止继承）承载。"
+  },
+  "verification": {
+    "connection": true,
+    "contract": false,
+    "model": false,
+    "evaluation": false,
+    "safety": false,
+    "concurrency": false,
+    "exemptions": [
+      {"gate": "contract", "reason": "演示夹具：无真实 worker 契约可校验。", "until": "真实路线二接入时以 T21c 发布预检（PROCESS_PRECHECK_FAILED）取代"},
+      {"gate": "model", "reason": "演示夹具：本地算法无模型选型环节。", "until": "不适用（路线二无模型门）"},
+      {"gate": "evaluation", "reason": "演示夹具：无评测数据集。", "until": "真实接入时补"},
+      {"gate": "safety", "reason": "演示夹具：守卫声明未实测。", "until": "真实接入时补"},
+      {"gate": "concurrency", "reason": "演示夹具：并发隔离未实测（真实口径见 T21d 并发配额测试）。", "until": "真实接入时补"}
+    ],
+    "notes": "再次声明：六门布尔值仅为满足 schema 必填形态的夹具占位（connection=true 也不例外），不构成任何真实验收声明；全部真实口径以 T21a–T21d 既有测试与 evidence 为准。"
+  },
+  "operations": {
+    "notes": "演示夹具无 SLO/成本数据。真实口径：PROCESS 超时杀树/退出码语义/输出 schema 见 T21a/T21c；并发配额/取消/审计见 T21d。"
+  },
+  "routeProfiles": [
+    {
+      "id": "local-process",
+      "execution": "demo-local-process",
+      "ontology": "none",
+      "tools": ["demo-eigen-decompose"],
+      "identity": "platform-user-guarded（只读直执行）",
+      "notes": "§11.3 路线配置 local-process 实例（演示）。"
+    }
+  ],
+  "implementationGaps": [
+    {
+      "area": "能力包运行层装载（§11.7 共享对象 + §11.9 六条演示第 1/2 条的最后一公里）",
+      "description": "能力包声明（本夹具与路线一实例）尚无运行层装载：capability_package_id/software_system_id 等共享对象未落库，声明→技能中心/应用草稿/发布门禁的自动装载未实现；新本地算法运行仍需按 T21b 形态在技能中心注册 PROCESS 技能。本夹具只演示声明机制与适配器分发语义。",
+      "ownerCard": "未排卡（PLAT-22 剩余主体，T22D 盘点已登记，属下轮）"
+    }
+  ]
+}

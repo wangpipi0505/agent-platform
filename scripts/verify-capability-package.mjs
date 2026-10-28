@@ -13,8 +13,9 @@
  * 2. 语义层（§11.2.4，schema 表达不了的跨字段规则）：
  *    - tools[].binding 必须指向本包 interfaces[].id（工具不与执行入口脱节）；
  *    - 只读与副作用互斥（v1.2 技能契约同口径）；WRITE_WITH_APPROVAL 必须带确认角色；
- *    - interfaces[].kind 必须是已注册适配器：PROCESS 未注册（SkillCatalog 现只允许
- *      HTTP/MCP/ALGORITHM），按 §11.2.4 给"需要新增适配器"的明确诊断（告警，留白归 T22C）；
+ *    - interfaces[].kind 必须是已注册适配器（T22D 起与 T22C 的 AdapterRegistry 五单元
+ *      对齐：HTTP_SYNC/HTTP_ASYNC/MCP/ALGORITHM/PROCESS），未注册 kind 按 §11.2.4 给
+ *      "需要新增适配器"的明确诊断（告警，指向归属卡）；
  *    - ontology.mode=NONE 时不得声明 contextPack（不得偷偷注入）；
  *    - verification 不允许全部关闭；关闭项必须有 exemptions 豁免留痕；
  *    - identity 禁止明文凭据（只允许 secret://、cred:// 引用）；
@@ -42,14 +43,21 @@ const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const SCHEMA_FILE = path.join(ROOT, 'contracts/capability-package.schema.json');
 const PACKAGE_DIR = path.join(ROOT, 'contracts/capability-packages');
 
-/** 已注册适配器面（现状，A-01）。PROCESS 未注册 → 告警诊断并指向 T22C。 */
+/**
+ * 已注册适配器面（现状，A-01；T22D 与 T22C 后的运行层注册表对齐：
+ * skill-registry AdapterRegistry 五单元 HTTP_SYNC/HTTP_ASYNC/MCP/ALGORITHM/PROCESS 全注册）。
+ * 声明层此表只做"kind 是否需要新增适配器"的诊断（§11.2.4），不是运行层白名单——
+ * 运行层注册表（AdapterRegistry）才是唯一分发来源；两者由 §11.2.4 口径保持一致，
+ * 新增 kind 时必须同步改动此处与 AdapterRegistry（声明层留白告警指向归属卡）。
+ */
 const REGISTERED_ADAPTERS = new Map([
-    ['HTTP_SYNC', 'HttpAdapter（adapterType=HTTP，invocationKind=SYNC）'],
-    ['HTTP_ASYNC', 'HttpAsyncAdapter（SUBMIT_QUERY 对账）'],
-    ['MCP', 'McpAdapter（v1.2 既有）'],
-    ['ALGORITHM', 'AlgoAdapter（K8s Job，v1.2 既有）'],
+    ['HTTP_SYNC', 'HttpSyncExecutionAdapter（HTTP×SYNC）'],
+    ['HTTP_ASYNC', 'HttpAsyncExecutionAdapter（HTTP×SUBMIT_QUERY/CALLBACK 对账）'],
+    ['MCP', 'McpExecutionAdapter（MCP×SYNC，v1.2 既有）'],
+    ['ALGORITHM', 'AlgorithmExecutionAdapter（SUBMIT_QUERY，K8s Job，v1.2 既有）'],
+    ['PROCESS', 'ProcessExecutionAdapter（PROCESS×SYNC，algorithm-process/1，T21a–d + T22C）'],
 ]);
-const PENDING_ADAPTER_OWNER = 'T22C（A-01 适配器注册表）';
+const PENDING_ADAPTER_OWNER = '下一张适配器卡（五类 kind 已全注册；新 kind 先扩 AdapterRegistry 运行层，再同步解本表留白）';
 
 /** 身份区块里禁止出现明文的键名模式；命中且值不是密钥引用 → 错误。 */
 const PLAINTEXT_CREDENTIAL_KEY = /pass(word)?|secret|token|api_?key|credential/i;
