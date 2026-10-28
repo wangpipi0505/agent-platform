@@ -47,7 +47,10 @@ public class PortalRunEventsSseLifecycleTest {
     @Test void sameProcessorOnAnotherSocketCannotReceiveOldAbort() throws Exception { child("processor-reuse"); }
     @Test void noFutureWritableCallbackIsNeededForTheOwnedIdleDeadline() throws Exception { child("not-ready-idle"); }
     @Test void controlledProfileAndSingleLifetimeInstanceFailClosed() throws Exception { child("bad-profile"); }
-    @Test void forcedConnectorReleaseInvalidatesTokensWithoutInventingCompletion() throws Exception { child("forced-release"); }
+    @Test void forcedConnectorReleaseInvalidatesTokensWithoutInventingCompletion() throws Exception {
+        child(Boolean.getBoolean("ex27.forcedReleaseInFlight") ? "forced-release-in-flight" : "forced-release");
+    }
+    @Test void offLockCloseDuringProcessingRetainsSafetyWithoutInventingRecycle() throws Exception { child("off-lock-release-safety"); }
     static Path runs() throws IOException { return Files.createDirectories(root().resolve(".local/iam-o2b-f2c2a-http-exit-fixes/peers")); }
     static void child(String group) throws Exception {
         Path run = Files.createDirectory(runs().resolve(group + "-" + UUID.randomUUID()));
@@ -160,6 +163,7 @@ public class PortalRunEventsSseLifecycleTest {
         final List<String> trace=first.trace;
         final Path run;
         String invocation="normal";
+        volatile Consumer<HttpServletRequest> pingForTest;
         Server(Path run,Fixture f,PortalEventsTls tls,BiConsumer<String,Long> hook)throws Exception {
             this(run,f,List.of(tls),Collections.singletonList(hook));
         }
@@ -195,7 +199,7 @@ public class PortalRunEventsSseLifecycleTest {
                 }
             });servlet.setAsyncSupported(true);context.addServletMappingDecoded("/admin/runs/*","events");
             var reentry=Tomcat.addServlet(context,"reentry",new HttpServlet() { @Override protected void doGet(HttpServletRequest request,HttpServletResponse response)throws IOException { var exchange=exchanges.get(next.get()-1);try { exchange.handle.set(new PortalRunEventsSse().start(request,response,new PortalRunEventsHttp(endpoints.get(next.get()-1)),f.observed,f.source,f.run,0)); }catch(Throwable t) { exchange.failure.set(t); } } });reentry.setAsyncSupported(true);context.addServletMappingDecoded("/reentry","reentry");
-            Tomcat.addServlet(context,"ping",new HttpServlet() { @Override protected void doGet(HttpServletRequest r,HttpServletResponse out)throws IOException { out.setContentLength(4);out.getOutputStream().write(utf("pong")); } });context.addServletMappingDecoded("/ping","ping");
+            Tomcat.addServlet(context,"ping",new HttpServlet() { @Override protected void doGet(HttpServletRequest r,HttpServletResponse out)throws IOException { var probe=pingForTest;if(probe!=null)probe.accept(r);out.setContentLength(4);out.getOutputStream().write(utf("pong")); } });context.addServletMappingDecoded("/ping","ping");
             tomcat.start();assertEquals(1024,protocol.getMaxConnections());assertEquals(64,protocol.getMaxThreads());assertEquals(64,protocol.getProcessorCache());
         }
         Socket request(String run)throws Exception { return request(run,false); }
@@ -241,6 +245,8 @@ public class PortalRunEventsSseLifecycleTest {
             }
             case "not-ready-idle" -> { notReadyIdle(run);return; }
             case "forced-release" -> { forcedRelease(run);return; }
+            case "forced-release-in-flight" -> { forcedRelease(run,true);return; }
+            case "off-lock-release-safety" -> { forcedRelease(run,"off-lock-release-safety");return; }
             case "idle" -> { idle(run);return; }
             case "keepalive" -> { keepalive(run);return; }
             case "light-shell" -> { lightShell(run);return; }
@@ -678,32 +684,277 @@ public class PortalRunEventsSseLifecycleTest {
         }
     }
     static void forcedRelease(Path run)throws Exception {
+        forcedRelease(run,"forced-release");
+    }
+    static void forcedRelease(Path run,boolean inFlightDiagnostic)throws Exception {
+        forcedRelease(run,inFlightDiagnostic?"forced-release-in-flight":"forced-release");
+    }
+    static void forcedRelease(Path run,String mode)throws Exception {
         byte[] raw=utf("\""+"x".repeat(262142)+"\"");
         var entered=new CountDownLatch(2);var release=new CountDownLatch(1);
         var owner=new AtomicReference<Server>();
         var sockets=new ConcurrentHashMap<String,org.apache.tomcat.util.net.SocketWrapperBase<?>>();
-        BiConsumer<String,Long> hook=(phase,value)->{if(phase.equals("before-write")) { var actual=owner.get().protocol.currentSocketForTest();if(actual!=null)sockets.putIfAbsent(Thread.currentThread().getName()+"-"+System.identityHashCode(actual),actual); }if(phase.equals("recycle-invalidated")) { entered.countDown();pause(release); }};
+        boolean offLockSafety=mode.equals("off-lock-release-safety");
+        var diagnostic=mode.equals("forced-release")?null:new ForcedReleaseDiagnostic(mode);
+        var targets=new AtomicReference<List<ReleaseTarget>>();
+        var failures=new ConcurrentLinkedQueue<Throwable>();
+        var associatedCloseFacts=new ConcurrentLinkedQueue<Map<String,Object>>();
+        var hooks=new ArrayList<BiConsumer<String,Long>>();
+        for(int i=0;i<2;i++) { final int index=i;hooks.add((phase,value)->{
+            if(phase.equals("before-write")) {
+                var actual=owner.get().protocol.currentSocketForTest();
+                if(actual!=null)sockets.putIfAbsent(Thread.currentThread().getName()+"-"+System.identityHashCode(actual),actual);
+            }
+            if(diagnostic!=null&&phase.equals("ready-false"))diagnostic.ready(owner.get().protocol.currentSocketForTest());
+            if(offLockSafety&&phase.equals("before-close-now")) {
+                try { diagnostic.actionTarget(index,targets.get().get(index)); }
+                catch(Throwable failure) { failures.add(failure);throw new AssertionError(failure); }
+            }
+            if(phase.equals("recycle-invalidated")) {
+                if(diagnostic!=null)diagnostic.event("recycle-hook");
+                entered.countDown();pause(release);
+            }
+        }); }
+        if(offLockSafety) { hooks.add(null);hooks.add(null); }
         try(var f=new Fixture();var pa=new SequencePeer(f,Files.createDirectories(run.resolve("a")),m->{},"eof",raw);var pb=new SequencePeer(f,Files.createDirectories(run.resolve("b")),m->{},"eof",raw);var ta=pa.tls();var tb=pb.tls() ) {
-            var server=new Server(run,f,List.of(ta,tb),List.of(hook,hook));
+            var server=new Server(run,f,offLockSafety?List.of(ta,tb,ta,ta):List.of(ta,tb),hooks);
             owner.set(server);
             try(var ca=server.request(f.run);var cb=server.request(f.run)) {
                 var a=server.exchanges.get(0);var b=server.exchanges.get(1);a.handle();b.handle();
                 long end=System.nanoTime()+TimeUnit.SECONDS.toNanos(6);while(System.nanoTime()<end&&!((traceCount(a.trace,"ready-false")>0)&&(traceCount(b.trace,"ready-false")>0)))Thread.sleep(10);
                 var actual=new HashSet<>(sockets.values());assertEquals(2,actual.size());
-                var closers=actual.stream().map(socket->Thread.ofPlatform().start(socket::close)).toList();
+                if(diagnostic!=null)diagnostic.awaitPaused();
+                targets.set(List.of(releaseTarget(a),releaseTarget(b)));
+                assertEquals(actual,new HashSet<>(targets.get().stream().map(ReleaseTarget::socket).toList()));
+                var closers=targets.get().stream().map(target->Thread.ofPlatform().start(()->{
+                    try { if(diagnostic==null)closeAssociatedProcessor(target,associatedCloseFacts);else diagnostic.close(target.socket()); }
+                    catch(Throwable failure) { failures.add(failure); }
+                })).toList();
                 try {
-                    assertTrue(entered.await(5,TimeUnit.SECONDS));assertEquals(0,server.protocol.recyclesForTest());
+                    if(diagnostic!=null)diagnostic.resumeBeforeOriginalWait(actual);
+                    if(offLockSafety) {
+                        offLockReleaseSafety(run,f,ta,server,a,b,targets.get(),diagnostic,entered,failures);
+                        return;
+                    }
+                    try { assertTrue(entered.await(5,TimeUnit.SECONDS)); }
+                    finally { if(diagnostic!=null)diagnostic.waitEnded(entered,server.protocol); }
+                    assertEquals(0,server.protocol.recyclesForTest());
                     a.session.get().close();b.session.get().close();a.handle().close();b.handle().close();
                     assertFalse(a.handle().awaitClosed(Duration.ofMillis(50)));assertFalse(b.handle().awaitClosed(Duration.ofMillis(50)));
                     assertEquals(2,PortalEventsPacketBudget.SHARED.owners());assertThrows(IllegalStateException.class,()->new PortalRunEventsHttp(ta).begin(f.gateway,f.source,f.run,0));
                     assertFalse((traceCount(a.trace,"before-close-now")>0));assertFalse((traceCount(b.trace,"before-close-now")>0));
                     release.countDown();for(var closer:closers) { closer.join(5000);assertFalse(closer.isAlive()); }
+                    assertTrue(failures.isEmpty(),"real close threads returned without failure");
                     assertEquals(0,server.protocol.getWaitingProcessorCount());assertTrue(server.protocol.recyclesForTest()>=2);assertTrue(a.handle().inertTokenForTest());assertTrue(b.handle().inertTokenForTest());
                     a.handle().close();b.handle().close();assertFalse((traceCount(a.trace,"before-close-now")>0));assertFalse((traceCount(b.trace,"before-close-now")>0));
                     assertFalse((traceCount(a.trace,"completion-entry")>0));assertFalse((traceCount(b.trace,"completion-entry")>0));
                     Files.writeString(run.resolve("forced-release.properties"),"actualSocketCloseEach=true\nbarrierBeforeDelegateRecycle=true\nrecycled="+server.protocol.recyclesForTest()+"\nwaiting=0\ncompletionNotInvented=true\nownersRetained=2\nlateActionCalls=0\n");
-                } finally { release.countDown();for(var closer:closers)closer.join(5000); }
-            } finally { for(int i=0;i<server.exchanges.size();i++)Files.write(run.resolve("forced-trace-"+i+".txt"),server.exchanges.get(i).trace,StandardCharsets.UTF_8);server.tomcat.stop();server.tomcat.destroy(); }
+                } finally {
+                    if(diagnostic!=null)diagnostic.resume.countDown();
+                    release.countDown();for(var closer:closers)closer.join(5000);
+                }
+            } finally {
+                if(diagnostic==null)Files.writeString(run.resolve("associated-close-facts.json"),JSON.writeValueAsString(associatedCloseFacts),StandardCharsets.UTF_8);
+                if(offLockSafety&&targets.get()!=null)diagnostic.retention("before-tomcat-stop",server,server.exchanges,targets.get());
+                if(diagnostic!=null) { diagnostic.resume.countDown();diagnostic.write(run,entered,server.protocol); }
+                for(int i=0;i<server.exchanges.size();i++)Files.write(run.resolve("forced-trace-"+i+".txt"),server.exchanges.get(i).trace,StandardCharsets.UTF_8);server.tomcat.stop();server.tomcat.destroy();
+            }
+        }
+    }
+    record ReleaseTarget(org.apache.tomcat.util.net.SocketWrapperBase<?> socket,Object processor,Object token,Thread worker) {}
+    static ReleaseTarget releaseTarget(Exchange exchange)throws Exception {
+        Object state=field(exchange.handle(),"state"),token=field(state,"token");
+        var socket=assertInstanceOf(org.apache.tomcat.util.net.SocketWrapperBase.class,field(token,"originalSocket"));
+        Object processor=field(token,"origin");assertNotNull(processor);
+        return new ReleaseTarget(socket,processor,token,assertInstanceOf(Thread.class,field(state,"worker")));
+    }
+    static void closeAssociatedProcessor(ReleaseTarget target,ConcurrentLinkedQueue<Map<String,Object>> facts)throws Exception {
+        var lock=target.socket().getLock();boolean acquired=lock.tryLock(3,TimeUnit.SECONDS);
+        try {
+            assertTrue(acquired,"real processor close acquired its original socket lock");
+            assertFalse(target.socket().isClosed());assertSame(target.processor(),target.socket().getCurrentProcessor());
+            facts.add(Map.of("phase","associated-before-close","socket",System.identityHashCode(target.socket()),
+                    "processor",System.identityHashCode(target.processor()),"originalProcessorAssociated",true,"closed",false,"originalSocketLockHeld",true));
+            // 正例要求真实关联已恢复；只调用容器真实close，回收与token失效仍由容器执行。
+            target.socket().close();
+        } finally { if(acquired)lock.unlock(); }
+    }
+    static void offLockReleaseSafety(Path run,Fixture f,PortalEventsTls tls,Server server,Exchange a,Exchange b,
+            List<ReleaseTarget> targets,ForcedReleaseDiagnostic diagnostic,CountDownLatch entered,
+            ConcurrentLinkedQueue<Throwable> failures)throws Exception {
+        try { assertFalse(entered.await(5,TimeUnit.SECONDS),"off-lock in-flight close did not recycle either original processor"); }
+        finally { diagnostic.waitEnded(entered,server.protocol); }
+        assertEquals(0,server.protocol.recyclesForTest());
+        assertEquals(2,server.protocol.getWaitingProcessorCount());
+        assertEquals(2,diagnostic.facts.stream().filter(x->x.get("phase").equals("processing-exit-fence")).count());
+        var exchanges=List.of(a,b);long[] cursors={a.handle().after(),b.handle().after()};
+        assertOffLockRetained(server,exchanges,targets,entered);
+        assertThirdSseDenied(f,server);
+        diagnostic.retention("before-cancel",server,exchanges,targets);
+        var pingRequests=new AtomicInteger();
+        var pingSockets=Collections.synchronizedList(new ArrayList<org.apache.tomcat.util.net.SocketWrapperBase<?>>());
+        server.pingForTest=request->{
+            assertEquals(jakarta.servlet.DispatcherType.REQUEST,request.getDispatcherType());
+            // 普通ping请求不铸SSE token；以真实处理bridge和两次REQUEST响应观察另一连接。
+            assertNull(request.getAttribute(PortalRunEventsSse.class.getName()+".request"));
+            var socket=server.protocol.currentSocketForTest();assertNotNull(socket);
+            assertTrue(targets.stream().noneMatch(t->t.socket()==socket));
+            pingSockets.add(socket);int requestIndex=pingRequests.incrementAndGet();
+            diagnostic.sample("other-request-epoch-"+requestIndex,socket);
+            diagnostic.event("ordinary-request-without-sse-token-"+requestIndex);
+        };
+        try(var other=new Socket("127.0.0.1",server.tomcat.getConnector().getLocalPort())) {
+            other.setSoTimeout(5000);assertPing(other,true);assertEquals(1,pingRequests.get());
+            for(var exchange:exchanges) { exchange.handle().close();exchange.handle().close(); }
+            for(var target:targets) { target.worker().join(5000);assertFalse(target.worker().isAlive(),"actual original reader exited after cancellation"); }
+            for(var exchange:exchanges) {
+                assertEquals(1,traceCount(exchange.trace,"worker-body-exit"));
+                assertEquals(false,field(exchange.session.get(),"active"));
+                exchange.session.get().close();exchange.handle().close();
+                assertFalse(exchange.handle().awaitClosed(Duration.ofMillis(50)));
+                assertFalse(exchange.session.get().awaitClosed(Duration.ofMillis(50)));
+            }
+            assertOffLockRetained(server,exchanges,targets,entered);
+            assertThirdSseDenied(f,server);
+            diagnostic.retention("after-worker-exit",server,exchanges,targets);
+            assertPing(other,false);
+            assertEquals(2,pingRequests.get());assertEquals(2,pingSockets.size());
+            assertSame(pingSockets.get(0),pingSockets.get(1),"the other real keepalive socket served two distinct request epochs");
+        } finally { server.pingForTest=null; }
+        for(int i=0;i<exchanges.size();i++) {
+            final int index=i;
+            var exchange=exchanges.get(i);
+            assertEquals(cursors[i],exchange.handle().after());
+            long actions=traceCount(exchange.trace,"before-close-now");assertTrue(actions<=1);
+            assertEquals(actions,traceCount(exchange.trace,"close-now-return"));
+            assertEquals(actions,diagnostic.facts.stream().filter(x->x.get("phase").equals("original-closed-action-"+index)).count());
+        }
+        assertTrue(failures.isEmpty(),"original close/action observations have no failures");
+        assertOffLockRetained(server,exchanges,targets,entered);
+        diagnostic.retention("after-other-request",server,exchanges,targets);
+        Files.writeString(run.resolve("off-lock-release-safety.properties"),"controlledOffLockCloseEach=true\noriginalWindowRecycled=0\noriginalWindowWaiting=2\noriginalProcessorReused=false\notherSocketPongResponses=2\notherRequestEpochs=2\nactualReadersExited=2\ncompletionNotInvented=true\nownersRetained=2\nthirdSseDenied=true\noriginalActionsEachAtMostOne=true\n");
+    }
+    static void assertThirdSseDenied(Fixture f,Server server)throws Exception {
+        // 真实REQUEST经原工厂取得新Handle；拒绝必须来自Owner准入，不能误中旧Handle唯一性门。
+        int index=server.next.get();long handles=server.protocol.handleAllocationsForTest();
+        try(var third=server.request(f.run)) { third.getInputStream().readAllBytes(); }
+        var exchange=server.exchanges.get(index);
+        var failure=assertInstanceOf(IllegalStateException.class,exchange.failure.get());
+        assertEquals("packet owner slots exhausted",failure.getMessage());assertNull(exchange.handle.get());
+        assertEquals(handles+1,server.protocol.handleAllocationsForTest());assertEquals(2,PortalEventsPacketBudget.SHARED.owners());
+    }
+    static void assertOffLockRetained(Server server,List<Exchange> exchanges,List<ReleaseTarget> targets,CountDownLatch entered)throws Exception {
+        assertEquals(2,entered.getCount());assertEquals(2,server.protocol.getWaitingProcessorCount());
+        assertEquals(2,PortalEventsPacketBudget.SHARED.owners());
+        assertTrue(PortalEventsPacketBudget.SHARED.reservedBytes()>=PortalEventsPacketBudget.SHARED.connectorBaselineBytes()+2*PortalRunEventsHttp.HTTP_BYTES);
+        for(int i=0;i<exchanges.size();i++) {
+            var exchange=exchanges.get(i);var target=targets.get(i);
+            assertTrue(target.socket().isClosed());assertSame(target.processor(),target.socket().getCurrentProcessor());
+            assertSame(target.socket(),field(target.processor(),"socket"));assertSame(target.token(),field(target.processor(),"slot"));
+            assertEquals(0,traceCount(exchange.trace,"recycle-invalidated"));assertEquals(0,traceCount(exchange.trace,"completion-entry"));
+            assertFalse(exchange.handle().awaitClosed(Duration.ZERO));
+            assertFalse(exchange.session.get().awaitClosed(Duration.ZERO));
+            assertEquals(false,field(field(exchange.session.get(),"sseLease"),"released"));
+            assertNotNull(field(exchange.session.get(),"fee"));
+            assertEquals(false,field(field(exchange.session.get(),"owner"),"closed"));
+        }
+    }
+    static void assertPing(Socket socket,boolean keepAlive)throws Exception {
+        socket.getOutputStream().write(utf("GET /ping HTTP/1.1\r\nHost: localhost\r\nConnection: "+(keepAlive?"keep-alive":"close")+"\r\n\r\n"));socket.getOutputStream().flush();
+        var input=socket.getInputStream();assertTrue(line(input).startsWith("HTTP/1.1 200"));
+        int length=-1;String header;while(!(header=line(input)).isEmpty())if(header.toLowerCase(Locale.ROOT).startsWith("content-length:"))length=Integer.parseInt(header.substring(header.indexOf(':')+1).trim());
+        assertEquals(4,length);assertEquals("pong",new String(input.readNBytes(length),StandardCharsets.UTF_8));
+    }
+    /** 只读容器事实；历史显式诊断保留原裸close与原5秒正例断言。 */
+    static final class ForcedReleaseDiagnostic {
+        final CountDownLatch paused=new CountDownLatch(2),resume=new CountDownLatch(1),returned=new CountDownLatch(2);
+        final Set<org.apache.tomcat.util.net.SocketWrapperBase<?>> seen=ConcurrentHashMap.newKeySet();
+        final List<Map<String,Object>> facts=Collections.synchronizedList(new ArrayList<>());
+        final AtomicInteger order=new AtomicInteger(),normalReturns=new AtomicInteger();
+        final long started=System.nanoTime();
+        final String mode;
+        ForcedReleaseDiagnostic(String mode) { this.mode=mode; }
+        long hooksAtWaitEnd=-1;
+        long recycledAtWaitEnd=-1;
+        int waitingAtWaitEnd=-1;
+        void sample(String phase,org.apache.tomcat.util.net.SocketWrapperBase<?> socket) {
+            var lock=socket.getLock();
+            var actual=lock instanceof java.util.concurrent.locks.ReentrantLock r?r:null;
+            facts.add(Map.of("order",order.incrementAndGet(),"phase",phase,
+                    "socket",System.identityHashCode(socket),"thread",Thread.currentThread().getName(),
+                    "elapsedNanos",System.nanoTime()-started,"processorPresent",socket.getCurrentProcessor()!=null,
+                    "closed",socket.isClosed(),"lockClass",lock.getClass().getName(),
+                    "locked",actual!=null&&actual.isLocked(),"heldByCaller",actual!=null&&actual.isHeldByCurrentThread()));
+        }
+        void event(String phase) {
+            facts.add(Map.of("order",order.incrementAndGet(),"phase",phase,
+                    "thread",Thread.currentThread().getName(),"elapsedNanos",System.nanoTime()-started));
+        }
+        void ready(org.apache.tomcat.util.net.SocketWrapperBase<?> socket) {
+            if(socket==null||!seen.add(socket))return;
+            sample("ready-paused",socket);paused.countDown();pause(resume);sample("ready-pause-return",socket);
+        }
+        void awaitPaused()throws Exception {
+            assertTrue(paused.await(3,TimeUnit.SECONDS),"diagnostic two ready-false scopes");
+            List<Map<String,Object>> snapshots;synchronized(facts) { snapshots=List.copyOf(facts); }
+            var ready=snapshots.stream().filter(f->f.get("phase").equals("ready-paused")).toList();
+            assertEquals(2,ready.size());
+            assertTrue(ready.stream().allMatch(f->Boolean.TRUE.equals(f.get("heldByCaller"))
+                    &&Boolean.FALSE.equals(f.get("processorPresent"))&&Boolean.FALSE.equals(f.get("closed"))),
+                    "diagnostic actual in-flight processing window before close");
+        }
+        void close(org.apache.tomcat.util.net.SocketWrapperBase<?> socket) {
+            sample("close-entry",socket);
+            try { socket.close();normalReturns.incrementAndGet();sample("close-return",socket); }
+            catch(RuntimeException|Error failure) { sample("close-throw-"+failure.getClass().getName(),socket);throw failure; }
+            finally { returned.countDown(); }
+        }
+        void resumeBeforeOriginalWait(Set<org.apache.tomcat.util.net.SocketWrapperBase<?>> sockets)throws Exception {
+            boolean bothReturned;
+            try { bothReturned=returned.await(2,TimeUnit.SECONDS); }
+            finally { event("callback-resume-signal");resume.countDown(); }
+            assertTrue(bothReturned,"diagnostic bare close returned before processing resumed");
+            assertEquals(2,normalReturns.get(),"diagnostic bare close returned normally");
+            // 见证位于裸close之后；先解除人工暂停，再取得处理退出见证，不跨原5秒等待持锁。
+            for(var socket:sockets) {
+                var lock=socket.getLock();boolean acquired=lock.tryLock(1,TimeUnit.SECONDS);
+                try { sample(acquired?"processing-exit-fence":"processing-exit-not-observed",socket); }
+                finally { if(acquired)lock.unlock(); }
+            }
+            event("original-five-second-wait-start");
+        }
+        void waitEnded(CountDownLatch entered,PortalRunEventsSse.ControlledProtocol protocol) {
+            hooksAtWaitEnd=2-entered.getCount();
+            recycledAtWaitEnd=protocol.recyclesForTest();waitingAtWaitEnd=protocol.getWaitingProcessorCount();
+            facts.add(Map.of("order",order.incrementAndGet(),"phase","original-five-second-wait-end",
+                    "thread",Thread.currentThread().getName(),"elapsedNanos",System.nanoTime()-started,
+                    "recycleHooks",hooksAtWaitEnd));
+        }
+        void actionTarget(int index,ReleaseTarget target)throws Exception {
+            assertSame(target.socket(),field(target.token(),"originalSocket"));assertSame(target.processor(),field(target.token(),"origin"));
+            assertSame(target.socket(),field(target.processor(),"socket"));assertSame(target.token(),field(target.processor(),"slot"));
+            assertTrue(target.socket().isClosed());sample("original-closed-action-"+index,target.socket());
+        }
+        void retention(String phase,Server server,List<Exchange> exchanges,List<ReleaseTarget> targets) {
+            facts.add(Map.of("order",order.incrementAndGet(),"phase",phase,"elapsedNanos",System.nanoTime()-started,
+                    "owners",PortalEventsPacketBudget.SHARED.owners(),"reservedBytes",PortalEventsPacketBudget.SHARED.reservedBytes(),
+                    "recycled",server.protocol.recyclesForTest(),"waiting",server.protocol.getWaitingProcessorCount(),
+                    "completionEntries",exchanges.stream().mapToLong(x->traceCount(x.trace,"completion-entry")).sum(),
+                    "readersAlive",targets.stream().filter(x->x.worker().isAlive()).count()));
+        }
+        void write(Path run,CountDownLatch entered,PortalRunEventsSse.ControlledProtocol protocol) {
+            List<Map<String,Object>> snapshots;synchronized(facts) { snapshots=new ArrayList<>(facts); }
+            snapshots.sort(Comparator.comparingInt(f->((Number)f.get("order")).intValue()));
+            try {
+                String json=JSON.writeValueAsString(Map.of("mode",mode,
+                        "beforeTomcatStop",true,"pausedScopes",2-paused.getCount(),
+                        "closeExits",2-returned.getCount(),"normalCloseReturns",normalReturns.get(),
+                        "recycleHooks",2-entered.getCount(),"recycleHooksAtWaitEnd",hooksAtWaitEnd,"facts",snapshots,
+                        "processorCounts",Map.of("recycledAtWaitEnd",recycledAtWaitEnd,"waitingAtWaitEnd",waitingAtWaitEnd,
+                                "recycledBeforeStop",protocol.recyclesForTest(),"waitingBeforeStop",protocol.getWaitingProcessorCount())));
+                Files.writeString(run.resolve("ex27-release-diagnostic.json"),json,StandardCharsets.UTF_8);
+                System.out.println("EX27_RELEASE_DIAGNOSTIC="+json);
+            } catch(IOException failure) { System.out.println("EX27_DIAGNOSTIC_WRITE_ERROR="+failure.getClass().getName()); }
         }
     }
     static final class SequencePeer implements AutoCloseable {

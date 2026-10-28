@@ -1,0 +1,31 @@
+{
+  "recordedAt": "2026-10-28T23:02:42.0439785+08:00",
+  "head": "0cc967278007343bd5ab09faf9953d86cd573bf8",
+  "source": "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseLifecycleTest.java",
+  "sourceSha256": "FD34D818988FCE6782F1AAFAAB4459BD39B3ACB7CDC0A57D33AD30FBC745B630",
+  "sourceWriteWindowGrantedBy": "/root",
+  "runtimeWindowGranted": false,
+  "compiled": false,
+  "testsExecuted": false,
+  "originalMethodCount": 37,
+  "candidateMethodCount": 38,
+  "addedMethods": [
+    "offLockCloseDuringProcessingRetainsSafetyWithoutInventingRecycle"
+  ],
+  "missingMethods": [],
+  "staticReviewPending": true,
+  "originalDiagnosticSha256": "4470434C459F900B9CC85AD96D4F7D8953A17D7BCC7B37C3EAE64FBBD9D5C53D",
+  "originalDiagnosticRun": "in-flight-diagnostic-once-20261028-223443-168",
+  "originalDiagnosticMavenExit": 1,
+  "originalDiagnosticChildExit": 1,
+  "diagnosticRawPreserved": true,
+  "positiveOriginalFiveSecondWaitAndAssertionsPreserved": true,
+  "newDefaultSafetyChild": "off-lock-release-safety",
+  "thirdAdmission": "Two real Servlet REQUESTs through original factory; each requires Owner-slots failure and exactly one new real Handle allocation; no private factory invocation",
+  "srcMainEditedInThisSubstep": false,
+  "tomcatDependenciesChanged": false,
+  "gitIndexOrCommitOperations": false,
+  "moduleGate": false,
+  "next": "Root reviews FD34, grants exact two methods then default full38 and gateway27-class window; current turn stops without running",
+  "supersededForStaticFixtureError": "GET /ping intentionally has no SSE RequestSlot; FD34 assertNotNull was invalid. Never compiled or run, not a red test result."
+}

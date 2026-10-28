@@ -1,0 +1,351 @@
+{
+  "source": "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseLifecycleTest.java",
+  "sha256": "6B144C0033CE22556996897824B2F0D864A862E39F6E12EF2C21B5212B5199C1",
+  "originalMethods": [
+    "originalRequestBootstrapAndContinuousCursorTerminal",
+    "privateEofDoesNotInventTerminal",
+    "realBackpressureAbortRetainsCursorAndActuallyExits",
+    "resetPrecedesStatusAndDoesNotAdvanceCursor",
+    "allSpacePgTypeSurvivesActualServletOutput",
+    "generationAtGetterAndEachWriteBoundaryNeverPublishesOldTail",
+    "revokeAndPartialUnknownNeverAdvanceCursor",
+    "firstErrorAndLateFirstWindowCannotReviveRegistration",
+    "originalIdleDeadlineSurvivesSpuriousWakeupsAndStoppedReader",
+    "twoHeavyHelpersKeepWholeOwnersAndThirdAdmissionClosed",
+    "stalledCompletionKeepsOwnersBeforeOldHttpCleanup",
+    "abortIsOrderedAfterActualReadyWriteAndRetainsFeesWhileStalled",
+    "lateAbortCannotTouchReusedKeepaliveRequest",
+    "realNotReadyNotificationResumesTheSameFrame",
+    "exactLongMaxCursorAndHighPrecisionJsonReachRealServletBytes",
+    "inertReadyIdleShellAllowsMaterialFeeExitButRetainsFinalOwner",
+    "actualPendingFlushRequiresDrainAndFreshGenerationBeforeCursor",
+    "stalledActualActionRetainsTwoOwnersUntilActionAndCompletionExit",
+    "sameProcessorOnAnotherSocketCannotReceiveOldAbort",
+    "noFutureWritableCallbackIsNeededForTheOwnedIdleDeadline",
+    "controlledProfileAndSingleLifetimeInstanceFailClosed",
+    "forcedConnectorReleaseInvalidatesTokensWithoutInventingCompletion",
+    "invalidCursorCannotPublishAnUnreapableLease",
+    "preasyncUnsupportedDetachesHeavyStateBeforeRefund",
+    "uncertainHandleConstructionAndRegistrationBurnSharedCredits",
+    "mixedAutomaticReferencesReuseOneSharedPopulation",
+    "actualAwaitClosedAncestorPinsRefundedShellCredit",
+    "actualAbortSnapshotMustReturnBeforeHttpRefund",
+    "actualCleanupSnapshotMustReturnBeforeHttpRefund",
+    "retainedFinishedHandlesConsumeSharedFactoryCapacity",
+    "q403FailureClosesTransferredSessionBeforeReturningCapacity",
+    "qTransportFailureClosesTransferredSessionBeforeReturningCapacity",
+    "transferredServletCannotClaimTheOriginalRequestFromWorker",
+    "originalRequestScopeAndDispatcherAreRequiredBeforeQuery",
+    "uncertainProcessorConstructionBurnsItsReservedBundle",
+    "automaticPhantomNotificationCanReturnActualFactoryCapacity",
+    "actualProcessorFactoryRefusesBeyondFixedStrongPopulation"
+  ],
+  "candidateMethods": [
+    "originalRequestBootstrapAndContinuousCursorTerminal",
+    "privateEofDoesNotInventTerminal",
+    "realBackpressureAbortRetainsCursorAndActuallyExits",
+    "resetPrecedesStatusAndDoesNotAdvanceCursor",
+    "allSpacePgTypeSurvivesActualServletOutput",
+    "generationAtGetterAndEachWriteBoundaryNeverPublishesOldTail",
+    "revokeAndPartialUnknownNeverAdvanceCursor",
+    "firstErrorAndLateFirstWindowCannotReviveRegistration",
+    "originalIdleDeadlineSurvivesSpuriousWakeupsAndStoppedReader",
+    "twoHeavyHelpersKeepWholeOwnersAndThirdAdmissionClosed",
+    "stalledCompletionKeepsOwnersBeforeOldHttpCleanup",
+    "abortIsOrderedAfterActualReadyWriteAndRetainsFeesWhileStalled",
+    "lateAbortCannotTouchReusedKeepaliveRequest",
+    "realNotReadyNotificationResumesTheSameFrame",
+    "exactLongMaxCursorAndHighPrecisionJsonReachRealServletBytes",
+    "inertReadyIdleShellAllowsMaterialFeeExitButRetainsFinalOwner",
+    "actualPendingFlushRequiresDrainAndFreshGenerationBeforeCursor",
+    "stalledActualActionRetainsTwoOwnersUntilActionAndCompletionExit",
+    "sameProcessorOnAnotherSocketCannotReceiveOldAbort",
+    "noFutureWritableCallbackIsNeededForTheOwnedIdleDeadline",
+    "controlledProfileAndSingleLifetimeInstanceFailClosed",
+    "forcedConnectorReleaseInvalidatesTokensWithoutInventingCompletion",
+    "offLockCloseDuringProcessingRetainsSafetyWithoutInventingRecycle",
+    "invalidCursorCannotPublishAnUnreapableLease",
+    "preasyncUnsupportedDetachesHeavyStateBeforeRefund",
+    "uncertainHandleConstructionAndRegistrationBurnSharedCredits",
+    "mixedAutomaticReferencesReuseOneSharedPopulation",
+    "actualAwaitClosedAncestorPinsRefundedShellCredit",
+    "actualAbortSnapshotMustReturnBeforeHttpRefund",
+    "actualCleanupSnapshotMustReturnBeforeHttpRefund",
+    "retainedFinishedHandlesConsumeSharedFactoryCapacity",
+    "q403FailureClosesTransferredSessionBeforeReturningCapacity",
+    "qTransportFailureClosesTransferredSessionBeforeReturningCapacity",
+    "transferredServletCannotClaimTheOriginalRequestFromWorker",
+    "originalRequestScopeAndDispatcherAreRequiredBeforeQuery",
+    "uncertainProcessorConstructionBurnsItsReservedBundle",
+    "automaticPhantomNotificationCanReturnActualFactoryCapacity",
+    "actualProcessorFactoryRefusesBeyondFixedStrongPopulation"
+  ],
+  "originalCount": 37,
+  "candidateCount": 38,
+  "addedMethods": [
+    "offLockCloseDuringProcessingRetainsSafetyWithoutInventingRecycle"
+  ],
+  "missingMethods": [],
+  "originalScope": [
+    {
+      "method": "originalRequestBootstrapAndContinuousCursorTerminal",
+      "goal": "原REQUEST引导、连续游标及真实terminal",
+      "change": "原方法/场景保持",
+      "priorFrozenModuleStatus": "PASS",
+      "currentCandidateStatus": "PASS_IN_FULL38_AND_27_CLASS_MODULE"
+    },
+    {
+      "method": "privateEofDoesNotInventTerminal",
+      "goal": "私有EOF不得伪造terminal",
+      "change": "原方法/场景保持",
+      "priorFrozenModuleStatus": "PASS",
+      "currentCandidateStatus": "PASS_IN_FULL38_AND_27_CLASS_MODULE"
+    },
+    {
+      "method": "realBackpressureAbortRetainsCursorAndActuallyExits",
+      "goal": "真实反压取消、游标与实际退出",
+      "change": "原方法/场景保持",
+      "priorFrozenModuleStatus": "PASS",
+      "currentCandidateStatus": "PASS_IN_FULL38_AND_27_CLASS_MODULE"
+    },
+    {
+      "method": "resetPrecedesStatusAndDoesNotAdvanceCursor",
+      "goal": "reset先于status且不推进游标",
+      "change": "原方法/场景保持",
+      "priorFrozenModuleStatus": "PASS",
+      "currentCandidateStatus": "PASS_IN_FULL38_AND_27_CLASS_MODULE"
+    },
+    {
+      "method": "allSpacePgTypeSurvivesActualServletOutput",
+      "goal": "PG全空格类型真实Servlet输出",
+      "change": "原方法/场景保持",
+      "priorFrozenModuleStatus": "PASS",
+      "currentCandidateStatus": "PASS_IN_FULL38_AND_27_CLASS_MODULE"
+    },
+    {
+      "method": "generationAtGetterAndEachWriteBoundaryNeverPublishesOldTail",
+      "goal": "getter及各write边界generation失效",
+      "change": "原方法/场景保持",
+      "priorFrozenModuleStatus": "PASS",
+      "currentCandidateStatus": "PASS_IN_FULL38_AND_27_CLASS_MODULE"
+    },
+    {
+      "method": "revokeAndPartialUnknownNeverAdvanceCursor",
+      "goal": "revoke/partial未知结果不得推进游标",
+      "change": "原方法/场景保持",
+      "priorFrozenModuleStatus": "PASS",
+      "currentCandidateStatus": "PASS_IN_FULL38_AND_27_CLASS_MODULE"
+    },
+    {
+      "method": "firstErrorAndLateFirstWindowCannotReviveRegistration",
+      "goal": "首错和迟到首窗口不可复活注册",
+      "change": "原方法/场景保持",
+      "priorFrozenModuleStatus": "PASS",
+      "currentCandidateStatus": "PASS_IN_FULL38_AND_27_CLASS_MODULE"
+    },
+    {
+      "method": "originalIdleDeadlineSurvivesSpuriousWakeupsAndStoppedReader",
+      "goal": "原idle期限不因虚假唤醒或停读而重置",
+      "change": "原方法/场景保持",
+      "priorFrozenModuleStatus": "PASS",
+      "currentCandidateStatus": "PASS_IN_FULL38_AND_27_CLASS_MODULE"
+    },
+    {
+      "method": "twoHeavyHelpersKeepWholeOwnersAndThirdAdmissionClosed",
+      "goal": "两个heavy helper持完整Owner并拒第三准入",
+      "change": "原方法/场景保持",
+      "priorFrozenModuleStatus": "PASS",
+      "currentCandidateStatus": "PASS_IN_FULL38_AND_27_CLASS_MODULE"
+    },
+    {
+      "method": "stalledCompletionKeepsOwnersBeforeOldHttpCleanup",
+      "goal": "completion停滞不得先退款HTTP资源",
+      "change": "原方法/场景保持",
+      "priorFrozenModuleStatus": "PASS",
+      "currentCandidateStatus": "PASS_IN_FULL38_AND_27_CLASS_MODULE"
+    },
+    {
+      "method": "abortIsOrderedAfterActualReadyWriteAndRetainsFeesWhileStalled",
+      "goal": "abort位于实际write之后且停滞持费",
+      "change": "原方法/场景保持",
+      "priorFrozenModuleStatus": "PASS",
+      "currentCandidateStatus": "PASS_IN_FULL38_AND_27_CLASS_MODULE"
+    },
+    {
+      "method": "lateAbortCannotTouchReusedKeepaliveRequest",
+      "goal": "真实keepalive新REQUEST不受旧abort影响",
+      "change": "原方法/场景保持",
+      "priorFrozenModuleStatus": "PASS",
+      "currentCandidateStatus": "PASS_IN_FULL38_AND_27_CLASS_MODULE"
+    },
+    {
+      "method": "realNotReadyNotificationResumesTheSameFrame",
+      "goal": "真实not-ready通知恢复同一frame",
+      "change": "原方法/场景保持",
+      "priorFrozenModuleStatus": "PASS",
+      "currentCandidateStatus": "PASS_IN_FULL38_AND_27_CLASS_MODULE"
+    },
+    {
+      "method": "exactLongMaxCursorAndHighPrecisionJsonReachRealServletBytes",
+      "goal": "Long.MAX游标及高精度JSON真实字节",
+      "change": "原方法/场景保持",
+      "priorFrozenModuleStatus": "PASS",
+      "currentCandidateStatus": "PASS_IN_FULL38_AND_27_CLASS_MODULE"
+    },
+    {
+      "method": "inertReadyIdleShellAllowsMaterialFeeExitButRetainsFinalOwner",
+      "goal": "轻壳允许material费退出但保留最终Owner",
+      "change": "原方法/场景保持",
+      "priorFrozenModuleStatus": "PASS",
+      "currentCandidateStatus": "PASS_IN_FULL38_AND_27_CLASS_MODULE"
+    },
+    {
+      "method": "actualPendingFlushRequiresDrainAndFreshGenerationBeforeCursor",
+      "goal": "pending flush须drain且fresh后才能推进游标",
+      "change": "原方法/场景保持",
+      "priorFrozenModuleStatus": "PASS",
+      "currentCandidateStatus": "PASS_IN_FULL38_AND_27_CLASS_MODULE"
+    },
+    {
+      "method": "stalledActualActionRetainsTwoOwnersUntilActionAndCompletionExit",
+      "goal": "实际action停滞持两个Owner直至action/completion退出",
+      "change": "原方法/场景保持",
+      "priorFrozenModuleStatus": "PASS",
+      "currentCandidateStatus": "PASS_IN_FULL38_AND_27_CLASS_MODULE"
+    },
+    {
+      "method": "sameProcessorOnAnotherSocketCannotReceiveOldAbort",
+      "goal": "真实processor跨socket复用不得被旧abort命中",
+      "change": "原方法/场景保持",
+      "priorFrozenModuleStatus": "PASS",
+      "currentCandidateStatus": "PASS_IN_FULL38_AND_27_CLASS_MODULE"
+    },
+    {
+      "method": "noFutureWritableCallbackIsNeededForTheOwnedIdleDeadline",
+      "goal": "原idle期限不依赖下一次可写callback",
+      "change": "原方法/场景保持",
+      "priorFrozenModuleStatus": "PASS",
+      "currentCandidateStatus": "PASS_IN_FULL38_AND_27_CLASS_MODULE"
+    },
+    {
+      "method": "controlledProfileAndSingleLifetimeInstanceFailClosed",
+      "goal": "受控部署profile及单JVM终身实例默认拒绝",
+      "change": "原方法/场景保持",
+      "priorFrozenModuleStatus": "PASS",
+      "currentCandidateStatus": "PASS_IN_FULL38_AND_27_CLASS_MODULE"
+    },
+    {
+      "method": "forcedConnectorReleaseInvalidatesTokensWithoutInventingCompletion",
+      "goal": "实际processor回收前失效token且不得伪造completion",
+      "change": "正例增加真实关联/锁内close前提；保留原5秒及全部断言；显式原红mode保留",
+      "priorFrozenModuleStatus": "FAIL",
+      "currentCandidateStatus": "PASS_IN_FULL38_AND_27_CLASS_MODULE"
+    },
+    {
+      "method": "invalidCursorCannotPublishAnUnreapableLease",
+      "goal": "非法游标不得发布不可回收lease",
+      "change": "原方法/场景保持",
+      "priorFrozenModuleStatus": "PASS",
+      "currentCandidateStatus": "PASS_IN_FULL38_AND_27_CLASS_MODULE"
+    },
+    {
+      "method": "preasyncUnsupportedDetachesHeavyStateBeforeRefund",
+      "goal": "不支持async时先detach重图再退款",
+      "change": "原方法/场景保持",
+      "priorFrozenModuleStatus": "PASS",
+      "currentCandidateStatus": "PASS_IN_FULL38_AND_27_CLASS_MODULE"
+    },
+    {
+      "method": "uncertainHandleConstructionAndRegistrationBurnSharedCredits",
+      "goal": "构造/注册不确定性烧毁共享名额",
+      "change": "原方法/场景保持",
+      "priorFrozenModuleStatus": "PASS",
+      "currentCandidateStatus": "PASS_IN_FULL38_AND_27_CLASS_MODULE"
+    },
+    {
+      "method": "mixedAutomaticReferencesReuseOneSharedPopulation",
+      "goal": "自动引用通知共用固定人口",
+      "change": "原方法/场景保持",
+      "priorFrozenModuleStatus": "PASS",
+      "currentCandidateStatus": "PASS_IN_FULL38_AND_27_CLASS_MODULE"
+    },
+    {
+      "method": "actualAwaitClosedAncestorPinsRefundedShellCredit",
+      "goal": "实际awaitClosed祖先栈仍锚定退款后壳名额",
+      "change": "原方法/场景保持",
+      "priorFrozenModuleStatus": "PASS",
+      "currentCandidateStatus": "PASS_IN_FULL38_AND_27_CLASS_MODULE"
+    },
+    {
+      "method": "actualAbortSnapshotMustReturnBeforeHttpRefund",
+      "goal": "实际HTTP abort快照返回前不得退款",
+      "change": "原方法/场景保持",
+      "priorFrozenModuleStatus": "PASS",
+      "currentCandidateStatus": "PASS_IN_FULL38_AND_27_CLASS_MODULE"
+    },
+    {
+      "method": "actualCleanupSnapshotMustReturnBeforeHttpRefund",
+      "goal": "实际HTTP cleanup快照返回前不得退款",
+      "change": "原方法/场景保持",
+      "priorFrozenModuleStatus": "PASS",
+      "currentCandidateStatus": "PASS_IN_FULL38_AND_27_CLASS_MODULE"
+    },
+    {
+      "method": "retainedFinishedHandlesConsumeSharedFactoryCapacity",
+      "goal": "保留finished Handle仍占共享factory容量",
+      "change": "原方法/场景保持",
+      "priorFrozenModuleStatus": "PASS",
+      "currentCandidateStatus": "PASS_IN_FULL38_AND_27_CLASS_MODULE"
+    },
+    {
+      "method": "q403FailureClosesTransferredSessionBeforeReturningCapacity",
+      "goal": "Q403先关闭转交Session再退容量",
+      "change": "原方法/场景保持",
+      "priorFrozenModuleStatus": "PASS",
+      "currentCandidateStatus": "PASS_IN_FULL38_AND_27_CLASS_MODULE"
+    },
+    {
+      "method": "qTransportFailureClosesTransferredSessionBeforeReturningCapacity",
+      "goal": "Q传输失败先关闭转交Session再退容量",
+      "change": "原方法/场景保持",
+      "priorFrozenModuleStatus": "PASS",
+      "currentCandidateStatus": "PASS_IN_FULL38_AND_27_CLASS_MODULE"
+    },
+    {
+      "method": "transferredServletCannotClaimTheOriginalRequestFromWorker",
+      "goal": "转交Servlet不得从worker夺原REQUEST",
+      "change": "原方法/场景保持",
+      "priorFrozenModuleStatus": "PASS",
+      "currentCandidateStatus": "PASS_IN_FULL38_AND_27_CLASS_MODULE"
+    },
+    {
+      "method": "originalRequestScopeAndDispatcherAreRequiredBeforeQuery",
+      "goal": "查询前要求原REQUEST scope/dispatcher",
+      "change": "原方法/场景保持",
+      "priorFrozenModuleStatus": "PASS",
+      "currentCandidateStatus": "PASS_IN_FULL38_AND_27_CLASS_MODULE"
+    },
+    {
+      "method": "uncertainProcessorConstructionBurnsItsReservedBundle",
+      "goal": "processor构造不确定性烧毁预留bundle",
+      "change": "原方法/场景保持",
+      "priorFrozenModuleStatus": "PASS",
+      "currentCandidateStatus": "PASS_IN_FULL38_AND_27_CLASS_MODULE"
+    },
+    {
+      "method": "automaticPhantomNotificationCanReturnActualFactoryCapacity",
+      "goal": "真实phantom通知可归还factory容量",
+      "change": "原方法/场景保持",
+      "priorFrozenModuleStatus": "PASS",
+      "currentCandidateStatus": "PASS_IN_FULL38_AND_27_CLASS_MODULE"
+    },
+    {
+      "method": "actualProcessorFactoryRefusesBeyondFixedStrongPopulation",
+      "goal": "真实processor工厂不得超过固定强人口",
+      "change": "原方法/场景保持",
+      "priorFrozenModuleStatus": "PASS",
+      "currentCandidateStatus": "PASS_IN_FULL38_AND_27_CLASS_MODULE"
+    }
+  ],
+  "newGoal": "默认fresh child保留off-lock交错，验证无回收/无completion/Owner持费/第三真实SSE拒绝/取消及实际reader退出/旧closed连接动作至多一次/另一真实socket两个REQUEST epoch安全；不声称SSE processor复用"
+}

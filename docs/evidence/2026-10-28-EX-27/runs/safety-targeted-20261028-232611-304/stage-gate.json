@@ -1,0 +1,32 @@
+{
+  "stage": "targeted",
+  "sourceSha256": "E1758505D03E6997D257ECF6D52BAC1A97C6AFDBA782DBB15105E30549F37517",
+  "mavenExitCode": 1,
+  "compiled": false,
+  "methodCount": 0,
+  "xmlCount": 0,
+  "childCount": 0,
+  "targetAssertionsExecuted": false,
+  "compileErrors": [
+    {
+      "line": 828,
+      "problem": "traceCount returns long; local actions declared int",
+      "proposedTestOnlyCorrection": "long actions"
+    },
+    {
+      "line": 942,
+      "problem": "traceCount returns long; mapToInt expects int",
+      "proposedTestOnlyCorrection": "mapToLong"
+    }
+  ],
+  "fixtureCompilationFailure": true,
+  "productSafetyFailureProven": false,
+  "gate": false,
+  "classStage": "NOT_RUN",
+  "moduleStage": "NOT_RUN",
+  "fingerprintsChanged": 0,
+  "headUnchanged": true,
+  "collectionErrors": 0,
+  "runtimeWindowReturnedTo": "/root",
+  "sourceEditedAfterRun": false
+}

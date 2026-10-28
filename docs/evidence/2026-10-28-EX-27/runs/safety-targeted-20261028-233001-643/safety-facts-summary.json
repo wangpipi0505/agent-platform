@@ -1,0 +1,102 @@
+{
+  "positiveAssociatedBeforeCloseCount": 2,
+  "positiveAllOriginalAssociated": true,
+  "mode": "off-lock-release-safety",
+  "pausedScopes": 2,
+  "normalCloseReturns": 2,
+  "processingExitFences": 2,
+  "originalFiveSecond": {
+    "recycledAtWaitEnd": 0,
+    "waitingBeforeStop": 2,
+    "waitingAtWaitEnd": 2,
+    "recycledBeforeStop": 4
+  },
+  "retentions": [
+    {
+      "completionEntries": 0,
+      "waiting": 2,
+      "reservedBytes": 184175046,
+      "phase": "before-cancel",
+      "owners": 2,
+      "elapsedNanos": 7211956900,
+      "readersAlive": 2,
+      "recycled": 1,
+      "order": 14
+    },
+    {
+      "completionEntries": 0,
+      "waiting": 2,
+      "reservedBytes": 15485324,
+      "phase": "after-worker-exit",
+      "owners": 2,
+      "elapsedNanos": 11475357000,
+      "readersAlive": 0,
+      "recycled": 3,
+      "order": 19
+    },
+    {
+      "completionEntries": 0,
+      "waiting": 2,
+      "reservedBytes": 15485324,
+      "phase": "after-other-request",
+      "owners": 2,
+      "elapsedNanos": 11476382300,
+      "readersAlive": 0,
+      "recycled": 4,
+      "order": 22
+    },
+    {
+      "completionEntries": 0,
+      "waiting": 2,
+      "reservedBytes": 15485324,
+      "phase": "before-tomcat-stop",
+      "owners": 2,
+      "elapsedNanos": 11477424200,
+      "readersAlive": 0,
+      "recycled": 4,
+      "order": 23
+    }
+  ],
+  "originalActionCounts": [
+    {
+      "originalIndex": 0,
+      "actions": 1
+    },
+    {
+      "originalIndex": 1,
+      "actions": 1
+    }
+  ],
+  "ordinaryRequestsWithoutSseToken": 2,
+  "otherRealRequestPhases": [
+    {
+      "phase": "other-request-epoch-1",
+      "socket": 262614961,
+      "closed": false,
+      "heldByCaller": true
+    },
+    {
+      "phase": "other-request-epoch-2",
+      "socket": 262614961,
+      "closed": false,
+      "heldByCaller": true
+    }
+  ],
+  "claimsOriginalSseProcessorReuse": false,
+  "nativeChildren": [
+    {
+      "directory": "forced-release-ab1aeb05-c881-4e9a-affa-ae3c6507a664",
+      "exit": "0",
+      "alive": "false",
+      "collectorAlive": "false",
+      "pid": "31724"
+    },
+    {
+      "directory": "off-lock-release-safety-a05c2343-6109-48ff-9f8d-8c7b8683a028",
+      "exit": "0",
+      "alive": "false",
+      "collectorAlive": "false",
+      "pid": "6112"
+    }
+  ]
+}

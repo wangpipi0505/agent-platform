@@ -1,0 +1,35 @@
+﻿{
+    "phase":  "in-flight-diagnostic-once",
+    "startedAt":  "2026-10-28T22:34:43.2077420+08:00",
+    "endedAt":  "2026-10-28T22:34:59.1468013+08:00",
+    "headAtStart":  "0cc967278007343bd5ab09faf9953d86cd573bf8",
+    "headAtEnd":  "0cc967278007343bd5ab09faf9953d86cd573bf8",
+    "exitCode":  1,
+    "command":  "mvn.cmd -B -ntp -pl platform-gateway test -Dmaven.repo.local=G:\\207\\项目\\算法重组工具\\代码\\agent-platform/.tools/m2 -DargLine=-Xmx1024m -Djdk.net.unixdomain.tmpdir=V:/.local/tmp -Dex27.forcedReleaseInFlight=true -DreuseForks=false -Dsurefire.timeout=900 -Dsurefire.failIfNoSpecifiedTests=true -Dtest=PortalRunEventsSseLifecycleTest#forcedConnectorReleaseInvalidatesTokensWithoutInventingCompletion",
+    "freshForkPerClass":  true,
+    "diagnosticMode":  true,
+    "source":  "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsSseLifecycleTest.java",
+    "sourceSha256":  "4470434C459F900B9CC85AD96D4F7D8953A17D7BCC7B37C3EAE64FBBD9D5C53D",
+    "collectorSha256":  "D7FADEBBF77BC37B706A924B8BB8F563099E9CA939C84C8992018E5BD6488F94",
+    "nativeChildExitCode":  1,
+    "sourceUnchanged":  true,
+    "configurationSha256":  "AF038F68E0CA2E3EEEEB0C5240B2C2DA1EF647D680500F63AF1564975EBAFD4A",
+    "developmentFlagPresent":  true,
+    "postgresTestsEnabled":  true,
+    "reportCount":  1,
+    "methodCount":  1,
+    "statuses":  [
+                     {
+                         "status":  "FAIL",
+                         "count":  1
+                     }
+                 ],
+    "diagnosticDirectoryCount":  1,
+    "diagnosticFactsPresent":  true,
+    "collectionErrors":  [
+
+                         ],
+    "independentPowerShellProcessRequired":  true,
+    "originalWaitSeconds":  5,
+    "originalParentChildDeadlineSeconds":  95
+}

@@ -1,0 +1,129 @@
+{
+  "sourceSha256": "6B144C0033CE22556996897824B2F0D864A862E39F6E12EF2C21B5212B5199C1",
+  "run": "safety-class-20261028-233128-749",
+  "factsConfirmed": true,
+  "positiveAssociatedBeforeClose": [
+    {
+      "closed": false,
+      "originalSocketLockHeld": true,
+      "originalProcessorAssociated": true,
+      "phase": "associated-before-close",
+      "socket": 532693735,
+      "processor": 2121989800
+    },
+    {
+      "closed": false,
+      "originalSocketLockHeld": true,
+      "originalProcessorAssociated": true,
+      "phase": "associated-before-close",
+      "socket": 789891756,
+      "processor": 1081827073
+    }
+  ],
+  "offLockMode": "off-lock-release-safety",
+  "pausedScopes": 2,
+  "normalCloseReturns": 2,
+  "processingExitFences": 2,
+  "originalFiveSecondAndBeforeStopCounts": {
+    "waitingBeforeStop": 2,
+    "recycledAtWaitEnd": 0,
+    "recycledBeforeStop": 4,
+    "waitingAtWaitEnd": 2
+  },
+  "retentions": [
+    {
+      "elapsedNanos": 7108774500,
+      "owners": 2,
+      "phase": "before-cancel",
+      "reservedBytes": 184175046,
+      "waiting": 2,
+      "completionEntries": 0,
+      "order": 14,
+      "recycled": 1,
+      "readersAlive": 2
+    },
+    {
+      "elapsedNanos": 11363694300,
+      "owners": 2,
+      "phase": "after-worker-exit",
+      "reservedBytes": 15485324,
+      "waiting": 2,
+      "completionEntries": 0,
+      "order": 19,
+      "recycled": 3,
+      "readersAlive": 0
+    },
+    {
+      "elapsedNanos": 11364670100,
+      "owners": 2,
+      "phase": "after-other-request",
+      "reservedBytes": 15485324,
+      "waiting": 2,
+      "completionEntries": 0,
+      "order": 22,
+      "recycled": 4,
+      "readersAlive": 0
+    },
+    {
+      "elapsedNanos": 11365265200,
+      "owners": 2,
+      "phase": "before-tomcat-stop",
+      "reservedBytes": 15485324,
+      "waiting": 2,
+      "completionEntries": 0,
+      "order": 23,
+      "recycled": 4,
+      "readersAlive": 0
+    }
+  ],
+  "originalActionCounts": [
+    {
+      "originalIndex": 0,
+      "actions": 1
+    },
+    {
+      "originalIndex": 1,
+      "actions": 1
+    }
+  ],
+  "otherRealRequests": [
+    {
+      "phase": "other-request-epoch-1",
+      "socket": 1491533386,
+      "closed": false,
+      "heldByCaller": true
+    },
+    {
+      "phase": "other-request-epoch-2",
+      "socket": 1491533386,
+      "closed": false,
+      "heldByCaller": true
+    }
+  ],
+  "ordinaryRequestsHaveNoSseToken": true,
+  "originalSseProcessorReusedInOffLockVector": false,
+  "actualReuseInSeparateOriginalVectors": [
+    {
+      "directory": "keepalive-22df88ac-03ae-43fb-8e4b-3b0b2e931246",
+      "nativeExit": "0",
+      "facts": {
+        "lateAbortAfterRealDisarm": "true",
+        "sameSocket": "true",
+        "workerHeldFeesUntilActualExit": "true",
+        "nextRequestPong": "true"
+      }
+    },
+    {
+      "directory": "processor-reuse-468250b0-5981-439e-8198-36526275b147",
+      "nativeExit": "0",
+      "facts": {
+        "pipelinedPingResponses": "2",
+        "sameProcessorId": "1",
+        "differentSocket": "true",
+        "lateActionCalls": "0"
+      }
+    }
+  ],
+  "nativeChildCount": 49,
+  "badNativeExits": []
+}

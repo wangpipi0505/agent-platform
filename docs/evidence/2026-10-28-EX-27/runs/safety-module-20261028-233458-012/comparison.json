@@ -1,0 +1,93 @@
+﻿{
+    "reference":  "EX00/comparison-baseline.json",
+    "run":  "safety-module-20261028-233458-012",
+    "nativeMavenExit":  1,
+    "baselineMethods":  254,
+    "baselineAttempts":  [
+                             {
+                                 "attempt":  "20261028-164553-272",
+                                 "count":  29
+                             },
+                             {
+                                 "attempt":  "20261028-173319-158",
+                                 "count":  225
+                             }
+                         ],
+    "baselineClasses":  26,
+    "afterMethods":  288,
+    "afterClasses":  27,
+    "reports":  27,
+    "statuses":  [
+                     {
+                         "status":  "PASS",
+                         "count":  273
+                     },
+                     {
+                         "status":  "FAIL",
+                         "count":  7
+                     },
+                     {
+                         "status":  "ERROR",
+                         "count":  8
+                     }
+                 ],
+    "expectedMethods":  288,
+    "restoredOriginalProxyMethods":  30,
+    "newProxyMethods":  [
+                            "closeBeforeActiveRegistrationRejectsItsLateContextWith503",
+                            "closeAfterFiniteWriteClaimPreservesTheClaimedSuccessStatus",
+                            "timerAndRealServletTimeoutCannotDeadlockClose"
+                        ],
+    "proxyReported":  33,
+    "originalSseMethods":  37,
+    "newSseMethods":  [
+                          "offLockCloseDuringProcessingRetainsSafetyWithoutInventingRecycle"
+                      ],
+    "sseReported":  38,
+    "missingClasses":  [
+
+                       ],
+    "unexpectedClasses":  [
+
+                          ],
+    "missingBaselineMethods":  [
+
+                               ],
+    "missingOriginalProxy":  [
+
+                             ],
+    "missingExpectedProxy":  [
+
+                             ],
+    "missingSse":  [
+
+                   ],
+    "unexpectedAdded":  [
+
+                        ],
+    "newlyNonpassing":  [
+
+                        ],
+    "changedReportedMethods":  [
+                                   {
+                                       "key":  "cn.agentplatform.gateway.infra.PortalEventsTlsTest#plainObserverDetectsApplicationAndAdditionalConnectionNegativeControl",
+                                       "before":  "FAIL",
+                                       "after":  "PASS"
+                                   }
+                               ],
+    "retainedNonpassCauseChanges":  [
+
+                                    ],
+    "retainedNonpassMethods":  15,
+    "collectionComplete":  true,
+    "regressionGate":  true,
+    "allTestsPassed":  false,
+    "environmentDisclosure":  [
+                                  "Per-class fresh JVM via -DreuseForks=false differs from original EX00 fork reuse; no ServiceTokens reset",
+                                  "AP dependency restoration is an environment fact from EX35/dependency-recovery.json, not a product fix",
+                                  "Gateway YAML includes EX01 explicit service environment configuration; its exact SHA is frozen before/after each run"
+                              ],
+    "originalEx35ModuleFailurePreserved":  true,
+    "ex27DiagnosticFailurePreserved":  true,
+    "earlierFixtureCompileFailurePreserved":  true
+}

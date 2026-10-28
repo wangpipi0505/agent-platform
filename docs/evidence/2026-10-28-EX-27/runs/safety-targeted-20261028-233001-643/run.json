@@ -1,0 +1,65 @@
+﻿{
+    "stage":  "targeted",
+    "startedAt":  "2026-10-28T23:30:01.6952680+08:00",
+    "endedAt":  "2026-10-28T23:30:30.9380807+08:00",
+    "exitCode":  0,
+    "headAtStart":  "0cc967278007343bd5ab09faf9953d86cd573bf8",
+    "headAtEnd":  "0cc967278007343bd5ab09faf9953d86cd573bf8",
+    "command":  "mvn.cmd -B -ntp -pl platform-gateway test -Dmaven.repo.local=G:\\207\\项目\\算法重组工具\\代码\\agent-platform/.tools/m2 -DargLine=-Xmx1024m -Djdk.net.unixdomain.tmpdir=V:/.local/tmp -DreuseForks=false -Dsurefire.timeout=900 -Dsurefire.failIfNoSpecifiedTests=true -Dtest=PortalRunEventsSseLifecycleTest#forcedConnectorReleaseInvalidatesTokensWithoutInventingCompletion+offLockCloseDuringProcessingRetainsSafetyWithoutInventingRecycle",
+    "freshForkPerClass":  true,
+    "diagnosticFlag":  false,
+    "collectorSha256":  "97093862970F450E0539E544AA6BE39C885C23C96EEA77921AA4DB7E2E190CE6",
+    "sourceSha256":  "6B144C0033CE22556996897824B2F0D864A862E39F6E12EF2C21B5212B5199C1",
+    "fingerprintChanges":  [
+
+                           ],
+    "sourceTestClasses":  [
+                              "GatewayPortalEventsServletTest",
+                              "GatewayPublishedChainPostgresTest",
+                              "GatewayPublishedRunProxyTest",
+                              "GatewayRunStatusChainPostgresTest",
+                              "IntegrationPolicyTest",
+                              "IntegrationRateLimitTest",
+                              "IntegrationSecurityTest",
+                              "PortalEventsMaterialAuthorityTest",
+                              "PortalEventsMaterialVerifierTest",
+                              "PortalEventsPacketBudgetTest",
+                              "PortalEventsPacketDecoderTest",
+                              "PortalEventsTlsDebtTest",
+                              "PortalEventsTlsTest",
+                              "PortalRunEventsHttpTest",
+                              "PortalRunEventsJoinedChainTest",
+                              "PortalRunEventsPrivateAuthorityTest",
+                              "PortalRunEventsPrivateHttpTest",
+                              "PortalRunEventsSseAutomaticCleanupTest",
+                              "PortalRunEventsSseLifecycleTest",
+                              "PortalRunEventsSseResetCleanupTest",
+                              "PortalRunEventsSseTest",
+                              "PortalSessionHttpTest",
+                              "PublishedMetadataClientTest",
+                              "PublishedMetadataSmokeLauncherTest",
+                              "RoutesTest",
+                              "RunObservationEventsMetadataTest",
+                              "RunObservationGetTransportTest"
+                          ],
+    "configurationSha256":  "AF038F68E0CA2E3EEEEB0C5240B2C2DA1EF647D680500F63AF1564975EBAFD4A",
+    "developmentFlagPresent":  true,
+    "postgresTestsEnabled":  true,
+    "reportCount":  1,
+    "methodCount":  2,
+    "statuses":  [
+                     {
+                         "status":  "PASS",
+                         "count":  2
+                     }
+                 ],
+    "childCount":  2,
+    "badOrMissingChildExits":  [
+
+                               ],
+    "collectionErrors":  [
+
+                         ],
+    "independentPowerShellProcess":  true,
+    "serviceTokensReset":  false
+}
