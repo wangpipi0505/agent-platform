@@ -1,0 +1,31 @@
+﻿{
+    "phase":  "red-spring",
+    "module":  "engine-runtime",
+    "arguments":  [
+                      "-B",
+                      "-ntp",
+                      "-pl",
+                      "engine-runtime",
+                      "test",
+                      "-Dmaven.repo.local=G:\\207\\项目\\算法重组工具\\代码\\agent-platform/.tools/m2",
+                      "-DargLine=-Xmx1024m -Djdk.net.unixdomain.tmpdir=V:/.local/tmp",
+                      "-Dsurefire.timeout=900",
+                      "-Dsurefire.failIfNoSpecifiedTests=true",
+                      "-Dtest=OntologyContextPacksTest"
+                  ],
+    "startedAt":  "2026-10-28T22:55:50.6894730+08:00",
+    "endedAt":  "2026-10-28T22:56:00.9195909+08:00",
+    "exitCode":  1,
+    "headAtStart":  "0cc967278007343bd5ab09faf9953d86cd573bf8",
+    "headAtEnd":  "0cc967278007343bd5ab09faf9953d86cd573bf8",
+    "sourceSha256":  {
+                         "engine-runtime/src/test/java/cn/agentplatform/engine/infra/OntologyContextPacksTest.java":  "6C1652FD420AA9D876548D72D2142E7D61DF51CEB223109A05D007AAC058A652",
+                         "engine-runtime/src/main/java/cn/agentplatform/engine/infra/OntologyContextPacks.java":  "290495341D58D2574C68912837DDA70A36EF279DA9916DE3CB40731EAAA56550"
+                     },
+    "environmentSha256":  "AF038F68E0CA2E3EEEEB0C5240B2C2DA1EF647D680500F63AF1564975EBAFD4A",
+    "developmentFlag":  true,
+    "postgresFlag":  true,
+    "selector":  "OntologyContextPacksTest",
+    "collectionOnly":  false,
+    "independentPowerShellProcessRequired":  true
+}

@@ -1,0 +1,34 @@
+﻿{
+    "phase":  "after-module",
+    "module":  "engine-runtime",
+    "arguments":  [
+                      "-B",
+                      "-ntp",
+                      "-pl",
+                      "engine-runtime",
+                      "test",
+                      "-Dmaven.repo.local=G:\\207\\项目\\算法重组工具\\代码\\agent-platform/.tools/m2",
+                      "-DargLine=-Xmx1024m -Djdk.net.unixdomain.tmpdir=V:/.local/tmp",
+                      "-Dsurefire.timeout=900",
+                      "-Dsurefire.failIfNoSpecifiedTests=true",
+                      "-Dmaven.test.failure.ignore=true"
+                  ],
+    "startedAt":  "2026-10-28T23:03:22.9167516+08:00",
+    "endedAt":  "2026-10-28T23:15:20.3017833+08:00",
+    "exitCode":  0,
+    "headAtStart":  "0cc967278007343bd5ab09faf9953d86cd573bf8",
+    "headAtEnd":  "0cc967278007343bd5ab09faf9953d86cd573bf8",
+    "sourceSha256":  {
+                         "engine-runtime/src/test/java/cn/agentplatform/engine/infra/OntologyContextPacksTest.java":  "6C1652FD420AA9D876548D72D2142E7D61DF51CEB223109A05D007AAC058A652",
+                         "engine-runtime/src/main/java/cn/agentplatform/engine/infra/OntologyContextPacks.java":  "9F462FF6D960FE11DB4412E7A7FF08230A7B864125D8C7AC46CF0C68A8B7DD74"
+                     },
+    "collectorSha256":  "71C5A23446C77008CFE113EF867337321892593F0AADBBB1C1414FC96ECED7BC",
+    "environmentSha256":  "AF038F68E0CA2E3EEEEB0C5240B2C2DA1EF647D680500F63AF1564975EBAFD4A",
+    "developmentFlag":  true,
+    "postgresFlag":  true,
+    "securityModePresent":  false,
+    "securityMode":  null,
+    "selector":  "",
+    "collectionOnly":  true,
+    "independentPowerShellProcessRequired":  true
+}

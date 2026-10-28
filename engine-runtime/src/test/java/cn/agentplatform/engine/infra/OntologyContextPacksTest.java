@@ -7,9 +7,13 @@ import cn.agentplatform.common.*;
 import com.sun.net.httpserver.HttpServer;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.core.env.MapPropertySource;
 
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.time.Clock;
 import java.util.*;
 import java.util.concurrent.*;
@@ -91,6 +95,41 @@ class OntologyContextPacksTest {
         body.put("message", "");
         body.set("data", data);
         return Json.write(body);
+    }
+
+    @Test
+    void springInjectsProductionConstructorAndUsesConfiguredSecretReference(@TempDir Path secretDir)
+            throws Exception {
+        String previousDir = System.getProperty("agent.secret.dir");
+        String previousKey = System.getProperty("agent.master.key");
+        System.setProperty("agent.secret.dir", secretDir.toString());
+        System.setProperty("agent.master.key", "ex36-spring-context-test-master-key-0123456789");
+        try (var stub = new Stub(); var context = new AnnotationConfigApplicationContext()) {
+            var actor = actor("ex36-spring-tenant");
+            String secret = "ex36-context-spring-test-key";
+            String reference = SecretVault.put(secret, actor);
+            stub.body.set(packBody());
+            context.getEnvironment()
+                    .getPropertySources()
+                    .addFirst(new MapPropertySource("ex36-test", Map.of(
+                            "agent.ontology.base-url", stub.baseUrl(),
+                            "agent.ontology.api-key-ref", reference)));
+            // 必须由真实Spring选择生产构造并注入属性；工厂直调掩盖了正式启动的多构造缺口。
+            context.register(OntologyContextPacks.class);
+            context.refresh();
+            var packs = context.getBean(OntologyContextPacks.class);
+            var pack = packs.fetch(actor.tenantId(), SPACE, RELEASE, actor);
+            assertEquals(Json.read(packBody()).path("data"), pack.body());
+            assertEquals(1, stub.count.get());
+            assertEquals("/onto/releases/" + RELEASE + "/context-pack", stub.paths.getFirst());
+            assertEquals(secret, header(stub.headers.getFirst(), "X-API-Key"));
+            assertNull(header(stub.headers.getFirst(), "Authorization"));
+        } finally {
+            if (previousDir == null) System.clearProperty("agent.secret.dir");
+            else System.setProperty("agent.secret.dir", previousDir);
+            if (previousKey == null) System.clearProperty("agent.master.key");
+            else System.setProperty("agent.master.key", previousKey);
+        }
     }
 
     @Test

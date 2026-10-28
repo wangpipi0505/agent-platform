@@ -4,6 +4,7 @@ import cn.agentplatform.common.*;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -78,6 +79,8 @@ public class OntologyContextPacks {
 
     private record BindingEntry(Binding binding, Instant expiresAt) {}
 
+    // 测试工厂也有独立构造，必须明确生产注入入口，避免Spring退回不存在的无参构造。
+    @Autowired
     public OntologyContextPacks(
             @Value("${agent.ontology.base-url:}") String baseUrl,
             @Value("${agent.ontology.api-key-ref:}") String keyRef) {
