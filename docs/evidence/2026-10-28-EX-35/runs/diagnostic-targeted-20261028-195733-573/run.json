@@ -1,0 +1,48 @@
+{
+  "phase": "diagnostic-targeted",
+  "selector": "GatewayPublishedRunProxyTest#timerAndRealServletTimeoutCannotDeadlockClose",
+  "startedAt": "2026-10-28T19:57:33.5797901+08:00",
+  "endedAt": "2026-10-28T19:57:52.5418592+08:00",
+  "exitCode": 1,
+  "command": "mvn.cmd -B -ntp -pl platform-gateway test -Dmaven.repo.local=G:\\207\\项目\\算法重组工具\\代码\\agent-platform/.tools/m2 -DargLine=-Xmx1024m -Djdk.net.unixdomain.tmpdir=V:/.local/tmp -Dsurefire.timeout=900 -Dsurefire.failIfNoSpecifiedTests=true -Dtest=GatewayPublishedRunProxyTest#timerAndRealServletTimeoutCannotDeadlockClose",
+  "head": "20333f35bc9f97dc11df296c04c8028e27fd42c8",
+  "reportCount": 1,
+  "methodCount": 1,
+  "statuses": [
+    {
+      "status": "FAIL",
+      "count": 1
+    }
+  ],
+  "sourceTestClasses": [
+    "GatewayPortalEventsServletTest",
+    "GatewayPublishedChainPostgresTest",
+    "GatewayPublishedRunProxyTest",
+    "GatewayRunStatusChainPostgresTest",
+    "IntegrationPolicyTest",
+    "IntegrationRateLimitTest",
+    "IntegrationSecurityTest",
+    "PortalEventsMaterialAuthorityTest",
+    "PortalEventsMaterialVerifierTest",
+    "PortalEventsPacketBudgetTest",
+    "PortalEventsPacketDecoderTest",
+    "PortalEventsTlsDebtTest",
+    "PortalEventsTlsTest",
+    "PortalRunEventsHttpTest",
+    "PortalRunEventsJoinedChainTest",
+    "PortalRunEventsPrivateAuthorityTest",
+    "PortalRunEventsPrivateHttpTest",
+    "PortalRunEventsSseAutomaticCleanupTest",
+    "PortalRunEventsSseLifecycleTest",
+    "PortalRunEventsSseResetCleanupTest",
+    "PortalRunEventsSseTest",
+    "PortalSessionHttpTest",
+    "PublishedMetadataClientTest",
+    "PublishedMetadataSmokeLauncherTest",
+    "RoutesTest",
+    "RunObservationEventsMetadataTest",
+    "RunObservationGetTransportTest"
+  ],
+  "developmentFlagPresent": true,
+  "postgresTestsEnabled": true
+}

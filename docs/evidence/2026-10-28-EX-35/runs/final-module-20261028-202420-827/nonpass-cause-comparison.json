@@ -1,0 +1,271 @@
+[
+  {
+    "classname": "cn.agentplatform.common.authority.GatewayRunStatusChainPostgresTest",
+    "method": "realGatewayQueryAndStatusReturnOriginalBytes",
+    "baselineType": "org.opentest4j.AssertionFailedError",
+    "afterType": "org.opentest4j.AssertionFailedError",
+    "typeUnchanged": true,
+    "baselineCauseTypes": [],
+    "afterCauseTypes": [],
+    "baselineBusinessFrames": [
+      "\tat cn.agentplatform.common.authority.GatewayRunStatusChainPostgresTest.realGatewayQueryAndStatusReturnOriginalBytes(GatewayRunStatusChainPostgresTest.java:110)"
+    ],
+    "afterBusinessFrames": [
+      "\tat cn.agentplatform.common.authority.GatewayRunStatusChainPostgresTest.realGatewayQueryAndStatusReturnOriginalBytes(GatewayRunStatusChainPostgresTest.java:110)"
+    ]
+  },
+  {
+    "classname": "cn.agentplatform.gateway.application.PublishedMetadataSmokeLauncherTest",
+    "method": "launchTwoIsolatedJvmFixturesWithFiniteDeadline",
+    "baselineType": "org.opentest4j.AssertionFailedError",
+    "afterType": "org.opentest4j.AssertionFailedError",
+    "typeUnchanged": true,
+    "baselineCauseTypes": [
+      "java.lang.ClassNotFoundException"
+    ],
+    "afterCauseTypes": [
+      "java.lang.ClassNotFoundException"
+    ],
+    "baselineBusinessFrames": [
+      "\tat cn.agentplatform.gateway.application.PublishedMetadataClient.ownedTransport(PublishedMetadataClient.java:40)",
+      "\tat cn.agentplatform.gateway.application.PublishedMetadataClient.<init>(PublishedMetadataClient.java:36)",
+      "\tat cn.agentplatform.common.authority.PublishedMetadataSmokeMain.main(PublishedMetadataSmokeMain.java:29)",
+      "\tat cn.agentplatform.gateway.application.PublishedMetadataSmokeLauncherTest.launchTwoIsolatedJvmFixturesWithFiniteDeadline(PublishedMetadataSmokeLauncherTest.java:19)"
+    ],
+    "afterBusinessFrames": [
+      "\tat cn.agentplatform.gateway.application.PublishedMetadataClient.ownedTransport(PublishedMetadataClient.java:40)",
+      "\tat cn.agentplatform.gateway.application.PublishedMetadataClient.<init>(PublishedMetadataClient.java:36)",
+      "\tat cn.agentplatform.common.authority.PublishedMetadataSmokeMain.main(PublishedMetadataSmokeMain.java:29)",
+      "\tat cn.agentplatform.gateway.application.PublishedMetadataSmokeLauncherTest.launchTwoIsolatedJvmFixturesWithFiniteDeadline(PublishedMetadataSmokeLauncherTest.java:19)"
+    ]
+  },
+  {
+    "classname": "cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest",
+    "method": "slowReaderCurrentAuthorityAndExpiry",
+    "baselineType": "org.opentest4j.AssertionFailedError",
+    "afterType": "org.opentest4j.AssertionFailedError",
+    "typeUnchanged": true,
+    "baselineCauseTypes": [],
+    "afterCauseTypes": [],
+    "baselineBusinessFrames": [
+      "\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.awaitFile(PortalRunEventsJoinedChainTest.java:56)",
+      "\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.focused(PortalRunEventsJoinedChainTest.java:125)",
+      "\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.focused(PortalRunEventsJoinedChainTest.java:118)",
+      "\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.slowReaderCurrentAuthorityAndExpiry(PortalRunEventsJoinedChainTest.java:115)",
+      "\t\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest$Child.close(PortalRunEventsJoinedChainTest.java:71)",
+      "\t\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.focused(PortalRunEventsJoinedChainTest.java:124)"
+    ],
+    "afterBusinessFrames": [
+      "\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.awaitFile(PortalRunEventsJoinedChainTest.java:56)",
+      "\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.focused(PortalRunEventsJoinedChainTest.java:125)",
+      "\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.focused(PortalRunEventsJoinedChainTest.java:118)",
+      "\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.slowReaderCurrentAuthorityAndExpiry(PortalRunEventsJoinedChainTest.java:115)",
+      "\t\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest$Child.close(PortalRunEventsJoinedChainTest.java:71)",
+      "\t\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.focused(PortalRunEventsJoinedChainTest.java:124)"
+    ]
+  },
+  {
+    "classname": "cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest",
+    "method": "retainedStreamControlledExpiry",
+    "baselineType": "org.opentest4j.AssertionFailedError",
+    "afterType": "org.opentest4j.AssertionFailedError",
+    "typeUnchanged": true,
+    "baselineCauseTypes": [],
+    "afterCauseTypes": [],
+    "baselineBusinessFrames": [
+      "\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.awaitFile(PortalRunEventsJoinedChainTest.java:56)",
+      "\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.focused(PortalRunEventsJoinedChainTest.java:125)",
+      "\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.retainedStreamControlledExpiry(PortalRunEventsJoinedChainTest.java:117)",
+      "\t\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest$Child.close(PortalRunEventsJoinedChainTest.java:71)",
+      "\t\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.focused(PortalRunEventsJoinedChainTest.java:124)"
+    ],
+    "afterBusinessFrames": [
+      "\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.awaitFile(PortalRunEventsJoinedChainTest.java:56)",
+      "\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.focused(PortalRunEventsJoinedChainTest.java:125)",
+      "\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.retainedStreamControlledExpiry(PortalRunEventsJoinedChainTest.java:117)",
+      "\t\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest$Child.close(PortalRunEventsJoinedChainTest.java:71)",
+      "\t\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.focused(PortalRunEventsJoinedChainTest.java:124)"
+    ]
+  },
+  {
+    "classname": "cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest",
+    "method": "exactPayloadAndRealRenewal",
+    "baselineType": "org.opentest4j.AssertionFailedError",
+    "afterType": "org.opentest4j.AssertionFailedError",
+    "typeUnchanged": true,
+    "baselineCauseTypes": [],
+    "afterCauseTypes": [],
+    "baselineBusinessFrames": [
+      "\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.awaitFile(PortalRunEventsJoinedChainTest.java:56)",
+      "\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.focused(PortalRunEventsJoinedChainTest.java:125)",
+      "\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.focused(PortalRunEventsJoinedChainTest.java:118)",
+      "\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.exactPayloadAndRealRenewal(PortalRunEventsJoinedChainTest.java:114)",
+      "\t\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest$Child.close(PortalRunEventsJoinedChainTest.java:71)",
+      "\t\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.focused(PortalRunEventsJoinedChainTest.java:124)"
+    ],
+    "afterBusinessFrames": [
+      "\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.awaitFile(PortalRunEventsJoinedChainTest.java:56)",
+      "\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.focused(PortalRunEventsJoinedChainTest.java:125)",
+      "\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.focused(PortalRunEventsJoinedChainTest.java:118)",
+      "\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.exactPayloadAndRealRenewal(PortalRunEventsJoinedChainTest.java:114)",
+      "\t\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest$Child.close(PortalRunEventsJoinedChainTest.java:71)",
+      "\t\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.focused(PortalRunEventsJoinedChainTest.java:124)"
+    ]
+  },
+  {
+    "classname": "cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest",
+    "method": "independentJoinedChainDeniesBeforeMaterialAndRelaysRealEngineOutput",
+    "baselineType": "org.opentest4j.AssertionFailedError",
+    "afterType": "org.opentest4j.AssertionFailedError",
+    "typeUnchanged": true,
+    "baselineCauseTypes": [],
+    "afterCauseTypes": [],
+    "baselineBusinessFrames": [
+      "\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.awaitFile(PortalRunEventsJoinedChainTest.java:56)",
+      "\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.independentJoinedChainDeniesBeforeMaterialAndRelaysRealEngineOutput(PortalRunEventsJoinedChainTest.java:164)",
+      "\t\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest$Child.close(PortalRunEventsJoinedChainTest.java:71)",
+      "\t\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.independentJoinedChainDeniesBeforeMaterialAndRelaysRealEngineOutput(PortalRunEventsJoinedChainTest.java:163)"
+    ],
+    "afterBusinessFrames": [
+      "\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.awaitFile(PortalRunEventsJoinedChainTest.java:56)",
+      "\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.independentJoinedChainDeniesBeforeMaterialAndRelaysRealEngineOutput(PortalRunEventsJoinedChainTest.java:164)",
+      "\t\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest$Child.close(PortalRunEventsJoinedChainTest.java:71)",
+      "\t\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.independentJoinedChainDeniesBeforeMaterialAndRelaysRealEngineOutput(PortalRunEventsJoinedChainTest.java:163)"
+    ]
+  },
+  {
+    "classname": "cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest",
+    "method": "retainedTerminalHistoryScopeInventory",
+    "baselineType": "org.opentest4j.AssertionFailedError",
+    "afterType": "org.opentest4j.AssertionFailedError",
+    "typeUnchanged": true,
+    "baselineCauseTypes": [],
+    "afterCauseTypes": [],
+    "baselineBusinessFrames": [
+      "\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.awaitFile(PortalRunEventsJoinedChainTest.java:56)",
+      "\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.focused(PortalRunEventsJoinedChainTest.java:125)",
+      "\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.retainedTerminalHistoryScopeInventory(PortalRunEventsJoinedChainTest.java:116)",
+      "\t\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest$Child.close(PortalRunEventsJoinedChainTest.java:71)",
+      "\t\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.focused(PortalRunEventsJoinedChainTest.java:124)"
+    ],
+    "afterBusinessFrames": [
+      "\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.awaitFile(PortalRunEventsJoinedChainTest.java:56)",
+      "\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.focused(PortalRunEventsJoinedChainTest.java:125)",
+      "\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.retainedTerminalHistoryScopeInventory(PortalRunEventsJoinedChainTest.java:116)",
+      "\t\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest$Child.close(PortalRunEventsJoinedChainTest.java:71)",
+      "\t\tat cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest.focused(PortalRunEventsJoinedChainTest.java:124)"
+    ]
+  },
+  {
+    "classname": "cn.agentplatform.gateway.infra.PortalRunEventsSseAutomaticCleanupTest",
+    "method": "actualCompletionAutomaticallyRefundsAfterTransportHelperReturns",
+    "baselineType": "java.lang.NullPointerException",
+    "afterType": "java.lang.NullPointerException",
+    "typeUnchanged": true,
+    "baselineCauseTypes": [],
+    "afterCauseTypes": [],
+    "baselineBusinessFrames": [
+      "\tat cn.agentplatform.gateway.infra.PortalRunEventsSseAutomaticCleanupTest.actualCompletionAutomaticallyRefundsAfterTransportHelperReturns(PortalRunEventsSseAutomaticCleanupTest.java:19)"
+    ],
+    "afterBusinessFrames": [
+      "\tat cn.agentplatform.gateway.infra.PortalRunEventsSseAutomaticCleanupTest.actualCompletionAutomaticallyRefundsAfterTransportHelperReturns(PortalRunEventsSseAutomaticCleanupTest.java:19)"
+    ]
+  },
+  {
+    "classname": "cn.agentplatform.gateway.infra.PortalRunEventsSseResetCleanupTest",
+    "method": "terminalResetAutomaticallyRefundsWhenReaderAbortOverlapsCompletion",
+    "baselineType": "java.lang.NullPointerException",
+    "afterType": "java.lang.NullPointerException",
+    "typeUnchanged": true,
+    "baselineCauseTypes": [],
+    "afterCauseTypes": [],
+    "baselineBusinessFrames": [
+      "\tat cn.agentplatform.gateway.infra.PortalRunEventsSseResetCleanupTest.terminalResetAutomaticallyRefundsWhenReaderAbortOverlapsCompletion(PortalRunEventsSseResetCleanupTest.java:18)"
+    ],
+    "afterBusinessFrames": [
+      "\tat cn.agentplatform.gateway.infra.PortalRunEventsSseResetCleanupTest.terminalResetAutomaticallyRefundsWhenReaderAbortOverlapsCompletion(PortalRunEventsSseResetCleanupTest.java:18)"
+    ]
+  },
+  {
+    "classname": "cn.agentplatform.gateway.IntegrationSecurityTest",
+    "method": "directServiceApiAuthenticatesApiKeyThenPassesOnlyScopedInternalTicket",
+    "baselineType": "java.lang.IllegalStateException",
+    "afterType": "java.lang.IllegalStateException",
+    "typeUnchanged": true,
+    "baselineCauseTypes": [
+      "java.lang.IllegalStateException"
+    ],
+    "afterCauseTypes": [
+      "java.lang.IllegalStateException"
+    ],
+    "baselineBusinessFrames": [
+      "\tat cn.agentplatform.common.authority.AuthorityProperties.invalid(AuthorityProperties.java:102)",
+      "\tat cn.agentplatform.common.authority.AuthorityProperties.validate(AuthorityProperties.java:30)",
+      "\tat cn.agentplatform.common.authority.AuthorityProperties.validateDeployment(AuthorityProperties.java:80)",
+      "\tat cn.agentplatform.common.SecurityConfiguration.bindDeployment(SecurityConfiguration.java:60)",
+      "\tat cn.agentplatform.common.SecurityConfiguration.lambda$authorityModeGuard$0(SecurityConfiguration.java:46)"
+    ],
+    "afterBusinessFrames": [
+      "\tat cn.agentplatform.common.authority.AuthorityProperties.invalid(AuthorityProperties.java:102)",
+      "\tat cn.agentplatform.common.authority.AuthorityProperties.validate(AuthorityProperties.java:30)",
+      "\tat cn.agentplatform.common.authority.AuthorityProperties.validateDeployment(AuthorityProperties.java:80)",
+      "\tat cn.agentplatform.common.SecurityConfiguration.bindDeployment(SecurityConfiguration.java:60)",
+      "\tat cn.agentplatform.common.SecurityConfiguration.lambda$authorityModeGuard$0(SecurityConfiguration.java:46)"
+    ]
+  },
+  {
+    "classname": "cn.agentplatform.gateway.IntegrationSecurityTest",
+    "method": "revocationAndPolicyChangeImmediatelyRejectExistingTicket",
+    "baselineType": "java.lang.IllegalStateException",
+    "afterType": "java.lang.IllegalStateException",
+    "typeUnchanged": true,
+    "baselineCauseTypes": [],
+    "afterCauseTypes": [],
+    "baselineBusinessFrames": [],
+    "afterBusinessFrames": []
+  },
+  {
+    "classname": "cn.agentplatform.gateway.IntegrationSecurityTest",
+    "method": "refusesInvalidSecretBeforeIssuingTicket",
+    "baselineType": "java.lang.IllegalStateException",
+    "afterType": "java.lang.IllegalStateException",
+    "typeUnchanged": true,
+    "baselineCauseTypes": [],
+    "afterCauseTypes": [],
+    "baselineBusinessFrames": [],
+    "afterBusinessFrames": []
+  },
+  {
+    "classname": "cn.agentplatform.gateway.IntegrationSecurityTest",
+    "method": "validTicketCannotAccessAdminOrOtherAppOrOtherAppRun",
+    "baselineType": "java.lang.IllegalStateException",
+    "afterType": "java.lang.IllegalStateException",
+    "typeUnchanged": true,
+    "baselineCauseTypes": [],
+    "afterCauseTypes": [],
+    "baselineBusinessFrames": [],
+    "afterBusinessFrames": []
+  },
+  {
+    "classname": "cn.agentplatform.gateway.IntegrationSecurityTest",
+    "method": "corsAllowsRegisteredOriginAndRejectsUnknownOrigin",
+    "baselineType": "java.lang.IllegalStateException",
+    "afterType": "java.lang.IllegalStateException",
+    "typeUnchanged": true,
+    "baselineCauseTypes": [],
+    "afterCauseTypes": [],
+    "baselineBusinessFrames": [],
+    "afterBusinessFrames": []
+  },
+  {
+    "classname": "cn.agentplatform.gateway.IntegrationSecurityTest",
+    "method": "boundedEngineRetryAfterSurvivesGatewayWithoutOpeningOtherHeaders",
+    "baselineType": "java.lang.IllegalStateException",
+    "afterType": "java.lang.IllegalStateException",
+    "typeUnchanged": true,
+    "baselineCauseTypes": [],
+    "afterCauseTypes": [],
+    "baselineBusinessFrames": [],
+    "afterBusinessFrames": []
+  }
+]

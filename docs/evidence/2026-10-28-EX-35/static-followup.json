@@ -1,0 +1,14 @@
+{
+  "kind": "static-review-followup",
+  "finding": "Two separate closed.get reads could observe false then true and terminate a late context without selecting 503",
+  "change": "Compute stopped once, then use the same stopped result for the nonterminal rejection status",
+  "reproducer": "No artificial hook between atomic reads; bounded pre-active-close regression retained",
+  "beforeProductSha256": "F5EDDB05A91B7134A1FF00AE102402ACB9EA254E106271D8A682F169EE3927B0",
+  "afterProductSha256": "B4AFF02FFC69CBDC5697A5B7D1B9BC6151B6D75D180791AD5B05E5926C92E129",
+  "testSha256": "03533FDD869AC48D3F1036871FCA76F0EE4CDB05B98A03FA8D62C78F00E376D6",
+  "reviewRequestedFrom": "/root/ex35_independent_review",
+  "finalShaReviewPending": false,
+  "testWindow": "Returned to root after final-module-20261028-202420-827 completed; no Maven/PG/HTTP/Java during handoff",
+  "confirmedBy": "/root/ex35_independent_review",
+  "confirmationRecordedAt": "2026-10-28T20:40:43.9833833+08:00"
+}

@@ -1,0 +1,24 @@
+{
+  "moduleRun": "frozen-module-20261028-205724-595",
+  "gatePassed": false,
+  "collectionComplete": true,
+  "baselineMethodCount": 254,
+  "afterMethodCount": 287,
+  "newNonpassing": [
+    {
+      "key": "cn.agentplatform.gateway.infra.PortalRunEventsSseLifecycleTest#forcedConnectorReleaseInvalidatesTokensWithoutInventingCompletion",
+      "before": "PASS",
+      "after": "FAIL",
+      "baselineAttempt": "20261028-173319-158"
+    }
+  ],
+  "missingBaselineMethods": 0,
+  "missingOriginalProxyMethods": 0,
+  "classLevelCases": 0,
+  "proxyReportedMethodCount": 33,
+  "nonpassingProxyMethods": 0,
+  "frozenSourcesStillMatch": true,
+  "additionalObservation": "lifecycle-repeat-1-20261028-211206-488 PASS; does not replace module FAIL",
+  "reason": "New SSE method failure requires attribution or independent follow-up; old TLS failure disappearing cannot offset it",
+  "sseProductAndTestModified": false
+}

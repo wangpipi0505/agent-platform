@@ -82,7 +82,7 @@ public final class PublishedRunProxy implements AutoCloseable {
         active.add(exchange);
         // MVC must observe this same async request as started when the void controller returns.
         try {
-            mvc.addTimeoutHandler(() -> exchange.fail(503));
+            mvc.addTimeoutHandler(exchange::servletTimeout);
             mvc.addErrorHandler(e -> exchange.terminate());
             mvc.addCompletionHandler(exchange::terminate);
             mvc.setTimeout(
@@ -120,7 +120,14 @@ public final class PublishedRunProxy implements AutoCloseable {
         private GatewayRunAuthorization proof;
         private byte[] output;
         private int position;
-        private boolean success, listenerInstalled;
+        private boolean success,
+                listenerInstalled,
+                writing,
+                cancellationRequested,
+                cancellationStarted;
+        private int servletCalls, responseStatus = 200;
+        private final AtomicInteger observedInstalls = new AtomicInteger(),
+                observedCancels = new AtomicInteger();
 
         Exchange(
                 HttpServletRequest request,
@@ -135,112 +142,143 @@ public final class PublishedRunProxy implements AutoCloseable {
             if (closed.get()
                     || state == State.TERMINAL
                     || deadline - System.nanoTime() <= 0
-                    || cancellation.cancelled()) throw unavailable();
+                    || cancellationRequested) throw unavailable();
         }
 
         // startAsync stays outside this monitor: close must not wait for external framework code.
         // Whichever side sees a late handle owns completing it, even if terminal already won.
-        private synchronized boolean installAsync(AsyncContext actual) {
-            if (state == State.TERMINAL) {
-                completeAsync(actual);
-                return false;
+        private boolean installAsync(AsyncContext actual) {
+            boolean stopped;
+            AsyncContext completion;
+            synchronized (this) {
+                async = actual;
+                stopped = state == State.TERMINAL || closed.get();
+                if (stopped && state != State.TERMINAL) responseStatus = 503;
+                completion = takeCompletion();
             }
-            async = actual;
-            if (closed.get()) {
-                fail(503);
+            completeAsync(completion);
+            if (stopped) {
                 terminate();
                 return false;
             }
-            // Terminal and timeout installation share the monitor; no task can appear after
-            // cleanup.
-            timeout =
+            var task =
                     timeouts.schedule(
                             () -> fail(503),
                             Math.max(1, deadline - System.nanoTime()),
                             TimeUnit.NANOSECONDS);
-            return true;
+            synchronized (this) {
+                stopped = state == State.TERMINAL;
+                if (!stopped) timeout = task;
+            }
+            if (stopped) task.cancel(false);
+            return !stopped;
         }
 
-        synchronized void read() throws IOException {
-            if (state != State.READING) return;
-            if (request.getContentLengthLong() > MAX) {
-                fail(413);
-                return;
-            }
-            if (request.getHeader("Content-Encoding") != null
-                    || request.getContentType() == null
-                    || !request.getContentType()
-                            .matches("(?i)application/json(?:\\s*;\\s*charset\\s*=\\s*UTF-8)?")) {
-                fail(415);
-                return;
-            }
-            var in = request.getInputStream();
-            in.setReadListener(
-                    new ReadListener() {
-                        public void onDataAvailable() {
-                            try {
-                                synchronized (Exchange.this) {
-                                    if (state != State.READING) return;
-                                    byte[] b = new byte[8192];
-                                    while (in.isReady() && !in.isFinished()) {
-                                        live();
-                                        int n = in.read(b);
-                                        if (n < 0) break;
-                                        if (n > MAX - input.size()) {
-                                            fail(413);
-                                            return;
-                                        }
-                                        input.write(b, 0, n);
-                                    }
-                                }
-                            } catch (Exception e) {
-                                fail(503);
-                            }
-                        }
-
-                        public void onAllDataRead() {
-                            submit();
-                        }
-
-                        public void onError(Throwable error) {
-                            terminate();
-                        }
-                    });
-        }
-
-        private synchronized void submit() {
-            if (state != State.READING) return;
+        void read() throws IOException {
+            if (!beginServlet(State.READING)) return;
             try {
-                live();
+                if (request.getContentLengthLong() > MAX) {
+                    fail(413);
+                    return;
+                }
+                if (request.getHeader("Content-Encoding") != null
+                        || request.getContentType() == null
+                        || !request.getContentType()
+                                .matches(
+                                        "(?i)application/json(?:\\s*;\\s*charset\\s*=\\s*UTF-8)?")) {
+                    fail(415);
+                    return;
+                }
+                var in = request.getInputStream();
+                in.setReadListener(
+                        new ReadListener() {
+                            public void onDataAvailable() {
+                                try {
+                                    if (!beginServlet(State.READING)) return;
+                                    try {
+                                        byte[] b = new byte[8192];
+                                        while (in.isReady() && !in.isFinished()) {
+                                            synchronized (Exchange.this) {
+                                                if (state != State.READING) return;
+                                                live();
+                                            }
+                                            int n = in.read(b);
+                                            if (n < 0) break;
+                                            synchronized (Exchange.this) {
+                                                if (state != State.READING) return;
+                                                if (n > MAX - input.size())
+                                                    throw new PlatformException(
+                                                            413, "INVALID_JSON", "请求过大");
+                                                input.write(b, 0, n);
+                                            }
+                                        }
+                                    } finally {
+                                        endServlet();
+                                    }
+                                } catch (PlatformException e) {
+                                    fail(e.status());
+                                } catch (Exception e) {
+                                    fail(503);
+                                }
+                            }
+
+                            public void onAllDataRead() {
+                                submit();
+                            }
+
+                            public void onError(Throwable error) {
+                                terminate();
+                            }
+                        });
+            } finally {
+                endServlet();
+            }
+        }
+
+        private void submit() {
+            if (!beginServlet(State.READING)) return;
+            try {
                 if (!request.getTrailerFields().isEmpty())
                     throw new PlatformException(400, "INVALID_JSON", "请求格式不支持");
-                byte[] body = input.toByteArray();
+                byte[] body;
+                synchronized (this) {
+                    if (state != State.READING) return;
+                    live();
+                    body = input.toByteArray();
+                }
                 var node = JSON.readTree(body);
                 if (node == null || !node.isObject()) throw new IOException("JSON object required");
-                state = State.UPSTREAM;
-                var portal = source;
-                source = null;
-                input.reset();
-                future =
-                        new FutureTask<>(
-                                () -> {
-                                    worker = Thread.currentThread();
-                                    workerStarts.incrementAndGet();
-                                    try {
-                                        upstream(portal, body);
-                                    } finally {
-                                        handleInstalls.addAndGet(cancellation.installedHandles());
-                                        handleCancels.addAndGet(cancellation.cancelledHandles());
-                                        workerExits.incrementAndGet();
-                                        worker = null;
-                                    }
-                                    return null;
-                                });
-                workers.execute(future);
+                FutureTask<Void> task;
+                synchronized (this) {
+                    if (state != State.READING) return;
+                    live();
+                    state = State.UPSTREAM;
+                    var portal = source;
+                    source = null;
+                    input.reset();
+                    task =
+                            future =
+                                    new FutureTask<>(
+                                            () -> {
+                                                worker = Thread.currentThread();
+                                                workerStarts.incrementAndGet();
+                                                try {
+                                                    upstream(portal, body);
+                                                } finally {
+                                                    observeHandles();
+                                                    workerExits.incrementAndGet();
+                                                    worker = null;
+                                                }
+                                                return null;
+                                            });
+                }
+                workers.execute(task);
             } catch (PlatformException e) {
                 fail(e.status());
             } catch (Exception e) {
                 fail(400);
+            } finally {
+                endServlet();
             }
         }
 
@@ -300,8 +338,8 @@ public final class PublishedRunProxy implements AutoCloseable {
                     output = result.body();
                     success = true;
                     state = State.WRITING;
-                    installWriter();
                 }
+                installWriter();
             } catch (PlatformException e) {
                 fail(e.status());
             } catch (Exception e) {
@@ -310,33 +348,61 @@ public final class PublishedRunProxy implements AutoCloseable {
         }
 
         private void installWriter() {
-            if (listenerInstalled || state != State.WRITING) return;
-            listenerInstalled = true;
+            int status;
+            synchronized (this) {
+                if (listenerInstalled || state != State.WRITING) return;
+                listenerInstalled = true;
+                servletCalls++;
+                status = responseStatus;
+            }
             try {
-                response.setStatus(success ? 200 : response.getStatus());
+                response.setStatus(status);
                 response.setContentType("application/json;charset=UTF-8");
                 var out = response.getOutputStream();
                 out.setWriteListener(
                         new WriteListener() {
                             public void onWritePossible() {
                                 synchronized (Exchange.this) {
-                                    try {
-                                        if (state != State.WRITING) return;
-                                        while (position < output.length && out.isReady()) {
+                                    if (state != State.WRITING || writing) return;
+                                    writing = true;
+                                    servletCalls++;
+                                }
+                                try {
+                                    while (out.isReady()) {
+                                        byte[] bytes;
+                                        int offset, n;
+                                        synchronized (Exchange.this) {
+                                            if (state != State.WRITING) return;
                                             if (success) {
                                                 live();
                                                 proof.requireVerified();
                                             }
-                                            int n = Math.min(8192, output.length - position);
-                                            out.write(output, position, n);
+                                            bytes = output;
+                                            offset = position;
+                                            n = Math.min(8192, bytes.length - position);
                                             position += n;
                                         }
-                                        if (position == output.length) terminate();
-                                    } catch (PlatformException expired) {
-                                        fail(expired.status());
-                                    } catch (Exception error) {
-                                        terminate();
+                                        if (n == 0) {
+                                            terminate();
+                                            return;
+                                        }
+                                        // This finite chunk belongs to the callback before a
+                                        // concurrent terminal decision; completion waits for it.
+                                        out.write(bytes, offset, n);
+                                        if (offset + n == bytes.length) {
+                                            terminate();
+                                            return;
+                                        }
                                     }
+                                } catch (PlatformException expired) {
+                                    fail(expired.status());
+                                } catch (Exception error) {
+                                    terminate();
+                                } finally {
+                                    synchronized (Exchange.this) {
+                                        writing = false;
+                                    }
+                                    endServlet();
                                 }
                             }
 
@@ -346,6 +412,8 @@ public final class PublishedRunProxy implements AutoCloseable {
                         });
             } catch (Exception error) {
                 terminate();
+            } finally {
+                endServlet();
             }
         }
 
@@ -353,66 +421,138 @@ public final class PublishedRunProxy implements AutoCloseable {
         // Self-interruption would poison AsyncContext.complete before buffered bytes reach the
         // wire.
         // Future is installed before execute, under this Exchange monitor: no late Future install.
-        private void cancelWorker() {
-            if (future != null) future.cancel(worker != Thread.currentThread());
-        }
-
-        synchronized void fail(int status) {
-            if (state == State.TERMINAL) return;
-            if (response.isCommitted() || position > 0) {
-                terminate();
-                return;
+        private void cancelWork() {
+            FutureTask<Void> task;
+            synchronized (this) {
+                if (cancellationStarted) return;
+                cancellationStarted = true;
+                task = future;
             }
             cancellation.cancel();
-            cancelWorker();
-            success = false;
-            proof = null;
-            source = null;
-            input.reset();
-            response.setStatus(
-                    Set.of(400, 401, 403, 409, 413, 415, 503).contains(status) ? status : 503);
-            if (async == null) {
-                // Until we own the async handle, registering a writer can wait on Tomcat's request
-                // processor. Terminate now; the late installer completes the actual context.
-                terminate();
-                return;
-            }
-            output =
-                    Json.write(
-                                    new ApiResponse<>(
-                                            "GATEWAY_RUN_REJECTED",
-                                            "运行请求未完成，请检查权限或服务状态",
-                                            null,
-                                            null))
-                            .getBytes(java.nio.charset.StandardCharsets.UTF_8);
-            position = 0;
-            state = State.WRITING;
-            // If the output listener already owns this response, its next readiness callback writes
-            // the safe error. Never block, flush, close, or install a second listener here.
-            if (listenerInstalled) {
-                terminate();
-                return;
-            }
-            installWriter();
+            if (task != null) task.cancel(worker != Thread.currentThread());
+            observeHandles();
         }
 
-        synchronized void terminate() {
-            if (state == State.TERMINAL) return;
-            state = State.TERMINAL;
-            cancellation.cancel();
-            cancelWorker();
-            if (timeout != null) timeout.cancel(false);
-            source = null;
-            proof = null;
-            output = null;
-            input.reset();
-            active.remove(this);
-            completeAsync(async);
+        void fail(int status) {
+            if (!beginServlet(null)) return;
+            try {
+                boolean committed = response.isCommitted(), stop;
+                synchronized (this) {
+                    if (state == State.TERMINAL) return;
+                    stop = committed || position > 0 || listenerInstalled || async == null;
+                    cancellationRequested = true;
+                    source = null;
+                    input.reset();
+                    // A claimed finite chunk keeps the status that accompanied its authorization.
+                    // Once bytes are committed/claimed, termination may not relabel them as error.
+                    if (!committed && position == 0)
+                        responseStatus =
+                                Set.of(400, 401, 403, 409, 413, 415, 503).contains(status)
+                                        ? status
+                                        : 503;
+                    if (!stop) {
+                        success = false;
+                        proof = null;
+                        output =
+                                Json.write(
+                                                new ApiResponse<>(
+                                                        "GATEWAY_RUN_REJECTED",
+                                                        "运行请求未完成，请检查权限或服务状态",
+                                                        null,
+                                                        null))
+                                        .getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                        position = 0;
+                        state = State.WRITING;
+                    }
+                }
+                cancelWork();
+                // A reserved writer keeps its sole ownership even if registration has not returned.
+                if (stop) terminate();
+                else installWriter();
+            } finally {
+                endServlet();
+            }
+        }
+
+        void terminate() {
+            ScheduledFuture<?> timer;
+            AsyncContext completion;
+            synchronized (this) {
+                if (state == State.TERMINAL) return;
+                state = State.TERMINAL;
+                cancellationRequested = true;
+                timer = timeout;
+                timeout = null;
+                source = null;
+                proof = null;
+                output = null;
+                input.reset();
+                active.remove(this);
+                completion = takeCompletion();
+            }
+            cancelWork();
+            if (timer != null) timer.cancel(false);
+            completeAsync(completion);
+        }
+
+        private void servletTimeout() {
+            fail(503);
+            // A real container timeout must be acknowledged before its listener returns, or
+            // Tomcat handles it as an uncompleted timeout. A registration already in progress
+            // may still return later; terminal state prevents its callback from writing bytes.
+            terminate();
+            AsyncContext completion;
+            synchronized (this) {
+                completion = async;
+                async = null;
+            }
+            completeAsync(completion);
+        }
+
+        // No Servlet or cancellation call may hold the state monitor: container callbacks can
+        // enter it while owning Tomcat's processor lock. An in-flight registration/write owns its
+        // context until it returns, including callbacks invoked inline by setWriteListener.
+        private synchronized boolean beginServlet(State expected) {
+            if (state == State.TERMINAL || (expected != null && state != expected)) return false;
+            servletCalls++;
+            return true;
+        }
+
+        private void endServlet() {
+            AsyncContext completion;
+            synchronized (this) {
+                servletCalls--;
+                completion = takeCompletion();
+            }
+            completeAsync(completion);
+        }
+
+        private AsyncContext takeCompletion() {
+            if (state != State.TERMINAL || servletCalls != 0) return null;
+            var actual = async;
+            async = null;
+            return actual;
+        }
+
+        private void observeHandles() {
+            // Cancellation and worker exit can now overlap. Monotonic deltas retain late handle
+            // installs/cancels without counting the same owned handle twice.
+            int installs = cancellation.installedHandles(),
+                    cancels = cancellation.cancelledHandles();
+            handleInstalls.addAndGet(
+                    Math.max(0, installs - observedInstalls.getAndAccumulate(installs, Math::max)));
+            handleCancels.addAndGet(
+                    Math.max(0, cancels - observedCancels.getAndAccumulate(cancels, Math::max)));
         }
 
         private void completeAsync(AsyncContext actual) {
             if (actual != null)
                 try {
+                    int status;
+                    synchronized (this) {
+                        status = responseStatus;
+                    }
+                    if (status != 200 && !response.isCommitted()) response.setStatus(status);
                     actual.complete();
                 } catch (IllegalStateException ignored) {
                 }

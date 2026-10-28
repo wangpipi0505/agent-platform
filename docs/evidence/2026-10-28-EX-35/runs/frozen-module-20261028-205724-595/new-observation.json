@@ -1,0 +1,23 @@
+{
+  "method": "PortalRunEventsSseLifecycleTest#forcedConnectorReleaseInvalidatesTokensWithoutInventingCompletion",
+  "baseline": "PASS",
+  "current": "FAIL",
+  "frozenSourcesStillMatch": true,
+  "assertionNumericOrBooleanPairs": [
+    {
+      "expected": "true",
+      "actual": "false"
+    },
+    {
+      "expected": "0",
+      "actual": "1"
+    }
+  ],
+  "sourceLine695": "                    assertTrue(entered.await(5,TimeUnit.SECONDS));assertEquals(0,server.protocol.recyclesForTest());",
+  "productModified": false,
+  "testModified": false,
+  "claim": "New observation; no full-module acceptance. Need bounded repeat/attribution; no change outside whitelist.",
+  "failedAssertion": "entered.await(5 seconds) expected true, actual false",
+  "outerChildExitAssertion": "child:84 expected exitCode 0, actual 1; this is not a recycle count",
+  "recycleCountAssertionExecuted": false
+}

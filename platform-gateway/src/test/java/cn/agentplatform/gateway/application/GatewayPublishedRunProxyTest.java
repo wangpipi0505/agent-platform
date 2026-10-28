@@ -52,6 +52,8 @@ class GatewayPublishedRunProxyTest {
     static PublishedRunProxy proxy;
     static final String SHA = Digest.sha256("stored");
     static volatile AsyncInstallWindow asyncInstallWindow;
+    static volatile ServletTimeoutWindow servletTimeoutWindow;
+    static volatile WriteClaimWindow writeClaimWindow;
 
     @Configuration(proxyBeanMethods = false)
     @EnableAutoConfiguration(
@@ -104,8 +106,11 @@ class GatewayPublishedRunProxyTest {
                             (req, res, chain) -> {
                                 var response = (HttpServletResponse) res;
                                 var window = asyncInstallWindow;
+                                var timeoutWindow = servletTimeoutWindow;
                                 chain.doFilter(
-                                        window == null
+                                        timeoutWindow != null
+                                                ? timeoutWindow.wrap((HttpServletRequest) req)
+                                                : window == null
                                                 ? req
                                                 : window.wrap((HttpServletRequest) req),
                                         new HttpServletResponseWrapper(response) {
@@ -135,7 +140,9 @@ class GatewayPublishedRunProxyTest {
 
                                                                 public void setWriteListener(
                                                                         WriteListener l) {
-                                                                    out.setWriteListener(l);
+                                                                    if (timeoutWindow == null)
+                                                                        out.setWriteListener(l);
+                                                                    else timeoutWindow.install(out, l);
                                                                 }
 
                                                                 public void write(int b)
@@ -148,7 +155,9 @@ class GatewayPublishedRunProxyTest {
                                                                         byte[] b, int o, int n)
                                                                         throws java.io.IOException {
                                                                     writtenBytes.addAndGet(n);
-                                                                    out.write(b, o, n);
+                                                                    var claim = writeClaimWindow;
+                                                                    if (claim == null) out.write(b, o, n);
+                                                                    else claim.write(out, b, o, n);
                                                                 }
                                                             };
                                                 }
@@ -1544,10 +1553,338 @@ class GatewayPublishedRunProxyTest {
         assertCloseDuringAsyncInstallation(false);
     }
 
-    private static void assertCloseDuringAsyncInstallation(boolean beforeStart) throws Exception {
+    @Test
+    void closeBeforeActiveRegistrationRejectsItsLateContextWith503() throws Exception {
+        assertCloseDuringAsyncInstallation(true, true);
+    }
+
+    @Test
+    void closeAfterFiniteWriteClaimPreservesTheClaimedSuccessStatus() throws Exception {
         var saved = proxy;
         var savedAuthority = authority;
-        var window = new AsyncInstallWindow(beforeStart);
+        var window = new WriteClaimWindow();
+        var callers = Executors.newFixedThreadPool(2);
+        var closingThread = new AtomicReference<Thread>();
+        try (var c = boot(Receiver.class); var http = HttpClient.newHttpClient()) {
+            var closing = proxy;
+            writeClaimWindow = window;
+            try {
+                var response = callers.submit(() -> http.send(
+                        HttpRequest.newBuilder(URI.create("http://127.0.0.1:"
+                                        + c.getWebServer().getPort() + "/admin/apps/Demo/runs"))
+                                .header("Authorization", "Bearer " + iam.portal())
+                                .header("Content-Type", "application/json")
+                                .timeout(Duration.ofSeconds(8))
+                                .POST(HttpRequest.BodyPublishers.ofString("{}")).build(),
+                        HttpResponse.BodyHandlers.ofString()));
+                assertThat(window.paused.await(3, TimeUnit.SECONDS)).isTrue();
+                assertThat(window.claimed.length).isBetween(1, 8192);
+                var closed = callers.submit(() -> {
+                    closingThread.set(Thread.currentThread());
+                    closing.close();
+                });
+                long until = System.nanoTime() + TimeUnit.SECONDS.toNanos(1);
+                while (closing.observation().active() != 0 && System.nanoTime() < until)
+                    Thread.sleep(5);
+                assertThat(closing.observation().active()).isZero();
+                // Let close finish both cancellation/shutdown decisions before releasing the
+                // artificial output pause; close must still wait for its owned worker to exit.
+                until = System.nanoTime() + TimeUnit.SECONDS.toNanos(1);
+                boolean awaitingWorker = false;
+                while (!awaitingWorker && System.nanoTime() < until) {
+                    var thread = closingThread.get();
+                    awaitingWorker = thread != null && Arrays.stream(thread.getStackTrace()).anyMatch(
+                            frame -> frame.getClassName().startsWith("java.util.concurrent.")
+                                    && frame.getMethodName().equals("awaitTermination"));
+                    if (!awaitingWorker) Thread.sleep(5);
+                }
+                assertThat(awaitingWorker).isTrue();
+                window.resume.countDown();
+                closed.get(4, TimeUnit.SECONDS);
+                var result = response.get(4, TimeUnit.SECONDS);
+                System.out.println("EX35_RESERVED_WRITE=" + Json.write(Map.of(
+                        "status", result.statusCode(), "claimedBytes", window.claimed.length,
+                        "writtenBytes", writtenBytes.get(), "active", closing.observation().active(),
+                        "delegatedWrites", window.delegatedWrites.get(), "pauseInterrupts", window.pauseInterrupts.get(),
+                        "receivedBytes", result.body().getBytes(StandardCharsets.UTF_8).length,
+                        "bodyMatchesClaim", result.body().equals(new String(window.claimed, StandardCharsets.UTF_8)))));
+                assertThat(result.body()).isEqualTo(new String(window.claimed, StandardCharsets.UTF_8));
+                assertThat(result.statusCode()).isEqualTo(200);
+                assertThat(Json.read(result.body()).path("data").path("status").asText())
+                        .isEqualTo("SUCCEEDED");
+                assertThat(writtenBytes).hasValue(window.claimed.length);
+                assertThat(queries).hasValue(1);
+                assertThat(posts).hasValue(1);
+                assertThat(closing.observation().workerStarts()).isEqualTo(1);
+                assertThat(closing.observation().workerExits()).isEqualTo(1);
+                closing.close();
+                assertThat(writtenBytes).hasValue(window.claimed.length);
+            } finally {
+                window.resume.countDown();
+            }
+        } finally {
+            window.resume.countDown();
+            writeClaimWindow = null;
+            proxy = saved;
+            authority = savedAuthority;
+            callers.shutdownNow();
+            assertThat(callers.awaitTermination(3, TimeUnit.SECONDS)).isTrue();
+        }
+    }
+
+    static final class WriteClaimWindow {
+        final CountDownLatch paused = new CountDownLatch(1), resume = new CountDownLatch(1);
+        final AtomicBoolean once = new AtomicBoolean();
+        final AtomicInteger delegatedWrites = new AtomicInteger(), pauseInterrupts = new AtomicInteger();
+        volatile byte[] claimed;
+
+        void write(ServletOutputStream actual, byte[] bytes, int offset, int length)
+                throws java.io.IOException {
+            if (once.compareAndSet(false, true)) {
+                claimed = Arrays.copyOfRange(bytes, offset, offset + length);
+                paused.countDown();
+                long until = System.nanoTime() + TimeUnit.SECONDS.toNanos(4);
+                // The injected pause is not part of the real nonblocking Servlet write. Record
+                // cancellation interrupts without inventing an interruptible transport failure.
+                while (resume.getCount() != 0) {
+                    try {
+                        if (!resume.await(Math.max(1, until - System.nanoTime()), TimeUnit.NANOSECONDS))
+                            throw new java.io.IOException("finite write claim window");
+                    } catch (InterruptedException error) {
+                        pauseInterrupts.incrementAndGet();
+                    }
+                }
+            }
+            actual.write(bytes, offset, length);
+            delegatedWrites.incrementAndGet();
+        }
+    }
+
+    @Test
+    void timerAndRealServletTimeoutCannotDeadlockClose() throws Exception {
+        var output = new java.io.ByteArrayOutputStream();
+        var child =
+                new ProcessBuilder(
+                                java.nio.file.Path.of(System.getProperty("java.home"), "bin", "java.exe")
+                                        .toString(),
+                                "-Xmx256m",
+                                "-Djdk.net.unixdomain.tmpdir="
+                                        + System.getProperty("jdk.net.unixdomain.tmpdir", "V:/.local/tmp"),
+                                "-cp",
+                                System.getProperty(
+                                        "surefire.test.class.path", System.getProperty("java.class.path")),
+                                ServletTimeoutProbe.class.getName())
+                        .redirectErrorStream(true)
+                        .start();
+        var drain =
+                Thread.ofVirtual()
+                        .start(
+                                () -> {
+                                    try (var in = child.getInputStream()) {
+                                        in.transferTo(output);
+                                    } catch (java.io.IOException ignored) {
+                                    }
+                                });
+        boolean exited;
+        try {
+            exited = child.waitFor(30, TimeUnit.SECONDS);
+        } finally {
+            // A broken probe must not strand the Surefire fork or its AfterAll cleanup.
+            if (child.isAlive()) child.destroyForcibly();
+            assertThat(child.waitFor(3, TimeUnit.SECONDS)).isTrue();
+            drain.join(1000);
+        }
+        var facts =
+                output.toString(StandardCharsets.UTF_8).lines()
+                        .filter(line -> line.startsWith("EX35_"))
+                        .collect(java.util.stream.Collectors.joining("\n"));
+        System.out.println(facts);
+        assertThat(exited).as(facts).isTrue();
+        assertThat(child.exitValue()).as(facts).isZero();
+        assertThat(facts).contains("EX35_SCENARIO_PASS=").doesNotContain("EX35_DEADLOCK=");
+    }
+
+    /** Runs the real lock competition in a disposable JVM, including the original implementation. */
+    public static final class ServletTimeoutProbe {
+        public static void main(String[] args) {
+            var done = new AtomicBoolean();
+            Thread.ofPlatform()
+                    .daemon(true)
+                    .name("ex35-bounded-probe-watchdog")
+                    .start(
+                            () -> {
+                                long until = System.nanoTime() + TimeUnit.SECONDS.toNanos(24);
+                                var threads = java.lang.management.ManagementFactory.getThreadMXBean();
+                                while (!done.get() && System.nanoTime() < until) {
+                                    var deadlocked = threads.findDeadlockedThreads();
+                                    if (deadlocked != null) {
+                                        var facts = new ArrayList<Map<String, Object>>();
+                                        for (var info : threads.getThreadInfo(deadlocked, true, true)) {
+                                            var frames =
+                                                    Arrays.stream(info.getStackTrace())
+                                                            .map(f -> f.getClassName() + "." + f.getMethodName())
+                                                            .toList();
+                                            facts.add(Map.of("thread", info.getThreadName(),
+                                                    "waitingFor", info.getLockInfo().getClassName(),
+                                                    "owner", info.getLockOwnerName(), "frames", frames));
+                                        }
+                                        System.out.println("EX35_DEADLOCK=" + Json.write(facts));
+                                        System.out.flush();
+                                        Runtime.getRuntime().halt(86);
+                                    }
+                                    try {
+                                        Thread.sleep(25);
+                                    } catch (InterruptedException ignored) {
+                                        return;
+                                    }
+                                }
+                                if (!done.get()) {
+                                    System.out.println("EX35_PROBE_TIMEOUT=true");
+                                    System.out.flush();
+                                    Runtime.getRuntime().halt(87);
+                                }
+                            });
+            try {
+                servletTimeoutWindow = new ServletTimeoutWindow();
+                var window = servletTimeoutWindow;
+                start();
+                try (var socket = new Socket("127.0.0.1", context.getWebServer().getPort())) {
+                    socket.setSoTimeout(3000);
+                    socket.getOutputStream().write(
+                            ("POST /admin/apps/Demo/runs HTTP/1.1\r\n"
+                                    + "Host: 127.0.0.1\r\nAuthorization: Bearer " + iam.portal()
+                                    + "\r\nContent-Type: application/json\r\n"
+                                    + "Transfer-Encoding: chunked\r\nConnection: close\r\n\r\n1\r\n{\r\n")
+                                    .getBytes(StandardCharsets.UTF_8));
+                    socket.getOutputStream().flush();
+                    assertThat(window.writerEntered.await(8, TimeUnit.SECONDS)).isTrue();
+                    // Keep the product's five-second timer unchanged. Only schedule the actual
+                    // container callback after that timer has entered the registration window.
+                    window.actual.get().setTimeout(1);
+                    assertThat(window.timeoutEntered.await(3, TimeUnit.SECONDS)).isTrue();
+                    var closed = new CountDownLatch(1);
+                    var closeError = new AtomicReference<Throwable>();
+                    Thread.ofPlatform().daemon(true).name("ex35-real-proxy-close").start(() -> {
+                        try { proxy.close(); }
+                        catch (Throwable error) { closeError.set(error); }
+                        finally { closed.countDown(); }
+                    });
+                    assertThat(closed.await(4, TimeUnit.SECONDS)).isTrue();
+                    assertThat(closeError.get()).isNull();
+                    assertThat(window.timeoutReturned.await(1, TimeUnit.SECONDS)).isTrue();
+                    var response = new String(socket.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+                    assertThat(response).startsWith("HTTP/1.1 503");
+                    assertThat(window.completed.await(1, TimeUnit.SECONDS)).isTrue();
+                    assertThat(window.completeCalls).hasValue(1);
+                    assertThat(window.completionEvents).hasValue(1);
+                    assertThat(window.writerInstalls).hasValue(1);
+                    assertThat(proxy.observation().active()).isZero();
+                    assertThat(proxy.observation().workerStarts()).isZero();
+                    assertThat(queries).hasValue(0);
+                    assertThat(posts).hasValue(0);
+                    int bytes = writtenBytes.get();
+                    for (var listener : window.listeners) {
+                        listener.onTimeout(new AsyncEvent(window.actual.get()));
+                        listener.onError(new AsyncEvent(window.actual.get(), new java.io.IOException()));
+                    }
+                    proxy.close();
+                    assertThat(writtenBytes).hasValue(bytes);
+                    assertThat(window.completeCalls).hasValue(1);
+                    stop();
+                    System.out.println("EX35_SCENARIO_PASS=" + Json.write(Map.of(
+                            "completeCalls", window.completeCalls.get(),
+                            "completionEvents", window.completionEvents.get(),
+                            "writerInstalls", window.writerInstalls.get(),
+                            "active", proxy.observation().active(), "writtenBytes", bytes)));
+                }
+                done.set(true);
+            } catch (Throwable error) {
+                System.out.println("EX35_PROBE_ERROR=" + error.getClass().getName());
+                for (var frame : error.getStackTrace())
+                    System.out.println("EX35_PROBE_FRAME=" + frame.getClassName() + "." + frame.getMethodName()
+                            + ":" + frame.getLineNumber());
+                System.out.flush();
+                Runtime.getRuntime().halt(88);
+            }
+        }
+    }
+
+    static final class ServletTimeoutWindow {
+        final CountDownLatch writerEntered = new CountDownLatch(1),
+                timeoutEntered = new CountDownLatch(1), timeoutReturned = new CountDownLatch(1),
+                completed = new CountDownLatch(1);
+        final AtomicReference<AsyncContext> actual = new AtomicReference<>();
+        final AtomicInteger writerInstalls = new AtomicInteger(), completeCalls = new AtomicInteger(),
+                completionEvents = new AtomicInteger();
+        final List<AsyncListener> listeners = new CopyOnWriteArrayList<>();
+        volatile AsyncContext observed;
+
+        HttpServletRequest wrap(HttpServletRequest request) {
+            return new HttpServletRequestWrapper(request) {
+                @Override
+                public AsyncContext startAsync(ServletRequest req, ServletResponse res) {
+                    var real = super.startAsync(req, res);
+                    actual.set(real);
+                    observed = (AsyncContext) java.lang.reflect.Proxy.newProxyInstance(
+                            AsyncContext.class.getClassLoader(), new Class<?>[] {AsyncContext.class},
+                            (p, method, args) -> {
+                                if (method.getName().equals("setTimeout")) args = new Object[] {30000L};
+                                if (method.getName().equals("complete")) completeCalls.incrementAndGet();
+                                if (method.getName().equals("addListener")) {
+                                    var listener = (AsyncListener) args[0];
+                                    listeners.add(listener);
+                                    args = args.clone();
+                                    args[0] = new AsyncListener() {
+                                        public void onTimeout(AsyncEvent e) throws java.io.IOException {
+                                            timeoutEntered.countDown();
+                                            try { listener.onTimeout(e); }
+                                            finally { timeoutReturned.countDown(); }
+                                        }
+                                        public void onComplete(AsyncEvent e) throws java.io.IOException {
+                                            completionEvents.incrementAndGet();
+                                            try { listener.onComplete(e); }
+                                            finally { completed.countDown(); }
+                                        }
+                                        public void onError(AsyncEvent e) throws java.io.IOException { listener.onError(e); }
+                                        public void onStartAsync(AsyncEvent e) throws java.io.IOException { listener.onStartAsync(e); }
+                                    };
+                                }
+                                try { return method.invoke(real, args); }
+                                catch (java.lang.reflect.InvocationTargetException error) { throw error.getCause(); }
+                            });
+                    return observed;
+                }
+                @Override
+                public AsyncContext getAsyncContext() {
+                    return observed == null ? super.getAsyncContext() : observed;
+                }
+            };
+        }
+
+        void install(ServletOutputStream out, WriteListener listener) {
+            writerInstalls.incrementAndGet();
+            writerEntered.countDown();
+            try {
+                if (!timeoutEntered.await(3, TimeUnit.SECONDS))
+                    throw new IllegalStateException("EX35_CONTAINER_TIMEOUT_NOT_ENTERED");
+            } catch (InterruptedException error) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException(error);
+            }
+            // The real timeout callback owns Tomcat's processor lock at this boundary.
+            out.setWriteListener(listener);
+        }
+    }
+
+    private static void assertCloseDuringAsyncInstallation(boolean beforeStart) throws Exception {
+        assertCloseDuringAsyncInstallation(beforeStart, false);
+    }
+
+    private static void assertCloseDuringAsyncInstallation(boolean beforeStart, boolean beforeActive)
+            throws Exception {
+        var saved = proxy;
+        var savedAuthority = authority;
+        var window = new AsyncInstallWindow(beforeStart, beforeActive);
         var callers = Executors.newFixedThreadPool(2);
         Future<HttpResponse<String>> response = null;
         var http = HttpClient.newHttpClient();
@@ -1577,7 +1914,7 @@ class GatewayPublishedRunProxyTest {
                                             HttpResponse.BodyHandlers.ofString());
                                 });
                 assertThat(window.paused.await(3, TimeUnit.SECONDS)).isTrue();
-                assertThat(closing.observation().active()).isEqualTo(1);
+                assertThat(closing.observation().active()).isEqualTo(beforeActive ? 0 : 1);
                 if (beforeStart) assertThat(window.real.get()).isNull();
                 else assertThat(window.real.get()).isNotNull();
                 // close must return while the external Servlet API is still held by the fixture.
@@ -1607,6 +1944,11 @@ class GatewayPublishedRunProxyTest {
                 assertThat(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - resumedAt))
                         .isLessThan(2000);
                 var result = response.get(2, TimeUnit.SECONDS);
+                if (beforeActive)
+                    System.out.println("EX35_PRE_ACTIVE_CLOSE=" + Json.write(Map.of(
+                            "status", result.statusCode(), "completeCalls", window.completeCalls.get(),
+                            "completionEvents", window.completionEvents.get(),
+                            "active", closing.observation().active(), "writtenBytes", writtenBytes.get())));
                 assertThat(result.statusCode()).isEqualTo(503);
                 assertThat(result.body()).doesNotContain("r-finite");
                 assertThat(window.completeCalls).hasValue(1);
@@ -1679,7 +2021,7 @@ class GatewayPublishedRunProxyTest {
     }
 
     static final class AsyncInstallWindow {
-        final boolean beforeStart;
+        final boolean beforeStart, beforeActive;
         final CountDownLatch paused = new CountDownLatch(1),
                 resume = new CountDownLatch(1),
                 created = new CountDownLatch(1),
@@ -1693,8 +2035,9 @@ class GatewayPublishedRunProxyTest {
         volatile AsyncContext observed;
         volatile Thread pauseThread;
 
-        AsyncInstallWindow(boolean beforeStart) {
+        AsyncInstallWindow(boolean beforeStart, boolean beforeActive) {
             this.beforeStart = beforeStart;
+            this.beforeActive = beforeActive;
         }
 
         void pause() {
@@ -1712,6 +2055,15 @@ class GatewayPublishedRunProxyTest {
 
         HttpServletRequest wrap(HttpServletRequest request) {
             return new HttpServletRequestWrapper(request) {
+                @Override
+                public boolean isAsyncSupported() {
+                    boolean supported = super.isAsyncSupported();
+                    if (beforeActive && StackWalker.getInstance().walk(frames -> frames.anyMatch(
+                            frame -> frame.getClassName().equals(PublishedRunProxy.class.getName())
+                                    && frame.getMethodName().equals("start")))) pause();
+                    return supported;
+                }
+
                 @Override
                 public AsyncContext startAsync(ServletRequest req, ServletResponse res) {
                     if (beforeStart) pause();

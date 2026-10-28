@@ -1,0 +1,39 @@
+{
+  "recoveredAt": "2026-10-28T20:22:10.3251950+08:00",
+  "keeperExecSession": 2170,
+  "performedBy": "/root",
+  "initialObservation": "AP 25432/26379/29000 had no LISTEN; prior process disappearance cause not established",
+  "sourceScripts": [
+    "scripts/start-database.ps1",
+    "scripts/start-cache.ps1",
+    "scripts/start-object-store.ps1"
+  ],
+  "existingConfigurationFingerprintUnchanged": true,
+  "configurationSha256": "AF038F68E0CA2E3EEEEB0C5240B2C2DA1EF647D680500F63AF1564975EBAFD4A",
+  "dataCleared": false,
+  "newDatabaseCreated": false,
+  "apiStarted": false,
+  "listeners": [
+    {
+      "LocalAddress": "::1",
+      "LocalPort": 29000,
+      "OwningProcess": 7860
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 29000,
+      "OwningProcess": 7860
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 26379,
+      "OwningProcess": 57888
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 25432,
+      "OwningProcess": 15204
+    }
+  ],
+  "meaning": "Prerequisite recovery only; prior incomplete module run retained; not a product fix or module PASS"
+}

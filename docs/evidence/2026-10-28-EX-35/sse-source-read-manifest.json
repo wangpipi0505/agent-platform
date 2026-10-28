@@ -1,0 +1,28 @@
+{
+  "scope": "Read-only narrow mechanism attribution; no Java/Maven/local HTTP/PG; no dependency or product change",
+  "tag": "Tomcat 10.1.41",
+  "license": "Apache-2.0",
+  "webSources": [
+    {
+      "url": "https://raw.githubusercontent.com/apache/tomcat/10.1.41/java/org/apache/tomcat/util/net/SocketWrapperBase.java",
+      "ranges": "148-161,381-394",
+      "remoteBytesHash": null
+    },
+    {
+      "url": "https://raw.githubusercontent.com/apache/tomcat/10.1.41/java/org/apache/coyote/AbstractProtocol.java",
+      "ranges": "757-786,971-974,1025-1055",
+      "remoteBytesHash": null
+    },
+    {
+      "url": "https://raw.githubusercontent.com/apache/tomcat/10.1.41/java/org/apache/tomcat/util/net/SocketProcessorBase.java",
+      "ranges": "35-51",
+      "remoteBytesHash": null
+    }
+  ],
+  "existingLocalSource": "docs/evidence/iam-stage-5-n4b2-gateway-published-chain/upstream/NioEndpoint.java",
+  "existingLocalSourceSha256": "11892B8378983F843FA9D365D753B29C7A27D7EE3A87B2B70C64CD24BE18EB80",
+  "existingManifestSha256": "11892b8378983f843fa9d365d753b29c7a27d7ee3a87b2b70c64cd24be18eb80",
+  "existingLocalSourceMatchesManifest": true,
+  "localReadRanges": "1199-1230,1675-1730",
+  "limitation": "Web views are not byte-for-byte source archives; no remote hash or whole-library audit claimed"
+}
