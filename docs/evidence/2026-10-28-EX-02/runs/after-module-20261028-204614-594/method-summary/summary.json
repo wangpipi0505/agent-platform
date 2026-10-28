@@ -1,0 +1,72 @@
+{
+  "repository": "AP",
+  "run_id": "after-module-20261028-204614-594",
+  "supplement_runs": [],
+  "modules": [
+    "app-management"
+  ],
+  "scope": "SELECTED_MODULES",
+  "reactor_modules": [
+    "admin-common",
+    "platform-gateway",
+    "app-management",
+    "engine-runtime",
+    "skill-registry",
+    "model-gateway",
+    "monitor"
+  ],
+  "source_pattern": "*Test.java",
+  "groups": [
+    {
+      "module": "app-management",
+      "database": "AP",
+      "expected_classes": 23,
+      "exit_code": 0,
+      "command_status": "COLLECTED",
+      "commands": [
+        {
+          "attempt": "after-module-20261028-204614-594",
+          "exitCode": 0,
+          "status": "COLLECTED",
+          "testExecutionStatus": null,
+          "testProcessExitCode": null
+        }
+      ],
+      "fresh_xml": 23,
+      "cases": 178,
+      "counts": {
+        "passed": 160,
+        "failure": 0,
+        "error": 18,
+        "skipped": 0
+      },
+      "not_reported": [],
+      "collection_complete": true,
+      "tests_all_passed": false
+    }
+  ],
+  "cases": 178,
+  "counts": {
+    "passed": 160,
+    "failure": 0,
+    "error": 18,
+    "skipped": 0
+  },
+  "error_classes": [
+    "cn.agentplatform.app.application.DraftMetadataHttpTest",
+    "cn.agentplatform.app.application.IntegrationPolicyResolverHttpTest",
+    "cn.agentplatform.app.application.PublishTransactionTest"
+  ],
+  "class_level_error_events": 0,
+  "class_level_error_classes": [],
+  "not_reported": 0,
+  "issues": [],
+  "no_source_modules": [],
+  "collection_complete": true,
+  "tested_groups_all_passed": false,
+  "tests_all_passed": false,
+  "display_name_note": "仅保留XML显式displayName属性；缺失时留空，原case name保留，不反推展示名。",
+  "scope_note": "仅汇总本轮命令与XML。NOT_REPORTED须归因；无源测试模块单列不适用，采集完整不代表全部测试通过。",
+  "parser_sha256": "216b9f126e366fa1c04e725188e07a6e6b2cd340d4dd994edb5f7ab96a1b3dc1",
+  "raw_sha256": "38ec21352c3bd3e4f87fe8ae9b81493988184e01c23f1cb0b505d4cb5cfaf9ff"
+}

@@ -89,6 +89,7 @@ public class ReleasePins {
 
         var body =
                 Map.of(
+                        "spaceId", space,
                         "platformTenant", actor.tenantId(),
                         "appCode", appCode,
                         "environment", environment,

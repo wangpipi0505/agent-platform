@@ -1,0 +1,36 @@
+﻿{
+    "name":  "app-management",
+    "phase":  "green-unit",
+    "kind":  "EX-02",
+    "scope":  "TARGETED",
+    "executable":  "mvn.cmd",
+    "arguments":  [
+                      "-B",
+                      "-ntp",
+                      "-pl",
+                      "app-management",
+                      "test",
+                      "-Dmaven.repo.local=G:\\207\\项目\\算法重组工具\\代码\\agent-platform/.tools/m2",
+                      "-DargLine=-Xmx1024m -Djdk.net.unixdomain.tmpdir=V:/.local/tmp",
+                      "-Dsurefire.timeout=900",
+                      "-Dsurefire.failIfNoSpecifiedTests=true",
+                      "-Dtest=ReleasePinsTest,PublishPinTest"
+                  ],
+    "startedAt":  "2026-10-28T20:44:23.9378310+08:00",
+    "endedAt":  "2026-10-28T20:44:34.1064089+08:00",
+    "exitCode":  0,
+    "status":  "COLLECTED",
+    "selector":  "ReleasePinsTest,PublishPinTest",
+    "head":  "20333f35bc9f97dc11df296c04c8028e27fd42c8",
+    "sourceSha256":  {
+                         "app-management/src/test/java/cn/agentplatform/app/infra/ReleasePinsTest.java":  "0E84F7DE392E3C47F1DE2A5945949521527480B0E9CB92C7CD24B1B8ED4EB18A",
+                         "app-management/src/test/java/cn/agentplatform/app/application/PublishPinTest.java":  "5ACE8B8ACA74D67B524270376BB5FA0E2EEA4A0EB73F1F8F939D9CCE0C9B79CD",
+                         "app-management/src/main/java/cn/agentplatform/app/infra/ReleasePins.java":  "8B7CA57C9161F505CFA68120A7AA101CC7949A4A0A4D037315677E00F43AAE44"
+                     },
+    "xmlCount":  2,
+    "environmentSha256":  "AF038F68E0CA2E3EEEEB0C5240B2C2DA1EF647D680500F63AF1564975EBAFD4A",
+    "developmentFlag":  true,
+    "postgresFlag":  true,
+    "collectionOnly":  false,
+    "meaning":  "Maven0不代表测试通过；以当次XML及逐方法差异判断"
+}

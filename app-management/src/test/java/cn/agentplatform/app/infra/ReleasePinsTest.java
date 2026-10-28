@@ -77,6 +77,7 @@ class ReleasePinsTest {
             assertNull(request.authorization());
             assertEquals(
                     Map.of(
+                            "spaceId", SPACE,
                             "platformTenant", "tenant-pin",
                             "appCode", "app-a",
                             "environment", "production",
@@ -123,6 +124,19 @@ class ReleasePinsTest {
             assertEquals("SKIPPED", badRelease.get("state"));
             assertTrue(badRelease.get("reason").toString().contains("UUID"), badRelease.get("reason").toString());
 
+            assertEquals(0, stub.requests.size());
+        }
+    }
+
+    @Test
+    void missingSpaceNeverInfersScopeFromRelease() throws Exception {
+        try (var stub = new Stub()) {
+            var pins = new ReleasePins(stub.base(), apiKeyRef, true, false, "production");
+
+            var result = pins.pin(ACTOR, "app-a", candidate(Map.of("releaseId", RELEASE)));
+
+            // 发布快照必须明示空间；客户端不能靠版本反查补出调用身份。
+            assertEquals("SKIPPED", result.get("state"));
             assertEquals(0, stub.requests.size());
         }
     }

@@ -183,6 +183,7 @@ class PublishPinTest {
             assertNull(sent.authorization());
             assertEquals(
                     Map.of(
+                            "spaceId", SPACE,
                             "platformTenant", TENANT,
                             "appCode", code,
                             "environment", "production",
