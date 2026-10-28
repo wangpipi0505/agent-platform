@@ -1,0 +1,138 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ------------------< cn.agentplatform:app-management >-------------------
+[INFO] Building app-management 0.1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- enforcer:3.5.0:enforce (default) @ app-management ---
+[INFO] Rule 0: org.apache.maven.enforcer.rules.version.RequireJavaVersion passed
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ app-management ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 7 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.0:compile (default-compile) @ app-management ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 28 source files with javac [debug parameters release 21] to target\classes
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/app-management/src/main/java/cn/agentplatform/app/application/IntegrationPolicyResolver.java: 某些输入文件使用或覆盖了已过时的 API。
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/app-management/src/main/java/cn/agentplatform/app/application/IntegrationPolicyResolver.java: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/app-management/src/main/java/cn/agentplatform/app/application/AppService.java: G:\207\项目\算法重组工具\代码\agent-platform\app-management\src\main\java\cn\agentplatform\app\application\AppService.java使用了未经检查或不安全的操作。
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/app-management/src/main/java/cn/agentplatform/app/application/AppService.java: 有关详细信息, 请使用 -Xlint:unchecked 重新编译。
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ app-management ---
+[INFO] skip non existing resourceDirectory G:\207\项目\算法重组工具\代码\agent-platform\app-management\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.14.0:testCompile (default-testCompile) @ app-management ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 22 source files with javac [debug parameters release 21] to target\test-classes
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/app-management/src/test/java/cn/agentplatform/app/application/PublishPinTest.java: 某些输入文件使用了未经检查或不安全的操作。
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/app-management/src/test/java/cn/agentplatform/app/application/PublishPinTest.java: 有关详细信息, 请使用 -Xlint:unchecked 重新编译。
+[INFO] 
+[INFO] --- surefire:3.5.3:test (default-test) @ app-management ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running cn.agentplatform.app.application.AuditLinkPostgresTest
+03:12:04.282 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+03:12:04.325 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.024s)
+03:12:04.357 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+03:12:04.359 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+03:12:04.579 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+03:12:04.592 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.007s)
+03:12:04.616 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+03:12:04.616 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+03:12:04.879 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+03:12:04.892 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.007s)
+03:12:04.915 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+03:12:04.916 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+03:12:05.097 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+03:12:05.110 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.007s)
+03:12:05.136 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+03:12:05.136 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+[ERROR] Tests run: 4, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 1.427 s <<< FAILURE! -- in cn.agentplatform.app.application.AuditLinkPostgresTest
+[ERROR] cn.agentplatform.app.application.AuditLinkPostgresTest.integrationAuditWriterCarriesCredentialIdIntoReverseLookup -- Time elapsed: 0.671 s <<< FAILURE!
+java.lang.AssertionError: 
+
+Expected size: 1 but was: 0 in:
+[]
+	at cn.agentplatform.app.application.AuditLinkPostgresTest.integrationAuditWriterCarriesCredentialIdIntoReverseLookup(AuditLinkPostgresTest.java:159)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] Running cn.agentplatform.app.application.IdentityMappingPostgresTest
+03:12:05.345 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+03:12:05.355 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.006s)
+03:12:05.378 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+03:12:05.378 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+03:12:05.428 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+03:12:05.439 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.005s)
+03:12:05.461 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+03:12:05.462 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+03:12:05.719 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+03:12:05.728 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.005s)
+03:12:05.752 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+03:12:05.752 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+03:12:05.891 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+03:12:05.903 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.007s)
+03:12:05.929 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+03:12:05.929 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+03:12:05.973 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+03:12:05.982 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.005s)
+03:12:06.004 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+03:12:06.004 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+03:12:06.095 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+03:12:06.105 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.005s)
+03:12:06.130 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+03:12:06.130 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+03:12:06.174 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+03:12:06.184 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.004s)
+03:12:06.206 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+03:12:06.206 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+03:12:06.296 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+03:12:06.307 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.005s)
+03:12:06.329 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+03:12:06.329 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+03:12:06.374 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+03:12:06.384 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.005s)
+03:12:06.409 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+03:12:06.410 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+03:12:06.754 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+03:12:06.763 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.004s)
+03:12:06.785 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+03:12:06.785 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+03:12:06.831 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+03:12:06.839 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.004s)
+03:12:06.861 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+03:12:06.861 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.755 s -- in cn.agentplatform.app.application.IdentityMappingPostgresTest
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Failures: 
+[ERROR]   AuditLinkPostgresTest.integrationAuditWriterCarriesCredentialIdIntoReverseLookup:159 
+Expected size: 1 but was: 0 in:
+[]
+[INFO] 
+[ERROR] Tests run: 10, Failures: 1, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  7.609 s
+[INFO] Finished at: 2026-10-28T03:12:07+08:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.3:test (default-test) on project app-management: There are test failures.
+[ERROR] 
+[ERROR] See G:\207\项目\算法重组工具\代码\agent-platform\app-management\target\surefire-reports for the individual test results.
+[ERROR] See dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

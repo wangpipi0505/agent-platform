@@ -2144,5 +2144,16 @@
   "source": "app-management/src/main/java/cn/agentplatform/app/api/DataHealthController.java:24",
   "callerSource": "",
   "reason": "ADMIN 人工运维端点（T20.1）：门户 Bearer 鉴权 Actor.requireRole(ADMIN)，非服务票据路由，无服务调用方；disabled=零服务授权，明细不进公开 /actuator/health"
+ } ,{
+  "method": "GET",
+  "template": "/admin/usage/summary",
+  "caller": null,
+  "target": "engine",
+  "action": "usage.summary",
+  "mode": "disabled",
+  "integrationAllowed": false,
+  "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/UsageController.java:21",
+  "callerSource": "",
+  "reason": "ADMIN 人工查询端点（T19.1）：门户 Bearer 鉴权按租户取数，非服务票据路由，无服务调用方；disabled=零服务授权（G-9 补录，对齐 /health/data 先例）"
  }
 ]

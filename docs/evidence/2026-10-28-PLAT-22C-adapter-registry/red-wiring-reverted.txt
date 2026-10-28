@@ -1,0 +1,90 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ------------------< cn.agentplatform:skill-registry >-------------------
+[INFO] Building skill-registry 0.1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- enforcer:3.5.0:enforce (default) @ skill-registry ---
+[INFO] Rule 0: org.apache.maven.enforcer.rules.version.RequireJavaVersion passed
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ skill-registry ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 16 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.0:compile (default-compile) @ skill-registry ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 56 source files with javac [debug parameters release 21] to target\classes
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/skill-registry/src/main/java/cn/agentplatform/skill/application/OpenApiImports.java: 某些输入文件使用或覆盖了已过时的 API。
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/skill-registry/src/main/java/cn/agentplatform/skill/application/OpenApiImports.java: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/skill-registry/src/main/java/cn/agentplatform/skill/application/SkillCatalog.java: 某些输入文件使用了未经检查或不安全的操作。
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/skill-registry/src/main/java/cn/agentplatform/skill/application/SkillCatalog.java: 有关详细信息, 请使用 -Xlint:unchecked 重新编译。
+[INFO] -------------------------------------------------------------
+[ERROR] COMPILATION ERROR : 
+[INFO] -------------------------------------------------------------
+[ERROR] /G:/207/项目/算法重组工具/代码/agent-platform/skill-registry/src/main/java/cn/agentplatform/skill/infra/AlgorithmExecutionAdapter.java:[42,20] 找不到符号
+  符号:   方法 algorithmInvoke(java.util.Map<java.lang.String,java.lang.Object>,java.util.Map<java.lang.String,java.lang.Object>,java.lang.String,long,boolean,java.lang.String,long)
+  位置: 类型为cn.agentplatform.skill.infra.SkillAdapters的变量 host
+[ERROR] /G:/207/项目/算法重组工具/代码/agent-platform/skill-registry/src/main/java/cn/agentplatform/skill/infra/AlgorithmExecutionAdapter.java:[56,20] 找不到符号
+  符号:   方法 algorithmObserve(java.util.Map<java.lang.String,java.lang.Object>,java.util.Map<java.lang.String,java.lang.Object>,java.lang.String,long,boolean,java.lang.String,long)
+  位置: 类型为cn.agentplatform.skill.infra.SkillAdapters的变量 host
+[ERROR] /G:/207/项目/算法重组工具/代码/agent-platform/skill-registry/src/main/java/cn/agentplatform/skill/infra/AlgorithmExecutionAdapter.java:[63,13] 找不到符号
+  符号:   方法 algorithmBind(java.util.Map<java.lang.String,java.lang.Object>,java.util.Map<java.lang.String,java.lang.Object>)
+  位置: 类型为cn.agentplatform.skill.infra.SkillAdapters的变量 host
+[ERROR] /G:/207/项目/算法重组工具/代码/agent-platform/skill-registry/src/main/java/cn/agentplatform/skill/infra/HttpAsyncExecutionAdapter.java:[29,29] 找不到符号
+  符号:   方法 asyncForm(java.util.Map<java.lang.String,java.lang.Object>)
+  位置: 类 cn.agentplatform.skill.infra.SkillAdapters
+[ERROR] /G:/207/项目/算法重组工具/代码/agent-platform/skill-registry/src/main/java/cn/agentplatform/skill/infra/HttpAsyncExecutionAdapter.java:[42,20] 找不到符号
+  符号:   方法 httpAsync(java.util.Map<java.lang.String,java.lang.Object>,java.util.Map<java.lang.String,java.lang.Object>,java.lang.String,long,boolean,java.lang.String,long)
+  位置: 类型为cn.agentplatform.skill.infra.SkillAdapters的变量 host
+[ERROR] /G:/207/项目/算法重组工具/代码/agent-platform/skill-registry/src/main/java/cn/agentplatform/skill/infra/HttpAsyncExecutionAdapter.java:[48,13] 找不到符号
+  符号:   方法 httpAsyncBind(java.util.Map<java.lang.String,java.lang.Object>,java.util.Map<java.lang.String,java.lang.Object>)
+  位置: 类型为cn.agentplatform.skill.infra.SkillAdapters的变量 host
+[ERROR] /G:/207/项目/算法重组工具/代码/agent-platform/skill-registry/src/main/java/cn/agentplatform/skill/infra/HttpSyncExecutionAdapter.java:[29,30] 找不到符号
+  符号:   方法 asyncForm(java.util.Map<java.lang.String,java.lang.Object>)
+  位置: 类 cn.agentplatform.skill.infra.SkillAdapters
+[ERROR] /G:/207/项目/算法重组工具/代码/agent-platform/skill-registry/src/main/java/cn/agentplatform/skill/infra/HttpSyncExecutionAdapter.java:[42,20] http(java.util.Map<java.lang.String,java.lang.Object>,java.util.Map<java.lang.String,java.lang.Object>,java.lang.String,long,java.lang.String,long) 在 cn.agentplatform.skill.infra.SkillAdapters 中是 private 访问控制
+[ERROR] /G:/207/项目/算法重组工具/代码/agent-platform/skill-registry/src/main/java/cn/agentplatform/skill/infra/ProcessExecutionAdapter.java:[41,20] 找不到符号
+  符号:   方法 executeLocalProcess(java.util.Map<java.lang.String,java.lang.Object>,java.util.Map<java.lang.String,java.lang.Object>,long)
+  位置: 类型为cn.agentplatform.skill.infra.SkillAdapters的变量 host
+[INFO] 9 errors 
+[INFO] -------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  3.781 s
+[INFO] Finished at: 2026-10-28T08:13:52+08:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.14.0:compile (default-compile) on project skill-registry: Compilation failure: Compilation failure: 
+[ERROR] /G:/207/项目/算法重组工具/代码/agent-platform/skill-registry/src/main/java/cn/agentplatform/skill/infra/AlgorithmExecutionAdapter.java:[42,20] 找不到符号
+[ERROR]   符号:   方法 algorithmInvoke(java.util.Map<java.lang.String,java.lang.Object>,java.util.Map<java.lang.String,java.lang.Object>,java.lang.String,long,boolean,java.lang.String,long)
+[ERROR]   位置: 类型为cn.agentplatform.skill.infra.SkillAdapters的变量 host
+[ERROR] /G:/207/项目/算法重组工具/代码/agent-platform/skill-registry/src/main/java/cn/agentplatform/skill/infra/AlgorithmExecutionAdapter.java:[56,20] 找不到符号
+[ERROR]   符号:   方法 algorithmObserve(java.util.Map<java.lang.String,java.lang.Object>,java.util.Map<java.lang.String,java.lang.Object>,java.lang.String,long,boolean,java.lang.String,long)
+[ERROR]   位置: 类型为cn.agentplatform.skill.infra.SkillAdapters的变量 host
+[ERROR] /G:/207/项目/算法重组工具/代码/agent-platform/skill-registry/src/main/java/cn/agentplatform/skill/infra/AlgorithmExecutionAdapter.java:[63,13] 找不到符号
+[ERROR]   符号:   方法 algorithmBind(java.util.Map<java.lang.String,java.lang.Object>,java.util.Map<java.lang.String,java.lang.Object>)
+[ERROR]   位置: 类型为cn.agentplatform.skill.infra.SkillAdapters的变量 host
+[ERROR] /G:/207/项目/算法重组工具/代码/agent-platform/skill-registry/src/main/java/cn/agentplatform/skill/infra/HttpAsyncExecutionAdapter.java:[29,29] 找不到符号
+[ERROR]   符号:   方法 asyncForm(java.util.Map<java.lang.String,java.lang.Object>)
+[ERROR]   位置: 类 cn.agentplatform.skill.infra.SkillAdapters
+[ERROR] /G:/207/项目/算法重组工具/代码/agent-platform/skill-registry/src/main/java/cn/agentplatform/skill/infra/HttpAsyncExecutionAdapter.java:[42,20] 找不到符号
+[ERROR]   符号:   方法 httpAsync(java.util.Map<java.lang.String,java.lang.Object>,java.util.Map<java.lang.String,java.lang.Object>,java.lang.String,long,boolean,java.lang.String,long)
+[ERROR]   位置: 类型为cn.agentplatform.skill.infra.SkillAdapters的变量 host
+[ERROR] /G:/207/项目/算法重组工具/代码/agent-platform/skill-registry/src/main/java/cn/agentplatform/skill/infra/HttpAsyncExecutionAdapter.java:[48,13] 找不到符号
+[ERROR]   符号:   方法 httpAsyncBind(java.util.Map<java.lang.String,java.lang.Object>,java.util.Map<java.lang.String,java.lang.Object>)
+[ERROR]   位置: 类型为cn.agentplatform.skill.infra.SkillAdapters的变量 host
+[ERROR] /G:/207/项目/算法重组工具/代码/agent-platform/skill-registry/src/main/java/cn/agentplatform/skill/infra/HttpSyncExecutionAdapter.java:[29,30] 找不到符号
+[ERROR]   符号:   方法 asyncForm(java.util.Map<java.lang.String,java.lang.Object>)
+[ERROR]   位置: 类 cn.agentplatform.skill.infra.SkillAdapters
+[ERROR] /G:/207/项目/算法重组工具/代码/agent-platform/skill-registry/src/main/java/cn/agentplatform/skill/infra/HttpSyncExecutionAdapter.java:[42,20] http(java.util.Map<java.lang.String,java.lang.Object>,java.util.Map<java.lang.String,java.lang.Object>,java.lang.String,long,java.lang.String,long) 在 cn.agentplatform.skill.infra.SkillAdapters 中是 private 访问控制
+[ERROR] /G:/207/项目/算法重组工具/代码/agent-platform/skill-registry/src/main/java/cn/agentplatform/skill/infra/ProcessExecutionAdapter.java:[41,20] 找不到符号
+[ERROR]   符号:   方法 executeLocalProcess(java.util.Map<java.lang.String,java.lang.Object>,java.util.Map<java.lang.String,java.lang.Object>,long)
+[ERROR]   位置: 类型为cn.agentplatform.skill.infra.SkillAdapters的变量 host
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

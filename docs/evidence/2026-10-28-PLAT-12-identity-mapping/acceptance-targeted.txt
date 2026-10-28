@@ -1,0 +1,162 @@
+[INFO] Scanning for projects...
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Build Order:
+[INFO] 
+[INFO] admin-common                                                       [jar]
+[INFO] app-management                                                     [jar]
+[INFO] 
+[INFO] -------------------< cn.agentplatform:admin-common >--------------------
+[INFO] Building admin-common 0.1.0-SNAPSHOT                               [1/2]
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- enforcer:3.5.0:enforce (default) @ admin-common ---
+[INFO] Rule 0: org.apache.maven.enforcer.rules.version.RequireJavaVersion passed
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ admin-common ---
+[INFO] Copying 0 resource from src\main\resources to target\classes
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.0:compile (default-compile) @ admin-common ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ admin-common ---
+[INFO] skip non existing resourceDirectory G:\207\项目\算法重组工具\代码\agent-platform\admin-common\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.14.0:testCompile (default-testCompile) @ admin-common ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- jar:3.4.2:test-jar (finite-test-fixtures) @ admin-common ---
+[INFO] 
+[INFO] --- surefire:3.5.3:test (default-test) @ admin-common ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running cn.agentplatform.common.ActorSubjectSnapshotTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.191 s -- in cn.agentplatform.common.ActorSubjectSnapshotTest
+[INFO] Running cn.agentplatform.common.CommonBoundaryTest
+N4A_EXECUTED=common-boundary
+N4A_CHILD_REAPED=common-boundary:784
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.540 s -- in cn.agentplatform.common.CommonBoundaryTest
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] 
+[INFO] ------------------< cn.agentplatform:app-management >-------------------
+[INFO] Building app-management 0.1.0-SNAPSHOT                             [2/2]
+[INFO]   from G:\207\项目\算法重组工具\代码\agent-platform\app-management\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- enforcer:3.5.0:enforce (default) @ app-management ---
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ app-management ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 7 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.0:compile (default-compile) @ app-management ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ app-management ---
+[INFO] skip non existing resourceDirectory G:\207\项目\算法重组工具\代码\agent-platform\app-management\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.14.0:testCompile (default-testCompile) @ app-management ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- surefire:3.5.3:test (default-test) @ app-management ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running cn.agentplatform.app.application.AuditLinkPostgresTest
+03:13:28.091 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+03:13:28.139 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.027s)
+03:13:28.180 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+03:13:28.182 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+03:13:28.685 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+03:13:28.706 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.010s)
+03:13:28.732 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+03:13:28.732 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+03:13:29.041 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+03:13:29.055 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.008s)
+03:13:29.082 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+03:13:29.082 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+03:13:29.290 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+03:13:29.306 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.009s)
+03:13:29.334 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+03:13:29.334 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.836 s -- in cn.agentplatform.app.application.AuditLinkPostgresTest
+[INFO] Running cn.agentplatform.app.application.IdentityMappingPostgresTest
+03:13:29.542 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+03:13:29.556 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.008s)
+03:13:29.584 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+03:13:29.584 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+03:13:29.639 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+03:13:29.653 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.008s)
+03:13:29.685 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+03:13:29.685 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+03:13:29.989 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+03:13:30.003 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.006s)
+03:13:30.029 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+03:13:30.029 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+03:13:30.192 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+03:13:30.209 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.009s)
+03:13:30.240 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+03:13:30.240 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+03:13:30.293 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+03:13:30.305 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.007s)
+03:13:30.333 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+03:13:30.333 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+03:13:30.441 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+03:13:30.455 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.007s)
+03:13:30.480 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+03:13:30.480 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+03:13:30.534 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+03:13:30.547 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.007s)
+03:13:30.573 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+03:13:30.573 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+03:13:30.671 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+03:13:30.682 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.005s)
+03:13:30.711 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+03:13:30.711 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+03:13:30.760 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+03:13:30.773 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.008s)
+03:13:30.798 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+03:13:30.799 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+03:13:31.227 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+03:13:31.240 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.007s)
+03:13:31.268 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+03:13:31.268 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+03:13:31.329 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_identity_v12 (PostgreSQL 16.15)
+03:13:31.343 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.007s)
+03:13:31.376 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 107
+03:13:31.376 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "app" is up to date. No migration necessary.
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.980 s -- in cn.agentplatform.app.application.IdentityMappingPostgresTest
+[INFO] Running cn.agentplatform.app.application.IntegrationPolicyDatabaseTest
+D2_DATABASE_EXISTED=true
+03:13:31.525 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_policy_v12 (PostgreSQL 16.15)
+03:13:31.542 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.011s)
+03:13:31.572 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 105
+03:13:31.586 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "app" to version "107 - identity mapping"
+03:13:31.791 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Successfully applied 1 migration to schema "app", now at version v107 (execution time 00:00.196s)
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.379 s -- in cn.agentplatform.app.application.IntegrationPolicyDatabaseTest
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 11, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Summary for admin-common 0.1.0-SNAPSHOT:
+[INFO] 
+[INFO] admin-common ....................................... SUCCESS [  2.366 s]
+[INFO] app-management ..................................... SUCCESS [  4.774 s]
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  7.413 s
+[INFO] Finished at: 2026-10-28T03:13:31+08:00
+[INFO] ------------------------------------------------------------------------
