@@ -673,3 +673,29 @@ SUBMIT_QUERY 对账端点可用声明式映射表达"平台字段 → 远端占�
 | `CONFIRM_STRENGTH_INSUFFICIENT` | 403 | `risk=HIGH` 且（confirmRoles 少于 2 个不同角色 且 无 `doubleConfirmed`） |
 
 全部错误经既有 `PlatformException`/`ErrorSemantics` 信封携带 `code + userMessage + traceId`；模型对不可重试的拒绝收到可解释工具结果（不重试），人不重试已过期/被替换的计划。
+
+## 15. 工程增补（PLAT-22 C 段，2026-10-28）：适配器注册表与执行方式零改代码接入
+
+> 本节为平台侧优化的工程增补，依据《平台侧优化方案与实施细则-20261027》§11.4（新软件接入八步）与优化台账 T22C 派发实施；**不属于 v1.2 原文提取**，`contracts/snapshot/` 保持 v1.2 原文不变。与上文冲突时以本节为准。
+
+### 15.1 注册表机制（定死）
+
+- kind→执行单元的单一来源是适配器注册表（skill-registry `infra.AdapterRegistry`）：`SkillAdapters` 的 invoke/observe/bind/persistentBinding 与 `SkillCatalog` 的注册期校验（适配器类型白名单、类型×调用形态组合白名单、kind 缺省值、MCP 工具目录能力门）全部经注册表取答案；平台主链不再出现 kind→实现的硬编码 switch 与散落的白名单枚举；
+- 注册来源两条路注册同一批单元类，声明清单（type × invocationKind 接受面）只在单元类内维护一份：①**Spring 装配自动发现**——实现 `SkillAdapter` 并标注 `@Component`，注册表构造器注入收集全部单元（内置五个与未来外部适配器同一通道）；②**显式注册**——直接构造场景（既有单测的组织方式）用 `withPlatformDefaults()`（内置五单元）或 `register(...)`；
+- 未注册 kind 的语义（定死）：注册期 `400 INVALID_SKILL`（适配器类型无效）与 `400 UNSUPPORTED_INVOCATION_KIND`（组合不支持），错误码与触发条件和注册表化之前完全一致（PROCESS 的 SYNC-only 定制诊断正文由其注册单元承载，不退化）；执行期 `PARAM_ERROR` 失败（unknown=false，与原 switch default 臂同码同位），正文列出已注册类型与接入方式。bind/persistentBinding 等旁路询问对未注册 kind 保持既有静默语义（查找返回 null，无操作），不新增抛错面；
+- 内置五单元（HTTP 同步 / HTTP 异步 / MCP / ALGORITHM / PROCESS）零搬运执行语义：单元把注册表路由交回 `SkillAdapters` 既有通道，T05 错误信封、T06 输出卸载、T12 身份注入调用点、T21d 进程加固（超时杀树/可执行白名单/失败转储）、PLAT-15 两段审批原地不动；MCP 与 PROCESS 的对账保护（queryOnly → `RESULT_UNKNOWN`，本地进程与 MCP SSE 无结果查询通道，重跑即第二次副作用）随各自单元声明迁移。
+
+### 15.2 两层 kind 关系（定死）
+
+- **声明层**：能力包 schema（`contracts/capability-package.schema.json` 的 `interfaces[].kind`，T22A 冻结的五值枚举 HTTP_SYNC/HTTP_ASYNC/PROCESS/MCP/ALGORITHM）是新软件接入的唯一声明入口；新取值必须修订 schema（契约纪律 §6.5），schema v1 冻结不受本节影响；
+- **运行层**：本注册表允许在不改平台分发代码的前提下注册新执行方式（实现适配器 + 注册即接入）。运行层先行注册不构成声明层上线——注册表中存在但能力包 schema 未声明的 kind 只用于平台侧验证/内部扩展，不能进入对外能力包声明；两层各自独立治理；
+- 错误诊断**正文**不是契约不变量：执行期未注册 kind 的正文（已注册类型清单）随注册状态变化，`PARAM_ERROR`/`INVALID_SKILL`/`UNSUPPORTED_INVOCATION_KIND` 错误码与 unknown 位保持不变。
+
+### 15.3 新执行方式接入路径（八步中"平台扩展"的落点）
+
+1. 实现 `SkillAdapter` 接口：声明 `type()` 与 `supportedKinds()`，按需覆写 `defaultKind`（注册期 kind 缺省）、`handles`（同 type 多形态二次路由）、`observe`（独立观测模型）、`bind`/`persistentBinding`（幂等键登记）、`supportsToolDiscovery`（工具目录能力门）、`unsupportedKindMessage`（组合拒绝定制诊断）；执行语义自持，或经 `host`（`SkillAdapters`）复用结果信封等平台共享设施，并保持七字段错误语义；
+2. 标注 `@Component` 交 Spring 自动发现，或在测试/嵌入式场景显式 `register`；
+3. **无需修改 `SkillAdapters`/`SkillCatalog` 任何分发与白名单代码**——注册期校验、执行分发、绑定、观测、工具目录门由注册表自动获得；
+4. 契约形状规则（endpoint/toolName/process 子契约/callback 声明等 per-kind 校验）与执行编排行为分支（回调接听、算法证据等）仍按 §4/§11–§14 既有口径，其收敛属后续 A-02 卡，不在本节范围。
+
+验证锚点：`AdapterRegistryZeroChangeTest`（8 例）——TEST_ECHO 测试单元在产品主代码零字样的前提下经注册表完成注册期放行与执行分发；内置 kind 路由矩阵、bind/persistentBinding 旁路语义与原 if-chain 等价、MCP/PROCESS 对账保护随单元迁移均有锚点断言。

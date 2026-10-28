@@ -185,6 +185,7 @@ public class SkillAdapters {
     private final AlgorithmAdapter algorithm;
     private final HttpAsyncAdapter asyncHttp;
     private final ProcessAdapter process;
+    private final AdapterRegistry registry;
     private final SkillRules.SchemaMode schemaMode;
     private final long maxExpandedWork;
 
@@ -213,9 +214,34 @@ public class SkillAdapters {
     }
 
     /**
+     * 既有 6 参构造（PLAT-07 模式/预算开关）：注册表用内置单元——注册的单元类与 Spring 装配完全
+     * 同一批（见 {@link AdapterRegistry#withPlatformDefaults}），不存在"测试构造 = 另一套分发"。
+     */
+    public SkillAdapters(
+            ArtifactStore artifacts,
+            AlgorithmAdapter algorithm,
+            HttpAsyncAdapter asyncHttp,
+            ProcessAdapter process,
+            String schemaMode,
+            long maxExpandedWork) {
+        this(
+                artifacts,
+                algorithm,
+                asyncHttp,
+                process,
+                AdapterRegistry.withPlatformDefaults(),
+                schemaMode,
+                maxExpandedWork);
+    }
+
+    /**
      * 容器注入的正式构造。PROCESS 是适配器的一支而不是旁路：只有装配了 {@link ProcessAdapter} 的进程才能执行
      * 本地进程技能，未装配时该类型按配置错误拒绝，而不是静默回退成别的调用方式。短构造保留给既有单测，
      * 它们只覆盖 HTTP/MCP/ALGORITHM。
+     *
+     * <p>PLAT-22C：kind→适配器分发改为 {@link AdapterRegistry} 查找——注册表是 Spring 装配的单一
+     * bean（内置单元以 @Component 自动发现注册，外部新执行方式实现 {@link SkillAdapter} + @Component
+     * 即接入，无需修改本类分发代码）。直接构造（既有单测）经 6 参构造落到内置注册表，两条路同一批单元类。
      *
      * <p>PLAT-07：输出校验模式与展开预算在启动时校验。非法值直接让进程起不来，而不是静默回退到
      * STRICT 或上限；{@code max-expanded-work} 只允许调低（1..8192），共享硬上限不能靠配置抬高。
@@ -226,6 +252,7 @@ public class SkillAdapters {
             AlgorithmAdapter algorithm,
             HttpAsyncAdapter asyncHttp,
             ProcessAdapter process,
+            AdapterRegistry registry,
             @org.springframework.beans.factory.annotation.Value("${agent.schema.mode:DEGRADED}")
                     String schemaMode,
             @org.springframework.beans.factory.annotation.Value(
@@ -235,6 +262,7 @@ public class SkillAdapters {
         this.algorithm = algorithm;
         this.asyncHttp = asyncHttp;
         this.process = process;
+        this.registry = registry;
         this.schemaMode = schemaMode(schemaMode);
         this.maxExpandedWork = expansionLimit(maxExpandedWork);
     }
@@ -256,19 +284,33 @@ public class SkillAdapters {
         return value;
     }
 
-    public boolean asynchronous(Map<String, Object> contract) {
+    /**
+     * HTTP 异步形态判定（SUBMIT_QUERY/CALLBACK）：{@link HttpAsyncExecutionAdapter} 的 handles 路由与
+     * {@link HttpSyncExecutionAdapter} 的互斥分流共用这一定义，执行编排（SkillExecution）的异步旁路
+     * 询问也读它——三处不会出现两套判定。
+     */
+    static boolean asyncForm(Map<String, Object> contract) {
         return "HTTP".equals(contract.get("type"))
                 && Set.of("SUBMIT_QUERY", "CALLBACK")
                         .contains(Objects.toString(contract.get("invocationKind"), ""));
     }
 
+    public boolean asynchronous(Map<String, Object> contract) {
+        return asyncForm(contract);
+    }
+
+    /**
+     * PLAT-22C：提交前绑定经注册表路由到对应单元（ALGORITHM→算法 Job 绑定、HTTP 异步→幂等键登记，
+     * 其余形态无操作）。未注册 kind 保持既有静默语义（find 返回 null），不在这里新增抛错面。
+     */
     public void bind(Map<String, Object> contract, Map<String, Object> request) {
-        if ("ALGORITHM".equals(contract.get("type"))) algorithm.bind(contract, request);
-        else if (asynchronous(contract)) asyncHttp.bind(contract, request);
+        SkillAdapter unit = registry.find(contract);
+        if (unit != null) unit.bind(this, contract, request);
     }
 
     public boolean persistentBinding(Map<String, Object> contract) {
-        return "ALGORITHM".equals(contract.get("type")) || asynchronous(contract);
+        SkillAdapter unit = registry.find(contract);
+        return unit != null && unit.persistentBinding(contract);
     }
 
     public Observation observe(
@@ -280,12 +322,9 @@ public class SkillAdapters {
             String runId,
             long expectedAttempt) {
         requireAttempt(expectedAttempt);
-        if ("ALGORITHM".equals(contract.get("type")))
-            return algorithm.observe(
-                    contract, arguments, key, callId, queryOnly, this, runId, expectedAttempt);
-        return new Observation(
-                invoke(contract, arguments, key, callId, queryOnly, runId, expectedAttempt),
-                Map.of());
+        return registry
+                .dispatch(contract)
+                .observe(this, contract, arguments, key, callId, queryOnly, runId, expectedAttempt);
     }
 
     public void completeAlgorithm(
@@ -298,6 +337,53 @@ public class SkillAdapters {
             Map<String, Object> original,
             Map<String, Object> request) {
         algorithm.prepareRetry(contract, original, request);
+    }
+
+    /** HTTP 异步通道（{@link HttpAsyncExecutionAdapter} 路由目标）：对账/attempt 栅栏在 HttpAsyncAdapter。 */
+    Raw httpAsync(
+            Map<String, Object> contract,
+            Map<String, Object> arguments,
+            String key,
+            long callId,
+            boolean queryOnly,
+            String runId,
+            long expectedAttempt) {
+        return asyncHttp.invoke(
+                contract, arguments, key, callId, queryOnly, runId, expectedAttempt, this);
+    }
+
+    /** HTTP 异步提交绑定（幂等键登记），原 bind 的 asynchronous 分支。 */
+    void httpAsyncBind(Map<String, Object> contract, Map<String, Object> request) {
+        asyncHttp.bind(contract, request);
+    }
+
+    /** 算法 Job 执行/观测/绑定（{@link AlgorithmExecutionAdapter} 路由目标）。 */
+    Raw algorithmInvoke(
+            Map<String, Object> contract,
+            Map<String, Object> arguments,
+            String key,
+            long callId,
+            boolean queryOnly,
+            String runId,
+            long expectedAttempt) {
+        return algorithm.invoke(
+                contract, arguments, key, callId, queryOnly, this, runId, expectedAttempt);
+    }
+
+    Observation algorithmObserve(
+            Map<String, Object> contract,
+            Map<String, Object> arguments,
+            String key,
+            long callId,
+            boolean queryOnly,
+            String runId,
+            long expectedAttempt) {
+        return algorithm.observe(
+                contract, arguments, key, callId, queryOnly, this, runId, expectedAttempt);
+    }
+
+    void algorithmBind(Map<String, Object> contract, Map<String, Object> request) {
+        algorithm.bind(contract, request);
     }
 
     /** LAST_REAL只由已核实事实调用；附件复制为当前run的独立归属，不能公开原run链接。 */
@@ -359,6 +445,11 @@ public class SkillAdapters {
         }
     }
 
+    /**
+     * PLAT-22C：kind→适配器分发 = 注册表查询。原 switch 的五个分支收敛为五个内置
+     * {@link SkillAdapter} 单元（HTTP 同步/异步、MCP、PROCESS、ALGORITHM），各单元声明自己的
+     * 调用形态与对账保护；未注册 kind 由注册表给出可读 PARAM_ERROR（与原 default 臂同码）。
+     */
     public Raw invoke(
             Map<String, Object> contract,
             Map<String, Object> arguments,
@@ -368,44 +459,9 @@ public class SkillAdapters {
             String runId,
             long expectedAttempt) {
         requireAttempt(expectedAttempt);
-        return switch (contract.get("type").toString()) {
-            case "HTTP" ->
-                    asynchronous(contract)
-                            ? asyncHttp.invoke(
-                                    contract,
-                                    arguments,
-                                    key,
-                                    callId,
-                                    queryOnly,
-                                    runId,
-                                    expectedAttempt,
-                                    this)
-                            : http(contract, arguments, key, callId, runId, expectedAttempt);
-            case "MCP" -> {
-                if (queryOnly)
-                    throw new Failure("RESULT_UNKNOWN", true, "MCP SSE不提供原调用结果查询，禁止以对账名义重新调用工具");
-                yield mcp(contract, arguments, callId, runId, expectedAttempt);
-            }
-            case "PROCESS" -> {
-                // 与原调用对账必须读回“已发生的结果”。本地进程没有结果查询通道，重跑一次不是对账，
-                // 而是第二次副作用；与 MCP 同一裁决，按“结果未知”拒绝。
-                if (queryOnly)
-                    throw new Failure(
-                            "RESULT_UNKNOWN", true, "本地进程没有可查询的原调用结果，禁止以对账名义重新执行");
-                yield localProcess(contract, arguments, callId);
-            }
-            case "ALGORITHM" ->
-                    algorithm.invoke(
-                            contract,
-                            arguments,
-                            key,
-                            callId,
-                            queryOnly,
-                            this,
-                            runId,
-                            expectedAttempt);
-            default -> throw new Failure("PARAM_ERROR", false, "未支持的适配器类型");
-        };
+        return registry
+                .dispatch(contract)
+                .invoke(this, contract, arguments, key, callId, queryOnly, runId, expectedAttempt);
     }
 
     /**
@@ -417,7 +473,8 @@ public class SkillAdapters {
     }
 
     /**
-     * PROCESS 分支只做“契约+调用参数→进程→Raw”的搬运。请求信封由 ProcessAdapter 按 §4.4 写 stdin
+     * PROCESS 分支只做“契约+调用参数→进程→Raw”的搬运（PLAT-22C：由 {@link ProcessExecutionAdapter}
+     * 经注册表路由进入）。请求信封由 ProcessAdapter 按 §4.4 写 stdin
      * （protocol/requestId/operation/parameters/files），本方法只提供 requestId=callId、operation=技能 code、
      * parameters=已校验的 arguments；Raw 的输出取响应 {@code result}，而不是整段 stdout——stdout 是协议信封，
      * 把它当业务结果会把 requestId/ok/metrics 混进下游 schema。
@@ -427,7 +484,7 @@ public class SkillAdapters {
      * 异常——包成通用的依赖不可用会把“配置错误”与“上游抖动”混为一谈，调用方据此重试只会再执行一次本地
      * 进程（Y-3 的教训）。租户 ID 来自已验签上下文，仅用于每租户并发配额；解析不出（系统级调用）就跳过该层。
      */
-    private Raw localProcess(Map<String, Object> contract, Map<String, Object> arguments, long callId) {
+    Raw executeLocalProcess(Map<String, Object> contract, Map<String, Object> arguments, long callId) {
         if (process == null)
             throw new Failure("PARAM_ERROR", false, "当前进程未装配本地进程执行器，拒绝执行PROCESS技能");
         ProcessContract parsed = ProcessContract.parse(Json.tree(contract.get("process")));
@@ -463,7 +520,12 @@ public class SkillAdapters {
         return process != null && process.cancel(callId);
     }
 
-    private Raw http(
+    // ===== PLAT-22C 内置注册单元的回调通道 =====
+    // 这些包私有方法不是新语义：HTTP 同步/异步、ALGORITHM、本地进程的执行体仍在本类（T05/T06/T12/
+    // T21d 行为零搬运），单元只负责"被注册表找到并路由回来"，避免单元复制任何执行分支。
+
+    /** HTTP 同步通道（{@link HttpSyncExecutionAdapter} 路由目标）。 */
+    Raw http(
             Map<String, Object> contract,
             Map<String, Object> arguments,
             String key,
@@ -744,14 +806,5 @@ public class SkillAdapters {
                         ? Map.of("artifactId", value.asText())
                         : Json.read(value.toString(), Map.class);
         refs.add(artifacts.controlledReference(ref, runId));
-    }
-
-    private Raw mcp(
-            Map<String, Object> contract,
-            Map<String, Object> arguments,
-            long callId,
-            String runId,
-            long expectedAttempt) {
-        return new McpAdapter().invoke(contract, arguments, callId, runId, expectedAttempt, this);
     }
 }

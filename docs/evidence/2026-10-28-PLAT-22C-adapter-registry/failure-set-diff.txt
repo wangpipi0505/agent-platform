@@ -1,0 +1,8 @@
+# 干净基线（HEAD a439557，无本卡改动）vs 本卡后 失败方法集合 diff
+# 左=baseline-full-module（51 失败），右=regression-full-module（50 失败）
+# '<' 行 = 仅基线失败（本卡后转为通过）；'>' 行 = 本卡新增失败（应为空）
+34d33
+< McpAdapterTest.blockedAckBodyCannotOutliveTheWholeSessionDeadline
+---
+新增失败数: 0
+消失失败数: 1

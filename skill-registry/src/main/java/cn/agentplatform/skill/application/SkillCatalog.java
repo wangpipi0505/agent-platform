@@ -5,6 +5,7 @@ import cn.agentplatform.common.auth.AuthScheme;
 import cn.agentplatform.skill.domain.ProcessContract;
 import cn.agentplatform.skill.domain.SkillDigest;
 import cn.agentplatform.skill.domain.SkillRules;
+import cn.agentplatform.skill.infra.AdapterRegistry;
 import cn.agentplatform.skill.infra.McpAdapter;
 import cn.agentplatform.skill.infra.OpenApiHttpMapping;
 import cn.agentplatform.skill.infra.ProcessWhitelist;
@@ -39,6 +40,8 @@ public class SkillCatalog {
     private final boolean evidenceDigestGate;
     /** PLAT-21d：PROCESS 可执行文件白名单（归一化后的绝对路径集；空集=未配置=不限制）。 */
     private final Set<String> allowedExecutables;
+    /** PLAT-22C：kind 白名单与组合校验的单一来源（注册表），normalize 不再自持类型枚举。 */
+    private final AdapterRegistry adapterRegistry;
 
     /** 单测直连四参构造：等价于默认 legacy-bearer=true、digest 门禁开启，既有测试无需感知本卡开关。 */
     public SkillCatalog(
@@ -74,6 +77,29 @@ public class SkillCatalog {
     }
 
     /**
+     * 兼容 T21d 的七参构造（PLAT-22C 前的容器形态）：注册表落到内置单元——注册的单元类与 Spring
+     * 装配完全同一批（见 {@link AdapterRegistry#withPlatformDefaults}），直接构造不产生第二套行为。
+     */
+    public SkillCatalog(
+            JdbcTemplate db,
+            PlatformTransactionManager manager,
+            SkillClients clients,
+            String appUrl,
+            boolean legacyBearer,
+            boolean evidenceDigestGate,
+            String allowedExecutables) {
+        this(
+                db,
+                manager,
+                clients,
+                appUrl,
+                legacyBearer,
+                evidenceDigestGate,
+                allowedExecutables,
+                AdapterRegistry.withPlatformDefaults());
+    }
+
+    /**
      * 容器注入的正式构造。legacy-bearer 只影响注册期归一化（未声明 authScheme 时补 BEARER 还是
      * 拒绝），见 {@link cn.agentplatform.common.auth.AuthScheme} 的兼容窗口说明；默认 true 保证
      * 升级瞬间存量技能的对外凭据形态不变。
@@ -85,6 +111,10 @@ public class SkillCatalog {
      * <p>PLAT-21d：allowed-executables 是 PROCESS 可执行文件白名单（逗号分隔绝对路径）。
      * 已配置时注册期即拒绝白名单外的可执行文件（400 可读，见 {@link #normalize}）；
      * 未配置时保持兼容行为（ADMIN 登记 + 发布预检兜底），执行期由 ProcessAdapter 的第二道闸兜住。
+     *
+     * <p>PLAT-22C：adapterRegistry 是注册期 kind 白名单/组合校验/工具发现能力的单一来源。注册表由
+     * Spring 装配（内置单元 @Component 自动发现 + 外部新执行方式实现 {@link cn.agentplatform.skill.infra.SkillAdapter}
+     * 即接入），目录层不再自持类型枚举——新 kind 能否登记由“是否已注册”决定，而不是由本类硬编码决定。
      */
     @Autowired
     public SkillCatalog(
@@ -94,7 +124,8 @@ public class SkillCatalog {
             @Value("${agent.services.app:http://127.0.0.1:18081}") String appUrl,
             @Value("${agent.skill.auth.legacy-bearer:true}") boolean legacyBearer,
             @Value("${agent.skill.evidence-digest-gate:true}") boolean evidenceDigestGate,
-            @Value("${agent.process.allowed-executables:}") String allowedExecutables) {
+            @Value("${agent.process.allowed-executables:}") String allowedExecutables,
+            AdapterRegistry adapterRegistry) {
         this.db = db;
         this.tx = new TransactionTemplate(manager);
         this.clients = clients;
@@ -102,6 +133,7 @@ public class SkillCatalog {
         this.legacyBearer = legacyBearer;
         this.evidenceDigestGate = evidenceDigestGate;
         this.allowedExecutables = ProcessWhitelist.parse(allowedExecutables);
+        this.adapterRegistry = adapterRegistry;
     }
 
     private String tenant() {
@@ -206,7 +238,9 @@ public class SkillCatalog {
         var candidate = version(code, version);
         if (!"DRAFT".equals(candidate.get("status")))
             throw error(409, "SKILL_STATE", "仅草稿可列取MCP工具");
-        if (!"MCP".equals(candidate.get("type"))) throw error(400, "INVALID_SKILL", "该草稿不是MCP技能");
+        // PLAT-22C：工具目录发现是注册单元声明的能力（MCP 单元支持），不再按类型字符串硬判。
+        if (!adapterRegistry.supportsToolDiscovery(Objects.toString(candidate.get("type"), "")))
+            throw error(400, "INVALID_SKILL", "该草稿不是MCP技能");
         if (!Objects.toString(candidate.get("authRef"), "").isBlank())
             Actor.current().requireRole("ADMIN");
         try {
@@ -368,7 +402,9 @@ public class SkillCatalog {
         String type =
                 Objects.toString(
                         body.getOrDefault("type", invocation.getOrDefault("adapterType", "")), "");
-        if (!Set.of("HTTP", "MCP", "ALGORITHM", "PROCESS").contains(type))
+        // PLAT-22C：适配器类型白名单的单一来源是注册表（内置五单元 + 已注册的新执行方式）。
+        // 未注册 kind 的拒绝保持既有 400 码与文案；新执行方式接入 = 实现注册单元，不改本处。
+        if (!adapterRegistry.isSupportedType(type))
             throw error(400, "INVALID_SKILL", "适配器类型无效");
         var result = new LinkedHashMap<String, Object>();
         result.put("type", type);
@@ -440,18 +476,15 @@ public class SkillCatalog {
                         invocation.getOrDefault(
                                 "kind",
                                 body.getOrDefault(
-                                        "invocationKind",
-                                        type.equals("ALGORITHM") ? "SUBMIT_QUERY" : "SYNC")));
-        if (process && !kind.equals("SYNC"))
+                                        "invocationKind", adapterRegistry.defaultKind(type))));
+        // PLAT-22C：类型×调用形态组合白名单收敛到注册表（单元声明 supportedKinds，注册表取并集）。
+        // 错误码与触发条件与既有完全一致；PROCESS 的定制诊断由其注册单元承载（unsupportedKindMessage），
+        // 编辑器可读性不退化；未注册 kind 同样在此给出可读 400。
+        if (!adapterRegistry.isSupportedCombination(type, kind))
             throw error(
                     400,
                     "UNSUPPORTED_INVOCATION_KIND",
-                    "PROCESS 仅支持 SYNC 调用形态（本地进程没有异步提交或回调通道），收到: " + kind);
-        if (!(type.equals("HTTP") && Set.of("SYNC", "SUBMIT_QUERY", "CALLBACK").contains(kind)
-                || type.equals("MCP") && kind.equals("SYNC")
-                || type.equals("ALGORITHM") && kind.equals("SUBMIT_QUERY")
-                || process && kind.equals("SYNC")))
-            throw error(400, "UNSUPPORTED_INVOCATION_KIND", "该适配器与调用形态组合尚未支持");
+                    adapterRegistry.combinationMessage(type, kind));
         // PROCESS子契约只由ProcessContract.parse解释（绝对路径可执行文件、参数个数、超时、stdin/env、
         // 输出上限），目录层负责把规范化结果写回持久化契约：缺省值在注册期落库，执行期不再猜默认值，
         // 草稿读回的取值就是执行时的取值（与HTTP契约用OpenApiHttpMapping归一化同一做法）。

@@ -25,8 +25,8 @@
       "file": "contracts/skill-invocation.md",
       "sourceLineStart": 940,
       "sourceLineEnd": 1399,
-      "sha256": "e3abb23311c8d0e499cb659e33704d2f1d8fea4d1fa1943029b5f854f0022556",
-      "engineeringAddendum": "2026-10-28 PLAT-05 增补 §11（统一错误对象/errorSemantics/任务结果端点）；2026-10-28 PLAT-06 增补 §12（SUBMIT_QUERY pathParams 声明式映射、占位符一一对应校验与查询 4xx 可读化）；2026-10-28 PLAT-12 增补 §13（技能契约 identity 声明与出站 X-User-* 注入：mode 只允许 PLATFORM_SUBJECT、headers 值只允许主体快照字段白名单、与 AuthScheme 鉴权头叠加、无主体跳过注入并随运行详情可见），依据平台侧优化方案 §4.5/§4.6/§4.12/§4.16，snapshot 保持 v1.2 原文；2026-10-28 PLAT-15 增补 §14（写操作 PREPARE/EXECUTE 两段与人工确认：execution.approval 声明与缺省 SINGLE_STEP 兼容口径、独立 prepare 入口、引擎盖章 actionPlanDigest/幂等键、V221 execute_key 唯一约束、高危 risk=HIGH 双角色或二次确认、digest/过期/强度三重执行门、错误码登记），依据平台侧优化方案 §4.15，snapshot 保持 v1.2 原文"
+      "sha256": "399f6248e3b24bf10c1489b670238b1a8b7cc67ee5d5ab0e1eb4c6d1a43d66a5",
+      "engineeringAddendum": "2026-10-28 PLAT-05 增补 §11（统一错误对象/errorSemantics/任务结果端点）；2026-10-28 PLAT-06 增补 §12（SUBMIT_QUERY pathParams 声明式映射、占位符一一对应校验与查询 4xx 可读化）；2026-10-28 PLAT-12 增补 §13（技能契约 identity 声明与出站 X-User-* 注入：mode 只允许 PLATFORM_SUBJECT、headers 值只允许主体快照字段白名单、与 AuthScheme 鉴权头叠加、无主体跳过注入并随运行详情可见），依据平台侧优化方案 §4.5/§4.6/§4.12/§4.16，snapshot 保持 v1.2 原文；2026-10-28 PLAT-15 增补 §14（写操作 PREPARE/EXECUTE 两段与人工确认：execution.approval 声明与缺省 SINGLE_STEP 兼容口径、独立 prepare 入口、引擎盖章 actionPlanDigest/幂等键、V221 execute_key 唯一约束、高危 risk=HIGH 双角色或二次确认、digest/过期/强度三重执行门、错误码登记），依据平台侧优化方案 §4.15，snapshot 保持 v1.2 原文；2026-10-28 PLAT-22 C 段 增补 §15（适配器注册表与执行方式零改代码接入：注册表为 kind→执行单元与 kind 白名单单一来源、Spring 装配与显式注册同一批单元类、未注册 kind 三处错误码不变、内置五单元执行语义零搬运、与 T22A 能力包 schema 枚举的两层 kind 关系、新执行方式接入=实现适配器+注册不改分发代码），依据平台侧优化方案 §11.4，snapshot 保持 v1.2 原文"
     },
     {
       "name": "authorization-confirmation",
@@ -54,6 +54,25 @@
       "basis": "平台侧优化方案与实施细则-20261027 §11.2（能力包：软件接入的唯一声明入口）与 §11.9 A 段（先冻结 schema 再实现，不写平台代码）",
       "changeControl": "schema v1 冻结；变更须走计划 §6.5 契约纪律：本条目 sha256 更新 + contracts/snapshot/ 同步 + 变更记录（台账 §7.3 追加），版本不可原地覆盖（演进 = 新 schemaId）；声明文件不是代码分支。冻结记录与字段出处映射见 docs/evidence/2026-10-28-PLAT-22A-capability-schema/README.md",
       "note": "本条目只登记冻结事实，不改变 verify-contracts.mjs 既有门禁行为（登记是否接入门禁由 T22D 控制面收口决策）；contracts/skill-invocation.md 及四契约原文保持不动。PROCESS 适配器等未实现能力在 schema 中为冻结留白（实现归 T22C），不构成已上线能力。"
+    },
+    {
+      "date": "2026-10-28",
+      "card": "T22C（PLAT-22 C 段）",
+      "artifact": "contracts/skill-invocation.md",
+      "addendum": "§15 适配器注册表与执行方式零改代码接入",
+      "sha256": "399f6248e3b24bf10c1489b670238b1a8b7cc67ee5d5ab0e1eb4c6d1a43d66a5",
+      "code": [
+        "skill-registry/src/main/java/cn/agentplatform/skill/infra/AdapterRegistry.java",
+        "skill-registry/src/main/java/cn/agentplatform/skill/infra/SkillAdapter.java",
+        "skill-registry/src/main/java/cn/agentplatform/skill/infra/HttpSyncExecutionAdapter.java",
+        "skill-registry/src/main/java/cn/agentplatform/skill/infra/HttpAsyncExecutionAdapter.java",
+        "skill-registry/src/main/java/cn/agentplatform/skill/infra/McpExecutionAdapter.java",
+        "skill-registry/src/main/java/cn/agentplatform/skill/infra/AlgorithmExecutionAdapter.java",
+        "skill-registry/src/main/java/cn/agentplatform/skill/infra/ProcessExecutionAdapter.java"
+      ],
+      "basis": "平台侧优化方案与实施细则-20261027 §11.4（新软件接入八步：'新增执行 kind = 平台扩展，现有 kind 都不匹配才新增 adapter'）；优化台账 T22C（适配器注册表替代硬编码 switch）",
+      "changeControl": "skill-invocation.md 增补节随文件整体 sha256 登记于 contracts[]（沿用 §11–§14 模式）；注册表运行层新增执行方式不触发本文件变更，能力包 schema（声明层）扩容另行走 T22A 条目的变更控制",
+      "note": "两层 kind 关系定死：能力包 schema 五值枚举是声明层，本注册表是运行层；运行层先行注册不构成声明层上线。内置五单元执行语义零搬运（T05/T06/T12/T21d/PLAT-15 原地不动）。验证锚点 AdapterRegistryZeroChangeTest（8 例），红绿对照与模块全量对照见 docs/evidence/2026-10-28-PLAT-22C-adapter-registry/README.md"
     }
   ]
 }
