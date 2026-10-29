@@ -97,3 +97,11 @@
 服务端 `config.capabilityPackages` 保存包版本/摘要、软件、环境、路线、映射摘要和逐工具精确来源，PG 关联为权威校验源。普通 save（含 FLOW 图）不能删除/伪造来源、改绑定版本或改变已固定工具策略，否则 `409 CAPABILITY_SOURCE_CONFLICT`；无包旧应用不新增此字段、原构造及保存行为保持。copy 在原事务为新应用复制来源关系，不复制发布/评测许可；删除从未发布草稿时，仅本应用关联随外键删除，包版本、其他应用和发布版本保留。precheck/commit 再核来源关系，发布快照沿原完整 config 固化并进入候选摘要。
 
 本子批证明草稿与发布来源保护，不宣称真实评测或执行已完成。RunService 原深复制可保留 config 字段，但独立 `versionRefs`、执行 tools 的来源对应与重放自洽检查仍待后续子批；IAM 原准入仍拒绝不支持的包/技能配置。EX-10 原完整运行验收保持未完成。
+
+## Phase 3b：运行快照来源与精确版本一致性
+
+本子批补充上一节保留的运行冻结缺口，不改变执行器或 PG 事实权威。带 `config.capabilityPackages` 的新运行先核包身份、环境/路线、原映射摘要及全部逻辑 tool 引用，再以 `requireRegistered=true` 读取精确发布技能；返回 code/version/versionNo/id/skillVersionId、契约 SHA 与原映射必须一致，扁平执行/guard/Schema 字段也必须与同摘要 definition 一致。失败为 `409 CAPABILITY_SNAPSHOT_CONFLICT`，在 run/节点写入和模型冻结之前拒绝。旧无包应用的原读取与冻结形状保持。
+
+运行 `snapshot.capabilityBindings` 保存原包版本、软件版本、环境声明、路线和逐工具精确绑定，并记录本次实际选择 `SELECTED`、`GUARD_DENIED`、`DISABLED` 或 `PROFILE_NOT_MEMBER`。同 code/version 只取一次技能，但保留每个逻辑 tool 的来源；相同技能引用的 enabled/profiles 策略冲突时拒绝，不能靠去重吞掉差异。选中 `config.tools[]` 增加 `capabilityOrigins[]`，`version_refs.capabilityPackages` 保存同一冻结来源；未选工具不伪装成已装载。
+
+所有新运行在入库前核冻结来源与 tools 的 ID、契约摘要及 origins 自洽。受控录制回放仅检查原快照，不读当前包/技能目录、不重新解释历史选择；损坏或缺失的包冻结材料明确拒绝。已有 requestId 保持原幂等读取，不重写原记录；重新执行仍沿原目录解析规则核对冻结来源。无包旧回放不新增来源键。IAM 原入口对不支持的技能/包配置继续拒绝，本子批不宣称实际模型/工具调用、容量或完整 EX-10 联验完成。

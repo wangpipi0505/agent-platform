@@ -651,6 +651,7 @@ public class RunService {
             // All new run entry points share the frozen declaration gate. An invalid request
             // must fail before model binding, run/attempt creation or any paid dispatch.
             // Previously accepted requestIds above keep their original idempotent read semantics.
+            validateCapabilitySnapshot(snapshot);
             InputDeclarations.validate(snapshot, req.path("inputs"));
             if (!recordedReplay && !firstChat) freezeModelRefs(snapshot, trigger, actor);
             if (trigger.equals("DEBUG"))
@@ -1120,6 +1121,7 @@ public class RunService {
         refs.put("interpreterVer", "1.0");
         refs.put("evalReportId", req.path("evalReportId"));
         refs.put("ontology", List.of());
+        if (frozen.has("capabilityBindings")) refs.put("capabilityPackages", frozen.path("capabilityBindings").deepCopy());
         return refs;
     }
 
@@ -1208,6 +1210,9 @@ public class RunService {
 
     private JsonNode prepareSnapshot(JsonNode original, Actor actor, Long controlledDraftId) {
         var snapshot = (com.fasterxml.jackson.databind.node.ObjectNode) original.deepCopy();
+        CapabilitySources capability = capabilitySources(snapshot);
+        if (capability != null && controlledDraftId != null) throw capabilityConflict();
+        var capabilitySelections = new HashMap<String, String>();
         if (iamEnabled()) {
             // Published empty dependency containers carry no external references. Normalize only
             // these known empty fields before the existing preparation code enumerates them.
@@ -1276,7 +1281,7 @@ public class RunService {
                             ? pinnedDraft
                             : clients.get(
                                     "skill",
-                                    "/internal/skills/" + code + "?version=" + version,
+                                    "/internal/skills/" + code + "?version=" + version + (capability == null ? "" : "&requireRegistered=true"),
                                     actor);
             boolean controlledDraft =
                     controlledDraftId != null
@@ -1285,6 +1290,7 @@ public class RunService {
             if (!controlledDraft
                     && !Set.of("PUBLISHED", "ARCHIVED").contains(skill.path("status").asText()))
                 throw new PlatformException(409, "SKILL_NOT_PUBLISHED", "技能尚未发布");
+            if (capability != null) validateCapabilitySkill(capability.versions().get(key), skill);
             pinned.put(key, skill);
             boolean visible = true;
             for (JsonNode role : skill.path("guard").path("roles"))
@@ -1305,6 +1311,9 @@ public class RunService {
                             .contains(allowed.asText())) match = true;
                 if (!match) visible = false;
             }
+            if (capability != null)
+                capabilitySelections.put(key, !visible ? "GUARD_DENIED" : !ref.path("enabled").asBoolean(true)
+                        ? "DISABLED" : !toolInProfile(ref, toolProfile) ? "PROFILE_NOT_MEMBER" : "SELECTED");
             if (visible) {
                 boolean enabled = ref.path("enabled").asBoolean(true);
                 boolean member = toolInProfile(ref, toolProfile);
@@ -1405,6 +1414,7 @@ public class RunService {
         }
         config.set("frozenPrompts", prompts);
         config.set("tools", tools);
+        freezeCapabilities(snapshot, config, capability, capabilitySelections);
         annotateToolSelection(
                 snapshot,
                 toolProfile,
@@ -1414,6 +1424,176 @@ public class RunService {
         applyOntologyContext(config, snapshot, actor);
         snapshot.set("config", config);
         return snapshot;
+    }
+
+    private record CapabilitySources(List<JsonNode> packages, Map<String, JsonNode> versions,
+            Map<String, com.fasterxml.jackson.databind.node.ArrayNode> origins) {}
+
+    private static PlatformException capabilityConflict() {
+        return new PlatformException(409, "CAPABILITY_SNAPSHOT_CONFLICT", "能力包来源、路线或精确技能版本与运行快照不一致");
+    }
+
+    private static boolean capabilityText(JsonNode node) {
+        return node.isTextual() && !node.asText().isBlank();
+    }
+
+    private static boolean capabilityId(JsonNode node) {
+        return node.isIntegralNumber() && node.canConvertToLong() && node.asLong() > 0;
+    }
+
+    private static boolean capabilityVersion(JsonNode node) {
+        return capabilityId(node) && node.canConvertToInt();
+    }
+
+    /** 来源只来自 app 的受控 config；重建摘要所用的原四字段，不能信任孤立的 mappingSha256 标签。 */
+    private static CapabilitySources capabilitySources(JsonNode snapshot) {
+        JsonNode config = snapshot.path("config"), raw = config.path("capabilityPackages");
+        if (!config.has("capabilityPackages")) return null;
+        if (!raw.isArray() || raw.isEmpty()) throw capabilityConflict();
+        var packages = new ArrayList<JsonNode>();
+        var versions = new LinkedHashMap<String, JsonNode>();
+        var origins = new LinkedHashMap<String, com.fasterxml.jackson.databind.node.ArrayNode>();
+        var packageIds = new HashSet<Long>();
+        var packageVersions = new HashSet<String>();
+        var codeVersions = new HashMap<String, Integer>();
+        for (JsonNode pkg : raw) {
+            if (!pkg.isObject() || !capabilityId(pkg.path("packageVersionId")) || !packageIds.add(pkg.path("packageVersionId").asLong())) throw capabilityConflict();
+            for (String key : List.of("packageId", "version", "softwareId", "environment", "routeProfileId"))
+                if (!capabilityText(pkg.path(key))) throw capabilityConflict();
+            if (!packageVersions.add(pkg.path("packageId").asText() + "\n" + pkg.path("version").asText())
+                    || !PROMPT_SHA_PATTERN.matcher(pkg.path("sha256").asText()).matches()
+                    || !PROMPT_SHA_PATTERN.matcher(pkg.path("mappingSha256").asText()).matches()
+                    || !pkg.hasNonNull("environmentDeclaration") || !pkg.path("bindings").isArray() || pkg.path("bindings").isEmpty()) throw capabilityConflict();
+            var mapping = Json.object();
+            for (String key : List.of("environment", "environmentDeclaration", "routeProfileId", "bindings")) mapping.set(key, pkg.path(key));
+            if (!pkg.path("mappingSha256").asText().equals(Digest.sha256(Json.canonical(mapping)))) throw capabilityConflict();
+            var toolIds = new HashSet<String>();
+            for (JsonNode binding : pkg.path("bindings")) {
+                if (!binding.isObject() || !capabilityText(binding.path("toolId")) || !toolIds.add(binding.path("toolId").asText())
+                        || !capabilityText(binding.path("interfaceId")) || !binding.path("routeProfileId").equals(pkg.path("routeProfileId"))
+                        || !binding.path("skillCode").asText().matches("[A-Za-z][A-Za-z0-9_-]{0,63}")
+                        || !capabilityVersion(binding.path("version")) || !capabilityId(binding.path("skillVersionId"))
+                        || !PROMPT_SHA_PATTERN.matcher(binding.path("sha256").asText()).matches()) throw capabilityConflict();
+                String code = binding.path("skillCode").asText(), key = code + ":" + binding.path("version").asInt();
+                Integer priorVersion = codeVersions.putIfAbsent(code, binding.path("version").asInt());
+                if (priorVersion != null && priorVersion != binding.path("version").asInt()) throw capabilityConflict();
+                JsonNode previous = versions.putIfAbsent(key, binding);
+                if (previous != null && (previous.path("skillVersionId").asLong() != binding.path("skillVersionId").asLong()
+                        || !previous.path("sha256").equals(binding.path("sha256")))) throw capabilityConflict();
+                var origin = Json.object();
+                for (String field : List.of("packageVersionId", "packageId", "softwareId", "softwareVersion", "environment", "environmentDeclaration", "routeProfileId", "mappingSha256"))
+                    if (pkg.has(field)) origin.set(field, pkg.path(field).deepCopy());
+                origin.set("packageVersion", pkg.path("version").deepCopy()); origin.set("packageSha256", pkg.path("sha256").deepCopy());
+                for (String field : List.of("toolId", "interfaceId", "skillCode", "skillVersionId")) origin.set(field, binding.path(field).deepCopy());
+                origin.set("skillVersion", binding.path("version").deepCopy()); origin.set("contractDigest", binding.path("sha256").deepCopy());
+                origins.computeIfAbsent(key, ignored -> Json.mapper().createArrayNode()).add(origin);
+            }
+            packages.add(pkg);
+        }
+        if (!config.path("skillRefs").isArray()) throw capabilityConflict();
+        var configured = new HashSet<String>();
+        var policies = new HashMap<String, String>();
+        var refs = new ArrayList<JsonNode>(); config.path("skillRefs").forEach(refs::add);
+        for (JsonNode ref : config.path("skillRefs")) configured.add(ref.path("code").asText() + ":" + ref.path("version").asInt());
+        if (!configured.equals(versions.keySet())) throw capabilityConflict();
+        for (JsonNode node : snapshot.path("definition").path("nodes")) if (node.has("skillRef")) refs.add(node.path("skillRef"));
+        for (JsonNode ref : refs) {
+            if (!ref.isObject() || !capabilityVersion(ref.path("version"))) throw capabilityConflict();
+            String key = ref.path("code").asText() + ":" + ref.path("version").asInt();
+            JsonNode expected = versions.get(key);
+            if (expected == null || (ref.has("skillVersionId") && ref.path("skillVersionId").asLong() != expected.path("skillVersionId").asLong())
+                    || (ref.has("enabled") && !ref.path("enabled").isBoolean()) || (ref.has("profiles") && !ref.path("profiles").isArray())) throw capabilityConflict();
+            var profiles = new TreeSet<String>();
+            for (JsonNode profile : ref.path("profiles")) {
+                if (!capabilityText(profile)) throw capabilityConflict(); profiles.add(profile.asText());
+            }
+            String policy = Json.canonical(Map.of("enabled", ref.path("enabled").asBoolean(true), "profiles", profiles));
+            String prior = policies.putIfAbsent(key, policy);
+            if (prior != null && !prior.equals(policy)) throw capabilityConflict();
+        }
+        return new CapabilitySources(packages, versions, origins);
+    }
+
+    /** 仅有包的首次冻结走 requireRegistered；旧无包历史读取 ARCHIVED 等行为不全局收紧。 */
+    private static void validateCapabilitySkill(JsonNode expected, JsonNode skill) {
+        if (expected == null || !"PUBLISHED".equals(skill.path("status").asText())
+                || !Set.of("PUBLISHED", "DRAFT").contains(skill.path("skillStatus").asText())
+                || !skill.path("registered").isBoolean() || !skill.path("registered").asBoolean()
+                || !expected.path("skillCode").equals(skill.path("code"))
+                || !capabilityVersion(skill.path("version")) || skill.path("version").asInt() != expected.path("version").asInt()
+                || !capabilityVersion(skill.path("versionNo")) || skill.path("versionNo").asInt() != expected.path("version").asInt()
+                || !capabilityId(skill.path("id")) || !capabilityId(skill.path("skillVersionId"))
+                || skill.path("id").asLong() != expected.path("skillVersionId").asLong()
+                || skill.path("skillVersionId").asLong() != expected.path("skillVersionId").asLong()
+                || !skill.path("sha256").equals(expected.path("sha256")) || !skill.path("digest").equals(expected.path("sha256"))
+                || !skill.path("definition").isObject()
+                || !Digest.sha256(Json.canonical(skill.path("definition"))).equals(expected.path("sha256").asText())) throw capabilityConflict();
+        for (String field : List.of("guard", "execution", "inputSchema", "outputSchema"))
+            if (!skill.path(field).equals(skill.path("definition").path(field))) throw capabilityConflict();
+    }
+
+    private static void freezeCapabilities(com.fasterxml.jackson.databind.node.ObjectNode snapshot,
+            com.fasterxml.jackson.databind.node.ObjectNode config, CapabilitySources sources, Map<String, String> selections) {
+        if (sources == null) return;
+        var frozen = Json.mapper().createArrayNode();
+        for (JsonNode pkg : sources.packages()) {
+            var copy = (com.fasterxml.jackson.databind.node.ObjectNode) pkg.deepCopy();
+            for (JsonNode binding : copy.path("bindings")) {
+                String key = binding.path("skillCode").asText() + ":" + binding.path("version").asInt();
+                if (!selections.containsKey(key)) throw capabilityConflict();
+                ((com.fasterxml.jackson.databind.node.ObjectNode) binding).put("selection", selections.get(key));
+            }
+            frozen.add(copy);
+        }
+        for (JsonNode tool : config.path("tools")) {
+            String code = tool.path("code").asText();
+            String key = sources.versions().keySet().stream().filter(k -> k.startsWith(code + ":")).findFirst().orElseThrow(RunService::capabilityConflict);
+            ((com.fasterxml.jackson.databind.node.ObjectNode) tool).set("capabilityOrigins", sources.origins().get(key).deepCopy());
+        }
+        snapshot.set("capabilityBindings", frozen);
+    }
+
+    /** 新运行与受控回放共用入库前门；回放只查原快照自身，不读当前包/技能目录、不重算历史选择。 */
+    private static void validateCapabilitySnapshot(JsonNode snapshot) {
+        CapabilitySources sources = capabilitySources(snapshot);
+        if (sources == null) {
+            if (snapshot.has("capabilityBindings")) throw capabilityConflict();
+            for (JsonNode tool : snapshot.path("config").path("tools")) if (tool.has("capabilityOrigins")) throw capabilityConflict();
+            return;
+        }
+        JsonNode frozen = snapshot.path("capabilityBindings");
+        if (!frozen.isArray() || frozen.size() != sources.packages().size()) throw capabilityConflict();
+        var selections = new HashMap<String, String>();
+        for (int p = 0; p < frozen.size(); p++) {
+            JsonNode original = sources.packages().get(p), saved = frozen.get(p);
+            if (!saved.isObject() || !saved.path("bindings").isArray() || saved.path("bindings").size() != original.path("bindings").size()) throw capabilityConflict();
+            var expected = (com.fasterxml.jackson.databind.node.ObjectNode) original.deepCopy();
+            for (int b = 0; b < saved.path("bindings").size(); b++) {
+                String state = saved.path("bindings").get(b).path("selection").asText();
+                if (!Set.of("SELECTED", "GUARD_DENIED", "DISABLED", "PROFILE_NOT_MEMBER").contains(state)) throw capabilityConflict();
+                var binding = (com.fasterxml.jackson.databind.node.ObjectNode) expected.path("bindings").get(b);
+                binding.put("selection", state);
+                String key = binding.path("skillCode").asText() + ":" + binding.path("version").asInt();
+                String previous = selections.putIfAbsent(key, state);
+                if (previous != null && !previous.equals(state)) throw capabilityConflict();
+            }
+            if (!Json.canonical(expected).equals(Json.canonical(saved))) throw capabilityConflict();
+        }
+        var selected = new HashSet<String>();
+        for (JsonNode tool : snapshot.path("config").path("tools")) {
+            String code = tool.path("code").asText();
+            String key = sources.versions().keySet().stream().filter(k -> k.startsWith(code + ":")).findFirst().orElseThrow(RunService::capabilityConflict);
+            JsonNode expected = sources.versions().get(key);
+            if (!selected.add(key) || !"SELECTED".equals(selections.get(key)) || !capabilityId(tool.path("skillVersionId"))
+                    || tool.path("skillVersionId").asLong() != expected.path("skillVersionId").asLong()
+                    || !tool.path("contractDigest").equals(expected.path("sha256")) || !tool.path("contract").isObject()
+                    || !Digest.sha256(Json.canonical(tool.path("contract"))).equals(expected.path("sha256").asText())
+                    || !Json.canonical(tool.path("capabilityOrigins")).equals(Json.canonical(sources.origins().get(key)))) throw capabilityConflict();
+            for (String field : List.of("guard", "execution", "inputSchema", "outputSchema"))
+                if (!tool.path(field).equals(tool.path("contract").path(field))) throw capabilityConflict();
+        }
+        for (var entry : selections.entrySet())
+            if ("SELECTED".equals(entry.getValue()) != selected.contains(entry.getKey())) throw capabilityConflict();
     }
 
     private void applyOntologyContext(
