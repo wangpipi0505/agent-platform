@@ -54,4 +54,42 @@ class RoutesTest {
         assertThatThrownBy(() -> Routes.service("/v1/apps/ops/sessions/s_1/secret"))
                 .isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    void routesOnlyExactCapabilityPackageEndpointsToApplicationService() {
+        for (String path : new String[] {
+                "/admin/capability-packages",
+                "/admin/capability-packages/import",
+                "/admin/capability-packages/1",
+                "/admin/capability-packages/42",
+                "/admin/capability-packages/1/bindings/resolve",
+                "/admin/capability-packages/42/bindings/resolve",
+                "/admin/capability-packages/1/applications",
+                "/admin/capability-packages/42/applications"
+        }) {
+            assertThatCode(() -> Routes.service(path)).as(path).doesNotThrowAnyException();
+            assertThat(Routes.service(path)).as(path).isEqualTo("app");
+        }
+        for (String path : new String[] {
+                "/admin/capability-packages-extra",
+                "/admin/capability-packagesX",
+                "/admin/capability-packages/",
+                "/admin/capability-packages/import/1",
+                "/admin/capability-packages/0",
+                "/admin/capability-packages/01",
+                "/admin/capability-packages/-1",
+                "/admin/capability-packages/abc",
+                "/admin/capability-packages/internal",
+                "/admin/capability-packages/1/",
+                "/admin/capability-packages/1/bindings",
+                "/admin/capability-packages/1/bindings/resolve/more",
+                "/admin/capability-packages/1/applications/2",
+                "/admin/capability-packages/1/unknown",
+                "/internal/capability-packages",
+                "/v1/capability-packages"
+        }) {
+            assertThatThrownBy(() -> Routes.service(path)).as(path)
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+    }
 }

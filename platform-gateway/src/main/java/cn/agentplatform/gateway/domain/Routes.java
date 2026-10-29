@@ -8,6 +8,10 @@ public final class Routes {
         // Named inputs remain runtime resources; promotion's service-only endpoint stays private.
         if (path.matches("/admin/debug-inputs(?:/[0-9]+(?:/promote)?)?")) return "engine";
         if (path.matches("/admin/evaluation-datasets(?:/[^/]+/[^/]+)?")) return "monitor";
+        // 能力包仅匹配已登记入口；归属与调用权限仍由应用服务校验。
+        if (path.matches(
+                "/admin/capability-packages(?:/import|/[1-9][0-9]*(?:/bindings/resolve|/applications)?)?"))
+            return "app";
         if (path.matches("/v1/apps/[A-Za-z0-9_-]+/input-schema")) return "app";
         // 会话所有权与固定版本由运行时校验，不能被后面的应用CRUD前缀吞掉。
         if (path.matches(
