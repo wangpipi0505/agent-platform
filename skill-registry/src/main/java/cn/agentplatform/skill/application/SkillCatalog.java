@@ -729,18 +729,44 @@ public class SkillCatalog {
         if (body.containsKey("httpMapping")) result.put("httpMapping", body.get("httpMapping"));
         if (body.containsKey("importSource")) {
             var source = object(body.get("importSource"));
-            if (!source.keySet()
-                            .equals(
-                                    Set.of(
-                                            "kind",
-                                            "operationId",
-                                            "method",
-                                            "path",
-                                            "documentSha256"))
-                    || !"OPENAPI".equals(source.get("kind"))
-                    || !Objects.toString(source.get("documentSha256"), "").matches("[a-f0-9]{64}"))
-                throw error(400, "INVALID_IMPORT_SOURCE", "导入来源结构无效");
-            for (String field : List.of("operationId", "method", "path")) text(source, field);
+            if ("ONTOLOGY".equals(source.get("kind"))) {
+                // 来源坐标和摘要同属冻结契约；只接纳导入器的六字段，不能夹带其它执行声明。
+                boolean valid =
+                        source.keySet()
+                                        .equals(
+                                                Set.of(
+                                                        "kind",
+                                                        "toolCode",
+                                                        "spaceCode",
+                                                        "releaseId",
+                                                        "version",
+                                                        "contentDigest"))
+                                && source.values().stream()
+                                        .allMatch(value -> value instanceof String s && !s.isBlank())
+                                && Objects.toString(source.get("contentDigest"), "")
+                                        .matches("[a-f0-9]{64}");
+                try {
+                    UUID.fromString(Objects.toString(source.get("releaseId"), ""));
+                } catch (IllegalArgumentException invalid) {
+                    valid = false;
+                }
+                if (!valid)
+                    throw error(400, "INVALID_IMPORT_SOURCE", "本体导入来源结构、releaseId或contentDigest无效");
+            } else {
+                if (!source.keySet()
+                                .equals(
+                                        Set.of(
+                                                "kind",
+                                                "operationId",
+                                                "method",
+                                                "path",
+                                                "documentSha256"))
+                        || !"OPENAPI".equals(source.get("kind"))
+                        || !Objects.toString(source.get("documentSha256"), "")
+                                .matches("[a-f0-9]{64}"))
+                    throw error(400, "INVALID_IMPORT_SOURCE", "导入来源结构无效");
+                for (String field : List.of("operationId", "method", "path")) text(source, field);
+            }
             result.put("importSource", source);
         }
         return result;

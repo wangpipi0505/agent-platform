@@ -1,6 +1,7 @@
 package cn.agentplatform.skill.application;
 
 import cn.agentplatform.common.*;
+import cn.agentplatform.common.auth.AuthScheme;
 
 import org.springframework.stereotype.Service;
 
@@ -39,13 +40,28 @@ public class OntologyManifestImports {
         this.catalog = catalog;
     }
 
-    /** 导入正式manifest数组。body: {manifests:[...], authRef?}；authRef可选，由catalog按ADMIN+vault校验。 */
+    /** 本体消费面固定API_KEY；整批写入前证明当前管理员有权使用已配置的authRef。 */
     public Map<String, Object> importManifests(Map<String, Object> body) {
         if (!(body.get("manifests") instanceof List<?> raw) || raw.isEmpty())
             throw new PlatformException(400, "INVALID_MANIFEST", "manifests必须为非空数组");
         if (raw.size() > MAX_MANIFESTS)
             throw new PlatformException(400, "INVALID_MANIFEST", "单次导入至多" + MAX_MANIFESTS + "条manifest");
         String authRef = Objects.toString(body.get("authRef"), "");
+        AuthScheme scheme =
+                AuthScheme.parse(body.getOrDefault(AuthScheme.FIELD, AuthScheme.API_KEY.name()));
+        AuthScheme.checkCombination(scheme, authRef, "HTTP");
+        if (scheme != AuthScheme.API_KEY)
+            throw new PlatformException(
+                    400, AuthScheme.CODE_CONFLICT, "本体manifest导入只支持authScheme=API_KEY");
+        // 先检查角色再解析引用；普通HTTP目录校验不证明凭据可用或归属，不能把失败留给发布后出站。
+        Actor.current().requireRole("ADMIN");
+        try {
+            SecretVault.resolve(authRef);
+        } catch (PlatformException denied) {
+            throw denied;
+        } catch (RuntimeException unavailable) {
+            throw invalid("authRef无效或尚未配置，请选择当前租户已登记的secret_ref");
+        }
         var contracts = new ArrayList<Map<String, Object>>();
         var seenCodes = new HashSet<String>();
         for (Object item : raw) {
@@ -129,8 +145,9 @@ public class OntologyManifestImports {
         for (String field : new String[] {"spaceCode", "releaseId", "version", "contentDigest"})
             importSource.put(field, Objects.toString(meta.get(field), ""));
         body.put("importSource", importSource);
-        // 空authRef不入契约：与OpenAPI导入同语义，authRef非空时catalog端强制ADMIN+vault校验。
-        if (!authRef.isBlank()) body.put("authRef", authRef);
+        // 本体协议的鉴权声明必须显式进入冻结契约，不能依赖手工HTTP技能的存量Bearer默认。
+        body.put(AuthScheme.FIELD, AuthScheme.API_KEY.name());
+        body.put("authRef", authRef);
         return body;
     }
 

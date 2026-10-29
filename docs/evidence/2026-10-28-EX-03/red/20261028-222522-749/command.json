@@ -1,0 +1,22 @@
+{
+  "head": "0cc967278007343bd5ab09faf9953d86cd573bf8",
+  "command": "mvn.cmd",
+  "arguments": [
+    "-B",
+    "-ntp",
+    "-pl",
+    "skill-registry",
+    "test",
+    "-Dmaven.repo.local=G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2",
+    "-DargLine=-Xmx1024m -Djdk.net.unixdomain.tmpdir=V:/.local/tmp",
+    "-Dsurefire.timeout=900",
+    "-Dsurefire.failIfNoSpecifiedTests=true",
+    "-Dtest=OntologyManifestImportsTest"
+  ],
+  "startedAt": "2026-10-28T22:25:24.8025650+08:00",
+  "endedAt": "2026-10-28T22:25:35.3471986+08:00",
+  "exitCode": 1,
+  "freshXml": 1,
+  "phase": "RED_ONLY",
+  "productModified": false
+}
