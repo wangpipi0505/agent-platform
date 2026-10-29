@@ -1,0 +1,1247 @@
+{
+  "phase": "FINAL_CODE_CHAIN_VERIFIED",
+  "actualRunHead": "83726d50a6cce116251c03c5c193080d8ed5aad2",
+  "actualRunSourceManifest": "docs/evidence/2026-10-28-EX-27/runs/outbox-fix-20261029-085643-361/full/module-source-sha256.json",
+  "actualRunSourceManifestSha256": "788fdb7547fac98ad55117470a46bafcf0a833f9bdf896ec011341c6e71ec4b1",
+  "sourceCount": 149,
+  "workingSourceSetAndRawShaMatchActualRun": true,
+  "allSourceAttributes": {
+    "text": "auto",
+    "eol": "lf",
+    "filter": "unspecified"
+  },
+  "stagedCombined149SourceBlobsMatchStandardFilters": true,
+  "pendingEx03Commit": false,
+  "normalizedSourceFiles": 22,
+  "files": [
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/api/ArtifactController.java",
+      "actualRunWorkSha256": "17334e1d4f8348d6d117c567327fbcf9ed517ea4df117461859927a7f9a1667e",
+      "currentWorkSha256": "17334e1d4f8348d6d117c567327fbcf9ed517ea4df117461859927a7f9a1667e",
+      "rawBlobOid": "748fb78cbfea989d38939147bea0d6cd5948bdf6",
+      "expectedGitBlobOidUnderStandardLf": "748fb78cbfea989d38939147bea0d6cd5948bdf6",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/api/FixtureAdminController.java",
+      "actualRunWorkSha256": "5796477808a4a4295dfea3208ee2a04557c730ab2e77cf1f6e7f905c871b2316",
+      "currentWorkSha256": "5796477808a4a4295dfea3208ee2a04557c730ab2e77cf1f6e7f905c871b2316",
+      "rawBlobOid": "3f81713420faf20e02f0780ae7076e4ffa23d690",
+      "expectedGitBlobOidUnderStandardLf": "3f81713420faf20e02f0780ae7076e4ffa23d690",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/api/OntologyImportController.java",
+      "actualRunWorkSha256": "16d0b2f10deaa4ab6ff4127647495dae4135391bef8de5ae4b83ef3fdabb09e9",
+      "currentWorkSha256": "16d0b2f10deaa4ab6ff4127647495dae4135391bef8de5ae4b83ef3fdabb09e9",
+      "rawBlobOid": "0ae96643c37203270a6d344116e14c671a505fbe",
+      "expectedGitBlobOidUnderStandardLf": "0ae96643c37203270a6d344116e14c671a505fbe",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/api/OpenApiImportController.java",
+      "actualRunWorkSha256": "d3b67f9c7eceb6f7842f4de5d8cd82d0fe9e0a9b3cbd2afd54df04b4a88e5bd4",
+      "currentWorkSha256": "d3b67f9c7eceb6f7842f4de5d8cd82d0fe9e0a9b3cbd2afd54df04b4a88e5bd4",
+      "rawBlobOid": "8b1f1908e77b0174b10567dc1551822e24ea3898",
+      "expectedGitBlobOidUnderStandardLf": "8b1f1908e77b0174b10567dc1551822e24ea3898",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/api/ReconciliationProofController.java",
+      "actualRunWorkSha256": "75a8e7b1a1868af3ae065b9fb064fabe77d52d89e7dd45e2220618a05612d37e",
+      "currentWorkSha256": "75a8e7b1a1868af3ae065b9fb064fabe77d52d89e7dd45e2220618a05612d37e",
+      "rawBlobOid": "f0c9af0ab4e496363a34a7f985aa0041f0481fbf",
+      "expectedGitBlobOidUnderStandardLf": "f0c9af0ab4e496363a34a7f985aa0041f0481fbf",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/api/ServiceController.java",
+      "actualRunWorkSha256": "67c6c6614be109b3c6689cd38afcd4662bd55b45d56b2aba8616917b45984fd8",
+      "currentWorkSha256": "67c6c6614be109b3c6689cd38afcd4662bd55b45d56b2aba8616917b45984fd8",
+      "rawBlobOid": "5d82826b699492f332b0b598b5d8e6168928ce17",
+      "expectedGitBlobOidUnderStandardLf": "5d82826b699492f332b0b598b5d8e6168928ce17",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/api/SkillCallbackController.java",
+      "actualRunWorkSha256": "117f8e72657c134eaf59b4337057690d6f7f75fffc8cc2277a2314d9037192b8",
+      "currentWorkSha256": "117f8e72657c134eaf59b4337057690d6f7f75fffc8cc2277a2314d9037192b8",
+      "rawBlobOid": "355e35eba668c6268b21e14ed37049248f288d0e",
+      "expectedGitBlobOidUnderStandardLf": "355e35eba668c6268b21e14ed37049248f288d0e",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/api/SkillController.java",
+      "actualRunWorkSha256": "cc6cf46adbdf886ff0b7c432b8ce8c284c24370dff9de3a10c8574317dae3927",
+      "currentWorkSha256": "cc6cf46adbdf886ff0b7c432b8ce8c284c24370dff9de3a10c8574317dae3927",
+      "rawBlobOid": "1d357e9feff7231dcdf1e6b56d2f7b61d9bea6f4",
+      "expectedGitBlobOidUnderStandardLf": "1d357e9feff7231dcdf1e6b56d2f7b61d9bea6f4",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/api/SkillEvidenceController.java",
+      "actualRunWorkSha256": "395c1c75e593f064a3287e8d1b901afddbb094348d5a68ab6f224fbfb92dbb19",
+      "currentWorkSha256": "395c1c75e593f064a3287e8d1b901afddbb094348d5a68ab6f224fbfb92dbb19",
+      "rawBlobOid": "e797dc37629ec5828db72ccbe55c1697da9b59eb",
+      "expectedGitBlobOidUnderStandardLf": "e797dc37629ec5828db72ccbe55c1697da9b59eb",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/api/TaskResultController.java",
+      "actualRunWorkSha256": "e43adfaa3340fcabe4e177ecd60085b6e8054e50b61b4ae4222d3dc2fa4e4a65",
+      "currentWorkSha256": "e43adfaa3340fcabe4e177ecd60085b6e8054e50b61b4ae4222d3dc2fa4e4a65",
+      "rawBlobOid": "f2f57e978f7715b0ee16562f7d330a1451aa80c7",
+      "expectedGitBlobOidUnderStandardLf": "f2f57e978f7715b0ee16562f7d330a1451aa80c7",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/FixtureSkills.java",
+      "actualRunWorkSha256": "8557e86dbc5fb50164d8ba8257ffeea887e507c5c814881b575050d974c4e07e",
+      "currentWorkSha256": "8557e86dbc5fb50164d8ba8257ffeea887e507c5c814881b575050d974c4e07e",
+      "rawBlobOid": "ffd12fa6beabb2e559087efff2a8a7a812b6ec55",
+      "expectedGitBlobOidUnderStandardLf": "ffd12fa6beabb2e559087efff2a8a7a812b6ec55",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/FixtureStartupGuard.java",
+      "actualRunWorkSha256": "5a8905896f7d3b55e3935a3b5f53d3a22606ef9f10afde118101c9e0911bb68f",
+      "currentWorkSha256": "5a8905896f7d3b55e3935a3b5f53d3a22606ef9f10afde118101c9e0911bb68f",
+      "rawBlobOid": "5b22827e7f17f4eff337ea1215f5d0611ffc4b10",
+      "expectedGitBlobOidUnderStandardLf": "5b22827e7f17f4eff337ea1215f5d0611ffc4b10",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/OntologyManifestImports.java",
+      "actualRunWorkSha256": "41450faac9141e0e3393d7a9ed45b5e5f67e7d09da787f448ddbe86565f24ca5",
+      "currentWorkSha256": "41450faac9141e0e3393d7a9ed45b5e5f67e7d09da787f448ddbe86565f24ca5",
+      "rawBlobOid": "4c186224173a34e8decc5c0cf32673fb300b2bb6",
+      "expectedGitBlobOidUnderStandardLf": "4c186224173a34e8decc5c0cf32673fb300b2bb6",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/OpenApiImports.java",
+      "actualRunWorkSha256": "0c1d23433a75489042997eab6338e373f09628021f09941e563cc7192d498d0b",
+      "currentWorkSha256": "0c1d23433a75489042997eab6338e373f09628021f09941e563cc7192d498d0b",
+      "rawBlobOid": "8a54d9f97fb767efb37779d203eaf2801acd7f47",
+      "expectedGitBlobOidUnderStandardLf": "8a54d9f97fb767efb37779d203eaf2801acd7f47",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/ReconciliationProofs.java",
+      "actualRunWorkSha256": "6ff0183299b4e999ffdd4571f137510a963eee3fdfdcbb6949ae6f14c3289639",
+      "currentWorkSha256": "6ff0183299b4e999ffdd4571f137510a963eee3fdfdcbb6949ae6f14c3289639",
+      "rawBlobOid": "b65ed5a5e77fba7c4563d566716cc0c8e29ce2d9",
+      "expectedGitBlobOidUnderStandardLf": "c3ed26366cec17ba5b8e433cad4ac5f6264b84b2",
+      "lineEndingNormalizationChangesBytes": true
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/ServiceLifecycle.java",
+      "actualRunWorkSha256": "e8233e57589ebbe1a75c37cfabe439749ac226055dbfe523017fe2439ab173cc",
+      "currentWorkSha256": "e8233e57589ebbe1a75c37cfabe439749ac226055dbfe523017fe2439ab173cc",
+      "rawBlobOid": "c7b8919bb3da070157b18ed1d644d0a7e23150de",
+      "expectedGitBlobOidUnderStandardLf": "c7b8919bb3da070157b18ed1d644d0a7e23150de",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/ServiceProbe.java",
+      "actualRunWorkSha256": "6c184aee8e48fcaae78a67062ff42948e54bc34d0e03d12c7afecc3850550902",
+      "currentWorkSha256": "6c184aee8e48fcaae78a67062ff42948e54bc34d0e03d12c7afecc3850550902",
+      "rawBlobOid": "b25b890a0889ae786d395d1f354a8eab540e006a",
+      "expectedGitBlobOidUnderStandardLf": "b25b890a0889ae786d395d1f354a8eab540e006a",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/SkillCallbacks.java",
+      "actualRunWorkSha256": "db8df03a5792f1733532f34675c0d8e1773c02f634ad90435b24c54f988b492d",
+      "currentWorkSha256": "db8df03a5792f1733532f34675c0d8e1773c02f634ad90435b24c54f988b492d",
+      "rawBlobOid": "4fd0cc72782e09a8341466d097a9d2201d17e70d",
+      "expectedGitBlobOidUnderStandardLf": "4fd0cc72782e09a8341466d097a9d2201d17e70d",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/SkillCatalog.java",
+      "actualRunWorkSha256": "7c98cae7587da4f64bf70e93e9540a16f097bff885de7ea158e147fe8d491b03",
+      "currentWorkSha256": "7c98cae7587da4f64bf70e93e9540a16f097bff885de7ea158e147fe8d491b03",
+      "rawBlobOid": "517322f4f819bd2dd1238b55e2b96049f1bdba0b",
+      "expectedGitBlobOidUnderStandardLf": "517322f4f819bd2dd1238b55e2b96049f1bdba0b",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/SkillExecution.java",
+      "actualRunWorkSha256": "8cd3d8edae7c0dee54dd562c6f2f3f3664759de85d122f70c1e00b9bc6d25218",
+      "currentWorkSha256": "8cd3d8edae7c0dee54dd562c6f2f3f3664759de85d122f70c1e00b9bc6d25218",
+      "rawBlobOid": "ed8b6ac45370f5e130985c3ff9e6e46afa7fdbc1",
+      "expectedGitBlobOidUnderStandardLf": "ed8b6ac45370f5e130985c3ff9e6e46afa7fdbc1",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/SkillGovernance.java",
+      "actualRunWorkSha256": "5f0c1cc7e9fc835f971d2920a5026566fd7ffa80781fd91c8299c023b6d7ede8",
+      "currentWorkSha256": "5f0c1cc7e9fc835f971d2920a5026566fd7ffa80781fd91c8299c023b6d7ede8",
+      "rawBlobOid": "0269100f4f76123e97859fbe853d4708143bd2d1",
+      "expectedGitBlobOidUnderStandardLf": "0269100f4f76123e97859fbe853d4708143bd2d1",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/SkillOutbox.java",
+      "actualRunWorkSha256": "30bae61b51db4df75462c5d92badc5455fbec1fc7437856cd1d9a9da2da32db7",
+      "currentWorkSha256": "30bae61b51db4df75462c5d92badc5455fbec1fc7437856cd1d9a9da2da32db7",
+      "rawBlobOid": "040a9447415fbd0dac1dd22eeccb59e9541457d0",
+      "expectedGitBlobOidUnderStandardLf": "040a9447415fbd0dac1dd22eeccb59e9541457d0",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/SkillStatistics.java",
+      "actualRunWorkSha256": "84edb850c69043b69e9a95652a4a7e9dc7f00855dc48469cde1d897e7a436e4d",
+      "currentWorkSha256": "84edb850c69043b69e9a95652a4a7e9dc7f00855dc48469cde1d897e7a436e4d",
+      "rawBlobOid": "63090554c59e9abac3c6f88dae85c59a8f879857",
+      "expectedGitBlobOidUnderStandardLf": "63090554c59e9abac3c6f88dae85c59a8f879857",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/domain/ErrorSemantics.java",
+      "actualRunWorkSha256": "ddc17273fe22bef75c567f87a92bb03e9f8ccbcd12cb410cd0c0c5a12f638c86",
+      "currentWorkSha256": "ddc17273fe22bef75c567f87a92bb03e9f8ccbcd12cb410cd0c0c5a12f638c86",
+      "rawBlobOid": "20d603e04a2c478ea9522cc980ea20542d810927",
+      "expectedGitBlobOidUnderStandardLf": "20d603e04a2c478ea9522cc980ea20542d810927",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/domain/ProcessContract.java",
+      "actualRunWorkSha256": "72699070d4a722bc7a3ffb7edeeb3d1cff13d51f825c133abc7e1cfb645252d9",
+      "currentWorkSha256": "72699070d4a722bc7a3ffb7edeeb3d1cff13d51f825c133abc7e1cfb645252d9",
+      "rawBlobOid": "45795d9398ef50c96424e037830f5660fcf5c230",
+      "expectedGitBlobOidUnderStandardLf": "45795d9398ef50c96424e037830f5660fcf5c230",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/domain/ServiceManifest.java",
+      "actualRunWorkSha256": "706afb5ad8698357e9821ae749d1feb10b511f7a225e33302a0521d5f1cdbcea",
+      "currentWorkSha256": "706afb5ad8698357e9821ae749d1feb10b511f7a225e33302a0521d5f1cdbcea",
+      "rawBlobOid": "1a983e43697d9bfca3c1a34713361d0bc4716ee3",
+      "expectedGitBlobOidUnderStandardLf": "1a983e43697d9bfca3c1a34713361d0bc4716ee3",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/domain/SkillDigest.java",
+      "actualRunWorkSha256": "e4ba3d331e36ff0937f5ff3f19ad413a115fccb963233e12df8b558cf168ed07",
+      "currentWorkSha256": "e4ba3d331e36ff0937f5ff3f19ad413a115fccb963233e12df8b558cf168ed07",
+      "rawBlobOid": "23f086518a4440e6329fbbdac1d3f6ded40e05f3",
+      "expectedGitBlobOidUnderStandardLf": "23f086518a4440e6329fbbdac1d3f6ded40e05f3",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/domain/SkillRules.java",
+      "actualRunWorkSha256": "ec43746f20705a8292294945594fae7a7ad0f3006e24f60657e1ac88c67886a3",
+      "currentWorkSha256": "ec43746f20705a8292294945594fae7a7ad0f3006e24f60657e1ac88c67886a3",
+      "rawBlobOid": "655314c763824ff47efbd3509c7fba20eb81166d",
+      "expectedGitBlobOidUnderStandardLf": "655314c763824ff47efbd3509c7fba20eb81166d",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/AdapterRegistry.java",
+      "actualRunWorkSha256": "2d1c7484cee53110281154650e00c361b66d6b9c90a0be2e78bdcab238be82f2",
+      "currentWorkSha256": "2d1c7484cee53110281154650e00c361b66d6b9c90a0be2e78bdcab238be82f2",
+      "rawBlobOid": "d77e5748ffaddbfca6382c3b025f11fde5cd401b",
+      "expectedGitBlobOidUnderStandardLf": "d77e5748ffaddbfca6382c3b025f11fde5cd401b",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/AlgorithmAdapter.java",
+      "actualRunWorkSha256": "019a81608c3f90b1d41046c962ff146ef2d5ebd2e3ef6a55adc56910e1504230",
+      "currentWorkSha256": "019a81608c3f90b1d41046c962ff146ef2d5ebd2e3ef6a55adc56910e1504230",
+      "rawBlobOid": "37cbef4cc867e093b4dfb9288b46b94d82f7ee41",
+      "expectedGitBlobOidUnderStandardLf": "c23e52ad78e8059401e0d6ea6cd9bedfc0f5f31f",
+      "lineEndingNormalizationChangesBytes": true
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/AlgorithmExecutionAdapter.java",
+      "actualRunWorkSha256": "aba0aa73889564d37013f58b161e29dcaa54ed98ccc487a0aa9f38a28aafebaf",
+      "currentWorkSha256": "aba0aa73889564d37013f58b161e29dcaa54ed98ccc487a0aa9f38a28aafebaf",
+      "rawBlobOid": "2760cbaab57abfbb07f61b03b952c2d4ca2625f2",
+      "expectedGitBlobOidUnderStandardLf": "2760cbaab57abfbb07f61b03b952c2d4ca2625f2",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/ArtifactStore.java",
+      "actualRunWorkSha256": "9deb51566206d548110f1f6b5aaab466619eb80d43e8d30b67f11b7e27b7541d",
+      "currentWorkSha256": "9deb51566206d548110f1f6b5aaab466619eb80d43e8d30b67f11b7e27b7541d",
+      "rawBlobOid": "013a8f32cfa72996dfc0b9f5a6ed547961badbae",
+      "expectedGitBlobOidUnderStandardLf": "6909dd354aa482e28bf9b7184865c830abcf17d1",
+      "lineEndingNormalizationChangesBytes": true
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/AsyncHttpResponse.java",
+      "actualRunWorkSha256": "e807e4a589286269e551440b3831f30d53a20d249db1fbbd2ab0ca00be691b59",
+      "currentWorkSha256": "e807e4a589286269e551440b3831f30d53a20d249db1fbbd2ab0ca00be691b59",
+      "rawBlobOid": "f648ed78ffa90549cfecfaff267b25de82ebdb39",
+      "expectedGitBlobOidUnderStandardLf": "f648ed78ffa90549cfecfaff267b25de82ebdb39",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/BoundedMcpSseTransport.java",
+      "actualRunWorkSha256": "44b1a81c554a9be6b3e1b11a1881d467b347c9d1b2e604fe4147e95fa38c0c77",
+      "currentWorkSha256": "44b1a81c554a9be6b3e1b11a1881d467b347c9d1b2e604fe4147e95fa38c0c77",
+      "rawBlobOid": "fa3e911703a5499fe36f28864f9740a2b57999e3",
+      "expectedGitBlobOidUnderStandardLf": "208b549ba4a8b7603adba3383cbaba0dddd49942",
+      "lineEndingNormalizationChangesBytes": true
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/HttpAsyncAdapter.java",
+      "actualRunWorkSha256": "dc63c6cf0794bb5439f7e5aa7b05e70328654edd92acf518a63630e9fa419c83",
+      "currentWorkSha256": "dc63c6cf0794bb5439f7e5aa7b05e70328654edd92acf518a63630e9fa419c83",
+      "rawBlobOid": "0dfe7fcc1644494fd84417bd77c5809f81c4d915",
+      "expectedGitBlobOidUnderStandardLf": "0dfe7fcc1644494fd84417bd77c5809f81c4d915",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/HttpAsyncExecutionAdapter.java",
+      "actualRunWorkSha256": "4509b20b1a10bb072a100cd0da37f9cd34f5ed1071f8e4c31fe22ccaabc6516c",
+      "currentWorkSha256": "4509b20b1a10bb072a100cd0da37f9cd34f5ed1071f8e4c31fe22ccaabc6516c",
+      "rawBlobOid": "91f642236474e8a57135bb32257c8c8d3fb212be",
+      "expectedGitBlobOidUnderStandardLf": "91f642236474e8a57135bb32257c8c8d3fb212be",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/HttpSyncExecutionAdapter.java",
+      "actualRunWorkSha256": "f83d8d90ca4e398bbd3e9e2c11f8114418a22a13c1446024c74891162b737b7e",
+      "currentWorkSha256": "f83d8d90ca4e398bbd3e9e2c11f8114418a22a13c1446024c74891162b737b7e",
+      "rawBlobOid": "47b7b5da7e63abdeefbdc68e6a4cda1858549805",
+      "expectedGitBlobOidUnderStandardLf": "47b7b5da7e63abdeefbdc68e6a4cda1858549805",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/localspike/LocalProcessManager.java",
+      "actualRunWorkSha256": "6fd57a3c2379765716543383b88e188a53d48e3d7a8f9f746bf0b1a9ca4e5107",
+      "currentWorkSha256": "6fd57a3c2379765716543383b88e188a53d48e3d7a8f9f746bf0b1a9ca4e5107",
+      "rawBlobOid": "7ed4998d63dcaba07fe7eb0a56af03a46390e799",
+      "expectedGitBlobOidUnderStandardLf": "7ed4998d63dcaba07fe7eb0a56af03a46390e799",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/localspike/LocalSpikeConfig.java",
+      "actualRunWorkSha256": "0e7b652432a87031a796d571938224128f648c6ce548a7afa1468b86eebea6e0",
+      "currentWorkSha256": "0e7b652432a87031a796d571938224128f648c6ce548a7afa1468b86eebea6e0",
+      "rawBlobOid": "b40531c20473ac0b83209941539cc387d400153e",
+      "expectedGitBlobOidUnderStandardLf": "b40531c20473ac0b83209941539cc387d400153e",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/localspike/LocalSpikeException.java",
+      "actualRunWorkSha256": "71fb600e44a59f99c4b3aec81ccc7b9611b3c1311ca432cc94353526216535b4",
+      "currentWorkSha256": "71fb600e44a59f99c4b3aec81ccc7b9611b3c1311ca432cc94353526216535b4",
+      "rawBlobOid": "583afe2453c2a230c34c5472f4ca77f3f43e19df",
+      "expectedGitBlobOidUnderStandardLf": "583afe2453c2a230c34c5472f4ca77f3f43e19df",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/localspike/LocalSpikeInvoker.java",
+      "actualRunWorkSha256": "21f402ace7814a13ef14a235ce17302a4ad1a9a50897aac0bb59c0018c5c9a91",
+      "currentWorkSha256": "21f402ace7814a13ef14a235ce17302a4ad1a9a50897aac0bb59c0018c5c9a91",
+      "rawBlobOid": "86e8c1e15c4858e815b19bdf9875c5940ca6e410",
+      "expectedGitBlobOidUnderStandardLf": "86e8c1e15c4858e815b19bdf9875c5940ca6e410",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/localspike/LocalSpikePorts.java",
+      "actualRunWorkSha256": "41fa24f09b9734db69858790fd7b16dcdda02dfdf4d9c9f42cbfc8a3ae3a6a81",
+      "currentWorkSha256": "41fa24f09b9734db69858790fd7b16dcdda02dfdf4d9c9f42cbfc8a3ae3a6a81",
+      "rawBlobOid": "a95a3a67ef8df1a02b0d1270c63bd1576f7f379a",
+      "expectedGitBlobOidUnderStandardLf": "a95a3a67ef8df1a02b0d1270c63bd1576f7f379a",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/McpAdapter.java",
+      "actualRunWorkSha256": "65bb3a464518d2f59ed25d5e0546c6afeafb8cef21a3caa864d5f0abcdee653e",
+      "currentWorkSha256": "65bb3a464518d2f59ed25d5e0546c6afeafb8cef21a3caa864d5f0abcdee653e",
+      "rawBlobOid": "334fbad9a2f0ab2b04f86529b1cf799eb23e369f",
+      "expectedGitBlobOidUnderStandardLf": "803bebb32683906b683cbbfeb4e26c73f50c4428",
+      "lineEndingNormalizationChangesBytes": true
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/McpExecutionAdapter.java",
+      "actualRunWorkSha256": "74a567cbc37dda128114e9a6f6e131301c14f089092617deb01f58d9cd79ddc5",
+      "currentWorkSha256": "74a567cbc37dda128114e9a6f6e131301c14f089092617deb01f58d9cd79ddc5",
+      "rawBlobOid": "a7e89b434fffd663d7c7d3903a5c94048316c8bb",
+      "expectedGitBlobOidUnderStandardLf": "a7e89b434fffd663d7c7d3903a5c94048316c8bb",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/MultipartFormMapping.java",
+      "actualRunWorkSha256": "3f784bbbdd5ff361f4d119c17006d7864eee15c196fcfb11224f2959fe198393",
+      "currentWorkSha256": "3f784bbbdd5ff361f4d119c17006d7864eee15c196fcfb11224f2959fe198393",
+      "rawBlobOid": "c428ca95922720d61d20cb5993c2ebd3b8feb273",
+      "expectedGitBlobOidUnderStandardLf": "c428ca95922720d61d20cb5993c2ebd3b8feb273",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/OpenApiHttpMapping.java",
+      "actualRunWorkSha256": "6eb12f58bc5be7bcee8294a7a8225b2ca276d3e03ba77bdb06b680f2ab7ea06b",
+      "currentWorkSha256": "6eb12f58bc5be7bcee8294a7a8225b2ca276d3e03ba77bdb06b680f2ab7ea06b",
+      "rawBlobOid": "3e3cf45e83ffb3deea9d4540445d2c5b38a58adf",
+      "expectedGitBlobOidUnderStandardLf": "3e3cf45e83ffb3deea9d4540445d2c5b38a58adf",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/ProcessAdapter.java",
+      "actualRunWorkSha256": "6898320e164be2a254dcf009cfc24ce00be0aa9b63954ffd7b6f9ba26d58a293",
+      "currentWorkSha256": "6898320e164be2a254dcf009cfc24ce00be0aa9b63954ffd7b6f9ba26d58a293",
+      "rawBlobOid": "b690d9d829f7f7e541fe6e209dd32979faef3ef1",
+      "expectedGitBlobOidUnderStandardLf": "b690d9d829f7f7e541fe6e209dd32979faef3ef1",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/ProcessExecutionAdapter.java",
+      "actualRunWorkSha256": "fdafa9e3f4155aa9ffa1aefc9496cf304b28ce2bb192d89ea61e63a4c0d7ad44",
+      "currentWorkSha256": "fdafa9e3f4155aa9ffa1aefc9496cf304b28ce2bb192d89ea61e63a4c0d7ad44",
+      "rawBlobOid": "154b174c7545e20f69e1a834e7a9f87275e4dfc0",
+      "expectedGitBlobOidUnderStandardLf": "154b174c7545e20f69e1a834e7a9f87275e4dfc0",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/ProcessTree.java",
+      "actualRunWorkSha256": "109add4dcf48bfb1e07540d97a125ad302b0a9f17a3ce20835fe67fd06de143a",
+      "currentWorkSha256": "109add4dcf48bfb1e07540d97a125ad302b0a9f17a3ce20835fe67fd06de143a",
+      "rawBlobOid": "e702669ee7389f3051150970de2b56d09f40bfbf",
+      "expectedGitBlobOidUnderStandardLf": "e702669ee7389f3051150970de2b56d09f40bfbf",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/ProcessWhitelist.java",
+      "actualRunWorkSha256": "14bc16253a7e562199770d5a59bb5f082f891abf2c5df79c4bf5269a6ee90160",
+      "currentWorkSha256": "14bc16253a7e562199770d5a59bb5f082f891abf2c5df79c4bf5269a6ee90160",
+      "rawBlobOid": "ef3ee7c35aadc35d023c52b2ba9036b61f62c6e2",
+      "expectedGitBlobOidUnderStandardLf": "ef3ee7c35aadc35d023c52b2ba9036b61f62c6e2",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/ServiceTickets.java",
+      "actualRunWorkSha256": "76c56f3595344bc09b674bacfb8cefbec0b81d96c6149e9647dd09e694d40aee",
+      "currentWorkSha256": "76c56f3595344bc09b674bacfb8cefbec0b81d96c6149e9647dd09e694d40aee",
+      "rawBlobOid": "4c7224e78416b5cfcf9bf3992826f2a4841867cb",
+      "expectedGitBlobOidUnderStandardLf": "4c7224e78416b5cfcf9bf3992826f2a4841867cb",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/SignedCallback.java",
+      "actualRunWorkSha256": "67b0405062c907e6c58fac498c9fb31daf2c55a74a7aea248c3c2afacf422bc1",
+      "currentWorkSha256": "67b0405062c907e6c58fac498c9fb31daf2c55a74a7aea248c3c2afacf422bc1",
+      "rawBlobOid": "806c2ab7cc326be3eb5bc5148068158135d84941",
+      "expectedGitBlobOidUnderStandardLf": "806c2ab7cc326be3eb5bc5148068158135d84941",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/SkillAdapter.java",
+      "actualRunWorkSha256": "8ae95a9c68572f71078c0026a1bf34648c9d5be17cf94288909d4b767482fccb",
+      "currentWorkSha256": "8ae95a9c68572f71078c0026a1bf34648c9d5be17cf94288909d4b767482fccb",
+      "rawBlobOid": "e9fa0e94565d7673fc22d37ccfd74283688dee00",
+      "expectedGitBlobOidUnderStandardLf": "e9fa0e94565d7673fc22d37ccfd74283688dee00",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/SkillAdapters.java",
+      "actualRunWorkSha256": "1ffd4d080af175185fde5e2f7ae5a33d823d657f965253bf336e29579b22fc11",
+      "currentWorkSha256": "1ffd4d080af175185fde5e2f7ae5a33d823d657f965253bf336e29579b22fc11",
+      "rawBlobOid": "c4516e02f7361c3f05e92bc91f39e236eff6e992",
+      "expectedGitBlobOidUnderStandardLf": "c4516e02f7361c3f05e92bc91f39e236eff6e992",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/SkillClients.java",
+      "actualRunWorkSha256": "5ab026b4aea0f3ac77f276dcb6b19b5e85124b0abe8146410a88ef96d7440534",
+      "currentWorkSha256": "5ab026b4aea0f3ac77f276dcb6b19b5e85124b0abe8146410a88ef96d7440534",
+      "rawBlobOid": "70bad58cf114b976fbea5db48595fca57cd13f0d",
+      "expectedGitBlobOidUnderStandardLf": "70bad58cf114b976fbea5db48595fca57cd13f0d",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/SkillApplication.java",
+      "actualRunWorkSha256": "9e742dcd1e549c9030f05ac78664333469e2c3b4e3a32a33bbcdeb73a3e9d267",
+      "currentWorkSha256": "9e742dcd1e549c9030f05ac78664333469e2c3b4e3a32a33bbcdeb73a3e9d267",
+      "rawBlobOid": "cf8b113c248257f8312e666087c6f00da367e389",
+      "expectedGitBlobOidUnderStandardLf": "cf8b113c248257f8312e666087c6f00da367e389",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/resources/application.yml",
+      "actualRunWorkSha256": "8ef7ba83da65989bd2f17ac8b7d0910dfd586908a7cc832b3a28342b9d8d172e",
+      "currentWorkSha256": "8ef7ba83da65989bd2f17ac8b7d0910dfd586908a7cc832b3a28342b9d8d172e",
+      "rawBlobOid": "e436d2be1731a36e030241564857473359404c86",
+      "expectedGitBlobOidUnderStandardLf": "e436d2be1731a36e030241564857473359404c86",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V300__skill.sql",
+      "actualRunWorkSha256": "e8c764d3d3b2747e54567ba0750eef1b8638b6e8c86469f8c37ec1a59b65c9d2",
+      "currentWorkSha256": "e8c764d3d3b2747e54567ba0750eef1b8638b6e8c86469f8c37ec1a59b65c9d2",
+      "rawBlobOid": "7f4f8f13cd005e1d8f8a3dd1a8394811f5fde5a1",
+      "expectedGitBlobOidUnderStandardLf": "a6dcb0bc45aa8d7e5417c90001b5b76737f20af1",
+      "lineEndingNormalizationChangesBytes": true
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V301__reconciliation.sql",
+      "actualRunWorkSha256": "92496812c02c3f005a463220b0b1f4ea6ad6b2d62424e1a73989988eeb2ab6b8",
+      "currentWorkSha256": "92496812c02c3f005a463220b0b1f4ea6ad6b2d62424e1a73989988eeb2ab6b8",
+      "rawBlobOid": "b95f2034ab9f7feec578eb5f27c0e04eeb309412",
+      "expectedGitBlobOidUnderStandardLf": "ee2da363909c16adc65643744c7b39f4a3dcba72",
+      "lineEndingNormalizationChangesBytes": true
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V302__skill_immutability.sql",
+      "actualRunWorkSha256": "abaaa4e3aea0db32f47308d5dbdedfc52796427c7a28016fd289ac9660883919",
+      "currentWorkSha256": "abaaa4e3aea0db32f47308d5dbdedfc52796427c7a28016fd289ac9660883919",
+      "rawBlobOid": "3cc763f2d4fbcf79fb9ca77c671e1a30013087e7",
+      "expectedGitBlobOidUnderStandardLf": "99fe386a1e23cc1ee9a24a33e34507a31f877225",
+      "lineEndingNormalizationChangesBytes": true
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V303__execution_fact_generation.sql",
+      "actualRunWorkSha256": "0d0e62e3185ca202622f77d83de995659f062b1082dff4ca7847b1cbccfc5aee",
+      "currentWorkSha256": "0d0e62e3185ca202622f77d83de995659f062b1082dff4ca7847b1cbccfc5aee",
+      "rawBlobOid": "588a4a1cc67fefbb897b8f35a5fdeda216d48cda",
+      "expectedGitBlobOidUnderStandardLf": "b806f9d7de438b029387a69c8de0b665373bb4e0",
+      "lineEndingNormalizationChangesBytes": true
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V304__fact_delivery_lease.sql",
+      "actualRunWorkSha256": "38e6916d5b128d8fb6cc771deeffa6f7ab42701e7a384e3150b2a45a2e1f0e12",
+      "currentWorkSha256": "38e6916d5b128d8fb6cc771deeffa6f7ab42701e7a384e3150b2a45a2e1f0e12",
+      "rawBlobOid": "39584f65e1dfbcf98ff903fa4fa231099dc8f447",
+      "expectedGitBlobOidUnderStandardLf": "fae637515c372b73249ece296e82b03f02e486a8",
+      "lineEndingNormalizationChangesBytes": true
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V305__controlled_contract_digest.sql",
+      "actualRunWorkSha256": "4010940a7d37dc516c077771a6f0909b190c0c432987ee5ebedc453f91044600",
+      "currentWorkSha256": "4010940a7d37dc516c077771a6f0909b190c0c432987ee5ebedc453f91044600",
+      "rawBlobOid": "092a80031115a74bbd58850e760fd4d50e926119",
+      "expectedGitBlobOidUnderStandardLf": "2872a9b8329df99f99d3411a02f170193d0afca8",
+      "lineEndingNormalizationChangesBytes": true
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V306__controlled_artifacts.sql",
+      "actualRunWorkSha256": "44abf9f1d5688b29cc19f6a05ba6811f7ed8f00e0562251ca391b4b23e1afdcf",
+      "currentWorkSha256": "44abf9f1d5688b29cc19f6a05ba6811f7ed8f00e0562251ca391b4b23e1afdcf",
+      "rawBlobOid": "ee1ad22b718615605fb2dfeea5275dd037b133f7",
+      "expectedGitBlobOidUnderStandardLf": "ee1ad22b718615605fb2dfeea5275dd037b133f7",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V307__http_async_binding.sql",
+      "actualRunWorkSha256": "c32087496295f94f91e47a65602c1d77ef5d56cbbbeaa9ab67d96304a3b35824",
+      "currentWorkSha256": "c32087496295f94f91e47a65602c1d77ef5d56cbbbeaa9ab67d96304a3b35824",
+      "rawBlobOid": "360d12af85f2cc482a4152d286430e59d3e9f0a8",
+      "expectedGitBlobOidUnderStandardLf": "360d12af85f2cc482a4152d286430e59d3e9f0a8",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V308__async_preparation_delivery.sql",
+      "actualRunWorkSha256": "4a2229c9c0df0bc95c6e782306abf01fc60a7b7bcb3f9a825be6b0ee15390daf",
+      "currentWorkSha256": "4a2229c9c0df0bc95c6e782306abf01fc60a7b7bcb3f9a825be6b0ee15390daf",
+      "rawBlobOid": "5f50d7a51a13fd210e201133be5fea7fdf146c7f",
+      "expectedGitBlobOidUnderStandardLf": "5f50d7a51a13fd210e201133be5fea7fdf146c7f",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V309__signed_callback_receipt.sql",
+      "actualRunWorkSha256": "fcafff8492f60254a5f46c59fe1c092dd68fdcea580f012a637e28ece1c6076f",
+      "currentWorkSha256": "fcafff8492f60254a5f46c59fe1c092dd68fdcea580f012a637e28ece1c6076f",
+      "rawBlobOid": "d14813ef08f40a6ee01be6ca056fc40809f076dd",
+      "expectedGitBlobOidUnderStandardLf": "d14813ef08f40a6ee01be6ca056fc40809f076dd",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V310__reconciliation_proof.sql",
+      "actualRunWorkSha256": "07ecf9e91a05c181400c75e54b3cceb99b019c63d4615c6562e62aeba3a01d6a",
+      "currentWorkSha256": "07ecf9e91a05c181400c75e54b3cceb99b019c63d4615c6562e62aeba3a01d6a",
+      "rawBlobOid": "9f4b1d4507e7677f7eed29b542e11cbd09352400",
+      "expectedGitBlobOidUnderStandardLf": "9f4b1d4507e7677f7eed29b542e11cbd09352400",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V311__algorithm_job_identity.sql",
+      "actualRunWorkSha256": "763a5fd44c12cbe649fd8220a174a9853b16fd55944cd487c881a05a1f3bc4b1",
+      "currentWorkSha256": "763a5fd44c12cbe649fd8220a174a9853b16fd55944cd487c881a05a1f3bc4b1",
+      "rawBlobOid": "2488659bd686e98534889b8b818eb3c746bdcf59",
+      "expectedGitBlobOidUnderStandardLf": "ea6817127fcd7c48a86c9ff3a435fc65195876c8",
+      "lineEndingNormalizationChangesBytes": true
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V312__fixture_audit.sql",
+      "actualRunWorkSha256": "ff63d4c53be9da37a0e4ee52c2f82d08f8a7d4f76f24d89f4ac3f231d6b59cdc",
+      "currentWorkSha256": "ff63d4c53be9da37a0e4ee52c2f82d08f8a7d4f76f24d89f4ac3f231d6b59cdc",
+      "rawBlobOid": "72e57c536fb666b81e4e600bccc08f441db11803",
+      "expectedGitBlobOidUnderStandardLf": "72e57c536fb666b81e4e600bccc08f441db11803",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V313__service_lifecycle.sql",
+      "actualRunWorkSha256": "d499ab44e6b008a7b49b6ea0fb4776893d41ff1ca79631d0499412da3e6c4b8f",
+      "currentWorkSha256": "d499ab44e6b008a7b49b6ea0fb4776893d41ff1ca79631d0499412da3e6c4b8f",
+      "rawBlobOid": "b1fb630dbf257e15046a3c1ca9d9380549638f0c",
+      "expectedGitBlobOidUnderStandardLf": "b1fb630dbf257e15046a3c1ca9d9380549638f0c",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V314__external_job_state.sql",
+      "actualRunWorkSha256": "3b421414bb728e5e1f3202bfde7a4157bac7a1e673b7b6ac79f589c256b43978",
+      "currentWorkSha256": "3b421414bb728e5e1f3202bfde7a4157bac7a1e673b7b6ac79f589c256b43978",
+      "rawBlobOid": "ddcf59d212926bb4f00f20b1c2be0dbd73bbb448",
+      "expectedGitBlobOidUnderStandardLf": "ddcf59d212926bb4f00f20b1c2be0dbd73bbb448",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V315__skill_semantic_digest.sql",
+      "actualRunWorkSha256": "465f6528580a9d4d0d2c147ffd58f03ae62fd2f27ea442064cc859520385ea66",
+      "currentWorkSha256": "465f6528580a9d4d0d2c147ffd58f03ae62fd2f27ea442064cc859520385ea66",
+      "rawBlobOid": "5710b214d455243d52256d701b084519858ff371",
+      "expectedGitBlobOidUnderStandardLf": "5710b214d455243d52256d701b084519858ff371",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/api/OpenApiImportControllerTest.java",
+      "actualRunWorkSha256": "4043ca81670aaca7757a521bbd661c69c8fbc889a7bd88af2c54ae424e07089c",
+      "currentWorkSha256": "4043ca81670aaca7757a521bbd661c69c8fbc889a7bd88af2c54ae424e07089c",
+      "rawBlobOid": "60ce35a130fcd72d4c8378c8199db38ba3d64738",
+      "expectedGitBlobOidUnderStandardLf": "60ce35a130fcd72d4c8378c8199db38ba3d64738",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/api/TaskResultControllerTest.java",
+      "actualRunWorkSha256": "a31c617d5d8ff0b2c10621874b000d89d6afe18398ce8759b0125c34a79aa00e",
+      "currentWorkSha256": "a31c617d5d8ff0b2c10621874b000d89d6afe18398ce8759b0125c34a79aa00e",
+      "rawBlobOid": "e672ed737c0e00291e0ea1328779ebc79e23ca20",
+      "expectedGitBlobOidUnderStandardLf": "e672ed737c0e00291e0ea1328779ebc79e23ca20",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/AlgorithmExecutionPostgresTest.java",
+      "actualRunWorkSha256": "fa6eef095a59fd0c60753e033256c5ece2dfa7bcb0a0caa0aed5be14086c745b",
+      "currentWorkSha256": "fa6eef095a59fd0c60753e033256c5ece2dfa7bcb0a0caa0aed5be14086c745b",
+      "rawBlobOid": "fd5865adb6e1bc162373230fbfb89ca99af9d4b6",
+      "expectedGitBlobOidUnderStandardLf": "769cf17b005c3081e06710a78d033e52bca65ebe",
+      "lineEndingNormalizationChangesBytes": true
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/AsyncHttpExecutionTest.java",
+      "actualRunWorkSha256": "4415d705708b7b19ef1b9cc672a5d9c1e53cc31da14c681173aa47cf635d2fb6",
+      "currentWorkSha256": "4415d705708b7b19ef1b9cc672a5d9c1e53cc31da14c681173aa47cf635d2fb6",
+      "rawBlobOid": "505eb0ee09c6a861566f3339da2d71ace7c01ad3",
+      "expectedGitBlobOidUnderStandardLf": "505eb0ee09c6a861566f3339da2d71ace7c01ad3",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/AsyncResultEndpointFailureTest.java",
+      "actualRunWorkSha256": "35385530dfbeb4a2cb14963d45f150764471c40d7772255213d0c6122994d9f2",
+      "currentWorkSha256": "35385530dfbeb4a2cb14963d45f150764471c40d7772255213d0c6122994d9f2",
+      "rawBlobOid": "33973d35f4b2beda0c161441b085c6c2827f7972",
+      "expectedGitBlobOidUnderStandardLf": "33973d35f4b2beda0c161441b085c6c2827f7972",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/CallbackHttpTest.java",
+      "actualRunWorkSha256": "6341e5c67ec8275c77ed1abb81f2e519fc022a1116f7884cb76625657edaa71c",
+      "currentWorkSha256": "6341e5c67ec8275c77ed1abb81f2e519fc022a1116f7884cb76625657edaa71c",
+      "rawBlobOid": "f60248dee6975e80906384364f58664adc8305da",
+      "expectedGitBlobOidUnderStandardLf": "f60248dee6975e80906384364f58664adc8305da",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/ExternalJobStateTest.java",
+      "actualRunWorkSha256": "28a83d8a996a4294fa55dade40cd2c46a1dbcc47c9b233d7320223628a48a70c",
+      "currentWorkSha256": "28a83d8a996a4294fa55dade40cd2c46a1dbcc47c9b233d7320223628a48a70c",
+      "rawBlobOid": "60112c8792cb8ccbefb201e930d4124bb5780a94",
+      "expectedGitBlobOidUnderStandardLf": "60112c8792cb8ccbefb201e930d4124bb5780a94",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/FixtureSkillsTest.java",
+      "actualRunWorkSha256": "76d897b6beff1609c90ea0e1f49a34e1c4c3ca0bcac688128a821937ab096041",
+      "currentWorkSha256": "76d897b6beff1609c90ea0e1f49a34e1c4c3ca0bcac688128a821937ab096041",
+      "rawBlobOid": "ebe217f336e9839a4a0a8e66b4ea88d7f580ae7a",
+      "expectedGitBlobOidUnderStandardLf": "ebe217f336e9839a4a0a8e66b4ea88d7f580ae7a",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/OntologyManifestImportsTest.java",
+      "actualRunWorkSha256": "97d0a6b1b48ecd833568c9e3f584303feef6d2a094bdae6979aec36353432051",
+      "currentWorkSha256": "97d0a6b1b48ecd833568c9e3f584303feef6d2a094bdae6979aec36353432051",
+      "rawBlobOid": "357542c9d8a4d318c9b26b43f77b16a26bf7f715",
+      "expectedGitBlobOidUnderStandardLf": "357542c9d8a4d318c9b26b43f77b16a26bf7f715",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/OpenApiImportPersistenceTest.java",
+      "actualRunWorkSha256": "56a45b4e7cd175b2f87ba6995a6c38b344dc85de56a2678e2511a8d1a757dd3d",
+      "currentWorkSha256": "56a45b4e7cd175b2f87ba6995a6c38b344dc85de56a2678e2511a8d1a757dd3d",
+      "rawBlobOid": "5947951068e5fd541d5e47c60b54deabd58943ae",
+      "expectedGitBlobOidUnderStandardLf": "5947951068e5fd541d5e47c60b54deabd58943ae",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/OpenApiImportsTest.java",
+      "actualRunWorkSha256": "f4743875cb4612404eea0d126496e7650423215ef973522c5bab40ba06bdd8be",
+      "currentWorkSha256": "f4743875cb4612404eea0d126496e7650423215ef973522c5bab40ba06bdd8be",
+      "rawBlobOid": "630a4a89da4716b09d84e23fd67d30a960d8a8a6",
+      "expectedGitBlobOidUnderStandardLf": "630a4a89da4716b09d84e23fd67d30a960d8a8a6",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/PathParamsAsyncMappingTest.java",
+      "actualRunWorkSha256": "cf71d00f26247a9227aaedebe390e4d882afae1dae2b148dd523f8051534b628",
+      "currentWorkSha256": "cf71d00f26247a9227aaedebe390e4d882afae1dae2b148dd523f8051534b628",
+      "rawBlobOid": "9fb5e7107908b64dfed670a9a79bed12d00a6fe9",
+      "expectedGitBlobOidUnderStandardLf": "9fb5e7107908b64dfed670a9a79bed12d00a6fe9",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/ProcessPublishPrecheckTest.java",
+      "actualRunWorkSha256": "cd483b4ce88900e51f357dbb692768e0a9ed2642582394f0515af22702b6dcae",
+      "currentWorkSha256": "cd483b4ce88900e51f357dbb692768e0a9ed2642582394f0515af22702b6dcae",
+      "rawBlobOid": "565ad568bb5a89c8faef6e07808a05642f6e2cdf",
+      "expectedGitBlobOidUnderStandardLf": "565ad568bb5a89c8faef6e07808a05642f6e2cdf",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/ReconciliationProofTest.java",
+      "actualRunWorkSha256": "4a7a7d3d0ce66754d827c112df70249f2837f93ecbd238d91108c397f97e623a",
+      "currentWorkSha256": "4a7a7d3d0ce66754d827c112df70249f2837f93ecbd238d91108c397f97e623a",
+      "rawBlobOid": "5384affa99f9f41aa1dd481d2d2df7e35ad5ee5b",
+      "expectedGitBlobOidUnderStandardLf": "5384affa99f9f41aa1dd481d2d2df7e35ad5ee5b",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/SchemaDegradedValidationTest.java",
+      "actualRunWorkSha256": "63e481a30e67a89091ec805511f417a65fbec1d16891ef30d01a417464257356",
+      "currentWorkSha256": "63e481a30e67a89091ec805511f417a65fbec1d16891ef30d01a417464257356",
+      "rawBlobOid": "d51244ee8253ecf1697435338052ac53a20f94dc",
+      "expectedGitBlobOidUnderStandardLf": "d51244ee8253ecf1697435338052ac53a20f94dc",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/ServiceLifecycleTest.java",
+      "actualRunWorkSha256": "83d5d2c5bfc90f5baf547c6ec73bf9ede544dcd6f3602b8ae542ce7bdcaa1644",
+      "currentWorkSha256": "83d5d2c5bfc90f5baf547c6ec73bf9ede544dcd6f3602b8ae542ce7bdcaa1644",
+      "rawBlobOid": "8fc0711ec834474b42519d1b8620c80eb65ee32c",
+      "expectedGitBlobOidUnderStandardLf": "8fc0711ec834474b42519d1b8620c80eb65ee32c",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/ServiceManifestTest.java",
+      "actualRunWorkSha256": "6735a87619eb3a1edf5bb56ec8a002294d539c1586c0b214cc038358c722c460",
+      "currentWorkSha256": "6735a87619eb3a1edf5bb56ec8a002294d539c1586c0b214cc038358c722c460",
+      "rawBlobOid": "8df95d2c96bb41a77afb92d770479a29206223e6",
+      "expectedGitBlobOidUnderStandardLf": "8df95d2c96bb41a77afb92d770479a29206223e6",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/ServiceProbeTest.java",
+      "actualRunWorkSha256": "78eb31b1d3b5bf0e5629a3c1c7b69efb55250d2e5b66b1d89691893fece0cd77",
+      "currentWorkSha256": "78eb31b1d3b5bf0e5629a3c1c7b69efb55250d2e5b66b1d89691893fece0cd77",
+      "rawBlobOid": "65e20b138e3df7b7809c43ebd6df5504a4f34c59",
+      "expectedGitBlobOidUnderStandardLf": "65e20b138e3df7b7809c43ebd6df5504a4f34c59",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/SkillAuthSchemeRegistrationTest.java",
+      "actualRunWorkSha256": "6f8b5dd2a562331347ec092ac8e61a40c875662425dbb5deb890df43c93f758d",
+      "currentWorkSha256": "6f8b5dd2a562331347ec092ac8e61a40c875662425dbb5deb890df43c93f758d",
+      "rawBlobOid": "3f4be970c1d7ca9ef030482bc944bcc70ec0a3f0",
+      "expectedGitBlobOidUnderStandardLf": "3f4be970c1d7ca9ef030482bc944bcc70ec0a3f0",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/SkillCallbackWakeTest.java",
+      "actualRunWorkSha256": "ee4aa490ba78764e2c93a3766e178ebbd59e185db986df7b2d39995bfeb5b910",
+      "currentWorkSha256": "ee4aa490ba78764e2c93a3766e178ebbd59e185db986df7b2d39995bfeb5b910",
+      "rawBlobOid": "b21903e29543d59e2d0951220d45684e2a690759",
+      "expectedGitBlobOidUnderStandardLf": "b21903e29543d59e2d0951220d45684e2a690759",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/SkillErrorEnvelopeTest.java",
+      "actualRunWorkSha256": "9cff6f858d4c7e345d19e758f0d0aab6898139a62c17853fcab4aae24c1b7e56",
+      "currentWorkSha256": "9cff6f858d4c7e345d19e758f0d0aab6898139a62c17853fcab4aae24c1b7e56",
+      "rawBlobOid": "1bbf7a93fe2dc3739fda27fdeec5044a1bae0e20",
+      "expectedGitBlobOidUnderStandardLf": "1bbf7a93fe2dc3739fda27fdeec5044a1bae0e20",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/SkillEvidenceRebindPostgresTest.java",
+      "actualRunWorkSha256": "a94e33657f5d23aaee7c31fb6ea859f41e20180907a942deed2f7747f337ccf0",
+      "currentWorkSha256": "a94e33657f5d23aaee7c31fb6ea859f41e20180907a942deed2f7747f337ccf0",
+      "rawBlobOid": "971252c2a1b03071accf8dc89ef7280473798bc2",
+      "expectedGitBlobOidUnderStandardLf": "971252c2a1b03071accf8dc89ef7280473798bc2",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/SkillExecutionTest.java",
+      "actualRunWorkSha256": "607ba3c31ae5ef8dc4568e8eb35d338446a9ed444a7366285124e28bfda17ea8",
+      "currentWorkSha256": "607ba3c31ae5ef8dc4568e8eb35d338446a9ed444a7366285124e28bfda17ea8",
+      "rawBlobOid": "5502ac2972f3aa15e35a27e646c02b1fa107c94d",
+      "expectedGitBlobOidUnderStandardLf": "5502ac2972f3aa15e35a27e646c02b1fa107c94d",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/SkillIdentityRegistrationTest.java",
+      "actualRunWorkSha256": "2f8ff2845d3ea0617c55e6ccccb7ddf27f0b0b1e32f811ee8dc951e8e2e21fa9",
+      "currentWorkSha256": "2f8ff2845d3ea0617c55e6ccccb7ddf27f0b0b1e32f811ee8dc951e8e2e21fa9",
+      "rawBlobOid": "e36b2bae48f1c34f210ad6b4a00ad99a48cbe02f",
+      "expectedGitBlobOidUnderStandardLf": "e36b2bae48f1c34f210ad6b4a00ad99a48cbe02f",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/SkillPrepareExecuteTest.java",
+      "actualRunWorkSha256": "1f965830f3ce9c2454c2a63abab0bf33a88f34e3340746959d5dfa90797fa276",
+      "currentWorkSha256": "1f965830f3ce9c2454c2a63abab0bf33a88f34e3340746959d5dfa90797fa276",
+      "rawBlobOid": "d74426f5c9d7119ca78f08f8205522ec41dfb549",
+      "expectedGitBlobOidUnderStandardLf": "d74426f5c9d7119ca78f08f8205522ec41dfb549",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/SkillProcessAuditTest.java",
+      "actualRunWorkSha256": "ad926eb06a525e3fe88a5f58ac58924978d155f831b5f0e2661a25c324304ad4",
+      "currentWorkSha256": "ad926eb06a525e3fe88a5f58ac58924978d155f831b5f0e2661a25c324304ad4",
+      "rawBlobOid": "5a22b005bdd72fa76c5269fe30d9cf93a5a56df4",
+      "expectedGitBlobOidUnderStandardLf": "5a22b005bdd72fa76c5269fe30d9cf93a5a56df4",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/SkillProcessExecutionTest.java",
+      "actualRunWorkSha256": "a0dd5c8c3dec416a4cc8ed64c97215b1e21873cb773dc2ab76aa420c74333fe9",
+      "currentWorkSha256": "a0dd5c8c3dec416a4cc8ed64c97215b1e21873cb773dc2ab76aa420c74333fe9",
+      "rawBlobOid": "db7e9cbed43ec7b68c2c09ce818eeddc776885db",
+      "expectedGitBlobOidUnderStandardLf": "db7e9cbed43ec7b68c2c09ce818eeddc776885db",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/SkillProcessRegistrationTest.java",
+      "actualRunWorkSha256": "74581a9acdf3ce5d26b401f252346c8ebd91bf480adc996b441d1df8ac6da28e",
+      "currentWorkSha256": "74581a9acdf3ce5d26b401f252346c8ebd91bf480adc996b441d1df8ac6da28e",
+      "rawBlobOid": "91ba86e4f723c7c09396d55a85620c4333d9fe36",
+      "expectedGitBlobOidUnderStandardLf": "91ba86e4f723c7c09396d55a85620c4333d9fe36",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/SkillProcessWhitelistRegistrationTest.java",
+      "actualRunWorkSha256": "ecde6ad9b5b0f0d4792aa75281ba63d59a7ef936494039696af7a0dd199669ee",
+      "currentWorkSha256": "ecde6ad9b5b0f0d4792aa75281ba63d59a7ef936494039696af7a0dd199669ee",
+      "rawBlobOid": "a02ccc20802615fb511634771c27d0aef6cde253",
+      "expectedGitBlobOidUnderStandardLf": "a02ccc20802615fb511634771c27d0aef6cde253",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/SkillPublishDigestPostgresTest.java",
+      "actualRunWorkSha256": "c0dc7238cac45753757a66fccd1da0acae6d40e32c3ad40918fe41b379e3444d",
+      "currentWorkSha256": "c0dc7238cac45753757a66fccd1da0acae6d40e32c3ad40918fe41b379e3444d",
+      "rawBlobOid": "4147ca404b1259c6e32dbdb7de82797777946ca3",
+      "expectedGitBlobOidUnderStandardLf": "4147ca404b1259c6e32dbdb7de82797777946ca3",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/SkillStatisticsPostgresTest.java",
+      "actualRunWorkSha256": "6efe3ab22c961740d8b1abf89e66b38f58e57b5cdf99553b2853bc5306d00be2",
+      "currentWorkSha256": "6efe3ab22c961740d8b1abf89e66b38f58e57b5cdf99553b2853bc5306d00be2",
+      "rawBlobOid": "c4156e9a9ad8a37b6b22d30e804128bbc86fcf15",
+      "expectedGitBlobOidUnderStandardLf": "c4156e9a9ad8a37b6b22d30e804128bbc86fcf15",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/SkillTaskResultTest.java",
+      "actualRunWorkSha256": "600f1a9df2d5f0199a52f7f2152d339f2e6c6d78839382c30c5ba9c5e7fa164f",
+      "currentWorkSha256": "600f1a9df2d5f0199a52f7f2152d339f2e6c6d78839382c30c5ba9c5e7fa164f",
+      "rawBlobOid": "dc4a422d93ba69ada238496dd827f832ec2dc23d",
+      "expectedGitBlobOidUnderStandardLf": "dc4a422d93ba69ada238496dd827f832ec2dc23d",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/domain/BoundedSchemaValidationTest.java",
+      "actualRunWorkSha256": "8724e22b2cb484983dc91089d9b19dac3d1358f48edaba94794d038e2cbe8e74",
+      "currentWorkSha256": "8724e22b2cb484983dc91089d9b19dac3d1358f48edaba94794d038e2cbe8e74",
+      "rawBlobOid": "5eeb73e3f9f706ee17133bd1045c222eb38a61e6",
+      "expectedGitBlobOidUnderStandardLf": "12dab581107822cf791063d14f427f5580732e39",
+      "lineEndingNormalizationChangesBytes": true
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/domain/ErrorSemanticsTest.java",
+      "actualRunWorkSha256": "c5fc6a25fa6d9ddfef0e26bc3daf7bcfa39f6ddb56007b6dbaef5f0589d2f1c4",
+      "currentWorkSha256": "c5fc6a25fa6d9ddfef0e26bc3daf7bcfa39f6ddb56007b6dbaef5f0589d2f1c4",
+      "rawBlobOid": "6ce47122a293e16176d23c802880aa7cadfd7e32",
+      "expectedGitBlobOidUnderStandardLf": "6ce47122a293e16176d23c802880aa7cadfd7e32",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/domain/ProcessContractTest.java",
+      "actualRunWorkSha256": "4c32982a92390508913127bdff7af4bc1da002e2320c052d2e4b84967ca8c611",
+      "currentWorkSha256": "4c32982a92390508913127bdff7af4bc1da002e2320c052d2e4b84967ca8c611",
+      "rawBlobOid": "9ad4902726c7be786082d9219ced6cad474087f5",
+      "expectedGitBlobOidUnderStandardLf": "9ad4902726c7be786082d9219ced6cad474087f5",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/domain/SchemaWorkBudgetTest.java",
+      "actualRunWorkSha256": "57874715dd0e51b8433b939b16709c195824b7f2f03bedd5ce247512dc11816a",
+      "currentWorkSha256": "57874715dd0e51b8433b939b16709c195824b7f2f03bedd5ce247512dc11816a",
+      "rawBlobOid": "7ccf59b79c416ff6c79b72fb4c6ef6d85c38c5d5",
+      "expectedGitBlobOidUnderStandardLf": "a76c50a41d86bffa6158f7099b9e9fa5818b7b3a",
+      "lineEndingNormalizationChangesBytes": true
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/domain/SkillDigestTest.java",
+      "actualRunWorkSha256": "1f09c9687b52572445e25d6dd30fde84284e200b4ddc073ee9e125e4b2a2f2cf",
+      "currentWorkSha256": "1f09c9687b52572445e25d6dd30fde84284e200b4ddc073ee9e125e4b2a2f2cf",
+      "rawBlobOid": "b6030f7bbad8f2489511f086d7b78c002ff78a33",
+      "expectedGitBlobOidUnderStandardLf": "b6030f7bbad8f2489511f086d7b78c002ff78a33",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/domain/SkillRulesTest.java",
+      "actualRunWorkSha256": "10d9dfb2ee0e1785f33cdc5b7ba86a4fec16682011353683cff395f55b25e4f3",
+      "currentWorkSha256": "10d9dfb2ee0e1785f33cdc5b7ba86a4fec16682011353683cff395f55b25e4f3",
+      "rawBlobOid": "0b9f80a1ab779c63d86dbfc27196cf56561bbf1f",
+      "expectedGitBlobOidUnderStandardLf": "0b9f80a1ab779c63d86dbfc27196cf56561bbf1f",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/domain/SkillSchemaDialectTest.java",
+      "actualRunWorkSha256": "b45b5d5977e4879f13dbd0de25922636eb83f2b0425aff3a63ddd4105c570cea",
+      "currentWorkSha256": "b45b5d5977e4879f13dbd0de25922636eb83f2b0425aff3a63ddd4105c570cea",
+      "rawBlobOid": "05058d973b0e0e07cafa4b90160a2bf073f84226",
+      "expectedGitBlobOidUnderStandardLf": "05058d973b0e0e07cafa4b90160a2bf073f84226",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/AdapterRegistryZeroChangeTest.java",
+      "actualRunWorkSha256": "78ff82f4f5fad6c72a1e0cbae377f822b00111ce1926170cd5e0a7be1f63fe95",
+      "currentWorkSha256": "78ff82f4f5fad6c72a1e0cbae377f822b00111ce1926170cd5e0a7be1f63fe95",
+      "rawBlobOid": "fb550c0f288bced85ab9be1167ccf8749fdcf91c",
+      "expectedGitBlobOidUnderStandardLf": "fb550c0f288bced85ab9be1167ccf8749fdcf91c",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/AlgorithmApiFixture.java",
+      "actualRunWorkSha256": "6d6206696b810aca0b4bc6b4faa6a62daaf84ad6dee644f4872b07703341905b",
+      "currentWorkSha256": "6d6206696b810aca0b4bc6b4faa6a62daaf84ad6dee644f4872b07703341905b",
+      "rawBlobOid": "252aa877d88d8df82547c9cc913f432dc9220b38",
+      "expectedGitBlobOidUnderStandardLf": "2be3eec0bce994c60132b440c4cd06d8e0e0cb69",
+      "lineEndingNormalizationChangesBytes": true
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/AlgorithmMigrationPostgresTest.java",
+      "actualRunWorkSha256": "acd5beb686f92349233a38402a43c5e2f04043cf3356fb8c131008f5c3751a8c",
+      "currentWorkSha256": "acd5beb686f92349233a38402a43c5e2f04043cf3356fb8c131008f5c3751a8c",
+      "rawBlobOid": "8870df4818d5bdc730c75fab110a3fb12841397e",
+      "expectedGitBlobOidUnderStandardLf": "8870df4818d5bdc730c75fab110a3fb12841397e",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/AlgorithmMinioFixture.java",
+      "actualRunWorkSha256": "7c9ebdc0d7ed390bb3c053341d43ad965745b1854726508045b64889fb4ff406",
+      "currentWorkSha256": "7c9ebdc0d7ed390bb3c053341d43ad965745b1854726508045b64889fb4ff406",
+      "rawBlobOid": "457888bab24d959c869bc233cbaa7efc3e5eae45",
+      "expectedGitBlobOidUnderStandardLf": "457888bab24d959c869bc233cbaa7efc3e5eae45",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/AlgorithmOffloadInterruptionTest.java",
+      "actualRunWorkSha256": "43ec56726c4dd04f3b4e4553590b80316d87bd2b619230c6f728a52d9376bd9d",
+      "currentWorkSha256": "43ec56726c4dd04f3b4e4553590b80316d87bd2b619230c6f728a52d9376bd9d",
+      "rawBlobOid": "5aed039775f94744d6fa9847fd0057a344ca0929",
+      "expectedGitBlobOidUnderStandardLf": "e59e06cf2ff7c7e479a2be9bf978b10ea28c418c",
+      "lineEndingNormalizationChangesBytes": true
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/AlgorithmProtocolTest.java",
+      "actualRunWorkSha256": "743c91ddbebe8c2dd1a1fde7827427615d0288700019aea5e01c35d096c4c859",
+      "currentWorkSha256": "743c91ddbebe8c2dd1a1fde7827427615d0288700019aea5e01c35d096c4c859",
+      "rawBlobOid": "17172fc563289b1d98e2b6962a4ddb55025d4e98",
+      "expectedGitBlobOidUnderStandardLf": "3ddebcda3bb4aec8fc8114456fc548d3ac63d6b1",
+      "lineEndingNormalizationChangesBytes": true
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/AlgorithmTestDatabase.java",
+      "actualRunWorkSha256": "57d17735e0390996eb8252d84f91f6d5c76f50e28c59ed4fcb68b61c870fd49c",
+      "currentWorkSha256": "57d17735e0390996eb8252d84f91f6d5c76f50e28c59ed4fcb68b61c870fd49c",
+      "rawBlobOid": "afc2a73c8f0d06a59f06b57bc65d2d047e12f51f",
+      "expectedGitBlobOidUnderStandardLf": "afc2a73c8f0d06a59f06b57bc65d2d047e12f51f",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/ArtifactBoundTest.java",
+      "actualRunWorkSha256": "1500a9c42c2b9ce13a9768d2f54ab0f51350f51be5c166551fdb5ec4c7c2061e",
+      "currentWorkSha256": "1500a9c42c2b9ce13a9768d2f54ab0f51350f51be5c166551fdb5ec4c7c2061e",
+      "rawBlobOid": "ced3f0a04d604a03d01fceac13da472b79f28eb5",
+      "expectedGitBlobOidUnderStandardLf": "ced3f0a04d604a03d01fceac13da472b79f28eb5",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/ArtifactPersistenceTest.java",
+      "actualRunWorkSha256": "25b0549c1c8aa3564a3b8f8b5fed4799e1361a1f6a0fa2164dd19a1c5113aa49",
+      "currentWorkSha256": "25b0549c1c8aa3564a3b8f8b5fed4799e1361a1f6a0fa2164dd19a1c5113aa49",
+      "rawBlobOid": "e1e7eccbe551efb5bc00c7052d321b7222823624",
+      "expectedGitBlobOidUnderStandardLf": "e1e7eccbe551efb5bc00c7052d321b7222823624",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/ArtifactReferenceTest.java",
+      "actualRunWorkSha256": "57db0b3508664ee1d29f8c9b0e3d78356591b31cd30f77537f6c762fa3d271d2",
+      "currentWorkSha256": "57db0b3508664ee1d29f8c9b0e3d78356591b31cd30f77537f6c762fa3d271d2",
+      "rawBlobOid": "73eec6d667c7a96886d9067e8d0eb7f5a3642c07",
+      "expectedGitBlobOidUnderStandardLf": "73eec6d667c7a96886d9067e8d0eb7f5a3642c07",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/AuthSchemeOutboundTest.java",
+      "actualRunWorkSha256": "8d77f4ecb3ccda5c6713c813b4d28385c39cf10db367ed88f1830052c419be86",
+      "currentWorkSha256": "8d77f4ecb3ccda5c6713c813b4d28385c39cf10db367ed88f1830052c419be86",
+      "rawBlobOid": "4c98a533dee1b114feb2997bb7c61cce66600ac6",
+      "expectedGitBlobOidUnderStandardLf": "4c98a533dee1b114feb2997bb7c61cce66600ac6",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/FakeProcessWorker.java",
+      "actualRunWorkSha256": "f3a4a3c53c209a2d35a80addc47ea4f84a3659215b20b429e98651517b59c61d",
+      "currentWorkSha256": "f3a4a3c53c209a2d35a80addc47ea4f84a3659215b20b429e98651517b59c61d",
+      "rawBlobOid": "2e179a42e2d93d7196c5c27ae4702f9d7110add7",
+      "expectedGitBlobOidUnderStandardLf": "2e179a42e2d93d7196c5c27ae4702f9d7110add7",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/HttpAsyncAdapterTest.java",
+      "actualRunWorkSha256": "900b90d61227fea94020f04f5628b8c05743d3f843b5f5e745e26e9695d8379b",
+      "currentWorkSha256": "900b90d61227fea94020f04f5628b8c05743d3f843b5f5e745e26e9695d8379b",
+      "rawBlobOid": "f6e121e6ed43763fe54e0f52f72be669712445f9",
+      "expectedGitBlobOidUnderStandardLf": "f6e121e6ed43763fe54e0f52f72be669712445f9",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/HttpAsyncAttemptFenceTest.java",
+      "actualRunWorkSha256": "8ba27ff69fd226652ea8929994cf35100e9e73987abc2d84411fde2e517dddc4",
+      "currentWorkSha256": "8ba27ff69fd226652ea8929994cf35100e9e73987abc2d84411fde2e517dddc4",
+      "rawBlobOid": "131ac95ee709170919a3f88f29fd9049de22f97b",
+      "expectedGitBlobOidUnderStandardLf": "131ac95ee709170919a3f88f29fd9049de22f97b",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/HttpFixture.java",
+      "actualRunWorkSha256": "876f924ef1f701a01933b43a8a409aa1db3ef8d7dc97166dd933eb87ff38bec6",
+      "currentWorkSha256": "876f924ef1f701a01933b43a8a409aa1db3ef8d7dc97166dd933eb87ff38bec6",
+      "rawBlobOid": "71dce0561408274349941dd4f670640cb2df3227",
+      "expectedGitBlobOidUnderStandardLf": "71dce0561408274349941dd4f670640cb2df3227",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/HttpSchemaBoundaryTest.java",
+      "actualRunWorkSha256": "cbe63e114c29e7a4e925793679d51fce6271da6635ecff9ce00d62593a19765d",
+      "currentWorkSha256": "cbe63e114c29e7a4e925793679d51fce6271da6635ecff9ce00d62593a19765d",
+      "rawBlobOid": "688f9608896b3fca74561cb7c623e7ac89e6a3cf",
+      "expectedGitBlobOidUnderStandardLf": "f6e0013fcf1f1753c2f23b88207d8dc0d0c46743",
+      "lineEndingNormalizationChangesBytes": true
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/IdentityOutboundTest.java",
+      "actualRunWorkSha256": "e0e0676400c41460552f504296a14f91fc0733434801cfbb4d09c50165371046",
+      "currentWorkSha256": "e0e0676400c41460552f504296a14f91fc0733434801cfbb4d09c50165371046",
+      "rawBlobOid": "048cfd774e781befd52da425b01d5119d133fc28",
+      "expectedGitBlobOidUnderStandardLf": "048cfd774e781befd52da425b01d5119d133fc28",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/localspike/FakeDeafMain.java",
+      "actualRunWorkSha256": "80e8ac13c87bae9e46cefe769bdf14b051245253671cb542cb8a259b23ba0009",
+      "currentWorkSha256": "80e8ac13c87bae9e46cefe769bdf14b051245253671cb542cb8a259b23ba0009",
+      "rawBlobOid": "a521ee4300d0caf870494d484552c7ea51186591",
+      "expectedGitBlobOidUnderStandardLf": "a521ee4300d0caf870494d484552c7ea51186591",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/localspike/LocalSpikeLifecycleLiveTest.java",
+      "actualRunWorkSha256": "c47bf3f62394dcf238cc70a26933be627484b98db4d8a72397697848e01917b7",
+      "currentWorkSha256": "c47bf3f62394dcf238cc70a26933be627484b98db4d8a72397697848e01917b7",
+      "rawBlobOid": "76dcb6aaefcec91a8b160215dfcc1ac8f32c503d",
+      "expectedGitBlobOidUnderStandardLf": "76dcb6aaefcec91a8b160215dfcc1ac8f32c503d",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/localspike/LocalSpikeManagerFailurePathTest.java",
+      "actualRunWorkSha256": "ab3155b7d55f2849e9ca5080ea3cba5f0b20e39ce3eb2a85e2a670e16bb6fbf8",
+      "currentWorkSha256": "ab3155b7d55f2849e9ca5080ea3cba5f0b20e39ce3eb2a85e2a670e16bb6fbf8",
+      "rawBlobOid": "54252afcbb0cd2cdc42b188a30dea0d450a932eb",
+      "expectedGitBlobOidUnderStandardLf": "54252afcbb0cd2cdc42b188a30dea0d450a932eb",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/McpAdapterTest.java",
+      "actualRunWorkSha256": "ebb60e0af57aa8d182d3c82e1698cabb336984c22153854fa93b17dd24370afc",
+      "currentWorkSha256": "ebb60e0af57aa8d182d3c82e1698cabb336984c22153854fa93b17dd24370afc",
+      "rawBlobOid": "0a21d000d6b77d14347f46fe98f883ea9538f7da",
+      "expectedGitBlobOidUnderStandardLf": "e80616c88461e475532394ae63cfcf759352678b",
+      "lineEndingNormalizationChangesBytes": true
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/McpExecutionPostgresTest.java",
+      "actualRunWorkSha256": "255c1328a9771b79cc9f8bba97ad5d099df8368f92c994d2d08664712cce2f96",
+      "currentWorkSha256": "255c1328a9771b79cc9f8bba97ad5d099df8368f92c994d2d08664712cce2f96",
+      "rawBlobOid": "5490c59da68c4a5f4e65681a8572504054b68093",
+      "expectedGitBlobOidUnderStandardLf": "5490c59da68c4a5f4e65681a8572504054b68093",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/McpManagementTest.java",
+      "actualRunWorkSha256": "79255f7c9bf7b059e8d488acf1a20c9db91f7a1da75841e72f284fee5d4ffb42",
+      "currentWorkSha256": "79255f7c9bf7b059e8d488acf1a20c9db91f7a1da75841e72f284fee5d4ffb42",
+      "rawBlobOid": "4f5e59765e6255dce2983d299a1e57ea7e7c2e77",
+      "expectedGitBlobOidUnderStandardLf": "4f5e59765e6255dce2983d299a1e57ea7e7c2e77",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/McpResourceLifecycleTest.java",
+      "actualRunWorkSha256": "a56e0e871b5b99cdea22e6a9058dd9cef2d50bfee0e2dddeaebbf134e8ec947f",
+      "currentWorkSha256": "a56e0e871b5b99cdea22e6a9058dd9cef2d50bfee0e2dddeaebbf134e8ec947f",
+      "rawBlobOid": "f4e246f5a2fd1e73aa0cbde8966ca875910e9685",
+      "expectedGitBlobOidUnderStandardLf": "f4e246f5a2fd1e73aa0cbde8966ca875910e9685",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/McpSchemaBoundaryTest.java",
+      "actualRunWorkSha256": "072e939a9e454b950ee38f4ac8870d21615ea57c0d9b0d81b1bbe32fae955d38",
+      "currentWorkSha256": "072e939a9e454b950ee38f4ac8870d21615ea57c0d9b0d81b1bbe32fae955d38",
+      "rawBlobOid": "72ecd724ea5db9aebddc0aa3e91d91bba433827b",
+      "expectedGitBlobOidUnderStandardLf": "b4785c4864bc64b407a58987587fb76b47a83a36",
+      "lineEndingNormalizationChangesBytes": true
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/MultipartFormMappingTest.java",
+      "actualRunWorkSha256": "74084fcd8c40ed4cdb9d22877c99615a8f0152e9a6cdee89fb75f9babd0dd980",
+      "currentWorkSha256": "74084fcd8c40ed4cdb9d22877c99615a8f0152e9a6cdee89fb75f9babd0dd980",
+      "rawBlobOid": "e52fc23440abc193bee020c0d727e2a4c23aefda",
+      "expectedGitBlobOidUnderStandardLf": "e52fc23440abc193bee020c0d727e2a4c23aefda",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/MultipartStreamingTest.java",
+      "actualRunWorkSha256": "2fda939f61dbfef4d17bebe55b8e22a23bd8fce1d651112151b6e9465d66b34d",
+      "currentWorkSha256": "2fda939f61dbfef4d17bebe55b8e22a23bd8fce1d651112151b6e9465d66b34d",
+      "rawBlobOid": "3c14f7dda429794a74b4a54518a9db7c47106c33",
+      "expectedGitBlobOidUnderStandardLf": "3c14f7dda429794a74b4a54518a9db7c47106c33",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/OpenApiHttpMappingTest.java",
+      "actualRunWorkSha256": "0bc281aad61e526be35472480980721da9bc74ca871bd7604861e5c07fc59efe",
+      "currentWorkSha256": "0bc281aad61e526be35472480980721da9bc74ca871bd7604861e5c07fc59efe",
+      "rawBlobOid": "672b6dd61eff86c1ba7019ad9aae2fe0a5e1a6a3",
+      "expectedGitBlobOidUnderStandardLf": "1e43f8db93b3fd910727ce1f568614711fa245bc",
+      "lineEndingNormalizationChangesBytes": true
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/ProcessAdapterHardeningTest.java",
+      "actualRunWorkSha256": "0de036bfccb3f5e061d5491315920cf55e8f218f95430a324c0c2e42d764c064",
+      "currentWorkSha256": "0de036bfccb3f5e061d5491315920cf55e8f218f95430a324c0c2e42d764c064",
+      "rawBlobOid": "4437e07010536498d9003899efdbac087adf84c3",
+      "expectedGitBlobOidUnderStandardLf": "4437e07010536498d9003899efdbac087adf84c3",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/ProcessAdapterTest.java",
+      "actualRunWorkSha256": "aff5c9cbefb722ad6d26be44e4f60c82c018761e3875854d2391f65401abb02e",
+      "currentWorkSha256": "aff5c9cbefb722ad6d26be44e4f60c82c018761e3875854d2391f65401abb02e",
+      "rawBlobOid": "9a466168d2df1fbfd807b8851b48be6084943a9f",
+      "expectedGitBlobOidUnderStandardLf": "9a466168d2df1fbfd807b8851b48be6084943a9f",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/ProcessProtocolTest.java",
+      "actualRunWorkSha256": "77495d77d4ca372ee536db08278351a04015e36f3f2f1f2cf3cb11ed7dfc9b28",
+      "currentWorkSha256": "77495d77d4ca372ee536db08278351a04015e36f3f2f1f2cf3cb11ed7dfc9b28",
+      "rawBlobOid": "5bb535b60c456ecc5bfc9c607484ccf287213206",
+      "expectedGitBlobOidUnderStandardLf": "5bb535b60c456ecc5bfc9c607484ccf287213206",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/ProcessTreeTest.java",
+      "actualRunWorkSha256": "fc73ac8c2eb2a42dbf29af59ef00d5c3ec20191975e5348982dd46ae2b5d2e25",
+      "currentWorkSha256": "fc73ac8c2eb2a42dbf29af59ef00d5c3ec20191975e5348982dd46ae2b5d2e25",
+      "rawBlobOid": "6e04e48929ef3a7877c1af1a942e4db73b8ffb84",
+      "expectedGitBlobOidUnderStandardLf": "6e04e48929ef3a7877c1af1a942e4db73b8ffb84",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/ServiceTicketsTest.java",
+      "actualRunWorkSha256": "522243f32432aedb74c41b5ffc5957c35522e6d0b0f9c39dc2f14e457f9b6793",
+      "currentWorkSha256": "522243f32432aedb74c41b5ffc5957c35522e6d0b0f9c39dc2f14e457f9b6793",
+      "rawBlobOid": "8369bfaa20d6adb774cdd6d880a932d94c53d045",
+      "expectedGitBlobOidUnderStandardLf": "8369bfaa20d6adb774cdd6d880a932d94c53d045",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/SignedCallbackTest.java",
+      "actualRunWorkSha256": "c905c4e1049caaaa945bf43f5aa80c7b973f28904591e9722d5b87b5de1fe75f",
+      "currentWorkSha256": "c905c4e1049caaaa945bf43f5aa80c7b973f28904591e9722d5b87b5de1fe75f",
+      "rawBlobOid": "3dbb7a4525772e564e45e65e40cfba2efb404e0c",
+      "expectedGitBlobOidUnderStandardLf": "3dbb7a4525772e564e45e65e40cfba2efb404e0c",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/SkillAttemptPropagationTest.java",
+      "actualRunWorkSha256": "585763ee05189235984f9488fd5016edf2a2731daf46a67d10c1bb51df7e1e0f",
+      "currentWorkSha256": "585763ee05189235984f9488fd5016edf2a2731daf46a67d10c1bb51df7e1e0f",
+      "rawBlobOid": "d685be9980f17922621f495b630a06a3c715f791",
+      "expectedGitBlobOidUnderStandardLf": "d685be9980f17922621f495b630a06a3c715f791",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/SkillClientsErrorTest.java",
+      "actualRunWorkSha256": "2c8a50bb71b1bdfdcf9d30b7a08465bee776f7c2e52c5f68a6b660400443a2d0",
+      "currentWorkSha256": "2c8a50bb71b1bdfdcf9d30b7a08465bee776f7c2e52c5f68a6b660400443a2d0",
+      "rawBlobOid": "4f47fce45aeb7fa701cdd0c1a24832904dab19a7",
+      "expectedGitBlobOidUnderStandardLf": "4f47fce45aeb7fa701cdd0c1a24832904dab19a7",
+      "lineEndingNormalizationChangesBytes": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/SkillProcessRoutingTest.java",
+      "actualRunWorkSha256": "83ee5836381f2a695bcff7871d92649df4d93dce12e26f3ed241bca96d15ec95",
+      "currentWorkSha256": "83ee5836381f2a695bcff7871d92649df4d93dce12e26f3ed241bca96d15ec95",
+      "rawBlobOid": "c650d26ff603f0b9b9bfba71bd3ab0ef508aabb3",
+      "expectedGitBlobOidUnderStandardLf": "c650d26ff603f0b9b9bfba71bd3ab0ef508aabb3",
+      "lineEndingNormalizationChangesBytes": false
+    }
+  ],
+  "finalCodeHead": "cffbd3613273f6c8a810cc25e8cb75508709841b",
+  "finalCodeTree": "a95e0f158ed3bf9c3606d7eecbb2432d7f012f29",
+  "commitChain": [
+    {
+      "commit": "c109171958e6a260089cad123549473d20a5c201",
+      "parent": "83726d50a6cce116251c03c5c193080d8ed5aad2",
+      "tree": "614c1ccf53020537f3f449a1b1561b3788e0d02c",
+      "changedFiles": 112,
+      "codePaths": [
+        "skill-registry/src/test/java/cn/agentplatform/skill/application/SkillExecutionTest.java"
+      ]
+    },
+    {
+      "commit": "6eda42cb3201dea2005b5442ac5e5966c31c3300",
+      "parent": "c109171958e6a260089cad123549473d20a5c201",
+      "tree": "2fdeaf71fde011c13cabe0b777a4c5d3fbe010ea",
+      "changedFiles": 250,
+      "codePaths": [
+        "skill-registry/src/test/java/cn/agentplatform/skill/infra/AlgorithmOffloadInterruptionTest.java"
+      ]
+    },
+    {
+      "commit": "cffbd3613273f6c8a810cc25e8cb75508709841b",
+      "parent": "6eda42cb3201dea2005b5442ac5e5966c31c3300",
+      "tree": "a95e0f158ed3bf9c3606d7eecbb2432d7f012f29",
+      "changedFiles": 102,
+      "codePaths": [
+        "skill-registry/src/main/java/cn/agentplatform/skill/application/OntologyManifestImports.java",
+        "skill-registry/src/main/java/cn/agentplatform/skill/application/SkillCatalog.java",
+        "skill-registry/src/test/java/cn/agentplatform/skill/application/OntologyManifestImportsTest.java"
+      ]
+    }
+  ],
+  "committed149SourceSetAndStandardLfBlobsMatch": true,
+  "sourceFilesChangedByThreeCommits": 5,
+  "testsRerunAfterCodeCommits": false,
+  "reasonNoRerun": "No code changed after the frozen run; all149 raw working hashes and standard-clean Git blobs match. Only evidence/ledger changes follow."
+}
