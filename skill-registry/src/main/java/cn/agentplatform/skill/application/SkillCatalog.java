@@ -219,6 +219,28 @@ public class SkillCatalog {
         return result;
     }
 
+    /** 能力包首次绑定只读现有发布事实和实际注册表，不归一化、改写契约或执行适配器。 */
+    public Map<String, Object> registeredVersion(String code, Integer requested) {
+        if (requested == null || requested < 1)
+            throw error(400, "SKILL_VERSION_REQUIRED", "绑定必须指定精确正整数技能版本");
+        var result = version(code, requested);
+        if (!"PUBLISHED".equals(result.get("status"))
+                || Set.of("DISABLED", "ARCHIVED").contains(result.get("skillStatus")))
+            throw error(409, "SKILL_NOT_PUBLISHED", "绑定需要当前可用的精确已发布技能版本");
+        var definition = object(result.get("definition"));
+        if (!Digest.sha256(Json.canonical(definition)).equals(result.get("sha256")))
+            throw error(409, "SKILL_DIGEST_MISMATCH", "技能版本摘要与持久契约不符");
+        String type = Objects.toString(definition.get("type"), "");
+        String kind = Objects.toString(definition.get("invocationKind"), "");
+        if (!adapterRegistry.isSupportedCombination(type, kind) || adapterRegistry.find(definition) == null)
+            throw error(409, "SKILL_ADAPTER_NOT_REGISTERED", "当前服务未注册该技能的执行组合");
+        result.put("registered", true);
+        // 历史规范化契约省略默认 protocol；使用同一解释器读取，绝不重写 definition/digest。
+        if ("PROCESS".equals(type))
+            result.put("resolvedProcessProtocol", ProcessContract.parse(Json.tree(definition.get("process"))).protocol());
+        return result;
+    }
+
     public Map<String, Object> versionId(long id) {
         var rows =
                 db.query(

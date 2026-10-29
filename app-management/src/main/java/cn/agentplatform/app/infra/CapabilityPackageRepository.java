@@ -58,6 +58,52 @@ public class CapabilityPackageRepository {
         }
     }
 
+    public Map<String, Object> bindingSource(long id, String tenant) {
+        var rows = db.query("select * from app.capability_package_version where tenant_id=? and id=?",
+                (r, n) -> {
+                    var result = row(r, n);
+                    result.put("declaration", cn.agentplatform.common.Json.read(r.getString("declaration"), Map.class));
+                    result.put("planSha256", r.getString("request_plan_sha256"));
+                    String mapping = r.getString("resolved_mapping");
+                    result.put("resolvedMapping", mapping == null ? Map.of() : cn.agentplatform.common.Json.read(mapping, Map.class));
+                    return result;
+                }, tenant, id);
+        if (rows.isEmpty()) throw new PlatformException(404, "CAPABILITY_PACKAGE_NOT_FOUND", "能力包版本不存在");
+        return rows.getFirst();
+    }
+
+    public Map<String, Object> bindingReceipt(Map<String, Object> stored, String planSha, boolean reused) {
+        if (!"RESOLVED".equals(stored.get("bindingStatus")) || !planSha.equals(stored.get("planSha256")))
+            throw new PlatformException(409, "CAPABILITY_IMPORT_PLAN_CONFLICT", "该包版本已按不同计划解析，请登记新版本");
+        var result = new LinkedHashMap<String, Object>();
+        for (String key : List.of("packageVersionId", "packageId", "version", "sha256", "softwareId", "softwareVersion"))
+            if (stored.containsKey(key)) result.put(key, stored.get(key));
+        result.putAll((Map<String, Object>) stored.get("resolvedMapping"));
+        result.put("bindingStatus", "RESOLVED"); result.put("verificationStatus", "NOT_EVALUATED");
+        result.put("appCreated", false); result.put("applications", List.of()); result.put("reused", reused);
+        return result;
+    }
+
+    public Map<String, Object> resolveBinding(long id, Actor actor, String packageSha, String planSha, Map<String, Object> mapping) {
+        try {
+            return tx.execute(status -> {
+                db.execute("set local lock_timeout='2s'");
+                db.execute("set local statement_timeout='3s'");
+                // UPDATE 的 tenant+原包摘要条件与行锁共同裁决并发；失败者只读取原收据，绝不覆写。
+                int changed = db.update("update app.capability_package_version set binding_status='RESOLVED',"
+                                + "request_plan_sha256=?,resolved_mapping=?::jsonb,resolved_by=?,resolved_at=now()"
+                                + " where tenant_id=? and id=? and package_sha256=? and binding_status='UNRESOLVED'",
+                        planSha, cn.agentplatform.common.Json.write(mapping), actor.principalId(), actor.tenantId(), id, packageSha);
+                var stored = bindingSource(id, actor.tenantId());
+                if (!packageSha.equals(stored.get("sha256")))
+                    throw new PlatformException(409, "CAPABILITY_VERSION_CONFLICT", "解析期间包声明已改变");
+                return bindingReceipt(stored, planSha, changed == 0);
+            });
+        } catch (CannotAcquireLockException | QueryTimeoutException ex) {
+            throw new PlatformException(409, "CAPABILITY_IMPORT_BUSY", "能力包解析忙，请重试");
+        }
+    }
+
     private Map<String, Object> row(ResultSet r, int ignored) throws SQLException {
         var value = new LinkedHashMap<String, Object>();
         value.put("packageVersionId", r.getLong("id"));

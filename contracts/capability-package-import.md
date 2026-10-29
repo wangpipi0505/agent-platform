@@ -3,7 +3,7 @@
 本增补将既定能力包装载分为三个实施阶段。冻结的 `capability-package.schema.json`、其 `$id`、原四契约和最终验收不变。本文不把声明登记当作已发布技能绑定、应用创建或运行验收。
 
 1. **Phase 1：声明登记。** app-management 校验并持久保存租户内的包版本；状态为 `UNRESOLVED`。本批实现与测试范围只到这里。
-2. **Phase 2：真实绑定。** 按 `docs/evidence/2026-10-29-EX-10/engineering-mapping-candidate.md` 只读核验精确已发布技能版本、摘要及实际注册表，解析软件环境、路线和工具映射；不写入技能、不作跨服务补偿。当前未交付。
+2. **Phase 2：真实绑定。** 已实现单路线的精确已发布技能/摘要/真实注册表只读核验及本地映射保存，23项定向验证通过；不写技能、不执行工具。多路线/完整应用计划与运行闭环继续按原候选推进。
 3. **Phase 3：应用与运行。** 在真实绑定后创建可编辑草稿，保护编辑/复制/删除时的来源一致性，并将映射冻结到发布和 run 快照。网关精确路由、服务授权、完整应用计划幂等、HTTP/MCP/PROCESS 实际链路及最终 EX-10 验收仍待；不能用 Phase 1 的成功回包替代。
 
 ## Phase 1 API
@@ -55,3 +55,31 @@
 | 409 | `CAPABILITY_BINDING_REQUIRED` | 提交 environment/bindings/applications 计划；必须等待真实绑定及应用子批，不能忽略这些字段后返回成功 |
 
 本批不新增 app 关联表、不改 AppService/SkillCatalog/RunService，不声称生成可编辑草稿。后续恢复既定应用组装信封时须显式实现其 plan SHA、真实绑定和原子创建，不得把本批登记记录直接升级为 READY。
+
+## Phase 2：选定单一路线的绑定解析
+
+本子批将已登记的一个包版本解析到真实精确发布技能，仍不创建应用、不执行工具、不生成评测结果。Phase 1 的声明入口和冻结 schema 保持兼容。原完整应用组装与 run 快照目标仍由 Phase 3 承担。
+
+`POST /admin/capability-packages/{packageVersionId}/bindings/resolve`，JSON 请求：
+
+```json
+{
+  "environment": "dev",
+  "routeProfileId": "primary",
+  "bindings": [
+    {"toolId": "example-tool", "skillRef": {"code": "existing_skill", "version": 1}}
+  ]
+}
+```
+
+`bindings` 可省略，由选中工具的 `skillRef` 提供精确引用；可带已有候选定义的可选 `sha256`。声明和请求同时提供引用时必须一致。不能提交 tenant、principal、URL、任意 `binding_ref`、应用计划或附加权威字段。仅 EDITOR/ADMIN，包版本始终按 Actor 租户读取。网关与 IAM 新授权入口仍未包含在本子批。
+
+- environment 必须是原包中的明确键；仅冻结该键及声明值，不能覆盖已发布技能 endpoint。有 routeProfiles 时只选指定路线；没有时按 interface id 选择默认组合。缺省工具为该 interface 的全部启用工具；显式空集合拒绝，混合 interface 路线返回 `CAPABILITY_ROUTE_BINDING_CONFLICT`。未选路线/工具仍只是原声明，不称已解析。
+- app 仅请求配置中的固定技能服务 origin：`GET /internal/skills/{code}?version=n&requireRegistered=true`。用 `ServiceTokens.issue(Actor)` 签独立内部票据，禁止重定向；总预检预算 5 秒，单次连接/读取最多 2 秒且受剩余总预算限制，单响应最多 2 MiB。先完成全部远端只读校验，再进入原本地短事务。
+- 技能读口保留 SERVICE 门。`requireRegistered` 缺省/false 沿原行为；true 必须给正整数精确版本，要求版本 PUBLISHED、主技能未停用/归档、definition 的 canonical SHA 与持久摘要一致，并由实际注入的 AdapterRegistry 同时核组合与 `find`。只追加 `registered=true`，不改 definition/digest、不执行 adapter、不调用写入 normalize。PROCESS 历史契约省略 protocol 时，追加 `resolvedProcessProtocol`，由原 ProcessContract.parse 得出默认协议；app 比该解析值，不重写历史契约。
+- app 核 code/version/id/skillVersionId/sha256/digest/definition/registered 返回一致。HTTP/MCP/PROCESS 分别按已定案候选比较传输形态、endpoint/toolName、command/解析协议；HTTP_ASYNC 对账声明逐字段核，ALGORITHM 核 jobTemplate。注册资格由技能服务决定，app 没有第二套适配器注册表。
+- 显式读写/幂等/确认角色/风险、非空 inputSchema/outputSchema/errorSemantics、分页模式、outboundIdentity/guard 均与发布契约比较。本子批 guard 非空时采用精确比较，不推断更宽权限。未解析 secret/cred 引用、额外 scopes、非 none 本体引用、无权威字段的 operation、非空 artifacts 要求明确拒绝。TASK/模型/提示词/agent 模板不在这个解析请求中选用；不因此承诺整份声明可生成应用。
+- V109 仅扩原 `capability_package_version`：request_plan_sha256、resolved_mapping、resolved_by、resolved_at，binding_status 允许 RESOLVED。计划摘要覆盖 environment、routeProfileId 和 bindings（省略 bindings 视为空数组）；首次解析后同计划返回原收据且 reused=true，不重新读取目录；异计划返回 `CAPABILITY_IMPORT_PLAN_CONFLICT`。每个包版本本子批仅一份选定路线计划，更多应用/组合计划留后续阶段，不隐式覆盖或重新绑定。
+- 写入 WHERE 同时限定 tenant、packageVersionId、原包 SHA、UNRESOLVED；并发败者回读后核原包 SHA 与同计划，不覆写。绑定成功响应 HTTP 200/OK，包含原包版本/软件身份、environment、routeProfileId、`bindings[{routeProfileId,toolId,interfaceId,skillCode,skillVersionId,version,sha256}]`、bindingStatus=RESOLVED、verificationStatus=NOT_EVALUATED、appCreated=false、applications=[]、reused。RESOLVED 只表示这份计划已解析，不能视作 READY、发布、执行或连接测试通过。
+
+新增/沿用错误：400 `SKILL_VERSION_REQUIRED`（精确内部读缺版本）；404 `CAPABILITY_PACKAGE_NOT_FOUND`、`SKILL_VERSION_NOT_FOUND`；409 `SKILL_NOT_PUBLISHED`、`SKILL_ADAPTER_NOT_REGISTERED`、`SKILL_DIGEST_MISMATCH`、`CAPABILITY_BINDING_DIGEST_MISMATCH`、`CAPABILITY_BINDING_CONFLICT`、`CAPABILITY_BINDING_REQUIRED`、`UNRESOLVED_SECRET_BINDING`、`SKILL_VERSION_CONFLICT`、`CAPABILITY_IMPORT_PLAN_CONFLICT`；502 `DEPENDENCY_UNAVAILABLE` 用于传输超时或不完整/不一致的元数据回复。错误不回显票据、秘密或下游原始消息。Phase 1 的同包同版本异 SHA 409 和未解析声明仍保留。

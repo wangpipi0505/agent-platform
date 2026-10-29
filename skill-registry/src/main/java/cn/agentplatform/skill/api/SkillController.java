@@ -172,9 +172,14 @@ public class SkillController {
 
     @GetMapping("/internal/skills/{code}")
     public Object internal(
-            @PathVariable String code, @RequestParam(required = false) Integer version) {
+            @PathVariable String code, @RequestParam(required = false) Integer version,
+            @RequestParam(defaultValue = "false") boolean requireRegistered) {
         Actor.current().requireRole("SERVICE");
-        return ApiResponse.ok(catalog.get(code, version));
+        return ApiResponse.ok(requireRegistered ? catalog.registeredVersion(code, version) : catalog.get(code, version));
+    }
+
+    public Object internal(String code, Integer version) {
+        return internal(code, version, false);
     }
 
     @GetMapping("/internal/skill-versions/{id}")
