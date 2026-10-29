@@ -378,8 +378,10 @@ final class BoundedMcpSseTransport implements McpClientTransport, AutoCloseable 
                             requests.remove(future);
                         }
                     } catch (Exception ex) {
+                        // Retain the failure without delivering it again to a terminal RPC.
+                        boolean terminal = closed.get() || deadline - System.nanoTime() <= 0;
                         fail(ex);
-                        throw failure;
+                        if (!terminal) throw failure;
                     } finally {
                         synchronized (lifecycle) {
                             activeSends--;

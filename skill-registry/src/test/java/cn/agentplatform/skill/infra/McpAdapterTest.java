@@ -5,19 +5,34 @@ import static org.mockito.Mockito.mock;
 
 import cn.agentplatform.common.Json;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
+
+import io.modelcontextprotocol.client.McpAsyncClient;
+import io.modelcontextprotocol.client.McpClient;
+import io.modelcontextprotocol.spec.McpClientTransport;
+import io.modelcontextprotocol.spec.McpSchema;
 
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.reactivestreams.Subscription;
+
+import reactor.core.publisher.BaseSubscriber;
+import reactor.core.publisher.Mono;
+import reactor.core.publisher.SignalType;
 
 import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 
 /** Real SSE + JSON-RPC HTTP peer; no SDK/result mocks. */
 class McpAdapterTest {
@@ -499,6 +514,192 @@ class McpAdapterTest {
     }
 
     @Test
+    void closedSessionDoesNotDeliverLateAckFailureToCancelledRpc() throws Exception {
+        peer.blockAck = true;
+        int permitsBefore = McpAdapter.SESSIONS.availablePermits();
+        long started = System.nanoTime();
+        long sendDeadline = started + TimeUnit.MILLISECONDS.toNanos(800);
+        long testDeadline = started + TimeUnit.MILLISECONDS.toNanos(1800);
+        var transport = new BoundedMcpSseTransport(peer.url(), null, sendDeadline);
+        var terminated = new CountDownLatch(1);
+        transport.whenTerminated(terminated::countDown);
+        var subscribed = new CountDownLatch(1);
+        var sendFinished = new CountDownLatch(1);
+        var cancelReturned = new AtomicBoolean();
+        var deliveredAfterCancel = new AtomicBoolean();
+        var lateErrors = new AtomicInteger();
+        var lateFailure = new AtomicReference<Throwable>();
+        var sendSignal = new AtomicReference<SignalType>();
+        var rpcSignal = new AtomicReference<SignalType>();
+        var rpcValues = new AtomicInteger();
+        var rpcCompletions = new AtomicInteger();
+        var rpcErrors = new AtomicInteger();
+        // Delegate all real SDK traffic; observe the send publisher without replacing its result.
+        McpClientTransport observed =
+                new McpClientTransport() {
+                    @Override
+                    public Mono<Void> connect(
+                            Function<Mono<McpSchema.JSONRPCMessage>, Mono<McpSchema.JSONRPCMessage>>
+                                    handler) {
+                        return transport.connect(handler);
+                    }
+
+                    @Override
+                    public Mono<Void> sendMessage(McpSchema.JSONRPCMessage message) {
+                        return transport.sendMessage(message)
+                                .doOnError(
+                                        error -> {
+                                            lateFailure.compareAndSet(null, error);
+                                            deliveredAfterCancel.set(cancelReturned.get());
+                                            lateErrors.incrementAndGet();
+                                        })
+                                .doFinally(
+                                        signal -> {
+                                            sendSignal.set(signal);
+                                            sendFinished.countDown();
+                                        });
+                    }
+
+                    @Override
+                    public <T> T unmarshalFrom(Object data, TypeReference<T> type) {
+                        return transport.unmarshalFrom(data, type);
+                    }
+
+                    @Override
+                    public Mono<Void> closeGracefully() {
+                        return transport.closeGracefully();
+                    }
+
+                    @Override
+                    public void close() {
+                        transport.close();
+                    }
+                };
+        var rpc =
+                new BaseSubscriber<McpSchema.InitializeResult>() {
+                    @Override
+                    protected void hookOnSubscribe(Subscription subscription) {
+                        subscribed.countDown();
+                        requestUnbounded();
+                    }
+
+                    @Override
+                    protected void hookOnNext(McpSchema.InitializeResult value) {
+                        rpcValues.incrementAndGet();
+                    }
+
+                    @Override
+                    protected void hookOnComplete() {
+                        rpcCompletions.incrementAndGet();
+                    }
+
+                    @Override
+                    protected void hookOnError(Throwable error) {
+                        rpcErrors.incrementAndGet();
+                    }
+
+                    @Override
+                    protected void hookFinally(SignalType signal) {
+                        rpcSignal.set(signal);
+                    }
+                };
+        var logger =
+                (ch.qos.logback.classic.Logger)
+                        org.slf4j.LoggerFactory.getLogger("reactor.core.publisher.Operators");
+        var appender =
+                new ch.qos.logback.core.read.ListAppender<
+                        ch.qos.logback.classic.spi.ILoggingEvent>();
+        appender.start();
+        logger.addAppender(appender);
+        var worker = Executors.newVirtualThreadPerTaskExecutor();
+        McpAsyncClient client = null;
+        Future<?> subscription = null;
+        boolean workerStopped = false;
+        boolean transportStopped = false;
+        try {
+            client =
+                    McpClient.async(observed)
+                            .requestTimeout(Duration.ofMillis(800))
+                            .initializationTimeout(Duration.ofMillis(800))
+                            .build();
+            var ownedClient = client;
+            subscription = worker.submit(() -> ownedClient.initialize().subscribe(rpc));
+            assertTrue(
+                    subscribed.await(terminalFixtureRemaining(sendDeadline), TimeUnit.NANOSECONDS),
+                    "MCP_TERMINAL_FIXTURE_SUBSCRIBED");
+            assertTrue(
+                    peer.firstAckByte.await(
+                            terminalFixtureRemaining(sendDeadline), TimeUnit.NANOSECONDS),
+                    "MCP_TERMINAL_FIXTURE_ACK_ENTERED");
+            assertFalse(subscription.isDone(), "MCP_TERMINAL_FIXTURE_SEND_STILL_BLOCKED");
+            assertEquals(0, lateErrors.get(), "MCP_TERMINAL_FIXTURE_NO_EARLY_SEND_ERROR");
+            assertEquals(0, rpcErrors.get(), "MCP_TERMINAL_FIXTURE_NO_EARLY_RPC_ERROR");
+
+            rpc.cancel();
+            assertEquals(SignalType.CANCEL, rpcSignal.get(), "MCP_TERMINAL_FIXTURE_RPC_CANCELLED");
+            cancelReturned.set(true);
+            transport.close();
+            // subscribe() is synchronous through the real blocking send. Its return and doFinally
+            // witness completed delivery, not merely entry to an error observer.
+            subscription.get(terminalFixtureRemaining(sendDeadline), TimeUnit.NANOSECONDS);
+            assertTrue(
+                    sendFinished.await(terminalFixtureRemaining(sendDeadline), TimeUnit.NANOSECONDS),
+                    "MCP_TERMINAL_FIXTURE_SEND_FINISHED");
+            assertTrue(System.nanoTime() < sendDeadline, "MCP_TERMINAL_FIXTURE_BEFORE_SDK_TIMEOUT");
+        } finally {
+            try {
+                rpc.cancel();
+                if (client != null) client.close();
+            } finally {
+                try {
+                    transport.close();
+                    if (subscription != null && !subscription.isDone()) subscription.cancel(true);
+                    worker.shutdownNow();
+                    workerStopped =
+                            worker.awaitTermination(
+                                    Math.max(0, testDeadline - System.nanoTime()),
+                                    TimeUnit.NANOSECONDS);
+                    transportStopped =
+                            terminated.await(
+                                    Math.max(0, testDeadline - System.nanoTime()),
+                                    TimeUnit.NANOSECONDS);
+                } finally {
+                    logger.detachAppender(appender);
+                    appender.stop();
+                }
+            }
+        }
+        assertTrue(workerStopped, "MCP_TERMINAL_FIXTURE_WORKER_TERMINATED");
+        assertTrue(transportStopped, "MCP_TERMINAL_FIXTURE_TRANSPORT_TERMINATED");
+        assertTrue(System.nanoTime() < testDeadline, "MCP_TERMINAL_FIXTURE_TOTAL_1800MS");
+        assertNotNull(transport.failure(), "MCP_TERMINAL_FIXTURE_FIRST_FAILURE_RETAINED");
+        assertFalse(transport.callSent());
+        assertEquals(0, peer.calls.get());
+        assertEquals(0, rpcValues.get());
+        assertEquals(0, rpcCompletions.get());
+        assertEquals(0, rpcErrors.get());
+        assertEquals(permitsBefore, McpAdapter.SESSIONS.availablePermits());
+        assertTrue(lateErrors.get() <= 1, "MCP_TERMINAL_FIXTURE_SINGLE_INITIALIZE_SEND");
+        if (lateErrors.get() != 0) {
+            assertTrue(deliveredAfterCancel.get(), "MCP_TERMINAL_FIXTURE_ERROR_AFTER_CANCEL");
+            assertSame(transport.failure(), lateFailure.get());
+            assertEquals(SignalType.ON_ERROR, sendSignal.get());
+        } else {
+            assertEquals(SignalType.ON_COMPLETE, sendSignal.get());
+        }
+        assertFalse(
+                appender.list.stream()
+                        .anyMatch(event -> event.getFormattedMessage().contains("onErrorDropped")));
+        assertEquals(0, lateErrors.get(), "MCP_TERMINAL_ACK_LATE_ERROR_DELIVERY");
+    }
+
+    private static long terminalFixtureRemaining(long deadline) {
+        long remaining = deadline - System.nanoTime();
+        assertTrue(remaining > 0, "MCP_TERMINAL_FIXTURE_PHASE_DEADLINE");
+        return remaining;
+    }
+
+    @Test
     void twoRealSessionsExhaustLocalDecodeAdmissionBeforeThirdSocket() throws Exception {
         try (var second = new Peer();
                 var third = new Peer();
@@ -566,6 +767,7 @@ class McpAdapterTest {
         final HttpServer server;
         final ExecutorService workers = Executors.newVirtualThreadPerTaskExecutor();
         final CopyOnWriteArrayList<String> methods = new CopyOnWriteArrayList<>();
+        final CountDownLatch firstAckByte = new CountDownLatch(1);
         final AtomicInteger calls = new AtomicInteger(),
                 streams = new AtomicInteger(),
                 opens = new AtomicInteger();
@@ -706,6 +908,7 @@ class McpAdapterTest {
                     while (!closed) {
                         exchange.getResponseBody().write(1);
                         exchange.getResponseBody().flush();
+                        firstAckByte.countDown();
                         Thread.sleep(40);
                     }
                 } catch (IOException ignored) {

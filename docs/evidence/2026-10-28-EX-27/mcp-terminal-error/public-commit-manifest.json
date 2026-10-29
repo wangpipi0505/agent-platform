@@ -1,0 +1,796 @@
+{
+  "schemaVersion": "EX27-MCP-terminal-error-public-commit-candidate-v1",
+  "sealed": true,
+  "preparedParentHead": "73dc4cf37a2894f5c20fe806908011091888383b",
+  "actualRuntimeHead": "73dc4cf37a2894f5c20fe806908011091888383b",
+  "actualRuntimeUsesWorkingTreeSource": true,
+  "wholeWorkingTreeFrozenOrClean": false,
+  "sourceWhitelist": [
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/BoundedMcpSseTransport.java",
+      "sha256": "83E9568637311DDAC603B4780124F996C68560B5D6E97C5A1C75CC2E005260B7"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/McpAdapterTest.java",
+      "sha256": "068002325D7D224FB685DBB3476AEBD27CEDFF170430E115BDF1008ADC9F282F"
+    }
+  ],
+  "publicFileCount": 17,
+  "sourceFileCount": 2,
+  "evidenceAndAttributesCount": 15,
+  "existingPathCountExcludingPendingReview": 17,
+  "contentHashedPathCountExcludingSelfAndPending": 16,
+  "files": [
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/BoundedMcpSseTransport.java",
+      "role": "SOURCE",
+      "public": true,
+      "bytes": 27639,
+      "rawSha256": "83E9568637311DDAC603B4780124F996C68560B5D6E97C5A1C75CC2E005260B7",
+      "expectedCleanSha256": "6B8CD7C38677CACFE1083B5176C92F9FEB8C3B07DCAEB8C1E1C8AE5A1046EFAA",
+      "expectedIndexOid": "36ace23280a8221586007fbcea3e3e7db1f65c99",
+      "normalization": "ONLY_EXISTING_CRLF_TO_LF"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/McpAdapterTest.java",
+      "role": "SOURCE",
+      "public": true,
+      "bytes": 43886,
+      "rawSha256": "068002325D7D224FB685DBB3476AEBD27CEDFF170430E115BDF1008ADC9F282F",
+      "expectedCleanSha256": "068002325D7D224FB685DBB3476AEBD27CEDFF170430E115BDF1008ADC9F282F",
+      "expectedIndexOid": "cae5c124f3e1c97d6d4911ccc1505c198dd8ab72",
+      "normalization": "ONLY_EXISTING_CRLF_TO_LF"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/mcp-terminal-error/run-target.ps1",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 15316,
+      "rawSha256": "4F9EAAF0DB9481494E2597734539C2C6CEDEAD514B2D300DEA31E21752E8055F",
+      "expectedCleanSha256": "4F9EAAF0DB9481494E2597734539C2C6CEDEAD514B2D300DEA31E21752E8055F",
+      "expectedIndexOid": "5d36470ee4bc983041d427e95439ffc93f36ab68",
+      "normalization": "EXACT_RAW_BYTES"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/mcp-terminal-error/manifest.json",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 90417,
+      "rawSha256": "6BB982AA8988FD20690C1B7DA876286C28829ECDD54B4C8DACE00A850D12970B",
+      "expectedCleanSha256": "6BB982AA8988FD20690C1B7DA876286C28829ECDD54B4C8DACE00A850D12970B",
+      "expectedIndexOid": "de343f600a6b72175a9f4cbf04715d48b39d5250",
+      "normalization": "EXACT_RAW_BYTES"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/mcp-terminal-error/run-regression.ps1",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 21054,
+      "rawSha256": "E675B8A217A4CE0EBF3E547CE15F68351841744DD82994E58993A6F11E0E1061",
+      "expectedCleanSha256": "E675B8A217A4CE0EBF3E547CE15F68351841744DD82994E58993A6F11E0E1061",
+      "expectedIndexOid": "be3035485be1ab8048ed0bfb1a3777dc2578e71e",
+      "normalization": "EXACT_RAW_BYTES"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/mcp-terminal-error/regression-manifest.json",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 111831,
+      "rawSha256": "C56F864883DF377D1FBACB28BED5A32368016C0E37FD687187F693E60B2ADD67",
+      "expectedCleanSha256": "C56F864883DF377D1FBACB28BED5A32368016C0E37FD687187F693E60B2ADD67",
+      "expectedIndexOid": "d5effa3025959d37967b365f757e9eb2ed793fa8",
+      "normalization": "EXACT_RAW_BYTES"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/mcp-terminal-error/run-full-regression.ps1",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 43384,
+      "rawSha256": "E8D11D6B1369A3233925C80705E5B75E96AC9D5AA5EB54BB21776B821C9A55A9",
+      "expectedCleanSha256": "E8D11D6B1369A3233925C80705E5B75E96AC9D5AA5EB54BB21776B821C9A55A9",
+      "expectedIndexOid": "f7e9fe8585f9d3f36e4bd921c31afadf7e59437d",
+      "normalization": "EXACT_RAW_BYTES"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/mcp-terminal-error/full-regression-manifest.json",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 158264,
+      "rawSha256": "4B139DFF99633A388575A10FCB141FEFEF3317B6D479C477A963C34FF1AF2E91",
+      "expectedCleanSha256": "4B139DFF99633A388575A10FCB141FEFEF3317B6D479C477A963C34FF1AF2E91",
+      "expectedIndexOid": "c229e06b7f411fcf7d4dd8a52ddf09c39ce8ff70",
+      "normalization": "EXACT_RAW_BYTES"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/mcp-terminal-error/.gitattributes",
+      "role": "EXACT_EVIDENCE_ATTRIBUTES",
+      "public": true,
+      "bytes": 20,
+      "rawSha256": "E97602AB9CAC70102245345C5AB0FC9830DF8B17F1072B188265A662A3A547AE",
+      "expectedCleanSha256": "E97602AB9CAC70102245345C5AB0FC9830DF8B17F1072B188265A662A3A547AE",
+      "expectedIndexOid": "bd2de00cda30e433943ceb23971ade38d5a3fc86",
+      "normalization": "EXACT_RAW_BYTES"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/mcp-terminal-error/public-summary.json",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 10343,
+      "rawSha256": "80A89384EC4595B4660FC1510CC0B50F52637101839E8081C003E1AA46E89983",
+      "expectedCleanSha256": "80A89384EC4595B4660FC1510CC0B50F52637101839E8081C003E1AA46E89983",
+      "expectedIndexOid": "2ddbf92732a49bf41657e642c069793a7b834032",
+      "normalization": "EXACT_RAW_BYTES"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/mcp-terminal-error/closeout.md",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 5861,
+      "rawSha256": "BF8931F28963C70B394B97BB8638EE0417ABAFEAA98776BC5784E0B1DC2D40AA",
+      "expectedCleanSha256": "BF8931F28963C70B394B97BB8638EE0417ABAFEAA98776BC5784E0B1DC2D40AA",
+      "expectedIndexOid": "5a9b37b55bf3a16a359e12c01f741677bb973be9",
+      "normalization": "EXACT_RAW_BYTES"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/mcp-terminal-error/public-commit-manifest.json",
+      "role": "SELF_MANIFEST",
+      "public": true,
+      "bytes": null,
+      "rawSha256": null,
+      "expectedCleanSha256": null,
+      "expectedIndexOid": null,
+      "normalization": "SELF_HASH_EXCLUDED_EXTERNAL_PIN"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/mcp-terminal-error/full707-bounded-reason-proof.json",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 711,
+      "rawSha256": "C05049EC2D7DA11BE2A391C2138B8828A12CE026EF76B0DC049F45B4CE398775",
+      "expectedCleanSha256": "C05049EC2D7DA11BE2A391C2138B8828A12CE026EF76B0DC049F45B4CE398775",
+      "expectedIndexOid": "2b76c5c2fbaa85b48985f229b62f6a223d1cbd08",
+      "normalization": "EXACT_RAW_BYTES"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/mcp-terminal-error-candidate.md",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 11850,
+      "rawSha256": "DAAC49CC013AA3FA6B99CB501BDF529446D0575D0982236EFE856FDF5E7222BE",
+      "expectedCleanSha256": "DAAC49CC013AA3FA6B99CB501BDF529446D0575D0982236EFE856FDF5E7222BE",
+      "expectedIndexOid": "9504506709009c03536a4b57fcf220649aae23a4",
+      "normalization": "EXACT_RAW_BYTES"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/mcp-terminal-error-test-candidate.patch",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 11437,
+      "rawSha256": "AC26D7C5A019D0F6119946F0E6B0416A97505949AB7839197CFA83AFEC24CC03",
+      "expectedCleanSha256": "AC26D7C5A019D0F6119946F0E6B0416A97505949AB7839197CFA83AFEC24CC03",
+      "expectedIndexOid": "98c406d296d7516c5871f9fe3933edd5c7370826",
+      "normalization": "EXACT_RAW_BYTES"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/mcp-terminal-error-review.md",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 14810,
+      "rawSha256": "D2E3C3FC1B230AFC685958ACCFCD81F62F54980877925CBD1CFD0AEEE2CC965A",
+      "expectedCleanSha256": "D2E3C3FC1B230AFC685958ACCFCD81F62F54980877925CBD1CFD0AEEE2CC965A",
+      "expectedIndexOid": "9c761b57e6f89cd2176ace73bebc05fc1e3792b0",
+      "normalization": "EXACT_RAW_BYTES"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/.gitattributes",
+      "role": "EXACT_EVIDENCE_ATTRIBUTES",
+      "public": true,
+      "bytes": 26136,
+      "rawSha256": "DD7ADE8E8E5D5E73D2D1FF1CA1F5DFAE1559AE1B856A6580EE3F601D4A4FC9B2",
+      "expectedCleanSha256": "DD7ADE8E8E5D5E73D2D1FF1CA1F5DFAE1559AE1B856A6580EE3F601D4A4FC9B2",
+      "expectedIndexOid": "2359eabec4edbc42c83935fcfbbd50d0a671f656",
+      "normalization": "EXACT_RAW_BYTES"
+    }
+  ],
+  "selfPath": "docs/evidence/2026-10-28-EX-27/mcp-terminal-error/public-commit-manifest.json",
+  "selfHashExcludedFromEmbeddedHashes": true,
+  "selfPinRule": "Final manifest SHA and Git blob pinned externally; verify exact staged17 paths and every blob independently, never recursive add",
+  "pendingReviewCount": 0,
+  "runtimeIndependentReview": {
+    "path": "docs/evidence/2026-10-28-EX-27/mcp-terminal-error-review.md",
+    "bytes": 14810,
+    "sha256": "D2E3C3FC1B230AFC685958ACCFCD81F62F54980877925CBD1CFD0AEEE2CC965A",
+    "expectedGitBlob": "9c761b57e6f89cd2176ace73bebc05fc1e3792b0",
+    "status": "COMPLETE_ROOT_FINAL_HANDOFF",
+    "subBatchAccepted": true,
+    "wholeCardClosed": false,
+    "isIndependentExactIndexReview": false
+  },
+  "leafExecutionStatus": [
+    {
+      "files": [
+        "run-target.ps1",
+        "manifest.json"
+      ],
+      "status": "ACTUAL_RED_ONLY",
+      "run": ".local/ex27-mcp-terminal/mcp-terminal-red-20261029-01",
+      "note": "original target input is immutable approved-manifest6BB9; collector4F9E; 1F/native1/collector0"
+    },
+    {
+      "files": [
+        "run-regression.ps1",
+        "regression-manifest.json"
+      ],
+      "status": "ACTUAL_GREEN_AND_CLASS",
+      "runs": [
+        ".local/ex27-mcp-terminal/mcp-terminal-green-20261029-01",
+        ".local/ex27-mcp-terminal/mcp-terminal-class39-20261029-01"
+      ],
+      "note": "collectorE675; Green inputBAB0 is private immutable approved-manifest; currentC56F is actual Class input; no backward rewrite"
+    },
+    {
+      "files": [
+        "run-full-regression.ps1",
+        "full-regression-manifest.json"
+      ],
+      "status": "ACTUAL_FULL707_RAW_GATE_FALSE",
+      "run": ".local/ex27-mcp-terminal/mcp-terminal-full707-20261029-01",
+      "note": "collectorE8D1/input4B13; native0(ignore)/collector1; exact frozen migration pair accepted by D2E3 review; original rawReason/regression/allGreen false retained"
+    }
+  ],
+  "attributes": {
+    "parentPath": "docs/evidence/2026-10-28-EX-27/.gitattributes",
+    "parentExistingPrefixBytes": 25978,
+    "parentExistingPrefixSha256": "B6696AE7AD98CE15830B8AE237679E51A47A91E4EF3670934D3AD2CD14410E61",
+    "parentPrefixUnchanged": true,
+    "appendedExactRootReviewRules": [
+      "mcp-terminal-error-candidate.md",
+      "mcp-terminal-error-test-candidate.patch",
+      "mcp-terminal-error-review.md"
+    ],
+    "leafPath": "docs/evidence/2026-10-28-EX-27/mcp-terminal-error/.gitattributes",
+    "leafBoundedRule": "* -text -whitespace",
+    "futureUnknownFilesAuthorizedForCommit": false,
+    "sourceRulesChanged": false
+  },
+  "workingTreeRuntimeSeparation": {
+    "actualRuntimeSevenSourceDelta": [
+      "skill-registry/src/main/java/cn/agentplatform/skill/domain/ProcessContract.java",
+      "skill-registry/src/main/java/cn/agentplatform/skill/infra/ProcessAdapter.java",
+      "skill-registry/src/test/java/cn/agentplatform/skill/domain/ProcessContractTest.java",
+      "skill-registry/src/test/java/cn/agentplatform/skill/application/SkillProcessRegistrationTest.java",
+      "skill-registry/src/test/java/cn/agentplatform/skill/infra/ProcessFilesTest.java",
+      "skill-registry/src/main/java/cn/agentplatform/skill/infra/BoundedMcpSseTransport.java",
+      "skill-registry/src/test/java/cn/agentplatform/skill/infra/McpAdapterTest.java"
+    ],
+    "includedInThisPublicBatch": [
+      "skill-registry/src/main/java/cn/agentplatform/skill/infra/BoundedMcpSseTransport.java",
+      "skill-registry/src/test/java/cn/agentplatform/skill/infra/McpAdapterTest.java"
+    ],
+    "excludedPhaseAFiveSources": [
+      "skill-registry/src/main/java/cn/agentplatform/skill/domain/ProcessContract.java",
+      "skill-registry/src/main/java/cn/agentplatform/skill/infra/ProcessAdapter.java",
+      "skill-registry/src/test/java/cn/agentplatform/skill/domain/ProcessContractTest.java",
+      "skill-registry/src/test/java/cn/agentplatform/skill/application/SkillProcessRegistrationTest.java",
+      "skill-registry/src/test/java/cn/agentplatform/skill/infra/ProcessFilesTest.java"
+    ],
+    "wholeWorkingTreeCleanClaimed": false,
+    "wholeWorkingTreeCommittedClaimed": false,
+    "laterContractStatusMetadataExcluded": {
+      "path": "contracts/process-files-io.md",
+      "currentSha256": "465646D3C46F79191E2E8C4C8E109F046D7B004EF6E3A7626FE4FB0F29C4D637",
+      "statusTextUpdatedAfterFull707": true,
+      "claimedAsFull707RuntimeInput": false,
+      "includedInMcpPublicBatch": false
+    }
+  },
+  "localOnlyReferences": [
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-red-20261029-01/summary.json",
+      "mode": "Red",
+      "bytes": 651,
+      "sha256": "CADF072112CF1891711717C85D5A8D29EBDD18BF0E9273362AD91A861D75C7CB",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-red-20261029-01/native-exit.json",
+      "mode": "Red",
+      "bytes": 205,
+      "sha256": "6E698E9E058BA22918E08B2A7F76BB290B86E3B18C7FCAD3C93A38837F9415C1",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-red-20261029-01/collector-exit.json",
+      "mode": "Red",
+      "bytes": 125,
+      "sha256": "96C73584FF298E1AF55597E5902971F33EA2EFDD8D68852DA28F406C3DC5EAA2",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-red-20261029-01/source-before.json",
+      "mode": "Red",
+      "bytes": 31695,
+      "sha256": "A976CC295D96D67F0A33D98A15BFF82ADD57409F15188221ACE65ACE2E9C2F9C",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-red-20261029-01/source-after.json",
+      "mode": "Red",
+      "bytes": 31695,
+      "sha256": "A976CC295D96D67F0A33D98A15BFF82ADD57409F15188221ACE65ACE2E9C2F9C",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-red-20261029-01/context-before.json",
+      "mode": "Red",
+      "bytes": 55564,
+      "sha256": "AEADC266FEAD9D4C72D8893BB0344BFA0D2FE1D1ED4309299C5B7B204FAE511D",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-red-20261029-01/context-after.json",
+      "mode": "Red",
+      "bytes": 55564,
+      "sha256": "AEADC266FEAD9D4C72D8893BB0344BFA0D2FE1D1ED4309299C5B7B204FAE511D",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-red-20261029-01/approved-manifest.json",
+      "mode": "Red",
+      "bytes": 90417,
+      "sha256": "6BB982AA8988FD20690C1B7DA876286C28829ECDD54B4C8DACE00A850D12970B",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-red-20261029-01/collector.ps1",
+      "mode": "Red",
+      "bytes": 15316,
+      "sha256": "4F9EAAF0DB9481494E2597734539C2C6CEDEAD514B2D300DEA31E21752E8055F",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-red-20261029-01/xml-manifest.json",
+      "mode": "Red",
+      "bytes": 259,
+      "sha256": "7AA12882014EC199B82E2DD67051824D139123290C579085097AB05C27B64853",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-red-20261029-01/classpath-facts.json",
+      "mode": "Red",
+      "bytes": 2117,
+      "sha256": "9C3976455B763010C36B7172AEFC27A65BE814B47AAA3623DEE56C826ED79B6A",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-red-20261029-01/methods.csv",
+      "mode": "Red",
+      "bytes": 698,
+      "sha256": "7A2086624F9FBB19A778172FA4E59843B2C4EE22ED723FE3469EC1365DBA5E20",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-red-20261029-01/raw-log-manifest.json",
+      "mode": "Red",
+      "bytes": 160,
+      "sha256": "AAF3745FD7C5E06B3362F2CD05CC34228AA4296A18E5CEFEF16F4D03AF1C1515",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-red-20261029-01/xml-issues.json",
+      "mode": "Red",
+      "bytes": 6,
+      "sha256": "B423BB45501E0FA49D3B77E635F800A29F1FDCF5A58E00C7E04A7FF7833045F2",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-green-20261029-01/summary.json",
+      "mode": "Green",
+      "bytes": 812,
+      "sha256": "331C6FE4BE8B80C710E945F42AD977C2A3E4AED53CEF86B4AEC1689E045ABE17",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-green-20261029-01/native-exit.json",
+      "mode": "Green",
+      "bytes": 205,
+      "sha256": "87A9E9B51C6BDC1814057478A493E039E19C17209BAD4E558D6FC6976C970A26",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-green-20261029-01/collector-exit.json",
+      "mode": "Green",
+      "bytes": 125,
+      "sha256": "299478A4A58108227C42F8BD3C456B9FD753EFEA236F0D53923AC7198FD99EF4",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-green-20261029-01/source-before.json",
+      "mode": "Green",
+      "bytes": 31695,
+      "sha256": "A9DCCF0025A6C9AA24A029C818D515CD69019167CEE0BFDC72DDF9127821E6D6",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-green-20261029-01/source-after.json",
+      "mode": "Green",
+      "bytes": 31695,
+      "sha256": "A9DCCF0025A6C9AA24A029C818D515CD69019167CEE0BFDC72DDF9127821E6D6",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-green-20261029-01/context-before.json",
+      "mode": "Green",
+      "bytes": 55564,
+      "sha256": "AEADC266FEAD9D4C72D8893BB0344BFA0D2FE1D1ED4309299C5B7B204FAE511D",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-green-20261029-01/context-after.json",
+      "mode": "Green",
+      "bytes": 55564,
+      "sha256": "AEADC266FEAD9D4C72D8893BB0344BFA0D2FE1D1ED4309299C5B7B204FAE511D",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-green-20261029-01/approved-manifest.json",
+      "mode": "Green",
+      "bytes": 107444,
+      "sha256": "BAB05CBBF9DFF785ED5D98C8CCD937EAA483FC9D19FA8D5ACDEA499A6F099966",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-green-20261029-01/collector.ps1",
+      "mode": "Green",
+      "bytes": 21054,
+      "sha256": "E675B8A217A4CE0EBF3E547CE15F68351841744DD82994E58993A6F11E0E1061",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-green-20261029-01/xml-manifest.json",
+      "mode": "Green",
+      "bytes": 259,
+      "sha256": "1F61317332F0C9B8AA9FB95AC1E9E2776CC5B4EFB0166D5069EF2AC58B17B57E",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-green-20261029-01/classpath-facts.json",
+      "mode": "Green",
+      "bytes": 2117,
+      "sha256": "9C3976455B763010C36B7172AEFC27A65BE814B47AAA3623DEE56C826ED79B6A",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-green-20261029-01/methods.csv",
+      "mode": "Green",
+      "bytes": 563,
+      "sha256": "565AA2B1CE25361905A185599D2C1FDC66AE78348A2E11290238086B31962A11",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-green-20261029-01/method-transitions.json",
+      "mode": "Green",
+      "bytes": 275,
+      "sha256": "3BFD391080CA8AC16AE64B93D7E8855347B3C9FC41616EDA4E35A69837877BCE",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-green-20261029-01/raw-log-manifest.json",
+      "mode": "Green",
+      "bytes": 159,
+      "sha256": "410D620BE00C3C4AD766EA9B56A23865346BEF0C71BA0ACA482C2695EFB6DFA1",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-green-20261029-01/xml-issues.json",
+      "mode": "Green",
+      "bytes": 6,
+      "sha256": "B423BB45501E0FA49D3B77E635F800A29F1FDCF5A58E00C7E04A7FF7833045F2",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-class39-20261029-01/summary.json",
+      "mode": "Class",
+      "bytes": 816,
+      "sha256": "10110C5B8AFDA8A2297A5D3895DEB883F95C3D3DA6CEDFCF6686A8C491E1E3EE",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-class39-20261029-01/native-exit.json",
+      "mode": "Class",
+      "bytes": 205,
+      "sha256": "E893ED54FB5BAF69522757C8F9BF19CC3D09E0560D803F54C1FE15C7DB2FF54C",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-class39-20261029-01/collector-exit.json",
+      "mode": "Class",
+      "bytes": 125,
+      "sha256": "299478A4A58108227C42F8BD3C456B9FD753EFEA236F0D53923AC7198FD99EF4",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-class39-20261029-01/source-before.json",
+      "mode": "Class",
+      "bytes": 31695,
+      "sha256": "A9DCCF0025A6C9AA24A029C818D515CD69019167CEE0BFDC72DDF9127821E6D6",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-class39-20261029-01/source-after.json",
+      "mode": "Class",
+      "bytes": 31695,
+      "sha256": "A9DCCF0025A6C9AA24A029C818D515CD69019167CEE0BFDC72DDF9127821E6D6",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-class39-20261029-01/context-before.json",
+      "mode": "Class",
+      "bytes": 55564,
+      "sha256": "AEADC266FEAD9D4C72D8893BB0344BFA0D2FE1D1ED4309299C5B7B204FAE511D",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-class39-20261029-01/context-after.json",
+      "mode": "Class",
+      "bytes": 55564,
+      "sha256": "AEADC266FEAD9D4C72D8893BB0344BFA0D2FE1D1ED4309299C5B7B204FAE511D",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-class39-20261029-01/approved-manifest.json",
+      "mode": "Class",
+      "bytes": 111831,
+      "sha256": "C56F864883DF377D1FBACB28BED5A32368016C0E37FD687187F693E60B2ADD67",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-class39-20261029-01/collector.ps1",
+      "mode": "Class",
+      "bytes": 21054,
+      "sha256": "E675B8A217A4CE0EBF3E547CE15F68351841744DD82994E58993A6F11E0E1061",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-class39-20261029-01/xml-manifest.json",
+      "mode": "Class",
+      "bytes": 259,
+      "sha256": "621341A1907BC4A384DEDEC5C267727F45AA26F9C9753D1187B98D50ECA4853D",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-class39-20261029-01/classpath-facts.json",
+      "mode": "Class",
+      "bytes": 2117,
+      "sha256": "9C3976455B763010C36B7172AEFC27A65BE814B47AAA3623DEE56C826ED79B6A",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-class39-20261029-01/methods.csv",
+      "mode": "Class",
+      "bytes": 14805,
+      "sha256": "ED8C3FFFDE22368C27BC7C82B90B5D7CE1BB2B9F16534C216CCB426B9E775428",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-class39-20261029-01/method-transitions.json",
+      "mode": "Class",
+      "bytes": 10307,
+      "sha256": "5C76F8BE6BAB259D89D4776F8EAE5E202F9C8DF6EB5B822F37D2E29D6E2B0832",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-class39-20261029-01/raw-log-manifest.json",
+      "mode": "Class",
+      "bytes": 160,
+      "sha256": "C46526B9AEE5CF7083CCFCE3DE56D7A0164A36B1BD716532B8AA0194DC27E28A",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-class39-20261029-01/xml-issues.json",
+      "mode": "Class",
+      "bytes": 6,
+      "sha256": "B423BB45501E0FA49D3B77E635F800A29F1FDCF5A58E00C7E04A7FF7833045F2",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-full707-20261029-01/summary.json",
+      "mode": "Full",
+      "bytes": 1343,
+      "sha256": "EDDAA0996DC6173C2173F263300C54B1D137FD34D7F7342789F1016D7CC1AFF0",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-full707-20261029-01/native-exit.json",
+      "mode": "Full",
+      "bytes": 195,
+      "sha256": "D5EA3CCAA745EB0E3DEF587006613E7B18964FBB61A7545366CE96A0CE4F22AB",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-full707-20261029-01/collector-exit.json",
+      "mode": "Full",
+      "bytes": 126,
+      "sha256": "678412F8B7CBE5DC308C7B73F19F0A14837CAB1B81CB519AE2FEE7ED9609010A",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-full707-20261029-01/source-before.json",
+      "mode": "Full",
+      "bytes": 31695,
+      "sha256": "A9DCCF0025A6C9AA24A029C818D515CD69019167CEE0BFDC72DDF9127821E6D6",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-full707-20261029-01/source-after.json",
+      "mode": "Full",
+      "bytes": 31695,
+      "sha256": "A9DCCF0025A6C9AA24A029C818D515CD69019167CEE0BFDC72DDF9127821E6D6",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-full707-20261029-01/context-before.json",
+      "mode": "Full",
+      "bytes": 49378,
+      "sha256": "04B91BCDFA31F37ED1CBC49BDD1A955F8FB8E73101D56EA0689D8ED48E60C0B3",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-full707-20261029-01/context-after.json",
+      "mode": "Full",
+      "bytes": 49378,
+      "sha256": "04B91BCDFA31F37ED1CBC49BDD1A955F8FB8E73101D56EA0689D8ED48E60C0B3",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-full707-20261029-01/approved-manifest.json",
+      "mode": "Full",
+      "bytes": 158264,
+      "sha256": "4B139DFF99633A388575A10FCB141FEFEF3317B6D479C477A963C34FF1AF2E91",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-full707-20261029-01/collector.ps1",
+      "mode": "Full",
+      "bytes": 43384,
+      "sha256": "E8D11D6B1369A3233925C80705E5B75E96AC9D5AA5EB54BB21776B821C9A55A9",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-full707-20261029-01/xml-manifest.json",
+      "mode": "Full",
+      "bytes": 19572,
+      "sha256": "7D95C234F94CF879B9228CCB60F3E8980454AC332366DC203A7C0C785891AA07",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-full707-20261029-01/classpath-facts.json",
+      "mode": "Full",
+      "bytes": 49281,
+      "sha256": "C4068B9E5E5EF34F1C875065B99C0EE2F2413174C6F5F3A4EE3776D1CAC242E8",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-full707-20261029-01/methods.csv",
+      "mode": "Full",
+      "bytes": 299805,
+      "sha256": "07AC4CB39A822F5A31A0D1E9CFEA4F90BDD7C093D45168A09EC634B1DAFF2BDA",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-full707-20261029-01/method-status-changes.json",
+      "mode": "Full",
+      "bytes": 6,
+      "sha256": "B423BB45501E0FA49D3B77E635F800A29F1FDCF5A58E00C7E04A7FF7833045F2",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-full707-20261029-01/before-storage.json",
+      "mode": "Full",
+      "bytes": 56518,
+      "sha256": "DB812973E235E5BF1FDCF030B7784AE9C31924BDCC150F5502798B9ABEEB34CD",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-full707-20261029-01/after-storage.json",
+      "mode": "Full",
+      "bytes": 56518,
+      "sha256": "BB532143D495FF17FE3438BC271CF68588B81FDA69D13A1F44C156A8E1953EC4",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-full707-20261029-01/sdk-default-outcomes.json",
+      "mode": "Full",
+      "bytes": 920,
+      "sha256": "8BCFD4E5770A445C52845F055929D7AB2DA99100D8E3815A57CFCDEC07BD181D",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-full707-20261029-01/ownership-witness.json",
+      "mode": "Full",
+      "bytes": 183,
+      "sha256": "9D6D1FB8DA082EB573E58040D15C974597033B2AA9640105273E76ABB3CB5754",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-full707-20261029-01/bounded-volatile-proof.json",
+      "mode": "Full",
+      "bytes": 711,
+      "sha256": "C05049EC2D7DA11BE2A391C2138B8828A12CE026EF76B0DC049F45B4CE398775",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-full707-20261029-01/raw-log-manifest.json",
+      "mode": "Full",
+      "bytes": 161,
+      "sha256": "D959D552DCC2B490616B0F95DDE2E4EB183DC7F074CF015D616000012AD521BB",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-full707-20261029-01/prior-failures-preserved.json",
+      "mode": "Full",
+      "bytes": 398,
+      "sha256": "8D7217908ADBCFC9D022C5482DF868EE81B601C4FB0430697EE4333358580CE8",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-full707-20261029-01/class-level-events.json",
+      "mode": "Full",
+      "bytes": 6,
+      "sha256": "B423BB45501E0FA49D3B77E635F800A29F1FDCF5A58E00C7E04A7FF7833045F2",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-full707-20261029-01/known-unexecuted-source.json",
+      "mode": "Full",
+      "bytes": 6,
+      "sha256": "B423BB45501E0FA49D3B77E635F800A29F1FDCF5A58E00C7E04A7FF7833045F2",
+      "copiedIntoPublicSet": false
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-full707-20261029-01/xml-issues.json",
+      "mode": "Full",
+      "bytes": 6,
+      "sha256": "B423BB45501E0FA49D3B77E635F800A29F1FDCF5A58E00C7E04A7FF7833045F2",
+      "copiedIntoPublicSet": false
+    }
+  ],
+  "localOnlyReferencesAreCommittedFiles": false,
+  "rawCollectorAndReasonGatesRewritten": false,
+  "originalFull706FailurePreserved": true,
+  "relativeTechnicalAcceptance": true,
+  "relativeAcceptanceStatus": "ACCEPTED_BY_FIXED_RUN_AND_XML_PAIR_INDEPENDENT_REVIEW",
+  "wholeIoClosed": false,
+  "wholeEx27Closed": false,
+  "publicSetIsStandaloneFullReplay": false,
+  "sourceOrOldFrozenArtifactBytesModifiedByPreparation": false,
+  "gitStageOrCommitPerformed": false,
+  "excludedLocal": [
+    "PhaseA five source files and process-files-io.md contract",
+    "All raw XML/logs/PG query content/process data/JAR/dependencies/.env/actual secrets",
+    "Repeated runtime source snapshots, targets, private replay inputs and unrelated untracked/card files"
+  ],
+  "securityScan": {
+    "knownCredentialSourceSha256": "AF038F68E0CA2E3EEEEB0C5240B2C2DA1EF647D680500F63AF1564975EBAFD4A",
+    "rootExtractionRule": "PASSWORD|SECRET|TOKEN|KEY value, trim quotes, length>=8, exclude env:/vault:, unique",
+    "uniqueKnownValuesComparedInMemory": 7,
+    "includesNonSecretSecretDirectoryAsAdditionalLiteralCheck": true,
+    "actualValuesPrintedOrPersisted": false,
+    "knownLiteralMatches": 0,
+    "jwtPatternMatches": 0,
+    "privateKeyPatternMatches": 0,
+    "scannedKnownFileCountExcludingManifestSelfAndPendingReview": 16,
+    "selfManifestAlsoScanned": true,
+    "pendingReviewMustBeScannedAfterRealFinalHandoff": false,
+    "finalReviewIncludedAndScanned": true,
+    "allSeventeenCandidateContentsScanned": true
+  },
+  "independentExactIndexReviewStillRequired": true,
+  "finalSealProvenance": {
+    "previousUnsealedManifestSha256": "2A4D081E53D8C20C7200B645C25BC5F5DD8E59A756049E6AE81C40F4D50ABC94",
+    "reportActuallyReadAndPinned": true,
+    "onlySummaryCloseoutManifestChangedAtSeal": true,
+    "rawFull707FalseGatesPreserved": true,
+    "exactPathCountUnchanged": 17
+  }
+}

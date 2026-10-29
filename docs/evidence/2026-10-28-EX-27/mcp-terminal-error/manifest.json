@@ -1,0 +1,1937 @@
+{
+  "schemaVersion": 1,
+  "purpose": "EX27 MCP terminal send error: sealed RED-only one-method collector input; owner retains the exclusive actual runtime window. Green/Class remain unimplemented and unsealed.",
+  "executionHeadSealed": true,
+  "expectedExecutionHead": "73dc4cf37a2894f5c20fe806908011091888383b",
+  "baselineHead": "6ca930d8b9b7ef32c4eb7de1ce88ae87fc75c946",
+  "headSealRule": "Owner supplies new HEAD; require git diff --name-only baselineHead..newHead -- skill-registry admin-common pom.xml empty. Runtime repeats comparison. Do not rewrite Full706 historical HEAD.",
+  "modes": {
+    "Red": {
+      "sealed": true,
+      "records": 1,
+      "nativeExit": 1
+    },
+    "Green": {
+      "sealed": false,
+      "actualRedPrerequisite": null,
+      "notImplemented": true
+    },
+    "Class": {
+      "sealed": false,
+      "actualGreenPrerequisite": null,
+      "notImplemented": true
+    }
+  },
+  "runnerSha256": "4F9EAAF0DB9481494E2597734539C2C6CEDEAD514B2D300DEA31E21752E8055F",
+  "runner": "docs/evidence/2026-10-28-EX-27/mcp-terminal-error/run-target.ps1",
+  "runtimeParent": ".local/ex27-mcp-terminal",
+  "rawEvidencePrivate": true,
+  "invocation": "C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File docs/evidence/2026-10-28-EX-27/mcp-terminal-error/run-target.ps1 -Mode Red -RunId <fresh-owned-id> -ApprovedManifestSha256 <actual-sealed-sha> -ExecuteApproved",
+  "jdk": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot",
+  "maven": "C:\\ProgramData\\chocolatey\\lib\\maven\\apache-maven-3.9.16\\bin\\mvn.cmd",
+  "reportReader": "docs/evidence/2026-10-28-EX-04/collector/full-report-records.ps1",
+  "reportReaderSha256": "96D70BE0951B75C335EA9D2A60460F794424D03D08882CB760BE5F48CABD8724",
+  "envSha256": "AF038F68E0CA2E3EEEEB0C5240B2C2DA1EF647D680500F63AF1564975EBAFD4A",
+  "envFileImported": false,
+  "noPgMinioOrExternalHttp": true,
+  "ownedLoopbackHttpTest": true,
+  "offlineMaven": true,
+  "cleanAmInstall": false,
+  "budget": {
+    "heapMiB": 1024,
+    "surefireTimeoutSeconds": 900,
+    "defaultForkReuseAndOrder": true,
+    "failureIgnore": false,
+    "sdkAndTransportMs": 800,
+    "testIncludingFinallyMs": 1800,
+    "unchangedAfterEachMs": 2000
+  },
+  "expectedMethod": {
+    "classname": "cn.agentplatform.skill.infra.McpAdapterTest",
+    "method": "closedSessionDoesNotDeliverLateAckFailureToCancelledRpc",
+    "display_name": "",
+    "suite_path": "cn.agentplatform.skill.infra.McpAdapterTest",
+    "record_kind": "NAMED_CASE",
+    "status": "failure"
+  },
+  "expectedToken": "MCP_TERMINAL_ACK_LATE_ERROR_DELIVERY",
+  "expectedMessage": "MCP_TERMINAL_ACK_LATE_ERROR_DELIVERY ==> expected: <0> but was: <1>",
+  "expectedMessageSha256": "925B879EB3C084ADDB0B6AAFDBFA5D257D0BAC464150C2336822DBE24A0A0EE9",
+  "expectedFirstProjectFrame": "cn.agentplatform.skill.infra.McpAdapterTest.closedSessionDoesNotDeliverLateAckFailureToCancelledRpc",
+  "redGate": "Native1 + exactly one fresh XML and named case + exact AssertionFailedError token expected0 actual1 + no error/skip/suppressed failure + source/context/exact CP. Fixture, timing, cleanup, compilation and prerequisites are not product RED. onErrorDropped is not required.",
+  "baselineRun": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-full-20261029-01",
+  "baselineSourceBefore": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-full-20261029-01/source-before.json",
+  "baselineSourceAfter": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-full-20261029-01/source-after.json",
+  "baselineMcpXml": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-full-20261029-01/xml/TEST-cn.agentplatform.skill.infra.McpAdapterTest.xml",
+  "onlyAllowedSourceDelta": "skill-registry/src/test/java/cn/agentplatform/skill/infra/McpAdapterTest.java",
+  "originalMethods": [
+    {
+      "classname": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "method": "rawTopLevelSchemaKeywordsSurviveSdkConversion",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "record_kind": "NAMED_CASE",
+      "status": "passed"
+    },
+    {
+      "classname": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "method": "quotaHasDistinctNonUnknownSemantic",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "record_kind": "NAMED_CASE",
+      "status": "passed"
+    },
+    {
+      "classname": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "method": "writeDisconnectIsUnknownAndNeverResent",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "record_kind": "NAMED_CASE",
+      "status": "passed"
+    },
+    {
+      "classname": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "method": "initialUtf8BomIsAcceptedWithinWireByteCount",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "record_kind": "NAMED_CASE",
+      "status": "passed"
+    },
+    {
+      "classname": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "method": "validSseExtensionFieldsAreIgnoredWithinWireLimits",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "record_kind": "NAMED_CASE",
+      "status": "passed"
+    },
+    {
+      "classname": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "method": "duplicateToolNamesRejectBeforeBusinessCall",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "record_kind": "NAMED_CASE",
+      "status": "passed"
+    },
+    {
+      "classname": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "method": "tooManyEventsClosesStreamWithoutQueueingSdkNotifications",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "record_kind": "NAMED_CASE",
+      "status": "passed"
+    },
+    {
+      "classname": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "method": "repeatedCursorCannotLoopUntilTimeout",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "record_kind": "NAMED_CASE",
+      "status": "passed"
+    },
+    {
+      "classname": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "method": "missingToolFailsBeforeBusinessCall",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "record_kind": "NAMED_CASE",
+      "status": "passed"
+    },
+    {
+      "classname": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "method": "readDisconnectIsFailureWithoutAutomaticRetry",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "record_kind": "NAMED_CASE",
+      "status": "passed"
+    },
+    {
+      "classname": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "method": "totalWireLimitAlsoCountsNonDataSseComments",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "record_kind": "NAMED_CASE",
+      "status": "passed"
+    },
+    {
+      "classname": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "method": "crOnlySseLineEndingsStillUseTheSdkProtocol",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "record_kind": "NAMED_CASE",
+      "status": "passed"
+    },
+    {
+      "classname": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "method": "forbiddenPostIsNotLostAsGenericTimeout",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "record_kind": "NAMED_CASE",
+      "status": "passed"
+    },
+    {
+      "classname": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "method": "droppedBusinessPostAckNeverReplaysPostBody",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "record_kind": "NAMED_CASE",
+      "status": "passed"
+    },
+    {
+      "classname": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "method": "connectionFailurePropagatesWithoutUnconsumedGlobalReactorError",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "record_kind": "NAMED_CASE",
+      "status": "passed"
+    },
+    {
+      "classname": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "method": "twoRealSessionsExhaustLocalDecodeAdmissionBeforeThirdSocket",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "record_kind": "NAMED_CASE",
+      "status": "passed"
+    },
+    {
+      "classname": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "method": "followsBoundedToolPagesWithoutChangingArguments",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "record_kind": "NAMED_CASE",
+      "status": "passed"
+    },
+    {
+      "classname": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "method": "entireSessionUsesOneDeadlineIncludingBlockedReads",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "record_kind": "NAMED_CASE",
+      "status": "passed"
+    },
+    {
+      "classname": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "method": "endpointCannotForwardCredentialsAcrossOrigins",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "record_kind": "NAMED_CASE",
+      "status": "passed"
+    },
+    {
+      "classname": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "method": "oversizedEventIsRejectedBeforeSdkMaterializesResult",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "record_kind": "NAMED_CASE",
+      "status": "passed"
+    },
+    {
+      "classname": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "method": "absentToolsCapabilityRejectsBeforeListOrCall",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "record_kind": "NAMED_CASE",
+      "status": "passed"
+    },
+    {
+      "classname": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "method": "idleSseWithoutEndpointClosesAtTotalDeadline",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "record_kind": "NAMED_CASE",
+      "status": "passed"
+    },
+    {
+      "classname": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "method": "oversizedArgumentsFailBeforeCallWithoutBecomingRetryable",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "record_kind": "NAMED_CASE",
+      "status": "passed"
+    },
+    {
+      "classname": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "method": "ackBodyHasIndependentReceiveLimit",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "record_kind": "NAMED_CASE",
+      "status": "passed"
+    },
+    {
+      "classname": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "method": "writeToolErrorNeverAuthorizesAutomaticRetry",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "record_kind": "NAMED_CASE",
+      "status": "passed"
+    },
+    {
+      "classname": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "method": "blockedAckBodyCannotOutliveTheWholeSessionDeadline",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "record_kind": "NAMED_CASE",
+      "status": "failure"
+    },
+    {
+      "classname": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "method": "businessPostRejectionPreservesDefiniteErrorsAndUncertainWrite(int)[1]",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "record_kind": "NAMED_CASE",
+      "status": "passed"
+    },
+    {
+      "classname": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "method": "businessPostRejectionPreservesDefiniteErrorsAndUncertainWrite(int)[2]",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "record_kind": "NAMED_CASE",
+      "status": "passed"
+    },
+    {
+      "classname": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "method": "businessPostRejectionPreservesDefiniteErrorsAndUncertainWrite(int)[3]",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "record_kind": "NAMED_CASE",
+      "status": "passed"
+    },
+    {
+      "classname": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "method": "unsupportedProtocolIsAConfigurationFailureBeforeBusinessCall",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "record_kind": "NAMED_CASE",
+      "status": "passed"
+    },
+    {
+      "classname": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "method": "topLevelOneOfAndNestedPatternAreNotLostBySdkJsonSchema",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "record_kind": "NAMED_CASE",
+      "status": "passed"
+    },
+    {
+      "classname": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "method": "schemaOver64KiBRejectsBeforeBusinessCall",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "record_kind": "NAMED_CASE",
+      "status": "passed"
+    },
+    {
+      "classname": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "method": "externalSchemaReferenceNeverTriggersNetworkLookup",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "record_kind": "NAMED_CASE",
+      "status": "passed"
+    },
+    {
+      "classname": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "method": "remoteInputSchemaIsCheckedBeforeBusinessCall",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "record_kind": "NAMED_CASE",
+      "status": "passed"
+    },
+    {
+      "classname": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "method": "queryOnlyCannotIssueASecondMcpBusinessCall",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "record_kind": "NAMED_CASE",
+      "status": "passed"
+    },
+    {
+      "classname": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "method": "toolCountIsBoundedBeforeSdkConvertsAllTools",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "record_kind": "NAMED_CASE",
+      "status": "passed"
+    },
+    {
+      "classname": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "method": "pagesCannotExtendBeyondSixteenRequests",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "record_kind": "NAMED_CASE",
+      "status": "passed"
+    },
+    {
+      "classname": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "method": "initializesListsThenCallsWithRealArguments",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.skill.infra.McpAdapterTest",
+      "record_kind": "NAMED_CASE",
+      "status": "passed"
+    }
+  ],
+  "oldSourceAnnotatedMethods": 36,
+  "oldExecutionIdentities": 38,
+  "candidateTotalClassIdentities": 39,
+  "oldMethodsRunInTarget": false,
+  "sourcePreservation": {
+    "originalTestSha256": "EBB60E0AF57AA8D182D3C82E1698CABB336984C22153854FA93B17DD24370AFC",
+    "candidateTestSha256": "068002325D7D224FB685DBB3476AEBD27CEDFF170430E115BDF1008ADC9F282F",
+    "unchangedTransportSha256": "44B1A81C554A9BE6B3E1B11A1881D467B347C9D1B2E604FE4147E95FA38C0C77",
+    "additionLines": 203,
+    "removedLines": 0,
+    "staticOriginal36MethodBlocksUnchanged": true
+  },
+  "expectedClasspathValueSha256": "C4A9BC77B5786D2084E37124AFE408B048C6CB13371282804C7813FE33B04406",
+  "classpathRawSegments": 182,
+  "classpathJarCount": 179,
+  "classpathDirectoryCount": 2,
+  "classpathTrailingEmptySegments": 1,
+  "classpathProvenance": "Ordered path string from actual Full706 MCP XML including original trailing semicolon. Jar-byte pins freshly read during candidate preparation, not historical per-jar hashes. No old JAR restoration. Only module target classes may be recompiled by test phase.",
+  "expectedRuntimeProperties": [
+    {
+      "name": "java.home",
+      "value": "C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.12.8-hotspot"
+    },
+    {
+      "name": "java.version",
+      "value": "21.0.12"
+    },
+    {
+      "name": "java.vm.version",
+      "value": "21.0.12+8-LTS"
+    },
+    {
+      "name": "argLine",
+      "value": "-Xmx1024m -Djdk.net.unixdomain.tmpdir=V:/.local/tmp"
+    },
+    {
+      "name": "surefire.timeout",
+      "value": "900"
+    },
+    {
+      "name": "surefire.failIfNoSpecifiedTests",
+      "value": "true"
+    },
+    {
+      "name": "maven.test.failure.ignore",
+      "value": "false"
+    },
+    {
+      "name": "maven.repo.local",
+      "value": "G:\\207\\项目\\算法重组工具\\代码\\agent-platform/.tools/m2"
+    },
+    {
+      "name": "jdk.net.unixdomain.tmpdir",
+      "value": "V:/.local/tmp"
+    }
+  ],
+  "commonContext": {
+    "mainJar": ".tools/m2/cn/agentplatform/admin-common/0.1.0-SNAPSHOT/admin-common-0.1.0-SNAPSHOT.jar",
+    "preparedMainJarSha256": "0FBB83F6E6ADCF9E36BA27345602AA93AA4769D863CF2635FE0357EC7DA29A93",
+    "testsJar": ".tools/m2/cn/agentplatform/admin-common/0.1.0-SNAPSHOT/admin-common-0.1.0-SNAPSHOT-tests.jar",
+    "preparedTestsJarSha256": "0CA864F064A758ED9EA72BCD8EEEDE532C771F5F7BD51F0A2E9B42818E7AB732",
+    "testsJarObservedInOriginalSkillClasspath": false,
+    "testsJarConservativelyPinnedEvenWhenNotOnClasspath": true,
+    "futureLegalCommonRebuildRequiresFreshSourceProvenanceAndNewApprovedManifest": true,
+    "neverRestoreOldJarToPassPin": true,
+    "oldRunsRemainImmutable": true
+  },
+  "contextPins": [
+    {
+      "path": ".tools/m2/cn/agentplatform/admin-common/0.1.0-SNAPSHOT/admin-common-0.1.0-SNAPSHOT.jar",
+      "sha256": "0FBB83F6E6ADCF9E36BA27345602AA93AA4769D863CF2635FE0357EC7DA29A93"
+    },
+    {
+      "path": ".tools/m2/cn/agentplatform/admin-common/0.1.0-SNAPSHOT/admin-common-0.1.0-SNAPSHOT-tests.jar",
+      "sha256": "0CA864F064A758ED9EA72BCD8EEEDE532C771F5F7BD51F0A2E9B42818E7AB732"
+    },
+    {
+      "path": ".tools/m2/cn/agentplatform/admin-common/0.1.0-SNAPSHOT/admin-common-0.1.0-SNAPSHOT.pom",
+      "sha256": "B5BA5FD5F094DF545C6E18AEEA87166323BF22F7E1FE2E98111CEE5559F8E4B0"
+    },
+    {
+      "path": "pom.xml",
+      "sha256": "836BA70369072496695E167BF3AB937FE48C7150A5E0B13B7B8D13674FFBCB2C"
+    },
+    {
+      "path": "skill-registry/pom.xml",
+      "sha256": "FBB154B930491AA738CEC3620F29F2D38B5F66910CC6394FAB95EA8707EB0C96"
+    },
+    {
+      "path": "admin-common/pom.xml",
+      "sha256": "B5BA5FD5F094DF545C6E18AEEA87166323BF22F7E1FE2E98111CEE5559F8E4B0"
+    },
+    {
+      "path": "C:\\ProgramData\\chocolatey\\lib\\maven\\apache-maven-3.9.16\\bin\\mvn.cmd",
+      "sha256": "5F9B8EAC523030CD9818DAA0EB337635E06137D0DA95A66A0A5425D668050E12"
+    },
+    {
+      "path": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/java.exe",
+      "sha256": "A38D821EFB69EF99C55D315B00D9E8B88F126743B8773E44154E1A3D193EFD41"
+    },
+    {
+      "path": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/javac.exe",
+      "sha256": "4F3A8103193E1AC3E9268B9BB998CC672B7346F6E67E3B8A95109D4D494755AD"
+    },
+    {
+      "path": "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/release",
+      "sha256": "0838EC7ABAB7D1B89D425E36735DBB696889E05968C1DBAE18EAE631972F443E"
+    },
+    {
+      "path": "C:/ProgramData/chocolatey/lib/maven/apache-maven-3.9.16/conf/settings.xml",
+      "sha256": "2F552325AEDD9A9C9268DF520BE22CFE3AA86260B76A0F830D2796D2F0E22BD4"
+    }
+  ],
+  "classpathJarPins": [
+    {
+      "path": ".tools/m2/cn/agentplatform/admin-common/0.1.0-SNAPSHOT/admin-common-0.1.0-SNAPSHOT.jar",
+      "sha256": "0FBB83F6E6ADCF9E36BA27345602AA93AA4769D863CF2635FE0357EC7DA29A93"
+    },
+    {
+      "path": ".tools/m2/org/springframework/boot/spring-boot-starter-web/3.5.0/spring-boot-starter-web-3.5.0.jar",
+      "sha256": "31E44BBB76057ECFDA11F27140894EDFABF56753E6C814B3A98665C79BDC83E2"
+    },
+    {
+      "path": ".tools/m2/org/springframework/boot/spring-boot-starter-json/3.5.0/spring-boot-starter-json-3.5.0.jar",
+      "sha256": "8C2A29B99E0BF83AA5A435E3E14BC22A8B8B57A15AF62115D0AD43964974323E"
+    },
+    {
+      "path": ".tools/m2/com/fasterxml/jackson/datatype/jackson-datatype-jdk8/2.19.0/jackson-datatype-jdk8-2.19.0.jar",
+      "sha256": "04F1A3F9DA8155995DD00098D6847CDB9B7AF67F4A3028C94031EFF017C8E3E5"
+    },
+    {
+      "path": ".tools/m2/com/fasterxml/jackson/module/jackson-module-parameter-names/2.19.0/jackson-module-parameter-names-2.19.0.jar",
+      "sha256": "A2AD4F099694B4A7A4A9DAAF737E6289CD3D310A438460ACAA79BBE4D45BB4BB"
+    },
+    {
+      "path": ".tools/m2/org/springframework/boot/spring-boot-starter-tomcat/3.5.0/spring-boot-starter-tomcat-3.5.0.jar",
+      "sha256": "9B9EF4DC3B3B1D6C9F4C072F135641CAD8AB658002D12B2F0F485FAB952E5CD3"
+    },
+    {
+      "path": ".tools/m2/org/apache/tomcat/embed/tomcat-embed-core/10.1.41/tomcat-embed-core-10.1.41.jar",
+      "sha256": "2029F890A2208862CF2C544C695C1CC9378D1ADF40EE6FF0764EA6F0E72C38D1"
+    },
+    {
+      "path": ".tools/m2/org/apache/tomcat/embed/tomcat-embed-websocket/10.1.41/tomcat-embed-websocket-10.1.41.jar",
+      "sha256": "7212F466FCB2D22B87E5EA70BDEC75EF17BCF20D670464A08D2335681829C3E2"
+    },
+    {
+      "path": ".tools/m2/org/springframework/spring-web/6.2.7/spring-web-6.2.7.jar",
+      "sha256": "1ACF7461FD4127421FC545C43363F9AAE0B0A47AD288CA191B0E9ED0252F1000"
+    },
+    {
+      "path": ".tools/m2/org/springframework/spring-webmvc/6.2.7/spring-webmvc-6.2.7.jar",
+      "sha256": "50C801768E49FC48C8E92E2D94A803AF209EA1F5E3126BD8D7370B5C59B9E71A"
+    },
+    {
+      "path": ".tools/m2/org/springframework/spring-aop/6.2.7/spring-aop-6.2.7.jar",
+      "sha256": "64FCA3EB272E4FBB604612E1DBB33008D40DE96D26655F16A6AADBDD95488643"
+    },
+    {
+      "path": ".tools/m2/org/springframework/spring-context/6.2.7/spring-context-6.2.7.jar",
+      "sha256": "50F155F7B2E14B897FF288FF6C8032724317A9156719FC8182CFA4CC8BF5ED93"
+    },
+    {
+      "path": ".tools/m2/org/springframework/spring-expression/6.2.7/spring-expression-6.2.7.jar",
+      "sha256": "A13E2957181FDEFE47A6C873C3465A76741A70746FA3AFF96DD44FC9CE5C06B0"
+    },
+    {
+      "path": ".tools/m2/org/springframework/boot/spring-boot-starter-validation/3.5.0/spring-boot-starter-validation-3.5.0.jar",
+      "sha256": "C5406278F4F81A1C5C87EC9C6F2A3B30ADAD7F8C1D1540D8D0E8D688C2F1CD4D"
+    },
+    {
+      "path": ".tools/m2/org/apache/tomcat/embed/tomcat-embed-el/10.1.41/tomcat-embed-el-10.1.41.jar",
+      "sha256": "EF010669DA3BB78231BDA7BF508A5C82922E8C431C50C2AAB73A8406795A0249"
+    },
+    {
+      "path": ".tools/m2/org/hibernate/validator/hibernate-validator/8.0.2.Final/hibernate-validator-8.0.2.Final.jar",
+      "sha256": "2F2224A5A19BDCFA73540E9FF5C971B6C425AD80415876F305259FE873A15B2F"
+    },
+    {
+      "path": ".tools/m2/jakarta/validation/jakarta.validation-api/3.0.2/jakarta.validation-api-3.0.2.jar",
+      "sha256": "291C25E6910CC6A7EBD96D4C6BAEBF6D7C37676C5482C2D96146E901B62C1FC9"
+    },
+    {
+      "path": ".tools/m2/org/jboss/logging/jboss-logging/3.6.1.Final/jboss-logging-3.6.1.Final.jar",
+      "sha256": "5E08A4B092DC85B337F0910A740571D8720CFA565FABD880A8CAF94A657CA416"
+    },
+    {
+      "path": ".tools/m2/com/fasterxml/classmate/1.7.0/classmate-1.7.0.jar",
+      "sha256": "CB868F231C5CCEB89D795EA00E6E1B7A93B8F4AC1CE1D8BE76DDE322DFF4A046"
+    },
+    {
+      "path": ".tools/m2/org/springframework/boot/spring-boot-starter-oauth2-resource-server/3.5.0/spring-boot-starter-oauth2-resource-server-3.5.0.jar",
+      "sha256": "8A01EA1E1A8BAE1A165638E8AC0BF3AB6D57D176F49DFB9A06FFC0918C161237"
+    },
+    {
+      "path": ".tools/m2/org/springframework/security/spring-security-config/6.5.0/spring-security-config-6.5.0.jar",
+      "sha256": "C214523F277F4217EE654023CCA36E94F7CBBDB4813AD95F71A043F84D8D400A"
+    },
+    {
+      "path": ".tools/m2/org/springframework/security/spring-security-core/6.5.0/spring-security-core-6.5.0.jar",
+      "sha256": "A2111C3055667D24AD0AE9721B7712E0EF555EBA7BDE643510F93BF4602C0C28"
+    },
+    {
+      "path": ".tools/m2/org/springframework/security/spring-security-crypto/6.5.0/spring-security-crypto-6.5.0.jar",
+      "sha256": "1D0D9B62477BD7F97DA47232106DD2C61348BA88C8AFE512BF9B186C208E63CA"
+    },
+    {
+      "path": ".tools/m2/org/springframework/security/spring-security-oauth2-resource-server/6.5.0/spring-security-oauth2-resource-server-6.5.0.jar",
+      "sha256": "7E9C7A179FE5209920C02773E35C430783B5986DE2356650CE738CDBDDB07D37"
+    },
+    {
+      "path": ".tools/m2/org/springframework/security/spring-security-oauth2-core/6.5.0/spring-security-oauth2-core-6.5.0.jar",
+      "sha256": "160CE939614DBE916A33269CC5ECB72C216EE4171DDA7E1C7FDDAC89216BBBE2"
+    },
+    {
+      "path": ".tools/m2/org/springframework/security/spring-security-web/6.5.0/spring-security-web-6.5.0.jar",
+      "sha256": "A72D57C360BB7322189BB4A585FFAF7C34534430EE916CC6E1BA6F0064F30BCE"
+    },
+    {
+      "path": ".tools/m2/org/springframework/security/spring-security-oauth2-jose/6.5.0/spring-security-oauth2-jose-6.5.0.jar",
+      "sha256": "7D06558657827E76C7DA1FA5E93166D9194054A4E7C3CEE8919826164B814145"
+    },
+    {
+      "path": ".tools/m2/com/nimbusds/nimbus-jose-jwt/9.37.3/nimbus-jose-jwt-9.37.3.jar",
+      "sha256": "12AE4A3A260095D7AEBA2ADEA7AE396E8B9570DB8B7B409E09A824C219CC0444"
+    },
+    {
+      "path": ".tools/m2/com/github/stephenc/jcip/jcip-annotations/1.0-1/jcip-annotations-1.0-1.jar",
+      "sha256": "4FCCFF8382AAFC589962C4EDB262F6AA595E34F1E11E61057D1C6A96E8FC7323"
+    },
+    {
+      "path": ".tools/m2/org/springdoc/springdoc-openapi-starter-webmvc-api/2.8.9/springdoc-openapi-starter-webmvc-api-2.8.9.jar",
+      "sha256": "F41EFF2D4FFA6BE04B2633E1396D4EC4F8B832934A06A3979334992D8D8FE043"
+    },
+    {
+      "path": ".tools/m2/org/springdoc/springdoc-openapi-starter-common/2.8.9/springdoc-openapi-starter-common-2.8.9.jar",
+      "sha256": "69BA8FB55FAC0144DD46C20F35C505CF12218CBE7F074E7337AD43C07887A81D"
+    },
+    {
+      "path": ".tools/m2/io/swagger/core/v3/swagger-core-jakarta/2.2.30/swagger-core-jakarta-2.2.30.jar",
+      "sha256": "AF6E6D5CE2CE865A022BAB9CC8652BDFBCB2DC45796387BCB1F3C5C2AD3FA12D"
+    },
+    {
+      "path": ".tools/m2/io/swagger/core/v3/swagger-annotations-jakarta/2.2.30/swagger-annotations-jakarta-2.2.30.jar",
+      "sha256": "2A3F16F20C6567E3E5E9A146ACEF8D6AA71CAB68BAEA621556AC2D37978E06E2"
+    },
+    {
+      "path": ".tools/m2/io/swagger/core/v3/swagger-models-jakarta/2.2.30/swagger-models-jakarta-2.2.30.jar",
+      "sha256": "E96D031483CBDA22DEEAA5157BC73D6D46BFCCA2D2E955AB56A198B2AE55693E"
+    },
+    {
+      "path": ".tools/m2/com/google/re2j/re2j/1.8/re2j-1.8.jar",
+      "sha256": "7B52C72156DD7F98B3237A5B35C1D34FBA381B21048C89208913AD80A45DFBD7"
+    },
+    {
+      "path": ".tools/m2/org/springframework/boot/spring-boot-starter-jdbc/3.5.0/spring-boot-starter-jdbc-3.5.0.jar",
+      "sha256": "9AC3AE436315066D8907BAC8F26CE24399DA957E2208A7E7319A167F1535CD39"
+    },
+    {
+      "path": ".tools/m2/org/springframework/boot/spring-boot-starter/3.5.0/spring-boot-starter-3.5.0.jar",
+      "sha256": "E4BC887500CC11DF58E8AD97AC675E6B4FEE1A065B1738FA6D12D021236F06E5"
+    },
+    {
+      "path": ".tools/m2/org/springframework/boot/spring-boot/3.5.0/spring-boot-3.5.0.jar",
+      "sha256": "304CE175DE4C22314655A0F1FA5D94D84A70DA1F9B9164B98A58B393F9B7AAA9"
+    },
+    {
+      "path": ".tools/m2/org/springframework/boot/spring-boot-autoconfigure/3.5.0/spring-boot-autoconfigure-3.5.0.jar",
+      "sha256": "27CF5447F6ACA1C35695D53E489DBA8AEC9A36A1D734DBD47374879EC30089DB"
+    },
+    {
+      "path": ".tools/m2/org/springframework/boot/spring-boot-starter-logging/3.5.0/spring-boot-starter-logging-3.5.0.jar",
+      "sha256": "E70F5C421A78F38C3308B83E4D774E0267314EBE6DAA5F6EB3B09480772E4E41"
+    },
+    {
+      "path": ".tools/m2/ch/qos/logback/logback-classic/1.5.18/logback-classic-1.5.18.jar",
+      "sha256": "3E1533D0321F8815EEF46750AEE0111B41554F9A4644C3C4D2D404744B09F60F"
+    },
+    {
+      "path": ".tools/m2/ch/qos/logback/logback-core/1.5.18/logback-core-1.5.18.jar",
+      "sha256": "85139E7B57B464F8E5E36326DD81317648BED199CCC4F98CD42585F8D7571027"
+    },
+    {
+      "path": ".tools/m2/org/apache/logging/log4j/log4j-to-slf4j/2.24.3/log4j-to-slf4j-2.24.3.jar",
+      "sha256": "C7F2B0C612A4EB05B1587D1C880EB4CF5F4F53850676A8EDE8DA2B8FABB4F73F"
+    },
+    {
+      "path": ".tools/m2/org/apache/logging/log4j/log4j-api/2.24.3/log4j-api-2.24.3.jar",
+      "sha256": "5B4A0A0CD0E751DED431C162442BDBDD53328D1F8BB2BAE5FC1BBEEE0F66D80F"
+    },
+    {
+      "path": ".tools/m2/org/slf4j/jul-to-slf4j/2.0.17/jul-to-slf4j-2.0.17.jar",
+      "sha256": "A7AFCD23B9CFD1475E55C94F943B808C5922035E7E2C2A5C65A487A4106BC538"
+    },
+    {
+      "path": ".tools/m2/jakarta/annotation/jakarta.annotation-api/2.1.1/jakarta.annotation-api-2.1.1.jar",
+      "sha256": "5F65FDAF424EEE2B55E1D882BA9BB376BE93FB09B37B808BE6E22E8851C909FE"
+    },
+    {
+      "path": ".tools/m2/com/zaxxer/HikariCP/6.3.0/HikariCP-6.3.0.jar",
+      "sha256": "07C6344059AF30A135144209C7C8BD666B8823124422EC859864D209D4AB7CA1"
+    },
+    {
+      "path": ".tools/m2/org/springframework/spring-jdbc/6.2.7/spring-jdbc-6.2.7.jar",
+      "sha256": "CAAC5117C00A56C02B37FCB300F5E0206F2B77A2CFCE79C8871EA664C2CF594A"
+    },
+    {
+      "path": ".tools/m2/org/springframework/spring-beans/6.2.7/spring-beans-6.2.7.jar",
+      "sha256": "C623AB697867D060E29CDAE8AC7443FABB63598E33E9596EF0722205AE4E654A"
+    },
+    {
+      "path": ".tools/m2/org/springframework/spring-tx/6.2.7/spring-tx-6.2.7.jar",
+      "sha256": "58C20096E632333A09D0DA33E0C6BF75ACBC71C49837EA7D2340663AADF6DA25"
+    },
+    {
+      "path": ".tools/m2/org/springframework/boot/spring-boot-starter-actuator/3.5.0/spring-boot-starter-actuator-3.5.0.jar",
+      "sha256": "FEDCD3FD52562ECBB584EA3E8998EB1D70A89CDC011E99361E4D64684B5F8A02"
+    },
+    {
+      "path": ".tools/m2/org/springframework/boot/spring-boot-actuator-autoconfigure/3.5.0/spring-boot-actuator-autoconfigure-3.5.0.jar",
+      "sha256": "4B76221D1070A29E05B13019BCF6562596B4486FF3FCA637476CB361F082B589"
+    },
+    {
+      "path": ".tools/m2/org/springframework/boot/spring-boot-actuator/3.5.0/spring-boot-actuator-3.5.0.jar",
+      "sha256": "A6C66E99216EA225782C5C29681F3A055200AEB0E491BE0291104BCD80DBDA89"
+    },
+    {
+      "path": ".tools/m2/io/micrometer/micrometer-observation/1.15.0/micrometer-observation-1.15.0.jar",
+      "sha256": "866E59794B27F079FD2E4D1FE45E752D266818E6D851B3F3A351153A3F8E281E"
+    },
+    {
+      "path": ".tools/m2/io/micrometer/micrometer-commons/1.15.0/micrometer-commons-1.15.0.jar",
+      "sha256": "2A0F029296F28519E0AFD3965B4BC26597709BABEB07F975D46E57BD0484E825"
+    },
+    {
+      "path": ".tools/m2/io/micrometer/micrometer-jakarta9/1.15.0/micrometer-jakarta9-1.15.0.jar",
+      "sha256": "92100360230E17F2C927747FB0F85AE2B706EC29EF34806B7EEB6D62F9455CC5"
+    },
+    {
+      "path": ".tools/m2/io/micrometer/micrometer-registry-prometheus/1.15.0/micrometer-registry-prometheus-1.15.0.jar",
+      "sha256": "CFFD53CF05CF5CBADC2D2C6A004BD7DC8170F5551ED456CBBD2D3E67FC3E0086"
+    },
+    {
+      "path": ".tools/m2/io/micrometer/micrometer-core/1.15.0/micrometer-core-1.15.0.jar",
+      "sha256": "67A73231F182D9C218203643AB91608069F899F4B8CFFEFF6E58EABF0A6C698A"
+    },
+    {
+      "path": ".tools/m2/org/hdrhistogram/HdrHistogram/2.2.2/HdrHistogram-2.2.2.jar",
+      "sha256": "22D1D4316C4EC13A68B559E98C8256D69071593731DA96136640F864FA14FAD8"
+    },
+    {
+      "path": ".tools/m2/org/latencyutils/LatencyUtils/2.0.3/LatencyUtils-2.0.3.jar",
+      "sha256": "A32A9FFA06B2F4E01C5360F8F9DF7BC5D9454A5D373CD8F361347FA5A57165EC"
+    },
+    {
+      "path": ".tools/m2/io/prometheus/prometheus-metrics-core/1.3.6/prometheus-metrics-core-1.3.6.jar",
+      "sha256": "681EB8F906DBD30E396BB69B1AEFF711A652F1464E2C87B36813F895D124AC67"
+    },
+    {
+      "path": ".tools/m2/io/prometheus/prometheus-metrics-model/1.3.6/prometheus-metrics-model-1.3.6.jar",
+      "sha256": "51A8DA74C037DDD5C94DD6BFC828E60B748EFEDE0DC3FAE6F188D4E0BBEADD75"
+    },
+    {
+      "path": ".tools/m2/io/prometheus/prometheus-metrics-config/1.3.6/prometheus-metrics-config-1.3.6.jar",
+      "sha256": "32E6ECF39F3AB76EEE94EE69102795F8ED80024D27FDA0BA41D54F25AC887FAD"
+    },
+    {
+      "path": ".tools/m2/io/prometheus/prometheus-metrics-tracer-common/1.3.6/prometheus-metrics-tracer-common-1.3.6.jar",
+      "sha256": "F74E318A30AAFE29C169488C4535F4170714625CB50FCFD56C2854C3C5F66F09"
+    },
+    {
+      "path": ".tools/m2/io/prometheus/prometheus-metrics-exposition-formats/1.3.6/prometheus-metrics-exposition-formats-1.3.6.jar",
+      "sha256": "527C5E21767934FA1D7FB0F4581F560254FE15FFF5B86046EB3D669AEC8AE000"
+    },
+    {
+      "path": ".tools/m2/io/prometheus/prometheus-metrics-exposition-textformats/1.3.6/prometheus-metrics-exposition-textformats-1.3.6.jar",
+      "sha256": "2D9E03503C2BCD1C913F2A4F82D2EBEF8B9DF971C6F22DE7993DFABE01D575F9"
+    },
+    {
+      "path": ".tools/m2/org/flywaydb/flyway-core/11.7.2/flyway-core-11.7.2.jar",
+      "sha256": "FF01FAB3BCFD79E9345DF191ECF82CBE1F9F65A757266158BD691564B1C1282C"
+    },
+    {
+      "path": ".tools/m2/com/fasterxml/jackson/dataformat/jackson-dataformat-toml/2.19.0/jackson-dataformat-toml-2.19.0.jar",
+      "sha256": "E6312D390C6BEF67681F8E258F29CED2F3D0FA1D83A72E0BEC1513B8C1C4F430"
+    },
+    {
+      "path": ".tools/m2/com/fasterxml/jackson/datatype/jackson-datatype-jsr310/2.19.0/jackson-datatype-jsr310-2.19.0.jar",
+      "sha256": "0EE97BF32936349D6A4CF6D8428533BF4A4B5B3E7E55FD9A4F19508CE062A775"
+    },
+    {
+      "path": ".tools/m2/org/flywaydb/flyway-database-postgresql/11.7.2/flyway-database-postgresql-11.7.2.jar",
+      "sha256": "1D586E14EA772C75613DF2C27DDC20F5C065E8A32283815338611AF82E48F9A2"
+    },
+    {
+      "path": ".tools/m2/org/postgresql/postgresql/42.7.5/postgresql-42.7.5.jar",
+      "sha256": "69020B3BD20984543E817393F2E6C01A890EF2E37A77DD11D6D8508181D079AB"
+    },
+    {
+      "path": ".tools/m2/org/checkerframework/checker-qual/3.48.3/checker-qual-3.48.3.jar",
+      "sha256": "443685B1B232803BAAF803C15D6F5A425473C6F7B81C5F276DFCF93288E389A5"
+    },
+    {
+      "path": ".tools/m2/org/springframework/boot/spring-boot-starter-test/3.5.0/spring-boot-starter-test-3.5.0.jar",
+      "sha256": "38BA715B748EFE023055CB7272B59F4CD55A9CDD4E445BEB24043801650034FE"
+    },
+    {
+      "path": ".tools/m2/org/springframework/boot/spring-boot-test/3.5.0/spring-boot-test-3.5.0.jar",
+      "sha256": "ED41AB43FE9D86B3ED838CB2FFB5F82619C81BFF14DC46870C29D63E4F42DB4A"
+    },
+    {
+      "path": ".tools/m2/org/springframework/boot/spring-boot-test-autoconfigure/3.5.0/spring-boot-test-autoconfigure-3.5.0.jar",
+      "sha256": "F781AAFAC4DCD0B4A1CC3948B46FE14A3DE2E5F15F65967A98F657C5FF77B06A"
+    },
+    {
+      "path": ".tools/m2/com/jayway/jsonpath/json-path/2.9.0/json-path-2.9.0.jar",
+      "sha256": "11A9EE6F88BB31F1450108D1CF6441377DEC84ACA075EB6BB2343BE157575BEA"
+    },
+    {
+      "path": ".tools/m2/jakarta/xml/bind/jakarta.xml.bind-api/4.0.2/jakarta.xml.bind-api-4.0.2.jar",
+      "sha256": "0D6BCFE47763E85047ACF7C398336DC84FF85EBCAD0A7CB6F3B9D3E981245406"
+    },
+    {
+      "path": ".tools/m2/jakarta/activation/jakarta.activation-api/2.1.3/jakarta.activation-api-2.1.3.jar",
+      "sha256": "01B176D718A169263E78290691FC479977186BCC6B333487325084D6586F4627"
+    },
+    {
+      "path": ".tools/m2/net/minidev/json-smart/2.5.2/json-smart-2.5.2.jar",
+      "sha256": "4FBDEDB0105CEDC7F766B95C297D2E88FB6A560DA48F3BBAA0CC538EA8B7BF71"
+    },
+    {
+      "path": ".tools/m2/net/minidev/accessors-smart/2.5.2/accessors-smart-2.5.2.jar",
+      "sha256": "9B8A7BC43861D6156C021166D941FB7DDDBE4463E2FA5EE88077E4B01452A836"
+    },
+    {
+      "path": ".tools/m2/org/ow2/asm/asm/9.7.1/asm-9.7.1.jar",
+      "sha256": "8CADD43AC5EB6D09DE05FAECCA38B917A040BB9139C7EDEB4CC81C740B713281"
+    },
+    {
+      "path": ".tools/m2/org/assertj/assertj-core/3.27.3/assertj-core-3.27.3.jar",
+      "sha256": "5B8A26205F6D5EA60AD9CE65CE4A40A2AFE4C48ABEEC61BD0740A088C24E89F5"
+    },
+    {
+      "path": ".tools/m2/net/bytebuddy/byte-buddy/1.17.5/byte-buddy-1.17.5.jar",
+      "sha256": "71568C9F8396677219F650268FBF6493DED484EDCDBDF2DAE6129CA5BE81E8DB"
+    },
+    {
+      "path": ".tools/m2/org/awaitility/awaitility/4.3.0/awaitility-4.3.0.jar",
+      "sha256": "EE58568EA5945DCF988551501655183DC184E23E45A8E013FDFD9036194E6F7B"
+    },
+    {
+      "path": ".tools/m2/org/hamcrest/hamcrest/3.0/hamcrest-3.0.jar",
+      "sha256": "5D66B6A4A680755CB6ED7CB104FA7835EF644667586FF0737ADEB977C39ECDBC"
+    },
+    {
+      "path": ".tools/m2/org/junit/jupiter/junit-jupiter/5.12.2/junit-jupiter-5.12.2.jar",
+      "sha256": "3854B3AD434906B827FEC474AA0D8DA8B56E9E56D5FC7F2E20FC3F12EC4BE894"
+    },
+    {
+      "path": ".tools/m2/org/junit/jupiter/junit-jupiter-api/5.12.2/junit-jupiter-api-5.12.2.jar",
+      "sha256": "0B9CA728E4BCD9ADC57F29DEB9556FF9ED5E08B4E8843B875ABA4E4E3E04F092"
+    },
+    {
+      "path": ".tools/m2/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar",
+      "sha256": "48E2DF636CAB6563CED64DCDFF8ABB2355627CB236EF0BF37598682DDF742F1B"
+    },
+    {
+      "path": ".tools/m2/org/junit/platform/junit-platform-commons/1.12.2/junit-platform-commons-1.12.2.jar",
+      "sha256": "E683A01E85DFABEA520C056AC6015A6162756E602EC653C0DA85E233F0AFBC18"
+    },
+    {
+      "path": ".tools/m2/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar",
+      "sha256": "B509448AC506D607319F182537F0B35D71007582EC741832A1F111E5B5B70B38"
+    },
+    {
+      "path": ".tools/m2/org/junit/jupiter/junit-jupiter-params/5.12.2/junit-jupiter-params-5.12.2.jar",
+      "sha256": "B219FFA949B90A71AA3B6C2B606456B82BCA0B2089B7459C8FF461156FF59B0F"
+    },
+    {
+      "path": ".tools/m2/org/junit/jupiter/junit-jupiter-engine/5.12.2/junit-jupiter-engine-5.12.2.jar",
+      "sha256": "F576C06B8ACCDE9985063B8BC80526CB980EEC24DEE0B7221FC8DDD7ACE65800"
+    },
+    {
+      "path": ".tools/m2/org/junit/platform/junit-platform-engine/1.12.2/junit-platform-engine-1.12.2.jar",
+      "sha256": "CEF0EFCB5BD2E05E2B808D38BAB5C655089C0C3001527376E74CB606A7911EC8"
+    },
+    {
+      "path": ".tools/m2/org/mockito/mockito-core/5.17.0/mockito-core-5.17.0.jar",
+      "sha256": "DFF59AD8C61B026EF86CC113F94F2301EB06CAAF81DEC30C78A96A1A65595C5E"
+    },
+    {
+      "path": ".tools/m2/net/bytebuddy/byte-buddy-agent/1.17.5/byte-buddy-agent-1.17.5.jar",
+      "sha256": "C5B9334AD82E632F6AF60DF22BBBDBBB62CEE04877F4F43C38BA04AED9BD9901"
+    },
+    {
+      "path": ".tools/m2/org/objenesis/objenesis/3.3/objenesis-3.3.jar",
+      "sha256": "02DFD0B0439A5591E35B708ED2F5474EB0948F53ABF74637E959B8E4EF69BFEB"
+    },
+    {
+      "path": ".tools/m2/org/mockito/mockito-junit-jupiter/5.17.0/mockito-junit-jupiter-5.17.0.jar",
+      "sha256": "5C5442F8AAAA8F03DF03E4862A0D69205D1B41F5EDBF7D5AA7A2486A61DE49B7"
+    },
+    {
+      "path": ".tools/m2/org/skyscreamer/jsonassert/1.5.3/jsonassert-1.5.3.jar",
+      "sha256": "719095C07D4203961320DA593441D8B3B643C18EB1D81AA98EA933BB7EB351BA"
+    },
+    {
+      "path": ".tools/m2/com/vaadin/external/google/android-json/0.0.20131108.vaadin1/android-json-0.0.20131108.vaadin1.jar",
+      "sha256": "DFB7BAE2F404CFE0B72B4D23944698CB716B7665171812A0A4D0F5926C0FAC79"
+    },
+    {
+      "path": ".tools/m2/org/springframework/spring-core/6.2.7/spring-core-6.2.7.jar",
+      "sha256": "D7FE31A31CA3EA6226D003999DF40153993AF6D11E62DF5EAF7D5D2B2189A511"
+    },
+    {
+      "path": ".tools/m2/org/springframework/spring-jcl/6.2.7/spring-jcl-6.2.7.jar",
+      "sha256": "F4E09F9B612EC27E7AEE5D7096674DD812D9C4013022A3B9AA8F246C7559E089"
+    },
+    {
+      "path": ".tools/m2/org/springframework/spring-test/6.2.7/spring-test-6.2.7.jar",
+      "sha256": "7349BCBD17E4295BEFB5F9E309D14B41ABBB1C85714D25312A250D252CE344E4"
+    },
+    {
+      "path": ".tools/m2/org/xmlunit/xmlunit-core/2.10.1/xmlunit-core-2.10.1.jar",
+      "sha256": "ACCDC62F40911013DC4ADEF3E0A49AEBAFAA26AD12CCBF4C304C4568E3501445"
+    },
+    {
+      "path": ".tools/m2/com/networknt/json-schema-validator/1.5.6/json-schema-validator-1.5.6.jar",
+      "sha256": "5531436B97DFA90D34BB2ACBBE65E054A0A24DED1576032B684EE179728F86D4"
+    },
+    {
+      "path": ".tools/m2/com/ethlo/time/itu/1.10.3/itu-1.10.3.jar",
+      "sha256": "23D3BA84095D489A595240F89045085EA5066FB6FC1DC091258D577DF9D74ABC"
+    },
+    {
+      "path": ".tools/m2/com/fasterxml/jackson/core/jackson-databind/2.19.0/jackson-databind-2.19.0.jar",
+      "sha256": "CEDA311F476C3B18E1D2B240C94E2DCB9C8D44E70F8AFA9FACAB88BAC4DDC03A"
+    },
+    {
+      "path": ".tools/m2/com/fasterxml/jackson/dataformat/jackson-dataformat-yaml/2.19.0/jackson-dataformat-yaml-2.19.0.jar",
+      "sha256": "46E54DCBD39D4D12CDA18EC9276E7B888E08FC765EA0C77E71662306F0D4ABC4"
+    },
+    {
+      "path": ".tools/m2/org/slf4j/slf4j-api/2.0.17/slf4j-api-2.0.17.jar",
+      "sha256": "7B751D952061954D5ABFED7181C1F645D336091B679891591D63329C622EB832"
+    },
+    {
+      "path": ".tools/m2/io/swagger/parser/v3/swagger-parser/2.1.27/swagger-parser-2.1.27.jar",
+      "sha256": "BC33FC048A21F484D43AC4DC2A4E49105A115E20C5E1FBA86B9F988521B99768"
+    },
+    {
+      "path": ".tools/m2/io/swagger/parser/v3/swagger-parser-v2-converter/2.1.27/swagger-parser-v2-converter-2.1.27.jar",
+      "sha256": "45B5D1DB32FDFD69E5729930D26E180909A16AEC479715C15C79155FACAD8CB9"
+    },
+    {
+      "path": ".tools/m2/io/swagger/swagger-core/1.6.15/swagger-core-1.6.15.jar",
+      "sha256": "DC0DC3B1A1E381EBE3BFCB9329C048214A701DC6D7D168E27657CDD501106A4F"
+    },
+    {
+      "path": ".tools/m2/io/swagger/swagger-models/1.6.15/swagger-models-1.6.15.jar",
+      "sha256": "CE1510358616462F518D141575AC49D59CDFF925C0F268A28B93F9C1F132C90C"
+    },
+    {
+      "path": ".tools/m2/io/swagger/swagger-parser/1.0.73/swagger-parser-1.0.73.jar",
+      "sha256": "58857E95BABDA35BE441CB7A17A1543E79A4E6B11DFC9C0ED7350F6936B64A16"
+    },
+    {
+      "path": ".tools/m2/io/swagger/swagger-parser-safe-url-resolver/1.0.73/swagger-parser-safe-url-resolver-1.0.73.jar",
+      "sha256": "053BBB3980D1121D6264AB2E62A9D6A986FBE6C9EACAFEA5527F24AE2C4828AC"
+    },
+    {
+      "path": ".tools/m2/io/swagger/swagger-compat-spec-parser/1.0.73/swagger-compat-spec-parser-1.0.73.jar",
+      "sha256": "7FB8A411008A646ABC1F5BA219DBBFD7CC5143605D674203989FC7E66C1A3FFD"
+    },
+    {
+      "path": ".tools/m2/com/github/java-json-tools/json-schema-validator/2.2.14/json-schema-validator-2.2.14.jar",
+      "sha256": "CD9E3C599BB32296517FD3AC38BEEAC709F0A6AB81B2D4289495D0361BA59899"
+    },
+    {
+      "path": ".tools/m2/com/github/java-json-tools/jackson-coreutils-equivalence/1.0/jackson-coreutils-equivalence-1.0.jar",
+      "sha256": "EB4A9AD7D803FB084BFFCF793C8A81F51D745B6D438C28470EF9D5AA5FB8A182"
+    },
+    {
+      "path": ".tools/m2/com/github/java-json-tools/json-schema-core/1.2.14/json-schema-core-1.2.14.jar",
+      "sha256": "C859942FDDA29C26CCB2BE83A8453A130DE35FDE6F88AE189785516B5D14F81C"
+    },
+    {
+      "path": ".tools/m2/com/github/java-json-tools/uri-template/0.10/uri-template-0.10.jar",
+      "sha256": "3936F67D8E7DFA3EEDEFE450FF58871749308982C6B8B706535A884391DF4FB0"
+    },
+    {
+      "path": ".tools/m2/org/mozilla/rhino/1.7.7.2/rhino-1.7.7.2.jar",
+      "sha256": "5C6DAE050CEB71774A5FC82CE6E3F0392DAF0FFA9EC3596F70D4D07EE50B8970"
+    },
+    {
+      "path": ".tools/m2/joda-time/joda-time/2.10.5/joda-time-2.10.5.jar",
+      "sha256": "4EE73E7FF8E2DF0D4E3408CF1A1527A59F265DD9FB43FB9B2EB818D87F93759E"
+    },
+    {
+      "path": ".tools/m2/com/googlecode/libphonenumber/libphonenumber/8.11.1/libphonenumber-8.11.1.jar",
+      "sha256": "F430C92394C2053F168715853DA96D99996E94E34E5A291B97C5C86A5AD62A98"
+    },
+    {
+      "path": ".tools/m2/net/sf/jopt-simple/jopt-simple/5.0.4/jopt-simple-5.0.4.jar",
+      "sha256": "DF26CC58F235F477DB07F753BA5A3AB243EBE5789D9F89ECF68DD62EA9A66C28"
+    },
+    {
+      "path": ".tools/m2/com/github/java-json-tools/json-patch/1.13/json-patch-1.13.jar",
+      "sha256": "1F794D256965B53EF37E70B55505E2ED00DDC0184D44E2E8E1FDCE5A3CACC7DE"
+    },
+    {
+      "path": ".tools/m2/com/github/java-json-tools/msg-simple/1.2/msg-simple-1.2.jar",
+      "sha256": "BEF4111B993A5B3E6148D8F585621CCEAC2A1889CDBC34448B11632E0D8A9A8F"
+    },
+    {
+      "path": ".tools/m2/com/github/java-json-tools/btf/1.3/btf-1.3.jar",
+      "sha256": "67C3E462EB50807F4E0A5F4DEE304BBF17CD986A42EE5EB0B2F4C9BF64D130D9"
+    },
+    {
+      "path": ".tools/m2/com/github/java-json-tools/jackson-coreutils/2.0/jackson-coreutils-2.0.jar",
+      "sha256": "16B3AABD3A9EB25655DDA433E35F9BD9C7C1AA7991427702F5F11F000813DBB0"
+    },
+    {
+      "path": ".tools/m2/org/apache/httpcomponents/httpclient/4.5.14/httpclient-4.5.14.jar",
+      "sha256": "C8BC7E1C51A6D4CE72F40D2EBBABF1C4B68BFE76E732104B04381B493478E9D6"
+    },
+    {
+      "path": ".tools/m2/org/apache/httpcomponents/httpcore/4.4.16/httpcore-4.4.16.jar",
+      "sha256": "6C9B3DD142A09DC468E23AD39AAD6F75A0F2B85125104469F026E52A474E464F"
+    },
+    {
+      "path": ".tools/m2/commons-logging/commons-logging/1.2/commons-logging-1.2.jar",
+      "sha256": "DADDEA1EA0BE0F56978AB3006B8AC92834AFEEFBD9B7E4E6316FCA57DF0FA636"
+    },
+    {
+      "path": ".tools/m2/io/swagger/core/v3/swagger-models/2.2.29/swagger-models-2.2.29.jar",
+      "sha256": "384266CFA2293E4A30595BFDB2257FFCE9DD70522646AB97E6A84B2A58B784A2"
+    },
+    {
+      "path": ".tools/m2/io/swagger/parser/v3/swagger-parser-core/2.1.27/swagger-parser-core-2.1.27.jar",
+      "sha256": "627E1C267C70098C8EEBA28ED1E59C5277C978511C5D2937DD1E84CEF4D52540"
+    },
+    {
+      "path": ".tools/m2/io/swagger/parser/v3/swagger-parser-v3/2.1.27/swagger-parser-v3-2.1.27.jar",
+      "sha256": "536E6CCDBC2470D5FFA458913A64FBB9C28210CC8430D18DC257FAB2BB2A9A39"
+    },
+    {
+      "path": ".tools/m2/io/swagger/core/v3/swagger-core/2.2.29/swagger-core-2.2.29.jar",
+      "sha256": "51EC097A7AC0D609773E367230F803C0176B189519AA90A971465EAB6600E6C2"
+    },
+    {
+      "path": ".tools/m2/io/swagger/core/v3/swagger-annotations/2.2.29/swagger-annotations-2.2.29.jar",
+      "sha256": "E224A6E11F16C525D8AD04090CC32B534A9EE10835B9F93457BA6FF00F117F34"
+    },
+    {
+      "path": ".tools/m2/io/swagger/parser/v3/swagger-parser-safe-url-resolver/2.1.27/swagger-parser-safe-url-resolver-2.1.27.jar",
+      "sha256": "E94062927FF0B1F2B846F72A4F21CBB76D41FE8CA6E26B5451A3468DDDB7CFB8"
+    },
+    {
+      "path": ".tools/m2/org/yaml/snakeyaml/2.4/snakeyaml-2.4.jar",
+      "sha256": "EF779AF5D29A9DDE8CC70CE0341F5C6F7735E23EDFF9685CEAA9D35359B7BB7F"
+    },
+    {
+      "path": ".tools/m2/commons-io/commons-io/2.18.0/commons-io-2.18.0.jar",
+      "sha256": "F3CA0F8D63C40E23A56D54101C60D5EDEE136B42D84BFB85BC7963093109CF8B"
+    },
+    {
+      "path": ".tools/m2/io/modelcontextprotocol/sdk/mcp/0.10.0/mcp-0.10.0.jar",
+      "sha256": "EE5B24C04A9432EF9495342F80F6DCACEB6FC2A907F535677BE0331EA896CA6B"
+    },
+    {
+      "path": ".tools/m2/io/projectreactor/reactor-core/3.7.6/reactor-core-3.7.6.jar",
+      "sha256": "6D5CAA24A2DBFC8E30B94A625B198B8E30751F5C1D1EDD333D42D1A8B212BA99"
+    },
+    {
+      "path": ".tools/m2/org/reactivestreams/reactive-streams/1.0.4/reactive-streams-1.0.4.jar",
+      "sha256": "F75CA597789B3DAC58F61857B9AC2E1034A68FA672DB35055A8FB4509E325F28"
+    },
+    {
+      "path": ".tools/m2/io/kubernetes/client-java/23.0.0/client-java-23.0.0.jar",
+      "sha256": "4653D72D406415991F390EC0B29BBBE49C5610ABA3165FD9329CB26BBA4BC14E"
+    },
+    {
+      "path": ".tools/m2/io/kubernetes/client-java-api/23.0.0/client-java-api-23.0.0.jar",
+      "sha256": "2BBA28B574EA6C5379DB349C1F7A15D3C2CBD55C26E18C7EB0ADDFD7C1D8A5A8"
+    },
+    {
+      "path": ".tools/m2/javax/annotation/javax.annotation-api/1.3.2/javax.annotation-api-1.3.2.jar",
+      "sha256": "E04BA5195BCD555DC95650F7CC614D151E4BCD52D29A10B8AA2197F3AB89AB9B"
+    },
+    {
+      "path": ".tools/m2/io/swagger/swagger-annotations/1.6.15/swagger-annotations-1.6.15.jar",
+      "sha256": "71D499F8A0AF3DCA2921A30277EC034C177074EA26C2872ABBF2E1CE2197B050"
+    },
+    {
+      "path": ".tools/m2/com/squareup/okhttp3/logging-interceptor/4.12.0/logging-interceptor-4.12.0.jar",
+      "sha256": "F3E8D5F0903C250C2B55D2F47FCFE008E80634385DA8385161C7A63AAED0C74C"
+    },
+    {
+      "path": ".tools/m2/com/google/code/gson/gson/2.13.1/gson-2.13.1.jar",
+      "sha256": "94855942D4992F112946D3DE1C334E709237B8126D8130BF07807C018A4A2120"
+    },
+    {
+      "path": ".tools/m2/io/gsonfire/gson-fire/1.9.0/gson-fire-1.9.0.jar",
+      "sha256": "73F56642EF43381EFDA085BEFB1E6CB51CE906AF426D8DB19632D396A5BB7A91"
+    },
+    {
+      "path": ".tools/m2/com/google/code/findbugs/jsr305/3.0.2/jsr305-3.0.2.jar",
+      "sha256": "766AD2A0783F2687962C8AD74CEECC38A28B9F72A2D085EE438B7813E928D0C7"
+    },
+    {
+      "path": ".tools/m2/io/kubernetes/client-java-proto/23.0.0/client-java-proto-23.0.0.jar",
+      "sha256": "E843C9342D62B0E97221D09133AB1C060C4BF90CE919F767ED660DC406696263"
+    },
+    {
+      "path": ".tools/m2/commons-codec/commons-codec/1.18.0/commons-codec-1.18.0.jar",
+      "sha256": "BA005F304CEF92A3DEDE24A38AD5AC9B8AFCCF0D8F75839D6C1338634CF7F6E4"
+    },
+    {
+      "path": ".tools/m2/org/apache/commons/commons-compress/1.27.1/commons-compress-1.27.1.jar",
+      "sha256": "293D80F54B536B74095DCD7EA3CF0A29BBFC3402519281332495F4420D370D16"
+    },
+    {
+      "path": ".tools/m2/org/apache/commons/commons-lang3/3.17.0/commons-lang3-3.17.0.jar",
+      "sha256": "6EE731DF5C8E5A2976A1CA023B6BB320EA8D3539FBE64C8A1D5CB765127C33B4"
+    },
+    {
+      "path": ".tools/m2/org/bouncycastle/bcpkix-jdk18on/1.80/bcpkix-jdk18on-1.80.jar",
+      "sha256": "4F4BA6A92617EA19DC183F0FA5DB492EEE426FDDE2A0A2D6C94777FFD1AF6413"
+    },
+    {
+      "path": ".tools/m2/org/bouncycastle/bcutil-jdk18on/1.80.2/bcutil-jdk18on-1.80.2.jar",
+      "sha256": "BC78D32D7FFB141EE27E4FB77DF04259D842C899E7E8EAF912F990D7253BD3B4"
+    },
+    {
+      "path": ".tools/m2/com/google/protobuf/protobuf-java/4.29.3/protobuf-java-4.29.3.jar",
+      "sha256": "442DB5991A11974D72127353BE7D7E7ABDF8D943D83B16668CB2E336D7392F54"
+    },
+    {
+      "path": ".tools/m2/org/apache/commons/commons-collections4/4.4/commons-collections4-4.4.jar",
+      "sha256": "1DF8B9430B5C8ED143D7815E403E33EF5371B2400AADBE9BDA0883762E0846D1"
+    },
+    {
+      "path": ".tools/m2/org/bitbucket/b_c/jose4j/0.9.6/jose4j-0.9.6.jar",
+      "sha256": "7314AF50CDE9C99E8EAF43EEE617A23EDCC6BB43036221064355094999D837EF"
+    },
+    {
+      "path": ".tools/m2/io/github/resilience4j/resilience4j-circuitbreaker/2.3.0/resilience4j-circuitbreaker-2.3.0.jar",
+      "sha256": "5E9D6B821CF620B26B9144C5EA8D92A80C717EBDA1500061231EED5017F56927"
+    },
+    {
+      "path": ".tools/m2/io/github/resilience4j/resilience4j-core/2.3.0/resilience4j-core-2.3.0.jar",
+      "sha256": "BDAF2C553265B9C1AC6967ACF598E3F433CC592E85E7872BD24D1E6264A97B93"
+    },
+    {
+      "path": ".tools/m2/org/jetbrains/kotlin/kotlin-stdlib-jdk8/1.9.25/kotlin-stdlib-jdk8-1.9.25.jar",
+      "sha256": "F94FDF78390CE9BE30383BF039C5A935CAEA33B11F037FC7F86BBCEE19287E5A"
+    },
+    {
+      "path": ".tools/m2/org/jetbrains/kotlin/kotlin-stdlib/1.9.25/kotlin-stdlib-1.9.25.jar",
+      "sha256": "F9CDCDBFF1F5DE85380AE526977E683726C2AA42DB1ED6E6E50AE89E496E95FD"
+    },
+    {
+      "path": ".tools/m2/org/jetbrains/annotations/13.0/annotations-13.0.jar",
+      "sha256": "ACE2A10DC8E2D5FD34925ECAC03E4988B2C0F851650C94B8CEF49BA1BD111478"
+    },
+    {
+      "path": ".tools/m2/org/jetbrains/kotlin/kotlin-stdlib-jdk7/1.9.25/kotlin-stdlib-jdk7-1.9.25.jar",
+      "sha256": "FB5373DD761B4E93E3F538C5E853BBA38A71143A181536E8F193ED6E4EDDB3B8"
+    },
+    {
+      "path": ".tools/m2/io/minio/minio/8.5.17/minio-8.5.17.jar",
+      "sha256": "9CD43EA8C79CA3C6CE81E7D4BE81C5C8115FEBD2750F493F699FA41B92E209B3"
+    },
+    {
+      "path": ".tools/m2/com/carrotsearch/thirdparty/simple-xml-safe/2.7.1/simple-xml-safe-2.7.1.jar",
+      "sha256": "4506E4BB57D41481936F0AC684468CA4B2CC9E002CA8466EE19E23228D455957"
+    },
+    {
+      "path": ".tools/m2/com/google/guava/guava/33.3.1-jre/guava-33.3.1-jre.jar",
+      "sha256": "4BF0E2C5AF8E4525C96E8FDE17A4F7307F97F8478F11C4C8E35A0E3298AE4E90"
+    },
+    {
+      "path": ".tools/m2/com/google/guava/failureaccess/1.0.2/failureaccess-1.0.2.jar",
+      "sha256": "8A8F81CF9B359E3F6DFA691A1E776985C061EF2F223C9B2C80753E1B458E8064"
+    },
+    {
+      "path": ".tools/m2/com/google/guava/listenablefuture/9999.0-empty-to-avoid-conflict-with-guava/listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar",
+      "sha256": "B372A037D4230AA57FBEFFDEF30FD6123F9C0C2DB85D0ACED00C91B974F33F99"
+    },
+    {
+      "path": ".tools/m2/com/google/errorprone/error_prone_annotations/2.28.0/error_prone_annotations-2.28.0.jar",
+      "sha256": "F3FC8A3A0A4020706A373B00E7F57C2512DD26D1F83D28C7D38768F8682B231E"
+    },
+    {
+      "path": ".tools/m2/com/google/j2objc/j2objc-annotations/3.0.0/j2objc-annotations-3.0.0.jar",
+      "sha256": "88241573467DDCA44FFD4D74AA04C2BBFD11BF7C17E0C342C94C9DE7A70A7C64"
+    },
+    {
+      "path": ".tools/m2/com/squareup/okhttp3/okhttp/4.12.0/okhttp-4.12.0.jar",
+      "sha256": "B1050081B14BB7A3A7E55A4D3EF01B5DCFABC453B4573A4FC019767191D5F4E0"
+    },
+    {
+      "path": ".tools/m2/com/squareup/okio/okio/3.6.0/okio-3.6.0.jar",
+      "sha256": "8E63292E5C53BB93C4A6B0C213E79F15990FED250C1340F1C343880E1C9C39B5"
+    },
+    {
+      "path": ".tools/m2/com/squareup/okio/okio-jvm/3.6.0/okio-jvm-3.6.0.jar",
+      "sha256": "67543F0736FC422AE927ED0E504B98BC5E269FDA0D3500579337CB713DA28412"
+    },
+    {
+      "path": ".tools/m2/org/jetbrains/kotlin/kotlin-stdlib-common/1.9.25/kotlin-stdlib-common-1.9.25.jar",
+      "sha256": "8202E7F032C8DC6698D00C62867701546A7C12C4731EBDDFB8EEC0788E2EEEE4"
+    },
+    {
+      "path": ".tools/m2/com/fasterxml/jackson/core/jackson-annotations/2.19.0/jackson-annotations-2.19.0.jar",
+      "sha256": "EAD60E9CAC0E42B57092B9E2D087FF43536E9477D4486BA393037A8CC156CDA7"
+    },
+    {
+      "path": ".tools/m2/com/fasterxml/jackson/core/jackson-core/2.19.0/jackson-core-2.19.0.jar",
+      "sha256": "DA8E859BAC94874528116A25F20C68560E4287ACBF27628711B8A4F96B028430"
+    },
+    {
+      "path": ".tools/m2/org/bouncycastle/bcprov-jdk18on/1.78.1/bcprov-jdk18on-1.78.1.jar",
+      "sha256": "ADD5915E6ACFC6AB5836E1FD8A5E21C6488536A8C1F21F386EEB3BF280B702D7"
+    },
+    {
+      "path": ".tools/m2/org/xerial/snappy/snappy-java/1.1.10.7/snappy-java-1.1.10.7.jar",
+      "sha256": "4C766CB3F855415EE734B2392949A0B6F12A60879334A74518DEAF6270D32E36"
+    }
+  ],
+  "absentMavenInputs": [
+    ".mvn/maven.config",
+    ".mvn/jvm.config",
+    ".mvn/extensions.xml",
+    "C:/Users/Administrator/.m2/settings.xml"
+  ],
+  "pins": [
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-full-20261029-01/approved-manifest.json",
+      "sha256": "BB6DDEA557F0FEFD56A9249C594478D3914B5F7133D2D20FC1D9FCAE969CA12F"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-full-20261029-01/collector.ps1",
+      "sha256": "8A93C1255DBA3623609ED11EFC860B27462458AE58FA81E2F2A8378627904BC1"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-full-20261029-01/summary.json",
+      "sha256": "C719234B41F7DEDD82E429F1AD93D62ABCE98E5E87649C1D776D8C47899A7785"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-full-20261029-01/native-exit.json",
+      "sha256": "A8188FDB76FD9D46520717737F71F9C862D13B35D4CAB1229C7CFFAD8DAA05E0"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-full-20261029-01/collector-exit.json",
+      "sha256": "678412F8B7CBE5DC308C7B73F19F0A14837CAB1B81CB519AE2FEE7ED9609010A"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-full-20261029-01/source-before.json",
+      "sha256": "520C209CF8F427C60F99DB547760133AFC77F164C6576EBD15017E82BC1932AB"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-full-20261029-01/source-after.json",
+      "sha256": "520C209CF8F427C60F99DB547760133AFC77F164C6576EBD15017E82BC1932AB"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-full-20261029-01/context-before.json",
+      "sha256": "127225B6C4638A2F190409D6F4A239255BE0FE6DE5EFC7E1A5A59DAEB05D029E"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-full-20261029-01/context-after.json",
+      "sha256": "127225B6C4638A2F190409D6F4A239255BE0FE6DE5EFC7E1A5A59DAEB05D029E"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-full-20261029-01/command.json",
+      "sha256": "361F4A701D08E405788A2AF47E6CB3834E294841613444C966EFD9A8435E02BA"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-full-20261029-01/method-status-changes.json",
+      "sha256": "E7AAD645793AFE27B929DC78D5D2899848C697E34C9B32F2C5142009B33103CE"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-full-20261029-01/methods.csv",
+      "sha256": "3913D852BCF77DE159CE8790A5CAD25B70BF930C31530D8762665FC16BD9BAC6"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-full-20261029-01/xml/TEST-cn.agentplatform.skill.infra.McpAdapterTest.xml",
+      "sha256": "91CB39781D5672B890E0173A405566F9E1913197F40AE6F012A0E1B25EECB28E"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-04/collector/full-report-records.ps1",
+      "sha256": "96D70BE0951B75C335EA9D2A60460F794424D03D08882CB760BE5F48CABD8724"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/mcp-terminal-error-candidate.md",
+      "sha256": "DAAC49CC013AA3FA6B99CB501BDF529446D0575D0982236EFE856FDF5E7222BE"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/mcp-terminal-error-test-candidate.patch",
+      "sha256": "AC26D7C5A019D0F6119946F0E6B0416A97505949AB7839197CFA83AFEC24CC03"
+    },
+    {
+      "path": ".local/ex27-v222-recovery/mcp-terminal-source-20261029-01/McpAdapterTest.before.java",
+      "sha256": "EBB60E0AF57AA8D182D3C82E1698CABB336984C22153854FA93B17DD24370AFC"
+    },
+    {
+      "path": ".local/ex27-v222-recovery/mcp-terminal-source-20261029-01/BoundedMcpSseTransport.before.java",
+      "sha256": "44B1A81C554A9BE6B3E1B11A1881D467B347C9D1B2E604FE4147E95FA38C0C77"
+    },
+    {
+      "path": ".local/ex27-v222-recovery/v222-resource-green-20261029-01/installed-after-test.json",
+      "sha256": "11236879CBFB1DB4FF05B5FF4986A454AC55F3C9F1A04B5B8A36657B3784CCAE"
+    }
+  ],
+  "sources": [
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/api/ArtifactController.java",
+      "sha256": "17334E1D4F8348D6D117C567327FBCF9ED517EA4DF117461859927A7F9A1667E"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/api/FixtureAdminController.java",
+      "sha256": "5796477808A4A4295DFEA3208EE2A04557C730AB2E77CF1F6E7F905C871B2316"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/api/OntologyImportController.java",
+      "sha256": "16D0B2F10DEAA4AB6FF4127647495DAE4135391BEF8DE5AE4B83EF3FDABB09E9"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/api/OpenApiImportController.java",
+      "sha256": "D3B67F9C7ECEB6F7842F4DE5D8CD82D0FE9E0A9B3CBD2AFD54DF04B4A88E5BD4"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/api/ReconciliationProofController.java",
+      "sha256": "75A8E7B1A1868AF3AE065B9FB064FABE77D52D89E7DD45E2220618A05612D37E"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/api/ServiceController.java",
+      "sha256": "67C6C6614BE109B3C6689CD38AFCD4662BD55B45D56B2ABA8616917B45984FD8"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/api/SkillCallbackController.java",
+      "sha256": "117F8E72657C134EAF59B4337057690D6F7F75FFFC8CC2277A2314D9037192B8"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/api/SkillController.java",
+      "sha256": "CC6CF46ADBDF886FF0B7C432B8CE8C284C24370DFF9DE3A10C8574317DAE3927"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/api/SkillEvidenceController.java",
+      "sha256": "395C1C75E593F064A3287E8D1B901AFDDBB094348D5A68AB6F224FBFB92DBB19"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/api/TaskResultController.java",
+      "sha256": "E43ADFAA3340FCABE4E177ECD60085B6E8054E50B61B4AE4222D3DC2FA4E4A65"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/FixtureSkills.java",
+      "sha256": "8557E86DBC5FB50164D8BA8257FFEEA887E507C5C814881B575050D974C4E07E"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/FixtureStartupGuard.java",
+      "sha256": "5A8905896F7D3B55E3935A3B5F53D3A22606EF9F10AFDE118101C9E0911BB68F"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/OntologyManifestImports.java",
+      "sha256": "0538830D9C0E511D868E4C6B4BA21582A0600A5FC3C9240062AFFC3008E9CC8D"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/OpenApiImports.java",
+      "sha256": "0C1D23433A75489042997EAB6338E373F09628021F09941E563CC7192D498D0B"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/ReconciliationProofs.java",
+      "sha256": "6FF0183299B4E999FFDD4571F137510A963EEE3FDFDCBB6949AE6F14C3289639"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/ServiceLifecycle.java",
+      "sha256": "E8233E57589EBBE1A75C37CFABE439749AC226055DBFE523017FE2439AB173CC"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/ServiceProbe.java",
+      "sha256": "6C184AEE8E48FCAAE78A67062FF42948E54BC34D0E03D12C7AFECC3850550902"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/SkillCallbacks.java",
+      "sha256": "DB8DF03A5792F1733532F34675C0D8E1773C02F634AD90435B24C54F988B492D"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/SkillCatalog.java",
+      "sha256": "C9C3A0B6E69A76CD49939F639AC0B7CF014E67FEDB9DD86311C807199ABC47FD"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/SkillExecution.java",
+      "sha256": "8CD3D8EDAE7C0DEE54DD562C6F2F3F3664759DE85D122F70C1E00B9BC6D25218"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/SkillGovernance.java",
+      "sha256": "5F0C1CC7E9FC835F971D2920A5026566FD7FFA80781FD91C8299C023B6D7EDE8"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/SkillOutbox.java",
+      "sha256": "30BAE61B51DB4DF75462C5D92BADC5455FBEC1FC7437856CD1D9A9DA2DA32DB7"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/SkillStatistics.java",
+      "sha256": "84EDB850C69043B69E9A95652A4A7E9DC7F00855DC48469CDE1D897E7A436E4D"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/domain/ErrorSemantics.java",
+      "sha256": "DDC17273FE22BEF75C567F87A92BB03E9F8CCBCD12CB410CD0C0C5A12F638C86"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/domain/ProcessContract.java",
+      "sha256": "8D8030F53F24488C3880FEED71BBB6E7E3A42ED19FC416B63366505C41205B88"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/domain/ServiceManifest.java",
+      "sha256": "706AFB5AD8698357E9821AE749D1FEB10B511F7A225E33302A0521D5F1CDBCEA"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/domain/SkillDigest.java",
+      "sha256": "E4BA3D331E36FF0937F5FF3F19AD413A115FCCB963233E12DF8B558CF168ED07"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/domain/SkillRules.java",
+      "sha256": "221BFA61CC137D94B2D9C70C02AEC1B5FD1C5052A19BE39D212CB305EEBE98BD"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/AdapterRegistry.java",
+      "sha256": "2D1C7484CEE53110281154650E00C361B66D6B9C90A0BE2E78BDCAB238BE82F2"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/AlgorithmAdapter.java",
+      "sha256": "019A81608C3F90B1D41046C962FF146EF2D5EBD2E3EF6A55ADC56910E1504230"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/AlgorithmExecutionAdapter.java",
+      "sha256": "ABA0AA73889564D37013F58B161E29DCAA54ED98CCC487A0AA9F38A28AAFEBAF"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/ArtifactStore.java",
+      "sha256": "75F89B938A054BE6AC385C7152F49A9525D25E696BCE3634C42C7BD3201AE907"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/AsyncHttpResponse.java",
+      "sha256": "E807E4A589286269E551440B3831F30D53A20D249DB1FBBD2AB0CA00BE691B59"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/BoundedMcpSseTransport.java",
+      "sha256": "44B1A81C554A9BE6B3E1B11A1881D467B347C9D1B2E604FE4147E95FA38C0C77"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/HttpAsyncAdapter.java",
+      "sha256": "DC63C6CF0794BB5439F7E5AA7B05E70328654EDD92ACF518A63630E9FA419C83"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/HttpAsyncExecutionAdapter.java",
+      "sha256": "4509B20B1A10BB072A100CD0DA37F9CD34F5ED1071F8E4C31FE22CCAABC6516C"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/HttpSyncExecutionAdapter.java",
+      "sha256": "F83D8D90CA4E398BBD3E9E2C11F8114418A22A13C1446024C74891162B737B7E"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/localspike/LocalProcessManager.java",
+      "sha256": "6FD57A3C2379765716543383B88E188A53D48E3D7A8F9F746BF0B1A9CA4E5107"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/localspike/LocalSpikeConfig.java",
+      "sha256": "0E7B652432A87031A796D571938224128F648C6CE548A7AFA1468B86EEBEA6E0"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/localspike/LocalSpikeException.java",
+      "sha256": "71FB600E44A59F99C4B3AEC81CCC7B9611B3C1311CA432CC94353526216535B4"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/localspike/LocalSpikeInvoker.java",
+      "sha256": "21F402ACE7814A13EF14A235CE17302A4AD1A9A50897AAC0BB59C0018C5C9A91"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/localspike/LocalSpikePorts.java",
+      "sha256": "41FA24F09B9734DB69858790FD7B16DCDDA02DFDF4D9C9F42CBFC8A3AE3A6A81"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/McpAdapter.java",
+      "sha256": "65BB3A464518D2F59ED25D5E0546C6AFEAFB8CEF21A3CAA864D5F0ABCDEE653E"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/McpExecutionAdapter.java",
+      "sha256": "74A567CBC37DDA128114E9A6F6E131301C14F089092617DEB01F58D9CD79DDC5"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/MultipartFormMapping.java",
+      "sha256": "D58AC69EDCE07090D3C3800DA2E2785318D00DCF8ACB5BADBDC0572FB0FB95D9"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/OpenApiHttpMapping.java",
+      "sha256": "6EB12F58BC5BE7BCEE8294A7A8225B2CA276D3E03BA77BDB06B680F2AB7EA06B"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/ProcessAdapter.java",
+      "sha256": "00D30C03B2F63079908BA98AC89992DBD6304D8025E7B5DA756F5C9D20BD134C"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/ProcessExecutionAdapter.java",
+      "sha256": "FDAFA9E3F4155AA9FFA1AEFC9496CF304B28CE2BB192D89EA61E63A4C0D7AD44"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/ProcessTree.java",
+      "sha256": "109ADD4DCF48BFB1E07540D97A125AD302B0A9F17A3CE20835FE67FD06DE143A"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/ProcessWhitelist.java",
+      "sha256": "14BC16253A7E562199770D5A59BB5F082F891ABF2C5DF79C4BF5269A6EE90160"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/ServiceTickets.java",
+      "sha256": "76C56F3595344BC09B674BACFB8CEFBEC0B81D96C6149E9647DD09E694D40AEE"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/SignedCallback.java",
+      "sha256": "67B0405062C907E6C58FAC498C9FB31DAF2C55A74A7AEA248C3C2AFACF422BC1"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/SkillAdapter.java",
+      "sha256": "8AE95A9C68572F71078C0026A1BF34648C9D5BE17CF94288909D4B767482FCCB"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/SkillAdapters.java",
+      "sha256": "7E4B33DB18435AF0429B7EA483BE3D74C9BF73151912E0EEAF16AB7385C8935A"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/SkillClients.java",
+      "sha256": "5AB026B4AEA0F3AC77F276DCB6B19B5E85124B0ABE8146410A88EF96D7440534"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/SkillApplication.java",
+      "sha256": "9E742DCD1E549C9030F05AC78664333469E2C3B4E3A32A33BBCDEB73A3E9D267"
+    },
+    {
+      "path": "skill-registry/src/main/resources/application.yml",
+      "sha256": "8EF7BA83DA65989BD2F17AC8B7D0910DFD586908A7CC832B3A28342B9D8D172E"
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V300__skill.sql",
+      "sha256": "E8C764D3D3B2747E54567BA0750EEF1B8638B6E8C86469F8C37EC1A59B65C9D2"
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V301__reconciliation.sql",
+      "sha256": "92496812C02C3F005A463220B0B1F4EA6AD6B2D62424E1A73989988EEB2AB6B8"
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V302__skill_immutability.sql",
+      "sha256": "ABAAA4E3AEA0DB32F47308D5DBDEDFC52796427C7A28016FD289AC9660883919"
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V303__execution_fact_generation.sql",
+      "sha256": "0D0E62E3185CA202622F77D83DE995659F062B1082DFF4CA7847B1CBCCFC5AEE"
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V304__fact_delivery_lease.sql",
+      "sha256": "38E6916D5B128D8FB6CC771DEEFFA6F7AB42701E7A384E3150B2A45A2E1F0E12"
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V305__controlled_contract_digest.sql",
+      "sha256": "4010940A7D37DC516C077771A6F0909B190C0C432987EE5EBEDC453F91044600"
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V306__controlled_artifacts.sql",
+      "sha256": "44ABF9F1D5688B29CC19F6A05BA6811F7ED8F00E0562251CA391B4B23E1AFDCF"
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V307__http_async_binding.sql",
+      "sha256": "C32087496295F94F91E47A65602C1D77EF5D56CBBBEAA9AB67D96304A3B35824"
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V308__async_preparation_delivery.sql",
+      "sha256": "4A2229C9C0DF0BC95C6E782306ABF01FC60A7B7BCB3F9A825BE6B0EE15390DAF"
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V309__signed_callback_receipt.sql",
+      "sha256": "FCAFFF8492F60254A5F46C59FE1C092DD68FDCEA580F012A637E28ECE1C6076F"
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V310__reconciliation_proof.sql",
+      "sha256": "07ECF9E91A05C181400C75E54B3CCEB99B019C63D4615C6562E62AEBA3A01D6A"
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V311__algorithm_job_identity.sql",
+      "sha256": "763A5FD44C12CBE649FD8220A174A9853B16FD55944CD487C881A05A1F3BC4B1"
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V312__fixture_audit.sql",
+      "sha256": "FF63D4C53BE9DA37A0E4EE52C2F82D08F8A7D4F76F24D89F4AC3F231D6B59CDC"
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V313__service_lifecycle.sql",
+      "sha256": "D499AB44E6B008A7B49B6EA0FB4776893D41FF1CA79631D0499412DA3E6C4B8F"
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V314__external_job_state.sql",
+      "sha256": "3B421414BB728E5E1F3202BFDE7A4157BAC7A1E673B7B6AC79F589C256B43978"
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V315__skill_semantic_digest.sql",
+      "sha256": "465F6528580A9D4D0D2C147FFD58F03AE62FD2F27EA442064CC859520385EA66"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/api/OpenApiImportControllerTest.java",
+      "sha256": "4043CA81670AACA7757A521BBD661C69C8FBC889A7BD88AF2C54AE424E07089C"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/api/TaskResultControllerTest.java",
+      "sha256": "A31C617D5D8FF0B2C10621874B000D89D6AFE18398CE8759B0125C34A79AA00E"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/AlgorithmExecutionPostgresTest.java",
+      "sha256": "FA6EEF095A59FD0C60753E033256C5ECE2DFA7BCB0A0CAA0AED5BE14086C745B"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/AsyncHttpExecutionTest.java",
+      "sha256": "4415D705708B7B19EF1B9CC672A5D9C1E53CC31DA14C681173AA47CF635D2FB6"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/AsyncResultEndpointFailureTest.java",
+      "sha256": "35385530DFBEB4A2CB14963D45F150764471C40D7772255213D0C6122994D9F2"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/CallbackHttpTest.java",
+      "sha256": "6341E5C67EC8275C77ED1ABB81F2E519FC022A1116F7884CB76625657EDAA71C"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/ExternalJobStateTest.java",
+      "sha256": "28A83D8A996A4294FA55DADE40CD2C46A1DBCC47C9B233D7320223628A48A70C"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/FixtureSkillsTest.java",
+      "sha256": "76D897B6BEFF1609C90EA0E1F49A34E1C4C3CA0BCAC688128A821937AB096041"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/OntologyManifestImportsTest.java",
+      "sha256": "4B2573FA159E250B00E6DD19AAF990299ABB6C204F1E880285108B9B9F533BC4"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/OntologyProjectionImportTest.java",
+      "sha256": "EF0D3B60C0846D79744B5B18C9B57538D2C0C348AAC6599E15CDCB3E2BF99B52"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/OpenApiImportPersistenceTest.java",
+      "sha256": "56A45B4E7CD175B2F87BA6995A6C38B344DC85DE56A2678E2511A8D1A757DD3D"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/OpenApiImportsTest.java",
+      "sha256": "F4743875CB4612404EEA0D126496E7650423215EF973522C5BAB40BA06BDD8BE"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/PathParamsAsyncMappingTest.java",
+      "sha256": "CF71D00F26247A9227AAEDEBE390E4D882AFAE1DAE2B148DD523F8051534B628"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/ProcessPublishPrecheckTest.java",
+      "sha256": "CD483B4CE88900E51F357DBB692768E0A9ED2642582394F0515AF22702B6DCAE"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/ReconciliationProofTest.java",
+      "sha256": "4A7A7D3D0CE66754D827C112DF70249F2837F93ECBD238D91108C397F97E623A"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/SchemaDegradedValidationTest.java",
+      "sha256": "63E481A30E67A89091EC805511F417A65FBEC1D16891EF30D01A417464257356"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/ServiceLifecycleTest.java",
+      "sha256": "83D5D2C5BFC90F5BAF547C6EC73BF9EDE544DCD6F3602B8AE542CE7BDCAA1644"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/ServiceManifestTest.java",
+      "sha256": "6735A87619EB3A1EDF5BB56EC8A002294D539C1586C0B214CC038358C722C460"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/ServiceProbeTest.java",
+      "sha256": "78EB31B1D3B5BF0E5629A3C1C7B69EFB55250D2E5B66B1D89691893FECE0CD77"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/SkillAuthSchemeRegistrationTest.java",
+      "sha256": "6F8B5DD2A562331347EC092AC8E61A40C875662425DBB5DEB890DF43C93F758D"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/SkillCallbackWakeTest.java",
+      "sha256": "EE4AA490BA78764E2C93A3766E178EBBD59E185DB986DF7B2D39995BFEB5B910"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/SkillErrorEnvelopeTest.java",
+      "sha256": "9CFF6F858D4C7E345D19E758F0D0AAB6898139A62C17853FCAB4AAE24C1B7E56"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/SkillEvidenceRebindPostgresTest.java",
+      "sha256": "A94E33657F5D23AAEE7C31FB6EA859F41E20180907A942DEED2F7747F337CCF0"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/SkillExecutionTest.java",
+      "sha256": "607BA3C31AE5EF8DC4568E8EB35D338446A9ED444A7366285124E28BFDA17EA8"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/SkillIdentityRegistrationTest.java",
+      "sha256": "2F8FF2845D3EA0617C55E6CCCCB7DDF27F0B0B1E32F811EE8DC951E8E2E21FA9"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/SkillPrepareExecuteTest.java",
+      "sha256": "1F965830F3CE9C2454C2A63ABAB0BF33A88F34E3340746959D5DFA90797FA276"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/SkillProcessAuditTest.java",
+      "sha256": "AD926EB06A525E3FE88A5F58AC58924978D155F831B5F0E2661A25C324304AD4"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/SkillProcessExecutionTest.java",
+      "sha256": "A0DD5C8C3DEC416A4CC8ED64C97215B1E21873CB773DC2AB76AA420C74333FE9"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/SkillProcessRegistrationTest.java",
+      "sha256": "65ED5ACA7101A4C8198E0E26BB83609B90F4A2E3BD48F32B73C655D33FB5D705"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/SkillProcessWhitelistRegistrationTest.java",
+      "sha256": "ECDE6AD9B5B0F0D4792AA75281BA63D59A7EF936494039696AF7A0DD199669EE"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/SkillPublishDigestPostgresTest.java",
+      "sha256": "C0DC7238CAC45753757A66FCCD1DA0ACAE6D40E32C3AD40918FE41B379E3444D"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/SkillStatisticsPostgresTest.java",
+      "sha256": "6EFE3AB22C961740D8B1ABF89E66B38F58E57B5CDF99553B2853BC5306D00BE2"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/SkillTaskResultTest.java",
+      "sha256": "600F1A9DF2D5F0199A52F7F2152D339F2E6C6D78839382C30C5BA9C5E7FA164F"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/domain/BoundedSchemaValidationTest.java",
+      "sha256": "8724E22B2CB484983DC91089D9B19DAC3D1358F48EDABA94794D038E2CBE8E74"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/domain/ErrorSemanticsTest.java",
+      "sha256": "C5FC6A25FA6D9DDFEF0E26BC3DAF7BCFA39F6DDB56007B6DBAEF5F0589D2F1C4"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/domain/ProcessContractTest.java",
+      "sha256": "94A0E0A7682BE4203CFC3A76A4F646FC74489D3E182268AFAF7D727F257A20CD"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/domain/SchemaWorkBudgetTest.java",
+      "sha256": "57874715DD0E51B8433B939B16709C195824B7F2F03BEDD5CE247512DC11816A"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/domain/SkillDigestTest.java",
+      "sha256": "1F09C9687B52572445E25D6DD30FDE84284E200B4DDC073EE9E125E4B2A2F2CF"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/domain/SkillRulesTest.java",
+      "sha256": "10D9DFB2EE0E1785F33CDC5B7BA86A4FEC16682011353683CFF395F55B25E4F3"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/domain/SkillSchemaDialectTest.java",
+      "sha256": "B45B5D5977E4879F13DBD0DE25922636EB83F2B0425AFF3A63DDD4105C570CEA"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/AdapterRegistryZeroChangeTest.java",
+      "sha256": "78FF82F4F5FAD6C72A1E0CBAE377F822B00111CE1926170CD5E0A7BE1F63FE95"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/AlgorithmApiFixture.java",
+      "sha256": "6D6206696B810ACA0B4BC6B4FAA6A62DAAF84AD6DEE644F4872B07703341905B"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/AlgorithmMigrationPostgresTest.java",
+      "sha256": "ACD5BEB686F92349233A38402A43C5E2F04043CF3356FB8C131008F5C3751A8C"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/AlgorithmMinioFixture.java",
+      "sha256": "7C9EBDC0D7ED390BB3C053341D43AD965745B1854726508045B64889FB4FF406"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/AlgorithmOffloadInterruptionTest.java",
+      "sha256": "43EC56726C4DD04F3B4E4553590B80316D87BD2B619230C6F728A52D9376BD9D"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/AlgorithmOffloadResponseOwnershipTest.java",
+      "sha256": "40474F829DEBD58D0B1D689D8F139F5BD89E2B2A07B298470D90C870960397F6"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/AlgorithmProtocolTest.java",
+      "sha256": "743C91DDBEBE8C2DD1A1FDE7827427615D0288700019AEA5E01C35D096C4C859"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/AlgorithmTestDatabase.java",
+      "sha256": "57D17735E0390996EB8252D84F91F6D5C76F50E28C59ED4FCB68B61C870FD49C"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/ArtifactBoundTest.java",
+      "sha256": "1500A9C42C2B9CE13A9768D2F54AB0F51350F51BE5C166551FDB5EC4C7C2061E"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/ArtifactPersistenceTest.java",
+      "sha256": "16CBD8FD8ABE960CCC6B72FE7FB1C41DD5883FBD0A3F15F0298A1F46CAB75D66"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/ArtifactReferenceTest.java",
+      "sha256": "57DB0B3508664EE1D29F8C9B0E3D78356591B31CD30F77537F6C762FA3D271D2"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/AuthSchemeOutboundTest.java",
+      "sha256": "8D77F4ECB3CCDA5C6713C813B4D28385C39CF10DB367ED88F1830052C419BE86"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/FakeProcessWorker.java",
+      "sha256": "F3A4A3C53C209A2D35A80ADDC47EA4F84A3659215B20B429E98651517B59C61D"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/HttpAsyncAdapterTest.java",
+      "sha256": "900B90D61227FEA94020F04F5628B8C05743D3F843B5F5E745E26E9695D8379B"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/HttpAsyncAttemptFenceTest.java",
+      "sha256": "8BA27FF69FD226652EA8929994CF35100E9E73987ABC2D84411FDE2E517DDDC4"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/HttpFixture.java",
+      "sha256": "876F924EF1F701A01933B43A8A409AA1DB3EF8D7DC97166DD933EB87FF38BEC6"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/HttpSchemaBoundaryTest.java",
+      "sha256": "CBE63E114C29E7A4E925793679D51FCE6271DA6635ECFF9CE00D62593A19765D"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/IdentityOutboundTest.java",
+      "sha256": "E0E0676400C41460552F504296A14F91FC0733434801CFBB4D09C50165371046"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/localspike/FakeDeafMain.java",
+      "sha256": "80E8AC13C87BAE9E46CEFE769BDF14B051245253671CB542CB8A259B23BA0009"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/localspike/LocalSpikeLifecycleLiveTest.java",
+      "sha256": "C47BF3F62394DCF238CC70A26933BE627484B98DB4D8A72397697848E01917B7"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/localspike/LocalSpikeManagerFailurePathTest.java",
+      "sha256": "AB3155B7D55F2849E9CA5080EA3CBA5F0B20E39CE3EB2A85E2A670E16BB6FBF8"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/McpAdapterTest.java",
+      "sha256": "068002325D7D224FB685DBB3476AEBD27CEDFF170430E115BDF1008ADC9F282F"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/McpExecutionPostgresTest.java",
+      "sha256": "255C1328A9771B79CC9F8BBA97AD5D099DF8368F92C994D2D08664712CCE2F96"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/McpManagementTest.java",
+      "sha256": "79255F7C9BF7B059E8D488ACF1A20C9DB91F7A1DA75841E72F284FEE5D4FFB42"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/McpResourceLifecycleTest.java",
+      "sha256": "A56E0E871B5B99CDEA22E6A9058DD9CEF2D50BFEE0E2DDDEAEBBF134E8EC947F"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/McpSchemaBoundaryTest.java",
+      "sha256": "072E939A9E454B950EE38F4AC8870D21615EA57C0D9B0D81B1BBE32FAE955D38"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/MultipartFormMappingTest.java",
+      "sha256": "74084FCD8C40ED4CDB9D22877C99615A8F0152E9A6CDEE89FB75F9BABD0DD980"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/MultipartStreamingTest.java",
+      "sha256": "64A981A93E22351645FA3D9BD77671A0D1F84DB0740E6585737114BD6046EB1E"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/OpenApiHttpMappingTest.java",
+      "sha256": "0BC281AAD61E526BE35472480980721DA9BC74CA871BD7604861E5C07FC59EFE"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/ProcessAdapterHardeningTest.java",
+      "sha256": "0DE036BFCCB3F5E061D5491315920CF55E8F218F95430A324C0C2E42D764C064"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/ProcessAdapterTest.java",
+      "sha256": "AFF5C9CBEFB722AD6D26BE44E4F60C82C018761E3875854D2391F65401ABB02E"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/ProcessFilesTest.java",
+      "sha256": "6E4A4AAAB135BD01CA2B830A0E11A3741B060551A98EA2F0D9FA111ECF2A544C"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/ProcessProtocolTest.java",
+      "sha256": "77495D77D4CA372EE536DB08278351A04015E36F3F2F1F2CF3CB11ED7DFC9B28"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/ProcessTreeTest.java",
+      "sha256": "FC73AC8C2EB2A42DBF29AF59EF00D5C3EC20191975E5348982DD46AE2B5D2E25"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/ServiceTicketsTest.java",
+      "sha256": "522243F32432AEDB74C41B5FFC5957C35522E6D0B0F9C39DC2F14E457F9B6793"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/SignedCallbackTest.java",
+      "sha256": "C905C4E1049CAAAA945BF43F5AA80C7B973F28904591E9722D5B87B5DE1FE75F"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/SkillAttemptPropagationTest.java",
+      "sha256": "585763EE05189235984F9488FD5016EDF2A2731DAF46A67D10C1BB51DF7E1E0F"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/SkillClientsErrorTest.java",
+      "sha256": "2C8A50BB71B1BDFDCF9D30B7A08465BEE776F7C2E52C5F68A6B660400443A2D0"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/SkillProcessRoutingTest.java",
+      "sha256": "83EE5836381F2A695BCFF7871D92649DF4D93DCE12E26F3ED241BCA96D15EC95"
+    }
+  ],
+  "historicalFull706": {
+    "records": 706,
+    "passed": 589,
+    "failures": 7,
+    "errors": 106,
+    "oldSkipped": 4,
+    "nativeExit": 0,
+    "failureIgnore": true,
+    "collectorExit": 1,
+    "rawReasonComparisonPassed": false,
+    "regressionGatePassed": false,
+    "notOverwrittenByTargetRun": true
+  },
+  "nonClaims": [
+    "Not whole EX27 acceptance",
+    "Not atomic cancellation race fix",
+    "No production permit acquisition coverage from direct transport",
+    "No timeout increase or disabled old assertion",
+    "No automatic fix or retry",
+    "No Green/Class implementation or admission"
+  ],
+  "executionHeadProvenance": {
+    "baselineFull706RuntimeHead": "6ca930d8b9b7ef32c4eb7de1ce88ae87fc75c946",
+    "executionHead": "73dc4cf37a2894f5c20fe806908011091888383b",
+    "executionHeadParent": "6ca930d8b9b7ef32c4eb7de1ce88ae87fc75c946",
+    "executionHeadTree": "8f0ac18c5c4355e7bf698c3cc042caf30feddc90",
+    "staticCommittedDiffPaths": [
+      "skill-registry",
+      "admin-common",
+      "pom.xml"
+    ],
+    "staticCommittedDiffEmpty": true,
+    "unexecutedManifestSha256": "BAC558B9AB0AF7406BA4E017B6C31F3BC2BEF3EFEA79301E1C087097B2078E0E",
+    "unexecutedManifestArchive": ".local/ex27-mcp-terminal/unexecuted-bac558b9-manifest-20261029-bdf1c048/manifest.json",
+    "historicalRunInputsUnmodified": true,
+    "staticSourceCount": 152,
+    "staticClasspathJarPins": 179,
+    "actualRunStarted": false
+  }
+}
