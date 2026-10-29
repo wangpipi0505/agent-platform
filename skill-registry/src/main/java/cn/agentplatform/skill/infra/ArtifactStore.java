@@ -561,6 +561,101 @@ public class ArtifactStore implements AutoCloseable {
         }
     }
 
+    /**
+     * Binary PROCESS result, using the run/call/attempt already authorized by SkillExecution.
+     * It never enters the independent r_upload/call1 input namespace. Cross-service result
+     * acceptance remains the engine's fence; this method does not invent a new authority.
+     */
+    Map<String, Object> storeProcessOutput(
+            String contentType, long size, String expectedSha256, InputStream source,
+            String runId, long callId, long attempt) {
+        var actor = Actor.current();
+        if (db == null) throw new PlatformException(503, "ARTIFACT_STORAGE_UNAVAILABLE", "输出存储未装配");
+        if (runId == null || !runId.matches("r_[A-Za-z0-9_-]{1,125}") || callId < 1 || attempt < 1
+                || size < 0 || size > MAX_ARTIFACT_BYTES || contentType == null
+                || contentType.isBlank() || contentType.length() > 128 || expectedSha256 == null
+                || !expectedSha256.matches("[0-9a-f]{64}"))
+            throw new PlatformException(502, "PROCESS_OUTPUT_INVALID", "输出文件缺少有效执行归属或声明");
+        String id = "art_" + UUID.randomUUID().toString().replace("-", "");
+        String bucket = configuration.get("AGENT_MINIO_BUCKET");
+        String key = processOutputPrefix(actor.tenantId(), runId, callId, attempt) + id + ".bin";
+        boolean registered = false;
+        try (InputStream ownedSource = source) {
+            var client = client();
+            db.update(
+                    "insert into skill.artifact"
+                            + "(artifact_id,tenant_id,principal_id,run_id,call_id,bucket,object_key,state,"
+                            + "content_type,expires_at,cleanup_after)"
+                            + " values(?,?,?,?,?,?,?,'UPLOADING',?,now()+interval '7 days',now()+interval '1 hour')",
+                    id, actor.tenantId(), actor.principalId(), runId, callId, bucket, key, contentType);
+            registered = true;
+            var digest = MessageDigest.getInstance("SHA-256");
+            var bounded = new BoundedStream(ownedSource, MAX_ARTIFACT_BYTES);
+            var checked = new DigestInputStream(bounded, digest);
+            client.putObject(PutObjectArgs.builder().bucket(bucket).object(key).contentType(contentType)
+                    .stream(checked, size, 5 * 1024 * 1024).build());
+            if (bounded.count != size || ownedSource.read() != -1
+                    || !expectedSha256.equals(HexFormat.of().formatHex(digest.digest())))
+                throw new PlatformException(502, "PROCESS_OUTPUT_INVALID", "输出文件在转存时长度或摘要不一致");
+            int changed = db.update(
+                    "update skill.artifact set state='READY',sha256=?,size_bytes=?,updated_at=now()"
+                            + " where tenant_id=? and principal_id=? and artifact_id=? and run_id=?"
+                            + " and call_id=? and object_key=? and state='UPLOADING'",
+                    expectedSha256, bounded.count, actor.tenantId(), actor.principalId(),
+                    id, runId, callId, key);
+            if (changed != 1) throw new IllegalStateException("ARTIFACT_STATE_CHANGED");
+            return reference(owned(id, runId));
+        } catch (Exception failure) {
+            if (registered) {
+                try {
+                    db.update(
+                            "update skill.artifact set state='CLEANUP_PENDING',last_error_code='PROCESS_OUTPUT_FAILED',"
+                                    + "cleanup_after=now(),updated_at=now() where tenant_id=? and principal_id=?"
+                                    + " and artifact_id=? and run_id=? and call_id=? and object_key=?",
+                            actor.tenantId(), actor.principalId(), id, runId, callId, key);
+                    deleteObject(actor.tenantId(), id, bucket, key);
+                } catch (Exception cleanupFailure) {
+                    failure.addSuppressed(cleanupFailure);
+                }
+            }
+            if (failure instanceof PlatformException platform) throw platform;
+            var unavailable = new PlatformException(503, "ARTIFACT_STORAGE_UNAVAILABLE", "输出文件暂不可保存");
+            unavailable.addSuppressed(failure);
+            throw unavailable;
+        }
+    }
+
+    /** Compensate only artifacts returned by this exact batch; no tenant scan or queue cleanup. */
+    void discardProcessOutputs(
+            List<Map<String, Object>> refs, String runId, long callId, long attempt, RuntimeException failure) {
+        var actor = Actor.current();
+        for (var ref : refs) {
+            String id = Objects.toString(ref.get("artifactId"), "");
+            String key = processOutputPrefix(actor.tenantId(), runId, callId, attempt) + id + ".bin";
+            try {
+                var rows = db.queryForList(
+                        "select bucket from skill.artifact where artifact_id=? and tenant_id=?"
+                                + " and principal_id=? and run_id=? and call_id=? and object_key=?",
+                        id, actor.tenantId(), actor.principalId(), runId, callId, key);
+                if (rows.size() != 1) throw new IllegalStateException("PROCESS_OUTPUT_COMPENSATION_IDENTITY");
+                int changed = db.update(
+                        "update skill.artifact set state='CLEANUP_PENDING',last_error_code='PROCESS_OUTPUT_BATCH_FAILED',"
+                                + "cleanup_after=now(),updated_at=now() where artifact_id=? and tenant_id=?"
+                                + " and principal_id=? and run_id=? and call_id=? and object_key=?",
+                        id, actor.tenantId(), actor.principalId(), runId, callId, key);
+                if (changed != 1) throw new IllegalStateException("PROCESS_OUTPUT_COMPENSATION_STATE");
+                deleteObject(actor.tenantId(), id, rows.getFirst().get("bucket").toString(), key);
+            } catch (Exception cleanupFailure) {
+                failure.addSuppressed(cleanupFailure);
+            }
+        }
+    }
+
+    private static String processOutputPrefix(String tenant, String runId, long callId, long attempt) {
+        return Digest.sha256(tenant) + "/artifacts/process/" + Digest.sha256(runId)
+                + "/call-" + callId + "/attempt-" + attempt + "/";
+    }
+
     /** 外部结果只可引用同tenant/principal/run的既有opaque产物；URL/物理键均不是授权凭据。 */
     public Map<String, Object> controlledReference(Map<String, Object> value, String runId) {
         if (!value.keySet().equals(Set.of("artifactId")) || runId == null)

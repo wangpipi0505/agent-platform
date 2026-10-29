@@ -1,6 +1,6 @@
 # PROCESS 受控文件 I/O 工程增补（EX-15b/1）
 
-本增补承接现有 PROCESS 执行方式、algorithm-process/1 信封及既有 artifact 权威存储。它定义后续实施目标；当前已交付父目录段拒绝，以及 PhaseA 的 files 布尔开关校验、启用后的输出相对路径与普通文件存在性校验；PhaseB 已补齐显式输入的同主体 READY/有效期授权、受控文件名流式物化、数量/字节/摘要检查与流关闭；定向回归66项通过。输出持久化与二进制回放仍待。完整 I/O 的实际进度、准入与验收以统一台账 EX-15b 为准。原冻结契约及 EX-05 工程增补不改写，不引入新执行器、迁移、公共上传接口或 OS 沙箱承诺。
+本增补承接现有 PROCESS 执行方式、algorithm-process/1 信封及既有 artifact 权威存储。它定义后续实施目标；当前已交付父目录段拒绝，以及 PhaseA 的 files 布尔开关校验、启用后的输出相对路径与普通文件存在性校验；PhaseB 已补齐显式输入的同主体 READY/有效期授权、受控文件名流式物化、数量/字节/摘要检查与流关闭；定向回归66项通过。输出持久化已接线但待验，二进制回放仍待。完整 I/O 的实际进度、准入与验收以统一台账 EX-15b 为准。原冻结契约及 EX-05 工程增补不改写，不引入新执行器、迁移、公共上传接口或 OS 沙箱承诺。
 
 ## 1. 显式启用与兼容边界
 
@@ -40,3 +40,9 @@ PhaseA 只批准三个既有测试源的原25加新5方法，先真实失败再�
 输入引用形状错误沿422/PROCESS_INPUT_INVALID，数量或字节超限沿400/PROCESS_INPUT_TOO_LARGE；仅真实404/ARTIFACT_NOT_FOUND窄映射为404/PROCESS_INPUT_ARTIFACT_NOT_FOUND。读取/写入及实际长度或摘要不符为503/ARTIFACT_STORAGE_UNAVAILABLE，其它PlatformException保持。输入准备与worker使用同一剩余timeout预算，准备失败不进入失败转储。单次SDK阻塞读取的严格返回时限及配额/存储损坏分支尚未专项验证，不视为已获OS隔离保证。
 
 按用户最新策略，本批仅两轮定向测试：25项22P3F确认缺口，最小两生产文件修复后六相关类66P；不追加全仓回归。注入认证上下文的adapter测试不冒称入口JWT验签，完整schema/guard入口、输出归属、回放和重启另批推进。
+
+### 2026-10-30 输出持久化实现状态
+
+已接通callDir回收前的二进制输出登记，沿现SkillExecution已claim/submitted传入的Actor/run/call/attempt，使用独立process object_key及UPLOADING→READY，不复用普通上传r_upload/call1。全组声明先核路径/数量/bytes/SHA，Windows保护句柄同源转存；中途失败仅补偿本批新增对象，预存输入不触。当前保护打开仅支持Windows，其他平台拒绝；不宣称OS沙箱、祖先替换绝对防护或跨服务最新代原子发布/取消晚到闭环。
+
+测试两轮已到止：22项19P3F确认缺口；实现后69项67P1F1E。后两未通过由JDK Windows BasicFileAttributes.fileKey固定null导致提前拒绝；已据本机JDK源修正为可选补充比较，保留NOSHARE/NOFOLLOW/路径和实际字节摘要检查，未重跑。状态为实现已改、待验，原结果不改写、不认领69通过。跨服务取消/晚到由EX16及联合阶段接续，完整回放/正式重启另批。

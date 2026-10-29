@@ -194,6 +194,267 @@ class ArtifactPersistenceTest {
         assertEquals(1, inputRowCount());
     }
 
+    @Test
+    @Timeout(60)
+    void processOutputPersistsBinaryWithExecutionOwnership(@TempDir Path temporary) throws Exception {
+        String runId = "r_process_output_" + UUID.randomUUID().toString().replace("-", "");
+        var raw = runProcessOutput(store, "one", temporary, runId, call, 11L);
+        assertEquals(1, raw.fileRefs().size(), "successful declared output must be persisted");
+        var ref = raw.fileRefs().getFirst();
+        String id = ref.get("artifactId").toString();
+        var row = inputRow(id);
+        byte[] expected = ProcessOutputWorker.payload(1);
+        assertAll(
+                () -> assertEquals(tenant, row.get("tenant_id")),
+                () -> assertEquals("owner", row.get("principal_id")),
+                () -> assertEquals(runId, row.get("run_id")),
+                () -> assertEquals(call, ((Number) row.get("call_id")).longValue()),
+                () -> assertTrue(row.get("object_key").toString().contains("/attempt-11/")),
+                () -> assertEquals("READY", row.get("state")),
+                () -> assertEquals(expected.length, ((Number) ref.get("bytes")).longValue()),
+                () -> assertEquals("application/octet-stream", ref.get("contentType")),
+                () -> assertEquals(11L, ((Number) raw.processFact().get("attemptId")).longValue()),
+                () -> assertEquals(runId, raw.processFact().get("runId")),
+                () -> assertEquals(call, ((Number) raw.processFact().get("callId")).longValue()),
+                () -> assertFalse(ref.containsKey("path")),
+                () -> assertFalse(Json.write(ref).contains(temporary.toString())),
+                () -> assertFalse(raw.processFact().containsKey("workDir")));
+        try (var download = store.download(id, runId)) {
+            byte[] actual = download.source().readNBytes(expected.length + 1);
+            assertArrayEquals(expected, actual);
+            assertEquals(-1, download.source().read());
+            assertEquals(HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(expected)),
+                    download.sha256());
+        }
+        var wrongRun = assertThrows(PlatformException.class, () -> store.download(id, runId + "_other"));
+        assertEquals("ARTIFACT_NOT_FOUND", wrongRun.code());
+        try {
+            identity(tenant, "another-owner");
+            var denied = assertThrows(PlatformException.class, () -> store.download(id, runId));
+            assertEquals(404, denied.status());
+            assertEquals("ARTIFACT_NOT_FOUND", denied.code());
+        } finally {
+            identity(tenant, "owner");
+        }
+    }
+
+    @Test
+    @Timeout(60)
+    void processOutputValidatesWholeDeclarationBeforePersisting(@TempDir Path temporary) throws Exception {
+        var input = store.upload("application/octet-stream", 1, new ByteArrayInputStream(new byte[] {9}));
+        String inputId = input.get("artifactId").toString();
+        var original = inputRow(inputId);
+        PlatformException rejected = null;
+        try {
+            runProcessOutput(store, "bad-second-sha", temporary,
+                    "r_process_bad_output_" + UUID.randomUUID().toString().replace("-", ""), call, 13L);
+        } catch (PlatformException failure) {
+            rejected = failure;
+        }
+        final var actual = rejected;
+        assertAll(
+                () -> {
+                    assertNotNull(actual, "the second wrong digest must reject the complete output");
+                    assertEquals(502, actual.status());
+                    assertEquals("PROCESS_OUTPUT_INVALID", actual.code());
+                },
+                () -> assertEquals(1, inputRowCount(), "no partial output registration is allowed"),
+                () -> assertEquals(original, inputRow(inputId)));
+    }
+
+    @Test
+    @Timeout(60)
+    void processOutputStorageFailureCompensatesOnlyNewObjects(@TempDir Path temporary) throws Exception {
+        var input = store.upload("application/octet-stream", 1, new ByteArrayInputStream(new byte[] {7}));
+        String inputId = input.get("artifactId").toString();
+        var original = inputRow(inputId);
+        String runId = "r_process_compensate_" + UUID.randomUUID().toString().replace("-", "");
+        var outputInserts = new AtomicInteger();
+        var firstWasReady = new java.util.concurrent.atomic.AtomicBoolean();
+        // Real PG and MinIO are used until the second exact output registration fails.
+        var failing = new JdbcTemplate(Objects.requireNonNull(db.getDataSource())) {
+            @Override
+            public int update(String sql, Object... args) {
+                if (sql.toLowerCase(Locale.ROOT).contains("insert into")
+                        && sql.contains("skill.artifact") && Arrays.asList(args).contains(runId)
+                        && outputInserts.incrementAndGet() == 2) {
+                    firstWasReady.set(db.queryForObject(
+                            "select count(*) from skill.artifact where tenant_id=? and run_id=?"
+                                    + " and call_id=? and state='READY'",
+                            Integer.class, tenant, runId, call) == 1);
+                    throw new org.springframework.dao.DataAccessResourceFailureException(
+                            "fixture: second exact output registration unavailable");
+                }
+                return super.update(sql, args);
+            }
+        };
+        PlatformException rejected = null;
+        try (var outputs = new ArtifactStore(failing, System.getenv())) {
+            try {
+                runProcessOutput(outputs, "two", temporary, runId, call, 17L);
+            } catch (PlatformException failure) {
+                rejected = failure;
+            }
+        }
+        final var actual = rejected;
+        var rows = db.queryForList(
+                "select artifact_id,bucket,object_key,state,last_error_code from skill.artifact"
+                        + " where tenant_id=? and principal_id=? and run_id=? and call_id=?",
+                tenant, "owner", runId, call);
+        assertAll(
+                () -> {
+                    assertNotNull(actual, "storage failure must not return a success/fileRef");
+                    assertEquals(503, actual.status());
+                    assertEquals("ARTIFACT_STORAGE_UNAVAILABLE", actual.code());
+                },
+                () -> assertTrue(firstWasReady.get(), "the first output really reached READY before failure"),
+                () -> assertEquals(2, outputInserts.get()),
+                () -> assertEquals(1, rows.size()),
+                () -> assertEquals(original, inputRow(inputId), "pre-existing input is untouched"));
+        var row = rows.getFirst();
+        assertEquals("DELETED", row.get("state"), "only this batch's exact first object is compensated");
+        try (var minio = MinioAsyncClient.builder().endpoint(System.getenv("AGENT_MINIO_ENDPOINT"))
+                .credentials(System.getenv("AGENT_MINIO_ACCESS_KEY"), System.getenv("AGENT_MINIO_SECRET_KEY"))
+                .build()) {
+            var missing = assertThrows(ExecutionException.class,
+                    () -> minio.statObject(StatObjectArgs.builder().bucket(row.get("bucket").toString())
+                            .object(row.get("object_key").toString()).build()).get(10, TimeUnit.SECONDS));
+            var completion = assertInstanceOf(CompletionException.class, missing.getCause());
+            var error = assertInstanceOf(io.minio.errors.ErrorResponseException.class, completion.getCause());
+            assertEquals("NoSuchKey", error.errorResponse().code());
+        }
+        try (var download = store.download(inputId, null)) {
+            assertArrayEquals(new byte[] {7}, download.source().readNBytes(2));
+        }
+    }
+
+    private SkillAdapters.Raw runProcessOutput(
+            ArtifactStore inputs, String outputMode, Path temporary,
+            String runId, long executionCall, long attempt) throws Exception {
+        Path root = Files.createDirectory(temporary.resolve("中文 空格 输出根")).toRealPath();
+        Path marker = temporary.resolve("worker-started").toAbsolutePath();
+        String executable = Path.of(System.getProperty("java.home"), "bin",
+                System.getProperty("os.name", "").toLowerCase(Locale.ROOT).contains("win")
+                        ? "java.exe" : "java").toRealPath().toString();
+        Path classes = Path.of(ArtifactPersistenceTest.class.getProtectionDomain()
+                .getCodeSource().getLocation().toURI()).toRealPath();
+        assertTrue(Files.isDirectory(classes));
+        var process = new ProcessAdapter(true, root.toString(), 1, 1, 0, 0, executable);
+        String requestId = Long.toString(executionCall);
+        var contract = Map.<String, Object>of(
+                "code", "output-probe", "type", "PROCESS", "invocationKind", "SYNC",
+                "process", Map.of(
+                        "command", List.of(executable, "-Xmx64m", "-cp", classes.toString(),
+                                ProcessOutputWorker.class.getName(), marker.toString(), outputMode),
+                        "timeoutMs", 20000, "stdin", Map.of("files", true)),
+                "inputSchema", Map.of("type", "object"),
+                "outputSchema", Map.of("type", "object"));
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        var caller = Executors.newSingleThreadExecutor();
+        var future = caller.submit(() -> {
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            try {
+                return new SkillAdapters(inputs, null, null, process).invoke(
+                        contract, Map.of(), "process-output-" + executionCall, executionCall,
+                        false, runId, attempt);
+            } finally {
+                SecurityContextHolder.clearContext();
+            }
+        });
+        ProcessHandle owned = null;
+        Instant created = null;
+        try {
+            long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(15);
+            while (!Files.isRegularFile(marker, LinkOption.NOFOLLOW_LINKS) && !future.isDone()) {
+                if (System.nanoTime() >= deadline) throw new AssertionError("worker identity timeout");
+                Thread.sleep(10);
+            }
+            if (Files.isRegularFile(marker, LinkOption.NOFOLLOW_LINKS)) {
+                var fields = Files.readAllLines(marker, StandardCharsets.UTF_8);
+                assertEquals(4, fields.size());
+                var candidate = ProcessHandle.of(Long.parseLong(fields.get(0))).orElseThrow();
+                Instant candidateCreated = Instant.parse(fields.get(1));
+                assertEquals(candidateCreated, candidate.info().startInstant().orElseThrow());
+                assertEquals(ProcessHandle.current().pid(), candidate.parent().orElseThrow().pid());
+                assertEquals(Path.of(executable), Path.of(candidate.info().command().orElseThrow()).toRealPath());
+                assertEquals(requestId, fields.get(2));
+                Path callDir = Path.of(fields.get(3)).toRealPath();
+                assertEquals(root, callDir.getParent());
+                owned = candidate;
+                created = candidateCreated;
+                Files.writeString(callDir.resolve("input-probe.release"), requestId,
+                        StandardCharsets.UTF_8, StandardOpenOption.CREATE_NEW);
+            }
+            try {
+                return future.get(25, TimeUnit.SECONDS);
+            } catch (ExecutionException failure) {
+                if (failure.getCause() instanceof RuntimeException actual) throw actual;
+                throw new AssertionError("unexpected invocation failure", failure.getCause());
+            }
+        } finally {
+            process.cancel(requestId);
+            if (owned != null && owned.isAlive()
+                    && owned.info().startInstant().filter(created::equals).isPresent())
+                ProcessTree.killTree(owned);
+            future.cancel(true);
+            caller.shutdownNow();
+            assertTrue(caller.awaitTermination(10, TimeUnit.SECONDS));
+            assertFalse(process.inFlight(requestId));
+            if (owned != null) assertFalse(owned.isAlive(), "registered worker must terminate");
+            try (var entries = Files.list(root)) {
+                assertEquals(0, entries.count(), "only this callDir is reclaimed");
+            }
+        }
+    }
+
+    /** Pure JDK fixture: real binary files and a valid success envelope, including negative metadata. */
+    public static final class ProcessOutputWorker {
+        static byte[] payload(int ordinal) {
+            return new byte[] {0, (byte) ordinal, 2, 10, 13, 127, (byte) 255};
+        }
+
+        public static void main(String[] args) throws Exception {
+            if (args.length != 2) throw new IllegalArgumentException("marker and mode required");
+            String received = new String(System.in.readNBytes(1024 * 1024 + 1),
+                    StandardCharsets.UTF_8).trim();
+            var id = Pattern.compile("\"requestId\"\\s*:\\s*\"([A-Za-z0-9_-]+)\"").matcher(received);
+            if (!id.find()) throw new IllegalArgumentException("requestId missing");
+            String requestId = id.group(1);
+            Path cwd = Path.of("").toRealPath();
+            Path marker = Path.of(args[0]);
+            Path pending = marker.resolveSibling("worker-started.pending");
+            Files.write(pending, List.of(Long.toString(ProcessHandle.current().pid()),
+                    ProcessHandle.current().info().startInstant().orElseThrow().toString(),
+                    requestId, cwd.toString()), StandardCharsets.UTF_8, StandardOpenOption.CREATE_NEW);
+            Files.move(pending, marker);
+            Path release = cwd.resolve("input-probe.release");
+            long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
+            while (!Files.isRegularFile(release, LinkOption.NOFOLLOW_LINKS)) {
+                if (System.nanoTime() >= deadline) throw new IllegalStateException("release timeout");
+                Thread.sleep(10);
+            }
+            if (!requestId.equals(Files.readString(release, StandardCharsets.UTF_8)))
+                throw new IllegalStateException("release identity mismatch");
+            Files.createDirectory(cwd.resolve("output"));
+            var declarations = new StringJoiner(",");
+            int files = "one".equals(args[1]) ? 1 : 2;
+            for (int i = 1; i <= files; i++) {
+                byte[] bytes = payload(i);
+                String path = "output/" + i + ".bin";
+                Files.write(cwd.resolve(path), bytes, StandardOpenOption.CREATE_NEW);
+                String sha = HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes));
+                if (i == 2 && "bad-second-sha".equals(args[1])) sha = "0".repeat(64);
+                declarations.add("{\"name\":\"binary-" + i + "\",\"path\":\"" + path
+                        + "\",\"contentType\":\"application/octet-stream\",\"bytes\":" + bytes.length
+                        + ",\"sha256\":\"" + sha + "\"}");
+            }
+            System.out.print("{\"protocol\":\"algorithm-process/1\",\"requestId\":\"" + requestId
+                    + "\",\"ok\":true,\"result\":{\"binary\":true},\"files\":[" + declarations
+                    + "],\"warnings\":[],\"metrics\":{}}");
+        }
+    }
+
+
     private Map<String, Object> inputRow(String id) {
         return db.queryForMap(
                 "select artifact_id,tenant_id,principal_id,run_id,call_id,state,size_bytes,sha256,"

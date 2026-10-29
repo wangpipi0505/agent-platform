@@ -214,12 +214,26 @@ public class ProcessAdapter {
         return execute(contract, request, tenantId, null);
     }
 
+    @FunctionalInterface
+    interface OutputFiles {
+        void persist(Path callDir, Output output, long deadline);
+    }
+
     /** 输入物化只在原执行门通过、callDir 创建之后运行；任何输入失败都先于 worker 启动。 */
     Output execute(
             ProcessContract contract,
             Request request,
             String tenantId,
             BiFunction<Path, Long, Map<String, String>> inputFiles) {
+        return execute(contract, request, tenantId, inputFiles, null);
+    }
+
+    Output execute(
+            ProcessContract contract,
+            Request request,
+            String tenantId,
+            BiFunction<Path, Long, Map<String, String>> inputFiles,
+            OutputFiles outputFiles) {
         Objects.requireNonNull(contract, "contract");
         Objects.requireNonNull(request, "request");
         if (!enabled)
@@ -236,7 +250,7 @@ public class ProcessAdapter {
 
         Semaphore tenantPermit = acquirePermits(tenantId);
         try {
-            return runOnce(contract, request, inputFiles);
+            return runOnce(contract, request, inputFiles, outputFiles);
         } finally {
             if (tenantPermit != null) tenantPermit.release();
             globalPermits.release();
@@ -302,7 +316,8 @@ public class ProcessAdapter {
     private Output runOnce(
             ProcessContract contract,
             Request request,
-            BiFunction<Path, Long, Map<String, String>> inputFiles) {
+            BiFunction<Path, Long, Map<String, String>> inputFiles,
+            OutputFiles outputFiles) {
         byte[] envelope = envelope(contract, request);
         long started = System.nanoTime();
         long deadline = started + contract.timeout().toNanos();
@@ -395,7 +410,10 @@ public class ProcessAdapter {
                 if (call.cancelled) throw cancelled();
                 throw exitFailure(exitCode, stderr, stdout);
             }
-            return success(contract, request, stdout, exitCode, durationMs, callDir, stderr.truncated());
+            Output output = success(contract, request, stdout, exitCode, durationMs, callDir, stderr.truncated());
+            // 成功文件必须在本次目录回收前交接；旧入口不提供回调，行为不变。
+            if (outputFiles != null) outputFiles.persist(callDir, output, deadline);
+            return output;
         } catch (RuntimeException ex) {
             failure = ex;
             throw ex;
@@ -406,7 +424,7 @@ public class ProcessAdapter {
             String dumpDir = null;
             if (callDir != null && root != null && Files.exists(callDir)) {
                 // 准备阶段尚未启动 worker，不把已下载输入留入失败现场转储。
-                if (failure == null || keepFailedDirs <= 0 || preparingInputs) deleteCallDir(callDir);
+                if (failure == null || keepFailedDirs <= 0 || preparingInputs || outputFiles != null) deleteCallDir(callDir);
                 else dumpDir = retainFailureDump(root, callDir);
             }
             if (failure != null)

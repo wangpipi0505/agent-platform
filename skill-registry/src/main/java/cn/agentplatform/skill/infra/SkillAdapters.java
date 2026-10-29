@@ -18,6 +18,10 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.*;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.OpenOption;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -491,6 +495,12 @@ public class SkillAdapters {
      * 进程（Y-3 的教训）。租户 ID 来自已验签上下文，仅用于每租户并发配额；解析不出（系统级调用）就跳过该层。
      */
     Raw executeLocalProcess(Map<String, Object> contract, Map<String, Object> arguments, long callId) {
+        return executeLocalProcess(contract, arguments, callId, null, 0);
+    }
+
+    Raw executeLocalProcess(
+            Map<String, Object> contract, Map<String, Object> arguments,
+            long callId, String runId, long expectedAttempt) {
         if (process == null)
             throw new Failure("PARAM_ERROR", false, "当前进程未装配本地进程执行器，拒绝执行PROCESS技能");
         ProcessContract parsed = ProcessContract.parse(Json.tree(contract.get("process")));
@@ -509,6 +519,7 @@ public class SkillAdapters {
                 inputArtifacts = processInputReferences(parameters.remove("files"));
         }
         Map<String, String> inputs = inputArtifacts;
+        var outputRefs = new ArrayList<Map<String, Object>>();
         ProcessAdapter.Output executed =
                 process.execute(
                         parsed,
@@ -517,17 +528,180 @@ public class SkillAdapters {
                         tenantId,
                         inputs.isEmpty()
                                 ? null
-                                : (callDir, deadline) -> materializeProcessInputs(inputs, callDir, deadline));
+                                : (callDir, deadline) -> materializeProcessInputs(inputs, callDir, deadline),
+                        !parsed.filesEnabled() ? null
+                                : (callDir, output, deadline) -> outputRefs.addAll(persistProcessOutputs(
+                                        callDir, output.files(), runId, callId, expectedAttempt, deadline)));
+        Map<String, Object> processFact = executed.fact();
+        if (parsed.filesEnabled()) {
+            processFact = new LinkedHashMap<>(processFact);
+            processFact.remove("workDir");
+            processFact.remove("command");
+            processFact.put("runId", Objects.toString(runId, ""));
+            processFact.put("callId", callId);
+            processFact.put("attemptId", expectedAttempt);
+        }
         return new Raw(
                 executed.result(),
-                List.of(),
+                List.copyOf(outputRefs),
                 "本地进程返回成功，耗时 " + executed.durationMs() + "ms",
                 Json.tree(null),
                 "",
                 null,
-                executed.fact());
+                processFact);
     }
 
+
+    private record ProcessOutputFile(
+            String name, String contentType, long bytes, String sha256, FileChannel channel) {}
+
+    /** All descriptors and bytes are checked before the first artifact is registered. */
+    private List<Map<String, Object>> persistProcessOutputs(
+            Path callDir, JsonNode declared, String runId, long callId, long attempt, long deadline) {
+        if (declared.isEmpty()) return List.of();
+        if (runId == null || !runId.matches("r_[A-Za-z0-9_-]{1,125}") || callId < 1 || attempt < 1)
+            throw new PlatformException(502, "PROCESS_OUTPUT_INVALID", "输出文件缺少已核实的执行归属");
+        Actor.current();
+        if (artifacts == null)
+            throw new PlatformException(503, "ARTIFACT_STORAGE_UNAVAILABLE", "受控输出存储未装配");
+        if (declared.size() > 16) throw invalidProcessOutput();
+        var names = new HashSet<String>();
+        var paths = new HashSet<Path>();
+        var opened = new ArrayList<ProcessOutputFile>();
+        var refs = new ArrayList<Map<String, Object>>();
+        try {
+            long total = 0;
+            for (JsonNode item : declared) {
+                checkProcessFileDeadline(deadline);
+                if (!item.isObject() || !item.path("name").isTextual()
+                        || item.path("name").asText().isBlank()
+                        || !names.add(item.path("name").asText())
+                        || !item.path("path").isTextual()
+                        || !item.path("contentType").isTextual()
+                        || item.path("contentType").asText().isBlank()
+                        || item.path("contentType").asText().length() > 128
+                        || !item.path("bytes").isIntegralNumber() || !item.path("bytes").canConvertToLong()
+                        || !item.path("sha256").isTextual()
+                        || !item.path("sha256").asText().matches("[0-9a-f]{64}"))
+                    throw invalidProcessOutput();
+                long bytes = item.path("bytes").asLong();
+                if (bytes < 0 || bytes > ArtifactStore.MAX_ARTIFACT_BYTES
+                        || bytes > ArtifactStore.MAX_ARTIFACT_BYTES - total) throw invalidProcessOutput();
+                total += bytes;
+                String relative = item.path("path").asText().replace('\\', '/');
+                if (relative.startsWith("/") || relative.contains(":")) throw invalidProcessOutput();
+                for (String segment : relative.split("/", -1))
+                    if (segment.isEmpty() || ".".equals(segment) || "..".equals(segment))
+                        throw invalidProcessOutput();
+                Path path = callDir.resolve(relative).normalize();
+                if (!path.startsWith(callDir.resolve("output")) || !paths.add(path))
+                    throw invalidProcessOutput();
+                // Reject every ancestor link/reparse redirection, not only the final component.
+                rejectProcessOutputLinks(path);
+                var before = Files.readAttributes(path, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
+                if (!before.isRegularFile() || before.size() != bytes)
+                    throw invalidProcessOutput();
+                Set<OpenOption> options = new HashSet<>(Set.of(StandardOpenOption.READ, LinkOption.NOFOLLOW_LINKS));
+                if (!System.getProperty("os.name", "").toLowerCase(Locale.ROOT).contains("win"))
+                    throw invalidProcessOutput();
+                // JDK Windows CreateFile sharing flags: an active writer/replacer makes open fail.
+                options.add(com.sun.nio.file.ExtendedOpenOption.NOSHARE_WRITE);
+                options.add(com.sun.nio.file.ExtendedOpenOption.NOSHARE_DELETE);
+                FileChannel channel = FileChannel.open(path, options);
+                var file = new ProcessOutputFile(item.path("name").asText(),
+                        item.path("contentType").asText(), bytes, item.path("sha256").asText(), channel);
+                opened.add(file);
+                rejectProcessOutputLinks(path);
+                var after = Files.readAttributes(path, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
+                // JDK WindowsFileAttributes.fileKey() returns null; an optional key is only
+                // a supplementary check. Protection comes from the same guarded handle below.
+                if ((before.fileKey() != null && !Objects.equals(before.fileKey(), after.fileKey()))
+                        || after.size() != bytes
+                        || channel.size() != bytes) throw invalidProcessOutput();
+                MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                var buffer = java.nio.ByteBuffer.allocate(8192);
+                long actual = 0;
+                while (true) {
+                    checkProcessFileDeadline(deadline);
+                    int read = channel.read(buffer);
+                    if (read < 0) break;
+                    if (read == 0) continue;
+                    actual += read;
+                    if (actual > bytes) throw invalidProcessOutput();
+                    buffer.flip();
+                    digest.update(buffer);
+                    buffer.clear();
+                }
+                if (actual != bytes || !file.sha256().equals(HexFormat.of().formatHex(digest.digest())))
+                    throw invalidProcessOutput();
+                channel.position(0);
+            }
+            for (var file : opened) {
+                checkProcessFileDeadline(deadline);
+                // Upload reads the same protected handle that was verified above; no path re-open.
+                InputStream bytes = new FilterInputStream(Channels.newInputStream(file.channel())) {
+                    @Override public int read() throws IOException {
+                        checkProcessFileDeadline(deadline);
+                        int value = super.read();
+                        checkProcessFileDeadline(deadline);
+                        return value;
+                    }
+                    @Override public int read(byte[] buffer, int offset, int length) throws IOException {
+                        checkProcessFileDeadline(deadline);
+                        int count = in.read(buffer, offset, length);
+                        checkProcessFileDeadline(deadline);
+                        return count;
+                    }
+                };
+                var ref = new LinkedHashMap<>(artifacts.storeProcessOutput(
+                        file.contentType(), file.bytes(), file.sha256(), bytes, runId, callId, attempt));
+                ref.put("name", file.name());
+                refs.add(ref);
+            }
+            checkProcessFileDeadline(deadline);
+            return List.copyOf(refs);
+        } catch (RuntimeException failure) {
+            artifacts.discardProcessOutputs(refs, runId, callId, attempt, failure);
+            throw failure;
+        } catch (IOException failure) {
+            var rejected = invalidProcessOutput();
+            artifacts.discardProcessOutputs(refs, runId, callId, attempt, rejected);
+            throw rejected;
+        } catch (NoSuchAlgorithmException unavailable) {
+            var failure = new IllegalStateException("SHA-256 unavailable", unavailable);
+            artifacts.discardProcessOutputs(refs, runId, callId, attempt, failure);
+            throw failure;
+        } finally {
+            for (var file : opened) {
+                try {
+                    file.channel().close();
+                } catch (IOException ignored) {
+                    // All platform-owned handles are closed; no worker path is retried or reopened.
+                }
+            }
+        }
+    }
+
+    private static void rejectProcessOutputLinks(Path path) throws IOException {
+        Path cursor = path.getRoot();
+        if (cursor == null) throw invalidProcessOutput();
+        for (Path segment : path) {
+            cursor = cursor.resolve(segment);
+            var attributes = Files.readAttributes(cursor, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
+            if (attributes.isSymbolicLink() || attributes.isOther()
+                    || !cursor.toRealPath(LinkOption.NOFOLLOW_LINKS).equals(cursor.toRealPath()))
+                throw invalidProcessOutput();
+        }
+    }
+
+    private static PlatformException invalidProcessOutput() {
+        return new PlatformException(502, "PROCESS_OUTPUT_INVALID", "输出文件声明、归属或内容不符合受控文件约定");
+    }
+
+    private static void checkProcessFileDeadline(long deadline) {
+        if (Thread.currentThread().isInterrupted() || deadline - System.nanoTime() <= 0)
+            throw new PlatformException(504, "PROCESS_TIMEOUT", "文件交接超过执行时限或被中断");
+    }
 
     private static Map<String, String> processInputReferences(Object value) {
         if (!(value instanceof Map<?, ?> declared))

@@ -38,7 +38,7 @@ public class ProcessExecutionAdapter implements SkillAdapter {
         if (queryOnly)
             throw new SkillAdapters.Failure(
                     "RESULT_UNKNOWN", true, "本地进程没有可查询的原调用结果，禁止以对账名义重新执行");
-        return host.executeLocalProcess(contract, arguments, callId);
+        return host.executeLocalProcess(contract, arguments, callId, runId, expectedAttempt);
     }
 
     @Override
