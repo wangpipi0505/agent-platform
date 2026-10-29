@@ -1,0 +1,19 @@
+﻿{
+    "command":  "mvn.cmd",
+    "arguments":  [
+                      "-B",
+                      "-ntp",
+                      "-pl",
+                      "skill-registry",
+                      "test",
+                      "-Dmaven.repo.local=G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2",
+                      "-DargLine=-Xmx1024m -Djdk.net.unixdomain.tmpdir=V:/.local/tmp",
+                      "-Dsurefire.timeout=900",
+                      "-Dsurefire.failIfNoSpecifiedTests=true",
+                      "-Dtest=AlgorithmOffloadInterruptionTest"
+                  ],
+    "startedAt":  "2026-10-29T03:28:17.1581595+08:00",
+    "endedAt":  "2026-10-29T03:28:28.6139005+08:00",
+    "nativeExit":  0,
+    "state":  "COMMAND_RETURNED"
+}

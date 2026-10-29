@@ -1,0 +1,488 @@
+[
+  {
+    "stage": "PUT",
+    "diagnosticMode": "AFTER_RETURN_ONLY",
+    "peerEnteredCaptureOmitted": true,
+    "clientStageAtInterrupt": "UNKNOWN",
+    "joinReturnMs": 23,
+    "firstCheckSinceInterruptNanos": 23914200,
+    "firstQuiescent": true,
+    "originalBodyCompleted": true,
+    "samples": [
+      {
+        "phase": "before-peer-release",
+        "observedSinceOriginNanos": 69080300,
+        "workerAlive": false,
+        "workerFinallyInterrupted": true,
+        "inputClosed": 1,
+        "routes": 5,
+        "deletes": 0,
+        "peerReleaseRemaining": 1,
+        "peerFinishedRemaining": 1,
+        "lifecycle": {
+          "ioObservedSinceOriginNanos": 69713600,
+          "stages": 0,
+          "calls": 0,
+          "stopping": true,
+          "interrupted": true,
+          "stopNotConfirmed": false,
+          "cancelUntilSet": true,
+          "cancelUntilSinceInterruptNanos": 200093100,
+          "executorObservedSinceOriginNanos": 70198100,
+          "executorShutdown": true,
+          "executorTerminated": true,
+          "executorActive": 0,
+          "executorQueued": 0,
+          "quiescentAtSample": true
+        },
+        "failureGraph": [
+          {
+            "edge": "root",
+            "codes": [
+              "OUTPUT_ARTIFACT_UNAVAILABLE"
+            ],
+            "class": "java.lang.IllegalStateException",
+            "parent": -1
+          },
+          {
+            "edge": "cause",
+            "codes": [],
+            "class": "java.lang.InterruptedException",
+            "parent": 0
+          }
+        ],
+        "pg": {
+          "ready": 0,
+          "error": "OFFLOAD_FAILED",
+          "rows": 1,
+          "state": "CLEANUP_PENDING"
+        },
+        "observationErrorClass": null
+      },
+      {
+        "phase": "after-original-peer-wait",
+        "observedSinceOriginNanos": 165663100,
+        "workerAlive": false,
+        "workerFinallyInterrupted": true,
+        "inputClosed": 1,
+        "routes": 5,
+        "deletes": 0,
+        "peerReleaseRemaining": 0,
+        "peerFinishedRemaining": 0,
+        "lifecycle": {
+          "ioObservedSinceOriginNanos": 165710400,
+          "stages": 0,
+          "calls": 0,
+          "stopping": true,
+          "interrupted": true,
+          "stopNotConfirmed": false,
+          "cancelUntilSet": true,
+          "cancelUntilSinceInterruptNanos": 200093100,
+          "executorObservedSinceOriginNanos": 165733200,
+          "executorShutdown": true,
+          "executorTerminated": true,
+          "executorActive": 0,
+          "executorQueued": 0,
+          "quiescentAtSample": true
+        },
+        "failureGraph": [
+          {
+            "edge": "root",
+            "codes": [
+              "OUTPUT_ARTIFACT_UNAVAILABLE"
+            ],
+            "class": "java.lang.IllegalStateException",
+            "parent": -1
+          },
+          {
+            "edge": "cause",
+            "codes": [],
+            "class": "java.lang.InterruptedException",
+            "parent": 0
+          }
+        ],
+        "pg": {
+          "ready": 0,
+          "error": "OFFLOAD_FAILED",
+          "rows": 1,
+          "state": "CLEANUP_PENDING"
+        },
+        "observationErrorClass": null
+      },
+      {
+        "phase": "after-finally-peer-release",
+        "observedSinceOriginNanos": 454569100,
+        "workerAlive": false,
+        "workerFinallyInterrupted": true,
+        "inputClosed": 1,
+        "routes": 14,
+        "deletes": 3,
+        "peerReleaseRemaining": 0,
+        "peerFinishedRemaining": 0,
+        "lifecycle": {
+          "ioObservedSinceOriginNanos": 454605000,
+          "stages": 0,
+          "calls": 0,
+          "stopping": true,
+          "interrupted": true,
+          "stopNotConfirmed": false,
+          "cancelUntilSet": true,
+          "cancelUntilSinceInterruptNanos": 200093100,
+          "executorObservedSinceOriginNanos": 454626100,
+          "executorShutdown": true,
+          "executorTerminated": true,
+          "executorActive": 0,
+          "executorQueued": 0,
+          "quiescentAtSample": true
+        },
+        "failureGraph": [
+          {
+            "edge": "root",
+            "codes": [
+              "OUTPUT_ARTIFACT_UNAVAILABLE"
+            ],
+            "class": "java.lang.IllegalStateException",
+            "parent": -1
+          },
+          {
+            "edge": "cause",
+            "codes": [],
+            "class": "java.lang.InterruptedException",
+            "parent": 0
+          }
+        ],
+        "pg": {
+          "ready": 0,
+          "error": "OFFLOAD_FAILED",
+          "rows": 1,
+          "state": "OTHER"
+        },
+        "observationErrorClass": null
+      }
+    ]
+  },
+  {
+    "stage": "GET",
+    "diagnosticMode": "AFTER_RETURN_ONLY",
+    "peerEnteredCaptureOmitted": true,
+    "clientStageAtInterrupt": "UNKNOWN",
+    "joinReturnMs": 23,
+    "firstCheckSinceInterruptNanos": 23390300,
+    "firstQuiescent": true,
+    "originalBodyCompleted": true,
+    "samples": [
+      {
+        "phase": "before-peer-release",
+        "observedSinceOriginNanos": 68577700,
+        "workerAlive": false,
+        "workerFinallyInterrupted": true,
+        "inputClosed": 1,
+        "routes": 6,
+        "deletes": 0,
+        "peerReleaseRemaining": 1,
+        "peerFinishedRemaining": 1,
+        "lifecycle": {
+          "ioObservedSinceOriginNanos": 68629400,
+          "stages": 0,
+          "calls": 0,
+          "stopping": true,
+          "interrupted": true,
+          "stopNotConfirmed": false,
+          "cancelUntilSet": true,
+          "cancelUntilSinceInterruptNanos": 200040000,
+          "executorObservedSinceOriginNanos": 68655400,
+          "executorShutdown": true,
+          "executorTerminated": true,
+          "executorActive": 0,
+          "executorQueued": 0,
+          "quiescentAtSample": true
+        },
+        "failureGraph": [
+          {
+            "edge": "root",
+            "codes": [
+              "OUTPUT_ARTIFACT_UNAVAILABLE"
+            ],
+            "class": "java.lang.IllegalStateException",
+            "parent": -1
+          },
+          {
+            "edge": "cause",
+            "codes": [],
+            "class": "java.lang.InterruptedException",
+            "parent": 0
+          }
+        ],
+        "pg": {
+          "ready": 0,
+          "error": "OFFLOAD_FAILED",
+          "rows": 1,
+          "state": "CLEANUP_PENDING"
+        },
+        "observationErrorClass": null
+      },
+      {
+        "phase": "after-original-peer-wait",
+        "observedSinceOriginNanos": 152221700,
+        "workerAlive": false,
+        "workerFinallyInterrupted": true,
+        "inputClosed": 1,
+        "routes": 6,
+        "deletes": 0,
+        "peerReleaseRemaining": 0,
+        "peerFinishedRemaining": 0,
+        "lifecycle": {
+          "ioObservedSinceOriginNanos": 152279100,
+          "stages": 0,
+          "calls": 0,
+          "stopping": true,
+          "interrupted": true,
+          "stopNotConfirmed": false,
+          "cancelUntilSet": true,
+          "cancelUntilSinceInterruptNanos": 200040000,
+          "executorObservedSinceOriginNanos": 152305000,
+          "executorShutdown": true,
+          "executorTerminated": true,
+          "executorActive": 0,
+          "executorQueued": 0,
+          "quiescentAtSample": true
+        },
+        "failureGraph": [
+          {
+            "edge": "root",
+            "codes": [
+              "OUTPUT_ARTIFACT_UNAVAILABLE"
+            ],
+            "class": "java.lang.IllegalStateException",
+            "parent": -1
+          },
+          {
+            "edge": "cause",
+            "codes": [],
+            "class": "java.lang.InterruptedException",
+            "parent": 0
+          }
+        ],
+        "pg": {
+          "ready": 0,
+          "error": "OFFLOAD_FAILED",
+          "rows": 1,
+          "state": "CLEANUP_PENDING"
+        },
+        "observationErrorClass": null
+      },
+      {
+        "phase": "after-finally-peer-release",
+        "observedSinceOriginNanos": 416426400,
+        "workerAlive": false,
+        "workerFinallyInterrupted": true,
+        "inputClosed": 1,
+        "routes": 15,
+        "deletes": 3,
+        "peerReleaseRemaining": 0,
+        "peerFinishedRemaining": 0,
+        "lifecycle": {
+          "ioObservedSinceOriginNanos": 416472000,
+          "stages": 0,
+          "calls": 0,
+          "stopping": true,
+          "interrupted": true,
+          "stopNotConfirmed": false,
+          "cancelUntilSet": true,
+          "cancelUntilSinceInterruptNanos": 200040000,
+          "executorObservedSinceOriginNanos": 416496900,
+          "executorShutdown": true,
+          "executorTerminated": true,
+          "executorActive": 0,
+          "executorQueued": 0,
+          "quiescentAtSample": true
+        },
+        "failureGraph": [
+          {
+            "edge": "root",
+            "codes": [
+              "OUTPUT_ARTIFACT_UNAVAILABLE"
+            ],
+            "class": "java.lang.IllegalStateException",
+            "parent": -1
+          },
+          {
+            "edge": "cause",
+            "codes": [],
+            "class": "java.lang.InterruptedException",
+            "parent": 0
+          }
+        ],
+        "pg": {
+          "ready": 0,
+          "error": "OFFLOAD_FAILED",
+          "rows": 1,
+          "state": "OTHER"
+        },
+        "observationErrorClass": null
+      }
+    ]
+  },
+  {
+    "stage": "GET_BODY",
+    "diagnosticMode": "AFTER_RETURN_ONLY",
+    "peerEnteredCaptureOmitted": true,
+    "clientStageAtInterrupt": "UNKNOWN",
+    "joinReturnMs": 22,
+    "firstCheckSinceInterruptNanos": 22528400,
+    "firstQuiescent": true,
+    "originalBodyCompleted": true,
+    "samples": [
+      {
+        "phase": "before-peer-release",
+        "observedSinceOriginNanos": 67694200,
+        "workerAlive": false,
+        "workerFinallyInterrupted": true,
+        "inputClosed": 1,
+        "routes": 6,
+        "deletes": 0,
+        "peerReleaseRemaining": 1,
+        "peerFinishedRemaining": 1,
+        "lifecycle": {
+          "ioObservedSinceOriginNanos": 67753900,
+          "stages": 0,
+          "calls": 0,
+          "stopping": true,
+          "interrupted": true,
+          "stopNotConfirmed": false,
+          "cancelUntilSet": true,
+          "cancelUntilSinceInterruptNanos": 200055000,
+          "executorObservedSinceOriginNanos": 67781300,
+          "executorShutdown": true,
+          "executorTerminated": true,
+          "executorActive": 0,
+          "executorQueued": 0,
+          "quiescentAtSample": true
+        },
+        "failureGraph": [
+          {
+            "edge": "root",
+            "codes": [
+              "OUTPUT_ARTIFACT_UNAVAILABLE"
+            ],
+            "class": "java.lang.IllegalStateException",
+            "parent": -1
+          },
+          {
+            "edge": "cause",
+            "codes": [],
+            "class": "java.lang.InterruptedException",
+            "parent": 0
+          }
+        ],
+        "pg": {
+          "ready": 0,
+          "error": "OFFLOAD_FAILED",
+          "rows": 1,
+          "state": "CLEANUP_PENDING"
+        },
+        "observationErrorClass": null
+      },
+      {
+        "phase": "after-original-peer-wait",
+        "observedSinceOriginNanos": 152553000,
+        "workerAlive": false,
+        "workerFinallyInterrupted": true,
+        "inputClosed": 1,
+        "routes": 6,
+        "deletes": 0,
+        "peerReleaseRemaining": 0,
+        "peerFinishedRemaining": 0,
+        "lifecycle": {
+          "ioObservedSinceOriginNanos": 152599200,
+          "stages": 0,
+          "calls": 0,
+          "stopping": true,
+          "interrupted": true,
+          "stopNotConfirmed": false,
+          "cancelUntilSet": true,
+          "cancelUntilSinceInterruptNanos": 200055000,
+          "executorObservedSinceOriginNanos": 152622600,
+          "executorShutdown": true,
+          "executorTerminated": true,
+          "executorActive": 0,
+          "executorQueued": 0,
+          "quiescentAtSample": true
+        },
+        "failureGraph": [
+          {
+            "edge": "root",
+            "codes": [
+              "OUTPUT_ARTIFACT_UNAVAILABLE"
+            ],
+            "class": "java.lang.IllegalStateException",
+            "parent": -1
+          },
+          {
+            "edge": "cause",
+            "codes": [],
+            "class": "java.lang.InterruptedException",
+            "parent": 0
+          }
+        ],
+        "pg": {
+          "ready": 0,
+          "error": "OFFLOAD_FAILED",
+          "rows": 1,
+          "state": "CLEANUP_PENDING"
+        },
+        "observationErrorClass": null
+      },
+      {
+        "phase": "after-finally-peer-release",
+        "observedSinceOriginNanos": 422860500,
+        "workerAlive": false,
+        "workerFinallyInterrupted": true,
+        "inputClosed": 1,
+        "routes": 15,
+        "deletes": 3,
+        "peerReleaseRemaining": 0,
+        "peerFinishedRemaining": 0,
+        "lifecycle": {
+          "ioObservedSinceOriginNanos": 422901000,
+          "stages": 0,
+          "calls": 0,
+          "stopping": true,
+          "interrupted": true,
+          "stopNotConfirmed": false,
+          "cancelUntilSet": true,
+          "cancelUntilSinceInterruptNanos": 200055000,
+          "executorObservedSinceOriginNanos": 422923200,
+          "executorShutdown": true,
+          "executorTerminated": true,
+          "executorActive": 0,
+          "executorQueued": 0,
+          "quiescentAtSample": true
+        },
+        "failureGraph": [
+          {
+            "edge": "root",
+            "codes": [
+              "OUTPUT_ARTIFACT_UNAVAILABLE"
+            ],
+            "class": "java.lang.IllegalStateException",
+            "parent": -1
+          },
+          {
+            "edge": "cause",
+            "codes": [],
+            "class": "java.lang.InterruptedException",
+            "parent": 0
+          }
+        ],
+        "pg": {
+          "ready": 0,
+          "error": "OFFLOAD_FAILED",
+          "rows": 1,
+          "state": "OTHER"
+        },
+        "observationErrorClass": null
+      }
+    ]
+  }
+]

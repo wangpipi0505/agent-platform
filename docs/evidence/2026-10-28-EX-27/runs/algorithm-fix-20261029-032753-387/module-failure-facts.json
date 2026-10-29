@@ -1,0 +1,25 @@
+{
+  "analysis": "FILE_XML_ONLY_AFTER_ACTUAL_WINDOW_RETURNED",
+  "classname": "cn.agentplatform.skill.application.SkillExecutionTest",
+  "method": "automaticOutboxRecoversTransientCallbackWithoutRepeatingBusiness",
+  "baselineStatus": "passed",
+  "originalEx03FullStatus": "passed",
+  "currentStatus": "failure",
+  "failureType": "org.opentest4j.AssertionFailedError",
+  "safeAssertion": "expected: <skill-tester> but was: <task-result-tester>",
+  "projectAssertionFrame": "SkillExecutionTest.java:757",
+  "projectCallerFrame": "SkillExecutionTest.java:767",
+  "observedCallPath": [
+    "SkillOutbox.drainTenant",
+    "SkillExecution.retry",
+    "SkillExecution.deliver",
+    "mock SkillClients.post"
+  ],
+  "xmlSha256": "9284D75ED367C3A4BF9C9273D9034F9D852B2C323377ABBC919263F35C4E63D9",
+  "sourceSha256": "14AE4EEA65C05EBEEBDBDF16D3FC4733D4613FDEC20EE7644DF56DB83627194B",
+  "sourceAmongOther148Unchanged": true,
+  "causeEstablished": false,
+  "productFailureClaimed": false,
+  "noRerun": true,
+  "noSourceFix": true
+}

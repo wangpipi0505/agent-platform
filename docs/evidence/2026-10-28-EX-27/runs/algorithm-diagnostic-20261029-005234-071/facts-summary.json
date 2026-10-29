@@ -1,0 +1,605 @@
+[
+  {
+    "stage": "PUT",
+    "joinReturnMs": 30,
+    "firstCheckSinceInterruptNanos": 30986500,
+    "firstQuiescent": true,
+    "originalBodyCompleted": true,
+    "samples": [
+      {
+        "phase": "peer-entered",
+        "workerAlive": true,
+        "workerFinallyInterrupted": false,
+        "inputClosed": 1,
+        "routes": 5,
+        "deletes": 0,
+        "peerReleaseRemaining": 1,
+        "peerFinishedRemaining": 1,
+        "workerStack": {
+          "frames": [
+            "java.util.concurrent.CompletableFuture#waitingGet:1898",
+            "java.util.concurrent.CompletableFuture#get:2072",
+            "cn.agentplatform.skill.infra.ArtifactStore$AlgorithmIo#await:179",
+            "cn.agentplatform.skill.infra.ArtifactStore#offload:379",
+            "cn.agentplatform.skill.infra.AlgorithmOffloadInterruptionTest#lambda$interruptedSdkWaitStopsOriginalOperationBeforeReturningAndNeverRacesCleanup$0:71"
+          ],
+          "frameScanLimit": 64,
+          "frameOutputLimit": 16,
+          "frameScanTruncated": false,
+          "bodyReadFrameObserved": false,
+          "algorithmAwaitFrameObserved": true
+        },
+        "lifecycle": {
+          "ioObservedSinceOriginNanos": 31869100,
+          "stages": 1,
+          "calls": 1,
+          "stopping": false,
+          "interrupted": false,
+          "stopNotConfirmed": false,
+          "cancelUntilSet": false,
+          "executorObservedSinceOriginNanos": 33543700,
+          "executorShutdown": false,
+          "executorTerminated": false,
+          "executorActive": 1,
+          "executorQueued": 0,
+          "quiescentAtSample": false
+        },
+        "failureGraph": [],
+        "pg": null,
+        "observationErrorClass": null
+      },
+      {
+        "phase": "before-peer-release",
+        "workerAlive": false,
+        "workerFinallyInterrupted": true,
+        "inputClosed": 1,
+        "routes": 5,
+        "deletes": 0,
+        "peerReleaseRemaining": 1,
+        "peerFinishedRemaining": 1,
+        "workerStack": null,
+        "lifecycle": {
+          "ioObservedSinceOriginNanos": 89588000,
+          "stages": 0,
+          "calls": 0,
+          "stopping": true,
+          "interrupted": true,
+          "stopNotConfirmed": false,
+          "cancelUntilSet": true,
+          "cancelUntilSinceInterruptNanos": 200056600,
+          "executorObservedSinceOriginNanos": 89618100,
+          "executorShutdown": true,
+          "executorTerminated": true,
+          "executorActive": 0,
+          "executorQueued": 0,
+          "quiescentAtSample": true
+        },
+        "failureGraph": [
+          {
+            "parent": -1,
+            "class": "java.lang.IllegalStateException",
+            "codes": [
+              "OUTPUT_ARTIFACT_UNAVAILABLE"
+            ],
+            "edge": "root"
+          },
+          {
+            "parent": 0,
+            "class": "java.lang.InterruptedException",
+            "codes": [],
+            "edge": "cause"
+          }
+        ],
+        "pg": {
+          "state": "CLEANUP_PENDING",
+          "rows": 1,
+          "error": "OFFLOAD_FAILED",
+          "ready": 0
+        },
+        "observationErrorClass": null
+      },
+      {
+        "phase": "after-original-peer-wait",
+        "workerAlive": false,
+        "workerFinallyInterrupted": true,
+        "inputClosed": 1,
+        "routes": 5,
+        "deletes": 0,
+        "peerReleaseRemaining": 0,
+        "peerFinishedRemaining": 0,
+        "workerStack": null,
+        "lifecycle": {
+          "ioObservedSinceOriginNanos": 191961000,
+          "stages": 0,
+          "calls": 0,
+          "stopping": true,
+          "interrupted": true,
+          "stopNotConfirmed": false,
+          "cancelUntilSet": true,
+          "cancelUntilSinceInterruptNanos": 200056600,
+          "executorObservedSinceOriginNanos": 191990700,
+          "executorShutdown": true,
+          "executorTerminated": true,
+          "executorActive": 0,
+          "executorQueued": 0,
+          "quiescentAtSample": true
+        },
+        "failureGraph": [
+          {
+            "parent": -1,
+            "class": "java.lang.IllegalStateException",
+            "codes": [
+              "OUTPUT_ARTIFACT_UNAVAILABLE"
+            ],
+            "edge": "root"
+          },
+          {
+            "parent": 0,
+            "class": "java.lang.InterruptedException",
+            "codes": [],
+            "edge": "cause"
+          }
+        ],
+        "pg": {
+          "state": "CLEANUP_PENDING",
+          "rows": 1,
+          "error": "OFFLOAD_FAILED",
+          "ready": 0
+        },
+        "observationErrorClass": null
+      },
+      {
+        "phase": "after-finally-peer-release",
+        "workerAlive": false,
+        "workerFinallyInterrupted": true,
+        "inputClosed": 1,
+        "routes": 14,
+        "deletes": 3,
+        "peerReleaseRemaining": 0,
+        "peerFinishedRemaining": 0,
+        "workerStack": null,
+        "lifecycle": {
+          "ioObservedSinceOriginNanos": 513685700,
+          "stages": 0,
+          "calls": 0,
+          "stopping": true,
+          "interrupted": true,
+          "stopNotConfirmed": false,
+          "cancelUntilSet": true,
+          "cancelUntilSinceInterruptNanos": 200056600,
+          "executorObservedSinceOriginNanos": 513708100,
+          "executorShutdown": true,
+          "executorTerminated": true,
+          "executorActive": 0,
+          "executorQueued": 0,
+          "quiescentAtSample": true
+        },
+        "failureGraph": [
+          {
+            "parent": -1,
+            "class": "java.lang.IllegalStateException",
+            "codes": [
+              "OUTPUT_ARTIFACT_UNAVAILABLE"
+            ],
+            "edge": "root"
+          },
+          {
+            "parent": 0,
+            "class": "java.lang.InterruptedException",
+            "codes": [],
+            "edge": "cause"
+          }
+        ],
+        "pg": {
+          "state": "OTHER",
+          "rows": 1,
+          "error": "OFFLOAD_FAILED",
+          "ready": 0
+        },
+        "observationErrorClass": null
+      }
+    ]
+  },
+  {
+    "stage": "GET",
+    "joinReturnMs": 26,
+    "firstCheckSinceInterruptNanos": 26406400,
+    "firstQuiescent": true,
+    "originalBodyCompleted": true,
+    "samples": [
+      {
+        "phase": "peer-entered",
+        "workerAlive": true,
+        "workerFinallyInterrupted": false,
+        "inputClosed": 1,
+        "routes": 6,
+        "deletes": 0,
+        "peerReleaseRemaining": 1,
+        "peerFinishedRemaining": 1,
+        "workerStack": {
+          "frames": [
+            "java.util.concurrent.CompletableFuture#waitingGet:1898",
+            "java.util.concurrent.CompletableFuture#get:2072",
+            "cn.agentplatform.skill.infra.ArtifactStore$AlgorithmIo#await:179",
+            "cn.agentplatform.skill.infra.ArtifactStore#offload:389",
+            "cn.agentplatform.skill.infra.AlgorithmOffloadInterruptionTest#lambda$interruptedSdkWaitStopsOriginalOperationBeforeReturningAndNeverRacesCleanup$0:71"
+          ],
+          "frameScanLimit": 64,
+          "frameOutputLimit": 16,
+          "frameScanTruncated": false,
+          "bodyReadFrameObserved": false,
+          "algorithmAwaitFrameObserved": true
+        },
+        "lifecycle": {
+          "ioObservedSinceOriginNanos": 26534600,
+          "stages": 1,
+          "calls": 1,
+          "stopping": false,
+          "interrupted": false,
+          "stopNotConfirmed": false,
+          "cancelUntilSet": false,
+          "executorObservedSinceOriginNanos": 26561500,
+          "executorShutdown": false,
+          "executorTerminated": false,
+          "executorActive": 1,
+          "executorQueued": 0,
+          "quiescentAtSample": false
+        },
+        "failureGraph": [],
+        "pg": null,
+        "observationErrorClass": null
+      },
+      {
+        "phase": "before-peer-release",
+        "workerAlive": false,
+        "workerFinallyInterrupted": true,
+        "inputClosed": 1,
+        "routes": 6,
+        "deletes": 0,
+        "peerReleaseRemaining": 1,
+        "peerFinishedRemaining": 1,
+        "workerStack": null,
+        "lifecycle": {
+          "ioObservedSinceOriginNanos": 76807100,
+          "stages": 0,
+          "calls": 0,
+          "stopping": true,
+          "interrupted": true,
+          "stopNotConfirmed": false,
+          "cancelUntilSet": true,
+          "cancelUntilSinceInterruptNanos": 200040100,
+          "executorObservedSinceOriginNanos": 76830500,
+          "executorShutdown": true,
+          "executorTerminated": true,
+          "executorActive": 0,
+          "executorQueued": 0,
+          "quiescentAtSample": true
+        },
+        "failureGraph": [
+          {
+            "parent": -1,
+            "class": "java.lang.IllegalStateException",
+            "codes": [
+              "OUTPUT_ARTIFACT_UNAVAILABLE"
+            ],
+            "edge": "root"
+          },
+          {
+            "parent": 0,
+            "class": "java.lang.InterruptedException",
+            "codes": [],
+            "edge": "cause"
+          }
+        ],
+        "pg": {
+          "state": "CLEANUP_PENDING",
+          "rows": 1,
+          "error": "OFFLOAD_FAILED",
+          "ready": 0
+        },
+        "observationErrorClass": null
+      },
+      {
+        "phase": "after-original-peer-wait",
+        "workerAlive": false,
+        "workerFinallyInterrupted": true,
+        "inputClosed": 1,
+        "routes": 6,
+        "deletes": 0,
+        "peerReleaseRemaining": 0,
+        "peerFinishedRemaining": 0,
+        "workerStack": null,
+        "lifecycle": {
+          "ioObservedSinceOriginNanos": 162510100,
+          "stages": 0,
+          "calls": 0,
+          "stopping": true,
+          "interrupted": true,
+          "stopNotConfirmed": false,
+          "cancelUntilSet": true,
+          "cancelUntilSinceInterruptNanos": 200040100,
+          "executorObservedSinceOriginNanos": 162533800,
+          "executorShutdown": true,
+          "executorTerminated": true,
+          "executorActive": 0,
+          "executorQueued": 0,
+          "quiescentAtSample": true
+        },
+        "failureGraph": [
+          {
+            "parent": -1,
+            "class": "java.lang.IllegalStateException",
+            "codes": [
+              "OUTPUT_ARTIFACT_UNAVAILABLE"
+            ],
+            "edge": "root"
+          },
+          {
+            "parent": 0,
+            "class": "java.lang.InterruptedException",
+            "codes": [],
+            "edge": "cause"
+          }
+        ],
+        "pg": {
+          "state": "CLEANUP_PENDING",
+          "rows": 1,
+          "error": "OFFLOAD_FAILED",
+          "ready": 0
+        },
+        "observationErrorClass": null
+      },
+      {
+        "phase": "after-finally-peer-release",
+        "workerAlive": false,
+        "workerFinallyInterrupted": true,
+        "inputClosed": 1,
+        "routes": 15,
+        "deletes": 3,
+        "peerReleaseRemaining": 0,
+        "peerFinishedRemaining": 0,
+        "workerStack": null,
+        "lifecycle": {
+          "ioObservedSinceOriginNanos": 459364300,
+          "stages": 0,
+          "calls": 0,
+          "stopping": true,
+          "interrupted": true,
+          "stopNotConfirmed": false,
+          "cancelUntilSet": true,
+          "cancelUntilSinceInterruptNanos": 200040100,
+          "executorObservedSinceOriginNanos": 459391300,
+          "executorShutdown": true,
+          "executorTerminated": true,
+          "executorActive": 0,
+          "executorQueued": 0,
+          "quiescentAtSample": true
+        },
+        "failureGraph": [
+          {
+            "parent": -1,
+            "class": "java.lang.IllegalStateException",
+            "codes": [
+              "OUTPUT_ARTIFACT_UNAVAILABLE"
+            ],
+            "edge": "root"
+          },
+          {
+            "parent": 0,
+            "class": "java.lang.InterruptedException",
+            "codes": [],
+            "edge": "cause"
+          }
+        ],
+        "pg": {
+          "state": "OTHER",
+          "rows": 1,
+          "error": "OFFLOAD_FAILED",
+          "ready": 0
+        },
+        "observationErrorClass": null
+      }
+    ]
+  },
+  {
+    "stage": "GET_BODY",
+    "joinReturnMs": 23,
+    "firstCheckSinceInterruptNanos": 23946200,
+    "firstQuiescent": true,
+    "originalBodyCompleted": true,
+    "samples": [
+      {
+        "phase": "peer-entered",
+        "workerAlive": true,
+        "workerFinallyInterrupted": false,
+        "inputClosed": 1,
+        "routes": 6,
+        "deletes": 0,
+        "peerReleaseRemaining": 1,
+        "peerFinishedRemaining": 1,
+        "workerStack": {
+          "frames": [
+            "java.util.concurrent.CompletableFuture#waitingGet:1898",
+            "java.util.concurrent.CompletableFuture#get:2072",
+            "cn.agentplatform.skill.infra.ArtifactStore$AlgorithmIo#await:179",
+            "cn.agentplatform.skill.infra.ArtifactStore#offload:389",
+            "cn.agentplatform.skill.infra.AlgorithmOffloadInterruptionTest#lambda$interruptedSdkWaitStopsOriginalOperationBeforeReturningAndNeverRacesCleanup$0:71"
+          ],
+          "frameScanLimit": 64,
+          "frameOutputLimit": 16,
+          "frameScanTruncated": false,
+          "bodyReadFrameObserved": false,
+          "algorithmAwaitFrameObserved": true
+        },
+        "lifecycle": {
+          "ioObservedSinceOriginNanos": 27717800,
+          "stages": 0,
+          "calls": 1,
+          "stopping": false,
+          "interrupted": false,
+          "stopNotConfirmed": false,
+          "cancelUntilSet": false,
+          "executorObservedSinceOriginNanos": 27742600,
+          "executorShutdown": false,
+          "executorTerminated": false,
+          "executorActive": 0,
+          "executorQueued": 0,
+          "quiescentAtSample": false
+        },
+        "failureGraph": [],
+        "pg": null,
+        "observationErrorClass": null
+      },
+      {
+        "phase": "before-peer-release",
+        "workerAlive": false,
+        "workerFinallyInterrupted": true,
+        "inputClosed": 1,
+        "routes": 6,
+        "deletes": 0,
+        "peerReleaseRemaining": 1,
+        "peerFinishedRemaining": 1,
+        "workerStack": null,
+        "lifecycle": {
+          "ioObservedSinceOriginNanos": 73973300,
+          "stages": 0,
+          "calls": 0,
+          "stopping": true,
+          "interrupted": true,
+          "stopNotConfirmed": false,
+          "cancelUntilSet": true,
+          "cancelUntilSinceInterruptNanos": 200233900,
+          "executorObservedSinceOriginNanos": 74055000,
+          "executorShutdown": true,
+          "executorTerminated": true,
+          "executorActive": 0,
+          "executorQueued": 0,
+          "quiescentAtSample": true
+        },
+        "failureGraph": [
+          {
+            "parent": -1,
+            "class": "java.lang.IllegalStateException",
+            "codes": [
+              "OUTPUT_ARTIFACT_UNAVAILABLE"
+            ],
+            "edge": "root"
+          },
+          {
+            "parent": 0,
+            "class": "java.io.InterruptedIOException",
+            "codes": [],
+            "edge": "cause"
+          }
+        ],
+        "pg": {
+          "state": "CLEANUP_PENDING",
+          "rows": 1,
+          "error": "OFFLOAD_FAILED",
+          "ready": 0
+        },
+        "observationErrorClass": null
+      },
+      {
+        "phase": "after-original-peer-wait",
+        "workerAlive": false,
+        "workerFinallyInterrupted": true,
+        "inputClosed": 1,
+        "routes": 6,
+        "deletes": 0,
+        "peerReleaseRemaining": 0,
+        "peerFinishedRemaining": 0,
+        "workerStack": null,
+        "lifecycle": {
+          "ioObservedSinceOriginNanos": 158955100,
+          "stages": 0,
+          "calls": 0,
+          "stopping": true,
+          "interrupted": true,
+          "stopNotConfirmed": false,
+          "cancelUntilSet": true,
+          "cancelUntilSinceInterruptNanos": 200233900,
+          "executorObservedSinceOriginNanos": 158989300,
+          "executorShutdown": true,
+          "executorTerminated": true,
+          "executorActive": 0,
+          "executorQueued": 0,
+          "quiescentAtSample": true
+        },
+        "failureGraph": [
+          {
+            "parent": -1,
+            "class": "java.lang.IllegalStateException",
+            "codes": [
+              "OUTPUT_ARTIFACT_UNAVAILABLE"
+            ],
+            "edge": "root"
+          },
+          {
+            "parent": 0,
+            "class": "java.io.InterruptedIOException",
+            "codes": [],
+            "edge": "cause"
+          }
+        ],
+        "pg": {
+          "state": "CLEANUP_PENDING",
+          "rows": 1,
+          "error": "OFFLOAD_FAILED",
+          "ready": 0
+        },
+        "observationErrorClass": null
+      },
+      {
+        "phase": "after-finally-peer-release",
+        "workerAlive": false,
+        "workerFinallyInterrupted": true,
+        "inputClosed": 1,
+        "routes": 15,
+        "deletes": 3,
+        "peerReleaseRemaining": 0,
+        "peerFinishedRemaining": 0,
+        "workerStack": null,
+        "lifecycle": {
+          "ioObservedSinceOriginNanos": 454151600,
+          "stages": 0,
+          "calls": 0,
+          "stopping": true,
+          "interrupted": true,
+          "stopNotConfirmed": false,
+          "cancelUntilSet": true,
+          "cancelUntilSinceInterruptNanos": 200233900,
+          "executorObservedSinceOriginNanos": 454173900,
+          "executorShutdown": true,
+          "executorTerminated": true,
+          "executorActive": 0,
+          "executorQueued": 0,
+          "quiescentAtSample": true
+        },
+        "failureGraph": [
+          {
+            "parent": -1,
+            "class": "java.lang.IllegalStateException",
+            "codes": [
+              "OUTPUT_ARTIFACT_UNAVAILABLE"
+            ],
+            "edge": "root"
+          },
+          {
+            "parent": 0,
+            "class": "java.io.InterruptedIOException",
+            "codes": [],
+            "edge": "cause"
+          }
+        ],
+        "pg": {
+          "state": "OTHER",
+          "rows": 1,
+          "error": "OFFLOAD_FAILED",
+          "ready": 0
+        },
+        "observationErrorClass": null
+      }
+    ]
+  }
+]

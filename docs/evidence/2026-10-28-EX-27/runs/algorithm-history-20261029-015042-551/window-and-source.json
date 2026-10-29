@@ -1,0 +1,40 @@
+{
+  "phase": "SOURCE_AND_ORIGINAL_EVIDENCE_ONLY",
+  "currentHead": "ae2d1860071c9e49d07e80ecace331e41f898c9d",
+  "originalNativeStart": "2026-10-28T23:49:19.2381126+08:00",
+  "originalNativeEnd": "2026-10-28T23:52:48.9248179+08:00",
+  "queryMarginSeconds": 0,
+  "xmlTimestampPresent": false,
+  "xmlSuiteSeconds": "2.35",
+  "xmlUserTimezone": "Asia/Shanghai",
+  "xmlSha256": "4C2EC4084E8918C27FDA2A20A0BF06721764E5AE7D7E7C5F7C3504E76E491F36",
+  "xmlRecordedMtime": "2026-10-28T23:51:29.0757423+08:00",
+  "caseOrder": [
+    {
+      "method": "unconfirmedStopRetainsOriginalFutureUntilActualFiniteSourceExit",
+      "seconds": "0.543",
+      "status": "PASS"
+    },
+    {
+      "method": "interruptedSdkWaitStopsOriginalOperationBeforeReturningAndNeverRacesCleanup(String)[1]",
+      "seconds": "0.637",
+      "status": "PASS"
+    },
+    {
+      "method": "interruptedSdkWaitStopsOriginalOperationBeforeReturningAndNeverRacesCleanup(String)[2]",
+      "seconds": "0.638",
+      "status": "PASS"
+    },
+    {
+      "method": "interruptedSdkWaitStopsOriginalOperationBeforeReturningAndNeverRacesCleanup(String)[3]",
+      "seconds": "0.455",
+      "status": "FAIL"
+    }
+  ],
+  "queryPrefix": "algorithm_interrupt_",
+  "maxBusinessRows": 13,
+  "expectedGroups": 3,
+  "expectedMaximumRows": 9,
+  "anonymousHash": "PostgreSQL md5(tenant_id), no tenant or call value output",
+  "sourceStoreSha256": "9DEB51566206D548110F1F6B5AAAB466619EB80D43E8D30B67F11B7E27B7541D"
+}

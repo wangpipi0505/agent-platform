@@ -1,0 +1,39 @@
+{
+    "phase":  "STATIC_PREPARATION_ONLY_NOT_COMPILED_OR_RUN",
+    "generatedAt":  "2026-10-29T01:25:30.9265123+08:00",
+    "powershellVersion":  "5.1.26100.9711",
+    "head":  "ae2d1860071c9e49d07e80ecace331e41f898c9d",
+    "sourceSha256":  "155DD67F8F256DB2227DDA4430B1FE1D99C3CB7127F1AE0B54E02D0ADB96AEB1",
+    "originalAssertionCount":  25,
+    "candidateAssertionCount":  25,
+    "originalWaitTokenCount":  15,
+    "candidateWaitTokenCount":  15,
+    "testDeclarations":  [
+                             "interruptedSdkWaitStopsOriginalOperationBeforeReturningAndNeverRacesCleanup",
+                             "unconfirmedStopRetainsOriginalFutureUntilActualFiniteSourceExit"
+                         ],
+    "reportIdentities":  [
+                             "interruptedSdkWaitStopsOriginalOperationBeforeReturningAndNeverRacesCleanup(String)[1]:PUT",
+                             "interruptedSdkWaitStopsOriginalOperationBeforeReturningAndNeverRacesCleanup(String)[2]:GET",
+                             "interruptedSdkWaitStopsOriginalOperationBeforeReturningAndNeverRacesCleanup(String)[3]:GET_BODY",
+                             "unconfirmedStopRetainsOriginalFutureUntilActualFiniteSourceExit"
+                         ],
+    "checks":  {
+                   "headStable":  true,
+                   "originalAssertionsIdenticalAfterFirstCheckAlias":  true,
+                   "originalAssertionCountNonzero":  true,
+                   "originalWaitTokensUnchanged":  true,
+                   "originalTestMethodsUnchanged":  true,
+                   "exactlyTwoTestDeclarations":  true,
+                   "originalParameterOrderUnchanged":  true,
+                   "unconfirmedVectorUnchanged":  true,
+                   "finitePeerUnchanged":  true,
+                   "noDisabledOrAssumptionAdded":  true,
+                   "explicitDefaultOffDiagnostic":  true,
+                   "firstBooleanCapturedBeforeAssert":  true,
+                   "gitDiffCheckPassed":  true
+               },
+    "allStaticChecksPassed":  true,
+    "compiled":  false,
+    "javaMavenPgHttpRun":  false
+}
