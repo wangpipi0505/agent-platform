@@ -485,7 +485,8 @@ public class SkillExecution {
                 contract,
                 number(request, "callId"),
                 text(request, "runId"),
-                source.get("run_id").toString());
+                source.get("run_id").toString(),
+                number(request, "attemptId"));
     }
 
     /** 受控复现只复制已核实工件；不接受客户端提供结果/对象键，不执行技能业务适配器。 */
@@ -542,7 +543,7 @@ public class SkillExecution {
             throw error(403, "REPRODUCTION_SCOPE_CHANGED", "当前权限范围与历史结果不同");
         return Map.of(
                 "fileRefs",
-                adapters.recorded(recorded, contract, call, runId, source.get("run_id").toString())
+                adapters.recorded(recorded, contract, call, runId, source.get("run_id").toString(), attempt)
                         .fileRefs());
     }
 

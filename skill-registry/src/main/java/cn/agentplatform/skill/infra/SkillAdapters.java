@@ -403,15 +403,41 @@ public class SkillAdapters {
             long callId,
             String runId,
             String sourceRunId) {
+        return recorded(source, contract, callId, runId, sourceRunId, 0);
+    }
+
+    public Raw recorded(
+            JsonNode source, Map<String, Object> contract, long callId,
+            String runId, String sourceRunId, long expectedAttempt) {
+        boolean binary = "PROCESS".equals(contract.get("type"));
         List<Map<String, Object>> refs = new ArrayList<>();
-        for (JsonNode ref : source.path("fileRefs"))
-            refs.add(
-                    artifacts.copyToRun(
-                            ref.path("artifactId").asText(),
-                            sourceRunId,
-                            runId,
-                            callId,
-                            contract.get("outputSchema")));
+        try {
+            if (binary && source.path("fileRefs").size() > 16)
+                throw invalidProcessOutput();
+            long total = 0;
+            for (JsonNode ref : source.path("fileRefs")) {
+                Map<String, Object> copied;
+                if (binary) {
+                    if (expectedAttempt < 1) throw invalidProcessOutput();
+                    copied = artifacts.copyProcessToRun(
+                            ref.path("artifactId").asText(), sourceRunId, runId, callId, expectedAttempt);
+                    var named = new LinkedHashMap<>(copied);
+                    if (ref.path("name").isTextual()) named.put("name", ref.path("name").asText());
+                    copied = named;
+                } else {
+                    copied = artifacts.copyToRun(
+                            ref.path("artifactId").asText(), sourceRunId, runId, callId, contract.get("outputSchema"));
+                }
+                refs.add(copied);
+                if (binary) {
+                    total += ((Number) copied.get("bytes")).longValue();
+                    if (total > ArtifactStore.MAX_ARTIFACT_BYTES) throw invalidProcessOutput();
+                }
+            }
+        } catch (RuntimeException failure) {
+            if (binary) artifacts.discardProcessOutputs(refs, runId, callId, expectedAttempt, failure);
+            throw failure;
+        }
         return new Raw(
                 source.path("structured"),
                 refs,

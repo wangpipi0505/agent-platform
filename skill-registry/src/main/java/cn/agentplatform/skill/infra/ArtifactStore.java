@@ -697,6 +697,23 @@ public class ArtifactStore implements AutoCloseable {
         }
     }
 
+    /** Binary PROCESS replay keeps the source owner/run check and creates an independent attempt key. */
+    public Map<String, Object> copyProcessToRun(
+            String id, String sourceRunId, String runId, long callId, long attempt) {
+        if (sourceRunId == null || sourceRunId.isBlank())
+            throw new PlatformException(404, "ARTIFACT_NOT_FOUND", "原产物运行归属不可用");
+        try (var source = download(id, sourceRunId)) {
+            // The Download owns the real response stream; storeProcessOutput closes this wrapper.
+            var bytes = new FilterInputStream(source.source()) {
+                @Override public void close() {}
+            };
+            return storeProcessOutput(source.contentType(), source.bytes(), source.sha256(),
+                    bytes, runId, callId, attempt);
+        } catch (IOException failure) {
+            throw new PlatformException(503, "ARTIFACT_STORAGE_UNAVAILABLE", "二进制附件暂不可复制");
+        }
+    }
+
     private void deleteObject(String tenant, String id, String bucket, String key)
             throws Exception {
         abortIncompleteUploads(bucket, key);
