@@ -1,5 +1,17 @@
 [
  {
+  "method": "POST",
+  "template": "/internal/skill-calls/{callId}/cancel",
+  "caller": "engine",
+  "target": "skill",
+  "action": "skill.process.cancel",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/SkillController.java",
+  "callerSource": "engine-runtime/src/main/java/cn/agentplatform/engine/application/RunService.java cancel -> RuntimeClients.cancelSkillCall",
+  "reason": "Committed CANCELLED run plus exact tenant/principal/run/call/attempt/version ownership; no arbitrary process cancellation"
+ },
+ {
   "method": "GET",
   "template": "/internal/material-scopes/{kind}/{id}",
   "caller": "model",

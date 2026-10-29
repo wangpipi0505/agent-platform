@@ -558,6 +558,59 @@ public class RuntimeClients implements AutoCloseable {
                         .body(String.class));
     }
 
+    /** 取消专用小收据传输；不改变普通执行的超时，不透传用户票据，也不重试外部动作。 */
+    public JsonNode cancelSkillCall(long callId, Object body, Actor actor, long deadline) {
+        legacy("skill");
+        if (callId < 1) throw new IllegalArgumentException("callId");
+        java.net.HttpURLConnection connection = null;
+        try {
+            var origin = java.net.URI.create(skill);
+            if (!java.util.Set.of("http", "https").contains(origin.getScheme()) || origin.getHost() == null
+                    || origin.getRawUserInfo() != null || origin.getRawQuery() != null || origin.getRawFragment() != null
+                    || !(origin.getPath().isEmpty() || origin.getPath().equals("/"))) throw new IllegalArgumentException("skill origin");
+            byte[] request = Json.write(body).getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            if (request.length > 1024) throw new IllegalArgumentException("cancel body");
+            long until = Math.min(deadline, System.nanoTime() + 2_000_000_000L);
+            connection = (java.net.HttpURLConnection) origin.resolve("/internal/skill-calls/" + callId + "/cancel").toURL().openConnection();
+            connection.setInstanceFollowRedirects(false); connection.setRequestMethod("POST"); connection.setDoOutput(true);
+            connection.setConnectTimeout(Math.min(1000, cancelRemaining(until))); connection.setReadTimeout(cancelRemaining(until));
+            connection.setRequestProperty("Authorization", "Bearer " + ServiceTokens.issue(actor));
+            connection.setRequestProperty("Content-Type", "application/json"); connection.setFixedLengthStreamingMode(request.length);
+            try (var output = connection.getOutputStream()) { output.write(request); }
+            connection.setReadTimeout(cancelRemaining(until));
+            if (connection.getResponseCode() != 200) throw new java.io.IOException("cancel status");
+            String response;
+            try (var input = connection.getInputStream(); var output = new java.io.ByteArrayOutputStream()) {
+                byte[] buffer = new byte[4096];
+                while (true) {
+                    connection.setReadTimeout(cancelRemaining(until)); int count = input.read(buffer);
+                    if (count < 0) break;
+                    if (output.size() + count > 65536) throw new java.io.IOException("cancel receipt size");
+                    output.write(buffer, 0, count);
+                }
+                response = output.toString(java.nio.charset.StandardCharsets.UTF_8);
+            }
+            cancelRemaining(until);
+            JsonNode envelope = Json.read(response), data = envelope.path("data");
+            if (!"OK".equals(envelope.path("code").asText()) || !data.isObject()
+                    || !data.path("localCallMatched").isBoolean() || !data.path("cancelRequested").isBoolean()
+                    || !data.path("reason").isTextual() || data.path("reason").asText().isBlank()
+                    || data.path("reason").asText().length() > 128) throw new java.io.IOException("cancel receipt shape");
+            return Json.tree(java.util.Map.of("localCallMatched", data.path("localCallMatched").asBoolean(),
+                    "cancelRequested", data.path("cancelRequested").asBoolean(), "reason", data.path("reason").asText()));
+        } catch (Exception failure) {
+            throw new PlatformException(502, "PROCESS_CANCEL_UNCONFIRMED", "技能取消请求未确认，运行取消状态保持不变");
+        } finally {
+            if (connection != null) connection.disconnect();
+        }
+    }
+
+    private static int cancelRemaining(long deadline) throws java.io.IOException {
+        long millis = (deadline - System.nanoTime()) / 1_000_000;
+        if (millis < 1) throw new java.io.IOException("cancel deadline");
+        return (int) Math.min(2000, millis);
+    }
+
     private String base(String service) {
         if (service == null) throw RunAuthorityStore.denied();
         return switch (service) {

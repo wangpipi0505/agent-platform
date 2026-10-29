@@ -714,10 +714,11 @@ public class ToolCalls {
                 store.db()
                         .queryForMap(
                                 "select"
-                                    + " public_id,trigger_type,controlled_draft_skill_version_id,controlled_draft_skill_digest,controlled_skill_test_version_id,controlled_skill_test_digest,controlled_skill_test_status,snapshot"
+                                    + " public_id,status,trigger_type,controlled_draft_skill_version_id,controlled_draft_skill_digest,controlled_skill_test_version_id,controlled_skill_test_digest,controlled_skill_test_status,snapshot"
                                     + " from engine.run where id=?",
                                 call.get("run_id"));
         result.put("runId", run.get("public_id"));
+        result.put("runStatus", run.get("status"));
         result.put("trigger_type", run.get("trigger_type"));
         result.put(
                 "controlled_draft_skill_version_id", run.get("controlled_draft_skill_version_id"));

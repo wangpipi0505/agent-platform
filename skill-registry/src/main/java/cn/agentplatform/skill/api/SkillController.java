@@ -198,6 +198,11 @@ public class SkillController {
         return ApiResponse.ok(execution.proof(callId));
     }
 
+    @PostMapping("/internal/skill-calls/{callId}/cancel")
+    public Object cancelProcess(@PathVariable long callId, @RequestBody Map<String, Object> body) {
+        return ApiResponse.ok(execution.cancelProcess(callId, body));
+    }
+
     @PostMapping("/internal/skill-facts/{callId}/reconcile")
     public Object reconcile(@PathVariable long callId) {
         return ApiResponse.ok(execution.reconcile(callId));

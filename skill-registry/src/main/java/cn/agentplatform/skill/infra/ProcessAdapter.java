@@ -70,7 +70,7 @@ import java.util.function.BiFunction;
  *       {@code Semaphore(max-concurrent-per-tenant)}，排队窗口 {@code queue-wait-ms}，超窗
  *       429 PROCESS_BUSY；名额只在执行线程持有，不跨数据库事务等待。
  *   <li>取消句柄：{@link #cancel(String)} 按 requestId（=callId）终止整棵树，被取消的调用以
- *       502 PROCESS_CANCELLED 结束；引擎取消事件的出站接线是已登记缺口（见证据 README）。
+ *       502 PROCESS_CANCELLED 结束；生产入口核对引擎已提交状态和本地精确执行代次。
  *   <li>失败现场：成功调用彻底回收 callDir；失败/杀树/取消把现场挪成 {@code failed-*} 转储，
  *       保留最近 {@code keep-failed-dirs} 个（0 = 全部回收），最旧先剪。
  *   <li>执行期白名单：可执行文件不在 {@code agent.process.allowed-executables} 时 403
@@ -104,7 +104,7 @@ public class ProcessAdapter {
     /** 每租户信号量按需创建；租户数量有界（来自已验签 JWT），不做淘汰。 */
     private final ConcurrentMap<String, Semaphore> tenantPermits = new ConcurrentHashMap<>();
 
-    /** 进行中的调用注册表：cancel(requestId) 按它定位活进程树；键=requestId（即 callId）。 */
+    /** 排队和执行中的临时句柄注册表；业务取消状态仍以 engine PG 为准，键=requestId（即 callId）。 */
     private final ConcurrentMap<String, ActiveCall> active = new ConcurrentHashMap<>();
 
     /** 既有调用点与单测的兼容构造：配额默认 4/1、排队 30s、保留 5 个失败转储、无白名单。 */
@@ -172,7 +172,17 @@ public class ProcessAdapter {
     }
 
     /** 请求信封（§4.4）：requestId 由调用事实的 callId 派生，算法必须原样回显。 */
-    public record Request(String requestId, String operation, JsonNode parameters) {
+    public record CancellationOwner(String tenantId, String principalId, String runId, long attemptId, long skillVersionId) {
+        public CancellationOwner {
+            if (tenantId == null || tenantId.isBlank() || principalId == null || principalId.isBlank()
+                    || runId == null || runId.isBlank() || attemptId < 1 || skillVersionId < 1)
+                throw new IllegalArgumentException("本地进程取消归属不完整");
+        }
+    }
+
+    public record Request(String requestId, String operation, JsonNode parameters, CancellationOwner cancellationOwner) {
+
+        public Request(String requestId, String operation, JsonNode parameters) { this(requestId, operation, parameters, null); }
 
         public Request {
             Objects.requireNonNull(requestId, "requestId");
@@ -248,12 +258,24 @@ public class ProcessAdapter {
                             + contract.command().get(0)
                             + "（agent.process.allowed-executables）");
 
-        Semaphore tenantPermit = acquirePermits(tenantId);
+        // 从排队起登记同代所有权；取消早于 worker 启动时只置栅栏，不留下迟到启动窗口。
+        ActiveCall call = new ActiveCall(request.cancellationOwner());
+        if (active.putIfAbsent(request.requestId(), call) != null)
+            throw new PlatformException(409, "PROCESS_CALL_ACTIVE", "同一调用仍有未结束的本地执行代次");
+        Semaphore tenantPermit = null;
+        boolean acquired = false;
         try {
-            return runOnce(contract, request, inputFiles, outputFiles);
+            tenantPermit = acquirePermits(tenantId);
+            acquired = true;
+            if (call.cancelled) throw cancelled();
+            return runOnce(contract, request, inputFiles, outputFiles, call);
         } finally {
-            if (tenantPermit != null) tenantPermit.release();
-            globalPermits.release();
+            synchronized (call) { call.closed = true; }
+            active.remove(request.requestId(), call);
+            if (acquired) {
+                if (tenantPermit != null) tenantPermit.release();
+                globalPermits.release();
+            }
         }
     }
 
@@ -317,17 +339,18 @@ public class ProcessAdapter {
             ProcessContract contract,
             Request request,
             BiFunction<Path, Long, Map<String, String>> inputFiles,
-            OutputFiles outputFiles) {
+            OutputFiles outputFiles,
+            ActiveCall call) {
         byte[] envelope = envelope(contract, request);
         long started = System.nanoTime();
         long deadline = started + contract.timeout().toNanos();
         Path root = null;
         Path callDir = null;
         Process process = null;
-        ActiveCall call = null;
         RuntimeException failure = null;
         boolean preparingInputs = false;
         try {
+            if (call.cancelled) throw cancelled();
             root = resolveAllowedRoot(contract.workDirRoot());
             try {
                 callDir = Files.createTempDirectory(root, "call-");
@@ -342,20 +365,25 @@ public class ProcessAdapter {
                     throw new PlatformException(504, "PROCESS_TIMEOUT", "输入文件准备超过执行时限或被中断");
             }
 
+            if (call.cancelled) throw cancelled();
+
             ProcessBuilder builder =
                     ProcessTree.builder(contract.command(), callDir, contract.allowedEnv());
             try {
-                process = ProcessTree.start(builder);
-                preparingInputs = false;
+                // 检查与进程句柄交接共用本调用锁；取消不能落在最后一次检查和登记句柄之间。
+                synchronized (call) {
+                    if (call.cancelled) throw cancelled();
+                    process = ProcessTree.start(builder);
+                    call.process = process;
+                    call.callDir = callDir;
+                    preparingInputs = false;
+                }
             } catch (IOException ex) {
                 String message =
                         ex.getMessage() == null ? ex.getClass().getSimpleName() : ex.getMessage();
                 throw new PlatformException(
                         502, "PROCESS_START_FAILED", "进程启动失败: " + message);
             }
-            call = new ActiveCall(process, callDir);
-            active.put(request.requestId(), call);
-
             ActiveCall registered = call;
             // stdout 超限意味着信封不可能完整，直接杀树；stderr 超限仍只截断（诊断用途）。
             Process running = process;
@@ -413,12 +441,15 @@ public class ProcessAdapter {
             Output output = success(contract, request, stdout, exitCode, durationMs, callDir, stderr.truncated());
             // 成功文件必须在本次目录回收前交接；旧入口不提供回调，行为不变。
             if (outputFiles != null) outputFiles.persist(callDir, output, deadline);
+            synchronized (call) {
+                if (call.cancelled) throw cancelled();
+                call.closed = true;
+            }
             return output;
         } catch (RuntimeException ex) {
             failure = ex;
             throw ex;
         } finally {
-            if (call != null) active.remove(request.requestId(), call);
             if (process != null && process.isAlive())
                 kill(call, call.killReason != null ? call.killReason : KILL_ABNORMAL);
             String dumpDir = null;
@@ -726,19 +757,29 @@ public class ProcessAdapter {
      * 被取消的调用随后以 502 PROCESS_CANCELLED 收尾（确定性结论，调用方不得当作可重试失败）。
      * 返回 false 表示该调用不存在或已经结束——取消是幂等操作。
      *
-     * <p>接线缺口（T21d 明确登记）：引擎的 run/node 取消目前只在 engine-runtime 落库
-     * （run/node 状态 CANCELLED），没有出站事件到达 skill-registry，因此本句柄尚无生产调用方。
-     * 接通方案：引擎取消事件 → skill-registry 内部端点（SERVICE 鉴权）→ {@code SkillAdapters
-     * .cancelLocalProcess(callId)} → 本方法；在接通之前，超时杀树（{@link #KILL_TIMEOUT}）仍是
-     * 唯一的“平台侧终止”路径。
+     * <p>此无归属重载保留既有本地测试兼容；生产内部端点必须调用带 CancellationOwner 的重载，
+     * 在引擎持久取消和精确主体/代次核验后才能命中本地句柄。
      */
     public boolean cancel(String requestId) {
+        return cancel(requestId, null, false);
+    }
+
+    /** 已通过引擎权威核验的生产取消；没有精确本地同代归属时幂等返回 false。 */
+    public boolean cancel(String requestId, CancellationOwner owner) {
+        if (owner == null) return false;
+        return cancel(requestId, owner, true);
+    }
+
+    private boolean cancel(String requestId, CancellationOwner owner, boolean scoped) {
         if (requestId == null) return false;
         ActiveCall call = active.get(requestId);
         if (call == null) return false;
-        call.cancelled = true;
-        kill(call, KILL_CANCELLED);
-        return true;
+        synchronized (call) {
+            if (call.closed || scoped && !owner.equals(call.owner)) return false;
+            call.cancelled = true;
+            kill(call, KILL_CANCELLED);
+            return true;
+        }
     }
 
     /** long 形式的 callId 便捷入口。 */
@@ -858,15 +899,14 @@ public class ProcessAdapter {
 
     /** 注册表条目：进程树与调用目录的活引用；cancelled/killReason 跨线程读写，必须 volatile。 */
     private static final class ActiveCall {
-        final Process process;
-        final Path callDir;
+        final CancellationOwner owner;
+        volatile Process process;
+        volatile Path callDir;
         volatile boolean cancelled;
+        boolean closed;
         volatile String killReason;
 
-        ActiveCall(Process process, Path callDir) {
-            this.process = process;
-            this.callDir = callDir;
-        }
+        ActiveCall(CancellationOwner owner) { this.owner = owner; }
     }
 
     /**

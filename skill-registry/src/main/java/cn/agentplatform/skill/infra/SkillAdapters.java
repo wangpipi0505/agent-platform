@@ -532,8 +532,10 @@ public class SkillAdapters {
         ProcessContract parsed = ProcessContract.parse(Json.tree(contract.get("process")));
         String operation = String.valueOf(contract.get("code"));
         String tenantId;
+        Actor processActor = null;
         try {
-            tenantId = Actor.current().tenantId();
+            processActor = Actor.current();
+            tenantId = processActor.tenantId();
         } catch (PlatformException unresolvable) {
             tenantId = null;
         }
@@ -546,11 +548,16 @@ public class SkillAdapters {
         }
         Map<String, String> inputs = inputArtifacts;
         var outputRefs = new ArrayList<Map<String, Object>>();
-        ProcessAdapter.Output executed =
-                process.execute(
+        // 旧无上下文测试入口仍可执行，但不会匹配生产取消入口；真实执行使用同一已核主体和精确代次。
+        var cancellationOwner = processActor != null && runId != null && expectedAttempt > 0
+                && contract.get("skillVersionId") instanceof Number version
+                ? new ProcessAdapter.CancellationOwner(tenantId, processActor.principalId(), runId, expectedAttempt, version.longValue()) : null;
+        ProcessAdapter.Output executed;
+        try {
+            executed = process.execute(
                         parsed,
                         new ProcessAdapter.Request(
-                                Long.toString(callId), operation, Json.tree(parameters)),
+                                Long.toString(callId), operation, Json.tree(parameters), cancellationOwner),
                         tenantId,
                         inputs.isEmpty()
                                 ? null
@@ -558,6 +565,12 @@ public class SkillAdapters {
                         !parsed.filesEnabled() ? null
                                 : (callDir, output, deadline) -> outputRefs.addAll(persistProcessOutputs(
                                         callDir, output.files(), runId, callId, expectedAttempt, deadline)));
+        } catch (RuntimeException failure) {
+            // 输出交接后仍可能收到取消；只撤销本批新产物，不能留下失败调用的 READY 附件。
+            if (!outputRefs.isEmpty())
+                artifacts.discardProcessOutputs(outputRefs, runId, callId, expectedAttempt, failure);
+            throw failure;
+        }
         Map<String, Object> processFact = executed.fact();
         if (parsed.filesEnabled()) {
             processFact = new LinkedHashMap<>(processFact);
@@ -814,12 +827,15 @@ public class SkillAdapters {
     }
 
     /**
-     * T21d 取消句柄：按 callId 终止进行中的本地进程树。引擎的 run/node 取消目前只在 engine-runtime
-     * 落库，没有出站事件到达 skill-registry（接线缺口已登记），因此本方法暂时没有生产调用方；
-     * 接通方案与缺口说明见 {@link ProcessAdapter#cancel(String)} 与证据 README。
+     * 兼容既有本地取消测试；生产内部端点必须使用带精确归属的重载，不能只凭 callId 杀进程。
      */
     public boolean cancelLocalProcess(long callId) {
         return process != null && process.cancel(callId);
+    }
+
+    /** 生产取消必须同时匹配租户、主体、run、call 和 attempt/version，旧授权不能命中新代进程。 */
+    public boolean cancelLocalProcess(long callId, ProcessAdapter.CancellationOwner owner) {
+        return process != null && process.cancel(Long.toString(callId), owner);
     }
 
     // ===== PLAT-22C 内置注册单元的回调通道 =====

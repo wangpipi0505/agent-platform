@@ -53,6 +53,42 @@ public class SkillExecution {
         return Actor.current().tenantId();
     }
 
+    /** 只取消引擎已提交 CANCELLED 的同主体、同调用代次；不把无本地句柄解释成已杀进程。 */
+    public Map<String, Object> cancelProcess(long callId, Map<String, Object> body) {
+        var actor = Actor.current();
+        if (!actor.roles().contains("SERVICE")) throw error(403, "SYS-APP-4031", "取消入口仅供已授权服务调用");
+        var authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (authentication.getPrincipal() instanceof org.springframework.security.oauth2.jwt.Jwt jwt
+                && "delegated".equals(jwt.getClaimAsString("authority_mode"))
+                && !"engine".equals(cn.agentplatform.common.authority.AuthorityContext.current().caller()))
+            throw error(403, "SYS-APP-4031", "取消入口仅接受引擎授权");
+        if (callId < 1 || !body.keySet().equals(Set.of("runId", "attemptId", "skillVersionId")))
+            throw error(400, "INVALID_INPUT", "取消请求仅接受 runId/attemptId/skillVersionId");
+        String runId = text(body, "runId");
+        var attemptValue = Json.tree(body.get("attemptId"));
+        var versionValue = Json.tree(body.get("skillVersionId"));
+        if (!runId.matches("r_[A-Za-z0-9_-]{1,125}") || !attemptValue.isIntegralNumber() || !attemptValue.canConvertToLong()
+                || attemptValue.longValue() < 1 || !versionValue.isIntegralNumber() || !versionValue.canConvertToLong() || versionValue.longValue() < 1)
+            throw error(400, "INVALID_INPUT", "取消请求必须提供精确调用代次");
+        long attempt = attemptValue.longValue(), version = versionValue.longValue();
+        // 此读口按已验签 tenant+principal 锁定 engine PG 归属；legacy 票据没有 caller 证明，绝不信请求自报身份。
+        var authority = clients.get(engineUrl + "/internal/tool-calls/" + callId);
+        if (authority.path("callId").asLong() != callId || !runId.equals(authority.path("runId").asText())
+                || authority.path("attempt_id").asLong() != attempt || authority.path("skill_version_id").asLong() != version)
+            throw error(409, "PROCESS_CANCEL_GENERATION_MISMATCH", "取消请求与引擎当前调用代次不一致");
+        if (!"CANCELLED".equals(authority.path("runStatus").asText()))
+            throw error(409, "PROCESS_CANCEL_NOT_AUTHORIZED", "引擎尚未提交运行取消状态");
+        var contract = catalog.versionId(version);
+        if (!"PROCESS".equals(contract.get("type")) || !Objects.equals(contract.get("code"), authority.path("skill_code").asText()))
+            throw error(409, "PROCESS_CANCEL_UNSUPPORTED", "当前精确技能不是本地进程调用");
+        if (!Boolean.TRUE.equals(object(contract.get("execution")).get("cancellable")))
+            throw error(409, "PROCESS_NOT_CANCELLABLE", "当前技能契约未允许取消");
+        boolean matched = adapters.cancelLocalProcess(callId, new ProcessAdapter.CancellationOwner(
+                actor.tenantId(), actor.principalId(), runId, attempt, version));
+        return Map.of("callId", callId, "runId", runId, "attemptId", attempt, "localCallMatched", matched,
+                "cancelRequested", matched, "reason", matched ? "LOCAL_CANCEL_REQUESTED" : "NO_LOCAL_MATCH");
+    }
+
     /**
      * PLAT-12：与出站注入同一裁决的主体解析——401/403（机器票据）都表示没有可出站的用户主体，
      * 返回 null 让 identity trace 记录"跳过"，而不是让信封构建或注入伪造一个服务账号身份。

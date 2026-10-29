@@ -46,3 +46,11 @@ PhaseA 只批准三个既有测试源的原25加新5方法，先真实失败再�
 已接通callDir回收前的二进制输出登记，沿现SkillExecution已claim/submitted传入的Actor/run/call/attempt，使用独立process object_key及UPLOADING→READY，不复用普通上传r_upload/call1。全组声明先核路径/数量/bytes/SHA，Windows保护句柄同源转存；中途失败仅补偿本批新增对象，预存输入不触。当前保护打开仅支持Windows，其他平台拒绝；不宣称OS沙箱、祖先替换绝对防护或跨服务最新代原子发布/取消晚到闭环。
 
 测试两轮已到止：22项19P3F确认缺口；实现后69项67P1F1E。后两未通过由JDK Windows BasicFileAttributes.fileKey固定null导致提前拒绝；已据本机JDK源修正为可选补充比较，保留NOSHARE/NOFOLLOW/路径和实际字节摘要检查，未重跑。状态为实现已改、待验，原结果不改写、不认领69通过。跨服务取消/晚到由EX16及联合阶段接续，完整回放/正式重启另批。
+
+### 2026-10-30 运行取消生产接线（EX-16）
+
+引擎先提交 PG 的 CANCELLED，再对当前同代/同租约、非 mock、冻结 PROCESS 且 cancellable 的活跃工具调用，向固定 skill origin 发送 `POST /internal/skill-calls/{callId}/cancel`。body 仅 `{runId,attemptId,skillVersionId}`；全轮最多5秒、单次最多2秒、收据64KiB，不跟随重定向。失败只记未确认，不撤销终态；外层事务尚未提交则明确 `OUTER_TRANSACTION_PENDING`，不持事务发送 HTTP。
+
+技能入口要求 SERVICE，并回读 engine 已认证的同 tenant/principal/run/call/attempt/version 与已提交 CANCELLED 状态，核实际 PROCESS/cancellable 契约，再命中本地同代句柄。排队起登记所有权，取消和启动交接共用单调用锁；旧代不能杀新代。收据 `{callId,runId,attemptId,localCallMatched,cancelRequested,reason}` 仅表示请求/匹配，不保证远端树已退出；重复或无句柄为 `NO_LOCAL_MATCH`。输出交接后取消只补偿本批新产物。
+
+当前传输沿现有 legacy ServiceTokens；IAM 模式明确拒绝 legacy transport，IAM delegated 出站和多实例句柄路由仍归 EX-26/部署联合，不伪造 caller 证明。两侧分别用真实 PG 与签名 HTTP peer、真实双层测试 JVM 验证，尚未作为同一套正式服务做联合取消；不关闭真实 worker/服务重启待验项。

@@ -2539,50 +2539,68 @@ public class RunService {
     public Map<String, Object> cancel(String id, Actor actor) {
         var run = store.run(id, actor);
         long rid = TraceStore.number(run, "id");
-        store.atomic(
-                () -> {
-                    int n =
-                            store.db()
-                                    .update(
-                                            "update engine.run set"
-                                                + " status='CANCELLED',stop_reason='USER_CANCEL',ended_at=now()"
-                                                + " where id=? and status not in"
-                                                + " ('SUCCEEDED','FAILED','CANCELLED')",
-                                            rid);
-                    if (n > 0) {
-                        store.db()
-                                .update(
-                                        "update engine.node_instance set"
-                                            + " status='CANCELLED',ended_at=now() where run_id=?"
-                                            + " and status not in"
-                                            + " ('SUCCEEDED','FAILED','SKIPPED','ABANDONED','CANCELLED')",
-                                        rid);
-                        store.db()
-                                .update(
-                                        "update engine.tool_call set status='ABANDONED' where"
-                                            + " run_id=? and status in ('REGISTERED','EXECUTING')",
-                                        rid);
-                        int inFlight =
-                                store.db()
-                                        .queryForObject(
-                                                "select count(*) from engine.tool_call where"
-                                                        + " run_id=? and status='SUBMITTED'",
-                                                Integer.class,
-                                                rid);
-                        if (inFlight > 0)
-                            store.event(
-                                    rid,
-                                    "CANCEL_IN_FLIGHT",
-                                    Map.of(
-                                            "submittedCalls",
-                                            inFlight,
-                                            "externalEffectReverted",
-                                            false));
-                        store.event(rid, "RUN_FINISHED", Map.of("status", "CANCELLED"));
+        var targets = store.atomic(() -> {
+            int n = store.db().update("update engine.run set status='CANCELLED',stop_reason='USER_CANCEL',ended_at=now()"
+                    + " where id=? and status not in ('SUCCEEDED','FAILED','CANCELLED')", rid);
+            var result = new ArrayList<Map<String, Object>>();
+            if (n > 0) {
+                // run 行锁已排除并发 claim/submitted；在改 node 状态前冻结当前代、同 owner 的活跃调用。
+                var active = store.db().queryForList("select t.id,t.attempt_id,t.skill_version_id,t.skill_code,t.skill_contract_sha256"
+                        + " from engine.tool_call t join engine.node_instance node on node.id=t.node_instance_id and node.run_id=t.run_id"
+                        + " join engine.attempt a on a.id=t.attempt_id and a.node_instance_id=node.id"
+                        + " where t.run_id=? and t.status in ('EXECUTING','SUBMITTED') and t.is_mock=false"
+                        + " and node.status in ('RUNNING','WAITING_EXTERNAL') and a.status='RUNNING'"
+                        + " and t.claimed_by=node.lease_owner and node.lease_until>now() and t.claimed_lease>now()"
+                        + " and a.attempt_no=(select max(latest.attempt_no) from engine.attempt latest where latest.node_instance_id=node.id) order by t.id", rid);
+                for (var call : active) {
+                    for (JsonNode tool : TraceStore.json(run.get("snapshot")).path("config").path("tools")) {
+                        JsonNode contract = tool.path("contract");
+                        if (tool.path("skillVersionId").asLong() == TraceStore.number(call, "skill_version_id")
+                                && tool.path("code").asText().equals(call.get("skill_code"))
+                                && "PROCESS".equals(contract.path("type").asText())
+                                && contract.path("execution").path("cancellable").asBoolean(false)
+                                && tool.path("contractDigest").asText().equals(call.get("skill_contract_sha256"))
+                                && Digest.sha256(Json.canonical(contract)).equals(tool.path("contractDigest").asText())) {
+                            result.add(Map.of("callId", call.get("id"), "attemptId", call.get("attempt_id"), "skillVersionId", call.get("skill_version_id")));
+                            break;
+                        }
                     }
-                    return null;
-                });
-        return status(id, actor);
+                }
+                store.db().update("update engine.node_instance set status='CANCELLED',ended_at=now() where run_id=?"
+                        + " and status not in ('SUCCEEDED','FAILED','SKIPPED','ABANDONED','CANCELLED')", rid);
+                store.db().update("update engine.tool_call set status='ABANDONED' where run_id=? and status in ('REGISTERED','EXECUTING')", rid);
+                int inFlight = store.db().queryForObject("select count(*) from engine.tool_call where run_id=? and status='SUBMITTED'", Integer.class, rid);
+                if (inFlight > 0) store.event(rid, "CANCEL_IN_FLIGHT", Map.of("submittedCalls", inFlight, "externalEffectReverted", false));
+                store.event(rid, "RUN_FINISHED", Map.of("status", "CANCELLED"));
+            }
+            return List.copyOf(result);
+        });
+        var receipts = new ArrayList<Map<String, Object>>();
+        long deadline = System.nanoTime() + 5_000_000_000L;
+        for (var target : targets) {
+            var receipt = new LinkedHashMap<String, Object>(target);
+            receipt.put("receiptReceived", false);
+            receipt.put("remoteTerminationConfirmed", false);
+            // REQUIRED 可能加入调用者事务；此时不把 lambda 返回冒充提交，不持外层锁发送 HTTP。
+            if (TransactionSynchronizationManager.isActualTransactionActive()) receipt.put("reason", "OUTER_TRANSACTION_PENDING");
+            else if (System.nanoTime() >= deadline) receipt.put("reason", "DEADLINE_EXCEEDED");
+            else {
+                try {
+                    var response = clients.cancelSkillCall(((Number) target.get("callId")).longValue(),
+                            Map.of("runId", id, "attemptId", target.get("attemptId"), "skillVersionId", target.get("skillVersionId")), actor, deadline);
+                    receipt.put("receiptReceived", true);
+                    receipt.put("localCallMatched", response.path("localCallMatched").asBoolean());
+                    receipt.put("cancelRequested", response.path("cancelRequested").asBoolean());
+                    receipt.put("reason", response.path("reason").asText());
+                } catch (RuntimeException unconfirmed) { receipt.put("reason", "REQUEST_FAILED"); }
+            }
+            // 收据只是通知结果，不改 run/node/tool 状态；HTTP 失败也不撤销已经提交的取消。
+            store.atomic(() -> { store.event(rid, "PROCESS_CANCEL_RECEIPT", receipt); return null; });
+            receipts.add(receipt);
+        }
+        var response = new LinkedHashMap<String, Object>(status(id, actor));
+        if (!receipts.isEmpty()) response.put("processCancellation", receipts);
+        return response;
     }
 
     public List<Map<String, Object>> list(Actor actor) {
