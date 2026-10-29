@@ -1,0 +1,22 @@
+{
+    "command":  "mvn.cmd",
+    "arguments":  [
+                      "-B",
+                      "-ntp",
+                      "-pl",
+                      "skill-registry",
+                      "test",
+                      "-Dmaven.repo.local=G:\\207\\项目\\算法重组工具\\代码\\agent-platform/.tools/m2",
+                      "-DargLine=-Xmx1024m -Djdk.net.unixdomain.tmpdir=V:/.local/tmp",
+                      "-Dsurefire.timeout=900",
+                      "-Dsurefire.failIfNoSpecifiedTests=true",
+                      "-Dmaven.test.failure.ignore=true"
+                  ],
+    "startedAt":  "2026-10-29T09:11:38.6708478Z",
+    "head":  "acad6bdee223b23f331420c6de50045cb5fa8941",
+    "envSha256":  "AF038F68E0CA2E3EEEEB0C5240B2C2DA1EF647D680500F63AF1564975EBAFD4A",
+    "adminJarSha256":  "1B0D7B40FC3AE02B207294D3B6BE7EA7F7BB9DCD35AF8EA62A372F916FA14B87",
+    "jdk":  "C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot",
+    "failureIgnore":  true,
+    "defaultForkReuseAndOrder":  true
+}

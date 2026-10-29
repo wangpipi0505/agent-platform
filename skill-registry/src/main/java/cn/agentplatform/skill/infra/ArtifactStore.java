@@ -156,17 +156,22 @@ public class ArtifactStore implements AutoCloseable {
             synchronized (this) {
                 stages++;
             }
+            var responseClosed = new java.util.concurrent.atomic.AtomicBoolean();
+            java.util.function.Consumer<T> closeOnce =
+                    value -> {
+                        if (value instanceof AutoCloseable response
+                                && responseClosed.compareAndSet(false, true))
+                            try {
+                                response.close();
+                            } catch (Exception ignored) {
+                            }
+                    };
             // Do not cancel this future: cancellation would mark only the wrapper done, without
             // joining PartReader/HTTP chains. Its real completion retains lifecycle ownership.
             original.whenComplete(
                     (value, error) -> {
                         try {
-                            if (stopping && value instanceof AutoCloseable response) {
-                                try {
-                                    response.close();
-                                } catch (Exception ignored) {
-                                }
-                            }
+                            if (stopping) closeOnce.accept(value);
                         } finally {
                             synchronized (this) {
                                 stages--;
@@ -181,15 +186,14 @@ public class ArtifactStore implements AutoCloseable {
                     checkActive();
                     return value;
                 } catch (Exception stopped) {
-                    if (value instanceof AutoCloseable response)
-                        try {
-                            response.close();
-                        } catch (Exception ignored) {
-                        }
+                    closeOnce.accept(value);
                     throw stopped;
                 }
             } catch (InterruptedException ex) {
                 interrupted = true;
+                // 中断后原future仍可能成功交回响应，早于stopping也必须接管；三条关闭路径共用
+                // 一次所有权，Call真正结束和原执行器退出仍由既有生命周期确认。
+                original.whenComplete((value, error) -> closeOnce.accept(value));
                 throw ex;
             } catch (java.util.concurrent.ExecutionException ex) {
                 if (ex.getCause() instanceof Exception cause) throw cause;
