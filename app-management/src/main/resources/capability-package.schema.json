@@ -1,0 +1,406 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:capability-package:1.0",
+  "title": "CapabilityPackage v1（能力包：软件接入的唯一声明入口）",
+  "description": "平台侧优化方案与实施细则-20261027 §11.2 能力包结构的 schema 冻结（T22A，PLAT-22 A 段：先冻结 schema 再实现）。本 schema 是声明文件契约，不是平台产品代码；能力包不绑定某个智能体应用，也不绑定某条路线，路线配置只是能力包的一种使用方式（routeProfiles）。冻结口径见 docs/evidence/2026-10-28-PLAT-22A-capability-schema/README.md；任何变更须走开发计划 §6.5 契约纪律（freeze.json digest 更新 + snapshot 同步 + 变更记录）。未实现的平台能力在本 schema 中以可扩展枚举/留白表达并注明实现归属卡（PROCESS 适配器归 T22C，contextPack 自动注入归 T22B，控制面/共享对象归 T22D），不得据此声称相应能力已上线。",
+  "type": "object",
+  "required": ["apiVersion", "kind", "metadata", "software", "interfaces", "tools", "identity", "verification", "operations"],
+  "additionalProperties": false,
+  "properties": {
+    "apiVersion": {
+      "const": "platform/v1",
+      "description": "§11.2.3 示例口径 apiVersion: platform/v1。schema 演进 = 新 $id 版本（urn:agent-platform:capability-package:N.0），版本不可原地覆盖（§11.2.4）。"
+    },
+    "kind": {"const": "CapabilityPackage"},
+
+    "metadata": {
+      "type": "object",
+      "description": "§11.2.2 metadata：name/domain/owner/version/description，name 全局唯一（校验脚本对 contracts/capability-packages/ 全集查重）。",
+      "required": ["name", "domain", "owner", "version", "description"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {"type": "string", "pattern": "^[a-z][a-z0-9-]{2,63}$", "description": "全局唯一名称，小写连字符。"},
+        "domain": {"type": "string", "minLength": 1, "description": "业务域标识。"},
+        "owner": {"type": "string", "minLength": 1, "description": "责任团队（如 algorithm-team）。"},
+        "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$", "description": "能力包自身版本（semver 三段）；发布后不可原地覆盖，演进走新版本。"},
+        "description": {"type": "string", "minLength": 1},
+        "tags": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+      }
+    },
+
+    "software": {
+      "type": "object",
+      "description": "§11.2.2 software：软件系统、版本、环境、责任团队。",
+      "required": ["system", "environments"],
+      "additionalProperties": false,
+      "properties": {
+        "system": {"type": "string", "minLength": 1, "description": "软件系统标识。"},
+        "version": {"type": "string", "description": "软件系统版本/构建标识。"},
+        "ownerTeam": {"type": "string", "description": "软件侧责任团队（可与 metadata.owner 不同）。"},
+        "environments": {
+          "type": "object",
+          "minProperties": 1,
+          "description": "环境名 → 服务基址；密钥不得出现在 URL（§11.2.4），校验脚本扫描明文凭据键。",
+          "propertyNames": {"pattern": "^[a-z][a-z0-9-]*$"},
+          "additionalProperties": {"type": "string", "minLength": 1}
+        },
+        "notes": {"type": "string"}
+      }
+    },
+
+    "interfaces": {
+      "type": "array",
+      "minItems": 1,
+      "description": "§11.2.2 interfaces：至少一个执行入口。kind 枚举即适配器注册面：HTTP_SYNC/HTTP_ASYNC 由 skill-registry HttpAdapter/HttpAsyncAdapter 承载（路线一现状）；MCP/ALGORITHM 为 v1.2 既有适配器（McpAdapter/AlgoAdapter-K8s）；PROCESS 为一次性进程 stdin/stdout（协议 algorithm-process/1，PLAT-21 算法侧 worker 契约已有、平台侧适配器未注册），声明 PROCESS 属冻结留白，实现归 T22C（A-01 适配器注册表），校验脚本对 PROCESS 出告警诊断。未列枚举值 = 未来新执行方式必须先修订本 schema（§6.5 契约纪律），不允许 schema 外自由扩展。",
+      "items": {
+        "type": "object",
+        "required": ["id", "kind"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {"type": "string", "pattern": "^[a-z][a-z0-9-]{1,63}$", "description": "包内唯一；tools[].binding 与 routeProfiles[].execution 引用它。"},
+          "kind": {
+            "enum": ["HTTP_SYNC", "HTTP_ASYNC", "PROCESS", "MCP", "ALGORITHM"],
+            "description": "执行方式枚举（§11.2.2）。PROCESS 留白归 T22C。"
+          },
+          "description": {"type": "string"},
+          "endpoint": {"type": "string", "pattern": "^https?://", "description": "HTTP_SYNC/HTTP_ASYNC 必填；完整 URL，无明文凭据。"},
+          "httpMethod": {"enum": ["GET", "POST"], "description": "HTTP 入口方法；PREPARE 语义（PLAT-15 §14）只允许 POST。"},
+          "timeoutMs": {"type": "integer", "minimum": 1, "description": "单次尝试超时（不含对账）。"},
+          "authRef": {"type": "string", "pattern": "^(secret|cred)://", "description": "凭据引用（密文存取，skill 契约 authRef 同口径）；禁止明文。"},
+          "contractRef": {"type": "string", "description": "接口契约文档/机器合同引用（如 OpenAPI 路径）。"},
+          "reconciliation": {
+            "type": "object",
+            "description": "HTTP_ASYNC 对账配置——字段与 contracts/skill-invocation.md §12（PLAT-06 冻结形态）逐字段对齐，避免声明层与技能契约两层词汇漂移。",
+            "required": ["endpoint"],
+            "additionalProperties": false,
+            "properties": {
+              "endpoint": {"type": "string", "description": "状态查询端点，须字面含 {jobId}/{idempotencyKey} 占位符或与 pathParams 一一对应（§12.1）。"},
+              "method": {"enum": ["GET", "POST"]},
+              "jobIdPath": {"type": "string", "description": "任务标识读取路径（§12.2 双源优先级：reconciliation.jobIdPath 优先）。"},
+              "idempotencyKeyPath": {"type": "string"},
+              "donePath": {"type": "string"},
+              "doneValue": {"type": "string"},
+              "failedValue": {"type": "string"},
+              "failedValues": {"type": "array", "items": {"type": "string"}},
+              "failureMessagePath": {"type": "string"},
+              "resultEndpoint": {"type": "string"},
+              "resultEndpointPath": {"type": "string"},
+              "idempotencyKeyEcho": {"type": "boolean"},
+              "lookupEndpoint": {"type": "string"},
+              "pathParams": {
+                "type": "object",
+                "description": "声明式占位符映射：键=端点占位符名，值 {from} 只允许 externalJobId/idempotencyKey（§12.1）。",
+                "additionalProperties": {
+                  "type": "object",
+                  "required": ["from"],
+                  "additionalProperties": false,
+                  "properties": {"from": {"enum": ["externalJobId", "idempotencyKey"]}}
+                }
+              }
+            }
+          },
+          "command": {
+            "type": "array", "minItems": 1, "items": {"type": "string"},
+            "description": "PROCESS 必填：一次性进程命令（§11.2.3 示例形态）。留白字段：适配器实现归 T22C。"
+          },
+          "protocol": {"type": "string", "description": "PROCESS 协议名；当前冻结值 algorithm-process/1（PLAT-21c）。"},
+          "workDir": {"type": "string", "description": "PROCESS 每调用工作目录。"},
+          "serverRef": {"type": "string", "description": "MCP 必填：MCP 服务地址/manifest 引用。"},
+          "jobTemplate": {"type": "string", "description": "ALGORITHM 必填：K8s Job 任务模板编码（v1.2 技能契约 adapterType=ALGORITHM 同口径）。"},
+          "notes": {"type": "string"}
+        },
+        "allOf": [
+          {
+            "if": {"properties": {"kind": {"enum": ["HTTP_SYNC", "HTTP_ASYNC"]}}, "required": ["kind"]},
+            "then": {"required": ["endpoint"]}
+          },
+          {
+            "if": {"properties": {"kind": {"const": "HTTP_ASYNC"}}, "required": ["kind"]},
+            "then": {"required": ["reconciliation"]}
+          },
+          {
+            "if": {"properties": {"kind": {"const": "PROCESS"}}, "required": ["kind"]},
+            "then": {"required": ["command", "protocol"]}
+          },
+          {
+            "if": {"properties": {"kind": {"const": "MCP"}}, "required": ["kind"]},
+            "then": {"required": ["serverRef"]}
+          },
+          {
+            "if": {"properties": {"kind": {"const": "ALGORITHM"}}, "required": ["kind"]},
+            "then": {"required": ["jobTemplate"]}
+          }
+        ]
+      }
+    },
+
+    "ontology": {
+      "type": "object",
+      "description": "§11.2.2 ontology（否）：mode=NONE/REFERENCE/OWNED；引用时给 space/release/contextPack/guards。§11.2.4：mode=NONE 时不得声明 contextPack（脚本语义校验强制）。本体发布解析（READY 校验）、工具投影/consumer 注册/contextPack 自动注入归 T22B（O-02/O-03/O-05/O-07、A-03），本 schema 只冻结声明形态。",
+      "required": ["mode"],
+      "additionalProperties": false,
+      "properties": {
+        "mode": {"enum": ["NONE", "REFERENCE", "OWNED"]},
+        "space": {"type": "string", "minLength": 1, "description": "REFERENCE/OWNED 必填：本体空间。"},
+        "release": {"type": "string", "minLength": 1, "description": "REFERENCE/OWNED 必填：本体发布标识（须可解析到 READY 发布——发布态校验归 T22B）。"},
+        "contextPack": {"type": "string", "description": "context pack 引用（如 auto 或摘要标识）；mode=NONE 禁止声明。"},
+        "guards": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "notes": {"type": "string"}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"mode": {"enum": ["REFERENCE", "OWNED"]}}, "required": ["mode"]},
+          "then": {"required": ["space", "release"]}
+        }
+      ]
+    },
+
+    "tools": {
+      "type": "array",
+      "minItems": 1,
+      "description": "§11.2.2 tools：对外暴露的操作、schema、读写属性、分页、错误语义、绑定到哪个 interface。exposure 口径沿 §11.2.3 示例（READ_ONLY/WRITE_WITH_APPROVAL）；写操作确认沿 PLAT-15 §14（confirmRoles、riskLevel）。跨字段规则（§11.2.4）由校验脚本执行：binding 必须指向本包 interface；只读与副作用互斥。",
+      "items": {
+        "type": "object",
+        "required": ["id", "binding", "exposure"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {"type": "string", "pattern": "^[a-z][a-z0-9.-]{2,63}$", "description": "包内唯一工具标识；routeProfiles[].tools 与 agents[].skillRefs[].tool 引用它。"},
+          "operation": {"type": "string", "description": "远端操作名（本体 operation 投影或接口操作）。"},
+          "description": {"type": "string"},
+          "binding": {"type": "string", "pattern": "^[a-z][a-z0-9-]{1,63}$", "description": "必须指向本包 interfaces[].id（§11.2.4，脚本校验）。"},
+          "exposure": {"enum": ["READ_ONLY", "WRITE_WITH_APPROVAL"], "description": "§11.2.3 示例口径：只读 / 需确认写。"},
+          "confirmRoles": {"type": "array", "minItems": 1, "items": {"type": "string"}, "description": "WRITE_WITH_APPROVAL 必填：确认角色（引擎 WAITING_APPROVAL 角色来源，PLAT-15 口径）。"},
+          "riskLevel": {"enum": ["STANDARD", "HIGH"], "description": "PLAT-15 §14.1：高危写以声明为准，平台不从 URL/方法猜测。"},
+          "readonly": {"type": "boolean", "description": "技能契约 readonly_flag 同口径；只读与 WRITE_WITH_APPROVAL 互斥。"},
+          "sideEffect": {"type": "boolean"},
+          "idempotent": {"type": "boolean"},
+          "pagination": {"enum": ["none", "offset", "cursor", "page"], "description": "§11.2.2 分页语义（传输中立，O-03）。"},
+          "artifacts": {"type": "array", "items": {"type": "string"}, "description": "产物引用名（§11.2.3 示例 artifacts）。"},
+          "inputSchema": {"type": "object", "description": "JSON Schema Draft 2020-12 透传（v1.2 技能契约 input_schema 同口径）；本 schema 不深校验其内部。"},
+          "outputSchema": {"type": "object", "description": "输出结构断言 schema 透传。"},
+          "errorSemantics": {
+            "description": "错误语义声明，兼容两形态：v1.2 数组形态 [{match,semantic}] 或 PLAT-05 §11.2 对象形态 {codePath,messagePath,retryableCodes}。",
+            "oneOf": [
+              {"type": "array", "items": {"type": "object", "required": ["match", "semantic"], "properties": {"match": {"type": "string"}, "semantic": {"type": "string"}}, "additionalProperties": false}},
+              {"type": "object", "additionalProperties": false, "properties": {"codePath": {"type": "string"}, "messagePath": {"type": "string"}, "retryableCodes": {"type": "array", "items": {"type": "string"}}}}
+            ]
+          },
+          "skillRef": {
+            "type": "object",
+            "description": "平台侧落点引用：本工具当前由技能中心哪个已发布技能版本承载（钉版本 + 契约 sha256）。能力包声明不改变技能中心任何行为。",
+            "additionalProperties": false,
+            "properties": {
+              "code": {"type": "string", "minLength": 1},
+              "version": {"type": "integer", "minimum": 1},
+              "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$", "description": "技能版本契约摘要（前缀必须为完整 64 位）。"}
+            },
+            "required": ["code", "version"]
+          },
+          "enabled": {"type": "boolean", "default": true, "description": "停用的工具不对外暴露（如因输出预算停用的目录查询技能）；false 时须在 notes 写明停用依据。"},
+          "notes": {"type": "string"}
+        },
+        "allOf": [
+          {
+            "if": {"properties": {"exposure": {"const": "WRITE_WITH_APPROVAL"}}, "required": ["exposure"]},
+            "then": {"required": ["confirmRoles"]}
+          }
+        ]
+      }
+    },
+
+    "identity": {
+      "type": "object",
+      "description": "§11.2.2 identity：平台主体到软件/本体消费身份的映射、scope、密钥引用（不写明文）。outboundIdentity 口径沿 PLAT-12 §13（mode 只允许 PLATFORM_SUBJECT，headers 值只允许主体快照白名单）；统一主体映射（平台用户→agent principal→ontology consumer 一张映射）归 T22B/T22D（O-07、A-06），本 schema 只冻结声明形态。",
+      "required": ["subjectMapping"],
+      "additionalProperties": false,
+      "properties": {
+        "subjectMapping": {"type": "string", "minLength": 1, "description": "主体映射描述（如 platform_user -> ontology_consumer）。"},
+        "scopes": {"type": "array", "items": {"type": "string"}, "description": "scope 声明（如 dept/attr scope，路线三口径）。"},
+        "guard": {
+          "type": "object",
+          "description": "平台侧守卫声明快照（应用/技能守卫角色与属性）。",
+          "additionalProperties": false,
+          "properties": {
+            "roles": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+            "attributes": {"type": "object", "additionalProperties": {"type": "array", "items": {"type": "string"}}}
+          }
+        },
+        "outboundIdentity": {
+          "type": "object",
+          "description": "出站身份注入（PLAT-12 §13 冻结形态）：mode 只允许 PLATFORM_SUBJECT；headers 值只允许主体快照字段白名单。",
+          "required": ["mode"],
+          "additionalProperties": false,
+          "properties": {
+            "mode": {"const": "PLATFORM_SUBJECT"},
+            "headers": {
+              "type": "object",
+              "additionalProperties": {"enum": ["principalId", "tenantId", "roles", "attributes"]}
+            }
+          }
+        },
+        "secrets": {
+          "type": "array",
+          "description": "密钥引用清单；只允许 secret:// 或 cred:// 引用，禁止明文（§11.2.4，脚本扫描强制）。",
+          "items": {
+            "type": "object",
+            "required": ["ref", "purpose"],
+            "additionalProperties": false,
+            "properties": {
+              "ref": {"type": "string", "pattern": "^(secret|cred)://"},
+              "purpose": {"type": "string", "minLength": 1}
+            }
+          }
+        },
+        "notes": {"type": "string"}
+      }
+    },
+
+    "agents": {
+      "type": "array",
+      "description": "§11.2.2 agents（否）：推荐的应用/技能/提示词模板；能力包本身不强制绑定某个 app。提示词走引用不内联长文（§11.4 第 6 步）；应用组装自动化归 T22B/T22D（A-04）。",
+      "items": {
+        "type": "object",
+        "required": ["code", "type", "skillRefs"],
+        "additionalProperties": false,
+        "properties": {
+          "code": {"type": "string", "minLength": 1},
+          "name": {"type": "string"},
+          "type": {"enum": ["CHAT", "TASK", "FLOW"], "description": "应用类型（图定义 trigger 口径 CHAT/TASK；FLOW 为流程编排）。"},
+          "skillRefs": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["tool", "skillCode", "version"],
+              "additionalProperties": false,
+              "properties": {
+                "tool": {"type": "string", "description": "必须指向本包 tools[].id（脚本校验）。"},
+                "skillCode": {"type": "string", "minLength": 1},
+                "version": {"type": "integer", "minimum": 1},
+                "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+              }
+            }
+          },
+          "modelBinding": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "modelEntryId": {"type": "integer", "minimum": 1},
+              "entry": {"type": "string", "description": "模型条目名（如 deepseek-flash）；模型可替换（§11.4 第 6 步）。"}
+            }
+          },
+          "guard": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "roles": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+              "attributes": {"type": "object", "additionalProperties": {"type": "array", "items": {"type": "string"}}}
+            }
+          },
+          "promptRef": {"type": "string", "description": "提示词出处引用（配置快照/摘要），不内联业务长文。"},
+          "requiredLabels": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+          "notes": {"type": "string"}
+        }
+      }
+    },
+
+    "verification": {
+      "type": "object",
+      "description": "§11.2.2 verification：连接、契约、模型、评测、安全、并发隔离六类门禁的配置。§11.2.4：不允许全部关闭；关闭项必须走豁免并留痕（脚本强制：每个 false 门禁须有对应 exemptions 条目）。分层验证流水线归 T22D 前的 A-05，本 schema 只冻结声明形态。",
+      "required": ["connection", "contract", "model", "evaluation", "safety", "concurrency"],
+      "additionalProperties": false,
+      "properties": {
+        "connection": {"type": "boolean", "description": "连接门：端点真实可达（连接测试非 mock）。"},
+        "contract": {"type": "boolean", "description": "契约门：schema 校验/契约收敛通过。"},
+        "model": {"type": "boolean", "description": "模型门：选型验收命中率门禁（≥0.8）。"},
+        "evaluation": {"type": "boolean", "description": "评测门：评测断言通过。"},
+        "safety": {"type": "boolean", "description": "安全门：守卫声明/确认流程/出域检查。"},
+        "concurrency": {"type": "boolean", "description": "并发隔离门：并发上限/隔离用例实测。"},
+        "exemptions": {
+          "type": "array",
+          "description": "豁免留痕：关闭的门禁逐条登记理由与期限（§11.2.4）。",
+          "items": {
+            "type": "object",
+            "required": ["gate", "reason"],
+            "additionalProperties": false,
+            "properties": {
+              "gate": {"enum": ["connection", "contract", "model", "evaluation", "safety", "concurrency"]},
+              "reason": {"type": "string", "minLength": 1},
+              "until": {"type": "string", "description": "豁免期限/解除条件。"}
+            }
+          }
+        },
+        "notes": {"type": "string"}
+      }
+    },
+
+    "operations": {
+      "type": "object",
+      "description": "§11.2.2 operations：SLO、日志/产物保留、告警接收方、成本归属。无实测数据时不得编造数值——用 notes 如实登记并指明登记归属卡；按能力包/路线/工具/本体的运行归因与成本观测归 T22D（A-07、O-08）。",
+      "additionalProperties": false,
+      "properties": {
+        "slo": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "p95Ms": {"type": "integer", "minimum": 1},
+            "errorRate": {"type": "number", "minimum": 0, "maximum": 1},
+            "notes": {"type": "string"}
+          }
+        },
+        "retention": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "logsDays": {"type": "integer", "minimum": 1},
+            "artifactsDays": {"type": "integer", "minimum": 1},
+            "notes": {"type": "string"}
+          }
+        },
+        "alerting": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "receivers": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+            "notes": {"type": "string"}
+          }
+        },
+        "costOwner": {"type": "string"},
+        "notes": {"type": "string"}
+      }
+    },
+
+    "routeProfiles": {
+      "type": "array",
+      "description": "§11.2.2 routeProfiles（否）：预置的路线组合；不填时由平台按 interface/ontology 自动生成默认组合。RouteProfile 是能力包的一次绑定（§11.3），只允许引用本包 interface/tool/ontology（§11.2.4，脚本校验）。路线一/二/三不是平台分类，是这里的配置实例。",
+      "items": {
+        "type": "object",
+        "required": ["id", "execution"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {"type": "string", "pattern": "^[a-z][a-z0-9-]{1,63}$", "description": "路线配置标识；§11.3 口径如 http-sync/http-async/local-process/mcp/k8s-algorithm，可加本体横切（ontology-constrained/hybrid）。"},
+          "execution": {"type": "string", "pattern": "^[a-z][a-z0-9-]{1,63}$", "description": "执行入口 = 本包 interfaces[].id（脚本校验）。"},
+          "ontology": {"type": "string", "description": "\"none\" 或 \"<space>@<release>\"（须与 ontology 区块一致，脚本校验）。"},
+          "tools": {"type": "array", "items": {"type": "string"}, "uniqueItems": true, "description": "本路线暴露的工具 = 本包 tools[].id（脚本校验）。"},
+          "identity": {"type": "string", "description": "身份组合描述（如 dept-scoped/service-account）。"},
+          "notes": {"type": "string"}
+        }
+      }
+    },
+
+    "implementationGaps": {
+      "type": "array",
+      "description": "留白登记：本能力包依赖但平台尚未实现/未覆盖的能力，逐条注明归属卡。这是 §11.2 冻结时「先声明、后实现」的显式留白（T22A 口径），不得视为已上线能力。",
+      "items": {
+        "type": "object",
+        "required": ["area", "description", "ownerCard"],
+        "additionalProperties": false,
+        "properties": {
+          "area": {"type": "string", "minLength": 1},
+          "description": {"type": "string", "minLength": 1},
+          "ownerCard": {"type": "string", "minLength": 1, "description": "实现归属卡（如 T22B/T22C/T22D/T14.1）。"}
+        }
+      }
+    }
+  }
+}
