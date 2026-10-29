@@ -1,0 +1,202 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "能力包管理接口工程增补（EX-10/11）",
+    "version": "2026-10-30",
+    "description": "独立的源码对应接口补充，不替代网关实时 OpenAPI。身份和 tenant 只来自已验签 Actor；登记、解析和草稿均不构成评测、执行或发布成功。冻结声明 schema 仅引用，不复制或修改。"
+  },
+  "servers": [{ "url": "/" }],
+  "security": [{ "bearerAuth": [] }],
+  "paths": {
+    "/admin/capability-packages/import": {
+      "post": {
+        "operationId": "registerCapabilityPackage",
+        "summary": "登记不可变能力包声明",
+        "description": "EDITOR/ADMIN。同租户同 packageId/version/SHA 重试返回原记录；异 SHA 拒绝。重试可返回该版本现有的 RESOLVED 状态，但本收据仍固定 appCreated=false、applications=[]，不代表当前真实来源应用清单。",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CapabilityImportRequest" } } } },
+        "responses": {
+          "200": { "description": "首次登记或同声明重试", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CapabilityImportResponse" } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        },
+        "x-error-codes": { "400": ["INVALID_INPUT", "CAPABILITY_DECLARATION_INVALID"], "401": ["SYS-AUTH-401"], "403": ["SYS-APP-4031"], "409": ["CAPABILITY_BINDING_REQUIRED", "CAPABILITY_VERSION_CONFLICT", "CAPABILITY_IMPORT_BUSY"] }
+      }
+    },
+    "/admin/capability-packages/{id}/bindings/resolve": {
+      "post": {
+        "operationId": "resolveCapabilityPackageBindings",
+        "summary": "解析选定环境和单一路线的精确技能绑定",
+        "description": "EDITOR/ADMIN。全部远端只读校验完成后保存一份计划；同计划重试复用，异计划拒绝。RESOLVED 仅表示所选路线映射，不表示整包全部路线可用或已通过验证。",
+        "parameters": [{ "$ref": "#/components/parameters/PackageVersionId" }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CapabilityResolveRequest" } } } },
+        "responses": {
+          "200": { "description": "精确绑定收据", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CapabilityResolveResponse" } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "502": { "$ref": "#/components/responses/DependencyUnavailable" }
+        },
+        "x-error-codes": { "400": ["INVALID_INPUT"], "401": ["SYS-AUTH-401"], "403": ["SYS-APP-4031"], "404": ["CAPABILITY_PACKAGE_NOT_FOUND", "SKILL_NOT_FOUND", "SKILL_VERSION_NOT_FOUND"], "409": ["CAPABILITY_IMPORT_PLAN_CONFLICT", "CAPABILITY_VERSION_CONFLICT", "CAPABILITY_IMPORT_BUSY", "CAPABILITY_ROUTE_BINDING_CONFLICT", "CAPABILITY_BINDING_REQUIRED", "UNRESOLVED_SECRET_BINDING", "SKILL_VERSION_CONFLICT", "CAPABILITY_BINDING_CONFLICT", "CAPABILITY_BINDING_DIGEST_MISMATCH", "SKILL_NOT_PUBLISHED", "SKILL_ADAPTER_NOT_REGISTERED", "SKILL_DIGEST_MISMATCH"], "502": ["DEPENDENCY_UNAVAILABLE"] }
+      }
+    },
+    "/admin/capability-packages/{id}/applications": {
+      "post": {
+        "operationId": "createCapabilityPackageApplications",
+        "summary": "从已解析来源创建真实可编辑应用草稿",
+        "description": "EDITOR/ADMIN。完整配置由用户提供；不猜模型、环境或流程图。首次计划原子创建，同计划重试读取原应用当前草稿，异计划拒绝；不会覆盖后续编辑或复活已删除目标。响应有意不包含 softwareId、softwareVersion 或 bindingStatus。",
+        "parameters": [{ "$ref": "#/components/parameters/PackageVersionId" }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CapabilityApplicationsRequest" } } } },
+        "responses": {
+          "200": { "description": "应用当前草稿收据；首次 DRAFT，重试可反映之后的应用状态", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CapabilityApplicationsResponse" } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "502": { "$ref": "#/components/responses/DependencyUnavailable" }
+        },
+        "x-error-codes": { "400": ["INVALID_INPUT"], "401": ["SYS-AUTH-401"], "403": ["SYS-APP-4031"], "404": ["CAPABILITY_PACKAGE_NOT_FOUND", "SKILL_NOT_FOUND", "SKILL_VERSION_NOT_FOUND"], "409": ["CAPABILITY_IMPORT_PLAN_CONFLICT", "CAPABILITY_BINDING_REQUIRED", "CAPABILITY_BINDING_CONFLICT", "CAPABILITY_VERSION_CONFLICT", "CAPABILITY_ROUTE_BINDING_CONFLICT", "CAPABILITY_SOURCE_CONFLICT", "CAPABILITY_APPLICATION_MISSING", "APP_CODE_CONFLICT", "CAPABILITY_IMPORT_BUSY", "SKILL_NOT_PUBLISHED", "SKILL_ADAPTER_NOT_REGISTERED", "SKILL_DIGEST_MISMATCH"], "502": ["DEPENDENCY_UNAVAILABLE"] }
+      }
+    },
+    "/admin/capability-packages": {
+      "get": {
+        "operationId": "listCapabilityPackages",
+        "summary": "读取当前租户的有界能力目录",
+        "description": "VIEWER/EDITOR/ADMIN。按 id 倒序游标分页；仅接受这里列出的检索参数，未知参数拒绝。space/release 只匹配原声明引用，不代表本体授权或版本有效性。",
+        "parameters": [
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 30 } },
+          { "name": "beforeId", "in": "query", "description": "上一页 nextBeforeId；不含该行", "schema": { "type": "integer", "format": "int64", "minimum": 1 } },
+          { "name": "q", "in": "query", "description": "packageId/softwareId 字面子串，不将 % 或 _ 当通配符", "schema": { "type": "string", "maxLength": 128 } },
+          { "name": "ontologySpace", "in": "query", "schema": { "type": "string", "maxLength": 128 } },
+          { "name": "ontologyRelease", "in": "query", "schema": { "type": "string", "maxLength": 128 } }
+        ],
+        "responses": {
+          "200": { "description": "最多 limit 条；仅有下一页时提供 nextBeforeId", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CapabilityListResponse" } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        },
+        "x-error-codes": { "400": ["INVALID_INPUT"], "401": ["SYS-AUTH-401"], "403": ["SYS-APP-4031"] }
+      }
+    },
+    "/admin/capability-packages/{id}": {
+      "get": {
+        "operationId": "getCapabilityPackage",
+        "summary": "读取包声明、选定映射与当前真实来源应用",
+        "description": "VIEWER/EDITOR/ADMIN。跨租户与不存在统一返回 404。来源应用最多 100 条，超过时 applicationsTruncated=true；applicationCount 为真实关联总数，不从首次创建收据或声明推算。",
+        "parameters": [{ "$ref": "#/components/parameters/PackageVersionId" }],
+        "responses": {
+          "200": { "description": "当前租户能力包详情", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CapabilityDetailResponse" } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        },
+        "x-error-codes": { "400": ["INVALID_INPUT"], "401": ["SYS-AUTH-401"], "403": ["SYS-APP-4031"], "404": ["CAPABILITY_PACKAGE_NOT_FOUND"] }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": { "bearerAuth": { "type": "http", "scheme": "bearer", "bearerFormat": "JWT" } },
+    "parameters": { "PackageVersionId": { "name": "id", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64", "minimum": 1 } } },
+    "responses": {
+      "BadRequest": { "description": "业务输入、声明或配置校验失败；具体已知错误码见 operation.x-error-codes", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CapabilityError" } } } },
+      "Unauthorized": { "description": "没有有效 Actor 身份", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CapabilityError" } } } },
+      "Forbidden": { "description": "没有当前操作所需管理角色", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CapabilityError" } } } },
+      "NotFound": { "description": "租户内包或精确技能版本不存在", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CapabilityError" } } } },
+      "Conflict": { "description": "声明、解析、来源、应用计划、发布资格或并发冲突；不覆盖现有记录", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CapabilityError" } } } },
+      "DependencyUnavailable": { "description": "真实技能/模型/流程校验依赖不可用或回复不完整", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CapabilityError" } } } }
+    },
+    "schemas": {
+      "CapabilityPackageDeclaration": { "$ref": "./capability-package.schema.json" },
+      "CapabilityImportRequest": { "type": "object", "additionalProperties": false, "required": ["package"], "properties": { "package": { "$ref": "#/components/schemas/CapabilityPackageDeclaration", "description": "完整冻结声明；canonical UTF-8 最多 2 MiB，另受现有引用/凭据语义校验" } } },
+      "CapabilitySkillReference": { "type": "object", "additionalProperties": false, "required": ["code", "version"], "properties": { "code": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$" }, "version": { "type": "integer", "minimum": 1, "maximum": 2147483647 }, "sha256": { "$ref": "#/components/schemas/Sha256" } } },
+      "CapabilityResolveRequest": {
+        "type": "object", "additionalProperties": false, "required": ["environment", "routeProfileId"],
+        "properties": {
+          "environment": { "type": "string", "minLength": 1, "maxLength": 128, "description": "必须明确存在于原声明 software.environments" },
+          "routeProfileId": { "type": "string", "minLength": 1, "maxLength": 128, "description": "必须是原声明路线；没有 routeProfiles 时为 interface id" },
+          "bindings": { "type": ["array", "null"], "description": "省略或 null 视为空数组；从选中工具原声明读取精确引用", "items": { "type": "object", "additionalProperties": false, "required": ["toolId", "skillRef"], "properties": { "toolId": { "type": "string", "minLength": 1, "maxLength": 128 }, "skillRef": { "$ref": "#/components/schemas/CapabilitySkillReference" } } } }
+        }
+      },
+      "CapabilityApplicationsRequest": { "type": "object", "additionalProperties": false, "required": ["applications"], "properties": { "applications": { "type": "array", "minItems": 1, "items": { "$ref": "#/components/schemas/CapabilityApplicationPlan" } } } },
+      "CapabilityApplicationPlan": {
+        "type": "object", "additionalProperties": false, "required": ["appCode", "name", "type", "routeProfileId", "config"],
+        "properties": {
+          "appCode": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$" },
+          "name": { "type": "string", "minLength": 1, "maxLength": 128 },
+          "type": { "type": "string", "enum": ["CHAT", "FLOW"] },
+          "routeProfileId": { "type": "string", "minLength": 1, "description": "必须等于已解析路线，不重新绑定" },
+          "config": { "$ref": "#/components/schemas/CapabilityDraftConfig" },
+          "definition": { "type": "object", "description": "FLOW 提供既有完整图格式；CHAT 只接受空对象" },
+          "layout": { "type": "object" }, "description": { "type": "string" }, "domain": { "type": "string" }, "bizCategory": { "type": "string" }, "tags": { "type": "array", "items": { "type": "string" } }
+        },
+        "allOf": [
+          { "if": { "properties": { "type": { "const": "CHAT" } } }, "then": { "properties": { "config": { "required": ["modelBinding"] }, "definition": { "maxProperties": 0 } } } },
+          { "if": { "properties": { "type": { "const": "FLOW" } } }, "then": { "required": ["definition"], "properties": { "definition": { "$ref": "./graph-definition.schema.json" } } } }
+        ]
+      },
+      "CapabilityDraftConfig": {
+        "type": "object", "description": "沿既有应用配置/引用/Schema 校验；完整模型和流程依赖由服务端真实读取，不由声明猜测。",
+        "properties": { "modelBinding": { "type": "object", "required": ["modelEntryId"], "properties": { "modelEntryId": { "type": "integer", "format": "int64", "minimum": 1 } } } },
+        "not": { "anyOf": [{ "required": ["capabilityPackages"] }, { "required": ["capabilityBindings"] }, { "required": ["skillRefs"] }, { "required": ["tools"] }, { "required": ["frozenPrompts"] }, { "required": ["dependencyVersions"] }, { "required": ["ontologyContext"] }] }
+      },
+      "Sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+      "AppStatus": { "type": "string", "enum": ["DRAFT", "PUBLISHED", "DISABLED", "ARCHIVED"] },
+      "CapabilityImportReceipt": {
+        "type": "object", "additionalProperties": false,
+        "required": ["packageVersionId", "packageId", "version", "sha256", "softwareId", "reused", "bindingStatus", "verificationStatus", "appCreated", "applications"],
+        "properties": {
+          "packageVersionId": { "type": "integer", "format": "int64", "minimum": 1 }, "packageId": { "type": "string" }, "version": { "type": "string" }, "sha256": { "$ref": "#/components/schemas/Sha256" },
+          "softwareId": { "type": "string" }, "softwareVersion": { "type": "string", "description": "原声明未提供时省略，不与包版本混淆" },
+          "reused": { "type": "boolean" }, "bindingStatus": { "type": "string", "enum": ["UNRESOLVED", "RESOLVED"] }, "verificationStatus": { "const": "NOT_EVALUATED" }, "appCreated": { "const": false }, "applications": { "type": "array", "maxItems": 0, "items": {} }
+        }
+      },
+      "CapabilityResolvedBinding": {
+        "type": "object", "additionalProperties": false, "required": ["routeProfileId", "toolId", "interfaceId", "skillCode", "skillVersionId", "version", "sha256"],
+        "properties": { "routeProfileId": { "type": "string" }, "toolId": { "type": "string" }, "interfaceId": { "type": "string" }, "skillCode": { "type": "string" }, "skillVersionId": { "type": "integer", "format": "int64", "minimum": 1 }, "version": { "type": "integer", "minimum": 1 }, "sha256": { "$ref": "#/components/schemas/Sha256" } }
+      },
+      "CapabilityResolvedMapping": {
+        "type": "object", "additionalProperties": false, "required": ["environment", "environmentDeclaration", "routeProfileId", "bindings"],
+        "properties": { "environment": { "type": "string" }, "environmentDeclaration": { "type": "string", "description": "原 software.environments 中声明值，仅保留不作为目标覆盖" }, "routeProfileId": { "type": "string" }, "bindings": { "type": "array", "items": { "$ref": "#/components/schemas/CapabilityResolvedBinding" } } }
+      },
+      "CapabilityResolveReceipt": {
+        "type": "object", "additionalProperties": false,
+        "required": ["packageVersionId", "packageId", "version", "sha256", "softwareId", "environment", "environmentDeclaration", "routeProfileId", "bindings", "bindingStatus", "verificationStatus", "appCreated", "applications", "reused"],
+        "properties": {
+          "packageVersionId": { "type": "integer", "format": "int64", "minimum": 1 }, "packageId": { "type": "string" }, "version": { "type": "string" }, "sha256": { "$ref": "#/components/schemas/Sha256" }, "softwareId": { "type": "string" }, "softwareVersion": { "type": "string" },
+          "environment": { "type": "string" }, "environmentDeclaration": { "type": "string" }, "routeProfileId": { "type": "string" }, "bindings": { "type": "array", "items": { "$ref": "#/components/schemas/CapabilityResolvedBinding" } },
+          "bindingStatus": { "const": "RESOLVED" }, "verificationStatus": { "const": "NOT_EVALUATED" }, "appCreated": { "const": false }, "applications": { "type": "array", "maxItems": 0, "items": {} }, "reused": { "type": "boolean" }
+        }
+      },
+      "CapabilityApplicationReceipt": { "type": "object", "additionalProperties": false, "required": ["appId", "appCode", "draftRev", "status"], "properties": { "appId": { "type": "integer", "format": "int64", "minimum": 1 }, "appCode": { "type": "string" }, "draftRev": { "type": "integer", "format": "int64", "minimum": 1 }, "status": { "$ref": "#/components/schemas/AppStatus" } } },
+      "CapabilityApplicationsReceipt": {
+        "type": "object", "additionalProperties": false, "required": ["packageVersionId", "packageId", "version", "sha256", "applications", "appCreated", "reused", "verificationStatus"],
+        "properties": { "packageVersionId": { "type": "integer", "format": "int64", "minimum": 1 }, "packageId": { "type": "string" }, "version": { "type": "string" }, "sha256": { "$ref": "#/components/schemas/Sha256" }, "applications": { "type": "array", "minItems": 1, "items": { "$ref": "#/components/schemas/CapabilityApplicationReceipt" } }, "appCreated": { "const": true }, "reused": { "type": "boolean" }, "verificationStatus": { "const": "NOT_EVALUATED" } }
+      },
+      "CapabilityPackageSummary": {
+        "type": "object", "required": ["packageVersionId", "packageId", "version", "sha256", "softwareId", "softwareVersion", "bindingStatus", "verificationStatus", "applicationCount", "createdAt"],
+        "properties": { "packageVersionId": { "type": "integer", "format": "int64", "minimum": 1 }, "packageId": { "type": "string" }, "version": { "type": "string" }, "sha256": { "$ref": "#/components/schemas/Sha256" }, "softwareId": { "type": "string" }, "softwareVersion": { "type": ["string", "null"] }, "bindingStatus": { "type": "string", "enum": ["UNRESOLVED", "RESOLVED"] }, "verificationStatus": { "const": "NOT_EVALUATED" }, "applicationCount": { "type": "integer", "format": "int64", "minimum": 0 }, "createdAt": { "type": "string", "format": "date-time" }, "resolvedAt": { "type": "string", "format": "date-time" } }
+      },
+      "CapabilityPackagePage": { "type": "object", "additionalProperties": false, "required": ["items"], "properties": { "items": { "type": "array", "maxItems": 100, "items": { "$ref": "#/components/schemas/CapabilityPackageSummary" } }, "nextBeforeId": { "type": "integer", "format": "int64", "minimum": 1 } } },
+      "CapabilitySourceApplication": { "type": "object", "additionalProperties": false, "required": ["appId", "appCode", "name", "type", "status", "draftRev", "currentVersionNo"], "properties": { "appId": { "type": "integer", "format": "int64", "minimum": 1 }, "appCode": { "type": "string" }, "name": { "type": "string" }, "type": { "type": "string", "enum": ["CHAT", "FLOW"] }, "status": { "$ref": "#/components/schemas/AppStatus" }, "draftRev": { "type": ["integer", "null"], "format": "int64" }, "currentVersionNo": { "type": ["integer", "null"] } } },
+      "CapabilityPackageDetail": {
+        "allOf": [
+          { "$ref": "#/components/schemas/CapabilityPackageSummary" },
+          { "type": "object", "required": ["declaration", "resolvedMapping", "applications", "applicationsTruncated"], "properties": { "declaration": { "$ref": "#/components/schemas/CapabilityPackageDeclaration" }, "resolvedMapping": { "oneOf": [{ "type": "object", "maxProperties": 0 }, { "$ref": "#/components/schemas/CapabilityResolvedMapping" }] }, "applications": { "type": "array", "maxItems": 100, "items": { "$ref": "#/components/schemas/CapabilitySourceApplication" } }, "applicationsTruncated": { "type": "boolean" } } }
+        ]
+      },
+      "CapabilitySuccess": { "type": "object", "required": ["code", "message", "data", "traceId"], "properties": { "code": { "const": "OK" }, "message": { "const": "" }, "data": {}, "traceId": { "type": ["string", "null"] } } },
+      "CapabilityImportResponse": { "allOf": [{ "$ref": "#/components/schemas/CapabilitySuccess" }, { "type": "object", "required": ["data"], "properties": { "data": { "$ref": "#/components/schemas/CapabilityImportReceipt" } } }] },
+      "CapabilityResolveResponse": { "allOf": [{ "$ref": "#/components/schemas/CapabilitySuccess" }, { "type": "object", "required": ["data"], "properties": { "data": { "$ref": "#/components/schemas/CapabilityResolveReceipt" } } }] },
+      "CapabilityApplicationsResponse": { "allOf": [{ "$ref": "#/components/schemas/CapabilitySuccess" }, { "type": "object", "required": ["data"], "properties": { "data": { "$ref": "#/components/schemas/CapabilityApplicationsReceipt" } } }] },
+      "CapabilityListResponse": { "allOf": [{ "$ref": "#/components/schemas/CapabilitySuccess" }, { "type": "object", "required": ["data"], "properties": { "data": { "$ref": "#/components/schemas/CapabilityPackagePage" } } }] },
+      "CapabilityDetailResponse": { "allOf": [{ "$ref": "#/components/schemas/CapabilitySuccess" }, { "type": "object", "required": ["data"], "properties": { "data": { "$ref": "#/components/schemas/CapabilityPackageDetail" } } }] },
+      "CapabilityError": { "type": "object", "additionalProperties": false, "required": ["code", "message", "data", "traceId"], "properties": { "code": { "type": "string", "description": "已知业务错误码见各操作 x-error-codes；此补充不代替 EX-22 全局认证/代理错误验收" }, "message": { "type": "string" }, "data": { "type": "null" }, "traceId": { "type": ["string", "null"] } } }
+    }
+  }
+}

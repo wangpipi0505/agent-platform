@@ -64,6 +64,41 @@ for(const [module,namespace] of Object.entries(modules)){
  }
 }
 JSON.parse(await readFile(path.join(root,'contracts/graph-definition.schema.json'),'utf8'));
+// EX-10/11 是独立源码契约，不叠加/冒充网关实时文档；五个入口必须仍有真实 Controller。
+const capabilityApi=JSON.parse(await readFile(path.join(root,'contracts/capability-package.openapi.json'),'utf8'));
+const capabilityOperations=[
+ ['/admin/capability-packages/import','post','CapabilityPackageController','CapabilityImportRequest','CapabilityImportResponse'],
+ ['/admin/capability-packages/{id}/bindings/resolve','post','CapabilityPackageBindingController','CapabilityResolveRequest','CapabilityResolveResponse'],
+ ['/admin/capability-packages/{id}/applications','post','CapabilityPackageApplicationsController','CapabilityApplicationsRequest','CapabilityApplicationsResponse'],
+ ['/admin/capability-packages','get','CapabilityPackageQueryController',null,'CapabilityListResponse'],
+ ['/admin/capability-packages/{id}','get','CapabilityPackageQueryController',null,'CapabilityDetailResponse'],
+];
+if(capabilityApi.openapi!=='3.1.0'||!isDeepStrictEqual(Object.keys(capabilityApi.paths??{}).sort(),capabilityOperations.map(item=>item[0]).sort()))throw new Error('EX-10/11 能力包 OpenAPI 五路径漂移');
+const capabilitySchemas=capabilityApi.components?.schemas??{};
+if(capabilitySchemas.CapabilityPackageDeclaration?.$ref!=='./capability-package.schema.json')throw new Error('EX-10/11 必须直接引用冻结能力包 schema');
+const capabilityRequired={
+ CapabilityImportRequest:['package'],CapabilityResolveRequest:['environment','routeProfileId'],CapabilityApplicationsRequest:['applications'],
+ CapabilityImportReceipt:['packageVersionId','packageId','version','sha256','softwareId','reused','bindingStatus','verificationStatus','appCreated','applications'],
+ CapabilityResolveReceipt:['packageVersionId','packageId','version','sha256','softwareId','environment','environmentDeclaration','routeProfileId','bindings','bindingStatus','verificationStatus','appCreated','applications','reused'],
+ CapabilityApplicationsReceipt:['packageVersionId','packageId','version','sha256','applications','appCreated','reused','verificationStatus'],
+ CapabilityPackageSummary:['packageVersionId','packageId','version','sha256','softwareId','softwareVersion','bindingStatus','verificationStatus','applicationCount','createdAt'],
+};
+for(const [name,required] of Object.entries(capabilityRequired))if(!isDeepStrictEqual([...(capabilitySchemas[name]?.required??[])].sort(),[...required].sort()))throw new Error(`EX-10/11 请求/收据必填字段漂移：${name}`);
+for(const [route,method,controller,request,response] of capabilityOperations){
+ const operation=capabilityApi.paths[route]?.[method];
+ const source=await readFile(path.join(root,`app-management/src/main/java/cn/agentplatform/app/api/${controller}.java`),'utf8');
+ if(!operation||!source.includes(`"${route}"`)||!source.includes(method==='get'?'@GetMapping':'@PostMapping'))throw new Error(`EX-10/11 无对应真实入口：${method} ${route}`);
+ if(operation.responses?.['200']?.content?.['application/json']?.schema?.$ref!==`#/components/schemas/${response}`)throw new Error(`EX-10/11 成功收据漂移：${route}`);
+ if(request&&(operation.requestBody?.required!==true||operation.requestBody?.content?.['application/json']?.schema?.$ref!==`#/components/schemas/${request}`||capabilitySchemas[request]?.additionalProperties!==false))throw new Error(`EX-10/11 请求信封漂移：${route}`);
+ for(const status of ['400','401','403',...(method==='post'?['409']:[]),...(route.includes('{id}')?['404']:[]),...(route.endsWith('/resolve')||route.endsWith('/applications')?['502']:[])]){
+  if(!operation.responses?.[status]||!operation['x-error-codes']?.[status]?.length)throw new Error(`EX-10/11 错误响应遗漏：${route} ${status}`);
+ }
+}
+for(const name of ['CapabilityImportReceipt','CapabilityResolveReceipt','CapabilityApplicationsReceipt','CapabilityPackageSummary']){
+ if(capabilitySchemas[name]?.properties?.verificationStatus?.const!=='NOT_EVALUATED')throw new Error(`EX-10/11 不得伪造验证结论：${name}`);
+}
+if(capabilitySchemas.CapabilityImportReceipt?.properties?.appCreated?.const!==false||capabilitySchemas.CapabilityResolveReceipt?.properties?.appCreated?.const!==false||capabilitySchemas.CapabilityApplicationsReceipt?.properties?.appCreated?.const!==true)throw new Error('EX-10/11 登记/解析/草稿状态混淆');
+if(!isDeepStrictEqual(capabilitySchemas.CapabilitySuccess?.required,['code','message','data','traceId'])||capabilitySchemas.CapabilitySuccess?.properties?.code?.const!=='OK')throw new Error('EX-10/11 成功信封漂移');
 // G-9：路由目录漂移。只在服务票据面出现 MISSING 时失败；门户面（/admin/**）与 STALE 仅告警。
 const routes=verifyRoutes();
 if(routes.blocking){
