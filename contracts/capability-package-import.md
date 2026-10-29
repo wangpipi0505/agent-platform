@@ -111,3 +111,9 @@
 沿现有 `GET /admin/runs/page` 增加可选 `packageId`、`routeProfileId`、`toolId`、`releaseId`、`traceId`（各最多128字符），原 appCode/status/q/time/page/size保持。tenant/principal只取当前身份，显式提交范围字段拒绝。包/路线必须来自同一 `version_refs.capabilityPackages` 元素；toolId另需同来源binding与该run实际 `tool_call` 的精确skill code/version对应，不从技能编码猜toolId，也不把声明当成已调用。release仅取原已消费的 `snapshot.contextPack.releaseId`。
 
 列表及legacy运行详情新增 `observation`，含 `traceId/releaseId/spaceId/capabilityPackages`；历史缺字段为null，读取时不以当前MDC或目录补值。仅新运行生成versionRefs时捕获 `TraceContextFilter.current()` 并与原事务共同持久；IAM protected详情原形状保持。本批未接OR的可信package/route/app-tool执行挂点，也不宣称trace已经跨服务贯通。
+
+## EX-13：请求 trace 与冻结 worker 上下文
+
+网关既有合法 X-Trace-Id 规则保持。新run沿versionRefs冻结trace，legacy与已验IAM worker均在各自run执行边界绑定并finally恢复MDC；旧run缺字段仅生成当次关联，不回填PG。RuntimeClients的GET/POST、流、取消和受控异步发布读传同一头，SkillAdapters HTTP最后设置一个上下文trace，不能由技能鉴权配置覆盖。关联值不参与身份或授权。
+
+OR请求边界用相同长度/字符约束，成功/错误信封和响应头携当前请求trace，结束清理；旧三参Envelope构造保持。OR原执行UUID不强制改成AP opaque trace；请求trace持久化及执行查询关联仍待EX-12后续，不把HTTP透传当作已完成四段真实业务联验。

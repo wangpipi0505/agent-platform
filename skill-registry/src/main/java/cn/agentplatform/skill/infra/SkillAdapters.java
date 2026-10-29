@@ -913,6 +913,8 @@ public class SkillAdapters {
             // 身份头与鉴权头叠加（PLAT-12 §4.12）：声明了 identity 的技能出站追加 X-User-*，值
             // 只来自进程内已验主体快照；无可用主体（系统级调用）时跳过注入不伪造，不改变鉴权语义。
             identityHeaders(contract).forEach(request::header);
+            // 关联值仅来自已校验的请求/运行上下文，不能由技能鉴权配置覆盖或用作身份。
+            request.headers(headers -> headers.set(TraceContextFilter.HEADER, TraceContextFilter.current()));
             if (mapped && MultipartFormMapping.declared(contract)) {
                 // multipart表单：文件字节经产物存储按租户/主体解析（runId传null与/admin下载语义一致，
                 // 允许引用此前运行的产物）；重发同一坏引用不会有不同结果，失败按PARAM_ERROR处理。

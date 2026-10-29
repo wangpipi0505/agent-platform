@@ -1680,6 +1680,12 @@ public class RunService {
             return;
         }
         var run = store.db().queryForMap("select * from engine.run where id=?", rid);
+        try (var trace = TraceContextFilter.bind(TraceStore.json(run.get("version_refs")).path("traceId").asText(null))) {
+            driveLegacy(rid, actor, run);
+        }
+    }
+
+    private void driveLegacy(long rid, Actor actor, Map<String, Object> run) {
         if (!run.get("status").equals("RUNNING")) return;
         for (var pending : store.nodes(rid)) {
             if (!scheduler.mayAdvance(rid)) break;
@@ -2791,11 +2797,17 @@ public class RunService {
     private void driveOwned(long id) {
         if (runAuthority == null) throw RunAuthorityStore.denied();
         var dispatch = scheduler.ownedDispatch(id);
-        String type = store.ownedApplicationType(dispatch, runAuthority.currentRetained(id));
-        if (type.equals("FLOW")) driveOwnedFlow(id);
-        else {
-            if (initialMaterials == null) throw RunAuthorityStore.denied();
-            driveOwnedInitial(id);
+        var proof = runAuthority.currentRetained(id);
+        String type = store.ownedApplicationType(dispatch, proof);
+        // 先完成现有 owner/current/material 校验；关联值不是授权，不替代后续每次执行的 proof。
+        String frozenTrace = store.db().queryForObject("select version_refs->>'traceId' from engine.run where id=?", String.class, id);
+        proof.requireVerified();
+        try (var trace = TraceContextFilter.bind(frozenTrace)) {
+            if (type.equals("FLOW")) driveOwnedFlow(id);
+            else {
+                if (initialMaterials == null) throw RunAuthorityStore.denied();
+                driveOwnedInitial(id);
+            }
         }
     }
 

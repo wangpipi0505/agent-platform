@@ -126,6 +126,7 @@ public class RuntimeClients implements AutoCloseable {
         var request = new org.apache.hc.client5.http.classic.methods.HttpPost(initialOrigin.resolve(
                 "/internal/model/chat/stream?profile=initial-chat-main-v1&materialRef=" + query));
         request.setHeader("Authorization", "Bearer " + ticket.value());
+        request.setHeader(TraceContextFilter.HEADER, TraceContextFilter.current());
         request.setHeader("Accept", "text/event-stream");
         request.setEntity(new org.apache.hc.core5.http.io.entity.ByteArrayEntity(accepted.clone(), org.apache.hc.core5.http.ContentType.APPLICATION_JSON));
         var context = org.apache.hc.client5.http.protocol.HttpClientContext.create();
@@ -341,6 +342,8 @@ public class RuntimeClients implements AutoCloseable {
                 new org.apache.hc.client5.http.classic.methods.HttpGet(
                         publishedOrigin.resolve("/internal/apps/" + code + "/published"));
         request.setHeader("Authorization", "Bearer " + forwarded.value());
+        String traceId = TraceContextFilter.current();
+        request.setHeader(TraceContextFilter.HEADER, traceId);
         request.setHeader("Accept", "application/json");
         request.setHeader("Accept-Encoding", "identity");
         java.util.concurrent.Future<PublishedResponse> response = null;
@@ -355,8 +358,9 @@ public class RuntimeClients implements AutoCloseable {
             // constrains actual HTTP dispatch; TCP address connection attempts are not GET replays.
             response =
                     publishedExecutor.submit(
-                            () ->
-                                    publishedHttp.execute(
+                            () -> {
+                                try (var trace = TraceContextFilter.bind(traceId)) {
+                                    return publishedHttp.execute(
                                             request,
                                             context,
                                             upstream -> {
@@ -399,7 +403,9 @@ public class RuntimeClients implements AutoCloseable {
                                                     request.cancel();
                                                     throw failure;
                                                 }
-                                            }));
+                                            });
+                                }
+                            });
             // Socket response timeouts reset with activity. The outer future covers headers and
             // the entire body together, including a body which stalls after initial bytes.
             long remaining = deadline - System.nanoTime();
@@ -542,6 +548,7 @@ public class RuntimeClients implements AutoCloseable {
                         .get()
                         .uri(base(service) + path)
                         .header("Authorization", "Bearer " + ServiceTokens.issue(actor))
+                        .header(TraceContextFilter.HEADER, TraceContextFilter.current())
                         .retrieve()
                         .body(String.class));
     }
@@ -552,6 +559,7 @@ public class RuntimeClients implements AutoCloseable {
                 http.post()
                         .uri(base(service) + path)
                         .header("Authorization", "Bearer " + ServiceTokens.issue(actor))
+                        .header(TraceContextFilter.HEADER, TraceContextFilter.current())
                         .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                         .body(body)
                         .retrieve()
@@ -575,6 +583,7 @@ public class RuntimeClients implements AutoCloseable {
             connection.setInstanceFollowRedirects(false); connection.setRequestMethod("POST"); connection.setDoOutput(true);
             connection.setConnectTimeout(Math.min(1000, cancelRemaining(until))); connection.setReadTimeout(cancelRemaining(until));
             connection.setRequestProperty("Authorization", "Bearer " + ServiceTokens.issue(actor));
+            connection.setRequestProperty(TraceContextFilter.HEADER, TraceContextFilter.current());
             connection.setRequestProperty("Content-Type", "application/json"); connection.setFixedLengthStreamingMode(request.length);
             try (var output = connection.getOutputStream()) { output.write(request); }
             connection.setReadTimeout(cancelRemaining(until));
@@ -650,6 +659,7 @@ public class RuntimeClients implements AutoCloseable {
             connection.setRequestProperty("Content-Type", "application/json");
             connection.setRequestProperty("Accept", "text/event-stream");
             connection.setRequestProperty("Authorization", "Bearer " + ServiceTokens.issue(actor));
+            connection.setRequestProperty(TraceContextFilter.HEADER, TraceContextFilter.current());
             try (var output = connection.getOutputStream()) {
                 output.write(Json.write(body).getBytes(java.nio.charset.StandardCharsets.UTF_8));
             }

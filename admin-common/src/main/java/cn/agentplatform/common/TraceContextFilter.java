@@ -39,6 +39,23 @@ public class TraceContextFilter extends OncePerRequestFilter {
         }
     }
 
+    /** 运行工作线程只绑定本 run 的冻结关联值；旧记录缺失时仅生成当次值，不回写历史。 */
+    public static Scope bind(String frozenTrace) {
+        String previous = MDC.get("traceId");
+        String trace = frozenTrace != null && SAFE.matcher(frozenTrace).matches()
+                ? frozenTrace : UUID.randomUUID().toString();
+        MDC.put("traceId", trace);
+        return () -> {
+            if (previous == null) MDC.remove("traceId");
+            else MDC.put("traceId", previous);
+        };
+    }
+
+    @FunctionalInterface
+    public interface Scope extends AutoCloseable {
+        @Override void close();
+    }
+
     /** Current request's correlation ID, or a fresh one outside a request (e.g. scheduler). */
     public static String current() {
         String trace = MDC.get("traceId");
