@@ -1,0 +1,47 @@
+{
+  "card": "EX-10",
+  "phase": "RUN_SNAPSHOT",
+  "commit": "6d96a7bdb1cf3e5d518fcceecb001b7c45d264e9",
+  "parent": "8df4dd5cb41c4cc3ff653f5088ec74ce85fec138",
+  "tree": "9c4ec2d5d173d6b59056955020162fbd2661dcab",
+  "paths": [
+    "engine-runtime/src/main/java/cn/agentplatform/engine/application/RunService.java",
+    "engine-runtime/src/test/java/cn/agentplatform/engine/infra/CapabilityRunSnapshotTest.java",
+    "contracts/capability-package-import.md",
+    "docs/evidence/2026-10-30-EX-10/run-snapshot.md"
+  ],
+  "roundsUsed": 2,
+  "round1": {
+    "round": 1,
+    "maximumRounds": 2,
+    "nativeExit": 1,
+    "freshXml": 1,
+    "records": 3,
+    "passed": 0,
+    "failures": 1,
+    "errors": 2,
+    "skipped": 0,
+    "sourceStable": true,
+    "targetedGate": false,
+    "wholeEx10Complete": false,
+    "furtherTestRoundScheduled": false
+  },
+  "round2": {
+    "round": 2,
+    "maximumRounds": 2,
+    "nativeExit": 0,
+    "freshXml": 2,
+    "records": 7,
+    "passed": 7,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "sourceStable": true,
+    "targetedGate": true,
+    "wholeEx10Complete": false,
+    "furtherTestRoundScheduled": false
+  },
+  "fixtureCorrection": "numeric published version, no foreign queue claim, capacity; business assertions unchanged",
+  "wholeCardComplete": false,
+  "pushExecuted": false
+}

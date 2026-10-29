@@ -1,0 +1,51 @@
+{
+  "card": "EX-10",
+  "phase": "EXACT_REGISTERED_BINDING",
+  "commit": "2a7159a383f00ecf5e6416b34757e7a6c34933b4",
+  "parent": "6b08a3e32a17fad2f38cdc2cee4bdb3c2e133e88",
+  "tree": "6b46689715ae9296dff806e0c3f660b9f0a40cd3",
+  "paths": [
+    "skill-registry/src/main/java/cn/agentplatform/skill/api/SkillController.java",
+    "skill-registry/src/main/java/cn/agentplatform/skill/application/SkillCatalog.java",
+    "app-management/src/main/java/cn/agentplatform/app/api/CapabilityPackageBindingController.java",
+    "app-management/src/main/java/cn/agentplatform/app/infra/CapabilitySkillClient.java",
+    "app-management/src/main/java/cn/agentplatform/app/application/CapabilityPackageBindingService.java",
+    "app-management/src/main/java/cn/agentplatform/app/domain/CapabilityBinding.java",
+    "app-management/src/main/java/cn/agentplatform/app/infra/CapabilityPackageRepository.java",
+    "app-management/src/main/resources/db/migration/V109__capability_package_resolution.sql",
+    "app-management/src/test/java/cn/agentplatform/app/application/CapabilityPackageBindingTest.java",
+    "skill-registry/src/test/java/cn/agentplatform/skill/application/CapabilityBindingReadTest.java",
+    "contracts/capability-package-import.md",
+    "docs/evidence/2026-10-29-EX-10/phase2-implementation.md"
+  ],
+  "roundsUsed": 2,
+  "round1": {
+    "appFailures": 3,
+    "skillNotExecuted": true,
+    "reactorStoppedAfterAppFailure": true,
+    "rawExpectedGate": false
+  },
+  "round2": {
+    "round": 2,
+    "maximumRounds": 2,
+    "nativeExit": 0,
+    "freshXml": 5,
+    "records": 23,
+    "passed": 23,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "sourceStable": true,
+    "targetedGate": true,
+    "wholeEx10Complete": false,
+    "furtherTestRoundScheduled": false
+  },
+  "lightCodeReview": "ROOT non-author: no identified blocking issue",
+  "verificationStatus": "NOT_EVALUATED",
+  "bindingStatus": "RESOLVED",
+  "appCreated": false,
+  "wholeCardComplete": false,
+  "pushExecuted": false,
+  "indexEmpty": true,
+  "recordedAtUtc": "2026-10-29T19:03:42.1955206Z"
+}

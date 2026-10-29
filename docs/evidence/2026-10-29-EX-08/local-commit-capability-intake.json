@@ -1,0 +1,51 @@
+{
+  "card": "EX-10",
+  "phase": "DECLARATION_INTAKE",
+  "commit": "de08c79f4f53dd9bd63c9eb95008af406726c531",
+  "parent": "b4e2d7d9a8260e728baac1be65981810ce6fb83b",
+  "tree": "6924c36461363ad6d8bade8ccc0a2efc58332255",
+  "paths": [
+    "app-management/src/main/java/cn/agentplatform/app/api/CapabilityPackageController.java",
+    "app-management/src/main/java/cn/agentplatform/app/application/CapabilityPackageService.java",
+    "app-management/src/main/java/cn/agentplatform/app/domain/CapabilityPackage.java",
+    "app-management/src/main/java/cn/agentplatform/app/infra/CapabilityPackageRepository.java",
+    "app-management/src/main/resources/db/migration/V108__capability_package_intake.sql",
+    "app-management/src/main/resources/capability-package.schema.json",
+    "app-management/src/test/java/cn/agentplatform/app/application/CapabilityPackageImportTest.java",
+    "contracts/capability-package-import.md",
+    "docs/evidence/2026-10-29-EX-10/phase1-implementation.md"
+  ],
+  "roundsUsed": 2,
+  "round1": {
+    "records": 5,
+    "failures": 5,
+    "errors": 0,
+    "skipped": 0,
+    "nativeExit": 1,
+    "accurateMissingHandler": true
+  },
+  "round2": {
+    "round": 2,
+    "maximumRounds": 2,
+    "nativeExit": 0,
+    "freshXml": 3,
+    "records": 18,
+    "passed": 18,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "sourceStable": true,
+    "targetedGate": true,
+    "wholeEx10Complete": false,
+    "furtherTestRoundScheduled": false
+  },
+  "lightIndependentReview": "ex04_pg_scope: URL userinfo and ROOT recursive credential fixes before second round",
+  "schemaSha256": "0456799D04DEB57DFB114D169D8A37C7B57A49CAD3996FEE917A93EFA704A634",
+  "bindingStatus": "UNRESOLVED",
+  "appCreated": false,
+  "sourceGatewayRouteChanged": false,
+  "wholeCardComplete": false,
+  "pushExecuted": false,
+  "indexEmpty": true,
+  "recordedAtUtc": "2026-10-29T18:06:13.6697343Z"
+}

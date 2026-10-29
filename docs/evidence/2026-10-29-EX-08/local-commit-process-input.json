@@ -1,0 +1,50 @@
+{
+  "card": "EX-15b",
+  "substep": "INPUT_MATERIALIZATION",
+  "commit": "b4e2d7d9a8260e728baac1be65981810ce6fb83b",
+  "parent": "d354daf05961d3efdb8759e3d4cb8f188fad1baa",
+  "tree": "c5426c6f41c2b582773f6ba90ac2f4ab38234f77",
+  "paths": [
+    "skill-registry/src/main/java/cn/agentplatform/skill/infra/ProcessAdapter.java",
+    "skill-registry/src/main/java/cn/agentplatform/skill/infra/SkillAdapters.java",
+    "skill-registry/src/test/java/cn/agentplatform/skill/infra/ArtifactPersistenceTest.java",
+    "skill-registry/src/test/java/cn/agentplatform/skill/infra/SkillProcessRoutingTest.java",
+    "contracts/process-files-io.md",
+    "docs/evidence/2026-10-29-EX-15b/phase-b-input-implementation.md"
+  ],
+  "productionFiles": 2,
+  "testFiles": 2,
+  "contractFiles": 1,
+  "evidenceFiles": 1,
+  "roundsUsed": 2,
+  "round1": {
+    "records": 25,
+    "passed": 22,
+    "failures": 3,
+    "errors": 0,
+    "skipped": 0,
+    "rawCollectorGate": false,
+    "rawCollectorIdentitySuffixMismatchPreserved": true
+  },
+  "round2": {
+    "round": 2,
+    "maximumRounds": 2,
+    "nativeExit": 0,
+    "freshXml": 6,
+    "records": 66,
+    "passed": 66,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "sourceStable": true,
+    "targetedGate": true,
+    "wholeEx15bComplete": false,
+    "furtherTestRoundScheduled": false
+  },
+  "lightIndependentReview": "review_invalidation_final: no blocking issue",
+  "fullRepositoryRegression": false,
+  "pushExecuted": false,
+  "indexEmpty": true,
+  "wholeCardComplete": false,
+  "recordedAtUtc": "2026-10-29T17:51:22.2293874Z"
+}

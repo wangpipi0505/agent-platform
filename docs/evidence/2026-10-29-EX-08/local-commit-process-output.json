@@ -1,0 +1,48 @@
+{
+  "card": "EX-15b",
+  "substep": "OUTPUT_PERSISTENCE",
+  "commit": "6b08a3e32a17fad2f38cdc2cee4bdb3c2e133e88",
+  "parent": "de08c79f4f53dd9bd63c9eb95008af406726c531",
+  "tree": "c905ca58d85bd70d3d47a90ab53172e7d2a29245",
+  "paths": [
+    "skill-registry/src/main/java/cn/agentplatform/skill/infra/ProcessAdapter.java",
+    "skill-registry/src/main/java/cn/agentplatform/skill/infra/ProcessExecutionAdapter.java",
+    "skill-registry/src/main/java/cn/agentplatform/skill/infra/SkillAdapters.java",
+    "skill-registry/src/main/java/cn/agentplatform/skill/infra/ArtifactStore.java",
+    "skill-registry/src/test/java/cn/agentplatform/skill/infra/ArtifactPersistenceTest.java",
+    "contracts/process-files-io.md",
+    "docs/evidence/2026-10-29-EX-15b/output-persistence-implementation.md"
+  ],
+  "roundsUsed": 2,
+  "round1": {
+    "records": 22,
+    "passed": 19,
+    "failures": 3,
+    "errors": 0,
+    "accurateGaps": true
+  },
+  "round2": {
+    "round": 2,
+    "maximumRounds": 2,
+    "nativeExit": 1,
+    "freshXml": 6,
+    "records": 69,
+    "passed": 67,
+    "failures": 1,
+    "errors": 1,
+    "skipped": 0,
+    "sourceStable": true,
+    "targetedGate": false,
+    "wholeEx15bComplete": false,
+    "furtherTestRoundScheduled": false
+  },
+  "postRoundFix": "WindowsFileAttributes.fileKey returns null; preserve protected handle and treat key as optional",
+  "postRoundSourceSha256": "4C18EA775489CE1562F4E4873A7B2FC6C088B871C5E8595E2831A30F90720C19",
+  "postRoundFixRerun": false,
+  "validationPending": true,
+  "thirdRoundScheduled": false,
+  "wholeCardComplete": false,
+  "pushExecuted": false,
+  "indexEmpty": true,
+  "recordedAtUtc": "2026-10-29T18:41:45.8869338Z"
+}
