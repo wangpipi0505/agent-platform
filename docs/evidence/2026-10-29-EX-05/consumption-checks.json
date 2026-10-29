@@ -1,0 +1,142 @@
+[
+  {
+    "name": "valid",
+    "inputSha256": "a9dd35cab57e30dd03beaa5ab9aed09f4882f720db78e5ffb35dac35bb9eb4da",
+    "nativeExit": 0,
+    "diagnostic": "EX-05消费映射",
+    "pass": true
+  },
+  {
+    "name": "original-byte-drift",
+    "inputSha256": "515f590e9db72c0ef0d175c754e8967a2e8abcd5d44e50afe498146f0dd15fc6",
+    "nativeExit": 1,
+    "diagnostic": "冻结契约原文被改",
+    "pass": true
+  },
+  {
+    "name": "missing-addendum",
+    "inputSha256": "399f6248e3b24bf10c1489b670238b1a8b7cc67ee5d5ab0e1eb4c6d1a43d66a5",
+    "nativeExit": 1,
+    "diagnostic": "增补缺失",
+    "pass": true
+  },
+  {
+    "name": "duplicate-marker",
+    "inputSha256": "f032629b9c8debb4ecca282477cfaf3a16d78aada014bd23dc64b96ab098d72e",
+    "nativeExit": 1,
+    "diagnostic": "增补缺失、重复或边界漂移",
+    "pass": true
+  },
+  {
+    "name": "shifted-boundary",
+    "inputSha256": "383863f41c12f882fa8be437a6bd5808c5df6e9428201b25f364e7ca7f6c23c6",
+    "nativeExit": 1,
+    "diagnostic": "边界漂移",
+    "pass": true
+  },
+  {
+    "name": "unframed-tail",
+    "inputSha256": "54f58c58d2171581c858d8684a203392b4234919c57cf1cef29e1120505abfc9",
+    "nativeExit": 1,
+    "diagnostic": "结束边界无效",
+    "pass": true
+  },
+  {
+    "name": "missing-version",
+    "inputSha256": "a0f234dad5a8e48aef672c74a22339a8c3f7777200ea80528f96297058ed6332",
+    "nativeExit": 1,
+    "diagnostic": "漂移：version",
+    "pass": true
+  },
+  {
+    "name": "missing-transport",
+    "inputSha256": "969a455ebc97298abff55847ed8bcbbb226bdd41db38d5c7414ad8ba3c7de5ed",
+    "nativeExit": 1,
+    "diagnostic": "漂移：transport",
+    "pass": true
+  },
+  {
+    "name": "missing-authentication",
+    "inputSha256": "34d2c6b6fc7aa88f449c84861d75fb25bf39a17673d93c4e1b08b8d4d473fb92",
+    "nativeExit": 1,
+    "diagnostic": "漂移：authentication",
+    "pass": true
+  },
+  {
+    "name": "missing-source",
+    "inputSha256": "bfa75fb222310da18028f1b5c8260774cdf161b240e6296d604da5c06050fa05",
+    "nativeExit": 1,
+    "diagnostic": "漂移：source",
+    "pass": true
+  },
+  {
+    "name": "missing-exposure",
+    "inputSha256": "04f91492ab51c2c47ccaf3ec521e356e3d33a902d90ecc41217e4b4fd78ea12d",
+    "nativeExit": 1,
+    "diagnostic": "漂移：exposure",
+    "pass": true
+  },
+  {
+    "name": "missing-pagination",
+    "inputSha256": "c2b9cd95c61be480b4db4b243f06b018730e6cad4d9dc894d0060c0cf8bc3e2b",
+    "nativeExit": 1,
+    "diagnostic": "漂移：pagination",
+    "pass": true
+  },
+  {
+    "name": "missing-editing",
+    "inputSha256": "042963fdae79335285bc6f6eff2c8912a3afcc0336af8dd66ff6380f83ff4f33",
+    "nativeExit": 1,
+    "diagnostic": "漂移：editing",
+    "pass": true
+  },
+  {
+    "name": "bearer-fallback",
+    "inputSha256": "cebddf7e1d1ca6bdc03b7df124a4bfc6998548cfdf33015abf1297b5ee4c1970",
+    "nativeExit": 1,
+    "diagnostic": "漂移：authentication",
+    "pass": true
+  },
+  {
+    "name": "offset-as-page",
+    "inputSha256": "57fe734b0187980a2d8153186262701ad19c97ffe19529abae31d5301fe4913c",
+    "nativeExit": 1,
+    "diagnostic": "漂移：pagination",
+    "pass": true
+  },
+  {
+    "name": "automatic-paging-claim",
+    "inputSha256": "ba019c5270f231861d8612b689a12039c5c35768efd683cd40ff513273bb28df",
+    "nativeExit": 1,
+    "diagnostic": "漂移：pagination",
+    "pass": true
+  },
+  {
+    "name": "risk-downgrade",
+    "inputSha256": "e5240c9ac42f84fc522e0932a4c2585703aaff5be55f98e2b4f28c29880718b5",
+    "nativeExit": 1,
+    "diagnostic": "漂移：exposure",
+    "pass": true
+  },
+  {
+    "name": "EX09-missing-tool-binding",
+    "inputSha256": "0562bbb7cd520027fa004fc40230a4d9a99e90eb7ac45e2a289184c0e6f11fbf",
+    "nativeExit": 1,
+    "diagnostic": "能力包.tools[0].binding",
+    "pass": true
+  },
+  {
+    "name": "EX09-identity-plaintext",
+    "inputSha256": "45c6d1572e50c7c701e7eaff2da8063f5b55c64a5f7c93ee812549950afbe4f7",
+    "nativeExit": 1,
+    "diagnostic": "能力包.identity.secrets[0].ref",
+    "pass": true
+  },
+  {
+    "name": "EX09-unknown-kind",
+    "inputSha256": "90b3d7e442a0c9f489342467af2054adbcfe5a19abb49f5a1121e0775c9336a7",
+    "nativeExit": 1,
+    "diagnostic": "能力包.interfaces[0].kind",
+    "pass": true
+  }
+]

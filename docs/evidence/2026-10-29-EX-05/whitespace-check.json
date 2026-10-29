@@ -1,0 +1,6 @@
+{
+  "nativeExit": 0,
+  "command": "git -c core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol diff --check -- contracts/skill-invocation.md scripts/verify-contracts.mjs",
+  "reason": "historical contract is byte-frozen CRLF under existing contracts/** -text; no source whitespace attribute exception added",
+  "defaultCheck": "CRLF reported on all 81 appended lines; preserved rather than rewriting frozen bytes"
+}

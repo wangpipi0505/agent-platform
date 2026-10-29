@@ -699,3 +699,84 @@ SUBMIT_QUERY 对账端点可用声明式映射表达"平台字段 → 远端占�
 4. 契约形状规则（endpoint/toolName/process 子契约/callback 声明等 per-kind 校验）与执行编排行为分支（回调接听、算法证据等）仍按 §4/§11–§14 既有口径，其收敛属后续 A-02 卡，不在本节范围。
 
 验证锚点：`AdapterRegistryZeroChangeTest`（8 例）——TEST_ECHO 测试单元在产品主代码零字样的前提下经注册表完成注册期放行与执行分发；内置 kind 路由矩阵、bind/persistentBinding 旁路语义与原 if-chain 等价、MCP/PROCESS 对账保护随单元迁移均有锚点断言。
+
+## 16. 工程增补（EX-05）：本体manifest消费映射
+
+本节记录 EX-03/04 已实现的消费映射，不改变 v1.2 原文或增加执行语义。`freeze.json` 中 skill-invocation 的 SHA 代表追加本节前的历史 63,602 字节；门禁继续逐字节校验该前缀，再独立校验本节映射。此卡采用追加冻结边界，原冻结文件及其整体 SHA 登记保持历史事实，不用新摘要覆盖旧正文。
+
+导入只接纳正式 HTTP/SYNC/POST 消费端点；非 HTTP 没有名义绑定目录时明确拒绝。authRef 仍经过 ADMIN、SecretVault 和租户归属校验，不从 manifest 接收明文凭据。importSource 保留下面六个来源字段。QUERY/MUTATION 必须与执行旗标一致，风险不得下调；分页仅是声明提示，无自动翻页或强制总行截断。OFFSET 不推断 response 路径，maxRows 可以小于 maxPageSize，既有 PAGE 契约保持兼容。编辑省略投影字段保留旧值，显式 null 拒绝；批量纯语义预检早于首个 create，后续数据库创建失败仍沿原部分创建语义，不虚称整批数据库事务。
+
+认证边界：OR 内部绑定读写使用 `X-API-Key: ontosa_…`，只读账号可读，写/解绑还需动态 `release.bind` 权限；binder 是具备该权限的服务账号，不是新 key 类型。管理读面、platform-actors 和评论使用人 Bearer；正式工具消费使用 `ontopa_…` 并走端点/空间/主体守卫。三者不得互换，真实联合验收仍归 EX-07。
+
+下面是供 `scripts/verify-contracts.mjs` 验证的消费映射；路径右值均为 AP 草稿字段，标记值表述已实现的拒绝或兼容边界。
+
+```json
+{
+  "version": "EX-05/1",
+  "transport": {
+    "adapter_type": "type",
+    "invocation_kind": "invocationKind",
+    "http_method": "httpMethod",
+    "accepted": [
+      "HTTP",
+      "SYNC",
+      "POST"
+    ],
+    "unregisteredBinding": "REJECT"
+  },
+  "authentication": {
+    "scheme": "API_KEY",
+    "reference": "authRef",
+    "header": "X-API-Key",
+    "authorizationHeader": false,
+    "secretRefPrefixes": [
+      "env:AGENT_SECRET_",
+      "vault:"
+    ],
+    "tenantCheck": true
+  },
+  "source": {
+    "kind": "ONTOLOGY",
+    "tool_code": "toolCode",
+    "ontology_meta.spaceCode": "spaceCode",
+    "ontology_meta.releaseId": "releaseId",
+    "ontology_meta.version": "version",
+    "ontology_meta.contentDigest": "contentDigest",
+    "preview": false
+  },
+  "exposure": {
+    "exposure.kind": "exposure.kind",
+    "QUERY": {
+      "readonly": true,
+      "sideEffect": false
+    },
+    "MUTATION": {
+      "readonly": false,
+      "sideEffect": "PRESERVE"
+    },
+    "risk_level": "riskLevel",
+    "riskDowngrade": "REJECT"
+  },
+  "pagination": {
+    "mode": "OFFSET",
+    "exposure.pagination.offsetParam": "pagination.request.offset",
+    "exposure.pagination.limitParam": "pagination.request.size",
+    "exposure.pagination.maxLimit": "pagination.maxPageSize",
+    "exposure.pagination.maxRows": "pagination.maxRows",
+    "limitType": "POSITIVE_INT32",
+    "responsePath": "UNDECLARED",
+    "automaticPaging": false,
+    "enforcedTotalRows": false,
+    "legacyMode": "PAGE"
+  },
+  "editing": {
+    "omitted": [
+      "exposure",
+      "pagination"
+    ],
+    "onOmission": "PRESERVE",
+    "explicitNull": "REJECT"
+  }
+}
+```
+<!-- EX-05-CONSUMPTION-END -->

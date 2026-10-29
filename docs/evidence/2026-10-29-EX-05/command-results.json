@@ -1,0 +1,25 @@
+[
+  {
+    "command": "node scripts/verify-contracts.mjs",
+    "phase": "RED",
+    "nativeExit": 1,
+    "input": "historical skill-invocation.md, 63602 bytes",
+    "inputSha256": "399f6248e3b24bf10c1489b670238b1a8b7cc67ee5d5ab0e1eb4c6d1a43d66a5",
+    "diagnostic": "EX-05消费映射增补缺失、重复或边界漂移",
+    "log": "red-ap.log"
+  },
+  {
+    "command": "node scripts/verify-contracts.mjs",
+    "phase": "GREEN",
+    "nativeExit": 0,
+    "input": "append-only §16",
+    "log": "green-ap.log"
+  },
+  {
+    "command": "node docs/evidence/2026-10-29-EX-05/check-consumption.mjs",
+    "phase": "MUTATION_AND_COMPATIBILITY",
+    "nativeExit": 0,
+    "checks": 20,
+    "detail": "consumption-checks.json"
+  }
+]

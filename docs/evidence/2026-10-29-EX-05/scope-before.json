@@ -1,0 +1,28 @@
+{
+  "card": "EX-05",
+  "status": "in_progress",
+  "apHead": "67d1d41dc599a99ecad4654a4736446e076f84f7",
+  "orHead": "da3345a123752c3fda06c5a7a8a1dc9d614b8918",
+  "scope": {
+    "AP": [
+      "contracts/skill-invocation.md",
+      "scripts/verify-contracts.mjs"
+    ],
+    "OR": [
+      "contracts/openapi.json",
+      "web/packages/api-client/src/generated.ts",
+      "deploy/Verify-ApiContract.mjs"
+    ]
+  },
+  "frozen": {
+    "contracts/freeze.json": "4c915c50b9a53b4c110c48a6fa9144aa8a1ba7c874469b1ea2d94e43a53d95d4",
+    "contracts/skill-invocation.md": "399f6248e3b24bf10c1489b670238b1a8b7cc67ee5d5ab0e1eb4c6d1a43d66a5",
+    "contracts/snapshot/detailed-design-v1.2.md": "3c72b2062beb2e8b377f2384843ea935a0074b50c0063e5106566bbd8dcd0c4f"
+  },
+  "boundaries": [
+    "No Java/DB changes",
+    "Single actual verification window",
+    "Existing untracked evidence preserved",
+    "Local commits only"
+  ]
+}

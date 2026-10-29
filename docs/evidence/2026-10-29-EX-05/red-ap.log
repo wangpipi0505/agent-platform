@@ -1,0 +1,9 @@
+file:///G:/207/%E9%A1%B9%E7%9B%AE/%E7%AE%97%E6%B3%95%E9%87%8D%E7%BB%84%E5%B7%A5%E5%85%B7/%E4%BB%A3%E7%A0%81/agent-platform/scripts/verify-contracts.mjs:35
+ if(!bytes.subarray(skillPrefixBytes).toString('utf8').startsWith(skillMarker)||text.split(skillMarker).length!==2)throw new Error('EX-05消费映射增补缺失、重复或边界漂移');
+                                                                                                                         ^
+
+Error: EX-05消费映射增补缺失、重复或边界漂移
+    at verifySkillContract (file:///G:/207/%E9%A1%B9%E7%9B%AE/%E7%AE%97%E6%B3%95%E9%87%8D%E7%BB%84%E5%B7%A5%E5%85%B7/%E4%BB%A3%E7%A0%81/agent-platform/scripts/verify-contracts.mjs:35:122)
+    at file:///G:/207/%E9%A1%B9%E7%9B%AE/%E7%AE%97%E6%B3%95%E9%87%8D%E7%BB%84%E5%B7%A5%E5%85%B7/%E4%BB%A3%E7%A0%81/agent-platform/scripts/verify-contracts.mjs:46:36
+
+Node.js v24.16.0
