@@ -6,6 +6,7 @@ import { terminal, streamEvents,authorityFailure } from "../../debug-panel/event
 import Artifacts from '../../shared/Artifacts.vue';
 import { outputWarning, safeMarkdown } from '../../shared/content';
 import { decodeRunStatus, protocolFailure, record } from '../../shared/run-protocol';
+import RunObservation from './RunObservation.vue';
 const props = defineProps<{ runId: string }>();
 const api = useApi();
 const auth=useAuth(),session=auth.snapshot();
@@ -361,15 +362,10 @@ onBeforeUnmount(() => {
         </template>
         <el-empty v-else description="本次运行没有错误、尝试或工具调用诊断记录" /></el-tab-pane
       ><el-tab-pane label="版本与依赖" name="versions">
-        <pre>{{ JSON.stringify(value.versionRefs || {}, null, 2) }}</pre>
-        <p class="muted">
-          本体调用版本：{{
-            (value.versionRefs?.ontologyVersions || value.versionRefs?.ontology)
-              ?.length
-              ? "见以上版本链"
-              : "不适用（服务端未报告本体调用）"
-          }}
-        </p></el-tab-pane
+        <h3>本次运行冻结来源</h3>
+        <RunObservation :observation="value.observation" />
+        <details class="output-raw"><summary>查看原始版本与依赖记录</summary><pre>{{ JSON.stringify(value.versionRefs ?? null, null, 2) }}</pre></details>
+        </el-tab-pane
       ><el-tab-pane label="事件回放" name="replay"
         ><p class="muted">历史事件来自持久化执行记录，不会重新执行技能。</p>
         <el-slider
