@@ -1,0 +1,257 @@
+{
+  "schemaVersion": 1,
+  "phase": "PROPOSED_FILE_ONLY_SCOPE_PENDING_STATIC_REVIEW_FINAL_RUN_AND_ROOT_APPROVAL",
+  "observedAt": "2026-10-29T08:57:34.182041+08:00",
+  "rootHead": "83726d50a6cce116251c03c5c193080d8ed5aad2",
+  "noStageCommitOrSourceChangesInThisTask": true,
+  "noActualRuntimeOrRunnerChangesInThisTask": true,
+  "scope": "OUTBOX_TEST_TENANT_ISOLATION_SUBSTEP_ONLY",
+  "codeAllowlist": [
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/SkillExecutionTest.java",
+      "sha256": "607BA3C31AE5EF8DC4568E8EB35D338446A9ED444A7366285124E28BFDA17EA8",
+      "bytes": 40930
+    }
+  ],
+  "fixedEvidenceAllowlist": [
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/outbox-actor-preflight.md",
+      "sha256": "30B3338C276696E9D3C4F4BCD369B98D440DF2704B7995B3DFF3B6FDB889DD39",
+      "bytes": 13067
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/runs/outbox-fix-prepare-20261029-084356-913/candidate.diff",
+      "sha256": "1E6F28A4EE3659BF6B91A9EF17F4252952524D385A5993A31A05748C086D58DB",
+      "bytes": 11590
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/runs/outbox-fix-prepare-20261029-084356-913/candidate.md",
+      "sha256": "62E8D39474213919C49E3F6B1C7A27A14183E4EF819C105C243518869D4DBDF4",
+      "bytes": 4818
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/runs/outbox-fix-prepare-20261029-084356-913/file-manifest.json",
+      "sha256": "41CDBD0728633FF5769EA2E34B02E6723072A0D3123266D340FB46EC116F6BE6",
+      "bytes": 1070
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/runs/outbox-fix-prepare-20261029-084356-913/module-source-sha256.json",
+      "sha256": "F2C1E106CB10AAE0B09B2233E20439A1E450EEE8E149B88954A426D35FFE30F6",
+      "bytes": 28963
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/runs/outbox-fix-prepare-20261029-084356-913/SkillExecutionTest.before.java",
+      "sha256": "14AE4EEA65C05EBEEBDBDF16D3FC4733D4613FDEC20EE7644DF56DB83627194B",
+      "bytes": 40125
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/runs/outbox-fix-prepare-20261029-084356-913/SkillExecutionTest.candidate.java",
+      "sha256": "607BA3C31AE5EF8DC4568E8EB35D338446A9ED444A7366285124E28BFDA17EA8",
+      "bytes": 40930
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/runs/outbox-fix-prepare-20261029-084356-913/static-checks.json",
+      "sha256": "73655B1C2BD9EE673EACC444CE5BA30BAC055A3E695D077C6EF7B84DE458F0C3",
+      "bytes": 5984
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/runs/outbox-fix-prepare-20261029-084356-913/tenant-mapping.json",
+      "sha256": "D2A0374878AA287C2AC36E64AB1BC7D668ACCDA11DBB845BE0EA9BE2F6E2CCED",
+      "bytes": 3383
+    }
+  ],
+  "proposedScopeArtifactPaths": [
+    "docs/evidence/2026-10-28-EX-27/proposed-commit-scope.md",
+    "docs/evidence/2026-10-28-EX-27/proposed-commit-scope.json"
+  ],
+  "independentReviewSlot": {
+    "path": null,
+    "reason": "OWNER_STILL_WRITING_EXACT_OUTBOX_REVIEW_PATH_MUST_BE_CONFIRMED_BEFORE_STAGING",
+    "mustNotIncludeSdkReviews": true
+  },
+  "collectorPreparationPendingFreeze": [
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/runs/outbox-collector-prepare-20261029-084702-676/.gitignore",
+      "sha256": "DA2662C291451063231AE4C0DA5542E98F8FC94403B2F52709AE144AF86B7B8D",
+      "bytes": 80
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/runs/outbox-collector-prepare-20261029-084702-676/check-preparation.ps1",
+      "sha256": "6FFD641A3E4A033FA4EF93168A2E8B7AE98CA2C62CBE5FE2C2111B99E371AE59",
+      "bytes": 9078
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/runs/outbox-collector-prepare-20261029-084702-676/collector-scope.md",
+      "sha256": "8D6629F7E0903A9599DBD79226D91659566978810878006C4AEC4319D9828BF6",
+      "bytes": 6561
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/runs/outbox-collector-prepare-20261029-084702-676/compare-nonpass-reasons.ps1",
+      "sha256": "E5FD54E69CE79331CE38A23B0A8D94A25A19E7E403C1A33FB4AD4A40F9C1FB5B",
+      "bytes": 5641
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/runs/outbox-collector-prepare-20261029-084702-676/packaging-static.json",
+      "sha256": "91DB68FFD91B037559B67B188FE98FC2A5C68BEF4E119EB3F8F53E788D511FBD",
+      "bytes": 2169
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/runs/outbox-collector-prepare-20261029-084702-676/preflight.ps1",
+      "sha256": "B53EC32F0E36E526931B0E64B6287CBB7BAE6F3AA8B181D4CBA14AD18910E254",
+      "bytes": 19531
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/runs/outbox-collector-prepare-20261029-084702-676/preparation-attempts.json",
+      "sha256": "46A89F88E71B30CD6B8984FB6B787B37CD90529C7B55D151D4BF4F73174F7E12",
+      "bytes": 814
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/runs/outbox-collector-prepare-20261029-084702-676/run-verify.ps1",
+      "sha256": "01F9DCC17562834F404FF9DAAF566FF615B346A6DBF05A6EE770118CE2A7C2B8",
+      "bytes": 33206
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/runs/outbox-collector-prepare-20261029-084702-676/static-check.json",
+      "sha256": "77927FEB0A38695472B9AE1D9E0EF85C5CA3053BA366989DFD7A69BAE001C927",
+      "bytes": 2739
+    }
+  ],
+  "actualRunSlot": {
+    "path": null,
+    "selection": "ONE_ROOT_GRANTED_NEW_OUTBOX_RUN_ID_ONLY_AFTER_FINITE_REPORT_AND_EXACT_MANIFEST",
+    "safeFiles": null,
+    "exclude": [
+      "targeted/raw.log",
+      "targeted/xml/**",
+      "full/raw.log",
+      "full/xml/**",
+      "pg-preflight.raw.log"
+    ],
+    "noBroadDirectoryGitAdd": true
+  },
+  "conditionalAttributesFile": "docs/evidence/2026-10-28-EX-27/.gitattributes",
+  "proposedExactAttributesRules": [
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/runs/outbox-collector-prepare-20261029-084702-676/packaging-static.json",
+      "relativeRule": "/runs/outbox-collector-prepare-20261029-084702-676/packaging-static.json -text -whitespace",
+      "reason": "FROZEN_RAW_SHA_WOULD_CHANGE_UNDER_TEXT_AUTO_EOL_LF",
+      "observedCrlfCount": 48,
+      "observedSha256": "91DB68FFD91B037559B67B188FE98FC2A5C68BEF4E119EB3F8F53E788D511FBD"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/runs/outbox-collector-prepare-20261029-084702-676/preflight.ps1",
+      "relativeRule": "/runs/outbox-collector-prepare-20261029-084702-676/preflight.ps1 -text -whitespace",
+      "reason": "FROZEN_RAW_SHA_WOULD_CHANGE_UNDER_TEXT_AUTO_EOL_LF",
+      "observedCrlfCount": 1,
+      "observedSha256": "B53EC32F0E36E526931B0E64B6287CBB7BAE6F3AA8B181D4CBA14AD18910E254"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/runs/outbox-collector-prepare-20261029-084702-676/preparation-attempts.json",
+      "relativeRule": "/runs/outbox-collector-prepare-20261029-084702-676/preparation-attempts.json -text -whitespace",
+      "reason": "FROZEN_RAW_SHA_WOULD_CHANGE_UNDER_TEXT_AUTO_EOL_LF",
+      "observedCrlfCount": 25,
+      "observedSha256": "46A89F88E71B30CD6B8984FB6B787B37CD90529C7B55D151D4BF4F73174F7E12"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/runs/outbox-collector-prepare-20261029-084702-676/run-verify.ps1",
+      "relativeRule": "/runs/outbox-collector-prepare-20261029-084702-676/run-verify.ps1 -text -whitespace",
+      "reason": "FROZEN_RAW_SHA_WOULD_CHANGE_UNDER_TEXT_AUTO_EOL_LF",
+      "observedCrlfCount": 55,
+      "observedSha256": "01F9DCC17562834F404FF9DAAF566FF615B346A6DBF05A6EE770118CE2A7C2B8"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/runs/outbox-collector-prepare-20261029-084702-676/static-check.json",
+      "relativeRule": "/runs/outbox-collector-prepare-20261029-084702-676/static-check.json -text -whitespace",
+      "reason": "FROZEN_RAW_SHA_WOULD_CHANGE_UNDER_TEXT_AUTO_EOL_LF",
+      "observedCrlfCount": 57,
+      "observedSha256": "77927FEB0A38695472B9AE1D9E0EF85C5CA3053BA366989DFD7A69BAE001C927"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/runs/outbox-fix-prepare-20261029-084356-913/file-manifest.json",
+      "relativeRule": "/runs/outbox-fix-prepare-20261029-084356-913/file-manifest.json -text -whitespace",
+      "reason": "FROZEN_RAW_SHA_WOULD_CHANGE_UNDER_TEXT_AUTO_EOL_LF",
+      "observedCrlfCount": 37,
+      "observedSha256": "41CDBD0728633FF5769EA2E34B02E6723072A0D3123266D340FB46EC116F6BE6"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/runs/outbox-fix-prepare-20261029-084356-913/module-source-sha256.json",
+      "relativeRule": "/runs/outbox-fix-prepare-20261029-084356-913/module-source-sha256.json -text -whitespace",
+      "reason": "FROZEN_RAW_SHA_WOULD_CHANGE_UNDER_TEXT_AUTO_EOL_LF",
+      "observedCrlfCount": 598,
+      "observedSha256": "F2C1E106CB10AAE0B09B2233E20439A1E450EEE8E149B88954A426D35FFE30F6"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/runs/outbox-fix-prepare-20261029-084356-913/SkillExecutionTest.before.java",
+      "relativeRule": "/runs/outbox-fix-prepare-20261029-084356-913/SkillExecutionTest.before.java -text -whitespace",
+      "reason": "EXACT_ORIGINAL_OR_CANDIDATE_SOURCE_BYTES",
+      "observedCrlfCount": 0,
+      "observedSha256": "14AE4EEA65C05EBEEBDBDF16D3FC4733D4613FDEC20EE7644DF56DB83627194B"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/runs/outbox-fix-prepare-20261029-084356-913/SkillExecutionTest.candidate.java",
+      "relativeRule": "/runs/outbox-fix-prepare-20261029-084356-913/SkillExecutionTest.candidate.java -text -whitespace",
+      "reason": "EXACT_ORIGINAL_OR_CANDIDATE_SOURCE_BYTES",
+      "observedCrlfCount": 0,
+      "observedSha256": "607BA3C31AE5EF8DC4568E8EB35D338446A9ED444A7366285124E28BFDA17EA8"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/runs/outbox-fix-prepare-20261029-084356-913/static-checks.json",
+      "relativeRule": "/runs/outbox-fix-prepare-20261029-084356-913/static-checks.json -text -whitespace",
+      "reason": "FROZEN_RAW_SHA_WOULD_CHANGE_UNDER_TEXT_AUTO_EOL_LF",
+      "observedCrlfCount": 197,
+      "observedSha256": "73655B1C2BD9EE673EACC444CE5BA30BAC055A3E695D077C6EF7B84DE458F0C3"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/runs/outbox-fix-prepare-20261029-084356-913/tenant-mapping.json",
+      "relativeRule": "/runs/outbox-fix-prepare-20261029-084356-913/tenant-mapping.json -text -whitespace",
+      "reason": "FROZEN_RAW_SHA_WOULD_CHANGE_UNDER_TEXT_AUTO_EOL_LF",
+      "observedCrlfCount": 146,
+      "observedSha256": "D2A0374878AA287C2AC36E64AB1BC7D668ACCDA11DBB845BE0EA9BE2F6E2CCED"
+    }
+  ],
+  "actualRunAttributeRulesPendingFinalFileList": true,
+  "noSourceOrGlobalAttributeRule": true,
+  "externalHistoryDependencies": [
+    "docs/evidence/2026-10-28-EX-27/runs/algorithm-fix-20261029-032753-387/result.md",
+    "docs/evidence/2026-10-28-EX-27/runs/algorithm-fix-20261029-032753-387/full/summary.json",
+    "docs/evidence/2026-10-28-EX-27/runs/algorithm-fix-20261029-032753-387/full/module-source-sha256.json",
+    "docs/evidence/2026-10-28-EX-27/runs/algorithm-fix-prepare-20261029-022836-663",
+    "docs/evidence/2026-10-28-EX-27/algorithm-fix-static-review.md",
+    "docs/evidence/2026-10-28-EX-27/algorithm-history-technical-review.md",
+    "docs/evidence/2026-10-28-EX-03/after/full-20261028-234917-584",
+    "docs/evidence/2026-10-28-EX-00/baseline/20261028-164553-272"
+  ],
+  "excludedCodePaths": [
+    "skill-registry/src/test/java/cn/agentplatform/skill/infra/AlgorithmOffloadInterruptionTest.java",
+    "skill-registry/src/main/java/cn/agentplatform/skill/application/OntologyManifestImports.java",
+    "skill-registry/src/main/java/cn/agentplatform/skill/application/SkillCatalog.java",
+    "skill-registry/src/test/java/cn/agentplatform/skill/application/OntologyManifestImportsTest.java",
+    "skill-registry/src/test/java/cn/agentplatform/skill/application/SkillTaskResultTest.java",
+    "skill-registry/src/main/java/cn/agentplatform/skill/application/SkillOutbox.java",
+    "skill-registry/src/main/java/cn/agentplatform/skill/application/SkillExecution.java"
+  ],
+  "excludedEvidencePrefixes": [
+    "docs/evidence/2026-10-28-EX-27/runs/algorithm-",
+    "docs/evidence/2026-10-28-EX-27/algorithm-",
+    "docs/evidence/2026-10-28-EX-03/",
+    "docs/evidence/2026-10-28-EX-08/",
+    "docs/evidence/2026-10-28-EX-17/",
+    "docs/evidence/acceptance-audit-20261026/",
+    "output/"
+  ],
+  "validationContextBoundary": {
+    "full674UsesUncommittedSdk43ECAndEx03Candidates": true,
+    "outboxCommitAloneDoesNotReproduceFull674": true,
+    "rootMustLinkSeparateDependencyCommitsOrRetainExplicitFrozenJointCandidateContext": true
+  },
+  "parentWorkspaceMainEntryDocumentsExcludedFromApCommit": true,
+  "finalStagingExecutionAuthorizedByThisDocument": false,
+  "fullResultStillPending": true,
+  "rootConfirmedCommitSeparation": {
+    "outbox": "ONE_SKILL_EXECUTION_TEST_AND_OUTBOX_SUBSTEP_EVIDENCE_ONLY",
+    "sdk": "SEPARATE_ALGORITHM_TEST_AND_DIAGNOSTIC_HISTORY_EVIDENCE_WITH_SHARED_FULL_REFERENCE",
+    "ex03": "SEPARATE_THREE_SOURCE_COMMIT",
+    "jointContext": "FINAL_CHAIN_MUST_RECORD_SAME_149_SOURCE_WORKSPACE_NO_SINGLE_COMMIT_674_REPRODUCTION_CLAIM",
+    "attributes": "ROOT_ENUMERATES_EXACT_RAW_SHA_VS_FILTERED_BLOB_DIFFERENCES_NO_WILDCARDS"
+  }
+}

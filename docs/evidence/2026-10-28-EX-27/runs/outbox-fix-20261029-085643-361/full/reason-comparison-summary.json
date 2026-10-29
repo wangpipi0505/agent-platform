@@ -1,0 +1,32 @@
+{
+    "analysis":  "FILE_XML_ONLY_NO_PRODUCT_COMMAND",
+    "baselineCases":  664,
+    "originalFullCases":  673,
+    "previousSdk43FullCases":  674,
+    "currentCases":  674,
+    "baselineNonpass":  116,
+    "missing":  0,
+    "categoryOrCauseFrameChanges":  0,
+    "exactMessageChanges":  1,
+    "exactDetailChanges":  1,
+    "originalFullStatusDelta":  [
+                                    {
+                                        "classname":  "cn.agentplatform.skill.infra.AlgorithmOffloadInterruptionTest",
+                                        "method":  "interruptedSdkWaitStopsOriginalOperationBeforeReturningAndNeverRacesCleanup(String)[3]",
+                                        "beforeStatus":  "failure",
+                                        "afterStatus":  "passed"
+                                    }
+                                ],
+    "previousSdk43FullStatusDelta":  [
+                                         {
+                                             "classname":  "cn.agentplatform.skill.application.SkillExecutionTest",
+                                             "method":  "automaticOutboxRecoversTransientCallbackWithoutRepeatingBusiness",
+                                             "beforeStatus":  "failure",
+                                             "afterStatus":  "passed"
+                                         }
+                                     ],
+    "rawMessagesPrinted":  false,
+    "normalizationApplied":  false,
+    "oldRawXmlPreserved":  true,
+    "newRawXmlPreserved":  true
+}

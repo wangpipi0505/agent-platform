@@ -1,0 +1,197 @@
+{
+  "scope": "FILE_ONLY_STATIC_CHECKS_NOT_JAVA_COMPILATION_OR_RUNTIME_TESTS",
+  "head": "83726d50a6cce116251c03c5c193080d8ed5aad2",
+  "beforeSha256": "14AE4EEA65C05EBEEBDBDF16D3FC4733D4613FDEC20EE7644DF56DB83627194B",
+  "candidateSha256": "607BA3C31AE5EF8DC4568E8EB35D338446A9ED444A7366285124E28BFDA17EA8",
+  "checkCount": 30,
+  "passed": true,
+  "checks": [
+    {
+      "name": "original_byte_snapshot_sha256",
+      "passed": true
+    },
+    {
+      "name": "candidate_source_sha256",
+      "passed": true
+    },
+    {
+      "name": "all_24_old_fixed_tenants_accounted",
+      "passed": true
+    },
+    {
+      "name": "no_fixed_skill_tests_tenant_remaining",
+      "passed": true
+    },
+    {
+      "name": "only_one_tenant_assignment_before_jwt",
+      "passed": true
+    },
+    {
+      "name": "instance_tenant_field_not_static",
+      "passed": true
+    },
+    {
+      "name": "new_callback_url_assertion_exact",
+      "passed": true
+    },
+    {
+      "name": "new_single_due_call_assertion_exact",
+      "passed": true
+    },
+    {
+      "name": "principal_and_service_assertions_unchanged",
+      "passed": true
+    },
+    {
+      "name": "outbox_maximum_one_unchanged",
+      "passed": true
+    },
+    {
+      "name": "connection_sql_placeholders_and_parameter_order",
+      "passed": true
+    },
+    {
+      "name": "acceptance_sql_placeholders_and_parameter_order",
+      "passed": true
+    },
+    {
+      "name": "inverse_substitutions_exactly_22_identifiers",
+      "passed": true,
+      "detail": {
+        "count": 22
+      }
+    },
+    {
+      "name": "reversing_only_authorized_edits_recovers_every_original_byte",
+      "passed": true,
+      "detail": {
+        "restoredSha256": "14AE4EEA65C05EBEEBDBDF16D3FC4733D4613FDEC20EE7644DF56DB83627194B"
+      }
+    },
+    {
+      "name": "all_method_signatures_and_order_preserved",
+      "passed": true,
+      "detail": [
+        "migrate()",
+        "prepare()",
+        "durableProofIsCanonicalAndDoesNotRedispatch()",
+        "readonlyConnectionUsesControlledRunBeforeAnyExternalCall()",
+        "contract()",
+        "close()",
+        "actualHttpExecutesOnceAndFactExistsBeforeCallback(String trigger)",
+        "debugBodyCannotInventMockAndAuthoritySnapshotCannotBeOverridden()",
+        "lastRealRequiresPersistedOwnUnchangedNonMockSource()",
+        "lastRealCannotReuseBroaderGuardedArgumentsAfterPermissionNarrows()",
+        "scopeIdentity(List<String> regions)",
+        "controlledArtifactCopyRequiresAuthoritativeSourceBindingAndCurrentLease()",
+        "callbackRetryNeverRepeatsExternalBusiness()",
+        "invalidParametersHaveZeroExternalCalls()",
+        "deniedScopeHasZeroExternalCalls()",
+        "noClaimNeverExecutes()",
+        "changedArgumentsCannotReuseCallIdentity()",
+        "writeTimeoutStaysUnknownAndNeverResubmits()",
+        "unknownReconciliationOnlyQueriesAndUpdatesSameStatistic()",
+        "unapprovedWriteNeverClaimsOrDispatches()",
+        "unpublishedDraftCanBeDeletedWithoutPublishedHistory()",
+        "configuredReturnSpecSeparatesSummaryStructuredAndCard()",
+        "readonlyRetryRequiresExplicitNewEngineGeneration()",
+        "formalAuthorityCannotBeSpoofedIntoMockByRequestBody()",
+        "largeHttpResultPersistsOnlyOpaqueReferencesInExecutionFact()",
+        "automaticOutboxRecoversTransientCallbackWithoutRepeatingBusiness()",
+        "controlledDraftWriteRequiresEngineProofAndRejectsEditedContract()",
+        "arbitraryDraftFlagCannotBypassEngineAuthority()",
+        "oldAcceptanceCannotApproveChangedDraft()"
+      ]
+    },
+    {
+      "name": "annotations_including_parameter_values_and_skip_conditions_preserved",
+      "passed": true
+    },
+    {
+      "name": "only_two_additional_assert_equals_calls",
+      "passed": true,
+      "detail": {
+        "before": {
+          "assertEquals": 79,
+          "assertNotNull": 1,
+          "assertFalse": 4,
+          "assertTrue": 5,
+          "assertThrows": 8
+        },
+        "after": {
+          "assertEquals": 81,
+          "assertNotNull": 1,
+          "assertFalse": 4,
+          "assertTrue": 5,
+          "assertThrows": 8
+        }
+      }
+    },
+    {
+      "name": "original_25_report_source_identity_shape",
+      "passed": true
+    },
+    {
+      "name": "utf8_no_bom_and_line_endings_preserved",
+      "passed": true
+    },
+    {
+      "name": "149_manifest_only_whitelisted_test_changed",
+      "passed": true,
+      "detail": [
+        {
+          "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/SkillExecutionTest.java",
+          "beforeSha256": "14AE4EEA65C05EBEEBDBDF16D3FC4733D4613FDEC20EE7644DF56DB83627194B",
+          "afterSha256": "607BA3C31AE5EF8DC4568E8EB35D338446A9ED444A7366285124E28BFDA17EA8"
+        }
+      ]
+    },
+    {
+      "name": "frozen_AlgorithmOffloadInterruptionTest.java",
+      "passed": true
+    },
+    {
+      "name": "frozen_ArtifactStore.java",
+      "passed": true
+    },
+    {
+      "name": "frozen_SkillTaskResultTest.java",
+      "passed": true
+    },
+    {
+      "name": "frozen_SkillOutbox.java",
+      "passed": true
+    },
+    {
+      "name": "frozen_SkillExecution.java",
+      "passed": true
+    },
+    {
+      "name": "git_diff_check_exit0_no_findings",
+      "passed": true
+    },
+    {
+      "name": "expected_head_unchanged",
+      "passed": true,
+      "detail": "83726d50a6cce116251c03c5c193080d8ed5aad2"
+    },
+    {
+      "name": "index_still_empty",
+      "passed": true
+    },
+    {
+      "name": "diff_names_only_whitelisted_source",
+      "passed": true
+    },
+    {
+      "name": "24_tenant_mapping_entries",
+      "passed": true
+    }
+  ],
+  "noActualWindow": true,
+  "noRunnerPrepared": true,
+  "noEnvRead": true,
+  "noSourceFilesWrittenExceptWhitelist": true,
+  "frozenOther148": true,
+  "indexEmpty": true
+}

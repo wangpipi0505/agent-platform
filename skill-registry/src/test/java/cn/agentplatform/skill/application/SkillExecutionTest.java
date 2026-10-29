@@ -30,6 +30,7 @@ class SkillExecutionTest {
     SkillExecution executor;
     SkillAdapters adapters;
     Map<String, Object> request;
+    String tenant;
     String code;
     long version;
     boolean callbackUnavailable;
@@ -58,11 +59,13 @@ class SkillExecutionTest {
 
     @BeforeEach
     void prepare() throws Exception {
+        // Tenant-wide outbox recovery must only see this case's persisted facts.
+        tenant = "skill-execution-" + UUID.randomUUID();
         var jwt =
                 Jwt.withTokenValue("verified-test")
                         .header("alg", "HS256")
                         .subject("skill-tester")
-                        .claim("tenant_id", "skill-tests")
+                        .claim("tenant_id", tenant)
                         .claim("roles", List.of("ADMIN", "EDITOR", "SERVICE"))
                         .claim("attributes", Map.of("region", List.of("A")))
                         .issuedAt(Instant.now())
@@ -81,13 +84,13 @@ class SkillExecutionTest {
         // 这里只为执行器测试建立已发布fixture；生产发布必须经过真实连接和模型验收报告。
         db.update(
                 "update skill.skill_version set status='PUBLISHED' where tenant_id=? and id=?",
-                "skill-tests",
+                tenant,
                 version);
         db.update(
                 "update skill.skill set status='PUBLISHED',current_version_id=? where tenant_id=?"
                         + " and code=?",
                 version,
-                "skill-tests",
+                tenant,
                 code);
         request =
                 new LinkedHashMap<>(
@@ -170,7 +173,7 @@ class SkillExecutionTest {
                                                 "select count(*) from skill.execution_fact where"
                                                         + " tenant_id=? and call_id=?",
                                                 Integer.class,
-                                                "skill-tests",
+                                                tenant,
                                                 request.get("callId")));
                                 if (callbackUnavailable)
                                     throw new IllegalStateException("test-only unavailable");
@@ -279,7 +282,7 @@ class SkillExecutionTest {
                         "select request_snapshot->>'authorityTriggerType' from skill.execution_fact"
                                 + " where tenant_id=? and call_id=?",
                         String.class,
-                        "skill-tests",
+                        tenant,
                         request.get("callId")));
     }
 
@@ -357,7 +360,7 @@ class SkillExecutionTest {
         version = ((Number) catalog.create(body).get("skillVersionId")).longValue();
         db.update(
                 "update skill.skill_version set status='PUBLISHED' where tenant_id=? and id=?",
-                "skill-tests",
+                tenant,
                 version);
         request.put("skillVersionId", version);
         request.put("arguments", Map.of("region", List.of("A", "B")));
@@ -396,7 +399,7 @@ class SkillExecutionTest {
                 Jwt.withTokenValue("verified-scope")
                         .header("alg", "HS256")
                         .subject("skill-tester")
-                        .claim("tenant_id", "skill-tests")
+                        .claim("tenant_id", tenant)
                         .claim("roles", List.of("ADMIN", "EDITOR", "SERVICE"))
                         .claim("attributes", Map.of("region", regions))
                         .issuedAt(Instant.now())
@@ -490,7 +493,7 @@ class SkillExecutionTest {
                                 "select contract::text from skill.skill_version where tenant_id=?"
                                         + " and id=?",
                                 String.class,
-                                "skill-tests",
+                                tenant,
                                 version),
                         Map.class);
         // 新建独立写技能fixture，不修改已发布不可变契约。
@@ -514,7 +517,7 @@ class SkillExecutionTest {
         version = ((Number) created.get("skillVersionId")).longValue();
         db.update(
                 "update skill.skill_version set status='PUBLISHED' where tenant_id=? and id=?",
-                "skill-tests",
+                tenant,
                 version);
         request.put("skillVersionId", version);
         endpoint.delayMs = 400;
@@ -556,7 +559,7 @@ class SkillExecutionTest {
         version = ((Number) created.get("skillVersionId")).longValue();
         db.update(
                 "update skill.skill_version set status='PUBLISHED' where tenant_id=? and id=?",
-                "skill-tests",
+                tenant,
                 version);
         request.put("skillVersionId", version);
         endpoint.delayMs = 400;
@@ -602,7 +605,7 @@ class SkillExecutionTest {
         version = ((Number) created.get("skillVersionId")).longValue();
         db.update(
                 "update skill.skill_version set status='PUBLISHED' where tenant_id=? and id=?",
-                "skill-tests",
+                tenant,
                 version);
         request.put("skillVersionId", version);
         request.put("confirmed", true);
@@ -639,7 +642,7 @@ class SkillExecutionTest {
         version = ((Number) created.get("skillVersionId")).longValue();
         db.update(
                 "update skill.skill_version set status='PUBLISHED' where tenant_id=? and id=?",
-                "skill-tests",
+                tenant,
                 version);
         request.put("skillVersionId", version);
         var result = Json.tree(executor.execute(code, request).get("result"));
@@ -658,7 +661,7 @@ class SkillExecutionTest {
         version = ((Number) created.get("skillVersionId")).longValue();
         db.update(
                 "update skill.skill_version set status='PUBLISHED' where tenant_id=? and id=?",
-                "skill-tests",
+                tenant,
                 version);
         request.put("skillVersionId", version);
         endpoint.delayMs = 400;
@@ -684,7 +687,7 @@ class SkillExecutionTest {
                 db.queryForObject(
                         "select count(*) from skill.execution_fact where tenant_id=? and call_id=?",
                         Integer.class,
-                        "skill-tests",
+                        tenant,
                         request.get("callId")));
         assertEquals(
                 1,
@@ -692,7 +695,7 @@ class SkillExecutionTest {
                         "select count(*) from skill.execution_fact_history where tenant_id=? and"
                                 + " call_id=?",
                         Integer.class,
-                        "skill-tests",
+                        tenant,
                         request.get("callId")));
     }
 
@@ -723,7 +726,7 @@ class SkillExecutionTest {
                         "select result::text from skill.execution_fact where tenant_id=? and"
                                 + " call_id=?",
                         String.class,
-                        "skill-tests",
+                        tenant,
                         request.get("callId"));
         assertFalse(fact.contains("s3://"));
         assertFalse(fact.contains("object_key"));
@@ -736,9 +739,9 @@ class SkillExecutionTest {
             db.update(
                     "update skill.artifact set expires_at=now()-interval '1 second' where"
                             + " tenant_id=? and artifact_id=?",
-                    "skill-tests",
+                    tenant,
                     id);
-            store.cleanTenant("skill-tests", 8);
+            store.cleanTenant(tenant, 8);
             store.close();
         }
     }
@@ -753,25 +756,38 @@ class SkillExecutionTest {
                 .thenAnswer(
                         invocation -> {
                             Actor scope = invocation.getArgument(2);
-                            assertEquals("skill-tests", scope.tenantId());
+                            assertEquals(tenant, scope.tenantId());
                             assertEquals("skill-tester", scope.principalId());
                             assertEquals(Set.of("SERVICE"), scope.roles());
+                            assertEquals(
+                                    "http://engine.test/internal/tool-calls/"
+                                            + request.get("callId")
+                                            + "/fact",
+                                    invocation.getArgument(0));
                             return clients.post(
                                     invocation.getArgument(0), invocation.getArgument(1));
                         });
         db.update(
                 "update skill.execution_fact set next_delivery_at=now()-interval '1 day' where"
                         + " tenant_id=? and call_id=?",
-                "skill-tests",
+                tenant,
                 request.get("callId"));
-        assertEquals(1, new SkillOutbox(db, executor).drainTenant("skill-tests", 1));
+        assertEquals(
+                List.of(((Number) request.get("callId")).longValue()),
+                db.queryForList(
+                        "select call_id from skill.execution_fact where tenant_id=?"
+                            + " and callback_state='PENDING' and next_delivery_at<=now()"
+                            + " and (delivery_lease_until is null or delivery_lease_until<now())",
+                        Long.class,
+                        tenant));
+        assertEquals(1, new SkillOutbox(db, executor).drainTenant(tenant, 1));
         assertEquals(
                 "DELIVERED",
                 db.queryForObject(
                         "select callback_state from skill.execution_fact where tenant_id=? and"
                                 + " call_id=?",
                         String.class,
-                        "skill-tests",
+                        tenant,
                         request.get("callId")));
         assertEquals(1, endpoint.calls.get());
     }
@@ -850,15 +866,17 @@ class SkillExecutionTest {
         db.update(
                 "insert into"
                     + " skill.connection_test(tenant_id,skill_version_id,candidate_sha256,passed,report,semantic_digest)"
-                    + " values('skill-tests',?,?,true,'{}',?)",
+                    + " values(?,?,?,true,'{}',?)",
+                tenant,
                 id,
                 sha,
                 created.get("semanticDigest"));
         db.update(
                 "insert into"
                     + " skill.acceptance(id,tenant_id,skill_version_id,candidate_sha256,passed,hit_rate,report,semantic_digest)"
-                    + " values(?,'skill-tests',?,?,true,1,'{}',?)",
+                    + " values(?,?,?,?,true,1,'{}',?)",
                 "test-" + UUID.randomUUID(),
+                tenant,
                 id,
                 sha,
                 created.get("semanticDigest"));

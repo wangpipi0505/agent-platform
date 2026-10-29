@@ -1,4 +1,20 @@
-# EX-27 前置子步：网关回收夹具
+# EX-27 测试基座子步骤证据
+
+2026-10-29 增量：SSE 子步已由 `83cc21d0a490a50ae6e5ac3dbad57bd53e0381ef` 提交。SDK 中断前提/安全覆盖与 outbox 租户隔离分别审阅、分别提交；本卡整体仍进行中，不能把这三个子步算成三张完成卡。最新状态与提交串联见[统一台账§14](../../../../../文档/优化方案/优化台账-统一-20261028.md)和[EX-08索引](../2026-10-29-EX-08/README.md)。
+
+outbox 的[归因](outbox-actor-preflight.md)、[静态准入](outbox-actor-static-review.md)及[本轮结果](runs/outbox-fix-20261029-085643-361/result.md)保留各阶段身份。原两个测试共用租户；产品从认领事实恢复 principal 的路径保持不变。本次仅测试逐例 UUID 隔离，原97断言保留并增加2条检查，未清理未知旧队列。默认28项定向已全绿；共享完整skill为70类674记录、558P/6F/106E/4旧SKIP，新非通过/缺失/源漂移0，原116非通过仍保留，不是全模块全绿。最终原因门与独审以对应新回执为准。
+
+SDK 的[历史技术门](algorithm-history-technical-review.md)、[43EC静态准入](algorithm-fix-static-review.md)及[原五项通过但outbox新增F的Full](runs/algorithm-fix-20261029-032753-387/result.md)保持原件；新的共享Full不能倒写原失败现场，也不能把本轮handoff确认退出写成已重现历史未确认分支。一次Full同时包含SDK、outbox及EX-03共149源候选，分别提交后的最终串联树才恢复该源码上下文；任一孤立子步提交不声称独立复现674项。
+
+命令原文直接保存在各次实际 `command.json` 的 `command` / `arguments` 字段，并同时保存该命令原生起止及 exit：
+
+- [SDK默认整类5项命令原文](runs/algorithm-fix-20261029-032753-387/class/command.json)：默认43EC、5P/native0，无诊断flag。
+- [outbox两类28项命令原文](runs/outbox-fix-20261029-085643-361/targeted/command.json)：默认607B、28P/native0，无failure.ignore。
+- [同栈完整skill命令原文](runs/outbox-fix-20261029-085643-361/full/command.json)：70类674、558P/6F/106E/4旧S，原failure.ignore只采集。
+
+以上各命令的参数数组是原文载体，不是手工概述；执行前置及环境恢复见各Run原字节 `preflight.ps1` / `run-verify.ps1`。历史红与诊断命令仍对应各自Run及当时测试SHA，不能将后续43EC/607B倒填到旧失败。
+
+## SSE 子步原阶段快照（以下保留当时记录）
 
 本轮只推进EX-27的网关回收夹具子步，Y-4其它部分未启动。仅测试及本证据目录在白名单内，所有src/main、SSE/HTTP/Budget、EX35 Proxy候选、Tomcat依赖与原期限不改；不使用superpower、不操作index/commit。root负责主入口、独立验收和提交。
 

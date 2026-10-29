@@ -1,0 +1,26 @@
+{
+  "phase": "STATIC_PREPARATION_ONLY",
+  "attempts": [
+    {
+      "attempt": 1,
+      "result": "PS51_UTF8_WITHOUT_BOM_PATH_DECODE_FAILED_BEFORE_BASELINE_READ",
+      "correction": "COLLECTOR_PS1_UTF8_BOM_ONLY"
+    },
+    {
+      "attempt": 2,
+      "result": "PARSE_ZERO_VERIFIER_SOURCE_COMPARISON_FALSE",
+      "cause": "PS51_CONVERTFROMJSON_ARRAY_WRAPPER_IN_STATIC_CHECKER",
+      "correction": "MATCH_MATURE_DIRECT_JSON_ARRAY_ASSIGNMENT_NO_ADMISSION_RELAXATION"
+    },
+    {
+      "attempt": 3,
+      "result": "PS51_PARSE_ZERO_ALL_19_CHECKS_TRUE",
+      "sourceActualDelta": "ONLY_SKILL_EXECUTION_TEST_14AE_TO_607B",
+      "remaining147AndSdk": "UNCHANGED"
+    }
+  ],
+  "productCommandStarted": false,
+  "envFileRead": false,
+  "sourceModified": false,
+  "targetRedCounted": false
+}

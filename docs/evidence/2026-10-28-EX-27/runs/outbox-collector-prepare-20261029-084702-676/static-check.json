@@ -1,0 +1,58 @@
+{
+    "phase":  "STATIC_PREPARATION_ONLY",
+    "powershell":  "5.1.26100.9711",
+    "parse":  [
+                  {
+                      "path":  "preflight.ps1",
+                      "errorCount":  0,
+                      "sha256":  "B53EC32F0E36E526931B0E64B6287CBB7BAE6F3AA8B181D4CBA14AD18910E254"
+                  },
+                  {
+                      "path":  "run-verify.ps1",
+                      "errorCount":  0,
+                      "sha256":  "01F9DCC17562834F404FF9DAAF566FF615B346A6DBF05A6EE770118CE2A7C2B8"
+                  },
+                  {
+                      "path":  "compare-nonpass-reasons.ps1",
+                      "errorCount":  0,
+                      "sha256":  "E5FD54E69CE79331CE38A23B0A8D94A25A19E7E403C1A33FB4AD4A40F9C1FB5B"
+                  },
+                  {
+                      "path":  "check-preparation.ps1",
+                      "errorCount":  0,
+                      "sha256":  "6FFD641A3E4A033FA4EF93168A2E8B7AE98CA2C62CBE5FE2C2111B99E371AE59"
+                  }
+              ],
+    "checks":  {
+                   "ps51":  true,
+                   "allParseErrorsZero":  true,
+                   "exactBaseline28With25Plus3":  true,
+                   "baseline664Retains116Including4Skip":  true,
+                   "source149OnlyApprovedOutboxDelta":  true,
+                   "sdk43ECAndOther147Unchanged":  true,
+                   "explicitFrozenProductsAndTaskResultMatch":  true,
+                   "targetAndFullSelectorAdapted":  true,
+                   "defaultOriginalArgLineOnly":  true,
+                   "target28PrerequisiteNative0NoIgnore":  true,
+                   "mainOwnerSchemaHistoryAdded":  true,
+                   "preflightContainsNoDdlOrQueueSql":  true,
+                   "strictKnownPgAndReplayRulesKept":  true,
+                   "targetZeroOutcomesFullSdkFiveAndFour":  true,
+                   "full674AndOriginal116Required":  true,
+                   "nativePersistedBeforeXml":  true,
+                   "safeFixedFailureAndFinallyRestore":  true,
+                   "reasonComparisonKeepsOriginalAndOutboxRedFull":  true,
+                   "expectedHeadStillFrozen":  true
+               },
+    "allPassed":  true,
+    "expectedTargetCases":  28,
+    "expectedTargetClasses":  2,
+    "expectedFullCases":  674,
+    "expectedFullClasses":  70,
+    "candidateSha256":  "607BA3C31AE5EF8DC4568E8EB35D338446A9ED444A7366285124E28BFDA17EA8",
+    "candidateApproval":  "PENDING_ROOT_FINAL_SHA_AND_INDEPENDENT_REVIEW_AND_ACTUAL_WINDOW",
+    "envFileNotRead":  true,
+    "javaMavenPgHttpStarted":  false,
+    "productOrTestSourceModified":  false,
+    "indexModified":  false
+}
