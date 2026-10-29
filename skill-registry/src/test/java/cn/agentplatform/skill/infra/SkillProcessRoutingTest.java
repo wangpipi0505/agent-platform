@@ -158,6 +158,31 @@ class SkillProcessRoutingTest {
         assertTrue(ex.unknown, "本地进程没有可查询的原调用结果，必须标记为结果未知");
     }
 
+    @Test
+    void disabledAndLegacyStdinKeepBusinessFilesInParameters() {
+        Map<String, Object> arguments = Map.of(
+                "files", Map.of("business", java.util.List.of("alpha", "beta")), "keep", "unchanged");
+        String frozen = Json.canonical(arguments);
+        int index = 0;
+        for (Object stdin : java.util.Arrays.asList(
+                Map.of("files", false), null, "legacy-stdin", java.util.List.of("legacy", "array"))) {
+            var declared = contract("envelope");
+            @SuppressWarnings("unchecked")
+            var processContract = (Map<String, Object>) declared.get("process");
+            if (stdin != null) processContract.put("stdin", stdin);
+            long callId = 8100L + index++;
+            var raw = adapters.invoke(declared, arguments, "phase-b-compat-" + callId,
+                    callId, false, "r_phase_b_compat_" + callId, 3L);
+            var received = Json.read(raw.structured().path("stdin").asText());
+            assertAll(
+                    () -> assertEquals(Json.tree(arguments), received.path("parameters")),
+                    () -> assertTrue(received.path("files").isObject()),
+                    () -> assertEquals(0, received.path("files").size()),
+                    () -> assertEquals(Long.toString(callId), received.path("requestId").asText()),
+                    () -> assertEquals(frozen, Json.canonical(arguments)));
+        }
+    }
+
     private static Map<String, Object> contract(String... workerArgs) {
         var process = new LinkedHashMap<String, Object>();
         process.put("command", FakeProcessWorker.command(workerArgs));

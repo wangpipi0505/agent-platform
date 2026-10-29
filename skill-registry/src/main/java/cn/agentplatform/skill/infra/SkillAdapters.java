@@ -18,6 +18,12 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.*;
 
@@ -480,8 +486,8 @@ public class SkillAdapters {
      * 把它当业务结果会把 requestId/ok/metrics 混进下游 schema。
      *
      * <p>ProcessAdapter 已用 PlatformException 区分 403（开关关闭/白名单外/允许根越界）、429（并发配额）、
-     * 400（信封超限）、502（启动失败/退出码/协议违规/输出 schema/取消）、504（超时）；这里刻意不 catch 任何
-     * 异常——包成通用的依赖不可用会把“配置错误”与“上游抖动”混为一谈，调用方据此重试只会再执行一次本地
+     * 400（信封超限）、502（启动失败/退出码/协议违规/输出 schema/取消）、504（超时）；除文件输入边界窄映射
+     * ARTIFACT_NOT_FOUND 外保留真实异常——包成通用的依赖不可用会混淆故障，调用方据此重试只会再执行一次本地
      * 进程（Y-3 的教训）。租户 ID 来自已验签上下文，仅用于每租户并发配额；解析不出（系统级调用）就跳过该层。
      */
     Raw executeLocalProcess(Map<String, Object> contract, Map<String, Object> arguments, long callId) {
@@ -495,12 +501,23 @@ public class SkillAdapters {
         } catch (PlatformException unresolvable) {
             tenantId = null;
         }
+        Map<String, Object> parameters = arguments;
+        Map<String, String> inputArtifacts = Map.of();
+        if (parsed.filesEnabled()) {
+            parameters = new LinkedHashMap<>(arguments);
+            if (parameters.containsKey("files"))
+                inputArtifacts = processInputReferences(parameters.remove("files"));
+        }
+        Map<String, String> inputs = inputArtifacts;
         ProcessAdapter.Output executed =
                 process.execute(
                         parsed,
                         new ProcessAdapter.Request(
-                                Long.toString(callId), operation, Json.tree(arguments)),
-                        tenantId);
+                                Long.toString(callId), operation, Json.tree(parameters)),
+                        tenantId,
+                        inputs.isEmpty()
+                                ? null
+                                : (callDir, deadline) -> materializeProcessInputs(inputs, callDir, deadline));
         return new Raw(
                 executed.result(),
                 List.of(),
@@ -509,6 +526,91 @@ public class SkillAdapters {
                 "",
                 null,
                 executed.fact());
+    }
+
+
+    private static Map<String, String> processInputReferences(Object value) {
+        if (!(value instanceof Map<?, ?> declared))
+            throw new PlatformException(422, "PROCESS_INPUT_INVALID", "files 必须是受控产物引用对象");
+        if (declared.size() > 16)
+            throw new PlatformException(400, "PROCESS_INPUT_TOO_LARGE", "输入文件不能超过16个");
+        var inputs = new LinkedHashMap<String, String>();
+        for (var entry : declared.entrySet()) {
+            if (!(entry.getKey() instanceof String name)
+                    || !(entry.getValue() instanceof Map<?, ?> reference)
+                    || !reference.keySet().equals(Set.of("artifactId"))
+                    || !(reference.get("artifactId") instanceof String id))
+                throw new PlatformException(
+                        422, "PROCESS_INPUT_INVALID", "每个输入文件仅接受字符串 artifactId");
+            inputs.put(name, id);
+        }
+        return inputs;
+    }
+
+    /** 逻辑名只用作信封键；本机文件名由平台生成，全部输入验证完毕才允许启动 worker。 */
+    private Map<String, String> materializeProcessInputs(
+            Map<String, String> inputs, Path callDir, long deadline) {
+        if (artifacts == null)
+            throw new PlatformException(503, "ARTIFACT_STORAGE_UNAVAILABLE", "受控输入存储未装配");
+        final long singleLimit = 16L * 1024 * 1024;
+        final long totalLimit = 64L * 1024 * 1024;
+        var files = new LinkedHashMap<String, String>();
+        long total = 0;
+        try {
+            Path inputDir = Files.createDirectory(callDir.resolve("input"));
+            byte[] buffer = new byte[8192];
+            for (var input : inputs.entrySet()) {
+                checkProcessInputDeadline(deadline);
+                String fileName = String.format(Locale.ROOT, "%04d.bin", files.size() + 1);
+                MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                long bytes = 0;
+                // sourceRun=null 只放开源运行匹配；真实下载仍核当前 Actor、READY 与有效期。
+                try (var download = artifacts.download(input.getValue(), null);
+                        var target = Files.newOutputStream(
+                                inputDir.resolve(fileName), StandardOpenOption.CREATE_NEW,
+                                StandardOpenOption.WRITE, LinkOption.NOFOLLOW_LINKS)) {
+                    if (download.bytes() < 0 || download.bytes() > singleLimit
+                            || download.bytes() > totalLimit - total)
+                        throw new PlatformException(
+                                400, "PROCESS_INPUT_TOO_LARGE", "输入文件超过单个或合计字节上限");
+                    while (true) {
+                        checkProcessInputDeadline(deadline);
+                        int read = download.source().read(buffer);
+                        checkProcessInputDeadline(deadline);
+                        if (read == -1) break;
+                        if (read == 0) continue;
+                        bytes += read;
+                        total += read;
+                        if (bytes > singleLimit || total > totalLimit)
+                            throw new PlatformException(
+                                    400, "PROCESS_INPUT_TOO_LARGE", "输入文件超过单个或合计字节上限");
+                        digest.update(buffer, 0, read);
+                        target.write(buffer, 0, read);
+                    }
+                    if (bytes != download.bytes()
+                            || !HexFormat.of().formatHex(digest.digest()).equals(download.sha256()))
+                        throw new PlatformException(
+                                503, "ARTIFACT_STORAGE_UNAVAILABLE", "输入文件长度或摘要与存储记录不一致");
+                }
+                checkProcessInputDeadline(deadline);
+                files.put(input.getKey(), "input/" + fileName);
+            }
+            return files;
+        } catch (PlatformException ex) {
+            if (ex.status() == 404 && "ARTIFACT_NOT_FOUND".equals(ex.code()))
+                throw new PlatformException(
+                        404, "PROCESS_INPUT_ARTIFACT_NOT_FOUND", "输入产物不存在、已过期或无权访问");
+            throw ex;
+        } catch (IOException ex) {
+            throw new PlatformException(503, "ARTIFACT_STORAGE_UNAVAILABLE", "输入文件暂不可读取或写入");
+        } catch (NoSuchAlgorithmException ex) {
+            throw new IllegalStateException("SHA-256 unavailable", ex);
+        }
+    }
+
+    private static void checkProcessInputDeadline(long deadline) {
+        if (Thread.currentThread().isInterrupted() || deadline - System.nanoTime() <= 0)
+            throw new PlatformException(504, "PROCESS_TIMEOUT", "输入文件准备超过执行时限或被中断");
     }
 
     /**

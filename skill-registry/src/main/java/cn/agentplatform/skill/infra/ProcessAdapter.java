@@ -37,6 +37,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiFunction;
 
 /**
  * 本地算法进程的一次性执行适配器（PLAT-21 / 方案 §12）。
@@ -210,6 +211,15 @@ public class ProcessAdapter {
      * 只用于每租户并发配额（null 跳过该层，不参与出站信封）。
      */
     public Output execute(ProcessContract contract, Request request, String tenantId) {
+        return execute(contract, request, tenantId, null);
+    }
+
+    /** 输入物化只在原执行门通过、callDir 创建之后运行；任何输入失败都先于 worker 启动。 */
+    Output execute(
+            ProcessContract contract,
+            Request request,
+            String tenantId,
+            BiFunction<Path, Long, Map<String, String>> inputFiles) {
         Objects.requireNonNull(contract, "contract");
         Objects.requireNonNull(request, "request");
         if (!enabled)
@@ -226,7 +236,7 @@ public class ProcessAdapter {
 
         Semaphore tenantPermit = acquirePermits(tenantId);
         try {
-            return runOnce(contract, request);
+            return runOnce(contract, request, inputFiles);
         } finally {
             if (tenantPermit != null) tenantPermit.release();
             globalPermits.release();
@@ -289,14 +299,19 @@ public class ProcessAdapter {
      * 名额持有后的单次执行体：建 callDir → 起进程 → 协议交换 → 无论成败回收/转储。
      * 失败事实在这里落结构化日志；成功事实随 {@link Output#fact()} 交给调用方写入执行事实信封。
      */
-    private Output runOnce(ProcessContract contract, Request request) {
+    private Output runOnce(
+            ProcessContract contract,
+            Request request,
+            BiFunction<Path, Long, Map<String, String>> inputFiles) {
         byte[] envelope = envelope(contract, request);
         long started = System.nanoTime();
+        long deadline = started + contract.timeout().toNanos();
         Path root = null;
         Path callDir = null;
         Process process = null;
         ActiveCall call = null;
         RuntimeException failure = null;
+        boolean preparingInputs = false;
         try {
             root = resolveAllowedRoot(contract.workDirRoot());
             try {
@@ -305,10 +320,18 @@ public class ProcessAdapter {
                 throw denied("无法在允许根下创建调用目录: " + ex.getMessage());
             }
 
+            if (inputFiles != null) {
+                preparingInputs = true;
+                envelope = envelope(contract, request, inputFiles.apply(callDir, deadline));
+                if (Thread.currentThread().isInterrupted() || deadline - System.nanoTime() <= 0)
+                    throw new PlatformException(504, "PROCESS_TIMEOUT", "输入文件准备超过执行时限或被中断");
+            }
+
             ProcessBuilder builder =
                     ProcessTree.builder(contract.command(), callDir, contract.allowedEnv());
             try {
                 process = ProcessTree.start(builder);
+                preparingInputs = false;
             } catch (IOException ex) {
                 String message =
                         ex.getMessage() == null ? ex.getClass().getSimpleName() : ex.getMessage();
@@ -337,7 +360,10 @@ public class ProcessAdapter {
 
             boolean exited;
             try {
-                exited = ProcessTree.awaitExit(process, contract.timeout());
+                long remaining = deadline - System.nanoTime();
+                exited = inputFiles == null
+                        ? ProcessTree.awaitExit(process, contract.timeout())
+                        : remaining > 0 && ProcessTree.awaitExit(process, Duration.ofNanos(remaining));
             } catch (InterruptedException ex) {
                 Thread.currentThread().interrupt();
                 throw new PlatformException(504, "PROCESS_TIMEOUT", "等待进程退出被中断，已终止进程树");
@@ -379,7 +405,8 @@ public class ProcessAdapter {
                 kill(call, call.killReason != null ? call.killReason : KILL_ABNORMAL);
             String dumpDir = null;
             if (callDir != null && root != null && Files.exists(callDir)) {
-                if (failure == null || keepFailedDirs <= 0) deleteCallDir(callDir);
+                // 准备阶段尚未启动 worker，不把已下载输入留入失败现场转储。
+                if (failure == null || keepFailedDirs <= 0 || preparingInputs) deleteCallDir(callDir);
                 else dumpDir = retainFailureDump(root, callDir);
             }
             if (failure != null)
@@ -388,16 +415,21 @@ public class ProcessAdapter {
     }
 
     /**
-     * 请求信封（§4.4）。参数只放业务入参，凭据一律不进信封；{@code files} 目前是空对象——
-     * artifact 引用到相对路径的映射属于后续卡，本卡不假装支持。
+     * 请求信封（§4.4）。旧入口 files 为空；显式文件输入由调用方物化后提供受控相对路径。
+     * 凭据、artifact 标识与本机绝对路径一律不进文件映射。
      */
     static byte[] envelope(ProcessContract contract, Request request) {
+        return envelope(contract, request, Map.of());
+    }
+
+    private static byte[] envelope(
+            ProcessContract contract, Request request, Map<String, String> inputFiles) {
         var node = Json.object();
         node.put("protocol", contract.protocol());
         node.put("requestId", request.requestId());
         node.put("operation", request.operation());
         node.set("parameters", request.parameters());
-        node.set("files", Json.object());
+        node.set("files", Json.tree(inputFiles));
         byte[] bytes = Json.write(node).getBytes(StandardCharsets.UTF_8);
         if (bytes.length > ProcessContract.MAX_REQUEST_BYTES)
             throw new PlatformException(
