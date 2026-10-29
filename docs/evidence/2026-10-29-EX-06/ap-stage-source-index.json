@@ -1,0 +1,614 @@
+{
+  "readOnly": true,
+  "executedProduct": false,
+  "sources": [
+    {
+      "repository": "AP",
+      "path": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/DevAuthentication.java",
+      "sha256": "eb7d2609e0b4c1e5afd008ea1cc0d126dd11fcb5af649de9aeec6dcfa250648f",
+      "bytes": 1936,
+      "anchors": [
+        {
+          "needle": "auth/dev-token",
+          "lines": [
+            16
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "AP",
+      "path": "app-management/src/main/java/cn/agentplatform/app/api/AppController.java",
+      "sha256": "f47c47eefb5093f7081739d1a5e898803f612e4bc8120320bf7206f165fb5132",
+      "bytes": 8449,
+      "anchors": [
+        {
+          "needle": "@PostMapping(\"/admin/apps\")",
+          "lines": [
+            32
+          ]
+        },
+        {
+          "needle": "publish/precheck",
+          "lines": [
+            107
+          ]
+        },
+        {
+          "needle": "publish/commit",
+          "lines": [
+            113
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "AP",
+      "path": "app-management/src/main/java/cn/agentplatform/app/application/AppService.java",
+      "sha256": "a01bedf3036f0dec91f6b8c895e92099b59937a3566297962a6c2dc33ba764ce",
+      "bytes": 93561,
+      "anchors": [
+        {
+          "needle": "public Map<String, Object> create(",
+          "lines": [
+            321
+          ]
+        },
+        {
+          "needle": "public Map<String, Object> save(",
+          "lines": [
+            351
+          ]
+        },
+        {
+          "needle": "public Map<String, Object> precheck(",
+          "lines": [
+            927
+          ]
+        },
+        {
+          "needle": "public Map<String, Object> commit(",
+          "lines": [
+            1406
+          ]
+        },
+        {
+          "needle": "public List<Map<String, Object>> skillRefs(",
+          "lines": [
+            1318
+          ]
+        },
+        {
+          "needle": "private void recordPin(",
+          "lines": [
+            1621
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "AP",
+      "path": "app-management/src/main/java/cn/agentplatform/app/infra/ReleasePins.java",
+      "sha256": "8b7ca57c9161f505cfa68120a7aa101cc7949a4a0a4d037315677e00f43aae44",
+      "bytes": 8763,
+      "anchors": [
+        {
+          "needle": "public Map<String, Object> pin(",
+          "lines": [
+            67
+          ]
+        },
+        {
+          "needle": "private static final String PATH",
+          "lines": [
+            40
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "AP",
+      "path": "app-management/src/main/resources/application.yml",
+      "sha256": "96e2d41c8b481bced43452d5b33a91404ec65b5140600d15ba9709549f2f2251",
+      "bytes": 1882,
+      "anchors": [
+        {
+          "needle": "  ontology:",
+          "lines": [
+            33
+          ]
+        },
+        {
+          "needle": "  pin:",
+          "lines": [
+            38
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "AP",
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/api/OntologyImportController.java",
+      "sha256": "16d0b2f10deaa4ab6ff4127647495dae4135391bef8de5ae4b83ef3fdabb09e9",
+      "bytes": 1643,
+      "anchors": [
+        {
+          "needle": "import-ontology-manifests",
+          "lines": [
+            21
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "AP",
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/OntologyManifestImports.java",
+      "sha256": "0538830d9c0e511d868e4c6b4ba21582a0600a5fc3c9240062affc3008e9cc8d",
+      "bytes": 13119,
+      "anchors": [
+        {
+          "needle": "public Map<String, Object> importManifests(",
+          "lines": [
+            41
+          ]
+        },
+        {
+          "needle": "String toolCode",
+          "lines": [
+            101
+          ]
+        },
+        {
+          "needle": "body.put(\"code\"",
+          "lines": [
+            132
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "AP",
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/api/SkillController.java",
+      "sha256": "cc6cf46adbdf886ff0b7c432b8ce8c284c24370dff9de3a10c8574317dae3927",
+      "bytes": 8321,
+      "anchors": [
+        {
+          "needle": "connection-test",
+          "lines": [
+            105
+          ]
+        },
+        {
+          "needle": "/acceptance",
+          "lines": [
+            114
+          ]
+        },
+        {
+          "needle": "/publish",
+          "lines": [
+            97,
+            98
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "AP",
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/SkillCatalog.java",
+      "sha256": "c9c3a0b6e69a76cd49939f639ac0b7cf014e67fedb9dd86311c807199abc47fd",
+      "bytes": 74170,
+      "anchors": [
+        {
+          "needle": "public Map<String, Object> create(",
+          "lines": [
+            293
+          ]
+        },
+        {
+          "needle": "public Map<String, Object> publish(",
+          "lines": [
+            881
+          ]
+        },
+        {
+          "needle": "guard.get(\"guardAttrs\")",
+          "lines": [
+            718
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "AP",
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/SkillGovernance.java",
+      "sha256": "5f0c1cc7e9fc835f971d2920a5026566fd7ffa80781fd91c8299c023b6d7ede8",
+      "bytes": 10924,
+      "anchors": [
+        {
+          "needle": "public Map<String, Object> connection(",
+          "lines": [
+            40
+          ]
+        },
+        {
+          "needle": "public Map<String, Object> acceptance(",
+          "lines": [
+            119
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "AP",
+      "path": "skill-registry/src/main/resources/db/migration/V300__skill.sql",
+      "sha256": "e8c764d3d3b2747e54567ba0750eef1b8638b6e8c86469f8c37ec1a59b65c9d2",
+      "bytes": 3475,
+      "anchors": [
+        {
+          "needle": "UNIQUE(tenant_id,code)",
+          "lines": [
+            6
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "AP",
+      "path": "model-gateway/src/main/java/cn/agentplatform/model/api/ModelController.java",
+      "sha256": "517a0c12a4e80cfec87bccaccda9f0bfa09dd837e54b09c56e3f0bb39e0f8b2f",
+      "bytes": 10488,
+      "anchors": [
+        {
+          "needle": "@PostMapping(\"/admin/model-providers\")",
+          "lines": [
+            30
+          ]
+        },
+        {
+          "needle": "@PostMapping(\"/admin/model-entries\")",
+          "lines": [
+            65
+          ]
+        },
+        {
+          "needle": "/admin/model-entries/{id}/test",
+          "lines": [
+            75
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "AP",
+      "path": "model-gateway/src/main/java/cn/agentplatform/model/infra/ModelStore.java",
+      "sha256": "6b37436cc06ef99719f00474641076b71c0c60f04e1128dee5c91ee824bc4428",
+      "bytes": 40222,
+      "anchors": [
+        {
+          "needle": "public Map<String, Object> createProvider(",
+          "lines": [
+            58
+          ]
+        },
+        {
+          "needle": "public Map<String, Object> createEntry(",
+          "lines": [
+            265
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "AP",
+      "path": "model-gateway/src/main/java/cn/agentplatform/model/application/ModelCalls.java",
+      "sha256": "01093b0369a928afd28b7b88c310b6153c8fffd793b8a2e81ac98f853110e6e1",
+      "bytes": 86555,
+      "anchors": [
+        {
+          "needle": "public Map<String, Object> testProvider(",
+          "lines": [
+            113
+          ]
+        },
+        {
+          "needle": "public Map<String, Object> entryHealth(",
+          "lines": [
+            194
+          ]
+        },
+        {
+          "needle": "private JsonNode chatProbe(",
+          "lines": [
+            413
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "AP",
+      "path": "model-gateway/src/main/java/cn/agentplatform/model/domain/ModelPolicy.java",
+      "sha256": "827ef6740d59e85333195751b520d407abb4f9d2710e7edbcccadf622aef67b5",
+      "bytes": 1362,
+      "anchors": [
+        {
+          "needle": "public static void checkLabels(",
+          "lines": [
+            10
+          ]
+        },
+        {
+          "needle": "public static URI endpoint(",
+          "lines": [
+            23
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "AP",
+      "path": "monitor/src/main/java/cn/agentplatform/monitor/api/EvaluationController.java",
+      "sha256": "59d82dbaaa20122455536c9386984775c5226aa75637a3d8ed09f8052dd734de",
+      "bytes": 2000,
+      "anchors": [
+        {
+          "needle": "@PostMapping(\"/admin/evaluations\")",
+          "lines": [
+            18
+          ]
+        },
+        {
+          "needle": "/resume",
+          "lines": [
+            29
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "AP",
+      "path": "monitor/src/main/java/cn/agentplatform/monitor/application/EvaluationService.java",
+      "sha256": "a2fc2eac3146e6a4a1969e09b7f4b1bf587b6b2faa8fa69b8b02d7ae3347005e",
+      "bytes": 27723,
+      "anchors": [
+        {
+          "needle": "public Map<String, Object> evaluate(",
+          "lines": [
+            127
+          ]
+        },
+        {
+          "needle": "SAFETY_CASE_REQUIRED",
+          "lines": [
+            163
+          ]
+        },
+        {
+          "needle": "String status =",
+          "lines": [
+            363
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "AP",
+      "path": "monitor/src/main/java/cn/agentplatform/monitor/domain/EvaluationAssertions.java",
+      "sha256": "8573db41964e3c6c7f7c6fdc5296f2868e635c68a38878602ec5994df4c8c58a",
+      "bytes": 25454,
+      "anchors": [
+        {
+          "needle": "public static Spec requireValid(",
+          "lines": [
+            133
+          ]
+        },
+        {
+          "needle": "case SCHEMA ->",
+          "lines": [
+            163,
+            232
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "AP",
+      "path": "engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java",
+      "sha256": "df76eea91c106796163f7459fdb5779badb12178411a778eb466c76ad15cc17f",
+      "bytes": 31105,
+      "anchors": [
+        {
+          "needle": "@PostMapping(\"/admin/debug-runs\")",
+          "lines": [
+            43
+          ]
+        },
+        {
+          "needle": "@PostMapping({\"/admin/apps/{code}/runs\"",
+          "lines": [
+            49
+          ]
+        },
+        {
+          "needle": "@GetMapping({\"/admin/runs/{id}\"",
+          "lines": [
+            89
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "AP",
+      "path": "engine-runtime/src/main/java/cn/agentplatform/engine/application/RunService.java",
+      "sha256": "c6aa628a0ae436627b2f202f10a0278dc9d3069141582658cadbf98219607716",
+      "bytes": 161122,
+      "anchors": [
+        {
+          "needle": "private void applyOntologyContext(",
+          "lines": [
+            1419
+          ]
+        },
+        {
+          "needle": "config.path(\"skillRefs\").forEach",
+          "lines": [
+            1257
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "AP",
+      "path": "engine-runtime/src/main/java/cn/agentplatform/engine/application/AgentDriver.java",
+      "sha256": "c048a14a952a9556ec432ec78c9e15ba5a736f170b41a6e2280a959e49dc17b5",
+      "bytes": 25866,
+      "anchors": [
+        {
+          "needle": "JsonNode calls = answer.path(\"toolCalls\")",
+          "lines": [
+            134
+          ]
+        },
+        {
+          "needle": "\"actualModel\"",
+          "lines": [
+            144,
+            145
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "AP",
+      "path": "engine-runtime/src/main/resources/application.yml",
+      "sha256": "562054834cc0b726ba445d3035ef05d908397cc121b892254efc33c034e1664c",
+      "bytes": 3966,
+      "anchors": [
+        {
+          "needle": "  ontology:",
+          "lines": [
+            60
+          ]
+        },
+        {
+          "needle": "  pin:",
+          "lines": [
+            65
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "AP",
+      "path": "scripts/acceptance/Prepare-Joint.ps1",
+      "sha256": "fce9ce3a4e06d3b01ac9b34f80283de86740c0393a14788cbe8ef29d842fab98",
+      "bytes": 24014,
+      "anchors": [
+        {
+          "needle": "code='joint_list'",
+          "lines": [
+            90
+          ]
+        },
+        {
+          "needle": "opCode='joint_list'",
+          "lines": [
+            106,
+            219
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "AP",
+      "path": "scripts/acceptance/fixtures/Joint-ProtocolFixture.mjs",
+      "sha256": "31cb04c62461097d9a02b28337184990a2601642ef6e59c0ea336317657a1d4e",
+      "bytes": 3503,
+      "anchors": [
+        {
+          "needle": "不模拟本体发布",
+          "lines": [
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "OR",
+      "path": "onto-operation/src/main/java/cn/ontorepo/operation/application/OperationService.java",
+      "sha256": "bee0ec17176d54074c1dadddfb2925bde7bfb4bf9046f830edbd139ed05365f3",
+      "bytes": 6588,
+      "anchors": [
+        {
+          "needle": "Input.text(b, \"code\", 80)",
+          "lines": [
+            35
+          ]
+        },
+        {
+          "needle": "code.matches",
+          "lines": [
+            46
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "AP",
+      "path": "pom.xml",
+      "sha256": "836ba70369072496695e167bf3ab937fe48c7150a5e0b13b7b8d13674ffbcb2c",
+      "bytes": 1661,
+      "anchors": []
+    },
+    {
+      "repository": "AP",
+      "path": "scripts/start-backend.ps1",
+      "sha256": "542cc2bb88fadf93b7ef6c847b5fc67a42d0f03d27ab29d672df959e8980530f",
+      "bytes": 14013,
+      "anchors": []
+    },
+    {
+      "repository": "AP",
+      "path": "scripts/start-database.ps1",
+      "sha256": "4b927fd41565f93256a56620648aa67d77959ee5ee910397ba8f5fc819d9d906",
+      "bytes": 4284,
+      "anchors": []
+    },
+    {
+      "repository": "AP",
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/ArtifactStore.java",
+      "sha256": "967849596ae6179a2b0858fb39d50a365c65f2370d4e2ad0658dfee44a0569b1",
+      "bytes": 35703,
+      "anchors": []
+    },
+    {
+      "repository": "AP",
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/ServiceLifecycle.java",
+      "sha256": "e8233e57589ebbe1a75c37cfabe439749ac226055dbfe523017fe2439ab173cc",
+      "bytes": 35892,
+      "anchors": []
+    },
+    {
+      "repository": "AP",
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/SkillOutbox.java",
+      "sha256": "30bae61b51db4df75462c5d92badc5455fbec1fc7437856cd1d9a9da2da32db7",
+      "bytes": 4334,
+      "anchors": []
+    },
+    {
+      "repository": "AP",
+      "path": "engine-runtime/src/main/java/cn/agentplatform/engine/application/RunScheduler.java",
+      "sha256": "05014bad75a93a25a51b05c31252a6d90a6c3be6b05be78487e7aef2374c9754",
+      "bytes": 17441,
+      "anchors": []
+    },
+    {
+      "repository": "AP",
+      "path": "model-gateway/src/main/resources/application.yml",
+      "sha256": "5076a38441a28a4677061b713b4cc834a5126c099998c0cfc54c3d516619e8b6",
+      "bytes": 1505,
+      "anchors": []
+    }
+  ]
+}

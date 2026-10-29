@@ -1,0 +1,1605 @@
+{
+  "formatVersion": 1,
+  "preparedAtUtc": "2026-10-29T08:50:25.432943+00:00",
+  "preparedBy": "ex04_pg_scope",
+  "purpose": "Exact local EX-06 partial-stage commit candidate; not staged or committed by this preparation",
+  "headAtPreparation": "acad6bdee223b23f331420c6de50045cb5fa8941",
+  "indexSha256ObservedReadOnly": "A878CD34475B135F05936F6D172F9C3DFE667452924AD5D2B969CF8E2D06502D",
+  "wholeCardComplete": false,
+  "actualStage": "ONTOLOGY_READY",
+  "APBusinessStageExecuted": false,
+  "AllStageDelivered": false,
+  "businessValidationPerformedByProtocolFixture": false,
+  "runtimeExecutedDuringThisPreparation": false,
+  "indexOrHeadModifiedDuringThisPreparation": false,
+  "counts": {
+    "existingCandidateFilesIncludingThisManifest": 123,
+    "productScripts": 3,
+    "evidencePayloadsIncludingThisManifest": 120,
+    "excludedEvidenceLogs": 4,
+    "proposedAttributeFilesNotCreated": 1,
+    "expectedCommitFilesIfExactAttributeCandidateAdopted": 124,
+    "preexistingEvidenceFilesWithCRLF": 89
+  },
+  "acceptedPhaseEvidence": [
+    {
+      "name": "Ontology original session and latest Resume",
+      "actions": 49,
+      "nativeExit": 0,
+      "actionsResourcesContextUnchanged": true,
+      "credentialBytesUnchanged": true,
+      "complete": false,
+      "evidence": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/green-operation-resume-comparison.json"
+    },
+    {
+      "name": "Preparation assertions",
+      "checks": 41,
+      "nativeExit": 0,
+      "evidence": "docs/evidence/2026-10-29-EX-06/empty-names-green-20261029-01/summary.json"
+    },
+    {
+      "name": "Protocol and model fixture",
+      "checks": 63,
+      "nativeExit": 0,
+      "businessValidationPerformed": false,
+      "evidence": "docs/evidence/2026-10-29-EX-06/model-protocol-20261029-04/summary.json"
+    }
+  ],
+  "failedExecutionEvidenceRetained": [
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/model-protocol-20261029-01/recovered-summary.json",
+      "nativeExit": 1,
+      "originalExitCodeNotCaptured": true
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/failed-run.json",
+      "nativeExit": 1,
+      "laterSuccessIsSeparate": true
+    }
+  ],
+  "intentionalRedEvidenceRetained": [
+    "docs/evidence/2026-10-29-EX-06/protocol-ontology-20261029-1428/red-execution.json",
+    "docs/evidence/2026-10-29-EX-06/operation-red-20261029-01/summary.json",
+    "docs/evidence/2026-10-29-EX-06/empty-names-red-20261029-01/summary.json"
+  ],
+  "unacceptedRemainingWork": [
+    "AP business preparation and actual application/skill/model chain",
+    "All stage",
+    "J1-J9 and S1 business acceptance",
+    "New-session operation identity live acceptance beyond existing-session Resume"
+  ],
+  "files": [
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/Test-JointPreparation.ps1",
+      "category": "public_evidence",
+      "bytes": 12870,
+      "rawSha256": "CD9F6EE6DB452BF724E1893B0D8210AE06661AF6158294B81412BE3E88474F5B",
+      "utf8Bom": true,
+      "crlfCount": 160,
+      "expectedIndexBlobOid": "1f8e50e9a6f18740d5a9f067fa8d2896a37880b2",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/Test-JointProtocol.ps1",
+      "category": "public_evidence",
+      "bytes": 18757,
+      "rawSha256": "FBEB113D01506B6A7429B51C3F02EF9F253B14B6F90348544658C31FB5213298",
+      "utf8Bom": true,
+      "crlfCount": 170,
+      "expectedIndexBlobOid": "9c1fa6db7fd54d8742336f3ab03b7ded4cd8023d",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/ap-stage-execution-candidate.md",
+      "category": "unexecuted_AP_plan_or_historical_inventory",
+      "bytes": 12393,
+      "rawSha256": "5A9B05E52349F7D9C8686C456CC0E3F21C99AE7799E84FDAC2C96D056350EF00",
+      "utf8Bom": false,
+      "crlfCount": 0,
+      "expectedIndexBlobOid": "17557eba2102858e374a639bd664fdd95a409ed5",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/ap-stage-plan-review.md",
+      "category": "unexecuted_AP_plan_or_historical_inventory",
+      "bytes": 17851,
+      "rawSha256": "D73EF60B6F2A1D31C47A2C64B66271FE41465F596C4B649925CEE284F614F5AD",
+      "utf8Bom": false,
+      "crlfCount": 0,
+      "expectedIndexBlobOid": "178a1c76400ac749fa616d21d46f43b9c8701a5f",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/ap-stage-plan.md",
+      "category": "unexecuted_AP_plan_or_historical_inventory",
+      "bytes": 20776,
+      "rawSha256": "F04D7F7C890CF1E8513C9C62DF9A79EB5225A3AD5174FDB687DC3AF867E18FAE",
+      "utf8Bom": false,
+      "crlfCount": 0,
+      "expectedIndexBlobOid": "aa9dab1f15a6b40dc0a71a7ea7512627206493b2",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/ap-stage-runtime-inventory.json",
+      "category": "unexecuted_AP_plan_or_historical_inventory",
+      "bytes": 82853,
+      "rawSha256": "FD7EFE2D09FE542AF2B5137CE12ECBFE38BA602AA0AD23023BECCA99B1BB0A9B",
+      "utf8Bom": false,
+      "crlfCount": 1486,
+      "expectedIndexBlobOid": "c99b4ebe27de4f7ce3e59e48c35fd6ab58490c01",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/ap-stage-source-index.json",
+      "category": "unexecuted_AP_plan_or_historical_inventory",
+      "bytes": 16148,
+      "rawSha256": "A339D6B39AE0F22C3E530741AE9A774462ED3A1F8892FF09C17A74B02734318A",
+      "utf8Bom": false,
+      "crlfCount": 614,
+      "expectedIndexBlobOid": "35eec4594c51558683ee64d45a79a84bfcf7c5ff",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/archive-verification-20261029.json",
+      "category": "public_evidence",
+      "bytes": 11579,
+      "rawSha256": "FFC28C5AD69E7D8F356DBAB4B8CED3F02940DE7D0D73E22B15F842144BE63AF9",
+      "utf8Bom": false,
+      "crlfCount": 356,
+      "expectedIndexBlobOid": "f81840186e7b513b793dec7163033b8b79545808",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/commit-manifest.json",
+      "category": "commit_preparation_manifest",
+      "bytes": null,
+      "rawSha256": null,
+      "expectedIndexBlobOid": null,
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute",
+      "selfIdentity": "Final bytes and SHA are published separately to parent after write; no recursive self hash claimed."
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/empty-names-green-20261029-01/Joint.Common.ps1",
+      "category": "public_evidence",
+      "bytes": 19570,
+      "rawSha256": "4CC93F7A3563809D8F4971079B13E440026AE035CBC2068A5D9AC013B533F342",
+      "utf8Bom": true,
+      "crlfCount": 264,
+      "expectedIndexBlobOid": "a320edd4f5d5322532dc36903f890def2669a5b6",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/empty-names-green-20261029-01/Prepare-Joint.ps1",
+      "category": "public_evidence",
+      "bytes": 27413,
+      "rawSha256": "87709F9FE5CC0C7BB387ED3A09433C713B7CE238F6B78E2BD64AE7C8B17C52EC",
+      "utf8Bom": true,
+      "crlfCount": 285,
+      "expectedIndexBlobOid": "523618434103cebbead9d655e324f9e764dc3834",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/empty-names-green-20261029-01/Test-JointPreparation.ps1",
+      "category": "public_evidence",
+      "bytes": 12870,
+      "rawSha256": "CD9F6EE6DB452BF724E1893B0D8210AE06661AF6158294B81412BE3E88474F5B",
+      "utf8Bom": true,
+      "crlfCount": 160,
+      "expectedIndexBlobOid": "1f8e50e9a6f18740d5a9f067fa8d2896a37880b2",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/empty-names-green-20261029-01/preparation-checks.json",
+      "category": "public_evidence",
+      "bytes": 3729,
+      "rawSha256": "8B12CC8CE0EC06CDF1E8E53038B392F2CBD39CD9D6EEB61EA713FAFED2322127",
+      "utf8Bom": false,
+      "crlfCount": 51,
+      "expectedIndexBlobOid": "5a8e42768b787af6547d798c46be690f47cafc8d",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/empty-names-green-20261029-01/summary.json",
+      "category": "public_evidence",
+      "bytes": 1156,
+      "rawSha256": "03E815621B525FCD3E92A8F54DB44FC033BE75CC6C43182ABFB24D288B22042F",
+      "utf8Bom": false,
+      "crlfCount": 35,
+      "expectedIndexBlobOid": "288b2eede8277a9afe6b8260536a1762fb459ca0",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/empty-names-red-20261029-01/Joint.Common.ps1",
+      "category": "public_evidence",
+      "bytes": 19546,
+      "rawSha256": "EF5CAE1919812965592D4EB702B9B99EA9C7CA9A75191051C9EC2878FEBB84CE",
+      "utf8Bom": true,
+      "crlfCount": 264,
+      "expectedIndexBlobOid": "ecf3457a7e0c698bcd7667e4cfb37a46d2be9d02",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/empty-names-red-20261029-01/Prepare-Joint.ps1",
+      "category": "public_evidence",
+      "bytes": 27413,
+      "rawSha256": "87709F9FE5CC0C7BB387ED3A09433C713B7CE238F6B78E2BD64AE7C8B17C52EC",
+      "utf8Bom": true,
+      "crlfCount": 285,
+      "expectedIndexBlobOid": "523618434103cebbead9d655e324f9e764dc3834",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/empty-names-red-20261029-01/Test-JointPreparation.ps1",
+      "category": "public_evidence",
+      "bytes": 12870,
+      "rawSha256": "CD9F6EE6DB452BF724E1893B0D8210AE06661AF6158294B81412BE3E88474F5B",
+      "utf8Bom": true,
+      "crlfCount": 160,
+      "expectedIndexBlobOid": "1f8e50e9a6f18740d5a9f067fa8d2896a37880b2",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/empty-names-red-20261029-01/preparation-checks.json",
+      "category": "public_evidence",
+      "bytes": 3718,
+      "rawSha256": "DC810C5434120F010C790C5B1F369449AA32A314F55D12E9006A44729ACBAF86",
+      "utf8Bom": false,
+      "crlfCount": 50,
+      "expectedIndexBlobOid": "21202aba986cc37a0766ce04d4f84f3b2e557a63",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/empty-names-red-20261029-01/summary.json",
+      "category": "public_evidence",
+      "bytes": 390,
+      "rawSha256": "AF136949447E7D0954CCC0464CAACC65D6339EBF4EC717D9FE755D869DA338E7",
+      "utf8Bom": false,
+      "crlfCount": 9,
+      "expectedIndexBlobOid": "cea77ba68c97a0269ce208ed391c82ff540d447a",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/empty-names-review.md",
+      "category": "public_evidence",
+      "bytes": 9051,
+      "rawSha256": "7D7ED3B8EB114BB07E8589B90EB6E30E1EEF456A9EA5C7AFB499BE08E36504C5",
+      "utf8Bom": false,
+      "crlfCount": 0,
+      "expectedIndexBlobOid": "8ce9aec0f61ae4fee9f01fba58bf942e5ac56d95",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/foundation-20261029-1348/README.md",
+      "category": "public_evidence",
+      "bytes": 1942,
+      "rawSha256": "393099BB8A1AA9BA7D2D4856CFB962EDC9537A8C3945C3BA511CC3DBF838E9B9",
+      "utf8Bom": false,
+      "crlfCount": 0,
+      "expectedIndexBlobOid": "cb8ffdee140860de1dc105c3c109a675d1b48d57",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/foundation-20261029-1348/all-preparation-checks.json",
+      "category": "public_evidence",
+      "bytes": 2964,
+      "rawSha256": "A09C435F5DA281EE139AE59D2C86F786E681B97D14449B2592A41C0A992DFFD7",
+      "utf8Bom": false,
+      "crlfCount": 42,
+      "expectedIndexBlobOid": "64396222703dda26a6a3d57cd348e303a3f41d71",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/foundation-20261029-1348/existing-manifest-collision.json",
+      "category": "public_evidence",
+      "bytes": 618,
+      "rawSha256": "3F4B064E56EBEB9B338720DD0EB3873B134FFC675F0C84E41D26F7C08A8E2F14",
+      "utf8Bom": false,
+      "crlfCount": 14,
+      "expectedIndexBlobOid": "bf0038e21c5d005aba2439d95b1821a1f8426eb0",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/foundation-20261029-1348/manifest.json",
+      "category": "public_evidence",
+      "bytes": 835,
+      "rawSha256": "9FFAD133825CA5E38368525A21C7A9FB0959A957F68A87FB417FE5D9513FC71D",
+      "utf8Bom": false,
+      "crlfCount": 0,
+      "expectedIndexBlobOid": "1fa3c497ee68fc7fd29a23538b02b36ee932ce0d",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/model-protocol-20261029-01/command.json",
+      "category": "public_evidence",
+      "bytes": 631,
+      "rawSha256": "A0AFB5E119FB509648439474DCB929C4A1F4949FA06CF2A0A805349837E90A8B",
+      "utf8Bom": false,
+      "crlfCount": 10,
+      "expectedIndexBlobOid": "b76e79a189fb4fd0f6d59c8ef7f5001f3b366a39",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/model-protocol-20261029-01/protocol-checks.json",
+      "category": "public_evidence",
+      "bytes": 4824,
+      "rawSha256": "33165BED834C0AE60D45FE8A43724FC3DE454702F20DF224294E7FBA40B93C02",
+      "utf8Bom": false,
+      "crlfCount": 74,
+      "expectedIndexBlobOid": "5140a20155e68fdbbe0e74fd6fa873e8521c462e",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/model-protocol-20261029-01/recovered-summary.json",
+      "category": "public_evidence",
+      "bytes": 562,
+      "rawSha256": "DC719B3712950358D85AF88D071A878F9C0497F1777361002E57B870E7813559",
+      "utf8Bom": false,
+      "crlfCount": 21,
+      "expectedIndexBlobOid": "bc975b79f6658d6ef4d0533fa0a965e493e76858",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/model-protocol-20261029-01/source-before.json",
+      "category": "public_evidence",
+      "bytes": 856,
+      "rawSha256": "378702B41186B4732F1D6D9BA57978BB0C363BABF5D1CD6E34B0938499ACE1CE",
+      "utf8Bom": false,
+      "crlfCount": 21,
+      "expectedIndexBlobOid": "30fb64ec1c6be849da22dd18d3a0b9afdd3043e1",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/model-protocol-20261029-01/source/Joint-ProtocolFixture.mjs",
+      "category": "public_evidence",
+      "bytes": 11165,
+      "rawSha256": "BCFA907779DD98CB69A26A8DE9D20D4E048ACEBC6CBDF2E38255F2ECCA5FF401",
+      "utf8Bom": false,
+      "crlfCount": 0,
+      "expectedIndexBlobOid": "62cb9548d5e72f77173a2ec98795e37ff5447499",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/model-protocol-20261029-01/source/Joint.Common.ps1",
+      "category": "public_evidence",
+      "bytes": 18939,
+      "rawSha256": "A008F692D89D18A416B657C9CB3B5F08F804B2BB44205E616253B90DB48505CD",
+      "utf8Bom": true,
+      "crlfCount": 257,
+      "expectedIndexBlobOid": "807aac7836f9810e34b865873e6e67f2b0ccf077",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/model-protocol-20261029-01/source/Prepare-Joint.ps1",
+      "category": "public_evidence",
+      "bytes": 24014,
+      "rawSha256": "FCE9CE3A4E06D3B01AC9B34F80283DE86740C0393A14788CBE8EF29D842FAB98",
+      "utf8Bom": true,
+      "crlfCount": 235,
+      "expectedIndexBlobOid": "b447ee968f3ccb0c4e4a60d2a4696b6fe8697879",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/model-protocol-20261029-01/source/Test-JointPreparation.ps1",
+      "category": "public_evidence",
+      "bytes": 11116,
+      "rawSha256": "59A8AA9F9C6273A154C60CD848877A97A487D4C12E79CA3F4A8C62EAA0C1D1C6",
+      "utf8Bom": true,
+      "crlfCount": 144,
+      "expectedIndexBlobOid": "ce5d55d6f582aa832fb1bd017c4af781673280d4",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/model-protocol-20261029-01/source/Test-JointProtocol.ps1",
+      "category": "public_evidence",
+      "bytes": 18558,
+      "rawSha256": "26107BC6E05F1DB85FDA28F6C3F02CFF34C3F60C0057450619E8A82C2CBFF4C0",
+      "utf8Bom": true,
+      "crlfCount": 168,
+      "expectedIndexBlobOid": "6251391f437fc31c969236ccf3499c8321e86530",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/model-protocol-20261029-02/command.json",
+      "category": "public_evidence",
+      "bytes": 631,
+      "rawSha256": "78F0DDA8963CAB8E28501859CC48E55EFEA2B57B41A04774A29AB87E0549856F",
+      "utf8Bom": false,
+      "crlfCount": 10,
+      "expectedIndexBlobOid": "444b9efa9333869907d6c788be8fd2d0ec46d072",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/model-protocol-20261029-02/protocol-checks.json",
+      "category": "public_evidence",
+      "bytes": 4830,
+      "rawSha256": "95398EE62B235310322367F1FA86731357DB6BF48975D304678724DD8FDDB86A",
+      "utf8Bom": false,
+      "crlfCount": 75,
+      "expectedIndexBlobOid": "22a351686155689e96fa03a523e74e9d75773da1",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/model-protocol-20261029-02/source-after.json",
+      "category": "public_evidence",
+      "bytes": 856,
+      "rawSha256": "AD482F1CA3A0648783D2BDA3D46F9C7D7D1FAE68A709FB7A3B7A8D709703D77C",
+      "utf8Bom": false,
+      "crlfCount": 21,
+      "expectedIndexBlobOid": "da361cda0e6ed0fd832db6f03bf1da9608d1eac9",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/model-protocol-20261029-02/source-before.json",
+      "category": "public_evidence",
+      "bytes": 856,
+      "rawSha256": "AD482F1CA3A0648783D2BDA3D46F9C7D7D1FAE68A709FB7A3B7A8D709703D77C",
+      "utf8Bom": false,
+      "crlfCount": 21,
+      "expectedIndexBlobOid": "da361cda0e6ed0fd832db6f03bf1da9608d1eac9",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/model-protocol-20261029-02/summary.json",
+      "category": "public_evidence",
+      "bytes": 1135,
+      "rawSha256": "DE73B6B57CAA9E10AD83BFBE39A6925B33D4D29BFCAC893079A78B373927E52D",
+      "utf8Bom": false,
+      "crlfCount": 33,
+      "expectedIndexBlobOid": "aebf4030086343846494e97d67211f2505fdb716",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/model-protocol-20261029-03/command.json",
+      "category": "public_evidence",
+      "bytes": 631,
+      "rawSha256": "CCFCDC99A002AAA9A045FB7D76363C6185A7EE296646524F539A35CC39156D2A",
+      "utf8Bom": false,
+      "crlfCount": 10,
+      "expectedIndexBlobOid": "3016cef139f306c99d1994be5657f3aa36051ece",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/model-protocol-20261029-03/protocol-checks.json",
+      "category": "public_evidence",
+      "bytes": 4830,
+      "rawSha256": "3D2C55A07FF35DB373CCC4006E71C83E279561C9ADDB6843CD3BDE846A79AB75",
+      "utf8Bom": false,
+      "crlfCount": 75,
+      "expectedIndexBlobOid": "36c5cbe1de4fe2b5ea1a6e5ba47ed4a87dfdcfe9",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/model-protocol-20261029-03/source-after.json",
+      "category": "public_evidence",
+      "bytes": 856,
+      "rawSha256": "58DCC5B4A3E58B452E06B4F3F7908045CE1B765D927DD9552549FC23594E1B0C",
+      "utf8Bom": false,
+      "crlfCount": 21,
+      "expectedIndexBlobOid": "60adf7f896923d374cd9843706dc5f4874609080",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/model-protocol-20261029-03/source-before.json",
+      "category": "public_evidence",
+      "bytes": 856,
+      "rawSha256": "58DCC5B4A3E58B452E06B4F3F7908045CE1B765D927DD9552549FC23594E1B0C",
+      "utf8Bom": false,
+      "crlfCount": 21,
+      "expectedIndexBlobOid": "60adf7f896923d374cd9843706dc5f4874609080",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/model-protocol-20261029-03/summary.json",
+      "category": "public_evidence",
+      "bytes": 1135,
+      "rawSha256": "FF6BAAD574D11E50D2562FA699DFD6BB7E91E10BFDE4F192ECA10701ACDDD958",
+      "utf8Bom": false,
+      "crlfCount": 33,
+      "expectedIndexBlobOid": "b970ba5b3220aeda264d54d507d612f46417777b",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/model-protocol-20261029-04/command.json",
+      "category": "public_evidence",
+      "bytes": 631,
+      "rawSha256": "AF1C28240C1F32A26193B254C01057FCAFD92B5A6331FB532E8FF53DF03F7E4B",
+      "utf8Bom": false,
+      "crlfCount": 10,
+      "expectedIndexBlobOid": "88113483c1059eb1facf9b2922c27cf5391e5018",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/model-protocol-20261029-04/protocol-checks.json",
+      "category": "public_evidence",
+      "bytes": 4830,
+      "rawSha256": "26AB9ABCCF6DCDCF06813D01414D57FE5FC03AD3788604564FA6C66CFD51CCAE",
+      "utf8Bom": false,
+      "crlfCount": 75,
+      "expectedIndexBlobOid": "a961f1ffbc34c8a7c262e8ecc6abeba2cc360caa",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/model-protocol-20261029-04/source-after.json",
+      "category": "public_evidence",
+      "bytes": 856,
+      "rawSha256": "9496D05F19E81B1AE34E8E01E007AE35D029797EF10C926F2E36DA2D2B4AB001",
+      "utf8Bom": false,
+      "crlfCount": 21,
+      "expectedIndexBlobOid": "3e711c85e388dc9ee568f568d6b95e52452732b3",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/model-protocol-20261029-04/source-before.json",
+      "category": "public_evidence",
+      "bytes": 856,
+      "rawSha256": "9496D05F19E81B1AE34E8E01E007AE35D029797EF10C926F2E36DA2D2B4AB001",
+      "utf8Bom": false,
+      "crlfCount": 21,
+      "expectedIndexBlobOid": "3e711c85e388dc9ee568f568d6b95e52452732b3",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/model-protocol-20261029-04/summary.json",
+      "category": "public_evidence",
+      "bytes": 1135,
+      "rawSha256": "836A8C8479B20D02EBFADCF1C016A403376528A1DBE49E885D56E18814008021",
+      "utf8Bom": false,
+      "crlfCount": 33,
+      "expectedIndexBlobOid": "e2cc073e6bfe4148979a3a96f53035827b9b4693",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/model-protocol-final-review.md",
+      "category": "public_evidence",
+      "bytes": 7178,
+      "rawSha256": "6D57167A387A517791DDF6C4B4DE05BD5D5C4C8DB2EE38E02B9BA6984B5B58B0",
+      "utf8Bom": false,
+      "crlfCount": 0,
+      "expectedIndexBlobOid": "afc26bacd01ce1a0f8d8a9af134ed4f1be7abd06",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/model-protocol-review.md",
+      "category": "public_evidence",
+      "bytes": 4848,
+      "rawSha256": "921E54437AC7DFD197AE5B22F455BA49DA1A1BC55D25C4E4A7A30CC3B57C915B",
+      "utf8Bom": false,
+      "crlfCount": 0,
+      "expectedIndexBlobOid": "226fa7fd2716e0ced8e3166231243ab8d939b958",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/ontology-20261029-1438/README.md",
+      "category": "public_evidence",
+      "bytes": 1942,
+      "rawSha256": "1DDB30DCFD6AA409DF928542DD9632C270E780E73CFF71A69E8585E3346546F3",
+      "utf8Bom": false,
+      "crlfCount": 0,
+      "expectedIndexBlobOid": "fe7ddf2443834361dc837fefd77a419e24138589",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/ontology-20261029-1438/after-resume-safe.json",
+      "category": "public_evidence",
+      "bytes": 12467,
+      "rawSha256": "7EF66D7689446578363CAF7CBD8E644009D5C52DAFEE2DD9D345E1552CFA2F1F",
+      "utf8Bom": false,
+      "crlfCount": 0,
+      "expectedIndexBlobOid": "2fcc1fff62c331df1445d2040f8937aeda04d8aa",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/ontology-20261029-1438/before-resume-safe.json",
+      "category": "public_evidence",
+      "bytes": 12467,
+      "rawSha256": "7EF66D7689446578363CAF7CBD8E644009D5C52DAFEE2DD9D345E1552CFA2F1F",
+      "utf8Bom": false,
+      "crlfCount": 0,
+      "expectedIndexBlobOid": "2fcc1fff62c331df1445d2040f8937aeda04d8aa",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/ontology-20261029-1438/first-admission.json",
+      "category": "public_evidence",
+      "bytes": 770,
+      "rawSha256": "DCD25FAE686F121EB4322574A5D0641963E1A3035257407676AFE235804DE2A3",
+      "utf8Bom": false,
+      "crlfCount": 12,
+      "expectedIndexBlobOid": "09658cc5b42a8f643dd9ce3ef67a789db9cde0c9",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/ontology-20261029-1438/first-run.json",
+      "category": "public_evidence",
+      "bytes": 786,
+      "rawSha256": "AE61DD3DE2438E827D24DCCEB172737B1BF313BFC260546AF43A479C83A41277",
+      "utf8Bom": false,
+      "crlfCount": 15,
+      "expectedIndexBlobOid": "2e622dc7ef6444e7ace9bed928cd8c2d8dfcd675",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/ontology-20261029-1438/manifest.json",
+      "category": "public_evidence",
+      "bytes": 1655,
+      "rawSha256": "34316A4CBD79F5FC7BCA12A7B29C7F7FF4027B1F04460386E196AB33697B86C5",
+      "utf8Bom": false,
+      "crlfCount": 0,
+      "expectedIndexBlobOid": "4ccf018956ad528702450035bf3576bf2d2da28a",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/ontology-20261029-1438/resume-admission.json",
+      "category": "public_evidence",
+      "bytes": 770,
+      "rawSha256": "DCD25FAE686F121EB4322574A5D0641963E1A3035257407676AFE235804DE2A3",
+      "utf8Bom": false,
+      "crlfCount": 12,
+      "expectedIndexBlobOid": "09658cc5b42a8f643dd9ce3ef67a789db9cde0c9",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/ontology-20261029-1438/resume-comparison.json",
+      "category": "public_evidence",
+      "bytes": 940,
+      "rawSha256": "A5FCE61E0D4CECE0E2B220788DCBB321A5FCB4AEACFC80115871A004CFE2D2D1",
+      "utf8Bom": false,
+      "crlfCount": 0,
+      "expectedIndexBlobOid": "a65d176037e6bade45d40c2f875d275934bff17e",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/ontology-20261029-1438/resume-run.json",
+      "category": "public_evidence",
+      "bytes": 784,
+      "rawSha256": "7D5272106A6053D8A8E51BEF5133768D21E635E64A79DA734E7DAF3B3DE89B83",
+      "utf8Bom": false,
+      "crlfCount": 15,
+      "expectedIndexBlobOid": "97d1128070468364896a224b3ba4c244ffa1d29e",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/ontology-static-review.md",
+      "category": "public_evidence",
+      "bytes": 11108,
+      "rawSha256": "E6E95578070EB1962075EC9C7DF8C4152A6AFA73135B0130D933027A1069C272",
+      "utf8Bom": false,
+      "crlfCount": 0,
+      "expectedIndexBlobOid": "ab102053fb578ee7bfb18b87ac1443b209b8a60a",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/operation-fix-candidate.md",
+      "category": "public_evidence",
+      "bytes": 6609,
+      "rawSha256": "743E9A35EABCAE3E7F9EDAE4475C7D8ACD4DB7C42CE8D2E23BFC9C7E01C49EC1",
+      "utf8Bom": false,
+      "crlfCount": 0,
+      "expectedIndexBlobOid": "0a29869e3be1a603727ce2bf1f40dc52658aa473",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/operation-green-20261029-01/Joint.Common.ps1",
+      "category": "public_evidence",
+      "bytes": 19546,
+      "rawSha256": "EF5CAE1919812965592D4EB702B9B99EA9C7CA9A75191051C9EC2878FEBB84CE",
+      "utf8Bom": true,
+      "crlfCount": 264,
+      "expectedIndexBlobOid": "ecf3457a7e0c698bcd7667e4cfb37a46d2be9d02",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/operation-green-20261029-01/Prepare-Joint.ps1",
+      "category": "public_evidence",
+      "bytes": 27413,
+      "rawSha256": "87709F9FE5CC0C7BB387ED3A09433C713B7CE238F6B78E2BD64AE7C8B17C52EC",
+      "utf8Bom": true,
+      "crlfCount": 285,
+      "expectedIndexBlobOid": "523618434103cebbead9d655e324f9e764dc3834",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/operation-green-20261029-01/Test-JointPreparation.ps1",
+      "category": "public_evidence",
+      "bytes": 12724,
+      "rawSha256": "3EEF58416DF377E59776E993E4147038105E88647F0FB65F159DFB32824DD60D",
+      "utf8Bom": true,
+      "crlfCount": 159,
+      "expectedIndexBlobOid": "e99a92396a83faad9a6b4f6c77317d67b88b9e50",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/operation-green-20261029-01/preparation-checks.json",
+      "category": "public_evidence",
+      "bytes": 3645,
+      "rawSha256": "755BE239C58787645BB3DB7AB2467AA51E67DA3BBD2AC0B9AB4B117CD4E4538D",
+      "utf8Bom": false,
+      "crlfCount": 50,
+      "expectedIndexBlobOid": "773defc2989d705bc7082b45baa097cbefd6de8e",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/operation-green-20261029-01/summary.json",
+      "category": "public_evidence",
+      "bytes": 1156,
+      "rawSha256": "0020632464CDAD42E19CFE62A3BAA1EA081D1E049938B2134EE0C46D94FD1B15",
+      "utf8Bom": false,
+      "crlfCount": 35,
+      "expectedIndexBlobOid": "3a66ff3df094e59032a3f307b9bd2c5028350633",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/operation-red-20261029-01/Joint.Common.ps1",
+      "category": "public_evidence",
+      "bytes": 18939,
+      "rawSha256": "A008F692D89D18A416B657C9CB3B5F08F804B2BB44205E616253B90DB48505CD",
+      "utf8Bom": true,
+      "crlfCount": 257,
+      "expectedIndexBlobOid": "807aac7836f9810e34b865873e6e67f2b0ccf077",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/operation-red-20261029-01/Prepare-Joint.ps1",
+      "category": "public_evidence",
+      "bytes": 24014,
+      "rawSha256": "FCE9CE3A4E06D3B01AC9B34F80283DE86740C0393A14788CBE8EF29D842FAB98",
+      "utf8Bom": true,
+      "crlfCount": 235,
+      "expectedIndexBlobOid": "b447ee968f3ccb0c4e4a60d2a4696b6fe8697879",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/operation-red-20261029-01/Test-JointPreparation.ps1",
+      "category": "public_evidence",
+      "bytes": 12724,
+      "rawSha256": "3EEF58416DF377E59776E993E4147038105E88647F0FB65F159DFB32824DD60D",
+      "utf8Bom": true,
+      "crlfCount": 159,
+      "expectedIndexBlobOid": "e99a92396a83faad9a6b4f6c77317d67b88b9e50",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/operation-red-20261029-01/preparation-checks.json",
+      "category": "public_evidence",
+      "bytes": 3037,
+      "rawSha256": "E8BB4EA58A39797F0C902ABAEB31FE532E340671B271FF6D1361910039E3FCEF",
+      "utf8Bom": false,
+      "crlfCount": 42,
+      "expectedIndexBlobOid": "3bb826e29fa9f6ec0b9b04b2da6919a3115dc7cc",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/operation-red-20261029-01/summary.json",
+      "category": "public_evidence",
+      "bytes": 218,
+      "rawSha256": "A62235109355C75C6DEF6E8D6A1B74A340D509F8024C61EB882D4CC7D8212AD0",
+      "utf8Bom": false,
+      "crlfCount": 7,
+      "expectedIndexBlobOid": "b8c4347f1d1e7a34526bf3d7283d7652854a21db",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/Joint-ProtocolFixture.mjs",
+      "category": "public_evidence",
+      "bytes": 11165,
+      "rawSha256": "BCFA907779DD98CB69A26A8DE9D20D4E048ACEBC6CBDF2E38255F2ECCA5FF401",
+      "utf8Bom": false,
+      "crlfCount": 0,
+      "expectedIndexBlobOid": "62cb9548d5e72f77173a2ec98795e37ff5447499",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/Joint.Common.ps1",
+      "category": "public_evidence",
+      "bytes": 19570,
+      "rawSha256": "4CC93F7A3563809D8F4971079B13E440026AE035CBC2068A5D9AC013B533F342",
+      "utf8Bom": true,
+      "crlfCount": 264,
+      "expectedIndexBlobOid": "a320edd4f5d5322532dc36903f890def2669a5b6",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/Prepare-Joint.ps1",
+      "category": "public_evidence",
+      "bytes": 27413,
+      "rawSha256": "87709F9FE5CC0C7BB387ED3A09433C713B7CE238F6B78E2BD64AE7C8B17C52EC",
+      "utf8Bom": true,
+      "crlfCount": 285,
+      "expectedIndexBlobOid": "523618434103cebbead9d655e324f9e764dc3834",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/README.md",
+      "category": "public_evidence",
+      "bytes": 2271,
+      "rawSha256": "E00C9F9FAC0495F00CF8CC803A0A3F3B9C513CFF58ADDA8A4EF49B0291B9BA1F",
+      "utf8Bom": false,
+      "crlfCount": 0,
+      "expectedIndexBlobOid": "a41150837a00116fbae2b6bfbbcb9c78d4df61ce",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/Test-JointPreparation.ps1",
+      "category": "public_evidence",
+      "bytes": 12870,
+      "rawSha256": "CD9F6EE6DB452BF724E1893B0D8210AE06661AF6158294B81412BE3E88474F5B",
+      "utf8Bom": true,
+      "crlfCount": 160,
+      "expectedIndexBlobOid": "1f8e50e9a6f18740d5a9f067fa8d2896a37880b2",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/Test-JointProtocol.ps1",
+      "category": "public_evidence",
+      "bytes": 18757,
+      "rawSha256": "FBEB113D01506B6A7429B51C3F02EF9F253B14B6F90348544658C31FB5213298",
+      "utf8Bom": true,
+      "crlfCount": 170,
+      "expectedIndexBlobOid": "9c1fa6db7fd54d8742336f3ab03b7ded4cd8023d",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/failed-admission.json",
+      "category": "public_evidence",
+      "bytes": 770,
+      "rawSha256": "98AE5A5066FCC2E6E4F9AF0F3A765B32FA8A0244C675EE4614BE6D696E3D4BB7",
+      "utf8Bom": false,
+      "crlfCount": 12,
+      "expectedIndexBlobOid": "4a5a77cdc3455ea7e4490bd9cdcdd56751ec2da0",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/failed-before-credentials-sha.json",
+      "category": "public_evidence",
+      "bytes": 87,
+      "rawSha256": "4CB97665136FD057AF0060800A01F356901947EB27C06E05EDD655892E25D574",
+      "utf8Bom": false,
+      "crlfCount": 2,
+      "expectedIndexBlobOid": "84012ae5ad2a36e823644e8d6c4a39e19bb83b1c",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/failed-executed-wrapper.ps1",
+      "category": "public_evidence",
+      "bytes": 9330,
+      "rawSha256": "FD392AB7BD28F46596A8B654A1263EAA24740D006F9EB96F97E77B45BF6A3CAD",
+      "utf8Bom": true,
+      "crlfCount": 60,
+      "expectedIndexBlobOid": "eea0cb51ef8d081d64da6389927328906f91a092",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/failed-run.json",
+      "category": "public_evidence",
+      "bytes": 786,
+      "rawSha256": "72FE7601CEB75D7E3B48D20CE9BB5B22B394D2FF327C80AE00D98AF825933624",
+      "utf8Bom": false,
+      "crlfCount": 15,
+      "expectedIndexBlobOid": "a14f36d34290c03c4b7e12639a60381b5d2ee77a",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/green-admission.json",
+      "category": "public_evidence",
+      "bytes": 770,
+      "rawSha256": "CD4F9F05C0FDF45FCA8ADC68EF73A25CE09F53945CEDA5D4B54B59E8FBE10165",
+      "utf8Bom": false,
+      "crlfCount": 12,
+      "expectedIndexBlobOid": "60530f2c710d7798755838c8822b69ef44877e19",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/green-before-credentials-sha.json",
+      "category": "public_evidence",
+      "bytes": 87,
+      "rawSha256": "4CB97665136FD057AF0060800A01F356901947EB27C06E05EDD655892E25D574",
+      "utf8Bom": false,
+      "crlfCount": 2,
+      "expectedIndexBlobOid": "84012ae5ad2a36e823644e8d6c4a39e19bb83b1c",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/green-executed-wrapper.ps1",
+      "category": "public_evidence",
+      "bytes": 9330,
+      "rawSha256": "4EDB242104721CE8342BE1F4DF0965DAD7BE2B04DD324234F40A43CBC5AD10A4",
+      "utf8Bom": true,
+      "crlfCount": 60,
+      "expectedIndexBlobOid": "2188d556a5736b682605cb4b93711a1308f3e2ab",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/green-operation-resume-comparison.json",
+      "category": "public_evidence",
+      "bytes": 640,
+      "rawSha256": "A10AF9119B3D3908C855880D5FCE1D14E166FF977F06BC1F97E04A9FA38F5FD8",
+      "utf8Bom": false,
+      "crlfCount": 18,
+      "expectedIndexBlobOid": "7e81bc8431ff1d461285d783e10fd9e446e47a4c",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/green-run.json",
+      "category": "public_evidence",
+      "bytes": 786,
+      "rawSha256": "07BA29EC16AE639A7FADFDB1D2436AF73B121A4BB84291DA62F219DAA387230E",
+      "utf8Bom": false,
+      "crlfCount": 15,
+      "expectedIndexBlobOid": "4b060d05ad111f7bab0ef134a543f0573e5d3f18",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/manifest.json",
+      "category": "public_evidence",
+      "bytes": 4156,
+      "rawSha256": "C6B3B5CAFA16F7D6C8D2D8665E2F0B970DAAE9DA0BE376E9D012E1C0B583D17A",
+      "utf8Bom": false,
+      "crlfCount": 92,
+      "expectedIndexBlobOid": "3efe40f30402d6a55c84824a30c5a617ffb0c833",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/operation-review.md",
+      "category": "public_evidence",
+      "bytes": 8619,
+      "rawSha256": "7FFD326DAFB33B69DD0020710FAAC4FC982AD3A9D720418D6D26072C7A81FD26",
+      "utf8Bom": false,
+      "crlfCount": 0,
+      "expectedIndexBlobOid": "ca430bdac2a6add2f6c8f39b98b9df0993815124",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/or-stage-candidate.md",
+      "category": "public_evidence",
+      "bytes": 7424,
+      "rawSha256": "D61FE05C5A95241F3C4C2FEB92E05DB6E41A4B6814487D6FE69FFFE09901AFA3",
+      "utf8Bom": false,
+      "crlfCount": 0,
+      "expectedIndexBlobOid": "ebe4b9fcec79e2adcf07319afc33764e8128b8f7",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/or-stage-source/Joint-ProtocolFixture.mjs",
+      "category": "public_evidence",
+      "bytes": 3503,
+      "rawSha256": "31CB04C62461097D9A02B28337184990A2601642EF6E59C0EA336317657A1D4E",
+      "utf8Bom": false,
+      "crlfCount": 0,
+      "expectedIndexBlobOid": "a1bc580fcfb46c400e4e787c49f75899d8c7d10d",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/or-stage-source/Joint.Common.ps1",
+      "category": "public_evidence",
+      "bytes": 18887,
+      "rawSha256": "C2A6C8A483C7F3785497A7DCFB94D089E632891ABC70D7EA9E70720F9ED6B01A",
+      "utf8Bom": true,
+      "crlfCount": 257,
+      "expectedIndexBlobOid": "6143dd045f834d76c36ae4408070f45d354babfe",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/or-stage-source/Prepare-Joint.ps1",
+      "category": "public_evidence",
+      "bytes": 24014,
+      "rawSha256": "FCE9CE3A4E06D3B01AC9B34F80283DE86740C0393A14788CBE8EF29D842FAB98",
+      "utf8Bom": true,
+      "crlfCount": 235,
+      "expectedIndexBlobOid": "b447ee968f3ccb0c4e4a60d2a4696b6fe8697879",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/or-stage-source/Test-JointPreparation.ps1",
+      "category": "public_evidence",
+      "bytes": 11116,
+      "rawSha256": "59A8AA9F9C6273A154C60CD848877A97A487D4C12E79CA3F4A8C62EAA0C1D1C6",
+      "utf8Bom": true,
+      "crlfCount": 144,
+      "expectedIndexBlobOid": "ce5d55d6f582aa832fb1bd017c4af781673280d4",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/or-stage-source/Test-JointProtocol.ps1",
+      "category": "public_evidence",
+      "bytes": 7575,
+      "rawSha256": "B3EA5CAFFC377B406B8AB9E4EB30E74313566FEDDA04017361AE5AE8F9D8678E",
+      "utf8Bom": true,
+      "crlfCount": 73,
+      "expectedIndexBlobOid": "87061380a607206033eeefbcbdfbfa821f5418e1",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/or-stage-source/manifest.json",
+      "category": "public_evidence",
+      "bytes": 3866,
+      "rawSha256": "CB7715B1C11D2D7AFF8DE1B3EBB72E006C17C4A44B78D5A23E31D319F3CEE5A5",
+      "utf8Bom": false,
+      "crlfCount": 0,
+      "expectedIndexBlobOid": "39a375b82fae01446a8e52c7b43e1fdc5b412937",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/phase-acceptance.md",
+      "category": "public_evidence",
+      "bytes": 4316,
+      "rawSha256": "B9FD6CFF4B2A2630472C8FC3CB912C1B4F9745DAB18B7897F1032BD65C082DE2",
+      "utf8Bom": false,
+      "crlfCount": 0,
+      "expectedIndexBlobOid": "4923c935f9a7c830b6e907f7f19ce4789d35923d",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/preparation.md",
+      "category": "public_evidence",
+      "bytes": 11108,
+      "rawSha256": "48CF6DE5B1751A217E4CACA14D3272890E8437E8CFE79643AC8EF84002B43E5B",
+      "utf8Bom": false,
+      "crlfCount": 0,
+      "expectedIndexBlobOid": "7d56424433a76428a42bc95eae9c02099230475a",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/protocol-20261029-1401/README.md",
+      "category": "public_evidence",
+      "bytes": 1552,
+      "rawSha256": "A02909A75E8E75301A86DACF8AF591DA5412CD70F1D08183EBDF4E043AE9AF2A",
+      "utf8Bom": false,
+      "crlfCount": 0,
+      "expectedIndexBlobOid": "c593cb7a4be5f1b0365f1d35b02b718dec1cc836",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/protocol-20261029-1401/manifest.json",
+      "category": "public_evidence",
+      "bytes": 1724,
+      "rawSha256": "7AC4534A4B8BFE08ECC195CE66E0BB1E41D892E8846998F2A472D84D97C843D1",
+      "utf8Bom": false,
+      "crlfCount": 0,
+      "expectedIndexBlobOid": "f1db528823fbaefe841ef1736ef1d0bfdeddc409",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/protocol-20261029-1401/preparation-checks.json",
+      "category": "public_evidence",
+      "bytes": 2964,
+      "rawSha256": "A09C435F5DA281EE139AE59D2C86F786E681B97D14449B2592A41C0A992DFFD7",
+      "utf8Bom": false,
+      "crlfCount": 42,
+      "expectedIndexBlobOid": "64396222703dda26a6a3d57cd348e303a3f41d71",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/protocol-20261029-1401/preparation-execution.json",
+      "category": "public_evidence",
+      "bytes": 422,
+      "rawSha256": "C8026EB7485FF302E357FFE378FACBCAA43549137DF4C27A2683F2723518615C",
+      "utf8Bom": false,
+      "crlfCount": 8,
+      "expectedIndexBlobOid": "4028827321f241f6b644202e942554a40ef86025",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/protocol-20261029-1401/protocol-checks.json",
+      "category": "public_evidence",
+      "bytes": 1630,
+      "rawSha256": "A1B1EE468A352D9816EFE71ECBA913C5EEE7B81BB5817ECF7A14858C0D27099E",
+      "utf8Bom": false,
+      "crlfCount": 28,
+      "expectedIndexBlobOid": "83f06768853220869575acfc40aeb4003872538e",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/protocol-20261029-1401/protocol-execution.json",
+      "category": "public_evidence",
+      "bytes": 1574,
+      "rawSha256": "FD2350CA20CD11C82DD5A46C02CEBFA494556D1131E00DA4D2B2AD5318F31847",
+      "utf8Bom": false,
+      "crlfCount": 42,
+      "expectedIndexBlobOid": "2dde7ca37659ed312ce06967c5c1ec88ba0f58f1",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/protocol-20261029-1401/protocol-invocation.json",
+      "category": "public_evidence",
+      "bytes": 376,
+      "rawSha256": "802A51A985BFF5B316C4219E41CC5E56BCB34C8EC0BA949FCC03657D6033FD7D",
+      "utf8Bom": false,
+      "crlfCount": 6,
+      "expectedIndexBlobOid": "1eddbe11fb4180e070c5ca2d7b6718e363d02b9a",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/protocol-20261029-1401/source/Joint-ProtocolFixture.mjs",
+      "category": "public_evidence",
+      "bytes": 3397,
+      "rawSha256": "E080D47FB40087794A47B35BEDBCD1E818633718913CAAE985B078E6FCD52C8D",
+      "utf8Bom": false,
+      "crlfCount": 0,
+      "expectedIndexBlobOid": "6d934033d58c16f90caa761fc7be1f0984d325e5",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/protocol-20261029-1401/source/Joint.Common.ps1",
+      "category": "public_evidence",
+      "bytes": 14241,
+      "rawSha256": "4DD3326207C86F6D27B6498F94E12A8EA44609A8963E642E44C4F11D91D8EE81",
+      "utf8Bom": true,
+      "crlfCount": 195,
+      "expectedIndexBlobOid": "d103a77f3c6bbfcc1f2e2a71fc64f6c710b4ebb2",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/protocol-20261029-1401/source/Test-JointPreparation.ps1",
+      "category": "public_evidence",
+      "bytes": 11116,
+      "rawSha256": "59A8AA9F9C6273A154C60CD848877A97A487D4C12E79CA3F4A8C62EAA0C1D1C6",
+      "utf8Bom": true,
+      "crlfCount": 144,
+      "expectedIndexBlobOid": "ce5d55d6f582aa832fb1bd017c4af781673280d4",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/protocol-20261029-1401/source/Test-JointProtocol.ps1",
+      "category": "public_evidence",
+      "bytes": 6093,
+      "rawSha256": "B5B2DCCA3E5B95B819B46BA2767A9B91BC46327A3031439856F693524AF94B95",
+      "utf8Bom": true,
+      "crlfCount": 63,
+      "expectedIndexBlobOid": "94d69f7daa3cc4a37737a702c1a95131ef3170c8",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/protocol-ontology-20261029-1428/Joint.Common.final.ps1",
+      "category": "public_evidence",
+      "bytes": 18939,
+      "rawSha256": "A008F692D89D18A416B657C9CB3B5F08F804B2BB44205E616253B90DB48505CD",
+      "utf8Bom": true,
+      "crlfCount": 257,
+      "expectedIndexBlobOid": "807aac7836f9810e34b865873e6e67f2b0ccf077",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/protocol-ontology-20261029-1428/README.md",
+      "category": "public_evidence",
+      "bytes": 975,
+      "rawSha256": "A6E3E856E5D2357BBB1985F5D265E73B0510ACBFF7A6CE30BA4CA6B7454054CD",
+      "utf8Bom": false,
+      "crlfCount": 0,
+      "expectedIndexBlobOid": "36dc302862363b5a3af1ff5cd762f8d3d24931b5",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/protocol-ontology-20261029-1428/green-execution.json",
+      "category": "public_evidence",
+      "bytes": 1978,
+      "rawSha256": "9B786F5FEA92F2FE02108909FF2B11B7F8F639F92963752B74BE13CF893D582F",
+      "utf8Bom": false,
+      "crlfCount": 51,
+      "expectedIndexBlobOid": "66e104448d8ee3936cac3d194e7176750234c66a",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/protocol-ontology-20261029-1428/green-protocol-checks.json",
+      "category": "public_evidence",
+      "bytes": 2166,
+      "rawSha256": "BF1FCB89EFD2111F92BC731A3B7C424FAD13C55C95D18F7AC785955B5BC3544D",
+      "utf8Bom": false,
+      "crlfCount": 34,
+      "expectedIndexBlobOid": "bfeb82a14b7c15616aba6cb878f894e5f5b52ddb",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/protocol-ontology-20261029-1428/manifest.json",
+      "category": "public_evidence",
+      "bytes": 2506,
+      "rawSha256": "21838B9BA97AD24D52487E30366D21DF65F26CA99ED504E99723A27A4DD46976",
+      "utf8Bom": false,
+      "crlfCount": 0,
+      "expectedIndexBlobOid": "c3463e61c9784a4c7819fba647d2925aabb4fb56",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/protocol-ontology-20261029-1428/nullstring-change.json",
+      "category": "public_evidence",
+      "bytes": 695,
+      "rawSha256": "CB820DA77D310830033A10923664605DDB1CBD7F02C99EE06CF95A03C16904D9",
+      "utf8Bom": false,
+      "crlfCount": 0,
+      "expectedIndexBlobOid": "f106c9a494ee6f0efa8ed780220800d8226c182f",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/protocol-ontology-20261029-1428/nullstring-proof.json",
+      "category": "public_evidence",
+      "bytes": 468,
+      "rawSha256": "ADEEC07B32CF2182588A6F61EF2AFB9344406B6BE1D45DECA8B42460B0590CBC",
+      "utf8Bom": false,
+      "crlfCount": 9,
+      "expectedIndexBlobOid": "dcd3356d1c206d96865aa660a83a2a0b97248497",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/protocol-ontology-20261029-1428/preparation-execution.json",
+      "category": "public_evidence",
+      "bytes": 431,
+      "rawSha256": "300F5358FABE21B411ECA42A876738BCBAA41A1E693BC95CA47B7860F352B19E",
+      "utf8Bom": false,
+      "crlfCount": 8,
+      "expectedIndexBlobOid": "9e9d256d216f6735e4fde0844410a2ecf98b8ca5",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/protocol-ontology-20261029-1428/preparation-preparation-checks.json",
+      "category": "public_evidence",
+      "bytes": 2964,
+      "rawSha256": "A09C435F5DA281EE139AE59D2C86F786E681B97D14449B2592A41C0A992DFFD7",
+      "utf8Bom": false,
+      "crlfCount": 42,
+      "expectedIndexBlobOid": "64396222703dda26a6a3d57cd348e303a3f41d71",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/protocol-ontology-20261029-1428/red-execution.json",
+      "category": "public_evidence",
+      "bytes": 1972,
+      "rawSha256": "1C09D913D72DAD0BD04DEB7E02AD5C69C7A621398DDB81EFEA829295F1FE35EA",
+      "utf8Bom": false,
+      "crlfCount": 51,
+      "expectedIndexBlobOid": "06beb4b2a06592c74d733b7ac77bd94fd3447c16",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/protocol-ontology-20261029-1428/red-protocol-checks.json",
+      "category": "public_evidence",
+      "bytes": 1934,
+      "rawSha256": "A66084D12932F3841ED12C650D15FD64D101D4C1FCD4CA3758A356CFACE80687",
+      "utf8Bom": false,
+      "crlfCount": 31,
+      "expectedIndexBlobOid": "7f147a8081ac82b36515c2976d43ddde6383c02b",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/run-model-protocol.ps1",
+      "category": "public_evidence",
+      "bytes": 3716,
+      "rawSha256": "1700944D1AB59D1F22A34D501B1917B881A25B3D26D89BD2C7EBACC6CB0C2A87",
+      "utf8Bom": true,
+      "crlfCount": 2,
+      "expectedIndexBlobOid": "23f1b482fba74cb902c3bb58771287190a73f8f8",
+      "indexPolicy": "exact evidence bytes after proposed per-file attribute"
+    },
+    {
+      "path": "scripts/acceptance/Joint.Common.ps1",
+      "category": "product_script",
+      "bytes": 19570,
+      "rawSha256": "4CC93F7A3563809D8F4971079B13E440026AE035CBC2068A5D9AC013B533F342",
+      "utf8Bom": true,
+      "crlfCount": 264,
+      "expectedIndexBlobOid": "511ce5ad9c74e0bae9a11b793fa11341294c9f75",
+      "indexPolicy": "existing repository text=auto eol=lf; preserve BOM"
+    },
+    {
+      "path": "scripts/acceptance/Prepare-Joint.ps1",
+      "category": "product_script",
+      "bytes": 27413,
+      "rawSha256": "87709F9FE5CC0C7BB387ED3A09433C713B7CE238F6B78E2BD64AE7C8B17C52EC",
+      "utf8Bom": true,
+      "crlfCount": 285,
+      "expectedIndexBlobOid": "acb6d4110109c011f16e7abfa11ffc0ebd63945d",
+      "indexPolicy": "existing repository text=auto eol=lf; preserve BOM"
+    },
+    {
+      "path": "scripts/acceptance/fixtures/Joint-ProtocolFixture.mjs",
+      "category": "product_script",
+      "bytes": 11165,
+      "rawSha256": "BCFA907779DD98CB69A26A8DE9D20D4E048ACEBC6CBDF2E38255F2ECCA5FF401",
+      "utf8Bom": false,
+      "crlfCount": 0,
+      "expectedIndexBlobOid": "62cb9548d5e72f77173a2ec98795e37ff5447499",
+      "indexPolicy": "existing repository text=auto eol=lf; preserve BOM"
+    }
+  ],
+  "excludedFiles": [
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/model-protocol-20261029-01/driver.log",
+      "bytes": 0,
+      "rawSha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+      "reason": "Raw driver log explicitly excluded; retained in place, not deleted or rewritten."
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/model-protocol-20261029-02/driver.log",
+      "bytes": 138,
+      "rawSha256": "D9A97032FA2024C138E086FF8E6AD8618A21BE9432D22C2C8E3B88C7D3352F68",
+      "reason": "Raw driver log explicitly excluded; retained in place, not deleted or rewritten."
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/model-protocol-20261029-03/driver.log",
+      "bytes": 138,
+      "rawSha256": "D9A97032FA2024C138E086FF8E6AD8618A21BE9432D22C2C8E3B88C7D3352F68",
+      "reason": "Raw driver log explicitly excluded; retained in place, not deleted or rewritten."
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-06/model-protocol-20261029-04/driver.log",
+      "bytes": 138,
+      "rawSha256": "D9A97032FA2024C138E086FF8E6AD8618A21BE9432D22C2C8E3B88C7D3352F68",
+      "reason": "Raw driver log explicitly excluded; retained in place, not deleted or rewritten."
+    }
+  ],
+  "excludedScopes": [
+    ".local/acceptance private environment, credentials, original journals, XML and logs",
+    "Other execution cards and evidence",
+    "Three main-entry documents",
+    "Unlisted source and runtime files"
+  ],
+  "secretScan": {
+    "scope": "All 123 exact candidate files, including a final verification scan of this generated manifest; known values remain in memory only. This is bounded scanning, not an absolute claim about unknown secrets.",
+    "knownValueSourcePaths": [
+      ".env",
+      ".local/acceptance/ex06-or-20261029/joint-or-20261029-01/credentials.env"
+    ],
+    "distinctKnownValuesLengthAtLeast8": 12,
+    "knownValueHits": [],
+    "realCredentialOrJwtOrPrivateKeyPatternHits": [],
+    "sensitiveNamedJsonStringFields": [],
+    "preservedSyntheticRejectionFixtureOccurrences": [
+      {
+        "path": "docs/evidence/2026-10-29-EX-06/Test-JointPreparation.ps1",
+        "line": 99
+      },
+      {
+        "path": "docs/evidence/2026-10-29-EX-06/empty-names-green-20261029-01/Test-JointPreparation.ps1",
+        "line": 99
+      },
+      {
+        "path": "docs/evidence/2026-10-29-EX-06/empty-names-red-20261029-01/Test-JointPreparation.ps1",
+        "line": 99
+      },
+      {
+        "path": "docs/evidence/2026-10-29-EX-06/model-protocol-20261029-01/source/Test-JointPreparation.ps1",
+        "line": 99
+      },
+      {
+        "path": "docs/evidence/2026-10-29-EX-06/operation-green-20261029-01/Test-JointPreparation.ps1",
+        "line": 99
+      },
+      {
+        "path": "docs/evidence/2026-10-29-EX-06/operation-red-20261029-01/Test-JointPreparation.ps1",
+        "line": 99
+      },
+      {
+        "path": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/Test-JointPreparation.ps1",
+        "line": 99
+      },
+      {
+        "path": "docs/evidence/2026-10-29-EX-06/or-stage-source/Test-JointPreparation.ps1",
+        "line": 99
+      },
+      {
+        "path": "docs/evidence/2026-10-29-EX-06/protocol-20261029-1401/source/Test-JointPreparation.ps1",
+        "line": 99
+      }
+    ],
+    "syntheticOccurrenceCount": 9,
+    "jsonPayloadsParseCheckedIncludingThisManifest": 66,
+    "rawLogsNotIncluded": true,
+    "privateRawFilesCopied": false
+  },
+  "archiveCopyVerification": {
+    "checkedRecords": 32,
+    "allMatched": true,
+    "records": [
+      {
+        "manifest": "docs/evidence/2026-10-29-EX-06/foundation-20261029-1348/manifest.json",
+        "copy": "docs/evidence/2026-10-29-EX-06/foundation-20261029-1348/existing-manifest-collision.json",
+        "rawSha256": "3F4B064E56EBEB9B338720DD0EB3873B134FFC675F0C84E41D26F7C08A8E2F14",
+        "bytes": 618
+      },
+      {
+        "manifest": "docs/evidence/2026-10-29-EX-06/foundation-20261029-1348/manifest.json",
+        "copy": "docs/evidence/2026-10-29-EX-06/foundation-20261029-1348/all-preparation-checks.json",
+        "rawSha256": "A09C435F5DA281EE139AE59D2C86F786E681B97D14449B2592A41C0A992DFFD7",
+        "bytes": 2964
+      },
+      {
+        "manifest": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/manifest.json",
+        "copy": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/failed-admission.json",
+        "rawSha256": "98AE5A5066FCC2E6E4F9AF0F3A765B32FA8A0244C675EE4614BE6D696E3D4BB7",
+        "bytes": 770
+      },
+      {
+        "manifest": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/manifest.json",
+        "copy": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/failed-run.json",
+        "rawSha256": "72FE7601CEB75D7E3B48D20CE9BB5B22B394D2FF327C80AE00D98AF825933624",
+        "bytes": 786
+      },
+      {
+        "manifest": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/manifest.json",
+        "copy": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/failed-before-credentials-sha.json",
+        "rawSha256": "4CB97665136FD057AF0060800A01F356901947EB27C06E05EDD655892E25D574",
+        "bytes": 87
+      },
+      {
+        "manifest": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/manifest.json",
+        "copy": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/green-admission.json",
+        "rawSha256": "CD4F9F05C0FDF45FCA8ADC68EF73A25CE09F53945CEDA5D4B54B59E8FBE10165",
+        "bytes": 770
+      },
+      {
+        "manifest": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/manifest.json",
+        "copy": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/green-run.json",
+        "rawSha256": "07BA29EC16AE639A7FADFDB1D2436AF73B121A4BB84291DA62F219DAA387230E",
+        "bytes": 786
+      },
+      {
+        "manifest": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/manifest.json",
+        "copy": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/green-before-credentials-sha.json",
+        "rawSha256": "4CB97665136FD057AF0060800A01F356901947EB27C06E05EDD655892E25D574",
+        "bytes": 87
+      },
+      {
+        "manifest": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/manifest.json",
+        "copy": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/green-operation-resume-comparison.json",
+        "rawSha256": "A10AF9119B3D3908C855880D5FCE1D14E166FF977F06BC1F97E04A9FA38F5FD8",
+        "bytes": 640
+      },
+      {
+        "manifest": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/manifest.json",
+        "copy": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/failed-executed-wrapper.ps1",
+        "rawSha256": "FD392AB7BD28F46596A8B654A1263EAA24740D006F9EB96F97E77B45BF6A3CAD",
+        "bytes": 9330
+      },
+      {
+        "manifest": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/manifest.json",
+        "copy": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/green-executed-wrapper.ps1",
+        "rawSha256": "4EDB242104721CE8342BE1F4DF0965DAD7BE2B04DD324234F40A43CBC5AD10A4",
+        "bytes": 9330
+      },
+      {
+        "manifest": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/manifest.json",
+        "copy": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/Joint.Common.ps1",
+        "rawSha256": "4CC93F7A3563809D8F4971079B13E440026AE035CBC2068A5D9AC013B533F342",
+        "bytes": 19570
+      },
+      {
+        "manifest": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/manifest.json",
+        "copy": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/Prepare-Joint.ps1",
+        "rawSha256": "87709F9FE5CC0C7BB387ED3A09433C713B7CE238F6B78E2BD64AE7C8B17C52EC",
+        "bytes": 27413
+      },
+      {
+        "manifest": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/manifest.json",
+        "copy": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/Test-JointPreparation.ps1",
+        "rawSha256": "CD9F6EE6DB452BF724E1893B0D8210AE06661AF6158294B81412BE3E88474F5B",
+        "bytes": 12870
+      },
+      {
+        "manifest": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/manifest.json",
+        "copy": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/Test-JointProtocol.ps1",
+        "rawSha256": "FBEB113D01506B6A7429B51C3F02EF9F253B14B6F90348544658C31FB5213298",
+        "bytes": 18757
+      },
+      {
+        "manifest": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/manifest.json",
+        "copy": "docs/evidence/2026-10-29-EX-06/operation-resume-20261029/Joint-ProtocolFixture.mjs",
+        "rawSha256": "BCFA907779DD98CB69A26A8DE9D20D4E048ACEBC6CBDF2E38255F2ECCA5FF401",
+        "bytes": 11165
+      },
+      {
+        "manifest": "docs/evidence/2026-10-29-EX-06/protocol-20261029-1401/manifest.json",
+        "copy": "docs/evidence/2026-10-29-EX-06/protocol-20261029-1401/source/Joint-ProtocolFixture.mjs",
+        "rawSha256": "E080D47FB40087794A47B35BEDBCD1E818633718913CAAE985B078E6FCD52C8D",
+        "bytes": 3397
+      },
+      {
+        "manifest": "docs/evidence/2026-10-29-EX-06/protocol-20261029-1401/manifest.json",
+        "copy": "docs/evidence/2026-10-29-EX-06/protocol-20261029-1401/source/Joint.Common.ps1",
+        "rawSha256": "4DD3326207C86F6D27B6498F94E12A8EA44609A8963E642E44C4F11D91D8EE81",
+        "bytes": 14241
+      },
+      {
+        "manifest": "docs/evidence/2026-10-29-EX-06/protocol-20261029-1401/manifest.json",
+        "copy": "docs/evidence/2026-10-29-EX-06/protocol-20261029-1401/source/Test-JointPreparation.ps1",
+        "rawSha256": "59A8AA9F9C6273A154C60CD848877A97A487D4C12E79CA3F4A8C62EAA0C1D1C6",
+        "bytes": 11116
+      },
+      {
+        "manifest": "docs/evidence/2026-10-29-EX-06/protocol-20261029-1401/manifest.json",
+        "copy": "docs/evidence/2026-10-29-EX-06/protocol-20261029-1401/source/Test-JointProtocol.ps1",
+        "rawSha256": "B5B2DCCA3E5B95B819B46BA2767A9B91BC46327A3031439856F693524AF94B95",
+        "bytes": 6093
+      },
+      {
+        "manifest": "docs/evidence/2026-10-29-EX-06/protocol-20261029-1401/manifest.json",
+        "copy": "docs/evidence/2026-10-29-EX-06/protocol-20261029-1401/protocol-checks.json",
+        "rawSha256": "A1B1EE468A352D9816EFE71ECBA913C5EEE7B81BB5817ECF7A14858C0D27099E",
+        "bytes": 1630
+      },
+      {
+        "manifest": "docs/evidence/2026-10-29-EX-06/protocol-20261029-1401/manifest.json",
+        "copy": "docs/evidence/2026-10-29-EX-06/protocol-20261029-1401/protocol-execution.json",
+        "rawSha256": "FD2350CA20CD11C82DD5A46C02CEBFA494556D1131E00DA4D2B2AD5318F31847",
+        "bytes": 1574
+      },
+      {
+        "manifest": "docs/evidence/2026-10-29-EX-06/protocol-20261029-1401/manifest.json",
+        "copy": "docs/evidence/2026-10-29-EX-06/protocol-20261029-1401/protocol-invocation.json",
+        "rawSha256": "802A51A985BFF5B316C4219E41CC5E56BCB34C8EC0BA949FCC03657D6033FD7D",
+        "bytes": 376
+      },
+      {
+        "manifest": "docs/evidence/2026-10-29-EX-06/protocol-20261029-1401/manifest.json",
+        "copy": "docs/evidence/2026-10-29-EX-06/protocol-20261029-1401/preparation-checks.json",
+        "rawSha256": "A09C435F5DA281EE139AE59D2C86F786E681B97D14449B2592A41C0A992DFFD7",
+        "bytes": 2964
+      },
+      {
+        "manifest": "docs/evidence/2026-10-29-EX-06/protocol-20261029-1401/manifest.json",
+        "copy": "docs/evidence/2026-10-29-EX-06/protocol-20261029-1401/preparation-execution.json",
+        "rawSha256": "C8026EB7485FF302E357FFE378FACBCAA43549137DF4C27A2683F2723518615C",
+        "bytes": 422
+      },
+      {
+        "manifest": "docs/evidence/2026-10-29-EX-06/protocol-ontology-20261029-1428/manifest.json",
+        "copy": "docs/evidence/2026-10-29-EX-06/protocol-ontology-20261029-1428/red-protocol-checks.json",
+        "rawSha256": "A66084D12932F3841ED12C650D15FD64D101D4C1FCD4CA3758A356CFACE80687",
+        "bytes": 1934
+      },
+      {
+        "manifest": "docs/evidence/2026-10-29-EX-06/protocol-ontology-20261029-1428/manifest.json",
+        "copy": "docs/evidence/2026-10-29-EX-06/protocol-ontology-20261029-1428/red-execution.json",
+        "rawSha256": "1C09D913D72DAD0BD04DEB7E02AD5C69C7A621398DDB81EFEA829295F1FE35EA",
+        "bytes": 1972
+      },
+      {
+        "manifest": "docs/evidence/2026-10-29-EX-06/protocol-ontology-20261029-1428/manifest.json",
+        "copy": "docs/evidence/2026-10-29-EX-06/protocol-ontology-20261029-1428/green-protocol-checks.json",
+        "rawSha256": "BF1FCB89EFD2111F92BC731A3B7C424FAD13C55C95D18F7AC785955B5BC3544D",
+        "bytes": 2166
+      },
+      {
+        "manifest": "docs/evidence/2026-10-29-EX-06/protocol-ontology-20261029-1428/manifest.json",
+        "copy": "docs/evidence/2026-10-29-EX-06/protocol-ontology-20261029-1428/green-execution.json",
+        "rawSha256": "9B786F5FEA92F2FE02108909FF2B11B7F8F639F92963752B74BE13CF893D582F",
+        "bytes": 1978
+      },
+      {
+        "manifest": "docs/evidence/2026-10-29-EX-06/protocol-ontology-20261029-1428/manifest.json",
+        "copy": "docs/evidence/2026-10-29-EX-06/protocol-ontology-20261029-1428/preparation-preparation-checks.json",
+        "rawSha256": "A09C435F5DA281EE139AE59D2C86F786E681B97D14449B2592A41C0A992DFFD7",
+        "bytes": 2964
+      },
+      {
+        "manifest": "docs/evidence/2026-10-29-EX-06/protocol-ontology-20261029-1428/manifest.json",
+        "copy": "docs/evidence/2026-10-29-EX-06/protocol-ontology-20261029-1428/preparation-execution.json",
+        "rawSha256": "300F5358FABE21B411ECA42A876738BCBAA41A1E693BC95CA47B7860F352B19E",
+        "bytes": 431
+      },
+      {
+        "manifest": "docs/evidence/2026-10-29-EX-06/protocol-ontology-20261029-1428/manifest.json",
+        "copy": "docs/evidence/2026-10-29-EX-06/protocol-ontology-20261029-1428/nullstring-proof.json",
+        "rawSha256": "ADEEC07B32CF2182588A6F61EF2AFB9344406B6BE1D45DECA8B42460B0590CBC",
+        "bytes": 468
+      }
+    ]
+  },
+  "attributesCandidate": {
+    "path": "docs/evidence/2026-10-29-EX-06/.gitattributes",
+    "createdOrApplied": false,
+    "ruleCount": 120,
+    "containsWildcards": false,
+    "includesProductPaths": false,
+    "encoding": "UTF-8 without BOM, LF",
+    "bytes": 7385,
+    "rawSha256": "23F00AA211F7B192C5C75A7A7CDB8C20CD8BB820CF60F46A5966B67B8C22533B",
+    "expectedIndexBlobOid": "5058498ba3a76282600487b64ad90c8aac41d425",
+    "content": "Test-JointPreparation.ps1 -text -whitespace\nTest-JointProtocol.ps1 -text -whitespace\nap-stage-execution-candidate.md -text -whitespace\nap-stage-plan-review.md -text -whitespace\nap-stage-plan.md -text -whitespace\nap-stage-runtime-inventory.json -text -whitespace\nap-stage-source-index.json -text -whitespace\narchive-verification-20261029.json -text -whitespace\ncommit-manifest.json -text -whitespace\nempty-names-green-20261029-01/Joint.Common.ps1 -text -whitespace\nempty-names-green-20261029-01/Prepare-Joint.ps1 -text -whitespace\nempty-names-green-20261029-01/Test-JointPreparation.ps1 -text -whitespace\nempty-names-green-20261029-01/preparation-checks.json -text -whitespace\nempty-names-green-20261029-01/summary.json -text -whitespace\nempty-names-red-20261029-01/Joint.Common.ps1 -text -whitespace\nempty-names-red-20261029-01/Prepare-Joint.ps1 -text -whitespace\nempty-names-red-20261029-01/Test-JointPreparation.ps1 -text -whitespace\nempty-names-red-20261029-01/preparation-checks.json -text -whitespace\nempty-names-red-20261029-01/summary.json -text -whitespace\nempty-names-review.md -text -whitespace\nfoundation-20261029-1348/README.md -text -whitespace\nfoundation-20261029-1348/all-preparation-checks.json -text -whitespace\nfoundation-20261029-1348/existing-manifest-collision.json -text -whitespace\nfoundation-20261029-1348/manifest.json -text -whitespace\nmodel-protocol-20261029-01/command.json -text -whitespace\nmodel-protocol-20261029-01/protocol-checks.json -text -whitespace\nmodel-protocol-20261029-01/recovered-summary.json -text -whitespace\nmodel-protocol-20261029-01/source-before.json -text -whitespace\nmodel-protocol-20261029-01/source/Joint-ProtocolFixture.mjs -text -whitespace\nmodel-protocol-20261029-01/source/Joint.Common.ps1 -text -whitespace\nmodel-protocol-20261029-01/source/Prepare-Joint.ps1 -text -whitespace\nmodel-protocol-20261029-01/source/Test-JointPreparation.ps1 -text -whitespace\nmodel-protocol-20261029-01/source/Test-JointProtocol.ps1 -text -whitespace\nmodel-protocol-20261029-02/command.json -text -whitespace\nmodel-protocol-20261029-02/protocol-checks.json -text -whitespace\nmodel-protocol-20261029-02/source-after.json -text -whitespace\nmodel-protocol-20261029-02/source-before.json -text -whitespace\nmodel-protocol-20261029-02/summary.json -text -whitespace\nmodel-protocol-20261029-03/command.json -text -whitespace\nmodel-protocol-20261029-03/protocol-checks.json -text -whitespace\nmodel-protocol-20261029-03/source-after.json -text -whitespace\nmodel-protocol-20261029-03/source-before.json -text -whitespace\nmodel-protocol-20261029-03/summary.json -text -whitespace\nmodel-protocol-20261029-04/command.json -text -whitespace\nmodel-protocol-20261029-04/protocol-checks.json -text -whitespace\nmodel-protocol-20261029-04/source-after.json -text -whitespace\nmodel-protocol-20261029-04/source-before.json -text -whitespace\nmodel-protocol-20261029-04/summary.json -text -whitespace\nmodel-protocol-final-review.md -text -whitespace\nmodel-protocol-review.md -text -whitespace\nontology-20261029-1438/README.md -text -whitespace\nontology-20261029-1438/after-resume-safe.json -text -whitespace\nontology-20261029-1438/before-resume-safe.json -text -whitespace\nontology-20261029-1438/first-admission.json -text -whitespace\nontology-20261029-1438/first-run.json -text -whitespace\nontology-20261029-1438/manifest.json -text -whitespace\nontology-20261029-1438/resume-admission.json -text -whitespace\nontology-20261029-1438/resume-comparison.json -text -whitespace\nontology-20261029-1438/resume-run.json -text -whitespace\nontology-static-review.md -text -whitespace\noperation-fix-candidate.md -text -whitespace\noperation-green-20261029-01/Joint.Common.ps1 -text -whitespace\noperation-green-20261029-01/Prepare-Joint.ps1 -text -whitespace\noperation-green-20261029-01/Test-JointPreparation.ps1 -text -whitespace\noperation-green-20261029-01/preparation-checks.json -text -whitespace\noperation-green-20261029-01/summary.json -text -whitespace\noperation-red-20261029-01/Joint.Common.ps1 -text -whitespace\noperation-red-20261029-01/Prepare-Joint.ps1 -text -whitespace\noperation-red-20261029-01/Test-JointPreparation.ps1 -text -whitespace\noperation-red-20261029-01/preparation-checks.json -text -whitespace\noperation-red-20261029-01/summary.json -text -whitespace\noperation-resume-20261029/Joint-ProtocolFixture.mjs -text -whitespace\noperation-resume-20261029/Joint.Common.ps1 -text -whitespace\noperation-resume-20261029/Prepare-Joint.ps1 -text -whitespace\noperation-resume-20261029/README.md -text -whitespace\noperation-resume-20261029/Test-JointPreparation.ps1 -text -whitespace\noperation-resume-20261029/Test-JointProtocol.ps1 -text -whitespace\noperation-resume-20261029/failed-admission.json -text -whitespace\noperation-resume-20261029/failed-before-credentials-sha.json -text -whitespace\noperation-resume-20261029/failed-executed-wrapper.ps1 -text -whitespace\noperation-resume-20261029/failed-run.json -text -whitespace\noperation-resume-20261029/green-admission.json -text -whitespace\noperation-resume-20261029/green-before-credentials-sha.json -text -whitespace\noperation-resume-20261029/green-executed-wrapper.ps1 -text -whitespace\noperation-resume-20261029/green-operation-resume-comparison.json -text -whitespace\noperation-resume-20261029/green-run.json -text -whitespace\noperation-resume-20261029/manifest.json -text -whitespace\noperation-review.md -text -whitespace\nor-stage-candidate.md -text -whitespace\nor-stage-source/Joint-ProtocolFixture.mjs -text -whitespace\nor-stage-source/Joint.Common.ps1 -text -whitespace\nor-stage-source/Prepare-Joint.ps1 -text -whitespace\nor-stage-source/Test-JointPreparation.ps1 -text -whitespace\nor-stage-source/Test-JointProtocol.ps1 -text -whitespace\nor-stage-source/manifest.json -text -whitespace\nphase-acceptance.md -text -whitespace\npreparation.md -text -whitespace\nprotocol-20261029-1401/README.md -text -whitespace\nprotocol-20261029-1401/manifest.json -text -whitespace\nprotocol-20261029-1401/preparation-checks.json -text -whitespace\nprotocol-20261029-1401/preparation-execution.json -text -whitespace\nprotocol-20261029-1401/protocol-checks.json -text -whitespace\nprotocol-20261029-1401/protocol-execution.json -text -whitespace\nprotocol-20261029-1401/protocol-invocation.json -text -whitespace\nprotocol-20261029-1401/source/Joint-ProtocolFixture.mjs -text -whitespace\nprotocol-20261029-1401/source/Joint.Common.ps1 -text -whitespace\nprotocol-20261029-1401/source/Test-JointPreparation.ps1 -text -whitespace\nprotocol-20261029-1401/source/Test-JointProtocol.ps1 -text -whitespace\nprotocol-ontology-20261029-1428/Joint.Common.final.ps1 -text -whitespace\nprotocol-ontology-20261029-1428/README.md -text -whitespace\nprotocol-ontology-20261029-1428/green-execution.json -text -whitespace\nprotocol-ontology-20261029-1428/green-protocol-checks.json -text -whitespace\nprotocol-ontology-20261029-1428/manifest.json -text -whitespace\nprotocol-ontology-20261029-1428/nullstring-change.json -text -whitespace\nprotocol-ontology-20261029-1428/nullstring-proof.json -text -whitespace\nprotocol-ontology-20261029-1428/preparation-execution.json -text -whitespace\nprotocol-ontology-20261029-1428/preparation-preparation-checks.json -text -whitespace\nprotocol-ontology-20261029-1428/red-execution.json -text -whitespace\nprotocol-ontology-20261029-1428/red-protocol-checks.json -text -whitespace\nrun-model-protocol.ps1 -text -whitespace\n",
+    "rationale": "Preserve pinned evidence bytes only. Each rule names an exact payload; production scripts retain repository standard filtering."
+  },
+  "preStageRequirements": [
+    "Recheck exact raw SHA and HEAD/source context; this list is not automatic stage approval.",
+    "Create only the exact proposed nested attribute content if chosen, then stage exact paths only.",
+    "Verify actual index set: 123 payload files plus exactly one adopted attributes file, no extra paths.",
+    "Verify evidence index blob bytes equal raw files; verify 3 product blobs equal recorded standard-filtered OIDs.",
+    "Verify current manifest identity against separately delivered final SHA; never invent a recursive self hash."
+  ]
+}

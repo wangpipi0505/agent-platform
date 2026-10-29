@@ -1,0 +1,18 @@
+{
+  "oldSha256": "c2a6c8a483c7f3785497a7dcfb94d089e632891abc70d7ea9e70720f9ed6b01a",
+  "newSha256": "a008f692d89d18a416b657c9cb3b5f08f804b2bb44205e616253b90db48505cd",
+  "oldSnapshot": "../or-stage-source/Joint.Common.ps1",
+  "newSnapshot": "Joint.Common.final.ps1",
+  "onlyChange": {
+    "oldCall": "[IO.File]::Replace($temp,$path,$null)",
+    "newCall": "[IO.File]::Replace($temp,$path,[System.Management.Automation.Language.NullString]::Value)"
+  },
+  "replacementCount": 1,
+  "wholeFileMatchesAfterOnlyReplacement": true,
+  "protocolNativeRed": 1,
+  "protocolNativeGreen": 0,
+  "redChecksReached": 22,
+  "greenChecks": 25,
+  "preparationChecks": 32,
+  "businessValidationPerformed": false
+}

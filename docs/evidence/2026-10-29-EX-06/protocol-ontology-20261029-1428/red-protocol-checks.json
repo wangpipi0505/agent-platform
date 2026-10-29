@@ -1,0 +1,32 @@
+{
+    "phase":  "PROTOCOL_ASSERTION_FAILED",
+    "passed":  false,
+    "checks":  [
+                   "actual HTTP envelope decoded",
+                   "expected HTTP 403 preserves code",
+                   "unexpected status rejects without raw response",
+                   "unexpected status rejects without raw response does not leak response or credentials",
+                   "malformed success JSON rejected",
+                   "malformed success JSON rejected does not leak response or credentials",
+                   "HTTP 200 business error is not success",
+                   "HTTP 200 business error is not success does not leak response or credentials",
+                   "redirect is not followed with credential",
+                   "redirect is not followed with credential does not leak response or credentials",
+                   "redirect target never called",
+                   "response bytes are bounded",
+                   "response bytes are bounded does not leak response or credentials",
+                   "HTTP timeout is finite and safe",
+                   "HTTP timeout is finite and safe does not leak response or credentials",
+                   "UTF8 JSON survives actual HTTP",
+                   "machine request does not receive human bearer",
+                   "mixed authentication rejected before request",
+                   "mixed authentication rejected before request does not leak response or credentials",
+                   "HTTP success cannot replace publication READY_TO_COMMIT",
+                   "HTTP success cannot replace publication READY_TO_COMMIT does not leak response or credentials",
+                   "private env preserves value without public serialization"
+               ],
+    "safeError":  "JOINT_PRIVATE_WRITE_FAILED",
+    "protocolFixtureOnly":  true,
+    "businessValidationPerformed":  false,
+    "fixturePid":  37284
+}

@@ -1,0 +1,358 @@
+{
+  "sessionId": "joint-or-20261029-01",
+  "nonce": "29094d2317894b0b8ddc8acd8585c60f",
+  "context": {
+    "SessionId": "joint-or-20261029-01",
+    "PlatformTenant": "local-v12",
+    "Environment": "production",
+    "PlatformBaseUrl": "http://127.0.0.1:18080",
+    "OntologyBaseUrl": "http://127.0.0.1:18182",
+    "ModelMode": "TestFixture",
+    "ModelEntryId": ""
+  },
+  "ownerId": "0bb26b3e-5bf3-48c8-9adf-5a4cb7d7e483",
+  "actions": {
+    "A_space": {
+      "id": "175af2a7-9fec-4f15-89c1-b5f83e1c9194",
+      "code": "joint-29094d2317894b0b-a",
+      "draftRev": 0,
+      "namespaceUri": "https://example.org/joint/29094d2317894b0b8ddc8acd8585c60f/A/"
+    },
+    "A_class": {
+      "id": "175af2a7-9fec-4f15-89c1-b5f83e1c9194",
+      "draftRev": 1
+    },
+    "A_operation": {
+      "id": "175af2a7-9fec-4f15-89c1-b5f83e1c9194",
+      "draftRev": 2
+    },
+    "A_guards": {
+      "id": "175af2a7-9fec-4f15-89c1-b5f83e1c9194",
+      "draftRev": 3
+    },
+    "A_owner_scope": {
+      "id": "175af2a7-9fec-4f15-89c1-b5f83e1c9194",
+      "draftRev": 4
+    },
+    "A_assistant": {
+      "id": "175af2a7-9fec-4f15-89c1-b5f83e1c9194",
+      "draftRev": 5
+    },
+    "A_test_case": {
+      "id": "175af2a7-9fec-4f15-89c1-b5f83e1c9194",
+      "draftRev": 6
+    },
+    "A_first_candidate": {
+      "id": "f112d9da-1d93-4350-8a66-eb0a5b24a218",
+      "draftRev": 6,
+      "sha256": "cfdc7d0c4e09d7b61ff4ddc4005f65964f88e2fd029b5f3a1a890114b37a40d7",
+      "preReleaseId": "55ee7566-b3a8-488d-bff9-86d515cbb4ed"
+    },
+    "A_first_validate": {
+      "status": "TESTING"
+    },
+    "A_first_tests": {
+      "passed": true,
+      "candidateSha256": "cfdc7d0c4e09d7b61ff4ddc4005f65964f88e2fd029b5f3a1a890114b37a40d7"
+    },
+    "A_first_review": {
+      "status": "REVIEWING"
+    },
+    "A_first_prepare": {
+      "status": "READY_TO_COMMIT",
+      "artifacts": [
+        {
+          "kind": "BUNDLE",
+          "sha256": "cfdc7d0c4e09d7b61ff4ddc4005f65964f88e2fd029b5f3a1a890114b37a40d7",
+          "size": 2659,
+          "ready": true
+        },
+        {
+          "kind": "CONTEXT_PACK",
+          "sha256": "3f92eacbca7f4b0b47b8a1acdcf0b86d1fa0a90dc5f0d8773e69ba5b8bccec2a",
+          "size": 954,
+          "ready": true
+        },
+        {
+          "kind": "KNOWLEDGE_INDEX",
+          "sha256": "ebcc128931ea4729874597ea349d1ed54ab8a8f42cc72907f8707d08ae935327",
+          "size": 210,
+          "ready": true
+        },
+        {
+          "kind": "MANIFEST",
+          "sha256": "2511824af54e19724cc3668b96e5b2d01d85c952ff6dfc995783df777ebf452a",
+          "size": 1589,
+          "ready": true
+        }
+      ]
+    },
+    "A_first_commit": {
+      "id": "55ee7566-b3a8-488d-bff9-86d515cbb4ed",
+      "spaceId": "175af2a7-9fec-4f15-89c1-b5f83e1c9194",
+      "status": "READY",
+      "bundleSha256": "cfdc7d0c4e09d7b61ff4ddc4005f65964f88e2fd029b5f3a1a890114b37a40d7"
+    },
+    "A_revision_class": {
+      "id": "175af2a7-9fec-4f15-89c1-b5f83e1c9194",
+      "draftRev": 7
+    },
+    "A_replacement_candidate": {
+      "id": "12352db5-b34e-41a7-975b-6cf99cb1c39d",
+      "draftRev": 7,
+      "sha256": "66f55cbc8b25a5cdee64c9fcb497038ae2c1ff1bfc46ade2b1a43cfb6aa05822",
+      "preReleaseId": "233466e3-03bb-4e64-ac15-58170d350511"
+    },
+    "A_replacement_validate": {
+      "status": "TESTING"
+    },
+    "A_replacement_tests": {
+      "passed": true,
+      "candidateSha256": "66f55cbc8b25a5cdee64c9fcb497038ae2c1ff1bfc46ade2b1a43cfb6aa05822"
+    },
+    "A_replacement_review": {
+      "status": "REVIEWING"
+    },
+    "A_replacement_prepare": {
+      "status": "READY_TO_COMMIT",
+      "artifacts": [
+        {
+          "kind": "BUNDLE",
+          "sha256": "66f55cbc8b25a5cdee64c9fcb497038ae2c1ff1bfc46ade2b1a43cfb6aa05822",
+          "size": 2888,
+          "ready": true
+        },
+        {
+          "kind": "CONTEXT_PACK",
+          "sha256": "b0402d3dc119f449ecd582875f2afe58a4b3668026f7da6030b4dec37f04f88d",
+          "size": 1199,
+          "ready": true
+        },
+        {
+          "kind": "KNOWLEDGE_INDEX",
+          "sha256": "4705446290959c38839e37de46d959610169954c79caf893c69e3b4644bc621d",
+          "size": 210,
+          "ready": true
+        },
+        {
+          "kind": "MANIFEST",
+          "sha256": "8d45e81a6635f3ad0868e8f35c2b221d3d52ff0fc9ad1d1783751df48205850f",
+          "size": 1589,
+          "ready": true
+        }
+      ]
+    },
+    "A_replacement_commit": {
+      "id": "233466e3-03bb-4e64-ac15-58170d350511",
+      "spaceId": "175af2a7-9fec-4f15-89c1-b5f83e1c9194",
+      "status": "READY",
+      "bundleSha256": "66f55cbc8b25a5cdee64c9fcb497038ae2c1ff1bfc46ade2b1a43cfb6aa05822"
+    },
+    "B_space": {
+      "id": "2e9e29c8-ac71-4b36-9b40-90132ee783df",
+      "code": "joint-29094d2317894b0b-b",
+      "draftRev": 0,
+      "namespaceUri": "https://example.org/joint/29094d2317894b0b8ddc8acd8585c60f/B/"
+    },
+    "B_class": {
+      "id": "2e9e29c8-ac71-4b36-9b40-90132ee783df",
+      "draftRev": 1
+    },
+    "B_operation": {
+      "id": "2e9e29c8-ac71-4b36-9b40-90132ee783df",
+      "draftRev": 2
+    },
+    "B_guards": {
+      "id": "2e9e29c8-ac71-4b36-9b40-90132ee783df",
+      "draftRev": 3
+    },
+    "B_owner_scope": {
+      "id": "2e9e29c8-ac71-4b36-9b40-90132ee783df",
+      "draftRev": 4
+    },
+    "B_assistant": {
+      "id": "2e9e29c8-ac71-4b36-9b40-90132ee783df",
+      "draftRev": 5
+    },
+    "B_test_case": {
+      "id": "2e9e29c8-ac71-4b36-9b40-90132ee783df",
+      "draftRev": 6
+    },
+    "B_first_candidate": {
+      "id": "17a6d0d8-93fb-4e1f-bd0d-ca8c5c363e6a",
+      "draftRev": 6,
+      "sha256": "bf93855696bccedaf3653f42a3224e0fe66ebe1d2dbe14af8ab2dde7b9de70e3",
+      "preReleaseId": "a8569baa-766b-44fe-be5d-12e508868ec2"
+    },
+    "B_first_validate": {
+      "status": "TESTING"
+    },
+    "B_first_tests": {
+      "passed": true,
+      "candidateSha256": "bf93855696bccedaf3653f42a3224e0fe66ebe1d2dbe14af8ab2dde7b9de70e3"
+    },
+    "B_first_review": {
+      "status": "REVIEWING"
+    },
+    "B_first_prepare": {
+      "status": "READY_TO_COMMIT",
+      "artifacts": [
+        {
+          "kind": "BUNDLE",
+          "sha256": "bf93855696bccedaf3653f42a3224e0fe66ebe1d2dbe14af8ab2dde7b9de70e3",
+          "size": 2659,
+          "ready": true
+        },
+        {
+          "kind": "CONTEXT_PACK",
+          "sha256": "60ef4a0fea228214349904c134d5b2f38f769b124b7514a860438995ddbb9b64",
+          "size": 954,
+          "ready": true
+        },
+        {
+          "kind": "KNOWLEDGE_INDEX",
+          "sha256": "da667362026859bd75b4828ef340189d354a955169af4a4aed48fa7366bea989",
+          "size": 210,
+          "ready": true
+        },
+        {
+          "kind": "MANIFEST",
+          "sha256": "912fc5846805f8381d56e02e9b4163ca3db0664a90e2931093833fe289da3bc1",
+          "size": 1589,
+          "ready": true
+        }
+      ]
+    },
+    "B_first_commit": {
+      "id": "a8569baa-766b-44fe-be5d-12e508868ec2",
+      "spaceId": "2e9e29c8-ac71-4b36-9b40-90132ee783df",
+      "status": "READY",
+      "bundleSha256": "bf93855696bccedaf3653f42a3224e0fe66ebe1d2dbe14af8ab2dde7b9de70e3"
+    },
+    "CONSUMER_user": {
+      "id": "c9065279-3f5f-42d7-ba26-adb6594d9b05",
+      "status": "ACTIVE"
+    },
+    "CONSUMER_space_grant": {
+      "id": "175af2a7-9fec-4f15-89c1-b5f83e1c9194",
+      "draftRev": 8
+    },
+    "TEMP_CONSUMER_user": {
+      "id": "52728fc2-3655-446f-b1d4-3658ffe916d7",
+      "status": "ACTIVE"
+    },
+    "TEMP_CONSUMER_space_grant": {
+      "id": "175af2a7-9fec-4f15-89c1-b5f83e1c9194",
+      "draftRev": 9
+    },
+    "endpoint_1dfff24a-bf50-4353-b461-ce09e7477b87_c9065279-3f5f-42d7-ba26-adb6594d9b05": {
+      "userId": "c9065279-3f5f-42d7-ba26-adb6594d9b05",
+      "status": "ACTIVE"
+    },
+    "endpoint_421e0024-8434-4db6-ad00-c5320edc92a4_c9065279-3f5f-42d7-ba26-adb6594d9b05": {
+      "userId": "c9065279-3f5f-42d7-ba26-adb6594d9b05",
+      "status": "ACTIVE"
+    },
+    "endpoint_1dfff24a-bf50-4353-b461-ce09e7477b87_52728fc2-3655-446f-b1d4-3658ffe916d7": {
+      "userId": "52728fc2-3655-446f-b1d4-3658ffe916d7",
+      "status": "ACTIVE"
+    },
+    "endpoint_421e0024-8434-4db6-ad00-c5320edc92a4_52728fc2-3655-446f-b1d4-3658ffe916d7": {
+      "userId": "52728fc2-3655-446f-b1d4-3658ffe916d7",
+      "status": "ACTIVE"
+    },
+    "key_READ": {
+      "id": "cc829889-7136-40b5-9730-814fd19e16ca",
+      "principalId": "c6e35133-b3de-4683-baac-4c2e22a10f4b",
+      "spaceId": "175af2a7-9fec-4f15-89c1-b5f83e1c9194",
+      "credentialKind": "SERVICE_ACCOUNT",
+      "platformActor": "joint-29094d2317894b0b-read",
+      "keyRef": "env:AGENT_SECRET_JOINT_29094D231789_READ"
+    },
+    "key_BINDER": {
+      "id": "371dbfd7-86af-4c21-a2ed-3a1794816499",
+      "principalId": "5957f5aa-60c4-4456-9c1e-30b199e073bd",
+      "spaceId": "175af2a7-9fec-4f15-89c1-b5f83e1c9194",
+      "credentialKind": "SERVICE_ACCOUNT",
+      "platformActor": "joint-29094d2317894b0b-binder",
+      "keyRef": "env:AGENT_SECRET_JOINT_29094D231789_BINDER"
+    },
+    "key_TEMP_READ": {
+      "id": "65617d12-d87f-4dca-91c2-dafaa8bbc0c6",
+      "principalId": "114f9101-34c7-4da7-9ddd-c146de432f1c",
+      "spaceId": "175af2a7-9fec-4f15-89c1-b5f83e1c9194",
+      "credentialKind": "SERVICE_ACCOUNT",
+      "platformActor": "joint-29094d2317894b0b-temp_read",
+      "keyRef": "env:AGENT_SECRET_JOINT_29094D231789_TEMP_READ"
+    },
+    "key_TEMP_BINDER": {
+      "id": "6a348c9b-6209-4848-81b1-8fa08bbd55b3",
+      "principalId": "e8b0f8a0-d4bf-4548-bb19-24c7bd2ab83e",
+      "spaceId": "175af2a7-9fec-4f15-89c1-b5f83e1c9194",
+      "credentialKind": "SERVICE_ACCOUNT",
+      "platformActor": "joint-29094d2317894b0b-temp_binder",
+      "keyRef": "env:AGENT_SECRET_JOINT_29094D231789_TEMP_BINDER"
+    },
+    "key_CONSUMER": {
+      "id": "e0e1ed8c-931f-4901-86e9-70ac032934cd",
+      "principalId": "c9065279-3f5f-42d7-ba26-adb6594d9b05",
+      "spaceId": "175af2a7-9fec-4f15-89c1-b5f83e1c9194",
+      "credentialKind": "PLATFORM_ACTOR",
+      "platformActor": "joint-29094d2317894b0b-consumer",
+      "keyRef": "env:AGENT_SECRET_JOINT_29094D231789_CONSUMER"
+    },
+    "key_TEMP_CONSUMER": {
+      "id": "1fae7485-896f-46cc-ab61-d6ab20cd1b12",
+      "principalId": "52728fc2-3655-446f-b1d4-3658ffe916d7",
+      "spaceId": "175af2a7-9fec-4f15-89c1-b5f83e1c9194",
+      "credentialKind": "PLATFORM_ACTOR",
+      "platformActor": "joint-29094d2317894b0b-temp_consumer",
+      "keyRef": "env:AGENT_SECRET_JOINT_29094D231789_TEMP_CONSUMER"
+    },
+    "MAIN_binder_role": {
+      "id": "5957f5aa-60c4-4456-9c1e-30b199e073bd",
+      "revision": 1
+    },
+    "TEMP_binder_role": {
+      "id": "e8b0f8a0-d4bf-4548-bb19-24c7bd2ab83e",
+      "revision": 1
+    }
+  },
+  "resources": {
+    "spaceId": "175af2a7-9fec-4f15-89c1-b5f83e1c9194",
+    "spaceCode": "joint-29094d2317894b0b-a",
+    "releaseId": "55ee7566-b3a8-488d-bff9-86d515cbb4ed",
+    "replacementReleaseId": "233466e3-03bb-4e64-ac15-58170d350511",
+    "endpointId": "1dfff24a-bf50-4353-b461-ce09e7477b87",
+    "replacementEndpointId": "421e0024-8434-4db6-ad00-c5320edc92a4",
+    "opCode": "joint_list",
+    "readCredentialId": "cc829889-7136-40b5-9730-814fd19e16ca",
+    "binderCredentialId": "371dbfd7-86af-4c21-a2ed-3a1794816499",
+    "consumerCredentialId": "e0e1ed8c-931f-4901-86e9-70ac032934cd",
+    "readKeyRef": "env:AGENT_SECRET_JOINT_29094D231789_READ",
+    "binderKeyRef": "env:AGENT_SECRET_JOINT_29094D231789_BINDER",
+    "consumerKeyRef": "env:AGENT_SECRET_JOINT_29094D231789_CONSUMER",
+    "revocationFixtures": {
+      "readCredentialId": "65617d12-d87f-4dca-91c2-dafaa8bbc0c6",
+      "binderCredentialId": "6a348c9b-6209-4848-81b1-8fa08bbd55b3",
+      "consumerCredentialId": "1fae7485-896f-46cc-ab61-d6ab20cd1b12",
+      "readKeyRef": "env:AGENT_SECRET_JOINT_29094D231789_TEMP_READ",
+      "binderKeyRef": "env:AGENT_SECRET_JOINT_29094D231789_TEMP_BINDER",
+      "consumerKeyRef": "env:AGENT_SECRET_JOINT_29094D231789_TEMP_CONSUMER",
+      "readPrincipalId": "114f9101-34c7-4da7-9ddd-c146de432f1c",
+      "binderPrincipalId": "e8b0f8a0-d4bf-4548-bb19-24c7bd2ab83e",
+      "consumerPrincipalId": "52728fc2-3655-446f-b1d4-3658ffe916d7"
+    },
+    "isolationFixtures": {
+      "spaceId": "2e9e29c8-ac71-4b36-9b40-90132ee783df",
+      "spaceCode": "joint-29094d2317894b0b-b",
+      "releaseId": "a8569baa-766b-44fe-be5d-12e508868ec2",
+      "endpointId": "3b2de11f-e58a-48a9-b8b2-62b9b64633c7",
+      "opCode": "joint_list"
+    }
+  },
+  "pending": null,
+  "stage": "ONTOLOGY_READY",
+  "complete": false,
+  "lastError": null
+}
