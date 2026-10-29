@@ -21,6 +21,8 @@ class PortalRunEventsLifecycleTest {
     static PortalEventsResponse heldResponse(PortalRunEventsService service){try{var field=PortalRunEventsService.class.getDeclaredField("owners");field.setAccessible(true);var owner=((Set<?>)field.get(service)).iterator().next();var response=owner.getClass().getDeclaredField("response");response.setAccessible(true);return (PortalEventsResponse)response.get(owner);}catch(ReflectiveOperationException failure){throw new AssertionError(failure);}}
     static Future<HttpResponse<String>> request(ExecutorService caller,ServletWebServerApplicationContext server,String run,String ticket){return caller.submit(()->PortalRunEventsHttpTest.request(server,run,ticket,""));}
     static int availableFrames(ChunkBus bus)throws Exception{var leases=new ArrayList<AutoCloseable>();try{AutoCloseable l;while((l=bus.reservePortalFrame())!=null)leases.add(l);return leases.size();}finally{for(var l:leases)l.close();}}
+    // owners.remove occurs after the actual reader/frame/slot finally, unlike complete's return counter.
+    static int actualOwnerCount(PortalRunEventsService service){try{var field=PortalRunEventsService.class.getDeclaredField("owners");field.setAccessible(true);return ((Set<?>)field.get(service)).size();}catch(ReflectiveOperationException failure){throw new AssertionError(failure);}}
     @Test void invalidatedBetweenFreshReadAndConsumeEntryRetainsBothOwnersThroughComplete()throws Exception{guardBoundaryOwners(false);}
     @Test void invalidatedAfterCallbackBeforeFinalGuardRetainsBothOwnersThroughComplete()throws Exception{guardBoundaryOwners(true);}
     static void guardBoundaryOwners(boolean afterCallback)throws Exception{
@@ -106,12 +108,12 @@ class PortalRunEventsLifecycleTest {
                 var bus=server.getBean(ChunkBus.class);var first=request(callers,server,b.publicId(),ticket);var second=request(callers,server,b.publicId(),ticket);entered(h);
                 assertThatThrownBy(()->server.getBean(RunEventReader.class).readNext(fresh,0)).isInstanceOfSatisfying(RunEventReader.CapacityFailure.class,e->assertThat(e.dimension()).isEqualTo("WORKSPACE"));
                 assertThatThrownBy(()->bus.subscribe(100)).isInstanceOf(PlatformException.class);assertThat(availableFrames(bus)).isEqualTo(60);
-                await(()->h.timeouts.get()>0&&h.notifications.get()>0);server.getBean(PortalRunEventsService.class).close();
+                await(()->h.timeouts.get()>0&&h.notifications.get()>0);var service=server.getBean(PortalRunEventsService.class);service.close();
                 assertThatThrownBy(()->server.getBean(RunEventReader.class).readNext(fresh,0)).isInstanceOf(RunEventReader.CapacityFailure.class);assertThat(availableFrames(bus)).isEqualTo(60);assertThat(h.writes).hasValue(0);
-                h.release.countDown();await(()->h.exits.get()>=1);
+                h.release.countDown();await(()->h.exits.get()>=1&&actualOwnerCount(service)==1);
                 try(var one=server.getBean(RunEventReader.class).readNext(fresh,0).orElseThrow()){assertThatThrownBy(()->server.getBean(RunEventReader.class).readNext(fresh,0)).isInstanceOf(RunEventReader.CapacityFailure.class);}
                 assertThat(availableFrames(bus)).isEqualTo(61);
-                h.secondRelease.countDown();first.get(4,TimeUnit.SECONDS);second.get(4,TimeUnit.SECONDS);await(()->h.exits.get()==2);
+                h.secondRelease.countDown();first.get(4,TimeUnit.SECONDS);second.get(4,TimeUnit.SECONDS);await(()->h.exits.get()==2&&actualOwnerCount(service)==0);
                 assertThat(availableFrames(bus)).isEqualTo(62);try(var one=bus.subscribe(100);var two=bus.subscribe(101)){}
             }finally{h.release.countDown();h.secondRelease.countDown();PortalRunEventsHttpTest.hooks=null;}
         }

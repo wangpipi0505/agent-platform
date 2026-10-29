@@ -1,0 +1,1230 @@
+{
+  "schema": "EX27-SSE-FULL-EXACT-REASON-PROOF-v1",
+  "sealed": true,
+  "actualAfter": ".local/ex27-v222-recovery/sse-owners-full-933-20261029-01",
+  "plannedAfterRun": ".local/ex27-v222-recovery/sse-owners-full-933-20261029-01",
+  "baselineRun": "docs/evidence/2026-10-28-EX-04/collector/runs/full-engine-20261029-1124",
+  "outputDirectory": ".local/ex27-v222-recovery/sse-owners-full-933-20261029-01-reason-proof",
+  "preparedOnly": false,
+  "afterEvidencePending": false,
+  "derivationExecuted": false,
+  "preparedRunnerSha256": "6D8928936C53F3B24F7D5AD1F12DF26F335F1F5D63531AEEDB9B5B2FED8DE717",
+  "referenceDeriver": "docs/evidence/2026-10-28-EX-04/collector/derive-engine-representation-proof.ps1",
+  "referenceDeriverSha256": "E84BD8929CDC20F559A3700E220DE2B6490547DB8D2D9E6F3C335CD884EFC0EF",
+  "copiedVerbatimFunctions": [
+    "Read-FieldText",
+    "Analyze-ExactField",
+    "Check-JointIdentityRelations"
+  ],
+  "reportReader": "docs/evidence/2026-10-28-EX-04/collector/full-report-records.ps1",
+  "rules": [
+    {
+      "classname": "cn.agentplatform.engine.infra.EngineContextPostgresTest",
+      "method": "actualMvcTimeoutLeavesRoomForTheFiftyFiveSecondObservationWindow",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.engine.infra.EngineContextPostgresTest",
+      "category": "SPRING_CONTEXT_OBJECT_IDENTITY",
+      "messageTokens": 13,
+      "detailTokens": 13,
+      "status": "error",
+      "exceptionType": "java.lang.IllegalStateException",
+      "messagePrefixes": [
+        "WebMergedContextConfiguration@",
+        "ImportsContextCustomizer@",
+        "org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@",
+        "org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@",
+        "org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@",
+        "org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@",
+        "org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@",
+        "org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@",
+        "org.springframework.test.context.support.DynamicPropertiesContextCustomizer@",
+        "org.springframework.boot.test.context.SpringBootTestAnnotation@"
+      ],
+      "detailPrefixes": [
+        "WebMergedContextConfiguration@",
+        "ImportsContextCustomizer@",
+        "org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@",
+        "org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@",
+        "org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@",
+        "org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@",
+        "org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@",
+        "org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@",
+        "org.springframework.test.context.support.DynamicPropertiesContextCustomizer@",
+        "org.springframework.boot.test.context.SpringBootTestAnnotation@"
+      ],
+      "beforeXml": "xml/TEST-cn.agentplatform.engine.infra.EngineContextPostgresTest.xml",
+      "afterXml": "xml/TEST-cn.agentplatform.engine.infra.EngineContextPostgresTest.xml",
+      "beforeMessageSha256": "1B91A1C9CA87D86625430D8988A12084B37C168DEEC3038B1748DECEAD4D69C2",
+      "afterMessageSha256": "8B8A5A300E40D2525E64F5F63C4AE3E463D0343482B1A9F2B27483D156EEF212",
+      "beforeDetailSha256": "3D0A527D861B3597789A8B432C0E911C9A7928F1C4A9BEA283F40CF248B4E7A3",
+      "afterDetailSha256": "33B9EB43E685CB2270C28D3712F44F0A7C8A7319DAC18087AC392F0217810C32"
+    },
+    {
+      "classname": "cn.agentplatform.engine.infra.EngineContextPostgresTest",
+      "method": "repositoryProxyAndSchedulerUseRealInitializedJdbc",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.engine.infra.EngineContextPostgresTest",
+      "category": "SPRING_CONTEXT_OBJECT_IDENTITY",
+      "messageTokens": 13,
+      "detailTokens": 13,
+      "status": "error",
+      "exceptionType": "java.lang.IllegalStateException",
+      "messagePrefixes": [
+        "WebMergedContextConfiguration@",
+        "ImportsContextCustomizer@",
+        "org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@",
+        "org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@",
+        "org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@",
+        "org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@",
+        "org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@",
+        "org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@",
+        "org.springframework.test.context.support.DynamicPropertiesContextCustomizer@",
+        "org.springframework.boot.test.context.SpringBootTestAnnotation@"
+      ],
+      "detailPrefixes": [
+        "WebMergedContextConfiguration@",
+        "ImportsContextCustomizer@",
+        "org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@",
+        "org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@",
+        "org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@",
+        "org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@",
+        "org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@",
+        "org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@",
+        "org.springframework.test.context.support.DynamicPropertiesContextCustomizer@",
+        "org.springframework.boot.test.context.SpringBootTestAnnotation@"
+      ],
+      "beforeXml": "xml/TEST-cn.agentplatform.engine.infra.EngineContextPostgresTest.xml",
+      "afterXml": "xml/TEST-cn.agentplatform.engine.infra.EngineContextPostgresTest.xml",
+      "beforeMessageSha256": "1A310AC263B05E346999DE24F520CBB9D0A2417B92C5326C0322997E66DABDE5",
+      "afterMessageSha256": "D8EBCD73DE3691900C81373CE4A56544387041C41B9158432E1F3AB59CD7D7B1",
+      "beforeDetailSha256": "DBDBB86030BCB25A52061983D3AC47C8057075A6B65311CF20A161FB613C2F00",
+      "afterDetailSha256": "0B3E974BCBF71BC0E87CD88F2B70667C9EA39353B8E52FB97E1DDC81EA05514E"
+    },
+    {
+      "classname": "cn.agentplatform.engine.infra.RunAdmissionHttpTest",
+      "method": "acceptedRequestIdRemainsReadableAtCapacityAndConflictStillConflicts",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.engine.infra.RunAdmissionHttpTest",
+      "category": "SPRING_CONTEXT_OBJECT_IDENTITY",
+      "messageTokens": 12,
+      "detailTokens": 12,
+      "status": "error",
+      "exceptionType": "java.lang.IllegalStateException",
+      "messagePrefixes": [
+        "WebMergedContextConfiguration@",
+        "org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@",
+        "org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@",
+        "org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@",
+        "org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@",
+        "org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@",
+        "org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@",
+        "org.springframework.test.context.support.DynamicPropertiesContextCustomizer@",
+        "org.springframework.boot.test.context.SpringBootTestAnnotation@"
+      ],
+      "detailPrefixes": [
+        "WebMergedContextConfiguration@",
+        "org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@",
+        "org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@",
+        "org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@",
+        "org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@",
+        "org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@",
+        "org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@",
+        "org.springframework.test.context.support.DynamicPropertiesContextCustomizer@",
+        "org.springframework.boot.test.context.SpringBootTestAnnotation@"
+      ],
+      "beforeXml": "xml/TEST-cn.agentplatform.engine.infra.RunAdmissionHttpTest.xml",
+      "afterXml": "xml/TEST-cn.agentplatform.engine.infra.RunAdmissionHttpTest.xml",
+      "beforeMessageSha256": "FF4F7D7867A51EBB952E5C2322C7C0B7A72E46EB7A5976870EFE377892CFC26F",
+      "afterMessageSha256": "9B6489694907CA0501FB8AD72A93CD0E9E6B2AE9F5A969570DE9E90A65A633B6",
+      "beforeDetailSha256": "98ACC4C754E4AEB7E692CBAB764F196B4AE1EFEBDE58FF0D3AB06E83CD98289C",
+      "afterDetailSha256": "5195AD159472EC06FCB10A042B7869DC70EBA4FA10F6905E614EB1674A8F8A47"
+    },
+    {
+      "classname": "cn.agentplatform.engine.infra.RunAdmissionHttpTest",
+      "method": "drainingReturns503RetryAfterButAcceptedRunStillReads",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.engine.infra.RunAdmissionHttpTest",
+      "category": "SPRING_CONTEXT_OBJECT_IDENTITY",
+      "messageTokens": 12,
+      "detailTokens": 12,
+      "status": "error",
+      "exceptionType": "java.lang.IllegalStateException",
+      "messagePrefixes": [
+        "WebMergedContextConfiguration@",
+        "org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@",
+        "org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@",
+        "org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@",
+        "org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@",
+        "org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@",
+        "org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@",
+        "org.springframework.test.context.support.DynamicPropertiesContextCustomizer@",
+        "org.springframework.boot.test.context.SpringBootTestAnnotation@"
+      ],
+      "detailPrefixes": [
+        "WebMergedContextConfiguration@",
+        "org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@",
+        "org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@",
+        "org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@",
+        "org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@",
+        "org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@",
+        "org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@",
+        "org.springframework.test.context.support.DynamicPropertiesContextCustomizer@",
+        "org.springframework.boot.test.context.SpringBootTestAnnotation@"
+      ],
+      "beforeXml": "xml/TEST-cn.agentplatform.engine.infra.RunAdmissionHttpTest.xml",
+      "afterXml": "xml/TEST-cn.agentplatform.engine.infra.RunAdmissionHttpTest.xml",
+      "beforeMessageSha256": "FF4F7D7867A51EBB952E5C2322C7C0B7A72E46EB7A5976870EFE377892CFC26F",
+      "afterMessageSha256": "9B6489694907CA0501FB8AD72A93CD0E9E6B2AE9F5A969570DE9E90A65A633B6",
+      "beforeDetailSha256": "98ACC4C754E4AEB7E692CBAB764F196B4AE1EFEBDE58FF0D3AB06E83CD98289C",
+      "afterDetailSha256": "5195AD159472EC06FCB10A042B7869DC70EBA4FA10F6905E614EB1674A8F8A47"
+    },
+    {
+      "classname": "cn.agentplatform.engine.infra.RunAdmissionHttpTest",
+      "method": "fullPoolRejectsNewDebugAndFormalBeforeAnyRunOrDependencyRead",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.engine.infra.RunAdmissionHttpTest",
+      "category": "SPRING_CONTEXT_OBJECT_IDENTITY",
+      "messageTokens": 12,
+      "detailTokens": 12,
+      "status": "error",
+      "exceptionType": "java.lang.IllegalStateException",
+      "messagePrefixes": [
+        "WebMergedContextConfiguration@",
+        "org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@",
+        "org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@",
+        "org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@",
+        "org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@",
+        "org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@",
+        "org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@",
+        "org.springframework.test.context.support.DynamicPropertiesContextCustomizer@",
+        "org.springframework.boot.test.context.SpringBootTestAnnotation@"
+      ],
+      "detailPrefixes": [
+        "WebMergedContextConfiguration@",
+        "org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@",
+        "org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@",
+        "org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@",
+        "org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@",
+        "org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@",
+        "org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@",
+        "org.springframework.test.context.support.DynamicPropertiesContextCustomizer@",
+        "org.springframework.boot.test.context.SpringBootTestAnnotation@"
+      ],
+      "beforeXml": "xml/TEST-cn.agentplatform.engine.infra.RunAdmissionHttpTest.xml",
+      "afterXml": "xml/TEST-cn.agentplatform.engine.infra.RunAdmissionHttpTest.xml",
+      "beforeMessageSha256": "FF4F7D7867A51EBB952E5C2322C7C0B7A72E46EB7A5976870EFE377892CFC26F",
+      "afterMessageSha256": "9B6489694907CA0501FB8AD72A93CD0E9E6B2AE9F5A969570DE9E90A65A633B6",
+      "beforeDetailSha256": "98ACC4C754E4AEB7E692CBAB764F196B4AE1EFEBDE58FF0D3AB06E83CD98289C",
+      "afterDetailSha256": "5195AD159472EC06FCB10A042B7869DC70EBA4FA10F6905E614EB1674A8F8A47"
+    },
+    {
+      "classname": "cn.agentplatform.engine.infra.RunAdmissionHttpTest",
+      "method": "newSessionTurnIsRejectedBeforeReservationAndNextTurnChanges",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.engine.infra.RunAdmissionHttpTest",
+      "category": "SPRING_CONTEXT_OBJECT_IDENTITY",
+      "messageTokens": 12,
+      "detailTokens": 12,
+      "status": "error",
+      "exceptionType": "java.lang.IllegalStateException",
+      "messagePrefixes": [
+        "WebMergedContextConfiguration@",
+        "org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@",
+        "org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@",
+        "org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@",
+        "org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@",
+        "org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@",
+        "org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@",
+        "org.springframework.test.context.support.DynamicPropertiesContextCustomizer@",
+        "org.springframework.boot.test.context.SpringBootTestAnnotation@"
+      ],
+      "detailPrefixes": [
+        "WebMergedContextConfiguration@",
+        "org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@",
+        "org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@",
+        "org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@",
+        "org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@",
+        "org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@",
+        "org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@",
+        "org.springframework.test.context.support.DynamicPropertiesContextCustomizer@",
+        "org.springframework.boot.test.context.SpringBootTestAnnotation@"
+      ],
+      "beforeXml": "xml/TEST-cn.agentplatform.engine.infra.RunAdmissionHttpTest.xml",
+      "afterXml": "xml/TEST-cn.agentplatform.engine.infra.RunAdmissionHttpTest.xml",
+      "beforeMessageSha256": "FF4F7D7867A51EBB952E5C2322C7C0B7A72E46EB7A5976870EFE377892CFC26F",
+      "afterMessageSha256": "9B6489694907CA0501FB8AD72A93CD0E9E6B2AE9F5A969570DE9E90A65A633B6",
+      "beforeDetailSha256": "98ACC4C754E4AEB7E692CBAB764F196B4AE1EFEBDE58FF0D3AB06E83CD98289C",
+      "afterDetailSha256": "5195AD159472EC06FCB10A042B7869DC70EBA4FA10F6905E614EB1674A8F8A47"
+    },
+    {
+      "classname": "cn.agentplatform.engine.infra.RunAdmissionHttpTest",
+      "method": "oldAcceptedEmptySessionReservationCanRecoverAtCapacity",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.engine.infra.RunAdmissionHttpTest",
+      "category": "SPRING_CONTEXT_OBJECT_IDENTITY",
+      "messageTokens": 12,
+      "detailTokens": 12,
+      "status": "error",
+      "exceptionType": "java.lang.IllegalStateException",
+      "messagePrefixes": [
+        "WebMergedContextConfiguration@",
+        "org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@",
+        "org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@",
+        "org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@",
+        "org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@",
+        "org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@",
+        "org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@",
+        "org.springframework.test.context.support.DynamicPropertiesContextCustomizer@",
+        "org.springframework.boot.test.context.SpringBootTestAnnotation@"
+      ],
+      "detailPrefixes": [
+        "WebMergedContextConfiguration@",
+        "org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@",
+        "org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@",
+        "org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@",
+        "org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@",
+        "org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@",
+        "org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@",
+        "org.springframework.test.context.support.DynamicPropertiesContextCustomizer@",
+        "org.springframework.boot.test.context.SpringBootTestAnnotation@"
+      ],
+      "beforeXml": "xml/TEST-cn.agentplatform.engine.infra.RunAdmissionHttpTest.xml",
+      "afterXml": "xml/TEST-cn.agentplatform.engine.infra.RunAdmissionHttpTest.xml",
+      "beforeMessageSha256": "88BECA16C29606B94574CCB908146F99C9190AE320A8B6B58961E00516B00391",
+      "afterMessageSha256": "BA6C7C163B6432E8F52FCB6429CF19A6BCAF308A7B0E9D79198138B0F11EC57D",
+      "beforeDetailSha256": "7BBC57853FCE97D612A50DA42BEB3BD129614948F86F1934F07450B0F326041E",
+      "afterDetailSha256": "0E81D71EA9F286F625883AA127EB0017472D37715FA414E7AC623825BECF8152"
+    },
+    {
+      "classname": "cn.agentplatform.engine.infra.RunObservationMetadataHttpPostgresTest",
+      "method": "actualHttpProjectsSevenFieldsFromReadOnlyRepeatableReadWithoutPayload",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.engine.infra.RunObservationMetadataHttpPostgresTest",
+      "category": "TEST_CONNECTION_IDENTITY_HASHCODE",
+      "messageTokens": 4,
+      "detailTokens": 4,
+      "status": "failure",
+      "exceptionType": "java.lang.AssertionError",
+      "messagePrefixes": [
+        "connection=",
+        "connection=",
+        "connection=",
+        "connection="
+      ],
+      "detailPrefixes": [
+        "connection=",
+        "connection=",
+        "connection=",
+        "connection="
+      ],
+      "beforeXml": "xml/TEST-cn.agentplatform.engine.infra.RunObservationMetadataHttpPostgresTest.xml",
+      "afterXml": "xml/TEST-cn.agentplatform.engine.infra.RunObservationMetadataHttpPostgresTest.xml",
+      "beforeMessageSha256": "95D3DEE5ECC9A3091C52B2418291D57A96CAE13816CEBDD678245A9F5DFC18B6",
+      "afterMessageSha256": "2B3E574A849CDB4CB96D63FF22B82032214267EB2484E4E39F7E59D2F3E642B8",
+      "beforeDetailSha256": "135B3330C949E07DE3B2571F784F2D09D6051EA9D1EE95B18417DDB92F7CEAF7",
+      "afterDetailSha256": "1A7C65E8E4AC8CAFFF51F13C6647A0BB0FC93442B2D17CD24C5438C997AB0731"
+    },
+    {
+      "classname": "cn.agentplatform.engine.infra.RunObservationMetadataHttpPostgresTest",
+      "method": "actualInvalidDigestAndRootKindInPostgresAreDeniedWithoutReadingPayload",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.engine.infra.RunObservationMetadataHttpPostgresTest",
+      "category": "TEST_CONNECTION_IDENTITY_HASHCODE",
+      "messageTokens": 3,
+      "detailTokens": 3,
+      "status": "failure",
+      "exceptionType": "java.lang.AssertionError",
+      "messagePrefixes": [
+        "connection=",
+        "connection=",
+        "connection="
+      ],
+      "detailPrefixes": [
+        "connection=",
+        "connection=",
+        "connection="
+      ],
+      "beforeXml": "xml/TEST-cn.agentplatform.engine.infra.RunObservationMetadataHttpPostgresTest.xml",
+      "afterXml": "xml/TEST-cn.agentplatform.engine.infra.RunObservationMetadataHttpPostgresTest.xml",
+      "beforeMessageSha256": "BDAB509ED7C69C2A490FB04E685F07FF956730F370F3B4BCB60F9047D6B4F9ED",
+      "afterMessageSha256": "25A04F9564C484CA0AB6726E7F0720729B6B861E09AA91C4C11C637D2AFAC59C",
+      "beforeDetailSha256": "89579CFE0DCE875B3948D06B6327F07B6988184EA643023E01039B8D1DDF7F87",
+      "afterDetailSha256": "FD4DB839CBE3C47D38498DC56D2D859CBF0BF89A3367AECCCA676C2C4CB9473D"
+    },
+    {
+      "classname": "cn.agentplatform.engine.infra.RunObservationMetadataHttpPostgresTest",
+      "method": "damagedControlMetadataAndMissingOrInconsistentRootManifestsFailClosed",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.engine.infra.RunObservationMetadataHttpPostgresTest",
+      "category": "TEST_CONNECTION_IDENTITY_HASHCODE",
+      "messageTokens": 4,
+      "detailTokens": 4,
+      "status": "failure",
+      "exceptionType": "java.lang.AssertionError",
+      "messagePrefixes": [
+        "connection=",
+        "connection=",
+        "connection=",
+        "connection="
+      ],
+      "detailPrefixes": [
+        "connection=",
+        "connection=",
+        "connection=",
+        "connection="
+      ],
+      "beforeXml": "xml/TEST-cn.agentplatform.engine.infra.RunObservationMetadataHttpPostgresTest.xml",
+      "afterXml": "xml/TEST-cn.agentplatform.engine.infra.RunObservationMetadataHttpPostgresTest.xml",
+      "beforeMessageSha256": "E065E717761863B224C048F16236BC0873B90CB5993FD089E85011D8C780B249",
+      "afterMessageSha256": "F0A1103F1B45362B6E84800EE5B632225BC718AC8B67325FE526690FB4F39872",
+      "beforeDetailSha256": "A2002DFA6AA89B8CD537BFD60956C95D97500750B971C5DFB98E2FE7A1F46597",
+      "afterDetailSha256": "3F17C6366E6F518310E42F0B263B13445336052DA95F7B253B77AC5C524E8CF6"
+    },
+    {
+      "classname": "cn.agentplatform.engine.infra.RunObservationMetadataHttpPostgresTest",
+      "method": "localExpiryOrClosedFrameAfterReadAndCommitPreventsAValidProjection",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.engine.infra.RunObservationMetadataHttpPostgresTest",
+      "category": "TEST_CONNECTION_IDENTITY_HASHCODE",
+      "messageTokens": 4,
+      "detailTokens": 4,
+      "status": "failure",
+      "exceptionType": "java.lang.AssertionError",
+      "messagePrefixes": [
+        "connection=",
+        "connection=",
+        "connection=",
+        "connection="
+      ],
+      "detailPrefixes": [
+        "connection=",
+        "connection=",
+        "connection=",
+        "connection="
+      ],
+      "beforeXml": "xml/TEST-cn.agentplatform.engine.infra.RunObservationMetadataHttpPostgresTest.xml",
+      "afterXml": "xml/TEST-cn.agentplatform.engine.infra.RunObservationMetadataHttpPostgresTest.xml",
+      "beforeMessageSha256": "B419ED6313D50F1EA8E13F4D2BC58DA68B1791FBB2D2318E4AC6833EB7AA01DF",
+      "afterMessageSha256": "F0A1BE67672DF3060A2E514631E37BA099ACC11EF1A3E6C1BD05E82578AB8582",
+      "beforeDetailSha256": "23B8DE8440B00D9364A21A863774DF9E85845A3B6CA21A1B99DC278D1F41CE98",
+      "afterDetailSha256": "E36080A8DEA3372C93A2D29DEA6DCA940D8E971114F89CFFFB7FFE35ADF4AEFB"
+    },
+    {
+      "classname": "cn.agentplatform.engine.infra.RunObservationMetadataHttpPostgresTest",
+      "method": "longVersionNumbersRemainPinnedWhenLaterRunsAreAccepted",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.engine.infra.RunObservationMetadataHttpPostgresTest",
+      "category": "TEST_CONNECTION_IDENTITY_HASHCODE",
+      "messageTokens": 4,
+      "detailTokens": 4,
+      "status": "failure",
+      "exceptionType": "java.lang.AssertionError",
+      "messagePrefixes": [
+        "connection=",
+        "connection=",
+        "connection=",
+        "connection="
+      ],
+      "detailPrefixes": [
+        "connection=",
+        "connection=",
+        "connection=",
+        "connection="
+      ],
+      "beforeXml": "xml/TEST-cn.agentplatform.engine.infra.RunObservationMetadataHttpPostgresTest.xml",
+      "afterXml": "xml/TEST-cn.agentplatform.engine.infra.RunObservationMetadataHttpPostgresTest.xml",
+      "beforeMessageSha256": "FD562E64BB4D16B16ACEB430E49CF3D1B942B6A8DE66AD9BC9C740C177902C2C",
+      "afterMessageSha256": "A9E6789160490C5BD9BC4ADA4E16FBBB641A4ADD75DE578AB024E229C14D9AAE",
+      "beforeDetailSha256": "4618BC49B20994E0AB6298AE420163CFB8E739743200AC5E77542B522515CA91",
+      "afterDetailSha256": "99FF8B761B54967C62373F13E5E6059B0FF43BE0E166D5D64E6B62E7AF3DDDB0"
+    },
+    {
+      "classname": "cn.agentplatform.engine.infra.RunObservationMetadataHttpPostgresTest",
+      "method": "notFoundAndOtherOwnerHaveTheSame404WhileOwnedLegacyHas403",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.engine.infra.RunObservationMetadataHttpPostgresTest",
+      "category": "TEST_CONNECTION_IDENTITY_HASHCODE",
+      "messageTokens": 2,
+      "detailTokens": 2,
+      "status": "failure",
+      "exceptionType": "java.lang.AssertionError",
+      "messagePrefixes": [
+        "connection=",
+        "connection="
+      ],
+      "detailPrefixes": [
+        "connection=",
+        "connection="
+      ],
+      "beforeXml": "xml/TEST-cn.agentplatform.engine.infra.RunObservationMetadataHttpPostgresTest.xml",
+      "afterXml": "xml/TEST-cn.agentplatform.engine.infra.RunObservationMetadataHttpPostgresTest.xml",
+      "beforeMessageSha256": "356C1C0E4AD5D157D655457C802F9C48DE061C59506461BB8860EE93B2449414",
+      "afterMessageSha256": "BCC3E1924002139988624A8ADC113312D9507169037675BF6D5E4BDB891E2CDB",
+      "beforeDetailSha256": "4FC494A54F1365F5C36D5D9586A742D190C26B17F75F4DAA956992395F094C42",
+      "afterDetailSha256": "4AF5D91F3F22472DCBEE8D39C7F9F7F4F8A2037CF0CEDA719AFA734D10C68179"
+    },
+    {
+      "classname": "cn.agentplatform.engine.infra.RunObservationMetadataHttpPostgresTest",
+      "method": "selfConsistentLegalRootDigestReplacementIsTheDocumentedStorageTrustBoundary",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.engine.infra.RunObservationMetadataHttpPostgresTest",
+      "category": "TEST_CONNECTION_IDENTITY_HASHCODE",
+      "messageTokens": 4,
+      "detailTokens": 4,
+      "status": "failure",
+      "exceptionType": "java.lang.AssertionError",
+      "messagePrefixes": [
+        "connection=",
+        "connection=",
+        "connection=",
+        "connection="
+      ],
+      "detailPrefixes": [
+        "connection=",
+        "connection=",
+        "connection=",
+        "connection="
+      ],
+      "beforeXml": "xml/TEST-cn.agentplatform.engine.infra.RunObservationMetadataHttpPostgresTest.xml",
+      "afterXml": "xml/TEST-cn.agentplatform.engine.infra.RunObservationMetadataHttpPostgresTest.xml",
+      "beforeMessageSha256": "F54EAD4FD8D2AFC8BD3EDD6DFD1A9F30BACA97AC5679FC188D205D6E9E7657A9",
+      "afterMessageSha256": "69FEDFDA412440F3FF5031F19ECBA10082964B62CAEB5777975215740170C525",
+      "beforeDetailSha256": "B49C1A2B0FDA9A6C4D5B0097571D9D0048C6EB076E92BF4935DA62E51915102C",
+      "afterDetailSha256": "531DD2BD7B1EAF039DCA931585388F2B74873122E63A1C849079DA11ED2B7F94"
+    },
+    {
+      "classname": "cn.agentplatform.engine.infra.TestInputHttpTest",
+      "method": "boundsInputsAndPaginationAndRevalidatesChangedSchema",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.engine.infra.TestInputHttpTest",
+      "category": "SPRING_CONTEXT_OBJECT_IDENTITY",
+      "messageTokens": 12,
+      "detailTokens": 12,
+      "status": "error",
+      "exceptionType": "java.lang.IllegalStateException",
+      "messagePrefixes": [
+        "WebMergedContextConfiguration@",
+        "org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@",
+        "org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@",
+        "org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@",
+        "org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@",
+        "org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@",
+        "org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@",
+        "org.springframework.test.context.support.DynamicPropertiesContextCustomizer@",
+        "org.springframework.boot.test.context.SpringBootTestAnnotation@"
+      ],
+      "detailPrefixes": [
+        "WebMergedContextConfiguration@",
+        "org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@",
+        "org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@",
+        "org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@",
+        "org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@",
+        "org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@",
+        "org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@",
+        "org.springframework.test.context.support.DynamicPropertiesContextCustomizer@",
+        "org.springframework.boot.test.context.SpringBootTestAnnotation@"
+      ],
+      "beforeXml": "xml/TEST-cn.agentplatform.engine.infra.TestInputHttpTest.xml",
+      "afterXml": "xml/TEST-cn.agentplatform.engine.infra.TestInputHttpTest.xml",
+      "beforeMessageSha256": "0007BA2851CD110DBB1ABE0C65A8BED912E0113F4707A9748600C79B37CE9C3A",
+      "afterMessageSha256": "ED48F5333A3EB98D3C6E43DFC004D4871D901990E7944B8EBDC60A107CFA17F1",
+      "beforeDetailSha256": "B1B370C51D5D8F8EBEFBD7061EA91F543020303FC6C572786B2D3652C3E4433E",
+      "afterDetailSha256": "21B8B5D73A017DA43EE0ADC125134B1C9DAD71EF5ED5DB0B40E8D198969929EC"
+    },
+    {
+      "classname": "cn.agentplatform.engine.infra.TestInputHttpTest",
+      "method": "callerCannotOverrideFrozenInputsAndStaleRevisionCannotPromote",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.engine.infra.TestInputHttpTest",
+      "category": "SPRING_CONTEXT_OBJECT_IDENTITY",
+      "messageTokens": 12,
+      "detailTokens": 12,
+      "status": "error",
+      "exceptionType": "java.lang.IllegalStateException",
+      "messagePrefixes": [
+        "WebMergedContextConfiguration@",
+        "org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@",
+        "org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@",
+        "org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@",
+        "org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@",
+        "org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@",
+        "org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@",
+        "org.springframework.test.context.support.DynamicPropertiesContextCustomizer@",
+        "org.springframework.boot.test.context.SpringBootTestAnnotation@"
+      ],
+      "detailPrefixes": [
+        "WebMergedContextConfiguration@",
+        "org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@",
+        "org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@",
+        "org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@",
+        "org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@",
+        "org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@",
+        "org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@",
+        "org.springframework.test.context.support.DynamicPropertiesContextCustomizer@",
+        "org.springframework.boot.test.context.SpringBootTestAnnotation@"
+      ],
+      "beforeXml": "xml/TEST-cn.agentplatform.engine.infra.TestInputHttpTest.xml",
+      "afterXml": "xml/TEST-cn.agentplatform.engine.infra.TestInputHttpTest.xml",
+      "beforeMessageSha256": "0007BA2851CD110DBB1ABE0C65A8BED912E0113F4707A9748600C79B37CE9C3A",
+      "afterMessageSha256": "ED48F5333A3EB98D3C6E43DFC004D4871D901990E7944B8EBDC60A107CFA17F1",
+      "beforeDetailSha256": "B1B370C51D5D8F8EBEFBD7061EA91F543020303FC6C572786B2D3652C3E4433E",
+      "afterDetailSha256": "21B8B5D73A017DA43EE0ADC125134B1C9DAD71EF5ED5DB0B40E8D198969929EC"
+    },
+    {
+      "classname": "cn.agentplatform.engine.infra.TestInputHttpTest",
+      "method": "chatDeclarationsValidateRequiredTypeAndChangedReuse",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.engine.infra.TestInputHttpTest",
+      "category": "SPRING_CONTEXT_OBJECT_IDENTITY",
+      "messageTokens": 12,
+      "detailTokens": 12,
+      "status": "error",
+      "exceptionType": "java.lang.IllegalStateException",
+      "messagePrefixes": [
+        "WebMergedContextConfiguration@",
+        "org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@",
+        "org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@",
+        "org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@",
+        "org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@",
+        "org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@",
+        "org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@",
+        "org.springframework.test.context.support.DynamicPropertiesContextCustomizer@",
+        "org.springframework.boot.test.context.SpringBootTestAnnotation@"
+      ],
+      "detailPrefixes": [
+        "WebMergedContextConfiguration@",
+        "org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@",
+        "org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@",
+        "org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@",
+        "org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@",
+        "org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@",
+        "org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@",
+        "org.springframework.test.context.support.DynamicPropertiesContextCustomizer@",
+        "org.springframework.boot.test.context.SpringBootTestAnnotation@"
+      ],
+      "beforeXml": "xml/TEST-cn.agentplatform.engine.infra.TestInputHttpTest.xml",
+      "afterXml": "xml/TEST-cn.agentplatform.engine.infra.TestInputHttpTest.xml",
+      "beforeMessageSha256": "0007BA2851CD110DBB1ABE0C65A8BED912E0113F4707A9748600C79B37CE9C3A",
+      "afterMessageSha256": "ED48F5333A3EB98D3C6E43DFC004D4871D901990E7944B8EBDC60A107CFA17F1",
+      "beforeDetailSha256": "B1B370C51D5D8F8EBEFBD7061EA91F543020303FC6C572786B2D3652C3E4433E",
+      "afterDetailSha256": "21B8B5D73A017DA43EE0ADC125134B1C9DAD71EF5ED5DB0B40E8D198969929EC"
+    },
+    {
+      "classname": "cn.agentplatform.engine.infra.TestInputHttpTest",
+      "method": "declaredSchemaConstraintsNullAndDefaultsMatchStructuredInputPayloads",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.engine.infra.TestInputHttpTest",
+      "category": "SPRING_CONTEXT_OBJECT_IDENTITY",
+      "messageTokens": 12,
+      "detailTokens": 12,
+      "status": "error",
+      "exceptionType": "java.lang.IllegalStateException",
+      "messagePrefixes": [
+        "WebMergedContextConfiguration@",
+        "org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@",
+        "org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@",
+        "org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@",
+        "org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@",
+        "org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@",
+        "org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@",
+        "org.springframework.test.context.support.DynamicPropertiesContextCustomizer@",
+        "org.springframework.boot.test.context.SpringBootTestAnnotation@"
+      ],
+      "detailPrefixes": [
+        "WebMergedContextConfiguration@",
+        "org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@",
+        "org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@",
+        "org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@",
+        "org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@",
+        "org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@",
+        "org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@",
+        "org.springframework.test.context.support.DynamicPropertiesContextCustomizer@",
+        "org.springframework.boot.test.context.SpringBootTestAnnotation@"
+      ],
+      "beforeXml": "xml/TEST-cn.agentplatform.engine.infra.TestInputHttpTest.xml",
+      "afterXml": "xml/TEST-cn.agentplatform.engine.infra.TestInputHttpTest.xml",
+      "beforeMessageSha256": "0007BA2851CD110DBB1ABE0C65A8BED912E0113F4707A9748600C79B37CE9C3A",
+      "afterMessageSha256": "ED48F5333A3EB98D3C6E43DFC004D4871D901990E7944B8EBDC60A107CFA17F1",
+      "beforeDetailSha256": "B1B370C51D5D8F8EBEFBD7061EA91F543020303FC6C572786B2D3652C3E4433E",
+      "afterDetailSha256": "21B8B5D73A017DA43EE0ADC125134B1C9DAD71EF5ED5DB0B40E8D198969929EC"
+    },
+    {
+      "classname": "cn.agentplatform.engine.infra.TestInputHttpTest",
+      "method": "deniesOtherOwnerTenantAndMissingEditorIncludingAdmin",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.engine.infra.TestInputHttpTest",
+      "category": "SPRING_CONTEXT_OBJECT_IDENTITY",
+      "messageTokens": 12,
+      "detailTokens": 12,
+      "status": "error",
+      "exceptionType": "java.lang.IllegalStateException",
+      "messagePrefixes": [
+        "WebMergedContextConfiguration@",
+        "org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@",
+        "org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@",
+        "org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@",
+        "org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@",
+        "org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@",
+        "org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@",
+        "org.springframework.test.context.support.DynamicPropertiesContextCustomizer@",
+        "org.springframework.boot.test.context.SpringBootTestAnnotation@"
+      ],
+      "detailPrefixes": [
+        "WebMergedContextConfiguration@",
+        "org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@",
+        "org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@",
+        "org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@",
+        "org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@",
+        "org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@",
+        "org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@",
+        "org.springframework.test.context.support.DynamicPropertiesContextCustomizer@",
+        "org.springframework.boot.test.context.SpringBootTestAnnotation@"
+      ],
+      "beforeXml": "xml/TEST-cn.agentplatform.engine.infra.TestInputHttpTest.xml",
+      "afterXml": "xml/TEST-cn.agentplatform.engine.infra.TestInputHttpTest.xml",
+      "beforeMessageSha256": "0007BA2851CD110DBB1ABE0C65A8BED912E0113F4707A9748600C79B37CE9C3A",
+      "afterMessageSha256": "ED48F5333A3EB98D3C6E43DFC004D4871D901990E7944B8EBDC60A107CFA17F1",
+      "beforeDetailSha256": "B1B370C51D5D8F8EBEFBD7061EA91F543020303FC6C572786B2D3652C3E4433E",
+      "afterDetailSha256": "21B8B5D73A017DA43EE0ADC125134B1C9DAD71EF5ED5DB0B40E8D198969929EC"
+    },
+    {
+      "classname": "cn.agentplatform.engine.infra.TestInputHttpTest",
+      "method": "pagingIsBoundedStableAndDoesNotExposeInputsInMetadata",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.engine.infra.TestInputHttpTest",
+      "category": "SPRING_CONTEXT_OBJECT_IDENTITY",
+      "messageTokens": 12,
+      "detailTokens": 12,
+      "status": "error",
+      "exceptionType": "java.lang.IllegalStateException",
+      "messagePrefixes": [
+        "WebMergedContextConfiguration@",
+        "org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@",
+        "org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@",
+        "org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@",
+        "org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@",
+        "org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@",
+        "org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@",
+        "org.springframework.test.context.support.DynamicPropertiesContextCustomizer@",
+        "org.springframework.boot.test.context.SpringBootTestAnnotation@"
+      ],
+      "detailPrefixes": [
+        "WebMergedContextConfiguration@",
+        "org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@",
+        "org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@",
+        "org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@",
+        "org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@",
+        "org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@",
+        "org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@",
+        "org.springframework.test.context.support.DynamicPropertiesContextCustomizer@",
+        "org.springframework.boot.test.context.SpringBootTestAnnotation@"
+      ],
+      "beforeXml": "xml/TEST-cn.agentplatform.engine.infra.TestInputHttpTest.xml",
+      "afterXml": "xml/TEST-cn.agentplatform.engine.infra.TestInputHttpTest.xml",
+      "beforeMessageSha256": "0F3A00E55F28041DA103E818F21D8857187E292124A36F476A1A574C3D171E51",
+      "afterMessageSha256": "0AF826C06DF540E67E3915AF57B47BB03A4B10557A57D7CAFF7D09B2243318ED",
+      "beforeDetailSha256": "EE0C47B73FB83BEF4EB5B023280966715D534EFCEDF7994E26D92FCFF4807295",
+      "afterDetailSha256": "60B2AA998010D59A2BB4886289271AD6700E45F97FD4CC1978A209E5EFDE7C5A"
+    },
+    {
+      "classname": "cn.agentplatform.engine.infra.TestInputHttpTest",
+      "method": "parallelUpdatesHaveExactlyOneWinner",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.engine.infra.TestInputHttpTest",
+      "category": "SPRING_CONTEXT_OBJECT_IDENTITY",
+      "messageTokens": 12,
+      "detailTokens": 12,
+      "status": "error",
+      "exceptionType": "java.lang.IllegalStateException",
+      "messagePrefixes": [
+        "WebMergedContextConfiguration@",
+        "org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@",
+        "org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@",
+        "org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@",
+        "org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@",
+        "org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@",
+        "org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@",
+        "org.springframework.test.context.support.DynamicPropertiesContextCustomizer@",
+        "org.springframework.boot.test.context.SpringBootTestAnnotation@"
+      ],
+      "detailPrefixes": [
+        "WebMergedContextConfiguration@",
+        "org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@",
+        "org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@",
+        "org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@",
+        "org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@",
+        "org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@",
+        "org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@",
+        "org.springframework.test.context.support.DynamicPropertiesContextCustomizer@",
+        "org.springframework.boot.test.context.SpringBootTestAnnotation@"
+      ],
+      "beforeXml": "xml/TEST-cn.agentplatform.engine.infra.TestInputHttpTest.xml",
+      "afterXml": "xml/TEST-cn.agentplatform.engine.infra.TestInputHttpTest.xml",
+      "beforeMessageSha256": "0007BA2851CD110DBB1ABE0C65A8BED912E0113F4707A9748600C79B37CE9C3A",
+      "afterMessageSha256": "ED48F5333A3EB98D3C6E43DFC004D4871D901990E7944B8EBDC60A107CFA17F1",
+      "beforeDetailSha256": "B1B370C51D5D8F8EBEFBD7061EA91F543020303FC6C572786B2D3652C3E4433E",
+      "afterDetailSha256": "21B8B5D73A017DA43EE0ADC125134B1C9DAD71EF5ED5DB0B40E8D198969929EC"
+    },
+    {
+      "classname": "cn.agentplatform.engine.infra.TestInputHttpTest",
+      "method": "persistsAndCasProtectsAgainstLostUpdates",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.engine.infra.TestInputHttpTest",
+      "category": "SPRING_CONTEXT_OBJECT_IDENTITY",
+      "messageTokens": 12,
+      "detailTokens": 12,
+      "status": "error",
+      "exceptionType": "java.lang.IllegalStateException",
+      "messagePrefixes": [
+        "WebMergedContextConfiguration@",
+        "org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@",
+        "org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@",
+        "org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@",
+        "org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@",
+        "org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@",
+        "org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@",
+        "org.springframework.test.context.support.DynamicPropertiesContextCustomizer@",
+        "org.springframework.boot.test.context.SpringBootTestAnnotation@"
+      ],
+      "detailPrefixes": [
+        "WebMergedContextConfiguration@",
+        "org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@",
+        "org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@",
+        "org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@",
+        "org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@",
+        "org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@",
+        "org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@",
+        "org.springframework.test.context.support.DynamicPropertiesContextCustomizer@",
+        "org.springframework.boot.test.context.SpringBootTestAnnotation@"
+      ],
+      "beforeXml": "xml/TEST-cn.agentplatform.engine.infra.TestInputHttpTest.xml",
+      "afterXml": "xml/TEST-cn.agentplatform.engine.infra.TestInputHttpTest.xml",
+      "beforeMessageSha256": "0007BA2851CD110DBB1ABE0C65A8BED912E0113F4707A9748600C79B37CE9C3A",
+      "afterMessageSha256": "ED48F5333A3EB98D3C6E43DFC004D4871D901990E7944B8EBDC60A107CFA17F1",
+      "beforeDetailSha256": "B1B370C51D5D8F8EBEFBD7061EA91F543020303FC6C572786B2D3652C3E4433E",
+      "afterDetailSha256": "21B8B5D73A017DA43EE0ADC125134B1C9DAD71EF5ED5DB0B40E8D198969929EC"
+    },
+    {
+      "classname": "cn.agentplatform.engine.infra.TestInputHttpTest",
+      "method": "recoveryFreezesSourceAndTargetBeforeHttpAndRejectsDifferentRetry",
+      "display_name": "",
+      "suite_path": "cn.agentplatform.engine.infra.TestInputHttpTest",
+      "category": "SPRING_CONTEXT_OBJECT_IDENTITY",
+      "messageTokens": 12,
+      "detailTokens": 12,
+      "status": "error",
+      "exceptionType": "java.lang.IllegalStateException",
+      "messagePrefixes": [
+        "WebMergedContextConfiguration@",
+        "org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@",
+        "org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@",
+        "org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@",
+        "org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@",
+        "org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@",
+        "org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@",
+        "org.springframework.test.context.support.DynamicPropertiesContextCustomizer@",
+        "org.springframework.boot.test.context.SpringBootTestAnnotation@"
+      ],
+      "detailPrefixes": [
+        "WebMergedContextConfiguration@",
+        "org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@",
+        "org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@",
+        "org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@",
+        "org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@",
+        "org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@",
+        "org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@",
+        "org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@",
+        "org.springframework.test.context.support.DynamicPropertiesContextCustomizer@",
+        "org.springframework.boot.test.context.SpringBootTestAnnotation@"
+      ],
+      "beforeXml": "xml/TEST-cn.agentplatform.engine.infra.TestInputHttpTest.xml",
+      "afterXml": "xml/TEST-cn.agentplatform.engine.infra.TestInputHttpTest.xml",
+      "beforeMessageSha256": "0007BA2851CD110DBB1ABE0C65A8BED912E0113F4707A9748600C79B37CE9C3A",
+      "afterMessageSha256": "ED48F5333A3EB98D3C6E43DFC004D4871D901990E7944B8EBDC60A107CFA17F1",
+      "beforeDetailSha256": "B1B370C51D5D8F8EBEFBD7061EA91F543020303FC6C572786B2D3652C3E4433E",
+      "afterDetailSha256": "21B8B5D73A017DA43EE0ADC125134B1C9DAD71EF5ED5DB0B40E8D198969929EC"
+    }
+  ],
+  "addedMethod": {
+    "classname": "cn.agentplatform.engine.infra.EngineMigrationsTest",
+    "method": "preservesExecutedV222MigrationResourceBytes",
+    "display_name": "",
+    "suite_path": "cn.agentplatform.engine.infra.EngineMigrationsTest",
+    "record_kind": "NAMED_CASE",
+    "status": "passed",
+    "exception_type": "",
+    "cause_types": "",
+    "first_project_frame": "",
+    "message_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+    "detail_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+  },
+  "expectedSseMethod": {
+    "classname": "cn.agentplatform.engine.infra.PortalRunEventsLifecycleTest",
+    "method": "timeoutOnCompleteAndShutdownKeepTwoActualGetterOwnersUntilEachReturns",
+    "display_name": "",
+    "suite_path": "cn.agentplatform.engine.infra.PortalRunEventsLifecycleTest",
+    "status": "passed"
+  },
+  "expectedAfter": {
+    "records": 933,
+    "passed": 818,
+    "failures": 35,
+    "errors": 80,
+    "skipped": 0,
+    "xml": 93,
+    "sourceCount": 306,
+    "nativeExit": 0,
+    "methodIdentityAndStatusGate": true,
+    "sourceStable": true,
+    "contextStable": true,
+    "greenDependenciesStable": true,
+    "storageGate": true,
+    "knownUnexecutedScopeGate": true,
+    "strictOriginalReasonGate": false,
+    "collectorGatePassed": false,
+    "allTestsGreen": false,
+    "baselineStatusChanges": 0
+  },
+  "expectedOriginalNonpass": 115,
+  "expectedExactUnchangedNonpass": 92,
+  "expectedReviewedChangedNonpass": 23,
+  "expectedChangedFields": 46,
+  "expectedClassLevelEvents": 2,
+  "expectedKnownUnexecutedSourceTests": 14,
+  "metadataIdentitySource": {
+    "path": "engine-runtime/src/test/java/cn/agentplatform/engine/infra/RunObservationMetadataHttpPostgresTest.java",
+    "line": 136,
+    "sha256": "5E53C2AA895C0A7E2790418AD75B2044717DE93FD02716B6F1CB92B3ABA9ADF9",
+    "meaning": "System.identityHashCode(connection), not SQL/business data"
+  },
+  "pins": [
+    {
+      "path": ".local/ex27-v222-recovery/sse-owners-full-933-20261029-01/after-built-resources.json",
+      "sha256": "9F3A5C10831D23734EBAE2D91FA8C798578178951A8B43A796FE49FE2B811795"
+    },
+    {
+      "path": ".local/ex27-v222-recovery/sse-owners-full-933-20261029-01/after-storage.json",
+      "sha256": "18C367DF0EF8B0ED2EB154D00FFB32A8E62B6D32F1EBB36B67985200DCABE7C2"
+    },
+    {
+      "path": ".local/ex27-v222-recovery/sse-owners-full-933-20261029-01/approved-manifest.json",
+      "sha256": "C5FB5C6777B0EF596182CDB3A5ED00ACFBACCCCE558DA61BC6257079C53FF225"
+    },
+    {
+      "path": ".local/ex27-v222-recovery/sse-owners-full-933-20261029-01/before-built-resources.json",
+      "sha256": "9F3A5C10831D23734EBAE2D91FA8C798578178951A8B43A796FE49FE2B811795"
+    },
+    {
+      "path": ".local/ex27-v222-recovery/sse-owners-full-933-20261029-01/before-storage.json",
+      "sha256": "7B8F8CBB5ED2748DE5B3D24D4ABAB762E7E5629B4551199887EC3D5FBA1298D2"
+    },
+    {
+      "path": ".local/ex27-v222-recovery/sse-owners-full-933-20261029-01/class-level-events.json",
+      "sha256": "98AE849C04CF3038CE460B098305E7561CC08FDC69804541D92C75249EBEA7E8"
+    },
+    {
+      "path": ".local/ex27-v222-recovery/sse-owners-full-933-20261029-01/collector-exit.json",
+      "sha256": "9563FC2C9B302FF8CA57AA5C2EDB822F2CAC37737356E991BBA48C35FC17097B"
+    },
+    {
+      "path": ".local/ex27-v222-recovery/sse-owners-full-933-20261029-01/collector.ps1",
+      "sha256": "B6336D82040C5192BF781956822A48E6C652D51AE1053EBB981405945D634B08"
+    },
+    {
+      "path": ".local/ex27-v222-recovery/sse-owners-full-933-20261029-01/command.json",
+      "sha256": "CE93C242BA2F3353EE602635DF862C97BA1E5CECD0F46CBD51E77D5D66D6C81E"
+    },
+    {
+      "path": ".local/ex27-v222-recovery/sse-owners-full-933-20261029-01/dynamic-database-delta.json",
+      "sha256": "1E0F9AF90C852FF7B15526759D4E60CED7DD0236A510819F6DB987D8885FE216"
+    },
+    {
+      "path": ".local/ex27-v222-recovery/sse-owners-full-933-20261029-01/fixture-context-after.json",
+      "sha256": "72D24D60C561DE08EDBA070067AEB30940F09151CFCF17CBDBE70F2B7AF65339"
+    },
+    {
+      "path": ".local/ex27-v222-recovery/sse-owners-full-933-20261029-01/fixture-context-before.json",
+      "sha256": "72D24D60C561DE08EDBA070067AEB30940F09151CFCF17CBDBE70F2B7AF65339"
+    },
+    {
+      "path": ".local/ex27-v222-recovery/sse-owners-full-933-20261029-01/history-pass-input.json",
+      "sha256": "B3BC4CF6CF32D0640E675FFBA2CEF34D371DA8ECFA5C14A913FD2A3BA6531DF6"
+    },
+    {
+      "path": ".local/ex27-v222-recovery/sse-owners-full-933-20261029-01/installed-after.json",
+      "sha256": "11236879CBFB1DB4FF05B5FF4986A454AC55F3C9F1A04B5B8A36657B3784CCAE"
+    },
+    {
+      "path": ".local/ex27-v222-recovery/sse-owners-full-933-20261029-01/installed-before.json",
+      "sha256": "11236879CBFB1DB4FF05B5FF4986A454AC55F3C9F1A04B5B8A36657B3784CCAE"
+    },
+    {
+      "path": ".local/ex27-v222-recovery/sse-owners-full-933-20261029-01/known-unexecuted-source.json",
+      "sha256": "AC6176CEBFF7B148446C625D8EBD5182DF347DC0ADC0C862872D855969591073"
+    },
+    {
+      "path": ".local/ex27-v222-recovery/sse-owners-full-933-20261029-01/method-status-delta.json",
+      "sha256": "B423BB45501E0FA49D3B77E635F800A29F1FDCF5A58E00C7E04A7FF7833045F2"
+    },
+    {
+      "path": ".local/ex27-v222-recovery/sse-owners-full-933-20261029-01/methods.csv",
+      "sha256": "356C10B1EF91C84F9824B51ECBEF408A76C1AD4E8D167D5E4C1B847E6E82B740"
+    },
+    {
+      "path": ".local/ex27-v222-recovery/sse-owners-full-933-20261029-01/native-exit.json",
+      "sha256": "B5F18E0022FFBE9A27C073D5BB037FEC3424BB88245AC34C761691AB4B4A8D66"
+    },
+    {
+      "path": ".local/ex27-v222-recovery/sse-owners-full-933-20261029-01/pg.raw.log",
+      "sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    },
+    {
+      "path": ".local/ex27-v222-recovery/sse-owners-full-933-20261029-01/raw.log",
+      "sha256": "F7C1C66AFB2CD0F310B1793227F8905511505C1A302E8B6313D89C24AC175B77"
+    },
+    {
+      "path": ".local/ex27-v222-recovery/sse-owners-full-933-20261029-01/source-after.json",
+      "sha256": "390A04051EBEAA4AF91B8E56E38276F54C1CAFBA963684F763B316028908ACC8"
+    },
+    {
+      "path": ".local/ex27-v222-recovery/sse-owners-full-933-20261029-01/source-before.json",
+      "sha256": "390A04051EBEAA4AF91B8E56E38276F54C1CAFBA963684F763B316028908ACC8"
+    },
+    {
+      "path": ".local/ex27-v222-recovery/sse-owners-full-933-20261029-01/strict-reason-delta.json",
+      "sha256": "350CC1DA17675C39E426A93E60E71591C10D2F6500F783EEB2139790099D7C89"
+    },
+    {
+      "path": ".local/ex27-v222-recovery/sse-owners-full-933-20261029-01/summary.json",
+      "sha256": "69EC49AF9956F764B896FCD3D5DEEF656632B4849254BC3DA5F13441F8414AFA"
+    },
+    {
+      "path": ".local/ex27-v222-recovery/sse-owners-full-933-20261029-01/target-prerequisite-receipt.json",
+      "sha256": "72DA746C826B9C1F45A94EDDD8C552BAF408D1903356D68BF9732E5B42F883AC"
+    },
+    {
+      "path": ".local/ex27-v222-recovery/sse-owners-full-933-20261029-01/xml-issues.json",
+      "sha256": "B423BB45501E0FA49D3B77E635F800A29F1FDCF5A58E00C7E04A7FF7833045F2"
+    },
+    {
+      "path": ".local/ex27-v222-recovery/sse-owners-full-933-20261029-01/xml-manifest.json",
+      "sha256": "38EFD18498D77A104394CF2CFA8A7FF8E3B95D657B48389C345D2519BB97AC60"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-04/collector/derive-engine-representation-proof.ps1",
+      "sha256": "E84BD8929CDC20F559A3700E220DE2B6490547DB8D2D9E6F3C335CD884EFC0EF"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-04/collector/full-report-records.ps1",
+      "sha256": "96D70BE0951B75C335EA9D2A60460F794424D03D08882CB760BE5F48CABD8724"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-04/collector/runs/full-engine-20261029-1124/class-level-events.json",
+      "sha256": "98AE849C04CF3038CE460B098305E7561CC08FDC69804541D92C75249EBEA7E8"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-04/collector/runs/full-engine-20261029-1124/engine-bounded-representation-proof.json",
+      "sha256": "0BB515517D460D0012DD5118496FEDB4EAF1584F00A1013DBDBB30D85450AFC8"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-04/collector/runs/full-engine-20261029-1124/engine-representation-allowlist.csv",
+      "sha256": "5281BFA6643CA708F632BA6AB3411BD5F6BE5773BDADB2CBE3534ED322A7B285"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-04/collector/runs/full-engine-20261029-1124/known-unexecuted-source.json",
+      "sha256": "AC6176CEBFF7B148446C625D8EBD5182DF347DC0ADC0C862872D855969591073"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-04/collector/runs/full-engine-20261029-1124/methods.csv",
+      "sha256": "412EE7AF61682969BA02FFEED8B536E96C3A0E0082E97D76EC735F6BD8D8F5BC"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-04/collector/runs/full-engine-20261029-1124/native-exit.json",
+      "sha256": "14081A96D8D58242B580BB96DDEDF9DD4E09C7A3E4556FEE2D7D264619F9A71A"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-04/collector/runs/full-engine-20261029-1124/source-after.json",
+      "sha256": "658619EDFBF993CB19E431808D0377DC07E9C2E7D2DDBDB42F87899F9A8F9958"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-04/collector/runs/full-engine-20261029-1124/source-before.json",
+      "sha256": "658619EDFBF993CB19E431808D0377DC07E9C2E7D2DDBDB42F87899F9A8F9958"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-04/collector/runs/full-engine-20261029-1124/summary.json",
+      "sha256": "33B99AE9D215E758BAEE025C99AC76FAC22E9924A63472DB40E3AA72AF6BF579"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-04/collector/runs/full-engine-20261029-1124/xml-manifest.json",
+      "sha256": "C267C02166E9B89497A4D09F13DFA3AFF40DED7068B62299E9EBA2268A63C38E"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-source-recovery/derive-full-reasons.ps1",
+      "sha256": "55C5837F951F2B451E26E458DE74341D22E3C53C685AEACF03B6816BF7D1C33B"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-source-recovery/derive-sse-full-reasons.ps1",
+      "sha256": "6D8928936C53F3B24F7D5AD1F12DF26F335F1F5D63531AEEDB9B5B2FED8DE717"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-source-recovery/full-reasons-manifest.json",
+      "sha256": "CFEAF05C9C9BB36055A721F3D01EFE50ABB8C3BF6601BA9E2715632B542A431D"
+    },
+    {
+      "path": "engine-runtime/src/test/java/cn/agentplatform/engine/infra/RunObservationMetadataHttpPostgresTest.java",
+      "sha256": "5E53C2AA895C0A7E2790418AD75B2044717DE93FD02716B6F1CB92B3ABA9ADF9"
+    }
+  ],
+  "preparationPins": [
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-source-recovery/derive-full-reasons.ps1",
+      "sha256": "55C5837F951F2B451E26E458DE74341D22E3C53C685AEACF03B6816BF7D1C33B"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-source-recovery/full-reasons-manifest.json",
+      "sha256": "CFEAF05C9C9BB36055A721F3D01EFE50ABB8C3BF6601BA9E2715632B542A431D"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-04/collector/derive-engine-representation-proof.ps1",
+      "sha256": "E84BD8929CDC20F559A3700E220DE2B6490547DB8D2D9E6F3C335CD884EFC0EF"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-04/collector/full-report-records.ps1",
+      "sha256": "96D70BE0951B75C335EA9D2A60460F794424D03D08882CB760BE5F48CABD8724"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-04/collector/runs/full-engine-20261029-1124/engine-representation-allowlist.csv",
+      "sha256": "5281BFA6643CA708F632BA6AB3411BD5F6BE5773BDADB2CBE3534ED322A7B285"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-04/collector/runs/full-engine-20261029-1124/engine-bounded-representation-proof.json",
+      "sha256": "0BB515517D460D0012DD5118496FEDB4EAF1584F00A1013DBDBB30D85450AFC8"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-04/collector/runs/full-engine-20261029-1124/methods.csv",
+      "sha256": "412EE7AF61682969BA02FFEED8B536E96C3A0E0082E97D76EC735F6BD8D8F5BC"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-04/collector/runs/full-engine-20261029-1124/xml-manifest.json",
+      "sha256": "C267C02166E9B89497A4D09F13DFA3AFF40DED7068B62299E9EBA2268A63C38E"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-04/collector/runs/full-engine-20261029-1124/source-before.json",
+      "sha256": "658619EDFBF993CB19E431808D0377DC07E9C2E7D2DDBDB42F87899F9A8F9958"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-04/collector/runs/full-engine-20261029-1124/known-unexecuted-source.json",
+      "sha256": "AC6176CEBFF7B148446C625D8EBD5182DF347DC0ADC0C862872D855969591073"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-04/collector/runs/full-engine-20261029-1124/class-level-events.json",
+      "sha256": "98AE849C04CF3038CE460B098305E7561CC08FDC69804541D92C75249EBEA7E8"
+    }
+  ],
+  "actualAfterPinsMustBeFrozenBeforeSealing": true,
+  "afterCaseHashPairsMustBeFrozenBeforeSealing": true,
+  "originalCsvXmlSummaryAreReadOnly": true,
+  "all186XmlMustMatchPinnedManifestBytes": true,
+  "normalizationBeyondExact23RulesForbidden": true,
+  "futureRunRequiresNewManifestAndIndependentReview": true,
+  "noJavaMavenPgHttpNodeWslOrEnvironmentRead": true,
+  "exitZeroRequiresReasonAndActualRelativeGates": true,
+  "allTestsGreenMustRemainFalse": true,
+  "cardClosed": false,
+  "invocation": "powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File docs/evidence/2026-10-28-EX-27/v222-source-recovery/derive-sse-full-reasons.ps1 -ApprovedManifestSha256 <SEALED_MANIFEST_SHA256_AFTER_ACTUAL_COMPLETION_AND_REVIEW> -ExecuteFileOnly"
+}

@@ -1,0 +1,652 @@
+{
+  "schemaVersion": "EX27-V222-four-source-public-commit-candidate-v1",
+  "sealed": true,
+  "preparedParentHead": "6ca930d8b9b7ef32c4eb7de1ce88ae87fc75c946",
+  "actualRuntimeHead": "6ca930d8b9b7ef32c4eb7de1ce88ae87fc75c946",
+  "actualRuntimeUsesWorkingTreeSource": true,
+  "wholeWorkingTreeFrozenOrClean": false,
+  "sourceWhitelist": [
+    {
+      "path": "engine-runtime/src/main/resources/db/migration/V222__run_context_pack.sql",
+      "sha256": "419C753C652B326DBD59DE40409F080A16F26B98787A7F8CF870B6ECF2859A90"
+    },
+    {
+      "path": "engine-runtime/src/test/java/cn/agentplatform/engine/infra/EngineMigrationsTest.java",
+      "sha256": "66EF434AB8ABB818599C69C9E0BF1D80C02087CFB7CD05CFD8AB577F2FF6109F"
+    },
+    {
+      "path": "engine-runtime/src/test/java/cn/agentplatform/engine/infra/PortalRunEventsLifecycleTest.java",
+      "sha256": "021629A09E978A177F98764AF28BA7B96569F707F27DAE4DC85994657F1747F8"
+    },
+    {
+      "path": "scripts/verify-cache.ps1",
+      "sha256": "0A2A9402D6B9D34116874ED644E8FDB956FA326642CF431910305B8AB690D920"
+    }
+  ],
+  "publicFileCount": 45,
+  "sourceFileCount": 4,
+  "evidenceAndAttributesCount": 41,
+  "existingPathCountExcludingPendingReview": 45,
+  "contentHashedPathCountExcludingSelfAndPending": 44,
+  "files": [
+    {
+      "path": "engine-runtime/src/main/resources/db/migration/V222__run_context_pack.sql",
+      "role": "SOURCE",
+      "public": true,
+      "bytes": 286,
+      "rawSha256": "419C753C652B326DBD59DE40409F080A16F26B98787A7F8CF870B6ECF2859A90",
+      "expectedCleanSha256": "419C753C652B326DBD59DE40409F080A16F26B98787A7F8CF870B6ECF2859A90",
+      "expectedIndexOid": "3bb4a080d7bdccbdf3d7cb27a999e6a30674c9c4",
+      "normalization": "ONLY_EXISTING_CRLF_TO_LF"
+    },
+    {
+      "path": "engine-runtime/src/test/java/cn/agentplatform/engine/infra/EngineMigrationsTest.java",
+      "role": "SOURCE",
+      "public": true,
+      "bytes": 2874,
+      "rawSha256": "66EF434AB8ABB818599C69C9E0BF1D80C02087CFB7CD05CFD8AB577F2FF6109F",
+      "expectedCleanSha256": "66EF434AB8ABB818599C69C9E0BF1D80C02087CFB7CD05CFD8AB577F2FF6109F",
+      "expectedIndexOid": "e35b9f09f9e53220d96d5cee893a1981db32ce71",
+      "normalization": "ONLY_EXISTING_CRLF_TO_LF"
+    },
+    {
+      "path": "engine-runtime/src/test/java/cn/agentplatform/engine/infra/PortalRunEventsLifecycleTest.java",
+      "role": "SOURCE",
+      "public": true,
+      "bytes": 22522,
+      "rawSha256": "021629A09E978A177F98764AF28BA7B96569F707F27DAE4DC85994657F1747F8",
+      "expectedCleanSha256": "021629A09E978A177F98764AF28BA7B96569F707F27DAE4DC85994657F1747F8",
+      "expectedIndexOid": "7d22afc35315a890d005f2b129f69da66412d381",
+      "normalization": "ONLY_EXISTING_CRLF_TO_LF"
+    },
+    {
+      "path": "scripts/verify-cache.ps1",
+      "role": "SOURCE",
+      "public": true,
+      "bytes": 4052,
+      "rawSha256": "0A2A9402D6B9D34116874ED644E8FDB956FA326642CF431910305B8AB690D920",
+      "expectedCleanSha256": "0A2A9402D6B9D34116874ED644E8FDB956FA326642CF431910305B8AB690D920",
+      "expectedIndexOid": "a30eb228e29aa955721691b43de74c7248aef22f",
+      "normalization": "ONLY_EXISTING_CRLF_TO_LF"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-source-recovery/derive-full-reasons.ps1",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 19833,
+      "rawSha256": "55C5837F951F2B451E26E458DE74341D22E3C53C685AEACF03B6816BF7D1C33B",
+      "expectedCleanSha256": "55C5837F951F2B451E26E458DE74341D22E3C53C685AEACF03B6816BF7D1C33B",
+      "expectedIndexOid": "715c859a04934c3ff6c3692973f139fb1a4ead0b",
+      "normalization": "EXACT_RAW_BYTES_TEXT_UNSET"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-source-recovery/derive-sse-full-reasons.ps1",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 22165,
+      "rawSha256": "6D8928936C53F3B24F7D5AD1F12DF26F335F1F5D63531AEEDB9B5B2FED8DE717",
+      "expectedCleanSha256": "6D8928936C53F3B24F7D5AD1F12DF26F335F1F5D63531AEEDB9B5B2FED8DE717",
+      "expectedIndexOid": "8780d5081098fd09a841774adbbcec4c9fe73515",
+      "normalization": "EXACT_RAW_BYTES_TEXT_UNSET"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-source-recovery/full-reasons-manifest.json",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 76831,
+      "rawSha256": "CFEAF05C9C9BB36055A721F3D01EFE50ABB8C3BF6601BA9E2715632B542A431D",
+      "expectedCleanSha256": "CFEAF05C9C9BB36055A721F3D01EFE50ABB8C3BF6601BA9E2715632B542A431D",
+      "expectedIndexOid": "1df903a392383f89fc1f8bec10e2e27b36565136",
+      "normalization": "EXACT_RAW_BYTES_TEXT_UNSET"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-source-recovery/full-regression-manifest-v2.json",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 241569,
+      "rawSha256": "7D6D93308E366A6BC8DB14C7F5CEE358EF97C4D259959F11A974DE1E1CBABD9D",
+      "expectedCleanSha256": "7D6D93308E366A6BC8DB14C7F5CEE358EF97C4D259959F11A974DE1E1CBABD9D",
+      "expectedIndexOid": "df986e2f273cd872c8a4d000fb2bdcdcfbff1fb0",
+      "normalization": "EXACT_RAW_BYTES_TEXT_UNSET"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-source-recovery/full-regression-manifest.json",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 155097,
+      "rawSha256": "2C5ACF11ED38E5C610450406A1699F5F309A3CD4A49F1B324017468BBDB209CA",
+      "expectedCleanSha256": "2C5ACF11ED38E5C610450406A1699F5F309A3CD4A49F1B324017468BBDB209CA",
+      "expectedIndexOid": "dbf9839575c9848a7f3cfea4e7780c28cc32c777",
+      "normalization": "EXACT_RAW_BYTES_TEXT_UNSET"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-source-recovery/history-validate-manifest-v2.json",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 127077,
+      "rawSha256": "5B4AE6C6A455C4C1107BEDCF25C5A13976D3DC26D2AF683F847B09E25498CB1A",
+      "expectedCleanSha256": "5B4AE6C6A455C4C1107BEDCF25C5A13976D3DC26D2AF683F847B09E25498CB1A",
+      "expectedIndexOid": "58259192bab51ef2d4e613f6ae75afa11169caee",
+      "normalization": "EXACT_RAW_BYTES_TEXT_UNSET"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-source-recovery/history-validate-manifest.json",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 125267,
+      "rawSha256": "550C239FA8AA6814E101DE8FD346C033596D874DA7FC1825707F437455C8C576",
+      "expectedCleanSha256": "550C239FA8AA6814E101DE8FD346C033596D874DA7FC1825707F437455C8C576",
+      "expectedIndexOid": "5fb9c54f79cd35082eec50a457ccba9465cc2dcc",
+      "normalization": "EXACT_RAW_BYTES_TEXT_UNSET"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-source-recovery/manifest-green.json",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 89853,
+      "rawSha256": "191F6F78792B669397781EF91706EDB5B539B9163B1A16330BD37699FC8D3AEE",
+      "expectedCleanSha256": "191F6F78792B669397781EF91706EDB5B539B9163B1A16330BD37699FC8D3AEE",
+      "expectedIndexOid": "6f61419bc1142a7ff6a1fdfab27633a65eb28303",
+      "normalization": "EXACT_RAW_BYTES_TEXT_UNSET"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-source-recovery/manifest-v2.json",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 85472,
+      "rawSha256": "E315200B67871A97B0BB5FA64F87DE7F4A3903B969B0A888FF225AC23218D1B6",
+      "expectedCleanSha256": "E315200B67871A97B0BB5FA64F87DE7F4A3903B969B0A888FF225AC23218D1B6",
+      "expectedIndexOid": "e7e22c663671cb3191e9f0237e350de0714cb13f",
+      "normalization": "EXACT_RAW_BYTES_TEXT_UNSET"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-source-recovery/manifest.json",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 79642,
+      "rawSha256": "1B38382001733B124C310985BC962235618E912A285B43EB161917A14208729B",
+      "expectedCleanSha256": "1B38382001733B124C310985BC962235618E912A285B43EB161917A14208729B",
+      "expectedIndexOid": "b5b1ba83faf65cb40c542384b78bd579715dcfa7",
+      "normalization": "EXACT_RAW_BYTES_TEXT_UNSET"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-source-recovery/regression-manifest.json",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 83694,
+      "rawSha256": "27FD43ECC5C433AB857EDB1A42C86DE70AFF191C843BFA5EC18D5381E812559A",
+      "expectedCleanSha256": "27FD43ECC5C433AB857EDB1A42C86DE70AFF191C843BFA5EC18D5381E812559A",
+      "expectedIndexOid": "4bd78ce4e942a7bba0e42a12c0f43c1266b67bc3",
+      "normalization": "EXACT_RAW_BYTES_TEXT_UNSET"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-source-recovery/run-full-regression-v2.ps1",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 26726,
+      "rawSha256": "9F653CD7019FCCF83BD2EA1F5FC4FFDAFD8B9BF45F384B9BDD5911E898B29E80",
+      "expectedCleanSha256": "9F653CD7019FCCF83BD2EA1F5FC4FFDAFD8B9BF45F384B9BDD5911E898B29E80",
+      "expectedIndexOid": "786c8e6d195d41533831e80b469362153aa655b1",
+      "normalization": "EXACT_RAW_BYTES_TEXT_UNSET"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-source-recovery/run-full-regression.ps1",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 26723,
+      "rawSha256": "56CE06FF054ECEEAE4B87704FB7E6285352EF62D1B5CCD21906D731ECC69FC33",
+      "expectedCleanSha256": "56CE06FF054ECEEAE4B87704FB7E6285352EF62D1B5CCD21906D731ECC69FC33",
+      "expectedIndexOid": "ceb156922114c5b109e142b498edd0ca67c920c6",
+      "normalization": "EXACT_RAW_BYTES_TEXT_UNSET"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-source-recovery/run-history-validate-v2.ps1",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 30297,
+      "rawSha256": "EE988BFF97E467D266C0AB00A97DADC5812A54DCB81C1C10963E6BC4F34439E8",
+      "expectedCleanSha256": "EE988BFF97E467D266C0AB00A97DADC5812A54DCB81C1C10963E6BC4F34439E8",
+      "expectedIndexOid": "4bffeb88ff9e278818b40da0317d72e8f3558542",
+      "normalization": "EXACT_RAW_BYTES_TEXT_UNSET"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-source-recovery/run-history-validate.ps1",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 30296,
+      "rawSha256": "B9EEDBBD25FA72B81CB543F9B36E221E7E33F6E310C35E16B3D9C6DBC44DF275",
+      "expectedCleanSha256": "B9EEDBBD25FA72B81CB543F9B36E221E7E33F6E310C35E16B3D9C6DBC44DF275",
+      "expectedIndexOid": "93f8586567ade9ab9d96aaaa24505fefd390ebc7",
+      "normalization": "EXACT_RAW_BYTES_TEXT_UNSET"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-source-recovery/run-regression.ps1",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 26194,
+      "rawSha256": "82589CD43D0472675759C21C97E2ADEE35053FB76CF8E1A4AC038129D6A44937",
+      "expectedCleanSha256": "82589CD43D0472675759C21C97E2ADEE35053FB76CF8E1A4AC038129D6A44937",
+      "expectedIndexOid": "a834b2291ca23c69d8a4dcbb71aed9f81b317b67",
+      "normalization": "EXACT_RAW_BYTES_TEXT_UNSET"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-source-recovery/run-resource-gate-v2.ps1",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 25911,
+      "rawSha256": "E8EADC50369836EE264E0875803396DCB600133DA0EAD1F377B7169D3181CD0E",
+      "expectedCleanSha256": "E8EADC50369836EE264E0875803396DCB600133DA0EAD1F377B7169D3181CD0E",
+      "expectedIndexOid": "5cb50d0f756e1fefc517256dcd42877cdc3a5ccd",
+      "normalization": "EXACT_RAW_BYTES_TEXT_UNSET"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-source-recovery/run-resource-gate.ps1",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 23093,
+      "rawSha256": "BC333296C0F36963EED00EE039CD7D4B4DCEC2BB43A6F396BF31FA45AA240C2F",
+      "expectedCleanSha256": "BC333296C0F36963EED00EE039CD7D4B4DCEC2BB43A6F396BF31FA45AA240C2F",
+      "expectedIndexOid": "247e599ab7455e28f9614226df53ea2c365e8f2d",
+      "normalization": "EXACT_RAW_BYTES_TEXT_UNSET"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-source-recovery/run-resource-green.ps1",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 31153,
+      "rawSha256": "5C97A30B5B139E572F0DFC7A5EF16E23DA3383AB37A0471EB61552FAB0FC6680",
+      "expectedCleanSha256": "5C97A30B5B139E572F0DFC7A5EF16E23DA3383AB37A0471EB61552FAB0FC6680",
+      "expectedIndexOid": "5dbd0fc08bab2009954d69fa67c2e074bcf19577",
+      "normalization": "EXACT_RAW_BYTES_TEXT_UNSET"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-source-recovery/run-sse-regression.ps1",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 34991,
+      "rawSha256": "B6336D82040C5192BF781956822A48E6C652D51AE1053EBB981405945D634B08",
+      "expectedCleanSha256": "B6336D82040C5192BF781956822A48E6C652D51AE1053EBB981405945D634B08",
+      "expectedIndexOid": "0c4047d04e9e8701de5ed0decc224a3fac86cb28",
+      "normalization": "EXACT_RAW_BYTES_TEXT_UNSET"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-source-recovery/sql-restore-after-red.json",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 593,
+      "rawSha256": "2F2EAED734BA036618A243D422B0775FEDA88C7315C489B37E79601B99A5060F",
+      "expectedCleanSha256": "2F2EAED734BA036618A243D422B0775FEDA88C7315C489B37E79601B99A5060F",
+      "expectedIndexOid": "f6fba55d9eef375883daa93a280a8c41f6eb5992",
+      "normalization": "EXACT_RAW_BYTES_TEXT_UNSET"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-source-recovery/sse-full-reasons-manifest.json",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 83390,
+      "rawSha256": "268E04950049F0004D581C24318422EC54492A8F38DDFAC50EFCDBC0BECB7679",
+      "expectedCleanSha256": "268E04950049F0004D581C24318422EC54492A8F38DDFAC50EFCDBC0BECB7679",
+      "expectedIndexOid": "c86438b0e66cc02812d52ae8b8c19ad7392c803d",
+      "normalization": "EXACT_RAW_BYTES_TEXT_UNSET"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-source-recovery/sse-regression-manifest.json",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 171980,
+      "rawSha256": "C5FB5C6777B0EF596182CDB3A5ED00ACFBACCCCE558DA61BC6257079C53FF225",
+      "expectedCleanSha256": "C5FB5C6777B0EF596182CDB3A5ED00ACFBACCCCE558DA61BC6257079C53FF225",
+      "expectedIndexOid": "771575521409f282eab584a43608946ed6bbb0dc",
+      "normalization": "EXACT_RAW_BYTES_TEXT_UNSET"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-source-recovery/V222HistoryValidate.java",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 13501,
+      "rawSha256": "AFEE873B11C26ACE47E5A8EFF67640773EBD19D2EB7127653919FCDD26F6B117",
+      "expectedCleanSha256": "AFEE873B11C26ACE47E5A8EFF67640773EBD19D2EB7127653919FCDD26F6B117",
+      "expectedIndexOid": "6e9709a14decb41da16cb8470343aabad3b1f8d8",
+      "normalization": "EXACT_RAW_BYTES_TEXT_UNSET"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-source-recovery/public-summary.json",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 12433,
+      "rawSha256": "5610540E17991756918B03F637EFC472F253891B5110E8B47039FDAD9214EEA3",
+      "expectedCleanSha256": "5610540E17991756918B03F637EFC472F253891B5110E8B47039FDAD9214EEA3",
+      "expectedIndexOid": "df5cfa7b846a4be4a624db9dbbdb4c3af423adac",
+      "normalization": "EXACT_RAW_BYTES_TEXT_UNSET"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-source-recovery/closeout.md",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 6321,
+      "rawSha256": "761317DB8F9A271F3F9B55D5B1D465BEABEEA71EA461B703B8DDAA59957B6D6C",
+      "expectedCleanSha256": "761317DB8F9A271F3F9B55D5B1D465BEABEEA71EA461B703B8DDAA59957B6D6C",
+      "expectedIndexOid": "1a45369d63658b2d4069a599ee0d1d5084d01899",
+      "normalization": "EXACT_RAW_BYTES_TEXT_UNSET"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-source-recovery/public-commit-manifest.json",
+      "role": "PUBLIC_MANIFEST_SELF",
+      "public": true,
+      "bytes": null,
+      "rawSha256": null,
+      "expectedCleanSha256": null,
+      "expectedIndexOid": null,
+      "normalization": "EXACT_RAW_BYTES_TEXT_UNSET",
+      "selfHashExcluded": "Final manifest SHA and Git OID delivered externally; never self-referential"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-source-recovery/.gitattributes",
+      "role": "EVIDENCE_ATTRIBUTES",
+      "public": true,
+      "bytes": 20,
+      "rawSha256": "E97602AB9CAC70102245345C5AB0FC9830DF8B17F1072B188265A662A3A547AE",
+      "expectedCleanSha256": "E97602AB9CAC70102245345C5AB0FC9830DF8B17F1072B188265A662A3A547AE",
+      "expectedIndexOid": "bd2de00cda30e433943ceb23971ade38d5a3fc86",
+      "normalization": "EXACT_RAW_BYTES_TEXT_UNSET"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-source-recovery/run02-reason-proof.json",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 1786629,
+      "rawSha256": "9D8B90FF52A87104D63E83E0F998A9B21AE02DC99127A7EA63DBB5A4B9DC4558",
+      "expectedCleanSha256": "9D8B90FF52A87104D63E83E0F998A9B21AE02DC99127A7EA63DBB5A4B9DC4558",
+      "expectedIndexOid": "7aae15992f3d24c18c61bf2d684e5addcbe17d6a",
+      "normalization": "EXACT_RAW_BYTES_TEXT_UNSET"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-source-recovery/sse-full-reason-proof.json",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 1790931,
+      "rawSha256": "0E6414A16A1957A4AC262E759B1E48924D40F1281FCE791DB1FA49D28A3B9B96",
+      "expectedCleanSha256": "0E6414A16A1957A4AC262E759B1E48924D40F1281FCE791DB1FA49D28A3B9B96",
+      "expectedIndexOid": "36c86cea73ac45b95cbaab7680c6cfcbf69e5766",
+      "normalization": "EXACT_RAW_BYTES_TEXT_UNSET"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/cache-utf8-review.md",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 7459,
+      "rawSha256": "59FE8890134479821B35DC85D498D28AA03CB35F155A17954F30A17603B48372",
+      "expectedCleanSha256": "59FE8890134479821B35DC85D498D28AA03CB35F155A17954F30A17603B48372",
+      "expectedIndexOid": "85c0fa38058b869e05f79a6f2bb078f4a3835d60",
+      "normalization": "EXACT_RAW_BYTES_TEXT_UNSET"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-adjacent-review.md",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 7934,
+      "rawSha256": "00018013DFA8F7E1B988CB0BC9A7419B3E250F6429F28AE59B2B2E0ECA0BFF25",
+      "expectedCleanSha256": "00018013DFA8F7E1B988CB0BC9A7419B3E250F6429F28AE59B2B2E0ECA0BFF25",
+      "expectedIndexOid": "4fe755ebc3d3228a498e42efb98e9b07b75b9654",
+      "normalization": "EXACT_RAW_BYTES_TEXT_UNSET"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-green-resource-review.md",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 8241,
+      "rawSha256": "781A17A0BF1728B268338C9D5B2590D8980C80443E3A0AF949AC9B2B3CD277D7",
+      "expectedCleanSha256": "781A17A0BF1728B268338C9D5B2590D8980C80443E3A0AF949AC9B2B3CD277D7",
+      "expectedIndexOid": "bdb05629d3b2625ee7e338ea930dad44723ee7fc",
+      "normalization": "EXACT_RAW_BYTES_TEXT_UNSET"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-history-and-reasons-review.md",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 12964,
+      "rawSha256": "677CFEDACFA42BD2E0A5B77FC3D688C78BED421998C57CE9E765496F819858DF",
+      "expectedCleanSha256": "677CFEDACFA42BD2E0A5B77FC3D688C78BED421998C57CE9E765496F819858DF",
+      "expectedIndexOid": "17cad716efe6bf908c88b328b38bbf27094b39aa",
+      "normalization": "EXACT_RAW_BYTES_TEXT_UNSET"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-history-target-recheck.md",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 11539,
+      "rawSha256": "E02AAFE3A3128D386C38CD0210DD545B0791D9B42A3190EC6B416B6CF428B450",
+      "expectedCleanSha256": "E02AAFE3A3128D386C38CD0210DD545B0791D9B42A3190EC6B416B6CF428B450",
+      "expectedIndexOid": "977758dd23ee8320ecfceca9f718b51453457989",
+      "normalization": "EXACT_RAW_BYTES_TEXT_UNSET"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-red-restore-review.md",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 10865,
+      "rawSha256": "01F64E222EB943C9A0D6056796DE875CF4803CC018BB0ECA0B9EB72F618CCB99",
+      "expectedCleanSha256": "01F64E222EB943C9A0D6056796DE875CF4803CC018BB0ECA0B9EB72F618CCB99",
+      "expectedIndexOid": "c47c7df5e6e4ace460d1c67a40b4a40352411f2c",
+      "normalization": "EXACT_RAW_BYTES_TEXT_UNSET"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-source-recovery-candidate.md",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 15077,
+      "rawSha256": "1F6131E77DFB234CB87BAF5866A961B6FC8949EC03EA97455A549378D0012C7D",
+      "expectedCleanSha256": "1F6131E77DFB234CB87BAF5866A961B6FC8949EC03EA97455A549378D0012C7D",
+      "expectedIndexOid": "baec865ae7a7b7feeedcb5bb244709d6a49b78cb",
+      "normalization": "EXACT_RAW_BYTES_TEXT_UNSET"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-source-recovery-scope-review.md",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 11902,
+      "rawSha256": "3FCFB4D9DB15D3675A4131DD1DF571DAD6E8522D1AB1B7356075F6B0A074DF2B",
+      "expectedCleanSha256": "3FCFB4D9DB15D3675A4131DD1DF571DAD6E8522D1AB1B7356075F6B0A074DF2B",
+      "expectedIndexOid": "337bbf07f4c89ef4d3a1daff297253619e617019",
+      "normalization": "EXACT_RAW_BYTES_TEXT_UNSET"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-sse-await-review.md",
+      "role": "PUBLIC_EVIDENCE",
+      "public": true,
+      "bytes": 4112,
+      "rawSha256": "CEB75249EA2A261E69E29785342FC28A9309AF978A7CE009FCB40A21635C295C",
+      "expectedCleanSha256": "CEB75249EA2A261E69E29785342FC28A9309AF978A7CE009FCB40A21635C295C",
+      "expectedIndexOid": "afbe2f956c9b108f3c4e7559bb2c9db6b372de97",
+      "normalization": "EXACT_RAW_BYTES_TEXT_UNSET"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/v222-sse-full-review.md",
+      "role": "RUNTIME_INDEPENDENT_REVIEW",
+      "public": true,
+      "bytes": 12980,
+      "rawSha256": "383F6F28BDAA096F8C733D5D6CAC3CF1682B18071961706EDBBC0B801E0561F9",
+      "expectedCleanSha256": "383F6F28BDAA096F8C733D5D6CAC3CF1682B18071961706EDBBC0B801E0561F9",
+      "expectedIndexOid": "8251e68e911756d75d6755b9dede199eb405b5b0",
+      "normalization": "EXACT_RAW_BYTES_TEXT_UNSET"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/.gitattributes",
+      "role": "EVIDENCE_ATTRIBUTES",
+      "public": true,
+      "bytes": 25978,
+      "rawSha256": "B6696AE7AD98CE15830B8AE237679E51A47A91E4EF3670934D3AD2CD14410E61",
+      "expectedCleanSha256": "B6696AE7AD98CE15830B8AE237679E51A47A91E4EF3670934D3AD2CD14410E61",
+      "expectedIndexOid": "a0de7823a506d0713794d63a56181159ecca635b",
+      "normalization": "ONLY_EXISTING_CRLF_TO_LF"
+    }
+  ],
+  "selfPath": "docs/evidence/2026-10-28-EX-27/v222-source-recovery/public-commit-manifest.json",
+  "selfHashExcludedFromEmbeddedHashes": true,
+  "selfPinRule": "Final manifest SHA/OID pinned externally after real review handoff; exact stage set/blob audit required, never recursive add",
+  "leafExecutionStatus": [
+    {
+      "files": [
+        "run-resource-gate.ps1",
+        "manifest.json"
+      ],
+      "status": "HISTORICAL_UNEXECUTED_RESOURCE_GATE_CANDIDATE",
+      "note": "Separate dev metadata preflight failed; not resource RED"
+    },
+    {
+      "files": [
+        "run-resource-gate-v2.ps1",
+        "manifest-v2.json"
+      ],
+      "status": "ACTUAL_RESOURCE_RED",
+      "note": "E8/E315; original3P+resourceMissing1F"
+    },
+    {
+      "files": [
+        "run-resource-green.ps1",
+        "manifest-green.json"
+      ],
+      "status": "ACTUAL_RESOURCE_GREEN",
+      "note": "5C97/191F;4P"
+    },
+    {
+      "files": [
+        "run-regression.ps1",
+        "regression-manifest.json"
+      ],
+      "status": "ACTUAL_ADJACENT24",
+      "note": "82589/27FD; Adjacent only, Full not executed via these inputs"
+    },
+    {
+      "files": [
+        "run-full-regression.ps1",
+        "full-regression-manifest.json"
+      ],
+      "status": "ACTUAL_PRETEST_STOP",
+      "note": "Full01 collector2/native null before Maven test; PS5 registered JSON decoding fixed by explicit Get-Content -Encoding UTF8, not output encoding"
+    },
+    {
+      "files": [
+        "run-full-regression-v2.ps1",
+        "full-regression-manifest-v2.json"
+      ],
+      "status": "ACTUAL_OLD_FULL02",
+      "note": "9F/7D6D;817P36F80E, raw gates false"
+    },
+    {
+      "files": [
+        "run-history-validate.ps1",
+        "history-validate-manifest.json"
+      ],
+      "status": "ROOT_TOOL_REFERENCED_PRECOMPILE_ACL_STOP",
+      "note": "B9/550C history01 failed before approved input copy or compile; root tool provenance retained"
+    },
+    {
+      "files": [
+        "run-history-validate-v2.ps1",
+        "history-validate-manifest-v2.json",
+        "V222HistoryValidate.java"
+      ],
+      "status": "ACTUAL_HISTORICAL_VALIDATE02",
+      "note": "EE/5B/AFEE;compile0 validate0 collector0; not a new database migrate"
+    },
+    {
+      "files": [
+        "run-sse-regression.ps1",
+        "sse-regression-manifest.json"
+      ],
+      "status": "ACTUAL_TARGET_AND_SSE_FULL",
+      "note": "B633 runner; currentC5FB is actual Full input; Target used immutable331E input archived in original run"
+    },
+    {
+      "files": [
+        "derive-full-reasons.ps1",
+        "full-reasons-manifest.json"
+      ],
+      "status": "ACTUAL_FILE_ONLY_OLD_RUN02_REASON_DERIVATION",
+      "note": "55C5/CFEA; original115 reasons92+23 accepted, SSE extra failure still false"
+    },
+    {
+      "files": [
+        "derive-sse-full-reasons.ps1",
+        "sse-full-reasons-manifest.json"
+      ],
+      "status": "ACTUAL_FILE_ONLY_NEW_SSE_REASON_DERIVATION",
+      "note": "6D89/268E/native0; adjustedRelative=true, raw collector1 retained"
+    },
+    {
+      "files": [
+        "sql-restore-after-red.json"
+      ],
+      "status": "ACTUAL_ROOT_COPY_RECEIPT",
+      "note": "Historical greenExecuted=false remains restoration-time fact"
+    }
+  ],
+  "attributes": {
+    "parentPath": "docs/evidence/2026-10-28-EX-27/.gitattributes",
+    "parentExistingPrefixBytes": 25500,
+    "parentExistingPrefixSha256": "C56F70A13EE225397264D875FF83BCA27009F10BEF3089F01DFA8B4FDF6B41A1",
+    "parentPrefixUnchanged": true,
+    "appendedExactRootReviewRules": [
+      "cache-utf8-review.md",
+      "v222-adjacent-review.md",
+      "v222-green-resource-review.md",
+      "v222-history-and-reasons-review.md",
+      "v222-history-target-recheck.md",
+      "v222-red-restore-review.md",
+      "v222-source-recovery-candidate.md",
+      "v222-source-recovery-scope-review.md",
+      "v222-sse-await-review.md",
+      "v222-sse-full-review.md"
+    ],
+    "mcpCandidatesExcluded": true,
+    "leafPath": "docs/evidence/2026-10-28-EX-27/v222-source-recovery/.gitattributes",
+    "leafBoundedRule": "* -text -whitespace",
+    "futureUnknownFilesAuthorizedForCommit": false,
+    "sourceRulesChanged": false
+  },
+  "resultsSource": "public-summary.json records actual root facts, bounded technical derivations and final383F independent sub-batch acceptance; raw collector failures remain unchanged",
+  "wholeEx27Closed": false,
+  "newEmptyDbMigrationForEx06Pending": true,
+  "originalRawCollectorAndReasonGatesRewritten": false,
+  "sourceOrOldFrozenArtifactBytesModifiedByPreparation": false,
+  "gitStageOrCommitPerformed": false,
+  "publicSetIsStandaloneFullReplay": false,
+  "excludedLocal": [
+    "All raw XML/logs/PG query results/process records",
+    ".env and actual credentials",
+    "JAR/dependency/backup/target/.tools/.local bytes except explicit copied safe bounded proofs",
+    "MCP candidate/patch and McpAdapterTest applied after engine Full",
+    "Skill Process2 product+3 original tests+MCP test6 sources and process-files-io contract",
+    "PhaseA/EX15b/other untracked evidence",
+    "EX00 database list and unrelated main documents"
+  ],
+  "securityScan": {
+    "knownCredentialSourceSha256": "AF038F68E0CA2E3EEEEB0C5240B2C2DA1EF647D680500F63AF1564975EBAFD4A",
+    "uniqueKnownCredentialValuesComparedInMemory": 5,
+    "actualValuesPrintedOrPersisted": false,
+    "knownLiteralMatches": 0,
+    "jwtPatternMatches": 0,
+    "privateKeyPatternMatches": 0,
+    "rawMessageDetailFieldsInCopiedProofs": 0,
+    "scannedKnownFileCountExcludingManifestSelfAndPendingReview": 44,
+    "pendingReviewMustBeScannedAfterRealFinalHandoff": false,
+    "finalReviewIncludedAndScanned": true
+  },
+  "workingTreeRuntimeSeparation": {
+    "currentMcpAdapterTestWasAppliedAfterEngineFull": true,
+    "engineRuntimeSourceScope": 306,
+    "currentUncommittedWholeTreeIsNotClaimedAsRuntimeSource": true,
+    "excludedSkillSourceCount": 6
+  },
+  "runtimeIndependentReview": {
+    "path": "docs/evidence/2026-10-28-EX-27/v222-sse-full-review.md",
+    "bytes": 12980,
+    "sha256": "383F6F28BDAA096F8C733D5D6CAC3CF1682B18071961706EDBBC0B801E0561F9",
+    "status": "COMPLETE_ROOT_FINAL_HANDOFF",
+    "subBatchAccepted": true,
+    "wholeCardClosed": false
+  },
+  "pendingReviewCount": 0,
+  "independentExactIndexReviewStillRequired": true
+}

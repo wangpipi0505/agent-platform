@@ -42,4 +42,19 @@ class EngineMigrationsTest {
         assertThat(EngineMigrations.versions().getLast()).isEqualTo(max);
         assertThat(EngineMigrations.versions()).contains(200, max);
     }
+
+    @Test
+    void preservesExecutedV222MigrationResourceBytes() throws Exception {
+        try (var resource = EngineMigrationsTest.class.getClassLoader()
+                .getResourceAsStream("db/migration/V222__run_context_pack.sql")) {
+            org.junit.jupiter.api.Assertions.assertNotNull(resource, "V222_RESOURCE_REQUIRED");
+            byte[] bytes = resource.readAllBytes();
+            assertThat(bytes).hasSize(286);
+            String sha256 = java.util.HexFormat.of().formatHex(
+                    java.security.MessageDigest.getInstance("SHA-256").digest(bytes));
+            assertThat(sha256).isEqualTo(
+                    "419c753c652b326dbd59de40409f080a16f26b98787a7f8cf870b6ecf2859a90");
+            assertThat(EngineMigrations.versions()).contains(222);
+        }
+    }
 }

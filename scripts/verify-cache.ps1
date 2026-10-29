@@ -3,7 +3,7 @@ $ErrorActionPreference='Stop'
 $env:WSL_UTF8='1'
 $agentRoot=Split-Path -Parent $PSScriptRoot
 Get-Content -LiteralPath (Join-Path $agentRoot '.env')|ForEach-Object {if($_ -match '^([^#=]+)=(.*)$'){[Environment]::SetEnvironmentVariable($Matches[1],$Matches[2],'Process')}}
-$agentRecord=Get-Content -LiteralPath (Join-Path $agentRoot '.local/redis-process.json') -Raw|ConvertFrom-Json
+$agentRecord=Get-Content -LiteralPath (Join-Path $agentRoot '.local/redis-process.json') -Raw -Encoding UTF8|ConvertFrom-Json
 if($agentRecord.distribution -ne 'AgentPlatformV12' -or [IO.Path]::GetFullPath($agentRecord.root) -ne [IO.Path]::GetFullPath((Join-Path $agentRoot '.local/wsl'))){throw '缓存登记不属于本工程'}
 $agentSocket=[Net.Sockets.TcpClient]::new('127.0.0.1',[int]$env:AGENT_REDIS_PORT)
 $agentSocket.ReceiveTimeout=5000;$agentSocket.SendTimeout=5000
