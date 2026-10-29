@@ -105,3 +105,9 @@
 运行 `snapshot.capabilityBindings` 保存原包版本、软件版本、环境声明、路线和逐工具精确绑定，并记录本次实际选择 `SELECTED`、`GUARD_DENIED`、`DISABLED` 或 `PROFILE_NOT_MEMBER`。同 code/version 只取一次技能，但保留每个逻辑 tool 的来源；相同技能引用的 enabled/profiles 策略冲突时拒绝，不能靠去重吞掉差异。选中 `config.tools[]` 增加 `capabilityOrigins[]`，`version_refs.capabilityPackages` 保存同一冻结来源；未选工具不伪装成已装载。
 
 所有新运行在入库前核冻结来源与 tools 的 ID、契约摘要及 origins 自洽。受控录制回放仅检查原快照，不读当前包/技能目录、不重新解释历史选择；损坏或缺失的包冻结材料明确拒绝。已有 requestId 保持原幂等读取，不重写原记录；重新执行仍沿原目录解析规则核对冻结来源。无包旧回放不新增来源键。IAM 原入口对不支持的技能/包配置继续拒绝，本子批不宣称实际模型/工具调用、容量或完整 EX-10 联验完成。
+
+## EX-12：运行观测查询（AP）
+
+沿现有 `GET /admin/runs/page` 增加可选 `packageId`、`routeProfileId`、`toolId`、`releaseId`、`traceId`（各最多128字符），原 appCode/status/q/time/page/size保持。tenant/principal只取当前身份，显式提交范围字段拒绝。包/路线必须来自同一 `version_refs.capabilityPackages` 元素；toolId另需同来源binding与该run实际 `tool_call` 的精确skill code/version对应，不从技能编码猜toolId，也不把声明当成已调用。release仅取原已消费的 `snapshot.contextPack.releaseId`。
+
+列表及legacy运行详情新增 `observation`，含 `traceId/releaseId/spaceId/capabilityPackages`；历史缺字段为null，读取时不以当前MDC或目录补值。仅新运行生成versionRefs时捕获 `TraceContextFilter.current()` 并与原事务共同持久；IAM protected详情原形状保持。本批未接OR的可信package/route/app-tool执行挂点，也不宣称trace已经跨服务贯通。

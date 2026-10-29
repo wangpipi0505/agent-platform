@@ -1121,6 +1121,8 @@ public class RunService {
         refs.put("interpreterVer", "1.0");
         refs.put("evalReportId", req.path("evalReportId"));
         refs.put("ontology", List.of());
+        // 仅新运行入库时捕获本次真实请求关联；读取历史运行时不得用当前 MDC 补写旧事实。
+        refs.put("traceId", TraceContextFilter.current());
         if (frozen.has("capabilityBindings")) refs.put("capabilityPackages", frozen.path("capabilityBindings").deepCopy());
         return refs;
     }
@@ -2135,6 +2137,7 @@ public class RunService {
         // UIF-A5：执行详情只读画布复用需要本次运行钉定的图定义——来自运行快照
         // （创建即冻结），与节点状态表同源，不存在"画布与记录不一致"的第二事实源。
         var snapshotJson = TraceStore.json(run.get("snapshot"));
+        if (!protectedView) result.put("observation", observationView(TraceStore.json(run.get("version_refs")), snapshotJson.path("contextPack")));
         if (snapshotJson.has("definition"))
             result.put("graph", snapshotJson.path("definition"));
         // PLAT-20 T20.1：environment/dataset 标注随冻结快照铺到详情顶层；旧运行无标注时不落键。
@@ -2617,6 +2620,8 @@ public class RunService {
 
     /** 运行监控：服务端检索 + 分页，避免管理台只能看到最近 200 条后在前端盲目过滤。 */
     public Map<String, Object> page(Actor actor, Map<String, String> filters) {
+        if (!Collections.disjoint(filters.keySet(), Set.of("tenant", "tenantId", "principal", "principalId")))
+            throw new PlatformException(400, "INVALID_INPUT", "运行查询范围仅来自当前身份");
         int page = Math.max(1, parsePositive(filters.get("page"), 1));
         int size = Math.min(100, Math.max(1, parsePositive(filters.get("size"), 20)));
         var where = new StringBuilder(
@@ -2647,6 +2652,7 @@ public class RunService {
             where.append(" and r.app_code=?");
             args.add(appCode);
         }
+        appendObservationFilters(where, args, filters);
         String from = filters.getOrDefault("from", "").trim();
         String to = filters.getOrDefault("to", "").trim();
         if (!from.isEmpty()) {
@@ -2668,18 +2674,62 @@ public class RunService {
         List<Map<String, Object>> items = store.db().queryForList(
                 "select r.public_id as \"runId\",r.app_code as \"appCode\",r.trigger_type as"
                     + " \"triggerType\",r.status,r.started_at as \"startedAt\",r.ended_at as"
-                    + " \"endedAt\",r.stop_reason as \"stopReason\""
+                    + " \"endedAt\",r.stop_reason as \"stopReason\",r.version_refs as \"_observationRefs\","
+                    + "r.snapshot->'contextPack' as \"_observationContext\""
                     + where
                     + " order by r.id desc limit ? offset ?",
                 pageArgs.toArray());
         for (var item : items) {
             item.put("statusLabel", runStatusLabel(String.valueOf(item.get("status"))));
+            item.put("observation", observationView(TraceStore.json(item.remove("_observationRefs")), TraceStore.json(item.remove("_observationContext"))));
         }
         var result = new LinkedHashMap<String, Object>();
         result.put("items", items);
         result.put("total", total == null ? 0 : total);
         result.put("page", page);
         result.put("size", size);
+        return result;
+    }
+
+    /** 六维查询只消费本次运行持久事实；包/路线/工具必须在同一个冻结来源元素内对应。 */
+    private static void appendObservationFilters(StringBuilder where, List<Object> args, Map<String, String> filters) {
+        var selected = new LinkedHashMap<String, String>();
+        for (String key : List.of("packageId", "routeProfileId", "toolId", "releaseId", "traceId")) {
+            String value = filters.getOrDefault(key, "").trim();
+            if (value.length() > 128) throw new PlatformException(400, "INVALID_INPUT", "运行观测条件过长");
+            selected.put(key, value);
+        }
+        if (!selected.get("releaseId").isEmpty()) {
+            where.append(" and r.snapshot#>>'{contextPack,releaseId}'=?"); args.add(selected.get("releaseId"));
+        }
+        if (!selected.get("traceId").isEmpty()) {
+            where.append(" and r.version_refs->>'traceId'=?"); args.add(selected.get("traceId"));
+        }
+        if (selected.get("packageId").isEmpty() && selected.get("routeProfileId").isEmpty() && selected.get("toolId").isEmpty()) return;
+        where.append(" and exists(select 1 from jsonb_array_elements(case when jsonb_typeof(r.version_refs->'capabilityPackages')='array'"
+                + " then r.version_refs->'capabilityPackages' else '[]'::jsonb end) as pkg(value) where true");
+        for (String key : List.of("packageId", "routeProfileId")) if (!selected.get(key).isEmpty()) {
+            where.append(" and pkg.value->>'" + key + "'=?"); args.add(selected.get(key));
+        }
+        if (!selected.get("toolId").isEmpty()) {
+            // toolId 不能从技能编码猜测，也不能仅因声明里出现而声称已发生调用；必须有同精确技能的实际 PG 调用。
+            where.append(" and exists(select 1 from jsonb_array_elements(case when jsonb_typeof(pkg.value->'bindings')='array'"
+                    + " then pkg.value->'bindings' else '[]'::jsonb end) as binding(value) join engine.tool_call observed_call"
+                    + " on observed_call.run_id=r.id and observed_call.skill_code=binding.value->>'skillCode'"
+                    + " and observed_call.skill_version_id::text=binding.value->>'skillVersionId'"
+                    + " where binding.value->>'toolId'=? and binding.value->>'routeProfileId'=pkg.value->>'routeProfileId')");
+            args.add(selected.get("toolId"));
+        }
+        where.append(")");
+    }
+
+    /** null 表示历史未记录；冻结来源包含选择结果，不把全部绑定误称为实际调用清单。 */
+    private static Map<String, Object> observationView(JsonNode refs, JsonNode contextPack) {
+        var result = new LinkedHashMap<String, Object>();
+        result.put("traceId", refs.path("traceId").isTextual() ? refs.path("traceId").asText() : null);
+        result.put("releaseId", contextPack.path("releaseId").isTextual() ? contextPack.path("releaseId").asText() : null);
+        result.put("spaceId", contextPack.path("space").isTextual() ? contextPack.path("space").asText() : null);
+        result.put("capabilityPackages", refs.path("capabilityPackages").isArray() ? refs.path("capabilityPackages").deepCopy() : null);
         return result;
     }
 
