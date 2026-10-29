@@ -1,0 +1,152 @@
+{
+    "database":  "agent_platform_ex15a_live_20261029134925_56393207",
+    "databasePreserved":  true,
+    "noCleanInstall":  true,
+    "publicContainsCredentials":  false,
+    "run":  "ex15a-live-20261029134925-56393207",
+    "facts":  [
+                  {
+                      "stage":  "package",
+                      "nativeExit":  0
+                  },
+                  {
+                      "stage":  "log-archive",
+                      "service":  "platform-gateway",
+                      "generation":  "before-initial",
+                      "kind":  "out",
+                      "sha256":  "30b9dda7db4df4ed1cdd0f8cd6531d03f60212542dee9708036fea48ea7ba123",
+                      "bytes":  2841
+                  },
+                  {
+                      "stage":  "log-archive",
+                      "service":  "platform-gateway",
+                      "generation":  "before-initial",
+                      "kind":  "err",
+                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                      "bytes":  0
+                  },
+                  {
+                      "stage":  "log-archive",
+                      "service":  "skill-registry",
+                      "generation":  "before-initial",
+                      "kind":  "out",
+                      "sha256":  "7d2b4d0e2a786e27b2e004f678238cb2da99f6e447e633cd346f5aa56c6cd525",
+                      "bytes":  4255
+                  },
+                  {
+                      "stage":  "log-archive",
+                      "service":  "skill-registry",
+                      "generation":  "before-initial",
+                      "kind":  "err",
+                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                      "bytes":  0
+                  },
+                  {
+                      "stage":  "registered",
+                      "process":  {
+                                      "service":  "platform-gateway",
+                                      "pid":  48968,
+                                      "creation":  "2026-10-29T13:49:42.1616170+08:00",
+                                      "jar":  "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\platform-gateway\\target\\platform-gateway-0.1.0-SNAPSHOT.jar",
+                                      "jarSha256":  "9ecb0173d829b637a2a56e76e743b5ff53f2db0eb576df82073753490e4bf592",
+                                      "generation":  "initial"
+                                  }
+                  },
+                  {
+                      "stage":  "registered",
+                      "process":  {
+                                      "service":  "skill-registry",
+                                      "pid":  65656,
+                                      "creation":  "2026-10-29T13:49:43.2111690+08:00",
+                                      "jar":  "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\skill-registry\\target\\skill-registry-0.1.0-SNAPSHOT.jar",
+                                      "jarSha256":  "844ef00c928bed9961cf0cfe51468d864c2199df9fa1e2b60a775003eb5ae0be",
+                                      "generation":  "initial"
+                                  }
+                  },
+                  {
+                      "stage":  "ready",
+                      "service":  "platform-gateway",
+                      "pid":  48968,
+                      "port":  18080,
+                      "http":  200
+                  },
+                  {
+                      "stage":  "ready",
+                      "service":  "skill-registry",
+                      "pid":  65656,
+                      "port":  18083,
+                      "http":  200
+                  },
+                  {
+                      "stage":  "probe-exit",
+                      "phase":  "upload",
+                      "nativeExit":  0,
+                      "pid":  55648
+                  },
+                  {
+                      "stage":  "log-archive",
+                      "service":  "skill-registry",
+                      "generation":  "after-initial",
+                      "kind":  "out",
+                      "sha256":  "9412df374a798eea9c388e02b3d12c661a6ff154e607143a683611403fe600fd",
+                      "bytes":  7698
+                  },
+                  {
+                      "stage":  "log-archive",
+                      "service":  "skill-registry",
+                      "generation":  "after-initial",
+                      "kind":  "err",
+                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                      "bytes":  0
+                  },
+                  {
+                      "stage":  "exited",
+                      "service":  "skill-registry",
+                      "pid":  65656,
+                      "creation":  "2026-10-29T13:49:43.2111690+08:00"
+                  },
+                  {
+                      "stage":  "log-archive",
+                      "service":  "skill-registry",
+                      "generation":  "before-restarted",
+                      "kind":  "out",
+                      "sha256":  "9412df374a798eea9c388e02b3d12c661a6ff154e607143a683611403fe600fd",
+                      "bytes":  7698
+                  },
+                  {
+                      "stage":  "log-archive",
+                      "service":  "skill-registry",
+                      "generation":  "before-restarted",
+                      "kind":  "err",
+                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                      "bytes":  0
+                  },
+                  {
+                      "stage":  "log-archive",
+                      "service":  "platform-gateway",
+                      "generation":  "after-initial",
+                      "kind":  "out",
+                      "sha256":  "46002413bdf9ef8ce0843374ef71fb35c558b0479946220ad375aeaa3472555a",
+                      "bytes":  2841
+                  },
+                  {
+                      "stage":  "log-archive",
+                      "service":  "platform-gateway",
+                      "generation":  "after-initial",
+                      "kind":  "err",
+                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                      "bytes":  0
+                  },
+                  {
+                      "stage":  "exited",
+                      "service":  "platform-gateway",
+                      "pid":  48968,
+                      "creation":  "2026-10-29T13:49:42.1616170+08:00"
+                  }
+              ],
+    "rawEvidenceDirectory":  "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\.local\\ex15a-live\\ex15a-live-20261029134925-56393207",
+    "failureCode":  "EX15_LIVE_FAILED",
+    "databaseCreated":  true,
+    "head":  "1fe99d67b9f72fad576d5e3a424b24d550dbf0b2",
+    "complete":  false
+}

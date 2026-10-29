@@ -1,0 +1,646 @@
+{
+    "passed":  true,
+    "checkedAtUtc":  "2026-10-29T06:24:21.7988405Z",
+    "mode":  "After",
+    "configurationSha256":  "af038f68e0ca2e3eeeeb0c5240b2c2da1ef647d680500f63af1564975ebafd4a",
+    "host":  "127.0.0.1",
+    "port":  25432,
+    "pid":  15204,
+    "creationDate":  "2026-10-28T20:18:26.7744990+08:00",
+    "dataDirectory":  "V:/.local/pgdata",
+    "readOnly":  true,
+    "databases":  [
+                      {
+                          "name":  "agent_platform_iam_admission_app_v12",
+                          "existed":  true,
+                          "owner":  "agent_v12",
+                          "projectOwnershipVerified":  true,
+                          "historyVerified":  true,
+                          "schema":  "app",
+                          "schemaOwner":  "agent_v12",
+                          "historyOwner":  "agent_v12",
+                          "fixtureTarget":  104,
+                          "metadataOnly":  false,
+                          "pendingRequiredMigrations":  0,
+                          "actualSqlRows":  5,
+                          "history":  [
+                                          {
+                                              "rank":  0,
+                                              "version":  null,
+                                              "type":  "SCHEMA",
+                                              "script":  "\"app\"",
+                                              "checksum":  null,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  1,
+                                              "version":  "100",
+                                              "type":  "SQL",
+                                              "script":  "V100__application.sql",
+                                              "checksum":  1064274284,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  2,
+                                              "version":  "101",
+                                              "type":  "SQL",
+                                              "script":  "V101__integration.sql",
+                                              "checksum":  123537960,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  3,
+                                              "version":  "102",
+                                              "type":  "SQL",
+                                              "script":  "V102__separate_application_draft.sql",
+                                              "checksum":  1415506777,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  4,
+                                              "version":  "103",
+                                              "type":  "SQL",
+                                              "script":  "V103__freeze_candidate_models.sql",
+                                              "checksum":  -452534077,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  5,
+                                              "version":  "104",
+                                              "type":  "SQL",
+                                              "script":  "V104__integration_policy_revision.sql",
+                                              "checksum":  -47184097,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          }
+                                      ]
+                      },
+                      {
+                          "name":  "agent_platform_iam_admission_engine_v12",
+                          "existed":  true,
+                          "owner":  "agent_v12",
+                          "projectOwnershipVerified":  true,
+                          "historyVerified":  true,
+                          "schema":  "engine",
+                          "schemaOwner":  "agent_v12",
+                          "historyOwner":  "agent_v12",
+                          "fixtureTarget":  223,
+                          "metadataOnly":  false,
+                          "pendingRequiredMigrations":  0,
+                          "actualSqlRows":  24,
+                          "history":  [
+                                          {
+                                              "rank":  0,
+                                              "version":  null,
+                                              "type":  "SCHEMA",
+                                              "script":  "\"engine\"",
+                                              "checksum":  null,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  1,
+                                              "version":  "200",
+                                              "type":  "SQL",
+                                              "script":  "V200__engine.sql",
+                                              "checksum":  -1129590471,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  2,
+                                              "version":  "201",
+                                              "type":  "SQL",
+                                              "script":  "V201__engine_tool_approval.sql",
+                                              "checksum":  580067347,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  3,
+                                              "version":  "202",
+                                              "type":  "SQL",
+                                              "script":  "V202__engine_controlled_draft_test.sql",
+                                              "checksum":  707443294,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  4,
+                                              "version":  "203",
+                                              "type":  "SQL",
+                                              "script":  "V203__engine_frozen_call_contract.sql",
+                                              "checksum":  646965935,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  5,
+                                              "version":  "204",
+                                              "type":  "SQL",
+                                              "script":  "V204__engine_fact_recovery_schedule.sql",
+                                              "checksum":  -2044828041,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  6,
+                                              "version":  "205",
+                                              "type":  "SQL",
+                                              "script":  "V205__engine_model_projection.sql",
+                                              "checksum":  1045032642,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  7,
+                                              "version":  "206",
+                                              "type":  "SQL",
+                                              "script":  "V206__engine_debug_controls.sql",
+                                              "checksum":  -1028316638,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  8,
+                                              "version":  "207",
+                                              "type":  "SQL",
+                                              "script":  "V207__engine_model_usage_ledger.sql",
+                                              "checksum":  1934542204,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  9,
+                                              "version":  "208",
+                                              "type":  "SQL",
+                                              "script":  "V208__engine_chat_sessions.sql",
+                                              "checksum":  768495068,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  10,
+                                              "version":  "209",
+                                              "type":  "SQL",
+                                              "script":  "V209__engine_readonly_retry_budget.sql",
+                                              "checksum":  1867923543,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  11,
+                                              "version":  "210",
+                                              "type":  "SQL",
+                                              "script":  "V210__engine_controlled_reproduction.sql",
+                                              "checksum":  -137714443,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  12,
+                                              "version":  "211",
+                                              "type":  "SQL",
+                                              "script":  "V211__engine_controlled_model_provenance.sql",
+                                              "checksum":  -400208876,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  13,
+                                              "version":  "212",
+                                              "type":  "SQL",
+                                              "script":  "V212__engine_exact_skill_connection.sql",
+                                              "checksum":  281983426,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  14,
+                                              "version":  "213",
+                                              "type":  "SQL",
+                                              "script":  "V213__engine_model_output_policy.sql",
+                                              "checksum":  1552686261,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  15,
+                                              "version":  "214",
+                                              "type":  "SQL",
+                                              "script":  "V214__named_test_inputs.sql",
+                                              "checksum":  2054032904,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  16,
+                                              "version":  "215",
+                                              "type":  "SQL",
+                                              "script":  "V215__run_scheduler.sql",
+                                              "checksum":  1323767709,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  17,
+                                              "version":  "216",
+                                              "type":  "SQL",
+                                              "script":  "V216__run_authority_initial_materials.sql",
+                                              "checksum":  -762860462,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  18,
+                                              "version":  "217",
+                                              "type":  "SQL",
+                                              "script":  "V217__run_flow_materials.sql",
+                                              "checksum":  -1329318129,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  19,
+                                              "version":  "218",
+                                              "type":  "SQL",
+                                              "script":  "V218__initial_model_input_material.sql",
+                                              "checksum":  -1618362922,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  20,
+                                              "version":  "219",
+                                              "type":  "SQL",
+                                              "script":  "V219__initial_request_utf8.sql",
+                                              "checksum":  1572542507,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  21,
+                                              "version":  "220",
+                                              "type":  "SQL",
+                                              "script":  "V220__run_error_structured.sql",
+                                              "checksum":  -1513129480,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  22,
+                                              "version":  "222",
+                                              "type":  "SQL",
+                                              "script":  "V222__run_context_pack.sql",
+                                              "checksum":  701700386,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  23,
+                                              "version":  "223",
+                                              "type":  "SQL",
+                                              "script":  "V223__engine_quota_window.sql",
+                                              "checksum":  -1544326013,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  24,
+                                              "version":  "221",
+                                              "type":  "SQL",
+                                              "script":  "V221__action_plan_execute_key.sql",
+                                              "checksum":  -1050133376,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          }
+                                      ]
+                      },
+                      {
+                          "name":  "agent_platform_iam_o1c_gateway_status_v12",
+                          "existed":  true,
+                          "owner":  "agent_v12",
+                          "projectOwnershipVerified":  true,
+                          "historyVerified":  true,
+                          "schema":  "engine",
+                          "schemaOwner":  "agent_v12",
+                          "historyOwner":  "agent_v12",
+                          "fixtureTarget":  223,
+                          "metadataOnly":  false,
+                          "pendingRequiredMigrations":  0,
+                          "actualSqlRows":  24,
+                          "history":  [
+                                          {
+                                              "rank":  0,
+                                              "version":  null,
+                                              "type":  "SCHEMA",
+                                              "script":  "\"engine\"",
+                                              "checksum":  null,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  1,
+                                              "version":  "200",
+                                              "type":  "SQL",
+                                              "script":  "V200__engine.sql",
+                                              "checksum":  -1129590471,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  2,
+                                              "version":  "201",
+                                              "type":  "SQL",
+                                              "script":  "V201__engine_tool_approval.sql",
+                                              "checksum":  580067347,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  3,
+                                              "version":  "202",
+                                              "type":  "SQL",
+                                              "script":  "V202__engine_controlled_draft_test.sql",
+                                              "checksum":  707443294,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  4,
+                                              "version":  "203",
+                                              "type":  "SQL",
+                                              "script":  "V203__engine_frozen_call_contract.sql",
+                                              "checksum":  646965935,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  5,
+                                              "version":  "204",
+                                              "type":  "SQL",
+                                              "script":  "V204__engine_fact_recovery_schedule.sql",
+                                              "checksum":  -2044828041,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  6,
+                                              "version":  "205",
+                                              "type":  "SQL",
+                                              "script":  "V205__engine_model_projection.sql",
+                                              "checksum":  1045032642,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  7,
+                                              "version":  "206",
+                                              "type":  "SQL",
+                                              "script":  "V206__engine_debug_controls.sql",
+                                              "checksum":  -1028316638,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  8,
+                                              "version":  "207",
+                                              "type":  "SQL",
+                                              "script":  "V207__engine_model_usage_ledger.sql",
+                                              "checksum":  1934542204,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  9,
+                                              "version":  "208",
+                                              "type":  "SQL",
+                                              "script":  "V208__engine_chat_sessions.sql",
+                                              "checksum":  768495068,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  10,
+                                              "version":  "209",
+                                              "type":  "SQL",
+                                              "script":  "V209__engine_readonly_retry_budget.sql",
+                                              "checksum":  1867923543,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  11,
+                                              "version":  "210",
+                                              "type":  "SQL",
+                                              "script":  "V210__engine_controlled_reproduction.sql",
+                                              "checksum":  -137714443,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  12,
+                                              "version":  "211",
+                                              "type":  "SQL",
+                                              "script":  "V211__engine_controlled_model_provenance.sql",
+                                              "checksum":  -400208876,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  13,
+                                              "version":  "212",
+                                              "type":  "SQL",
+                                              "script":  "V212__engine_exact_skill_connection.sql",
+                                              "checksum":  281983426,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  14,
+                                              "version":  "213",
+                                              "type":  "SQL",
+                                              "script":  "V213__engine_model_output_policy.sql",
+                                              "checksum":  1552686261,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  15,
+                                              "version":  "214",
+                                              "type":  "SQL",
+                                              "script":  "V214__named_test_inputs.sql",
+                                              "checksum":  2054032904,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  16,
+                                              "version":  "215",
+                                              "type":  "SQL",
+                                              "script":  "V215__run_scheduler.sql",
+                                              "checksum":  1323767709,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  17,
+                                              "version":  "216",
+                                              "type":  "SQL",
+                                              "script":  "V216__run_authority_initial_materials.sql",
+                                              "checksum":  -762860462,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  18,
+                                              "version":  "217",
+                                              "type":  "SQL",
+                                              "script":  "V217__run_flow_materials.sql",
+                                              "checksum":  -1329318129,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  19,
+                                              "version":  "218",
+                                              "type":  "SQL",
+                                              "script":  "V218__initial_model_input_material.sql",
+                                              "checksum":  -1618362922,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  20,
+                                              "version":  "219",
+                                              "type":  "SQL",
+                                              "script":  "V219__initial_request_utf8.sql",
+                                              "checksum":  1572542507,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  21,
+                                              "version":  "220",
+                                              "type":  "SQL",
+                                              "script":  "V220__run_error_structured.sql",
+                                              "checksum":  -1513129480,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  22,
+                                              "version":  "221",
+                                              "type":  "SQL",
+                                              "script":  "V221__action_plan_execute_key.sql",
+                                              "checksum":  -1050133376,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  23,
+                                              "version":  "222",
+                                              "type":  "SQL",
+                                              "script":  "V222__run_context_pack.sql",
+                                              "checksum":  701700386,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  24,
+                                              "version":  "223",
+                                              "type":  "SQL",
+                                              "script":  "V223__engine_quota_window.sql",
+                                              "checksum":  -1544326013,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          }
+                                      ]
+                      },
+                      {
+                          "name":  "agent_platform_iam_metadata_v12",
+                          "existed":  true,
+                          "owner":  "agent_v12",
+                          "projectOwnershipVerified":  true,
+                          "historyVerified":  true,
+                          "schema":  "app",
+                          "schemaOwner":  "agent_v12",
+                          "historyOwner":  "agent_v12",
+                          "fixtureTarget":  104,
+                          "metadataOnly":  true,
+                          "pendingRequiredMigrations":  0,
+                          "actualSqlRows":  5,
+                          "history":  [
+                                          {
+                                              "rank":  0,
+                                              "version":  null,
+                                              "type":  "SCHEMA",
+                                              "script":  "\"app\"",
+                                              "checksum":  null,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  1,
+                                              "version":  "100",
+                                              "type":  "SQL",
+                                              "script":  "V100__application.sql",
+                                              "checksum":  1064274284,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  2,
+                                              "version":  "101",
+                                              "type":  "SQL",
+                                              "script":  "V101__integration.sql",
+                                              "checksum":  123537960,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  3,
+                                              "version":  "102",
+                                              "type":  "SQL",
+                                              "script":  "V102__separate_application_draft.sql",
+                                              "checksum":  1415506777,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  4,
+                                              "version":  "103",
+                                              "type":  "SQL",
+                                              "script":  "V103__freeze_candidate_models.sql",
+                                              "checksum":  -452534077,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          },
+                                          {
+                                              "rank":  5,
+                                              "version":  "104",
+                                              "type":  "SQL",
+                                              "script":  "V104__integration_policy_revision.sql",
+                                              "checksum":  -47184097,
+                                              "installedBy":  "agent_v12",
+                                              "success":  true
+                                          }
+                                      ]
+                      }
+                  ],
+    "knownLegacyRuntime":  {
+                               "sourceAbsent":  true,
+                               "path":  "engine-runtime/target/classes/db/migration/V222__run_context_pack.sql",
+                               "sha256":  "419c753c652b326dbd59de40409f080a16f26b98787a7f8cf870b6ecf2859a90",
+                               "checksum":  701700386,
+                               "cleanBuildVerified":  false
+                           },
+    "noDdlOrQueueCleanup":  true,
+    "historyUnchanged":  true,
+    "fingerprintsSha256":  "ea4f30e232ddb77cfd1a5db523148aaa4acb4e0c60379a3ed21ab4b285b5811b"
+}

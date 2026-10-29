@@ -206,6 +206,16 @@ public final class MultipartFormMapping {
         return parts;
     }
 
+    /** 请求结束时也关闭尚未被写出器消费的文件部分；各 FilePartBody 的 CAS 保证只关闭一次。 */
+    public static void closeFiles(MultiValueMap<String, Object> parts) {
+        if (parts == null) return;
+        for (var values : parts.values())
+            for (var value : values)
+                if (value instanceof HttpEntity<?> entity
+                        && entity.getBody() instanceof FilePartBody body)
+                    body.close();
+    }
+
     /**
      * 文件部分载体：保存产物流的“打开方式”，首次（也唯一一次）{@link #getInputStream()} 时才把
      * okhttp/MinIO 流交给HTTP写出器，边写边计数——堆占用与文件大小无关，也不做base64/byte[]中转。
@@ -355,7 +365,7 @@ public final class MultipartFormMapping {
         if (reference.matches("art_[a-f0-9]{32}")) id = reference;
         else {
             var matcher = java.util.regex.Pattern
-                    .compile("/(?:admin/artifacts|v1/runs/[A-Za-z0-9_-]+/artifacts)/([a-f0-9]{32})/download")
+                    .compile("/(?:admin/artifacts|v1/runs/[A-Za-z0-9_-]+/artifacts)/(?:art_)?([a-f0-9]{32})/download")
                     .matcher(reference);
             if (!matcher.matches()) id = null;
             else id = "art_" + matcher.group(1);

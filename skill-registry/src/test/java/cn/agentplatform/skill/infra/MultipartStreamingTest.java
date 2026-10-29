@@ -4,17 +4,24 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import cn.agentplatform.common.PlatformException;
 
+import com.sun.net.httpserver.HttpServer;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.FormHttpMessageConverter;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.http.MockHttpOutputMessage;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.util.MultiValueMap;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -256,5 +263,151 @@ class MultipartStreamingTest {
         assertEquals(0, second.readCalls.get());
         assertEquals(1, first.closeCalls.get(), "已装载的前序部分必须在构建失败时关闭");
         assertEquals(1, second.closeCalls.get(), "被拒绝的部分必须就地关闭");
+    }
+
+    @Test
+    void 真实产物引用生成器的门户下载路径可直接用于文件参数() throws Exception {
+        consumeGeneratedReference("downloadUrl");
+    }
+
+    @Test
+    void 真实产物引用生成器的运行下载路径可直接用于文件参数() throws Exception {
+        consumeGeneratedReference("externalDownloadUrl");
+    }
+
+    private static void consumeGeneratedReference(String field) throws Exception {
+        var stream = new SyntheticStream(4);
+        var loads = new AtomicInteger();
+        var reference = generatedReference();
+        var parts = MultipartFormMapping.build(
+                contract(MIB),
+                Map.of("file", reference.get(field)),
+                id -> {
+                    assertEquals(ARTIFACT, id, "下载路径必须解析回同一 opaque artifactId");
+                    loads.incrementAndGet();
+                    return new ArtifactStore.Download(stream, 4, "text/csv", "e".repeat(64));
+                });
+        assertEquals(1, loads.get(), "必须经过受控产物解析，而非将 URL 当作远程下载地址");
+        assertEquals(0, stream.readCalls.get(), "构建期仍不得读取文件内容");
+        try (var input = fileBody(parts).getInputStream()) {
+            assertEquals(4, input.transferTo(OutputStream.nullOutputStream()));
+        }
+        assertEquals(1, stream.closeCalls.get());
+    }
+
+    /** 仅替代持久查询；URL 必须来自生产 ArtifactStore，不能在测试里复制其拼接规则。 */
+    private static Map<String, Object> generatedReference() {
+        String tenant = "multipart-reference-test", principal = "owner", run = "r_multipart_reference";
+        var row = Map.<String, Object>of(
+                "artifact_id", ARTIFACT,
+                "run_id", run,
+                "sha256", "e".repeat(64),
+                "size_bytes", 4L,
+                "content_type", "text/csv");
+        var db = new JdbcTemplate() {
+            @Override
+            public List<Map<String, Object>> queryForList(String sql, Object... args) {
+                assertArrayEquals(new Object[] {ARTIFACT, tenant, principal}, args);
+                assertTrue(sql.contains("state='READY' and expires_at>now()"));
+                return List.of(row);
+            }
+        };
+        var previous = SecurityContextHolder.getContext();
+        var context = SecurityContextHolder.createEmptyContext();
+        var jwt = Jwt.withTokenValue("verified-fixture")
+                .header("alg", "HS256")
+                .subject(principal)
+                .claim("tenant_id", tenant)
+                .claim("roles", List.of("SERVICE"))
+                .build();
+        context.setAuthentication(new JwtAuthenticationToken(jwt));
+        SecurityContextHolder.setContext(context);
+        try (var store = new ArtifactStore(db, Map.of())) {
+            return store.controlledReference(Map.of("artifactId", ARTIFACT), run);
+        } finally {
+            SecurityContextHolder.setContext(previous);
+        }
+    }
+
+    @Test
+    void 真实出站第一文件断流后关闭尚未消费的第二文件() throws Exception {
+        var first = new SyntheticStream(16 * 1024, 4096);
+        var second = new SyntheticStream(4);
+        var received = new AtomicBoolean();
+        var failure = failOutbound(first, 16 * 1024, second, false, received);
+        assertEquals("RETRYABLE_FAILURE", failure.semantic);
+        assertFalse(failure.unknown, "只读调用失败不能伪造已成功的远端结果");
+        assertTrue(first.readCalls.get() > 0, "必须进入真实 HTTP 写出层后触发断流");
+        assertAll(
+                () -> assertEquals(1, first.closeCalls.get(), "断流的当前部分必须只关闭一次"),
+                () -> assertEquals(0, second.readCalls.get(), "后续部分不得在失败后继续发送"),
+                () -> assertEquals(1, second.closeCalls.get(), "已装载但未消费的后续部分也必须关闭"));
+    }
+
+    @Test
+    void 真实出站对端断连后关闭全部已装载文件() throws Exception {
+        var first = new SyntheticStream(64 * MIB);
+        var second = new SyntheticStream(4);
+        var received = new AtomicBoolean();
+        var failure = failOutbound(first, 64 * MIB, second, true, received);
+        assertEquals("RETRYABLE_FAILURE", failure.semantic);
+        assertFalse(failure.unknown);
+        assertTrue(received.get(), "对端必须实际收到请求后关闭，不能把配置失败当作发送失败");
+        assertAll(
+                () -> assertEquals(1, first.closeCalls.get(), "发送中止必须关闭当前部分"),
+                () -> assertEquals(0, second.readCalls.get(), "对端中止后不得继续读取第二部分"),
+                () -> assertEquals(1, second.closeCalls.get(), "发送中止必须关闭未消费的已装载部分"));
+    }
+
+    private static SkillAdapters.Failure failOutbound(
+            SyntheticStream first,
+            long firstBytes,
+            SyntheticStream second,
+            boolean disconnect,
+            AtomicBoolean received) throws Exception {
+        String secondId = "art_" + "f".repeat(32);
+        var loaded = new LinkedHashSet<String>();
+        var server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        server.createContext("/upload", exchange -> {
+            received.set(true);
+            try (exchange) {
+                if (disconnect) return;
+                exchange.getRequestBody().transferTo(OutputStream.nullOutputStream());
+                exchange.sendResponseHeaders(204, -1);
+            } catch (IOException expectedDisconnect) {
+                // 断流用例故意中止 chunked 请求；服务端不得为等完整请求而遗留连接。
+            }
+        });
+        server.start();
+        try (var store = new ArtifactStore(Map.of()) {
+            @Override
+            public Download download(String id, String runId) {
+                assertNull(runId, "同步文件输入沿用已验主体的受控下载语义");
+                assertTrue(loaded.add(id), "每部分必须只装载一次");
+                if (ARTIFACT.equals(id))
+                    return new Download(first, firstBytes, "text/csv", "e".repeat(64));
+                assertEquals(secondId, id);
+                return new Download(second, 4, "text/csv", "f".repeat(64));
+            }
+        }) {
+            var contract = contractWithFiles(List.of(
+                    fileSpec("file", "text/csv", firstBytes),
+                    fileSpec("file2", "text/csv", MIB)));
+            contract.put("endpoint", "http://127.0.0.1:" + server.getAddress().getPort() + "/upload");
+            contract.put("timeoutMs", 2000);
+            contract.put("execution", Map.of("readonly", true, "sideEffect", false));
+            contract.put("outputSchema", Map.of("type", "object"));
+            contract.put("outputMaxBytes", 1024);
+            var adapters = new SkillAdapters(store, null);
+            var failure = assertThrows(
+                    SkillAdapters.Failure.class,
+                    () -> adapters.http(contract, Map.of("file", ARTIFACT, "file2", secondId),
+                            "multipart-close-test", 1, "r_multipart_close", 1));
+            assertEquals(Set.of(ARTIFACT, secondId), loaded,
+                    "断流前必须已装载两个部分，不能用未创建资源来满足关闭断言");
+            return failure;
+        } finally {
+            server.stop(0);
+        }
     }
 }

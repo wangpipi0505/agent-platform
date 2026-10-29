@@ -520,6 +520,10 @@ public class ArtifactStore implements AutoCloseable {
                                 .contentType(type)
                                 .stream(checked, size, 5 * 1024 * 1024)
                                 .build());
+                // SDK 可能预读或在声明长度处停止；READY 前必须确认完整长度，不能发布截断文件。
+                // 尾探测只读源的一个字节且不再上传；64MiB 正确 EOF 不消耗额外额度，额外字节一律拒绝。
+                if (bounded.count != size || source.read() != -1)
+                    throw new PlatformException(400, "ARTIFACT_SIZE_MISMATCH", "文件实际字节数与声明不一致");
             }
             String sha = HexFormat.of().formatHex(digest.digest());
             int changed =

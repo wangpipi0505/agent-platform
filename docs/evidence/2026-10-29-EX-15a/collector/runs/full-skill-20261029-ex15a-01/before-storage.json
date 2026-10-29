@@ -1,0 +1,834 @@
+{
+    "checkedAt":  "2026-10-29T13:19:25.1376114+08:00",
+    "pgPid":  15204,
+    "pgPort":  25432,
+    "knownDataDirectory":  true,
+    "databaseProofs":  [
+                           {
+                               "database":  "agent_platform_v12",
+                               "owner":  "agent_v12",
+                               "schemaOwner":  "agent_v12",
+                               "historyOwner":  "agent_v12",
+                               "history":  [
+                                               {
+                                                   "rank":  0,
+                                                   "version":  null,
+                                                   "type":  "SCHEMA",
+                                                   "script":  "\"skill\"",
+                                                   "checksum":  null,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  1,
+                                                   "version":  "300",
+                                                   "type":  "SQL",
+                                                   "script":  "V300__skill.sql",
+                                                   "checksum":  -1418292411,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  2,
+                                                   "version":  "301",
+                                                   "type":  "SQL",
+                                                   "script":  "V301__reconciliation.sql",
+                                                   "checksum":  -1594274411,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  3,
+                                                   "version":  "302",
+                                                   "type":  "SQL",
+                                                   "script":  "V302__skill_immutability.sql",
+                                                   "checksum":  1433624071,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  4,
+                                                   "version":  "303",
+                                                   "type":  "SQL",
+                                                   "script":  "V303__execution_fact_generation.sql",
+                                                   "checksum":  1518996234,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  5,
+                                                   "version":  "304",
+                                                   "type":  "SQL",
+                                                   "script":  "V304__fact_delivery_lease.sql",
+                                                   "checksum":  -1362208593,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  6,
+                                                   "version":  "305",
+                                                   "type":  "SQL",
+                                                   "script":  "V305__controlled_contract_digest.sql",
+                                                   "checksum":  222957610,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  7,
+                                                   "version":  "306",
+                                                   "type":  "SQL",
+                                                   "script":  "V306__controlled_artifacts.sql",
+                                                   "checksum":  420917862,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  8,
+                                                   "version":  "307",
+                                                   "type":  "SQL",
+                                                   "script":  "V307__http_async_binding.sql",
+                                                   "checksum":  1608652779,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  9,
+                                                   "version":  "308",
+                                                   "type":  "SQL",
+                                                   "script":  "V308__async_preparation_delivery.sql",
+                                                   "checksum":  -1491318948,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  10,
+                                                   "version":  "309",
+                                                   "type":  "SQL",
+                                                   "script":  "V309__signed_callback_receipt.sql",
+                                                   "checksum":  -660367829,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  11,
+                                                   "version":  "310",
+                                                   "type":  "SQL",
+                                                   "script":  "V310__reconciliation_proof.sql",
+                                                   "checksum":  296044497,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  12,
+                                                   "version":  "311",
+                                                   "type":  "SQL",
+                                                   "script":  "V311__algorithm_job_identity.sql",
+                                                   "checksum":  1869890936,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  13,
+                                                   "version":  "312",
+                                                   "type":  "SQL",
+                                                   "script":  "V312__fixture_audit.sql",
+                                                   "checksum":  -1400064458,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  14,
+                                                   "version":  "313",
+                                                   "type":  "SQL",
+                                                   "script":  "V313__service_lifecycle.sql",
+                                                   "checksum":  -255900859,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  15,
+                                                   "version":  "314",
+                                                   "type":  "SQL",
+                                                   "script":  "V314__external_job_state.sql",
+                                                   "checksum":  170650313,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  16,
+                                                   "version":  "315",
+                                                   "type":  "SQL",
+                                                   "script":  "V315__skill_semantic_digest.sql",
+                                                   "checksum":  1360029625,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               }
+                                           ],
+                               "knownHistoryOnly":  true,
+                               "collectorDdl":  false,
+                               "originalReplay":  false
+                           },
+                           {
+                               "database":  "agent_platform_skill_algorithm_test",
+                               "owner":  "agent_v12",
+                               "schemaOwner":  "agent_v12",
+                               "historyOwner":  "agent_v12",
+                               "history":  [
+                                               {
+                                                   "rank":  0,
+                                                   "version":  null,
+                                                   "type":  "SCHEMA",
+                                                   "script":  "\"skill\"",
+                                                   "checksum":  null,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  1,
+                                                   "version":  "300",
+                                                   "type":  "SQL",
+                                                   "script":  "V300__skill.sql",
+                                                   "checksum":  -1418292411,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  2,
+                                                   "version":  "301",
+                                                   "type":  "SQL",
+                                                   "script":  "V301__reconciliation.sql",
+                                                   "checksum":  -1594274411,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  3,
+                                                   "version":  "302",
+                                                   "type":  "SQL",
+                                                   "script":  "V302__skill_immutability.sql",
+                                                   "checksum":  1433624071,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  4,
+                                                   "version":  "303",
+                                                   "type":  "SQL",
+                                                   "script":  "V303__execution_fact_generation.sql",
+                                                   "checksum":  1518996234,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  5,
+                                                   "version":  "304",
+                                                   "type":  "SQL",
+                                                   "script":  "V304__fact_delivery_lease.sql",
+                                                   "checksum":  -1362208593,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  6,
+                                                   "version":  "305",
+                                                   "type":  "SQL",
+                                                   "script":  "V305__controlled_contract_digest.sql",
+                                                   "checksum":  222957610,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  7,
+                                                   "version":  "306",
+                                                   "type":  "SQL",
+                                                   "script":  "V306__controlled_artifacts.sql",
+                                                   "checksum":  420917862,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  8,
+                                                   "version":  "307",
+                                                   "type":  "SQL",
+                                                   "script":  "V307__http_async_binding.sql",
+                                                   "checksum":  1608652779,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  9,
+                                                   "version":  "308",
+                                                   "type":  "SQL",
+                                                   "script":  "V308__async_preparation_delivery.sql",
+                                                   "checksum":  -1491318948,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  10,
+                                                   "version":  "309",
+                                                   "type":  "SQL",
+                                                   "script":  "V309__signed_callback_receipt.sql",
+                                                   "checksum":  -660367829,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  11,
+                                                   "version":  "310",
+                                                   "type":  "SQL",
+                                                   "script":  "V310__reconciliation_proof.sql",
+                                                   "checksum":  296044497,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  12,
+                                                   "version":  "311",
+                                                   "type":  "SQL",
+                                                   "script":  "V311__algorithm_job_identity.sql",
+                                                   "checksum":  1869890936,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  13,
+                                                   "version":  "312",
+                                                   "type":  "SQL",
+                                                   "script":  "V312__fixture_audit.sql",
+                                                   "checksum":  -1400064458,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  14,
+                                                   "version":  "313",
+                                                   "type":  "SQL",
+                                                   "script":  "V313__service_lifecycle.sql",
+                                                   "checksum":  -255900859,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  15,
+                                                   "version":  "314",
+                                                   "type":  "SQL",
+                                                   "script":  "V314__external_job_state.sql",
+                                                   "checksum":  170650313,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  16,
+                                                   "version":  "315",
+                                                   "type":  "SQL",
+                                                   "script":  "V315__skill_semantic_digest.sql",
+                                                   "checksum":  1360029625,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               }
+                                           ],
+                               "knownHistoryOnly":  true,
+                               "collectorDdl":  false,
+                               "originalReplay":  false
+                           },
+                           {
+                               "database":  "agent_platform_skill_algorithm_migration_test",
+                               "owner":  "agent_v12",
+                               "schemaOwner":  "agent_v12",
+                               "historyOwner":  "agent_v12",
+                               "history":  [
+                                               {
+                                                   "rank":  0,
+                                                   "version":  null,
+                                                   "type":  "SCHEMA",
+                                                   "script":  "\"skill\"",
+                                                   "checksum":  null,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  1,
+                                                   "version":  "300",
+                                                   "type":  "SQL",
+                                                   "script":  "V300__skill.sql",
+                                                   "checksum":  -1418292411,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  2,
+                                                   "version":  "301",
+                                                   "type":  "SQL",
+                                                   "script":  "V301__reconciliation.sql",
+                                                   "checksum":  -1594274411,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  3,
+                                                   "version":  "302",
+                                                   "type":  "SQL",
+                                                   "script":  "V302__skill_immutability.sql",
+                                                   "checksum":  1433624071,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  4,
+                                                   "version":  "303",
+                                                   "type":  "SQL",
+                                                   "script":  "V303__execution_fact_generation.sql",
+                                                   "checksum":  1518996234,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  5,
+                                                   "version":  "304",
+                                                   "type":  "SQL",
+                                                   "script":  "V304__fact_delivery_lease.sql",
+                                                   "checksum":  -1362208593,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  6,
+                                                   "version":  "305",
+                                                   "type":  "SQL",
+                                                   "script":  "V305__controlled_contract_digest.sql",
+                                                   "checksum":  222957610,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  7,
+                                                   "version":  "306",
+                                                   "type":  "SQL",
+                                                   "script":  "V306__controlled_artifacts.sql",
+                                                   "checksum":  420917862,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  8,
+                                                   "version":  "307",
+                                                   "type":  "SQL",
+                                                   "script":  "V307__http_async_binding.sql",
+                                                   "checksum":  1608652779,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  9,
+                                                   "version":  "308",
+                                                   "type":  "SQL",
+                                                   "script":  "V308__async_preparation_delivery.sql",
+                                                   "checksum":  -1491318948,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  10,
+                                                   "version":  "309",
+                                                   "type":  "SQL",
+                                                   "script":  "V309__signed_callback_receipt.sql",
+                                                   "checksum":  -660367829,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  11,
+                                                   "version":  "310",
+                                                   "type":  "SQL",
+                                                   "script":  "V310__reconciliation_proof.sql",
+                                                   "checksum":  296044497,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  12,
+                                                   "version":  "311",
+                                                   "type":  "SQL",
+                                                   "script":  "V311__algorithm_job_identity.sql",
+                                                   "checksum":  1869890936,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  13,
+                                                   "version":  "312",
+                                                   "type":  "SQL",
+                                                   "script":  "V312__fixture_audit.sql",
+                                                   "checksum":  -1400064458,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  14,
+                                                   "version":  "313",
+                                                   "type":  "SQL",
+                                                   "script":  "V313__service_lifecycle.sql",
+                                                   "checksum":  -255900859,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  15,
+                                                   "version":  "314",
+                                                   "type":  "SQL",
+                                                   "script":  "V314__external_job_state.sql",
+                                                   "checksum":  170650313,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  16,
+                                                   "version":  "315",
+                                                   "type":  "SQL",
+                                                   "script":  "V315__skill_semantic_digest.sql",
+                                                   "checksum":  1360029625,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               }
+                                           ],
+                               "knownHistoryOnly":  true,
+                               "collectorDdl":  false,
+                               "originalReplay":  true
+                           },
+                           {
+                               "database":  "agent_platform_skill_digest_test",
+                               "owner":  "agent_v12",
+                               "schemaOwner":  "agent_v12",
+                               "historyOwner":  "agent_v12",
+                               "history":  [
+                                               {
+                                                   "rank":  0,
+                                                   "version":  null,
+                                                   "type":  "SCHEMA",
+                                                   "script":  "\"skill\"",
+                                                   "checksum":  null,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  1,
+                                                   "version":  "300",
+                                                   "type":  "SQL",
+                                                   "script":  "V300__skill.sql",
+                                                   "checksum":  -1418292411,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  2,
+                                                   "version":  "301",
+                                                   "type":  "SQL",
+                                                   "script":  "V301__reconciliation.sql",
+                                                   "checksum":  -1594274411,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  3,
+                                                   "version":  "302",
+                                                   "type":  "SQL",
+                                                   "script":  "V302__skill_immutability.sql",
+                                                   "checksum":  1433624071,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  4,
+                                                   "version":  "303",
+                                                   "type":  "SQL",
+                                                   "script":  "V303__execution_fact_generation.sql",
+                                                   "checksum":  1518996234,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  5,
+                                                   "version":  "304",
+                                                   "type":  "SQL",
+                                                   "script":  "V304__fact_delivery_lease.sql",
+                                                   "checksum":  -1362208593,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  6,
+                                                   "version":  "305",
+                                                   "type":  "SQL",
+                                                   "script":  "V305__controlled_contract_digest.sql",
+                                                   "checksum":  222957610,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  7,
+                                                   "version":  "306",
+                                                   "type":  "SQL",
+                                                   "script":  "V306__controlled_artifacts.sql",
+                                                   "checksum":  420917862,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  8,
+                                                   "version":  "307",
+                                                   "type":  "SQL",
+                                                   "script":  "V307__http_async_binding.sql",
+                                                   "checksum":  1608652779,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  9,
+                                                   "version":  "308",
+                                                   "type":  "SQL",
+                                                   "script":  "V308__async_preparation_delivery.sql",
+                                                   "checksum":  -1491318948,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  10,
+                                                   "version":  "309",
+                                                   "type":  "SQL",
+                                                   "script":  "V309__signed_callback_receipt.sql",
+                                                   "checksum":  -660367829,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  11,
+                                                   "version":  "310",
+                                                   "type":  "SQL",
+                                                   "script":  "V310__reconciliation_proof.sql",
+                                                   "checksum":  296044497,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  12,
+                                                   "version":  "311",
+                                                   "type":  "SQL",
+                                                   "script":  "V311__algorithm_job_identity.sql",
+                                                   "checksum":  1869890936,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  13,
+                                                   "version":  "312",
+                                                   "type":  "SQL",
+                                                   "script":  "V312__fixture_audit.sql",
+                                                   "checksum":  -1400064458,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  14,
+                                                   "version":  "313",
+                                                   "type":  "SQL",
+                                                   "script":  "V313__service_lifecycle.sql",
+                                                   "checksum":  -255900859,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  15,
+                                                   "version":  "314",
+                                                   "type":  "SQL",
+                                                   "script":  "V314__external_job_state.sql",
+                                                   "checksum":  170650313,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  16,
+                                                   "version":  "315",
+                                                   "type":  "SQL",
+                                                   "script":  "V315__skill_semantic_digest.sql",
+                                                   "checksum":  1360029625,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               }
+                                           ],
+                               "knownHistoryOnly":  true,
+                               "collectorDdl":  false,
+                               "originalReplay":  true
+                           },
+                           {
+                               "database":  "agent_platform_ontology_import_test",
+                               "owner":  "agent_v12",
+                               "schemaOwner":  "agent_v12",
+                               "historyOwner":  "agent_v12",
+                               "history":  [
+                                               {
+                                                   "rank":  0,
+                                                   "version":  null,
+                                                   "type":  "SCHEMA",
+                                                   "script":  "\"skill\"",
+                                                   "checksum":  null,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  1,
+                                                   "version":  "300",
+                                                   "type":  "SQL",
+                                                   "script":  "V300__skill.sql",
+                                                   "checksum":  -1418292411,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  2,
+                                                   "version":  "301",
+                                                   "type":  "SQL",
+                                                   "script":  "V301__reconciliation.sql",
+                                                   "checksum":  -1594274411,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  3,
+                                                   "version":  "302",
+                                                   "type":  "SQL",
+                                                   "script":  "V302__skill_immutability.sql",
+                                                   "checksum":  1433624071,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  4,
+                                                   "version":  "303",
+                                                   "type":  "SQL",
+                                                   "script":  "V303__execution_fact_generation.sql",
+                                                   "checksum":  1518996234,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  5,
+                                                   "version":  "304",
+                                                   "type":  "SQL",
+                                                   "script":  "V304__fact_delivery_lease.sql",
+                                                   "checksum":  -1362208593,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  6,
+                                                   "version":  "305",
+                                                   "type":  "SQL",
+                                                   "script":  "V305__controlled_contract_digest.sql",
+                                                   "checksum":  222957610,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  7,
+                                                   "version":  "306",
+                                                   "type":  "SQL",
+                                                   "script":  "V306__controlled_artifacts.sql",
+                                                   "checksum":  420917862,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  8,
+                                                   "version":  "307",
+                                                   "type":  "SQL",
+                                                   "script":  "V307__http_async_binding.sql",
+                                                   "checksum":  1608652779,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  9,
+                                                   "version":  "308",
+                                                   "type":  "SQL",
+                                                   "script":  "V308__async_preparation_delivery.sql",
+                                                   "checksum":  -1491318948,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  10,
+                                                   "version":  "309",
+                                                   "type":  "SQL",
+                                                   "script":  "V309__signed_callback_receipt.sql",
+                                                   "checksum":  -660367829,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  11,
+                                                   "version":  "310",
+                                                   "type":  "SQL",
+                                                   "script":  "V310__reconciliation_proof.sql",
+                                                   "checksum":  296044497,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  12,
+                                                   "version":  "311",
+                                                   "type":  "SQL",
+                                                   "script":  "V311__algorithm_job_identity.sql",
+                                                   "checksum":  1869890936,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  13,
+                                                   "version":  "312",
+                                                   "type":  "SQL",
+                                                   "script":  "V312__fixture_audit.sql",
+                                                   "checksum":  -1400064458,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  14,
+                                                   "version":  "313",
+                                                   "type":  "SQL",
+                                                   "script":  "V313__service_lifecycle.sql",
+                                                   "checksum":  -255900859,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  15,
+                                                   "version":  "314",
+                                                   "type":  "SQL",
+                                                   "script":  "V314__external_job_state.sql",
+                                                   "checksum":  170650313,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               },
+                                               {
+                                                   "rank":  16,
+                                                   "version":  "315",
+                                                   "type":  "SQL",
+                                                   "script":  "V315__skill_semantic_digest.sql",
+                                                   "checksum":  1360029625,
+                                                   "installedBy":  "agent_v12",
+                                                   "success":  true
+                                               }
+                                           ],
+                               "knownHistoryOnly":  true,
+                               "collectorDdl":  false,
+                               "originalReplay":  false
+                           }
+                       ],
+    "minioPort":  29000,
+    "minioHealthy":  true,
+    "collectorReadOnly":  true,
+    "collectorDdl":  false,
+    "unknownDatabaseCreation":  false,
+    "queueCleanup":  false
+}

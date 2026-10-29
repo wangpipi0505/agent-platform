@@ -1,0 +1,1251 @@
+{
+  "schemaVersion": 1,
+  "runId": "gateway-module-20261029-ex15a-02",
+  "reviewer": "ex04_pg_scope",
+  "scope": "Pure file comparison of exactly 11 nonpass representation differences; no product execution, no raw normalization, no regression/card acceptance.",
+  "inputs": {
+    "baseline": {
+      "path": ".local/ex15a-gateway-module/gateway-module-20261029-ex15a-02/baseline-nonpass-reasons.json",
+      "sha256": "5cf446e1387bbc3cd14938dc1bd48ef13b0ac97817eeae9ff8c044f7509f7c00"
+    },
+    "actual": {
+      "path": ".local/ex15a-gateway-module/gateway-module-20261029-ex15a-02/raw-reasons.json",
+      "sha256": "995164c24b3d16d2edd6064faa206a996c87dac20d4d0d0caa554722e29cc8ba"
+    },
+    "summary": {
+      "path": "docs/evidence/2026-10-29-EX-15a/gateway/runs/gateway-module-20261029-ex15a-02/summary.json",
+      "sha256": "c5c5d72ef44451242baacb1717b6c7daca0e101f39ce2a720dc1cf877857e546"
+    },
+    "fixtureSource": {
+      "path": "platform-gateway/src/test/java/cn/agentplatform/gateway/infra/PortalRunEventsJoinedChainTest.java",
+      "sha256": "a74b6f524e5f212db424a2cef7c00d3a78ed48bc9a7ba26de8f5a356f1f8d9f3",
+      "uuidSourceLines": [
+        120,
+        155
+      ]
+    }
+  },
+  "algorithm": "Require exact 15 unique method identities and 13-field schema; recompute all 60 original text hashes; compare nine metadata fields structurally/ordinally. For only five named Portal methods and six named IntegrationSecurity methods apply explicitly listed literals, one occurrence per field; require inverse literal absent, exact UTF-16 offset, fixture path anchors, and complete remaining message/detail equality without newline/stack/UUID/hex normalization. Three records must be unchanged in every field. One launcher record is excluded.",
+  "baselineAndActualIdentitySetEqual": true,
+  "rawInputsAndSummaryUnchanged": true,
+  "metadataIdenticalAll15": true,
+  "storedTextHashesVerified": 60,
+  "matrixCounts": {
+    "fixtureUuid": 5,
+    "springObjects": 6,
+    "boundedRepresentationOnly": 11,
+    "exactOriginalRecord": 3,
+    "separateAttributionRequired": 1,
+    "totalOriginalNonpass": 15,
+    "boundedFields": 22,
+    "literalOccurrences": 34
+  },
+  "boundedRepresentationProofPassed": true,
+  "originalSummaryPreserved": {
+    "nativeMavenExit": 1,
+    "collectorExit": 1,
+    "reports": 28,
+    "records": 299,
+    "statuses": [
+      {
+        "status": "PASS",
+        "count": 284
+      },
+      {
+        "status": "FAIL",
+        "count": 7
+      },
+      {
+        "status": "ERROR",
+        "count": 8
+      }
+    ],
+    "identityGate": true,
+    "sseAnd49ChildGate": true,
+    "sourceStable": true,
+    "original15RawReasonGate": false,
+    "regressionGate": false,
+    "allTestsPassed": false,
+    "rawReasonsNormalized": false,
+    "noFailureIgnore": true
+  },
+  "rows": [
+    {
+      "key": "cn.agentplatform.common.authority.GatewayRunStatusChainPostgresTest#realGatewayQueryAndStatusReturnOriginalBytes",
+      "classname": "cn.agentplatform.common.authority.GatewayRunStatusChainPostgresTest",
+      "method": "realGatewayQueryAndStatusReturnOriginalBytes",
+      "status": "FAIL",
+      "category": "exact_original_record",
+      "unchangedMetadataFields": [
+        "key",
+        "classname",
+        "method",
+        "status",
+        "type",
+        "causes",
+        "firstProjectFrame",
+        "classEvent",
+        "xml"
+      ],
+      "changedFields": [],
+      "fields": [
+        {
+          "field": "message",
+          "baselineLengthUtf16": 26,
+          "actualLengthUtf16": 26,
+          "baselineBytesUtf8": 26,
+          "actualBytesUtf8": 26,
+          "baselineSha256": "c0720c0bb8301d0e1a70536b97ed74639e1de32e86577d5b3ef0e514f95b3038",
+          "actualSha256": "c0720c0bb8301d0e1a70536b97ed74639e1de32e86577d5b3ef0e514f95b3038",
+          "storedHashesVerified": true,
+          "literalReplacements": [],
+          "afterExactReplacementsSha256": "c0720c0bb8301d0e1a70536b97ed74639e1de32e86577d5b3ef0e514f95b3038",
+          "allOtherTextOrdinalIdentical": true
+        },
+        {
+          "field": "detail",
+          "baselineLengthUtf16": 415,
+          "actualLengthUtf16": 415,
+          "baselineBytesUtf8": 415,
+          "actualBytesUtf8": 415,
+          "baselineSha256": "174851ac85ddfae69153773ad5c549b7c5c36ff925708a5a0afe32c89ba71353",
+          "actualSha256": "174851ac85ddfae69153773ad5c549b7c5c36ff925708a5a0afe32c89ba71353",
+          "storedHashesVerified": true,
+          "literalReplacements": [],
+          "afterExactReplacementsSha256": "174851ac85ddfae69153773ad5c549b7c5c36ff925708a5a0afe32c89ba71353",
+          "allOtherTextOrdinalIdentical": true
+        }
+      ],
+      "acceptedAsRepresentationOnly": false,
+      "excludedReason": null
+    },
+    {
+      "key": "cn.agentplatform.gateway.application.PublishedMetadataSmokeLauncherTest#launchTwoIsolatedJvmFixturesWithFiniteDeadline",
+      "classname": "cn.agentplatform.gateway.application.PublishedMetadataSmokeLauncherTest",
+      "method": "launchTwoIsolatedJvmFixturesWithFiniteDeadline",
+      "status": "FAIL",
+      "category": "excluded_missing_class_change",
+      "unchangedMetadataFields": [
+        "key",
+        "classname",
+        "method",
+        "status",
+        "type",
+        "causes",
+        "firstProjectFrame",
+        "classEvent",
+        "xml"
+      ],
+      "changedFields": [
+        "message",
+        "detail",
+        "messageSha256",
+        "detailSha256"
+      ],
+      "fields": [
+        {
+          "field": "message",
+          "baselineLengthUtf16": 846,
+          "actualLengthUtf16": 828,
+          "baselineBytesUtf8": 846,
+          "actualBytesUtf8": 828,
+          "baselineSha256": "4516fb374ee99532ec81d230d8cd865518cc2fa1dc37530e7d3e4d8f2144536e",
+          "actualSha256": "02df55fd9e66d74aee1d757fcaf44956c39cc564795acffa30936bfdbfe81be7",
+          "storedHashesVerified": true,
+          "literalReplacements": [],
+          "afterExactReplacementsSha256": null,
+          "allOtherTextOrdinalIdentical": null
+        },
+        {
+          "field": "detail",
+          "baselineLengthUtf16": 1241,
+          "actualLengthUtf16": 1223,
+          "baselineBytesUtf8": 1241,
+          "actualBytesUtf8": 1223,
+          "baselineSha256": "5b47ada0f2e0f1c28402bc71bc6135305d8cc1e7f437b38f97554a3325a00259",
+          "actualSha256": "85ae5774578659f7ea166873891a6fc41f8a235b20ce536187eca148d38b4d76",
+          "storedHashesVerified": true,
+          "literalReplacements": [],
+          "afterExactReplacementsSha256": null,
+          "allOtherTextOrdinalIdentical": null
+        }
+      ],
+      "acceptedAsRepresentationOnly": false,
+      "excludedReason": "Missing-class name changed; separate technical attribution required. No normalization or acceptance in this proof."
+    },
+    {
+      "key": "cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest#slowReaderCurrentAuthorityAndExpiry",
+      "classname": "cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest",
+      "method": "slowReaderCurrentAuthorityAndExpiry",
+      "status": "FAIL",
+      "category": "fixture_uuid_literal_only",
+      "unchangedMetadataFields": [
+        "key",
+        "classname",
+        "method",
+        "status",
+        "type",
+        "causes",
+        "firstProjectFrame",
+        "classEvent",
+        "xml"
+      ],
+      "changedFields": [
+        "message",
+        "detail",
+        "messageSha256",
+        "detailSha256"
+      ],
+      "fields": [
+        {
+          "field": "message",
+          "baselineLengthUtf16": 202,
+          "actualLengthUtf16": 202,
+          "baselineBytesUtf8": 222,
+          "actualBytesUtf8": 222,
+          "baselineSha256": "5594222fe28ad8afd819c27b4329e3fe41b460907a28594db0dc7aaef98d1733",
+          "actualSha256": "91138c8437b22120822a22954afd51117117e29991796add56abf142f0491188",
+          "storedHashesVerified": true,
+          "literalReplacements": [
+            {
+              "oldLiteral": "738d60b3-b7a1-4afa-b58c-2277ca87557d",
+              "newLiteral": "68719f44-85c3-4ba0-8a78-56113c832c4f",
+              "baselineOccurrences": 1,
+              "actualOccurrences": 1,
+              "oldLiteralInActual": 0,
+              "newLiteralInBaseline": 0,
+              "baselineOffsetUtf16": 91,
+              "actualOffsetUtf16": 91,
+              "fixturePathAnchorBaseline": "focused-738d60b3-b7a1-4afa-b58c-2277ca87557d\\engine-ready.json",
+              "fixturePathAnchorActual": "focused-68719f44-85c3-4ba0-8a78-56113c832c4f\\engine-ready.json"
+            }
+          ],
+          "afterExactReplacementsSha256": "91138c8437b22120822a22954afd51117117e29991796add56abf142f0491188",
+          "allOtherTextOrdinalIdentical": true
+        },
+        {
+          "field": "detail",
+          "baselineLengthUtf16": 2078,
+          "actualLengthUtf16": 2078,
+          "baselineBytesUtf8": 2098,
+          "actualBytesUtf8": 2098,
+          "baselineSha256": "b3f4cd19addae41046a44a13436e0ef36c028c1da106b4faf6732046fff29aea",
+          "actualSha256": "a81123837ccc7a689f51dc0e6756013706d1d8d0f818f6f5f4a4f5e4247d49a2",
+          "storedHashesVerified": true,
+          "literalReplacements": [
+            {
+              "oldLiteral": "738d60b3-b7a1-4afa-b58c-2277ca87557d",
+              "newLiteral": "68719f44-85c3-4ba0-8a78-56113c832c4f",
+              "baselineOccurrences": 1,
+              "actualOccurrences": 1,
+              "oldLiteralInActual": 0,
+              "newLiteralInBaseline": 0,
+              "baselineOffsetUtf16": 128,
+              "actualOffsetUtf16": 128,
+              "fixturePathAnchorBaseline": "focused-738d60b3-b7a1-4afa-b58c-2277ca87557d\\engine-ready.json",
+              "fixturePathAnchorActual": "focused-68719f44-85c3-4ba0-8a78-56113c832c4f\\engine-ready.json"
+            }
+          ],
+          "afterExactReplacementsSha256": "a81123837ccc7a689f51dc0e6756013706d1d8d0f818f6f5f4a4f5e4247d49a2",
+          "allOtherTextOrdinalIdentical": true
+        }
+      ],
+      "acceptedAsRepresentationOnly": true,
+      "excludedReason": null
+    },
+    {
+      "key": "cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest#retainedStreamControlledExpiry",
+      "classname": "cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest",
+      "method": "retainedStreamControlledExpiry",
+      "status": "FAIL",
+      "category": "fixture_uuid_literal_only",
+      "unchangedMetadataFields": [
+        "key",
+        "classname",
+        "method",
+        "status",
+        "type",
+        "causes",
+        "firstProjectFrame",
+        "classEvent",
+        "xml"
+      ],
+      "changedFields": [
+        "message",
+        "detail",
+        "messageSha256",
+        "detailSha256"
+      ],
+      "fields": [
+        {
+          "field": "message",
+          "baselineLengthUtf16": 202,
+          "actualLengthUtf16": 202,
+          "baselineBytesUtf8": 222,
+          "actualBytesUtf8": 222,
+          "baselineSha256": "574ba451962c231dd9301ea62bcc8a5ed16c3d06aee24a2de335e764966ed6da",
+          "actualSha256": "ed6228f691321b523e69ab8e399c349b94556810eb6c836e72f2e8687e6cee74",
+          "storedHashesVerified": true,
+          "literalReplacements": [
+            {
+              "oldLiteral": "bf73b54b-e5c3-4d36-8516-ae9c17225ea3",
+              "newLiteral": "112e5d23-a404-45ee-bb74-94f42731efa5",
+              "baselineOccurrences": 1,
+              "actualOccurrences": 1,
+              "oldLiteralInActual": 0,
+              "newLiteralInBaseline": 0,
+              "baselineOffsetUtf16": 91,
+              "actualOffsetUtf16": 91,
+              "fixturePathAnchorBaseline": "focused-bf73b54b-e5c3-4d36-8516-ae9c17225ea3\\engine-ready.json",
+              "fixturePathAnchorActual": "focused-112e5d23-a404-45ee-bb74-94f42731efa5\\engine-ready.json"
+            }
+          ],
+          "afterExactReplacementsSha256": "ed6228f691321b523e69ab8e399c349b94556810eb6c836e72f2e8687e6cee74",
+          "allOtherTextOrdinalIdentical": true
+        },
+        {
+          "field": "detail",
+          "baselineLengthUtf16": 1958,
+          "actualLengthUtf16": 1958,
+          "baselineBytesUtf8": 1978,
+          "actualBytesUtf8": 1978,
+          "baselineSha256": "27d82943f7aea54875350e08e202f2b7be6a465630f29fad9541895514db16aa",
+          "actualSha256": "157c006e91c2c8402a878359b4d0ab21a0b6e02e7e5a5f23617e05c913d0969f",
+          "storedHashesVerified": true,
+          "literalReplacements": [
+            {
+              "oldLiteral": "bf73b54b-e5c3-4d36-8516-ae9c17225ea3",
+              "newLiteral": "112e5d23-a404-45ee-bb74-94f42731efa5",
+              "baselineOccurrences": 1,
+              "actualOccurrences": 1,
+              "oldLiteralInActual": 0,
+              "newLiteralInBaseline": 0,
+              "baselineOffsetUtf16": 128,
+              "actualOffsetUtf16": 128,
+              "fixturePathAnchorBaseline": "focused-bf73b54b-e5c3-4d36-8516-ae9c17225ea3\\engine-ready.json",
+              "fixturePathAnchorActual": "focused-112e5d23-a404-45ee-bb74-94f42731efa5\\engine-ready.json"
+            }
+          ],
+          "afterExactReplacementsSha256": "157c006e91c2c8402a878359b4d0ab21a0b6e02e7e5a5f23617e05c913d0969f",
+          "allOtherTextOrdinalIdentical": true
+        }
+      ],
+      "acceptedAsRepresentationOnly": true,
+      "excludedReason": null
+    },
+    {
+      "key": "cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest#exactPayloadAndRealRenewal",
+      "classname": "cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest",
+      "method": "exactPayloadAndRealRenewal",
+      "status": "FAIL",
+      "category": "fixture_uuid_literal_only",
+      "unchangedMetadataFields": [
+        "key",
+        "classname",
+        "method",
+        "status",
+        "type",
+        "causes",
+        "firstProjectFrame",
+        "classEvent",
+        "xml"
+      ],
+      "changedFields": [
+        "message",
+        "detail",
+        "messageSha256",
+        "detailSha256"
+      ],
+      "fields": [
+        {
+          "field": "message",
+          "baselineLengthUtf16": 202,
+          "actualLengthUtf16": 202,
+          "baselineBytesUtf8": 222,
+          "actualBytesUtf8": 222,
+          "baselineSha256": "aa83be91a51b9273e837ebec2be37840e82d867994da2b422446f83f3a946d34",
+          "actualSha256": "2da22e02f2416a3afb4f3589b47acc91fb293707276e9fb1eb2277cd98e16d51",
+          "storedHashesVerified": true,
+          "literalReplacements": [
+            {
+              "oldLiteral": "27bf11c7-0c74-4036-812f-239b1ca3fd67",
+              "newLiteral": "e34731b4-625a-4c3c-80cd-5c7999cd497e",
+              "baselineOccurrences": 1,
+              "actualOccurrences": 1,
+              "oldLiteralInActual": 0,
+              "newLiteralInBaseline": 0,
+              "baselineOffsetUtf16": 91,
+              "actualOffsetUtf16": 91,
+              "fixturePathAnchorBaseline": "focused-27bf11c7-0c74-4036-812f-239b1ca3fd67\\engine-ready.json",
+              "fixturePathAnchorActual": "focused-e34731b4-625a-4c3c-80cd-5c7999cd497e\\engine-ready.json"
+            }
+          ],
+          "afterExactReplacementsSha256": "2da22e02f2416a3afb4f3589b47acc91fb293707276e9fb1eb2277cd98e16d51",
+          "allOtherTextOrdinalIdentical": true
+        },
+        {
+          "field": "detail",
+          "baselineLengthUtf16": 2069,
+          "actualLengthUtf16": 2069,
+          "baselineBytesUtf8": 2089,
+          "actualBytesUtf8": 2089,
+          "baselineSha256": "86954a25f9b993ed75d0efd4d4a396e569c089db032702e4c81b46c512c75f9b",
+          "actualSha256": "d33b7a7e979e32b65e1d2f8a4facc6ac30f7db191bbaf69a4cd50ef4b2848d09",
+          "storedHashesVerified": true,
+          "literalReplacements": [
+            {
+              "oldLiteral": "27bf11c7-0c74-4036-812f-239b1ca3fd67",
+              "newLiteral": "e34731b4-625a-4c3c-80cd-5c7999cd497e",
+              "baselineOccurrences": 1,
+              "actualOccurrences": 1,
+              "oldLiteralInActual": 0,
+              "newLiteralInBaseline": 0,
+              "baselineOffsetUtf16": 128,
+              "actualOffsetUtf16": 128,
+              "fixturePathAnchorBaseline": "focused-27bf11c7-0c74-4036-812f-239b1ca3fd67\\engine-ready.json",
+              "fixturePathAnchorActual": "focused-e34731b4-625a-4c3c-80cd-5c7999cd497e\\engine-ready.json"
+            }
+          ],
+          "afterExactReplacementsSha256": "d33b7a7e979e32b65e1d2f8a4facc6ac30f7db191bbaf69a4cd50ef4b2848d09",
+          "allOtherTextOrdinalIdentical": true
+        }
+      ],
+      "acceptedAsRepresentationOnly": true,
+      "excludedReason": null
+    },
+    {
+      "key": "cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest#independentJoinedChainDeniesBeforeMaterialAndRelaysRealEngineOutput",
+      "classname": "cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest",
+      "method": "independentJoinedChainDeniesBeforeMaterialAndRelaysRealEngineOutput",
+      "status": "FAIL",
+      "category": "fixture_uuid_literal_only",
+      "unchangedMetadataFields": [
+        "key",
+        "classname",
+        "method",
+        "status",
+        "type",
+        "causes",
+        "firstProjectFrame",
+        "classEvent",
+        "xml"
+      ],
+      "changedFields": [
+        "message",
+        "detail",
+        "messageSha256",
+        "detailSha256"
+      ],
+      "fields": [
+        {
+          "field": "message",
+          "baselineLengthUtf16": 200,
+          "actualLengthUtf16": 200,
+          "baselineBytesUtf8": 220,
+          "actualBytesUtf8": 220,
+          "baselineSha256": "a55b0cfb86bedda6eabd4ccb1d07bde5f6e84b6aaec671dee754ee418799c0ce",
+          "actualSha256": "dd86073af268853808dd12820810386acecdffaf1d42f200921d7e225803282d",
+          "storedHashesVerified": true,
+          "literalReplacements": [
+            {
+              "oldLiteral": "67dbd879-566d-40b3-90b2-24e7295d65ea",
+              "newLiteral": "4d96af55-097c-4d8d-8bfe-42bcca9c7299",
+              "baselineOccurrences": 1,
+              "actualOccurrences": 1,
+              "oldLiteralInActual": 0,
+              "newLiteralInBaseline": 0,
+              "baselineOffsetUtf16": 89,
+              "actualOffsetUtf16": 89,
+              "fixturePathAnchorBaseline": "epoch-67dbd879-566d-40b3-90b2-24e7295d65ea\\engine-ready.json",
+              "fixturePathAnchorActual": "epoch-4d96af55-097c-4d8d-8bfe-42bcca9c7299\\engine-ready.json"
+            }
+          ],
+          "afterExactReplacementsSha256": "dd86073af268853808dd12820810386acecdffaf1d42f200921d7e225803282d",
+          "allOtherTextOrdinalIdentical": true
+        },
+        {
+          "field": "detail",
+          "baselineLengthUtf16": 1938,
+          "actualLengthUtf16": 1938,
+          "baselineBytesUtf8": 1958,
+          "actualBytesUtf8": 1958,
+          "baselineSha256": "3ae6f9e78f7b19462979076dbbbe65281177874dfede135b18f89111b1d6aa29",
+          "actualSha256": "cf7e9b1d7851565fd17fa5f22936b1b2a1768c336269383c2080922083399d93",
+          "storedHashesVerified": true,
+          "literalReplacements": [
+            {
+              "oldLiteral": "67dbd879-566d-40b3-90b2-24e7295d65ea",
+              "newLiteral": "4d96af55-097c-4d8d-8bfe-42bcca9c7299",
+              "baselineOccurrences": 1,
+              "actualOccurrences": 1,
+              "oldLiteralInActual": 0,
+              "newLiteralInBaseline": 0,
+              "baselineOffsetUtf16": 126,
+              "actualOffsetUtf16": 126,
+              "fixturePathAnchorBaseline": "epoch-67dbd879-566d-40b3-90b2-24e7295d65ea\\engine-ready.json",
+              "fixturePathAnchorActual": "epoch-4d96af55-097c-4d8d-8bfe-42bcca9c7299\\engine-ready.json"
+            }
+          ],
+          "afterExactReplacementsSha256": "cf7e9b1d7851565fd17fa5f22936b1b2a1768c336269383c2080922083399d93",
+          "allOtherTextOrdinalIdentical": true
+        }
+      ],
+      "acceptedAsRepresentationOnly": true,
+      "excludedReason": null
+    },
+    {
+      "key": "cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest#retainedTerminalHistoryScopeInventory",
+      "classname": "cn.agentplatform.gateway.infra.PortalRunEventsJoinedChainTest",
+      "method": "retainedTerminalHistoryScopeInventory",
+      "status": "FAIL",
+      "category": "fixture_uuid_literal_only",
+      "unchangedMetadataFields": [
+        "key",
+        "classname",
+        "method",
+        "status",
+        "type",
+        "causes",
+        "firstProjectFrame",
+        "classEvent",
+        "xml"
+      ],
+      "changedFields": [
+        "message",
+        "detail",
+        "messageSha256",
+        "detailSha256"
+      ],
+      "fields": [
+        {
+          "field": "message",
+          "baselineLengthUtf16": 202,
+          "actualLengthUtf16": 202,
+          "baselineBytesUtf8": 222,
+          "actualBytesUtf8": 222,
+          "baselineSha256": "cd67343a49000fc03ee90b2f506815ca805dc7177dc15044d322d5ec35162e3a",
+          "actualSha256": "fdbc47deb6165bbb4b085df737c2539fe3b6f299dd1c3d81f29ab37e81957c7a",
+          "storedHashesVerified": true,
+          "literalReplacements": [
+            {
+              "oldLiteral": "3a6e8f6b-3246-42af-a3d8-33c833207767",
+              "newLiteral": "0cdf3a6e-8109-4991-82c0-bdb54ab565fa",
+              "baselineOccurrences": 1,
+              "actualOccurrences": 1,
+              "oldLiteralInActual": 0,
+              "newLiteralInBaseline": 0,
+              "baselineOffsetUtf16": 91,
+              "actualOffsetUtf16": 91,
+              "fixturePathAnchorBaseline": "focused-3a6e8f6b-3246-42af-a3d8-33c833207767\\engine-ready.json",
+              "fixturePathAnchorActual": "focused-0cdf3a6e-8109-4991-82c0-bdb54ab565fa\\engine-ready.json"
+            }
+          ],
+          "afterExactReplacementsSha256": "fdbc47deb6165bbb4b085df737c2539fe3b6f299dd1c3d81f29ab37e81957c7a",
+          "allOtherTextOrdinalIdentical": true
+        },
+        {
+          "field": "detail",
+          "baselineLengthUtf16": 1965,
+          "actualLengthUtf16": 1965,
+          "baselineBytesUtf8": 1985,
+          "actualBytesUtf8": 1985,
+          "baselineSha256": "2a47147cbcbe74df0f352579a17b71083fdd1ef8decc6f32577d7b62ede734f8",
+          "actualSha256": "401debc10b1514206a6e23fc574380b28c9efd4802a6db788b5bd4c0d00e941b",
+          "storedHashesVerified": true,
+          "literalReplacements": [
+            {
+              "oldLiteral": "3a6e8f6b-3246-42af-a3d8-33c833207767",
+              "newLiteral": "0cdf3a6e-8109-4991-82c0-bdb54ab565fa",
+              "baselineOccurrences": 1,
+              "actualOccurrences": 1,
+              "oldLiteralInActual": 0,
+              "newLiteralInBaseline": 0,
+              "baselineOffsetUtf16": 128,
+              "actualOffsetUtf16": 128,
+              "fixturePathAnchorBaseline": "focused-3a6e8f6b-3246-42af-a3d8-33c833207767\\engine-ready.json",
+              "fixturePathAnchorActual": "focused-0cdf3a6e-8109-4991-82c0-bdb54ab565fa\\engine-ready.json"
+            }
+          ],
+          "afterExactReplacementsSha256": "401debc10b1514206a6e23fc574380b28c9efd4802a6db788b5bd4c0d00e941b",
+          "allOtherTextOrdinalIdentical": true
+        }
+      ],
+      "acceptedAsRepresentationOnly": true,
+      "excludedReason": null
+    },
+    {
+      "key": "cn.agentplatform.gateway.infra.PortalRunEventsSseAutomaticCleanupTest#actualCompletionAutomaticallyRefundsAfterTransportHelperReturns",
+      "classname": "cn.agentplatform.gateway.infra.PortalRunEventsSseAutomaticCleanupTest",
+      "method": "actualCompletionAutomaticallyRefundsAfterTransportHelperReturns",
+      "status": "ERROR",
+      "category": "exact_original_record",
+      "unchangedMetadataFields": [
+        "key",
+        "classname",
+        "method",
+        "status",
+        "type",
+        "causes",
+        "firstProjectFrame",
+        "classEvent",
+        "xml"
+      ],
+      "changedFields": [],
+      "fields": [
+        {
+          "field": "message",
+          "baselineLengthUtf16": 0,
+          "actualLengthUtf16": 0,
+          "baselineBytesUtf8": 0,
+          "actualBytesUtf8": 0,
+          "baselineSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "actualSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "storedHashesVerified": true,
+          "literalReplacements": [],
+          "afterExactReplacementsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "allOtherTextOrdinalIdentical": true
+        },
+        {
+          "field": "detail",
+          "baselineLengthUtf16": 601,
+          "actualLengthUtf16": 601,
+          "baselineBytesUtf8": 601,
+          "actualBytesUtf8": 601,
+          "baselineSha256": "73e2b03990036e2710a8ab1302bad876708060e4a9367c11373b971584be91bb",
+          "actualSha256": "73e2b03990036e2710a8ab1302bad876708060e4a9367c11373b971584be91bb",
+          "storedHashesVerified": true,
+          "literalReplacements": [],
+          "afterExactReplacementsSha256": "73e2b03990036e2710a8ab1302bad876708060e4a9367c11373b971584be91bb",
+          "allOtherTextOrdinalIdentical": true
+        }
+      ],
+      "acceptedAsRepresentationOnly": false,
+      "excludedReason": null
+    },
+    {
+      "key": "cn.agentplatform.gateway.infra.PortalRunEventsSseResetCleanupTest#terminalResetAutomaticallyRefundsWhenReaderAbortOverlapsCompletion",
+      "classname": "cn.agentplatform.gateway.infra.PortalRunEventsSseResetCleanupTest",
+      "method": "terminalResetAutomaticallyRefundsWhenReaderAbortOverlapsCompletion",
+      "status": "ERROR",
+      "category": "exact_original_record",
+      "unchangedMetadataFields": [
+        "key",
+        "classname",
+        "method",
+        "status",
+        "type",
+        "causes",
+        "firstProjectFrame",
+        "classEvent",
+        "xml"
+      ],
+      "changedFields": [],
+      "fields": [
+        {
+          "field": "message",
+          "baselineLengthUtf16": 0,
+          "actualLengthUtf16": 0,
+          "baselineBytesUtf8": 0,
+          "actualBytesUtf8": 0,
+          "baselineSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "actualSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "storedHashesVerified": true,
+          "literalReplacements": [],
+          "afterExactReplacementsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "allOtherTextOrdinalIdentical": true
+        },
+        {
+          "field": "detail",
+          "baselineLengthUtf16": 596,
+          "actualLengthUtf16": 596,
+          "baselineBytesUtf8": 596,
+          "actualBytesUtf8": 596,
+          "baselineSha256": "48aa6e56ddae54cfa9d004026c3dbb46f782ea16d91677b81ac6aca9a664cb9e",
+          "actualSha256": "48aa6e56ddae54cfa9d004026c3dbb46f782ea16d91677b81ac6aca9a664cb9e",
+          "storedHashesVerified": true,
+          "literalReplacements": [],
+          "afterExactReplacementsSha256": "48aa6e56ddae54cfa9d004026c3dbb46f782ea16d91677b81ac6aca9a664cb9e",
+          "allOtherTextOrdinalIdentical": true
+        }
+      ],
+      "acceptedAsRepresentationOnly": false,
+      "excludedReason": null
+    },
+    {
+      "key": "cn.agentplatform.gateway.IntegrationSecurityTest#directServiceApiAuthenticatesApiKeyThenPassesOnlyScopedInternalTicket",
+      "classname": "cn.agentplatform.gateway.IntegrationSecurityTest",
+      "method": "directServiceApiAuthenticatesApiKeyThenPassesOnlyScopedInternalTicket",
+      "status": "ERROR",
+      "category": "spring_object_identity_literals_only",
+      "unchangedMetadataFields": [
+        "key",
+        "classname",
+        "method",
+        "status",
+        "type",
+        "causes",
+        "firstProjectFrame",
+        "classEvent",
+        "xml"
+      ],
+      "changedFields": [
+        "message",
+        "detail",
+        "messageSha256",
+        "detailSha256"
+      ],
+      "fields": [
+        {
+          "field": "message",
+          "baselineLengthUtf16": 2833,
+          "actualLengthUtf16": 2833,
+          "baselineBytesUtf8": 2833,
+          "actualBytesUtf8": 2833,
+          "baselineSha256": "7fc96db35d468ee5024ff1e8c0b24ad3029bab8a2f5cefc141ba26fd574d655e",
+          "actualSha256": "3fabca3bb27f35fbb65ed5b8676b3c562b9f7e2cf1df5844e82a324e915414b9",
+          "storedHashesVerified": true,
+          "literalReplacements": [
+            {
+              "oldLiteral": "WebMergedContextConfiguration@33d7765a",
+              "newLiteral": "WebMergedContextConfiguration@3c28e5b6",
+              "baselineOccurrences": 1,
+              "actualOccurrences": 1,
+              "oldLiteralInActual": 0,
+              "newLiteralInBaseline": 0,
+              "baselineOffsetUtf16": 39,
+              "actualOffsetUtf16": 39
+            },
+            {
+              "oldLiteral": "ImportsContextCustomizer@69ed5ea2",
+              "newLiteral": "ImportsContextCustomizer@7558c24b",
+              "baselineOccurrences": 1,
+              "actualOccurrences": 1,
+              "oldLiteralInActual": 0,
+              "newLiteralInBaseline": 0,
+              "baselineOffsetUtf16": 430,
+              "actualOffsetUtf16": 430
+            }
+          ],
+          "afterExactReplacementsSha256": "3fabca3bb27f35fbb65ed5b8676b3c562b9f7e2cf1df5844e82a324e915414b9",
+          "allOtherTextOrdinalIdentical": true
+        },
+        {
+          "field": "detail",
+          "baselineLengthUtf16": 7180,
+          "actualLengthUtf16": 7180,
+          "baselineBytesUtf8": 7180,
+          "actualBytesUtf8": 7180,
+          "baselineSha256": "8198ddc1e47dda11d9ae1b13fb4effeaedcacb949ca04ea670e7d9ad6fe70a8d",
+          "actualSha256": "54b908dff7bbb408619fabee14e04894622d8473c39e8ce396a38c78ef445c18",
+          "storedHashesVerified": true,
+          "literalReplacements": [
+            {
+              "oldLiteral": "WebMergedContextConfiguration@33d7765a",
+              "newLiteral": "WebMergedContextConfiguration@3c28e5b6",
+              "baselineOccurrences": 1,
+              "actualOccurrences": 1,
+              "oldLiteralInActual": 0,
+              "newLiteralInBaseline": 0,
+              "baselineOffsetUtf16": 72,
+              "actualOffsetUtf16": 72
+            },
+            {
+              "oldLiteral": "ImportsContextCustomizer@69ed5ea2",
+              "newLiteral": "ImportsContextCustomizer@7558c24b",
+              "baselineOccurrences": 1,
+              "actualOccurrences": 1,
+              "oldLiteralInActual": 0,
+              "newLiteralInBaseline": 0,
+              "baselineOffsetUtf16": 463,
+              "actualOffsetUtf16": 463
+            }
+          ],
+          "afterExactReplacementsSha256": "54b908dff7bbb408619fabee14e04894622d8473c39e8ce396a38c78ef445c18",
+          "allOtherTextOrdinalIdentical": true
+        }
+      ],
+      "acceptedAsRepresentationOnly": true,
+      "excludedReason": null
+    },
+    {
+      "key": "cn.agentplatform.gateway.IntegrationSecurityTest#revocationAndPolicyChangeImmediatelyRejectExistingTicket",
+      "classname": "cn.agentplatform.gateway.IntegrationSecurityTest",
+      "method": "revocationAndPolicyChangeImmediatelyRejectExistingTicket",
+      "status": "ERROR",
+      "category": "spring_object_identity_literals_only",
+      "unchangedMetadataFields": [
+        "key",
+        "classname",
+        "method",
+        "status",
+        "type",
+        "causes",
+        "firstProjectFrame",
+        "classEvent",
+        "xml"
+      ],
+      "changedFields": [
+        "message",
+        "detail",
+        "messageSha256",
+        "detailSha256"
+      ],
+      "fields": [
+        {
+          "field": "message",
+          "baselineLengthUtf16": 2892,
+          "actualLengthUtf16": 2892,
+          "baselineBytesUtf8": 2892,
+          "actualBytesUtf8": 2892,
+          "baselineSha256": "735484975a66dbecba0c4cb88d7c8d08fc94ee193d554390f818887d15b6794d",
+          "actualSha256": "527394e4f91a10d09aa38667f55ed3e558191d8d25b2a0160946c6f80dd63acd",
+          "storedHashesVerified": true,
+          "literalReplacements": [
+            {
+              "oldLiteral": "WebMergedContextConfiguration@33d7765a",
+              "newLiteral": "WebMergedContextConfiguration@3c28e5b6",
+              "baselineOccurrences": 1,
+              "actualOccurrences": 1,
+              "oldLiteralInActual": 0,
+              "newLiteralInBaseline": 0,
+              "baselineOffsetUtf16": 98,
+              "actualOffsetUtf16": 98
+            },
+            {
+              "oldLiteral": "ImportsContextCustomizer@69ed5ea2",
+              "newLiteral": "ImportsContextCustomizer@7558c24b",
+              "baselineOccurrences": 1,
+              "actualOccurrences": 1,
+              "oldLiteralInActual": 0,
+              "newLiteralInBaseline": 0,
+              "baselineOffsetUtf16": 489,
+              "actualOffsetUtf16": 489
+            }
+          ],
+          "afterExactReplacementsSha256": "527394e4f91a10d09aa38667f55ed3e558191d8d25b2a0160946c6f80dd63acd",
+          "allOtherTextOrdinalIdentical": true
+        },
+        {
+          "field": "detail",
+          "baselineLengthUtf16": 4840,
+          "actualLengthUtf16": 4840,
+          "baselineBytesUtf8": 4840,
+          "actualBytesUtf8": 4840,
+          "baselineSha256": "4c1fe68cbeb330acefff77f3417f3d56b9b37fe87deaccd7131500ab360c9346",
+          "actualSha256": "193704c78a4b9bf797c564bf26a9b75a31581a1c6ebf096bab0536887124d43d",
+          "storedHashesVerified": true,
+          "literalReplacements": [
+            {
+              "oldLiteral": "WebMergedContextConfiguration@33d7765a",
+              "newLiteral": "WebMergedContextConfiguration@3c28e5b6",
+              "baselineOccurrences": 1,
+              "actualOccurrences": 1,
+              "oldLiteralInActual": 0,
+              "newLiteralInBaseline": 0,
+              "baselineOffsetUtf16": 131,
+              "actualOffsetUtf16": 131
+            },
+            {
+              "oldLiteral": "ImportsContextCustomizer@69ed5ea2",
+              "newLiteral": "ImportsContextCustomizer@7558c24b",
+              "baselineOccurrences": 1,
+              "actualOccurrences": 1,
+              "oldLiteralInActual": 0,
+              "newLiteralInBaseline": 0,
+              "baselineOffsetUtf16": 522,
+              "actualOffsetUtf16": 522
+            }
+          ],
+          "afterExactReplacementsSha256": "193704c78a4b9bf797c564bf26a9b75a31581a1c6ebf096bab0536887124d43d",
+          "allOtherTextOrdinalIdentical": true
+        }
+      ],
+      "acceptedAsRepresentationOnly": true,
+      "excludedReason": null
+    },
+    {
+      "key": "cn.agentplatform.gateway.IntegrationSecurityTest#refusesInvalidSecretBeforeIssuingTicket",
+      "classname": "cn.agentplatform.gateway.IntegrationSecurityTest",
+      "method": "refusesInvalidSecretBeforeIssuingTicket",
+      "status": "ERROR",
+      "category": "spring_object_identity_literals_only",
+      "unchangedMetadataFields": [
+        "key",
+        "classname",
+        "method",
+        "status",
+        "type",
+        "causes",
+        "firstProjectFrame",
+        "classEvent",
+        "xml"
+      ],
+      "changedFields": [
+        "message",
+        "detail",
+        "messageSha256",
+        "detailSha256"
+      ],
+      "fields": [
+        {
+          "field": "message",
+          "baselineLengthUtf16": 2892,
+          "actualLengthUtf16": 2892,
+          "baselineBytesUtf8": 2892,
+          "actualBytesUtf8": 2892,
+          "baselineSha256": "735484975a66dbecba0c4cb88d7c8d08fc94ee193d554390f818887d15b6794d",
+          "actualSha256": "527394e4f91a10d09aa38667f55ed3e558191d8d25b2a0160946c6f80dd63acd",
+          "storedHashesVerified": true,
+          "literalReplacements": [
+            {
+              "oldLiteral": "WebMergedContextConfiguration@33d7765a",
+              "newLiteral": "WebMergedContextConfiguration@3c28e5b6",
+              "baselineOccurrences": 1,
+              "actualOccurrences": 1,
+              "oldLiteralInActual": 0,
+              "newLiteralInBaseline": 0,
+              "baselineOffsetUtf16": 98,
+              "actualOffsetUtf16": 98
+            },
+            {
+              "oldLiteral": "ImportsContextCustomizer@69ed5ea2",
+              "newLiteral": "ImportsContextCustomizer@7558c24b",
+              "baselineOccurrences": 1,
+              "actualOccurrences": 1,
+              "oldLiteralInActual": 0,
+              "newLiteralInBaseline": 0,
+              "baselineOffsetUtf16": 489,
+              "actualOffsetUtf16": 489
+            }
+          ],
+          "afterExactReplacementsSha256": "527394e4f91a10d09aa38667f55ed3e558191d8d25b2a0160946c6f80dd63acd",
+          "allOtherTextOrdinalIdentical": true
+        },
+        {
+          "field": "detail",
+          "baselineLengthUtf16": 4840,
+          "actualLengthUtf16": 4840,
+          "baselineBytesUtf8": 4840,
+          "actualBytesUtf8": 4840,
+          "baselineSha256": "4c1fe68cbeb330acefff77f3417f3d56b9b37fe87deaccd7131500ab360c9346",
+          "actualSha256": "193704c78a4b9bf797c564bf26a9b75a31581a1c6ebf096bab0536887124d43d",
+          "storedHashesVerified": true,
+          "literalReplacements": [
+            {
+              "oldLiteral": "WebMergedContextConfiguration@33d7765a",
+              "newLiteral": "WebMergedContextConfiguration@3c28e5b6",
+              "baselineOccurrences": 1,
+              "actualOccurrences": 1,
+              "oldLiteralInActual": 0,
+              "newLiteralInBaseline": 0,
+              "baselineOffsetUtf16": 131,
+              "actualOffsetUtf16": 131
+            },
+            {
+              "oldLiteral": "ImportsContextCustomizer@69ed5ea2",
+              "newLiteral": "ImportsContextCustomizer@7558c24b",
+              "baselineOccurrences": 1,
+              "actualOccurrences": 1,
+              "oldLiteralInActual": 0,
+              "newLiteralInBaseline": 0,
+              "baselineOffsetUtf16": 522,
+              "actualOffsetUtf16": 522
+            }
+          ],
+          "afterExactReplacementsSha256": "193704c78a4b9bf797c564bf26a9b75a31581a1c6ebf096bab0536887124d43d",
+          "allOtherTextOrdinalIdentical": true
+        }
+      ],
+      "acceptedAsRepresentationOnly": true,
+      "excludedReason": null
+    },
+    {
+      "key": "cn.agentplatform.gateway.IntegrationSecurityTest#validTicketCannotAccessAdminOrOtherAppOrOtherAppRun",
+      "classname": "cn.agentplatform.gateway.IntegrationSecurityTest",
+      "method": "validTicketCannotAccessAdminOrOtherAppOrOtherAppRun",
+      "status": "ERROR",
+      "category": "spring_object_identity_literals_only",
+      "unchangedMetadataFields": [
+        "key",
+        "classname",
+        "method",
+        "status",
+        "type",
+        "causes",
+        "firstProjectFrame",
+        "classEvent",
+        "xml"
+      ],
+      "changedFields": [
+        "message",
+        "detail",
+        "messageSha256",
+        "detailSha256"
+      ],
+      "fields": [
+        {
+          "field": "message",
+          "baselineLengthUtf16": 2892,
+          "actualLengthUtf16": 2892,
+          "baselineBytesUtf8": 2892,
+          "actualBytesUtf8": 2892,
+          "baselineSha256": "735484975a66dbecba0c4cb88d7c8d08fc94ee193d554390f818887d15b6794d",
+          "actualSha256": "527394e4f91a10d09aa38667f55ed3e558191d8d25b2a0160946c6f80dd63acd",
+          "storedHashesVerified": true,
+          "literalReplacements": [
+            {
+              "oldLiteral": "WebMergedContextConfiguration@33d7765a",
+              "newLiteral": "WebMergedContextConfiguration@3c28e5b6",
+              "baselineOccurrences": 1,
+              "actualOccurrences": 1,
+              "oldLiteralInActual": 0,
+              "newLiteralInBaseline": 0,
+              "baselineOffsetUtf16": 98,
+              "actualOffsetUtf16": 98
+            },
+            {
+              "oldLiteral": "ImportsContextCustomizer@69ed5ea2",
+              "newLiteral": "ImportsContextCustomizer@7558c24b",
+              "baselineOccurrences": 1,
+              "actualOccurrences": 1,
+              "oldLiteralInActual": 0,
+              "newLiteralInBaseline": 0,
+              "baselineOffsetUtf16": 489,
+              "actualOffsetUtf16": 489
+            }
+          ],
+          "afterExactReplacementsSha256": "527394e4f91a10d09aa38667f55ed3e558191d8d25b2a0160946c6f80dd63acd",
+          "allOtherTextOrdinalIdentical": true
+        },
+        {
+          "field": "detail",
+          "baselineLengthUtf16": 4840,
+          "actualLengthUtf16": 4840,
+          "baselineBytesUtf8": 4840,
+          "actualBytesUtf8": 4840,
+          "baselineSha256": "4c1fe68cbeb330acefff77f3417f3d56b9b37fe87deaccd7131500ab360c9346",
+          "actualSha256": "193704c78a4b9bf797c564bf26a9b75a31581a1c6ebf096bab0536887124d43d",
+          "storedHashesVerified": true,
+          "literalReplacements": [
+            {
+              "oldLiteral": "WebMergedContextConfiguration@33d7765a",
+              "newLiteral": "WebMergedContextConfiguration@3c28e5b6",
+              "baselineOccurrences": 1,
+              "actualOccurrences": 1,
+              "oldLiteralInActual": 0,
+              "newLiteralInBaseline": 0,
+              "baselineOffsetUtf16": 131,
+              "actualOffsetUtf16": 131
+            },
+            {
+              "oldLiteral": "ImportsContextCustomizer@69ed5ea2",
+              "newLiteral": "ImportsContextCustomizer@7558c24b",
+              "baselineOccurrences": 1,
+              "actualOccurrences": 1,
+              "oldLiteralInActual": 0,
+              "newLiteralInBaseline": 0,
+              "baselineOffsetUtf16": 522,
+              "actualOffsetUtf16": 522
+            }
+          ],
+          "afterExactReplacementsSha256": "193704c78a4b9bf797c564bf26a9b75a31581a1c6ebf096bab0536887124d43d",
+          "allOtherTextOrdinalIdentical": true
+        }
+      ],
+      "acceptedAsRepresentationOnly": true,
+      "excludedReason": null
+    },
+    {
+      "key": "cn.agentplatform.gateway.IntegrationSecurityTest#corsAllowsRegisteredOriginAndRejectsUnknownOrigin",
+      "classname": "cn.agentplatform.gateway.IntegrationSecurityTest",
+      "method": "corsAllowsRegisteredOriginAndRejectsUnknownOrigin",
+      "status": "ERROR",
+      "category": "spring_object_identity_literals_only",
+      "unchangedMetadataFields": [
+        "key",
+        "classname",
+        "method",
+        "status",
+        "type",
+        "causes",
+        "firstProjectFrame",
+        "classEvent",
+        "xml"
+      ],
+      "changedFields": [
+        "message",
+        "detail",
+        "messageSha256",
+        "detailSha256"
+      ],
+      "fields": [
+        {
+          "field": "message",
+          "baselineLengthUtf16": 2892,
+          "actualLengthUtf16": 2892,
+          "baselineBytesUtf8": 2892,
+          "actualBytesUtf8": 2892,
+          "baselineSha256": "735484975a66dbecba0c4cb88d7c8d08fc94ee193d554390f818887d15b6794d",
+          "actualSha256": "527394e4f91a10d09aa38667f55ed3e558191d8d25b2a0160946c6f80dd63acd",
+          "storedHashesVerified": true,
+          "literalReplacements": [
+            {
+              "oldLiteral": "WebMergedContextConfiguration@33d7765a",
+              "newLiteral": "WebMergedContextConfiguration@3c28e5b6",
+              "baselineOccurrences": 1,
+              "actualOccurrences": 1,
+              "oldLiteralInActual": 0,
+              "newLiteralInBaseline": 0,
+              "baselineOffsetUtf16": 98,
+              "actualOffsetUtf16": 98
+            },
+            {
+              "oldLiteral": "ImportsContextCustomizer@69ed5ea2",
+              "newLiteral": "ImportsContextCustomizer@7558c24b",
+              "baselineOccurrences": 1,
+              "actualOccurrences": 1,
+              "oldLiteralInActual": 0,
+              "newLiteralInBaseline": 0,
+              "baselineOffsetUtf16": 489,
+              "actualOffsetUtf16": 489
+            }
+          ],
+          "afterExactReplacementsSha256": "527394e4f91a10d09aa38667f55ed3e558191d8d25b2a0160946c6f80dd63acd",
+          "allOtherTextOrdinalIdentical": true
+        },
+        {
+          "field": "detail",
+          "baselineLengthUtf16": 4840,
+          "actualLengthUtf16": 4840,
+          "baselineBytesUtf8": 4840,
+          "actualBytesUtf8": 4840,
+          "baselineSha256": "4c1fe68cbeb330acefff77f3417f3d56b9b37fe87deaccd7131500ab360c9346",
+          "actualSha256": "193704c78a4b9bf797c564bf26a9b75a31581a1c6ebf096bab0536887124d43d",
+          "storedHashesVerified": true,
+          "literalReplacements": [
+            {
+              "oldLiteral": "WebMergedContextConfiguration@33d7765a",
+              "newLiteral": "WebMergedContextConfiguration@3c28e5b6",
+              "baselineOccurrences": 1,
+              "actualOccurrences": 1,
+              "oldLiteralInActual": 0,
+              "newLiteralInBaseline": 0,
+              "baselineOffsetUtf16": 131,
+              "actualOffsetUtf16": 131
+            },
+            {
+              "oldLiteral": "ImportsContextCustomizer@69ed5ea2",
+              "newLiteral": "ImportsContextCustomizer@7558c24b",
+              "baselineOccurrences": 1,
+              "actualOccurrences": 1,
+              "oldLiteralInActual": 0,
+              "newLiteralInBaseline": 0,
+              "baselineOffsetUtf16": 522,
+              "actualOffsetUtf16": 522
+            }
+          ],
+          "afterExactReplacementsSha256": "193704c78a4b9bf797c564bf26a9b75a31581a1c6ebf096bab0536887124d43d",
+          "allOtherTextOrdinalIdentical": true
+        }
+      ],
+      "acceptedAsRepresentationOnly": true,
+      "excludedReason": null
+    },
+    {
+      "key": "cn.agentplatform.gateway.IntegrationSecurityTest#boundedEngineRetryAfterSurvivesGatewayWithoutOpeningOtherHeaders",
+      "classname": "cn.agentplatform.gateway.IntegrationSecurityTest",
+      "method": "boundedEngineRetryAfterSurvivesGatewayWithoutOpeningOtherHeaders",
+      "status": "ERROR",
+      "category": "spring_object_identity_literals_only",
+      "unchangedMetadataFields": [
+        "key",
+        "classname",
+        "method",
+        "status",
+        "type",
+        "causes",
+        "firstProjectFrame",
+        "classEvent",
+        "xml"
+      ],
+      "changedFields": [
+        "message",
+        "detail",
+        "messageSha256",
+        "detailSha256"
+      ],
+      "fields": [
+        {
+          "field": "message",
+          "baselineLengthUtf16": 2892,
+          "actualLengthUtf16": 2892,
+          "baselineBytesUtf8": 2892,
+          "actualBytesUtf8": 2892,
+          "baselineSha256": "735484975a66dbecba0c4cb88d7c8d08fc94ee193d554390f818887d15b6794d",
+          "actualSha256": "527394e4f91a10d09aa38667f55ed3e558191d8d25b2a0160946c6f80dd63acd",
+          "storedHashesVerified": true,
+          "literalReplacements": [
+            {
+              "oldLiteral": "WebMergedContextConfiguration@33d7765a",
+              "newLiteral": "WebMergedContextConfiguration@3c28e5b6",
+              "baselineOccurrences": 1,
+              "actualOccurrences": 1,
+              "oldLiteralInActual": 0,
+              "newLiteralInBaseline": 0,
+              "baselineOffsetUtf16": 98,
+              "actualOffsetUtf16": 98
+            },
+            {
+              "oldLiteral": "ImportsContextCustomizer@69ed5ea2",
+              "newLiteral": "ImportsContextCustomizer@7558c24b",
+              "baselineOccurrences": 1,
+              "actualOccurrences": 1,
+              "oldLiteralInActual": 0,
+              "newLiteralInBaseline": 0,
+              "baselineOffsetUtf16": 489,
+              "actualOffsetUtf16": 489
+            }
+          ],
+          "afterExactReplacementsSha256": "527394e4f91a10d09aa38667f55ed3e558191d8d25b2a0160946c6f80dd63acd",
+          "allOtherTextOrdinalIdentical": true
+        },
+        {
+          "field": "detail",
+          "baselineLengthUtf16": 4840,
+          "actualLengthUtf16": 4840,
+          "baselineBytesUtf8": 4840,
+          "actualBytesUtf8": 4840,
+          "baselineSha256": "4c1fe68cbeb330acefff77f3417f3d56b9b37fe87deaccd7131500ab360c9346",
+          "actualSha256": "193704c78a4b9bf797c564bf26a9b75a31581a1c6ebf096bab0536887124d43d",
+          "storedHashesVerified": true,
+          "literalReplacements": [
+            {
+              "oldLiteral": "WebMergedContextConfiguration@33d7765a",
+              "newLiteral": "WebMergedContextConfiguration@3c28e5b6",
+              "baselineOccurrences": 1,
+              "actualOccurrences": 1,
+              "oldLiteralInActual": 0,
+              "newLiteralInBaseline": 0,
+              "baselineOffsetUtf16": 131,
+              "actualOffsetUtf16": 131
+            },
+            {
+              "oldLiteral": "ImportsContextCustomizer@69ed5ea2",
+              "newLiteral": "ImportsContextCustomizer@7558c24b",
+              "baselineOccurrences": 1,
+              "actualOccurrences": 1,
+              "oldLiteralInActual": 0,
+              "newLiteralInBaseline": 0,
+              "baselineOffsetUtf16": 522,
+              "actualOffsetUtf16": 522
+            }
+          ],
+          "afterExactReplacementsSha256": "193704c78a4b9bf797c564bf26a9b75a31581a1c6ebf096bab0536887124d43d",
+          "allOtherTextOrdinalIdentical": true
+        }
+      ],
+      "acceptedAsRepresentationOnly": true,
+      "excludedReason": null
+    }
+  ]
+}

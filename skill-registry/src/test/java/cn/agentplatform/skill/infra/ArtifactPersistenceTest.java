@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import cn.agentplatform.common.*;
 
+import com.sun.net.httpserver.HttpServer;
+
 import io.minio.*;
 
 import org.flywaydb.core.Flyway;
@@ -16,9 +18,16 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
 import java.io.*;
+import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.security.DigestOutputStream;
+import java.security.MessageDigest;
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 @EnabledIfEnvironmentVariable(named = "AGENT_MINIO_ENDPOINT", matches = ".+")
 class ArtifactPersistenceTest {
@@ -307,7 +316,7 @@ class ArtifactPersistenceTest {
                 "update skill.artifact set expires_at=now()-interval '1 second' where tenant_id=?",
                 tenant);
         assertThrows(PlatformException.class, () -> store.download(id, "r_artifact"));
-        assertEquals(0, store.cleanTenant("unrelated-tenant", 8));
+        assertEquals(0, store.cleanTenant(tenant + "-unrelated", 8));
         assertEquals(
                 "READY",
                 db.queryForObject(
@@ -510,5 +519,254 @@ class ArtifactPersistenceTest {
                 .andExpect(
                         org.springframework.test.web.servlet.result.MockMvcResultMatchers.status()
                                 .isUnauthorized());
+    }
+
+    @Test
+    void declaredUploadOverHardLimitDoesNotReadOrRegister() throws Exception {
+        var source = new UploadSource(ArtifactStore.MAX_ARTIFACT_BYTES + 1);
+        // 参数预检拒绝前仍由调用方持有流，和 ArtifactController 的 try-with-resources 一致。
+        try (source) {
+            var rejected = assertThrows(PlatformException.class,
+                    () -> store.upload("application/octet-stream",
+                            ArtifactStore.MAX_ARTIFACT_BYTES + 1, source));
+            assertEquals(413, rejected.status());
+            assertEquals("ARTIFACT_TOO_LARGE", rejected.code());
+            assertEquals(0, source.readCalls, "声明超限必须在读取文件前拒绝");
+            assertEquals(0, db.queryForObject(
+                    "select count(*) from skill.artifact where tenant_id=?", Integer.class, tenant));
+        }
+        assertEquals(1, source.closeCalls);
+    }
+
+    @Test
+    void shortUploadNeverBecomesReadyAndCleansExactObject() throws Exception {
+        var source = new UploadSource(3);
+        assertRejectedUpload(source, 8);
+    }
+
+    @Test
+    void longUploadNeverBecomesReadyAndCleansExactObject() throws Exception {
+        var source = new UploadSource(8);
+        assertRejectedUpload(source, 3);
+    }
+
+    @Test
+    void brokenUploadCleansExactObjectAndClosesSource() throws Exception {
+        long failAfter = 5L * 1024 * 1024 + 13;
+        var source = new UploadSource(6L * 1024 * 1024, failAfter);
+        assertRejectedUpload(source, 6L * 1024 * 1024);
+        assertEquals(failAfter, source.position, "必须实际读到指定断流点，不能用预检失败冒充断流");
+    }
+
+    private void assertRejectedUpload(UploadSource source, long declared) throws Exception {
+        PlatformException rejection = null;
+        Map<String, Object> reference = null;
+        try {
+            reference = store.upload("application/octet-stream", declared, source);
+        } catch (PlatformException expected) {
+            rejection = expected;
+        }
+        var actualRejection = rejection;
+        var actualReference = reference;
+        assertAll(
+                () -> assertNotNull(actualRejection, "大小不符或断流的上传必须拒绝"),
+                () -> assertNull(actualReference, "失败上传不得发出 READY 引用"),
+                () -> assertEquals(1, source.closeCalls, "已接管的上传源流必须只关闭一次"),
+                this::assertUploadFailureCleaned);
+    }
+
+    private void assertUploadFailureCleaned() throws Exception {
+        var rows = db.queryForList("select * from skill.artifact where tenant_id=?", tenant);
+        assertEquals(1, rows.size(), "只允许本用例登记的一条上传事实");
+        var row = rows.getFirst();
+        assertEquals("DELETED", row.get("state"));
+        assertEquals("UPLOAD_FAILED", row.get("last_error_code"));
+        assertNotNull(row.get("deleted_at"));
+        assertEquals("owner", row.get("principal_id"));
+        assertTrue(row.get("run_id").toString().startsWith("r_upload_"));
+        try (var client = MinioAsyncClient.builder()
+                .endpoint(System.getenv("AGENT_MINIO_ENDPOINT"))
+                .credentials(System.getenv("AGENT_MINIO_ACCESS_KEY"), System.getenv("AGENT_MINIO_SECRET_KEY"))
+                .build()) {
+            var missing = assertThrows(ExecutionException.class,
+                    () -> client.statObject(StatObjectArgs.builder()
+                            .bucket(row.get("bucket").toString())
+                            .object(row.get("object_key").toString()).build()).get(10, TimeUnit.SECONDS));
+            // MinIO 8.5.17 的 async HEAD 在 ExecutionException 内保留一层 CompletionException。
+            var completion = assertInstanceOf(CompletionException.class, missing.getCause());
+            var cause = assertInstanceOf(io.minio.errors.ErrorResponseException.class, completion.getCause());
+            assertEquals("NoSuchKey", cause.errorResponse().code(), "只检查本次持久登记的精确对象键");
+        }
+    }
+
+    @Test
+    void sixtyFourMiBUploadSurvivesFreshStoreAndStreamsToHttpWithMatchingDigest() throws Exception {
+        long bytes = ArtifactStore.MAX_ARTIFACT_BYTES;
+        var source = new UploadSource(bytes);
+        var reference = store.upload("application/octet-stream", bytes, source);
+        String expectedDigest = HexFormat.of().formatHex(source.digest.digest());
+        String id = reference.get("artifactId").toString();
+        assertEquals(bytes, source.position);
+        assertTrue(source.readCalls > 1, "文件按需生成，不能以一个大 byte[] 代替流式上传");
+        assertEquals(1, source.closeCalls);
+        assertEquals(bytes, ((Number) reference.get("bytes")).longValue());
+        assertEquals(expectedDigest, reference.get("sha256"));
+        var row = db.queryForMap("select * from skill.artifact where tenant_id=? and artifact_id=?", tenant, id);
+        assertEquals("READY", row.get("state"));
+        assertEquals(bytes, ((Number) row.get("size_bytes")).longValue());
+        assertEquals(expectedDigest, row.get("sha256"));
+
+        // 证明组件冷重建后仍可读取持久内容；这不是 JVM 或整个服务重启的证据。
+        store.close();
+        store = new ArtifactStore(db, System.getenv());
+        var downloadedDigest = MessageDigest.getInstance("SHA-256");
+        try (var download = store.download(id, null);
+                var sink = new DigestOutputStream(OutputStream.nullOutputStream(), downloadedDigest)) {
+            assertEquals(bytes, download.bytes());
+            assertEquals(expectedDigest, download.sha256());
+            assertEquals(bytes, download.source().transferTo(sink));
+        }
+        assertEquals(expectedDigest, HexFormat.of().formatHex(downloadedDigest.digest()));
+
+        var received = new CompletableFuture<ReceivedUpload>();
+        var server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        server.createContext("/upload", exchange -> {
+            try (exchange) {
+                var actual = receiveSingleFile(exchange.getRequestBody(),
+                        exchange.getRequestHeaders().getFirst("Content-Type"), bytes);
+                received.complete(actual);
+                byte[] response = "{\"received\":true}".getBytes(StandardCharsets.UTF_8);
+                exchange.getResponseHeaders().set("Content-Type", "application/json");
+                exchange.sendResponseHeaders(200, response.length);
+                exchange.getResponseBody().write(response);
+            } catch (Exception failure) {
+                received.completeExceptionally(failure);
+            }
+        });
+        server.start();
+        try {
+            var contract = new LinkedHashMap<String, Object>();
+            contract.put("type", "HTTP");
+            contract.put("httpMethod", "POST");
+            contract.put("endpoint", "http://127.0.0.1:" + server.getAddress().getPort() + "/upload");
+            contract.put("timeoutMs", 30000);
+            contract.put("execution", Map.of("readonly", true, "sideEffect", false));
+            contract.put("outputSchema", Map.of("type", "object"));
+            contract.put("outputMaxBytes", 1024);
+            contract.put("httpMapping", Map.of("path", List.of(), "query", List.of(),
+                    "multipart", Map.of("files", List.of(Map.of(
+                            "name", "file", "from", "file", "filename", "payload.bin",
+                            "maxBytes", bytes, "allowedContentTypes", List.of("application/octet-stream"))))));
+            var output = new SkillAdapters(store, null).http(contract,
+                    Map.of("file", reference.get("downloadUrl")), "artifact-64m", call, "r_upload_stream", 1);
+            assertTrue(output.structured().path("received").asBoolean());
+            var actual = received.get(10, TimeUnit.SECONDS);
+            assertEquals(bytes, actual.bytes());
+            assertEquals(expectedDigest, actual.sha256());
+            assertEquals("application/octet-stream", actual.contentType());
+            assertTrue(actual.disposition().contains("name=\"file\""));
+            assertTrue(actual.disposition().contains("filename=\"payload.bin\""));
+        } finally {
+            server.stop(0);
+        }
+    }
+
+    private record ReceivedUpload(long bytes, String sha256, String contentType, String disposition) {}
+
+    /** 仅解析本例约定的一个文件：有界头、精确长度和结束边界，文件内容只进 8 KiB 缓冲。 */
+    private static ReceivedUpload receiveSingleFile(InputStream raw, String contentType, long expected)
+            throws Exception {
+        String boundary = org.springframework.http.MediaType.parseMediaType(contentType).getParameter("boundary");
+        if (boundary == null || boundary.length() > 200) throw new IOException("missing multipart boundary");
+        var input = new BufferedInputStream(raw, 8192);
+        if (!("--" + boundary).equals(readAsciiLine(input))) throw new IOException("wrong opening boundary");
+        var headers = new LinkedHashMap<String, String>();
+        for (int i = 0; ; i++) {
+            String line = readAsciiLine(input);
+            if (line.isEmpty()) break;
+            if (i >= 16) throw new IOException("too many part headers");
+            int colon = line.indexOf(':');
+            if (colon <= 0 || headers.put(line.substring(0, colon).toLowerCase(Locale.ROOT),
+                    line.substring(colon + 1).trim()) != null) throw new IOException("invalid part header");
+        }
+        if (!Long.toString(expected).equals(headers.get("content-length")))
+            throw new IOException("part length does not match uploaded artifact");
+        var digest = MessageDigest.getInstance("SHA-256");
+        byte[] buffer = new byte[8192];
+        long count = 0;
+        while (count < expected) {
+            int read = input.read(buffer, 0, (int) Math.min(buffer.length, expected - count));
+            if (read < 0) throw new EOFException("truncated file part");
+            digest.update(buffer, 0, read);
+            count += read;
+        }
+        if (!readAsciiLine(input).isEmpty()
+                || !("--" + boundary + "--").equals(readAsciiLine(input)) || input.read() != -1)
+            throw new IOException("unexpected extra bytes or multipart parts");
+        return new ReceivedUpload(count, HexFormat.of().formatHex(digest.digest()),
+                headers.getOrDefault("content-type", ""), headers.getOrDefault("content-disposition", ""));
+    }
+
+    private static String readAsciiLine(InputStream input) throws IOException {
+        var line = new ByteArrayOutputStream(128);
+        while (line.size() <= 8192) {
+            int value = input.read();
+            if (value < 0) throw new EOFException("truncated multipart framing");
+            if (value == '\r') {
+                if (input.read() != '\n') throw new IOException("invalid multipart newline");
+                return line.toString(StandardCharsets.US_ASCII);
+            }
+            if (value > 127 || value == '\n') throw new IOException("invalid multipart header byte");
+            line.write(value);
+        }
+        throw new IOException("multipart header exceeds 8 KiB");
+    }
+
+    private static final class UploadSource extends InputStream {
+        final long total;
+        final long failAfter;
+        final MessageDigest digest;
+        long position;
+        int readCalls;
+        int closeCalls;
+
+        UploadSource(long total) throws Exception {
+            this(total, Long.MAX_VALUE);
+        }
+
+        UploadSource(long total, long failAfter) throws Exception {
+            this.total = total;
+            this.failAfter = failAfter;
+            this.digest = MessageDigest.getInstance("SHA-256");
+        }
+
+        @Override
+        public int read() throws IOException {
+            readCalls++;
+            if (position >= failAfter) throw new IOException("fixture upload interruption");
+            if (position >= total) return -1;
+            int value = (int) (position++ % 251);
+            digest.update((byte) value);
+            return value;
+        }
+
+        @Override
+        public int read(byte[] buffer, int offset, int length) throws IOException {
+            Objects.checkFromIndexSize(offset, length, buffer.length);
+            if (length == 0) return 0;
+            readCalls++;
+            if (position >= failAfter) throw new IOException("fixture upload interruption");
+            if (position >= total) return -1;
+            int count = (int) Math.min(Math.min(length, 8192), Math.min(total - position, failAfter - position));
+            for (int i = 0; i < count; i++) buffer[offset + i] = (byte) ((position + i) % 251);
+            digest.update(buffer, offset, count);
+            position += count;
+            return count;
+        }
+
+        @Override
+        public void close() {
+            closeCalls++;
+        }
     }
 }

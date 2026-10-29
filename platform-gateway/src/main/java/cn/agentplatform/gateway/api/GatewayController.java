@@ -12,6 +12,7 @@ import cn.agentplatform.gateway.domain.Routes;
 import jakarta.servlet.http.*;
 
 import org.springframework.core.env.Environment;
+import org.springframework.http.MediaType;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestClient;
@@ -107,7 +108,7 @@ public class GatewayController {
                 upstream.setDoOutput(true);
                 upstream.setChunkedStreamingMode(8192);
                 try (OutputStream out = upstream.getOutputStream()) {
-                    copyBounded(req.getInputStream(), out, 2 * 1024 * 1024);
+                    copyBounded(req.getInputStream(), out, requestLimit(req));
                 }
             }
             int status = upstream.getResponseCode();
@@ -150,6 +151,21 @@ public class GatewayController {
         } finally {
             upstream.disconnect();
         }
+    }
+
+    private static int requestLimit(HttpServletRequest req) {
+        if ("POST".equals(req.getMethod()) && "/admin/artifacts".equals(req.getRequestURI())
+                && req.getContentType() != null) {
+            try {
+                var type = MediaType.parseMediaType(req.getContentType());
+                // 64MiB 文件另受下游校验；仅此入口预留 multipart framing，总请求仍逐字节有界。
+                if ("multipart".equals(type.getType()) && "form-data".equals(type.getSubtype()))
+                    return 65 * 1024 * 1024;
+            } catch (IllegalArgumentException ignored) {
+                // 畸形或不匹配的媒体类型沿用普通请求额度，不扩大其它入口。
+            }
+        }
+        return 2 * 1024 * 1024;
     }
 
     private static void copyBounded(InputStream in, OutputStream out, int max) throws IOException {

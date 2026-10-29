@@ -1,0 +1,62 @@
+[
+    {
+        "scenario":  "forced-release",
+        "file":  "forced-release.properties",
+        "before":  {
+                       "completionNotInvented":  "true",
+                       "waiting":  "0",
+                       "barrierBeforeDelegateRecycle":  "true",
+                       "lateActionCalls":  "0",
+                       "ownersRetained":  "2",
+                       "actualSocketCloseEach":  "true",
+                       "recycled":  "2"
+                   },
+        "after":  {
+                      "completionNotInvented":  "true",
+                      "waiting":  "0",
+                      "barrierBeforeDelegateRecycle":  "true",
+                      "lateActionCalls":  "0",
+                      "ownersRetained":  "2",
+                      "actualSocketCloseEach":  "true",
+                      "recycled":  "2"
+                  },
+        "fixedInvariantChanges":  [
+
+                                  ],
+        "recycledIsObservation":  true
+    },
+    {
+        "scenario":  "off-lock-release-safety",
+        "file":  "off-lock-release-safety.properties",
+        "before":  {
+                       "completionNotInvented":  "true",
+                       "originalProcessorReused":  "false",
+                       "otherSocketPongResponses":  "2",
+                       "originalActionsEachAtMostOne":  "true",
+                       "controlledOffLockCloseEach":  "true",
+                       "otherRequestEpochs":  "2",
+                       "originalWindowRecycled":  "0",
+                       "originalWindowWaiting":  "2",
+                       "actualReadersExited":  "2",
+                       "ownersRetained":  "2",
+                       "thirdSseDenied":  "true"
+                   },
+        "after":  {
+                      "completionNotInvented":  "true",
+                      "originalProcessorReused":  "false",
+                      "otherSocketPongResponses":  "2",
+                      "originalActionsEachAtMostOne":  "true",
+                      "controlledOffLockCloseEach":  "true",
+                      "otherRequestEpochs":  "2",
+                      "originalWindowRecycled":  "0",
+                      "originalWindowWaiting":  "2",
+                      "actualReadersExited":  "2",
+                      "ownersRetained":  "2",
+                      "thirdSseDenied":  "true"
+                  },
+        "fixedInvariantChanges":  [
+
+                                  ],
+        "recycledIsObservation":  true
+    }
+]

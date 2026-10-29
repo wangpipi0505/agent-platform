@@ -1,0 +1,68 @@
+[
+    {
+        "class":  "cn.agentplatform.gateway.ArtifactUploadGatewayTest",
+        "method":  "rejects65MiBTotalWirePlusOneWithKnownLength",
+        "status":  "passed",
+        "message":  ""
+    },
+    {
+        "class":  "cn.agentplatform.gateway.ArtifactUploadGatewayTest",
+        "method":  "acceptsExactly65MiBTotalWireWithKnownLength",
+        "status":  "failure",
+        "message":  "valid bounded request must reach the HTTP upstream ==\u003e expected: \u003c200\u003e but was: \u003c502\u003e"
+    },
+    {
+        "class":  "cn.agentplatform.gateway.ArtifactUploadGatewayTest",
+        "method":  "acceptsExactly65MiBTotalWireWithoutContentLength",
+        "status":  "failure",
+        "message":  "valid bounded request must reach the HTTP upstream ==\u003e expected: \u003c200\u003e but was: \u003c502\u003e"
+    },
+    {
+        "class":  "cn.agentplatform.gateway.ArtifactUploadGatewayTest",
+        "method":  "forwards64MiBMultipartWithKnownLengthAndVerifiedInternalIdentity",
+        "status":  "failure",
+        "message":  "valid bounded request must reach the HTTP upstream ==\u003e expected: \u003c200\u003e but was: \u003c502\u003e"
+    },
+    {
+        "class":  "cn.agentplatform.gateway.ArtifactUploadGatewayTest",
+        "method":  "rejects65MiBTotalWirePlusOneWithoutContentLength",
+        "status":  "passed",
+        "message":  ""
+    },
+    {
+        "class":  "cn.agentplatform.gateway.ArtifactUploadGatewayTest",
+        "method":  "putMultipartDoesNotReceiveUploadAllowance",
+        "status":  "passed",
+        "message":  ""
+    },
+    {
+        "class":  "cn.agentplatform.gateway.ArtifactUploadGatewayTest",
+        "method":  "otherRoutesAndArtifactDownloadPathKeep2MiB",
+        "status":  "passed",
+        "message":  ""
+    },
+    {
+        "class":  "cn.agentplatform.gateway.ArtifactUploadGatewayTest",
+        "method":  "ordinaryRequestsKeepExact2MiBAllowance",
+        "status":  "passed",
+        "message":  ""
+    },
+    {
+        "class":  "cn.agentplatform.gateway.ArtifactUploadGatewayTest",
+        "method":  "missingInvalidSimilarAndWildcardContentTypesKeep2MiB",
+        "status":  "passed",
+        "message":  ""
+    },
+    {
+        "class":  "cn.agentplatform.gateway.ArtifactUploadGatewayTest",
+        "method":  "ordinaryRequestsReject2MiBPlusOneIncludingUnknownLength",
+        "status":  "passed",
+        "message":  ""
+    },
+    {
+        "class":  "cn.agentplatform.gateway.ArtifactUploadGatewayTest",
+        "method":  "forwards64MiBMultipartWithoutContentLength",
+        "status":  "failure",
+        "message":  "valid bounded request must reach the HTTP upstream ==\u003e expected: \u003c200\u003e but was: \u003c502\u003e"
+    }
+]

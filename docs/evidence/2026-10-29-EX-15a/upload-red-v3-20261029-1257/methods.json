@@ -1,0 +1,98 @@
+[
+    {
+        "class":  "cn.agentplatform.skill.infra.ArtifactPersistenceTest",
+        "method":  "longUploadNeverBecomesReadyAndCleansExactObject",
+        "status":  "failure",
+        "message":  "Multiple Failures (3 failures)\n\torg.opentest4j.AssertionFailedError: 大小不符或断流的上传必须拒绝 ==\u003e expected: not \u003cnull\u003e\n\torg.opentest4j.AssertionFailedError: 失败上传不得发出 READY 引用 ==\u003e expected: \u003cnull\u003e but was: \u003c{bytes=8, artifactId=art_b1e9467e60f04d37af470c259d046f0d, contentType=application/octet-stream, downloadUrl=/admin/artifacts/art_b1e9467e60f04d37af470c259d046f0d/download, sha256=8a851ff82ee7048ad09ec3847f1ddf44944104d2cbd17ef4e3db22c6785a0d45}\u003e\n\torg.opentest4j.AssertionFailedError: expected: \u003cDELETED\u003e but was: \u003cREADY\u003e"
+    },
+    {
+        "class":  "cn.agentplatform.skill.infra.ArtifactPersistenceTest",
+        "method":  "recordedAttachmentGetsNewRunOwnershipAndSurvivesSourceExpiry",
+        "status":  "passed",
+        "message":  ""
+    },
+    {
+        "class":  "cn.agentplatform.skill.infra.ArtifactPersistenceTest",
+        "method":  "httpDownloadRoutesReturnBytesAndRejectSpoofedIdentityAndWrongRun",
+        "status":  "passed",
+        "message":  ""
+    },
+    {
+        "class":  "cn.agentplatform.skill.infra.ArtifactPersistenceTest",
+        "method":  "databaseOwnershipCannotBeRewrittenAndCleanupHonorsBatchMaximum",
+        "status":  "passed",
+        "message":  ""
+    },
+    {
+        "class":  "cn.agentplatform.skill.infra.ArtifactPersistenceTest",
+        "method":  "responseStreamFailureCleansPartialUploadAndDoesNotIssueReference",
+        "status":  "passed",
+        "message":  ""
+    },
+    {
+        "class":  "cn.agentplatform.skill.infra.ArtifactPersistenceTest",
+        "method":  "fiveMegabyteArtifactIsOpaquePersistentAndDownloadableOnlyByOwnerAndRun",
+        "status":  "passed",
+        "message":  ""
+    },
+    {
+        "class":  "cn.agentplatform.skill.infra.ArtifactPersistenceTest",
+        "method":  "brokenUploadCleansExactObjectAndClosesSource",
+        "status":  "passed",
+        "message":  ""
+    },
+    {
+        "class":  "cn.agentplatform.skill.infra.ArtifactPersistenceTest",
+        "method":  "retentionIsBoundedAndNeverDeletesAnotherTenantObject",
+        "status":  "passed",
+        "message":  ""
+    },
+    {
+        "class":  "cn.agentplatform.skill.infra.ArtifactPersistenceTest",
+        "method":  "shortUploadNeverBecomesReadyAndCleansExactObject",
+        "status":  "passed",
+        "message":  ""
+    },
+    {
+        "class":  "cn.agentplatform.skill.infra.ArtifactPersistenceTest",
+        "method":  "hardByteLimitFailureDeletesExactObject",
+        "status":  "passed",
+        "message":  ""
+    },
+    {
+        "class":  "cn.agentplatform.skill.infra.ArtifactPersistenceTest",
+        "method":  "sixtyFourMiBUploadSurvivesFreshStoreAndStreamsToHttpWithMatchingDigest",
+        "status":  "passed",
+        "message":  ""
+    },
+    {
+        "class":  "cn.agentplatform.skill.infra.ArtifactPersistenceTest",
+        "method":  "interruptedUploadIsRecoveredFromMetadataWithoutBucketListing",
+        "status":  "passed",
+        "message":  ""
+    },
+    {
+        "class":  "cn.agentplatform.skill.infra.ArtifactPersistenceTest",
+        "method":  "declaredUploadOverHardLimitDoesNotReadOrRegister",
+        "status":  "passed",
+        "message":  ""
+    },
+    {
+        "class":  "cn.agentplatform.skill.infra.ArtifactPersistenceTest",
+        "method":  "storageCleanupFailureIsRecordedAndLaterRetriedWithoutChangingOwnership",
+        "status":  "passed",
+        "message":  ""
+    },
+    {
+        "class":  "cn.agentplatform.skill.infra.ArtifactPersistenceTest",
+        "method":  "uploadedInputIsOwnerScopedAndDownloadableWithoutAnExecution",
+        "status":  "passed",
+        "message":  ""
+    },
+    {
+        "class":  "cn.agentplatform.skill.infra.ArtifactPersistenceTest",
+        "method":  "schemaFailureDeletesExactObjectAndLeavesDurableCleanupRecord",
+        "status":  "passed",
+        "message":  ""
+    }
+]

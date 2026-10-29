@@ -569,6 +569,7 @@ public class SkillAdapters {
                                 .followRedirects(java.net.http.HttpClient.Redirect.NEVER)
                                 .build()
                         : null;
+        org.springframework.util.MultiValueMap<String, Object> multipart = null;
         try {
             org.springframework.http.client.ClientHttpRequestFactory factory;
             if (patchClient != null) {
@@ -597,10 +598,10 @@ public class SkillAdapters {
             if (mapped && MultipartFormMapping.declared(contract)) {
                 // multipart表单：文件字节经产物存储按租户/主体解析（runId传null与/admin下载语义一致，
                 // 允许引用此前运行的产物）；重发同一坏引用不会有不同结果，失败按PARAM_ERROR处理。
+                multipart = MultipartFormMapping.build(
+                        contract, arguments, id -> artifacts.download(id, null));
                 request.contentType(org.springframework.http.MediaType.MULTIPART_FORM_DATA)
-                        .body(
-                                MultipartFormMapping.build(
-                                        contract, arguments, id -> artifacts.download(id, null)));
+                        .body(multipart);
             }
             // JsonNode强制Jackson编码；Java String直接交给默认转换器会变为裸text/plain，破坏OpenAPI JSON标量契约。
             else if (!method.equals("GET") && requestBody != null)
@@ -646,6 +647,7 @@ public class SkillAdapters {
                     sideEffect,
                     "外部端点连接、超时或结果接收失败");
         } finally {
+            MultipartFormMapping.closeFiles(multipart);
             if (patchClient != null) patchClient.close();
         }
     }

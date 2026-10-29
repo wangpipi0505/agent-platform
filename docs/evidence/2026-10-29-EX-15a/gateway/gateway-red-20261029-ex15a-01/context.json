@@ -1,0 +1,26 @@
+{
+    "phase":  "red",
+    "head":  "1fe99d67b9f72fad576d5e3a424b24d550dbf0b2",
+    "arguments":  [
+                      "-B",
+                      "-ntp",
+                      "-pl",
+                      "platform-gateway",
+                      "test",
+                      "-Dmaven.repo.local=G:\\207\\项目\\算法重组工具\\代码\\agent-platform/.tools/m2",
+                      "-DargLine=-Xmx256m -Djdk.net.unixdomain.tmpdir=V:/.local/tmp",
+                      "-Dsurefire.timeout=180",
+                      "-Dsurefire.failIfNoSpecifiedTests=true",
+                      "-Dmaven.test.failure.ignore=false",
+                      "-DreuseForks=false",
+                      "-DforkCount=1",
+                      "-Dtest=ArtifactUploadGatewayTest"
+                  ],
+    "startedAt":  "2026-10-29T05:34:28.5026735Z",
+    "collectorSha256":  "5750EA69EC0B71BD748834290F2478EB4619D4BB2481DFB39FFD8F016A83B202",
+    "adminJarSha256":  "1B0D7B40FC3AE02B207294D3B6BE7EA7F7BB9DCD35AF8EA62A372F916FA14B87",
+    "failureIgnore":  false,
+    "inheritedJvmOptionsAbsent":  true,
+    "scope":  "Generated Servlet input to real GatewayController and loopback HTTP peer; authenticated context premise, no inbound FilterChain/JVM restart/PG/MinIO proof",
+    "resources":  "Per-call 127.0.0.1 random listener, owned worker and deadline; no fixed ports, external services, DB rows or objects"
+}

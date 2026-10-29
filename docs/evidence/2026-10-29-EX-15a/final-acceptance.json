@@ -1,0 +1,72 @@
+{
+  "card": "EX-15a",
+  "decidedAtUtc": "2026-10-29T06:52:35.0571660Z",
+  "decisionBy": "root; separate non-author technical attribution by artifact_boundary_review",
+  "baseHead": "1fe99d67b9f72fad576d5e3a424b24d550dbf0b2",
+  "directedRedThenGreen": true,
+  "skillRelativeGate": true,
+  "adjacent32Passed": true,
+  "formalLivePassed": true,
+  "gateway": {
+    "records": 299,
+    "passed": 284,
+    "failures": 7,
+    "errors": 8,
+    "nativeMavenExit": 1,
+    "collectorExit": 1,
+    "identityGate": true,
+    "sourceStable": true,
+    "sse38And49ChildGate": true,
+    "fourDatabaseBeforeAfterPassed": true,
+    "originalRawReasonGate": false,
+    "originalRegressionGate": false,
+    "allTestsPassed": false,
+    "exactOldReasons": 3,
+    "boundedRepresentationReasons": 11,
+    "separatelyReviewedOldClasspathDebt": 1,
+    "combinedNoNewRegressionAccepted": true,
+    "rawEvidenceModified": false,
+    "excludedMethod": "cn.agentplatform.gateway.application.PublishedMetadataSmokeLauncherTest#launchTwoIsolatedJvmFixturesWithFiniteDeadline",
+    "limitation": "First missing-class resolution order cannot be reconstructed from historical fingerprints. Both missing classes are absent from the unchanged fixed child classpath. The original method remains FAIL; EX-27 owns this fixture debt."
+  },
+  "scope": "Seven source files, four product and three test. No migration. True worker and joint business acceptance remain separate.",
+  "implementationAndApplicableRegressionAccepted": true,
+  "independentFinalReviewPath": "final-independent-review.md",
+  "indexReviewRequired": true,
+  "localCommitRequired": true,
+  "cardClosedByThisRecord": false,
+  "inputs": [
+    {
+      "path": "README.md",
+      "sha256": "ef10508a6d18f79de3994dc5863e5187912ca3ecf503897387de4576d2493bd2"
+    },
+    {
+      "path": "root-replay.json",
+      "sha256": "a59f7af364fec539fa27be2f50df8cfc20cc055b9015456d40104651816a5b59"
+    },
+    {
+      "path": "gateway/metadata-classpath-change-review.md",
+      "sha256": "bc6cd5bff5fb5e25bde96946f8338e592a9357fc9b8f1747b710ae011c504a25"
+    },
+    {
+      "path": "gateway/runs/gateway-module-20261029-ex15a-02/summary.json",
+      "sha256": "c5c5d72ef44451242baacb1717b6c7daca0e101f39ce2a720dc1cf877857e546"
+    },
+    {
+      "path": "gateway/runs/gateway-module-20261029-ex15a-02/bounded-representation-proof.json",
+      "sha256": "e6817b0da75e6681886ffad7861ef80ee5ddd4f088f61e4d13326a07b77a4f78"
+    },
+    {
+      "path": "collector/runs/full-skill-20261029-ex15a-01/summary.json",
+      "sha256": "5458d9eaa1a2c55266e01c6d823ddf3572fd732bf3c302750454f647146d36da"
+    },
+    {
+      "path": "collector/runs/adjacent-20261029-ex15a-01/summary.json",
+      "sha256": "981321143b39e0cc761c0d32dbebef70c3d7d0c29c380ef4956bf811dc0c1d79"
+    },
+    {
+      "path": "live/runs/ex15a-live-20261029140249-7cb555ea/run.json",
+      "sha256": "ac1a4abca3d686df5448c159c4337b95f36e2afa35ef6f35dfbcb70a09df461c"
+    }
+  ]
+}
