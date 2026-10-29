@@ -301,8 +301,15 @@ public record ProcessContract(
         return timeout;
     }
 
+    public boolean filesEnabled() {
+        return stdinJson != null && stdinJson.isObject() && stdinJson.path("files").asBoolean(false);
+    }
+
     private static JsonNode validStdin(JsonNode stdin) {
         if (stdin == null || stdin.isNull()) return null;
+        // 只有对象顶层的保留键启用受控文件；旧 scalar/array stdin 仍原样保存。
+        if (stdin.isObject() && stdin.has("files") && !stdin.get("files").isBoolean())
+            throw invalid("字段 stdin.files 必须是布尔值");
         int bytes;
         try {
             bytes = Json.write(stdin).getBytes(StandardCharsets.UTF_8).length;

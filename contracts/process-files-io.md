@@ -1,0 +1,37 @@
+# PROCESS 受控文件 I/O 工程增补（EX-15b/1）
+
+本增补承接现有 PROCESS 执行方式、algorithm-process/1 信封及既有 artifact 权威存储。它定义后续实施目标；当前已交付父目录段拒绝，以及 PhaseA 的 files 布尔开关校验、启用后的输出相对路径与普通文件存在性校验；这些局部约束尚未完成输入物化、输出持久化或二进制回放。完整 I/O 的实际进度、准入与验收以统一台账 EX-15b 为准。原冻结契约及 EX-05 工程增补不改写，不引入新执行器、迁移、公共上传接口或 OS 沙箱承诺。
+
+## 1. 显式启用与兼容边界
+
+仅 process.stdin 是对象时，其顶层 files 为本增补保留的布尔键。true 启用输入物化及成功输出校验/持久化；false 或键缺省保留既有无文件 I/O 路径，不把业务 arguments.files 解释为控制信息。旧 stdin 的 scalar/array 及其它字段原样保存，不顺带要求 stdin 必须为对象。
+
+兼容例外：旧 object.stdin.files 的字符串、数值、对象、数组或 null 原本可被保存；从本增补实施起，这一保留键的非布尔值以 400/PROCESS_CONTRACT_INVALID 拒绝。不能把该有意收紧描述为所有旧任意 stdin 都不变。旧发布记录不就地改写，遇该冲突应由所有者显式修正新草稿；历史原件仍保留。
+
+启用不改变已发布技能的协议、命令白名单、timeout、环境白名单、1 MiB 信封/stdout 上限或执行/授权门。queryOnly 不启动进程。未启用时既有父目录段拒绝仍适用。
+
+## 2. 入参先受原 schema 和权限约束
+
+arguments.files 是完整 arguments 的一部分，先通过既有 inputSchema 和 guard。stdin.files=true 不自动删除该键来绕过 schema，也不修改技能 schema。additionalProperties=false 且未声明 files 的 schema 应拒绝该输入；需要输入文件的技能须由其 schema 明确允许该键。输出文件能力不要求请求必须带输入 files。
+
+通过原校验后，adapter 仅在一份参数副本中移除控制键；调用者原对象、其余业务字段与数组顺序不改。worker 信封仍使用原 parameters 字段，文件映射在独立 files 字段，不新增第二套信封。
+
+启用时 arguments.files 可缺省为空映射；存在时为 logicalName 到 {artifactId} 的对象。不得接受 URL、物理对象 key、本机路径、主体或 sourceRun 覆盖字段。logicalName 不参与本机路径拼接。引用必须由既有 ArtifactStore 核同 tenant/principal、READY、未过期；同 owner 先前上传的输入不要求 sourceRun 等于当前执行 run。原 schema/guard 仍先行拒绝。既有 ArtifactStore 对不可见、跨 owner 或失效引用统一404/ARTIFACT_NOT_FOUND；PROCESS 输入边界在已列 SkillAdapters 内窄映射为404/PROCESS_INPUT_ARTIFACT_NOT_FOUND，使既有 SkillExecution 的 PROCESS_ 错误通路保留真实状态，维持 owner 不可区分且不泄露源详情。不宣称原 ARTIFACT_NOT_FOUND 码已端到端透传，不扩大 SkillExecution 生产白名单。此拒绝时 worker 不得启动、无输出行；其它真实存储故障不能伪装成404或worker输出错误，其必要映射由输入阶段按实际异常单独冻结。
+
+平台在本次私有 callDir/input 中生成文件名，信封 files 只映射 logicalName 到 input/0001.bin 等受控相对路径。按实际读取字节验长度和 SHA，关闭每个输入流。最多16个输入、单个16 MiB、合计64 MiB；实际超限必须在启动 worker 前停止，不信任声明值。
+
+## 3. 输出与持久化不变量
+
+仅显式启用的受控 I/O 路径负责把成功响应 files 声明转换为 artifact 引用。worker 先返回完整成功信封；result 仍通过原 outputSchema。files 声明沿用 name/path/contentType/bytes/sha256，路径只允许本次 callDir/output 内的相对文件。拒绝绝对路径、UNC/盘符、完整父目录段、符号链接/junction/reparse、缺失或目录、重复 name/path、错字节数或 SHA。最多16个输出、单个及合计均不超过64 MiB；输入、输出配额独立，不能放大原 stdout 或超时上限。
+
+先验证整个声明集合，再在同一安全文件句柄或平台独占稳定快照上核验和流式写入。实际已登记 worker 及后代退出、写入者收敛与防替换事实是验收前提；普通路径检查或一次 stat 不能代替。Windows 无等价安全保证时 fail closed，不能声称获得 OS 沙箱。所有路径拒绝沿既有 502/PROCESS_OUTPUT_INVALID；持久化/资源故障按其实际错误保留，不用该码吞掉输入授权失败。
+
+使用真实 Actor/runId/callId/attempt、既有 V306 key 和 UPLOADING→READY 链；不得复用普通上传的 r_upload/call1 代替执行归属。fileRefs 只返回既有 artifact 引用和安全元数据，不返回本机路径。后续失败只补偿本次调用已创建的精确对象/行，不删除源输入、其它调用或旧队列；保留原失败并记录补偿失败。
+
+LAST_REAL/录制回放对 PROCESS 二进制附件使用流式复制并再次核 owner/sourceRun，生成新 run/call 归属，不经 JSON offload。原 JSON offload 路径保持。重启读回、二进制一致、跨 owner 拒绝和新归属必须实测。
+
+## 4. 分阶段验收
+
+PhaseA 只批准三个既有测试源的原25加新5方法，先真实失败再最小修复；绝对路径负例的真实空文件必须已在本次 output 子目录内，使绝对性成为唯一非法项。所有旧断言、进程身份/收敛和原预算保持。参数 schema 拒绝、false/缺省保留业务 files、scalar/array stdin 兼容须有后续真实信封/worker 正例。
+
+输入授权/额度、输出链接与替换、存储补偿、二进制回放及正式新 JVM 读回分阶段取得真实 PG/MinIO/进程证据。纯 mock、三条红转绿或当前 PROCESS 路径元数据不能替代完整文件链验收。真实业务算法 worker 仍依 X-1 单列，协议夹具不冒充该外部验收。

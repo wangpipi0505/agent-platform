@@ -105,6 +105,23 @@ class SkillProcessRegistrationTest {
     }
 
     @Test
+    void normalizedFilesOptInSurvivesSerializedContractReadback() {
+        signIn();
+        var body = body();
+        var process = process();
+        process.put("stdin", Map.of("files", true));
+        body.put("process", process);
+
+        // This is normalization plus JSON round-trip, not a database persistence test.
+        var normalized = catalog().normalize(body);
+        var readback = Json.read(Json.write(normalized));
+        assertEquals("PROCESS", readback.path("type").asText());
+        assertTrue(readback.path("process").path("stdin").path("files").isBoolean());
+        assertTrue(readback.path("process").path("stdin").path("files").asBoolean());
+        assertEquals(Json.tree(process.get("stdin")), readback.path("process").path("stdin"));
+    }
+
+    @Test
     void processRejectsEndpointBecauseALocalProcessNeverAddressesAnHttpEndpoint() {
         signIn();
         var body = body();

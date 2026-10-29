@@ -1,6 +1,8 @@
 package cn.agentplatform.skill.infra;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 import cn.agentplatform.common.Json;
 import cn.agentplatform.common.PlatformException;
@@ -9,6 +11,9 @@ import cn.agentplatform.skill.domain.ProcessContract;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.io.TempDir;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -19,9 +24,11 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
@@ -52,7 +59,27 @@ class ProcessFilesTest {
         assertEquals("PROCESS_OUTPUT_INVALID", failure.code());
     }
 
+    @Test
+    void routedFilesOptInRejectsMissingOutputBeforeArtifactPersistence() {
+        var failure = assertThrows(PlatformException.class, () -> execute("missing", true));
+
+        assertEquals(502, failure.status());
+        assertEquals("PROCESS_OUTPUT_INVALID", failure.code());
+    }
+
+    @Test
+    void routedFilesOptInRejectsAbsoluteOutputBeforeArtifactPersistence() {
+        var failure = assertThrows(PlatformException.class, () -> execute("absolute", true));
+
+        assertEquals(502, failure.status());
+        assertEquals("PROCESS_OUTPUT_INVALID", failure.code());
+    }
+
     private ProcessAdapter.Output execute(String mode) throws Exception {
+        return execute(mode, false);
+    }
+
+    private ProcessAdapter.Output execute(String mode, boolean routed) throws Exception {
         Path root = Files.createDirectory(temp.resolve("中文 空格 PROCESS 文件根")).toRealPath();
         String executable =
                 Path.of(
@@ -70,7 +97,10 @@ class ProcessFilesTest {
                         .toRealPath();
         assertTrue(Files.isDirectory(classpath), "worker must use this test's compiled classes");
         var adapter = new ProcessAdapter(true, root.toString(), 1, 1, 0, 0, executable);
-        String requestId = "process_files_" + UUID.randomUUID().toString().replace("-", "");
+        long callId = ThreadLocalRandom.current().nextLong(1, Long.MAX_VALUE);
+        String requestId = routed
+                ? Long.toString(callId)
+                : "process_files_" + UUID.randomUUID().toString().replace("-", "");
         var contract = Json.object();
         contract.set(
                 "command",
@@ -83,14 +113,55 @@ class ProcessFilesTest {
                                 Worker.class.getName(),
                                 mode)));
         contract.put("timeoutMs", 20000);
+        if (routed) contract.putObject("stdin").put("files", true);
         var request = new ProcessAdapter.Request(requestId, "files-probe", Json.object());
         var caller = Executors.newSingleThreadExecutor();
         var future =
                 caller.submit(
-                        () -> adapter.execute(ProcessContract.parse(contract), request, "files-test"));
+                        () -> {
+                            if (!routed)
+                                return adapter.execute(
+                                        ProcessContract.parse(contract), request, "files-test");
+                            // A malformed output must be rejected before any artifact IO.
+                            var artifacts = mock(ArtifactStore.class);
+                            var jwt = Jwt.withTokenValue("verified-test")
+                                    .header("alg", "HS256")
+                                    .subject("process-files-test")
+                                    .claim("tenant_id", "process-files-test")
+                                    .claim("roles", List.of("ADMIN"))
+                                    .build();
+                            SecurityContextHolder.getContext()
+                                    .setAuthentication(new JwtAuthenticationToken(jwt));
+                            try {
+                                new SkillAdapters(artifacts, null, null, adapter).invoke(
+                                        Map.of(
+                                                "code", "files-probe",
+                                                "type", "PROCESS",
+                                                "invocationKind", "SYNC",
+                                                "process", Json.mapper().convertValue(contract, Map.class),
+                                                "inputSchema", Map.of("type", "object"),
+                                                "outputSchema", Map.of("type", "object")),
+                                        Map.of(),
+                                        "phase-a-" + callId,
+                                        callId,
+                                        false,
+                                        "r_" + UUID.randomUUID().toString().replace("-", ""),
+                                        1L);
+                                return null; // assertThrows must fail if the production route accepts it.
+                            } finally {
+                                SecurityContextHolder.clearContext();
+                                verifyNoInteractions(artifacts);
+                            }
+                        });
         OwnedWorker owned = null;
         try {
             owned = awaitWorker(root, requestId, executable);
+            // This owned file makes absolute path the only invalid part of its descriptor.
+            if (routed && mode.equals("absolute")) {
+                Path output = Files.createDirectories(owned.callDir().resolve("output"));
+                Files.createFile(output.resolve("declared-only.bin"));
+            }
+
             // The child waits inside its own callDir until its exact process identity is registered.
             Path release = owned.callDir().resolve("process-files.release.tmp");
             Files.writeString(
@@ -159,7 +230,7 @@ class ProcessFilesTest {
     /** Pure JDK fixture: no database, HTTP, dependency JARs, or path access from the files descriptor. */
     public static final class Worker {
         public static void main(String[] args) throws Exception {
-            if (args.length != 1 || !(args[0].equals("empty") || args[0].equals("escape")))
+            if (args.length != 1 || !List.of("empty", "escape", "missing", "absolute").contains(args[0]))
                 throw new IllegalArgumentException("unknown fixture mode");
             byte[] bytes = System.in.readNBytes(1024 * 1024 + 1);
             if (bytes.length > 1024 * 1024) throw new IllegalArgumentException("fixture request too large");
@@ -188,11 +259,18 @@ class ProcessFilesTest {
             }
             if (!requestId.equals(Files.readString(release, StandardCharsets.UTF_8)))
                 throw new IllegalStateException("fixture release identity mismatch");
-            // The hostile path is only JSON text. Neither mode creates or opens escape.bin.
+            // Descriptor paths are JSON only: the worker never creates or opens any declared file.
+            String path = switch (args[0]) {
+                case "escape" -> "../escape.bin";
+                case "missing" -> "output/missing.bin";
+                case "absolute" -> cwd.resolve("output").resolve("declared-only.bin").toAbsolutePath().toString();
+                default -> "";
+            };
+            String escapedPath = path.replace("\\", "\\\\").replace("\"", "\\\"");
             String files =
                     args[0].equals("empty")
                             ? "[]"
-                            : "[{\"name\":\"escape\",\"path\":\"../escape.bin\","
+                            : "[{\"name\":\"escape\",\"path\":\"" + escapedPath + "\","
                                     + "\"contentType\":\"application/octet-stream\",\"bytes\":0,"
                                     + "\"sha256\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\"}]";
             String response =

@@ -221,6 +221,27 @@ class ProcessContractTest {
         assertInvalid(Json.object(), "executable");
     }
 
+    @Test
+    void rejectsNonBooleanFilesOptIn() {
+        for (String value : java.util.List.of("\"true\"", "1", "{}", "[]", "null")) {
+            ObjectNode json = base();
+            json.putObject("stdin").set("files", Json.read(value));
+
+            assertInvalid(json, "stdin.files");
+        }
+    }
+
+    @Test
+    void falseFilesOptInAndLegacyStdinRemainUnchanged() {
+        ObjectNode disabled = base();
+        disabled.putObject("stdin").put("files", false).put("hello", "世界");
+        assertEquals(disabled.path("stdin"), ProcessContract.parse(disabled).stdinJson());
+
+        ObjectNode legacy = base();
+        legacy.putObject("stdin").put("hello", "世界");
+        assertEquals(legacy.path("stdin"), ProcessContract.parse(legacy).stdinJson());
+    }
+
     private ObjectNode base() {
         ObjectNode json = Json.object();
         json.putArray("command").add(javaExecutable());

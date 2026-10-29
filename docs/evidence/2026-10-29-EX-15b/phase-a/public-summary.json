@@ -1,0 +1,508 @@
+{
+  "schemaVersion": "EX15b-PhaseA-public-summary-v1",
+  "sealed": true,
+  "preparedParentHead": "b4918591a8d899d260ab365106ca798554d2b81d",
+  "waitingFor": "Independent exact29 index review; no stage or commit performed by this preparation",
+  "publicFileCount": 29,
+  "sourceAndContractCount": 6,
+  "evidenceAndAttributesCount": 23,
+  "phaseAJavaSourcePins": [
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/domain/ProcessContract.java",
+      "sha256": "8D8030F53F24488C3880FEED71BBB6E7E3A42ED19FC416B63366505C41205B88"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/ProcessAdapter.java",
+      "sha256": "00D30C03B2F63079908BA98AC89992DBD6304D8025E7B5DA756F5C9D20BD134C"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/domain/ProcessContractTest.java",
+      "sha256": "94A0E0A7682BE4203CFC3A76A4F646FC74489D3E182268AFAF7D727F257A20CD"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/SkillProcessRegistrationTest.java",
+      "sha256": "65ED5ACA7101A4C8198E0E26BB83609B90F4A2E3BD48F32B73C655D33FB5D705"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/ProcessFilesTest.java",
+      "sha256": "6E4A4AAAB135BD01CA2B830A0E11A3741B060551A98EA2F0D9FA111ECF2A544C"
+    }
+  ],
+  "contract": {
+    "current": {
+      "path": "contracts/process-files-io.md",
+      "sha256": "465646D3C46F79191E2E8C4C8E109F046D7B004EF6E3A7626FE4FB0F29C4D637"
+    },
+    "historicalAcceptedContractSha256": "194DEAF939B0A97EEEC66869E742AD56A1220F4A227974AB1674EB60A9E0548B",
+    "onlyFirstParagraphStatusChanged": true,
+    "reverseParagraphReplacementRestoresExactOldBytes": true
+  },
+  "results": {
+    "Red30": {
+      "directory": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-red-20261029-01",
+      "runtimeHead": "6ca930d8b9b7ef32c4eb7de1ce88ae87fc75c946",
+      "summarySha256": "C77B84E8EA6F200BE27CFA5577462086AD170A100896BE7DCB2DE8601463E22F",
+      "actualManifestSha256": "74C2A9E18FD31EE93A1042842A9FE65B76C994BCE8920C72ED98CEE4003B05C3",
+      "actualRunnerSha256": "7252B91377B863711EF1537574A1B9FE9D46D802C8ECB14E154E58BE013720EE",
+      "collectorExit": 0,
+      "mode": "RED_ONLY",
+      "nativeExit": 1,
+      "failureIgnore": false,
+      "records": 30,
+      "freshXml": 3,
+      "passed": 27,
+      "failures": 3,
+      "errors": 0,
+      "skipped": 0,
+      "sourceStable": true,
+      "contextStable": true,
+      "classpathPassed": true,
+      "gatePassed": true,
+      "allGreen": false
+    },
+    "Green30": {
+      "directory": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-green-20261029-01",
+      "runtimeHead": "6ca930d8b9b7ef32c4eb7de1ce88ae87fc75c946",
+      "summarySha256": "5080A1E987297FAAF80C8985776AE42E58991FC1682C14B5A1ECA8A9C73E507C",
+      "actualManifestSha256": "17184F287929512A82EDA335B5267E82DD04C8654628002A3819727E491CC195",
+      "actualRunnerSha256": "4CA466409538EE7754D21760B99D4304788C7412F82DBF3C059C494A7898E76F",
+      "collectorExit": 0,
+      "mode": "GREEN_ONLY",
+      "nativeExit": 0,
+      "failureIgnore": false,
+      "records": 30,
+      "freshXml": 3,
+      "passed": 30,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sourceStable": true,
+      "contextStable": true,
+      "classpathPassed": true,
+      "gatePassed": true,
+      "allGreen": true
+    },
+    "Adjacent88": {
+      "directory": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-adjacent-20261029-02",
+      "runtimeHead": "6ca930d8b9b7ef32c4eb7de1ce88ae87fc75c946",
+      "summarySha256": "CB3FBF6F19915C09FCE38BAC5C6938C02F05A3DB9B8580DFB7797A7CEC6CC21A",
+      "actualManifestSha256": "6E42B9B0CD8BD3F417531F0F2EB6D03B10112EABD3762AC3114D8EE0BC33EC24",
+      "actualRunnerSha256": "8A93C1255DBA3623609ED11EFC860B27462458AE58FA81E2F2A8378627904BC1",
+      "collectorExit": 0,
+      "mode": "Adjacent",
+      "nativeExit": 0,
+      "failureIgnore": false,
+      "records": 88,
+      "actualXml": 10,
+      "passed": 88,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sourceCount": 152,
+      "sourceStable": true,
+      "contextStable": true,
+      "classpathPassed": true,
+      "regressionGatePassed": true,
+      "rawReasonComparisonPassed": true,
+      "reasonComparisonPassed": true,
+      "allGreen": true,
+      "statusChanges": 0,
+      "newSkipped": 0,
+      "baselineNonpass": 0,
+      "boundedVolatileAccepted": 0,
+      "boundedVolatileExplanationCandidates": 0,
+      "sdkDefaultPassed": true,
+      "ownershipWitnessPassed": true
+    },
+    "Full706": {
+      "directory": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-full-20261029-01",
+      "runtimeHead": "6ca930d8b9b7ef32c4eb7de1ce88ae87fc75c946",
+      "summarySha256": "C719234B41F7DEDD82E429F1AD93D62ABCE98E5E87649C1D776D8C47899A7785",
+      "actualManifestSha256": "BB6DDEA557F0FEFD56A9249C594478D3914B5F7133D2D20FC1D9FCAE969CA12F",
+      "actualRunnerSha256": "8A93C1255DBA3623609ED11EFC860B27462458AE58FA81E2F2A8378627904BC1",
+      "collectorExit": 1,
+      "mode": "Full",
+      "nativeExit": 0,
+      "failureIgnore": true,
+      "records": 706,
+      "actualXml": 73,
+      "passed": 589,
+      "failures": 7,
+      "errors": 106,
+      "skipped": 4,
+      "sourceCount": 152,
+      "sourceStable": true,
+      "contextStable": true,
+      "classpathPassed": true,
+      "regressionGatePassed": false,
+      "rawReasonComparisonPassed": false,
+      "reasonComparisonPassed": false,
+      "allGreen": false,
+      "statusChanges": 1,
+      "newSkipped": 0,
+      "baselineNonpass": 116,
+      "boundedVolatileAccepted": 0,
+      "boundedVolatileExplanationCandidates": 1,
+      "sdkDefaultPassed": true,
+      "ownershipWitnessPassed": true
+    },
+    "Full707": {
+      "directory": ".local/ex27-mcp-terminal/mcp-terminal-full707-20261029-01",
+      "runtimeHead": "73dc4cf37a2894f5c20fe806908011091888383b",
+      "summarySha256": "EDDAA0996DC6173C2173F263300C54B1D137FD34D7F7342789F1016D7CC1AFF0",
+      "actualManifestSha256": "4B139DFF99633A388575A10FCB141FEFEF3317B6D479C477A963C34FF1AF2E91",
+      "actualRunnerSha256": "E8D11D6B1369A3233925C80705E5B75E96AC9D5AA5EB54BB21776B821C9A55A9",
+      "collectorExit": 1,
+      "mode": "Full",
+      "nativeExit": 0,
+      "failureIgnore": true,
+      "records": 707,
+      "actualXml": 73,
+      "passed": 591,
+      "failures": 6,
+      "errors": 106,
+      "skipped": 4,
+      "sourceCount": 152,
+      "sourceStable": true,
+      "contextStable": true,
+      "classpathPassed": true,
+      "regressionGatePassed": false,
+      "rawReasonComparisonPassed": false,
+      "reasonComparisonPassed": false,
+      "allGreen": false,
+      "statusChanges": 0,
+      "newSkipped": 0,
+      "baselineNonpass": 116,
+      "boundedVolatileAccepted": 0,
+      "boundedVolatileExplanationCandidates": 1,
+      "sdkDefaultPassed": true,
+      "ownershipWitnessPassed": true
+    }
+  },
+  "preservedPreparationFailure": {
+    "directory": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-adjacent-20261029-01",
+    "errorReceipt": {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-adjacent-20261029-01/collector-error.json",
+      "sha256": "374557F6310A0CE9E333B52AA2BC99DED264B462946D7C258A30B4B187BAC0EA"
+    },
+    "reason": "APPROVED_MAVEN_MISSING",
+    "nativeExit": null,
+    "collectorExit": 2,
+    "mavenNotEntered": true
+  },
+  "separateRelativeAcceptance": {
+    "accepted": true,
+    "review": {
+      "path": "docs/evidence/2026-10-28-EX-27/mcp-terminal-error-review.md",
+      "sha256": "D2E3C3FC1B230AFC685958ACCFCD81F62F54980877925CBD1CFD0AEEE2CC965A"
+    },
+    "rawGatesRewritten": false,
+    "allGreenClaimed": false,
+    "full707PhaseA30Passed": 30,
+    "full707Adjacent88Passed": 88,
+    "full707Mcp39Passed": 39,
+    "sdkOriginalMethodsPassed": 5,
+    "ownershipMethodsPassed": 1,
+    "originalNonpass": 116,
+    "rawReasonsIdentical": 115,
+    "exactPairBoundedDifferenceCount": 1,
+    "fixedMigrationIdentity": "cn.agentplatform.skill.infra.AlgorithmMigrationPostgresTest|v310UpgradePreservesLegacyHttpProofAndAlgorithmRowsAndAddsScopedUniqueIdentity||cn.agentplatform.skill.infra.AlgorithmMigrationPostgresTest",
+    "boundedFields": [
+      "tenant_id algorithm_upgrade_ UUID, two slots per message/detail",
+      "updated_at timestamp, two slots per message/detail"
+    ],
+    "genericNormalizerOrFutureWaiver": false,
+    "boundedProofCopy": {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/full707-bounded-reason-proof.json",
+      "sha256": "C05049EC2D7DA11BE2A391C2138B8828A12CE026EF76B0DC049F45B4CE398775"
+    }
+  },
+  "full707Context": {
+    "runtimeHead": "73dc4cf37a2894f5c20fe806908011091888383b",
+    "sourceCount": 152,
+    "contextPins": 189,
+    "actualRuntimeUsesJointWorkingTree": true,
+    "phaseAJavaPaths": 5,
+    "mcpOtherJavaPaths": 2,
+    "fivePhaseAJavaPinsMatchActualBeforeAfter": true,
+    "exactClasspathSha256": "C4A9BC77B5786D2084E37124AFE408B048C6CB13371282804C7813FE33B04406",
+    "commonMainSha256": "0FBB83F6E6ADCF9E36BA27345602AA93AA4769D863CF2635FE0357EC7DA29A93",
+    "commonTestsJarOnClasspath": false,
+    "storageScope": "five original owned PG databases; fixed histories and MinIO health before/after; collector read-only",
+    "historicalFull701DependencyNotRewritten": true
+  },
+  "reviews": [
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a-collector-review.md",
+      "sha256": "AE2FE743A285F974F60F747B050ECB36E107EABB1DEC66DB2E6B40EF2178DE15"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a-green-review.md",
+      "sha256": "D7F720EE4EE39D9F7E35CBF9E760FC74E4F8012257BE7C3B8CB0D85EE5DCFE02"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a-adjacent-review.md",
+      "sha256": "0964B62F432DCAB443B61338200A60CDA0C3FC7491829AFF39625B49A839CA6B"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/process-files-contract-review.md",
+      "sha256": "F04CD34F4FF80B8A34715221B3E4643DF9AACC5E037D417F660BE95E4DDB60E5"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/mcp-terminal-error-review.md",
+      "sha256": "D2E3C3FC1B230AFC685958ACCFCD81F62F54980877925CBD1CFD0AEEE2CC965A"
+    }
+  ],
+  "scope": {
+    "oldMethods": 25,
+    "newMethods": 5,
+    "productAddedLines": 31,
+    "controlledIoFullyImplemented": false,
+    "wholeEx15bComplete": false,
+    "inputMaterializationOutputPersistenceReplayAndRestartPending": true,
+    "stdinScalarArrayPreserved": true,
+    "nonBooleanTopLevelObjectFilesIsIntentionalCompatibilityException": true,
+    "falseUnsetBusinessArgumentFilesRealEnvelopeVerificationPending": true,
+    "futurePhaseBIncluded": false
+  },
+  "publicReplayBoundary": {
+    "rawXmlCsvLogsEnvironmentJarsAndProcessRecordsExcluded": true,
+    "referencedPrivateOriginalsRequired": true,
+    "gitPublicSubsetAloneIsNotCompleteReplay": true,
+    "stagePerformed": false,
+    "commitPerformed": false
+  },
+  "privateEvidenceReferences": [
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-red-20261029-01/summary.json",
+      "sha256": "C77B84E8EA6F200BE27CFA5577462086AD170A100896BE7DCB2DE8601463E22F"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-red-20261029-01/approved-manifest.json",
+      "sha256": "74C2A9E18FD31EE93A1042842A9FE65B76C994BCE8920C72ED98CEE4003B05C3"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-red-20261029-01/collector.ps1",
+      "sha256": "7252B91377B863711EF1537574A1B9FE9D46D802C8ECB14E154E58BE013720EE"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-red-20261029-01/source-before.json",
+      "sha256": "F7045ADD519549EC390B1C2BE2545457FD6C43AC3967C484370142C5A16257F3"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-red-20261029-01/source-after.json",
+      "sha256": "F7045ADD519549EC390B1C2BE2545457FD6C43AC3967C484370142C5A16257F3"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-red-20261029-01/context-before.json",
+      "sha256": "FEB345BB404BFB36CF0F64913B3940A75B81D9371D9AAF41F12AB784552416AB"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-red-20261029-01/context-after.json",
+      "sha256": "FEB345BB404BFB36CF0F64913B3940A75B81D9371D9AAF41F12AB784552416AB"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-red-20261029-01/methods.csv",
+      "sha256": "E18F278CEB9102EF63C962C9283D2A625E4A4380F54F362516ADF6B6CA033F3E"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-red-20261029-01/xml-manifest.json",
+      "sha256": "5C22AE8E8B37823882201C95641531367451C3FCB18478715CE4C3FDDDA98C38"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-red-20261029-01/native-exit.json",
+      "sha256": "3ED32EF39C27A37071900DBB8B5658D1B2F08B6900E80A23503CC2C588C89E8A"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-red-20261029-01/collector-exit.json",
+      "sha256": "96C73584FF298E1AF55597E5902971F33EA2EFDD8D68852DA28F406C3DC5EAA2"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-green-20261029-01/summary.json",
+      "sha256": "5080A1E987297FAAF80C8985776AE42E58991FC1682C14B5A1ECA8A9C73E507C"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-green-20261029-01/approved-manifest.json",
+      "sha256": "17184F287929512A82EDA335B5267E82DD04C8654628002A3819727E491CC195"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-green-20261029-01/collector.ps1",
+      "sha256": "4CA466409538EE7754D21760B99D4304788C7412F82DBF3C059C494A7898E76F"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-green-20261029-01/source-before.json",
+      "sha256": "520C209CF8F427C60F99DB547760133AFC77F164C6576EBD15017E82BC1932AB"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-green-20261029-01/source-after.json",
+      "sha256": "520C209CF8F427C60F99DB547760133AFC77F164C6576EBD15017E82BC1932AB"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-green-20261029-01/context-before.json",
+      "sha256": "FEB345BB404BFB36CF0F64913B3940A75B81D9371D9AAF41F12AB784552416AB"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-green-20261029-01/context-after.json",
+      "sha256": "FEB345BB404BFB36CF0F64913B3940A75B81D9371D9AAF41F12AB784552416AB"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-green-20261029-01/methods.csv",
+      "sha256": "0266D599C286F5746921FE20D0A6551CB62794B0F1A996E38463D1CB6730E15A"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-green-20261029-01/xml-manifest.json",
+      "sha256": "C498C0ADF1E2855831176D27AA7A7EE96B8D259E9569EDF94273304EF20EF862"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-green-20261029-01/native-exit.json",
+      "sha256": "C8F8B57BD915C23F6743FF44D30A218BCF80FF799500E3012C7C59734DAD7099"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-green-20261029-01/collector-exit.json",
+      "sha256": "299478A4A58108227C42F8BD3C456B9FD753EFEA236F0D53923AC7198FD99EF4"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-adjacent-20261029-02/summary.json",
+      "sha256": "CB3FBF6F19915C09FCE38BAC5C6938C02F05A3DB9B8580DFB7797A7CEC6CC21A"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-adjacent-20261029-02/approved-manifest.json",
+      "sha256": "6E42B9B0CD8BD3F417531F0F2EB6D03B10112EABD3762AC3114D8EE0BC33EC24"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-adjacent-20261029-02/collector.ps1",
+      "sha256": "8A93C1255DBA3623609ED11EFC860B27462458AE58FA81E2F2A8378627904BC1"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-adjacent-20261029-02/source-before.json",
+      "sha256": "520C209CF8F427C60F99DB547760133AFC77F164C6576EBD15017E82BC1932AB"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-adjacent-20261029-02/source-after.json",
+      "sha256": "520C209CF8F427C60F99DB547760133AFC77F164C6576EBD15017E82BC1932AB"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-adjacent-20261029-02/context-before.json",
+      "sha256": "127225B6C4638A2F190409D6F4A239255BE0FE6DE5EFC7E1A5A59DAEB05D029E"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-adjacent-20261029-02/context-after.json",
+      "sha256": "127225B6C4638A2F190409D6F4A239255BE0FE6DE5EFC7E1A5A59DAEB05D029E"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-adjacent-20261029-02/methods.csv",
+      "sha256": "509750515EEAA815CA9692BE4764C71E2C409D2814A11FC47342904578260FED"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-adjacent-20261029-02/xml-manifest.json",
+      "sha256": "C6D3EB374DE34C1E54C18F80E8735DB39B5958CAAB80006DB097FFB47D07476B"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-adjacent-20261029-02/native-exit.json",
+      "sha256": "A07997BF2B1AB1000CF4DE2D6FEED760792E595CA78C95571060E3D41B6733AE"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-adjacent-20261029-02/collector-exit.json",
+      "sha256": "5EBC366575F9C4460DA9659A21F68FADE6E10E35E6EE44C9E6EA421D4E341391"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-full-20261029-01/summary.json",
+      "sha256": "C719234B41F7DEDD82E429F1AD93D62ABCE98E5E87649C1D776D8C47899A7785"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-full-20261029-01/approved-manifest.json",
+      "sha256": "BB6DDEA557F0FEFD56A9249C594478D3914B5F7133D2D20FC1D9FCAE969CA12F"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-full-20261029-01/collector.ps1",
+      "sha256": "8A93C1255DBA3623609ED11EFC860B27462458AE58FA81E2F2A8378627904BC1"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-full-20261029-01/source-before.json",
+      "sha256": "520C209CF8F427C60F99DB547760133AFC77F164C6576EBD15017E82BC1932AB"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-full-20261029-01/source-after.json",
+      "sha256": "520C209CF8F427C60F99DB547760133AFC77F164C6576EBD15017E82BC1932AB"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-full-20261029-01/context-before.json",
+      "sha256": "127225B6C4638A2F190409D6F4A239255BE0FE6DE5EFC7E1A5A59DAEB05D029E"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-full-20261029-01/context-after.json",
+      "sha256": "127225B6C4638A2F190409D6F4A239255BE0FE6DE5EFC7E1A5A59DAEB05D029E"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-full-20261029-01/methods.csv",
+      "sha256": "3913D852BCF77DE159CE8790A5CAD25B70BF930C31530D8762665FC16BD9BAC6"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-full-20261029-01/xml-manifest.json",
+      "sha256": "48DA28C5012D8AE1ADFA6E88B97372523BDC6A184A2CC7112A35FE29F258FA46"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-full-20261029-01/native-exit.json",
+      "sha256": "A8188FDB76FD9D46520717737F71F9C862D13B35D4CAB1229C7CFFAD8DAA05E0"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/phase-a/runs/phase-a-full-20261029-01/collector-exit.json",
+      "sha256": "678412F8B7CBE5DC308C7B73F19F0A14837CAB1B81CB519AE2FEE7ED9609010A"
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-full707-20261029-01/summary.json",
+      "sha256": "EDDAA0996DC6173C2173F263300C54B1D137FD34D7F7342789F1016D7CC1AFF0"
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-full707-20261029-01/approved-manifest.json",
+      "sha256": "4B139DFF99633A388575A10FCB141FEFEF3317B6D479C477A963C34FF1AF2E91"
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-full707-20261029-01/collector.ps1",
+      "sha256": "E8D11D6B1369A3233925C80705E5B75E96AC9D5AA5EB54BB21776B821C9A55A9"
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-full707-20261029-01/source-before.json",
+      "sha256": "A9DCCF0025A6C9AA24A029C818D515CD69019167CEE0BFDC72DDF9127821E6D6"
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-full707-20261029-01/source-after.json",
+      "sha256": "A9DCCF0025A6C9AA24A029C818D515CD69019167CEE0BFDC72DDF9127821E6D6"
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-full707-20261029-01/context-before.json",
+      "sha256": "04B91BCDFA31F37ED1CBC49BDD1A955F8FB8E73101D56EA0689D8ED48E60C0B3"
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-full707-20261029-01/context-after.json",
+      "sha256": "04B91BCDFA31F37ED1CBC49BDD1A955F8FB8E73101D56EA0689D8ED48E60C0B3"
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-full707-20261029-01/methods.csv",
+      "sha256": "07AC4CB39A822F5A31A0D1E9CFEA4F90BDD7C093D45168A09EC634B1DAFF2BDA"
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-full707-20261029-01/xml-manifest.json",
+      "sha256": "7D95C234F94CF879B9228CCB60F3E8980454AC332366DC203A7C0C785891AA07"
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-full707-20261029-01/native-exit.json",
+      "sha256": "D5EA3CCAA745EB0E3DEF587006613E7B18964FBB61A7545366CE96A0CE4F22AB"
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-full707-20261029-01/collector-exit.json",
+      "sha256": "678412F8B7CBE5DC308C7B73F19F0A14837CAB1B81CB519AE2FEE7ED9609010A"
+    },
+    {
+      "path": ".local/ex27-mcp-terminal/mcp-terminal-full707-20261029-01/bounded-volatile-proof.json",
+      "sha256": "C05049EC2D7DA11BE2A391C2138B8828A12CE026EF76B0DC049F45B4CE398775"
+    }
+  ],
+  "preparedParentProvenance": {
+    "actualMcpCommit": "b4918591a8d899d260ab365106ca798554d2b81d",
+    "parent": "73dc4cf37a2894f5c20fe806908011091888383b",
+    "tree": "5cc6977aa584becd1e22a5daa591daeb131316e9",
+    "mcpManifestSha256": "0A42D127DDA4497DBE1B301C250067BA9E3AFB082C60347FEC48586E75DA9F8A",
+    "historicalRuntimeHeadsUnmodified": true
+  }
+}

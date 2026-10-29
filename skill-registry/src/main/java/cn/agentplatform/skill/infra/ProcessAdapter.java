@@ -22,6 +22,7 @@ import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -508,6 +509,7 @@ public class ProcessAdapter {
         JsonNode files = arrayOrEmpty(root.get("files"));
         for (JsonNode file : files) {
             JsonNode path = file.get("path");
+            if (contract.filesEnabled()) validateOutputFilePath(callDir, path);
             if (path == null || !path.isTextual()) continue;
             // 两种分隔符按路径段处理，拒绝父目录引用但保留含连续点的普通文件名。
             for (String segment : path.asText().replace('\\', '/').split("/", -1))
@@ -529,6 +531,28 @@ public class ProcessAdapter {
                 exitCode,
                 durationMs,
                 fact);
+    }
+
+    /** 声明路径先过位置与存在门；此门不代替后续稳定句柄、摘要及持久化验收。 */
+    private static void validateOutputFilePath(Path callDir, JsonNode path) {
+        if (path == null || !path.isTextual() || path.asText().isBlank())
+            throw invalid("响应 files.path 必须是 output 内的相对文件路径");
+        String value = path.asText().replace('\\', '/');
+        if (value.startsWith("/") || value.matches("^[A-Za-z]:.*"))
+            throw invalid("响应 files.path 不允许绝对路径或盘符");
+        for (String segment : value.split("/", -1))
+            if (segment.isEmpty() || ".".equals(segment) || "..".equals(segment))
+                throw invalid("响应 files.path 不允许空段或目录引用");
+        try {
+            Path relative = Path.of(value);
+            if (relative.isAbsolute()
+                    || relative.getNameCount() < 2
+                    || !"output".equals(relative.getName(0).toString())
+                    || !Files.isRegularFile(callDir.resolve(relative), LinkOption.NOFOLLOW_LINKS))
+                throw invalid("响应 files.path 必须指向本次 output 内已存在的普通文件");
+        } catch (InvalidPathException ex) {
+            throw invalid("响应 files.path 不是合法文件路径");
+        }
     }
 
     private static void validateResult(ProcessContract contract, JsonNode result) {
