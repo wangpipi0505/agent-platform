@@ -83,3 +83,17 @@
 - 写入 WHERE 同时限定 tenant、packageVersionId、原包 SHA、UNRESOLVED；并发败者回读后核原包 SHA 与同计划，不覆写。绑定成功响应 HTTP 200/OK，包含原包版本/软件身份、environment、routeProfileId、`bindings[{routeProfileId,toolId,interfaceId,skillCode,skillVersionId,version,sha256}]`、bindingStatus=RESOLVED、verificationStatus=NOT_EVALUATED、appCreated=false、applications=[]、reused。RESOLVED 只表示这份计划已解析，不能视作 READY、发布、执行或连接测试通过。
 
 新增/沿用错误：400 `SKILL_VERSION_REQUIRED`（精确内部读缺版本）；404 `CAPABILITY_PACKAGE_NOT_FOUND`、`SKILL_VERSION_NOT_FOUND`；409 `SKILL_NOT_PUBLISHED`、`SKILL_ADAPTER_NOT_REGISTERED`、`SKILL_DIGEST_MISMATCH`、`CAPABILITY_BINDING_DIGEST_MISMATCH`、`CAPABILITY_BINDING_CONFLICT`、`CAPABILITY_BINDING_REQUIRED`、`UNRESOLVED_SECRET_BINDING`、`SKILL_VERSION_CONFLICT`、`CAPABILITY_IMPORT_PLAN_CONFLICT`；502 `DEPENDENCY_UNAVAILABLE` 用于传输超时或不完整/不一致的元数据回复。错误不回显票据、秘密或下游原始消息。Phase 1 的同包同版本异 SHA 409 和未解析声明仍保留。
+
+## Phase 3a：由已解析绑定创建真实应用草稿
+
+`POST /admin/capability-packages/{packageVersionId}/applications` 接受 `{applications:[{appCode,name,type,routeProfileId,config,definition?,layout?,description?,domain?,bizCategory?,tags?}]}`，返回统一 `OK` 信封。身份来自 Actor，要求 EDITOR；客户端不能指定 tenant/principal。一个包版本首次只能使用一个完整应用计划，所有应用选择 Phase 2 已解析的同一路线。`agentCode`/TASK 模板转换、向既有应用合并来源、多路线重新绑定均不在本子批内。
+
+必须明确提供用户完整配置：CHAT 必须有真实可解析的 `modelBinding.modelEntryId`，FLOW 必须提供原格式完整图。服务复用 AppService 的结构、参数、Schema、技能/模型/提示词和 guard 校验；远端只读检查先完成，再开始本地事务。不猜模型、不调用工具、不伪造评测或发布结果。首次创建还通过原 `requireRegistered=true` 读口复核精确技能 ID/版本/摘要与已存解析一致。依赖失败不创建任何应用。
+
+配置不得自行提供 `capabilityPackages`、`capabilityBindings`、`skillRefs`、`tools`、`frozenPrompts`、`dependencyVersions`、`ontologyContext` 等服务端来源或冻结字段；skillRefs 从解析映射生成。FLOW 显式技能节点必须与该映射的 code/version 一致。首版不在这个入口接受工具档案切换、停用或隐式重绑。
+
+全部草稿、逐应用来源关联和首次创建收据在同一 app PG 事务写入。返回 `applications:[{appId,appCode,draftRev,status}]`、`appCreated=true`、`reused`、`verificationStatus=NOT_EVALUATED`；首次状态为 DRAFT。同一完整计划重试读取原应用当前草稿信息，不覆盖其后编辑，也不再创建应用；不同计划为 `409 CAPABILITY_IMPORT_PLAN_CONFLICT`。目标已删除或同名应用已换身份为 `409 CAPABILITY_APPLICATION_MISSING`，不会通过重试复活。
+
+服务端 `config.capabilityPackages` 保存包版本/摘要、软件、环境、路线、映射摘要和逐工具精确来源，PG 关联为权威校验源。普通 save（含 FLOW 图）不能删除/伪造来源、改绑定版本或改变已固定工具策略，否则 `409 CAPABILITY_SOURCE_CONFLICT`；无包旧应用不新增此字段、原构造及保存行为保持。copy 在原事务为新应用复制来源关系，不复制发布/评测许可；删除从未发布草稿时，仅本应用关联随外键删除，包版本、其他应用和发布版本保留。precheck/commit 再核来源关系，发布快照沿原完整 config 固化并进入候选摘要。
+
+本子批证明草稿与发布来源保护，不宣称真实评测或执行已完成。RunService 原深复制可保留 config 字段，但独立 `versionRefs`、执行 tools 的来源对应与重放自洽检查仍待后续子批；IAM 原准入仍拒绝不支持的包/技能配置。EX-10 原完整运行验收保持未完成。

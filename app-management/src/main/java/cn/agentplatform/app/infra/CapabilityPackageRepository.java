@@ -104,6 +104,33 @@ public class CapabilityPackageRepository {
         }
     }
 
+    public Map<String, Object> applicationSource(long id, String tenant, boolean lock) {
+        if (lock) {
+            db.execute("set local lock_timeout='2s'");
+            db.execute("set local statement_timeout='3s'");
+        }
+        var rows = db.queryForList("select application_plan_sha256,application_receipt::text from app.capability_package_version"
+                + " where tenant_id=? and id=?" + (lock ? " for update" : ""), tenant, id);
+        if (rows.isEmpty()) throw new PlatformException(404, "CAPABILITY_PACKAGE_NOT_FOUND", "能力包版本不存在");
+        var value = bindingSource(id, tenant);
+        value.put("applicationPlanSha256", rows.getFirst().get("application_plan_sha256"));
+        var receipt = rows.getFirst().get("application_receipt");
+        value.put("applicationReceipt", receipt == null ? List.of() : cn.agentplatform.common.Json.read(receipt.toString(), List.class));
+        return value;
+    }
+
+    public void associateApplication(String tenant, Map<String, Object> app, long packageId, Map<String, Object> source) {
+        db.update("insert into app.capability_app_binding(tenant_id,app_id,app_code,package_version_id,source) values(?,?,?,?,?::jsonb)",
+                tenant, app.get("id"), app.get("code"), packageId, cn.agentplatform.common.Json.write(source));
+    }
+
+    public void saveApplicationReceipt(String tenant, long id, String packageSha, String planSha, List<Map<String, Object>> receipt) {
+        int changed = db.update("update app.capability_package_version set application_plan_sha256=?,application_receipt=?::jsonb"
+                        + " where tenant_id=? and id=? and package_sha256=? and binding_status='RESOLVED' and application_plan_sha256 is null",
+                planSha, cn.agentplatform.common.Json.write(receipt), tenant, id, packageSha);
+        if (changed != 1) throw new PlatformException(409, "CAPABILITY_IMPORT_PLAN_CONFLICT", "应用计划已由其他请求确定");
+    }
+
     private Map<String, Object> row(ResultSet r, int ignored) throws SQLException {
         var value = new LinkedHashMap<String, Object>();
         value.put("packageVersionId", r.getLong("id"));

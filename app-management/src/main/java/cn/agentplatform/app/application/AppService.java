@@ -288,13 +288,18 @@ public class AppService {
                         // READ COMMITTED 下等待 d 锁的 join 可能保留旧 a；持有既有草稿锁后，
                         // 用新语句快照读取完整来源，保证复制内容与来源修订/发布状态一致。
                         var source = get(sourceCode);
+                        assertCapabilitySource(source);
                         var input = new LinkedHashMap<String, Object>();
                         input.put("code", code);
                         input.put("name", name);
                         for (String field :
                                 List.of("type", "description", "domain", "bizCategory", "tags"))
                             input.put(field, source.get(field));
-                        create(input);
+                        var target = create(input);
+                        if (object(source.get("config")).containsKey("capabilityPackages"))
+                            db.update("insert into app.capability_app_binding(tenant_id,app_id,app_code,package_version_id,source)"
+                                            + " select tenant_id,?,?,package_version_id,source from app.capability_app_binding where tenant_id=? and app_id=?",
+                                    target.get("id"), code, tenant(), source.get("id"));
                         // 只复制编排输入并保留用户模型/技能引用；冻结模型、评测/预检/发布证据及集成凭据
                         // 绑定源应用身份，新草稿必须重新生成，不能据此继承发布许可。
                         db.update(
@@ -361,6 +366,12 @@ public class AppService {
                         throw error(409, "APP_TYPE", "仅流程应用可保存流程图");
                     String field = flow ? "definition" : "config";
                     Map<String, Object> value = object(body.get(field));
+                    var checked = new LinkedHashMap<String, Object>(old);
+                    checked.put(field, value);
+                    if (object(old.get("config")).containsKey("capabilityPackages")
+                            && !object(checked.get("config")).containsKey("capabilityPackages"))
+                        throw error(409, "CAPABILITY_SOURCE_CONFLICT", "不能移除应用的能力包来源");
+                    assertCapabilitySource(checked);
                     boolean changed =
                             !AppRules.canonical(value).equals(AppRules.canonical(old.get(field)));
                     Object layout =
@@ -924,8 +935,81 @@ public class AppService {
         }
     }
 
+    /** 只读组装校验，不创建评测/模型冻结/发布报告，也不持有草稿或包行锁。 */
+    public void validateCapabilityDraft(Map<String, Object> app) {
+        var config = object(app.get("config"));
+        var definition = object(app.get("definition"));
+        try {
+            if ("FLOW".equals(app.get("type"))) {
+                var errors = AppRules.graphErrors(definition);
+                if (!errors.isEmpty()) throw new IllegalArgumentException(String.join("; ", errors));
+                var checked = remotePost(engineUrl, "/internal/graphs/validate", Map.of("definition", definition));
+                if (!Boolean.TRUE.equals(checked.get("valid"))) throw new IllegalArgumentException("流程图未通过真实结构校验");
+            }
+            parameterChecks(app, config, definition);
+            typeChecks(config, definition);
+            referenceChecks(config, definition, false);
+            referenceChecks(config, definition, true);
+            if (config.get("modelBinding") instanceof Map<?, ?> binding) {
+                long id = number(object(binding), "modelEntryId");
+                var model = remote(modelUrl, "/internal/model-entries/" + id);
+                if (!skillRefs(config, definition).isEmpty()
+                        && !((Collection<?>) model.getOrDefault("capabilities", List.of())).contains("tools"))
+                    throw new IllegalArgumentException("模型不支持工具调用");
+            }
+        } catch (IllegalArgumentException ex) {
+            throw error(400, "INVALID_INPUT", Objects.toString(ex.getMessage(), "应用配置无效"));
+        }
+    }
+
+    /** 普通保存不能伪造来源；包来源关系和 config 必须在同一租户、同一应用身份下逐字一致。 */
+    private void assertCapabilitySource(Map<String, Object> app) {
+        var config = object(app.get("config"));
+        if (!config.containsKey("capabilityPackages")) return;
+        var rows = db.queryForList("select b.source::text,p.package_sha256,p.binding_status,p.resolved_mapping::text"
+                        + " from app.capability_app_binding b join app.capability_package_version p"
+                        + " on p.tenant_id=b.tenant_id and p.id=b.package_version_id"
+                        + " where b.tenant_id=? and b.app_id=? and b.app_code=? order by b.package_version_id",
+                tenant(), app.get("id"), app.get("code"));
+        var expected = new ArrayList<Map<String, Object>>();
+        for (var row : rows) {
+            var source = Json.read(row.get("source").toString(), Map.class);
+            if (!"RESOLVED".equals(row.get("binding_status")) || !source.get("sha256").equals(row.get("package_sha256"))
+                    || !source.get("mappingSha256").equals(Digest.sha256(Json.canonical(Json.read(row.get("resolved_mapping").toString())))))
+                throw error(409, "CAPABILITY_SOURCE_CONFLICT", "能力包解析来源不一致");
+            expected.add(source);
+        }
+        if (expected.isEmpty() || !Json.canonical(expected).equals(Json.canonical(config.get("capabilityPackages"))))
+            throw error(409, "CAPABILITY_SOURCE_CONFLICT", "能力包来源必须来自本应用的真实解析关系");
+        checkCapabilityReferences(config, object(app.get("definition")));
+    }
+
+    /** 工具策略、版本和来源作为一个整体保留；首版不隐式重绑、停用或更改工具档案。 */
+    public static void checkCapabilityReferences(Map<String, Object> config, Map<String, Object> definition) {
+        var refs = new LinkedHashMap<String, Map<String, Object>>();
+        for (var source : objects(config.get("capabilityPackages")))
+            for (var binding : objects(source.get("bindings"))) {
+                String code = text(binding, "skillCode");
+                var ref = Map.<String, Object>of("code", code, "version", binding.get("version"));
+                var prior = refs.putIfAbsent(code, ref);
+                if (prior != null && !Json.canonical(prior).equals(Json.canonical(ref)))
+                    throw error(409, "CAPABILITY_SOURCE_CONFLICT", "相同技能存在不同来源版本");
+            }
+        if (!Json.canonical(new ArrayList<>(refs.values())).equals(Json.canonical(config.get("skillRefs")))
+                || !Collections.disjoint(config.keySet(), Set.of("tools", "frozenPrompts", "capabilityBindings", "toolProfile")))
+            throw error(409, "CAPABILITY_SOURCE_CONFLICT", "不能改写已绑定工具或来源策略");
+        for (var node : objects(definition.get("nodes")))
+            if (node.get("skillRef") instanceof Map<?, ?> raw) {
+                var ref = object(raw);
+                var expected = refs.get(text(ref, "code"));
+                if (expected == null || !Json.canonical(expected).equals(Json.canonical(ref)))
+                    throw error(409, "CAPABILITY_SOURCE_CONFLICT", "流程技能必须使用已绑定的精确版本");
+            }
+    }
+
     public Map<String, Object> precheck(String code) {
         var app = get(code);
+        assertCapabilitySource(app);
         var config = object(app.get("config"));
         var definition = object(app.get("definition"));
         String hash = sha(app);
@@ -1461,6 +1545,7 @@ public class AppService {
                         released.set(releasedCandidate(code, ((Number) old.get("version_no")).intValue()));
                         return publication(code, ((Number) old.get("version_no")).intValue(), hash);
                     }
+                    assertCapabilitySource(app);
                     if (((Number) app.get("draftRev")).longValue() != rev || !sha(app).equals(hash))
                         throw error(412, "CANDIDATE_CHANGED", "草稿已变更，请重新预检");
                     var reports =
