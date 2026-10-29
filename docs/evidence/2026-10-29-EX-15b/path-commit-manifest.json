@@ -1,0 +1,1192 @@
+{
+  "schema": "EX15b-path-only-commit-candidate-v1",
+  "preparedAt": "2026-10-29T17:41:05.60548+08:00",
+  "preparationHead": "73a4ada6de5ed5ee34f623a8a435c949040a2e7d",
+  "pathTargetRunHead": "1cc453388950ec90eba51a1484994208c78d67fd",
+  "regressionRunHead": "acad6bdee223b23f331420c6de50045cb5fa8941",
+  "laterSeparateEx06Commit": "73a4ada6de5ed5ee34f623a8a435c949040a2e7d",
+  "runtimeWasJointWorkingTree": true,
+  "stagePerformed": false,
+  "commitPerformed": false,
+  "wholeEx15bComplete": false,
+  "fullProcessIoImplemented": false,
+  "expectedCommitFileCount": 70,
+  "sourceFileCount": 2,
+  "publicEvidenceFileCount": 68,
+  "commitPaths": [
+    "docs/evidence/2026-10-29-EX-15b/.gitattributes",
+    "docs/evidence/2026-10-29-EX-15b/adjacent/README.md",
+    "docs/evidence/2026-10-29-EX-15b/adjacent/manifest.json",
+    "docs/evidence/2026-10-29-EX-15b/adjacent/run-selected.ps1",
+    "docs/evidence/2026-10-29-EX-15b/adjacent/runs/process-adjacent-20261029-01/approved-manifest.json",
+    "docs/evidence/2026-10-29-EX-15b/adjacent/runs/process-adjacent-20261029-01/collector-exit.json",
+    "docs/evidence/2026-10-29-EX-15b/adjacent/runs/process-adjacent-20261029-01/collector.ps1",
+    "docs/evidence/2026-10-29-EX-15b/adjacent/runs/process-adjacent-20261029-01/command.json",
+    "docs/evidence/2026-10-29-EX-15b/adjacent/runs/process-adjacent-20261029-01/context-after.json",
+    "docs/evidence/2026-10-29-EX-15b/adjacent/runs/process-adjacent-20261029-01/context-before.json",
+    "docs/evidence/2026-10-29-EX-15b/adjacent/runs/process-adjacent-20261029-01/methods.json",
+    "docs/evidence/2026-10-29-EX-15b/adjacent/runs/process-adjacent-20261029-01/native-exit.json",
+    "docs/evidence/2026-10-29-EX-15b/adjacent/runs/process-adjacent-20261029-01/source-after.json",
+    "docs/evidence/2026-10-29-EX-15b/adjacent/runs/process-adjacent-20261029-01/source-before.json",
+    "docs/evidence/2026-10-29-EX-15b/adjacent/runs/process-adjacent-20261029-01/summary.json",
+    "docs/evidence/2026-10-29-EX-15b/adjacent/runs/process-adjacent-20261029-01/xml-manifest.json",
+    "docs/evidence/2026-10-29-EX-15b/collector/manifest.json",
+    "docs/evidence/2026-10-29-EX-15b/collector/preflight.md",
+    "docs/evidence/2026-10-29-EX-15b/collector/run-regression.ps1",
+    "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/admission.json",
+    "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/after-storage.json",
+    "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/approved-manifest.json",
+    "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/before-storage.json",
+    "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/bounded-volatile-proof.json",
+    "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/collector-exit.json",
+    "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/collector.ps1",
+    "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/command-end.json",
+    "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/command.json",
+    "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/method-status-changes.json",
+    "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/native-exit.json",
+    "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/raw-log-manifest.json",
+    "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/sdk-default-outcomes.json",
+    "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/source-after.json",
+    "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/source-before.json",
+    "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/summary.json",
+    "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml-issues.json",
+    "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml-manifest.json",
+    "docs/evidence/2026-10-29-EX-15b/fix-candidate.md",
+    "docs/evidence/2026-10-29-EX-15b/path-commit-manifest.json",
+    "docs/evidence/2026-10-29-EX-15b/path-fix-review.md",
+    "docs/evidence/2026-10-29-EX-15b/path-green-20261029-01/collector-exit.json",
+    "docs/evidence/2026-10-29-EX-15b/path-green-20261029-01/command.json",
+    "docs/evidence/2026-10-29-EX-15b/path-green-20261029-01/methods.json",
+    "docs/evidence/2026-10-29-EX-15b/path-green-20261029-01/native-exit.json",
+    "docs/evidence/2026-10-29-EX-15b/path-green-20261029-01/source-after.json",
+    "docs/evidence/2026-10-29-EX-15b/path-green-20261029-01/source-before.json",
+    "docs/evidence/2026-10-29-EX-15b/path-green-20261029-01/summary.json",
+    "docs/evidence/2026-10-29-EX-15b/path-green-20261029-02/collector-exit.json",
+    "docs/evidence/2026-10-29-EX-15b/path-green-20261029-02/command.json",
+    "docs/evidence/2026-10-29-EX-15b/path-green-20261029-02/methods.json",
+    "docs/evidence/2026-10-29-EX-15b/path-green-20261029-02/native-exit.json",
+    "docs/evidence/2026-10-29-EX-15b/path-green-20261029-02/source-after.json",
+    "docs/evidence/2026-10-29-EX-15b/path-green-20261029-02/source-before.json",
+    "docs/evidence/2026-10-29-EX-15b/path-green-20261029-02/summary.json",
+    "docs/evidence/2026-10-29-EX-15b/path-red-20261029-01/collector-exit.json",
+    "docs/evidence/2026-10-29-EX-15b/path-red-20261029-01/command.json",
+    "docs/evidence/2026-10-29-EX-15b/path-red-20261029-01/executed-collector.ps1",
+    "docs/evidence/2026-10-29-EX-15b/path-red-20261029-01/methods.json",
+    "docs/evidence/2026-10-29-EX-15b/path-red-20261029-01/native-exit.json",
+    "docs/evidence/2026-10-29-EX-15b/path-red-20261029-01/source-after.json",
+    "docs/evidence/2026-10-29-EX-15b/path-red-20261029-01/source-before.json",
+    "docs/evidence/2026-10-29-EX-15b/path-red-20261029-01/summary.json",
+    "docs/evidence/2026-10-29-EX-15b/path-red-20261029-01/test-source.java",
+    "docs/evidence/2026-10-29-EX-15b/path-substep-closeout.md",
+    "docs/evidence/2026-10-29-EX-15b/run-path-green.ps1",
+    "docs/evidence/2026-10-29-EX-15b/run-path-red.ps1",
+    "docs/evidence/2026-10-29-EX-15b/test-candidate-review.md",
+    "docs/evidence/2026-10-29-EX-15b/test-candidate.md",
+    "skill-registry/src/main/java/cn/agentplatform/skill/infra/ProcessAdapter.java",
+    "skill-registry/src/test/java/cn/agentplatform/skill/infra/ProcessFilesTest.java"
+  ],
+  "files": [
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/.gitattributes",
+      "kind": "public-evidence",
+      "bytes": 4407,
+      "rawSha256": "B0D6D1DAFE0753231CB181DFC68A4681BB7A49893F164D4FB3B3AA7664B1BDFD",
+      "gitBlobOid": "6131e12450560a1666b640d86aaa549a860cee49"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/adjacent/README.md",
+      "kind": "public-evidence",
+      "bytes": 6545,
+      "rawSha256": "35142DF2ABD05EB9AFEFC134CE48585116846A233FF08FC118776A3155C563E9",
+      "gitBlobOid": "d9f529ceb4f300917befa300d9fc0494ffe6edd7"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/adjacent/manifest.json",
+      "kind": "public-evidence",
+      "bytes": 67654,
+      "rawSha256": "06F233FF7D627C53F6797C376F7B13EDEB1B4EAA8555FCD61AF2895533F4F043",
+      "gitBlobOid": "fcd295234e9ae4ee37b965d4839bdf5f83f2e6ba"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/adjacent/run-selected.ps1",
+      "kind": "public-evidence",
+      "bytes": 11557,
+      "rawSha256": "E7D5270BDEC459BDBDF37AAB36208C07D1737841987F8C7730B61091DCFB6140",
+      "gitBlobOid": "97d164d293768d6b56e2a36a1813eeb86d7f3ee6"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/adjacent/runs/process-adjacent-20261029-01/approved-manifest.json",
+      "kind": "public-evidence",
+      "bytes": 67654,
+      "rawSha256": "06F233FF7D627C53F6797C376F7B13EDEB1B4EAA8555FCD61AF2895533F4F043",
+      "gitBlobOid": "fcd295234e9ae4ee37b965d4839bdf5f83f2e6ba"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/adjacent/runs/process-adjacent-20261029-01/collector-exit.json",
+      "kind": "public-evidence",
+      "bytes": 84,
+      "rawSha256": "8A2878659009582020F4C8FE6296088CA65E2568F9DE583729536093E39F316E",
+      "gitBlobOid": "7186200c45b88efa31f01955a51f8c8de7428e4b"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/adjacent/runs/process-adjacent-20261029-01/collector.ps1",
+      "kind": "public-evidence",
+      "bytes": 11557,
+      "rawSha256": "E7D5270BDEC459BDBDF37AAB36208C07D1737841987F8C7730B61091DCFB6140",
+      "gitBlobOid": "97d164d293768d6b56e2a36a1813eeb86d7f3ee6"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/adjacent/runs/process-adjacent-20261029-01/command.json",
+      "kind": "public-evidence",
+      "bytes": 1589,
+      "rawSha256": "6CC63808DF2BEE1ADE27EEF29D53568AC64FB99A6960C62E49BA215E6960DAF4",
+      "gitBlobOid": "463f387398c6ad6325e1c6c05dfb75092082d734"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/adjacent/runs/process-adjacent-20261029-01/context-after.json",
+      "kind": "public-evidence",
+      "bytes": 1768,
+      "rawSha256": "6481D509AD94B8BB00E4F6C3B63DA92D5C85493B6147CD8E75C2CB3C242EBC9B",
+      "gitBlobOid": "de290734ef56a48c9b1905501e6c963ab6e6739a"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/adjacent/runs/process-adjacent-20261029-01/context-before.json",
+      "kind": "public-evidence",
+      "bytes": 1768,
+      "rawSha256": "6481D509AD94B8BB00E4F6C3B63DA92D5C85493B6147CD8E75C2CB3C242EBC9B",
+      "gitBlobOid": "de290734ef56a48c9b1905501e6c963ab6e6739a"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/adjacent/runs/process-adjacent-20261029-01/methods.json",
+      "kind": "public-evidence",
+      "bytes": 22513,
+      "rawSha256": "43765C258C54982565CB75DAD62FF7DA5E84F192CBD12E123A559F52DB6596D5",
+      "gitBlobOid": "e6ed2beaa7edd0f80050ffa52262fdd3dcffa9bb"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/adjacent/runs/process-adjacent-20261029-01/native-exit.json",
+      "kind": "public-evidence",
+      "bytes": 78,
+      "rawSha256": "90B7FB8180D2E44C9968200771B7C14229CC1FF9CF993D50FF115BA25CB5C92C",
+      "gitBlobOid": "c71516a3cf0100e562836fc38c8b281f10351536"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/adjacent/runs/process-adjacent-20261029-01/source-after.json",
+      "kind": "public-evidence",
+      "bytes": 52649,
+      "rawSha256": "7A5F3186ED9822324C59D1A4E1AC3B893CA8DC0316F86161E4F6AD643681503A",
+      "gitBlobOid": "7aa3a1ec993f1988307d4379d5641f1bc501dac3"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/adjacent/runs/process-adjacent-20261029-01/source-before.json",
+      "kind": "public-evidence",
+      "bytes": 52649,
+      "rawSha256": "7A5F3186ED9822324C59D1A4E1AC3B893CA8DC0316F86161E4F6AD643681503A",
+      "gitBlobOid": "7aa3a1ec993f1988307d4379d5641f1bc501dac3"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/adjacent/runs/process-adjacent-20261029-01/summary.json",
+      "kind": "public-evidence",
+      "bytes": 522,
+      "rawSha256": "A7FE45C3070D05CA67575B802E9BED091E0B61D634E2A3D8DA516E7F06B5534A",
+      "gitBlobOid": "cb788ab76162437afdc3b442014b6579a80d85ac"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/adjacent/runs/process-adjacent-20261029-01/xml-manifest.json",
+      "kind": "public-evidence",
+      "bytes": 2170,
+      "rawSha256": "4F6D55C0B7A0DBEBB6955BAC7B4B6555AC09306FA5086019DC07E1B9C1CB7527",
+      "gitBlobOid": "fc3fb369ef5a195af4a8388adea9e5e58443825e"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/manifest.json",
+      "kind": "public-evidence",
+      "bytes": 39544,
+      "rawSha256": "833EE0F815DAB47FDD22F6F672E23B7EE31E295389A8BE761055CA4C50511C9F",
+      "gitBlobOid": "6f4b963e6bd7d352f422dcd1f2a7f344fcc35aa7"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/preflight.md",
+      "kind": "public-evidence",
+      "bytes": 8588,
+      "rawSha256": "E2DA35625646FB47E943DB1FA33717CD28B69D94A79EEBD333D874D91014E056",
+      "gitBlobOid": "57feffcac563c5a64364935c7abf49e6a390621f"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/run-regression.ps1",
+      "kind": "public-evidence",
+      "bytes": 24366,
+      "rawSha256": "87D0B0A35920AC843DE065DC4A57009723F9110A5DACA732622FCA795B9EA957",
+      "gitBlobOid": "563efaec730f9d5f63ca37d4ff688ce1996f12de"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/admission.json",
+      "kind": "public-evidence",
+      "bytes": 1042,
+      "rawSha256": "F1D77EBD17C7ADA9E4286C10A75FDB19083E0D013169F964EE360DC9857946E3",
+      "gitBlobOid": "86596eec795d4a3f86ab7270b9b9df8cadda0897"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/after-storage.json",
+      "kind": "public-evidence",
+      "bytes": 56518,
+      "rawSha256": "6AEA1279D0C7BA166FE5C4AA848C17C7EFDC91BFECADB771714F628C2DC7A650",
+      "gitBlobOid": "69e7aebc95617ef6bba4761b079bcd33f3b1996c"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/approved-manifest.json",
+      "kind": "public-evidence",
+      "bytes": 39544,
+      "rawSha256": "833EE0F815DAB47FDD22F6F672E23B7EE31E295389A8BE761055CA4C50511C9F",
+      "gitBlobOid": "6f4b963e6bd7d352f422dcd1f2a7f344fcc35aa7"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/before-storage.json",
+      "kind": "public-evidence",
+      "bytes": 56518,
+      "rawSha256": "FB74653E6E6D40817938E81131B95E6D5EB8FEA625210559638EDA2BA9962749",
+      "gitBlobOid": "1752189dbbe95b0e3a47acad42432854fd348b91"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/bounded-volatile-proof.json",
+      "kind": "public-evidence",
+      "bytes": 711,
+      "rawSha256": "C05049EC2D7DA11BE2A391C2138B8828A12CE026EF76B0DC049F45B4CE398775",
+      "gitBlobOid": "2b76c5c2fbaa85b48985f229b62f6a223d1cbd08"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/collector-exit.json",
+      "kind": "public-evidence",
+      "bytes": 126,
+      "rawSha256": "678412F8B7CBE5DC308C7B73F19F0A14837CAB1B81CB519AE2FEE7ED9609010A",
+      "gitBlobOid": "222656ca3144afb52461ed5aaa125b25428db39f"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/collector.ps1",
+      "kind": "public-evidence",
+      "bytes": 24366,
+      "rawSha256": "87D0B0A35920AC843DE065DC4A57009723F9110A5DACA732622FCA795B9EA957",
+      "gitBlobOid": "563efaec730f9d5f63ca37d4ff688ce1996f12de"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/command-end.json",
+      "kind": "public-evidence",
+      "bytes": 297,
+      "rawSha256": "6C6473827474195D1250449F22646FCC779A1510EC7B4D3259FFE88EEC4F55CE",
+      "gitBlobOid": "c8233aecf7aa2a46808948d6958c5d385f19b5fb"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/command.json",
+      "kind": "public-evidence",
+      "bytes": 1040,
+      "rawSha256": "9D321AE952DC0152878E3A15C7F46F277E236B8289C7F79B9912959FD24FB0E4",
+      "gitBlobOid": "aa1048caf311756763e49f8093203f750566b658"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/method-status-changes.json",
+      "kind": "public-evidence",
+      "bytes": 301,
+      "rawSha256": "9AB2D358143BF5C705B93FAC624353D4C1A87C17E469F8B26F951FE73363E342",
+      "gitBlobOid": "9eccc92d3bc9c28f3549fc090fc859579fd6dae2"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/native-exit.json",
+      "kind": "public-evidence",
+      "bytes": 195,
+      "rawSha256": "5AEC7958927C37867B65E1900333C022414D55E2E87462E8E93BEF2A61BE92DF",
+      "gitBlobOid": "3c83631deb82cff81606fb5549c2ff07204bf717"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/raw-log-manifest.json",
+      "kind": "public-evidence",
+      "bytes": 161,
+      "rawSha256": "4E5286C4F4A2471E60AD664DA2D328BEBAA3E05D796BCF1264F39A3164474965",
+      "gitBlobOid": "481948192f59be6b7420883dcab1eec0dbd19e95"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/sdk-default-outcomes.json",
+      "kind": "public-evidence",
+      "bytes": 689,
+      "rawSha256": "2055BB4A0C6B88C08A1F41C3D2F1B3F717AD5F16493C80439A0FC63287551363",
+      "gitBlobOid": "367142931aa3ad94565c048bc21392f79005a88b"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/source-after.json",
+      "kind": "public-evidence",
+      "bytes": 31471,
+      "rawSha256": "A6EC23F5D8B7350453B3F5EF3947892AD27F371B56805DF1F5926F1294CC8CF9",
+      "gitBlobOid": "bd5f85f768c094ed0120167ec35615648f615fb5"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/source-before.json",
+      "kind": "public-evidence",
+      "bytes": 31471,
+      "rawSha256": "A6EC23F5D8B7350453B3F5EF3947892AD27F371B56805DF1F5926F1294CC8CF9",
+      "gitBlobOid": "bd5f85f768c094ed0120167ec35615648f615fb5"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/summary.json",
+      "kind": "public-evidence",
+      "bytes": 941,
+      "rawSha256": "DE852ACA1BF47C0F65967CE7C61741D21108B0C4E3105DC49CB5CDCA8D81A779",
+      "gitBlobOid": "7d6f0e645c1ecb720c47ac1f4dd9772788cffba8"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml-issues.json",
+      "kind": "public-evidence",
+      "bytes": 6,
+      "rawSha256": "B423BB45501E0FA49D3B77E635F800A29F1FDCF5A58E00C7E04A7FF7833045F2",
+      "gitBlobOid": "609889aad07d2c031c181c4734e4cdfc4214f7dc"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml-manifest.json",
+      "kind": "public-evidence",
+      "bytes": 19293,
+      "rawSha256": "32B319A0003C57BB10FABB485CC496F2236E3A6F97B876BDC8EBE23B68BD20B0",
+      "gitBlobOid": "24fccb1c56f7995470da858a3991da58ec554ad0"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/fix-candidate.md",
+      "kind": "public-evidence",
+      "bytes": 3163,
+      "rawSha256": "187D7F8474A1B1FE8E820EA6DA86101946C2C62B014960E06ABD9BBBE0BB4437",
+      "gitBlobOid": "40594fed0c8951685cfb383bca2930a591fed0ab"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/path-fix-review.md",
+      "kind": "public-evidence",
+      "bytes": 6438,
+      "rawSha256": "1040572AAE5F788206BC83CF430CA8D4300C456CB2B5EA6E3FE48A7D7DB0A169",
+      "gitBlobOid": "e17dfdcf705d2af8810a5d8248fd85598df35821"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/path-green-20261029-01/collector-exit.json",
+      "kind": "public-evidence",
+      "bytes": 57,
+      "rawSha256": "B094113B26B9C89AA501771EDBF34500890A76E0F3C6662DA197D166673D7063",
+      "gitBlobOid": "1a621eff21307a0fa6c2df8067c5ecb957f45c97"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/path-green-20261029-01/command.json",
+      "kind": "public-evidence",
+      "bytes": 1466,
+      "rawSha256": "84B655D26D20E0DBB1B548682261E38549B10F4393229881163F1BED5328998A",
+      "gitBlobOid": "0036a4f15dd838af0031758b20268bac863c4574"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/path-green-20261029-01/methods.json",
+      "kind": "public-evidence",
+      "bytes": 719,
+      "rawSha256": "A0DE8DD0C83A3D2F30C3394C7DB482A0CCB878FDAC35EC403FF01E2257467BEF",
+      "gitBlobOid": "cc6a08b4f1469544d09a72da8f4d126465151441"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/path-green-20261029-01/native-exit.json",
+      "kind": "public-evidence",
+      "bytes": 78,
+      "rawSha256": "9B926948338DBBCEE2F1730690BFEFBB8891EB01CF13B9405BE7122A0D9E672A",
+      "gitBlobOid": "5505a3848efe7ce0817ad27897ce75a0d724fb6a"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/path-green-20261029-01/source-after.json",
+      "kind": "public-evidence",
+      "bytes": 52649,
+      "rawSha256": "7A5F3186ED9822324C59D1A4E1AC3B893CA8DC0316F86161E4F6AD643681503A",
+      "gitBlobOid": "7aa3a1ec993f1988307d4379d5641f1bc501dac3"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/path-green-20261029-01/source-before.json",
+      "kind": "public-evidence",
+      "bytes": 52649,
+      "rawSha256": "7A5F3186ED9822324C59D1A4E1AC3B893CA8DC0316F86161E4F6AD643681503A",
+      "gitBlobOid": "7aa3a1ec993f1988307d4379d5641f1bc501dac3"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/path-green-20261029-01/summary.json",
+      "kind": "public-evidence",
+      "bytes": 374,
+      "rawSha256": "82929ED04431662B8644BD3D4988718F7C167BB9545DCA7220EA8F8A3A39AAD5",
+      "gitBlobOid": "3ac787db06fca1b3a33186c2c3aa25cc74811a71"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/path-green-20261029-02/collector-exit.json",
+      "kind": "public-evidence",
+      "bytes": 57,
+      "rawSha256": "89E4F3567D2F8AAC3A2A8F0E13A26B566E3E33AB462A871D676F784B073A28EB",
+      "gitBlobOid": "5a3a0fecc15cc7c62500e02499e9b1585d8b827e"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/path-green-20261029-02/command.json",
+      "kind": "public-evidence",
+      "bytes": 1466,
+      "rawSha256": "FE1F033E436DE002AAF7454AF3A14962E8A09586CCEEEB8BCB1F9DBD8EF88137",
+      "gitBlobOid": "e9de4f7ca7b3045f49380ee65572636195138bf0"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/path-green-20261029-02/methods.json",
+      "kind": "public-evidence",
+      "bytes": 456,
+      "rawSha256": "2CE23F2ED3633B3B1F3A45F0335174E21A556EA949206AE42F2BD851713811AF",
+      "gitBlobOid": "9c0147cbffb3ac0de8f384ecedcd895de45f91bc"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/path-green-20261029-02/native-exit.json",
+      "kind": "public-evidence",
+      "bytes": 78,
+      "rawSha256": "B57B242909D8B47B0E8FB36A6BE8BBEB6150903CAACB9B9E54BDEDC6CC372E06",
+      "gitBlobOid": "a2ed93cc81e530287aabfec28f20ad0c86df3b43"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/path-green-20261029-02/source-after.json",
+      "kind": "public-evidence",
+      "bytes": 52649,
+      "rawSha256": "7A5F3186ED9822324C59D1A4E1AC3B893CA8DC0316F86161E4F6AD643681503A",
+      "gitBlobOid": "7aa3a1ec993f1988307d4379d5641f1bc501dac3"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/path-green-20261029-02/source-before.json",
+      "kind": "public-evidence",
+      "bytes": 52649,
+      "rawSha256": "7A5F3186ED9822324C59D1A4E1AC3B893CA8DC0316F86161E4F6AD643681503A",
+      "gitBlobOid": "7aa3a1ec993f1988307d4379d5641f1bc501dac3"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/path-green-20261029-02/summary.json",
+      "kind": "public-evidence",
+      "bytes": 373,
+      "rawSha256": "33A4D90A962689F5AD2D7C1F330AEFA9527C1DD10C2F8239E9F1FB1684EA386D",
+      "gitBlobOid": "01caedf86e9338e0a67893d1557aed1703ee6a96"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/path-red-20261029-01/collector-exit.json",
+      "kind": "public-evidence",
+      "bytes": 57,
+      "rawSha256": "57E50EA4DA0DF2B9205D5C7D9F5B6DC483822215815C7D24F4BF19D9D58F892E",
+      "gitBlobOid": "0df0216e9271c22e346f09e5fde553f28ba72877"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/path-red-20261029-01/command.json",
+      "kind": "public-evidence",
+      "bytes": 1466,
+      "rawSha256": "B2F347862057EA2BCAE042CA837C06AF96A2FCD682DB3C0AB874DC6D79E8F845",
+      "gitBlobOid": "d80dc777434f23be7cd5ec7c2754c1aeb6d51817"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/path-red-20261029-01/executed-collector.ps1",
+      "kind": "public-evidence",
+      "bytes": 6766,
+      "rawSha256": "CF4850BCD43EE7DE5B52D07210B4664EAA86AE6B653083AC3F0A7C96B8232830",
+      "gitBlobOid": "f7976805502924905927a6078834e8b938c97803"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/path-red-20261029-01/methods.json",
+      "kind": "public-evidence",
+      "bytes": 579,
+      "rawSha256": "172614AD80DF371A483A67DA8E878D7957E85154CFCDC2E4E99215FF2BC5C294",
+      "gitBlobOid": "09696ebd18def4175baa23402fc46fc6fe4e8ace"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/path-red-20261029-01/native-exit.json",
+      "kind": "public-evidence",
+      "bytes": 78,
+      "rawSha256": "44E38D0F947CF7120996A4C3C91D959F4AC3DE226DBEC81AF134142F4B5A89B6",
+      "gitBlobOid": "edfbc3ad6add314e03154513fdf553e98194a238"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/path-red-20261029-01/source-after.json",
+      "kind": "public-evidence",
+      "bytes": 52649,
+      "rawSha256": "EE3F4A348DB557E1F06F27E4AB38FFE20E15FCC1BBC045488AD6A7F3AFF78154",
+      "gitBlobOid": "8587658bb6bea9e4da6e1b147f2e21846e8efcba"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/path-red-20261029-01/source-before.json",
+      "kind": "public-evidence",
+      "bytes": 52649,
+      "rawSha256": "EE3F4A348DB557E1F06F27E4AB38FFE20E15FCC1BBC045488AD6A7F3AFF78154",
+      "gitBlobOid": "8587658bb6bea9e4da6e1b147f2e21846e8efcba"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/path-red-20261029-01/summary.json",
+      "kind": "public-evidence",
+      "bytes": 369,
+      "rawSha256": "068A00CB624C2D4A963ED824C140A521B54BEC344A8010855C35B720A6C073FA",
+      "gitBlobOid": "587681e7ce7301a2d0022352cf5a3a00a14a2bf5"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/path-red-20261029-01/test-source.java",
+      "kind": "public-evidence",
+      "bytes": 10665,
+      "rawSha256": "7B363256F026266C5A65D4C85E2BEB79D4AF3DADDC497AC1831E30834868A7D7",
+      "gitBlobOid": "e73e334c77019b618507cbb2c75ae5ea2757107f"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/path-substep-closeout.md",
+      "kind": "public-evidence",
+      "bytes": 7252,
+      "rawSha256": "0BEB228E56345EC44CFB4ACC0DC825981CC9460F284906A49EE7D0AD32347E9B",
+      "gitBlobOid": "57fb9c9046036f0257d217982b2fc9376edb0751"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/run-path-green.ps1",
+      "kind": "public-evidence",
+      "bytes": 6452,
+      "rawSha256": "01A8DBCE5F0E49763E4D424D1F026AF1A26BAE800BA0E61AFF578E6530D5E47D",
+      "gitBlobOid": "b21498c1ef747ce24b1fb3922116dae752d0aebc"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/run-path-red.ps1",
+      "kind": "public-evidence",
+      "bytes": 6766,
+      "rawSha256": "CF4850BCD43EE7DE5B52D07210B4664EAA86AE6B653083AC3F0A7C96B8232830",
+      "gitBlobOid": "f7976805502924905927a6078834e8b938c97803"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/test-candidate-review.md",
+      "kind": "public-evidence",
+      "bytes": 8478,
+      "rawSha256": "E211FB054B5ED19AD260CAF381F4AE512201B86FE4A535AA73DB30895F8BB920",
+      "gitBlobOid": "1e03767984511f5769d9445fc0fd5a626b458345"
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/test-candidate.md",
+      "kind": "public-evidence",
+      "bytes": 6604,
+      "rawSha256": "BFA68529ABAA109B31889BBDE827E30A7CEEB651A320F38144BDC766E551AEE2",
+      "gitBlobOid": "60704de08309b6faf7b63ee80900b79f4499b401"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/ProcessAdapter.java",
+      "kind": "source",
+      "bytes": 43190,
+      "rawSha256": "5A0C87FD88EECE89C2B5A2F85C95B599C59124468830E5A500C734A935118E80",
+      "gitBlobOid": "3d870988cc396f1e73e06772bc512dae564c5c14"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/ProcessFilesTest.java",
+      "kind": "source",
+      "bytes": 10665,
+      "rawSha256": "7B363256F026266C5A65D4C85E2BEB79D4AF3DADDC497AC1831E30834868A7D7",
+      "gitBlobOid": "e73e334c77019b618507cbb2c75ae5ea2757107f"
+    }
+  ],
+  "self": {
+    "path": "docs/evidence/2026-10-29-EX-15b/path-commit-manifest.json",
+    "included": true,
+    "reasonNoEmbeddedDigest": "Self digest is fixed in the final handoff receipt; all other 69 payload files have exact raw SHA and git blob OID."
+  },
+  "externalReferences": [
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/response-ownership-runtime-review.md",
+      "rawSha256": "1544804F75C758AD4D6EF511AF18905390CD82164CC49AF8EFB005EDC4611D1D",
+      "submittedInThisCandidate": false
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/response-ownership-full/runs/sdk-six-20261029-01/summary.json",
+      "rawSha256": "B43992DA448F7AD2E82327C4BFC69782B70ABDBA68B3757C679A1DBF32EA7BE0",
+      "submittedInThisCandidate": false
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/response-ownership-full/runs/adjacent-20261029-01/summary.json",
+      "rawSha256": "74EEE7B68A655B1A1013B332D725A3CBCF69B31BBB6811F9507257E8346695D8",
+      "submittedInThisCandidate": false
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/response-ownership-full/runs/full-701-20261029-01/summary.json",
+      "rawSha256": "58AB80FD4A1BD83BCF0DA5A6CE5C59B846EB89C1C87E503B1E544C7736F1F32B",
+      "submittedInThisCandidate": false
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/ArtifactStore.java",
+      "rawSha256": "75F89B938A054BE6AC385C7152F49A9525D25E696BCE3634C42C7BD3201AE907",
+      "submittedInThisCandidate": false
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/infra/AlgorithmOffloadResponseOwnershipTest.java",
+      "rawSha256": "40474F829DEBD58D0B1D689D8F139F5BD89E2B2A07B298470D90C870960397F6",
+      "submittedInThisCandidate": false
+    }
+  ],
+  "excludedLocalEvidence": [
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/path-red-20261029-01/maven.log",
+      "bytes": 9048,
+      "sha256": "1F7F582E9DA006C1B9EFADB49BB0EC338F905E9ABF60BD627CAF23BC2269A09E",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/path-red-20261029-01/methods.xml",
+      "bytes": 59498,
+      "sha256": "41D01FD9811ACCC34FE6011E443481878B23FBEA51842CF3074EEBF868DCE890",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/path-green-20261029-01/maven.log",
+      "bytes": 20658,
+      "sha256": "56542DF547AC8BB815756784389BE55C67E602EFC64F1E503D25BE21BBF6671A",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/path-green-20261029-01/methods.xml",
+      "bytes": 64494,
+      "sha256": "027B56AA02FE95C61360BAFC49544EC532849919975D41CE7B45E4B95A656A63",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/path-green-20261029-02/maven.log",
+      "bytes": 6202,
+      "sha256": "F5011BE27B1F385BF3207F623E704F82640F9CF2B25F17390249497CF50CC574",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/path-green-20261029-02/methods.xml",
+      "bytes": 59214,
+      "sha256": "3C8827193C8DF5D654B111EA9016D542D304A4BA944E68077334315B271E3214",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/adjacent/runs/process-adjacent-20261029-01/maven.raw.log",
+      "bytes": 37334,
+      "sha256": "2E5CEF22C1418700F2F23F0106B4FB422A78BC72C956D64C47A003FDE046D151",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/adjacent/runs/process-adjacent-20261029-01/xml/TEST-cn.agentplatform.skill.application.ProcessPublishPrecheckTest.xml",
+      "bytes": 60241,
+      "sha256": "4FF8D2FEA0E25DB807A6D0BC4E04FBAE2EF3F7B06170CCB67BE3B84455A24E83",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/adjacent/runs/process-adjacent-20261029-01/xml/TEST-cn.agentplatform.skill.application.SkillProcessRegistrationTest.xml",
+      "bytes": 59778,
+      "sha256": "CB00E5CC43D76A740CFE3367A59DE46BCC5A94676E612E159FEF9D9415F3BF9C",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/adjacent/runs/process-adjacent-20261029-01/xml/TEST-cn.agentplatform.skill.application.SkillProcessWhitelistRegistrationTest.xml",
+      "bytes": 59328,
+      "sha256": "C79C80D57D6282C600174C94D0A2ED1785E225A31611B148C36FFF018B8AF4A6",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/adjacent/runs/process-adjacent-20261029-01/xml/TEST-cn.agentplatform.skill.domain.ProcessContractTest.xml",
+      "bytes": 60995,
+      "sha256": "DF2869FF8185575482FE7E5AFC998095E8215CFD471C59EAC66B3AEBC78D8367",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/adjacent/runs/process-adjacent-20261029-01/xml/TEST-cn.agentplatform.skill.infra.ProcessAdapterHardeningTest.xml",
+      "bytes": 65611,
+      "sha256": "69EF3B53663F0A2D7CA5789131146FD299E3B05C9352689B23F150FD4C0E9E07",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/adjacent/runs/process-adjacent-20261029-01/xml/TEST-cn.agentplatform.skill.infra.ProcessAdapterTest.xml",
+      "bytes": 63985,
+      "sha256": "E129C76FE3A9690D472E8667A5A154D70472A6E7F69D5C8749E71E0AAD4B0ECA",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/adjacent/runs/process-adjacent-20261029-01/xml/TEST-cn.agentplatform.skill.infra.ProcessFilesTest.xml",
+      "bytes": 59749,
+      "sha256": "1F572FD39C892A5D38B167A099F0ECA9C6A8535D419B8416704B8789B58D6539",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/adjacent/runs/process-adjacent-20261029-01/xml/TEST-cn.agentplatform.skill.infra.ProcessProtocolTest.xml",
+      "bytes": 66544,
+      "sha256": "E3FCA37DB724F1940F26E061F5C746455A6370CF9A577F59DF9BC67B10CC01C6",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/adjacent/runs/process-adjacent-20261029-01/xml/TEST-cn.agentplatform.skill.infra.ProcessTreeTest.xml",
+      "bytes": 59159,
+      "sha256": "086B16F2955AFD96841E3DB407BC1EA00768AC8132E6300A7D94C8C89B26B826",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/adjacent/runs/process-adjacent-20261029-01/xml/TEST-cn.agentplatform.skill.infra.SkillProcessRoutingTest.xml",
+      "bytes": 60338,
+      "sha256": "5D0848A9343BBC2CD8C3335F5981C372BCFD43ADD8D5218602DCED8DBBD1BFCB",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/methods.csv",
+      "bytes": 297091,
+      "sha256": "704B27F31877120C8D44C104C713B46EB39EB6DF7338256B02212E49031BF557",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/nonpass-reasons.csv",
+      "bytes": 57525,
+      "sha256": "FAAD6FC0387FA8330160F3B3597044C8A3D9DDB65F76B8C094826E3D3D9BB611",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/pg.raw.log",
+      "bytes": 0,
+      "sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/raw.log",
+      "bytes": 574480,
+      "sha256": "6F5853A81F75DBEE101FA6B385E6FFDA79CF93103837ECF3C9196C5F45AE2313",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.api.OpenApiImportControllerTest.xml",
+      "bytes": 61391,
+      "sha256": "2C9B8C69CC679E806CF803DEA6871EA4255098B91A676E0D7E4B14DB827C21A3",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.api.TaskResultControllerTest.xml",
+      "bytes": 72219,
+      "sha256": "2B7C3BDBADD5E9C49A3AA088F05496783A7592460CEACDFABA17ACED5DEFA098",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.application.AlgorithmExecutionPostgresTest.xml",
+      "bytes": 92531,
+      "sha256": "2B93EE297837EF0019281AE16AA06A596D0F6A569D9E75A1FA451BC915E484A5",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.application.AsyncHttpExecutionTest.xml",
+      "bytes": 75362,
+      "sha256": "242DF27FCE44BD06069201E121C76DEE1E97DB59C1892CCC3B901E0A177234E6",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.application.AsyncResultEndpointFailureTest.xml",
+      "bytes": 59061,
+      "sha256": "58DE9C7186D339866D57A4644C7CE33723F66ED2024D701B93A2A641B7769D2F",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.application.CallbackHttpTest.xml",
+      "bytes": 129680,
+      "sha256": "ACEB33A978D9669CCF05C565DE68379CA1927CF8964197E825FEAE9F3256DFDA",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.application.ExternalJobStateTest.xml",
+      "bytes": 60013,
+      "sha256": "A400A8A3944BD0D8AE0663F781A835E898C4104982588BEFC95334D75F8BEAF1",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.application.FixtureSkillsTest.xml",
+      "bytes": 59580,
+      "sha256": "78825E60312DD518E89D02806A4D7682DF24A331DC6296659C2B302234E1248A",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.application.OntologyManifestImportsTest.xml",
+      "bytes": 61693,
+      "sha256": "45DF329606C87F0AA39BE4EDD32A8B6AF3D74C0753AC86E228C55E0922089459",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.application.OntologyProjectionImportTest.xml",
+      "bytes": 63011,
+      "sha256": "87B3E0E438B6E47FE8BB84CBB536D4977B74F0CAE6D51D3B1B48D6B58C125678",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.application.OpenApiImportPersistenceTest.xml",
+      "bytes": 59066,
+      "sha256": "AB640C19808F0B7E5D75940D1A50B23516C9895BBDFF0D78BB12DA1CCAD4FCFC",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.application.OpenApiImportsTest.xml",
+      "bytes": 60091,
+      "sha256": "C04D92578C6F4B5DD9EC1727D85AD267693844A3817935354E93BF467D03C76F",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.application.PathParamsAsyncMappingTest.xml",
+      "bytes": 60314,
+      "sha256": "6E40F50F3D0645A08157D85DC078FD1EE6AC0D9326C478B5BAB4A8B4CD77405F",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.application.ProcessPublishPrecheckTest.xml",
+      "bytes": 59727,
+      "sha256": "10AB7021D810FC1201D9816F502AB9B44CBC1A41848C39227ADD7B3399440060",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.application.ReconciliationProofTest.xml",
+      "bytes": 100856,
+      "sha256": "BA0431D3C856C7A69A721E42049AC9CBF2A4E80FC8A621BE27D9FFB85141236D",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.application.SchemaDegradedValidationTest.xml",
+      "bytes": 60422,
+      "sha256": "64A9BB7551DF96CAA056803EEFC8ABD814325C680A32249FE40C3EE2F7A68BD2",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.application.ServiceLifecycleTest.xml",
+      "bytes": 59347,
+      "sha256": "D07E1A231254AD1BEE3AEE7366AEFFC0B9A268977672CF704EFFEF419676E0BC",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.application.ServiceManifestTest.xml",
+      "bytes": 58902,
+      "sha256": "5C4D599A6B3A82CDE40A4C79424B041B06FE20B6C1DED2C2D3D07142D34130AA",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.application.ServiceProbeTest.xml",
+      "bytes": 59389,
+      "sha256": "AF393DB2E346F5EC24F6CCC947501FAEF9416E5D08B3EF903FE28FEBBFE15606",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.application.SkillAuthSchemeRegistrationTest.xml",
+      "bytes": 59438,
+      "sha256": "54E5A6890A8F3C88EB9EF4DFC41FB1B944009CF6997D988DC470FE455A207215",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.application.SkillCallbackWakeTest.xml",
+      "bytes": 73574,
+      "sha256": "4BAD5B2DEDE6D7B7A93D5FD348FBF54C5040CE93368BC423F0637F5010A6CBF4",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.application.SkillErrorEnvelopeTest.xml",
+      "bytes": 59335,
+      "sha256": "2FEB5D28F4AC3393A48FAA18A17763B3C25FAF91F701C8D31D1A83B3A4E89F70",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.application.SkillEvidenceRebindPostgresTest.xml",
+      "bytes": 59994,
+      "sha256": "7BF8A41548145087A5FD4E2D3F54DE9239E61E392A07BAD26F743B0D19CAE030",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.application.SkillExecutionTest.xml",
+      "bytes": 62637,
+      "sha256": "6646CF0DC3B1C3A0F6B5518A2121F6F20775FBD814CC708562517069535B7918",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.application.SkillIdentityRegistrationTest.xml",
+      "bytes": 59657,
+      "sha256": "FA83420689D36B4D89637C36CEA70977F6DECF920D79B3A6C02D9560EB40876D",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.application.SkillPrepareExecuteTest.xml",
+      "bytes": 59960,
+      "sha256": "B5FFA96A8B35325C1770A1762C3A237AFED76A361C41C913899E87768E7014BD",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.application.SkillProcessAuditTest.xml",
+      "bytes": 59982,
+      "sha256": "D1536483142BB36ED17C042198512761AC0E322EF8B0EEC6651C9A47E0D48CA0",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.application.SkillProcessExecutionTest.xml",
+      "bytes": 59040,
+      "sha256": "DA857DCFC4B40D1B43A04F6EB58996506B201623D2582734B52501C55D839FDD",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.application.SkillProcessRegistrationTest.xml",
+      "bytes": 59260,
+      "sha256": "D9F65C3BD808562984FAD897328FAA66F3C8E2950C04967EEE279F4B7D078DD8",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.application.SkillProcessWhitelistRegistrationTest.xml",
+      "bytes": 58812,
+      "sha256": "F6AC209012D34A593E834DEBA873D89391B2C849FC7C514456A0F7FB155414D2",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.application.SkillPublishDigestPostgresTest.xml",
+      "bytes": 62795,
+      "sha256": "3C15F97E5E871BD048ED0103C0CD48855819B69F2457D27DE0104C103CFF0343",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.application.SkillStatisticsPostgresTest.xml",
+      "bytes": 62851,
+      "sha256": "B2C478690FD69593EB027E1099D12E8BBEEDEE3A8CC81315162C440CDF3D3480",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.application.SkillTaskResultTest.xml",
+      "bytes": 59296,
+      "sha256": "B61527395B675A1F44CF66313F49406CD592B6066276EF3CF5DD3256B38F8C50",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.domain.BoundedSchemaValidationTest.xml",
+      "bytes": 60055,
+      "sha256": "AC236D34AEEA82B1CDD980C824ECFE061EF236F5767035577EA762DF3D45F8CD",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.domain.ErrorSemanticsTest.xml",
+      "bytes": 59118,
+      "sha256": "0C9B5638F78C5E267873C57C2E6DF3DA2DC3444A2563638E64C2B4BBAD95250B",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.domain.ProcessContractTest.xml",
+      "bytes": 60480,
+      "sha256": "04342BAD24C29F96AE1FA0230B321EE2E6F7A8FCA1938411B66355402E97D992",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.domain.SchemaWorkBudgetTest.xml",
+      "bytes": 59326,
+      "sha256": "FF916FA58E8A10655560DED4DA3884F63336A02EFD797D470DA09EE46D4CA0D8",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.domain.SkillDigestTest.xml",
+      "bytes": 58999,
+      "sha256": "B581128D80A8A9A8162E7691C34A8D33AFECE64BB7B41E73A5F23F437EB9102E",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.domain.SkillRulesTest.xml",
+      "bytes": 59058,
+      "sha256": "71635F9AA2FDCC9B91A70BBF0D6E2A24FF317300D698F883ADFB9F5C6613FA05",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.domain.SkillSchemaDialectTest.xml",
+      "bytes": 59146,
+      "sha256": "A725F26CF7E3F276B42192BCD1FB2DEA14E3E9F5EDB5CCC9B05D296CE4FD46E6",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.infra.AdapterRegistryZeroChangeTest.xml",
+      "bytes": 59551,
+      "sha256": "C8BBC4348F6A37C88ECDE9A99995830C9C41706F2FAE07E99C49499077DFA3CF",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.infra.AlgorithmMigrationPostgresTest.xml",
+      "bytes": 67436,
+      "sha256": "AC5C51AFDF9F7F1E80885DF0BF13A0AF20D2BB6A2ED8FD737954B9ABB8DEE1A7",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.infra.AlgorithmOffloadInterruptionTest.xml",
+      "bytes": 61796,
+      "sha256": "82024C1D21DE3DF027E215373F0785BE12A50100E12F988A98B81B519D37401F",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.infra.AlgorithmProtocolTest.xml",
+      "bytes": 67684,
+      "sha256": "470576BA8987BFFA6E6DE287D14E5511F6D3E6AB8623A233832B3ECA35D62A40",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.infra.ArtifactBoundTest.xml",
+      "bytes": 58702,
+      "sha256": "5BC2F987901A4B0D3766C9671B1CF5B7BB802B3087091F0585A3226DEB96998C",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.infra.ArtifactPersistenceTest.xml",
+      "bytes": 61795,
+      "sha256": "543606C107F0FDD894F256C8FFD9454D45C4AFC1307807CA384D2A57988F9FFD",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.infra.ArtifactReferenceTest.xml",
+      "bytes": 59143,
+      "sha256": "B0DAEC19248310A8A39309A1291017B533F095B22BCEDE73AF50F144C688EE27",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.infra.AuthSchemeOutboundTest.xml",
+      "bytes": 58966,
+      "sha256": "F2108D7B1402FD373DD269BB2195EDC3E170BDEDEC2A727E596D2540F7189E3F",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.infra.HttpAsyncAdapterTest.xml",
+      "bytes": 58562,
+      "sha256": "652A0D9FBF3C6654C207088958DA51EFEE0D5DAE69ED83FE953650B926987041",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.infra.HttpAsyncAttemptFenceTest.xml",
+      "bytes": 63900,
+      "sha256": "7E597C1D2FB5A8BD9806D77BF7EF60871BEFCE31B93C2B9BB5DA40B6EC348BE0",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.infra.HttpSchemaBoundaryTest.xml",
+      "bytes": 59470,
+      "sha256": "1D211C20B7D42BD971AB1F8EFC3330F67C294F5330554003DFDBBD648474FDC6",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.infra.IdentityOutboundTest.xml",
+      "bytes": 59457,
+      "sha256": "59E2DEEF370C099ED66FFD3D31DA119B4CA63B73342F43D8B11B8E2A84873431",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.infra.localspike.LocalSpikeLifecycleLiveTest.xml",
+      "bytes": 59271,
+      "sha256": "2DB7DD6F0589A1ADFD05C70D76BC7C6228512CB16CB7443D7E26EBCD5CAA3A97",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.infra.localspike.LocalSpikeManagerFailurePathTest.xml",
+      "bytes": 58924,
+      "sha256": "37EEE9D262E8BEFBE08CC3E615CB33E5BBA31C5093A92E2B6B48609ED093C3FA",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.infra.McpAdapterTest.xml",
+      "bytes": 75888,
+      "sha256": "7F37767371A865E6DB03F2F9494AD461AF145B3558159F5EA0B50C039EBBD453",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.infra.McpExecutionPostgresTest.xml",
+      "bytes": 64003,
+      "sha256": "D172228B49AD3527A93EB2EF9A5AD943E62144AF4F5B43273B885408E75F3A9C",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.infra.McpManagementTest.xml",
+      "bytes": 72360,
+      "sha256": "3F601B837F0DF7B535BC738069D5A183A567F0C33B736D49E7504C3C4895A7DB",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.infra.McpResourceLifecycleTest.xml",
+      "bytes": 58436,
+      "sha256": "16BFC488BC6D2BA64CC52C965DA6F7562C6FA61D89790C8C3453866DDE692643",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.infra.McpSchemaBoundaryTest.xml",
+      "bytes": 70684,
+      "sha256": "743E114266AC180295ACC403B3A30D6AC6327B78A51F8E8A29D4DA3DD88A2790",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.infra.MultipartFormMappingTest.xml",
+      "bytes": 60165,
+      "sha256": "F55CA8286D22FD869512D5F1F1942E453E0CEF4705A247E6002C2FEDC234060D",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.infra.MultipartStreamingTest.xml",
+      "bytes": 60016,
+      "sha256": "D90F255DFE2FE947C9AF782B4A4D6735DA5779D89EDB4871D126D77615EDCD97",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.infra.OpenApiHttpMappingTest.xml",
+      "bytes": 59369,
+      "sha256": "7BB6EB4E0687508FDE823720F7933C2E260191373C3D48A11332AB1E39C41612",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.infra.ProcessAdapterHardeningTest.xml",
+      "bytes": 65102,
+      "sha256": "F7B859EBAF6A947C30DFD0940F327AD8EFFCD8ADEFD18119467BD6E8D92DFD68",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.infra.ProcessAdapterTest.xml",
+      "bytes": 63472,
+      "sha256": "4597622C97B0225AA8864F93CABBC433980B066579A56F464A070B5DC37DF6A0",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.infra.ProcessFilesTest.xml",
+      "bytes": 59232,
+      "sha256": "95954292AB19BB3585A91AA42231D73503D736F2EE9AB9C2FE20EABB365C2BA2",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.infra.ProcessProtocolTest.xml",
+      "bytes": 66033,
+      "sha256": "4C6D7395AE9260C8F7B88EF79D5C03CB15D230A863277FCB42896A4F9979BFE4",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.infra.ProcessTreeTest.xml",
+      "bytes": 58646,
+      "sha256": "693A1E2564E7B47AF497F9431CA475ED4F48550F7D635113DC93932F548961BC",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.infra.ServiceTicketsTest.xml",
+      "bytes": 59036,
+      "sha256": "B943402E528DFBC55E3631DD11F207054E57596F9056176598BC1DCB1F0F6C5F",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.infra.SignedCallbackTest.xml",
+      "bytes": 58725,
+      "sha256": "2537BD0AB3FFFCED2CD5867233883ABDF527F648D64A3C6565E6B83E7F45F42E",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.infra.SkillAttemptPropagationTest.xml",
+      "bytes": 59095,
+      "sha256": "6BF10939F10B2A2175262613C5BCEAC2E440C9F3913513663BC6EE38E049DAD9",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.infra.SkillClientsErrorTest.xml",
+      "bytes": 59408,
+      "sha256": "4A5C8A7DD3B401EAA92A0A0EA0E2324388BEB168E766BD5BCB27DFD737A55394",
+      "submitted": false
+    },
+    {
+      "path": "docs/evidence/2026-10-29-EX-15b/collector/runs/full-skill-ex15b-20261029-01/xml/TEST-cn.agentplatform.skill.infra.SkillProcessRoutingTest.xml",
+      "bytes": 59825,
+      "sha256": "097CDA9AAFC5AA574235C0C18EF71675B657CC386C0D6752F86A7DC07A4AA1FB",
+      "submitted": false
+    }
+  ],
+  "excludedCategories": [
+    "all raw XML and logs",
+    "environment/credential/private files",
+    "local raw failure CSVs",
+    "EX27 source and evidence",
+    "SDK diagnostic candidates and runs",
+    "full PROCESS IO preparation and phase-A patch"
+  ],
+  "credentialScan": {
+    "pendingFinalScan": false,
+    "checkedFiles": 70,
+    "knownActualCredentialValues": 4,
+    "credentialSources": [
+      "current .env credential assignments",
+      "current process credential variables"
+    ],
+    "exactCredentialHitCount": 0,
+    "privateKeyOrJwtCandidateCount": 0,
+    "valuesEmitted": false,
+    "rawEvidenceContentNotIncluded": true
+  },
+  "indexAdmission": "Compare exact staged paths and every listed blob OID plus externally recorded manifest SHA; this worktree candidate is not an index review."
+}

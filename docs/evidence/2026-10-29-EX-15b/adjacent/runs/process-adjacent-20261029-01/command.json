@@ -1,0 +1,27 @@
+{
+    "head":  "acad6bdee223b23f331420c6de50045cb5fa8941",
+    "arguments":  [
+                      "-B",
+                      "-ntp",
+                      "-pl",
+                      "skill-registry",
+                      "test",
+                      "-Dmaven.repo.local=G:\\207\\项目\\算法重组工具\\代码\\agent-platform/.tools/m2",
+                      "-DargLine=-Xmx1024m -Djdk.net.unixdomain.tmpdir=V:/.local/tmp",
+                      "-Dsurefire.timeout=900",
+                      "-Dsurefire.failIfNoSpecifiedTests=true",
+                      "-Dmaven.test.failure.ignore=false",
+                      "-Dtest=cn.agentplatform.skill.domain.ProcessContractTest,cn.agentplatform.skill.infra.ProcessAdapterTest,cn.agentplatform.skill.infra.ProcessProtocolTest,cn.agentplatform.skill.infra.ProcessAdapterHardeningTest,cn.agentplatform.skill.infra.ProcessTreeTest,cn.agentplatform.skill.infra.SkillProcessRoutingTest,cn.agentplatform.skill.application.SkillProcessRegistrationTest,cn.agentplatform.skill.application.SkillProcessWhitelistRegistrationTest,cn.agentplatform.skill.application.ProcessPublishPrecheckTest,cn.agentplatform.skill.infra.ProcessFilesTest"
+                  ],
+    "startedAtUtc":  "2026-10-29T07:59:41.6109949Z",
+    "powershell":  "5.1.26100.9711",
+    "environmentImported":  false,
+    "databaseAccess":  false,
+    "minioAccess":  false,
+    "serviceStartup":  false,
+    "failureIgnore":  false,
+    "expectedXml":  10,
+    "expectedMethods":  83,
+    "deferredPgMethods":  3,
+    "defaultForkAndOrder":  true
+}

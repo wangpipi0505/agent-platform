@@ -1,0 +1,500 @@
+[
+    {
+        "classname":  "cn.agentplatform.skill.domain.ProcessContractTest",
+        "method":  "rejectsInvalidEnvironmentEntries",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.domain.ProcessContractTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.domain.ProcessContractTest",
+        "method":  "executableWithoutArgsIsSingleElementCommand",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.domain.ProcessContractTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.domain.ProcessContractTest",
+        "method":  "rejectsNonObjectContract",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.domain.ProcessContractTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.domain.ProcessContractTest",
+        "method":  "rejectsTimeoutOutsideDocumentedRange",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.domain.ProcessContractTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.domain.ProcessContractTest",
+        "method":  "fullContractIsParsedVerbatim",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.domain.ProcessContractTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.domain.ProcessContractTest",
+        "method":  "minimalContractUsesDocumentedDefaults",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.domain.ProcessContractTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.domain.ProcessContractTest",
+        "method":  "executableAndArgsAreNormalizedToCommand",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.domain.ProcessContractTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.domain.ProcessContractTest",
+        "method":  "documentedAliasesAreAccepted",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.domain.ProcessContractTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.domain.ProcessContractTest",
+        "method":  "rejectsMissingOrEmptyCommand",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.domain.ProcessContractTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.domain.ProcessContractTest",
+        "method":  "unknownCleanupValueIsRejected",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.domain.ProcessContractTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.domain.ProcessContractTest",
+        "method":  "missingCommandAndExecutableIsRejected",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.domain.ProcessContractTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.domain.ProcessContractTest",
+        "method":  "rejectsNonAbsoluteWorkDir",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.domain.ProcessContractTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.domain.ProcessContractTest",
+        "method":  "rejectsOutputBudgetAboveHardLimit",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.domain.ProcessContractTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.domain.ProcessContractTest",
+        "method":  "rejectsRelativeExecutable",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.domain.ProcessContractTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.domain.ProcessContractTest",
+        "method":  "maxStderrBytesIsRangeChecked",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.domain.ProcessContractTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.domain.ProcessContractTest",
+        "method":  "envAllowlistArrayIsRejectedWithGuidance",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.domain.ProcessContractTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.domain.ProcessContractTest",
+        "method":  "commandWinsWhenBothFormsArePresent",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.domain.ProcessContractTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.ProcessAdapterTest",
+        "method":  "stderrFloodIsTruncatedWithoutFailingTheCall",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.ProcessAdapterTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.ProcessAdapterTest",
+        "method":  "timeoutKillsTheChildProcess",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.ProcessAdapterTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.ProcessAdapterTest",
+        "method":  "childEnvironmentIsWhitelistOnly",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.ProcessAdapterTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.ProcessAdapterTest",
+        "method":  "executesAndReturnsZeroExit",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.ProcessAdapterTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.ProcessAdapterTest",
+        "method":  "passesArgumentsWithoutShell",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.ProcessAdapterTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.ProcessAdapterTest",
+        "method":  "calculationFailureIsNotReportedAsGenericExit",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.ProcessAdapterTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.ProcessAdapterTest",
+        "method":  "stdoutBeyondLimitKillsTheTree",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.ProcessAdapterTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.ProcessAdapterTest",
+        "method":  "disabledSwitchSkipsProcessAndCallDir",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.ProcessAdapterTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.ProcessAdapterTest",
+        "method":  "legacyEntryWithoutRequestStillWorks",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.ProcessAdapterTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.ProcessAdapterTest",
+        "method":  "rejectsWorkDirOutsideAllowedRoot",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.ProcessAdapterTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.ProcessAdapterTest",
+        "method":  "chineseAndSpaceInWorkingDirectoryArePreserved",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.ProcessAdapterTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.ProcessProtocolTest",
+        "method":  "writesEnvelopeWithProtocolRequestIdOperationAndParameters",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.ProcessProtocolTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.ProcessProtocolTest",
+        "method":  "requestEnvelopeBeyondOneMiBIsRejectedBeforeStart",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.ProcessProtocolTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.ProcessProtocolTest",
+        "method":  "exitCodeFourIsOutputWriteFailed",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.ProcessProtocolTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.ProcessProtocolTest",
+        "method":  "bannerAroundEnvelopeIsOutputInvalid",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.ProcessProtocolTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.ProcessProtocolTest",
+        "method":  "rejectedRequestIdIsProtocolMismatch",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.ProcessProtocolTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.ProcessProtocolTest",
+        "method":  "exitCodeTwoIsInputInvalid",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.ProcessProtocolTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.ProcessProtocolTest",
+        "method":  "resultSatisfyingOutputSchemaIsReturnedAsRawOutput",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.ProcessProtocolTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.ProcessProtocolTest",
+        "method":  "emptyStdoutIsOutputInvalid",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.ProcessProtocolTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.ProcessProtocolTest",
+        "method":  "wrongProtocolVersionIsProtocolMismatch",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.ProcessProtocolTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.ProcessProtocolTest",
+        "method":  "resultViolatingOutputSchemaIsRejected",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.ProcessProtocolTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.ProcessProtocolTest",
+        "method":  "explicitRejectionOnOtherExitCodeKeepsWorkerMessage",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.ProcessProtocolTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.ProcessAdapterHardeningTest",
+        "method":  "globalLimitRejectsExcessWithReadable429",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.ProcessAdapterHardeningTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.ProcessAdapterHardeningTest",
+        "method":  "executionAcceptsExecutableInsideWhitelist",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.ProcessAdapterHardeningTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.ProcessAdapterHardeningTest",
+        "method":  "executionRejectsExecutableOutsideWhitelist",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.ProcessAdapterHardeningTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.ProcessAdapterHardeningTest",
+        "method":  "successDeletesCallDirOnEveryPath",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.ProcessAdapterHardeningTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.ProcessAdapterHardeningTest",
+        "method":  "queuedCallSucceedsWhenPermitReleasedWithinWait",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.ProcessAdapterHardeningTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.ProcessAdapterHardeningTest",
+        "method":  "keepFailedDirsZeroDeletesFailureDumpToo",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.ProcessAdapterHardeningTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.ProcessAdapterHardeningTest",
+        "method":  "emptyWhitelistKeepsExecutionUnrestricted",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.ProcessAdapterHardeningTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.ProcessAdapterHardeningTest",
+        "method":  "cancelUnknownOrFinishedCallIsIdempotentFalse",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.ProcessAdapterHardeningTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.ProcessAdapterHardeningTest",
+        "method":  "tenantLimitIsIndependentFromOtherTenants",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.ProcessAdapterHardeningTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.ProcessAdapterHardeningTest",
+        "method":  "factRecordsKillReasonOnTimeout",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.ProcessAdapterHardeningTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.ProcessAdapterHardeningTest",
+        "method":  "timeoutKillRetainsFailureDump",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.ProcessAdapterHardeningTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.ProcessAdapterHardeningTest",
+        "method":  "chineseAndSpacedWorkDirCreateExecuteKillReclaim",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.ProcessAdapterHardeningTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.ProcessAdapterHardeningTest",
+        "method":  "outputFactCarriesAuditFactsWithoutSensitiveEnvValues",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.ProcessAdapterHardeningTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.ProcessAdapterHardeningTest",
+        "method":  "cancelKillsTheRunningTreeAndReportsCancelled",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.ProcessAdapterHardeningTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.ProcessAdapterHardeningTest",
+        "method":  "failureRetainsDumpAndPrunesOldestBeyondLimit",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.ProcessAdapterHardeningTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.ProcessTreeTest",
+        "method":  "killTreeKillsParentAndDescendant",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.ProcessTreeTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.ProcessTreeTest",
+        "method":  "startsAndWaitsForExit",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.ProcessTreeTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.ProcessTreeTest",
+        "method":  "killTreeByHandleAlsoKillsDescendants",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.ProcessTreeTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.SkillProcessRoutingTest",
+        "method":  "disabledSwitchRejectsBeforeCreatingAnyCallDirectory",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.SkillProcessRoutingTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.SkillProcessRoutingTest",
+        "method":  "calculationFailureIsNotFoldedIntoDependencyUnavailable",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.SkillProcessRoutingTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.SkillProcessRoutingTest",
+        "method":  "reconciliationQueryMustNotRerunTheProcess",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.SkillProcessRoutingTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.SkillProcessRoutingTest",
+        "method":  "rawOutputIsResultNodeNotTheWholeEnvelope",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.SkillProcessRoutingTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.SkillProcessRoutingTest",
+        "method":  "workerReceivesProtocolEnvelopeBuiltFromCallArguments",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.SkillProcessRoutingTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.application.SkillProcessRegistrationTest",
+        "method":  "processRejectsEndpointBecauseALocalProcessNeverAddressesAnHttpEndpoint",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.application.SkillProcessRegistrationTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.application.SkillProcessRegistrationTest",
+        "method":  "processCommandMustStartWithAnAbsolutePath",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.application.SkillProcessRegistrationTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.application.SkillProcessRegistrationTest",
+        "method":  "processContractIsAcceptedAndNormalizedBeforePersistence",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.application.SkillProcessRegistrationTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.application.SkillProcessRegistrationTest",
+        "method":  "processObjectIsMandatoryForProcessSkills",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.application.SkillProcessRegistrationTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.application.SkillProcessRegistrationTest",
+        "method":  "processOnlySupportsSyncInvocationKind",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.application.SkillProcessRegistrationTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.application.SkillProcessRegistrationTest",
+        "method":  "processRejectsHttpMappingBecauseThereIsNoHttpRequestToMap",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.application.SkillProcessRegistrationTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.application.SkillProcessWhitelistRegistrationTest",
+        "method":  "registrationRejectsExecutableOutsideWhitelistWith400",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.application.SkillProcessWhitelistRegistrationTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.application.SkillProcessWhitelistRegistrationTest",
+        "method":  "emptyWhitelistKeepsLegacyRegistrationUnrestricted",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.application.SkillProcessWhitelistRegistrationTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.application.SkillProcessWhitelistRegistrationTest",
+        "method":  "registrationAcceptsExecutableInsideWhitelist",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.application.SkillProcessWhitelistRegistrationTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.application.ProcessPublishPrecheckTest",
+        "method":  "nonProcessCandidateSkipsProcessRules",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.application.ProcessPublishPrecheckTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.application.ProcessPublishPrecheckTest",
+        "method":  "rejectsFileAsWorkDirRoot",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.application.ProcessPublishPrecheckTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.application.ProcessPublishPrecheckTest",
+        "method":  "acceptsWorkDirRootThatCanBeCreatedWithoutCreatingIt",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.application.ProcessPublishPrecheckTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.application.ProcessPublishPrecheckTest",
+        "method":  "acceptsExecutableAndSchemaThatExist",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.application.ProcessPublishPrecheckTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.application.ProcessPublishPrecheckTest",
+        "method":  "rejectsRelativeCommand",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.application.ProcessPublishPrecheckTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.application.ProcessPublishPrecheckTest",
+        "method":  "rejectsDirectoryAsCommand",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.application.ProcessPublishPrecheckTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.application.ProcessPublishPrecheckTest",
+        "method":  "rejectsOutputSchemaThatSkillRulesCannotLoad",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.application.ProcessPublishPrecheckTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.application.ProcessPublishPrecheckTest",
+        "method":  "timeoutOutOfRangeIsRejectedByContractParse",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.application.ProcessPublishPrecheckTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.application.ProcessPublishPrecheckTest",
+        "method":  "rejectsRelativeWorkDirRoot",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.application.ProcessPublishPrecheckTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.application.ProcessPublishPrecheckTest",
+        "method":  "rejectsCommandFileThatDoesNotExist",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.application.ProcessPublishPrecheckTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.ProcessFilesTest",
+        "method":  "rejectsParentRelativeOutputPathBeforeReturningSuccess",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.ProcessFilesTest.xml"
+    },
+    {
+        "classname":  "cn.agentplatform.skill.infra.ProcessFilesTest",
+        "method":  "acceptsValidEnvelopeWithoutOutputFiles",
+        "status":  "PASS",
+        "xml":  "xml/TEST-cn.agentplatform.skill.infra.ProcessFilesTest.xml"
+    }
+]

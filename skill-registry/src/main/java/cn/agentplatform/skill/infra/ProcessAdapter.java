@@ -505,6 +505,15 @@ public class ProcessAdapter {
         if (result == null || !result.isObject()) throw invalid("成功响应缺少 result 对象");
         validateResult(contract, result);
 
+        JsonNode files = arrayOrEmpty(root.get("files"));
+        for (JsonNode file : files) {
+            JsonNode path = file.get("path");
+            if (path == null || !path.isTextual()) continue;
+            // 两种分隔符按路径段处理，拒绝父目录引用但保留含连续点的普通文件名。
+            for (String segment : path.asText().replace('\\', '/').split("/", -1))
+                if ("..".equals(segment)) throw invalid("响应 files.path 不允许父目录段 ..");
+        }
+
         var fact = new LinkedHashMap<String, Object>();
         fact.put("command", contract.command());
         fact.put("workDir", callDir == null ? null : callDir.toString());
@@ -514,7 +523,7 @@ public class ProcessAdapter {
         fact.put("stderrTruncated", stderrTruncated);
         return new Output(
                 result.deepCopy(),
-                arrayOrEmpty(root.get("files")),
+                files,
                 arrayOrEmpty(root.get("warnings")),
                 objectOrEmpty(root.get("metrics")),
                 exitCode,
