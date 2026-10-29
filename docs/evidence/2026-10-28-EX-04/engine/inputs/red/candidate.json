@@ -1,0 +1,48 @@
+{
+  "phase": "STATIC_PREDICTIONS_ONLY_NOT_EXECUTED",
+  "expectedIdentities": 47,
+  "originalIdentitiesFromEx00": 22,
+  "newIdentities": 25,
+  "expectedRedIdentities": 11,
+  "remainingIdentitiesNotClaimedPassed": 36,
+  "classCounts": {
+    "cn.agentplatform.engine.application.ToolOutputPolicyTest": 34,
+    "cn.agentplatform.engine.application.RunToolProfileTest": 13
+  },
+  "methodNamingEvidence": "EX00 InputDeclarationSchemaPositionsTest 2-argument String/JsonNode reports use method(String, JsonNode)[index]; custom-name AuthorityConfigurationTest still has empty display_name and class suite_path.",
+  "predictionRationale": {
+    "offsetPositive": "old declaredPagination requires request.page and size; valid OFFSET has no page, so hint missing",
+    "freezePositive": "prepareSnapshot preserves contract but old output policy does not recognize OFFSET",
+    "parameter4": "mixed OFFSET includes request.page and size, old reader wrongly accepts",
+    "parameter14to21": "old PAGE reader ignores mode/null/type/unknown keys/caps/response; all still have nonblank page+size after asText",
+    "exceptionType": "Local AssertJ3.27.3 metadata: AbstractBooleanAssert.isTrue uses Failures.failure with actual/expected -> AssertionErrorCreator assertionFailedError; Objects.assertNull uses ShouldBeEqual -> assertionFailedError. OpenTest4J is available in existing JUnit runtime; freeze uses JUnit assertEquals."
+  },
+  "testSha256": {
+    "ToolOutputPolicyTest": "0989dce43b6033082ac7d15b807e475b6941426adc2441c2a335d900c5e9e741",
+    "RunToolProfileTest": "4018d136e9b9e7b8bf3eef66a32ce2edecba565eeebc68b9b6f0f40c1461c1c0"
+  },
+  "sourceCount": 202,
+  "files": [
+    {
+      "file": "expected-methods.csv",
+      "sha256": "7066558b2c98ec680ca4dd3dbe54f1f9ea73c22bd4cb327343b048edca247e66",
+      "bytes": 8163
+    },
+    {
+      "file": "expected-red.csv",
+      "sha256": "e27ed872a8a916860d31357f96124e690795e62e556336be1a2e9ee722c81aac",
+      "bytes": 2590
+    },
+    {
+      "file": "module-source-sha256.json",
+      "sha256": "6f091faeeb5a05e84741c34b7ac891f210a72cf0faa40bc41d23726a3056e2ea",
+      "bytes": 38731
+    }
+  ],
+  "nativeExit": null,
+  "actualTestsRun": false,
+  "javaMavenPgHttpStarted": false,
+  "envRead": false,
+  "sourceModifiedInThisTask": false,
+  "indexModified": false
+}

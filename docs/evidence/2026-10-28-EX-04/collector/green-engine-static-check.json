@@ -1,0 +1,50 @@
+{
+    "phase":  "GREEN_ENGINE_STATIC_PREPARATION_ONLY",
+    "powershell":  "5.1.26100.9711",
+    "parse":  [
+                  {
+                      "path":  "run-green-engine.ps1",
+                      "errors":  0,
+                      "sha256":  "3195923AE1B6097EC4B7583E28E58778FBB7683687815B06B13ABA90DE3EAC7F"
+                  },
+                  {
+                      "path":  "check-green-engine-static.ps1",
+                      "errors":  0,
+                      "sha256":  "85FDDBEC8447508050F1EADDAE7F5BFB1397433DBE8E277E12F285954F68030B"
+                  }
+              ],
+    "checks":  {
+                   "ps51":  true,
+                   "parseZero":  true,
+                   "templateAndBridgeDisabled":  true,
+                   "fixedEngineModuleAndTwoClasses":  true,
+                   "originalRuntimeArgs":  true,
+                   "noIgnoreSkipAmOrderForkOrDiag":  true,
+                   "freezeBeforeEnv":  true,
+                   "noOldProductOrRedPins":  true,
+                   "fullEngineRosterHashBeforeAndAfter":  true,
+                   "dynamicCompleteIdentitySet":  true,
+                   "allReportsPassNative0":  true,
+                   "noClassOrSkip":  true,
+                   "noPgOrBusinessHttpAdmission":  true,
+                   "rootVerifiedFixtureRequired":  true,
+                   "fixtureProvenanceBeforeEnv":  true,
+                   "ownedActualGreenSkillProducer":  true,
+                   "actualJsonXmlProofHashesPinned":  true,
+                   "actualProducerProofSemantics":  true,
+                   "consumerTwoSourcePinsRequired":  true,
+                   "fixedFixtureScopeHonest":  true,
+                   "nativePersistedBeforeXml":  true,
+                   "freshUtf8XmlNoRawTail":  true,
+                   "identityDuplicatesRejected":  true,
+                   "safeFixedErrorAndLine":  true,
+                   "finallyRestoresEnvironment":  true,
+                   "noProducerOrFixtureWrite":  true
+               },
+    "allPassed":  true,
+    "expectedAuthorReports":  47,
+    "envRead":  false,
+    "javaMavenPgHttpStarted":  false,
+    "actualInvocationPerformed":  false,
+    "producerArchiveOrRootInputsModified":  false
+}

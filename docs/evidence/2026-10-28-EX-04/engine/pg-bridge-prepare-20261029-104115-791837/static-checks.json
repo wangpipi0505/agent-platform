@@ -1,0 +1,58 @@
+{
+  "phase": "PG_PROJECTION_BRIDGE_STATIC_CANDIDATE_PENDING_DEFAULT_47_GREEN",
+  "files": [
+    {
+      "path": "engine-runtime/src/test/java/cn/agentplatform/engine/application/ToolOutputPolicyTest.java",
+      "bytes": 21270,
+      "sha256": "666c61bb5e46290be05921a6f6bdc1ff171bb509fe206adf247b0ea20b8a1b51",
+      "embeddedJsonSha256": "0e99aae36146e3b35a06f9755e2532c1fed3202e095cd5b9cbc89efeedf8b2d9",
+      "embeddedBytes": 137,
+      "originalTestsReconstructedExactly": true,
+      "methodSignaturesUnchangedFromRed": true,
+      "assertionCallsBeforeBridge": 78,
+      "assertionCallsAfterBridge": 79
+    },
+    {
+      "path": "engine-runtime/src/test/java/cn/agentplatform/engine/application/RunToolProfileTest.java",
+      "bytes": 22331,
+      "sha256": "53d4c07f97011f0f4a364044419fdd0375622353751755f67b8ff2db854c6afc",
+      "embeddedJsonSha256": "0e99aae36146e3b35a06f9755e2532c1fed3202e095cd5b9cbc89efeedf8b2d9",
+      "embeddedBytes": 137,
+      "originalTestsReconstructedExactly": true,
+      "methodSignaturesUnchangedFromRed": true,
+      "assertionCallsBeforeBridge": 64,
+      "assertionCallsAfterBridge": 65
+    }
+  ],
+  "productionSha256Unchanged": "5d2596babb01a047fc24f8db4e3534eae22bc4e2820f45231299a2d3f91ffebb",
+  "sourceCount": 202,
+  "moduleSourceManifestSha256": "fc923e7f05fa235064d20f070ad9c266f3d889555e150094379b8bcdc6ac99b1",
+  "identitiesUnchanged": 47,
+  "originalIdentities": 22,
+  "newIdentities": 25,
+  "sourceJsonKeys": [
+    "pagination",
+    "exposure"
+  ],
+  "oldRedFixture": {
+    "offset": "skip",
+    "size": "take",
+    "maxPageSize": 37,
+    "maxRows": 7
+  },
+  "actualPgFixture": {
+    "offset": "startAt",
+    "size": "takeRows",
+    "maxPageSize": 6,
+    "maxRows": 2,
+    "mode": "OFFSET",
+    "kind": "QUERY"
+  },
+  "oldRedPreserved": true,
+  "noAssertionsRemovedOrConditional": true,
+  "gitDiffCheck": 0,
+  "actualEngineGreenRun": false,
+  "javaMavenPgHttpStarted": false,
+  "envRead": false,
+  "indexModified": false
+}

@@ -414,4 +414,64 @@ class RunToolProfileTest {
         RunService.surfaceToolSelection(detail, Json.read("{\"appCode\":\"old\"}"));
         assertFalse(detail.containsKey("toolSelection"), "旧运行详情不得补键");
     }
+
+    // EX-04 PG readback bridge: fixed data, no runtime PG/HTTP/file dependency.
+    // Source Run: green-skill-20261029-103602-527; 137 UTF-8 bytes.
+    // JSON SHA256: 0e99aae36146e3b35a06f9755e2532c1fed3202e095cd5b9cbc89efeedf8b2d9
+    // XML SHA256: 30220156caf1644beca88d4ef634511a333171d18df84b783ba0bdb4ddae0921
+    private static final String PERSISTED_PROJECTION =
+                "{\"pagination\":{\"mode\":\"OFFSET\",\"maxRows\":2,"
+                        + "\"request\":{\"size\":\"takeRows\",\"offset\":\"startAt\"},"
+                        + "\"maxPageSize\":6},\"exposure\":{\"kind\":\"QUERY\"}}";
+    private static final String PERSISTED_PROJECTION_SHA256 =
+            "0e99aae36146e3b35a06f9755e2532c1fed3202e095cd5b9cbc89efeedf8b2d9";
+
+    @Test
+    void projectionContractSurvivesActualFreezeAndFeedsOffsetPolicy() throws Exception {
+        var stub = new SkillStub();
+        var published =
+                (com.fasterxml.jackson.databind.node.ObjectNode)
+                        Json.read(skill("query_projection", 41));
+        assertEquals(
+                PERSISTED_PROJECTION_SHA256,
+                cn.agentplatform.common.Digest.sha256(PERSISTED_PROJECTION));
+        var projection = Json.read(PERSISTED_PROJECTION);
+        var definition =
+                (com.fasterxml.jackson.databind.node.ObjectNode) published.path("definition");
+        definition.set("exposure", projection.path("exposure"));
+        definition.set("pagination", projection.path("pagination"));
+        var expected = definition.deepCopy();
+        stub.bodies.put("query_projection", Json.write(published));
+        var source = snapshot(null, List.of(ref("query_projection", 3, null, null)), List.of());
+
+        var frozen = freeze(service(stub), source);
+
+        assertEquals(1, stub.reads.get());
+        assertEquals(List.of("query_projection"), toolCodes(frozen));
+        var tool = frozen.path("config").path("tools").get(0);
+        assertEquals(expected, tool.path("contract"));
+        for (String key : List.of("pagination", "exposure"))
+            assertEquals(expected.path(key), tool.path("contract").path(key), key);
+        for (String key : List.of("execution", "guard", "inputSchema", "outputSchema"))
+            assertEquals(published.path(key), tool.path(key), key);
+        assertEquals(41L, tool.path("skillVersionId").asLong());
+        assertEquals(published.path("digest"), tool.path("contractDigest"));
+        assertFalse(frozen.has("toolSelection"));
+        assertEquals(expected, definition);
+
+        var result = Json.tree(Map.of("blob", "x".repeat(4096), "total", 99));
+        var hint =
+                new ToolOutputPolicy(1024)
+                        .enforce(tool, result, "ex04:freeze:call")
+                        .path("pagination");
+        assertEquals("OFFSET", hint.path("mode").asText());
+        assertEquals(expected.path("pagination").path("request"), hint.path("request"));
+        assertEquals(6, hint.path("maxPageSize").asInt());
+        assertEquals(2, hint.path("maxRows").asInt());
+        assertFalse(hint.path("request").has("page"));
+        assertFalse(hint.has("response"));
+        assertFalse(hint.has("nextOffset"));
+        assertTrue(hint.path("observed").isObject());
+        assertTrue(hint.path("observed").isEmpty());
+    }
 }

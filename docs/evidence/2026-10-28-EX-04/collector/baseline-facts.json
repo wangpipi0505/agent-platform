@@ -1,0 +1,160 @@
+{
+  "phase": "READ_EXISTING_BASELINE_FILES_ONLY",
+  "preparationHead": "d7880a66b345f15aecf37133a702df769e591fa5",
+  "sourceReferences": [
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/runs/outbox-fix-20261029-085643-361/full/summary.json",
+      "sha256": "794D69277AF23AD5B3B6E29558C3C3B1FCD9BB3482F5A757C880CA0E7B5120CA"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/runs/outbox-fix-20261029-085643-361/full/methods.csv",
+      "sha256": "EC10BE90DC5F0186F83CC03D5A2F6ADEEDE6F9A5B97010A87016EB3269B37A6F"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/runs/outbox-fix-20261029-085643-361/full/reason-comparison-summary.json",
+      "sha256": "C5808E84DF5F4CC6FBF611187C7FC74DF7EBF6B4E4F65091A07CB48B2C3D65DC"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-27/runs/outbox-fix-20261029-085643-361/full/retained-nonpass-reasons.csv",
+      "sha256": "0D8600DFF80F28D8D2B594AD376E3E0FB1B7B28D2D38C433877D9DD2F5971DA1"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-36/runs/after-module-20261028-230322-842/method-summary/summary.json",
+      "sha256": "BD3D830A9E404BF352B7233D8F92692F4F333932756A501144A23944729C44AC"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-36/runs/after-module-20261028-230322-842/method-summary/methods.csv",
+      "sha256": "76A4F8611684EF032B675ACE3BFF11F6BA208D6C8914B50B3660758673FC2C97"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-36/runs/after-module-20261028-230322-842/method-summary/comparison.json",
+      "sha256": "599A74F9603E4697127E31FCB6CF432FB201FF71D37D74BA533D14506FFF0885"
+    },
+    {
+      "path": "docs/evidence/2026-10-28-EX-36/runs/after-module-20261028-230322-842/nonpass-cause-comparison.json",
+      "sha256": "BF72E0EED6E0D8875FDF19E15384AFC8FC3070EFC825A8AE4927492809CABD2B"
+    }
+  ],
+  "skill": {
+    "records": 674,
+    "reportedClasses": 70,
+    "originalNonpass": 116,
+    "oldSkip": 4,
+    "postEx04ExpectedRecords": "PENDING_AUTHOR_FROZEN_NEW_IDENTITIES_NOT_674",
+    "comparisonMustRetainOriginalIdentityAndReason": true
+  },
+  "engine": {
+    "records": 907,
+    "namedRecords": 905,
+    "reportedXml": 93,
+    "originalNonpass": 115,
+    "classLevelEvents": [
+      {
+        "module": "engine-runtime",
+        "database": "AP",
+        "attempt": "after-module-20261028-230322-842",
+        "classname": "cn.agentplatform.engine.infra.ModelInputMaterialHttpTest",
+        "method": "",
+        "status": "failure",
+        "display_name": "",
+        "suite_path": "cn.agentplatform.engine.infra.ModelInputMaterialHttpTest",
+        "case_index": "1",
+        "seconds": "0.578",
+        "xml": "xml/TEST-cn.agentplatform.engine.infra.ModelInputMaterialHttpTest.xml"
+      },
+      {
+        "module": "engine-runtime",
+        "database": "AP",
+        "attempt": "after-module-20261028-230322-842",
+        "classname": "cn.agentplatform.engine.infra.RunEventReaderTimeoutBudgetPostgresTest",
+        "method": "",
+        "status": "error",
+        "display_name": "",
+        "suite_path": "cn.agentplatform.engine.infra.RunEventReaderTimeoutBudgetPostgresTest",
+        "case_index": "1",
+        "seconds": "0.464",
+        "xml": "xml/TEST-cn.agentplatform.engine.infra.RunEventReaderTimeoutBudgetPostgresTest.xml"
+      }
+    ],
+    "unexecutedSourceTests": [
+      {
+        "classname": "cn.agentplatform.engine.infra.ModelInputMaterialHttpTest",
+        "method": "actualSignedHttpsReadsReusableMetadataAndHeadersWithoutPayload",
+        "baseline": "SOURCE_TEST_WITHOUT_NAMED_EXECUTION_RECORD"
+      },
+      {
+        "classname": "cn.agentplatform.engine.infra.ModelInputMaterialHttpTest",
+        "method": "unsignedPortalWrongCallerAndWrongSelectorsCannotRead",
+        "baseline": "SOURCE_TEST_WITHOUT_NAMED_EXECUTION_RECORD"
+      },
+      {
+        "classname": "cn.agentplatform.engine.infra.ModelInputMaterialHttpTest",
+        "method": "signatureIssuerAudienceTargetActionAndOwnerMutationsAreDenied",
+        "baseline": "SOURCE_TEST_WITHOUT_NAMED_EXECUTION_RECORD"
+      },
+      {
+        "classname": "cn.agentplatform.engine.infra.ModelInputMaterialHttpTest",
+        "method": "boundedStoredMetadataDeniesBeforeFullRootScopeMaterialization",
+        "baseline": "SOURCE_TEST_WITHOUT_NAMED_EXECUTION_RECORD"
+      },
+      {
+        "classname": "cn.agentplatform.engine.infra.ModelInputMaterialHttpTest",
+        "method": "continuationIntegrationAndPortalSourceCannotBecomeExportPurpose",
+        "baseline": "SOURCE_TEST_WITHOUT_NAMED_EXECUTION_RECORD"
+      },
+      {
+        "classname": "cn.agentplatform.engine.infra.ModelInputMaterialHttpTest",
+        "method": "testTransportRefusesRedirectAndDoesNotForwardAnyTicket",
+        "baseline": "SOURCE_TEST_WITHOUT_NAMED_EXECUTION_RECORD"
+      },
+      {
+        "classname": "cn.agentplatform.engine.infra.ModelInputMaterialHttpTest",
+        "method": "currentNarrowingWrongRootMissingParentAndStoredScopeMismatchDenyAtTheirOwnBoundary",
+        "baseline": "SOURCE_TEST_WITHOUT_NAMED_EXECUTION_RECORD"
+      },
+      {
+        "classname": "cn.agentplatform.engine.infra.ModelInputMaterialHttpTest",
+        "method": "authorityOutageRemains503AndNoSuccessfulManifest",
+        "baseline": "SOURCE_TEST_WITHOUT_NAMED_EXECUTION_RECORD"
+      },
+      {
+        "classname": "cn.agentplatform.engine.infra.ModelInputMaterialHttpTest",
+        "method": "hostnameAndUntrustedCertificateFailNormalTls",
+        "baseline": "SOURCE_TEST_WITHOUT_NAMED_EXECUTION_RECORD"
+      },
+      {
+        "classname": "cn.agentplatform.engine.infra.ModelInputMaterialHttpTest",
+        "method": "legacyConstructionNeedsNoIamBeanAndDeniesBeforeProtectedReads",
+        "baseline": "SOURCE_TEST_WITHOUT_NAMED_EXECUTION_RECORD"
+      },
+      {
+        "classname": "cn.agentplatform.engine.infra.ModelInputMaterialHttpTest",
+        "method": "unchangedDefaultIamDeploymentGuardStillRejectsBeforeListener",
+        "baseline": "SOURCE_TEST_WITHOUT_NAMED_EXECUTION_RECORD"
+      },
+      {
+        "classname": "cn.agentplatform.engine.infra.RunEventReaderTimeoutBudgetPostgresTest",
+        "method": "liveBudgetSurvivesRealTimeoutSettingRoundTrip",
+        "baseline": "SOURCE_TEST_WITHOUT_NAMED_EXECUTION_RECORD"
+      },
+      {
+        "classname": "cn.agentplatform.engine.infra.RunEventReaderTimeoutBudgetPostgresTest",
+        "method": "consumedBudgetDeniesBeforeBusinessSelect",
+        "baseline": "SOURCE_TEST_WITHOUT_NAMED_EXECUTION_RECORD"
+      },
+      {
+        "classname": "cn.agentplatform.engine.infra.RunEventReaderTimeoutBudgetPostgresTest",
+        "method": "timeoutSettingFailureDeniesBeforeBusinessSelect",
+        "baseline": "SOURCE_TEST_WITHOUT_NAMED_EXECUTION_RECORD"
+      }
+    ],
+    "reportsCollected": true,
+    "allSourceMethodsExecuted": false,
+    "collectionComplete": false,
+    "postEx04ExpectedRecords": "PENDING_AUTHOR_FROZEN_NEW_IDENTITIES_NOT_907",
+    "classEventCannotStandForNamedTests": true
+  },
+  "envRead": false,
+  "javaMavenPgHttpStarted": false,
+  "sourceOrIndexModified": false
+}

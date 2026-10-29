@@ -11,6 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * PLAT-14 T14.2：工具（技能/MCP）输出注入模型上下文前的引擎级大响应策略。
@@ -30,11 +31,11 @@ import java.util.Objects;
  *
  * <p>分页声明载体：引擎工具来自应用冻结快照 config.tools[]，其 contract 键即技能契约
  * （RunService.prepareSnapshot 原样透传），故按方案 §4.14 形状消费
- * contract.pagination（request.page/size + response.itemsPath/totalPath + maxPageSize）。
- * 本体侧 O-02 的 exposure 分页声明落在 ontorepo 工具投影，不经此结构到引擎；两侧语义
- * 一致（声明了分页参数/上限就遵循），载体位置以各自代码现状为准。声明形状非法一律
- * 视为未声明（防御读取，注册侧校验不在本卡范围）。当前无技能声明分页时全部走引擎级
- * 默认阈值。
+ * contract.pagination。旧 PAGE 形状保留 request.page/size、可选 response 路径与上限；
+ * EX-04 导入的 OFFSET 保留原 offset/size 参数名、maxPageSize/maxRows，不换算页码。
+ * 两种模式均只提示声明，不自动改写请求、续拉或累计执行 maxRows；未声明响应路径时
+ * 不推测观测值。非法存量声明视为未声明，正常阈值内仍原样返回。
+ * 无分页声明时全部走引擎级默认阈值。
  *
  * <p>调参：application.yml `agent.tool.output-max-bytes`（环境变量
  * AGENT_TOOL_OUTPUT_MAX_BYTES），默认 262144（256KiB），低于 P2-11 的 550KB 场景。
@@ -105,24 +106,66 @@ public final class ToolOutputPolicy {
         return error;
     }
 
-    /** 分页声明读取：非对象或缺 request.page/size 文本一律视为未声明。 */
+    /** 只读已归一化声明；非法存量形状不抛错，也不降为另一分页模式。 */
     static JsonNode declaredPagination(JsonNode tool) {
         var declaration = tool.path("contract").path("pagination");
         if (!declaration.isObject()) return null;
-        var request = declaration.path("request");
-        if (request.path("page").asText("").isBlank() || request.path("size").asText("").isBlank())
-            return null;
+        var mode = declaration.get("mode");
+        boolean offset = mode != null && mode.isTextual() && "OFFSET".equals(mode.textValue());
+        boolean page = mode == null || (mode.isTextual() && "PAGE".equals(mode.textValue()));
+        if (!offset && !page) return null;
+        if (offset) {
+            if (!onlyFields(declaration, Set.of("mode", "request", "maxPageSize", "maxRows"))
+                    || !validRequest(declaration.path("request"), "offset")
+                    || !positiveInt(declaration.path("maxPageSize"))
+                    || !positiveInt(declaration.path("maxRows"))) return null;
+        } else {
+            if (!onlyFields(declaration, Set.of("mode", "request", "response", "maxPageSize"))
+                    || !validRequest(declaration.path("request"), "page")) return null;
+            if (declaration.has("maxPageSize")
+                    && !positiveInt(declaration.path("maxPageSize"))) return null;
+            if (declaration.has("response")) {
+                var response = declaration.path("response");
+                if (!onlyFields(response, Set.of("itemsPath", "totalPath"))) return null;
+                for (String path : Set.of("itemsPath", "totalPath"))
+                    if (response.has(path) && !nonBlankText(response.path(path))) return null;
+            }
+        }
         return declaration;
+    }
+
+    private static boolean validRequest(JsonNode request, String firstParameter) {
+        return onlyFields(request, Set.of(firstParameter, "size"))
+                && nonBlankText(request.path(firstParameter))
+                && nonBlankText(request.path("size"));
+    }
+
+    private static boolean onlyFields(JsonNode object, Set<String> allowed) {
+        if (!object.isObject()) return false;
+        var names = object.fieldNames();
+        while (names.hasNext()) if (!allowed.contains(names.next())) return false;
+        return true;
+    }
+
+    private static boolean nonBlankText(JsonNode value) {
+        return value.isTextual() && !value.textValue().isBlank();
+    }
+
+    private static boolean positiveInt(JsonNode value) {
+        return value.isIntegralNumber() && value.canConvertToInt() && value.intValue() > 0;
     }
 
     /** 分页提示：声明原样透传 + 按声明响应路径提取的观测值 + 续拉指引。不切片原响应。 */
     private JsonNode paginationHint(JsonNode declaration, JsonNode result) {
         var hint = Json.object();
+        boolean offset = "OFFSET".equals(declaration.path("mode").asText(""));
+        if (offset) hint.put("mode", "OFFSET");
         hint.set("request", declaration.path("request").deepCopy());
         if (declaration.path("response").isObject())
             hint.set("response", declaration.path("response").deepCopy());
         if (declaration.path("maxPageSize").isIntegralNumber())
             hint.set("maxPageSize", declaration.path("maxPageSize"));
+        if (offset) hint.set("maxRows", declaration.path("maxRows"));
         var observed = Json.object();
         JsonNode total =
                 resolve(result, declaration.path("response").path("totalPath").asText(""));
@@ -134,7 +177,7 @@ public final class ToolOutputPolicy {
         hint.put(
                 "hint",
                 "本次输出超过引擎上限、未注入模型；请按 request 声明的分页参数（"
-                        + declaration.path("request").path("page").asText()
+                        + declaration.path("request").path(offset ? "offset" : "page").asText()
                         + "/"
                         + declaration.path("request").path("size").asText()
                         + "）分批调用本工具并汇总结果");

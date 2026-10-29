@@ -1,0 +1,103 @@
+{
+  "phase": "TEST_ONLY_RED_CANDIDATE_NOT_EXECUTED",
+  "expectedReports": 33,
+  "expectedPass": 18,
+  "expectedFailures": 15,
+  "expectedErrors": 0,
+  "expectedSkip": 0,
+  "moduleSources": 150,
+  "newReports": 15,
+  "originalImporterReports": 18,
+  "testSources": [
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/OntologyManifestImportsTest.java",
+      "sha256": "4b2573fa159e250b00e6dd19aaf990299abb6c204f1e880285108b9b9f533bc4"
+    },
+    {
+      "path": "skill-registry/src/test/java/cn/agentplatform/skill/application/OntologyProjectionImportTest.java",
+      "sha256": "ef0d3b60c0846d79744b5b18c9b57538d2c0c348aac6599e15cdcb3e2bf99b52"
+    }
+  ],
+  "redVectors": [
+    {
+      "method": "正式manifest完整映射为技能契约",
+      "class": "cn.agentplatform.skill.application.OntologyManifestImportsTest",
+      "exception_type": "org.opentest4j.AssertionFailedError"
+    },
+    {
+      "method": "formalProjectionAndExplicitRiskSurviveImport",
+      "class": "cn.agentplatform.skill.application.OntologyProjectionImportTest",
+      "exception_type": "org.opentest4j.AssertionFailedError"
+    },
+    {
+      "method": "catalogRetainsOffsetAndLegacyPageWithoutAddingMode",
+      "class": "cn.agentplatform.skill.application.OntologyProjectionImportTest",
+      "exception_type": "org.opentest4j.AssertionFailedError"
+    },
+    {
+      "method": "changingOnlyPaginationChangesSemanticDigest",
+      "class": "cn.agentplatform.skill.application.OntologyProjectionImportTest",
+      "exception_type": "org.opentest4j.AssertionFailedError"
+    },
+    {
+      "method": "explicitRiskCanRiseWhileLegacyManualFloorRemainsCompatible",
+      "class": "cn.agentplatform.skill.application.OntologyProjectionImportTest",
+      "exception_type": "org.opentest4j.AssertionFailedError"
+    },
+    {
+      "method": "mutationPreservesBothSideEffectValuesWithoutInventingApproval",
+      "class": "cn.agentplatform.skill.application.OntologyProjectionImportTest",
+      "exception_type": "org.opentest4j.AssertionFailedError"
+    },
+    {
+      "method": "registeredNonHttpRequiresRealBindingWithoutInventingHttp",
+      "class": "cn.agentplatform.skill.application.OntologyProjectionImportTest",
+      "exception_type": "org.opentest4j.AssertionFailedError"
+    },
+    {
+      "method": "contradictionsAndUnknownTransportCombinationsPointToTheirField",
+      "class": "cn.agentplatform.skill.application.OntologyProjectionImportTest",
+      "exception_type": "org.opentest4j.AssertionFailedError"
+    },
+    {
+      "method": "sourcePaginationIsStrictAndNeverSilentlyDropped",
+      "class": "cn.agentplatform.skill.application.OntologyProjectionImportTest",
+      "exception_type": "org.opentest4j.AssertionFailedError"
+    },
+    {
+      "method": "canonicalPaginationRejectsNullUnknownFieldsAndMixedModes",
+      "class": "cn.agentplatform.skill.application.OntologyProjectionImportTest",
+      "exception_type": "org.opentest4j.AssertionFailedError"
+    },
+    {
+      "method": "invalidLaterPaginationKindRiskAndTransportRejectBeforeFirstCreate",
+      "class": "cn.agentplatform.skill.application.OntologyProjectionImportTest",
+      "exception_type": "org.opentest4j.AssertionFailedError"
+    },
+    {
+      "method": "projectionConflictsAndUnknownRiskCannotChangeExecutionFlags",
+      "class": "cn.agentplatform.skill.application.OntologyProjectionImportTest",
+      "exception_type": "org.opentest4j.AssertionFailedError"
+    },
+    {
+      "method": "postgresInvalidLaterItemsLeaveAllDraftCountsUnchanged",
+      "class": "cn.agentplatform.skill.application.OntologyProjectionImportTest",
+      "exception_type": "org.opentest4j.AssertionFailedError"
+    },
+    {
+      "method": "postgresHighRiskAndMutationDraftsKeepApprovalAndOmittedFields",
+      "class": "cn.agentplatform.skill.application.OntologyProjectionImportTest",
+      "exception_type": "org.opentest4j.AssertionFailedError"
+    },
+    {
+      "method": "postgresReadEditPublishKeepsOffsetAndExactApiKeyHeaders",
+      "class": "cn.agentplatform.skill.application.OntologyProjectionImportTest",
+      "exception_type": "org.opentest4j.AssertionFailedError"
+    }
+  ],
+  "productionChanged": false,
+  "javaFormatterOnly": "Existing GoogleJavaFormat1.25.2 --aosp exit0; not compile/test evidence",
+  "pgIsolation": "Each new case UUID tenant; existing marked EX03 database only; no create/reset/old queue cleanup",
+  "staticReviewPending": true,
+  "indexModified": false
+}

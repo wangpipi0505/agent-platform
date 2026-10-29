@@ -1,0 +1,56 @@
+{
+    "phase":  "GREEN_SKILL_STATIC_PREPARATION_ONLY",
+    "powershell":  "5.1.26100.9711",
+    "parse":  [
+                  {
+                      "path":  "run-green-skill.ps1",
+                      "errors":  0,
+                      "sha256":  "EC89F96DEB2A0F6A07A7697B9107DEF68CC29DF39C9A0B1B0F78123530682AAD"
+                  },
+                  {
+                      "path":  "extract-projection-evidence.ps1",
+                      "errors":  0,
+                      "sha256":  "D02DF01B5A72518445A482FAF44AC5F883590C8BEE9810803032019CAEC7555B"
+                  },
+                  {
+                      "path":  "check-green-static.ps1",
+                      "errors":  0,
+                      "sha256":  "1DA307B1E25B2F0E6EFC450D5DBAEDA03AC096B9B23EF4C14932E7FA10B82D5C"
+                  }
+              ],
+    "checks":  {
+                   "ps51":  true,
+                   "parseZero":  true,
+                   "templateDisabled":  true,
+                   "exactTwoClassSelector":  true,
+                   "noIgnoreSkipAmOrderForkOrDiag":  true,
+                   "originalRuntimeArgs":  true,
+                   "freezeBeforeEnv":  true,
+                   "noOldProductOrRedPins":  true,
+                   "allSourceRosterHashBeforeAndAfter":  true,
+                   "dynamicIdentitySetNotNumericShortcut":  true,
+                   "allReportsPassNative0":  true,
+                   "noClassOrSkip":  true,
+                   "ownedExistingOntologyPg":  true,
+                   "readOnlyTimeoutNoDdl":  true,
+                   "nativePersistedBeforeXml":  true,
+                   "xmlUtf8FreshLoad":  true,
+                   "safeFixedErrorAndLine":  true,
+                   "finallyRestoresEnvironment":  true,
+                   "extractionOnlyAfterTestGreen":  true,
+                   "extractorBytePinCheckedTwice":  true,
+                   "projectionOnlyActualXml":  true,
+                   "twoKeysAndStrictNestedShape":  true,
+                   "batchFourSafeFieldsAndPostcondition":  true,
+                   "noJsonBeforeAllValidation":  true,
+                   "actualRawBytesAndProvenance":  true,
+                   "helperNoServiceOrSyntheticPayload":  true
+               },
+    "allPassed":  true,
+    "expectedAuthorReports":  33,
+    "envRead":  false,
+    "javaMavenPgHttpStarted":  false,
+    "actualInvocationPerformed":  false,
+    "projectionJsonConstructed":  false,
+    "rootInputsModified":  false
+}

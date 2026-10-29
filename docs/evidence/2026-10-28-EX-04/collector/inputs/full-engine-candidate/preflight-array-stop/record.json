@@ -1,0 +1,16 @@
+{
+  "originalToolChunk": "368e21",
+  "productMavenStarted": false,
+  "phase": "FIXED_DATABASE_OWNERSHIP",
+  "originalLine": 37,
+  "rootCause": "PS5 pipeline ConvertFrom-Json returned a nested array from helper; history row predicate saw array rather than rows",
+  "fileOnlyReproduction": {
+    "oldCount": 1,
+    "oldFirstType": "System.Object[]",
+    "fixedCount": 2,
+    "fixedFirstType": "System.Management.Automation.PSCustomObject"
+  },
+  "repair": "Wrap helper ConvertFrom-Json expression in parentheses, matching previously verified skill helper; no SQL/ownership/history predicates changed",
+  "beforeSha256": "5a626b0935fb1cc6875089298f810aac4194d1bc99ca820c0a768f38ecdcfde3",
+  "afterSha256": "ab98d0fa55cbedbce3b0881800613f8ce39667a3779ba333c080aa82b422718b"
+}

@@ -2,33 +2,30 @@ package cn.agentplatform.skill.application;
 
 import cn.agentplatform.common.*;
 import cn.agentplatform.common.auth.AuthScheme;
+import cn.agentplatform.skill.domain.SkillRules;
 
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 
 /**
- * OR-S01 本体manifest导入桥：把 ontorepo 发布管道产出的正式技能manifest
- * （ContractGenerator.formalize 形状，见 ontorepo contracts/p2-supply.md、p4-release.md）
- * 转换为平台技能草稿契约并整批创建。与 OpenAPI 导入同为"导入仅生成可编辑DRAFT"语义，
- * 发布仍走四道门。
+ * OR-S01 本体manifest导入桥：把 ontorepo 发布管道产出的正式技能manifest （ContractGenerator.formalize 形状，见 ontorepo
+ * contracts/p2-supply.md、p4-release.md） 转换为平台技能草稿契约并整批创建。与 OpenAPI 导入同为"导入仅生成可编辑DRAFT"语义， 发布仍走四道门。
  *
- * <p>设计不变量（默认拒绝）：</p>
+ * <p>设计不变量（默认拒绝）：
+ *
  * <ul>
  *   <li>只接受正式manifest：ontology_meta.preview 不得为 true——preview 的 endpoint 指向
- *       候选内部执行入口，导入会造成不可发布的草稿或指向非发布路由的调用；</li>
+ *       候选内部执行入口，导入会造成不可发布的草稿或指向非发布路由的调用；
  *   <li>endpoint 必须是发布消费路由形态 /onto/r/{spaceCode}/releases/{releaseId}/ops/{toolCode}，
- *       防止manifest把技能指向任意URL；</li>
- *   <li>adapter_type/invocation_kind/http_method/category 逐一硬校验，与当前适配器能力严格对齐；</li>
- *   <li>guard_attrs 只声明属性名，运行时由 Actor 已验授权的非空集合供给
- *       （路线三：OR-S02 绑定的 dept_scope 等属性），roles 留空不做角色限制；</li>
- *   <li>riskLevel 不从manifest映射：平台按 readonly 旗标确定性推导（READ_ONLY/CONFIRM_REQUIRED），
- *       不让manifest主张绕过；</li>
- *   <li>ontology_meta 进 importSource（编辑不可变），保证草稿可追溯到本体release版本与内容摘要。</li>
+ *       防止manifest把技能指向任意URL；
+ *   <li>adapter_type/invocation_kind/http_method/category 逐一硬校验，与当前适配器能力严格对齐；
+ *   <li>guard_attrs 只声明属性名，运行时由 Actor 已验授权的非空集合供给 （路线三：OR-S02 绑定的 dept_scope 等属性），roles 留空不做角色限制；
+ *   <li>risk_level保留显式上调，不能低于执行旗标要求；exposure/pagination只保存已验证声明， 不把投影标签当作执行权或自动分页；
+ *   <li>ontology_meta 进 importSource（编辑不可变），保证草稿可追溯到本体release版本与内容摘要。
  * </ul>
  *
- * <p>整批语义与 OpenAPI 导入一致：先全部构建并校验，再逐个创建；单个创建失败
- * （如技能编码已存在）时此前已创建的草稿保留，调用方按返回错误定位后重试余项。</p>
+ * <p>整批语义与 OpenAPI 导入一致：先全部构建并校验，再逐个创建；单个创建失败 （如技能编码已存在）时此前已创建的草稿保留，调用方按返回错误定位后重试余项。
  */
 @Service
 public class OntologyManifestImports {
@@ -45,7 +42,8 @@ public class OntologyManifestImports {
         if (!(body.get("manifests") instanceof List<?> raw) || raw.isEmpty())
             throw new PlatformException(400, "INVALID_MANIFEST", "manifests必须为非空数组");
         if (raw.size() > MAX_MANIFESTS)
-            throw new PlatformException(400, "INVALID_MANIFEST", "单次导入至多" + MAX_MANIFESTS + "条manifest");
+            throw new PlatformException(
+                    400, "INVALID_MANIFEST", "单次导入至多" + MAX_MANIFESTS + "条manifest");
         String authRef = Objects.toString(body.get("authRef"), "");
         AuthScheme scheme =
                 AuthScheme.parse(body.getOrDefault(AuthScheme.FIELD, AuthScheme.API_KEY.name()));
@@ -75,6 +73,8 @@ public class OntologyManifestImports {
                         400, "INVALID_MANIFEST", "manifest中技能编码重复：" + contract.get("code"));
             contracts.add(contract);
         }
+        // normalize无写入；整批预检后create仍独立重验，不能为避重复而增加可绕过规则的写入入口。
+        for (Map<String, Object> contract : contracts) catalog.normalize(contract);
         var drafts = new ArrayList<Map<String, Object>>();
         for (Map<String, Object> contract : contracts) drafts.add(catalog.create(contract));
         return Map.of(
@@ -86,21 +86,25 @@ public class OntologyManifestImports {
                         "guard_attrs仅声明属性名；调用主体须持有OR-S02绑定属性（如dept_scope）的非空授权集"));
     }
 
-    /** manifest→技能草稿契约。结构性错误抛400 INVALID_MANIFEST；语义校验交给catalog.create统一收口。 */
+    /** manifest→技能草稿契约。转换和纯语义预检均在首个create之前完成。 */
     Map<String, Object> toSkillBody(Map<String, Object> manifest, String authRef) {
         require("category", manifest, "ontology_service");
-        require("adapter_type", manifest, "HTTP");
+        catalog.validateOntologyTransport(manifest);
+        String type = text(manifest, "adapter_type");
+        if (!"HTTP".equals(type)) throw invalid("binding_ref缺失或未登记；当前没有可解析的非HTTP名义绑定目录");
         require("invocation_kind", manifest, "SYNC");
         require("http_method", manifest, "POST");
         var meta = object(manifest.get("ontology_meta"));
-        if (Boolean.parseBoolean(Objects.toString(meta.get("preview"), "false")) || isBlank(meta.get("releaseId")))
+        if (Boolean.parseBoolean(Objects.toString(meta.get("preview"), "false"))
+                || isBlank(meta.get("releaseId")))
             throw invalid("只接受正式manifest（ontology_meta.preview必须为false且releaseId非空）");
         String toolCode = text(manifest, "tool_code");
         if (!toolCode.matches("[A-Za-z][A-Za-z0-9_-]{0,63}"))
             throw invalid("tool_code不能直接作为技能编码（须为ASCII字母开头）：" + toolCode);
         String endpoint = text(manifest, "endpoint");
         if (!endpoint.matches("^https?://.+/onto/r/[^/]+/releases/[^/]+/ops/[^/]+$"))
-            throw invalid("endpoint必须是发布消费路由 /onto/r/{spaceCode}/releases/{releaseId}/ops/{toolCode}");
+            throw invalid(
+                    "endpoint必须是发布消费路由 /onto/r/{spaceCode}/releases/{releaseId}/ops/{toolCode}");
         var exec = object(manifest.get("exec_attrs"));
         var execution = new LinkedHashMap<String, Object>();
         for (var pair : Map.<String, String>of(
@@ -129,7 +133,8 @@ public class OntologyManifestImports {
         body.put("name", bounded(manifest, "name", 128));
         body.put("description", bounded(manifest, "description", 2000));
         body.put("category", "ontology_service");
-        body.put("type", "HTTP");
+        body.put("type", type);
+        body.put("invocationKind", "SYNC");
         body.put("endpoint", endpoint);
         body.put("httpMethod", "POST");
         body.put("timeoutMs", timeout);
@@ -148,6 +153,45 @@ public class OntologyManifestImports {
         // 本体协议的鉴权声明必须显式进入冻结契约，不能依赖手工HTTP技能的存量Bearer默认。
         body.put(AuthScheme.FIELD, AuthScheme.API_KEY.name());
         body.put("authRef", authRef);
+        if (manifest.containsKey("risk_level")) body.put("riskLevel", manifest.get("risk_level"));
+        if (manifest.containsKey("exposure")) {
+            if (!(manifest.get("exposure") instanceof Map<?, ?> exposure)
+                    || !Set.of("kind", "pagination").containsAll(exposure.keySet()))
+                throw invalid("exposure必须为仅含kind与可选pagination的对象");
+            var declaration = new LinkedHashMap<String, Object>();
+            declaration.put("kind", exposure.get("kind"));
+            body.put("exposure", declaration);
+            if (exposure.containsKey("pagination")) {
+                if (!(exposure.get("pagination") instanceof Map<?, ?> page)
+                        || !page.keySet()
+                                .equals(Set.of("offsetParam", "limitParam", "maxLimit", "maxRows")))
+                    throw invalid(
+                            "exposure.pagination必须完整声明offsetParam/limitParam/maxLimit/maxRows");
+                var request = new LinkedHashMap<String, Object>();
+                request.put("offset", page.get("offsetParam"));
+                request.put("size", page.get("limitParam"));
+                var pagination = new LinkedHashMap<String, Object>();
+                pagination.put("mode", "OFFSET");
+                pagination.put("request", request);
+                pagination.put("maxPageSize", page.get("maxLimit"));
+                pagination.put("maxRows", page.get("maxRows"));
+                body.put("pagination", pagination);
+            }
+        }
+        try {
+            body.putAll(SkillRules.projection(body));
+        } catch (PlatformException invalidProjection) {
+            throw invalid(
+                    invalidProjection
+                            .getMessage()
+                            .replace("pagination.request.offset", "exposure.pagination.offsetParam")
+                            .replace("pagination.request.size", "exposure.pagination.limitParam")
+                            .replace("pagination.maxPageSize", "exposure.pagination.maxLimit")
+                            .replace("pagination.maxRows", "exposure.pagination.maxRows")
+                            .replace("riskLevel", "risk_level")
+                            .replace("execution.readonly", "exec_attrs.readonly_flag")
+                            .replace("execution.sideEffect", "exec_attrs.side_effect"));
+        }
         return body;
     }
 

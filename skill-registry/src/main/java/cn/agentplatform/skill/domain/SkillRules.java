@@ -33,6 +33,125 @@ public final class SkillRules {
 
     private SkillRules() {}
 
+    /** 导入预检与目录保存共用的纯规则；分页只声明参数及上限，不承诺续拉或累计行数限制。 未声明的新键保持缺省，来源风险与投影冲突的拒绝不扩到旧手工技能。 */
+    public static Map<String, Object> projection(Map<String, Object> body) {
+        var result = new LinkedHashMap<String, Object>();
+        boolean ontology =
+                body.get("importSource") instanceof Map<?, ?> source
+                        && "ONTOLOGY".equals(source.get("kind"));
+        boolean exposed = body.containsKey("exposure");
+        if (ontology || exposed) {
+            var execution = body.get("execution") instanceof Map<?, ?> map ? map : Map.of();
+            if (!(execution.get("readonly") instanceof Boolean readonly)
+                    || !(execution.get("sideEffect") instanceof Boolean sideEffect))
+                throw projectionError("execution.readonly/sideEffect必须为显式布尔");
+            if (exposed) {
+                var exposure =
+                        projectionMap(
+                                body.get("exposure"), "exposure", Set.of("kind"), Set.of("kind"));
+                String kind = projectionText(exposure, "kind", "exposure.kind");
+                if (!Set.of("QUERY", "MUTATION").contains(kind))
+                    throw projectionError("exposure.kind只能是QUERY或MUTATION");
+                if ("QUERY".equals(kind) && (!readonly || sideEffect)
+                        || "MUTATION".equals(kind) && readonly)
+                    throw projectionError("exposure.kind与execution.readonly/sideEffect冲突");
+                result.put("exposure", Map.of("kind", kind));
+            }
+            if (readonly && sideEffect)
+                throw projectionError("execution.readonly与execution.sideEffect互斥");
+            if (body.containsKey("riskLevel")) {
+                Object risk = body.get("riskLevel");
+                if (!(risk instanceof String level)
+                        || !Set.of("READ_ONLY", "CONFIRM_REQUIRED").contains(level))
+                    throw projectionError("riskLevel只能是READ_ONLY或CONFIRM_REQUIRED");
+                if ((!readonly || sideEffect) && "READ_ONLY".equals(level))
+                    throw projectionError("riskLevel不能降低execution要求的确认风险");
+                result.put("riskLevel", level);
+            }
+        }
+        if (body.containsKey("pagination")) {
+            if (!(body.get("pagination") instanceof Map<?, ?> raw))
+                throw projectionError("pagination必须为非空对象");
+            String mode =
+                    raw.containsKey("mode")
+                            ? projectionText(raw, "mode", "pagination.mode")
+                            : "PAGE";
+            if (!Set.of("PAGE", "OFFSET").contains(mode))
+                throw projectionError("pagination.mode只能是PAGE或OFFSET");
+            boolean offset = "OFFSET".equals(mode);
+            var page =
+                    projectionMap(
+                            raw,
+                            "pagination",
+                            offset
+                                    ? Set.of("mode", "request", "maxPageSize", "maxRows")
+                                    : Set.of("mode", "request", "response", "maxPageSize"),
+                            offset
+                                    ? Set.of("mode", "request", "maxPageSize", "maxRows")
+                                    : Set.of("request"));
+            String coordinate = offset ? "offset" : "page";
+            var request =
+                    projectionMap(
+                            page.get("request"),
+                            "pagination.request",
+                            Set.of(coordinate, "size"),
+                            Set.of(coordinate, "size"));
+            var normalized = new LinkedHashMap<String, Object>();
+            if (page.containsKey("mode")) normalized.put("mode", mode);
+            normalized.put(
+                    "request",
+                    Map.of(
+                            coordinate,
+                            projectionText(request, coordinate, "pagination.request." + coordinate),
+                            "size",
+                            projectionText(request, "size", "pagination.request.size")));
+            if (page.containsKey("response")) {
+                var response =
+                        projectionMap(
+                                page.get("response"),
+                                "pagination.response",
+                                Set.of("itemsPath", "totalPath"),
+                                Set.of());
+                var paths = new LinkedHashMap<String, Object>();
+                for (String key : List.of("itemsPath", "totalPath"))
+                    if (response.containsKey(key))
+                        paths.put(key, projectionText(response, key, "pagination.response." + key));
+                normalized.put("response", paths);
+            }
+            for (String key : List.of("maxPageSize", "maxRows"))
+                if (page.containsKey(key))
+                    normalized.put(key, projectionLimit(page.get(key), "pagination." + key));
+            result.put("pagination", normalized);
+        }
+        return result;
+    }
+
+    private static Map<?, ?> projectionMap(
+            Object raw, String path, Set<String> allowed, Set<String> required) {
+        if (!(raw instanceof Map<?, ?> map)
+                || !allowed.containsAll(map.keySet())
+                || !map.keySet().containsAll(required))
+            throw projectionError(path + "对象字段缺失或包含未知字段");
+        return map;
+    }
+
+    private static String projectionText(Map<?, ?> map, String key, String path) {
+        if (!(map.get(key) instanceof String text) || text.isBlank())
+            throw projectionError(path + "必须为非空字符串");
+        return text;
+    }
+
+    private static int projectionLimit(Object raw, String path) {
+        var value = Json.tree(raw);
+        if (!value.isIntegralNumber() || !value.canConvertToInt() || value.intValue() <= 0)
+            throw projectionError(path + "必须为正32位整数");
+        return value.intValue();
+    }
+
+    private static PlatformException projectionError(String message) {
+        return new PlatformException(400, "INVALID_SKILL", message);
+    }
+
     /**
      * 注册期 Schema 唯一入口（PLAT-08b）：先按 {@link SchemaDialect} 把可空写法归一为规范形并一次性
      * 判定方言，再交给 networknt 编译与资源预算。
@@ -294,7 +413,10 @@ public final class SkillRules {
                             + adapterType);
         if (!(declared instanceof Map<?, ?> declaration) || declaration.isEmpty())
             throw new PlatformException(
-                    400, CODE_IDENTITY_INVALID, "identity必须为对象，形如 {\"mode\":\"PLATFORM_SUBJECT\",\"headers\":{\"X-User-Id\":\"principalId\"}}");
+                    400,
+                    CODE_IDENTITY_INVALID,
+                    "identity必须为对象，形如"
+                        + " {\"mode\":\"PLATFORM_SUBJECT\",\"headers\":{\"X-User-Id\":\"principalId\"}}");
         Object mode = declaration.get("mode");
         if (!IDENTITY_MODE.equals(Objects.toString(mode, "")))
             throw new PlatformException(
@@ -371,7 +493,10 @@ public final class SkillRules {
             case "roles" ->
                     subject.roles().isEmpty()
                             ? null
-                            : subject.roles().stream().sorted().reduce((a, b) -> a + "," + b).orElseThrow();
+                            : subject.roles().stream()
+                                    .sorted()
+                                    .reduce((a, b) -> a + "," + b)
+                                    .orElseThrow();
             case "attributes" ->
                     subject.attributes().isEmpty() ? null : attributesJson(subject.attributes());
             default -> null;

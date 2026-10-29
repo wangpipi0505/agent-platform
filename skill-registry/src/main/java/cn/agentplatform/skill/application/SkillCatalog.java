@@ -354,6 +354,18 @@ public class SkillCatalog {
                             && !effective.containsKey(SkillRules.IDENTITY_FIELD))
                         effective.put(
                                 SkillRules.IDENTITY_FIELD, previous.get(SkillRules.IDENTITY_FIELD));
+                    // 省略不等于删除新声明；显式null仍留给纯规则拒绝，不用putIfAbsent吞掉坏输入。
+                    for (String field : List.of("exposure", "pagination"))
+                        if (previous.containsKey(field) && !effective.containsKey(field))
+                            effective.put(field, previous.get(field));
+                    boolean projected =
+                            previous.containsKey("exposure")
+                                    || (previous.get("importSource") instanceof Map<?, ?> source
+                                            && "ONTOLOGY".equals(source.get("kind")));
+                    if (projected
+                            && !effective.containsKey("riskLevel")
+                            && "CONFIRM_REQUIRED".equals(previous.get("riskLevel")))
+                        effective.put("riskLevel", previous.get("riskLevel"));
                     var contract = normalize(effective);
                     String sha = Digest.sha256(Json.canonical(contract));
                     String semanticDigest = SkillDigest.of(contract);
@@ -389,6 +401,20 @@ public class SkillCatalog {
                             code);
                     return version(code, version);
                 });
+    }
+
+    /** 本体导入使用实际注册表预检组合；注册单元不是binding_ref名义绑定目录。 */
+    void validateOntologyTransport(Map<String, Object> manifest) {
+        String type = Objects.toString(manifest.get("adapter_type"), "");
+        if (!adapterRegistry.isSupportedType(type))
+            throw error(400, "INVALID_MANIFEST", "adapter_type未登记");
+        if (!"HTTP".equals(type))
+            for (String field : List.of("endpoint", "http_method"))
+                if (manifest.containsKey(field))
+                    throw error(400, "INVALID_MANIFEST", field + "与非HTTP adapter_type冲突");
+        String kind = Objects.toString(manifest.get("invocation_kind"), "");
+        if (!adapterRegistry.isSupportedCombination(type, kind))
+            throw error(400, "INVALID_MANIFEST", "invocation_kind与adapter_type组合未登记");
     }
 
     public Map<String, Object> normalize(Map<String, Object> body) {
@@ -671,6 +697,7 @@ public class SkillCatalog {
         for (String flag : List.of("readonly", "sideEffect", "idempotent", "cancellable"))
             if (!(execution.get(flag) instanceof Boolean))
                 throw error(400, "INVALID_SKILL", "execution需显式布尔字段: " + flag);
+        result.putAll(SkillRules.projection(body));
         if (Boolean.TRUE.equals(execution.get("readonly"))
                 && Boolean.TRUE.equals(execution.get("sideEffect")))
             throw error(400, "INVALID_SKILL", "只读与副作用互斥");

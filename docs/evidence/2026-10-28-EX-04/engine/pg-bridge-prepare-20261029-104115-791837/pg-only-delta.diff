@@ -1,0 +1,115 @@
+--- ToolOutputPolicyTest.before.java
++++ ToolOutputPolicyTest.candidate.java
+@@ -222,17 +222,28 @@
+                 .isEqualTo("run-abc:node-9:round2:call-77");
+     }
+ 
++    // EX-04 PG readback bridge: fixed data, no runtime PG/HTTP/file dependency.
++    // Source Run: green-skill-20261029-103602-527; 137 UTF-8 bytes.
++    // JSON SHA256: 0e99aae36146e3b35a06f9755e2532c1fed3202e095cd5b9cbc89efeedf8b2d9
++    // XML SHA256: 30220156caf1644beca88d4ef634511a333171d18df84b783ba0bdb4ddae0921
++    private static final String PERSISTED_PROJECTION =
++                "{\"pagination\":{\"mode\":\"OFFSET\",\"maxRows\":2,"
++                        + "\"request\":{\"size\":\"takeRows\",\"offset\":\"startAt\"},"
++                        + "\"maxPageSize\":6},\"exposure\":{\"kind\":\"QUERY\"}}";
++    private static final String PERSISTED_PROJECTION_SHA256 =
++            "0e99aae36146e3b35a06f9755e2532c1fed3202e095cd5b9cbc89efeedf8b2d9";
++
+     private static ObjectNode offsetDeclaration() {
+-        return (ObjectNode)
+-                Json.read(
+-                        "{\"mode\":\"OFFSET\",\"request\":{\"offset\":\"skip\",\"size\":\"take\"},"
+-                                + "\"maxPageSize\":37,\"maxRows\":7}");
++        return (ObjectNode) Json.read(PERSISTED_PROJECTION).path("pagination");
+     }
+ 
+     @Test
+     void offsetHintKeepsDeclaredCursorAndCapsWithoutInventingObservedValues() {
+         var policy = new ToolOutputPolicy(1024);
+-        var declaration = offsetDeclaration();
++        assertThat(cn.agentplatform.common.Digest.sha256(PERSISTED_PROJECTION))
++                .isEqualTo(PERSISTED_PROJECTION_SHA256);
++        var projection = Json.read(PERSISTED_PROJECTION);
++        var declaration = projection.path("pagination");
+         var result =
+                 Json.tree(
+                         oversized(
+@@ -243,7 +254,7 @@
+         var original = result.deepCopy();
+         long bytes = Json.write(result).getBytes(StandardCharsets.UTF_8).length;
+ 
+-        var content = policy.enforce(toolWithPagination(declaration), result, TRACE);
++        var content = policy.enforce(toolWith(projection), result, TRACE);
+ 
+         var error = content.path("error");
+         assertThat(error.path("semantic").asText()).isEqualTo(ToolOutputPolicy.CODE);
+@@ -260,13 +271,13 @@
+         assertThat(hint.path("mode").asText()).isEqualTo("OFFSET");
+         assertThat(hint.path("request")).isEqualTo(declaration.path("request"));
+         assertThat(hint.path("request").has("page")).isFalse();
+-        assertThat(hint.path("maxPageSize").asInt()).isEqualTo(37);
+-        assertThat(hint.path("maxRows").asInt()).isEqualTo(7);
++        assertThat(hint.path("maxPageSize").asInt()).isEqualTo(6);
++        assertThat(hint.path("maxRows").asInt()).isEqualTo(2);
+         assertThat(hint.path("observed").isObject()).isTrue();
+         assertThat(hint.path("observed").isEmpty()).isTrue();
+         assertThat(hint.has("response")).isFalse();
+         assertThat(hint.has("nextOffset")).isFalse();
+-        assertThat(hint.path("hint").asText()).contains("skip", "take");
++        assertThat(hint.path("hint").asText()).contains("startAt", "takeRows");
+         assertThat(content.has("items")).isFalse();
+         // 声明的maxRows只作提示；模型可见面替换不修改原始工具输出。
+         assertThat(result).isEqualTo(original);
+--- RunToolProfileTest.before.java
++++ RunToolProfileTest.candidate.java
+@@ -415,24 +415,27 @@
+         assertFalse(detail.containsKey("toolSelection"), "旧运行详情不得补键");
+     }
+ 
++    // EX-04 PG readback bridge: fixed data, no runtime PG/HTTP/file dependency.
++    // Source Run: green-skill-20261029-103602-527; 137 UTF-8 bytes.
++    // JSON SHA256: 0e99aae36146e3b35a06f9755e2532c1fed3202e095cd5b9cbc89efeedf8b2d9
++    // XML SHA256: 30220156caf1644beca88d4ef634511a333171d18df84b783ba0bdb4ddae0921
++    private static final String PERSISTED_PROJECTION =
++                "{\"pagination\":{\"mode\":\"OFFSET\",\"maxRows\":2,"
++                        + "\"request\":{\"size\":\"takeRows\",\"offset\":\"startAt\"},"
++                        + "\"maxPageSize\":6},\"exposure\":{\"kind\":\"QUERY\"}}";
++    private static final String PERSISTED_PROJECTION_SHA256 =
++            "0e99aae36146e3b35a06f9755e2532c1fed3202e095cd5b9cbc89efeedf8b2d9";
++
+     @Test
+     void projectionContractSurvivesActualFreezeAndFeedsOffsetPolicy() throws Exception {
+         var stub = new SkillStub();
+         var published =
+                 (com.fasterxml.jackson.databind.node.ObjectNode)
+                         Json.read(skill("query_projection", 41));
+-        // 本阶段为规范样例；真实PG读回的脱敏两字段在EX-04实际窗口后另留来源及字节证据。
+-        var projection =
+-                Json.read(
+-                        """
+-                        {
+-                          "exposure":{"kind":"QUERY"},
+-                          "pagination":{
+-                            "mode":"OFFSET","request":{"offset":"skip","size":"take"},
+-                            "maxPageSize":37,"maxRows":7
+-                          }
+-                        }
+-                        """);
++        assertEquals(
++                PERSISTED_PROJECTION_SHA256,
++                cn.agentplatform.common.Digest.sha256(PERSISTED_PROJECTION));
++        var projection = Json.read(PERSISTED_PROJECTION);
+         var definition =
+                 (com.fasterxml.jackson.databind.node.ObjectNode) published.path("definition");
+         definition.set("exposure", projection.path("exposure"));
+@@ -463,8 +466,8 @@
+                         .path("pagination");
+         assertEquals("OFFSET", hint.path("mode").asText());
+         assertEquals(expected.path("pagination").path("request"), hint.path("request"));
+-        assertEquals(37, hint.path("maxPageSize").asInt());
+-        assertEquals(7, hint.path("maxRows").asInt());
++        assertEquals(6, hint.path("maxPageSize").asInt());
++        assertEquals(2, hint.path("maxRows").asInt());
+         assertFalse(hint.path("request").has("page"));
+         assertFalse(hint.has("response"));
+         assertFalse(hint.has("nextOffset"));

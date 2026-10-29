@@ -1,0 +1,55 @@
+{
+    "phase":  "STATIC_PREPARATION_ONLY",
+    "powershell":  "5.1.26100.9711",
+    "parse":  [
+                  {
+                      "path":  "run-red-skill.ps1",
+                      "errors":  0,
+                      "sha256":  "CF8673665B560A84CD724AD981119D67088F22C22EF228DD747079E1738DE76E"
+                  },
+                  {
+                      "path":  "run-red-engine.ps1",
+                      "errors":  0,
+                      "sha256":  "D54E44BC6D9D965641836B5344D8B55209DFE088C3DF70585206B2D83E97E047"
+                  },
+                  {
+                      "path":  "check-static.ps1",
+                      "errors":  0,
+                      "sha256":  "5A2258ADB550E2BD4C243FBE89E95B0BA07CB76243C15FFDC31669C1B8C65C71"
+                  }
+              ],
+    "checks":  {
+                   "ps51":  true,
+                   "parseZero":  true,
+                   "templateDisabled":  true,
+                   "frozenInputsBeforeEnv":  true,
+                   "fixedTwoClassSelector":  true,
+                   "noIgnoreAmSkipDiagnosticOverride":  true,
+                   "originalRuntimeArgLine":  true,
+                   "noDatabaseCreateResetDdl":  true,
+                   "readOnlyTimeoutAndExistingOwnerMarker":  true,
+                   "strictKnownPgInstance":  true,
+                   "productionThreePinsRequired":  true,
+                   "allModuleSourceSetAndHashesRequired":  true,
+                   "nativePersistedBeforeXml":  true,
+                   "xmlUtf8FileLoadAndNoRawTail":  true,
+                   "identityAndExactRedTypeGuard":  true,
+                   "noClassOrSkipAsTargetRed":  true,
+                   "redNativeMustFailAndAllOtherPass":  true,
+                   "fixedErrorStageLineNoMessage":  true,
+                   "finallyRestoresProcess":  true,
+                   "engineTemplateDisabled":  true,
+                   "engineFixedTwoClasses":  true,
+                   "engineNoPgOrBusinessClientInvocation":  true,
+                   "engineOriginalPolicyPin":  true,
+                   "engineNoIgnoreOrDiagnostic":  true,
+                   "engineFreezeBeforeEnv":  true,
+                   "engineNativeAndExactRedIdentityGuard":  true
+               },
+    "allPassed":  true,
+    "targetCountNotInvented":  true,
+    "envRead":  false,
+    "javaMavenPgHttpStarted":  false,
+    "sourceOrIndexModified":  false,
+    "actualInvocationPerformed":  false
+}

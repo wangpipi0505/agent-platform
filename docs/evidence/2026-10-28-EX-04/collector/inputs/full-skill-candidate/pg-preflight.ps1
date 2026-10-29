@@ -1,0 +1,146 @@
+﻿$ErrorActionPreference = 'Stop'
+$taskRoot = 'G:/207/项目/算法重组工具/代码/agent-platform'
+$taskRun = $PSScriptRoot
+$taskPhase = 'BOOT'
+$taskReason = 'UNEXPECTED_COLLECTOR_ERROR'
+$taskPrevious = @{}
+$taskLocation = Get-Location
+$taskPassed = $false
+$taskPg = 'V:/.tools/postgresql-16.15/pgsql/bin/psql.exe'
+$taskDatabase = 'agent_platform_skill_algorithm_test'
+$taskExpectedHead = 'd7880a66b345f15aecf37133a702df769e591fa5'
+$taskExpectedEnv = 'AF038F68E0CA2E3EEEEB0C5240B2C2DA1EF647D680500F63AF1564975EBAFD4A'
+$taskFrozen = [ordered]@{
+    'skill-registry/src/test/java/cn/agentplatform/skill/infra/AlgorithmOffloadInterruptionTest.java' = '43EC56726C4DD04F3B4E4553590B80316D87BD2B619230C6F728A52D9376BD9D'
+    'skill-registry/src/main/java/cn/agentplatform/skill/infra/ArtifactStore.java' = '9DEB51566206D548110F1F6B5AAAB466619EB80D43E8D30B67F11B7E27B7541D'
+    'skill-registry/src/test/java/cn/agentplatform/skill/application/SkillExecutionTest.java' = '607BA3C31AE5EF8DC4568E8EB35D338446A9ED444A7366285124E28BFDA17EA8'
+    'skill-registry/src/test/java/cn/agentplatform/skill/application/SkillTaskResultTest.java' = '600F1A9DF2D5F0199A52F7F2152D339F2E6C6D78839382C30C5BA9C5E7FA164F'
+    'skill-registry/src/main/java/cn/agentplatform/skill/application/SkillOutbox.java' = '30BAE61B51DB4DF75462C5D92BADC5455FBEC1FC7437856CD1D9A9DA2DA32DB7'
+    'skill-registry/src/main/java/cn/agentplatform/skill/application/SkillExecution.java' = '8CD3D8EDAE7C0DEE54DD562C6F2F3F3664759DE85D122F70C1E00B9BC6D25218'
+}
+function Write-TaskJson([string]$Name, $Value) {
+    [IO.File]::WriteAllText((Join-Path $taskRun $Name), (ConvertTo-Json -InputObject $Value -Depth 12), (New-Object Text.UTF8Encoding($false)))
+}
+function Read-TaskPg([string]$Database, [string]$Sql) {
+    $output = & $taskPg -X -w -h 127.0.0.1 -p 25432 -U agent_v12 -d $Database -At -v ON_ERROR_STOP=1 -c $Sql 2>> (Join-Path $taskRun 'pg-preflight.raw.log')
+    if ($LASTEXITCODE -ne 0) { throw 'PG_READ_FAILED' }
+    (($output -join "`n") | ConvertFrom-Json)
+}
+function Fixed-TaskValue($Value, [string[]]$Allowed) {
+    if ($null -eq $Value) { return 'NULL' }
+    if ($Allowed -ccontains [string]$Value) { return [string]$Value }
+    'OTHER'
+}
+try {
+    Set-Location -LiteralPath $taskRoot
+    $taskPhase = 'SOURCE_ADMISSION'; $taskReason = 'FROZEN_HEAD_ENV_SOURCE_MISMATCH'
+    if (((& git rev-parse HEAD) -join '') -cne $taskExpectedHead) { throw 'FROZEN_HEAD_ENV_SOURCE_MISMATCH' }
+    if ((Get-FileHash -LiteralPath '.env' -Algorithm SHA256).Hash -cne $taskExpectedEnv) { throw 'FROZEN_HEAD_ENV_SOURCE_MISMATCH' }
+    foreach ($path in $taskFrozen.Keys) {
+        if ((Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash -cne $taskFrozen[$path]) { throw 'FROZEN_HEAD_ENV_SOURCE_MISMATCH' }
+    }
+    $taskPhase = 'ENVIRONMENT_LOAD'; $taskReason = 'AP_ENVIRONMENT_PREREQUISITE_MISMATCH'
+    $taskValues = @{}
+    foreach ($line in [IO.File]::ReadAllLines((Join-Path $taskRoot '.env'), [Text.Encoding]::UTF8)) {
+        if ($line -match '^([A-Za-z_][A-Za-z0-9_]*)=(.*)$') { $taskValues[$Matches[1]] = $Matches[2] }
+    }
+    foreach ($name in (@($taskValues.Keys) + @('PGPASSWORD','PGCONNECT_TIMEOUT','PGOPTIONS') | Select-Object -Unique)) { $taskPrevious[$name] = [Environment]::GetEnvironmentVariable($name,'Process') }
+    foreach ($name in $taskValues.Keys) { [Environment]::SetEnvironmentVariable($name,$taskValues[$name],'Process') }
+    if (-not $env:AGENT_DB_PASSWORD -or $env:AGENT_DEV_AUTH -cne 'true') { throw 'AP_ENVIRONMENT_PREREQUISITE_MISMATCH' }
+    $env:PGPASSWORD = $env:AGENT_DB_PASSWORD
+    $env:PGCONNECT_TIMEOUT = '5'
+    $env:PGOPTIONS = '-c statement_timeout=5000 -c default_transaction_read_only=on'
+    $taskPhase = 'LISTENER_ADMISSION'; $taskReason = 'PG_LISTENER_PROCESS_MISMATCH'
+    $taskListeners = @(Get-NetTCPConnection -LocalPort 25432 -State Listen)
+    if ($taskListeners.Count -ne 1 -or $taskListeners[0].LocalAddress -cne '127.0.0.1' -or $taskListeners[0].OwningProcess -ne 15204) { throw 'PG_LISTENER_PROCESS_MISMATCH' }
+    $taskProcess = Get-CimInstance Win32_Process -Filter 'ProcessId=15204'
+    if ($taskProcess.ExecutablePath.Replace([char]92,[char]47) -cne 'V:/.tools/postgresql-16.15/pgsql/bin/postgres.exe' -or $taskProcess.CommandLine -notlike '*V:/.local/pgdata*') { throw 'PG_LISTENER_PROCESS_MISMATCH' }
+    Write-TaskJson 'listener.json' ([ordered]@{pid=15204;port=25432;loopback=$true;expectedExecutable=$true;expectedDataArgument=$true})
+    $taskPhase = 'PG_INSTANCE'; $taskReason = 'PG_INSTANCE_DIRECTORY_ROLE_MISMATCH'
+    $taskInstance = Read-TaskPg 'postgres' "select json_build_object('directory',current_setting('data_directory'),'role',current_user)"
+    $taskDirectoryOkay = $taskInstance.directory.Replace([char]92,[char]47).TrimEnd('/') -ceq 'V:/.local/pgdata'
+    Write-TaskJson 'pg-instance.json' ([ordered]@{directory=if($taskDirectoryOkay){'V:/.local/pgdata'}else{'OTHER'};role=(Fixed-TaskValue $taskInstance.role @('agent_v12'));directoryMatched=$taskDirectoryOkay})
+    if (-not $taskDirectoryOkay -or $taskInstance.role -cne 'agent_v12') { throw 'PG_INSTANCE_DIRECTORY_ROLE_MISMATCH' }
+    $taskPhase = 'PG_DATABASE'; $taskReason = 'EXISTING_DATABASE_OWNER_MISMATCH'
+    $taskOwner = Read-TaskPg 'postgres' "select json_build_object('database',datname,'owner',pg_get_userbyid(datdba)) from pg_database where datname='agent_platform_skill_algorithm_test'"
+    Write-TaskJson 'pg-database.json' ([ordered]@{exists=($null -ne $taskOwner);database=(Fixed-TaskValue $taskOwner.database @($taskDatabase));owner=(Fixed-TaskValue $taskOwner.owner @('agent_v12'))})
+    if (-not $taskOwner -or $taskOwner.database -cne $taskDatabase -or $taskOwner.owner -cne 'agent_v12') { throw 'EXISTING_DATABASE_OWNER_MISMATCH' }
+    $taskPhase = 'PG_SCHEMA'; $taskReason = 'EXISTING_SKILL_SCHEMA_HISTORY_IDENTITY_MISMATCH'
+    $taskSchema = Read-TaskPg $taskDatabase "select json_build_object('database',current_database(),'role',current_user,'schemaOwner',pg_get_userbyid(n.nspowner),'display',to_regclass('skill.flyway_schema_history')::text,'historySchema',h.nspname,'historyName',c.relname,'historyOwner',pg_get_userbyid(c.relowner)) from pg_namespace n left join pg_class c on c.oid=to_regclass('skill.flyway_schema_history') left join pg_namespace h on h.oid=c.relnamespace where n.nspname='skill'"
+    $taskLegacySchema = $taskSchema -and $taskSchema.database -ceq $taskDatabase -and $taskSchema.role -ceq 'agent_v12' -and $taskSchema.schemaOwner -ceq 'agent_v12' -and $taskSchema.display -ceq 'skill.flyway_schema_history'
+    $taskSchemaOkay = $taskSchema -and $taskSchema.database -ceq $taskDatabase -and $taskSchema.role -ceq 'agent_v12' -and $taskSchema.schemaOwner -ceq 'agent_v12' -and $taskSchema.historySchema -ceq 'skill' -and $taskSchema.historyName -ceq 'flyway_schema_history' -and $taskSchema.historyOwner -ceq 'agent_v12'
+    Write-TaskJson 'pg-schema.json' ([ordered]@{database=(Fixed-TaskValue $taskSchema.database @($taskDatabase));role=(Fixed-TaskValue $taskSchema.role @('agent_v12'));schemaOwner=(Fixed-TaskValue $taskSchema.schemaOwner @('agent_v12'));regclassDisplay=(Fixed-TaskValue $taskSchema.display @('skill.flyway_schema_history','flyway_schema_history'));historySchema=(Fixed-TaskValue $taskSchema.historySchema @('skill'));historyName=(Fixed-TaskValue $taskSchema.historyName @('flyway_schema_history'));historyOwner=(Fixed-TaskValue $taskSchema.historyOwner @('agent_v12'));legacyDisplayPredicatePassed=[bool]$taskLegacySchema;exactCatalogIdentityPassed=[bool]$taskSchemaOkay})
+    if (-not $taskSchemaOkay) { throw 'EXISTING_SKILL_SCHEMA_HISTORY_IDENTITY_MISMATCH' }
+    $taskPhase = 'PG_HISTORY'; $taskReason = 'FLYWAY_UNKNOWN_TYPE_OWNER_OR_SCRIPT'
+    $taskHistory = @(Read-TaskPg $taskDatabase "select coalesce(json_agg(json_build_object('rank',installed_rank,'version',version,'type',type,'script',script,'checksum',checksum,'installedBy',installed_by,'success',success) order by installed_rank),'[]'::json) from skill.flyway_schema_history")
+    $taskFiles = @(Get-ChildItem -LiteralPath 'skill-registry/src/main/resources/db/migration' -File -Filter 'V*.sql' | ForEach-Object {$_.Name})
+    $taskSafeHistory = @(foreach ($row in $taskHistory) {
+        [pscustomobject]@{rank=$row.rank;version=if($null -eq $row.version){$null}elseif($row.version -cmatch '^\d+(\.\d+)*$'){$row.version}else{'OTHER'};type=(Fixed-TaskValue $row.type @('SQL','SCHEMA'));script=(Fixed-TaskValue $row.script (@($taskFiles)+@('"skill"','skill')));checksum=$row.checksum;installedBy=(Fixed-TaskValue $row.installedBy @('agent_v12'));success=$row.success;scriptInProjectVFiles=($taskFiles -ccontains $row.script)}
+    })
+    Write-TaskJson 'pg-history.json' $taskSafeHistory
+    $taskLegacyHistory = $taskHistory.Count -gt 0 -and @($taskHistory | Where-Object {-not $_.success -or $_.installedBy -cne 'agent_v12' -or $taskFiles -cnotcontains $_.script}).Count -eq 0
+    $taskSql = @($taskHistory | Where-Object {$_.type -ceq 'SQL'})
+    $taskSchemaRows = @($taskHistory | Where-Object {$_.type -ceq 'SCHEMA'})
+    $taskBadRows = @($taskHistory | Where-Object {
+        -not $_.success -or $_.installedBy -cne 'agent_v12' -or
+        (($_.type -ceq 'SQL') -and ($null -eq $_.version -or $taskFiles -cnotcontains $_.script)) -or
+        (($_.type -ceq 'SCHEMA') -and ($_.rank -ne 0 -or $null -ne $_.version -or $_.script -cne '"skill"')) -or
+        @('SQL','SCHEMA') -cnotcontains $_.type
+    })
+    $taskHistoryOkay = $taskSql.Count -gt 0 -and $taskSchemaRows.Count -le 1 -and $taskBadRows.Count -eq 0
+    Write-TaskJson 'pg-history-predicates.json' ([ordered]@{legacyAllRowsRequireVFilePassed=$taskLegacyHistory;exactClassifiedHistoryPassed=$taskHistoryOkay;sqlRows=$taskSql.Count;schemaRows=$taskSchemaRows.Count;badRows=$taskBadRows.Count;schemaRule='rank0/versionNULL/typeSCHEMA/scriptQuotedSkill/installedByAgentV12/successTrue';sqlRule='typeSQL/versionPresent/currentProjectVScript/installedByAgentV12/successTrue';unknownTypesAllowed=$false})
+    if (-not $taskHistoryOkay) { throw 'FLYWAY_UNKNOWN_TYPE_OWNER_OR_SCRIPT' }
+    $taskPhase = 'MAIN_DATABASE'; $taskReason = 'EXISTING_MAIN_DATABASE_OWNER_MISMATCH'
+    $mainDatabase = 'agent_platform_v12'
+    $mainOwner = Read-TaskPg 'postgres' "select json_build_object('database',datname,'owner',pg_get_userbyid(datdba)) from pg_database where datname='agent_platform_v12'"
+    Write-TaskJson 'main-database.json' ([ordered]@{existed=($null -ne $mainOwner);database=(Fixed-TaskValue $mainOwner.database @($mainDatabase));owner=(Fixed-TaskValue $mainOwner.owner @('agent_v12'));collectorDdl=$false})
+    if (-not $mainOwner -or $mainOwner.database -cne $mainDatabase -or $mainOwner.owner -cne 'agent_v12') { throw 'EXISTING_MAIN_DATABASE_OWNER_MISMATCH' }
+    $taskPhase = 'MAIN_SKILL_SCHEMA'; $taskReason = 'EXISTING_MAIN_SKILL_SCHEMA_HISTORY_MISMATCH'
+    $mainSchema = Read-TaskPg $mainDatabase "select json_build_object('database',current_database(),'role',current_user,'schemaOwner',pg_get_userbyid(n.nspowner),'historySchema',h.nspname,'historyName',c.relname,'historyOwner',pg_get_userbyid(c.relowner)) from pg_namespace n left join pg_class c on c.oid=to_regclass('skill.flyway_schema_history') left join pg_namespace h on h.oid=c.relnamespace where n.nspname='skill'"
+    $mainSchemaOkay = $mainSchema -and $mainSchema.database -ceq $mainDatabase -and $mainSchema.role -ceq 'agent_v12' -and $mainSchema.schemaOwner -ceq 'agent_v12' -and $mainSchema.historySchema -ceq 'skill' -and $mainSchema.historyName -ceq 'flyway_schema_history' -and $mainSchema.historyOwner -ceq 'agent_v12'
+    Write-TaskJson 'main-schema.json' ([ordered]@{database=(Fixed-TaskValue $mainSchema.database @($mainDatabase));role=(Fixed-TaskValue $mainSchema.role @('agent_v12'));schemaOwner=(Fixed-TaskValue $mainSchema.schemaOwner @('agent_v12'));historySchema=(Fixed-TaskValue $mainSchema.historySchema @('skill'));historyName=(Fixed-TaskValue $mainSchema.historyName @('flyway_schema_history'));historyOwner=(Fixed-TaskValue $mainSchema.historyOwner @('agent_v12'));exactCatalogIdentityPassed=[bool]$mainSchemaOkay;collectorDdl=$false})
+    if (-not $mainSchemaOkay) { throw 'EXISTING_MAIN_SKILL_SCHEMA_HISTORY_MISMATCH' }
+    $taskPhase = 'MAIN_SKILL_HISTORY'; $taskReason = 'MAIN_FLYWAY_UNKNOWN_TYPE_OWNER_OR_SCRIPT'
+    $mainHistory = @(Read-TaskPg $mainDatabase "select coalesce(json_agg(json_build_object('rank',installed_rank,'version',version,'type',type,'script',script,'checksum',checksum,'installedBy',installed_by,'success',success) order by installed_rank),'[]'::json) from skill.flyway_schema_history")
+    $mainBad = @($mainHistory | Where-Object { -not $_.success -or $_.installedBy -cne 'agent_v12' -or (($_.type -ceq 'SQL') -and ($null -eq $_.version -or $taskFiles -cnotcontains $_.script)) -or (($_.type -ceq 'SCHEMA') -and ($_.rank -ne 0 -or $null -ne $_.version -or $_.script -cne '"skill"')) -or @('SQL','SCHEMA') -cnotcontains $_.type })
+    $mainSql = @($mainHistory | Where-Object {$_.type -ceq 'SQL'})
+    $mainMissingScripts = @($taskFiles | Where-Object {$script=$_;@($mainSql | Where-Object {$_.script -ceq $script}).Count -ne 1})
+    $mainHistoryOkay = $mainBad.Count -eq 0 -and $mainSql.Count -eq $taskFiles.Count -and $mainMissingScripts.Count -eq 0 -and @($mainHistory | Where-Object {$_.type -ceq 'SCHEMA'}).Count -le 1
+    $mainSafe = @(foreach ($row in $mainHistory) {[pscustomobject]@{rank=$row.rank;version=if($null -eq $row.version){$null}elseif($row.version -cmatch '^\d+(\.\d+)*$'){$row.version}else{'OTHER'};type=(Fixed-TaskValue $row.type @('SQL','SCHEMA'));script=(Fixed-TaskValue $row.script (@($taskFiles)+@('"skill"')));installedBy=(Fixed-TaskValue $row.installedBy @('agent_v12'));success=$row.success;checksum=$row.checksum}})
+    Write-TaskJson 'main-precondition.json' ([ordered]@{database=$mainDatabase;existed=$true;owner='agent_v12';schemaOwner='agent_v12';historyOwner='agent_v12';exactCatalogIdentity=[bool]$mainSchemaOkay;exactClassifiedHistory=[bool]$mainHistoryOkay;history=$mainSafe;badRows=$mainBad.Count;currentProjectSqlFiles=$taskFiles.Count;sqlRows=$mainSql.Count;missingOrDuplicateCurrentScripts=$mainMissingScripts.Count;collectorDdl=$false;created=$false;reset=$false;oldQueueReadOrWrite=$false})
+    if (-not $mainHistoryOkay) { throw 'MAIN_FLYWAY_UNKNOWN_TYPE_OWNER_OR_SCRIPT' }
+    $taskPhase = 'OWNED_MIGRATION_REPLAY_DATABASES'; $taskReason = 'EXISTING_REPLAY_DATABASE_OR_HISTORY_OWNERSHIP_MISMATCH'
+    foreach ($replayDatabase in @('agent_platform_skill_algorithm_migration_test','agent_platform_skill_digest_test')) {
+        $owner = Read-TaskPg 'postgres' ("select json_build_object('database',datname,'owner',pg_get_userbyid(datdba)) from pg_database where datname='" + $replayDatabase + "'")
+        if (-not $owner -or $owner.database -cne $replayDatabase -or $owner.owner -cne 'agent_v12') { throw 'EXISTING_REPLAY_DATABASE_OR_HISTORY_OWNERSHIP_MISMATCH' }
+        $schema = Read-TaskPg $replayDatabase "select json_build_object('schemaOwner',pg_get_userbyid(n.nspowner),'historySchema',h.nspname,'historyName',c.relname,'historyOwner',pg_get_userbyid(c.relowner)) from pg_namespace n left join pg_class c on c.oid=to_regclass('skill.flyway_schema_history') left join pg_namespace h on h.oid=c.relnamespace where n.nspname='skill'"
+        if (-not $schema -or $schema.schemaOwner -cne 'agent_v12' -or $schema.historySchema -cne 'skill' -or $schema.historyName -cne 'flyway_schema_history' -or $schema.historyOwner -cne 'agent_v12') { throw 'EXISTING_REPLAY_DATABASE_OR_HISTORY_OWNERSHIP_MISMATCH' }
+        $history = @(Read-TaskPg $replayDatabase "select coalesce(json_agg(json_build_object('rank',installed_rank,'version',version,'type',type,'script',script,'checksum',checksum,'installedBy',installed_by,'success',success) order by installed_rank),'[]'::json) from skill.flyway_schema_history")
+        $bad = @($history | Where-Object { -not $_.success -or $_.installedBy -cne 'agent_v12' -or (($_.type -ceq 'SQL') -and ($null -eq $_.version -or $taskFiles -cnotcontains $_.script)) -or (($_.type -ceq 'SCHEMA') -and ($_.rank -ne 0 -or $null -ne $_.version -or $_.script -cne '"skill"')) -or @('SQL','SCHEMA') -cnotcontains $_.type })
+        $safe = @(foreach ($row in $history) {[pscustomobject]@{rank=$row.rank;version=if($null -eq $row.version){$null}elseif($row.version -cmatch '^\d+(\.\d+)*$'){$row.version}else{'OTHER'};type=(Fixed-TaskValue $row.type @('SQL','SCHEMA'));script=(Fixed-TaskValue $row.script (@($taskFiles)+@('"skill"')));installedBy=(Fixed-TaskValue $row.installedBy @('agent_v12'));success=$row.success;checksum=$row.checksum}})
+        Write-TaskJson ($replayDatabase + '-precondition.json') ([ordered]@{database=$replayDatabase;existed=$true;owner='agent_v12';schemaOwner='agent_v12';historyOwner='agent_v12';history=$safe;badRows=$bad.Count;originalTestSkillSchemaReplayAuthorizedByRoot=$true;collectorDdl=$false;databaseCreateAuthorized=$false})
+        if ($bad.Count -ne 0 -or @($history | Where-Object {$_.type -ceq 'SQL'}).Count -eq 0 -or @($history | Where-Object {$_.type -ceq 'SCHEMA'}).Count -gt 1) { throw 'EXISTING_REPLAY_DATABASE_OR_HISTORY_OWNERSHIP_MISMATCH' }
+    }
+    $taskPhase = 'ONTOLOGY_IMPORT_DATABASE'; $taskReason = 'ONTOLOGY_DATABASE_OWNER_OR_MARKER_MISMATCH'
+    $ontology = Read-TaskPg 'postgres' "select json_build_object('database',datname,'owner',pg_get_userbyid(datdba),'marker',coalesce(shobj_description(oid,'pg_database'),'')) from pg_database where datname='agent_platform_ontology_import_test'"
+    $marker = 'agent-platform EX-03 2026-10-28 ontology import isolated test database'
+    Write-TaskJson 'ontology-precondition.json' ([ordered]@{existed=($null -ne $ontology);expectedOwner=($ontology.owner -ceq 'agent_v12');exactProjectMarker=($ontology.marker -ceq $marker);collectorDdl=$false})
+    if (-not $ontology -or $ontology.database -cne 'agent_platform_ontology_import_test' -or $ontology.owner -cne 'agent_v12' -or $ontology.marker -cne $marker) { throw 'ONTOLOGY_DATABASE_OWNER_OR_MARKER_MISMATCH' }
+    $taskPhase = 'ADMISSION_COMPLETE'; $taskReason = 'NONE'
+
+    Write-TaskJson 'admission.json' ([ordered]@{passed=$true;phase=$taskPhase;reason=$taskReason;checkedAt=[DateTimeOffset]::Now.ToString('o');head=$taskExpectedHead;envSha256=$taskExpectedEnv;sourceHashes=$taskFrozen;pid=15204;port=25432;database=$taskDatabase;databaseOwner='agent_v12';schemaOwner='agent_v12';exactCatalogIdentity=$taskSchemaOkay;exactClassifiedHistory=$taskHistoryOkay;mainDatabase=$mainDatabase;mainExactCatalogIdentity=[bool]$mainSchemaOkay;mainExactClassifiedHistory=[bool]$mainHistoryOkay;legacySchemaDisplayPredicate=$taskLegacySchema;legacyHistoryPredicate=$taskLegacyHistory;created=$false;reset=$false;drop=$false;truncate=$false;markerAdded=$false;oldQueueReadOrWrite=$false;javaMavenStarted=$false})
+    $fullFreeze = [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'freeze-candidate.json'),[Text.Encoding]::UTF8) | ConvertFrom-Json
+    $moduleManifest = [IO.File]::ReadAllText((Join-Path $taskRoot $fullFreeze.moduleSourceManifest),[Text.Encoding]::UTF8) | ConvertFrom-Json
+    foreach ($pin in $moduleManifest) { if((Get-FileHash -LiteralPath (Join-Path $taskRoot $pin.path) -Algorithm SHA256).Hash -cne $pin.sha256.ToUpperInvariant()){throw 'FULL_SOURCE_DRIFT'} }
+    $proofs = @('agent_platform_v12','agent_platform_skill_algorithm_test','agent_platform_skill_algorithm_migration_test','agent_platform_skill_digest_test','agent_platform_ontology_import_test') | ForEach-Object { [pscustomobject]@{ database=$_;existed=$true;owner='agent_v12';ownershipVerified=$true } }
+    Write-TaskJson 'full-pg-admission.json' ([ordered]@{passed=$true;evidenceKind='ACTUAL_PG_READONLY_PREFLIGHT';checkedAt=[DateTimeOffset]::Now.ToString('o');module='skill-registry';head=$taskExpectedHead;envSha256=$taskExpectedEnv;moduleSourceManifestSha256=$fullFreeze.moduleSourceManifestSha256.ToUpperInvariant();exclusiveWindowId=$fullFreeze.exclusiveWindowId;pid=15204;port=25432;knownDataDirectory=$true;roleAgentV12=$true;knownScopeOnly=$true;unknownDatabaseCount=0;noCreateResetOrQueueCleanup=$true;readOnly=$true;originalReplayWhitelistReviewed=$true;databaseProofs=@($proofs);approvedReplayDatabases=@('agent_platform_skill_algorithm_migration_test','agent_platform_skill_digest_test');note='Collector read-only. Original two tests retain their previously authorized isolated skill-schema replay; no shared queue cleanup.'})
+    $taskPassed = $true
+    Write-Output 'EX04_FULL_SKILL_READONLY_ADMISSION_PASSED' 
+} catch {
+    Write-TaskJson 'preflight-error.json' ([ordered]@{phase=$taskPhase;reason=$taskReason;scriptLineNumber=$_.InvocationInfo.ScriptLineNumber;exceptionClass=$_.Exception.GetType().FullName;messagePrinted=$false;javaMavenStarted=$false})
+    Write-Output ('EX27_OUTBOX_READONLY_ADMISSION_STOPPED phase=' + $taskPhase + ' reason=' + $taskReason + ' line=' + $_.InvocationInfo.ScriptLineNumber)
+} finally {
+    foreach ($name in $taskPrevious.Keys) { [Environment]::SetEnvironmentVariable($name,$taskPrevious[$name],'Process') }
+    Set-Location -LiteralPath $taskLocation
+}
+if (-not $taskPassed) { exit 2 }

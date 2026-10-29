@@ -1,0 +1,56 @@
+{
+    "passed":  true,
+    "evidenceKind":  "ACTUAL_PG_READONLY_PREFLIGHT",
+    "checkedAt":  "2026-10-29T11:09:53.4430158+08:00",
+    "module":  "skill-registry",
+    "head":  "d7880a66b345f15aecf37133a702df769e591fa5",
+    "envSha256":  "AF038F68E0CA2E3EEEEB0C5240B2C2DA1EF647D680500F63AF1564975EBAFD4A",
+    "moduleSourceManifestSha256":  "586C44EBBA8BFF69FCF3BCEEB295FC5252057B5B3BDD69009E8EFD972EB9A39A",
+    "exclusiveWindowId":  "ex04-full-skill-legacy-save-20261029",
+    "pid":  15204,
+    "port":  25432,
+    "knownDataDirectory":  true,
+    "roleAgentV12":  true,
+    "knownScopeOnly":  true,
+    "unknownDatabaseCount":  0,
+    "noCreateResetOrQueueCleanup":  true,
+    "readOnly":  true,
+    "originalReplayWhitelistReviewed":  true,
+    "databaseProofs":  [
+                           {
+                               "database":  "agent_platform_v12",
+                               "existed":  true,
+                               "owner":  "agent_v12",
+                               "ownershipVerified":  true
+                           },
+                           {
+                               "database":  "agent_platform_skill_algorithm_test",
+                               "existed":  true,
+                               "owner":  "agent_v12",
+                               "ownershipVerified":  true
+                           },
+                           {
+                               "database":  "agent_platform_skill_algorithm_migration_test",
+                               "existed":  true,
+                               "owner":  "agent_v12",
+                               "ownershipVerified":  true
+                           },
+                           {
+                               "database":  "agent_platform_skill_digest_test",
+                               "existed":  true,
+                               "owner":  "agent_v12",
+                               "ownershipVerified":  true
+                           },
+                           {
+                               "database":  "agent_platform_ontology_import_test",
+                               "existed":  true,
+                               "owner":  "agent_v12",
+                               "ownershipVerified":  true
+                           }
+                       ],
+    "approvedReplayDatabases":  [
+                                    "agent_platform_skill_algorithm_migration_test",
+                                    "agent_platform_skill_digest_test"
+                                ],
+    "note":  "Collector read-only. Original two tests retain their previously authorized isolated skill-schema replay; no shared queue cleanup."
+}

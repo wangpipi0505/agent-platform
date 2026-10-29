@@ -67,7 +67,7 @@ class OntologyManifestImportsTest {
     }
 
     /** 按ContractGenerator.formalize产出形状构造正式manifest。 */
-    private Map<String, Object> formalManifest(String toolCode) {
+    static Map<String, Object> formalManifest(String toolCode) {
         var meta = new LinkedHashMap<String, Object>();
         meta.put("spaceCode", "route3");
         meta.put("releaseId", "9f8e7d6c-1111-2222-3333-444455556666");
@@ -149,8 +149,8 @@ class OntologyManifestImportsTest {
         var execution = (Map<?, ?>) body.get("execution");
         assertEquals(true, execution.get("readonly"));
         assertEquals(false, execution.get("sideEffect"));
-        // riskLevel不从manifest映射：平台按readonly旗标确定性推导
-        assertFalse(body.containsKey("riskLevel"));
+        // EX-04保留来源显式风险；确认要求仍不能低于执行旗标推导的底线。
+        assertEquals("READ_ONLY", body.get("riskLevel"));
         var guard = (Map<?, ?>) body.get("guard");
         assertEquals(List.of("region"), guard.get("guardAttrs"));
         assertTrue(((List<?>) guard.get("roles")).isEmpty());
@@ -438,7 +438,7 @@ class OntologyManifestImportsTest {
         }
     }
 
-    private void executeFixture(SkillExecution execution, SkillClients clients, String code, long versionId, String sha, long callId, boolean controlled) {
+    static void executeFixture(SkillExecution execution, SkillClients clients, String code, long versionId, String sha, long callId, boolean controlled) {
         var arguments = Map.of("region", "A");
         var authority = new LinkedHashMap<String, Object>();
         authority.put("claimed", true);

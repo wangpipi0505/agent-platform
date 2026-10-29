@@ -1,0 +1,23 @@
+{
+  "approvedForExclusiveActualWindow": true,
+  "phase": "RED_ENGINE",
+  "head": "d7880a66b345f15aecf37133a702df769e591fa5",
+  "envSha256": "AF038F68E0CA2E3EEEEB0C5240B2C2DA1EF647D680500F63AF1564975EBAFD4A",
+  "adminCommonJarSha256": "1B0D7B40FC3AE02B207294D3B6BE7EA7F7BB9DCD35AF8EA62A372F916FA14B87",
+  "moduleSourceManifest": "docs/evidence/2026-10-28-EX-04/engine/inputs/red/module-source-sha256.json",
+  "moduleSourceManifestSha256": "6f091faeeb5a05e84741c34b7ac891f210a72cf0faa40bc41d23726a3056e2ea",
+  "expectedMethodsCsv": "docs/evidence/2026-10-28-EX-04/engine/inputs/red/expected-methods.csv",
+  "expectedMethodsCsvSha256": "7066558b2c98ec680ca4dd3dbe54f1f9ea73c22bd4cb327343b048edca247e66",
+  "expectedRedCsv": "docs/evidence/2026-10-28-EX-04/engine/inputs/red/expected-red.csv",
+  "expectedRedCsvSha256": "e27ed872a8a916860d31357f96124e690795e62e556336be1a2e9ee722c81aac",
+  "redProductionPins": [
+    {
+      "path": "engine-runtime/src/main/java/cn/agentplatform/engine/application/ToolOutputPolicy.java",
+      "sha256": "94CF53C998668FE6D4A7C60D41A063D5C05FCED6E7800A96FC3FD1A289FE4C77"
+    }
+  ],
+  "testReview": "EX04/tests-static-review.md SHA3bdf3130c04a845c02346ca057715a0d6998cae010414f75b2e444c6c83b4ffe; original22 preserved/new25 expected47; ROOT admits author 11 exact predicted assertion failures.",
+  "rootGrant": "ROOT sole actual window RED_ENGINE once after RED_SKILL native1/collector0; original ToolOutputPolicy94CF unchanged. No parallel runtime/PG/HTTP.",
+  "note": "TEMPLATE_ONLY false approval. ToolOutputPolicyTest and RunToolProfileTest are reviewed pure/stub vectors; this directed collector never connects PG or business HTTP. Full engine private database admission remains a separate original EX36 scope. Exact author identities and red vector are required; 47 is an author forecast, not a hard-coded gate.",
+  "pureTwoClassNoPg": true
+}

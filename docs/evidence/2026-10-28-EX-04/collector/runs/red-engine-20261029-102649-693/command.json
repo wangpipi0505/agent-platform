@@ -1,0 +1,20 @@
+{
+    "command":  "mvn.cmd",
+    "arguments":  [
+                      "-B",
+                      "-ntp",
+                      "-pl",
+                      "engine-runtime",
+                      "test",
+                      "-Dmaven.repo.local=G:/207/项目/算法重组工具/代码/agent-platform/.tools/m2",
+                      "-DargLine=-Xmx1024m -Djdk.net.unixdomain.tmpdir=V:/.local/tmp",
+                      "-Dsurefire.timeout=900",
+                      "-Dsurefire.failIfNoSpecifiedTests=true",
+                      "-Dtest=ToolOutputPolicyTest,RunToolProfileTest"
+                  ],
+    "startedAt":  "2026-10-29T10:26:50.2548976+08:00",
+    "endedAt":  "2026-10-29T10:27:01.5660039+08:00",
+    "nativeExit":  1,
+    "state":  "COMMAND_RETURNED",
+    "failureIgnore":  false
+}

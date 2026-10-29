@@ -7,12 +7,18 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import cn.agentplatform.common.Json;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 /**
  * PLAT-14 T14.2（大响应策略·纯函数部分）：工具输出注入模型上下文前的引擎级阈值策略。
@@ -214,5 +220,176 @@ class ToolOutputPolicyTest {
         var content = policy.enforce(noDeclaration(), result, "run-abc:node-9:round2:call-77");
         assertThat(content.path("error").path("traceId").asText())
                 .isEqualTo("run-abc:node-9:round2:call-77");
+    }
+
+    // EX-04 PG readback bridge: fixed data, no runtime PG/HTTP/file dependency.
+    // Source Run: green-skill-20261029-103602-527; 137 UTF-8 bytes.
+    // JSON SHA256: 0e99aae36146e3b35a06f9755e2532c1fed3202e095cd5b9cbc89efeedf8b2d9
+    // XML SHA256: 30220156caf1644beca88d4ef634511a333171d18df84b783ba0bdb4ddae0921
+    private static final String PERSISTED_PROJECTION =
+                "{\"pagination\":{\"mode\":\"OFFSET\",\"maxRows\":2,"
+                        + "\"request\":{\"size\":\"takeRows\",\"offset\":\"startAt\"},"
+                        + "\"maxPageSize\":6},\"exposure\":{\"kind\":\"QUERY\"}}";
+    private static final String PERSISTED_PROJECTION_SHA256 =
+            "0e99aae36146e3b35a06f9755e2532c1fed3202e095cd5b9cbc89efeedf8b2d9";
+
+    private static ObjectNode offsetDeclaration() {
+        return (ObjectNode) Json.read(PERSISTED_PROJECTION).path("pagination");
+    }
+
+    @Test
+    void offsetHintKeepsDeclaredCursorAndCapsWithoutInventingObservedValues() {
+        var policy = new ToolOutputPolicy(1024);
+        assertThat(cn.agentplatform.common.Digest.sha256(PERSISTED_PROJECTION))
+                .isEqualTo(PERSISTED_PROJECTION_SHA256);
+        var projection = Json.read(PERSISTED_PROJECTION);
+        var declaration = projection.path("pagination");
+        var result =
+                Json.tree(
+                        oversized(
+                                "items",
+                                IntStream.range(0, 20).mapToObj(i -> Map.of("id", i)).toList(),
+                                "total",
+                                9000));
+        var original = result.deepCopy();
+        long bytes = Json.write(result).getBytes(StandardCharsets.UTF_8).length;
+
+        var content = policy.enforce(toolWith(projection), result, TRACE);
+
+        var error = content.path("error");
+        assertThat(error.path("semantic").asText()).isEqualTo(ToolOutputPolicy.CODE);
+        assertThat(error.path("code").asText()).isEqualTo(ToolOutputPolicy.CODE);
+        assertThat(error.path("category").asText()).isEqualTo("BUSINESS");
+        assertThat(error.path("retryable").asBoolean()).isFalse();
+        assertThat(error.path("traceId").asText()).isEqualTo(TRACE);
+        assertThat(error.path("reason").asText()).contains(ToolOutputPolicy.CODE);
+        assertThat(error.path("detail"))
+                .isEqualTo(Json.tree(Map.of("tool", "lookup", "actualBytes", bytes, "maxBytes", 1024L)));
+        var hint = content.path("pagination");
+        assertThat(hint.isObject()).isTrue();
+        assertThat(hint.size()).isEqualTo(6);
+        assertThat(hint.path("mode").asText()).isEqualTo("OFFSET");
+        assertThat(hint.path("request")).isEqualTo(declaration.path("request"));
+        assertThat(hint.path("request").has("page")).isFalse();
+        assertThat(hint.path("maxPageSize").asInt()).isEqualTo(6);
+        assertThat(hint.path("maxRows").asInt()).isEqualTo(2);
+        assertThat(hint.path("observed").isObject()).isTrue();
+        assertThat(hint.path("observed").isEmpty()).isTrue();
+        assertThat(hint.has("response")).isFalse();
+        assertThat(hint.has("nextOffset")).isFalse();
+        assertThat(hint.path("hint").asText()).contains("startAt", "takeRows");
+        assertThat(content.has("items")).isFalse();
+        // 声明的maxRows只作提示；模型可见面替换不修改原始工具输出。
+        assertThat(result).isEqualTo(original);
+        assertThat(result.path("items").size()).isEqualTo(20);
+    }
+
+    @Test
+    void pageModeAndLegacyOptionalResponseKeepExistingHintSemantics() {
+        var policy = new ToolOutputPolicy(1024);
+        var result =
+                Json.tree(oversized("items", java.util.List.of(Map.of("id", 1)), "total", 9));
+        var explicitPage = (ObjectNode) paginationDeclaration();
+        explicitPage.put("mode", "PAGE");
+        var explicitHint =
+                policy.enforce(toolWithPagination(explicitPage), result, TRACE).path("pagination");
+        assertThat(explicitHint.path("request")).isEqualTo(explicitPage.path("request"));
+        assertThat(explicitHint.path("response")).isEqualTo(explicitPage.path("response"));
+        assertThat(explicitHint.path("maxPageSize").asInt()).isEqualTo(200);
+        assertThat(explicitHint.path("observed"))
+                .isEqualTo(Json.tree(Map.of("total", 9, "itemCount", 1)));
+
+        var legacyMinimal = Json.read("{\"request\":{\"page\":\"p\",\"size\":\"n\"}}");
+        var minimalHint =
+                policy.enforce(toolWithPagination(legacyMinimal), result, TRACE).path("pagination");
+        assertThat(minimalHint.path("request")).isEqualTo(legacyMinimal.path("request"));
+        assertThat(minimalHint.has("mode")).isFalse();
+        assertThat(minimalHint.has("maxPageSize")).isFalse();
+        assertThat(minimalHint.has("response")).isFalse();
+        assertThat(minimalHint.path("observed").isObject()).isTrue();
+        assertThat(minimalHint.path("observed").isEmpty()).isTrue();
+
+        var optionalEmptyResponse = (ObjectNode) legacyMinimal.deepCopy();
+        optionalEmptyResponse.set("response", Json.object());
+        var emptyResponseHint =
+                policy.enforce(toolWithPagination(optionalEmptyResponse), result, TRACE)
+                        .path("pagination");
+        assertThat(emptyResponseHint.path("response")).isEqualTo(Json.object());
+        assertThat(emptyResponseHint.path("observed")).isEqualTo(Json.object());
+    }
+
+    @Test
+    void exactThresholdKeepsSameNodeForOffsetMalformedAndAbsentDeclarations() {
+        var result = Json.read("{\"text\":\"精确字节阈值\"}");
+        var policy = new ToolOutputPolicy(Json.write(result).getBytes(StandardCharsets.UTF_8).length);
+        for (var tool :
+                java.util.List.of(
+                        toolWithPagination(offsetDeclaration()),
+                        toolWithPagination(Json.object()),
+                        noDeclaration())) {
+            assertSame(result, policy.enforce(tool, result, TRACE));
+        }
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("invalidDeclaredPagination")
+    void invalidPaginationDoesNotCreateRuntimeHintOrThrow(String label, JsonNode declaration) {
+        var policy = new ToolOutputPolicy(1024);
+        var tool = toolWithPagination(declaration);
+        var result = Json.tree(Map.of("blob", "x".repeat(4096)));
+
+        assertThat(ToolOutputPolicy.declaredPagination(tool)).as(label).isNull();
+        var content = policy.enforce(tool, result, TRACE);
+        assertThat(content.has("pagination")).as(label).isFalse();
+        assertThat(content.path("error").path("code").asText()).isEqualTo(ToolOutputPolicy.CODE);
+        assertThat(content.path("error").path("traceId").asText()).isEqualTo(TRACE);
+    }
+
+    private static Stream<Arguments> invalidDeclaredPagination() {
+        var page = (ObjectNode) paginationDeclaration();
+        return Stream.of(
+                Arguments.of("null declaration", Json.read("null")),
+                Arguments.of("empty declaration", Json.object()),
+                Arguments.of("OFFSET without mode", offsetDeclaration().without("mode")),
+                Arguments.of(
+                        "OFFSET with page mixed into request",
+                        offsetDeclaration()
+                                .set("request", Json.read("{\"offset\":\"skip\",\"size\":\"take\",\"page\":\"p\"}"))),
+                Arguments.of(
+                        "OFFSET numeric parameter name",
+                        offsetDeclaration()
+                                .set("request", Json.read("{\"offset\":3,\"size\":\"take\"}"))),
+                Arguments.of(
+                        "OFFSET blank parameter name",
+                        offsetDeclaration()
+                                .set("request", Json.read("{\"offset\":\"  \",\"size\":\"take\"}"))),
+                Arguments.of("OFFSET missing maxRows", offsetDeclaration().without("maxRows")),
+                Arguments.of("OFFSET zero page cap", offsetDeclaration().put("maxPageSize", 0)),
+                Arguments.of("OFFSET fractional rows cap", offsetDeclaration().put("maxRows", 1.5)),
+                Arguments.of("OFFSET textual rows cap", offsetDeclaration().put("maxRows", "7")),
+                Arguments.of(
+                        "OFFSET overflowing page cap", offsetDeclaration().put("maxPageSize", 2147483648L)),
+                Arguments.of("OFFSET unknown key", offsetDeclaration().put("nextOffset", 10)),
+                Arguments.of(
+                        "OFFSET response is not a supported declaration",
+                        offsetDeclaration().set("response", Json.read("{\"itemsPath\":\"$.items\"}"))),
+                Arguments.of(
+                        "unknown mode with otherwise valid PAGE", page.deepCopy().put("mode", "CURSOR")),
+                Arguments.of(
+                        "null mode with otherwise valid PAGE", page.deepCopy().putNull("mode")),
+                Arguments.of(
+                        "PAGE numeric parameter name",
+                        page.deepCopy()
+                                .set("request", Json.read("{\"page\":3,\"size\":\"size\"}"))),
+                Arguments.of(
+                        "PAGE with offset mixed into request",
+                        page.deepCopy()
+                                .set("request", Json.read("{\"page\":\"page\",\"size\":\"size\",\"offset\":\"skip\"}"))),
+                Arguments.of("PAGE negative cap", page.deepCopy().put("maxPageSize", -1)),
+                Arguments.of("PAGE malformed response", page.deepCopy().put("response", 3)),
+                Arguments.of(
+                        "PAGE nontext response path",
+                        page.deepCopy().set("response", Json.read("{\"itemsPath\":3}"))),
+                Arguments.of("PAGE must not declare OFFSET maxRows", page.deepCopy().put("maxRows", 7)));
     }
 }

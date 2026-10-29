@@ -1,0 +1,18 @@
+{
+    "command":  "mvn.cmd",
+    "arguments":  [
+                      "-B",
+                      "-ntp",
+                      "-pl",
+                      "onto-contract",
+                      "test",
+                      "-DargLine=-Xmx512m -Djava.io.tmpdir=O:\\.runtime\\tmp -Djdk.net.unixdomain.tmpdir=O:\\.runtime\\tmp",
+                      "-Dsurefire.timeout=900",
+                      "-Dsurefire.failIfNoSpecifiedTests=true",
+                      "-Dtest=ToolBindingExposureTest"
+                  ],
+    "startedAt":  "2026-10-29T10:48:00.5414194+08:00",
+    "endedAt":  "2026-10-29T10:48:03.5585817+08:00",
+    "nativeExit":  0,
+    "state":  "COMMAND_RETURNED"
+}

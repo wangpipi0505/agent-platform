@@ -1,0 +1,69 @@
+﻿param([ValidateSet('before','after')][string]$Moment='before')
+$ErrorActionPreference='Stop';$old=@{};$taskRoot='G:/207/项目/算法重组工具/代码/agent-platform';$passed=$false;$phase='ENVIRONMENT'
+function Save([string]$name,$v){[IO.File]::WriteAllText((Join-Path $PSScriptRoot $name),(ConvertTo-Json -InputObject $v -Depth 15),(New-Object Text.UTF8Encoding($false)))}
+function ReadPg([string]$database,[string]$sql){$out=& 'V:/.tools/postgresql-16.15/pgsql/bin/psql.exe' -X -w -h 127.0.0.1 -p 25432 -U agent_v12 -d $database -At -v ON_ERROR_STOP=1 -c $sql 2>> (Join-Path $PSScriptRoot 'pg-preflight.raw.log');if($LASTEXITCODE -ne 0){throw 'PG_READ_FAILED'};(($out -join "`n")|ConvertFrom-Json)}
+try{
+ $f=[IO.File]::ReadAllText((Join-Path $PSScriptRoot 'freeze-candidate.json'),[Text.Encoding]::UTF8)|ConvertFrom-Json
+ if((Get-FileHash -LiteralPath (Join-Path $taskRoot '.env') -Algorithm SHA256).Hash -cne $f.envSha256){throw 'ENV_DRIFT'}
+ if(((& git -C $taskRoot rev-parse HEAD)-join '') -cne $f.head){throw 'HEAD_DRIFT'}
+ $source=Join-Path $taskRoot $f.moduleSourceManifest
+ if((Get-FileHash -LiteralPath $source -Algorithm SHA256).Hash -cne $f.moduleSourceManifestSha256.ToUpperInvariant()){throw 'MANIFEST_DRIFT'}
+ foreach($pin in ([IO.File]::ReadAllText($source,[Text.Encoding]::UTF8)|ConvertFrom-Json)){if((Get-FileHash -LiteralPath (Join-Path $taskRoot $pin.path) -Algorithm SHA256).Hash -cne $pin.sha256.ToUpperInvariant()){throw 'SOURCE_DRIFT'}}
+ $values=@{};foreach($line in [IO.File]::ReadAllLines((Join-Path $taskRoot '.env'),[Text.Encoding]::UTF8)){if($line -match '^([A-Za-z_][A-Za-z0-9_]*)=(.*)$'){$values[$Matches[1]]=$Matches[2]}}
+ foreach($n in @('PGPASSWORD','PGCONNECT_TIMEOUT','PGOPTIONS')){$old[$n]=[Environment]::GetEnvironmentVariable($n,'Process')}
+ if(-not $values['AGENT_DB_PASSWORD']){throw 'PASSWORD_ABSENT'}
+ $env:PGPASSWORD=$values['AGENT_DB_PASSWORD'];$env:PGCONNECT_TIMEOUT='5';$env:PGOPTIONS='-c statement_timeout=5000 -c default_transaction_read_only=on'
+ $phase='LISTENER';$listen=@(Get-NetTCPConnection -LocalPort 25432 -State Listen)
+ if($listen.Count -ne 1 -or $listen[0].LocalAddress -cne '127.0.0.1' -or $listen[0].OwningProcess -ne 15204){throw 'LISTENER_DRIFT'}
+ $process=Get-CimInstance Win32_Process -Filter 'ProcessId=15204'
+ if($process.ExecutablePath.Replace([char]92,[char]47) -cne 'V:/.tools/postgresql-16.15/pgsql/bin/postgres.exe' -or $process.CommandLine -notlike '*V:/.local/pgdata*'){throw 'PROCESS_DRIFT'}
+ $instance=ReadPg 'postgres' "select json_build_object('directory',current_setting('data_directory'),'role',current_user)"
+ if($instance.directory.Replace([char]92,[char]47).TrimEnd('/') -cne 'V:/.local/pgdata' -or $instance.role -cne 'agent_v12'){throw 'INSTANCE_DRIFT'}
+ $legacyPath=Join-Path $taskRoot 'engine-runtime/target/classes/db/migration/V222__run_context_pack.sql'
+ if((Get-FileHash -LiteralPath $legacyPath -Algorithm SHA256).Hash -cne '419C753C652B326DBD59DE40409F080A16F26B98787A7F8CF870B6ECF2859A90'){throw 'KNOWN_LEGACY_RUNTIME_DRIFT'}
+ $phase='FIXED_DATABASE_OWNERSHIP'
+ $names=@('agent_platform_v12','agent_platform_engine_test','agent_platform_iam_engine_v12','agent_platform_iam_flow_material_v12','agent_platform_iam_owned_flow_v12','agent_platform_statistics_test','agent_platform_iam_admission_engine_v12','agent_platform_iam_o2a_c_events_v12','agent_platform_iam_o2a_b_material_v12','agent_platform_iam_o1a_metadata_v12','agent_platform_iam_o1b_status_v12','agent_platform_test_input_test','agent_platform_test_input_promotion_test','agent_platform_iam_admission_app_v12')
+ $proofs=@();foreach($name in $names){
+  $history=@();$bad=@();$state=$null
+  $row=ReadPg 'postgres' ("select json_build_object('database',datname,'owner',pg_get_userbyid(datdba)) from pg_database where datname='"+$name+"'")
+  if(-not $row -or $row.database -cne $name -or $row.owner -cne 'agent_v12'){throw 'FIXED_DATABASE_OWNER_MISMATCH'}
+  $proof=[ordered]@{database=$name;existed=$true;owner='agent_v12';ownershipVerified=$true}
+  if($name -cne 'agent_platform_v12'){
+   $schema=if($name -ceq 'agent_platform_iam_admission_app_v12'){'app'}else{'engine'}
+   $module=if($schema -ceq 'app'){'app-management'}else{'engine-runtime'}
+   $query="select json_build_object('schemaOwner',pg_get_userbyid(n.nspowner),'historyOwner',pg_get_userbyid(c.relowner),'historySchema',h.nspname,'historyName',c.relname) from pg_namespace n left join pg_class c on c.oid=to_regclass('"+$schema+".flyway_schema_history') left join pg_namespace h on h.oid=c.relnamespace where n.nspname='"+$schema+"'"
+   $state=ReadPg $name $query
+   # This exact original Boot fixture fails before Flyway in the retained baseline (9 errors).
+   # Keep its owned, uninitialized schema state; do not manufacture a migration success.
+   if($name -ceq 'agent_platform_test_input_test' -and (-not $state -or ($state.schemaOwner -ceq 'agent_v12' -and -not $state.historyOwner -and -not $state.historyName))){
+    $proof['schemaPresent']=[bool]$state;$proof['historyPresent']=$false;$proof['originalContextFailureBeforeMigrationRetained']=$true;$proof['originalBaselineErrorCount']=9;$proofs+=[pscustomobject]$proof;continue
+   }
+   if(-not $state -or $state.schemaOwner -cne 'agent_v12' -or $state.historyOwner -cne 'agent_v12' -or $state.historySchema -cne $schema -or $state.historyName -cne 'flyway_schema_history'){throw 'SCHEMA_OWNER_MISMATCH'}
+   $history=@(ReadPg $name ("select coalesce(json_agg(json_build_object('rank',installed_rank,'version',version,'type',type,'script',script,'checksum',checksum,'installedBy',installed_by,'success',success) order by installed_rank),'[]'::json) from "+$schema+".flyway_schema_history"))
+   $files=@(Get-ChildItem -LiteralPath (Join-Path $taskRoot ($module+'/src/main/resources/db/migration')) -File -Filter 'V*.sql'|ForEach-Object{$_.Name})
+   if($schema -ceq 'engine'){$files+=@('V222__run_context_pack.sql')}
+   $legacyBad=@($history|Where-Object{$_.script -ceq 'V222__run_context_pack.sql' -and ($schema -cne 'engine' -or $_.version -cne '222' -or $_.type -cne 'SQL' -or $_.checksum -ne 701700386 -or $_.installedBy -cne 'agent_v12' -or -not $_.success)})
+   if($legacyBad.Count -ne 0){throw 'KNOWN_LEGACY_HISTORY_MISMATCH'}
+   $bad=@($history|Where-Object{-not $_.success -or $_.installedBy -cne 'agent_v12' -or (($_.type -ceq 'SQL') -and ($null -eq $_.version -or $files -cnotcontains $_.script)) -or (($_.type -ceq 'SCHEMA') -and ($_.rank -ne 0 -or $null -ne $_.version -or $_.script -cne ('"'+$schema+'"'))) -or @('SQL','SCHEMA') -cnotcontains $_.type})
+   if($bad.Count -ne 0 -or @($history|Where-Object{$_.type -ceq 'SQL'}).Count -eq 0 -or @($history|Where-Object{$_.type -ceq 'SCHEMA'}).Count -gt 1){throw 'PROJECT_HISTORY_MISMATCH'}
+   $proof['schema']=$schema;$proof['schemaHistoryOwnershipVerified']=$true;$proof['history']=$history
+  }
+  $proofs+=[pscustomobject]$proof
+ }
+ $phase='DYNAMIC_DATABASE_CATALOG'
+ $dynamic=@(ReadPg 'postgres' "select coalesce(json_agg(json_build_object('database',datname,'owner',pg_get_userbyid(datdba)) order by datname),'[]'::json) from pg_database where datname ~ '^timeout_fix_[0-9a-f]{32}$'")
+ Save ('timeout-database-'+$Moment+'.json') $dynamic
+ Save ('fixed-database-'+$Moment+'.json') $proofs
+ if($Moment -ceq 'after'){
+  $before=[IO.File]::ReadAllText((Join-Path $PSScriptRoot 'timeout-database-before.json'),[Text.Encoding]::UTF8)|ConvertFrom-Json
+  $new=@($dynamic|Where-Object{$n=$_.database;@($before|Where-Object{$_.database -ceq $n}).Count -eq 0})
+  $lost=@($before|Where-Object{$n=$_.database;$oldOwner=$_.owner;@($dynamic|Where-Object{$_.database -ceq $n -and $_.owner -ceq $oldOwner}).Count -eq 0})
+  $ok=$new.Count -eq 1 -and @($new|Where-Object{$_.owner -cne 'agent_v12' -or $_.database -cnotmatch '^timeout_fix_[0-9a-f]{32}$'}).Count -eq 0 -and $lost.Count -eq 0
+  Save 'dynamic-database-delta.json' ([ordered]@{passed=$ok;newDatabases=$new;removedOrOwnershipChanged=$lost;beforeCount=$before.Count;afterCount=$dynamic.Count;collectorDdl=$false;oldDatabaseCatalogIdentityChanged=($lost.Count -ne 0);originalSourceBehavior='RunEventReaderTimeoutBudgetPostgresTest.freshDatabase CREATE before missing timeout.fix.evidence class error; no property added; no cleanup'})
+  if(-not $ok){throw 'UNEXPECTED_DYNAMIC_DATABASE_DELTA'}
+ }else{
+  Save 'full-pg-admission.json' ([ordered]@{passed=$true;evidenceKind='ACTUAL_PG_READONLY_PREFLIGHT';checkedAt=[DateTimeOffset]::Now.ToString('o');module='engine-runtime';head=$f.head;envSha256=$f.envSha256;moduleSourceManifestSha256=$f.moduleSourceManifestSha256.ToUpperInvariant();exclusiveWindowId=$f.exclusiveWindowId;pid=15204;port=25432;knownDataDirectory=$true;roleAgentV12=$true;knownScopeOnly=$true;unknownDatabaseCount=0;noCreateResetOrQueueCleanup=$true;readOnly=$true;originalReplayWhitelistReviewed=$true;databaseProofs=$proofs;approvedReplayDatabases=@('agent_platform_engine_test','agent_platform_iam_owned_flow_v12');knownLegacyRuntimeArtifact=@{path='engine-runtime/target/classes/db/migration/V222__run_context_pack.sql';sha256='419C753C652B326DBD59DE40409F080A16F26B98787A7F8CF870B6ECF2859A90';flywayChecksum=701700386;currentSourceContainsFile=$false;cleanBuildVerified=$false};dynamicDatabaseBehaviorReviewed=$true;dynamicDatabasePrefix='timeout_fix_';dynamicDatabaseBeforeFile='docs/evidence/2026-10-28-EX-04/collector/inputs/full-engine-candidate/timeout-database-before.json';dynamicDatabaseBeforeSha256=(Get-FileHash -LiteralPath (Join-Path $PSScriptRoot 'timeout-database-before.json') -Algorithm SHA256).Hash;originalTimeoutFixtureCreatesThenClassError=$true;noRegistryPropertiesAdded=$true;note='unknownDatabaseCount covers this whitelist only, not the whole instance. No collector DDL. Original owned fixture table deletes/truncate retained. No unknown or old dynamic database cleanup. Scope includes original HTTP app fixture; see engine-full-pg-scope.md.'})
+ }
+ $passed=$true;Write-Output ('EX04_FULL_ENGINE_PG_'+$Moment.ToUpperInvariant()+'_PASSED fixed='+$proofs.Count+' dynamic='+$dynamic.Count)
+}catch{Save ('pg-'+$Moment+'-error.json') ([ordered]@{phase=$phase;knownDatabase=$name;historyRows=@($history).Count;badHistory=@($bad|ForEach-Object{[pscustomobject]@{rank=$_.rank;version=$_.version;type=$_.type;script=if($_.script -match '^[A-Za-z0-9_ ."/,:-]+$'){$_.script}else{'OTHER'};installedBy=if($_.installedBy -in @('agent_v12','postgres')){$_.installedBy}else{'OTHER'};success=$_.success}});line=$_.InvocationInfo.ScriptLineNumber;exceptionClass=$_.Exception.GetType().FullName;messagePrinted=$false});Write-Output ('EX04_ENGINE_PG_STOP phase='+$phase+' line='+$_.InvocationInfo.ScriptLineNumber)}finally{foreach($n in $old.Keys){[Environment]::SetEnvironmentVariable($n,$old[$n],'Process')}}
+if(-not $passed){exit 2}

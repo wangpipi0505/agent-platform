@@ -1,0 +1,55 @@
+{
+  "phase": "STATIC_TEST_CANDIDATE_NOT_COMPILED_OR_RUN",
+  "files": [
+    {
+      "path": "engine-runtime/src/main/java/cn/agentplatform/engine/application/ToolOutputPolicy.java",
+      "sha256": "94cf53c998668fe6d4a7c60d41a063d5c05fced6e7800a96fc3fd1a289fe4c77",
+      "bytes": 8047,
+      "crlf": 0
+    },
+    {
+      "path": "engine-runtime/src/test/java/cn/agentplatform/engine/application/ToolOutputPolicyTest.java",
+      "sha256": "0989dce43b6033082ac7d15b807e475b6941426adc2441c2a335d900c5e9e741",
+      "bytes": 20459,
+      "crlf": 0
+    },
+    {
+      "path": "engine-runtime/src/test/java/cn/agentplatform/engine/application/RunToolProfileTest.java",
+      "sha256": "4018d136e9b9e7b8bf3eef66a32ce2edecba565eeebc68b9b6f0f40c1461c1c0",
+      "bytes": 21925,
+      "crlf": 0
+    }
+  ],
+  "checks": {
+    "onlyTwoAllowedTestFilesWritten": true,
+    "productionUnchanged": true,
+    "toolOriginalFullTextReconstructedExactly": true,
+    "profileOriginalFullTextReconstructedExactly": true,
+    "all22OriginalMethodNamesPreserved": true,
+    "toolMethodSourceCases": 21,
+    "expectedToolReports": 34,
+    "expectedProfileReports": 13,
+    "expectedTotalReports": 47,
+    "expectedNewReports": 25,
+    "gitDiffCheck": 0,
+    "sourceLf": true,
+    "realPgProjectionProvenancePending": true,
+    "javaMavenPgHttpStarted": false,
+    "envRead": false,
+    "indexModified": false,
+    "usedSuperpower": false
+  },
+  "newNamedMethods": {
+    "ToolOutputPolicyTest": [
+      "offsetHintKeepsDeclaredCursorAndCapsWithoutInventingObservedValues",
+      "pageModeAndLegacyOptionalResponseKeepExistingHintSemantics",
+      "exactThresholdKeepsSameNodeForOffsetMalformedAndAbsentDeclarations",
+      "invalidPaginationDoesNotCreateRuntimeHintOrThrow"
+    ],
+    "RunToolProfileTest": [
+      "projectionContractSurvivesActualFreezeAndFeedsOffsetPolicy"
+    ]
+  },
+  "targetCommand": "Test-AP engine-runtime 'ToolOutputPolicyTest,RunToolProfileTest'",
+  "actualWindowRequired": true
+}
