@@ -3,6 +3,12 @@ import { createRouter, createWebHashHistory, type RouteRecordRaw } from "vue-rou
 const routes: RouteRecordRaw[] = [
   { path: "/", redirect: "/apps" },
   {
+    path: "/capability-packages",
+    name: "capability-packages",
+    component: () => import("./pages/CapabilityPackagesPage.vue"),
+    meta: { title: "软件能力目录" },
+  },
+  {
     path: "/apps",
     name: "apps",
     component: () => import("./pages/AppsPage.vue"),

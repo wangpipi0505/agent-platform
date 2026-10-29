@@ -3,10 +3,12 @@ import { computed, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { useAuth } from "../../shared/api";
 import { pageChrome } from "./page-chrome";
+import { canReadCapabilityPackages } from "../../shared/capability-package";
 
 const auth = useAuth();
 const route = useRoute();
 const menus = [
+  ["软件能力目录", "/capability-packages"],
   ["智能体管理", "/apps"],
   ["模型供应商", "/model/providers"],
   ["模型条目", "/model/entries"],
@@ -34,6 +36,7 @@ const tab = computed(() => {
 const shellClass = computed(() => ({
   "canvas-mode": route.name === "app-workspace" && tab.value === "orchestration/flow",
   "statistics-mode": route.path === "/statistics",
+  "capability-mode": route.name === "capability-packages",
   "test-input-mode":
     route.name === "app-workspace" &&
     ["orchestration/debug", "orchestration/publish"].includes(tab.value),
@@ -64,8 +67,8 @@ function logout() {
     <aside class="nav">
       <div class="logo">◈ 智能体平台</div>
       <small>构建与管理</small>
-      <template v-for="(menu, i) in menus" :key="menu[1]">
-        <small v-if="i === 5">运行与支撑</small>
+      <template v-for="menu in menus.filter((item) => item[1] !== '/capability-packages' || canReadCapabilityPackages(auth.roles))" :key="menu[1]">
+        <small v-if="menu[1] === '/services'">运行与支撑</small>
         <a
           :href="'#' + menu[1]"
           :data-short="menu[0].slice(0, 1)"
@@ -106,6 +109,11 @@ function logout() {
   border-bottom: 1px solid #f5dab1;
   color: #8a5a00;
   font-size: 0.875rem;
+}
+@media (max-width: 900px) {
+  .capability-mode { min-width: 0; }
+  .capability-mode .topbar { height: auto; min-height: 3.5rem; flex-wrap: wrap; gap: .5rem; padding: .75rem 1rem; }
+  .capability-mode .topbar .actions { flex-wrap: wrap; }
 }
 @media (max-width: 900px) {
   .statistics-mode {
