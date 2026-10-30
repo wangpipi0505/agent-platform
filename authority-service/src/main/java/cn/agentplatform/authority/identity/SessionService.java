@@ -43,6 +43,15 @@ public final class SessionService {
     private static final int MAX_BODY_BYTES = 8 * 1024;
     private static final int MAX_IDENTITY_BYTES = 64 * 1024;
     private static final String TYPE = "at+jwt";
+    /**
+     * 委派天花板维度：必须与 {@code DelegatedAuthority.ATTRIBUTE_KEYS} 同集合。
+     *
+     * <p>签进令牌的 {@code attributes} 只表示"这份人身份可以被委派到哪些维度"，是授权上限而不是
+     * 身份画像；{@code DelegatedAuthority.attributesOf} 对白名单外的键按 fail-closed 拒绝
+     * （{@code SUBJECT_ATTRIBUTES}）。因此 deptId/deptName/dataScope 这类展示属性只能留在
+     * 会话响应体里，不能进签名面——否则本服务签出的人令牌无法作为它自己委派链的主体令牌。
+     */
+    private static final Set<String> CEILING_KEYS = Set.of("region", "dataLabels", "bizSystemCode", "userId");
 
     private final KeyRing keys;
     private final IssuerResolver issuerResolver;
@@ -124,13 +133,28 @@ public final class SessionService {
         claims.put("tenant_id", properties.tenant());
         claims.put("sub", userName);
         claims.put("roles", roles);
-        claims.put("attributes", attributes);
+        claims.put("attributes", ceilingAttributes(attributes));
         claims.put("scope", properties.scope());
         claims.put("iat", iat);
         claims.put("nbf", iat);
         claims.put("exp", iat + properties.sessionSeconds());
         claims.put("jti", "ses_" + UUID.randomUUID().toString().replace("-", ""));
         return claims;
+    }
+
+    /**
+     * 只把委派天花板维度签进令牌；其余身份画像留在响应体 {@code session.attributes} 里。
+     *
+     * <p>两个面必须分开：响应体是给调用方渲染用的，不参与验签；令牌是下游
+     * {@code DelegatedAuthority} 的授权上限输入，只能出现它认识的四个维度，否则
+     * {@code attributesOf} 会整条拒绝（{@code 403 SUBJECT_ATTRIBUTES}）。
+     */
+    private static Map<String, Object> ceilingAttributes(Map<String, Object> attributes) {
+        Map<String, Object> ceiling = new LinkedHashMap<>();
+        attributes.forEach((key, value) -> {
+            if (CEILING_KEYS.contains(key)) ceiling.put(key, value);
+        });
+        return ceiling;
     }
 
     /**

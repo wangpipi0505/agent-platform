@@ -139,7 +139,12 @@ class SessionEndpointTest extends AuthorityTestSupport {
                 .containsExactly("admin");
         assertThat(claims.get("attributes").get("userId").get(0).asText()).isEqualTo("admin");
         assertThat(claims.get("attributes").get("bizSystemCode").get(0).asText()).isEqualTo("agent-platform");
-        assertThat(claims.get("attributes").get("dataScope").get(0).asText()).isEqualTo("1");
+        // 令牌面只放委派天花板维度：deptId/deptName/dataScope 进签名会让人令牌在
+        // DelegatedAuthority.attributesOf 的白名单校验里整条被拒（403 SUBJECT_ATTRIBUTES）。
+        assertThat(claims.get("attributes").has("dataScope"))
+                .as("dataScope 不能进令牌签名面，只能留在 session 响应体里").isFalse();
+        assertThat(claims.get("attributes").has("deptId"))
+                .as("deptId 不能进令牌签名面，只能留在 session 响应体里").isFalse();
     }
 
     @Test
