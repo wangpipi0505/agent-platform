@@ -13,6 +13,7 @@ import { restoreSession, writeSessionUrl } from "./session";
 const sessionId = ref(
   new URLSearchParams(location.search).get("sessionId") || "",
 );
+const sessionInfo = ref<{ versionNo?: number; maxTurns?: number }>();
 const declaration = ref<any>();
 const inputsForm = ref<InstanceType<typeof SchemaInputs>>();
 const ready = ref(false);
@@ -29,6 +30,7 @@ const auth = useAuth();
 const draft = ref("");
 const messages = ref<{ role: string; text: string; warning?: string }[]>([]);
 const busy = ref(false);
+const observing = ref(false);
 const error = ref("");
 const runId = ref("");
 const connection = ref('正在处理 ▍');
@@ -36,11 +38,39 @@ let disposed = false;
 let controller: AbortController;
 let frame = 0;
 let buffer = "";
+function sessionFacts(value: unknown) {
+  const data = record(value);
+  const number = (key: string) => {
+    const candidate = data?.[key];
+    return typeof candidate === 'number' && Number.isSafeInteger(candidate) && candidate > 0 ? candidate : undefined;
+  };
+  sessionInfo.value = { versionNo: number('versionNo'), maxTurns: number('maxTurns') };
+}
+function terminalOutput(snapshot: Record<string, unknown>) {
+  if (snapshot.status !== 'FAILED' && snapshot.status !== 'CANCELLED') return snapshot.output;
+  // PG默认空对象不能覆盖真实失败原因，也不能被当作取消后的最终回答。
+  const available = (value: unknown) => value !== undefined && value !== null &&
+    (typeof value !== 'object' || Object.keys(value).length > 0);
+  return available(snapshot.error) ? snapshot.error : available(snapshot.output) ? snapshot.output
+    : snapshot.status === 'FAILED' ? '运行失败' : '运行已取消';
+}
+function finishObservation() {
+  cancelAnimationFrame(frame);
+  frame = 0;
+  if (buffer && messages.value.at(-1)?.role === "assistant") {
+    messages.value[messages.value.length - 1].text += buffer;
+    buffer = "";
+  }
+  busy.value = false;
+}
 async function initialize() {
+  ready.value = false;
+  busy.value = true;
   try {
     if (props.ticket) auth.token = await props.ticket();
     const api = useApi();
     const base = props.endpoint || "";
+    let pendingId = "";
     if (sessionId.value) {
       const restored = await restoreSession(
         (p) => api(base + p),
@@ -48,19 +78,29 @@ async function initialize() {
         sessionId.value,
       );
       declaration.value = restored.declaration;
-      for (const turn of restored.session.turns || []) {
+      sessionFacts(restored.session);
+      const turns = restored.session.turns || [];
+      for (let index = 0; index < turns.length; index++) {
+        const turn = turns[index];
+        if (typeof turn.run_public_id !== 'string' || !turn.run_public_id)
+          throw Error('会话有已受理但尚未关联运行的轮次，请保留会话标识并核对原请求，不要重新发送。');
         const r = await api(
           base + "/v1/runs/" + encodeURIComponent(turn.run_public_id),
         );
+        if (r.runId !== turn.run_public_id) throw Error('会话运行回执不一致，请在运行中心核对原记录。');
         if (r.inputs?.message)
           messages.value.push({ role: "user", text: String(r.inputs.message) });
         messages.value.push({
           role: "assistant",
-          ...finalAnswer(r.output??r.error),
+          ...(terminal(r.status) ? finalAnswer(terminalOutput(r)) : { text: "" }),
         });
         runId.value = r.runId;
         files.value = r.fileRefs || [];
         awaitingApproval.value = r.status === "WAITING_APPROVAL";
+        if (!terminal(r.status)) {
+          if (index !== turns.length - 1) throw Error('会话历史中存在未结束轮次，请先在运行中心核对。');
+          pendingId = r.runId;
+        }
       }
     } else
       declaration.value = await api(
@@ -72,8 +112,15 @@ async function initialize() {
     if (!["CHAT", "FLOW"].includes(declaration.value.type))
       throw Error("发布输入契约未提供应用类型，请刷新后重试");
     ready.value = true;
+    // 恢复只观察PG已受理的原run，不创建会话、不换requestId，也不重发工具或模型调用。
+    if (pendingId) {
+      connection.value = '正在恢复原运行的状态与输出 ▍';
+      await followRun(api, base, pendingId);
+    }
   } catch (e: any) {
-    error.value = e.message;
+    if (e.name !== 'AbortError') error.value = e.message;
+  } finally {
+    finishObservation();
   }
 }
 onMounted(initialize);
@@ -105,6 +152,7 @@ async function send() {
         "POST",
       );
       sessionId.value = s.sessionId;
+      sessionFacts(s);
       writeSessionUrl(s.sessionId);
     }
     const run = await api(
@@ -123,6 +171,15 @@ async function send() {
     if (disposed) throw new DOMException('观察已停止', 'AbortError');
     runId.value = run.runId;
     messages.value.push({ role: "assistant", text: "" });
+    await followRun(api, base, run.runId);
+  } catch (e: any) {
+    if (e.name !== "AbortError")
+      error.value = e.message + "；可在运行中心查看权威结果。";
+  } finally {
+    finishObservation();
+  }
+}
+async function followRun(api: ReturnType<typeof useApi>, base: string, observedId: string) {
     let receivedFinal = false;
     // Cancel queued animation writes before accepting a terminal snapshot. Otherwise
     // chunks from an invalid output attempt can append after the corrected answer.
@@ -134,7 +191,6 @@ async function send() {
       Object.assign(messages.value[messages.value.length - 1], finalAnswer(output));
     };
     controller = new AbortController();
-    const observedId = run.runId;
     const signal = AbortSignal.any([controller.signal, auth.snapshot().signal]);
     const refreshTicket = async () => {
       if (props.ticket) {
@@ -143,6 +199,8 @@ async function send() {
         auth.token = token;
       }
     };
+    observing.value = true;
+    try {
     const result = await observeRun({
       signal,
       open: async (cursor, emit) => {
@@ -181,42 +239,45 @@ async function send() {
         files.value = snapshot.fileRefs || snapshot.output?.fileRefs || [];
         // Nonterminal output may be the PG default {}; it cannot finalize or replace chunks.
         if (terminal(snapshot.status))
-          applyFinal(snapshot.status === 'FAILED' || snapshot.status === 'CANCELLED'
-            ? snapshot.error ?? snapshot.output ?? (snapshot.status === 'FAILED' ? '运行失败' : '运行已取消')
-            : snapshot.output);
+          applyFinal(terminalOutput(snapshot));
       },
     });
     if (result.status === "FAILED")
       error.value = result.error?.message || "本次运行失败，请查看运行中心记录";
-  } catch (e: any) {
-    if (e.name !== "AbortError")
-      error.value = e.message + "；可在运行中心查看权威结果。";
-  } finally {
-    cancelAnimationFrame(frame);
-    frame = 0;
-    if (buffer && messages.value.at(-1)?.role === "assistant") {
-      messages.value[messages.value.length - 1].text += buffer;
-      buffer = "";
+    } finally {
+      observing.value = false;
     }
-    busy.value = false;
-  }
 }
 async function stop() {
+  if (!runId.value || !busy.value || !observing.value) return;
   if (!confirm("确认停止当前运行？")) return;
+  const id = runId.value, owned = controller, message = messages.value.at(-1);
   try {
-    await useApi()(
+    const cancelled = await useApi()(
       (props.endpoint || "") + "/v1/runs/" + runId.value + "/cancel",
       "POST",
     );
-    controller?.abort();
+    // 停止回执只影响发起时的原观察，不能让迟到回执中止用户之后接续的新一轮。
+    if (disposed || controller !== owned || runId.value !== id || messages.value.at(-1) !== message) return;
+    if (cancelled?.runId !== id) throw Error('停止回执与原运行不一致，请在运行中心核对。');
+    error.value = '';
+    if (terminal(cancelled.status)) {
+      awaitingApproval.value = false;
+      files.value = cancelled.fileRefs || [];
+      if (messages.value.at(-1)?.role === 'assistant')
+        Object.assign(messages.value[messages.value.length - 1], finalAnswer(terminalOutput(cancelled)));
+    }
+    owned.abort();
   } catch (e: any) {
-    error.value = e.message;
+    if (!disposed && controller === owned && runId.value === id && messages.value.at(-1) === message)
+      error.value = e.message;
   }
 }
 async function newConversation() {
   // 显式切换续接入口，不删除旧会话、轮次或运行事实。
   if (busy.value || awaitingApproval.value) return;
   sessionId.value = "";
+  sessionInfo.value = undefined;
   writeSessionUrl("");
   messages.value = [];
   files.value = [];
@@ -234,6 +295,9 @@ onBeforeUnmount(() => {
 </script>
 <template>
   <div class="chat">
+    <p v-if="sessionId && sessionInfo" class="muted" role="status">
+      当前会话 {{ sessionId }} · 固定发布版本 {{ sessionInfo.versionNo ?? '未记录' }} · 最多 {{ sessionInfo.maxTurns ?? '未记录' }} 轮
+    </p>
     <div class="messages">
       <p v-if="!messages.length" class="muted">
         向智能体提问，运行过程可在工作台查看。
@@ -275,8 +339,8 @@ onBeforeUnmount(() => {
     <div class="row" style="margin-top: 0.75rem">
       <span class="muted">{{ runId }}</span
       ><el-button v-if="declaration?.type === 'CHAT' && sessionId" :disabled="busy || awaitingApproval" @click="newConversation">新建会话</el-button
-      ><el-button v-if="busy" @click="stop">停止运行</el-button
-      ><el-button v-else type="primary" :disabled="!ready" @click="send">{{
+      ><el-button v-if="busy && observing" @click="stop">停止运行</el-button
+      ><el-button v-else type="primary" :disabled="!ready || busy" @click="send">{{
         declaration?.type === "FLOW" ? "提交运行" : "发送"
       }}</el-button>
     </div>
