@@ -51,6 +51,12 @@ public class AppController {
         return ApiResponse.ok(apps.get(code));
     }
 
+    /** 只读最近pin观测，沿相邻GET的身份边界；租户与应用存在性由现有服务统一校验。 */
+    @GetMapping("/admin/apps/{code}/pin-status")
+    public Object pinStatus(@PathVariable String code) {
+        return ApiResponse.ok(apps.pinStatus(code));
+    }
+
     @PutMapping("/admin/apps/{code}")
     public Object metadata(@PathVariable String code, @RequestBody Map<String, Object> b) {
         edit();
