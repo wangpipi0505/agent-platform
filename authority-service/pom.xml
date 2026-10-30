@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>cn.agentplatform</groupId>
+    <artifactId>agent-platform</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+  </parent>
+  <artifactId>authority-service</artifactId>
+
+  <dependencies>
+    <!-- 公共契约（Json/Digest/ServiceRoutePolicy/ServiceCall/AuthorityProperties）唯一来源。 -->
+    <dependency>
+      <groupId>cn.agentplatform</groupId>
+      <artifactId>admin-common</artifactId>
+      <version>${project.version}</version>
+      <exclusions>
+        <!-- 本服务是票据签发方而不是资源服务器：不把 spring-security/oauth2-resource-server
+             的默认过滤链带进运行期，避免"未加防护却看起来被保护"的反向风险。 -->
+        <exclusion>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <!-- 仅测试期用于"真实消费方"契约测试（HttpCurrentAuthorityClient/TrustedJwtDecoder 需要这些类）。 -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>
+</project>

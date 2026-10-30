@@ -1,0 +1,39 @@
+server:
+  # 签发服务只对可信网络暴露；默认仅回环，生产前置 mTLS/网关再监听真实地址。
+  address: ${AGENT_BIND_ADDRESS:127.0.0.1}
+  port: ${SERVER_PORT:18086}
+
+spring:
+  application:
+    name: authority-service
+  threads:
+    virtual:
+      enabled: true
+
+logging:
+  level:
+    org.springframework.security: WARN
+
+agent:
+  authority:
+    # 对外 issuer。留空时仅在回环绑定的开发/测试场景按实际端口推导；
+    # 非回环绑定下留空会以 AUTHORITY_ISSUER_REQUIRED 启动失败（fail-closed）。
+    issuer: ${AGENT_AUTHORITY_ISSUER:}
+    # PKCS#8 PEM（支持 classpath: 前缀）。留空则启动时生成一次性 RSA 密钥并告警：
+    # 生产必须挂载稳定私钥，否则重启即换 kid，平台侧缓存全部失效。
+    key-path: ${AGENT_AUTHORITY_KEY_PATH:}
+    kid: ${AGENT_AUTHORITY_KID:2026-10}
+    # 轮换预留：同时暴露上一个 kid 的公钥，签发只用 active kid。
+    previous-key-path: ${AGENT_AUTHORITY_PREVIOUS_KEY_PATH:}
+    previous-kid: ${AGENT_AUTHORITY_PREVIOUS_KID:}
+    # 票面时限：ticket <= 60s、assertion <= 5s 与平台 AuthorityProperties 的预算上界一致。
+    ticket-seconds: ${AGENT_AUTHORITY_TICKET_SECONDS:60}
+    assertion-seconds: ${AGENT_AUTHORITY_ASSERTION_SECONDS:5}
+    # 调用方凭据：client_id 只能是平台服务名；空值表示该客户端未启用（401）。
+    clients:
+      gateway: ${AGENT_SECRET_IAM_GATEWAY_CLIENT:}
+      app: ${AGENT_SECRET_IAM_APP_CLIENT:}
+      engine: ${AGENT_SECRET_IAM_ENGINE_CLIENT:}
+      skill: ${AGENT_SECRET_IAM_SKILL_CLIENT:}
+      model: ${AGENT_SECRET_IAM_MODEL_CLIENT:}
+      monitor: ${AGENT_SECRET_IAM_MONITOR_CLIENT:}
