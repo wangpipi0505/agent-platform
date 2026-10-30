@@ -20,6 +20,7 @@ from urllib.parse import urlparse
 RELEASE_ID = "7dc4a1e2-5b3c-4f8d-9a11-2c3d4e5f6a7b"
 CANDIDATE_SHA = "3f1a9c0d5e7b2468ace013579bdf24680ace13579bdf24680ace13579bdf2468"
 GOOD_KEY = "good-key"
+OTHER_RELEASE_ID = "99999999-8888-7777-6666-555555555555"
 
 PACK_NORMAL = {
     "candidateId": "0b1c2d3e-4f50-4a6b-8c7d-9e0f1a2b3c4d",
@@ -68,12 +69,24 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         path = urlparse(self.path).path
-        expected = f"/onto/releases/{RELEASE_ID}/context-pack"
-        if path != expected:
+        pack_path = f"/onto/releases/{RELEASE_ID}/context-pack"
+        manifest_path = f"/onto/releases/{RELEASE_ID}/manifest"
+        if path not in (pack_path, manifest_path):
             self._send(404, {"code": "NOT_FOUND", "message": "路径不存在", "data": None})
             return
         if self.headers.get("X-API-Key") != GOOD_KEY:
             self._send(401, {"code": "SERVICE_CREDENTIAL_REQUIRED", "message": "需要服务账号凭据", "data": None})
+            return
+        if path == manifest_path:
+            # J4 第一段的形状：每个 operation 一条 manifest，releaseId 必须与入参一致。
+            # mode=mismatch 时故意写成另一个 release，用于验证脚本会拒绝"导错版本"。
+            listed = OTHER_RELEASE_ID if self.mode == "mismatch" else RELEASE_ID
+            self._send(200, {"code": "OK", "message": "success", "data": {"manifests": [
+                {"toolCode": "queryCampaign", "spaceCode": "marketing", "releaseId": listed,
+                 "version": 3, "contentDigest": CANDIDATE_SHA},
+                {"toolCode": "querySegment", "spaceCode": "marketing", "releaseId": listed,
+                 "version": 3, "contentDigest": CANDIDATE_SHA},
+            ]}})
             return
         pack = {"empty": PACK_EMPTY, "badsha": PACK_BADSHA}.get(self.mode, PACK_NORMAL)
         self._send(200, {"code": "OK", "message": "success", "data": pack})
@@ -82,7 +95,7 @@ class Handler(BaseHTTPRequestHandler):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int, default=18199)
-    parser.add_argument("--mode", default="normal", choices=["normal", "empty", "badsha"])
+    parser.add_argument("--mode", default="normal", choices=["normal", "empty", "badsha", "mismatch"])
     args = parser.parse_args()
     Handler.mode = args.mode
     server = HTTPServer(("127.0.0.1", args.port), Handler)
