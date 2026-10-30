@@ -1024,3 +1024,190 @@ function Invoke-JointPlatformAppEvaluate {
     Set-JointValue $State 'lastError' $null;& $Save
     return $result
 }
+
+# 真实预检/发布属于后置验收；当前开发任务不授权运行，须用户后续明确确认。
+function Invoke-JointPlatformAppPublish {
+    param([Parameter(Mandatory=$true)][ValidateSet('Precheck','Commit')][string]$Mode,[object]$Plan,[object]$State,[object]$Runtime,
+        [string]$BearerToken,[scriptblock]$Save,[AllowNull()][object]$Confirmation,[switch]$LivePublicationApproved)
+    if(-not $LivePublicationApproved){throw 'JOINT_LIVE_PUBLICATION_REQUIRES_EXPLICIT_APPROVAL'}
+    if(-not $BearerToken -or -not $Save){throw 'JOINT_PLATFORM_IDENTITY_MISMATCH'}
+    if($State.pending){throw 'JOINT_PENDING_ACTION_NEEDS_RECONCILIATION'}
+    $drafts=$State.platformAppDrafts;$evaluations=$State.platformAppEvaluations
+    if($State.complete -ne $false -or -not $drafts -or @($drafts.applications).Count -ne 3 -or
+        -not $evaluations -or $evaluations.status -cne 'ACCEPTED' -or @($evaluations.reports).Count -ne 3 -or
+        $evaluations.modelMode -cne $Plan.ModelMode -or $evaluations.externalTruth -cne 'NOT_ASSESSED'){
+        throw 'JOINT_APP_EVALUATION_STAGE_REQUIRED'
+    }
+    if($Mode -ceq 'Commit'){
+        if(-not $Confirmation -or $Confirmation.sessionId -cne $Plan.SessionId -or
+            @(Get-JointNames $Confirmation|Where-Object{$_ -cnotin @('sessionId','applications')}).Count -or
+            @($Confirmation.applications).Count -ne 3){throw 'JOINT_APP_PUBLICATION_CONFIRMATION_REQUIRED'}
+        Assert-JointSafeMetadata $Confirmation
+    }elseif($null -ne $Confirmation){throw 'JOINT_APP_PUBLICATION_CONFIRMATION_STAGE_INVALID'}
+    # 已确认技能发布才允许复用只读前提检查，避免本阶段隐含选型或技能发布。
+    if(-not $State.platformPublishedSkill -or -not (Get-JointValue $State.actions 'platform_skill_publish') -or
+        -not (Get-JointValue $State.actions 'platform_skill_acceptance')){throw 'JOINT_SKILL_PUBLICATION_STAGE_REQUIRED'}
+    Invoke-JointPlatformSkillPublish -Plan $Plan -State $State -Runtime $Runtime -BearerToken $BearerToken -Save $Save|Out-Null
+    $environment=if($Plan.ModelMode -ceq 'TestFixture'){'DEMO'}else{'REAL'}
+    $clock=[Diagnostics.Stopwatch]::StartNew()
+    function Publication-Request([string]$Path,[string]$Method='GET',[AllowNull()][object]$Body){
+        $remaining=180-[int]$clock.Elapsed.TotalSeconds
+        if($remaining -lt 1){throw 'JOINT_APP_PUBLICATION_BUDGET_EXCEEDED'}
+        $call=@{BaseUrl=$Plan.PlatformBaseUrl;Path=$Path;Method=$Method;BearerToken=$BearerToken;TimeoutSeconds=[Math]::Min(30,$remaining)}
+        if($PSBoundParameters.ContainsKey('Body')){$call.Body=$Body}
+        return (Invoke-JointHttp @call).Data
+    }
+    function Publication-Write([string]$Name,[string]$Path,[AllowNull()][object]$Body,[scriptblock]$Project){
+        $pending=[pscustomobject]@{action=$Name;method='POST';path=$Path;phase='REQUEST';startedAt=[DateTime]::UtcNow.ToString('o')}
+        Set-JointValue $State 'pending' $pending;Set-JointValue $State 'stage' $Name;& $Save
+        try{
+            $call=@{Path=$Path;Method='POST'};if($null -ne $Body){$call.Body=$Body}
+            $response=Publication-Request @call;$record=& $Project $response $pending.startedAt
+            Assert-JointSafeMetadata $record;Set-JointValue $State.actions $Name $record;& $Save
+            Set-JointValue $State 'pending' $null;& $Save
+            return $record
+        }catch{Set-JointValue $State 'pending' $pending;throw}
+    }
+    function Check-Evaluation([object]$App,[object]$Receipt){
+        $report=Publication-Request ('/admin/evaluations/'+$Receipt.id);$proof=$report.publicationEvidence
+        if($report.id -cne $Receipt.id -or $report.evalReportId -cne $Receipt.id -or $report.appCode -cne $App.code -or
+            $report.draftRev -ne $App.draftRev -or $report.candidateSha256 -cne $App.candidateSha256 -or
+            $report.datasetVersion -cne $Receipt.datasetVersion -or $report.createdBy -cne 'developer-v12' -or
+            $report.status -cne 'ACCEPTED' -or $report.accepted -isnot [bool] -or -not $report.accepted -or
+            $proof.schemaVersion -ne 2 -or $proof.scope -cne 'PLATFORM_PARTICIPANT_MODES_AND_DATASET_IDENTITY' -or
+            $proof.externalTruth -cne 'NOT_ASSESSED' -or $proof.tenantId -cne $Plan.PlatformTenant -or
+            $proof.appCode -cne $App.code -or $proof.draftRev -ne $App.draftRev -or $proof.candidateSha256 -cne $App.candidateSha256 -or
+            $proof.evalReportId -cne $Receipt.id -or $proof.datasetVersion -cne $Receipt.datasetVersion -or
+            $proof.datasetSha256 -cne $Receipt.datasetSha256 -or $proof.evidenceSha256 -cne $Receipt.evidenceSha256 -or
+            $proof.caseSourcesSha256 -cne $Receipt.caseSourcesSha256 -or $proof.environment -cne $environment -or
+            $proof.qualityAccepted -isnot [bool] -or -not $proof.qualityAccepted -or $proof.status -cne 'ACCEPTED'){
+            throw 'JOINT_APP_PUBLICATION_EVALUATION_CHANGED'
+        }
+    }
+    function Check-App([object]$App,[AllowNull()][object]$Committed){
+        $current=Publication-Request ('/admin/apps/'+$App.code)
+        $status=if($Committed){'PUBLISHED'}else{'DRAFT'}
+        if($current.id -ne $App.id -or $current.draftId -ne $App.draftId -or $current.code -cne $App.code -or
+            $current.type -cne 'CHAT' -or $current.status -cne $status -or $current.draftRev -ne $App.draftRev -or
+            $current.candidateSha256 -cne $App.candidateSha256 -or
+            ($Committed -and $current.currentVersionNo -ne $Committed.versionNo) -or
+            (-not $Committed -and $null -ne $current.currentVersionNo)){throw 'JOINT_APP_DRAFT_CHANGED'}
+        if($current.config.modelBinding.modelEntryId -ne $State.platformModel.modelEntryId -or
+            @($current.config.skillRefs).Count -ne 1 -or $current.config.skillRefs[0].code -cne $State.platformPublishedSkill.code -or
+            $current.config.skillRefs[0].version -ne $State.platformPublishedSkill.versionNo -or
+            $current.config.ontology.space -cne $State.resources.spaceId){throw 'JOINT_APP_DRAFT_CHANGED'}
+        if($App.role -ceq 'resolve'){
+            if('releaseId' -cin @(Get-JointNames $current.config.ontology)){throw 'JOINT_APP_DRAFT_CHANGED'}
+        }elseif($current.config.ontology.releaseId -cne $State.resources.releaseId){throw 'JOINT_APP_DRAFT_CHANGED'}
+    }
+    function Is-Fresh([object]$Precheck){
+        $time=[DateTimeOffset]::MinValue
+        return ($Precheck -and [DateTimeOffset]::TryParse([string]$Precheck.requestedAtUtc,[ref]$time) -and
+            $time -le [DateTimeOffset]::UtcNow -and $time.AddSeconds(900) -gt [DateTimeOffset]::UtcNow)
+    }
+    function Latest-Precheck([string]$Role){
+        $prefix='platform_app_'+$Role+'_precheck_'
+        $items=@(foreach($key in @(Get-JointNames $State.actions|Where-Object{$_.StartsWith($prefix,[StringComparison]::Ordinal)})){Get-JointValue $State.actions $key})
+        return ($items|Sort-Object sequence -Descending|Select-Object -First 1)
+    }
+    $contexts=New-Object 'System.Collections.Generic.List[object]'
+    foreach($role in @('resolve','explicit','pin')){
+        $apps=@($drafts.applications|Where-Object{$_.role -ceq $role});$reports=@($evaluations.reports|Where-Object{$_.role -ceq $role})
+        if($apps.Count -ne 1 -or $reports.Count -ne 1){throw 'JOINT_APP_EVALUATION_STAGE_REQUIRED'}
+        $app=$apps[0];$eval=$reports[0];$saved=Get-JointValue $State.actions ('platform_app_'+$role+'_evaluation_accepted')
+        if(-not $saved -or $eval.appCode -cne $app.code -or $eval.draftRev -ne $app.draftRev -or
+            $eval.candidateSha256 -cne $app.candidateSha256 -or $eval.status -cne 'ACCEPTED' -or $eval.environment -cne $environment -or
+            $saved.id -cne $eval.id -or $saved.evidenceSha256 -cne $eval.evidenceSha256){throw 'JOINT_APP_EVALUATION_STAGE_REQUIRED'}
+        $committed=Get-JointValue $State.actions ('platform_app_'+$role+'_commit')
+        Check-App $app $committed;Check-Evaluation $app $eval
+        $pc=Latest-Precheck $role
+        if($pc -and ($pc.appCode -cne $app.code -or $pc.role -cne $role -or $pc.draftRev -ne $app.draftRev -or
+            $pc.candidateSha256 -cne $app.candidateSha256 -or $pc.evalReportId -cne $eval.id -or
+            $pc.evidenceSha256 -cne $eval.evidenceSha256 -or $pc.evaluationEnvironment -cne $environment)){
+            throw 'JOINT_APP_PRECHECK_RECORD_CHANGED'
+        }
+        $rowConfirmation=$null
+        if($Mode -ceq 'Commit'){
+            $matches=@($Confirmation.applications|Where-Object{$_.appCode -ceq $app.code})
+            if($matches.Count -ne 1){throw 'JOINT_APP_PUBLICATION_CONFIRMATION_REQUIRED'}
+            $rowConfirmation=$matches[0]
+            if(@(Get-JointNames $rowConfirmation|Where-Object{$_ -cnotin @('appCode','precheckId','evalReportId','evidenceSha256','confirmed')}).Count -or
+                $rowConfirmation.confirmed -isnot [bool] -or -not $rowConfirmation.confirmed -or -not $pc -or
+                $rowConfirmation.precheckId -cne $pc.precheckId -or $rowConfirmation.evalReportId -cne $eval.id -or
+                $rowConfirmation.evidenceSha256 -cne $eval.evidenceSha256){throw 'JOINT_APP_PUBLICATION_CONFIRMATION_REQUIRED'}
+            if(-not $committed -and -not (Is-Fresh $pc)){throw 'JOINT_APP_PRECHECK_EXPIRED'}
+        }
+        $contexts.Add([pscustomobject]@{app=$app;evaluation=$eval;precheck=$pc;committed=$committed;confirmation=$rowConfirmation})
+    }
+    $receipts=New-Object 'System.Collections.Generic.List[object]'
+    foreach($ctx in $contexts){
+        $app=$ctx.app;$eval=$ctx.evaluation;$pc=$ctx.precheck;$committed=$ctx.committed
+        if($Mode -ceq 'Precheck'){
+            if($committed){throw 'JOINT_APP_ALREADY_PUBLISHED'}
+            if(-not (Is-Fresh $pc)){
+                $sequence=if($pc){[int]$pc.sequence+1}else{1}
+                $pc=Publication-Write ('platform_app_'+$app.role+'_precheck_'+$sequence) ('/admin/apps/'+$app.code+'/publish/precheck') $null {
+                    param($reply,$startedAt)
+                    $checks=@($reply.report.checks)
+                    if($reply.precheckId -cnotmatch '^pc_[a-f0-9-]{36}$' -or $reply.draftRev -ne $app.draftRev -or
+                        $reply.candidateSha256 -cne $app.candidateSha256 -or $reply.evalReportId -cne $eval.id -or
+                        $reply.passed -isnot [bool] -or -not $reply.passed -or $reply.result -cne 'PASS' -or
+                        $reply.gateMode -cne 'BLOCKING' -or $reply.waiverId -or $reply.evaluationEnvironment -cne $environment -or
+                        $reply.environmentEvidenceSha256 -cne $eval.evidenceSha256 -or
+                        $reply.publicationTarget -cnotin @('PRODUCTION','NON_PRODUCTION') -or
+                        ($environment -ceq 'DEMO' -and $reply.publicationTarget -cne 'NON_PRODUCTION') -or
+                        $reply.environmentConfirmationRequired -isnot [bool] -or $reply.environmentConfirmationRequired -ne ($environment -ceq 'DEMO') -or
+                        $reply.evaluationBinding.matchedBy -cne 'SHA256' -or $reply.evaluationBinding.evalReportId -cne $eval.id -or
+                        $reply.evaluationBinding.evaluatedCandidateSha256 -cne $app.candidateSha256 -or
+                        @($checks|Where-Object{$_.result -cne 'PASS'}).Count){throw 'JOINT_APP_PRECHECK_NOT_ACCEPTED'}
+                    foreach($group in @('结构','参数','类型与无效引用','引用有效性','守卫声明','评测门禁','评测环境')){
+                        if(@($checks|Where-Object{$_.group -ceq $group}).Count -ne 1){throw 'JOINT_APP_PRECHECK_NOT_ACCEPTED'}
+                    }
+                    [pscustomobject][ordered]@{appCode=$app.code;role=$app.role;sequence=$sequence;precheckId=$reply.precheckId;draftRev=$app.draftRev;candidateSha256=$app.candidateSha256;evalReportId=$eval.id;evidenceSha256=$eval.evidenceSha256;publicationTarget=$reply.publicationTarget;evaluationEnvironment=$environment;environmentConfirmationRequired=$reply.environmentConfirmationRequired;requestedAtUtc=$startedAt}
+                }
+            }
+            $receipts.Add($pc);continue
+        }
+        if(-not $committed){
+            Check-App $app $null
+            $sha=[Security.Cryptography.SHA256]::Create()
+            try{$requestNo='ex06-app-'+([BitConverter]::ToString($sha.ComputeHash([Text.Encoding]::UTF8.GetBytes(($Plan.SessionId+':'+$app.code+':'+$pc.precheckId)))).Replace('-','').ToLowerInvariant()).Substring(0,32)}finally{$sha.Dispose()}
+            $body=@{precheckId=$pc.precheckId;draftRev=$app.draftRev;candidateSha256=$app.candidateSha256;idempotencyRequestNo=$requestNo}
+            if($pc.environmentConfirmationRequired){$body.evaluationEnvironmentConfirmation=@{confirmed=$true;precheckId=$pc.precheckId;evalReportId=$eval.id;evidenceSha256=$eval.evidenceSha256}}
+            $committed=Publication-Write ('platform_app_'+$app.role+'_commit') ('/admin/apps/'+$app.code+'/publish/commit') $body {
+                param($reply)
+                if($reply.appCode -cne $app.code -or $reply.sha256 -cne $app.candidateSha256 -or
+                    [string]$reply.versionNo -cnotmatch '^[1-9][0-9]{0,8}$'){throw 'JOINT_APP_COMMIT_REPLY_INVALID'}
+                $pin=$reply.pin
+                if($app.role -ceq 'resolve'){
+                    if($pin.state -cne 'SKIPPED' -or $pin.reason -cne 'config.ontology 缺少 space/releaseId'){throw 'JOINT_APP_PIN_RESULT_UNCONFIRMED'}
+                }else{
+                    $binding=[Guid]::Empty
+                    if($pin.state -cne 'PINNED' -or -not [Guid]::TryParse([string]$pin.bindingId,[ref]$binding) -or $binding -eq [Guid]::Empty -or
+                        $pin.changed -isnot [bool]){throw 'JOINT_APP_PIN_RESULT_UNCONFIRMED'}
+                }
+                [pscustomobject][ordered]@{appCode=$app.code;role=$app.role;versionNo=$reply.versionNo;draftRev=$app.draftRev;candidateSha256=$app.candidateSha256;precheckId=$pc.precheckId;evalReportId=$eval.id;evidenceSha256=$eval.evidenceSha256;publicationTarget=$pc.publicationTarget;environment=$environment;requestNo=$requestNo;pinState=$pin.state;bindingId=(Get-JointValue $pin 'bindingId');bindingChanged=(Get-JointValue $pin 'changed');complete=$false}
+            }
+        }
+        Check-App $app $committed
+        $version=Publication-Request ('/admin/apps/'+$app.code+'/versions/'+$committed.versionNo)
+        if($version.appCode -cne $app.code -or $version.versionNo -ne $committed.versionNo -or $version.draftRev -ne $app.draftRev -or
+            $version.candidateSha256 -cne $app.candidateSha256 -or [string]$version.appVersionId -cnotmatch '^[1-9][0-9]{0,17}$' -or
+            $version.publicationTarget -cne $pc.publicationTarget -or $version.publicationEvidence.evalReportId -cne $eval.id -or
+            $version.publicationEvidence.evidenceSha256 -cne $eval.evidenceSha256 -or $version.publicationEvidence.environment -cne $environment){throw 'JOINT_APP_PUBLICATION_READBACK_MISMATCH'}
+        if($version.config.modelBinding.modelEntryId -ne $State.platformModel.modelEntryId -or @($version.config.skillRefs).Count -ne 1 -or
+            $version.config.skillRefs[0].code -cne $State.platformPublishedSkill.code -or $version.config.skillRefs[0].version -ne $State.platformPublishedSkill.versionNo -or
+            $version.config.ontology.space -cne $State.resources.spaceId -or
+            ($app.role -ceq 'resolve' -and 'releaseId' -cin @(Get-JointNames $version.config.ontology)) -or
+            ($app.role -cne 'resolve' -and $version.config.ontology.releaseId -cne $State.resources.releaseId)){throw 'JOINT_APP_PUBLICATION_READBACK_MISMATCH'}
+        if($environment -ceq 'DEMO' -and ($version.evaluationEnvironmentConfirmation.confirmed -ne $true -or
+            $version.evaluationEnvironmentConfirmation.precheckId -cne $pc.precheckId -or $version.evaluationEnvironmentConfirmation.evalReportId -cne $eval.id -or
+            $version.evaluationEnvironmentConfirmation.evidenceSha256 -cne $eval.evidenceSha256)){throw 'JOINT_APP_PUBLICATION_READBACK_MISMATCH'}
+        $receipts.Add($committed)
+    }
+    $field=if($Mode -ceq 'Precheck'){'platformAppPrechecks'}else{'platformAppPublications'}
+    $stage=if($Mode -ceq 'Precheck'){'PLATFORM_APPS_PRECHECKED'}else{'PLATFORM_APPS_PUBLISHED'}
+    $result=[pscustomobject][ordered]@{applications=@($receipts.ToArray());modelMode=$Plan.ModelMode;environment=$environment;externalTruth='NOT_ASSESSED';bindingVerification='JOINT_ACCEPTANCE_PENDING';complete=$false}
+    Set-JointValue $State $field $result;Set-JointValue $State 'stage' $stage;Set-JointValue $State 'lastError' $null;& $Save
+    return $result
+}

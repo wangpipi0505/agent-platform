@@ -3,8 +3,9 @@
     [string]$PlatformBaseUrl='http://127.0.0.1:18080',[string]$PlatformTenant='local-v12',[string]$Environment='production',
     [string]$OutputDirectory,[string]$ReuseManifestPath,[switch]$Resume,
     [ValidateSet('TestFixture','Real')][string]$ModelMode='TestFixture',[Alias('RealModelEntryId')][string]$ModelEntryId,
-    [ValidateSet('All','Ontology','PlatformModel','PlatformSkillDraft','PlatformSkillConnect','PlatformSkillPublish','PlatformAppDrafts','PlatformAppEvaluate')][string]$Stage='All',[pscredential]$OntologyCredential,
-    [string]$PlatformRuntimePlanPath,[string]$PlatformEvaluationPlanPath
+    [ValidateSet('All','Ontology','PlatformModel','PlatformSkillDraft','PlatformSkillConnect','PlatformSkillPublish','PlatformAppDrafts','PlatformAppEvaluate','PlatformAppPrecheck','PlatformAppPublish')][string]$Stage='All',[pscredential]$OntologyCredential,
+    [string]$PlatformRuntimePlanPath,[string]$PlatformEvaluationPlanPath,
+    [string]$PlatformPublicationConfirmationPath,[switch]$LivePublicationApproved
 )
 $ErrorActionPreference='Stop'
 $repositoryRoot=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
@@ -191,13 +192,15 @@ function Get-JointSavedKey([object]$Credential) {
     return $values[$variable]
 }
 try{
+    # 真实预检/发布是后置验收，当前开发不授权；仅用户后续明确确认后传入此开关。
+    if($Stage -in @('PlatformAppPrecheck','PlatformAppPublish') -and -not $LivePublicationApproved){throw 'JOINT_LIVE_PUBLICATION_REQUIRES_EXPLICIT_APPROVAL'}
     if($Stage -eq 'All'){throw 'JOINT_ALL_STAGE_NOT_DELIVERED'}
     if($Resume -and $ReuseManifestPath){throw 'JOINT_RESUME_AND_FINAL_REUSE_CONFLICT'}
     if($Stage -eq 'Ontology' -and -not $OntologyCredential){throw 'JOINT_OR_CREDENTIAL_REQUIRED'}
-    if($Stage -in @('PlatformModel','PlatformSkillDraft','PlatformSkillConnect','PlatformSkillPublish','PlatformAppDrafts','PlatformAppEvaluate') -and (-not $Resume -or $ReuseManifestPath -or -not $PlatformRuntimePlanPath)){throw 'JOINT_PLATFORM_MODEL_RESUME_REQUIRED'}
+    if($Stage -in @('PlatformModel','PlatformSkillDraft','PlatformSkillConnect','PlatformSkillPublish','PlatformAppDrafts','PlatformAppEvaluate','PlatformAppPrecheck','PlatformAppPublish') -and (-not $Resume -or $ReuseManifestPath -or -not $PlatformRuntimePlanPath)){throw 'JOINT_PLATFORM_MODEL_RESUME_REQUIRED'}
     $plan=Get-JointPreparationPlan -RepositoryRoot $repositoryRoot -SessionId $SessionId -PlatformTenant $PlatformTenant -Environment $Environment -OutputDirectory $OutputDirectory -PlatformBaseUrl $PlatformBaseUrl -OntologyBaseUrl $OntologyBaseUrl -ReuseManifestPath $ReuseManifestPath -ModelMode $ModelMode -ModelEntryId $ModelEntryId
     $platformRuntime=$null
-    if($Stage -in @('PlatformModel','PlatformSkillDraft','PlatformSkillConnect','PlatformSkillPublish','PlatformAppDrafts','PlatformAppEvaluate')){
+    if($Stage -in @('PlatformModel','PlatformSkillDraft','PlatformSkillConnect','PlatformSkillPublish','PlatformAppDrafts','PlatformAppEvaluate','PlatformAppPrecheck','PlatformAppPublish')){
         $runtimePath=Assert-JointAcceptancePath $repositoryRoot $PlatformRuntimePlanPath
         Assert-JointPrivateFile $runtimePath
         try{$platformRuntime=[IO.File]::ReadAllText($runtimePath)|ConvertFrom-Json -ErrorAction Stop}catch{throw 'JOINT_PLATFORM_RUNTIME_PLAN_INVALID'}
@@ -215,6 +218,14 @@ try{
             Assert-JointSafeMetadata $evaluationPlan
         }
     }elseif($PlatformEvaluationPlanPath){throw 'JOINT_EVALUATION_PLAN_STAGE_INVALID'}
+    $publicationConfirmation=$null
+    if($Stage -eq 'PlatformAppPublish'){
+        if(-not $PlatformPublicationConfirmationPath){throw 'JOINT_APP_PUBLICATION_CONFIRMATION_REQUIRED'}
+        $confirmationPath=Assert-JointAcceptancePath $repositoryRoot $PlatformPublicationConfirmationPath
+        Assert-JointPrivateFile $confirmationPath
+        try{$publicationConfirmation=[IO.File]::ReadAllText($confirmationPath)|ConvertFrom-Json -ErrorAction Stop}catch{throw 'JOINT_APP_PUBLICATION_CONFIRMATION_REQUIRED'}
+        Assert-JointSafeMetadata $publicationConfirmation
+    }elseif($PlatformPublicationConfirmationPath){throw 'JOINT_APP_PUBLICATION_CONFIRMATION_STAGE_INVALID'}
     $existed=Test-Path -LiteralPath $plan.PrivateDirectory
     $private=New-JointPrivateDirectory $repositoryRoot $plan.PrivateDirectory
     $journal=Join-Path $private 'partial.json'
@@ -259,6 +270,10 @@ try{
         $exitCode=0
     }elseif($Stage -eq 'PlatformAppEvaluate'){
         Invoke-JointPlatformAppEvaluate -Plan $plan -State $script:jointState -Runtime $platformRuntime -BearerToken $script:jointPlatformToken -Save {Save-JointStage} -EvaluationPlan $evaluationPlan|Out-Null
+        $exitCode=0
+    }elseif($Stage -in @('PlatformAppPrecheck','PlatformAppPublish')){
+        $publicationMode=if($Stage -eq 'PlatformAppPrecheck'){'Precheck'}else{'Commit'}
+        Invoke-JointPlatformAppPublish -Mode $publicationMode -Plan $plan -State $script:jointState -Runtime $platformRuntime -BearerToken $script:jointPlatformToken -Save {Save-JointStage} -Confirmation $publicationConfirmation -LivePublicationApproved:$LivePublicationApproved|Out-Null
         $exitCode=0
     }else{
     $login=Invoke-JointHttp -BaseUrl $plan.OntologyBaseUrl -Path '/onto/auth/login' -Method POST -Body @{username=$OntologyCredential.UserName;password=$OntologyCredential.GetNetworkCredential().Password}
@@ -326,6 +341,6 @@ try{
     Write-Error $code -ErrorAction Continue
 }finally{
     if($script:jointToken){try{Invoke-JointOr '/auth/logout' 'POST'|Out-Null}catch{}};$script:jointToken=$null;$script:jointPlatformToken=$null
-    if($script:jointState){$summary=[ordered]@{sessionId=$SessionId;stage=$script:jointState.stage;complete=$false;partialPath=(Join-Path $private 'partial.json');resources=$script:jointState.resources;platformModel=(Get-JointValue $script:jointState 'platformModel');platformSkill=(Get-JointValue $script:jointState 'platformSkill');platformConnection=(Get-JointValue $script:jointState 'platformConnection');platformPublishedSkill=(Get-JointValue $script:jointState 'platformPublishedSkill');platformAppDrafts=(Get-JointValue $script:jointState 'platformAppDrafts');platformAppEvaluations=(Get-JointValue $script:jointState 'platformAppEvaluations');resourceIds=@(foreach($action in @(Get-JointNames $script:jointState.actions)){$item=Get-JointValue $script:jointState.actions $action;if($item.id){[pscustomobject]@{action=$action;id=$item.id;principalId=$item.principalId;spaceId=$item.spaceId}}});lastError=$script:jointState.lastError};Assert-JointSafeMetadata $summary;Write-Output ($summary|ConvertTo-Json -Depth 8)}
+    if($script:jointState){$summary=[ordered]@{sessionId=$SessionId;stage=$script:jointState.stage;complete=$false;partialPath=(Join-Path $private 'partial.json');resources=$script:jointState.resources;platformModel=(Get-JointValue $script:jointState 'platformModel');platformSkill=(Get-JointValue $script:jointState 'platformSkill');platformConnection=(Get-JointValue $script:jointState 'platformConnection');platformPublishedSkill=(Get-JointValue $script:jointState 'platformPublishedSkill');platformAppDrafts=(Get-JointValue $script:jointState 'platformAppDrafts');platformAppEvaluations=(Get-JointValue $script:jointState 'platformAppEvaluations');platformAppPrechecks=(Get-JointValue $script:jointState 'platformAppPrechecks');platformAppPublications=(Get-JointValue $script:jointState 'platformAppPublications');resourceIds=@(foreach($action in @(Get-JointNames $script:jointState.actions)){$item=Get-JointValue $script:jointState.actions $action;if($item.id){[pscustomobject]@{action=$action;id=$item.id;principalId=$item.principalId;spaceId=$item.spaceId}}});lastError=$script:jointState.lastError};Assert-JointSafeMetadata $summary;Write-Output ($summary|ConvertTo-Json -Depth 8)}
 }
 exit $exitCode
