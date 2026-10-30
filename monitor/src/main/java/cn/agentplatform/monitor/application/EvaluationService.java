@@ -176,6 +176,7 @@ public class EvaluationService {
                                 + hash,
                         Map.of());
         String semanticDigest = candidateDigest(candidate);
+        promptTemplateRef(candidate);
         if (!hash.equals(candidate.get("candidateSha256"))
                 || !(candidate.get("draftRev") instanceof Number candidateRev)
                 || candidateRev.longValue() != rev.longValue())
@@ -442,6 +443,8 @@ public class EvaluationService {
                                     "candidateSemanticDigest",
                                     r.getString("candidate_semantic_digest"));
                             v.put("datasetVersion", r.getString("dataset_version"));
+                            // 只读报告持久候选，不以当前模板反推历史引用。
+                            v.put("promptTemplateRef", promptTemplateRef(obj(Json.read(r.getString("candidate"), Map.class))));
                             v.put("threshold", r.getDouble("threshold"));
                             v.put("baselineReportId", r.getString("baseline_report_id"));
                             v.put("assertionModel", r.getString("assertion_model"));
@@ -523,6 +526,44 @@ public class EvaluationService {
         if (!(value instanceof String digest) || !digest.matches("[0-9a-f]{64}"))
             throw new PlatformException(400, "INVALID_CANDIDATE_DIGEST", "候选语义摘要必须是64位小写十六进制");
         return digest;
+    }
+
+    /** 正文不重复进入候选摘要，必须通过已入摘要的精确引用核验后使用。 */
+    private Map<String, Object> promptTemplateRef(Map<String, Object> candidate) {
+        var snapshot = Json.tree(candidate);
+        if (!snapshot.path("config").has("promptSource")) return null;
+        var refs = snapshot.path("config").path("promptRefs");
+        var frozen = snapshot.path("dependencyVersions").path("frozenPrompts");
+        if (!"TEMPLATE".equals(snapshot.path("config").path("promptSource").asText())
+                || !refs.isArray() || refs.size() != 1 || !frozen.isArray() || frozen.size() != 1)
+            throw promptMismatch();
+        var ref = refs.get(0);
+        var prompt = frozen.get(0);
+        var promptFields = Set.of("code", "version", "versionNo", "status", "content", "variables", "outputContract", "sha256");
+        prompt.fieldNames().forEachRemaining(key -> { if (!promptFields.contains(key)) throw promptMismatch(); });
+        String sha = ref.path("sha256").asText();
+        if (!ref.isObject() || ref.size() != 3 || !ref.path("code").asText().matches("[A-Za-z][A-Za-z0-9_-]{0,63}")
+                || !ref.path("version").isIntegralNumber() || !ref.path("version").canConvertToInt()
+                || ref.path("version").intValue() < 1 || !sha.matches("[0-9a-f]{64}")
+                || !ref.path("code").equals(prompt.path("code"))
+                || !ref.path("version").equals(prompt.path("version"))
+                || prompt.has("versionNo") && !ref.path("version").equals(prompt.path("versionNo"))
+                || !sha.equals(prompt.path("sha256").asText())
+                || !"PUBLISHED".equals(prompt.path("status").asText())
+                || !prompt.path("content").isTextual() || !prompt.path("variables").isArray()
+                || !prompt.path("outputContract").isObject()) throw promptMismatch();
+        var content = new LinkedHashMap<String, Object>();
+        for (String key : List.of("appCode", "type", "name", "description", "domain", "bizCategory", "tags", "config", "definition"))
+            content.put(key, snapshot.path(key));
+        var material = Map.of("content", prompt.path("content"), "variables", prompt.path("variables"),
+                "outputContract", prompt.path("outputContract"));
+        if (!Digest.sha256(Json.canonical(content)).equals(snapshot.path("candidateSha256").asText())
+                || !sha.equals(Digest.sha256(Json.canonical(material)))) throw promptMismatch();
+        return Map.of("code", ref.path("code").textValue(), "version", ref.path("version").intValue(), "sha256", sha);
+    }
+
+    private PlatformException promptMismatch() {
+        return fail(409, "PROMPT_TEMPLATE_SNAPSHOT_MISMATCH", "冻结模板正文与候选中的精确版本摘要不一致");
     }
 
     public Object project(String kind) {

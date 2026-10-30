@@ -181,7 +181,8 @@ public class ModelInputMaterials {
       ModelInputMaterialStore.InitialSource source, RetainedAuthorization proof) {
     var snapshot = (JsonNode) source.snapshot().payload();
     var inputs = (JsonNode) source.inputs().payload();
-    var config = snapshot.path("config");
+    var declaredConfig = snapshot.path("config");
+    var config = cn.agentplatform.engine.domain.InitialChatRules.promptConfig(snapshot);
     if (!"CHAT".equals(snapshot.path("type").asText()) || !config.isObject() || !inputs.isObject())
       throw missing();
     for (String key :
@@ -201,7 +202,8 @@ public class ModelInputMaterials {
             "timeout",
             "budgets",
             "requiredLabels",
-            "maxOutputTokens");
+            "maxOutputTokens",
+            "promptSource", "promptRefs", "frozenPrompts");
     config
         .fieldNames()
         .forEachRemaining(
@@ -212,7 +214,9 @@ public class ModelInputMaterials {
       if (config.has(k) && !config.path(k).isTextual()) throw missing();
     for (String k : List.of("params", "sampling", "output", "context", "timeout", "budgets"))
       if (config.has(k) && !config.path(k).isObject()) throw missing();
-    rejectExternal(config);
+    // 来源仍不能自报 config.frozenPrompts；这里只使用上方核验后派生的依赖正文。
+    rejectExternal(declaredConfig);
+    if (declaredConfig.has("promptRefs") && !declaredConfig.has("promptSource")) throw missing();
     initialOutputPolicy(config.path("output"));
     if (config.has("maxOutputTokens")) intLimit(config.path("maxOutputTokens"));
     if (config.path("output").has("maxTokens")) intLimit(config.path("output").path("maxTokens"));
@@ -296,7 +300,7 @@ public class ModelInputMaterials {
    * canonical request, sources and depth still have their independent bounds.
    */
   private static void guardPromptExpansion(JsonNode config, JsonNode inputs) {
-    String text = config.path("systemPrompt").asText(config.path("prompt").asText("你是一个助手。"));
+    String text = ContextAssembler.promptText(config, inputs);
     var scope = Json.tree(Map.of("input", inputs));
     var matches = java.util.regex.Pattern.compile("\\$\\{([^}]+)}").matcher(text);
     if (matches.matches()) {

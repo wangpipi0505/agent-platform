@@ -59,6 +59,7 @@ public class AppService {
     private final TransactionTemplate publishedReadTx;
     private final RestClient http = client();
     private final String skillUrl, modelUrl, monitorUrl, engineUrl;
+    private final TemplateService templates;
 
     /**
      * 发布门禁模式与豁免回滚开关。用字段注入而不是构造参数，保持既有装配签名不变；手工构造（测试/诊断）时
@@ -115,6 +116,7 @@ public class AppService {
             @Value("${agent.services.engine:http://127.0.0.1:18082}") String engineUrl) {
         this.engineUrl = engineUrl;
         this.db = db;
+        this.templates = new TemplateService(db);
         this.tx = new TransactionTemplate(manager);
         this.publishedReadTx = new TransactionTemplate(manager);
         this.publishedReadTx.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);
@@ -327,6 +329,14 @@ public class AppService {
         String code = text(body, "code"), name = text(body, "name"), type = text(body, "type");
         if (!code.matches("[A-Za-z][A-Za-z0-9_-]{0,63}") || !Set.of("CHAT", "FLOW").contains(type))
             throw error(400, "INVALID_INPUT", "应用编码或类型无效");
+        Map<String, Object> initialConfig = Map.of();
+        if (body.containsKey("promptTemplateRef")) {
+            var reference = object(body.get("promptTemplateRef"));
+            if (!Set.of("code", "version").equals(reference.keySet()))
+                throw error(400, "INVALID_INPUT", "创建时仅提供模板编码与精确版本，摘要由服务端固定");
+            initialConfig = templateConfig(Map.of("promptSource", "TEMPLATE", "promptRefs", List.of(reference)));
+        }
+        final var config = initialConfig;
         return tx.execute(
                 status -> {
                     db.update(
@@ -343,9 +353,10 @@ public class AppService {
                             Json.write(body.getOrDefault("tags", List.of())),
                             Actor.current().principalId());
                     db.update(
-                            "insert into app.app_draft(tenant_id,app_id,app_code) select"
-                                + " tenant_id,id,code from app.application where tenant_id=? and"
+                            "insert into app.app_draft(tenant_id,app_id,app_code,config) select"
+                                + " tenant_id,id,code,?::jsonb from app.application where tenant_id=? and"
                                 + " code=?",
+                            Json.write(config),
                             tenant(),
                             code);
                     log(code, "CREATE", "DRAFT", "DRAFT", Map.of());
@@ -366,6 +377,7 @@ public class AppService {
                         throw error(409, "APP_TYPE", "仅流程应用可保存流程图");
                     String field = flow ? "definition" : "config";
                     Map<String, Object> value = object(body.get(field));
+                    if (!flow) value = templateConfig(value);
                     var checked = new LinkedHashMap<String, Object>(old);
                     checked.put(field, value);
                     if (object(old.get("config")).containsKey("capabilityPackages")
@@ -890,14 +902,36 @@ public class AppService {
     }
 
     private void attachModels(Map<String, Object> snapshot, List<Map<String, Object>> refs) {
-        snapshot.put(
-                "dependencyVersions",
-                Map.of(
+        var dependencies = new LinkedHashMap<String, Object>(Map.of(
                         "skillRefs",
                         skillRefs(
                                 object(snapshot.get("config")), object(snapshot.get("definition"))),
                         "modelRefs",
                         refs));
+        var config = object(snapshot.get("config"));
+        if ("TEMPLATE".equals(config.get("promptSource"))) {
+            var references = objects(templateConfig(config).get("promptRefs"));
+            if (!Json.tree(config.get("promptRefs")).equals(Json.tree(references)))
+                throw error(409, "PROMPT_TEMPLATE_SNAPSHOT_MISMATCH", "候选模板引用缺少服务端固定摘要");
+            // 正文不重复进入候选摘要；其字节由已入摘要的精确 promptRefs.sha256 约束。
+            dependencies.put("frozenPrompts", references.stream().map(templates::frozenReference).toList());
+        }
+        snapshot.put("dependencyVersions", dependencies);
+    }
+
+    private Map<String, Object> templateConfig(Map<String, Object> config) {
+        if (!config.containsKey("promptSource")) return config;
+        if (!"TEMPLATE".equals(config.get("promptSource")) || config.containsKey("frozenPrompts")
+                || config.containsKey("dependencyVersions"))
+            throw error(400, "INVALID_INPUT", "模板来源必须显式选择，冻结正文由服务端提供");
+        var references = objects(config.get("promptRefs"));
+        if (references.size() != 1)
+            throw error(400, "PROMPT_VERSION_REQUIRED", "模板主来源必须选择一个精确版本");
+        var frozen = templates.frozenReference(references.getFirst());
+        var result = new LinkedHashMap<>(config);
+        result.put("promptRefs", List.of(Map.of("code", frozen.get("code"),
+                "version", frozen.get("version"), "sha256", frozen.get("sha256"))));
+        return result;
     }
 
     public Map<String, Object> remote(String base, String path) {

@@ -65,6 +65,9 @@ function save() {
     error.value = e.message;
   }
 }
+function clearPromptSha(reference: { sha256?: unknown }) {
+  delete reference.sha256;
+}
 </script>
 <template>
   <div class="panel form">
@@ -97,8 +100,9 @@ function save() {
             :label="m.displayName || m.modelName" /></el-select></el-form-item
       ><el-form-item label="提示词模板"
         ><div style="width: 100%">
+          <p v-if="value.promptSource === 'TEMPLATE'" class="muted">所选模板是提示词主来源。修改编码或版本后，保存时由服务端重新固定摘要；原运行快照保持不变。</p>
           <div v-for="(p, i) in value.promptRefs" :key="i" class="row">
-            <el-select v-model="p.code" filterable placeholder="选择模板"
+            <el-select v-model="p.code" filterable placeholder="选择模板" @change="clearPromptSha(p)"
               ><el-option
                 v-for="t in templates"
                 :key="t.code"
@@ -108,11 +112,12 @@ function save() {
               v-model="p.version"
               :min="1"
               aria-label="模板版本"
-            /><el-button text @click="value.promptRefs.splice(i, 1)"
+              @change="clearPromptSha(p)"
+            /><el-button v-if="value.promptSource !== 'TEMPLATE'" text @click="value.promptRefs.splice(i, 1)"
               >移除</el-button
             >
           </div>
-          <el-button @click="value.promptRefs.push({ code: '', version: 1 })"
+          <el-button v-if="value.promptSource !== 'TEMPLATE'" @click="value.promptRefs.push({ code: '', version: 1 })"
             >添加模板</el-button
           >
         </div></el-form-item

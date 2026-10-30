@@ -160,6 +160,29 @@ public class TemplateService {
         return row;
     }
 
+    /** 精确引用在当前租户内解析；摘要只取已核验的持久正文。 */
+    public Map<String, Object> frozenReference(Map<String, Object> reference) {
+        if (!Set.of("code", "version", "sha256").containsAll(reference.keySet()))
+            throw error(400, "INVALID_INPUT", "模板引用不得携带客户端正文或未知字段");
+        String code = text(reference, "code");
+        Object raw = reference.get("version");
+        if (!code.matches("[A-Za-z][A-Za-z0-9_-]{0,63}")
+                || !(raw instanceof Number number)
+                || number.longValue() < 1 || number.longValue() > Integer.MAX_VALUE
+                || number.doubleValue() != number.longValue())
+            throw error(400, "PROMPT_VERSION_REQUIRED", "提示词必须绑定精确版本");
+        int version = ((Number) raw).intValue();
+        var stored = version(code, version);
+        if (!"PUBLISHED".equals(stored.get("status")))
+            throw error(409, "TEMPLATE_UNPUBLISHED", "模板版本未发布");
+        if (reference.containsKey("sha256")
+                && !Objects.equals(reference.get("sha256"), stored.get("sha256")))
+            throw error(409, "PROMPT_TEMPLATE_SNAPSHOT_MISMATCH", "模板引用摘要与指定版本不一致");
+        var frozen = new LinkedHashMap<>(stored);
+        frozen.put("version", version);
+        return frozen;
+    }
+
     /**
      * 读取即校验：正文/变量/输出契约必须与发布时写入的摘要一致。
      *

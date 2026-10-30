@@ -25,9 +25,7 @@ public class ContextAssembler {
             List<Map<String, Object>> history,
             List<?> tools,
             List<Map<String, Object>> sessionHistory) {
-        String prompt = config.path("systemPrompt").asText(config.path("prompt").asText("你是一个助手。"));
-        for (JsonNode template : config.path("frozenPrompts"))
-            prompt += "\n\n[" + template.path("code").asText() + "]\n" + render(template, inputs);
+        String prompt = promptText(config, inputs);
         prompt =
                 cn.agentplatform.engine.domain.Values.resolve(
                                 Json.tree(prompt), Json.tree(Map.of("input", inputs)))
@@ -125,7 +123,20 @@ public class ContextAssembler {
         return request;
     }
 
-    private String render(JsonNode template, JsonNode inputs) {
+    public static String promptText(JsonNode config, JsonNode inputs) {
+        boolean primary = "TEMPLATE".equals(config.path("promptSource").asText());
+        if (config.has("promptSource") && !primary)
+            throw new PlatformException(409, "PROMPT_TEMPLATE_SNAPSHOT_MISMATCH", "提示词来源无效");
+        if (primary && (!config.path("frozenPrompts").isArray() || config.path("frozenPrompts").isEmpty()))
+            throw new PlatformException(409, "PROMPT_TEMPLATE_SNAPSHOT_MISMATCH", "模板主来源缺少冻结正文");
+        // 只有显式新选择才切换主段；旧内联和附加模板维持原重放顺序。
+        String prompt = primary ? "" : config.path("systemPrompt").asText(config.path("prompt").asText("你是一个助手。"));
+        for (JsonNode template : config.path("frozenPrompts"))
+            prompt += (prompt.isEmpty() && primary ? "" : "\n\n") + "[" + template.path("code").asText() + "]\n" + render(template, inputs);
+        return prompt;
+    }
+
+    private static String render(JsonNode template, JsonNode inputs) {
         Map<String, JsonNode> variables = new HashMap<>();
         for (JsonNode declaration : template.path("variables")) {
             String name = declaration.path("name").asText();
@@ -138,17 +149,23 @@ public class ContextAssembler {
             variables.put(name, value);
         }
         var pattern = java.util.regex.Pattern.compile("\\{\\{\\s*([A-Za-z_][A-Za-z0-9_]*)\\s*}}");
-        var matcher = pattern.matcher(template.path("content").asText());
+        String content = template.path("content").asText();
+        var matcher = pattern.matcher(content);
+        long renderedLength = content.length();
         StringBuffer result = new StringBuffer();
         while (matcher.find()) {
             String name = matcher.group(1);
             if (!variables.containsKey(name))
                 throw new IllegalArgumentException("PARAM_ERROR:unknown prompt variable " + name);
             JsonNode value = variables.get(name);
+            String replacement = value.isValueNode() ? value.asText() : value.toString();
+            renderedLength += replacement.length() - (matcher.end() - matcher.start());
+            if (renderedLength > 2_097_152)
+                throw new PlatformException(413, "PROMPT_TOO_LARGE", "模板展开超过提示词大小上限");
             matcher.appendReplacement(
                     result,
                     java.util.regex.Matcher.quoteReplacement(
-                            value.isValueNode() ? value.asText() : value.toString()));
+                            replacement));
         }
         matcher.appendTail(result);
         return result.toString();

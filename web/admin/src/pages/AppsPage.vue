@@ -38,6 +38,7 @@ const copySource = ref("");
 const copyForm = ref({ code: "", name: "" });
 const copyError = ref("");
 const copying = ref(false);
+const templateSelectionEnabled = import.meta.env.VITE_PROMPT_TEMPLATE_SELECTION !== "false";
 
 function create() {
   form.value = {
@@ -48,6 +49,8 @@ function create() {
     domain: "",
     bizCategory: "",
     tags: [],
+    promptMode: templateSelectionEnabled ? "TEMPLATE" : "INLINE",
+    promptTemplateRef: { code: "", version: undefined },
   };
   createOpen.value = true;
 }
@@ -56,7 +59,13 @@ async function save() {
   await operation(async () => {
     if (!form.value.name?.trim()) throw new Error("请填写应用名称");
     if (!form.value.code?.trim()) throw new Error("请填写编码");
-    await api("/admin/apps", "POST", form.value);
+    const { promptMode, promptTemplateRef, ...body } = form.value;
+    if (promptMode === "TEMPLATE") {
+      if (!promptTemplateRef?.code || !Number.isInteger(promptTemplateRef.version))
+        throw new Error("请选择已发布的模板和精确版本");
+      body.promptTemplateRef = { code: promptTemplateRef.code, version: promptTemplateRef.version };
+    }
+    await api("/admin/apps", "POST", body);
     createOpen.value = false;
     success("已保存");
     await load();
@@ -208,6 +217,7 @@ watch(filter, () => (detail.value = undefined), { deep: true });
     v-model="createOpen"
     :form="form"
     :busy="busy"
+    :template-selection-enabled="templateSelectionEnabled"
     @save="save"
   />
   <CopyApplicationDialog

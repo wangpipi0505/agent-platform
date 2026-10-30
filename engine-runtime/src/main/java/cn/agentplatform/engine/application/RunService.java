@@ -1100,7 +1100,10 @@ public class RunService {
                 promptShas = new TreeMap<>();
         for (JsonNode skill : frozen.path("config").path("tools"))
             skills.put(skill.path("code").asText(), skill.path("skillVersionId"));
-        for (JsonNode prompt : frozen.path("config").path("frozenPrompts")) {
+        JsonNode recordedPrompts = frozen.path("config").path("frozenPrompts");
+        if (!recordedPrompts.isArray() && "TEMPLATE".equals(source.path("config").path("promptSource").asText()))
+            recordedPrompts = InitialChatRules.promptConfig(source).path("frozenPrompts");
+        for (JsonNode prompt : recordedPrompts) {
             String code = prompt.path("code").asText();
             prompts.put(code, prompt.path("version"));
             // 只留痕校验通过的摘要：关闭兜底开关时库里的无效摘要也不会被写成运行证据。
@@ -1384,6 +1387,8 @@ public class RunService {
                             .set("execution", skill.path("execution"));
                 }
         List<JsonNode> promptRefs = new ArrayList<>();
+        JsonNode primaryPrompt = "TEMPLATE".equals(config.path("promptSource").asText())
+                ? InitialChatRules.promptConfig(original).path("frozenPrompts").get(0) : null;
         config.path("promptRefs").forEach(promptRefs::add);
         for (JsonNode n : snapshot.path("definition").path("nodes"))
             if (n.has("promptRef")) promptRefs.add(n.path("promptRef"));
@@ -1395,11 +1400,16 @@ public class RunService {
             if (version < 1 || code.isBlank())
                 throw new PlatformException(400, "PROMPT_VERSION_REQUIRED", "提示词必须绑定精确版本");
             if (promptKeys.add(code + ":" + version)) {
-                JsonNode template =
-                        clients.get(
+                JsonNode template = primaryPrompt != null
+                                && code.equals(primaryPrompt.path("code").asText())
+                                && version == primaryPrompt.path("version").asInt()
+                        ? primaryPrompt
+                        : clients.get(
                                 "app",
                                 "/internal/prompt-templates/" + code + "/versions/" + version,
                                 actor);
+                if (ref.has("sha256") && !ref.path("sha256").equals(template.path("sha256")))
+                    throw new PlatformException(409, "PROMPT_TEMPLATE_SNAPSHOT_MISMATCH", "模板版本摘要与冻结引用不一致");
                 // 摘要缺失或形状非法的模板不得进入冻结：冻结后模板正文不可再取，留痕必须自证一致。
                 if (promptDigestCheck
                         && !PROMPT_SHA_PATTERN.matcher(template.path("sha256").asText()).matches())
