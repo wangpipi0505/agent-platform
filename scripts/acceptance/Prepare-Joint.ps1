@@ -3,7 +3,7 @@
     [string]$PlatformBaseUrl='http://127.0.0.1:18080',[string]$PlatformTenant='local-v12',[string]$Environment='production',
     [string]$OutputDirectory,[string]$ReuseManifestPath,[switch]$Resume,
     [ValidateSet('TestFixture','Real')][string]$ModelMode='TestFixture',[Alias('RealModelEntryId')][string]$ModelEntryId,
-    [ValidateSet('All','Ontology','PlatformModel','PlatformSkillDraft')][string]$Stage='All',[pscredential]$OntologyCredential,
+    [ValidateSet('All','Ontology','PlatformModel','PlatformSkillDraft','PlatformSkillConnect')][string]$Stage='All',[pscredential]$OntologyCredential,
     [string]$PlatformRuntimePlanPath
 )
 $ErrorActionPreference='Stop'
@@ -194,10 +194,10 @@ try{
     if($Stage -eq 'All'){throw 'JOINT_ALL_STAGE_NOT_DELIVERED'}
     if($Resume -and $ReuseManifestPath){throw 'JOINT_RESUME_AND_FINAL_REUSE_CONFLICT'}
     if($Stage -eq 'Ontology' -and -not $OntologyCredential){throw 'JOINT_OR_CREDENTIAL_REQUIRED'}
-    if($Stage -in @('PlatformModel','PlatformSkillDraft') -and (-not $Resume -or $ReuseManifestPath -or -not $PlatformRuntimePlanPath)){throw 'JOINT_PLATFORM_MODEL_RESUME_REQUIRED'}
+    if($Stage -in @('PlatformModel','PlatformSkillDraft','PlatformSkillConnect') -and (-not $Resume -or $ReuseManifestPath -or -not $PlatformRuntimePlanPath)){throw 'JOINT_PLATFORM_MODEL_RESUME_REQUIRED'}
     $plan=Get-JointPreparationPlan -RepositoryRoot $repositoryRoot -SessionId $SessionId -PlatformTenant $PlatformTenant -Environment $Environment -OutputDirectory $OutputDirectory -PlatformBaseUrl $PlatformBaseUrl -OntologyBaseUrl $OntologyBaseUrl -ReuseManifestPath $ReuseManifestPath -ModelMode $ModelMode -ModelEntryId $ModelEntryId
     $platformRuntime=$null
-    if($Stage -in @('PlatformModel','PlatformSkillDraft')){
+    if($Stage -in @('PlatformModel','PlatformSkillDraft','PlatformSkillConnect')){
         $runtimePath=Assert-JointAcceptancePath $repositoryRoot $PlatformRuntimePlanPath
         Assert-JointPrivateFile $runtimePath
         try{$platformRuntime=[IO.File]::ReadAllText($runtimePath)|ConvertFrom-Json -ErrorAction Stop}catch{throw 'JOINT_PLATFORM_RUNTIME_PLAN_INVALID'}
@@ -237,6 +237,9 @@ try{
             Invoke-JointPlatformSkillDraft -Plan $plan -State $script:jointState -Runtime $platformRuntime -BearerToken $script:jointPlatformToken -ReadKey $readKey -Save {Save-JointStage}|Out-Null
             $exitCode=0
         }finally{$readKey=$null}
+    }elseif($Stage -eq 'PlatformSkillConnect'){
+        Invoke-JointPlatformSkillConnect -Plan $plan -State $script:jointState -Runtime $platformRuntime -BearerToken $script:jointPlatformToken -Save {Save-JointStage}|Out-Null
+        $exitCode=0
     }else{
     $login=Invoke-JointHttp -BaseUrl $plan.OntologyBaseUrl -Path '/onto/auth/login' -Method POST -Body @{username=$OntologyCredential.UserName;password=$OntologyCredential.GetNetworkCredential().Password}
     $script:jointToken=$login.Data.token;$login=$null
@@ -303,6 +306,6 @@ try{
     Write-Error $code -ErrorAction Continue
 }finally{
     if($script:jointToken){try{Invoke-JointOr '/auth/logout' 'POST'|Out-Null}catch{}};$script:jointToken=$null;$script:jointPlatformToken=$null
-    if($script:jointState){$summary=[ordered]@{sessionId=$SessionId;stage=$script:jointState.stage;complete=$false;partialPath=(Join-Path $private 'partial.json');resources=$script:jointState.resources;platformModel=(Get-JointValue $script:jointState 'platformModel');platformSkill=(Get-JointValue $script:jointState 'platformSkill');resourceIds=@(foreach($action in @(Get-JointNames $script:jointState.actions)){$item=Get-JointValue $script:jointState.actions $action;if($item.id){[pscustomobject]@{action=$action;id=$item.id;principalId=$item.principalId;spaceId=$item.spaceId}}});lastError=$script:jointState.lastError};Assert-JointSafeMetadata $summary;Write-Output ($summary|ConvertTo-Json -Depth 8)}
+    if($script:jointState){$summary=[ordered]@{sessionId=$SessionId;stage=$script:jointState.stage;complete=$false;partialPath=(Join-Path $private 'partial.json');resources=$script:jointState.resources;platformModel=(Get-JointValue $script:jointState 'platformModel');platformSkill=(Get-JointValue $script:jointState 'platformSkill');platformConnection=(Get-JointValue $script:jointState 'platformConnection');resourceIds=@(foreach($action in @(Get-JointNames $script:jointState.actions)){$item=Get-JointValue $script:jointState.actions $action;if($item.id){[pscustomobject]@{action=$action;id=$item.id;principalId=$item.principalId;spaceId=$item.spaceId}}});lastError=$script:jointState.lastError};Assert-JointSafeMetadata $summary;Write-Output ($summary|ConvertTo-Json -Depth 8)}
 }
 exit $exitCode

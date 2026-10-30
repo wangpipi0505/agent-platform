@@ -496,3 +496,106 @@ function Invoke-JointPlatformSkillDraft {
     & $Save
     return $actual
 }
+
+function Invoke-JointPlatformSkillConnect {
+    param([object]$Plan,[object]$State,[object]$Runtime,[string]$BearerToken,[scriptblock]$Save)
+    if(-not $BearerToken -or -not $Save){throw 'JOINT_PLATFORM_IDENTITY_MISMATCH'}
+    if($State.pending){throw 'JOINT_PENDING_ACTION_NEEDS_RECONCILIATION'}
+    $skill=$State.platformSkill
+    $imported=Get-JointValue $State.actions 'platform_skill_import'
+    if($State.complete -ne $false -or -not $imported -or -not $skill -or $skill.status -cne 'DRAFT' -or
+        $skill.code -cnotmatch '^[A-Za-z][A-Za-z0-9_-]{0,63}$' -or [string]$skill.skillVersionId -cnotmatch '^[1-9][0-9]{0,17}$' -or
+        $skill.versionNo -ne 1 -or $skill.sha256 -cnotmatch '^[a-f0-9]{64}$' -or $skill.semanticDigest -cnotmatch '^[a-f0-9]{64}$' -or
+        $skill.digestVersion -ne 1 -or (ConvertTo-Json -InputObject $skill -Compress) -cne (ConvertTo-Json -InputObject $imported -Compress)){
+        throw 'JOINT_PLATFORM_SKILL_DRAFT_REQUIRED'
+    }
+    $runtimePlan=Assert-JointPlatformModelPlan $Plan $Runtime
+    if(-not $State.platformRuntime -or (ConvertTo-Json -InputObject $State.platformRuntime -Compress) -cne
+        (ConvertTo-Json -InputObject $runtimePlan -Compress)){throw 'JOINT_PLATFORM_RUNTIME_CONTEXT_MISMATCH'}
+    $clock=[Diagnostics.Stopwatch]::StartNew()
+    function Invoke-ConnectRequest([string]$Path,[string]$Method='GET',[AllowNull()][object]$Body){
+        $remaining=180-[int]$clock.Elapsed.TotalSeconds
+        if($remaining -lt 1){throw 'JOINT_SKILL_CONNECTION_BUDGET_EXCEEDED'}
+        $call=@{BaseUrl=$Plan.PlatformBaseUrl;Path=$Path;Method=$Method;BearerToken=$BearerToken;TimeoutSeconds=[Math]::Min(30,$remaining)}
+        if($PSBoundParameters.ContainsKey('Body')){$call.Body=$Body}
+        return (Invoke-JointHttp @call).Data
+    }
+    function Assert-ConnectionDigest([object]$Report){
+        if($Report.ok -isnot [bool] -or $Report.candidateSha256 -cne $skill.sha256 -or
+            $Report.semanticDigest -cne $skill.semanticDigest -or $Report.digestVersion -ne $skill.digestVersion){throw 'JOINT_SKILL_CONNECTION_REPORT_MISMATCH'}
+    }
+    function Save-ConnectionStep([string]$Name,[object]$Body,[scriptblock]$Project){
+        $old=Get-JointValue $State.actions $Name
+        if($old){return $old}
+        $pending=[pscustomobject]@{action=$Name;method='POST';path=$connectionPath;phase='REQUEST';skillVersionId=$skill.skillVersionId;candidateSha256=$skill.sha256;startedAt=[DateTime]::UtcNow.ToString('o')}
+        if($Body.ContainsKey('requestId')){Set-JointValue $pending 'requestId' $Body.requestId}
+        if($Body.ContainsKey('controlledCallId')){Set-JointValue $pending 'controlledCallId' $Body.controlledCallId}
+        Set-JointValue $State 'pending' $pending;Set-JointValue $State 'stage' $Name;& $Save
+        try{
+            $response=Invoke-ConnectRequest $connectionPath 'POST' $Body
+            $record=& $Project $response
+            Assert-JointSafeMetadata $record
+            Set-JointValue $State.actions $Name $record
+            & $Save
+            Set-JointValue $State 'pending' $null
+            & $Save
+            return $record
+        }catch{Set-JointValue $State 'pending' $pending;throw}
+    }
+    # 启动前再读精确草稿。只读无副作用才允许自动连接；本脚本不绕过审批、schema或guard。
+    $versions=@(Invoke-ConnectRequest ('/admin/skills/'+$skill.code+'/versions'))
+    $version=@($versions|Where-Object{$_.skillVersionId -eq $skill.skillVersionId})
+    if($version.Count -ne 1 -or $version[0].versionNo -ne $skill.versionNo -or $version[0].status -cne 'DRAFT' -or
+        $version[0].sha256 -cne $skill.sha256 -or $version[0].semanticDigest -cne $skill.semanticDigest -or
+        $version[0].digestVersion -ne $skill.digestVersion){throw 'JOINT_SKILL_DRAFT_CHANGED'}
+    $definition=$version[0].definition
+    if($definition.type -cne 'HTTP' -or $definition.invocationKind -cne 'SYNC' -or
+        $definition.execution.readonly -isnot [bool] -or -not $definition.execution.readonly -or
+        $definition.execution.sideEffect -isnot [bool] -or $definition.execution.sideEffect -or
+        $definition.riskLevel -ceq 'CONFIRM_REQUIRED' -or $definition.authScheme -cne 'API_KEY' -or
+        $definition.authConfigured -isnot [bool] -or -not $definition.authConfigured){throw 'JOINT_SKILL_CONNECTION_NOT_READONLY'}
+    $connectionPath='/admin/skills/'+$skill.code+'/drafts/'+$skill.versionNo+'/connection-test'
+    $sha=[Security.Cryptography.SHA256]::Create()
+    try{$requestId='ex06-connection-'+([BitConverter]::ToString($sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($Plan.SessionId+':'+$skill.skillVersionId+':'+$skill.sha256))).Replace('-','').ToLowerInvariant()).Substring(0,32)}finally{$sha.Dispose()}
+    $start=Save-ConnectionStep 'platform_skill_connection_start' @{inputs=@{};requestId=$requestId} {
+        param($report)
+        Assert-ConnectionDigest $report
+        if($report.runId -cnotmatch '^r_[a-f0-9]{32}$' -or $report.action -cne 'WAIT_AND_RECHECK' -or
+            $report.status -cnotin @('PENDING','RUNNING','SUCCEEDED')){throw 'JOINT_SKILL_CONNECTION_START_INVALID'}
+        # 首次ok=false通常只是DEBUG尚未完成，不能以其代替终态与真实执行事实。
+        [pscustomobject]@{runId=$report.runId;requestId=$requestId;skillVersionId=$skill.skillVersionId;candidateSha256=$report.candidateSha256;semanticDigest=$report.semanticDigest;digestVersion=$report.digestVersion}
+    }
+    if($start.runId -cnotmatch '^r_[a-f0-9]{32}$' -or $start.requestId -cne $requestId -or
+        $start.skillVersionId -ne $skill.skillVersionId -or $start.candidateSha256 -cne $skill.sha256 -or $start.semanticDigest -cne $skill.semanticDigest){throw 'JOINT_SKILL_CONNECTION_START_INVALID'}
+    $run=$null
+    for($poll=0;$poll -lt 240;$poll++){
+        $run=Invoke-ConnectRequest ('/admin/debug-runs/'+$start.runId+'/status')
+        if($run.runId -cne $start.runId -or $run.appCode -cne ('skill_test_'+$skill.skillVersionId) -or
+            $run.controlledSkillVersionId -ne $skill.skillVersionId -or $run.controlledSkillStatus -cne 'DRAFT'){
+            throw 'JOINT_SKILL_CONNECTION_RUN_MISMATCH'
+        }
+        $expectedEnvironment=if($runtimePlan.engineDemoMode){'DEMO'}else{'REAL'}
+        if($run.environment -cne $expectedEnvironment -or $run.demoMode -isnot [bool] -or $run.demoMode -ne $runtimePlan.engineDemoMode){throw 'JOINT_SKILL_CONNECTION_ENVIRONMENT_MISMATCH'}
+        if($run.status -ceq 'SUCCEEDED'){break}
+        if($run.status -cnotin @('PENDING','RUNNING')){throw 'JOINT_SKILL_CONNECTION_RUN_NOT_SUCCEEDED'}
+        Start-Sleep -Milliseconds 250
+    }
+    if($run.status -cne 'SUCCEEDED'){throw 'JOINT_SKILL_CONNECTION_WAIT_EXHAUSTED'}
+    if([string]$run.controlledCallId -cnotmatch '^[1-9][0-9]{0,17}$'){throw 'JOINT_SKILL_CONNECTION_CALL_MISSING'}
+    $callId=[long]$run.controlledCallId
+    $receipt=Save-ConnectionStep 'platform_skill_connection_recheck' @{controlledCallId=$callId} {
+        param($report)
+        Assert-ConnectionDigest $report
+        if(-not $report.ok){throw 'JOINT_SKILL_CONNECTION_FACT_NOT_PASSED'}
+        # 连接报告没有reportId；保存精确run/call与同摘要事实，不编造一个报告标识。
+        [pscustomobject][ordered]@{runId=$start.runId;controlledCallId=$callId;skillVersionId=$skill.skillVersionId;candidateSha256=$report.candidateSha256;semanticDigest=$report.semanticDigest;digestVersion=$report.digestVersion;ok=$true;environment=$run.environment;demoMode=$run.demoMode;complete=$false}
+    }
+    if($receipt.ok -ne $true -or $receipt.runId -cne $start.runId -or $receipt.controlledCallId -ne $callId -or
+        $receipt.skillVersionId -ne $skill.skillVersionId -or $receipt.candidateSha256 -cne $skill.sha256 -or
+        $receipt.semanticDigest -cne $skill.semanticDigest -or $receipt.environment -cne $run.environment -or $receipt.demoMode -ne $run.demoMode){throw 'JOINT_SKILL_CONNECTION_REPORT_MISMATCH'}
+    Set-JointValue $State 'platformConnection' $receipt
+    Set-JointValue $State 'stage' 'PLATFORM_SKILL_CONNECTED'
+    Set-JointValue $State 'lastError' $null
+    & $Save
+    return $receipt
+}
