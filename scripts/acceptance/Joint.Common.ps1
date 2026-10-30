@@ -599,3 +599,129 @@ function Invoke-JointPlatformSkillConnect {
     & $Save
     return $receipt
 }
+
+function Invoke-JointPlatformSkillPublish {
+    param([object]$Plan,[object]$State,[object]$Runtime,[string]$BearerToken,[scriptblock]$Save)
+    if(-not $BearerToken -or -not $Save){throw 'JOINT_PLATFORM_IDENTITY_MISMATCH'}
+    if($State.pending){throw 'JOINT_PENDING_ACTION_NEEDS_RECONCILIATION'}
+    $skill=$State.platformSkill;$connected=$State.platformConnection;$model=$State.platformModel
+    $imported=Get-JointValue $State.actions 'platform_skill_import'
+    $connection=Get-JointValue $State.actions 'platform_skill_connection_recheck'
+    if($State.complete -ne $false -or -not $skill -or -not $imported -or $skill.status -cne 'DRAFT' -or
+        $skill.code -cnotmatch '^[A-Za-z][A-Za-z0-9_-]{0,63}$' -or [string]$skill.skillVersionId -cnotmatch '^[1-9][0-9]{0,17}$' -or
+        $skill.versionNo -ne 1 -or $skill.sha256 -cnotmatch '^[a-f0-9]{64}$' -or $skill.semanticDigest -cnotmatch '^[a-f0-9]{64}$' -or
+        (ConvertTo-Json -InputObject $skill -Compress) -cne (ConvertTo-Json -InputObject $imported -Compress) -or
+        -not $connected -or -not $connection -or $connected.ok -isnot [bool] -or -not $connected.ok -or
+        $connected.skillVersionId -ne $skill.skillVersionId -or $connected.candidateSha256 -cne $skill.sha256 -or
+        $connected.semanticDigest -cne $skill.semanticDigest -or $connected.digestVersion -ne $skill.digestVersion -or
+        (ConvertTo-Json -InputObject $connected -Compress) -cne (ConvertTo-Json -InputObject $connection -Compress)){
+        throw 'JOINT_SKILL_CONNECTION_STAGE_REQUIRED'
+    }
+    $runtimePlan=Assert-JointPlatformModelPlan $Plan $Runtime
+    if(-not $State.platformRuntime -or (ConvertTo-Json -InputObject $State.platformRuntime -Compress) -cne
+        (ConvertTo-Json -InputObject $runtimePlan -Compress)){throw 'JOINT_PLATFORM_RUNTIME_CONTEXT_MISMATCH'}
+    $environment=if($runtimePlan.engineDemoMode){'DEMO'}else{'REAL'}
+    if($connected.environment -cne $environment -or $connected.demoMode -isnot [bool] -or $connected.demoMode -ne $runtimePlan.engineDemoMode -or
+        $model.healthStatus -cne 'HEALTHY' -or $model.modelMode -cne $Plan.ModelMode -or
+        [string]$model.modelEntryId -cnotmatch '^[1-9][0-9]{0,17}$'){throw 'JOINT_SKILL_PUBLISH_ENVIRONMENT_MISMATCH'}
+    $clock=[Diagnostics.Stopwatch]::StartNew()
+    function Invoke-PublishRequest([string]$Path,[string]$Method='GET',[AllowNull()][object]$Body){
+        $remaining=180-[int]$clock.Elapsed.TotalSeconds
+        if($remaining -lt 1){throw 'JOINT_SKILL_PUBLISH_BUDGET_EXCEEDED'}
+        $call=@{BaseUrl=$Plan.PlatformBaseUrl;Path=$Path;Method=$Method;BearerToken=$BearerToken;TimeoutSeconds=[Math]::Min(30,$remaining)}
+        if($PSBoundParameters.ContainsKey('Body')){$call.Body=$Body}
+        return (Invoke-JointHttp @call).Data
+    }
+    function Save-PublishStep([string]$Name,[string]$Path,[AllowNull()][object]$Body,[scriptblock]$Project){
+        $old=Get-JointValue $State.actions $Name
+        if($old){return $old}
+        $pending=[pscustomobject]@{action=$Name;method='POST';path=$Path;phase='REQUEST';skillVersionId=$skill.skillVersionId;candidateSha256=$skill.sha256;modelEntryId=$model.modelEntryId;startedAt=[DateTime]::UtcNow.ToString('o')}
+        Set-JointValue $State 'pending' $pending;Set-JointValue $State 'stage' $Name;& $Save
+        try{
+            $call=@{Path=$Path;Method='POST'};if($null -ne $Body){$call.Body=$Body}
+            $response=Invoke-PublishRequest @call
+            $record=& $Project $response
+            Assert-JointSafeMetadata $record
+            Set-JointValue $State.actions $Name $record
+            & $Save
+            Set-JointValue $State 'pending' $null
+            & $Save
+            return $record
+        }catch{Set-JointValue $State 'pending' $pending;throw}
+    }
+    function Assert-PublishVersion([object]$Version,[string]$Status){
+        if($Version.code -cne $skill.code -or $Version.skillVersionId -ne $skill.skillVersionId -or
+            $Version.versionNo -ne $skill.versionNo -or $Version.status -cne $Status -or
+            $Version.sha256 -cne $skill.sha256 -or $Version.semanticDigest -cne $skill.semanticDigest -or $Version.digestVersion -ne 1){throw 'JOINT_SKILL_DRAFT_CHANGED'}
+        $definition=$Version.definition
+        if($definition.type -cne 'HTTP' -or $definition.invocationKind -cne 'SYNC' -or $definition.authScheme -cne 'API_KEY' -or
+            $definition.authConfigured -isnot [bool] -or -not $definition.authConfigured -or
+            $definition.execution.readonly -isnot [bool] -or -not $definition.execution.readonly -or
+            $definition.execution.sideEffect -isnot [bool] -or $definition.execution.sideEffect -or
+            $definition.riskLevel -cne 'READ_ONLY' -or @(Get-JointNames $definition.guard.attributes).Count -eq 0){throw 'JOINT_SKILL_PUBLISH_GUARD_INVALID'}
+    }
+    function Read-PublishVersion([string]$Status){
+        $versions=@(Invoke-PublishRequest ('/admin/skills/'+$skill.code+'/versions'))
+        if($versions.Count -ne 1){throw 'JOINT_SKILL_DRAFT_CHANGED'}
+        Assert-PublishVersion $versions[0] $Status
+    }
+    $published=Get-JointValue $State.actions 'platform_skill_publish'
+    if($published -and -not (Get-JointValue $State.actions 'platform_skill_acceptance')){throw 'JOINT_SKILL_PUBLICATION_REPLY_INVALID'}
+    $status=if($published){'PUBLISHED'}else{'DRAFT'}
+    Read-PublishVersion $status
+    # 模型来自已确认目录ID，仍要求当前可用。fixture身份不能用Real名义参与选型。
+    $entries=@(Invoke-PublishRequest '/admin/model-entries'|Where-Object{$_.id -eq $model.modelEntryId})
+    if($entries.Count -ne 1 -or $entries[0].providerId -ne $model.providerId -or $entries[0].provider.id -ne $model.providerId -or
+        $entries[0].modelName -cne $model.modelName -or $entries[0].status -cne 'ENABLED' -or $entries[0].provider.status -cne 'ENABLED' -or
+        'LOCAL' -cnotin @($entries[0].provider.trustLabels) -or 'chat' -cnotin @($entries[0].capabilities) -or 'tools' -cnotin @($entries[0].capabilities)){throw 'JOINT_MODEL_ENTRY_NOT_READY'}
+    $providerCode=[string]$entries[0].provider.code
+    if($Plan.ModelMode -ceq 'TestFixture'){
+        $sha=[Security.Cryptography.SHA256]::Create()
+        try{$expectedProvider='fixture_joint_'+([BitConverter]::ToString($sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($Plan.SessionId))).Replace('-','').ToLowerInvariant()).Substring(0,24)}finally{$sha.Dispose()}
+        if($providerCode -cne $expectedProvider -or $model.modelName -cne 'ready.model'){throw 'JOINT_MODEL_PROVIDER_IDENTITY_MISMATCH'}
+        $providers=@(Invoke-PublishRequest '/admin/model-providers'|Where-Object{$_.id -eq $model.providerId})
+        if($providers.Count -ne 1 -or $providers[0].code -cne $expectedProvider -or $providers[0].status -cne 'ENABLED' -or
+            $providers[0].baseUrl -cne $runtimePlan.fixtureBaseUrl -or $providers[0].protocol -cne 'OPENAI_COMPATIBLE'){throw 'JOINT_MODEL_PROVIDER_IDENTITY_MISMATCH'}
+        $question='EX06_TOOL:'+$skill.code
+    }else{
+        if($providerCode -cmatch 'fixture|^smoke_model_'){throw 'JOINT_REAL_MODEL_NOT_READY'}
+        $question='请调用工具 '+$skill.code+'，参数使用空JSON对象，不要直接回答。'
+    }
+    $acceptance=Save-PublishStep 'platform_skill_acceptance' ('/admin/skills/'+$skill.code+'/drafts/'+$skill.versionNo+'/acceptance') @{
+        modelEntryId=$model.modelEntryId;cases=@(@{question=$question;expectSelected=$skill.code;expectArgs=@{}})
+    } {
+        param($report)
+        $reportId=[Guid]::Empty
+        if($report.id -isnot [string] -or -not $report.id.StartsWith('sa_') -or
+            -not [Guid]::TryParse($report.id.Substring(3),[ref]$reportId) -or $reportId -eq [Guid]::Empty -or
+            $report.pass -isnot [bool] -or -not $report.pass -or $report.hitRate -ne 1 -or $report.gate.minHitRate -ne 0.8 -or
+            $report.candidateSha256 -cne $skill.sha256 -or $report.semanticDigest -cne $skill.semanticDigest -or $report.digestVersion -ne 1 -or
+            @($report.cases).Count -ne 1){throw 'JOINT_SKILL_ACCEPTANCE_NOT_PASSED'}
+        $case=$report.cases[0]
+        if($case.question -cne $question -or $case.selected -cne $skill.code -or $case.pass -isnot [bool] -or -not $case.pass -or
+            $case.argsOk -isnot [bool] -or -not $case.argsOk -or
+            -not ($case.actualArgs -is [pscustomobject] -or $case.actualArgs -is [Collections.IDictionary]) -or
+            @(Get-JointNames $case.actualArgs).Count -ne 0){throw 'JOINT_SKILL_ACCEPTANCE_NOT_PASSED'}
+        [pscustomobject]@{id=$report.id;skillVersionId=$skill.skillVersionId;modelEntryId=$model.modelEntryId;candidateSha256=$report.candidateSha256;semanticDigest=$report.semanticDigest;digestVersion=1;pass=$true;hitRate=$report.hitRate;minHitRate=$report.gate.minHitRate;caseCount=1;modelMode=$Plan.ModelMode}
+    }
+    if($acceptance.pass -ne $true -or $acceptance.skillVersionId -ne $skill.skillVersionId -or $acceptance.modelEntryId -ne $model.modelEntryId -or
+        $acceptance.candidateSha256 -cne $skill.sha256 -or $acceptance.semanticDigest -cne $skill.semanticDigest -or $acceptance.modelMode -cne $Plan.ModelMode){throw 'JOINT_SKILL_ACCEPTANCE_NOT_PASSED'}
+    # 服务端保留四道发布门；不改草稿、不豁免、不重绑旧报告。发布响应未知必须停。
+    Read-PublishVersion $status
+    $receipt=Save-PublishStep 'platform_skill_publish' ('/admin/skills/'+$skill.code+'/drafts/'+$skill.versionNo+'/publish') $null {
+        param($version)
+        Assert-PublishVersion $version 'PUBLISHED'
+        [pscustomobject][ordered]@{code=$skill.code;skillVersionId=$skill.skillVersionId;versionNo=$skill.versionNo;sha256=$skill.sha256;semanticDigest=$skill.semanticDigest;digestVersion=1;status='PUBLISHED';acceptanceId=$acceptance.id;modelEntryId=$model.modelEntryId;modelMode=$Plan.ModelMode;complete=$false}
+    }
+    if($receipt.status -cne 'PUBLISHED' -or $receipt.skillVersionId -ne $skill.skillVersionId -or $receipt.sha256 -cne $skill.sha256 -or
+        $receipt.semanticDigest -cne $skill.semanticDigest -or $receipt.acceptanceId -cne $acceptance.id){throw 'JOINT_SKILL_PUBLICATION_REPLY_INVALID'}
+    Read-PublishVersion 'PUBLISHED'
+    $main=Invoke-PublishRequest ('/admin/skills/'+$skill.code)
+    if($main.id -ne $skill.skillId -or $main.code -cne $skill.code -or $main.status -cne 'PUBLISHED' -or
+        $main.currentVersionId -ne $skill.skillVersionId -or $main.currentVersion -ne $skill.versionNo){throw 'JOINT_SKILL_PUBLICATION_READBACK_MISMATCH'}
+    Set-JointValue $State 'platformPublishedSkill' $receipt
+    Set-JointValue $State 'stage' 'PLATFORM_SKILL_PUBLISHED'
+    Set-JointValue $State 'lastError' $null
+    & $Save
+    return $receipt
+}
