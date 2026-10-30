@@ -1,0 +1,62 @@
+{
+  "card": "EX-26",
+  "commit": "e85788383dee83a8c7ea10f4196103af1b603645",
+  "parent": "b52dee68d633d615c7bea52c581e193a48fa76f1",
+  "tree": "24e2faa63a10f3daa8539b3002a9cf7cb7c3d0b6",
+  "paths": [
+    "admin-common/src/main/java/cn/agentplatform/common/authority/IamServiceTicketProvider.java",
+    "admin-common/src/test/java/cn/agentplatform/common/authority/LoopbackAuthority.java",
+    "skill-registry/pom.xml",
+    "skill-registry/src/main/java/cn/agentplatform/skill/infra/ServiceTicketConfiguration.java",
+    "skill-registry/src/test/java/cn/agentplatform/skill/infra/ServiceTicketAuthorityWiringTest.java",
+    "docs/evidence/2026-10-30-EX-26/outbound-wiring.md"
+  ],
+  "roundsUsed": 2,
+  "first": {
+    "round": 1,
+    "maximumRounds": 2,
+    "nativeExit": 1,
+    "freshXml": 1,
+    "records": 3,
+    "passed": 0,
+    "failures": 3,
+    "errors": 0,
+    "skipped": 0,
+    "sourceStable": true,
+    "targetedGate": true,
+    "wholeEx26Complete": false,
+    "furtherTestRoundScheduled": false
+  },
+  "secondCommon": {
+    "round": 2,
+    "maximumRounds": 2,
+    "nativeExit": 1,
+    "freshXml": 2,
+    "records": 4,
+    "passed": 1,
+    "failures": 0,
+    "errors": 3,
+    "skipped": 0,
+    "sourceStable": true,
+    "targetedGate": false,
+    "wholeEx26Complete": false,
+    "furtherTestRoundScheduled": false
+  },
+  "secondSkill": {
+    "round": 2,
+    "maximumRounds": 2,
+    "nativeExit": 0,
+    "freshXml": 2,
+    "records": 9,
+    "passed": 9,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "sourceStable": true,
+    "targetedGate": true,
+    "wholeEx26Complete": false,
+    "furtherTestRoundScheduled": false
+  },
+  "wholeCardComplete": false,
+  "pushExecuted": false
+}

@@ -1,0 +1,63 @@
+{
+  "card": "EX-19",
+  "substep": "comment ownership resolution and review materials backend",
+  "commit": "c4382b682c5c803de80265d1b29060a1b118cb82",
+  "parent": "f4fc004aee1cd97d14bfdefa2f4d43eaaf29d51b",
+  "tree": "a73793051d65d97cacec45bfd9ea68a15fd2208d",
+  "paths": [
+    "onto-release/src/main/java/cn/ontorepo/release/application/ProposalCommentService.java",
+    "onto-release/src/main/java/cn/ontorepo/release/application/ReleaseHistoryService.java",
+    "onto-release/src/main/java/cn/ontorepo/release/application/PublicationService.java",
+    "onto-designer-api/src/main/java/cn/ontorepo/api/ReleaseController.java",
+    "onto-designer-api/src/main/resources/db/migration/V33__proposal_comment_resolution.sql",
+    "onto-designer-api/src/test/java/cn/ontorepo/ProposalCommentReviewMaterialsTest.java",
+    "onto-designer-api/src/test/java/cn/ontorepo/ProposalCommentEndpointTest.java",
+    "contracts/openapi.json",
+    "web/packages/api-client/src/generated.ts",
+    "contracts/p4-release.md",
+    "docs/evidence/2026-10-30-EX-19/comment-review-materials.md"
+  ],
+  "roundsUsed": 2,
+  "first": {
+    "round": 1,
+    "maximumRounds": 2,
+    "nativeExit": 1,
+    "freshXml": true,
+    "records": 3,
+    "passed": 0,
+    "failures": 3,
+    "errors": 0,
+    "skipped": 0,
+    "sourceStable": true,
+    "expectedRed": true,
+    "wholeEx19Complete": false
+  },
+  "second": {
+    "round": 2,
+    "maximumRounds": 2,
+    "nativeExit": 0,
+    "freshXml": 3,
+    "records": 7,
+    "passed": 7,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "sourceStable": true,
+    "targetedGate": true,
+    "wholeEx19Complete": false,
+    "furtherTestRoundScheduled": false
+  },
+  "contract": {
+    "round": 2,
+    "maximumRounds": 2,
+    "backendPassed": 7,
+    "backendRerun": false,
+    "browserVerified": false,
+    "generateExit": 0,
+    "typecheckExit": 0,
+    "contractExit": 0
+  },
+  "uiPending": true,
+  "wholeCardComplete": false,
+  "pushExecuted": false
+}

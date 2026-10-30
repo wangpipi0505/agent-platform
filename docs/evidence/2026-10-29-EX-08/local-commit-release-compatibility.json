@@ -1,0 +1,47 @@
+{
+  "card": "EX-14",
+  "phase": "COMPATIBILITY_GATE",
+  "commit": "b7da6b15abfeeb71402aa664f180a0532565283b",
+  "parent": "4fc403613e168b68d849ea4d8800503575d9b882",
+  "tree": "a4774ebda64d47a1b5961a27b28922cb7b5f8b95",
+  "paths": [
+    "onto-release/src/main/java/cn/ontorepo/release/domain/ReleaseCompatibility.java",
+    "onto-release/src/main/java/cn/ontorepo/release/application/ReleaseBindingService.java",
+    "onto-release/src/main/java/cn/ontorepo/release/application/PublicationService.java",
+    "onto-designer-api/src/test/java/cn/ontorepo/ReleaseCompatibilityGateTest.java",
+    "contracts/p4-release.md",
+    "docs/evidence/2026-10-30-EX-14/compatibility-gate.md"
+  ],
+  "roundsUsed": 2,
+  "round1Failures": 3,
+  "round2": {
+    "round": 2,
+    "maximumRounds": 2,
+    "nativeExit": 0,
+    "freshXml": 3,
+    "records": 15,
+    "passed": 15,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "sourceStable": true,
+    "targetedGate": true,
+    "wholeEx14Complete": false,
+    "furtherTestRoundScheduled": false
+  },
+  "contracts": {
+    "traceRound": 2,
+    "compatibilityRound": 2,
+    "maximumTestRounds": 2,
+    "generateExit": 0,
+    "formatExit": 0,
+    "contractExit": 0,
+    "typecheckExit": 0,
+    "buildExit": 0,
+    "cqTargetedTestsRerun": false,
+    "browserVerified": false
+  },
+  "unknownSchemaReported": true,
+  "wholeCardComplete": false,
+  "pushExecuted": false
+}

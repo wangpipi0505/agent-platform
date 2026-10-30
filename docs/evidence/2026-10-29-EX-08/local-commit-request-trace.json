@@ -1,0 +1,58 @@
+{
+  "cards": [
+    "EX-12",
+    "EX-13"
+  ],
+  "commit": "f4fc004aee1cd97d14bfdefa2f4d43eaaf29d51b",
+  "parent": "4714d4823c10db18578252962568f6cdfbbaac23",
+  "tree": "deb6fd8870902bdfe1b6520101ddd0612a58126e",
+  "paths": [
+    "onto-trace/src/main/java/cn/ontorepo/trace/application/CandidateService.java",
+    "onto-trace/src/main/java/cn/ontorepo/trace/application/ExecutionFacts.java",
+    "onto-designer-api/src/main/java/cn/ontorepo/api/ApiDtos.java",
+    "onto-designer-api/src/main/java/cn/ontorepo/api/CandidateController.java",
+    "onto-designer-api/src/main/resources/db/migration/V32__execution_request_trace.sql",
+    "onto-designer-api/src/test/java/cn/ontorepo/ExecutionRequestTraceTest.java",
+    "contracts/openapi.json",
+    "web/packages/api-client/src/generated.ts",
+    "contracts/p4-release.md",
+    "docs/evidence/2026-10-30-EX-13/request-trace-facts.md"
+  ],
+  "roundsUsed": 2,
+  "firstFailures": 2,
+  "firstAccurateProductFailure": 1,
+  "firstIncorrectTestExpectedCode": 1,
+  "second": {
+    "round": 2,
+    "maximumRounds": 2,
+    "nativeExit": 1,
+    "freshXml": 2,
+    "records": 4,
+    "passed": 3,
+    "failures": 1,
+    "errors": 0,
+    "skipped": 0,
+    "sourceStable": true,
+    "targetedGate": false,
+    "wholeEx13Complete": false,
+    "furtherTestRoundScheduled": false
+  },
+  "incorrectTestCodeCorrectedTo": "FORBIDDEN",
+  "correctedTestRerun": false,
+  "frontend": {
+    "round": 2,
+    "maximumRounds": 2,
+    "backendNativeExit": 1,
+    "backendPassed": 3,
+    "backendFailures": 1,
+    "backendErrors": 0,
+    "rerunBackend": false,
+    "generateExit": 0,
+    "formatExit": 0,
+    "typecheckExit": 0,
+    "buildExit": 0,
+    "contractExit": 0
+  },
+  "wholeCardComplete": false,
+  "pushExecuted": false
+}

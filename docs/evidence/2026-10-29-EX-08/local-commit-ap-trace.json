@@ -1,0 +1,66 @@
+{
+  "card": "EX-13",
+  "phase": "AP_TRACE",
+  "commit": "a4ea4260832cb75ee1770b549a3a5c8e65ec1466",
+  "parent": "8ecae42c2b668c059b5252f0bac12afb55470369",
+  "tree": "5894d958b9c30534270245e4c8656efa0897b8d2",
+  "paths": [
+    "admin-common/src/main/java/cn/agentplatform/common/TraceContextFilter.java",
+    "engine-runtime/src/main/java/cn/agentplatform/engine/application/RunService.java",
+    "engine-runtime/src/main/java/cn/agentplatform/engine/infra/RuntimeClients.java",
+    "skill-registry/src/main/java/cn/agentplatform/skill/infra/SkillAdapters.java",
+    "engine-runtime/src/test/java/cn/agentplatform/engine/infra/CrossServiceTraceTest.java",
+    "contracts/capability-package-import.md",
+    "docs/evidence/2026-10-30-EX-13/ap-trace.md"
+  ],
+  "roundsUsed": 2,
+  "round1Failures": 2,
+  "round2Raw": {
+    "round": 2,
+    "maximumRounds": 2,
+    "nativeExit": 0,
+    "freshXml": 3,
+    "records": 13,
+    "passed": 13,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "sourceStable": true,
+    "targetedGate": false,
+    "wholeEx13Complete": false,
+    "furtherTestRoundScheduled": false
+  },
+  "round2XmlAnalysis": {
+    "analysisOnly": true,
+    "testRerun": false,
+    "nativeExit": 0,
+    "rawCollectorGate": false,
+    "reason": "expectedRecords=11 omitted two existing parameterized OpenApiHttpMappingTest invocations",
+    "freshClasses": 3,
+    "actualRecords": 13,
+    "passed": 13,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "sourceStable": true,
+    "classes": [
+      {
+        "class": "CrossServiceTraceTest",
+        "passed": 2
+      },
+      {
+        "class": "PromptFreezeDigestTest",
+        "passed": 4
+      },
+      {
+        "class": "OpenApiHttpMappingTest",
+        "passed": 7
+      }
+    ],
+    "actualAllSelectedPassed": true
+  },
+  "contractGateExit": 0,
+  "formalJointVerified": false,
+  "wholeCardComplete": false,
+  "pushExecuted": false
+}
