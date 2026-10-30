@@ -119,6 +119,11 @@ public final class LoopbackAuthority implements AutoCloseable {
     public HttpCurrentAuthorityClient client(String service){
         var c=config(service);return new HttpCurrentAuthorityClient(c,clock,new WorkloadCredentialResolver(c,name->secrets.get(service),true),true);
     }
+    /** 仅为本地协议装配测试注入本夹具凭据，不读取或导出部署环境中的秘密。 */
+    public WorkloadCredentialResolver clientCredentials(String service){
+        if(!AuthorityProperties.SERVICES.contains(service))throw new IllegalArgumentException("FINITE_CLIENT_ONLY");
+        return new WorkloadCredentialResolver(config(service),name->secrets.get(service),true);
+    }
     static ServiceCall call(String caller,String target){
         var route=new ServiceRoutePolicy().routes().stream().filter(r->caller.equals(r.caller())&&target.equals(r.target())&&"delegated".equals(r.mode())).findFirst().orElseThrow();
         return new ServiceCall(target,route.action(),new ResourceBinding("run","r-test",Digest.sha256("snapshot-v1")));
