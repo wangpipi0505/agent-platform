@@ -28,6 +28,47 @@ agent:
     allow-embed: true
     jwt-secret: ${AGENT_JWT_SECRET}
     issuer: agent-platform-v12
+    # EX-43 §3.1：iam 由部署注入；留空时启动即失败（与未落盘 mode 时的既有行为一致），
+    # 因此默认值绝不能在仓库里写成 iam 之外的“可运行假象”。dev-hmac 回滚=注入 dev-hmac+AGENT_DEV_AUTH=true。
+    mode: ${AGENT_SECURITY_MODE:}
+    service-id: gateway
+    # portal 域只有 gateway 允许（AuthorityProperties.validate 的 PORTAL_SERVICE_FORBIDDEN）。
+    # enabled=false 时下列空值不参与校验，回滚只需关闭开关；一旦置 true，全部取值必须由环境注入，
+    # 仓库里不写任何真实租户/受众/密钥。bizSystemCode、userId 各自必须恰好一个值（有效值白名单）。
+    portal:
+      enabled: ${AGENT_PORTAL_ENABLED:false}
+      issuer: ${AGENT_PORTAL_ISSUER:}
+      jwks-uri: ${AGENT_PORTAL_JWKS_URI:}
+      audience: ${AGENT_PORTAL_AUDIENCE:}
+      client-id: ${AGENT_PORTAL_CLIENT_ID:}
+      role-allowlist: ${AGENT_PORTAL_ROLE_ALLOWLIST:EDITOR}
+      # 白名单键集必须与 attribute-value-allowlist 的键集完全相等（AuthorityProperties.validate），
+      # 且 ClaimCeiling 要求每个键都出现在票里——"声明即强制"。仓库只列参考 IdP 默认签发的两个键，
+      # 取值由环境注入；enabled=true 而未注入取值时启动即失败（fail-closed）。
+      # 需要额外钉住归属键（bizSystemCode、userId 各恰一值）的部署用 SPRING_APPLICATION_JSON 追加：
+      # {"agent.security.portal":{"attribute-allowlist":"region,dataLabels,bizSystemCode,userId",
+      #  "attribute-value-allowlist":{"bizSystemCode":["BIZ-1"],"userId":["user-1"]}}}
+      # ——必须用 JSON/YAML 源：环境变量会把 map 键宽松绑定成小写，与 camelCase 白名单键集不再相等。
+      attribute-allowlist: ${AGENT_PORTAL_ATTRIBUTE_ALLOWLIST:region,dataLabels}
+      attribute-value-allowlist:
+        region: ${AGENT_PORTAL_ATTRIBUTE_REGION:}
+        dataLabels: ${AGENT_PORTAL_ATTRIBUTE_DATA_LABELS:}
+      scope-allowlist: ${AGENT_PORTAL_SCOPE_ALLOWLIST:platform.access}
+    # authority 域（服务票换发）同样只存引用：密钥名固定为 env:AGENT_SECRET_IAM_GATEWAY_CLIENT，
+    # 由 IamStartupGate 在监听端口打开前本地校验其可解析性，不发起任何网络调用。
+    authority:
+      issuer: ${AGENT_IAM_ISSUER:}
+      jwks-uri: ${AGENT_IAM_JWKS_URI:}
+      token-uri: ${AGENT_IAM_TOKEN_URI:}
+      decision-uri: ${AGENT_IAM_DECISION_URI:}
+      client-id: gateway
+      client-secret-ref: env:AGENT_SECRET_IAM_GATEWAY_CLIENT
+      allowed-algorithm: RS256
+      audience: urn:agent-platform:service:gateway
+      max-ticket-seconds: 60
+      max-decision-seconds: 5
+      connect-timeout-ms: 1000
+      read-timeout-ms: 2000
   integration:
     # T18.1 业务入口限流：按集成凭据滑动窗口计数；默认关闭（回滚=恢复 false），max-requests<=0 表示不限。
     rate-limit-enabled: ${AGENT_INTEGRATION_RATE_LIMIT_ENABLED:false}

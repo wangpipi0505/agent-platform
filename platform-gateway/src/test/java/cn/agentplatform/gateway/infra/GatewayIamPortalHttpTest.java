@@ -1,0 +1,276 @@
+package cn.agentplatform.gateway.infra;
+
+import cn.agentplatform.common.Actor;
+import cn.agentplatform.common.authority.CoverageGate;
+import cn.agentplatform.common.authority.CurrentAuthorityClient;
+import cn.agentplatform.common.authority.LoopbackAuthority;
+import cn.agentplatform.common.authority.ServiceRoutePolicy;
+import cn.agentplatform.common.authority.ServiceTrustChain;
+import cn.agentplatform.gateway.GatewayApplication;
+
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.MapPropertySource;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.servlet.handler.MappedInterceptor;
+import org.springframework.web.servlet.mvc.method.RequestMappingInfoHandlerMapping;
+
+import java.net.URI;
+import java.time.Clock;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+/**
+ * EX-43 phase 2 group B: the gateway must run the two-chain layout against real IAM material, keep the
+ * portal surface on chain 2 only, take the SSE ticket from the {@code Authorization} header only, and
+ * still answer the legacy dev-token route with 404.
+ *
+ * <p>A real HTTP port is used instead of MockMvc on purpose: the portal ingress is a container filter
+ * ordered after the security chain and the SSE claim depends on async dispatch. A MockMvc call would
+ * skip exactly the ordering this test is meant to pin.
+ */
+class GatewayIamPortalHttpTest {
+
+    private static LoopbackAuthority iam;
+    private static ServletWebServerApplicationContext app;
+    private static String base;
+
+    @BeforeAll
+    static void boot() throws Exception {
+        iam = new LoopbackAuthority();
+        var deployment = properties();
+        app = (ServletWebServerApplicationContext)
+                new SpringApplicationBuilder(TestAuthorityClient.class, GatewayApplication.class)
+                        .profiles("test")
+                        // The deployment values must be visible to the early-startup bean factory
+                        // post processor that validates agent.security, so they go in as the highest
+                        // precedence source instead of a default property (which the file-based
+                        // application.yml source would shadow).
+                        .initializers(context -> context.getEnvironment()
+                                .getPropertySources()
+                                .addFirst(new MapPropertySource("gateway-iam-test", deployment)))
+                        .run();
+        base = "http://127.0.0.1:" + app.getWebServer().getPort();
+    }
+
+    @AfterAll
+    static void shutdown() {
+        if (app != null) app.close();
+        if (iam != null) iam.close();
+    }
+
+    /**
+     * Only the fake authority client differs from production wiring: the deployment still binds the full
+     * {@code agent.security} tree and the same secrets reference, so a missing or inconsistent portal
+     * block would fail startup here instead of at the first portal request.
+     */
+    @Configuration(proxyBeanMethods = false)
+    static class TestAuthorityClient {
+        @Bean
+        CurrentAuthorityClient gatewayAuthorityClient() {
+            return iam.client("gateway");
+        }
+
+        /**
+         * The fixture signs material against its own fixed instant; production wires the system clock.
+         * Sharing the fixture clock keeps "now" inside the ticket's validity window instead of testing
+         * expiry, which the fixture's lifecycle tests already cover.
+         */
+        @Bean
+        Clock gatewayTestAuthorityClock() {
+            return iam.clock();
+        }
+    }
+
+    private static Map<String, Object> properties() {
+        var values = new LinkedHashMap<String, Object>();
+        values.put("server.port", "0");
+        values.put("spring.flyway.enabled", "false");
+        values.put("agent.dev-auth", "false");
+        values.put("agent.security.mode", "iam");
+        values.put("agent.security.service-id", "gateway");
+        values.put("agent.security.portal.enabled", "true");
+        values.put("agent.security.portal.issuer", iam.issuer() + "/portal");
+        values.put("agent.security.portal.jwks-uri", iam.issuer() + "/portal-jwks");
+        values.put("agent.security.portal.audience", "portal-gateway");
+        values.put("agent.security.portal.client-id", "portal-web");
+        values.put("agent.security.portal.role-allowlist", "ADMIN,EDITOR");
+        // attribute-value-allowlist 是 Map<String,Set<String>>：没有 String→Map 的转换器，而方括号/
+        // 点号记法都会被适配成小写键（datalabels），与 camelCase 白名单键集不再相等并报未绑定。
+        // 因此键名只留在 application.yml（YAML 保留大小写），测试与生产一样只注入取值。
+        values.put("AGENT_PORTAL_ATTRIBUTE_REGION", "A,B");
+        values.put("AGENT_PORTAL_ATTRIBUTE_DATA_LABELS", "confidential");
+        values.put("agent.security.portal.scope-allowlist", "platform.access");
+        values.put("agent.security.authority.issuer", iam.issuer());
+        values.put("agent.security.authority.jwks-uri", iam.issuer() + "/jwks");
+        values.put("agent.security.authority.token-uri", iam.issuer() + "/token");
+        values.put("agent.security.authority.decision-uri", iam.issuer() + "/decision");
+        values.put("agent.security.authority.client-id", "gateway");
+        values.put("agent.security.authority.client-secret-ref", "env:AGENT_SECRET_IAM_GATEWAY_CLIENT");
+        values.put("agent.security.authority.allowed-algorithm", "RS256");
+        values.put("agent.security.authority.audience", "urn:agent-platform:service:gateway");
+        // The deployment reads the secret from the environment; the test profile supplies the same
+        // property so the startup gate sees a present value without exporting anything.
+        values.put("AGENT_SECRET_IAM_GATEWAY_CLIENT", iam.testClientSecret("gateway"));
+        values.put("AGENT_JWT_SECRET", "test-only-gateway-secret-0123456789abcdef");
+        values.put("AGENT_DB_PASSWORD", "test-only-db-password");
+        return values;
+    }
+
+    @Test
+    void internalSurfaceRunsOnTheServiceTrustChainAndPortalSurfaceOnTheGeneralChain() {
+        var chains = app.getBeansOfType(SecurityFilterChain.class).values().stream().toList();
+        var trust = chains.stream()
+                .filter(ServiceTrustChain.class::isInstance)
+                .map(ServiceTrustChain.class::cast)
+                .toList();
+        assertThat(trust).as("exactly one /internal chain").hasSize(1);
+        var chain = trust.get(0);
+        // Lower order means "consulted first"; the general chain keeps the Boot default.
+        assertThat(chain.getOrder()).isLessThan(0);
+        assertThat(chain.matches(request("POST", "/internal/iam/policy"))).isTrue();
+        assertThat(chain.matches(request("GET", "/admin/apps/app-a/runs"))).isFalse();
+        assertThat(chain.matches(request("GET", "/auth/session"))).isFalse();
+
+        var general = chains.stream().filter(c -> !(c instanceof ServiceTrustChain)).toList();
+        assertThat(general).hasSize(1);
+        // 通用链来自被扫描的公共配置，它可能同样命中 /internal/**；真正保证门户票进不了链 1 的是
+        // 链 1 的 order 更小（上一处断言），因此这里钉住顺序语义而不钉“通用链不命中”。
+        assertThat(general.get(0).matches(request("GET", "/admin/apps/app-a/runs"))).isTrue();
+        assertThat(general.get(0).matches(request("GET", "/auth/session"))).isTrue();
+    }
+
+    @Test
+    void portalTicketPassesTheAdminSurface() throws Exception {
+        var response = send(HttpRequest.newBuilder(URI.create(base + "/admin/apps/app-a/runs"))
+                .header("Authorization", "Bearer " + iam.portal())
+                .POST(HttpRequest.BodyPublishers.ofString("{}")));
+        // Reaching the controller proves authentication and authorisation passed; the 503 is the
+        // published-run proxy being absent from this minimal deployment, not an auth rejection.
+        assertThat(response.statusCode()).as(response.body()).isEqualTo(503);
+        assertThat(response.body()).contains("PUBLISHED_RUN_UNAVAILABLE");
+    }
+
+    @Test
+    void adminSurfaceWithoutTicketIs401() throws Exception {
+        var response = send(HttpRequest.newBuilder(URI.create(base + "/admin/apps/app-a/runs"))
+                .POST(HttpRequest.BodyPublishers.ofString("{}")));
+        assertThat(response.statusCode()).as(response.body()).isEqualTo(401);
+        assertThat(response.body()).contains("SYS-AUTH-401");
+    }
+
+    @Test
+    void serviceTicketForAnotherAudienceIs401() throws Exception {
+        var claims = iam.base("service", "urn:agent-platform:service:app", 60);
+        claims.put("sub", "app");
+        var response = get("/auth/session", iam.sign(claims, iam.authoritySigningKey(), "at+jwt"));
+        assertThat(response.statusCode()).as(response.body()).isEqualTo(401);
+        assertThat(response.body()).contains("SYS-AUTH-401");
+    }
+
+    @Test
+    void ticketWithUserUseButServiceAudienceIs401() throws Exception {
+        // Mirror image of the audience case: the trust domain is chosen by iss+aud, so a user ticket
+        // signed by the service authority must be refused instead of authenticating as a service.
+        var claims = iam.base("user", "urn:agent-platform:service:gateway", 60);
+        claims.put("sub", "alice");
+        var response = get("/auth/session", iam.sign(claims, iam.authoritySigningKey(), "at+jwt"));
+        assertThat(response.statusCode()).as(response.body()).isEqualTo(401);
+        assertThat(response.body()).contains("SYS-AUTH-401");
+    }
+
+    @Test
+    void portalSessionReturnsTheExchangedIdentity() throws Exception {
+        var response = get("/auth/session", iam.portal());
+        assertThat(response.statusCode()).as(response.body()).isEqualTo(200);
+        assertThat(response.headers().firstValue("Cache-Control")).contains("no-store");
+        assertThat(response.body()).contains("tenant-a").doesNotContain("access_token");
+    }
+
+    @Test
+    void portalSessionWithoutTicketIs401() throws Exception {
+        var response = get("/auth/session", null);
+        assertThat(response.statusCode()).as(response.body()).isEqualTo(401);
+        assertThat(response.body()).contains("SYS-AUTH-401");
+    }
+
+    @Test
+    void devTokenIsNotFoundInIamMode() throws Exception {
+        var response = get("/auth/dev-token", null);
+        assertThat(response.statusCode()).as(response.body()).isEqualTo(404);
+        assertThat(response.body()).contains("NOT_FOUND");
+    }
+
+    @Test
+    void portalTicketCannotEnterTheInternalSurface() throws Exception {
+        var response = send(HttpRequest.newBuilder(URI.create(base + "/internal/iam/policy"))
+                .header("Authorization", "Bearer " + iam.portal())
+                .POST(HttpRequest.BodyPublishers.ofString("{}")));
+        // Chain 1 wraps its decoder in a service-domain check, so a browser ticket is refused there
+        // rather than being authenticated and then dropped by the absent internal handler.
+        assertThat(response.statusCode()).as(response.body()).isEqualTo(401);
+    }
+
+    @Test
+    void queryStringTicketIsRejectedOnTheSseSurface() throws Exception {
+        var response = get("/admin/runs/r_0123456789abcdef0123456789abcdef/events?access_token=leaked",
+                iam.portal());
+        assertThat(response.statusCode()).as(response.body()).isEqualTo(400);
+        assertThat(response.body()).contains("PORTAL_TICKET_SOURCE_INVALID");
+    }
+
+    @Test
+    void queryStringTicketIsRejectedEvenWithoutAnAuthorizationHeader() throws Exception {
+        // 第一阶段遗留的缺口：只带 ?access_token= 的 SSE 订阅必须被拒绝，且拒绝方式固定为 400
+        // （过滤器在安全链之前判定票来源，避免把"票放错位置"误报成"票无效"的 401）。
+        var response = get("/admin/runs/r_0123456789abcdef0123456789abcdef/events?access_token=leaked",
+                null);
+        assertThat(response.statusCode()).as(response.body()).isEqualTo(400);
+        assertThat(response.body()).contains("PORTAL_TICKET_SOURCE_INVALID");
+    }
+
+    @Test
+    void coverageGateFindsNoUncoveredInternalHandler() {
+        var mappings = app.getBeansOfType(RequestMappingInfoHandlerMapping.class).values();
+        var missing = CoverageGate.missingInternal("gateway", new ServiceRoutePolicy(), mappings);
+        assertThat(missing).isEmpty();
+        // Gateway intentionally exposes no /internal handler yet; the assertion above is therefore
+        // vacuous today and becomes meaningful the moment one is added without a catalog row.
+        var interceptors = app.getBeansOfType(MappedInterceptor.class).values();
+        assertThat(interceptors).as("portal ingress interceptor registered once").hasSize(1);
+    }
+
+    // ---- helpers ---------------------------------------------------------------------------------
+
+    private static MockHttpServletRequest request(String method, String path) {
+        return new MockHttpServletRequest(method, path);
+    }
+
+    private static HttpResponse<String> get(String path, String token) throws Exception {
+        var builder = HttpRequest.newBuilder(URI.create(base + path))
+                .header("Accept", "application/json")
+                .GET();
+        if (token != null) builder.header("Authorization", "Bearer " + token);
+        return send(builder);
+    }
+
+    private static HttpResponse<String> send(HttpRequest.Builder builder) throws Exception {
+        try (var client = HttpClient.newHttpClient()) {
+            return client.send(
+                    builder.header("Accept", "application/json").build(),
+                    HttpResponse.BodyHandlers.ofString());
+        }
+    }
+}
