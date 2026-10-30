@@ -804,6 +804,18 @@
   "reason": ""
  },
  {
+  "method": "POST",
+  "template": "/internal/evaluations/turn",
+  "caller": "monitor",
+  "target": "engine",
+  "action": "evaluation.turn",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/ChatSessionController.java:19",
+  "callerSource": "monitor/src/main/java/cn/agentplatform/monitor/application/EvaluationConversations.java:117",
+  "reason": ""
+ },
+ {
   "method": "GET",
   "template": "/admin/runs",
   "caller": "gateway",
