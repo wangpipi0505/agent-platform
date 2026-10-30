@@ -33,6 +33,17 @@ import java.util.*;
 
 @Component
 public class SkillAdapters {
+    private IdentityMappingClient identityMapping;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    void identityMapping(IdentityMappingClient client) { this.identityMapping = client; }
+
+    private Map<String, String> mappedIdentityHeaders(Map<String, Object> contract) {
+        if (!IdentityMappingClient.declared(contract)) return Map.of();
+        if (identityMapping == null) throw IdentityMappingClient.missingClient();
+        return identityMapping.headers(contract);
+    }
+
     public record Raw(
             JsonNode structured,
             List<Map<String, Object>> fileRefs,
@@ -877,6 +888,8 @@ public class SkillAdapters {
                         contract.get(AuthScheme.FIELD),
                         Objects.toString(contract.get("authRef"), ""));
         HttpMethod httpMethod = HttpMethod.valueOf(method);
+        // PG 映射前置核验在业务传输 try 外；拒绝不能被折成可重试网络错误或未知写入。
+        Map<String, String> mappedIdentity = mappedIdentityHeaders(contract);
         boolean sideEffect =
                 Boolean.TRUE.equals(object(contract.get("execution")).get("sideEffect"));
         // 复用既有 JDK21 transport：HttpURLConnection 的 streaming POST 在 401 时丢弃错误体，
@@ -901,7 +914,7 @@ public class SkillAdapters {
             authorization.forEach(request::header);
             // 身份头与鉴权头叠加（PLAT-12 §4.12）：声明了 identity 的技能出站追加 X-User-*，值
             // 只来自进程内已验主体快照；无可用主体（系统级调用）时跳过注入不伪造，不改变鉴权语义。
-            identityHeaders(contract).forEach(request::header);
+            mappedIdentity.forEach(request::header);
             // 关联值仅来自已校验的请求/运行上下文，不能由技能鉴权配置覆盖或用作身份。
             request.headers(headers -> headers.set(TraceContextFilter.HEADER, TraceContextFilter.current()));
             if (mapped && MultipartFormMapping.declared(contract)) {

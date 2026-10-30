@@ -157,6 +157,7 @@ public class SkillExecution {
         String failure = null, reason = null;
         // PLAT-05：远端业务码与有界原文由适配器失败携带，终经 envelope 落成七字段错误对象。
         String errorCode = null, errorRaw = null;
+        boolean mappingRejectedBeforeDispatch = false;
         Map<String, Object> secured = arguments;
         try {
             SkillRules.validate(contract.get("inputSchema"), arguments);
@@ -372,6 +373,7 @@ public class SkillExecution {
                     errorRaw = ex.raw;
                     algorithmSource = ex.source;
                 } catch (SkillAdapters.Failure ex) {
+                    mappingRejectedBeforeDispatch = ex instanceof cn.agentplatform.skill.infra.IdentityMappingClient.BeforeDispatchFailure;
                     // 回滚开关关闭时保持改造前语义：提交未拿到任务标识仍是 RESULT_UNKNOWN。
                     boolean legacy = !externalJobEnabled && "SUBMIT_NO_TASK_ID".equals(ex.semantic);
                     status = legacy || ex.unknown ? "UNKNOWN" : "FAILED";
@@ -397,6 +399,13 @@ public class SkillExecution {
             }
         }
         var envelope = envelope(request, contract, status, semantic, reason, errorCode, errorRaw, raw, mock, secured);
+        if (mappingRejectedBeforeDispatch && envelope.get("identity") != null) {
+            var identity = (com.fasterxml.jackson.databind.node.ObjectNode) Json.tree(envelope.get("identity"));
+            identity.put("injected", false);
+            identity.put("skipReason", errorCode);
+            for (var header : identity.path("headers")) ((com.fasterxml.jackson.databind.node.ObjectNode) header).put("sent", false);
+            envelope.put("identity", Json.mapper().convertValue(identity, Map.class));
+        }
         var frozenRequest = new LinkedHashMap<String, Object>(request);
         frozenRequest.put("guardedArguments", secured);
         frozenRequest.put("authorityTriggerType", authorityTrigger);

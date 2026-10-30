@@ -71,6 +71,10 @@ public class HttpAsyncAdapter {
     private static final int MAX_ERROR_MESSAGE = 512;
 
     private final JdbcTemplate db;
+    private IdentityMappingClient identityMapping;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    void identityMapping(IdentityMappingClient client) { this.identityMapping = client; }
 
     public HttpAsyncAdapter(JdbcTemplate db) {
         this.db = db;
@@ -480,7 +484,8 @@ public class HttpAsyncAdapter {
             // T06.2：只有“已核实结论”（服务端终态失败、查询被401/403明确拒绝）可以穿透；
             // 本地验收异常与“任务暂不可见”仍是不确定证据——折叠保留绑定等待对账，但消息必须
             // 携带原始语义与原因，cause 保留，不能把一次404折叠成无法定位的“尚未完成”。
-            if ("REMOTE_FAILED".equals(failure.semantic) || failure instanceof QueryRejected)
+            if ("REMOTE_FAILED".equals(failure.semantic) || failure instanceof QueryRejected
+                    || failure instanceof IdentityMappingClient.BeforeDispatchFailure)
                 throw failure;
             throw unknown(
                     "原任务查询或结果验收尚未完成（"
@@ -582,6 +587,8 @@ public class HttpAsyncAdapter {
     private JsonNode statusResponse(Map<String, Object> contract, String endpoint, String key) {
         try {
             return exchange(contract, endpoint, "GET", null, key, 65536);
+        } catch (IdentityMappingClient.BeforeDispatchFailure blocked) {
+            throw blocked;
         } catch (Exception rejected) {
             return null;
         }
@@ -648,7 +655,10 @@ public class HttpAsyncAdapter {
                 .forEach(request::header);
         // 身份头与鉴权头叠加（PLAT-12 §4.12）：与同步适配器共用 SkillAdapters.identityHeaders，
         // 声明了 identity 的技能在提交与查询请求上都带同一组 X-User-*；无可用主体时跳过不伪造。
-        SkillAdapters.identityHeaders(contract).forEach(request::header);
+        if (IdentityMappingClient.declared(contract)) {
+            if (identityMapping == null) throw IdentityMappingClient.missingClient();
+            identityMapping.headers(contract).forEach(request::header);
+        }
         if (body != null)
             request.contentType(org.springframework.http.MediaType.APPLICATION_JSON).body(body);
         return request;

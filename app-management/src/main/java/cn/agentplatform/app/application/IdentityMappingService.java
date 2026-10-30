@@ -26,6 +26,26 @@ public class IdentityMappingService {
         return repository.upsert(actor.subject(), actor.principalId());
     }
 
+    /** 登记是显式动作；只取当前验签主体，不提供 body 指定他人/跨租户身份的入口。 */
+    @Transactional
+    public IdentityMapping registerCurrent() {
+        var actor = Actor.current();
+        actor.requireRole("EDITOR");
+        var stored = put(actor);
+        if (!actor.subject().mappingKey().equals(stored.mappingKey()))
+            throw error(409, "IDENTITY_MAPPING_WRITE_CONFLICT", "主体快照已变化，请重新读取身份后登记");
+        return stored;
+    }
+
+    /** 读取绝不自动重建：旧 JWT/旧映射键不能覆盖已经更新或撤销的 PG 当前行。 */
+    public IdentityMapping current() {
+        var actor = Actor.current();
+        var mapping = require(actor.tenantId(), actor.principalId());
+        if (!actor.subject().mappingKey().equals(mapping.mappingKey()))
+            throw error(403, "IDENTITY_MAPPING_CHANGED", "当前授权快照与已登记映射不同，请确认权限后重新登记");
+        return mapping;
+    }
+
     public Optional<IdentityMapping> find(String tenantId, String principalId) {
         return repository.find(tenantId, principalId);
     }

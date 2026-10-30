@@ -2167,5 +2167,29 @@
   "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/UsageController.java:21",
   "callerSource": "",
   "reason": "ADMIN 人工查询端点（T19.1）：门户 Bearer 鉴权按租户取数，非服务票据路由，无服务调用方；disabled=零服务授权（G-9 补录，对齐 /health/data 先例）"
- }
+ },
+{
+    "method": "PUT",
+    "template": "/admin/system/identity-mapping/current",
+    "caller": "gateway",
+    "target": "app",
+    "action": "identity.mapping.register",
+    "mode": "delegated",
+    "integrationAllowed": false,
+    "source": "app-management/src/main/java/cn/agentplatform/app/api/IdentityMappingController.java registerCurrent",
+    "callerSource": "platform-gateway GatewayController registered admin/system proxy",
+    "reason": "Only verified current subject; explicit self registration, no body identity or external subject assignment"
+  },
+  {
+    "method": "GET",
+    "template": "/internal/identity-mappings/current",
+    "caller": "skill",
+    "target": "app",
+    "action": "identity.mapping.current",
+    "mode": "delegated",
+    "integrationAllowed": false,
+    "source": "app-management/src/main/java/cn/agentplatform/app/api/IdentityMappingController.java current",
+    "callerSource": "skill-registry/src/main/java/cn/agentplatform/skill/infra/IdentityMappingClient.java headers",
+    "reason": "Current tenant/principal and exact authorization snapshot must match the current PG row; no cache or auto registration"
+  }
 ]
