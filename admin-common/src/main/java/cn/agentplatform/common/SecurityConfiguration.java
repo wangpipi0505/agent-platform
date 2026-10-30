@@ -3,8 +3,14 @@ package cn.agentplatform.common;
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 
+import cn.agentplatform.common.authority.AuthorityDecoders;
 import cn.agentplatform.common.authority.AuthorityProperties;
+import cn.agentplatform.common.authority.CoverageGate;
+import cn.agentplatform.common.authority.IamStartupGate;
 import cn.agentplatform.common.authority.ServiceAuthorization;
+import cn.agentplatform.common.authority.ServiceRoutePolicy;
+import cn.agentplatform.common.authority.ServiceTrustChain;
+import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.boot.context.properties.bind.*;
 import org.springframework.boot.context.properties.bind.handler.NoUnboundElementsBindHandler;
@@ -31,6 +37,7 @@ import org.springframework.security.oauth2.server.resource.web.authentication.Be
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.*;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.servlet.mvc.method.RequestMappingInfoHandlerMapping;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -41,36 +48,75 @@ import javax.crypto.spec.SecretKeySpec;
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfiguration {
+    /** IAM_CONFIG_INCOMPLETE covers every authority-block validation reason, keeping the detail. */
+    private static final Set<String> IAM_CONFIG_REASONS =
+            Set.of(
+                    "IAM_CONFIG_REQUIRED",
+                    "IAM_CLIENT_SERVICE_MISMATCH",
+                    "IAM_SECRET_REF_INVALID",
+                    "IAM_ALGORITHM_INVALID",
+                    "IAM_AUDIENCE_INVALID",
+                    "IAM_URI_INVALID",
+                    "IAM_BUDGET_INVALID",
+                    IamStartupGate.CONFIG_INCOMPLETE);
+
     @Bean
     static BeanFactoryPostProcessor authorityModeGuard(Environment environment) {
         return beanFactory -> {
-            var properties = bindDeployment(environment);
+            var properties = bindValidatedDeployment(environment);
             // Spring Context 6.2.7 invokes factory processors before onRefresh; Boot 3.5.0
-            // creates its web server in onRefresh. Reject IAM here, before any listener exists.
-            // D1 component receivers do not open production IAM; D3 must migrate every service first.
-            if ("iam".equals(properties.mode())) throw new IllegalStateException("IAM_TRUST_CHAIN_UNAVAILABLE");
+            // creates its web server in onRefresh. Every check below is local, so a rejected iam
+            // deployment never opens a listener, and a healthy one starts without any network call.
+            // EX-43 §3.2: iam is a validating gate now, not an unconditional refusal.
+            if ("iam".equals(properties.mode())) IamStartupGate.requireLocalClientSecret(environment, properties);
+            // Publish signing permission only after every local iam check passed.
+            ServiceTokens.registerDeployment(properties.mode());
             beanFactory.registerSingleton("authorityProperties", properties);
         };
     }
 
     /** Bind and validate actual deployment sources before publishing any signing permission. */
     public static AuthorityProperties bindDeployment(Environment environment) {
-        var properties = Binder.get(environment).bind("agent.security",
-                Bindable.of(AuthorityProperties.class), new NoUnboundElementsBindHandler(BindHandler.DEFAULT))
-                .orElseGet(() -> new AuthorityProperties(null, null, null, null, null, null, null, null, null));
-        properties.validateDeployment(environment.getProperty("agent.dev-auth", Boolean.class, false),
-                environment.getProperty("server.address"),
-                Arrays.asList(environment.getActiveProfiles()).contains("test"));
+        var properties = bindValidatedDeployment(environment);
         // Boot 3.5.0 Binder/NoUnboundElementsBindHandler finish strict binding before this
         // registration. Invalid input cannot change the classloader signing state.
         ServiceTokens.registerDeployment(properties.mode());
         return properties;
     }
 
+    /**
+     * Binds and validates deployment input without publishing signing permission. The guard uses this
+     * split so iam registration happens only after the client-secret reference resolves; callers that
+     * only need the validated view cannot accidentally mutate the classloader-wide signing state.
+     */
+    public static AuthorityProperties bindValidatedDeployment(Environment environment) {
+        var properties = Binder.get(environment).bind("agent.security",
+                Bindable.of(AuthorityProperties.class), new NoUnboundElementsBindHandler(BindHandler.DEFAULT))
+                .orElseGet(() -> new AuthorityProperties(null, null, null, null, null, null, null, null, null));
+        try {
+            properties.validateDeployment(environment.getProperty("agent.dev-auth", Boolean.class, false),
+                    environment.getProperty("server.address"),
+                    Arrays.asList(environment.getActiveProfiles()).contains("test"));
+        } catch (IllegalStateException invalid) {
+            // EX-43 §3.2 keeps the authority block's concrete reason for diagnosis but reports it
+            // under the stable iam startup code. Mode/bind/dev-auth errors stay as they were.
+            if ("iam".equals(properties.mode()) && IAM_CONFIG_REASONS.stream()
+                    .anyMatch(reason -> String.valueOf(invalid.getMessage()).startsWith(reason)))
+                throw new IllegalStateException(
+                        IamStartupGate.CONFIG_INCOMPLETE + ": " + invalid.getMessage(), invalid);
+            throw invalid;
+        }
+        return properties;
+    }
+
     @Bean
     JwtDecoder jwtDecoder(
-            @Value("${agent.security.jwt-secret}") String secret,
-            @Value("${agent.security.allow-embed:false}") boolean allowEmbed) {
+            @Value("${agent.security.jwt-secret:}") String secret,
+            @Value("${agent.security.allow-embed:false}") boolean allowEmbed,
+            AuthorityProperties deployment) {
+        // EX-43 §3.4: iam verifies RS256 against the deployment's fixed trust domains. Building the
+        // decoder only wires a lazy JWKS key source, so startup still performs no network call.
+        if ("iam".equals(deployment.mode())) return AuthorityDecoders.iam(deployment);
         if (secret.length() < 32) throw new IllegalStateException("JWT密钥必须独立且至少32字符");
         var decoder =
                 NimbusJwtDecoder.withSecretKey(
@@ -102,7 +148,7 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    SecurityFilterChain security(
+    public SecurityFilterChain security(
             HttpSecurity http,
             JwtDecoder decoder,
             @Qualifier("cors") CorsConfigurationSource corsSource,
@@ -131,6 +177,20 @@ public class SecurityConfiguration {
                     FilterChain chain) throws ServletException, IOException {
                 try { chain.doFilter(request, response); }
                 catch (PlatformException error) { authError(response, error.status(), error.code()); }
+            }
+        }, BearerTokenAuthenticationFilter.class);
+        if (trusted) http.addFilterBefore(new OncePerRequestFilter() {
+            @Override protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+                    FilterChain chain) throws ServletException, IOException {
+                // Q1/EX-43: a production iam deployment must not keep the legacy dev-token backdoor.
+                // denyAll would answer 403 and reveal that the route exists; the agreed contract is 404.
+                if ("/auth/dev-token".equals(request.getServletPath())) {
+                    response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                    response.setContentType("application/json;charset=UTF-8");
+                    response.getWriter().write(Json.write(ApiResponse.error(404, "NOT_FOUND", "接口不存在")));
+                    return;
+                }
+                chain.doFilter(request, response);
             }
         }, BearerTokenAuthenticationFilter.class);
         ApiKeyAuthenticator apiKey = apiKeys.getIfAvailable();
@@ -171,40 +231,44 @@ public class SecurityConfiguration {
                 .cors(x -> x.configurationSource(corsSource))
                 .sessionManagement(x -> x.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(
-                        x ->
-                                x.requestMatchers(
-                                                "/actuator/health",
-                                                "/actuator/health/**",
-                                                "/auth/dev-token",
-                                                "/embed/ticket",
-                                                "/assistant.js")
-                                        .permitAll()
-                                        .requestMatchers("/admin/**", "/v3/api-docs")
+                        x -> {
+                            x.requestMatchers(
+                                            "/actuator/health",
+                                            "/actuator/health/**",
+                                            "/auth/dev-token",
+                                            "/embed/ticket",
+                                            "/assistant.js")
+                                    .permitAll()
+                                    .requestMatchers("/admin/**", "/v3/api-docs")
+                                    .access(
+                                            (auth, context) ->
+                                                    new AuthorizationDecision(
+                                                            auth.get().isAuthenticated()
+                                                                    && !(auth.get() instanceof AnonymousAuthenticationToken)
+                                                                    && (!trusted || portalScope(auth.get()))
+                                                                    && !(auth.get().getPrincipal() instanceof Jwt jwt
+                                                                            && "integration"
+                                                                                    .equals(jwt.getClaimAsString("token_use")))));
+                            // EX-43 §3.1: in iam /internal/** belongs exclusively to the dedicated
+                            // service trust chain. Reaching this chain means chain 1 was not installed
+                            // or was matched later, so deny outright instead of accepting a role string.
+                            if (trusted) x.requestMatchers("/internal/**").denyAll();
+                            else
+                                x.requestMatchers("/internal/**")
                                         .access(
                                                 (auth, context) ->
                                                         new AuthorizationDecision(
-                                                                auth.get().isAuthenticated()
-                                                                        && !(auth.get() instanceof AnonymousAuthenticationToken)
-                                                                        && (!trusted || portalScope(auth.get()))
-                                                                        && !(auth.get()
-                                                                                                .getPrincipal()
-                                                                                        instanceof
-                                                                                        Jwt jwt
-                                                                                && "integration"
-                                                                                        .equals(
-                                                                                                jwt
-                                                                                                        .getClaimAsString(
-                                                                                                                "token_use")))))
-                                        .requestMatchers("/internal/**")
-                                        .access((auth, context) -> new AuthorizationDecision(
-                                                // Current-authority/resource guards are not yet installed. No RS256
-                                                // service ticket may turn a role string into a service capability.
-                                                !trusted && auth.get().getAuthorities().stream()
-                                                        .anyMatch(a -> a.getAuthority().equals("ROLE_SERVICE"))))
-                                        .anyRequest()
-                                        .access((auth, context) -> new AuthorizationDecision(auth.get().isAuthenticated()
-                                                && !(auth.get() instanceof AnonymousAuthenticationToken)
-                                                && (!trusted || portalScope(auth.get())))))
+                                                                auth.get().getAuthorities().stream()
+                                                                        .anyMatch(
+                                                                                a -> a.getAuthority().equals("ROLE_SERVICE"))));
+                            x.anyRequest()
+                                    .access(
+                                            (auth, context) ->
+                                                    new AuthorizationDecision(
+                                                            auth.get().isAuthenticated()
+                                                                    && !(auth.get() instanceof AnonymousAuthenticationToken)
+                                                                    && (!trusted || portalScope(auth.get()))));
+                        })
                 .exceptionHandling(x -> x
                         .authenticationEntryPoint((request, response, error) -> authError(response, 401, "SYS-AUTH-401"))
                         .accessDeniedHandler((request, response, error) -> authError(response, 403, "SYS-AUTH-403")))
@@ -233,6 +297,33 @@ public class SecurityConfiguration {
                 .oauth2ResourceServer(x -> x.authenticationEntryPoint((request,response,error)->authError(response,401,"SYS-AUTH-401"))
                     .jwt(j -> j.decoder(decoder).jwtAuthenticationConverter(jwt->new JwtAuthenticationToken(jwt,List.of()))))
                 .build();
+    }
+
+    /**
+     * EX-43 §3.1 chain 1, scoped to {@code /internal/**} only. Kept separate from
+     * {@link #serviceSecurity} so existing single-chain assemblies keep their exact behaviour: this
+     * entry is the one that narrows the match and wraps the chain in {@link ServiceTrustChain}, whose
+     * order guarantees chain 1 is consulted before the application chain regardless of bean
+     * declaration order. Services expose the returned value as a {@code SecurityFilterChain} bean.
+     */
+    public static ServiceTrustChain serviceTrustChain(
+            HttpSecurity http, JwtDecoder decoder, ServiceAuthorization receiver) throws Exception {
+        http.securityMatcher("/internal/**");
+        return new ServiceTrustChain(serviceSecurity(http, decoder, receiver));
+    }
+
+    /**
+     * EX-43 §3.2: catalog self-check before Boot accepts requests. iam fails closed (a handler with no
+     * usable catalog row is an unusable capability); every other mode only warns so the dev-hmac
+     * migration/rollback path stays observable instead of silently broken.
+     */
+    @Bean
+    static SmartInitializingSingleton routeCoverageGate(
+            AuthorityProperties deployment,
+            ObjectProvider<ServiceRoutePolicy> routes,
+            ObjectProvider<RequestMappingInfoHandlerMapping> mappings) {
+        return () -> CoverageGate.verify(deployment.mode(), deployment.serviceId(),
+                routes.getIfAvailable(ServiceRoutePolicy::new), mappings.orderedStream().toList());
     }
 
     private static boolean portalScope(org.springframework.security.core.Authentication auth) {

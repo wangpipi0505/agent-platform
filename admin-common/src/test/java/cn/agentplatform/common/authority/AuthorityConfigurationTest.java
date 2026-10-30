@@ -27,7 +27,7 @@ class AuthorityConfigurationTest {
         var tests = new AuthorityConfigurationTest();
         switch (args[0]) {
             case "authority-complete-iam" -> tests.illegalConfigurationFailsBeforeCreatingListener(
-                    new Invalid("complete-iam-still-closed", completeIam(), "IAM_TRUST_CHAIN_UNAVAILABLE"));
+                    new Invalid("complete-iam-without-secret", completeIam(), "IAM_CLIENT_SECRET_MISSING"));
             case "authority-dev-hmac" -> tests.explicitDevelopmentModesKeepLegacyDecoder("dev-hmac");
             case "authority-test" -> tests.explicitDevelopmentModesKeepLegacyDecoder("test");
             case "authority-gateway" -> tests.explicitGatewayDevPreservesIntegration();
@@ -62,7 +62,7 @@ class AuthorityConfigurationTest {
         var cases = new ArrayList<Invalid>();
         cases.add(new Invalid("no-mode", Map.of(), "SECURITY_MODE_REQUIRED"));
         cases.add(new Invalid("unknown-mode", Map.of("agent.security.mode", "production"), "SECURITY_MODE_INVALID"));
-        cases.add(new Invalid("complete-iam-still-closed", completeIam(), "IAM_TRUST_CHAIN_UNAVAILABLE"));
+        cases.add(new Invalid("complete-iam-without-secret", completeIam(), "IAM_CLIENT_SECRET_MISSING"));
         for (String key : List.of("issuer", "jwks-uri", "token-uri", "decision-uri", "client-secret-ref", "client-id", "allowed-algorithm", "audience")) {
             var p = completeIam(); p.remove("agent.security.authority." + key);
             cases.add(new Invalid("missing-" + key, p, "IAM_CONFIG_REQUIRED"));
@@ -108,7 +108,7 @@ class AuthorityConfigurationTest {
 
     @ParameterizedTest(name = "{0}") @MethodSource("invalidConfigurations")
     void illegalConfigurationFailsBeforeCreatingListener(Invalid invalid) throws Exception {
-        if (!childProcess && "complete-iam-still-closed".equals(invalid.name())) {
+        if (!childProcess && "complete-iam-without-secret".equals(invalid.name())) {
             ServiceTokensDeploymentModeTest.runScenario("authority-complete-iam"); return;
         }
         var factories = new AtomicInteger();
@@ -152,7 +152,7 @@ class AuthorityConfigurationTest {
         var p=completeIam();p.replaceAll((k,v)->v instanceof String s?s.replace("https://authority.invalid","http://127.0.0.1:12345"):v);
         p.put("stage1.test-profile",true);
         var factories=new AtomicInteger();
-        assertThatThrownBy(()->{try(var ignored=application(p,factories).run()){}}).hasStackTraceContaining("IAM_TRUST_CHAIN_UNAVAILABLE");
+        assertThatThrownBy(()->{try(var ignored=application(p,factories).run()){}}).hasStackTraceContaining("IAM_CLIENT_SECRET_MISSING");
         assertThat(factories).hasValue(0);
         p.put("agent.security.authority.jwks-uri","http://localhost:12345/jwks");
         assertThatThrownBy(()->{try(var ignored=application(p,factories).run()){}}).hasStackTraceContaining("IAM_URI_INVALID");
@@ -171,7 +171,7 @@ class AuthorityConfigurationTest {
         var factories=new AtomicInteger();
         assertThatThrownBy(()->{try(var ignored=application(p,factories).run()){}}).hasStackTraceContaining("PORTAL_CONFIG_REQUIRED");
         p.put("agent.security.portal.attribute-value-allowlist.region[0]","A");p.put("agent.security.portal.scope-allowlist[0]","platform.access");
-        assertThatThrownBy(()->{try(var ignored=application(p,factories).run()){}}).hasStackTraceContaining("IAM_TRUST_CHAIN_UNAVAILABLE");
+        assertThatThrownBy(()->{try(var ignored=application(p,factories).run()){}}).hasStackTraceContaining("IAM_CLIENT_SECRET_MISSING");
         p.put("agent.security.portal.role-allowlist[0]","SERVICE");
         assertThatThrownBy(()->{try(var ignored=application(p,factories).run()){}}).hasStackTraceContaining("PORTAL_CEILING_INVALID");
         assertThat(factories).hasValue(0);

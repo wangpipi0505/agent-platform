@@ -120,9 +120,9 @@ public class ServiceTokensDeploymentModeTest {
                 // Defaults lose to JVM properties; this actual source precedes systemProperties.
                 app.addInitializers(context -> context.getEnvironment().getPropertySources().addFirst(
                         new MapPropertySource("n4a-trusted-iam", AuthorityConfigurationTest.completeIam())));
-                assertThatThrownBy(() -> { try (var ignored = app.run()) {} }).hasStackTraceContaining("IAM_TRUST_CHAIN_UNAVAILABLE");
+                assertThatThrownBy(() -> { try (var ignored = app.run()) {} }).hasStackTraceContaining("IAM_CLIENT_SECRET_MISSING");
                 assertThat(factories).hasValue(0); deniedAll();
-                assertThatThrownBy(() -> { try (var ignored = app.run()) {} }).hasStackTraceContaining("IAM_TRUST_CHAIN_UNAVAILABLE");
+                assertThatThrownBy(() -> { try (var ignored = app.run()) {} }).hasStackTraceContaining("IAM_CLIENT_SECRET_MISSING");
                 assertThat(factories).hasValue(0); deniedAll();
                 System.setProperty("agent.security.mode","dev-hmac"); System.setProperty("agent.dev-auth","true");
                 deniedAll();
@@ -146,7 +146,7 @@ public class ServiceTokensDeploymentModeTest {
             }
             case "invalid-registration" -> {
                 System.setProperty("agent.security.mode","test"); System.setProperty("spring.profiles.active","test");
-                for (var invalid : AuthorityConfigurationTest.invalidConfigurations().filter(i -> !i.name().equals("complete-iam-still-closed")).toList()) {
+                for (var invalid : AuthorityConfigurationTest.invalidConfigurations().filter(i -> !i.name().equals("complete-iam-without-secret")).toList()) {
                     var input = new LinkedHashMap<>(invalid.properties());
                     // This scenario uses explicit Environment profiles; keep the original helper's meaning.
                     var env = environment(input, Boolean.TRUE.equals(input.remove("stage1.test-profile")));
@@ -197,7 +197,7 @@ public class ServiceTokensDeploymentModeTest {
         deniedAll();
         var factories = new AtomicInteger();
         assertThatThrownBy(() -> { try (var ignored = AuthorityConfigurationTest.application(AuthorityConfigurationTest.completeIam(),factories).run()) {} })
-                .hasStackTraceContaining("IAM_TRUST_CHAIN_UNAVAILABLE");
+                .hasStackTraceContaining("IAM_CLIENT_SECRET_MISSING");
         assertThat(factories).hasValue(0);
     }
 }
