@@ -27,6 +27,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.*;
 
 /**
  * T10 受控证据重绑定的真实库验证。
@@ -181,7 +182,7 @@ class SkillEvidenceRebindPostgresTest {
         var failure =
                 assertThrows(
                         PlatformException.class,
-                        () -> catalog.rebindEvidence(code, 2, Map.of("fromVersion", 1, "reason", REASON)));
+                        () -> catalog.rebindEvidence(code, 2, Map.of("fromVersion", 1, "reason", REASON + "；本次改用不同绑定声明")));
 
         assertEquals(409, failure.status());
         assertEquals("EVIDENCE_ALREADY_BOUND", failure.code());
@@ -192,6 +193,64 @@ class SkillEvidenceRebindPostgresTest {
                         "select count(*) from skill.evidence_rebind where tenant_id=?",
                         Integer.class,
                         tenant));
+    }
+
+    @Test
+    void concurrentSamePayloadReturnsOriginalReceiptWithoutDuplicatingOrMutatingHistory() throws Exception {
+        publishWithEvidence(1);
+        long source = versionId(1);
+        var originalConnection = history("skill.connection_test", source);
+        var originalAcceptance = history("skill.acceptance", source);
+        var edited = new LinkedHashMap<>(SkillCatalog.object(catalog.version(code, 1).get("definition")));
+        edited.put("description", "并发仅改展示文案"); catalog.save(code, edited);
+        var ready = new CountDownLatch(2); var go = new CountDownLatch(1);
+        var pool = Executors.newFixedThreadPool(2);
+        try {
+            Callable<Map<String,Object>> bind = () -> {
+                identity(tenant, List.of("EDITOR", "ADMIN", "SERVICE")); ready.countDown();
+                try {
+                    if (!go.await(5, TimeUnit.SECONDS)) throw new AssertionError("并发起点未放行");
+                    try { return catalog.rebindEvidence(code, 2, Map.of("fromVersion", 1, "reason", REASON)); }
+                    catch (PlatformException failed) { return Map.of("code", failed.code(), "status", failed.status()); }
+                } finally { SecurityContextHolder.clearContext(); }
+            };
+            var first = pool.submit(bind); var second = pool.submit(bind);
+            assertTrue(ready.await(5, TimeUnit.SECONDS)); go.countDown();
+            var one = first.get(10, TimeUnit.SECONDS); var two = second.get(10, TimeUnit.SECONDS);
+            assertEquals(true, one.get("rebound"), one.toString());
+            assertEquals(true, two.get("rebound"), two.toString());
+            assertEquals(one, two, "同请求返回首份回执，不重新生成证明");
+            assertEquals(1, db.queryForObject("select count(*) from skill.evidence_rebind where tenant_id=?", Integer.class, tenant));
+            assertEquals(1, db.queryForObject("select count(*) from skill.connection_test where tenant_id=? and skill_version_id=?", Integer.class, tenant, versionId(2)));
+            assertEquals(1, db.queryForObject("select count(*) from skill.acceptance where tenant_id=? and skill_version_id=?", Integer.class, tenant, versionId(2)));
+            assertEquals(originalConnection, history("skill.connection_test", source));
+            assertEquals(originalAcceptance, history("skill.acceptance", source));
+            catalog.publish(code, 2);
+            assertEquals(one, catalog.rebindEvidence(code, 2, Map.of("fromVersion", 1, "reason", REASON)), "发布后的 ACK 重试只读原回执");
+        } finally { go.countDown(); pool.shutdownNow(); assertTrue(pool.awaitTermination(5, TimeUnit.SECONDS)); }
+    }
+
+    @Test
+    void changedPayloadOrTargetBytesConflictWhileSamePayloadReplaysExactly() {
+        publishWithEvidence(1);
+        var edited = new LinkedHashMap<>(SkillCatalog.object(catalog.version(code, 1).get("definition")));
+        edited.put("description", "第一份目标文案"); catalog.save(code, edited);
+        var first = catalog.rebindEvidence(code, 2, Map.of("fromVersion", 1, "reason", REASON));
+        assertEquals(first, assertDoesNotThrow(() -> catalog.rebindEvidence(code, 2, Map.of("fromVersion", 1, "reason", REASON))));
+        var conflict = assertThrows(PlatformException.class, () -> catalog.rebindEvidence(code, 2,
+                Map.of("fromVersion", 1, "reason", REASON + "；使用另一项理由")));
+        assertEquals(409, conflict.status()); assertEquals("EVIDENCE_ALREADY_BOUND", conflict.code());
+        assertEquals(400, assertThrows(PlatformException.class, () -> catalog.rebindEvidence(code, 2,
+                Map.of("fromVersion", 1.5, "reason", REASON))).status());
+        assertEquals(400, assertThrows(PlatformException.class, () -> catalog.rebindEvidence(code, 2,
+                Map.of("fromVersion", 1, "reason", REASON, "requestSha256", "a".repeat(64)))).status());
+        long target = versionId(2);
+        var connection = history("skill.connection_test", target); var acceptance = history("skill.acceptance", target);
+        edited.put("description", "后续又改展示文案"); catalog.save(code, edited);
+        assertEquals("EVIDENCE_ALREADY_BOUND", assertThrows(PlatformException.class, () -> catalog.rebindEvidence(code, 2,
+                Map.of("fromVersion", 1, "reason", REASON))).code());
+        assertEquals(connection, history("skill.connection_test", target)); assertEquals(acceptance, history("skill.acceptance", target));
+        assertEquals(1, db.queryForObject("select count(*) from skill.evidence_rebind where tenant_id=?", Integer.class, tenant));
     }
 
     @Test

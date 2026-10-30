@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import {computed} from 'vue';
-import {evaluationSummary,evaluationLabel,pendingCase} from './evaluation-observer';
-const props=defineProps<{report:any}>();const stats=computed(()=>evaluationSummary(props.report));
+import {evaluationSummary,evaluationLabel,pendingCase,evaluationEvidenceLabel} from './evaluation-observer';
+const props=defineProps<{report:any;binding?:any}>();const stats=computed(()=>evaluationSummary(props.report));
 const labels:Record<string,string>={PENDING:'排队中',CREATED:'已创建',READY:'准备中',RUNNING:'运行中',WAITING_EXTERNAL:'等待外部任务',WAITING_APPROVAL:'等待人工确认',WAITING_STEP:'等待单步放行',SUCCEEDED:'执行成功',FAILED:'执行失败',CANCELLED:'已取消',ERROR:'执行出错'};
 function result(row:any){return pendingCase(row.status)?labels[row.status]:row.status==='SUCCEEDED'?(row.passed?'通过':'输出不符'):row.error?'执行出错':labels[row.status]||row.status;}
 function pct(value:number){return `${Math.round(value*1000)/10}%`;}
 </script>
 <template>
   <section class="evaluation-report"><h2>评测报告</h2><p class="evaluation-status" role="status"><strong>{{evaluationLabel(report)}}</strong></p>
+    <div v-if="binding" class="evidence-binding" role="status"><p>{{evaluationEvidenceLabel(binding)}}</p><p class="muted">原报告 {{binding.evalReportId}} · 原候选 {{binding.evaluatedCandidateSha256}} · 当前预检候选 {{binding.candidateSha256}}。此处只查看原证据，不改写原报告。</p></div>
     <p>通过 {{stats.passed}} · 失败 {{stats.failed}} · 待完成 {{stats.pending}} · 共 {{stats.total}} 条 · 通过率 {{pct(stats.passRate)}}<span v-if="stats.threshold"> / 阈值 {{pct(stats.threshold)}}</span></p><p>安全用例通过 {{stats.safetyPassed}} / {{stats.safety}}<span v-if="stats.safetyFailed">，失败 {{stats.safetyFailed}} 条</span></p>
     <p v-if="report.baselineReportId">基线报告 <code>{{report.baselineReportId}}</code> · <span :class="stats.regressions?'error':'muted'">新增回归 {{stats.regressions}} 条</span></p>
     <p v-else class="muted">这是该应用与数据集的首个评测报告，没有基线可比较。</p>

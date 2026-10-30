@@ -69,6 +69,14 @@ agent:
   # 一环都直接失败且绝不回落 LEGACY。回滚就是把该键改回 LEGACY（默认值本身就是回滚目标）。
   skill:
     service-ticket-mode: ${AGENT_SKILL_SERVICE_TICKET_MODE:LEGACY}
+    # 仅公共只读 HTTP/SYNC 的小型 inline 结果；每次命中仍在线复核 IAM/guard/声明的 PG 身份映射。
+    # 不覆盖外部凭据撤销；无可信 retained refresh 的 delegated 请求失败关闭，旧模式正常绕过。
+    read-only-cache:
+      enabled: ${AGENT_SKILL_READ_ONLY_CACHE_ENABLED:false}
+      ttl-ms: ${AGENT_SKILL_READ_ONLY_CACHE_TTL_MS:30000}
+      max-entries: ${AGENT_SKILL_READ_ONLY_CACHE_MAX_ENTRIES:256}
+      max-total-bytes: ${AGENT_SKILL_READ_ONLY_CACHE_MAX_TOTAL_BYTES:8388608}
+      max-entry-bytes: ${AGENT_SKILL_READ_ONLY_CACHE_MAX_ENTRY_BYTES:65536}
 management:
   endpoints:
     web:

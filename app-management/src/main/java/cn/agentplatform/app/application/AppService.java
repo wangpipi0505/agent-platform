@@ -1235,6 +1235,16 @@ public class AppService {
         result.put("draftRev", rev);
         result.put("candidateSha256", hash);
         result.put("evalReportId", evalId);
+        // 本次预检的选择上下文单独返回；不把 matchedBy 回写到历史评测报告。
+        if (accepted && eval != null && matchedBy != null && Set.of("SHA256", "SEMANTIC_DIGEST").contains(matchedBy)) {
+            var binding = new LinkedHashMap<String, Object>();
+            binding.put("matchedBy", matchedBy);
+            binding.put("evalReportId", evalId);
+            binding.put("draftRev", rev);
+            binding.put("candidateSha256", hash);
+            binding.put("evaluatedCandidateSha256", eval.get("candidateSha256"));
+            result.put("evaluationBinding", binding);
+        }
         result.put("passed", passed);
         result.put("result", passed ? "PASS" : "BLOCKED");
         result.put("gateMode", gate.name());

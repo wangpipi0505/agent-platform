@@ -22,6 +22,24 @@ export function evaluationLabel(report:any) {
   if(report?.status==='PENDING'||rows.some((r:any)=>r.status==='PENDING'))return '评测排队中';
   return '评测进行中';
 }
+
+/** matchedBy 只解释本次选择，不补写为原报告属性；未知值不猜成 SHA 命中。 */
+export function evaluationEvidenceLabel(binding:any) {
+  if(binding?.matchedBy==='SHA256')return 'SHA-256 精确匹配';
+  if(binding?.matchedBy==='SEMANTIC_DIGEST')return '语义摘要匹配 · 复用原报告（本次未重新评测）';
+  return '匹配方式未记录';
+}
+export function matchesBoundEvaluation(report:any,binding:any,target:any) {
+  if(!binding||!['SHA256','SEMANTIC_DIGEST'].includes(binding.matchedBy)
+    ||typeof binding.evalReportId!=='string'||!binding.evalReportId
+    ||!/^[0-9a-f]{64}$/.test(binding.evaluatedCandidateSha256||'')
+    ||binding.candidateSha256!==target?.candidateSha256||binding.draftRev!==target?.draftRev)return false;
+  if(binding.matchedBy==='SHA256'&&binding.evaluatedCandidateSha256!==binding.candidateSha256)return false;
+  if(binding.matchedBy==='SEMANTIC_DIGEST'&&binding.evaluatedCandidateSha256===binding.candidateSha256)return false;
+  return report?.status==='ACCEPTED'&&(report.evalReportId||report.id)===binding.evalReportId
+    &&report.appCode===target?.appCode&&report.draftRev===target?.draftRev
+    &&report.candidateSha256===binding.evaluatedCandidateSha256;
+}
 type Notice = {phase:'observing'|'recovering'|'paused'|'stopped'|'finished';message:string;retryable:boolean};
 type Options = {api:(path:string,method?:string,body?:any,signal?:AbortSignal)=>Promise<any>;signal:AbortSignal;canResume:()=>boolean;publish:(report:any)=>void;notice:(notice:Notice)=>void;resumeError?:boolean;sleep?:(ms:number)=>Promise<void>};
 function pause(ms:number,signal:AbortSignal) {

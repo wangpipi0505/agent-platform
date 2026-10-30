@@ -33,6 +33,10 @@ import java.util.*;
 
 @Component
 public class SkillAdapters {
+    private cn.agentplatform.skill.application.ReadOnlyToolCache readOnlyCache;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void readOnlyCache(cn.agentplatform.skill.application.ReadOnlyToolCache cache) { this.readOnlyCache = cache; }
     private IdentityMappingClient identityMapping;
 
     @org.springframework.beans.factory.annotation.Autowired
@@ -483,7 +487,7 @@ public class SkillAdapters {
         dry.put("outputSchema", Map.of("type", "object"));
         dry.put("execution", Map.of("readonly", true, "sideEffect", false));
         try {
-            return http(dry, arguments, key, callId, runId, expectedAttempt);
+            return httpUncached(dry, arguments, key, callId, runId, expectedAttempt);
         } catch (Failure failure) {
             throw new Failure(
                     "ACTION_PLAN_UNAVAILABLE",
@@ -853,8 +857,24 @@ public class SkillAdapters {
     // 这些包私有方法不是新语义：HTTP 同步/异步、ALGORITHM、本地进程的执行体仍在本类（T05/T06/T12/
     // T21d 行为零搬运），单元只负责"被注册表找到并路由回来"，避免单元复制任何执行分支。
 
-    /** HTTP 同步通道（{@link HttpSyncExecutionAdapter} 路由目标）。 */
+    /** HTTP 同步通道：缓存只持叶结果，Observation 命中事实由本地生成。 */
     Raw http(
+            Map<String, Object> contract, Map<String, Object> arguments, String key,
+            long callId, String runId, long expectedAttempt) {
+        return httpObserved(contract, arguments, key, callId, runId, expectedAttempt, false).raw();
+    }
+
+    Observation httpObserved(
+            Map<String, Object> contract, Map<String, Object> arguments, String key,
+            long callId, String runId, long expectedAttempt, boolean queryOnly) {
+        requireAttempt(expectedAttempt);
+        if (queryOnly || readOnlyCache == null)
+            return new Observation(httpUncached(contract, arguments, key, callId, runId, expectedAttempt), Map.of());
+        return readOnlyCache.execute(contract, arguments, () -> mappedIdentityHeaders(contract),
+                () -> httpUncached(contract, arguments, key, callId, runId, expectedAttempt));
+    }
+
+    private Raw httpUncached(
             Map<String, Object> contract,
             Map<String, Object> arguments,
             String key,

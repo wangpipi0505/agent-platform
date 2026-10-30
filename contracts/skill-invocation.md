@@ -780,3 +780,72 @@ SUBMIT_QUERY 对账端点可用声明式映射表达"平台字段 → 远端占�
 }
 ```
 <!-- EX-05-CONSUMPTION-END -->
+
+
+## EX24 工程增补：HIGH 双主体确认与执行前在线复核
+
+本增补追加于冻结正文之后，替代原 D4 的角色数或客户端双勾确认口径；原正文和历史计划字节不改。
+
+### 计划与批准政策
+
+- actionPlan 形状：`{summary, target, diff, risk, idempotencyKey, expiresAt}`；EX24 新 HIGH 另固定 `approvalPolicy=TWO_PRINCIPALS_V1`，该字段由引擎写入核心摘要材料后再计算 executeKey 与完整 digest，不能由业务响应决定；STANDARD 形状与键算法保持原样；
+- **`idempotencyKey` 与 `expiresAt` 由引擎在 `requestApproval` 时统一盖章**（技能侧若提供将被覆盖）：实际既有算法为 `coreDigest = sha256(canonical(去 idempotencyKey/expiresAt 的计划核心))`、`idempotencyKey = sha256("EXECUTE:" + callId + ":" + coreDigest)`；新 HIGH 的核心另含引擎固定的 approvalPolicy。`expiresAt = 审批上下文 expiresAt`（申请确认时刻 + 3600s），`actionPlanDigest = sha256(canonical(盖章后的完整 actionPlan))`。此处澄清核心摘要与完整摘要，不重算旧行的键；幂等键来源仍唯一是引擎；
+
+- EX24（V224）把旧行标识为 `LEGACY_DECLARATION`，不改其 plan/digest/executeKey。旧 HIGH 未执行计划明确拒绝批准和 EXECUTE，要求重新发起调用与 PREPARE；历史执行结果仍可读。新 HIGH 同一 executeKey 只复用原冻结行，重复 PREPARE 不再刷新其正文、摘要、有效期或已记审批事实。过期后需重新发起逻辑调用，不覆盖旧事实；跨 callId 业务键范围仍属 EX25。
+
+  - 新高危计划（`risk=HIGH`）未持久化两个不同已验 principal 的本计划批准 → `403 CONFIRM_STRENGTH_INSUFFICIENT`；两个角色或客户端 `doubleConfirmed` 不增加人数；
+  - EXECUTE 前必须从原运行强校验的委托与资源来源出发，用 `CurrentAuthorityClient.approver` 在线复核两人对同一 action-plan id/digest 的当前权限。网络在 PG 锁外；锁内比较同一 plan/digest/投票 JSON 版本，并在提交前及返回授予前检查复核期限。缺原始可信委托或未装配在线能力 → `503 APPROVAL_CURRENT_AUTHORITY_REQUIRED`；撤权、角色不满足、绑定不符或复核过期明确拒绝，保存的角色快照不能替代当前核权；
+
+- EX24 替代原 D4 的“角色数或双勾”口径：新 HIGH 需 **两个不同的已验 principal 分别批准**。身份取自过滤链验过的当前请求，不能自报第二人或审批材料；同一 principal 多角色、重复请求与双勾均最多计一人。两份批准绑定同一 tenant/planId/digest，复用 `engine.action_plan.approvals` JSONB，在既有 run→node→plan 锁与 JSON 版本 CAS 下持久化。第一人只记 `APPROVAL_RECORDED`，节点和调用仍等待；第二人才 `APPROVED` 并重排 READY。任何有资格确认人的拒绝使计划 REJECTED；拒绝、过期和当前权限不足均不授予 EXECUTE；
+
+- 原 IAM 有限工具调用尚未接入可信运行委托时，新双主体事实与 UI 可以记录和展示，EXECUTE 明确失败关闭；本地签名 HTTP 协议测试不代表真实 IAM 工具范围已接通。`SINGLE_STEP`、STANDARD 以及历史已成功结果的读取不切换为新的双主体政策。
+
+### 新政策错误码
+
+| 错误码 | HTTP | 触发条件 |
+|---|---|---|
+| `CONFIRM_STRENGTH_INSUFFICIENT` | 403 | 新 HIGH 未取得同一计划的两名不同已验 principal 批准 |
+| `ACTION_PLAN_REPREPARE_REQUIRED` | 409 | 旧 HIGH 尚未执行，须重新 PREPARE；不改旧摘要或键 |
+| `APPROVAL_CURRENT_AUTHORITY_REQUIRED` | 503 | 缺少可强校验的原运行委托或在线双主体核权能力 |
+| `APPROVAL_CURRENT_DENIED` | 403 | 双主体事实、原委托、计划绑定或当前复核期限不符 |
+| `APPROVAL_RISK_MISMATCH` | 409 | PREPARE 风险声明与冻结技能风险不符 |
+
+
+
+## EX25：显式业务意图的跨 callId 幂等（新声明可选协议）
+
+本节只扩展新声明 `execution.approval.businessIntentInput` 的 HTTP/SYNC、PREPARE_EXECUTE 写技能。未声明的契约及历史计划沿用 §14 原有 callId 作用域和 executeKey，原计划正文、digest、execute_key 不重算。
+
+- `businessIntentInput` 是冻结 `run.inputs` 的顶层字段名，形如 `businessIntentId`，只允许 `[A-Za-z_][A-Za-z0-9_]{0,63}`。该输入的值必须是调用方显式指定的 `[A-Za-z0-9._:-]{1,128}` 字符串；不取模型 tool arguments 或业务 PREPARE 返回值，不因参数相同推测同一业务。相同业务重试沿用意图，不同真实业务明确换值。
+- 业务作用域为已验租户、固定 skillVersionId、冻结 contractDigest、显式意图；引擎按 canonical `['BUSINESS_EXECUTE_V1',tenant,skillVersionId,contractDigest,intent]` 的 SHA-256 生成稳定业务键。payload 指纹为原 call.args_digest。同作用域异 payload 拒绝 `409 BUSINESS_INTENT_PAYLOAD_CONFLICT`，不同意图/租户/固定版本互不合并。
+- 新计划的业务材料由引擎从 PG 盖章，远端自报同名材料无效。每计划 executeKey 仍用于 claim；GET approval 对该新协议额外下发 `actionPlan.executeKey`，`actionPlan.idempotencyKey` 改为稳定业务键，skill 将后者用于真实业务出站。旧回复未带 executeKey 时仍使用原 idempotencyKey 认领。
+- 原 run→node→call→plan 行锁后，以 PG 事务业务锁串行同业务作用域；现 action_plan.execute_granted_at 的部分唯一索引保证最多一次授权。未曾授予的过期计划可在新 callId 重新确认；已确认执行拒绝 `409 BUSINESS_INTENT_ALREADY_EXECUTED`，已授权但副作用未被安全排除（包括 UNKNOWN/FAILED/进程崩溃）拒绝 `409 BUSINESS_INTENT_RESULT_UNKNOWN`。
+- 授权事实默认持续保留，不因计划过期、普通重试、重新 PREPARE 或 UNKNOWN 自动释放。此子步不提供自动清理/自动解锁，也不宣称未声明的所有业务自动幂等；人工对账、补偿及新业务意图须保持显式授权。
+- 依赖本机 PG 与原 skill 出站幂等协议，不增加跨服务事务，不将业务键当身份或额外授权。HIGH 仍完整执行 EX24 的双主体确认及执行前在线复核。
+
+
+
+## EX30 工程增补：摘要版本、重绑定回执与匹配展示
+
+本增补追加到既有冻结前缀之后，不修改历史正文、证据或已发布证明。后续摘要规则升级必须另行版本化，不能以改排除集后重算旧列代替兼容设计。
+
+### 摘要规则与匹配优先级
+
+- 技能当前规则固定为 `SkillDigest.VERSION=1`，响应字段 `digestVersion=1` 标识这份规则；`digest` 仍是原 `sha256` 的兼容别名，不能改指语义摘要。
+- v1 对对象逐层按键自然序排序，数组保留原序、标量保持原值，再对规范 JSON 的 UTF-8 做 SHA-256。按键名、忽略大小写、整棵排除 `description`、`example`/`examples`、`docLink`/`docLinks`、`documentation`、`changelog`、`displayName`、`title`。其余字段（含 endpoint、Schema 约束、execution、guard、identity、版本和引用）均参与。
+- 应用侧沿现 `AppDigest` 规则，排除 `description/displayName/title/notes/example/examples/docLinks/documentation/changelog`，不把技能内部摘要变化自动投射为应用引用版本不变。两套现有排除集不混用。
+- V315 历史回填可能仅是当时的 SHA 兼容值；当前响应规则号不能证明旧列已按 v1 规范化。新重绑定前，来源和目标的 stored semantic_digest 都须与现 v1 对其 contract 的复算一致，并且两者相同；不一致返回 `409 DIGEST_RULE_RETEST_REQUIRED` 或既有语义变化错误，要求重测，不回写历史摘要。
+- monitor 的 accepted 仍按已验 tenant、同 app、同 draftRev 查询：先精确 SHA；即使语义命中的报告更新，也优先 SHA。没有精确命中才比较非空 semantic digest。旧报告 digest 为 null 时只接受精确 SHA；不回落为最近任意通过报告。
+
+### 受控重绑定与幂等
+
+- 入口继续为 `POST /admin/skills/{code}/versions/{version}/rebind-evidence`，仅 ADMIN；身份来自已验请求，tenant 不从 body 取得。body 仅 `fromVersion`（正整数）与 `reason`（trim 后10–500字），不接收自报指纹、身份或证据。
+- V316 只给既有 evidence_rebind 行增加 nullable request_sha256 与 receipt。新请求指纹为 canonical JSON 的 SHA-256，材料固定 `schemaVersion=1`、digestVersion、tenantId、skillCode、fromVersionId、toVersionId、sourceSha256、targetSha256、semanticDigest、trim 后 reason。
+- 并发继续由技能主行锁及 UNIQUE(tenant_id,to_version_id) 裁决。首次审计、证据复制与原回执在同一事务提交；任一步失败整体回滚。同指纹重试只返回原回执，包含目标随后已发布但内容未变的 ACK 重试；不再复制报告。指纹不同返回 `409 EVIDENCE_ALREADY_BOUND`，包括目标草稿随后更改 SHA 的情况。
+- 旧审计行缺指纹/回执时无法证明是同一请求，重试明确409；不猜测、补填或改写旧请求。原 connection_test/acceptance 不 UPDATE/DELETE，新复制行继续保留 reboundFrom。目标 SHA 改变后，旧复制证据不会被静默重绑定到新字节。
+- **本批明确不支持撤销重绑定**，没有 DELETE 或伪撤销入口。已发布证明与审计历史保留；需要纠正时以新的真实测试和新版本留下新事实，不通过删除历史来声称撤销成功。
+
+### matchedBy 的展示边界
+
+- `matchedBy=SHA256|SEMANTIC_DIGEST` 是本次查询/预检选择上下文，不是原报告的固有属性。App 预检可另返 evaluationBinding：matchedBy、evalReportId、draftRev、当前 candidateSha256、evaluatedCandidateSha256；不把这些字段回写旧报告。
+- UI 明示“SHA精确匹配”或“语义摘要匹配、复用原报告、本次未重新评测”。查看原报告必须核对报告id、app、修订、原SHA与本次绑定；身份或绑定变化清除旧视图。此分支只读，不发起恢复/重新评测，也不把原SHA覆盖成当前候选SHA。没有匹配字段显示未记录，不猜成 SHA 命中。

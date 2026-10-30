@@ -30,6 +30,13 @@ public class HttpSyncExecutionAdapter implements SkillAdapter {
     }
 
     @Override
+    public SkillAdapters.Observation observe(
+            SkillAdapters host, Map<String, Object> contract, Map<String, Object> arguments,
+            String key, long callId, boolean queryOnly, String runId, long expectedAttempt) {
+        return host.httpObserved(contract, arguments, key, callId, runId, expectedAttempt, queryOnly);
+    }
+
+    @Override
     public SkillAdapters.Raw invoke(
             SkillAdapters host,
             Map<String, Object> contract,
@@ -39,6 +46,6 @@ public class HttpSyncExecutionAdapter implements SkillAdapter {
             boolean queryOnly,
             String runId,
             long expectedAttempt) {
-        return host.http(contract, arguments, key, callId, runId, expectedAttempt);
+        return host.httpObserved(contract, arguments, key, callId, runId, expectedAttempt, queryOnly).raw();
     }
 }

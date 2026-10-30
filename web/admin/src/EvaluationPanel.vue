@@ -9,11 +9,13 @@ import {computed,ref,watch,onBeforeUnmount} from 'vue';
 import {useApi,useAuth} from '../../shared/api';
 import EvaluationInputs from './EvaluationInputs.vue';
 import EvaluationReport from './EvaluationReport.vue';
-import {observeEvaluation,evaluationLabel} from './evaluation-observer';
+import {observeEvaluation,evaluationLabel,evaluationEvidenceLabel,matchesBoundEvaluation} from './evaluation-observer';
 const props=defineProps<{appCode:string;draftRev:number;candidate?:any}>();
 const emit=defineEmits<{report:[report:any];bind:[];activity:[active:boolean]}>();
 const api=useApi(),auth=useAuth(),inputs=ref<InstanceType<typeof EvaluationInputs>>();
 const report=ref<any>(),reports=ref<any[]>([]),selected=ref(''),error=ref(''),notice=ref<any>(),creating=ref(false),listLoading=ref(false),choosing=ref(false);
+const boundReport=ref<any>(),bindingError=ref(''),bindingLoading=ref(false);
+let bindingSequence=0;
 const identity=computed(()=>JSON.stringify([props.appCode,props.draftRev,props.candidate?.draftRev,props.candidate?.candidateSha256]));
 const attemptKey=computed(()=>JSON.stringify([identity.value,auth.user?.tenantId||'',auth.user?.principalId||'']));
 const unknownCreate=computed(()=>unconfirmedCreations.has(attemptKey.value)&&!creating.value);
@@ -24,6 +26,26 @@ const running=computed(()=>report.value&&!['ACCEPTED','REJECTED','ERROR'].includ
 let generation=0,alive=true,controller=new AbortController(),observer=new AbortController(),listSequence=0,detailSequence=0;
 const canResume=()=>!!auth.user?.principalId&&auth.user.principalId===report.value?.createdBy&&auth.can('edit');
 function current(g:number){return alive&&g===generation&&!controller.signal.aborted;}
+async function readBoundReport(){
+  if(bindingLoading.value||creating.value||choosing.value)return;
+  const binding=props.candidate?.evaluationBinding;
+  if(!binding?.evalReportId)return;
+  const key=JSON.stringify(binding),g=generation,ticket=++bindingSequence;
+  const target={appCode:props.appCode,draftRev:props.candidate?.draftRev,candidateSha256:props.candidate?.candidateSha256};
+  const valid=()=>current(g)&&ticket===bindingSequence&&key===JSON.stringify(props.candidate?.evaluationBinding);
+  bindingLoading.value=true;bindingError.value='';boundReport.value=undefined;
+  try{
+    const value=await api('/admin/evaluations/'+encodeURIComponent(binding.evalReportId),'GET',undefined,controller.signal);
+    if(!valid())return;
+    if(!matchesBoundEvaluation(value,binding,target))throw Error('原报告与本次预检选择的证据不匹配，请重新预检。');
+    // 复用报告只查看，不发 report/bind/activity 事件，也不进入恢复执行观察器。
+    boundReport.value=value;
+  }catch(problem:any){if(valid()&&problem.name!=='AbortError')bindingError.value=problem.message||'原报告读取失败，请重试';}
+  finally{if(valid())bindingLoading.value=false;}
+}
+watch([()=>JSON.stringify(props.candidate?.evaluationBinding),()=>auth.token,()=>auth.user?.tenantId,()=>auth.user?.principalId],()=>{
+  bindingSequence++;boundReport.value=undefined;bindingError.value='';bindingLoading.value=false;
+},{flush:'sync'});
 function observe(resumeError=false){observer.abort();observer=new AbortController();const g=generation;notice.value=undefined;
   void observeEvaluation(report.value,{api,signal:observer.signal,canResume,publish:value=>{if(current(g)&&matches(value)){report.value=value;emit('report',value);}},notice:value=>{if(current(g))notice.value=value;},resumeError});
 }
@@ -59,6 +81,7 @@ onBeforeUnmount(()=>{alive=false;generation++;controller.abort();observer.abort(
     <details class="existing-reports" :open="unknownCreate"><summary>找回已受理报告</summary><p v-if="!candidate" class="muted">请先预检，以匹配当前应用、修订与候选摘要。</p><el-select v-model="selected" aria-label="已受理评测报告" placeholder="选择当前候选的报告" :disabled="listLoading||choosing||creating||!candidate" @change="choose"><el-option v-for="r in matching" :key="r.evalReportId||r.id" :value="r.evalReportId||r.id" :label="r.datasetVersion+' · '+evaluationLabel(r)+(r.createdBy===auth.user?.principalId?' · 我发起的':' · 仅查看')"/></el-select><el-button :loading="listLoading" :disabled="creating" @click="list">刷新报告列表</el-button><p v-if="candidate&&!matching.length&&!listLoading" class="muted">当前候选没有可选择的已受理报告。</p></details>
     <p v-if="choosing" class="muted" role="status">正在载入所选报告，请稍候…</p><div v-if="unknownCreate" class="error" role="alert">尚未确认创建结果。请刷新已受理报告列表找回，页面不会自动重建报告。</div><div v-if="error" class="error" role="alert">{{error}}</div>
   </section>
+  <section v-if="candidate?.evaluationBinding" class="panel"><h2>本次预检采用的评测证据</h2><p>{{evaluationEvidenceLabel(candidate.evaluationBinding)}}</p><p class="muted">报告 {{candidate.evaluationBinding.evalReportId}}；语义复用仍保留原候选身份，当前预检单独绑定此证据。</p><el-button :loading="bindingLoading" :disabled="creating||choosing" @click="readBoundReport">查看已绑定的原报告</el-button><p v-if="bindingError" class="error" role="alert">{{bindingError}}</p><EvaluationReport v-if="boundReport" :report="boundReport" :binding="candidate.evaluationBinding"/></section>
   <section v-if="report" class="panel"><EvaluationReport :report="report"/><p v-if="notice" class="muted" role="status">{{notice.message}}</p><el-button v-if="notice?.retryable&&canResume()" :disabled="creating" @click="retry">{{report.status==='ERROR'?'重试此报告':'重新连接报告'}}</el-button><el-button v-if="report.status==='ACCEPTED'" v-permission="'edit'" @click="emit('bind')">重新预检并绑定报告</el-button></section>
 </template>
 <style scoped>.existing-reports{margin-top:1rem}.existing-reports .el-select{width:min(440px,100%);margin:.75rem .5rem .75rem 0}.panel>.el-button{margin-top:.75rem}@media(max-width:600px){.panel>.el-button{min-height:44px}}</style>

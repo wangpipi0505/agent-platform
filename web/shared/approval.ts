@@ -18,7 +18,9 @@ export function actionPlanView(row: any) {
   const plan = row?.parameterSnapshot?.actionPlan;
   if (!plan || typeof plan !== "object" || Array.isArray(plan)) return null;
   const risk = plan.risk === "HIGH" ? "HIGH" : "STANDARD";
-  const roles = Array.isArray(row?.confirmRoles) ? row.confirmRoles.length : 0;
+  const policy = String(plan.approvalPolicy ?? "LEGACY_DECLARATION");
+  const twoPrincipalsRequired = risk === "HIGH" && policy === "TWO_PRINCIPALS_V1";
+  const confirmed = row?.approvalProgress?.confirmedCount;
   const diffText =
     plan.diff == null
       ? "（未提供差异详情）"
@@ -34,24 +36,25 @@ export function actionPlanView(row: any) {
     highRisk: risk === "HIGH",
     expiresAt: plan.expiresAt ?? null,
     idempotencyKey: plan.idempotencyKey ?? null,
-    // 高危确认强度（定死 D4）：confirmRoles 少于两个不同角色时必须二次确认。
-    secondConfirmRequired: risk === "HIGH" && roles < 2,
+    policy,
+    twoPrincipalsRequired,
+    confirmedCount: Number.isInteger(confirmed) && confirmed >= 0 && confirmed <= 2 ? confirmed : null,
+    requiresReprepare: risk === "HIGH" && !twoPrincipalsRequired,
+    // 客户端二次勾选不构成另一名确认人，人数只采用服务端持久审批事实。
+    secondConfirmRequired: false,
   };
 }
 
-/** 审批决定载荷：沿用 decisionPayload 的摘要绑定；高危 + 强度不足时必须携带二次确认标记。 */
+/** 只提交本人的决定与快照摘要；双主体人数与当前授权由服务端确认，不发送第二人声明。 */
 export function approvePayload(
   row: any,
   approved: boolean,
   requestId: string,
-  doubleConfirmed = false,
+  _doubleConfirmed = false,
 ) {
-  const payload: any = decisionPayload(row, approved, requestId);
+  const payload = decisionPayload(row, approved, requestId);
   const view = actionPlanView(row);
-  if (approved && view?.secondConfirmRequired) {
-    if (!doubleConfirmed)
-      throw new Error("高危操作需要先勾选二次确认，再批准执行");
-    payload.doubleConfirmed = true;
-  }
+  if (approved && view?.requiresReprepare)
+    throw new Error("旧高危计划未采用双主体政策，请重新发起调用与 PREPARE；原计划事实保留");
   return payload;
 }

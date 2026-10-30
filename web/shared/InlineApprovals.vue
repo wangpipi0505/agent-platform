@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
 import { useApi } from "./api";
-import { decisionPayload } from "./approval";
+import { approvePayload } from "./approval";
 const props = defineProps<{ runId: string; endpoint?: string }>();
 const rows = ref<any[]>([]);
 const error = ref("");
@@ -39,7 +39,7 @@ async function decide(row: any, approved: boolean) {
         encodeURIComponent(row.nodeInstanceId || row.nodeId) +
         "/decision",
       "POST",
-      decisionPayload(row, approved, crypto.randomUUID()),
+      approvePayload(row, approved, crypto.randomUUID()),
     );
     await refresh();
   } catch (e: any) {
@@ -69,13 +69,14 @@ defineExpose({ refresh });
     >
       <strong>{{ row.nodeDefId || row.nodeId }}</strong>
       <p class="muted">截止时间：{{ row.expiresAt || "由服务端控制" }}</p>
+      <p v-if="row.approvalProgress" class="muted">{{ row.approvalProgress.requiresReprepare ? '旧高危计划需重新发起调用与 PREPARE' : `需两名不同确认人；已记录 ${row.approvalProgress.confirmedCount} / 2 人批准` }}</p>
       <details>
         <summary>待确认参数（摘要 {{ (row.snapshotDigest || "").slice(0, 12) }}…）</summary>
         <pre>{{ JSON.stringify(row.parameterSnapshot, null, 2) }}</pre>
       </details>
       <div class="row">
         <el-button type="primary" :loading="busy" @click="decide(row, true)"
-          >确认执行（Enter）</el-button
+          >{{ row.approvalProgress ? '记录我的批准（Enter）' : '确认执行（Enter）' }}</el-button
         ><el-button :disabled="busy" @click="decide(row, false)">拒绝（Esc）</el-button>
       </div>
     </article>

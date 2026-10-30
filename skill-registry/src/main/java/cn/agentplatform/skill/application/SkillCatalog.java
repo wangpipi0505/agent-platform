@@ -843,6 +843,12 @@ public class SkillCatalog {
                     400,
                     "APPROVAL_MODE_INVALID",
                     "execution.approval.mode 只允许 PREPARE_EXECUTE 或 SINGLE_STEP，收到: " + mode);
+        if (approval.containsKey("businessIntentInput")) {
+            if (!SkillRules.APPROVAL_MODE_TWO_PHASE.equals(mode)
+                    || !(approval.get("businessIntentInput") instanceof String field)
+                    || !field.matches("[A-Za-z_][A-Za-z0-9_]{0,63}"))
+                throw error(400, "BUSINESS_INTENT_INPUT_INVALID", "execution.approval.businessIntentInput 只能是两段审批的冻结 run.inputs 顶层字段");
+        }
         if (!SkillRules.APPROVAL_MODE_TWO_PHASE.equals(mode)) return;
         if (!"HTTP".equals(type) || !"SYNC".equals(kind))
             throw error(
@@ -1021,28 +1027,30 @@ public class SkillCatalog {
      * semanticDigest 不变，此时允许复用证据；端点/Schema/执行语义变化则摘要变化，必须重跑真实测试，
      * 返回 409 SEMANTIC_CHANGE_REQUIRES_RETEST 并给出下一步。
      *
-     * <p>不变量三：同一目标草稿只绑定一次。审计表 UNIQUE(tenant_id,to_version_id) 是并发下的唯一
-     * 裁决者：两个请求都过了预检时，数据库只允许一个提交，另一个得到 409 EVIDENCE_ALREADY_BOUND，
-     * 而不是静默成功或复制两份证据。审计与复制在同一个事务里，任一步失败整体回滚。
+     * <p>不变量三：同一目标只产生一次绑定。技能主行锁串行处理，唯一约束仍作最终裁决；同指纹重试
+     * 只读原回执，不同指纹或缺少原回执的历史记录返回 409 EVIDENCE_ALREADY_BOUND。
+     * 审计、复制与新回执在同一事务内提交，任一步失败整体回滚；不提供删除历史证明的撤销捷径。
      *
      * <p>复制行的 candidate_sha256 一律改写为目标草稿当前的 sha256（证据从此证明的是目标字节），
      * semantic_digest 保持来源摘要（两版本相等才允许走到这里）；旧 report 保留，另加 reboundFrom。
      */
     public Map<String, Object> rebindEvidence(String code, int version, Map<String, Object> body) {
-        if (!(body.get("fromVersion") instanceof Number from) || from.longValue() < 1)
+        Actor actor = Actor.current();
+        actor.requireRole("ADMIN");
+        if (!Set.of("fromVersion", "reason").equals(body.keySet())
+                || !(body.get("fromVersion") instanceof Number from) || from.longValue() < 1
+                || from.longValue() > Integer.MAX_VALUE || from.doubleValue() != from.longValue())
             throw error(400, "INVALID_REBIND", "fromVersion 必须是正整数版本号");
-        int fromVersion = from.intValue();
+        int fromVersion = ((Number) body.get("fromVersion")).intValue();
+        if (!(body.get("reason") instanceof String)) throw error(400, "INVALID_REBIND", "reason 必须为文本");
         String reason = Objects.toString(body.get("reason"), "").trim();
         if (reason.length() < 10 || reason.length() > 500)
             throw error(400, "INVALID_REBIND", "reason 需为10至500字符，写明为什么语义没有变化");
-        Actor actor = Actor.current();
         return tx.execute(
                 status -> {
                     main(code, true);
                     var target = version(code, version);
                     long targetId = ((Number) target.get("skillVersionId")).longValue();
-                    if (!"DRAFT".equals(target.get("status")))
-                        throw error(409, "SKILL_STATE", "只有草稿可重绑定证据；下一步：先保存为目标草稿");
                     if (fromVersion == version)
                         throw error(400, "INVALID_REBIND", "来源版本不能是目标版本本身");
                     var source = version(code, fromVersion);
@@ -1058,26 +1066,34 @@ public class SkillCatalog {
                                         + " 与目标草稿 v"
                                         + version
                                         + " 的语义摘要不同，旧证据不能为新契约放行；下一步：对该版本重跑连接测试与选型验收");
+                    // V315 历史回填可能只是 SHA 兼容值，响应里的当前规则号不能替代一次真实规范化核对。
+                    if (!targetDigest.equals(SkillDigest.of(object(target.get("definition"))))
+                            || !sourceDigest.equals(SkillDigest.of(object(source.get("definition")))))
+                        throw error(409, "DIGEST_RULE_RETEST_REQUIRED", "历史摘要未能按当前 v1 规则核验；下一步：重跑连接测试与选型验收，不改写历史证据");
+                    String requestSha = Digest.sha256(Json.canonical(Map.of("schemaVersion", 1,
+                            "digestVersion", SkillDigest.VERSION, "tenantId", tenant(), "skillCode", code,
+                            "fromVersionId", sourceId, "toVersionId", targetId,
+                            "sourceSha256", source.get("sha256"), "targetSha256", target.get("sha256"),
+                            "semanticDigest", targetDigest, "reason", reason)));
+                    var previous = db.queryForList("select request_sha256,receipt from skill.evidence_rebind where tenant_id=? and to_version_id=?", tenant(), targetId);
+                    if (!previous.isEmpty()) return replayRebind(previous.getFirst(), requestSha);
+                    if (!"DRAFT".equals(target.get("status")))
+                        throw error(409, "SKILL_STATE", "只有草稿可重绑定证据；下一步：先保存为目标草稿");
                     String at = java.time.Instant.now().toString();
-                    try {
-                        db.update(
+                    var inserted = db.queryForList(
                                 "insert into"
-                                    + " skill.evidence_rebind(tenant_id,skill_code,from_version_id,to_version_id,semantic_digest,reason,operator)"
-                                    + " values(?,?,?,?,?,?,?)",
+                                    + " skill.evidence_rebind(tenant_id,skill_code,from_version_id,to_version_id,semantic_digest,reason,operator,request_sha256)"
+                                    + " values(?,?,?,?,?,?,?,?) on conflict(tenant_id,to_version_id) do nothing returning id",
                                 tenant(),
                                 code,
                                 sourceId,
                                 targetId,
                                 targetDigest,
                                 reason,
-                                actor.principalId());
-                    } catch (org.springframework.dao.DuplicateKeyException duplicate) {
-                        // 唯一约束比“先查再插”更可靠：并发时只有一个事务能提交，其余显式失败。
-                        throw error(
-                                409,
-                                "EVIDENCE_ALREADY_BOUND",
-                                "目标草稿已绑定过证据，不能重复绑定；下一步：直接发布，或修改契约后重新测试");
-                    }
+                                actor.principalId(), requestSha);
+                    if (inserted.isEmpty()) return replayRebind(db.queryForMap(
+                            "select request_sha256,receipt from skill.evidence_rebind where tenant_id=? and to_version_id=?", tenant(), targetId), requestSha);
+                    long rebindId = ((Number) inserted.getFirst().get("id")).longValue();
                     var reboundFrom =
                             Map.of(
                                     "version", fromVersion,
@@ -1134,13 +1150,24 @@ public class SkillCatalog {
                                 409,
                                 "EVIDENCE_INCOMPLETE",
                                 "来源版本缺少可复用的通过证据（连接测试与选型验收必须都存在）；下一步：对该版本重跑连接测试与选型验收");
-                    return Map.of(
+                    var receipt = Map.<String,Object>of(
                             "rebound", true,
                             "fromVersion", fromVersion,
                             "semanticDigest", targetDigest,
                             "connectionTest", true,
                             "acceptance", true);
+                    // 只更新本事务尚未提交的新审计行；重试只读这份回执，不复制新证据或改写旧证明。
+                    int saved = db.update("update skill.evidence_rebind set receipt=?::jsonb where tenant_id=? and id=? and request_sha256=? and receipt is null",
+                            Json.write(receipt), tenant(), rebindId, requestSha);
+                    if (saved != 1) throw error(409, "EVIDENCE_ALREADY_BOUND", "重绑定回执发生冲突；下一步：刷新目标版本后检查原证据");
+                    return receipt;
                 });
+    }
+
+    private Map<String,Object> replayRebind(Map<String,Object> existing, String requestSha) {
+        if (requestSha.equals(existing.get("request_sha256")) && existing.get("receipt") != null)
+            return object(Json.read(existing.get("receipt").toString(), Map.class));
+        throw error(409, "EVIDENCE_ALREADY_BOUND", "目标版本已有不同请求的重绑定，或历史记录缺少可核验回执；下一步：检查原证据，不能覆盖历史绑定");
     }
 
     /**

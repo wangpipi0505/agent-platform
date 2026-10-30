@@ -26,20 +26,12 @@ const {
 } = useResourceList("approvals");
 
 const detail = ref<any>();
-// PLAT-15：高危计划（risk=HIGH 且确认角色不足两个）需要二次确认；按节点实例记录勾选状态。
-const doubleConfirmedBy = ref<Record<string, boolean>>({});
-
-function confirmKey(row: any): string {
-  return `${row.runId}/${row.nodeInstanceId || row.nodeId}`;
-}
-
 async function approval(row: any, action: string) {
   await operation(async () => {
     const payload = approvePayload(
       row,
       action === "APPROVE",
       crypto.randomUUID(),
-      doubleConfirmedBy.value[confirmKey(row)] === true,
     );
     if (
       !confirm(
@@ -54,7 +46,7 @@ async function approval(row: any, action: string) {
       "POST",
       payload,
     );
-    success(action === "APPROVE" ? "已确认执行" : "已拒绝执行");
+    success(action === "APPROVE" ? "已记录批准，请查看服务端确认进度" : "已拒绝执行");
     await load();
   });
 }
@@ -80,12 +72,7 @@ async function approval(row: any, action: string) {
     <el-table v-else :data="paginated" stripe>
       <el-table-column type="expand">
         <template #default="{ row }">
-          <ActionPlanPanel
-            :row="row"
-            @update:doubleConfirmed="
-              (value: boolean) => (doubleConfirmedBy[confirmKey(row)] = value)
-            "
-          />
+          <ActionPlanPanel :row="row" />
         </template>
       </el-table-column>
       <el-table-column prop="runId" label="运行编码" min-width="300" />

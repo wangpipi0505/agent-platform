@@ -183,8 +183,9 @@ public class SkillExecution {
         // 存量契约不落键零回归。两段时未批准的执行先走 PREPARE 生成 actionPlan（无业务副作用）。
         boolean prepareMode =
                 SkillRules.APPROVAL_MODE_TWO_PHASE.equals(SkillRules.approvalMode(contract));
-        // 批准态的盖章计划键提升到方法作用域：claim 的 executeKey 与业务出站键同源（契约 §14.4）。
+        // 旧协议两键同源；显式业务意图协议分别使用计划 claimKey 与稳定业务出站键。
         String stampedKey = "";
+        String claimExecuteKey = "";
         if (failure == null && needsApproval) {
             Object roles = executionPolicy.get("confirmRoles");
             if (!(roles instanceof Collection<?> declared) || declared.isEmpty())
@@ -195,6 +196,7 @@ public class SkillExecution {
                     prepareMode
                             ? approval.path("actionPlan").path("idempotencyKey").asText("")
                             : "";
+            claimExecuteKey = prepareMode ? approval.path("actionPlan").path("executeKey").asText(stampedKey) : "";
             if (!approval.path("approved").asBoolean()) {
                 var confirmation = new LinkedHashMap<String, Object>();
                 confirmation.put("roles", roles);
@@ -213,13 +215,13 @@ public class SkillExecution {
                 throw error(409, "APPROVAL_MISMATCH", "批准快照与当前技能或参数不一致，请重新确认");
         }
         // 先完成参数/守卫判断，再认领失败事实或实际执行的交付权；校验失败绝不会发送SUBMITTED或触发外部调用。
-        // PLAT-15：两段调用的业务出站键与 claim executeKey 都取引擎盖章的 actionPlan.idempotencyKey
-        // （GET approval 下发，唯一权威是 engine.action_plan）；SINGLE_STEP 沿用逻辑调用键。
+        // 两键均由 engine.action_plan 下发；新业务协议仅稳定业务出站键，claim 仍绑定当前计划。
+        // 未声明协议与 SINGLE_STEP 的旧键保持原值。
         String businessKey = stampedKey.isEmpty() ? text(request, "idempotencyKey") : stampedKey;
         var claimBody = new LinkedHashMap<String, Object>();
         claimBody.put("owner", owner);
         claimBody.put("attemptId", attempt);
-        if (!stampedKey.isEmpty()) claimBody.put("executeKey", stampedKey);
+        if (!stampedKey.isEmpty()) claimBody.put("executeKey", claimExecuteKey);
         JsonNode authority =
                 clients.post(engineUrl + "/internal/tool-calls/" + callId + "/claim", claimBody);
         if (authority.path("attempt_id").asLong() != attempt
@@ -373,7 +375,8 @@ public class SkillExecution {
                     errorRaw = ex.raw;
                     algorithmSource = ex.source;
                 } catch (SkillAdapters.Failure ex) {
-                    mappingRejectedBeforeDispatch = ex instanceof cn.agentplatform.skill.infra.IdentityMappingClient.BeforeDispatchFailure;
+                    mappingRejectedBeforeDispatch = ex instanceof cn.agentplatform.skill.infra.IdentityMappingClient.BeforeDispatchFailure
+                            || ex instanceof ReadOnlyToolCache.BeforeDispatchFailure;
                     // 回滚开关关闭时保持改造前语义：提交未拿到任务标识仍是 RESULT_UNKNOWN。
                     boolean legacy = !externalJobEnabled && "SUBMIT_NO_TASK_ID".equals(ex.semantic);
                     status = legacy || ex.unknown ? "UNKNOWN" : "FAILED";
@@ -399,10 +402,13 @@ public class SkillExecution {
             }
         }
         var envelope = envelope(request, contract, status, semantic, reason, errorCode, errorRaw, raw, mock, secured);
-        if (mappingRejectedBeforeDispatch && envelope.get("identity") != null) {
+        // 只认本地同步适配器的 Observation.source；远端 structured 同名字段不参与发送事实。
+        boolean readOnlyCacheHit = "HTTP".equals(contract.get("type")) && "SYNC".equals(contract.get("invocationKind"))
+                && Boolean.TRUE.equals(algorithmSource.get("readOnlyCacheHit"));
+        if ((mappingRejectedBeforeDispatch || readOnlyCacheHit) && envelope.get("identity") != null) {
             var identity = (com.fasterxml.jackson.databind.node.ObjectNode) Json.tree(envelope.get("identity"));
             identity.put("injected", false);
-            identity.put("skipReason", errorCode);
+            identity.put("skipReason", readOnlyCacheHit ? "READ_ONLY_CACHE_HIT" : errorCode);
             for (var header : identity.path("headers")) ((com.fasterxml.jackson.databind.node.ObjectNode) header).put("sent", false);
             envelope.put("identity", Json.mapper().convertValue(identity, Map.class));
         }

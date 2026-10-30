@@ -11,9 +11,16 @@ import java.util.*;
 @Service
 public class ToolCalls {
     private final TraceStore store;
+    private HighRiskApprovals highRisk;
 
     public ToolCalls(TraceStore s) {
         store = s;
+        highRisk = new HighRiskApprovals(s, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    public void currentApprovers(cn.agentplatform.common.authority.HttpCurrentAuthorityClient client) {
+        highRisk = new HighRiskApprovals(store, client);
     }
 
     public Map<String, Object> register(JsonNode req, Actor actor) {
@@ -156,7 +163,7 @@ public class ToolCalls {
      * 4xx——claim 未授予，业务调用不发出，副作用不发生。SINGLE_STEP 旧调用无 actionPlanId，
      * 直接通过（零回归锚点：writeApproval 既有用例与 ActionPlanPostgresTest.legacySingleStep）。
      */
-    private void requireExecutablePlan(Map<String, Object> call, JsonNode req) {
+    private void requireExecutablePlan(Map<String, Object> call, JsonNode req, HighRiskApprovals.Checked checked) {
         var context = TraceStore.json(call.get("approval_context"));
         if (!context.has("actionPlanId")) return;
         var plans =
@@ -185,13 +192,12 @@ public class ToolCalls {
                     409,
                     "ACTION_PLAN_EXPIRED",
                     "批准的执行计划已过期，副作用未发生，请重新发起调用与确认");
-        if ("HIGH".equals(plan.get("risk"))
-                && context.path("roles").size() < 2
-                && !Boolean.TRUE.equals(plan.get("double_confirmed")))
-            throw new PlatformException(
-                    403,
-                    "CONFIRM_STRENGTH_INSUFFICIENT",
-                    "高危操作需要两个不同确认角色，或审批时勾选二次确认后才能执行");
+        if ("HIGH".equals(plan.get("risk"))) {
+            HighRiskApprovals.requirePolicy(plan);
+            if (checked == null) throw new PlatformException(503, "APPROVAL_CURRENT_AUTHORITY_REQUIRED", "缺少本次双主体在线复核，执行未获授权");
+            checked.require(call, plan);
+        }
+        BusinessIdempotency.requireAvailable(store, call, plan);
         // 首次授予才落 execute_granted_at：重复 EXECUTE 复用同一授权时间，审计上只有一次执行授权。
         store.db()
                 .update(
@@ -204,8 +210,8 @@ public class ToolCalls {
      * PLAT-15（契约 §14.3）：两段审批的 actionPlan 引擎盖章与持久化。幂等键来源唯一是引擎：
      * executeKey = sha256("EXECUTE:" + callId + ":" + 去键核心摘要)；digest = 盖章后完整计划
      * （含 idempotencyKey/expiresAt）的 canonical SHA-256。技能侧提供的 idempotencyKey/expiresAt
-     * 一律覆盖。同一调用重复 PREPARE 相同内容 → 复用同一行（V221 execute_key 唯一约束），仅刷新
-     * 盖章字段；内容变化 → 新 digest 新行，旧行保留审计。确认人与执行结果经 approve/fact 回写。
+     * 一律由引擎决定。STANDARD 保留原盖章行为；新 HIGH 的同键重复 PREPARE 只复用原冻结行，
+     * 不刷新正文、有效期或投票。内容变化产生新行，旧行保留审计；确认人与结果经 approve/fact 回写。
      */
     private void stampActionPlan(
             long callId,
@@ -213,31 +219,39 @@ public class ToolCalls {
             long nodeId,
             com.fasterxml.jackson.databind.JsonNode planNode,
             java.time.Instant expiry,
-            com.fasterxml.jackson.databind.node.ObjectNode context) {
+            com.fasterxml.jackson.databind.node.ObjectNode context,
+            String declaredRisk,
+            String businessIntentInput) {
         if (!(planNode instanceof com.fasterxml.jackson.databind.node.ObjectNode source)
                 || source.isEmpty()) return;
-        String declaredRisk = source.path("risk").asText("STANDARD");
         if (!Set.of("STANDARD", "HIGH").contains(declaredRisk))
             throw new PlatformException(
                     400,
                     "APPROVAL_RISK_INVALID",
                     "actionPlan.risk 只允许 STANDARD 或 HIGH，收到: " + declaredRisk);
+        if (source.has("risk") && !declaredRisk.equals(source.path("risk").asText()))
+            throw new PlatformException(409, "APPROVAL_RISK_MISMATCH", "行动计划风险与冻结技能声明不一致");
         var core = source.deepCopy();
         core.remove("idempotencyKey");
         core.remove("expiresAt");
+        core.remove("approvalPolicy");
         core.put("risk", declaredRisk);
+        var business = BusinessIdempotency.prepare(store, callId, runId, businessIntentInput);
+        if (business != null) core.set("businessIdempotency", Json.tree(business.material()));
+        boolean twoPrincipals = "HIGH".equals(declaredRisk);
+        if (twoPrincipals) core.put("approvalPolicy", HighRiskApprovals.POLICY);
         String coreDigest = Digest.sha256(Json.canonical(core));
         String executeKey = Digest.sha256("EXECUTE:" + callId + ":" + coreDigest);
         var stamped = core.deepCopy();
-        stamped.put("idempotencyKey", executeKey);
+        stamped.put("idempotencyKey", business == null ? executeKey : business.key());
         stamped.put("expiresAt", expiry.toString());
         String digest = Digest.sha256(Json.canonical(stamped));
         store.db()
                 .update(
                         "insert into"
-                            + " engine.action_plan(run_id,call_id,node_instance_id,digest,plan,execute_key,risk,expires_at)"
-                            + " values(?,?,?,?,?::jsonb,?,?,?) on conflict(execute_key) do update"
-                            + " set digest=excluded.digest,plan=excluded.plan,expires_at=excluded.expires_at,risk=excluded.risk",
+                            + " engine.action_plan(run_id,call_id,node_instance_id,digest,plan,execute_key,risk,expires_at,approval_policy)"
+                            + " values(?,?,?,?,?::jsonb,?,?,?,?) on conflict(execute_key) "
+                            + (twoPrincipals || business != null ? "do nothing" : "do update set digest=excluded.digest,plan=excluded.plan,expires_at=excluded.expires_at,risk=excluded.risk"),
                         runId,
                         callId,
                         nodeId,
@@ -245,7 +259,17 @@ public class ToolCalls {
                         Json.write(stamped),
                         executeKey,
                         declaredRisk,
-                        java.sql.Timestamp.from(expiry));
+                        java.sql.Timestamp.from(expiry),
+                        twoPrincipals ? HighRiskApprovals.POLICY : "LEGACY_DECLARATION");
+        BusinessIdempotency.attach(store, executeKey, business);
+        var persisted = store.db().queryForMap("select * from engine.action_plan where execute_key=?", executeKey);
+        // 新 HIGH 同一键只复用原冻结计划；已有票据/过期时间不能因重复 PREPARE 被重盖章。
+        if (twoPrincipals || business != null) {
+            if (twoPrincipals) HighRiskApprovals.requirePolicy(persisted);
+            stamped = (com.fasterxml.jackson.databind.node.ObjectNode) TraceStore.json(persisted.get("plan")).deepCopy();
+            digest = persisted.get("digest").toString();
+            context.put("expiresAt", ((java.sql.Timestamp) persisted.get("expires_at")).toInstant().toString());
+        }
         long planId =
                 store.db()
                         .queryForObject(
@@ -311,7 +335,9 @@ public class ToolCalls {
     }
 
     public Map<String, Object> claim(long id, JsonNode req, Actor actor) {
-        return store.atomic(
+        // 双人在线核权必须在 PG 锁外；事务内只消费同一计划/投票版本的短期复核结果。
+        var checked = highRisk.beforeClaim(id, actor);
+        var result = store.atomic(
                 () -> {
                     var call = locked(id, actor);
                     String owner = req.path("owner").asText();
@@ -324,7 +350,7 @@ public class ToolCalls {
                     if (TraceStore.json(call.get("approval_context")).has("roles")
                             && !Boolean.TRUE.equals(approval(id, actor).get("approved")))
                         throw new PlatformException(403, "APPROVAL_REQUIRED", "调用尚未取得有效参数确认");
-                    requireExecutablePlan(call, req);
+                    requireExecutablePlan(call, req, checked);
                     if (call.get("status").equals("SUCCEEDED")
                             || call.get("status").equals("FAILED"))
                         return withClaim(view(call), false);
@@ -356,6 +382,8 @@ public class ToolCalls {
                                                     id)),
                             changed == 1);
                 });
+        if (checked != null) checked.requireLive();
+        return result;
     }
 
     public Map<String, Object> submitted(long id, JsonNode req, Actor actor) {
@@ -569,13 +597,14 @@ public class ToolCalls {
                         var plan =
                                 store.db()
                                         .queryForMap(
-                                                "select digest,plan,execute_key,risk,expires_at"
+                                                "select digest,plan,execute_key,risk,expires_at,business_key"
                                                     + " from engine.action_plan where id=?",
                                                 context.path("actionPlanId").asLong());
                         var stamped = TraceStore.json(plan.get("plan"));
                         var issued = new LinkedHashMap<String, Object>();
                         issued.put("id", context.path("actionPlanId").asLong());
-                        issued.put("idempotencyKey", plan.get("execute_key"));
+                        issued.put("idempotencyKey", plan.get("business_key") == null ? plan.get("execute_key") : plan.get("business_key"));
+                        if (plan.get("business_key") != null) issued.put("executeKey", plan.get("execute_key"));
                         issued.put("digest", plan.get("digest"));
                         issued.put("risk", plan.get("risk"));
                         issued.put(
@@ -632,12 +661,25 @@ public class ToolCalls {
                                                     String.class,
                                                     rid));
                     Set<String> declaredRoles = new HashSet<>(), returnedRoles = new HashSet<>();
+                    String declaredRisk = "STANDARD";
+                    String businessIntentInput = null;
                     for (JsonNode skill : frozen.path("config").path("tools"))
                         if (skill.path("skillVersionId").asLong()
                                 == TraceStore.number(call, "skill_version_id"))
+                        {
+                            var approvalDeclaration = skill.path("execution").path("approval");
+                            declaredRisk = approvalDeclaration.path("risk").asText("STANDARD");
+                            if (approvalDeclaration.has("businessIntentInput")) {
+                                if (!"PREPARE_EXECUTE".equals(approvalDeclaration.path("mode").asText())
+                                        || !approvalDeclaration.path("businessIntentInput").isTextual()
+                                        || !approvalDeclaration.path("businessIntentInput").asText().matches("[A-Za-z_][A-Za-z0-9_]{0,63}"))
+                                    throw new PlatformException(400, "BUSINESS_INTENT_INPUT_INVALID", "业务意图必须来自冻结 run.inputs 的显式顶层字段");
+                                businessIntentInput = approvalDeclaration.path("businessIntentInput").asText();
+                            }
                             skill.path("execution")
                                     .path("confirmRoles")
                                     .forEach(role -> declaredRoles.add(role.asText()));
+                        }
                     confirmation.path("roles").forEach(role -> returnedRoles.add(role.asText()));
                     if (declaredRoles.isEmpty() || !declaredRoles.equals(returnedRoles))
                         throw new PlatformException(
@@ -658,7 +700,7 @@ public class ToolCalls {
                     context.put("expiresAt", expiry.toString());
                     context.put("status", "PENDING");
                     stampActionPlan(id, rid, TraceStore.number(call, "node_instance_id"),
-                            confirmation.path("actionPlan"), expiry, context);
+                            confirmation.path("actionPlan"), expiry, context, declaredRisk, businessIntentInput);
                     store.db()
                             .update(
                                     "update engine.tool_call set approval_context=?::jsonb where"
