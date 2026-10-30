@@ -106,15 +106,21 @@ export function createApi(
       // A stopped request or an earlier login must never revoke the current login.
       if (response.status === 401 && token() === requestToken) onUnauthorized?.();
       const error: any = new Error(
+        response.status===401?'会话已失效，请重新连接':
         response.status===403?'当前账号没有此操作权限，请联系管理员。':
         response.status===503&&['IAM_AUTHORITY_UNAVAILABLE','PORTAL_SESSION_UNAVAILABLE'].includes(envelope.code)?'授权服务暂不可用，请稍后手动重试':
         String(envelope.code).startsWith("SYS-")
           ? "系统繁忙，请稍后重试"
-          : envelope.message || `请求失败 (${response.status})`,
+          : envelope.userMessage || envelope.message || `请求失败 (${response.status})`,
       );
-      error.traceId = envelope.traceId;
+      error.traceId = envelope.traceId || response.headers.get('X-Trace-Id') || undefined;
       error.status = response.status;
       error.code = envelope.code;
+      error.category = response.status === 401 || response.status === 403 ? 'AUTH' : envelope.category;
+      // 仅携带服务端明确布尔值；鉴权拒绝恒为不可重试，不新增自动重发行为。
+      error.retryable = response.status === 401 || response.status === 403
+        ? false : typeof envelope.retryable === 'boolean' ? envelope.retryable : undefined;
+      error.userMessage = error.message;
       throw error;
     }
     return envelope.data;

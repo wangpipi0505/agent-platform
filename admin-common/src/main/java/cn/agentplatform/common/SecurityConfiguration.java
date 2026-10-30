@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.*;
 import org.springframework.http.*;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -155,11 +156,10 @@ public class SecurityConfiguration {
                                     response.getWriter()
                                             .write(
                                                     Json.write(
-                                                            new ApiResponse<>(
+                                                            ApiResponse.error(
+                                                                    error.status(),
                                                                     error.code(),
-                                                                    error.getMessage(),
-                                                                    null,
-                                                                    null)));
+                                                                    error.getMessage())));
                                     return;
                                 }
                             }
@@ -184,6 +184,7 @@ public class SecurityConfiguration {
                                                 (auth, context) ->
                                                         new AuthorizationDecision(
                                                                 auth.get().isAuthenticated()
+                                                                        && !(auth.get() instanceof AnonymousAuthenticationToken)
                                                                         && (!trusted || portalScope(auth.get()))
                                                                         && !(auth.get()
                                                                                                 .getPrincipal()
@@ -202,6 +203,7 @@ public class SecurityConfiguration {
                                                         .anyMatch(a -> a.getAuthority().equals("ROLE_SERVICE"))))
                                         .anyRequest()
                                         .access((auth, context) -> new AuthorizationDecision(auth.get().isAuthenticated()
+                                                && !(auth.get() instanceof AnonymousAuthenticationToken)
                                                 && (!trusted || portalScope(auth.get())))))
                 .exceptionHandling(x -> x
                         .authenticationEntryPoint((request, response, error) -> authError(response, 401, "SYS-AUTH-401"))
@@ -241,7 +243,7 @@ public class SecurityConfiguration {
     private static void authError(HttpServletResponse response, int status, String code) throws IOException {
         response.setStatus(status);
         response.setContentType("application/json;charset=UTF-8");
-        response.getWriter().write(Json.write(new ApiResponse<>(code, "身份或授权验证未通过", null, null)));
+        response.getWriter().write(Json.write(ApiResponse.error(status, code, "身份或授权验证未通过")));
     }
 
     @Bean

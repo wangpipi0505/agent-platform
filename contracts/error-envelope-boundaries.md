@@ -1,0 +1,11 @@
+# 错误信封边界增补（EX-22）
+
+成功信封保留code/message/data/traceId四字段及旧四参构造。公共错误出口附加可选userMessage/category/retryable，不删除原字段或远端业务码。category按明确状态分AUTH、QUOTA、PARAM、TRANSPORT、SYSTEM、BUSINESS；API入口仅429声明retryable=true，其余保守false。它不覆盖工具副作用/发送结果未知的判定，也不增加自动重发。
+
+请求trace过滤器先于Security运行；仅接受单个有界安全X-Trace-Id，多值或非法值重建，响应头与错误体同值，finally清理MDC。匿名Authentication虽然isAuthenticated=true，也不能通过受保护/admin及其它私有入口；公开健康/登录等原permitAll保持，IAM_TRUST_CHAIN_UNAVAILABLE启动门保持。
+
+HTTP工具复用已有JDK21 transport，禁止重定向，沿原连接/读取预算、响应大小和关闭边界；避免HttpURLConnection streaming POST在401丢失错误体。401/403优先归AUTH且retryable=false，声明retryableCodes不能覆盖；其它显式4xx规则、带副作用5xx的RESULT_UNKNOWN规则保持。前端保留code/status/trace/category/显式布尔retryable，401/403固定安全提示，不显示远端敏感细节，缺body trace可用响应头。
+
+HTTP的NONE/BEARER/API_KEY沿现AuthScheme与secret_ref解析；本批只修HTTP错误传输/映射，不把HTTP鉴权规则套到MCP或ALGORITHM。MCP沿已有协议传输与错误映射；ALGORITHM沿PROCESS/K8S现有协议与凭据（K8S authRef是K8S client凭据），不能凭HTTP authScheme声明自动获得支持。新增协议鉴权仍须先明确契约与实现；真实桥/算法worker由X1/X3接续。
+
+capability-package源码OpenAPI与生成类型同步可选错误字段；实时网关OpenAPI仍须正式服务重建后读取，不能把源码补充称为live生成。回滚反向本批代码/类型差异，保留旧字段；不降低匿名拒绝、IAM门或结果未知保护。

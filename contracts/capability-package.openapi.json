@@ -196,7 +196,7 @@
       "CapabilityApplicationsResponse": { "allOf": [{ "$ref": "#/components/schemas/CapabilitySuccess" }, { "type": "object", "required": ["data"], "properties": { "data": { "$ref": "#/components/schemas/CapabilityApplicationsReceipt" } } }] },
       "CapabilityListResponse": { "allOf": [{ "$ref": "#/components/schemas/CapabilitySuccess" }, { "type": "object", "required": ["data"], "properties": { "data": { "$ref": "#/components/schemas/CapabilityPackagePage" } } }] },
       "CapabilityDetailResponse": { "allOf": [{ "$ref": "#/components/schemas/CapabilitySuccess" }, { "type": "object", "required": ["data"], "properties": { "data": { "$ref": "#/components/schemas/CapabilityPackageDetail" } } }] },
-      "CapabilityError": { "type": "object", "additionalProperties": false, "required": ["code", "message", "data", "traceId"], "properties": { "code": { "type": "string", "description": "已知业务错误码见各操作 x-error-codes；此补充不代替 EX-22 全局认证/代理错误验收" }, "message": { "type": "string" }, "data": { "type": "null" }, "traceId": { "type": ["string", "null"] } } }
+      "CapabilityError": { "type": "object", "additionalProperties": false, "required": ["code", "message", "data", "traceId"], "properties": { "code": { "type": "string", "description": "已知业务错误码见各操作 x-error-codes；此补充不代替 EX-22 全局认证/代理错误验收" }, "message": { "type": "string" }, "data": { "type": "null" }, "traceId": { "type": ["string", "null"] }, "userMessage": { "type": "string", "description": "安全的用户提示；旧响应可省略" }, "category": { "type": "string", "enum": ["AUTH", "QUOTA", "PARAM", "TRANSPORT", "SYSTEM", "BUSINESS"] }, "retryable": { "type": "boolean", "description": "API入口仅明确限流可重试；不代表工具副作用可重发" } } }
     }
   }
 }

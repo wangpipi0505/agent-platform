@@ -301,6 +301,12 @@ export interface components {
             message: string;
             data: null;
             traceId: string | null;
+            /** @description 安全的用户提示；旧响应可省略 */
+            userMessage?: string;
+            /** @enum {string} */
+            category?: "AUTH" | "QUOTA" | "PARAM" | "TRANSPORT" | "SYSTEM" | "BUSINESS";
+            /** @description API入口仅明确限流可重试；不代表工具副作用可重发 */
+            retryable?: boolean;
         };
         /**
          * CapabilityPackage v1（能力包：软件接入的唯一声明入口）

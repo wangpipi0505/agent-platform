@@ -879,30 +879,19 @@ public class SkillAdapters {
         HttpMethod httpMethod = HttpMethod.valueOf(method);
         boolean sideEffect =
                 Boolean.TRUE.equals(object(contract.get("execution")).get("sideEffect"));
-        // HttpURLConnection不支持PATCH。仅该方法使用JDK21 transport，保持相同的超时/硬字节闸并在单次调用后关闭。
-        java.net.http.HttpClient patchClient =
-                method.equals("PATCH")
-                        ? java.net.http.HttpClient.newBuilder()
-                                .connectTimeout(Duration.ofSeconds(3))
-                                .followRedirects(java.net.http.HttpClient.Redirect.NEVER)
-                                .build()
-                        : null;
+        // 复用既有 JDK21 transport：HttpURLConnection 的 streaming POST 在 401 时丢弃错误体，
+        // 会把已知鉴权拒绝折成传输故障。保留同一超时/硬字节闸，单次调用后关闭，不新增重发。
+        java.net.http.HttpClient httpClient =
+                java.net.http.HttpClient.newBuilder()
+                        .connectTimeout(Duration.ofSeconds(3))
+                        .followRedirects(java.net.http.HttpClient.Redirect.NEVER)
+                        .build();
         org.springframework.util.MultiValueMap<String, Object> multipart = null;
         try {
-            org.springframework.http.client.ClientHttpRequestFactory factory;
-            if (patchClient != null) {
-                var jdk =
-                        new org.springframework.http.client.JdkClientHttpRequestFactory(
-                                patchClient);
-                jdk.setReadTimeout(
-                        Duration.ofMillis(((Number) contract.get("timeoutMs")).longValue()));
-                factory = jdk;
-            } else {
-                var simple = new SimpleClientHttpRequestFactory();
-                simple.setConnectTimeout(3000);
-                simple.setReadTimeout(((Number) contract.get("timeoutMs")).intValue());
-                factory = simple;
-            }
+            var factory =
+                    new org.springframework.http.client.JdkClientHttpRequestFactory(httpClient);
+            factory.setReadTimeout(
+                    Duration.ofMillis(((Number) contract.get("timeoutMs")).longValue()));
             var client = RestClient.builder().requestFactory(factory).build();
             var request =
                     mapped
@@ -932,26 +921,26 @@ public class SkillAdapters {
                         int code = response.getStatusCode().value();
                         if (code >= 400) {
                             // PLAT-05：错误响应不再是黑盒。先按契约声明（或平台缺省 $.code/$.message）
-                            // 读取远端业务码与原文；声明的 retryableCodes 命中时把 4xx 的确定性失败
-                            // 改判为可重试。带副作用的 5xx 仍然结果未知——任何业务码都不能把“未确认
+                            // 读取远端业务码与原文；鉴权拒绝恒为不可重试，其余已声明 4xx 可改判。
+                            // 带副作用的 5xx 仍然结果未知——任何业务码都不能把“未确认
                             // 是否已生效”洗成“已确认失败”。
                             var remote = remoteRejection(contract, response.getBody());
                             var declared = declaredMapping(contract);
                             boolean undetermined = sideEffect && code >= 500;
                             throw new Failure(
-                                    !undetermined
+                                    code == 403 || code == 401
+                                            ? "NO_PERMISSION"
+                                            : !undetermined
                                                     && ErrorSemantics.retryableCode(
                                                             declared, remote)
                                             ? "RETRYABLE_FAILURE"
-                                            : code == 403 || code == 401
-                                                    ? "NO_PERMISSION"
-                                                    : code == 429
-                                                            ? "QUOTA"
-                                                            : code < 500
-                                                                    ? "PARAM_ERROR"
-                                                                    : undetermined
-                                                                            ? "RESULT_UNKNOWN"
-                                                                            : "RETRYABLE_FAILURE",
+                                            : code == 429
+                                                    ? "QUOTA"
+                                                    : code < 500
+                                                            ? "PARAM_ERROR"
+                                                            : undetermined
+                                                                    ? "RESULT_UNKNOWN"
+                                                                    : "RETRYABLE_FAILURE",
                                     undetermined,
                                     "外部端点HTTP " + code,
                                     remote.code(),
@@ -968,7 +957,7 @@ public class SkillAdapters {
                     "外部端点连接、超时或结果接收失败");
         } finally {
             MultipartFormMapping.closeFiles(multipart);
-            if (patchClient != null) patchClient.close();
+            httpClient.close();
         }
     }
 

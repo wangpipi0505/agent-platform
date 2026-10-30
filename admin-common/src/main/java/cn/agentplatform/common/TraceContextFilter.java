@@ -4,6 +4,8 @@ import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 
 import org.slf4j.MDC;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -18,6 +20,7 @@ import java.util.regex.Pattern;
  * calls may forward it explicitly, but identity/authority is never carried in this header.
  */
 @Component
+@Order(Ordered.HIGHEST_PRECEDENCE)
 public class TraceContextFilter extends OncePerRequestFilter {
     public static final String HEADER = "X-Trace-Id";
     private static final Pattern SAFE = Pattern.compile("[A-Za-z0-9._:-]{1,128}");
@@ -26,7 +29,10 @@ public class TraceContextFilter extends OncePerRequestFilter {
     protected void doFilterInternal(
             HttpServletRequest req, HttpServletResponse res, FilterChain chain)
             throws ServletException, IOException {
-        String incoming = req.getHeader(HEADER);
+        var values = req.getHeaders(HEADER);
+        String incoming = values.hasMoreElements() ? values.nextElement() : null;
+        // 多值不能任选一项冒充唯一关联值；响应仍只返回一个本服务新生成的值。
+        if (values.hasMoreElements()) incoming = null;
         String trace = incoming != null && SAFE.matcher(incoming).matches()
                 ? incoming
                 : UUID.randomUUID().toString();
