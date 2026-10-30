@@ -2146,7 +2146,8 @@
   "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java:524",
   "callerSource": "",
   "reason": "无服务调用方：运维总览由 monitor 的 /admin/operations/overview 提供，engine 侧该只读统计暂无调用者；先登记为 disabled（覆盖校验通过、零授权），接入方确定后再改为对应 caller 与 delegated"
- } ,{
+ },
+ {
   "method": "POST",
   "template": "/internal/runs/{id}/wake",
   "caller": "skill",
@@ -2157,7 +2158,8 @@
   "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java:495",
   "callerSource": "skill-registry/src/main/java/cn/agentplatform/skill/application/SkillCallbacks.java:355",
   "reason": "skill 采纳外部事实后唤醒，免一次调度退避；事实判定仍由引擎 resumeExternalFacts 完成"
- } ,{
+ },
+ {
   "method": "GET",
   "template": "/health/data",
   "caller": null,
@@ -2168,7 +2170,8 @@
   "source": "app-management/src/main/java/cn/agentplatform/app/api/DataHealthController.java:24",
   "callerSource": "",
   "reason": "ADMIN 人工运维端点（T20.1）：门户 Bearer 鉴权 Actor.requireRole(ADMIN)，非服务票据路由，无服务调用方；disabled=零服务授权，明细不进公开 /actuator/health"
- } ,{
+ },
+ {
   "method": "GET",
   "template": "/admin/usage/summary",
   "caller": null,
@@ -2180,28 +2183,40 @@
   "callerSource": "",
   "reason": "ADMIN 人工查询端点（T19.1）：门户 Bearer 鉴权按租户取数，非服务票据路由，无服务调用方；disabled=零服务授权（G-9 补录，对齐 /health/data 先例）"
  },
-{
-    "method": "PUT",
-    "template": "/admin/system/identity-mapping/current",
-    "caller": "gateway",
-    "target": "app",
-    "action": "identity.mapping.register",
-    "mode": "delegated",
-    "integrationAllowed": false,
-    "source": "app-management/src/main/java/cn/agentplatform/app/api/IdentityMappingController.java registerCurrent",
-    "callerSource": "platform-gateway GatewayController registered admin/system proxy",
-    "reason": "Only verified current subject; explicit self registration, no body identity or external subject assignment"
-  },
-  {
-    "method": "GET",
-    "template": "/internal/identity-mappings/current",
-    "caller": "skill",
-    "target": "app",
-    "action": "identity.mapping.current",
-    "mode": "delegated",
-    "integrationAllowed": false,
-    "source": "app-management/src/main/java/cn/agentplatform/app/api/IdentityMappingController.java current",
-    "callerSource": "skill-registry/src/main/java/cn/agentplatform/skill/infra/IdentityMappingClient.java headers",
-    "reason": "Current tenant/principal and exact authorization snapshot must match the current PG row; no cache or auto registration"
-  }
+ {
+  "method": "PUT",
+  "template": "/admin/system/identity-mapping/current",
+  "caller": "gateway",
+  "target": "app",
+  "action": "identity.mapping.register",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/IdentityMappingController.java registerCurrent",
+  "callerSource": "platform-gateway GatewayController registered admin/system proxy",
+  "reason": "Only verified current subject; explicit self registration, no body identity or external subject assignment"
+ },
+ {
+  "method": "GET",
+  "template": "/internal/identity-mappings/current",
+  "caller": "skill",
+  "target": "app",
+  "action": "identity.mapping.current",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/IdentityMappingController.java current",
+  "callerSource": "skill-registry/src/main/java/cn/agentplatform/skill/infra/IdentityMappingClient.java headers",
+  "reason": "Current tenant/principal and exact authorization snapshot must match the current PG row; no cache or auto registration"
+ },
+ {
+  "method": "POST",
+  "template": "/internal/iam/integration-policy/resolve",
+  "caller": null,
+  "target": "app",
+  "action": "integration.policy.resolve",
+  "mode": "disabled",
+  "integrationAllowed": false,
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/IntegrationController.java:31",
+  "callerSource": "",
+  "reason": "仅当 agent.policy-resolver.enabled=true 时装配，无目录调用方（ingress 豁免见 route-catalog-exclusions.json）。iam 下登记 disabled，避免开启该开关即启动失败。"
+ }
 ]

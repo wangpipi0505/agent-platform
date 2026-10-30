@@ -64,13 +64,15 @@ class IamInboundGateTest {
     }
 
     @Test
-    void disabledCatalogRowAlsoBlocksIamStartup() {
+    void disabledCatalogRowCountsAsCataloguedButStillRefusesCallers() {
         var mappings = IamTestEnvironments.mappings(Map.of("/internal/disabled", "GET"));
         var routes = IamTestEnvironments.routes(new ServiceRoutePolicy.Route("GET", "/internal/disabled",
                 null, "engine", "internal.disabled", "disabled", false, "TEST", null, "test-only"));
-        assertThatThrownBy(() -> CoverageGate.verify("iam", "engine", routes, mappings))
-                .hasMessageStartingWith("ROUTE_COVERAGE_MISSING")
-                .hasMessageContaining("disabled");
+        // A disabled row is an explicit deny-all posture: catalogued, so startup passes; the inbound
+        // guard (ServiceAuthorization) still refuses every caller at runtime.
+        assertThatCode(() -> CoverageGate.verify("iam", "engine", routes, mappings))
+                .as("explicit deny is a decision, not a missing decision")
+                .doesNotThrowAnyException();
         assertThatCode(() -> CoverageGate.verify("test", "engine", routes, mappings)).doesNotThrowAnyException();
     }
 }

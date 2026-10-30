@@ -12,9 +12,9 @@ import java.util.Objects;
 /**
  * EX-43 §3.2 catalog/handler consistency gate.
  *
- * <p>In iam every {@code /internal/**} handler must own a catalog row whose mode is not
- * {@code disabled}; otherwise the service would expose an inbound surface that no caller may use or
- * that the guard would reject at runtime. The failure is therefore a startup failure. dev-hmac keeps
+ * <p>In iam every {@code /internal/**} handler must own a catalog row, whether it names a caller or
+ * is explicitly {@code disabled} (deny-all). A handler with no row is a startup failure because
+ * nothing would decide who may call it. dev-hmac keeps
  * the historical warn-only behaviour so a partially migrated deployment stays observable during the
  * migration window rather than silently broken.
  */
@@ -35,9 +35,14 @@ public final class CoverageGate {
     }
 
     /**
-     * Reusable judgement shared with {@link RouteCoverageVerifier}: uncovered or disabled internal
-     * handlers. Disabled rows are rejected here because an iam service that keeps a disabled
-     * {@code /internal/**} handler assembled is a deployment mistake, not a runtime option.
+     * Reusable judgement shared with {@link RouteCoverageVerifier}: internal handlers with no catalog
+     * row at all.
+     *
+     * <p>A {@code disabled} row counts as catalogued: it is an explicit "no caller may use this"
+     * posture, and the inbound guard refuses every caller at runtime. Failing startup on it would
+     * force operators to either delete an in-process endpoint or invent a fake caller — both worse
+     * than a documented deny. Only a handler with no row is a real gap: nothing would decide who may
+     * call it.
      */
     public static List<String> missingInternal(String serviceId, ServiceRoutePolicy routes,
             Collection<? extends RequestMappingInfoHandlerMapping> mappings) {
@@ -48,8 +53,6 @@ public final class CoverageGate {
             if (!isInternal(route.template())) continue;
             var row = RouteCoverageVerifier.catalogRow(serviceId, routes, route.method(), route.template());
             if (row.isEmpty()) missing.add(route.method() + " " + route.template() + " (no catalog row)");
-            else if ("disabled".equals(row.get().mode()))
-                missing.add(route.method() + " " + route.template() + " (disabled catalog row)");
         }
         return List.copyOf(missing);
     }
