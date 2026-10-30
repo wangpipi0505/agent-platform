@@ -396,3 +396,103 @@ function Invoke-JointPlatformModel {
     & $Save
     return $State.platformModel
 }
+
+function Invoke-JointPlatformSkillDraft {
+    param([object]$Plan,[object]$State,[object]$Runtime,[string]$BearerToken,[string]$ReadKey,[scriptblock]$Save)
+    if(-not $BearerToken -or -not $Save -or $ReadKey -cnotmatch '^ontosa_[A-Za-z0-9_-]{43}$'){throw 'JOINT_PLATFORM_IDENTITY_MISMATCH'}
+    if($State.pending){throw 'JOINT_PENDING_ACTION_NEEDS_RECONCILIATION'}
+    if($State.complete -ne $false -or $State.platformModel.healthStatus -cne 'HEALTHY' -or
+        $State.platformModel.modelMode -cne $Plan.ModelMode -or [string]$State.platformModel.modelEntryId -cnotmatch '^[1-9][0-9]{0,17}$'){
+        throw 'JOINT_PLATFORM_MODEL_STAGE_REQUIRED'
+    }
+    $runtimePlan=Assert-JointPlatformModelPlan $Plan $Runtime
+    if(-not $State.platformRuntime -or (ConvertTo-Json -InputObject $State.platformRuntime -Compress) -cne
+        (ConvertTo-Json -InputObject $runtimePlan -Compress)){throw 'JOINT_PLATFORM_RUNTIME_CONTEXT_MISMATCH'}
+    $resources=$State.resources
+    $release=Get-JointValue $State.actions 'A_first_commit'
+    $readCredential=Get-JointValue $State.actions 'key_READ'
+    $consumer=Get-JointValue $State.actions 'key_CONSUMER'
+    $releaseId=[Guid]::Empty
+    if(-not [Guid]::TryParse([string]$resources.releaseId,[ref]$releaseId) -or $releaseId -eq [Guid]::Empty -or
+        $release.id -cne $resources.releaseId -or $release.spaceId -cne $resources.spaceId -or
+        $release.status -cne 'READY' -or $release.bundleSha256 -cnotmatch '^[a-f0-9]{64}$' -or
+        $resources.spaceCode -cnotmatch '^[A-Za-z][A-Za-z0-9_-]{0,79}$' -or $resources.opCode -cnotmatch '^[A-Za-z][A-Za-z0-9_-]{0,63}$'){
+        throw 'JOINT_ONTOLOGY_STAGE_REQUIRED'
+    }
+    if($readCredential.id -cne $resources.readCredentialId -or $readCredential.spaceId -cne $resources.spaceId -or
+        $readCredential.credentialKind -cne 'SERVICE_ACCOUNT' -or $readCredential.keyRef -cne $resources.readKeyRef -or
+        $consumer.id -cne $resources.consumerCredentialId -or $consumer.spaceId -cne $resources.spaceId -or
+        $consumer.credentialKind -cne 'PLATFORM_ACTOR' -or $consumer.keyRef -cne $resources.consumerKeyRef -or
+        $resources.consumerKeyRef -cnotmatch '^env:AGENT_SECRET_JOINT_[A-F0-9]{12}_CONSUMER$'){
+        throw 'JOINT_ONTOLOGY_CREDENTIAL_IDENTITY_MISMATCH'
+    }
+    $clock=[Diagnostics.Stopwatch]::StartNew()
+    function Invoke-SkillDraftRequest([string]$Path,[string]$Method='GET',[AllowNull()][object]$Body,[switch]$Ontology){
+        $remaining=120-[int]$clock.Elapsed.TotalSeconds
+        if($remaining -lt 1){throw 'JOINT_PLATFORM_SKILL_BUDGET_EXCEEDED'}
+        $call=@{BaseUrl=$Plan.PlatformBaseUrl;Path=$Path;Method=$Method;TimeoutSeconds=[Math]::Min(30,$remaining)}
+        if($Ontology){$call.BaseUrl=$Plan.OntologyBaseUrl;$call.ApiKey=$ReadKey}else{$call.BearerToken=$BearerToken}
+        if($PSBoundParameters.ContainsKey('Body')){$call.Body=$Body}
+        return (Invoke-JointHttp @call).Data
+    }
+    # 由原发布制品读取接口验证对象摘要/READY/空间权限；不改manifest正文或重造执行声明。
+    $collection=Invoke-SkillDraftRequest ('/onto/releases/'+$resources.releaseId+'/manifest') -Ontology
+    $items=@($collection.manifests|Where-Object{$_.tool_code -ceq $resources.opCode})
+    if($items.Count -ne 1){throw 'JOINT_FORMAL_MANIFEST_NOT_UNIQUE'}
+    $manifest=$items[0];$meta=$manifest.ontology_meta
+    $endpoint=$Plan.OntologyBaseUrl+'/onto/r/'+$resources.spaceCode+'/releases/'+$resources.releaseId+'/ops/'+$resources.opCode
+    if($meta.preview -eq $true -or $meta.releaseId -cne $resources.releaseId -or $meta.spaceCode -cne $resources.spaceCode -or
+        $meta.contentDigest -cne $release.bundleSha256 -or $meta.version -cnotmatch '^v[1-9][0-9]*$' -or
+        $manifest.category -cne 'ontology_service' -or $manifest.adapter_type -cne 'HTTP' -or
+        $manifest.invocation_kind -cne 'SYNC' -or $manifest.http_method -cne 'POST' -or $manifest.endpoint -cne $endpoint -or
+        $manifest.exec_attrs.readonly_flag -isnot [bool] -or -not $manifest.exec_attrs.readonly_flag -or
+        $manifest.exec_attrs.side_effect -isnot [bool] -or $manifest.exec_attrs.side_effect){throw 'JOINT_FORMAL_MANIFEST_IDENTITY_MISMATCH'}
+    function Read-DraftRecord([object]$Version,[long]$SkillId,[switch]$Imported){
+        $definition=$Version.definition;$source=$definition.importSource
+        if($SkillId -lt 1 -or [string]$Version.skillVersionId -cnotmatch '^[1-9][0-9]{0,17}$' -or
+            $Version.code -cne $resources.opCode -or $Version.versionNo -ne 1 -or $Version.status -cne 'DRAFT' -or
+            $Version.sha256 -cnotmatch '^[a-f0-9]{64}$' -or $Version.semanticDigest -cnotmatch '^[a-f0-9]{64}$' -or $Version.digestVersion -ne 1 -or
+            $definition.type -cne 'HTTP' -or $definition.invocationKind -cne 'SYNC' -or $definition.httpMethod -cne 'POST' -or
+            $definition.endpoint -cne $endpoint -or $definition.authScheme -cne 'API_KEY' -or
+            $source.kind -cne 'ONTOLOGY' -or $source.toolCode -cne $resources.opCode){throw 'JOINT_SKILL_DRAFT_IDENTITY_MISMATCH'}
+        foreach($field in @('spaceCode','releaseId','version','contentDigest')){
+            if((Get-JointValue $source $field) -cne (Get-JointValue $meta $field)){throw 'JOINT_SKILL_DRAFT_IDENTITY_MISMATCH'}
+        }
+        if($Imported){
+            if($definition.authRef -cne $resources.consumerKeyRef){throw 'JOINT_SKILL_DRAFT_IDENTITY_MISMATCH'}
+        }elseif($definition.authConfigured -isnot [bool] -or -not $definition.authConfigured){throw 'JOINT_SKILL_DRAFT_IDENTITY_MISMATCH'}
+        return [pscustomobject][ordered]@{skillId=$SkillId;code=$Version.code;skillVersionId=[long]$Version.skillVersionId;versionNo=1;sha256=$Version.sha256;semanticDigest=$Version.semanticDigest;digestVersion=1;status='DRAFT';releaseId=$meta.releaseId;contentDigest=$meta.contentDigest;authScheme='API_KEY';authRef=$resources.consumerKeyRef;complete=$false}
+    }
+    $confirmed=Get-JointValue $State.actions 'platform_skill_import'
+    if(-not $confirmed){
+        $existing=@(Invoke-SkillDraftRequest '/admin/skills'|Where-Object{$_.code -ceq $resources.opCode})
+        if($existing.Count){throw 'JOINT_SKILL_CODE_ALREADY_EXISTS'}
+        $body=@{manifests=@($manifest);authScheme='API_KEY';authRef=$resources.consumerKeyRef}
+        if([Text.Encoding]::UTF8.GetByteCount((ConvertTo-Json -InputObject $body -Depth 32 -Compress)) -gt 2097152){throw 'JOINT_SKILL_IMPORT_BODY_TOO_LARGE'}
+        $pending=[pscustomobject]@{action='platform_skill_import';method='POST';path='/admin/skills/import-ontology-manifests';phase='REQUEST';code=$resources.opCode;releaseId=$meta.releaseId;contentDigest=$meta.contentDigest;startedAt=[DateTime]::UtcNow.ToString('o')}
+        Set-JointValue $State 'pending' $pending;Set-JointValue $State 'stage' 'PLATFORM_SKILL_IMPORT';& $Save
+        try{
+            $imported=Invoke-SkillDraftRequest '/admin/skills/import-ontology-manifests' 'POST' $body
+            $drafts=@($imported.drafts)
+            if($drafts.Count -ne 1 -or $drafts[0].code -cne $resources.opCode -or $drafts[0].status -cne 'DRAFT' -or
+                [string]$drafts[0].id -cnotmatch '^[1-9][0-9]{0,17}$' -or $null -ne $drafts[0].currentVersion -or
+                @($drafts[0].versions).Count -ne 1){throw 'JOINT_SKILL_IMPORT_REPLY_INVALID'}
+            $confirmed=Read-DraftRecord $drafts[0].versions[0] ([long]$drafts[0].id) -Imported
+            Assert-JointSafeMetadata $confirmed
+            Set-JointValue $State.actions 'platform_skill_import' $confirmed
+            & $Save
+            Set-JointValue $State 'pending' $null
+            & $Save
+        }catch{Set-JointValue $State 'pending' $pending;throw}
+    }
+    # 公共版本读口把authRef变成authConfigured；不能要求它泄漏引用或冒用internal服务票据。
+    $versions=@(Invoke-SkillDraftRequest ('/admin/skills/'+$resources.opCode+'/versions'))
+    if($versions.Count -ne 1){throw 'JOINT_SKILL_DRAFT_CHANGED'}
+    $actual=Read-DraftRecord $versions[0] ([long]$confirmed.skillId)
+    if((ConvertTo-Json -InputObject $actual -Compress) -cne (ConvertTo-Json -InputObject $confirmed -Compress)){throw 'JOINT_SKILL_DRAFT_CHANGED'}
+    Set-JointValue $State 'platformSkill' $actual
+    Set-JointValue $State 'stage' 'PLATFORM_SKILL_DRAFT_READY'
+    Set-JointValue $State 'lastError' $null
+    & $Save
+    return $actual
+}
