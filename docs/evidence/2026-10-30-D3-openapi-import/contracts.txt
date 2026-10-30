@@ -1,0 +1,31 @@
+drafts=5 warnings=[导入仅生成可编辑DRAFT；真实连接测试与模型选型验收通过后才能发布]
+--- space_ballistic_preview op=operation27
+type=HTTP method=GET endpoint=http://127.0.0.1:8080/api/v1/ballistic/files/{fileId}/preview authRef='' timeoutMs=30000
+execution={readonly=true, idempotent=true, sideEffect=false, cancellable=false}
+mapping={query=[page, limit], body=, path=[fileId]}
+keys=[code, name, description, execution, guard, returnSpec, errorSemantics, type, endpoint, httpMethod, inputSchema, outputSchema, httpMapping, authRef, timeoutMs, importSource]
+input={type=object, properties={fileId={type=string}, page={type=integer, minimum=1}, limit={type=integer, minimum=1}}, required=[fileId], additionalProperties=false}
+--- space_visibility_task op=operation17
+type=HTTP method=GET endpoint=http://127.0.0.1:8080/api/v1/space/visibility/tasks/{taskId} authRef='' timeoutMs=30000
+execution={readonly=true, idempotent=true, sideEffect=false, cancellable=false}
+mapping={query=[], body=, path=[taskId]}
+keys=[code, name, description, execution, guard, returnSpec, errorSemantics, type, endpoint, httpMethod, inputSchema, outputSchema, httpMapping, authRef, timeoutMs, importSource]
+input={type=object, properties={taskId={type=string}}, required=[taskId], additionalProperties=false}
+--- space_satellite_payload op=operation05
+type=HTTP method=GET endpoint=http://127.0.0.1:8080/api/v1/space/satellites/{satelliteId}/payload authRef='' timeoutMs=30000
+execution={readonly=true, idempotent=true, sideEffect=false, cancellable=false}
+mapping={query=[], body=, path=[satelliteId]}
+keys=[code, name, description, execution, guard, returnSpec, errorSemantics, type, endpoint, httpMethod, inputSchema, outputSchema, httpMapping, authRef, timeoutMs, importSource]
+input={type=object, properties={satelliteId={type=integer}}, required=[satelliteId], additionalProperties=false}
+--- space_satellites_page op=operation03
+type=HTTP method=GET endpoint=http://127.0.0.1:8080/api/v1/space/satellites/page authRef='' timeoutMs=30000
+execution={readonly=true, idempotent=true, sideEffect=false, cancellable=false}
+mapping={query=[pageNumber, pageSize, keyword], body=, path=[]}
+keys=[code, name, description, execution, guard, returnSpec, errorSemantics, type, endpoint, httpMethod, inputSchema, outputSchema, httpMapping, authRef, timeoutMs, importSource]
+input={type=object, properties={pageNumber={type=integer, minimum=1}, pageSize={type=integer, minimum=1, maximum=200}, keyword={type=string}}, required=[], additionalProperties=false}
+--- space_health op=operation01
+type=HTTP method=GET endpoint=http://127.0.0.1:8080/api/v1/space/health authRef='' timeoutMs=30000
+execution={readonly=true, idempotent=true, sideEffect=false, cancellable=false}
+mapping={query=[], body=, path=[]}
+keys=[code, name, description, execution, guard, returnSpec, errorSemantics, type, endpoint, httpMethod, inputSchema, outputSchema, httpMapping, authRef, timeoutMs, importSource]
+input={type=object, properties={}, required=[], additionalProperties=false}
