@@ -787,6 +787,16 @@ public class ProcessAdapter {
         return cancel(Long.toString(callId));
     }
 
+    /** 输出仍属于本地活动调用；取消后不再读取文件，失去同代归属也不能借用新代继续交接。 */
+    void checkOutputActive(String requestId, CancellationOwner owner) {
+        ActiveCall call = active.get(requestId);
+        if (call == null) throw cancelled();
+        synchronized (call) {
+            if (call.closed || call.cancelled || !Objects.equals(owner, call.owner))
+                throw cancelled();
+        }
+    }
+
     /** 该调用是否仍在执行（取消入口与配额观测共用）。 */
     public boolean inFlight(String requestId) {
         return requestId != null && active.containsKey(requestId);

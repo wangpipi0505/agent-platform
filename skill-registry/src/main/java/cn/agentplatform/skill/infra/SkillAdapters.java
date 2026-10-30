@@ -579,7 +579,8 @@ public class SkillAdapters {
                                 : (callDir, deadline) -> materializeProcessInputs(inputs, callDir, deadline),
                         !parsed.filesEnabled() ? null
                                 : (callDir, output, deadline) -> outputRefs.addAll(persistProcessOutputs(
-                                        callDir, output.files(), runId, callId, expectedAttempt, deadline)));
+                                        callDir, output.files(), runId, callId, expectedAttempt, deadline,
+                                        () -> process.checkOutputActive(Long.toString(callId), cancellationOwner))));
         } catch (RuntimeException failure) {
             // 输出交接后仍可能收到取消；只撤销本批新产物，不能留下失败调用的 READY 附件。
             if (!outputRefs.isEmpty())
@@ -611,7 +612,8 @@ public class SkillAdapters {
 
     /** All descriptors and bytes are checked before the first artifact is registered. */
     private List<Map<String, Object>> persistProcessOutputs(
-            Path callDir, JsonNode declared, String runId, long callId, long attempt, long deadline) {
+            Path callDir, JsonNode declared, String runId, long callId, long attempt, long deadline,
+            Runnable checkActive) {
         if (declared.isEmpty()) return List.of();
         if (runId == null || !runId.matches("r_[A-Za-z0-9_-]{1,125}") || callId < 1 || attempt < 1)
             throw new PlatformException(502, "PROCESS_OUTPUT_INVALID", "输出文件缺少已核实的执行归属");
@@ -623,10 +625,15 @@ public class SkillAdapters {
         var paths = new HashSet<Path>();
         var opened = new ArrayList<ProcessOutputFile>();
         var refs = new ArrayList<Map<String, Object>>();
+        // 检查绑定本次已登记主体/代次；取消不中断别的代次或已交付资源，仅沿原批次补偿退出。
+        Runnable checkpoint = () -> {
+            checkActive.run();
+            checkProcessFileDeadline(deadline);
+        };
         try {
             long total = 0;
             for (JsonNode item : declared) {
-                checkProcessFileDeadline(deadline);
+                checkpoint.run();
                 if (!item.isObject() || !item.path("name").isTextual()
                         || item.path("name").asText().isBlank()
                         || !names.add(item.path("name").asText())
@@ -676,7 +683,7 @@ public class SkillAdapters {
                 var buffer = java.nio.ByteBuffer.allocate(8192);
                 long actual = 0;
                 while (true) {
-                    checkProcessFileDeadline(deadline);
+                    checkpoint.run();
                     int read = channel.read(buffer);
                     if (read < 0) break;
                     if (read == 0) continue;
@@ -691,19 +698,19 @@ public class SkillAdapters {
                 channel.position(0);
             }
             for (var file : opened) {
-                checkProcessFileDeadline(deadline);
+                checkpoint.run();
                 // Upload reads the same protected handle that was verified above; no path re-open.
                 InputStream bytes = new FilterInputStream(Channels.newInputStream(file.channel())) {
                     @Override public int read() throws IOException {
-                        checkProcessFileDeadline(deadline);
+                        checkpoint.run();
                         int value = super.read();
-                        checkProcessFileDeadline(deadline);
+                        checkpoint.run();
                         return value;
                     }
                     @Override public int read(byte[] buffer, int offset, int length) throws IOException {
-                        checkProcessFileDeadline(deadline);
+                        checkpoint.run();
                         int count = in.read(buffer, offset, length);
-                        checkProcessFileDeadline(deadline);
+                        checkpoint.run();
                         return count;
                     }
                 };
@@ -712,7 +719,7 @@ public class SkillAdapters {
                 ref.put("name", file.name());
                 refs.add(ref);
             }
-            checkProcessFileDeadline(deadline);
+            checkpoint.run();
             return List.copyOf(refs);
         } catch (RuntimeException failure) {
             artifacts.discardProcessOutputs(refs, runId, callId, attempt, failure);
