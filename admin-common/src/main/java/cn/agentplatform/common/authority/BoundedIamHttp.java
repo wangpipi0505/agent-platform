@@ -53,15 +53,34 @@ public final class BoundedIamHttp implements AutoCloseable {
         builder.method(method,body==null?HttpRequest.BodyPublishers.noBody():HttpRequest.BodyPublishers.ofByteArray(body));
         var subscriber=new LimitedBody();
         var future=client.sendAsync(builder.build(),info->{
-            if(info.statusCode()!=200 || info.headers().firstValueAsLong("Content-Length").orElse(0)>MAX_BYTES)subscriber.reject();
+            if(info.headers().firstValueAsLong("Content-Length").orElse(0)>MAX_BYTES)subscriber.reject(unavailable());
+            else if(info.statusCode()!=200)subscriber.reject(rejected(info.statusCode()));
             return subscriber;
         });
         try {return future.get(deadlineMs,TimeUnit.MILLISECONDS).body();}
         catch(InterruptedException e){Thread.currentThread().interrupt();throw unavailable();}
-        catch(ExecutionException|TimeoutException|CancellationException e){throw unavailable();}
+        catch(ExecutionException e){
+            // reject(...) 抛出的判权结论必须原样上抛，否则 403/401 又会被折回“服务不可用”。
+            if(e.getCause() instanceof PlatformException failure)throw failure;
+            throw unavailable();
+        }
+        catch(TimeoutException|CancellationException e){throw unavailable();}
         finally{subscriber.cancel();future.cancel(true);}
     }
     static PlatformException unavailable(){return new PlatformException(503,"IAM_AUTHORITY_UNAVAILABLE","可信授权服务暂不可用");}
+    /**
+     * 授权服务的否定回答必须与"服务不可用"区分：前者是确定性判权结果（调用方不该重试、也不该被当成依赖故障），
+     * 后者才是可重试的基础设施问题。响应体不读取——判定只依据状态码，避免把服务端自由文本带进错误消息。
+     */
+    static PlatformException rejected(int status){
+        return switch(status){
+            case 400 -> new PlatformException(400,"IAM_AUTHORITY_REJECTED","可信授权服务拒绝了请求（400）");
+            case 401 -> new PlatformException(401,"IAM_AUTHORITY_UNAUTHORIZED","调用方未被可信授权服务认证（401）");
+            case 403 -> new PlatformException(403,"IAM_AUTHORITY_FORBIDDEN","可信授权服务拒绝了该调用（403）");
+            case 409 -> new PlatformException(409,"IAM_AUTHORITY_CONFLICT","可信授权服务报告状态冲突（409）");
+            default -> unavailable();
+        };
+    }
     /** Completion covers the full body; overflow/timeout cancels the active HTTP subscription. */
     private static final class LimitedBody implements HttpResponse.BodySubscriber<byte[]> {
         private final CompletableFuture<byte[]> done=new CompletableFuture<>();
@@ -72,14 +91,14 @@ public final class BoundedIamHttp implements AutoCloseable {
         public synchronized void onNext(List<ByteBuffer> buffers){
             if(done.isDone())return;
             for(var buffer:buffers){
-                if(buffer.remaining()>MAX_BYTES-bytes.size()){reject();return;}
+                if(buffer.remaining()>MAX_BYTES-bytes.size()){reject(unavailable());return;}
                 byte[] piece=new byte[buffer.remaining()];buffer.get(piece);bytes.writeBytes(piece);
             }
             subscription.request(1);
         }
         public void onError(Throwable error){done.completeExceptionally(unavailable());}
         public synchronized void onComplete(){done.complete(bytes.toByteArray());}
-        synchronized void reject(){done.completeExceptionally(unavailable());cancel();}
+        synchronized void reject(PlatformException failure){done.completeExceptionally(failure);cancel();}
         synchronized void cancel(){if(subscription!=null)subscription.cancel();if(!done.isDone())done.completeExceptionally(unavailable());}
     }
     @Override public void close(){client.close();}

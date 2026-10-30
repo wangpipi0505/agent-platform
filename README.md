@@ -13,6 +13,7 @@
 | skill-registry | 六维注册、版本、HTTP/MCP/算法执行与事实 | 18083 |
 | model-gateway | Spring AI单次模型调用、计量准入、请求快照 | 18084 |
 | monitor | 候选评测、确认/统计/审计投影 | 18085 |
+| authority-service | IAM 口径 B 的票据签发与判权（JWKS / 服务票据 / 人身份会话），只读落地目录判权 | 18086 |
 | web | admin / webapp / assistant.js / flow-designer / debug-panel / shared | 15173 / 15174 |
 
 锁定 Java 21、Spring Boot 3.5.0、Spring AI 1.0.0；前端 Vue 3.5、TypeScript、Element Plus、AntV X6。生产业务事实落 PostgreSQL；独立开发 PG 16.15 使用 25432，数据 `.local/pgdata`。默认仅监听本机。
