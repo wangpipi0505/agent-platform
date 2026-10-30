@@ -1,0 +1,111 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ------------------< cn.agentplatform:skill-registry >-------------------
+[INFO] Building skill-registry 0.1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- enforcer:3.5.0:enforce (default) @ skill-registry ---
+[INFO] Rule 0: org.apache.maven.enforcer.rules.version.RequireJavaVersion passed
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ skill-registry ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 17 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.0:compile (default-compile) @ skill-registry ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ skill-registry ---
+[INFO] skip non existing resourceDirectory G:\207\项目\算法重组工具\代码\agent-platform\skill-registry\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.14.0:testCompile (default-testCompile) @ skill-registry ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 90 source files with javac [debug parameters release 21] to target\test-classes
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/skill-registry/src/test/java/cn/agentplatform/skill/infra/HttpAuthErrorBoundaryTest.java: G:\207\项目\算法重组工具\代码\agent-platform\skill-registry\src\test\java\cn\agentplatform\skill\infra\HttpAuthErrorBoundaryTest.java使用或覆盖了已过时的 API。
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/skill-registry/src/test/java/cn/agentplatform/skill/infra/HttpAuthErrorBoundaryTest.java: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/skill-registry/src/test/java/cn/agentplatform/skill/application/AlgorithmExecutionPostgresTest.java: 某些输入文件使用了未经检查或不安全的操作。
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/skill-registry/src/test/java/cn/agentplatform/skill/application/AlgorithmExecutionPostgresTest.java: 有关详细信息, 请使用 -Xlint:unchecked 重新编译。
+[INFO] 
+[INFO] --- surefire:3.5.3:test (default-test) @ skill-registry ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running cn.agentplatform.skill.infra.RealWorkerProcessIT
+10月 30, 2026 2:31:06 下午 cn.agentplatform.skill.infra.ProcessAdapter logFailureFact
+警告: PROCESS 执行失败事实: code=PROCESS_INPUT_INVALID, command=[C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot\bin\java.exe, -jar, G:\Code\Code-V3\visibility-trajectory\target\algorithm-worker.jar], workDir=C:\Users\Administrator\AppData\Local\Temp\junit-18372080648476195008\allowed-root\call-8587823515795131873, killReason=null, dumpDir=C:\Users\Administrator\AppData\Local\Temp\junit-18372080648476195008\allowed-root\failed-call-8587823515795131873, message=算法进程判定输入或数据非法（exitCode=2），stderr 尾部: 读取请求
+失败：INPUT_INVALID，文件映射数量应为1至16
+
+10月 30, 2026 2:31:07 下午 cn.agentplatform.skill.infra.ProcessAdapter logFailureFact
+警告: PROCESS 执行失败事实: code=PROCESS_INPUT_INVALID, command=[C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot\bin\java.exe, -jar, G:\Code\Code-V3\visibility-trajectory\target\algorithm-worker.jar], workDir=C:\Users\Administrator\AppData\Local\Temp\junit-12620784524312284442\allowed-root\call-3232059625268267198, killReason=null, dumpDir=C:\Users\Administrator\AppData\Local\Temp\junit-12620784524312284442\allowed-root\failed-call-3232059625268267198, message=算法进程判定输入或数据非法（exitCode=2），stderr 尾部: 读取请求
+失败：INPUT_INVALID，文件映射数量应为1至16
+
+[D2-real-worker] exit=0 stdout={"protocol":"algorithm-process/1","requestId":"real-worker-1","ok":true,"result":{"resultMode":"SUMMARY","referenceUtc":"2026/07/01 10:00:00.000","payloadType":"对地监视","counts":{"targets":1,"satellites":1,"payloads":1,"results":1,"visibleResults":1,"visibleArcs":1,"visiblePoints":3},"best":{"offsetSecond":0,"launchTimeUtc":"2026/07/01 10:00:00.000","visibleDurationSec":2.0,"visibleArcCount":1,"visiblePointCount":3}},"files":[{"name":"visibility_detail","path":"output/visibility_detail.json","cont… stderr=读取请求 | 校验文件 | 开始计算 | 写入明细 | 完成 | 
+10月 30, 2026 2:31:07 下午 cn.agentplatform.skill.infra.ProcessAdapter logFailureFact
+警告: PROCESS 执行失败事实: code=PROCESS_INPUT_INVALID, command=[C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot\bin\java.exe, -jar, G:\Code\Code-V3\visibility-trajectory\target\algorithm-worker.jar], workDir=C:\Users\Administrator\AppData\Local\Temp\junit-5926144196688676818\allowed-root\call-5215960127034245540, killReason=null, dumpDir=C:\Users\Administrator\AppData\Local\Temp\junit-5926144196688676818\allowed-root\failed-call-5215960127034245540, message=算法进程判定输入或数据非法（exitCode=2），stderr 尾部: 读取请求
+失败：INPUT_INVALID，数值字段超出范围或类型非法
+
+[D2-real-worker 负例] exit=2 stdout={"protocol":"algorithm-process/1","requestId":"real-worker-1","ok":false,"error":{"code":"INPUT_INVALID","message":"数值字段超出范围或类型非法","details":{"field":"stepSizeSec"}}}\n
+[ERROR] Tests run: 5, Failures: 1, Errors: 1, Skipped: 0, Time elapsed: 1.295 s <<< FAILURE! -- in cn.agentplatform.skill.infra.RealWorkerProcessIT
+[ERROR] cn.agentplatform.skill.infra.RealWorkerProcessIT.platformEntryRunsRealWorkerAndAcceptsEnvelope -- Time elapsed: 0.190 s <<< ERROR!
+cn.agentplatform.common.PlatformException: 
+算法进程判定输入或数据非法（exitCode=2），stderr 尾部: 读取请求
+失败：INPUT_INVALID，文件映射数量应为1至16
+
+	at cn.agentplatform.skill.infra.ProcessAdapter.exitFailure(ProcessAdapter.java:515)
+	at cn.agentplatform.skill.infra.ProcessAdapter.runOnce(ProcessAdapter.java:439)
+	at cn.agentplatform.skill.infra.ProcessAdapter.execute(ProcessAdapter.java:271)
+	at cn.agentplatform.skill.infra.ProcessAdapter.execute(ProcessAdapter.java:238)
+	at cn.agentplatform.skill.infra.ProcessAdapter.execute(ProcessAdapter.java:224)
+	at cn.agentplatform.skill.infra.RealWorkerProcessIT.platformEntryRunsRealWorkerAndAcceptsEnvelope(RealWorkerProcessIT.java:133)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.skill.infra.RealWorkerProcessIT.platformEntryMapsOutOfRangeParameterToInputInvalid -- Time elapsed: 0.192 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+stderr 尾部必须指出非法字段: 算法进程判定输入或数据非法（exitCode=2），stderr 尾部: 读取请求
+失败：INPUT_INVALID，数值字段超出范围或类型非法
+ ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at cn.agentplatform.skill.infra.RealWorkerProcessIT.platformEntryMapsOutOfRangeParameterToInputInvalid(RealWorkerProcessIT.java:179)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Failures: 
+[ERROR]   RealWorkerProcessIT.platformEntryMapsOutOfRangeParameterToInputInvalid:179 stderr 尾部必须指出非法字段: 算法进程判定输入或数据非法（exitCode=2），stderr 尾部: 读取请求
+失败：INPUT_INVALID，数值字段超出范围或类型非法
+ ==> expected: <true> but was: <false>
+[ERROR] Errors: 
+[ERROR]   RealWorkerProcessIT.platformEntryRunsRealWorkerAndAcceptsEnvelope:133 ? Platform 算法进程判定输入或数据非法（exitCode=2），stderr 尾部: 读取请求
+失败：INPUT_INVALID，文件映射数量应为1至16
+
+[INFO] 
+[ERROR] Tests run: 5, Failures: 1, Errors: 1, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  7.223 s
+[INFO] Finished at: 2026-10-30T14:31:07+08:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.3:test (default-test) on project skill-registry: There are test failures.
+[ERROR] 
+[ERROR] See G:\207\项目\算法重组工具\代码\agent-platform\skill-registry\target\surefire-reports for the individual test results.
+[ERROR] See dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
