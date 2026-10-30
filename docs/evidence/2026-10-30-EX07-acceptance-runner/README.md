@@ -38,3 +38,18 @@
 1. 真实 `spaceId`/`releaseId`/`appCode` 与两把 `ontosa_` 服务账号 key（只读、binder 各一）；
 2. 本体侧 18182 就绪且该 release 为 READY；
 3. 真正的 J3～J8 与 J9（平台 ReleasePins 实际发送）仍未验——本脚本只覆盖绑定协议本身。
+
+## 执行器自测：用桩把 PASS 路径也跑一遍（2026-10-30 追加）
+
+只验证"前置缺失"和"不可达失败"两条路径是不够的——PASS 分支从未执行过。为此新增
+`scripts/acceptance/stub-binding-server.py`（127.0.0.1 本地桩，四种响应：只读写 403、binder 首写
+`changed=true`、重复写 `changed=false`、查询不存在 404）并实跑：
+
+```
+python scripts/acceptance/stub-binding-server.py 18199 &
+& joint-j1-j2.ps1 -SpaceId … -ReleaseId … -AppCode ex07-probe -OntologyBase http://127.0.0.1:18199 …
+→ == J1/J2 PASS（467 ms）==  五项检查全 PASS，EXIT=0，证据 JSON 落盘
+```
+
+边界必须说清：桩只是按契约伪造响应的**脚本自测替身**，它证明执行器的判定逻辑与证据格式正确，
+**不证明本体实现正确、也不构成 J1/J2 通过**。真实结论仍以连真实 18182 的那一次为准。
