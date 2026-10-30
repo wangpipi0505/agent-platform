@@ -262,3 +262,137 @@ function Assert-JointPublicationPrepared([object]$Publication) {
     if((Get-JointValue $Publication 'status') -cne 'READY_TO_COMMIT'){throw 'JOINT_PUBLICATION_NOT_READY'}
     Assert-JointArtifactsReady @(Get-JointValue $Publication 'artifacts')
 }
+
+function Assert-JointPlatformModelPlan([object]$Plan,[object]$Runtime) {
+    # 这是操作者明确确认的隔离运行计划，不是脚本伪造的进程/数据库检查结果。
+    $names=@('sessionId','platformTenant','platformBaseUrl','databaseName','redisHost','redisPort','isolationConfirmed','modelDemoMode','engineDemoMode','fixtureBaseUrl')
+    if($null -eq $Runtime -or @((Get-JointNames $Runtime)|Where-Object{$_ -cnotin $names}).Count){throw 'JOINT_PLATFORM_RUNTIME_PLAN_INVALID'}
+    foreach($name in @('sessionId','platformTenant','platformBaseUrl')){
+        if((Get-JointValue $Runtime $name) -cne (Get-JointValue $Plan $name)){throw 'JOINT_PLATFORM_RUNTIME_CONTEXT_MISMATCH'}
+    }
+    if($Runtime.isolationConfirmed -isnot [bool] -or -not $Runtime.isolationConfirmed -or
+        $Runtime.databaseName -cnotmatch '^agent_platform_[a-z0-9_]{1,48}$' -or
+        $Runtime.databaseName -cin @('agent_platform_v12','agent_platform_dev_v12','agent_platform_engine_test') -or
+        $Runtime.redisHost -cne '127.0.0.1' -or $Runtime.redisPort -is [string] -or
+        $Runtime.redisPort -lt 1024 -or $Runtime.redisPort -gt 65535 -or $Runtime.redisPort -eq 26379){throw 'JOINT_PLATFORM_ISOLATION_REQUIRED'}
+    if($Runtime.modelDemoMode -isnot [bool] -or $Runtime.engineDemoMode -isnot [bool]){throw 'JOINT_PLATFORM_RUNTIME_PLAN_INVALID'}
+    if($Plan.ModelMode -ceq 'TestFixture'){
+        if(-not $Runtime.modelDemoMode -or -not $Runtime.engineDemoMode){throw 'JOINT_PLATFORM_DEMO_REQUIRED'}
+        $fixture=Assert-JointRootUrl ([string]$Runtime.fixtureBaseUrl)
+    }else{
+        if($Runtime.modelDemoMode -or $Runtime.engineDemoMode -or $Runtime.fixtureBaseUrl -or
+            $Plan.ModelEntryId -cnotmatch '^[1-9][0-9]{0,17}$'){throw 'JOINT_REAL_MODEL_PLAN_INVALID'}
+        $fixture=$null
+    }
+    return [pscustomobject][ordered]@{sessionId=$Plan.SessionId;platformTenant=$Plan.PlatformTenant;platformBaseUrl=$Plan.PlatformBaseUrl;databaseName=$Runtime.databaseName;redisHost=$Runtime.redisHost;redisPort=[int]$Runtime.redisPort;isolationConfirmed=$true;modelDemoMode=$Runtime.modelDemoMode;engineDemoMode=$Runtime.engineDemoMode;fixtureBaseUrl=$fixture}
+}
+
+function Invoke-JointPlatformModel {
+    param([object]$Plan,[object]$State,[object]$Runtime,[string]$BearerToken,[scriptblock]$Save)
+    if(-not $BearerToken -or -not $Save){throw 'JOINT_PLATFORM_IDENTITY_MISMATCH'}
+    if($State.pending){throw 'JOINT_PENDING_ACTION_NEEDS_RECONCILIATION'}
+    if(-not $State.resources -or -not $State.resources.spaceId -or -not $State.resources.releaseId -or
+        $State.complete -ne $false){throw 'JOINT_ONTOLOGY_STAGE_REQUIRED'}
+    $runtimePlan=Assert-JointPlatformModelPlan $Plan $Runtime
+    if($State.platformRuntime -and (ConvertTo-Json -InputObject $State.platformRuntime -Compress) -cne
+        (ConvertTo-Json -InputObject $runtimePlan -Compress)){throw 'JOINT_PLATFORM_RUNTIME_CONTEXT_MISMATCH'}
+    Set-JointValue $State 'platformRuntime' $runtimePlan
+    & $Save
+    $clock=[Diagnostics.Stopwatch]::StartNew()
+    function Invoke-ModelRequest([string]$Path,[string]$Method='GET',[AllowNull()][object]$Body){
+        $remaining=180-[int]$clock.Elapsed.TotalSeconds
+        if($remaining -lt 1){throw 'JOINT_PLATFORM_MODEL_BUDGET_EXCEEDED'}
+        $call=@{BaseUrl=$Plan.PlatformBaseUrl;Path=$Path;Method=$Method;BearerToken=$BearerToken;TimeoutSeconds=[Math]::Min(30,$remaining)}
+        if($PSBoundParameters.ContainsKey('Body')){$call.Body=$Body}
+        return (Invoke-JointHttp @call).Data
+    }
+    function Save-ModelStep([string]$Name,[string]$Path,[object]$Body,[scriptblock]$Project){
+        $old=Get-JointValue $State.actions $Name
+        if($old){return $old}
+        $pending=[pscustomobject]@{action=$Name;method='POST';path=$Path;phase='REQUEST';startedAt=[DateTime]::UtcNow.ToString('o')}
+        Set-JointValue $State 'pending' $pending
+        Set-JointValue $State 'stage' $Name
+        & $Save
+        try{
+            $call=@{Path=$Path;Method='POST'};if($null -ne $Body){$call.Body=$Body}
+            $data=Invoke-ModelRequest @call
+            $record=& $Project $data
+            Assert-JointSafeMetadata $record
+            Set-JointValue $State.actions $Name $record
+            # 先在pending仍存在时保存确认记录，再清pending；落盘失败仍保留未知写结果。
+            & $Save
+            Set-JointValue $State 'pending' $null
+            & $Save
+            return $record
+        }catch{Set-JointValue $State 'pending' $pending;throw}
+    }
+    function Assert-ModelEntry([object]$Entry,[long]$ProviderId,[string]$ModelName){
+        if(-not $Entry -or [string]$Entry.id -cnotmatch '^[1-9][0-9]{0,17}$' -or
+            [string]$Entry.providerId -cnotmatch '^[1-9][0-9]{0,17}$' -or
+            $Entry.providerId -ne $ProviderId -or $Entry.modelName -cne $ModelName -or
+            $Entry.status -cne 'ENABLED' -or $Entry.provider.status -cne 'ENABLED' -or
+            $Entry.provider.id -ne $ProviderId -or 'LOCAL' -cnotin @($Entry.provider.trustLabels) -or
+            'chat' -cnotin @($Entry.capabilities) -or 'tools' -cnotin @($Entry.capabilities)){
+            throw 'JOINT_MODEL_ENTRY_NOT_READY'
+        }
+    }
+    if($Plan.ModelMode -ceq 'TestFixture'){
+        $sha=[Security.Cryptography.SHA256]::Create()
+        try{$code='fixture_joint_'+([BitConverter]::ToString($sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($Plan.SessionId))).Replace('-','').ToLowerInvariant()).Substring(0,24)}finally{$sha.Dispose()}
+        $provider=Save-ModelStep 'model_provider' '/admin/model-providers' @{
+            code=$code;name=('EX06 fixture '+$Plan.SessionId);baseUrl=$runtimePlan.fixtureBaseUrl
+            protocol='OPENAI_COMPATIBLE';trustLabels=@('LOCAL')
+        } {
+            param($data)
+            if([string]$data.id -cnotmatch '^[1-9][0-9]{0,17}$' -or $data.code -cne $code -or $data.status -cne 'DISABLED'){throw 'JOINT_MODEL_PROVIDER_REPLY_INVALID'}
+            [pscustomobject]@{id=[long]$data.id;code=$data.code}
+        }
+        if([string]$provider.id -cnotmatch '^[1-9][0-9]{0,17}$' -or $provider.code -cne $code){throw 'JOINT_MODEL_PROVIDER_IDENTITY_MISMATCH'}
+        $providerRows=@(Invoke-ModelRequest '/admin/model-providers')
+        $observed=@($providerRows|Where-Object{$_.id -eq $provider.id})
+        if($observed.Count -ne 1 -or $observed[0].code -cne $code -or
+            $observed[0].baseUrl -cne $runtimePlan.fixtureBaseUrl -or $observed[0].protocol -cne 'OPENAI_COMPATIBLE' -or
+            'LOCAL' -cnotin @($observed[0].trustLabels)){throw 'JOINT_MODEL_PROVIDER_IDENTITY_MISMATCH'}
+        Save-ModelStep 'model_provider_test' ('/admin/model-providers/'+$provider.id+'/test') $null {
+            param($data)
+            if($data.ok -isnot [bool] -or -not $data.ok -or $data.stage -cne 'OK' -or
+                'ready.model' -cnotin @($data.discoveredModels)){throw 'JOINT_MODEL_PROVIDER_TEST_FAILED'}
+            [pscustomobject]@{id=$provider.id;ok=$true}
+        }|Out-Null
+        $entry=Save-ModelStep 'model_entry' '/admin/model-entries' @{
+            providerId=$provider.id;modelName='ready.model';displayName=('EX06 fixture '+$Plan.SessionId)
+            contextWindow=8192;maxOutputTokens=512;capabilities=@('chat','tools')
+        } {
+            param($data)
+            Assert-ModelEntry $data $provider.id 'ready.model'
+            [pscustomobject]@{id=[long]$data.id;providerId=$provider.id;modelName='ready.model'}
+        }
+    }else{
+        # Real只复用显式ID，不挑首条、不改供应商、不把fixture作为真实模型。
+        $rows=@(Invoke-ModelRequest '/admin/model-entries')
+        $chosen=@($rows|Where-Object{$_.id -eq [long]$Plan.ModelEntryId})
+        if($chosen.Count -ne 1 -or $chosen[0].provider.code -cmatch 'fixture|^smoke_model_' -or
+            [string]::IsNullOrWhiteSpace($chosen[0].modelName)){throw 'JOINT_REAL_MODEL_NOT_READY'}
+        Assert-ModelEntry $chosen[0] $chosen[0].providerId $chosen[0].modelName
+        $entry=[pscustomobject]@{id=[long]$chosen[0].id;providerId=[long]$chosen[0].providerId;modelName=$chosen[0].modelName}
+    }
+    if([string]$entry.id -cnotmatch '^[1-9][0-9]{0,17}$' -or [string]$entry.providerId -cnotmatch '^[1-9][0-9]{0,17}$'){throw 'JOINT_MODEL_ENTRY_NOT_READY'}
+    $entries=@(Invoke-ModelRequest '/admin/model-entries')
+    $readBack=@($entries|Where-Object{$_.id -eq $entry.id})
+    if($readBack.Count -ne 1){throw 'JOINT_MODEL_ENTRY_NOT_READY'}
+    Assert-ModelEntry $readBack[0] $entry.providerId $entry.modelName
+    if($Plan.ModelMode -ceq 'TestFixture' -and $readBack[0].provider.code -cne $code){throw 'JOINT_MODEL_PROVIDER_IDENTITY_MISMATCH'}
+    # 健康报告是真实HTTP探测结果；不是评测ACCEPTED，也不代表应用发布或真实外部模型验收。
+    $health=Invoke-ModelRequest ('/admin/model-entries/'+$entry.id+'/test') 'POST'
+    if($health.ok -isnot [bool] -or -not $health.ok -or $health.status -cne 'HEALTHY' -or
+        $health.entryId -ne $entry.id -or $health.providerId -ne $entry.providerId -or $health.model -cne $entry.modelName){throw 'JOINT_MODEL_HEALTH_FAILED'}
+    foreach($key in @('config','endpoint','auth','model','tools')){
+        $check=@($health.checks|Where-Object{$_.key -ceq $key})
+        if($check.Count -ne 1 -or $check[0].status -cne 'PASS'){throw 'JOINT_MODEL_HEALTH_FAILED'}
+    }
+    Set-JointValue $State 'platformModel' ([pscustomobject]@{modelEntryId=$entry.id;providerId=$entry.providerId;modelName=$entry.modelName;modelMode=$Plan.ModelMode;healthStatus=$health.status;complete=$false})
+    Set-JointValue $State 'stage' 'PLATFORM_MODEL_READY'
+    Set-JointValue $State 'lastError' $null
+    & $Save
+    return $State.platformModel
+}

@@ -3,12 +3,13 @@
     [string]$PlatformBaseUrl='http://127.0.0.1:18080',[string]$PlatformTenant='local-v12',[string]$Environment='production',
     [string]$OutputDirectory,[string]$ReuseManifestPath,[switch]$Resume,
     [ValidateSet('TestFixture','Real')][string]$ModelMode='TestFixture',[Alias('RealModelEntryId')][string]$ModelEntryId,
-    [ValidateSet('All','Ontology')][string]$Stage='All',[pscredential]$OntologyCredential
+    [ValidateSet('All','Ontology','PlatformModel')][string]$Stage='All',[pscredential]$OntologyCredential,
+    [string]$PlatformRuntimePlanPath
 )
 $ErrorActionPreference='Stop'
 $repositoryRoot=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
 . (Join-Path $PSScriptRoot 'Joint.Common.ps1')
-$script:jointState=$null;$script:jointToken=$null;$plan=$null;$private=$null;$exitCode=1
+$script:jointState=$null;$script:jointToken=$null;$script:jointPlatformToken=$null;$plan=$null;$private=$null;$exitCode=1
 $script:jointClock=[Diagnostics.Stopwatch]::StartNew()
 function Save-JointStage {
     Write-JointPrivateJson $repositoryRoot $private 'partial.json' $script:jointState
@@ -192,8 +193,17 @@ function Get-JointSavedKey([object]$Credential) {
 try{
     if($Stage -eq 'All'){throw 'JOINT_ALL_STAGE_NOT_DELIVERED'}
     if($Resume -and $ReuseManifestPath){throw 'JOINT_RESUME_AND_FINAL_REUSE_CONFLICT'}
-    if(-not $OntologyCredential){throw 'JOINT_OR_CREDENTIAL_REQUIRED'}
+    if($Stage -eq 'Ontology' -and -not $OntologyCredential){throw 'JOINT_OR_CREDENTIAL_REQUIRED'}
+    if($Stage -eq 'PlatformModel' -and (-not $Resume -or $ReuseManifestPath -or -not $PlatformRuntimePlanPath)){throw 'JOINT_PLATFORM_MODEL_RESUME_REQUIRED'}
     $plan=Get-JointPreparationPlan -RepositoryRoot $repositoryRoot -SessionId $SessionId -PlatformTenant $PlatformTenant -Environment $Environment -OutputDirectory $OutputDirectory -PlatformBaseUrl $PlatformBaseUrl -OntologyBaseUrl $OntologyBaseUrl -ReuseManifestPath $ReuseManifestPath -ModelMode $ModelMode -ModelEntryId $ModelEntryId
+    $platformRuntime=$null
+    if($Stage -eq 'PlatformModel'){
+        $runtimePath=Assert-JointAcceptancePath $repositoryRoot $PlatformRuntimePlanPath
+        Assert-JointPrivateFile $runtimePath
+        try{$platformRuntime=[IO.File]::ReadAllText($runtimePath)|ConvertFrom-Json -ErrorAction Stop}catch{throw 'JOINT_PLATFORM_RUNTIME_PLAN_INVALID'}
+        Assert-JointSafeMetadata $platformRuntime
+        $platformRuntime=Assert-JointPlatformModelPlan $plan $platformRuntime
+    }
     $existed=Test-Path -LiteralPath $plan.PrivateDirectory
     $private=New-JointPrivateDirectory $repositoryRoot $plan.PrivateDirectory
     $journal=Join-Path $private 'partial.json'
@@ -215,7 +225,12 @@ try{
     # 首个OR业务写入前从真实gateway读固定已验开发身份，不能按请求体自报租户。
     $platformIdentity=(Invoke-JointHttp -BaseUrl $plan.PlatformBaseUrl -Path '/auth/dev-token' -Method POST).Data
     if($platformIdentity.user.tenantId -cne $PlatformTenant -or $platformIdentity.user.principalId -cne 'developer-v12' -or -not $platformIdentity.accessToken){throw 'JOINT_PLATFORM_IDENTITY_MISMATCH'}
+    $script:jointPlatformToken=$platformIdentity.accessToken
     $platformIdentity=$null
+    if($Stage -eq 'PlatformModel'){
+        Invoke-JointPlatformModel -Plan $plan -State $script:jointState -Runtime $platformRuntime -BearerToken $script:jointPlatformToken -Save {Save-JointStage}|Out-Null
+        $exitCode=0
+    }else{
     $login=Invoke-JointHttp -BaseUrl $plan.OntologyBaseUrl -Path '/onto/auth/login' -Method POST -Body @{username=$OntologyCredential.UserName;password=$OntologyCredential.GetNetworkCredential().Password}
     $script:jointToken=$login.Data.token;$login=$null
     if(-not $script:jointToken){throw 'JOINT_OR_LOGIN_INVALID'}
@@ -273,13 +288,14 @@ try{
     }
     Set-JointValue $script:jointState 'stage' 'ONTOLOGY_READY';Set-JointValue $script:jointState 'lastError' $null;Save-JointStage
     $exitCode=0
+    }
 }catch{
     $code='JOINT_PREPARATION_FAILED';if($_.Exception.Message -cmatch '^JOINT_[A-Z_]+$'){$code=$_.Exception.Message}
     if($code -match 'NOT_DELIVERED|CREDENTIAL_REQUIRED'){$exitCode=2}
     if($script:jointState){Set-JointValue $script:jointState 'lastError' $code;if($_.Exception.Data.Contains('HttpStatus')){Set-JointValue $script:jointState 'lastHttpStatus' ([int]$_.Exception.Data['HttpStatus'])};try{Save-JointStage}catch{}}
     Write-Error $code -ErrorAction Continue
 }finally{
-    if($script:jointToken){try{Invoke-JointOr '/auth/logout' 'POST'|Out-Null}catch{}};$script:jointToken=$null
-    if($script:jointState){$summary=[ordered]@{sessionId=$SessionId;stage=$script:jointState.stage;complete=$false;partialPath=(Join-Path $private 'partial.json');resources=$script:jointState.resources;resourceIds=@(foreach($action in @(Get-JointNames $script:jointState.actions)){$item=Get-JointValue $script:jointState.actions $action;if($item.id){[pscustomobject]@{action=$action;id=$item.id;principalId=$item.principalId;spaceId=$item.spaceId}}});lastError=$script:jointState.lastError};Assert-JointSafeMetadata $summary;Write-Output ($summary|ConvertTo-Json -Depth 8)}
+    if($script:jointToken){try{Invoke-JointOr '/auth/logout' 'POST'|Out-Null}catch{}};$script:jointToken=$null;$script:jointPlatformToken=$null
+    if($script:jointState){$summary=[ordered]@{sessionId=$SessionId;stage=$script:jointState.stage;complete=$false;partialPath=(Join-Path $private 'partial.json');resources=$script:jointState.resources;platformModel=(Get-JointValue $script:jointState 'platformModel');resourceIds=@(foreach($action in @(Get-JointNames $script:jointState.actions)){$item=Get-JointValue $script:jointState.actions $action;if($item.id){[pscustomobject]@{action=$action;id=$item.id;principalId=$item.principalId;spaceId=$item.spaceId}}});lastError=$script:jointState.lastError};Assert-JointSafeMetadata $summary;Write-Output ($summary|ConvertTo-Json -Depth 8)}
 }
 exit $exitCode
