@@ -142,7 +142,8 @@ public record CapabilityBinding(String route, Object environmentDeclaration,
         if (tool.containsKey("pagination")) {
             var pagination = AppService.object(definition.getOrDefault("pagination", Map.of()));
             String mode = tool.get("pagination").toString().toUpperCase(Locale.ROOT);
-            equal(mode, pagination.getOrDefault("mode", "NONE"), "pagination");
+            // 注册期允许非空分页配置省略 mode，其有效含义为 PAGE；未配置分页才是 NONE。
+            equal(mode, pagination.getOrDefault("mode", pagination.isEmpty() ? "NONE" : "PAGE"), "pagination");
         }
         if (tool.get("artifacts") instanceof Collection<?> artifacts && !artifacts.isEmpty()) throw unresolved("产物声明尚无精确运行绑定");
         declared(identity, "outboundIdentity", definition, "identity");
