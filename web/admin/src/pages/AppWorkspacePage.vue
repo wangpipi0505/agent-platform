@@ -6,7 +6,7 @@ import PageError from "../PageError.vue";
 import PageHeader from "../PageHeader.vue";
 import RunDetail from "../RunDetail.vue";
 import { usePageOperation, usePageTitle } from "../usePageOperation";
-import { isGateRejection, type GateRejection } from "../publish-gate";
+import { buildEnvironmentConfirmation, isGateRejection, type EnvironmentConfirmation, type GateRejection } from "../publish-gate";
 import AppOverviewPanel from "./workspace/AppOverviewPanel.vue";
 import AppPublishPanel from "./workspace/AppPublishPanel.vue";
 import AppRunPanel from "./workspace/AppRunPanel.vue";
@@ -47,6 +47,35 @@ const evaluation = ref<any>();
 const evaluationNeedsCheck = ref(false);
 const evaluationWorking = ref(false);
 const requestNo = ref("");
+const environmentConfirmation = ref<EnvironmentConfirmation | null>(null);
+const environmentConfirmed = computed(() => {
+  if (!precheck.value || !environmentConfirmation.value) return false;
+  try { return !!buildEnvironmentConfirmation(precheck.value, environmentConfirmation.value); }
+  catch { return false; }
+});
+
+function confirmEnvironment(confirmed: boolean) {
+  environmentConfirmation.value = null;
+  if (!confirmed || busy.value || precheckStale.value || evaluationWorking.value || evaluationNeedsCheck.value) return;
+  const current = precheck.value;
+  try {
+    if (!current) throw new Error("请先完成当前候选的发布预检");
+    const selected = { precheckId: current.precheckId, evalReportId: current.evalReportId,
+      evidenceSha256: current.environmentEvidenceSha256 };
+    if (!buildEnvironmentConfirmation(current, selected)) throw new Error("本次预检无需演示发布确认");
+    environmentConfirmation.value = selected;
+  } catch (problem) { failure(problem); }
+}
+
+// 确认只属于这次预检与当前身份；重新预检、改稿、评测或身份切换均不能继承旧勾选。
+watch([() => precheck.value, () => precheck.value?.precheckId, () => precheck.value?.evalReportId,
+  () => precheck.value?.environmentEvidenceSha256, () => precheck.value?.publicationTarget,
+  () => precheck.value?.evaluationEnvironment, () => precheck.value?.environmentConfirmationRequired,
+  () => precheckStale.value, () => evaluationWorking.value, () => evaluationNeedsCheck.value,
+  () => gateBlocked.value, () => auth.generation, () => auth.token,
+  () => auth.user?.tenantId, () => auth.user?.principalId, () => auth.roles.join(",")],
+  () => { environmentConfirmation.value = null; }, { flush: "sync" });
+watch(error, (message) => { if (message) environmentConfirmation.value = null; }, { flush: "sync" });
 
 async function load() {
   if (!code.value || !auth.token) return;
@@ -85,6 +114,7 @@ async function load() {
   });
 }
 function detailReset() {
+  environmentConfirmation.value = null;
   precheck.value = null;
   precheckStale.value = false;
   gateBlocked.value = null;
@@ -128,6 +158,7 @@ async function saveFlow(data: any) {
 }
 async function check() {
   if (busy.value) return;
+  environmentConfirmation.value = null;
   const requestedPath = route.fullPath;
   const requestedCode = code.value;
   const requestedRev = app.value?.draftRev;
@@ -187,11 +218,15 @@ function onEvaluationReport(value: any) {
   evaluationNeedsCheck.value = true;
 }
 async function commit() {
-  if (!confirm("确认将当前候选发布为正式版本？发布后可被业务系统调用。"))
+  const demo = precheck.value?.publicationTarget === "NON_PRODUCTION" && precheck.value?.evaluationEnvironment === "DEMO";
+  if (!confirm(demo ? "确认仅进行本次非生产演示发布？该演示评测不能作为生产来源证明。" : "确认将当前候选发布为正式版本？发布后可被业务系统调用。")) {
+    environmentConfirmation.value = null;
     return;
+  }
   await operation(async () => {
     const current = precheck.value;
     if (!current?.precheckId) throw new Error("请先重新预检并通过评测");
+    if (!current.passed) throw new Error("当前预检尚未通过，请先处理检查结果");
     if (precheckStale.value) throw new Error("配置已变更，预检已过期，请重新预检");
     if (
       evaluationWorking.value ||
@@ -202,6 +237,7 @@ async function commit() {
           evaluation.value.draftRev !== current.draftRev))
     )
       throw Error("评测尚未完成或报告未重新绑定，请重新预检");
+    const confirmation = buildEnvironmentConfirmation(current, environmentConfirmation.value);
     try {
       published.value = await api(
         `/admin/apps/${code.value}/publish/commit`,
@@ -211,6 +247,7 @@ async function commit() {
           draftRev: current.draftRev,
           candidateSha256: current.candidateSha256,
           idempotencyRequestNo: requestNo.value,
+          ...(confirmation ? { evaluationEnvironmentConfirmation: confirmation } : {}),
         },
       );
     } catch (e) {
@@ -226,8 +263,10 @@ async function commit() {
         return;
       }
       throw e;
+    } finally {
+      environmentConfirmation.value = null;
     }
-    success("发布成功");
+    success(confirmation ? "非生产演示版本已发布" : "发布成功");
   });
 }
 async function lifecycle(action: string) {
@@ -329,6 +368,8 @@ onMounted(() => void load());
       :evaluation-needs-check="evaluationNeedsCheck"
       :gate-blocked="gateBlocked"
       :is-admin="auth.roles.includes('ADMIN')"
+      :environment-confirmed="environmentConfirmed"
+      @environment-confirm="confirmEnvironment"
       @check="check"
       @commit="commit"
       @report="onEvaluationReport"

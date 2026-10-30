@@ -35,6 +35,7 @@ class PublishGateTest {
     static AppService apps;
     static HttpServer stub;
     static volatile boolean evalDown;
+    static volatile Map<String, Object> sourceEvidence;
     String code;
 
     @BeforeAll
@@ -63,7 +64,7 @@ class PublishGateTest {
         db = new JdbcTemplate(ds);
         stub = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         // 默认"没有合格报告"：门禁必须自己决定阻断、告警还是豁免，不能靠依赖返回 accepted=true 蒙混通过。
-        // evalDown 模拟监控侧故障（503）：门禁必须 fail-closed，且 OFF 模式不得再依赖该服务。
+        // evalDown 模拟监控侧故障（503）：OFF 只跳过质量阈值，环境来源仍必须 fail-closed。
         stub.createContext(
                 "/internal/evaluations/accepted",
                 exchange -> {
@@ -73,7 +74,20 @@ class PublishGateTest {
                         exchange.close();
                         return;
                     }
-                    respond(exchange, "{\"data\":{\"accepted\":false}}");
+                    var query = new HashMap<String, String>();
+                    for (String part : exchange.getRequestURI().getRawQuery().split("&")) {
+                        var pair = part.split("=", 2);
+                        query.put(pair[0], java.net.URLDecoder.decode(pair[1], StandardCharsets.UTF_8));
+                    }
+                    var evidence = sourceEvidence;
+                    if (evidence == null || !Objects.equals(query.get("appCode"), evidence.get("appCode"))
+                            || !Objects.equals(query.get("draftRev"), evidence.get("draftRev").toString())
+                            || !Objects.equals(query.get("candidateSha256"), evidence.get("candidateSha256"))
+                            || !Objects.equals(query.get("semanticDigest"), evidence.get("candidateSemanticDigest"))) {
+                        exchange.sendResponseHeaders(400, -1); exchange.close(); return;
+                    }
+                    respond(exchange, Json.write(Map.of("data", Map.of("accepted", false,
+                            "evalReportId", evidence.get("evalReportId"), "publicationEvidence", evidence))));
                 });
         reply(
                 "/internal/model-entries",
@@ -143,6 +157,18 @@ class PublishGateTest {
                 code,
                 Map.of("draftRev", 1, "config", Map.of("modelBinding", Map.of("modelEntryId", 41))),
                 false);
+        // 有限单报告协议夹具：来源绑定本例真实PG候选；REAL仅是显式测试输入，不冒充实际引擎运行证据。
+        var app = apps.get(code);
+        var evidence = new LinkedHashMap<String, Object>();
+        evidence.put("schemaVersion", 1); evidence.put("scope", "ENGINE_RUNTIME_AND_DATASET_IDENTITY");
+        evidence.put("tenantId", "application-tests"); evidence.put("appCode", code);
+        evidence.put("draftRev", app.get("draftRev")); evidence.put("candidateSha256", app.get("candidateSha256"));
+        evidence.put("candidateSemanticDigest", app.get("semanticDigest"));
+        evidence.put("evalReportId", "gate-source-" + code); evidence.put("datasetVersion", "publish-gate-fixture-v1");
+        evidence.put("datasetSha256", Digest.sha256(Json.canonical(List.of(Map.of("caseId", "quality-rejected", "runMode", "REAL")))));
+        evidence.put("environment", "REAL"); evidence.put("qualityAccepted", false); evidence.put("status", "REJECTED");
+        evidence.put("evidenceSha256", Digest.sha256(Json.canonical(evidence)));
+        sourceEvidence = Collections.unmodifiableMap(evidence);
     }
 
     @AfterEach
@@ -364,7 +390,7 @@ class PublishGateTest {
     }
 
     @Test
-    void offModePublishesWithoutEvaluationAndMarksSkipped() {
+    void offModeSkipsQualityButFreezesEnvironmentEvidence() {
         apps.configurePublishGate("OFF", true);
         var precheck = apps.precheck(code);
         assertEquals(true, precheck.get("passed"));
@@ -454,7 +480,7 @@ class PublishGateTest {
             // 依赖故障不是"结论不通过"：放宽模式与豁免都不能把不确定性变成放行。
             var blocked = assertThrows(PlatformException.class, () -> apps.precheck(code));
             assertEquals(409, blocked.status());
-            assertEquals("EVAL_GATE_BLOCKED", blocked.code());
+            assertEquals("EVALUATION_ENVIRONMENT_BLOCKED", blocked.code());
             var row = report();
             assertEquals("ADVISORY", row.get("gate_mode"));
             assertNull(row.get("waiver_id"));
@@ -467,24 +493,23 @@ class PublishGateTest {
     }
 
     @Test
-    void offModeDoesNotDependOnEvaluationService() {
+    void offModeStillRequiresEnvironmentEvidenceWhenMonitorIsUnavailable() {
         apps.configurePublishGate("OFF", true);
         evalDown = true;
         try {
-            // 门禁关闭后发布通道不再咨询评测服务：监控侧故障期间仍应能走完预检与提交。
-            var precheck = apps.precheck(code);
-            assertEquals(true, precheck.get("passed"));
-            assertEquals("OFF", precheck.get("gateMode"));
-            assertTrue(report().get("checks").toString().contains("SKIPPED"));
-            var commit =
-                    apps.commit(
-                            code,
-                            Map.of(
-                                    "precheckId", precheck.get("precheckId"),
-                                    "draftRev", precheck.get("draftRev"),
-                                    "candidateSha256", precheck.get("candidateSha256"),
-                                    "idempotencyRequestNo", "req-" + UUID.randomUUID()));
-            assertEquals(1, commit.get("versionNo"));
+            // 质量OFF不能把缺失来源变成REAL；故障仍保留报告并阻断新发布。
+            var blocked = assertThrows(PlatformException.class, () -> apps.precheck(code));
+            assertEquals(409, blocked.status());
+            assertEquals("EVALUATION_ENVIRONMENT_BLOCKED", blocked.code());
+            var row = report();
+            assertEquals("OFF", row.get("gate_mode"));
+            assertEquals(false, row.get("passed"));
+            assertNull(row.get("waiver_id"));
+            var checks = Json.read(row.get("checks").toString());
+            assertTrue(java.util.stream.StreamSupport.stream(checks.spliterator(), false)
+                    .anyMatch(check -> "评测环境".equals(check.path("group").asText())
+                            && "BLOCKED".equals(check.path("result").asText())));
+            assertTrue(apps.versions(code).isEmpty());
         } finally {
             evalDown = false;
         }

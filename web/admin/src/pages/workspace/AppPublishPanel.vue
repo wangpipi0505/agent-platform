@@ -26,6 +26,7 @@ const props = defineProps<{
   gateBlocked?: GateRejection | null;
   /** 仅控制前端可见性；豁免申请与撤销最终由后端 requireRole("ADMIN") 校验。 */
   isAdmin?: boolean;
+  environmentConfirmed?: boolean;
 }>();
 const emit = defineEmits<{
   (e: "check"): void;
@@ -33,6 +34,7 @@ const emit = defineEmits<{
   (e: "report", value: any): void;
   (e: "activity", working: boolean): void;
   (e: "bind"): void;
+  (e: "environment-confirm", confirmed: boolean): void;
 }>();
 
 const api = useApi();
@@ -55,6 +57,15 @@ const gate = computed(() =>
     isAdmin: props.isAdmin,
   }),
 );
+
+const demoConfirmationAvailable = computed(() => props.precheck?.publicationTarget === "NON_PRODUCTION"
+  && props.precheck.evaluationEnvironment === "DEMO" && props.precheck.environmentConfirmationRequired === true
+  && !!props.precheck.precheckId?.trim() && !!props.precheck.evalReportId?.trim()
+  && /^[0-9a-f]{64}$/.test(props.precheck.environmentEvidenceSha256 || ""));
+const environmentBlocked = computed(() => !!props.precheck
+  && (props.precheck.evaluationEnvironment === "UNKNOWN"
+    || (props.precheck.environmentConfirmationRequired === true || props.precheck.evaluationEnvironment === "DEMO")
+    && !demoConfirmationAvailable.value));
 
 const waivedSummary = computed(() => {
   const check = gate.value.gateCheck;
@@ -298,6 +309,9 @@ const webappBase = (() => {
                 draftRev: precheck.draftRev,
                 candidateSha256: precheck.candidateSha256,
                 evalReportId: precheck.evalReportId,
+                publicationTarget: precheck.publicationTarget,
+                evaluationEnvironment: precheck.evaluationEnvironment,
+                environmentEvidenceSha256: precheck.environmentEvidenceSha256,
               },
               null,
               2,
@@ -320,18 +334,27 @@ const webappBase = (() => {
       <p class="muted">
         服务端检查评测报告与候选摘要一致性。错误或过期报告将阻断发布。
       </p>
+      <div v-if="demoConfirmationAvailable" class="panel" role="group" aria-label="非生产演示发布确认">
+        <el-alert title="仅允许非生产演示发布；演示评测不能作为生产来源证明" type="warning" :closable="false" show-icon />
+        <p class="muted">本次预检 {{ precheck.precheckId }} · 报告 {{ precheck.evalReportId }} · 来源摘要 {{ shortSha(precheck.environmentEvidenceSha256 || '') }}</p>
+        <el-checkbox :model-value="environmentConfirmed === true" :disabled="busy || precheckStale || evaluationWorking || evaluationNeedsCheck || !precheck.passed"
+          @update:model-value="emit('environment-confirm', $event === true)">我确认仅按上述预检、报告与来源摘要进行本次非生产演示发布</el-checkbox>
+      </div>
+      <p v-if="environmentBlocked" class="error" role="alert">服务端预检未允许本次非生产演示确认，请重新评测和预检；普通 ADMIN 豁免不能替代来源检查。</p>
       <el-button
         :type="precheck.passed ? 'primary' : 'default'"
         :loading="busy"
         :disabled="
           !precheck.passed ||
+          precheckStale || environmentBlocked ||
+          (demoConfirmationAvailable && environmentConfirmed !== true) ||
           evaluationWorking ||
           evaluationNeedsCheck ||
           (!!evaluation && evaluation.status !== 'ACCEPTED')
         "
         v-permission="'edit'"
         @click="emit('commit')"
-        >确认发布版本</el-button
+        >{{ demoConfirmationAvailable ? '确认非生产演示发布' : '确认发布版本' }}</el-button
       >
     </div>
     <div v-if="published" class="panel">

@@ -31,8 +31,32 @@ export type PublishPrecheck = {
   result: string;
   gateMode: GateMode;
   waiverId?: string | null;
+  publicationTarget?: "PRODUCTION" | "NON_PRODUCTION";
+  evaluationEnvironment?: "REAL" | "DEMO" | "UNKNOWN";
+  environmentConfirmationRequired?: boolean;
+  environmentEvidenceSha256?: string;
   report?: { checks?: PublishCheck[]; warnings?: string[] };
 };
+
+export type EnvironmentConfirmation = { precheckId: string; evalReportId: string; evidenceSha256: string };
+
+/** 只把人工确认绑定到当次服务端预检；载荷不携带客户端自报目标环境。 */
+export function buildEnvironmentConfirmation(precheck: PublishPrecheck, confirmed: EnvironmentConfirmation | null) {
+  if (precheck.evaluationEnvironment === "UNKNOWN")
+    throw new Error("评测来源未知，不能用于发布，请重新评测和预检");
+  if (precheck.environmentConfirmationRequired !== true && precheck.evaluationEnvironment !== "DEMO") return undefined;
+  if (precheck.publicationTarget !== "NON_PRODUCTION" || precheck.evaluationEnvironment !== "DEMO"
+      || precheck.environmentConfirmationRequired !== true || !precheck.passed
+      || typeof precheck.precheckId !== "string" || !precheck.precheckId.trim()
+      || typeof precheck.evalReportId !== "string" || !precheck.evalReportId.trim()
+      || !/^[0-9a-f]{64}$/.test(precheck.environmentEvidenceSha256 || ""))
+    throw new Error("服务端预检未允许本次非生产演示确认，请重新评测和预检");
+  if (!confirmed || confirmed.precheckId !== precheck.precheckId || confirmed.evalReportId !== precheck.evalReportId
+      || confirmed.evidenceSha256 !== precheck.environmentEvidenceSha256)
+    throw new Error("请显式确认当前非生产演示预检、报告和来源摘要");
+  return { confirmed: true, precheckId: precheck.precheckId, evalReportId: precheck.evalReportId,
+    evidenceSha256: precheck.environmentEvidenceSha256 };
+}
 
 export type WaiverView = {
   id: string;
@@ -50,7 +74,7 @@ export type WaiverView = {
 /** api() 抛出的错误携带 status/code/traceId；这里只认评测门禁拦截那一型。 */
 export type GateRejection = {
   status: number;
-  code: "EVAL_GATE_BLOCKED";
+  code: "EVAL_GATE_BLOCKED" | "EVALUATION_ENVIRONMENT_BLOCKED" | "EVALUATION_ENVIRONMENT_REQUIRED" | "EVALUATION_ENVIRONMENT_CONFIRMATION_REQUIRED";
   message: string;
   traceId?: string;
 };
@@ -133,7 +157,8 @@ export function isGateRejection(e: unknown): e is GateRejection {
     !!e &&
     typeof e === "object" &&
     (e as { status?: unknown }).status === 409 &&
-    (e as { code?: unknown }).code === "EVAL_GATE_BLOCKED"
+    ["EVAL_GATE_BLOCKED", "EVALUATION_ENVIRONMENT_BLOCKED", "EVALUATION_ENVIRONMENT_REQUIRED", "EVALUATION_ENVIRONMENT_CONFIRMATION_REQUIRED"]
+      .includes(String((e as { code?: unknown }).code))
   );
 }
 
@@ -274,8 +299,13 @@ export function summarizeGateState(input: GateStateInput): GateStateView {
   }
 
   let applyHint = "";
+  const environmentBlocked = !!rejection && rejection.code !== 'EVAL_GATE_BLOCKED';
   if (rejection) {
-    if (!isAdmin)
+    if (environmentBlocked)
+      applyHint = rejection.code === 'EVALUATION_ENVIRONMENT_CONFIRMATION_REQUIRED'
+        ? '仅部署已固定为非生产的演示发布可显式确认本次预检、报告和来源摘要；普通评测豁免不适用。'
+        : '演示或未知来源不能用于生产发布，请在目标环境新建报告重新评测；ADMIN 普通豁免不能绕过来源检查。';
+    else if (!isAdmin)
       applyHint = "仅 ADMIN 可申请豁免；当前账号无权操作，请联系管理员处理。";
     else if (waiverInvalid)
       applyHint = "发布豁免已撤销或过期：请重新申请豁免，或修复评测后重新预检。";
@@ -294,7 +324,7 @@ export function summarizeGateState(input: GateStateInput): GateStateView {
     blocked: rejection,
     waiverInvalid,
     waiver,
-    canApplyWaiver: isAdmin && !!rejection,
+    canApplyWaiver: isAdmin && !!rejection && !environmentBlocked,
     applyHint,
   };
 }

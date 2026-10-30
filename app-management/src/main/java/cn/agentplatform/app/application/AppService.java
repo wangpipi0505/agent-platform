@@ -71,6 +71,17 @@ public class AppService {
     @Value("${agent.publish.waiver-enabled:true}")
     private boolean waiverEnabled = true;
 
+    private String publicationTarget = "PRODUCTION";
+
+    /** 发布目标由部署固定，不能由浏览器或本体 pin.environment 自报。 */
+    @Value("${agent.publish.target-environment:PRODUCTION}")
+    public void publicationTarget(String value) {
+        String target = Objects.toString(value, "").trim().toUpperCase(Locale.ROOT);
+        if (!Set.of("PRODUCTION", "NON_PRODUCTION").contains(target))
+            throw new IllegalStateException("PUBLICATION_TARGET_INVALID");
+        publicationTarget = target;
+    }
+
     /**
      * pin 结果落库开关与本体环境名。T18.3：绑定状态机结果在发布事务提交后落 app.publish_pin，
      * 反查不再依赖日志。落库失败不阻断已提交的发布（与 T-pin fail-open 同一取向）；
@@ -1093,8 +1104,8 @@ public class AppService {
         PublishGate gate = publishGate();
         Map<String, Object> eval = null;
         var evalFailure = new String[1];
-        // OFF 是真正的关闭：不再咨询评测服务，监控侧故障不得阻断已明确关闭门禁的发布通道。
-        if (gate != PublishGate.OFF) {
+        // OFF 仅关闭质量阈值；所有目标仍需同报告的可信环境证据，故始终读取 monitor。
+        {
             try {
                 eval =
                         remote(
@@ -1110,6 +1121,19 @@ public class AppService {
             } catch (PlatformException ex) {
                 evalFailure[0] = Objects.toString(ex.getMessage(), "评测依赖不可用");
             }
+        }
+        String semanticDigest = AppDigest.semantic(candidate(app));
+        var sourceEvidence = eval != null && eval.get("publicationEvidence") instanceof Map<?, ?>
+                ? object(eval.get("publicationEvidence")) : Map.<String, Object>of();
+        boolean evidenceValid = validPublicationEvidence(sourceEvidence, code, rev, hash, semanticDigest);
+        String environment = evidenceValid ? Objects.toString(sourceEvidence.get("environment"), "UNKNOWN") : "UNKNOWN";
+        boolean environmentAllowed = evidenceValid && ("REAL".equals(environment)
+                || "NON_PRODUCTION".equals(publicationTarget) && "DEMO".equals(environment));
+        if (eval != null) {
+            eval = new LinkedHashMap<>(eval);
+            eval.put("accepted", evidenceValid && Boolean.TRUE.equals(sourceEvidence.get("qualityAccepted")));
+            eval.put("evalReportId", evidenceValid ? sourceEvidence.get("evalReportId") : "");
+            eval.put("matchedBy", hash.equals(sourceEvidence.get("candidateSha256")) ? "SHA256" : "SEMANTIC_DIGEST");
         }
         boolean accepted = eval != null && Boolean.TRUE.equals(eval.get("accepted"));
         // 语义摘要命中说明候选结构没变、只是描述类字段变了：证据可复用，但必须在检查快照里留下痕迹，
@@ -1154,7 +1178,20 @@ public class AppService {
         gateCheck.put("result", gateResult);
         if (gateDetail != null) gateCheck.put("detail", gateDetail);
         checks.add(gateCheck);
+        var environmentCheck = new LinkedHashMap<String, Object>();
+        environmentCheck.put("group", "评测环境");
+        environmentCheck.put("result", environmentAllowed ? "PASS" : "BLOCKED");
+        environmentCheck.put("schemaVersion", 1);
+        environmentCheck.put("publicationTarget", publicationTarget);
+        environmentCheck.put("candidateSha256", hash);
+        environmentCheck.put("semanticDigest", semanticDigest);
+        environmentCheck.put("publicationEvidence", sourceEvidence);
+        environmentCheck.put("detail", environmentAllowed ? "环境来源已冻结；仅证明引擎模式及数据集身份"
+                : "演示或未知来源评测不能用于生产发布；请在目标环境新建报告重新评测，普通豁免无效");
+        checks.add(environmentCheck);
         var warnings = new ArrayList<String>();
+        if (environmentAllowed && "DEMO".equals(environment))
+            warnings.add("NON_PRODUCTION：本次仅允许演示发布，提交必须显式确认本预检与报告；不能作为生产来源证明");
         if ("ADVISORY".equals(gateResult))
             warnings.add("评测门禁：" + gateDetail + "（ADVISORY 仅告警，发布风险由发布人承担）");
         if ("WAIVED".equals(gateResult))
@@ -1189,6 +1226,8 @@ public class AppService {
                 gate.name(),
                 waiverId);
         // 依赖故障在任何模式都拦截：不确定候选状态时的"放宽"等于没有门禁，且豁免不得代替可用性判断。
+        if (!environmentAllowed)
+            throw error(409, "EVALUATION_ENVIRONMENT_BLOCKED", "演示或未知来源评测不能用于当前发布目标；请重新评测，普通豁免无效");
         if ("ERROR".equals(gateResult) || (gate.blocking() && "BLOCKED".equals(gateResult)))
             throw error(409, "EVAL_GATE_BLOCKED", gateDetail);
         var result = new LinkedHashMap<String, Object>();
@@ -1200,8 +1239,63 @@ public class AppService {
         result.put("result", passed ? "PASS" : "BLOCKED");
         result.put("gateMode", gate.name());
         result.put("waiverId", waiverId);
+        result.put("publicationTarget", publicationTarget);
+        result.put("evaluationEnvironment", environment);
+        result.put("environmentConfirmationRequired", "DEMO".equals(environment));
+        result.put("environmentEvidenceSha256", sourceEvidence.get("evidenceSha256"));
         result.put("report", Map.of("checks", checks, "warnings", warnings));
         return result;
+    }
+
+    private boolean validPublicationEvidence(Map<String, Object> evidence, String code, long rev, String hash, String semantic) {
+        var node = Json.tree(evidence);
+        if (!node.path("schemaVersion").isIntegralNumber() || node.path("schemaVersion").asInt() != 1
+                || !"ENGINE_RUNTIME_AND_DATASET_IDENTITY".equals(node.path("scope").asText())
+                || !tenant().equals(node.path("tenantId").asText()) || !code.equals(node.path("appCode").asText())
+                || !node.path("draftRev").isIntegralNumber() || node.path("draftRev").asLong() != rev
+                || node.path("evalReportId").asText().isBlank() || !node.path("qualityAccepted").isBoolean()
+                || !Set.of("ACCEPTED", "REJECTED").contains(node.path("status").asText())
+                || !node.path("datasetSha256").asText().matches("[0-9a-f]{64}")
+                || node.path("datasetVersion").asText().isBlank()
+                || !Set.of("REAL", "DEMO", "UNKNOWN").contains(node.path("environment").asText())
+                || !(hash.equals(node.path("candidateSha256").asText())
+                    || semantic != null && semantic.equals(node.path("candidateSemanticDigest").asText()))) return false;
+        var unsigned = new LinkedHashMap<>(evidence);
+        Object digest = unsigned.remove("evidenceSha256");
+        return Digest.sha256(Json.canonical(unsigned)).equals(digest)
+                && (Boolean.TRUE.equals(evidence.get("qualityAccepted")) == "ACCEPTED".equals(evidence.get("status")));
+    }
+
+    /** 仅消费本预检固化证据；不持发布行锁发 HTTP，也不把当前配置贴到旧报告上。 */
+    private Map<String, Object> requirePublicationEnvironment(Map<String, Object> report, Map<String, Object> app,
+            String code, long rev, String hash, String precheck, Map<String, Object> body) {
+        var checks = Json.read(report.get("checks").toString());
+        var matches = java.util.stream.StreamSupport.stream(checks.spliterator(), false)
+                .filter(c -> "评测环境".equals(c.path("group").asText())).toList();
+        if (matches.size() != 1) throw error(409, "EVALUATION_ENVIRONMENT_REQUIRED", "旧预检缺少冻结环境证据，请重新评测和预检");
+        var check = matches.getFirst();
+        var evidence = check.path("publicationEvidence").isObject()
+                ? object(Json.mapper().convertValue(check.path("publicationEvidence"), Map.class)) : Map.<String, Object>of();
+        String semantic = AppDigest.semantic(candidate(app));
+        if (!check.path("schemaVersion").isIntegralNumber() || check.path("schemaVersion").asInt() != 1
+                || !"PASS".equals(check.path("result").asText()) || !hash.equals(check.path("candidateSha256").asText())
+                || !semantic.equals(check.path("semanticDigest").asText())
+                || !publicationTarget.equals(check.path("publicationTarget").asText())
+                || !validPublicationEvidence(evidence, code, rev, hash, semantic)
+                || !Objects.equals(report.get("eval_report_id"), evidence.get("evalReportId")))
+            throw error(409, "EVALUATION_ENVIRONMENT_BLOCKED", "环境证据与当前候选或部署目标不一致，请重新预检");
+        String environment = Objects.toString(evidence.get("environment"), "UNKNOWN");
+        if (!"REAL".equals(environment)) {
+            if (!"NON_PRODUCTION".equals(publicationTarget) || !"DEMO".equals(environment))
+                throw error(409, "EVALUATION_ENVIRONMENT_BLOCKED", "演示或未知评测不能用于生产发布");
+            var confirmation = Json.tree(body.get("evaluationEnvironmentConfirmation"));
+            if (!confirmation.path("confirmed").isBoolean() || !confirmation.path("confirmed").asBoolean()
+                    || !precheck.equals(confirmation.path("precheckId").asText())
+                    || !Objects.equals(evidence.get("evalReportId"), confirmation.path("evalReportId").asText())
+                    || !Objects.equals(evidence.get("evidenceSha256"), confirmation.path("evidenceSha256").asText()))
+                throw error(409, "EVALUATION_ENVIRONMENT_CONFIRMATION_REQUIRED", "非生产演示发布需显式确认当前预检、报告与来源摘要");
+        }
+        return evidence;
     }
 
     /** 测试/诊断入口：覆盖门禁模式与豁免开关，不改动事务与 HTTP 依赖。 */
@@ -1594,6 +1688,7 @@ public class AppService {
                                     hash);
                     if (reports.isEmpty())
                         throw error(412, "PRECHECK_INVALID", "预检无效、已过期或被阻断，请重新预检");
+                    var publicationEvidence = requirePublicationEnvironment(reports.getFirst(), app, code, rev, hash, precheck, body);
                     // 报告有效期 15 分钟，豁免窗口可能更短或已被撤销：提交时重查一次，
                     // 否则撤销/到期后仍能用旧报告发布，撤销语义会被报告窗口吞掉。
                     var waiverRef = reports.getFirst().get("waiver_id");
@@ -1653,6 +1748,12 @@ public class AppService {
                         snapshot.put("candidateSha256", hash);
                         snapshot.put("appVersionId", code + "@" + version);
                         snapshot.put("interpreterVersion", "1.0");
+                        snapshot.put("publicationTarget", publicationTarget);
+                        snapshot.put("publicationEvidence", publicationEvidence);
+                        if ("DEMO".equals(publicationEvidence.get("environment")))
+                            snapshot.put("evaluationEnvironmentConfirmation", Map.of("confirmed", true,
+                                    "precheckId", precheck, "evalReportId", publicationEvidence.get("evalReportId"),
+                                    "evidenceSha256", publicationEvidence.get("evidenceSha256")));
                         attachModels(
                                 snapshot,
                                 objects(
@@ -1689,7 +1790,16 @@ public class AppService {
                                     version,
                                     text(ref, "code"),
                                     number(ref, "version"));
-                    } else version = ((Number) existing.getFirst().get("version_no")).intValue();
+                    } else {
+                        version = ((Number) existing.getFirst().get("version_no")).intValue();
+                        var oldSnapshot = Json.read(db.queryForObject("select snapshot::text from app.app_version where tenant_id=? and app_code=? and version_no=?",
+                                String.class, tenant(), code, version));
+                        var oldEvidence = oldSnapshot.path("publicationEvidence").isObject()
+                                ? object(Json.mapper().convertValue(oldSnapshot.path("publicationEvidence"), Map.class)) : Map.<String, Object>of();
+                        if (!publicationTarget.equals(oldSnapshot.path("publicationTarget").asText())
+                                || !validPublicationEvidence(oldEvidence, code, rev, hash, AppDigest.semantic(candidate(app))))
+                            throw error(409, "EVALUATION_ENVIRONMENT_REQUIRED", "既有版本缺少当前目标的可信来源，不能借新请求追认；请新建修订重新评测");
+                    }
                     // 版本、当前指针、引用与幂等凭据处于同一事务，任一写失败全部回滚。
                     db.update(
                             "update app.application set"

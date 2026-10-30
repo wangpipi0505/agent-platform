@@ -226,8 +226,8 @@ public class EvaluationService {
                         throw fail(409, "DATASET_IMMUTABLE", "数据集版本已存在且内容不同，请使用新版本号");
                     db.update(
                             "insert into"
-                                + " monitor.evaluation_report(tenant_id,id,app_code,draft_rev,candidate_sha256,candidate_semantic_digest,dataset_version,candidate,status,threshold,baseline_report_id,created_by,assertion_model,assertion_snapshot)"
-                                + " values(?,?,?,?,?,?,?,?::jsonb,'RUNNING',?,?,?,?,?::jsonb)",
+                                + " monitor.evaluation_report(tenant_id,id,app_code,draft_rev,candidate_sha256,candidate_semantic_digest,dataset_version,candidate,status,threshold,baseline_report_id,created_by,assertion_model,assertion_snapshot,results)"
+                                + " values(?,?,?,?,?,?,?,?::jsonb,'RUNNING',?,?,?,?,?::jsonb,?::jsonb)",
                             tenant(),
                             id,
                             code,
@@ -240,7 +240,11 @@ public class EvaluationService {
                             baselineId,
                             Actor.current().principalId(),
                             assertionModel,
-                            assertionsEnabled ? Json.write(assertionSnapshot) : null);
+                            assertionsEnabled ? Json.write(assertionSnapshot) : null,
+                            Json.write(frozenCases.stream().map(c -> Map.of("id", c.get("id"),
+                                    "sourceEvidence", Map.of("schemaVersion", 1, "environment", "UNKNOWN",
+                                            "datasetVersion", dataset, "datasetSha256", Digest.sha256(Json.write(frozenCases)))))
+                                    .toList()));
                 });
         return execute(
                 id,
@@ -268,6 +272,10 @@ public class EvaluationService {
             String assertionModel) {
         // EXACT（旧报告/开关关闭）忽略 assertion 字段；CONFIGURABLE 按冻结的用例配置判分。
         boolean configurable = EvaluationAssertions.MODEL_CONFIGURABLE.equals(assertionModel);
+        var priorResults = Json.read(db.queryForObject(
+                "select results::text from monitor.evaluation_report where tenant_id=? and id=?", String.class, tenant(), id));
+        String datasetSha = db.queryForObject("select sha256 from monitor.dataset where tenant_id=? and app_code=? and dataset_version=?",
+                String.class, tenant(), code, dataset);
         var results = new ArrayList<Map<String, Object>>();
         boolean transportError = false;
         boolean pending = false;
@@ -276,6 +284,20 @@ public class EvaluationService {
             result.put("id", c.get("id"));
             result.put("safety", c.get("safety"));
             result.put("expected", c.get("expected"));
+            var prior = java.util.stream.StreamSupport.stream(priorResults.spliterator(), false)
+                    .filter(r -> Objects.equals(r.path("id").asText(), c.get("id"))).findFirst()
+                    .orElse(Json.object()).path("sourceEvidence");
+            // 协议标记在新报告首次外调前已落库；旧 RUNNING/ERROR 的 resume 不得追认新来源。
+            boolean sourceProtocol = prior.path("schemaVersion").isIntegralNumber()
+                    && prior.path("schemaVersion").asInt() == 1
+                    && dataset.equals(prior.path("datasetVersion").asText())
+                    && datasetSha.equals(prior.path("datasetSha256").asText());
+            var source = new LinkedHashMap<String, Object>();
+            if (sourceProtocol) source.put("schemaVersion", 1);
+            source.put("environment", "UNKNOWN");
+            source.put("datasetVersion", dataset);
+            source.put("datasetSha256", datasetSha);
+            result.put("sourceEvidence", source);
             try {
                 var run =
                         call(
@@ -299,6 +321,18 @@ public class EvaluationService {
                                         "inputs",
                                         c.get("inputs")));
                 String runStatus = Objects.toString(run.get("status"), "UNKNOWN");
+                String environment = Objects.toString(run.get("environment"), "UNKNOWN");
+                String runId = Objects.toString(run.get("runId"), "");
+                boolean consistent = sourceProtocol && !prior.path("invalid").asBoolean(false) && !runId.isBlank()
+                        && dataset.equals(run.get("datasetVersion"))
+                        && ("REAL".equals(environment) && Boolean.FALSE.equals(run.get("demoMode"))
+                            || "DEMO".equals(environment) && Boolean.TRUE.equals(run.get("demoMode")));
+                if (prior.hasNonNull("runId") && !runId.equals(prior.path("runId").asText())) consistent = false;
+                if (!"UNKNOWN".equals(prior.path("environment").asText("UNKNOWN"))
+                        && !environment.equals(prior.path("environment").asText())) consistent = false;
+                source.put("environment", consistent ? environment : "UNKNOWN");
+                if (!consistent && !runId.isBlank()) source.put("invalid", true);
+                if (!runId.isBlank()) source.put("runId", runId);
                 // A queued run or a submitted external job is unfinished, not a failed
                 // case. Keep the frozen report resumable under its original case requestIds.
                 if (Set.of(
@@ -473,7 +507,50 @@ public class EvaluationService {
                         tenant(),
                         id);
         if (rows.isEmpty()) throw fail(404, "REPORT_NOT_FOUND", "评测报告不存在");
-        return rows.getFirst();
+        var result = rows.getFirst();
+        result.put("publicationEvidence", publicationEvidence(result));
+        return result;
+    }
+
+    /** 只证明引擎冻结模式与数据集身份；不声称模型/技能模式或用户输入内容已获真实性认证。 */
+    private Map<String, Object> publicationEvidence(Map<String, Object> report) {
+        var data = db.queryForList("select cases::text,sha256 from monitor.dataset where tenant_id=? and app_code=? and dataset_version=?",
+                tenant(), report.get("appCode"), report.get("datasetVersion"));
+        String environment = "UNKNOWN";
+        String datasetSha = data.isEmpty() ? "" : Objects.toString(data.getFirst().get("sha256"), "");
+        var results = Json.tree(report.get("results"));
+        if (!data.isEmpty()) {
+            var suite = Json.read(data.getFirst().get("cases").toString());
+            var ids = new HashSet<String>();
+            suite.forEach(c -> ids.add(c.path("id").asText()));
+            boolean valid = suite.isArray() && suite.size() > 0 && ids.size() == suite.size()
+                    && results.isArray() && results.size() == suite.size();
+            boolean demo = false;
+            for (var r : results) {
+                var source = r.path("sourceEvidence");
+                String mode = source.path("environment").asText();
+                valid &= ids.remove(r.path("id").asText()) && source.path("schemaVersion").isIntegralNumber()
+                        && source.path("schemaVersion").asInt() == 1
+                        && report.get("datasetVersion").equals(source.path("datasetVersion").asText())
+                        && datasetSha.equals(source.path("datasetSha256").asText())
+                        && !source.path("runId").asText().isBlank()
+                        && Set.of("REAL", "DEMO").contains(mode);
+                demo |= "DEMO".equals(mode);
+            }
+            if (valid && ids.isEmpty()) environment = demo ? "DEMO" : "REAL";
+        }
+        var evidence = new LinkedHashMap<String, Object>();
+        evidence.put("schemaVersion", 1);
+        evidence.put("scope", "ENGINE_RUNTIME_AND_DATASET_IDENTITY");
+        evidence.put("tenantId", tenant());
+        for (String key : List.of("appCode", "draftRev", "evalReportId", "candidateSha256", "candidateSemanticDigest", "datasetVersion"))
+            evidence.put(key, report.get(key));
+        evidence.put("datasetSha256", datasetSha);
+        evidence.put("environment", environment);
+        evidence.put("qualityAccepted", Boolean.TRUE.equals(report.get("accepted")));
+        evidence.put("status", report.get("status"));
+        evidence.put("evidenceSha256", Digest.sha256(Json.canonical(evidence)));
+        return evidence;
     }
 
     /**
@@ -490,7 +567,7 @@ public class EvaluationService {
                 db.queryForList(
                         "select id,candidate_sha256,candidate_semantic_digest from"
                             + " monitor.evaluation_report where tenant_id=? and app_code=? and"
-                            + " draft_rev=? and status='ACCEPTED' and (candidate_sha256=?"
+                            + " draft_rev=? and status in ('ACCEPTED','REJECTED') and (candidate_sha256=?"
                             + " or (candidate_semantic_digest is not null and"
                             + " candidate_semantic_digest=?)) order by completed_at desc",
                         tenant(),
@@ -499,13 +576,24 @@ public class EvaluationService {
                         hash,
                         semanticDigest);
         if (rows.isEmpty()) return Map.of("accepted", false);
+        var reports = rows.stream().map(r -> report(r.get("id").toString())).toList();
+        var quality = reports.stream().filter(r -> Boolean.TRUE.equals(r.get("accepted"))).toList();
         var exact =
-                rows.stream()
-                        .filter(r -> Objects.equals(r.get("candidate_sha256"), hash))
+                quality.stream()
+                        .filter(r -> Objects.equals(r.get("candidateSha256"), hash))
                         .findFirst();
-        var chosen = exact.orElse(rows.getFirst());
-        var result = new LinkedHashMap<>(report(chosen.get("id").toString()));
-        result.put("matchedBy", exact.isPresent() ? "SHA256" : "SEMANTIC_DIGEST");
+        var result = quality.isEmpty() ? new LinkedHashMap<String, Object>(Map.of("accepted", false))
+                : new LinkedHashMap<>(exact.orElse(quality.getFirst()));
+        if (!quality.isEmpty()) result.put("matchedBy", exact.isPresent() ? "SHA256" : "SEMANTIC_DIGEST");
+        var exactSources = reports.stream().filter(r -> Objects.equals(r.get("candidateSha256"), hash)).toList();
+        var sources = exactSources.isEmpty() ? reports : exactSources;
+        var sourceReport = sources.stream().min(Comparator.comparingInt(r -> {
+            var evidence = Json.tree(r.get("publicationEvidence"));
+            String mode = evidence.path("environment").asText();
+            return ("REAL".equals(mode) ? 0 : "DEMO".equals(mode) ? 2 : 4)
+                    + (Boolean.TRUE.equals(r.get("accepted")) ? 0 : 1);
+        })).orElseThrow();
+        result.put("publicationEvidence", sourceReport.get("publicationEvidence"));
         return result;
     }
 

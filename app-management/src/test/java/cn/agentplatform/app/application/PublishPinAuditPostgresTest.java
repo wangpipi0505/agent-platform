@@ -141,20 +141,23 @@ class PublishPinAuditPostgresTest {
     Map<String, Object> permit() {
         var app = apps.get(code);
         String pc = "pc_" + UUID.randomUUID();
+        String sourceReport = "fixture-" + pc;
         String sha = app.get("candidateSha256").toString();
         long rev = ((Number) app.get("draftRev")).longValue();
         db.update(
                 "insert into"
                     + " app.publish_report(tenant_id,id,app_draft_id,app_code,draft_rev,candidate_sha256,eval_report_id,checks,passed,expires_at)"
                     + " values(?,?,(select id from app.app_draft where tenant_id=? and"
-                    + " app_code=?),?,?,?,'test-report','[]',true,now()+interval '10 minutes')",
+                    + " app_code=?),?,?,?,?,?::jsonb,true,now()+interval '10 minutes')",
                 TENANT,
                 pc,
                 TENANT,
                 code,
                 code,
                 rev,
-                sha);
+                sha,
+                sourceReport,
+                fixtureEnvironmentChecks(app, TENANT, sourceReport));
         return Map.of(
                 "precheckId",
                 pc,
@@ -430,5 +433,21 @@ class PublishPinAuditPostgresTest {
         public void close() {
             server.stop(0);
         }
+    }
+
+    /** 此类只验证发布事务/生命周期：显式有限来源夹具绑定本例候选，不能当作真实监控评测证据。 */
+    private String fixtureEnvironmentChecks(Map<String, Object> app, String tenantId, String reportId) {
+        var evidence = new LinkedHashMap<String, Object>();
+        evidence.put("schemaVersion", 1); evidence.put("scope", "ENGINE_RUNTIME_AND_DATASET_IDENTITY");
+        evidence.put("tenantId", tenantId); evidence.put("appCode", app.get("code"));
+        evidence.put("draftRev", app.get("draftRev")); evidence.put("candidateSha256", app.get("candidateSha256"));
+        evidence.put("candidateSemanticDigest", app.get("semanticDigest")); evidence.put("evalReportId", reportId);
+        evidence.put("datasetVersion", "PublishPinAuditPostgresTest-environment-fixture-v1");
+        evidence.put("datasetSha256", Digest.sha256(Json.canonical(List.of(Map.of("caseId", "fixture-case", "runMode", "REAL")))));
+        evidence.put("environment", "REAL"); evidence.put("qualityAccepted", true); evidence.put("status", "ACCEPTED");
+        evidence.put("evidenceSha256", Digest.sha256(Json.canonical(evidence)));
+        return Json.write(List.of(Map.of("group", "评测环境", "result", "PASS", "schemaVersion", 1,
+                "publicationTarget", "PRODUCTION", "candidateSha256", app.get("candidateSha256"),
+                "semanticDigest", app.get("semanticDigest"), "publicationEvidence", evidence)));
     }
 }
