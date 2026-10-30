@@ -136,6 +136,9 @@ public record CapabilityBinding(String route, Object environmentDeclaration,
         equal(tool.getOrDefault("riskLevel", "STANDARD"), approval.getOrDefault("risk", "STANDARD"), "approval.risk");
         for (String field : List.of("inputSchema", "outputSchema", "errorSemantics"))
             if (tool.get(field) instanceof Map<?, ?> object && !object.isEmpty()) equal(object, definition.get(field), field);
+        // 数组规则的先后次序也是声明的一部分；历史空声明仍不增加绑定条件。
+        if (tool.get("errorSemantics") instanceof Collection<?> rules && !rules.isEmpty())
+            equal(rules, definition.get("errorSemantics"), "errorSemantics");
         if (tool.containsKey("pagination")) {
             var pagination = AppService.object(definition.getOrDefault("pagination", Map.of()));
             String mode = tool.get("pagination").toString().toUpperCase(Locale.ROOT);
