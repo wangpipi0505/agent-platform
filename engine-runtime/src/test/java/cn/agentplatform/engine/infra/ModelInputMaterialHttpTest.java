@@ -495,7 +495,10 @@ class ModelInputMaterialHttpTest {
         .getPropertySources()
         .addFirst(new org.springframework.core.env.MapPropertySource("closed-iam", props));
     ctx.register(SecurityConfiguration.class);
-    assertThatThrownBy(ctx::refresh).hasStackTraceContaining("IAM_TRUST_CHAIN_UNAVAILABLE");
+    // EX-43 phase 2 A: the closure now comes from the shared startup gate (IamStartupGate), not from a
+    // service-local "IAM_TRUST_CHAIN_UNAVAILABLE" throw: an iam deployment still refuses to start before
+    // any listener exists, but the code is the gate's IAM_CLIENT_SECRET_MISSING.
+    assertThatThrownBy(ctx::refresh).hasStackTraceContaining("IAM_CLIENT_SECRET_MISSING");
     ctx.close();
   }
 }

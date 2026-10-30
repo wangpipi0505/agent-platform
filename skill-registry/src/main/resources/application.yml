@@ -58,6 +58,11 @@ agent:
   security:
     jwt-secret: ${AGENT_JWT_SECRET}
     issuer: agent-platform-v12
+    # EX-43 第二阶段 A 组（skill-registry）：本服务在服务间信任链里的身份。
+    # mode=iam 时它必须与 agent.security.authority.client-id、audience
+    # （urn:agent-platform:service:skill）一致。IAM 客户端凭据只允许走 secret
+    # 引用：环境变量 AGENT_SECRET_IAM_SKILL_CLIENT（yml 只写 env:NAME）。
+    service-id: skill
   services:
     app: ${AGENT_APP_URL:http://127.0.0.1:18081}
     engine: ${AGENT_ENGINE_URL:http://127.0.0.1:18082}

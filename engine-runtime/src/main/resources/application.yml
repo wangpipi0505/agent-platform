@@ -51,6 +51,11 @@ agent:
   security:
     jwt-secret: ${AGENT_JWT_SECRET}
     issuer: agent-platform-v12
+    # EX-43 第二阶段 A 组（engine-runtime）：本服务在服务间信任链里的身份。
+    # mode=iam 时它必须与 agent.security.authority.client-id、audience
+    # （urn:agent-platform:service:engine）一致。IAM 客户端凭据只允许走 secret
+    # 引用：环境变量 AGENT_SECRET_IAM_ENGINE_CLIENT（yml 只写 env:NAME）。
+    service-id: engine
   services:
     app: ${AGENT_APP_URL:http://127.0.0.1:18081}
     engine: ${AGENT_ENGINE_URL:http://127.0.0.1:18082}
