@@ -110,6 +110,8 @@ public record CapabilityBinding(String route, Object environmentDeclaration,
             }
         } else if (kind.equals("MCP")) {
             equal(executionInterface.get("serverRef"), definition.get("endpoint"), "serverRef");
+            // MCP执行器读取顶层超时；显式声明必须一致，省略时不替旧包增加条件。
+            declared(executionInterface, "timeoutMs", definition, "timeoutMs");
             if (tool.containsKey("operation")) equal(tool.get("operation"), definition.get("toolName"), "operation");
         } else if (kind.equals("PROCESS")) {
             var process = AppService.object(definition.get("process"));
