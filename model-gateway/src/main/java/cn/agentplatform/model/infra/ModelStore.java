@@ -13,6 +13,8 @@ import java.util.*;
 @Repository
 public class ModelStore {
     private final JdbcTemplate db;
+    @org.springframework.beans.factory.annotation.Value("${agent.demo-mode:false}")
+    private boolean producerDemoMode;
     private final org.springframework.transaction.support.TransactionTemplate tx;
 
     public ModelStore(JdbcTemplate db) {
@@ -525,6 +527,10 @@ public class ModelStore {
                                 : "MODEL_TOKENIZER",
                         "exact",
                         !entry.get("tokenizerUrl").toString().isBlank()));
+        var provider = Json.tree(entry.get("provider"));
+        snapshot.put("publicationSource", Map.of("schemaVersion", 1, "producer", "model",
+                "producerEnvironment", producerDemoMode || cn.agentplatform.model.application.FixturePolicy.isFixtureProviderCode(provider.path("code").asText()) ? "DEMO" : "REAL",
+                "executionPath", "MODEL_HTTP", "externalTruth", "NOT_ASSESSED"));
         if (initialRequest != null) metering.put("initialRequest", initialRequest);
         return db.queryForObject(
                 "insert into"
@@ -556,6 +562,22 @@ public class ModelStore {
                                 actualUrl)),
                 scope,
                 Json.write(req.path("_quotaReceipt")));
+    }
+
+    /** 来源只取发送前已落库的 producer 标记，不能从请求或模型正文反查补 REAL。 */
+    public Map<String, Object> publicationSource(long id) {
+        var rows = db.queryForList("select tenant_id,principal_id,run_id,invocation_ref,model_snapshot from model.call_log where id=?", id);
+        if (rows.isEmpty()) return Map.of();
+        var row = rows.getFirst();
+        var frozen = Json.read(row.get("model_snapshot").toString()).path("publicationSource");
+        if (!frozen.path("schemaVersion").isIntegralNumber() || frozen.path("schemaVersion").asInt() != 1 || !"model".equals(frozen.path("producer").asText())
+                || !Set.of("REAL", "DEMO").contains(frozen.path("producerEnvironment").asText())) return Map.of();
+        var source = new LinkedHashMap<String, Object>(Json.mapper().convertValue(frozen, Map.class));
+        source.put("factId", id);
+        for (String key : List.of("tenant_id", "principal_id", "run_id", "invocation_ref"))
+            source.put(switch (key) { case "tenant_id" -> "tenantId"; case "principal_id" -> "principalId";
+                case "run_id" -> "runId"; default -> "invocationRef"; }, Objects.toString(row.get(key), ""));
+        return source;
     }
 
     public void finished(long id, Map<String, Object> response, long ms) {

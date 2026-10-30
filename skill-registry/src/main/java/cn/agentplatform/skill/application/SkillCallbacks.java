@@ -323,6 +323,7 @@ public class SkillCallbacks {
         return tx.execute(
                 t -> {
                     var f = fact(call, true);
+                    envelope.put("sourceEvidence", execution.retainedPublicationSource(f));
                     var r = receipt(call, event);
                     if (!owner.equals(r.get("processing_owner"))
                             || !"PROCESSING".equals(r.get("outcome"))

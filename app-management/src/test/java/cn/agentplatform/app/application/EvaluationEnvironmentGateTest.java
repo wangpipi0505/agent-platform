@@ -29,6 +29,7 @@ class EvaluationEnvironmentGateTest {
     String tenant, code;
     volatile String mode = "REAL";
     volatile boolean proof = true, quality = true;
+    volatile boolean legacyScope;
 
     @BeforeAll static void database() {
         var ds = new DriverManagerDataSource("jdbc:postgresql://127.0.0.1:25432/agent_platform_v12", "agent_v12", System.getenv("AGENT_DB_PASSWORD"));
@@ -64,7 +65,8 @@ class EvaluationEnvironmentGateTest {
                 result.put("accepted", true); result.put("evalReportId", "quality-only-report");
                 if (proof) {
                     var evidence = new LinkedHashMap<String, Object>();
-                    evidence.put("schemaVersion", 1); evidence.put("scope", "ENGINE_RUNTIME_AND_DATASET_IDENTITY");
+                    evidence.put("schemaVersion", 2); evidence.put("scope", "PLATFORM_PARTICIPANT_MODES_AND_DATASET_IDENTITY");
+        evidence.put("externalTruth", "NOT_ASSESSED"); evidence.put("caseSourcesSha256", Digest.sha256("finite-producer-sources"));
                     evidence.put("tenantId", tenant); evidence.put("appCode", query.get("appCode"));
                     evidence.put("draftRev", Long.parseLong(query.get("draftRev")));
                     evidence.put("candidateSha256", query.get("candidateSha256"));
@@ -72,6 +74,8 @@ class EvaluationEnvironmentGateTest {
                     evidence.put("evalReportId", "source-report"); evidence.put("datasetVersion", "ex17-dataset");
                     evidence.put("datasetSha256", "d".repeat(64)); evidence.put("environment", mode);
                     evidence.put("qualityAccepted", quality); evidence.put("status", quality ? "ACCEPTED" : "REJECTED");
+                    if (legacyScope) { evidence.put("schemaVersion", 1); evidence.put("scope", "ENGINE_RUNTIME_AND_DATASET_IDENTITY");
+                        evidence.remove("externalTruth"); evidence.remove("caseSourcesSha256"); }
                     evidence.put("evidenceSha256", Digest.sha256(Json.canonical(evidence)));
                     result.put("publicationEvidence", evidence);
                 }
@@ -110,6 +114,9 @@ class EvaluationEnvironmentGateTest {
                 assertCode(() -> apps.precheck(code), "EVALUATION_ENVIRONMENT_BLOCKED");
             }
         }
+        mode = "REAL"; legacyScope = true;
+        assertCode(() -> apps.precheck(code), "EVALUATION_ENVIRONMENT_BLOCKED");
+        legacyScope = false;
         proof = false;
         assertCode(() -> apps.precheck(code), "EVALUATION_ENVIRONMENT_BLOCKED");
         assertThat(db.queryForObject("select count(*) from app.app_version where tenant_id=? and app_code=?", Integer.class, tenant, code)).isZero();

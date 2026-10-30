@@ -61,7 +61,7 @@ class EvaluationEnvironmentEvidenceTest {
                 var request = Json.read(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
                 var frozen = Json.read(db.queryForObject("select results::text from monitor.evaluation_report where tenant_id=? and id=?",
                         String.class, tenant, request.path("evalReportId").asText()));
-                if (frozen.isEmpty() || frozen.get(0).path("sourceEvidence").path("schemaVersion").asInt() != 1)
+                if (frozen.isEmpty() || frozen.get(0).path("sourceEvidence").path("schemaVersion").asInt() != 2)
                     initializedBeforeSend.set(false);
                 var run = new LinkedHashMap<String, Object>();
                 run.put("runId", "run-" + request.path("evalReportId").asText());
@@ -69,6 +69,12 @@ class EvaluationEnvironmentEvidenceTest {
                 if (!"MISSING".equals(mode)) {
                     run.put("environment", mode); run.put("demoMode", "DEMO".equals(mode));
                     run.put("datasetVersion", request.path("datasetVersion").asText());
+                    var producer = new LinkedHashMap<String,Object>();
+                    producer.put("schemaVersion", 2); producer.put("scope", "PLATFORM_PARTICIPANT_MODES");
+                    producer.put("runId", run.get("runId")); producer.put("tenantId", tenant); producer.put("principalId", "evaluator");
+                    producer.put("environment", mode); producer.put("engineEnvironment", mode); producer.put("participants", List.of());
+                    producer.put("externalTruth", "NOT_ASSESSED"); producer.put("executionScope", "ENGINE_LOCAL_ONLY");
+                    producer.put("evidenceSha256", Digest.sha256(Json.canonical(producer))); run.put("sourceEvidence", producer);
                 }
                 response = run;
             }

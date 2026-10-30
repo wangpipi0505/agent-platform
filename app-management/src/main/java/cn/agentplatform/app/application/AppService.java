@@ -1186,7 +1186,7 @@ public class AppService {
         environmentCheck.put("candidateSha256", hash);
         environmentCheck.put("semanticDigest", semanticDigest);
         environmentCheck.put("publicationEvidence", sourceEvidence);
-        environmentCheck.put("detail", environmentAllowed ? "环境来源已冻结；仅证明引擎模式及数据集身份"
+        environmentCheck.put("detail", environmentAllowed ? "平台参与者自身模式及数据集身份已冻结；外部语义与业务效果不在本门范围"
                 : "演示或未知来源评测不能用于生产发布；请在目标环境新建报告重新评测，普通豁免无效");
         checks.add(environmentCheck);
         var warnings = new ArrayList<String>();
@@ -1259,8 +1259,10 @@ public class AppService {
 
     private boolean validPublicationEvidence(Map<String, Object> evidence, String code, long rev, String hash, String semantic) {
         var node = Json.tree(evidence);
-        if (!node.path("schemaVersion").isIntegralNumber() || node.path("schemaVersion").asInt() != 1
-                || !"ENGINE_RUNTIME_AND_DATASET_IDENTITY".equals(node.path("scope").asText())
+        if (!node.path("schemaVersion").isIntegralNumber() || node.path("schemaVersion").asInt() != 2
+                || !"PLATFORM_PARTICIPANT_MODES_AND_DATASET_IDENTITY".equals(node.path("scope").asText())
+                || !"NOT_ASSESSED".equals(node.path("externalTruth").asText())
+                || !node.path("caseSourcesSha256").asText().matches("[0-9a-f]{64}")
                 || !tenant().equals(node.path("tenantId").asText()) || !code.equals(node.path("appCode").asText())
                 || !node.path("draftRev").isIntegralNumber() || node.path("draftRev").asLong() != rev
                 || node.path("evalReportId").asText().isBlank() || !node.path("qualityAccepted").isBoolean()

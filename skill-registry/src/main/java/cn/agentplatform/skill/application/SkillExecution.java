@@ -32,6 +32,8 @@ public class SkillExecution {
      */
     @Value("${agent.skill.external-job-enabled:true}")
     boolean externalJobEnabled = true;
+    @Value("${agent.demo-mode:false}")
+    boolean producerDemoMode;
 
     public SkillExecution(
             JdbcTemplate db,
@@ -110,6 +112,7 @@ public class SkillExecution {
         var arguments = object(request.get("arguments"));
         String digest = Digest.sha256(Json.canonical(arguments));
         var contract = catalog.versionId(versionId);
+        final boolean producerDemoAtStart = producerDemoMode;
         var registration = clients.get(engineUrl + "/internal/tool-calls/" + callId);
         boolean controlled = registration.path("controlled_draft_skill_version_id").asLong() > 0;
         if (controlled) {
@@ -311,6 +314,7 @@ public class SkillExecution {
                                     null,
                                     false,
                                     secured);
+                    pendingEnvelope.put("sourceEvidence", publicationSource(request, contract, false, producerDemoAtStart, false));
                     // PREPARING is durable registration, not a deliverable execution fact. The
                     // outbox must not turn engine EXECUTING into UNKNOWN before submitted CAS.
                     // No transaction/row lock spans either HTTP call; send_started fences dispatch.
@@ -402,6 +406,8 @@ public class SkillExecution {
             }
         }
         var envelope = envelope(request, contract, status, semantic, reason, errorCode, errorRaw, raw, mock, secured);
+        envelope.put("sourceEvidence", publicationSource(request, contract, mock, producerDemoAtStart,
+                Boolean.TRUE.equals(algorithmSource.get("readOnlyCacheHit"))));
         // 只认本地同步适配器的 Observation.source；远端 structured 同名字段不参与发送事实。
         boolean readOnlyCacheHit = "HTTP".equals(contract.get("type")) && "SYNC".equals(contract.get("invocationKind"))
                 && Boolean.TRUE.equals(algorithmSource.get("readOnlyCacheHit"));
@@ -661,6 +667,33 @@ public class SkillExecution {
      * userMessage/detail/traceId，另含兼容键 reason）；code/raw 来自适配器携带的远端业务码与
      * 有界原文，没有远端证据时为 null。traceId 取自请求上下文 MDC，与 API 错误信封同源。
      */
+    /** 本次 producer 配置在 execute 入口捕获；业务 JSON、请求自报字段均不参与。 */
+    private Map<String, Object> publicationSource(Map<String, Object> request, Map<String, Object> contract,
+            boolean mock, boolean demoAtStart, boolean cacheHit) {
+        var source = new LinkedHashMap<String, Object>();
+        source.put("schemaVersion", 1); source.put("producer", "skill");
+        source.put("producerEnvironment", mock || demoAtStart
+                || FixtureSkills.isFixtureCode(Objects.toString(contract.get("code"), "")) ? "DEMO" : "REAL");
+        source.put("executionPath", mock ? "MOCK" : cacheHit ? "READ_ONLY_CACHE" : contract.get("type"));
+        source.put("externalTruth", "NOT_ASSESSED");
+        source.put("tenantId", tenant()); source.put("principalId", Actor.current().principalId());
+        for (String key : List.of("runId", "callId", "attemptId", "skillVersionId")) source.put(key, request.get(key));
+        return source;
+    }
+
+    /** 回调/对账仅保留原 PG 代次标记；旧事实缺失时保持 UNKNOWN，绝不读取当前 demo 配置追认。 */
+    Map<String, Object> retainedPublicationSource(Map<String, Object> fact) {
+        var source = (fact.get("result") == null ? Json.object() : Json.read(fact.get("result").toString())).path("sourceEvidence");
+        if (!source.path("schemaVersion").isIntegralNumber() || source.path("schemaVersion").asInt() != 1 || !"skill".equals(source.path("producer").asText())
+                || !Objects.equals(fact.get("tenant_id"), source.path("tenantId").asText())
+                || !Objects.equals(fact.get("principal_id"), source.path("principalId").asText())
+                || !Objects.equals(fact.get("run_id"), source.path("runId").asText())
+                || ((Number) fact.get("call_id")).longValue() != source.path("callId").asLong()
+                || ((Number) fact.get("attempt_id")).longValue() != source.path("attemptId").asLong()
+                || ((Number) fact.get("skill_version_id")).longValue() != source.path("skillVersionId").asLong()) return Map.of();
+        return Json.mapper().convertValue(source, Map.class);
+    }
+
     Map<String, Object> envelope(
             Map<String, Object> request,
             Map<String, Object> contract,
@@ -1176,6 +1209,7 @@ public class SkillExecution {
                             raw,
                             false,
                             object(requestSnapshot.get("guardedArguments")));
+            result.put("sourceEvidence", retainedPublicationSource(recorded));
             adoptAlgorithm(
                     recorded,
                     contract,
@@ -1200,6 +1234,7 @@ public class SkillExecution {
                             null,
                             false,
                             object(failedSnapshot.get("guardedArguments")));
+            failed.put("sourceEvidence", retainedPublicationSource(recorded));
             String failedFence =
                     queriedBinding == null
                             ? ""

@@ -15,6 +15,12 @@ public class ChatSessionController {
         this.sessions = sessions;
     }
 
+    /** 固定候选的显式顺序轮次；会话归属和EVALUATION限制由同一服务端边界复核。 */
+    @PostMapping("/internal/evaluations/turn")
+    public Object evaluationTurn(@RequestBody JsonNode request) {
+        return ApiResponse.ok(sessions.evaluationTurn(request,Actor.current()));
+    }
+
     @PostMapping({"/v1/apps/{code}/sessions", "/admin/apps/{code}/sessions"})
     public Object create(@PathVariable String code) {
         return ApiResponse.ok(sessions.create(code, Actor.current()));

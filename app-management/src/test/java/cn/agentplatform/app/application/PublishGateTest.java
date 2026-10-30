@@ -160,7 +160,8 @@ class PublishGateTest {
         // 有限单报告协议夹具：来源绑定本例真实PG候选；REAL仅是显式测试输入，不冒充实际引擎运行证据。
         var app = apps.get(code);
         var evidence = new LinkedHashMap<String, Object>();
-        evidence.put("schemaVersion", 1); evidence.put("scope", "ENGINE_RUNTIME_AND_DATASET_IDENTITY");
+        evidence.put("schemaVersion", 2); evidence.put("scope", "PLATFORM_PARTICIPANT_MODES_AND_DATASET_IDENTITY");
+        evidence.put("externalTruth", "NOT_ASSESSED"); evidence.put("caseSourcesSha256", Digest.sha256("finite-producer-sources"));
         evidence.put("tenantId", "application-tests"); evidence.put("appCode", code);
         evidence.put("draftRev", app.get("draftRev")); evidence.put("candidateSha256", app.get("candidateSha256"));
         evidence.put("candidateSemanticDigest", app.get("semanticDigest"));

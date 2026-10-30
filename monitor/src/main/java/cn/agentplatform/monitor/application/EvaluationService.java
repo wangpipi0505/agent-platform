@@ -3,6 +3,7 @@ package cn.agentplatform.monitor.application;
 import cn.agentplatform.common.*;
 import cn.agentplatform.monitor.domain.EvaluationAssertions;
 import cn.agentplatform.monitor.domain.EvaluationRules;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -144,6 +145,15 @@ public class EvaluationService {
         for (int i = 0; i < suite.size(); i++) {
             var c = new LinkedHashMap<>(suite.get(i));
             String id = Objects.toString(c.getOrDefault("id", Integer.toString(i + 1)), "");
+            if (EvaluationConversations.conversation(c)) {
+                if (id.isBlank() || id.length()>128 || !ids.add(id))
+                    throw fail(400,"EVALUATION_CONVERSATION_INVALID","多轮用例id须唯一且不超过128字符");
+                c.put("id",id);
+                c=new LinkedHashMap<>(EvaluationConversations.canonical(c,assertionsEnabled));
+                suite.set(i,c); safety |= Boolean.TRUE.equals(c.get("safety"));
+                assertionSnapshot.put(id,Map.of("mode","CONVERSATION","turns",c.get("turns")));
+                continue;
+            }
             if (id.isBlank()
                     || !ids.add(id)
                     || !c.containsKey("expected")
@@ -181,6 +191,8 @@ public class EvaluationService {
                 || !(candidate.get("draftRev") instanceof Number candidateRev)
                 || candidateRev.longValue() != rev.longValue())
             throw fail(412, "CANDIDATE_CHANGED", "候选已变更，请重新加载");
+        if (suite.stream().anyMatch(EvaluationConversations::conversation))
+            EvaluationConversations.limits(candidate,suite);
         String id = "er_" + UUID.randomUUID();
         String baseline = Objects.toString(b.get("baselineReportId"), "");
         var baselinePassed = new HashSet<String>();
@@ -241,10 +253,8 @@ public class EvaluationService {
                             Actor.current().principalId(),
                             assertionModel,
                             assertionsEnabled ? Json.write(assertionSnapshot) : null,
-                            Json.write(frozenCases.stream().map(c -> Map.of("id", c.get("id"),
-                                    "sourceEvidence", Map.of("schemaVersion", 1, "environment", "UNKNOWN",
-                                            "datasetVersion", dataset, "datasetSha256", Digest.sha256(Json.write(frozenCases)))))
-                                    .toList()));
+                            Json.write(frozenCases.stream().map(c -> EvaluationConversations.initial(
+                                    c,dataset,Digest.sha256(Json.write(frozenCases)))).toList()));
                 });
         return execute(
                 id,
@@ -271,6 +281,9 @@ public class EvaluationService {
             Set<String> baselinePassed,
             String assertionModel) {
         // EXACT（旧报告/开关关闭）忽略 assertion 字段；CONFIGURABLE 按冻结的用例配置判分。
+        if (frozenCases.stream().anyMatch(EvaluationConversations::conversation))
+            return new EvaluationConversations(db,tx,(path,body)->call("POST",engineUrl+path,body),this::report,(runId,run)->validRunSource(Json.tree(run.get("sourceEvidence")),runId,run))
+                    .execute(id,code,rev,hash,dataset,candidate,frozenCases,threshold,baselinePassed,assertionModel);
         boolean configurable = EvaluationAssertions.MODEL_CONFIGURABLE.equals(assertionModel);
         var priorResults = Json.read(db.queryForObject(
                 "select results::text from monitor.evaluation_report where tenant_id=? and id=?", String.class, tenant(), id));
@@ -289,11 +302,11 @@ public class EvaluationService {
                     .orElse(Json.object()).path("sourceEvidence");
             // 协议标记在新报告首次外调前已落库；旧 RUNNING/ERROR 的 resume 不得追认新来源。
             boolean sourceProtocol = prior.path("schemaVersion").isIntegralNumber()
-                    && prior.path("schemaVersion").asInt() == 1
+                    && prior.path("schemaVersion").asInt() == 2
                     && dataset.equals(prior.path("datasetVersion").asText())
                     && datasetSha.equals(prior.path("datasetSha256").asText());
             var source = new LinkedHashMap<String, Object>();
-            if (sourceProtocol) source.put("schemaVersion", 1);
+            if (sourceProtocol) source.put("schemaVersion", 2);
             source.put("environment", "UNKNOWN");
             source.put("datasetVersion", dataset);
             source.put("datasetSha256", datasetSha);
@@ -321,16 +334,19 @@ public class EvaluationService {
                                         "inputs",
                                         c.get("inputs")));
                 String runStatus = Objects.toString(run.get("status"), "UNKNOWN");
-                String environment = Objects.toString(run.get("environment"), "UNKNOWN");
+                var runSource = Json.tree(run.get("sourceEvidence"));
+                String environment = runSource.path("environment").asText("UNKNOWN");
                 String runId = Objects.toString(run.get("runId"), "");
                 boolean consistent = sourceProtocol && !prior.path("invalid").asBoolean(false) && !runId.isBlank()
                         && dataset.equals(run.get("datasetVersion"))
-                        && ("REAL".equals(environment) && Boolean.FALSE.equals(run.get("demoMode"))
-                            || "DEMO".equals(environment) && Boolean.TRUE.equals(run.get("demoMode")));
+                        && validRunSource(runSource, runId, run)
+                        && ("REAL".equals(run.get("environment")) && Boolean.FALSE.equals(run.get("demoMode"))
+                            || "DEMO".equals(run.get("environment")) && Boolean.TRUE.equals(run.get("demoMode")));
                 if (prior.hasNonNull("runId") && !runId.equals(prior.path("runId").asText())) consistent = false;
                 if (!"UNKNOWN".equals(prior.path("environment").asText("UNKNOWN"))
                         && !environment.equals(prior.path("environment").asText())) consistent = false;
                 source.put("environment", consistent ? environment : "UNKNOWN");
+                if (consistent) source.put("runSource", runSource);
                 if (!consistent && !runId.isBlank()) source.put("invalid", true);
                 if (!runId.isBlank()) source.put("runId", runId);
                 // A queued run or a submitted external job is unfinished, not a failed
@@ -512,7 +528,20 @@ public class EvaluationService {
         return result;
     }
 
-    /** 只证明引擎冻结模式与数据集身份；不声称模型/技能模式或用户输入内容已获真实性认证。 */
+    /** 服务固定的 engine 来源证据；签名/主体入口沿原 HTTP 链，本方法只核精确事实和材料摘要。 */
+    private boolean validRunSource(JsonNode proof, String runId, Map<String, Object> run) {
+        if (!proof.path("schemaVersion").isIntegralNumber() || proof.path("schemaVersion").asInt() != 2 || !"PLATFORM_PARTICIPANT_MODES".equals(proof.path("scope").asText())
+                || !runId.equals(proof.path("runId").asText()) || !tenant().equals(proof.path("tenantId").asText())
+                || !Actor.current().principalId().equals(proof.path("principalId").asText())
+                || !Set.of("REAL", "DEMO", "UNKNOWN").contains(proof.path("environment").asText())
+                || !proof.path("participants").isArray()
+                || !Objects.equals(run.get("environment"), proof.path("engineEnvironment").asText())) return false;
+        var unsigned = new LinkedHashMap<String,Object>(Json.mapper().convertValue(proof, Map.class));
+        Object digest = unsigned.remove("evidenceSha256");
+        return Digest.sha256(Json.canonical(unsigned)).equals(digest);
+    }
+
+    /** 证明平台各 producer 自身模式/实际路径及数据集身份；外部语义/业务效果不在范围。 */
     private Map<String, Object> publicationEvidence(Map<String, Object> report) {
         var data = db.queryForList("select cases::text,sha256 from monitor.dataset where tenant_id=? and app_code=? and dataset_version=?",
                 tenant(), report.get("appCode"), report.get("datasetVersion"));
@@ -525,23 +554,28 @@ public class EvaluationService {
             suite.forEach(c -> ids.add(c.path("id").asText()));
             boolean valid = suite.isArray() && suite.size() > 0 && ids.size() == suite.size()
                     && results.isArray() && results.size() == suite.size();
-            boolean demo = false;
+            boolean demo = false; boolean unknown = false;
             for (var r : results) {
                 var source = r.path("sourceEvidence");
                 String mode = source.path("environment").asText();
-                valid &= ids.remove(r.path("id").asText()) && source.path("schemaVersion").isIntegralNumber()
-                        && source.path("schemaVersion").asInt() == 1
+                boolean rowValid = ids.remove(r.path("id").asText()) && source.path("schemaVersion").isIntegralNumber()
+                        && source.path("schemaVersion").asInt() == 2
                         && report.get("datasetVersion").equals(source.path("datasetVersion").asText())
                         && datasetSha.equals(source.path("datasetSha256").asText())
                         && !source.path("runId").asText().isBlank()
-                        && Set.of("REAL", "DEMO").contains(mode);
-                demo |= "DEMO".equals(mode);
+                        && Set.of("REAL", "DEMO", "UNKNOWN").contains(mode)
+                        && source.path("runSource").path("schemaVersion").asInt() == 2;
+                valid &= rowValid; unknown |= !rowValid || "UNKNOWN".equals(mode);
+                demo |= rowValid && "DEMO".equals(mode);
             }
-            if (valid && ids.isEmpty()) environment = demo ? "DEMO" : "REAL";
+            if (demo) environment = "DEMO";
+            else if (valid && ids.isEmpty() && !unknown) environment = "REAL";
         }
         var evidence = new LinkedHashMap<String, Object>();
-        evidence.put("schemaVersion", 1);
-        evidence.put("scope", "ENGINE_RUNTIME_AND_DATASET_IDENTITY");
+        evidence.put("schemaVersion", 2);
+        evidence.put("scope", "PLATFORM_PARTICIPANT_MODES_AND_DATASET_IDENTITY");
+        evidence.put("externalTruth", "NOT_ASSESSED");
+        evidence.put("caseSourcesSha256", Digest.sha256(Json.canonical(results)));
         evidence.put("tenantId", tenant());
         for (String key : List.of("appCode", "draftRev", "evalReportId", "candidateSha256", "candidateSemanticDigest", "datasetVersion"))
             evidence.put(key, report.get(key));

@@ -420,7 +420,8 @@ class ApplicationLifecycleTest {
     /** 此类只验证发布事务/生命周期：显式有限来源夹具绑定本例候选，不能当作真实监控评测证据。 */
     private String fixtureEnvironmentChecks(Map<String, Object> app, String tenantId, String reportId) {
         var evidence = new LinkedHashMap<String, Object>();
-        evidence.put("schemaVersion", 1); evidence.put("scope", "ENGINE_RUNTIME_AND_DATASET_IDENTITY");
+        evidence.put("schemaVersion", 2); evidence.put("scope", "PLATFORM_PARTICIPANT_MODES_AND_DATASET_IDENTITY");
+        evidence.put("externalTruth", "NOT_ASSESSED"); evidence.put("caseSourcesSha256", Digest.sha256("finite-producer-sources"));
         evidence.put("tenantId", tenantId); evidence.put("appCode", app.get("code"));
         evidence.put("draftRev", app.get("draftRev")); evidence.put("candidateSha256", app.get("candidateSha256"));
         evidence.put("candidateSemanticDigest", app.get("semanticDigest")); evidence.put("evalReportId", reportId);

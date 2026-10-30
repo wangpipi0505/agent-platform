@@ -131,6 +131,13 @@ public class RunService {
         return createInternal(code, request, "TASK", actor, snapshot, null, false, ticket, true);
     }
 
+    /** 只供本地已核归属的评测会话调用；保留EVALUATION副作用限制，IAM未迁移时明确拒绝。 */
+    public Map<String,Object> createEvaluationSessionTurn(String code,JsonNode request,JsonNode trustedSnapshot,Actor actor) {
+        if (!actor.roles().contains("SERVICE") || iamEnabled())
+            throw new PlatformException(403,"IAM_ADMISSION_ROUTE_DENIED","当前候选会话受理未获授权");
+        return createInternal(code,request,"EVALUATION",actor,trustedSnapshot,null);
+    }
+
     public Map<String, Object> create(String code, JsonNode req, String trigger, Actor actor) {
         return createInternal(code, req, trigger, actor, null, null);
     }
@@ -202,6 +209,7 @@ public class RunService {
         var runtime = snapshot.putObject("runtime");
         runtime.put("environment", demoMode ? "DEMO" : "REAL");
         runtime.put("demoMode", demoMode);
+        runtime.put("sourceProtocol", 2);
         String datasetVersion = req == null ? null : req.path("datasetVersion").asText("").trim();
         if (!datasetVersion.isBlank()) runtime.put("datasetVersion", datasetVersion);
     }
@@ -526,7 +534,11 @@ public class RunService {
         final RetainedAuthorization opening =
                 protectedAdmission ? admissionProof(code, actor) : null;
         if (trigger.equals("DEBUG")) actor.requireRole("EDITOR");
-        if (trigger.equals("EVALUATION") && req.has("evalReportId") && req.has("caseId"))
+        if (trigger.equals("EVALUATION") && trustedSnapshot != null && trustedSnapshot.has("evaluationConversation"))
+            ((com.fasterxml.jackson.databind.node.ObjectNode) req).put("requestId","evt_"+Digest.sha256(Json.canonical(Map.of(
+                    "tenant",actor.tenantId(),"principal",actor.principalId(),"binding",trustedSnapshot.path("evaluationConversation"),
+                    "turn",trustedSnapshot.path("chatSession").path("turnNo")))).substring(0,44));
+        else if (trigger.equals("EVALUATION") && req.has("evalReportId") && req.has("caseId"))
             ((com.fasterxml.jackson.databind.node.ObjectNode) req)
                     .put(
                             "requestId",
@@ -2158,6 +2170,8 @@ public class RunService {
             result.put("graph", snapshotJson.path("definition"));
         // PLAT-20 T20.1：environment/dataset 标注随冻结快照铺到详情顶层；旧运行无标注时不落键。
         surfaceRuntimeAnnotation(result, snapshotJson);
+        if (!protectedView && "EVALUATION".equals(run.get("trigger_type")))
+            result.put("sourceEvidence", participantSource(run));
         // PLAT-14 T14.1：工具档案选择留痕（生效清单/所选档案/排除原因）同规则透出。
         surfaceToolSelection(result, snapshotJson);
         result.put("nodes", nodes.stream().map(this::nodeView).toList());
@@ -2180,6 +2194,80 @@ public class RunService {
                                                 List.of("NEXT_NODE", "RUN_TO_END", "CANCEL")))
                         .orElse(null));
         return result;
+    }
+
+    /** 只消费本仓已采纳的 invocation/tool PG 事实；不读取 text/structured 内的环境自报。 */
+    private Map<String, Object> participantSource(Map<String, Object> run) {
+        var runtime = TraceStore.json(run.get("snapshot")).path("runtime");
+        var result = new LinkedHashMap<String, Object>();
+        result.put("schemaVersion", 2); result.put("scope", "PLATFORM_PARTICIPANT_MODES");
+        result.put("runId", run.get("public_id")); result.put("tenantId", run.get("tenant_id"));
+        result.put("principalId", run.get("principal_id"));
+        result.put("engineEnvironment", runtime.path("environment").asText("UNKNOWN"));
+        result.put("externalTruth", "NOT_ASSESSED");
+        var participants = new ArrayList<Map<String, Object>>();
+        boolean protocol = runtime.path("sourceProtocol").asInt() == 2
+                && (runtime.path("environment").asText().equals("REAL") && runtime.path("demoMode").isBoolean() && !runtime.path("demoMode").asBoolean()
+                    || runtime.path("environment").asText().equals("DEMO") && runtime.path("demoMode").asBoolean());
+        boolean demo = protocol && "DEMO".equals(runtime.path("environment").asText());
+        boolean unknown = !protocol || !"SUCCEEDED".equals(run.get("status"));
+        long rid = TraceStore.number(run, "id");
+        for (var invocation : store.db().queryForList("select id,status,is_mock,final_request,response from engine.model_invocation where run_id=? order by id", rid)) {
+            var source = TraceStore.json(invocation.get("response")).path("sourceEvidence");
+            boolean valid = producerBound(source, run, "model")
+                    && source.path("factId").isIntegralNumber() && source.path("factId").asLong() > 0
+                    && source.path("invocationRef").asText().equals(TraceStore.json(invocation.get("final_request")).path("invocationRef").asText())
+                    && !source.path("invocationRef").asText().isBlank()
+                    && "MODEL_HTTP".equals(source.path("executionPath").asText());
+            String mode = Boolean.TRUE.equals(invocation.get("is_mock")) ? "DEMO" : valid ? source.path("producerEnvironment").asText() : "UNKNOWN";
+            if (!"DEMO".equals(mode) && (!"SUCCEEDED".equals(invocation.get("status")) || !"REAL".equals(mode))) mode = "UNKNOWN";
+            demo |= "DEMO".equals(mode); unknown |= "UNKNOWN".equals(mode);
+            participants.add(Map.of("kind", "MODEL", "invocationId", invocation.get("id"), "environment", mode,
+                    "sourceSha256", Digest.sha256(Json.canonical(source))));
+        }
+        for (var call : store.db().queryForList("select id,status,attempt_id,skill_version_id,is_mock,result from engine.tool_call where run_id=? order by id", rid)) {
+            var source = TraceStore.json(call.get("result")).path("sourceEvidence");
+            boolean valid = producerBound(source, run, "skill")
+                    && source.path("callId").isIntegralNumber() && source.path("callId").asLong() == ((Number) call.get("id")).longValue()
+                    && source.path("attemptId").asLong() == ((Number) call.get("attempt_id")).longValue()
+                    && source.path("skillVersionId").asLong() == ((Number) call.get("skill_version_id")).longValue()
+                    && Set.of("HTTP", "MCP", "ALGORITHM", "PROCESS", "READ_ONLY_CACHE", "MOCK").contains(source.path("executionPath").asText());
+            String mode = Boolean.TRUE.equals(call.get("is_mock")) ? "DEMO" : valid ? source.path("producerEnvironment").asText() : "UNKNOWN";
+            if (!"DEMO".equals(mode) && (!"SUCCEEDED".equals(call.get("status")) || !"REAL".equals(mode)
+                    || "MOCK".equals(source.path("executionPath").asText()))) mode = "UNKNOWN";
+            demo |= "DEMO".equals(mode); unknown |= "UNKNOWN".equals(mode);
+            participants.add(Map.of("kind", "SKILL", "callId", call.get("id"), "environment", mode,
+                    "sourceSha256", Digest.sha256(Json.canonical(source))));
+        }
+        var nodes = store.db().queryForList("select n.id,n.node_type,n.status,"
+                + "exists(select 1 from engine.model_invocation m where m.node_instance_id=n.id) as has_model,"
+                + "exists(select 1 from engine.tool_call t where t.node_instance_id=n.id) as has_tool from engine.node_instance n where n.run_id=?", rid);
+        boolean requiresProducer = false;
+        if (nodes.isEmpty()) unknown = true;
+        for (var node : nodes) {
+            if (Set.of("SKIPPED", "ABANDONED").contains(Objects.toString(node.get("status"), ""))) continue;
+            String type = Objects.toString(node.get("node_type"), "");
+            if (Set.of("LLM", "AGENT").contains(type)) {
+                requiresProducer = true; unknown |= !Boolean.TRUE.equals(node.get("has_model"));
+            } else if (Set.of("SKILL", "RETRIEVE").contains(type)) {
+                requiresProducer = true; unknown |= !Boolean.TRUE.equals(node.get("has_tool"));
+            } else if (!Set.of("START", "END", "CODE", "CONDITION", "CONFIRM", "JOIN").contains(type)) unknown = true;
+        }
+        result.put("participants", participants);
+        // 旧运行没有“本协议在创建时生效”的事实，不能事后用当前服务配置补成 REAL。
+        result.put("environment", !protocol ? "UNKNOWN" : demo ? "DEMO" : unknown ? "UNKNOWN" : "REAL");
+        result.put("executionScope", participants.isEmpty() && !requiresProducer ? "ENGINE_LOCAL_ONLY" : "PLATFORM_PRODUCERS");
+        result.put("evidenceSha256", Digest.sha256(Json.canonical(result)));
+        return result;
+    }
+
+    private static boolean producerBound(JsonNode source, Map<String, Object> run, String producer) {
+        return source.path("schemaVersion").isIntegralNumber() && source.path("schemaVersion").asInt() == 1
+                && producer.equals(source.path("producer").asText())
+                && Objects.equals(run.get("tenant_id"), source.path("tenantId").asText())
+                && Objects.equals(run.get("principal_id"), source.path("principalId").asText())
+                && Objects.equals(run.get("public_id"), source.path("runId").asText())
+                && Set.of("REAL", "DEMO").contains(source.path("producerEnvironment").asText());
     }
 
     private List<Map<String, Object>> artifactRefs(long run, String publicRunId) {

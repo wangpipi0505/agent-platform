@@ -854,8 +854,10 @@ public class ModelCalls {
             Map<String, Object> result = new LinkedHashMap<>(result(response, entry));
             circuits.succeeded(circuit, provider, actor, System.nanoTime() - started);
             circuit = null;
-            if (logId.get() != 0)
+            if (logId.get() != 0) {
+                result.put("sourceEvidence", store.publicationSource(logId.get()));
                 store.finished(logId.get(), result, (System.nanoTime() - started) / 1_000_000);
+            }
             if (Json.tree(result.get("usage")).path("totalTokens").asInt() > 0)
                 try {
                     String outcome =
@@ -1060,6 +1062,7 @@ public class ModelCalls {
                 throw new IllegalStateException("模型流没有终态");
             refreshInitial(accepted, materialRef, identity, manifestSha); initialOwner(owner, deadline);
             var result = new LinkedHashMap<String,Object>(result(finalResponse.get(), entry));
+            result.put("sourceEvidence", store.publicationSource(logId.get()));
             store.finished(logId.get(), result, (System.nanoTime()-started)/1_000_000);
             completionPersisted = true;
             if (Json.tree(result.get("usage")).path("totalTokens").asInt() > 0) {
