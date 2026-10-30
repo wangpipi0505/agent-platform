@@ -20,6 +20,8 @@ public final class RouteDirectory {
 
     private static final Logger log = LoggerFactory.getLogger(RouteDirectory.class);
     public static final String WORKLOAD = "workload";
+    /** 委派链路（authorize/forward）只命中这种行：delegated 决策不能被当成 workload 能力。 */
+    public static final String DELEGATED = "delegated";
 
     private final List<ServiceRoutePolicy.Route> routes;
 

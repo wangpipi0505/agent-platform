@@ -1,5 +1,6 @@
 package cn.agentplatform.authority.config;
 
+import cn.agentplatform.authority.decision.DecisionStore;
 import cn.agentplatform.authority.sign.KeyRing;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,5 +22,11 @@ public final class AuthorityConfiguration {
     @Bean
     KeyRing keyRing(AuthorityServiceProperties properties, Clock clock) {
         return new KeyRing(properties, clock);
+    }
+
+    /** 容量由 {@code agent.authority.delegation.capacity} 控制，测试直接 new 小容量实例。 */
+    @Bean
+    DecisionStore decisionStore(DelegationProperties delegation, Clock clock) {
+        return new DecisionStore(delegation.capacity(), clock);
     }
 }

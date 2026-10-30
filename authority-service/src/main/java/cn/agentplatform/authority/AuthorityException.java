@@ -35,6 +35,14 @@ public final class AuthorityException extends RuntimeException {
         return new AuthorityException(403, "SYS-AUTH-403", "当前授权不允许此操作", auditReason);
     }
 
+    /**
+     * 已签发但已过期的委派决策。语义上是"过期"而不是"不允许"：调用方据此区分"重新判权"与"永久拒绝"，
+     * 因此状态码走 409 而不是复用 403（卡片 EX-42 明确要求可区分）。
+     */
+    public static AuthorityException expired(String auditReason) {
+        return new AuthorityException(409, "AUTHORITY_EXPIRED", "委派授权已过期", auditReason);
+    }
+
     public int status() {
         return status;
     }

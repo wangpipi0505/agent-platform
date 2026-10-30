@@ -2,6 +2,7 @@ package cn.agentplatform.authority.api;
 
 import cn.agentplatform.authority.AuthorityException;
 import cn.agentplatform.authority.client.ClientRegistry;
+import cn.agentplatform.authority.decision.DelegatedAuthority;
 import cn.agentplatform.authority.identity.SessionService;
 import cn.agentplatform.authority.route.RouteDirectory;
 import cn.agentplatform.authority.sign.KeyRing;
@@ -45,14 +46,16 @@ public final class AuthorityController {
     private final RouteDirectory routes;
     private final TicketService tickets;
     private final SessionService sessions;
+    private final DelegatedAuthority delegated;
 
     public AuthorityController(KeyRing keys, ClientRegistry clients, RouteDirectory routes, TicketService tickets,
-                               SessionService sessions) {
+                               SessionService sessions, DelegatedAuthority delegated) {
         this.keys = keys;
         this.clients = clients;
         this.routes = routes;
         this.tickets = tickets;
         this.sessions = sessions;
+        this.delegated = delegated;
     }
 
     @GetMapping(path = "/.well-known/jwks.json", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -82,6 +85,10 @@ public final class AuthorityController {
 
     /** {@code operation=client}：目录命中 workload 行才签票，票面只描述"client 到 target 的这一跳"。 */
     private Map<String, Object> issueTicket(String clientId, AuthorityRequest request) {
+        // 转发也走 tokenUri（平台客户端就是这么做的），但语义是把一张已登记决策换成新目标的票据。
+        if (DelegatedAuthority.FORWARD.equals(request.operation())) {
+            return delegated.forward(clientId, request);
+        }
         if (!TICKET_OPERATIONS.contains(request.operation())) {
             throw AuthorityException.denied("tokenUri 不接受 operation=" + request.operation());
         }
@@ -100,6 +107,9 @@ public final class AuthorityController {
      * 且调用方就是 target 本身（否则等于允许"拿着别人的票替别人做决策"）。
      */
     private Map<String, Object> decide(String clientId, AuthorityRequest request) {
+        if (DelegatedAuthority.AUTHORIZE.equals(request.operation())) {
+            return delegated.authorize(clientId, request);
+        }
         if (!DECISION_OPERATIONS.contains(request.operation())) {
             throw AuthorityException.denied("decisionUri 不接受 operation=" + request.operation());
         }

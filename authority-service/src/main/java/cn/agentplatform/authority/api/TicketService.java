@@ -128,6 +128,17 @@ public final class TicketService {
     }
 
     private Map<String, Object> assertion(String clientId, AuthorityRequest request, String decisionId, long iat) {
+        return envelope(clientId, request.call(), request.nonce(), request.raw(), decisionId, iat);
+    }
+
+    /**
+     * 决策断言骨架：{@code aud=调用方 urn}、{@code token_use=current-decision}、{@code jti=decision_id}、
+     * {@code nonce}、{@code request_sha256} 与 {@code active/current}。
+     * <p>委派链路（{@code decision.DelegatedAuthority}）复用同一骨架后再补 delegated 专属 claims：
+     * 两处各写一份的话，平台客户端会在 nonce/摘要校验上分叉。
+     */
+    public Map<String, Object> envelope(String clientId, ServiceCall call, String nonce, JsonNode raw,
+                                        String decisionId, long iat) {
         Map<String, Object> claims = new LinkedHashMap<>();
         claims.put("iss", issuer.issuer());
         claims.put("aud", audience(clientId));
@@ -136,9 +147,9 @@ public final class TicketService {
         claims.put("nbf", iat);
         claims.put("exp", iat + assertionSeconds);
         claims.put("jti", decisionId);
-        claims.putAll(callClaims(request.call()));
-        claims.put("nonce", request.nonce());
-        claims.put("request_sha256", Digest.sha256(Json.canonical(request.raw())));
+        claims.putAll(callClaims(call));
+        claims.put("nonce", nonce);
+        claims.put("request_sha256", Digest.sha256(Json.canonical(raw)));
         claims.put("client_id", clientId);
         claims.put("active", true);
         claims.put("current", true);

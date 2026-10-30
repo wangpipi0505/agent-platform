@@ -1,6 +1,7 @@
 package cn.agentplatform.authority;
 
 import cn.agentplatform.authority.config.AuthorityServiceProperties;
+import cn.agentplatform.authority.config.DelegationProperties;
 import cn.agentplatform.authority.identity.IdentityProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -18,7 +19,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
                 "org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration",
                 "org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration"
         })
-@EnableConfigurationProperties({AuthorityServiceProperties.class, IdentityProperties.class})
+@EnableConfigurationProperties({AuthorityServiceProperties.class, IdentityProperties.class, DelegationProperties.class})
 public class AuthorityApplication {
 
     public static void main(String[] args) {

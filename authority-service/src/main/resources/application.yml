@@ -55,3 +55,12 @@ agent:
       connect-timeout-ms: ${AGENT_AUTHORITY_IDENTITY_CONNECT_TIMEOUT_MS:2000}
       read-timeout-ms: ${AGENT_AUTHORITY_IDENTITY_READ_TIMEOUT_MS:2000}
       session-seconds: ${AGENT_AUTHORITY_IDENTITY_SESSION_SECONDS:3600}
+
+    # 委派判权与转发（EX-42 / M3 前半）：默认关；关闭时 authorize/forward 一律 403，
+    # 其它 operation（client / authorize_workload / session）完全不受影响。
+    # 时限严格嵌套：断言 ≤5s（assertion-seconds）、grant 与 delegated 票据 ≤60s、决策窗口再被 grant 截断。
+    delegation:
+      enabled: ${AGENT_AUTHORITY_DELEGATION_ENABLED:false}
+      grant-seconds: ${AGENT_AUTHORITY_DELEGATION_GRANT_SECONDS:60}
+      decision-seconds: ${AGENT_AUTHORITY_DELEGATION_DECISION_SECONDS:60}
+      capacity: ${AGENT_AUTHORITY_DELEGATION_CAPACITY:256}
