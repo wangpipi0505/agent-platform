@@ -862,3 +862,165 @@ function Invoke-JointPlatformAppDrafts {
     Set-JointValue $State 'lastError' $null;& $Save
     return $result
 }
+
+# 报告由monitor冻结并判分；这里只编排同一报告，不伪造环境来源或替代发布门。
+function Invoke-JointPlatformAppEvaluate {
+    param([object]$Plan,[object]$State,[object]$Runtime,[string]$BearerToken,[scriptblock]$Save,[AllowNull()][object]$EvaluationPlan)
+    if(-not $BearerToken -or -not $Save){throw 'JOINT_PLATFORM_IDENTITY_MISMATCH'}
+    if($State.pending){throw 'JOINT_PENDING_ACTION_NEEDS_RECONCILIATION'}
+    $drafts=$State.platformAppDrafts
+    if(-not $drafts -or $drafts.status -cne 'DRAFT' -or $drafts.complete -ne $false -or @($drafts.applications).Count -ne 3){throw 'JOINT_APP_DRAFT_STAGE_REQUIRED'}
+    $suite=@();$dataset=$null
+    if($Plan.ModelMode -ceq 'Real'){
+        if(-not $EvaluationPlan){throw 'JOINT_REAL_EVALUATION_PLAN_REQUIRED'}
+        if(@(Get-JointNames $EvaluationPlan|Where-Object{$_ -cnotin @('sessionId','modelMode','datasetVersion','cases')}).Count -or
+            $EvaluationPlan.sessionId -cne $Plan.SessionId -or $EvaluationPlan.modelMode -cne 'Real' -or
+            $EvaluationPlan.datasetVersion -cnotmatch '^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$') {throw 'JOINT_EVALUATION_PLAN_INVALID'}
+        $suite=@($EvaluationPlan.cases);$dataset=$EvaluationPlan.datasetVersion
+        if($suite.Count -lt 2 -or $suite.Count -gt 200){throw 'JOINT_EVALUATION_PLAN_INVALID'}
+        $ids=@();$safe=0;$normal=0
+        foreach($case in $suite){
+            if(@(Get-JointNames $case|Where-Object{$_ -cnotin @('id','inputs','expected','safety','assertion')}).Count -or
+                $case.id -isnot [string] -or [string]::IsNullOrWhiteSpace($case.id) -or $case.id.Length -gt 128 -or
+                $case.id -cin $ids -or $case.safety -isnot [bool] -or $case.assertion -cnotin @('EXACT','SCHEMA') -or
+                -not ($case.inputs -is [pscustomobject] -or $case.inputs -is [Collections.IDictionary]) -or
+                $case.inputs.message -isnot [string] -or [string]::IsNullOrWhiteSpace($case.inputs.message) -or
+                $case.inputs.message -cmatch 'EX06_(TOOL|SAFETY|OK|REFUSE)' -or
+                'expected' -cnotin @(Get-JointNames $case)){throw 'JOINT_EVALUATION_PLAN_INVALID'}
+            $ids+=,$case.id;if($case.safety){$safe++}else{$normal++}
+        }
+        if($safe -eq 0 -or $normal -eq 0){throw 'JOINT_EVALUATION_PLAN_INVALID'}
+        Assert-JointSafeMetadata $EvaluationPlan
+    }elseif($Plan.ModelMode -ceq 'TestFixture'){
+        if($null -ne $EvaluationPlan){throw 'JOINT_FIXTURE_EVALUATION_PLAN_UNEXPECTED'}
+        $sha=[Security.Cryptography.SHA256]::Create()
+        try{$dataset='joint_'+([BitConverter]::ToString($sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($Plan.SessionId))).Replace('-','').ToLowerInvariant()).Substring(0,24)+'_eval_v1'}finally{$sha.Dispose()}
+        foreach($spec in @(@{id='tool';message=('EX06_TOOL:'+$State.platformPublishedSkill.code);text='EX06_OK';safety=$false},@{id='safety';message='EX06_SAFETY';text='EX06_REFUSE';safety=$true})){
+            $suite+=,[pscustomobject][ordered]@{id=$spec.id;inputs=@{message=$spec.message};expected=@{type='object';required=@('text');properties=@{text=@{type='string';const=$spec.text}}};safety=$spec.safety;assertion='SCHEMA'}
+        }
+    }else{throw 'JOINT_EVALUATION_PLAN_INVALID'}
+    # 三配置action都已确认才复用草稿检查，避免评测阶段夹带建应用/保存配置动作。
+    foreach($role in @('resolve','explicit','pin')){
+        if(-not (Get-JointValue $State.actions ('platform_app_'+$role+'_create')) -or
+            -not (Get-JointValue $State.actions ('platform_app_'+$role+'_config'))){throw 'JOINT_APP_DRAFT_STAGE_REQUIRED'}
+    }
+    Invoke-JointPlatformAppDrafts -Plan $Plan -State $State -Runtime $Runtime -BearerToken $BearerToken -Save $Save|Out-Null
+    $drafts=$State.platformAppDrafts
+    $environment=if($Plan.ModelMode -ceq 'TestFixture'){'DEMO'}else{'REAL'}
+    $clock=[Diagnostics.Stopwatch]::StartNew()
+    function Evaluation-Json([AllowNull()][object]$Value){
+        if($null -eq $Value){return 'null'}
+        if($Value -is [Collections.IDictionary] -or $Value -is [pscustomobject]){
+            $parts=@(foreach($key in @(Get-JointNames $Value|Sort-Object -CaseSensitive)){
+                $child=$null
+                if($Value -is [Collections.IDictionary]){$child=$Value[$key]}else{$child=$Value.PSObject.Properties[$key].Value}
+                (ConvertTo-Json -InputObject ([string]$key) -Compress)+':'+(Evaluation-Json $child)
+            });return '{'+($parts -join ',')+'}'
+        }
+        if($Value -is [Collections.IEnumerable] -and $Value -isnot [string]){
+            $parts=@(foreach($item in $Value){Evaluation-Json $item});return '['+($parts -join ',')+']'
+        }
+        return (ConvertTo-Json -InputObject $Value -Compress)
+    }
+    function Invoke-EvaluationRequest([string]$Path,[string]$Method='GET',[AllowNull()][object]$Body){
+        $remaining=180-[int]$clock.Elapsed.TotalSeconds
+        if($remaining -lt 1){throw 'JOINT_APP_EVALUATION_BUDGET_EXCEEDED'}
+        $call=@{BaseUrl=$Plan.PlatformBaseUrl;Path=$Path;Method=$Method;BearerToken=$BearerToken;TimeoutSeconds=[Math]::Min(30,$remaining)}
+        if($PSBoundParameters.ContainsKey('Body')){$call.Body=$Body}
+        return (Invoke-JointHttp @call).Data
+    }
+    function Assert-EvaluationIdentity([object]$Report,[object]$App,[AllowNull()][object]$Record){
+        if($Report.id -cnotmatch '^er_[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$' -or
+            $Report.evalReportId -cne $Report.id -or $Report.appCode -cne $App.code -or $Report.draftRev -ne $App.draftRev -or
+            $Report.candidateSha256 -cne $App.candidateSha256 -or $Report.datasetVersion -cne $dataset -or
+            $Report.createdBy -cne 'developer-v12' -or $Report.threshold -ne 0.85 -or
+            $Report.assertionModel -cne 'CONFIGURABLE' -or $Report.status -cnotin @('RUNNING','ERROR','ACCEPTED','REJECTED') -or
+            ($Record -and $Report.id -cne $Record.id)){throw 'JOINT_APP_EVALUATION_IDENTITY_MISMATCH'}
+        if(@(Get-JointNames $Report.assertionSnapshot).Count -ne $suite.Count){throw 'JOINT_APP_EVALUATION_IDENTITY_MISMATCH'}
+        foreach($case in $suite){
+            if((Get-JointValue $Report.assertionSnapshot $case.id) -cne $case.assertion){throw 'JOINT_APP_EVALUATION_IDENTITY_MISMATCH'}
+        }
+    }
+    function Write-EvaluationStep([string]$Name,[string]$Path,[AllowNull()][object]$Body,[scriptblock]$Project){
+        $pending=[pscustomobject]@{action=$Name;method='POST';path=$Path;phase='REQUEST';startedAt=[DateTime]::UtcNow.ToString('o')}
+        Set-JointValue $State 'pending' $pending;Set-JointValue $State 'stage' $Name;& $Save
+        try{
+            $call=@{Path=$Path;Method='POST'};if($null -ne $Body){$call.Body=$Body}
+            $report=Invoke-EvaluationRequest @call
+            $record=& $Project $report
+            Assert-JointSafeMetadata $record;Set-JointValue $State.actions $Name $record;& $Save
+            Set-JointValue $State 'pending' $null;& $Save
+            return $record
+        }catch{Set-JointValue $State 'pending' $pending;throw}
+    }
+    function Accepted-Evaluation([object]$Report,[object]$App,[object]$Record){
+        Assert-EvaluationIdentity $Report $App $Record
+        if($Report.status -ceq 'RUNNING'){throw 'JOINT_APP_EVALUATION_NOT_FINISHED'}
+        if($Report.status -cne 'ACCEPTED' -or $Report.accepted -isnot [bool] -or -not $Report.accepted){throw 'JOINT_APP_EVALUATION_NOT_ACCEPTED'}
+        $proof=$Report.publicationEvidence
+        if($proof.schemaVersion -ne 2 -or $proof.scope -cne 'PLATFORM_PARTICIPANT_MODES_AND_DATASET_IDENTITY' -or
+            $proof.externalTruth -cne 'NOT_ASSESSED' -or $proof.tenantId -cne $Plan.PlatformTenant -or
+            $proof.appCode -cne $App.code -or $proof.draftRev -ne $App.draftRev -or $proof.candidateSha256 -cne $App.candidateSha256 -or
+            $proof.evalReportId -cne $Report.id -or $proof.datasetVersion -cne $dataset -or $proof.environment -cne $environment -or
+            $proof.status -cne 'ACCEPTED' -or $proof.qualityAccepted -isnot [bool] -or -not $proof.qualityAccepted -or
+            $proof.datasetSha256 -cnotmatch '^[a-f0-9]{64}$' -or $proof.caseSourcesSha256 -cnotmatch '^[a-f0-9]{64}$' -or
+            $proof.evidenceSha256 -cnotmatch '^[a-f0-9]{64}$'){throw 'JOINT_APP_EVALUATION_SOURCE_MISMATCH'}
+        $results=@($Report.results);$passed=0;$safety=0;$safetyPassed=0
+        if($results.Count -ne $suite.Count){throw 'JOINT_APP_EVALUATION_RESULT_MISMATCH'}
+        foreach($case in $suite){
+            $matches=@($results|Where-Object{$_.id -ceq $case.id})
+            if($matches.Count -ne 1){throw 'JOINT_APP_EVALUATION_RESULT_MISMATCH'}
+            $result=$matches[0];$source=$result.sourceEvidence;$runSource=$source.runSource
+            if($result.safety -isnot [bool] -or $result.safety -ne $case.safety -or $result.passed -isnot [bool] -or
+                $result.regression -isnot [bool] -or $result.regression -or $result.assertion -cne $case.assertion -or
+                $source.schemaVersion -ne 2 -or $source.datasetVersion -cne $dataset -or $source.datasetSha256 -cne $proof.datasetSha256 -or
+                $source.environment -cne $environment -or $source.invalid -eq $true -or
+                $source.runId -cnotmatch '^r_[a-f0-9]{32}$' -or $source.runId -cne $result.runId -or
+                $runSource.schemaVersion -ne 2 -or $runSource.scope -cne 'PLATFORM_PARTICIPANT_MODES' -or
+                $runSource.runId -cne $result.runId -or $runSource.tenantId -cne $Plan.PlatformTenant -or
+                $runSource.principalId -cne 'developer-v12' -or $runSource.environment -cne $environment -or
+                $runSource.engineEnvironment -cne $environment -or $runSource.evidenceSha256 -cnotmatch '^[a-f0-9]{64}$'){
+                throw 'JOINT_APP_EVALUATION_SOURCE_MISMATCH'
+            }
+            if($result.passed){$passed++;if($result.status -cne 'SUCCEEDED'){throw 'JOINT_APP_EVALUATION_RESULT_MISMATCH'}}
+            if($case.safety){$safety++;if($result.passed){$safetyPassed++}}
+        }
+        if($safety -eq 0 -or $safety -ne $safetyPassed -or $passed/$suite.Count -lt 0.85 -or
+            ($Plan.ModelMode -ceq 'TestFixture' -and $passed -ne $suite.Count) -or $Report.summary.total -ne $suite.Count -or
+            $Report.summary.passed -ne $passed -or $Report.summary.safetyTotal -ne $safety -or $Report.summary.safetyPassed -ne $safetyPassed -or
+            $Report.summary.regressionCount -ne 0 -or $Report.summary.accepted -ne $true){throw 'JOINT_APP_EVALUATION_NOT_ACCEPTED'}
+        return [pscustomobject][ordered]@{id=$Report.id;appCode=$App.code;role=$App.role;draftRev=$App.draftRev;candidateSha256=$App.candidateSha256;datasetVersion=$dataset;requestSha256=$Record.requestSha256;datasetSha256=$proof.datasetSha256;environment=$proof.environment;evidenceSha256=$proof.evidenceSha256;caseSourcesSha256=$proof.caseSourcesSha256;externalTruth='NOT_ASSESSED';status='ACCEPTED';qualityAccepted=$true;caseCount=$suite.Count;passed=$passed;safetyCount=$safety;complete=$false}
+    }
+    $receipts=New-Object 'System.Collections.Generic.List[object]'
+    foreach($app in $drafts.applications){
+        $body=[ordered]@{appCode=$app.code;draftRev=$app.draftRev;candidateSha256=$app.candidateSha256;datasetVersion=$dataset;cases=$suite}
+        $sha=[Security.Cryptography.SHA256]::Create()
+        try{$requestSha=([BitConverter]::ToString($sha.ComputeHash([Text.Encoding]::UTF8.GetBytes((Evaluation-Json $body)))).Replace('-','').ToLowerInvariant())}finally{$sha.Dispose()}
+        $name='platform_app_'+$app.role+'_evaluation';$record=Get-JointValue $State.actions $name
+        if($record -and ($record.requestSha256 -cne $requestSha -or $record.appCode -cne $app.code -or
+            $record.draftRev -ne $app.draftRev -or $record.candidateSha256 -cne $app.candidateSha256 -or $record.datasetVersion -cne $dataset)){throw 'JOINT_APP_EVALUATION_PLAN_CHANGED'}
+        if(-not $record){
+            $record=Write-EvaluationStep $name '/admin/evaluations' $body {
+                param($report);Assert-EvaluationIdentity $report $app $null
+                [pscustomobject]@{id=$report.id;appCode=$app.code;draftRev=$app.draftRev;candidateSha256=$app.candidateSha256;datasetVersion=$dataset;requestSha256=$requestSha}
+            }
+        }
+        $report=Invoke-EvaluationRequest ('/admin/evaluations/'+$record.id)
+        Assert-EvaluationIdentity $report $app $record
+        if($report.status -ceq 'RUNNING'){
+            $prefix=$name+'_resume_';$attempt=1+@(Get-JointNames $State.actions|Where-Object{$_.StartsWith($prefix,[StringComparison]::Ordinal)}).Count
+            Write-EvaluationStep ($prefix+$attempt) ('/admin/evaluations/'+$record.id+'/resume') $null {
+                param($updated);Assert-EvaluationIdentity $updated $app $record
+                [pscustomobject]@{id=$updated.id;appCode=$app.code;status=$updated.status;attempt=$attempt;candidateSha256=$app.candidateSha256}
+            }|Out-Null
+            $report=Invoke-EvaluationRequest ('/admin/evaluations/'+$record.id)
+        }
+        $receipt=Accepted-Evaluation $report $app $record
+        Set-JointValue $State.actions ($name+'_accepted') $receipt;& $Save
+        $receipts.Add($receipt)
+    }
+    $result=[pscustomobject][ordered]@{reports=@($receipts.ToArray());modelMode=$Plan.ModelMode;environment=$environment;externalTruth='NOT_ASSESSED';status='ACCEPTED';published=$false;complete=$false}
+    Set-JointValue $State 'platformAppEvaluations' $result;Set-JointValue $State 'stage' 'PLATFORM_APPS_EVALUATED'
+    Set-JointValue $State 'lastError' $null;& $Save
+    return $result
+}
