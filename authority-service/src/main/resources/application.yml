@@ -37,3 +37,21 @@ agent:
       skill: ${AGENT_SECRET_IAM_SKILL_CLIENT:}
       model: ${AGENT_SECRET_IAM_MODEL_CLIENT:}
       monitor: ${AGENT_SECRET_IAM_MONITOR_CLIENT:}
+
+    # 人身份会话（口径 B 的 M4 前置）：把 user-mgmt 的 API-Key 身份换成平台 gateway 认得的 portal 令牌。
+    # 默认关：不配 url/api-key-ref 时该 operation 一律 403，既有部署行为不变。
+    # issuer/audience/client-id 必须与平台 AuthorityProperties.portal 逐字一致，否则签出的票没人认。
+    identity:
+      enabled: ${AGENT_AUTHORITY_IDENTITY_ENABLED:false}
+      url: ${AGENT_AUTHORITY_IDENTITY_URL:}
+      api-key-ref: ${AGENT_AUTHORITY_IDENTITY_KEY_REF:}
+      identity-path: ${AGENT_AUTHORITY_IDENTITY_PATH:/system/apikeys/identity/self}
+      tenant: ${AGENT_AUTHORITY_IDENTITY_TENANT:local-v12}
+      issuer: ${AGENT_AUTHORITY_IDENTITY_ISSUER:${AGENT_AUTHORITY_ISSUER:}}
+      audience: ${AGENT_AUTHORITY_IDENTITY_AUDIENCE:agent-platform-portal}
+      client-id: ${AGENT_AUTHORITY_IDENTITY_CLIENT_ID:gateway}
+      scope: ${AGENT_AUTHORITY_IDENTITY_SCOPE:platform.access}
+      biz-system-code: ${AGENT_AUTHORITY_IDENTITY_BIZ_SYSTEM_CODE:agent-platform}
+      connect-timeout-ms: ${AGENT_AUTHORITY_IDENTITY_CONNECT_TIMEOUT_MS:2000}
+      read-timeout-ms: ${AGENT_AUTHORITY_IDENTITY_READ_TIMEOUT_MS:2000}
+      session-seconds: ${AGENT_AUTHORITY_IDENTITY_SESSION_SECONDS:3600}

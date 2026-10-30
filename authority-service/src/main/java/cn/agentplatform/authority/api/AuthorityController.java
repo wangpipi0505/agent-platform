@@ -2,6 +2,7 @@ package cn.agentplatform.authority.api;
 
 import cn.agentplatform.authority.AuthorityException;
 import cn.agentplatform.authority.client.ClientRegistry;
+import cn.agentplatform.authority.identity.SessionService;
 import cn.agentplatform.authority.route.RouteDirectory;
 import cn.agentplatform.authority.sign.KeyRing;
 import org.slf4j.Logger;
@@ -43,12 +44,15 @@ public final class AuthorityController {
     private final ClientRegistry clients;
     private final RouteDirectory routes;
     private final TicketService tickets;
+    private final SessionService sessions;
 
-    public AuthorityController(KeyRing keys, ClientRegistry clients, RouteDirectory routes, TicketService tickets) {
+    public AuthorityController(KeyRing keys, ClientRegistry clients, RouteDirectory routes, TicketService tickets,
+                               SessionService sessions) {
         this.keys = keys;
         this.clients = clients;
         this.routes = routes;
         this.tickets = tickets;
+        this.sessions = sessions;
     }
 
     @GetMapping(path = "/.well-known/jwks.json", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -62,6 +66,10 @@ public final class AuthorityController {
     public Map<String, Object> token(
             @RequestHeader(name = "Authorization", required = false) String authorization,
             @RequestBody(required = false) byte[] body) {
+        // 会话签发不是一次 ServiceCall：它换的是"人"而不是"服务能力"，因此在解析目录请求之前分流。
+        if (SessionService.OPERATION.equals(SessionService.operationOf(body))) {
+            return handleSession(authorization, body);
+        }
         return handle("token", authorization, body, this::issueTicket);
     }
 
@@ -107,6 +115,20 @@ public final class AuthorityController {
                     + " target=" + request.call().target() + " action=" + request.call().action());
         }
         return tickets.workloadAssertion(clientId, request, ticket);
+    }
+
+    private Map<String, Object> handleSession(String authorization, byte[] body) {
+        String clientId = null;
+        try {
+            clientId = clients.authenticate(authorization);
+            Map<String, Object> response = sessions.session(clientId, body);
+            audit.info("authority.audit endpoint=token outcome=permit client_id={} operation=session", clientId);
+            return response;
+        } catch (AuthorityException denied) {
+            audit.info("authority.audit endpoint=token outcome=deny client_id={} operation=session reason={}",
+                    clientId, denied.auditReason());
+            throw denied;
+        }
     }
 
     private Map<String, Object> handle(String endpoint, String authorization, byte[] body, Dispatch dispatch) {

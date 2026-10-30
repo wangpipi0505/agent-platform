@@ -78,8 +78,10 @@ class RealClientContractTest extends AuthorityTestSupport {
                     .isInstanceOf(PlatformException.class)
                     .satisfies(e -> {
                         PlatformException platform = (PlatformException) e;
-                        assertThat(platform.status()).isEqualTo(503);
-                        assertThat(platform.code()).isEqualTo("IAM_AUTHORITY_UNAVAILABLE");
+                        // M2 之后不再把"目录里没有这条行"折叠成"服务不可用"：403 是可区分的拒绝，
+                        // 503 只留给真正的传输/协议故障。否则运维无法从状态码判断是配置缺失还是服务挂了。
+                        assertThat(platform.status()).isEqualTo(403);
+                        assertThat(platform.code()).isEqualTo("IAM_AUTHORITY_FORBIDDEN");
                     });
         }
     }
