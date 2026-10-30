@@ -124,15 +124,42 @@ public final class ServiceTickets {
             return ServiceTokens.issue(actor);
         }
         VerifiedAuthority authority = currentAuthority();
+        String path = authorityPath(url);
         // target 只由 host:port 决定；判定不出就置空，空名不可能命中目录行，必然 403。
         String target = Objects.toString(targetOf(url), "");
-        String template = templateOf(caller, target, method, pathOf(url));
+        String template = templateOf(caller, target, method, path);
         ServiceCall call = policy.require(caller, target, method, template);
         ServiceTicketProvider issuer = provider;
         if (issuer == null)
             // 装配错误不是鉴权失败：403 会把运维引向授权配置，真因是容器里没有签发器。
             throw new PlatformException(500, PROVIDER_MISSING, PROVIDER_MISSING_MESSAGE);
         return issuer.issue(authority, call).value();
+    }
+
+    /** 仅控制本实例传输行为；LEGACY的签发、URL及重定向行为保持原样。 */
+    boolean authorityMode() {
+        return AUTHORITY.equals(mode);
+    }
+
+    /** 票据模板必须与实际发送的原始路径一致，不解码、折叠路径或采纳URL内身份。 */
+    private static String authorityPath(String url) {
+        try {
+            if (url == null || !url.equals(url.trim())) throw new IllegalArgumentException();
+            URI uri = URI.create(url);
+            String path = uri.getRawPath();
+            if (!uri.isAbsolute() || uri.isOpaque() || uri.getHost() == null
+                    || !java.util.Set.of("http", "https").contains(uri.getScheme().toLowerCase(Locale.ROOT))
+                    || uri.getRawUserInfo() != null || uri.getRawFragment() != null
+                    || uri.getPort() == 0 || uri.getPort() > 65535
+                    || path == null || path.isBlank() || !path.startsWith("/")
+                    || !path.equals(uri.getPath()) || path.contains("//") || path.endsWith("/")
+                    || path.contains(";")) throw new IllegalArgumentException();
+            for (String segment : path.split("/"))
+                if (".".equals(segment) || "..".equals(segment)) throw new IllegalArgumentException();
+            return path;
+        } catch (IllegalArgumentException | NullPointerException invalid) {
+            throw new PlatformException(403, "SYS-AUTH-403", "AUTHORITY服务地址必须是已登记目标的规范路径，不能携带URL身份或片段");
+        }
     }
 
     /**

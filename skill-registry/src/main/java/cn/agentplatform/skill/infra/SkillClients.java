@@ -29,7 +29,15 @@ public class SkillClients {
     }
 
     public SkillClients() {
-        var factory = new SimpleClientHttpRequestFactory();
+        var factory = new SimpleClientHttpRequestFactory() {
+            @Override
+            protected void prepareConnection(java.net.HttpURLConnection connection, String method)
+                    throws java.io.IOException {
+                super.prepareConnection(connection, method);
+                // 每次实际请求仍只能发送到签票时登记的origin与路径；302不能产生第二次隐式调用。
+                if (serviceTickets.authorityMode()) connection.setInstanceFollowRedirects(false);
+            }
+        };
         factory.setConnectTimeout(3000);
         factory.setReadTimeout(60000);
         client = RestClient.builder().requestFactory(factory).build();
@@ -54,19 +62,23 @@ public class SkillClients {
         String ticket = serviceTickets.ticket(actor, "skill", method, url);
         String response;
         try {
-            response =
+            var reply =
                     method.equals("GET")
                             ? client.get()
                                     .uri(url)
                                     .header("Authorization", "Bearer " + ticket)
                                     .retrieve()
-                                    .body(String.class)
                             : client.post()
                                     .uri(url)
                                     .header("Authorization", "Bearer " + ticket)
                                     .body(body)
-                                    .retrieve()
-                                    .body(String.class);
+                                    .retrieve();
+            // 不能把未跟随的3xx正文里的OK信封当业务成功，也不以Location重新签发或重试。
+            if (serviceTickets.authorityMode())
+                reply.onStatus(status -> status.is3xxRedirection(), (request, redirect) -> {
+                    throw unavailable();
+                });
+            response = reply.body(String.class);
         } catch (RestClientResponseException ex) {
             // 4xx 可能携带下游业务信封，按原码抛出；5xx 不解析，维持依赖不可用。
             throw downstreamError(ex);
