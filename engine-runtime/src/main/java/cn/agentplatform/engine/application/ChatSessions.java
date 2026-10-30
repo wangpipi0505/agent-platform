@@ -27,6 +27,7 @@ public class ChatSessions {
         JsonNode snapshot = clients.get("app", "/internal/apps/" + code + "/published", actor);
         if (!snapshot.path("type").asText().equals("CHAT"))
             throw new PlatformException(409, "CHAT_REQUIRED", "只有已发布对话应用可创建会话");
+        maxTurns(snapshot);
         String id = "s_" + UUID.randomUUID().toString().replace("-", "");
         store.db()
                 .update(
@@ -52,6 +53,8 @@ public class ChatSessions {
                 TraceStore.json(session.get("snapshot")).path("versionNo"),
                 "nextTurn",
                 session.get("next_turn"),
+                "maxTurns",
+                maxTurns(TraceStore.json(session.get("snapshot"))),
                 "turns",
                 store.db()
                         .queryForList(
@@ -77,6 +80,7 @@ public class ChatSessions {
         // disablement.
         // Existing reservations are accepted work and must remain idempotently recoverable.
         if (!known) {
+            requireTurnLimit(pinnedSession);
             ChatHistory.checkScope(store, id, code, actor);
             clients.get("app", "/internal/apps/" + code + "/published", actor);
         }
@@ -120,6 +124,8 @@ public class ChatSessions {
                                                         409, "REQUEST_CONFLICT", "轮次请求号已绑定其他输入");
                                             return existing.getFirst();
                                         }
+                                        // 在既有会话行锁内复核固定版本的上限；已受理请求走上方重放分支，不再占用轮次。
+                                        requireTurnLimit(session);
                                         var pending =
                                                 store.db()
                                                         .queryForList(
@@ -213,5 +219,20 @@ public class ChatSessions {
                                 actor.principalId());
         if (rows.isEmpty()) throw new PlatformException(404, "SESSION_NOT_FOUND", "会话不存在");
         return rows.getFirst();
+    }
+
+    /** 上限随会话创建时的发布快照固定；后续应用改稿不会改变旧会话，缺省40轮。 */
+    private static int maxTurns(JsonNode snapshot) {
+        var value = snapshot.path("config").path("context").path("maxTurns");
+        if (value.isMissingNode()) return 40;
+        if (!value.isIntegralNumber() || !value.canConvertToInt() || value.intValue() < 1 || value.intValue() > 200)
+            throw new PlatformException(400, "CHAT_CONTEXT_INVALID", "会话最大轮数须为1至200的整数");
+        return value.intValue();
+    }
+
+    private static void requireTurnLimit(Map<String, Object> session) {
+        int limit = maxTurns(TraceStore.json(session.get("snapshot")));
+        if (((Number) session.get("next_turn")).longValue() > limit)
+            throw new PlatformException(429, "CHAT_TURN_LIMIT", "会话已达到固定版本的 " + limit + " 轮上限，请新建会话后继续");
     }
 }

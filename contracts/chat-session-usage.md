@@ -1,0 +1,9 @@
+# 会话接续与用量展示增补（EX-21b）
+
+复用PostgreSQL的chat_session/chat_turn、会话创建时冻结的发布快照及原requestId幂等/上一轮串行。新请求在受理前及会话行锁内复核config.context.maxTurns：1至200的整数，缺省40；超限429/CHAT_TURN_LIMIT，不占轮号或运行容量。已受理requestId沿原输入一致性与归属检查重放，不因上限拒绝原请求。显式新会话仅切换当前UI选择，旧会话/轮次/运行不删除。
+
+继续历史时同时复核session和每个关联run的tenant/principal/app；引用其它主体或应用的run返回403/CHAT_HISTORY_SCOPE_CHANGED，不能仅凭会话行归属读取回答。保留原角色/属性范围校验、固定版本、historyTurns/historyTokens、真实tokenizer与上下文裁剪顺序；无会话的单轮不合成历史。本批未开放IAM尚未迁移的会话授权范围。
+
+GET /admin/usage/summary既有读接口由gateway精确路由至engine，by=app|user|model。tokens只汇总已计量totalTokens，usageMissingInvocations单列未计量/缺值，不把缺值显示为已知零。tenant来自已验Actor。附加quotaEnabled/quotaWindowSeconds/limitTokens/limitStatus，只在应用维度且查询窗口与实际配额窗口一致时比较；其它维度NOT_APPLICABLE、不同窗口WINDOW_MISMATCH。未配置额度、配额未开启、用量不全分别显示，不增加金额计算或按用户/模型执行新配额。
+
+回滚只撤新入口/展示或反向代码差异，保留PG历史与既有配额规则。正式重启/浏览器、真实模型指代、多轮评测及IAM会话接线分别按台账继续，不能由本地用例代替。

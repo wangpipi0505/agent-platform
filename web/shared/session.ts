@@ -12,7 +12,9 @@ export async function restoreSession(
   return { session, declaration };
 }
 export function writeSessionUrl(id: string) {
+  // 空 id 只退出当前历史续接；旧会话仍受服务端归属校验保护。
   const url = new URL(location.href);
-  url.searchParams.set("sessionId", id);
+  if (id) url.searchParams.set("sessionId", id);
+  else url.searchParams.delete("sessionId");
   history.replaceState(null, "", url);
 }

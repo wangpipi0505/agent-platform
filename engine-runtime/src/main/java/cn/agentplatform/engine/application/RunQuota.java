@@ -163,18 +163,34 @@ public class RunQuota {
                             "coalesce(mi.response->'actualModel'->>'modelName','(unknown)')";
                     default -> throw new IllegalArgumentException("聚合维度必须是 app|user|model");
                 };
-        return db.queryForList(
+        // 缺用量的成功调用仍列入调用数，但只求和已入计量账本的 token，避免把未知伪装成零。
+        var groups = db.queryForList(
                 "select "
                         + dimension
                         + " as scope,"
-                        + " coalesce(sum((mi.response->'usage'->>'totalTokens')::bigint),0) as tokens,"
-                        + " count(*) as invocations"
-                        + WINDOW_FROM
+                        + " coalesce(sum(case when mi.usage_accounted and mi.response->'usage'->>'totalTokens' is not null then (mi.response->'usage'->>'totalTokens')::bigint else 0 end),0) as tokens,"
+                        + " count(*) as invocations,"
+                        + " count(*) filter(where not mi.usage_accounted or mi.response->'usage'->>'totalTokens' is null) as \"usageMissingInvocations\""
+                        + " from engine.model_invocation mi join engine.run r on r.id=mi.run_id"
+                        + " where mi.status='SUCCEEDED' and mi.response is not null and mi.updated_at>=?"
                         + " and r.tenant_id=? group by "
                         + dimension
                         + " order by tokens desc, scope",
                 cutoff(windowSeconds),
                 actor.tenantId());
+        for (var group : groups) {
+            long used = ((Number) group.get("tokens")).longValue();
+            boolean app = "app".equals(by);
+            group.put("quotaEnabled", enabled);
+            group.put("quotaWindowSeconds", Math.max(1, this.windowSeconds));
+            group.put("limitTokens", app && appTokens > 0 ? appTokens : null);
+            // 仅同一窗口的应用汇总可比较应用上限；用户/模型维度不借用凭据级上限。
+            group.put("limitStatus", !enabled ? "DISABLED" : !app ? "NOT_APPLICABLE" : appTokens <= 0 ? "UNLIMITED"
+                    : windowSeconds != Math.max(1, this.windowSeconds) ? "WINDOW_MISMATCH"
+                    : used >= appTokens ? "EXCEEDED" : ((Number) group.get("usageMissingInvocations")).longValue() > 0
+                    ? "USAGE_INCOMPLETE" : "WITHIN_LIMIT");
+        }
+        return groups;
     }
 
     private void requireWithin(String level, String scope, long limit, long used, long window) {

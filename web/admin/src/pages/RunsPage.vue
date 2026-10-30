@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import PageHeader from "../PageHeader.vue";
 import RunList from "../RunList.vue";
+import RunUsage from "../RunUsage.vue";
 import { usePageTitle } from "../usePageOperation";
 
 usePageTitle(() => "运行监控");
@@ -15,4 +16,5 @@ const key = ref(0);
     @refresh="key++"
   />
   <RunList :key="key" />
+  <RunUsage :key="`usage-${key}`" />
 </template>

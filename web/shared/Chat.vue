@@ -213,6 +213,19 @@ async function stop() {
     error.value = e.message;
   }
 }
+async function newConversation() {
+  // 显式切换续接入口，不删除旧会话、轮次或运行事实。
+  if (busy.value || awaitingApproval.value) return;
+  sessionId.value = "";
+  writeSessionUrl("");
+  messages.value = [];
+  files.value = [];
+  runId.value = "";
+  draft.value = "";
+  error.value = "";
+  ready.value = false;
+  await initialize();
+}
 onBeforeUnmount(() => {
   disposed = true;
   controller?.abort();
@@ -261,6 +274,7 @@ onBeforeUnmount(() => {
     <p v-else class="muted" role="status">等待确认后继续运行；输入区已由确认卡接管。</p>
     <div class="row" style="margin-top: 0.75rem">
       <span class="muted">{{ runId }}</span
+      ><el-button v-if="declaration?.type === 'CHAT' && sessionId" :disabled="busy || awaitingApproval" @click="newConversation">新建会话</el-button
       ><el-button v-if="busy" @click="stop">停止运行</el-button
       ><el-button v-else type="primary" :disabled="!ready" @click="send">{{
         declaration?.type === "FLOW" ? "提交运行" : "发送"

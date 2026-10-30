@@ -5,6 +5,8 @@ public final class Routes {
     private Routes() {}
 
     public static String service(String path) {
+        // 用量事实由运行时提供，精确入口不扩展为任意 usage 子路径。
+        if (path.equals("/admin/usage/summary")) return "engine";
         // Named inputs remain runtime resources; promotion's service-only endpoint stays private.
         if (path.matches("/admin/debug-inputs(?:/[0-9]+(?:/promote)?)?")) return "engine";
         if (path.matches("/admin/evaluation-datasets(?:/[^/]+/[^/]+)?")) return "monitor";

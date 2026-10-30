@@ -18,7 +18,7 @@ public final class ChatHistory {
         var rows =
                 store.db()
                         .queryForList(
-                                "select r.guard_ctx from engine.chat_turn t join"
+                                "select r.guard_ctx,r.tenant_id,r.principal_id,r.app_code from engine.chat_turn t join"
                                     + " engine.chat_session s on s.public_id=t.session_id join"
                                     + " engine.run r on r.public_id=t.run_public_id where"
                                     + " s.public_id=? and s.tenant_id=? and s.principal_id=? and"
@@ -28,7 +28,10 @@ public final class ChatHistory {
                                 actor.principalId(),
                                 code);
         var current = Json.tree(Map.of("roles", actor.roles(), "attributes", actor.attributes()));
-        for (var row : rows) requireScope(TraceStore.json(row.get("guard_ctx")), current);
+        for (var row : rows) {
+            requireOwner(row, actor.tenantId(), actor.principalId(), code);
+            requireScope(TraceStore.json(row.get("guard_ctx")), current);
+        }
     }
 
     private static void requireScope(JsonNode source, JsonNode current) {
@@ -59,10 +62,16 @@ public final class ChatHistory {
     public static List<Map<String, Object>> load(TraceStore store, Map<String, Object> run) {
         var session = TraceStore.json(run.get("snapshot")).path("chatSession");
         if (!session.has("sessionId")) return List.of();
+        if (!session.path("sessionId").isTextual() || !session.path("turnNo").isIntegralNumber()
+                || !session.path("turnNo").canConvertToInt() || session.path("turnNo").intValue() < 1)
+            throw changed();
+        if (store.db().queryForObject("select count(*) from engine.chat_session where public_id=? and tenant_id=? and principal_id=? and app_code=?",
+                Integer.class, session.path("sessionId").textValue(), run.get("tenant_id"), run.get("principal_id"), run.get("app_code")) != 1)
+            throw changed();
         var rows =
                 store.db()
                         .queryForList(
-                                "select t.inputs,r.status,r.output,r.error,r.guard_ctx from"
+                                "select t.inputs,r.status,r.output,r.error,r.guard_ctx,r.tenant_id,r.principal_id,r.app_code from"
                                     + " engine.chat_turn t join engine.chat_session s on"
                                     + " s.public_id=t.session_id join engine.run r on"
                                     + " r.public_id=t.run_public_id where s.public_id=? and"
@@ -75,6 +84,8 @@ public final class ChatHistory {
                                 session.path("turnNo").asInt());
         List<Map<String, Object>> history = new ArrayList<>();
         for (var row : rows) {
+            // 会话链接不能替代所指运行本身的归属证明；重启后仍先复核，再装配历史回答。
+            requireOwner(row, run.get("tenant_id"), run.get("principal_id"), run.get("app_code"));
             // 执行/恢复入口再次校验，不能只依赖前端清空会话或创建前的一次检查。
             requireScope(
                     TraceStore.json(row.get("guard_ctx")), TraceStore.json(run.get("guard_ctx")));
@@ -100,5 +111,10 @@ public final class ChatHistory {
             history.add(Map.of("role", "assistant", "content", text));
         }
         return history;
+    }
+
+    private static void requireOwner(Map<String, Object> row, Object tenant, Object principal, Object code) {
+        if (!Objects.equals(tenant, row.get("tenant_id")) || !Objects.equals(principal, row.get("principal_id"))
+                || !Objects.equals(code, row.get("app_code"))) throw changed();
     }
 }
