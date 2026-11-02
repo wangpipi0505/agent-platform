@@ -2233,7 +2233,7 @@
  },
  {
   "method": "GET",
-  "template": "/admin/apps/{}/pin-status",
+  "template": "/admin/apps/{code}/pin-status",
   "caller": "gateway",
   "target": "app",
   "action": "proxy.app.get.AppController.pinStatus",
@@ -2353,7 +2353,7 @@
  },
  {
   "method": "POST",
-  "template": "/admin/model-entries/{}/test",
+  "template": "/admin/model-entries/{id}/test",
   "caller": "gateway",
   "target": "model",
   "action": "proxy.model.post.ModelController.testEntry",

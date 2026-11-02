@@ -139,4 +139,18 @@ class RouteCoverageVerifierTest {
         fails(PartialGuardApp.class,"ROUTE_GUARD_MISSING");
     }
 
+    /** R20：真实代理目录行必须与控制器映射模板逐字相等，否则iam启动即ROUTE_COVERAGE_MISSING。 */
+    @Test void realProxyRowsUseExactControllerTemplates(){
+        var routes=new ServiceRoutePolicy();
+        var pin=RouteCoverageVerifier.catalogRow("app",routes,"GET","/admin/apps/{code}/pin-status").orElseThrow();
+        assertThat(pin.caller()).isEqualTo("gateway");assertThat(pin.mode()).isEqualTo("delegated");
+        var test=RouteCoverageVerifier.catalogRow("model",routes,"POST","/admin/model-entries/{id}/test").orElseThrow();
+        assertThat(test.caller()).isEqualTo("gateway");assertThat(test.mode()).isEqualTo("delegated");
+        assertThat(routes.routes()).noneMatch(r->r.template().equals("/admin/apps/{}/pin-status"));
+        assertThat(routes.routes()).noneMatch(r->r.template().equals("/admin/model-entries/{}/test"));
+        // 覆盖判定是method+模板精确匹配：错method、未登记模板继续不存在，不因形状相近而放行。
+        assertThat(RouteCoverageVerifier.catalogRow("app",routes,"POST","/admin/apps/{code}/pin-status")).isEmpty();
+        assertThat(RouteCoverageVerifier.catalogRow("model",routes,"POST","/admin/model-entries/{id}/other")).isEmpty();
+    }
+
 }
