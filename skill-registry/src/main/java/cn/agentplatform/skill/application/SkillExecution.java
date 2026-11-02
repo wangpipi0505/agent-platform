@@ -166,7 +166,12 @@ public class SkillExecution {
             SkillRules.validate(contract.get("inputSchema"), arguments);
         } catch (Exception ex) {
             failure = "PARAM_ERROR";
-            reason = "参数不符合技能Schema";
+            // R11：预算拒绝保留阶段/维度/限额/原因（仅SkillRules自身的有界预算消息），
+            // 其余校验失败维持原通用文案，避免networknt细节或用户材料进入诊断。
+            reason =
+                    ex.getMessage() != null && ex.getMessage().startsWith("Schema预算拒绝：")
+                            ? ex.getMessage()
+                            : "参数不符合技能Schema";
         }
         if (failure == null)
             try {

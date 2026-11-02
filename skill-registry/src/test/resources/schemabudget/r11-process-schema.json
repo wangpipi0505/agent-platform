@@ -1,0 +1,293 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "properties": {
+  "ballistics": {
+   "type": "array",
+   "items": {
+    "$ref": "#/definitions/ballistic"
+   },
+   "minItems": 1,
+   "maxItems": 64
+  },
+  "satellites": {
+   "type": "array",
+   "items": {
+    "$ref": "#/definitions/satellite"
+   },
+   "minItems": 1,
+   "maxItems": 64
+  },
+  "startOffsetSec": {
+   "type": "integer",
+   "minimum": -2592000,
+   "maximum": 2592000
+  },
+  "stepSizeSec": {
+   "type": "integer",
+   "minimum": 1,
+   "maximum": 86400
+  },
+  "numCalculations": {
+   "type": "integer",
+   "minimum": 1,
+   "maximum": 100000
+  },
+  "targetSampleStepSec": {
+   "type": "number",
+   "minimum": 0.01,
+   "maximum": 60,
+   "default": 1.0
+  },
+  "trajectoryPointOutput": {
+   "type": "integer",
+   "enum": [
+    0,
+    1
+   ],
+   "default": 1
+  },
+  "orbitModel": {
+   "type": "string",
+   "enum": [
+    "TWO_BODY",
+    "J2_SECULAR",
+    "J2_NUMERICAL"
+   ],
+   "default": "J2_NUMERICAL"
+  },
+  "files": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "trajectory"
+   ],
+   "properties": {
+    "trajectory": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "artifactId"
+     ],
+     "properties": {
+      "artifactId": {
+       "type": "string",
+       "minLength": 1
+      }
+     }
+    }
+   }
+  }
+ },
+ "required": [
+  "ballistics",
+  "satellites",
+  "startOffsetSec",
+  "stepSizeSec",
+  "numCalculations",
+  "files"
+ ],
+ "description": "终止偏移、ID唯一性、文件引用、日期和采样量/组合规模由运行时验证；default仅为文档，不要求Schema验证器填值。",
+ "definitions": {
+  "parameters": {
+   "type": "object",
+   "additionalProperties": false,
+   "properties": {
+    "ballistics": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/ballistic"
+     },
+     "minItems": 1,
+     "maxItems": 64
+    },
+    "satellites": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/satellite"
+     },
+     "minItems": 1,
+     "maxItems": 64
+    },
+    "startOffsetSec": {
+     "type": "integer",
+     "minimum": -2592000,
+     "maximum": 2592000
+    },
+    "stepSizeSec": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 86400
+    },
+    "numCalculations": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 100000
+    },
+    "targetSampleStepSec": {
+     "type": "number",
+     "minimum": 0.01,
+     "maximum": 60,
+     "default": 1.0
+    },
+    "trajectoryPointOutput": {
+     "type": "integer",
+     "enum": [
+      0,
+      1
+     ],
+     "default": 1
+    },
+    "orbitModel": {
+     "type": "string",
+     "enum": [
+      "TWO_BODY",
+      "J2_SECULAR",
+      "J2_NUMERICAL"
+     ],
+     "default": "J2_NUMERICAL"
+    }
+   },
+   "required": [
+    "ballistics",
+    "satellites",
+    "startOffsetSec",
+    "stepSizeSec",
+    "numCalculations"
+   ],
+   "description": "终止偏移、ID唯一性、文件引用、日期和采样量/组合规模由运行时验证；default仅为文档，不要求Schema验证器填值。"
+  },
+  "ballistic": {
+   "type": "object",
+   "additionalProperties": false,
+   "properties": {
+    "file": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 128
+    },
+    "baseLaunchUtc": {
+     "type": "string",
+     "pattern": "^(?:20[0-9]{2}|2100)/(?:0[1-9]|1[0-2])/(?:0[1-9]|[12][0-9]|3[01]) (?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](?:\\.[0-9]{3})?$",
+     "description": "UTC，2000—2100年；Schema检查词法，真实日历、上下界和偏移后区间由运行时严格验证。"
+    },
+    "targetId": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 128
+    },
+    "targetName": {
+     "type": "string",
+     "maxLength": 256
+    }
+   },
+   "required": [
+    "file"
+   ]
+  },
+  "satellite": {
+   "type": "object",
+   "additionalProperties": false,
+   "properties": {
+    "satelliteId": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 128
+    },
+    "name": {
+     "type": "string",
+     "maxLength": 256
+    },
+    "semiMajorAxisM": {
+     "type": "number",
+     "exclusiveMinimum": 0
+    },
+    "eccentricity": {
+     "type": "number",
+     "minimum": 0,
+     "exclusiveMaximum": 1
+    },
+    "inclinationDeg": {
+     "type": "number",
+     "minimum": 0,
+     "maximum": 180
+    },
+    "raanDeg": {
+     "type": "number",
+     "minimum": 0,
+     "maximum": 360
+    },
+    "argumentOfPerigeeDeg": {
+     "type": "number",
+     "minimum": 0,
+     "maximum": 360
+    },
+    "meanAnomalyDeg": {
+     "type": "number",
+     "minimum": 0,
+     "maximum": 360
+    },
+    "epochUtc": {
+     "type": "string",
+     "pattern": "^(?:20[0-9]{2}|2100)/(?:0[1-9]|1[0-2])/(?:0[1-9]|[12][0-9]|3[01]) (?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](?:\\.[0-9]{3})?$",
+     "description": "UTC，2000—2100年；Schema检查词法，真实日历、上下界和偏移后区间由运行时严格验证。"
+    },
+    "payloads": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/payload"
+     },
+     "minItems": 1,
+     "maxItems": 8
+    }
+   },
+   "required": [
+    "semiMajorAxisM",
+    "eccentricity",
+    "inclinationDeg",
+    "raanDeg",
+    "argumentOfPerigeeDeg",
+    "meanAnomalyDeg",
+    "epochUtc"
+   ]
+  },
+  "payload": {
+   "type": "object",
+   "additionalProperties": false,
+   "properties": {
+    "payloadId": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 128
+    },
+    "payloadName": {
+     "type": "string",
+     "maxLength": 256
+    },
+    "payloadType": {
+     "type": "string",
+     "enum": [
+      "对地监视",
+      "对空监视",
+      "对地跟踪",
+      "对空跟踪"
+     ]
+    },
+    "maxDetectRangeKm": {
+     "type": "number",
+     "default": 0,
+     "description": "km；沿用核心<=0表示不限距离。"
+    },
+    "sunExclusionAngleDeg": {
+     "type": "number",
+     "minimum": 0,
+     "maximum": 180,
+     "default": 45
+    }
+   },
+   "required": [
+    "payloadType"
+   ]
+  }
+ }
+}
