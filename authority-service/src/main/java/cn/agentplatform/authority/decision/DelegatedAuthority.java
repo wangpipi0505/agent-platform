@@ -16,6 +16,7 @@ import cn.agentplatform.common.authority.PortalEventsBinding;
 import cn.agentplatform.common.authority.ResourceBinding;
 import cn.agentplatform.common.authority.RunObservationSelectors;
 import cn.agentplatform.common.authority.ServiceCall;
+import cn.agentplatform.common.authority.ServiceRoutePolicy;
 import cn.agentplatform.common.authority.SubjectKey;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -63,6 +64,14 @@ public final class DelegatedAuthority {
 
     public static final String AUTHORIZE = "authorize";
     public static final String FORWARD = "forward";
+    /**
+     * EX-26：用本服务**已经签发并登记**的原委托换一张新的短票。
+     *
+     * <p>与 forward/exchange 同走 tokenUri（平台客户端就是这么发的），但入口凭据只有
+     * {@code grant_ref}：主体、角色、上限、到期时间全部从登记簿重建，不接受调用方自带身份，
+     * 也不重放原门户 JWT。
+     */
+    public static final String RESUME = "resume";
     public static final String EXCHANGE = "exchange";
     public static final String MODE = "delegated";
     /** EX-44 S3：为一次 SSE 观测开窗，产物是断言信封 + continuation，不是票。 */
@@ -201,6 +210,129 @@ public final class DelegatedAuthority {
             deny("decision", FORWARD, clientId, request, denied);
             throw denied;
         }
+    }
+
+    /**
+     * {@code operation=resume}：用本服务**已经签发并登记**的原委托换一张新的短票（EX-26）。
+     *
+     * <p>与 forward 的区别是换什么：forward 换"目标"（把决策交给目录里另一条 delegated 行），
+     * resume 换"时间"——目标、资源、主体、上限全部沿用原委托，只重新签发一张
+     * {@code operation.source_kind=DELEGATED} 的短票，让已认证服务在门户 JWT 早已过期之后
+     * 继续推进同一个 run。设计简报（iam-stage-3-implementation-brief §resume）给的边界是：
+     * 权威方可以跨过原门户 JWT 的寿命，只要 grant 自身仍在有效期；但**不能**由调用方
+     * 自带主体、角色或 expiry，否则"续期"就成了扩权。
+     *
+     * <p>不变量（缺一不可）：
+     * <ol>
+     *   <li>凭据只有 {@code grant_ref}；主体、角色、上限从登记簿的原委托重建，请求里的身份字段一概不看；</li>
+     *   <li>原委托必须存在（未登记 → 403）、未被一次性消费（撤销 → 403）、grant 未过期
+     *       （→ 403 {@code AUTHORITY_EXPIRED}，与"未登记"可区分）；</li>
+     *   <li>请求的 resource 必须与原委托绑定的 root 逐项相等——换 root 等于换授权对象，是越权；</li>
+     *   <li>target 必须是原委托的 target（能力只能回到它原本被授予的服务），action 必须仍是同一条
+     *       推进边：或与原 action 相同，或是 {@link ServiceRoutePolicy#localRunAdvance} 的这一条本地边
+     *       （目录里没有 engine→engine 的 delegated 行，{@code run.advance} 只由平台客户端的本地规则放行）；</li>
+     *   <li>签出的票沿用原 {@code initial_ceiling}（客户端 {@code verifyCeiling} 注释：
+     *       "Signed grant ceiling is immutable across resume"）、原 grant 到期时间与 origin，
+     *       所以续期后的票永远活不过原 grant，也永远不改变这次能力最初由谁认证。</li>
+     * </ol>
+     *
+     * <p>resume 不往登记簿写新决策：它是同一份委托的再签发，写入会占用容量，并给"一次性消费"
+     * 制造第二个可消费对象。票面 {@code decision_id} 因此只是这张票自己的标识，
+     * 后续 {@code authorize} 会按票面内容重新登记（{@link #fromTicket}）。
+     */
+    public Map<String, Object> resume(String clientId, AuthorityRequest request) {
+        try {
+            requireEnabled();
+            DecisionStore.Decision original = resumeGrant(clientId, request);
+            long iat = now();
+            Instant issued = Instant.ofEpochSecond(iat);
+            Instant grantExpiresAt = original.grantExpiresAt();
+            Map<String, Object> originalOperation = original.operation();
+            String originKind = operationText(originalOperation, "origin_kind");
+            String ceilingSha = operationText(originalOperation, "ceiling_sha256");
+            // 新 operation 只延长"这张票"：expires 仍被原 grant 到期时间夹住，续期不能延长 grant。
+            Map<String, Object> operation = operation(newId("op"), issued,
+                    earlier(issued.plusSeconds(properties.ticketSeconds()), grantExpiresAt),
+                    original.grantRef(), operationText(originalOperation, "tenant_id"),
+                    operationText(originalOperation, "sub"), request.call(), ceilingSha,
+                    "DELEGATED", originKind);
+            DecisionStore.Decision resumed = new DecisionStore.Decision(newId("dec"), clientId,
+                    request.call().target(), request.call().action(), resourceOf(request.call()),
+                    original.actor(), original.ceiling(), operation, original.grantRef(), grantExpiresAt,
+                    // 这一跳的发起方就是调用方：断言 subject_caller 必须与票面 caller 一致
+                    // （客户端 authorizeRetained 逐字比对），原委托的 subject_caller 只留在审计里。
+                    clientId, null, original.originAuthenticationId(), original.authorizationVersion(),
+                    earlier(issued.plusSeconds(delegation.decisionSeconds()), grantExpiresAt),
+                    // purpose / sourceTokenSha256：resume 不是一次判权目的，也不消费主体令牌。
+                    null, null, request.nonce(), Digest.sha256(Json.canonical(request.raw())),
+                    // consumedAt/consumedBy/parentAdmissionId/bindingResponseId/continuationJti/hardDeadline/immutable：
+                    // 这张决策不登记进 store，这些跨越重试与恢复窗口的字段不参与 resume。
+                    null, null, null, null, null, null, null);
+            String jti = newId("tkt");
+            IssuedTicket ticket = ticket(resumed, clientId, request.call(), iat, jti, null);
+            Map<String, Object> claims = authorityClaims(resumed.withTicketJti(jti), request, iat);
+            claims.put("ticket", ticket.value());
+            audit.info("delegation.audit endpoint=token outcome=permit operation=resume caller={} target={}"
+                            + " action={} decision_id={} grant_ref={} grant_expires_at={}",
+                    clientId, request.call().target(), request.call().action(), resumed.id(),
+                    resumed.grantRef(), grantExpiresAt.getEpochSecond());
+            return Map.of("assertion", keys.sign(TicketService.ASSERTION_TYPE, claims), "ticket", ticket.value());
+        } catch (AuthorityException denied) {
+            deny("token", RESUME, clientId, request, denied);
+            throw denied;
+        }
+    }
+
+    /**
+     * resume 的原委托查找与前置校验。按 grant_ref 取候选是**故意不过滤过期**的：
+     * 只有拿到那条已过期的登记，才能把"过期"（可重建运行）与"从未签发过"（可能被伪造的引用）分开。
+     */
+    private DecisionStore.Decision resumeGrant(String clientId, AuthorityRequest request) {
+        String grantRef = request.grantRef();
+        if (grantRef == null || grantRef.isBlank()) {
+            throw AuthorityException.denied("RESUME_GRANT");
+        }
+        List<DecisionStore.Decision> scoped = decisions.findByGrantRef(grantRef).stream()
+                // 能力只能回到它原本被授予的服务：换票方必须是原决策的 caller，目标服务也要与原委托一致。
+                // 别的服务（或更早的 portal 一跳）拿着同一个 grant 引用不能换票。
+                .filter(candidate -> clientId.equals(candidate.caller())
+                        && request.call().target().equals(candidate.target()))
+                .toList();
+        if (scoped.isEmpty()) {
+            throw AuthorityException.denied("RESUME_GRANT_UNKNOWN");
+        }
+        List<DecisionStore.Decision> matched = scoped.stream()
+                // root 必须逐项相等：换资源等于换授权对象，不在原委托范围内。
+                .filter(candidate -> candidate.resource().equals(resourceOf(request.call())))
+                .toList();
+        if (matched.isEmpty()) {
+            throw AuthorityException.denied("RESUME_ESCALATION");
+        }
+        DecisionStore.Decision original = matched.get(0);
+        if (original.consumedAt() != null) {
+            // 仓库没有撤销 API；一次性消费标记是既有的"这份委托已作废"信号（与 S1 的 opening 消费同源）。
+            throw AuthorityException.denied("RESUME_REVOKED");
+        }
+        if (!original.grantExpiresAt().isAfter(Instant.ofEpochSecond(now()))) {
+            // 这里用 403 而不是 forward 路径的 409：resume 的调用方需要的是"重判权"这个动作，
+            // 而不是"换一跳"；平台客户端 RunAuthority 也只识别 403/503，409 会被原样上抛。
+            throw new AuthorityException(403, "AUTHORITY_EXPIRED", "原委托已过期", "RESUME_GRANT_EXPIRED");
+        }
+        if (!request.call().action().equals(original.action())
+                && !ServiceRoutePolicy.localRunAdvance(clientId, request.call(), MODE, "DELEGATED",
+                        operationText(original.operation(), "origin_kind"))) {
+            throw AuthorityException.denied("RESUME_ACTION");
+        }
+        return original;
+    }
+
+    /** operation 证据里的文本字段：缺失或非文本一律拒绝，不把 null 代进票面。 */
+    private static String operationText(Map<String, Object> operation, String key) {
+        Object value = operation.get(key);
+        if (!(value instanceof String text) || text.isBlank()) {
+            throw AuthorityException.denied("RESUME_OPERATION");
+        }
+        return text;
     }
 
     /**
@@ -1564,10 +1696,24 @@ public final class DelegatedAuthority {
 
     private Map<String, Object> operation(String operationId, Instant issued, Instant expires, String grantRef,
                                           String tenantId, String principalId, ServiceCall call, String ceilingSha) {
+        // 门户直签与转发链：这张票的来源与这次能力的初始接入源都是 PORTAL。
+        return operation(operationId, issued, expires, grantRef, tenantId, principalId, call, ceilingSha,
+                SOURCE_KIND, SOURCE_KIND);
+    }
+
+    /**
+     * 可变来源的 operation 证据（EX-26）。{@code source_kind} 描述"这张票是怎么来的"：
+     * resume 签出的票必须写 {@code DELEGATED}（平台客户端 {@code resume} 逐字检查这个值），
+     * 而 {@code origin_kind} 描述"这次能力最初由谁认证"，续期不改变它，仍是 PORTAL——
+     * 否则审计里就丢了登录来源，客户端的 {@code localRunAdvance} 也会因为 origin 不是 PORTAL 而拒绝。
+     */
+    private Map<String, Object> operation(String operationId, Instant issued, Instant expires, String grantRef,
+                                          String tenantId, String principalId, ServiceCall call, String ceilingSha,
+                                          String sourceKind, String originKind) {
         Map<String, Object> operation = new LinkedHashMap<>();
         operation.put("operation_id", operationId);
-        operation.put("source_kind", SOURCE_KIND);
-        operation.put("origin_kind", SOURCE_KIND);
+        operation.put("source_kind", sourceKind);
+        operation.put("origin_kind", originKind);
         operation.put("issued_at", issued.getEpochSecond());
         operation.put("expires_at", expires.getEpochSecond());
         operation.put("grant_ref", grantRef);

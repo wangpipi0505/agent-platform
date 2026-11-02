@@ -3,6 +3,8 @@ package cn.agentplatform.authority.decision;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
@@ -152,6 +154,29 @@ public final class DecisionStore {
     /** 不做过期过滤：调用方需要自己判断"过期"(409) 与"不存在"(403) 的区别。 */
     public Optional<Decision> find(String id) {
         return id == null ? Optional.empty() : Optional.ofNullable(entries.get(id));
+    }
+
+    /**
+     * 按 grant_ref 反查它签出过的全部决策（同一个 grant 可能因 forward 产生多跳）。
+     *
+     * <p>同样不做过期过滤：{@code operation=resume} 必须把"这份委托从未签发过"（403）与
+     * "签发过但 grant 已到期"（403 {@code AUTHORITY_EXPIRED}）分开——前者只能重判权，
+     * 后者至少让调用方知道原能力存在过，不能把两者混成一个不可区分的拒绝。
+     *
+     * <p>刻意不加索引：登记簿容量有界（默认 {@code 256}），线性扫描的代价远小于在写入路径上
+     * 维护第三个可能悬空的索引；淘汰/覆盖由 {@code sweep} 与 {@code put} 负责，这里只读。
+     */
+    public List<Decision> findByGrantRef(String grantRef) {
+        if (grantRef == null || grantRef.isBlank()) {
+            return List.of();
+        }
+        List<Decision> found = new ArrayList<>();
+        for (Decision decision : entries.values()) {
+            if (grantRef.equals(decision.grantRef())) {
+                found.add(decision);
+            }
+        }
+        return List.copyOf(found);
     }
 
     /**

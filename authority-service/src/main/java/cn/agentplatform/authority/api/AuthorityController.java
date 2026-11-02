@@ -96,6 +96,10 @@ public final class AuthorityController {
         if (DelegatedAuthority.EXCHANGE.equals(request.operation())) {
             return delegated.exchange(clientId, request);
         }
+        // EX-26：resume 也从 tokenUri 进（平台客户端 RunAuthority 就是这么发的），入口凭据只有 grant_ref。
+        if (DelegatedAuthority.RESUME.equals(request.operation())) {
+            return delegated.resume(clientId, request);
+        }
         if (!TICKET_OPERATIONS.contains(request.operation())) {
             throw AuthorityException.denied("tokenUri 不接受 operation=" + request.operation());
         }

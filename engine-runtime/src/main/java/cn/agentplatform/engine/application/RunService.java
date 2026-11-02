@@ -27,8 +27,13 @@ public class RunService {
     private final FlowDriver flow;
     private final AgentDriver agent;
     private final RunScheduler scheduler;
-    private final RunAuthority runAuthority;
-    private final RunAuthorityStore admissionStore;
+    /**
+     * 受理授权依赖：非 final，因为 iam 生产装配走 setter 注入（{@code RunAuthorityConfiguration}），
+     * 而构造器链必须保持既有 public 签名与 10 处 {@code new RunService(...)} 夹具不变。
+     * 两者都为 null 时 {@code admissionProof} 显式 403 IAM_ADMISSION_UNAVAILABLE——默认拒绝，不静默放行。
+     */
+    private RunAuthority runAuthority;
+    private RunAuthorityStore admissionStore;
     private final Clock clock;
     /**
      * 可选装配：未配置本体地址的环境不注入。冻结阶段是唯一取包点，之后 assemble 只读文本。
@@ -159,6 +164,22 @@ public class RunService {
     @Autowired(required = false)
     public void runQuota(RunQuota quota) {
         this.runQuota = quota;
+    }
+
+    /**
+     * EX-26：受理授权只在 {@code agent.security.mode=iam} 下由 RunAuthorityConfiguration 装配。
+     * 仍走 setter 而不是构造器：非 iam 部署没有 authority-service，构造器保持既有 10 处直连夹具的形状；
+     * 任一依赖缺失时 admissionProof 仍按默认拒绝回 403 IAM_ADMISSION_UNAVAILABLE。
+     */
+    @Autowired(required = false)
+    public void runAuthority(RunAuthority authority) {
+        this.runAuthority = authority;
+    }
+
+    /** 与 {@link #runAuthority(RunAuthority)} 成对装配：续期结果要写回 PG 里的运行授权登记。 */
+    @Autowired(required = false)
+    public void admissionStore(RunAuthorityStore store) {
+        this.admissionStore = store;
     }
 
     /**
