@@ -177,11 +177,16 @@ class AuthorityPolicyTest {
             if (row.source().startsWith("springdoc-")) continue;
             catalog.add(row.target() + "|" + row.method() + "|" + row.template());
         }
-        // POLICY_MACHINE is a distinct exact ingress, never a service capability. Retain every
-        // original catalog entry and compare the full union rather than merely changing a count.
+        // 目录与 MVC 模板基本一一对应，但有两处"刻意不同"的入口，必须逐条具名而非只改计数：
+        //  - policyIngress：app-management 的精确 MVC 入口，不是服务能力，目录中不得出现；
+        //  - servletIngress：gateway SSE 是 Servlet（没有 @RestController 模板），目录中的这行是真实能力。
+        //    EX-44 的 gateway→gateway 观测订阅票就落在这个 Servlet 路由上。
         String policyIngress="app|POST|"+PolicyRequestVerifier.PATH;
-        assertThat(catalog).hasSize(159).doesNotContain(policyIngress);
-        var allIngress=new HashSet<>(catalog);allIngress.add(policyIngress);
+        String servletIngress="gateway|GET|/admin/runs/{id}/events";
+        assertThat(catalog).hasSize(160).contains(servletIngress).doesNotContain(policyIngress);
+        var allIngress=new HashSet<>(catalog);
+        allIngress.remove(servletIngress);
+        allIngress.add(policyIngress);
         assertThat(actual).hasSize(160).containsExactlyInAnyOrderElementsOf(allIngress);
         assertThat(policy.routes()).noneMatch(r->r.template().equals(PolicyRequestVerifier.PATH));
         String policySource=Files.readString(root.resolve("app-management/src/main/java/cn/agentplatform/app/api/IntegrationPolicyResolverController.java"));

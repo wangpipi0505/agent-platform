@@ -49,8 +49,15 @@ public final class DecisionStore {
             Instant grantExpiresAt,
             String subjectCaller,
             String ticketJti,
+            String originAuthenticationId,
             String authorizationVersion,
             Instant expiresAt) {
+
+        /** 同一决策签出票后回写票 jti：决策 id 不变，只补"这张决策对应哪张票"。 */
+        public Decision withTicketJti(String jti) {
+            return new Decision(id, caller, target, action, resource, actor, ceiling, operation, grantRef,
+                    grantExpiresAt, subjectCaller, jti, originAuthenticationId, authorizationVersion, expiresAt);
+        }
     }
 
     public synchronized void put(Decision decision) {

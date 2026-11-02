@@ -95,7 +95,15 @@ class GatewayPortalEventsAuthorityTest {
             var call=new ServiceCall("gateway",RunObservationSelectors.GATEWAY_EVENTS_ACTION,RESOURCE);
             denied(()->s.gateway.exchange(s.source,call));denied(()->s.gateway.client(call));
             denied(()->RunObservationSelectors.requirePurpose(call,"gateway","delegated","PORTAL","PORTAL"));
-            assertThat(new ServiceRoutePolicy().routes()).noneMatch(r->r.action().equals(call.action()));
+            // EX-44 只放开一条 closed 目录行：gateway→gateway 的观测订阅票本身，且必须
+            // delegated / integrationAllowed=false；目录里不得再出现第二条同 action 的行。
+            var rows=new ServiceRoutePolicy().routes().stream().filter(r->r.action().equals(call.action())).toList();
+            assertThat(rows).singleElement().satisfies(r->{
+                assertThat(r.caller()).isEqualTo("gateway");
+                assertThat(r.target()).isEqualTo("gateway");
+                assertThat(r.mode()).isEqualTo("delegated");
+                assertThat(r.integrationAllowed()).isFalse();
+            });
             denied(()->s.engine.beginGatewayPortalEvents(s.source,RUN,0));
         }
     }

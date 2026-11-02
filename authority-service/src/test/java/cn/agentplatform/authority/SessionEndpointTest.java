@@ -1,5 +1,6 @@
 package cn.agentplatform.authority;
 
+import cn.agentplatform.common.Digest;
 import cn.agentplatform.common.Json;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.sun.net.httpserver.HttpServer;
@@ -145,6 +146,32 @@ class SessionEndpointTest extends AuthorityTestSupport {
                 .as("dataScope 不能进令牌签名面，只能留在 session 响应体里").isFalse();
         assertThat(claims.get("attributes").has("deptId"))
                 .as("deptId 不能进令牌签名面，只能留在 session 响应体里").isFalse();
+    }
+
+    /**
+     * EX-44 切片 1a：人会话令牌必须自带 {@code origin_authentication_id}。
+     *
+     * <p>SSE 出流链的 S0 票要求这个 claim（客户端 {@code HttpCurrentAuthorityClient:594} 缺它即 403），
+     * 而 authority 自己无法从 service 调用反推"最初是谁登录的"，所以只能在签发人令牌时按 portal
+     * {@code jti} 派生：{@code "oa1:" + hex32(sha256("portal-session:" + jti))}。派生规则只有这一份，
+     * 下游票面/断言/决策都只是透传同一个值。
+     */
+    @Test
+    void portalTokenCarriesTheOriginAuthenticationIdDerivedFromItsJti() {
+        MODE.set("ok");
+
+        ResponseEntity<JsonNode> response = postJson("/oauth/token", basic(GATEWAY, GATEWAY_SECRET),
+                sessionBody("ak-admin-test"));
+        assertThat(response.getStatusCode()).as("body: %s", response.getBody()).isEqualTo(HttpStatus.OK);
+
+        JsonNode claims = TestJwt.verifiedClaims(response.getBody().get("access_token").asText(), "at+jwt", publishedKey());
+        String jti = claims.path("jti").asText();
+        String origin = claims.path("origin_authentication_id").asText();
+
+        assertThat(jti).startsWith("ses_");
+        assertThat(origin).hasSize(36).startsWith("oa1:")
+                .isEqualTo("oa1:" + Digest.sha256("portal-session:" + jti).substring(0, 32));
+        assertThat(origin.substring(4)).matches("[0-9a-f]{32}");
     }
 
     @Test

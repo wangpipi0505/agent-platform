@@ -3,6 +3,7 @@ package cn.agentplatform.authority.identity;
 import cn.agentplatform.authority.AuthorityException;
 import cn.agentplatform.authority.config.IssuerResolver;
 import cn.agentplatform.authority.sign.KeyRing;
+import cn.agentplatform.common.Digest;
 import cn.agentplatform.common.Json;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.stereotype.Component;
@@ -138,8 +139,17 @@ public final class SessionService {
         claims.put("iat", iat);
         claims.put("nbf", iat);
         claims.put("exp", iat + properties.sessionSeconds());
-        claims.put("jti", "ses_" + UUID.randomUUID().toString().replace("-", ""));
+        String jti = "ses_" + UUID.randomUUID().toString().replace("-", "");
+        claims.put("jti", jti);
+        // EX-44：SSE 第二跳 gateway→gateway 的观测票要能证明"同一个浏览器会话"。origin 只做等值关联、
+        // 不是凭据——用会话 jti 的摘要，既不把可重放的会话标识透给下游，又让 authority 能对两跳做同一性比对。
+        claims.put("origin_authentication_id", originAuthenticationId(jti));
         return claims;
+    }
+
+    /** {@code oa1:<32hex>}：sha256("portal-session:" + 会话 jti) 的前 32 位，绑定会话但不可反推 jti。 */
+    static String originAuthenticationId(String jti) {
+        return "oa1:" + Digest.sha256("portal-session:" + jti).substring(0, 32);
     }
 
     /**

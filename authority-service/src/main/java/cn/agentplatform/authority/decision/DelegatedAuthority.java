@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 /**
  * 委派判权（{@code operation=authorize}）与转发（{@code operation=forward}）的唯一实现点。
@@ -145,20 +146,20 @@ public final class DelegatedAuthority {
                 // 目录里没有 caller->新 target 的 delegated 行：跨目标转发到这里必须停住。
                 throw AuthorityException.denied("FORWARD_ESCALATION");
             }
-            String ticket = ticket(decision, clientId, request.call(), now);
+            IssuedTicket ticket = ticket(decision, clientId, request.call(), now);
             DecisionStore.Decision hop = new DecisionStore.Decision(
                     newId("dec"), clientId, request.call().target(), request.call().action(),
                     decision.resource(), decision.actor(), decision.ceiling(), decision.operation(),
                     decision.grantRef(), decision.grantExpiresAt(), decision.subjectCaller(), decision.ticketJti(),
-                    decision.authorizationVersion(),
+                    decision.originAuthenticationId(), decision.authorizationVersion(),
                     earlier(decision.expiresAt(), Instant.ofEpochSecond(now).plusSeconds(delegation.decisionSeconds())));
             decisions.put(hop);
             Map<String, Object> claims = authorityClaims(hop, request, now);
-            claims.put("ticket", ticket);
+            claims.put("ticket", ticket.value());
             audit.info("delegation.audit endpoint=decision outcome=permit operation=forward caller={} target={}"
                             + " action={} decision_id={} next_decision_id={} grant_ref={}",
                     clientId, request.call().target(), request.call().action(), decisionId, hop.id(), grantRef);
-            return Map.of("assertion", keys.sign(TicketService.ASSERTION_TYPE, claims), "ticket", ticket);
+            return Map.of("assertion", keys.sign(TicketService.ASSERTION_TYPE, claims), "ticket", ticket.value());
         } catch (AuthorityException denied) {
             deny("decision", FORWARD, clientId, request, denied);
             throw denied;
@@ -201,14 +202,18 @@ public final class DelegatedAuthority {
                 throw AuthorityException.denied("SUBJECT_EXPIRY");
             }
             DecisionStore.Decision decision = fromSubject(clientId, request, cap);
-            String ticket = ticket(decision, clientId, request.call(), iat);
-            Map<String, Object> claims = authorityClaims(decision, request, iat);
-            claims.put("ticket", ticket);
+            IssuedTicket ticket = ticket(decision, clientId, request.call(), iat);
+            // 先回写票 jti 再签断言：断言里的 ticket_jti 必须就是随体返回的那张票，
+            // 后续 portal_gateway_events_open 靠它把"S0 换出的票"与决策对上（EX-44 §5）。
+            DecisionStore.Decision recorded = decision.withTicketJti(ticket.jti());
+            decisions.put(recorded);
+            Map<String, Object> claims = authorityClaims(recorded, request, iat);
+            claims.put("ticket", ticket.value());
             audit.info("delegation.audit endpoint=decision outcome=permit operation=exchange caller={} target={}"
                             + " action={} decision_id={} grant_ref={} grant_expires_at={}",
-                    clientId, request.call().target(), request.call().action(), decision.id(),
-                    decision.grantRef(), decision.grantExpiresAt().getEpochSecond());
-            return Map.of("assertion", keys.sign(TicketService.ASSERTION_TYPE, claims), "ticket", ticket);
+                    clientId, request.call().target(), request.call().action(), recorded.id(),
+                    recorded.grantRef(), recorded.grantExpiresAt().getEpochSecond());
+            return Map.of("assertion", keys.sign(TicketService.ASSERTION_TYPE, claims), "ticket", ticket.value());
         } catch (AuthorityException denied) {
             deny("decision", EXCHANGE, clientId, request, denied);
             throw denied;
@@ -266,7 +271,8 @@ public final class DelegatedAuthority {
         DecisionStore.Decision decision = new DecisionStore.Decision(newId("dec"), clientId,
                 request.call().target(), request.call().action(), resourceOf(request.call()), actor, actor,
                 operation, grantRef, grantExpiresAt, Objects.requireNonNullElse(subjectClient, PORTAL_CALLER), null,
-                authorizationVersion(), issued.plusSeconds(delegation.decisionSeconds()));
+                originOf(claims, "SUBJECT_ORIGIN"), authorizationVersion(),
+                issued.plusSeconds(delegation.decisionSeconds()));
         decisions.put(decision);
         return decision;
     }
@@ -337,7 +343,7 @@ public final class DelegatedAuthority {
         DecisionStore.Decision decision = new DecisionStore.Decision(newId("dec"), clientId, call.target(),
                 call.action(), resourceOf(call), actor(tenantId, principalId, roles, attributes),
                 toMap(ceilingNode), operation, grantRef, grantExpiresAt, upstream, text(claims, "jti"),
-                required(claims, "authorization_version"),
+                originOf(claims, "TICKET_ORIGIN"), required(claims, "authorization_version"),
                 earlier(issued.plusSeconds(delegation.decisionSeconds()), grantExpiresAt));
         decisions.put(decision);
         return decision;
@@ -362,6 +368,10 @@ public final class DelegatedAuthority {
         if (decision.ticketJti() != null) {
             claims.put("ticket_jti", decision.ticketJti());
         }
+        if (decision.originAuthenticationId() != null) {
+            // 断言也带 origin：authorizeRetained 会用它与票上的 origin 做一致性检查（client :627）。
+            claims.put("origin_authentication_id", decision.originAuthenticationId());
+        }
         return claims;
     }
 
@@ -370,7 +380,7 @@ public final class DelegatedAuthority {
      * 且必须带租户/角色/属性/grant/operation —— 平台侧 {@code verifiedTicket} 的 delegated 分支逐项比对。
      * {@code exp} 取 {@code min(iat+ticket-seconds, grant_expires_at)}：转发不允许延长授权。
      */
-    private String ticket(DecisionStore.Decision decision, String clientId, ServiceCall call, long iat) {
+    private IssuedTicket ticket(DecisionStore.Decision decision, String clientId, ServiceCall call, long iat) {
         Map<String, Object> claims = new LinkedHashMap<>();
         claims.put("iss", issuer.issuer());
         claims.put("aud", tickets.audience(call.target()));
@@ -378,7 +388,8 @@ public final class DelegatedAuthority {
         claims.put("iat", iat);
         claims.put("nbf", iat);
         claims.put("exp", Math.min(iat + properties.ticketSeconds(), decision.grantExpiresAt().getEpochSecond()));
-        claims.put("jti", newId("tkt"));
+        String jti = newId("tkt");
+        claims.put("jti", jti);
         claims.put("target", call.target());
         claims.put("action", call.action());
         claims.put("resource", resourceOf(call));
@@ -394,7 +405,32 @@ public final class DelegatedAuthority {
         claims.put("initial_ceiling", decision.ceiling());
         claims.put("operation", decision.operation());
         claims.put("subject_caller", decision.subjectCaller());
-        return keys.sign(TicketService.TICKET_TYPE, claims);
+        if (decision.originAuthenticationId() != null) {
+            // 票上带 origin 是 S1 之后 :594/:627 的唯一依据：没有它，第二次 exchange 立刻 403。
+            claims.put("origin_authentication_id", decision.originAuthenticationId());
+        }
+        return new IssuedTicket(keys.sign(TicketService.TICKET_TYPE, claims), jti);
+    }
+
+    private static final Pattern ORIGIN = Pattern.compile("oa1:[0-9a-f]{32}");
+
+    /**
+     * EX-44：读主体凭据上的 {@code origin_authentication_id}。形状必须严格是 {@code oa1:<32hex>}；
+     * 缺省返回 null（历史票/未升级的 portal 票走 currentOnly 语义），形状不对一律拒绝而不是透传。
+     */
+    private static String originOf(JsonNode claims, String denial) {
+        JsonNode node = claims.get("origin_authentication_id");
+        if (node == null || node.isNull()) {
+            return null;
+        }
+        if (!node.isTextual() || !ORIGIN.matcher(node.textValue()).matches()) {
+            throw AuthorityException.denied(denial);
+        }
+        return node.textValue();
+    }
+
+    /** 签出的候选票 + 它的 jti：exchange 需要把 jti 回写进决策，才能让断言引用同一张票。 */
+    private record IssuedTicket(String value, String jti) {
     }
 
     private void requireEnabled() {

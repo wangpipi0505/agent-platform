@@ -60,6 +60,6 @@ class DecisionStoreTest {
                 Map.of("kind", "run", "id", "run-1", "version_digest", AuthorityTestSupport.DIGEST),
                 Map.of("tenant_id", "tenant-a", "sub", "alice"), Map.of("tenant_id", "tenant-a", "sub", "alice"),
                 Map.of("operation_id", "op-bootstrap"), "grant-1", expiresAt, "gateway", null,
-                "delegated-v1", expiresAt);
+                null, "delegated-v1", expiresAt);
     }
 }

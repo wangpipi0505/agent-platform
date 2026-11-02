@@ -961,6 +961,18 @@
  },
  {
   "method": "GET",
+  "template": "/admin/runs/{id}/events",
+  "caller": "gateway",
+  "target": "gateway",
+  "action": "gateway.run.events.observe",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "admin-common/src/main/java/cn/agentplatform/common/authority/HttpCurrentAuthorityClient.java:621",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/infra/PortalRunEventsHttp.java:55",
+  "reason": "SSE 出流第二步：gateway→gateway 的观测订阅票；缺此行使第二次 exchange 与 authorize 都 403 ROUTE_NOT_REGISTERED"
+ },
+ {
+  "method": "GET",
   "template": "/admin/debug-runs/{id}/events",
   "caller": "gateway",
   "target": "engine",
