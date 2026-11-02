@@ -1088,7 +1088,11 @@ public final class DelegatedAuthority {
             }
             // 续期把登记一并续到硬截止：sweep 只按 expiresAt 回收，登记不续就会在首个 5s 窗后
             // 被下一次 put 顺手清掉，表现为"合法续期突然 403 EVENTS_CHECK_CONTINUATION"（EX-46）。
-            decisions.put(window.withExpiresAt(window.hardDeadline()));
+            // 必须基于当前值改（touchExpiry 内部 compute），不能用读到的旧快照回写：
+            // 与 child 换票并发时旧快照会把 consumedAt 擦掉，同一窗口就能二次换票。
+            if (decisions.touchExpiry(window.id(), window.hardDeadline()).isEmpty()) {
+                throw AuthorityException.denied("EVENTS_CHECK_CONTINUATION");
+            }
             Map<String, Object> claims = eventsWindowClaims(clientId, request, window, iat, checkedUntil,
                     window.immutable(), continuation);
             audit.info("delegation.audit endpoint=decision outcome=permit operation={} caller={} decision_id={}"
@@ -1509,7 +1513,13 @@ public final class DelegatedAuthority {
         if (!upstream.equals(text(claims, "client_id"))) {
             throw AuthorityException.denied("TICKET_CALLER");
         }
-        if (!routes.permits(upstream, call.target(), call.action(), RouteDirectory.DELEGATED)) {
+        JsonNode routeOperation = claims.get("operation");
+        String routeOriginKind = routeOperation != null && routeOperation.isObject()
+                ? text(routeOperation, "origin_kind") : null;
+        if (!routes.permits(upstream, call.target(), call.action(), RouteDirectory.DELEGATED)
+                && !ServiceRoutePolicy.localRunAdvance(upstream, call, MODE, "DELEGATED", routeOriginKind)) {
+            // 目录里没有 engine→engine 的 delegated 行（run.advance 是本地续接边），
+            // 消费侧必须与 resume 的签发侧同样接受它，否则签得出、换不回（EX-26）。
             throw AuthorityException.denied("ROUTE_NOT_REGISTERED");
         }
         String tenantId = required(claims, "tenant_id");

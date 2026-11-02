@@ -56,6 +56,9 @@ $ErrorActionPreference = 'Stop'
 try { [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false) } catch { }
 $Started = Get-Date
 $UuidPattern = '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+# engine.run.id 真实主键形状是 r_+32 hex（见 engine 迁移与 RunService.newId），不是 UUID；
+# 只认 UUID 会让正常输入永远进不了 C 段（EX-06 复核）。
+$RunIdPattern = '^(r_[0-9a-f]{32}|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$'
 $repositoryRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
 $results = New-Object System.Collections.ArrayList
 
@@ -274,8 +277,8 @@ if ($requested -contains 'B') {
 # ---- C：SUBMIT_QUERY 异步任务态 ----
 if ($requested -contains 'C') {
     $missing = @()
-    if ((Get-S1Text $CWaitingRunId) -notmatch $UuidPattern) { $missing += 'CWaitingRunId(UUID)' }
-    if ((Get-S1Text $CFailedRunId) -notmatch $UuidPattern) { $missing += 'CFailedRunId(UUID)' }
+    if ((Get-S1Text $CWaitingRunId) -notmatch $RunIdPattern) { $missing += 'CWaitingRunId(r_<32hex> 或 UUID)' }
+    if ((Get-S1Text $CFailedRunId) -notmatch $RunIdPattern) { $missing += 'CFailedRunId(r_<32hex> 或 UUID)' }
     if (-not (Get-S1Text $CExpectedRemoteJobId)) { $missing += 'CExpectedRemoteJobId' }
     if (-not $psqlReady) { $missing += 'psql/数据库连接' }
     if ($missing.Count) {

@@ -105,6 +105,24 @@ class DelegatedResumeContractTest extends DelegatedTestSupport {
     }
 
     @Test
+    void resumeTicketCanBeConsumedByTheSameEngineLocalAdvance() {
+        ServiceCall inbound = rootCall(FIRST_ACTION, "appv-resume-consume");
+        ServiceCall advance = rootCall(RUN_ADVANCE, "appv-resume-consume");
+        String bootstrap = DelegatedTickets.bootstrap(keys, inbound, GATEWAY);
+
+        try (HttpCurrentAuthorityClient engine = client(ENGINE, ENGINE_SECRET_REF, ENGINE_SECRET)) {
+            VerifiedAuthority authority = engine.authorize(bootstrap, inbound);
+            ServiceTicket resumed = engine.resume(authority.delegation(), advance);
+            // 目录里没有 engine→engine 的 delegated 行（run.advance 是本地续接边），
+            // 消费侧必须与签发侧同样接受它，否则 resume 签得出的票永远换不回（EX-26）。
+            VerifiedAuthority next = engine.authorize(resumed.value(), advance);
+            assertThat(next.decisionId()).isNotBlank();
+            assertThat(next.delegation()).isNotNull();
+            assertThat(next.call().action()).isEqualTo(RUN_ADVANCE);
+        }
+    }
+
+    @Test
     void resumeRejectsAGrantThatHasExpired() {
         ListAppender<ILoggingEvent> audit = attachAudit();
         decisions.put(expiredGrant(DelegatedTickets.GRANT_REF, "appv-resume-expired"));

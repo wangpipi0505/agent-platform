@@ -247,6 +247,30 @@ public final class DecisionStore {
         return Optional.ofNullable(consumed[0]);
     }
 
+    /**
+     * 只推后登记有效期，且**基于当前值**重写（EX-46）。
+     *
+     * <p>不能用"读出旧快照 → {@code put(withExpiresAt)}"：读与写之间若有 child 换票把
+     * {@code consumedAt} 标记上去，旧快照回写会把消费标记擦掉，同一张观察窗就能二次换票。
+     * 这里用 {@code compute} 在同一把 bin 锁内读-改-写，并拒绝改写已消费的登记。
+     *
+     * @return 成功推后时返回更新后的决策；登记不存在或已消费时 empty（调用方据此报 403）。
+     */
+    public Optional<Decision> touchExpiry(String id, Instant until) {
+        if (id == null || until == null) {
+            return Optional.empty();
+        }
+        Decision[] touched = new Decision[1];
+        entries.compute(id, (key, current) -> {
+            if (current == null || current.consumedAt() != null) {
+                return current;
+            }
+            touched[0] = current.withExpiresAt(until);
+            return touched[0];
+        });
+        return Optional.ofNullable(touched[0]);
+    }
+
     public int size() {
         return entries.size();
     }

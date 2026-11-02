@@ -234,10 +234,16 @@ function Invoke-JointAllAggregation {
     $main=@('sessionId','platformTenant','environment','spaceId','spaceCode','releaseId','replacementReleaseId','appCode','pinAppCode','explicitAppCode','opCode','readCredentialId','binderCredentialId','consumerCredentialId','readKeyRef','binderKeyRef','consumerKeyRef','platformBaseUrl','ontologyBaseUrl')
     $manifest=[ordered]@{sessionId=$Plan.SessionId;platformTenant=$Plan.PlatformTenant;environment=$Plan.Environment;spaceId=$resources.spaceId;spaceCode=$resources.spaceCode;releaseId=$resources.releaseId;replacementReleaseId=$resources.replacementReleaseId;appCode=$AppCode;pinAppCode=$PinAppCode;explicitAppCode=$ExplicitAppCode;opCode=$resources.opCode;readCredentialId=$resources.readCredentialId;binderCredentialId=$resources.binderCredentialId;consumerCredentialId=$resources.consumerCredentialId;readKeyRef=$resources.readKeyRef;binderKeyRef=$resources.binderKeyRef;consumerKeyRef=$resources.consumerKeyRef;platformBaseUrl=$Plan.PlatformBaseUrl;ontologyBaseUrl=$Plan.OntologyBaseUrl;revocationFixtures=$resources.revocationFixtures;isolationFixtures=$resources.isolationFixtures}
     $missing=@();foreach($name in $main){$value=Get-JointValue $manifest $name;if($value -isnot [string] -or [string]::IsNullOrWhiteSpace($value)){$missing+=$name}}
-    # 阶段全部通过但资源字段不全时仍是 BLOCKED：缺平台应用草稿阶段就不能宣称完整。
-    if($verdict -eq 'PASS' -and $missing.Count -gt 0){$verdict='BLOCKED'}
-    $complete=($verdict -eq 'PASS' -and $missing.Count -eq 0)
+    # 交付范围也是完整性的一部分：本轮只交付 J1-J4，J5-J9（三应用评测/发布、恢复、隔离等）仍未实现。
+    # 只按"字段齐 + J1-J4 通过"就标 complete 会把"没交付"说成"已完成"（EX-06 复核）。
+    $requiredStages=@('J1','J2','J3','J4','J5','J6','J7','J8','J9')
+    $deliveredStages=@($rows|ForEach-Object{[string]$_.stage})
+    $missingStages=@($requiredStages|Where-Object{$deliveredStages -notcontains $_})
+    # 阶段全部通过但资源字段或阶段范围不全时仍是 BLOCKED：缺平台应用草稿阶段就不能宣称完整。
+    if($verdict -eq 'PASS' -and ($missing.Count -gt 0 -or $missingStages.Count -gt 0)){$verdict='BLOCKED'}
+    $complete=($verdict -eq 'PASS' -and $missing.Count -eq 0 -and $missingStages.Count -eq 0)
     $manifest['verdict']=$verdict;$manifest['complete']=$complete
+    $manifest['missingStages']=@($missingStages)
     $manifest['generatedAt']=[DateTime]::UtcNow.ToString('o');$manifest['stages']=@($rows);$manifest['missingFields']=@($missing)
     $manifestPath=Join-Path $Plan.OutputDirectory 'manifest.json'
     if($complete){
@@ -246,7 +252,7 @@ function Invoke-JointAllAggregation {
     }else{
         Write-JointPrivateJson $repositoryRoot $Plan.OutputDirectory 'manifest.json' $manifest|Out-Null
         Write-JointPrivateJson $repositoryRoot $Plan.OutputDirectory 'manifest.incomplete.json' $manifest|Out-Null
-        Write-Host ('[BLOCKED] MANIFEST_INCOMPLETE missing='+($missing -join ','))
+        Write-Host ('[BLOCKED] MANIFEST_INCOMPLETE missing='+($missing -join ',')+' missingStages='+($missingStages -join ','))
     }
     Set-JointValue $State 'allAcceptance' ([pscustomobject]@{verdict=$verdict;complete=$complete;manifestPath=$manifestPath;evidenceDirectory=$evidence;stages=@($rows);missingFields=@($missing)})
     Set-JointValue $State 'stage' 'ONTOLOGY_READY'

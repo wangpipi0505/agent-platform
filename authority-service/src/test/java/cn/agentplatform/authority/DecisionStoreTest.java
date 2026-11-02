@@ -55,6 +55,31 @@ class DecisionStoreTest {
         assertThat(store.find("dec-expired")).isPresent();
     }
 
+    @Test
+    void touchExpiryExtendsTheRegistrationToTheHardDeadline() {
+        DecisionStore store = new DecisionStore(8, CLOCK);
+        store.put(decision("dec-window", NOW.plusSeconds(5)));
+
+        Instant hardDeadline = NOW.plusSeconds(55);
+        assertThat(store.touchExpiry("dec-window", hardDeadline)).isPresent();
+        // 过期项在 put 时被清掉；这里显式触发一次写入，确认已延后的登记不会被 sweep 回收。
+        store.put(decision("dec-other", NOW.plusSeconds(60)));
+        assertThat(store.find("dec-window")).isPresent();
+        assertThat(store.find("dec-window").orElseThrow().expiresAt()).isEqualTo(hardDeadline);
+    }
+
+    @Test
+    void touchExpiryNeverResurrectsAConsumedRegistration() {
+        DecisionStore store = new DecisionStore(8, CLOCK);
+        store.put(decision("dec-consumed", NOW.plusSeconds(5)));
+        assertThat(store.consume("dec-consumed", "gateway")).isPresent();
+
+        // child 换票已消费；续期若用旧快照回写就会把 consumedAt 擦掉，同一窗口可再换一次票（EX-46）。
+        assertThat(store.touchExpiry("dec-consumed", NOW.plusSeconds(55))).isEmpty();
+        assertThat(store.find("dec-consumed").orElseThrow().consumedAt()).isNotNull();
+        assertThat(store.consume("dec-consumed", "gateway")).isEmpty();
+    }
+
     private static DecisionStore.Decision decision(String id, Instant expiresAt) {
         return new DecisionStore.Decision(id, "engine", "skill", "skill.process.cancel",
                 Map.of("kind", "run", "id", "run-1", "version_digest", AuthorityTestSupport.DIGEST),
