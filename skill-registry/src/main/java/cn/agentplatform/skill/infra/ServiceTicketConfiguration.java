@@ -30,9 +30,10 @@ public class ServiceTicketConfiguration {
             ObjectProvider<WorkloadCredentialResolver> credentials, ObjectProvider<Clock> clocks) {
         if (!"iam".equals(deployment.mode()) || !"skill".equals(deployment.serviceId()))
             throw new IllegalStateException("AUTHORITY_REQUIRES_SKILL_IAM");
+        boolean testProfile = environment.acceptsProfiles(Profiles.of("test"));
         return new HttpCurrentAuthorityClient(deployment, clocks.getIfAvailable(Clock::systemUTC),
-                credentials.getIfAvailable(() -> new WorkloadCredentialResolver(deployment)),
-                environment.acceptsProfiles(Profiles.of("test")));
+                credentials.getIfAvailable(() -> new WorkloadCredentialResolver(deployment, testProfile)),
+                testProfile);
     }
 
     @Bean

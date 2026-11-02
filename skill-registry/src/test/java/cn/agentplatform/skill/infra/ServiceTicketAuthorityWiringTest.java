@@ -108,6 +108,64 @@ class ServiceTicketAuthorityWiringTest {
                         .hasStackTraceContaining("AUTHORITY_REQUIRES_SKILL_IAM"));
     }
 
+    /** 默认fallback必须携带同一test profile布尔：回环HTTP在test下可装配，无test profile仍拒绝。 */
+    @Test
+    void defaultFallbackResolverHonorsTestProfileLoopbackWithoutInjectedCredentials() throws Exception {
+        try (var iam = new LoopbackAuthority()) {
+            new ApplicationContextRunner().withUserConfiguration(Wiring.class)
+                    .withPropertyValues("agent.skill.service-ticket-mode=AUTHORITY", "spring.profiles.active=test")
+                    .withBean(AuthorityProperties.class, () -> iam.config("skill"))
+                    .withBean(Clock.class, iam::clock)
+                    .run(context -> {
+                        if (System.getenv("AGENT_SECRET_IAM_SKILL_CLIENT") == null) {
+                            // 无部署凭据时URI门必须已按test profile放行，fallback构造器到达凭据检查；
+                            // 旧缺陷在此处先抛IAM_URI_INVALID。Spring把根因包进BeanCreationException。
+                            assertThat(context).hasFailed().getFailure()
+                                    .hasRootCauseInstanceOf(IllegalStateException.class)
+                                    .hasRootCauseMessage("IAM_CLIENT_CREDENTIAL_REQUIRED");
+                        } else {
+                            assertThat(context).hasNotFailed().hasSingleBean(HttpCurrentAuthorityClient.class)
+                                    .hasSingleBean(ServiceTicketProvider.class);
+                        }
+                    });
+        }
+    }
+
+    @Test
+    void defaultFallbackStillRejectsLoopbackHttpWithoutTestProfile() throws Exception {
+        try (var iam = new LoopbackAuthority()) {
+            new ApplicationContextRunner().withUserConfiguration(Wiring.class)
+                    .withPropertyValues("agent.skill.service-ticket-mode=AUTHORITY")
+                    .withBean(AuthorityProperties.class, () -> iam.config("skill"))
+                    .withBean(Clock.class, iam::clock)
+                    .run(context -> assertThat(context).hasFailed().getFailure()
+                            .hasStackTraceContaining("IAM_URI_INVALID"));
+        }
+    }
+
+    @Test
+    void defaultFallbackKeepsAcceptingHttpsDeploymentOutsideTestProfile() {
+        var https = new AuthorityProperties("iam", "skill", null,
+                new AuthorityProperties.Authority("https://iam.internal", "https://iam.internal/jwks",
+                        "https://iam.internal/token", "https://iam.internal/decision", "skill",
+                        "env:AGENT_SECRET_IAM_SKILL_CLIENT", "RS256", "urn:agent-platform:service:skill",
+                        60, 5, 1000, 2000),
+                null, null, null, false, null);
+        new ApplicationContextRunner().withUserConfiguration(Wiring.class)
+                .withPropertyValues("agent.skill.service-ticket-mode=AUTHORITY")
+                .withBean(AuthorityProperties.class, () -> https)
+                .run(context -> {
+                    if (System.getenv("AGENT_SECRET_IAM_SKILL_CLIENT") == null) {
+                        // HTTPS URI合法：无凭据时失败只能来自凭据检查，不得是URI门。
+                        assertThat(context).hasFailed().getFailure()
+                                .hasRootCauseInstanceOf(IllegalStateException.class)
+                                .hasRootCauseMessage("IAM_CLIENT_CREDENTIAL_REQUIRED");
+                    } else {
+                        assertThat(context).hasNotFailed().hasSingleBean(HttpCurrentAuthorityClient.class);
+                    }
+                });
+    }
+
     private static ApplicationContextRunner runner(LoopbackAuthority iam, String engineUrl) {
         return new ApplicationContextRunner().withUserConfiguration(Wiring.class)
                 .withPropertyValues("agent.skill.service-ticket-mode=AUTHORITY", "agent.services.engine=" + engineUrl,
