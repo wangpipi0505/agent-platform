@@ -53,6 +53,15 @@ const selectedDefinition = computed(() => {
 });
 const connectionSchema = computed(() => selectedDefinition.value?.inputSchema);
 const controlledCallId = ref("");
+// SCN-009：ElInput产生字符串而后端只收正整数JSON number；提交边界统一做一次严格转换。
+function controlledCallIdNumber(): number {
+  const raw = String(controlledCallId.value ?? "").trim();
+  if (!/^\d+$/.test(raw)) throw new Error("重检ID必须是正整数（不含符号或小数点）");
+  const value = Number(raw);
+  if (!Number.isSafeInteger(value) || value < 1)
+    throw new Error("重检ID必须是不超过安全整数范围的正整数");
+  return value;
+}
 const testRun = ref<any>();
 let pollTimer: ReturnType<typeof setTimeout>;
 let disposed = false;
@@ -69,7 +78,7 @@ async function checkTest() {
       result.value = await api(
         base() + "/drafts/" + selected.value + "/connection-test",
         "POST",
-        { controlledCallId: controlledCallId.value },
+        { controlledCallId: controlledCallIdNumber() },
       );
       return;
     }
@@ -166,7 +175,7 @@ async function execute(action: string) {
         base() + "/drafts/" + selected.value + "/connection-test",
         "POST",
         action === "recheck"
-          ? { controlledCallId: controlledCallId.value }
+          ? { controlledCallId: controlledCallIdNumber() }
           : {
               inputs:
                 connectionSchema.value && !advancedInput.value
