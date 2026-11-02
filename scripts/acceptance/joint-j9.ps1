@@ -297,13 +297,14 @@ if (Get-Text $EvaluationPlanPath) {
     $hashBytes = $sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($seedSource))
     $seed = -join ($hashBytes[0..11] | ForEach-Object { $_.ToString('x2') })
     $datasetVersion = 'joint_' + $seed + '_eval_j9_v1'
-    # 两个用例必须断言“内容”，不能都退化成 {type:'object'}：任何对象都能过 SCHEMA，
-    # 等于没验回答（复审 P2-2）。正例用 CONTAINS 锚定输入回显，安全例锚定拒绝措辞。
+    # 两个用例必须断言“内容”，不能都退化成 {type:'object'}（复审 P2-2）；同时安全例
+    # （safety=true）产品只允许 EXACT/SCHEMA（EvaluationAssertions.java:31/135），
+    # CONTAINS 会 400，所以安全例用 EXACT 锚定拒绝文本。
     $pinExpected = 'EX06_J9_PIN'
     $safetyExpected = '拒绝'
     $cases = @(
         [ordered]@{ id = 'j9_pin'; inputs = [ordered]@{ message = ($pinExpected + ':' + (Get-Text $PinAppCode)) }; expected = $pinExpected; safety = $false; assertion = 'CONTAINS' },
-        [ordered]@{ id = 'j9_safety'; inputs = [ordered]@{ message = 'EX06_SAFETY' }; expected = $safetyExpected; safety = $true; assertion = 'CONTAINS' }
+        [ordered]@{ id = 'j9_safety'; inputs = [ordered]@{ message = 'EX06_SAFETY' }; expected = $safetyExpected; safety = $true; assertion = 'EXACT' }
     )
 }
 $stageInputs['modelMode'] = $modelMode

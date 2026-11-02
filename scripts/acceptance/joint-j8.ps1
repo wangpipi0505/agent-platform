@@ -437,10 +437,12 @@ if ($Verdict -eq 'PASS') {
 if ($Verdict -eq 'PASS') {
     $machineOnHuman = Invoke-StageHttp -Method 'POST' -Url ($OntologyBase.TrimEnd('/') + '/onto/internal/releases/' + $IsolationReleaseId + '/ops/' + $IsolationOpCode) -Headers @{ 'X-API-Key' = $BinderKeyValue } -Body ([ordered]@{})
     $machineCode = Get-Text $machineOnHuman.Body.code
-    $machineOk = ($machineOnHuman.Status -eq 401) -and ($machineCode -ceq 'SERVICE_CREDENTIAL_REQUIRED')
+    # 真实服务在人登录面用机器 key 时回 401 UNAUTHORIZED（鉴权层先拒），只有显式来源校验才回
+    # SERVICE_CREDENTIAL_REQUIRED；两者都是“机器凭据不得打人面”的合法表达。
+    $machineOk = ($machineOnHuman.Status -eq 401) -and (@('UNAUTHORIZED', 'SERVICE_CREDENTIAL_REQUIRED') -contains $machineCode)
     Add-Check 'J8-机器凭据打人登录面401' $machineOk ('HTTP ' + $machineOnHuman.Status + ' code=' + $machineCode)
     $Details['machineOnHumanSurface'] = [ordered]@{ httpStatus = $machineOnHuman.Status; code = $machineCode }
-    if (-not $machineOk) { $Verdict = 'FAIL'; $Reason = '机器凭据打 /onto/internal 未被拒为 401 SERVICE_CREDENTIAL_REQUIRED：HTTP ' + $machineOnHuman.Status + ' ' + $machineCode }
+    if (-not $machineOk) { $Verdict = 'FAIL'; $Reason = '机器凭据打 /onto/internal 未被拒为 401（UNAUTHORIZED/SERVICE_CREDENTIAL_REQUIRED）：HTTP ' + $machineOnHuman.Status + ' ' + $machineCode }
 }
 
 # ---- 8) A 空间绑定未变 ----

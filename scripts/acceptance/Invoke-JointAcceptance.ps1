@@ -471,6 +471,28 @@ if (-not (Get-JointText $CredentialsFile)) {
     $candidateCredentials = Join-Path (Join-Path $OutputDirectory $SessionId) 'credentials.env'
     if (Test-Path -LiteralPath $candidateCredentials -PathType Leaf) { $CredentialsFile = $candidateCredentials }
 }
+# 只给 -CredentialsFile 时也必须把文件内容装进内存：此前仅登记路径，keyRef 解析仍读不到
+# 临时密钥，J7 会在“只给 manifest + 凭据文件”的场景里必然 BLOCKED（复审 17:5x）。
+if ((Get-JointText $CredentialsFile) -and $null -eq $script:Credentials) {
+    if (-not (Test-Path -LiteralPath $CredentialsFile -PathType Leaf)) {
+        Write-Output ('[FAIL] CredentialsFile 不存在: ' + $CredentialsFile)
+        exit $ExitFail
+    }
+    $loadedCredentials = @{}
+    foreach ($line in [IO.File]::ReadAllLines($CredentialsFile)) {
+        if ([string]::IsNullOrWhiteSpace($line)) { continue }
+        if ($line -cnotmatch '^(AGENT_SECRET_[A-Z0-9_]+)=(.+)$') {
+            Write-Output ('[FAIL] 凭据文件格式非法（需 AGENT_SECRET_<NAME>=<value>）: ' + $line.Substring(0, [Math]::Min(24, $line.Length)))
+            exit $ExitFail
+        }
+        if ($loadedCredentials.ContainsKey($Matches[1])) {
+            Write-Output ('[FAIL] 凭据文件重复键: ' + $Matches[1])
+            exit $ExitFail
+        }
+        $loadedCredentials[$Matches[1]] = $Matches[2]
+    }
+    $script:Credentials = $loadedCredentials
+}
 
 $script:ReadKeyValue = Resolve-JointCredential $ReadKey $script:ReadKeyRef $ReadKeyEnv
 $script:BinderKeyValue = Resolve-JointCredential $BinderKey $script:BinderKeyRef $BinderKeyEnv
