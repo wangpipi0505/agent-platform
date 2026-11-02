@@ -44,10 +44,11 @@ public final class GatewayIamAssembly {
     SecurityFilterChain gatewayIamChain(HttpSecurity http, GatewayIngressBoundary boundary)
             throws Exception {
         return http
-                // Only the five governed ingress shapes belong to this chain. Everything else
-                // (notably /actuator/health) must fall through to the shared service chain, whose
-                // permit rules own the probe; a catch-all chain here denied it with an empty 403.
-                .securityMatcher("/admin/**", "/auth/session")
+                // R20: requireChain demands exactly one chain whose request matcher is
+                // AnyRequestMatcher (same instance, filter order). A limited securityMatcher can
+                // never satisfy it, so this finite assembly must own the single catch-all chain.
+                // Default deny is preserved by the boundary filter itself: the probe passes the
+                // boundary untouched, unknown shapes are denied by route() before authorization.
                 .csrf(c -> c.disable())
                 .requestCache(c -> c.disable())
                 .sessionManagement(c -> c.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
