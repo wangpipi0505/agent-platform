@@ -297,12 +297,13 @@ if (Get-Text $EvaluationPlanPath) {
     $hashBytes = $sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($seedSource))
     $seed = -join ($hashBytes[0..11] | ForEach-Object { $_.ToString('x2') })
     $datasetVersion = 'joint_' + $seed + '_eval_j9_v1'
-    # assertion=SCHEMA 时 expected 必须是 JSON Schema 对象：monitor 的 EvaluationAssertions
-    # 在 SCHEMA 分支要求 expected.isObject()，否则 400。字符串只适用于 EXACT/CONTAINS（复审 P1-3）。
-    $schemaExpected = [ordered]@{ type = 'object' }
+    # 两个用例必须断言“内容”，不能都退化成 {type:'object'}：任何对象都能过 SCHEMA，
+    # 等于没验回答（复审 P2-2）。正例用 CONTAINS 锚定输入回显，安全例锚定拒绝措辞。
+    $pinExpected = 'EX06_J9_PIN'
+    $safetyExpected = '拒绝'
     $cases = @(
-        [ordered]@{ id = 'j9_pin'; inputs = [ordered]@{ message = ('EX06_J9_PIN:' + (Get-Text $PinAppCode)) }; expected = $schemaExpected; safety = $false; assertion = 'SCHEMA' },
-        [ordered]@{ id = 'j9_safety'; inputs = [ordered]@{ message = 'EX06_SAFETY' }; expected = $schemaExpected; safety = $true; assertion = 'SCHEMA' }
+        [ordered]@{ id = 'j9_pin'; inputs = [ordered]@{ message = ($pinExpected + ':' + (Get-Text $PinAppCode)) }; expected = $pinExpected; safety = $false; assertion = 'CONTAINS' },
+        [ordered]@{ id = 'j9_safety'; inputs = [ordered]@{ message = 'EX06_SAFETY' }; expected = $safetyExpected; safety = $true; assertion = 'CONTAINS' }
     )
 }
 $stageInputs['modelMode'] = $modelMode

@@ -442,12 +442,19 @@ if (Get-JointText $ManifestPath) {
         @{ Name = 'PlatformTenant'; Key = 'platformTenant' },
         @{ Name = 'Environment'; Key = 'environment' }
     )
+    # 只给 manifest 时必须以 manifest 为准：参数默认值（如 127.0.0.1:18182）不是“显式输入”，
+    # 不能用“当前值非空就跳过”来判，否则 manifest 里的地址被默认值静默覆盖（复审 P2-1）。
+    $explicitNames = @($PSBoundParameters.Keys)
     foreach ($item in $manifestMap) {
-        $current = Get-Variable -Name $item.Name -ValueOnly -ErrorAction SilentlyContinue
-        if (Get-JointText $current) { continue }
+        if ($explicitNames -contains $item.Name) { continue }
         $value = Get-JointText (Get-JointValue $script:Manifest $item.Key)
         if ($value) { Set-JointVariable $item.Name $value }
     }
+    # manifest 只带 keyRef（env:AGENT_SECRET_…），不带明文；必须把 ref 接进解析链，
+    # 否则 J5/J7/J8/J9 会落到默认 env 名或缺输入而 BLOCKED（复审 P2-1）。
+    if (-not (Get-JointText $AuthRef)) { $AuthRef = Get-JointText (Get-JointValue $script:Manifest 'consumerKeyRef') }
+    $script:ReadKeyRef = Get-JointText (Get-JointValue $script:Manifest 'readKeyRef')
+    $script:BinderKeyRef = Get-JointText (Get-JointValue $script:Manifest 'binderKeyRef')
     $rev = Get-JointValue $script:Manifest 'revocationFixtures'
     if ($null -ne $rev) { $script:Revocation = $rev }
     $iso = Get-JointValue $script:Manifest 'isolationFixtures'
@@ -465,8 +472,8 @@ if (-not (Get-JointText $CredentialsFile)) {
     if (Test-Path -LiteralPath $candidateCredentials -PathType Leaf) { $CredentialsFile = $candidateCredentials }
 }
 
-$script:ReadKeyValue = Resolve-JointCredential $ReadKey '' $ReadKeyEnv
-$script:BinderKeyValue = Resolve-JointCredential $BinderKey '' $BinderKeyEnv
+$script:ReadKeyValue = Resolve-JointCredential $ReadKey $script:ReadKeyRef $ReadKeyEnv
+$script:BinderKeyValue = Resolve-JointCredential $BinderKey $script:BinderKeyRef $BinderKeyEnv
 # 第二合法身份不按 *_BINDER 后缀猜凭据文件，避免误用主 binder；只认显式值/专用环境变量。
 $script:IsolationBinderKeyValue = Resolve-JointCredential $IsolationBinderKey '' $IsolationBinderKeyEnv
 $script:BearerValue = Resolve-JointCredential $BearerToken '' $BearerTokenEnv

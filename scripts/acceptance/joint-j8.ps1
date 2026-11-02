@@ -395,11 +395,13 @@ if ($Verdict -eq 'PASS') {
             $Reason = 'B 空间合法 binder 无法在本空间写绑定，第二合法身份腿不成立：HTTP ' + $ownBind.Status + ' ' + $ownBind.Code
         } else {
             $Details['legalIdentityOwnBind'] = [ordered]@{ httpStatus = $ownBind.Status; code = $ownBind.Code; bindingId = (Get-Text $ownBind.Data.bindingId); changed = $ownBind.Data.changed }
+            # 读绑定按“凭据所属空间”解释：B 空间 key 查询 A 的 appCode 在 B 空间没有 ACTIVE 行，
+            # 正确语义是 404 BINDING_NOT_FOUND 且不带数据；403 NO_PERMISSION 只用于显式跨空间/跨租户写路径。
             $legalCrossRead = Get-OrBinding $AppCode $PlatformTenant $null $IsolationBinderKeyValue
-            $legalReadOk = ($legalCrossRead.Status -eq 403) -and ($legalCrossRead.Code -ceq 'NO_PERMISSION') -and ($null -eq $legalCrossRead.Data)
-            Add-Check 'J8-合法身份跨读A403' $legalReadOk ('HTTP ' + $legalCrossRead.Status + ' code=' + $legalCrossRead.Code + ' data=' + $(if ($null -eq $legalCrossRead.Data) { '<null>' } else { '<present>' }))
+            $legalReadOk = ($legalCrossRead.Status -eq 404) -and ($legalCrossRead.Code -ceq 'BINDING_NOT_FOUND') -and ($null -eq $legalCrossRead.Data)
+            Add-Check 'J8-合法身份跨读A404' $legalReadOk ('HTTP ' + $legalCrossRead.Status + ' code=' + $legalCrossRead.Code + ' data=' + $(if ($null -eq $legalCrossRead.Data) { '<null>' } else { '<present>' }))
             $Details['legalIdentityCrossRead'] = [ordered]@{ httpStatus = $legalCrossRead.Status; code = $legalCrossRead.Code; dataPresent = ($null -ne $legalCrossRead.Data) }
-            if (-not $legalReadOk) { $Verdict = 'FAIL'; $Reason = 'B 空间合法身份跨读 A 空间未被拒为 403 NO_PERMISSION（或泄漏 data）：HTTP ' + $legalCrossRead.Status + ' ' + $legalCrossRead.Code }
+            if (-not $legalReadOk) { $Verdict = 'FAIL'; $Reason = 'B 空间合法身份跨读 A 空间未按凭据空间语义返回 404 BINDING_NOT_FOUND（或泄漏 data）：HTTP ' + $legalCrossRead.Status + ' ' + $legalCrossRead.Code }
             if ($Verdict -eq 'PASS') {
                 $legalCrossWrite = Set-OrBinding $SpaceId $ReleaseId $AppCode $null $IsolationBinderKeyValue
                 $legalWriteOk = ($legalCrossWrite.Status -eq 403) -and ($legalCrossWrite.Code -ceq 'NO_PERMISSION')
@@ -416,7 +418,8 @@ if ($Verdict -eq 'PASS') {
 
 # ---- 7) 跨空间执行操作必须被拒且无数据 ----
 if ($Verdict -eq 'PASS') {
-    $opsResponse = Invoke-StageHttp -Method 'POST' -Url ($OntologyBase.TrimEnd('/') + '/onto/internal/releases/' + $IsolationReleaseId + '/ops/' + $IsolationOpCode) -Headers @{ 'X-API-Key' = $BinderKeyValue } -Body ([ordered]@{})
+    # /onto/internal/** 只认人登录 Bearer；机器 ontosa_ key 打这里是 401 而不是越权（复审 P1-2）。
+    $opsResponse = Invoke-StageHttp -Method 'POST' -Url ($OntologyBase.TrimEnd('/') + '/onto/internal/releases/' + $IsolationReleaseId + '/ops/' + $IsolationOpCode) -Headers @{ 'Authorization' = ('Bearer ' + $AdminBearerValue) } -Body ([ordered]@{})
     $opsCode = Get-Text $opsResponse.Body.code
     $stableCodes = @('NO_PERMISSION', 'RELEASE_NOT_FOUND')
     $opsData = $null
@@ -428,6 +431,16 @@ if ($Verdict -eq 'PASS') {
         $Verdict = 'FAIL'
         $Reason = 'A 凭据对 B release 执行操作未被稳定拒绝：HTTP ' + $opsResponse.Status + ' code=' + $opsCode
     }
+}
+
+# ---- 7b) 机器凭据不得打人登录面 ----
+if ($Verdict -eq 'PASS') {
+    $machineOnHuman = Invoke-StageHttp -Method 'POST' -Url ($OntologyBase.TrimEnd('/') + '/onto/internal/releases/' + $IsolationReleaseId + '/ops/' + $IsolationOpCode) -Headers @{ 'X-API-Key' = $BinderKeyValue } -Body ([ordered]@{})
+    $machineCode = Get-Text $machineOnHuman.Body.code
+    $machineOk = ($machineOnHuman.Status -eq 401) -and ($machineCode -ceq 'SERVICE_CREDENTIAL_REQUIRED')
+    Add-Check 'J8-机器凭据打人登录面401' $machineOk ('HTTP ' + $machineOnHuman.Status + ' code=' + $machineCode)
+    $Details['machineOnHumanSurface'] = [ordered]@{ httpStatus = $machineOnHuman.Status; code = $machineCode }
+    if (-not $machineOk) { $Verdict = 'FAIL'; $Reason = '机器凭据打 /onto/internal 未被拒为 401 SERVICE_CREDENTIAL_REQUIRED：HTTP ' + $machineOnHuman.Status + ' ' + $machineCode }
 }
 
 # ---- 8) A 空间绑定未变 ----

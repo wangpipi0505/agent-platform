@@ -234,6 +234,15 @@ function Invoke-JointAllAggregation {
         $arguments.IsolationReleaseId=[string](Get-JointValue $isolation 'releaseId')
         $arguments.IsolationOpCode=[string](Get-JointValue $isolation 'opCode')
     }
+    # J7 的 revocationFixtures、J8 的 isolationFixtures 与三段 keyRef 只在最终 manifest 里成文，
+    # 而最终 manifest 要等 Invoke 跑完才写。为让 J7/J8 在本次运行内拿到这些输入，先把资源侧
+    # 字段写成 pre-manifest 交给 Invoke（Invoke 只补空值，不覆盖显式参数）。
+    $credentialsPath=Join-Path(Join-Path $Plan.OutputDirectory $Plan.SessionId)'credentials.env'
+    $preManifest=[ordered]@{sessionId=$Plan.SessionId;platformTenant=$Plan.PlatformTenant;environment=$Plan.Environment;spaceId=$resources.spaceId;spaceCode=$resources.spaceCode;releaseId=$resources.releaseId;replacementReleaseId=$resources.replacementReleaseId;appCode=$AppCode;pinAppCode=$PinAppCode;explicitAppCode=$ExplicitAppCode;opCode=$resources.opCode;readKeyRef=$resources.readKeyRef;binderKeyRef=$resources.binderKeyRef;consumerKeyRef=$resources.consumerKeyRef;platformBaseUrl=$Plan.PlatformBaseUrl;ontologyBaseUrl=$Plan.OntologyBaseUrl;revocationFixtures=$resources.revocationFixtures;isolationFixtures=$resources.isolationFixtures}
+    $preManifestPath=Join-Path $Plan.OutputDirectory 'manifest.pre.json'
+    ($preManifest|ConvertTo-Json -Depth 8)|Set-Content -LiteralPath $preManifestPath -Encoding UTF8
+    $arguments.ManifestPath=$preManifestPath
+    if(Test-Path -LiteralPath $credentialsPath -PathType Leaf){$arguments.CredentialsFile=$credentialsPath}
     Write-Host ('[ALL] Invoke-JointAcceptance.ps1 -Stages '+($requiredStages -join ',')+' -EvidenceDir '+$evidence)
     $lines=@(& $invoke @arguments 2>&1 | ForEach-Object{[string]$_})
     $invokeExit=$LASTEXITCODE
