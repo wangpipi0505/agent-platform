@@ -313,7 +313,9 @@ function Assert-JointArtifactsReady([object[]]$Artifacts) {
 }
 function Assert-JointPublicationPrepared([object]$Publication) {
     if((Get-JointValue $Publication 'status') -cne 'READY_TO_COMMIT'){throw 'JOINT_PUBLICATION_NOT_READY'}
-    Assert-JointArtifactsReady @(Get-JointValue $Publication 'artifacts')
+    # Get-JointValue已用一元逗号保数组；此处再@()会包成1元素嵌套数组（JOINT-001）。
+    $artifacts = Get-JointValue $Publication 'artifacts'
+    Assert-JointArtifactsReady -Artifacts $artifacts
 }
 
 function Assert-JointPlatformModelPlan([object]$Plan,[object]$Runtime) {
