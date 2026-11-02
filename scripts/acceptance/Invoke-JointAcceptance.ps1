@@ -4,13 +4,22 @@
 
 .DESCRIPTION
   - -Stages 默认 J1,J2,J3,J4；J2 由 joint-j1-j2.ps1 与 J1 合并执行，但仍逐段记录。
+  - J5–J9 各有一个真实阶段脚本（joint-j5..j9.ps1），语义对齐《联合验收与回归执行手册》
+    §4 原检查项：J5 绑定更新/显式优先、J6 解绑/故障边界、J7 轮换/撤权、J8 租户/空间、
+    J9 平台真实发布→pin。入口只负责编排，不替代真实 OR/AP 与凭据。
   - 缺外部输入时该段记 SKIPPED-BLOCKED 且不发起任何调用；实际失败记 FAIL。
+    J5 需要 -ReplacementReleaseId；J6 需要 -FaultPlatformBase（注入 404/5xx 的第二个 AP）；
+    J7 需要 -DestructiveApproved 与 revocationFixtures；J8 需要 isolationFixtures 与 OR 人工 Bearer；
+    J9 需要 -LivePublicationApproved。缺一项即 BLOCKED，绝不以弱断言代替。
   - -DryRun 只打印将执行的命令与缺失项，不发请求、不写证据文件、不创建目录。
   - 退出码：0=PASS（或 DryRun 计划完成），1=FAIL，3=BLOCKED/SKIPPED-BLOCKED。
   - -Prepare 时先跑 Prepare-Joint.ps1（只准备本体资源，不跑平台阶段），成功后从
     session 私密目录解析三把 key 与 consumerKeyRef，再执行各段。
+  - 提供 -ManifestPath（Prepare All 的 manifest.json）时，从中取 spaceId/releaseId/
+    replacementReleaseId/appCode/pinAppCode/explicitAppCode/opCode、isolationFixtures 与
+    revocationFixtures；命令行显式值优先，manifest 只补缺。
 
-  J1–J3 需要真实 OR/AP 服务与真实 spaceId/releaseId/凭据；本入口只负责编排与证据，
+  J1–J9 需要真实 OR/AP 服务与真实 spaceId/releaseId/凭据；本入口只负责编排与证据，
   不把桩数据当通过。J4 只导入 DRAFT 技能，不代表连接测试/发布/运行完成。
 #>
 [CmdletBinding()]
@@ -25,6 +34,21 @@ param(
     [string]$SpaceCode,
     [string]$ReleaseId,
     [string]$AppCode,
+    [string]$ExplicitAppCode,
+    [string]$PinAppCode,
+    [string]$ReplacementReleaseId,
+    [string]$OpCode,
+    [string]$FaultPlatformBase,
+    [string]$EvaluationPlanPath,
+    [string]$IsolationSpaceId,
+    [string]$IsolationReleaseId,
+    [string]$IsolationOpCode,
+    [string]$OntologyAdminBearer,
+    [string]$OntologyAdminBearerEnv = 'AGENT_ACCEPTANCE_OR_BEARER',
+    [switch]$DestructiveApproved,
+    [switch]$LivePublicationApproved,
+    [string]$CredentialsFile,
+    [ValidateRange(0, 90)][int]$CacheWaitSeconds = 31,
     [string]$PlatformTenant = 'local-v12',
     [string]$Environment = 'production',
     [string]$ExpectSha256,
@@ -92,7 +116,15 @@ function Import-JointConfig([string]$Path) {
         @{ Name = 'SpaceId'; Key = 'spaceId' },
         @{ Name = 'SpaceCode'; Key = 'spaceCode' },
         @{ Name = 'ReleaseId'; Key = 'releaseId' },
+        @{ Name = 'ReplacementReleaseId'; Key = 'replacementReleaseId' },
         @{ Name = 'AppCode'; Key = 'appCode' },
+        @{ Name = 'ExplicitAppCode'; Key = 'explicitAppCode' },
+        @{ Name = 'PinAppCode'; Key = 'pinAppCode' },
+        @{ Name = 'OpCode'; Key = 'opCode' },
+        @{ Name = 'FaultPlatformBase'; Key = 'faultPlatformBase' },
+        @{ Name = 'IsolationSpaceId'; Key = 'isolationSpaceId' },
+        @{ Name = 'IsolationReleaseId'; Key = 'isolationReleaseId' },
+        @{ Name = 'IsolationOpCode'; Key = 'isolationOpCode' },
         @{ Name = 'PlatformTenant'; Key = 'platformTenant' },
         @{ Name = 'Environment'; Key = 'environment' },
         @{ Name = 'ExpectSha256'; Key = 'expectSha256' },
@@ -191,6 +223,14 @@ function Get-JointDeveloperToken {
     return ''
 }
 
+function Resolve-JointFixtureCredential([object]$Fixture, [string]$KeyName) {
+    # 清单里的撤权/隔离夹具只登记 secret_ref（env:AGENT_SECRET_*），明文只在本机私密目录/环境变量。
+    if ($null -eq $Fixture) { return '' }
+    $ref = Get-JointText (Get-JointValue $Fixture $KeyName)
+    if (-not $ref) { return '' }
+    return (Resolve-JointCredential '' $ref '')
+}
+
 function Get-JointStageRequirements([string]$Suite) {
     $missing = @()
     if ($Suite -eq 'J1') {
@@ -209,6 +249,52 @@ function Get-JointStageRequirements([string]$Suite) {
         if (-not (Get-JointText $script:ReadKeyValue)) { $missing += '只读key(' + $ReadKeyEnv + ')' }
         if (-not (Get-JointText $AuthRef)) { $missing += 'AuthRef(已登记secret_ref)' } elseif ((Get-JointText $AuthRef) -notmatch $RefPattern) { $missing += 'AuthRef(形状非法)' }
         if (-not (Get-JointText $script:BearerValue)) { $missing += 'ADMIN Bearer(' + $BearerTokenEnv + ')' }
+    } elseif ($Suite -eq 'J5') {
+        if (-not (Test-JointUuid $SpaceId)) { $missing += 'SpaceId(UUID)' }
+        if (-not (Test-JointUuid $ReleaseId)) { $missing += 'ReleaseId(UUID)' }
+        if (-not (Test-JointUuid $ReplacementReleaseId)) { $missing += 'ReplacementReleaseId(UUID)' }
+        elseif ($ReplacementReleaseId -ceq $ReleaseId) { $missing += 'ReplacementReleaseId(必须不同于ReleaseId)' }
+        if (-not (Get-JointText $AppCode)) { $missing += 'AppCode(绑定解析应用)' }
+        if (-not (Get-JointText $ExplicitAppCode)) { $missing += 'ExplicitAppCode(显式优先对照应用)' }
+        if (-not (Get-JointText $script:BinderKeyValue)) { $missing += 'binder key(' + $BinderKeyEnv + ')' }
+        if (-not (Get-JointText $script:BearerValue)) { $missing += 'ADMIN Bearer(' + $BearerTokenEnv + ')' }
+    } elseif ($Suite -eq 'J6') {
+        if (-not (Test-JointUuid $SpaceId)) { $missing += 'SpaceId(UUID)' }
+        if (-not (Get-JointText $AppCode)) { $missing += 'AppCode(绑定解析应用)' }
+        if (-not (Get-JointText $script:BinderKeyValue)) { $missing += 'binder key(' + $BinderKeyEnv + ')' }
+        if (-not (Get-JointText $script:BearerValue)) { $missing += 'ADMIN Bearer(' + $BearerTokenEnv + ')' }
+        if (-not (Get-JointText $FaultPlatformBase)) { $missing += 'FaultPlatformBase(注入非BINDING_NOT_FOUND的404/5xx的第二个AP)' }
+    } elseif ($Suite -eq 'J7') {
+        if (-not (Test-JointUuid $SpaceId)) { $missing += 'SpaceId(UUID)' }
+        if (-not (Get-JointText $SpaceCode)) { $missing += 'SpaceCode' }
+        if (-not (Test-JointUuid $ReleaseId)) { $missing += 'ReleaseId(UUID)' }
+        if (-not (Get-JointText $OpCode)) { $missing += 'OpCode' }
+        if (-not (Get-JointText $script:OntologyBearerValue)) { $missing += 'OR人工Bearer(' + $OntologyAdminBearerEnv + ')' }
+        if (-not (Get-JointText $script:ReadKeyValue)) { $missing += '只读key(' + $ReadKeyEnv + ')' }
+        if (-not (Get-JointText (Resolve-JointFixtureCredential $script:Revocation 'binderKeyRef'))) { $missing += 'revocationFixtures.binderKeyRef' }
+        if (-not (Get-JointText (Resolve-JointFixtureCredential $script:Revocation 'consumerKeyRef'))) { $missing += 'revocationFixtures.consumerKeyRef' }
+        if (-not (Test-JointUuid (Get-JointText (Get-JointValue $script:Revocation 'binderCredentialId')))) { $missing += 'revocationFixtures.binderCredentialId(UUID)' }
+        if (-not (Test-JointUuid (Get-JointText (Get-JointValue $script:Revocation 'binderPrincipalId')))) { $missing += 'revocationFixtures.binderPrincipalId(UUID)' }
+        if (-not (Test-JointUuid (Get-JointText (Get-JointValue $script:Revocation 'consumerCredentialId')))) { $missing += 'revocationFixtures.consumerCredentialId(UUID)' }
+        if (-not $DestructiveApproved) { $missing += 'DestructiveApproved(破坏性撤权显式批准)' }
+    } elseif ($Suite -eq 'J8') {
+        if (-not (Test-JointUuid $SpaceId)) { $missing += 'SpaceId(UUID)' }
+        if (-not (Test-JointUuid $ReleaseId)) { $missing += 'ReleaseId(UUID)' }
+        if (-not (Get-JointText $AppCode)) { $missing += 'AppCode(绑定解析应用)' }
+        if (-not (Test-JointUuid $IsolationSpaceId)) { $missing += 'IsolationSpaceId(UUID)' }
+        if (-not (Test-JointUuid $IsolationReleaseId)) { $missing += 'IsolationReleaseId(UUID)' }
+        if (-not (Get-JointText $IsolationOpCode)) { $missing += 'IsolationOpCode' }
+        if (-not (Get-JointText $script:BinderKeyValue)) { $missing += 'binder key(' + $BinderKeyEnv + ')' }
+        if (-not (Get-JointText $script:OntologyBearerValue)) { $missing += 'OR人工Bearer(' + $OntologyAdminBearerEnv + ')' }
+    } elseif ($Suite -eq 'J9') {
+        if (-not (Test-JointUuid $SpaceId)) { $missing += 'SpaceId(UUID)' }
+        if (-not (Test-JointUuid $ReleaseId)) { $missing += 'ReleaseId(UUID)' }
+        if (-not (Test-JointUuid $ReplacementReleaseId)) { $missing += 'ReplacementReleaseId(UUID)' }
+        elseif ($ReplacementReleaseId -ceq $ReleaseId) { $missing += 'ReplacementReleaseId(必须不同于ReleaseId)' }
+        if (-not (Get-JointText $PinAppCode)) { $missing += 'PinAppCode(发布pin应用)' }
+        if (-not (Get-JointText $script:BinderKeyValue)) { $missing += 'binder key(' + $BinderKeyEnv + ')' }
+        if (-not (Get-JointText $script:BearerValue)) { $missing += 'ADMIN Bearer(' + $BearerTokenEnv + ')' }
+        if (-not $LivePublicationApproved) { $missing += 'LivePublicationApproved(真实发布显式批准)' }
     }
     return @($missing)
 }
@@ -216,7 +302,8 @@ function Get-JointStageRequirements([string]$Suite) {
 function Get-SuiteEvidencePattern([string]$Suite) {
     if ($Suite -eq 'J1') { return 'j1-j2-*.json' }
     if ($Suite -eq 'J3') { return 'j3-*.json' }
-    return 'j4-*.json'
+    if ($Suite -eq 'J4') { return 'j4-*.json' }
+    return ($Suite.ToLowerInvariant() + '-*.json')
 }
 
 function Get-LatestEvidence([string]$Suite) {
@@ -249,7 +336,12 @@ try {
 }
 
 $requested = @()
+$stagePieces = @()
 foreach ($stage in @($Stages)) {
+    # -File 从命令行只能传一个字符串，允许 "-Stages J5,J6,J7" 这种逗号写法。
+    foreach ($piece in ([string]$stage).Split(',')) { if (Get-JointText $piece) { $stagePieces += (Get-JointText $piece) } }
+}
+foreach ($stage in $stagePieces) {
     $upper = (Get-JointText $stage).ToUpperInvariant()
     if (-not $upper) { continue }
     if ($upper -notmatch '^J[1-9]$') {
@@ -318,11 +410,63 @@ if ($Prepare) {
     }
 }
 
+# ---- 可选：从 Prepare All 的 manifest.json 补缺（命令行显式值优先） ----
+$script:Manifest = $null
+$script:Revocation = $null
+$script:Isolation = $null
+if (Get-JointText $ManifestPath) {
+    if (-not (Test-Path -LiteralPath $ManifestPath -PathType Leaf)) {
+        Write-Output ('[FAIL] ManifestPath 不存在: ' + $ManifestPath)
+        exit $ExitFail
+    }
+    try { $script:Manifest = [IO.File]::ReadAllText($ManifestPath) | ConvertFrom-Json -ErrorAction Stop } catch {
+        Write-Output ('[FAIL] manifest 解析失败: ' + $_.Exception.Message)
+        exit $ExitFail
+    }
+    $manifestMap = @(
+        @{ Name = 'SpaceId'; Key = 'spaceId' },
+        @{ Name = 'SpaceCode'; Key = 'spaceCode' },
+        @{ Name = 'ReleaseId'; Key = 'releaseId' },
+        @{ Name = 'ReplacementReleaseId'; Key = 'replacementReleaseId' },
+        @{ Name = 'AppCode'; Key = 'appCode' },
+        @{ Name = 'PinAppCode'; Key = 'pinAppCode' },
+        @{ Name = 'ExplicitAppCode'; Key = 'explicitAppCode' },
+        @{ Name = 'OpCode'; Key = 'opCode' },
+        @{ Name = 'OntologyBase'; Key = 'ontologyBaseUrl' },
+        @{ Name = 'PlatformBase'; Key = 'platformBaseUrl' },
+        @{ Name = 'PlatformTenant'; Key = 'platformTenant' },
+        @{ Name = 'Environment'; Key = 'environment' }
+    )
+    foreach ($item in $manifestMap) {
+        $current = Get-Variable -Name $item.Name -ValueOnly -ErrorAction SilentlyContinue
+        if (Get-JointText $current) { continue }
+        $value = Get-JointText (Get-JointValue $script:Manifest $item.Key)
+        if ($value) { Set-JointVariable $item.Name $value }
+    }
+    $rev = Get-JointValue $script:Manifest 'revocationFixtures'
+    if ($null -ne $rev) { $script:Revocation = $rev }
+    $iso = Get-JointValue $script:Manifest 'isolationFixtures'
+    if ($null -ne $iso) {
+        $script:Isolation = $iso
+        if (-not (Get-JointText $IsolationSpaceId)) { $IsolationSpaceId = Get-JointText (Get-JointValue $iso 'spaceId') }
+        if (-not (Get-JointText $IsolationReleaseId)) { $IsolationReleaseId = Get-JointText (Get-JointValue $iso 'releaseId') }
+        if (-not (Get-JointText $IsolationOpCode)) { $IsolationOpCode = Get-JointText (Get-JointValue $iso 'opCode') }
+    }
+}
+
+# session 私密目录里的 credentials.env 供各段按 keyRef 取值（J5/J7/J8/J9 需 -CredentialsFile）。
+if (-not (Get-JointText $CredentialsFile)) {
+    $candidateCredentials = Join-Path (Join-Path $OutputDirectory $SessionId) 'credentials.env'
+    if (Test-Path -LiteralPath $candidateCredentials -PathType Leaf) { $CredentialsFile = $candidateCredentials }
+}
+
 $script:ReadKeyValue = Resolve-JointCredential $ReadKey '' $ReadKeyEnv
 $script:BinderKeyValue = Resolve-JointCredential $BinderKey '' $BinderKeyEnv
 $script:BearerValue = Resolve-JointCredential $BearerToken '' $BearerTokenEnv
+$script:OntologyBearerValue = Resolve-JointCredential $OntologyAdminBearer '' $OntologyAdminBearerEnv
 if (-not $DryRun -and $prepareExit -eq 0) {
-    if ($requested -contains 'J4' -and -not (Get-JointText $script:BearerValue)) {
+    $platformBearerStages = @($requested | Where-Object { @('J4', 'J5', 'J6', 'J9') -contains $_ })
+    if ($platformBearerStages.Count -gt 0 -and -not (Get-JointText $script:BearerValue)) {
         $script:BearerValue = Get-JointDeveloperToken
     }
 }
@@ -356,7 +500,7 @@ if ($prepareExit -ne 0) {
 
 # ---- 逐段执行 ----
 $suites = @()
-foreach ($suite in @('J1', 'J3', 'J4')) {
+foreach ($suite in @('J1', 'J3', 'J4', 'J5', 'J6', 'J7', 'J8', 'J9')) {
     if ($requested -contains $suite) { $suites += $suite }
     elseif ($suite -eq 'J1' -and $requested -contains 'J2') { $suites += $suite }
 }
@@ -377,18 +521,45 @@ try {
             }
             continue
         }
-        $scriptPath = Join-Path $PSScriptRoot (@{ J1 = 'joint-j1-j2.ps1'; J3 = 'joint-j3.ps1'; J4 = 'joint-j4.ps1' }[$suite])
+        $scriptMap = @{ J1 = 'joint-j1-j2.ps1'; J3 = 'joint-j3.ps1'; J4 = 'joint-j4.ps1'; J5 = 'joint-j5.ps1'; J6 = 'joint-j6.ps1'; J7 = 'joint-j7.ps1'; J8 = 'joint-j8.ps1'; J9 = 'joint-j9.ps1' }
+        $scriptPath = Join-Path $PSScriptRoot $scriptMap[$suite]
         $callArgs = [ordered]@{}
         if ($suite -eq 'J1') {
             $callArgs = [ordered]@{ OntologyBase = $OntologyBase.TrimEnd('/'); SpaceId = $SpaceId; ReleaseId = $ReleaseId; AppCode = $AppCode; PlatformTenant = $PlatformTenant; Environment = $Environment; EvidenceDir = $EvidenceDir }
         } elseif ($suite -eq 'J3') {
             $callArgs = [ordered]@{ OntologyBase = $OntologyBase.TrimEnd('/'); ReleaseId = $ReleaseId; EvidenceDir = $EvidenceDir }
             if (Get-JointText $ExpectSha256) { $callArgs.ExpectSha256 = $ExpectSha256 }
-        } else {
+        } elseif ($suite -eq 'J4') {
             $callArgs = [ordered]@{ OntologyBase = $OntologyBase.TrimEnd('/'); PlatformBase = $PlatformBase.TrimEnd('/'); SpaceId = $SpaceId; SpaceCode = $SpaceCode; ReleaseId = $ReleaseId; AuthRef = $AuthRef; ReadKey = $script:ReadKeyValue; BearerToken = $script:BearerValue; EvidenceDir = $EvidenceDir }
+        } elseif ($suite -eq 'J5') {
+            $callArgs = [ordered]@{ OntologyBase = $OntologyBase.TrimEnd('/'); PlatformBase = $PlatformBase.TrimEnd('/'); PlatformTenant = $PlatformTenant; Environment = $Environment; SpaceId = $SpaceId; SpaceCode = $SpaceCode; ReleaseId = $ReleaseId; ReplacementReleaseId = $ReplacementReleaseId; AppCode = $AppCode; ExplicitAppCode = $ExplicitAppCode; BinderKey = $script:BinderKeyValue; BearerToken = $script:BearerValue; CacheWaitSeconds = $CacheWaitSeconds; EvidenceDir = $EvidenceDir; SessionId = $SessionId }
+            if (Get-JointText $CredentialsFile) { $callArgs.CredentialsFile = $CredentialsFile }
+        } elseif ($suite -eq 'J6') {
+            $callArgs = [ordered]@{ OntologyBase = $OntologyBase.TrimEnd('/'); PlatformBase = $PlatformBase.TrimEnd('/'); FaultPlatformBase = $FaultPlatformBase.TrimEnd('/'); PlatformTenant = $PlatformTenant; Environment = $Environment; SpaceId = $SpaceId; AppCode = $AppCode; BinderKey = $script:BinderKeyValue; BearerToken = $script:BearerValue; CacheWaitSeconds = $CacheWaitSeconds; EvidenceDir = $EvidenceDir; SessionId = $SessionId }
+            if (Get-JointText $CredentialsFile) { $callArgs.CredentialsFile = $CredentialsFile }
+        } elseif ($suite -eq 'J7') {
+            $callArgs = [ordered]@{
+                OntologyBase = $OntologyBase.TrimEnd('/'); PlatformTenant = $PlatformTenant; Environment = $Environment
+                SpaceId = $SpaceId; SpaceCode = $SpaceCode; ReleaseId = $ReleaseId; OpCode = $OpCode
+                OntologyAdminBearer = $script:OntologyBearerValue; ReadKey = $script:ReadKeyValue
+                RevocationBinderKey = (Resolve-JointFixtureCredential $script:Revocation 'binderKeyRef')
+                RevocationBinderCredentialId = (Get-JointText (Get-JointValue $script:Revocation 'binderCredentialId'))
+                RevocationBinderPrincipalId = (Get-JointText (Get-JointValue $script:Revocation 'binderPrincipalId'))
+                RevocationConsumerKey = (Resolve-JointFixtureCredential $script:Revocation 'consumerKeyRef')
+                RevocationConsumerCredentialId = (Get-JointText (Get-JointValue $script:Revocation 'consumerCredentialId'))
+                EvidenceDir = $EvidenceDir; SessionId = $SessionId; DestructiveApproved = $true
+            }
+            if (Get-JointText $CredentialsFile) { $callArgs.CredentialsFile = $CredentialsFile }
+        } elseif ($suite -eq 'J8') {
+            $callArgs = [ordered]@{ OntologyBase = $OntologyBase.TrimEnd('/'); PlatformTenant = $PlatformTenant; Environment = $Environment; SpaceId = $SpaceId; ReleaseId = $ReleaseId; AppCode = $AppCode; IsolationSpaceId = $IsolationSpaceId; IsolationReleaseId = $IsolationReleaseId; IsolationOpCode = $IsolationOpCode; BinderKey = $script:BinderKeyValue; OntologyAdminBearer = $script:OntologyBearerValue; EvidenceDir = $EvidenceDir; SessionId = $SessionId }
+            if (Get-JointText $CredentialsFile) { $callArgs.CredentialsFile = $CredentialsFile }
+        } else {
+            $callArgs = [ordered]@{ OntologyBase = $OntologyBase.TrimEnd('/'); PlatformBase = $PlatformBase.TrimEnd('/'); PlatformTenant = $PlatformTenant; Environment = $Environment; SpaceId = $SpaceId; SpaceCode = $SpaceCode; ReleaseId = $ReleaseId; ReplacementReleaseId = $ReplacementReleaseId; PinAppCode = $PinAppCode; BinderKey = $script:BinderKeyValue; BearerToken = $script:BearerValue; EvidenceDir = $EvidenceDir; SessionId = $SessionId; LivePublicationApproved = $true }
+            if (Get-JointText $CredentialsFile) { $callArgs.CredentialsFile = $CredentialsFile }
+            if (Get-JointText $EvaluationPlanPath) { $callArgs.EvaluationPlanPath = $EvaluationPlanPath }
         }
-        $secretKeys = @('ReadKey', 'BinderKey', 'BearerToken')
-        $display = '& ' + @{ J1 = 'joint-j1-j2.ps1'; J3 = 'joint-j3.ps1'; J4 = 'joint-j4.ps1' }[$suite] + ' ' + (Format-JointPlanArgs $callArgs $secretKeys)
+        $secretKeys = @('ReadKey', 'BinderKey', 'BearerToken', 'OntologyAdminBearer', 'RevocationBinderKey', 'RevocationConsumerKey')
+        $display = '& ' + $scriptMap[$suite] + ' ' + (Format-JointPlanArgs $callArgs $secretKeys)
         if ($DryRun) {
             Write-Output ('[PLAN] ' + $display)
             foreach ($rowStage in $rowStages) {
@@ -424,10 +595,10 @@ try {
         }
     }
 
-    # 未交付脚本的阶段如实记 SKIPPED-BLOCKED，不得静默跳过。
+    # 兜底：请求了但没有对应行的阶段一律如实记 SKIPPED-BLOCKED，不得静默跳过。
     foreach ($stage in $requested) {
         if (@($results | Where-Object { $_.stage -eq $stage }).Count -eq 0) {
-            [void]$results.Add([ordered]@{ stage = $stage; status = 'SKIPPED-BLOCKED'; reason = '该阶段脚本未交付（当前只交付 J1/J2、J3、J4）'; evidence = ''; log = '' })
+            [void]$results.Add([ordered]@{ stage = $stage; status = 'SKIPPED-BLOCKED'; reason = '该阶段未产生执行行（编排缺失，不得记通过）'; evidence = ''; log = '' })
         }
     }
 } finally {
@@ -458,12 +629,15 @@ $summary = [ordered]@{
     startedAt  = $Started.ToUniversalTime().ToString('o')
     finishedAt = (Get-Date).ToUniversalTime().ToString('o')
     dryRun     = [bool]$DryRun
-    inputs     = [ordered]@{ ontologyBase = $OntologyBase; platformBase = $PlatformBase; releaseId = $ReleaseId; spaceId = $SpaceId; spaceCode = $SpaceCode; appCode = $AppCode; platformTenant = $PlatformTenant; environment = $Environment; expectSha256 = $ExpectSha256; sessionId = $SessionId; authRefProvided = [bool](Get-JointText $AuthRef); readKeyProvided = [bool](Get-JointText $script:ReadKeyValue); binderKeyProvided = [bool](Get-JointText $script:BinderKeyValue); bearerProvided = [bool](Get-JointText $script:BearerValue); manifestPath = $ManifestPath }
+    inputs     = [ordered]@{ ontologyBase = $OntologyBase; platformBase = $PlatformBase; faultPlatformBase = $FaultPlatformBase; releaseId = $ReleaseId; replacementReleaseId = $ReplacementReleaseId; spaceId = $SpaceId; spaceCode = $SpaceCode; appCode = $AppCode; pinAppCode = $PinAppCode; explicitAppCode = $ExplicitAppCode; opCode = $OpCode; isolationSpaceId = $IsolationSpaceId; isolationReleaseId = $IsolationReleaseId; isolationOpCode = $IsolationOpCode; platformTenant = $PlatformTenant; environment = $Environment; expectSha256 = $ExpectSha256; sessionId = $SessionId; destructiveApproved = [bool]$DestructiveApproved; livePublicationApproved = [bool]$LivePublicationApproved; authRefProvided = [bool](Get-JointText $AuthRef); readKeyProvided = [bool](Get-JointText $script:ReadKeyValue); binderKeyProvided = [bool](Get-JointText $script:BinderKeyValue); bearerProvided = [bool](Get-JointText $script:BearerValue); ontologyAdminBearerProvided = [bool](Get-JointText $script:OntologyBearerValue); manifestPath = $ManifestPath }
     results    = @($results)
     totals     = [ordered]@{ pass = $passCount; fail = $failCount; blocked = $blockedCount; skipped = $skippedCount; planned = $plannedCount }
     boundaries = @(
         'J1/J2、J3 需要真实 OR/AP 服务、真实 spaceId/releaseId 与 ontosa_ 凭据；本入口只做编排，不替代真实输入。',
         'J4 只证明正式清单可导入为 DRAFT 技能，不代表连接测试、模型/技能发布或真实运行完成。',
+        'J5–J9 对齐手册 §4 原检查项；缺段输入（ReplacementReleaseId/FaultPlatformBase/revocationFixtures/isolationFixtures/显式批准）一律 BLOCKED，不做弱断言。',
+        'J6 的 pinFailure 记录只存在于 AP 运行快照（数据库），HTTP 只暴露 observation；本段以“非 503 + observation.releaseId 为空”证明跳过策略，不伪造字段。',
+        'J7 只动 revocationFixtures 临时主体，主 readonly/binder/consumer 凭据不动；撤权后临时主体不可恢复。',
         'stub 仅用于脚本契约自检，桩数据不得作为验收通过证据。',
         'S1 A/B/C/D 不在本入口；由 Invoke-S1Acceptance.ps1 单独执行。'
     )

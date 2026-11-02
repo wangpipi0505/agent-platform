@@ -6,6 +6,9 @@
     [ValidateSet('All','Ontology','PlatformModel','PlatformSkillDraft','PlatformSkillConnect','PlatformSkillPublish','PlatformAppDrafts','PlatformAppEvaluate','PlatformAppPrecheck','PlatformAppPublish')][string]$Stage='All',[pscredential]$OntologyCredential,
     [string]$PlatformRuntimePlanPath,[string]$PlatformEvaluationPlanPath,
     [string]$PlatformPublicationConfirmationPath,[switch]$LivePublicationApproved,
+    # J6 需要一个“本体调用会 404(非 BINDING_NOT_FOUND)/坏响应/5xx”的第二个 AP 才能验证 503 边界；
+    # 缺它就只把 J6 记 BLOCKED，绝不以“跳过故障注入”冒充通过。J7 的破坏性撤权同样必须显式批准。
+    [string]$FaultPlatformBase,[switch]$DestructiveApproved,
     # -Stage All 的聚合输入与证据目录；appCode 三件套只有平台应用草稿阶段才会产生，
     # 未跑平台阶段时必须由操作者显式给定，否则 final manifest 记 missingFields 且 complete=false。
     [string]$EvidenceDirectory,[string]$AppCode,[string]$PinAppCode,[string]$ExplicitAppCode,
@@ -201,7 +204,7 @@ function Get-JointSavedKey([object]$Credential) {
 # -Stage All：同 session 内先备好本体资源，再按 J1/J2→J3→J4 逐段执行并汇总 final manifest。
 # 任何 FAIL 或 BLOCKED 都不得写出 complete=true；缺字段只允许出现在 complete=false 的清单里。
 function Invoke-JointAllAggregation {
-    param([object]$Plan,[object]$State,[string]$EvidenceDirectory,[string]$AppCode,[string]$PinAppCode,[string]$ExplicitAppCode,[string]$ExpectSha256,[string]$PlatformToken)
+    param([object]$Plan,[object]$State,[string]$EvidenceDirectory,[string]$AppCode,[string]$PinAppCode,[string]$ExplicitAppCode,[string]$ExpectSha256,[string]$PlatformToken,[string]$FaultPlatformBase,[switch]$DestructiveApproved,[string]$EvaluationPlanPath)
     if(-not $State.resources -or -not $State.resources.spaceId -or -not $State.resources.releaseId){throw 'JOINT_ALL_RESOURCES_REQUIRED'}
     $resources=$State.resources
     $evidence=$EvidenceDirectory
@@ -215,9 +218,23 @@ function Invoke-JointAllAggregation {
     $readKey=Get-JointSavedKey ([pscustomobject]@{keyRef=$resources.readKeyRef})
     $binderKey=Get-JointSavedKey ([pscustomobject]@{keyRef=$resources.binderKeyRef})
     $invoke=Join-Path $PSScriptRoot 'Invoke-JointAcceptance.ps1'
-    $arguments=@{Stages=@('J1','J2','J3','J4');OntologyBase=$Plan.OntologyBaseUrl;PlatformBase=$Plan.PlatformBaseUrl;SpaceId=$resources.spaceId;SpaceCode=$resources.spaceCode;ReleaseId=$resources.releaseId;PlatformTenant=$Plan.PlatformTenant;Environment=$Plan.Environment;AppCode=$AppCode;AuthRef=$resources.consumerKeyRef;ReadKey=$readKey;BinderKey=$binderKey;BearerToken=$PlatformToken;EvidenceDir=$evidence;OutputDirectory=$Plan.OutputDirectory;SessionId=$Plan.SessionId}
+    # 必须执行的阶段由“脚本是否真实交付”决定：缺 J5–J9 时不再假装它们不存在于清单要求里，
+    # 但只要五个脚本都在，All 就必须跑 J1–J9 并按实际结果计算 complete。
+    $stageScripts=@{J1='joint-j1-j2.ps1';J2='joint-j1-j2.ps1';J3='joint-j3.ps1';J4='joint-j4.ps1';J5='joint-j5.ps1';J6='joint-j6.ps1';J7='joint-j7.ps1';J8='joint-j8.ps1';J9='joint-j9.ps1'}
+    $requiredStages=@('J1','J2','J3','J4','J5','J6','J7','J8','J9')|Where-Object{Test-Path -LiteralPath (Join-Path $PSScriptRoot $stageScripts[$_]) -PathType Leaf}
+    $arguments=@{Stages=@($requiredStages);OntologyBase=$Plan.OntologyBaseUrl;PlatformBase=$Plan.PlatformBaseUrl;SpaceId=$resources.spaceId;SpaceCode=$resources.spaceCode;ReleaseId=$resources.releaseId;ReplacementReleaseId=$resources.replacementReleaseId;AppCode=$AppCode;PinAppCode=$PinAppCode;ExplicitAppCode=$ExplicitAppCode;OpCode=$resources.opCode;PlatformTenant=$Plan.PlatformTenant;Environment=$Plan.Environment;AuthRef=$resources.consumerKeyRef;ReadKey=$readKey;BinderKey=$binderKey;BearerToken=$PlatformToken;OntologyAdminBearer=$script:jointToken;EvidenceDir=$evidence;OutputDirectory=$Plan.OutputDirectory;SessionId=$Plan.SessionId}
     if($ExpectSha256){$arguments.ExpectSha256=$ExpectSha256}
-    Write-Host ('[ALL] Invoke-JointAcceptance.ps1 -Stages J1,J2,J3,J4 -EvidenceDir '+$evidence)
+    if($FaultPlatformBase){$arguments.FaultPlatformBase=$FaultPlatformBase}
+    if($EvaluationPlanPath){$arguments.EvaluationPlanPath=$EvaluationPlanPath}
+    if($DestructiveApproved){$arguments.DestructiveApproved=$true}
+    if($LivePublicationApproved){$arguments.LivePublicationApproved=$true}
+    if((Get-JointValue $resources 'isolationFixtures')){
+        $isolation=$resources.isolationFixtures
+        $arguments.IsolationSpaceId=[string](Get-JointValue $isolation 'spaceId')
+        $arguments.IsolationReleaseId=[string](Get-JointValue $isolation 'releaseId')
+        $arguments.IsolationOpCode=[string](Get-JointValue $isolation 'opCode')
+    }
+    Write-Host ('[ALL] Invoke-JointAcceptance.ps1 -Stages '+($requiredStages -join ',')+' -EvidenceDir '+$evidence)
     $lines=@(& $invoke @arguments 2>&1 | ForEach-Object{[string]$_})
     $invokeExit=$LASTEXITCODE
     foreach($line in $lines){Write-Host $line}
@@ -234,9 +251,8 @@ function Invoke-JointAllAggregation {
     $main=@('sessionId','platformTenant','environment','spaceId','spaceCode','releaseId','replacementReleaseId','appCode','pinAppCode','explicitAppCode','opCode','readCredentialId','binderCredentialId','consumerCredentialId','readKeyRef','binderKeyRef','consumerKeyRef','platformBaseUrl','ontologyBaseUrl')
     $manifest=[ordered]@{sessionId=$Plan.SessionId;platformTenant=$Plan.PlatformTenant;environment=$Plan.Environment;spaceId=$resources.spaceId;spaceCode=$resources.spaceCode;releaseId=$resources.releaseId;replacementReleaseId=$resources.replacementReleaseId;appCode=$AppCode;pinAppCode=$PinAppCode;explicitAppCode=$ExplicitAppCode;opCode=$resources.opCode;readCredentialId=$resources.readCredentialId;binderCredentialId=$resources.binderCredentialId;consumerCredentialId=$resources.consumerCredentialId;readKeyRef=$resources.readKeyRef;binderKeyRef=$resources.binderKeyRef;consumerKeyRef=$resources.consumerKeyRef;platformBaseUrl=$Plan.PlatformBaseUrl;ontologyBaseUrl=$Plan.OntologyBaseUrl;revocationFixtures=$resources.revocationFixtures;isolationFixtures=$resources.isolationFixtures}
     $missing=@();foreach($name in $main){$value=Get-JointValue $manifest $name;if($value -isnot [string] -or [string]::IsNullOrWhiteSpace($value)){$missing+=$name}}
-    # 交付范围也是完整性的一部分：本轮只交付 J1-J4，J5-J9（三应用评测/发布、恢复、隔离等）仍未实现。
-    # 只按"字段齐 + J1-J4 通过"就标 complete 会把"没交付"说成"已完成"（EX-06 复核）。
-    $requiredStages=@('J1','J2','J3','J4','J5','J6','J7','J8','J9')
+    # 交付范围也是完整性的一部分：requiredStages 由真实存在的阶段脚本推导（见上），
+    # 缺任何一个已交付阶段的行都记 missingStages；只有字段齐、阶段齐且全 PASS 才 complete。
     $deliveredStages=@($rows|ForEach-Object{[string]$_.stage})
     $missingStages=@($requiredStages|Where-Object{$deliveredStages -notcontains $_})
     # 阶段全部通过但资源字段或阶段范围不全时仍是 BLOCKED：缺平台应用草稿阶段就不能宣称完整。
@@ -409,7 +425,7 @@ try{
     }
     if($Stage -eq 'All'){
         if(-not $script:jointState.resources){throw 'JOINT_ALL_RESOURCES_REQUIRED'}
-        $exitCode=Invoke-JointAllAggregation -Plan $plan -State $script:jointState -EvidenceDirectory $EvidenceDirectory -AppCode $AppCode -PinAppCode $PinAppCode -ExplicitAppCode $ExplicitAppCode -ExpectSha256 $ExpectSha256 -PlatformToken $script:jointPlatformToken
+        $exitCode=Invoke-JointAllAggregation -Plan $plan -State $script:jointState -EvidenceDirectory $EvidenceDirectory -AppCode $AppCode -PinAppCode $PinAppCode -ExplicitAppCode $ExplicitAppCode -ExpectSha256 $ExpectSha256 -PlatformToken $script:jointPlatformToken -FaultPlatformBase $FaultPlatformBase -DestructiveApproved:$DestructiveApproved -EvaluationPlanPath $PlatformEvaluationPlanPath
     }
 }catch{
     $code='JOINT_PREPARATION_FAILED';if($_.Exception.Message -cmatch '^JOINT_[A-Z_]+$'){$code=$_.Exception.Message}
