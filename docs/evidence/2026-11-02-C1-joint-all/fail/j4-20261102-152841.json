@@ -1,0 +1,40 @@
+﻿{
+    "suite":  "J4",
+    "verdict":  "FAIL",
+    "reason":  "读取 OR 清单失败：HTTP 500",
+    "startedAt":  "2026-11-02T07:28:41.5133330Z",
+    "finishedAt":  "2026-11-02T07:28:41.5946684Z",
+    "inputs":  {
+                   "ontologyBase":  "http://127.0.0.1:18283",
+                   "platformBase":  "http://127.0.0.1:18283",
+                   "releaseId":  "11111111-1111-4111-8111-111111111111",
+                   "spaceId":  "22222222-2222-4222-8222-222222222222",
+                   "spaceCode":  "joint_stub_space",
+                   "authRefProvided":  true,
+                   "readKeyProvided":  true,
+                   "bearerProvided":  true
+               },
+    "manifestCount":  0,
+    "toolCodes":  [
+
+                  ],
+    "draftCount":  0,
+    "warningCount":  0,
+    "checks":  [
+                   {
+                       "id":  "J4a-取清单",
+                       "ok":  false,
+                       "detail":  "HTTP 500"
+                   },
+                   {
+                       "id":  "J4a-信封",
+                       "ok":  false,
+                       "detail":  "code=INTERNAL_ERROR"
+                   }
+               ],
+    "boundaries":  [
+                       "J4 只证明 OR 正式清单可被 AP 导入为 DRAFT 技能；连接测试、模型/技能发布与真实运行不在本段范围。",
+                       "导入不修改 OR 侧 release，也不证明技能运行期鉴权头。",
+                       "J4 需要真实已发布 release、只读 ontosa_ 凭据与 ADMIN Bearer；缺一项即 BLOCKED，不得用桩数据记通过。"
+                   ]
+}

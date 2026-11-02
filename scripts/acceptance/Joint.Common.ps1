@@ -42,7 +42,9 @@ function Assert-JointAcceptancePath([string]$RepositoryRoot, [string]$Path) {
 }
 function Assert-JointManifestShape([object]$Manifest, [string]$SessionId, [string]$PlatformTenant, [string]$Environment) {
     $main = @('sessionId','platformTenant','environment','spaceId','spaceCode','releaseId','replacementReleaseId','appCode','pinAppCode','explicitAppCode','opCode','readCredentialId','binderCredentialId','consumerCredentialId','readKeyRef','binderKeyRef','consumerKeyRef','platformBaseUrl','ontologyBaseUrl')
-    $allowed = $main + @('revocationFixtures','isolationFixtures')
+    # 聚合字段只允许出现在最终manifest：complete必须由真实阶段结果决定，不能由局部阶段自报。
+    $aggregate = @('schemaVersion','complete','verdict','generatedAt','stages','missingFields')
+    $allowed = $main + @('revocationFixtures','isolationFixtures') + $aggregate
     if (@(Get-JointNames $Manifest | Where-Object { $_ -notin $allowed }).Count) { throw 'JOINT_MANIFEST_FIELDS_INVALID' }
     foreach ($name in $main) {
         $value = Get-JointValue $Manifest $name
@@ -89,6 +91,28 @@ function Assert-JointManifestShape([object]$Manifest, [string]$SessionId, [strin
     }
     Assert-JointRootUrl (Get-JointValue $Manifest 'platformBaseUrl') | Out-Null
     Assert-JointRootUrl (Get-JointValue $Manifest 'ontologyBaseUrl') | Out-Null
+    # 聚合字段可选；出现时必须是可审计的强类型，防止“缺阶段但complete=true”。
+    $names = @(Get-JointNames $Manifest)
+    if ($names -contains 'schemaVersion' -and $Manifest.schemaVersion -ne 1) { throw 'JOINT_MANIFEST_FIELDS_INVALID' }
+    if ($names -contains 'complete' -and $Manifest.complete -isnot [bool]) { throw 'JOINT_MANIFEST_FIELDS_INVALID' }
+    if ($names -contains 'verdict' -and @('PASS','FAIL','BLOCKED') -notcontains ([string]$Manifest.verdict)) { throw 'JOINT_MANIFEST_FIELDS_INVALID' }
+    if ($names -contains 'generatedAt') {
+        $generated = [DateTimeOffset]::MinValue
+        if (-not [DateTimeOffset]::TryParse([string]$Manifest.generatedAt,[ref]$generated)) { throw 'JOINT_MANIFEST_FIELDS_INVALID' }
+    }
+    if ($names -contains 'missingFields') {
+        foreach ($field in @($Manifest.missingFields)) { if ($field -isnot [string] -or [string]::IsNullOrWhiteSpace($field)) { throw 'JOINT_MANIFEST_FIELDS_INVALID' } }
+    }
+    if ($names -contains 'stages') {
+        if ($Manifest.stages -isnot [System.Array]) { throw 'JOINT_MANIFEST_FIELDS_INVALID' }
+        foreach ($stage in @($Manifest.stages)) {
+            if ($null -eq $stage -or @((Get-JointNames $stage) | Where-Object { $_ -notin @('stage','status','reason','evidence') }).Count) { throw 'JOINT_MANIFEST_FIELDS_INVALID' }
+            $stageName = Get-JointValue $stage 'stage'
+            if ($stageName -isnot [string] -or [string]::IsNullOrWhiteSpace($stageName)) { throw 'JOINT_MANIFEST_FIELDS_INVALID' }
+            if (@('PASS','FAIL','BLOCKED','SKIPPED-BLOCKED') -notcontains ([string](Get-JointValue $stage 'status'))) { throw 'JOINT_MANIFEST_FIELDS_INVALID' }
+            foreach ($field in @('reason','evidence')) { $value = Get-JointValue $stage $field; if ($null -ne $value -and $value -isnot [string]) { throw 'JOINT_MANIFEST_FIELDS_INVALID' } }
+        }
+    }
     return $Manifest
 }
 function Get-JointPreparationPlan {

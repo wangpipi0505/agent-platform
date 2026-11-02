@@ -1,0 +1,68 @@
+{
+    "sessionId":  "c1-all-pass",
+    "platformTenant":  "local-v12",
+    "environment":  "production",
+    "spaceId":  "33333333-3333-4333-8333-333333333333",
+    "spaceCode":  "joint_stub_space",
+    "releaseId":  "11111111-1111-4111-8111-111111111111",
+    "replacementReleaseId":  "44444444-4444-4444-8444-444444444444",
+    "appCode":  "c1_pass_resolve",
+    "pinAppCode":  "c1_pass_pin",
+    "explicitAppCode":  "c1_pass_explicit",
+    "opCode":  "joint_stub_op",
+    "readCredentialId":  "77777777-7777-4777-8777-777777777777",
+    "binderCredentialId":  "88888888-8888-4888-8888-888888888888",
+    "consumerCredentialId":  "99999999-9999-4999-8999-999999999999",
+    "readKeyRef":  "env:AGENT_SECRET_JOINT_TEST_READ",
+    "binderKeyRef":  "env:AGENT_SECRET_JOINT_TEST_BINDER",
+    "consumerKeyRef":  "env:AGENT_SECRET_JOINT_TEST_CONSUMER",
+    "platformBaseUrl":  "http://127.0.0.1:18282",
+    "ontologyBaseUrl":  "http://127.0.0.1:18282",
+    "revocationFixtures":  {
+                               "readCredentialId":  "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+                               "binderCredentialId":  "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+                               "consumerCredentialId":  "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+                               "readKeyRef":  "env:AGENT_SECRET_JOINT_TEST_TEMP_READ",
+                               "binderKeyRef":  "env:AGENT_SECRET_JOINT_TEST_TEMP_BINDER",
+                               "consumerKeyRef":  "env:AGENT_SECRET_JOINT_TEST_TEMP_CONSUMER"
+                           },
+    "isolationFixtures":  {
+                              "spaceId":  "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
+                              "spaceCode":  "joint_stub_isolation",
+                              "releaseId":  "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee",
+                              "endpointId":  "ffffffff-ffff-4fff-8fff-ffffffffffff",
+                              "opCode":  "joint_stub_isolation_op"
+                          },
+    "verdict":  "PASS",
+    "complete":  true,
+    "generatedAt":  "2026-11-02T07:34:49.7633295Z",
+    "stages":  [
+                   {
+                       "stage":  "J1",
+                       "status":  "PASS",
+                       "reason":  "",
+                       "evidence":  "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\2026-11-02-C1-joint-all\\all-pass\\j1-j2-20261102-153449.json"
+                   },
+                   {
+                       "stage":  "J2",
+                       "status":  "PASS",
+                       "reason":  "",
+                       "evidence":  "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\2026-11-02-C1-joint-all\\all-pass\\j1-j2-20261102-153449.json"
+                   },
+                   {
+                       "stage":  "J3",
+                       "status":  "PASS",
+                       "reason":  "",
+                       "evidence":  "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\2026-11-02-C1-joint-all\\all-pass\\j3-20261102-153449.json"
+                   },
+                   {
+                       "stage":  "J4",
+                       "status":  "PASS",
+                       "reason":  "",
+                       "evidence":  "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\2026-11-02-C1-joint-all\\all-pass\\j4-20261102-153449.json"
+                   }
+               ],
+    "missingFields":  [
+
+                      ]
+}

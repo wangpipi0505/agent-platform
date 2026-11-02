@@ -1,0 +1,79 @@
+﻿{
+    "suite":  "EX-07 J3 context-pack fetch",
+    "verdict":  "PASS",
+    "reason":  "",
+    "startedAt":  "2026-11-02T15:34:53.8733541+08:00",
+    "elapsedMs":  1,
+    "inputs":  {
+                   "ontologyBase":  "http://127.0.0.1:18283",
+                   "releaseId":  "11111111-1111-4111-8111-111111111111",
+                   "expectSha256":  ""
+               },
+    "observedSha256":  "134c1c7b912439e2cb745bacf3e7786be0021b266a4d6bb4236933a69ecdd629",
+    "sectionCounts":  {
+                          "conceptCards":  1,
+                          "termDictionary":  0,
+                          "relationSummaries":  0,
+                          "exampleQa":  0
+                      },
+    "emptySections":  [
+                          "termDictionary",
+                          "relationSummaries",
+                          "exampleQa"
+                      ],
+    "checks":  [
+                   {
+                       "expected":  "200",
+                       "ok":  true,
+                       "name":  "J3-取包",
+                       "actual":  "200"
+                   },
+                   {
+                       "expected":  "data 为对象",
+                       "ok":  true,
+                       "name":  "J3-信封",
+                       "actual":  "present"
+                   },
+                   {
+                       "expected":  "数组",
+                       "ok":  true,
+                       "name":  "J3-四段:conceptCards",
+                       "actual":  "array(1)"
+                   },
+                   {
+                       "expected":  "数组",
+                       "ok":  true,
+                       "name":  "J3-四段:termDictionary",
+                       "actual":  "array(0)"
+                   },
+                   {
+                       "expected":  "数组",
+                       "ok":  true,
+                       "name":  "J3-四段:relationSummaries",
+                       "actual":  "array(0)"
+                   },
+                   {
+                       "expected":  "数组",
+                       "ok":  true,
+                       "name":  "J3-四段:exampleQa",
+                       "actual":  "array(0)"
+                   },
+                   {
+                       "expected":  "缺省或64位小写hex",
+                       "ok":  true,
+                       "name":  "J3-candidateSha256",
+                       "actual":  "aaaaaaaaaaaa…"
+                   },
+                   {
+                       "expected":  "仅记录（未给 -ExpectSha256）",
+                       "ok":  true,
+                       "name":  "J3-摘要观测",
+                       "actual":  "134c1c7b912439e2cb745bacf3e7786be0021b266a4d6bb4236933a69ecdd629"
+                   }
+               ],
+    "boundaries":  [
+                       "J3 只证明本体侧能给出真实、结构完整、可复算的包；不证明 AP 运行期 snapshot.contextPack 正确。",
+                       "snapshot.contextPack（space/releaseId/sha256/fetchedAt/truncated）需一次声明 ontology 的真实运行，属后续步骤。",
+                       "空段如实列出（emptySections），不把空包当\"通过内容正确\"。"
+                   ]
+}

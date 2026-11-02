@@ -1,0 +1,46 @@
+﻿{
+    "suite":  "JOINT",
+    "verdict":  "PASS",
+    "startedAt":  "2026-11-02T07:37:50.9861495Z",
+    "finishedAt":  "2026-11-02T07:37:51.2674658Z",
+    "dryRun":  false,
+    "inputs":  {
+                   "ontologyBase":  "http://127.0.0.1:18282",
+                   "platformBase":  "http://127.0.0.1:18282",
+                   "releaseId":  "11111111-1111-4111-8111-111111111111",
+                   "spaceId":  "22222222-2222-4222-8222-222222222222",
+                   "spaceCode":  "joint_stub_space",
+                   "appCode":  "",
+                   "platformTenant":  "local-v12",
+                   "environment":  "production",
+                   "expectSha256":  "",
+                   "sessionId":  "joint-20261102-153750",
+                   "authRefProvided":  true,
+                   "readKeyProvided":  true,
+                   "binderKeyProvided":  false,
+                   "bearerProvided":  true,
+                   "manifestPath":  ""
+               },
+    "results":  [
+                    {
+                        "stage":  "J4",
+                        "status":  "PASS",
+                        "reason":  "",
+                        "evidence":  "G:\\207\\项目\\算法重组工具\\代码\\agent-platform\\docs\\evidence\\2026-11-02-C1-joint-all\\verify-pass\\j4-20261102-153751.json",
+                        "log":  "docs\\evidence\\2026-11-02-C1-joint-all\\verify-pass\\j4.log"
+                    }
+                ],
+    "totals":  {
+                   "pass":  1,
+                   "fail":  0,
+                   "blocked":  0,
+                   "skipped":  0,
+                   "planned":  0
+               },
+    "boundaries":  [
+                       "J1/J2、J3 需要真实 OR/AP 服务、真实 spaceId/releaseId 与 ontosa_ 凭据；本入口只做编排，不替代真实输入。",
+                       "J4 只证明正式清单可导入为 DRAFT 技能，不代表连接测试、模型/技能发布或真实运行完成。",
+                       "stub 仅用于脚本契约自检，桩数据不得作为验收通过证据。",
+                       "S1 A/B/C/D 不在本入口；由 Invoke-S1Acceptance.ps1 单独执行。"
+                   ]
+}

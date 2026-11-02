@@ -1,0 +1,315 @@
+﻿{
+    "suite":  "J4",
+    "verdict":  "PASS",
+    "reason":  "",
+    "startedAt":  "2026-11-02T07:28:36.1261313Z",
+    "finishedAt":  "2026-11-02T07:28:36.2641580Z",
+    "inputs":  {
+                   "ontologyBase":  "http://127.0.0.1:18282",
+                   "platformBase":  "http://127.0.0.1:18282",
+                   "releaseId":  "11111111-1111-4111-8111-111111111111",
+                   "spaceId":  "22222222-2222-4222-8222-222222222222",
+                   "spaceCode":  "joint_stub_space",
+                   "authRefProvided":  true,
+                   "readKeyProvided":  true,
+                   "bearerProvided":  true
+               },
+    "manifestCount":  1,
+    "toolCodes":  [
+                      "joint_stub_op"
+                  ],
+    "draftCount":  1,
+    "warningCount":  2,
+    "checks":  [
+                   {
+                       "id":  "J4a-取清单",
+                       "ok":  true,
+                       "detail":  "HTTP 200"
+                   },
+                   {
+                       "id":  "J4a-信封",
+                       "ok":  true,
+                       "detail":  "code=OK"
+                   },
+                   {
+                       "id":  "J4a-清单数组",
+                       "ok":  true,
+                       "detail":  "count=1"
+                   },
+                   {
+                       "id":  "J4a-清单1-tool_code",
+                       "ok":  true,
+                       "detail":  "tool_code=joint_stub_op"
+                   },
+                   {
+                       "id":  "J4a-清单1-ontology_meta",
+                       "ok":  true,
+                       "detail":  "ontology_meta 必须存在"
+                   },
+                   {
+                       "id":  "J4a-清单1-meta-release",
+                       "ok":  true,
+                       "detail":  "releaseId=11111111-1111-4111-8111-111111111111"
+                   },
+                   {
+                       "id":  "J4a-清单1-meta-preview",
+                       "ok":  true,
+                       "detail":  "preview 必须为 false 或缺失"
+                   },
+                   {
+                       "id":  "J4a-清单1-meta-space",
+                       "ok":  true,
+                       "detail":  "spaceCode=joint_stub_space"
+                   },
+                   {
+                       "id":  "J4a-清单1-meta-version",
+                       "ok":  true,
+                       "detail":  "version=v1"
+                   },
+                   {
+                       "id":  "J4a-清单1-meta-digest",
+                       "ok":  true,
+                       "detail":  "contentDigest=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                   },
+                   {
+                       "id":  "J4a-清单1-meta-space-match",
+                       "ok":  true,
+                       "detail":  "expect=joint_stub_space"
+                   },
+                   {
+                       "id":  "J4a-清单1-endpoint",
+                       "ok":  true,
+                       "detail":  "endpoint=http://127.0.0.1:18282/onto/r/joint_stub_space/releases/11111111-1111-4111-8111-111111111111/ops/joint_stub_op"
+                   },
+                   {
+                       "id":  "J4a-清单1-category",
+                       "ok":  true,
+                       "detail":  "category=ontology_service"
+                   },
+                   {
+                       "id":  "J4a-清单1-adapter_type",
+                       "ok":  true,
+                       "detail":  "adapter_type=HTTP"
+                   },
+                   {
+                       "id":  "J4a-清单1-invocation_kind",
+                       "ok":  true,
+                       "detail":  "invocation_kind=SYNC"
+                   },
+                   {
+                       "id":  "J4a-清单1-http_method",
+                       "ok":  true,
+                       "detail":  "http_method=POST"
+                   },
+                   {
+                       "id":  "J4a-清单1-name",
+                       "ok":  true,
+                       "detail":  "length=21"
+                   },
+                   {
+                       "id":  "J4a-清单1-description",
+                       "ok":  true,
+                       "detail":  "length=47"
+                   },
+                   {
+                       "id":  "J4a-清单1-input_schema",
+                       "ok":  true,
+                       "detail":  "object"
+                   },
+                   {
+                       "id":  "J4a-清单1-output_schema",
+                       "ok":  true,
+                       "detail":  "object"
+                   },
+                   {
+                       "id":  "J4a-清单1-guard_attrs",
+                       "ok":  true,
+                       "detail":  "count=1"
+                   },
+                   {
+                       "id":  "J4a-清单1-error_semantics",
+                       "ok":  true,
+                       "detail":  "count=1"
+                   },
+                   {
+                       "id":  "J4a-清单1-return_spec",
+                       "ok":  true,
+                       "detail":  "object"
+                   },
+                   {
+                       "id":  "J4a-清单1-exec_attrs",
+                       "ok":  true,
+                       "detail":  "exec_attrs 必须存在"
+                   },
+                   {
+                       "id":  "J4a-清单1-exec-flags",
+                       "ok":  true,
+                       "detail":  "readonly_flag/side_effect/idempotent/cancellable 均为布尔"
+                   },
+                   {
+                       "id":  "J4a-清单1-exec-timeout",
+                       "ok":  true,
+                       "detail":  "timeout_ms=15000"
+                   },
+                   {
+                       "id":  "J4a-同空间",
+                       "ok":  true,
+                       "detail":  "spaceCodes=joint_stub_space"
+                   },
+                   {
+                       "id":  "J4b-请求体大小",
+                       "ok":  true,
+                       "detail":  "bytes=1109"
+                   },
+                   {
+                       "id":  "J4b-导入HTTP",
+                       "ok":  true,
+                       "detail":  "HTTP 200"
+                   },
+                   {
+                       "id":  "J4b-信封",
+                       "ok":  true,
+                       "detail":  "code=OK"
+                   },
+                   {
+                       "id":  "J4b-drafts",
+                       "ok":  true,
+                       "detail":  "count=1/1"
+                   },
+                   {
+                       "id":  "J4b-warnings",
+                       "ok":  true,
+                       "detail":  "count=2"
+                   },
+                   {
+                       "id":  "J4b-草稿-joint_stub_op-code",
+                       "ok":  true,
+                       "detail":  "code=joint_stub_op"
+                   },
+                   {
+                       "id":  "J4b-草稿-joint_stub_op-status",
+                       "ok":  true,
+                       "detail":  "status=DRAFT"
+                   },
+                   {
+                       "id":  "J4b-草稿-joint_stub_op-id",
+                       "ok":  true,
+                       "detail":  "id=102"
+                   },
+                   {
+                       "id":  "J4b-草稿-joint_stub_op-currentVersion",
+                       "ok":  true,
+                       "detail":  "currentVersion 必须为 null"
+                   },
+                   {
+                       "id":  "J4b-草稿-joint_stub_op-versions",
+                       "ok":  true,
+                       "detail":  "count=1"
+                   },
+                   {
+                       "id":  "J4b-草稿-joint_stub_op-versionNo",
+                       "ok":  true,
+                       "detail":  "versionNo=1"
+                   },
+                   {
+                       "id":  "J4b-草稿-joint_stub_op-version-status",
+                       "ok":  true,
+                       "detail":  "status=DRAFT"
+                   },
+                   {
+                       "id":  "J4b-草稿-joint_stub_op-sha256",
+                       "ok":  true,
+                       "detail":  "64hex"
+                   },
+                   {
+                       "id":  "J4b-草稿-joint_stub_op-semanticDigest",
+                       "ok":  true,
+                       "detail":  "64hex"
+                   },
+                   {
+                       "id":  "J4b-草稿-joint_stub_op-digestVersion",
+                       "ok":  true,
+                       "detail":  "digestVersion=1"
+                   },
+                   {
+                       "id":  "J4b-草稿-joint_stub_op-definition",
+                       "ok":  true,
+                       "detail":  "definition 必须存在"
+                   },
+                   {
+                       "id":  "J4b-草稿-joint_stub_op-def-type",
+                       "ok":  true,
+                       "detail":  "type=HTTP"
+                   },
+                   {
+                       "id":  "J4b-草稿-joint_stub_op-def-invocation",
+                       "ok":  true,
+                       "detail":  "invocationKind=SYNC"
+                   },
+                   {
+                       "id":  "J4b-草稿-joint_stub_op-def-http",
+                       "ok":  true,
+                       "detail":  "httpMethod=POST"
+                   },
+                   {
+                       "id":  "J4b-草稿-joint_stub_op-def-endpoint",
+                       "ok":  true,
+                       "detail":  "endpoint=http://127.0.0.1:18282/onto/r/joint_stub_space/releases/11111111-1111-4111-8111-111111111111/ops/joint_stub_op"
+                   },
+                   {
+                       "id":  "J4b-草稿-joint_stub_op-def-authScheme",
+                       "ok":  true,
+                       "detail":  "authScheme=API_KEY"
+                   },
+                   {
+                       "id":  "J4b-草稿-joint_stub_op-def-authRef",
+                       "ok":  true,
+                       "detail":  "authRef 引用一致"
+                   },
+                   {
+                       "id":  "J4b-草稿-joint_stub_op-importSource",
+                       "ok":  true,
+                       "detail":  "importSource 必须存在"
+                   },
+                   {
+                       "id":  "J4b-草稿-joint_stub_op-src-kind",
+                       "ok":  true,
+                       "detail":  "kind=ONTOLOGY"
+                   },
+                   {
+                       "id":  "J4b-草稿-joint_stub_op-src-tool",
+                       "ok":  true,
+                       "detail":  "toolCode=joint_stub_op"
+                   },
+                   {
+                       "id":  "J4b-草稿-joint_stub_op-src-space",
+                       "ok":  true,
+                       "detail":  "spaceCode=joint_stub_space"
+                   },
+                   {
+                       "id":  "J4b-草稿-joint_stub_op-src-release",
+                       "ok":  true,
+                       "detail":  "releaseId=11111111-1111-4111-8111-111111111111"
+                   },
+                   {
+                       "id":  "J4b-草稿-joint_stub_op-src-version",
+                       "ok":  true,
+                       "detail":  "version=v1"
+                   },
+                   {
+                       "id":  "J4b-草稿-joint_stub_op-src-digest",
+                       "ok":  true,
+                       "detail":  "contentDigest 一致"
+                   },
+                   {
+                       "id":  "J4b-覆盖清单",
+                       "ok":  true,
+                       "detail":  "tools=1"
+                   }
+               ],
+    "boundaries":  [
+                       "J4 只证明 OR 正式清单可被 AP 导入为 DRAFT 技能；连接测试、模型/技能发布与真实运行不在本段范围。",
+                       "导入不修改 OR 侧 release，也不证明技能运行期鉴权头。",
+                       "J4 需要真实已发布 release、只读 ontosa_ 凭据与 ADMIN Bearer；缺一项即 BLOCKED，不得用桩数据记通过。"
+                   ]
+}

@@ -1,0 +1,52 @@
+﻿{
+    "suite":  "EX-07 J1/J2 binding protocol",
+    "verdict":  "PASS",
+    "reason":  "",
+    "startedAt":  "2026-11-02T15:34:49.4738833+08:00",
+    "elapsedMs":  33,
+    "inputs":  {
+                   "ontologyBase":  "http://127.0.0.1:18282",
+                   "spaceId":  "33333333-3333-4333-8333-333333333333",
+                   "releaseId":  "11111111-1111-4111-8111-111111111111",
+                   "appCode":  "c1_pass_resolve",
+                   "platformTenant":  "local-v12",
+                   "environment":  "production",
+                   "sideEffectCheck":  true
+               },
+    "checks":  [
+                   {
+                       "expected":  "403 NO_PERMISSION",
+                       "ok":  true,
+                       "name":  "J1-403",
+                       "actual":  "403 NO_PERMISSION"
+                   },
+                   {
+                       "expected":  "404 BINDING_NOT_FOUND",
+                       "ok":  true,
+                       "name":  "J1-无副作用",
+                       "actual":  "404 BINDING_NOT_FOUND"
+                   },
+                   {
+                       "expected":  "200 changed=true",
+                       "ok":  true,
+                       "name":  "J2-首次pin",
+                       "actual":  "200 changed=True"
+                   },
+                   {
+                       "expected":  "200 changed=false 同 bindingId",
+                       "ok":  true,
+                       "name":  "J2-幂等",
+                       "actual":  "200 changed=False"
+                   },
+                   {
+                       "expected":  "200 同 bindingId/releaseId",
+                       "ok":  true,
+                       "name":  "J2-读回",
+                       "actual":  "200 binding=c1-stub-binding-1 release=11111111-1111-4111-8111-111111111111"
+                   }
+               ],
+    "boundaries":  [
+                       "J1/J2 只证明绑定协议本身，不等于 J9：没有证明 AP 的 ReleasePins 发出了正确载荷。",
+                       "J3～J8 未执行；用真实应用发布链路验证 pin 需另有合格候选与评测/发布前提。"
+                   ]
+}
