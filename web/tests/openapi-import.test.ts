@@ -22,6 +22,12 @@ it("keeps server-derived schemas out of overrides and creates only selected cont
   expect(body.overrides.readResult.description).toContain("不可修改");
   expect(body.overrides.readResult).not.toHaveProperty("inputSchema");
   expect(body.overrides.readResult).not.toHaveProperty("authRef");
+  // R04/R01附录I：summaryTemplate只作表单字段，输出统一为modelSummary.mode=TEMPLATE/tpl。
+  expect(body.overrides.readResult.returnSpec).toEqual({
+    modelSummary: {mode: "TEMPLATE", tpl: "已读取结果"},
+    structuredPath: "$", fileRefPaths: [],
+  });
+  expect(JSON.stringify(body.overrides.readResult.returnSpec)).not.toContain("summaryTemplate");
 });
 it("rejects unsupported operations, duplicate codes, credentials in URL and non-admin auth", () => {
   const run = (ops: any[], forms: any[], admin = true, base = "http://localhost") => buildOpenApiImport("doc", base, ops, forms, admin);

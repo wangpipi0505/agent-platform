@@ -60,7 +60,7 @@ export function buildOpenApiImport(document: string, baseUrl: string, operations
       description: `能力职责：${form.capability.trim()}\n适用：${form.applicable.trim()}\n不适用：${form.excluded.trim()}\n参数示例：${form.example.trim()}`,
       execution: {...form.execution, ...(!form.execution.readonly ? {confirmRoles} : {})},
       guard: {roles, attributes}, timeoutMs: form.timeoutMs,
-      returnSpec: {summaryTemplate: form.summaryTemplate.trim(), structuredPath: form.structuredPath.trim(), fileRefPaths: list(form.fileRefPaths)},
+      returnSpec: {modelSummary: {mode: "TEMPLATE", tpl: form.summaryTemplate.trim()}, structuredPath: form.structuredPath.trim(), fileRefPaths: list(form.fileRefPaths)},
       errorSemantics: form.errors.map(error => ({...error, code: error.code.trim(), message: error.message.trim()})),
       ...(admin && form.authRef.trim() ? {authRef: form.authRef.trim()} : {}),
     };

@@ -297,11 +297,12 @@ class OpenApiImportsTest {
                         false));
         manual.put("guard", Map.of("roles", List.of("READER"), "attributes", Map.of()));
         manual.put("errorSemantics", List.of(Map.of("code", "PARAM_ERROR", "retryable", false)));
+        // R04/R01附录I：示例按唯一目标方言构造（summaryTemplate仅是前端表单字段）。
         manual.put(
                 "returnSpec",
                 Map.of(
-                        "summaryTemplate",
-                        "已查询条目",
+                        "modelSummary",
+                        Map.of("mode", "TEMPLATE", "tpl", "已查询条目"),
                         "structuredPath",
                         "$",
                         "fileRefPaths",
