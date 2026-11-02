@@ -232,12 +232,17 @@ public class SecurityConfiguration {
                 .sessionManagement(x -> x.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(
                         x -> {
-                            x.requestMatchers(
-                                            "/actuator/health",
-                                            "/actuator/health/**",
-                                            "/auth/dev-token",
-                                            "/embed/ticket",
-                                            "/assistant.js")
+                            // Path-lambda matchers: the MVC matcher resolution used by
+                            // requestMatchers(String...) does not resolve actuator endpoints, so the
+                            // health probe fell through to anyRequest and was denied in iam mode.
+                            x.requestMatchers(r -> {
+                                        String u = r.getRequestURI();
+                                        return u.equals("/actuator/health")
+                                                || u.startsWith("/actuator/health/")
+                                                || u.equals("/auth/dev-token")
+                                                || u.equals("/embed/ticket")
+                                                || u.equals("/assistant.js");
+                                    })
                                     .permitAll()
                                     .requestMatchers("/admin/**", "/v3/api-docs")
                                     .access(

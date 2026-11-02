@@ -47,7 +47,15 @@ public final class GatewayIamAssembly {
                 .requestCache(c -> c.disable())
                 .sessionManagement(c -> c.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(boundary.filter(), SecurityContextHolderAwareRequestFilter.class)
-                .authorizeHttpRequests(c -> c.requestMatchers("/actuator/health", "/actuator/health/**").permitAll().anyRequest().authenticated())
+                .authorizeHttpRequests(c -> c
+                        // Path lambdas, not requestMatchers(String...): the MVC matcher resolver used by
+                        // the string overload does not resolve actuator endpoints, so the health probe
+                        // fell through to anyRequest and was denied with an empty 403.
+                        .requestMatchers(r -> {
+                            String u = r.getRequestURI();
+                            return u.equals("/actuator/health") || u.startsWith("/actuator/health/");
+                        }).permitAll()
+                        .anyRequest().authenticated())
                 .build();
     }
 
