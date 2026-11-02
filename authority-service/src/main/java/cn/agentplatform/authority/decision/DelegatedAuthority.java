@@ -57,6 +57,7 @@ public final class DelegatedAuthority {
 
     public static final String AUTHORIZE = "authorize";
     public static final String FORWARD = "forward";
+    public static final String EXCHANGE = "exchange";
     public static final String MODE = "delegated";
     /** portal 令牌的签发方与使用者都是 gateway：委派判权只允许它发起。 */
     public static final String PORTAL_CALLER = "gateway";
@@ -164,8 +165,65 @@ public final class DelegatedAuthority {
         }
     }
 
+    /**
+     * {@code operation=exchange}：gateway 用一张 portal 用户令牌直接换签给新目标（典型是 SSE 订阅目标）的
+     * delegated 票据，不再要求先 {@code authorize} 再 {@code forward} 两跳（EX-43）。
+     *
+     * <p>与 forward 的区别在入口凭据：forward 换的是已登记决策，exchange 换的是"人"，所以这里重新走
+     * {@link #fromSubject} 的主体校验，只额外要求目标落在目录已登记的 delegated 行上。grant 到期时间被夹到
+     * 令牌 {@code exp}——票据不能活得比主体凭据更久，否则登录会话已失效、票据仍能继续访问。
+     *
+     * <p>返回体与 forward 同形（{@code assertion}+{@code ticket}，且断言 claim 里也带 {@code ticket}）：
+     * 平台侧 {@code HttpCurrentAuthorityClient.query} 先验决策断言，再从断言 claim 取票，只回 ticket 会被拒。
+     */
+    public Map<String, Object> exchange(String clientId, AuthorityRequest request) {
+        try {
+            requireEnabled();
+            if (!PORTAL_CALLER.equals(clientId)) {
+                throw AuthorityException.denied("EXCHANGE_CALLER_NOT_GATEWAY");
+            }
+            if (!routes.permits(clientId, request.call().target(), request.call().action(), RouteDirectory.DELEGATED)) {
+                // 换票只能落在已登记的 delegated 行：否则等于凭空给一个新目标发通行证。
+                throw AuthorityException.denied("ROUTE_NOT_REGISTERED");
+            }
+            if (request.subjectToken() == null) {
+                throw AuthorityException.denied("SUBJECT_UNAVAILABLE");
+            }
+            JsonNode subject = keys.verify(request.subjectToken(), TicketService.TICKET_TYPE);
+            JsonNode expires = subject.get("exp");
+            if (expires == null || !expires.isIntegralNumber()) {
+                throw AuthorityException.denied("SUBJECT_EXPIRY");
+            }
+            long iat = now();
+            Instant cap = Instant.ofEpochSecond(expires.longValue());
+            if (!cap.isAfter(Instant.ofEpochSecond(iat))) {
+                // 令牌在本秒内到期：签出来的票会立刻过期，直接按不可用处理而不是发一张废票。
+                throw AuthorityException.denied("SUBJECT_EXPIRY");
+            }
+            DecisionStore.Decision decision = fromSubject(clientId, request, cap);
+            String ticket = ticket(decision, clientId, request.call(), iat);
+            Map<String, Object> claims = authorityClaims(decision, request, iat);
+            claims.put("ticket", ticket);
+            audit.info("delegation.audit endpoint=decision outcome=permit operation=exchange caller={} target={}"
+                            + " action={} decision_id={} grant_ref={} grant_expires_at={}",
+                    clientId, request.call().target(), request.call().action(), decision.id(),
+                    decision.grantRef(), decision.grantExpiresAt().getEpochSecond());
+            return Map.of("assertion", keys.sign(TicketService.ASSERTION_TYPE, claims), "ticket", ticket);
+        } catch (AuthorityException denied) {
+            deny("decision", EXCHANGE, clientId, request, denied);
+            throw denied;
+        }
+    }
+
     /** portal 用户令牌换决策：调用方必须是 gateway，令牌必须是本服务签的、给本 portal 受众的 user 令牌。 */
     private DecisionStore.Decision fromSubject(String clientId, AuthorityRequest request) {
+        return fromSubject(clientId, request, null);
+    }
+
+    /**
+     * @param cap 主体凭据的到期时间；非空时 grant 不得晚于它（exchange 用 portal 令牌的 {@code exp} 封顶）
+     */
+    private DecisionStore.Decision fromSubject(String clientId, AuthorityRequest request, Instant cap) {
         if (!PORTAL_CALLER.equals(clientId)) {
             throw AuthorityException.denied("SUBJECT_CALLER_NOT_GATEWAY");
         }
@@ -199,6 +257,10 @@ public final class DelegatedAuthority {
         String grantRef = newId("grt");
         Instant issued = Instant.ofEpochSecond(now());
         Instant grantExpiresAt = issued.plusSeconds(delegation.grantSeconds());
+        if (cap != null && cap.isBefore(grantExpiresAt)) {
+            // 只缩短不延长：portal 令牌比默认 grant 短命时，授权随凭据一起到期。
+            grantExpiresAt = cap;
+        }
         Map<String, Object> operation = operation(newId("op"), issued, grantExpiresAt, grantRef, tenantId,
                 principalId, request.call(), ceilingSha256);
         DecisionStore.Decision decision = new DecisionStore.Decision(newId("dec"), clientId,

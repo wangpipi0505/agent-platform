@@ -25,11 +25,13 @@ import java.util.Set;
  * 三组端点（口径 B 最小可消费面）：
  * <ul>
  *   <li>{@code GET /.well-known/jwks.json} 公钥集，供平台按 kid 验签；</li>
- *   <li>{@code POST /oauth/token} 只做 {@code operation=client}（workload 票据）；</li>
- *   <li>{@code POST /internal/authorize} 只做 {@code operation=authorize_workload}（第二跳决策断言）。</li>
+ *   <li>{@code POST /oauth/token} 支持 {@code operation=client}（workload 票据）与
+ *       {@code operation=forward}/{@code operation=exchange}（委派票据 / portal 令牌换票）；</li>
+ *   <li>{@code POST /internal/authorize} 支持 {@code operation=authorize_workload}（第二跳决策断言）与
+ *       {@code operation=authorize}（portal 主体或上游 delegated 票换决策）。</li>
  * </ul>
- * 其余 operation（{@code exchange/exchange_integration/resume/forward/authorize/response_*}）在 M1 一律
- * 403 + 审计：最小面越窄，越不可能出现"没验证就许可"的路径；完整语义留给 M2/M3。
+ * 其余 operation（{@code exchange_integration/resume/response_*}）在 M1 一律 403 + 审计：
+ * 最小面越窄，越不可能出现"没验证就许可"的路径；完整语义留给 M2/M3。
  * <p>两条 POST 都走 {@link #handle}：先认证、再解析、再按目录裁决，permit/deny 都落一条
  * {@code authority.audit}（只记 client_id/operation/target/action/nonce，不记 secret 与 token 原文）。
  */
@@ -88,6 +90,10 @@ public final class AuthorityController {
         // 转发也走 tokenUri（平台客户端就是这么做的），但语义是把一张已登记决策换成新目标的票据。
         if (DelegatedAuthority.FORWARD.equals(request.operation())) {
             return delegated.forward(clientId, request);
+        }
+        // exchange 与 forward 同为"换票"，但入口凭据是 portal 用户令牌而不是已登记决策（EX-43 / SSE 订阅）。
+        if (DelegatedAuthority.EXCHANGE.equals(request.operation())) {
+            return delegated.exchange(clientId, request);
         }
         if (!TICKET_OPERATIONS.contains(request.operation())) {
             throw AuthorityException.denied("tokenUri 不接受 operation=" + request.operation());
