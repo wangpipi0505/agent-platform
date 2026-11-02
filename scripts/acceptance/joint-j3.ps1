@@ -7,7 +7,8 @@
     - 只读服务账号 GET /onto/releases/{id}/context-pack 必须 200；
     - 载荷必须是四段（conceptCards/termDictionary/relationSummaries/exampleQa）且都是数组；
     - candidateSha256 出现时必须是 64 位小写十六进制；
-    - 对**收到的原始字节**复算 SHA-256：给 -ExpectSha256 时作为通过条件，不给时只记录观测值。
+    - 摘要三对象分开（R05/JOINT-003）：live Envelope 摘要含动态 traceId，仅观测记录；
+      -ExpectSha256 只与 -FrozenContextPackPath 指向的冻结制品原件核对，无法取得独立原件时 BLOCKED。
   AP 侧"运行时 snapshot.contextPack 含 space/releaseId/sha256/fetchedAt/truncated"**不在本脚本**：
   那需要一次声明了 ontology 的真实运行（J9 链路），缺候选/评测时就无法伪造，故如实留给后续步骤。
 
@@ -22,6 +23,7 @@ param(
     [string]$OntologyBase = 'http://127.0.0.1:18182',
     [string]$ReleaseId,
     [string]$ExpectSha256,
+    [string]$FrozenContextPackPath,
     [string]$EvidenceDir
 )
 
@@ -34,6 +36,33 @@ $UuidPattern = '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-
 function Get-Text([object]$Value) {
     if ($null -eq $Value) { return '' }
     return ([string]$Value).Trim()
+}
+
+# R05/JOINT-003：三个摘要对象分开，不得混用——
+#   ① live HTTP Envelope 摘要（含每请求变化的 traceId，仅观测记录，不可与任何冻结期望比较）；
+#   ② 冻结 CONTEXT_PACK 制品原件 SHA（凭本地独立原件核对，期望必须指向它）；
+#   ③ 发布元数据中的制品摘要（另按已核发布元数据验证，不在本脚本内）。
+# 给了 -ExpectSha256 却无法取得独立原件时该核对记 BLOCKED；不把当前响应现算 SHA 回填期望。
+function Resolve-J3DigestDecision([string]$ExpectSha256, [string]$FrozenPath, [bool]$FrozenPathExists, [string]$ObservedEnvelopeSha) {
+    $envelope = @{ name = 'J3-Envelope摘要观测'; expected = '仅记录（含动态traceId，不可与冻结制品比较）'; actual = $ObservedEnvelopeSha; ok = $true }
+    if (-not (Get-Text $ExpectSha256)) {
+        return @{ verdict = 'OBSERVE'; checks = @($envelope); reason = '' }
+    }
+    if (-not (Get-Text $FrozenPath)) {
+        return @{ verdict = 'BLOCKED'; checks = @($envelope); reason = '给了-ExpectSha256但未提供-FrozenContextPackPath：摘要期望对应冻结制品原件，live Envelope含动态traceId不可比较；无法取得独立原件时BLOCKED' }
+    }
+    if (-not $FrozenPathExists) {
+        return @{ verdict = 'BLOCKED'; checks = @($envelope); reason = ('冻结制品原件不存在: ' + $FrozenPath) }
+    }
+    $Hasher = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        $FileSha = ([BitConverter]::ToString($Hasher.ComputeHash([IO.File]::ReadAllBytes($FrozenPath))) -replace '-', '').ToLowerInvariant()
+    } finally { $Hasher.Dispose() }
+    $artifact = @{ name = 'J3-冻结制品原件'; expected = $ExpectSha256; actual = $FileSha; ok = ($FileSha -cne $ExpectSha256 -eq $false) }
+    if ($FileSha -cne $ExpectSha256) {
+        return @{ verdict = 'FAIL'; checks = @($envelope, $artifact); reason = '冻结制品原件SHA与期望不一致（对象错配或内容变化，例如把BUNDLE摘要当context-pack期望）' }
+    }
+    return @{ verdict = 'PASS'; checks = @($envelope, $artifact); reason = '' }
 }
 
 $Missing = @()
@@ -129,13 +158,11 @@ try {
     [void]$Checks.Add(@{ name = 'J3-candidateSha256'; expected = '缺省或64位小写hex'; actual = $(if ((Get-Text $CandidateSha)) { $CandidateSha.Substring(0, [Math]::Min(12, $CandidateSha.Length)) + '…' } else { 'absent' }); ok = $ShaOk })
     if (-not $ShaOk) { throw 'candidateSha256 不是 64 位小写十六进制' }
 
-    if ((Get-Text $ExpectSha256)) {
-        $Match = ($ObservedSha -eq $ExpectSha256)
-        [void]$Checks.Add(@{ name = 'J3-摘要复算'; expected = $ExpectSha256; actual = $ObservedSha; ok = $Match })
-        if (-not $Match) { throw '按原始字节复算的摘要与 -ExpectSha256 不一致（包内容或期望值有变）' }
-    } else {
-        [void]$Checks.Add(@{ name = 'J3-摘要观测'; expected = '仅记录（未给 -ExpectSha256）'; actual = $ObservedSha; ok = $true })
-    }
+    # R05/JOINT-003：Envelope摘要仅观测；-ExpectSha256只与冻结制品原件核对。
+    $Digest = Resolve-J3DigestDecision $ExpectSha256 $FrozenContextPackPath (Test-Path -LiteralPath $FrozenContextPackPath) $ObservedSha
+    foreach ($DigestCheck in @($Digest.checks)) { [void]$Checks.Add($DigestCheck) }
+    if ($Digest.verdict -ceq 'FAIL') { throw $Digest.reason }
+    if ($Digest.verdict -ceq 'BLOCKED') { $Verdict = 'BLOCKED'; $Reason = $Digest.reason }
 } catch {
     $Verdict = 'FAIL'
     $Reason = $_.Exception.Message
@@ -148,7 +175,7 @@ $Evidence = [ordered]@{
     reason       = $Reason
     startedAt    = $Started.ToString('o')
     elapsedMs    = $Elapsed
-    inputs       = [ordered]@{ ontologyBase = $OntologyBase; releaseId = $ReleaseId; expectSha256 = $ExpectSha256 }
+    inputs       = [ordered]@{ ontologyBase = $OntologyBase; releaseId = $ReleaseId; expectSha256 = $ExpectSha256; frozenContextPackPath = $FrozenContextPackPath }
     observedSha256 = $ObservedSha
     sectionCounts  = $SectionCounts
     emptySections  = @($EmptySections)
