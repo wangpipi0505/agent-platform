@@ -497,7 +497,9 @@ public final class DelegatedAuthority {
                     retained.actor(), retained.ceiling(), retained.operation(), retained.grantRef(),
                     retained.grantExpiresAt(), retained.subjectCaller(), retained.ticketJti(),
                     retained.originAuthenticationId(), retained.authorizationVersion(),
-                    Instant.ofEpochSecond(checkedUntil), DecisionStore.Purpose.EVENTS,
+                    // 登记的有效期必须是 hard_deadline 而不是首个 5s 断言窗：决策是"读窗口的登记"，
+                    // 断言只是一次次续期出来的短票。取 checkedUntil 会让窗口在第一次续期前就被 sweep 清掉（EX-46）。
+                    binding.hardDeadline(), DecisionStore.Purpose.EVENTS,
                     retained.sourceTokenSha256(), retained.admissionNonce(), retained.admissionRequestSha256(),
                     null, null, retained.id(), binding.responseId(), continuationJti, binding.hardDeadline(),
                     request.immutable());
@@ -866,7 +868,8 @@ public final class DelegatedAuthority {
                     child.action(), child.resource(), child.actor(), child.ceiling(), child.operation(),
                     child.grantRef(), child.grantExpiresAt(), child.subjectCaller(), child.ticketJti(),
                     child.originAuthenticationId(), child.authorizationVersion(),
-                    Instant.ofEpochSecond(checkedUntil), DecisionStore.Purpose.CHILD_OPEN,
+                    // 同 S3：登记活到子窗口硬截止，续期只刷新断言；否则首个 5s 窗一过就被 sweep 清掉（EX-46）。
+                    child.hardDeadline(), DecisionStore.Purpose.CHILD_OPEN,
                     child.sourceTokenSha256(), child.admissionNonce(), child.admissionRequestSha256(), null, null,
                     child.id(), child.bindingResponseId(), continuationJti, child.hardDeadline(), immutable);
             decisions.put(window);
@@ -951,6 +954,9 @@ public final class DelegatedAuthority {
             if (checkedUntil <= iat) {
                 throw AuthorityException.expired("EVENTS_CHECK_EXPIRED");
             }
+            // 续期把登记一并续到硬截止：sweep 只按 expiresAt 回收，登记不续就会在首个 5s 窗后
+            // 被下一次 put 顺手清掉，表现为"合法续期突然 403 EVENTS_CHECK_CONTINUATION"（EX-46）。
+            decisions.put(window.withExpiresAt(window.hardDeadline()));
             Map<String, Object> claims = eventsWindowClaims(clientId, request, window, iat, checkedUntil,
                     window.immutable(), continuation);
             audit.info("delegation.audit endpoint=decision outcome=permit operation={} caller={} decision_id={}"

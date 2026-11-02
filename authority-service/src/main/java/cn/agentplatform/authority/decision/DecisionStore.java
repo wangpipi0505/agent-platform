@@ -118,6 +118,14 @@ public final class DecisionStore {
                     parentAdmissionId, bindingResponseId, continuationJti, hardDeadline, immutable);
         }
 
+        /** 续期时只推后登记的有效期：窗口登记要活到硬截止，判权结果与一次性消费标记都不动。 */
+        public Decision withExpiresAt(Instant until) {
+            return new Decision(id, caller, target, action, resource, actor, ceiling, operation, grantRef,
+                    grantExpiresAt, subjectCaller, ticketJti, originAuthenticationId, authorizationVersion, until,
+                    purpose, sourceTokenSha256, admissionNonce, admissionRequestSha256, consumedAt, consumedBy,
+                    parentAdmissionId, bindingResponseId, continuationJti, hardDeadline, immutable);
+        }
+
         /** 一次性消费标记：只改这两个字段，其余判权结果不动（消费不改变已经做出的授权）。 */
         public Decision consumed(Instant at, String consumer) {
             return new Decision(id, caller, target, action, resource, actor, ceiling, operation, grantRef,
