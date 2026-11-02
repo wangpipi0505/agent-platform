@@ -82,6 +82,10 @@ agent:
     model: ${AGENT_MODEL_URL:http://127.0.0.1:18084}
     monitor: ${AGENT_MONITOR_URL:http://127.0.0.1:18085}
 management:
+  # iam 模式下业务链对 /actuator/** 一律拒绝（它不属于五种受管入站形态），
+  # 健康探针必须由独立管理端口提供；未设置时与业务同端口，探针会被业务链拒绝。
+  server:
+    port: ${MANAGEMENT_SERVER_PORT:}
   endpoints:
     web:
       exposure:

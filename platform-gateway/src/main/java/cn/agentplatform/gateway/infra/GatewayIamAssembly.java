@@ -43,7 +43,12 @@ public final class GatewayIamAssembly {
     @Bean
     SecurityFilterChain gatewayIamChain(HttpSecurity http, GatewayIngressBoundary boundary)
             throws Exception {
-        return http.csrf(c -> c.disable())
+        return http
+                // Only the five governed ingress shapes belong to this chain. Everything else
+                // (notably /actuator/health) must fall through to the shared service chain, whose
+                // permit rules own the probe; a catch-all chain here denied it with an empty 403.
+                .securityMatcher("/admin/**", "/auth/session")
+                .csrf(c -> c.disable())
                 .requestCache(c -> c.disable())
                 .sessionManagement(c -> c.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(boundary.filter(), SecurityContextHolderAwareRequestFilter.class)

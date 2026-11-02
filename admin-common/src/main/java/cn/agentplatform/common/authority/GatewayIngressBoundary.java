@@ -323,6 +323,11 @@ public final class GatewayIngressBoundary implements AsyncHandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest r, HttpServletResponse s, Object handler) {
+        // The interceptor is mapped to every path, but it only has authority over requests the
+        // filter admitted (it stamps Proof under KEY). A path that never passed the filter — the
+        // /actuator/health probe is the concrete case — is not boundary-governed and must not be
+        // denied here, otherwise the permit rule in the security chain never gets a chance.
+        if (r.getAttribute(KEY) == null) return true;
         var p = proof(r);
         synchronized (p) {
             p.check(r);

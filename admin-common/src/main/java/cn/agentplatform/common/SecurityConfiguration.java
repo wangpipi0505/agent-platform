@@ -35,6 +35,7 @@ import org.springframework.security.oauth2.jwt.*;
 import org.springframework.security.oauth2.server.resource.authentication.*;
 import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.*;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfoHandlerMapping;
@@ -235,14 +236,15 @@ public class SecurityConfiguration {
                             // Path-lambda matchers: the MVC matcher resolution used by
                             // requestMatchers(String...) does not resolve actuator endpoints, so the
                             // health probe fell through to anyRequest and was denied in iam mode.
-                            x.requestMatchers(r -> {
-                                        String u = r.getRequestURI();
-                                        return u.equals("/actuator/health")
-                                                || u.startsWith("/actuator/health/")
-                                                || u.equals("/auth/dev-token")
-                                                || u.equals("/embed/ticket")
-                                                || u.equals("/assistant.js");
-                                    })
+                            // Named RequestMatchers: the MVC resolver behind requestMatchers(String...)
+                            // does not resolve actuator endpoints, and a path lambda is not registered
+                            // as an AuthorizedUrl rule, so the probe fell through to anyRequest (403).
+                            x.requestMatchers(
+                                            new AntPathRequestMatcher("/actuator/health"),
+                                            new AntPathRequestMatcher("/actuator/health/**"),
+                                            new AntPathRequestMatcher("/auth/dev-token"),
+                                            new AntPathRequestMatcher("/embed/ticket"),
+                                            new AntPathRequestMatcher("/assistant.js"))
                                     .permitAll()
                                     .requestMatchers("/admin/**", "/v3/api-docs")
                                     .access(
