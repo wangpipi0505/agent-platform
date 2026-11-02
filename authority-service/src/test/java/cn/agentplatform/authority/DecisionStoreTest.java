@@ -62,6 +62,7 @@ class DecisionStoreTest {
                 Map.of("operation_id", "op-bootstrap"), "grant-1", expiresAt, "gateway", null,
                 null, "delegated-v1", expiresAt,
                 // 1c/1d 新增的 admission/消费/continuation 字段：本测试只关心容量与过期，全部留空。
-                null, null, null, null, null, null, null, null, null, null);
+                // 第 26 个字段是 EX-46 的 immutable 快照（续期要逐字节回显），本测试不涉及续期，留空。
+                null, null, null, null, null, null, null, null, null, null, null);
     }
 }

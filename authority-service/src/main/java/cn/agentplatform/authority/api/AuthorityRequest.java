@@ -216,6 +216,28 @@ public record AuthorityRequest(
         return node;
     }
 
+    /**
+     * EX-46 S5 的入口凭据：S4 回显的 {@code child_open}
+     * （{@code agent-portal-events-child-open+jwt}），engine 打开子观测时必须原样带回。
+     *
+     * <p>与 {@code parent_continuation} 同属"票面字符串"：解析层只管形状与长度，typ/use/aud/exp、
+     * 与 association 的三个绑定值（摘要、父子 responseId）全部留给 S5 判定。
+     */
+    public String childOpen() {
+        return optionalText(raw, "child_open", MAX_TICKET);
+    }
+
+    /**
+     * EX-46 S6 的续期凭据：S3/S5 断言里的 {@code continuation_ref} 原样带回
+     * （gateway 窗口用 gateway continuation，child 窗口用 child continuation）。
+     *
+     * <p>续期只刷新 checked 窗口，不重新发窗：请求层因此只读这一个字段，窗口上界由判决层按
+     * 决策里的 immutable 与 55s 硬窗复核。
+     */
+    public String continuationRef() {
+        return optionalText(raw, "continuation_ref", MAX_TICKET);
+    }
+
     /** S3 binding 的类型化视图：构造前已在 {@link #binding()} 里完成形状/长度/编码校验。 */
     public record Binding(String responseId, ResourceBinding resource, long effectiveCursor,
                           String observationRequestSha256, Instant hardDeadline) {

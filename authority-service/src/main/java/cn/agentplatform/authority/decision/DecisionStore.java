@@ -40,7 +40,15 @@ public final class DecisionStore {
         /** S2/S3：由 retained 票继续派生的决策（1d 使用）。 */
         EVENTS,
         /** S4：child 交换后给 engine 的观测授权（EX-45）；父决策是 S3 的 {@link #EVENTS}。 */
-        CHILD
+        CHILD,
+        /**
+         * S5：engine 按 {@code child_open} 真正打开子观测后落下的窗口决策（EX-46）。
+         *
+         * <p>与 {@link #CHILD} 的分工：{@code CHILD} 是"S4 已授权 engine 可以来打开"的一次性凭据，
+         * S5 消费它并产生一条可续期的窗口；S6 的 {@code portal_events_child_check} 只刷新这条窗口的
+         * checked 上界，不再消费任何决策。
+         */
+        CHILD_OPEN
     }
 
     private final Map<String, Decision> entries = new ConcurrentHashMap<>();
@@ -67,6 +75,12 @@ public final class DecisionStore {
      * {@code admissionNonce}/{@code admissionRequestSha256} 记录**入站请求**的 nonce 与摘要，
      * 供 1d 的 {@code gateway_query} 比对；{@code consumedAt}/{@code consumedBy} 是一次性消费标记；
      * {@code parentAdmissionId} 让 S1 决策能指回它消费的 S0 决策。
+     *
+     * <p>EX-46 增补 {@code immutable}：S5/S6 续期时断言必须**逐字节**回显当初开窗的那份 immutable
+     * （客户端 {@code install} 要求续期前后 {@code immutable} 引用相同，{@code eventsCurrent} 再做整节点
+     * 比较），而 child 窗口的 {@code opening_decision_id}/{@code admission_nonce} 等字段来自 engine 的
+     * 入站请求、无法从本服务已有决策重算，所以只能把已经过一次整节点校验的节点存下来。
+     * 这里存的不是令牌原文，而是公开的、已经进了签名的判权素材；过期淘汰规则与其它字段一致。
      */
     public record Decision(
             String id,
@@ -93,14 +107,15 @@ public final class DecisionStore {
             String parentAdmissionId,
             String bindingResponseId,
             String continuationJti,
-            Instant hardDeadline) {
+            Instant hardDeadline,
+            com.fasterxml.jackson.databind.JsonNode immutable) {
 
         /** 同一决策签出票后回写票 jti：决策 id 不变，只补"这张决策对应哪张票"。 */
         public Decision withTicketJti(String jti) {
             return new Decision(id, caller, target, action, resource, actor, ceiling, operation, grantRef,
                     grantExpiresAt, subjectCaller, jti, originAuthenticationId, authorizationVersion, expiresAt,
                     purpose, sourceTokenSha256, admissionNonce, admissionRequestSha256, consumedAt, consumedBy,
-                    parentAdmissionId, bindingResponseId, continuationJti, hardDeadline);
+                    parentAdmissionId, bindingResponseId, continuationJti, hardDeadline, immutable);
         }
 
         /** 一次性消费标记：只改这两个字段，其余判权结果不动（消费不改变已经做出的授权）。 */
@@ -108,7 +123,7 @@ public final class DecisionStore {
             return new Decision(id, caller, target, action, resource, actor, ceiling, operation, grantRef,
                     grantExpiresAt, subjectCaller, ticketJti, originAuthenticationId, authorizationVersion,
                     expiresAt, purpose, sourceTokenSha256, admissionNonce, admissionRequestSha256, at, consumer,
-                    parentAdmissionId, bindingResponseId, continuationJti, hardDeadline);
+                    parentAdmissionId, bindingResponseId, continuationJti, hardDeadline, immutable);
         }
     }
 

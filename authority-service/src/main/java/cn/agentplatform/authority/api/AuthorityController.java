@@ -125,6 +125,15 @@ public final class AuthorityController {
         if (DelegatedAuthority.CHILD_EXCHANGE.equals(request.operation())) {
             return delegated.eventsChildExchange(clientId, request);
         }
+        // EX-46 S5：engine 用 G 票 + child_open 换 child 读窗口，并取回 child_receipt。
+        if (DelegatedAuthority.CHILD_OPEN.equals(request.operation())) {
+            return delegated.eventsChildOpen(clientId, request);
+        }
+        // EX-46 S6/S6'：gateway / child 读窗口续期（客户端 deadline 线程与 gateway 观测循环都调这一面）。
+        if (DelegatedAuthority.GATEWAY_CHECK.equals(request.operation())
+                || DelegatedAuthority.CHILD_CHECK.equals(request.operation())) {
+            return delegated.eventsWindowCheck(clientId, request);
+        }
         if (!DECISION_OPERATIONS.contains(request.operation())) {
             throw AuthorityException.denied("decisionUri 不接受 operation=" + request.operation());
         }

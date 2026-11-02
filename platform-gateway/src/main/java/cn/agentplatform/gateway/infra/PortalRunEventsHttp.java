@@ -84,6 +84,12 @@ public final class PortalRunEventsHttp {
                 long versionNo, String accepted, String initial, ResourceBinding snapshot, long cursor) {}
         private final long t0, openingDeadline, lifetimeDeadline;
         private long hopDeadline;
+        // EX-46：G/child 的 checked 窗口只有 assertionSeconds（默认 5s），硬窗仍由权威判决的
+        // hard_deadline 封顶。客户端 watchdog 会在剩余 ≤3s 时异步续期；这里再在剩余 ≤10s 时
+        // 主动驱动一次续期，让"流被 5s 检查窗掐断"不再依赖客户端定时器的调度运气。
+        private static final long RENEW_AHEAD_NANOS = java.util.concurrent.TimeUnit.SECONDS.toNanos(10);
+        private static final long RENEW_INTERVAL_NANOS = java.util.concurrent.TimeUnit.SECONDS.toNanos(2);
+        private long renewedAtNanos;
         private boolean used, active, stopped, closing, closed, transportClean, cleanupActive;
         private int transportStops;
         private Thread operationThread;
@@ -411,10 +417,38 @@ public final class PortalRunEventsHttp {
         }
         private void livePrivate(boolean head) {
             current();
+            renewPrivateWindow();
             if (head) {
                 if (hopDeadline != 0 && System.nanoTime() - hopDeadline >= 0 || child == null) throw unavailable();
                 child.requireVerified();
             }
+        }
+
+        /**
+         * EX-46 的私有相位续期：只剩 checked 窗口可续，child 票本身不可换。
+         *
+         * <p>客户端契约把 child 授权做成"一次交换、有效期冻结"（{@code childReserved} + immutable
+         * {@code expires}），所以这里能驱动的续期面是 G 窗口的 {@code portal_gateway_events_check}：
+         * 它只刷新 {@code checked_until}，不动 {@code hard_deadline}/{@code continuation}/{@code immutable}。
+         * 续期失败按"流结束"收尾——直接让调用方抛错结束本次 SSE，绝不静默降级成公共流
+         * （公共流是另一个授权面，降级等于用不同权限继续出流）。</p>
+         */
+        private void renewPrivateWindow() {
+            GatewayPortalEventsResponse active;
+            CurrentAuthorityClient owner;
+            synchronized (this) {
+                if (!privatePhase || stopped || closing || closed) return;
+                active = gatewayResponse;
+                owner = authority;
+            }
+            if (active == null || !(owner instanceof ResponseAuthorityClient responseAuthority)) return;
+            if (active.currentCapture().remainingNanos() > RENEW_AHEAD_NANOS) return;
+            long now = System.nanoTime();
+            if (renewedAtNanos != 0 && now - renewedAtNanos < RENEW_INTERVAL_NANOS && now - renewedAtNanos >= 0) return;
+            renewedAtNanos = now;
+            responseAuthority.checkGatewayPortalEvents(active);
+            // install() 换的是同一 holder 上的 evidence 代次，旧 Capture 已过期，重新取一次。
+            current();
         }
         private void enterBody() {
             livePrivate(true);

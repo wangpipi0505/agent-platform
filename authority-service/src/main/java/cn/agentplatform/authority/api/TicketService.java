@@ -48,6 +48,10 @@ public final class TicketService {
      */
     public static final String CHILD_OPEN_TYPE = "agent-portal-events-child-open+jwt";
     public static final String CHILD_OPEN_USE = "portal-events-child-open";
+    public static final String CHILD_CONTINUATION_TYPE = "agent-portal-engine-events-child-continuation+jwt";
+    public static final String CHILD_CONTINUATION_USE = "portal-engine-events-child-continuation";
+    public static final String CHILD_RECEIPT_TYPE = "agent-portal-events-child-receipt+jwt";
+    public static final String CHILD_RECEIPT_USE = "portal-events-child-receipt";
 
     private final KeyRing keys;
     private final IssuerResolver issuer;
@@ -187,6 +191,62 @@ public final class TicketService {
         claims.put("parent_response_id", parentResponseId);
         claims.put("child_response_id", childResponseId);
         return keys.sign(CHILD_OPEN_TYPE, claims);
+    }
+
+    /**
+     * EX-46：child continuation——engine 侧 child 窗口的续期证明，{@code portal_events_child_check} 的
+     * {@code continuation_ref}。
+     *
+     * <p>与 gateway continuation 的两处刻意差异：{@code aud} 指向 engine（续期请求由 engine 发出），
+     * 且只携带 immutable 的<b>摘要</b>而不是整棵节点——客户端 CHILD 分支就是按
+     * {@code same(digest(immutable), immutable_sha256)} 校验的。immutable 正文在续期断言里由服务端按
+     * 决策回显，客户端再用摘要确认"还是同一次 child 打开"。
+     */
+    public String childContinuation(String clientId, String jti, String immutableSha256, Instant hardDeadline,
+                                    long iat) {
+        Map<String, Object> claims = new LinkedHashMap<>();
+        claims.put("iss", issuer.issuer());
+        claims.put("aud", audience(clientId));
+        claims.put("token_use", CHILD_CONTINUATION_USE);
+        claims.put("iat", iat);
+        claims.put("nbf", iat);
+        claims.put("exp", hardDeadline.getEpochSecond());
+        claims.put("jti", jti);
+        claims.put("continuation_jti", jti);
+        claims.put("hard_deadline", hardDeadline.getEpochSecond());
+        claims.put("immutable_sha256", immutableSha256);
+        return keys.sign(CHILD_CONTINUATION_TYPE, claims);
+    }
+
+    /**
+     * EX-46：{@code child_receipt}——engine 成功打开子观测后交给 gateway 的回执（经首帧 metadata 送回）。
+     *
+     * <p>客户端 {@code expectedChildImmutable} 重建 immutable 时，只有
+     * {@code engine_opening_decision_id / engine_admission_nonce / engine_admission_request_sha256}
+     * 三个字段取自回执，其余全部取自 association——所以回执必须原样带回 engine 自己的那三个值，
+     * 否则 gateway 重算出的摘要与 engine 手里那份不相等，{@code acceptChildReceipt} 会拒绝。
+     * {@code child_immutable_sha256} 就是 engine immutable 的 canonical 摘要，两端口径一致。
+     */
+    public String childReceipt(String target, String associationSha256, String parentResponseId,
+                               String childResponseId, String openingDecisionId, String admissionNonce,
+                               String admissionRequestSha256, String childImmutableSha256, Instant hardDeadline,
+                               long iat) {
+        Map<String, Object> claims = new LinkedHashMap<>();
+        claims.put("iss", issuer.issuer());
+        claims.put("aud", audience(target));
+        claims.put("token_use", CHILD_RECEIPT_USE);
+        claims.put("iat", iat);
+        claims.put("nbf", iat);
+        claims.put("exp", hardDeadline.getEpochSecond());
+        claims.put("jti", newId("crec"));
+        claims.put("association_sha256", associationSha256);
+        claims.put("parent_response_id", parentResponseId);
+        claims.put("child_response_id", childResponseId);
+        claims.put("engine_opening_decision_id", openingDecisionId);
+        claims.put("engine_admission_nonce", admissionNonce);
+        claims.put("engine_admission_request_sha256", admissionRequestSha256);
+        claims.put("child_immutable_sha256", childImmutableSha256);
+        return keys.sign(CHILD_RECEIPT_TYPE, claims);
     }
 
     private Map<String, Object> assertion(String clientId, AuthorityRequest request, String decisionId, long iat) {
