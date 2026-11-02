@@ -49,9 +49,19 @@ public class ArtifactController {
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(download.contentType()))
                 .contentLength(download.bytes())
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + id + ".json\"")
+                // R08：扩展名只取服务端可信contentType映射，主体仍为artifactId，不拼接外部文件名。
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + id + extension(download.contentType()) + "\"")
                 .header(HttpHeaders.CACHE_CONTROL, "private, no-store")
                 .header("X-Content-Type-Options", "nosniff")
                 .body(new InputStreamResource(download.source()));
+    }
+
+    private static String extension(String contentType) {
+        var base = contentType == null ? "" : contentType.toLowerCase(java.util.Locale.ROOT).split(";", 2)[0].trim();
+        return switch (base) {
+            case "application/json" -> ".json";
+            case "text/csv", "application/csv" -> ".csv";
+            default -> ".bin";
+        };
     }
 }

@@ -8,6 +8,7 @@ import * as Vue from 'vue';
 import { afterEach, expect, it, vi } from 'vitest';
 import * as controlled from '../shared/controlled-test';
 import * as serviceAccess from '../shared/service-access';
+import * as artifactUpload from '../shared/artifact-upload';
 
 type ApiCall = { path: string; method: string; body?: unknown };
 const cleanup: (() => void)[] = [];
@@ -37,6 +38,7 @@ function mountResource(statusBody: Record<string, unknown>) {
     : id.endsWith('/shared/api') ? { useApi: () => api, useAuth: () => auth }
     : id.endsWith('/shared/controlled-test') ? controlled
     : id.endsWith('/shared/service-access') ? serviceAccess
+    : id.endsWith('/shared/artifact-upload') ? artifactUpload
     : id.endsWith('.vue') ? { default: { render: () => null } }
     : require(id), exports);
   exports.default.render = () => null;

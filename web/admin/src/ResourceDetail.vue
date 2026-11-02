@@ -4,6 +4,7 @@ import SchemaInputs from "../../shared/SchemaInputs.vue";
 import McpToolsPanel from "./McpToolsPanel.vue";
 import { completedControlledCall } from "../../shared/controlled-test";
 import { probeView, serviceAccess } from "../../shared/service-access";
+import { uploadArtifact as uploadArtifactFile } from "../../shared/artifact-upload";
 import { useAuth, useApi } from "../../shared/api";
 const props = defineProps<{ resource: any; kind: "skill" | "template" }>();
 const api = useApi();
@@ -138,17 +139,8 @@ async function load() {
   }
 }
 async function uploadArtifact(file: File): Promise<string> {
-  const body = new FormData();
-  body.append("file", file);
-  const response = await fetch("/admin/artifacts", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${auth.token}` },
-    body,
-  });
-  const envelope = await response.json().catch(() => ({}));
-  if (!response.ok || envelope.code !== "OK")
-    throw new Error(envelope.message || `文件上传失败 (${response.status})`);
-  return envelope.data.artifactId;
+  // R08：统一走共享上传函数（顶层回包/明确OK信封），不再各自猜包装形状。
+  return uploadArtifactFile(auth.token, file);
 }
 async function execute(action: string) {
   busy.value = true;

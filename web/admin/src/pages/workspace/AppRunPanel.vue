@@ -4,6 +4,7 @@ import { useRouter } from "vue-router";
 import PageError from "../../PageError.vue";
 import SchemaInputs from "../../../../shared/SchemaInputs.vue";
 import { useAuth } from "../../../../shared/api";
+import { uploadArtifact as uploadArtifactFile } from "../../../../shared/artifact-upload";
 import { usePageOperation } from "../../usePageOperation";
 
 const props = defineProps<{
@@ -46,18 +47,8 @@ watch(() => form.value.versionNo, () => void loadPublishedInput(), {
 });
 
 async function uploadArtifact(file: File): Promise<string> {
-  // Multipart must keep the browser boundary; the JSON api helper cannot be reused here.
-  const body = new FormData();
-  body.append("file", file);
-  const response = await fetch("/admin/artifacts", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${auth.token}` },
-    body,
-  });
-  const envelope = await response.json().catch(() => ({}));
-  if (!response.ok || envelope.code !== "OK")
-    throw new Error(envelope.message || `文件上传失败 (${response.status})`);
-  return envelope.data.artifactId;
+  // R08：统一走共享上传函数（顶层回包/明确OK信封），不再各自猜包装形状。
+  return uploadArtifactFile(auth.token, file);
 }
 
 async function formalRun() {
