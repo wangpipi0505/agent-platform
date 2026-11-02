@@ -17,11 +17,12 @@ import java.util.regex.Pattern;
  * <p>字段集合刻意很窄：{@code operation} 决定端点语义，{@code target/action/resource} 必须与目录行
  * 逐字段相等（会原样进票据并成为平台侧的路由键），{@code nonce} 绑定断言与请求。
  * <p>{@code service_ticket} 出现在 {@code authorize_workload}（workload 票）与 {@code authorize}
- * （上游已委派的票）；{@code subject_token} 只在 {@code authorize} 出现（gateway 持有的 portal 用户令牌）；
- * {@code decision_id/grant_ref/operation_id} 只在 {@code forward} 出现（转发链的定位三件套）。
- * <p>{@code gateway_events_opening} 只在 {@code operation=exchange} 上合法（EX-44 变体 A，SSE 观测 opening）。
- * 它是判别位而不是能力开关：只有布尔 {@code true} 才按 opening 语义校验，拼成字符串等非法形状一律 400——
- * 静默忽略会把"opening 的前置校验"降级成一次普通换票。
+ * （上游已委派的票）；{@code subject_token} 只在 {@code authorize}/`exchange` 出现（gateway 持有的 portal
+ * 用户令牌）；{@code decision_id/grant_ref/operation_id} 只在 {@code forward} 出现（转发链的定位三件套）。
+ * <p>{@code gateway_events_opening} 与 {@code query_ticket} 是 exchange 的**两个互斥变体**（EX-44 §2.3）：
+ * 前者是变体 A（SSE 观测 opening，S0），后者是变体 B（拿 S0 票换 retained 观测票，S1）。
+ * 两者都是判别位而不是能力开关：只有布尔 {@code true}/非空字符串才按对应语义校验，拼成字符串等非法形状一律
+ * 400——静默忽略会把"opening 的前置校验"降级成一次普通换票，或让 {@code query_ticket} 变成没人校验的装饰字段。
  * <p>不接受额外字段是防"协议悄悄扩张"：新增字段必须先改这里的白名单和对应的平台消费者。
  */
 public record AuthorityRequest(
@@ -30,6 +31,7 @@ public record AuthorityRequest(
         String nonce,
         String serviceTicket,
         String subjectToken,
+        String queryTicket,
         String decisionId,
         String grantRef,
         String operationId,
@@ -97,12 +99,14 @@ public record AuthorityRequest(
         }
         String serviceTicket = optionalText(node, "service_ticket", MAX_TICKET);
         String subjectToken = optionalText(node, "subject_token", MAX_TICKET);
+        // 变体 B 的判别位：字段存在且非空才是 query_ticket 交换；空串/非法形状直接 400，绝不悄悄降级。
+        String queryTicket = optionalText(node, "query_ticket", MAX_TICKET);
         String decisionId = optionalText(node, "decision_id", MAX_TEXT);
         String grantRef = optionalText(node, "grant_ref", MAX_TEXT);
         String operationId = optionalText(node, "operation_id", MAX_TEXT);
         boolean gatewayEventsOpening = optionalBoolean(node, "gateway_events_opening");
         return new AuthorityRequest(operation, new ServiceCall(target, action, binding), nonce, serviceTicket,
-                subjectToken, decisionId, grantRef, operationId, gatewayEventsOpening, node);
+                subjectToken, queryTicket, decisionId, grantRef, operationId, gatewayEventsOpening, node);
     }
 
     private static String requiredText(JsonNode node, String field, int max) {

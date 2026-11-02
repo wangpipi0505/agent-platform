@@ -20,8 +20,10 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * EX-44 切片 1a 的服务端契约：gateway→gateway 观测订阅票的 jti 回写，以及
+ * EX-44 切片 1a 的服务端契约：opening 票（engine→metadata）的 jti 回写，以及
  * {@code origin_authentication_id} 从 portal 令牌 → ticket → assertion → Decision 的透传。
+ * 1c 起 gateway 观测订阅票只能经 {@code query_ticket} 换出，本切片的 fixture 因此改用 opening 目的；
+ * 断言语义（jti 同源、origin 三处一致）不受影响。
  *
  * <p>为什么这条链路要在 1a 就成立：客户端 {@code beginGatewayPortalEvents} 拿到 S0 票后第一件事是
  * {@code origin(ticket.claims())}（{@code HttpCurrentAuthorityClient:594}）；缺 claim 即 403，
@@ -42,7 +44,6 @@ import static org.assertj.core.api.Assertions.assertThat;
                 DelegatedTestSupport.P_DELEGATION_ON})
 class GatewayEventsSlice1aContractTest extends DelegatedTestSupport {
 
-    private static final String ACTION = "gateway.run.events.observe";
     private static final String PORTAL_AUDIENCE = "agent-platform-portal";
     private static final String SELECTOR_ID = "r_0123456789abcdef0123456789abcdef";
     /** {@code "oa1:" + 32 hex}；36 字符，客户端 {@code origin()} 的上限是 128。 */
@@ -53,7 +54,7 @@ class GatewayEventsSlice1aContractTest extends DelegatedTestSupport {
 
     @Test
     void exchangeRecordsTheIssuedTicketJtiOnTheDecision() {
-        JsonNode exchanged = exchange(gatewayEventsCall(), "slice1a-jti", portalToken(300, ORIGIN));
+        JsonNode exchanged = exchange(openingCall(), "slice1a-jti", portalToken(300, ORIGIN));
         JsonNode ticket = verified(exchanged.get("ticket").asText(), "at+jwt");
         JsonNode assertion = verified(exchanged.get("assertion").asText(), "agent-authority-decision+jwt");
         String ticketJti = ticket.get("jti").asText();
@@ -67,7 +68,7 @@ class GatewayEventsSlice1aContractTest extends DelegatedTestSupport {
 
     @Test
     void exchangeCarriesThePortalOriginOntoTicketAssertionAndDecision() {
-        JsonNode exchanged = exchange(gatewayEventsCall(), "slice1a-origin", portalToken(300, ORIGIN));
+        JsonNode exchanged = exchange(openingCall(), "slice1a-origin", portalToken(300, ORIGIN));
         JsonNode ticket = verified(exchanged.get("ticket").asText(), "at+jwt");
         JsonNode assertion = verified(exchanged.get("assertion").asText(), "agent-authority-decision+jwt");
 
@@ -79,11 +80,15 @@ class GatewayEventsSlice1aContractTest extends DelegatedTestSupport {
 
     @Test
     void authorizeCarriesTheOriginFromTheServiceTicket() {
-        JsonNode exchanged = exchange(gatewayEventsCall(), "slice1a-authorize", portalToken(300, ORIGIN));
-        String serviceTicket = exchanged.get("ticket").asText();
+        // 1c 起 target=gateway 的观测票只能由变体 B 换出，所以这里按真实链路先 opening、再 query_ticket，
+        // 然后用换到的票走 fromTicket（消费方=gateway），断言语义仍是"origin 由票面透传到决策"。
+        String portal = portalToken(300, ORIGIN);
+        JsonNode opened = exchange(openingCall(), "slice1a-opening", portal);
+        JsonNode retained = exchangeQuery(portal, opened.get("ticket").asText(), "slice1a-retained");
+        String serviceTicket = retained.get("ticket").asText();
 
         ResponseEntity<JsonNode> response = postJson("/internal/authorize", basic(GATEWAY, GATEWAY_SECRET),
-                command("authorize", gatewayEventsCall(), "slice1a-authorize-decision",
+                command("authorize", retainedCall(), "slice1a-authorize-decision",
                         Map.of("service_ticket", serviceTicket)));
         assertThat(response.getStatusCode()).as("authorize body: %s", response.getBody()).isEqualTo(HttpStatus.OK);
 
@@ -96,8 +101,18 @@ class GatewayEventsSlice1aContractTest extends DelegatedTestSupport {
     }
 
     private JsonNode exchange(ServiceCall call, String nonce, String subjectToken) {
+        // S0 的真实形状：opening 目的 + 变体 A 判别位。1c 起只有打了这个标记的决策才能被 query_ticket 消费。
         ResponseEntity<JsonNode> response = postJson("/oauth/token", basic(GATEWAY, GATEWAY_SECRET),
-                command("exchange", call, nonce, Map.of("subject_token", subjectToken)));
+                command("exchange", call, nonce,
+                        Map.of("subject_token", subjectToken, "gateway_events_opening", true)));
+        assertThat(response.getStatusCode()).as("exchange body: %s", response.getBody()).isEqualTo(HttpStatus.OK);
+        return response.getBody();
+    }
+
+    private JsonNode exchangeQuery(String subjectToken, String queryTicket, String nonce) {
+        ResponseEntity<JsonNode> response = postJson("/oauth/token", basic(GATEWAY, GATEWAY_SECRET),
+                command("exchange", retainedCall(), nonce,
+                        Map.of("subject_token", subjectToken, "query_ticket", queryTicket)));
         assertThat(response.getStatusCode()).as("exchange body: %s", response.getBody()).isEqualTo(HttpStatus.OK);
         return response.getBody();
     }
@@ -106,12 +121,17 @@ class GatewayEventsSlice1aContractTest extends DelegatedTestSupport {
         return TestJwt.verifiedClaims(token, type, publishedKey());
     }
 
-    private static ServiceCall gatewayEventsCall() {
-        return new ServiceCall("gateway", ACTION, selectorResource());
+    private static ServiceCall openingCall() {
+        // 1c 之后，gateway 观测订阅票只能经 query_ticket 换出；S0 的 opening 调用是 engine/metadata，
+        // 本切片的 jti 回写与 origin 透传在这条调用上同样成立，故 fixture 改用 opening 目的。
+        return new ServiceCall(ENGINE, RunObservationSelectors.ACTION,
+                RunObservationSelectors.metadata(
+                        new SubjectKey(DelegatedTickets.TENANT_ID, DelegatedTickets.SUBJECT), SELECTOR_ID));
     }
 
-    private static ResourceBinding selectorResource() {
-        return new ResourceBinding("run-snapshot", SELECTOR_ID, DIGEST);
+    private static ServiceCall retainedCall() {
+        return new ServiceCall("gateway", "gateway.run.events.observe",
+                new ResourceBinding("run-snapshot", SELECTOR_ID, DIGEST));
     }
 
     private static String command(String operation, ServiceCall call, String nonce, Map<String, Object> extra) {

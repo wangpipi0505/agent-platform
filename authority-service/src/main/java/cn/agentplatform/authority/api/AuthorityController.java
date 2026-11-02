@@ -159,6 +159,19 @@ public final class AuthorityController {
                 throw AuthorityException.invalidRequest("gateway_events_opening 只适用于 operation=exchange",
                         "gateway_events_opening on operation=" + request.operation());
             }
+            // 变体 A / B 互斥：同时出现说明调用方把两次 exchange 拼在了一起，服务端只能选一个语义，
+            // 任何"取其一"都是猜——400 让客户端暴露 bug，而不是让它以为自己在走 S0 或 S1。
+            if (request.gatewayEventsOpening() && request.queryTicket() != null) {
+                throw AuthorityException.invalidRequest(
+                        "gateway_events_opening 与 query_ticket 不能同时出现",
+                        "exchange variants A and B both present");
+            }
+            // query_ticket 只对 exchange 有意义；出现在别的 operation 上不能被悄悄忽略——
+            // 这正是 1c 之前"未知字段"漏洞的形状，必须显式拒绝。
+            if (request.queryTicket() != null && !DelegatedAuthority.EXCHANGE.equals(request.operation())) {
+                throw AuthorityException.invalidRequest("query_ticket 只适用于 operation=exchange",
+                        "query_ticket on operation=" + request.operation());
+            }
             Map<String, Object> response = dispatch.run(clientId, request);
             audit.info("authority.audit endpoint={} outcome=permit client_id={} operation={} target={} action={} nonce={}",
                     endpoint, clientId, request.operation(), request.call().target(),

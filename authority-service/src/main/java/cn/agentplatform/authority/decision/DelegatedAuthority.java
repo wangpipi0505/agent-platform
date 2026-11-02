@@ -153,7 +153,10 @@ public final class DelegatedAuthority {
                     decision.resource(), decision.actor(), decision.ceiling(), decision.operation(),
                     decision.grantRef(), decision.grantExpiresAt(), decision.subjectCaller(), decision.ticketJti(),
                     decision.originAuthenticationId(), decision.authorizationVersion(),
-                    earlier(decision.expiresAt(), Instant.ofEpochSecond(now).plusSeconds(delegation.decisionSeconds())));
+                    earlier(decision.expiresAt(), Instant.ofEpochSecond(now).plusSeconds(delegation.decisionSeconds())),
+                    // 转发只延续授权链：purpose 与 parentAdmissionId 随票透传（1d 的 S3 要顺着它反查 S0），
+                    // admission nonce/request_sha256 是**入站请求**的属性，每一跳各有自己的值，不能继承。
+                    decision.purpose(), null, null, null, null, null, decision.parentAdmissionId());
             decisions.put(hop);
             Map<String, Object> claims = authorityClaims(hop, request, now);
             claims.put("ticket", ticket.value());
@@ -188,6 +191,14 @@ public final class DelegatedAuthority {
             if (!PORTAL_CALLER.equals(clientId)) {
                 throw AuthorityException.denied("EXCHANGE_CALLER_NOT_GATEWAY");
             }
+            if (request.queryTicket() != null) {
+                // 变体 B：拿 S0 (opening) 票换 retained 观测票，并且消费掉那张 opening 决策。
+                return exchangeQueryTicket(clientId, request);
+            }
+            // 变体 B 是进入 gateway 观测目的的唯一入口。没有 query_ticket 的普通 exchange 一旦落到这条
+            // action 上，就是 1c 之前那个"跳过 opening 直接换观测票"的绕过路径——必须在验凭据之前就拒绝，
+            // 因为目的判定只看请求本身，不依赖主体令牌是否有效（否则无效令牌会伪装成"目的无关"的 403）。
+            requireNotRetainedPurpose(request.call());
             if (request.gatewayEventsOpening()) {
                 requireOpeningPurpose(request.call());
             }
@@ -215,7 +226,8 @@ public final class DelegatedAuthority {
                 // 若 §10#2 最终确认"origin 可由 authority 从 portal jti 派生"，这个分支应改为派生而非拒绝。
                 throw AuthorityException.denied("EVENTS_ORIGIN");
             }
-            DecisionStore.Decision decision = fromSubject(clientId, request, cap);
+            DecisionStore.Decision decision = fromSubject(clientId, request, cap,
+                    request.gatewayEventsOpening() ? DecisionStore.Purpose.OPENING : null);
             IssuedTicket ticket = ticket(decision, clientId, request.call(), iat);
             // 先回写票 jti 再签断言：断言里的 ticket_jti 必须就是随体返回的那张票，
             // 后续 portal_gateway_events_open 靠它把"S0 换出的票"与决策对上（EX-44 §5）。
@@ -234,22 +246,169 @@ public final class DelegatedAuthority {
         }
     }
 
-    /** portal 用户令牌换决策：调用方必须是 gateway，令牌必须是本服务签的、给本 portal 受众的 user 令牌。 */
-    private DecisionStore.Decision fromSubject(String clientId, AuthorityRequest request) {
-        return fromSubject(clientId, request, null);
+    /**
+     * EX-44 变体 B（S1）：用 S0 签出的 opening 票换"gateway 读 SSE 事件"的 retained 票。
+     *
+     * <p>安全不变量（缺一不可）：
+     * <ol>
+     *   <li>票必须是本服务签的、{@code token_use=service}/{@code authority_mode=delegated}/caller=gateway，
+     *       且 {@code decision_id} 指向一条 {@code purpose=OPENING} 的决策——不是随便一张 delegated 票；</li>
+     *   <li>绑定逐项相等：决策 id、票 jti、origin、portal 主体、portal 令牌原文摘要、opening 的 operation
+     *       节点（含 grant_ref/operation_id/resource/ceiling）——换用户、换令牌、换资源都复用不了；</li>
+     *   <li>那条 opening 决策必须**未消费**：用 {@link DecisionStore#consume} 的单键 CAS 占位，
+     *       并发两次只有一个能签出票；</li>
+     *   <li>新票必须新 mint grant_ref 与 operation_id（§4.4），exp 不越过 portal 会话 exp。</li>
+     * </ol>
+     * 失败一律 403（对外 code 恒 {@code SYS-AUTH-403}），reason 只进审计，见 §5。
+     */
+    private Map<String, Object> exchangeQueryTicket(String clientId, AuthorityRequest request) {
+        requireRetainedPurpose(request.call());
+        if (!routes.permits(clientId, request.call().target(), request.call().action(), RouteDirectory.DELEGATED)) {
+            throw AuthorityException.denied("ROUTE_NOT_REGISTERED");
+        }
+        if (request.subjectToken() == null) {
+            throw AuthorityException.denied("SUBJECT_UNAVAILABLE");
+        }
+        JsonNode subject = verifyPortalUser(request.subjectToken());
+        String tenantId = required(subject, "tenant_id");
+        String principalId = required(subject, "sub");
+        String origin = originOf(subject, "EVENTS_ORIGIN");
+        if (origin == null) {
+            // 1b 已要求 S0 的 portal 令牌带 origin；S1 再验一次，否则一张旧令牌能换出一张无 origin 的观测票，
+            // 客户端 :627 会立刻 403，服务端却在存储里留下一条无法归因的授权。
+            throw AuthorityException.denied("EVENTS_ORIGIN");
+        }
+        JsonNode expires = subject.get("exp");
+        if (expires == null || !expires.isIntegralNumber()) {
+            throw AuthorityException.denied("SUBJECT_EXPIRY");
+        }
+        long iat = now();
+        Instant cap = Instant.ofEpochSecond(expires.longValue());
+        if (!cap.isAfter(Instant.ofEpochSecond(iat))) {
+            throw AuthorityException.denied("SUBJECT_EXPIRY");
+        }
+
+        JsonNode query = verifyQueryTicket(request.queryTicket());
+        String jti = text(query, "jti");
+        String admissionId = text(query, "decision_id");
+        String openingGrantRef = text(query, "grant_ref");
+        // 决策里的 operation 是内存 Map（epoch 秒是 Long），票面经过 JSON 往返后会变成 Integer；
+        // 直接 Map.equals 会因为装箱类型不同而误判绑定失败，所以两侧都归一到规范 JSON 文本再比。
+        String queryOperation = Json.canonical(query.get("operation"));
+
+        // 1) 找到 S0 决策：找不到（或已被淘汰/不是 opening）→ UNKNOWN，不与绑定失败混报。
+        DecisionStore.Decision opening = decisions.findByTicketJti(jti)
+                .orElseThrow(() -> AuthorityException.denied("EVENTS_TICKET_UNKNOWN"));
+        if (opening.purpose() != DecisionStore.Purpose.OPENING) {
+            throw AuthorityException.denied("EVENTS_TICKET_UNKNOWN");
+        }
+
+        // 2) 绑定：票面声明必须与 S0 决策逐项相等。任何一项不等都说明这张票被挪用/篡改。
+        ServiceCall openingCall = callOf(query);
+        boolean bound = admissionId.equals(opening.id())
+                && jti.equals(opening.ticketJti())
+                && openingGrantRef.equals(opening.grantRef())
+                && queryOperation.equals(Json.canonical(Json.mapper().valueToTree(opening.operation())))
+                && openingCall.target().equals(opening.target())
+                && openingCall.action().equals(opening.action())
+                && resourceOf(openingCall).equals(opening.resource())
+                && origin.equals(text(query, "origin_authentication_id"))
+                && Objects.equals(opening.originAuthenticationId(), origin)
+                && tenantId.equals(Objects.toString(opening.actor().get("tenant_id"), null))
+                && principalId.equals(Objects.toString(opening.actor().get("sub"), null))
+                && Digest.sha256(request.subjectToken()).equals(opening.sourceTokenSha256());
+        if (!bound) {
+            throw AuthorityException.denied("EVENTS_TICKET_BINDING");
+        }
+
+        // 3) 一次性：先给"重放"一个明确的 reason；真正的原子判定在下面的 consume。
+        if (opening.consumedAt() != null) {
+            throw AuthorityException.denied("EVENTS_TICKET_CONSUMED");
+        }
+        if (!opening.expiresAt().isAfter(Instant.ofEpochSecond(iat))) {
+            throw AuthorityException.denied("EVENTS_TICKET_EXPIRED");
+        }
+
+        // 4) 新 mint grant/operation：绝不能复用 S0 的，否则 S1 拿到的还是同一份授权（§4.4）。
+        Set<String> roles = rolesOf(subject.get("roles"));
+        Map<String, Set<String>> attributes = attributesOf(subject.get("attributes"));
+        Map<String, Object> actor = actor(tenantId, principalId, roles, attributes);
+        String ceilingSha256 = Digest.sha256(Json.canonical(ceiling(tenantId, principalId, roles, attributes)));
+        String grantRef = newId("grt");
+        Instant issued = Instant.ofEpochSecond(iat);
+        Instant grantExpiresAt = issued.plusSeconds(delegation.grantSeconds());
+        if (cap.isBefore(grantExpiresAt)) {
+            grantExpiresAt = cap;
+        }
+        Map<String, Object> operation = operation(newId("op"), issued, grantExpiresAt, grantRef, tenantId,
+                principalId, request.call(), ceilingSha256);
+        DecisionStore.Decision retained = new DecisionStore.Decision(newId("dec"), clientId,
+                request.call().target(), request.call().action(), resourceOf(request.call()), actor, actor,
+                operation, grantRef, grantExpiresAt, opening.subjectCaller(), null, origin, authorizationVersion(),
+                issued.plusSeconds(delegation.decisionSeconds()), DecisionStore.Purpose.RETAINED,
+                Digest.sha256(request.subjectToken()), request.nonce(),
+                Digest.sha256(Json.canonical(request.raw())), null, null, opening.id());
+        IssuedTicket ticket = ticket(retained, clientId, request.call(), iat);
+        DecisionStore.Decision recorded = retained.withTicketJti(ticket.jti());
+
+        // 5) 原子消费：compute 单键 CAS，输家不落任何新决策。
+        if (decisions.consume(opening.id(), clientId).isEmpty()) {
+            throw AuthorityException.denied("EVENTS_TICKET_CONSUMED");
+        }
+        decisions.put(recorded);
+        Map<String, Object> claims = authorityClaims(recorded, request, iat);
+        claims.put("ticket", ticket.value());
+        audit.info("delegation.audit endpoint=decision outcome=permit operation=exchange variant=B caller={} target={}"
+                        + " action={} decision_id={} parent_decision_id={} query_ticket_jti={} grant_ref={}"
+                        + " grant_expires_at={}",
+                clientId, request.call().target(), request.call().action(), recorded.id(), opening.id(), jti,
+                recorded.grantRef(), recorded.grantExpiresAt().getEpochSecond());
+        return Map.of("assertion", keys.sign(TicketService.ASSERTION_TYPE, claims), "ticket", ticket.value());
     }
 
     /**
-     * @param cap 主体凭据的到期时间；非空时 grant 不得晚于它（exchange 用 portal 令牌的 {@code exp} 封顶）
+     * 验 S0 票的形状与签名。失败统一 reason {@code EVENTS_QUERY_TICKET}：对调用方来说这就是"你给的
+     * query_ticket 不是一张合法的 opening 票"，细分验签失败/类型不对只会泄露服务端内部，也无助于客户端自愈。
      */
-    private DecisionStore.Decision fromSubject(String clientId, AuthorityRequest request, Instant cap) {
-        if (!PORTAL_CALLER.equals(clientId)) {
-            throw AuthorityException.denied("SUBJECT_CALLER_NOT_GATEWAY");
+    private JsonNode verifyQueryTicket(String queryTicket) {
+        JsonNode claims;
+        try {
+            claims = keys.verify(queryTicket, TicketService.TICKET_TYPE);
+        } catch (AuthorityException invalid) {
+            // 过期/签名错/typ 错都在这里：一律按"票不可用"处理，不把 KeyRing 的内部文案透到审计语义里。
+            throw AuthorityException.denied("EVENTS_QUERY_TICKET");
         }
-        String token = request.subjectToken();
-        if (token == null) {
-            throw AuthorityException.denied("SUBJECT_UNAVAILABLE");
+        JsonNode operation = claims.get("operation");
+        String origin = text(claims, "origin_authentication_id");
+        if (!"service".equals(text(claims, "token_use"))
+                || !MODE.equals(text(claims, "authority_mode"))
+                || !PORTAL_CALLER.equals(text(claims, "caller"))
+                || !PORTAL_CALLER.equals(text(claims, "client_id"))
+                || !issuer.issuer().equals(text(claims, "iss"))
+                || text(claims, "decision_id") == null
+                || text(claims, "jti") == null
+                || text(claims, "grant_ref") == null
+                || origin == null
+                || operation == null || !operation.isObject()) {
+            throw AuthorityException.denied("EVENTS_QUERY_TICKET");
         }
+        if (!ORIGIN.matcher(origin).matches()) {
+            throw AuthorityException.denied("EVENTS_QUERY_TICKET");
+        }
+        try {
+            // 只有 opening 票能换成 retained 票；别的 delegated 票即便签名有效也不是这一跳的凭据。
+            requireOpeningPurpose(callOf(claims));
+        } catch (AuthorityException invalid) {
+            throw AuthorityException.denied("EVENTS_QUERY_TICKET");
+        }
+        return claims;
+    }
+
+    /**
+     * 校验"portal 用户令牌"这个凭据类型本身：本服务签发、user 用途、portal 受众、gateway 客户端。
+     * 身份字段（tenant/sub/roles）由调用方继续读；这里只负责"这张令牌能不能当主体凭据"。
+     */
+    private JsonNode verifyPortalUser(String token) {
         JsonNode claims = keys.verify(token, TicketService.TICKET_TYPE);
         if (!"user".equals(text(claims, "token_use"))) {
             throw AuthorityException.denied("SUBJECT_TOKEN_USE");
@@ -265,6 +424,62 @@ public final class DelegatedAuthority {
         if (subjectClient != null && !subjectClient.isBlank() && !subjectClient.equals(text(claims, "client_id"))) {
             throw AuthorityException.denied("SUBJECT_CLIENT");
         }
+        return claims;
+    }
+
+    /** 客户端 {@code RunObservationSelectors.GATEWAY_EVENTS_ACTION}；admin-common 里是包私有常量，只能对字面量。 */
+    private static final String GATEWAY_EVENTS_ACTION = "gateway.run.events.observe";
+    private static final Pattern RUN_ID = Pattern.compile("r_[0-9a-f]{32}");
+    private static final Pattern SHA256 = Pattern.compile("[0-9a-f]{64}");
+
+    /**
+     * 变体 B 的目的校验，等价于客户端 {@code requireGatewayPortalEventsCall} 的 target/action 分支
+     * （mode/source/origin 已由票面固定），再加上 resource 形状：SSE 观测只能针对 run-snapshot 选择器。
+     */
+    private static boolean isRetainedPurpose(ServiceCall call) {
+        return "gateway".equals(call.target())
+                && GATEWAY_EVENTS_ACTION.equals(call.action())
+                && "run-snapshot".equals(call.resource().kind())
+                && RUN_ID.matcher(call.resource().id()).matches()
+                && SHA256.matcher(call.resource().versionDigest()).matches();
+    }
+
+    private static void requireRetainedPurpose(ServiceCall call) {
+        if (!isRetainedPurpose(call)) {
+            throw AuthorityException.denied("EVENTS_RETAINED_PURPOSE");
+        }
+    }
+
+    private static void requireNotRetainedPurpose(ServiceCall call) {
+        if (isRetainedPurpose(call)) {
+            throw AuthorityException.denied("EVENTS_RETAINED_PURPOSE");
+        }
+    }
+
+    /** portal 用户令牌换决策：调用方必须是 gateway，令牌必须是本服务签的、给本 portal 受众的 user 令牌。 */
+    private DecisionStore.Decision fromSubject(String clientId, AuthorityRequest request) {
+        return fromSubject(clientId, request, null, null);
+    }
+
+    private DecisionStore.Decision fromSubject(String clientId, AuthorityRequest request, Instant cap) {
+        return fromSubject(clientId, request, cap, null);
+    }
+
+    /**
+     * @param cap     主体凭据的到期时间；非空时 grant 不得晚于它（exchange 用 portal 令牌的 {@code exp} 封顶）
+     * @param purpose EX-44 观测链路的用途（S0 传 {@code OPENING}）；普通 authorize/exchange 传 null
+     */
+    private DecisionStore.Decision fromSubject(String clientId, AuthorityRequest request, Instant cap,
+                                               DecisionStore.Purpose purpose) {
+        if (!PORTAL_CALLER.equals(clientId)) {
+            throw AuthorityException.denied("SUBJECT_CALLER_NOT_GATEWAY");
+        }
+        String token = request.subjectToken();
+        if (token == null) {
+            throw AuthorityException.denied("SUBJECT_UNAVAILABLE");
+        }
+        JsonNode claims = verifyPortalUser(token);
+        String subjectClient = identity.clientId();
         String tenantId = required(claims, "tenant_id");
         String principalId = required(claims, "sub");
         Set<String> roles = rolesOf(claims.get("roles"));
@@ -286,7 +501,12 @@ public final class DelegatedAuthority {
                 request.call().target(), request.call().action(), resourceOf(request.call()), actor, actor,
                 operation, grantRef, grantExpiresAt, Objects.requireNonNullElse(subjectClient, PORTAL_CALLER), null,
                 originOf(claims, "SUBJECT_ORIGIN"), authorizationVersion(),
-                issued.plusSeconds(delegation.decisionSeconds()));
+                issued.plusSeconds(delegation.decisionSeconds()),
+                purpose,
+                // 把决策钉死到"这一张"portal 令牌原文：同用户换一张令牌不能复用同一个 opening 决策。
+                Digest.sha256(token),
+                request.nonce(), Digest.sha256(Json.canonical(request.raw())),
+                null, null, null);
         decisions.put(decision);
         return decision;
     }
@@ -354,11 +574,15 @@ public final class DelegatedAuthority {
         }
         Instant grantExpiresAt = Instant.ofEpochSecond(expiresNode.longValue());
         Instant issued = Instant.ofEpochSecond(now());
+        // 1d 的 retained 票会把 parent_admission_id 带回来，这里原样落到决策上，S2/S3 才能反查到 S0。
+        String parentAdmissionId = text(claims, "parent_admission_id");
         DecisionStore.Decision decision = new DecisionStore.Decision(newId("dec"), clientId, call.target(),
                 call.action(), resourceOf(call), actor(tenantId, principalId, roles, attributes),
                 toMap(ceilingNode), operation, grantRef, grantExpiresAt, upstream, text(claims, "jti"),
                 originOf(claims, "TICKET_ORIGIN"), required(claims, "authorization_version"),
-                earlier(issued.plusSeconds(delegation.decisionSeconds()), grantExpiresAt));
+                earlier(issued.plusSeconds(delegation.decisionSeconds()), grantExpiresAt),
+                parentAdmissionId == null ? null : DecisionStore.Purpose.EVENTS,
+                null, null, null, null, null, parentAdmissionId);
         decisions.put(decision);
         return decision;
     }
@@ -422,6 +646,10 @@ public final class DelegatedAuthority {
         if (decision.originAuthenticationId() != null) {
             // 票上带 origin 是 S1 之后 :594/:627 的唯一依据：没有它，第二次 exchange 立刻 403。
             claims.put("origin_authentication_id", decision.originAuthenticationId());
+        }
+        if (decision.parentAdmissionId() != null) {
+            // retained 票指回 S0 的 opening 决策：S3 的 eventsQuery 要靠它反查 gateway_query 的比对基准。
+            claims.put("parent_admission_id", decision.parentAdmissionId());
         }
         return new IssuedTicket(keys.sign(TicketService.TICKET_TYPE, claims), jti);
     }
