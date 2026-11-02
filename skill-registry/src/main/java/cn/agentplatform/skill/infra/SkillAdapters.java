@@ -1067,7 +1067,7 @@ public class SkillAdapters {
             if ("PATH".equals(summarySpec.get("mode")))
                 summary = valueText(select(output, Objects.toString(summarySpec.get("path"))));
             else if ("TEMPLATE".equals(summarySpec.get("mode")))
-                summary = render(text(summarySpec, "tpl"), output);
+                summary = render(modelSummaryTemplate(summarySpec), output);
             if (summary.length() > 2000) summary = summary.substring(0, 2000) + "…";
             var refs = new ArrayList<Map<String, Object>>();
             if (spec.get("fileRefPaths") instanceof Collection<?> paths)
@@ -1126,6 +1126,18 @@ public class SkillAdapters {
                             valueText(select(output, "$." + matcher.group(1)))));
         matcher.appendTail(result);
         return result.toString();
+    }
+
+    /** R01附录I.2运行边界：TEMPLATE字段唯一目标为tpl；template仅作输入别名同语法解释，双字段冲突拒绝。 */
+    private static String modelSummaryTemplate(Map<String, Object> summarySpec) {
+        Object tpl = summarySpec.get("tpl");
+        Object alias = summarySpec.get("template");
+        if (tpl != null && alias != null && !Objects.toString(tpl).equals(Objects.toString(alias)))
+            throw new IllegalArgumentException("modelSummary的tpl与template冲突");
+        Object chosen = tpl != null ? tpl : alias;
+        if (!(chosen instanceof String text) || text.isBlank())
+            throw new IllegalArgumentException("TEMPLATE摘要必须提供非空字符串tpl（或旧别名template）");
+        return text;
     }
 
     private static JsonNode renderCard(JsonNode template, JsonNode output) {

@@ -783,6 +783,8 @@ public class SkillCatalog {
             throw error(400, "INVALID_SKILL", malformed.getMessage());
         }
         result.put("errorSemantics", errorSemantics);
+        // R01附录I/R04：保存与导入共用同一返回声明方言校验；别名/冲突规则见SkillRules。
+        SkillRules.validateReturnSpec(body.get("returnSpec"));
         result.put("returnSpec", body.getOrDefault("returnSpec", Map.of()));
         var constraints = object(body.getOrDefault("constraints", Map.of()));
         int max = ((Number) constraints.getOrDefault("outputMaxBytes", 1048576)).intValue();

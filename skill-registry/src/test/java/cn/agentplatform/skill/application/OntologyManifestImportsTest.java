@@ -111,11 +111,12 @@ class OntologyManifestImportsTest {
         manifest.put("error_semantics", List.of(Map.of("match", "HTTP 403", "semantic", "NO_PERMISSION")));
         manifest.put(
                 "return_spec",
+                // R01附录I.1：共享夹具按唯一目标方言构造（tpl + JSON容器卡片）。
                 Map.of(
-                        "modelSummary", Map.of("mode", "TEMPLATE", "template", "查询结果"),
+                        "modelSummary", Map.of("mode", "TEMPLATE", "tpl", "查询结果"),
                         "structuredPath", "$.data",
                         "fileRefPaths", List.of(),
-                        "cardTemplate", "查询结果",
+                        "cardTemplate", Map.of("text", "查询结果"),
                         "ontologyMetaPath", "$.meta"));
         manifest.put("ontology_meta", meta);
         return manifest;
@@ -478,6 +479,73 @@ class OntologyManifestImportsTest {
         signIn("ontology_other_" + UUID.randomUUID().toString().replace("-", "").substring(0, 6), List.of("ADMIN", "EDITOR", "SERVICE"));
         String otherRef = SecretVault.put("ontopa_import_test_only");
         assertDoesNotThrow(() -> importer.importManifests(Map.of("manifests", List.of(formalManifest(code)), "authRef", otherRef)));
+    }
+
+    /** R01附录I.2/R04：旧template别名经真实导入保存并在运行边界按同一{{}}方言渲染；冲突契约整批拒绝。 */
+    @Test
+    @EnabledIfEnvironmentVariable(named = "AGENT_DB_PASSWORD", matches = ".+")
+    void postgresTemplateAliasImportsAndRendersWhileConflictIsRejected() throws Exception {
+        String database = "agent_platform_ontology_import_test";
+        String password = System.getenv("AGENT_DB_PASSWORD");
+        var admin = new JdbcTemplate(new DriverManagerDataSource("jdbc:postgresql://127.0.0.1:25432/postgres", "agent_v12", password));
+        var ownership = admin.queryForList(
+                "select pg_get_userbyid(datdba) as owner,shobj_description(oid,'pg_database') as marker"
+                        + " from pg_database where datname=?",
+                database);
+        assertEquals(1, ownership.size(), "先由EX-03授权runner核验并准备专库，不自动创建或跳过");
+        var dataSource = new DriverManagerDataSource("jdbc:postgresql://127.0.0.1:25432/" + database, "agent_v12", password);
+        Flyway.configure().dataSource(dataSource).schemas("skill").defaultSchema("skill").locations("classpath:db/migration").load().migrate();
+        var db = new JdbcTemplate(dataSource);
+        String tenant = "ontology_" + UUID.randomUUID();
+        signIn(tenant, List.of("ADMIN", "EDITOR", "SERVICE"));
+        String reference = SecretVault.put("ontopa_import_test_only");
+        var persistentCatalog = new SkillCatalog(db, new DataSourceTransactionManager(dataSource), mock(SkillClients.class), "http://app.test", false);
+        var importer = new OntologyManifestImports(persistentCatalog);
+        // 冲突契约（tpl与template不同值）：导入边界400且零草稿。
+        String conflictCode = "conflict_" + UUID.randomUUID().toString().replace("-", "").substring(0, 8);
+        var conflictManifest = formalManifest(conflictCode);
+        conflictManifest.put("return_spec", Map.of(
+                "modelSummary", Map.of("mode", "TEMPLATE", "tpl", "A", "template", "B"),
+                "structuredPath", "$.data", "fileRefPaths", List.of()));
+        var conflict = assertThrows(PlatformException.class,
+                () -> importer.importManifests(Map.of("manifests", List.of(conflictManifest), "authRef", reference)));
+        assertEquals(400, conflict.status());
+        assertTrue(conflict.getMessage().contains("returnSpec.modelSummary"));
+        assertEquals(0, (long) db.queryForObject("select count(*) from skill.skill where tenant_id=?", Long.class, tenant));
+        // 别名契约：导入保存成功，真实执行后modelSummary按别名渲染。
+        String aliasCode = "alias_" + UUID.randomUUID().toString().replace("-", "").substring(0, 8);
+        var aliasManifest = formalManifest(aliasCode);
+        aliasManifest.put("return_spec", Map.of(
+                "modelSummary", Map.of("mode", "TEMPLATE", "template", "查询结果"),
+                "structuredPath", "$.data", "fileRefPaths", List.of(),
+                "cardTemplate", Map.of("text", "查询结果")));
+        var peer = com.sun.net.httpserver.HttpServer.create(new java.net.InetSocketAddress("127.0.0.1", 0), 0);
+        String aliasPath = "/onto/r/route3/releases/9f8e7d6c-1111-2222-3333-444455556666/ops/" + aliasCode;
+        peer.createContext(aliasPath, exchange -> {
+            exchange.getRequestBody().readAllBytes();
+            byte[] ok = "{\"code\":\"OK\",\"data\":{\"found\":true},\"meta\":{}}".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            exchange.getResponseHeaders().set("Content-Type", "application/json");
+            exchange.sendResponseHeaders(200, ok.length);
+            try (var out = exchange.getResponseBody()) { out.write(ok); }
+        });
+        peer.start();
+        aliasManifest.put("endpoint", "http://127.0.0.1:" + peer.getAddress().getPort() + aliasPath);
+        try {
+        var result = importer.importManifests(Map.of("manifests", List.of(aliasManifest), "authRef", reference));
+        var draft = ((List<Map<String, Object>>) result.get("drafts")).getFirst();
+        long versionId = ((Number) draft.get("skillVersionId")).longValue();
+        var stored = persistentCatalog.versionId(versionId);
+        assertEquals("DRAFT", stored.get("status"));
+        var adapters = new SkillAdapters(mock(ArtifactStore.class), mock(AlgorithmAdapter.class));
+        var clients = mock(SkillClients.class);
+        var execution = new SkillExecution(db, new DataSourceTransactionManager(dataSource), persistentCatalog, adapters, clients, "http://engine.test");
+        executeFixture(execution, clients, aliasCode, versionId, stored.get("sha256").toString(), 11, true);
+        var fact = Json.read(db.queryForObject(
+                "select result::text from skill.execution_fact where tenant_id=? and call_id=11", String.class, tenant));
+        assertEquals("查询结果", fact.path("modelSummary").asText());
+        } finally {
+            peer.stop(0);
+        }
     }
 
     static void executeFixture(SkillExecution execution, SkillClients clients, String code, long versionId, String sha, long callId, boolean controlled) {

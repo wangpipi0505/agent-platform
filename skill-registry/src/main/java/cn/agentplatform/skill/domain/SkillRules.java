@@ -148,6 +148,54 @@ public final class SkillRules {
         return value.intValue();
     }
 
+    /**
+     * R01附录I.1/I.2 注册期返回声明方言校验：唯一目标形状为 {@code modelSummary.mode=TEMPLATE/tpl}
+     * （或 PATH/path）+ JSON 容器卡片。旧 {@code template} 字段仅作输入别名按同一 {@code {{}}}
+     * 语法解释，双字段不同值必须 400 并定位到 modelSummary；普通文本卡片不再可保存。
+     * 运行边界（SkillAdapters）对同一方言做同构解释；已发布历史版本不在本方法约束内。
+     */
+    public static void validateReturnSpec(Object raw) {
+        if (raw == null) return;
+        if (!(raw instanceof Map<?, ?> spec))
+            throw projectionError("returnSpec必须为对象");
+        Object summary = spec.get("modelSummary");
+        if (summary != null) {
+            if (!(summary instanceof Map<?, ?> model)) throw projectionError("returnSpec.modelSummary必须为对象");
+            String mode = Objects.toString(model.get("mode"), "");
+            if (!mode.isEmpty() && !Set.of("PATH", "TEMPLATE").contains(mode))
+                throw projectionError("returnSpec.modelSummary.mode只能是PATH或TEMPLATE");
+            if ("TEMPLATE".equals(mode)) {
+                Object tpl = model.get("tpl");
+                Object alias = model.get("template");
+                for (String key : List.of("tpl", "template")) {
+                    Object value = model.get(key);
+                    if (value != null && (!(value instanceof String text) || text.isBlank()))
+                        throw projectionError("returnSpec.modelSummary." + key + "必须为非空字符串");
+                }
+                if (tpl != null && alias != null && !tpl.equals(alias))
+                    throw projectionError("returnSpec.modelSummary的tpl与template冲突，请只保留一个");
+                if (tpl == null && alias == null)
+                    throw projectionError("returnSpec.modelSummary为TEMPLATE时必须提供tpl（或旧别名template）");
+            }
+            if ("PATH".equals(mode)
+                    && (!(model.get("path") instanceof String path) || path.isBlank()))
+                throw projectionError("returnSpec.modelSummary为PATH时必须提供非空字符串path");
+        }
+        Object card = spec.get("cardTemplate");
+        if (card != null && !(card instanceof Map) && !(card instanceof List)) {
+            if (!(card instanceof String text))
+                throw projectionError("returnSpec.cardTemplate必须为JSON对象或数组容器");
+            JsonNode parsed;
+            try {
+                parsed = Json.mapper().readTree(text);
+            } catch (com.fasterxml.jackson.core.JsonProcessingException malformed) {
+                throw projectionError("returnSpec.cardTemplate必须是可解析的JSON容器，普通文本卡片不再支持");
+            }
+            if (parsed == null || !parsed.isContainerNode())
+                throw projectionError("returnSpec.cardTemplate必须为JSON对象或数组容器，普通文本卡片不再支持");
+        }
+    }
+
     private static PlatformException projectionError(String message) {
         return new PlatformException(400, "INVALID_SKILL", message);
     }
