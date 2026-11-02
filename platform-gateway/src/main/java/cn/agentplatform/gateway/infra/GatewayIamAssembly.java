@@ -47,7 +47,7 @@ public final class GatewayIamAssembly {
                 .requestCache(c -> c.disable())
                 .sessionManagement(c -> c.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(boundary.filter(), SecurityContextHolderAwareRequestFilter.class)
-                .authorizeHttpRequests(c -> c.anyRequest().authenticated())
+                .authorizeHttpRequests(c -> c.requestMatchers("/actuator/health", "/actuator/health/**").permitAll().anyRequest().authenticated())
                 .build();
     }
 

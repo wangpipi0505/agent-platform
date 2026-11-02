@@ -42,8 +42,9 @@ public class RuntimeClients implements AutoCloseable {
     public RuntimeClients(
             AuthorityProperties properties,
             ObjectProvider<CurrentAuthorityClient> capability,
-            @Value("${agent.services.app:http://127.0.0.1:18081}") String origin) {
-        this(properties, capability.getIfAvailable(), origin, false);
+            @Value("${agent.services.app:http://127.0.0.1:18081}") String origin,
+            org.springframework.core.env.Environment environment) {
+        this(properties, capability.getIfAvailable(), origin, java.util.Arrays.asList(environment.getActiveProfiles()).contains("test"));
     }
 
     /**

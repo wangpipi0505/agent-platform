@@ -103,7 +103,7 @@ public class ServiceTrustChainConfiguration implements WebMvcConfigurer {
     HttpCurrentAuthorityClient serviceCurrentAuthorityClient(AuthorityProperties deployment, Environment environment,
             ObjectProvider<WorkloadCredentialResolver> credentials, ObjectProvider<Clock> clocks) {
         return new HttpCurrentAuthorityClient(deployment, clocks.getIfAvailable(Clock::systemUTC),
-                credentials.getIfAvailable(() -> new WorkloadCredentialResolver(deployment)),
+                credentials.getIfAvailable(() -> new WorkloadCredentialResolver(deployment, environment.acceptsProfiles(Profiles.of("test")))),
                 environment.acceptsProfiles(Profiles.of("test")));
     }
 

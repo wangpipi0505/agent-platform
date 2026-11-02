@@ -43,6 +43,12 @@ public final class AuthorityDecoders {
         if (config.portal() == null || !config.portal().enabled()) return authority;
         var portal = domain(config.portal().jwksUri(), config.portal().issuer(),
                 config.portal().audience(), "user");
+        // Local single-authority deployments share one issuer for both domains; a routing map keyed by
+        // issuer cannot hold two entries, so the same-issuer case accepts either domain by falling back.
+        if (config.portal().issuer().equals(config.authority().issuer()))
+            return token -> {
+                try { return authority.decode(token); } catch (org.springframework.security.oauth2.jwt.JwtException ex) { return portal.decode(token); }
+            };
         return new IssuerRoutingDecoder(Map.of(
                 config.authority().issuer(), authority,
                 config.portal().issuer(), portal));

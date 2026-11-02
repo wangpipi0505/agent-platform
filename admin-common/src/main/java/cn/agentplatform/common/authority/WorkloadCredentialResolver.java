@@ -9,6 +9,8 @@ public final class WorkloadCredentialResolver {
     private final String client, reference;
     private final Function<String,String> environment;
     public WorkloadCredentialResolver(AuthorityProperties config) { this(config,System::getenv,false); }
+    /** Public seam for services that know their deployment profile (iam + local test only). */
+    public WorkloadCredentialResolver(AuthorityProperties config, boolean testProfile) { this(config,System::getenv,testProfile); }
     // Package test seam supplies independent ephemeral credentials without reading the host environment.
     WorkloadCredentialResolver(AuthorityProperties config,Function<String,String> environment,boolean testProfile) {
         config.validate(testProfile);this.client=config.authority().clientId();

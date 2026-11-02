@@ -94,7 +94,7 @@ public class GatewayIamPortalConfiguration {
     CurrentAuthorityClient gatewayAuthorityClient(
             AuthorityProperties properties, Clock clock, Environment environment) {
         return new HttpCurrentAuthorityClient(
-                properties, clock, new WorkloadCredentialResolver(properties), testProfile(environment));
+                properties, clock, new WorkloadCredentialResolver(properties, testProfile(environment)), testProfile(environment));
     }
 
     /**
