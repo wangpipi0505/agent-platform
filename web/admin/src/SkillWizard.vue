@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import OpenApiImport from "./OpenApiImport.vue";
 import { analyzeSchema } from "../../shared/schema-dialect";
 const props = defineProps<{ initial: any }>();
@@ -12,6 +12,21 @@ const output = ref(JSON.stringify(value.value.outputSchema, null, 2) ?? "");
 // 只读方言提示：不改变 input/output 的解析时机与提交路径，只把可空写法与明显问题显示出来。
 const inputAnalysis = computed(() => analyzeSchema(input.value));
 const outputAnalysis = computed(() => analyzeSchema(output.value));
+const processJson = ref(JSON.stringify(value.value.process ?? {}, null, 2));
+// R10/SCN-004：PROCESS登记走process子契约（ProcessContract.parse），不提交endpoint/httpMapping；
+// 切换类型清除不相容隐藏字段，避免隐藏值随表单进入其他类型的草稿。
+watch(
+  () => value.value.type,
+  (type) => {
+    if (type === "PROCESS") {
+      for (const field of ["endpoint", "httpMapping", "toolName", "authRef"])
+        delete value.value[field];
+    } else {
+      delete value.value.process;
+      if (type !== "MCP") delete value.value.toolName;
+    }
+  },
+);
 const roles = ref<string>((value.value.guard?.roles || []).join(", "));
 const attributes = ref(JSON.stringify(value.value.guard?.attributes || {}, null, 2));
 const steps = [
@@ -31,11 +46,23 @@ function next() {
       (!/^[a-z][a-z0-9_]{1,63}$/.test(value.value.code) || !value.value.name)
     )
       throw new Error("请填写名称及合法编码（小写字母开头，2–64 位）");
-    if (step.value === 1 && !/^https?:\/\//.test(value.value.endpoint))
-      throw new Error("请填写 http/https 服务地址");
-    if (step.value === 1 && value.value.type === "MCP" &&
-        (typeof value.value.toolName !== "string" || !value.value.toolName.trim()))
-      throw new Error("请填写远端准确工具名（区分大小写）");
+    if (step.value === 1 && value.value.type === "PROCESS") {
+      let parsed: any;
+      try {
+        parsed = JSON.parse(processJson.value);
+      } catch (e: any) {
+        throw new Error("process 子契约必须是合法 JSON 对象");
+      }
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed))
+        throw new Error("字段 process 必须是 JSON 对象（command/workDirRoot/timeoutMs 等）");
+      value.value.process = parsed;
+    } else if (step.value === 1) {
+      if (!/^https?:\/\//.test(value.value.endpoint))
+        throw new Error("请填写 http/https 服务地址");
+      if (value.value.type === "MCP" &&
+          (typeof value.value.toolName !== "string" || !value.value.toolName.trim()))
+        throw new Error("请填写远端准确工具名（区分大小写）");
+    }
     if (step.value === 2) {
       value.value.inputSchema = JSON.parse(input.value);
       value.value.outputSchema = JSON.parse(output.value);
@@ -72,7 +99,7 @@ function next() {
       ><el-form-item label="技能类型"
         ><el-radio-group v-model="value.type"
           ><el-radio-button
-            v-for="t in ['HTTP', 'MCP', 'ALGORITHM']"
+            v-for="t in ['HTTP', 'MCP', 'ALGORITHM', 'PROCESS']"
             :key="t"
             :value="t"
             >{{ t }}</el-radio-button
@@ -82,7 +109,15 @@ function next() {
         ><el-input
           v-model="value.description"
           type="textarea" /></el-form-item></template
-    ><template v-if="step === 1"
+    ><template v-if="step === 1 && value.type === 'PROCESS'"
+      ><el-form-item label="process 子契约 JSON（遵循 ProcessContract）" required
+        ><el-input v-model="processJson" type="textarea" :rows="8"
+          /><p class="muted"
+            >command 为参数数组且首元素是绝对路径（不做 shell 拼接）；endpoint/httpMapping
+            与 PROCESS 互斥。登记通过不代表 worker 可执行，运行出口由正式配置与预算准入决定。</p
+        ></el-form-item
+      ></template
+    ><template v-if="step === 1 && value.type !== 'PROCESS'"
       ><el-form-item :label="value.type === 'MCP' ? 'MCP SSE 地址' : '调用端点'" required
         ><el-input
           v-model="value.endpoint"

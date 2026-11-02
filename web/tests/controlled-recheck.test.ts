@@ -10,7 +10,7 @@ import * as controlled from '../shared/controlled-test';
 import * as serviceAccess from '../shared/service-access';
 import * as artifactUpload from '../shared/artifact-upload';
 
-type ApiCall = { path: string; method: string; body?: unknown };
+type ApiCall = { path: string; method: string; body?: Record<string, unknown> };
 const cleanup: (() => void)[] = [];
 afterEach(() => { cleanup.splice(0).forEach(close => close()); vi.unstubAllGlobals(); });
 async function flush() {
@@ -20,7 +20,7 @@ async function flush() {
 /** 与现有页面测试相同：真实SFC setup/生命周期，只替换HTTP与子组件。 */
 function mountResource(statusBody: Record<string, unknown>) {
   const calls: ApiCall[] = [];
-  const api = vi.fn(async (path: string, method = 'GET', body?: unknown) => {
+  const api = vi.fn(async (path: string, method = 'GET', body?: Record<string, unknown>) => {
     calls.push({ path, method, body });
     if (path === '/admin/skills/sk_recheck' && method === 'GET')
       return { code: 'sk_recheck', versions: [{ versionNo: 1, status: 'DRAFT' }] };
@@ -59,7 +59,7 @@ it('手动重检把ElInput字符串在提交边界转成正整数JSON number再�
   await page.state.execute('recheck');
   const post = page.calls.find(c => c.method === 'POST' && c.path === '/admin/skills/sk_recheck/drafts/1/connection-test');
   expect(post).toBeTruthy();
-  expect(typeof post!.body.controlledCallId).toBe('number');
+  expect(typeof post!.body!.controlledCallId).toBe('number');
   expect(post!.body).toEqual({ controlledCallId: 3 });
   expect(page.state.error).toBe('');
 });
@@ -71,7 +71,7 @@ it('自动重检沿用真实成功DEBUG的callId并同样发送number', async ()
   await page.state.checkTest();
   const post = page.calls.find(c => c.method === 'POST' && c.path.endsWith('/connection-test'));
   expect(post).toBeTruthy();
-  expect(typeof post!.body.controlledCallId).toBe('number');
+  expect(typeof post!.body!.controlledCallId).toBe('number');
   expect(post!.body).toEqual({ controlledCallId: 36 });
 });
 
