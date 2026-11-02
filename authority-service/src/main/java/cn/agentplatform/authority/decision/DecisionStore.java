@@ -3,7 +3,7 @@ package cn.agentplatform.authority.decision;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -60,6 +60,22 @@ public final class DecisionStore {
     private final Map<String, String> continuations = new ConcurrentHashMap<>();
     /** 插入序；与 entries 分开存，才能在不加全局锁的前提下做有界淘汰。 */
     private final Queue<String> order = new ConcurrentLinkedQueue<>();
+    /**
+     * grant 保留区（EX-26）：按 decision id 保存仍可能被 {@code operation=resume} 换票的原委托。
+     *
+     * <p>为什么需要第二份登记：{@code entries} 的 {@code expiresAt} 是**这一跳**的展示/消费有效期
+     * （authorize 取 {@code min(issued+decisionSeconds, grantExpiresAt)}）。{@code decisionSeconds}
+     * 一旦配得比 {@code grantSeconds} 短，登记会在 grant 仍有效时被 {@code sweep()} 按 expiresAt 清掉，
+     * 于是同一份委托 resume 只能报 {@code RESUME_GRANT_UNKNOWN}——恢复来源被展示 TTL 误杀。
+     * 保留区把恢复来源活到 {@code grantExpiresAt}，与决策的展示/消费 TTL 解耦；只有
+     * {@code grantRef != null}（可 resume）的决策才登记，容量与 {@code capacity} 同量级，
+     * 按 {@code grantExpiresAt} 淘汰最旧。
+     *
+     * <p>它不是第二份权威：{@link #consume}/{@link #touchExpiry} 在同一次调用里同步同一决策，
+     * 保留区里的 {@code consumedAt} 与 {@code entries} 一样是撤销信号；过期时间永远只看
+     * {@code grantExpiresAt}，绝不用 {@code expiresAt}。
+     */
+    private final Map<String, Decision> grantEntries = new ConcurrentHashMap<>();
     private final int capacity;
     private final Clock clock;
 
@@ -149,6 +165,24 @@ public final class DecisionStore {
         if (decision.continuationJti() != null) {
             continuations.put(decision.continuationJti(), decision.id());
         }
+        if (decision.grantRef() == null) {
+            // 没有 grant 的决策本来就 resume 不了；若曾登记过，覆盖写要顺手撤掉，避免保留区留下
+            // 一条 grantRef 为空、resume 永远匹配不上的僵尸项。
+            grantEntries.remove(decision.id());
+        } else {
+            // 保留区只吸收"还能不能 resume"的状态：消费标记一旦落下，后续覆盖写（例如回写票 jti）
+            // 不能用创建时的旧快照把它擦掉——那会让 resume 从 REVOKED 漂移回成功。
+            grantEntries.compute(decision.id(),
+                    (key, current) -> current == null ? decision : keepConsumption(current, decision));
+        }
+    }
+
+    /** 合并两份登记时以 {@code consumedAt} 为准：消费是单向状态，任何旧快照都不能把它抹掉。 */
+    private static Decision keepConsumption(Decision retained, Decision incoming) {
+        if (retained.consumedAt() == null || incoming.consumedAt() != null) {
+            return incoming;
+        }
+        return incoming.consumed(retained.consumedAt(), retained.consumedBy());
     }
 
     /** 不做过期过滤：调用方需要自己判断"过期"(409) 与"不存在"(403) 的区别。 */
@@ -163,20 +197,30 @@ public final class DecisionStore {
      * "签发过但 grant 已到期"（403 {@code AUTHORITY_EXPIRED}）分开——前者只能重判权，
      * 后者至少让调用方知道原能力存在过，不能把两者混成一个不可区分的拒绝。
      *
-     * <p>刻意不加索引：登记簿容量有界（默认 {@code 256}），线性扫描的代价远小于在写入路径上
-     * 维护第三个可能悬空的索引；淘汰/覆盖由 {@code sweep} 与 {@code put} 负责，这里只读。
+     * <p>EX-26 起合并两个来源：{@code entries}（短 TTL，供展示/消费）与 {@link #grantEntries}
+     * （活到 {@code grantExpiresAt} 的恢复来源）。按 decision id 去重，entries 优先——它们的字段
+     * 除 expiresAt 外同源。这里仍<b>不清理也不过滤</b>过期项：保留区的清理发生在写入路径的
+     * {@code sweep()} 里，resume 才能先看到"已过期"（{@code AUTHORITY_EXPIRED}）而不是"不存在"。
+     *
+     * <p>刻意不加 grant_ref 索引：两个登记区都按容量有界（默认 {@code 256}），线性扫描的代价
+     * 远小于维护第三个可能悬空的索引；淘汰/覆盖由 {@code sweep} 与 {@code put} 负责，这里只读。
      */
     public List<Decision> findByGrantRef(String grantRef) {
         if (grantRef == null || grantRef.isBlank()) {
             return List.of();
         }
-        List<Decision> found = new ArrayList<>();
+        Map<String, Decision> found = new LinkedHashMap<>();
         for (Decision decision : entries.values()) {
             if (grantRef.equals(decision.grantRef())) {
-                found.add(decision);
+                found.put(decision.id(), decision);
             }
         }
-        return List.copyOf(found);
+        for (Decision decision : grantEntries.values()) {
+            if (grantRef.equals(decision.grantRef())) {
+                found.putIfAbsent(decision.id(), decision);
+            }
+        }
+        return List.copyOf(found.values());
     }
 
     /**
@@ -244,17 +288,33 @@ public final class DecisionStore {
             consumed[0] = current.consumed(at, consumer);
             return consumed[0];
         });
+        if (consumed[0] != null) {
+            // 保留区必须看到同一个撤销标记：entries 被 sweep（短 TTL）清掉后，resume 只剩保留区
+            // 这一条来源；这里漏同步会让已消费的委托在 expiresAt 之后又能成功换票（EX-26）。
+            // 用 compute 基于保留区的当前值改，保留它自己的 expiresAt，且不覆盖更早的消费时间。
+            grantEntries.compute(id, (key, current) -> {
+                if (current == null || current.consumedAt() != null) {
+                    return current;
+                }
+                return current.consumed(at, consumer);
+            });
+        }
         return Optional.ofNullable(consumed[0]);
     }
 
     /**
-     * 只推后登记有效期，且**基于当前值**重写（EX-46）。
+     * 只推后登记有效期，且**基于当前值**重写（EX-46）。<b>续期 ≠ 复活</b>：
+     *
+     * <p>已消费的登记也允许续期——S4 child 换票会消费父 EVENTS 窗口，S6 的第一次续期必须仍能
+     * 把窗口推到硬截止，否则合法链路在第一个断言窗后就 403。但续期只改 {@code expiresAt}，
+     * {@code consumedAt}/{@code consumedBy} 原样保留：已消费的登记仍然不可再 {@link #consume}，
+     * 也仍然会让 resume 报 {@code RESUME_REVOKED}。消费的"单向性"没有变，变的只是有效期。
      *
      * <p>不能用"读出旧快照 → {@code put(withExpiresAt)}"：读与写之间若有 child 换票把
-     * {@code consumedAt} 标记上去，旧快照回写会把消费标记擦掉，同一张观察窗就能二次换票。
-     * 这里用 {@code compute} 在同一把 bin 锁内读-改-写，并拒绝改写已消费的登记。
+     * {@code consumedAt} 标记上去，旧快照回写会把消费标记擦掉，同一张观察窗就能二次换票——
+     * 那才是复活。这里用 {@code compute} 在同一把 bin 锁内读-改-写，并同步保留区。
      *
-     * @return 成功推后时返回更新后的决策；登记不存在或已消费时 empty（调用方据此报 403）。
+     * @return 成功推后时返回更新后的决策；登记不存在时 empty（调用方据此报 403）。
      */
     public Optional<Decision> touchExpiry(String id, Instant until) {
         if (id == null || until == null) {
@@ -262,12 +322,17 @@ public final class DecisionStore {
         }
         Decision[] touched = new Decision[1];
         entries.compute(id, (key, current) -> {
-            if (current == null || current.consumedAt() != null) {
-                return current;
+            if (current == null) {
+                return null;
             }
             touched[0] = current.withExpiresAt(until);
             return touched[0];
         });
+        // 保留区镜像同一份有效期；同样按字段改而不是整体替换，绝不把消费标记写丢。
+        if (touched[0] != null) {
+            grantEntries.compute(id, (key, current) ->
+                    current == null ? null : current.withExpiresAt(until));
+        }
         return Optional.ofNullable(touched[0]);
     }
 
@@ -289,6 +354,45 @@ public final class DecisionStore {
             }
             remove(oldest);
         }
+        sweepGrantReservations(now);
+    }
+
+    /**
+     * 保留区的过期与容量：按 {@code grantExpiresAt}（不是 {@code expiresAt}）清理与淘汰。
+     *
+     * <p>清理只发生在写入路径：读路径保留过期项，resume 才能区分"过期"（AUTHORITY_EXPIRED）
+     * 与"从未签发"（RESUME_GRANT_UNKNOWN）。容量按 grantExpiresAt 最旧淘汰——按插入序会把
+     * "签发早但 grant 更晚"的恢复来源误删，而 grantExpiresAt 才是它真正的可用边界。
+     */
+    private void sweepGrantReservations(Instant now) {
+        grantEntries.forEach((id, decision) -> {
+            Instant until = decision.grantExpiresAt();
+            if (until == null || !until.isAfter(now)) {
+                grantEntries.remove(id, decision);
+            }
+        });
+        while (grantEntries.size() >= capacity) {
+            String oldest = oldestGrant();
+            if (oldest == null) {
+                break;
+            }
+            grantEntries.remove(oldest);
+        }
+    }
+
+    /** 按 grantExpiresAt 找最旧的保留项；null（形状异常的决策）视为最旧，优先淘汰。 */
+    private String oldestGrant() {
+        String oldestId = null;
+        Instant oldestUntil = null;
+        for (Map.Entry<String, Decision> entry : grantEntries.entrySet()) {
+            Instant until = entry.getValue().grantExpiresAt();
+            if (oldestId == null || until == null
+                    || (oldestUntil != null && until.isBefore(oldestUntil))) {
+                oldestId = entry.getKey();
+                oldestUntil = until;
+            }
+        }
+        return oldestId;
     }
 
     private void remove(String id) {

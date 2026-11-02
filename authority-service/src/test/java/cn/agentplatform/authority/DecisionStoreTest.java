@@ -69,14 +69,26 @@ class DecisionStoreTest {
     }
 
     @Test
-    void touchExpiryNeverResurrectsAConsumedRegistration() {
+    void touchExpiryExtendsAConsumedRegistrationWithoutResurrectingIt() {
         DecisionStore store = new DecisionStore(8, CLOCK);
         store.put(decision("dec-consumed", NOW.plusSeconds(5)));
-        assertThat(store.consume("dec-consumed", "gateway")).isPresent();
+        DecisionStore.Decision consumed = store.consume("dec-consumed", "gateway").orElseThrow();
+        Instant consumedAt = consumed.consumedAt();
 
-        // child 换票已消费；续期若用旧快照回写就会把 consumedAt 擦掉，同一窗口可再换一次票（EX-46）。
-        assertThat(store.touchExpiry("dec-consumed", NOW.plusSeconds(55))).isEmpty();
-        assertThat(store.find("dec-consumed").orElseThrow().consumedAt()).isNotNull();
+        // S4 child 换票已消费父窗口；S6 的首次续期必须仍允许（EX-46 的 403 回归），
+        // 但续期只能推后 expiresAt：消费标记原样保留，窗口不会“复活”成可再消费/可再换票。
+        Instant hardDeadline = NOW.plusSeconds(55);
+        assertThat(store.touchExpiry("dec-consumed", hardDeadline))
+                .as("续期 ≠ 复活：已消费的登记允许推后 expiresAt")
+                .isPresent();
+
+        DecisionStore.Decision touched = store.find("dec-consumed").orElseThrow();
+        assertThat(touched.expiresAt()).isEqualTo(hardDeadline);
+        assertThat(touched.consumedAt())
+                .as("续期不能擦掉消费时间：旧快照回写才是复活")
+                .isEqualTo(consumedAt);
+        assertThat(touched.consumedBy()).isEqualTo("gateway");
+        // 续期不改变一次性消费的语义：同一张窗口不能再被消费一次。
         assertThat(store.consume("dec-consumed", "gateway")).isEmpty();
     }
 
