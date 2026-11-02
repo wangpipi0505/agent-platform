@@ -76,3 +76,26 @@
 ## 10 仍未闭合（验收输入）
 
 真实双仓 `-Stage All`（J1–J9）、J7 吊销链、J8 双空间 binder 与 A-only 主体的真实账号、J9 真实评测数据集与真实模型；J9 两个用例的 const 值依赖默认模型桩的回答（`EX06_OK`/`EX06_REFUSE`），换成真实模型时必须改评测计划（`-EvaluationPlanPath`）。
+
+---
+
+# 第五轮复审（2026-11-02 18:2x，基线 AP `8bc60e3e`）
+
+第五版 `复审问题.md` 收敛为两处：J8 走错鉴权面、J9 把应用编码当技能编码。
+
+## 11 两条与修法
+
+| # | 复审问题 | 修法 |
+| --- | --- | --- |
+| P1·J8 | 仍用 `ontosa_` binder 调 `/onto/internal/releases/...`（人登录面），实际 401，脚本却要 403/404；证明不了跨空间消费 | §7 改为 **A 空间的 `ontopa_` 消费凭据** 打 **`POST /onto/r/{B 空间 code}/releases/{B release}/ops/{op}`**，断言 **403 `NO_PERMISSION` 且无 `data`**；内部面的 401 负例独立保留在原 §7b（binder key 打 `/onto/internal` 必须 401）。新增 `-ConsumerKey`/`-ConsumerKeyEnv`/`-IsolationSpaceCode`，`Invoke-JointAcceptance.ps1` 从 `consumerKeyRef` 解析并向下传 |
+| P1·J9 | `EX06_TOOL:<PinAppCode>` 的后缀被模型桩解释为技能编码，而默认应用编码≠技能编码，会触发 `FIXTURE_TOOL_UNKNOWN/NOT_OFFERED` | 读完 pinApp 后从 `config.skillRefs[0].code` 取真实技能编码，仅在 `modelMode=TestFixture` 时改写 `j9_pin` 的 `inputs.message = 'EX06_TOOL:<skillCode>'`；`skillRefs` 为空则 BLOCKED（不猜）。Schema 常量断言（`EX06_OK`/`EX06_REFUSE`）保持不变 |
+
+## 12 验证
+
+1. Parser：三个 `.ps1` `check-ps` 3/3 `OK`。
+2. J9 逻辑单测（`$config.skillRefs=@(@{code='joint_unit_op'})`）：`skillCode=joint_unit_op`、`pinMessage=EX06_TOOL:joint_unit_op`、`safetyMessage=EX06_SAFETY` —— 证明只改写正例且用真实技能编码。
+3. J8 静态核对：`§7` 的 URL 组装为 `/onto/r/{B spaceCode}/releases/{B releaseId}/ops/{opCode}`、Header `X-API-Key: <A consumer>`、断言 `403 + NO_PERMISSION + data 为空`；`§7b` 保持 `401 + UNAUTHORIZED/SERVICE_CREDENTIAL_REQUIRED`。
+
+## 13 仍未闭合（验收输入）
+
+真实 A 空间 `ontopa_` 消费凭据与 B 空间 code/release/op（`isolationFixtures` 已有 `spaceCode`，缺真实消费凭据时该腿记 `SKIPPED-BLOCKED`）、真实双仓 `-Stage All`、J7 吊销链、J9 真实评测数据集与真实模型。

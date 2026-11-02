@@ -332,6 +332,21 @@ if ($Verdict -eq 'PASS') {
     } else {
         $appData = $app.Data
         $config = $appData.config
+        # EX06_TOOL:<name> 里的 <name> 由模型桩解释成“已发布技能编码”，不是应用编码
+        # （复审 18:2x P1·J9：应用编码与技能编码不同，用应用编码会触发 FIXTURE_TOOL_UNKNOWN）。
+        # 真实技能编码只能从被测应用的 config.skillRefs 取，取不到就 BLOCKED，不猜。
+        $skillCode = ''
+        if ($null -ne $config) {
+            $skillRefs = @($config.skillRefs)
+            if ($skillRefs.Count -ge 1) { $skillCode = Get-Text $skillRefs[0].code }
+        }
+        if (-not $skillCode) {
+            Complete-Stage 'J9' 'BLOCKED' ('缺外部输入: pinApp ' + $PinAppCode + ' 的 config.skillRefs 为空，无法确定 EX06_TOOL:<技能编码>') $stageInputs $stageBoundaries
+        }
+        if ($modelMode -eq 'TestFixture' -and @($cases).Count -ge 1) {
+            $cases[0]['inputs']['message'] = 'EX06_TOOL:' + $skillCode
+        }
+        Add-Check 'J9-技能编码取自skillRefs' $true ('skillCode=' + $skillCode)
         $ontology = $null
         if ($null -ne $config) { $ontology = $config.ontology }
         $frozenRelease = ''

@@ -10,7 +10,9 @@
     2) A 凭据 POST 绑定 body.spaceId=A 空间 + B release → 403 NO_PERMISSION（版本不属于该空间）；
     3) A 凭据 GET 绑定查询带 platformTenant=其它租户 → 403 NO_PERMISSION（不泄漏他人绑定）；
     4) 第 1 步重放并附加 X-User-Id/X-User-Roles/X-Tenant 伪造头 → 仍 403 NO_PERMISSION（不得扩权）；
-    5) A 凭据 POST /onto/internal/releases/{B release}/ops/{op} → 403/404 的稳定业务码，且无 data；
+    5) A 空间 ontopa_ 消费凭据 POST /onto/r/{B 空间}/releases/{B release}/ops/{op} → 403 NO_PERMISSION 且无 data
+     （跨空间执行必须走正式消费面；/onto/internal 是人登录内部面，机器凭据在那里只能得到 401）；
+  5b) 同一 B release 的内部面用机器 key 调 → 401 稳定码、无 data（负例独立保留）；
     6) 结束读回 A 空间原绑定，bindingId/releaseId 未变。
 
   缺输入 → [BLOCKED] 退出码 3（不发请求）；断言失败 → 1；通过 → 0。
@@ -34,8 +36,12 @@ param(
     [string]$ReleaseId,
     [string]$AppCode,
     [string]$IsolationSpaceId,
+    [string]$IsolationSpaceCode,
     [string]$IsolationReleaseId,
     [string]$IsolationOpCode,
+    # A 空间的 ontopa_ 消费凭据：用于 /onto/r 正式消费面跨空间执行（内部 /onto/internal 只认人 Bearer）。
+    [string]$ConsumerKey,
+    [string]$ConsumerKeyEnv = 'AGENT_SECRET_JOINT_CONSUMER_KEY',
     # 第二合法身份（B 空间 binder 服务凭据）：有则证“合法身份跨空间仍被拒”，
     # 没有则记 SKIPPED-BLOCKED，明确缺什么，不用伪造身份头替代（EX-06 复审 J8）。
     [string]$IsolationBinderKey,
@@ -282,7 +288,9 @@ $stageInputs = [ordered]@{
     releaseId = (Get-Text $ReleaseId)
     appCode = (Get-Text $AppCode)
     isolationSpaceId = (Get-Text $IsolationSpaceId)
+    isolationSpaceCode = (Get-Text $IsolationSpaceCode)
     isolationReleaseId = (Get-Text $IsolationReleaseId)
+    consumerKeyProvided = [bool](Get-Text $ConsumerKey)
     isolationOpCode = (Get-Text $IsolationOpCode)
     probeAppCode = $ProbeApp
     isolationProbeAppCode = $IsolationProbeApp
@@ -416,25 +424,32 @@ if ($Verdict -eq 'PASS') {
     }
 }
 
-# ---- 7) 跨空间执行操作必须被拒且无数据 ----
+# ---- 7) 跨空间执行走正式消费面 /onto/r，必须 403 NO_PERMISSION ----
 if ($Verdict -eq 'PASS') {
-    # 跨空间执行必须改用“只对 A 空间有权的身份”：人登录管理账号在夹具里同时是 A/B 的 OWNER，
-    # 用它打 B 只能证明“端点未授权”（ENDPOINT_FORBIDDEN），证明不了空间隔离（复审 18:0x P1·J8）。
-    # 这里改用 A 空间自己的 ontosa_ binder 凭据：服务端按凭据行解析空间=A，再用 B 的 release
-    # 调执行入口，正确语义是“稳定业务码拒绝且无 data”，而不是越权成功。
-    $opsResponse = Invoke-StageHttp -Method 'POST' -Url ($OntologyBase.TrimEnd('/') + '/onto/internal/releases/' + $IsolationReleaseId + '/ops/' + $IsolationOpCode) -Headers @{ 'X-API-Key' = $BinderKeyValue } -Body ([ordered]@{})
-    $opsCode = Get-Text $opsResponse.Body.code
-    # 三种都是稳定拒绝：跨空间/跨租户写路径 NO_PERMISSION、release 不属于该空间时会解析不到
-    # RELEASE_NOT_FOUND、A 空间对该端点没有授予记录时 ENDPOINT_FORBIDDEN；关键是“拒绝 + 无 data”。
-    $stableCodes = @('NO_PERMISSION', 'RELEASE_NOT_FOUND', 'ENDPOINT_FORBIDDEN')
-    $opsData = $null
-    if ($null -ne $opsResponse.Body -and $null -ne $opsResponse.Body.PSObject.Properties['data']) { $opsData = $opsResponse.Body.data }
-    Add-Check 'J8-跨空间执行拒绝' ((@(403, 404) -contains $opsResponse.Status) -and ($stableCodes -contains $opsCode)) ('HTTP ' + $opsResponse.Status + ' code=' + $opsCode)
-    Add-Check 'J8-跨空间执行无数据' ($null -eq $opsData) ('data=' + (Get-Text $opsData))
-    $Details['crossSpaceOps'] = [ordered]@{ httpStatus = $opsResponse.Status; code = $opsCode; dataPresent = ($null -ne $opsData) }
-    if (-not ((@(403, 404) -contains $opsResponse.Status) -and ($stableCodes -contains $opsCode))) {
-        $Verdict = 'FAIL'
-        $Reason = 'A 凭据对 B release 执行操作未被稳定拒绝：HTTP ' + $opsResponse.Status + ' code=' + $opsCode
+    # 跨空间执行必须用 **A 空间自己的 ontopa_ 消费凭据** 打 B 空间的正式消费路由
+    #   POST /onto/r/{B 空间 code}/releases/{B release}/ops/{op}
+    # 服务端按凭据行解析空间=A，与目标空间不一致时正确语义是 403 NO_PERMISSION，且绝不带 data。
+    # 注意不能用 /onto/internal：那面只认人登录 Bearer，机器凭据只会得到 401（那是 §7b 的负例，
+    # 拿它当“跨空间被拒”的证据是错的面，复审 18:2x P1·J8）。
+    $bSpaceCode = Get-Text $IsolationSpaceCode
+    $consumerKeyValue = Get-Text $ConsumerKey
+    if ($bSpaceCode -and $consumerKeyValue) {
+        $consumeUrl = $OntologyBase.TrimEnd('/') + '/onto/r/' + $bSpaceCode + '/releases/' + $IsolationReleaseId + '/ops/' + $IsolationOpCode
+        $consume = Invoke-StageHttp -Method 'POST' -Url $consumeUrl -Headers @{ 'X-API-Key' = $consumerKeyValue } -Body ([ordered]@{})
+        $consumeCode = Get-Text $consume.Body.code
+        $consumeData = $null
+        if ($null -ne $consume.Body -and $null -ne $consume.Body.PSObject.Properties['data']) { $consumeData = $consume.Body.data }
+        $consumeOk = ($consume.Status -eq 403) -and ($consumeCode -ceq 'NO_PERMISSION') -and ($null -eq $consumeData)
+        Add-Check 'J8-跨空间消费403' $consumeOk ('HTTP ' + $consume.Status + ' code=' + $consumeCode + ' targetSpace=' + $bSpaceCode)
+        Add-Check 'J8-跨空间消费无数据' ($null -eq $consumeData) ('data=' + (Get-Text $consumeData))
+        $Details['crossSpaceConsume'] = [ordered]@{ httpStatus = $consume.Status; code = $consumeCode; targetSpace = $bSpaceCode; dataPresent = ($null -ne $consumeData) }
+        if (-not $consumeOk) {
+            $Verdict = 'FAIL'
+            $Reason = 'A 空间消费凭据对 B 空间执行未被拒为 403 NO_PERMISSION（或泄漏 data）：HTTP ' + $consume.Status + ' ' + $consumeCode
+        }
+    } else {
+        Write-Output '[SKIPPED-BLOCKED] J8-跨空间消费 缺 -IsolationSpaceCode / -ConsumerKey（A 空间 ontopa_ 消费凭据 / isolationFixtures.spaceCode）：未证“跨空间消费被拒”，不伪造结果。'
+        $Details['crossSpaceConsume'] = [ordered]@{ status = 'SKIPPED-BLOCKED'; missing = '-IsolationSpaceCode / -ConsumerKey' }
     }
 }
 
