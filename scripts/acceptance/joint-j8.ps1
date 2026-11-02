@@ -418,10 +418,15 @@ if ($Verdict -eq 'PASS') {
 
 # ---- 7) 跨空间执行操作必须被拒且无数据 ----
 if ($Verdict -eq 'PASS') {
-    # /onto/internal/** 只认人登录 Bearer；机器 ontosa_ key 打这里是 401 而不是越权（复审 P1-2）。
-    $opsResponse = Invoke-StageHttp -Method 'POST' -Url ($OntologyBase.TrimEnd('/') + '/onto/internal/releases/' + $IsolationReleaseId + '/ops/' + $IsolationOpCode) -Headers @{ 'Authorization' = ('Bearer ' + $AdminBearerValue) } -Body ([ordered]@{})
+    # 跨空间执行必须改用“只对 A 空间有权的身份”：人登录管理账号在夹具里同时是 A/B 的 OWNER，
+    # 用它打 B 只能证明“端点未授权”（ENDPOINT_FORBIDDEN），证明不了空间隔离（复审 18:0x P1·J8）。
+    # 这里改用 A 空间自己的 ontosa_ binder 凭据：服务端按凭据行解析空间=A，再用 B 的 release
+    # 调执行入口，正确语义是“稳定业务码拒绝且无 data”，而不是越权成功。
+    $opsResponse = Invoke-StageHttp -Method 'POST' -Url ($OntologyBase.TrimEnd('/') + '/onto/internal/releases/' + $IsolationReleaseId + '/ops/' + $IsolationOpCode) -Headers @{ 'X-API-Key' = $BinderKeyValue } -Body ([ordered]@{})
     $opsCode = Get-Text $opsResponse.Body.code
-    $stableCodes = @('NO_PERMISSION', 'RELEASE_NOT_FOUND')
+    # 三种都是稳定拒绝：跨空间/跨租户写路径 NO_PERMISSION、release 不属于该空间时会解析不到
+    # RELEASE_NOT_FOUND、A 空间对该端点没有授予记录时 ENDPOINT_FORBIDDEN；关键是“拒绝 + 无 data”。
+    $stableCodes = @('NO_PERMISSION', 'RELEASE_NOT_FOUND', 'ENDPOINT_FORBIDDEN')
     $opsData = $null
     if ($null -ne $opsResponse.Body -and $null -ne $opsResponse.Body.PSObject.Properties['data']) { $opsData = $opsResponse.Body.data }
     Add-Check 'J8-跨空间执行拒绝' ((@(403, 404) -contains $opsResponse.Status) -and ($stableCodes -contains $opsCode)) ('HTTP ' + $opsResponse.Status + ' code=' + $opsCode)

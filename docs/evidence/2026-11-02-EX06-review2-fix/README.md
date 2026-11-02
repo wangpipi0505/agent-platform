@@ -51,4 +51,28 @@
 
 ## 7 未覆盖
 
-真实双仓 `-Stage All`（J1–J9）、J7 吊销链、J8 双空间 binder、J9 真实评测数据集；J9 安全例的 `拒绝` 文案需与被测应用提示词一致，否则真实模型会按 EXACT 判失败（这属验收输入问题，脚本不再放宽）。
+真实双仓 `-Stage All`（J1–J9）、J7 吊销链、J8 双空间 binder、J9 真实评测数据集；J9 安全例原先的 `拒绝` 文案已改为 `EX06_REFUSE` 常量 Schema（见第四轮 §8）。
+
+---
+
+# 第四轮复审（2026-11-02 18:0x，基线 AP `a5d6848d`）
+
+第四版 `复审问题.md`：EX-12/26/46 维持待验收；EX-06 仍有 2 处功能阻断 + 1 处日志问题。本轮仍只改验收脚本。
+
+## 8 三条与修法
+
+| # | 复审问题 | 修法 |
+| --- | --- | --- |
+| P1·J9 | 安全例改成合法 EXACT 但 expected 是字符串 `拒绝`，而运行输出是 `{text,usage,actualModel}` 对象；默认模型桩固定回答 `EX06_REFUSE`/`EX06_OK` | 两个用例都改用 text 常量 Schema（`{type:'object',required:['text'],properties:{text:{type:'string',const:…}}}`，形状取自既有候选实现），断言统一 `SCHEMA`；正例 message 用 `EX06_TOOL:<pinAppCode>`、const `EX06_OK`，安全例 const `EX06_REFUSE` |
+| P1·J8 | §7 用人登录管理账号打 B 空间，而夹具里该账号同时是 A/B 的 OWNER，只能证明“端点未授权”（`ENDPOINT_FORBIDDEN`），证明不了空间隔离 | 改用 **A 空间自己的 `ontosa_` binder 凭据**（只对 A 有权）调 B 的 release 执行入口；稳定拒绝码集合补 `ENDPOINT_FORBIDDEN`（另两种为 `NO_PERMISSION`/`RELEASE_NOT_FOUND`），仍断言 `data` 为空 |
+| P2·日志 | 凭据文件格式错误分支回显原行前 24 字符，误贴裸密钥会泄露片段 | 改为只报行号与固定错误码 `JOINT_CREDENTIALS_FORMAT_INVALID`，不再回显任何内容 |
+
+## 9 验证
+
+1. Parser：三个 `.ps1` `check-ps` 3/3 `OK`（BOM+CRLF 保留）。
+2. P2 实测：凭据文件写成 `ontosa_FAKE_SECRET_SHOULD_NOT_LEAK_0123456789` → 输出 `[FAIL] JOINT_CREDENTIALS_FORMAT_INVALID: 第 1 行不符合 AGENT_SECRET_<NAME>=<value>`、退出码 1，**无任何内容片段**。
+3. J9/J8 只能静态核对：J9 的 `expected` 已是对象 Schema（用 `PSScriptAnalyzer` 外的方式无法再跑真实评测，需真实模型与数据集）；J8 的 §7 请求头已从 `Authorization: Bearer <admin>` 换成 `X-API-Key: <A binder>`，稳定码集合含 `ENDPOINT_FORBIDDEN`。
+
+## 10 仍未闭合（验收输入）
+
+真实双仓 `-Stage All`（J1–J9）、J7 吊销链、J8 双空间 binder 与 A-only 主体的真实账号、J9 真实评测数据集与真实模型；J9 两个用例的 const 值依赖默认模型桩的回答（`EX06_OK`/`EX06_REFUSE`），换成真实模型时必须改评测计划（`-EvaluationPlanPath`）。

@@ -297,14 +297,22 @@ if (Get-Text $EvaluationPlanPath) {
     $hashBytes = $sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($seedSource))
     $seed = -join ($hashBytes[0..11] | ForEach-Object { $_.ToString('x2') })
     $datasetVersion = 'joint_' + $seed + '_eval_j9_v1'
-    # 两个用例必须断言“内容”，不能都退化成 {type:'object'}（复审 P2-2）；同时安全例
-    # （safety=true）产品只允许 EXACT/SCHEMA（EvaluationAssertions.java:31/135），
-    # CONTAINS 会 400，所以安全例用 EXACT 锚定拒绝文本。
-    $pinExpected = 'EX06_J9_PIN'
-    $safetyExpected = '拒绝'
+    # 运行输出是对象 {text,usage,actualModel}，拿字符串做 EXACT/CONTAINS 必然对不上
+    # （复审 18:0x P1·J9）。这里复用候选实现里既有的 text 常量 Schema 形状：
+    #   expected = {type:'object', required:['text'], properties:{text:{type:'string', const:<常量>}}}
+    # 断言统一用 SCHEMA（安全例产品只允许 EXACT/SCHEMA，见 EvaluationAssertions.java:31/135）；
+    # 正例常量对应默认模型桩的正常回答 EX06_OK，安全例对应拒绝回答 EX06_REFUSE。
+    $textSchema = {
+        param([string]$Const)
+        return [ordered]@{
+            type = 'object'
+            required = @('text')
+            properties = [ordered]@{ text = [ordered]@{ type = 'string'; const = $Const } }
+        }
+    }
     $cases = @(
-        [ordered]@{ id = 'j9_pin'; inputs = [ordered]@{ message = ($pinExpected + ':' + (Get-Text $PinAppCode)) }; expected = $pinExpected; safety = $false; assertion = 'CONTAINS' },
-        [ordered]@{ id = 'j9_safety'; inputs = [ordered]@{ message = 'EX06_SAFETY' }; expected = $safetyExpected; safety = $true; assertion = 'EXACT' }
+        [ordered]@{ id = 'j9_pin'; inputs = [ordered]@{ message = ('EX06_TOOL:' + (Get-Text $PinAppCode)) }; expected = (& $textSchema 'EX06_OK'); safety = $false; assertion = 'SCHEMA' },
+        [ordered]@{ id = 'j9_safety'; inputs = [ordered]@{ message = 'EX06_SAFETY' }; expected = (& $textSchema 'EX06_REFUSE'); safety = $true; assertion = 'SCHEMA' }
     )
 }
 $stageInputs['modelMode'] = $modelMode

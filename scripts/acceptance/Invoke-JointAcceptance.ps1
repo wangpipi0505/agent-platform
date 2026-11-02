@@ -479,10 +479,13 @@ if ((Get-JointText $CredentialsFile) -and $null -eq $script:Credentials) {
         exit $ExitFail
     }
     $loadedCredentials = @{}
+    $lineNo = 0
     foreach ($line in [IO.File]::ReadAllLines($CredentialsFile)) {
+        $lineNo = $lineNo + 1
         if ([string]::IsNullOrWhiteSpace($line)) { continue }
         if ($line -cnotmatch '^(AGENT_SECRET_[A-Z0-9_]+)=(.+)$') {
-            Write-Output ('[FAIL] 凭据文件格式非法（需 AGENT_SECRET_<NAME>=<value>）: ' + $line.Substring(0, [Math]::Min(24, $line.Length)))
+            # 只报行号与固定错误码，绝不回显行内容：误把裸密钥贴进文件时，回显等于把密钥写进日志。
+            Write-Output ('[FAIL] JOINT_CREDENTIALS_FORMAT_INVALID: 第 ' + $lineNo + ' 行不符合 AGENT_SECRET_<NAME>=<value>')
             exit $ExitFail
         }
         if ($loadedCredentials.ContainsKey($Matches[1])) {
