@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.stereotype.Component;
 
 import java.time.Clock;
+import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -38,6 +39,9 @@ public final class TicketService {
     public static final String ASSERTION_TYPE = "agent-authority-decision+jwt";
     public static final String TICKET_TYPE = "at+jwt";
     public static final String WORKLOAD = "workload";
+    /** EX-44 S3：continuation 是"下一次观测会话的接续凭据"，不是票，也不参与服务鉴权。 */
+    public static final String CONTINUATION_TYPE = "agent-portal-gateway-events-continuation+jwt";
+    public static final String CONTINUATION_USE = "portal-gateway-events-continuation";
 
     private final KeyRing keys;
     private final IssuerResolver issuer;
@@ -125,6 +129,34 @@ public final class TicketService {
 
     public String audience(String serviceId) {
         return SERVICE_AUDIENCE_PREFIX + serviceId;
+    }
+
+    /**
+     * EX-44 S3 的 continuation：S3 断言信封里 {@code continuation_ref} 指向的那张 JWT。
+     *
+     * <p>与票/断言的差别是刻意的：
+     * <ul>
+     *   <li>typ 是独立的 {@code agent-portal-gateway-events-continuation+jwt}，客户端按 typ 选择验证分支，</li>
+     *   <li>{@code exp} 必须**等于** immutable 里的 {@code hard_deadline}（客户端会逐值比对），不能按
+     *       {@code assertionSeconds} 重算——否则一次长观测在 S4 续期时会被自己的 exp 卡住；</li>
+     *   <li>{@code immutable} 原样随签，供下游续期时证明"还是同一次观测"；</li>
+     *   <li>不携带 {@code service_ticket}/{@code parent_response_id}/{@code completion_permit}：
+     *       continuation 不能当票用，也不能借它拼接两段授权。</li>
+     * </ul>
+     */
+    public String continuation(String clientId, String jti, JsonNode immutable, Instant hardDeadline, long iat) {
+        Map<String, Object> claims = new LinkedHashMap<>();
+        claims.put("iss", issuer.issuer());
+        claims.put("aud", audience(clientId));
+        claims.put("token_use", CONTINUATION_USE);
+        claims.put("iat", iat);
+        claims.put("nbf", iat);
+        claims.put("exp", hardDeadline.getEpochSecond());
+        claims.put("jti", jti);
+        claims.put("continuation_jti", jti);
+        claims.put("hard_deadline", hardDeadline.getEpochSecond());
+        claims.put("immutable", immutable);
+        return keys.sign(CONTINUATION_TYPE, claims);
     }
 
     private Map<String, Object> assertion(String clientId, AuthorityRequest request, String decisionId, long iat) {

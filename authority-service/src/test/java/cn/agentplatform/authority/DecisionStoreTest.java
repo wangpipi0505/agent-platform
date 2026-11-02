@@ -61,7 +61,7 @@ class DecisionStoreTest {
                 Map.of("tenant_id", "tenant-a", "sub", "alice"), Map.of("tenant_id", "tenant-a", "sub", "alice"),
                 Map.of("operation_id", "op-bootstrap"), "grant-1", expiresAt, "gateway", null,
                 null, "delegated-v1", expiresAt,
-                // 1c 新增的 admission/消费字段：本测试只关心容量与过期，全部留空。
-                null, null, null, null, null, null, null);
+                // 1c/1d 新增的 admission/消费/continuation 字段：本测试只关心容量与过期，全部留空。
+                null, null, null, null, null, null, null, null, null, null);
     }
 }

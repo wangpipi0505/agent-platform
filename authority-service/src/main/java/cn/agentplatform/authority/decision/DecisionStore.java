@@ -86,14 +86,17 @@ public final class DecisionStore {
             String admissionRequestSha256,
             Instant consumedAt,
             String consumedBy,
-            String parentAdmissionId) {
+            String parentAdmissionId,
+            String bindingResponseId,
+            String continuationJti,
+            Instant hardDeadline) {
 
         /** 同一决策签出票后回写票 jti：决策 id 不变，只补"这张决策对应哪张票"。 */
         public Decision withTicketJti(String jti) {
             return new Decision(id, caller, target, action, resource, actor, ceiling, operation, grantRef,
                     grantExpiresAt, subjectCaller, jti, originAuthenticationId, authorizationVersion, expiresAt,
                     purpose, sourceTokenSha256, admissionNonce, admissionRequestSha256, consumedAt, consumedBy,
-                    parentAdmissionId);
+                    parentAdmissionId, bindingResponseId, continuationJti, hardDeadline);
         }
 
         /** 一次性消费标记：只改这两个字段，其余判权结果不动（消费不改变已经做出的授权）。 */
@@ -101,7 +104,7 @@ public final class DecisionStore {
             return new Decision(id, caller, target, action, resource, actor, ceiling, operation, grantRef,
                     grantExpiresAt, subjectCaller, ticketJti, originAuthenticationId, authorizationVersion,
                     expiresAt, purpose, sourceTokenSha256, admissionNonce, admissionRequestSha256, at, consumer,
-                    parentAdmissionId);
+                    parentAdmissionId, bindingResponseId, continuationJti, hardDeadline);
         }
     }
 

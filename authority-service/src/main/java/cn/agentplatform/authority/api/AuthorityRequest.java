@@ -8,6 +8,8 @@ import cn.agentplatform.common.authority.ServiceCall;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.time.format.DateTimeParseException;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -40,9 +42,16 @@ public record AuthorityRequest(
 
     public static final int MAX_BODY_BYTES = 16 * 1024;
     private static final Set<String> RESOURCE_KEYS = Set.of("kind", "id", "version_digest");
+    /** EX-44 S3 的 binding：与客户端 {@code PortalEventsBinding} 记录逐字段同名（camelCase）。 */
+    private static final Set<String> BINDING_KEYS = Set.of("responseId", "resource", "effectiveCursor",
+            "observationRequestSha256", "hardDeadline");
+    private static final Set<String> BINDING_RESOURCE_KEYS = Set.of("kind", "id", "versionDigest");
     private static final Pattern OPERATION = Pattern.compile("[a-z_]{1,64}");
     private static final Pattern NONCE = Pattern.compile("[A-Za-z0-9._:-]{1,128}");
     private static final Pattern ACTION = Pattern.compile("[A-Za-z][A-Za-z0-9_.-]{0,127}");
+    private static final Pattern RESPONSE_ID = Pattern.compile("[A-Za-z0-9_-]{1,128}");
+    private static final Pattern SHA256 = Pattern.compile("[0-9a-f]{64}");
+    private static final Pattern PROFILE = Pattern.compile("[a-z0-9.-]{1,64}");
     private static final int MAX_TEXT = 256;
     private static final int MAX_TICKET = 16384;
 
@@ -107,6 +116,90 @@ public record AuthorityRequest(
         boolean gatewayEventsOpening = optionalBoolean(node, "gateway_events_opening");
         return new AuthorityRequest(operation, new ServiceCall(target, action, binding), nonce, serviceTicket,
                 subjectToken, queryTicket, decisionId, grantRef, operationId, gatewayEventsOpening, node);
+    }
+
+    /**
+     * EX-44 S3 的 binding。字段集/类型在这里一次钉死：多一个少一个都 400，不把"看起来像"的节点带进判定。
+     *
+     * <p>响应 id 由客户端生成（重放保护键），因此只做字符集与长度约束；{@code hardDeadline} 是 ISO-8601
+     * 字符串（与 {@code immutable.hard_deadline} 的 epoch 秒是两种编码，不能混用）；{@code resource}
+     * 用记录组件名（camelCase {@code versionDigest}），与决策存储里的 snake_case 资源对象刻意不同。
+     */
+    public Binding binding() {
+        JsonNode node = raw.get("binding");
+        if (node == null || !node.isObject()) {
+            throw AuthorityException.invalidRequest("binding 必须是对象", "binding missing");
+        }
+        if (!BINDING_KEYS.equals(fieldNames(node))) {
+            throw AuthorityException.invalidRequest("binding 必须且只能包含五个字段", "binding keys=" + fieldNames(node));
+        }
+        String responseId = requiredText(node, "responseId", 128);
+        if (!RESPONSE_ID.matcher(responseId).matches()) {
+            throw AuthorityException.invalidRequest("binding.responseId 非法", "responseId=" + responseId);
+        }
+        JsonNode resource = node.get("resource");
+        if (resource == null || !resource.isObject() || !BINDING_RESOURCE_KEYS.equals(fieldNames(resource))) {
+            throw AuthorityException.invalidRequest("binding.resource 必须且只能包含 kind/id/versionDigest",
+                    "binding.resource invalid");
+        }
+        ResourceBinding resourceBinding;
+        try {
+            resourceBinding = new ResourceBinding(
+                    requiredText(resource, "kind", MAX_TEXT),
+                    requiredText(resource, "id", MAX_TEXT),
+                    requiredText(resource, "versionDigest", MAX_TEXT));
+        } catch (IllegalArgumentException e) {
+            throw AuthorityException.invalidRequest("binding.resource 字段非法", "binding.resource blank");
+        }
+        JsonNode cursorNode = node.get("effectiveCursor");
+        if (cursorNode == null || !cursorNode.isIntegralNumber() || !cursorNode.canConvertToLong()) {
+            throw AuthorityException.invalidRequest("binding.effectiveCursor 必须是整数", "effectiveCursor invalid");
+        }
+        long effectiveCursor = cursorNode.longValue();
+        if (effectiveCursor < 0) {
+            throw AuthorityException.invalidRequest("binding.effectiveCursor 不能为负", "effectiveCursor=" + effectiveCursor);
+        }
+        String sha = requiredText(node, "observationRequestSha256", 64);
+        if (!SHA256.matcher(sha).matches()) {
+            throw AuthorityException.invalidRequest("binding.observationRequestSha256 非法", "sha=" + sha);
+        }
+        String deadline = requiredText(node, "hardDeadline", 64);
+        Instant hardDeadline;
+        try {
+            hardDeadline = Instant.parse(deadline);
+        } catch (DateTimeParseException e) {
+            throw AuthorityException.invalidRequest("binding.hardDeadline 必须是 ISO-8601 时刻", "hardDeadline=" + deadline);
+        }
+        return new Binding(responseId, resourceBinding, effectiveCursor, sha, hardDeadline);
+    }
+
+    /** S3 的 profile 是固定枚举值：先做形状校验，具体取值由 S3 判定（这里不耦合 gateway/engine 两套）。 */
+    public String profile() {
+        String value = requiredText(raw, "profile", 64);
+        if (!PROFILE.matcher(value).matches()) {
+            throw AuthorityException.invalidRequest("profile 非法", "profile=" + value);
+        }
+        return value;
+    }
+
+    /** S3 的 immutable：必须整体作为对象回显给客户端，字段语义由 S3 与 D2/D1 的权威值逐字段比对。 */
+    public JsonNode immutable() {
+        JsonNode node = raw.get("immutable");
+        if (node == null || !node.isObject() || node.isEmpty()) {
+            throw AuthorityException.invalidRequest("immutable 必须是对象", "immutable missing");
+        }
+        return node;
+    }
+
+    /** S3 binding 的类型化视图：构造前已在 {@link #binding()} 里完成形状/长度/编码校验。 */
+    public record Binding(String responseId, ResourceBinding resource, long effectiveCursor,
+                          String observationRequestSha256, Instant hardDeadline) {
+    }
+
+    private static Set<String> fieldNames(JsonNode node) {
+        Set<String> names = new LinkedHashSet<>();
+        node.fieldNames().forEachRemaining(names::add);
+        return names;
     }
 
     private static String requiredText(JsonNode node, String field, int max) {

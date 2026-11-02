@@ -41,7 +41,8 @@ public final class AuthorityController {
     private static final Logger audit = LoggerFactory.getLogger("agent.authority.audit");
     private static final int JWKS_MAX_AGE_SECONDS = 300;
     private static final Set<String> TICKET_OPERATIONS = Set.of("client");
-    private static final Set<String> DECISION_OPERATIONS = Set.of("authorize_workload");
+    private static final Set<String> DECISION_OPERATIONS = Set.of("authorize_workload",
+            "portal_gateway_events_open");
 
     private final KeyRing keys;
     private final ClientRegistry clients;
@@ -115,6 +116,10 @@ public final class AuthorityController {
     private Map<String, Object> decide(String clientId, AuthorityRequest request) {
         if (DelegatedAuthority.AUTHORIZE.equals(request.operation())) {
             return delegated.authorize(clientId, request);
+        }
+        // EX-44 S3：和 authorize 一样由 DelegatedAuthority 判定，不走 workload 票那套（S3 不收 service_ticket）。
+        if (DelegatedAuthority.EVENTS_OPEN.equals(request.operation())) {
+            return delegated.eventsOpen(clientId, request);
         }
         if (!DECISION_OPERATIONS.contains(request.operation())) {
             throw AuthorityException.denied("decisionUri 不接受 operation=" + request.operation());
