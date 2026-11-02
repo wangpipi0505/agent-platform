@@ -398,7 +398,9 @@ watch(() => [props.resource.code, props.kind, auth.token, auth.user?.tenantId, a
               ><el-input
                 v-model="acceptanceCases"
                 type="textarea"
-                :rows="6" /></el-form-item></el-form
+                :rows="6"
+                placeholder='无工具预期用空字符串：{"question":"你好","expectSelected":""}；仅空白或缺失会被拒绝'
+            /></el-form-item></el-form
           ><el-button
             :loading="busy"
             v-permission="'edit'"

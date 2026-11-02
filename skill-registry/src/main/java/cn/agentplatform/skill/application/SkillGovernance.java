@@ -126,7 +126,14 @@ public class SkillGovernance {
         int correct = 0;
         for (int i = 0; i < cases.size(); i++) {
             var item = object(cases.get(i));
-            String question = text(item, "question"), expected = text(item, "expectSelected");
+            String question = text(item, "question");
+            // R01/R07：显式存在且恰为空字符串的expectSelected表示“无工具调用”预期；
+            // 缺失/null/非字符串/仅空白仍按原语义拒绝，不改全局text()避免其他必填字段接受空值。
+            if (!(item.get("expectSelected") instanceof String expected))
+                throw error(400, "INVALID_ACCEPTANCE", "缺少或无效字段: expectSelected");
+            if (!expected.isEmpty() && expected.isBlank())
+                throw error(400, "INVALID_ACCEPTANCE", "expectSelected仅空白无效；无工具预期请使用空字符串");
+            boolean expectNoTool = expected.isEmpty();
             var definition =
                     Map.of(
                             "type",
@@ -175,7 +182,9 @@ public class SkillGovernance {
             } catch (Exception ex) {
                 argsOk = false;
             }
-            boolean pass = expected.equals(selected) && argsOk;
+            // R07：无工具预期核实际toolCalls为空——意外选任一工具即失败，不能只看首个名字。
+            boolean noToolCalled = !calls.isArray() || calls.isEmpty();
+            boolean pass = (expectNoTool ? noToolCalled : expected.equals(selected)) && argsOk;
             if (pass) correct++;
             results.add(
                     Map.of(
