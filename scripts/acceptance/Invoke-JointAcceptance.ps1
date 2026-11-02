@@ -293,6 +293,10 @@ function Get-JointStageRequirements([string]$Suite) {
         if (-not (Test-JointUuid $IsolationSpaceId)) { $missing += 'IsolationSpaceId(UUID)' }
         if (-not (Test-JointUuid $IsolationReleaseId)) { $missing += 'IsolationReleaseId(UUID)' }
         if (-not (Get-JointText $IsolationOpCode)) { $missing += 'IsolationOpCode' }
+        # 跨空间消费两条腿都依赖这两个输入：缺任一条时 §7 无法发起真请求，必须在入口就 BLOCKED，
+        # 不能让它以“打印 SKIPPED-BLOCKED 后继续 PASS”的方式混过（复审 18:4x P1）。
+        if (-not (Get-JointText $IsolationSpaceCode)) { $missing += 'IsolationSpaceCode(B空间code)' } elseif ($IsolationSpaceCode -notmatch '^[A-Za-z][A-Za-z0-9_-]*$') { $missing += 'IsolationSpaceCode(形状非法)' }
+        if (-not (Get-JointText $script:ConsumerKeyValue)) { $missing += 'A空间ontopa_消费凭据(-ConsumerKey 或 ' + $ConsumerKeyEnv + ')' } elseif ($script:ConsumerKeyValue -notmatch '^ontopa_[A-Za-z0-9_-]{43}$') { $missing += '-ConsumerKey(需 ontopa_ 前缀加 43 位)' }
         if (-not (Get-JointText $script:BinderKeyValue)) { $missing += 'binder key(' + $BinderKeyEnv + ')' }
         if (-not (Get-JointText $script:OntologyBearerValue)) { $missing += 'OR人工Bearer(' + $OntologyAdminBearerEnv + ')' }
     } elseif ($Suite -eq 'J9') {
@@ -604,7 +608,9 @@ try {
             if (Get-JointText $CredentialsFile) { $callArgs.CredentialsFile = $CredentialsFile }
             if (Get-JointText $EvaluationPlanPath) { $callArgs.EvaluationPlanPath = $EvaluationPlanPath }
         }
-        $secretKeys = @('ReadKey', 'BinderKey', 'BearerToken', 'OntologyAdminBearer', 'RevocationBinderKey', 'RevocationConsumerKey')
+        # 任何被回显的凭据都必须在此列：ConsumerKey 是 ontopa_ 消费凭据，泄露即等于把跨空间执行权
+# 写进验收日志（复审 18:4x 发现 [RUN] 行曾原样打印它）。
+$secretKeys = @('ReadKey', 'BinderKey', 'ConsumerKey', 'BearerToken', 'OntologyAdminBearer', 'RevocationBinderKey', 'RevocationConsumerKey')
         $display = '& ' + $scriptMap[$suite] + ' ' + (Format-JointPlanArgs $callArgs $secretKeys)
         if ($DryRun) {
             Write-Output ('[PLAN] ' + $display)

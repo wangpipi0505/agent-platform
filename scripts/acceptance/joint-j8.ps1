@@ -65,6 +65,9 @@ $ExitBlocked = 3
 $Started = Get-Date
 $UuidPattern = '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
 $ServiceKeyPattern = '^ontosa_[A-Za-z0-9_-]{43}$'
+# 消费凭据是 ontopa_ 前缀（跨空间消费走 /onto/r 正式面），与 binder 的 ontosa_ 不能混用。
+$ConsumerKeyPattern = '^ontopa_[A-Za-z0-9_-]{43}$'
+$SpaceCodePattern = '^[A-Za-z][A-Za-z0-9_-]*$'
 $CodePattern = '^[A-Za-z][A-Za-z0-9_-]{0,79}$'
 $OpPattern = '^[A-Za-z][A-Za-z0-9_-]{0,63}$'
 $Checks = New-Object System.Collections.ArrayList
@@ -263,6 +266,9 @@ if ((Get-Text $IsolationReleaseId) -and ((Get-Text $IsolationReleaseId) -eq (Get
 if (-not (Get-Text $AppCode)) { $Missing += '-AppCode(A空间绑定解析应用)' }
 if (-not (Get-Text $IsolationOpCode)) { $Missing += '-IsolationOpCode' } elseif ($IsolationOpCode -notmatch $OpPattern) { $Missing += '-IsolationOpCode(形状非法)' }
 if (-not $BinderKeyValue) { $Missing += 'binder凭据(-BinderKey 或 ' + $BinderKeyEnv + ')' } elseif ($BinderKeyValue -notmatch $ServiceKeyPattern) { $Missing += 'binder凭据(需 ontosa_ 前缀加 43 位)' }
+# 跨空间消费必需：缺任一条都不能让本段以“其余检查通过”收尾（复审 18:4x P1）。
+if (-not (Get-Text $IsolationSpaceCode)) { $Missing += '-IsolationSpaceCode(B空间code，跨空间消费路由必需)' } elseif ($IsolationSpaceCode -notmatch $SpaceCodePattern) { $Missing += '-IsolationSpaceCode(形状非法)' } elseif ((Get-Text $SpaceCode) -and ($IsolationSpaceCode -ceq $SpaceCode)) { $Missing += '-IsolationSpaceCode(必须不同于-SpaceCode)' }
+if (-not (Get-Text $ConsumerKey)) { $Missing += 'A空间ontopa_消费凭据(-ConsumerKey 或 ' + $ConsumerKeyEnv + ')' } elseif ($ConsumerKey -notmatch $ConsumerKeyPattern) { $Missing += '-ConsumerKey(需 ontopa_ 前缀加 43 位)' }
 if ($IsolationBinderKeyValue -and $IsolationBinderKeyValue -notmatch $ServiceKeyPattern) { $Missing += '-IsolationBinderKey(需 ontosa_ 前缀加 43 位)' }
 if (-not $AdminBearerValue) { $Missing += 'OR 人工登录 token(-OntologyAdminBearer 或 ' + $AdminBearerEnv + ')' }
 if ($OntologyBase -notmatch '^https?://[^/]+$') { $Missing += '-OntologyBase(需 scheme+host:port，不含路径)' }
@@ -448,8 +454,12 @@ if ($Verdict -eq 'PASS') {
             $Reason = 'A 空间消费凭据对 B 空间执行未被拒为 403 NO_PERMISSION（或泄漏 data）：HTTP ' + $consume.Status + ' ' + $consumeCode
         }
     } else {
-        Write-Output '[SKIPPED-BLOCKED] J8-跨空间消费 缺 -IsolationSpaceCode / -ConsumerKey（A 空间 ontopa_ 消费凭据 / isolationFixtures.spaceCode）：未证“跨空间消费被拒”，不伪造结果。'
-        $Details['crossSpaceConsume'] = [ordered]@{ status = 'SKIPPED-BLOCKED'; missing = '-IsolationSpaceCode / -ConsumerKey' }
+        # 前置已强制这两个输入；走到这里说明状态不一致（例如被绕过前置直调），不能静默跳过。
+        Write-Output '[FAIL] J8-跨空间消费 缺 -IsolationSpaceCode / -ConsumerKey：前置应已 BLOCKED，这里只能是配置穿透，判 FAIL 而不是跳过。'
+        Add-Check 'J8-跨空间消费输入齐备' $false '-IsolationSpaceCode / -ConsumerKey 缺失'
+        $Verdict = 'FAIL'
+        $Reason = '跨空间消费缺少 -IsolationSpaceCode / -ConsumerKey（前置未拦截）'
+        $Details['crossSpaceConsume'] = [ordered]@{ status = 'FAIL'; missing = '-IsolationSpaceCode / -ConsumerKey' }
     }
 }
 

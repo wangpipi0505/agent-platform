@@ -99,3 +99,29 @@
 ## 13 仍未闭合（验收输入）
 
 真实 A 空间 `ontopa_` 消费凭据与 B 空间 code/release/op（`isolationFixtures` 已有 `spaceCode`，缺真实消费凭据时该腿记 `SKIPPED-BLOCKED`）、真实双仓 `-Stage All`、J7 吊销链、J9 真实评测数据集与真实模型。
+
+---
+
+# 第六轮复审（2026-11-02 18:4x，基线 AP `5c47a52f`）
+
+第六版 `复审问题.md`：**J8 缺输入时可能误报通过**——`§7` 在缺 `-ConsumerKey`/`-IsolationSpaceCode` 时只打印 `SKIPPED-BLOCKED`、不改变最终状态，其余检查通过后 J8 仍退出 0，统一入口记为 PASS。
+
+## 14 修法
+
+| 位置 | 修法 |
+| --- | --- |
+| `Invoke-JointAcceptance.ps1` 的 `Get-JointStageRequirements('J8')` | 增加两条必需输入：`IsolationSpaceCode`（含形状 `^[A-Za-z][A-Za-z0-9_-]*$`）与 `ConsumerKey`（`^ontopa_[A-Za-z0-9_-]{43}$`）；缺任一 → 该段 `SKIPPED-BLOCKED` 且 **verdict=BLOCKED、退出码 3**，不再进入 `joint-j8.ps1` |
+| `joint-j8.ps1` 前置 `$Missing` | 同样把两条列为必需（含“B 空间 code 必须不同于 A 空间 code”与 `ontopa_` 形状校验），缺任一 → `Complete-Stage 'J8' 'BLOCKED'` |
+| `joint-j8.ps1` §7 兜底分支 | 原本静默 `SKIPPED-BLOCKED` 后继续；改为 `Add-Check 'J8-跨空间消费输入齐备' $false` + `$Verdict='FAIL'`（前置已强制这两个输入，走到这里只能是状态不一致，不能算通过） |
+| `Invoke-JointAcceptance.ps1` 的 `$secretKeys` | 补 `ConsumerKey`：`[RUN]` 行此前会原样打印 `ontopa_…` 消费凭据（本轮实测发现），属凭据泄漏，一并修掉 |
+
+## 15 验证
+
+1. Parser：两个 `.ps1` `check-ps` 2/2 `OK`。
+2. **缺输入（只缺这两条，其余全部给齐的假值）**：`[BLOCKED] J8 未执行：缺外部输入: IsolationSpaceCode(B空间code); A空间ontopa_消费凭据(-ConsumerKey 或 AGENT_SECRET_JOINT_CONSUMER_KEY)`，`joint-summary.json` 中 `verdict=BLOCKED`、`J8 SKIPPED-BLOCKED`，**进程退出码 3**。
+3. **输入齐备（指向未启动的 18182 桩地址）**：不再 BLOCKED，直接进入 `joint-j8.ps1` 并因连接被拒 `FAIL` —— 证明两条输入已真正成为执行前提，而不是“打印一行继续走”。
+4. **脱敏**：`[RUN]` 行显示 `-ConsumerKey <redacted>`。
+
+## 16 仍未闭合（验收输入）
+
+真实 A 空间 `ontopa_` 消费凭据、B 空间 `spaceCode/release/op`、真实双仓 `-Stage All`、J7 吊销链、J9 真实评测数据集与模型。
