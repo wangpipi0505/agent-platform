@@ -42,6 +42,12 @@ public final class TicketService {
     /** EX-44 S3：continuation 是"下一次观测会话的接续凭据"，不是票，也不参与服务鉴权。 */
     public static final String CONTINUATION_TYPE = "agent-portal-gateway-events-continuation+jwt";
     public static final String CONTINUATION_USE = "portal-gateway-events-continuation";
+    /**
+     * EX-45 S4：child 交换签给 engine 的短票。客户端 {@code verifyChildOpen} 按 typ/use 选验证分支，
+     * 并把 aud 钉死成 {@code service:engine}；三个值都是协议常量，不能按调用方动态改写。
+     */
+    public static final String CHILD_OPEN_TYPE = "agent-portal-events-child-open+jwt";
+    public static final String CHILD_OPEN_USE = "portal-events-child-open";
 
     private final KeyRing keys;
     private final IssuerResolver issuer;
@@ -157,6 +163,30 @@ public final class TicketService {
         claims.put("hard_deadline", hardDeadline.getEpochSecond());
         claims.put("immutable", immutable);
         return keys.sign(CONTINUATION_TYPE, claims);
+    }
+
+    /**
+     * EX-45：{@code child_open}——"engine 可以按这份 association 打开子观测"的一次性证明。
+     *
+     * <p>与 continuation 的区别：它是<b>给 engine 验的票</b>（aud=service:engine、use=portal-events-child-open），
+     * 生命周期不得超过客户端 55s 硬窗，且 {@code exp} 必须恰为 association 的 {@code hard_deadline}
+     * （engine 侧 {@code requireAssociationToken} 会做 {@code same(exp, association.hard_deadline)}）。
+     * 三个绑定值（association 摘要、父子 responseId）让它无法被挪到另一次 child 授权上。
+     */
+    public String childOpen(String target, String associationSha256, String parentResponseId,
+                            String childResponseId, Instant hardDeadline, long iat) {
+        Map<String, Object> claims = new LinkedHashMap<>();
+        claims.put("iss", issuer.issuer());
+        claims.put("aud", audience(target));
+        claims.put("token_use", CHILD_OPEN_USE);
+        claims.put("iat", iat);
+        claims.put("nbf", iat);
+        claims.put("exp", hardDeadline.getEpochSecond());
+        claims.put("jti", newId("copen"));
+        claims.put("association_sha256", associationSha256);
+        claims.put("parent_response_id", parentResponseId);
+        claims.put("child_response_id", childResponseId);
+        return keys.sign(CHILD_OPEN_TYPE, claims);
     }
 
     private Map<String, Object> assertion(String clientId, AuthorityRequest request, String decisionId, long iat) {

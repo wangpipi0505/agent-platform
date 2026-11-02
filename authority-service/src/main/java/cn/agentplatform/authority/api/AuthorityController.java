@@ -42,7 +42,7 @@ public final class AuthorityController {
     private static final int JWKS_MAX_AGE_SECONDS = 300;
     private static final Set<String> TICKET_OPERATIONS = Set.of("client");
     private static final Set<String> DECISION_OPERATIONS = Set.of("authorize_workload",
-            "portal_gateway_events_open");
+            "portal_gateway_events_open", "portal_events_child_exchange");
 
     private final KeyRing keys;
     private final ClientRegistry clients;
@@ -120,6 +120,10 @@ public final class AuthorityController {
         // EX-44 S3：和 authorize 一样由 DelegatedAuthority 判定，不走 workload 票那套（S3 不收 service_ticket）。
         if (DelegatedAuthority.EVENTS_OPEN.equals(request.operation())) {
             return delegated.eventsOpen(clientId, request);
+        }
+        // EX-45 S4：child 交换与 S3 同源（同样不收 service_ticket），只允许 gateway 发起。
+        if (DelegatedAuthority.CHILD_EXCHANGE.equals(request.operation())) {
+            return delegated.eventsChildExchange(clientId, request);
         }
         if (!DECISION_OPERATIONS.contains(request.operation())) {
             throw AuthorityException.denied("decisionUri 不接受 operation=" + request.operation());

@@ -1,0 +1,277 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -----------------< cn.agentplatform:authority-service >-----------------
+[INFO] Building authority-service 0.1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- enforcer:3.5.0:enforce (default) @ authority-service ---
+[INFO] Rule 0: org.apache.maven.enforcer.rules.version.RequireJavaVersion passed
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ authority-service ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 0 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.0:compile (default-compile) @ authority-service ---
+[INFO] Recompiling the module because of added or removed source files.
+[INFO] Compiling 19 source files with javac [debug parameters release 21] to target\classes
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/authority-service/src/main/java/cn/agentplatform/authority/decision/DelegatedAuthority.java: G:\207\项目\算法重组工具\代码\agent-platform\authority-service\src\main\java\cn\agentplatform\authority\decision\DelegatedAuthority.java使用或覆盖了已过时的 API。
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/authority-service/src/main/java/cn/agentplatform/authority/decision/DelegatedAuthority.java: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ authority-service ---
+[INFO] Copying 1 resource from src\test\resources to target\test-classes
+[INFO] 
+[INFO] --- compiler:3.14.0:testCompile (default-testCompile) @ authority-service ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 25 source files with javac [debug parameters release 21] to target\test-classes
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/authority-service/src/test/java/cn/agentplatform/authority/SessionEndpointTest.java: G:\207\项目\算法重组工具\代码\agent-platform\authority-service\src\test\java\cn\agentplatform\authority\SessionEndpointTest.java使用了未经检查或不安全的操作。
+[INFO] /G:/207/项目/算法重组工具/代码/agent-platform/authority-service/src/test/java/cn/agentplatform/authority/SessionEndpointTest.java: 有关详细信息, 请使用 -Xlint:unchecked 重新编译。
+[INFO] 
+[INFO] --- surefire:3.5.3:test (default-test) @ authority-service ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running cn.agentplatform.common.authority.GatewayEventsSlice1eContractTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.0)
+
+2026-11-02T13:23:12.061+08:00  INFO 48280 --- [authority-service] [           main] c.a.c.a.GatewayEventsSlice1eContractTest : Starting GatewayEventsSlice1eContractTest using Java 21.0.12 with PID 48280 (started by Administrator in G:\207\项目\算法重组工具\代码\agent-platform\authority-service)
+2026-11-02T13:23:12.061+08:00  INFO 48280 --- [authority-service] [           main] c.a.c.a.GatewayEventsSlice1eContractTest : No active profile set, falling back to 1 default profile: "default"
+2026-11-02T13:23:12.878+08:00  INFO 48280 --- [authority-service] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 0 (http)
+2026-11-02T13:23:12.878+08:00  INFO 48280 --- [authority-service] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-11-02T13:23:12.878+08:00  INFO 48280 --- [authority-service] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.41]
+2026-11-02T13:23:12.920+08:00  INFO 48280 --- [authority-service] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-11-02T13:23:12.920+08:00  INFO 48280 --- [authority-service] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 838 ms
+2026-11-02T13:23:12.961+08:00  INFO 48280 --- [authority-service] [           main] c.a.authority.client.ClientRegistry      : authority.clients enabled=[gateway, engine]
+2026-11-02T13:23:13.011+08:00  INFO 48280 --- [authority-service] [           main] c.a.authority.route.RouteDirectory       : authority.routes rows=219 enabled=201 disabled=18 workload=2
+2026-11-02T13:23:13.578+08:00  INFO 48280 --- [authority-service] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 54211 (http) with context path '/'
+2026-11-02T13:23:13.578+08:00  INFO 48280 --- [authority-service] [           main] c.a.authority.config.IssuerResolver      : authority.issuer configured issuer=https://authority.test bind=127.0.0.1
+2026-11-02T13:23:13.578+08:00  INFO 48280 --- [authority-service] [           main] c.a.c.a.GatewayEventsSlice1eContractTest : Started GatewayEventsSlice1eContractTest in 1.779 seconds (process running for 2.321)
+Mockito is currently self-attaching to enable the inline-mock-maker. This will no longer work in future releases of the JDK. Please add Mockito as an agent to your build as described in Mockito's documentation: https://javadoc.io/doc/org.mockito/mockito-core/latest/org.mockito/org/mockito/Mockito.html#0.3
+OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+WARNING: A Java agent has been loaded dynamically (C:\Users\Administrator\.m2\repository\net\bytebuddy\byte-buddy-agent\1.17.5\byte-buddy-agent-1.17.5.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+2026-11-02T13:23:14.028+08:00  INFO 48280 --- [authority-service] [omcat-handler-0] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-11-02T13:23:14.028+08:00  INFO 48280 --- [authority-service] [omcat-handler-0] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-11-02T13:23:14.028+08:00  INFO 48280 --- [authority-service] [omcat-handler-0] o.s.web.servlet.DispatcherServlet        : Completed initialization in 0 ms
+2026-11-02T13:23:14.078+08:00  INFO 48280 --- [authority-service] [omcat-handler-0] agent.authority.audit                    : delegation.audit endpoint=decision outcome=permit operation=exchange caller=gateway target=engine action=run.observation.metadata.read decision_id=dec-3155fa6f-fea7-45b1-8154-162570a74ad9 grant_ref=grt-0d22f191-1254-4dc4-8447-b25067767d09 grant_expires_at=1793597054
+2026-11-02T13:23:14.078+08:00  INFO 48280 --- [authority-service] [omcat-handler-0] agent.authority.audit                    : authority.audit endpoint=token outcome=permit client_id=gateway operation=exchange target=engine action=run.observation.metadata.read nonce=n-s0-child-deadline
+2026-11-02T13:23:14.128+08:00  INFO 48280 --- [authority-service] [omcat-handler-1] agent.authority.audit                    : delegation.audit endpoint=decision outcome=permit operation=exchange variant=B caller=gateway target=gateway action=gateway.run.events.observe decision_id=dec-4a270e42-f045-4901-b326-f8688fa19002 parent_decision_id=dec-3155fa6f-fea7-45b1-8154-162570a74ad9 query_ticket_jti=tkt-980a2681-930c-4340-a7ae-a035be2681ce grant_ref=grt-905708ea-b4f2-43e9-bc5a-a327051cb394 grant_expires_at=1793597054
+2026-11-02T13:23:14.128+08:00  INFO 48280 --- [authority-service] [omcat-handler-1] agent.authority.audit                    : authority.audit endpoint=token outcome=permit client_id=gateway operation=exchange target=gateway action=gateway.run.events.observe nonce=n-s1-child-deadline
+2026-11-02T13:23:14.145+08:00  INFO 48280 --- [authority-service] [omcat-handler-2] agent.authority.audit                    : delegation.audit endpoint=decision outcome=permit operation=authorize caller=gateway target=gateway action=gateway.run.events.observe decision_id=dec-2ca08cd9-bec8-462a-8087-6ce8ea3b1ddc subject_caller=gateway ticket_jti=tkt-c7659c43-1920-4782-8dbe-f010850b717f grant_ref=grt-905708ea-b4f2-43e9-bc5a-a327051cb394 subject=tenant-a/alice
+2026-11-02T13:23:14.145+08:00  INFO 48280 --- [authority-service] [omcat-handler-2] agent.authority.audit                    : authority.audit endpoint=decision outcome=permit client_id=gateway operation=authorize target=gateway action=gateway.run.events.observe nonce=n-s2-child-deadline
+2026-11-02T13:23:14.178+08:00  INFO 48280 --- [authority-service] [omcat-handler-8] agent.authority.audit                    : delegation.audit endpoint=decision outcome=permit operation=portal_gateway_events_open caller=gateway target=gateway action=gateway.run.events.observe decision_id=dec-0b09d048-8e81-4ea5-8998-5237af6f1294 parent_decision_id=dec-2ca08cd9-bec8-462a-8087-6ce8ea3b1ddc continuation_jti=cont-c287bd8f-71e0-4d92-9e38-f104feef3851 hard_deadline=1793597033 checked_until=1793596999
+2026-11-02T13:23:14.178+08:00  INFO 48280 --- [authority-service] [omcat-handler-8] agent.authority.audit                    : authority.audit endpoint=decision outcome=permit client_id=gateway operation=portal_gateway_events_open target=gateway action=gateway.run.events.observe nonce=n-s3-child-deadline
+2026-11-02T13:23:14.178+08:00  INFO 48280 --- [authority-service] [mcat-handler-11] agent.authority.audit                    : authority.audit endpoint=decision outcome=deny client_id=gateway operation=portal_events_child_exchange target=engine action=proxy.engine.get.RunController.events status=403 code=SYS-AUTH-403 reason=decisionUri 不接受 operation=portal_events_child_exchange
+2026-11-02T13:23:14.213+08:00  INFO 48280 --- [authority-service] [mcat-handler-12] agent.authority.audit                    : delegation.audit endpoint=decision outcome=permit operation=exchange caller=gateway target=engine action=run.observation.metadata.read decision_id=dec-ade50d7b-7b08-439b-b804-bf8087d90d7a grant_ref=grt-f07bb941-dbc6-4aa8-b2ca-dcc02ea680e0 grant_expires_at=1793597054
+2026-11-02T13:23:14.215+08:00  INFO 48280 --- [authority-service] [mcat-handler-12] agent.authority.audit                    : authority.audit endpoint=token outcome=permit client_id=gateway operation=exchange target=engine action=run.observation.metadata.read nonce=n-s0-child-expired
+2026-11-02T13:23:14.220+08:00  INFO 48280 --- [authority-service] [mcat-handler-13] agent.authority.audit                    : delegation.audit endpoint=decision outcome=permit operation=exchange variant=B caller=gateway target=gateway action=gateway.run.events.observe decision_id=dec-dd063467-213d-4381-9721-a16cc5542a27 parent_decision_id=dec-ade50d7b-7b08-439b-b804-bf8087d90d7a query_ticket_jti=tkt-2544a8f5-e157-49d7-b97b-3c89bf653455 grant_ref=grt-2d161366-7a3f-497d-a2ed-2ab599a9458c grant_expires_at=1793597054
+2026-11-02T13:23:14.222+08:00  INFO 48280 --- [authority-service] [mcat-handler-13] agent.authority.audit                    : authority.audit endpoint=token outcome=permit client_id=gateway operation=exchange target=gateway action=gateway.run.events.observe nonce=n-s1-child-expired
+2026-11-02T13:23:14.225+08:00  INFO 48280 --- [authority-service] [mcat-handler-14] agent.authority.audit                    : delegation.audit endpoint=decision outcome=permit operation=authorize caller=gateway target=gateway action=gateway.run.events.observe decision_id=dec-44209da2-bafe-4e94-94ee-5ca3ca44cf44 subject_caller=gateway ticket_jti=tkt-cae15b44-788b-471c-85a3-aed114236dca grant_ref=grt-2d161366-7a3f-497d-a2ed-2ab599a9458c subject=tenant-a/alice
+2026-11-02T13:23:14.225+08:00  INFO 48280 --- [authority-service] [mcat-handler-14] agent.authority.audit                    : authority.audit endpoint=decision outcome=permit client_id=gateway operation=authorize target=gateway action=gateway.run.events.observe nonce=n-s2-child-expired
+2026-11-02T13:23:14.244+08:00  INFO 48280 --- [authority-service] [mcat-handler-20] agent.authority.audit                    : delegation.audit endpoint=decision outcome=permit operation=portal_gateway_events_open caller=gateway target=gateway action=gateway.run.events.observe decision_id=dec-29b17deb-d108-4628-980c-f675df8bb4df parent_decision_id=dec-44209da2-bafe-4e94-94ee-5ca3ca44cf44 continuation_jti=cont-2d710b98-2370-4613-ab70-6e26df9ac44f hard_deadline=1793597034 checked_until=1793596999
+2026-11-02T13:23:14.244+08:00  INFO 48280 --- [authority-service] [mcat-handler-20] agent.authority.audit                    : authority.audit endpoint=decision outcome=permit client_id=gateway operation=portal_gateway_events_open target=gateway action=gateway.run.events.observe nonce=n-s3-child-expired
+2026-11-02T13:23:14.251+08:00  INFO 48280 --- [authority-service] [mcat-handler-23] agent.authority.audit                    : authority.audit endpoint=decision outcome=deny client_id=gateway operation=portal_events_child_exchange target=engine action=proxy.engine.get.RunController.events status=403 code=SYS-AUTH-403 reason=decisionUri 不接受 operation=portal_events_child_exchange
+2026-11-02T13:23:14.261+08:00  INFO 48280 --- [authority-service] [mcat-handler-24] agent.authority.audit                    : delegation.audit endpoint=decision outcome=permit operation=exchange caller=gateway target=engine action=run.observation.metadata.read decision_id=dec-2bb0e779-becf-473c-994b-b9b63a135e29 grant_ref=grt-b5d311bd-6214-48be-a80f-0a420f2afe6c grant_expires_at=1793597054
+2026-11-02T13:23:14.261+08:00  INFO 48280 --- [authority-service] [mcat-handler-24] agent.authority.audit                    : authority.audit endpoint=token outcome=permit client_id=gateway operation=exchange target=engine action=run.observation.metadata.read nonce=n-s0-child-shape
+2026-11-02T13:23:14.261+08:00  INFO 48280 --- [authority-service] [mcat-handler-25] agent.authority.audit                    : delegation.audit endpoint=decision outcome=permit operation=exchange variant=B caller=gateway target=gateway action=gateway.run.events.observe decision_id=dec-e1523efe-e44e-4989-bc9b-e590da32bb64 parent_decision_id=dec-2bb0e779-becf-473c-994b-b9b63a135e29 query_ticket_jti=tkt-b99a0bf5-3279-4d2d-a800-71cc8b613187 grant_ref=grt-aae35b1e-5028-4929-b6dd-0b7d01ccd584 grant_expires_at=1793597054
+2026-11-02T13:23:14.261+08:00  INFO 48280 --- [authority-service] [mcat-handler-25] agent.authority.audit                    : authority.audit endpoint=token outcome=permit client_id=gateway operation=exchange target=gateway action=gateway.run.events.observe nonce=n-s1-child-shape
+2026-11-02T13:23:14.261+08:00  INFO 48280 --- [authority-service] [mcat-handler-26] agent.authority.audit                    : delegation.audit endpoint=decision outcome=permit operation=authorize caller=gateway target=gateway action=gateway.run.events.observe decision_id=dec-58d2e57f-1616-4f93-bc66-c92df9cd378f subject_caller=gateway ticket_jti=tkt-dd0718fc-8600-4903-89de-35a85d27dd1a grant_ref=grt-aae35b1e-5028-4929-b6dd-0b7d01ccd584 subject=tenant-a/alice
+2026-11-02T13:23:14.261+08:00  INFO 48280 --- [authority-service] [mcat-handler-26] agent.authority.audit                    : authority.audit endpoint=decision outcome=permit client_id=gateway operation=authorize target=gateway action=gateway.run.events.observe nonce=n-s2-child-shape
+2026-11-02T13:23:14.279+08:00  INFO 48280 --- [authority-service] [mcat-handler-32] agent.authority.audit                    : delegation.audit endpoint=decision outcome=permit operation=portal_gateway_events_open caller=gateway target=gateway action=gateway.run.events.observe decision_id=dec-955ef012-7384-41e5-a09c-5947c453cb3d parent_decision_id=dec-58d2e57f-1616-4f93-bc66-c92df9cd378f continuation_jti=cont-51f54a47-4a17-4845-b503-3fcdf33af064 hard_deadline=1793597034 checked_until=1793596999
+2026-11-02T13:23:14.279+08:00  INFO 48280 --- [authority-service] [mcat-handler-32] agent.authority.audit                    : authority.audit endpoint=decision outcome=permit client_id=gateway operation=portal_gateway_events_open target=gateway action=gateway.run.events.observe nonce=n-s3-child-shape
+2026-11-02T13:23:14.299+08:00  INFO 48280 --- [authority-service] [mcat-handler-34] agent.authority.audit                    : authority.audit endpoint=decision outcome=deny client_id=gateway operation=portal_events_child_exchange target=engine action=proxy.engine.get.RunController.events status=403 code=SYS-AUTH-403 reason=decisionUri 不接受 operation=portal_events_child_exchange
+2026-11-02T13:23:14.361+08:00  INFO 48280 --- [authority-service] [mcat-handler-36] agent.authority.audit                    : delegation.audit endpoint=decision outcome=permit operation=exchange caller=gateway target=engine action=run.observation.metadata.read decision_id=dec-b8c80d41-e758-4117-9e0f-d21bb56dd40c grant_ref=grt-68830b0d-563a-46eb-a22d-af8a426608f6 grant_expires_at=1793597054
+2026-11-02T13:23:14.361+08:00  INFO 48280 --- [authority-service] [mcat-handler-36] agent.authority.audit                    : authority.audit endpoint=token outcome=permit client_id=gateway operation=exchange target=engine action=run.observation.metadata.read nonce=c8773ea7-bb83-4332-a280-e959328c1329
+2026-11-02T13:23:14.378+08:00  INFO 48280 --- [authority-service] [mcat-handler-39] agent.authority.audit                    : delegation.audit endpoint=decision outcome=permit operation=exchange variant=B caller=gateway target=gateway action=gateway.run.events.observe decision_id=dec-de4c53f3-1208-4c2c-8813-c62ea8a8ae55 parent_decision_id=dec-b8c80d41-e758-4117-9e0f-d21bb56dd40c query_ticket_jti=tkt-77323602-003f-4249-8b50-35a1700e401a grant_ref=grt-ddd82569-43d7-4ca2-bda1-af0744310e0d grant_expires_at=1793597054
+2026-11-02T13:23:14.378+08:00  INFO 48280 --- [authority-service] [mcat-handler-39] agent.authority.audit                    : authority.audit endpoint=token outcome=permit client_id=gateway operation=exchange target=gateway action=gateway.run.events.observe nonce=cac1d0d5-963d-4b05-883c-005b9512db67
+2026-11-02T13:23:14.394+08:00  INFO 48280 --- [authority-service] [mcat-handler-42] agent.authority.audit                    : delegation.audit endpoint=decision outcome=permit operation=authorize caller=gateway target=gateway action=gateway.run.events.observe decision_id=dec-8661ac60-2215-4098-8c3d-6200aad78e28 subject_caller=gateway ticket_jti=tkt-71614a40-6407-45b0-b2c1-65fe1043d4ed grant_ref=grt-ddd82569-43d7-4ca2-bda1-af0744310e0d subject=tenant-a/alice
+2026-11-02T13:23:14.394+08:00  INFO 48280 --- [authority-service] [mcat-handler-42] agent.authority.audit                    : authority.audit endpoint=decision outcome=permit client_id=gateway operation=authorize target=gateway action=gateway.run.events.observe nonce=5d55579a-c38d-462c-92f6-238d90ebfbc0
+2026-11-02T13:23:14.394+08:00  INFO 48280 --- [authority-service] [mcat-handler-44] agent.authority.audit                    : delegation.audit endpoint=decision outcome=permit operation=portal_gateway_events_open caller=gateway target=gateway action=gateway.run.events.observe decision_id=dec-8147a0fa-cf3b-46bd-a10e-1992588eaf8e parent_decision_id=dec-8661ac60-2215-4098-8c3d-6200aad78e28 continuation_jti=cont-14a0179b-7585-44c3-8d89-c784ef3f9034 hard_deadline=1793597049 checked_until=1793596999
+2026-11-02T13:23:14.394+08:00  INFO 48280 --- [authority-service] [mcat-handler-44] agent.authority.audit                    : authority.audit endpoint=decision outcome=permit client_id=gateway operation=portal_gateway_events_open target=gateway action=gateway.run.events.observe nonce=d4f937c8-eaa1-4f13-b714-c33dd291593e
+2026-11-02T13:23:14.417+08:00  INFO 48280 --- [authority-service] [mcat-handler-47] agent.authority.audit                    : authority.audit endpoint=decision outcome=deny client_id=gateway operation=portal_events_child_exchange target=engine action=proxy.engine.get.RunController.events status=403 code=SYS-AUTH-403 reason=decisionUri 不接受 operation=portal_events_child_exchange
+2026-11-02T13:23:14.427+08:00  INFO 48280 --- [authority-service] [mcat-handler-50] agent.authority.audit                    : delegation.audit endpoint=decision outcome=permit operation=exchange caller=gateway target=engine action=run.observation.metadata.read decision_id=dec-003e99b9-f530-4a41-a583-20c2a9b19b8f grant_ref=grt-76dd7b71-88a2-4b2c-af59-c55c38857cc8 grant_expires_at=1793597054
+2026-11-02T13:23:14.428+08:00  INFO 48280 --- [authority-service] [mcat-handler-50] agent.authority.audit                    : authority.audit endpoint=token outcome=permit client_id=gateway operation=exchange target=engine action=run.observation.metadata.read nonce=n-s0-child-caller
+2026-11-02T13:23:14.432+08:00  INFO 48280 --- [authority-service] [mcat-handler-51] agent.authority.audit                    : delegation.audit endpoint=decision outcome=permit operation=exchange variant=B caller=gateway target=gateway action=gateway.run.events.observe decision_id=dec-4e3d774f-2a47-4b09-b023-1683090552ce parent_decision_id=dec-003e99b9-f530-4a41-a583-20c2a9b19b8f query_ticket_jti=tkt-b07b5eda-ce4c-447b-83f9-22cb4588a902 grant_ref=grt-ca4c2507-8f66-431b-a4cc-701884937c66 grant_expires_at=1793597054
+2026-11-02T13:23:14.432+08:00  INFO 48280 --- [authority-service] [mcat-handler-51] agent.authority.audit                    : authority.audit endpoint=token outcome=permit client_id=gateway operation=exchange target=gateway action=gateway.run.events.observe nonce=n-s1-child-caller
+2026-11-02T13:23:14.432+08:00  INFO 48280 --- [authority-service] [mcat-handler-52] agent.authority.audit                    : delegation.audit endpoint=decision outcome=permit operation=authorize caller=gateway target=gateway action=gateway.run.events.observe decision_id=dec-7641d9ef-3a8b-4ede-a093-8c0855e6406d subject_caller=gateway ticket_jti=tkt-0c5d4bda-0d6d-4af1-8340-3d104cb49cec grant_ref=grt-ca4c2507-8f66-431b-a4cc-701884937c66 subject=tenant-a/alice
+2026-11-02T13:23:14.432+08:00  INFO 48280 --- [authority-service] [mcat-handler-52] agent.authority.audit                    : authority.audit endpoint=decision outcome=permit client_id=gateway operation=authorize target=gateway action=gateway.run.events.observe nonce=n-s2-child-caller
+2026-11-02T13:23:14.445+08:00  INFO 48280 --- [authority-service] [mcat-handler-58] agent.authority.audit                    : delegation.audit endpoint=decision outcome=permit operation=portal_gateway_events_open caller=gateway target=gateway action=gateway.run.events.observe decision_id=dec-8d1b8945-dc27-4b9a-9d3b-527f155f499c parent_decision_id=dec-7641d9ef-3a8b-4ede-a093-8c0855e6406d continuation_jti=cont-282d1be1-7bd3-40e6-ac40-43d7fcf05757 hard_deadline=1793597034 checked_until=1793596999
+2026-11-02T13:23:14.445+08:00  INFO 48280 --- [authority-service] [mcat-handler-58] agent.authority.audit                    : authority.audit endpoint=decision outcome=permit client_id=gateway operation=portal_gateway_events_open target=gateway action=gateway.run.events.observe nonce=n-s3-child-caller
+2026-11-02T13:23:14.460+08:00  INFO 48280 --- [authority-service] [mcat-handler-60] agent.authority.audit                    : authority.audit endpoint=decision outcome=deny client_id=engine operation=portal_events_child_exchange target=engine action=proxy.engine.get.RunController.events status=403 code=SYS-AUTH-403 reason=decisionUri 不接受 operation=portal_events_child_exchange
+2026-11-02T13:23:14.478+08:00  INFO 48280 --- [authority-service] [mcat-handler-61] agent.authority.audit                    : delegation.audit endpoint=decision outcome=permit operation=exchange caller=gateway target=engine action=run.observation.metadata.read decision_id=dec-e833ca0d-2aa1-4691-81d2-45dd80a6fd0c grant_ref=grt-fe1f8ad3-d820-4351-a61f-32a220758062 grant_expires_at=1793597054
+2026-11-02T13:23:14.478+08:00  INFO 48280 --- [authority-service] [mcat-handler-61] agent.authority.audit                    : authority.audit endpoint=token outcome=permit client_id=gateway operation=exchange target=engine action=run.observation.metadata.read nonce=n-s0-child-replay
+2026-11-02T13:23:14.481+08:00  INFO 48280 --- [authority-service] [mcat-handler-62] agent.authority.audit                    : delegation.audit endpoint=decision outcome=permit operation=exchange variant=B caller=gateway target=gateway action=gateway.run.events.observe decision_id=dec-809837ff-6a47-4db3-a07e-d1412e2b2614 parent_decision_id=dec-e833ca0d-2aa1-4691-81d2-45dd80a6fd0c query_ticket_jti=tkt-69fb7c8e-2e20-41a3-b7fc-855127a9ebf4 grant_ref=grt-9a4f19ef-31b7-4a5b-b80b-1984f5a08f3e grant_expires_at=1793597054
+2026-11-02T13:23:14.481+08:00  INFO 48280 --- [authority-service] [mcat-handler-62] agent.authority.audit                    : authority.audit endpoint=token outcome=permit client_id=gateway operation=exchange target=gateway action=gateway.run.events.observe nonce=n-s1-child-replay
+2026-11-02T13:23:14.481+08:00  INFO 48280 --- [authority-service] [mcat-handler-63] agent.authority.audit                    : delegation.audit endpoint=decision outcome=permit operation=authorize caller=gateway target=gateway action=gateway.run.events.observe decision_id=dec-9e6d23e7-62d8-40d2-b51f-a8335ac69a35 subject_caller=gateway ticket_jti=tkt-2e909e70-0b90-4547-bf91-35660659351d grant_ref=grt-9a4f19ef-31b7-4a5b-b80b-1984f5a08f3e subject=tenant-a/alice
+2026-11-02T13:23:14.481+08:00  INFO 48280 --- [authority-service] [mcat-handler-63] agent.authority.audit                    : authority.audit endpoint=decision outcome=permit client_id=gateway operation=authorize target=gateway action=gateway.run.events.observe nonce=n-s2-child-replay
+2026-11-02T13:23:14.496+08:00  INFO 48280 --- [authority-service] [mcat-handler-69] agent.authority.audit                    : delegation.audit endpoint=decision outcome=permit operation=portal_gateway_events_open caller=gateway target=gateway action=gateway.run.events.observe decision_id=dec-e153eaf4-8d95-4f7a-aa96-5047c350cccd parent_decision_id=dec-9e6d23e7-62d8-40d2-b51f-a8335ac69a35 continuation_jti=cont-999c0822-d5c0-464b-a10a-a3548a51fa99 hard_deadline=1793597034 checked_until=1793596999
+2026-11-02T13:23:14.496+08:00  INFO 48280 --- [authority-service] [mcat-handler-69] agent.authority.audit                    : authority.audit endpoint=decision outcome=permit client_id=gateway operation=portal_gateway_events_open target=gateway action=gateway.run.events.observe nonce=n-s3-child-replay
+2026-11-02T13:23:14.502+08:00  INFO 48280 --- [authority-service] [mcat-handler-71] agent.authority.audit                    : authority.audit endpoint=decision outcome=deny client_id=gateway operation=portal_events_child_exchange target=engine action=proxy.engine.get.RunController.events status=403 code=SYS-AUTH-403 reason=decisionUri 不接受 operation=portal_events_child_exchange
+2026-11-02T13:23:14.511+08:00  INFO 48280 --- [authority-service] [mcat-handler-72] agent.authority.audit                    : delegation.audit endpoint=decision outcome=permit operation=exchange caller=gateway target=engine action=run.observation.metadata.read decision_id=dec-c80229c0-f1d4-433e-9929-7cf1b078d547 grant_ref=grt-0c50edb9-f468-46b1-bd5e-bc7870bd854e grant_expires_at=1793597054
+2026-11-02T13:23:14.511+08:00  INFO 48280 --- [authority-service] [mcat-handler-72] agent.authority.audit                    : authority.audit endpoint=token outcome=permit client_id=gateway operation=exchange target=engine action=run.observation.metadata.read nonce=n-s0-child-digest
+2026-11-02T13:23:14.511+08:00  INFO 48280 --- [authority-service] [mcat-handler-73] agent.authority.audit                    : delegation.audit endpoint=decision outcome=permit operation=exchange variant=B caller=gateway target=gateway action=gateway.run.events.observe decision_id=dec-d7b325a3-3924-4cd1-bbad-7d68bd8c0fba parent_decision_id=dec-c80229c0-f1d4-433e-9929-7cf1b078d547 query_ticket_jti=tkt-9ec130f6-d11f-4685-bba4-4b09123bb2c3 grant_ref=grt-0c713271-2a52-4a24-a058-375cffaeacf5 grant_expires_at=1793597054
+2026-11-02T13:23:14.511+08:00  INFO 48280 --- [authority-service] [mcat-handler-73] agent.authority.audit                    : authority.audit endpoint=token outcome=permit client_id=gateway operation=exchange target=gateway action=gateway.run.events.observe nonce=n-s1-child-digest
+2026-11-02T13:23:14.511+08:00  INFO 48280 --- [authority-service] [mcat-handler-74] agent.authority.audit                    : delegation.audit endpoint=decision outcome=permit operation=authorize caller=gateway target=gateway action=gateway.run.events.observe decision_id=dec-e55b616f-8d98-440d-a311-b0a91edc4e1c subject_caller=gateway ticket_jti=tkt-5ee01cd6-128f-4328-acea-36adfe2c79d5 grant_ref=grt-0c713271-2a52-4a24-a058-375cffaeacf5 subject=tenant-a/alice
+2026-11-02T13:23:14.511+08:00  INFO 48280 --- [authority-service] [mcat-handler-74] agent.authority.audit                    : authority.audit endpoint=decision outcome=permit client_id=gateway operation=authorize target=gateway action=gateway.run.events.observe nonce=n-s2-child-digest
+2026-11-02T13:23:14.533+08:00  INFO 48280 --- [authority-service] [mcat-handler-80] agent.authority.audit                    : delegation.audit endpoint=decision outcome=permit operation=portal_gateway_events_open caller=gateway target=gateway action=gateway.run.events.observe decision_id=dec-86c9e884-594e-4f30-ac96-e81b8d51c1c8 parent_decision_id=dec-e55b616f-8d98-440d-a311-b0a91edc4e1c continuation_jti=cont-b14abffe-ab73-495c-b4e3-9313c099c81f hard_deadline=1793597034 checked_until=1793596999
+2026-11-02T13:23:14.534+08:00  INFO 48280 --- [authority-service] [mcat-handler-80] agent.authority.audit                    : authority.audit endpoint=decision outcome=permit client_id=gateway operation=portal_gateway_events_open target=gateway action=gateway.run.events.observe nonce=n-s3-child-digest
+2026-11-02T13:23:14.538+08:00  INFO 48280 --- [authority-service] [mcat-handler-82] agent.authority.audit                    : authority.audit endpoint=decision outcome=deny client_id=gateway operation=portal_events_child_exchange target=engine action=proxy.engine.get.RunController.events status=403 code=SYS-AUTH-403 reason=decisionUri 不接受 operation=portal_events_child_exchange
+2026-11-02T13:23:14.545+08:00  INFO 48280 --- [authority-service] [mcat-handler-84] agent.authority.audit                    : delegation.audit endpoint=decision outcome=permit operation=exchange caller=gateway target=engine action=run.observation.metadata.read decision_id=dec-bbd9592e-809f-45d7-8e71-dcee8b26f2cf grant_ref=grt-2c3045ad-c659-45ad-902d-aaca5fc47e1c grant_expires_at=1793597054
+2026-11-02T13:23:14.545+08:00  INFO 48280 --- [authority-service] [mcat-handler-84] agent.authority.audit                    : authority.audit endpoint=token outcome=permit client_id=gateway operation=exchange target=engine action=run.observation.metadata.read nonce=n-s0-child-immutable
+2026-11-02T13:23:14.545+08:00  INFO 48280 --- [authority-service] [mcat-handler-85] agent.authority.audit                    : delegation.audit endpoint=decision outcome=permit operation=exchange variant=B caller=gateway target=gateway action=gateway.run.events.observe decision_id=dec-46340015-0157-4ddb-b9f8-5bc019195c4e parent_decision_id=dec-bbd9592e-809f-45d7-8e71-dcee8b26f2cf query_ticket_jti=tkt-639c7975-6fea-484f-b47f-0c4784d7843d grant_ref=grt-f18c3e4a-40a2-4714-8f34-c867b8c8665f grant_expires_at=1793597054
+2026-11-02T13:23:14.545+08:00  INFO 48280 --- [authority-service] [mcat-handler-85] agent.authority.audit                    : authority.audit endpoint=token outcome=permit client_id=gateway operation=exchange target=gateway action=gateway.run.events.observe nonce=n-s1-child-immutable
+2026-11-02T13:23:14.554+08:00  INFO 48280 --- [authority-service] [mcat-handler-86] agent.authority.audit                    : delegation.audit endpoint=decision outcome=permit operation=authorize caller=gateway target=gateway action=gateway.run.events.observe decision_id=dec-6fdabda2-d95c-4466-8bb8-f6d955e90d7c subject_caller=gateway ticket_jti=tkt-1f5274ec-dde4-4652-9999-9b0419583861 grant_ref=grt-f18c3e4a-40a2-4714-8f34-c867b8c8665f subject=tenant-a/alice
+2026-11-02T13:23:14.554+08:00  INFO 48280 --- [authority-service] [mcat-handler-86] agent.authority.audit                    : authority.audit endpoint=decision outcome=permit client_id=gateway operation=authorize target=gateway action=gateway.run.events.observe nonce=n-s2-child-immutable
+2026-11-02T13:23:14.561+08:00  INFO 48280 --- [authority-service] [mcat-handler-92] agent.authority.audit                    : delegation.audit endpoint=decision outcome=permit operation=portal_gateway_events_open caller=gateway target=gateway action=gateway.run.events.observe decision_id=dec-2e376d71-56ce-4b6e-9e69-62db3fa3d162 parent_decision_id=dec-6fdabda2-d95c-4466-8bb8-f6d955e90d7c continuation_jti=cont-2dc0a518-976a-41c4-9cb2-38dc33d4e390 hard_deadline=1793597034 checked_until=1793596999
+2026-11-02T13:23:14.561+08:00  INFO 48280 --- [authority-service] [mcat-handler-92] agent.authority.audit                    : authority.audit endpoint=decision outcome=permit client_id=gateway operation=portal_gateway_events_open target=gateway action=gateway.run.events.observe nonce=n-s3-child-immutable
+2026-11-02T13:23:14.561+08:00  INFO 48280 --- [authority-service] [mcat-handler-94] agent.authority.audit                    : authority.audit endpoint=decision outcome=deny client_id=gateway operation=portal_events_child_exchange target=engine action=proxy.engine.get.RunController.events status=403 code=SYS-AUTH-403 reason=decisionUri 不接受 operation=portal_events_child_exchange
+[ERROR] Tests run: 8, Failures: 6, Errors: 2, Skipped: 0, Time elapsed: 2.965 s <<< FAILURE! -- in cn.agentplatform.common.authority.GatewayEventsSlice1eContractTest
+[ERROR] cn.agentplatform.common.authority.GatewayEventsSlice1eContractTest.aChildDeadlineBeyondTheParentWindowIsRejected -- Time elapsed: 0.600 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+
+Expecting value to be true but was false
+	at cn.agentplatform.common.authority.GatewayEventsSlice1eContractTest.aChildDeadlineBeyondTheParentWindowIsRejected(GatewayEventsSlice1eContractTest.java:237)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.common.authority.GatewayEventsSlice1eContractTest.anExpiredParentContinuationIsRejected -- Time elapsed: 0.056 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+
+Expecting value to be true but was false
+	at cn.agentplatform.common.authority.GatewayEventsSlice1eContractTest.anExpiredParentContinuationIsRejected(GatewayEventsSlice1eContractTest.java:207)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.common.authority.GatewayEventsSlice1eContractTest.theChildExchangeEchoesTheAssociationChildOpenAndAChildDecision -- Time elapsed: 0.048 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+[S4 body: {"code":"SYS-AUTH-403","message":"当前授权不允许此操作"}] 
+expected: 200 OK
+ but was: 403 FORBIDDEN
+	at cn.agentplatform.common.authority.GatewayEventsSlice1eContractTest.theChildExchangeEchoesTheAssociationChildOpenAndAChildDecision(GatewayEventsSlice1eContractTest.java:100)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.common.authority.GatewayEventsSlice1eContractTest.theRealGatewayClientExchangesTheChildAndGetsALiveProof -- Time elapsed: 0.122 s <<< ERROR!
+cn.agentplatform.common.PlatformException: 可信授权服务拒绝了该调用（403）
+	at cn.agentplatform.common.authority.BoundedIamHttp.rejected(BoundedIamHttp.java:79)
+	at cn.agentplatform.common.authority.BoundedIamHttp.lambda$request$1(BoundedIamHttp.java:57)
+	at java.net.http/jdk.internal.net.http.Http1Exchange.createResponseSubscriber(Http1Exchange.java:460)
+	at java.net.http/jdk.internal.net.http.Http1Exchange.readBodyAsync(Http1Exchange.java:451)
+	at java.net.http/jdk.internal.net.http.Exchange.readBodyAsync(Exchange.java:225)
+	at java.net.http/jdk.internal.net.http.MultiExchange.lambda$responseAsync0$4(MultiExchange.java:367)
+	at java.base/java.util.concurrent.CompletableFuture$UniCompose.tryFire(CompletableFuture.java:1150)
+	at java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:510)
+	at java.base/java.util.concurrent.CompletableFuture.postFire(CompletableFuture.java:614)
+	at java.base/java.util.concurrent.CompletableFuture$UniApply.tryFire(CompletableFuture.java:653)
+	at java.base/java.util.concurrent.CompletableFuture$Completion.run(CompletableFuture.java:482)
+	at java.net.http/jdk.internal.net.http.HttpClientImpl$DelegatingExecutor.execute(HttpClientImpl.java:177)
+	at java.base/java.util.concurrent.CompletableFuture$UniCompletion.claim(CompletableFuture.java:572)
+	at java.base/java.util.concurrent.CompletableFuture$UniApply.tryFire(CompletableFuture.java:642)
+	at java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:510)
+	at java.base/java.util.concurrent.CompletableFuture.complete(CompletableFuture.java:2179)
+	at java.net.http/jdk.internal.net.http.Http1Response$HeadersReader.handle(Http1Response.java:610)
+	at java.net.http/jdk.internal.net.http.Http1Response$HeadersReader.handle(Http1Response.java:536)
+	at java.net.http/jdk.internal.net.http.Http1Response$Receiver.accept(Http1Response.java:527)
+	at java.net.http/jdk.internal.net.http.Http1Response$HeadersReader.tryAsyncReceive(Http1Response.java:583)
+	at java.net.http/jdk.internal.net.http.Http1AsyncReceiver.flush(Http1AsyncReceiver.java:233)
+	at java.net.http/jdk.internal.net.http.common.SequentialScheduler$LockingRestartableTask.run(SequentialScheduler.java:182)
+	at java.net.http/jdk.internal.net.http.common.SequentialScheduler$CompleteRestartableTask.run(SequentialScheduler.java:149)
+	at java.net.http/jdk.internal.net.http.common.SequentialScheduler$SchedulableTask.run(SequentialScheduler.java:207)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+
+[ERROR] cn.agentplatform.common.authority.GatewayEventsSlice1eContractTest.aNonGatewayCallerIsRejected -- Time elapsed: 0.039 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+
+Expecting value to be true but was false
+	at cn.agentplatform.common.authority.GatewayEventsSlice1eContractTest.aNonGatewayCallerIsRejected(GatewayEventsSlice1eContractTest.java:250)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.common.authority.GatewayEventsSlice1eContractTest.replayingTheSameParentIsForbiddenNotConflict -- Time elapsed: 0.041 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+
+expected: 200 OK
+ but was: 403 FORBIDDEN
+	at cn.agentplatform.common.authority.GatewayEventsSlice1eContractTest.replayingTheSameParentIsForbiddenNotConflict(GatewayEventsSlice1eContractTest.java:185)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.common.authority.GatewayEventsSlice1eContractTest.theChildAssociationDigestIsTheCanonicalDigestOfTheEchoedAssociation -- Time elapsed: 0.036 s <<< ERROR!
+java.lang.NullPointerException: Cannot invoke "String.split(String)" because "token" is null
+	at cn.agentplatform.authority.TestJwt.verifiedClaims(TestJwt.java:59)
+	at cn.agentplatform.common.authority.GatewayEventsSlice1cSupport.verified(GatewayEventsSlice1cSupport.java:101)
+	at cn.agentplatform.common.authority.GatewayEventsSlice1dSupport.claimsOf(GatewayEventsSlice1dSupport.java:153)
+	at cn.agentplatform.common.authority.GatewayEventsSlice1eContractTest.theChildAssociationDigestIsTheCanonicalDigestOfTheEchoedAssociation(GatewayEventsSlice1eContractTest.java:262)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] cn.agentplatform.common.authority.GatewayEventsSlice1eContractTest.aTamperedParentImmutableIsRejectedAsImmutableMismatch -- Time elapsed: 0.023 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+
+Expecting value to be true but was false
+	at cn.agentplatform.common.authority.GatewayEventsSlice1eContractTest.aTamperedParentImmutableIsRejectedAsImmutableMismatch(GatewayEventsSlice1eContractTest.java:222)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Failures: 
+[ERROR]   GatewayEventsSlice1eContractTest.aChildDeadlineBeyondTheParentWindowIsRejected:237 
+Expecting value to be true but was false
+[ERROR]   GatewayEventsSlice1eContractTest.aNonGatewayCallerIsRejected:250 
+Expecting value to be true but was false
+[ERROR]   GatewayEventsSlice1eContractTest.aTamperedParentImmutableIsRejectedAsImmutableMismatch:222 
+Expecting value to be true but was false
+[ERROR]   GatewayEventsSlice1eContractTest.anExpiredParentContinuationIsRejected:207 
+Expecting value to be true but was false
+[ERROR]   GatewayEventsSlice1eContractTest.replayingTheSameParentIsForbiddenNotConflict:185 
+expected: 200 OK
+ but was: 403 FORBIDDEN
+[ERROR]   GatewayEventsSlice1eContractTest.theChildExchangeEchoesTheAssociationChildOpenAndAChildDecision:100 [S4 body: {"code":"SYS-AUTH-403","message":"当前授权不允许此操作"}] 
+expected: 200 OK
+ but was: 403 FORBIDDEN
+[ERROR] Errors: 
+[ERROR]   GatewayEventsSlice1eContractTest.theChildAssociationDigestIsTheCanonicalDigestOfTheEchoedAssociation:262->GatewayEventsSlice1dSupport.claimsOf:153->GatewayEventsSlice1cSupport.verified:101 ? NullPointer Cannot invoke "String.split(String)" because "token" is null
+[ERROR]   GatewayEventsSlice1eContractTest.theRealGatewayClientExchangesTheChildAndGetsALiveProof ? Platform 可信授权服务拒绝了该调用（403）
+[INFO] 
+[ERROR] Tests run: 8, Failures: 6, Errors: 2, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  7.301 s
+[INFO] Finished at: 2026-11-02T13:23:15+08:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.3:test (default-test) on project authority-service: There are test failures.
+[ERROR] 
+[ERROR] See G:\207\项目\算法重组工具\代码\agent-platform\authority-service\target\surefire-reports for the individual test results.
+[ERROR] See dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

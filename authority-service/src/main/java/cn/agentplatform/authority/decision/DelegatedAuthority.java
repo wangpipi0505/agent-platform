@@ -79,6 +79,15 @@ public final class DelegatedAuthority {
     public static final String GATEWAY_EVENTS_PROFILE = "portal-gateway-events-response.v1";
     /** S0 观测窗的硬上限 55s：60s 票/授权预算里留 5s 时钟余量，客户端也按同一数值夹取。 */
     private static final long EVENTS_OPEN_MAX_SECONDS = 55L;
+    /**
+     * EX-45 S4：把 S3 开出的 gateway 观测窗换成 engine 侧的一段读授权。
+     *
+     * <p>输入是父 continuation + 父 immutable + 源令牌；产物是 G 票（caller=gateway、target=engine）、
+     * association（客户端逐字段验的绑定对象）与 child_open（engine 验的短票）。
+     */
+    public static final String CHILD_EXCHANGE = "portal_events_child_exchange";
+    /** 客户端 {@code verifyAssociation} 逐字比对的 schema；改名等于换协议。 */
+    private static final String CHILD_ASSOCIATION_SCHEMA = "portal-events-child-association.v1";
 
     private final KeyRing keys;
     private final TicketService tickets;
@@ -516,6 +525,273 @@ public final class DelegatedAuthority {
     }
 
     /**
+     * EX-45 S4：{@code operation=portal_events_child_exchange}。
+     *
+     * <p>把 S3 开出的 gateway 观测窗换成 engine 侧的一段读授权：gateway 拿到窗口后必须立刻换，
+     * 否则 engine 侧没有可用的 child 授权，SSE 仍然不出流。判定顺序固定：
+     * <ol>
+     *   <li>只允许 gateway 发起（child 票的 caller 恒为 gateway，engine 不能自己换）；</li>
+     *   <li>call 必须是 engine 的 events 选择器（run-snapshot）——与 S3 的 gateway 侧目的校验对称；</li>
+     *   <li>父 continuation 必须本服务签发（typ/use/aud/iss），且 {@code exp == immutable.hard_deadline}；</li>
+     *   <li>按 {@code continuation_jti} 反查 D4（purpose=EVENTS）；<b>重放判定排在过期之前</b>，
+     *       否则同一张票攻击两次会因为 D4 被 sweep 掉而得到两种 reason；</li>
+     *   <li>父 immutable 必须与 S3 签发的节点逐字节相同：先比请求回显，再用 D4/D3/D1 整棵重建后比较
+     *       （{@code gateway_query} 只有 D1 才有权威值，不重建就等于信任请求方）；</li>
+     *   <li>child 窗口只能等于父窗口，且落在 55s 硬窗内——请求里没有 child deadline，服务端也不接受
+     *       自签 continuation 把窗口放大；</li>
+     *   <li>源令牌必须是同一张 portal 令牌（{@code source_token_sha256} 与 origin 都对得上）；</li>
+     *   <li>最后 CAS 消费 D4（一个父窗口只换一次 child），再签 G 票、child_open、association 并落 D5。</li>
+     * </ol>
+     *
+     * <p>产物分工（客户端逐字段验，不能互换）：{@code portal_events_child={association,child_open}}
+     * 必须签进 <b>G 票</b>（客户端在 {@code verifiedTicket} 返回的票面 claims 上找它），
+     * {@code child_association_sha256} 必须签进 <b>决策断言</b>（客户端在信封 claims 上找它）。
+     */
+    public Map<String, Object> eventsChildExchange(String clientId, AuthorityRequest request) {
+        requireEnabled();
+        try {
+            if (!PORTAL_CALLER.equals(clientId)) {
+                throw AuthorityException.denied("EVENTS_CHILD_CALLER");
+            }
+            requireChildPurpose(request.call());
+            JsonNode parentClaims = verifyChildContinuation(request.parentContinuation());
+            long iat = now();
+            DecisionStore.Decision parent = decisions
+                    .findByContinuationJti(text(parentClaims, "continuation_jti")).orElse(null);
+            if (parent == null || parent.purpose() != DecisionStore.Purpose.EVENTS) {
+                throw AuthorityException.denied("EVENTS_CHILD_CONTINUATION");
+            }
+            if (parent.consumedAt() != null) {
+                throw AuthorityException.denied("EVENTS_CHILD_REPLAY");
+            }
+            if (!parent.expiresAt().isAfter(Instant.ofEpochSecond(iat))) {
+                throw AuthorityException.expired("EVENTS_CHILD_CONTINUATION_EXPIRED");
+            }
+            JsonNode signedImmutable = parentClaims.get("immutable");
+            if (signedImmutable == null || !signedImmutable.isObject()) {
+                throw AuthorityException.denied("EVENTS_CHILD_IMMUTABLE");
+            }
+            long hardDeadline = nodeEpoch(signedImmutable, "hard_deadline", "EVENTS_CHILD_IMMUTABLE");
+            // S3 是同一行代码签的 continuation.exp 与 immutable.hard_deadline；不等说明这张票被改过。
+            if (nodeEpoch(parentClaims, "exp", "EVENTS_CHILD_CONTINUATION") != hardDeadline) {
+                throw AuthorityException.denied("EVENTS_CHILD_CONTINUATION");
+            }
+            if (hardDeadline <= iat) {
+                throw AuthorityException.expired("EVENTS_CHILD_DEADLINE_EXPIRED");
+            }
+            if (hardDeadline > iat + EVENTS_OPEN_MAX_SECONDS) {
+                throw AuthorityException.denied("EVENTS_CHILD_DEADLINE");
+            }
+            if (parent.hardDeadline() == null || hardDeadline != parent.hardDeadline().getEpochSecond()) {
+                throw AuthorityException.denied("EVENTS_CHILD_DEADLINE");
+            }
+            if (!signedImmutable.equals(request.parentImmutable())) {
+                throw AuthorityException.denied("EVENTS_CHILD_IMMUTABLE");
+            }
+            // D3 = 父决策消费的 retained；D1 = 它的 opening。immutable 只能由这两条 + binding 唯一重建。
+            DecisionStore.Decision retained = parent.parentAdmissionId() == null
+                    ? null : decisions.find(parent.parentAdmissionId()).orElse(null);
+            DecisionStore.Decision admission = retained == null || retained.parentAdmissionId() == null
+                    ? null : decisions.find(retained.parentAdmissionId()).orElse(null);
+            if (retained == null || retained.purpose() != DecisionStore.Purpose.RETAINED
+                    || admission == null || admission.purpose() != DecisionStore.Purpose.OPENING) {
+                throw AuthorityException.denied("EVENTS_CHILD_IMMUTABLE");
+            }
+            PortalEventsBinding parentBinding = bindingOf(signedImmutable.get("binding"));
+            AuthorityRequest.Binding expectedBinding = new AuthorityRequest.Binding(parentBinding.responseId(),
+                    parentBinding.resource(), parentBinding.effectiveCursor(),
+                    parentBinding.observationRequestSha256(), parentBinding.hardDeadline());
+            if (!expectedEventsImmutable(retained, admission, expectedBinding).equals(signedImmutable)) {
+                throw AuthorityException.denied("EVENTS_CHILD_IMMUTABLE");
+            }
+            if (!parentBinding.responseId().equals(parent.bindingResponseId())) {
+                throw AuthorityException.denied("EVENTS_CHILD_IMMUTABLE");
+            }
+            // call 在这一跳换成了 engine 的 events 选择器（target/action 必然与父不同，目的已由
+            // requireChildPurpose 钉住），但授权对象必须还是同一个 run-snapshot：资源三元组逐项相等。
+            if (!parent.resource().equals(resourceClaims(request.call().resource()))
+                    || !parent.resource().equals(resourceClaims(parentBinding.resource()))) {
+                throw AuthorityException.denied("EVENTS_CHILD_BINDING");
+            }
+            String sourceToken = request.subjectToken();
+            if (sourceToken == null) {
+                throw AuthorityException.denied("EVENTS_CHILD_SOURCE");
+            }
+            JsonNode sourceClaims = verifyPortalUser(sourceToken);
+            // 权威值在 D1：S2 走的是 service_ticket，D3/D4 的 source_token_sha256 是空的；
+            // D1 记录的摘要与 immutable.gateway_query.source_token_sha256 同源，客户端也用它做前置校验。
+            if (admission.sourceTokenSha256() == null
+                    || !Digest.sha256(Json.canonical(sourceToken)).equals(admission.sourceTokenSha256())) {
+                throw AuthorityException.denied("EVENTS_CHILD_SOURCE");
+            }
+            String origin = text(sourceClaims, "origin_authentication_id");
+            if (origin == null || parent.originAuthenticationId() == null
+                    || !origin.equals(parent.originAuthenticationId())) {
+                throw AuthorityException.denied("EVENTS_CHILD_SOURCE");
+            }
+            // 单键 CAS：一个父窗口只换一次 child。输家不签票、不落 D5（与 S3 的 consume 同一语义）。
+            if (decisions.consume(parent.id(), clientId).isEmpty()) {
+                throw AuthorityException.denied("EVENTS_CHILD_REPLAY");
+            }
+            String childResponseId = newId("resp");
+            String decisionId = newId("dec");
+            String ticketJti = newId("tkt");
+            Instant childExpiry = Instant.ofEpochSecond(hardDeadline);
+            String grantRef = newId("grt");
+            Instant issued = Instant.ofEpochSecond(iat);
+            long grantExpiry = Math.min(hardDeadline, Math.min(epochSeconds(parent.operation(), "expires_at"),
+                    parent.grantExpiresAt().getEpochSecond()));
+            String ceilingSha256 = Digest.sha256(Json.canonical(ceilingMaterial(parent)));
+            Map<String, Object> operation = operation(newId("op"), issued, Instant.ofEpochSecond(grantExpiry),
+                    grantRef, textClaim(parent.actor(), "tenant_id"), textClaim(parent.actor(), "sub"),
+                    request.call(), ceilingSha256);
+            PortalEventsBinding childBinding = new PortalEventsBinding(childResponseId, parentBinding.resource(),
+                    parentBinding.effectiveCursor(), parentBinding.observationRequestSha256(), childExpiry);
+            // D5 的 expiresAt 用 childExpiry（而不是 5s 断言窗）：EX-46 的 child_open 还要按 id 反查它。
+            // D5 记的是 child 这一跳自己的授权：target=engine、action=events 选择器（不是父的 gateway 调用）。
+            DecisionStore.Decision child = new DecisionStore.Decision(decisionId, clientId,
+                    request.call().target(), request.call().action(), parent.resource(), parent.actor(),
+                    parent.ceiling(), operation, grantRef,
+                    Instant.ofEpochSecond(grantExpiry), parent.subjectCaller(), ticketJti,
+                    parent.originAuthenticationId(), parent.authorizationVersion(), childExpiry,
+                    DecisionStore.Purpose.CHILD, admission.sourceTokenSha256(), parent.admissionNonce(),
+                    parent.admissionRequestSha256(), null, null, parent.id(), childResponseId, null, childExpiry);
+            Map<String, Object> association = new LinkedHashMap<>();
+            association.put("schema", CHILD_ASSOCIATION_SCHEMA);
+            association.put("parent", request.parentImmutable());
+            Map<String, Object> engine = new LinkedHashMap<>();
+            engine.put("jti", child.ticketJti());
+            engine.put("grant_ref", child.grantRef());
+            engine.put("grant_expires_at", child.grantExpiresAt().getEpochSecond());
+            engine.put("authorization_version", child.authorizationVersion());
+            engine.put("operation", child.operation());
+            engine.put("initial_ceiling", child.ceiling());
+            engine.put("origin_authentication_id", child.originAuthenticationId());
+            engine.put("action", child.action());
+            engine.put("target", child.target());
+            engine.put("caller", clientId);
+            engine.put("resource", child.resource());
+            association.put("engine", engine);
+            association.put("source_token_sha256", child.sourceTokenSha256());
+            association.put("child_binding", Json.tree(childBinding));
+            association.put("hard_deadline", hardDeadline);
+            JsonNode associationNode = Json.read(Json.write(association));
+            // 摘要口径必须与客户端 AuthorityProtocol.digest 同源：sha256(canonical(逐层排序后的节点))。
+            // association 里没有 Set，Json.canonical 与客户端 sorted() 结果逐字节一致（见 evidence 的 F 段）。
+            String associationSha256 = Digest.sha256(Json.canonical(associationNode));
+            String childOpen = tickets.childOpen(child.target(), associationSha256,
+                    parentBinding.responseId(), childResponseId, childExpiry, iat);
+            Map<String, Object> marker = new LinkedHashMap<>();
+            marker.put("association", associationNode);
+            marker.put("child_open", childOpen);
+            IssuedTicket issuedTicket = ticket(child, clientId, request.call(), iat, ticketJti,
+                    Map.of("portal_events_child", marker));
+            decisions.put(child);
+            Map<String, Object> claims = new LinkedHashMap<>(
+                    tickets.envelope(clientId, request.call(), request.nonce(), request.raw(), child.id(), iat));
+            claims.put("authority_mode", MODE);
+            claims.put("decision_id", child.id());
+            claims.putAll(child.actor());
+            claims.put("subject_caller", child.subjectCaller());
+            claims.put("initial_ceiling", child.ceiling());
+            claims.put("grant_ref", child.grantRef());
+            claims.put("grant_expires_at", child.grantExpiresAt().getEpochSecond());
+            claims.put("authorization_version", child.authorizationVersion());
+            claims.put("operation", child.operation());
+            claims.put("ticket", issuedTicket.value());
+            claims.put("ticket_jti", issuedTicket.jti());
+            if (child.originAuthenticationId() != null) {
+                claims.put("origin_authentication_id", child.originAuthenticationId());
+            }
+            claims.put("child_association_sha256", associationSha256);
+            long checkedUntil = Math.min(iat + properties.assertionSeconds(), hardDeadline);
+            claims.put("exp", checkedUntil);
+            audit.info("delegation.audit endpoint=decision outcome=permit operation={} caller={} target={} action={}"
+                            + " parent_decision_id={} decision_id={} child_response_id={} hard_deadline={}",
+                    CHILD_EXCHANGE, clientId, child.target(), child.action(), parent.id(), child.id(),
+                    childResponseId, hardDeadline);
+            return Map.of("assertion", keys.sign(TicketService.ASSERTION_TYPE, claims));
+        } catch (AuthorityException denied) {
+            deny("decision", CHILD_EXCHANGE, clientId, request, denied);
+            throw denied;
+        }
+    }
+
+    /**
+     * 验父 continuation：除 typ/use/aud/iss 外，还要求 {@code exp == immutable.hard_deadline}。
+     *
+     * <p>过期不在这一层区分：{@code KeyRing.verify} 对 {@code exp<=now} 一律 403，与 {@code query_ticket}
+     * 的取舍一致——continuation 不是可续期的"授权过期"状态，客户端也不应该重试。
+     */
+    private JsonNode verifyChildContinuation(String continuation) {
+        if (continuation == null) {
+            throw AuthorityException.denied("EVENTS_CHILD_CONTINUATION");
+        }
+        JsonNode claims;
+        try {
+            claims = keys.verify(continuation, TicketService.CONTINUATION_TYPE);
+        } catch (AuthorityException invalid) {
+            throw AuthorityException.denied("EVENTS_CHILD_CONTINUATION");
+        }
+        JsonNode immutable = claims.get("immutable");
+        if (!TicketService.CONTINUATION_USE.equals(text(claims, "token_use"))
+                || !issuer.issuer().equals(text(claims, "iss"))
+                || !tickets.audience(PORTAL_CALLER).equals(audienceOf(claims))
+                || text(claims, "jti") == null
+                || text(claims, "continuation_jti") == null
+                || immutable == null || !immutable.isObject()) {
+            throw AuthorityException.denied("EVENTS_CHILD_CONTINUATION");
+        }
+        return claims;
+    }
+
+    /**
+     * S4 的目的校验，与客户端 {@code RunObservationSelectors.requirePortalEventsResponseCall}
+     * 的 engine 分支等价：caller/mode 已由入口与票面固定，这里只钉 target/action/资源种类。
+     */
+    private static void requireChildPurpose(ServiceCall call) {
+        if (!"engine".equals(call.target())
+                || !RunObservationSelectors.EVENTS_ACTION.equals(call.action())
+                || !"run-snapshot".equals(call.resource().kind())
+                || !RUN_ID.matcher(call.resource().id()).matches()
+                || !SHA256.matcher(call.resource().versionDigest()).matches()) {
+            throw AuthorityException.denied("EVENTS_CHILD_PURPOSE");
+        }
+    }
+
+    /** 从 S3 的 immutable 里解析 binding（与客户端 {@code Json.read(..., PortalEventsBinding.class)} 同形）。 */
+    private static PortalEventsBinding bindingOf(JsonNode node) {
+        JsonNode resource = node == null ? null : node.get("resource");
+        JsonNode cursor = node == null ? null : node.get("effectiveCursor");
+        String responseId = text(node, "responseId");
+        String kind = text(resource, "kind");
+        String id = text(resource, "id");
+        String versionDigest = text(resource, "versionDigest");
+        String observationSha = text(node, "observationRequestSha256");
+        String deadline = text(node, "hardDeadline");
+        if (responseId == null || kind == null || id == null || versionDigest == null
+                || observationSha == null || deadline == null
+                || cursor == null || !cursor.isIntegralNumber()) {
+            throw AuthorityException.denied("EVENTS_CHILD_IMMUTABLE");
+        }
+        try {
+            return new PortalEventsBinding(responseId, new ResourceBinding(kind, id, versionDigest),
+                    cursor.longValue(), observationSha, Instant.parse(deadline));
+        } catch (RuntimeException invalid) {
+            throw AuthorityException.denied("EVENTS_CHILD_IMMUTABLE");
+        }
+    }
+
+    /** epoch 秒字段只接受整数节点：IntNode/LongNode 在 JSON 上等价，DoubleNode 一律拒绝。 */
+    private static long nodeEpoch(JsonNode node, String field, String denial) {
+        JsonNode value = node == null ? null : node.get(field);
+        if (value == null || !value.isIntegralNumber()) {
+            throw AuthorityException.denied(denial);
+        }
+        return value.longValue();
+    }
+
+    /**
      * 逐字段重建客户端送来的 immutable（25 字段），用于整节点比较。
      *
      * <p>三个编码陷阱必须在这里一次处理掉：epoch 秒一律 long；{@code binding} 是记录（camelCase
@@ -877,6 +1153,16 @@ public final class DelegatedAuthority {
      * {@code exp} 取 {@code min(iat+ticket-seconds, grant_expires_at)}：转发不允许延长授权。
      */
     private IssuedTicket ticket(DecisionStore.Decision decision, String clientId, ServiceCall call, long iat) {
+        return ticket(decision, clientId, call, iat, newId("tkt"), null);
+    }
+
+    /**
+     * 带显式 jti 与追加 claims 的票面构造：S4 的 association 要把 {@code engine.jti} 绑到这张票上
+     * （客户端 {@code verifyAssociation} 执行 {@code same(ticket.jti, engine.jti)}），所以 jti 必须先于
+     * association 生成；{@code portal_events_child} 标记也只能挂在票面（客户端在票面 claims 上找它）。
+     */
+    private IssuedTicket ticket(DecisionStore.Decision decision, String clientId, ServiceCall call, long iat,
+                                String jti, Map<String, Object> extraClaims) {
         Map<String, Object> claims = new LinkedHashMap<>();
         claims.put("iss", issuer.issuer());
         claims.put("aud", tickets.audience(call.target()));
@@ -884,7 +1170,6 @@ public final class DelegatedAuthority {
         claims.put("iat", iat);
         claims.put("nbf", iat);
         claims.put("exp", Math.min(iat + properties.ticketSeconds(), decision.grantExpiresAt().getEpochSecond()));
-        String jti = newId("tkt");
         claims.put("jti", jti);
         claims.put("target", call.target());
         claims.put("action", call.action());
@@ -908,6 +1193,10 @@ public final class DelegatedAuthority {
         if (decision.parentAdmissionId() != null) {
             // retained 票指回 S0 的 opening 决策：S3 的 eventsQuery 要靠它反查 gateway_query 的比对基准。
             claims.put("parent_admission_id", decision.parentAdmissionId());
+        }
+        if (extraClaims != null) {
+            // 只允许服务端自己组装的附加 claims（S4 的 portal_events_child），不接受调用方输入。
+            claims.putAll(extraClaims);
         }
         return new IssuedTicket(keys.sign(TicketService.TICKET_TYPE, claims), jti);
     }

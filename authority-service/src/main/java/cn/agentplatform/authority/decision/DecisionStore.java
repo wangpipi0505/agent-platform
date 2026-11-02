@@ -38,12 +38,16 @@ public final class DecisionStore {
         /** S1：用 opening 票换出的 gateway 观测票（本切片）。 */
         RETAINED,
         /** S2/S3：由 retained 票继续派生的决策（1d 使用）。 */
-        EVENTS
+        EVENTS,
+        /** S4：child 交换后给 engine 的观测授权（EX-45）；父决策是 S3 的 {@link #EVENTS}。 */
+        CHILD
     }
 
     private final Map<String, Decision> entries = new ConcurrentHashMap<>();
     /** jti -> decision id：S1 只拿得到票面 jti，必须能反查到 S0 决策。 */
     private final Map<String, String> tickets = new ConcurrentHashMap<>();
+    /** continuation_jti -> decision id：S4 只拿得到 continuation，必须能反查到 S3 决策（EX-45）。 */
+    private final Map<String, String> continuations = new ConcurrentHashMap<>();
     /** 插入序；与 entries 分开存，才能在不加全局锁的前提下做有界淘汰。 */
     private final Queue<String> order = new ConcurrentLinkedQueue<>();
     private final int capacity;
@@ -117,6 +121,9 @@ public final class DecisionStore {
         if (decision.ticketJti() != null) {
             tickets.put(decision.ticketJti(), decision.id());
         }
+        if (decision.continuationJti() != null) {
+            continuations.put(decision.continuationJti(), decision.id());
+        }
     }
 
     /** 不做过期过滤：调用方需要自己判断"过期"(409) 与"不存在"(403) 的区别。 */
@@ -140,6 +147,30 @@ public final class DecisionStore {
         if (decision == null || !jti.equals(decision.ticketJti())) {
             // 索引指向的条目已被淘汰/覆盖：顺手清掉悬空索引，避免它随容量反复增长。
             tickets.remove(jti, id);
+            return Optional.empty();
+        }
+        return Optional.of(decision);
+    }
+
+    /**
+     * 按 continuation 的 jti 反查它所属的 S3 决策（EX-45 S4 的入口）。
+     *
+     * <p>同样不做过期过滤：S4 必须能区分"没有这段会话"（403 EVENTS_CHILD_CONTINUATION）与
+     * "会话还在但已过窗"（409），并且<b>重放判定要排在过期判定之前</b>——否则已消费的 S3
+     * 决策过期后会从"重放"漂移成"过期"，同一个攻击得到两种 reason。
+     */
+    public Optional<Decision> findByContinuationJti(String jti) {
+        if (jti == null) {
+            return Optional.empty();
+        }
+        String id = continuations.get(jti);
+        if (id == null) {
+            return Optional.empty();
+        }
+        Decision decision = entries.get(id);
+        if (decision == null || !jti.equals(decision.continuationJti())) {
+            // 条目已被淘汰/覆盖：清掉悬空索引，避免它随容量反复增长。
+            continuations.remove(jti, id);
             return Optional.empty();
         }
         return Optional.of(decision);
@@ -192,6 +223,9 @@ public final class DecisionStore {
         Decision removed = entries.remove(id);
         if (removed != null && removed.ticketJti() != null) {
             tickets.remove(removed.ticketJti(), id);
+        }
+        if (removed != null && removed.continuationJti() != null) {
+            continuations.remove(removed.continuationJti(), id);
         }
     }
 

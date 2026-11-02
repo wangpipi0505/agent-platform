@@ -191,6 +191,31 @@ public record AuthorityRequest(
         return node;
     }
 
+    /**
+     * EX-45 S4 的入口凭据：S3 开窗后回显给客户端的 continuation
+     * （{@code agent-portal-gateway-events-continuation+jwt}）。
+     *
+     * <p>它和 {@code query_ticket}/{@code service_ticket} 属于同一类"票面字符串"，长度上限也一致；
+     * 形状之外的校验（typ/use/aud/exp、与 D4 的绑定）全部留给 S4 判定——请求解析层不解释票据语义。
+     */
+    public String parentContinuation() {
+        return optionalText(raw, "parent_continuation", MAX_TICKET);
+    }
+
+    /**
+     * EX-45 S4 的父 immutable：客户端把 S3 收到的 immutable 原样带回。
+     *
+     * <p>这里只保证"是一个非空对象"；真正的校验是 S4 用 D4/D3/D1 重建后做<b>整节点</b>比较。
+     * 放到解析层会把"哪个字段不等"这类业务语义漏进请求层，也会让 S3/S4 的编码约束分叉。
+     */
+    public JsonNode parentImmutable() {
+        JsonNode node = raw.get("parent_immutable");
+        if (node == null || !node.isObject() || node.isEmpty()) {
+            throw AuthorityException.invalidRequest("parent_immutable 必须是对象", "parent_immutable missing");
+        }
+        return node;
+    }
+
     /** S3 binding 的类型化视图：构造前已在 {@link #binding()} 里完成形状/长度/编码校验。 */
     public record Binding(String responseId, ResourceBinding resource, long effectiveCursor,
                           String observationRequestSha256, Instant hardDeadline) {

@@ -1,0 +1,23 @@
+$ export JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot"
+$ mvn -B -ntp -pl authority-service test
+
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.538 s -- in cn.agentplatform.authority.DecisionEndpointTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.006 s -- in cn.agentplatform.authority.DecisionStoreTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.104 s -- in cn.agentplatform.authority.DelegatedDecisionExpiryTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.027 s -- in cn.agentplatform.authority.DelegatedDisabledTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.284 s -- in cn.agentplatform.authority.DelegatedSubjectTokenTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.016 s -- in cn.agentplatform.authority.JwksEndpointTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.297 s -- in cn.agentplatform.authority.SessionEndpointTest
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.050 s -- in cn.agentplatform.authority.TokenEndpointTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.385 s -- in cn.agentplatform.common.authority.DelegatedForwardContractTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.114 s -- in cn.agentplatform.common.authority.ExchangeContractTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.050 s -- in cn.agentplatform.common.authority.GatewayEventsSlice1aContractTest
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.067 s -- in cn.agentplatform.common.authority.GatewayEventsSlice1bContractTest
+[INFO] Tests run: 10, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.101 s -- in cn.agentplatform.common.authority.GatewayEventsSlice1cContractTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.633 s -- in cn.agentplatform.common.authority.GatewayEventsSlice1cExpiryTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.167 s -- in cn.agentplatform.common.authority.GatewayEventsSlice1dContractTest
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.433 s -- in cn.agentplatform.common.authority.GatewayEventsSlice1eContractTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.045 s -- in cn.agentplatform.common.authority.RealClientContractTest
+[INFO] Tests run: 79, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+[INFO] Finished at: 2026-11-02T13:29:12+08:00
