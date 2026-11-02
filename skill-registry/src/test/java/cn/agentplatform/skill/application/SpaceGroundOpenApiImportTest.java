@@ -317,6 +317,48 @@ class SpaceGroundOpenApiImportTest {
     // ---- helpers ----
 
     @SuppressWarnings("unchecked")
+    /**
+     * R12第一产出：51个operation的逐项支持矩阵必须可解释——每个被拒操作归类到确切的
+     * 不支持特性并保留诊断原文位置；计数与EX-39证据一致（pattern 10/oneOf 11/anyOf 6/
+     * 非JSON 2xx 5/默认序列化 2/allOf 1）。本测试只锁定可解释性，不承诺扩展任何子集；
+     * 子集扩展按R01裁定另行演进，届时本矩阵与本测试计数同步修订。
+     */
+    @Test
+    void openApiOperationSupportMatrixIsExplainablePerOperation() {
+        var operations = operations(imports.preview(Map.of("document", document)));
+        assertEquals(51, operations.size());
+        var matrix = new LinkedHashMap<String, String>();
+        var counts = new TreeMap<String, Integer>();
+        for (var op : operations) {
+            String id = op.get("operationId").toString();
+            if (Boolean.TRUE.equals(op.get("supported"))) {
+                matrix.put(id, "SUPPORTED");
+                continue;
+            }
+            String message = op.get("diagnostics").toString();
+            String feature;
+            if (message.contains("不支持Schema关键字: oneOf")) feature = "oneOf";
+            else if (message.contains("不支持Schema关键字: anyOf")) feature = "anyOf";
+            else if (message.contains("不支持Schema关键字: allOf")) feature = "allOf";
+            else if (message.contains("不支持Schema关键字: pattern")) feature = "pattern";
+            else if (message.contains("2xx") || message.contains("单一application/json"))
+                feature = "非JSON_2XX";
+            else if (message.contains("默认序列化")) feature = "非默认序列化";
+            else feature = "未归类";
+            matrix.put(id, feature + " | " + message.replace("\n", " ").trim());
+            counts.merge(feature, 1, Integer::sum);
+        }
+        // 与EX-39实测分类完全一致；任何偏差都说明转换器或规格变化，须同步证据后修订。
+        assertEquals(
+                Map.of("pattern", 10, "oneOf", 11, "anyOf", 6, "非JSON_2XX", 5, "非默认序列化", 2, "allOf", 1),
+                counts,
+                "被拒操作按特性分类漂移");
+        assertEquals(35, counts.values().stream().mapToInt(Integer::intValue).sum());
+        assertEquals(16, matrix.values().stream().filter("SUPPORTED"::equals).count());
+        // 逐操作矩阵输出：operationId → 特性 + 诊断原文（测试日志即完整支持矩阵）。
+        matrix.forEach((id, reason) -> System.out.println("R12矩阵 " + id + " => " + reason));
+    }
+
     private static List<Map<String, Object>> operations(Map<String, Object> preview) {
         return (List<Map<String, Object>>) preview.get("operations");
     }
