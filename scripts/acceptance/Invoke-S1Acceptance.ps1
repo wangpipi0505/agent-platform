@@ -37,6 +37,8 @@ param(
     [string]$ADatasetVersion = 's1-assertion',
     [string]$ACasesPath,
     [string]$BAppCode,
+    # 负例必须落在与正例不同的候选/应用上，否则“同一候选既 409 又 200”不可能成立（EX-06 复审）。
+    [string]$BFailAppCode,
     [long]$BPassDraftRev = 0,
     [string]$BPassCandidateSha256,
     [long]$BFailDraftRev = 0,
@@ -224,6 +226,8 @@ if ($requested -contains 'A') {
 if ($requested -contains 'B') {
     $missing = @()
     if (-not (Get-S1Text $BAppCode)) { $missing += 'BAppCode' }
+    if (-not (Get-S1Text $BFailAppCode)) { $missing += 'BFailAppCode(负例候选所在应用)' }
+    elseif ((Get-S1Text $BFailAppCode) -ceq (Get-S1Text $BAppCode)) { $missing += 'BFailAppCode(必须与 BAppCode 不同应用，负例才独立)' }
     if ($BPassDraftRev -le 0) { $missing += 'BPassDraftRev(>0)' }
     if ((Get-S1Text $BPassCandidateSha256) -notmatch '^[a-f0-9]{64}$') { $missing += 'BPassCandidateSha256(64hex)' }
     if ($BFailDraftRev -le 0) { $missing += 'BFailDraftRev(>0)' }
@@ -242,29 +246,57 @@ if ($requested -contains 'B') {
         New-S1Row 'B' 'PLANNED' 'DryRun' '' $null
     } else {
         try {
-            $waiverId = ''
-            $precheckId = ''
-            $failUrl = $base + '/admin/apps/' + $BAppCode + '/publish/precheck'
-            $blocked = Invoke-S1Http -Method 'POST' -Url $failUrl -Headers $adminHeaders -Body $null
+            $failApp = Get-S1Text $BFailAppCode
+            $failAppUrl = $base + '/admin/apps/' + $failApp
+            $passAppUrl = $base + '/admin/apps/' + $BAppCode
+            # 预检按“当前草稿”评估且不需要请求体；先 GET 两个应用，证明冻结的 draftRev/candidateSha256
+            # 就是服务端当前候选，避免把参数陈旧导致的门禁结果误判成门禁本身。
+            $failAppFact = Invoke-S1Http -Method 'GET' -Url $failAppUrl -Headers $adminHeaders -Body $null
+            $passAppFact = Invoke-S1Http -Method 'GET' -Url $passAppUrl -Headers $adminHeaders -Body $null
+            if ($failAppFact.Status -ne 200 -or $passAppFact.Status -ne 200) { throw ('S1_B_APP_FACT_UNAVAILABLE fail=' + $failAppFact.Status + ' pass=' + $passAppFact.Status) }
+            if ([long]$failAppFact.Body.data.draftRev -ne $BFailDraftRev -or (Get-S1Text $failAppFact.Body.data.candidateSha256) -cne (Get-S1Text $BFailCandidateSha256)) { throw 'S1_B_FAIL_CANDIDATE_STALE' }
+            if ([long]$passAppFact.Body.data.draftRev -ne $BPassDraftRev -or (Get-S1Text $passAppFact.Body.data.candidateSha256) -cne (Get-S1Text $BPassCandidateSha256)) { throw 'S1_B_PASS_CANDIDATE_STALE' }
+            $blocked = Invoke-S1Http -Method 'POST' -Url ($failAppUrl + '/publish/precheck') -Headers $adminHeaders -Body $null
             if ($blocked.Status -ne 409 -or (Get-S1Text $blocked.Body.code) -cne 'EVAL_GATE_BLOCKED') { throw ('S1_B_GATE_NOT_BLOCKED status=' + $blocked.Status) }
-            $pass = Invoke-S1Http -Method 'POST' -Url $failUrl -Headers $adminHeaders -Body $null
-            if ($pass.Status -ne 200 -or $pass.Body.data.passed -ne $true) { throw ('S1_B_GATE_NOT_PASSED status=' + $pass.Status) }
-            $waiver = Invoke-S1Http -Method 'POST' -Url ($base + '/admin/apps/' + $BAppCode + '/publish-waivers') -Headers $adminHeaders -Body @{ candidateSha256 = $BFailCandidateSha256; draftRev = $BFailDraftRev; reason = $BWaiverReason; expiresAt = $BWaiverExpiresAt }
-            $waiverId = Get-S1Text $waiver.Body.data.waiverId
+            $waiver = Invoke-S1Http -Method 'POST' -Url ($failAppUrl + '/publish-waivers') -Headers $adminHeaders -Body @{ candidateSha256 = $BFailCandidateSha256; draftRev = $BFailDraftRev; reason = $BWaiverReason; expiresAt = $BWaiverExpiresAt }
+            $waiverId = Get-S1Text $waiver.Body.data.id
+            if (-not $waiverId) { $waiverId = Get-S1Text $waiver.Body.data.waiverId }
             if ($waiver.Status -notin @(200, 201) -or -not $waiverId) { throw ('S1_B_WAIVER_CREATE_FAILED status=' + $waiver.Status) }
-            $waived = Invoke-S1Http -Method 'POST' -Url $failUrl -Headers $adminHeaders -Body $null
-            if ($waived.Status -ne 200 -or (Get-S1Text $waived.Body.data.gateMode) -cne 'WAIVED') { throw ('S1_B_GATE_NOT_WAIVED status=' + $waived.Status) }
-            $deleted = Invoke-S1Http -Method 'DELETE' -Url ($base + '/admin/apps/' + $BAppCode + '/publish-waivers/' + $waiverId) -Headers $adminHeaders -Body $null
-            if ($deleted.Status -ne 200) { throw ('S1_B_WAIVER_DELETE_FAILED status=' + $deleted.Status) }
-            $restored = Invoke-S1Http -Method 'POST' -Url $failUrl -Headers $adminHeaders -Body $null
+            $waived = Invoke-S1Http -Method 'POST' -Url ($failAppUrl + '/publish/precheck') -Headers $adminHeaders -Body $null
+            if ($waived.Status -ne 200 -or $waived.Body.data.passed -ne $true -or (Get-S1Text $waived.Body.data.result) -cne 'PASS') { throw ('S1_B_GATE_NOT_WAIVED status=' + $waived.Status) }
+            # gateMode 是门禁模式名（BLOCKING/ADVISORY/OFF），不是 WAIVED；豁免事实看 waiverId 与 check.result=WAIVED。
+            if ((Get-S1Text $waived.Body.data.gateMode) -cne 'BLOCKING') { throw ('S1_B_GATE_MODE_INVALID gateMode=' + (Get-S1Text $waived.Body.data.gateMode)) }
+            if ((Get-S1Text $waived.Body.data.waiverId) -cne $waiverId) { throw 'S1_B_WAIVER_ID_NOT_APPLIED' }
+            $waivedChecks = @($waived.Body.data.report.checks | Where-Object { (Get-S1Text $_.result) -ceq 'WAIVED' -and (Get-S1Text $_.waiverId) -ceq $waiverId })
+            if ($waivedChecks.Count -lt 1) { throw 'S1_B_WAIVER_CHECK_MISSING' }
+            $deleted = Invoke-S1Http -Method 'DELETE' -Url ($failAppUrl + '/publish-waivers/' + $waiverId) -Headers $adminHeaders -Body $null
+            if ($deleted.Status -ne 200 -or (Get-S1Text $deleted.Body.data.status) -cne 'REVOKED') { throw ('S1_B_WAIVER_DELETE_FAILED status=' + $deleted.Status) }
+            $restored = Invoke-S1Http -Method 'POST' -Url ($failAppUrl + '/publish/precheck') -Headers $adminHeaders -Body $null
             if ($restored.Status -ne 409 -or (Get-S1Text $restored.Body.code) -cne 'EVAL_GATE_BLOCKED') { throw ('S1_B_GATE_NOT_RESTORED status=' + $restored.Status) }
-            $finalPrecheck = Invoke-S1Http -Method 'POST' -Url $failUrl -Headers $adminHeaders -Body $null
-            $precheckId = Get-S1Text $finalPrecheck.Body.data.precheckId
-            if ($finalPrecheck.Status -ne 200 -or -not $precheckId) { throw ('S1_B_PRECHECK_ID_MISSING status=' + $finalPrecheck.Status) }
-            $commit = Invoke-S1Http -Method 'POST' -Url ($base + '/admin/apps/' + $BAppCode + '/publish/commit') -Headers $adminHeaders -Body @{ precheckId = $precheckId; draftRev = $BPassDraftRev; candidateSha256 = $BPassCandidateSha256; idempotencyRequestNo = $BIdempotencyRequestNo }
-            if ($commit.Status -ne 200) { throw ('S1_B_COMMIT_FAILED status=' + $commit.Status) }
-            $facts = @{ appCode = $BAppCode; waiverId = $waiverId; precheckId = $precheckId; commitStatus = $commit.Status }
-            $evidence = New-S1EvidenceFile 'B' ([ordered]@{ segment = 'B'; appCode = $BAppCode; waiverId = $waiverId; precheckId = $precheckId; commitStatus = $commit.Status })
+            $precheck = Invoke-S1Http -Method 'POST' -Url ($passAppUrl + '/publish/precheck') -Headers $adminHeaders -Body $null
+            $precheckId = Get-S1Text $precheck.Body.data.precheckId
+            if ($precheck.Status -ne 200 -or -not $precheckId -or $precheck.Body.data.passed -ne $true -or (Get-S1Text $precheck.Body.data.result) -cne 'PASS') { throw ('S1_B_PRECHECK_NOT_PASS status=' + $precheck.Status) }
+            $commitStatus = 0
+            $versionNo = ''
+            $replayVersionNo = ''
+            if ($BCommit) {
+                $commitBody = @{ precheckId = $precheckId; draftRev = $BPassDraftRev; candidateSha256 = $BPassCandidateSha256; idempotencyRequestNo = $BIdempotencyRequestNo }
+                if ($precheck.Body.data.environmentConfirmationRequired -eq $true) {
+                    # DEMO 非 REAL：提交必须显式确认评测环境，回填预检给出的 report/evidence 摘要（EX-06 §4.6）。
+                    $commitBody['evaluationEnvironmentConfirmation'] = @{ confirmed = $true; precheckId = $precheckId; evalReportId = (Get-S1Text $precheck.Body.data.evalReportId); evidenceSha256 = (Get-S1Text $precheck.Body.data.environmentEvidenceSha256) }
+                }
+                $commit = Invoke-S1Http -Method 'POST' -Url ($passAppUrl + '/publish/commit') -Headers $adminHeaders -Body $commitBody
+                if ($commit.Status -ne 200) { throw ('S1_B_COMMIT_FAILED status=' + $commit.Status) }
+                $commitStatus = $commit.Status
+                $versionNo = Get-S1Text $commit.Body.data.versionNo
+                if (-not $versionNo) { throw 'S1_B_COMMIT_VERSION_MISSING' }
+                $replay = Invoke-S1Http -Method 'POST' -Url ($passAppUrl + '/publish/commit') -Headers $adminHeaders -Body $commitBody
+                if ($replay.Status -ne 200) { throw ('S1_B_COMMIT_REPLAY_FAILED status=' + $replay.Status) }
+                $replayVersionNo = Get-S1Text $replay.Body.data.versionNo
+                if ($replayVersionNo -cne $versionNo) { throw ('S1_B_COMMIT_REPLAY_NOT_IDEMPOTENT first=' + $versionNo + ' replay=' + $replayVersionNo) }
+            }
+            $facts = @{ appCode = $BAppCode; failAppCode = $failApp; waiverId = $waiverId; precheckId = $precheckId; commitStatus = $commitStatus; versionNo = $versionNo }
+            $evidence = New-S1EvidenceFile 'B' ([ordered]@{ segment = 'B'; appCode = $BAppCode; failAppCode = $failApp; failCandidate = [ordered]@{ draftRev = $BFailDraftRev; candidateSha256 = $BFailCandidateSha256 }; passCandidate = [ordered]@{ draftRev = $BPassDraftRev; candidateSha256 = $BPassCandidateSha256 }; blockedStatus = $blocked.Status; blockedCode = (Get-S1Text $blocked.Body.code); waiverId = $waiverId; waivedGateMode = (Get-S1Text $waived.Body.data.gateMode); waivedCheckResult = 'WAIVED'; revokedStatus = (Get-S1Text $deleted.Body.data.status); restoredStatus = $restored.Status; precheckId = $precheckId; environmentConfirmationRequired = ($precheck.Body.data.environmentConfirmationRequired -eq $true); commitStatus = $commitStatus; versionNo = $versionNo; replayVersionNo = $replayVersionNo })
             New-S1Row 'B' 'PASS' '' $evidence $facts
         } catch {
             $reason = $_.Exception.Message
@@ -288,26 +320,38 @@ if ($requested -contains 'C') {
         New-S1Row 'C' 'PLANNED' 'DryRun' '' $null
     } else {
         try {
-            $waitStatus = Get-S1DbValue ("select status from engine.run where id='" + ($CWaitingRunId -replace "'", "''") + "'")
+            # engine.run.id 是 bigint 主键，public_id 才是 r_<32hex>/UUID；必须先用 public_id 换数值主键，
+            # 再用数值主键关联 node_instance/tool_call（EX-06 复审：不能用外部 id 直接比 bigint）。
+            $waitPublicId = Get-S1Text $CWaitingRunId
+            $failPublicId = Get-S1Text $CFailedRunId
+            $waitKey = Get-S1DbValue ("select id::text from engine.run where public_id='" + ($waitPublicId -replace "'", "''") + "'")
+            if ($waitKey -notmatch '^[0-9]+$') { throw ('S1_C_WAITING_RUN_NOT_FOUND publicId=' + $waitPublicId) }
+            $failKey = Get-S1DbValue ("select id::text from engine.run where public_id='" + ($failPublicId -replace "'", "''") + "'")
+            if ($failKey -notmatch '^[0-9]+$') { throw ('S1_C_FAILED_RUN_NOT_FOUND publicId=' + $failPublicId) }
+            $waitStatus = Get-S1DbValue ("select status from engine.run where id=" + $waitKey)
             if ($waitStatus -cne 'WAITING_EXTERNAL') { throw ('S1_C_WAITING_STATUS_INVALID status=' + $waitStatus) }
-            $job = Get-S1DbValue ("select external_job::text from engine.tool_call where run_id='" + ($CWaitingRunId -replace "'", "''") + "' and external_job is not null limit 1")
+            $job = Get-S1DbValue ("select external_job::text from engine.tool_call where run_id=" + $waitKey + " and external_job is not null limit 1")
             if (-not $job) { throw 'S1_C_EXTERNAL_JOB_MISSING' }
             $jobObject = $null
             try { $jobObject = $job | ConvertFrom-Json -ErrorAction Stop } catch { throw 'S1_C_EXTERNAL_JOB_INVALID' }
             if ((Get-S1Text $jobObject.remoteJobId) -cne (Get-S1Text $CExpectedRemoteJobId)) { throw 'S1_C_REMOTE_JOB_MISMATCH' }
-            $failStatus = Get-S1DbValue ("select status from engine.run where id='" + ($CFailedRunId -replace "'", "''") + "'")
+            $failStatus = Get-S1DbValue ("select status from engine.run where id=" + $failKey)
             if ($failStatus -cne 'FAILED') { throw ('S1_C_FAILED_STATUS_INVALID status=' + $failStatus) }
-            $errorText = Get-S1DbValue ("select coalesce(error_semantic::text,'') from engine.tool_call where run_id='" + ($CFailedRunId -replace "'", "''") + "' and error_semantic is not null limit 1")
-            if (-not $errorText) { throw 'S1_C_ERROR_SEMANTIC_MISSING' }
-            $errorObject = $null
-            try { $errorObject = $errorText | ConvertFrom-Json -ErrorAction Stop } catch { throw 'S1_C_ERROR_SEMANTIC_INVALID' }
-            foreach ($field in @('code', 'userMessage', 'traceId')) {
-                if (-not (Get-S1Text (Get-S1TextProperty $errorObject $field))) { throw ('S1_C_ERROR_FIELD_MISSING ' + $field) }
+            # engine.tool_call.error_semantic 是 varchar(32) 文本码（如 EXTERNAL_TIMEOUT），不是 JSON，禁止 ConvertFrom-Json。
+            $errorSemantic = Get-S1DbValue ("select coalesce(error_semantic,'') from engine.tool_call where run_id=" + $failKey + " and error_semantic is not null limit 1")
+            if (-not $errorSemantic) { throw 'S1_C_ERROR_SEMANTIC_MISSING' }
+            if ($errorSemantic -notmatch '^[A-Z][A-Z0-9_]{0,31}$') { throw ('S1_C_ERROR_SEMANTIC_NOT_CODE value=' + $errorSemantic) }
+            # 结构化七字段错误在 engine.run.error(jsonb)：code/userMessage/traceId 从这里取，而不是 tool_call.error_semantic。
+            $errorCode = Get-S1DbValue ("select coalesce(error->>'code','') from engine.run where id=" + $failKey)
+            $errorUserMessage = Get-S1DbValue ("select coalesce(error->>'userMessage','') from engine.run where id=" + $failKey)
+            $errorTraceId = Get-S1DbValue ("select coalesce(error->>'traceId','') from engine.run where id=" + $failKey)
+            foreach ($pair in @(@('code', $errorCode), @('userMessage', $errorUserMessage), @('traceId', $errorTraceId))) {
+                if (-not (Get-S1Text $pair[1])) { throw ('S1_C_ERROR_FIELD_MISSING ' + $pair[0]) }
             }
-            $transient = Get-S1DbValue ("select count(*) from engine.node_instance where run_id='" + ($CFailedRunId -replace "'", "''") + "' and status='WAITING_EXTERNAL'")
+            $transient = Get-S1DbValue ("select count(*) from engine.node_instance where run_id=" + $failKey + " and status='WAITING_EXTERNAL'")
             if ($transient -ne '0') { throw 'S1_C_TRANSIENT_STATE_NOT_CLEARED' }
-            $facts = @{ waitingRunId = $CWaitingRunId; failedRunId = $CFailedRunId; remoteJobId = $CExpectedRemoteJobId }
-            $evidence = New-S1EvidenceFile 'C' ([ordered]@{ segment = 'C'; waitingRunStatus = $waitStatus; remoteJobId = $CExpectedRemoteJobId; failedRunStatus = $failStatus; transientNodes = $transient })
+            $facts = @{ waitingRunId = $CWaitingRunId; failedRunId = $CFailedRunId; remoteJobId = $CExpectedRemoteJobId; errorSemantic = $errorSemantic }
+            $evidence = New-S1EvidenceFile 'C' ([ordered]@{ segment = 'C'; waitingRunPublicId = $waitPublicId; waitingRunKey = $waitKey; waitingRunStatus = $waitStatus; remoteJobId = $CExpectedRemoteJobId; failedRunPublicId = $failPublicId; failedRunKey = $failKey; failedRunStatus = $failStatus; errorSemantic = $errorSemantic; errorCode = $errorCode; errorUserMessage = $errorUserMessage; errorTraceId = $errorTraceId; transientNodes = $transient })
             New-S1Row 'C' 'PASS' '' $evidence $facts
         } catch {
             $reason = $_.Exception.Message

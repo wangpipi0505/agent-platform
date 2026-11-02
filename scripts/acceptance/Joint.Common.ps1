@@ -1,11 +1,18 @@
 ﻿# EX-06公共准备基础：装载只定义函数，不读.env、不启动进程、不调用HTTP。
 # 准备计划不是READY资源清单；资源状态、已验身份和秘密可用性必须由后续真实阶段核准。
 function Get-JointValue([object]$Object, [string]$Name) {
-    if ($Object -is [Collections.IDictionary]) { return $Object[$Name] }
-    if ($null -eq $Object) { return $null }
-    $property = $Object.PSObject.Properties[$Name]
-    if ($null -eq $property) { return $null }
-    return $property.Value
+    # 注意：函数 return 空数组会被 PowerShell 展开成“无输出”，调用方只能拿到 $null；
+    # missingStages/missingFields 这类空数组字段（P1-1）必须原样返回，故数组用一元逗号包一层。
+    $value = $null
+    if ($Object -is [Collections.IDictionary]) { $value = $Object[$Name] }
+    elseif ($null -eq $Object) { return $null }
+    else {
+        $property = $Object.PSObject.Properties[$Name]
+        if ($null -eq $property) { return $null }
+        $value = $property.Value
+    }
+    if ($value -is [System.Array]) { return ,$value }
+    return $value
 }
 function Get-JointNames([object]$Object) {
     if ($Object -is [Collections.IDictionary]) { return @($Object.Keys) }
@@ -43,7 +50,9 @@ function Assert-JointAcceptancePath([string]$RepositoryRoot, [string]$Path) {
 function Assert-JointManifestShape([object]$Manifest, [string]$SessionId, [string]$PlatformTenant, [string]$Environment) {
     $main = @('sessionId','platformTenant','environment','spaceId','spaceCode','releaseId','replacementReleaseId','appCode','pinAppCode','explicitAppCode','opCode','readCredentialId','binderCredentialId','consumerCredentialId','readKeyRef','binderKeyRef','consumerKeyRef','platformBaseUrl','ontologyBaseUrl')
     # 聚合字段只允许出现在最终manifest：complete必须由真实阶段结果决定，不能由局部阶段自报。
-    $aggregate = @('schemaVersion','complete','verdict','generatedAt','stages','missingFields')
+    # missingStages 是 Prepare-Joint.ps1 -Stage All 聚合时必写的阶段完整性字段（:262）；
+    # 漏在允许集合里会让“J1–J9 全 PASS”的清单反而抛 JOINT_MANIFEST_FIELDS_INVALID（EX-06 复审 P1-1）。
+    $aggregate = @('schemaVersion','complete','verdict','generatedAt','stages','missingFields','missingStages')
     $allowed = $main + @('revocationFixtures','isolationFixtures') + $aggregate
     if (@(Get-JointNames $Manifest | Where-Object { $_ -notin $allowed }).Count) { throw 'JOINT_MANIFEST_FIELDS_INVALID' }
     foreach ($name in $main) {
@@ -113,6 +122,26 @@ function Assert-JointManifestShape([object]$Manifest, [string]$SessionId, [strin
             foreach ($field in @('reason','evidence')) { $value = Get-JointValue $stage $field; if ($null -ne $value -and $value -isnot [string]) { throw 'JOINT_MANIFEST_FIELDS_INVALID' } }
         }
     }
+    # missingStages 要么不出现（局部阶段清单），要么是 J1..J9 的去重字符串数组：
+    # complete=true 时必须显式为 []，且不得与 stages 已交付行自相矛盾（EX-06 复审 P1-1）。
+    if ($names -contains 'missingStages') {
+        $missingStagesValue = Get-JointValue $Manifest 'missingStages'
+        if ($missingStagesValue -isnot [System.Array]) { throw 'JOINT_MANIFEST_FIELDS_INVALID' }
+        $missingStageNames = @()
+        foreach ($missingStage in @($missingStagesValue)) {
+            if ($missingStage -isnot [string] -or $missingStage -cnotmatch '^J[1-9]$') { throw 'JOINT_MANIFEST_FIELDS_INVALID' }
+            if ($missingStageNames -contains $missingStage) { throw 'JOINT_MANIFEST_FIELDS_INVALID' }
+            $missingStageNames += $missingStage
+        }
+        $complete = Get-JointValue $Manifest 'complete'
+        if ($complete -eq $true -and $missingStageNames.Count -ne 0) { throw 'JOINT_MANIFEST_FIELDS_INVALID' }
+        if ($names -contains 'stages') {
+            foreach ($stage in @($Manifest.stages)) {
+                if ($missingStageNames -contains [string](Get-JointValue $stage 'stage')) { throw 'JOINT_MANIFEST_FIELDS_INVALID' }
+            }
+        }
+    }
+    if ((Get-JointValue $Manifest 'complete') -eq $true -and $names -notcontains 'missingStages') { throw 'JOINT_MANIFEST_FIELDS_INVALID' }
     return $Manifest
 }
 function Get-JointPreparationPlan {

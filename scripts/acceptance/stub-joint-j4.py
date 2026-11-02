@@ -21,6 +21,8 @@ from urllib.parse import parse_qs, urlparse
 
 STATE = {}
 BINDINGS = {}
+# 只读计数：供 --stats 断言“校验失败后 0 导入请求”（EX-06 复审 P1-7）。
+STATS = {"requests": 0, "importRequests": 0}
 
 
 def envelope(code, message, data):
@@ -126,6 +128,11 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         path = urlparse(self.path).path
+        if path == "/__stats":
+            # 统计端点自身不计入请求数，避免“查一次计数就多一条”。
+            self._send(200, {"mode": STATE["mode"], "requests": STATS["requests"], "importRequests": STATS["importRequests"]})
+            return
+        STATS["requests"] += 1
         prefix = "/onto/releases/"
         suffix = "/manifest"
         if path.startswith(prefix) and path.endswith(suffix):
@@ -189,6 +196,12 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         path = urlparse(self.path).path
+        if path == "/__stats":
+            self._send(200, {"mode": STATE["mode"], "requests": STATS["requests"], "importRequests": STATS["importRequests"]})
+            return
+        STATS["requests"] += 1
+        if path == "/admin/skills/import-ontology-manifests":
+            STATS["importRequests"] += 1
         length = int(self.headers.get("Content-Length") or 0)
         raw = self.rfile.read(length) if length else b""
         if path == "/auth/dev-token":

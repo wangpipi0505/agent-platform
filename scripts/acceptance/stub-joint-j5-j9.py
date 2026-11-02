@@ -19,6 +19,7 @@
     pin-skipped  commit 的 pin 为 SKIPPED（J9 必须判 FAIL）
     pin-failed   commit 直接 502 PIN_FAILED（J9 必须判 FAIL）
     binding-404  GET 绑定恒 404 BINDING_NOT_FOUND
+    s1           S1-B 单段：为 joint_stub_resolve 预置匹配候选的 ACCEPTED 报告
 
 常量（阶段脚本参数必须与之一致）：
     tenant=local-v12  environment=production
@@ -43,7 +44,7 @@ import re
 import secrets
 import threading
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
@@ -68,11 +69,15 @@ BINDER_KEY = "ontosa_" + "b" * 43
 READ_KEY = "ontosa_" + "r" * 43
 TEMP_BINDER_KEY = "ontosa_" + "t" * 43
 TEMP_CONSUMER_KEY = "ontopa_" + "c" * 43
+# J8 第二合法身份：只属于 B 空间、有 release.bind 的独立凭据，
+# 用于证明“在 B 空间合法的身份跨到 A 空间仍被拒”，不能拿 A 空间 binder 冒充。
+BINDER_B_KEY = "ontosa_" + "i" * 43
 
 BINDER_ID = "dddddddd-dddd-4ddd-8ddd-dddddddddddd"
 READ_ID = "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee"
 TEMP_BINDER_ID = "ffffffff-ffff-4fff-8fff-ffffffffffff"
 TEMP_CONSUMER_ID = "99999999-9999-4999-8999-999999999999"
+BINDER_B_ID = "abababab-abab-4bab-8bab-abababababab"
 TEMP_BINDER_PRINCIPAL = "88888888-8888-4888-8888-888888888888"
 ROLE_BINDER_ID = "77777777-7777-4777-8777-777777777777"
 ROLE_MEMBER_ID = "66666666-6666-4666-8666-666666666666"
@@ -144,11 +149,13 @@ def reset_state(mode):
     STATE["evaluations"] = {}
     STATE["commits"] = {}
     STATE["runs"] = {}
+    STATE["waivers"] = {}
     STATE["keys"] = {
         BINDER_KEY: {"id": BINDER_ID, "space": SPACE_A, "tenant": TENANT, "kind": "SERVICE_ACCOUNT", "roles": {"release.bind", "release.read"}, "revoked": False},
         READ_KEY: {"id": READ_ID, "space": SPACE_A, "tenant": TENANT, "kind": "SERVICE_ACCOUNT", "roles": {"release.read"}, "revoked": False},
         TEMP_BINDER_KEY: {"id": TEMP_BINDER_ID, "space": SPACE_A, "tenant": TENANT, "kind": "SERVICE_ACCOUNT", "roles": {"release.bind"}, "revoked": False},
         TEMP_CONSUMER_KEY: {"id": TEMP_CONSUMER_ID, "space": SPACE_A, "tenant": TENANT, "kind": "PLATFORM_ACTOR", "roles": {"service.execute"}, "revoked": False},
+        BINDER_B_KEY: {"id": BINDER_B_ID, "space": SPACE_B, "tenant": TENANT, "kind": "SERVICE_ACCOUNT", "roles": {"release.bind", "release.read"}, "revoked": False},
     }
     STATE["binder_role_removed"] = False
     STATE["users"] = [{
@@ -171,6 +178,7 @@ def reset_state(mode):
             "platformTenant": TENANT,
             "appCode": code,
             "environment": ENV,
+            "space": SPACE_A,
             "boundAt": now_iso(),
             "status": "ACTIVE",
         }
@@ -189,6 +197,24 @@ def reset_state(mode):
             "updatedAt": now_iso(),
         }
     STATE["pin_seed"] = {code: dict(row) for code, row in STATE["pins"].items()}
+    if mode == "s1":
+        # S1 B 正例要“先有匹配当前候选的 ACCEPTED 报告”再预检；A 段会真跑评测，
+        # 这里只给 S1-B 单段桩跑预置一份等价报告，不改变其它段语义。
+        app = STATE["apps"][APP_RESOLVE]
+        report_id = "er_" + str(uuid.uuid4())
+        STATE["evaluations"][report_id] = {
+            "id": report_id,
+            "appCode": APP_RESOLVE,
+            "draftRev": int(app["draftRev"]),
+            "candidateSha256": app["candidateSha256"],
+            "datasetVersion": "s1-stub-dataset",
+            "status": "ACCEPTED",
+            "accepted": True,
+            "threshold": 0.85,
+            "results": [],
+            "createdAt": now_iso(),
+            "completedAt": now_iso(),
+        }
 
 
 def envelope(data=None, code="OK", message="ok"):
@@ -307,6 +333,15 @@ class Handler(BaseHTTPRequestHandler):
             if tail == ["publish", "commit"] and method == "POST":
                 self.commit(code, app, body)
                 return
+            if tail[:1] == ["publish-waivers"]:
+                if len(tail) == 1 and method == "POST":
+                    self.create_waiver(code, app, body)
+                    return
+                if len(tail) == 2 and method == "DELETE":
+                    self.revoke_waiver(tail[1])
+                    return
+                self.send_json(*error(404, "NOT_FOUND", "stub: 未实现的 publish-waivers 路径 " + path))
+                return
             if tail == ["runs"] and method == "POST":
                 self.create_run(code, app, body)
                 return
@@ -351,6 +386,48 @@ class Handler(BaseHTTPRequestHandler):
             if key not in body:
                 self.send_json(*error(400, "INVALID_REQUEST", "stub: 缺少 " + key))
                 return
+        cases = body.get("cases")
+        if not isinstance(cases, list) or not (1 <= len(cases) <= 200):
+            self.send_json(*error(400, "INVALID_REQUEST", "stub: cases 需 1..200 条"))
+            return
+        seen_ids = set()
+        has_safety = False
+        for case in cases:
+            if not isinstance(case, dict):
+                self.send_json(*error(400, "INVALID_REQUEST", "stub: case 必须是对象"))
+                return
+            case_id = case.get("id")
+            if not isinstance(case_id, str) or not case_id or case_id in seen_ids:
+                self.send_json(*error(400, "INVALID_REQUEST", "stub: case.id 必须唯一非空字符串"))
+                return
+            seen_ids.add(case_id)
+            if not isinstance(case.get("inputs"), dict):
+                self.send_json(*error(400, "INVALID_REQUEST", "stub: case.inputs 必须是对象"))
+                return
+            if "expected" not in case:
+                self.send_json(*error(400, "INVALID_REQUEST", "stub: case 缺少 expected"))
+                return
+            if not isinstance(case.get("safety"), bool):
+                self.send_json(*error(400, "INVALID_REQUEST", "stub: case.safety 必须是布尔"))
+                return
+            assertion = case.get("assertion")
+            mode = None
+            if isinstance(assertion, str):
+                mode = assertion.strip().upper()
+            elif isinstance(assertion, dict) and isinstance(assertion.get("mode"), str):
+                mode = assertion["mode"].strip().upper()
+            # 对齐 monitor EvaluationAssertions.requireValid：SCHEMA 的 expected 必须是 JSON Schema 对象。
+            if mode == "SCHEMA" and not isinstance(case.get("expected"), dict):
+                self.send_json(*error(400, "INVALID_ASSERTION", "stub: SCHEMA 的 expected 必须是JSON Schema对象"))
+                return
+            if case["safety"]:
+                has_safety = True
+                if mode is not None and mode not in ("EXACT", "SCHEMA"):
+                    self.send_json(*error(400, "INVALID_ASSERTION", "stub: 安全用例的 assertion 只允许 EXACT/SCHEMA"))
+                    return
+        if not has_safety:
+            self.send_json(*error(400, "INVALID_REQUEST", "stub: 至少需要一条 safety 用例"))
+            return
         report_id = "er_" + str(uuid.uuid4())
         report = {
             "id": report_id,
@@ -368,14 +445,67 @@ class Handler(BaseHTTPRequestHandler):
         STATE["evaluations"][report_id] = report
         self.send_json(200, envelope(dict(report)))
 
+    def active_waiver(self, code, app):
+        now = datetime.now(timezone.utc)
+        for waiver in STATE["waivers"].values():
+            if waiver["appCode"] != code or waiver["revokedAt"] is not None:
+                continue
+            if int(waiver["draftRev"]) != int(app["draftRev"]) or waiver["candidateSha256"] != app["candidateSha256"]:
+                continue
+            try:
+                expires = datetime.fromisoformat(waiver["expiresAt"].replace("Z", "+00:00"))
+            except Exception:
+                continue
+            if expires > now:
+                return waiver
+        return None
+
     def precheck(self, code, app):
         report_id = ""
         for report in STATE["evaluations"].values():
             if report["appCode"] == code and int(report["draftRev"]) == int(app["draftRev"]) and report["candidateSha256"] == app["candidateSha256"]:
                 report_id = report["id"]
-        if not report_id:
-            self.send_json(*error(409, "EVAL_GATE_BLOCKED", "stub: 没有匹配当前候选的 ACCEPTED 评测"))
+                break
+        waiver = self.active_waiver(code, app)
+        if not report_id and waiver is None:
+            self.send_json(*error(409, "EVAL_GATE_BLOCKED", "stub: 没有匹配当前候选的 ACCEPTED 评测，也没有生效豁免"))
             return
+        gate_check = {
+            "group": "评测门禁",
+            "name": "ACCEPTED 评测或生效豁免",
+            "result": "PASS" if report_id else "WAIVED",
+            "detail": "stub: " + ("匹配 ACCEPTED 报告" if report_id else "生效豁免:" + waiver["id"]),
+        }
+        if waiver is not None:
+            gate_check["waiverId"] = waiver["id"]
+        environment_check = {
+            "group": "评测环境",
+            "name": "评测环境",
+            "schemaVersion": 1,
+            "result": "PASS",
+            "publicationTarget": "NON_PRODUCTION",
+            "candidateSha256": app["candidateSha256"],
+            "semanticDigest": app["semanticDigest"],
+            "publicationEvidence": {
+                "schemaVersion": 2,
+                "scope": "PLATFORM_PARTICIPANT_MODES_AND_DATASET_IDENTITY",
+                "externalTruth": "NOT_ASSESSED",
+                "caseSourcesSha256": sha("cases:" + (report_id or waiver["id"])),
+                "tenantId": TENANT,
+                "appCode": code,
+                "draftRev": int(app["draftRev"]),
+                "evalReportId": report_id,
+                "qualityAccepted": True,
+                "status": "ACCEPTED",
+                "datasetSha256": sha("dataset:s1"),
+                "datasetVersion": "stub-dataset",
+                "environment": "DEMO",
+                "candidateSha256": app["candidateSha256"],
+                "semanticDigest": app["semanticDigest"],
+                "evidenceSha256": sha("evidence:" + code + ":" + str(app["draftRev"])),
+            },
+            "detail": "stub: DEMO 环境提交需 evaluationEnvironmentConfirmation",
+        }
         data = {
             "precheckId": "pc_" + str(uuid.uuid4()),
             "draftRev": int(app["draftRev"]),
@@ -384,15 +514,81 @@ class Handler(BaseHTTPRequestHandler):
             "passed": True,
             "result": "PASS",
             "gateMode": "BLOCKING",
-            "waiverId": None,
+            "waiverId": waiver["id"] if waiver is not None else None,
             "publicationTarget": "NON_PRODUCTION",
             "evaluationEnvironment": "DEMO",
-            "environmentConfirmationRequired": False,
-            "environmentEvidenceSha256": sha("env:" + report_id),
-            "report": {"checks": [], "warnings": []},
+            "environmentConfirmationRequired": True,
+            "environmentEvidenceSha256": sha("env:" + (report_id or waiver["id"])),
+            "report": {"checks": [gate_check, environment_check], "warnings": []},
         }
         app["precheck"] = data
         self.send_json(200, envelope(data))
+
+    def waiver_view(self, waiver):
+        return {
+            "id": waiver["id"],
+            "appCode": waiver["appCode"],
+            "draftRev": waiver["draftRev"],
+            "candidateSha256": waiver["candidateSha256"],
+            "reason": waiver["reason"],
+            "approvedBy": waiver["approvedBy"],
+            "approvedAt": waiver["approvedAt"],
+            "expiresAt": waiver["expiresAt"],
+            "revokedAt": waiver["revokedAt"],
+            "status": "REVOKED" if waiver["revokedAt"] else "ACTIVE",
+        }
+
+    def create_waiver(self, code, app, body):
+        if not isinstance(body, dict):
+            self.send_json(*error(400, "PUBLISH_WAIVER_INVALID", "stub: 需要 JSON body"))
+            return
+        reason = body.get("reason")
+        if not isinstance(reason, str) or not (10 <= len(reason.strip()) <= 512):
+            self.send_json(*error(400, "PUBLISH_WAIVER_INVALID", "stub: reason 去空白后需 10..512 字"))
+            return
+        draft_rev = body.get("draftRev")
+        if not isinstance(draft_rev, int) or isinstance(draft_rev, bool) or draft_rev < 1:
+            self.send_json(*error(400, "PUBLISH_WAIVER_INVALID", "stub: draftRev 必须是 >=1 的整数"))
+            return
+        candidate = body.get("candidateSha256")
+        if not isinstance(candidate, str) or not re.fullmatch(r"[0-9a-f]{64}", candidate):
+            self.send_json(*error(400, "PUBLISH_WAIVER_INVALID", "stub: candidateSha256 必须是 64 位小写十六进制"))
+            return
+        expires_raw = body.get("expiresAt")
+        try:
+            expires = datetime.fromisoformat(str(expires_raw).replace("Z", "+00:00"))
+        except Exception:
+            self.send_json(*error(400, "PUBLISH_WAIVER_INVALID", "stub: expiresAt 必须是 ISO-8601"))
+            return
+        if expires.tzinfo is None:
+            self.send_json(*error(400, "PUBLISH_WAIVER_INVALID", "stub: expiresAt 必须带时区"))
+            return
+        now = datetime.now(timezone.utc)
+        if not (now < expires <= now + timedelta(hours=24)):
+            self.send_json(*error(400, "PUBLISH_WAIVER_INVALID", "stub: expiresAt 必须在 (now, now+24h]"))
+            return
+        waiver = {
+            "id": "pw_" + str(uuid.uuid4()),
+            "appCode": code,
+            "draftRev": int(draft_rev),
+            "candidateSha256": candidate,
+            "reason": reason.strip(),
+            "approvedBy": "stub-admin",
+            "approvedAt": now_iso(),
+            "expiresAt": expires.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "revokedAt": None,
+        }
+        STATE["waivers"][waiver["id"]] = waiver
+        self.send_json(200, envelope(self.waiver_view(waiver)))
+
+    def revoke_waiver(self, waiver_id):
+        waiver = STATE["waivers"].get(waiver_id)
+        if waiver is None:
+            self.send_json(*error(404, "PUBLISH_WAIVER_NOT_FOUND", "stub: 豁免不存在"))
+            return
+        if waiver["revokedAt"] is None:
+            waiver["revokedAt"] = now_iso()
+        self.send_json(200, envelope(self.waiver_view(waiver)))
 
     def commit(self, code, app, body):
         if not isinstance(body, dict) or "idempotencyRequestNo" not in body:
@@ -417,6 +613,13 @@ class Handler(BaseHTTPRequestHandler):
         if body.get("precheckId") != precheck.get("precheckId"):
             self.send_json(*error(409, "PRECHECK_REQUIRED", "stub: precheckId 不匹配"))
             return
+        confirmation = body.get("evaluationEnvironmentConfirmation")
+        if (not isinstance(confirmation, dict)
+                or confirmation.get("confirmed") is not True
+                or confirmation.get("precheckId") != precheck.get("precheckId")):
+            # 与 AppService.requirePublicationEnvironment 对齐：DEMO 非 REAL，必须显式确认。
+            self.send_json(*error(409, "EVALUATION_ENVIRONMENT_CONFIRMATION_REQUIRED", "stub: DEMO 环境提交需 evaluationEnvironmentConfirmation"))
+            return
         if mode == "pin-failed":
             self.send_json(*error(502, "PIN_FAILED", "stub: pin fail-closed"))
             return
@@ -436,6 +639,7 @@ class Handler(BaseHTTPRequestHandler):
                 "platformTenant": TENANT,
                 "appCode": code,
                 "environment": ENV,
+                "space": ontology.get("space") or SPACE_A,
                 "boundAt": now_iso(),
                 "status": "ACTIVE",
             }
@@ -581,14 +785,15 @@ class Handler(BaseHTTPRequestHandler):
             self.send_json(*error(403, "NO_PERMISSION", "stub: 凭据不属于该租户"))
             return
         release = body.get("releaseId")
-        if release not in (RELEASE_OLD, RELEASE_NEW):
+        allowed = (RELEASE_B,) if target == SPACE_B else (RELEASE_OLD, RELEASE_NEW)
+        if release not in allowed:
             self.send_json(*error(403, "NO_PERMISSION", "stub: 版本不属于该空间"))
             return
         app_code = str(body.get("appCode") or "")
         environment = str(body.get("environment") or ENV)
         key = (credential["tenant"], app_code, environment)
         existing = STATE["bindings"].get(key)
-        if existing and existing["releaseId"] == release:
+        if existing and existing["releaseId"] == release and existing.get("space") == target:
             self.send_json(200, envelope({
                 "bindingId": existing["bindingId"],
                 "releaseId": release,
@@ -604,6 +809,7 @@ class Handler(BaseHTTPRequestHandler):
             "platformTenant": credential["tenant"],
             "appCode": app_code,
             "environment": environment,
+            "space": target,
             "boundAt": now_iso(),
             "status": "ACTIVE",
         }
@@ -634,6 +840,10 @@ class Handler(BaseHTTPRequestHandler):
         if binding is None:
             self.send_json(*error(404, "BINDING_NOT_FOUND", "stub: 该应用在当前环境没有生效的版本绑定"))
             return
+        # 真实 OR 以凭据所属空间授权：B 空间身份即使租户相同也不能读 A 空间绑定。
+        if binding.get("space") != credential["space"]:
+            self.send_json(*error(403, "NO_PERMISSION", "stub: 凭据不属于该空间"))
+            return
         self.send_json(200, envelope(dict(binding)))
 
     def unbind(self, binding_id):
@@ -644,6 +854,9 @@ class Handler(BaseHTTPRequestHandler):
             if binding["bindingId"] == binding_id:
                 if key[0] != credential["tenant"]:
                     self.send_json(*error(403, "NO_PERMISSION", "stub: 凭据不属于该租户"))
+                    return
+                if binding.get("space") != credential["space"]:
+                    self.send_json(*error(403, "NO_PERMISSION", "stub: 凭据不属于该空间"))
                     return
                 del STATE["bindings"][key]
                 self.send_json(200, envelope({"bindingId": binding_id, "releaseId": binding["releaseId"], "status": "UNBOUND"}))
@@ -748,7 +961,7 @@ def main():
     parser.add_argument("--port", type=int, default=18283)
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--mode", default="normal",
-                        choices=["normal", "server-error", "gateway-500", "pin-skipped", "pin-failed", "binding-404"])
+                        choices=["normal", "server-error", "gateway-500", "pin-skipped", "pin-failed", "binding-404", "s1"])
     args = parser.parse_args()
     reset_state(args.mode)
     server = ThreadingHTTPServer((args.host, args.port), Handler)

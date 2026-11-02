@@ -296,8 +296,15 @@ if ($Verdict -eq 'PASS') {
             Add-Check ($tag + '-exec-timeout') ($timeout -ge 100 -and $timeout -le 600000) ('timeout_ms=' + $timeout)
         }
         $ToolCodes += $toolCode
+        if ($script:FirstFailure) { break }
     }
-    Add-Check 'J4a-同空间' (@($spaceSeen | Sort-Object -Unique).Count -eq 1) ('spaceCodes=' + (@($spaceSeen | Sort-Object -Unique) -join ','))
+    if ($script:FirstFailure) {
+        # 复审 P1-7：J4a 任一清单校验失败即结束本段，不得继续导入产生副作用。
+        $Verdict = 'FAIL'
+        $Reason = 'J4a 清单校验失败，未发起导入：' + $script:FirstFailure
+    } else {
+        Add-Check 'J4a-同空间' (@($spaceSeen | Sort-Object -Unique).Count -eq 1) ('spaceCodes=' + (@($spaceSeen | Sort-Object -Unique) -join ','))
+    }
 }
 
 # ---- J4b：导入为技能草稿 ----
@@ -317,7 +324,17 @@ if ($Verdict -eq 'PASS') {
 if ($Verdict -eq 'PASS') {
     $payload = [ordered]@{ manifests = @($Manifests); authScheme = 'API_KEY'; authRef = $AuthRef }
     $bodyJson = $payload | ConvertTo-Json -Depth 32 -Compress
-    Add-Check 'J4b-请求体大小' ([Text.Encoding]::UTF8.GetByteCount($bodyJson) -le 2097152) ('bytes=' + [Text.Encoding]::UTF8.GetByteCount($bodyJson))
+    $bodyBytes = [Text.Encoding]::UTF8.GetByteCount($bodyJson)
+    Add-Check 'J4b-请求体大小' ($bodyBytes -le 2097152) ('bytes=' + $bodyBytes)
+    if ($bodyBytes -gt 2097152) {
+        # 复审 P1-7：体积超限同样不得发导入请求。
+        $Verdict = 'FAIL'
+        $Reason = 'J4b 请求体超过 2MiB，未发起导入'
+    }
+}
+
+# 只有 J4a 清单校验与 J4b 前置全部通过、且无 FirstFailure 时才允许导入（复审 P1-7）。
+if ($Verdict -eq 'PASS' -and -not $script:FirstFailure) {
     $importUrl = $PlatformBase.TrimEnd('/') + '/admin/skills/import-ontology-manifests'
     try {
         $importResponse = Invoke-J4Http -Method 'POST' -Url $importUrl -Headers @{ 'Authorization' = ('Bearer ' + $BearerToken) } -Body $payload

@@ -36,6 +36,11 @@ param(
     [string]$IsolationSpaceId,
     [string]$IsolationReleaseId,
     [string]$IsolationOpCode,
+    # 第二合法身份（B 空间 binder 服务凭据）：有则证“合法身份跨空间仍被拒”，
+    # 没有则记 SKIPPED-BLOCKED，明确缺什么，不用伪造身份头替代（EX-06 复审 J8）。
+    [string]$IsolationBinderKey,
+    [string]$IsolationBinderKeyEnv = 'AGENT_SECRET_JOINT_ISOLATION_BINDER_KEY',
+    [string]$IsolationAppCode,
     [string]$BinderKey,
     [string]$BinderKeyEnv = 'AGENT_SECRET_ONTO_APP_BINDER_KEY',
     [string]$OntologyAdminBearer,
@@ -204,17 +209,19 @@ function Complete-Stage {
     exit $ExitFail
 }
 
-function Get-OrBinding([string]$Code, [string]$Tenant, [hashtable]$ExtraHeaders) {
+function Get-OrBinding([string]$Code, [string]$Tenant, [hashtable]$ExtraHeaders, [string]$ApiKey) {
     $query = '?platformTenant=' + [Uri]::EscapeDataString($Tenant) +
         '&appCode=' + [Uri]::EscapeDataString($Code) +
         '&environment=' + [Uri]::EscapeDataString($Environment)
-    $headers = @{ 'X-API-Key' = $BinderKeyValue }
+    $key = $BinderKeyValue
+    if (Get-Text $ApiKey) { $key = Get-Text $ApiKey }
+    $headers = @{ 'X-API-Key' = $key }
     if ($ExtraHeaders) { foreach ($name in $ExtraHeaders.Keys) { $headers[$name] = $ExtraHeaders[$name] } }
     $response = Invoke-StageHttp -Method 'GET' -Url ($OntologyBase.TrimEnd('/') + '/onto/internal/release-bindings' + $query) -Headers $headers
     return (Test-Envelope $response @(200) 'OK')
 }
 
-function Set-OrBinding([string]$TargetSpace, [string]$TargetRelease, [string]$Code, [hashtable]$ExtraHeaders) {
+function Set-OrBinding([string]$TargetSpace, [string]$TargetRelease, [string]$Code, [hashtable]$ExtraHeaders, [string]$ApiKey) {
     $body = [ordered]@{
         spaceId = $TargetSpace
         platformTenant = $PlatformTenant
@@ -222,7 +229,9 @@ function Set-OrBinding([string]$TargetSpace, [string]$TargetRelease, [string]$Co
         environment = $Environment
         releaseId = $TargetRelease
     }
-    $headers = @{ 'X-API-Key' = $BinderKeyValue }
+    $key = $BinderKeyValue
+    if (Get-Text $ApiKey) { $key = Get-Text $ApiKey }
+    $headers = @{ 'X-API-Key' = $key }
     if ($ExtraHeaders) { foreach ($name in $ExtraHeaders.Keys) { $headers[$name] = $ExtraHeaders[$name] } }
     $response = Invoke-StageHttp -Method 'POST' -Url ($OntologyBase.TrimEnd('/') + '/onto/internal/release-bindings') -Headers $headers -Body $body
     return (Test-Envelope $response @(200, 401, 403, 404) 'NO_PERMISSION')
@@ -230,6 +239,10 @@ function Set-OrBinding([string]$TargetSpace, [string]$TargetRelease, [string]$Co
 
 # ---- 前置输入 ----
 $BinderKeyValue = Resolve-StageKey $BinderKey $BinderKeyEnv $CredentialsFile 'BINDER'
+# 第二合法身份只从显式参数/专用环境变量读取：credentials.env 可能有多个 *_BINDER，
+# 按后缀猜会误用主 binder，因此这里不读凭据文件。
+$IsolationBinderKeyValue = Get-Text $IsolationBinderKey
+if (-not $IsolationBinderKeyValue -and (Get-Text $IsolationBinderKeyEnv)) { $IsolationBinderKeyValue = Get-Text ([Environment]::GetEnvironmentVariable($IsolationBinderKeyEnv)) }
 $AdminBearerValue = Resolve-StageKey $OntologyAdminBearer $AdminBearerEnv $CredentialsFile 'BEARER'
 $Missing = @()
 foreach ($pair in @(
@@ -244,6 +257,7 @@ if ((Get-Text $IsolationReleaseId) -and ((Get-Text $IsolationReleaseId) -eq (Get
 if (-not (Get-Text $AppCode)) { $Missing += '-AppCode(A空间绑定解析应用)' }
 if (-not (Get-Text $IsolationOpCode)) { $Missing += '-IsolationOpCode' } elseif ($IsolationOpCode -notmatch $OpPattern) { $Missing += '-IsolationOpCode(形状非法)' }
 if (-not $BinderKeyValue) { $Missing += 'binder凭据(-BinderKey 或 ' + $BinderKeyEnv + ')' } elseif ($BinderKeyValue -notmatch $ServiceKeyPattern) { $Missing += 'binder凭据(需 ontosa_ 前缀加 43 位)' }
+if ($IsolationBinderKeyValue -and $IsolationBinderKeyValue -notmatch $ServiceKeyPattern) { $Missing += '-IsolationBinderKey(需 ontosa_ 前缀加 43 位)' }
 if (-not $AdminBearerValue) { $Missing += 'OR 人工登录 token(-OntologyAdminBearer 或 ' + $AdminBearerEnv + ')' }
 if ($OntologyBase -notmatch '^https?://[^/]+$') { $Missing += '-OntologyBase(需 scheme+host:port，不含路径)' }
 
@@ -255,6 +269,10 @@ if (-not $ProbeApp) {
     $ProbeApp = ('joint_j8_probe_' + $seed).ToLowerInvariant()
 }
 if ($ProbeApp -notmatch $CodePattern) { $ProbeApp = 'joint_j8_probe' }
+# B 空间合法身份写入的探针 appCode 必须与 A 空间探针分开，否则“B 空间无新增绑定”会把合法行算成泄漏。
+$IsolationProbeApp = Get-Text $IsolationAppCode
+if (-not $IsolationProbeApp) { $IsolationProbeApp = ($ProbeApp -creplace '^joint_j8_probe','joint_j8_iso') }
+if ($IsolationProbeApp -notmatch $CodePattern) { $IsolationProbeApp = 'joint_j8_iso' }
 
 $stageInputs = [ordered]@{
     ontologyBase = $OntologyBase
@@ -267,6 +285,8 @@ $stageInputs = [ordered]@{
     isolationReleaseId = (Get-Text $IsolationReleaseId)
     isolationOpCode = (Get-Text $IsolationOpCode)
     probeAppCode = $ProbeApp
+    isolationProbeAppCode = $IsolationProbeApp
+    isolationBinderKeyProvided = [bool]$IsolationBinderKeyValue
     binderKeyProvided = [bool]$BinderKeyValue
     adminBearerProvided = [bool]$AdminBearerValue
     sessionId = (Get-Text $SessionId)
@@ -276,6 +296,7 @@ $stageBoundaries = @(
     'J8 的隔离面来自本轮登记的 isolationFixtures（B 空间真实 release/endpoint）；没有真实 B 空间资源时本段 BLOCKED，不用 A 空间自证。',
     'OR 从凭据行解析空间/租户，body.spaceId 只是复述；因此跨空间/跨租户负例不需要第二个租户的登录身份，也不需要伪造合法身份头。',
     '本段只证明“A 凭据对 B 空间写/读/执行被拒且无新增绑定”，不证明 B 空间自身业务可用。'
+    '额外的第二合法身份腿（-IsolationBinderKey）只证明“在 B 空间合法的 binder 身份跨到 A 空间仍被拒”；缺该输入时如实记 SKIPPED-BLOCKED，不影响 A 凭据负例。'
 )
 
 if ($Missing.Count -gt 0) {
@@ -360,6 +381,36 @@ if ($Verdict -eq 'PASS') {
     if (-not (($forged.Status -eq 403) -and ($forged.Code -ceq 'NO_PERMISSION'))) {
         $Verdict = 'FAIL'
         $Reason = '伪造身份头改变了鉴权结果：HTTP ' + $forged.Status + ' ' + $forged.Code
+    }
+}
+
+# ---- 6b) 第二合法身份（B 空间 binder）跨空间仍被拒 ----
+if ($Verdict -eq 'PASS') {
+    if ($IsolationBinderKeyValue) {
+        $ownBind = Set-OrBinding $IsolationSpaceId $IsolationReleaseId $IsolationProbeApp $null $IsolationBinderKeyValue
+        $ownOk = ($ownBind.Status -eq 200) -and ($ownBind.Code -ceq 'OK') -and ((Get-Text $ownBind.Data.bindingId) -match $UuidPattern)
+        Add-Check 'J8-B空间合法身份绑定' $ownOk ('HTTP ' + $ownBind.Status + ' code=' + $ownBind.Code + ' bindingId=' + (Get-Text $ownBind.Data.bindingId) + ' changed=' + (Get-Text $ownBind.Data.changed))
+        if (-not $ownOk) {
+            $Verdict = 'FAIL'
+            $Reason = 'B 空间合法 binder 无法在本空间写绑定，第二合法身份腿不成立：HTTP ' + $ownBind.Status + ' ' + $ownBind.Code
+        } else {
+            $Details['legalIdentityOwnBind'] = [ordered]@{ httpStatus = $ownBind.Status; code = $ownBind.Code; bindingId = (Get-Text $ownBind.Data.bindingId); changed = $ownBind.Data.changed }
+            $legalCrossRead = Get-OrBinding $AppCode $PlatformTenant $null $IsolationBinderKeyValue
+            $legalReadOk = ($legalCrossRead.Status -eq 403) -and ($legalCrossRead.Code -ceq 'NO_PERMISSION') -and ($null -eq $legalCrossRead.Data)
+            Add-Check 'J8-合法身份跨读A403' $legalReadOk ('HTTP ' + $legalCrossRead.Status + ' code=' + $legalCrossRead.Code + ' data=' + $(if ($null -eq $legalCrossRead.Data) { '<null>' } else { '<present>' }))
+            $Details['legalIdentityCrossRead'] = [ordered]@{ httpStatus = $legalCrossRead.Status; code = $legalCrossRead.Code; dataPresent = ($null -ne $legalCrossRead.Data) }
+            if (-not $legalReadOk) { $Verdict = 'FAIL'; $Reason = 'B 空间合法身份跨读 A 空间未被拒为 403 NO_PERMISSION（或泄漏 data）：HTTP ' + $legalCrossRead.Status + ' ' + $legalCrossRead.Code }
+            if ($Verdict -eq 'PASS') {
+                $legalCrossWrite = Set-OrBinding $SpaceId $ReleaseId $AppCode $null $IsolationBinderKeyValue
+                $legalWriteOk = ($legalCrossWrite.Status -eq 403) -and ($legalCrossWrite.Code -ceq 'NO_PERMISSION')
+                Add-Check 'J8-合法身份跨写A403' $legalWriteOk ('HTTP ' + $legalCrossWrite.Status + ' code=' + $legalCrossWrite.Code)
+                $Details['legalIdentityCrossWrite'] = [ordered]@{ httpStatus = $legalCrossWrite.Status; code = $legalCrossWrite.Code }
+                if (-not $legalWriteOk) { $Verdict = 'FAIL'; $Reason = 'B 空间合法身份跨写 A 空间未被拒为 403 NO_PERMISSION：HTTP ' + $legalCrossWrite.Status + ' ' + $legalCrossWrite.Code }
+            }
+        }
+    } else {
+        Write-Output '[SKIPPED-BLOCKED] J8-合法身份跨空间 缺 -IsolationBinderKey（B 空间合法 binder 服务凭据，或 isolationFixtures.foreignBinderKeyRef）：未证“合法身份跨空间仍被拒”，不伪造身份头替代。'
+        $Details['legalIdentity'] = [ordered]@{ status = 'SKIPPED-BLOCKED'; missing = '-IsolationBinderKey / isolationFixtures.foreignBinderKeyRef' }
     }
 }
 

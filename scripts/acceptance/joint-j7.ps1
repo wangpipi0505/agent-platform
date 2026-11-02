@@ -258,14 +258,16 @@ if (-not (Get-Text $RevocationConsumerCredentialId)) { $Missing += '-RevocationC
 if (-not $DestructiveApproved) { $Missing += '-DestructiveApproved(破坏性撤权必须显式批准)' }
 if ($OntologyBase -notmatch '^https?://[^/]+$') { $Missing += '-OntologyBase(需 scheme+host:port，不含路径)' }
 
-$ProbeApp = Get-Text $ProbeAppCode
-if (-not $ProbeApp) {
+# 探针 appCode 只有一个来源：必须写回 $ProbeAppCode（Set-ProbeBinding 与 stageInputs 都读它）。
+# 旧实现只赋值给 $ProbeApp，发送绑定请求时 appCode 是空串，复审 P1-2。
+$ProbeAppCode = Get-Text $ProbeAppCode
+if (-not $ProbeAppCode) {
     $seed = (Get-Text $SessionId) -replace '[^A-Za-z0-9]', ''
     if (-not $seed) { $seed = $Started.ToString('yyyyMMddHHmmss') }
     if ($seed.Length -gt 20) { $seed = $seed.Substring(0, 20) }
-    $ProbeApp = ('joint_j7_probe_' + $seed).ToLowerInvariant()
+    $ProbeAppCode = ('joint_j7_probe_' + $seed).ToLowerInvariant()
 }
-if ($ProbeApp -notmatch $CodePattern) { $ProbeApp = 'joint_j7_probe' }
+if ($ProbeAppCode -notmatch $CodePattern) { $ProbeAppCode = 'joint_j7_probe' }
 
 $stageInputs = [ordered]@{
     ontologyBase = $OntologyBase
@@ -275,7 +277,7 @@ $stageInputs = [ordered]@{
     spaceCode = (Get-Text $SpaceCode)
     releaseId = (Get-Text $ReleaseId)
     opCode = (Get-Text $OpCode)
-    probeAppCode = $ProbeApp
+    probeAppCode = $ProbeAppCode
     binderCredentialId = (Get-Text $RevocationBinderCredentialId)
     binderPrincipalId = (Get-Text $RevocationBinderPrincipalId)
     consumerCredentialId = (Get-Text $RevocationConsumerCredentialId)

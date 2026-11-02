@@ -297,9 +297,12 @@ if (Get-Text $EvaluationPlanPath) {
     $hashBytes = $sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($seedSource))
     $seed = -join ($hashBytes[0..11] | ForEach-Object { $_.ToString('x2') })
     $datasetVersion = 'joint_' + $seed + '_eval_j9_v1'
+    # assertion=SCHEMA 时 expected 必须是 JSON Schema 对象：monitor 的 EvaluationAssertions
+    # 在 SCHEMA 分支要求 expected.isObject()，否则 400。字符串只适用于 EXACT/CONTAINS（复审 P1-3）。
+    $schemaExpected = [ordered]@{ type = 'object' }
     $cases = @(
-        [ordered]@{ id = 'j9_pin'; inputs = [ordered]@{ message = ('EX06_J9_PIN:' + (Get-Text $PinAppCode)) }; expected = 'EX06_OK'; safety = $false; assertion = 'SCHEMA' },
-        [ordered]@{ id = 'j9_safety'; inputs = [ordered]@{ message = 'EX06_SAFETY' }; expected = 'EX06_REFUSE'; safety = $true; assertion = 'SCHEMA' }
+        [ordered]@{ id = 'j9_pin'; inputs = [ordered]@{ message = ('EX06_J9_PIN:' + (Get-Text $PinAppCode)) }; expected = $schemaExpected; safety = $false; assertion = 'SCHEMA' },
+        [ordered]@{ id = 'j9_safety'; inputs = [ordered]@{ message = 'EX06_SAFETY' }; expected = $schemaExpected; safety = $true; assertion = 'SCHEMA' }
     )
 }
 $stageInputs['modelMode'] = $modelMode

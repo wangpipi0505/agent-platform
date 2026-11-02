@@ -43,6 +43,10 @@ param(
     [string]$IsolationSpaceId,
     [string]$IsolationReleaseId,
     [string]$IsolationOpCode,
+    # J8 第二合法身份（B 空间 binder）：显式参数或专用环境变量，缺失时该腿记 SKIPPED-BLOCKED。
+    [string]$IsolationBinderKey,
+    [string]$IsolationBinderKeyEnv = 'AGENT_SECRET_JOINT_ISOLATION_BINDER_KEY',
+    [string]$IsolationAppCode,
     [string]$OntologyAdminBearer,
     [string]$OntologyAdminBearerEnv = 'AGENT_ACCEPTANCE_OR_BEARER',
     [switch]$DestructiveApproved,
@@ -88,6 +92,7 @@ foreach ($name in $PSBoundParameters.Keys) { $script:BoundParameters[$name] = $t
 
 $script:ReadKeyValue = ''
 $script:BinderKeyValue = ''
+$script:IsolationBinderKeyValue = ''
 $script:BearerValue = ''
 $script:Credentials = $null
 $script:PreparedSummary = $null
@@ -462,6 +467,8 @@ if (-not (Get-JointText $CredentialsFile)) {
 
 $script:ReadKeyValue = Resolve-JointCredential $ReadKey '' $ReadKeyEnv
 $script:BinderKeyValue = Resolve-JointCredential $BinderKey '' $BinderKeyEnv
+# 第二合法身份不按 *_BINDER 后缀猜凭据文件，避免误用主 binder；只认显式值/专用环境变量。
+$script:IsolationBinderKeyValue = Resolve-JointCredential $IsolationBinderKey '' $IsolationBinderKeyEnv
 $script:BearerValue = Resolve-JointCredential $BearerToken '' $BearerTokenEnv
 $script:OntologyBearerValue = Resolve-JointCredential $OntologyAdminBearer '' $OntologyAdminBearerEnv
 if (-not $DryRun -and $prepareExit -eq 0) {
@@ -551,7 +558,7 @@ try {
             }
             if (Get-JointText $CredentialsFile) { $callArgs.CredentialsFile = $CredentialsFile }
         } elseif ($suite -eq 'J8') {
-            $callArgs = [ordered]@{ OntologyBase = $OntologyBase.TrimEnd('/'); PlatformTenant = $PlatformTenant; Environment = $Environment; SpaceId = $SpaceId; ReleaseId = $ReleaseId; AppCode = $AppCode; IsolationSpaceId = $IsolationSpaceId; IsolationReleaseId = $IsolationReleaseId; IsolationOpCode = $IsolationOpCode; BinderKey = $script:BinderKeyValue; OntologyAdminBearer = $script:OntologyBearerValue; EvidenceDir = $EvidenceDir; SessionId = $SessionId }
+            $callArgs = [ordered]@{ OntologyBase = $OntologyBase.TrimEnd('/'); PlatformTenant = $PlatformTenant; Environment = $Environment; SpaceId = $SpaceId; ReleaseId = $ReleaseId; AppCode = $AppCode; IsolationSpaceId = $IsolationSpaceId; IsolationReleaseId = $IsolationReleaseId; IsolationOpCode = $IsolationOpCode; IsolationBinderKey = $script:IsolationBinderKeyValue; IsolationAppCode = $IsolationAppCode; BinderKey = $script:BinderKeyValue; OntologyAdminBearer = $script:OntologyBearerValue; EvidenceDir = $EvidenceDir; SessionId = $SessionId }
             if (Get-JointText $CredentialsFile) { $callArgs.CredentialsFile = $CredentialsFile }
         } else {
             $callArgs = [ordered]@{ OntologyBase = $OntologyBase.TrimEnd('/'); PlatformBase = $PlatformBase.TrimEnd('/'); PlatformTenant = $PlatformTenant; Environment = $Environment; SpaceId = $SpaceId; SpaceCode = $SpaceCode; ReleaseId = $ReleaseId; ReplacementReleaseId = $ReplacementReleaseId; PinAppCode = $PinAppCode; BinderKey = $script:BinderKeyValue; BearerToken = $script:BearerValue; EvidenceDir = $EvidenceDir; SessionId = $SessionId; LivePublicationApproved = $true }
@@ -629,7 +636,7 @@ $summary = [ordered]@{
     startedAt  = $Started.ToUniversalTime().ToString('o')
     finishedAt = (Get-Date).ToUniversalTime().ToString('o')
     dryRun     = [bool]$DryRun
-    inputs     = [ordered]@{ ontologyBase = $OntologyBase; platformBase = $PlatformBase; faultPlatformBase = $FaultPlatformBase; releaseId = $ReleaseId; replacementReleaseId = $ReplacementReleaseId; spaceId = $SpaceId; spaceCode = $SpaceCode; appCode = $AppCode; pinAppCode = $PinAppCode; explicitAppCode = $ExplicitAppCode; opCode = $OpCode; isolationSpaceId = $IsolationSpaceId; isolationReleaseId = $IsolationReleaseId; isolationOpCode = $IsolationOpCode; platformTenant = $PlatformTenant; environment = $Environment; expectSha256 = $ExpectSha256; sessionId = $SessionId; destructiveApproved = [bool]$DestructiveApproved; livePublicationApproved = [bool]$LivePublicationApproved; authRefProvided = [bool](Get-JointText $AuthRef); readKeyProvided = [bool](Get-JointText $script:ReadKeyValue); binderKeyProvided = [bool](Get-JointText $script:BinderKeyValue); bearerProvided = [bool](Get-JointText $script:BearerValue); ontologyAdminBearerProvided = [bool](Get-JointText $script:OntologyBearerValue); manifestPath = $ManifestPath }
+    inputs     = [ordered]@{ ontologyBase = $OntologyBase; platformBase = $PlatformBase; faultPlatformBase = $FaultPlatformBase; releaseId = $ReleaseId; replacementReleaseId = $ReplacementReleaseId; spaceId = $SpaceId; spaceCode = $SpaceCode; appCode = $AppCode; pinAppCode = $PinAppCode; explicitAppCode = $ExplicitAppCode; opCode = $OpCode; isolationSpaceId = $IsolationSpaceId; isolationReleaseId = $IsolationReleaseId; isolationOpCode = $IsolationOpCode; isolationAppCode = $IsolationAppCode; isolationBinderKeyProvided = [bool](Get-JointText $script:IsolationBinderKeyValue); platformTenant = $PlatformTenant; environment = $Environment; expectSha256 = $ExpectSha256; sessionId = $SessionId; destructiveApproved = [bool]$DestructiveApproved; livePublicationApproved = [bool]$LivePublicationApproved; authRefProvided = [bool](Get-JointText $AuthRef); readKeyProvided = [bool](Get-JointText $script:ReadKeyValue); binderKeyProvided = [bool](Get-JointText $script:BinderKeyValue); bearerProvided = [bool](Get-JointText $script:BearerValue); ontologyAdminBearerProvided = [bool](Get-JointText $script:OntologyBearerValue); manifestPath = $ManifestPath }
     results    = @($results)
     totals     = [ordered]@{ pass = $passCount; fail = $failCount; blocked = $blockedCount; skipped = $skippedCount; planned = $plannedCount }
     boundaries = @(
