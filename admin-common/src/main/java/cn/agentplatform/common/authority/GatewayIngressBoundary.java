@@ -366,6 +366,14 @@ public final class GatewayIngressBoundary implements AsyncHandlerInterceptor {
             var r = (HttpServletRequest) request;
             var s = (HttpServletResponse) response;
             boolean observation=false,eventsObservation=false;
+            // EX-43 §3.2: the probe is served by the management endpoint, not by one of the five
+            // governed ingress shapes. route() would throw denied() (an empty 403) before the security
+            // chain's permitAll is ever consulted, so the probe must pass the boundary untouched.
+            String probe = r.getRequestURI();
+            if (probe.equals("/actuator/health") || probe.startsWith("/actuator/health/")) {
+                chain.doFilter(request, response);
+                return;
+            }
             try {
                 var purpose=route(r);
                 observation=purpose==Purpose.STATUS||purpose==Purpose.EVENTS;
