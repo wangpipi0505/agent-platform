@@ -181,6 +181,53 @@ public final class SkillRules {
                     && (!(model.get("path") instanceof String path) || path.isBlank()))
                 throw projectionError("returnSpec.modelSummary为PATH时必须提供非空字符串path");
         }
+        // R01附录I.9/R13：声明式外部产物获取的注册期校验（与运行边界同构）。
+        Object sources = spec.get("artifactSources");
+        if (sources != null) {
+            if (!(sources instanceof Map<?, ?> declared) || declared.isEmpty())
+                throw projectionError("returnSpec.artifactSources必须为非空对象");
+            for (var entry : declared.entrySet()) {
+                if (!(entry.getKey() instanceof String path) || path.isBlank())
+                    throw projectionError("returnSpec.artifactSources的键必须为fileRefPaths路径字符串");
+                if (!(entry.getValue() instanceof Map<?, ?> source))
+                    throw projectionError("returnSpec.artifactSources." + path + "必须为对象");
+                if (!(source.get("retrieve") instanceof Map<?, ?> retrieve))
+                    throw projectionError("returnSpec.artifactSources." + path + ".retrieve必须为对象");
+                Object url = retrieve.get("url");
+                boolean validUrl = false;
+                if (url instanceof String urlText
+                        && urlText.indexOf("{value}") >= 0
+                        && urlText.indexOf("{value}") == urlText.lastIndexOf("{value}")
+                        && urlText.indexOf('\r') < 0
+                        && urlText.indexOf('\n') < 0) {
+                    try {
+                        var base = java.net.URI.create(urlText.replace("{value}", "x"));
+                        validUrl =
+                                java.util.Set.of("http", "https").contains(base.getScheme())
+                                        && base.getHost() != null
+                                        && base.getUserInfo() == null
+                                        && base.getFragment() == null;
+                    } catch (IllegalArgumentException malformed) {
+                        validUrl = false;
+                    }
+                }
+                if (!validUrl)
+                    throw projectionError(
+                            "returnSpec.artifactSources."
+                                + path
+                                + ".retrieve.url必须为绝对http(s)地址且恰好含一个{value}占位");
+                String scheme = Objects.toString(retrieve.get("authScheme"), "NONE");
+                if (!Set.of("NONE", "API_KEY", "BEARER").contains(scheme))
+                    throw projectionError("returnSpec.artifactSources." + path + ".retrieve.authScheme仅支持NONE/API_KEY/BEARER");
+                Object ref = retrieve.get("authRef");
+                if (!"NONE".equals(scheme)
+                        && (!(ref instanceof String refText) || refText.isBlank()))
+                    throw projectionError("returnSpec.artifactSources." + path + ".retrieve.authRef必须为非空secret_ref");
+                Object contentType = retrieve.get("contentType") == null ? source.get("contentType") : retrieve.get("contentType");
+                if (contentType != null && (!(contentType instanceof String type) || type.isBlank() || type.length() > 128))
+                    throw projectionError("returnSpec.artifactSources." + path + ".contentType必须为1至128字符");
+            }
+        }
         Object card = spec.get("cardTemplate");
         if (card != null && !(card instanceof Map) && !(card instanceof List)) {
             if (!(card instanceof String text))

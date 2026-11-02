@@ -28,6 +28,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.*;
 
@@ -1071,7 +1072,14 @@ public class SkillAdapters {
             if (summary.length() > 2000) summary = summary.substring(0, 2000) + "…";
             var refs = new ArrayList<Map<String, Object>>();
             if (spec.get("fileRefPaths") instanceof Collection<?> paths)
-                for (Object path : paths) addFiles(select(output, path.toString()), refs, runId);
+                for (Object pathObj : paths) {
+                    String path = Objects.toString(pathObj, "");
+                    // R01附录I.9/R13：被artifactSources声明的路径由声明式获取接管，
+                    // 其值为业务文件标识而非受控产物ID；未声明路径保持既有行为。
+                    if (declaredArtifactSources(spec).containsKey(path)) continue;
+                    addFiles(select(output, path), refs, runId);
+                }
+            refs.addAll(declaredArtifacts(spec, output, runId));
             String card = "";
             if (spec.containsKey("cardTemplate")) {
                 Object template = spec.get("cardTemplate");
@@ -1082,6 +1090,7 @@ public class SkillAdapters {
             }
             return new Raw(structured, refs, summary, ontology, card, Validation.of(admission));
         } catch (Failure ex) {
+            // R13：声明式获取等路径抛出的Failure已是有界安全文案，直接透传不折叠。
             throw ex;
         } catch (Exception ex) {
             throw new Failure("OUTPUT_INVALID", false, "结果四份内容映射不符合returnSpec");
@@ -1157,6 +1166,88 @@ public class SkillAdapters {
             return result;
         }
         return template;
+    }
+
+    /** R01附录I.9/R13：声明式外部产物获取——URL来自契约、{value}只替换业务标识、不跟随重定向、64MB上限。 */
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> declaredArtifactSources(Map<String, Object> spec) {
+        if (!(spec.get("artifactSources") instanceof Map<?, ?> sources) || sources.isEmpty())
+            return Map.of();
+        return (Map<String, Object>) sources;
+    }
+
+    private List<Map<String, Object>> declaredArtifacts(
+            Map<String, Object> spec, JsonNode output, String runId) {
+        var declared = declaredArtifactSources(spec);
+        if (declared.isEmpty()) return List.of();
+        var refs = new ArrayList<Map<String, Object>>();
+        for (var entry : declared.entrySet()) {
+            String path = Objects.toString(entry.getKey(), "");
+            if (!(entry.getValue() instanceof Map<?, ?> source)
+                    || !(source.get("retrieve") instanceof Map<?, ?> retrieve))
+                throw new Failure("OUTPUT_INVALID", false, "artifactSources每项必须声明retrieve");
+            JsonNode selected;
+            try {
+                selected = select(output, path.startsWith("$") ? path : "$." + path);
+            } catch (Exception ex) {
+                throw new Failure("OUTPUT_INVALID", false, "声明的外部文件标识不存在: " + path);
+            }
+            if (selected.isMissingNode() || selected.isNull() || !selected.isTextual())
+                throw new Failure("OUTPUT_INVALID", false, "声明的外部文件标识必须为字符串: " + path);
+            String identifier = selected.asText();
+            if (!identifier.matches("[A-Za-z0-9._:-]{1,256}"))
+                throw new Failure("OUTPUT_INVALID", false, "外部文件标识含有不允许的字符: " + path);
+            String urlTemplate = Objects.toString(retrieve.get("url"), "");
+            java.net.URI uri;
+            try {
+                uri = java.net.URI.create(urlTemplate.replace("{value}", java.net.URLEncoder.encode(identifier, StandardCharsets.UTF_8)));
+            } catch (IllegalArgumentException malformed) {
+                throw new Failure("OUTPUT_INVALID", false, "retrieve.url无法构造成合法地址: " + path);
+            }
+            var requestBuilder =
+                    java.net.http.HttpRequest.newBuilder(uri)
+                            .GET()
+                            .timeout(Duration.ofSeconds(30));
+            for (var header :
+                    AuthScheme.headers(
+                                    retrieve.get("authScheme"),
+                                    Objects.toString(retrieve.get("authRef"), ""))
+                            .entrySet())
+                requestBuilder.header(header.getKey(), header.getValue());
+            var request = requestBuilder.build();
+            java.net.http.HttpClient client =
+                    java.net.http.HttpClient.newBuilder()
+                            .connectTimeout(Duration.ofSeconds(3))
+                            .followRedirects(java.net.http.HttpClient.Redirect.NEVER)
+                            .build();
+            java.net.http.HttpResponse<byte[]> response;
+            try {
+                response =
+                        client.send(request, java.net.http.HttpResponse.BodyHandlers.ofByteArray());
+            } catch (Exception ex) {
+                throw new Failure("OUTPUT_INVALID", false, "外部产物获取失败: " + path);
+            }
+            if (response.statusCode() != 200)
+                throw new Failure("OUTPUT_INVALID", false, "外部产物获取返回" + response.statusCode() + ": " + path);
+            byte[] body = response.body();
+            if (body.length > 64L * 1024 * 1024)
+                throw new Failure("OUTPUT_INVALID", false, "外部产物超过64MB上限: " + path);
+            String contentType =
+                    Objects.toString(
+                            retrieve.get("contentType") == null ? source.get("contentType") : retrieve.get("contentType"),
+                            response.headers()
+                                    .firstValue("Content-Type")
+                                    .orElse("application/octet-stream")
+                                    .split(";")[0]
+                                    .trim());
+            if (contentType.isBlank() || contentType.length() > 128)
+                contentType = "application/octet-stream";
+            var stored =
+                    artifacts.upload(
+                            contentType, body.length, new java.io.ByteArrayInputStream(body));
+            refs.add(artifacts.controlledReference(Map.of("artifactId", stored.get("artifactId")), runId));
+        }
+        return refs;
     }
 
     private void addFiles(JsonNode value, List<Map<String, Object>> refs, String runId) {
