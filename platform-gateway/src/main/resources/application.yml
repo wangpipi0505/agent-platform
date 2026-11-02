@@ -56,19 +56,6 @@ agent:
       scope-allowlist: ${AGENT_PORTAL_SCOPE_ALLOWLIST:platform.access}
     # authority 域（服务票换发）同样只存引用：密钥名固定为 env:AGENT_SECRET_IAM_GATEWAY_CLIENT，
     # 由 IamStartupGate 在监听端口打开前本地校验其可解析性，不发起任何网络调用。
-    authority:
-      issuer: ${AGENT_IAM_ISSUER:}
-      jwks-uri: ${AGENT_IAM_JWKS_URI:}
-      token-uri: ${AGENT_IAM_TOKEN_URI:}
-      decision-uri: ${AGENT_IAM_DECISION_URI:}
-      client-id: gateway
-      client-secret-ref: env:AGENT_SECRET_IAM_GATEWAY_CLIENT
-      allowed-algorithm: RS256
-      audience: urn:agent-platform:service:gateway
-      max-ticket-seconds: 60
-      max-decision-seconds: 5
-      connect-timeout-ms: 1000
-      read-timeout-ms: 2000
   integration:
     # T18.1 业务入口限流：按集成凭据滑动窗口计数；默认关闭（回滚=恢复 false），max-requests<=0 表示不限。
     rate-limit-enabled: ${AGENT_INTEGRATION_RATE_LIMIT_ENABLED:false}

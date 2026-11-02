@@ -34,15 +34,6 @@ agent:
     # EX-43 phase 2 group B: catalog identity for the iam trust chain.
     service-id: ${AGENT_SECURITY_SERVICEID:model}
     jwt-secret: ${AGENT_JWT_SECRET}
-    authority:
-      issuer: ${AGENT_IAM_ISSUER:}
-      jwks-uri: ${AGENT_IAM_JWKS_URI:}
-      token-uri: ${AGENT_IAM_TOKEN_URI:}
-      decision-uri: ${AGENT_IAM_DECISION_URI:}
-      client-id: model
-      client-secret-ref: env:AGENT_SECRET_IAM_MODEL_CLIENT
-      allowed-algorithm: RS256
-      audience: urn:agent-platform:service:model
     issuer: agent-platform-v12
   services:
     app: ${AGENT_APP_URL:http://127.0.0.1:18081}
