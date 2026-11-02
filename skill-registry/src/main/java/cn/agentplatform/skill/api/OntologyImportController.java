@@ -22,19 +22,20 @@ public class OntologyImportController {
     public Object create(HttpServletRequest request) {
         // manifest本体可能较大（含Schema），沿用OpenAPI导入的2MiB请求体上限防任意分配。
         int max = 2_097_152;
-        if (request.getContentLengthLong() > max)
-            throw new PlatformException(413, "MANIFEST_REQUEST_SIZE", "导入请求最大2MiB");
+        Map<String, Object> value;
         try {
+            if (request.getContentLengthLong() > max)
+                throw new PlatformException(413, "MANIFEST_REQUEST_SIZE", "导入请求最大2MiB");
             var bytes = request.getInputStream().readNBytes(max + 1);
             if (bytes.length > max)
                 throw new PlatformException(413, "MANIFEST_REQUEST_SIZE", "导入请求最大2MiB");
-            Map<String, Object> value =
-                    Json.mapper().readValue(new String(bytes, java.nio.charset.StandardCharsets.UTF_8), Map.class);
-            return ApiResponse.ok(imports.importManifests(value));
+            value = Json.mapper().readValue(new String(bytes, java.nio.charset.StandardCharsets.UTF_8), Map.class);
         } catch (PlatformException ex) {
             throw ex;
         } catch (Exception ex) {
             throw new PlatformException(400, "MANIFEST_PARSE", "导入请求不是合法JSON对象");
         }
+        // R09/JOINT-005：业务调用必须在解析catch之外；重复导入等业务/存储错误不得伪称MANIFEST_PARSE。
+        return ApiResponse.ok(imports.importManifests(value));
     }
 }

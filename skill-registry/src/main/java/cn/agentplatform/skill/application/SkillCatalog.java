@@ -16,6 +16,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -316,33 +317,55 @@ public class SkillCatalog {
         String code = text(body, "code"), name = text(body, "name");
         if (!code.matches("[A-Za-z][A-Za-z0-9_-]{0,63}") || name.length() > 128)
             throw error(400, "INVALID_SKILL", "编码或名称无效");
-        return tx.execute(
-                status -> {
-                    db.update(
-                            "insert into skill.skill(tenant_id,code,name,category,tags)"
-                                    + " values(?,?,?,?,?::jsonb)",
-                            tenant(),
-                            code,
-                            name,
-                            Objects.toString(body.get("category"), ""),
-                            Json.write(body.getOrDefault("tags", List.of())));
-                    var contract =
-                            body.containsKey("type") || body.containsKey("invocation")
-                                    ? normalize(body)
-                                    : Map.<String, Object>of();
-                    // 两个指纹一起写、取同一个规范化对象：sha 覆盖整份契约（含展示文案），
-                    // semanticDigest 只覆盖语义字段（排除集在 SkillDigest 内唯一实现）。
-                    db.update(
-                            "insert into"
-                                + " skill.skill_version(tenant_id,skill_code,version_no,contract,sha256,semantic_digest)"
-                                + " values(?,?,1,?::jsonb,?,?)",
-                            tenant(),
-                            code,
-                            Json.write(contract),
-                            Digest.sha256(Json.canonical(contract)),
-                            SkillDigest.of(contract));
+        try {
+            return tx.execute(
+                    status -> {
+                        // R01/R09：同租户同码重复创建是业务冲突，不覆盖不合并；并发唯一约束同码。
+                        if (!db
+                                .queryForList(
+                                        "select 1 from skill.skill where tenant_id=? and code=?",
+                                        tenant(),
+                                        code)
+                                .isEmpty())
+                            throw error(409, "SKILL_CODE_CONFLICT", "同租户已存在同编码技能；重复导入请使用新编码");
+                        db.update(
+                                "insert into skill.skill(tenant_id,code,name,category,tags)"
+                                        + " values(?,?,?,?,?::jsonb)",
+                                tenant(),
+                                code,
+                                name,
+                                Objects.toString(body.get("category"), ""),
+                                Json.write(body.getOrDefault("tags", List.of())));
+                        var contract =
+                                body.containsKey("type") || body.containsKey("invocation")
+                                        ? normalize(body)
+                                        : Map.<String, Object>of();
+                        // 两个指纹一起写、取同一个规范化对象：sha 覆盖整份契约（含展示文案），
+                        // semanticDigest 只覆盖语义字段（排除集在 SkillDigest 内唯一实现）。
+                        db.update(
+                                "insert into"
+                                    + " skill.skill_version(tenant_id,skill_code,version_no,contract,sha256,semantic_digest)"
+                                    + " values(?,?,1,?::jsonb,?,?)",
+                                tenant(),
+                                code,
+                                Json.write(contract),
+                                Digest.sha256(Json.canonical(contract)),
+                                SkillDigest.of(contract));
                     return get(code, null);
                 });
+        } catch (DataIntegrityViolationException race) {
+            // 仅确认的tenant+code唯一约束冲突映射为SKILL_CODE_CONFLICT；其余存储故障原样脱敏上抛。
+            if (uniqueViolation(race))
+                throw error(409, "SKILL_CODE_CONFLICT", "同租户已存在同编码技能（并发冲突）");
+            throw race;
+        }
+    }
+
+    private static boolean uniqueViolation(Throwable failure) {
+        int depth = 0;
+        for (Throwable cause = failure; cause != null && depth < 8; cause = cause.getCause(), depth++)
+            if (cause instanceof SQLException sql && "23505".equals(sql.getSQLState())) return true;
+        return false;
     }
 
     public Map<String, Object> save(String code, Map<String, Object> body) {

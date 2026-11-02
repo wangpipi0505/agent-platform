@@ -438,6 +438,48 @@ class OntologyManifestImportsTest {
         }
     }
 
+    /** R01/R09：同租户同码重复导入是409业务冲突，不覆盖不合并，skill/version计数不变。 */
+    @Test
+    @EnabledIfEnvironmentVariable(named = "AGENT_DB_PASSWORD", matches = ".+")
+    void postgresDuplicateImportIsBusinessConflictWithoutNewRows() {
+        // 与上方闭环用例同一专库归属门：owner与EX-03标记不符禁止迁移。
+        String database = "agent_platform_ontology_import_test";
+        String password = System.getenv("AGENT_DB_PASSWORD");
+        var admin = new JdbcTemplate(new DriverManagerDataSource("jdbc:postgresql://127.0.0.1:25432/postgres", "agent_v12", password));
+        var ownership = admin.queryForList(
+                "select pg_get_userbyid(datdba) as owner,shobj_description(oid,'pg_database') as marker"
+                        + " from pg_database where datname=?",
+                database);
+        assertEquals(1, ownership.size(), "先由EX-03授权runner核验并准备专库，不自动创建或跳过");
+        assertEquals("agent_v12", ownership.getFirst().get("owner"), "专库owner不符，禁止迁移");
+        assertEquals(
+                "agent-platform EX-03 2026-10-28 ontology import isolated test database",
+                ownership.getFirst().get("marker"),
+                "缺EX-03准确归属标记，禁止迁移");
+        var dataSource = new DriverManagerDataSource("jdbc:postgresql://127.0.0.1:25432/" + database, "agent_v12", password);
+        Flyway.configure().dataSource(dataSource).schemas("skill").defaultSchema("skill").locations("classpath:db/migration").load().migrate();
+        var db = new JdbcTemplate(dataSource);
+        String tenant = "ontology_" + UUID.randomUUID();
+        signIn(tenant, List.of("ADMIN", "EDITOR", "SERVICE"));
+        String reference = SecretVault.put("ontopa_import_test_only");
+        var persistentCatalog = new SkillCatalog(db, new DataSourceTransactionManager(dataSource), mock(SkillClients.class), "http://app.test", false);
+        var importer = new OntologyManifestImports(persistentCatalog);
+        String code = "dup_" + UUID.randomUUID().toString().replace("-", "").substring(0, 8);
+        importer.importManifests(Map.of("manifests", List.of(formalManifest(code)), "authRef", reference));
+        long skillsBefore = db.queryForObject("select count(*) from skill.skill where tenant_id=?", Long.class, tenant);
+        long versionsBefore = db.queryForObject("select count(*) from skill.skill_version where tenant_id=?", Long.class, tenant);
+        var ex = assertThrows(PlatformException.class,
+                () -> importer.importManifests(Map.of("manifests", List.of(formalManifest(code)), "authRef", reference)));
+        assertEquals(409, ex.status());
+        assertEquals("SKILL_CODE_CONFLICT", ex.code());
+        assertEquals(skillsBefore, (long) db.queryForObject("select count(*) from skill.skill where tenant_id=?", Long.class, tenant));
+        assertEquals(versionsBefore, (long) db.queryForObject("select count(*) from skill.skill_version where tenant_id=?", Long.class, tenant));
+        // 他租户同码不误冲突：凭据按租户绑定，须以新租户身份重新登记引用。
+        signIn("ontology_other_" + UUID.randomUUID().toString().replace("-", "").substring(0, 6), List.of("ADMIN", "EDITOR", "SERVICE"));
+        String otherRef = SecretVault.put("ontopa_import_test_only");
+        assertDoesNotThrow(() -> importer.importManifests(Map.of("manifests", List.of(formalManifest(code)), "authRef", otherRef)));
+    }
+
     static void executeFixture(SkillExecution execution, SkillClients clients, String code, long versionId, String sha, long callId, boolean controlled) {
         var arguments = Map.of("region", "A");
         var authority = new LinkedHashMap<String, Object>();
