@@ -153,6 +153,12 @@ public final class AuthorityController {
         try {
             clientId = clients.authenticate(authorization);
             request = AuthorityRequest.parse(body);
+            // 变体 A 只是 exchange 的一个判别位；出现在别的 operation 上说明调用方拼错了请求。
+            // 静默忽略会让它变成一次"看起来带了 opening 标志、实际按普通换票处理"的调用。
+            if (request.gatewayEventsOpening() && !DelegatedAuthority.EXCHANGE.equals(request.operation())) {
+                throw AuthorityException.invalidRequest("gateway_events_opening 只适用于 operation=exchange",
+                        "gateway_events_opening on operation=" + request.operation());
+            }
             Map<String, Object> response = dispatch.run(clientId, request);
             audit.info("authority.audit endpoint={} outcome=permit client_id={} operation={} target={} action={} nonce={}",
                     endpoint, clientId, request.operation(), request.call().target(),

@@ -19,6 +19,9 @@ import java.util.regex.Pattern;
  * <p>{@code service_ticket} 出现在 {@code authorize_workload}（workload 票）与 {@code authorize}
  * （上游已委派的票）；{@code subject_token} 只在 {@code authorize} 出现（gateway 持有的 portal 用户令牌）；
  * {@code decision_id/grant_ref/operation_id} 只在 {@code forward} 出现（转发链的定位三件套）。
+ * <p>{@code gateway_events_opening} 只在 {@code operation=exchange} 上合法（EX-44 变体 A，SSE 观测 opening）。
+ * 它是判别位而不是能力开关：只有布尔 {@code true} 才按 opening 语义校验，拼成字符串等非法形状一律 400——
+ * 静默忽略会把"opening 的前置校验"降级成一次普通换票。
  * <p>不接受额外字段是防"协议悄悄扩张"：新增字段必须先改这里的白名单和对应的平台消费者。
  */
 public record AuthorityRequest(
@@ -30,6 +33,7 @@ public record AuthorityRequest(
         String decisionId,
         String grantRef,
         String operationId,
+        boolean gatewayEventsOpening,
         JsonNode raw) {
 
     public static final int MAX_BODY_BYTES = 16 * 1024;
@@ -96,8 +100,9 @@ public record AuthorityRequest(
         String decisionId = optionalText(node, "decision_id", MAX_TEXT);
         String grantRef = optionalText(node, "grant_ref", MAX_TEXT);
         String operationId = optionalText(node, "operation_id", MAX_TEXT);
+        boolean gatewayEventsOpening = optionalBoolean(node, "gateway_events_opening");
         return new AuthorityRequest(operation, new ServiceCall(target, action, binding), nonce, serviceTicket,
-                subjectToken, decisionId, grantRef, operationId, node);
+                subjectToken, decisionId, grantRef, operationId, gatewayEventsOpening, node);
     }
 
     private static String requiredText(JsonNode node, String field, int max) {
@@ -117,5 +122,23 @@ public record AuthorityRequest(
             throw AuthorityException.invalidRequest(field + " 非法", field + " invalid");
         }
         return value.textValue();
+    }
+
+    /**
+     * EX-44 变体 A 的判别位：缺省即 false；出现时必须是真正的布尔值。
+     *
+     * <p>为什么拒绝字符串 {@code "true"}：客户端只会发布尔 {@code true}，字符串只可能是手写/拼错的请求。
+     * 若静默按 false 处理，一个本意是 opening 的调用会被降级成普通 exchange——服务端不再做目的校验、
+     * 也不再要求 origin，等于让拼写错误绕过本切片新增的两道前置检查。
+     */
+    private static boolean optionalBoolean(JsonNode node, String field) {
+        JsonNode value = node.get(field);
+        if (value == null || value.isNull()) {
+            return false;
+        }
+        if (!value.isBoolean()) {
+            throw AuthorityException.invalidRequest(field + " 必须是布尔值", field + " not boolean");
+        }
+        return value.booleanValue();
     }
 }

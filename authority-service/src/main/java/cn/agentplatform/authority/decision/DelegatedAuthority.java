@@ -12,6 +12,7 @@ import cn.agentplatform.authority.sign.KeyRing;
 import cn.agentplatform.common.Digest;
 import cn.agentplatform.common.Json;
 import cn.agentplatform.common.authority.ResourceBinding;
+import cn.agentplatform.common.authority.RunObservationSelectors;
 import cn.agentplatform.common.authority.ServiceCall;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
@@ -176,12 +177,19 @@ public final class DelegatedAuthority {
      *
      * <p>返回体与 forward 同形（{@code assertion}+{@code ticket}，且断言 claim 里也带 {@code ticket}）：
      * 平台侧 {@code HttpCurrentAuthorityClient.query} 先验决策断言，再从断言 claim 取票，只回 ticket 会被拒。
+     *
+     * <p>EX-44 变体 A（{@code gateway_events_opening=true}，{@code beginGatewayPortalEvents} 的 S0）在同一入口上
+     * 多加两道前置校验：目的只能是 run 观测 metadata 选择器（否则这里就会把任意 delegated 行升级成 opening 票），
+     * 主体凭据必须带 {@code origin_authentication_id}（客户端 :594 对 opening 票强制读取，缺了必 403）。
      */
     public Map<String, Object> exchange(String clientId, AuthorityRequest request) {
         try {
             requireEnabled();
             if (!PORTAL_CALLER.equals(clientId)) {
                 throw AuthorityException.denied("EXCHANGE_CALLER_NOT_GATEWAY");
+            }
+            if (request.gatewayEventsOpening()) {
+                requireOpeningPurpose(request.call());
             }
             if (!routes.permits(clientId, request.call().target(), request.call().action(), RouteDirectory.DELEGATED)) {
                 // 换票只能落在已登记的 delegated 行：否则等于凭空给一个新目标发通行证。
@@ -200,6 +208,12 @@ public final class DelegatedAuthority {
             if (!cap.isAfter(Instant.ofEpochSecond(iat))) {
                 // 令牌在本秒内到期：签出来的票会立刻过期，直接按不可用处理而不是发一张废票。
                 throw AuthorityException.denied("SUBJECT_EXPIRY");
+            }
+            if (request.gatewayEventsOpening() && originOf(subject, "EVENTS_ORIGIN") == null) {
+                // origin 是 S1/S2/S3 关联同一跳登录的唯一键，且客户端对 opening 票强制读取。
+                // 会话端没写（旧会话、派生失败）时在这里拒绝，而不是签一张"服务端 200、客户端必失败"的票。
+                // 若 §10#2 最终确认"origin 可由 authority 从 portal jti 派生"，这个分支应改为派生而非拒绝。
+                throw AuthorityException.denied("EVENTS_ORIGIN");
             }
             DecisionStore.Decision decision = fromSubject(clientId, request, cap);
             IssuedTicket ticket = ticket(decision, clientId, request.call(), iat);
@@ -413,6 +427,26 @@ public final class DelegatedAuthority {
     }
 
     private static final Pattern ORIGIN = Pattern.compile("oa1:[0-9a-f]{32}");
+
+    /**
+     * EX-44 变体 A 的目的校验，与客户端 {@code RunObservationSelectors.requirePurpose(call,"gateway",
+     * "delegated",sourceKind,originKind)} 的 metadata 分支等价：caller/mode/source/origin 已由 exchange 入口
+     * 固定（caller 必须是 gateway、票面 source_kind/origin_kind 恒为 PORTAL），这里只钉 target/action/kind。
+     *
+     * <p>为什么不能只依赖目录行：目录为 {@code (gateway,engine,run.observation.metadata.read,delegated)} 授权，
+     * 但它只约束 target/action，不约束 resource 种类；不做这一步，同一 action 配一个 run-snapshot 资源、
+     * 或任意其它已登记 delegated action，都能换到一张"opening 票"，而客户端会立刻以目的不符 403。
+     *
+     * <p>不反解 resource.id：run id 由客户端编进选择器文本（{@code Json.canonical(List.of(...))}），
+     * 服务端只需要 {@code AuthorityProtocol.operation(...)} 的 {@code same(resource, 请求 resource)} 结构等值。
+     */
+    private static void requireOpeningPurpose(ServiceCall call) {
+        if (!"engine".equals(call.target())
+                || !RunObservationSelectors.ACTION.equals(call.action())
+                || !RunObservationSelectors.KIND.equals(call.resource().kind())) {
+            throw AuthorityException.denied("EVENTS_OPENING_PURPOSE");
+        }
+    }
 
     /**
      * EX-44：读主体凭据上的 {@code origin_authentication_id}。形状必须严格是 {@code oa1:<32hex>}；
