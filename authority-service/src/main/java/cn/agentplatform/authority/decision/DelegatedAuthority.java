@@ -86,8 +86,6 @@ public final class DelegatedAuthority {
     private static final String SOURCE_KIND = "PORTAL";
     /** S3 只接受 gateway 观测 profile；engine/child profile 是 EX-45 的另一跳，不能在这里混用。 */
     public static final String GATEWAY_EVENTS_PROFILE = "portal-gateway-events-response.v1";
-    /** S0 观测窗的硬上限 55s：60s 票/授权预算里留 5s 时钟余量，客户端也按同一数值夹取。 */
-    private static final long EVENTS_OPEN_MAX_SECONDS = 55L;
     /**
      * EX-45 S4：把 S3 开出的 gateway 观测窗换成 engine 侧的一段读授权。
      *
@@ -604,7 +602,9 @@ public final class DelegatedAuthority {
             if (hardDeadline <= iat) {
                 throw AuthorityException.expired("EVENTS_DEADLINE_EXPIRED");
             }
-            long clamp = Math.min(iat + EVENTS_OPEN_MAX_SECONDS, Math.min(epochSeconds(retained.operation(), "expires_at"),
+            // 硬窗上限读配置（默认 55s，客户端按同一数值夹取）：60s 票/授权预算里留 5s 时钟余量，
+            // 配置只允许把它缩到 >=5s，不能放宽。
+            long clamp = Math.min(iat + properties.eventsHardWindowSeconds(), Math.min(epochSeconds(retained.operation(), "expires_at"),
                     Math.min(retained.grantExpiresAt().getEpochSecond(), admission.grantExpiresAt().getEpochSecond())));
             if (hardDeadline > clamp) {
                 throw AuthorityException.denied("EVENTS_DEADLINE");
@@ -727,7 +727,7 @@ public final class DelegatedAuthority {
             if (hardDeadline <= iat) {
                 throw AuthorityException.expired("EVENTS_CHILD_DEADLINE_EXPIRED");
             }
-            if (hardDeadline > iat + EVENTS_OPEN_MAX_SECONDS) {
+            if (hardDeadline > iat + properties.eventsHardWindowSeconds()) {
                 throw AuthorityException.denied("EVENTS_CHILD_DEADLINE");
             }
             if (parent.hardDeadline() == null || hardDeadline != parent.hardDeadline().getEpochSecond()) {
@@ -957,7 +957,7 @@ public final class DelegatedAuthority {
                 throw AuthorityException.expired("EVENTS_CHILD_OPEN_EXPIRED");
             }
             // 子窗口严格不超过父窗口：父窗口的 checked_until 每 5s 续一次，但硬截止时间不可延长。
-            if (hardDeadline > iat + EVENTS_OPEN_MAX_SECONDS
+            if (hardDeadline > iat + properties.eventsHardWindowSeconds()
                     || hardDeadline > parent.hardDeadline().getEpochSecond()) {
                 throw AuthorityException.denied("EVENTS_CHILD_OPEN_DEADLINE");
             }
@@ -973,10 +973,6 @@ public final class DelegatedAuthority {
             }
             String admissionNonce = text(immutable, "admission_nonce");
             String admissionRequestSha256 = text(immutable, "admission_request_sha256");
-            System.out.println("DEBUG-S5 imm nonce=" + admissionNonce + " sha=" + admissionRequestSha256
-                    + " open=" + text(immutable, "opening_decision_id") + " d5=" + child.id()
-                    + " tjti=" + text(immutable, "ticket_jti") + " d5tkt=" + child.ticketJti()
-                    + " cons=" + text(immutable, "consumer"));
             if (admissionNonce == null || admissionNonce.length() > 128
                     || admissionRequestSha256 == null || !SHA256.matcher(admissionRequestSha256).matches()
                     || !Objects.equals(child.id(), text(immutable, "opening_decision_id"))

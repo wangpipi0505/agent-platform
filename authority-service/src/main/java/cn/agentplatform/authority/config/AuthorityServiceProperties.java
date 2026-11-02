@@ -15,6 +15,9 @@ import java.util.regex.Pattern;
  * 签发方自身配置（与平台侧 {@link AuthorityProperties} 是两端契约的两半）。
  * <p>时限上界刻意对齐平台校验器：平台只接受 {@code exp-iat <= maxTicketSeconds(<=60)} 的票据、
  * {@code <= maxDecisionSeconds(<=5)} 的断言，签发方超过这个预算就是签出一张必然被拒的票。
+ * <p>{@code events-hard-window-seconds} 只限制观测窗的 hard_deadline（默认 55s，正是客户端夹取值），
+ * 供测试把"跨过首个断言窗后继续续期"压到秒级；断言窗上限仍是 {@code assertion-seconds<=5}，
+ * 客户端夹取逻辑不读这个配置。
  * <p>{@code clients} 用 {@code Map<service,secret>} 而不是 {@code List<Client>}：map 可以按 key
  * 被环境变量/测试属性单独覆盖（list 只能整体替换），凭据注入因此不需要重写整块配置。
  */
@@ -27,6 +30,7 @@ public record AuthorityServiceProperties(
         String previousKid,
         @DefaultValue("60") int ticketSeconds,
         @DefaultValue("5") int assertionSeconds,
+        @DefaultValue("55") int eventsHardWindowSeconds,
         Map<String, String> clients) {
 
     private static final Pattern KID = Pattern.compile("[A-Za-z0-9._-]{1,64}");
@@ -53,6 +57,12 @@ public record AuthorityServiceProperties(
         }
         if (assertionSeconds < 1 || assertionSeconds > 5) {
             throw new IllegalStateException("AUTHORITY_TTL_INVALID: assertion-seconds 必须在 1..5");
+        }
+        if (eventsHardWindowSeconds < 5 || eventsHardWindowSeconds > 55) {
+            // 只夹观测窗的 hard_deadline 上界（S3 及沿用同一上限的 S4/S5）；断言窗仍是 1..5s，
+            // 客户端夹取的 55s 常量也不随它变。上限 55 与客户端同值，配置不能把硬窗放宽。
+            throw new IllegalStateException(
+                    "AUTHORITY_TTL_INVALID: events-hard-window-seconds 必须在 5..55");
         }
         Map<String, String> normalized = new LinkedHashMap<>();
         if (clients != null) {
