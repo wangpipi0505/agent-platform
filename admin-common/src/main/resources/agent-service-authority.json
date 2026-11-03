@@ -3134,5 +3134,17 @@
   "source": "app-management/src/main/java/cn/agentplatform/app/api/SemanticBindingsController.java:56",
   "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
   "reason": ""
+ },
+ {
+  "method": "GET",
+  "template": "/v1/runs/{id}/semantic-results",
+  "caller": "gateway",
+  "target": "engine",
+  "action": "proxy.engine.get.SemanticResultController.semanticResults",
+  "mode": "delegated",
+  "integrationAllowed": true,
+  "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/SemanticResultController.java:27",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
+  "reason": ""
  }
 ]

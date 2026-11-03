@@ -805,7 +805,20 @@ public class SkillExecution {
                 result.put("ontologyMeta", actual);
             }
         }
+        // SEM-05.1：语义回执随执行事实落库，与本次 call/run 一一对应。拒绝标记保留 valid=false，
+        // 读口据此区分"有语义结论"与"投影被拒"，不得把被拒的投影渲染成成功语义结果。
+        if (raw != null && raw.semantic() != null) result.put("semantic", semanticFact(raw, request));
         return result;
+    }
+
+    private Map<String, Object> semanticFact(SkillAdapters.Raw raw, Map<String, Object> request) {
+        var fact = new LinkedHashMap<String, Object>();
+        fact.put("valid", raw.semantic().valid());
+        fact.put("digest", raw.semantic().digest());
+        fact.put("record", raw.semantic().record());
+        fact.put("callId", request.get("callId"));
+        if (request.get("runId") != null) fact.put("runId", request.get("runId"));
+        return fact;
     }
 
     /**

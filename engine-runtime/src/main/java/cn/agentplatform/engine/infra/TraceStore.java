@@ -75,6 +75,41 @@ public class TraceStore {
         return rows.getFirst();
     }
 
+    /**
+     * SEM-05.1：按运行读取语义回执。
+     *
+     * <p>回执随工具执行事实落在 {@code engine.attempt_note.payload.result.semantic}（kind=
+     * TOOL_EXECUTION_FACT），与 skill.execution_fact 里的是同一份回执的两个投影，这里不另存副本、
+     * 也不重算摘要。两条不变量：①只返回属于该运行的调用，跨运行/跨租户取不到；②只做脱敏投影
+     * （回执本体 + 本次 callId/runId + {@code valid}），不外泄 attempt/节点主键、凭据或管理路径。
+     */
+    public List<Map<String, Object>> semanticResults(String runPublicId, Actor actor) {
+        long run = ((Number) run(runPublicId, actor).get("id")).longValue();
+        var rows =
+                db.queryForList(
+                        "select n.payload from engine.attempt_note n join engine.node_instance i"
+                                + " on i.id=n.node_instance_id"
+                                + " where i.run_id=? and n.kind='TOOL_EXECUTION_FACT'"
+                                + " and n.payload->'result'->'semantic' is not null"
+                                + " order by n.id",
+                        run);
+        var out = new ArrayList<Map<String, Object>>();
+        for (var row : rows) {
+            var payload = json(row.get("payload"));
+            var semantic = payload.path("result").path("semantic");
+            if (semantic.isMissingNode() || semantic.isNull()) continue;
+            Map<String, Object> entry = new LinkedHashMap<>();
+            entry.put("callId", payload.path("callId").isNumber()
+                    ? payload.path("callId").asLong()
+                    : payload.path("callId").asText());
+            entry.put("valid", semantic.path("valid").asBoolean(false));
+            entry.put("digest", semantic.path("digest").asText(""));
+            entry.put("record", Json.read(semantic.path("record").toString(), Map.class));
+            out.add(entry);
+        }
+        return out;
+    }
+
     public List<Map<String, Object>> nodes(long id) {
         legacy(id);
         return db.queryForList(

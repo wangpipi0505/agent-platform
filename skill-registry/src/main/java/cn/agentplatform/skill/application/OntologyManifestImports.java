@@ -1,6 +1,7 @@
 package cn.agentplatform.skill.application;
 
 import cn.agentplatform.common.*;
+import cn.agentplatform.skill.domain.SemanticReceipt;
 import cn.agentplatform.common.auth.AuthScheme;
 import cn.agentplatform.skill.domain.SkillRules;
 
@@ -128,6 +129,12 @@ public class OntologyManifestImports {
             throw invalid("error_semantics必须为数组");
         if (!(manifest.get("return_spec") instanceof Map))
             throw invalid("return_spec必须为对象");
+        try {
+            // SEM-05.1：语义投影路径与 OR 冻结方言同源（$.data.semantic.* 点路径、互不重复）。
+            SemanticReceipt.validatePaths(object(manifest.get("return_spec")));
+        } catch (IllegalArgumentException paths) {
+            throw invalid(paths.getMessage());
+        }
         var body = new LinkedHashMap<String, Object>();
         body.put("code", toolCode);
         body.put("name", bounded(manifest, "name", 128));

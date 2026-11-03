@@ -7,6 +7,7 @@ import cn.agentplatform.common.auth.AuthScheme;
 import cn.agentplatform.common.schema.SchemaWorkBudget;
 import cn.agentplatform.skill.domain.ErrorSemantics;
 import cn.agentplatform.skill.domain.ProcessContract;
+import cn.agentplatform.skill.domain.SemanticReceipt;
 import cn.agentplatform.skill.domain.SkillRules;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -30,6 +31,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 
 @Component
@@ -56,7 +58,19 @@ public class SkillAdapters {
             JsonNode ontologyMeta,
             String cardPayloadJson,
             Validation validation,
-            Map<String, Object> processFact) {
+            Map<String, Object> processFact,
+            SemanticReceipt.Projection semantic) {
+        public Raw(
+                JsonNode structured,
+                List<Map<String, Object>> fileRefs,
+                String summary,
+                JsonNode ontologyMeta,
+                String cardPayloadJson,
+                Validation validation,
+                Map<String, Object> processFact) {
+            this(structured, fileRefs, summary, ontologyMeta, cardPayloadJson, validation, processFact, null);
+        }
+
         public Raw(
                 JsonNode structured,
                 List<Map<String, Object>> refs,
@@ -64,7 +78,7 @@ public class SkillAdapters {
                 JsonNode ontology,
                 String cardPayloadJson,
                 Validation validation) {
-            this(structured, refs, summary, ontology, cardPayloadJson, validation, null);
+            this(structured, refs, summary, ontology, cardPayloadJson, validation, null, null);
         }
 
         public Raw(
@@ -73,7 +87,7 @@ public class SkillAdapters {
                 String summary,
                 JsonNode ontology,
                 String cardPayloadJson) {
-            this(structured, refs, summary, ontology, cardPayloadJson, null, null);
+            this(structured, refs, summary, ontology, cardPayloadJson, null, null, null);
         }
 
         public Raw(
@@ -81,7 +95,7 @@ public class SkillAdapters {
                 List<Map<String, Object>> refs,
                 String summary,
                 JsonNode ontology) {
-            this(structured, refs, summary, ontology, "", null, null);
+            this(structured, refs, summary, ontology, "", null, null, null);
         }
     }
 
@@ -1158,6 +1172,7 @@ public class SkillAdapters {
         }
         var spec = object(contract.getOrDefault("returnSpec", Map.of()));
         JsonNode ontology = ontologyMeta(output, spec);
+        SemanticReceipt.Projection semantic = semantic(output, spec, contract, callId, runId);
         String summary = output.isTextual() ? output.asText() : Json.write(output);
         if (summary.length() > 2000) summary = summary.substring(0, 2000) + "…";
         long effectiveAttempt = attempt < 1 ? 1L : attempt;
@@ -1199,7 +1214,7 @@ public class SkillAdapters {
             }
             if (deadline != 0 || !declaredArtifactSources(spec).isEmpty())
                 remainingBudget(effectiveDeadline, "returnSpec");
-            return new Raw(structured, refs, summary, ontology, card, Validation.of(admission));
+            return new Raw(structured, refs, summary, ontology, card, Validation.of(admission), null, semantic);
         } catch (Failure ex) {
             if (!archivedByThisRead.isEmpty() && runId != null)
                 discardProcessOutputsBounded(
@@ -1276,6 +1291,81 @@ public class SkillAdapters {
             throw new Failure(
                     "OUTPUT_INVALID", false, "returnSpec.ontologyMetaPath的preview=true不得采集为实际版本");
         return meta;
+    }
+
+    /**
+     * SEM-05.1：语义回执投影只认 return_spec 声明的 {@code factSetPath}/{@code evidenceRefsPath}/
+     * {@code timelinessPath}，且片段必须落在 {@code $.data.semantic.*}。
+     *
+     * <p>三条不变量：①未声明任何语义路径的技能原样返回 {@code null}，投影零变化；②声明了但响应
+     * 缺片段、四元组与 {@code meta} 不符、摘要不符或字段越界，产出带 {@code valid=false} 的拒绝
+     * 标记，绝不补齐版本、绝不把候选预览当实际版本、也绝不因为"取不到证据"就让业务成功看起来
+     * 更像成功；③事实集缺失时如实标 {@code PARTIAL}（事实由 SEM-03 事实服务产出），不造空事实
+     * 冒充"查过没有"。
+     */
+    private static SemanticReceipt.Projection semantic(
+            JsonNode output,
+            Map<String, Object> spec,
+            Map<String, Object> contract,
+            long callId,
+            String runId) {
+        boolean declared = false;
+        for (String key : SemanticReceipt.SEMANTIC_PATHS)
+            if (spec.get(key) != null) declared = true;
+        if (!declared) return null;
+        try {
+            JsonNode root = select(output, "$.data.semantic");
+            if (!root.isObject())
+                return SemanticReceipt.rejected(
+                        "SEMANTIC_FIELD_OUT_OF_RANGE",
+                        "returnSpec声明了语义路径但响应缺少data.semantic对象",
+                        contract);
+            Map<String, Object> fragment = new LinkedHashMap<>();
+            fragment.put("releaseRef", asObject(root.path("releaseRef"), "data.semantic.releaseRef"));
+            fragment.put("evidenceRefs", asList(output, spec.get("evidenceRefsPath")));
+            fragment.put("timeliness", asObject(output, spec.get("timelinessPath")));
+            fragment.put("factSet", asObject(output, spec.get("factSetPath")));
+            return SemanticReceipt.project(
+                    contract, metaOf(output, spec), fragment, callId, runId, Instant.now());
+        } catch (IllegalArgumentException invalid) {
+            return SemanticReceipt.rejected(
+                    "SEMANTIC_FIELD_OUT_OF_RANGE", invalid.getMessage(), contract);
+        }
+    }
+
+    /** 四元组核对源：声明了 ontologyMetaPath 就用它，否则取信封根 {@code meta}；都不是对象则留空。 */
+    private static Map<String, Object> metaOf(JsonNode output, Map<String, Object> spec) {
+        JsonNode meta;
+        try {
+            Object declared = spec.get("ontologyMetaPath");
+            meta = declared instanceof String path ? select(output, path) : output.path("meta");
+        } catch (IllegalArgumentException missing) {
+            return Map.of();
+        }
+        return meta.isObject() ? Json.read(meta.toString(), Map.class) : Map.of();
+    }
+
+    private static Object asObject(JsonNode value, String path) {
+        if (value == null || value.isNull() || value.isMissingNode()) return null;
+        if (!value.isObject()) throw new IllegalArgumentException(path + "必须为对象");
+        return Json.read(value.toString(), Object.class);
+    }
+
+    private static Object asObject(JsonNode output, Object declared) {
+        if (declared == null) return null;
+        if (!(declared instanceof String path) || path.isBlank())
+            throw new IllegalArgumentException("语义路径必须为非空字符串");
+        return asObject(select(output, path.trim()), path);
+    }
+
+    private static Object asList(JsonNode output, Object declared) {
+        if (declared == null) return null;
+        if (!(declared instanceof String path) || path.isBlank())
+            throw new IllegalArgumentException("语义路径必须为非空字符串");
+        JsonNode value = select(output, path.trim());
+        if (value.isNull() || value.isMissingNode()) return null;
+        if (!value.isArray()) throw new IllegalArgumentException(path + "必须为数组");
+        return Json.read(value.toString(), Object.class);
     }
 
     private static String valueText(JsonNode value) {
