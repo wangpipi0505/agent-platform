@@ -6,6 +6,7 @@ import { completedControlledCall } from "../../shared/controlled-test";
 import { probeView, serviceAccess } from "../../shared/service-access";
 import { uploadArtifact as uploadArtifactFile } from "../../shared/artifact-upload";
 import { useAuth, useApi } from "../../shared/api";
+import { useUnsavedChanges } from "../../shared/useUnsavedChanges";
 const props = defineProps<{ resource: any; kind: "skill" | "template" }>();
 const api = useApi();
 const auth = useAuth();
@@ -15,6 +16,17 @@ const error = ref("");
 const result = ref<any>();
 const vars = ref("{}");
 const content = ref(props.resource.content || "");
+// MNT-02子步2：以最近一次服务端返回（选中版本 content）为基线计算 dirty；
+// 保存成功后 load() 刷新基线自动复位；本地重渲染不影响。
+const contentBaseline = ref(content.value);
+const contentDirty = computed(() => content.value !== contentBaseline.value);
+useUnsavedChanges({
+  isDirty: () => contentDirty.value,
+  securityKey: () => auth.token ?? undefined,
+  onReset: () => {
+    content.value = contentBaseline.value;
+  },
+});
 const selected = ref<number>();
 const busy = ref(false);
 const models = ref<any[]>([]);
@@ -124,6 +136,8 @@ async function load() {
       if (disposed || generation !== loadGeneration) return;
       versions.value = rows;
     }
+    // 服务端返回即基线：保存/载入后 dirty 复位，不误报。
+    contentBaseline.value = content.value;
     selected.value = versions.value[0]?.versionNo || value.value.currentVersion;
     if (props.kind === "template")
       content.value =
@@ -212,6 +226,7 @@ watch(selected, (version) => {
     content.value =
       versions.value.find((v) => (v.versionNo || v.version) === version)
         ?.content || "";
+  contentBaseline.value = content.value;
 });
 watch(() => [props.resource.code, props.kind, auth.token, auth.user?.tenantId, auth.user?.principalId], () => {
   if (auth.token) void load();

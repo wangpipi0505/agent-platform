@@ -6,6 +6,7 @@ import PageError from "../PageError.vue";
 import PageHeader from "../PageHeader.vue";
 import RunDetail from "../RunDetail.vue";
 import { usePageOperation, usePageTitle } from "../usePageOperation";
+import { useUnsavedChanges } from "../../../shared/useUnsavedChanges";
 import { buildEnvironmentConfirmation, isGateRejection, type EnvironmentConfirmation, type GateRejection } from "../publish-gate";
 import AppOverviewPanel from "./workspace/AppOverviewPanel.vue";
 import AppPublishPanel from "./workspace/AppPublishPanel.vue";
@@ -38,6 +39,17 @@ const catalogs = ref({
 });
 const versions = ref<any[]>([]);
 const config = ref("{}");
+// MNT-02子步2：以最近一次服务端返回的 config 为基线计算 dirty（本地重渲染不算）；
+// saveConfig/saveFlow/saveMetadata 成功后 app.value 更新，基线随之复位不误报。
+const configBaseline = ref("{}");
+const configDirty = computed(() => config.value !== configBaseline.value);
+useUnsavedChanges({
+  isDirty: () => configDirty.value,
+  securityKey: () => auth.token ?? undefined,
+  onReset: () => {
+    config.value = configBaseline.value;
+  },
+});
 const refreshKey = ref(0);
 const precheck = ref<any>();
 const precheckStale = ref(false);
@@ -89,6 +101,7 @@ async function load() {
     );
     if (route.fullPath !== requested) return;
     app.value = next;
+    configBaseline.value = JSON.stringify(app.value?.config ?? {});
     refreshKey.value++;
     config.value = JSON.stringify(next.config || {}, null, 2);
     if (tab.value === "orchestration/flow") {
@@ -140,6 +153,7 @@ async function saveConfig(value?: any) {
       { draftRev: app.value.draftRev, config: value || JSON.parse(config.value) },
     );
     app.value = result;
+    configBaseline.value = JSON.stringify(app.value?.config ?? {});
     precheckStale.value = true;
     success("配置已保存");
   });
@@ -289,6 +303,7 @@ async function saveMetadata() {
       bizCategory: app.value.bizCategory,
       tags: app.value.tags || [],
     });
+    configBaseline.value = JSON.stringify(app.value?.config ?? {});
     precheckStale.value = true;
     success("应用信息已保存");
   });
