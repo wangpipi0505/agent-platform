@@ -3,14 +3,14 @@ package cn.agentplatform.app.infra;
 import cn.agentplatform.common.Actor;
 import cn.agentplatform.common.PlatformException;
 
+import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.FlywayException;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -19,53 +19,54 @@ import static org.junit.jupiter.api.Assertions.*;
  * 真实 PostgreSQL 定向用例（无 AGENT_DB_PASSWORD 时整体跳过，与仓内既有约定一致）。
  *
  * 覆盖的是结构卡要求"不能用 Mock 证明"的部分：修订只追加、expectedRev CAS、requestId 幂等重放、
- * 跨对象引用必须落在已存在修订上、租户隔离。模式来自 V111 迁移文件本身，因此本用例同时验证该迁移可执行。
+ * 跨对象引用必须落在已存在修订上、租户隔离。建表走 Flyway 正式迁移（而不是测试里手写 DDL），
+ * 因此本用例同时证明 V111 能在既有 V110 库上顺利升级。
+ *
+ * 每个 run 使用独立租户前缀，共用同一套表也不会与上一轮残留数据冲突。
  */
 @EnabledIfEnvironmentVariable(named = "AGENT_DB_PASSWORD", matches = ".+")
 class ConnectionProfileRepositoryTest {
 
-    static final Actor ADMIN = new Actor("t1", "u1", Set.of("ADMIN"), Map.of());
+    static final String RUN = Long.toString(System.currentTimeMillis() % 1_000_000L, 36);
+    static final String TENANT = "t-" + RUN;
+    static final Actor ADMIN = new Actor(TENANT, "u-" + RUN, Set.of("ADMIN"), Map.of());
     static JdbcTemplate db;
     static ConnectionProfileRepository repository;
     static int seq;
 
     @BeforeAll
-    static void schema() throws Exception {
-        String url = env("AGENT_DB_URL", "jdbc:postgresql://127.0.0.1:25432/agent_platform_v12");
-        var ds = new DriverManagerDataSource(url, env("AGENT_DB_USER", "agent_v12"),
-                System.getenv("AGENT_DB_PASSWORD"));
+    static void schema() {
+        var ds = new DriverManagerDataSource(
+                env("AGENT_DB_URL", "jdbc:postgresql://127.0.0.1:25432/agent_platform_v12"),
+                env("AGENT_DB_USER", "agent_v12"), System.getenv("AGENT_DB_PASSWORD"));
         ds.setDriverClassName("org.postgresql.Driver");
         db = new JdbcTemplate(ds);
-        db.execute("create schema if not exists app");
-        db.execute("drop table if exists app.config_write_request, app.environment_binding_revision,"
-                + " app.environment_binding, app.connection_profile_version, app.connection_profile cascade");
-        for (String statement : migration()) db.execute(statement);
+        try {
+            migrate(ds);
+        } catch (FlywayException conflict) {
+            // 只有"表已存在但迁移历史缺失"这一种历史残留会走到这里（例如上一轮手工建过表）。
+            // 这里只清理本卡自己的表，不触碰任何既有表；清理后重新走正式迁移。
+            db.execute("drop table if exists app.config_write_request, app.environment_binding_revision,"
+                    + " app.environment_binding, app.connection_profile_version,"
+                    + " app.connection_profile cascade");
+            migrate(ds);
+        }
         repository = new ConnectionProfileRepository(db, new DataSourceTransactionManager(ds));
+    }
+
+    private static void migrate(DriverManagerDataSource ds) {
+        Flyway.configure()
+                .dataSource(ds)
+                .schemas("app")
+                .defaultSchema("app")
+                .locations("classpath:db/migration")
+                .load()
+                .migrate();
     }
 
     private static String env(String name, String fallback) {
         String value = System.getenv(name);
         return value == null || value.isBlank() ? fallback : value;
-    }
-
-    /** 迁移正文按 ; 切分执行；文件头注释先剥掉，避免注释里的分号被当成语句边界。 */
-    private static List<String> migration() throws Exception {
-        try (InputStream in = ConnectionProfileRepositoryTest.class
-                .getResourceAsStream("/db/migration/V111__connection_profiles_and_env_bindings.sql")) {
-            assertNotNull(in, "V111 迁移必须写在 main/resources/db/migration");
-            String text = new String(in.readAllBytes(), StandardCharsets.UTF_8);
-            StringBuilder sql = new StringBuilder();
-            for (String line : text.split("\n")) {
-                String trimmed = line.strip();
-                if (trimmed.startsWith("--") || trimmed.isEmpty()) continue;
-                sql.append(line).append('\n');
-            }
-            List<String> out = new ArrayList<>();
-            for (String statement : sql.toString().split(";")) {
-                if (!statement.isBlank()) out.add(statement.strip());
-            }
-            return out;
-        }
     }
 
     private static ConnectionProfileRepository.ProfileRevision revision(String operation) {
@@ -75,7 +76,7 @@ class ConnectionProfileRepositoryTest {
     }
 
     private static String id(String prefix) {
-        return prefix + "-" + (++seq);
+        return prefix + "-" + RUN + "-" + (++seq);
     }
 
     @Test
@@ -91,7 +92,7 @@ class ConnectionProfileRepositoryTest {
         assertEquals(Boolean.TRUE, replayed.get("replayed"));
         assertEquals(1, replayed.get("currentRev"));
         assertEquals(1, db.queryForObject("select count(*) from app.connection_profile_version"
-                + " where tenant_id='t1' and profile_id=?", Integer.class, profileId));
+                + " where tenant_id=? and profile_id=?", Integer.class, TENANT, profileId));
     }
 
     @Test
@@ -169,7 +170,7 @@ class ConnectionProfileRepositoryTest {
     @Test
     void sameIdentifierInAnotherTenantIsIndependent() {
         String profileId = id("crm-f");
-        var other = new Actor("t2", "u2", Set.of("ADMIN"), Map.of());
+        var other = new Actor("t2-" + RUN, "u2-" + RUN, Set.of("ADMIN"), Map.of());
         repository.createProfile(ADMIN, profileId, "req-" + profileId, "b".repeat(64), revision("customers.read"));
         assertDoesNotThrow(() -> repository.createProfile(other, profileId, "req-" + profileId,
                 "b".repeat(64), revision("customers.read")));
