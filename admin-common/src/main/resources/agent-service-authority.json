@@ -2770,5 +2770,65 @@
   "source": "app-management/src/main/java/cn/agentplatform/app/api/EnvironmentBindingController.java:61",
   "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
   "reason": "ADMIN disables an environment binding; the secret reference is still not resolved by the app service"
+ },
+ {
+  "method": "GET",
+  "template": "/admin/connection-profiles/{profileId}/versions/{profileRev}/grants",
+  "caller": "gateway",
+  "target": "app",
+  "action": "proxy.app.get.ConnectionProfileController.grantList",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/ConnectionProfileController.java:74",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
+  "reason": ""
+ },
+ {
+  "method": "POST",
+  "template": "/admin/connection-profiles/{profileId}/versions/{profileRev}/grants",
+  "caller": "gateway",
+  "target": "app",
+  "action": "proxy.app.post.ConnectionProfileController.grantOne",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/ConnectionProfileController.java:80",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
+  "reason": ""
+ },
+ {
+  "method": "POST",
+  "template": "/admin/connection-profiles/{profileId}/versions/{profileRev}/grants/{grantId}/revoke",
+  "caller": "gateway",
+  "target": "app",
+  "action": "proxy.app.post.ConnectionProfileController.revokeGrant",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/ConnectionProfileController.java:87",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
+  "reason": ""
+ },
+ {
+  "method": "GET",
+  "template": "/internal/connection-profiles/{profileId}/versions/{profileRev}/resolve",
+  "caller": "skill",
+  "target": "app",
+  "action": "app.connection.resolve",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/InternalConnectionProfilesController.java:26",
+  "callerSource": "skill-registry/src/main/java/cn/agentplatform/skill/application/ApprovedConnectionResolver.java:74",
+  "reason": ""
+ },
+ {
+  "method": "GET",
+  "template": "/internal/skills/{code}/approved-connections/{profileId}/versions/{profileRev}",
+  "caller": "engine",
+  "target": "skill",
+  "action": "skill.approved-connection.read",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/ApprovedConnectionSkillController.java:23",
+  "callerSource": "engine-runtime/src/main/java/cn/agentplatform/engine/application/RunService.java:255",
+  "reason": ""
  }
 ]

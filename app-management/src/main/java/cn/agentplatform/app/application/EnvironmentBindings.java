@@ -107,6 +107,11 @@ public class EnvironmentBindings {
         if ("DISABLED".equals(state.status()))
             throw new PlatformException(400, "CONFIG_RELEASE_NOT_ACTIVE",
                     "连接档案已停用，不能被环境绑定引用: " + revision.connectionProfileId());
+        // 契约 §10.3 裁决：绑定必须引用 APPROVED 及以上；引用 DRAFT 视为状态迁移非法，不在运行期"先绑后批"。
+        if (!"APPROVED".equals(state.status()))
+            throw new PlatformException(400, "CONFIG_STATE_TRANSITION_INVALID",
+                    "环境绑定只能引用已批准的连接档案修订: " + revision.connectionProfileId() + "@"
+                            + revision.connectionProfileRev() + " 当前状态 " + state.status());
     }
 
     /** 包内可见：规则用例直接验证字段契约，不必启动 Spring 或连接数据库。 */

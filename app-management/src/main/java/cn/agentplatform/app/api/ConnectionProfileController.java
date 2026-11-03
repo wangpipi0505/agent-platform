@@ -1,5 +1,6 @@
 package cn.agentplatform.app.api;
 
+import cn.agentplatform.app.application.ConnectionGrants;
 import cn.agentplatform.app.application.ConnectionProfiles;
 import cn.agentplatform.common.Actor;
 import cn.agentplatform.common.ApiResponse;
@@ -20,9 +21,11 @@ import java.util.*;
 public class ConnectionProfileController {
 
     private final ConnectionProfiles profiles;
+    private final ConnectionGrants grants;
 
-    public ConnectionProfileController(ConnectionProfiles profiles) {
+    public ConnectionProfileController(ConnectionProfiles profiles, ConnectionGrants grants) {
         this.profiles = profiles;
+        this.grants = grants;
     }
 
     /** requireRole("ADMIN")：非 ADMIN 一律 403，早于任何 JSON 校验。 */
@@ -64,5 +67,27 @@ public class ConnectionProfileController {
     public Object disable(@PathVariable String profileId, @RequestBody Map<String, Object> body) {
         admin();
         return ApiResponse.ok(profiles.disable(profileId, body));
+    }
+
+    // ------------------------------------------------------------ 授权（批准 ≠ 授权）
+
+    @GetMapping("/{profileId}/versions/{profileRev}/grants")
+    public Object grantList(@PathVariable String profileId, @PathVariable int profileRev) {
+        admin();
+        return ApiResponse.ok(grants.list(profileId, profileRev));
+    }
+
+    @PostMapping("/{profileId}/versions/{profileRev}/grants")
+    public Object grantOne(@PathVariable String profileId, @PathVariable int profileRev,
+            @RequestBody Map<String, Object> body) {
+        admin();
+        return ApiResponse.ok(grants.grant(profileId, profileRev, body));
+    }
+
+    @PostMapping("/{profileId}/versions/{profileRev}/grants/{grantId}/revoke")
+    public Object revokeGrant(@PathVariable String profileId, @PathVariable int profileRev,
+            @PathVariable long grantId, @RequestBody(required = false) Map<String, Object> body) {
+        admin();
+        return ApiResponse.ok(grants.revoke(profileId, profileRev, grantId, body == null ? Map.of() : body));
     }
 }

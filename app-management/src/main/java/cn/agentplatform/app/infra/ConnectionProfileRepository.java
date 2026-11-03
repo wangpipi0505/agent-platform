@@ -211,6 +211,35 @@ public class ConnectionProfileRepository {
                 .toList();
     }
 
+    /**
+     * 解析用：钉住指定档案修订、且自身已批准的环境绑定。
+     *
+     * 只取绑定的当前修订（current_rev = binding_rev）：修订不可变，旧修订若指向别的档案修订就不再是有效运行配置。
+     * 绑定自身未批准时不得出现在解析结果里，否则"目录只写了一半"也会被运行期用上。
+     */
+    public List<Map<String, Object>> pinnedBindingRevisions(Actor actor, String profileId, int profileRev) {
+        return db.query("select r.binding_id,r.binding_rev,r.environment,r.base_endpoint,r.secret_ref,"
+                        + "r.runtime_ref::text,r.origin_policy::text,r.health_policy::text,r.declaration_sha256"
+                        + " from app.environment_binding_revision r join app.environment_binding b"
+                        + " on b.tenant_id=r.tenant_id and b.binding_id=r.binding_id"
+                        + " where r.tenant_id=? and r.connection_profile_id=? and r.connection_profile_rev=?"
+                        + " and b.status='APPROVED' and b.current_rev=r.binding_rev"
+                        + " order by r.environment, r.binding_id",
+                (rs, n) -> {
+                    Map<String, Object> m = new LinkedHashMap<>();
+                    m.put("bindingId", rs.getString(1));
+                    m.put("bindingRev", rs.getInt(2));
+                    m.put("environment", rs.getString(3));
+                    m.put("baseEndpoint", rs.getString(4));
+                    m.put("secretRef", rs.getString(5));
+                    m.put("runtimeRef", Json.read(rs.getString(6), Object.class));
+                    m.put("originPolicy", Json.read(rs.getString(7), Object.class));
+                    m.put("healthPolicy", Json.read(rs.getString(8), Object.class));
+                    m.put("declarationSha256", rs.getString(9));
+                    return m;
+                }, actor.tenantId(), profileId, profileRev);
+    }
+
     // ---------------------------------------------------------------- internals
 
     /** 事务 + 锁超时降级：并发写只失败不排队，失败方按同一 requestId 重试即可拿到首次结果。 */
@@ -374,24 +403,24 @@ public class ConnectionProfileRepository {
     private PlatformException explainProfile(Actor actor, String profileId, int expectedRev, String action) {
         var head = head(actor, profileId);
         if (head.isEmpty())
-            return new PlatformException(404, "CONFIG_VERSION_UNKNOWN", "连接档案不存在: " + profileId);
+            return new PlatformException(404, "CONFIG_REF_NOT_FOUND", "连接档案不存在: " + profileId);
         int current = (Integer) head.get().get("currentRev");
         if (current != expectedRev)
             return new PlatformException(409, "CONFIG_REV_CONFLICT",
                     "profileRev 冲突：期望 " + expectedRev + "，当前 " + current);
-        return new PlatformException(400, "INVALID_INPUT",
+        return new PlatformException(400, "CONFIG_STATE_TRANSITION_INVALID",
                 "连接档案状态 " + head.get().get("status") + " 不允许" + action);
     }
 
     private PlatformException explainBinding(Actor actor, String bindingId, int expectedRev, String action) {
         var head = bindingHead(actor, bindingId);
         if (head.isEmpty())
-            return new PlatformException(404, "CONFIG_VERSION_UNKNOWN", "环境绑定不存在: " + bindingId);
+            return new PlatformException(404, "CONFIG_REF_NOT_FOUND", "环境绑定不存在: " + bindingId);
         int current = (Integer) head.get().get("currentRev");
         if (current != expectedRev)
             return new PlatformException(409, "CONFIG_REV_CONFLICT",
                     "bindingRev 冲突：期望 " + expectedRev + "，当前 " + current);
-        return new PlatformException(400, "INVALID_INPUT",
+        return new PlatformException(400, "CONFIG_STATE_TRANSITION_INVALID",
                 "环境绑定状态 " + head.get().get("status") + " 不允许" + action);
     }
 }

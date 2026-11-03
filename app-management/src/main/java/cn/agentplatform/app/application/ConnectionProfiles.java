@@ -41,8 +41,13 @@ public class ConnectionProfiles {
     private static final Set<String> ENDPOINT_KEYS = Set.of("hosts", "pathPrefixes", "httpMethods");
     private static final Set<String> AUTH_KEYS = Set.of("kind", "headerName");
     private static final Set<String> IDENTITY_KEYS = Set.of("mode", "subjectSource");
-    private static final Set<String> AUTH_KINDS = Set.of("NONE", "API_KEY", "OAUTH2_CLIENT_CREDENTIALS", "MTLS",
-            "SIGNED_REQUEST");
+    private static final Set<String> AUTH_KINDS = Set.of("NONE", "BEARER", "API_KEY", "OAUTH2_CLIENT_CREDENTIALS",
+            "MTLS", "SIGNED_REQUEST");
+    /**
+     * 运行期已开放的鉴权形态（契约 §10.1 裁决）。其余三种在目录里可以声明，但 resolve/校验必须显式拒绝，
+     * 不能"看不懂就当没鉴权"——留白值一旦静默退化成 NONE，等于把鉴权关掉了。
+     */
+    private static final Set<String> RUNTIME_AUTH_KINDS = Set.of("NONE", "BEARER", "API_KEY");
     private static final Set<String> IDENTITY_MODES = Set.of("PLATFORM_PRINCIPAL", "SERVICE_ACCOUNT");
     private static final Set<String> HTTP_METHODS = Set.of("GET", "POST", "PUT", "PATCH", "DELETE");
 
@@ -294,6 +299,21 @@ public class ConnectionProfiles {
                 list.forEach(stack::push);
             }
         }
+    }
+
+    /**
+     * 运行期只认已开放的鉴权形态；声明为空视为 NONE（无鉴权），声明了未开放形态即拒绝。
+     *
+     * 返回归一后的 kind，供 resolve 回执与后续调用方使用。
+     */
+    static String runtimeAuthKind(Map<String, Object> authScheme) {
+        Object raw = authScheme == null ? null : authScheme.get("kind");
+        if (raw == null) return "NONE";
+        String kind = String.valueOf(raw);
+        if (!RUNTIME_AUTH_KINDS.contains(kind))
+            throw new PlatformException(400, "CONFIG_AUTH_SCHEME_UNSUPPORTED",
+                    "该鉴权形态尚未开放给运行时: " + kind + "（当前支持 NONE/BEARER/API_KEY）");
+        return kind;
     }
 
     static PlatformException invalid(String message) {

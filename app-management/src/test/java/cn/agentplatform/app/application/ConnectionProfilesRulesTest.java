@@ -121,4 +121,39 @@ class ConnectionProfilesRulesTest {
         assertEquals("INVALID_INPUT", code(() -> ConnectionProfiles.requestId(Map.of("requestId", "short"))));
         assertEquals("req-20261103-0001", ConnectionProfiles.requestId(Map.of("requestId", "req-20261103-0001")));
     }
+
+    @Test
+    void bearerIsDeclarableAndRuntimeSupported() {
+        // §10.1：BEARER 在目录里可声明，运行期也已开放。
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("protocol", "HTTP_SYNC");
+        body.put("operationAllowlist", List.of("customers.read"));
+        body.put("authScheme", Map.of("kind", "BEARER", "headerName", "Authorization"));
+        body.put("identityPolicy", Map.of("mode", "PLATFORM_PRINCIPAL"));
+        body.put("allowedUses", List.of("read"));
+        var revision = ConnectionProfiles.declaration(body);
+        assertEquals("BEARER", ConnectionProfiles.runtimeAuthKind(revision.authScheme()));
+    }
+
+    @Test
+    void frozenAuthKindsDeclareButNeverResolve() {
+        // 可声明（目录要能记录未来形态），但 resolve 必须显式拒绝，不能静默当 NONE。
+        for (String kind : List.of("OAUTH2_CLIENT_CREDENTIALS", "MTLS", "SIGNED_REQUEST")) {
+            Map<String, Object> body = new LinkedHashMap<>();
+            body.put("protocol", "HTTP_SYNC");
+            body.put("operationAllowlist", List.of("customers.read"));
+            body.put("authScheme", Map.of("kind", kind));
+            body.put("identityPolicy", Map.of("mode", "SERVICE_ACCOUNT"));
+            body.put("allowedUses", List.of("read"));
+            var revision = ConnectionProfiles.declaration(body);
+            assertEquals("CONFIG_AUTH_SCHEME_UNSUPPORTED",
+                    code(() -> ConnectionProfiles.runtimeAuthKind(revision.authScheme())));
+        }
+    }
+
+    @Test
+    void absentAuthSchemeMeansNoAuthentication() {
+        assertEquals("NONE", ConnectionProfiles.runtimeAuthKind(Map.of()));
+        assertEquals("NONE", ConnectionProfiles.runtimeAuthKind(null));
+    }
 }
