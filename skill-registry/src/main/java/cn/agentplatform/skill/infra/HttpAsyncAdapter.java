@@ -9,6 +9,8 @@ import cn.agentplatform.skill.domain.SkillRules;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import org.springframework.http.client.ClientHttpRequestFactory;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -16,6 +18,8 @@ import org.springframework.web.client.RestClient;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.net.http.HttpClient;
+import java.time.Duration;
 import java.util.*;
 
 /**
@@ -72,6 +76,36 @@ public class HttpAsyncAdapter {
 
     private final JdbcTemplate db;
     private IdentityMappingClient identityMapping;
+    private HttpClient queryTransport;
+    private boolean queryTransportClosed;
+
+    /** 查询共享连接池；每次请求的剩余期限由独立factory持有，不能并发改写共享超时。 */
+    private synchronized HttpClient queryTransport() {
+        if (queryTransportClosed) throw unknown("异步查询传输已关闭");
+        if (queryTransport == null)
+            queryTransport = HttpClient.newBuilder()
+                    .connectTimeout(Duration.ofSeconds(3))
+                    .followRedirects(HttpClient.Redirect.NEVER)
+                    .build();
+        return queryTransport;
+    }
+
+    @jakarta.annotation.PreDestroy
+    void closeQueryTransport() {
+        HttpClient owned;
+        synchronized (this) {
+            queryTransportClosed = true;
+            owned = queryTransport;
+        }
+        if (owned != null) {
+            owned.shutdownNow();
+            try {
+                owned.awaitTermination(Duration.ofSeconds(1));
+            } catch (InterruptedException interrupted) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
 
     @org.springframework.beans.factory.annotation.Autowired
     void identityMapping(IdentityMappingClient client) { this.identityMapping = client; }
@@ -584,9 +618,8 @@ public class HttpAsyncAdapter {
 
     /**
      * 复核r04：绝对queryDeadline约束整个响应接收与解析——socket readTimeout只约束"无数据可读
-     * 的等待"，慢滴流（每次都及时给数据）可以无限拖延整流解析与临时文件落盘。守护流在每次读取
-     * 前复查绝对期限，超期即中止真实I/O；socket等待那一侧仍由构造时的剩余预算上界兜底，两条
-     * 途径合起来把状态/结果/复查的接收全程都置于总期限之下。期限耗尽属不确定，保持对账语义。
+     * 的等待"。请求层的JDK传输计时器负责截止取消连接、响应头、成功/错误正文及关闭收尾；
+     * 此处逐次检查负责拒绝已到期的缓冲数据，不将合作式检查冒充在途I/O取消。
      */
     private static InputStream deadlineGuard(InputStream raw, Long queryDeadline) {
         if (queryDeadline == null) return raw;
@@ -734,17 +767,23 @@ public class HttpAsyncAdapter {
             if (identityMapping == null) throw IdentityMappingClient.missingClient();
             identityHeaders = identityMapping.headers(contract);
         } else identityHeaders = Map.of();
-        long remainingMs = Long.MAX_VALUE;
-        if (queryDeadline != null) {
-            long remainingNanos = queryDeadline - System.nanoTime();
-            if (remainingNanos <= 0)
-                throw unknown("查询总期限已耗尽，不再发送新的异步请求");
-            remainingMs = Math.max(1, java.util.concurrent.TimeUnit.NANOSECONDS.toMillis(remainingNanos));
+        ClientHttpRequestFactory factory;
+        if (queryDeadline == null) {
+            // 提交入口保留既有传输语义，本项只修查询的总期限。
+            var submitting = new SimpleClientHttpRequestFactory();
+            submitting.setConnectTimeout(3000);
+            submitting.setReadTimeout(((Number) contract.get("timeoutMs")).intValue());
+            factory = submitting;
+        } else {
+            remainingQueryBudget(queryDeadline);
+            factory = (uri, methodToSend) -> {
+                // RestClient真正创建出站请求时再核期限；身份解析、排队和客户端初始化不能重置预算。
+                remainingQueryBudget(queryDeadline);
+                var bounded = new JdkClientHttpRequestFactory(queryTransport());
+                bounded.setReadTimeout(remainingQueryBudget(queryDeadline));
+                return bounded.createRequest(uri, methodToSend);
+            };
         }
-        var factory = new SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout((int) Math.min(3000, remainingMs));
-        factory.setReadTimeout(
-                (int) Math.min(((Number) contract.get("timeoutMs")).intValue(), remainingMs));
         var request =
                 RestClient.builder()
                         .requestFactory(factory)
@@ -762,6 +801,12 @@ public class HttpAsyncAdapter {
         if (body != null)
             request.contentType(org.springframework.http.MediaType.APPLICATION_JSON).body(body);
         return request;
+    }
+
+    private static Duration remainingQueryBudget(long deadline) {
+        long nanos = deadline - System.nanoTime();
+        if (nanos <= 0) throw unknown("查询总期限已耗尽，不再发送新的异步请求");
+        return Duration.ofNanos(nanos);
     }
 
     private static String segment(String value) {

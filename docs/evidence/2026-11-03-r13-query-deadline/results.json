@@ -1,0 +1,265 @@
+{
+  "baseCommit": "c7184c2d",
+  "red": {
+    "tests": 6,
+    "failures": 4,
+    "errors": 0,
+    "skipped": 0,
+    "failedCases": [
+      {
+        "name": "在途成功正文读取必须在总期限中止",
+        "message": "应在1000ms总期限附近取消真实I/O，实际=1659ms ==> expected: <true> but was: <false>"
+      },
+      {
+        "name": "错误正文读取也必须在总期限中止",
+        "message": "应在1000ms总期限附近取消真实I/O，实际=2664ms ==> expected: <true> but was: <false>"
+      },
+      {
+        "name": "结果拒绝后的响应关闭不能继续排空慢正文",
+        "message": "应在1000ms总期限附近取消真实I/O，实际=1669ms ==> expected: <true> but was: <false>"
+      },
+      {
+        "name": "构造后过期的请求在实际发送前拒绝",
+        "message": "Expected cn.agentplatform.skill.infra.SkillAdapters.Failure to be thrown, but nothing was thrown."
+      }
+    ]
+  },
+  "green": {
+    "tests": 32,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "suites": [
+      {
+        "name": "AsyncQueryDeadlineHttpTest",
+        "tests": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "cases": [
+          {
+            "name": "在途成功正文读取必须在总期限中止",
+            "seconds": 1.054,
+            "passed": true
+          },
+          {
+            "name": "错误正文读取也必须在总期限中止",
+            "seconds": 1.017,
+            "passed": true
+          },
+          {
+            "name": "尚未收到响应头也必须按总期限取消",
+            "seconds": 1.015,
+            "passed": true
+          },
+          {
+            "name": "结果拒绝后的响应关闭不能继续排空慢正文",
+            "seconds": 1.007,
+            "passed": true
+          },
+          {
+            "name": "构造后过期的请求在实际发送前拒绝",
+            "seconds": 0.141,
+            "passed": true
+          },
+          {
+            "name": "及时成功与真实认证拒绝保持原语义",
+            "seconds": 0.039,
+            "passed": true
+          }
+        ]
+      },
+      {
+        "name": "HttpAsyncAdapterTest",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "cases": [
+          {
+            "name": "声明multipart的异步契约在invoke开头400拒绝",
+            "seconds": 0.002,
+            "passed": true
+          },
+          {
+            "name": "拒绝先于尝试身份校验",
+            "seconds": 0.001,
+            "passed": true
+          }
+        ]
+      },
+      {
+        "name": "AuthSchemeOutboundTest",
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "cases": [
+          {
+            "name": "noneSendsNoAuthHeader",
+            "seconds": 0.093,
+            "passed": true
+          },
+          {
+            "name": "asyncAdapterAppliesTheSameSchemeMapping",
+            "seconds": 0.048,
+            "passed": true
+          },
+          {
+            "name": "apiKeySendsOnlyXApiKey",
+            "seconds": 0.013,
+            "passed": true
+          },
+          {
+            "name": "unresolvableCredentialFailsWith401BeforeAnyRequest",
+            "seconds": 0.004,
+            "passed": true
+          },
+          {
+            "name": "undeclaredSchemeKeepsLegacyBearerForStoredContracts",
+            "seconds": 0.013,
+            "passed": true
+          }
+        ]
+      },
+      {
+        "name": "ArtifactHandoverDeclarationTest",
+        "tests": 10,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "cases": [
+          {
+            "name": "多产物交接第二文件失败时第一文件整批补偿清理",
+            "seconds": 0.306,
+            "passed": true
+          },
+          {
+            "name": "获取失败按声明语义如实失败",
+            "seconds": 0.006,
+            "passed": true
+          },
+          {
+            "name": "未声明路径的行为零变化",
+            "seconds": 0.02,
+            "passed": true
+          },
+          {
+            "name": "保存与运行边界拒绝主机占位符与越权凭据及NONE冲突",
+            "seconds": 0.003,
+            "passed": true
+          },
+          {
+            "name": "声明获取归档受控产物并返回引用",
+            "seconds": 0.014,
+            "passed": true
+          },
+          {
+            "name": "期限耗尽或慢存储删除时失败收尾有界且落可恢复CLEANUP_PENDING",
+            "seconds": 0.478,
+            "passed": true
+          },
+          {
+            "name": "未显式传deadline时offload与声明式归档均向ArtifactStore贯通有效期限",
+            "seconds": 0.014,
+            "passed": true
+          },
+          {
+            "name": "流式接收超64MB立即中止且继承外层deadline",
+            "seconds": 0.786,
+            "passed": true
+          },
+          {
+            "name": "真实存储路径绑定当前run归属且跨run拒绝与失败清理生效",
+            "seconds": 0.035,
+            "passed": true
+          },
+          {
+            "name": "普通HTTP与声明式归档统一贯通有效期限且慢存储上传按时中止",
+            "seconds": 0.461,
+            "passed": true
+          }
+        ]
+      },
+      {
+        "name": "ProcessOutputCancellationTest",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "cases": [
+          {
+            "name": "staleAttemptCannotInterruptNewOutputOrDiscardResourcesAfterDelivery",
+            "seconds": 0.197,
+            "passed": true
+          },
+          {
+            "name": "sameAttemptCancellationStopsOutputReadsAndCompensatesOnlyItsUndeliveredBatch",
+            "seconds": 0.137,
+            "passed": true
+          }
+        ]
+      },
+      {
+        "name": "OntologyImportControllerTest",
+        "tests": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "cases": [
+          {
+            "name": "成功路径包ApiResponse",
+            "seconds": 0.366,
+            "passed": true
+          },
+          {
+            "name": "坏JSON仍是解析错误且不触业务",
+            "seconds": 0.0,
+            "passed": true
+          },
+          {
+            "name": "超限请求先拒绝且不触业务",
+            "seconds": 0.017,
+            "passed": true
+          },
+          {
+            "name": "存储故障原样透出不改判解析错误",
+            "seconds": 0.005,
+            "passed": true
+          },
+          {
+            "name": "顶层null字面量按解析错误400拒绝且不触业务",
+            "seconds": 0.002,
+            "passed": true
+          },
+          {
+            "name": "重复导入业务冲突按原码透出",
+            "seconds": 0.004,
+            "passed": true
+          }
+        ]
+      },
+      {
+        "name": "AlgorithmOffloadResponseOwnershipTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "cases": [
+          {
+            "name": "interruptedAwaitOwnsResponseCompletedBeforeCallerStartsStopping",
+            "seconds": 0.379,
+            "passed": true
+          }
+        ]
+      }
+    ]
+  },
+  "testSourceSha256": "2410E62FBB687524B0D52FB29DA7783B0755CFF3CBC04645C3A8F1853DDFCE4F",
+  "testSourceUnchangedSinceRed": true,
+  "functionalRounds": 2,
+  "postgresAccessed": false,
+  "fullAcceptanceStarted": false,
+  "testJvmSocketTemp": "C:/Temp/ap-r13",
+  "testJvmOnlyOverride": "-Djdk.net.unixdomain.tmpdir=C:/Temp/ap-r13"
+}
