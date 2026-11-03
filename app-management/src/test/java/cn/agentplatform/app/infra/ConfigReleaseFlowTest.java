@@ -1,6 +1,8 @@
 package cn.agentplatform.app.infra;
 
 import cn.agentplatform.app.application.AssistantExperiences;
+import cn.agentplatform.app.application.ConnectionProfiles;
+import cn.agentplatform.app.application.PublishedMetadataService;
 import cn.agentplatform.app.application.IntegrationConfigReleases;
 import cn.agentplatform.app.application.IntegrationProfiles;
 import cn.agentplatform.common.PlatformException;
@@ -42,6 +44,8 @@ class ConfigReleaseFlowTest {
     static IntegrationProfileRepository profileRepository;
     static IntegrationProfiles profiles;
     static ConfigReleaseRepository releaseRepository;
+    static ConnectionProfileRepository connectionRepository;
+    static ConnectionProfiles connectionProfiles;
     static IntegrationConfigReleases releases;
 
     @BeforeAll
@@ -59,8 +63,11 @@ class ConfigReleaseFlowTest {
         profileRepository = new IntegrationProfileRepository(db, txm);
         profiles = new IntegrationProfiles(profileRepository, experienceRepository, writes);
         releaseRepository = new ConfigReleaseRepository(db, txm);
+        connectionRepository = new ConnectionProfileRepository(db, txm);
+        connectionProfiles = new ConnectionProfiles(connectionRepository);
         releases = new IntegrationConfigReleases(releaseRepository, experienceRepository, experiences,
-                profileRepository, profiles, new ConnectionProfileRepository(db, txm), writes);
+                profileRepository, profiles, connectionRepository, writes,
+                new PublishedMetadataService(db));
     }
 
     @AfterAll
@@ -76,6 +83,8 @@ class ConfigReleaseFlowTest {
         db.update("delete from app.integration_profile where tenant_id=?", TENANT);
         db.update("delete from app.assistant_experience_revision where tenant_id=?", TENANT);
         db.update("delete from app.assistant_experience where tenant_id=?", TENANT);
+        db.update("delete from app.connection_profile_version where tenant_id=?", TENANT);
+        db.update("delete from app.connection_profile where tenant_id=?", TENANT);
     }
 
     @BeforeEach
@@ -175,6 +184,73 @@ class ConfigReleaseFlowTest {
             assertThrows(PlatformException.class, () -> releases.get(releaseId)).code());
     }
 
+    @Test
+    void projectionFollowsCurrentlyPublishedVersion() {
+        Fixture f = fixture();
+        int experienceRev = approvedExperience(f.appCode());
+        String profileId = approvedProfile(f.appCode(), experienceRev);
+        Map<String, Object> created = releases.create(
+            releaseBody(f, experienceRev, profileId, 1, "production"));
+
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> refs = (List<Map<String, Object>>) created.get("skillRefs");
+        assertEquals(1, refs.size(), "发布回显钉住的精确技能引用");
+        assertEquals("customers.read", refs.get(0).get("code"));
+        assertEquals(3L, ((Number) refs.get(0).get("version")).longValue());
+        releases.validate(String.valueOf(created.get("releaseId")), Map.of("requestId", req("validate")));
+        releases.approve(String.valueOf(created.get("releaseId")), Map.of("requestId", req("approve")));
+        releases.activate(String.valueOf(created.get("releaseId")), Map.of("requestId", req("activate")));
+
+        // 应用重发第 2 版之后，钉在第 1 版的配置不再代表当前应用：投影失败关闭而不是继续对外承诺旧能力。
+        db.update("""
+            insert into app.app_version(tenant_id, app_code, version_no, app_id, app_draft_id, draft_rev,
+              candidate_sha256, snapshot, eval_report_id, published_by)
+            select tenant_id, app_code, 2, app_id, app_draft_id, draft_rev, ?, '{}'::jsonb, 'eval-2', ?
+              from app.app_version where tenant_id=? and app_code=? and version_no=1
+            """, sha("candidate-2-" + f.appCode()), "u-" + RUN, TENANT, f.appCode());
+        db.update("update app.application set current_version_no=2 where tenant_id=? and code=?",
+            TENANT, f.appCode());
+        PlatformException stale = assertThrows(PlatformException.class,
+            () -> releases.experience(current(), f.appCode(), "production"));
+        assertEquals("CONFIG_RELEASE_NOT_ACTIVE", stale.code());
+    }
+
+    @Test
+    void disablingReferencedConnectionBlocksActivation() {
+        Fixture f = fixture();
+        int experienceRev = approvedExperience(f.appCode());
+        String profileId = approvedProfile(f.appCode(), experienceRev);
+        String connectionId = approvedConnection();
+
+        // 正例：引用仍有效时可以激活。
+        String live = stagedRelease(f, experienceRev, profileId, "staging", connectionId);
+        assertEquals("ACTIVE", String.valueOf(
+            releases.activate(live, Map.of("requestId", req("activate"))).get("status")));
+
+        // 负例：引用方被停用之后，另一份发布不能带着它上线。
+        String blocked = stagedRelease(f, experienceRev, profileId, "production", connectionId);
+        connectionProfiles.disable(connectionId,
+            Map.of("requestId", req("conn-disable"), "expectedRev", 1));
+        PlatformException e = assertThrows(PlatformException.class,
+            () -> releases.activate(blocked, Map.of("requestId", req("activate"))));
+        assertEquals("CONFIG_RELEASE_NOT_ACTIVE", e.code());
+        assertEquals(0, db.queryForObject("""
+            select count(*) from app.integration_config_release_activation
+             where tenant_id=? and app_code=? and scope='production'
+            """, Integer.class, TENANT, f.appCode()));
+    }
+
+    @Test
+    void capabilityWithoutSkillReferenceBlocksValidation() {
+        Fixture f = fixture();
+        int experienceRev = approvedExperience(f.appCode(), "customers.read", "ledger.write");
+        String profileId = approvedProfile(f.appCode(), experienceRev);
+        String releaseId = draftRelease(f, experienceRev, profileId);
+        PlatformException e = assertThrows(PlatformException.class,
+            () -> releases.validate(releaseId, Map.of("requestId", req("validate"))));
+        assertEquals("CONFIG_STATE_TRANSITION_INVALID", e.code());
+    }
+
     // ---------------------------------------------------------------- 夹具
 
     record Fixture(String appCode, int appVersion) {}
@@ -183,9 +259,10 @@ class ConfigReleaseFlowTest {
         String appCode = "app-" + RUN + "-" + SEQ.incrementAndGet();
         String candidate = sha("candidate-" + appCode);
         // V102 之后应用主实体带自增 id，草稿、版本与技能引用都用它做外键。
+        // 配置发布钉住的是"某一次已发布版本"，所以夹具先把应用置为已发布、指针指向第 1 版。
         Integer appId = db.queryForObject("""
-            insert into app.application(tenant_id, code, name, type, created_by)
-            values (?, ?, ?, 'CHAT', ?) returning id
+            insert into app.application(tenant_id, code, name, type, status, current_version_no, created_by)
+            values (?, ?, ?, 'CHAT', 'PUBLISHED', 1, ?) returning id
             """, Integer.class, TENANT, appCode, "应用 " + appCode, "u-" + RUN);
         Integer draftId = db.queryForObject("""
             insert into app.app_draft(tenant_id, app_id, app_code, draft_rev)
@@ -278,11 +355,54 @@ class ConfigReleaseFlowTest {
     }
 
     private static Map<String, Object> experienceBody() {
+        return experienceBody("customers.read");
+    }
+
+    private String approvedConnection() {
+        String profileId = "cp-" + RUN + "-" + SEQ.incrementAndGet();
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("profileId", profileId);
+        body.put("protocol", "HTTP_SYNC");
+        body.put("operationAllowlist", List.of("customers.read"));
+        body.put("endpointPolicy", Map.of("hosts", List.of("https://crm.example.com")));
+        body.put("authScheme", Map.of("kind", "API_KEY", "headerName", "X-Api-Key"));
+        body.put("identityPolicy", Map.of("mode", "PLATFORM_PRINCIPAL"));
+        body.put("allowedUses", List.of("read"));
+        body.put("requestId", req("conn-create"));
+        connectionProfiles.create(body);
+        connectionProfiles.approve(profileId,
+            Map.of("requestId", req("conn-approve"), "expectedRev", 1));
+        return profileId;
+    }
+
+    private int approvedExperience(String appCode, String... capabilityCodes) {
+        Map<String, Object> body = experienceBody(capabilityCodes);
+        body.put("requestId", req("exp-create"));
+        int rev = ((Number) experiences.create(appCode, body).get("experienceRev")).intValue();
+        experiences.approve(appCode, Map.of("requestId", req("exp-approve"), "expectedRev", rev));
+        return rev;
+    }
+
+    private String stagedRelease(Fixture f, int experienceRev, String profileId, String scope,
+        String connectionId) {
+        Map<String, Object> body = releaseBody(f, experienceRev, profileId, 1, scope);
+        body.put("connectionProfileRefs",
+            List.of(Map.of("profileId", connectionId, "profileRev", 1)));
+        String releaseId = String.valueOf(releases.create(body).get("releaseId"));
+        releases.validate(releaseId, Map.of("requestId", req("validate")));
+        releases.approve(releaseId, Map.of("requestId", req("approve")));
+        return releaseId;
+    }
+
+    private static Map<String, Object> experienceBody(String... capabilityCodes) {
+        List<Map<String, Object>> capabilities = new ArrayList<>();
+        for (String code : capabilityCodes) {
+            capabilities.add(Map.of("code", code, "label", code, "readOnly", true));
+        }
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("title", "逾期账单助手");
         body.put("welcomeText", "我帮你找出逾期客户。");
-        body.put("capabilityDescriptions", List.of(Map.of(
-            "code", "customers.read", "label", "查询客户", "readOnly", true)));
+        body.put("capabilityDescriptions", capabilities);
         body.put("promptRefs", List.of(Map.of("ref", "overdue-brief", "version", 2)));
         return body;
     }

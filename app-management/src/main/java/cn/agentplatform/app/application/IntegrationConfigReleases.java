@@ -3,6 +3,7 @@ package cn.agentplatform.app.application;
 import cn.agentplatform.app.infra.AssistantExperienceRepository;
 import cn.agentplatform.app.infra.ConfigReleaseRepository;
 import cn.agentplatform.app.infra.ConfigWriteLog;
+import cn.agentplatform.app.domain.PublishedMetadata;
 import cn.agentplatform.app.infra.ConnectionProfileRepository;
 import cn.agentplatform.app.infra.IntegrationProfileRepository;
 import cn.agentplatform.common.Actor;
@@ -38,11 +39,13 @@ public class IntegrationConfigReleases {
   private final IntegrationProfiles profiles;
   private final ConnectionProfileRepository connections;
   private final ConfigWriteLog writes;
+  private final PublishedMetadataService publishedMetadata;
 
   public IntegrationConfigReleases(ConfigReleaseRepository store,
       AssistantExperienceRepository experienceStore, AssistantExperiences experiences,
       IntegrationProfileRepository profileStore, IntegrationProfiles profiles,
-      ConnectionProfileRepository connections, ConfigWriteLog writes) {
+      ConnectionProfileRepository connections, ConfigWriteLog writes,
+      PublishedMetadataService publishedMetadata) {
     this.store = store;
     this.experienceStore = experienceStore;
     this.experiences = experiences;
@@ -50,6 +53,7 @@ public class IntegrationConfigReleases {
     this.profiles = profiles;
     this.connections = connections;
     this.writes = writes;
+    this.publishedMetadata = publishedMetadata;
   }
 
   public Map<String, Object> get(String releaseId) {
@@ -143,6 +147,7 @@ public class IntegrationConfigReleases {
     for (Object raw : (List<?>) row.get("connectionProfileRefs")) {
       requireConnection(actor, asRef(raw));
     }
+    requireCapabilitiesBacked(actor, row);
     String sha = Digest.sha256(Json.canonical(List.of("config-release.validate", releaseId, requestId)));
     Map<String, Object> replayed = writes.replay(actor.tenantId(), "config-release.validate", releaseId,
         requestId, sha);
@@ -172,6 +177,9 @@ public class IntegrationConfigReleases {
       replayed.put("replayed", true);
       return replayed;
     }
+    // 激活前重新核对引用：批准之后仍可能有人停用连接档案、改回体验草稿或重发应用版本。
+    // 只在 validate 时看一次是不够的——那之后到真正切换指针之间隔着任意长的时间。
+    requireReferencesStillValid(actor, releaseId);
     Map<String, Object> out = store.activate(actor, releaseId, requestId,
         () -> view(actor, releaseId, requestId));
     writes.remember(actor.tenantId(), "config-release.activate", releaseId, requestId, sha, out);
@@ -205,6 +213,20 @@ public class IntegrationConfigReleases {
       throw new PlatformException(409, "CONFIG_RELEASE_NOT_ACTIVE",
           "应用 " + appCode + " 在作用域 " + scope + " 没有激活的配置发布");
     }
+    int appVersion = ((Number) release.get("appVersion")).intValue();
+    // 对外投影必须站在"当前真实发布版本"上：配置发布钉住的是某一次发布，应用重新发布之后
+    // 旧配置就不该继续代表这个应用的能力面（文案与引擎实际能力会分叉）。
+    PublishedMetadata published = publishedMetadata.composition(appCode);
+    if (published.versionNo() != appVersion) {
+      throw new PlatformException(409, "CONFIG_RELEASE_NOT_ACTIVE",
+          "激活配置固定在应用版本 " + appVersion + "，当前发布版本是 " + published.versionNo()
+              + "，请针对新版本重新激活配置");
+    }
+    if (!String.valueOf(published.versionSha256())
+        .equals(String.valueOf(release.get("candidateSha256")))) {
+      throw new PlatformException(409, "CONFIG_RELEASE_NOT_ACTIVE",
+          "激活配置的候选摘要与当前发布版本不一致，请重新创建并激活配置发布");
+    }
     int experienceRev = ((Number) release.get("experienceRev")).intValue();
     Map<String, Object> experience = experiences.get(appCode);
     Map<String, Object> revision = revision(experience, experienceRev);
@@ -220,8 +242,7 @@ public class IntegrationConfigReleases {
         "digest", release.get("digest")));
     out.put("title", revision.get("title"));
     out.put("welcomeText", revision.get("welcomeText"));
-    out.put("capabilities", capabilities(actor, appCode, ((Number) release.get("appVersion")).intValue(),
-        revision));
+    out.put("capabilities", capabilities(appCode, published.versionNo(), revision));
     out.put("prompts", prompts(actor, revision));
     out.put("inputPresentation", revision.get("inputPresentation"));
     out.put("resultPresentation", revision.get("resultPresentation"));
@@ -232,12 +253,16 @@ public class IntegrationConfigReleases {
   }
 
   /**
-   * 能力清单按"该应用版本实际引用的技能"过滤：体验里声明了但版本没引用的能力不对外出现，
-   * 避免文案承诺了引擎并不具备的能力。
+   * 能力清单按"当前发布版本精确引用的技能版本"过滤：体验里声明了但版本没引用的能力不对外出现，
+   * 避免文案承诺了引擎并不具备的能力。引用来源是发布元数据（不可变版本 + skill_reference），
+   * 不是客户端传来的 appVersion。
    */
-  private List<Map<String, Object>> capabilities(Actor actor, String appCode, int appVersion,
+  private List<Map<String, Object>> capabilities(String appCode, int publishedVersion,
       Map<String, Object> revision) {
-    Set<String> declared = store.skills(actor, appCode, appVersion);
+    Set<String> declared = new java.util.LinkedHashSet<>();
+    for (Map<String, Object> ref : publishedMetadata.skillReferences(appCode, publishedVersion)) {
+      declared.add(String.valueOf(ref.get("code")));
+    }
     Object raw = revision.get("capabilityDescriptions");
     List<Map<String, Object>> out = new ArrayList<>();
     if (!(raw instanceof List<?> list)) {
@@ -317,9 +342,94 @@ public class IntegrationConfigReleases {
     if (row == null) {
       throw new PlatformException(404, "CONFIG_REF_NOT_FOUND", "配置发布不存在: " + releaseId);
     }
+    // 发布钉住的是不可变应用版本，所以"精确技能引用"可以从版本号确定性读回；
+    // 对外回显它们，让配置者看到这份发布究竟绑定了哪些技能版本，而不是只看到一句版本号。
+    row.put("skillRefs", publishedMetadata.skillReferences(String.valueOf(row.get("appCode")),
+        ((Number) row.get("appVersion")).intValue()));
     row.put("requestId", requestId);
     row.put("replayed", false);
     return row;
+  }
+
+  /**
+   * 激活前复核：这份发布当初校验过的引用，现在是否还有效。
+   *
+   * <p>只在 validate 时看一次不够——批准到真正切换指针之间可能过了很久，期间应用可能重发、
+   * 体验可能被改回草稿、接入档案可能被停用、连接档案可能被撤权。任一项不再成立就不切指针，
+   * 让配置者重新走校验，而不是让过期组合悄悄上线。
+   */
+  private void requireReferencesStillValid(Actor actor, String releaseId) {
+    Map<String, Object> row = store.find(actor, releaseId);
+    if (row == null) {
+      throw new PlatformException(404, "CONFIG_REF_NOT_FOUND", "配置发布不存在: " + releaseId);
+    }
+    String status = String.valueOf(row.get("status"));
+    if (!"APPROVED".equals(status)) {
+      throw new PlatformException(400, "CONFIG_STATE_TRANSITION_INVALID",
+          "状态 " + status + " 不能激活，只有 APPROVED 可以激活");
+    }
+    String appCode = String.valueOf(row.get("appCode"));
+    int appVersion = ((Number) row.get("appVersion")).intValue();
+    Map<String, Object> version = store.appVersion(actor, appCode, appVersion);
+    if (version == null || !String.valueOf(version.get("candidate_sha256"))
+        .equals(String.valueOf(row.get("candidateSha256")))) {
+      throw new PlatformException(400, "CONFIG_VERSION_UNKNOWN",
+          "应用版本已变化或不存在: " + appCode + "@" + appVersion);
+    }
+    experiences.requireApproved(actor, appCode, ((Number) row.get("experienceRev")).intValue());
+    profiles.requireApproved(actor, String.valueOf(row.get("integrationProfileId")),
+        ((Number) row.get("integrationProfileRev")).intValue());
+    for (Object raw : (List<?>) row.get("connectionProfileRefs")) {
+      requireActiveConnection(actor, asRef(raw));
+    }
+    requireCapabilitiesBacked(actor, row);
+  }
+
+  /**
+   * 体验声明的每一项能力，必须由钉住的应用版本真实引用（{@code app.skill_reference}）。
+   * 投影阶段已经按这个口径过滤，但过滤是"少给"；校验阶段要直接拦下来，否则配置者会以为
+   * 自己发布了十项能力，实际对外只出现三项。
+   *
+   * <p>版本完全没有技能引用时不设限（纯对话应用），与投影口径保持一致。
+   */
+  private void requireCapabilitiesBacked(Actor actor, Map<String, Object> row) {
+    String appCode = String.valueOf(row.get("appCode"));
+    int appVersion = ((Number) row.get("appVersion")).intValue();
+    Set<String> declared = new java.util.LinkedHashSet<>();
+    for (Map<String, Object> ref : publishedMetadata.skillReferences(appCode, appVersion)) {
+      declared.add(String.valueOf(ref.get("code")));
+    }
+    if (declared.isEmpty()) {
+      return;
+    }
+    Map<String, Object> revision = revision(experiences.get(appCode),
+        ((Number) row.get("experienceRev")).intValue());
+    Object raw = revision.get("capabilityDescriptions");
+    if (!(raw instanceof List<?> list)) {
+      return;
+    }
+    for (Object item : list) {
+      String code = String.valueOf(asMap(item).get("code"));
+      if (!declared.contains(code)) {
+        throw new PlatformException(400, "CONFIG_STATE_TRANSITION_INVALID",
+            "体验声明的能力在该应用版本没有对应技能引用: " + code + "（" + appCode + "@" + appVersion + "）");
+      }
+    }
+  }
+
+  /** 激活阶段的连接引用还要求档案处于 APPROVED：停用或未批准都不该带着上线。 */
+  private void requireActiveConnection(Actor actor, Map<String, Object> ref) {
+    String profileId = String.valueOf(ref.get("profileId"));
+    requireConnection(actor, ref);
+    var state = connections.profileState(actor, profileId,
+        ((Number) ref.get("profileRev")).intValue());
+    if (state.isEmpty()) {
+      throw new PlatformException(404, "CONFIG_REF_NOT_FOUND", "连接档案不存在: " + profileId);
+    }
+    if (!"APPROVED".equals(state.get().status())) {
+      throw new PlatformException(409, "CONFIG_RELEASE_NOT_ACTIVE",
+          "被引用的连接档案已停用或尚未批准: " + profileId + "（当前状态 " + state.get().status() + "）");
+    }
   }
 
   private static Map<String, Object> revision(Map<String, Object> experience, int rev) {
