@@ -137,8 +137,9 @@ class ConnectionProfileRepositoryTest {
 
         PlatformException e = assertThrows(PlatformException.class, () -> repository.reviseProfile(ADMIN, profileId,
                 1, "req-" + profileId + "-rev", "f".repeat(64), revision("orders.read")));
+        // INT-02子步2按契约裁决（configuration-profile.md §10.2）改用状态机专用拒绝码
         assertEquals(400, e.status());
-        assertEquals("INVALID_INPUT", e.code());
+        assertEquals("CONFIG_STATE_TRANSITION_INVALID", e.code());
 
         repository.transitionProfile(ADMIN, profileId, 1, "req-" + profileId + "-dis", "1".repeat(64), "DISABLED");
         PlatformException again = assertThrows(PlatformException.class, () -> repository.reviseProfile(ADMIN,
