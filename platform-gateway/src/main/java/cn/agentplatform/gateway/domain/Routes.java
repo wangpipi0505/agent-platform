@@ -15,6 +15,8 @@ public final class Routes {
                 "/admin/capability-packages(?:/import|/[1-9][0-9]*(?:/bindings/resolve|/applications)?)?"))
             return "app";
         if (path.matches("/v1/apps/[A-Za-z0-9_-]+/input-schema")) return "app";
+        // 对外体验投影：只读、脱敏，且由 app 服务按激活发布裁剪，因此提前于会话/运行前缀匹配。
+        if (path.matches("/v1/apps/[A-Za-z0-9_-]+/experience")) return "app";
         // 会话所有权与固定版本由运行时校验，不能被后面的应用CRUD前缀吞掉。
         if (path.matches(
                 "/(?:admin|v1)/apps/[A-Za-z0-9_-]+/sessions(?:/[A-Za-z0-9_-]+(?:/turns)?)?"))
@@ -35,7 +37,10 @@ public final class Routes {
                 // 连接档案与环境绑定是配置面资源：虽然由 app 服务持有，但只有 ADMIN 能读写；
                 // 这里只决定转发方向，不放宽调用权限（集成票据仍由 IntegrationPolicy 挡在外面）。
                 || path.startsWith("/admin/connection-profiles")
-                || path.startsWith("/admin/environment-bindings")) return "app";
+                || path.startsWith("/admin/environment-bindings")
+                // 体验描述、接入档案与配置发布同样是 app 持有的配置面资源，转发方向与权限分离。
+                || path.startsWith("/admin/integration-profiles")
+                || path.startsWith("/admin/config-releases")) return "app";
         if (path.startsWith("/admin/skills")) return "skill";
         if (path.startsWith("/admin/services")) return "skill";
         if (path.startsWith("/admin/model-providers")
