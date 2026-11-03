@@ -141,3 +141,13 @@ app schema：`connection_profile` / `connection_profile_version` / `connection_p
 - INT-02 五条最小运行路径（批准只读调用、A/B 绑定切换、伪造拒绝、撤权即时生效、存量技能不受影响）以 INT 方案 §5.2 为准。
 - INT-03（可还原激活版本、预检失效、幂等一次、tenant 隔离）、INT-06（真实读写闭环、恢复不重复副作用）以其各自卡验收为准。
 - 本标准自身的验收：一个**非三路线命名**的示例应用可按 §6/§2 Schema 完整描述；非法来源、客户端身份字段、未知版本、任意回调 JS、明文 secret 均命中 §6/assistant-integration.md §6 的登记错误码；每条新增 API 在权限目录有精确条目。
+
+## 10. INT-02 子步1 契约确认（2026-11-03，P 归口裁决；实现侧已按此对齐）
+
+INT-02 子步1 证据登记的 5 项缺口裁决如下，实现不得偏离；后续扩展回本节追加登记：
+
+1. **嵌套结构采纳回写**：`ConnectionProfile.authScheme = {kind ∈ NONE|BEARER|API_KEY|OAUTH2_CLIENT_CREDENTIALS|MTLS|SIGNED_REQUEST, headerName?}`、`identityPolicy = {mode ∈ PLATFORM_PRINCIPAL|SERVICE_ACCOUNT, subjectSource?}`、`endpointPolicy = {hosts?, pathPrefixes?, httpMethods?}`、`runtimeRef = {runner?, namespace?, engine?}`、`healthPolicy = {path?, intervalSeconds?, timeoutMs?}`。**当前运行仅支持与既有适配器 AuthScheme 对齐的 `NONE/BEARER/API_KEY`**；其余三值为冻结留白，resolve/校验遇留白值返回 `CONFIG_AUTH_SCHEME_UNSUPPORTED`，不静默当 NONE。
+2. **错误码补充**：对象不存在 → `CONFIG_REF_NOT_FOUND`（404）；状态迁移非法 → `CONFIG_STATE_TRANSITION_INVALID`（400）；停用/未激活档案被引用 → `CONFIG_RELEASE_NOT_ACTIVE`（沿用）。通用字段错误仍用既有 `INVALID_INPUT`。
+3. **`connection_profile_grant` 随子步2 落地**：批准（APPROVED）≠授权使用；grant 行与 `/{id}/grants` 端点、resolve 时的"被授予版本"投影在子步2 以**新迁移号**（app V112）实现，不回改 V111。
+4. **绑定引用状态下限**：`EnvironmentBinding` 引用的 `connectionProfileRev` 必须处于 **APPROVED 及以上**；引用 DRAFT 拒绝（`CONFIG_STATE_TRANSITION_INVALID`），引用 DISABLED 拒绝。先建目录后批准的流程改为"目录与批准连续完成后再建绑定"，不以放宽状态下限换取便利。
+5. **environment 取值**：格式沿用 `^[a-z][a-z0-9-]{0,31}$`；取值必须与既有 `publish_pin.environment` 值域一致（默认 `production`），不私造新环境名；两处值域的一致性由启动校验与发布预检共同保证。

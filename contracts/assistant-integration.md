@@ -132,6 +132,9 @@
 | `CONFIG_VERSION_UNKNOWN` | PARAM | 引用不存在的配置版本/修订 | INT-03 |
 | `CONFIG_RELEASE_NOT_ACTIVE` | BUSINESS | 应用无激活 ConfigRelease，明确缺哪个前提 | INT-03/06 |
 | `CONFIG_REV_CONFLICT` | PARAM | expectedRev 不符（409 语义） | INT-02/03 |
+| `CONFIG_REF_NOT_FOUND` | PARAM | 引用的档案/绑定/版本/修订对象不存在（404 语义） | INT-02 |
+| `CONFIG_STATE_TRANSITION_INVALID` | PARAM | 状态机外迁移（如引用未批准修订、SUPERSEDED 复活） | INT-02/03 |
+| `CONFIG_AUTH_SCHEME_UNSUPPORTED` | PARAM | authScheme 为冻结留白值（当前运行仅支持 NONE/BEARER/API_KEY） | INT-02 |
 | `CONFIG_SECRET_PLAINTEXT_REJECTED` | PARAM | 配置中出现明文密钥/secret 值 | INT-02/03 |
 | `CONFIG_SCHEMA_BUDGET_EXCEEDED` | PARAM | Schema 大小/预算超限，不放宽放行 | INT-01/02 |
 
