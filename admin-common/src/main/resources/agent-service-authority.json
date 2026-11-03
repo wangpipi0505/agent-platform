@@ -3070,5 +3070,69 @@
   "source": "app-management/src/main/java/cn/agentplatform/app/api/ExperienceController.java:29",
   "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
   "reason": ""
+ },
+ {
+  "method": "GET",
+  "template": "/admin/semantic-bindings",
+  "caller": "gateway",
+  "target": "app",
+  "action": "proxy.app.get.SemanticBindingsController.list",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/SemanticBindingsController.java:32",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
+  "reason": ""
+ }
+,
+ {
+  "method": "POST",
+  "template": "/admin/semantic-bindings",
+  "caller": "gateway",
+  "target": "app",
+  "action": "proxy.app.post.SemanticBindingsController.create",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/SemanticBindingsController.java:38",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
+  "reason": ""
+ }
+,
+ {
+  "method": "GET",
+  "template": "/admin/semantic-bindings/{bindingId}",
+  "caller": "gateway",
+  "target": "app",
+  "action": "proxy.app.get.SemanticBindingsController.get",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/SemanticBindingsController.java:44",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
+  "reason": ""
+ }
+,
+ {
+  "method": "POST",
+  "template": "/admin/semantic-bindings/{bindingId}/revisions",
+  "caller": "gateway",
+  "target": "app",
+  "action": "proxy.app.post.SemanticBindingsController.revise",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/SemanticBindingsController.java:50",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
+  "reason": ""
+ }
+,
+ {
+  "method": "POST",
+  "template": "/admin/semantic-bindings/{bindingId}/disable",
+  "caller": "gateway",
+  "target": "app",
+  "action": "proxy.app.post.SemanticBindingsController.disable",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/SemanticBindingsController.java:56",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
+  "reason": ""
  }
 ]
