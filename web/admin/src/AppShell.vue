@@ -2,7 +2,7 @@
 import { computed, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { useAuth } from "../../shared/api";
-import { pageChrome } from "./page-chrome";
+import { PAGE_ACTIONS_TARGET, pageChrome } from "./page-chrome";
 import { canReadCapabilityPackages } from "../../shared/capability-package";
 
 const auth = useAuth();
@@ -24,6 +24,7 @@ const menus = [
   ["系统管理", "/system"],
 ];
 const density = ref(localStorage.getItem("density") || "标准");
+const pageActionsTarget = PAGE_ACTIONS_TARGET;
 const isMock =
   import.meta.env.DEV &&
   typeof (import.meta as any).env?.VITE_MOCK === "string" &&
@@ -82,7 +83,13 @@ function logout() {
     </aside>
     <main class="main">
       <header class="topbar">
-        <span>工作台 / {{ pageChrome.title }}</span>
+        <!-- UI-02：顶栏左侧为当前模块上下文；中间挂载点承接本页 PageHeader 的
+             Teleport 操作（随路由卸载自动清理），右侧保留密度/身份/退出。 -->
+        <div class="context">
+          <span class="muted">{{ pageChrome.eyebrow }}</span>
+          <strong>{{ pageChrome.title }}</strong>
+        </div>
+        <div :id="pageActionsTarget" class="page-actions-slot"></div>
         <div class="actions">
           <span class="muted">显示密度</span>
           <el-select v-model="density" style="width: 6rem" aria-label="显示密度">
@@ -103,6 +110,22 @@ function logout() {
 </template>
 
 <style scoped>
+.context {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  min-width: 0;
+}
+.context strong {
+  font-size: var(--text-title);
+  font-weight: 650;
+}
+.page-actions-slot {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}
 .mock-banner {
   padding: 0.65rem 1.5rem;
   background: #fff7e6;

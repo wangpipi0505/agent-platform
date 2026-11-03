@@ -1,4 +1,5 @@
 import { createRouter, createWebHashHistory, type RouteRecordRaw } from "vue-router";
+import { pageChrome } from "./page-chrome";
 
 const routes: RouteRecordRaw[] = [
   { path: "/", redirect: "/apps" },
@@ -117,4 +118,12 @@ const routes: RouteRecordRaw[] = [
 export const router = createRouter({
   history: createWebHashHistory(),
   routes,
+});
+
+// UI-02：路由离开复位壳层上下文，防止未写页头的页面残留上一页标题；
+// 写页头的页面（PageHeader/usePageTitle）在挂载后覆盖复位值。
+router.afterEach(() => {
+  pageChrome.title = "智能体管理";
+  pageChrome.eyebrow = "平台管理";
+  pageChrome.subtitle = "连接业务能力，持续验证每一次运行。";
 });
