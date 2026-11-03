@@ -94,6 +94,10 @@ public class SkillCallbacks {
             throw error(403, "CALLBACK_SERVICE_REQUIRED", "回调需要可信服务身份");
         var bound = binding(call);
         var contract = catalog.versionId(((Number) bound.get("skill_version_id")).longValue());
+        long callbackTimeoutMs =
+                contract.get("timeoutMs") instanceof Number n ? Math.max(1L, n.longValue()) : 30000L;
+        long callbackDeadline =
+                System.nanoTime() + java.time.Duration.ofMillis(callbackTimeoutMs).toNanos();
         if (!"CALLBACK".equals(contract.get("invocationKind"))
                 || !"HTTP".equals(contract.get("type"))
                 || !Objects.equals(
@@ -177,7 +181,7 @@ public class SkillCallbacks {
                                         call,
                                         bound.get("run_id").toString(),
                                         ((Number) bound.get("attempt_id")).longValue(),
-                                        0);
+                                        callbackDeadline);
                     }
                 }
                 // PLAT-05：失败回调同样按契约声明读取远端业务码/原文，落成统一七字段错误对象；

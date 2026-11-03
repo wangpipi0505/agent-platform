@@ -721,23 +721,55 @@ public class SkillAdapters {
                         return count;
                     }
                 };
-                var ref = new LinkedHashMap<>(artifacts.storeProcessOutput(
-                        file.contentType(), file.bytes(), file.sha256(), bytes, runId, callId, attempt));
+                Map<String, Object> stored;
+                var scoped =
+                        deadline != 0 && artifacts != null && artifacts.configuration != null
+                                ? artifacts.forAlgorithmDeadline(deadline)
+                                : null;
+                if (scoped != null) {
+                    try (var operation = scoped) {
+                        stored =
+                                operation.storeProcessOutput(
+                                        file.contentType(),
+                                        file.bytes(),
+                                        file.sha256(),
+                                        bytes,
+                                        runId,
+                                        callId,
+                                        attempt);
+                    } catch (PlatformException ex) {
+                        if (deadline - System.nanoTime() <= 0
+                                || Thread.currentThread().isInterrupted())
+                            checkProcessFileDeadline(deadline);
+                        throw ex;
+                    }
+                } else {
+                    stored =
+                            artifacts.storeProcessOutput(
+                                    file.contentType(),
+                                    file.bytes(),
+                                    file.sha256(),
+                                    bytes,
+                                    runId,
+                                    callId,
+                                    attempt);
+                }
+                var ref = new LinkedHashMap<>(stored);
                 ref.put("name", file.name());
                 refs.add(ref);
             }
             checkpoint.run();
             return List.copyOf(refs);
         } catch (RuntimeException failure) {
-            artifacts.discardProcessOutputs(refs, runId, callId, attempt, failure);
+            discardProcessOutputsBounded(refs, runId, callId, attempt, deadline, failure);
             throw failure;
         } catch (IOException failure) {
             var rejected = invalidProcessOutput();
-            artifacts.discardProcessOutputs(refs, runId, callId, attempt, rejected);
+            discardProcessOutputsBounded(refs, runId, callId, attempt, deadline, rejected);
             throw rejected;
         } catch (NoSuchAlgorithmException unavailable) {
             var failure = new IllegalStateException("SHA-256 unavailable", unavailable);
-            artifacts.discardProcessOutputs(refs, runId, callId, attempt, failure);
+            discardProcessOutputsBounded(refs, runId, callId, attempt, deadline, failure);
             throw failure;
         } finally {
             for (var file : opened) {
@@ -764,6 +796,21 @@ public class SkillAdapters {
 
     private static PlatformException invalidProcessOutput() {
         return new PlatformException(502, "PROCESS_OUTPUT_INVALID", "输出文件声明、归属或内容不符合受控文件约定");
+    }
+
+    private void discardProcessOutputsBounded(
+            List<Map<String, Object>> refs,
+            String runId,
+            long callId,
+            long attempt,
+            long deadline,
+            RuntimeException failure) {
+        if (artifacts == null) return;
+        if (deadline != 0 && artifacts.configuration != null) {
+            artifacts.discardProcessOutputs(refs, runId, callId, attempt, deadline, failure);
+        } else {
+            artifacts.discardProcessOutputs(refs, runId, callId, attempt, failure);
+        }
     }
 
     private static void checkProcessFileDeadline(long deadline) {
@@ -926,19 +973,29 @@ public class SkillAdapters {
         Map<String, String> mappedIdentity = mappedIdentityHeaders(contract);
         boolean sideEffect =
                 Boolean.TRUE.equals(object(contract.get("execution")).get("sideEffect"));
+        long timeoutMs =
+                contract.get("timeoutMs") instanceof Number n ? Math.max(1L, n.longValue()) : 30_000L;
+        long callDeadline = System.nanoTime() + Duration.ofMillis(timeoutMs).toNanos();
+        long remainingConnectNanos = Math.max(1L, callDeadline - System.nanoTime());
         // 复用既有 JDK21 transport：HttpURLConnection 的 streaming POST 在 401 时丢弃错误体，
         // 会把已知鉴权拒绝折成传输故障。保留同一超时/硬字节闸，单次调用后关闭，不新增重发。
         java.net.http.HttpClient httpClient =
                 java.net.http.HttpClient.newBuilder()
-                        .connectTimeout(Duration.ofSeconds(3))
+                        .connectTimeout(
+                                Duration.ofNanos(
+                                        Math.min(
+                                                Duration.ofSeconds(3).toNanos(),
+                                                remainingConnectNanos)))
                         .followRedirects(java.net.http.HttpClient.Redirect.NEVER)
                         .build();
         org.springframework.util.MultiValueMap<String, Object> multipart = null;
         try {
+            long remainingReadNanos = callDeadline - System.nanoTime();
+            if (remainingReadNanos <= 0)
+                throw new Failure("RETRYABLE_FAILURE", false, "外部端点连接、超时或结果接收失败");
             var factory =
                     new org.springframework.http.client.JdkClientHttpRequestFactory(httpClient);
-            factory.setReadTimeout(
-                    Duration.ofMillis(((Number) contract.get("timeoutMs")).longValue()));
+            factory.setReadTimeout(Duration.ofNanos(remainingReadNanos));
             var client = RestClient.builder().requestFactory(factory).build();
             var request =
                     mapped
@@ -999,7 +1056,7 @@ public class SkillAdapters {
                                 callId,
                                 runId,
                                 expectedAttempt,
-                                0);
+                                callDeadline);
                     });
         } catch (Failure ex) {
             throw ex;
@@ -1064,18 +1121,26 @@ public class SkillAdapters {
             long attempt,
             long deadline)
             throws IOException {
+        long timeoutMs =
+                contract.get("timeoutMs") instanceof Number n ? Math.max(1L, n.longValue()) : 30_000L;
+        long effectiveDeadline =
+                deadline != 0
+                        ? deadline
+                        : System.nanoTime() + Duration.ofMillis(timeoutMs).toNanos();
         int limit = ((Number) contract.get("outputMaxBytes")).intValue();
         byte[] prefix = input.readNBytes(limit + 1);
         if (prefix.length > limit) {
             Map<String, Object> ref;
-            if (deadline == 0)
-                ref = artifacts.offload(prefix, input, contract.get("outputSchema"), callId, runId);
-            else
-                try (var operation = artifacts.forAlgorithmDeadline(deadline)) {
+            var scoped = artifacts.forAlgorithmDeadline(effectiveDeadline);
+            if (scoped != null) {
+                try (var operation = scoped) {
                     ref =
                             operation.offload(
                                     prefix, input, contract.get("outputSchema"), callId, runId);
                 }
+            } else {
+                ref = artifacts.offload(prefix, input, contract.get("outputSchema"), callId, runId);
+            }
             return new Raw(Json.tree(null), List.of(ref), "结果已流式转存，请使用受控文件引用查看", Json.tree(null));
         }
         JsonNode output = ArtifactStore.readJson(new ByteArrayInputStream(prefix));
@@ -1096,12 +1161,6 @@ public class SkillAdapters {
         if (summary.length() > 2000) summary = summary.substring(0, 2000) + "…";
         var spec = object(contract.getOrDefault("returnSpec", Map.of()));
         long effectiveAttempt = attempt < 1 ? 1L : attempt;
-        long timeoutMs =
-                contract.get("timeoutMs") instanceof Number n ? Math.max(1L, n.longValue()) : 30_000L;
-        long effectiveDeadline =
-                deadline != 0
-                        ? deadline
-                        : System.nanoTime() + Duration.ofMillis(timeoutMs).toNanos();
         var archivedByThisRead = new ArrayList<Map<String, Object>>();
         try {
             JsonNode structured =
@@ -1128,7 +1187,6 @@ public class SkillAdapters {
                             runId,
                             callId,
                             effectiveAttempt,
-                            deadline,
                             effectiveDeadline,
                             archivedByThisRead));
             String card = "";
@@ -1139,19 +1197,25 @@ public class SkillAdapters {
                 if (!json.isContainerNode()) throw new IllegalArgumentException("卡片模板必须为JSON对象或数组");
                 card = Json.write(renderCard(json, output));
             }
-            if (deadline != 0) remainingBudget(effectiveDeadline, "returnSpec");
+            if (deadline != 0 || !declaredArtifactSources(spec).isEmpty())
+                remainingBudget(effectiveDeadline, "returnSpec");
             return new Raw(structured, refs, summary, ontology, card, Validation.of(admission));
         } catch (Failure ex) {
             if (!archivedByThisRead.isEmpty() && runId != null)
-                artifacts.discardProcessOutputs(
-                        archivedByThisRead, runId, callId, effectiveAttempt, ex);
+                discardProcessOutputsBounded(
+                        archivedByThisRead, runId, callId, effectiveAttempt, effectiveDeadline, ex);
             // R13：声明式获取等路径抛出的Failure已是有界安全文案，直接透传不折叠。
             throw ex;
         } catch (Exception ex) {
             var mapped = new Failure("OUTPUT_INVALID", false, "结果四份内容映射不符合returnSpec");
             if (!archivedByThisRead.isEmpty() && runId != null)
-                artifacts.discardProcessOutputs(
-                        archivedByThisRead, runId, callId, effectiveAttempt, mapped);
+                discardProcessOutputsBounded(
+                        archivedByThisRead,
+                        runId,
+                        callId,
+                        effectiveAttempt,
+                        effectiveDeadline,
+                        mapped);
             throw mapped;
         }
     }
@@ -1243,11 +1307,20 @@ public class SkillAdapters {
     }
 
     /** R01附录I.9/R13：声明式外部产物获取——URL来自契约、{value}只替换业务标识、不跟随重定向、64MB上限。 */
-    @SuppressWarnings("unchecked")
     private Map<String, Object> declaredArtifactSources(Map<String, Object> spec) {
         if (!(spec.get("artifactSources") instanceof Map<?, ?> sources) || sources.isEmpty())
             return Map.of();
-        return (Map<String, Object>) sources;
+        var ordered = new LinkedHashMap<String, Object>();
+        if (spec.get("fileRefPaths") instanceof Collection<?> paths) {
+            for (Object pathObj : paths) {
+                String path = Objects.toString(pathObj, "");
+                if (sources.containsKey(path)) ordered.put(path, sources.get(path));
+            }
+        }
+        for (var entry : sources.entrySet()) {
+            ordered.putIfAbsent(Objects.toString(entry.getKey(), ""), entry.getValue());
+        }
+        return ordered;
     }
 
     private List<Map<String, Object>> declaredArtifacts(
@@ -1256,7 +1329,6 @@ public class SkillAdapters {
             String runId,
             long callId,
             long effectiveAttempt,
-            long deadline,
             long effectiveDeadline,
             List<Map<String, Object>> archivedOut) {
         var declared = declaredArtifactSources(spec);
@@ -1401,7 +1473,7 @@ public class SkillAdapters {
                                 ? java.nio.file.Files.newInputStream(tempFile)
                                 : new ByteArrayInputStream(memoryBuffer.toByteArray());
                 Map<String, Object> stored;
-                var scoped = deadline != 0 ? artifacts.forAlgorithmDeadline(deadline) : null;
+                var scoped = artifacts.forAlgorithmDeadline(effectiveDeadline);
                 if (scoped != null) {
                     try (var operation = scoped) {
                         stored =
@@ -1413,6 +1485,11 @@ public class SkillAdapters {
                                         runId,
                                         callId,
                                         effectiveAttempt);
+                    } catch (PlatformException ex) {
+                        if (effectiveDeadline - System.nanoTime() <= 0
+                                || Thread.currentThread().isInterrupted())
+                            throw new Failure("RETRYABLE_FAILURE", false, "外部产物归档超时: " + path);
+                        throw ex;
                     }
                 } else {
                     stored =

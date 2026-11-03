@@ -307,6 +307,10 @@ public class HttpAsyncAdapter {
                                 + name
                                 + "），无法构造查询；请修正契约");
         endpoint = substitute(endpoint, pathValues);
+        long queryTimeoutMs =
+                contract.get("timeoutMs") instanceof Number n ? Math.max(1L, n.longValue()) : 30000L;
+        long queryDeadline =
+                System.nanoTime() + java.time.Duration.ofMillis(queryTimeoutMs).toNanos();
         try (var streamed =
                 exchangeStream(
                         contract,
@@ -432,7 +436,14 @@ public class HttpAsyncAdapter {
                                 key,
                                 resultReadPath.isBlank() ? "$" : resultReadPath)) {
                     try (var result = finalResponse.result()) {
-                        raw = outputs.read(result, contract, callId, runId, expectedAttempt, 0);
+                        raw =
+                                outputs.read(
+                                        result,
+                                        contract,
+                                        callId,
+                                        runId,
+                                        expectedAttempt,
+                                        queryDeadline);
                     }
                 } catch (ResultRejected rejected) {
                     // PLAT-05 实现点3：结果端点 409/4xx 常见于“结果已清理/任务已失败，请查状态”。
@@ -455,7 +466,14 @@ public class HttpAsyncAdapter {
                 }
             } else {
                 try (var result = streamed.result()) {
-                    raw = outputs.read(result, contract, callId, runId, expectedAttempt, 0);
+                    raw =
+                            outputs.read(
+                                    result,
+                                    contract,
+                                    callId,
+                                    runId,
+                                    expectedAttempt,
+                                    queryDeadline);
                 }
             }
             int changed =

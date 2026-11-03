@@ -42,7 +42,7 @@ public class ArtifactStore implements AutoCloseable {
         return BOUNDED_JSON.readTree(source);
     }
 
-    private final Map<String, String> configuration;
+    final Map<String, String> configuration;
     private final JdbcTemplate db;
     private final okhttp3.OkHttpClient transport;
     private final long algorithmDeadline;
@@ -316,6 +316,31 @@ public class ArtifactStore implements AutoCloseable {
                             null,
                             0)
                     .get(45, java.util.concurrent.TimeUnit.SECONDS);
+        }
+
+        java.util.concurrent.CompletableFuture<okhttp3.Response> listExactAsync(
+                String bucket, String key) throws Exception {
+            var query = com.google.common.collect.HashMultimap.<String, String>create();
+            query.put("uploads", "");
+            query.put("prefix", key);
+            query.put("max-uploads", "8");
+            return getRegionAsync(bucket, null)
+                    .thenCompose(
+                            region -> {
+                                try {
+                                    return executeAsync(
+                                            io.minio.http.Method.GET,
+                                            bucket,
+                                            null,
+                                            region,
+                                            null,
+                                            query,
+                                            null,
+                                            0);
+                                } catch (Exception ex) {
+                                    return java.util.concurrent.CompletableFuture.failedFuture(ex);
+                                }
+                            });
         }
     }
 
@@ -652,7 +677,20 @@ public class ArtifactStore implements AutoCloseable {
     /** Compensate only artifacts returned by this exact batch; no tenant scan or queue cleanup. */
     void discardProcessOutputs(
             List<Map<String, Object>> refs, String runId, long callId, long attempt, RuntimeException failure) {
+        discardProcessOutputs(refs, runId, callId, attempt, algorithmDeadline, failure);
+    }
+
+    void discardProcessOutputs(
+            List<Map<String, Object>> refs,
+            String runId,
+            long callId,
+            long attempt,
+            long deadline,
+            RuntimeException failure) {
         var actor = Actor.current();
+        var pendingIds = new ArrayList<String>();
+        var pendingKeys = new ArrayList<String>();
+        var pendingBuckets = new ArrayList<String>();
         for (var ref : refs) {
             String id = Objects.toString(ref.get("artifactId"), "");
             String key = processOutputPrefix(actor.tenantId(), runId, callId, attempt) + id + ".bin";
@@ -668,9 +706,50 @@ public class ArtifactStore implements AutoCloseable {
                                 + " and principal_id=? and run_id=? and call_id=? and object_key=?",
                         id, actor.tenantId(), actor.principalId(), runId, callId, key);
                 if (changed != 1) throw new IllegalStateException("PROCESS_OUTPUT_COMPENSATION_STATE");
-                deleteObject(actor.tenantId(), id, rows.getFirst().get("bucket").toString(), key);
+                pendingIds.add(id);
+                pendingKeys.add(key);
+                pendingBuckets.add(rows.getFirst().get("bucket").toString());
             } catch (Exception cleanupFailure) {
                 failure.addSuppressed(cleanupFailure);
+            }
+        }
+        if (pendingIds.isEmpty()) return;
+        if (deadline != 0 && deadline - System.nanoTime() <= 0) {
+            // 期限已耗尽：所有已归档产物已转为 CLEANUP_PENDING (cleanup_after=now())，
+            // 立即剥夺 READY 可见性并交由可恢复清理状态机制回收，不再阻塞等待远程对象删除。
+            return;
+        }
+        if (deadline != 0 && algorithmIo == null) {
+            try (var scoped = forAlgorithmDeadline(deadline)) {
+                for (int i = 0; i < pendingIds.size(); i++) {
+                    if (deadline - System.nanoTime() <= 0) break;
+                    try {
+                        scoped.deleteObject(
+                                actor.tenantId(),
+                                pendingIds.get(i),
+                                pendingBuckets.get(i),
+                                pendingKeys.get(i));
+                    } catch (Exception cleanupFailure) {
+                        failure.addSuppressed(cleanupFailure);
+                        if (deadline - System.nanoTime() <= 0) break;
+                    }
+                }
+            } catch (Exception scopedFailure) {
+                failure.addSuppressed(scopedFailure);
+            }
+            return;
+        }
+        for (int i = 0; i < pendingIds.size(); i++) {
+            if (deadline != 0 && deadline - System.nanoTime() <= 0) break;
+            try {
+                deleteObject(
+                        actor.tenantId(),
+                        pendingIds.get(i),
+                        pendingBuckets.get(i),
+                        pendingKeys.get(i));
+            } catch (Exception cleanupFailure) {
+                failure.addSuppressed(cleanupFailure);
+                if (deadline != 0 && deadline - System.nanoTime() <= 0) break;
             }
         }
     }
@@ -740,8 +819,20 @@ public class ArtifactStore implements AutoCloseable {
 
     private void deleteObject(String tenant, String id, String bucket, String key)
             throws Exception {
+        if (algorithmIo != null) algorithmIo.checkActive();
         abortIncompleteUploads(bucket, key);
-        client().removeObject(RemoveObjectArgs.builder().bucket(bucket).object(key).build());
+        if (algorithmIo == null) {
+            client().removeObject(RemoveObjectArgs.builder().bucket(bucket).object(key).build());
+        } else {
+            algorithmIo.await(
+                    asyncClient()
+                            .removeObject(
+                                    RemoveObjectArgs.builder()
+                                            .bucket(bucket)
+                                            .object(key)
+                                            .build()));
+            algorithmIo.checkActive();
+        }
         db.update(
                 "update skill.artifact set"
                     + " state='DELETED',deleted_at=now(),cleanup_owner=null,cleanup_lease_until=null,updated_at=now()"
@@ -753,7 +844,10 @@ public class ArtifactStore implements AutoCloseable {
     private void abortIncompleteUploads(String bucket, String key) throws Exception {
         // 对照SDK8.5.17 S3Base：常规异常会abort，但进程崩溃不会执行catch。只查询登记的完整键前缀，最多8个upload。
         // 该MinIO版本在列表返回空StorageClass，SDK的必填XML映射会失败；这里用JDK安全XML解析最小S3列表响应。
-        try (var response = asyncClient().listExact(bucket, key)) {
+        try (var response =
+                algorithmIo == null
+                        ? asyncClient().listExact(bucket, key)
+                        : algorithmIo.await(asyncClient().listExactAsync(bucket, key))) {
             if (!response.isSuccessful() || response.body() == null)
                 throw new IOException("MULTIPART_CLEANUP_UNAVAILABLE");
             var factory = javax.xml.parsers.DocumentBuilderFactory.newInstance();
@@ -772,9 +866,12 @@ public class ArtifactStore implements AutoCloseable {
                 if (!key.equals(item.getElementsByTagName("Key").item(0).getTextContent()))
                     continue;
                 String uploadId = item.getElementsByTagName("UploadId").item(0).getTextContent();
-                asyncClient()
-                        .abortMultipartUploadAsync(bucket, null, key, uploadId, null, null)
-                        .get(45, java.util.concurrent.TimeUnit.SECONDS);
+                var abortFuture =
+                        asyncClient()
+                                .abortMultipartUploadAsync(bucket, null, key, uploadId, null, null);
+                if (algorithmIo == null)
+                    abortFuture.get(45, java.util.concurrent.TimeUnit.SECONDS);
+                else algorithmIo.await(abortFuture);
             }
             var truncated = document.getElementsByTagName("IsTruncated");
             if (truncated.getLength() > 0 && "true".equals(truncated.item(0).getTextContent()))

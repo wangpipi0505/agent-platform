@@ -430,6 +430,366 @@ class ArtifactHandoverDeclarationTest {
         }
     }
 
+    @Test
+    void 多产物交接第二文件失败时第一文件整批补偿清理() throws Exception {
+        var multiPeer = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        multiPeer.createContext(
+                "/api/files/",
+                exchange -> {
+                    String path = exchange.getRequestURI().getPath();
+                    exchange.getRequestBody().readAllBytes();
+                    if (path.endsWith("/file-ok")) {
+                        byte[] body = "id,name\n1,ok".getBytes(StandardCharsets.UTF_8);
+                        exchange.getResponseHeaders().set("Content-Type", "text/csv");
+                        exchange.sendResponseHeaders(200, body.length);
+                        try (var out = exchange.getResponseBody()) {
+                            out.write(body);
+                        }
+                    } else {
+                        exchange.sendResponseHeaders(500, -1);
+                    }
+                });
+        multiPeer.start();
+        try (var s3 = new InMemoryS3Peer()) {
+            var db = new InMemoryArtifactJdbc();
+            try (var realStore = new ArtifactStore(db, s3.configuration())) {
+                var realAdapters = new SkillAdapters(realStore, null);
+                String peerUrl = "http://127.0.0.1:" + multiPeer.getAddress().getPort();
+                Map<String, Object> multiContract = new LinkedHashMap<>();
+                multiContract.put("inputSchema", Map.of("type", "object"));
+                multiContract.put("outputMaxBytes", 1048576);
+                multiContract.put("outputSchema", Map.of("type", "object"));
+                var multiSources = new LinkedHashMap<String, Object>();
+                multiSources.put(
+                        "$.firstPath",
+                        Map.of(
+                                "retrieve",
+                                Map.of(
+                                        "url", peerUrl + "/api/files/{value}",
+                                        "authScheme", "NONE"),
+                                "contentType",
+                                "text/csv"));
+                multiSources.put(
+                        "$.secondPath",
+                        Map.of(
+                                "retrieve",
+                                Map.of(
+                                        "url", peerUrl + "/api/files/{value}",
+                                        "authScheme", "NONE"),
+                                "contentType",
+                                "text/csv"));
+                multiContract.put(
+                        "returnSpec",
+                        Map.of(
+                                "fileRefPaths",
+                                List.of("$.firstPath", "$.secondPath"),
+                                "artifactSources",
+                                multiSources));
+                var output = new LinkedHashMap<String, Object>();
+                output.put("firstPath", "file-ok");
+                output.put("secondPath", "file-bad");
+                var ex =
+                        assertThrows(
+                                SkillAdapters.Failure.class,
+                                () ->
+                                        realAdapters.read(
+                                                new ByteArrayInputStream(
+                                                        Json.write(output)
+                                                                .getBytes(StandardCharsets.UTF_8)),
+                                                multiContract,
+                                                55L,
+                                                "r_multi_batch_fail",
+                                                1L,
+                                                0L));
+                assertEquals("OUTPUT_INVALID", ex.semantic);
+                var rows = db.byRun("r_multi_batch_fail");
+                assertEquals(1, rows.size());
+                String firstArtifactId = rows.getFirst().get("artifact_id").toString();
+                assertEquals("DELETED", rows.getFirst().get("state"));
+                assertTrue(
+                        s3.deletedKeys.stream().anyMatch(k -> k.contains(firstArtifactId)),
+                        "第二文件失败时，已归档的第一文件应从对象存储补偿删除");
+                assertTrue(s3.objects.isEmpty());
+                var rejected =
+                        assertThrows(
+                                PlatformException.class,
+                                () ->
+                                        realStore.controlledReference(
+                                                Map.of("artifactId", firstArtifactId),
+                                                "r_multi_batch_fail"));
+                assertEquals(404, rejected.status());
+            }
+        } finally {
+            multiPeer.stop(0);
+        }
+    }
+
+    @Test
+    void 普通HTTP与声明式归档统一贯通有效期限且慢存储上传按时中止() throws Exception {
+        String filePeer = startPeer(null);
+        var skillServer = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        skillServer.createContext(
+                "/run",
+                exchange -> {
+                    exchange.getRequestBody().readAllBytes();
+                    byte[] body =
+                            Json.write(Map.of("csvPath", "file-slow-put"))
+                                    .getBytes(StandardCharsets.UTF_8);
+                    exchange.getResponseHeaders().set("Content-Type", "application/json");
+                    exchange.sendResponseHeaders(200, body.length);
+                    try (var out = exchange.getResponseBody()) {
+                        out.write(body);
+                    }
+                });
+        skillServer.start();
+        try (var s3 = new InMemoryS3Peer()) {
+            s3.putDelayMs = 1500;
+            var db = new InMemoryArtifactJdbc();
+            try (var realStore = new ArtifactStore(db, s3.configuration())) {
+                var realAdapters = new SkillAdapters(realStore, null);
+                Map<String, Object> httpContract = contract(filePeer, "NONE");
+                httpContract.put(
+                        "endpoint",
+                        "http://127.0.0.1:" + skillServer.getAddress().getPort() + "/run");
+                httpContract.put("httpMethod", "POST");
+                httpContract.put("authScheme", "NONE");
+                httpContract.put("execution", Map.of("sideEffect", false));
+                httpContract.put("timeoutMs", 220);
+
+                long startNs = System.nanoTime();
+                var ex =
+                        assertThrows(
+                                SkillAdapters.Failure.class,
+                                () ->
+                                        realAdapters.http(
+                                                httpContract,
+                                                Map.of(),
+                                                "k-http-deadline",
+                                                77L,
+                                                "r_http_slow_put",
+                                                1L));
+                long elapsedMs = java.time.Duration.ofNanos(System.nanoTime() - startNs).toMillis();
+                assertEquals("RETRYABLE_FAILURE", ex.semantic);
+                assertTrue(
+                        elapsedMs < 1100,
+                        "普通HTTP路径的声明式归档应在技能timeoutMs期限附近中止慢S3上传，实际耗时=" + elapsedMs + "ms");
+                var rows = db.byRun("r_http_slow_put");
+                assertEquals(1, rows.size());
+                assertEquals("CLEANUP_PENDING", rows.getFirst().get("state"));
+
+                // 直接调用 read(..., deadline=0) 时，offload 与 declaredArtifacts 也共用 effectiveDeadline
+                Map<String, Object> offloadContract = new LinkedHashMap<>();
+                offloadContract.put("inputSchema", Map.of("type", "object"));
+                offloadContract.put("outputMaxBytes", 10);
+                offloadContract.put("outputSchema", Map.of("type", "object"));
+                offloadContract.put("timeoutMs", 200);
+                long offloadStart = System.nanoTime();
+                var offloadEx =
+                        assertThrows(
+                                IllegalStateException.class,
+                                () ->
+                                        realAdapters.read(
+                                                new ByteArrayInputStream(
+                                                        "{\"largePayload\":\"0123456789abcdef\"}"
+                                                                .getBytes(StandardCharsets.UTF_8)),
+                                                offloadContract,
+                                                78L,
+                                                "r_offload_slow_put",
+                                                1L,
+                                                0L));
+                long offloadElapsedMs =
+                        java.time.Duration.ofNanos(System.nanoTime() - offloadStart).toMillis();
+                assertTrue(offloadEx.getMessage().startsWith("OUTPUT_ARTIFACT_UNAVAILABLE"));
+                assertTrue(
+                        offloadElapsedMs < 1100,
+                        "deadline=0时offload也应受effectiveDeadline约束，实际耗时=" + offloadElapsedMs + "ms");
+                var offloadRows = db.byRun("r_offload_slow_put");
+                assertEquals(1, offloadRows.size());
+                assertEquals("CLEANUP_PENDING", offloadRows.getFirst().get("state"));
+            }
+        } finally {
+            skillServer.stop(0);
+        }
+    }
+
+    @Test
+    void 期限耗尽或慢存储删除时失败收尾有界且落可恢复CLEANUP_PENDING() throws Exception {
+        var peerServer = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        peerServer.setExecutor(java.util.concurrent.Executors.newCachedThreadPool());
+        peerServer.createContext(
+                "/api/files/",
+                exchange -> {
+                    String path = exchange.getRequestURI().getPath();
+                    exchange.getRequestBody().readAllBytes();
+                    if (path.endsWith("/slow-second")) {
+                        try {
+                            Thread.sleep(450);
+                        } catch (InterruptedException ignored) {
+                        }
+                    }
+                    byte[] body = "id,val\n1,ok".getBytes(StandardCharsets.UTF_8);
+                    exchange.getResponseHeaders().set("Content-Type", "text/csv");
+                    exchange.sendResponseHeaders(200, body.length);
+                    try (var out = exchange.getResponseBody()) {
+                        out.write(body);
+                    }
+                });
+        peerServer.start();
+        try (var s3 = new InMemoryS3Peer()) {
+            s3.deleteDelayMs = 1500;
+            var db = new InMemoryArtifactJdbc();
+            try (var realStore = new ArtifactStore(db, s3.configuration())) {
+                var realAdapters = new SkillAdapters(realStore, null);
+                String peerUrl = "http://127.0.0.1:" + peerServer.getAddress().getPort();
+
+                // 场景A：第一文件已归档，第二文件下载超时耗尽effectiveDeadline；补偿不阻塞在慢DELETE上，立即落CLEANUP_PENDING
+                Map<String, Object> twoFileContract = new LinkedHashMap<>();
+                twoFileContract.put("inputSchema", Map.of("type", "object"));
+                twoFileContract.put("outputMaxBytes", 1048576);
+                twoFileContract.put("outputSchema", Map.of("type", "object"));
+                twoFileContract.put("timeoutMs", 220);
+                var twoFileSources = new LinkedHashMap<String, Object>();
+                twoFileSources.put(
+                        "$.firstPath",
+                        Map.of(
+                                "retrieve",
+                                Map.of(
+                                        "url", peerUrl + "/api/files/{value}",
+                                        "authScheme", "NONE"),
+                                "contentType",
+                                "text/csv"));
+                twoFileSources.put(
+                        "$.secondPath",
+                        Map.of(
+                                "retrieve",
+                                Map.of(
+                                        "url", peerUrl + "/api/files/{value}",
+                                        "authScheme", "NONE"),
+                                "contentType",
+                                "text/csv"));
+                twoFileContract.put(
+                        "returnSpec",
+                        Map.of(
+                                "fileRefPaths",
+                                List.of("$.firstPath", "$.secondPath"),
+                                "artifactSources",
+                                twoFileSources));
+                var twoFiles = new LinkedHashMap<String, Object>();
+                twoFiles.put("firstPath", "fast-first");
+                twoFiles.put("secondPath", "slow-second");
+
+                long startA = System.nanoTime();
+                var exA =
+                        assertThrows(
+                                SkillAdapters.Failure.class,
+                                () ->
+                                        realAdapters.read(
+                                                new ByteArrayInputStream(
+                                                        Json.write(twoFiles)
+                                                                .getBytes(StandardCharsets.UTF_8)),
+                                                twoFileContract,
+                                                88L,
+                                                "r_exhausted_deadline_cleanup",
+                                                1L,
+                                                0L));
+                long elapsedA = java.time.Duration.ofNanos(System.nanoTime() - startA).toMillis();
+                assertEquals("RETRYABLE_FAILURE", exA.semantic);
+                assertTrue(
+                        elapsedA < 1000,
+                        "期限已耗尽时失败补偿不应再阻塞于1500ms慢S3删除，实际耗时=" + elapsedA + "ms");
+                assertEquals(0, s3.deleteAttempts.get(), "期限已耗尽时应直接落CLEANUP_PENDING而不发起阻塞式远端DELETE");
+                var rowsA = db.byRun("r_exhausted_deadline_cleanup");
+                assertEquals(1, rowsA.size());
+                String firstIdA = rowsA.getFirst().get("artifact_id").toString();
+                assertEquals("CLEANUP_PENDING", rowsA.getFirst().get("state"));
+                assertEquals(
+                        "PROCESS_OUTPUT_BATCH_FAILED", rowsA.getFirst().get("last_error_code"));
+                assertThrows(
+                        PlatformException.class,
+                        () ->
+                                realStore.controlledReference(
+                                        Map.of("artifactId", firstIdA),
+                                        "r_exhausted_deadline_cleanup"));
+
+                // 场景B：第一文件归档成功且仍有剩余期限，但后续cardTemplate失败且S3删除慢（1500ms > 剩余期限）；
+                // 补偿删除受剩余期限约束按时中止，保留CLEANUP_PENDING供后台cleanTenant恢复
+                Map<String, Object> slowDeleteContract = contract(peerUrl, "NONE");
+                slowDeleteContract.put("timeoutMs", 220);
+                var badSpec = new LinkedHashMap<>(buildReturnSpec(peerUrl, "NONE"));
+                badSpec.put("cardTemplate", "invalid-card-template");
+                slowDeleteContract.put("returnSpec", badSpec);
+
+                long startB = System.nanoTime();
+                assertThrows(
+                        SkillAdapters.Failure.class,
+                        () ->
+                                realAdapters.read(
+                                        new ByteArrayInputStream(
+                                                Json.write(Map.of("csvPath", "fast-first"))
+                                                        .getBytes(StandardCharsets.UTF_8)),
+                                        slowDeleteContract,
+                                        89L,
+                                        "r_slow_delete_cleanup",
+                                        1L,
+                                        0L));
+                long elapsedB = java.time.Duration.ofNanos(System.nanoTime() - startB).toMillis();
+                assertTrue(
+                        elapsedB < 1000,
+                        "慢S3删除应受剩余有效期限约束中止而不拖满1500ms，实际耗时=" + elapsedB + "ms");
+                var rowsB = db.byRun("r_slow_delete_cleanup");
+                assertEquals(1, rowsB.size());
+                assertEquals("CLEANUP_PENDING", rowsB.getFirst().get("state"));
+                assertEquals(
+                        "PROCESS_OUTPUT_BATCH_FAILED", rowsB.getFirst().get("last_error_code"));
+
+                // 存储恢复正常后，后台cleanTenant可将两笔CLEANUP_PENDING产物回收为DELETED并删除底层对象
+                s3.deleteDelayMs = 0;
+                int cleaned = realStore.cleanTenant("handover_test", 8);
+                assertEquals(2, cleaned);
+                assertEquals("DELETED", db.byRun("r_exhausted_deadline_cleanup").getFirst().get("state"));
+                assertEquals("DELETED", db.byRun("r_slow_delete_cleanup").getFirst().get("state"));
+            }
+        } finally {
+            peerServer.stop(0);
+        }
+    }
+
+    @Test
+    void 未显式传deadline时offload与声明式归档均向ArtifactStore贯通有效期限() throws Exception {
+        String peer = startPeer("biz-secret");
+        when(artifacts.storeProcessOutput(
+                        eq("text/csv"),
+                        anyLong(),
+                        anyString(),
+                        any(),
+                        eq("r_deadline_prop"),
+                        eq(9L),
+                        eq(1L)))
+                .thenReturn(Map.of("artifactId", "art_prop", "bytes", 13L, "sha256", "abc"));
+        when(artifacts.controlledReference(any(), eq("r_deadline_prop")))
+                .thenReturn(Map.of("artifactId", "art_prop", "runId", "r_deadline_prop"));
+        long beforeRead = System.nanoTime();
+        Map<String, Object> c = contract(peer, "API_KEY");
+        c.put("timeoutMs", 5000);
+        adapters.read(
+                new ByteArrayInputStream(
+                        Json.write(Map.of("csvPath", "file-prop")).getBytes(StandardCharsets.UTF_8)),
+                c,
+                9L,
+                "r_deadline_prop",
+                1L,
+                0L);
+        verify(artifacts)
+                .forAlgorithmDeadline(
+                        longThat(
+                                d ->
+                                        d > beforeRead
+                                                && d
+                                                        <= System.nanoTime()
+                                                                + java.time.Duration.ofSeconds(6)
+                                                                        .toNanos()));
+    }
+
     private PlatformException invalidSource(Object retrieve) {
         return assertThrows(
                 PlatformException.class,
@@ -445,9 +805,14 @@ class ArtifactHandoverDeclarationTest {
         final HttpServer server;
         final Map<String, byte[]> objects = new java.util.concurrent.ConcurrentHashMap<>();
         final List<String> deletedKeys = new CopyOnWriteArrayList<>();
+        final java.util.concurrent.atomic.AtomicInteger deleteAttempts =
+                new java.util.concurrent.atomic.AtomicInteger();
+        volatile long putDelayMs;
+        volatile long deleteDelayMs;
 
         InMemoryS3Peer() throws java.io.IOException {
             server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+            server.setExecutor(java.util.concurrent.Executors.newCachedThreadPool());
             server.createContext(
                     "/",
                     x -> {
@@ -474,7 +839,14 @@ class ArtifactHandoverDeclarationTest {
                                 x.sendResponseHeaders(200, xml.length);
                                 x.getResponseBody().write(xml);
                             } else if (method.equals("PUT") && path.startsWith("/" + BUCKET + "/")) {
-                                objects.put(path, x.getRequestBody().readAllBytes());
+                                byte[] payload = x.getRequestBody().readAllBytes();
+                                if (putDelayMs > 0) {
+                                    try {
+                                        Thread.sleep(putDelayMs);
+                                    } catch (InterruptedException ignored) {
+                                    }
+                                }
+                                objects.put(path, payload);
                                 x.getResponseHeaders().set("ETag", "\"etag\"");
                                 x.sendResponseHeaders(200, -1);
                             } else if (method.equals("GET") && path.startsWith("/" + BUCKET + "/")) {
@@ -487,12 +859,21 @@ class ArtifactHandoverDeclarationTest {
                                 }
                             } else if (method.equals("DELETE")
                                     && path.startsWith("/" + BUCKET + "/")) {
+                                deleteAttempts.incrementAndGet();
+                                if (deleteDelayMs > 0) {
+                                    try {
+                                        Thread.sleep(deleteDelayMs);
+                                    } catch (InterruptedException ignored) {
+                                    }
+                                }
                                 deletedKeys.add(path);
                                 objects.remove(path);
                                 x.sendResponseHeaders(204, -1);
                             } else {
                                 x.sendResponseHeaders(400, -1);
                             }
+                        } catch (java.io.IOException ignored) {
+                            // 客户端在超时期限到达时主动关闭连接
                         } finally {
                             x.close();
                         }
@@ -535,7 +916,7 @@ class ArtifactHandoverDeclarationTest {
                 row.put("bucket", args[5]);
                 row.put("object_key", args[6]);
                 row.put("state", "UPLOADING");
-                row.put("content_type", args[7]);
+                row.put("content_type", args.length > 7 ? args[7] : "application/json");
                 rows.put(args[0].toString(), row);
                 return 1;
             }
@@ -551,7 +932,15 @@ class ArtifactHandoverDeclarationTest {
             if (normalized.contains("set state='cleanup_pending'")) {
                 for (Object arg : args) {
                     if (arg instanceof String s && s.startsWith("art_") && rows.containsKey(s)) {
-                        rows.get(s).put("state", "CLEANUP_PENDING");
+                        var row = rows.get(s);
+                        row.put("state", "CLEANUP_PENDING");
+                        if (sql.contains("'PROCESS_OUTPUT_BATCH_FAILED'")) {
+                            row.put("last_error_code", "PROCESS_OUTPUT_BATCH_FAILED");
+                        } else if (args.length > 0
+                                && args[0] instanceof String code
+                                && !code.startsWith("art_")) {
+                            row.put("last_error_code", code);
+                        }
                         return 1;
                     }
                 }
@@ -560,7 +949,9 @@ class ArtifactHandoverDeclarationTest {
             if (normalized.contains("set state='deleted'")) {
                 for (Object arg : args) {
                     if (arg instanceof String s && s.startsWith("art_") && rows.containsKey(s)) {
-                        rows.get(s).put("state", "DELETED");
+                        var row = rows.get(s);
+                        row.put("state", "DELETED");
+                        row.remove("cleanup_owner");
                         return 1;
                     }
                 }
@@ -571,6 +962,20 @@ class ArtifactHandoverDeclarationTest {
 
         @Override
         public List<Map<String, Object>> queryForList(String sql, Object... args) {
+            String normalized = sql.toLowerCase(Locale.ROOT);
+            if (normalized.startsWith("with candidate as")) {
+                String tenant = args[0].toString();
+                String owner = args[1].toString();
+                for (var row : rows.values()) {
+                    if (tenant.equals(row.get("tenant_id"))
+                            && "CLEANUP_PENDING".equals(row.get("state"))
+                            && row.get("cleanup_owner") == null) {
+                        row.put("cleanup_owner", owner);
+                        return List.of(new LinkedHashMap<>(row));
+                    }
+                }
+                return List.of();
+            }
             String id = args[0].toString();
             String tenant = args[1].toString();
             String principal = args[2].toString();
