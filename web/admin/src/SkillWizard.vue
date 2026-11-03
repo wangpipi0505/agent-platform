@@ -211,3 +211,7 @@ function next() {
   </div>
   </template>
 </template>
+<style scoped>
+/* UI-03：向导在弹层内的JSON预览溢出保护；不改注册流程与提交路径。 */
+pre { max-height: 20rem; overflow: auto; white-space: pre-wrap; word-break: break-word; background: var(--el-fill-color-light, #f5f7fa); padding: .75rem; border-radius: .45rem; }
+</style>

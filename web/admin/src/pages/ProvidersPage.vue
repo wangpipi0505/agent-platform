@@ -64,15 +64,17 @@ async function testProvider(row: any) {
     subtitle="登记模型端点、凭据引用与数据分类。"
     :busy="busy"
     @refresh="load"
-  />
-  <PageError :error="error" :trace="trace" />
-  <div class="row">
-    <div class="muted">共 {{ filtered.length }} 条记录</div>
-    <div class="actions">
+  >
+    <!-- UI-03：主操作经PageHeader actions插槽迁入AppShell顶栏挂载点。 -->
+    <template #actions>
       <el-button type="primary" v-permission="'admin'" @click="create()"
         >添加供应商</el-button
       >
-    </div>
+    </template>
+  </PageHeader>
+  <PageError :error="error" :trace="trace" />
+  <div class="row">
+    <div class="muted">共 {{ filtered.length }} 条记录</div>
   </div>
   <div class="panel">
     <div class="filters">

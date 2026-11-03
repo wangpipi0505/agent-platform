@@ -28,6 +28,9 @@ useUnsavedChanges({
   },
 });
 const selected = ref<number>();
+// UI-03：详情按任务分段组织（契约→连接调试→重检→选型→发布）；分段仅是呈现导航，
+// 不改变任何请求时机。模板与技能的分段集合不同，初始段随 kind 确定。
+const activeSection = ref(props.kind === "template" ? "content" : "contract");
 const busy = ref(false);
 const models = ref<any[]>([]);
 const modelId = ref<number>();
@@ -235,212 +238,273 @@ watch(() => [props.resource.code, props.kind, auth.token, auth.user?.tenantId, a
 </script>
 <template>
   <div class="panel resource-detail">
-    <div class="row">
-      <div>
+    <aside class="resource-aside" aria-label="资源概要与版本列表">
+      <div class="aside-head">
         <h2>{{ resource.name || resource.code }}</h2>
-        <span class="muted"
-          >{{ resource.code }} · {{ resource.description }}</span
-        >
+        <span class="muted">{{ resource.code }}</span>
+        <p v-if="resource.description" class="muted aside-desc">{{ resource.description }}</p>
       </div>
-      <div class="actions">
-        <el-select
-          v-model="selected"
-          placeholder="选择版本"
-          style="width: 10rem"
-          ><el-option
-            v-for="v in versions"
-            :key="v.versionNo || v.version"
-            :value="v.versionNo || v.version"
-            :label="
-              '版本 ' + (v.versionNo || v.version) + ' · ' + v.status
-            " /></el-select
-        ><el-button
-          :loading="busy"
-          v-permission="'edit'"
-          @click="execute('publish')"
-          >发布所选版本</el-button
+      <div class="version-list" role="listbox" aria-label="版本列表">
+        <button
+          v-for="v in versions"
+          :key="v.versionNo || v.version"
+          type="button"
+          role="option"
+          :aria-selected="(v.versionNo || v.version) === selected"
+          :class="['version-item', { active: (v.versionNo || v.version) === selected }]"
+          @click="selected = v.versionNo || v.version"
         >
-      </div>
-    </div>
-    <p v-if="error" class="error" role="alert">{{ error }}</p>
-    <template v-if="kind === 'template'"
-      ><el-form label-position="top"
-        ><el-form-item label="模板正文（变量使用双花括号）"
-          ><el-input
-            v-model="content"
-            type="textarea"
-            :rows="10" /></el-form-item></el-form
-      ><el-button
-        type="primary"
-        :loading="busy"
-        v-permission="'edit'"
-        @click="execute('save')"
-        >保存为草稿版本</el-button
-      >
-      <h2>试渲染</h2>
-      <el-input
-        v-model="vars"
-        type="textarea"
-        :rows="4"
-        placeholder="变量 JSON"
-      /><el-button
-        style="margin-top: 0.75rem"
-        :loading="busy"
-        v-permission="'edit'"
-        @click="execute('render')"
-        >试渲染所选版本</el-button
-      ></template
-    ><template v-else
-      ><section v-if="service" class="service-access" aria-labelledby="service-access-title">
-        <div class="service-head">
-          <div>
-            <h2 id="service-access-title">服务接入</h2>
-            <p class="muted">
-              真实接入地址与只读探测；卡片不执行技能，也不代替连接测试和验收。
-            </p>
-          </div>
-          <el-tag :type="probeMeta.type" effect="light">{{ probeMeta.label }}</el-tag>
-        </div>
-        <code class="service-url">{{ service.endpoint }}</code>
-        <dl class="service-meta">
-          <div>
-            <dt>调用方式</dt>
-            <dd>{{ service.type }} · {{ service.method }}</dd>
-          </div>
-          <div>
-            <dt>鉴权 / 超时</dt>
-            <dd>{{ service.authConfigured ? "已配置凭据" : "未配置凭据" }} · {{ service.timeoutMs ? service.timeoutMs + " ms" : "默认超时" }}</dd>
-          </div>
-          <div>
-            <dt>最近检查</dt>
-            <dd>
-              {{ probeResult?.checkedAt || "尚未探测" }}
-              <span v-if="probeResult" class="muted"> · {{ probeMeta.detail }}</span>
-            </dd>
-          </div>
-        </dl>
-        <div class="service-links">
-          <a :href="service.endpoint" target="_blank" rel="noopener">打开接口地址</a>
-          <template v-if="service.origin">
-            <a :href="service.origin" target="_blank" rel="noopener">服务根地址</a>
-            <a :href="service.origin + '/v3/api-docs'" target="_blank" rel="noopener">OpenAPI 文档</a>
-          </template>
-          <el-button size="small" :loading="probing" v-permission="'edit'" @click="probeService">
-            探测端点
-          </el-button>
-          <el-button size="small" disabled title="生命周期脚本属于 AP-S05，本页不直接杀进程">
-            重启服务（待配置）
-          </el-button>
-        </div>
-        <p v-if="probeError" class="error" role="alert">{{ probeError }}</p>
-        <p class="muted">
-          探测只发 HEAD，不跟随重定向、不读取响应体；最近一次检查时间来自本次页面探测，不伪装成历史监控。
-        </p>
-      </section>
-      <McpToolsPanel v-if="selectedDefinition?.type === 'MCP'" :code="resource.code" :version="selected" :definition="selectedDefinition" />
-      <h2>执行属性与权限守卫</h2>
-      <pre>{{
-        JSON.stringify(
-          {
-            execution: selectedDefinition?.execution,
-            guard: selectedDefinition?.guard,
-            inputSchema: selectedDefinition?.inputSchema,
-            outputSchema: selectedDefinition?.outputSchema,
-          },
-          null,
-          2,
-        )
-      }}</pre>
-      <el-collapse
-        ><el-collapse-item title="连接测试与选型验收（发布前必需）">
-          <SchemaInputs
-            v-if="connectionSchema && !advancedInput"
-            ref="connectionForm"
-            :declaration="connectionSchema"
-            :upload-artifact="uploadArtifact"
-          />
-          <el-checkbox v-model="advancedInput">高级 JSON 输入</el-checkbox>
-          <el-form
-            v-if="!connectionSchema || advancedInput"
-            label-position="top"
-            ><el-form-item label="测试输入参数 JSON"
-              ><el-input
-                v-model="connectionInput"
-                type="textarea"
-                :rows="4" /></el-form-item></el-form
-          ><el-button
-            :loading="busy"
-            v-permission="'edit'"
-            @click="execute('connection')"
-            >发起受控测试</el-button
+          <span>版本 {{ v.versionNo || v.version }}</span>
+          <el-tag
+            size="small"
+            effect="plain"
+            :type="v.status === 'PUBLISHED' ? 'success' : v.status === 'DRAFT' ? 'info' : 'warning'"
+            >{{ v.status }}</el-tag
           >
-          <div v-if="testRun" class="panel">
-            <strong>{{ testRun.runId }} · {{ testRun.status }}</strong>
-            <p v-if="testRun.status === 'WAITING_APPROVAL'">
-              请到确认中心核对参数快照并批准；完成后本页自动读取事实并重检。
-            </p>
-            <a href="#/approvals" target="_blank" rel="noopener"
-              >打开确认中心</a
+        </button>
+        <p v-if="!versions.length" class="muted">尚无版本记录。</p>
+      </div>
+      <p class="muted aside-note">
+        发布前需完成连接测试与选型验收；门禁由服务端校验。发布版本只读，编辑将创建新草稿。
+      </p>
+    </aside>
+    <section class="resource-main">
+      <p v-if="error" class="error" role="alert">{{ error }}</p>
+      <template v-if="kind === 'template'">
+        <el-tabs v-model="activeSection">
+          <el-tab-pane label="模板内容" name="content">
+            <el-form label-position="top"
+              ><el-form-item label="模板正文（变量使用双花括号）"
+                ><el-input
+                  v-model="content"
+                  type="textarea"
+                  :rows="10" /></el-form-item></el-form
+            ><el-button
+              type="primary"
+              :loading="busy"
+              v-permission="'edit'"
+              @click="execute('save')"
+              >保存为草稿版本</el-button
             >
-            ·
-            <a :href="'#/runs/' + testRun.runId" target="_blank" rel="noopener"
-              >查看调试详情</a
-            ><el-button @click="checkTest">刷新测试结果</el-button>
-          </div>
-          <details>
-            <summary>高级：已有受控调用标识</summary>
+          </el-tab-pane>
+          <el-tab-pane label="试渲染" name="render">
             <el-input
-              v-model="controlledCallId"
-              placeholder="已有真实调用标识"
-            /><el-button @click="execute('recheck')">重检已有调用</el-button>
-          </details>
-          <h2>模型选型验收</h2>
-          <el-form label-position="top"
-            ><el-form-item label="选型模型"
-              ><el-select
-                v-model="modelId"
-                filterable
-                placeholder="选择真实模型条目"
-                ><el-option
-                  v-for="m in models"
-                  :key="m.id"
-                  :value="m.id"
-                  :label="
-                    m.displayName || m.modelName
-                  " /></el-select></el-form-item
-            ><el-form-item
-              label="验收用例数组（question / expectSelected / expectArgs）"
-              ><el-input
-                v-model="acceptanceCases"
-                type="textarea"
-                :rows="6"
-                placeholder='无工具预期用空字符串：{"question":"你好","expectSelected":""}；仅空白或缺失会被拒绝'
-            /></el-form-item></el-form
-          ><el-button
-            :loading="busy"
-            v-permission="'edit'"
-            @click="execute('acceptance')"
-            >运行选型验收</el-button
-          >
-          <p class="muted">
-            报告绑定当前版本摘要；模型不可用会显示真实失败，不能直接发布绕过门禁。
-          </p>
-        </el-collapse-item></el-collapse
-      >
-      <h2>版本与验收记录</h2>
-      <pre>{{ JSON.stringify(versions, null, 2) }}</pre>
-      <p class="muted">
-        无验收报告或引用统计时不构造指标；发布门禁由技能服务执行。
-      </p></template
-    >
-    <pre v-if="result">{{ JSON.stringify(result, null, 2) }}</pre>
+              v-model="vars"
+              type="textarea"
+              :rows="4"
+              aria-label="变量 JSON"
+              placeholder="变量 JSON"
+            /><el-button
+              style="margin-top: 0.75rem"
+              :loading="busy"
+              v-permission="'edit'"
+              @click="execute('render')"
+              >试渲染所选版本</el-button
+            >
+          </el-tab-pane>
+          <el-tab-pane label="版本与发布" name="release">
+            <div class="publish-row">
+              <el-button
+                type="primary"
+                :loading="busy"
+                :disabled="!selected"
+                v-permission="'edit'"
+                @click="execute('publish')"
+                >发布所选版本</el-button
+              >
+              <span v-if="!selected" class="muted">请先在左侧选择版本。</span>
+            </div>
+            <h2>版本与验收记录</h2>
+            <pre>{{ JSON.stringify(versions, null, 2) }}</pre>
+          </el-tab-pane>
+        </el-tabs>
+      </template>
+      <template v-else>
+        <el-tabs v-model="activeSection">
+          <el-tab-pane label="契约" name="contract">
+            <section v-if="service" class="service-access" aria-labelledby="service-access-title">
+              <div class="service-head">
+                <div>
+                  <h2 id="service-access-title">服务接入</h2>
+                  <p class="muted">
+                    真实接入地址与只读探测；卡片不执行技能，也不代替连接测试和验收。
+                  </p>
+                </div>
+                <el-tag :type="probeMeta.type" effect="light">{{ probeMeta.label }}</el-tag>
+              </div>
+              <code class="service-url">{{ service.endpoint }}</code>
+              <dl class="service-meta">
+                <div>
+                  <dt>调用方式</dt>
+                  <dd>{{ service.type }} · {{ service.method }}</dd>
+                </div>
+                <div>
+                  <dt>鉴权 / 超时</dt>
+                  <dd>{{ service.authConfigured ? "已配置凭据" : "未配置凭据" }} · {{ service.timeoutMs ? service.timeoutMs + " ms" : "默认超时" }}</dd>
+                </div>
+                <div>
+                  <dt>最近检查</dt>
+                  <dd>
+                    {{ probeResult?.checkedAt || "尚未探测" }}
+                    <span v-if="probeResult" class="muted"> · {{ probeMeta.detail }}</span>
+                  </dd>
+                </div>
+              </dl>
+              <div class="service-links">
+                <a :href="service.endpoint" target="_blank" rel="noopener">打开接口地址</a>
+                <template v-if="service.origin">
+                  <a :href="service.origin" target="_blank" rel="noopener">服务根地址</a>
+                  <a :href="service.origin + '/v3/api-docs'" target="_blank" rel="noopener">OpenAPI 文档</a>
+                </template>
+                <el-button size="small" :loading="probing" v-permission="'edit'" @click="probeService">
+                  探测端点
+                </el-button>
+                <el-button size="small" disabled title="生命周期脚本属于 AP-S05，本页不直接杀进程">
+                  重启服务（待配置）
+                </el-button>
+              </div>
+              <p v-if="probeError" class="error" role="alert">{{ probeError }}</p>
+              <p class="muted">
+                探测只发 HEAD，不跟随重定向、不读取响应体；最近一次检查时间来自本次页面探测，不伪装成历史监控。
+              </p>
+            </section>
+            <McpToolsPanel v-if="selectedDefinition?.type === 'MCP'" :code="resource.code" :version="selected" :definition="selectedDefinition" />
+            <h2>执行属性与权限守卫</h2>
+            <pre>{{
+              JSON.stringify(
+                {
+                  execution: selectedDefinition?.execution,
+                  guard: selectedDefinition?.guard,
+                  inputSchema: selectedDefinition?.inputSchema,
+                  outputSchema: selectedDefinition?.outputSchema,
+                },
+                null,
+                2,
+              )
+            }}</pre>
+          </el-tab-pane>
+          <el-tab-pane label="连接调试" name="connection">
+            <SchemaInputs
+              v-if="connectionSchema && !advancedInput"
+              ref="connectionForm"
+              :declaration="connectionSchema"
+              :upload-artifact="uploadArtifact"
+            />
+            <el-checkbox v-model="advancedInput">高级 JSON 输入</el-checkbox>
+            <el-form
+              v-if="!connectionSchema || advancedInput"
+              label-position="top"
+              ><el-form-item label="测试输入参数 JSON"
+                ><el-input
+                  v-model="connectionInput"
+                  type="textarea"
+                  :rows="4" /></el-form-item></el-form
+            ><el-button
+              :loading="busy"
+              v-permission="'edit'"
+              @click="execute('connection')"
+              >发起受控测试</el-button
+            >
+            <div v-if="testRun" class="panel test-run">
+              <strong>{{ testRun.runId }} · {{ testRun.status }}</strong>
+              <p v-if="testRun.status === 'WAITING_APPROVAL'">
+                请到确认中心核对参数快照并批准；完成后本页自动读取事实并重检。
+              </p>
+              <a href="#/approvals" target="_blank" rel="noopener"
+                >打开确认中心</a
+              >
+              ·
+              <a :href="'#/runs/' + testRun.runId" target="_blank" rel="noopener"
+                >查看调试详情</a
+              ><el-button @click="checkTest">刷新测试结果</el-button>
+            </div>
+          </el-tab-pane>
+          <el-tab-pane label="重检" name="recheck">
+            <p class="muted">
+              已有受控调用标识来自确认通过后的真实运行；重检只读取该调用事实，不重复发起业务调用。
+            </p>
+            <div class="recheck-row">
+              <el-input
+                v-model="controlledCallId"
+                aria-label="已有受控调用标识"
+                placeholder="已有真实调用标识"
+              /><el-button :loading="busy" v-permission="'edit'" @click="execute('recheck')">重检已有调用</el-button>
+            </div>
+          </el-tab-pane>
+          <el-tab-pane label="选型验收" name="acceptance">
+            <h2>模型选型验收</h2>
+            <el-form label-position="top"
+              ><el-form-item label="选型模型"
+                ><el-select
+                  v-model="modelId"
+                  filterable
+                  placeholder="选择真实模型条目"
+                  ><el-option
+                    v-for="m in models"
+                    :key="m.id"
+                    :value="m.id"
+                    :label="
+                      m.displayName || m.modelName
+                    " /></el-select></el-form-item
+              ><el-form-item
+                label="验收用例数组（question / expectSelected / expectArgs）"
+                ><el-input
+                  v-model="acceptanceCases"
+                  type="textarea"
+                  :rows="6"
+                  placeholder='无工具预期用空字符串：{"question":"你好","expectSelected":""}；仅空白或缺失会被拒绝'
+              /></el-form-item></el-form
+            ><el-button
+              :loading="busy"
+              v-permission="'edit'"
+              @click="execute('acceptance')"
+              >运行选型验收</el-button
+            >
+            <p class="muted">
+              报告绑定当前版本摘要；模型不可用会显示真实失败，不能直接发布绕过门禁。
+            </p>
+          </el-tab-pane>
+          <el-tab-pane label="版本与发布" name="release">
+            <div class="publish-row">
+              <el-button
+                type="primary"
+                :loading="busy"
+                :disabled="!selected"
+                v-permission="'edit'"
+                @click="execute('publish')"
+                >发布所选版本</el-button
+              >
+              <span v-if="!selected" class="muted">请先在左侧选择版本。</span>
+              <span v-else class="muted"
+                >发布由服务端校验连接测试、选型验收与确认角色门禁。</span
+              >
+            </div>
+            <h2>版本与验收记录</h2>
+            <pre>{{ JSON.stringify(versions, null, 2) }}</pre>
+            <p class="muted">
+              无验收报告或引用统计时不构造指标；发布门禁由技能服务执行。
+            </p>
+          </el-tab-pane>
+        </el-tabs>
+      </template>
+      <pre v-if="result">{{ JSON.stringify(result, null, 2) }}</pre>
+    </section>
   </div>
 </template>
 <style scoped>
-.resource-detail > .row, .resource-detail .actions { flex-wrap: wrap; }
-.resource-detail .actions { display: flex; gap: .75rem; max-width: 100%; min-width: 0; }
-.resource-detail .actions :deep(.el-button) { margin-left: 0; }
-.service-access { margin: 1rem 0 1.25rem; padding: 1rem 1.1rem; border: 1px solid var(--line, #e3e8ef); border-radius: .75rem; background: var(--surface, #fff); }
+/* UI-03 主从布局：左侧版本列表约 31%，右侧任务分段详情约 69%；详情优先。 */
+.resource-detail { display: grid; grid-template-columns: minmax(13rem, 31fr) minmax(0, 69fr); gap: 1.25rem; align-items: start; }
+.resource-aside { min-width: 0; }
+.aside-head h2 { margin: 0 0 .25rem; }
+.aside-desc { margin: .35rem 0 0; overflow-wrap: anywhere; }
+.version-list { display: flex; flex-direction: column; gap: .4rem; margin: .9rem 0; }
+.version-item { display: flex; align-items: center; justify-content: space-between; gap: .5rem; padding: .5rem .7rem; border: 1px solid var(--line, #e3e8ef); border-radius: .5rem; background: transparent; cursor: pointer; text-align: left; font-size: .9rem; }
+.version-item:hover { border-color: var(--brand-primary, #0ea5e9); }
+.version-item.active { border-color: var(--brand-primary, #0ea5e9); background: color-mix(in srgb, var(--brand-primary, #0ea5e9) 8%, transparent); }
+.version-item:focus-visible { outline: 2px solid var(--brand-primary, #0ea5e9); outline-offset: 1px; }
+.aside-note { font-size: .82rem; margin: 0; }
+.resource-main { min-width: 0; }
+.test-run, .service-access { margin: 1rem 0 1.25rem; padding: 1rem 1.1rem; border: 1px solid var(--line, #e3e8ef); border-radius: .75rem; background: var(--surface, #fff); }
 .service-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
 .service-head h2 { margin: 0 0 .25rem; }
 .service-head .muted { margin: 0; }
@@ -451,7 +515,12 @@ watch(() => [props.resource.code, props.kind, auth.token, auth.user?.tenantId, a
 .service-meta dd { margin: 0; font-size: .84rem; overflow-wrap: anywhere; }
 .service-links { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem .9rem; margin-top: .6rem; }
 .service-links :deep(.el-button) { margin-left: 0; }
-@media (max-width: 720px) {
+.publish-row, .recheck-row { display: flex; align-items: center; flex-wrap: wrap; gap: .75rem; margin: .75rem 0 1rem; }
+.publish-row :deep(.el-button), .recheck-row :deep(.el-button) { margin-left: 0; }
+.recheck-row { max-width: 34rem; }
+.recheck-row :deep(.el-input) { flex: 1; }
+@media (max-width: 900px) {
+  .resource-detail { grid-template-columns: minmax(0, 1fr); }
   .service-head { flex-direction: column; }
   .service-links { align-items: flex-start; }
 }

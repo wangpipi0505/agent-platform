@@ -73,15 +73,17 @@ function openImported(code: string) {
     subtitle="注册、校验并复用可调用的业务能力。"
     :busy="busy"
     @refresh="load"
-  />
-  <PageError :error="error" :trace="trace" />
-  <div class="row">
-    <div class="muted">共 {{ filtered.length }} 条记录</div>
-    <div class="actions">
+  >
+    <!-- UI-03/UI-02遗留补迁移：主操作经PageHeader actions插槽迁入AppShell顶栏挂载点。 -->
+    <template #actions>
       <el-button type="primary" v-permission="'edit'" @click="create()"
         >注册技能</el-button
       >
-    </div>
+    </template>
+  </PageHeader>
+  <PageError :error="error" :trace="trace" />
+  <div class="row">
+    <div class="muted">共 {{ filtered.length }} 条记录</div>
   </div>
   <div class="panel">
     <div class="filters">

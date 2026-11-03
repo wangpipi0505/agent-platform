@@ -39,6 +39,8 @@ function mountResource(statusBody: Record<string, unknown>) {
     : id.endsWith('/shared/controlled-test') ? controlled
     : id.endsWith('/shared/service-access') ? serviceAccess
     : id.endsWith('/shared/artifact-upload') ? artifactUpload
+    // MNT-02子步2起 ResourceDetail 引用未保存离开保护；本组只测重检提交边界，守卫注册置空即可。
+    : id.includes('/shared/useUnsavedChanges') ? { useUnsavedChanges: () => ({}) }
     : id.endsWith('.vue') ? { default: { render: () => null } }
     : require(id), exports);
   exports.default.render = () => null;

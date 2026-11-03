@@ -49,15 +49,17 @@ async function save() {
     subtitle="沉淀可复用的提示词与变量声明。"
     :busy="busy"
     @refresh="load"
-  />
-  <PageError :error="error" :trace="trace" />
-  <div class="row">
-    <div class="muted">共 {{ filtered.length }} 条记录</div>
-    <div class="actions">
+  >
+    <!-- UI-03：主操作经PageHeader actions插槽迁入AppShell顶栏挂载点。 -->
+    <template #actions>
       <el-button type="primary" v-permission="'edit'" @click="create()"
         >创建提示词模板</el-button
       >
-    </div>
+    </template>
+  </PageHeader>
+  <PageError :error="error" :trace="trace" />
+  <div class="row">
+    <div class="muted">共 {{ filtered.length }} 条记录</div>
   </div>
   <div class="panel">
     <div class="filters">

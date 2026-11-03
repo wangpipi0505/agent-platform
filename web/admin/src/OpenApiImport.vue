@@ -180,5 +180,7 @@ details { margin: .75rem 0; } summary { cursor: pointer; color: var(--brand-prim
 .import-actions { display: flex; justify-content: flex-end; gap: .5rem; margin-top: 1rem; }
 .import-result { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
 .import-result p { margin: .35rem 0 0; }
+/* UI-03：只读 Schema 预览溢出保护；诊断仍完全来自服务端返回，不写死数量。 */
+details pre { max-height: 20rem; overflow: auto; }
 @media (max-width: 600px) { .field-grid, .guard-row { grid-template-columns: minmax(0, 1fr); } .import-result { align-items: flex-start; flex-direction: column; } }
 </style>
