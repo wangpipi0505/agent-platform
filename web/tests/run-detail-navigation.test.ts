@@ -25,7 +25,7 @@ async function flush() {
 
 /** 与现有页面测试相同：真实SFC setup，替换HTTP、事件流与路由为受控桩。 */
 function mountRun(routeQuery: Record<string, string>, props: Record<string, unknown> = {}) {
-  const api = vi.fn(async () => ({
+  const api = vi.fn(async (_path: string) => ({
     status: 'RUNNING',
     nodes: [
       { nodeDefId: 'n1', status: 'SUCCEEDED' },
