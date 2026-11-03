@@ -316,7 +316,8 @@ public class HttpAsyncAdapter {
                         contract,
                         endpoint,
                         key,
-                        Objects.toString(policy.getOrDefault("resultPath", "$.result")))) {
+                        Objects.toString(policy.getOrDefault("resultPath", "$.result")),
+                        queryDeadline)) {
             var response = streamed.metadata;
             String observedJob =
                     path(
@@ -434,7 +435,8 @@ public class HttpAsyncAdapter {
                                 contract,
                                 resultSource,
                                 key,
-                                resultReadPath.isBlank() ? "$" : resultReadPath)) {
+                                resultReadPath.isBlank() ? "$" : resultReadPath,
+                                queryDeadline)) {
                     try (var result = finalResponse.result()) {
                         raw =
                                 outputs.read(
@@ -449,7 +451,7 @@ public class HttpAsyncAdapter {
                     // PLAT-05 实现点3：结果端点 409/4xx 常见于“结果已清理/任务已失败，请查状态”。
                     // 复查同一状态端点：能确定终态失败才改判 REMOTE_FAILED；仍不能确定就保持
                     // RESULT_UNKNOWN 走对账，绝不把 409 直接抛给用户或当成业务结果。
-                    var rechecked = statusResponse(contract, endpoint, key);
+                    var rechecked = statusResponse(contract, endpoint, key, queryDeadline);
                     if (rechecked != null
                             && failedState(policy, path(rechecked, text(policy, "donePath"))))
                         throw remoteFailed(
@@ -550,8 +552,12 @@ public class HttpAsyncAdapter {
     }
 
     private AsyncHttpResponse exchangeStream(
-            Map<String, Object> contract, String endpoint, String key, String resultPath) {
-        return request(contract, endpoint, "GET", null, key)
+            Map<String, Object> contract,
+            String endpoint,
+            String key,
+            String resultPath,
+            Long queryDeadline) {
+        return request(contract, endpoint, "GET", null, key, queryDeadline)
                 .exchange(
                         (sent, response) -> {
                             int status = response.getStatusCode().value();
@@ -589,8 +595,12 @@ public class HttpAsyncAdapter {
      * 仍是“结果未知”；结果端点的 4xx 是需要复查状态端点的信号（{@link ResultRejected}）。
      */
     private AsyncHttpResponse resultEndpointStream(
-            Map<String, Object> contract, String endpoint, String key, String resultPath) {
-        return request(contract, endpoint, "GET", null, key)
+            Map<String, Object> contract,
+            String endpoint,
+            String key,
+            String resultPath,
+            Long queryDeadline) {
+        return request(contract, endpoint, "GET", null, key, queryDeadline)
                 .exchange(
                         (sent, response) -> {
                             int status = response.getStatusCode().value();
@@ -602,9 +612,10 @@ public class HttpAsyncAdapter {
     }
 
     /** 结果端点被拒后的状态端点复核；任何不确定（非2xx/解析失败）都返回 null 表示无法核实。 */
-    private JsonNode statusResponse(Map<String, Object> contract, String endpoint, String key) {
+    private JsonNode statusResponse(
+            Map<String, Object> contract, String endpoint, String key, Long queryDeadline) {
         try {
-            return exchange(contract, endpoint, "GET", null, key, 65536);
+            return exchange(contract, endpoint, "GET", null, key, 65536, queryDeadline);
         } catch (IdentityMappingClient.BeforeDispatchFailure blocked) {
             throw blocked;
         } catch (Exception rejected) {
@@ -619,7 +630,18 @@ public class HttpAsyncAdapter {
             Object body,
             String key,
             int limit) {
-        return request(contract, endpoint, method, body, key)
+        return exchange(contract, endpoint, method, body, key, limit, null);
+    }
+
+    private JsonNode exchange(
+            Map<String, Object> contract,
+            String endpoint,
+            String method,
+            Object body,
+            String key,
+            int limit,
+            Long queryDeadline) {
+        return request(contract, endpoint, method, body, key, queryDeadline)
                 .exchange(
                         (sent, response) -> {
                             int status = response.getStatusCode().value();
@@ -653,10 +675,33 @@ public class HttpAsyncAdapter {
      */
     RestClient.RequestBodySpec request(
             Map<String, Object> contract, String endpoint, String method, Object body, String key) {
+        return request(contract, endpoint, method, body, key, null);
+    }
+
+    /**
+     * R13时限贯通（复核P2修正）：查询路径把同一 queryDeadline 传给状态、结果与复查请求——
+     * 每次发出前拒绝已耗尽的期限（不再发送新请求），并按剩余期限限制连接与读超时，
+     * 不再每个请求重置完整 timeoutMs。提交路径传 null，行为与原状相同。
+     */
+    RestClient.RequestBodySpec request(
+            Map<String, Object> contract,
+            String endpoint,
+            String method,
+            Object body,
+            String key,
+            Long queryDeadline) {
+        long remainingMs = Long.MAX_VALUE;
+        if (queryDeadline != null) {
+            long remainingNanos = queryDeadline - System.nanoTime();
+            if (remainingNanos <= 0)
+                throw unknown("查询总期限已耗尽，不再发送新的异步请求");
+            remainingMs = Math.max(1, java.util.concurrent.TimeUnit.NANOSECONDS.toMillis(remainingNanos));
+        }
         SkillRules.endpoint(endpoint);
         var factory = new SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout(3000);
-        factory.setReadTimeout(((Number) contract.get("timeoutMs")).intValue());
+        factory.setConnectTimeout((int) Math.min(3000, remainingMs));
+        factory.setReadTimeout(
+                (int) Math.min(((Number) contract.get("timeoutMs")).intValue(), remainingMs));
         var request =
                 RestClient.builder()
                         .requestFactory(factory)
