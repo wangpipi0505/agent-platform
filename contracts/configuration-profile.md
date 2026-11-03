@@ -159,3 +159,11 @@ INT-02 子步1 证据登记的 5 项缺口裁决如下，实现不得偏离；�
 3. **grant 幂等用天然键**：`profileId+profileRev+grantee+payload摘要` 天然键幂等，不进 `config_write_request`；同载荷重放 `replayed=true`、异载荷 409 `CONFIG_REV_CONFLICT`。写入幂等表的覆盖范围（档案/绑定）不变。
 4. **resolve 不含健康判定**：解析回执只含声明、钉住的已批准绑定、有效授权与稳定摘要；`healthPolicy` 仅为声明，**只读健康检查归 INT-02 子步3 单独端点**，结果不进解析回执，不缓存。
 5. **resolve 为一次性读取**：不缓存（撤权下次解析即生效）；reserve/commit 两段式仅当后续卡（SEM-07 执行条件链）出现长事务窗口需要时回本节定义，当前不建、不预留字段。
+
+## 12. INT-03 子步1 契约确认（2026-11-03，P 归口裁决）
+
+1. **prompts 副作用声明**：PromptTemplate 侧无副作用声明位之前，体验投影统一 `readOnly=true`、`hasSideEffects=false`；**有写需求的推荐问法经能力卡 `requiresApproval` 表达**，不在模板侧新造声明位（PromptTemplate 扩展归原模板版本体系，另行登记）。投影不得宣传未授权/未交付的写能力。
+2. **capabilities[].inputSchema 透传**：即该技能发布版本的 `input_schema` 原样引用，投影层不裁剪、不产生第二语义；按场景裁剪属新技能版本或能力卡声明职责。
+3. **SUPERSEDED 可停用**：状态机补充迁移 `SUPERSEDED → DISABLED`（下线历史配置）；`SUPERSEDED → ACTIVE` 仍仅经授权回退指针（§4）；DRAFT 不可停用（只能废弃）。
+4. **activationScope 与 environment 同源**：取值域沿用 §10.5 environment 规则（`^[a-z][a-z0-9-]{0,31}$`，与 `publish_pin.environment` 值域一致）；激活唯一性按 `(appCode, activationScope)` 判定。
+5. **CONFIG_RELEASE_NOT_ACTIVE 固定 409**：对外 experience 端点"无激活发布"返回 409＋该码；§6 错误码语义不变。
