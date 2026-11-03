@@ -5,6 +5,8 @@ import java.util.*;
 /** Pure legacy integration rules shared by gateway issuance and the PG policy resolver. */
 public final class IntegrationClaims {
     private static final Set<String> PLATFORM_ROLES=Set.of("ADMIN","EDITOR","SERVICE","GATEWAY_AUTH");
+    /** 短票的环境维度：写入 Actor attributes，上限来自 claimLimits.attributes.environment（已入 digest）。 */
+    public static final String ENVIRONMENT_ATTRIBUTE="environment";
     private IntegrationClaims(){}
     public static String principal(String biz,String user){String value=biz+":"+user;return value.length()<=64?value:"ext_"+Digest.sha256(biz+"\u0000"+user).substring(0,60);}
     public static String digest(JsonNode credential){return Digest.sha256(Json.canonical(Map.of("secretRef",credential.path("secretRef"),"claimLimits",credential.path("claimLimits"),"allowedOrigins",credential.path("allowedOrigins"))));}

@@ -105,10 +105,11 @@ public final class SessionService {
             // 不存在/停用/无角色都归一到同一个 403：否则错误码本身就是账号枚举接口。
             throw AuthorityException.denied("user-mgmt 身份不可用或已停用");
         }
-        String userName = text(identity.get("userName"));
+        requireTenant(identity);
+        String userName = mappedText(identity, "userName");
         List<String> roles = roles(identity);
         if (roles.isEmpty()) throw AuthorityException.denied("user-mgmt 身份没有任何可用角色");
-        Map<String, Object> attributes = attributes(identity);
+        Map<String, Object> attributes = attributes(identity, userName);
         Map<String, Object> claims = claims(userName, roles, attributes);
         String token = keys.sign(TYPE, claims);
         Map<String, Object> session = new LinkedHashMap<>();
@@ -170,48 +171,95 @@ public final class SessionService {
     /**
      * 平台侧只看"用户是否可用"这一个事实：user-mgmt 的 {@code status} 是字符串枚举（"0" 正常），
      * 这里不接受其它类型，避免 "false"/0 之类的宽松相等把停用账号放进来。
+     *
+     * <p>状态字面量来自档案（{@code active-status}），字段位置来自有限映射；不做大小写/数字归一。
      */
-    private static boolean admissible(Map<String, Object> identity) {
-        Object status = identity.get("status");
-        if (!"0".equals(status)) return false;
-        Object userName = identity.get("userName");
-        return userName instanceof String name && !name.isBlank() && name.length() <= 128;
+    private boolean admissible(Map<String, Object> identity) {
+        if (!properties.activeStatus().equals(mapped(identity, "status"))) return false;
+        String name = mappedText(identity, "userName");
+        return name != null && !name.isBlank() && name.length() <= 128;
     }
 
-    @SuppressWarnings("unchecked")
+    /**
+     * 租户上限：只有档案里映射了 {@code tenant} 源字段时才校验，且必须与配置的 tenant 逐字相等。
+     *
+     * <p>平台签出的 {@code tenant_id} 永远取配置值，身份源返回值不得改变它；这里只是把
+     * "身份服务返回了别的租户"提前拒绝，而不是让它悄悄落到 {@code local-v12}。
+     */
+    private void requireTenant(Map<String, Object> identity) {
+        String sourceTenant = IdentityMapping.text(identity, properties.mapping().get("tenant"));
+        if (sourceTenant != null && !sourceTenant.equals(properties.tenant())) {
+            throw AuthorityException.denied("身份源返回的租户不属于本平台");
+        }
+    }
+
     private List<String> roles(Map<String, Object> identity) {
-        Object raw = identity.get("roles");
+        Object raw = mapped(identity, "roles");
         if (!(raw instanceof List<?> list)) return List.of();
         Set<String> unique = new LinkedHashSet<>();
+        String keyPath = properties.mapping().get("roleKey");
         for (Object item : list) {
-            if (!(item instanceof Map<?, ?> role)) continue;
-            Object key = role.get("roleKey");
-            if (!(key instanceof String text) || text.isBlank() || text.length() > 64) continue;
-            unique.add(text);
+            if (item instanceof String text) {
+                addRole(unique, text);
+            } else if (item instanceof Map<?, ?> role) {
+                // roleKey 在"角色对象内"解析；也容忍身份文档本来就给字符串数组（authorities: ["ops"]）。
+                for (String key : strings(IdentityMapping.resolve(role, keyPath))) addRole(unique, key);
+            }
         }
         unique.removeAll(properties.roleDenylist());
         return List.copyOf(unique);
     }
 
-    private Map<String, Object> attributes(Map<String, Object> identity) {
+    private static void addRole(Set<String> unique, String key) {
+        if (key != null && !key.isBlank() && key.length() <= 64) unique.add(key);
+    }
+
+    private Map<String, Object> attributes(Map<String, Object> identity, String userName) {
         Map<String, Object> attributes = new LinkedHashMap<>();
-        Object deptId = identity.get("deptId");
-        if (deptId != null) attributes.put("deptId", List.of(String.valueOf(deptId)));
-        Object deptName = identity.get("deptName");
-        if (deptName instanceof String name && !name.isBlank()) attributes.put("deptName", List.of(name));
+        String deptId = scalar(IdentityMapping.resolve(identity, properties.mapping().get("deptId")));
+        if (deptId != null) attributes.put("deptId", List.of(deptId));
+        String deptName = IdentityMapping.text(identity, properties.mapping().get("deptName"));
+        if (deptName != null && !deptName.isBlank()) attributes.put("deptName", List.of(deptName));
         List<String> dataScopes = new ArrayList<>();
-        Object rawRoles = identity.get("roles");
+        Object rawRoles = mapped(identity, "roles");
         if (rawRoles instanceof List<?> list) {
+            String scopePath = properties.mapping().get("roleDataScope");
             for (Object item : list) {
-                if (item instanceof Map<?, ?> role && role.get("dataScope") != null) {
-                    dataScopes.add(String.valueOf(role.get("dataScope")));
+                if (item instanceof Map<?, ?> role) {
+                    dataScopes.addAll(strings(IdentityMapping.resolve(role, scopePath)));
                 }
             }
         }
         if (!dataScopes.isEmpty()) attributes.put("dataScope", List.copyOf(new LinkedHashSet<>(dataScopes)));
-        attributes.put("userId", List.of(String.valueOf(identity.get("userName"))));
+        attributes.put("userId", List.of(userName));
         attributes.put("bizSystemCode", List.of(properties.bizSystemCode()));
         return attributes;
+    }
+
+    private Object mapped(Map<String, Object> identity, String target) {
+        return IdentityMapping.resolve(identity, properties.mapping().get(target));
+    }
+
+    private String mappedText(Map<String, Object> identity, String target) {
+        return IdentityMapping.text(identity, properties.mapping().get(target));
+    }
+
+    private static String scalar(Object value) {
+        if (value instanceof String text) return text;
+        if (value instanceof Number number) return String.valueOf(number);
+        return null;
+    }
+
+    private static List<String> strings(Object value) {
+        if (value instanceof String text) return text.isBlank() ? List.of() : List.of(text);
+        if (value instanceof List<?> list) {
+            List<String> result = new ArrayList<>();
+            for (Object item : list) {
+                if (item instanceof String text && !text.isBlank()) result.add(text);
+            }
+            return result;
+        }
+        return List.of();
     }
 
     private Map<String, Object> parse(byte[] body) {

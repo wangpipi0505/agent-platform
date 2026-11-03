@@ -31,9 +31,26 @@ public final class PortalSessionController {
             response.flushBuffer();
         }catch(PlatformException rejected){
             if(!response.isCommitted()){
-                response.resetBuffer();response.setStatus(rejected.status());
-                response.getOutputStream().write(Json.write(new ApiResponse<>(rejected.code(),rejected.getMessage(),null,null)).getBytes(StandardCharsets.UTF_8));
+                response.resetBuffer();
+                // 身份源不可达时统一成契约登记码：宿主据此展示"无法确认身份"的阻塞，
+                // 不会把它误判成 403 去降级到 dev/共享账号。
+                var emitted = degrade(rejected);
+                response.setStatus(emitted.status());
+                response.setContentType("application/json;charset=UTF-8");
+                response.getOutputStream().write(Json.write(ApiResponse.error(emitted.status(),emitted.code(),emitted.getMessage())).getBytes(StandardCharsets.UTF_8));
             }
         }
+    }
+
+    /**
+     * 身份源不可达（authority 本身或其上游身份服务）时对外只留契约 §6 的阻塞码。
+     * 两种内部码都来自 503：IAM_AUTHORITY_UNAVAILABLE（可信授权服务不可达）与
+     * IAM_IDENTITY_UNAVAILABLE（身份源返回 5xx/坏响应）。不把它们原样泄露给宿主，
+     * 也不能退化成 403，否则宿主会误以为"凭据错误"而切到 dev/共享账号。
+     */
+    static PlatformException degrade(PlatformException rejected){
+        if(rejected.status()!=503)return rejected;
+        if(!"IAM_IDENTITY_UNAVAILABLE".equals(rejected.code())&&!"IAM_AUTHORITY_UNAVAILABLE".equals(rejected.code()))return rejected;
+        return new PlatformException(503,"INTEGRATION_IDENTITY_PROVIDER_UNAVAILABLE","身份源暂不可用，未执行业务操作");
     }
 }

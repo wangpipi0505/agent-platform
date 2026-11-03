@@ -1,6 +1,7 @@
 package cn.agentplatform.gateway.application;
 
 import cn.agentplatform.common.*;
+import cn.agentplatform.common.authority.IntegrationClaims;
 import cn.agentplatform.gateway.domain.IntegrationPolicy;
 import cn.agentplatform.gateway.domain.IntegrationRateLimit;
 
@@ -69,21 +70,27 @@ public class IntegrationAccess implements AllowedOriginPolicy, ApiKeyAuthenticat
 
     @Override
     public Authentication authenticate(HttpServletRequest request) {
+        // 只允许可信后端声明"这是哪个终端用户"；tenant/principal 属于票据派生字段，出现即拒绝。
+        for (String header : List.of("X-User-Tenant", "X-Tenant", "X-Principal", "X-User-Principal")) {
+            if (request.getHeader(header) != null)
+                throw new PlatformException(
+                        403, "INTEGRATION_CLIENT_IDENTITY_REJECTED", "客户端自报的 tenant/principal 不被采信");
+        }
         String roles = Objects.toString(request.getHeader("X-User-Roles"), "[]"),
                 attributes = Objects.toString(request.getHeader("X-User-Attributes"), "{}");
         if (roles.length() + attributes.length() > 16384)
             throw new PlatformException(400, "CLAIMS_TOO_LARGE", "身份声明超过安全上限");
         JsonNode claimed;
         try {
-            claimed =
-                    Json.tree(
-                            Map.of(
-                                    "userId",
-                                    Objects.toString(request.getHeader("X-User-Id"), ""),
-                                    "roles",
-                                    Json.read(roles),
-                                    "attributes",
-                                    Json.read(attributes)));
+            Map<String, Object> claims = new LinkedHashMap<>();
+            claims.put("userId", Objects.toString(request.getHeader("X-User-Id"), ""));
+            claims.put("roles", Json.read(roles));
+            claims.put("attributes", Json.read(attributes));
+            // 环境不是身份：它是"允许落到哪个环境"的选择器，仍须落在接入档案上限内。
+            String environment = request.getHeader(IntegrationPolicy.ENVIRONMENT_HEADER);
+            if (environment != null && !environment.isBlank())
+                claims.put("environment", environment.trim());
+            claimed = Json.tree(claims);
         } catch (Exception e) {
             throw new PlatformException(400, "INVALID_CLAIMS", "身份声明须为有效JSON");
         }
@@ -104,16 +111,25 @@ public class IntegrationAccess implements AllowedOriginPolicy, ApiKeyAuthenticat
     }
 
     private JsonNode credential(long id) {
+        JsonNode body;
         try {
-            return client.get()
-                    .uri(appUrl + "/internal/integration-credentials/" + id)
-                    .header("Authorization", "Bearer " + ServiceTokens.issue(BOOTSTRAP))
-                    .retrieve()
-                    .body(JsonNode.class)
-                    .path("data");
-        } catch (Exception e) {
+            body =
+                    client.get()
+                            .uri(appUrl + "/internal/integration-credentials/" + id)
+                            .header("Authorization", "Bearer " + ServiceTokens.issue(BOOTSTRAP))
+                            .retrieve()
+                            .body(JsonNode.class);
+        } catch (org.springframework.web.client.HttpClientErrorException e) {
+            // 4xx 是"凭据不存在/无权读取"，属于调用方问题；不能包装成传输故障让业务方重试。
             throw new PlatformException(401, "INVALID_CREDENTIAL", "集成凭据不可用");
+        } catch (org.springframework.web.client.RestClientException e) {
+            // 连接失败/超时/5xx：接入档案暂不可达。零业务执行，且必须让宿主看到可解释的阻塞。
+            throw new PlatformException(
+                    503, "INTEGRATION_IDENTITY_PROVIDER_UNAVAILABLE", "接入档案暂不可用，未执行任何业务操作");
         }
+        if (body == null || body.isMissingNode())
+            throw new PlatformException(503, "INTEGRATION_IDENTITY_PROVIDER_UNAVAILABLE", "接入档案响应为空");
+        return body.path("data");
     }
 
     /** 出票成功后的凭据计数回调；只在凭据校验与声明裁剪全部通过后才触发（被拒流量不消耗配额）。 */
@@ -180,18 +196,28 @@ public class IntegrationAccess implements AllowedOriginPolicy, ApiKeyAuthenticat
         Number id = jwt.getClaim("credential_id");
         if (id == null) throw new PlatformException(401, "INVALID_TICKET", "出票缺少凭据绑定");
         JsonNode credential = credential(id.longValue());
-        IntegrationPolicy.active(credential);
+        String boundEnvironment =
+                actor.attributes()
+                        .getOrDefault(
+                                IntegrationClaims.ENVIRONMENT_ATTRIBUTE,
+                                Set.of())
+                        .stream()
+                        .findFirst()
+                        .orElse(null);
+        // 撤权、环境上限收紧都归一到"重新出票"；旧票据不能因为签名仍有效就继续用。
+        IntegrationPolicy.bound(credential, boundEnvironment);
         IntegrationPolicy.origin(credential, req.getHeader("Origin"));
         String app = credential.path("appCode").asText();
         if (!actor.tenantId().equals(credential.path("tenantId").asText())
-                || !app.equals(jwt.getClaimAsString("app_code"))
-                || !credential
+                || !app.equals(jwt.getClaimAsString("app_code")))
+            throw new PlatformException(403, "APP_BINDING_DENIED", "出票与当前应用/租户不一致");
+        if (!credential
                         .path("bizSystemCode")
                         .asText()
                         .equals(jwt.getClaimAsString("biz_system_code"))
                 || !IntegrationPolicy.digest(credential)
                         .equals(jwt.getClaimAsString("policy_digest")))
-            throw new PlatformException(401, "TICKET_POLICY_CHANGED", "集成授权已变更，请重新出票");
+            throw new PlatformException(401, "INTEGRATION_TICKET_EXPIRED", "集成授权已变更，请重新出票");
         String path = req.getRequestURI();
         if (!IntegrationPolicy.allowedPath(path, req.getMethod(), app))
             throw new PlatformException(403, "APP_BINDING_DENIED", "出票仅可访问绑定应用的运行接口");
