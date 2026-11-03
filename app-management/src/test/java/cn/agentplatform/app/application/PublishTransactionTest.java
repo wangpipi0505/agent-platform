@@ -32,9 +32,9 @@ class PublishTransactionTest {
     static void database() {
         var ds =
                 new DriverManagerDataSource(
-                        "jdbc:postgresql://127.0.0.1:25432/agent_platform_v12",
-                        "agent_v12",
-                        System.getenv("AGENT_DB_PASSWORD"));
+                        TestDatabase.url(),
+                        TestDatabase.user(),
+                        TestDatabase.password());
         Flyway.configure()
                 .dataSource(ds)
                 .schemas("app")

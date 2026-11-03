@@ -4,6 +4,7 @@ import cn.agentplatform.app.domain.AppDigest;
 import cn.agentplatform.app.domain.AppRules;
 import cn.agentplatform.app.domain.PublishGate;
 import cn.agentplatform.app.domain.PublishWaiver;
+import cn.agentplatform.app.infra.AppPublicationStore;
 import cn.agentplatform.app.infra.ReleasePins;
 import cn.agentplatform.common.*;
 import cn.agentplatform.common.authority.*;
@@ -35,26 +36,14 @@ import java.util.concurrent.atomic.AtomicReference;
 public class AppService {
     private static final org.slf4j.Logger log = LoggerFactory.getLogger(AppService.class);
 
-    /**
-     * pin 结果落库 UPSERT：每应用一行最近一次尝试结果；last_pinned_* 只在 PINNED 时推进，
-     * 失败/跳过不抹掉"远端当前仍指向哪个绑定"的已知事实。与 V106 迁移头注释的语义一一对应。
-     */
-    private static final String PIN_UPSERT =
-            "insert into app.publish_pin(tenant_id,app_code,app_version_no,state,release_id,"
-                    + "binding_id,reason,environment,last_pinned_release_id,last_pinned_binding_id,last_pinned_at)"
-                    + " values(?,?,?,?,?,?,?,?,?,?,?)"
-                    + " on conflict(tenant_id,app_code) do update set"
-                    + " app_version_no=excluded.app_version_no,state=excluded.state,"
-                    + " release_id=excluded.release_id,binding_id=excluded.binding_id,"
-                    + " reason=excluded.reason,environment=excluded.environment,updated_at=now(),"
-                    + " last_pinned_release_id=coalesce(case when excluded.state='PINNED' then"
-                    + " excluded.release_id end, app.publish_pin.last_pinned_release_id),"
-                    + " last_pinned_binding_id=coalesce(case when excluded.state='PINNED' then"
-                    + " excluded.binding_id end, app.publish_pin.last_pinned_binding_id),"
-                    + " last_pinned_at=coalesce(case when excluded.state='PINNED' then now() end,"
-                    + " app.publish_pin.last_pinned_at)";
-
     private final JdbcTemplate db;
+    /** 发布绑定观测的持久化协作对象：只做 {@code app.publish_pin} 的读写，事务仍归本类。 */
+    private final AppPublicationStore publicationStore;
+    /**
+     * 草稿生命周期协作对象：新建/复制/保存/元数据/停启用归档回滚/删除与生命周期日志已搬入
+     * {@link AppLifecycleService}，本类只保留兼容门面。发布预检与提交仍在本类，二者事务边界互不相同。
+     */
+    private final AppLifecycleService lifecycle;
     private final TransactionTemplate tx;
     private final TransactionTemplate publishedReadTx;
     private final RestClient http = client();
@@ -127,6 +116,39 @@ public class AppService {
             @Value("${agent.services.engine:http://127.0.0.1:18082}") String engineUrl) {
         this.engineUrl = engineUrl;
         this.db = db;
+        this.publicationStore = new AppPublicationStore(db);
+        // 生命周期子步只需读取与两条校验，用窄接口反向注入；发布预检/提交仍留在本类，
+        // 因此不存在"生命周期依赖发布实现"的反向环。
+        this.lifecycle =
+                new AppLifecycleService(
+                        db,
+                        manager,
+                        new AppLifecycleService.Port() {
+                            @Override
+                            public Map<String, Object> load(String code, boolean lock) {
+                                return get(code, lock);
+                            }
+
+                            @Override
+                            public Map<String, Object> reload(String code) {
+                                return get(code);
+                            }
+
+                            @Override
+                            public Map<String, Object> version(String code, int versionNo) {
+                                return AppService.this.version(code, versionNo);
+                            }
+
+                            @Override
+                            public Map<String, Object> templateConfig(Map<String, Object> config) {
+                                return AppService.this.templateConfig(config);
+                            }
+
+                            @Override
+                            public void assertCapabilitySource(Map<String, Object> app) {
+                                AppService.this.assertCapabilitySource(app);
+                            }
+                        });
         this.templates = new TemplateService(db);
         this.tx = new TransactionTemplate(manager);
         this.publishedReadTx = new TransactionTemplate(manager);
@@ -283,293 +305,45 @@ public class AppService {
         return db.query(sql.toString(), this::row, args.toArray());
     }
 
-    public Map<String, Object> copy(String sourceCode, Map<String, Object> body) {
-        if (!(body.get("code") instanceof String) || !(body.get("name") instanceof String))
-            throw error(400, "INVALID_INPUT", "新应用编码和名称必须为字符串");
-        String code = text(body, "code"), name = text(body, "name");
-        try {
-            return tx.execute(
-                    s -> {
-                        get(sourceCode, true);
-                        // READ COMMITTED 下等待 d 锁的 join 可能保留旧 a；持有既有草稿锁后，
-                        // 用新语句快照读取完整来源，保证复制内容与来源修订/发布状态一致。
-                        var source = get(sourceCode);
-                        assertCapabilitySource(source);
-                        var input = new LinkedHashMap<String, Object>();
-                        input.put("code", code);
-                        input.put("name", name);
-                        for (String field :
-                                List.of("type", "description", "domain", "bizCategory", "tags"))
-                            input.put(field, source.get(field));
-                        var target = create(input);
-                        if (object(source.get("config")).containsKey("capabilityPackages"))
-                            db.update("insert into app.capability_app_binding(tenant_id,app_id,app_code,package_version_id,source)"
-                                            + " select tenant_id,?,?,package_version_id,source from app.capability_app_binding where tenant_id=? and app_id=?",
-                                    target.get("id"), code, tenant(), source.get("id"));
-                        // 只复制编排输入并保留用户模型/技能引用；冻结模型、评测/预检/发布证据及集成凭据
-                        // 绑定源应用身份，新草稿必须重新生成，不能据此继承发布许可。
-                        db.update(
-                                "update app.app_draft set"
-                                    + " config=?::jsonb,definition=?::jsonb,layout=?::jsonb where"
-                                    + " tenant_id=? and app_code=?",
-                                Json.write(source.get("config")),
-                                Json.write(source.get("definition")),
-                                Json.write(source.get("layout")),
-                                tenant(),
-                                code);
-                        var detail = new LinkedHashMap<String, Object>();
-                        detail.put("sourceAppCode", sourceCode);
-                        detail.put("sourceDraftRev", source.get("draftRev"));
-                        detail.put("sourceCurrentVersionNo", source.get("currentVersionNo"));
-                        log(code, "COPY", source.get("status").toString(), "DRAFT", detail);
-                        return get(code);
-                    });
-        } catch (DuplicateKeyException ex) {
-            throw error(409, "APP_CODE_CONFLICT", "应用编码已存在，请更换编码");
-        }
-    }
+
+
+
+
+
+
+
 
     public Map<String, Object> create(Map<String, Object> body) {
-        String code = text(body, "code"), name = text(body, "name"), type = text(body, "type");
-        if (!code.matches("[A-Za-z][A-Za-z0-9_-]{0,63}") || !Set.of("CHAT", "FLOW").contains(type))
-            throw error(400, "INVALID_INPUT", "应用编码或类型无效");
-        Map<String, Object> initialConfig = Map.of();
-        if (body.containsKey("promptTemplateRef")) {
-            var reference = object(body.get("promptTemplateRef"));
-            if (!Set.of("code", "version").equals(reference.keySet()))
-                throw error(400, "INVALID_INPUT", "创建时仅提供模板编码与精确版本，摘要由服务端固定");
-            initialConfig = templateConfig(Map.of("promptSource", "TEMPLATE", "promptRefs", List.of(reference)));
-        }
-        final var config = initialConfig;
-        return tx.execute(
-                status -> {
-                    db.update(
-                            "insert into"
-                                + " app.application(tenant_id,code,name,type,description,domain,biz_category,tags,created_by)"
-                                + " values(?,?,?,?,?,?,?,?::jsonb,?)",
-                            tenant(),
-                            code,
-                            name,
-                            type,
-                            Objects.toString(body.get("description"), ""),
-                            Objects.toString(body.get("domain"), ""),
-                            Objects.toString(body.get("bizCategory"), ""),
-                            Json.write(body.getOrDefault("tags", List.of())),
-                            Actor.current().principalId());
-                    db.update(
-                            "insert into app.app_draft(tenant_id,app_id,app_code,config) select"
-                                + " tenant_id,id,code,?::jsonb from app.application where tenant_id=? and"
-                                + " code=?",
-                            Json.write(config),
-                            tenant(),
-                            code);
-                    log(code, "CREATE", "DRAFT", "DRAFT", Map.of());
-                    return get(code);
-                });
+        return lifecycle.create(body);
+    }
+
+    public Map<String, Object> copy(String sourceCode, Map<String, Object> body) {
+        return lifecycle.copy(sourceCode, body);
     }
 
     public Map<String, Object> save(String code, Map<String, Object> body, boolean flow) {
-        return tx.execute(
-                s -> {
-                    var old = get(code, true);
-                    long rev = number(body, "draftRev");
-                    if (((Number) old.get("draftRev")).longValue() != rev)
-                        throw error(409, "DRAFT_CONFLICT", "草稿已被更新，请刷新");
-                    if (Set.of("DISABLED", "ARCHIVED").contains(old.get("status")))
-                        throw error(409, "APP_STATE", "请先重新启用应用");
-                    if (flow && !"FLOW".equals(old.get("type")))
-                        throw error(409, "APP_TYPE", "仅流程应用可保存流程图");
-                    String field = flow ? "definition" : "config";
-                    Map<String, Object> value = object(body.get(field));
-                    if (!flow) value = templateConfig(value);
-                    var checked = new LinkedHashMap<String, Object>(old);
-                    checked.put(field, value);
-                    if (object(old.get("config")).containsKey("capabilityPackages")
-                            && !object(checked.get("config")).containsKey("capabilityPackages"))
-                        throw error(409, "CAPABILITY_SOURCE_CONFLICT", "不能移除应用的能力包来源");
-                    assertCapabilitySource(checked);
-                    boolean changed =
-                            !AppRules.canonical(value).equals(AppRules.canonical(old.get(field)));
-                    Object layout =
-                            flow
-                                    ? body.getOrDefault("layout", old.get("layout"))
-                                    : old.get("layout");
-                    if (!(layout instanceof Map)) throw error(400, "INVALID_INPUT", "layout必须为对象");
-                    db.update(
-                            "update app.app_draft set "
-                                    + field
-                                    + "=?::jsonb,layout=?::jsonb,draft_rev=draft_rev+?,draft_no=draft_no+?,updated_at=now()"
-                                    + " where tenant_id=? and app_code=?",
-                            Json.write(value),
-                            Json.write(layout),
-                            changed ? 1 : 0,
-                            changed && old.get("status").equals("PUBLISHED") ? 1 : 0,
-                            tenant(),
-                            code);
-                    db.update(
-                            "update app.application set status=case when ? then 'DRAFT' else status"
-                                    + " end,updated_at=now() where tenant_id=? and code=?",
-                            changed,
-                            tenant(),
-                            code);
-                    if (changed)
-                        log(
-                                code,
-                                "MODIFY",
-                                old.get("status").toString(),
-                                "DRAFT",
-                                Map.of("previousDraftRev", rev));
-                    return get(code);
-                });
+        return lifecycle.save(code, body, flow);
     }
 
     public Map<String, Object> metadata(String code, Map<String, Object> body) {
-        return tx.execute(
-                status -> {
-                    var old = get(code, true);
-                    if (number(body, "draftRev") != ((Number) old.get("draftRev")).longValue())
-                        throw error(409, "DRAFT_CONFLICT", "请刷新草稿");
-                    if (Set.of("DISABLED", "ARCHIVED").contains(old.get("status")))
-                        throw error(409, "APP_STATE", "请先启用应用");
-                    db.update(
-                            "update app.application set"
-                                + " name=?,description=?,domain=?,biz_category=?,tags=?::jsonb,status='DRAFT',updated_at=now()"
-                                + " where tenant_id=? and code=?",
-                            text(body, "name"),
-                            Objects.toString(body.get("description"), ""),
-                            Objects.toString(body.get("domain"), ""),
-                            Objects.toString(body.get("bizCategory"), ""),
-                            Json.write(body.getOrDefault("tags", List.of())),
-                            tenant(),
-                            code);
-                    db.update(
-                            "update app.app_draft set"
-                                    + " draft_rev=draft_rev+1,draft_no=draft_no+?,updated_at=now()"
-                                    + " where tenant_id=? and app_code=?",
-                            old.get("status").equals("PUBLISHED") ? 1 : 0,
-                            tenant(),
-                            code);
-                    log(
-                            code,
-                            "MODIFY",
-                            old.get("status").toString(),
-                            "DRAFT",
-                            Map.of("previousDraftRev", old.get("draftRev"), "scope", "METADATA"));
-                    return get(code);
-                });
+        return lifecycle.metadata(code, body);
     }
 
     private void log(String code, String action, String from, String to, Object detail) {
-        db.update(
-                "insert into"
-                    + " app.lifecycle_log(tenant_id,app_code,actor,action,from_state,to_state,detail)"
-                    + " values(?,?,?,?,?,?,?::jsonb)",
-                tenant(),
-                code,
-                Actor.current().principalId(),
-                action,
-                from,
-                to,
-                Json.write(detail));
+        lifecycle.log(code, action, from, to, detail);
     }
 
     public List<Map<String, Object>> lifecycleLogs(String code) {
-        get(code);
-        return db.query(
-                "select id,actor,action,from_state,to_state,detail::text,created_at from"
-                        + " app.lifecycle_log where tenant_id=? and app_code=? order by id desc",
-                (r, n) ->
-                        Map.<String, Object>of(
-                                "id",
-                                r.getLong("id"),
-                                "actor",
-                                r.getString("actor"),
-                                "action",
-                                r.getString("action"),
-                                "fromState",
-                                r.getString("from_state"),
-                                "toState",
-                                r.getString("to_state"),
-                                "detail",
-                                Json.read(r.getString("detail"), Map.class),
-                                "createdAt",
-                                r.getTimestamp("created_at").toInstant().toString()),
-                tenant(),
-                code);
+        return lifecycle.lifecycleLogs(code);
     }
 
     public Map<String, Object> lifecycle(String code, String action, Map<String, Object> body) {
-        return tx.execute(
-                s -> {
-                    var old = get(code, true);
-                    String from = old.get("status").toString();
-                    String to =
-                            switch (action) {
-                                case "disable" -> {
-                                    if (!Set.of("PUBLISHED", "DRAFT").contains(from)
-                                            || old.get("currentVersionNo") == null)
-                                        throw error(409, "APP_STATE", "仅已发布应用可停用");
-                                    yield "DISABLED";
-                                }
-                                case "enable" -> {
-                                    if (!from.equals("DISABLED")
-                                            || old.get("currentVersionNo") == null)
-                                        throw error(409, "APP_STATE", "仅停用应用可启用");
-                                    yield "PUBLISHED";
-                                }
-                                case "archive" -> {
-                                    if (!from.equals("DISABLED"))
-                                        throw error(409, "APP_STATE", "仅停用应用可归档");
-                                    yield "ARCHIVED";
-                                }
-                                case "rollback" -> {
-                                    int version = (int) number(body, "versionNo");
-                                    version(code, version);
-                                    if (!Set.of("PUBLISHED", "DRAFT").contains(from))
-                                        throw error(409, "APP_STATE", "当前状态不能回滚");
-                                    db.update(
-                                            "update app.application set current_version_no=? where"
-                                                    + " tenant_id=? and code=?",
-                                            version,
-                                            tenant(),
-                                            code);
-                                    yield "PUBLISHED";
-                                }
-                                default -> throw error(400, "INVALID_ACTION", "未知生命周期操作");
-                            };
-                    db.update(
-                            "update app.application set status=?,updated_at=now() where tenant_id=?"
-                                    + " and code=?",
-                            to,
-                            tenant(),
-                            code);
-                    log(code, action.toUpperCase(Locale.ROOT), from, to, body);
-                    return get(code);
-                });
+        return lifecycle.lifecycle(code, action, body);
     }
 
     public void delete(String code) {
-        tx.executeWithoutResult(
-                s -> {
-                    var old = get(code, true);
-                    if (!old.get("status").equals("DRAFT") || old.get("currentVersionNo") != null)
-                        throw error(409, "APP_STATE", "只能删除从未发布的草稿");
-                    db.update(
-                            "delete from app.publish_report where tenant_id=? and app_code=?",
-                            tenant(),
-                            code);
-                    db.update(
-                            "delete from app.app_draft where tenant_id=? and app_code=?",
-                            tenant(),
-                            code);
-                    db.update(
-                            "delete from app.application where tenant_id=? and code=?",
-                            tenant(),
-                            code);
-                    log(code, "DELETE", "DRAFT", "DRAFT", Map.of());
-                });
+        lifecycle.delete(code);
     }
-
     public List<Map<String, Object>> references(String code) {
         return db.queryForList(
                 "select app_code,app_version_no,skill_code,skill_version from app.skill_reference"
@@ -1856,23 +1630,15 @@ public class AppService {
             String code, Map<String, Object> candidate, Map<String, Object> pin, Object versionNo) {
         if (!pinRecordEnabled) return;
         try {
-            String state = Objects.toString(pin.get("state"), "");
-            String releaseId = ontologyReleaseId(candidate);
-            String bindingId = Objects.toString(pin.get("bindingId"), null);
-            boolean pinned = "PINNED".equals(state);
-            db.update(
-                    PIN_UPSERT,
+            publicationStore.recordPin(
                     tenant(),
                     code,
                     ((Number) Objects.requireNonNull(versionNo, "发布版本号缺失")).intValue(),
-                    state,
-                    releaseId,
-                    bindingId,
+                    Objects.toString(pin.get("state"), ""),
+                    ontologyReleaseId(candidate),
+                    Objects.toString(pin.get("bindingId"), null),
                     Objects.toString(pin.get("reason"), null),
-                    pinEnvironment,
-                    pinned ? releaseId : null,
-                    pinned ? bindingId : null,
-                    pinned ? new Timestamp(System.currentTimeMillis()) : null);
+                    pinEnvironment);
         } catch (RuntimeException failure) {
             // 观测不得破坏发布：已提交的版本与响应照常返回；traceId 走 MDC（TraceContextFilter），
             // 日志模式自动带上，这里补记应用与状态供事后补偿。
@@ -1900,11 +1666,7 @@ public class AppService {
      */
     public Map<String, Object> pinStatus(String code) {
         get(code);
-        var rows =
-                db.queryForList(
-                        "select * from app.publish_pin where tenant_id=? and app_code=?",
-                        tenant(),
-                        code);
+        var rows = publicationStore.pinRows(tenant(), code);
         if (rows.isEmpty()) return new LinkedHashMap<>();
         var r = rows.getFirst();
         var view = new LinkedHashMap<String, Object>();
