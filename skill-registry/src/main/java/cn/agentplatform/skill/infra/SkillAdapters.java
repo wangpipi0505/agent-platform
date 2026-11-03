@@ -1156,10 +1156,10 @@ public class SkillAdapters {
         } catch (IllegalArgumentException ex) {
             throw new Failure("OUTPUT_INVALID", false, "外部响应不符合输出Schema");
         }
-        JsonNode ontology = output.path("ontologyMeta");
+        var spec = object(contract.getOrDefault("returnSpec", Map.of()));
+        JsonNode ontology = ontologyMeta(output, spec);
         String summary = output.isTextual() ? output.asText() : Json.write(output);
         if (summary.length() > 2000) summary = summary.substring(0, 2000) + "…";
-        var spec = object(contract.getOrDefault("returnSpec", Map.of()));
         long effectiveAttempt = attempt < 1 ? 1L : attempt;
         var archivedByThisRead = new ArrayList<Map<String, Object>>();
         try {
@@ -1241,6 +1241,41 @@ public class SkillAdapters {
             if (value.isMissingNode()) throw new IllegalArgumentException("结果路径不存在: " + path);
         }
         return value;
+    }
+
+    /**
+     * SEM-05.0：本体元数据投影只认 return_spec.ontologyMetaPath。
+     *
+     * <p>声明了就按受限路径取对象并核对四元组；路径未命中、类型不符、字段不全或候选预览都按
+     * OUTPUT_INVALID 拒绝，绝不回退到根 meta、importSource 或旧同名字段——回退等于把别的版本
+     * 当成实际版本。未声明时保留存量 {@code ontologyMeta} 字段行为；普通 HTTP 响应里的 root
+     * {@code meta} 不会因此被识别成本体元数据。
+     */
+    private static JsonNode ontologyMeta(JsonNode output, Map<String, Object> spec) {
+        Object declared = spec.get("ontologyMetaPath");
+        if (declared == null) return output.path("ontologyMeta");
+        if (!(declared instanceof String raw) || raw.isBlank())
+            throw new Failure(
+                    "OUTPUT_INVALID", false, "returnSpec.ontologyMetaPath必须为非空受限路径");
+        JsonNode meta;
+        try {
+            meta = select(output, raw.trim());
+        } catch (IllegalArgumentException invalid) {
+            throw new Failure(
+                    "OUTPUT_INVALID",
+                    false,
+                    "returnSpec.ontologyMetaPath未命中: " + invalid.getMessage());
+        }
+        if (!meta.isObject())
+            throw new Failure("OUTPUT_INVALID", false, "returnSpec.ontologyMetaPath必须指向对象");
+        for (String key : List.of("spaceCode", "releaseId", "version", "contentDigest"))
+            if (meta.path(key).asText().isBlank())
+                throw new Failure(
+                        "OUTPUT_INVALID", false, "returnSpec.ontologyMetaPath缺少" + key);
+        if (meta.path("preview").isBoolean() && meta.path("preview").asBoolean())
+            throw new Failure(
+                    "OUTPUT_INVALID", false, "returnSpec.ontologyMetaPath的preview=true不得采集为实际版本");
+        return meta;
     }
 
     private static String valueText(JsonNode value) {

@@ -242,6 +242,15 @@ public final class SkillRules {
             if (parsed == null || !parsed.isContainerNode())
                 throw projectionError("returnSpec.cardTemplate必须为JSON对象或数组容器，普通文本卡片不再支持");
         }
+        // SEM-05.0：本体元数据路径只允许定位到单个对象。[*]会收集出数组、$根会把整个响应当成
+        // 元数据，两者都会让运行期拿到"看起来像版本但不是四元组"的值，因此在保存边界拒绝。
+        Object ontologyMetaPath = spec.get("ontologyMetaPath");
+        if (ontologyMetaPath != null) {
+            if (!(ontologyMetaPath instanceof String path) || path.isBlank())
+                throw projectionError("returnSpec.ontologyMetaPath必须为非空受限点路径");
+            if (!path.matches("\\$(?:\\.[A-Za-z_][A-Za-z0-9_-]*|\\[[0-9]+\\])+"))
+                throw projectionError("returnSpec.ontologyMetaPath仅支持点路径/数组下标，不能使用[*]或$根");
+        }
     }
 
     /**
