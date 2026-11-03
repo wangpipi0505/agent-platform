@@ -195,18 +195,10 @@ public final class SkillRules {
                     throw projectionError("returnSpec.artifactSources." + path + ".retrieve必须为对象");
                 Object url = retrieve.get("url");
                 boolean validUrl = false;
-                if (url instanceof String urlText
-                        && urlText.indexOf("{value}") >= 0
-                        && urlText.indexOf("{value}") == urlText.lastIndexOf("{value}")
-                        && urlText.indexOf('\r') < 0
-                        && urlText.indexOf('\n') < 0) {
+                if (url instanceof String urlText) {
                     try {
-                        var base = java.net.URI.create(urlText.replace("{value}", "x"));
-                        validUrl =
-                                java.util.Set.of("http", "https").contains(base.getScheme())
-                                        && base.getHost() != null
-                                        && base.getUserInfo() == null
-                                        && base.getFragment() == null;
+                        validateRetrieveUrlTemplate(urlText);
+                        validUrl = true;
                     } catch (IllegalArgumentException malformed) {
                         validUrl = false;
                     }
@@ -215,14 +207,23 @@ public final class SkillRules {
                     throw projectionError(
                             "returnSpec.artifactSources."
                                 + path
-                                + ".retrieve.url必须为绝对http(s)地址且恰好含一个{value}占位");
-                String scheme = Objects.toString(retrieve.get("authScheme"), "NONE");
+                                + ".retrieve.url必须为固定主机的绝对http(s)地址，且仅在路径或查询中含一个{value}占位");
+                Object rawScheme = retrieve.get("authScheme");
+                String scheme = rawScheme == null ? "NONE" : Objects.toString(rawScheme, "").trim();
                 if (!Set.of("NONE", "API_KEY", "BEARER").contains(scheme))
                     throw projectionError("returnSpec.artifactSources." + path + ".retrieve.authScheme仅支持NONE/API_KEY/BEARER");
                 Object ref = retrieve.get("authRef");
-                if (!"NONE".equals(scheme)
-                        && (!(ref instanceof String refText) || refText.isBlank()))
+                if (ref != null && !(ref instanceof String))
                     throw projectionError("returnSpec.artifactSources." + path + ".retrieve.authRef必须为非空secret_ref");
+                String refText = ref == null ? "" : ((String) ref).trim();
+                if (!"NONE".equals(scheme) && refText.isBlank())
+                    throw projectionError("returnSpec.artifactSources." + path + ".retrieve.authRef必须为非空secret_ref");
+                if (!refText.isBlank()
+                        && !refText.startsWith("vault:")
+                        && !refText.matches("env:AGENT_SECRET_[A-Z0-9_]+"))
+                    throw new PlatformException(400, "INVALID_SECRET_REF", "认证只能使用已配置secret_ref");
+                authScheme(scheme, refText, "HTTP", false);
+                if (!refText.isBlank()) Actor.current().requireRole("ADMIN");
                 Object contentType = retrieve.get("contentType") == null ? source.get("contentType") : retrieve.get("contentType");
                 if (contentType != null && (!(contentType instanceof String type) || type.isBlank() || type.length() > 128))
                     throw projectionError("returnSpec.artifactSources." + path + ".contentType必须为1至128字符");
@@ -241,6 +242,54 @@ public final class SkillRules {
             if (parsed == null || !parsed.isContainerNode())
                 throw projectionError("returnSpec.cardTemplate必须为JSON对象或数组容器，普通文本卡片不再支持");
         }
+    }
+
+    /**
+     * R13：校验外部产物下载URL模板——必须恰好包含一个 {value} 占位符，且 {value} 只能出现在主机端口之后的路径/查询部分，
+     * 替换前后 scheme、host、port、authority 保持固定，防止业务返回值劫持下载主机泄漏已配置凭据。
+     */
+    public static URI validateRetrieveUrlTemplate(String urlText) {
+        if (urlText == null
+                || urlText.indexOf("{value}") < 0
+                || urlText.indexOf("{value}") != urlText.lastIndexOf("{value}")
+                || urlText.indexOf('\r') >= 0
+                || urlText.indexOf('\n') >= 0)
+            throw new IllegalArgumentException("retrieve.url必须恰好含一个{value}占位");
+        int schemeSep = urlText.indexOf("://");
+        int pathStart = schemeSep > 0 ? urlText.indexOf('/', schemeSep + 3) : -1;
+        if (schemeSep <= 0 || pathStart <= schemeSep + 3 || urlText.indexOf("{value}") < pathStart)
+            throw new IllegalArgumentException("retrieve.url禁止在scheme/host/port中使用{value}");
+        var baseA = URI.create(urlText.replace("{value}", "x"));
+        var baseB = URI.create(urlText.replace("{value}", "y"));
+        if (!Set.of("http", "https").contains(baseA.getScheme())
+                || baseA.getHost() == null
+                || baseA.getRawAuthority() == null
+                || baseA.getUserInfo() != null
+                || baseA.getFragment() != null
+                || !Objects.equals(baseA.getScheme(), baseB.getScheme())
+                || !Objects.equals(baseA.getHost(), baseB.getHost())
+                || baseA.getPort() != baseB.getPort()
+                || !Objects.equals(baseA.getRawAuthority(), baseB.getRawAuthority()))
+            throw new IllegalArgumentException("retrieve.url必须为固定主机的合法http(s)地址");
+        return baseA;
+    }
+
+    /** R13：执行期构造下载URI，再次核对替换 {value} 前后 scheme/host/port/authority 完全一致。 */
+    public static URI resolveRetrieveUri(String urlTemplate, String identifier) {
+        var base = validateRetrieveUrlTemplate(urlTemplate);
+        String encoded =
+                java.net.URLEncoder.encode(
+                        Objects.requireNonNull(identifier, "identifier"),
+                        java.nio.charset.StandardCharsets.UTF_8);
+        var resolved = URI.create(urlTemplate.replace("{value}", encoded));
+        if (!Objects.equals(base.getScheme(), resolved.getScheme())
+                || !Objects.equals(base.getHost(), resolved.getHost())
+                || base.getPort() != resolved.getPort()
+                || !Objects.equals(base.getRawAuthority(), resolved.getRawAuthority())
+                || resolved.getUserInfo() != null
+                || resolved.getFragment() != null)
+            throw new IllegalArgumentException("retrieve.url替换{value}后scheme/host/port发生改变");
+        return resolved;
     }
 
     private static PlatformException projectionError(String message) {

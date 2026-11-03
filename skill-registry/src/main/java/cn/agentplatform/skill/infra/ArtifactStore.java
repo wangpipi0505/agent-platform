@@ -581,7 +581,8 @@ public class ArtifactStore implements AutoCloseable {
         String key = processOutputPrefix(actor.tenantId(), runId, callId, attempt) + id + ".bin";
         boolean registered = false;
         try (InputStream ownedSource = source) {
-            var client = client();
+            if (algorithmIo != null) algorithmIo.checkActive();
+            var client = algorithmIo == null ? client() : null;
             db.update(
                     "insert into skill.artifact"
                             + "(artifact_id,tenant_id,principal_id,run_id,call_id,bucket,object_key,state,"
@@ -592,11 +593,20 @@ public class ArtifactStore implements AutoCloseable {
             var digest = MessageDigest.getInstance("SHA-256");
             var bounded = new BoundedStream(ownedSource, MAX_ARTIFACT_BYTES);
             var checked = new DigestInputStream(bounded, digest);
-            client.putObject(PutObjectArgs.builder().bucket(bucket).object(key).contentType(contentType)
-                    .stream(checked, size, 5 * 1024 * 1024).build());
+            if (algorithmIo != null) algorithmIo.source = checked;
+            var put =
+                    PutObjectArgs.builder()
+                            .bucket(bucket)
+                            .object(key)
+                            .contentType(contentType)
+                            .stream(checked, size, 5 * 1024 * 1024)
+                            .build();
+            if (algorithmIo == null) client.putObject(put);
+            else algorithmIo.await(asyncClient().putObject(put));
             if (bounded.count != size || ownedSource.read() != -1
                     || !expectedSha256.equals(HexFormat.of().formatHex(digest.digest())))
                 throw new PlatformException(502, "PROCESS_OUTPUT_INVALID", "输出文件在转存时长度或摘要不一致");
+            if (algorithmIo != null) algorithmIo.checkActive();
             int changed = db.update(
                     "update skill.artifact set state='READY',sha256=?,size_bytes=?,updated_at=now()"
                             + " where tenant_id=? and principal_id=? and artifact_id=? and run_id=?"
@@ -606,14 +616,26 @@ public class ArtifactStore implements AutoCloseable {
             if (changed != 1) throw new IllegalStateException("ARTIFACT_STATE_CHANGED");
             return reference(owned(id, runId));
         } catch (Exception failure) {
+            if (algorithmIo != null) {
+                try {
+                    algorithmIo.stopAndAwait();
+                } catch (IllegalStateException notStopped) {
+                    failure.addSuppressed(notStopped);
+                }
+            }
             if (registered) {
                 try {
                     db.update(
-                            "update skill.artifact set state='CLEANUP_PENDING',last_error_code='PROCESS_OUTPUT_FAILED',"
-                                    + "cleanup_after=now(),updated_at=now() where tenant_id=? and principal_id=?"
+                            "update skill.artifact set state='CLEANUP_PENDING',last_error_code=?,"
+                                    + "cleanup_after="
+                                    + (algorithmIo == null ? "now()" : "now()+interval '1 hour'")
+                                    + ",updated_at=now() where tenant_id=? and principal_id=?"
                                     + " and artifact_id=? and run_id=? and call_id=? and object_key=?",
+                            algorithmIo != null && algorithmIo.stopNotConfirmed
+                                    ? "ALGORITHM_IO_STOP_NOT_CONFIRMED"
+                                    : "PROCESS_OUTPUT_FAILED",
                             actor.tenantId(), actor.principalId(), id, runId, callId, key);
-                    deleteObject(actor.tenantId(), id, bucket, key);
+                    if (algorithmIo == null) deleteObject(actor.tenantId(), id, bucket, key);
                 } catch (Exception cleanupFailure) {
                     failure.addSuppressed(cleanupFailure);
                 }
@@ -622,6 +644,8 @@ public class ArtifactStore implements AutoCloseable {
             var unavailable = new PlatformException(503, "ARTIFACT_STORAGE_UNAVAILABLE", "输出文件暂不可保存");
             unavailable.addSuppressed(failure);
             throw unavailable;
+        } finally {
+            if (algorithmIo != null && algorithmIo.interrupted) Thread.currentThread().interrupt();
         }
     }
 

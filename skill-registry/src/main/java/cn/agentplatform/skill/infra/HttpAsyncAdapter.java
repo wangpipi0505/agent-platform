@@ -432,7 +432,7 @@ public class HttpAsyncAdapter {
                                 key,
                                 resultReadPath.isBlank() ? "$" : resultReadPath)) {
                     try (var result = finalResponse.result()) {
-                        raw = outputs.read(result, contract, callId, runId);
+                        raw = outputs.read(result, contract, callId, runId, expectedAttempt, 0);
                     }
                 } catch (ResultRejected rejected) {
                     // PLAT-05 实现点3：结果端点 409/4xx 常见于“结果已清理/任务已失败，请查状态”。
@@ -455,7 +455,7 @@ public class HttpAsyncAdapter {
                 }
             } else {
                 try (var result = streamed.result()) {
-                    raw = outputs.read(result, contract, callId, runId);
+                    raw = outputs.read(result, contract, callId, runId, expectedAttempt, 0);
                 }
             }
             int changed =

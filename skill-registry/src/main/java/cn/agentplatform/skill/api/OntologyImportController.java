@@ -30,6 +30,8 @@ public class OntologyImportController {
             if (bytes.length > max)
                 throw new PlatformException(413, "MANIFEST_REQUEST_SIZE", "导入请求最大2MiB");
             value = Json.mapper().readValue(new String(bytes, java.nio.charset.StandardCharsets.UTF_8), Map.class);
+            if (value == null)
+                throw new PlatformException(400, "MANIFEST_PARSE", "导入请求不是合法JSON对象");
         } catch (PlatformException ex) {
             throw ex;
         } catch (Exception ex) {

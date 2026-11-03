@@ -170,7 +170,14 @@ public class SkillCallbacks {
                 // A supplied failure result was bounded/spooled but is never materialized/exposed.
                 if (status.equals("SUCCEEDED")) {
                     try (var result = payload.result()) {
-                        raw = adapters.read(result, contract, call, bound.get("run_id").toString());
+                        raw =
+                                adapters.read(
+                                        result,
+                                        contract,
+                                        call,
+                                        bound.get("run_id").toString(),
+                                        ((Number) bound.get("attempt_id")).longValue(),
+                                        0);
                     }
                 }
                 // PLAT-05：失败回调同样按契约声明读取远端业务码/原文，落成统一七字段错误对象；

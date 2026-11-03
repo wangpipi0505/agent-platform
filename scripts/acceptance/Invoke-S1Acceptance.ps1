@@ -138,6 +138,51 @@ function New-S1DConflictBody([object]$Manifest, [string]$SkillCode) {
     }
 }
 
+function Format-S1DLegEvidence([object]$Response) {
+    return [ordered]@{
+        status  = $Response.Status
+        code    = (Get-S1TextProperty $Response.Body 'code')
+        message = (Get-S1TextProperty $Response.Body 'message')
+        traceId = (Get-S1TextProperty $Response.Body 'traceId')
+    }
+}
+
+# R05：三腿分别在每腿HTTP响应返回后立即落入$evidencePayload，再判通过/抛异常；
+# 任意一腿失败时保留已完成腿的status/code/message/traceId脱敏摘录，后续未执行腿标注NOT_EXECUTED。
+function Invoke-S1DProbe([object]$Manifest, [string]$PlatformBase, [hashtable]$AdminHeaders, [string]$ConsumerKey, [string]$SkillCode, [scriptblock]$HttpCaller) {
+    $evidencePayload = [ordered]@{
+        segment         = 'D'
+        conflict        = [ordered]@{ status = 'NOT_EXECUTED' }
+        direct          = [ordered]@{ status = 'NOT_EXECUTED' }
+        readFace        = [ordered]@{ status = 'NOT_EXECUTED' }
+        headersObserved = '需 OR 侧访问日志/抓包证据核对 X-API-Key 与无 Authorization'
+    }
+    try {
+        $conflictBody = New-S1DConflictBody $Manifest $SkillCode
+        $conflict = & $HttpCaller 'POST' ($PlatformBase + '/admin/skills') $AdminHeaders $conflictBody
+        $evidencePayload.conflict = Format-S1DLegEvidence $conflict
+        if ($conflict.Status -ne 400 -or (Get-S1Text $conflict.Body.code) -cne 'SKILL_AUTH_SCHEME_CONFLICT') {
+            throw ('S1_D_SCHEME_CONFLICT_NOT_ENFORCED status=' + $conflict.Status)
+        }
+        $direct = & $HttpCaller 'POST' ($Manifest.ontologyBaseUrl + '/onto/r/' + $Manifest.spaceCode + '/releases/' + $Manifest.releaseId + '/ops/' + $Manifest.opCode) @{ 'X-API-Key' = $ConsumerKey } @{}
+        $evidencePayload.direct = Format-S1DLegEvidence $direct
+        if ($direct.Status -ne 200 -or (Get-S1Text $direct.Body.code) -cne 'OK') {
+            throw ('S1_D_DIRECT_CALL_FAILED status=' + $direct.Status)
+        }
+        $readFace = & $HttpCaller 'GET' ($Manifest.ontologyBaseUrl + '/onto/releases/' + $Manifest.releaseId + '/manifest') @{ 'X-API-Key' = $ConsumerKey } $null
+        $evidencePayload.readFace = Format-S1DLegEvidence $readFace
+        if ($readFace.Status -ne 401) {
+            throw ('S1_D_CONSUMER_READ_FACE_NOT_DENIED status=' + $readFace.Status)
+        }
+        $facts = @{ spaceCode = $Manifest.spaceCode; releaseId = $Manifest.releaseId; opCode = $Manifest.opCode; directStatus = $direct.Status; readFaceStatus = $readFace.Status }
+        return [pscustomobject]@{ Passed = $true; Reason = ''; Evidence = $evidencePayload; Facts = $facts }
+    } catch {
+        $reason = $_.Exception.Message
+        $evidencePayload['error'] = $reason
+        return [pscustomobject]@{ Passed = $false; Reason = $reason; Evidence = $evidencePayload; Facts = $null }
+    }
+}
+
 function New-S1Row([string]$Stage, [string]$Status, [string]$Reason, [string]$Evidence, [object]$Facts) {
     [void]$results.Add([ordered]@{ stage = $Stage; status = $Status; reason = $Reason; evidence = $Evidence; facts = $Facts })
 }
@@ -385,29 +430,16 @@ if ($requested -contains 'D') {
         Write-Output ('[PLAN] D: NONE+authRef 冲突 400; 消费key直连 ' + $manifest.ontologyBaseUrl + '/onto/r/' + $manifest.spaceCode + '/releases/' + $manifest.releaseId + '/ops/' + $manifest.opCode)
         New-S1Row 'D' 'PLANNED' 'DryRun' '' $null
     } else {
-        try {
-            $conflictBody = New-S1DConflictBody $manifest $DConflictSkillCode
-            $conflict = Invoke-S1Http -Method 'POST' -Url ($base + '/admin/skills') -Headers $adminHeaders -Body $conflictBody
-            if ($conflict.Status -ne 400 -or (Get-S1Text $conflict.Body.code) -cne 'SKILL_AUTH_SCHEME_CONFLICT') { throw ('S1_D_SCHEME_CONFLICT_NOT_ENFORCED status=' + $conflict.Status) }
-            $consumerKey = Get-S1Key $manifest.consumerKeyRef
-            $direct = Invoke-S1Http -Method 'POST' -Url ($manifest.ontologyBaseUrl + '/onto/r/' + $manifest.spaceCode + '/releases/' + $manifest.releaseId + '/ops/' + $manifest.opCode) -Headers @{ 'X-API-Key' = $consumerKey } -Body @{}
-            if ($direct.Status -ne 200 -or (Get-S1Text $direct.Body.code) -cne 'OK') { throw ('S1_D_DIRECT_CALL_FAILED status=' + $direct.Status) }
-            $readFace = Invoke-S1Http -Method 'GET' -Url ($manifest.ontologyBaseUrl + '/onto/releases/' + $manifest.releaseId + '/manifest') -Headers @{ 'X-API-Key' = $consumerKey } -Body $null
-            if ($readFace.Status -ne 401) { throw ('S1_D_CONSUMER_READ_FACE_NOT_DENIED status=' + $readFace.Status) }
-            $facts = @{ spaceCode = $manifest.spaceCode; releaseId = $manifest.releaseId; opCode = $manifest.opCode; directStatus = $direct.Status; readFaceStatus = $readFace.Status }
-            # R05：三腿分别保留真实安全回包的status/code/message/traceId（脱敏，不含密钥与完整头）。
-            $evidence = New-S1EvidenceFile 'D' ([ordered]@{
-                segment = 'D'
-                conflict = [ordered]@{ status = $conflict.Status; code = (Get-S1TextProperty $conflict.Body 'code'); message = (Get-S1TextProperty $conflict.Body 'message'); traceId = (Get-S1TextProperty $conflict.Body 'traceId') }
-                direct = [ordered]@{ status = $direct.Status; code = (Get-S1TextProperty $direct.Body 'code'); message = (Get-S1TextProperty $direct.Body 'message'); traceId = (Get-S1TextProperty $direct.Body 'traceId') }
-                readFace = [ordered]@{ status = $readFace.Status; code = (Get-S1TextProperty $readFace.Body 'code'); message = (Get-S1TextProperty $readFace.Body 'message'); traceId = (Get-S1TextProperty $readFace.Body 'traceId') }
-                headersObserved = '需 OR 侧访问日志/抓包证据核对 X-API-Key 与无 Authorization'
-            })
-            New-S1Row 'D' 'PASS' '' $evidence $facts
-        } catch {
-            $reason = $_.Exception.Message
-            $evidence = New-S1EvidenceFile 'D' ([ordered]@{ segment = 'D'; error = $reason })
-            New-S1Row 'D' 'FAIL' $reason $evidence $null
+        $consumerKey = Get-S1Key $manifest.consumerKeyRef
+        $dProbe = Invoke-S1DProbe $manifest $base $adminHeaders $consumerKey $DConflictSkillCode {
+            param($m, $u, $h, $b)
+            Invoke-S1Http -Method $m -Url $u -Headers $h -Body $b
+        }
+        $evidence = New-S1EvidenceFile 'D' $dProbe.Evidence
+        if ($dProbe.Passed) {
+            New-S1Row 'D' 'PASS' '' $evidence $dProbe.Facts
+        } else {
+            New-S1Row 'D' 'FAIL' $dProbe.Reason $evidence $null
         }
     }
 }

@@ -37,6 +37,14 @@ class OntologyImportControllerTest {
     }
 
     @Test
+    void 顶层null字面量按解析错误400拒绝且不触业务() {
+        var ex = assertThrows(PlatformException.class, () -> controller.create(body("null")));
+        assertEquals(400, ex.status());
+        assertEquals("MANIFEST_PARSE", ex.code());
+        verifyNoInteractions(imports);
+    }
+
+    @Test
     void 超限请求先拒绝且不触业务() {
         var request = body("{\"manifests\":[]}" + " ".repeat(3_000_000));
         var ex = assertThrows(PlatformException.class, () -> controller.create(request));

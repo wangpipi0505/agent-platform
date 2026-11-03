@@ -159,7 +159,8 @@ try {
     if (-not $ShaOk) { throw 'candidateSha256 不是 64 位小写十六进制' }
 
     # R05/JOINT-003：Envelope摘要仅观测；-ExpectSha256只与冻结制品原件核对。
-    $Digest = Resolve-J3DigestDecision $ExpectSha256 $FrozenContextPackPath (Test-Path -LiteralPath $FrozenContextPackPath) $ObservedSha
+    $FrozenExists = [bool]((Get-Text $FrozenContextPackPath) -and (Test-Path -LiteralPath $FrozenContextPackPath -PathType Leaf))
+    $Digest = Resolve-J3DigestDecision $ExpectSha256 $FrozenContextPackPath $FrozenExists $ObservedSha
     foreach ($DigestCheck in @($Digest.checks)) { [void]$Checks.Add($DigestCheck) }
     if ($Digest.verdict -ceq 'FAIL') { throw $Digest.reason }
     if ($Digest.verdict -ceq 'BLOCKED') { $Verdict = 'BLOCKED'; $Reason = $Digest.reason }
@@ -194,7 +195,7 @@ foreach ($Check in $Checks) {
     Write-Host ('  [' + $Mark + '] ' + $Check.name + ' | 期望 ' + $Check.expected + ' | 实际 ' + $Check.actual)
 }
 if ($EmptySections.Count -gt 0) { Write-Host ('  空段（需人工确认是否真的为空）：' + ($EmptySections -join ',')) }
-if ($Verdict -eq 'FAIL') { Write-Host ('  原因：' + $Reason) }
+if ($Verdict -in @('FAIL', 'BLOCKED')) { Write-Host ('  [' + $Verdict + '] 原因：' + $Reason) }
 
 if ((Get-Text $EvidenceDir)) {
     if (-not (Test-Path -LiteralPath $EvidenceDir)) { New-Item -ItemType Directory -Path $EvidenceDir -Force | Out-Null }
@@ -204,4 +205,5 @@ if ((Get-Text $EvidenceDir)) {
 }
 
 if ($Verdict -eq 'PASS') { exit $ExitPass }
+if ($Verdict -eq 'BLOCKED') { exit $ExitBlocked }
 exit $ExitFail

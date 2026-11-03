@@ -60,6 +60,7 @@ param(
     [string]$PlatformTenant = 'local-v12',
     [string]$Environment = 'production',
     [string]$ExpectSha256,
+    [string]$FrozenContextPackPath,
     [string]$AuthRef,
     [string]$ReadKey,
     [string]$BinderKey,
@@ -137,6 +138,7 @@ function Import-JointConfig([string]$Path) {
         @{ Name = 'PlatformTenant'; Key = 'platformTenant' },
         @{ Name = 'Environment'; Key = 'environment' },
         @{ Name = 'ExpectSha256'; Key = 'expectSha256' },
+        @{ Name = 'FrozenContextPackPath'; Key = 'frozenContextPackPath' },
         @{ Name = 'AuthRef'; Key = 'authRef' },
         @{ Name = 'ReadKeyEnv'; Key = 'readKeyEnv' },
         @{ Name = 'BinderKeyEnv'; Key = 'binderKeyEnv' },
@@ -448,7 +450,8 @@ if (Get-JointText $ManifestPath) {
         @{ Name = 'OntologyBase'; Key = 'ontologyBaseUrl' },
         @{ Name = 'PlatformBase'; Key = 'platformBaseUrl' },
         @{ Name = 'PlatformTenant'; Key = 'platformTenant' },
-        @{ Name = 'Environment'; Key = 'environment' }
+        @{ Name = 'Environment'; Key = 'environment' },
+        @{ Name = 'FrozenContextPackPath'; Key = 'frozenContextPackPath' }
     )
     # 只给 manifest 时必须以 manifest 为准：参数默认值（如 127.0.0.1:18182）不是“显式输入”，
     # 不能用“当前值非空就跳过”来判，否则 manifest 里的地址被默认值静默覆盖（复审 P2-1）。
@@ -579,6 +582,7 @@ try {
         } elseif ($suite -eq 'J3') {
             $callArgs = [ordered]@{ OntologyBase = $OntologyBase.TrimEnd('/'); ReleaseId = $ReleaseId; EvidenceDir = $EvidenceDir }
             if (Get-JointText $ExpectSha256) { $callArgs.ExpectSha256 = $ExpectSha256 }
+            if (Get-JointText $FrozenContextPackPath) { $callArgs.FrozenContextPackPath = $FrozenContextPackPath }
         } elseif ($suite -eq 'J4') {
             $callArgs = [ordered]@{ OntologyBase = $OntologyBase.TrimEnd('/'); PlatformBase = $PlatformBase.TrimEnd('/'); SpaceId = $SpaceId; SpaceCode = $SpaceCode; ReleaseId = $ReleaseId; AuthRef = $AuthRef; ReadKey = $script:ReadKeyValue; BearerToken = $script:BearerValue; EvidenceDir = $EvidenceDir }
         } elseif ($suite -eq 'J5') {
@@ -681,7 +685,7 @@ $summary = [ordered]@{
     startedAt  = $Started.ToUniversalTime().ToString('o')
     finishedAt = (Get-Date).ToUniversalTime().ToString('o')
     dryRun     = [bool]$DryRun
-    inputs     = [ordered]@{ ontologyBase = $OntologyBase; platformBase = $PlatformBase; faultPlatformBase = $FaultPlatformBase; releaseId = $ReleaseId; replacementReleaseId = $ReplacementReleaseId; spaceId = $SpaceId; spaceCode = $SpaceCode; appCode = $AppCode; pinAppCode = $PinAppCode; explicitAppCode = $ExplicitAppCode; opCode = $OpCode; isolationSpaceId = $IsolationSpaceId; isolationSpaceCode = $IsolationSpaceCode; isolationReleaseId = $IsolationReleaseId; isolationOpCode = $IsolationOpCode; consumerKeyProvided = [bool](Get-JointText $script:ConsumerKeyValue); isolationAppCode = $IsolationAppCode; isolationBinderKeyProvided = [bool](Get-JointText $script:IsolationBinderKeyValue); platformTenant = $PlatformTenant; environment = $Environment; expectSha256 = $ExpectSha256; sessionId = $SessionId; destructiveApproved = [bool]$DestructiveApproved; livePublicationApproved = [bool]$LivePublicationApproved; authRefProvided = [bool](Get-JointText $AuthRef); readKeyProvided = [bool](Get-JointText $script:ReadKeyValue); binderKeyProvided = [bool](Get-JointText $script:BinderKeyValue); bearerProvided = [bool](Get-JointText $script:BearerValue); ontologyAdminBearerProvided = [bool](Get-JointText $script:OntologyBearerValue); manifestPath = $ManifestPath }
+    inputs     = [ordered]@{ ontologyBase = $OntologyBase; platformBase = $PlatformBase; faultPlatformBase = $FaultPlatformBase; releaseId = $ReleaseId; replacementReleaseId = $ReplacementReleaseId; spaceId = $SpaceId; spaceCode = $SpaceCode; appCode = $AppCode; pinAppCode = $PinAppCode; explicitAppCode = $ExplicitAppCode; opCode = $OpCode; isolationSpaceId = $IsolationSpaceId; isolationSpaceCode = $IsolationSpaceCode; isolationReleaseId = $IsolationReleaseId; isolationOpCode = $IsolationOpCode; consumerKeyProvided = [bool](Get-JointText $script:ConsumerKeyValue); isolationAppCode = $IsolationAppCode; isolationBinderKeyProvided = [bool](Get-JointText $script:IsolationBinderKeyValue); platformTenant = $PlatformTenant; environment = $Environment; expectSha256 = $ExpectSha256; frozenContextPackPath = $FrozenContextPackPath; sessionId = $SessionId; destructiveApproved = [bool]$DestructiveApproved; livePublicationApproved = [bool]$LivePublicationApproved; authRefProvided = [bool](Get-JointText $AuthRef); readKeyProvided = [bool](Get-JointText $script:ReadKeyValue); binderKeyProvided = [bool](Get-JointText $script:BinderKeyValue); bearerProvided = [bool](Get-JointText $script:BearerValue); ontologyAdminBearerProvided = [bool](Get-JointText $script:OntologyBearerValue); manifestPath = $ManifestPath }
     results    = @($results)
     totals     = [ordered]@{ pass = $passCount; fail = $failCount; blocked = $blockedCount; skipped = $skippedCount; planned = $plannedCount }
     boundaries = @(

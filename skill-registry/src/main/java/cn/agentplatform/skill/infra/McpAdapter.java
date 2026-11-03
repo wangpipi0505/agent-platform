@@ -142,7 +142,14 @@ public final class McpAdapter {
                 bytes = text.text().getBytes(StandardCharsets.UTF_8);
             else bytes = Json.write(result).getBytes(StandardCharsets.UTF_8);
             return Map.of(
-                    "result", gate.read(new ByteArrayInputStream(bytes), contract, callId, runId));
+                    "result",
+                    gate.read(
+                            new ByteArrayInputStream(bytes),
+                            contract,
+                            callId,
+                            runId,
+                            1L,
+                            System.nanoTime() + transport.remaining().toNanos()));
         } catch (Exception ex) {
             if (ex instanceof PlatformException denied && denied.status() == 403)
                 throw new SkillAdapters.Failure("NO_PERMISSION", false, "MCP认证引用不允许用于当前租户");

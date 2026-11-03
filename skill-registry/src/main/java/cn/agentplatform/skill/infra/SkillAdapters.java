@@ -425,7 +425,13 @@ public class SkillAdapters {
     public Raw recorded(
             JsonNode source, Map<String, Object> contract, long callId,
             String runId, String sourceRunId, long expectedAttempt) {
-        boolean binary = "PROCESS".equals(contract.get("type"));
+        boolean processType = "PROCESS".equals(contract.get("type"));
+        boolean binary =
+                processType
+                        || !declaredArtifactSources(
+                                        object(contract.getOrDefault("returnSpec", Map.of())))
+                                .isEmpty();
+        long copyAttempt = processType ? expectedAttempt : (expectedAttempt < 1 ? 1L : expectedAttempt);
         List<Map<String, Object>> refs = new ArrayList<>();
         try {
             if (binary && source.path("fileRefs").size() > 16)
@@ -434,9 +440,9 @@ public class SkillAdapters {
             for (JsonNode ref : source.path("fileRefs")) {
                 Map<String, Object> copied;
                 if (binary) {
-                    if (expectedAttempt < 1) throw invalidProcessOutput();
+                    if (copyAttempt < 1) throw invalidProcessOutput();
                     copied = artifacts.copyProcessToRun(
-                            ref.path("artifactId").asText(), sourceRunId, runId, callId, expectedAttempt);
+                            ref.path("artifactId").asText(), sourceRunId, runId, callId, copyAttempt);
                     var named = new LinkedHashMap<>(copied);
                     if (ref.path("name").isTextual()) named.put("name", ref.path("name").asText());
                     copied = named;
@@ -987,7 +993,13 @@ public class SkillAdapters {
                                     remote.code(),
                                     remote.message());
                         }
-                        return read(response.getBody(), contract, callId, runId);
+                        return read(
+                                response.getBody(),
+                                contract,
+                                callId,
+                                runId,
+                                expectedAttempt,
+                                0);
                     });
         } catch (Failure ex) {
             throw ex;
@@ -1009,25 +1021,47 @@ public class SkillAdapters {
             String runId,
             long deadline)
             throws IOException {
-        return read(input, contract, callId, runId, deadline);
+        return read(input, contract, callId, runId, 1L, deadline);
+    }
+
+    public Raw readAlgorithm(
+            InputStream input,
+            Map<String, Object> contract,
+            long callId,
+            String runId,
+            long attempt,
+            long deadline)
+            throws IOException {
+        return read(input, contract, callId, runId, attempt, deadline);
     }
 
     /** 按字节读取max+1后立即转MinIO，普通响应仅在已知上限内构造JSON。 */
     public Raw read(InputStream input, Map<String, Object> contract, long callId)
             throws IOException {
-        return read(input, contract, callId, null);
+        return read(input, contract, callId, null, 1L, 0);
     }
 
     public Raw read(InputStream input, Map<String, Object> contract, long callId, String runId)
             throws IOException {
-        return read(input, contract, callId, runId, 0);
+        return read(input, contract, callId, runId, 1L, 0);
     }
 
-    private Raw read(
+    public Raw read(
             InputStream input,
             Map<String, Object> contract,
             long callId,
             String runId,
+            long deadline)
+            throws IOException {
+        return read(input, contract, callId, runId, 1L, deadline);
+    }
+
+    public Raw read(
+            InputStream input,
+            Map<String, Object> contract,
+            long callId,
+            String runId,
+            long attempt,
             long deadline)
             throws IOException {
         int limit = ((Number) contract.get("outputMaxBytes")).intValue();
@@ -1061,6 +1095,14 @@ public class SkillAdapters {
         String summary = output.isTextual() ? output.asText() : Json.write(output);
         if (summary.length() > 2000) summary = summary.substring(0, 2000) + "…";
         var spec = object(contract.getOrDefault("returnSpec", Map.of()));
+        long effectiveAttempt = attempt < 1 ? 1L : attempt;
+        long timeoutMs =
+                contract.get("timeoutMs") instanceof Number n ? Math.max(1L, n.longValue()) : 30_000L;
+        long effectiveDeadline =
+                deadline != 0
+                        ? deadline
+                        : System.nanoTime() + Duration.ofMillis(timeoutMs).toNanos();
+        var archivedByThisRead = new ArrayList<Map<String, Object>>();
         try {
             JsonNode structured =
                     select(output, Objects.toString(spec.getOrDefault("structuredPath", "$")));
@@ -1079,7 +1121,16 @@ public class SkillAdapters {
                     if (declaredArtifactSources(spec).containsKey(path)) continue;
                     addFiles(select(output, path), refs, runId);
                 }
-            refs.addAll(declaredArtifacts(spec, output, runId));
+            refs.addAll(
+                    declaredArtifacts(
+                            spec,
+                            output,
+                            runId,
+                            callId,
+                            effectiveAttempt,
+                            deadline,
+                            effectiveDeadline,
+                            archivedByThisRead));
             String card = "";
             if (spec.containsKey("cardTemplate")) {
                 Object template = spec.get("cardTemplate");
@@ -1088,12 +1139,20 @@ public class SkillAdapters {
                 if (!json.isContainerNode()) throw new IllegalArgumentException("卡片模板必须为JSON对象或数组");
                 card = Json.write(renderCard(json, output));
             }
+            if (deadline != 0) remainingBudget(effectiveDeadline, "returnSpec");
             return new Raw(structured, refs, summary, ontology, card, Validation.of(admission));
         } catch (Failure ex) {
+            if (!archivedByThisRead.isEmpty() && runId != null)
+                artifacts.discardProcessOutputs(
+                        archivedByThisRead, runId, callId, effectiveAttempt, ex);
             // R13：声明式获取等路径抛出的Failure已是有界安全文案，直接透传不折叠。
             throw ex;
         } catch (Exception ex) {
-            throw new Failure("OUTPUT_INVALID", false, "结果四份内容映射不符合returnSpec");
+            var mapped = new Failure("OUTPUT_INVALID", false, "结果四份内容映射不符合returnSpec");
+            if (!archivedByThisRead.isEmpty() && runId != null)
+                artifacts.discardProcessOutputs(
+                        archivedByThisRead, runId, callId, effectiveAttempt, mapped);
+            throw mapped;
         }
     }
 
@@ -1168,6 +1227,21 @@ public class SkillAdapters {
         return template;
     }
 
+    private static final java.util.concurrent.ScheduledExecutorService DOWNLOAD_WATCHDOG =
+            java.util.concurrent.Executors.newSingleThreadScheduledExecutor(
+                    runnable -> {
+                        Thread thread = new Thread(runnable, "artifact-retrieve-watchdog");
+                        thread.setDaemon(true);
+                        return thread;
+                    });
+
+    private static Duration remainingBudget(long effectiveDeadline, String path) {
+        long remainingNanos = effectiveDeadline - System.nanoTime();
+        if (remainingNanos <= 0)
+            throw new Failure("RETRYABLE_FAILURE", false, "外部产物获取超时: " + path);
+        return Duration.ofNanos(remainingNanos);
+    }
+
     /** R01附录I.9/R13：声明式外部产物获取——URL来自契约、{value}只替换业务标识、不跟随重定向、64MB上限。 */
     @SuppressWarnings("unchecked")
     private Map<String, Object> declaredArtifactSources(Map<String, Object> spec) {
@@ -1177,9 +1251,18 @@ public class SkillAdapters {
     }
 
     private List<Map<String, Object>> declaredArtifacts(
-            Map<String, Object> spec, JsonNode output, String runId) {
+            Map<String, Object> spec,
+            JsonNode output,
+            String runId,
+            long callId,
+            long effectiveAttempt,
+            long deadline,
+            long effectiveDeadline,
+            List<Map<String, Object>> archivedOut) {
         var declared = declaredArtifactSources(spec);
         if (declared.isEmpty()) return List.of();
+        if (runId == null || runId.isBlank())
+            throw new Failure("OUTPUT_INVALID", false, "外部产物交接缺少有效运行归属");
         var refs = new ArrayList<Map<String, Object>>();
         for (var entry : declared.entrySet()) {
             String path = Objects.toString(entry.getKey(), "");
@@ -1200,14 +1283,21 @@ public class SkillAdapters {
             String urlTemplate = Objects.toString(retrieve.get("url"), "");
             java.net.URI uri;
             try {
-                uri = java.net.URI.create(urlTemplate.replace("{value}", java.net.URLEncoder.encode(identifier, StandardCharsets.UTF_8)));
+                uri = SkillRules.resolveRetrieveUri(urlTemplate, identifier);
             } catch (IllegalArgumentException malformed) {
                 throw new Failure("OUTPUT_INVALID", false, "retrieve.url无法构造成合法地址: " + path);
             }
+            Duration remaining = remainingBudget(effectiveDeadline, path);
+            Duration connectTimeout =
+                    remaining.compareTo(Duration.ofSeconds(3)) < 0
+                            ? remaining
+                            : Duration.ofSeconds(3);
+            Duration requestTimeout =
+                    remaining.compareTo(Duration.ofSeconds(30)) < 0
+                            ? remaining
+                            : Duration.ofSeconds(30);
             var requestBuilder =
-                    java.net.http.HttpRequest.newBuilder(uri)
-                            .GET()
-                            .timeout(Duration.ofSeconds(30));
+                    java.net.http.HttpRequest.newBuilder(uri).GET().timeout(requestTimeout);
             for (var header :
                     AuthScheme.headers(
                                     retrieve.get("authScheme"),
@@ -1217,35 +1307,150 @@ public class SkillAdapters {
             var request = requestBuilder.build();
             java.net.http.HttpClient client =
                     java.net.http.HttpClient.newBuilder()
-                            .connectTimeout(Duration.ofSeconds(3))
+                            .connectTimeout(connectTimeout)
                             .followRedirects(java.net.http.HttpClient.Redirect.NEVER)
                             .build();
-            java.net.http.HttpResponse<byte[]> response;
+            java.net.http.HttpResponse<InputStream> response;
             try {
                 response =
-                        client.send(request, java.net.http.HttpResponse.BodyHandlers.ofByteArray());
+                        client.send(
+                                request, java.net.http.HttpResponse.BodyHandlers.ofInputStream());
             } catch (Exception ex) {
+                if (effectiveDeadline - System.nanoTime() <= 0)
+                    throw new Failure("RETRYABLE_FAILURE", false, "外部产物获取超时: " + path);
                 throw new Failure("OUTPUT_INVALID", false, "外部产物获取失败: " + path);
             }
-            if (response.statusCode() != 200)
-                throw new Failure("OUTPUT_INVALID", false, "外部产物获取返回" + response.statusCode() + ": " + path);
-            byte[] body = response.body();
-            if (body.length > 64L * 1024 * 1024)
-                throw new Failure("OUTPUT_INVALID", false, "外部产物超过64MB上限: " + path);
-            String contentType =
-                    Objects.toString(
-                            retrieve.get("contentType") == null ? source.get("contentType") : retrieve.get("contentType"),
-                            response.headers()
-                                    .firstValue("Content-Type")
-                                    .orElse("application/octet-stream")
-                                    .split(";")[0]
-                                    .trim());
-            if (contentType.isBlank() || contentType.length() > 128)
-                contentType = "application/octet-stream";
-            var stored =
-                    artifacts.upload(
-                            contentType, body.length, new java.io.ByteArrayInputStream(body));
-            refs.add(artifacts.controlledReference(Map.of("artifactId", stored.get("artifactId")), runId));
+            long watchDelayNanos = Math.max(1L, effectiveDeadline - System.nanoTime());
+            var timedOut = new java.util.concurrent.atomic.AtomicBoolean(false);
+            var watchTask =
+                    DOWNLOAD_WATCHDOG.schedule(
+                            () -> {
+                                timedOut.set(true);
+                                try {
+                                    response.body().close();
+                                } catch (IOException ignored) {
+                                }
+                            },
+                            watchDelayNanos,
+                            java.util.concurrent.TimeUnit.NANOSECONDS);
+            java.nio.file.Path tempFile = null;
+            OutputStream fileOut = null;
+            try (InputStream bodyStream = response.body()) {
+                if (response.statusCode() != 200)
+                    throw new Failure(
+                            "OUTPUT_INVALID",
+                            false,
+                            "外部产物获取返回" + response.statusCode() + ": " + path);
+                var declaredLength = response.headers().firstValueAsLong("Content-Length");
+                if (declaredLength.isPresent()
+                        && declaredLength.getAsLong() > ArtifactStore.MAX_ARTIFACT_BYTES)
+                    throw new Failure("OUTPUT_INVALID", false, "外部产物超过64MB上限: " + path);
+                var digest = java.security.MessageDigest.getInstance("SHA-256");
+                var memoryBuffer = new ByteArrayOutputStream();
+                byte[] buffer = new byte[8192];
+                long totalBytes = 0;
+                int n;
+                try {
+                    while ((n = bodyStream.read(buffer)) >= 0) {
+                        if (timedOut.get() || effectiveDeadline - System.nanoTime() <= 0)
+                            throw new Failure("RETRYABLE_FAILURE", false, "外部产物获取超时: " + path);
+                        if (n == 0) continue;
+                        totalBytes += n;
+                        if (totalBytes > ArtifactStore.MAX_ARTIFACT_BYTES)
+                            throw new Failure("OUTPUT_INVALID", false, "外部产物超过64MB上限: " + path);
+                        digest.update(buffer, 0, n);
+                        if (fileOut != null) {
+                            fileOut.write(buffer, 0, n);
+                        } else if (memoryBuffer.size() + n <= 64 * 1024) {
+                            memoryBuffer.write(buffer, 0, n);
+                        } else {
+                            tempFile = java.nio.file.Files.createTempFile("agent-retrieve-", ".bin");
+                            fileOut = java.nio.file.Files.newOutputStream(tempFile);
+                            memoryBuffer.writeTo(fileOut);
+                            memoryBuffer.reset();
+                            fileOut.write(buffer, 0, n);
+                        }
+                    }
+                } catch (Failure ex) {
+                    throw ex;
+                } catch (IOException ex) {
+                    if (timedOut.get() || effectiveDeadline - System.nanoTime() <= 0)
+                        throw new Failure("RETRYABLE_FAILURE", false, "外部产物获取超时: " + path);
+                    throw new Failure("OUTPUT_INVALID", false, "外部产物获取失败: " + path);
+                }
+                if (fileOut != null) {
+                    fileOut.close();
+                    fileOut = null;
+                }
+                remainingBudget(effectiveDeadline, path);
+                String sha256 = HexFormat.of().formatHex(digest.digest());
+                String contentType =
+                        Objects.toString(
+                                retrieve.get("contentType") == null
+                                        ? source.get("contentType")
+                                        : retrieve.get("contentType"),
+                                response.headers()
+                                        .firstValue("Content-Type")
+                                        .orElse("application/octet-stream")
+                                        .split(";")[0]
+                                        .trim());
+                if (contentType.isBlank() || contentType.length() > 128)
+                    contentType = "application/octet-stream";
+                InputStream archiveStream =
+                        tempFile != null
+                                ? java.nio.file.Files.newInputStream(tempFile)
+                                : new ByteArrayInputStream(memoryBuffer.toByteArray());
+                Map<String, Object> stored;
+                var scoped = deadline != 0 ? artifacts.forAlgorithmDeadline(deadline) : null;
+                if (scoped != null) {
+                    try (var operation = scoped) {
+                        stored =
+                                operation.storeProcessOutput(
+                                        contentType,
+                                        totalBytes,
+                                        sha256,
+                                        archiveStream,
+                                        runId,
+                                        callId,
+                                        effectiveAttempt);
+                    }
+                } else {
+                    stored =
+                            artifacts.storeProcessOutput(
+                                    contentType,
+                                    totalBytes,
+                                    sha256,
+                                    archiveStream,
+                                    runId,
+                                    callId,
+                                    effectiveAttempt);
+                }
+                archivedOut.add(stored);
+                remainingBudget(effectiveDeadline, path);
+                refs.add(
+                        artifacts.controlledReference(
+                                Map.of("artifactId", stored.get("artifactId")), runId));
+            } catch (Failure ex) {
+                throw ex;
+            } catch (Exception ex) {
+                if (timedOut.get() || effectiveDeadline - System.nanoTime() <= 0)
+                    throw new Failure("RETRYABLE_FAILURE", false, "外部产物获取或归档超时: " + path);
+                throw new Failure("OUTPUT_INVALID", false, "外部产物归档失败: " + path);
+            } finally {
+                watchTask.cancel(false);
+                if (fileOut != null) {
+                    try {
+                        fileOut.close();
+                    } catch (IOException ignored) {
+                    }
+                }
+                if (tempFile != null) {
+                    try {
+                        java.nio.file.Files.deleteIfExists(tempFile);
+                    } catch (IOException ignored) {
+                    }
+                }
+            }
         }
         return refs;
     }

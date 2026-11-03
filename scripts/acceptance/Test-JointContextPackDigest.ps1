@@ -63,6 +63,61 @@ try {
             if ($d.verdict -cne 'FAIL') { throw ('verdict=' + $d.verdict) }
         } finally { [IO.File]::Delete($changedPath) }
     }
+    Assert-DigestCase 'joint-j3.ps1脚本入口：缺省空FrozenContextPackPath不抛参数绑定异常，且给ExpectSha256无原件时以退出码3(BLOCKED)退出' -Check {
+        $listener = New-Object System.Net.HttpListener
+        $port = Get-Random -Minimum 29100 -Maximum 29800
+        $prefix = ('http://127.0.0.1:{0}/' -f $port)
+        $listener.Prefixes.Add($prefix)
+        $listener.Start()
+        $oldKey = $env:AGENT_SECRET_ONTO_ENGINE_READ_KEY
+        $env:AGENT_SECRET_ONTO_ENGINE_READ_KEY = 'ontosa_test_key'
+        $releaseId = '11111111-2222-3333-4444-555555555555'
+        $payloadBytes = [Text.Encoding]::UTF8.GetBytes('{"code":"OK","data":{"conceptCards":[{}],"termDictionary":[{}],"relationSummaries":[{}],"exampleQa":[{}]}}')
+        try {
+            # 第1次调用：不传 -FrozenContextPackPath 且不传 -ExpectSha256 → 走 OBSERVE 分支并以 0 (PASS) 退出
+            $async1 = $listener.BeginGetContext($null, $null)
+            $psi1 = New-Object System.Diagnostics.ProcessStartInfo('powershell.exe', ('-NoProfile -ExecutionPolicy Bypass -File "{0}" -OntologyBase "{1}" -ReleaseId "{2}"' -f $scriptPath, $prefix.TrimEnd('/'), $releaseId))
+            $psi1.UseShellExecute = $false
+            $proc1 = [System.Diagnostics.Process]::Start($psi1)
+            if (-not $async1.AsyncWaitHandle.WaitOne(10000)) { throw 'stub listener timeout (call 1)' }
+            $ctx1 = $listener.EndGetContext($async1)
+            $ctx1.Response.StatusCode = 200
+            $ctx1.Response.ContentType = 'application/json;charset=utf-8'
+            $ctx1.Response.OutputStream.Write($payloadBytes, 0, $payloadBytes.Length)
+            $ctx1.Response.Close()
+            [void]$proc1.WaitForExit(10000)
+            if ($proc1.ExitCode -ne 0) { throw ('无FrozenContextPackPath应退出0，实际exit=' + $proc1.ExitCode) }
+
+            # 第2次调用：传 -ExpectSha256 但不传 -FrozenContextPackPath → 必须以退出码 3 ($ExitBlocked) 退出，不得退 1
+            $async2 = $listener.BeginGetContext($null, $null)
+            $psi2 = New-Object System.Diagnostics.ProcessStartInfo('powershell.exe', ('-NoProfile -ExecutionPolicy Bypass -File "{0}" -OntologyBase "{1}" -ReleaseId "{2}" -ExpectSha256 "{3}"' -f $scriptPath, $prefix.TrimEnd('/'), $releaseId, $artifactSha))
+            $psi2.UseShellExecute = $false
+            $proc2 = [System.Diagnostics.Process]::Start($psi2)
+            if (-not $async2.AsyncWaitHandle.WaitOne(10000)) { throw 'stub listener timeout (call 2)' }
+            $ctx2 = $listener.EndGetContext($async2)
+            $ctx2.Response.StatusCode = 200
+            $ctx2.Response.ContentType = 'application/json;charset=utf-8'
+            $ctx2.Response.OutputStream.Write($payloadBytes, 0, $payloadBytes.Length)
+            $ctx2.Response.Close()
+            [void]$proc2.WaitForExit(10000)
+            if ($proc2.ExitCode -ne 3) { throw ('BLOCKED分支应退出3，实际exit=' + $proc2.ExitCode) }
+        } finally {
+            $env:AGENT_SECRET_ONTO_ENGINE_READ_KEY = $oldKey
+            $listener.Stop()
+            $listener.Close()
+        }
+    }
+    Assert-DigestCase 'Invoke-JointAcceptance.ps1与joint-all.ps1支持并向J3透传-FrozenContextPackPath' -Check {
+        foreach ($entryScript in @('Invoke-JointAcceptance.ps1', 'joint-all.ps1')) {
+            $entryPath = Join-Path $PSScriptRoot $entryScript
+            $entryErrors = $null
+            [void][System.Management.Automation.Language.Parser]::ParseFile($entryPath, [ref]$null, [ref]$entryErrors)
+            if ($entryErrors -and $entryErrors.Count) { throw ($entryScript + ' parse error: ' + $entryErrors[0].Message) }
+        }
+        $planOut = & (Join-Path $PSScriptRoot 'Invoke-JointAcceptance.ps1') -DryRun -Stages @('J3') -ReleaseId '11111111-2222-3333-4444-555555555555' -ReadKey 'ontosa_k' -ExpectSha256 $artifactSha -FrozenContextPackPath $artifactPath
+        $planText = ($planOut -join "`n")
+        if ($planText -cnotmatch 'FrozenContextPackPath') { throw ('Invoke-JointAcceptance DryRun计划未透传FrozenContextPackPath: ' + $planText) }
+    }
 } finally { [IO.File]::Delete($artifactPath) }
 
 Write-Host ('passed={0} failed={1}' -f ($script:Cases - $script:Failures), $script:Failures)

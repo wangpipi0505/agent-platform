@@ -26,6 +26,7 @@ param(
     [string]$PlatformTenant = 'local-v12',
     [string]$Environment = 'production',
     [string]$ExpectSha256,
+    [string]$FrozenContextPackPath,
     [string]$BearerTokenEnv = 'AGENT_ACCEPTANCE_BEARER',
     [string]$EvidenceDir,
     [string[]]$Suites = @('J1', 'J3', 'J4')
@@ -37,19 +38,20 @@ $Here = Split-Path -Parent $MyInvocation.MyCommand.Path
 if ($ConfigFile) {
     if (-not (Test-Path -LiteralPath $ConfigFile)) { throw ('配置文件不存在：' + $ConfigFile) }
     $Conf = Get-Content -LiteralPath $ConfigFile -Raw | ConvertFrom-Json
-    foreach ($Name in @('ontologyBase', 'appBase', 'spaceId', 'releaseId', 'appCode', 'platformTenant', 'environment', 'expectSha256', 'evidenceDir', 'bearerTokenEnv')) {
+    foreach ($Name in @('ontologyBase', 'appBase', 'spaceId', 'releaseId', 'appCode', 'platformTenant', 'environment', 'expectSha256', 'frozenContextPackPath', 'evidenceDir', 'bearerTokenEnv')) {
         if ($Conf.PSObject.Properties[$Name] -and $Conf.$Name) {
             switch ($Name) {
-                'ontologyBase' { $OntologyBase = [string]$Conf.$Name }
-                'appBase' { $AppBase = [string]$Conf.$Name }
-                'spaceId' { $SpaceId = [string]$Conf.$Name }
-                'releaseId' { $ReleaseId = [string]$Conf.$Name }
-                'appCode' { $AppCode = [string]$Conf.$Name }
-                'platformTenant' { $PlatformTenant = [string]$Conf.$Name }
-                'environment' { $Environment = [string]$Conf.$Name }
-                'expectSha256' { $ExpectSha256 = [string]$Conf.$Name }
-                'evidenceDir' { $EvidenceDir = [string]$Conf.$Name }
-                'bearerTokenEnv' { $BearerTokenEnv = [string]$Conf.$Name }
+                'ontologyBase' { if (-not $PSBoundParameters.ContainsKey('OntologyBase')) { $OntologyBase = [string]$Conf.$Name } }
+                'appBase' { if (-not $PSBoundParameters.ContainsKey('AppBase')) { $AppBase = [string]$Conf.$Name } }
+                'spaceId' { if (-not $PSBoundParameters.ContainsKey('SpaceId')) { $SpaceId = [string]$Conf.$Name } }
+                'releaseId' { if (-not $PSBoundParameters.ContainsKey('ReleaseId')) { $ReleaseId = [string]$Conf.$Name } }
+                'appCode' { if (-not $PSBoundParameters.ContainsKey('AppCode')) { $AppCode = [string]$Conf.$Name } }
+                'platformTenant' { if (-not $PSBoundParameters.ContainsKey('PlatformTenant')) { $PlatformTenant = [string]$Conf.$Name } }
+                'environment' { if (-not $PSBoundParameters.ContainsKey('Environment')) { $Environment = [string]$Conf.$Name } }
+                'expectSha256' { if (-not $PSBoundParameters.ContainsKey('ExpectSha256')) { $ExpectSha256 = [string]$Conf.$Name } }
+                'frozenContextPackPath' { if (-not $PSBoundParameters.ContainsKey('FrozenContextPackPath')) { $FrozenContextPackPath = [string]$Conf.$Name } }
+                'evidenceDir' { if (-not $PSBoundParameters.ContainsKey('EvidenceDir')) { $EvidenceDir = [string]$Conf.$Name } }
+                'bearerTokenEnv' { if (-not $PSBoundParameters.ContainsKey('BearerTokenEnv')) { $BearerTokenEnv = [string]$Conf.$Name } }
             }
         }
     }
@@ -105,6 +107,7 @@ foreach ($Suite in $Suites) {
         }
         'J3' {
             if ($ExpectSha256) { $Args['ExpectSha256'] = $ExpectSha256 }
+            if ($FrozenContextPackPath) { $Args['FrozenContextPackPath'] = $FrozenContextPackPath }
             $Script = Join-Path $Here 'joint-j3.ps1'
         }
         'J4' {
@@ -141,7 +144,7 @@ $Summary = [ordered]@{
     inputs    = [ordered]@{
         ontologyBase = $OntologyBase; appBase = $AppBase; spaceId = $SpaceId; releaseId = $ReleaseId
         appCode = $AppCode; platformTenant = $PlatformTenant; environment = $Environment
-        expectSha256 = $ExpectSha256; bearerEnv = $BearerTokenEnv; bearerProvided = [bool]$Bearer
+        expectSha256 = $ExpectSha256; frozenContextPackPath = $FrozenContextPackPath; bearerEnv = $BearerTokenEnv; bearerProvided = [bool]$Bearer
     }
     results   = @($Rows)
     boundaries = @(
