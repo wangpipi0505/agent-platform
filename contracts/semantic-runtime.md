@@ -1,7 +1,7 @@
 # 语义运行时契约——最小只读（SEM-01.1 工程增补，2026-11-03，v0.1 草案）
 
 > 状态：**草案，未激活**。新增工程增补，不改四契约原文、`capability-package.schema.json` v1、`assistant-integration.md`/`configuration-profile.md`（INT-01 v0.1）及任何历史发布物；激活时按 `freeze.json` engineeringAddenda 模式登记。
-> 唯一归属：SEM-01。本文件只冻结**只读（read-only）profile** 的最小完整契约；判定/条件/目标处置等后续 profile 的封闭 Schema 与能力标识属 SEM-01.2，未实现前不得启用，也不得借本契约宣称规则求值已交付。
+> 唯一归属：SEM-01。本文件冻结**只读（read-only）profile** 的最小完整契约（SEM-01.1，§1～§6）与后续 profile 的**封闭 Schema、能力标识及兼容边界**（SEM-01.2，§7）。§7 各 profile 仅定义不实现，未实现前不得启用，也不得借本契约宣称规则求值/条件检查/目标核验已交付。
 > 术语按[综合分析§6.1六项术语表](../../文档/优化方案/02-本轮升级依据/本体与智能体运行时协同-综合分析与提升思路-20261103.md)：语义扩展/语义绑定/语义事实/语义条件/语义回执/目标判据。OR 侧对应增补见 `代码/ontorepo/contracts/semantic-runtime.md`（同日 v0.1，同一 schemaVersion）。
 
 ## 1. 范围与不做什么
@@ -97,3 +97,40 @@ category/retryable 语义沿用 error-envelope-boundaries.md；仅 429 retryable
 - SEM-05.0 已窄修的 `returnSpec.ontologyMetaPath` 提取继续按既有 returnSpec 语义工作；本契约是**新**语义运行时记录的契约，不追溯改写旧 `ontologyMeta` 投影，也不把任意根 meta 识别成本体元数据。
 - OR 正式响应（`{code,data,meta}`）中的 meta 四元组是 `releaseRef` 的核对来源；`preview=true` 不得作为实际版本采集（SEM-05.0 既有拒绝语义延续）。
 - OR 侧对应增补：`代码/ontorepo/contracts/semantic-runtime.md`（v0.1 同步稿），登记 OR 只读消费的同一 schemaVersion 与字段口径；OR 运行代码改动属 SEM-02.1/03.x 各自白名单，本子步不改 OR 代码。
+
+<a id="profiles"></a>
+## 7. 后续 profile 注册表与兼容边界（SEM-01.2 冻结；不实现执行器）
+
+能力标识格式：`<profile>@<schemaVersion>`。服务端只受理本表**状态=已实现**的 profile；未实现/未知 profile 一律返回 `SEMANTIC_PROFILE_UNKNOWN`，不静默降级为 read-only。
+
+| 能力标识 | 状态 | Schema 载体 | 实现卡 | 求值点 |
+| --- | --- | --- | --- | --- |
+| `read-only@1.0` | 已冻结（激活候选） | `semantic-runtime-v1.schema.json` | SEM-01.1（本文件§1～§6） | SEM-03 事实服务 |
+| `decision@1.0` | **已定义未实现** | 实现时新建 `semantic-runtime-decision-v1.schema.json` 并回本表登记 | SEM-04 | OR ObjectDecisionService |
+| `condition@1.0` | **已定义未实现** | 实现时新建 `semantic-runtime-condition-v1.schema.json` 并回本表登记 | SEM-07 | OR SemanticConditionService＋AP SemanticExecutionGate |
+| `goal@1.0` | **已定义未实现** | 实现时新建 `semantic-runtime-goal-v1.schema.json` 并回本表登记 | SEM-08 | AP GoalVerificationService |
+
+### 7.1 `decision@1.0` 封闭字段（SEM-04 实现时按此冻结为独立 Schema）
+
+- `profile:"decision"`；公共字段沿用 §2（bindingRef/releaseRef/objectRefs/timeliness/errors 均必填同规则）。
+- `decision` 对象：`conclusion`（枚举 `MATCHED` / `NOT_MATCHED` / `MISSING_FACTS` / `COMPUTATION_FAILED` / `ERROR`——未命中、缺事实、计算失败、错误**四类互斥**，空结果不得默许放行）；`ruleRef`（≤128）＋`ruleDigest`（≤128，均必填，无命中/缺事实时同样登记实际引用的规则）；`usedFactRefs`（≤32 条，指向本次求值实际使用的 FactItem/FactSet 引用）；`evaluatedAt`（date-time，必填）。
+- `decisionRef` 在 decision 记录内是**必填的结构化对象**（含 ruleRef/ruleDigest/decisionId），不再是 false；它与 read-only 记录的 `"decisionRef":false` 互斥——**两种记录不共用信封**，禁止为 read-only 结果回填或伪造 decisionRef/规则版本。
+- 兼容：既有属性 Map 规则入口（RuleService/RuleExpression 旧 `passed` 字符串语义）沿原协议不变，**不得无版本地改成布尔**；`decision@1.0` 只用于对象事实驱动的求值路径。
+
+### 7.2 `condition@1.0` 封闭字段（SEM-07 实现时冻结）
+
+- `profile:"condition"`；`conditions[]`：`conditionKind`（枚举 `EXISTS` / `RELATION` / `STATE` / `VERSION` / `RULE`，封闭，不接受自定义种类）；`targetRef`（ObjectReference，必填）；`expected`（按 kind 的受控声明）；`result`（枚举 `HOLDS` / `NOT_HOLDS` / `UNKNOWN`，UNKNOWN 必填 `unknownReason`）；`checkedAt`＋`sourceRef`（复用 §2.6/§2.7 时效规则）。
+- 本 profile 仅作检查，**无业务副作用**；与实际执行侧使用同一条件解释；最终并发条件仍由业务原生版本/条件写保障，本记录不冒充跨系统强一致。
+
+### 7.3 `goal@1.0` 封闭字段（SEM-08 实现时冻结）
+
+- `profile:"goal"`；`goals[]`：`goalId`（≤64）；`criterion`（批准只读验证操作引用＋预期业务状态/产物判据）；`outcomeState`（枚举 `ACHIEVED` / `NOT_ACHIEVED` / `PENDING` / `FAILED` / `UNKNOWN`——HTTP200/工具终态/模型自述不得映射为 `ACHIEVED`）；`readbackRef`（EvidenceRef，`ACHIEVED` 时必填）；`nextStep`（≤256，可选）。
+- 逐对象记录、允许等待/终止条件显式声明；未知/部分完成可恢复沿用既有 call/run 幂等与 UNKNOWN 对账语义，不新建任务状态权威。
+
+### 7.4 兼容与演进规则（本表冻结）
+
+1. **信封不共用**：四个 profile 各自独立顶层记录与 Schema 文件；公共字段（§2.1/2.2/2.7/错误码）语义由本文件统一约束，禁止在同一信封内用可空字段拼多态。
+2. **演进**：已实现 profile 的字段语义变化或新增必填 → 新 schemaVersion＋新文件＋本表新增行＋freeze 登记；旧记录按自身 schemaVersion 永久可解释。未实现 profile 激活 = 新建其 schema 文件并把本表状态改为"已实现"（同样登记）。
+3. **摘要**：`contentDigest`（本体 bundle）/`factSetDigest`（事实投影）/`ruleDigest`（规则内容）三类摘要独立登记、不混比；扩展摘要（SEM-02）激活时回本节追加第四类并注明口径。
+4. **错误码**：执行期各卡复用 §3 登记集；确需新增（如条件专用码）回 §3 追加，不私造同义码。
+5. **降级禁止**：声明了语义约束的应用缺依赖时不得静默降级为裸工具调用；未实现 profile 的声明在发布门禁被拒绝，而不是运行期忽略。
