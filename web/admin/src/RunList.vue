@@ -147,3 +147,15 @@ onBeforeUnmount(() => { sequence++; });
   .observation-detail { padding: .5rem; }
 }
 </style>
+<!-- UI-04：.status 状态类此前无任何样式定义，等待确认与成功渲染无差别；
+     这里做全局（非 scoped）语义色映射——RunList/RunDetail/确认中心与各资源
+     列表共用 .status 类。WAITING_* 一律悬置黄，绝不与成功绿混同。 -->
+<style>
+.status.SUCCEEDED,
+.status.PUBLISHED { color: var(--st-ok-text, #86efac); }
+.status.FAILED,
+.status.DISABLED { color: var(--st-fail-text, #fca5a5); }
+.status.RUNNING { color: var(--st-run-text, #93c5fd); }
+.status.WAITING_APPROVAL,
+.status.WAITING_EXTERNAL { color: var(--st-suspend-text, #fcd34d); font-weight: 600; }
+</style>

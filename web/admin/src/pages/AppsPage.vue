@@ -112,15 +112,17 @@ watch(filter, () => (detail.value = undefined), { deep: true });
     subtitle="连接业务能力，持续验证每一次运行。"
     :busy="busy"
     @refresh="load"
-  />
-  <PageError :error="error" :trace="trace" />
-  <div class="row">
-    <div class="muted">共 {{ filtered.length }} 条记录</div>
-    <div class="actions">
+  >
+    <!-- UI-04：主操作经PageHeader actions插槽迁入AppShell顶栏挂载点。 -->
+    <template #actions>
       <el-button type="primary" v-permission="'edit'" @click="create()"
         >创建智能体</el-button
       >
-    </div>
+    </template>
+  </PageHeader>
+  <PageError :error="error" :trace="trace" />
+  <div class="row">
+    <div class="muted">共 {{ filtered.length }} 条记录</div>
   </div>
   <div class="panel">
     <div class="filters">
