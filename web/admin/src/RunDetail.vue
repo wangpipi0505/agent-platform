@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from "vue";
+import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
+import { useRoute } from "vue-router";
 import FlowDesigner from "../../flow-designer/FlowDesigner.vue";
 import { useAuth, useApi } from "../../shared/api";
 import { terminal, streamEvents,authorityFailure } from "../../debug-panel/events";
@@ -7,7 +8,8 @@ import Artifacts from '../../shared/Artifacts.vue';
 import { outputWarning, safeMarkdown } from '../../shared/content';
 import { decodeRunStatus, protocolFailure, record } from '../../shared/run-protocol';
 import RunObservation from './RunObservation.vue';
-const props = defineProps<{ runId: string }>();
+const props = defineProps<{ runId: string; nodeId?: string }>();
+// 无router的既有嵌入用法可显式传 nodeId；缺失时回退到已解析路由query。
 const api = useApi();
 const auth=useAuth(),session=auth.snapshot();
 const blocked=ref(false);
@@ -19,15 +21,26 @@ const selected = ref<any>();
 const replay = ref(0);
 // UIF-A1 深链：?nodeId=<nodeDefId> 由日志/告警/审批通知构造，进入即过滤定位
 // 该节点（表格过滤 + 自动选中检查器 + 事件回放跳到该节点首个事件）。
-const deepNode = (() => {
-  try {
-    return new URLSearchParams(window.location.search).get("nodeId") || "";
-  } catch {
-    return "";
-  }
-})();
-const nodeFilter = ref(deepNode);
+// MNT-01：Hash路由下参数位于路由query而非 location.search——统一从已解析路由读取；
+// 显式 nodeId 输入优先（覆盖无router嵌入），同run query变化时定位跟随。
+let route: ReturnType<typeof useRoute> | undefined;
+try {
+  route = useRoute();
+} catch {
+  route = undefined;
+}
+const deepNode = computed(() => {
+  if (props.nodeId != null && props.nodeId !== "") return props.nodeId;
+  const q = route?.query?.nodeId;
+  return typeof q === "string" ? q : "";
+});
+const nodeFilter = ref(deepNode.value);
 let deepApplied = false;
+watch(deepNode, (value) => {
+  nodeFilter.value = value;
+  deepApplied = false;
+  applyDeepLink();
+});
 // UIF-A5：画布 states 映射（nodeDefId→status），与状态接口 nodes 同源。
 const nodeStates = computed(() =>
   Object.fromEntries(
@@ -99,14 +112,15 @@ function diagnosticSeverity(type?: string) {
   return t.includes("FAILED") || t === "RUN_FINISHED" ? "error" : t.includes("RETRY") ? "warning" : "info";
 }
 function applyDeepLink() {
-  if (!deepNode || deepApplied || !(value.value.nodes || []).length) return;
+  const target = deepNode.value;
+  if (!target || deepApplied || !(value.value.nodes || []).length) return;
   deepApplied = true;
-  const row = (value.value.nodes || []).find((n: any) => n.nodeDefId === deepNode);
+  const row = (value.value.nodes || []).find((n: any) => n.nodeDefId === target);
   if (row) selected.value = row;
   const index = (value.value.events || []).findIndex(
     (e: any) => {
       const data = record?.(e?.data) || e?.data || {};
-      return data.nodeDefId === deepNode || data.nodeId === deepNode;
+      return data.nodeDefId === target || data.nodeId === target;
     },
   );
   if (index >= 0) {
