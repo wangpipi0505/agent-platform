@@ -135,6 +135,7 @@
 | `CONFIG_REF_NOT_FOUND` | PARAM | 引用的档案/绑定/版本/修订对象不存在（404 语义） | INT-02 |
 | `CONFIG_STATE_TRANSITION_INVALID` | PARAM | 状态机外迁移（如引用未批准修订、SUPERSEDED 复活） | INT-02/03 |
 | `CONFIG_AUTH_SCHEME_UNSUPPORTED` | PARAM | authScheme 为冻结留白值（当前运行仅支持 NONE/BEARER/API_KEY） | INT-02 |
+| `CONNECTION_RESOLUTION_MALFORMED` | TRANSPORT | skill 侧收到的解析回执形状不合规（digest 非64hex、authKind 越枚举、集合字段非数组），502 | INT-02 |
 | `CONFIG_SECRET_PLAINTEXT_REJECTED` | PARAM | 配置中出现明文密钥/secret 值 | INT-02/03 |
 | `CONFIG_SCHEMA_BUDGET_EXCEEDED` | PARAM | Schema 大小/预算超限，不放宽放行 | INT-01/02 |
 
@@ -159,7 +160,7 @@
 4. 前端 `web/shared/routes.ts`、`permission.ts` 与 `web/admin/src/router.ts` 同一权限语义；前端隐藏只改善体验，后端始终独立验证。
 5. `web/shared/api.ts`、`generate-api.mjs`、`generated/api.d.ts`：Controller/OpenAPI 先定，用现有生成链路同步；生成脚本仅可在获授权开发环境执行。
 6. 本标准冻结的受控登记入口：`POST /admin/skills/from-approved-connection`（细分 action 在 INT-02 实施时按本路径展开登记，不得另立同义路径）。
-7. 拟新增路由总表（归属卡在实施时登记 OpenAPI 与服务目录）：`/admin/connection-profiles`、`/admin/environment-bindings`、`/admin/apps/{code}/experiences`、`/integration-profiles`、`/config-releases`、`GET /v1/apps/{code}/experience`、`GET /internal/connection-profiles/{id}/versions/{rev}/resolve`、engine 会话/运行创建可选 `configReleaseId` 扩展。**以上均为拟新增，未实现前手册不得宣称可用。**
+7. 拟新增路由总表（归属卡在实施时登记 OpenAPI 与服务目录）：`/admin/connection-profiles`、`/admin/environment-bindings`、`/admin/apps/{code}/experiences`、`/integration-profiles`、`/config-releases`、`GET /v1/apps/{code}/experience`、`GET /internal/connection-profiles/{profileId}/versions/{profileRev}/resolve`（app 内部，caller=skill）、`GET /internal/skills/{code}/approved-connections/{profileId}/versions/{profileRev}?environment=`（skill 侧受控解析入口，INT-02 已实现，本文正式冻结）、engine 会话/运行创建可选 `configReleaseId` 扩展。**以上均为拟新增，未实现前手册不得宣称可用。**
 
 ## 9. Schema 通用边界（对所有新增配置/事件 Schema 生效）
 

@@ -151,3 +151,11 @@ INT-02 子步1 证据登记的 5 项缺口裁决如下，实现不得偏离；�
 3. **`connection_profile_grant` 随子步2 落地**：批准（APPROVED）≠授权使用；grant 行与 `/{id}/grants` 端点、resolve 时的"被授予版本"投影在子步2 以**新迁移号**（app V112）实现，不回改 V111。
 4. **绑定引用状态下限**：`EnvironmentBinding` 引用的 `connectionProfileRev` 必须处于 **APPROVED 及以上**；引用 DRAFT 拒绝（`CONFIG_STATE_TRANSITION_INVALID`），引用 DISABLED 拒绝。先建目录后批准的流程改为"目录与批准连续完成后再建绑定"，不以放宽状态下限换取便利。
 5. **environment 取值**：格式沿用 `^[a-z][a-z0-9-]{0,31}$`；取值必须与既有 `publish_pin.environment` 值域一致（默认 `production`），不私造新环境名；两处值域的一致性由启动校验与发布预检共同保证。
+
+## 11. INT-02 子步2 契约确认（2026-11-03，P 归口裁决）
+
+1. **skill 侧入口冻结**：`GET /internal/skills/{code}/approved-connections/{profileId}/versions/{profileRev}?environment=`（已实现，assistant-integration.md §8 已同步登记）；skill→app 内部 `GET /internal/connection-profiles/{profileId}/versions/{profileRev}/resolve`（caller=skill，委派精确登记）。
+2. **解析回执形状错误码**：`CONNECTION_RESOLUTION_MALFORMED`（502，TRANSPORT）已登记 assistant-integration.md §6；冻结鉴权形态沿用 `CONFIG_AUTH_SCHEME_UNSUPPORTED`。
+3. **grant 幂等用天然键**：`profileId+profileRev+grantee+payload摘要` 天然键幂等，不进 `config_write_request`；同载荷重放 `replayed=true`、异载荷 409 `CONFIG_REV_CONFLICT`。写入幂等表的覆盖范围（档案/绑定）不变。
+4. **resolve 不含健康判定**：解析回执只含声明、钉住的已批准绑定、有效授权与稳定摘要；`healthPolicy` 仅为声明，**只读健康检查归 INT-02 子步3 单独端点**，结果不进解析回执，不缓存。
+5. **resolve 为一次性读取**：不缓存（撤权下次解析即生效）；reserve/commit 两段式仅当后续卡（SEM-07 执行条件链）出现长事务窗口需要时回本节定义，当前不建、不预留字段。
