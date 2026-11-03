@@ -3,26 +3,13 @@ import { computed, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { useAuth } from "../../shared/api";
 import { PAGE_ACTIONS_TARGET, pageChrome } from "./page-chrome";
+import { navMenus } from "./router";
 import { canReadCapabilityPackages } from "../../shared/capability-package";
 
 const auth = useAuth();
 const route = useRoute();
-const menus = [
-  ["软件能力目录", "/capability-packages"],
-  ["智能体管理", "/apps"],
-  ["模型供应商", "/model/providers"],
-  ["模型条目", "/model/entries"],
-  ["提示词模板", "/model/prompt-templates"],
-  ["技能管理", "/skills"],
-  ["服务管理", "/services"],
-  ["运行中心", "/operations"],
-  ["运行监控", "/runs"],
-  ["确认中心", "/approvals"],
-  ["评测中心", "/evaluations"],
-  ["统计分析", "/statistics"],
-  ["审计", "/audit"],
-  ["系统管理", "/system"],
-];
+// MNT-02子步1：菜单从 page-access 单一来源派生（标题/路径/分组与路由 meta 同表）。
+const menus = navMenus.map((entry) => [entry.label, entry.path]);
 const density = ref(localStorage.getItem("density") || "标准");
 const pageActionsTarget = PAGE_ACTIONS_TARGET;
 const isMock =

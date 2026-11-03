@@ -3,8 +3,11 @@ import {onMounted,onBeforeUnmount} from 'vue';
 import App from './App.vue';
 import {useAuth} from '../../shared/api';
 import {createPortalSession,type PortalTokenProvider} from '../../shared/portal-auth';
+import {installPageAccessAuth} from './page-access';
 const props=defineProps<{provider?:PortalTokenProvider;mode:'portal'|'dev';configurationError?:string}>();
 const auth=useAuth();
+// MNT-02子步1：向路由守卫桥接已验证主体状态（读实时 auth，不复制会话数据）。
+installPageAccessAuth(() => ({ hasToken: !!auth.token, roles: auth.roles }));
 // A28/Mock：演示模式下 dev 登录与身份读取改由 mock 传输器应答；正常构建保持原生 fetch。
 const mock=import.meta.env.DEV&&typeof import.meta.env?.VITE_MOCK==='string'&&import.meta.env.VITE_MOCK!=='false';
 const transport=mock?async(...args:Parameters<typeof fetch>)=>{
