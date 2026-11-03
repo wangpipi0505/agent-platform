@@ -31,7 +31,11 @@ public final class Routes {
                 || path.startsWith("/admin/flows")
                 || path.startsWith("/admin/prompt-templates")
                 || path.startsWith("/admin/classifications")
-                || path.startsWith("/admin/system")) return "app";
+                || path.startsWith("/admin/system")
+                // 连接档案与环境绑定是配置面资源：虽然由 app 服务持有，但只有 ADMIN 能读写；
+                // 这里只决定转发方向，不放宽调用权限（集成票据仍由 IntegrationPolicy 挡在外面）。
+                || path.startsWith("/admin/connection-profiles")
+                || path.startsWith("/admin/environment-bindings")) return "app";
         if (path.startsWith("/admin/skills")) return "skill";
         if (path.startsWith("/admin/services")) return "skill";
         if (path.startsWith("/admin/model-providers")
