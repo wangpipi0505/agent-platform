@@ -577,8 +577,37 @@ public class HttpAsyncAdapter {
                             }
                             if (!response.getStatusCode().is2xxSuccessful())
                                 throw unknown("异步查询未返回确认 HTTP " + status);
-                            return AsyncHttpResponse.read(response.getBody(), resultPath);
+                            return AsyncHttpResponse.read(
+                                    deadlineGuard(response.getBody(), queryDeadline), resultPath);
                         });
+    }
+
+    /**
+     * 复核r04：绝对queryDeadline约束整个响应接收与解析——socket readTimeout只约束"无数据可读
+     * 的等待"，慢滴流（每次都及时给数据）可以无限拖延整流解析与临时文件落盘。守护流在每次读取
+     * 前复查绝对期限，超期即中止真实I/O；socket等待那一侧仍由构造时的剩余预算上界兜底，两条
+     * 途径合起来把状态/结果/复查的接收全程都置于总期限之下。期限耗尽属不确定，保持对账语义。
+     */
+    private static InputStream deadlineGuard(InputStream raw, Long queryDeadline) {
+        if (queryDeadline == null) return raw;
+        return new java.io.FilterInputStream(raw) {
+            private void requireBudget() {
+                if (queryDeadline - System.nanoTime() <= 0)
+                    throw unknown("查询总期限已耗尽，中止响应接收");
+            }
+
+            @Override
+            public int read() throws IOException {
+                requireBudget();
+                return super.read();
+            }
+
+            @Override
+            public int read(byte[] b, int off, int len) throws IOException {
+                requireBudget();
+                return super.read(b, off, len);
+            }
+        };
     }
 
     /** 远端业务码/原文的短摘要，用于不确定类错误的可读化；远端未提供时为空串。 */
@@ -607,7 +636,8 @@ public class HttpAsyncAdapter {
                             if (status >= 400 && status < 500) throw new ResultRejected(status);
                             if (!response.getStatusCode().is2xxSuccessful())
                                 throw unknown("异步查询未返回确认");
-                            return AsyncHttpResponse.read(response.getBody(), resultPath);
+                            return AsyncHttpResponse.read(
+                                    deadlineGuard(response.getBody(), queryDeadline), resultPath);
                         });
     }
 
@@ -662,7 +692,9 @@ public class HttpAsyncAdapter {
                             }
                             if (!response.getStatusCode().is2xxSuccessful())
                                 throw unknown("异步端点未返回确认");
-                            byte[] bytes = response.getBody().readNBytes(limit + 1);
+                            byte[] bytes =
+                                    deadlineGuard(response.getBody(), queryDeadline)
+                                            .readNBytes(limit + 1);
                             if (bytes.length > limit) throw unknown("异步协议响应超出限制");
                             return ArtifactStore.readJson(new ByteArrayInputStream(bytes));
                         });
@@ -690,6 +722,18 @@ public class HttpAsyncAdapter {
             Object body,
             String key,
             Long queryDeadline) {
+        SkillRules.endpoint(endpoint);
+        // 复核r04：鉴权凭据与身份映射的解析可能耗时，必须在解析完成之后复查期限——
+        // 这里就是真实dispatch前的最后一道门；耗尽即拒绝，不再用先前冻结的剩余值发送。
+        Map<String, String> authorization =
+                AuthScheme.headers(
+                        contract.get(AuthScheme.FIELD),
+                        Objects.toString(contract.get("authRef"), ""));
+        Map<String, String> identityHeaders;
+        if (IdentityMappingClient.declared(contract)) {
+            if (identityMapping == null) throw IdentityMappingClient.missingClient();
+            identityHeaders = identityMapping.headers(contract);
+        } else identityHeaders = Map.of();
         long remainingMs = Long.MAX_VALUE;
         if (queryDeadline != null) {
             long remainingNanos = queryDeadline - System.nanoTime();
@@ -697,7 +741,6 @@ public class HttpAsyncAdapter {
                 throw unknown("查询总期限已耗尽，不再发送新的异步请求");
             remainingMs = Math.max(1, java.util.concurrent.TimeUnit.NANOSECONDS.toMillis(remainingNanos));
         }
-        SkillRules.endpoint(endpoint);
         var factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout((int) Math.min(3000, remainingMs));
         factory.setReadTimeout(
@@ -711,17 +754,11 @@ public class HttpAsyncAdapter {
                         .header("Idempotency-Key", key)
                         .header("Accept", "application/json");
         // 与同步适配器共用同一份契约→头的映射：异步只多了提交/查询两步，鉴权方式不能有两套实现，
-        // 否则同一技能在 SYNC 与 SUBMIT_QUERY 之间会发出不同凭据。凭据解析失败同样在发请求前抛出。
-        AuthScheme.headers(
-                        contract.get(AuthScheme.FIELD),
-                        Objects.toString(contract.get("authRef"), ""))
-                .forEach(request::header);
-        // 身份头与鉴权头叠加（PLAT-12 §4.12）：与同步适配器共用 SkillAdapters.identityHeaders，
-        // 声明了 identity 的技能在提交与查询请求上都带同一组 X-User-*；无可用主体时跳过不伪造。
-        if (IdentityMappingClient.declared(contract)) {
-            if (identityMapping == null) throw IdentityMappingClient.missingClient();
-            identityMapping.headers(contract).forEach(request::header);
-        }
+        // 否则同一技能在 SYNC 与 SUBMIT_QUERY 之间会发出不同凭据。
+        authorization.forEach(request::header);
+        // 身份头与鉴权头叠加（PLAT-12 §4.12）：声明了 identity 的技能在提交与查询请求上都带
+        // 同一组 X-User-*；无可用主体时跳过不伪造。
+        identityHeaders.forEach(request::header);
         if (body != null)
             request.contentType(org.springframework.http.MediaType.APPLICATION_JSON).body(body);
         return request;

@@ -307,6 +307,59 @@ class AsyncResultDeadlinePropagationTest {
         assertTrue(elapsedMs < 4400, "实际耗时 " + elapsedMs + "ms 超过总期限约束（T=3000ms，修复后预期≈3.4s）");
     }
 
+    /**
+     * 复核r04：慢滴流必须被绝对期限切断，而不是socket读超时——状态端点每60ms给1字节，
+     * 每次读取都有数据、任何socket等待超时都不触发；body约85字节≈5.1s滴完，远超总期限T。
+     * 修复前解析持续~5.4s后才在最终结果read拒绝；修复后在~T处中止真实I/O并保持RESULT_UNKNOWN。
+     */
+    @Test
+    @Timeout(40)
+    void 慢滴流响应被绝对期限切断而非等待超时() throws Exception {
+        long timeoutMs = 1500;
+        // /submit 已由@BeforeEach注册；此处只注册慢滴状态端点。
+        server.createContext(
+                "/jobs",
+                exchange -> {
+                    phaseHits.add("drip@" + System.currentTimeMillis());
+                    exchange.getRequestBody().readAllBytes();
+                    byte[] body =
+                            Json.write(
+                                            Map.of(
+                                                    "jobId",
+                                                    "job-1",
+                                                    "idempotencyKey",
+                                                    key,
+                                                    "status",
+                                                    "DONE"))
+                                    .getBytes(StandardCharsets.UTF_8);
+                    exchange.getResponseHeaders().set("Content-Type", "application/json");
+                    exchange.sendResponseHeaders(200, body.length);
+                    var out = exchange.getResponseBody();
+                    for (byte b : body) {
+                        out.write(b);
+                        out.flush();
+                        try {
+                            Thread.sleep(60);
+                        } catch (InterruptedException dripped) {
+                            Thread.currentThread().interrupt();
+                            break;
+                        }
+                    }
+                    out.close();
+                });
+        server.start();
+        prepareExecution(timeoutMs);
+        phaseHits.add("start@" + System.currentTimeMillis());
+        long started = System.nanoTime();
+        var result = executor.execute("deadline_probe", request);
+        long elapsedMs =
+                java.util.concurrent.TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started);
+        assertEquals("RESULT_UNKNOWN", result.get("errorSemantic"), "期限中止属不确定，保持对账语义");
+        System.out.println("R13证据(慢滴) elapsedMs=" + elapsedMs + " phases=" + phaseHits);
+        // 修复后：~T(绝对期限)+一次在途读取(60ms滴间隔)≈1.6-1.8s；未修复：滴完~5.4s+提交与装配开销。
+        assertTrue(elapsedMs < 2500, "实际耗时 " + elapsedMs + "ms：慢滴流未被绝对期限在T=1500ms附近切断");
+    }
+
     /** 已耗尽的期限在发出请求前即拒绝：不建立任何连接，语义保持 RESULT_UNKNOWN。 */
     @Test
     void 已耗尽期限在发请求前拒绝且不建连() {
