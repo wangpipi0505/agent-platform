@@ -49,11 +49,19 @@ public class ToolCalls {
                     if (!key.equals(req.path("idempotencyKey").asText()))
                         throw new PlatformException(409, "CALL_KEY_MISMATCH", "幂等键与逻辑调用不匹配");
                     String digest = Digest.sha256(Json.canonical(req.path("arguments")));
+                    // INT-02：受控连接引用随调用登记钉住，来源只有运行快照（载荷由引擎构造），
+                    // 登记后不允许被重试/恢复改写——理由见 V226 迁移注释。
+                    String refs = bindingRefs(req.path("bindingRefs"));
+                    // 载荷没带就取运行快照里的冻结引用：引用是引擎的权威事实，
+                    // 不依赖某个调用方"记得"把它塞进请求；两边都有时以载荷为准（仍由引擎构造）。
+                    if (refs == null)
+                        refs = bindingRefs(
+                                TraceStore.json(run.get("snapshot")).path("config").path("bindingRefs"));
                     store.db()
                             .update(
                                     "insert into"
-                                        + " engine.tool_call(run_id,node_instance_id,call_seq,skill_version_id,args_digest,args_ref,idempotency_key,status,skill_code,args,attempt_id)"
-                                        + " values(?,?,?,?,?,? ,?,'REGISTERED',?,?::jsonb,?) on"
+                                        + " engine.tool_call(run_id,node_instance_id,call_seq,skill_version_id,args_digest,args_ref,idempotency_key,status,skill_code,args,attempt_id,binding_refs)"
+                                        + " values(?,?,?,?,?,? ,?,'REGISTERED',?,?::jsonb,?,?::jsonb) on"
                                         + " conflict(idempotency_key) do nothing",
                                     rid,
                                     nid,
@@ -64,7 +72,8 @@ public class ToolCalls {
                                     key,
                                     req.path("skillCode").asText(),
                                     Json.write(req.path("arguments")),
-                                    req.path("attemptId").asLong());
+                                    req.path("attemptId").asLong(),
+                                    refs);
                     var call =
                             store.db()
                                     .queryForMap(
@@ -73,6 +82,10 @@ public class ToolCalls {
                                             key);
                     if (!digest.equals(call.get("args_digest")))
                         throw new PlatformException(409, "CALL_ARGUMENTS_MISMATCH", "相同逻辑调用参数发生变化");
+                    // 同一逻辑调用的连接引用一旦登记就固定：换了引用说明"这次调用要连别的东西"，
+                    // 必须作为新调用重新登记，不能沿用旧记录偷换目标。
+                    if (!sameRefs(call.get("binding_refs"), refs))
+                        throw new PlatformException(409, "CALL_BINDING_CHANGED", "相同逻辑调用的连接引用发生变化");
                     String contractDigest = "";
                     for (JsonNode skill :
                             TraceStore.json(run.get("snapshot")).path("config").path("tools"))
@@ -730,6 +743,17 @@ public class ToolCalls {
                 });
     }
 
+    private static String bindingRefs(JsonNode refs) {
+        return refs.isArray() && !refs.isEmpty() ? Json.write(refs) : null;
+    }
+
+    private static boolean sameRefs(Object stored, String incoming) {
+        String existing = stored == null ? null : stored.toString();
+        if (existing == null || incoming == null) return existing == null && incoming == null;
+        return Digest.sha256(Json.canonical(Json.read(existing)))
+                .equals(Digest.sha256(Json.canonical(Json.read(incoming))));
+    }
+
     private Map<String, Object> view(Map<String, Object> call) {
         Map<String, Object> result = new LinkedHashMap<>();
         for (String field :
@@ -786,6 +810,13 @@ public class ToolCalls {
                         ? Json.read("null")
                         : TraceStore.json(call.get("external_job")));
         result.put("arguments", TraceStore.json(call.get("args")));
+        // INT-02：调用记录上钉住的受控连接引用（未引用时为 null，不是空数组）——
+        // 调用方读它就是引擎的权威引用，不需要也不允许自己再猜一次。
+        result.put(
+                "bindingRefs",
+                call.get("binding_refs") == null
+                        ? Json.read("null")
+                        : TraceStore.json(call.get("binding_refs")));
         return result;
     }
 

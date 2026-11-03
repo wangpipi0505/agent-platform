@@ -36,6 +36,10 @@ public class ApprovedConnectionResolver {
     static final Pattern ENVIRONMENT = Pattern.compile("^[a-z][a-z0-9-]{0,31}$");
     static final Set<String> RUNTIME_AUTH_KINDS = Set.of("NONE", "BEARER", "API_KEY");
     static final Pattern DIGEST = Pattern.compile("^[0-9a-f]{64}$");
+    /** 单次调用可引用的受控连接上限：超出即拒绝，避免一次调用被拼成任意多端点。 */
+    static final int MAX_REFS = 8;
+    /** 操作名与 app 侧 operationAllowlist 同一词汇表（见 ConnectionProfiles.OPERATION）。 */
+    static final Pattern OPERATION = Pattern.compile("^[a-zA-Z][a-zA-Z0-9_.\\-/:]{0,127}$");
 
     private final SkillClients clients;
     private final ConnectionResolutionReceipts receipts;
@@ -49,6 +53,15 @@ public class ApprovedConnectionResolver {
     }
 
     public Map<String, Object> resolve(String skillCode, String profileId, int profileRev, String environment) {
+        return resolve(skillCode, profileId, profileRev, environment, null);
+    }
+
+    /**
+     * 带调用范围的解析：回执额外记下 run/call/attempt/operation（V318），
+     * 用于把"这次解析"与引擎的具体调用逐条对齐。
+     */
+    public Map<String, Object> resolve(String skillCode, String profileId, int profileRev, String environment,
+            Map<String, Object> scope) {
         Actor actor = Actor.current();
         if (!ID.matcher(skillCode).matches())
             throw new PlatformException(400, "INVALID_INPUT", "技能编码格式不合法: " + skillCode);
@@ -63,7 +76,93 @@ public class ApprovedConnectionResolver {
         String url = appUrl + "/internal/connection-profiles/" + encode(profileId) + "/versions/" + profileRev
                 + "/resolve" + (env == null ? "" : "?environment=" + encode(env));
         Map<String, Object> facts = shape(clients.get(url), profileId, profileRev);
-        return receipts.record(actor, skillCode, facts, env);
+        return receipts.record(actor, skillCode, facts, env, scope);
+    }
+
+    /**
+     * 受控调用的分发前复核（INT-02 子步3，契约 §5.2）。
+     *
+     * 语义：
+     * 1) 引用来源只有两处——本次请求里引擎下发的 bindingRefs，或技能契约自带的 bindingRefs；
+     *    两处都空 = 该技能没有引用受控连接，走原有 legacy 路径，本方法不产生任何解析与回执。
+     * 2) 每条引用都要重新向 app 解析一次（不做本地缓存）：撤权、停用、换版在下一次调用立即生效。
+     * 3) 操作名必须在该档案的操作白名单内；引用声明了摘要时，摘要必须与当前解析一致，
+     *    否则说明"配置在批准后被换过"，按 409 拒绝而不是默认沿用旧端点。
+     * 4) 调用方不能自带 tenantId：租户只来自已验票据，引用里出现租户字段即视为伪造。
+     */
+    public Map<String, Object> gate(Map<String, Object> contract, Map<String, Object> request, String skillCode) {
+        List<Map<String, Object>> refs = bindingRefs(request.get("bindingRefs"),
+                contract == null ? null : contract.get("bindingRefs"));
+        if (refs.isEmpty()) return Map.of("refs", List.of());
+        Map<String, Object> scope = new LinkedHashMap<>();
+        scope.put("runPublicId", text(request.get("runId")));
+        scope.put("callId", request.get("callId"));
+        scope.put("attemptId", request.get("attemptId"));
+        List<Map<String, Object>> checked = new java.util.ArrayList<>();
+        for (Map<String, Object> ref : refs) {
+            if (ref.containsKey("tenantId"))
+                throw new PlatformException(400, "INVALID_INPUT", "连接引用不允许携带 tenantId，租户只来自已验票据");
+            String profileId = text(ref.get("profileId"));
+            String operation = text(ref.get("operation"));
+            Object rawRev = ref.get("profileRev");
+            if (profileId == null || operation == null || !(rawRev instanceof Number rev)
+                    || rev.intValue() < 1)
+                throw new PlatformException(400, "INVALID_INPUT", "连接引用必须给出 profileId/profileRev/operation");
+            if (!OPERATION.matcher(operation).matches())
+                throw new PlatformException(400, "INVALID_INPUT", "连接引用操作名格式不合法: " + operation);
+            String declared = text(ref.get("resolutionDigest"));
+            if (declared != null && !DIGEST.matcher(declared).matches())
+                throw new PlatformException(400, "INVALID_INPUT", "连接引用摘要格式不合法: " + declared);
+
+            Map<String, Object> callScope = new LinkedHashMap<>(scope);
+            callScope.put("operation", operation);
+            Map<String, Object> facts = resolve(skillCode, profileId, rev.intValue(),
+                    text(ref.get("environment")), callScope);
+            List<?> allow = facts.get("operationAllowlist") instanceof List<?> list ? list : List.of();
+            if (!allow.contains(operation))
+                throw new PlatformException(400, "CONNECTION_OPERATION_NOT_ALLOWED",
+                        "该连接档案未批准本次操作: " + profileId + " / " + operation);
+            Object resolvedDigest = facts.get("resolutionDigest");
+            if (declared != null && !declared.equals(String.valueOf(resolvedDigest)))
+                throw new PlatformException(409, "CONNECTION_BINDING_CHANGED",
+                        "引用的连接在批准后已变更，请按当前批准重新取用: " + profileId);
+            Map<String, Object> entry = new LinkedHashMap<>();
+            entry.put("profileId", profileId);
+            entry.put("profileRev", rev.intValue());
+            entry.put("operation", operation);
+            entry.put("authKind", facts.get("authKind"));
+            entry.put("resolutionDigest", resolvedDigest);
+            entry.put("receiptId", facts.get("receiptId"));
+            checked.add(entry);
+        }
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("refs", checked);
+        return out;
+    }
+
+    /** 多重来源合并：请求引用优先（引擎按调用冻结下发），契约声明只作缺省。 */
+    @SuppressWarnings("unchecked")
+    private static List<Map<String, Object>> bindingRefs(Object first, Object second) {
+        // Arrays.asList 而不是 List.of：两处来源都可能为 null（旧技能契约没有 bindingRefs）。
+        for (Object candidate : java.util.Arrays.asList(first, second)) {
+            if (candidate instanceof List<?> list && !list.isEmpty()) {
+                var out = new java.util.ArrayList<Map<String, Object>>();
+                for (Object item : list)
+                    if (item instanceof Map<?, ?> m) out.add((Map<String, Object>) m);
+                    else throw new PlatformException(400, "INVALID_INPUT", "连接引用必须是对象数组");
+                if (out.size() > MAX_REFS)
+                    throw new PlatformException(400, "INVALID_INPUT",
+                            "单次调用最多引用 " + MAX_REFS + " 个受控连接");
+                return out;
+            }
+        }
+        return List.of();
+    }
+
+    private static String text(Object value) {
+        if (value == null) return null;
+        String out = String.valueOf(value);
+        return out.isBlank() ? null : out;
     }
 
     /**

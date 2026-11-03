@@ -1,6 +1,7 @@
 package cn.agentplatform.app.api;
 
 import cn.agentplatform.app.application.ApprovedConnections;
+import cn.agentplatform.app.application.ConnectionHealth;
 import cn.agentplatform.common.ApiResponse;
 
 import org.springframework.web.bind.annotation.*;
@@ -18,14 +19,28 @@ import org.springframework.web.bind.annotation.*;
 public class InternalConnectionProfilesController {
 
     private final ApprovedConnections connections;
+    private final ConnectionHealth health;
 
-    public InternalConnectionProfilesController(ApprovedConnections connections) {
+    public InternalConnectionProfilesController(ApprovedConnections connections, ConnectionHealth health) {
         this.connections = connections;
+        this.health = health;
     }
 
     @GetMapping("/internal/connection-profiles/{profileId}/versions/{profileRev}/resolve")
     public Object resolve(@PathVariable String profileId, @PathVariable int profileRev,
             @RequestParam(name = "environment", required = false) String environment) {
         return ApiResponse.ok(connections.resolve(profileId, profileRev, environment));
+    }
+
+    /**
+     * 只读健康探针（契约 §11.4）：独立端点，**不进 resolve 回执**。
+     *
+     * 运行期解析必须与"此刻是否可达"解耦，否则一次网络抖动会让本可执行的调用被判死；
+     * 探针结果用于准入前置提示与运维观测，不作为放行依据。
+     */
+    @GetMapping("/internal/connection-profiles/{profileId}/versions/{profileRev}/health")
+    public Object health(@PathVariable String profileId, @PathVariable int profileRev,
+            @RequestParam(name = "environment", required = false) String environment) {
+        return ApiResponse.ok(health.probe(profileId, profileRev, environment));
     }
 }

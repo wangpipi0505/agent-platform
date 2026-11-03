@@ -26,13 +26,25 @@ public class ConnectionResolutionReceipts {
     }
 
     public Map<String, Object> record(Actor actor, String skillCode, Map<String, Object> facts, String environment) {
+        return record(actor, skillCode, facts, environment, null);
+    }
+
+    /**
+     * INT-02 子步3：带调用范围的解析回执。
+     *
+     * scope 可空（子步2 路径不变）；非空时给出 runPublicId / callId / attemptId / operation，
+     * 让回执能与引擎的 engine.tool_call 对齐——这是事后回答"这次调用连的是哪个端点"的唯一凭据。
+     */
+    public Map<String, Object> record(Actor actor, String skillCode, Map<String, Object> facts,
+            String environment, Map<String, Object> scope) {
         String digest = String.valueOf(facts.get("resolutionDigest"));
         String authKind = String.valueOf(facts.get("authKind"));
         Object uses = facts.getOrDefault("grantedUses", java.util.List.of());
+        Map<String, Object> call = scope == null ? Map.of() : scope;
         var rows = db.query("insert into skill.connection_resolution"
                         + " (tenant_id,skill_code,profile_id,profile_rev,environment,resolution_digest,auth_kind,"
-                        + " granted_uses,requested_by)"
-                        + " values (?,?,?,?,?,?,?,?::jsonb,?) returning id,resolved_at::text",
+                        + " granted_uses,requested_by,run_public_id,call_id,attempt_id,operation)"
+                        + " values (?,?,?,?,?,?,?,?::jsonb,?,?,?,?,?) returning id,resolved_at::text",
                 (rs, n) -> {
                     Map<String, Object> m = new LinkedHashMap<>();
                     m.put("receiptId", rs.getLong(1));
@@ -41,9 +53,21 @@ public class ConnectionResolutionReceipts {
                 },
                 actor.tenantId(), skillCode, String.valueOf(facts.get("profileId")),
                 ((Number) facts.get("profileRev")).intValue(), environment, digest, authKind,
-                Json.write(uses), actor.principalId());
+                Json.write(uses), actor.principalId(),
+                text(call, "runPublicId"), number(call, "callId"), number(call, "attemptId"),
+                text(call, "operation"));
         Map<String, Object> out = new LinkedHashMap<>(facts);
         out.putAll(rows.get(0));
         return out;
+    }
+
+    private static String text(Map<String, Object> source, String key) {
+        Object value = source.get(key);
+        return value == null || String.valueOf(value).isBlank() ? null : String.valueOf(value);
+    }
+
+    private static Long number(Map<String, Object> source, String key) {
+        Object value = source.get(key);
+        return value instanceof Number n ? Long.valueOf(n.longValue()) : null;
     }
 }

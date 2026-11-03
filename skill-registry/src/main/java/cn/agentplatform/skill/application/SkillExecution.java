@@ -23,6 +23,7 @@ public class SkillExecution {
     private final SkillCatalog catalog;
     private final SkillAdapters adapters;
     private final SkillClients clients;
+    private final ApprovedConnectionResolver approvedConnections;
     private final String engineUrl;
     private final ReconciliationProofs reconciliationProofs;
 
@@ -35,20 +36,34 @@ public class SkillExecution {
     @Value("${agent.demo-mode:false}")
     boolean producerDemoMode;
 
+    @org.springframework.beans.factory.annotation.Autowired
     public SkillExecution(
             JdbcTemplate db,
             org.springframework.transaction.PlatformTransactionManager manager,
             SkillCatalog catalog,
             SkillAdapters adapters,
             SkillClients clients,
+            ApprovedConnectionResolver approvedConnections,
             @Value("${agent.services.engine:http://127.0.0.1:18082}") String engineUrl) {
         this.db = db;
         this.tx = new org.springframework.transaction.support.TransactionTemplate(manager);
         this.catalog = catalog;
         this.adapters = adapters;
         this.clients = clients;
+        this.approvedConnections = approvedConnections;
         this.engineUrl = engineUrl;
         this.reconciliationProofs = new ReconciliationProofs(db, manager);
+    }
+
+    /** 供不涉及受控连接的定向测试构造：未接解析器时，任何携带 bindingRefs 的调用都会被拒绝。 */
+    public SkillExecution(
+            JdbcTemplate db,
+            org.springframework.transaction.PlatformTransactionManager manager,
+            SkillCatalog catalog,
+            SkillAdapters adapters,
+            SkillClients clients,
+            String engineUrl) {
+        this(db, manager, catalog, adapters, clients, null, engineUrl);
     }
 
     private String tenant() {
@@ -89,6 +104,22 @@ public class SkillExecution {
                 actor.tenantId(), actor.principalId(), runId, attempt, version));
         return Map.of("callId", callId, "runId", runId, "attemptId", attempt, "localCallMatched", matched,
                 "cancelRequested", matched, "reason", matched ? "LOCAL_CANCEL_REQUESTED" : "NO_LOCAL_MATCH");
+    }
+
+    /**
+     * INT-02：受控连接的分发前复核。
+     *
+     * 未声明 bindingRefs 的技能完全不受影响（不解析、不写回执、不多一次跨服务调用）；
+     * 一旦声明了引用，就必须有解析器可用——宁可拒绝，也不把"没装配"当成"没约束"。
+     */
+    private void gateApproved(Map<String, Object> contract, Map<String, Object> request, String code) {
+        boolean declared = request.get("bindingRefs") instanceof java.util.Collection<?> c && !c.isEmpty()
+                || contract != null
+                        && contract.get("bindingRefs") instanceof java.util.Collection<?> d && !d.isEmpty();
+        if (!declared) return;
+        if (approvedConnections == null)
+            throw error(503, "CONNECTION_RESOLUTION_UNAVAILABLE", "受控连接解析未装配，拒绝执行携带连接引用的调用");
+        approvedConnections.gate(contract, request, code);
     }
 
     /**
@@ -157,6 +188,10 @@ public class SkillExecution {
             // 重试层只能在引擎。旧事实存在时，仅权威REGISTERED+新attempt显式授权只读重试；UNKNOWN永远不能走此分支。
             if (!retry) return deliver(existing);
         }
+        // INT-02（契约 §5.2）：受控调用在进入任何适配器之前统一复核连接事实——首次分发、
+        // PREPARE/EXECUTE、只读重试都经过这里；已经结束的事实走上面的 deliver（观察历史结果
+        // 不产生新的外部调用，不应因事后撤权而读不出来）。
+        gateApproved(contract, request, code);
         String failure = null, reason = null;
         // PLAT-05：远端业务码与有界原文由适配器失败携带，终经 envelope 落成七字段错误对象。
         String errorCode = null, errorRaw = null;
@@ -929,6 +964,9 @@ public class SkillExecution {
             throw error(409, "RECONCILE_STATE", "请等待引擎确认原调用为UNKNOWN后对账");
         var contract = catalog.versionId(((Number) recorded.get("skill_version_id")).longValue());
         var original = Json.read(recorded.get("request_snapshot").toString(), Map.class);
+        // INT-02：对账同样会再次访问外部端点，按当前权限复核一次；引用取原调用快照，
+        // 保证"对账查的是同一个连接"，不会因为配置漂移而把结果归到另一套端点上。
+        gateApproved(contract, original, Objects.toString(contract.get("code"), ""));
         // PLAT-15：两段 EXECUTE 的对账按真实出站键查询；旧事实无该键时沿用逻辑调用键。
         // 缺键不报错（text 会拒空）——存量事实恒无该键，回退是常态而非异常。
         String key = Objects.toString(original.get("businessIdempotencyKey"), "");

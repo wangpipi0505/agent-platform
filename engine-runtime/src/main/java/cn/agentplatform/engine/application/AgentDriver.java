@@ -350,6 +350,12 @@ public class AgentDriver {
         req.put("triggerType", run.get("trigger_type"));
         req.put("mock", Map.of()); // Authority.mock_snapshot is the sole approval for skill mocks.
         req.put("skillCode", code);
+        // INT-02：受控连接引用只从冻结快照取——模型参数、浏览器与草稿在派发时都不能自己指定
+        // "连哪个端点"。引用随调用登记钉住（V226），重试与恢复不得改写。
+        JsonNode frozenRefs =
+                TraceStore.json(run.get("snapshot")).path("config").path("bindingRefs");
+        if (frozenRefs.isArray() && !frozenRefs.isEmpty())
+            req.put("bindingRefs", Json.tree(frozenRefs));
         var registration = new ToolCalls(store).register(Json.tree(req), actor);
         req.put("callId", registration.get("callId"));
         if (ControlledReplay.enabled(run) && registration.get("status").equals("REGISTERED"))
