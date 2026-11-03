@@ -152,24 +152,17 @@ public class AppService {
         return new PlatformException(status, code, message);
     }
 
+    /** 兼容入口：取值与校验规则已迁至 domain.CapabilityValues，错误码与缺省值不变。 */
     public static String text(Map<String, Object> body, String field) {
-        String v = Objects.toString(body.get(field), "");
-        if (v.isBlank() || v.length() > 128) throw error(400, "INVALID_INPUT", "缺少或无效字段: " + field);
-        return v;
+        return cn.agentplatform.app.domain.CapabilityValues.text(body, field);
     }
 
-    @SuppressWarnings("unchecked")
     public static Map<String, Object> object(Object v) {
-        if (!(v instanceof Map<?, ?>)) throw error(400, "INVALID_INPUT", "必须提供JSON对象");
-        return (Map<String, Object>) v;
+        return cn.agentplatform.app.domain.CapabilityValues.object(v);
     }
 
-    @SuppressWarnings("unchecked")
     public static List<Map<String, Object>> objects(Object v) {
-        if (v == null) return List.of();
-        if (!(v instanceof List<?> list) || list.stream().anyMatch(x -> !(x instanceof Map)))
-            throw error(400, "INVALID_INPUT", "必须提供对象数组");
-        return (List<Map<String, Object>>) v;
+        return cn.agentplatform.app.domain.CapabilityValues.objects(v);
     }
 
     public static long number(Map<String, Object> body, String field) {

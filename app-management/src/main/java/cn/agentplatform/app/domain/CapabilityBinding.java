@@ -1,6 +1,5 @@
 package cn.agentplatform.app.domain;
 
-import cn.agentplatform.app.application.AppService;
 import cn.agentplatform.common.Json;
 import cn.agentplatform.common.PlatformException;
 import java.util.*;
@@ -14,35 +13,35 @@ public record CapabilityBinding(String route, Object environmentDeclaration,
         if (!Set.of("environment", "routeProfileId", "bindings").containsAll(body.keySet()))
             throw bad("解析计划仅接受 environment/routeProfileId/bindings");
         var result = new LinkedHashMap<String, Object>();
-        result.put("environment", AppService.text(body, "environment"));
-        result.put("routeProfileId", AppService.text(body, "routeProfileId"));
-        result.put("bindings", AppService.objects(body.get("bindings")));
+        result.put("environment", CapabilityValues.text(body, "environment"));
+        result.put("routeProfileId", CapabilityValues.text(body, "routeProfileId"));
+        result.put("bindings", CapabilityValues.objects(body.get("bindings")));
         return result;
     }
 
     public static CapabilityBinding select(Map<String, Object> pkg, Map<String, Object> plan) {
-        var environments = AppService.object(AppService.object(pkg.get("software")).get("environments"));
+        var environments = CapabilityValues.object(CapabilityValues.object(pkg.get("software")).get("environments"));
         String environment = plan.get("environment").toString(), routeId = plan.get("routeProfileId").toString();
         if (!environments.containsKey(environment)) throw bad("environment 未在本包声明");
-        var profiles = AppService.objects(pkg.get("routeProfiles"));
-        var interfaces = AppService.objects(pkg.get("interfaces"));
+        var profiles = CapabilityValues.objects(pkg.get("routeProfiles"));
+        var interfaces = CapabilityValues.objects(pkg.get("interfaces"));
         Map<String, Object> profile = profiles.isEmpty()
                 ? Map.of("id", routeId, "execution", routeId)
                 : profiles.stream().filter(p -> routeId.equals(p.get("id"))).findFirst()
                         .orElseThrow(() -> bad("routeProfileId 未在本包声明"));
         var endpoint = interfaces.stream().filter(p -> profile.get("execution").equals(p.get("id"))).findFirst()
                 .orElseThrow(() -> bad("路线执行入口未声明"));
-        var ontology = AppService.object(pkg.getOrDefault("ontology", Map.of()));
+        var ontology = CapabilityValues.object(pkg.getOrDefault("ontology", Map.of()));
         Object ontologyRef = profile.getOrDefault("ontology", ontology.isEmpty() || "NONE".equals(ontology.get("mode"))
                 ? "none" : ontology.get("space") + "@" + ontology.get("release"));
         if (!"none".equals(ontologyRef)) throw unresolved("本体绑定须在应用阶段完成精确发布核验");
-        var identity = AppService.object(pkg.get("identity"));
-        if (!AppService.objects(identity.get("secrets")).isEmpty() || endpoint.containsKey("authRef"))
+        var identity = CapabilityValues.object(pkg.get("identity"));
+        if (!CapabilityValues.objects(identity.get("secrets")).isEmpty() || endpoint.containsKey("authRef"))
             throw new PlatformException(409, "UNRESOLVED_SECRET_BINDING", "声明中的密钥引用尚无受控绑定");
         if (identity.get("scopes") instanceof Collection<?> scopes && !scopes.isEmpty())
             throw unresolved("声明 scopes 尚无受控映射");
         List<Map<String, Object>> selected = new ArrayList<>();
-        var all = AppService.objects(pkg.get("tools"));
+        var all = CapabilityValues.objects(pkg.get("tools"));
         if (profile.containsKey("tools")) {
             for (Object toolId : (List<?>) profile.get("tools"))
                 selected.add(all.stream().filter(t -> toolId.equals(t.get("id"))).findFirst()
@@ -59,9 +58,9 @@ public record CapabilityBinding(String route, Object environmentDeclaration,
                 throw new PlatformException(409, "CAPABILITY_ROUTE_BINDING_CONFLICT", "选中路线工具必须启用并使用同一执行入口");
         }
         var supplied = new LinkedHashMap<String, Map<String, Object>>();
-        for (var binding : AppService.objects(plan.get("bindings"))) {
+        for (var binding : CapabilityValues.objects(plan.get("bindings"))) {
             if (!binding.keySet().equals(Set.of("toolId", "skillRef"))) throw bad("binding 仅接受 toolId/skillRef");
-            String id = AppService.text(binding, "toolId");
+            String id = CapabilityValues.text(binding, "toolId");
             if (!ids.contains(id) || supplied.putIfAbsent(id, referenceShape(binding.get("skillRef"))) != null)
                 throw bad("额外或重复的工具 binding");
         }
@@ -69,7 +68,7 @@ public record CapabilityBinding(String route, Object environmentDeclaration,
     }
 
     private static Map<String, Object> referenceShape(Object raw) {
-        var ref = AppService.object(raw);
+        var ref = CapabilityValues.object(raw);
         if (!ref.keySet().containsAll(Set.of("code", "version"))
                 || !Set.of("code", "version", "sha256").containsAll(ref.keySet())) throw bad("skillRef 需要精确 code/version");
         if (ref.containsKey("sha256") && (!(ref.get("sha256") instanceof String sha) || !sha.matches("[0-9a-f]{64}")))
@@ -93,7 +92,7 @@ public record CapabilityBinding(String route, Object environmentDeclaration,
     public Map<String, Object> mapping(Map<String, Object> tool, Map<String, Object> ref, Map<String, Object> actual) {
         if (ref.containsKey("sha256") && !ref.get("sha256").equals(actual.get("sha256")))
             throw new PlatformException(409, "CAPABILITY_BINDING_DIGEST_MISMATCH", "声明技能摘要与精确发布版本不同");
-        var definition = AppService.object(actual.get("definition"));
+        var definition = CapabilityValues.object(actual.get("definition"));
         String kind = executionInterface.get("kind").toString();
         String type = switch (kind) { case "HTTP_SYNC", "HTTP_ASYNC" -> "HTTP"; default -> kind; };
         equal(type, definition.get("type"), "interface.kind");
@@ -104,8 +103,8 @@ public record CapabilityBinding(String route, Object environmentDeclaration,
             declared(executionInterface, "httpMethod", definition, "httpMethod");
             declared(executionInterface, "timeoutMs", definition, "timeoutMs");
             if (kind.equals("HTTP_ASYNC")) {
-                var reconciliation = AppService.object(executionInterface.get("reconciliation"));
-                var actualPolicy = AppService.object(definition.getOrDefault("reconciliation", Map.of()));
+                var reconciliation = CapabilityValues.object(executionInterface.get("reconciliation"));
+                var actualPolicy = CapabilityValues.object(definition.getOrDefault("reconciliation", Map.of()));
                 reconciliation.forEach((key, value) -> equal(value, actualPolicy.get(key), "reconciliation." + key));
             }
         } else if (kind.equals("MCP")) {
@@ -114,17 +113,17 @@ public record CapabilityBinding(String route, Object environmentDeclaration,
             declared(executionInterface, "timeoutMs", definition, "timeoutMs");
             if (tool.containsKey("operation")) equal(tool.get("operation"), definition.get("toolName"), "operation");
         } else if (kind.equals("PROCESS")) {
-            var process = AppService.object(definition.get("process"));
+            var process = CapabilityValues.object(definition.get("process"));
             equal(executionInterface.get("command"), process.get("command"), "command");
             equal(executionInterface.get("protocol"), actual.get("resolvedProcessProtocol"), "protocol");
             declared(executionInterface, "workDir", process, "workDirRoot");
             declared(executionInterface, "timeoutMs", process, "timeoutMs");
         } else if (kind.equals("ALGORITHM")) equal(executionInterface.get("jobTemplate"), definition.get("jobTemplate"), "jobTemplate");
         if (tool.containsKey("operation") && !kind.equals("MCP")) {
-            var source = AppService.object(definition.getOrDefault("importSource", Map.of()));
+            var source = CapabilityValues.object(definition.getOrDefault("importSource", Map.of()));
             equal(tool.get("operation"), source.get("toolCode"), "operation");
         }
-        var execution = AppService.object(definition.get("execution"));
+        var execution = CapabilityValues.object(definition.get("execution"));
         for (String field : List.of("readonly", "sideEffect", "idempotent")) declared(tool, field, execution, field);
         if ("READ_ONLY".equals(tool.get("exposure"))) {
             equal(true, execution.get("readonly"), "readonly"); equal(false, execution.get("sideEffect"), "sideEffect");
@@ -134,7 +133,7 @@ public record CapabilityBinding(String route, Object environmentDeclaration,
             equal(new TreeSet<>((List<String>) tool.get("confirmRoles")),
                     new TreeSet<>((List<String>) execution.getOrDefault("confirmRoles", List.of())), "confirmRoles");
         }
-        var approval = AppService.object(execution.getOrDefault("approval", Map.of()));
+        var approval = CapabilityValues.object(execution.getOrDefault("approval", Map.of()));
         equal(tool.getOrDefault("riskLevel", "STANDARD"), approval.getOrDefault("risk", "STANDARD"), "approval.risk");
         for (String field : List.of("inputSchema", "outputSchema", "errorSemantics"))
             if (tool.get(field) instanceof Map<?, ?> object && !object.isEmpty()) equal(object, definition.get(field), field);
@@ -142,7 +141,7 @@ public record CapabilityBinding(String route, Object environmentDeclaration,
         if (tool.get("errorSemantics") instanceof Collection<?> rules && !rules.isEmpty())
             equal(rules, definition.get("errorSemantics"), "errorSemantics");
         if (tool.containsKey("pagination")) {
-            var pagination = AppService.object(definition.getOrDefault("pagination", Map.of()));
+            var pagination = CapabilityValues.object(definition.getOrDefault("pagination", Map.of()));
             String mode = tool.get("pagination").toString().toUpperCase(Locale.ROOT);
             // 注册期允许非空分页配置省略 mode，其有效含义为 PAGE；未配置分页才是 NONE。
             equal(mode, pagination.getOrDefault("mode", pagination.isEmpty() ? "NONE" : "PAGE"), "pagination");
