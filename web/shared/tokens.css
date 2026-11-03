@@ -1,38 +1,53 @@
 :root {
-  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.06);
-  --shadow-2: 0 8px 24px rgba(0, 0, 0, 0.12);
-  --brand-primary-dark: #60a5fa;
-  --ink-dark: #f8fafc;
-  --line-dark: #334155;
+  /* UI-01 暗夜流光主题底座（契约：本文件首块为变量定义，assistant.js 按首块截取注入 :host）。
+     画布与三级表面、主强调与独立前景、语义状态成对映射；旧变量名按实际用途映射暗值。 */
+  color-scheme: dark;
+  --canvas: #090d16;
+  --surface: #0f1623;
+  --surface-2: #162032;
+  --surface-3: #1e2b42;
+  --bg: #121b2c;
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-2: 0 8px 24px rgba(0, 0, 0, 0.55);
+  --brand-primary: #0ea5e9;
+  --brand-primary-hover: #38bdf8;
+  --brand-primary-light: rgba(14, 165, 233, 0.15);
+  --brand-primary-dark: #7dd3fc;
+  --on-primary: #041019;
+  --nav: #0b1120;
+  --nav-text: #c9d5ea;
+  --nav-text-active: #f1f5f9;
+  --nav-muted: #8296b8;
+  --nav-active-bg: rgba(14, 165, 233, 0.18);
+  --line: #24354f;
+  --ink: #f1f5f9;
+  --muted: #94a3b8;
+  --st-wait: #9ca3af;
+  --st-wait-text: #d1d5db;
+  --st-run: #60a5fa;
+  --st-run-text: #93c5fd;
+  --st-ok: #4ade80;
+  --st-ok-text: #86efac;
+  --st-fail: #f87171;
+  --st-fail-text: #fca5a5;
+  --st-suspend: #fbbf24;
+  --st-suspend-text: #fcd34d;
+  /* 兼容别名：历史 -dark 后缀变量接通同值，避免未知外部引用断链。 */
+  --surface-dark: #0f1623;
+  --bg-dark: #090d16;
+  --ink-dark: #f1f5f9;
+  --line-dark: #24354f;
   --st-wait-dark: #9ca3af;
   --st-run-dark: #60a5fa;
   --st-ok-dark: #4ade80;
   --st-fail-dark: #f87171;
   --st-suspend-dark: #fbbf24;
-  --brand-primary: #2563eb;
-  --brand-primary-hover: #1d4ed8;
-  --brand-primary-light: #eff6ff;
-  --nav: #142842;
-  --nav-muted: #aec0d9;
-  --surface: #fff;
-  --surface-dark: #111827;
-  --bg: #f5f7fa;
-  --bg-dark: #0f172a;
-  --line: #e5e7eb;
-  --ink: #111827;
-  --muted: #64748b;
-  --st-wait: #9ca3af;
-  --st-wait-text: #4b5563;
-  --st-run: #2563eb;
-  --st-run-text: #1d4ed8;
-  --st-ok: #16a34a;
-  /* P2-18：状态文字色相对 10% 底色的对比度实测需 ≥4.5:1；ok/suspend 原值恰在
-     4.50 临界，加深留余量（wait/run/fail 原值实测 5.5~7.0 已达标）。 */
-  --st-ok-text: #166534;
-  --st-fail: #dc2626;
-  --st-fail-text: #991b1b;
-  --st-suspend: #d97706;
-  --st-suspend-text: #92400e;
+  /* 字号梯度（§3.1）：正文/导航/输入15px，表格/按钮/标签14px，元数据/代码/胶囊≥13px */
+  --text-body: 0.9375rem;
+  --text-table: 0.875rem;
+  --text-meta: 0.8125rem;
+  --text-title: 1rem;
+  --text-module: 1.125rem;
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
@@ -41,16 +56,71 @@
   --radius: 0.5rem;
   --el-color-primary: var(--brand-primary);
   --el-border-radius-base: 6px;
-  --el-font-size-base: 13px;
+  --el-font-size-base: var(--text-table);
   --lay-sidebar: clamp(12.5rem, 14vw, 15rem);
   font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
   font-size: 16px;
   color: var(--ink);
-  background: var(--bg);
+  background: var(--canvas);
+}
+/* Element Plus 暗色基底之上的语义覆盖：入口先导入 EP dark css-vars，再导入本文件。 */
+html.dark {
+  --el-color-primary: #0ea5e9;
+  --el-color-primary-dark-2: #38bdf8;
+  --el-color-primary-light-3: #0b83ba;
+  --el-color-primary-light-5: #09688f;
+  --el-color-primary-light-7: #074e65;
+  --el-color-primary-light-8: #063a4d;
+  --el-color-primary-light-9: #142233;
+  --el-bg-color: #0f1623;
+  --el-bg-color-page: #090d16;
+  --el-bg-color-overlay: #1a2438;
+  --el-text-color-primary: #f1f5f9;
+  --el-text-color-regular: #dbe4f0;
+  --el-text-color-secondary: #94a3b8;
+  --el-text-color-placeholder: #5d6f8c;
+  --el-text-color-disabled: #4c5c77;
+  --el-border-color: #2b3c59;
+  --el-border-color-light: #243450;
+  --el-border-color-lighter: #1e2b42;
+  --el-border-color-extra-light: #182236;
+  --el-border-color-dark: #33486b;
+  --el-fill-color: #1a2438;
+  --el-fill-color-light: #162032;
+  --el-fill-color-lighter: #131b2b;
+  --el-fill-color-extra-light: #101827;
+  --el-fill-color-dark: #1e2b42;
+  --el-fill-color-blank: #0f1623;
+  --el-mask-color: rgba(5, 9, 16, 0.7);
+}
+/* 密度三档：显式令牌，不再缩放 html 根字号；紧凑档最小文字保持13px */
+[data-density="紧凑"] {
+  --text-body: 0.875rem;
+  --text-table: 0.8125rem;
+  --text-meta: 0.8125rem;
+  --text-title: 0.9375rem;
+  --text-module: 1.0625rem;
+  --space-1: 0.2rem;
+  --space-2: 0.4rem;
+  --space-3: 0.6rem;
+  --space-4: 0.8rem;
+  --space-6: 1.2rem;
+}
+[data-density="宽松"] {
+  --text-body: 1rem;
+  --text-table: 0.9375rem;
+  --text-meta: 0.875rem;
+  --text-title: 1.0625rem;
+  --text-module: 1.25rem;
+  --space-1: 0.3rem;
+  --space-2: 0.6rem;
+  --space-3: 0.9rem;
+  --space-4: 1.2rem;
+  --space-6: 1.8rem;
 }
 .output-warning {
   color: var(--st-suspend-text);
-  background: #fff7ed;
+  background: rgba(251, 191, 36, 0.12);
   border-left: 3px solid var(--st-suspend);
   border-radius: 6px;
   padding: 10px 12px;
@@ -62,7 +132,7 @@
 }
 body {
   margin: 0;
-  font-size: 0.8125rem;
+  font-size: var(--text-body);
 }
 button,
 input,
@@ -70,25 +140,34 @@ textarea,
 select {
   font: inherit;
 }
+/* 原生日期/选择/输入控件暗色：排除 Element Plus 自绘控件，避免双重边框 */
+input:not([class*="el-"]),
+select:not([class*="el-"]),
+textarea:not([class*="el-"]) {
+  background: var(--surface-2);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
 button,
 a {
   cursor: pointer;
 }
 button:focus-visible,
 a:focus-visible {
-  outline: 2px solid var(--brand-primary);
+  outline: 2px solid var(--brand-primary-hover);
   outline-offset: 3px;
 }
 a {
-  color: var(--brand-primary);
+  color: var(--brand-primary-hover);
   text-decoration: none;
 }
 h1 {
-  font-size: 1.25rem;
+  font-size: var(--text-module);
   margin: 0 0 0.5rem;
 }
 h2 {
-  font-size: 1rem;
+  font-size: var(--text-title);
 }
 p {
   line-height: 1.6;
@@ -96,8 +175,9 @@ p {
 pre {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  font-size: 0.75rem;
-  background: var(--bg);
+  font-size: var(--text-meta);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
   padding: 1rem;
   border-radius: var(--radius);
   max-height: 45vh;
@@ -112,29 +192,30 @@ pre {
   width: var(--lay-sidebar);
   flex-shrink: 0;
   background: var(--nav);
-  color: var(--surface);
+  color: var(--nav-text);
   padding: 1.5rem 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 .logo {
-  font-size: 1rem;
+  font-size: var(--text-title);
   font-weight: 650;
   margin-bottom: 2rem;
+  color: var(--nav-text-active);
 }
 .nav small {
   color: var(--nav-muted);
   margin: 1rem 0.5rem 0.25rem;
 }
 .nav a {
-  color: var(--nav-muted);
+  color: var(--nav-text);
   padding: 0.7rem 0.75rem;
   border-radius: var(--radius);
 }
 .nav a.active {
-  background: var(--brand-primary);
-  color: var(--surface);
+  background: var(--nav-active-bg);
+  color: var(--nav-text-active);
 }
 .main {
   flex: 1;
@@ -200,32 +281,34 @@ pre {
   font-size: 1.6rem;
   font-variant-numeric: tabular-nums;
 }
+/* 状态胶囊：暗色底混合（不再混白），文字用成对的 -text 亮色并保留状态文字 */
 .status {
   display: inline-flex;
   border-radius: 999px;
   padding: 0.2rem 0.6rem;
+  font-size: var(--text-meta);
   color: var(--st-wait-text);
-  background: color-mix(in srgb, var(--st-wait) 10%, white);
+  background: color-mix(in srgb, var(--st-wait) 16%, var(--surface-2));
 }
 .status.RUNNING {
   color: var(--st-run-text);
-  background: var(--brand-primary-light);
+  background: color-mix(in srgb, var(--st-run) 16%, var(--surface-2));
 }
 .status.SUCCEEDED,
 .status.PUBLISHED,
 .status.PASS {
   color: var(--st-ok-text);
-  background: color-mix(in srgb, var(--st-ok) 10%, white);
+  background: color-mix(in srgb, var(--st-ok) 16%, var(--surface-2));
 }
 .status.FAILED,
 .status.ERROR {
   color: var(--st-fail-text);
-  background: color-mix(in srgb, var(--st-fail) 10%, white);
+  background: color-mix(in srgb, var(--st-fail) 16%, var(--surface-2));
 }
 .status.WAITING_STEP,
 .status.WAITING_APPROVAL {
   color: var(--st-suspend-text);
-  background: color-mix(in srgb, var(--st-suspend) 10%, white);
+  background: color-mix(in srgb, var(--st-suspend) 16%, var(--surface-2));
 }
 .error {
   color: var(--st-fail-text);
@@ -265,11 +348,12 @@ pre {
 .chart {
   height: 12rem;
 }
+/* 表格14px：移除旧的12px压缩；表头用二级表面 */
 .el-table {
-  font-size: 0.75rem !important;
+  font-size: var(--text-table) !important;
 }
 .el-table th {
-  background: var(--bg) !important;
+  background: var(--surface-2) !important;
 }
 textarea {
   font-family: Consolas, monospace;
@@ -277,18 +361,22 @@ textarea {
 .el-dialog {
   width: clamp(28rem, 50vw, 60rem) !important;
 }
+/* Teleport 到 body 的弹层由 html.dark 的 EP 变量覆盖；此处只补边框对比 */
+html.dark .el-popper.is-light {
+  border-color: var(--el-border-color);
+}
 @media (max-width: 1439px) {
   .nav {
     width: 4.5rem;
     padding: 1rem 0.5rem;
   }
   .nav a {
-    font-size: 0.75rem;
+    font-size: var(--text-meta);
     padding: 0.5rem 0.25rem;
   }
   .nav small,
   .nav .logo {
-    font-size: 0.65rem;
+    font-size: var(--text-meta);
   }
   .secondary {
     display: none;
@@ -297,19 +385,12 @@ textarea {
     padding: 1rem;
   }
 }
+/* 大屏放大改用文字令牌，不再改 html 根字号（§3.1 实施约束） */
 @media (min-width: 2560px) {
-  :root {
-    --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.06);
-    --shadow-2: 0 8px 24px rgba(0, 0, 0, 0.12);
-    --brand-primary-dark: #60a5fa;
-    --ink-dark: #f8fafc;
-    --line-dark: #334155;
-    --st-wait-dark: #9ca3af;
-    --st-run-dark: #60a5fa;
-    --st-ok-dark: #4ade80;
-    --st-fail-dark: #f87171;
-    --st-suspend-dark: #fbbf24;
-    font-size: 17px;
+  html {
+    --text-body: 1rem;
+    --text-table: 0.9375rem;
+    --text-meta: 0.875rem;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -339,5 +420,5 @@ textarea {
 }
 .canvas-mode .nav a::before {
   content: attr(data-short);
-  font-size: 0.875rem;
+  font-size: var(--text-table);
 }

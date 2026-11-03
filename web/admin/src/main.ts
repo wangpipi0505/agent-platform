@@ -3,7 +3,11 @@ import { createApp } from "vue";
 import { createPinia } from "pinia";
 import ElementPlus from "element-plus";
 import "element-plus/dist/index.css";
+// UI-01：Element Plus 暗色基底（html.dark 作用域）须在语义覆盖 tokens.css 之前导入。
+import "element-plus/theme-chalk/dark/css-vars.css";
 import "../../shared/tokens.css";
+// 暗夜流光为本平台自有页面主题；dark 类只加在本应用文档根，不触碰业务宿主 html。
+document.documentElement.classList.add("dark");
 import PortalShell from "./PortalShell.vue";
 import { router } from "./router";
 import {portalMode,trustedPortal} from '../../shared/portal-auth';

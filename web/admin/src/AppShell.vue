@@ -50,9 +50,9 @@ watch(
   density,
   (value) => {
     localStorage.setItem("density", value);
-    document.documentElement.style.fontSize = (
-      { 紧凑: "15px", 标准: "16px", 宽松: "17px" } as Record<string, string>
-    )[value];
+    // UI-01：密度改为显式令牌（html[data-density]），不再缩放 html 根字号；
+    // 键与档位名称不变，旧偏好迁移后仍选中原档位。
+    document.documentElement.dataset.density = value;
   },
   { immediate: true },
 );
