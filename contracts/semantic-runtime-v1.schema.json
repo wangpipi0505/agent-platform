@@ -1,0 +1,234 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:semantic-runtime:1.0",
+  "title": "SemanticRuntimeRecord",
+  "description": "SEM-01.1 最小只读契约（read-only profile）。纯事实查询：decisionRef 在本 profile 下 Schema 级禁止。演进=新 schemaVersion+新文件，不原地覆盖。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "profile", "recordId", "status", "bindingRef", "releaseRef", "timeliness"],
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "profile": { "const": "read-only" },
+    "recordId": { "type": "string", "maxLength": 64, "pattern": "^[A-Za-z0-9._-]+$" },
+    "status": { "enum": ["OK", "NO_MATCH", "PARTIAL", "ERROR"] },
+    "bindingRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["skillCode", "skillVersion"],
+      "properties": {
+        "skillCode": { "type": "string", "maxLength": 64, "pattern": "^[A-Za-z0-9._-]+$" },
+        "skillVersion": { "type": "integer", "minimum": 1 },
+        "skillSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "extensionDigest": { "type": "string", "maxLength": 128 },
+        "configReleaseId": { "type": "string", "maxLength": 64 }
+      }
+    },
+    "releaseRef": { "$ref": "#/$defs/ReleaseQuadruple" },
+    "objectRefs": {
+      "type": "array",
+      "maxItems": 16,
+      "items": { "$ref": "#/$defs/ObjectReference" }
+    },
+    "factSet": { "$ref": "#/$defs/FactSet" },
+    "decisionRef": false,
+    "evidenceRefs": {
+      "type": "array",
+      "maxItems": 16,
+      "items": { "$ref": "#/$defs/EvidenceRef" }
+    },
+    "timeliness": { "$ref": "#/$defs/Timeliness" },
+    "errors": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/SemanticError" }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "enum": ["OK", "NO_MATCH", "PARTIAL"] } } },
+      "then": { "required": ["factSet"] }
+    },
+    {
+      "if": { "properties": { "status": { "const": "ERROR" } } },
+      "then": {
+        "required": ["errors"],
+        "properties": { "factSet": false }
+      }
+    },
+    {
+      "if": { "properties": { "status": { "const": "PARTIAL" } } },
+      "then": { "required": ["errors"] }
+    },
+    {
+      "if": { "properties": { "status": { "const": "OK" } } },
+      "then": { "properties": { "errors": { "maxItems": 0 } } }
+    }
+  ],
+  "$defs": {
+    "ReleaseQuadruple": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["spaceCode", "releaseId", "version", "contentDigest"],
+      "properties": {
+        "spaceCode": { "type": "string", "maxLength": 64, "pattern": "^[A-Za-z0-9._-]+$" },
+        "releaseId": { "type": "string", "format": "uuid", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" },
+        "version": { "type": "string", "maxLength": 64 },
+        "contentDigest": { "type": "string", "pattern": "^[0-9a-f]{64}$", "description": "manifest声明的本体bundle摘要，不与投影摘要混比" }
+      }
+    },
+    "ObjectReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["refKind"],
+      "properties": {
+        "refKind": { "enum": ["space-object", "external"] },
+        "spaceCode": { "type": "string", "maxLength": 64, "pattern": "^[A-Za-z0-9._-]+$" },
+        "objectType": { "type": "string", "maxLength": 64 },
+        "stableId": { "type": "string", "maxLength": 128 },
+        "sourceSystem": { "type": "string", "maxLength": 64 },
+        "externalId": { "type": "string", "maxLength": 128 }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "refKind": { "const": "space-object" } } },
+          "then": { "required": ["spaceCode", "objectType", "stableId"] }
+        },
+        {
+          "if": { "properties": { "refKind": { "const": "external" } } },
+          "then": { "required": ["sourceSystem", "externalId"] }
+        }
+      ]
+    },
+    "FactItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["objectRef", "factKind", "valueState", "observedAt"],
+      "properties": {
+        "objectRef": { "$ref": "#/$defs/ObjectReference" },
+        "factKind": { "enum": ["attribute", "relation"] },
+        "attribute": { "type": "string", "maxLength": 64 },
+        "relation": { "type": "string", "maxLength": 64 },
+        "valueState": { "enum": ["PRESENT", "NULL", "ABSENT", "UNKNOWN"] },
+        "value": { "type": ["string", "number", "boolean", "null"] },
+        "unknownReason": { "type": "string", "maxLength": 256 },
+        "relatedObjectRef": { "$ref": "#/$defs/ObjectReference" },
+        "observedAt": { "type": "string", "format": "date-time" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "factKind": { "const": "attribute" } } },
+          "then": { "required": ["attribute"], "properties": { "relation": false } }
+        },
+        {
+          "if": { "properties": { "factKind": { "const": "relation" } } },
+          "then": { "required": ["relation"], "properties": { "attribute": false } }
+        },
+        {
+          "if": { "properties": { "factKind": { "const": "attribute" }, "valueState": { "const": "PRESENT" } } },
+          "then": { "required": ["value"], "properties": { "value": { "type": ["string", "number", "boolean"] } } }
+        },
+        {
+          "if": { "properties": { "factKind": { "const": "relation" }, "valueState": { "const": "PRESENT" } } },
+          "then": { "required": ["relatedObjectRef"] }
+        },
+        {
+          "if": { "properties": { "valueState": { "const": "NULL" } } },
+          "then": { "required": ["value"], "properties": { "value": { "const": null } } }
+        },
+        {
+          "if": { "properties": { "valueState": { "enum": ["ABSENT"] } } },
+          "then": { "properties": { "value": false } }
+        },
+        {
+          "if": { "properties": { "valueState": { "const": "UNKNOWN" } } },
+          "then": { "required": ["unknownReason"], "properties": { "value": false } }
+        }
+      ]
+    },
+    "FactSet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["queryRef", "items"],
+      "properties": {
+        "queryRef": { "type": "string", "maxLength": 256 },
+        "items": {
+          "type": "array",
+          "maxItems": 64,
+          "items": { "$ref": "#/$defs/FactItem" }
+        },
+        "factSetDigest": { "type": "string", "maxLength": 128, "description": "规范化事实摘要；算法名须在证据登记，不冒充contentDigest" },
+        "sourceNote": { "type": "string", "maxLength": 256 }
+      }
+    },
+    "EvidenceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["evidenceKind"],
+      "properties": {
+        "evidenceKind": { "enum": ["call", "artifact", "business-record"] },
+        "callId": { "type": "string", "maxLength": 64 },
+        "runId": { "type": "string", "maxLength": 64 },
+        "artifactId": { "type": "integer", "minimum": 1 },
+        "digest": { "type": "string", "maxLength": 128 },
+        "recordSource": { "type": "string", "maxLength": 64 },
+        "recordId": { "type": "string", "maxLength": 128 }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "evidenceKind": { "const": "call" } } },
+          "then": { "required": ["callId"] }
+        },
+        {
+          "if": { "properties": { "evidenceKind": { "const": "artifact" } } },
+          "then": { "required": ["artifactId"] }
+        },
+        {
+          "if": { "properties": { "evidenceKind": { "const": "business-record" } } },
+          "then": { "required": ["recordSource", "recordId"] }
+        }
+      ]
+    },
+    "Timeliness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["observedAt", "freshness"],
+      "properties": {
+        "observedAt": { "type": "string", "format": "date-time" },
+        "freshness": { "enum": ["SOURCE_STAMPED", "UNKNOWN"] },
+        "dataAsOf": { "type": "string", "format": "date-time" },
+        "sourceVersion": { "type": "string", "maxLength": 64 },
+        "unknownReason": { "type": "string", "maxLength": 256 }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "freshness": { "const": "SOURCE_STAMPED" } } },
+          "then": { "required": ["dataAsOf"] }
+        },
+        {
+          "if": { "properties": { "freshness": { "const": "UNKNOWN" } } },
+          "then": { "required": ["unknownReason"] }
+        }
+      ]
+    },
+    "SemanticError": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "message"],
+      "properties": {
+        "code": {
+          "enum": [
+            "SEMANTIC_PROFILE_UNKNOWN",
+            "SEMANTIC_REF_INVALID",
+            "SEMANTIC_SUBJECT_UNVERIFIED",
+            "SEMANTIC_OBJECT_FORBIDDEN",
+            "SEMANTIC_DIGEST_MISMATCH",
+            "SEMANTIC_FIELD_OUT_OF_RANGE",
+            "SEMANTIC_SOURCE_UNAVAILABLE"
+          ]
+        },
+        "message": { "type": "string", "maxLength": 512 },
+        "fieldPath": { "type": "string", "maxLength": 128 },
+        "retryable": { "type": "boolean" }
+      }
+    }
+  }
+}
