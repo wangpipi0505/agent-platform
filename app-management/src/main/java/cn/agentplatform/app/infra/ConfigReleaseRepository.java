@@ -45,21 +45,35 @@ public class ConfigReleaseRepository {
   }
 
   public void insert(Actor actor, Map<String, Object> release) {
-    try {
-      db.update("""
-          insert into app.integration_config_release(tenant_id, release_id, app_code, app_version,
-            candidate_sha256, experience_rev, integration_profile_id, integration_profile_rev,
-            connection_profile_refs, activation_scope, digest, created_by)
-          values (?, ?, ?, ?, ?, ?, ?, ?, ?::jsonb, ?, ?, ?)
-          """, actor.tenantId(), release.get("releaseId"), release.get("appCode"),
-          release.get("appVersion"), release.get("candidateSha256"), release.get("experienceRev"),
-          release.get("integrationProfileId"), release.get("integrationProfileRev"),
-          Json.write(release.get("connectionProfileRefs")), release.get("activationScope"),
-          release.get("digest"), actor.principalId());
-    } catch (DuplicateKeyException e) {
-      throw new PlatformException(409, "CONFIG_REV_CONFLICT",
-          "配置发布已存在: " + release.get("releaseId"));
-    }
+    // 发布行与语义引用行必须同事务落库：只写一半会让发布钉住一个并不存在的引用，
+    // 之后的校验/激活会把错误推迟到更难解释的时点。
+    transaction(() -> {
+      try {
+        db.update("""
+            insert into app.integration_config_release(tenant_id, release_id, app_code, app_version,
+              candidate_sha256, experience_rev, integration_profile_id, integration_profile_rev,
+              connection_profile_refs, activation_scope, digest, created_by)
+            values (?, ?, ?, ?, ?, ?, ?, ?, ?::jsonb, ?, ?, ?)
+            """, actor.tenantId(), release.get("releaseId"), release.get("appCode"),
+            release.get("appVersion"), release.get("candidateSha256"), release.get("experienceRev"),
+            release.get("integrationProfileId"), release.get("integrationProfileRev"),
+            Json.write(release.get("connectionProfileRefs")), release.get("activationScope"),
+            release.get("digest"), actor.principalId());
+      } catch (DuplicateKeyException e) {
+        throw new PlatformException(409, "CONFIG_REV_CONFLICT",
+            "配置发布已存在: " + release.get("releaseId"));
+      }
+      List<Map<String, Object>> refs = semanticRefs(release.get("semanticBindings"));
+      for (int i = 0; i < refs.size(); i++) {
+        db.update("""
+            insert into app.integration_config_release_semantic_ref(tenant_id, release_id, ref_index,
+              binding_id, binding_rev)
+            values (?, ?, ?, ?, ?)
+            """, actor.tenantId(), release.get("releaseId"), i,
+            refs.get(i).get("bindingId"), refs.get(i).get("bindingRev"));
+      }
+      return null;
+    });
   }
 
   public Map<String, Object> find(Actor actor, String releaseId) {
@@ -69,7 +83,7 @@ public class ConfigReleaseRepository {
                activation_scope, status, digest, created_by, created_at, updated_at
           from app.integration_config_release where tenant_id = ? and release_id = ?
         """, actor.tenantId(), releaseId);
-    return rows.isEmpty() ? null : view(rows.get(0));
+    return rows.isEmpty() ? null : withSemantic(actor, view(rows.get(0)));
   }
 
   public List<Map<String, Object>> list(Actor actor, String appCode) {
@@ -79,7 +93,8 @@ public class ConfigReleaseRepository {
                activation_scope, status, digest, created_by, created_at, updated_at
           from app.integration_config_release where tenant_id = ? and app_code = ?
          order by created_at desc
-        """, actor.tenantId(), appCode).stream().map(ConfigReleaseRepository::view).toList();
+        """, actor.tenantId(), appCode).stream()
+        .map(ConfigReleaseRepository::view).map(row -> withSemantic(actor, row)).toList();
   }
 
   /** 状态迁移（校验/批准/停用）：CAS 到 from 状态，冲突返回 409 而不是覆盖。 */
@@ -185,7 +200,7 @@ public class ConfigReleaseRepository {
             on r.tenant_id = a.tenant_id and r.release_id = a.release_id
          where a.tenant_id = ? and a.app_code = ? and a.scope = ? and r.status = 'ACTIVE'
         """, actor.tenantId(), appCode, scope);
-    return rows.isEmpty() ? null : view(rows.get(0));
+    return rows.isEmpty() ? null : withSemantic(actor, view(rows.get(0)));
   }
 
   /** 对外能力清单以"应用版本实际引用的技能"为准，文案不能承诺引擎没有的能力。 */
@@ -244,6 +259,29 @@ public class ConfigReleaseRepository {
     out.put("createdAt", String.valueOf(row.get("created_at")));
     out.put("updatedAt", String.valueOf(row.get("updated_at")));
     return out;
+  }
+
+  /** 语义引用只回 bindingId/bindingRev；扩展、技能与本体四元组由绑定修订表回查。 */
+  private Map<String, Object> withSemantic(Actor actor, Map<String, Object> row) {
+    row.put("semanticBindings", refs(actor, String.valueOf(row.get("releaseId"))));
+    return row;
+  }
+
+  private List<Map<String, Object>> refs(Actor actor, String releaseId) {
+    return db.queryForList("""
+        select binding_id, binding_rev from app.integration_config_release_semantic_ref
+         where tenant_id = ? and release_id = ? order by ref_index
+        """, actor.tenantId(), releaseId).stream().map(row -> {
+          Map<String, Object> out = new LinkedHashMap<>();
+          out.put("bindingId", row.get("binding_id"));
+          out.put("bindingRev", row.get("binding_rev"));
+          return out;
+        }).toList();
+  }
+
+  @SuppressWarnings("unchecked")
+  private static List<Map<String, Object>> semanticRefs(Object raw) {
+    return raw instanceof List<?> list ? (List<Map<String, Object>>) list : List.of();
   }
 
   private Map<String, Object> finish(Supplier<Map<String, Object>> response, String requestId) {

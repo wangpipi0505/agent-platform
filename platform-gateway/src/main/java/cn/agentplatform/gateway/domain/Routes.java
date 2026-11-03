@@ -40,7 +40,9 @@ public final class Routes {
                 || path.startsWith("/admin/environment-bindings")
                 // 体验描述、接入档案与配置发布同样是 app 持有的配置面资源，转发方向与权限分离。
                 || path.startsWith("/admin/integration-profiles")
-                || path.startsWith("/admin/config-releases")) return "app";
+                || path.startsWith("/admin/config-releases")
+                // 语义绑定目录与配置发布同属 app 持有的配置面资源；转发方向不等于放权。
+                || path.startsWith("/admin/semantic-bindings")) return "app";
         if (path.startsWith("/admin/skills")) return "skill";
         if (path.startsWith("/admin/services")) return "skill";
         if (path.startsWith("/admin/model-providers")

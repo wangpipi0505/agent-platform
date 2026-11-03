@@ -15,6 +15,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
@@ -28,9 +29,11 @@ public class IntegrationConfigReleases {
 
   static final Set<String> BODY_KEYS = Set.of("expectedRev", "requestId", "releaseId", "appCode",
       "appVersion", "experienceRev", "integrationProfileId", "integrationProfileRev",
-      "connectionProfileRefs", "activationScope");
+      "connectionProfileRefs", "semanticBindings", "activationScope");
   private static final Set<String> REF_KEYS = Set.of("profileId", "profileRev");
+  private static final Set<String> SEMANTIC_REF_KEYS = Set.of("bindingId", "bindingRev");
   private static final int MAX_REFS = 16;
+  private static final int MAX_SEMANTIC_REFS = 8;
 
   private final ConfigReleaseRepository store;
   private final AssistantExperienceRepository experienceStore;
@@ -40,12 +43,24 @@ public class IntegrationConfigReleases {
   private final ConnectionProfileRepository connections;
   private final ConfigWriteLog writes;
   private final PublishedMetadataService publishedMetadata;
+  private final SemanticBindings bindings;
 
+  /** 兼容旧装配（阶段1测试直接 new）：不注入语义绑定目录时，发布不允许声明 semanticBindings。 */
   public IntegrationConfigReleases(ConfigReleaseRepository store,
       AssistantExperienceRepository experienceStore, AssistantExperiences experiences,
       IntegrationProfileRepository profileStore, IntegrationProfiles profiles,
       ConnectionProfileRepository connections, ConfigWriteLog writes,
       PublishedMetadataService publishedMetadata) {
+    this(store, experienceStore, experiences, profileStore, profiles, connections, writes,
+        publishedMetadata, null);
+  }
+
+  @Autowired
+  public IntegrationConfigReleases(ConfigReleaseRepository store,
+      AssistantExperienceRepository experienceStore, AssistantExperiences experiences,
+      IntegrationProfileRepository profileStore, IntegrationProfiles profiles,
+      ConnectionProfileRepository connections, ConfigWriteLog writes,
+      PublishedMetadataService publishedMetadata, SemanticBindings bindings) {
     this.store = store;
     this.experienceStore = experienceStore;
     this.experiences = experiences;
@@ -54,6 +69,7 @@ public class IntegrationConfigReleases {
     this.connections = connections;
     this.writes = writes;
     this.publishedMetadata = publishedMetadata;
+    this.bindings = bindings;
   }
 
   public Map<String, Object> get(String releaseId) {
@@ -62,11 +78,12 @@ public class IntegrationConfigReleases {
     if (row == null) {
       throw new PlatformException(404, "CONFIG_REF_NOT_FOUND", "配置发布不存在: " + releaseId);
     }
-    return row;
+    return withSemanticDetails(actor, row);
   }
 
   public List<Map<String, Object>> list(String appCode) {
-    return store.list(Actor.current(), appCode);
+    Actor actor = Actor.current();
+    return store.list(actor, appCode).stream().map(row -> withSemanticDetails(actor, row)).toList();
   }
 
   public Map<String, Object> create(Map<String, Object> body) {
@@ -83,6 +100,7 @@ public class IntegrationConfigReleases {
         ConnectionProfiles.ID);
     int profileRev = positive(body.get("integrationProfileRev"), "integrationProfileRev");
     List<Map<String, Object>> refs = refs(body.get("connectionProfileRefs"));
+    List<Map<String, Object>> semantic = semanticRefs(body.get("semanticBindings"));
     String scope = ConnectionProfiles.text(body, "activationScope", "activationScope", 32,
         EnvironmentBindings.ENVIRONMENT);
     String requestId = ConnectionProfiles.requestId(body);
@@ -97,8 +115,12 @@ public class IntegrationConfigReleases {
     for (Map<String, Object> ref : refs) {
       requireConnection(actor, ref);
     }
+    // 绑定修订在创建时钉住：只核对存在与所属应用；撤权状态留到 validate/activate 再拒绝，
+    // 这样配置者能看到"先建后校验失败"的明确错误，而不是创建时被含糊地挡住。
+    requireSemanticRevisions(actor, appCode, semantic);
     String candidate = String.valueOf(version.get("candidate_sha256"));
-    String digest = digest(appCode, appVersion, candidate, experienceRev, profileId, profileRev, refs);
+    String digest = digest(appCode, appVersion, candidate, experienceRev, profileId, profileRev, refs,
+        semantic);
     String sha = Digest.sha256(Json.canonical(List.of("config-release.create", releaseId, digest)));
     Map<String, Object> replayed = writes.replay(actor.tenantId(), "config-release.create", releaseId,
         requestId, sha);
@@ -115,6 +137,7 @@ public class IntegrationConfigReleases {
     release.put("integrationProfileId", profileId);
     release.put("integrationProfileRev", profileRev);
     release.put("connectionProfileRefs", refs);
+    release.put("semanticBindings", semantic);
     release.put("activationScope", scope);
     release.put("digest", digest);
     store.insert(actor, release);
@@ -147,6 +170,7 @@ public class IntegrationConfigReleases {
     for (Object raw : (List<?>) row.get("connectionProfileRefs")) {
       requireConnection(actor, asRef(raw));
     }
+    requireSemanticStillValid(actor, row);
     requireCapabilitiesBacked(actor, row);
     String sha = Digest.sha256(Json.canonical(List.of("config-release.validate", releaseId, requestId)));
     Map<String, Object> replayed = writes.replay(actor.tenantId(), "config-release.validate", releaseId,
@@ -233,6 +257,14 @@ public class IntegrationConfigReleases {
     String profileId = String.valueOf(release.get("integrationProfileId"));
     int profileRev = ((Number) release.get("integrationProfileRev")).intValue();
     Map<String, Object> profileRevision = profiles.requireApproved(actor, profileId, profileRev);
+    List<Map<String, Object>> semantic = semanticDetails(actor, release);
+    for (Map<String, Object> binding : semantic) {
+      if (!"ACTIVE".equals(String.valueOf(binding.get("status")))) {
+        // 撤权优先：旧发布可以回查自己钉住的修订，但运行投影不能再把已撤权的绑定当能力面。
+        throw new PlatformException(409, "SEMANTIC_REF_INVALID",
+            "配置发布引用的语义绑定已停用: " + binding.get("bindingId"));
+      }
+    }
 
     Map<String, Object> out = new LinkedHashMap<>();
     out.put("schemaVersion", "v1");
@@ -249,6 +281,7 @@ public class IntegrationConfigReleases {
     out.put("helpRefs", revision.get("helpRefs"));
     out.put("integrationProfileRef", Map.of("profileId", profileId, "profileRev", profileRev,
         "mode", profileRevision.get("mode"), "environment", profileRevision.get("environment")));
+    out.put("semanticBindings", semantic);
     return out;
   }
 
@@ -382,6 +415,7 @@ public class IntegrationConfigReleases {
     for (Object raw : (List<?>) row.get("connectionProfileRefs")) {
       requireActiveConnection(actor, asRef(raw));
     }
+    requireSemanticStillValid(actor, row);
     requireCapabilitiesBacked(actor, row);
   }
 
@@ -521,12 +555,115 @@ public class IntegrationConfigReleases {
     return number.intValue();
   }
 
-  /** 摘要只覆盖声明与版本引用：应用版本候选摘要、体验修订、接入档案修订、连接引用集合。 */
+  /** 对外/管理回看：把发布钉住的 bindingId+bindingRev 展开为不可变修订的可读投影。 */
+  private Map<String, Object> withSemanticDetails(Actor actor, Map<String, Object> release) {
+    release.put("semanticBindings", semanticDetails(actor, release));
+    return release;
+  }
+
+  private List<Map<String, Object>> semanticDetails(Actor actor, Map<String, Object> release) {
+    List<Map<String, Object>> refs = semanticRefs(release.get("semanticBindings"));
+    if (refs.isEmpty()) {
+      return List.of();
+    }
+    requireCatalog();
+    List<Map<String, Object>> out = new ArrayList<>();
+    for (Map<String, Object> ref : refs) {
+      out.add(bindings.pinned(actor, String.valueOf(release.get("appCode")),
+          String.valueOf(ref.get("bindingId")), ((Number) ref.get("bindingRev")).intValue()));
+    }
+    return out;
+  }
+
+  private void requireSemanticRevisions(Actor actor, String appCode,
+      List<Map<String, Object>> refs) {
+    if (refs.isEmpty()) {
+      return;
+    }
+    requireCatalog();
+    for (Map<String, Object> ref : refs) {
+      bindings.pinned(actor, appCode, String.valueOf(ref.get("bindingId")),
+          ((Number) ref.get("bindingRev")).intValue());
+    }
+  }
+
+  /** 兼容阶段1的 8 参构造：未装配目录时，任何语义引用都必须显式失败而不是被静默忽略。 */
+  private void requireCatalog() {
+    if (bindings == null) {
+      throw new PlatformException(409, "CONFIG_RELEASE_NOT_ACTIVE",
+          "语义绑定目录未装配，不能使用 semanticBindings");
+    }
+  }
+
+  /** 校验/激活共用：绑定必须仍为 ACTIVE，撤权优先于历史快照。 */
+  private void requireSemanticStillValid(Actor actor, Map<String, Object> row) {
+    String appCode = String.valueOf(row.get("appCode"));
+    List<Map<String, Object>> refs = rowRefs(row.get("semanticBindings"));
+    if (refs.isEmpty()) {
+      return;
+    }
+    requireCatalog();
+    for (Map<String, Object> ref : refs) {
+      bindings.live(actor, appCode, String.valueOf(ref.get("bindingId")),
+          ((Number) ref.get("bindingRev")).intValue());
+    }
+  }
+
+  /**
+   * 内部行上的绑定引用可能已被 {@link #withSemanticDetails} 展开为可读投影（含 appCode/status 等），
+   * 这里只取引用键；外部请求仍走 {@link #semanticRefs} 的严格白名单校验。
+   */
+  private static List<Map<String, Object>> rowRefs(Object raw) {
+    if (!(raw instanceof List<?> list)) {
+      return List.of();
+    }
+    List<Map<String, Object>> out = new ArrayList<>();
+    for (Object item : list) {
+      if (!(item instanceof Map<?, ?> map) || !(map.get("bindingRev") instanceof Number rev)) {
+        continue;
+      }
+      Object id = map.get("bindingId");
+      if (id != null) {
+        out.add(Map.of("bindingId", String.valueOf(id), "bindingRev", rev.intValue()));
+      }
+    }
+    return out;
+  }
+
+  private static List<Map<String, Object>> semanticRefs(Object raw) {
+    if (raw == null) {
+      return List.of();
+    }
+    if (!(raw instanceof List<?> list)) {
+      throw ConnectionProfiles.invalid("semanticBindings 必须是数组");
+    }
+    if (list.size() > MAX_SEMANTIC_REFS) {
+      throw ConnectionProfiles.budget("语义绑定引用最多 " + MAX_SEMANTIC_REFS + " 条");
+    }
+    List<Map<String, Object>> out = new ArrayList<>();
+    Set<String> seen = new java.util.LinkedHashSet<>();
+    for (Object item : list) {
+      Map<String, Object> ref = ConnectionProfiles.object(item, "semanticBindings", SEMANTIC_REF_KEYS);
+      String bindingId = ConnectionProfiles.text(ref, "bindingId", "semanticBindings", 64,
+          ConnectionProfiles.ID);
+      int rev = positive(ref.get("bindingRev"), "semanticBindings.bindingRev");
+      if (!seen.add(bindingId)) {
+        throw ConnectionProfiles.invalid("同一语义绑定只能引用一次: " + bindingId);
+      }
+      out.add(Map.of("bindingId", bindingId, "bindingRev", rev));
+    }
+    return List.copyOf(out);
+  }
+
+  /** 摘要只覆盖声明与版本引用：应用版本、体验/接入修订、连接引用与语义绑定引用。 */
   private static String digest(String appCode, int appVersion, String candidate, int experienceRev,
-      String profileId, int profileRev, List<Map<String, Object>> refs) {
+      String profileId, int profileRev, List<Map<String, Object>> refs,
+      List<Map<String, Object>> semantic) {
     List<Map<String, Object>> sorted = new ArrayList<>(refs);
     sorted.sort((a, b) -> String.valueOf(a.get("profileId")).compareTo(String.valueOf(b.get("profileId"))));
+    List<Map<String, Object>> bindings = new ArrayList<>(semantic);
+    bindings.sort((a, b) -> String.valueOf(a.get("bindingId")).compareTo(String.valueOf(b.get("bindingId"))));
     return Digest.sha256(Json.canonical(List.of("config-release", appCode, appVersion, candidate,
-        experienceRev, profileId, profileRev, sorted)));
+        experienceRev, profileId, profileRev, sorted, bindings)));
   }
 }

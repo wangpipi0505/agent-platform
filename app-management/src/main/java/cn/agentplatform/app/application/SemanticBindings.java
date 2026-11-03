@@ -115,6 +115,61 @@ public class SemanticBindings {
         return out;
     }
 
+    /**
+     * 配置发布接线：按 bindingId+bindingRev 解析不可变修订，并核对它确实属于该应用。
+     * 这里只回答"声明的这个修订是否存在、属于谁、父行当前状态是什么"，不判断发布是否允许激活；
+     * 激活与运行投影另行调用 {@link #live} 强制撤权优先。
+     */
+    public Map<String, Object> pinned(String appCode, String bindingId, int bindingRev) {
+        return pinned(Actor.current(), appCode, bindingId, bindingRev);
+    }
+
+    /** 指定调用者版本：配置发布的运行投影可能由内部 actor 触发，不能借用线程上下文。 */
+    public Map<String, Object> pinned(Actor actor, String appCode, String bindingId, int bindingRev) {
+        Map<String, Object> head = store.view(actor, bindingId)
+                .orElseThrow(() -> new PlatformException(404, "CONFIG_REF_NOT_FOUND",
+                        "语义绑定不存在: " + bindingId));
+        if (!appCode.equals(String.valueOf(head.get("appCode")))) {
+            throw new PlatformException(409, "CONFIG_REV_CONFLICT",
+                    "语义绑定不属于该应用: " + bindingId + "（" + appCode + "）");
+        }
+        Object raw = head.get("revisions");
+        if (raw instanceof List<?> revisions) {
+            for (Object item : revisions) {
+                if (!(item instanceof Map<?, ?> revision)) {
+                    continue;
+                }
+                if (((Number) revision.get("bindingRev")).intValue() == bindingRev) {
+                    Map<String, Object> out = new LinkedHashMap<>();
+                    out.put("bindingId", bindingId);
+                    out.put("bindingRev", bindingRev);
+                    out.put("appCode", appCode);
+                    out.put("currentRev", head.get("currentRev"));
+                    out.put("status", head.get("status"));
+                    revision.forEach((k, v) -> out.put(String.valueOf(k), v));
+                    return out;
+                }
+            }
+        }
+        throw new PlatformException(400, "CONFIG_VERSION_UNKNOWN",
+                "语义绑定修订不存在: " + bindingId + "@" + bindingRev);
+    }
+
+    /** 激活前/运行投影：撤权优先于历史快照，父行不是 ACTIVE 就整条拒绝，不回退旧修订。 */
+    public Map<String, Object> live(String appCode, String bindingId, int bindingRev) {
+        return live(Actor.current(), appCode, bindingId, bindingRev);
+    }
+
+    /** 激活前/运行投影：撤权优先于历史快照，父行不是 ACTIVE 就整条拒绝，不回退旧修订。 */
+    public Map<String, Object> live(Actor actor, String appCode, String bindingId, int bindingRev) {
+        Map<String, Object> revision = pinned(actor, appCode, bindingId, bindingRev);
+        if (!"ACTIVE".equals(String.valueOf(revision.get("status")))) {
+            throw new PlatformException(409, "CONFIG_RELEASE_NOT_ACTIVE",
+                    "语义绑定已停用，撤权优先于历史配置快照: " + bindingId);
+        }
+        return revision;
+    }
+
     private Map<String, Object> view(Actor actor, String bindingId) {
         return new LinkedHashMap<>(store.view(actor, bindingId)
                 .orElseThrow(() -> new PlatformException(404, "CONFIG_REF_NOT_FOUND",
