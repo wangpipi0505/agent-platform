@@ -35,13 +35,20 @@ public class ServiceTokensDeploymentModeTest {
                 "isolated-receiver", "common-boundary", "authority-complete-iam", "authority-dev-hmac", "authority-test",
                 "authority-gateway", "authority-loopback-iam", "authority-portal").contains(scenario)) throw new AssertionError("unknown child");
         Path output = Files.createTempFile("n4a-" + scenario, ".log");
+        // 子进程输出显式 UTF-8（Windows 默认 GBK 会破坏中文输出），父进程读取同样显式 UTF-8；
+        // JWT 密钥按 CommonBoundaryTest 的 TEST-ONLY 约定显式传给子进程（环境缺失时不再依赖
+        // 继承环境的隐式行为）；只修管道与装配，不改变子进程行为与任何断言。
+        String jwtKey = System.getenv("AGENT_JWT_SECRET");
+        if (jwtKey == null || jwtKey.isBlank()) jwtKey = System.getProperty("agent.jwt.secret", "abcdefghijklmnopqrstuvwxyz0123456789-TEST-ONLY");
         Process child = new ProcessBuilder(Path.of(System.getProperty("java.home"), "bin", "java.exe").toString(),
+                "-Dstdout.encoding=UTF-8", "-Dstderr.encoding=UTF-8", "-Dfile.encoding=UTF-8",
+                "-Dagent.jwt.secret=" + jwtKey,
                 "-Djdk.net.unixdomain.tmpdir=V:/.local/tmp", "-cp", System.getProperty("java.class.path"), ServiceTokensDeploymentModeTest.class.getName(), scenario)
                 .redirectErrorStream(true).redirectOutput(output.toFile()).start();
         try {
             boolean finished = child.waitFor(45, TimeUnit.SECONDS);
             if (!finished) { child.destroyForcibly(); assertThat(child.waitFor(5, TimeUnit.SECONDS)).isTrue(); }
-            String raw = Files.readString(output);
+            String raw = Files.readString(output, java.nio.charset.StandardCharsets.UTF_8);
             System.out.print(raw);
             assertThat(finished).as("bounded child " + scenario).isTrue();
             assertThat(child.exitValue()).as(raw).isZero();
