@@ -152,6 +152,7 @@ public final class IntegrationPolicy {
     }
 
     public static boolean allowedPath(String path, String method, String app) {
+        if ("GET".equals(method) && path.equals("/v1/apps/" + app + "/experience")) return true;
         if ("GET".equals(method) && path.equals("/v1/apps/" + app + "/input-schema")) return true;
         if ("POST".equals(method) && path.equals("/v1/apps/" + app + "/runs")) return true;
         // 应用名使用相等比较，禁止把凭据绑定值直接拼入正则；session主体仍由engine检查。
@@ -164,7 +165,7 @@ public final class IntegrationPolicy {
         }
         if ("GET".equals(method))
             return path.matches(
-                    "/v1/runs/[A-Za-z0-9_-]+(?:/events|/approvals|/artifacts/[A-Za-z0-9_-]+/download)?");
+                    "/v1/runs/[A-Za-z0-9_-]+(?:/events|/approvals|/semantic-results|/artifacts/[A-Za-z0-9_-]+/download)?");
         return "POST".equals(method)
                 && path.matches("/v1/runs/[A-Za-z0-9_-]+/(?:cancel|approvals/[0-9]+/decision)");
     }

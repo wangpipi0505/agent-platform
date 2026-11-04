@@ -18,6 +18,8 @@ import {
   renderExperience,
   renderExperienceFallback,
   validatePageContext,
+  experiencePath,
+  experienceProjection,
 } from "./experience";
 import { bubble, prependWarning } from "./widget";
 import { publishSession } from "./host-events";
@@ -114,6 +116,8 @@ export function createRuntime(
   let declaration: any;
   let hydrated = false;
   let experienceLoaded = false;
+  let experienceLoading: Promise<void> | undefined;
+  let experienceConfig = "";
   let pageContext: PageContext = options.context
     ? validatePageContext(options.context)
     : {};
@@ -126,7 +130,7 @@ export function createRuntime(
       .configReleaseId;
     if (typeof explicit === "string" && explicit.trim()) return explicit.trim();
     return (
-      new URLSearchParams(location.search).get("configReleaseId") || ""
+      new URLSearchParams(location.search).get("configReleaseId") || experienceConfig
     ).trim();
   };
   let sessionConfig = "";
@@ -196,36 +200,33 @@ export function createRuntime(
     widget.input.focus();
   }
 
-  /** Load the server experience projection once; failures fall back to chat. */
-  async function loadExperience() {
-    if (experienceLoaded) return;
-    experienceLoaded = true;
+  function loadExperience(): Promise<void> {
+    if (experienceLoaded) return Promise.resolve();
+    return experienceLoading ??= readExperience().finally(() => { experienceLoading = undefined; });
+  }
+  /** 本应用/固定配置才可呈现；授权失败不能记作已加载成功，允许重新出票后再打开。 */
+  async function readExperience() {
     try {
       const token = await options.ticket();
       if (destroyed) return;
       const response = await fetch(
-        options.endpoint +
-          "/v1/apps/" +
-          encodeURIComponent(options.appCode) +
-          "/experience",
+        options.endpoint + experiencePath(options.appCode, options.environment),
         { headers: { Authorization: "Bearer " + token } },
       );
       const envelope: any = await response.json().catch(() => null);
-      const description = envelope?.data;
-      const version = String(description?.schemaVersion ?? "");
-      if (
-        !response.ok ||
-        envelope?.code !== "OK" ||
-        !description ||
-        typeof description !== "object" ||
-        (version !== "v1" && version !== "1.0")
-      ) {
+      const projection = experienceProjection(response.status, envelope, options.appCode, sessionConfig || configProposal());
+      if (!projection) {
         renderExperienceFallback(widget);
+        experienceLoaded = true;
         return;
       }
-      renderExperience(widget, description, useComposer);
-    } catch {
+      if (destroyed) return;
+      experienceConfig = projection.configReleaseId;
+      renderExperience(widget, projection.description, useComposer);
+      experienceLoaded = true;
+    } catch (failure) {
       renderExperienceFallback(widget);
+      widget.error.textContent = failure instanceof Error ? failure.message : "体验读取失败，请重试";
     }
   }
 
@@ -313,6 +314,7 @@ export function createRuntime(
       if (answer.warning) prependWarning(reply, answer.warning);
     };
     try {
+      if (!sessionId) await loadExperience();
       if (!declaration) {
         if (sessionId) {
           const restored = await restoreSession(
@@ -571,8 +573,7 @@ export function createRuntime(
       ...(sessionConfig ? { configReleaseId: sessionConfig } : {}),
       structured: { pageContext: { ...pageContext } },
     });
-    void loadExperience();
-    void hydrate();
+    void hydrate().then(() => loadExperience());
   }
 
   function close() {

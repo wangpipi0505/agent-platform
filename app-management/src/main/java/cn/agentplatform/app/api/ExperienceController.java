@@ -25,11 +25,18 @@ public class ExperienceController {
         this.releases = releases;
     }
 
-    /** environment 缺省 production：与 app.publish_pin 的默认环境保持同一取值域。 */
+    /** 环境选择只能收缩已验票据范围；缺省优先使用票据环境，不能落入另一个生产作用域。 */
     @GetMapping
     public Object experience(@PathVariable String code,
             @RequestParam(name = "environment", required = false) String environment) {
-        String scope = environment == null || environment.isBlank() ? "production" : environment;
-        return ApiResponse.ok(releases.experience(Actor.current(), code, scope));
+        Actor actor = Actor.current();
+        Set<String> allowed = actor.attributes().getOrDefault("environment", Set.of());
+        if (allowed.size() > 1 && (environment == null || environment.isBlank()))
+            throw new cn.agentplatform.common.PlatformException(400, "CONFIG_ENVIRONMENT_REQUIRED", "请选择已授权的环境");
+        String scope = environment == null || environment.isBlank()
+                ? allowed.stream().findFirst().orElse("production") : environment;
+        if (!allowed.isEmpty() && !allowed.contains(scope))
+            throw new cn.agentplatform.common.PlatformException(403, "CONFIG_ENVIRONMENT_DENIED", "体验环境不在当前票据授权范围内");
+        return ApiResponse.ok(releases.experience(actor, code, scope));
     }
 }

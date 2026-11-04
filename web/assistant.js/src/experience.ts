@@ -1,6 +1,28 @@
 import { buildDeclaredInputs, inputFields } from "../../shared/input-schema";
 import type { ExtraInput, PageContext, Widget } from "./types";
 
+/** 环境只是选择器，服务端仍按已验票据求交；不把页面上下文当身份来源。 */
+export function experiencePath(appCode: string, environment?: string): string {
+  if (environment !== undefined && !/^[a-z][a-z0-9-]{0,31}$/.test(environment))
+    throw Error("体验环境格式不合法");
+  return `/v1/apps/${encodeURIComponent(appCode)}/experience${environment ? `?environment=${encodeURIComponent(environment)}` : ""}`;
+}
+
+/** 授权错误可见；错误应用或版本的描述不得混入当前会话。 */
+export function experienceProjection(status: number, envelope: unknown, appCode: string, fixedConfig = "") {
+  const reply = envelope && typeof envelope === "object" ? envelope as Record<string, unknown> : {};
+  if (status === 401 || status === 403)
+    throw Object.assign(Error(typeof reply.message === "string" ? reply.message : "体验读取未获授权，请重新登录或联系管理员"), { status, code: reply.code });
+  const description = reply.data && typeof reply.data === "object" ? reply.data as Record<string, unknown> : null;
+  if (status !== 200 || reply.code !== "OK" || !description
+      || !["v1", "1.0"].includes(String(description.schemaVersion)) || description.appCode !== appCode) return null;
+  const ref = description.configReleaseRef as { configReleaseId?: unknown } | undefined;
+  const configReleaseId = typeof ref?.configReleaseId === "string" ? ref.configReleaseId : "";
+  if (fixedConfig && configReleaseId !== fixedConfig)
+    throw Object.assign(Error("体验配置与当前会话固定版本不同，请继续使用该会话的原版本"), { status: 409, code: "CONFIG_RELEASE_CHANGED" });
+  return { description, configReleaseId };
+}
+
 /** Keys the page-context contract forbids even when they look like page state. */
 const IDENTITY_KEYS = new Set([
   "tenantId",

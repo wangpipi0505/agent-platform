@@ -12,6 +12,10 @@ export type AssistantOptions = {
   appCode: string;
   ticket: () => Promise<string>;
   context?: PageContext;
+  /** Optional environment selector; the verified ticket remains its authorization ceiling. */
+  environment?: string;
+  /** Proposed immutable configuration; the server verifies the effective version. */
+  configReleaseId?: string;
   /** Defaults to true: the SDK renders its own floating launcher. */
   autoLauncher?: boolean;
   /** Explicit host element that owns the assistant. Re-init replaces its instance. */
