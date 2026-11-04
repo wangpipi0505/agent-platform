@@ -42,7 +42,9 @@ public final class Routes {
                 || path.startsWith("/admin/integration-profiles")
                 || path.startsWith("/admin/config-releases")
                 // 语义绑定目录与配置发布同属 app 持有的配置面资源；转发方向不等于放权。
-                || path.startsWith("/admin/semantic-bindings")) return "app";
+                || path.startsWith("/admin/semantic-bindings")
+                // 业务接入模板目录同属 app 持有的配置面资源；转发方向不等于放权。
+                || path.startsWith("/admin/onboarding-templates")) return "app";
         if (path.startsWith("/admin/skills")) return "skill";
         if (path.startsWith("/admin/services")) return "skill";
         if (path.startsWith("/admin/model-providers")

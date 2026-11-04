@@ -3146,5 +3146,89 @@
   "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/SemanticResultController.java:27",
   "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
   "reason": ""
+ },
+ {
+  "method": "GET",
+  "template": "/admin/onboarding-templates",
+  "caller": "gateway",
+  "target": "app",
+  "action": "proxy.app.get.OnboardingController.list",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/OnboardingController.java:27",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
+  "reason": ""
+ },
+ {
+  "method": "GET",
+  "template": "/admin/onboarding-templates/{code}",
+  "caller": "gateway",
+  "target": "app",
+  "action": "proxy.app.get.OnboardingController.get",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/OnboardingController.java:34",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
+  "reason": ""
+ },
+ {
+  "method": "POST",
+  "template": "/admin/onboarding-templates",
+  "caller": "gateway",
+  "target": "app",
+  "action": "proxy.app.post.OnboardingController.create",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/OnboardingController.java:40",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
+  "reason": ""
+ },
+ {
+  "method": "POST",
+  "template": "/admin/onboarding-templates/{code}/versions",
+  "caller": "gateway",
+  "target": "app",
+  "action": "proxy.app.post.OnboardingController.revise",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/OnboardingController.java:46",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
+  "reason": ""
+ },
+ {
+  "method": "POST",
+  "template": "/admin/onboarding-templates/{code}/publish",
+  "caller": "gateway",
+  "target": "app",
+  "action": "proxy.app.post.OnboardingController.publish",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/OnboardingController.java:52",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
+  "reason": ""
+ },
+ {
+  "method": "POST",
+  "template": "/admin/onboarding-templates/{code}/disable",
+  "caller": "gateway",
+  "target": "app",
+  "action": "proxy.app.post.OnboardingController.disable",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/OnboardingController.java:58",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
+  "reason": ""
+ },
+ {
+  "method": "POST",
+  "template": "/admin/onboarding-templates/{code}/versions/{version}/preflight",
+  "caller": "gateway",
+  "target": "app",
+  "action": "proxy.app.post.OnboardingController.preflight",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/OnboardingController.java:64",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
+  "reason": ""
  }
 ]
