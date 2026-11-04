@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>空白宿主页 · 助手接线示例</title>
+  <!--
+    空白宿主页示例（非真实业务页面）。
+    演示：宿主按钮 → 打开助手 → 对话 → 只读调用 → 结果回传。
+    约束：不出现任何密钥；票据只经同源 BFF 获取并保存在内存；结果使用 textContent 渲染。
+    真实接入前请先完成 docs/integration/host-checklist.md。
+  -->
+  <style>
+    body { font: 15px/1.7 system-ui, sans-serif; margin: 0; color: #17202a; background: #f7f8fa; }
+    main { max-width: 860px; margin: 0 auto; padding: 32px 20px 80px; }
+    h1 { font-size: 20px; margin: 0 0 8px; }
+    .muted { color: #667085; }
+    .panel { background: #fff; border: 1px solid #e4e7ec; border-radius: 12px; padding: 18px; margin: 16px 0; }
+    .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin: 10px 0; }
+    label { font-weight: 600; }
+    input { padding: 8px 10px; border: 1px solid #d0d5dd; border-radius: 8px; min-width: 220px; }
+    button { padding: 9px 16px; border-radius: 8px; border: 1px solid #d0d5dd; background: #fff; cursor: pointer; }
+    button.primary { background: #1d4ed8; border-color: #1d4ed8; color: #fff; }
+    pre { background: #0f172a; color: #e2e8f0; padding: 12px; border-radius: 10px; overflow: auto; max-height: 260px; font-size: 12px; }
+    .answer { white-space: pre-wrap; overflow-wrap: anywhere; }
+    .error { color: #b42318; }
+    .tag { display: inline-block; font-size: 12px; padding: 2px 8px; border-radius: 999px; background: #eef2ff; color: #3538cd; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>空白宿主页</h1>
+  <p class="muted">
+    这是一个不含业务逻辑的接线示例：按钮打开助手；页面提供“当前记录号”作为 pageContext；
+    助手返回 result 后，宿主按 <code>businessRecordRefs</code> 做一次只读查询，并把结果显示在页面上。
+  </p>
+
+  <section class="panel">
+    <div class="row">
+      <label for="record-id">当前记录号（pageContext）</label>
+      <input id="record-id" placeholder="例如 R-2026-0001" autocomplete="off" />
+      <button id="open-assistant" class="primary">打开智能助手</button>
+      <button id="close-assistant">关闭</button>
+      <button id="clear-log">清空事件日志</button>
+    </div>
+    <p class="muted" id="hint">修改记录号会通过 updateContext 同步给助手；助手会话不会因此改变 Actor 或 tenant。</p>
+  </section>
+
+  <section class="panel">
+    <div class="row"><span class="tag">助手回复</span><span id="status" class="muted"></span></div>
+    <p id="answer" class="answer"></p>
+    <p id="result-error" class="error" role="alert"></p>
+  </section>
+
+  <section class="panel">
+    <div class="row"><span class="tag">只读记录</span><span class="muted">由宿主后端重新鉴权，只读</span></div>
+    <p id="record" class="answer"></p>
+  </section>
+
+  <section class="panel">
+    <div class="row"><span class="tag">宿主事件</span><span class="muted">来自 onHostEvent；未知事件会被忽略</span></div>
+    <pre id="events"></pre>
+  </section>
+</main>
+
+<!-- 固定版本 SDK；生产建议使用带摘要的文件名（/embed/assistant.<sha256>.js） -->
+<script src="/assistant.js"></script>
+<script>
+(() => {
+  "use strict";
+
+  // 平台网关基址（同源部署时可用当前 origin；示例用占位域名）
+  const ENDPOINT = "https://assistant.example.com";
+  // 平台配置发布页提供的应用与接入标识
+  const APP_CODE = "blank_host_app";
+  const INTEGRATION_ID = "blank-host-demo";
+
+  const $ = (id) => document.getElementById(id);
+  const statusEl = $("status");
+  const answerEl = $("answer");
+  const errorEl = $("result-error");
+  const recordEl = $("record");
+  const eventsEl = $("events");
+  const inputEl = $("record-id");
+  const logLines = [];
+
+  const api = window.AgentPlatformAssistant ?? window.AIAssistant;
+  if (!api) {
+    statusEl.textContent = "未加载 SDK";
+    return;
+  }
+
+  function log(label, payload) {
+    // 事件只按数据记录；不打印票据、Cookie、Authorization。
+    logLines.push(label + " " + JSON.stringify(payload));
+    if (logLines.length > 40) logLines.shift();
+    eventsEl.textContent = logLines.join("\n");
+  }
+
+  function showError(event) {
+    const code = event?.error?.code || "UNKNOWN";
+    const message = event?.error?.message || "助手请求失败";
+    errorEl.textContent = code + " · " + message + (event?.traceId ? "（trace " + event.traceId + "）" : "");
+    statusEl.textContent = "";
+  }
+
+  // 宿主 BFF：从服务端会话取身份并换短期票据。浏览器拿不到长期密钥。
+  async function ticket() {
+    const response = await fetch("/assistant/api/ticket", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ appCode: APP_CODE }),
+    });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok || body.code !== "OK" || !body.data?.ticket) {
+      throw new Error(body.message || "取票失败（" + response.status + "）");
+    }
+    return body.data.ticket;
+  }
+
+  const handle = api.init({
+    endpoint: ENDPOINT,
+    appCode: APP_CODE,
+    integrationId: INTEGRATION_ID,
+    autoLauncher: false, // 由宿主按钮 open()
+    ticket,
+    onHostEvent: onHostEvent,
+  });
+
+  function onHostEvent(event) {
+    log("[" + event.event + "]", {
+      runId: event.runId,
+      status: event.status,
+      traceId: event.traceId,
+    });
+
+    switch (event.event) {
+      case "ready":
+        statusEl.textContent = "助手已就绪";
+        break;
+      case "opened":
+        statusEl.textContent = "助手已打开";
+        break;
+      case "run-started":
+        statusEl.textContent = "正在处理…";
+        errorEl.textContent = "";
+        break;
+      case "approval-required":
+        statusEl.textContent = "等待人工确认（请在助手内确认参数快照）";
+        break;
+      case "result":
+        statusEl.textContent = "运行状态：" + (event.status || "UNKNOWN");
+        errorEl.textContent = "";
+        // structured 只是展示数据；业务效果永远以宿主后端为准，这里标注 UNKNOWN。
+        answerEl.textContent = event.structured?.answer || "";
+        if (Array.isArray(event.businessRecordRefs) && event.businessRecordRefs.length > 0) {
+          readOnlyLookup(event.businessRecordRefs[0]);
+        }
+        break;
+      case "error":
+        showError(event);
+        break;
+      default:
+        // 未知事件：忽略而不崩溃
+        break;
+    }
+  }
+
+  // 只读调用：宿主后端必须重新鉴权；示例仅按引用查询并展示摘要。
+  async function readOnlyLookup(ref) {
+    recordEl.textContent = "读取中…";
+    try {
+      const url = "/assistant/api/records?source=" + encodeURIComponent(ref.source) +
+        "&recordId=" + encodeURIComponent(ref.recordId);
+      const response = await fetch(url, { credentials: "same-origin", headers: { Accept: "application/json" } });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok || body.code !== "OK") {
+        throw new Error(body.message || "只读查询失败（" + response.status + "）");
+      }
+      const data = body.data || {};
+      // 只用 textContent，避免把服务端文本当成 HTML。
+      recordEl.textContent = [data.title, data.summary].filter(Boolean).join("\n") || JSON.stringify(data);
+    } catch (error) {
+      recordEl.textContent = "只读查询未完成：" + error.message;
+    }
+  }
+
+  $("open-assistant").addEventListener("click", () => {
+    const recordId = inputEl.value.trim();
+    handle.open({ pageContext: recordId ? { recordId } : {} });
+  });
+  $("close-assistant").addEventListener("click", () => handle.close());
+  $("clear-log").addEventListener("click", () => {
+    logLines.length = 0;
+    eventsEl.textContent = "";
+  });
+  inputEl.addEventListener("change", () => {
+    const recordId = inputEl.value.trim();
+    // 仅更新显式声明的 pageContext；不接受 tenant/角色等身份字段。
+    handle.updateContext(recordId ? { recordId } : {});
+  });
+
+  window.addEventListener("pagehide", () => handle.destroy(), { once: true });
+})();
+</script>
+</body>
+</html>

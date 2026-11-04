@@ -1,0 +1,53 @@
+{
+  "title": "示例应用智能助手",
+  "welcomeText": "可以问我系统里已经记录的业务事实；涉及写操作时会先请你确认参数。",
+  "capabilityDescriptions": [
+    {
+      "code": "query_records",
+      "label": "查询业务记录",
+      "description": "按编号或时间范围读取已授权的业务记录，只读。",
+      "readOnly": true,
+      "requiresApproval": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "recordId": { "type": "string", "maxLength": 64 },
+          "range": { "type": "string", "maxLength": 32 }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "code": "submit_followup",
+      "label": "提交跟进事项",
+      "description": "根据当前记录生成跟进草稿；提交前需要人工确认参数快照。",
+      "readOnly": false,
+      "requiresApproval": true,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "recordId": { "type": "string", "maxLength": 64 },
+          "note": { "type": "string", "maxLength": 2000 }
+        },
+        "required": ["recordId", "note"],
+        "additionalProperties": false
+      }
+    }
+  ],
+  "promptRefs": [
+    { "ref": "prompt:example_app.answer", "version": 3 },
+    { "ref": "prompt:example_app.followup", "version": 2 }
+  ],
+  "inputPresentation": {
+    "layout": "composer",
+    "placeholder": "输入问题，或从推荐问法开始"
+  },
+  "resultPresentation": {
+    "showCitations": false,
+    "showRecordRefs": true,
+    "maxAnswerChars": 2048
+  },
+  "helpRefs": [
+    "help:example_app.getting-started"
+  ]
+}

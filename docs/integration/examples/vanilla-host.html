@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>原生 JS 最小示例 · 助手 SDK</title>
+  <!--
+    最小接线：init + 默认浮球 + 可选宿主按钮 open()。
+    不含业务逻辑、不含密钥；票据由同源 BFF 提供（见 examples/bff/ticket-server.mjs）。
+  -->
+  <style>
+    body { font: 15px/1.7 system-ui, sans-serif; margin: 40px; color: #17202a; }
+    button { padding: 9px 16px; border-radius: 8px; border: 1px solid #d0d5dd; background: #fff; cursor: pointer; }
+    pre { background: #0f172a; color: #e2e8f0; padding: 12px; border-radius: 10px; max-height: 240px; overflow: auto; }
+  </style>
+</head>
+<body>
+  <h1>原生 JS 最小示例</h1>
+  <p>页面自带浮球；下面的按钮调用实例的 <code>open()</code>。</p>
+  <button id="open">从宿主按钮打开</button>
+  <pre id="events"></pre>
+
+  <!-- 固定版本 SDK -->
+  <script src="/assistant.js"></script>
+  <script>
+    (() => {
+      const api = window.AgentPlatformAssistant ?? window.AIAssistant;
+      const lines = [];
+
+      const handle = api.init({
+        endpoint: "https://assistant.example.com",
+        appCode: "vanilla_demo",
+        integrationId: "vanilla-demo",
+        // 不传 autoLauncher:false，保留默认浮球
+        ticket: async () => {
+          const response = await fetch("/assistant/api/ticket", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: "{}",
+          });
+          const body = await response.json().catch(() => ({}));
+          if (!response.ok || body.code !== "OK") throw new Error(body.message || "取票失败");
+          return body.data.ticket;
+        },
+        onHostEvent: (event) => {
+          lines.push(event.event + " " + (event.runId || ""));
+          if (lines.length > 30) lines.shift();
+          document.getElementById("events").textContent = lines.join("\n");
+        },
+      });
+
+      document.getElementById("open").addEventListener("click", () => handle.open());
+
+      // 单页应用离开时销毁，避免重复挂载与后台观察。
+      window.addEventListener("pagehide", () => handle.destroy(), { once: true });
+    })();
+  </script>
+</body>
+</html>

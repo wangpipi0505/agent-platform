@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>iframe 最小通道示例</title>
+  <!--
+    L1 示例：宿主嵌入平台页面，用 hello + 精确 origin/source/nonce/实例 ID 接收事件。
+    这不是 SDK 接线；iframe 内的 webapp 只接受父窗口 hello，之后用 hello 的精确 origin 回发 ready/opened。
+    约束：不使用 "*" 作为 targetOrigin；不执行消息中的 HTML/脚本；未知 schemaVersion/事件忽略。
+  -->
+  <style>
+    body { font: 15px/1.7 system-ui, sans-serif; margin: 0; }
+    header { padding: 16px 24px; border-bottom: 1px solid #e4e7ec; display: flex; gap: 12px; align-items: center; }
+    iframe { width: 100%; height: calc(100vh - 72px); border: 0; }
+    pre { margin: 8px 24px; background: #0f172a; color: #e2e8f0; padding: 10px; border-radius: 8px; max-height: 160px; overflow: auto; font-size: 12px; }
+    .muted { color: #667085; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <header>
+    <strong>iframe 宿主</strong>
+    <span class="muted">精确 origin：<code id="origin-label"></code></span>
+    <span class="muted" id="status">等待 hello 完成</span>
+  </header>
+
+  <!-- 平台自有独立页；code 从最后一段路径读取 -->
+  <iframe id="assistant-frame" title="智能助手" src="https://assistant.example.com/w/blank_host_app"></iframe>
+  <pre id="events"></pre>
+
+  <script>
+    (() => {
+      const frame = document.getElementById("assistant-frame");
+      const statusEl = document.getElementById("status");
+      const eventsEl = document.getElementById("events");
+      const lines = [];
+
+      // hello 前必须已知的精确平台 origin（协议 + 主机 + 端口，无路径）。
+      const CHANNEL_ORIGIN = "https://assistant.example.com";
+      document.getElementById("origin-label").textContent = CHANNEL_ORIGIN;
+
+      const EVENT_NAMES = new Set([
+        "ready", "opened", "closed", "run-started", "approval-required", "result", "error",
+      ]);
+      const EVENT_TYPE = "agent-platform:assistant:event";
+      const HELLO_TYPE = "agent-platform:assistant:hello";
+
+      function randomId() {
+        const bytes = new Uint8Array(16);
+        crypto.getRandomValues(bytes);
+        return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+      }
+
+      // 一次性通道参数：页面生命周期内固定，刷新重新生成。
+      const nonce = randomId();
+      const instanceId = randomId();
+      let channelReady = false;
+
+      function log(text) {
+        lines.push(text);
+        if (lines.length > 40) lines.shift();
+        eventsEl.textContent = lines.join("\n");
+      }
+
+      function sendHello() {
+        // targetOrigin 必须精确；hello 只含通道参数，不含身份/角色/tenant。
+        frame.contentWindow.postMessage(
+          { type: HELLO_TYPE, nonce, instanceId },
+          CHANNEL_ORIGIN,
+        );
+      }
+
+      window.addEventListener("message", (message) => {
+        // 1) origin 与 source 双重校验
+        if (message.origin !== CHANNEL_ORIGIN) return;
+        if (message.source !== frame.contentWindow) return;
+
+        const data = message.data;
+        if (!data || typeof data !== "object") return;
+
+        // 2) hello 完成后只接受带同一 nonce/实例 ID 的事件帧
+        if (data.type !== EVENT_TYPE) return;
+        if (data.schemaVersion !== "1.0") {
+          log("忽略未知 schemaVersion：" + String(data.schemaVersion));
+          return;
+        }
+        if (data.nonce !== nonce || data.instanceId !== instanceId) {
+          log("忽略 nonce/实例不匹配的帧");
+          return;
+        }
+
+        const event = data.event;
+        if (!event || !EVENT_NAMES.has(event.event)) {
+          log("忽略未知事件");
+          return;
+        }
+
+        channelReady = true;
+        statusEl.textContent = "通道已建立（nonce " + nonce.slice(0, 8) + "…）";
+        log(event.event + (event.runId ? " " + event.runId : ""));
+
+        if (event.event === "result") {
+          // 结果只作为宿主刷新的触发；业务状态仍由宿主后端核对。
+          log("result status=" + (event.status || "UNKNOWN"));
+        }
+        if (event.event === "error") {
+          log("error " + (event.error?.code || "UNKNOWN"));
+        }
+      });
+
+      // iframe 加载后发 hello；重复 load（刷新）时可重发（同参数）。
+      frame.addEventListener("load", () => {
+        channelReady = false;
+        sendHello();
+      });
+
+      // 兜底：若 load 事件早于脚本绑定，延迟补发一次。
+      setTimeout(() => {
+        if (!channelReady) sendHello();
+      }, 1500);
+    })();
+  </script>
+</body>
+</html>
