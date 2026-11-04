@@ -214,8 +214,9 @@ class GoalVerificationServiceTest {
         readback.put("objectIdPath", "$.id");
         readback.put("resultObjectIdPath", "$.id");
         Map<String, Object> predicate = new LinkedHashMap<>();
-        predicate.put("path", path);
-        predicate.put("equals", expected);
+        predicate.put("path", "$." + path);
+        predicate.put("operator", "equals");
+        predicate.put("value", expected);
         Map<String, Object> criterion = new LinkedHashMap<>();
         criterion.put("target", Map.of("objectType", "Order", "objectId", "order-B"));
         criterion.put("readback", readback);

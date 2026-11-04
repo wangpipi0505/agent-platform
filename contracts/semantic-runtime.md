@@ -108,7 +108,7 @@ category/retryable 语义沿用 error-envelope-boundaries.md；仅 429 retryable
 | `read-only@1.0` | 已冻结（激活候选） | `semantic-runtime-v1.schema.json` | SEM-01.1（本文件§1～§6） | SEM-03 事实服务 |
 | `decision@1.0` | **已定义未实现** | 实现时新建 `semantic-runtime-decision-v1.schema.json` 并回本表登记 | SEM-04 | OR ObjectDecisionService |
 | `condition@1.0` | **已定义未实现** | 实现时新建 `semantic-runtime-condition-v1.schema.json` 并回本表登记 | SEM-07 | OR SemanticConditionService＋AP SemanticExecutionGate |
-| `goal@1.0` | **已定义未实现** | 实现时新建 `semantic-runtime-goal-v1.schema.json` 并回本表登记 | SEM-08 | AP GoalVerificationService |
+| `goal@1.0` | 已实现（必要功能检查；真实场景验收另行） | `semantic-runtime-goal-v1.schema.json`；声明 `#/$defs/declaration`，处置 `#/$defs/outcome` | SEM-08 / CR-04、CR-06 | AP GoalVerificationService |
 
 ### 7.1 `decision@1.0` 封闭字段（SEM-04 实现时按此冻结为独立 Schema）
 
@@ -122,10 +122,15 @@ category/retryable 语义沿用 error-envelope-boundaries.md；仅 429 retryable
 - `profile:"condition"`；`conditions[]`：`conditionKind`（枚举 `EXISTS` / `RELATION` / `STATE` / `VERSION` / `RULE`，封闭，不接受自定义种类）；`targetRef`（ObjectReference，必填）；`expected`（按 kind 的受控声明）；`result`（枚举 `HOLDS` / `NOT_HOLDS` / `UNKNOWN`，UNKNOWN 必填 `unknownReason`）；`checkedAt`＋`sourceRef`（复用 §2.6/§2.7 时效规则）。
 - 本 profile 仅作检查，**无业务副作用**；与实际执行侧使用同一条件解释；最终并发条件仍由业务原生版本/条件写保障，本记录不冒充跨系统强一致。
 
-### 7.3 `goal@1.0` 封闭字段（SEM-08 实现时冻结）
+### 7.3 `goal@1.0` 封闭字段（CR-04、CR-06 工程冻结）
 
 - `profile:"goal"`；`goals[]`：`goalId`（≤64）；`criterion`（批准只读验证操作引用＋预期业务状态/产物判据）；`outcomeState`（枚举 `ACHIEVED` / `NOT_ACHIEVED` / `PENDING` / `FAILED` / `UNKNOWN`——HTTP200/工具终态/模型自述不得映射为 `ACHIEVED`）；`readbackRef`（EvidenceRef，`ACHIEVED` 时必填）；`nextStep`（≤256，可选）。
 - 逐对象记录、允许等待/终止条件显式声明；未知/部分完成可恢复沿用既有 call/run 幂等与 UNKNOWN 对账语义，不新建任务状态权威。
+- 唯一Schema为`contracts/semantic-runtime-goal-v1.schema.json`（`urn:agent-platform:semantic-runtime:goal:1.0`）。前端Ajv2020、发布及运行的networknt直接消费同一文件，不复制第二份字段定义。应用`config.goals[]`采用`#/$defs/declaration`，新运行冻结原声明；有效声明的核验摘要带`profile:"goal",schemaVersion:"1.0"`。无版本历史声明不改写，缺绑定/旧方言为UNKNOWN，不伪装为新profile。
+- `criterion.target`固定`objectType/objectId`（非空文本）。`readback`固定`skillCode/arguments/objectIdPath/resultObjectIdPath`，请求对象值与目标必须一致，回执对象值也必须一致；技能版本及合同摘要来自运行已冻结tools。可选`action`固定`skillCode/arguments/objectIdPath`，参数对象同目标；声明action时读回登记前必须已有同动作已采纳成功事实锚，后续事实不得补填。未声明action仅证明对象读回状态。
+- `predicate`只接受`{path,operator,value?}`：path必须以`$`为根，后接点号字段与零基`[n]`数组下标（不接受无根、SQL、通配符、负数或尾部残留）；operator封闭为equals/nonEmpty/exists。equals必须含JSON标量value（文本、数字、布尔、null），另两算子禁止value。equals不做真假转换，数字按十进制值比较；exists含显式null但不含missing；nonEmpty拒绝null、空白文本、空数组/对象，false和0有效。读回值显式null保留在detail.readbackValue，missing不写该键。
+- 发布预检与提交、新run受理均校验同一声明；发布引用门要求读回引用本应用已启用只读且无副作用技能，动作引用也须启用。无效声明使用既有`GOAL_CRITERION_INVALID`，未知/无读回/UNKNOWN不被隐式改成成功；核验不发送新业务操作。
+
 
 ### 7.4 兼容与演进规则（本表冻结）
 

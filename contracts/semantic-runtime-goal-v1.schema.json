@@ -1,0 +1,427 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:semantic-runtime:goal:1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "profile": {
+      "const": "goal"
+    },
+    "schemaVersion": {
+      "const": "1.0"
+    },
+    "runId": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "runStatus": {
+      "type": "string"
+    },
+    "goals": {
+      "type": "array",
+      "maxItems": 32,
+      "items": {
+        "$ref": "#/$defs/outcome"
+      }
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ACHIEVED": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "NOT_ACHIEVED": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "PENDING": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "FAILED": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "UNKNOWN": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "ACHIEVED",
+        "NOT_ACHIEVED",
+        "PENDING",
+        "FAILED",
+        "UNKNOWN"
+      ]
+    },
+    "complete": {
+      "type": "boolean"
+    },
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "maxGoals": {
+          "const": 32
+        },
+        "declaredGoals": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "verifiedGoals": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 32
+        },
+        "truncated": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "maxGoals",
+        "declaredGoals",
+        "verifiedGoals",
+        "truncated"
+      ]
+    },
+    "skipped": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "profile",
+    "schemaVersion",
+    "goals"
+  ],
+  "$defs": {
+    "path": {
+      "type": "string",
+      "maxLength": 256,
+      "pattern": "^\\$(?:\\.[A-Za-z_][A-Za-z0-9_]*(?:\\[(?:0|[1-9][0-9]{0,8})\\])*)+$"
+    },
+    "operation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "skillCode": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9._-]{0,63}$"
+        },
+        "arguments": {
+          "type": "object"
+        },
+        "objectIdPath": {
+          "$ref": "#/$defs/path"
+        }
+      },
+      "required": [
+        "skillCode",
+        "arguments",
+        "objectIdPath"
+      ]
+    },
+    "readback": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "skillCode": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9._-]{0,63}$"
+        },
+        "arguments": {
+          "type": "object"
+        },
+        "objectIdPath": {
+          "$ref": "#/$defs/path"
+        },
+        "resultObjectIdPath": {
+          "$ref": "#/$defs/path"
+        }
+      },
+      "required": [
+        "skillCode",
+        "arguments",
+        "objectIdPath",
+        "resultObjectIdPath"
+      ]
+    },
+    "predicate": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/path"
+        },
+        "operator": {
+          "enum": [
+            "equals",
+            "nonEmpty",
+            "exists"
+          ]
+        },
+        "value": {
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "path",
+        "operator"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "operator": {
+                "const": "equals"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "value"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "value"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "criterion": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "target": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "objectType": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "\\S"
+            },
+            "objectId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "\\S"
+            }
+          },
+          "required": [
+            "objectType",
+            "objectId"
+          ]
+        },
+        "readback": {
+          "$ref": "#/$defs/readback"
+        },
+        "action": {
+          "$ref": "#/$defs/operation"
+        },
+        "predicate": {
+          "$ref": "#/$defs/predicate"
+        }
+      },
+      "required": [
+        "target",
+        "readback",
+        "predicate"
+      ]
+    },
+    "declaration": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "goalId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._:-]{1,64}$"
+        },
+        "criterion": {
+          "$ref": "#/$defs/criterion"
+        },
+        "nextStep": {
+          "type": "string",
+          "maxLength": 256
+        }
+      },
+      "required": [
+        "goalId",
+        "criterion"
+      ]
+    },
+    "readbackRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "evidenceKind": {
+          "const": "call"
+        },
+        "callId": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "evidenceKind",
+        "callId"
+      ]
+    },
+    "detail": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "callId": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "callStatus": {
+          "type": "string"
+        },
+        "skillCode": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9._-]{0,63}$"
+        },
+        "predicate": {
+          "$ref": "#/$defs/path"
+        },
+        "matched": {
+          "type": "boolean"
+        },
+        "readbackValue": {},
+        "reason": {
+          "type": "string"
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "errorSemantic": {
+          "type": "string"
+        }
+      },
+      "required": []
+    },
+    "outcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "goalId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._:-]{1,64}$"
+        },
+        "criterion": {
+          "$ref": "#/$defs/criterion"
+        },
+        "nextStep": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 256
+        },
+        "outcomeState": {
+          "enum": [
+            "ACHIEVED",
+            "NOT_ACHIEVED",
+            "PENDING",
+            "FAILED",
+            "UNKNOWN"
+          ]
+        },
+        "readbackRef": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/readbackRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "detail": {
+          "$ref": "#/$defs/detail"
+        },
+        "runId": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "updatedAt": {
+          "type": [
+            "string",
+            "number"
+          ]
+        }
+      },
+      "required": [
+        "goalId",
+        "criterion",
+        "outcomeState",
+        "detail"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "outcomeState": {
+                "const": "ACHIEVED"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "readbackRef"
+            ],
+            "properties": {
+              "readbackRef": {
+                "$ref": "#/$defs/readbackRef"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "outcomeState": {
+                "enum": [
+                  "PENDING",
+                  "UNKNOWN"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "nextStep"
+            ],
+            "properties": {
+              "nextStep": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

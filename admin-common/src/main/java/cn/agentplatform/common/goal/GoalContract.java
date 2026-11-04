@@ -4,6 +4,7 @@ import cn.agentplatform.common.Digest;
 import cn.agentplatform.common.Json;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.MissingNode;
+import com.networknt.schema.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -12,7 +13,40 @@ import java.util.regex.Pattern;
 public final class GoalContract {
     public static final Pattern PATH = Pattern.compile("\\$(?:\\.[A-Za-z_][A-Za-z0-9_]*(?:\\[(?:0|[1-9][0-9]{0,8})])*)+");
     private static final Pattern SKILL = Pattern.compile("[A-Za-z][A-Za-z0-9._-]{0,63}");
+    private static final JsonNode SCHEMA_DOCUMENT = schemaDocument();
+    private static final JsonSchema DECLARATION_SCHEMA = validator("declaration");
+    private static final JsonSchema PREDICATE_SCHEMA = validator("predicate");
     private GoalContract() {}
+
+    private static JsonNode schemaDocument() {
+        try (var input = GoalContract.class.getResourceAsStream("/semantic-runtime-goal-v1.schema.json")) {
+            if (input == null) throw new IllegalStateException("Goal schema resource missing");
+            return Json.read(new String(input.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8));
+        } catch (java.io.IOException error) { throw new IllegalStateException("Goal schema unavailable", error); }
+    }
+
+    private static JsonSchema validator(String definition) {
+        var reference = Json.object();
+        reference.set("$defs", SCHEMA_DOCUMENT.path("$defs"));
+        reference.put("$ref", "#/$defs/" + definition);
+        var factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012,
+                builder -> builder.schemaLoaders(loaders -> loaders.add(iri -> {
+                    throw new IllegalArgumentException("Goal schema forbids external loading");
+                })));
+        return factory.getSchema(reference);
+    }
+
+    public static List<String> declarationErrors(JsonNode goal) {
+        var errors = new ArrayList<String>();
+        if (Json.canonical(goal).length() > 65536) return List.of("目标声明超过64KiB");
+        for (var error : DECLARATION_SCHEMA.validate(goal)) errors.add(error.getMessage());
+        errors.addAll(bindingErrors(goal));
+        return List.copyOf(errors);
+    }
+
+    public static List<String> predicateErrors(JsonNode predicate) {
+        return PREDICATE_SCHEMA.validate(predicate).stream().map(ValidationMessage::getMessage).toList();
+    }
 
     public static void requireBindings(JsonNode config) {
         if (!config.has("goals")) return;
@@ -22,8 +56,8 @@ public final class GoalContract {
         var ids = new java.util.HashSet<String>();
         for (JsonNode goal : goals) {
             if (!goal.path("goalId").isTextual() || !goal.path("goalId").asText().matches("[A-Za-z0-9._:-]{1,64}")
-                    || !ids.add(goal.path("goalId").asText()) || !bindingErrors(goal).isEmpty())
-                throw new cn.agentplatform.common.PlatformException(400, "GOAL_CRITERION_INVALID", "目标必须具有唯一标识及冻结的对象/调用绑定");
+                    || !ids.add(goal.path("goalId").asText()) || !declarationErrors(goal).isEmpty())
+                throw new cn.agentplatform.common.PlatformException(400, "GOAL_CRITERION_INVALID", "目标必须具有唯一标识、冻结的对象/调用绑定及合法goal@1.0判据");
         }
     }
 

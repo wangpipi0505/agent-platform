@@ -1,3 +1,7 @@
+import Ajv2020 from "ajv/dist/2020";
+import goalSchemaText from "../../contracts/semantic-runtime-goal-v1.schema.json?raw";
+const goalSchema = JSON.parse(goalSchemaText) as { $defs: Record<string, unknown> };
+
 /**
  * SEM-09 业务配置端的语义表单与权威显示规则。
  *
@@ -382,34 +386,80 @@ export function filterProjection(
   return { visible: true, reason: "", objects, actions, rules: projection.definitions.rules, attention };
 }
 
-/** 目标判据表单只产受控字段；禁止写任意表达式或 SQL。 */
+/** 表单/发布/运行共用同一goal@1.0声明Schema；对象引用与参数另作一致性核对。 */
+export interface GoalOperation {
+  skillCode: string;
+  arguments: Record<string, unknown>;
+  objectIdPath: string;
+}
 export interface GoalCriterionForm {
   goalId: string;
+  target: { objectType: string; objectId: string };
   skillCode: string;
+  readbackArguments: Record<string, unknown>;
+  objectIdPath: string;
+  resultObjectIdPath: string;
+  action?: GoalOperation;
   predicatePath: string;
   operator: "equals" | "nonEmpty" | "exists";
-  expectedValue?: string;
+  expectedValue?: string | number | boolean | null;
   nextStep?: string;
 }
-
-export function buildGoalCriterion(form: GoalCriterionForm) {
-  const goalId = requireText(form.goalId, "goalId", /^[A-Za-z0-9._:-]{1,64}$/, 64);
-  const skillCode = requireText(form.skillCode, "skillCode", SKILL_CODE, 64);
-  // 只接受点号路径（可带 $ 前缀）；不解析任意表达式/SQL。
-  const path = requireText(
-    form.predicatePath,
-    "predicate.path",
-    /^\$?(\.[A-Za-z_][A-Za-z0-9_]*(\[\d+\])?)+$/,
-    256,
-  );
-  if (!["equals", "nonEmpty", "exists"].includes(form.operator))
-    throw new SemanticFormError("predicate.operator", "只支持 equals / nonEmpty / exists 三种判据");
-  const predicate: Record<string, unknown> = { path, operator: form.operator };
-  if (form.operator === "equals") predicate.value = form.expectedValue ?? "";
-  const nextStep = String(form.nextStep ?? "").trim().slice(0, 256);
-  return {
-    goalId,
-    criterion: { readback: { skillCode }, predicate },
-    ...(nextStep ? { nextStep } : {}),
+export interface GoalDeclaration {
+  goalId: string;
+  criterion: {
+    target: GoalCriterionForm["target"];
+    readback: GoalOperation & { resultObjectIdPath: string };
+    action?: GoalOperation;
+    predicate: { path: string; operator: GoalCriterionForm["operator"]; value?: GoalCriterionForm["expectedValue"] };
   };
+  nextStep?: string;
+}
+const validateGoal = new Ajv2020({ allErrors: true, strict: false }).compile({
+  $defs: goalSchema.$defs,
+  $ref: "#/$defs/declaration",
+});
+
+function goalValueAt(root: unknown, path: string): unknown {
+  let value = root;
+  for (const part of path.slice(2).split(".")) {
+    for (const token of part.match(/[A-Za-z_][A-Za-z0-9_]*|\[\d+\]/g) ?? []) {
+      if (value === null || typeof value !== "object") return undefined;
+      const key = token.startsWith("[") ? token.slice(1, -1) : token;
+      value = (value as Record<string, unknown>)[key];
+    }
+  }
+  return value;
+}
+
+export function buildGoalCriterion(form: GoalCriterionForm): GoalDeclaration {
+  const goal: GoalDeclaration = {
+    goalId: form.goalId,
+    criterion: {
+      target: form.target,
+      readback: { skillCode: form.skillCode, arguments: form.readbackArguments,
+        objectIdPath: form.objectIdPath, resultObjectIdPath: form.resultObjectIdPath },
+      ...(form.action ? { action: form.action } : {}),
+      predicate: { path: form.predicatePath, operator: form.operator,
+        ...(form.operator === "equals" && form.expectedValue !== undefined ? { value: form.expectedValue } : {}) },
+    },
+    ...(form.nextStep?.trim() ? { nextStep: form.nextStep.trim() } : {}),
+  };
+  if (!validateGoal(goal)) {
+    const error = validateGoal.errors?.[0];
+    throw new SemanticFormError(error?.instancePath ?? "goal", "目标配置不符合goal@1.0：" + (error?.message ?? "字段不合法"));
+  }
+  for (const operation of [goal.criterion.readback, ...(goal.criterion.action ? [goal.criterion.action] : [])]) {
+    if (goalValueAt(operation.arguments, operation.objectIdPath) !== goal.criterion.target.objectId)
+      throw new SemanticFormError("arguments", "请求参数的对象标识必须与目标对象一致");
+  }
+  // 返回独立JSON快照，表单后续编辑不会改写已提交的冻结声明。
+  try {
+    return JSON.parse(JSON.stringify(goal, (_key, value: unknown) => {
+      if (["undefined", "function", "symbol", "bigint"].includes(typeof value)
+        || (typeof value === "number" && !Number.isFinite(value)))
+        throw new Error("non-JSON value");
+      return value;
+    })) as GoalDeclaration;
+  } catch { throw new SemanticFormError("goal", "目标配置只能包含有限数值及JSON数据"); }
 }

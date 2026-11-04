@@ -140,7 +140,7 @@ class GoalVerificationBindingTest {
             criterion.set("target", Json.tree(Map.of("objectType", "Order", "objectId", "order-B")));
             var readback = (com.fasterxml.jackson.databind.node.ObjectNode) operation("verify");
             readback.put("resultObjectIdPath", "$.id"); criterion.set("readback", readback);
-            criterion.set("predicate", Json.tree(Map.of("path", "status", "equals", "CONFIRMED")));
+            criterion.set("predicate", Json.tree(Map.of("path", "$.status", "operator", "equals", "value", "CONFIRMED")));
             if (withAction) criterion.set("action", operation("update"));
             goal = Json.tree(Map.of("goalId", "g", "criterion", criterion)); refreshRun();
             var store = mock(TraceStore.class); when(store.db()).thenReturn(db);

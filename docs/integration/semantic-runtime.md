@@ -119,7 +119,7 @@
 
 | 核对项 | 来源 A | 来源 B | 状态 |
 | --- | --- | --- | --- |
-| profile 标识与字段 | 本文件 §2 | `contracts/semantic-runtime.md` §7 + Schema | 一致（read-only/条件/判定）；goal Schema 文件待 AP 收口 |
+| profile 标识与字段 | 本文件 §2 | `contracts/semantic-runtime.md` §7 + Schema | 一致（read-only/条件/判定）；goal@1.0见`semantic-runtime-goal-v1.schema.json`，CR-06完成表单/发布/核验同Schema（真实场景另行验收） |
 | 错误码 | 本文件 §8 | `contracts/semantic-runtime.md` §3 | 一致；补充码为领域码，未改写契约码 |
 | 语义端点 | 本文件 §3 | OR `contracts/openapi.json` | **部分缺登记**：facts/decisions/conditions/identity/changes 未同步 openapi（P 窗口补） |
 | 提交号可复核 | 本文件 §1 | 两仓 `git cat-file -e` | 一致（见 manifest `components`） |

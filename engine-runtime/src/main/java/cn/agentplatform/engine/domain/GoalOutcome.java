@@ -43,7 +43,8 @@ public record GoalOutcome(
         if (!STATES.contains(state)) throw invalid("未知的目标处置状态: " + state);
         criterion = criterion == null ? Map.of() : Map.copyOf(criterion);
         readbackRef = readbackRef == null ? null : Map.copyOf(readbackRef);
-        detail = detail == null ? Map.of() : Map.copyOf(detail);
+        // 读回字段显式null是业务事实，不能被Map.copyOf拒绝或当missing丢弃。
+        detail = detail == null ? Map.of() : java.util.Collections.unmodifiableMap(new LinkedHashMap<>(detail));
         if (nextStep != null && nextStep.length() > MAX_NEXT_STEP)
             throw invalid("nextStep超过256字符");
         if (ACHIEVED.equals(state) && readbackRef == null) throw invalid("ACHIEVED必须带readbackRef");

@@ -559,6 +559,7 @@ public class AppPublicationService {
                     throw new IllegalArgumentException("变量引用不存在节点或作用域: " + scope);
             }
         }
+        cn.agentplatform.common.goal.GoalContract.requireBindings(Json.tree(config));
         validateSchema(config.get("inputSchema"));
         validateSchema(config.get("outputSchema"));
     }
@@ -620,10 +621,14 @@ public class AppPublicationService {
 
     void referenceChecks(
             Map<String, Object> config, Map<String, Object> definition, boolean guards) {
+        var resolvedGoalSkills = new HashMap<String, Map<String, Object>>();
+        var enabledGoalSkills = new HashSet<String>();
         for (var ref : skillRefs(config, definition)) {
             String skillCode = AppService.text(ref, "code");
             long version = AppService.number(ref, "version");
             var skill = resolveSkill(ref);
+            resolvedGoalSkills.put(skillCode, skill);
+            if (!Boolean.FALSE.equals(ref.get("enabled"))) enabledGoalSkills.add(skillCode);
             if (guards) {
                 var guard = AppService.object(skill.getOrDefault("guard", Map.of()));
                 var declared = AppService.object(config.getOrDefault("guard", Map.of()));
@@ -647,6 +652,20 @@ public class AppPublicationService {
             }
         }
         if (guards) return;
+        for (var goal : AppService.objects(config.get("goals"))) {
+            var criterion = AppService.object(goal.get("criterion"));
+            var readback = AppService.object(criterion.get("readback"));
+            String readbackCode = Objects.toString(readback.get("skillCode"), "");
+            var readbackSkill = resolvedGoalSkills.get(readbackCode);
+            var execution = readbackSkill == null ? Map.<String,Object>of()
+                    : AppService.object(readbackSkill.get("execution"));
+            if (!enabledGoalSkills.contains(readbackCode) || !Boolean.TRUE.equals(execution.get("readonly"))
+                    || !Boolean.FALSE.equals(execution.get("sideEffect")))
+                throw new IllegalArgumentException("目标读回必须引用本应用已启用的只读技能: " + readbackCode);
+            if (criterion.containsKey("action") && !enabledGoalSkills.contains(
+                    Objects.toString(AppService.object(criterion.get("action")).get("skillCode"), "")))
+                throw new IllegalArgumentException("目标动作必须引用本应用已启用的技能");
+        }
         if (config.get("modelBinding") instanceof Map<?, ?> binding) {
             Object id = binding.get("modelEntryId");
             if (id == null) throw new IllegalArgumentException("模型绑定需显式modelEntryId");
@@ -738,6 +757,8 @@ public class AppPublicationService {
                         return publication(code, ((Number) old.get("version_no")).intValue(), hash);
                     }
                     port.assertCapabilitySource(app);
+                    // 即使旧预检报告尚有效，提交也不能固化不可执行的目标方言。
+                    cn.agentplatform.common.goal.GoalContract.requireBindings(Json.tree(AppService.object(app.get("config"))));
                     if (((Number) app.get("draftRev")).longValue() != rev || !AppService.sha(app).equals(hash))
                         throw AppService.error(412, "CANDIDATE_CHANGED", "草稿已变更，请重新预检");
                     var reports =

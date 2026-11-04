@@ -73,6 +73,18 @@
       "basis": "平台侧优化方案与实施细则-20261027 §11.4（新软件接入八步：'新增执行 kind = 平台扩展，现有 kind 都不匹配才新增 adapter'）；优化台账 T22C（适配器注册表替代硬编码 switch）",
       "changeControl": "skill-invocation.md 增补节随文件整体 sha256 登记于 contracts[]（沿用 §11–§14 模式）；注册表运行层新增执行方式不触发本文件变更，能力包 schema（声明层）扩容另行走 T22A 条目的变更控制",
       "note": "两层 kind 关系定死：能力包 schema 五值枚举是声明层，本注册表是运行层；运行层先行注册不构成声明层上线。内置五单元执行语义零搬运（T05/T06/T12/T21d/PLAT-15 原地不动）。验证锚点 AdapterRegistryZeroChangeTest（8 例），红绿对照与模块全量对照见 docs/evidence/2026-10-28-PLAT-22C-adapter-registry/README.md"
+    },
+    {
+      "date": "2026-11-04",
+      "card": "CR-04/CR-06（SEM-08目标绑定与判据一致性）",
+      "artifact": "contracts/semantic-runtime-goal-v1.schema.json",
+      "sha256": "50d3692ca8ef15c04927db8055a187ce023392e796e3ab6330719d2ae884a6fb",
+      "schemaId": "urn:agent-platform:semantic-runtime:goal:1.0",
+      "declaration": "#/$defs/declaration",
+      "outcome": "#/$defs/outcome",
+      "basis": "contracts/semantic-runtime.md §7.3与20261104升级代码审核CR-04/CR-06；冻结目标对象/调用参数/动作时序，统一三算子JSON值与$根路径",
+      "changeControl": "已激活goal@1.0字段语义变更或新增必填须新schemaVersion、新文件和新增登记；无版本历史声明保留并保守UNKNOWN。",
+      "note": "必要功能检查范围，不替代真实PG并发、真实模型或外部业务场景验收。"
     }
   ]
 }

@@ -218,6 +218,8 @@ describe("SEM-09 目标判据表单", () => {
     const built = buildGoalCriterion({
       goalId: "refund-done",
       skillCode: "refund.read",
+      target: { objectType: "Refund", objectId: "refund-B" },
+      readbackArguments: { id: "refund-B" }, objectIdPath: "$.id", resultObjectIdPath: "$.data.id",
       predicatePath: "$.data.refund.status",
       operator: "equals",
       expectedValue: "SUCCESS",
@@ -226,7 +228,8 @@ describe("SEM-09 目标判据表单", () => {
     expect(built).toEqual({
       goalId: "refund-done",
       criterion: {
-        readback: { skillCode: "refund.read" },
+        target: { objectType: "Refund", objectId: "refund-B" },
+        readback: { skillCode: "refund.read", arguments: { id: "refund-B" }, objectIdPath: "$.id", resultObjectIdPath: "$.data.id" },
         predicate: { path: "$.data.refund.status", operator: "equals", value: "SUCCESS" },
       },
       nextStep: "仍未达成时重新读回",
@@ -235,9 +238,35 @@ describe("SEM-09 目标判据表单", () => {
       buildGoalCriterion({
         goalId: "x",
         skillCode: "refund.read",
+        target: { objectType: "Refund", objectId: "refund-B" },
+        readbackArguments: { id: "refund-B" }, objectIdPath: "$.id", resultObjectIdPath: "$.data.id",
         predicatePath: "SELECT * FROM refunds",
         operator: "exists",
       }),
     ).toThrow(SemanticFormError);
+  });
+});
+
+describe("CR-06 目标声明精确Schema", () => {
+  const base = { goalId: "g", skillCode: "verify", target: { objectType: "Order", objectId: "order-B" },
+    readbackArguments: { id: "order-B" }, objectIdPath: "$.id", resultObjectIdPath: "$.data.id", predicatePath: "$.data.rows[0].value" };
+  it.each([false, 0, null, ""])("equals保留JSON值 %s", (value) => {
+    expect(buildGoalCriterion({ ...base, operator: "equals", expectedValue: value }).criterion.predicate.value).toBe(value);
+  });
+  it.each(["exists", "nonEmpty"] as const)("%s不生成无意义的value", (operator) => {
+    expect(buildGoalCriterion({ ...base, operator }).criterion.predicate).toEqual({ path: base.predicatePath, operator });
+  });
+  it.each(["data.status", ".data.status", "$.data..status", "$.data.rows[0]oops", "$.data.rows[-1]", "$.data.rows[01]"])("拒绝错误路径 %s", (predicatePath) => {
+    expect(() => buildGoalCriterion({ ...base, operator: "exists", predicatePath })).toThrow(SemanticFormError);
+  });
+  it.each([NaN, Infinity, -Infinity])("拒绝非JSON数值 %s", (expectedValue) => {
+    expect(() => buildGoalCriterion({ ...base, operator: "equals", expectedValue })).toThrow(SemanticFormError);
+  });
+  it("equals缺值、参数错对象均拒绝，并保持提交快照独立", () => {
+    expect(() => buildGoalCriterion({ ...base, operator: "equals" })).toThrow(SemanticFormError);
+    expect(() => buildGoalCriterion({ ...base, operator: "exists", readbackArguments: { id: "order-A" } })).toThrow(SemanticFormError);
+    const submitted = buildGoalCriterion({ ...base, operator: "exists" });
+    base.readbackArguments.id = "order-A";
+    expect(submitted.criterion.readback.arguments.id).toBe("order-B");
   });
 });

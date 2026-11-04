@@ -10,7 +10,6 @@ import cn.agentplatform.engine.infra.TraceStore;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -29,10 +28,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class GoalVerificationService {
 
-    /** 单次核验的硬预算：目标数与每目标回执扫描数都有界，防止运行被无限展开。 */
+    /** 单次核验目标数有界；每目标只读取精确绑定的最新回执与动作锚。 */
     static final int MAX_GOALS = 32;
-
-    static final int MAX_CALL_SCAN = 50;
 
     /** 没有成功回执时，等待/未知的终止条件由 run 终态决定，不自行轮询。 */
     private static final Set<String> TERMINAL_RUN_STATES = Set.of("SUCCEEDED", "FAILED", "CANCELLED");
@@ -96,6 +93,11 @@ public class GoalVerificationService {
         budget.put("verifiedGoals", considered);
         budget.put("truncated", total > considered);
         Map<String, Object> summary = new LinkedHashMap<>();
+        boolean currentContract = declared.isArray() && total <= MAX_GOALS;
+        for (int i = 0; i < considered; i++)
+            if (!GoalContract.declarationErrors(declared.get(i)).isEmpty()) currentContract = false;
+        // 无版本的历史声明保持原投影；新声明才带已激活的goal@1.0标识。
+        if (currentContract) { summary.put("profile", "goal"); summary.put("schemaVersion", "1.0"); }
         summary.put("runId", runId);
         summary.put("runStatus", run.get("status"));
         summary.put("goals", goals);
@@ -114,10 +116,10 @@ public class GoalVerificationService {
             throw new PlatformException(500, "GOAL_CRITERION_INVALID", "目标缺少合法goalId");
         if (!criterion.isObject())
             throw new PlatformException(500, "GOAL_CRITERION_INVALID", "目标缺少criterion");
-        if (!GoalContract.bindingErrors(goal).isEmpty())
+        if (!GoalContract.declarationErrors(goal).isEmpty())
             return outcome(goalId, criterion, GoalOutcome.UNKNOWN, null,
                     "目标缺少冻结对象或精确读回参数，请修正配置后重新运行",
-                    Map.of("reason", "GOAL_BINDING_INVALID", "errors", GoalContract.bindingErrors(goal)));
+                    Map.of("reason", "GOAL_BINDING_INVALID", "errors", GoalContract.declarationErrors(goal)));
         JsonNode readback = criterion.path("readback");
         String skillCode = readback.path("skillCode").asText("");
         if (skillCode.isBlank())
@@ -172,11 +174,8 @@ public class GoalVerificationService {
                         with(detail, "reason", "READBACK_NOT_AFTER_ACTION"));
             Match match = match(result, predicate);
             detail.put("matched", match.matched());
-            if (match.value() != null) detail.put("readbackValue", match.value());
+            if (match.present()) detail.put("readbackValue", match.value());
             if (match.matched()) {
-                if (match.value() == null && predicate.path("path").asText().isBlank())
-                    return outcome(goalId, criterion, GoalOutcome.UNKNOWN, null,
-                            "判据缺少可读回字段，不能确认为完成", detail);
                 return outcome(goalId, criterion, GoalOutcome.ACHIEVED,
                         Map.of("evidenceKind", "call", "callId", callId), null, detail);
             }
@@ -256,67 +255,38 @@ public class GoalVerificationService {
 
     // ---- predicate ----------------------------------------------------------
 
-    private record Match(boolean matched, Object value, String reason) {}
+    private record Match(boolean matched, Object value, boolean present, String reason) {}
 
     private static Match match(JsonNode result, JsonNode predicate) {
-        if (result == null) return new Match(false, null, "NO_RESULT");
-        if (!predicate.isObject()) return new Match(false, null, "NO_PREDICATE");
-        String path = predicate.path("path").asText("");
-        if (path.isBlank()) return new Match(false, null, "NO_PREDICATE_PATH");
-        JsonNode value = path(result, path);
-        if (predicate.has("equals")) {
-            if (value == null || value.isMissingNode())
-                return new Match(false, null, "VALUE_MISSING");
-            Object actual = Json.mapper().convertValue(value, Object.class);
-            Object expected = Json.mapper().convertValue(predicate.get("equals"), Object.class);
-            boolean same = java.util.Objects.equals(normalize(actual), normalize(expected));
-            return new Match(same, actual, same ? "MATCHED" : "VALUE_MISMATCH");
-        }
-        if (predicate.path("nonEmpty").asBoolean(false)) {
-            boolean present = value != null && !value.isMissingNode();
-            boolean nonEmpty = present
-                    && !(value.isArray() && value.isEmpty())
-                    && !(value.isObject() && value.isEmpty())
-                    && !(value.isTextual() && value.asText().isBlank());
-            return new Match(nonEmpty, present ? Json.mapper().convertValue(value, Object.class) : null,
-                    nonEmpty ? "MATCHED" : "EMPTY");
-        }
-        if (predicate.path("exists").asBoolean(false)) {
-            boolean present = value != null && !value.isMissingNode() && !value.isNull();
-            return new Match(present, present ? Json.mapper().convertValue(value, Object.class) : null,
-                    present ? "MATCHED" : "ABSENT");
-        }
-        return new Match(false, null, "NO_PREDICATE");
+        if (result == null) return new Match(false, null, false, "NO_RESULT");
+        if (!GoalContract.predicateErrors(predicate).isEmpty())
+            return new Match(false, null, false, "INVALID_PREDICATE");
+        JsonNode value = GoalContract.path(result, predicate.path("path").asText());
+        boolean present = !value.isMissingNode();
+        Object actual = present ? Json.mapper().convertValue(value, Object.class) : null;
+        return switch (predicate.path("operator").asText()) {
+            case "equals" -> {
+                Object expected = Json.mapper().convertValue(predicate.get("value"), Object.class);
+                boolean same = present && java.util.Objects.equals(normalize(actual), normalize(expected));
+                yield new Match(same, actual, present, same ? "MATCHED" : present ? "VALUE_MISMATCH" : "VALUE_MISSING");
+            }
+            case "nonEmpty" -> {
+                boolean nonEmpty = present && !value.isNull()
+                        && !(value.isContainerNode() && value.isEmpty())
+                        && !(value.isTextual() && value.asText().isBlank());
+                yield new Match(nonEmpty, actual, present, nonEmpty ? "MATCHED" : "EMPTY");
+            }
+            case "exists" -> new Match(present, actual, present, present ? "MATCHED" : "ABSENT");
+            default -> new Match(false, null, false, "INVALID_PREDICATE");
+        };
     }
 
-    /** 数字按十进制值比较，避免 1 与 1.0 被当作不同业务状态。 */
+    /** 数字按十进制值比较；false/0/null不参与真假转换，missing与显式null严格区分。 */
     private static Object normalize(Object value) {
         return value instanceof Number number ? new java.math.BigDecimal(number.toString()).stripTrailingZeros() : value;
     }
 
-    /** 受限路径：点号分段 + [n] 下标，不执行表达式。 */
-    static JsonNode path(JsonNode root, String path) {
-        JsonNode node = root;
-        for (String part : path.split("\\.")) {
-            String name = part;
-            int bracket = part.indexOf('[');
-            if (bracket >= 0) {
-                name = part.substring(0, bracket);
-                if (!name.isEmpty()) node = node.path(name);
-                String rest = part.substring(bracket);
-                java.util.regex.Matcher m = java.util.regex.Pattern.compile("\\[(\\d+)]").matcher(rest);
-                while (m.find()) {
-                    if (!node.isArray()) return null;
-                    int index = Integer.parseInt(m.group(1));
-                    if (index < 0 || index >= node.size()) return null;
-                    node = node.get(index);
-                }
-                continue;
-            }
-            node = node.path(name);
-        }
-        return node;
-    }
+    static JsonNode path(JsonNode root, String path) { return GoalContract.path(root, path); }
 
     private static GoalOutcome outcome(
             String goalId,
