@@ -158,7 +158,8 @@ class SemanticDefinitionClientTest {
         return Map.of("ref", Map.of("kind", kind, "id", kind + "-1", "name", name));
     }
 
-    private static final class StubClients extends SkillClients {
+    /** 非静态内部类：避免被类路径扫描当候选组件（同 OntologyManifestClientTest.StubClients）。 */
+    private final class StubClients extends SkillClients {
         private final JsonNode payload;
         private final PlatformException failure;
         private String url;

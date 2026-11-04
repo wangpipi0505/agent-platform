@@ -59,7 +59,7 @@ class SemanticDecisionClientTest {
         assertMalformed(node);
     }
 
-    private static void assertMalformed(JsonNode node) {
+    private void assertMalformed(JsonNode node) {
         var failure = assertThrows(PlatformException.class,
                 () -> new SemanticDecisionClient(new StubClients(node), "http://or").evaluate(RELEASE, Map.of()));
         assertEquals(502, failure.status());
@@ -86,7 +86,8 @@ class SemanticDecisionClientTest {
         return Json.read(json);
     }
 
-    static class StubClients extends SkillClients {
+    /** 非静态内部类：避免被类路径扫描当候选组件（同 OntologyManifestClientTest.StubClients）。 */
+    class StubClients extends SkillClients {
         private final JsonNode data;
         String url;
 

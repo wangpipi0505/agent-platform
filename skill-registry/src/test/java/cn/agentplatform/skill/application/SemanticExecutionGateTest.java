@@ -181,7 +181,8 @@ class SemanticExecutionGateTest {
                 Map.of("releaseId", RELEASE.toString()), allHold, new ArrayList<>(conditions));
     }
 
-    static class StubDecision extends SemanticDecisionClient {
+    /** 非静态内部类：避免被类路径扫描当候选组件（同 OntologyManifestClientTest.StubClients）。 */
+    class StubDecision extends SemanticDecisionClient {
         private final SemanticDecisionClient.ConditionResult result;
         PlatformException failure;
         int calls;

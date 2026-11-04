@@ -489,8 +489,9 @@ class ArtifactPersistenceTest {
                         "rejection must happen before the real worker starts"));
     }
 
-    /** Delegates authorization and streaming to the real store; it never manufactures READY data. */
-    private static final class ProcessInputStore extends ArtifactStore {
+    /** Delegates authorization and streaming to the real store; it never manufactures READY data.
+     *  非静态内部类：避免被类路径扫描当候选组件（同 OntologyManifestClientTest.StubClients）。 */
+    private final class ProcessInputStore extends ArtifactStore {
         final AtomicInteger opened = new AtomicInteger();
         final AtomicInteger closed = new AtomicInteger();
 

@@ -165,7 +165,8 @@ class DefinitionLookupSkillsTest {
         return Map.of("execution", Map.of("releaseId", releaseId.toString()));
     }
 
-    private static final class StubDefinitions extends SemanticDefinitionClient {
+    /** 非静态内部类：避免被类路径扫描当候选组件（同 OntologyManifestClientTest.StubClients）。 */
+    private final class StubDefinitions extends SemanticDefinitionClient {
         private final int items;
         private int calls;
         private UUID last;

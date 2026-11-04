@@ -212,8 +212,8 @@ class SemanticFactsClientTest {
                 "sourceKey", "A-1"));
     }
 
-    /** 只替换传输层；请求 URL 与 body 仍由真实客户端拼装。 */
-    private static final class StubClients extends SkillClients {
+    /** 只替换传输层；请求 URL 与 body 仍由真实客户端拼装。非静态内部类：避免被类路径扫描当候选组件。 */
+    private final class StubClients extends SkillClients {
         private final JsonNode reply;
         private String url;
         private Object sent;

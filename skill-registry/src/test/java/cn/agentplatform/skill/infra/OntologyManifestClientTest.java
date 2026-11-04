@@ -61,7 +61,11 @@ class OntologyManifestClientTest {
         return Json.tree(body);
     }
 
-    private static final class StubClients extends SkillClients {
+    /**
+     * 非静态内部类（非独立类型）：继承的 {@code @Component} 会让类路径扫描把它当候选组件，
+     * 而带参私有构造无法实例化，整模块 Spring 上下文连坐失败；非独立类型不会被注册为 bean。
+     */
+    private final class StubClients extends SkillClients {
         private final JsonNode reply;
         private final PlatformException failure;
         private String url;
