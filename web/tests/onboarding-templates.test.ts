@@ -6,9 +6,10 @@ import {
   applyPackageSelection,
   buildOnboardingTemplatePayload,
   emptyOnboardingTemplateDraft,
+  onboardingClient,
   ONBOARDING_TEMPLATE_KINDS,
   selectablePackages,
-  TEMPLATE_SERVICE_UNAVAILABLE,
+  TEMPLATE_WRITE_SCOPE,
   validateOnboardingTemplateDraft,
 } from "../shared/onboarding";
 
@@ -109,11 +110,14 @@ describe("页面接线与不伪造可用", () => {
     "utf8",
   );
 
-  it("服务端缺口如实呈现：目录区无假数据，提交入口禁用并说明", () => {
-    expect(page).toContain("TEMPLATE_SERVICE_UNAVAILABLE");
-    expect(page).toContain('title="模板服务端尚未交付"');
-    // 提交按钮硬禁用，无模拟提交路径
-    expect(page).toContain('<el-button type="primary" disabled>{{ "提交登记" }}</el-button>');
+  it("ONB-04 解除硬禁用：登记走 DraftAssemblyStep 真实提交，目录读真实接口", () => {
+    expect(page).not.toContain("模板服务端尚未交付");
+    expect(page).not.toContain('提交入口暂未启用');
+    // ONB-04：提交入口解除硬禁用（DraftAssemblyStep 接真实 create）；无模拟提交路径
+    expect(page).toContain('<DraftAssemblyStep :draft="draft"');
+    expect(page).toContain('<VerifyPublishStep />');
+    expect(page).toContain('TEMPLATE_WRITE_SCOPE');
+    expect(page).not.toContain('TEMPLATE_SERVICE_UNAVAILABLE');
     expect(page).not.toMatch(/mock|fixture/i);
   });
 
@@ -133,8 +137,34 @@ describe("页面接线与不伪造可用", () => {
     );
   });
 
-  it("服务端缺口文案明确指向后续子步", () => {
-    expect(TEMPLATE_SERVICE_UNAVAILABLE).toContain("尚未交付");
-    expect(TEMPLATE_SERVICE_UNAVAILABLE).toContain("不显示任何模板数据");
+  it("ONB-04：服务端已交付——客户端走真实接口，requestId/expectedRev 约定对齐", () => {
+    expect(TEMPLATE_WRITE_SCOPE).toContain("管理员");
+    // 客户端路径与幂等约定
+    const calls: { path: string; method?: string; body?: unknown }[] = [];
+    const client = onboardingClient(async (path, method, body) => {
+      calls.push({ path, method, body });
+      return [];
+    });
+    void client.list({ q: "查找" });
+    expect(calls[0].path).toBe("/admin/onboarding-templates?q=%E6%9F%A5%E6%89%BE");
+    void client.create({
+      code: "t1", name: "T", kind: "QUERY", description: "",
+      sourcePackageVersionId: 1, sourcePackageSha256: "a".repeat(64),
+      appCode: "app", experience: { appCode: "app", experienceRev: 1 },
+      integration: { bizSystemCode: "B", environment: "PROD", mode: "EMBED" },
+      requestId: "rid-1",
+    });
+    expect(calls[1]).toEqual({
+      path: "/admin/onboarding-templates", method: "POST",
+      body: expect.objectContaining({ requestId: "rid-1" }),
+    });
+    expect(JSON.stringify(calls[1].body)).not.toContain("expectedRev");
+    void client.publish("t1", { expectedRev: 3, requestId: "rid-2" });
+    expect(calls[2]).toEqual({
+      path: "/admin/onboarding-templates/t1/publish", method: "POST",
+      body: { expectedRev: 3, requestId: "rid-2" },
+    });
+    void client.preflight("t1", 2, { document: "doc", connection: "conn", requestId: "rid-3" });
+    expect(calls[3].path).toBe("/admin/onboarding-templates/t1/versions/2/preflight");
   });
 });

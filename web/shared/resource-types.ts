@@ -63,12 +63,48 @@ export interface PreflightPreview {
   documentSha256: string;
 }
 
+/* ---------- 接入模板记录（GET /admin/onboarding-templates 投影，ONB-04） ---------- */
+
+export interface OnboardingTemplateRecord {
+  code: string;
+  name: string;
+  kind: string;
+  status: string;
+  currentRev: number;
+  updatedAt: string;
+}
+
+/** 未知输入 → 模板记录外壳；缺 code 的行丢弃，状态/修订给确定值。 */
+export function parseOnboardingTemplate(value: unknown): OnboardingTemplateRecord | null {
+  if (!isRecord(value)) return null;
+  const code = asString(value.code);
+  if (!code) return null;
+  const revision = asInt(value.currentRev);
+  return {
+    code,
+    name: asString(value.name) || code,
+    kind: asString(value.kind) || "QUERY",
+    status: asString(value.status) || "DRAFT",
+    currentRev: revision > 0 ? revision : 1,
+    updatedAt: asString(value.updatedAt),
+  };
+}
+
+export function parseOnboardingTemplateList(value: unknown): OnboardingTemplateRecord[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map(parseOnboardingTemplate)
+    .filter((row): row is OnboardingTemplateRecord => row !== null);
+}
+
 /* ---------- 边界收窄工具（无 as / 无 @ts-ignore） ---------- */
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
 const asString = (value: unknown): string => (typeof value === "string" ? value : "");
+const asInt = (value: unknown): number =>
+  typeof value === "number" && Number.isSafeInteger(value) ? value : 0;
 
 /** 未知输入 → 连接档案外壳；字段缺失给确定空值，多余键不进入类型面。 */
 export function parseConnectionProfileView(value: unknown): ConnectionProfileView | null {

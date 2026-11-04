@@ -5,6 +5,8 @@ import { computed, onMounted, ref } from "vue";
 import type { Ref } from "vue";
 import BusinessFieldsStep from "./BusinessFieldsStep.vue";
 import ConnectionCheckStep from "./ConnectionCheckStep.vue";
+import DraftAssemblyStep from "./DraftAssemblyStep.vue";
+import VerifyPublishStep from "./VerifyPublishStep.vue";
 import FieldMappingStep from "./FieldMappingStep.vue";
 import ReturnPresentationStep from "./ReturnPresentationStep.vue";
 import type { FieldsBundle } from "../../../../shared/onboarding-fields";
@@ -17,16 +19,18 @@ import {
   applyPackageSelection,
   buildOnboardingTemplatePayload,
   emptyOnboardingTemplateDraft,
+  onboardingClient,
   ONBOARDING_TEMPLATE_KINDS,
   selectablePackages,
-  TEMPLATE_SERVICE_UNAVAILABLE,
+  TEMPLATE_WRITE_SCOPE,
   validateOnboardingTemplateDraft,
   useCapabilityPackageClient,
   type OnboardingTemplateDraft,
+  type OnboardingTemplateRecord,
 } from "../../../../shared/onboarding";
 
 usePageTitle(() => "接入模板");
-const { auth, busy, error, trace, operation } = usePageOperation();
+const { auth, api, busy, error, trace, operation } = usePageOperation();
 const client = useCapabilityPackageClient();
 const packages: Ref<CapabilityPackageSummary[]> = ref([]);
 const query = ref("");
@@ -34,17 +38,21 @@ const wizardOpen = ref(false);
 const step = ref(0);
 const draft = ref<OnboardingTemplateDraft>(emptyOnboardingTemplateDraft());
 const payloadPreview = ref("");
+// ONB-04：模板服务端已交付——目录读真实接口；提交/预检/发布为 ADMIN 操作。
+const templates = ref<OnboardingTemplateRecord[]>([]);
+const registered = ref<{ code: string; status: string; rev: number }>();
 // ONB-03：业务字段/受限映射/返回呈现步骤共享的声明式包（编辑后经校验进入登记预览）。
 const fieldsBundle = ref<FieldsBundle>(emptyFieldsBundle());
 const activeStep = ref<"fields" | "mapping" | "return">("fields");
-const submitBlocked = TEMPLATE_SERVICE_UNAVAILABLE;
 
 // ②目录由服务端按租户/权限过滤——业务配置者只会看到被授予的能力包版本。
+const templateClient = onboardingClient(api);
 async function load() {
   if (!auth.token) return;
   await operation(async () => {
     const page = await client.list({ q: query.value.trim() || undefined });
     packages.value = selectablePackages(page.items);
+    templates.value = await templateClient.list({ q: query.value.trim() || undefined });
   });
 }
 onMounted(load);
@@ -103,8 +111,8 @@ async function copyPayload() {
     type="info"
     :closable="false"
     show-icon
-    title="模板服务端尚未交付"
-    :description="submitBlocked"
+    title="登记与发布为管理员操作"
+    :description="TEMPLATE_WRITE_SCOPE"
   />
   <div class="panel">
     <div class="filters">
@@ -153,8 +161,41 @@ async function copyPayload() {
       模板复用能力包精确身份（版本与 SHA256）；目录按租户与权限过滤，撤回模板不影响已发布应用来源。
     </p>
   </div>
-  <!-- ONB-02：前置连接与规格诊断先于模板落库（禁止诊断失败后继续创建草稿）。 -->
+  <!-- ONB-04：服务端模板目录（真实接口）+ 组装登记 + 验证发布。 -->
+  <div class="panel">
+    <div class="row spread">
+      <h2>模板目录</h2>
+      <span class="muted">{{ templates.length }} 个模板</span>
+    </div>
+    <el-skeleton v-if="busy && !templates.length" :rows="3" animated />
+    <el-empty
+      v-else-if="!templates.length"
+      description="尚无接入模板；管理员可通过下方登记向导创建。"
+    />
+    <el-table v-else :data="templates" size="small">
+      <el-table-column label="编码 / 名称" min-width="180">
+        <template #default="{ row }">{{ row.code }} · {{ row.name }}</template>
+      </el-table-column>
+      <el-table-column label="种类" width="90">
+        <template #default="{ row }">{{ row.kind }}</template>
+      </el-table-column>
+      <el-table-column label="状态" width="110">
+        <template #default="{ row }">{{ row.status }}</template>
+      </el-table-column>
+      <el-table-column label="修订" width="80">
+        <template #default="{ row }">r{{ row.currentRev }}</template>
+      </el-table-column>
+    </el-table>
+  </div>
   <ConnectionCheckStep />
+  <div class="panel">
+    <h2>组装登记与验证发布</h2>
+    <DraftAssemblyStep :draft="draft" @registered="registered = $event" />
+    <VerifyPublishStep />
+    <p v-if="registered" class="muted" role="status">
+      本会话已登记：{{ registered.code }} · {{ registered.status }} · r{{ registered.rev }}。
+    </p>
+  </div>
   <!-- ONB-03：业务字段表单/受限映射/返回呈现（声明式映射，无表达式执行）。 -->
   <div class="panel fields-block">
     <div class="row spread">
@@ -269,16 +310,9 @@ async function copyPayload() {
         <code class="sha">{{ draft.sourcePackageSha256.slice(0, 12) }}…</code>；不含凭据与可执行脚本字段。
       </p>
       <pre class="payload">{{ payloadPreview }}</pre>
-      <el-alert
-        type="warning"
-        :closable="false"
-        show-icon
-        title="提交入口暂未启用"
-        :description="submitBlocked + ' 可复制以下登记内容，待接口启用后提交联调。'"
-      />
+      <DraftAssemblyStep :draft="draft" @registered="registered = $event" />
       <div class="preview-actions">
         <el-button :disabled="!payloadPreview" @click="copyPayload">复制登记 JSON</el-button>
-        <el-button type="primary" disabled>{{ "提交登记" }}</el-button>
       </div>
     </template>
     <template #footer>

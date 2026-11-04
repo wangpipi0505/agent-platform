@@ -17,7 +17,7 @@ import type {
   OperationDiagnosis,
   PreflightPreview,
 } from "./resource-types";
-import { parsePreflightPreview } from "./resource-types";
+import { parseOnboardingTemplate, parsePreflightPreview } from "./resource-types";
 
 export type {
   ConnectionProfileView,
@@ -140,8 +140,14 @@ export interface OnboardingDirectoryQuery {
   kind?: OnboardingTemplateKind;
 }
 
-export const TEMPLATE_SERVICE_UNAVAILABLE =
-  "模板服务端接口尚未交付（ONB 服务端后续子步）；目录与提交接口启用前，本页不显示任何模板数据。";
+/**
+ * ONB-04：模板服务端已交付（/admin/onboarding-templates）。写操作（创建/发布/预检）
+ * 为 ADMIN-only；业务配置者只读目录。提交幂等键 requestId + 修订基线 expectedRev
+ * 按 §4.3 约定：同一 requestId + 同计划返回既有进度（不覆盖人工后续编辑），
+ * 同键不同计划 409。
+ */
+export const TEMPLATE_WRITE_SCOPE =
+  "模板登记/发布为管理员操作；业务配置者可浏览目录并在被授予范围内发起登记请求，由管理员复核提交。";
 
 /* ===================== ONB-02：前置清单与规格诊断（前端模型） ===================== */
 
@@ -199,6 +205,66 @@ export function buildPreflightSummary(preview: PreflightPreview): Record<string,
 
 export const PREFLIGHT_SERVICE_NOTE =
   "前置诊断预览复用技能导入的只读解析；模板提交接口仍属 ONB 服务端后续子步，启用前不创建任何资源。";
+
+/* ===================== ONB-04：模板会话客户端（真实服务端接口） ===================== */
+
+import { parseOnboardingTemplateList, type OnboardingTemplateRecord } from "./resource-types";
+
+/** 请求体键集与服务端 BODY_KEYS/TRANSITION_KEYS/PREFLIGHT_KEYS 对齐（未知键不发送）。 */
+export interface OnboardingCreateRequest {
+  code: string
+  name: string
+  kind: OnboardingTemplateKind
+  description: string
+  sourcePackageVersionId: number
+  sourcePackageSha256: string
+  appCode: string
+  experience: OnboardingExperienceRef
+  integration: OnboardingIntegrationRef
+  requestId: string
+}
+
+export interface OnboardingTransitionRequest {
+  expectedRev: number
+  requestId: string
+}
+
+export interface OnboardingPreflightRequest {
+  document: string
+  connection: string
+  requestId: string
+}
+
+type OnboardingApi = (path: string, method?: string, body?: unknown) => Promise<unknown>;
+
+export function onboardingClient(api: OnboardingApi) {
+  const root = "/admin/onboarding-templates";
+  return {
+    list: (filters: { q?: string; kind?: string } = {}) => {
+      const query = new URLSearchParams();
+      for (const [key, value] of Object.entries(filters))
+        if (value !== undefined && value !== "") query.set(key, String(value));
+      const suffix = query.toString();
+      return api(suffix ? `${root}?${suffix}` : root).then(parseOnboardingTemplateList);
+    },
+    /** 组装登记：完整规范化草稿 + requestId 幂等；新建不接受 expectedRev（服务端 400 守护）。 */
+    create: (request: OnboardingCreateRequest): Promise<OnboardingTemplateRecord | null> =>
+      api(root, "POST", { ...request }).then(parseOnboardingTemplate),
+    /** 发布前预检：文档规格 + 连接引用 + requestId；响应为逐项检查结论。 */
+    preflight: (code: string, version: number, request: OnboardingPreflightRequest) =>
+      api(`${root}/${encodeURIComponent(code)}/versions/${version}/preflight`, "POST", {
+        ...request,
+      }).then(parsePreflightPreview),
+    /** 发布（仅 DRAFT 可发布；expectedRev 修订基线 + requestId 幂等）。 */
+    publish: (code: string, request: OnboardingTransitionRequest): Promise<unknown> =>
+      api(`${root}/${encodeURIComponent(code)}/publish`, "POST", { ...request }),
+    disable: (code: string, request: OnboardingTransitionRequest): Promise<unknown> =>
+      api(`${root}/${encodeURIComponent(code)}/disable`, "POST", { ...request }),
+  };
+}
+
+export { parseOnboardingTemplateList };
+export type { OnboardingTemplateRecord };
 
 /** 兼容薄包装：preview 响应经 resource-types 边界收窄后返回规范诊断。 */
 export function normalizePreview(response: unknown): PreflightPreview {
