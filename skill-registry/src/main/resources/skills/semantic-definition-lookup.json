@@ -1,0 +1,65 @@
+{
+  "code": "semantic-definition-lookup",
+  "name": "本体定义查询",
+  "description": "按运行固定的 releaseId 查询该版本允许的对象类型、属性、关系、规则与动作定义；terms/intent 只影响相关性排序，不参与授权。",
+  "type": "SEMANTIC_DEFINITION",
+  "invocationKind": "SYNC",
+  "endpoint": "http://127.0.0.1:18182/onto/semantic/definitions/query",
+  "timeoutMs": 15000,
+  "execution": {
+    "readonly": true,
+    "sideEffect": false,
+    "idempotent": true,
+    "cancellable": true
+  },
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "releaseId": {
+        "type": "string",
+        "format": "uuid",
+        "description": "固定版本；发布前由登记门禁补全，运行期不可改写"
+      },
+      "kinds": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "enum": ["objects", "properties", "relations", "rules", "actions"]
+        },
+        "maxItems": 5
+      },
+      "objectTypes": {
+        "type": "array",
+        "items": {"type": "string", "maxLength": 64},
+        "maxItems": 32
+      },
+      "terms": {
+        "type": "array",
+        "items": {"type": "string", "maxLength": 64},
+        "maxItems": 16
+      },
+      "intent": {"type": "string", "maxLength": 256},
+      "limit": {"type": "integer", "minimum": 1, "maximum": 200}
+    },
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "releaseRef": {"type": "object"},
+      "definitions": {"type": "object"},
+      "counts": {"type": "object"},
+      "emptyResult": {"type": "boolean"},
+      "truncated": {"type": "boolean"},
+      "truncation": {"type": "object"},
+      "projectionDigest": {"type": "string"},
+      "budget": {"type": "object"}
+    },
+    "required": ["releaseRef", "definitions", "counts", "emptyResult", "truncated", "projectionDigest", "budget"],
+    "additionalProperties": false
+  },
+  "guard": {
+    "attributes": {},
+    "roles": []
+  }
+}
