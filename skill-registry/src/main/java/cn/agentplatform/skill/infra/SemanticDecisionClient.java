@@ -31,20 +31,28 @@ public class SemanticDecisionClient {
     private static final Set<String> RESULTS = Set.of("HOLDS", "NOT_HOLDS", "UNKNOWN");
     private static final Pattern DIGEST = Pattern.compile("^[0-9a-f]{64}$");
 
-    private final SkillClients clients;
+    private final java.util.function.BiFunction<String, Object, JsonNode> request;
     private final String baseUrl;
 
-    public SemanticDecisionClient(
-            SkillClients clients,
+    public SemanticDecisionClient(SkillClients clients, String baseUrl) {
+        this(clients::post, baseUrl);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public SemanticDecisionClient(OntologySemanticTransport transport,
             @Value("${agent.services.ontology:http://127.0.0.1:18182}") String baseUrl) {
-        this.clients = Objects.requireNonNull(clients);
+        this(transport::post, baseUrl);
+    }
+
+    private SemanticDecisionClient(java.util.function.BiFunction<String, Object, JsonNode> request, String baseUrl) {
+        this.request = Objects.requireNonNull(request);
         this.baseUrl = Objects.requireNonNull(baseUrl).replaceAll("/+$", "");
     }
 
     public ConditionResult evaluate(UUID releaseId, Map<String, Object> request) {
         if (releaseId == null || request == null)
             throw new PlatformException(400, "SEMANTIC_REF_INVALID", "条件求值请求不能为空");
-        JsonNode data = clients.post(baseUrl + PATH.formatted(releaseId), request);
+        JsonNode data = this.request.apply(baseUrl + PATH.formatted(releaseId), request);
         if (!data.isObject()) throw malformed("条件响应不是对象");
         if (!"condition@1.0".equals(text(data, "profile"))
                 || !"1.0".equals(text(data, "schemaVersion")))

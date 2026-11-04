@@ -46,13 +46,21 @@ public class SemanticDefinitionClient {
     private static final int MAX_TYPES = 32;
     private static final Pattern DIGEST = Pattern.compile("^[0-9a-f]{64}$");
 
-    private final SkillClients clients;
+    private final java.util.function.BiFunction<String, Object, JsonNode> request;
     private final String baseUrl;
 
-    public SemanticDefinitionClient(
-            SkillClients clients,
+    public SemanticDefinitionClient(SkillClients clients, String baseUrl) {
+        this(clients::post, baseUrl);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public SemanticDefinitionClient(OntologySemanticTransport transport,
             @Value("${agent.services.ontology:http://127.0.0.1:18182}") String baseUrl) {
-        this.clients = Objects.requireNonNull(clients);
+        this(transport::post, baseUrl);
+    }
+
+    private SemanticDefinitionClient(java.util.function.BiFunction<String, Object, JsonNode> request, String baseUrl) {
+        this.request = Objects.requireNonNull(request);
         this.baseUrl = Objects.requireNonNull(baseUrl).replaceAll("/+$", "");
     }
 
@@ -65,7 +73,7 @@ public class SemanticDefinitionClient {
         Map<String, Object> body = selection(selection);
         JsonNode data;
         try {
-            data = clients.post(baseUrl + PATH.formatted(releaseId), body);
+            data = request.apply(baseUrl + PATH.formatted(releaseId), body);
         } catch (PlatformException e) {
             // OR 的 503/SEMANTIC_SOURCE_UNAVAILABLE 是对外可重试的真实结论；SkillClients 对 5xx
             // 统一折成 502 依赖不可用，这里只把该折码还原为语义源不可用，不改 4xx 业务码。

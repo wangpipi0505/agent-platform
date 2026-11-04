@@ -1,0 +1,58 @@
+{
+  "review": "CR-03",
+  "rounds": {
+    "red": {
+      "test": "SemanticConsumptionBoundaryTest.platformKeyReachesDeclaredSemanticMethodWithoutLocalSession",
+      "result": "401 local session required through actual WebBoundary/AuthService branch"
+    },
+    "repair": {
+      "AP": {
+        "OntologySemanticTransportTest": {
+          "tests": 6,
+          "failures": 0,
+          "errors": 0,
+          "transport": "Spring MockRestServiceServer; actual identity/routing/authentication code"
+        },
+        "existing_clients": {
+          "tests": 31,
+          "failures": 0,
+          "errors": 0
+        }
+      },
+      "OR": {
+        "SemanticConsumptionBoundaryTest": {
+          "tests": 2,
+          "failures": 0,
+          "errors": 0
+        },
+        "SemanticConsumeAuthenticationTest": {
+          "tests": 3,
+          "failures": 0,
+          "errors": 0
+        },
+        "ObjectFactsServiceTest": {
+          "tests": 9,
+          "failures": 0,
+          "errors": 0
+        },
+        "SemanticConditionServiceTest": {
+          "tests": 8,
+          "failures": 0,
+          "setupErrors": 8,
+          "reason": "JDK Windows UnixDomainSockets Invalid argument: connect before business assertions"
+        }
+      }
+    }
+  },
+  "limitations": [
+    "No PG, deployed service, BASE data or credentials accessed",
+    "No real AP-to-OR HTTP round trip; transport seam and actual OR authentication tested separately",
+    "No current deployment secret_ref mapping provisioned",
+    "No full acceptance or browser checks"
+  ],
+  "precondition_failures": [
+    "AP request parameter shadowing compile error corrected",
+    "OR release module Mockito unavailable: used existing FakeSpaces pattern without new dependency",
+    "Windows JDK loopback prevents HttpServer; selector-provider switch did not resolve; original failed report preserved in summary; only HTTP transport replaced with Spring test seam"
+  ]
+}

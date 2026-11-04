@@ -1,0 +1,71 @@
+{
+  "schemaVersion": "1.0",
+  "authentication": {
+    "type": "apiKey",
+    "in": "header",
+    "name": "X-API-Key",
+    "x-key-prefix": "ontopa_",
+    "description": "Current platform actor credential. OR validates ACTIVE key, user, space, READY release, endpoint grants and data scopes. Never accepts AP internal Bearer or user identity headers."
+  },
+  "identityCheck": {
+    "method": "GET",
+    "path": "/onto/releases/{releaseId}/semantic/identity",
+    "fields": [
+      "platformTenant",
+      "platformActor",
+      "principalId",
+      "credentialId",
+      "spaceId",
+      "releaseId"
+    ],
+    "cache": "NONE"
+  },
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/onto/releases/{releaseId}/semantic/identity"
+    },
+    {
+      "method": "POST",
+      "path": "/onto/releases/{releaseId}/semantic/facts/resolve"
+    },
+    {
+      "method": "POST",
+      "path": "/onto/releases/{releaseId}/semantic/facts"
+    },
+    {
+      "method": "POST",
+      "path": "/onto/releases/{releaseId}/semantic/definitions/query"
+    },
+    {
+      "method": "POST",
+      "path": "/onto/releases/{releaseId}/semantic/decisions"
+    },
+    {
+      "method": "POST",
+      "path": "/onto/releases/{releaseId}/semantic/conditions/evaluate"
+    },
+    {
+      "method": "GET",
+      "path": "/onto/releases/{releaseId}/formal-source"
+    }
+  ],
+  "apDeploymentBinding": {
+    "property": "agent.ontology.consume-identities",
+    "fields": [
+      "tenantId",
+      "principalId",
+      "releaseId",
+      "secretRef"
+    ],
+    "selection": "verified Actor only; exact tenant, principal, release; duplicate or missing binding denied"
+  },
+  "constraints": [
+    "No AP internal Bearer trust",
+    "No identity headers",
+    "No administrator session reuse",
+    "No redirects",
+    "Exact configured ontology origin",
+    "Current credential and endpoint grants on every request"
+  ]
+}

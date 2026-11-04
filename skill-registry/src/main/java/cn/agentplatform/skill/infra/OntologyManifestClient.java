@@ -38,13 +38,21 @@ public class OntologyManifestClient {
     private static final Pattern SCHEMA_VERSION = Pattern.compile("^[0-9]+\\.[0-9]+$");
     private static final Set<String> ENDPOINT_STATUS = Set.of("ACTIVE", "DISABLED");
 
-    private final SkillClients clients;
+    private final java.util.function.Function<String, JsonNode> request;
     private final String baseUrl;
 
-    public OntologyManifestClient(
-            SkillClients clients,
+    public OntologyManifestClient(SkillClients clients, String baseUrl) {
+        this(clients::get, baseUrl);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public OntologyManifestClient(OntologySemanticTransport transport,
             @Value("${agent.services.ontology:http://127.0.0.1:18182}") String baseUrl) {
-        this.clients = Objects.requireNonNull(clients);
+        this(transport::get, baseUrl);
+    }
+
+    private OntologyManifestClient(java.util.function.Function<String, JsonNode> request, String baseUrl) {
+        this.request = Objects.requireNonNull(request);
         this.baseUrl = Objects.requireNonNull(baseUrl).replaceAll("/+$", "");
     }
 
@@ -80,7 +88,7 @@ public class OntologyManifestClient {
         }
         JsonNode data;
         try {
-            data = clients.get(url);
+            data = request.apply(url);
         } catch (PlatformException failure) {
             if (failure.status() == 502 && "DEPENDENCY_UNAVAILABLE".equals(failure.code()))
                 throw new PlatformException(

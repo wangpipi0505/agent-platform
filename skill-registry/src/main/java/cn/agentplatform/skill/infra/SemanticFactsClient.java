@@ -41,13 +41,21 @@ public class SemanticFactsClient {
             Set.of("call", "artifact", "business-record");
     private static final Pattern DIGEST = Pattern.compile("^[0-9a-f]{64}$");
 
-    private final SkillClients clients;
+    private final java.util.function.BiFunction<String, Object, JsonNode> request;
     private final String baseUrl;
 
-    public SemanticFactsClient(
-            SkillClients clients,
+    public SemanticFactsClient(SkillClients clients, String baseUrl) {
+        this(clients::post, baseUrl);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public SemanticFactsClient(OntologySemanticTransport transport,
             @Value("${agent.services.ontology:http://127.0.0.1:18182}") String baseUrl) {
-        this.clients = Objects.requireNonNull(clients);
+        this(transport::post, baseUrl);
+    }
+
+    private SemanticFactsClient(java.util.function.BiFunction<String, Object, JsonNode> request, String baseUrl) {
+        this.request = Objects.requireNonNull(request);
         this.baseUrl = Objects.requireNonNull(baseUrl).replaceAll("/+$", "");
     }
 
@@ -55,7 +63,7 @@ public class SemanticFactsClient {
     public ResolvedObject resolve(UUID releaseId, Map<String, Object> reference) {
         if (releaseId == null || reference == null)
             throw new PlatformException(400, "SEMANTIC_REF_INVALID", "对象引用不能为空");
-        JsonNode data = clients.post(baseUrl + PATH.formatted(releaseId), reference);
+        JsonNode data = request.apply(baseUrl + PATH.formatted(releaseId), reference);
         if (!data.isObject()) throw malformed();
         String refKind = text(data, "refKind");
         String spaceCode = text(data, "spaceCode");
@@ -129,7 +137,7 @@ public class SemanticFactsClient {
         body.put("opCode", opCode);
         body.put("reference", reference);
         body.put("input", input == null ? Map.of() : input);
-        JsonNode data = clients.post(baseUrl + FACTS_PATH.formatted(releaseId), body);
+        JsonNode data = request.apply(baseUrl + FACTS_PATH.formatted(releaseId), body);
         if (!data.isObject()) throw malformed();
 
         Map<String, Object> releaseRef = releaseRef(data.get("releaseRef"), releaseId);
