@@ -3,7 +3,12 @@
  * 模板服务端未交付前，目录区不显示任何数据，提交入口禁用并说明——不伪造已可用。 */
 import { computed, onMounted, ref } from "vue";
 import type { Ref } from "vue";
+import BusinessFieldsStep from "./BusinessFieldsStep.vue";
 import ConnectionCheckStep from "./ConnectionCheckStep.vue";
+import FieldMappingStep from "./FieldMappingStep.vue";
+import ReturnPresentationStep from "./ReturnPresentationStep.vue";
+import type { FieldsBundle } from "../../../../shared/onboarding-fields";
+import { emptyFieldsBundle } from "../../../../shared/onboarding-fields";
 import PageError from "../../PageError.vue";
 import PageHeader from "../../PageHeader.vue";
 import { usePageOperation, usePageTitle } from "../../usePageOperation";
@@ -29,6 +34,9 @@ const wizardOpen = ref(false);
 const step = ref(0);
 const draft = ref<OnboardingTemplateDraft>(emptyOnboardingTemplateDraft());
 const payloadPreview = ref("");
+// ONB-03：业务字段/受限映射/返回呈现步骤共享的声明式包（编辑后经校验进入登记预览）。
+const fieldsBundle = ref<FieldsBundle>(emptyFieldsBundle());
+const activeStep = ref<"fields" | "mapping" | "return">("fields");
 const submitBlocked = TEMPLATE_SERVICE_UNAVAILABLE;
 
 // ②目录由服务端按租户/权限过滤——业务配置者只会看到被授予的能力包版本。
@@ -147,6 +155,32 @@ async function copyPayload() {
   </div>
   <!-- ONB-02：前置连接与规格诊断先于模板落库（禁止诊断失败后继续创建草稿）。 -->
   <ConnectionCheckStep />
+  <!-- ONB-03：业务字段表单/受限映射/返回呈现（声明式映射，无表达式执行）。 -->
+  <div class="panel fields-block">
+    <div class="row spread">
+      <h2>业务字段与返回呈现</h2>
+      <el-radio-group v-model="activeStep" size="small">
+        <el-radio-button value="fields">业务字段</el-radio-button>
+        <el-radio-button value="mapping">受限映射</el-radio-button>
+        <el-radio-button value="return">返回呈现</el-radio-button>
+      </el-radio-group>
+    </div>
+    <BusinessFieldsStep v-if="activeStep === 'fields'" :fields="fieldsBundle.fields" />
+    <FieldMappingStep
+      v-else-if="activeStep === 'mapping'"
+      :bundle="fieldsBundle"
+      @update="fieldsBundle = $event"
+    />
+    <ReturnPresentationStep
+      v-else
+      :bundle="fieldsBundle"
+      @update="fieldsBundle = $event"
+    />
+    <p class="muted">
+      三个步骤的输入与映射只保存允许字段与映射引用；提交仍随模板服务端启用（见上方登记说明），不提交
+      authority、authRef 或任意 endpoint。
+    </p>
+  </div>
   <el-dialog
     v-model="wizardOpen"
     title="登记接入模板"
@@ -265,5 +299,6 @@ async function copyPayload() {
 .sha { word-break: break-all; }
 .payload { max-height: 30vh; overflow: auto; white-space: pre-wrap; word-break: break-word; background: var(--el-fill-color-light, #f5f7fa); padding: .75rem; border-radius: .45rem; }
 .preview-actions { display: flex; justify-content: flex-end; gap: .5rem; margin-top: .75rem; }
+.fields-block { margin-top: 1rem; }
 @media (max-width: 640px) { .field-grid { grid-template-columns: minmax(0, 1fr); } }
 </style>

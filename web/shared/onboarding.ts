@@ -6,9 +6,28 @@
  * 页面不得伪造已可用状态。
  */
 import { parseJsonObject, useCapabilityPackageClient, type CapabilityPackageSummary } from "./capability-package";
+// MNT-03 DTO 族子步：稳定外壳类型与边界解析器权威定义在 resource-types.ts；
+// 本文件只叠加 onboarding 业务规则并转发类型（既有导入面不变）。
+import type {
+  ConnectionProfileView,
+  OnboardingExperienceRef,
+  OnboardingIntegrationRef,
+  OnboardingTemplateDraft,
+  OnboardingTemplateKind,
+  OperationDiagnosis,
+  PreflightPreview,
+} from "./resource-types";
+import { parsePreflightPreview } from "./resource-types";
 
-/** 模板种类：读取查询模板先交付；受控文件分析待 INT-02 文件链路；写入待确认机制齐备。 */
-export type OnboardingTemplateKind = "QUERY" | "FILE_ANALYSIS" | "CONTROLLED_WRITE";
+export type {
+  ConnectionProfileView,
+  OnboardingExperienceRef,
+  OnboardingIntegrationRef,
+  OnboardingTemplateDraft,
+  OnboardingTemplateKind,
+  OperationDiagnosis,
+  PreflightPreview,
+};
 
 export const ONBOARDING_TEMPLATE_KINDS: readonly {
   kind: OnboardingTemplateKind;
@@ -30,34 +49,6 @@ export const ONBOARDING_TEMPLATE_KINDS: readonly {
     reason: "待确认机制齐备后开放",
   },
 ];
-
-/** 引用 AssistantExperience（INT-03）：只登记引用字段，不在模板内重定义体验内容。 */
-export interface OnboardingExperienceRef {
-  appCode: string;
-  experienceRev: number;
-}
-
-/** 引用 IntegrationProfile（INT-03）：宿主挂载与输入上下文引用。 */
-export interface OnboardingIntegrationRef {
-  bizSystemCode: string;
-  environment: string;
-  mode: string;
-}
-
-/** 模板登记草稿：能力包精确身份 + 契约引用字段；不含凭据或可执行脚本。 */
-export interface OnboardingTemplateDraft {
-  code: string;
-  name: string;
-  kind: OnboardingTemplateKind;
-  description: string;
-  /** 来源能力包版本 id（不可变精确身份，由向导从被授予目录中选择）。 */
-  sourcePackageVersionId: number | null;
-  /** 来源能力包内容 SHA（登记时核对，防止目录内容漂移）。 */
-  sourcePackageSha256: string;
-  appCode: string;
-  experience: OnboardingExperienceRef;
-  integration: OnboardingIntegrationRef;
-}
 
 const CODE_PATTERN = /^[a-z][a-z0-9_]{1,63}$/;
 
@@ -154,16 +145,6 @@ export const TEMPLATE_SERVICE_UNAVAILABLE =
 
 /* ===================== ONB-02：前置清单与规格诊断（前端模型） ===================== */
 
-/** 连接档案只读投影（GET /admin/connection-profiles，ADMIN-only；脱敏展示不含凭据）。 */
-export interface ConnectionProfileView {
-  profileId: number | string;
-  name?: string;
-  bizSystemCode?: string;
-  environment?: string;
-  status?: string;
-  [key: string]: unknown;
-}
-
 /**
  * ①只列被授予的连接档案：已批准（APPROVED/ACTIVE）且未停用的档案才可被模板引用；
  * 服务端按身份过滤后，本层再按状态收敛，不给未批准连接任何模板入口。
@@ -173,46 +154,6 @@ export function grantedConnections(rows: readonly ConnectionProfileView[]): Conn
     const status = String(row.status ?? "").toUpperCase();
     return status === "APPROVED" || status === "ACTIVE";
   });
-}
-
-/** 逐操作诊断视图：拒绝原因原样来自服务端 diagnostics，不归并为提示语。 */
-export interface OperationDiagnosis {
-  operationId: string;
-  method: string;
-  path: string;
-  supported: boolean;
-  requiresAuth: boolean;
-  reasons: string[];
-}
-
-export interface PreflightPreview {
-  operations: OperationDiagnosis[];
-  warnings: string[];
-  documentSha256: string;
-}
-
-const diagnosticText = (value: unknown): string =>
-  typeof value === "string" ? value : JSON.stringify(value);
-
-/** 把 OpenAPI preview 响应规范化为逐操作诊断；拒绝原因与警告逐条保留、可追溯。 */
-export function normalizePreview(response: {
-  operations?: { operationId?: string; method?: string; path?: string; supported?: boolean; requiresAuth?: boolean; diagnostics?: unknown[] }[];
-  warnings?: unknown[];
-  documentSha256?: string;
-}): PreflightPreview {
-  const operations = (response.operations ?? []).map((op) => ({
-    operationId: String(op.operationId ?? ""),
-    method: String(op.method ?? "").toUpperCase(),
-    path: String(op.path ?? ""),
-    supported: op.supported === true,
-    requiresAuth: op.requiresAuth === true,
-    reasons: (op.diagnostics ?? []).map(diagnosticText),
-  }));
-  return {
-    operations,
-    warnings: (response.warnings ?? []).map(diagnosticText),
-    documentSha256: String(response.documentSha256 ?? ""),
-  };
 }
 
 /**
@@ -258,5 +199,10 @@ export function buildPreflightSummary(preview: PreflightPreview): Record<string,
 
 export const PREFLIGHT_SERVICE_NOTE =
   "前置诊断预览复用技能导入的只读解析；模板提交接口仍属 ONB 服务端后续子步，启用前不创建任何资源。";
+
+/** 兼容薄包装：preview 响应经 resource-types 边界收窄后返回规范诊断。 */
+export function normalizePreview(response: unknown): PreflightPreview {
+  return parsePreflightPreview(response);
+}
 
 export { parseJsonObject, useCapabilityPackageClient };
