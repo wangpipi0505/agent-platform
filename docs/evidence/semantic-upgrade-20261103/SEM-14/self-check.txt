@@ -1,0 +1,91 @@
+PASS manifest 文件存在
+PASS 交付文档存在
+PASS manifest 顶层键 manifestVersion
+PASS manifest 顶层键 deliveryId
+PASS manifest 顶层键 generatedAt
+PASS manifest 顶层键 status
+PASS manifest 顶层键 contracts
+PASS manifest 顶层键 profiles
+PASS manifest 顶层键 components
+PASS manifest 顶层键 capabilities
+PASS manifest 顶层键 supportedResources
+PASS manifest 顶层键 consistency
+PASS manifest 顶层键 blocked
+PASS manifest 顶层键 sanitization
+PASS deliveryId
+PASS status 明确为受阻态
+PASS AP 契约 存在 — G:\207\项目\算法重组工具\代码\_worktrees\upgrade-20261103\agent-platform\contracts\semantic-runtime.md
+PASS AP 契约 摘要一致 — 7b87ea12febfadd2eb4ef2446c004a3d9d1477ec5c3c0ac443c0094935aa180a
+PASS 记录 Schema 存在 — G:\207\项目\算法重组工具\代码\_worktrees\upgrade-20261103\agent-platform\contracts\semantic-runtime-v1.schema.json
+PASS 记录 Schema 摘要一致 — 09209c0a2a501a20551d3b80bce55ce6a9ca5763630f31cc0a00d837e6cc2916
+PASS OR 消费口径 存在 — G:\207\项目\算法重组工具\代码\_worktrees\upgrade-20261103\ontorepo\contracts\semantic-runtime.md
+PASS OR 消费口径 摘要一致 — 93b6ef5ac304d227b7ae979de3a4a2b8882db2f81ef2bc367da9802c6aee4ad4
+PASS OR openapi 存在 — G:\207\项目\算法重组工具\代码\_worktrees\upgrade-20261103\ontorepo\contracts\openapi.json
+PASS OR openapi 摘要一致 — f4d671a08c4f83d08ba5404df470f8686f9c7e28fbcc78e58913f65107888ea0
+PASS profile read-only@1.0
+PASS profile condition@1.0
+PASS profile decision@1.0
+PASS profile goal@1.0
+PASS 受支持资源恰为两类
+PASS 资源 A 无产品分支
+PASS 资源 A 交接仍受阻
+PASS 资源 A 已列仅配置项
+PASS 资源 B 无产品分支
+PASS 资源 B 交接仍受阻
+PASS 资源 B 已列仅配置项
+PASS 提交存在 agent-platform@fd384653
+PASS 提交存在 agent-platform@6ab4ebac
+PASS 提交存在 agent-platform@c88c56bd
+PASS 提交存在 agent-platform@16b2266e
+PASS 提交存在 agent-platform@bbceccbc
+PASS 提交存在 agent-platform@836c6b7d
+PASS 提交存在 agent-platform@25fedc6c
+PASS 提交存在 agent-platform@2734ae2c
+PASS 提交存在 agent-platform@033926ce
+PASS 提交存在 agent-platform@48b1813b
+PASS 提交存在 agent-platform@e4198a9b
+PASS 提交存在 agent-platform@68f2ea66
+PASS 提交存在 ontorepo@8f06c1f
+PASS 提交存在 ontorepo@ddea47a
+PASS 提交存在 ontorepo@68c6e48
+PASS 提交存在 ontorepo@036fd03
+PASS 提交存在 ontorepo@2ed467c
+PASS 提交存在 ontorepo@4ca2e74
+PASS 提交存在 ontorepo@f05757c
+PASS 提交存在 ontorepo@bc2c631
+PASS 提交存在 ontorepo@c003b00
+PASS 提交存在 ontorepo@6f05550
+PASS 提交存在 ontorepo@f218386
+PASS 提交存在 ontorepo@d0d05fd
+PASS 提交存在 ontorepo@e3e83c7
+PASS 文档列出端点 /onto/releases/{releaseId}/semantic/facts/resolve
+PASS 文档列出端点 /onto/releases/{releaseId}/semantic/facts
+PASS 文档列出端点 /onto/releases/{releaseId}/semantic/decisions
+PASS 文档列出端点 /onto/releases/{releaseId}/semantic/conditions/evaluate
+PASS 文档列出端点 /onto/releases/{releaseId}/semantic/definitions/query
+PASS 文档列出端点 /onto/spaces/{spaceCode}/semantic/identity-links
+PASS 文档列出端点 /onto/spaces/{spaceCode}/semantic/changes
+PASS 文档列出端点 /onto/spaces/{spaceCode}/semantic/changes/state
+PASS 文档列出端点 /onto/spaces/{spaceCode}/releases/{releaseId}/semantic-extensions
+PASS 文档列出端点 /onto/releases/{releaseId}/formal-source
+PASS 文档列出端点 /admin/semantic-bindings
+PASS 文档登记 BLOCKED SEM14-RESOURCE-HANDOVER
+PASS 文档登记 BLOCKED SEM14-M1A-JOINT
+PASS 文档登记 BLOCKED SEM14-OPENAPI
+PASS 文档登记 BLOCKED SEM14-GOAL-SCHEMA
+PASS 文档登记 BLOCKED SEM14-EMBED
+PASS 文档声明不冒充交接完成
+PASS 文档含一致性核对表
+PASS 文档含回退章节
+PASS 一致性含 PASS/PARTIAL/PENDING
+PASS 非 PASS 项均有 detail
+PASS 脱敏：出现密码赋值
+PASS 脱敏：出现密钥赋值
+PASS 脱敏：出现连接串
+PASS 脱敏：出现疑似密钥
+PASS 脱敏：出现内部账号
+PASS 脱敏：出现回环地址
+PASS 脱敏：出现端口
+PASS manifest 声明不含密钥/账号/连接串
+
+通过 89 项，失败 0 项。

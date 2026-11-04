@@ -1,0 +1,123 @@
+{
+  "manifestVersion": "1.0",
+  "deliveryId": "semantic-runtime@0.1",
+  "generatedAt": "2026-11-04",
+  "status": "DOCUMENTED_BLOCKED",
+  "summary": "SEM 升级线语义运行时标准交付：四类 profile、12 类能力端点的文档与脱敏清单已齐；两类资源真实交接与 M1a 双端联合出口仍 BLOCKED。",
+  "contracts": {
+    "ap": {
+      "path": "contracts/semantic-runtime.md",
+      "version": "v0.1",
+      "sha256": "7b87ea12febfadd2eb4ef2446c004a3d9d1477ec5c3c0ac443c0094935aa180a"
+    },
+    "schema": {
+      "path": "contracts/semantic-runtime-v1.schema.json",
+      "id": "urn:agent-platform:semantic-runtime:1.0",
+      "sha256": "09209c0a2a501a20551d3b80bce55ce6a9ca5763630f31cc0a00d837e6cc2916"
+    },
+    "orConsumption": {
+      "path": "contracts/semantic-runtime.md",
+      "sha256": "93b6ef5ac304d227b7ae979de3a4a2b8882db2f81ef2bc367da9802c6aee4ad4"
+    },
+    "orOpenapi": {
+      "path": "contracts/openapi.json",
+      "sha256": "f4d671a08c4f83d08ba5404df470f8686f9c7e28fbcc78e58913f65107888ea0"
+    }
+  },
+  "profiles": [
+    { "id": "read-only@1.0", "implemented": true, "recordSchema": "semantic-runtime-v1", "evidence": "SEM-03.1/03.2/05.0/05.1" },
+    { "id": "condition@1.0", "implemented": true, "recordSchema": "semantic-runtime §7.2", "evidence": "SEM-07.1/07.2" },
+    { "id": "decision@1.0", "implemented": true, "recordSchema": "semantic-runtime §7.1", "evidence": "SEM-04.1/04.2" },
+    { "id": "goal@1.0", "implemented": true, "recordSchema": "semantic-runtime §7.3（独立 Schema 文件待收口）", "evidence": "SEM-08" }
+  ],
+  "components": [
+    { "repo": "agent-platform", "commit": "fd384653", "card": "SEM-01.1", "subject": "语义运行时最小只读契约" },
+    { "repo": "agent-platform", "commit": "6ab4ebac", "card": "SEM-01.2", "subject": "profile 注册表与兼容边界" },
+    { "repo": "agent-platform", "commit": "c88c56bd", "card": "SEM-05.0", "subject": "本体元数据按 returnSpec 声明路径提取" },
+    { "repo": "agent-platform", "commit": "16b2266e", "card": "SEM-02.2", "subject": "应用语义绑定目录（阶段 1）" },
+    { "repo": "agent-platform", "commit": "bbceccbc", "card": "SEM-02.2", "subject": "配置发布钉住绑定修订（阶段 2）" },
+    { "repo": "agent-platform", "commit": "836c6b7d", "card": "SEM-03.1", "subject": "语义事实对象引用解析客户端" },
+    { "repo": "agent-platform", "commit": "25fedc6c", "card": "SEM-03.2", "subject": "单源事实读取客户端" },
+    { "repo": "agent-platform", "commit": "2734ae2c", "card": "SEM-06.2", "subject": "按需定义查询接线" },
+    { "repo": "agent-platform", "commit": "033926ce", "card": "SEM-07.1", "subject": "分发前语义条件复核" },
+    { "repo": "agent-platform", "commit": "48b1813b", "card": "SEM-07.2", "subject": "审批后分发前再复核" },
+    { "repo": "agent-platform", "commit": "e4198a9b", "card": "SEM-08", "subject": "目标读回核验与终态恢复" },
+    { "repo": "agent-platform", "commit": "68f2ea66", "card": "SEM-09", "subject": "语义配置表单与权威证据卡" },
+    { "repo": "ontorepo", "commit": "8f06c1f", "card": "SEM-02.1", "subject": "发布不可变语义扩展" },
+    { "repo": "ontorepo", "commit": "ddea47a", "card": "SEM-05.1", "subject": "冻结回执投影 read-only 语义片段" },
+    { "repo": "ontorepo", "commit": "68c6e48", "card": "SEM-03.1", "subject": "对象引用解析与授权" },
+    { "repo": "ontorepo", "commit": "036fd03", "card": "SEM-03.2", "subject": "单源真实事实与关系" },
+    { "repo": "ontorepo", "commit": "2ed467c", "card": "SEM-04.1", "subject": "事实驱动规则判定" },
+    { "repo": "ontorepo", "commit": "4ca2e74", "card": "SEM-04.2", "subject": "判定边界与兼容" },
+    { "repo": "ontorepo", "commit": "f05757c", "card": "SEM-06.1", "subject": "固定版本定义投影与授权缓存" },
+    { "repo": "ontorepo", "commit": "bc2c631", "card": "SEM-07.1", "subject": "冻结版本条件求值" },
+    { "repo": "ontorepo", "commit": "c003b00", "card": "SEM-07.2", "subject": "OR 侧复核沿用既有求值" },
+    { "repo": "ontorepo", "commit": "6f05550", "card": "SEM-10", "subject": "单源有界对象查询与关系展开" },
+    { "repo": "ontorepo", "commit": "f218386", "card": "SEM-11", "subject": "跨系统身份对应显式登记" },
+    { "repo": "ontorepo", "commit": "d0d05fd", "card": "SEM-12", "subject": "有限两源对象关联" },
+    { "repo": "ontorepo", "commit": "e3e83c7", "card": "SEM-13", "subject": "业务变化通知只失效不写事实" }
+  ],
+  "capabilities": [
+    { "id": "facts.resolve", "method": "POST", "path": "/onto/releases/{releaseId}/semantic/facts/resolve", "permission": "service.execute", "commit": "68c6e48", "verified": "unit+targeted" },
+    { "id": "facts.read", "method": "POST", "path": "/onto/releases/{releaseId}/semantic/facts", "permission": "service.execute", "commit": "036fd03", "verified": "unit+PG" },
+    { "id": "decisions.evaluate", "method": "POST", "path": "/onto/releases/{releaseId}/semantic/decisions", "permission": "service.execute", "commit": "2ed467c", "verified": "unit" },
+    { "id": "conditions.evaluate", "method": "POST", "path": "/onto/releases/{releaseId}/semantic/conditions/evaluate", "permission": "service.execute", "commit": "bc2c631", "verified": "unit" },
+    { "id": "definitions.query", "method": "POST", "path": "/onto/releases/{releaseId}/semantic/definitions/query", "permission": "service.execute", "commit": "f05757c", "verified": "unit" },
+    { "id": "identity-links", "method": "GET/POST", "path": "/onto/spaces/{spaceCode}/semantic/identity-links", "permission": "mapping.read/mapping.write", "commit": "f218386", "verified": "unit" },
+    { "id": "federation.plan", "method": "library", "path": "onto-mapping BoundedObjectFederation", "permission": "caller per source", "commit": "d0d05fd", "verified": "unit" },
+    { "id": "changes.receive", "method": "POST", "path": "/onto/spaces/{spaceCode}/semantic/changes", "permission": "service.execute+signature", "commit": "e3e83c7", "verified": "unit+PG" },
+    { "id": "changes.state", "method": "GET", "path": "/onto/spaces/{spaceCode}/semantic/changes/state", "permission": "mapping.read", "commit": "e3e83c7", "verified": "unit+PG" },
+    { "id": "extensions", "method": "GET/POST", "path": "/onto/spaces/{spaceCode}/releases/{releaseId}/semantic-extensions", "permission": "release.read/release.write", "commit": "8f06c1f", "verified": "unit+PG-smoke" },
+    { "id": "formal-source", "method": "GET", "path": "/onto/releases/{releaseId}/formal-source", "permission": "release.read", "commit": "1dbe935", "verified": "unit" },
+    { "id": "bindings", "method": "GET/POST", "path": "/admin/semantic-bindings", "permission": "ADMIN", "commit": "16b2266e", "verified": "unit+PG" }
+  ],
+  "supportedResources": [
+    {
+      "id": "A",
+      "shape": "relational-read-only",
+      "protocol": "JDBC / PostgreSQL（冻结数据源）",
+      "permissionShape": "空间成员 + service_endpoint 授予 + dataScope",
+      "configOnly": ["datasources", "metaSnapshots", "objectMappings", "guardCfg", "accessScope"],
+      "codeBranchPerProduct": false,
+      "verifiedBy": ["ObjectFactsServicePgTest(4)", "ObjectQueryPlannerTest(12)"],
+      "handoverStatus": "BLOCKED"
+    },
+    {
+      "id": "B",
+      "shape": "algorithm-artifact-read-only",
+      "protocol": "受控技能调用 / 产物引用",
+      "permissionShape": "空间成员 + 端点授予 + 技能版本冻结 + 服务票据",
+      "configOnly": ["execution.semanticConditions", "return_spec 方言", "技能绑定"],
+      "codeBranchPerProduct": false,
+      "verifiedBy": ["SemanticReceiptTest(11)", "SemanticExecutionGateTest(13)"],
+      "handoverStatus": "BLOCKED"
+    }
+  ],
+  "consistency": [
+    { "item": "profile 标识与字段", "sourceA": "docs/integration/semantic-runtime.md §2", "sourceB": "contracts/semantic-runtime.md §7", "status": "PASS" },
+    { "item": "read-only 记录 Schema", "sourceA": "contracts/semantic-runtime-v1.schema.json", "sourceB": "SemanticReceipt", "status": "PASS" },
+    { "item": "错误码", "sourceA": "docs/integration/semantic-runtime.md §8", "sourceB": "contracts/semantic-runtime.md §3", "status": "PASS" },
+    { "item": "语义端点 openapi 登记", "sourceA": "docs/integration/semantic-runtime.md §3", "sourceB": "contracts/openapi.json", "status": "PARTIAL", "detail": "facts/decisions/conditions/identity/changes 未登记" },
+    { "item": "goal Schema 与 §7 登记", "sourceA": "docs/integration/semantic-runtime.md §2", "sourceB": "contracts/semantic-runtime.md §7", "status": "PENDING", "detail": "独立 Schema 文件待 AP 收口" },
+    { "item": "提交号可复核", "sourceA": "manifest.components", "sourceB": "两仓 git", "status": "PASS" },
+    { "item": "配置项无内联密钥", "sourceA": "docs/integration/semantic-runtime.md §5", "sourceB": "代码 @Value/构造校验", "status": "PASS" },
+    { "item": "脱敏", "sourceA": "manifest", "sourceB": "文档全文", "status": "PASS" }
+  ],
+  "blocked": [
+    { "id": "SEM14-RESOURCE-HANDOVER", "item": "两类资源真实交接", "reason": "B02 运行栈未就绪；无用户授权窗口", "unlock": "B02 就绪 + 用户确认窗口；按两类源留存真实正负记录", "owner": "P/用户" },
+    { "id": "SEM14-M1A-JOINT", "item": "M1a 双端联合出口", "reason": "同上", "unlock": "同 RESOURCE-HANDOVER，联合验收单独授权", "owner": "P" },
+    { "id": "SEM14-OPENAPI", "item": "语义端点 openapi 登记", "reason": "子步白名单不含其余端点", "unlock": "P 窗口统一导出并复核", "owner": "P/AP" },
+    { "id": "SEM14-GOAL-SCHEMA", "item": "goal@1.0 独立 Schema/登记", "reason": "属 AP 契约收口", "unlock": "新增 semantic-runtime-goal-v1.schema.json 并回 §7 登记", "owner": "AP" },
+    { "id": "SEM14-EMBED", "item": "SEM-09 嵌入/路由挂载", "reason": "依赖 INT-05/07 与 F/P 席", "unlock": "集成窗口", "owner": "F/P" }
+  ],
+  "sanitization": {
+    "containsSecrets": false,
+    "containsAccountNames": false,
+    "containsConnectionStrings": false,
+    "notes": "仅登记键名、环境变量引用形态与提交号；部署时由 secret_ref/环境注入实际值。"
+  },
+  "evidence": {
+    "ap": "docs/evidence/semantic-upgrade-20261103/SEM-14/",
+    "or": "docs/evidence/semantic-upgrade-20261103/SEM-14/"
+  }
+}
