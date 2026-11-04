@@ -18,6 +18,7 @@
 | `versions.md` | SDK/依赖/配置 Schema/契约版本与可复核 checksum |
 | `error-codes.md` | 故障码表（从 `contracts/assistant-integration.md` §6 派生） |
 | `upgrade-rollback.md` | 升级、回退与撤销语义 |
+| `three-route-tiering.md` | 三路线（space-ground-visible / visibility-trajectory / user-mgmt-system）分级声明、BLOCKED 项与交接清单（INT-10；**不是**验收完成证据） |
 | `checksums.txt` | 构建产物 checksum 与校验命令 |
 | `verify-delivery.mjs` | 交付包自检：checksum、示例与 Schema/契约枚举对齐 |
 
@@ -30,6 +31,10 @@
 - pageContext Schema：`urn:agent-platform:assistant-page-context:1.0`。
 - 体验配置：configuration-profile §6 体验 schema v1（`schemaVersion: "v1"`）。
 - 契约状态：`contracts/assistant-integration.md` 为 v0.1 **冻结草案**；本交付包不改变其激活状态。未激活的能力不因本包存在而可宣称已启用。
+
+### 三路线分级声明（INT-10）
+
+三条真实业务路线（`space-ground-visible`、`visibility-trajectory`、`user-mgmt-system`）的 L0～L3 目标等级、接入档案/ConfigRelease 引用要求、真实用户来源、允许能力、确认策略、故障责任与回退，统一登记在 [`three-route-tiering.md`](three-route-tiering.md)。该文同时登记 **B04/B05/B08 BLOCKED** 与解锁条件：**真实场景、全量/联合与独立验收均待用户另行授权，本交付包不代表任一路线已完成分级落地**。
 
 ## 快速开始（L2）
 

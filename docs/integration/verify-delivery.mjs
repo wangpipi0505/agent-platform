@@ -153,8 +153,13 @@ if (!exists("web/assistant.js/dist/assistant.js")) {
 } else {
   const digest = sha256(artifactPath);
   const bytes = statSync(artifactPath).size;
-  const declaredDigest = /`(f1a797[0-9a-f]{58})`/.exec(versions)?.[1];
-  const declaredBytes = /`(\d+)`/.exec(versions)?.[1];
+  // 从构建产物那一行取摘要与字节，避免把校验绑死在某一版产物上。
+  const artifactRow = versions
+    .split(/\r?\n/)
+    .find((line) => line.includes("web/assistant.js/dist/assistant.js"));
+  const artifactCells = artifactRow?.match(/`([^`]+)`/g)?.map((cell) => cell.slice(1, -1)) ?? [];
+  const declaredDigest = artifactCells.find((cell) => /^[0-9a-f]{64}$/.test(cell));
+  const declaredBytes = artifactCells.find((cell) => /^\d+$/.test(cell));
   if (!declaredDigest || declaredDigest !== digest) {
     fail(`versions.md 的 SDK sha256 与产物不一致（${digest}）`);
   }
