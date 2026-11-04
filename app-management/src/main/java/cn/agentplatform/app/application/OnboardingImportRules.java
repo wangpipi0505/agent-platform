@@ -219,7 +219,10 @@ public final class OnboardingImportRules {
         if (!Set.of("structuredPath", "modelSummary", "fileRefPaths", "cardTemplate").containsAll(value.keySet())) throw unsupported("不能通过新导入声明动态文件获取或新语义投影");
         returnPath(value.get("structuredPath"));
         var summary = object(value.get("modelSummary"), "modelSummary");
-        if (!summary.keySet().equals(Set.of("mode", "tpl")) || !"TEMPLATE".equals(summary.get("mode"))) throw missing("modelSummary.mode=TEMPLATE/tpl");
+        // 与既有SkillRules/表单的tpl方言一致；省略mode即TEMPLATE，显式其它模式仍拒绝。
+        if (!Set.of("mode", "tpl").containsAll(summary.keySet()) || !summary.containsKey("tpl")
+                || summary.containsKey("mode") && !"TEMPLATE".equals(summary.get("mode")))
+            throw missing("modelSummary.tpl（mode仅支持TEMPLATE）");
         template(text(summary.get("tpl"), "modelSummary.tpl", 4096));
         for (Object path : list(value.get("fileRefPaths"), "fileRefPaths", 16)) returnPath(path);
         if (value.containsKey("cardTemplate")) {
