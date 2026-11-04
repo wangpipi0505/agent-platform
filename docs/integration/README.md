@@ -21,6 +21,8 @@
 | `checksums.txt` | 构建产物 checksum 与校验命令 |
 | `verify-delivery.mjs` | 交付包自检：checksum、示例与 Schema/契约枚举对齐 |
 
+业务接入（ONB）的**总入口口径**见 [`../onboarding/README.md`](../onboarding/README.md)：独立入口全路径、内嵌交付「待集成」清单与已知问题登记；本目录仍是 SDK/宿主接线的技术交付包。
+
 ## 版本与状态
 
 - SDK：`@platform/assistant.js` **1.0.0**（IIFE，全局 `AgentPlatformAssistant`，保留 `AIAssistant` 兼容入口）。

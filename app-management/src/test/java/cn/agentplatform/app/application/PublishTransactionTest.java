@@ -3,6 +3,7 @@ package cn.agentplatform.app.application;
 import static org.junit.jupiter.api.Assertions.*;
 
 import cn.agentplatform.common.*;
+import cn.agentplatform.common.authority.*;
 
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.*;
@@ -14,9 +15,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
+import java.lang.reflect.Method;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.function.Supplier;
 
 /**
  * Runs only against the explicitly provisioned independent PostgreSQL instance; never substitutes
@@ -26,6 +29,9 @@ import java.util.concurrent.*;
 class PublishTransactionTest {
     static JdbcTemplate db;
     static AppService apps;
+    static String previousDir;
+    static String previousKey;
+    static java.nio.file.Path secretDir;
     String code;
 
     @BeforeAll
@@ -51,6 +57,29 @@ class PublishTransactionTest {
                         "http://127.0.0.1:1",
                         "http://127.0.0.1:1",
                         "http://127.0.0.1:1");
+        previousDir = System.getProperty("agent.secret.dir");
+        previousKey = System.getProperty("agent.master.key");
+        try {
+            secretDir = java.nio.file.Files.createTempDirectory("publish-tx-secret");
+        } catch (java.io.IOException ex) {
+            throw new IllegalStateException("test secret directory unavailable", ex);
+        }
+        System.setProperty("agent.secret.dir", secretDir.toString());
+        System.setProperty("agent.master.key", "0123456789abcdef0123456789abcdef");
+    }
+
+    @AfterAll
+    static void restoreSecrets() throws java.io.IOException {
+        restore("agent.secret.dir", previousDir);
+        restore("agent.master.key", previousKey);
+        try (var paths = java.nio.file.Files.walk(secretDir)) {
+            paths.sorted(java.util.Comparator.reverseOrder()).forEach(p -> p.toFile().delete());
+        }
+    }
+
+    private static void restore(String name, String value) {
+        if (value == null) System.clearProperty(name);
+        else System.setProperty(name, value);
     }
 
     static void actor(String tenant) {
@@ -313,7 +342,7 @@ class PublishTransactionTest {
     @Test
     void integrationSecretOnlyShownOnceAndRevocationPersists() {
         apps.commit(code, permit());
-        var service = new IntegrationService(db, apps);
+        var service = fixtureService();
         var issued =
                 service.issue(
                         code,
@@ -345,7 +374,7 @@ class PublishTransactionTest {
     @Test
     void globalCredentialLookupRequiresDedicatedGatewayIdentity() {
         apps.commit(code, permit());
-        var service = new IntegrationService(db, apps);
+        var service = fixtureService();
         var issued =
                 service.issue(
                         code,
@@ -474,5 +503,111 @@ class PublishTransactionTest {
         return Json.write(List.of(Map.of("group", "评测环境", "result", "PASS", "schemaVersion", 1,
                 "publicationTarget", "PRODUCTION", "candidateSha256", app.get("candidateSha256"),
                 "semanticDigest", app.get("semanticDigest"), "publicationEvidence", evidence)));
+    }
+
+    /**
+     * 测试装配引导：本地直连服务用例不经过 IAM 过滤器，产品仍要求可复核的授权帧。
+     * 匿名子类只给 issue/revoke 包一层测试帧，不改产品路径、不改断言、不伪造角色或租户。
+     */
+    private static IntegrationService fixtureService() {
+        return new IntegrationService(db, apps) {
+            @Override
+            public Map<String, Object> issue(String code, Map<String, Object> body) {
+                try (var frame = publishedVersionFrame(code)) {
+                    return super.issue(code, body);
+                }
+            }
+
+            @Override
+            public Map<String, Object> revoke(String code, String biz) {
+                try (var frame = credentialFrame(code, biz)) {
+                    return super.revoke(code, biz);
+                }
+            }
+        };
+    }
+
+    /** 与 IntegrationService.requirePublishedVersion 完全同口径：应用当前版本 + 候选摘要。 */
+    private static AuthorityContext publishedVersionFrame(String code) {
+        var row =
+                db.queryForMap(
+                        "select a.current_version_no,v.candidate_sha256 from app.application a"
+                                + " left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code"
+                                + " and v.version_no=a.current_version_no where a.tenant_id=? and a.code=?",
+                        "application-tests",
+                        code);
+        return frame(
+                new ResourceBinding(
+                        "app-version",
+                        code + "@" + row.get("current_version_no"),
+                        row.get("candidate_sha256").toString()));
+    }
+
+    /** 与 IntegrationService.requireCredential 完全同口径：凭据 id + 策略版本 + 策略摘要。 */
+    private static AuthorityContext credentialFrame(String code, String biz) {
+        var row =
+                db.queryForMap(
+                        "select id,policy_revision,secret_ref,claim_limits,allowed_origins from app.integration_credential"
+                                + " where tenant_id=? and app_code=? and biz_system_code=?",
+                        "application-tests",
+                        code,
+                        biz);
+        long id = ((Number) row.get("id")).longValue();
+        String digest =
+                IntegrationClaims.digest(
+                        Json.tree(
+                                Map.of(
+                                        "secretRef", row.get("secret_ref"),
+                                        "claimLimits", Json.read(row.get("claim_limits").toString()),
+                                        "allowedOrigins",
+                                                Json.read(row.get("allowed_origins").toString()))));
+        String version =
+                Digest.sha256(
+                        Json.canonical(
+                                Map.of(
+                                        "credentialId", id,
+                                        "policyVersion", id + ":" + row.get("policy_revision"),
+                                        "policyDigest", digest)));
+        return frame(new ResourceBinding("integration-credential", Long.toString(id), version));
+    }
+
+    private static AuthorityContext frame(ResourceBinding resource) {
+        var actor =
+                new Actor(
+                        "application-tests", "publisher", Set.of("EDITOR", "ADMIN"), Map.of());
+        Instant now = Instant.now();
+        var call = new ServiceCall("app", "app.integration.local", resource);
+        var operation =
+                new OperationBinding(
+                        "fixture-" + UUID.randomUUID(),
+                        "PORTAL",
+                        "PORTAL",
+                        now,
+                        now.plusSeconds(120),
+                        null,
+                        new SubjectKey(actor.tenantId(), actor.principalId()),
+                        resource,
+                        "0".repeat(64));
+        var verified =
+                new VerifiedAuthority(
+                        actor,
+                        "fixture",
+                        call,
+                        null,
+                        "fixture-v1",
+                        now,
+                        now.plusSeconds(120),
+                        "fixture-decision",
+                        operation);
+        try {
+            Method bind =
+                    AuthorityContext.class.getDeclaredMethod(
+                            "bind", VerifiedAuthority.class, Supplier.class);
+            bind.setAccessible(true);
+            Supplier<VerifiedAuthority> refresh = () -> verified;
+            return (AuthorityContext) bind.invoke(null, verified, refresh);
+        } catch (ReflectiveOperationException ex) {
+            throw new IllegalStateException("authority fixture unavailable", ex);
+        }
     }
 }
