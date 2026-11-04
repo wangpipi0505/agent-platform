@@ -99,6 +99,27 @@ const handoff = computed(() => {
   ].join("\n");
 });
 
+// INT-07：标准结果事件示例与契约 §4 一致；示例只展示数据面，不生成回调地址或密钥。
+const hostEventExample = computed(() => {
+  return [
+    "const handle = window.AgentPlatformAssistant.init({",
+    "  endpoint, appCode, ticket,",
+    '  integrationId: "int_' + props.code + '",',
+    "  onHostEvent(event) {",
+    '    // event.schemaVersion === "1.0"；SDK 已校验白名单字段与大小',
+    '    if (event.event === "result") {',
+    "      // 只把验证后的业务记录引用交给宿主自己的路由反查",
+    "      for (const ref of event.businessRecordRefs ?? []) {",
+    "        routeToBusiness(ref.source, ref.recordId);",
+    "      }",
+    "    }",
+    "  },",
+    "});",
+    "",
+    "// 重复终态、未知事件、伪造 origin/nonce 均被忽略，不得据此重复刷新业务页。",
+  ].join("\n");
+});
+
 // 豁免无查询端点（GET 列表未实现）：会话内授予/撤销的豁免留在本地展示，
 // 历史豁免只能经预检检查项带回的 waiverId/expiresAt 显示。
 const sessionWaiver = ref<WaiverView | null>(null);
@@ -458,6 +479,43 @@ const webappBase = (() => {
         </dl>
         <h3>接入示例（不含密钥）</h3>
         <pre>{{ handoff }}</pre>
+        <h3>宿主事件（assistant-integration §4）</h3>
+        <dl style="margin: 0.75rem 0">
+          <div>
+            <dt><code>ready</code></dt>
+            <dd>SDK 挂载完成；携带 schemaVersion、integrationId、appCode。</dd>
+          </div>
+          <div>
+            <dt><code>opened</code> / <code>closed</code></dt>
+            <dd>助手打开/关闭；只含数据字段，不含 DOM 或函数。</dd>
+          </div>
+          <div>
+            <dt><code>run-started</code></dt>
+            <dd>运行已受理；携带 runId、sessionId、configReleaseId。</dd>
+          </div>
+          <div>
+            <dt><code>approval-required</code></dt>
+            <dd>等待人工确认；携带 runId、status 与 structured.nodeId。</dd>
+          </div>
+          <div>
+            <dt><code>result</code></dt>
+            <dd>
+              每个 run 的权威终态只发一次；携带 runId、status、structured、fileRefs、
+              businessRecordRefs。重连或重复 SSE 不会重复刷新。
+            </dd>
+          </div>
+          <div>
+            <dt><code>error</code></dt>
+            <dd>可解释错误；携带 error.code、error.message、error.retryable。</dd>
+          </div>
+        </dl>
+        <pre>{{ hostEventExample }}</pre>
+        <p class="muted">
+          structured.businessEffect 恒为 UNKNOWN：助手消息与模型输出不是业务已提交的证据。
+          服务器不会下发回调函数、宿主 JS 或导航 URL；宿主只把验证后的 businessRecordRefs
+          交给自己的路由反查。iframe 通道要求精确 origin、一次性 nonce 与实例 ID，未知
+          schemaVersion 一律拒绝。
+        </p>
         <p class="muted">
           会话创建后配置引用写入运行事实；轮次与恢复沿用同一版本。伪造或过期的
           configReleaseId 由引擎以 CONFIG_RELEASE_NOT_ACTIVE / CONFIG_REV_CONFLICT 拒绝。

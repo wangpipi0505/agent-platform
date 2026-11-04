@@ -1,12 +1,24 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { onBeforeUnmount, onMounted, ref, watch } from "vue";
 import Chat from "../../shared/Chat.vue";
 import { useAuth, login } from "../../shared/api";
+import { connectHostChannel, type HostChannelHandle } from "./host-channel";
 const auth = useAuth();
 const error = ref("");
 const code = decodeURIComponent(
   location.pathname.split("/").filter(Boolean).pop() || "",
 );
+let hostChannel: HostChannelHandle | null = null;
+onMounted(() => {
+  hostChannel = connectHostChannel({ appCode: code });
+});
+watch(
+  () => auth.token,
+  (token) => {
+    if (token) hostChannel?.notifyOpened();
+  },
+);
+onBeforeUnmount(() => hostChannel?.close());
 async function enter() {
   try {
     auth.token = await login();

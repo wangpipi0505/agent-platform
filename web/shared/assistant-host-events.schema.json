@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:assistant-host-event:1.0",
+  "title": "AssistantHostEvent",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "event",
+    "integrationId",
+    "appCode",
+    "traceId",
+    "occurredAt"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "event": {
+      "enum": [
+        "ready",
+        "opened",
+        "closed",
+        "run-started",
+        "approval-required",
+        "result",
+        "error"
+      ]
+    },
+    "integrationId": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[A-Za-z0-9._-]+$"
+    },
+    "appCode": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[A-Za-z0-9._-]+$"
+    },
+    "traceId": { "type": "string", "maxLength": 64 },
+    "occurredAt": { "type": "string", "format": "date-time" },
+    "sessionId": { "type": "string", "maxLength": 64 },
+    "runId": { "type": "string", "maxLength": 64 },
+    "configReleaseId": { "type": "string", "maxLength": 64 },
+    "status": {
+      "enum": [
+        "SUCCEEDED",
+        "FAILED",
+        "UNKNOWN",
+        "WAITING_APPROVAL",
+        "CANCELLED"
+      ]
+    },
+    "structured": {
+      "type": "object",
+      "additionalProperties": true,
+      "maxProperties": 32
+    },
+    "fileRefs": {
+      "type": "array",
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["artifactId", "name"],
+        "properties": {
+          "artifactId": { "type": "integer", "minimum": 1 },
+          "name": { "type": "string", "maxLength": 256 },
+          "sizeBytes": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "businessRecordRefs": {
+      "type": "array",
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source", "recordId"],
+        "properties": {
+          "source": { "type": "string", "maxLength": 64 },
+          "recordId": { "type": "string", "maxLength": 128 }
+        }
+      }
+    },
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code"],
+      "properties": {
+        "code": { "type": "string", "maxLength": 64 },
+        "message": { "type": "string", "maxLength": 512 },
+        "retryable": { "type": "boolean" }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "event": { "const": "result" } } },
+      "then": { "required": ["runId", "status"] }
+    },
+    {
+      "if": { "properties": { "event": { "const": "error" } } },
+      "then": { "required": ["error"] }
+    }
+  ]
+}

@@ -1,13 +1,16 @@
 import { writeSessionUrl } from "../../shared/session";
-import type {
-  AssistantEvent,
-  AssistantEventPayload,
-} from "./types";
+import {
+  createHostEventBridge,
+  type HostEventBridge,
+  type HostEventEnvelope,
+} from "../../shared/assistant-host-events";
+import type { AssistantEvent, AssistantEventPayload } from "./types";
 
 /**
- * Host-page coupling owned by the SDK: session handoff through the page URL and
- * the additive event-registration surface. Event payloads are plain data only;
- * the richer host-event bridge arrives with the L2 step.
+ * Host-page coupling owned by the SDK: session handoff through the page URL,
+ * the legacy lifecycle bus, and the standard result-event bridge (§4).
+ * Event payloads are plain data only; functions, DOM nodes and window handles
+ * never cross this boundary.
  */
 const EVENTS = new Set<AssistantEvent>(["open", "close", "session", "destroy"]);
 
@@ -70,3 +73,33 @@ export function createEventBus(): EventBus {
     },
   };
 }
+
+export type SdkHostEventsOptions = {
+  appCode: string;
+  integrationId?: string;
+  /** Same-page explicit callback registered by the host at init time. */
+  onEvent?: (event: HostEventEnvelope) => void;
+  /** Optional iframe sender injected by the host/webapp channel. */
+  transport?: (event: HostEventEnvelope) => void;
+  traceId?: string;
+  now?: () => Date;
+};
+
+/**
+ * Standard result-event bridge. Unknown fields/versions are rejected by the
+ * shared validator before delivery; only the seven declared events pass.
+ */
+export function createSdkHostEvents(
+  options: SdkHostEventsOptions,
+): HostEventBridge {
+  return createHostEventBridge({
+    appCode: options.appCode,
+    integrationId: options.integrationId,
+    onEvent: options.onEvent,
+    transport: options.transport,
+    traceId: options.traceId,
+    now: options.now,
+  });
+}
+
+export type { HostEventBridge, HostEventEnvelope };

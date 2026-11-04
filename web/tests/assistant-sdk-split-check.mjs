@@ -11,7 +11,7 @@ import path from "node:path";
 const web = path.resolve(import.meta.dirname, "..");
 const repo = path.resolve(web, "..");
 const bundle = path.join(web, "assistant.js/dist/assistant.js");
-const evidenceDir = path.join(repo, "docs/evidence/int-06-20261104");
+const evidenceDir = path.join(repo, "docs/evidence/int-07-20261104");
 const evidence = {
   fixtureOnly: true,
   bundle: "assistant.js/dist/assistant.js",
@@ -492,6 +492,7 @@ try {
       "updateContext",
       "on",
       "off",
+      "onHostEvent",
       "destroy",
     ]);
     assert.equal(surface.hosts, 1);
@@ -965,6 +966,14 @@ try {
         .shadowRoot.querySelector(".log")
         .innerText.includes("完成"),
     );
+    // The terminal chunk renders the answer before the run promise settles and
+    // the composer is re-enabled; wait for the completed state, not one frame.
+    await page.waitForFunction(
+      () =>
+        !document
+          .querySelector("agent-platform-assistant")
+          .shadowRoot.querySelector(".send").disabled,
+    );
     const chat = await page.evaluate(() => {
       const shadow = document.querySelector("agent-platform-assistant").shadowRoot;
       const user = shadow.querySelectorAll(".bubble")[0];
@@ -1232,6 +1241,46 @@ try {
     );
     assert.equal(turns.length, 1);
     evidence.checks.interruptedStreamResumesWithCursor = true;
+    await page.close();
+  }
+
+  // INT-07: the seven standard events reach the same-page callback; the
+  // authoritative terminal state produces exactly one result.
+  {
+    const { page } = await sdkPage();
+    await page.evaluate(({ endpoint }) => {
+      window.hostEvents = [];
+      window.handle = window.AIAssistant.init({
+        endpoint,
+        appCode: "demo",
+        integrationId: "int_ops",
+        ticket: async () => "tok",
+        onHostEvent: (event) => window.hostEvents.push(event),
+      });
+      window.handle.open();
+    }, { endpoint: "http://localhost" });
+    await page.getByRole("textbox", { name: "输入问题" }).fill("你好");
+    await page.getByRole("button", { name: "发送", exact: true }).click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("agent-platform-assistant")
+        .shadowRoot.querySelector(".log")
+        .innerText.includes("完成"),
+    );
+    const events = await page.evaluate(() => window.hostEvents);
+    const names = events.map((e) => e.event);
+    assert.equal(names.filter((n) => n === "ready").length, 1);
+    assert.equal(names.filter((n) => n === "opened").length, 1);
+    assert.equal(names.filter((n) => n === "run-started").length, 1);
+    assert.equal(names.filter((n) => n === "result").length, 1);
+    const result = events.find((e) => e.event === "result");
+    assert.equal(result.schemaVersion, "1.0");
+    assert.equal(result.runId, "r_1");
+    assert.equal(result.status, "SUCCEEDED");
+    assert.equal(result.integrationId, "int_ops");
+    assert.equal(result.structured.businessEffect, "UNKNOWN");
+    assert.equal("configReleaseId" in result, false);
+    evidence.checks.hostResultEventDelivery = true;
     await page.close();
   }
 

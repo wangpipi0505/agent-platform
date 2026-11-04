@@ -1,3 +1,5 @@
+import type { HostEventEnvelope } from "../../shared/assistant-host-events";
+
 /** Scalar values allowed in the host page context (contract §5.1). */
 export type PageContextValue = string | number | boolean;
 
@@ -14,6 +16,10 @@ export type AssistantOptions = {
   autoLauncher?: boolean;
   /** Explicit host element that owns the assistant. Re-init replaces its instance. */
   mount?: HTMLElement;
+  /** Integration profile id used only to correlate result events. */
+  integrationId?: string;
+  /** Same-page callback for the seven standard result events (contract §4). */
+  onHostEvent?: (event: HostEventEnvelope) => void;
 };
 
 /** Data-only lifecycle events; the event bridge stays an additive step 2 surface. */
@@ -43,6 +49,8 @@ export type AssistantHandle = {
     event: E,
     listener: (payload: AssistantEventPayload[E]) => void,
   ): void;
+  /** Data-only standard result events; no functions or DOM handles. */
+  onHostEvent(listener: (event: HostEventEnvelope) => void): () => void;
   destroy(): void;
 };
 

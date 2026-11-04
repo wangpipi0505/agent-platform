@@ -1,6 +1,6 @@
 import type { AssistantHandle, AssistantOptions } from "./types";
 import { createRuntime } from "./runtime";
-import { createEventBus, readSessionId } from "./host-events";
+import { createEventBus, createSdkHostEvents, readSessionId } from "./host-events";
 import { mountWidget } from "./widget";
 
 /** One instance per explicit mount point; re-init replaces the previous one. */
@@ -19,10 +19,25 @@ export function init(options: AssistantOptions): AssistantHandle {
   const mount = options.mount;
   if (mount !== undefined && !(mount instanceof HTMLElement))
     throw Error("mount 必须是 DOM 元素");
+  if (
+    options.integrationId !== undefined &&
+    !/^[A-Za-z0-9._-]{1,64}$/.test(options.integrationId)
+  )
+    throw Error("integrationId 字符不合法");
+  if (
+    options.onHostEvent !== undefined &&
+    typeof options.onHostEvent !== "function"
+  )
+    throw Error("onHostEvent 必须是函数");
 
   if (mount) mounted.get(mount)?.destroy();
 
   const bus = createEventBus();
+  const hostEvents = createSdkHostEvents({
+    appCode: options.appCode,
+    integrationId: options.integrationId,
+    onEvent: options.onHostEvent,
+  });
   const widget = mountWidget({
     autoLauncher: options.autoLauncher !== false,
     mount,
@@ -32,6 +47,7 @@ export function init(options: AssistantOptions): AssistantHandle {
     widget,
     readSessionId(location.search),
     bus.emit,
+    hostEvents,
   );
   const listeners = new AbortController();
   const { signal } = listeners;
@@ -41,6 +57,9 @@ export function init(options: AssistantOptions): AssistantHandle {
     signal,
   });
   widget.send.addEventListener("click", () => void runtime.send(), { signal });
+
+  // 宿主在 init 时已注册回调的，ready 不会丢失；后注册者仍可通过 onHostEvent 订阅后续事件。
+  hostEvents.emit("ready");
 
   let destroyed = false;
   const handle: AssistantHandle = {
@@ -59,6 +78,9 @@ export function init(options: AssistantOptions): AssistantHandle {
     off(event, listener) {
       bus.off(event, listener);
     },
+    onHostEvent(listener) {
+      return hostEvents.subscribe(listener);
+    },
     destroy() {
       if (destroyed) return;
       destroyed = true;
@@ -66,6 +88,7 @@ export function init(options: AssistantOptions): AssistantHandle {
       listeners.abort();
       widget.host.remove();
       bus.clear();
+      hostEvents.clear();
       if (mount && mounted.get(mount) === handle) mounted.delete(mount);
     },
   };

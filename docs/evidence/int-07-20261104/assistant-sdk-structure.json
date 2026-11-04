@@ -1,0 +1,854 @@
+{
+  "fixtureOnly": true,
+  "bundle": "assistant.js/dist/assistant.js",
+  "checks": {
+    "mountContractAndShadowIsolation": true,
+    "hostApiAndEvents": true,
+    "experienceProjectionAndPrompts": true,
+    "experienceFallbackAndLongChinese": true,
+    "twoApplicationsIsolated": true,
+    "pageContextValidation": true,
+    "fileInputBlocked": true,
+    "errorRecovery": true,
+    "chatFlowAndSessionHandoff": true,
+    "restoreSessionCompatibility": true,
+    "flowRunPath": true,
+    "approvalAndArtifactDownload": true,
+    "configProposalPassthrough": true,
+    "restoreUsesServerReference": true,
+    "legacySessionRequestUnchanged": true,
+    "interruptedStreamResumesWithCursor": true,
+    "hostResultEventDelivery": true
+  },
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/v1/apps/demo/experience",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/second/experience",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/second/input-schema",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/second/sessions",
+      "query": "",
+      "body": {},
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/second/sessions/s_2/turns",
+      "query": "",
+      "body": {
+        "inputs": {
+          "message": "这是一段用于验证中文长文本传输的说明。这是一段用于验证中文长文本传输的说明。这是一段用于验证中文长文本传输的说明。这是一段用于验证中文长文本传输的说明。这是一段用于验证中文长文本传输的说明。这是一段用于验证中文长文本传输的说明。这是一段用于验证中文长文本传输的说明。这是一段用于验证中文长文本传输的说明。这是一段用于验证中文长文本传输的说明。这是一段用于验证中文长文本传输的说明。这是一段用于验证中文长文本传输的说明。这是一段用于验证中文长文本传输的说明。这是一段用于验证中文长文本传输的说明。这是一段用于验证中文长文本传输的说明。这是一段用于验证中文长文本传输的说明。这是一段用于验证中文长文本传输的说明。这是一段用于验证中文长文本传输的说明。这是一段用于验证中文长文本传输的说明。这是一段用于验证中文长文本传输的说明。这是一段用于验证中文长文本传输的说明。这是一段用于验证中文长文本传输的说明。这是一段用于验证中文长文本传输的说明。这是一段用于验证中文长文本传输的说明。这是一段用于验证中文长文本传输的说明。",
+          "context": {}
+        },
+        "requestId": "8f56044f-ffe8-4cba-bab7-2aeea627fd85"
+      },
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/runs/r_3/events",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": "0"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/runs/r_3",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/demo/experience",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/demo/input-schema",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/demo/sessions",
+      "query": "",
+      "body": {},
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/demo/sessions/s_1/turns",
+      "query": "",
+      "body": {
+        "inputs": {
+          "message": "第一个应用",
+          "context": {}
+        },
+        "requestId": "86b3b46d-91bf-4d6a-9af0-f575221ed871"
+      },
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/runs/r_1/events",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": "0"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/runs/r_1",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/second/experience",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/second/input-schema",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/second/sessions",
+      "query": "",
+      "body": {},
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/second/sessions/s_2/turns",
+      "query": "",
+      "body": {
+        "inputs": {
+          "message": "第二个应用",
+          "context": {}
+        },
+        "requestId": "62e70361-e2f2-4720-b3e9-2249a736a054"
+      },
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/runs/r_3/events",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": "0"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/runs/r_3",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/demo/experience",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/demo/input-schema",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/demo/sessions",
+      "query": "",
+      "body": {},
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/demo/sessions/s_1/turns",
+      "query": "",
+      "body": {
+        "inputs": {
+          "message": "上下文检查",
+          "context": {
+            "page": "p2",
+            "count": 3,
+            "flag": true
+          }
+        },
+        "requestId": "c516e667-938b-49f1-bd97-1f56153e5027"
+      },
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/runs/r_1/events",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": "0"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/runs/r_1",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/file_demo/experience",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/file_demo/input-schema",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/flaky/experience",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/flaky/input-schema",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/flaky/sessions",
+      "query": "",
+      "body": {},
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/flaky/sessions/s_f/turns",
+      "query": "",
+      "body": {
+        "inputs": {
+          "message": "重试",
+          "context": {}
+        },
+        "requestId": "f32e4d73-cd74-4b1f-a410-db5ab9a0ae97"
+      },
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/flaky/sessions/s_f/turns",
+      "query": "",
+      "body": {
+        "inputs": {
+          "message": "重试",
+          "context": {}
+        },
+        "requestId": "bc30773a-42f5-47bc-a730-3331ea9281f1"
+      },
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/runs/r_f/events",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": "0"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/runs/r_f",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/demo/experience",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/demo/input-schema",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/demo/sessions",
+      "query": "",
+      "body": {},
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/demo/sessions/s_1/turns",
+      "query": "",
+      "body": {
+        "inputs": {
+          "message": "你好",
+          "context": {
+            "page": "p1"
+          }
+        },
+        "requestId": "5934f333-199b-4c75-b49f-3e139511c03f"
+      },
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/runs/r_1/events",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": "0"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/runs/r_1",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/demo/experience",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/demo/sessions/s_prev",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/demo/input-schema",
+      "query": "?versionNo=7",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/runs/r_prev",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/flow_demo/experience",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/flow_demo/input-schema",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/flow_demo/runs",
+      "query": "",
+      "body": {
+        "inputs": {
+          "message": "流程主题",
+          "context": {}
+        },
+        "requestId": "a4f67d95-0e57-46bd-bfd0-292567d74281"
+      },
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/runs/r_flow/events",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": "0"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/runs/r_flow",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/demo/experience",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/demo/input-schema",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/demo/sessions",
+      "query": "",
+      "body": {},
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/demo/sessions/s_1/turns",
+      "query": "",
+      "body": {
+        "inputs": {
+          "message": "执行",
+          "context": {}
+        },
+        "requestId": "d36870c3-5d76-46f9-9f85-d77e9c832870"
+      },
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/runs/r_2/events",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": "0"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/runs/r_2/approvals",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/runs/r_2",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "POST",
+      "path": "/v1/runs/r_2/approvals/ni_1/decision",
+      "query": "",
+      "body": {
+        "approved": true,
+        "requestId": "eccd02c4-abbc-462a-b3f8-1d52972fde8e",
+        "snapshotDigest": "sha256:abc"
+      },
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/runs/r_2/artifacts/a1/download",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/demo/experience",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/demo/input-schema",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/demo/sessions",
+      "query": "",
+      "body": {
+        "configReleaseId": "cr_9"
+      },
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/demo/sessions/s_1/turns",
+      "query": "",
+      "body": {
+        "inputs": {
+          "message": "你好",
+          "context": {}
+        },
+        "requestId": "21358ffc-2c78-4fcd-aa88-927bbed51cbd"
+      },
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/runs/r_1/events",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": "0"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/runs/r_1",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/demo/experience",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/demo/sessions/s_prev",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/demo/input-schema",
+      "query": "?versionNo=7",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/runs/r_prev",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/demo/sessions/s_prev/turns",
+      "query": "",
+      "body": {
+        "inputs": {
+          "message": "继续",
+          "context": {}
+        },
+        "requestId": "a3f52fbb-ef45-4ce1-8853-7cb52b6824ec"
+      },
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/runs/r_prev2/events",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": "0"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/runs/r_prev2",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/demo/experience",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/demo/input-schema",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/demo/sessions",
+      "query": "",
+      "body": {},
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/demo/sessions/s_1/turns",
+      "query": "",
+      "body": {
+        "inputs": {
+          "message": "你好",
+          "context": {}
+        },
+        "requestId": "0a6fab94-6399-4039-b13e-b6e4f54da238"
+      },
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/runs/r_1/events",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": "0"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/runs/r_1",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/slow/experience",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/slow/input-schema",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/slow/sessions",
+      "query": "",
+      "body": {},
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/slow/sessions/s_slow/turns",
+      "query": "",
+      "body": {
+        "inputs": {
+          "message": "重连主题",
+          "context": {}
+        },
+        "requestId": "61e31180-9eb0-4869-b017-244fc04b9bc9"
+      },
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/runs/r_slow/events",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": "0"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/runs/r_slow",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/runs/r_slow/events",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": "1"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/runs/r_slow",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/demo/experience",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/demo/input-schema",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/demo/sessions",
+      "query": "",
+      "body": {},
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/demo/sessions/s_1/turns",
+      "query": "",
+      "body": {
+        "inputs": {
+          "message": "你好",
+          "context": {}
+        },
+        "requestId": "88eeef9e-e831-48b6-9f04-de5ea3a8a807"
+      },
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    },
+    {
+      "method": "GET",
+      "path": "/v1/runs/r_1/events",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": "0"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/runs/r_1",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok",
+      "lastEventId": ""
+    }
+  ],
+  "pageErrors": [],
+  "dialogs": [
+    "确认执行当前参数快照？"
+  ],
+  "ok": true
+}

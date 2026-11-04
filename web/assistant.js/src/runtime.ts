@@ -22,6 +22,10 @@ import {
 import { bubble, prependWarning } from "./widget";
 import { publishSession } from "./host-events";
 import type {
+  HostEventBridge,
+  HostEventStatus,
+} from "../../shared/assistant-host-events";
+import type {
   AssistantEvent,
   AssistantEventPayload,
   AssistantOpenOptions,
@@ -36,6 +40,61 @@ type Emit = <E extends AssistantEvent>(
   payload: AssistantEventPayload[E],
 ) => void;
 
+function hostStatusOf(status: unknown): HostEventStatus {
+  switch (status) {
+    case "SUCCEEDED":
+    case "SUCCESS":
+    case "COMPLETED":
+    case "FINISHED":
+      return "SUCCEEDED";
+    case "FAILED":
+      return "FAILED";
+    case "CANCELLED":
+      return "CANCELLED";
+    default:
+      return "UNKNOWN";
+  }
+}
+
+function hostFileRefs(result: any) {
+  const refs = result?.fileRefs ?? result?.output?.fileRefs ?? [];
+  if (!Array.isArray(refs)) return [];
+  return refs
+    .filter(
+      (f: any) =>
+        Number.isInteger(f?.artifactId) &&
+        f.artifactId > 0 &&
+        typeof f?.name === "string" &&
+        f.name,
+    )
+    .slice(0, 16)
+    .map((f: any) => ({
+      artifactId: f.artifactId as number,
+      name: String(f.name).slice(0, 256),
+      ...(Number.isInteger(f.sizeBytes) && f.sizeBytes >= 0
+        ? { sizeBytes: f.sizeBytes as number }
+        : {}),
+    }));
+}
+
+function hostRecordRefs(result: any) {
+  const refs = result?.businessRecordRefs;
+  if (!Array.isArray(refs)) return [];
+  return refs
+    .filter(
+      (r: any) =>
+        typeof r?.source === "string" &&
+        r.source &&
+        typeof r?.recordId === "string" &&
+        r.recordId,
+    )
+    .slice(0, 16)
+    .map((r: any) => ({
+      source: String(r.source).slice(0, 64),
+      recordId: String(r.recordId).slice(0, 128),
+    }));
+}
+
 /**
  * Session and run orchestration. Shared modules keep the protocol, approval,
  * artifact and observer state machines; this layer only wires them to the
@@ -46,6 +105,7 @@ export function createRuntime(
   widget: Widget,
   initialSessionId: string,
   emit: Emit,
+  hostEvents?: HostEventBridge,
 ) {
   let controller: AbortController | undefined;
   let running = false;
@@ -215,6 +275,13 @@ export function createRuntime(
       emit("session", { sessionId, appCode: options.appCode });
     } catch (e: any) {
       widget.error.textContent = e.message;
+      hostEvents?.emit("error", {
+        error: {
+          code: "ASSISTANT_RESTORE_FAILED",
+          message: String(e?.message ?? "恢复会话失败").slice(0, 512),
+          retryable: true,
+        },
+      });
     } finally {
       widget.send.disabled = running || destroyed;
     }
@@ -235,6 +302,7 @@ export function createRuntime(
     let text = "";
     let receivedFinal = false;
     let frame = 0;
+    let runId = "";
     const applyFinal = (value: unknown) => {
       receivedFinal = true;
       cancelAnimationFrame(frame);
@@ -292,6 +360,13 @@ export function createRuntime(
           );
           widget.root.querySelectorAll(".approval").forEach((n) => n.remove());
           for (const row of rows) {
+            hostEvents?.emit("approval-required", {
+              runId: id,
+              status: "WAITING_APPROVAL",
+              structured: {
+                nodeId: String(row.nodeInstanceId || row.nodeDefId || ""),
+              },
+            });
             const card = document.createElement("section");
             card.className = "bubble approval";
             const title = document.createElement("strong");
@@ -353,6 +428,14 @@ export function createRuntime(
         runBody,
       );
       if (destroyed) throw new DOMException("观察已停止", "AbortError");
+      runId = run.runId;
+      hostEvents?.emit("run-started", {
+        runId,
+        ...(sessionId ? { sessionId } : {}),
+        ...(sessionConfig ? { configReleaseId: sessionConfig } : {}),
+        // 运行已受理，但业务效果仍以服务端最终事实为准。
+        structured: { businessEffect: "UNKNOWN" },
+      });
       controller = new AbortController();
       const signal = controller.signal;
       const result = await observeRun({
@@ -413,6 +496,22 @@ export function createRuntime(
             );
         },
       });
+      const status = hostStatusOf(result.status);
+      const fileRefs = hostFileRefs(result);
+      const recordRefs = hostRecordRefs(result);
+      hostEvents?.result({
+        runId,
+        ...(sessionId ? { sessionId } : {}),
+        ...(sessionConfig ? { configReleaseId: sessionConfig } : {}),
+        status,
+        structured: {
+          // 消息/模型输出不是“业务已提交”的依据；业务效果只能由宿主按引用反查。
+          businessEffect: "UNKNOWN",
+          answer: text.slice(0, 2048),
+        },
+        ...(fileRefs.length ? { fileRefs } : {}),
+        ...(recordRefs.length ? { businessRecordRefs: recordRefs } : {}),
+      });
       if (result.status === "FAILED")
         widget.error.textContent =
           result.error?.message || "本次运行失败，请查看权威运行记录";
@@ -441,6 +540,17 @@ export function createRuntime(
       if (e.name !== "AbortError") {
         input.value = message;
         widget.error.textContent = e.message + "；可查看权威运行记录。";
+        hostEvents?.emit("error", {
+          ...(runId ? { runId } : {}),
+          error: {
+            code:
+              typeof e.code === "string" && e.code
+                ? e.code.slice(0, 64)
+                : "ASSISTANT_RUN_FAILED",
+            message: String(e.message ?? "助手请求失败").slice(0, 512),
+            retryable: false,
+          },
+        });
       }
     } finally {
       cancelAnimationFrame(frame);
@@ -456,6 +566,11 @@ export function createRuntime(
       pageContext = validatePageContext(openOptions.pageContext);
     widget.drawer.style.display = "flex";
     emit("open", { pageContext: { ...pageContext }, appCode: options.appCode });
+    hostEvents?.emit("opened", {
+      ...(sessionId ? { sessionId } : {}),
+      ...(sessionConfig ? { configReleaseId: sessionConfig } : {}),
+      structured: { pageContext: { ...pageContext } },
+    });
     void loadExperience();
     void hydrate();
   }
@@ -464,6 +579,10 @@ export function createRuntime(
     if (destroyed) return;
     widget.drawer.style.display = "none";
     emit("close", { appCode: options.appCode });
+    hostEvents?.emit("closed", {
+      ...(sessionId ? { sessionId } : {}),
+      ...(sessionConfig ? { configReleaseId: sessionConfig } : {}),
+    });
   }
 
   function updateContext(context: PageContext) {
