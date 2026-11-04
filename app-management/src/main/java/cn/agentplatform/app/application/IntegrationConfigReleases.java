@@ -30,7 +30,8 @@ public class IntegrationConfigReleases {
   static final Set<String> BODY_KEYS = Set.of("expectedRev", "requestId", "releaseId", "appCode",
       "appVersion", "experienceRev", "integrationProfileId", "integrationProfileRev",
       "connectionProfileRefs", "semanticBindings", "activationScope");
-  private static final Set<String> REF_KEYS = Set.of("profileId", "profileRev");
+  private static final Set<String> REF_KEYS = Set.of("profileId", "profileRev", "bindingId", "bindingRev",
+      "operation", "environment", "resolutionDigest");
   private static final Set<String> SEMANTIC_REF_KEYS = Set.of("bindingId", "bindingRev");
   private static final int MAX_REFS = 16;
   private static final int MAX_SEMANTIC_REFS = 8;
@@ -282,6 +283,15 @@ public class IntegrationConfigReleases {
     out.put("integrationProfileRef", Map.of("profileId", profileId, "profileRev", profileRev,
         "mode", profileRevision.get("mode"), "environment", profileRevision.get("environment")));
     out.put("semanticBindings", semantic);
+    // 仅版本引用可向运行期投影：地址/secret_ref仍由内部批准解析按当前授权读取。
+    var runtimeRefs = new ArrayList<Map<String, Object>>();
+    for (var ref : refs(release.get("connectionProfileRefs"))) {
+      if (!ref.containsKey("bindingId")) continue; // 历史目录引用不被猜成一个可执行连接。
+      var fixed = new LinkedHashMap<>(ref);
+      fixed.putIfAbsent("environment", profileRevision.get("environment"));
+      runtimeRefs.add(fixed);
+    }
+    out.put("bindingRefs", runtimeRefs);
     return out;
   }
 
@@ -509,6 +519,12 @@ public class IntegrationConfigReleases {
       throw new PlatformException(400, "CONFIG_VERSION_UNKNOWN",
           "连接档案修订不存在: " + profileId + "@" + rev);
     }
+    if (ref.containsKey("bindingId") && connections.pinnedBindingRevisions(actor, profileId, rev).stream()
+        .noneMatch(binding -> ref.get("bindingId").equals(binding.get("bindingId"))
+            && ref.get("bindingRev").equals(binding.get("bindingRev"))
+            && (!ref.containsKey("environment") || ref.get("environment").equals(binding.get("environment"))))) {
+      throw new PlatformException(409, "CONNECTION_BINDING_UNAVAILABLE", "配置引用的精确批准绑定不可用");
+    }
   }
 
   private static List<Map<String, Object>> refs(Object raw) {
@@ -527,15 +543,26 @@ public class IntegrationConfigReleases {
       String profileId = ConnectionProfiles.text(ref, "profileId", "connectionProfileRefs", 64,
           ConnectionProfiles.ID);
       int rev = positive(ref.get("profileRev"), "connectionProfileRefs.profileRev");
-      out.add(Map.of("profileId", profileId, "profileRev", rev));
+      var fixed = new LinkedHashMap<String, Object>();
+      fixed.put("profileId", profileId); fixed.put("profileRev", rev);
+      if (ref.keySet().stream().anyMatch(key -> !Set.of("profileId", "profileRev").contains(key))) {
+        fixed.put("bindingId", ConnectionProfiles.text(ref, "bindingId", "connectionProfileRefs.bindingId", 48,
+            ConnectionProfiles.ID));
+        fixed.put("bindingRev", positive(ref.get("bindingRev"), "connectionProfileRefs.bindingRev"));
+        fixed.put("operation", ConnectionProfiles.text(ref, "operation", "connectionProfileRefs.operation", 128,
+            ConnectionProfiles.OPERATION));
+        if (ref.containsKey("environment")) fixed.put("environment", ConnectionProfiles.text(ref, "environment", "environment", 32,
+            java.util.regex.Pattern.compile("^[a-z][a-z0-9-]{0,31}$")));
+        if (ref.containsKey("resolutionDigest")) fixed.put("resolutionDigest", ConnectionProfiles.text(ref, "resolutionDigest", "resolutionDigest", 64,
+            java.util.regex.Pattern.compile("^[0-9a-f]{64}$")));
+      }
+      out.add(Map.copyOf(fixed));
     }
     return List.copyOf(out);
   }
 
   private static Map<String, Object> asRef(Object raw) {
-    Map<String, Object> ref = asMap(raw);
-    return Map.of("profileId", String.valueOf(ref.get("profileId")),
-        "profileRev", ((Number) ref.get("profileRev")).intValue());
+    return refs(List.of(raw)).getFirst();
   }
 
   @SuppressWarnings("unchecked")

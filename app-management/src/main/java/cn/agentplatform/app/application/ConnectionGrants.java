@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
 @Service
 public class ConnectionGrants {
 
-    static final Pattern GRANTEE = Pattern.compile("^[a-z][a-z0-9._-]{2,63}$");
+    static final Pattern GRANTEE = Pattern.compile("^(?:[a-z][a-z0-9._-]{2,63}|skill\\.[A-Za-z][A-Za-z0-9_-]{0,63})$");
     private static final int MAX_USES = 16;
     private static final int MAX_REASON = 256;
 
@@ -56,7 +56,7 @@ public class ConnectionGrants {
             if (!"grantee".equals(key) && !"allowedUses".equals(key))
                 throw new PlatformException(400, "INVALID_INPUT", "授权请求包含未知字段: " + key);
 
-        String grantee = ConnectionProfiles.text(body, "grantee", "授权使用方", 64, GRANTEE);
+        String grantee = ConnectionProfiles.text(body, "grantee", "授权使用方", 70, GRANTEE);
         List<String> uses = ConnectionProfiles.strings(body.get("allowedUses"), "allowedUses", 1, MAX_USES,
                 ConnectionProfiles.USE);
         List<?> declared = revision.get("allowedUses") instanceof List<?> l ? l : List.of();

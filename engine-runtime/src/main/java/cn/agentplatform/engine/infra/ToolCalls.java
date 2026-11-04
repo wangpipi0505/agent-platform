@@ -51,12 +51,11 @@ public class ToolCalls {
                     String digest = Digest.sha256(Json.canonical(req.path("arguments")));
                     // INT-02：受控连接引用随调用登记钉住，来源只有运行快照（载荷由引擎构造），
                     // 登记后不允许被重试/恢复改写——理由见 V226 迁移注释。
-                    String refs = bindingRefs(req.path("bindingRefs"));
-                    // 载荷没带就取运行快照里的冻结引用：引用是引擎的权威事实，
-                    // 不依赖某个调用方"记得"把它塞进请求；两边都有时以载荷为准（仍由引擎构造）。
-                    if (refs == null)
-                        refs = bindingRefs(
-                                TraceStore.json(run.get("snapshot")).path("config").path("bindingRefs"));
+                    String refs = bindingRefs(
+                            TraceStore.json(run.get("snapshot")).path("config").path("bindingRefs"));
+                    String proposedRefs = bindingRefs(req.path("bindingRefs"));
+                    if (proposedRefs != null && !sameRefs(refs, proposedRefs))
+                        throw new PlatformException(409, "CALL_BINDING_CHANGED", "调用引用与运行冻结绑定不一致");
                     store.db()
                             .update(
                                     "insert into"

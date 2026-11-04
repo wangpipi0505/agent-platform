@@ -39,6 +39,7 @@ final class BoundedMcpSseTransport implements McpClientTransport, AutoCloseable 
             CATALOG_BYTES = 1024 * 1024;
     private final URI endpoint;
     private final String authorization;
+    private final Map<String, Object> executionContract;
     private final long deadline;
     private final HttpClient http;
     private final ObjectMapper mapper;
@@ -58,7 +59,12 @@ final class BoundedMcpSseTransport implements McpClientTransport, AutoCloseable 
     private int catalogBytes;
 
     BoundedMcpSseTransport(String endpoint, String authorization, long deadline) {
+        this(endpoint, authorization, deadline, Map.of());
+    }
+
+    BoundedMcpSseTransport(String endpoint, String authorization, long deadline, Map<String, Object> executionContract) {
         this.endpoint = SkillRules.endpoint(endpoint);
+        this.executionContract = executionContract;
         this.authorization = authorization;
         this.deadline = deadline;
         http =
@@ -103,7 +109,8 @@ final class BoundedMcpSseTransport implements McpClientTransport, AutoCloseable 
         return List.copyOf(tools.values());
     }
 
-    private HttpRequest.Builder request(URI uri) {
+    private HttpRequest.Builder request(URI uri, String method) {
+        ApprovedConnectionExecution.check(executionContract, uri.toString(), method);
         var builder = HttpRequest.newBuilder(uri).timeout(remaining());
         if (authorization != null) builder.header("Authorization", authorization);
         return builder;
@@ -133,7 +140,7 @@ final class BoundedMcpSseTransport implements McpClientTransport, AutoCloseable 
                                                     try {
                                                         var future =
                                                                 http.sendAsync(
-                                                                        request(endpoint)
+                                                                        request(endpoint, "GET")
                                                                                 .header(
                                                                                         "Accept",
                                                                                         "text/event-stream")
@@ -357,7 +364,7 @@ final class BoundedMcpSseTransport implements McpClientTransport, AutoCloseable 
                                     }
                                 };
                         HttpRequest outbound =
-                                request(target)
+                                request(target, "POST")
                                         .header("Content-Type", "application/json")
                                         .POST(publisher)
                                         .build();

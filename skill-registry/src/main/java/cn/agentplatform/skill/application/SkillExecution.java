@@ -146,14 +146,14 @@ public class SkillExecution {
      * 未声明 bindingRefs 的技能完全不受影响（不解析、不写回执、不多一次跨服务调用）；
      * 一旦声明了引用，就必须有解析器可用——宁可拒绝，也不把"没装配"当成"没约束"。
      */
-    private void gateApproved(Map<String, Object> contract, Map<String, Object> request, String code) {
+    private Map<String, Object> gateApproved(Map<String, Object> contract, Map<String, Object> request, String code) {
         boolean declared = request.get("bindingRefs") instanceof java.util.Collection<?> c && !c.isEmpty()
                 || contract != null
                         && contract.get("bindingRefs") instanceof java.util.Collection<?> d && !d.isEmpty();
-        if (!declared) return;
+        if (!declared) return contract;
         if (approvedConnections == null)
             throw error(503, "CONNECTION_RESOLUTION_UNAVAILABLE", "受控连接解析未装配，拒绝执行携带连接引用的调用");
-        approvedConnections.gate(contract, request, code);
+        return approvedConnections.executionContract(contract, request, code);
     }
 
     /**
@@ -168,17 +168,30 @@ public class SkillExecution {
         }
     }
 
-    public Map<String, Object> execute(String code, Map<String, Object> request) {
+    public Map<String, Object> execute(String code, Map<String, Object> incoming) {
         Actor.current().requireRole("SERVICE");
-        long callId = number(request, "callId"),
-                versionId = number(request, "skillVersionId"),
-                attempt = number(request, "attemptId");
-        String owner = text(request, "leaseOwner");
-        var arguments = object(request.get("arguments"));
+        long callId = number(incoming, "callId"),
+                versionId = number(incoming, "skillVersionId"),
+                attempt = number(incoming, "attemptId");
+        String owner = text(incoming, "leaseOwner");
+        var arguments = object(incoming.get("arguments"));
         String digest = Digest.sha256(Json.canonical(arguments));
         var contract = catalog.versionId(versionId);
         final boolean producerDemoAtStart = producerDemoMode;
         var registration = clients.get(engineUrl + "/internal/tool-calls/" + callId);
+        if (registration.hasNonNull("bindingRefs") && !registration.path("bindingRefs").isArray())
+            throw error(409, "CALL_REGISTRATION_MISMATCH", "引擎连接引用形状无效");
+        boolean hasBindings = registration.path("bindingRefs").isArray() && !registration.path("bindingRefs").isEmpty()
+                || contract.get("bindingRefs") instanceof Collection<?> refs && !refs.isEmpty();
+        if (hasBindings && (registration.path("skill_version_id").asLong() != versionId
+                || !code.equals(registration.path("skill_code").asText())
+                || !text(incoming, "runId").equals(registration.path("runId").asText())))
+            throw error(409, "CALL_REGISTRATION_MISMATCH", "调用精确技能与引擎登记不一致");
+        // 连接只来自引擎已登记事实，服务body也没有覆盖目的地的权限。之后落库同一规范化请求。
+        var request = new LinkedHashMap<String, Object>(incoming);
+        request.remove("bindingRefs");
+        if (registration.path("bindingRefs").isArray() && !registration.path("bindingRefs").isEmpty())
+            request.put("bindingRefs", Json.mapper().convertValue(registration.path("bindingRefs"), List.class));
         boolean controlled = registration.path("controlled_draft_skill_version_id").asLong() > 0;
         if (controlled) {
             Actor.current().requireRole("EDITOR");
@@ -225,7 +238,7 @@ public class SkillExecution {
         // INT-02（契约 §5.2）：受控调用在进入任何适配器之前统一复核连接事实——首次分发、
         // PREPARE/EXECUTE、只读重试都经过这里；已经结束的事实走上面的 deliver（观察历史结果
         // 不产生新的外部调用，不应因事后撤权而读不出来）。
-        gateApproved(contract, request, code);
+        var runtimeContract = gateApproved(contract, request, code);
         gateSemantic(contract);
         String failure = null, reason = null;
         // PLAT-05：远端业务码与有界原文由适配器失败携带，终经 envelope 落成七字段错误对象。
@@ -285,7 +298,7 @@ public class SkillExecution {
                 if (prepareMode)
                     confirmation.put(
                             "actionPlan",
-                            actionPlan(contract, secured, request, registration, callId));
+                            actionPlan(runtimeContract, secured, request, registration, callId));
                 return Map.of("status", "WAITING_APPROVAL", "confirmation", confirmation);
             }
             if (approval.path("skillVersionId").asLong() != versionId
@@ -295,6 +308,7 @@ public class SkillExecution {
             // 不成立/无法确认翻译为重新确认，依赖不可达仍按 503 拒绝。拒绝发生在 claim 与任何
             // 状态写入之前，因此不会产生 RESULT_UNKNOWN（那仅用于已发送后的不可判定）。
             recheckSemantic(contract);
+            gateApproved(contract, request, code);
         }
         // 先完成参数/守卫判断，再认领失败事实或实际执行的交付权；校验失败绝不会发送SUBMITTED或触发外部调用。
         // 两键均由 engine.action_plan 下发；新业务协议仅稳定业务出站键，claim 仍绑定当前计划。
@@ -409,7 +423,7 @@ public class SkillExecution {
                                             kind);
                                     return;
                                 }
-                                adapters.bind(contract, pendingRequest);
+                                adapters.bind(runtimeContract, pendingRequest);
                                 db.update(
                                         "insert into"
                                             + " skill.execution_fact(tenant_id,call_id,skill_version_id,principal_id,run_id,attempt_id,execution_owner,args_digest,skill_contract_sha256,request_snapshot,status,result,duration_ms,attempt_duration_ms,is_mock,call_kind,callback_state)"
@@ -440,7 +454,7 @@ public class SkillExecution {
                 try {
                     var observed =
                             adapters.observe(
-                                    contract,
+                                    runtimeContract,
                                     secured,
                                     businessKey,
                                     callId,
@@ -1016,9 +1030,12 @@ public class SkillExecution {
             throw error(409, "RECONCILE_STATE", "请等待引擎确认原调用为UNKNOWN后对账");
         var contract = catalog.versionId(((Number) recorded.get("skill_version_id")).longValue());
         var original = Json.read(recorded.get("request_snapshot").toString(), Map.class);
+        original.remove("bindingRefs");
+        if (authority.path("bindingRefs").isArray() && !authority.path("bindingRefs").isEmpty())
+            original.put("bindingRefs", Json.mapper().convertValue(authority.path("bindingRefs"), List.class));
         // INT-02：对账同样会再次访问外部端点，按当前权限复核一次；引用取原调用快照，
         // 保证"对账查的是同一个连接"，不会因为配置漂移而把结果归到另一套端点上。
-        gateApproved(contract, original, Objects.toString(contract.get("code"), ""));
+        var runtimeContract = gateApproved(contract, original, Objects.toString(contract.get("code"), ""));
         // PLAT-15：两段 EXECUTE 的对账按真实出站键查询；旧事实无该键时沿用逻辑调用键。
         // 缺键不报错（text 会拒空）——存量事实恒无该键，回退是常态而非异常。
         String key = Objects.toString(original.get("businessIdempotencyKey"), "");
@@ -1145,7 +1162,7 @@ public class SkillExecution {
                     || adapters.asynchronous(contract)) {
                 var observed =
                         adapters.observe(
-                                contract,
+                                runtimeContract,
                                 "ALGORITHM".equals(contract.get("type"))
                                         ? object(original.get("guardedArguments"))
                                         : secured,
@@ -1158,14 +1175,14 @@ public class SkillExecution {
                 algorithmSource = observed.source();
                 outcome = "APPLIED";
             } else {
-                var policy = object(contract.getOrDefault("reconciliation", Map.of()));
+                var policy = object(runtimeContract.getOrDefault("reconciliation", Map.of()));
                 String endpoint =
                         text(policy, "endpoint")
                                 .replace(
                                         "{idempotencyKey}",
                                         java.net.URLEncoder.encode(
                                                 key, java.nio.charset.StandardCharsets.UTF_8));
-                var query = new LinkedHashMap<>(contract);
+                var query = new LinkedHashMap<>(runtimeContract);
                 query.put("type", "HTTP");
                 query.put("endpoint", endpoint);
                 query.put("httpMethod", "GET");

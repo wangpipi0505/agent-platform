@@ -45,7 +45,14 @@ public class ApprovedConnections {
     }
 
     public Map<String, Object> resolve(String profileId, int profileRev, String environment) {
+        return resolve(profileId, profileRev, environment, null, null, null);
+    }
+
+    public Map<String, Object> resolve(String profileId, int profileRev, String environment,
+            String bindingId, Integer bindingRev, String grantee) {
         Actor actor = Actor.current();
+        if ((bindingId == null) != (bindingRev == null) || bindingRev != null && bindingRev < 1)
+            throw new PlatformException(400, "INVALID_INPUT", "绑定引用必须同时给出 bindingId/bindingRev");
         if (environment != null && !environment.isBlank() && !ENVIRONMENT.matcher(environment).matches())
             throw new PlatformException(400, "INVALID_INPUT", "environment 格式不合法: " + environment);
         String env = environment == null || environment.isBlank() ? null : environment;
@@ -68,12 +75,15 @@ public class ApprovedConnections {
 
         List<Map<String, Object>> bindings = profiles.pinnedBindingRevisions(actor, profileId, profileRev).stream()
                 .filter(b -> env == null || env.equals(b.get("environment")))
+                .filter(b -> bindingId == null || bindingId.equals(b.get("bindingId"))
+                        && bindingRev.equals(b.get("bindingRev")))
                 .toList();
-        if (env != null && bindings.isEmpty())
+        if ((env != null || bindingId != null) && bindings.isEmpty())
             throw new PlatformException(404, "CONFIG_REF_NOT_FOUND",
                     "该环境下没有已批准的环境绑定: " + profileId + "@" + profileRev + " / " + env);
 
-        List<Map<String, Object>> activeGrants = grants.activeGrants(actor, profileId, profileRev);
+        List<Map<String, Object>> activeGrants = grants.activeGrants(actor, profileId, profileRev).stream()
+                .filter(g -> grantee == null || grantee.equals(g.get("grantee"))).toList();
         // 被授予用途是各有效授权 allowedUses 的并集；保持首次出现顺序，便于摘要稳定。
         List<String> grantedUses = activeGrants.stream()
                 .flatMap(g -> asList(g.get("allowedUses")).stream())

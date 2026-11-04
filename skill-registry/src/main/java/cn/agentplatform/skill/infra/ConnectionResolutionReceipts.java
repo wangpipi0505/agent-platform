@@ -43,8 +43,8 @@ public class ConnectionResolutionReceipts {
         Map<String, Object> call = scope == null ? Map.of() : scope;
         var rows = db.query("insert into skill.connection_resolution"
                         + " (tenant_id,skill_code,profile_id,profile_rev,environment,resolution_digest,auth_kind,"
-                        + " granted_uses,requested_by,run_public_id,call_id,attempt_id,operation)"
-                        + " values (?,?,?,?,?,?,?,?::jsonb,?,?,?,?,?) returning id,resolved_at::text",
+                        + " granted_uses,requested_by,run_public_id,call_id,attempt_id,operation,execution_binding)"
+                        + " values (?,?,?,?,?,?,?,?::jsonb,?,?,?,?,?,?::jsonb) returning id,resolved_at::text",
                 (rs, n) -> {
                     Map<String, Object> m = new LinkedHashMap<>();
                     m.put("receiptId", rs.getLong(1));
@@ -55,7 +55,7 @@ public class ConnectionResolutionReceipts {
                 ((Number) facts.get("profileRev")).intValue(), environment, digest, authKind,
                 Json.write(uses), actor.principalId(),
                 text(call, "runPublicId"), number(call, "callId"), number(call, "attemptId"),
-                text(call, "operation"));
+                text(call, "operation"), call.get("executionBinding") == null ? null : Json.write(call.get("executionBinding")));
         Map<String, Object> out = new LinkedHashMap<>(facts);
         out.putAll(rows.get(0));
         return out;

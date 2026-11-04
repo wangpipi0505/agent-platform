@@ -57,7 +57,7 @@ public final class McpAdapter {
             String ref = Objects.toString(contract.get("authRef"), "");
             String authorization = ref.isBlank() ? null : "Bearer " + SecretVault.resolve(ref);
             transport =
-                    new BoundedMcpSseTransport(text(contract, "endpoint"), authorization, deadline);
+                    new BoundedMcpSseTransport(text(contract, "endpoint"), authorization, deadline, contract);
             client =
                     McpClient.async(transport)
                             .requestTimeout(Duration.ofMillis(millis))

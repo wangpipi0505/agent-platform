@@ -69,7 +69,8 @@ class ApprovedConnectionGateTest {
         node.set("operationAllowlist", Json.tree(allow));
         node.set("allowedUses", Json.tree(List.of("read", "write", "execute")));
         node.set("grantedUses", Json.tree(List.of("read", "write", "execute")));
-        node.set("bindings", Json.tree(List.of()));
+        node.set("bindings", Json.tree(List.of(Map.of("bindingId", "crm-binding", "bindingRev", 1,
+                "baseEndpoint", "http://127.0.0.1:18090", "secretRef", "env:AGENT_SECRET_CRM", "environment", "dev"))));
         node.set("grants", Json.tree(List.of(Map.of("grantee", "skill.crm-read",
                 "allowedUses", List.of("read", "write", "execute")))));
         node.set("endpointPolicy", Json.object());
@@ -82,7 +83,8 @@ class ApprovedConnectionGateTest {
     }
 
     static Map<String, Object> ref(String profileId, int rev, String operation) {
-        return Map.of("profileId", profileId, "profileRev", rev, "operation", operation);
+        return Map.of("profileId", profileId, "profileRev", rev, "operation", operation,
+                "bindingId", "crm-binding", "bindingRev", 1);
     }
 
     @Test

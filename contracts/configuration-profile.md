@@ -33,7 +33,16 @@
 - 本轮通用执行协议的 grantee 规范为 `skill.<code>`，例如 `skill.crm-read`。`code` 必须来自 skill-registry 读取的精确不可变技能版本，并已与本次执行编码核对；不使用请求体、模型参数或 bindingRef 自报的 grantee、principal、appCode 或用途。租户和当前用户仍只来自已验签 Actor，技能 guard 继续核验当前用户的执行权限。
 - 用途由该版本的 `execution` 确定：`sideEffect=true` 为 `write`（优先），否则 `readonly=true` 为 `read`，其余为 `execute`。PREPARE 和确认后执行沿用原技能用途，不能借预演把写技能降为 read；重试、恢复和外部观察必须复查原技能的当前 grant。
 - 同时满足档案 `allowedUses` 与当前 grantee 的一条有效 grant 的 `allowedUses` 才可分发；操作还须在 `operationAllowlist` 内。零 grant、其他使用方、其他用途及已撤销授权均以 403 `CONNECTION_USE_NOT_GRANTED` 拒绝，在适配器 I/O 与通过回执之前停止。`grantedUses` 全体并集只是目录投影，不能作为本次执行授权。执行回执只记录本次匹配的用途。
-- 管理员沿既有 `/{profileId}/versions/{profileRev}/grants` API 授予精确 `skill.<code>`（既有 grantee 格式和长度已支持），无需新增角色。历史 `skill-registry`、`engine-runtime` 等自由服务级名称保留为目录记录，不隐式获得全部技能权限；需要管理员重新向精确技能授予 read/write/execute。无受控引用的存量技能保持既有执行路径。
+- 管理员沿既有 `/{profileId}/versions/{profileRev}/grants` API 授予精确 `skill.<code>`，无需新增角色。`code` 完整沿用 SkillCatalog 的 `[A-Za-z][A-Za-z0-9_-]{0,63}`，含前缀的 grantee 最长70；app V117扩展列和校验，保留历史目录值。历史 `skill-registry`、`engine-runtime` 等自由服务级名称不隐式获得全部技能权限；需要管理员重新向精确技能授予 read/write/execute。无受控引用的存量技能保持既有执行路径。
+
+### 2.2 固定绑定驱动执行（CR-02）
+
+- 配置发布 `connectionProfileRefs` 支持精确 `{profileId,profileRev,bindingId,bindingRev,operation,environment?,resolutionDigest?}`。只含 profileId/profileRev 的历史值保留为目录引用，不推断可执行绑定。绑定字段一旦出现必须完整；发布/激活复查精确批准绑定。
+- app 的激活体验投影只附上述引用（`bindingRefs`），不暴露物理地址或 secret_ref。引擎按服务端环境校验后把精确引用写入运行快照和 `environment_binding_revs`；会话恢复从同一事实恢复。ToolCalls登记以运行快照为准，body不一致以 CALL_BINDING_CHANGED拒绝；skill再次以引擎已登记call为准，不能信请求覆盖目的地。
+- 每次受控技能执行固定一个 bindingId/bindingRev；缺少、歧义、不存在或已停用均拒绝，不能挑当前最新绑定补洞。当前目录的 APPROVED 修订不可原地变更，也没有“已批准→草稿改写”入口；切环境需新绑定/新配置，原批准绑定仍可用于旧运行，停用立即阻断。内部resolve按精确绑定和精确grantee投影，其摘要不受无关绑定/他人授权新增影响。
+- Resolver生成不可由客户端注入的 `ApprovedConnectionExecution`，派生仅本次使用的不可变contract副本：将批准baseEndpoint作为服务根前缀，保留原技能完整操作路径/查询模板；根本身应不重复填写操作路径。主入口、PREPARE、lookup/status/result和声明式文件获取必须与原技能同源，再统一转到同一批准根和凭据。实际HTTP/异步/MCP出站复查批准来源、根路径及endpointPolicy；跨来源附属入口明确拒绝，不能继续使用旧地址或旧凭据。
+- 原始skill_version、合同sha256与运行历史不改写。首次、PREPARE、确认后、只读重试、恢复和UNKNOWN观察都重新解析原引用及当前grant，凭据值按secret_ref在实际I/O前解析；缺失、撤销或租户不匹配直接拒绝。PROCESS/ALGORITHM环境runtimeRef尚无对应受控物理执行协议，带连接引用时明确拒绝，不沿旧路径出站。无引用的既有适配器保持原路径。
+- skill V319向解析回执追加 `execution_binding`，记录实际bindingId/rev、baseEndpoint、environment和resolutionDigest，不记录凭据值；与run/call/attempt/operation同行关联。已完成事实的重复交付只读历史，不重新写业务；UNKNOWN对账只观察原调用，不重发副作用。
 
 ## 3. 版本、修订与幂等规则
 
@@ -96,6 +105,19 @@
     "configReleaseRef": {
       "type": "object", "additionalProperties": false, "required": ["configReleaseId", "digest"],
       "properties": { "configReleaseId": { "type": "string", "maxLength": 64 }, "digest": { "type": "string", "maxLength": 128 } }
+    },
+    "bindingRefs": {
+      "type": "array", "maxItems": 8,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["profileId", "profileRev", "bindingId", "bindingRev", "operation", "environment"],
+        "properties": {
+          "profileId": { "type": "string" }, "profileRev": { "type": "integer", "minimum": 1 },
+          "bindingId": { "type": "string" }, "bindingRev": { "type": "integer", "minimum": 1 },
+          "operation": { "type": "string" }, "environment": { "type": "string" },
+          "resolutionDigest": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+        }
+      }
     },
     "title": { "type": "string", "maxLength": 128 },
     "welcomeText": { "type": "string", "maxLength": 2048 },

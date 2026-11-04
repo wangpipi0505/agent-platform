@@ -28,8 +28,11 @@ public class InternalConnectionProfilesController {
 
     @GetMapping("/internal/connection-profiles/{profileId}/versions/{profileRev}/resolve")
     public Object resolve(@PathVariable String profileId, @PathVariable int profileRev,
-            @RequestParam(name = "environment", required = false) String environment) {
-        return ApiResponse.ok(connections.resolve(profileId, profileRev, environment));
+            @RequestParam(name = "environment", required = false) String environment,
+            @RequestParam(name = "bindingId", required = false) String bindingId,
+            @RequestParam(name = "bindingRev", required = false) Integer bindingRev,
+            @RequestParam(name = "grantee", required = false) String grantee) {
+        return ApiResponse.ok(connections.resolve(profileId, profileRev, environment, bindingId, bindingRev, grantee));
     }
 
     /**

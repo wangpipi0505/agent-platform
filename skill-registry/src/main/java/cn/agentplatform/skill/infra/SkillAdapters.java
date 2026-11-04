@@ -967,6 +967,7 @@ public class SkillAdapters {
         }
         SkillRules.endpoint(endpoint);
         String method = Objects.toString(contract.get("httpMethod"), "POST");
+        ApprovedConnectionExecution.check(contract, endpoint, method);
         if (!mapped && method.equals("GET")) {
             var uri = UriComponentsBuilder.fromUriString(endpoint);
             arguments.forEach(
@@ -1197,6 +1198,7 @@ public class SkillAdapters {
                 }
             refs.addAll(
                     declaredArtifacts(
+                            contract,
                             spec,
                             output,
                             runId,
@@ -1449,6 +1451,7 @@ public class SkillAdapters {
     }
 
     private List<Map<String, Object>> declaredArtifacts(
+            Map<String, Object> contract,
             Map<String, Object> spec,
             JsonNode output,
             String runId,
@@ -1485,6 +1488,7 @@ public class SkillAdapters {
                 throw new Failure("OUTPUT_INVALID", false, "retrieve.url无法构造成合法地址: " + path);
             }
             Duration remaining = remainingBudget(effectiveDeadline, path);
+            ApprovedConnectionExecution.check(contract, uri.toString(), "GET");
             Duration connectTimeout =
                     remaining.compareTo(Duration.ofSeconds(3)) < 0
                             ? remaining

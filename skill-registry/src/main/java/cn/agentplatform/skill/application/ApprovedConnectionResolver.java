@@ -4,6 +4,7 @@ import cn.agentplatform.common.Actor;
 import cn.agentplatform.common.Json;
 import cn.agentplatform.common.PlatformException;
 import cn.agentplatform.skill.infra.ConnectionResolutionReceipts;
+import cn.agentplatform.skill.infra.ApprovedConnectionExecution;
 import cn.agentplatform.skill.infra.SkillClients;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -33,6 +34,7 @@ import java.util.regex.Pattern;
 public class ApprovedConnectionResolver {
 
     static final Pattern ID = Pattern.compile("^[a-z][a-z0-9-]{2,47}$");
+    static final Pattern SKILL_CODE = Pattern.compile("^[A-Za-z][A-Za-z0-9_-]{0,63}$");
     static final Pattern ENVIRONMENT = Pattern.compile("^[a-z][a-z0-9-]{0,31}$");
     static final Set<String> RUNTIME_AUTH_KINDS = Set.of("NONE", "BEARER", "API_KEY");
     static final Pattern DIGEST = Pattern.compile("^[0-9a-f]{64}$");
@@ -68,7 +70,12 @@ public class ApprovedConnectionResolver {
     }
 
     private Map<String, Object> facts(String skillCode, String profileId, int profileRev, String environment) {
-        if (!ID.matcher(skillCode).matches())
+        return facts(skillCode, profileId, profileRev, environment, null, 0, null);
+    }
+
+    private Map<String, Object> facts(String skillCode, String profileId, int profileRev, String environment,
+            String bindingId, int bindingRev, String grantee) {
+        if (!SKILL_CODE.matcher(skillCode).matches())
             throw new PlatformException(400, "INVALID_INPUT", "技能编码格式不合法: " + skillCode);
         if (!ID.matcher(profileId).matches())
             throw new PlatformException(400, "INVALID_INPUT", "连接档案编码格式不合法: " + profileId);
@@ -79,7 +86,12 @@ public class ApprovedConnectionResolver {
             throw new PlatformException(400, "INVALID_INPUT", "environment 格式不合法: " + env);
 
         String url = appUrl + "/internal/connection-profiles/" + encode(profileId) + "/versions/" + profileRev
-                + "/resolve" + (env == null ? "" : "?environment=" + encode(env));
+                + "/resolve";
+        var query = new java.util.StringJoiner("&");
+        if (env != null) query.add("environment=" + encode(env));
+        if (bindingId != null) query.add("bindingId=" + encode(bindingId)).add("bindingRev=" + bindingRev)
+                .add("grantee=" + encode(grantee));
+        if (query.length() > 0) url += "?" + query;
         return shape(clients.get(url), profileId, profileRev);
     }
 
@@ -127,7 +139,14 @@ public class ApprovedConnectionResolver {
             Map<String, Object> callScope = new LinkedHashMap<>(scope);
             callScope.put("operation", operation);
             String environment = text(ref.get("environment"));
-            Map<String, Object> facts = facts(skillCode, profileId, rev.intValue(), environment);
+            String bindingId = text(ref.get("bindingId"));
+            Object bindingRev = ref.get("bindingRev");
+            if (bindingId == null || !ID.matcher(bindingId).matches()
+                    || !(bindingRev instanceof Number bindingRevision) || bindingRevision.intValue() < 1
+                    || bindingRevision.doubleValue() != bindingRevision.intValue())
+                throw new PlatformException(400, "CONNECTION_BINDING_REQUIRED", "受控执行必须固定 bindingId/bindingRev");
+            Map<String, Object> facts = facts(skillCode, profileId, rev.intValue(), environment,
+                    bindingId, bindingRevision.intValue(), grantee);
             List<?> allow = facts.get("operationAllowlist") instanceof List<?> list ? list : List.of();
             if (!allow.contains(operation))
                 throw new PlatformException(400, "CONNECTION_OPERATION_NOT_ALLOWED",
@@ -141,12 +160,24 @@ public class ApprovedConnectionResolver {
             if (!granted)
                 throw new PlatformException(403, "CONNECTION_USE_NOT_GRANTED",
                         "连接未授予当前技能所需用途: " + profileId + " / " + grantee + " / " + use);
+            Map<?, ?> binding = ((List<?>) facts.get("bindings")).stream()
+                    .filter(b -> b instanceof Map<?, ?> m && bindingId.equals(m.get("bindingId"))
+                            && m.get("bindingRev") instanceof Number n && n.intValue() == bindingRevision.intValue()
+                            && (environment == null || environment.equals(m.get("environment"))))
+                    .map(b -> (Map<?, ?>) b).findFirst()
+                    .orElseThrow(() -> new PlatformException(409, "CONNECTION_BINDING_UNAVAILABLE",
+                            "原绑定修订不存在、未批准或已停用: " + bindingId + "@" + bindingRevision.intValue()));
             Object resolvedDigest = facts.get("resolutionDigest");
             if (declared != null && !declared.equals(String.valueOf(resolvedDigest)))
                 throw new PlatformException(409, "CONNECTION_BINDING_CHANGED",
                         "引用的连接在批准后已变更，请按当前批准重新取用: " + profileId);
             // 回执只记录本次使用方真正获授的用途，不把其他 grant 的用途并集写成执行授权。
             facts.put("grantedUses", List.of(use));
+            var executionBinding = new LinkedHashMap<String, Object>();
+            for (String key : List.of("bindingId", "bindingRev", "baseEndpoint", "environment"))
+                executionBinding.put(key, binding.get(key));
+            executionBinding.put("resolutionDigest", resolvedDigest);
+            callScope.put("executionBinding", executionBinding);
             facts = receipts.record(actor, skillCode, facts, environment, callScope);
             Map<String, Object> entry = new LinkedHashMap<>();
             entry.put("profileId", profileId);
@@ -155,11 +186,25 @@ public class ApprovedConnectionResolver {
             entry.put("authKind", facts.get("authKind"));
             entry.put("resolutionDigest", resolvedDigest);
             entry.put("receiptId", facts.get("receiptId"));
+            entry.put("executionBinding", executionBinding);
+            entry.put("executionContext", new ApprovedConnectionExecution(bindingId, bindingRevision.intValue(),
+                    Objects.toString(binding.get("baseEndpoint"), ""), Objects.toString(binding.get("secretRef"), ""),
+                    Objects.toString(facts.get("authKind")), Objects.toString(facts.get("protocol")),
+                    (Map<String, Object>) facts.get("endpointPolicy")));
             checked.add(entry);
         }
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("refs", checked);
         return out;
+    }
+
+    public Map<String, Object> executionContract(Map<String, Object> contract, Map<String, Object> request, String code) {
+        List<?> checked = (List<?>) gate(contract, request, code).get("refs");
+        if (checked.isEmpty()) return contract;
+        if (checked.size() != 1)
+            throw new PlatformException(400, "CONNECTION_BINDING_AMBIGUOUS", "单次技能执行必须精确固定一个连接");
+        var entry = (Map<?, ?>) checked.getFirst();
+        return ((ApprovedConnectionExecution) entry.get("executionContext")).apply(contract);
     }
 
     /** 多重来源合并：请求引用优先（引擎按调用冻结下发），契约声明只作缺省。 */

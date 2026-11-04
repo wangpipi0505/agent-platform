@@ -76,7 +76,15 @@ public class RunService {
 
     /** 服务端解析并核验过的配置版本引用；只用于写入运行事实，不进入 versionRefs。 */
     public record ConfigReference(
-            String releaseId, String digest, String environment, JsonNode environmentBindingRevs) {}
+            String releaseId, String digest, String environment, JsonNode environmentBindingRevs, JsonNode bindingRefs) {
+        public ConfigReference(String releaseId, String digest, String environment, JsonNode environmentBindingRevs) {
+            this(releaseId, digest, environment, environmentBindingRevs,
+                    Json.tree(java.util.stream.StreamSupport.stream(environmentBindingRevs.spliterator(), false)
+                            .filter(ref -> "connection-profile".equals(ref.path("kind").asText()))
+                            .map(ref -> { var fixed = ((com.fasterxml.jackson.databind.node.ObjectNode) ref).deepCopy(); fixed.remove("kind"); return fixed; })
+                            .toList()));
+        }
+    }
 
     private final ModelInputMaterials initialMaterials;
     private final ChunkBus initialChunks;
@@ -290,7 +298,24 @@ public class RunService {
                                         "profileId", profileId,
                                         "profileRev", profileRev.asLong(),
                                         "environment", environment)));
-        return new ConfigReference(releaseId, digest, environment, revs);
+        var fixedRefs = Json.mapper().createArrayNode();
+        if (projection.has("bindingRefs") && !projection.path("bindingRefs").isArray()
+                || projection.path("bindingRefs").size() > 8)
+            throw new PlatformException(409, "CONNECTION_BINDING_UNAVAILABLE", "激活配置执行绑定形状或预算无效");
+        for (JsonNode binding : projection.path("bindingRefs")) {
+            if (!binding.path("profileId").asText().matches("[a-z][a-z0-9-]{2,47}")
+                    || !binding.path("profileRev").isIntegralNumber() || binding.path("profileRev").asInt() < 1
+                    || !binding.path("bindingId").asText().matches("[a-z][a-z0-9-]{2,47}")
+                    || !binding.path("bindingRev").isIntegralNumber() || binding.path("bindingRev").asInt() < 1
+                    || !binding.path("operation").asText().matches("[a-zA-Z][a-zA-Z0-9_.\\-/:]{0,127}")
+                    || !environment.equals(binding.path("environment").asText()))
+                throw new PlatformException(409, "CONNECTION_BINDING_UNAVAILABLE", "激活配置缺少本环境精确执行绑定");
+            fixedRefs.add(binding.deepCopy());
+            var persisted = ((com.fasterxml.jackson.databind.node.ObjectNode) binding).deepCopy();
+            persisted.put("kind", "connection-profile");
+            ((com.fasterxml.jackson.databind.node.ArrayNode) revs).add(persisted);
+        }
+        return new ConfigReference(releaseId, digest, environment, revs, fixedRefs);
     }
 
     /** 只把已核验引用写入运行事实；versionRefs 保持既有版本引用不动。 */
@@ -765,6 +790,11 @@ public class RunService {
             // 记录，按当前进程环境标注。引擎对 runtime 键有所有权，应用快照同名键被有意覆盖。
             if (snapshot instanceof com.fasterxml.jackson.databind.node.ObjectNode annotated)
                 annotateRuntime(annotated, demoMode, req);
+            if (!recordedReplay && config != null && !config.bindingRefs().isEmpty()) {
+                // 来源是app已核验激活配置；冻结后首次、重试与恢复均只读同一修订。
+                var frozenConfig = ((com.fasterxml.jackson.databind.node.ObjectNode) snapshot).withObject("config");
+                frozenConfig.set("bindingRefs", config.bindingRefs().deepCopy());
+            }
             final JsonNode frozen = snapshot, graph = snapshot.path("definition");
             if (trigger.equals("EVALUATION")
                     && req.has("candidateSha256")

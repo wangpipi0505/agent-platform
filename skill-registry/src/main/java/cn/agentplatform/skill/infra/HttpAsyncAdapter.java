@@ -756,6 +756,7 @@ public class HttpAsyncAdapter {
             String key,
             Long queryDeadline) {
         SkillRules.endpoint(endpoint);
+        ApprovedConnectionExecution.check(contract, endpoint, method);
         // 复核r04：鉴权凭据与身份映射的解析可能耗时，必须在解析完成之后复查期限——
         // 这里就是真实dispatch前的最后一道门；耗尽即拒绝，不再用先前冻结的剩余值发送。
         Map<String, String> authorization =
