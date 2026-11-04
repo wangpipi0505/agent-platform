@@ -29,6 +29,8 @@ import {
   type OnboardingTemplateDraft,
   resumeEntryFor,
   type OnboardingTemplateRecord,
+  publishedTemplateApplication,
+  type PublishedOnboardingApplication,
 } from "../../../../shared/onboarding";
 
 usePageTitle(() => "接入模板");
@@ -43,6 +45,7 @@ const payloadPreview = ref("");
 // ONB-04：模板服务端已交付——目录读真实接口；提交/预检/发布为 ADMIN 操作。
 const templates = ref<OnboardingTemplateRecord[]>([]);
 const registered = ref<{ code: string; status: string; rev: number }>();
+const publishedApplication = ref<PublishedOnboardingApplication>();
 // ①会话恢复：DRAFT 草稿持久化于服务端，刷新/重进后从这里继续（验证发布步骤）。
 const resumeTarget = ref<{ code: string; status: string }>();
 const showResume = computed(() => !!resumeTarget.value);
@@ -73,10 +76,17 @@ const errors = computed(() => validateOnboardingTemplateDraft(draft.value));
 const steps = ["选择来源能力包", "登记契约字段", "核对并导出登记内容"];
 
 function openWizard() {
+  publishedApplication.value = undefined;
   draft.value = emptyOnboardingTemplateDraft();
   payloadPreview.value = "";
   step.value = 0;
   wizardOpen.value = true;
+}
+async function verifyPublishedApplication(templateCode: string) {
+  publishedApplication.value = undefined;
+  await operation(async () => {
+    publishedApplication.value = await publishedTemplateApplication(api, templateCode);
+  });
 }
 function choosePackage(packageVersionId: number) {
   draft.value = applyPackageSelection(draft.value, {
@@ -206,7 +216,7 @@ async function copyPayload() {
   <div class="panel">
     <h2>组装登记与验证发布</h2>
     <DraftAssemblyStep :draft="draft" @registered="registered = $event" />
-    <VerifyPublishStep @published="registered = { code: $event, status: 'PUBLISHED', rev: registered?.rev ?? 1 }" />
+    <VerifyPublishStep @published="registered = { code: $event, status: 'PUBLISHED', rev: registered?.rev ?? 1 }; verifyPublishedApplication($event)" />
     <p v-if="registered" class="muted" role="status">
       本会话已登记：{{ registered.code }} · {{ registered.status }} · r{{ registered.rev }}。
     </p>
@@ -215,7 +225,8 @@ async function copyPayload() {
   <div class="panel">
     <h2>使用端交接与首跑验证</h2>
     <AssistantLaunchStep
-      :app-code="registered?.code || ''"
+      :app-code="publishedApplication?.appCode || ''"
+      :app-version="publishedApplication?.appVersion"
       :published="registered?.status === 'PUBLISHED'"
     />
     <p class="muted">

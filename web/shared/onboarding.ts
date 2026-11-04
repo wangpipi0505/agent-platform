@@ -18,6 +18,7 @@ import type {
   PreflightPreview,
 } from "./resource-types";
 import { parseOnboardingTemplate, parsePreflightPreview } from "./resource-types";
+import { asUnknownRecord } from "./resource-types";
 
 export type {
   ConnectionProfileView,
@@ -265,6 +266,20 @@ export function onboardingClient(api: OnboardingApi) {
 
 export { parseOnboardingTemplateList };
 export type { OnboardingTemplateRecord };
+
+export interface PublishedOnboardingApplication { appCode: string; appVersion: number }
+
+/** 模板发布事件只给模板身份；正式入口必须再核对所引用应用的真实发布指针。 */
+export async function publishedTemplateApplication(api: OnboardingApi, templateCode: string): Promise<PublishedOnboardingApplication | undefined> {
+  const template = asUnknownRecord(await api(`/admin/onboarding-templates/${encodeURIComponent(templateCode)}`));
+  if (template?.status !== "PUBLISHED") return undefined;
+  const appCode = asUnknownRecord(template.latest)?.appCode;
+  if (typeof appCode !== "string" || !appCode) return undefined;
+  const app = asUnknownRecord(await api(`/admin/apps/${encodeURIComponent(appCode)}`));
+  if (app?.code !== appCode || ["DISABLED", "ARCHIVED"].includes(String(app.status))
+      || !Number.isSafeInteger(app.currentVersionNo) || Number(app.currentVersionNo) < 1) return undefined;
+  return { appCode, appVersion: Number(app.currentVersionNo) };
+}
 
 /* ===================== ONB-05：会话恢复与错误恢复（错误码映射/冲突保留） ===================== */
 

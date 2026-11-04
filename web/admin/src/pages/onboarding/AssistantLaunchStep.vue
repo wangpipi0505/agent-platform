@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /** ONB-06：助手组装交接与使用端首跑——发布后引导至独立助手入口（webapp，
  * 与 AppPublishPanel 同源推导）；首跑验证清单逐项人工核验；内嵌交付标注“待集成”。 */
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import {
   assistantEntryUrl,
   ONBOARDING_LAUNCH_CHECKS,
@@ -11,6 +11,8 @@ import {
 const props = defineProps<{
   /** 已发布/已登记的目标应用编码（来自组装登记回执或目录选择）。 */
   appCode: string
+  /** 服务端实际应用发布号；模板修订号不能代替应用版本。 */
+  appVersion?: number
   /** 模板是否已发布（发布后才产生正式使用端）。 */
   published: boolean
   /** 可选的 webapp 基址覆盖（测试/特殊部署注入）。 */
@@ -19,6 +21,7 @@ const props = defineProps<{
 
 const entryUrl = computed(() => assistantEntryUrl(props.appCode, props.webappBase));
 const checked = ref<Record<string, boolean>>({});
+watch(() => [props.appCode, props.appVersion], () => { checked.value = {}; });
 const allChecked = computed(() =>
   ONBOARDING_LAUNCH_CHECKS.every((check) => checked.value[check.item]),
 );
@@ -32,7 +35,7 @@ const allChecked = computed(() =>
       <p>
         独立助手入口（正式使用端）：
         <a :href="entryUrl" target="_blank" rel="noopener">{{ entryUrl }}</a>
-        · 应用编码 <code>{{ appCode }}</code>
+        · 应用编码 <code>{{ appCode }}</code><span v-if="appVersion"> · 发布版本 {{ appVersion }}</span>
       </p>
       <p class="muted">业务内嵌交付（SDK 宿主按钮）：待集成——宿主 open/close/updateContext 接口已交付，业务侧按钮接线按各自系统集成。</p>
       <h3>使用端首跑验证清单</h3>
