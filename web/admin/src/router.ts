@@ -16,6 +16,12 @@ const routes: RouteRecordRaw[] = [
     meta: { access: "capability-packages", title: "软件能力目录" },
   },
   {
+    path: "/onboarding/templates",
+    name: "onboarding-templates",
+    component: () => import("./pages/onboarding/OnboardingTemplatesPage.vue"),
+    meta: { access: "onboarding-templates", title: "接入模板" },
+  },
+  {
     path: "/apps",
     name: "apps",
     component: () => import("./pages/AppsPage.vue"),

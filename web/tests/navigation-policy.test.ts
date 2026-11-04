@@ -1,5 +1,5 @@
 // MNT-02子步1：路由访问单一来源（page-access.ts）与未知路径404。
-// 锁定：①14主入口+参数页同源登记（标题/区域/读条件/写上下文）；②读条件本轮统一为
+// 锁定：①主入口同源登记（标题/区域/读条件/写上下文；ONB-01起15个——新增接入模板页）；②读条件本轮统一为
 // 已验证主体（不以can('edit')替代读权限），写上下文按页面实际can()/v-permission用法登记；
 // ③未知路径命中 NotFoundPage 而非静默重定向；④合法主体原深链可达。
 import { expect, it } from "vitest";
@@ -20,10 +20,10 @@ const routerSource = readFileSync(
   "utf8",
 );
 
-it("单一来源：14个主入口与全部页面登记齐全且字段完整", () => {
+it("单一来源：主入口（ONB-01起15个）与全部页面登记齐全且字段完整", () => {
   const menu = menuEntries();
-  expect(menu.length).toBe(14);
-  expect(new Set(menu.map((e) => e.path)).size).toBe(14);
+  expect(menu.length).toBe(15);
+  expect(new Set(menu.map((e) => e.path)).size).toBe(15);
   for (const entry of pageAccess) {
     expect(entry.title.length, entry.key).toBeGreaterThan(0);
     expect(entry.area.length, entry.key).toBeGreaterThan(0);
@@ -55,7 +55,7 @@ it("路由源码：全部页面登记access键，未知路径命中404而非重�
   expect(routerSource).toContain('name: "not-found"');
   expect(routerSource).toContain("component: NotFoundPage");
   expect(routerSource).not.toContain('"/:pathMatch(.*)*", redirect');
-  // 菜单同源：AppShell 从 router 派生 navMenus，不再手写14入口数组
+  // 菜单同源：AppShell 从 router 派生 navMenus，不再手写入口数组
   expect(routerSource).toContain("export const navMenus = menuEntries()");
 });
 

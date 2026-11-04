@@ -29,6 +29,7 @@ export const PAGE_ACCESS_VERSION = 1;
 
 export const pageAccess: PageAccessEntry[] = [
   { key: "capability-packages", path: "/capability-packages", title: "软件能力目录", area: "平台管理", read: "session", write: "", menu: true },
+  { key: "onboarding-templates", path: "/onboarding/templates", title: "接入模板", area: "平台管理", read: "session", write: "admin", menu: true },
   { key: "apps", path: "/apps", title: "智能体管理", area: "平台管理", read: "session", write: "edit", menu: true },
   { key: "app-workspace", path: "/apps", route: "/apps/:code/:tabMatch(.*)*", title: "应用工作区", area: "平台管理", read: "session", write: "edit", menu: false },
   { key: "operations", path: "/operations", title: "运行中心", area: "运行与支撑", read: "session", write: "admin", menu: true },
