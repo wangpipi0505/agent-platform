@@ -3,14 +3,15 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
 
-// INT-05 host-API check: the shipped IIFE must keep the original host contract
-// (init/destroy, chat, restore, approval, artifact download) while exposing the
-// additive host lifecycle (open/close/updateContext/on/off), the experience
-// projection with honest fallback, and a validated page-context surface.
+// INT-05 host-API check plus INT-06 config-release check: the shipped IIFE must
+// keep the original host contract (init/destroy, chat, restore, approval,
+// artifact download) and the additive host lifecycle (open/close/updateContext/
+// on/off), while configReleaseId stays a proposal: the server-returned session
+// reference wins, turns never carry it, and legacy sessions keep their request.
 const web = path.resolve(import.meta.dirname, "..");
 const repo = path.resolve(web, "..");
 const bundle = path.join(web, "assistant.js/dist/assistant.js");
-const evidenceDir = path.join(repo, "docs/evidence/int-05-20261104");
+const evidenceDir = path.join(repo, "docs/evidence/int-06-20261104");
 const evidence = {
   fixtureOnly: true,
   bundle: "assistant.js/dist/assistant.js",
@@ -115,6 +116,7 @@ function service(state) {
       query: url.search,
       body: request.postData() ? request.postDataJSON() : null,
       authorization: request.headers()["authorization"] || "",
+      lastEventId: request.headers()["last-event-id"] || "",
     });
     const ok = (data) => json(route, { code: "OK", data });
     // Experience projection: rich, not-active, unreachable, or absent.
@@ -145,7 +147,14 @@ function service(state) {
       return ok(declarative);
     if (url.pathname === "/v1/apps/demo/sessions" && method === "POST") {
       state.session = "s_1";
-      return ok({ sessionId: "s_1" });
+      const body = request.postDataJSON() || {};
+      // Server resolves the proposal; only an accepted reference is echoed back.
+      return ok({
+        sessionId: "s_1",
+        ...(body.configReleaseId === "cr_9"
+          ? { configReleaseId: "cr_9" }
+          : {}),
+      });
     }
     if (
       url.pathname === "/v1/apps/demo/sessions/s_1/turns" &&
@@ -189,7 +198,66 @@ function service(state) {
         sessionId: "s_prev",
         versionNo: 7,
         turns: [{ run_public_id: "r_prev" }],
+        configReleaseId: "cr_old",
       });
+    if (
+      url.pathname === "/v1/apps/demo/sessions/s_prev/turns" &&
+      method === "POST"
+    )
+      return ok({ runId: "r_prev2", status: "QUEUED" });
+    if (url.pathname === "/v1/runs/r_prev2/events")
+      return route.fulfill({
+        status: 200,
+        contentType: "text/event-stream",
+        body: sse([
+          {
+            id: "1",
+            event: "RUN_FINISHED",
+            data: { output: { text: "继续回答" } },
+          },
+        ]),
+      });
+    if (url.pathname === "/v1/apps/slow/experience")
+      return json(route, { code: "NOT_FOUND", message: "无此资源" }, 404);
+    if (url.pathname === "/v1/apps/slow/input-schema")
+      return ok(declarative);
+    if (url.pathname === "/v1/apps/slow/sessions" && method === "POST")
+      return ok({ sessionId: "s_slow", configReleaseId: "cr_slow" });
+    if (
+      url.pathname === "/v1/apps/slow/sessions/s_slow/turns" &&
+      method === "POST"
+    )
+      return ok({ runId: "r_slow", status: "QUEUED" });
+    if (url.pathname === "/v1/runs/r_slow/events") {
+      const stream = (state.slowEvents = (state.slowEvents || 0) + 1);
+      return route.fulfill({
+        status: 200,
+        contentType: "text/event-stream",
+        body: sse(
+          stream === 1
+            ? [{ id: "1", event: "NODE_STARTED", data: { nodeId: "n1" } }]
+            : [
+                {
+                  id: "2",
+                  event: "RUN_FINISHED",
+                  data: { output: { text: "重连完成" } },
+                },
+              ],
+        ),
+      });
+    }
+    if (url.pathname === "/v1/runs/r_slow" && method === "GET") {
+      const status = (state.slowStatus = (state.slowStatus || 0) + 1);
+      return ok(
+        status === 1
+          ? { status: "RUNNING", eventsWatermark: 1 }
+          : {
+              status: "SUCCEEDED",
+              eventsWatermark: 2,
+              output: { text: "重连完成" },
+            },
+      );
+    }
     if (url.pathname === "/v1/runs/r_prev")
       return ok({ inputs: { message: "旧问题" }, output: { text: "旧回答" } });
     if (url.pathname === "/v1/runs/r_1/events")
@@ -1029,6 +1097,141 @@ try {
       fullPage: true,
     });
     evidence.checks.approvalAndArtifactDownload = true;
+    await page.close();
+  }
+
+  // INT-06-a: the client may propose configReleaseId, but only the server's
+  // resolved reference is authoritative; turns never carry the proposal.
+  {
+    const { page } = await sdkPage({ search: "?configReleaseId=cr_9" });
+    await page.evaluate(({ endpoint }) => {
+      window.AIAssistant.init({
+        endpoint,
+        appCode: "demo",
+        ticket: async () => "tok",
+      });
+    }, { endpoint: "http://localhost" });
+    await page.getByRole("button", { name: "打开智能助手" }).click();
+    const from = evidence.requests.length;
+    await page.getByRole("textbox", { name: "输入问题" }).fill("你好");
+    await page.getByRole("button", { name: "发送", exact: true }).click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("agent-platform-assistant")
+        .shadowRoot.querySelector(".log")
+        .innerText.includes("完成"),
+    );
+    const session = evidence.requests
+      .slice(from)
+      .find((r) => r.path === "/v1/apps/demo/sessions" && r.method === "POST");
+    assert.deepEqual(session.body, { configReleaseId: "cr_9" });
+    const turn = evidence.requests
+      .slice(from)
+      .find((r) => r.path === "/v1/apps/demo/sessions/s_1/turns");
+    assert.equal("configReleaseId" in turn.body, false);
+    evidence.checks.configProposalPassthrough = true;
+    await page.close();
+  }
+
+  // INT-06-b: restoring an old session reads the server-returned reference;
+  // a newer local proposal never overrides it and the mismatch is surfaced.
+  {
+    const { page } = await sdkPage({
+      search: "?sessionId=s_prev&configReleaseId=cr_new",
+    });
+    await page.evaluate(({ endpoint }) => {
+      window.AIAssistant.init({
+        endpoint,
+        appCode: "demo",
+        ticket: async () => "tok",
+      });
+    }, { endpoint: "http://localhost" });
+    await page.getByRole("button", { name: "打开智能助手" }).click();
+    await page.getByText("旧问题", { exact: false }).waitFor();
+    const notice = await page.evaluate(
+      () =>
+        document
+          .querySelector("agent-platform-assistant")
+          .shadowRoot.querySelector(".log .experience-note")?.textContent || "",
+    );
+    assert.match(notice, /继续使用创建时的配置版本/);
+    const from = evidence.requests.length;
+    await page.getByRole("textbox", { name: "输入问题" }).fill("继续");
+    await page.getByRole("button", { name: "发送", exact: true }).click();
+    await page.getByText("继续回答", { exact: false }).waitFor();
+    const turn = evidence.requests
+      .slice(from)
+      .find((r) => r.path === "/v1/apps/demo/sessions/s_prev/turns");
+    assert.equal("configReleaseId" in turn.body, false);
+    evidence.checks.restoreUsesServerReference = true;
+    await page.close();
+  }
+
+  // INT-06-c: hosts without a proposal keep the exact legacy request/response.
+  {
+    const { page } = await sdkPage();
+    await page.evaluate(({ endpoint }) => {
+      window.AIAssistant.init({
+        endpoint,
+        appCode: "demo",
+        ticket: async () => "tok",
+      });
+    }, { endpoint: "http://localhost" });
+    await page.getByRole("button", { name: "打开智能助手" }).click();
+    const from = evidence.requests.length;
+    await page.getByRole("textbox", { name: "输入问题" }).fill("你好");
+    await page.getByRole("button", { name: "发送", exact: true }).click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("agent-platform-assistant")
+        .shadowRoot.querySelector(".log")
+        .innerText.includes("完成"),
+    );
+    const session = evidence.requests
+      .slice(from)
+      .find((r) => r.path === "/v1/apps/demo/sessions" && r.method === "POST");
+    assert.deepEqual(session.body, {});
+    const turn = evidence.requests
+      .slice(from)
+      .find((r) => r.path === "/v1/apps/demo/sessions/s_1/turns");
+    assert.equal("configReleaseId" in turn.body, false);
+    const notes = await page.evaluate(
+      () =>
+        document
+          .querySelector("agent-platform-assistant")
+          .shadowRoot.querySelectorAll(".log .experience-note").length,
+    );
+    assert.equal(notes, 0);
+    evidence.checks.legacySessionRequestUnchanged = true;
+    await page.close();
+  }
+
+  // INT-06-d: an interrupted SSE stream resumes from the observer cursor; the
+  // resumed turn still belongs to the same session/run and is sent only once.
+  {
+    const { page } = await sdkPage();
+    await page.evaluate(({ endpoint }) => {
+      window.AIAssistant.init({
+        endpoint,
+        appCode: "slow",
+        ticket: async () => "tok",
+      });
+    }, { endpoint: "http://localhost" });
+    await page.getByRole("button", { name: "打开智能助手" }).click();
+    await page.getByRole("textbox", { name: "输入问题" }).fill("重连主题");
+    await page.getByRole("button", { name: "发送", exact: true }).click();
+    await page.getByText("重连完成", { exact: false }).waitFor();
+    const events = evidence.requests.filter(
+      (r) => r.path === "/v1/runs/r_slow/events",
+    );
+    assert.equal(events.length, 2);
+    assert.equal(events[0].lastEventId, "0");
+    assert.equal(events[1].lastEventId, "1");
+    const turns = evidence.requests.filter(
+      (r) => r.path === "/v1/apps/slow/sessions/s_slow/turns",
+    );
+    assert.equal(turns.length, 1);
+    evidence.checks.interruptedStreamResumesWithCursor = true;
     await page.close();
   }
 

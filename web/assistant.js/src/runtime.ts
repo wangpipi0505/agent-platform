@@ -9,7 +9,7 @@ import { decodeRunStatus, record, eventText } from "../../shared/run-protocol";
 import { observeRun } from "../../shared/run-observer";
 import { decisionPayload } from "../../shared/approval";
 import { downloadArtifact } from "../../shared/artifact";
-import { restoreSession } from "../../shared/session";
+import { restoreSession, sessionConfigReleaseId } from "../../shared/session";
 import {
   requireApplicationType,
   declaredSchema,
@@ -58,6 +58,39 @@ export function createRuntime(
     ? validatePageContext(options.context)
     : {};
   const extraInputs = new Map<string, ExtraInput>();
+
+  // INT-06：宿主只能“提议”配置版本；会话实际使用的版本一律以服务端返回值为准。
+  // 提议入口：init 选项（JS 宿主）或页面 URL 的 configReleaseId；两者都不决定可用性。
+  const configProposal = (): string => {
+    const explicit = (options as AssistantOptions & { configReleaseId?: unknown })
+      .configReleaseId;
+    if (typeof explicit === "string" && explicit.trim()) return explicit.trim();
+    return (
+      new URLSearchParams(location.search).get("configReleaseId") || ""
+    ).trim();
+  };
+  let sessionConfig = "";
+  let configNoticeShown = false;
+  const note = (text: string) => {
+    const line = document.createElement("p");
+    line.className = "experience-note";
+    line.textContent = text;
+    widget.log.append(line);
+    widget.log.scrollTop = widget.log.scrollHeight;
+  };
+  // 只读服务端返回的会话引用；恢复时若与本地提议不一致，以服务端为准并如实提示。
+  const adoptServerConfig = (session: any, notify: boolean) => {
+    sessionConfig = sessionConfigReleaseId(session);
+    const proposed = configProposal();
+    if (!notify || configNoticeShown || !proposed) return;
+    if (sessionConfig && proposed !== sessionConfig) {
+      configNoticeShown = true;
+      note("应用配置已更新，本会话继续使用创建时的配置版本（以服务端返回为准）。");
+    } else if (!sessionConfig) {
+      configNoticeShown = true;
+      note("该会话未固定配置版本，继续按会话创建时的应用版本执行（以服务端返回为准）。");
+    }
+  };
 
   /** Shared authorized request helper; HTTP status stays authoritative. */
   async function call(
@@ -177,6 +210,7 @@ export function createRuntime(
       declaration = restored.declaration;
       for (const turn of restored.session.turns || [])
         await appendHistory(request, turn.run_public_id);
+      adoptServerConfig(restored.session, true);
       hydrated = true;
       emit("session", { sessionId, appCode: options.appCode });
     } catch (e: any) {
@@ -221,6 +255,7 @@ export function createRuntime(
           declaration = restored.declaration;
           for (const turn of restored.session.turns || [])
             await appendHistory(call, turn.run_public_id, user);
+          adoptServerConfig(restored.session, true);
         } else
           declaration = await call(
             "/v1/apps/" +
@@ -239,11 +274,13 @@ export function createRuntime(
         extraInputs,
       );
       if (declaration.type === "CHAT" && !sessionId) {
+        const proposed = configProposal();
         const session = await call(
           "/v1/apps/" + encodeURIComponent(options.appCode) + "/sessions",
-          {},
+          proposed ? { configReleaseId: proposed } : {},
         );
         sessionId = session.sessionId;
+        adoptServerConfig(session, false);
         hydrated = true;
         publishSession(sessionId);
         emit("session", { sessionId, appCode: options.appCode });
@@ -302,16 +339,18 @@ export function createRuntime(
           widget.error.textContent = e.message;
         }
       }
+      // 轮次只沿用会话已固定的引用，不再携带提议；FLOW 运行则允许一次提议。
+      const runBody: any = { inputs, requestId: crypto.randomUUID() };
+      const flowProposal = configProposal();
+      if (declaration.type !== "CHAT" && flowProposal)
+        runBody.configReleaseId = flowProposal;
       const run = await call(
         "/v1/apps/" +
           encodeURIComponent(options.appCode) +
           (declaration.type === "CHAT"
             ? "/sessions/" + encodeURIComponent(sessionId) + "/turns"
             : "/runs"),
-        {
-          inputs,
-          requestId: crypto.randomUUID(),
-        },
+        runBody,
       );
       if (destroyed) throw new DOMException("观察已停止", "AbortError");
       controller = new AbortController();
