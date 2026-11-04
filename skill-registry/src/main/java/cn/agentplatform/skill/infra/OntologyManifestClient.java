@@ -1,6 +1,7 @@
 package cn.agentplatform.skill.infra;
 
 import cn.agentplatform.common.PlatformException;
+import cn.agentplatform.common.Json;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -158,7 +159,14 @@ public class OntologyManifestClient {
             String digest = text(item, "extensionSha256");
             if (!DIGEST.matcher(digest).matches()) throw malformed();
             if (!"ACTIVE".equals(item.path("status").asText(""))) throw malformed();
-            result.add(new Extension(extensionId, opCode, profile, schemaVersion, digest));
+            Map<String, Object> descriptor = Map.of();
+            if (item.hasNonNull("descriptor")) {
+                if (!item.path("descriptor").isObject()) throw malformed();
+                @SuppressWarnings("unchecked")
+                Map<String, Object> parsed = Json.read(item.path("descriptor").toString(), Map.class);
+                descriptor = Map.copyOf(parsed);
+            }
+            result.add(new Extension(extensionId, opCode, profile, schemaVersion, digest, descriptor));
         }
         return List.copyOf(result);
     }
@@ -193,7 +201,11 @@ public class OntologyManifestClient {
     }
 
     public record Extension(
-            UUID extensionId, String opCode, String profile, String schemaVersion, String sha256) {
+            UUID extensionId, String opCode, String profile, String schemaVersion, String sha256,
+            Map<String, Object> descriptor) {
+        public Extension(UUID extensionId, String opCode, String profile, String schemaVersion, String sha256) {
+            this(extensionId, opCode, profile, schemaVersion, sha256, Map.of());
+        }
         public Map<String, Object> toMap() {
             var map = new LinkedHashMap<String, Object>();
             map.put("extensionId", extensionId.toString());
@@ -201,6 +213,7 @@ public class OntologyManifestClient {
             map.put("profile", profile);
             map.put("schemaVersion", schemaVersion);
             map.put("extensionSha256", sha256);
+            if (!descriptor.isEmpty()) map.put("descriptor", descriptor);
             return map;
         }
     }

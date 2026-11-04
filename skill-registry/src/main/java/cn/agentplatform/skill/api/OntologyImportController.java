@@ -38,6 +38,6 @@ public class OntologyImportController {
             throw new PlatformException(400, "MANIFEST_PARSE", "导入请求不是合法JSON对象");
         }
         // R09/JOINT-005：业务调用必须在解析catch之外；重复导入等业务/存储错误不得伪称MANIFEST_PARSE。
-        return ApiResponse.ok(imports.importManifests(value));
+        return ApiResponse.ok(value.containsKey("releaseId") ? imports.importPublishedQueries(value) : imports.importManifests(value));
     }
 }

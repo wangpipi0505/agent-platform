@@ -27,6 +27,18 @@ public class OntologyConsumeIdentity {
         this.secrets = secrets;
     }
 
+    /** 只列当前已验主体登记的版本候选；不解析、不返回secret_ref或凭据。 */
+    public java.util.Set<UUID> releaseIds(Actor actor) {
+        var result = new java.util.LinkedHashSet<UUID>();
+        for (JsonNode binding : bindings) {
+            if (!actor.tenantId().equals(binding.path("tenantId").asText())
+                    || !actor.principalId().equals(binding.path("principalId").asText())) continue;
+            try { result.add(UUID.fromString(binding.path("releaseId").asText())); }
+            catch (IllegalArgumentException invalid) { throw denied(); }
+        }
+        return java.util.Collections.unmodifiableSet(result);
+    }
+
     public String key(Actor actor, UUID release) {
         JsonNode found = null;
         for (JsonNode binding : bindings) {

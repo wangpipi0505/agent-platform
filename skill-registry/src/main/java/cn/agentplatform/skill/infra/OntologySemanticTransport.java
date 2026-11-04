@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
 /** 跨平台只读消费共用通路：精确目的地、逐次身份回查、API key；绝不发送AP内部Bearer。 */
 @Component
 public class OntologySemanticTransport {
-    private static final Pattern PATH = Pattern.compile("^/onto/releases/([0-9a-fA-F-]{36})/(formal-source|semantic/(identity|facts/resolve|facts|definitions/query|decisions|conditions/evaluate|objects/query|objects/join))$");
+    private static final Pattern PATH = Pattern.compile("^/onto/releases/([0-9a-fA-F-]{36})/(formal-source|semantic/(identity|facts/resolve|facts|definitions/query|decisions|conditions/evaluate|objects/query|objects/join|objects/capabilities))$");
     private final URI base;
     private final OntologyConsumeIdentity identities;
     private final RestClient client;
@@ -60,8 +60,9 @@ public class OntologySemanticTransport {
         if (!sameOrigin(base, target) || target.getRawUserInfo() != null || target.getRawFragment() != null
                 || !match.matches() || !target.getPath().equals(target.getRawPath())) throw denied();
         String operation = match.group(2);
+        boolean read="formal-source".equals(operation)||"semantic/objects/capabilities".equals(operation);
         if ("identity".equals(operation) || "semantic/identity".equals(operation)
-                || !method.equals("formal-source".equals(operation) ? "GET" : "POST")
+                || !method.equals(read ? "GET" : "POST")
                 || target.getRawQuery() != null && !("formal-source".equals(operation)
                     && target.getRawQuery().matches("spaceCode=[A-Za-z0-9._-]{1,64}"))) throw denied();
         UUID release = UUID.fromString(match.group(1));

@@ -26,7 +26,8 @@ public class HttpSyncExecutionAdapter implements SkillAdapter {
 
     @Override
     public boolean handles(Map<String, Object> contract) {
-        return !SkillAdapters.asyncForm(contract);
+        return !SkillAdapters.asyncForm(contract)
+                && !SemanticObjectQuerySkills.isSemanticEndpoint(java.util.Objects.toString(contract.get("endpoint"), ""));
     }
 
     @Override

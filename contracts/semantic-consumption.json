@@ -48,6 +48,18 @@
     {
       "method": "GET",
       "path": "/onto/releases/{releaseId}/formal-source"
+    },
+    {
+      "method": "GET",
+      "path": "/onto/releases/{releaseId}/semantic/objects/capabilities"
+    },
+    {
+      "method": "POST",
+      "path": "/onto/releases/{releaseId}/semantic/objects/query"
+    },
+    {
+      "method": "POST",
+      "path": "/onto/releases/{releaseId}/semantic/objects/join"
     }
   ],
   "apDeploymentBinding": {

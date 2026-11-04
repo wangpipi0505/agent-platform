@@ -1,0 +1,615 @@
+{
+  "schemaVersion": "1.0",
+  "profile": "object-query@1.0",
+  "fixedRelease": true,
+  "publication": {
+    "method": "POST",
+    "path": "/onto/releases/{releaseId}/semantic/objects/capabilities",
+    "permission": "release.write",
+    "spaceRole": "OWNER",
+    "required": [
+      "expectedDraftRev"
+    ],
+    "optional": [
+      "mappingIds",
+      "joins"
+    ],
+    "storage": "release_semantic_extension immutable descriptor + service_endpoint; same transaction and space CAS; grants are never added",
+    "unchangedArtifacts": [
+      "bundle",
+      "manifest",
+      "context-pack",
+      "index"
+    ]
+  },
+  "catalog": {
+    "method": "GET",
+    "path": "/onto/releases/{releaseId}/semantic/objects/capabilities",
+    "credential": "semanticPlatformActor or local session",
+    "returns": [
+      "capabilities",
+      "manifests"
+    ]
+  },
+  "execution": [
+    {
+      "method": "POST",
+      "path": "/onto/releases/{releaseId}/semantic/objects/query",
+      "querySchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "filters": {
+            "type": "array",
+            "maxItems": 8,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "field",
+                "operator"
+              ],
+              "properties": {
+                "field": {
+                  "type": "string",
+                  "maxLength": 64
+                },
+                "operator": {
+                  "enum": [
+                    "EQ",
+                    "IN",
+                    "GT",
+                    "GE",
+                    "LT",
+                    "LE"
+                  ]
+                },
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    }
+                  ]
+                },
+                "values": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 100,
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "boolean"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "order": {
+            "type": "array",
+            "maxItems": 3,
+            "items": {
+              "type": "object",
+              "required": [
+                "field"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "field": {
+                  "type": "string"
+                },
+                "descending": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200
+          },
+          "expand": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "relation": {
+                "type": "string"
+              },
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/onto/releases/{releaseId}/semantic/objects/join",
+      "querySchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "left": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "filters": {
+                "type": "array",
+                "maxItems": 8,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "field",
+                    "operator"
+                  ],
+                  "properties": {
+                    "field": {
+                      "type": "string",
+                      "maxLength": 64
+                    },
+                    "operator": {
+                      "enum": [
+                        "EQ",
+                        "IN",
+                        "GT",
+                        "GE",
+                        "LT",
+                        "LE"
+                      ]
+                    },
+                    "value": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "boolean"
+                        }
+                      ]
+                    },
+                    "values": {
+                      "type": "array",
+                      "minItems": 1,
+                      "maxItems": 100,
+                      "items": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100
+              }
+            }
+          },
+          "right": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "filters": {
+                "type": "array",
+                "maxItems": 8,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "field",
+                    "operator"
+                  ],
+                  "properties": {
+                    "field": {
+                      "type": "string",
+                      "maxLength": 64
+                    },
+                    "operator": {
+                      "enum": [
+                        "EQ",
+                        "IN",
+                        "GT",
+                        "GE",
+                        "LT",
+                        "LE"
+                      ]
+                    },
+                    "value": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "boolean"
+                        }
+                      ]
+                    },
+                    "values": {
+                      "type": "array",
+                      "minItems": 1,
+                      "maxItems": 100,
+                      "items": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100
+              }
+            }
+          },
+          "maxRows": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200
+          },
+          "timeoutMs": {
+            "type": "integer",
+            "minimum": 100,
+            "maximum": 10000
+          }
+        }
+      }
+    }
+  ],
+  "apImport": {
+    "method": "POST",
+    "path": "/admin/skills/import-ontology-manifests",
+    "body": [
+      "releaseId",
+      "authRef",
+      "opCodes(optional)"
+    ],
+    "result": "existing DRAFT/normalize/publish gates",
+    "execution": "mutually exclusive HTTP semantic adapter -> current verified Actor transport; import authRef never selects the execution actor"
+  },
+  "budgets": {
+    "maxSources": 2,
+    "maxCalls": 2,
+    "maxRowsPerSource": 100,
+    "maxTotalRows": 200,
+    "maxBytes": 1048576,
+    "maxTimeoutMs": 10000
+  },
+  "identityJoin": "current ACTIVE semantic_identity_link constrained by release_id + mapping_id; no name or string equality merge",
+  "queryRequest": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "opCode",
+      "query"
+    ],
+    "properties": {
+      "opCode": {
+        "type": "string",
+        "pattern": "^[A-Za-z][A-Za-z0-9_]{0,63}$"
+      },
+      "query": {
+        "anyOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "filters": {
+                "type": "array",
+                "maxItems": 8,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "field",
+                    "operator"
+                  ],
+                  "properties": {
+                    "field": {
+                      "type": "string",
+                      "maxLength": 64
+                    },
+                    "operator": {
+                      "enum": [
+                        "EQ",
+                        "IN",
+                        "GT",
+                        "GE",
+                        "LT",
+                        "LE"
+                      ]
+                    },
+                    "value": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "boolean"
+                        }
+                      ]
+                    },
+                    "values": {
+                      "type": "array",
+                      "minItems": 1,
+                      "maxItems": 100,
+                      "items": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "order": {
+                "type": "array",
+                "maxItems": 3,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "field"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "field": {
+                      "type": "string"
+                    },
+                    "descending": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              },
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 200
+              },
+              "expand": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "relation": {
+                    "type": "string"
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "left": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "filters": {
+                    "type": "array",
+                    "maxItems": 8,
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "field",
+                        "operator"
+                      ],
+                      "properties": {
+                        "field": {
+                          "type": "string",
+                          "maxLength": 64
+                        },
+                        "operator": {
+                          "enum": [
+                            "EQ",
+                            "IN",
+                            "GT",
+                            "GE",
+                            "LT",
+                            "LE"
+                          ]
+                        },
+                        "value": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "boolean"
+                            }
+                          ]
+                        },
+                        "values": {
+                          "type": "array",
+                          "minItems": 1,
+                          "maxItems": 100,
+                          "items": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "boolean"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100
+                  }
+                }
+              },
+              "right": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "filters": {
+                    "type": "array",
+                    "maxItems": 8,
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "field",
+                        "operator"
+                      ],
+                      "properties": {
+                        "field": {
+                          "type": "string",
+                          "maxLength": 64
+                        },
+                        "operator": {
+                          "enum": [
+                            "EQ",
+                            "IN",
+                            "GT",
+                            "GE",
+                            "LT",
+                            "LE"
+                          ]
+                        },
+                        "value": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "boolean"
+                            }
+                          ]
+                        },
+                        "values": {
+                          "type": "array",
+                          "minItems": 1,
+                          "maxItems": 100,
+                          "items": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "boolean"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100
+                  }
+                }
+              },
+              "maxRows": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 200
+              },
+              "timeoutMs": {
+                "type": "integer",
+                "minimum": 100,
+                "maximum": 10000
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "partialResults": [
+    "FAILED",
+    "TIMEOUT",
+    "missingIdentity",
+    "ambiguousIdentity"
+  ],
+  "snapshot": "NOT_DISTRIBUTED",
+  "disallowed": [
+    "SQL",
+    "scripts",
+    "hosts",
+    "datasources",
+    "client-selected identities",
+    "client-selected mapping/source names during execution"
+  ]
+}

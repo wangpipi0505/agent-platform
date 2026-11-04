@@ -33,9 +33,32 @@ public class OntologyManifestImports {
     private static final int MAX_MANIFESTS = 64;
 
     private final SkillCatalog catalog;
+    private cn.agentplatform.skill.infra.SemanticObjectClient semanticObjects;
+
+    @org.springframework.beans.factory.annotation.Autowired(required=false)
+    public void semanticObjects(cn.agentplatform.skill.infra.SemanticObjectClient client){this.semanticObjects=client;}
 
     public OntologyManifestImports(SkillCatalog catalog) {
         this.catalog = catalog;
+    }
+
+    /** 既有导入路由的受控来源模式：只从当前主体固定版本清单取得manifest，再走原草稿/发布门禁。 */
+    public Map<String,Object> importPublishedQueries(Map<String,Object> body){
+        Actor.current().requireRole("ADMIN");
+        if(!Set.of("releaseId","authRef","opCodes").containsAll(body.keySet()))throw invalid("正式查询导入字段未登记");
+        UUID release;
+        try{release=UUID.fromString(Objects.toString(body.get("releaseId"),""));}
+        catch(IllegalArgumentException invalid){throw invalid("releaseId必须为固定UUID");}
+        if(semanticObjects==null)throw new PlatformException(503,"SEMANTIC_SOURCE_UNAVAILABLE","标准查询消费客户端未就绪");
+        var manifests=semanticObjects.manifests(release);
+        if(body.containsKey("opCodes")){
+            if(!(body.get("opCodes") instanceof List<?> selected)||selected.isEmpty()||selected.size()>64
+                    ||selected.stream().anyMatch(code->!(code instanceof String)))throw invalid("opCodes必须为非空编码数组");
+            var codes=new LinkedHashSet<>(selected);
+            manifests=manifests.stream().filter(item->codes.contains(item.get("tool_code"))).toList();
+            if(manifests.size()!=codes.size())throw invalid("所选标准操作不存在或当前不可用");
+        }
+        return importManifests(Map.of("manifests",manifests,"authRef",Objects.toString(body.get("authRef"),"")));
     }
 
     /** 本体消费面固定API_KEY；整批写入前证明当前管理员有权使用已配置的authRef。 */
@@ -103,7 +126,14 @@ public class OntologyManifestImports {
         if (!toolCode.matches("[A-Za-z][A-Za-z0-9_-]{0,63}"))
             throw invalid("tool_code不能直接作为技能编码（须为ASCII字母开头）：" + toolCode);
         String endpoint = text(manifest, "endpoint");
-        if (!endpoint.matches("^https?://.+/onto/r/[^/]+/releases/[^/]+/ops/[^/]+$"))
+        boolean semantic=cn.agentplatform.skill.infra.SemanticObjectQuerySkills.isSemanticEndpoint(endpoint);
+        if(semantic){
+            if(cn.agentplatform.skill.infra.SemanticObjectQuerySkills.release(endpoint)==null)throw invalid("标准查询端点必须是规范固定版本路由");
+            Object declaredOp=object(object(object(manifest.get("input_schema")).get("properties")).get("opCode")).get("const");
+            if(!Objects.equals(meta.get("releaseId"),cn.agentplatform.skill.infra.SemanticObjectQuerySkills.release(endpoint).toString())
+                    ||!toolCode.equals(declaredOp))throw invalid("标准查询端点、固定版本与操作常量不一致");
+        }
+        if (!semantic && !endpoint.matches("^https?://.+/onto/r/[^/]+/releases/[^/]+/ops/[^/]+$"))
             throw invalid(
                     "endpoint必须是发布消费路由 /onto/r/{spaceCode}/releases/{releaseId}/ops/{toolCode}");
         var exec = object(manifest.get("exec_attrs"));

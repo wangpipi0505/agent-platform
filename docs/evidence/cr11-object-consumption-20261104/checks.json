@@ -1,0 +1,68 @@
+{
+  "review": "CR-11",
+  "red": {
+    "test": "FederationSourceSelectionTest.twoMappingsOfSameTypeActuallyReadDifferentSources",
+    "expected": "COMPLETE and two distinct mapping reads",
+    "actual": "PARTIAL; both sources SEMANTIC_REF_INVALID; zero source reads"
+  },
+  "round2": {
+    "OR": {
+      "FederationSourceSelectionTest": {
+        "tests": 1,
+        "failures": 0,
+        "errors": 0
+      },
+      "ObjectQuerySpecTest": {
+        "tests": 6,
+        "failures": 0,
+        "errors": 0
+      },
+      "BoundedObjectFederationTest": {
+        "tests": 6,
+        "failures": 0,
+        "errors": 0
+      },
+      "SemanticObjectConsumptionTest": {
+        "tests": 5,
+        "failures": 0,
+        "errors": 0
+      },
+      "ObjectQueryPlannerTest": {
+        "tests": 12,
+        "setupErrors": 12,
+        "businessAssertionsExecuted": false,
+        "reason": "Windows JDK UnixDomainSockets Invalid argument: connect"
+      }
+    },
+    "AP": {
+      "SemanticObjectQueryConsumptionTest": {
+        "tests": 3,
+        "passed": 3,
+        "execution": "isolated javac/JUnit; actual import/normalize/registry/semantic transport/original host read; only HTTP transport and rows are test fixtures"
+      }
+    }
+  },
+  "compilation_preconditions": [
+    "AP OntologyManifestClient missing Json import corrected before test execution",
+    "OR test FrozenBundleLoader constructor corrected before test execution",
+    "AP whole module testCompile sees connection-agent temporary cross-module tests; no changes to those tests; compiled only CR11 test in D:/CodexPrep/algorithm-reorg/upgrade-cr11-ap"
+  ],
+  "not_run": [
+    "PG companion writes/CAS/transaction rollback/concurrency",
+    "real AP-OR HTTP/PG/business data",
+    "full acceptance",
+    "browser/generated web client checks"
+  ],
+  "post_functional_source_guards": [
+    "duplicate same-source stable IDs are marked ambiguous instead of overwritten",
+    "encoded/matrix semantic URLs remain in semantic adapter denial path",
+    "query budget/sort-window metadata and final envelope byte bound",
+    "response release tuple must equal immutable AP importSource tuple",
+    "operator descriptor ordering uses List for stable cross-process digests"
+  ],
+  "no_more_functional_runs": true,
+  "final_production_compile": {
+    "AP": "mvn -o -pl skill-registry -Dmaven.test.skip=true compile: exit 0",
+    "OR": "mvn -o -pl onto-designer-api -am -Dmaven.test.skip=true compile: exit 0"
+  }
+}
