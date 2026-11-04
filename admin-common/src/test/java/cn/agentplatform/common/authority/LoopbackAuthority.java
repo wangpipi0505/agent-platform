@@ -112,9 +112,22 @@ public final class LoopbackAuthority implements AutoCloseable {
     public String policyIssuer(){return "http://127.0.0.1:"+resolver.getAddress().getPort();}
     public AuthorityProperties config(String service){
         return new AuthorityProperties("iam",service,"gateway".equals(service)?new AuthorityProperties.Portal(true,issuer()+"/portal",issuer()+"/portal-jwks","portal-gateway","portal-web",
-            explicitPortalActor==null?Set.of("EDITOR"):explicitPortalActor.roles(),Set.of("region","dataLabels"),explicitPortalActor==null?Map.of("region",Set.of("A"),"dataLabels",Set.of("restricted")):explicitPortalActor.attributes(),Set.of("platform.access")):null,
+            explicitPortalActor==null?Set.of("EDITOR"):explicitPortalActor.roles(),Set.of("region","dataLabels"),portalValueAllowlist(),Set.of("platform.access")):null,
             new AuthorityProperties.Authority(issuer(),issuer()+"/jwks",issuer()+"/token",issuer()+"/decision",service,"env:AGENT_SECRET_IAM_"+service.toUpperCase(Locale.ROOT)+"_CLIENT","RS256","urn:agent-platform:service:"+service,60,5,1000,2000),
             "gateway".equals(service)?new AuthorityProperties.Integration(true,"test-only-ref"):null,null,null,false,null);
+    }
+    /**
+     * 夹具装配的 portal value-allowlist：键必须与 attributeAllowlist（region/dataLabels）完全一致，
+     * 缺键时用与 null-actor 相同的中立默认补齐，否则 AuthorityProperties.validate 以
+     * PORTAL_CEILING_INVALID 拒绝合法的"部分属性"portal actor（如仅 dataLabels 的租户管理员）。
+     * 不改变任何夹具签发的令牌内容，只修正配置装配。
+     */
+    private Map<String,Set<String>> portalValueAllowlist(){
+        if(explicitPortalActor==null) return Map.of("region",Set.of("A"),"dataLabels",Set.of("restricted"));
+        var attrs=new java.util.LinkedHashMap<>(explicitPortalActor.attributes());
+        attrs.putIfAbsent("region",Set.of("A"));
+        attrs.putIfAbsent("dataLabels",Set.of("restricted"));
+        return Map.copyOf(attrs);
     }
     public HttpCurrentAuthorityClient client(String service){
         var c=config(service);return new HttpCurrentAuthorityClient(c,clock,new WorkloadCredentialResolver(c,name->secrets.get(service),true),true);
