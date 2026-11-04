@@ -1,5 +1,6 @@
 package cn.agentplatform.app.application;
 
+import cn.agentplatform.app.infra.AppAuthorityTransport;
 import cn.agentplatform.common.Actor;
 import cn.agentplatform.common.Json;
 import cn.agentplatform.common.PlatformException;
@@ -14,6 +15,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -30,6 +32,14 @@ public class OnboardingPreflightService {
     private static final int MAX_DOCUMENT_BYTES = 1024 * 1024;
 
     private final String origin;
+    @Value("${agent.security.mode:dev-hmac}")
+    private String securityMode = "dev-hmac";
+    private AppAuthorityTransport authorityTransport;
+
+    @Autowired(required = false)
+    public void setAuthorityTransport(AppAuthorityTransport authorityTransport) {
+        this.authorityTransport = authorityTransport;
+    }
 
     public OnboardingPreflightService(
             @Value("${agent.services.skill:http://127.0.0.1:18083}") String base) {
@@ -56,9 +66,15 @@ public class OnboardingPreflightService {
         if (document.getBytes(StandardCharsets.UTF_8).length > MAX_DOCUMENT_BYTES) {
             throw new PlatformException(413, "OPENAPI_SIZE", "请上传不超过 1MiB 的 OpenAPI JSON/YAML 文本");
         }
-        String ticket = ServiceTokens.issue(actor);
+        boolean iam = "iam".equals(securityMode);
+        String ticket = iam ? null : ServiceTokens.issue(actor);
         HttpURLConnection connection = null;
         try {
+            if (iam) {
+                if (authorityTransport == null) throw unavailable();
+                return normalize(Json.tree(authorityTransport.call(origin, "/admin/skills/import-openapi/preview",
+                        Map.of("document", document))));
+            }
             connection = (HttpURLConnection) URI.create(origin + "/admin/skills/import-openapi/preview")
                     .toURL()
                     .openConnection();

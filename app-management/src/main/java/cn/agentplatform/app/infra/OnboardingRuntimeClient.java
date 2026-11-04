@@ -11,6 +11,12 @@ import java.util.*;
 public class OnboardingRuntimeClient {
     private final RestClient http;
     private final String engine,monitor;
+    private boolean iam;
+    private AppAuthorityTransport authorityTransport;
+    @org.springframework.beans.factory.annotation.Value("${agent.security.mode:}")
+    public void securityMode(String mode){this.iam="iam".equalsIgnoreCase(mode);}
+    @org.springframework.beans.factory.annotation.Autowired(required=false)
+    public void authorityTransport(AppAuthorityTransport transport){this.authorityTransport=transport;}
     public OnboardingRuntimeClient(@Value("${agent.services.engine:http://127.0.0.1:18082}")String engine,
             @Value("${agent.services.monitor:http://127.0.0.1:18085}")String monitor) {
         this.engine=origin(engine);this.monitor=origin(monitor);
@@ -28,6 +34,7 @@ public class OnboardingRuntimeClient {
     }
     public Map<String,Object> evaluate(Map<String,Object> body){return call(monitor,"/admin/evaluations",body);}
     @SuppressWarnings("unchecked") private Map<String,Object> call(String base,String path,Map<String,Object> body) {
+        if(iam){if(authorityTransport==null)throw new PlatformException(503,"ONBOARDING_AUTHORITY_REQUIRED","当前正式接入出站通路未装配");return authorityTransport.call(base,path,body);}
         String ticket=ServiceTokens.issue(Actor.current());
         try {
             var request=body==null?http.get().uri(base+path):http.post().uri(base+path).body(body);

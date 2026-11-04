@@ -50,6 +50,20 @@ public class AppService {
     private final RestClient http = client();
     private final String skillUrl, modelUrl, monitorUrl, engineUrl;
     private final TemplateService templates;
+    private OnboardingApplicationSources onboardingSources;
+    private cn.agentplatform.app.infra.AppAuthorityTransport authorityTransport;
+    @Value("${agent.security.mode:dev-hmac}")
+    private String serviceSecurityMode = "dev-hmac";
+
+    @Autowired
+    public void onboardingSources(OnboardingApplicationSources sources) {
+        this.onboardingSources = sources;
+    }
+
+    @Autowired
+    public void authorityTransport(cn.agentplatform.app.infra.AppAuthorityTransport transport) {
+        this.authorityTransport = transport;
+    }
 
     /**
      * 发布门禁模式与豁免回滚开关。用字段注入而不是构造参数，保持既有装配签名不变；手工构造（测试/诊断）时
@@ -716,6 +730,11 @@ public class AppService {
     }
 
     public Map<String, Object> remote(String base, String path) {
+        if ("iam".equals(serviceSecurityMode)) {
+            if (authorityTransport == null)
+                throw error(503, "AUTHORITY_CONTEXT_MISSING", "应用当前授权出站未装配");
+            return authorityTransport.call(base, path, null);
+        }
         try {
             var result =
                     http.get()
@@ -733,6 +752,11 @@ public class AppService {
     }
 
     public Map<String, Object> remotePost(String base, String path, Map<String, Object> body) {
+        if ("iam".equals(serviceSecurityMode)) {
+            if (authorityTransport == null)
+                throw error(503, "AUTHORITY_CONTEXT_MISSING", "应用当前授权出站未装配");
+            return authorityTransport.call(base, path, body);
+        }
         try {
             var result =
                     http.post()
@@ -779,7 +803,11 @@ public class AppService {
 
     /** 普通保存不能伪造来源；包来源关系和 config 必须在同一租户、同一应用身份下逐字一致。 */
     private void assertCapabilitySource(Map<String, Object> app) {
+        if (onboardingSources != null && onboardingSources.assertIfPresent(app)) return;
         var config = object(app.get("config"));
+        if (onboardingSources == null && objects(config.get("capabilityPackages")).stream()
+                .anyMatch(source -> source.containsKey("sessionSourceId")))
+            throw error(503, "ONBOARDING_SOURCE_UNAVAILABLE", "会话来源校验未装配");
         if (!config.containsKey("capabilityPackages")) return;
         var rows = db.queryForList("select b.source::text,p.package_sha256,p.binding_status,p.resolved_mapping::text"
                         + " from app.capability_app_binding b join app.capability_package_version p"

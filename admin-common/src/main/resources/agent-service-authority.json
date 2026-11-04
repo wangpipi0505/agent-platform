@@ -1496,7 +1496,7 @@
   "mode": "delegated",
   "integrationAllowed": false,
   "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/SkillController.java:146",
-  "callerSource": "app-management/src/main/java/cn/agentplatform/app/application/AppService.java:916;engine-runtime/src/main/java/cn/agentplatform/engine/application/RunService.java:775",
+  "callerSource": "app-management/src/main/java/cn/agentplatform/app/application/AppService.java:916;engine-runtime/src/main/java/cn/agentplatform/engine/application/RunService.java:775;app-management/src/main/java/cn/agentplatform/app/infra/OnboardingSkillImportsClient.java::version",
   "reason": ""
  },
  {
@@ -3247,7 +3247,7 @@
   "action": "proxy.app.get.OnboardingSessionsController.list",
   "mode": "delegated",
   "integrationAllowed": false,
-  "source": "app-management/src/main/java/cn/agentplatform/app/api/OnboardingSessionsController.java",
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/OnboardingSessionsController.java:11",
   "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
   "reason": ""
  },
@@ -3259,7 +3259,7 @@
   "action": "proxy.app.get.OnboardingSessionsController.templates",
   "mode": "delegated",
   "integrationAllowed": false,
-  "source": "app-management/src/main/java/cn/agentplatform/app/api/OnboardingSessionsController.java",
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/OnboardingSessionsController.java:12",
   "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
   "reason": ""
  },
@@ -3271,7 +3271,7 @@
   "action": "proxy.app.get.OnboardingSessionsController.get",
   "mode": "delegated",
   "integrationAllowed": false,
-  "source": "app-management/src/main/java/cn/agentplatform/app/api/OnboardingSessionsController.java",
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/OnboardingSessionsController.java:13",
   "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
   "reason": ""
  },
@@ -3283,7 +3283,7 @@
   "action": "proxy.app.post.OnboardingSessionsController.create",
   "mode": "delegated",
   "integrationAllowed": false,
-  "source": "app-management/src/main/java/cn/agentplatform/app/api/OnboardingSessionsController.java",
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/OnboardingSessionsController.java:14",
   "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
   "reason": ""
  },
@@ -3295,7 +3295,7 @@
   "action": "proxy.app.put.OnboardingSessionsController.save",
   "mode": "delegated",
   "integrationAllowed": false,
-  "source": "app-management/src/main/java/cn/agentplatform/app/api/OnboardingSessionsController.java",
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/OnboardingSessionsController.java:15",
   "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
   "reason": ""
  },
@@ -3307,7 +3307,7 @@
   "action": "proxy.app.post.OnboardingSessionsController.preview",
   "mode": "delegated",
   "integrationAllowed": false,
-  "source": "app-management/src/main/java/cn/agentplatform/app/api/OnboardingSessionsController.java",
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/OnboardingSessionsController.java:16",
   "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
   "reason": ""
  },
@@ -3319,7 +3319,7 @@
   "action": "proxy.app.post.OnboardingSessionsController.execute",
   "mode": "delegated",
   "integrationAllowed": false,
-  "source": "app-management/src/main/java/cn/agentplatform/app/api/OnboardingSessionsController.java",
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/OnboardingSessionsController.java:17",
   "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
   "reason": ""
  },
@@ -3331,7 +3331,7 @@
   "action": "proxy.app.post.OnboardingSessionsController.cancel",
   "mode": "delegated",
   "integrationAllowed": false,
-  "source": "app-management/src/main/java/cn/agentplatform/app/api/OnboardingSessionsController.java",
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/OnboardingSessionsController.java:18",
   "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
   "reason": ""
  },
@@ -3369,6 +3369,42 @@
   "integrationAllowed": false,
   "source": "monitor/src/main/java/cn/agentplatform/monitor/api/EvaluationController.java:18",
   "callerSource": "app-management/src/main/java/cn/agentplatform/app/infra/OnboardingRuntimeClient.java::evaluate",
+  "reason": ""
+ },
+ {
+  "method": "POST",
+  "template": "/internal/onboarding-skill-imports",
+  "caller": "app",
+  "target": "skill",
+  "action": "skill.onboarding-import.create",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/OnboardingSkillImportsController.java:32",
+  "callerSource": "app-management/src/main/java/cn/agentplatform/app/infra/OnboardingSkillImportsClient.java",
+  "reason": ""
+ },
+ {
+  "method": "GET",
+  "template": "/internal/onboarding-skill-imports/{sessionId}",
+  "caller": "app",
+  "target": "skill",
+  "action": "skill.onboarding-import.read",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/OnboardingSkillImportsController.java",
+  "callerSource": "app-management/src/main/java/cn/agentplatform/app/infra/OnboardingSkillImportsClient.java",
+  "reason": ""
+ },
+ {
+  "method": "POST",
+  "template": "/admin/skills/import-openapi/preview",
+  "caller": "app",
+  "target": "skill",
+  "action": "proxy.skill.post.OpenApiImportController.preview",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/OpenApiImportController.java:20",
+  "callerSource": "app-management/src/main/java/cn/agentplatform/app/infra/OnboardingSkillImportsClient.java",
   "reason": ""
  }
 ]

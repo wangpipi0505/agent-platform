@@ -1136,6 +1136,23 @@ public class RunService {
                                 version.path("guard"),
                                 "skillRefs",
                                 List.of(Map.of("code", code, "version", number)))));
+        // 接入导入绑定只读skill内部精确版本返回的不可变回执，绝不采信测试请求自报目的地。
+        if(request.has("executionBindingRefs")||request.has("bindingRefs"))
+            throw new PlatformException(400,"DRAFT_TEST_BINDING_FORBIDDEN","受控测试连接必须来自服务端导入回执");
+        JsonNode receipt=version.path("onboardingReceiptRef"),refs=version.path("executionBindingRefs");
+        if(!receipt.isMissingNode()||!refs.isMissingNode()) {
+            if(!receipt.isObject()||!refs.isArray()||refs.size()!=1
+                    ||receipt.path("skillVersionId").asLong()!=id||!digest.equals(receipt.path("sha256").asText())
+                    ||!Digest.sha256(Json.canonical(refs)).equals(receipt.path("bindingRefsDigest").asText())
+                    ||!receipt.path("sessionId").asText().matches("os_[a-f0-9]{32}")
+                    ||!receipt.path("planSha256").asText().matches("[a-f0-9]{64}"))
+                throw new PlatformException(409,"ONBOARDING_IMPORT_BINDING_MISMATCH","技能导入回执与受控测试精确合同不一致");
+            if(request.has("onboardingReceiptRef")&&!Json.canonical(request.path("onboardingReceiptRef")).equals(Json.canonical(receipt)))
+                throw new PlatformException(409,"ONBOARDING_IMPORT_BINDING_MISMATCH","受控测试来源指纹已变化");
+            ((com.fasterxml.jackson.databind.node.ObjectNode)snapshot.path("config")).set("bindingRefs",refs.deepCopy());
+            snapshot.set("onboardingReceiptRef",receipt.deepCopy());
+        } else if(request.has("onboardingReceiptRef"))
+            throw new PlatformException(409,"ONBOARDING_IMPORT_BINDING_MISMATCH","技能当前精确版本没有匹配导入回执");
         snapshot.set("definition", graph);
         snapshot.set("controlledSkillVersion", version);
         snapshot.set("controlledSkillContract", contract);

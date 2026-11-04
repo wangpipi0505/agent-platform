@@ -21,6 +21,9 @@ public class SkillGovernance {
     private final SkillClients clients;
     private final String modelUrl;
     private final String engineUrl;
+    private OnboardingExecutionBindings onboardingBindings;
+    @org.springframework.beans.factory.annotation.Autowired(required=false)
+    public void onboardingBindings(OnboardingExecutionBindings bindings){this.onboardingBindings=bindings;}
 
     public SkillGovernance(
             JdbcTemplate db,
@@ -39,6 +42,7 @@ public class SkillGovernance {
 
     public Map<String, Object> connection(String code, int version, Map<String, Object> body) {
         var candidate = catalog.version(code, version);
+        if(onboardingBindings!=null)candidate=onboardingBindings.attach(Actor.current(),candidate);
         if (!Objects.toString(candidate.get("authRef"), "").isBlank())
             Actor.current().requireRole("ADMIN");
         long id = ((Number) candidate.get("skillVersionId")).longValue();
@@ -56,37 +60,25 @@ public class SkillGovernance {
                 long call;
                 if (body.containsKey("controlledCallId")) call = number(body, "controlledCallId");
                 else {
-                    var test =
-                            clients.post(
-                                    engineUrl + "/internal/skill-draft-tests",
-                                    Map.of(
-                                            "skillVersionId",
-                                            id,
-                                            "inputs",
-                                            object(body.get("inputs")),
-                                            "requestId",
-                                            text(body, "requestId")));
+                    var testRequest=new LinkedHashMap<String,Object>();testRequest.put("skillVersionId",id);
+                    testRequest.put("inputs",object(body.get("inputs")));testRequest.put("requestId",text(body,"requestId"));
+                    // 仅传来源指纹作为核对提示；engine仍从自己读取的可信精确元数据取得执行引用。
+                    if(candidate.containsKey("onboardingReceiptRef"))testRequest.put("onboardingReceiptRef",candidate.get("onboardingReceiptRef"));
+                    var test=clients.post(engineUrl+"/internal/skill-draft-tests",testRequest);
                     report.put("runId", test.path("runId").asText());
                     report.put("status", test.path("status").asText());
                     report.put("action", readonly ? "WAIT_AND_RECHECK" : "APPROVE_AND_RECHECK");
                     call = test.path("controlledCallId").asLong(test.path("callId").asLong());
                     if (call > 0) report.put("controlledCallId", call);
                 }
-                Integer count =
-                        call <= 0
-                                ? 0
-                                : db.queryForObject(
-                                        "select count(*) from skill.execution_fact where"
-                                            + " tenant_id=? and principal_id=? and call_id=? and"
-                                            + " skill_version_id=? and skill_contract_sha256=? and"
-                                            + " status='SUCCEEDED' and call_kind='DEBUG' and not"
-                                            + " is_mock",
-                                        Integer.class,
-                                        Actor.current().tenantId(),
-                                        Actor.current().principalId(),
-                                        call,
-                                        id,
-                                        candidate.get("sha256"));
+                String proofSql="select count(*) from skill.execution_fact where tenant_id=? and principal_id=? and call_id=?"
+                        +" and skill_version_id=? and skill_contract_sha256=? and status='SUCCEEDED' and call_kind='DEBUG' and not is_mock";
+                var proofArgs=new ArrayList<Object>(List.of(Actor.current().tenantId(),Actor.current().principalId(),call,id,candidate.get("sha256")));
+                if(candidate.containsKey("executionBindingRefs")) {
+                    proofSql+=" and request_snapshot->'bindingRefs'=?::jsonb";
+                    proofArgs.add(Json.write(candidate.get("executionBindingRefs")));
+                }
+                Integer count=call<=0?0:db.queryForObject(proofSql,Integer.class,proofArgs.toArray());
                 if (count == null || count == 0)
                     throw new IllegalArgumentException("需要同摘要成功的非Mock受控调试callId；确认并完成测试后重检");
                 passed = true;

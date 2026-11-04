@@ -1,30 +1,37 @@
-# 持久接入会话（CR-05）
+# 接入会话与受控技能导入契约（CR-05）
 
-2026-11-04。此契约承接已授权的审核补改；实现及检查状态见`docs/evidence/cr05-onboarding-20261104/`和项目升级补改台账，不据本文件声称整体验收通过。
+## 使用入口
 
-## 身份、入口及状态
+`/admin/onboarding-sessions`：GET list、POST create；`/templates`：GET当前PUBLISHED QUERY目录；`/{sessionId}`：GET、PUT save；`/{sessionId}/preview`、`/steps/{step}/execute`、`/cancel`：POST。sessionId为`os_`加32位小写hex。全入口要求当前已验签EDITOR；数据按tenant+创建principal隔离。模板维护旧API仍为ADMIN。
 
-- 仅已验Actor的EDITOR操作；tenant与principal不从JSON/请求头取值。会话仅创建者可读写。ADMIN仍通过原接口维护模板，不扩大给业务用户。
-- `GET /admin/onboarding-sessions/templates`仅投影可使用的PUBLISHED QUERY模板，不返回底层secret或物理地址。
-- 会话创建`POST /admin/onboarding-sessions`，字段`templateCode/templateRev/appCode/appName/requestId`；模板编码与目标应用编码独立。服务端生成`os_`＋32位十六进制会话标识，初始化计划来自固定模板及实际资源。
-- `GET`根列表、`GET /{sessionId}`恢复；`PUT /{sessionId}`携带`expectedRev/requestId/plan`；`POST /{sessionId}/preview`携带`expectedRev/requestId`。
-- `POST /{sessionId}/steps/{ASSEMBLE|VERIFY|PUBLISH}/execute`携带`expectedRev/requestId/planSha256`；`POST /{sessionId}/cancel`携带`expectedRev/requestId/reason`。取消保留已建资源和历史步骤，不做自动删除。
-- 状态为DRAFT、ASSEMBLED、VERIFIED、PUBLISHED、CANCELLED；后两项终态只读。步骤RUNNING/SUCCEEDED/FAILED单独持久保存，不能只靠页面进度或内存标记。
+create为`{templateCode,templateRev,appCode,appName,requestId}`。save为`{expectedRev,requestId,plan}`。preview为`{expectedRev,requestId}`。execute为`{expectedRev,requestId,planSha256,evaluation?,evaluationEnvironmentConfirmation?}`；step只接受IMPORT_SKILLS、ASSEMBLE、VERIFY、PUBLISH。cancel为`{expectedRev,requestId,reason}`，reason非空且不超过512字符，PG回读cancelReason。
 
-## 计划及真实执行
+统一回读为`{sessionId,rev,status,templateCode,templateRev,appCode,appName,plan,planSha256,steps,application?,choices?,links?,handover?}`。status为DRAFT、ASSEMBLED、VERIFIED、PUBLISHED、CANCELLED。steps为当前planSha256下的`{step,status,receipt,error,requestId}`，status为RUNNING、SUCCEEDED、FAILED；历史计划收据仍保留。终态不接受新改稿或步骤。
 
-`plan`包含`fieldsBundle:{fields,mappings,returns}`、`values`、`selectedOperations`以及可用时的批准`connectionRef`。字段来自当前支持的Schema子集；direct/constant映射保留JSON类型，拒绝未知字段/操作/表达式。false、0、null不作空值丢弃。端点、凭据值和服务端来源关系不可由plan写入。
+## 计划来源
 
-最低QUERY路径以包内已经解析的精确只读技能组装FLOW，业务字段经标准节点args进入实际调用，返回呈现使用原始结构化回执与END映射。不能仅把字段塞进prompt或计划元数据冒充接线。文件引用受原不可变技能白名单约束，不新增动态文件抓取。
+plan保留`fieldsBundle/values/selectedOperations/modelEntryId?/connectionRef?`，扩展`sourceDocument?/routePlan?/importOverrides?`。原规格不超过1MiB；routePlan只含environment、routeProfileId；importOverrides按原生operationId逐项提供原importer的name、description、execution、guard、returnSpec、errorSemantics、timeoutMs、constraints。浏览器不得提交code、tenant、principal、authRef、endpoint或执行脚本；真实服务根与secret_ref由批准连接事实提供。
 
-会话自己的计划与应用创建回执不占用包版本的全局application_plan_sha256；相同模板可供多个目标应用使用。仍复用原prepare、精确技能复核、来源关联和AppService保存门，禁止复制假包或替换skillRefs绕过来源校验。未解析包/新技能导入等未覆盖路径应返回明确缺项，不能作为该组全部完成的证明。
+EDITOR的导入连接提议只来自模板基底应用真实发布版本、固定摘要/refs，以及对应精确旧技能的当前read grant和当前守卫。提议只是元数据来源，不授予新技能执行权。ADMIN可在本租户已批准同步HTTP档案中选择精确绑定。来源冻结记录原发布版本/摘要/旧技能/refs，不枚举全部连接给EDITOR。旧授权撤销后不得用未交付的冻结提议新建草稿。
 
-## 幂等、恢复与发布
+首版为单一标准同步只读HTTP QUERY；原规格完整预检、冻结包、显式人工合同和批准绑定必须共同匹配。缺失资料返回missing，不从模型摘要或地址猜造规格/守卫/验收结果。复杂Schema、返回数组下标、写/MCP/异步导入及任意新增文件获取明确拒绝。
 
-- 同一requestId的规范化载荷不同则冲突；相同载荷复用原收据。步骤绑定plan摘要，改计划不能复用旧验证成功。
-- app草稿、来源关系与本地装配收据在本地事务内提交；远端验证/评测不持有本地行锁。部分成功或响应丢失须恢复原资源和runId，不能重新创建资源或自动覆盖人工改动。
-- VERIFY使用真实受控debug-run并持久化运行标识，未结束/失败不得写成功。评测仅复用现有monitor门，预期结果须有明确输入，不构造假PASS。
-- PUBLISH复用原AppService预检/提交及接受评测/权限/环境确认门。缺项给实际应用工作台入口，模板PUBLISHED不代表应用发布成功。
-- `handover`仅由真实应用发布产生，含`templateCode/appCode/appVersion/launchPath`；前端核对应用身份和正整数版本后交接。独立助手链接默认打开当前发布版本，本次发布回执版本不能被说成链接已固定历史版本。
+## 导入、验证与来源
 
-IAM部署中缺少正式下游授权通路须明确失败，不透传用户token、不退回旧HMAC票据。白名单/目录登记不代表下游签发、撤权和真实HTTP已通过。
+IMPORT_SKILLS先冻结当前计划不可变来源，再通过专用app内部能力调用既有OpenApiImports。每operation的编码由skill按sessionId+planSha256+operationId确定；草稿和不可变receipt同事务。GET恢复原receipt，404才以原冻结payload幂等创建；不修改原OPENAPI五字段importSource。
+
+IMPORT_SKILLS的SUCCEEDED仅证明草稿已真实创建。receipt直接为`{drafts:[{operationId,code,version,skillVersionId,sha256,status,workspacePath}],missing,sourceResolved,links:{skillWorkspaces}}`。workspacePath指向原`#/skills/<code>`。用户在原技能工作台完成当前连接授权、受控连接测试、模型选型验收和发布，再用新requestId继续同一步，服务端只读精确PUBLISHED版本并固化session_source。
+
+新技能的连接grant必须由管理员对确定`skill.<code>`显式授予；不继承旧技能授权，不自动授予。执行ref固定profile/bindingId/rev/operation/environment，导入前的目录摘要只留审计，不把空grant时摘要冻结为后续执行许可。每次真实执行仍复查当前grant/凭据。
+
+受控草稿测试的执行refs由skill服务器按原owner、code、version、id、sha和不可变receipt复核后附到已有精确版本读口。engine从自己读取的精确metadata冻结refs；请求自报bindingRefs拒绝。治理证据还核对真实execution_fact.request_snapshot内同一refs，旧无绑定调用不能为新受控技能补造通过证据。
+
+会话source不占用包全局一次性applicationPlan/receipt；当前主体/模板/包摘要、原规格、原生操作、精确技能及mapping摘要独立固化。应用关联的session_source_id与source JSON必须由服务端同事务建立，普通保存/发布仍走AppService来源门。已有人工draftRev变化拒绝覆盖；同会话改计划只能绑定新的不可变来源，旧源和发布快照保留。
+
+## 应用与回执
+
+ASSEMBLE复用原prepare、validateCapabilityDraft、AppService.create、真实来源关系及save。fields/mappings进入标准SKILL.args，false/0/null保留；摘要/卡片进入END.args的既有Values递归方言，不只保存metadata。VERIFY只发起一个真实debug run并保存runId；继续/恢复轮询原run，未知结果不重发副作用。
+
+PUBLISH仍要求原候选评测、结构、权限和环境确认预检及commit；不生成自动PASS。发布请求号固定，commitRequest先落步骤收据再调用原发布门，恢复重放相同请求。真实发布成功才返回handover：templateCode与实际appCode分离，appVersion记录当时结果；`/w/<appCode>`遵当前助手入口语义，不暗示前端支持未消费的固定版本参数。
+
+IAM受控执行仍服从原RunAdmission范围，不能借导入放开DEBUG/controlledDraft。新增DEV导入必须使用独立app请求证明和原真实服务JWT；未配置证明关闭，IAM不回退DEV。开发编译通过不能替代正式授权配置或跨服务真实功能复核。

@@ -26,8 +26,15 @@ public record ApprovedConnectionExecution(String bindingId, int bindingRev, Stri
         // 校验在认领/提交前完成；缺失凭据不能进入旧异常兜底而被误记为已发出后的UNKNOWN。
         // 不保存此处解析出的值，适配器发出前仍按同一引用读取当前凭据。
         AuthScheme.headers(authKind, "NONE".equals(authKind) ? "" : secretRef);
-        String origin = origin(original);
-        var bound = rewrite(contract, origin, false);
+        String sourceRoot=origin(original);
+        if(contract.get("importSource") instanceof Map<?,?> source&&"OPENAPI".equals(source.get("kind"))) {
+            String path=Objects.toString(source.get("path"),"");
+            if(!contract.containsKey("httpMapping")||!Objects.equals(source.get("method"),contract.get("httpMethod"))
+                    ||!path.startsWith("/")||!original.endsWith(path))throw denied("原OpenAPI来源路径与不可变合同不一致");
+            sourceRoot=original.substring(0,original.length()-path.length());
+        }
+        if(SkillRules.endpoint(baseEndpoint).getRawQuery()!=null)throw denied("批准服务根不能携带查询参数");
+        var bound = rewrite(contract, sourceRoot, false);
         bound.put("authRef", "NONE".equals(authKind) ? "" : secretRef);
         bound.put("authScheme", authKind);
         bound.put(KEY, this);
@@ -35,7 +42,7 @@ public record ApprovedConnectionExecution(String bindingId, int bindingRev, Stri
     }
 
     @SuppressWarnings("unchecked")
-    private Map<String, Object> rewrite(Map<String, Object> value, String sourceOrigin, boolean artifacts) {
+    private Map<String, Object> rewrite(Map<String, Object> value, String sourceRoot, boolean artifacts) {
         var out = new LinkedHashMap<String, Object>();
         value.forEach((key, item) -> {
             if (artifacts && key.equals("authRef")) out.put(key, "NONE".equals(authKind) ? "" : secretRef);
@@ -43,12 +50,14 @@ public record ApprovedConnectionExecution(String bindingId, int bindingRev, Stri
             else if ((key.equals("endpoint") || key.equals("lookupEndpoint") || key.equals("resultEndpoint")
                     || artifacts && key.equals("url"))
                     && item instanceof String endpoint && !endpoint.isBlank()) {
-                if (!origin(endpoint).equals(sourceOrigin)) throw denied("附属入口必须与技能入口同源");
-                String suffix = endpoint.substring(sourceOrigin.length());
+                if (!origin(endpoint).equals(origin(sourceRoot))
+                        ||!(endpoint.equals(sourceRoot)||endpoint.startsWith(sourceRoot+"/")||endpoint.startsWith(sourceRoot+"?")))
+                    throw denied("附属入口必须位于原技能服务根");
+                String suffix = endpoint.substring(sourceRoot.length());
                 out.put(key, baseEndpoint.replaceAll("/+$", "") + (suffix.isEmpty() ? "/" : suffix));
             } else if ((artifacts || Set.of("execution", "approval", "prepare", "reconciliation", "returnSpec", "artifactSources").contains(key))
                     && item instanceof Map<?, ?> nested) {
-                var child = rewrite((Map<String, Object>) nested, sourceOrigin, artifacts || key.equals("artifactSources"));
+                var child = rewrite((Map<String, Object>) nested, sourceRoot, artifacts || key.equals("artifactSources"));
                 if (artifacts && key.equals("retrieve")) {
                     child.put("authRef", "NONE".equals(authKind) ? "" : secretRef);
                     child.put("authScheme", authKind);

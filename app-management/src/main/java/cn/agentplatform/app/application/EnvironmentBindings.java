@@ -98,20 +98,35 @@ public class EnvironmentBindings {
 
     /** 写时引用校验：档案必须存在、修订必须存在、档案不得处于停用态（停用档案不能被新绑定引用）。 */
     private void requireProfile(Actor actor, ConnectionProfileRepository.BindingRevision revision) {
-        var state = repository.profileState(actor, revision.connectionProfileId(), revision.connectionProfileRev())
+        var profile = repository.profile(actor, revision.connectionProfileId())
                 .orElseThrow(() -> new PlatformException(400, "CONFIG_VERSION_UNKNOWN",
                         "连接档案不存在: " + revision.connectionProfileId()));
-        if (!state.revisionExists())
+        Map<?, ?> pinned = null;
+        if (profile.get("revisions") instanceof List<?> revisions)
+            for (Object raw : revisions)
+                if (raw instanceof Map<?, ?> item
+                        && Integer.valueOf(revision.connectionProfileRev()).equals(item.get("profileRev"))) {
+                    pinned = item;
+                    break;
+                }
+        if (pinned == null)
             throw new PlatformException(400, "CONFIG_VERSION_UNKNOWN",
                     "连接档案修订不存在: " + revision.connectionProfileId() + "@" + revision.connectionProfileRev());
-        if ("DISABLED".equals(state.status()))
+        if ("DISABLED".equals(profile.get("status")))
             throw new PlatformException(400, "CONFIG_RELEASE_NOT_ACTIVE",
                     "连接档案已停用，不能被环境绑定引用: " + revision.connectionProfileId());
         // 契约 §10.3 裁决：绑定必须引用 APPROVED 及以上；引用 DRAFT 视为状态迁移非法，不在运行期"先绑后批"。
-        if (!"APPROVED".equals(state.status()))
+        if (!"APPROVED".equals(profile.get("status")))
             throw new PlatformException(400, "CONFIG_STATE_TRANSITION_INVALID",
                     "环境绑定只能引用已批准的连接档案修订: " + revision.connectionProfileId() + "@"
-                            + revision.connectionProfileRev() + " 当前状态 " + state.status());
+                            + revision.connectionProfileRev() + " 当前状态 " + profile.get("status"));
+        // 与 resolve 相同，未声明鉴权等同 NONE；判定只来自本租户钉住的不可变档案修订。
+        Object kind = pinned.get("authScheme") instanceof Map<?, ?> auth ? auth.get("kind") : null;
+        boolean noAuth = kind == null || "NONE".equals(kind);
+        if (noAuth && !revision.secretRef().isEmpty())
+            throw ConnectionProfiles.invalid("NONE 鉴权的环境绑定必须将 secretRef 设为空字符串");
+        if (!noAuth && revision.secretRef().isEmpty())
+            throw ConnectionProfiles.invalid("该连接档案要求 secretRef 为非空 scheme:ref 引用");
     }
 
     /** 包内可见：规则用例直接验证字段契约，不必启动 Spring 或连接数据库。 */
@@ -120,7 +135,10 @@ public class EnvironmentBindings {
         String profileId = ConnectionProfiles.id(body, "connectionProfileId");
         int profileRev = number(body, "connectionProfileRev", 1, Integer.MAX_VALUE, "connectionProfileRev");
         String baseEndpoint = ConnectionProfiles.endpoint(body.get("baseEndpoint"), "baseEndpoint");
-        String secretRef = ConnectionProfiles.text(body, "secretRef", "secretRef", 512, SECRET_REF);
+        Object rawSecret = body.get("secretRef");
+        if (!(rawSecret instanceof String secretRef) || secretRef.length() > 512
+                || !secretRef.isEmpty() && !SECRET_REF.matcher(secretRef).matches())
+            throw ConnectionProfiles.invalid("secretRef 必须是 scheme:ref 引用，NONE 鉴权须显式传空字符串");
         Map<String, Object> runtime = ConnectionProfiles.object(body.get("runtimeRef"), "runtimeRef", RUNTIME_KEYS);
         Map<String, Object> origin = ConnectionProfiles.object(body.get("originPolicy"), "originPolicy", ORIGIN_KEYS);
         Map<String, Object> health = ConnectionProfiles.object(body.get("healthPolicy"), "healthPolicy", HEALTH_KEYS);

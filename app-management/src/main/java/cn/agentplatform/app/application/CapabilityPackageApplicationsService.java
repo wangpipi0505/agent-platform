@@ -18,6 +18,12 @@ public class CapabilityPackageApplicationsService {
     private final AppService apps;
     private final CapabilitySkillClient skills;
     private final TransactionTemplate tx;
+    private OnboardingApplicationSources onboardingSources;
+    private cn.agentplatform.app.infra.OnboardingSkillImportsClient onboardingSkills;
+    @org.springframework.beans.factory.annotation.Autowired(required=false)
+    public void onboardingSources(OnboardingApplicationSources sources){this.onboardingSources=sources;}
+    @org.springframework.beans.factory.annotation.Autowired(required=false)
+    public void onboardingSkills(cn.agentplatform.app.infra.OnboardingSkillImportsClient client){this.onboardingSkills=client;}
     public CapabilityPackageApplicationsService(CapabilityPackageRepository packages, AppService apps, CapabilitySkillClient skills,
                                                PlatformTransactionManager manager) {
         this.packages = packages; this.apps = apps; this.skills = skills; this.tx = new TransactionTemplate(manager);
@@ -25,7 +31,28 @@ public class CapabilityPackageApplicationsService {
     }
 
     public record SessionApplication(long packageId, String packageSha, String resolutionSha,
-            Map<String,Object> source, Map<String,Object> application) {}
+            Map<String,Object> source, Map<String,Object> application,String sourceId) {
+        public SessionApplication(long packageId,String packageSha,String resolutionSha,Map<String,Object> source,Map<String,Object> application){
+            this(packageId,packageSha,resolutionSha,source,application,null);
+        }
+    }
+
+    public SessionApplication prepareForOnboardingSource(Map<String,Object> session,Map<String,Object> input) {
+        var actor=Actor.current();actor.requireRole("EDITOR");
+        if(onboardingSources==null||onboardingSkills==null)throw new PlatformException(503,"ONBOARDING_SOURCE_UNAVAILABLE","会话技能来源服务未装配");
+        var source=onboardingSources.resolved(session);
+        if(source==null)throw new PlatformException(409,"ONBOARDING_SOURCE_REQUIRED","请先完成本计划导入技能的原验证发布门");
+        long id=((Number)source.get("packageVersionId")).longValue();var stored=packages.bindingSource(id,actor.tenantId());
+        if(!source.get("sha256").equals(stored.get("sha256")))throw new PlatformException(409,"CAPABILITY_VERSION_CONFLICT","冻结包声明已经变化");
+        long deadline=System.nanoTime()+5_000_000_000L;
+        for(var binding:AppService.objects(source.get("bindings"))) {
+            var actual=onboardingSkills.version(binding.get("skillCode").toString(),((Number)binding.get("version")).intValue());
+            if(!binding.get("sha256").equals(actual.get("sha256"))||((Number)binding.get("skillVersionId")).longValue()!=((Number)actual.get("skillVersionId")).longValue())
+                throw new PlatformException(409,"CAPABILITY_BINDING_CONFLICT","会话精确发布技能与冻结来源不一致");
+        }
+        var prepared=prepare(input,source);apps.validateCapabilityDraft(prepared);
+        return new SessionApplication(id,stored.get("sha256").toString(),source.get("mappingSha256").toString(),source,prepared,source.get("sessionSourceId").toString());
+    }
 
     /** 会话独立拥有组装收据；不占用旧API的一包一次application_plan_sha256天然键。 */
     public SessionApplication prepareForSession(long id,Map<String,Object> input) {
@@ -47,8 +74,12 @@ public class CapabilityPackageApplicationsService {
         if(!org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive())
             throw new IllegalStateException("Session assembly requires its transaction");
         var actor=Actor.current();var current=packages.applicationSource(prepared.packageId(),actor.tenantId(),true);
-        if(!prepared.packageSha().equals(current.get("sha256"))||!prepared.resolutionSha().equals(current.get("planSha256")))
+        if(!prepared.packageSha().equals(current.get("sha256"))
+                ||prepared.sourceId()==null&&!prepared.resolutionSha().equals(current.get("planSha256")))
             throw new PlatformException(409,"CAPABILITY_VERSION_CONFLICT","组装期间包声明或精确解析已改变");
+        if(prepared.sourceId()!=null&&(onboardingSources==null
+                ||!Json.canonical(prepared.source()).equals(Json.canonical(onboardingSources.requireSource(prepared.sourceId())))))
+            throw new PlatformException(409,"ONBOARDING_SOURCE_CONFLICT","组装期间不可变会话来源不一致");
         var input=prepared.application();String code=input.get("code").toString();Map<String,Object> app;
         if(owned==null) {
             app=apps.create(input);packages.associateApplication(actor.tenantId(),app,prepared.packageId(),prepared.source());
@@ -57,6 +88,7 @@ public class CapabilityPackageApplicationsService {
             if(!Objects.equals(app.get("id"),owned.get("appId"))||((Number)app.get("draftRev")).longValue()!=((Number)owned.get("draftRev")).longValue())
                 throw new PlatformException(409,"ONBOARDING_APPLICATION_CHANGED","会话应用已由人工修改，未覆盖原修改");
         }
+        if(prepared.sourceId()!=null)onboardingSources.bind(app,prepared.sourceId());
         app=apps.save(code,Map.of("draftRev",app.get("draftRev"),"config",input.get("config")),false);
         if("FLOW".equals(input.get("type")))app=apps.save(code,Map.of("draftRev",app.get("draftRev"),"definition",input.get("definition"),"layout",input.get("layout")),true);
         return app;

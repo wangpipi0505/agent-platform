@@ -13,6 +13,9 @@ public class SkillController {
     private final SkillExecution execution;
     private final SkillGovernance governance;
     private final FixtureSkills fixtures;
+    private OnboardingExecutionBindings onboardingBindings;
+    @org.springframework.beans.factory.annotation.Autowired(required=false)
+    public void onboardingBindings(OnboardingExecutionBindings bindings){this.onboardingBindings=bindings;}
 
     /** 兼容既有测试构造；生产装配必须走四参构造注入 FixtureSkills，创建守卫才生效。 */
     public SkillController(
@@ -185,7 +188,8 @@ public class SkillController {
     @GetMapping("/internal/skill-versions/{id}")
     public Object internalVersion(@PathVariable long id) {
         Actor.current().requireRole("SERVICE");
-        return ApiResponse.ok(catalog.versionId(id));
+        var version=catalog.versionId(id);
+        return ApiResponse.ok(onboardingBindings==null?version:onboardingBindings.attach(Actor.current(),version));
     }
 
     @PostMapping("/internal/skills/{code}/execute")

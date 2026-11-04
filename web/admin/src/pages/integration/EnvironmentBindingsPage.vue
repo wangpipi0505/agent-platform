@@ -94,7 +94,7 @@ onMounted(load);
   <div class="integration-bindings">
     <PageHeader title="环境绑定" subtitle="把已批准连接档案钉到环境与物理端点；密钥只以引用保存，界面不回显。" :busy="busy" @refresh="load" />
     <PageError :error="error" :trace="trace" />
-    <p class="muted">secretRef 只填引用（如 <code>env:ERP_PROD_TOKEN</code>），不会在列表、导出或诊断中显示明文。</p>
+    <p class="muted">NONE 鉴权须将密钥引用留空；其它鉴权只填引用（如 <code>env:ERP_PROD_TOKEN</code>）。服务端按批准的连接档案校验，不保存凭据明文。</p>
     <div class="grid">
       <section class="panel" aria-label="环境绑定列表">
         <el-skeleton v-if="busy && !rows.length" :rows="4" animated />
@@ -138,7 +138,7 @@ onMounted(load);
           <el-form-item label="连接档案 ID"><el-input v-model="draft.connectionProfileId" maxlength="64" /></el-form-item>
           <el-form-item label="连接档案修订"><el-input-number v-model="draft.connectionProfileRev" :min="1" /></el-form-item>
           <el-form-item label="物理端点"><el-input v-model="draft.baseEndpoint" placeholder="https://erp.example.com" /></el-form-item>
-          <el-form-item label="密钥引用"><el-input v-model="draft.secretRef" placeholder="env:ERP_PROD_TOKEN" /></el-form-item>
+          <el-form-item label="密钥引用"><el-input v-model="draft.secretRef" placeholder="NONE 鉴权留空；其它如 env:ERP_PROD_TOKEN" /></el-form-item>
           <el-form-item label="运行引用 JSON"><el-input v-model="draft.runtimeRef" type="textarea" :rows="2" /></el-form-item>
           <el-form-item label="来源策略 JSON"><el-input v-model="draft.originPolicy" type="textarea" :rows="2" /></el-form-item>
           <el-form-item label="健康检查 JSON"><el-input v-model="draft.healthPolicy" type="textarea" :rows="2" /></el-form-item>

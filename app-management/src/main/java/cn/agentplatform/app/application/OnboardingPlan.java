@@ -7,7 +7,8 @@ import java.util.regex.Pattern;
 
 /** 接入计划纯规则：只转换已声明的字段、直接引用与JSON常量，不访问资源或执行表达式。 */
 public final class OnboardingPlan {
-    private static final Set<String> TOP = Set.of("fieldsBundle", "values", "selectedOperations", "modelEntryId", "connectionRef");
+    private static final Set<String> TOP = Set.of("fieldsBundle", "values", "selectedOperations", "modelEntryId", "connectionRef",
+            "sourceDocument", "routePlan", "importOverrides");
     private static final Set<String> KINDS = Set.of("text", "number", "boolean", "enum", "file");
     private static final Set<String> FORBIDDEN = Set.of("tenant", "tenantid", "principal", "principalid", "authref", "endpoint",
             "script", "expression", "eval", "function", "transform", "__proto__", "prototype", "constructor");
@@ -58,6 +59,27 @@ public final class OnboardingPlan {
             ref.put("operation", operation);
             if (connection.containsKey("environment")) ref.put("environment", text(connection.get("environment"), "connectionRef.environment", 64, false));
             result.put("connectionRef", ref);
+        }
+        if(plan.containsKey("sourceDocument")) {
+            if(!(plan.get("sourceDocument") instanceof String document)||document.getBytes(java.nio.charset.StandardCharsets.UTF_8).length>1_048_576)
+                throw invalid("sourceDocument","必须为不超过1MiB的原始规格文本");
+            result.put("sourceDocument",document);
+        }
+        if(plan.containsKey("routePlan")) {
+            var route=object(plan.get("routePlan"),"routePlan");checkKeys(route,Set.of("environment","routeProfileId"),"routePlan");
+            String environment=text(route.get("environment"),"routePlan.environment",32,false);
+            if(!environment.matches("[a-z][a-z0-9-]{0,31}"))throw invalid("routePlan.environment","环境格式无效");
+            result.put("routePlan",Map.of("environment",environment,"routeProfileId",text(route.get("routeProfileId"),"routePlan.routeProfileId",64,false)));
+        }
+        if(plan.containsKey("importOverrides")) {
+            var overrides=object(plan.get("importOverrides"),"importOverrides");if(overrides.size()>32)throw invalid("importOverrides","操作不得超过32项");
+            var copied=new LinkedHashMap<String,Object>();
+            for(var entry:overrides.entrySet()) {
+                text(entry.getKey(),"importOverrides.operationId",256,false);var manual=object(entry.getValue(),"importOverrides.operation");
+                checkKeys(manual,Set.of("name","description","execution","guard","returnSpec","errorSemantics","timeoutMs","constraints"),"importOverrides.operation");
+                copied.put(entry.getKey(),new LinkedHashMap<>(manual));
+            }
+            result.put("importOverrides",copied);
         }
         return result;
     }

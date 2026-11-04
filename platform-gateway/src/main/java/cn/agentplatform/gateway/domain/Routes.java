@@ -16,7 +16,7 @@ public final class Routes {
             return "app";
         // 持久接入会话仅开放已登记步骤；资源归属、修订与发布门仍由应用服务核验。
         if (path.matches("/admin/onboarding-sessions(?:/[A-Za-z0-9_-]{1,80}"
-                + "(?:/preview|/cancel|/steps/(?:ASSEMBLE|VERIFY|PUBLISH)/execute)?)?"))
+                + "(?:/preview|/cancel|/steps/(?:IMPORT_SKILLS|ASSEMBLE|VERIFY|PUBLISH)/execute)?)?"))
             return "app";
         if (path.matches("/v1/apps/[A-Za-z0-9_-]+/input-schema")) return "app";
         // 对外体验投影：只读、脱敏，且由 app 服务按激活发布裁剪，因此提前于会话/运行前缀匹配。

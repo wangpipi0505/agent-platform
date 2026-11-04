@@ -455,6 +455,13 @@ public class RunSnapshotService {
         var codeVersions = new HashMap<String, Integer>();
         for (JsonNode pkg : raw) {
             if (!pkg.isObject() || !capabilityId(pkg.path("packageVersionId")) || !packageIds.add(pkg.path("packageVersionId").asLong())) throw capabilityConflict();
+            if (pkg.has("sessionSourceId")) {
+                for (String field : List.of("sessionSourceId", "planSha256", "documentSha256"))
+                    if (!PROMPT_SHA_PATTERN.matcher(pkg.path(field).asText()).matches()) throw capabilityConflict();
+                if (!pkg.path("sessionId").asText().matches("os_[a-f0-9]{32}")
+                        || !capabilityText(pkg.path("templateCode")) || !capabilityVersion(pkg.path("templateRev")))
+                    throw capabilityConflict();
+            }
             for (String key : List.of("packageId", "version", "softwareId", "environment", "routeProfileId"))
                 if (!capabilityText(pkg.path(key))) throw capabilityConflict();
             if (!packageVersions.add(pkg.path("packageId").asText() + "\n" + pkg.path("version").asText())
@@ -479,6 +486,9 @@ public class RunSnapshotService {
                         || !previous.path("sha256").equals(binding.path("sha256")))) throw capabilityConflict();
                 var origin = Json.object();
                 for (String field : List.of("packageVersionId", "packageId", "softwareId", "softwareVersion", "environment", "environmentDeclaration", "routeProfileId", "mappingSha256"))
+                    if (pkg.has(field)) origin.set(field, pkg.path(field).deepCopy());
+                // 会话来源由app真实绑定关系核验；这里只冻结原坐标，不从当前可变会话补历史来源。
+                for (String field : List.of("sessionSourceId", "sessionId", "planSha256", "documentSha256", "templateCode", "templateRev"))
                     if (pkg.has(field)) origin.set(field, pkg.path(field).deepCopy());
                 origin.set("packageVersion", pkg.path("version").deepCopy()); origin.set("packageSha256", pkg.path("sha256").deepCopy());
                 for (String field : List.of("toolId", "interfaceId", "skillCode", "skillVersionId")) origin.set(field, binding.path(field).deepCopy());

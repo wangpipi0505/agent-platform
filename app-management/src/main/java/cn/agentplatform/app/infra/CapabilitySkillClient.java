@@ -2,6 +2,7 @@ package cn.agentplatform.app.infra;
 
 import cn.agentplatform.common.*;
 import com.fasterxml.jackson.databind.JsonNode;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import java.io.ByteArrayOutputStream;
@@ -15,6 +16,15 @@ import java.util.*;
 @Component
 public class CapabilitySkillClient {
     private final String origin;
+    @Value("${agent.security.mode:dev-hmac}")
+    private String securityMode = "dev-hmac";
+    private AppAuthorityTransport authorityTransport;
+
+    @Autowired(required = false)
+    public void setAuthorityTransport(AppAuthorityTransport authorityTransport) {
+        this.authorityTransport = authorityTransport;
+    }
+
     public CapabilitySkillClient(@Value("${agent.services.skill:http://127.0.0.1:18083}") String base) {
         var uri = URI.create(base);
         if (!Set.of("http", "https").contains(uri.getScheme()) || uri.getHost() == null
@@ -27,9 +37,18 @@ public class CapabilitySkillClient {
     public Map<String, Object> version(String code, int version, Actor actor, long deadline) {
         if (!code.matches("[A-Za-z][A-Za-z0-9_-]{0,63}") || version < 1)
             throw new PlatformException(400, "INVALID_INPUT", "技能必须使用精确 code/version");
-        String ticket = ServiceTokens.issue(actor);
+        boolean iam = "iam".equals(securityMode);
+        String ticket = iam ? null : ServiceTokens.issue(actor);
         HttpURLConnection connection = null;
         try {
+            if (iam) {
+                if (authorityTransport == null) throw unavailable();
+                remaining(deadline);
+                var data = authorityTransport.call(origin, "/internal/skills/" + code
+                        + "?version=" + version + "&requireRegistered=true", null, deadline);
+                remaining(deadline);
+                return validate(code, version, Json.tree(data));
+            }
             connection = (HttpURLConnection) URI.create(origin + "/internal/skills/" + code
                     + "?version=" + version + "&requireRegistered=true").toURL().openConnection();
             connection.setInstanceFollowRedirects(false);
@@ -62,25 +81,8 @@ public class CapabilitySkillClient {
                     throw new PlatformException(status, error, "精确技能版本不能用于当前绑定");
                 throw unavailable();
             }
-            JsonNode data = envelope.path("data");
-            if (!"OK".equals(envelope.path("code").asText()) || !data.isObject()
-                    || !code.equals(data.path("code").asText())
-                    || !data.path("version").isIntegralNumber() || !data.path("version").canConvertToInt() || data.path("version").asInt() != version
-                    || !data.path("versionNo").isIntegralNumber() || !data.path("versionNo").canConvertToInt() || data.path("versionNo").asInt() != version
-                    || !data.path("id").isIntegralNumber() || !data.path("id").canConvertToLong() || data.path("id").asLong() < 1
-                    || !data.path("skillVersionId").isIntegralNumber() || !data.path("skillVersionId").canConvertToLong()
-                    || data.path("id").asLong() != data.path("skillVersionId").asLong()
-                    || !data.path("definition").isObject()) throw unavailable();
-            if (!Set.of("DRAFT", "PUBLISHED", "DISABLED", "ARCHIVED").contains(data.path("skillStatus").asText())) throw unavailable();
-            if (!"PUBLISHED".equals(data.path("status").asText())
-                    || Set.of("DISABLED", "ARCHIVED").contains(data.path("skillStatus").asText()))
-                throw new PlatformException(409, "SKILL_NOT_PUBLISHED", "技能版本尚未发布或已停用");
-            if (!data.path("registered").isBoolean() || !data.path("registered").asBoolean())
-                throw new PlatformException(409, "SKILL_ADAPTER_NOT_REGISTERED", "当前技能服务未确认注册组合");
-            String sha = data.path("sha256").asText();
-            if (!sha.matches("[0-9a-f]{64}") || !sha.equals(data.path("digest").asText())
-                    || !sha.equals(Digest.sha256(Json.canonical(data.path("definition"))))) throw unavailable();
-            return Json.mapper().convertValue(data, Map.class);
+            if (!"OK".equals(envelope.path("code").asText())) throw unavailable();
+            return validate(code, version, envelope.path("data"));
         } catch (PlatformException ex) {
             if ("INVALID_JSON".equals(ex.code())) throw unavailable();
             throw ex;
@@ -89,6 +91,28 @@ public class CapabilitySkillClient {
         } finally {
             if (connection != null) connection.disconnect();
         }
+    }
+
+    /** 两种认证模式共用原始精确版本断言，授权交换不能替代来源与发布状态校验。 */
+    private static Map<String, Object> validate(String code, int version, JsonNode data) {
+        if (data == null || !data.isObject()
+                || !code.equals(data.path("code").asText())
+                || !data.path("version").isIntegralNumber() || !data.path("version").canConvertToInt() || data.path("version").asInt() != version
+                || !data.path("versionNo").isIntegralNumber() || !data.path("versionNo").canConvertToInt() || data.path("versionNo").asInt() != version
+                || !data.path("id").isIntegralNumber() || !data.path("id").canConvertToLong() || data.path("id").asLong() < 1
+                || !data.path("skillVersionId").isIntegralNumber() || !data.path("skillVersionId").canConvertToLong()
+                || data.path("id").asLong() != data.path("skillVersionId").asLong()
+                || !data.path("definition").isObject()) throw unavailable();
+        if (!Set.of("DRAFT", "PUBLISHED", "DISABLED", "ARCHIVED").contains(data.path("skillStatus").asText())) throw unavailable();
+        if (!"PUBLISHED".equals(data.path("status").asText())
+                || Set.of("DISABLED", "ARCHIVED").contains(data.path("skillStatus").asText()))
+            throw new PlatformException(409, "SKILL_NOT_PUBLISHED", "技能版本尚未发布或已停用");
+        if (!data.path("registered").isBoolean() || !data.path("registered").asBoolean())
+            throw new PlatformException(409, "SKILL_ADAPTER_NOT_REGISTERED", "当前技能服务未确认注册组合");
+        String sha = data.path("sha256").asText();
+        if (!sha.matches("[0-9a-f]{64}") || !sha.equals(data.path("digest").asText())
+                || !sha.equals(Digest.sha256(Json.canonical(data.path("definition"))))) throw unavailable();
+        return Json.mapper().convertValue(data, Map.class);
     }
 
     private static int remaining(long deadline) {

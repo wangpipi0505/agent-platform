@@ -1,0 +1,166 @@
+{
+  "card": "CR-05 phase 2 and CR-02 native follow-up",
+  "validation": "compile/typecheck only; functional results unchanged",
+  "files": [
+    {
+      "path": "admin-common/src/main/java/cn/agentplatform/common/auth/OnboardingServiceProof.java",
+      "sha256": "a8461bb9fbe9730ef0f50983131156e2a18602adc3613c7c517f547c63e2869b"
+    },
+    {
+      "path": "admin-common/src/main/resources/agent-service-authority.json",
+      "sha256": "16eb28ed3399f00c5685215d72020c1282fad41e3c5b52b044e8b3714bba7d45"
+    },
+    {
+      "path": "app-management/src/main/java/cn/agentplatform/app/application/AppService.java",
+      "sha256": "02e1e6a8a2075d79ae336fb98ba29fc56a73470e95c928b7a73751e4e9cb69ee"
+    },
+    {
+      "path": "app-management/src/main/java/cn/agentplatform/app/application/CapabilityPackageApplicationsService.java",
+      "sha256": "4d7300dcd48ba3a8be305b7615ceb8ee1c796d4697d71edb426e90f2f053c73f"
+    },
+    {
+      "path": "app-management/src/main/java/cn/agentplatform/app/application/EnvironmentBindings.java",
+      "sha256": "5eaaf9f55409e857d0fe5a3773a226c1bcc701958611166c97f2fde14828f819"
+    },
+    {
+      "path": "app-management/src/main/java/cn/agentplatform/app/application/OnboardingApplicationSources.java",
+      "sha256": "f009b9df6352fd91ba2239aceca5a7e2d5b71b6772f30a9a92de6dc8e8df1baa"
+    },
+    {
+      "path": "app-management/src/main/java/cn/agentplatform/app/application/OnboardingImportRules.java",
+      "sha256": "552f7aed7e1a36d0d058dc2bd7432772047fbc94bce9ff116c9b8d97e32989a2"
+    },
+    {
+      "path": "app-management/src/main/java/cn/agentplatform/app/application/OnboardingPlan.java",
+      "sha256": "8c97b8ae2298d1ead88075cda18d8ce9ebe072569d59962d821eaa51d015f0da"
+    },
+    {
+      "path": "app-management/src/main/java/cn/agentplatform/app/application/OnboardingPreflightService.java",
+      "sha256": "aa1fb6b4b61287273bd5bcc0e91ce8f21f9d8514376253a63cb88f845703940b"
+    },
+    {
+      "path": "app-management/src/main/java/cn/agentplatform/app/application/OnboardingSessions.java",
+      "sha256": "22d76169df4e7131b386ec811ec7f9fea50a6138a729ce8d8f21bd7b59046ee9"
+    },
+    {
+      "path": "app-management/src/main/java/cn/agentplatform/app/infra/AppAuthorityTransport.java",
+      "sha256": "f6f913de11b3a6e9cd6f4077794cc3849b19072e39ffe42cd3d31f87e2b72dff"
+    },
+    {
+      "path": "app-management/src/main/java/cn/agentplatform/app/infra/CapabilitySkillClient.java",
+      "sha256": "a5b64028f4c128f0dd44c4cf0e4ec04e74e84a558b2fd596ee8fbc404b795586"
+    },
+    {
+      "path": "app-management/src/main/java/cn/agentplatform/app/infra/OnboardingImportSourceRepository.java",
+      "sha256": "c2519a614902689ad4cdb90f260bd108ffa20c5846435421121236f09c8d05cf"
+    },
+    {
+      "path": "app-management/src/main/java/cn/agentplatform/app/infra/OnboardingRuntimeClient.java",
+      "sha256": "6e2b76301f0d0fe71902033aa9a20286c71ee51ea3d81b662ae957a9068de498"
+    },
+    {
+      "path": "app-management/src/main/java/cn/agentplatform/app/infra/OnboardingSkillImportsClient.java",
+      "sha256": "b831a51fb5724d7f3397301d67433add14e23eccc0d357a357d1ad6ace6e0b9e"
+    },
+    {
+      "path": "app-management/src/main/resources/db/migration/V120__onboarding_import_sources.sql",
+      "sha256": "213c5c366d1f94a389674896d1e5b1b5c22eaa9b21c736849e990dd00a10f15d"
+    },
+    {
+      "path": "app-management/src/main/resources/db/migration/V121__onboarding_import_step.sql",
+      "sha256": "7cccdae0f8f77c44ac276e73b23b0955c6d79c6868bce69a6477c168991982aa"
+    },
+    {
+      "path": "contracts/onboarding-session.md",
+      "sha256": "42b9ba701d8fbc2b4fe0cf7d80392750ad59da104f54d4b6bf1a0a61eee5fd56"
+    },
+    {
+      "path": "docs/evidence/cr05-app-authority-transport-20261104.md",
+      "sha256": "84500cdf978abdb08abe6778907db77250de7792dc0f53216c3af7397a5f2ec8"
+    },
+    {
+      "path": "docs/evidence/cr05-import-rules-20261104.md",
+      "sha256": "d15428cecf1439c3cf679b2b7a7dae6c7dc60e1707cbb377a87840b10b4bfedf"
+    },
+    {
+      "path": "docs/evidence/cr05-none-binding-20261104.md",
+      "sha256": "3aad33f05f482a7e9180b41880c82f09bcedbd089e4fead9d6246a9a7a377a84"
+    },
+    {
+      "path": "docs/evidence/cr05-onboarding-mode-20261104.md",
+      "sha256": "daad145d06b0e9bab2e367cc18183e564c666017df1ef24702817eb66b43a23b"
+    },
+    {
+      "path": "docs/evidence/cr05-onboarding/CR-05-import-runtime-wiring.md",
+      "sha256": "2d3c7a94c210c1486fdb9f8c3ddcab037d8cea5ffab3e9e045708e3c37b4a73e"
+    },
+    {
+      "path": "docs/evidence/cr05-r2-onboarding-skill-import-20261104.md",
+      "sha256": "a23a0006bf3ef01abce5a2ac5e8ead889df2fcf2a7d51c605286f7b724573515"
+    },
+    {
+      "path": "docs/evidence/cr05-r6-onboarding-import-ui-20261104.md",
+      "sha256": "233d97b697937938de4fd111704320f2430b9c0c7c9e000a1f2095458525fe8b"
+    },
+    {
+      "path": "docs/evidence/cr05-source-final-20261104.md",
+      "sha256": "9b77766d8265f17111034c5d9a71723898cb61aded9f9e07a08a0a700a50cd1a"
+    },
+    {
+      "path": "engine-runtime/src/main/java/cn/agentplatform/engine/application/RunService.java",
+      "sha256": "2104810ed76f3d324ade7bbbdb3072b1285141925b35784d2340ccd34e53115f"
+    },
+    {
+      "path": "engine-runtime/src/main/java/cn/agentplatform/engine/application/RunSnapshotService.java",
+      "sha256": "02ff29833c6ee9276f830368f63bb4f146d2b17e642c110d9f63ec1bb922e7f4"
+    },
+    {
+      "path": "platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java",
+      "sha256": "6ca61941bf5409eb5c7984fbfe86d82396406bfe8d4129fa32b721dd27e98690"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/api/OnboardingSkillImportsController.java",
+      "sha256": "e7f13ed6b584896842a607bea1275d9f7ae32de2a504214c4068fc29c97eb798"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/api/SkillController.java",
+      "sha256": "fc1e3b04dc77e50fe58b0f41e6279b5a4d0cf4c9d38cf59140e02e2428c4204e"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/OnboardingExecutionBindings.java",
+      "sha256": "45a2c81e6f147ab157c84d68defec79f4a467069a2352eef9f71cc3c159efe92"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/OnboardingSkillImports.java",
+      "sha256": "6dad6bd86a27fad2fb0a3817a9eb5951cf83fbc31186cc239d2efcd91fc4710d"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/application/SkillGovernance.java",
+      "sha256": "f306e983b276e47a30d1fdb9f1420eacb43220c471d69ac6ac40b0890a6a790d"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/ApprovedConnectionExecution.java",
+      "sha256": "42c0d720fdfbde26980c9227338003c60a9cb45362d3ab86124413c5ee6a8732"
+    },
+    {
+      "path": "skill-registry/src/main/java/cn/agentplatform/skill/infra/OnboardingImportReceipts.java",
+      "sha256": "938b844a56aaf6492314a30904aceb93b31ffe90cf202e5dd2251038d6a7f95d"
+    },
+    {
+      "path": "skill-registry/src/main/resources/db/migration/V320__onboarding_skill_import_receipt.sql",
+      "sha256": "ba454fb74767ffd96c07d1b8a5e6f51d81b6324ed5be52a0c0ad88254b48614a"
+    },
+    {
+      "path": "web/admin/src/pages/integration/EnvironmentBindingsPage.vue",
+      "sha256": "d9cf767894fb9d6f9352a09dd8c149d8fdde2144aef39e6055ddd0ace3d5a671"
+    },
+    {
+      "path": "web/admin/src/pages/onboarding/OnboardingSessionWorkspace.vue",
+      "sha256": "d4b2b128e90b28af62f871ad28bb4c7f7afdaa51be29250f2b7a9c3684ef908f"
+    },
+    {
+      "path": "web/shared/onboarding-session.ts",
+      "sha256": "ca0199875d9c08397b79c83ff25657ae92f5f80b0cf7044fb4be863ecf5debcb"
+    }
+  ]
+}
