@@ -71,7 +71,21 @@ function mountRun(routeQuery: Record<string, string>, props: Record<string, unkn
               ? runProtocol
               : id.endsWith('/shared/content')
                 ? content
-                : id.endsWith('.vue')
+                // MNT-03：RunDetail 引用 resource-types 稳定外壳；本组测导航深链，
+                // 沙箱给行为等价浅实现（相对导入在 tests/ 下解析错位，不能 require）。
+                : id.includes('/shared/resource-types')
+                  ? {
+                      emptyRunStatus: () => ({
+                        runId: '', status: '', eventsWatermark: '', nodes: [],
+                      }),
+                      asRecordField: (record: any, key: string) =>
+                        record && typeof record === 'object' ? record[key] : undefined,
+                      asUnknownRecord: (value: unknown) =>
+                        value && typeof value === 'object' && !Array.isArray(value)
+                          ? { ...(value as object) }
+                          : {},
+                    }
+                  : id.endsWith('.vue')
                   ? { default: { render: () => null } }
                   : require(id),
     exports);

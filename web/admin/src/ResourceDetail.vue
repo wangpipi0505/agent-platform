@@ -7,11 +7,13 @@ import { probeView, serviceAccess } from "../../shared/service-access";
 import { uploadArtifact as uploadArtifactFile } from "../../shared/artifact-upload";
 import { useAuth, useApi } from "../../shared/api";
 import { useUnsavedChanges } from "../../shared/useUnsavedChanges";
+import type { ResourceVersionInfo } from "../../shared/resource-types";
 const props = defineProps<{ resource: any; kind: "skill" | "template" }>();
 const api = useApi();
 const auth = useAuth();
 const value = ref(props.resource);
-const versions = ref<any[]>([]);
+// MNT-03：资源版本行稳定外壳（definition/content 动态保持 unknown）。
+const versions = ref<ResourceVersionInfo[]>([]);
 const error = ref("");
 const result = ref<any>();
 const vars = ref("{}");
@@ -32,18 +34,18 @@ const selected = ref<number>();
 // 不改变任何请求时机。模板与技能的分段集合不同，初始段随 kind 确定。
 const activeSection = ref(props.kind === "template" ? "content" : "contract");
 const busy = ref(false);
-const models = ref<any[]>([]);
+const models = ref<Record<string, unknown>[]>([]);
 const modelId = ref<number>();
 const connectionInput = ref("{}");
 const connectionForm = ref<InstanceType<typeof SchemaInputs>>();
 const advancedInput = ref(false);
 const service = computed(() => serviceAccess(selectedDefinition.value));
-const probeResult = ref<any>();
+const probeResult = ref<Record<string, unknown> | null>(null);
 const probing = ref(false);
 const probeError = ref("");
 const probeMeta = computed(() => probeView(probeResult.value));
 watch(selected, () => {
-  probeResult.value = undefined;
+  probeResult.value = null;
   probeError.value = "";
 });
 async function probeService() {

@@ -14,7 +14,10 @@ const invalid = () => Object.assign(Error('运行状态游标无效，请刷新�
 
 // Native reviver visits only surviving keys. Select the token by the final
 // envelope.data holder identity; nested and discarded fields remain untouched.
-export function decodeRunStatus(text: string): any {
+import { parseRunStatusEnvelope } from './resource-types';
+export function decodeRunStatus(text: string) {
+  // MNT-03：返回经 parseRunStatusSnapshot 边界收窄的稳定外壳（nodes 逐行收窄，
+  // 动态 output/inputs/graph 保持 unknown）；本函数内原有的游标精确性校验不变。
   const tokens = new WeakMap<object, string | undefined>();
   const sequences = new WeakMap<object, string | undefined>();
   const parse = JSON.parse as (text: string, reviver: (this: any, key: string, value: any, context?: {source?: string}) => any) => any;
@@ -41,7 +44,8 @@ export function decodeRunStatus(text: string): any {
       return {...fields, seq:exact(fields.seq, sequences.get(fields))};
     });
   }
-  return {...envelope, data:result};
+  // MNT-03：出口经 parseRunStatusEnvelope 收窄为稳定外壳（信封键保留，data 逐节点收窄）。
+  return parseRunStatusEnvelope({...envelope, data:result});
 }
 export const eventText = (data: unknown) => {
   const fields = record(data);

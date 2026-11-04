@@ -12,6 +12,15 @@ import AppOverviewPanel from "./workspace/AppOverviewPanel.vue";
 import AppPublishPanel from "./workspace/AppPublishPanel.vue";
 import AppRunPanel from "./workspace/AppRunPanel.vue";
 import AppRunsPanel from "./workspace/AppRunsPanel.vue";
+import {
+  emptyAppDetail,
+  parseAppDetail,
+  type AppDetail,
+  type EvaluationSnapshot,
+  type PublishedPointer,
+} from "../../../shared/resource-types";
+import type { PublishPrecheck } from "../publish-gate";
+
 
 const FlowDesigner = defineAsyncComponent(
   () => import("../../../flow-designer/FlowDesigner.vue"),
@@ -29,7 +38,8 @@ const tab = computed(() => {
   return (Array.isArray(parts) ? parts.join("/") : String(parts || "")) || "overview";
 });
 
-const app = ref<any>();
+// MNT-03：应用详情/预检/评测/发布回执稳定外壳（预检复用 publish-gate 的 PublishPrecheck）。
+const app = ref<AppDetail>(emptyAppDetail());
 usePageTitle(() => app.value?.name || code.value || "应用工作区");
 const flow = ref<any>();
 const catalogs = ref({
@@ -51,11 +61,11 @@ useUnsavedChanges({
   },
 });
 const refreshKey = ref(0);
-const precheck = ref<any>();
+const precheck = ref<PublishPrecheck | null>(null);
 const precheckStale = ref(false);
 const gateBlocked = ref<GateRejection | null>(null);
-const published = ref<any>();
-const evaluation = ref<any>();
+const published = ref<PublishedPointer | null>(null);
+const evaluation = ref<EvaluationSnapshot | null>(null);
 const evaluationNeedsCheck = ref(false);
 const evaluationWorking = ref(false);
 const requestNo = ref("");
@@ -72,8 +82,11 @@ function confirmEnvironment(confirmed: boolean) {
   const current = precheck.value;
   try {
     if (!current) throw new Error("请先完成当前候选的发布预检");
-    const selected = { precheckId: current.precheckId, evalReportId: current.evalReportId,
-      evidenceSha256: current.environmentEvidenceSha256 };
+    const selected = {
+      precheckId: current.precheckId,
+      evalReportId: current.evalReportId ?? "",
+      evidenceSha256: current.environmentEvidenceSha256 ?? "",
+    };
     if (!buildEnvironmentConfirmation(current, selected)) throw new Error("本次预检无需演示发布确认");
     environmentConfirmation.value = selected;
   } catch (problem) { failure(problem); }
@@ -93,7 +106,7 @@ async function load() {
   if (!code.value || !auth.token) return;
   await operation(async () => {
     detailReset();
-    app.value = undefined;
+    app.value = emptyAppDetail();
     refreshKey.value = 0;
     const requested = route.fullPath;
     const next = await api<any>(

@@ -179,6 +179,11 @@ export function asUnknownRecord(value: unknown): Record<string, unknown> {
   return isRecord(value) ? value : {};
 }
 
+/** 未知运行值上安全取键：非对象返回 undefined，不抛错不臆造。 */
+export function asRecordField(record: unknown, key: string): unknown {
+  return isRecord(record) ? record[key] : undefined;
+}
+
 export function isPlainValue(value: unknown): boolean {
   return (
     value === null ||
@@ -186,4 +191,264 @@ export function isPlainValue(value: unknown): boolean {
     typeof value === "number" ||
     typeof value === "boolean"
   );
+}
+/* ===================== MNT-03（onboarding 之外的 DTO 族：应用/发布→运行→资源） =====================
+ * 发布预检外壳已在 admin/src/publish-gate.ts（PLAT-02，PublishPrecheck）——优先引用，
+ * 此处不重复定义。动态 inputs/output/config/Schema 保持 unknown 受校验值。
+ */
+
+/** 应用详情外壳（GET /admin/apps/{code} 工作区装配面）。 */
+export interface AppDetail {
+  appCode: string
+  name: string
+  type: string
+  status: string
+  draftRev: number
+  currentVersionNo: number | null
+  description: string
+  domain: string
+  bizCategory: string
+  tags: string[]
+  candidateSha256: string
+  /** 动态声明保持 unknown：inputs/output/config 由运行时按声明校验。 */
+  inputs?: unknown
+  output?: unknown
+  config?: unknown
+}
+
+const asStringOr = (value: unknown, fallback = ""): string =>
+  typeof value === "string" ? value : fallback;
+
+/** 空应用详情（加载前初始值；不臆造任何运行事实）。 */
+export function emptyAppDetail(): AppDetail {
+  return {
+    appCode: "",
+    name: "",
+    type: "CHAT",
+    status: "",
+    draftRev: 0,
+    currentVersionNo: null,
+    description: "",
+    domain: "",
+    bizCategory: "",
+    tags: [],
+    candidateSha256: "",
+  };
+}
+
+/** 未知输入 → 应用详情外壳；appCode 缺失返回 null。tags 非数组时不臆造。 */
+export function parseAppDetail(value: unknown): AppDetail | null {
+  if (!isRecord(value)) return null;
+  const appCode = asString(value.appCode) || asString(value.code);
+  if (!appCode) return null;
+  const tags = Array.isArray(value.tags) ? value.tags.filter(isPlainValue) : [];
+  const rev = asInt(value.draftRev);
+  const versionNo = asInt(value.currentVersionNo);
+  return {
+    appCode,
+    name: asStringOr(value.name, appCode),
+    type: asStringOr(value.type, "CHAT"),
+    status: asStringOr(value.status),
+    draftRev: rev > 0 ? rev : 0,
+    currentVersionNo: versionNo > 0 ? versionNo : null,
+    description: asStringOr(value.description),
+    domain: asStringOr(value.domain),
+    bizCategory: asStringOr(value.bizCategory),
+    tags: tags.map((tag) => String(tag)),
+    candidateSha256: asString(value.candidateSha256),
+    inputs: value.inputs,
+    output: value.output,
+    config: value.config,
+  };
+}
+
+/** 评测引用外壳（评测中心/发布门禁核验面）。 */
+export interface EvaluationSnapshot {
+  status: string
+  candidateSha256: string
+  draftRev: number
+  evalReportId: string
+  evaluationId?: string
+}
+
+export function parseEvaluationSnapshot(value: unknown): EvaluationSnapshot | null {
+  if (!isRecord(value)) return null;
+  const reportId = asString(value.evalReportId);
+  if (!reportId) return null;
+  const rev = asInt(value.draftRev);
+  return {
+    status: asStringOr(value.status),
+    candidateSha256: asString(value.candidateSha256),
+    draftRev: rev > 0 ? rev : 0,
+    evalReportId: reportId,
+    evaluationId: asString(value.evaluationId) || undefined,
+  };
+}
+
+/** 发布提交回执外壳（POST /admin/apps/{code}/publish/commit）。 */
+export interface PublishedPointer {
+  precheckId: string
+  evalReportId: string
+  candidateSha256: string
+  draftRev: number
+  versionNo: number | null
+}
+
+export function parsePublishedPointer(value: unknown): PublishedPointer | null {
+  if (!isRecord(value)) return null;
+  const precheckId = asString(value.precheckId);
+  if (!precheckId) return null;
+  const rev = asInt(value.draftRev);
+  const versionNo = asInt(value.versionNo);
+  return {
+    precheckId,
+    evalReportId: asString(value.evalReportId),
+    candidateSha256: asString(value.candidateSha256),
+    draftRev: rev > 0 ? rev : 0,
+    versionNo: versionNo > 0 ? versionNo : null,
+  };
+}
+
+/** 运行状态节点行（状态接口 nodes[]；output 保持 unknown）。 */
+export interface RunNodeStatusRow {
+  nodeDefId: string
+  id: string
+  status: string
+  output?: unknown
+  /** 时间线字段：服务端可能缺省；缺省显示 —，不推算。 */
+  started_at?: string
+  ended_at?: string
+  error?: unknown
+}
+
+/** 运行状态快照外壳：decodeRunStatus（run-protocol）解析后的稳定面。
+ * output/inputs/graph/observation 保持 unknown；错误信封按原语义。 */
+export interface RunStatusSnapshot {
+  runId: string
+  status: string
+  eventsWatermark: string
+  nodes: RunNodeStatusRow[]
+  output?: unknown
+  inputs?: unknown
+  graph?: unknown
+  diagnostics?: unknown
+  observation?: unknown
+  error?: unknown
+  fileRefs?: unknown
+  events?: unknown[]
+}
+
+/** 空快照（加载初始值；不臆造任何运行事实）。 */
+export function emptyRunStatus(): RunStatusSnapshot {
+  return {
+    runId: "",
+    status: "",
+    eventsWatermark: "",
+    nodes: [],
+    events: [],
+  };
+}
+
+/** 逐节点收窄：nodeDefId 缺失回退 id；两者皆无丢弃该行（不臆造节点）。 */
+export function parseRunNodes(value: unknown): RunNodeStatusRow[] {
+  if (!Array.isArray(value)) return [];
+  const rows: RunNodeStatusRow[] = [];
+  for (const item of value) {
+    if (!isRecord(item)) continue;
+    const id = asString(item.id);
+    const nodeDefId = asString(item.nodeDefId) || id;
+    if (!nodeDefId && !id) continue;
+    rows.push({
+      nodeDefId,
+      id: id || nodeDefId,
+      status: asStringOr(item.status),
+      output: item.output,
+      started_at: typeof item.started_at === "string" ? item.started_at : undefined,
+      ended_at: typeof item.ended_at === "string" ? item.ended_at : undefined,
+      error: item.error,
+    });
+  }
+  return rows;
+}
+
+/** 运行状态信封外壳：code/message/traceId + 收窄后的 data（错误信封按原语义保留）。 */
+export interface RunStatusEnvelope {
+  code: string
+  message?: string
+  traceId?: string
+  data: RunStatusSnapshot
+}
+
+export function parseRunStatusEnvelope(value: unknown): RunStatusEnvelope {
+  const record = isRecord(value) ? value : {};
+  // 协议兼容：信封未知键（如 rawData/扩展头）原样保留，仅已知键收窄覆盖。
+  return {
+    ...record,
+    code: asStringOr(record.code),
+    message: typeof record.message === "string" ? record.message : undefined,
+    traceId: typeof record.traceId === "string" ? record.traceId : undefined,
+    data: parseRunStatusSnapshot(record.data),
+  };
+}
+
+/** 未知输入 → 运行状态快照；eventsWatermark 缺失给空串（游标精度由 run-protocol 权威校验）。 */
+export function parseRunStatusSnapshot(value: unknown): RunStatusSnapshot {
+  const record = isRecord(value) ? value : {};
+  // 协议兼容：data 未知键原样保留（调用方可继续读取扩展字段），已知键收窄覆盖。
+  // 无 events 键时不创建空数组——Object.hasOwn(data,'events') 语义由服务端事实决定。
+  const out: RunStatusSnapshot = {
+    ...record,
+    runId: asString(record.runId),
+    status: asStringOr(record.status),
+    eventsWatermark: asString(record.eventsWatermark),
+    nodes: parseRunNodes(record.nodes),
+    output: record.output,
+    inputs: record.inputs,
+    graph: record.graph,
+    diagnostics: record.diagnostics,
+    observation: record.observation,
+    error: record.error,
+    fileRefs: record.fileRefs,
+  };
+  if (Array.isArray(record.events)) out.events = record.events;
+  return out;
+}
+
+/** 资源版本行外壳（技能/模板 versions[]；definition/content 动态）。 */
+export interface ResourceVersionInfo {
+  versionNo: number
+  /** 服务端历史行可能只带 version 字段（与 versionNo 二选一）。 */
+  version?: number
+  status: string
+  createdAt: string
+  content?: string
+  definition?: unknown
+  /** 部分行平铺合同字段（旧数据形态）；透传不臆造。 */
+  inputSchema?: unknown
+  outputSchema?: unknown
+  evalReportId?: string
+  type?: string
+  execution?: unknown
+  guard?: unknown
+}
+
+export function parseResourceVersion(value: unknown): ResourceVersionInfo | null {
+  if (!isRecord(value)) return null;
+  const versionNo = asInt(value.versionNo);
+  if (versionNo <= 0) return null;
+  const flatVersion = asInt(value.version);
+  return {
+    versionNo,
+    version: flatVersion > 0 ? flatVersion : undefined,
+    status: asStringOr(value.status, "DRAFT"),
+    createdAt: asStringOr(value.createdAt),
+    content: typeof value.content === "string" ? value.content : undefined,
+    definition: value.definition,
+    inputSchema: value.inputSchema,
+    outputSchema: value.outputSchema,
+    evalReportId: typeof value.evalReportId === "string" ? value.evalReportId : undefined,
+    type: typeof value.type === "string" ? value.type : undefined,
+    execution: value.execution,
+    guard: value.guard,
+  };
 }

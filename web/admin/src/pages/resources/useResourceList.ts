@@ -105,7 +105,7 @@ export function useResourceList(
       let rows = Array.isArray(body) ? body : body.items;
       if (options.providerScoped)
         rows = rows.filter(
-          (row: any) =>
+          (row: Record<string, unknown>) =>
             !providerScoped.value ||
             String(row.providerId) === providerId.value,
         );

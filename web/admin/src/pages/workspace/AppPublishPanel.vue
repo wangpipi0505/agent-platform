@@ -2,6 +2,11 @@
 import { computed, onMounted, reactive, ref, watch } from "vue";
 import { useApi } from "../../../../shared/api";
 import EvaluationPanel from "../../EvaluationPanel.vue";
+import type {
+  AppDetail,
+  EvaluationSnapshot,
+  PublishedPointer,
+} from "../../../../shared/resource-types";
 import {
   WAIVER_MAX_HOURS,
   buildWaiverPayload,
@@ -13,13 +18,13 @@ import {
 } from "../../publish-gate";
 
 const props = defineProps<{
-  app: any;
+  app: AppDetail;
   code: string;
   busy: boolean;
   precheck?: PublishPrecheck | null;
   precheckStale: boolean;
-  published: any;
-  evaluation: any;
+  published: PublishedPointer | null;
+  evaluation: EvaluationSnapshot | null;
   evaluationWorking: boolean;
   evaluationNeedsCheck: boolean;
   /** 预检 409 EVAL_GATE_BLOCKED 时由页面捕获并传入；body 不含 checks 明细（只落审计行）。 */
@@ -31,7 +36,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: "check"): void;
   (e: "commit"): void;
-  (e: "report", value: any): void;
+  (e: "report", value: unknown): void;
   (e: "activity", working: boolean): void;
   (e: "bind"): void;
   (e: "environment-confirm", confirmed: boolean): void;
@@ -40,7 +45,7 @@ const emit = defineEmits<{
 const api = useApi();
 // INT-06：交接区只展示服务端已激活的配置版本；浏览器提议的 configReleaseId 由引擎复核，
 // 页面既不缓存密钥也不生成明文凭据。
-const activeRelease = ref<any>(null);
+const activeRelease = ref<Record<string, unknown> | null>(null);
 const releaseError = ref("");
 const releaseBusy = ref(false);
 
@@ -455,8 +460,8 @@ const webappBase = (() => {
           </div>
           <div>
             <dt>配置摘要</dt>
-            <dd :title="activeRelease.digest">
-              <code>{{ shortSha(activeRelease.digest || "") || "未知" }}</code>
+            <dd :title="String(activeRelease.digest ?? '')">
+              <code>{{ shortSha(String(activeRelease.digest ?? '')) || "未知" }}</code>
             </dd>
           </div>
           <div>

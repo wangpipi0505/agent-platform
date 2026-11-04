@@ -11,13 +11,25 @@ import RunObservation from './RunObservation.vue';
 const props = defineProps<{ runId: string; nodeId?: string }>();
 // 无router的既有嵌入用法可显式传 nodeId；缺失时回退到已解析路由query。
 const api = useApi();
+import {
+  asRecordField,
+  asUnknownRecord,
+  emptyRunStatus,
+  type RunNodeStatusRow,
+  type RunStatusSnapshot,
+} from "../../shared/resource-types";
+
+function toArrayOrEmpty(value: unknown): unknown[] {
+  return Array.isArray(value) ? value : [];
+}
 const auth=useAuth(),session=auth.snapshot();
 const blocked=ref(false);
 const current=()=>!stopped&&session.current();
-const value = ref<any>({});
+// MNT-03：运行状态稳定外壳（decodeRunStatus 经 parseRunStatusEnvelope 收窄的 data）。
+const value = ref<RunStatusSnapshot>(emptyRunStatus());
 const error = ref("");
 const active = ref("summary");
-const selected = ref<any>();
+const selected = ref<RunNodeStatusRow>();
 const replay = ref(0);
 // UIF-A1 深链：?nodeId=<nodeDefId> 由日志/告警/审批通知构造，进入即过滤定位
 // 该节点（表格过滤 + 自动选中检查器 + 事件回放跳到该节点首个事件）。
@@ -44,13 +56,13 @@ watch(deepNode, (value) => {
 // UIF-A5：画布 states 映射（nodeDefId→status），与状态接口 nodes 同源。
 const nodeStates = computed(() =>
   Object.fromEntries(
-    (value.value.nodes || []).map((n: any) => [n.nodeDefId || n.id, n.status]),
+    (value.value.nodes || []).map((n: RunNodeStatusRow) => [n.nodeDefId || n.id, n.status]),
   ),
 );
 // UIF-A5：执行时间线行（nodeInstanceId 顺序 = 执行顺序；耗时仅用持久起止值，
 // 缺失显示 —，绝不推算）；点行联动画布选中与节点检查器。
 const timeline = computed(() =>
-  (value.value.nodes || []).map((n: any) => {
+  (value.value.nodes || []).map((n: RunNodeStatusRow) => {
     const started = n.started_at ? Date.parse(n.started_at) : null;
     const ended = n.ended_at ? Date.parse(n.ended_at) : null;
     const duration =
@@ -77,25 +89,60 @@ function timelineRowClass({ row }: { row: any }) {
 }
 const visibleNodes = computed(() =>
   nodeFilter.value
-    ? (value.value.nodes || []).filter((n: any) => n.nodeDefId === nodeFilter.value)
+    ? (value.value.nodes || []).filter((n: RunNodeStatusRow) => n.nodeDefId === nodeFilter.value)
     : value.value.nodes || [],
 );
 // 纯对话应用没有可绘制的节点画布，避免留下一大块空白区域。
 const hasGraph = computed(() => {
-  const graph = value.value.graph;
-  return !!(graph && Array.isArray(graph.nodes) && graph.nodes.length);
+  // 动态 graph 保持 unknown；仅确认可绘制形状，不声明固定业务结构。
+  const graph = asUnknownRecord(value.value.graph);
+  return Object.keys(graph).length > 0 && Array.isArray(graph.nodes) && graph.nodes.length > 0;
 });
 const outputText = computed(() => {
-  const text = value.value.output?.text;
+  const text = asRecordField(value.value.output, "text");
   return typeof text === "string" ? text : "";
 });
 // AP-S07：诊断与工具调用来自后端持久化记录，不在前端二次推断。
-const diag = computed(() => value.value.diagnostics || {});
-const diagError = computed(() => diag.value.error || null);
-const diagCalls = computed(() => diag.value.toolCalls || []);
-const diagAttempts = computed(() => diag.value.attempts || []);
-const diagTimeline = computed(() => diag.value.timeline || []);
-const diagCounts = computed(() => diag.value.counts || {});
+const diag = computed(() => asUnknownRecord(value.value.diagnostics));
+const diagError = computed(() => diag.value.error ?? null);
+const diagCalls = computed(() => toArrayOrEmpty(asRecordField(diag.value, "toolCalls")));
+const diagAttempts = computed(() => toArrayOrEmpty(asRecordField(diag.value, "attempts")));
+const diagTimeline = computed(() => toArrayOrEmpty(asRecordField(diag.value, "timeline")));
+const diagCounts = computed(() => asUnknownRecord(asRecordField(diag.value, "counts")));
+// ONB/INT 深面字段统一收窄为展示视图（模板不再对 unknown 取属性）。
+const diagErrorView = computed(() => {
+  const record = asUnknownRecord(diag.value.error);
+  if (!Object.keys(record).length) return null;
+  const text = (key: string) => (typeof record[key] === "string" ? record[key] : "");
+  return {
+    retryable: record.retryable === true,
+    code: text("code"),
+    semantic: text("semantic"),
+    stage: text("stage"),
+    message: text("message"),
+    hint: text("hint"),
+    at: text("at"),
+    nodeInstanceId: text("nodeInstanceId"),
+    toolCallId: text("toolCallId"),
+    path: text("path"),
+    raw: record,
+  };
+});
+// 画布定义结构级守卫（nodes 数组存在即视为可绘制；具体字段由 FlowDesigner 运行时处理）。
+function isFlowDefinition(candidate: unknown): candidate is import("../../flow-designer/transform").Definition {
+  return Array.isArray(asRecordField(candidate, "nodes"));
+}
+const graphDefinition = computed(() =>
+  isFlowDefinition(value.value.graph) ? value.value.graph : undefined,
+);
+const graphLayout = computed(() => asUnknownRecord(asRecordField(graphDefinition.value, "layout")));
+const fileRefsList = computed(() => {
+  const direct = value.value.fileRefs;
+  if (Array.isArray(direct)) return direct;
+  const nested = asRecordField(value.value.output, "fileRefs");
+  return Array.isArray(nested) ? nested : [];
+});
+const versionRefs = computed(() => asRecordField(value.value, "versionRefs"));
 const hasDiagnostics = computed(
   () => !!(diagError.value || diagCalls.value.length || diagAttempts.value.length),
 );
@@ -115,7 +162,7 @@ function applyDeepLink() {
   const target = deepNode.value;
   if (!target || deepApplied || !(value.value.nodes || []).length) return;
   deepApplied = true;
-  const row = (value.value.nodes || []).find((n: any) => n.nodeDefId === target);
+  const row = (value.value.nodes || []).find((n: RunNodeStatusRow) => n.nodeDefId === target);
   if (row) selected.value = row;
   const index = (value.value.events || []).findIndex(
     (e: any) => {
@@ -204,22 +251,22 @@ onBeforeUnmount(() => {
     </div>
     <el-tabs v-model="active"
       ><el-tab-pane label="节点摘要" name="summary"
-        ><div v-if="diagError" class="diag-banner" :class="{ retryable: diagError.retryable }">
+        ><div v-if="diagErrorView" class="diag-banner" :class="{ retryable: diagErrorView.retryable }">
           <div>
-            <strong>{{ diagError.code || diagError.semantic || "运行失败" }}</strong>
-            <span class="diag-stage">{{ diagError.stage }}</span>
-            <span v-if="diagError.retryable" class="pill">可重试</span>
+            <strong>{{ diagErrorView.code || diagErrorView.semantic || "运行失败" }}</strong>
+            <span class="diag-stage">{{ diagErrorView.stage }}</span>
+            <span v-if="diagErrorView.retryable" class="pill">可重试</span>
           </div>
-          <p>{{ diagError.message }}</p>
-          <p v-if="diagError.hint" class="muted">{{ diagError.hint }}</p>
+          <p>{{ diagErrorView.message }}</p>
+          <p v-if="diagErrorView.hint" class="muted">{{ diagErrorView.hint }}</p>
           <el-button link type="primary" @click="active = 'diagnostics'">查看完整诊断与工具调用</el-button>
         </div>
         <!-- UIF-A5：只读画布复用主设计器组件（provide 隔离由组件自身 readOnly 保证），
              节点状态来自本次运行快照；点击节点行联动选中。 -->
         <FlowDesigner
-          v-if="hasGraph"
-          :definition="value.graph"
-          :layout="value.graph.layout || {}"
+          v-if="hasGraph && graphDefinition"
+          :definition="graphDefinition"
+          :layout="graphLayout"
           :states="nodeStates"
           :run-nodes="value.nodes || []"
           read-only
@@ -246,7 +293,7 @@ onBeforeUnmount(() => {
         /></el-table>
         <h2>运行输出</h2>
         <p v-if="outputWarning(value.output)" class="output-warning" role="status">{{ outputWarning(value.output) }}</p>
-        <Artifacts :files="value.fileRefs||value.output?.fileRefs||[]" :run-id="runId" admin/>
+        <Artifacts :files="fileRefsList" :run-id="runId" admin/>
         <div v-if="outputText" class="output-text" data-testid="run-output-text" v-html="safeMarkdown(outputText)"></div>
         <details v-if="outputText" class="output-raw">
           <summary>查看原始输出 JSON</summary>
@@ -265,7 +312,7 @@ onBeforeUnmount(() => {
         <details
           v-if="
             value.error &&
-            (typeof value.error === 'string' || Object.keys(value.error).length)
+            (typeof value.error === 'string' || Object.keys(asUnknownRecord(value.error)).length)
           "
           class="output-raw"
         >
@@ -274,29 +321,29 @@ onBeforeUnmount(() => {
         </details></el-tab-pane
       ><el-tab-pane label="诊断与工具" name="diagnostics">
         <template v-if="hasDiagnostics">
-          <div v-if="diagError" class="diag-card" :class="{ retryable: diagError.retryable }">
+          <div v-if="diagErrorView" class="diag-card" :class="{ retryable: diagErrorView.retryable }">
             <div class="diag-card-head">
-              <strong>{{ diagError.code || diagError.semantic || "运行失败" }}</strong>
-              <span class="diag-stage">{{ diagError.stage }}</span>
-              <span class="pill">{{ diagError.retryable ? "可重试" : "不可重试" }}</span>
-              <small class="muted">{{ diagError.at || "—" }}</small>
+              <strong>{{ diagErrorView.code || diagErrorView.semantic || "运行失败" }}</strong>
+              <span class="diag-stage">{{ diagErrorView.stage }}</span>
+              <span class="pill">{{ diagErrorView.retryable ? "可重试" : "不可重试" }}</span>
+              <small class="muted">{{ diagErrorView.at || "—" }}</small>
             </div>
-            <p>{{ diagError.message }}</p>
-            <p v-if="diagError.hint" class="muted">{{ diagError.hint }}</p>
+            <p>{{ diagErrorView.message }}</p>
+            <p v-if="diagErrorView.hint" class="muted">{{ diagErrorView.hint }}</p>
             <dl class="diag-meta">
-              <template v-if="diagError.nodeInstanceId">
-                <dt>节点实例</dt><dd>{{ diagError.nodeInstanceId }}</dd>
+              <template v-if="diagErrorView.nodeInstanceId">
+                <dt>节点实例</dt><dd>{{ diagErrorView.nodeInstanceId }}</dd>
               </template>
-              <template v-if="diagError.toolCallId">
-                <dt>工具调用</dt><dd>{{ diagError.toolCallId }}</dd>
+              <template v-if="diagErrorView.toolCallId">
+                <dt>工具调用</dt><dd>{{ diagErrorView.toolCallId }}</dd>
               </template>
-              <template v-if="diagError.path">
-                <dt>错误路径</dt><dd>{{ diagError.path }}</dd>
+              <template v-if="diagErrorView.path">
+                <dt>错误路径</dt><dd>{{ diagErrorView.path }}</dd>
               </template>
             </dl>
             <details class="output-raw">
               <summary>查看原始错误 JSON</summary>
-              <pre>{{ json(diagError.raw) }}</pre>
+              <pre>{{ json(diagErrorView.raw) }}</pre>
             </details>
           </div>
           <p class="diag-counts">
@@ -378,7 +425,7 @@ onBeforeUnmount(() => {
       ><el-tab-pane label="版本与依赖" name="versions">
         <h3>本次运行冻结来源</h3>
         <RunObservation :observation="value.observation" />
-        <details class="output-raw"><summary>查看原始版本与依赖记录</summary><pre>{{ JSON.stringify(value.versionRefs ?? null, null, 2) }}</pre></details>
+        <details class="output-raw"><summary>查看原始版本与依赖记录</summary><pre>{{ JSON.stringify(versionRefs ?? null, null, 2) }}</pre></details>
         </el-tab-pane
       ><el-tab-pane label="事件回放" name="replay"
         ><p class="muted">历史事件来自持久化执行记录，不会重新执行技能。</p>

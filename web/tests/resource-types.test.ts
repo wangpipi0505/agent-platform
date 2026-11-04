@@ -88,3 +88,104 @@ describe("动态值保持 unknown 受校验", () => {
     expect(isPlainValue({})).toBe(false);
   });
 });
+
+/* ===================== MNT-03（onboarding 之外 DTO 族） ===================== */
+import {
+  asRecordField,
+  asUnknownRecord,
+  emptyAppDetail,
+  emptyRunStatus,
+  parseAppDetail,
+  parseEvaluationSnapshot,
+  parsePublishedPointer,
+  parseResourceVersion,
+  parseRunNodes,
+  parseRunStatusEnvelope,
+  parseRunStatusSnapshot,
+} from "../shared/resource-types";
+
+describe("MNT-03 应用/发布外壳", () => {
+  it("parseAppDetail：appCode 缺失返回 null；tags 非数组不臆造；动态字段保持 unknown", () => {
+    expect(parseAppDetail({ nope: 1 })).toBeNull();
+    const detail = parseAppDetail({
+      appCode: "lookup", name: "查找", type: "FLOW", status: "DRAFT", draftRev: 3,
+      currentVersionNo: 2, tags: "not-array", inputs: { schema: true }, config: { k: 1 },
+    });
+    expect(detail?.tags).toEqual([]);
+    expect(detail?.draftRev).toBe(3);
+    expect(detail?.currentVersionNo).toBe(2);
+    expect((detail?.inputs as { schema: boolean }).schema).toBe(true);
+  });
+
+  it("空壳工厂：全零值不臆造运行事实", () => {
+    expect(emptyAppDetail().draftRev).toBe(0);
+    expect(emptyAppDetail().currentVersionNo).toBeNull();
+    expect(emptyRunStatus().nodes).toEqual([]);
+  });
+
+  it("parseEvaluationSnapshot：evalReportId 必需；parsePublishedPointer：precheckId 必需", () => {
+    expect(parseEvaluationSnapshot({ status: "ACCEPTED" })).toBeNull();
+    expect(parseEvaluationSnapshot({ evalReportId: "r1", status: "ACCEPTED", draftRev: 2 })?.draftRev).toBe(2);
+    expect(parsePublishedPointer({ nope: 1 })).toBeNull();
+    expect(parsePublishedPointer({ precheckId: "p1", versionNo: 4 })?.versionNo).toBe(4);
+  });
+});
+
+describe("MNT-03 运行状态外壳（协议兼容）", () => {
+  it("parseRunStatusEnvelope：信封未知键与 data 未知键原样保留", () => {
+    const envelope = parseRunStatusEnvelope({
+      code: "OK", traceId: "t1", rawData: "kept", data: { status: "RUNNING", eventsWatermark: "5", chunkHint: "keep" },
+    });
+    expect((envelope as Record<string, unknown>).rawData).toBe("kept");
+    expect((envelope.data as Record<string, unknown>).chunkHint).toBe("keep");
+    expect(envelope.data.eventsWatermark).toBe("5");
+  });
+
+  it("无 events 键时不创建空数组（Object.hasOwn 语义由服务端事实决定）", () => {
+    const data = parseRunStatusSnapshot({ status: "RUNNING" }) as Record<string, unknown>;
+    expect(Object.hasOwn(data, "events")).toBe(false);
+    const withEvents = parseRunStatusSnapshot({ status: "RUNNING", events: [1] }) as Record<string, unknown>;
+    expect(Object.hasOwn(withEvents, "events")).toBe(true);
+  });
+
+  it("parseRunNodes：nodeDefId 回退 id；双双缺失丢弃；时间线字段透传", () => {
+    const rows = parseRunNodes([
+      { id: "n1", status: "SUCCEEDED", started_at: "2026-11-04T00:00:00Z" },
+      { nodeDefId: "n2", status: "FAILED", error: { message: "boom" } },
+      { status: "RUNNING" },
+      null,
+    ]);
+    expect(rows.length).toBe(2);
+    expect(rows[0].nodeDefId).toBe("n1");
+    expect(rows[1].started_at).toBeUndefined();
+    expect((rows[1].error as { message: string }).message).toBe("boom");
+  });
+
+  it("错信封按原语义保留（data null 不伪装成功）", () => {
+    const envelope = parseRunStatusEnvelope({ code: "AUTH", message: "denied", data: null });
+    expect(envelope.code).toBe("AUTH");
+    expect(envelope.message).toBe("denied");
+    expect(envelope.data.status).toBe("");
+  });
+});
+
+describe("MNT-03 资源版本行外壳", () => {
+  it("versionNo 必需；version/平铺合同字段透传", () => {
+    expect(parseResourceVersion({ version: 3, status: "DRAFT" })).toBeNull();
+    const row = parseResourceVersion({
+      versionNo: 2, version: 2, status: "PUBLISHED", inputSchema: { type: "object" },
+      execution: { readonly: true }, guard: { roles: [] },
+    });
+    expect(row?.version).toBe(2);
+    expect(row?.execution).toEqual({ readonly: true });
+  });
+});
+
+describe("unknown 收窄辅助", () => {
+  it("asRecordField 非对象安全取键；asUnknownRecord 数组给空对象", () => {
+    expect(asRecordField({ a: 1 }, "a")).toBe(1);
+    expect(asRecordField(null, "a")).toBeUndefined();
+    expect(asRecordField("x", "a")).toBeUndefined();
+    expect(asUnknownRecord([1])).toEqual({});
+  });
+});
