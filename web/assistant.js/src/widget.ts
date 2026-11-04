@@ -5,11 +5,11 @@ import type { Widget } from "./types";
 // Presentation is isolated in a shadow root; authorization remains enforced by the gateway.
 // Server-provided experience text is rendered through textContent only, never as markup.
 const DRAWER =
-  '<section class="drawer" style="display:none"><header><strong>智能助手</strong><button class="close">关闭</button></header><section class="experience" hidden><p class="welcome"></p><div class="capabilities"></div><div class="prompts"></div><p class="experience-note"></p></section><div class="log"><p>向智能体提问。</p></div><p class="error" role="alert"></p><textarea aria-label="输入问题"></textarea><button class="send">发送</button></section>';
+  '<section class="drawer" style="display:none"><header><strong>智能助手</strong><button class="close">关闭</button></header><section class="experience" hidden><p class="welcome"></p><div class="capabilities"></div><div class="prompts"></div><p class="experience-note"></p></section><div class="log"><p>向智能体提问。</p></div><p class="error" role="alert"></p><details class="run-details" hidden><summary>执行详情</summary><pre class="run-meta"></pre></details><textarea aria-label="输入问题"></textarea><button class="send">发送</button></section>';
 const BALL = '<button class="ball" aria-label="打开智能助手">AI</button>';
 
 const WARNING_CSS =
-  " .output-warning{color:var(--st-suspend-text);background:#fff7ed;border-left:3px solid var(--st-suspend);border-radius:6px;padding:10px 12px;white-space:normal;overflow-wrap:anywhere}";
+  " .output-warning{color:var(--st-suspend-text);background:color-mix(in srgb, var(--st-suspend) 12%, transparent);border-left:3px solid var(--st-suspend);border-radius:6px;padding:10px 12px;white-space:normal;overflow-wrap:anywhere}";
 
 export type MountOptions = {
   autoLauncher?: boolean;
@@ -61,6 +61,17 @@ export function bubble(widget: Widget, text: string): HTMLDivElement {
   element.textContent = text;
   widget.log.append(element);
   return element;
+}
+
+/**
+ * UI-07：工程元数据（运行标识/状态等）只进可折叠"执行详情"，默认隐藏——
+ * 用户先看到结果与下一步；呈现行由宿主侧按需调用，协议与请求面不变。
+ */
+export function setRunMeta(root: ShadowRoot, text: string): void {
+  const details = root.querySelector<HTMLDetailsElement>(".run-details");
+  if (!details) return;
+  details.querySelector(".run-meta")!.textContent = text;
+  details.hidden = !text;
 }
 
 /** Validation metadata stays visually separate from business content. */
