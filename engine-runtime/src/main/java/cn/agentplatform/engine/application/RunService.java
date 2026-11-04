@@ -747,6 +747,8 @@ public class RunService {
             // Previously accepted requestIds above keep their original idempotent read semantics.
             validateCapabilitySnapshot(snapshot);
             InputDeclarations.validate(snapshot, req.path("inputs"));
+            // 新运行必须冻结对象与精确参数；旧run仍按原快照核验，缺绑定只会是UNKNOWN。
+            cn.agentplatform.common.goal.GoalContract.requireBindings(snapshot.path("config"));
             if (!recordedReplay && !firstChat) freezeModelRefs(snapshot, trigger, actor);
             if (trigger.equals("DEBUG"))
                 ((com.fasterxml.jackson.databind.node.ObjectNode) snapshot)

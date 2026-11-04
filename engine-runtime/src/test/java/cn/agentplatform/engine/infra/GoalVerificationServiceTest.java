@@ -58,7 +58,7 @@ class GoalVerificationServiceTest {
     @Test
     void achievedOnlyWhenReadbackMatches() {
         long run = run("SUCCEEDED", List.of(goal("g-ok", "verify", "rows[0].status", "CONFIRMED")), List.of(tool("verify")));
-        long call = call(run, "verify", "SUCCEEDED", Map.of("rows", List.of(Map.of("status", "CONFIRMED"))), null);
+        long call = call(run, "verify", "SUCCEEDED", Map.of("id", "order-B", "rows", List.of(Map.of("status", "CONFIRMED"))), null);
 
         Map<String, Object> summary = service.verify(run);
         List<Map<String, Object>> goals = goals(summary);
@@ -71,7 +71,7 @@ class GoalVerificationServiceTest {
     @Test
     void acceptedButNotPersistedIsNotAchieved() {
         long run = run("SUCCEEDED", List.of(goal("g-empty", "verify", "rows[0].status", "CONFIRMED")), List.of(tool("verify")));
-        call(run, "verify", "SUCCEEDED", Map.of("rows", List.of()), null);
+        call(run, "verify", "SUCCEEDED", Map.of("id", "order-B", "rows", List.of()), null);
 
         List<Map<String, Object>> goals = goals(service.verify(run));
         assertThat(goals.getFirst().get("outcomeState")).isEqualTo("NOT_ACHIEVED");
@@ -125,8 +125,8 @@ class GoalVerificationServiceTest {
                         goal("g2", "verify2", "rows[0].status", "CONFIRMED"),
                         goal("g3", "verify3", "rows[0].status", "CONFIRMED")),
                 List.of(tool("verify1"), tool("verify2"), tool("verify3")));
-        call(run, "verify1", "SUCCEEDED", Map.of("rows", List.of(Map.of("status", "CONFIRMED"))), null);
-        call(run, "verify2", "SUCCEEDED", Map.of("rows", List.of(Map.of("status", "OTHER"))), null);
+        call(run, "verify1", "SUCCEEDED", Map.of("id", "order-B", "rows", List.of(Map.of("status", "CONFIRMED"))), null);
+        call(run, "verify2", "SUCCEEDED", Map.of("id", "order-B", "rows", List.of(Map.of("status", "OTHER"))), null);
         call(run, "verify3", "FAILED", null, "CONNECTION_RESET");
 
         Map<String, Object> summary = service.verify(run);
@@ -142,7 +142,7 @@ class GoalVerificationServiceTest {
     @Test
     void repeatVerificationIsIdempotentAndCreatesNoCall() {
         long run = run("SUCCEEDED", List.of(goal("g-once", "verify", "rows[0].status", "CONFIRMED")), List.of(tool("verify")));
-        long call = call(run, "verify", "SUCCEEDED", Map.of("rows", List.of(Map.of("status", "CONFIRMED"))), null);
+        long call = call(run, "verify", "SUCCEEDED", Map.of("id", "order-B", "rows", List.of(Map.of("status", "CONFIRMED"))), null);
 
         service.verify(run);
         service.verify(run);
@@ -191,28 +191,33 @@ class GoalVerificationServiceTest {
                 Long.class, node, Digest.sha256(UUID.randomUUID().toString()));
         return db.queryForObject(
                 "insert into engine.tool_call(run_id,node_instance_id,call_seq,skill_version_id,args_digest,idempotency_key,"
-                        + "status,skill_code,args,result,attempt_id,error_semantic)"
-                        + " values(?,?,?,1,?,?,?,?, '{}'::jsonb, ?::jsonb, ?, ?) returning id",
+                        + "status,skill_code,args,result,attempt_id,error_semantic,skill_contract_sha256)"
+                        + " values(?,?,?,1,?,?,?,?, '{\"id\":\"order-B\"}'::jsonb, ?::jsonb, ?, ?, ?) returning id",
                 Long.class,
                 run,
                 node,
                 seq,
-                Digest.sha256(UUID.randomUUID().toString()),
+                Digest.sha256(Json.canonical(Map.of("id", "order-B"))),
                 Digest.sha256(UUID.randomUUID().toString()),
                 status,
                 skillCode,
                 result == null ? null : Json.write(result),
                 attempt,
-                errorSemantic);
+                errorSemantic,
+                Digest.sha256("sem08-" + skillCode));
     }
 
     private static Map<String, Object> goal(String id, String skillCode, String path, Object expected) {
         Map<String, Object> readback = new LinkedHashMap<>();
         readback.put("skillCode", skillCode);
+        readback.put("arguments", Map.of("id", "order-B"));
+        readback.put("objectIdPath", "$.id");
+        readback.put("resultObjectIdPath", "$.id");
         Map<String, Object> predicate = new LinkedHashMap<>();
         predicate.put("path", path);
         predicate.put("equals", expected);
         Map<String, Object> criterion = new LinkedHashMap<>();
+        criterion.put("target", Map.of("objectType", "Order", "objectId", "order-B"));
         criterion.put("readback", readback);
         criterion.put("predicate", predicate);
         Map<String, Object> goal = new LinkedHashMap<>();

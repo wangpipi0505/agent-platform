@@ -166,6 +166,8 @@ public class ToolCalls {
                                         call.get("id"));
                         call.put("attempt_id", req.path("attemptId").asLong());
                     }
+                    // run锁与fact共用：锚只记录本次登记前已采纳的动作事实，恢复不能补填旧读回。
+                    GoalReadbackAnchor.capture(store.db(), run, call);
                     return view(call);
                 });
     }

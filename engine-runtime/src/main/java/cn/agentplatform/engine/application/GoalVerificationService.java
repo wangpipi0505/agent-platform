@@ -2,6 +2,8 @@ package cn.agentplatform.engine.application;
 
 import cn.agentplatform.common.Json;
 import cn.agentplatform.common.PlatformException;
+import cn.agentplatform.common.goal.GoalContract;
+import cn.agentplatform.engine.infra.GoalReadbackAnchor;
 import cn.agentplatform.engine.domain.GoalOutcome;
 import cn.agentplatform.engine.infra.GoalOutcomeStore;
 import cn.agentplatform.engine.infra.TraceStore;
@@ -112,6 +114,10 @@ public class GoalVerificationService {
             throw new PlatformException(500, "GOAL_CRITERION_INVALID", "目标缺少合法goalId");
         if (!criterion.isObject())
             throw new PlatformException(500, "GOAL_CRITERION_INVALID", "目标缺少criterion");
+        if (!GoalContract.bindingErrors(goal).isEmpty())
+            return outcome(goalId, criterion, GoalOutcome.UNKNOWN, null,
+                    "目标缺少冻结对象或精确读回参数，请修正配置后重新运行",
+                    Map.of("reason", "GOAL_BINDING_INVALID", "errors", GoalContract.bindingErrors(goal)));
         JsonNode readback = criterion.path("readback");
         String skillCode = readback.path("skillCode").asText("");
         if (skillCode.isBlank())
@@ -128,7 +134,7 @@ public class GoalVerificationService {
                     "验证操作未在发布配置中登记为只读，不能核验目标",
                     Map.of("reason", "READBACK_NOT_APPROVED", "skillCode", skillCode));
 
-        Map<String, Object> call = latestCall(run, readback);
+        Map<String, Object> call = GoalReadbackAnchor.latest(store.db(), ((Number) run.get("id")).longValue(), readback, tool);
         if (call == null) {
             // 终态运行没有验证回执：目标未达成是事实，不能留 PENDING 或 UNKNOWN 等下一次；
             // 尚未终态才允许等待恢复后的同 run 调用。
@@ -153,6 +159,17 @@ public class GoalVerificationService {
         if (predicate.isObject() && predicate.has("path")) detail.put("predicate", predicate.path("path").asText());
 
         if ("SUCCEEDED".equals(status)) {
+            if (!Boolean.FALSE.equals(call.get("is_mock")))
+                return outcome(goalId, criterion, GoalOutcome.UNKNOWN, null,
+                        "替身回执不能证明业务目标完成，请读取真实业务状态", with(detail, "reason", "READBACK_NOT_REAL"));
+            if (!GoalContract.path(result, readback.path("resultObjectIdPath").asText())
+                    .equals(criterion.path("target").path("objectId")))
+                return outcome(goalId, criterion, GoalOutcome.UNKNOWN, null,
+                        "读回对象与冻结目标不符，请按同一对象重新验证", with(detail, "reason", "READBACK_OBJECT_MISMATCH"));
+            if (criterion.has("action") && !afterAction(run, goal, call))
+                return outcome(goalId, criterion, GoalOutcome.UNKNOWN, null,
+                        "缺少同目标动作完成后的读回证据，请等待动作对账后重新只读验证",
+                        with(detail, "reason", "READBACK_NOT_AFTER_ACTION"));
             Match match = match(result, predicate);
             detail.put("matched", match.matched());
             if (match.value() != null) detail.put("readbackValue", match.value());
@@ -198,34 +215,37 @@ public class GoalVerificationService {
             JsonNode execution = contract.path("execution");
             boolean readonly = execution.path("readonly").asBoolean(false);
             boolean sideEffect = execution.path("sideEffect").asBoolean(false);
-            if (readonly && !sideEffect) return tool;
+            if (readonly && !sideEffect && execution.path("sideEffect").isBoolean()
+                    && GoalReadbackAnchor.frozenTool(tool)) return tool;
         }
         return null;
     }
 
-    private Map<String, Object> latestCall(Map<String, Object> run, JsonNode readback) {
-        long runId = ((Number) run.get("id")).longValue();
-        String skillCode = readback.path("skillCode").asText();
-        String callId = readback.path("callId").isIntegralNumber()
-                ? Long.toString(readback.path("callId").asLong())
-                : readback.path("callId").asText("");
-        if (!callId.isBlank() && callId.matches("[0-9]+"))
-            return first(
-                    "select id,status,error_semantic,result::text as result_json from engine.tool_call"
-                            + " where run_id=? and skill_code=? and id=? limit 1",
-                    runId,
-                    skillCode,
-                    Long.parseLong(callId));
-        return first(
-                "select id,status,error_semantic,result::text as result_json from engine.tool_call"
-                        + " where run_id=? and skill_code=? order by id desc limit 1",
-                runId,
-                skillCode);
-    }
-
-    private Map<String, Object> first(String sql, Object... args) {
-        var rows = store.db().queryForList(sql, args);
-        return rows.isEmpty() ? null : rows.getFirst();
+    private boolean afterAction(Map<String, Object> run, JsonNode goal, Map<String, Object> readbackCall) {
+        JsonNode criterion = goal.path("criterion"), action = criterion.path("action");
+        JsonNode tools = TraceStore.json(run.get("snapshot")).path("config").path("tools");
+        var actionCall = GoalReadbackAnchor.latest(store.db(), ((Number)run.get("id")).longValue(), action,
+                GoalReadbackAnchor.tool(tools, action.path("skillCode").asText()));
+        if (actionCall == null || !"SUCCEEDED".equals(actionCall.get("status"))
+                || !Boolean.FALSE.equals(actionCall.get("is_mock"))) return false;
+        // 不以call ID/事务开始时间推测先后；锚在登记时的run锁内冻结，后来的动作事实不能倒填。
+        var anchors = store.db().queryForList("select n.payload::text as anchor_json from engine.attempt_note n"
+                + " join engine.attempt_note f on f.id=(n.payload->>'actionFactId')::bigint"
+                + " where n.node_instance_id=? and n.kind=? and n.payload->>'callId'=?"
+                + " and n.payload->>'goalId'=? and n.payload->>'criterionDigest'=?"
+                + " and n.payload->>'actionCallId'=? and f.node_instance_id=?"
+                + " and f.kind='TOOL_EXECUTION_FACT' and f.payload->>'callId'=?"
+                + " and f.payload->>'accepted'='true' and f.payload->>'status'='SUCCEEDED' limit 1",
+                readbackCall.get("node_instance_id"), GoalReadbackAnchor.KIND, readbackCall.get("id").toString(),
+                goal.path("goalId").asText(), GoalContract.digest(criterion), actionCall.get("id").toString(),
+                actionCall.get("node_instance_id"), actionCall.get("id").toString());
+        if (anchors.isEmpty()) return false;
+        JsonNode anchor = Json.read(String.valueOf(anchors.getFirst().get("anchor_json")));
+        return goal.path("goalId").asText().equals(anchor.path("goalId").asText())
+                && GoalContract.digest(criterion).equals(anchor.path("criterionDigest").asText())
+                && readbackCall.get("id").toString().equals(anchor.path("callId").asText())
+                && actionCall.get("id").toString().equals(anchor.path("actionCallId").asText())
+                && anchor.path("actionFactId").isIntegralNumber();
     }
 
     private Map<String, Object> run(long runId) {
