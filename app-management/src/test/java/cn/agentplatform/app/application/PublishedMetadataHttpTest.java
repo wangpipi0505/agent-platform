@@ -47,14 +47,11 @@ class PublishedMetadataHttpTest {
         @Bean RouteCoverageVerifier coverage(List<RequestMappingInfoHandlerMapping> mappings){return new RouteCoverageVerifier("app",new ServiceRoutePolicy(),mappings);}
     }
     @BeforeAll static void start()throws Exception {
-        String password=System.getenv("AGENT_DB_PASSWORD");assertThat(password).isNotBlank();
-        var admin=new JdbcTemplate(new DriverManagerDataSource("jdbc:postgresql://127.0.0.1:25432/postgres","agent_v12",password));
-        boolean exists=Boolean.TRUE.equals(admin.queryForObject("select exists(select 1 from pg_database where datname='agent_platform_iam_metadata_v12')",Boolean.class));
-        System.out.println("D3A0_DATABASE_EXISTED="+exists);
-        if(!exists)admin.execute("CREATE DATABASE agent_platform_iam_metadata_v12");
-        ds=new DriverManagerDataSource("jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_metadata_v12","agent_v12",password);
-        Flyway.configure().dataSource(ds).schemas("app").defaultSchema("app").locations("classpath:db/migration").target("104").load().migrate();db=new JdbcTemplate(ds);
-        assertThat(db.queryForObject("select current_database()",String.class)).isEqualTo("agent_platform_iam_metadata_v12");
+        String password=TestDatabase.password();assertThat(password).isNotBlank();
+        // 坐标统一走 TestDatabase，不建库、不硬编码实例；迁移到当前最新版本后直接复用该库。
+        ds=new DriverManagerDataSource(TestDatabase.url(),TestDatabase.user(),password);
+        Flyway.configure().dataSource(ds).schemas("app").defaultSchema("app").locations("classpath:db/migration").load().migrate();db=new JdbcTemplate(ds);
+        assertThat(db.queryForObject("select current_database()",String.class)).isEqualTo(TestDatabase.database());
         fixture=new LoopbackAuthority();fixture.portalActor(new Actor("initial","alice",Set.of("EDITOR"),Map.of("dataLabels",Set.of("confidential","restricted"),"region",Set.of("A"))));
         var application=new SpringApplication(Receiver.class);application.setAdditionalProfiles("test");
         application.setDefaultProperties(Map.ofEntries(Map.entry("server.address","127.0.0.1"),Map.entry("server.port","0"),Map.entry("spring.config.location","optional:classpath:/d3a0-no-config/"),Map.entry("spring.main.banner-mode","off"),Map.entry("springdoc.api-docs.enabled",false),Map.entry("spring.flyway.enabled",false),Map.entry("management.endpoints.web.exposure.exclude","*"),Map.entry("management.endpoints.web.discovery.enabled",false),Map.entry("logging.level.root","ERROR")));

@@ -31,6 +31,15 @@ final class TestDatabase {
         return "agent_v12";
     }
 
+    /** 当前 URL 指向的库名；仅供夹具断言“连到了约定的库”，不用于拼库名或建库。 */
+    static String database() {
+        String url = url();
+        int slash = url.lastIndexOf('/');
+        int query = url.indexOf('?', slash);
+        String name = query < 0 ? url.substring(slash + 1) : url.substring(slash + 1, query);
+        return name.isBlank() ? null : name;
+    }
+
     static String password() {
         return System.getenv("AGENT_DB_PASSWORD");
     }

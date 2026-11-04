@@ -5,9 +5,13 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 /**
  * Tests use a separate database on the dedicated new-project PG, never a running service's rows.
+ * 坐标统一从环境读取（{@code ENGINE_PG_URL} 优先，其次 {@code AGENT_DB_URL}）；仅在未显式给出
+ * {@code ENGINE_PG_URL} 时保留 25432 专用库守卫与自动建库，显式 URL 由调用方负责已准备。
  */
-final class EngineTestDatabase {
-    static String url() {
+public final class EngineTestDatabase {
+    private EngineTestDatabase() {}
+
+    public static String url() {
         // 本机开发窗口：默认仍是专用 25432 引擎库；显式 ENGINE_PG_URL 才切换，保持隐式跨库为零。
         String override = System.getenv("ENGINE_PG_URL");
         if (override != null && !override.isBlank()) return override;
@@ -37,11 +41,11 @@ final class EngineTestDatabase {
         return base.replaceFirst("(?<=:25432/)[^?]+", "agent_platform_engine_test");
     }
 
-    static String user() {
+    public static String user() {
         return System.getenv().getOrDefault("AGENT_DB_USER", "agent_v12");
     }
 
-    static String password() {
+    public static String password() {
         return System.getenv("AGENT_DB_PASSWORD");
     }
 }

@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import cn.agentplatform.common.*;
 import cn.agentplatform.common.authority.*;
+import cn.agentplatform.engine.infra.EngineTestDatabase;
 import cn.agentplatform.engine.infra.LiveMaterialScopeDigest;
 import cn.agentplatform.engine.infra.RunAuthorityStore;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -52,9 +53,8 @@ import java.util.*;
 class RunAuthorityLiveResumeTest {
 
     private static final String BASE = value("EX26_AUTHORITY_BASE", "http://127.0.0.1:18086");
-    private static final String URL =
-            value("EX26_LIVE_DB_URL", "jdbc:postgresql://127.0.0.1:25432/agent_platform_engine_test");
-    private static final String USER = value("AGENT_DB_USER", "agent_v12");
+    /** 坐标由 EngineTestDatabase 解析（ENGINE_PG_URL 优先，其次 AGENT_DB_URL 的 25432 守卫）。 */
+    private static final String USER = EngineTestDatabase.user();
     private static final String APP_CODE = "app-a";
     private static final int VERSION_NO = 1;
     /** 真实票据的 resource 必须在 exchange 时就定下来；摘要用固定串即可（authority 只校验 64 位小写 hex）。 */
@@ -82,7 +82,7 @@ class RunAuthorityLiveResumeTest {
             throw new IllegalStateException(
                     "EX26_LIVE_RESUME 需要 AGENT_DB_PASSWORD（以及 18086 的 AGENT_SECRET_IAM_ENGINE_CLIENT）");
         }
-        dataSource = new DriverManagerDataSource(URL, USER, password);
+        dataSource = new DriverManagerDataSource(value("EX26_LIVE_DB_URL", EngineTestDatabase.url()), USER, password);
         Flyway.configure()
                 .dataSource(dataSource)
                 .schemas("engine")

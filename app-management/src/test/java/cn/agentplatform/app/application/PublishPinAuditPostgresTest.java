@@ -28,15 +28,14 @@ import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * T18.3 / PLAT-18：pin 结果落库证据。真实 PG 专用库 {@code agent_platform_pin_audit_v12}：
- * Fresh DB 按 105→106→107 顺序应用（该库绝不复用其它泳道已到 V107 的库，否则 V106 会触发
- * Flyway outOfOrder 校验失败）。验证四点：
+ * T18.3 / PLAT-18：pin 结果落库证据。数据库坐标统一走 {@link TestDatabase}（{@code AGENT_DB_URL}/
+ * {@code AGENT_DB_USER}/{@code AGENT_DB_PASSWORD}），不再绑定 25432 或自建专用库；每个用例使用随机
+ * 租户与随机应用码隔离，迁移在同一已准备库上按序检查（105→106→107）。验证四点：
  * 四态（PINNED/SKIPPED/FAILED/DISABLED）各自落库可查；旧发布记录无 pin 行时反查不报错；
  * 重新发布覆盖后反查到最新；发布响应 pin 键与 T-pin（4caf8af）行为逐键兼容。
  */
 @EnabledIfEnvironmentVariable(named = "AGENT_DB_PASSWORD", matches = ".+")
 class PublishPinAuditPostgresTest {
-    static final String DB = "agent_platform_pin_audit_v12";
     static final String TENANT = "pin-audit-tests";
     static final Actor PUBLISHER = new Actor(TENANT, "publisher", Set.of("ADMIN"), Map.of());
     static final String SPACE = "3f8b6c1e-9d2a-4a51-8a77-1c2d3e4f5a6b";
@@ -54,24 +53,12 @@ class PublishPinAuditPostgresTest {
 
     @BeforeAll
     static void databaseAndSecrets() throws IOException {
-        // 专用库只在不存在时创建：既保证 Fresh DB 顺序迁移，也绝不触碰其它泳道的库。
-        var admin =
-                new JdbcTemplate(
-                        new DriverManagerDataSource(
-                                "jdbc:postgresql://127.0.0.1:25432/postgres",
-                                "agent_v12",
-                                System.getenv("AGENT_DB_PASSWORD")));
-        if (!Boolean.TRUE.equals(
-                admin.queryForObject(
-                        "select exists(select 1 from pg_database where datname=?)",
-                        Boolean.class,
-                        DB)))
-            admin.execute("CREATE DATABASE " + DB);
+        // 连接坐标由 TestDatabase 统一解析；不在测试内建库，也不硬编码任何实例地址。
         var ds =
                 new DriverManagerDataSource(
-                        "jdbc:postgresql://127.0.0.1:25432/" + DB,
-                        "agent_v12",
-                        System.getenv("AGENT_DB_PASSWORD"));
+                        TestDatabase.url(),
+                        TestDatabase.user(),
+                        TestDatabase.password());
         Flyway.configure()
                 .dataSource(ds)
                 .schemas("app")
