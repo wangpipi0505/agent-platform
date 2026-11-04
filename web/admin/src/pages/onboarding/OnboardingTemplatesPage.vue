@@ -3,6 +3,7 @@
  * 模板服务端未交付前，目录区不显示任何数据，提交入口禁用并说明——不伪造已可用。 */
 import { computed, onMounted, ref } from "vue";
 import type { Ref } from "vue";
+import ConnectionCheckStep from "./ConnectionCheckStep.vue";
 import PageError from "../../PageError.vue";
 import PageHeader from "../../PageHeader.vue";
 import { usePageOperation, usePageTitle } from "../../usePageOperation";
@@ -144,6 +145,8 @@ async function copyPayload() {
       模板复用能力包精确身份（版本与 SHA256）；目录按租户与权限过滤，撤回模板不影响已发布应用来源。
     </p>
   </div>
+  <!-- ONB-02：前置连接与规格诊断先于模板落库（禁止诊断失败后继续创建草稿）。 -->
+  <ConnectionCheckStep />
   <el-dialog
     v-model="wizardOpen"
     title="登记接入模板"
