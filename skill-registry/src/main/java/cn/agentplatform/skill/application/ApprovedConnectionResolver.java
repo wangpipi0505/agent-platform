@@ -26,8 +26,8 @@ import java.util.regex.Pattern;
  * 三条边界：
  * 1) 不解析就是不缓存的代理——每次都向 app 要，撤权、停用、换版在下一次调用立即生效；
  * 2) 回执与解析同一次请求完成，回执写失败就不把事实交出去（否则审计链会缺一段）；
- * 3) 只做形状与摘要校验，不在这里推断"该技能是否被允许用这个连接"——那是 app 侧 grant 的职责，
- *    本类只保证"交出去的事实与契约一致、且可追溯"。
+ * 3) app 提供当前有效 grant 事实；分发门禁按服务端精确技能身份与不可变执行用途裁决，
+ *    授权通过后才写可交给适配器的回执，批准档案本身不是使用授权。
  */
 @Component
 public class ApprovedConnectionResolver {
@@ -63,6 +63,11 @@ public class ApprovedConnectionResolver {
     public Map<String, Object> resolve(String skillCode, String profileId, int profileRev, String environment,
             Map<String, Object> scope) {
         Actor actor = Actor.current();
+        Map<String, Object> facts = facts(skillCode, profileId, profileRev, environment);
+        return receipts.record(actor, skillCode, facts, environment, scope);
+    }
+
+    private Map<String, Object> facts(String skillCode, String profileId, int profileRev, String environment) {
         if (!ID.matcher(skillCode).matches())
             throw new PlatformException(400, "INVALID_INPUT", "技能编码格式不合法: " + skillCode);
         if (!ID.matcher(profileId).matches())
@@ -75,8 +80,7 @@ public class ApprovedConnectionResolver {
 
         String url = appUrl + "/internal/connection-profiles/" + encode(profileId) + "/versions/" + profileRev
                 + "/resolve" + (env == null ? "" : "?environment=" + encode(env));
-        Map<String, Object> facts = shape(clients.get(url), profileId, profileRev);
-        return receipts.record(actor, skillCode, facts, env, scope);
+        return shape(clients.get(url), profileId, profileRev);
     }
 
     /**
@@ -94,6 +98,12 @@ public class ApprovedConnectionResolver {
         List<Map<String, Object>> refs = bindingRefs(request.get("bindingRefs"),
                 contract == null ? null : contract.get("bindingRefs"));
         if (refs.isEmpty()) return Map.of("refs", List.of());
+        Actor actor = Actor.current();
+        // code 已由 SkillExecution 与精确 skill_version 核对；请求/ref 自报身份与用途从不参与授权。
+        String grantee = "skill." + skillCode;
+        Map<?, ?> execution = contract != null && contract.get("execution") instanceof Map<?, ?> e ? e : Map.of();
+        String use = Boolean.TRUE.equals(execution.get("sideEffect")) ? "write"
+                : Boolean.TRUE.equals(execution.get("readonly")) ? "read" : "execute";
         Map<String, Object> scope = new LinkedHashMap<>();
         scope.put("runPublicId", text(request.get("runId")));
         scope.put("callId", request.get("callId"));
@@ -116,16 +126,28 @@ public class ApprovedConnectionResolver {
 
             Map<String, Object> callScope = new LinkedHashMap<>(scope);
             callScope.put("operation", operation);
-            Map<String, Object> facts = resolve(skillCode, profileId, rev.intValue(),
-                    text(ref.get("environment")), callScope);
+            String environment = text(ref.get("environment"));
+            Map<String, Object> facts = facts(skillCode, profileId, rev.intValue(), environment);
             List<?> allow = facts.get("operationAllowlist") instanceof List<?> list ? list : List.of();
             if (!allow.contains(operation))
                 throw new PlatformException(400, "CONNECTION_OPERATION_NOT_ALLOWED",
                         "该连接档案未批准本次操作: " + profileId + " / " + operation);
+            List<?> declaredUses = facts.get("allowedUses") instanceof List<?> list ? list : List.of();
+            List<?> grants = facts.get("grants") instanceof List<?> list ? list : List.of();
+            boolean granted = declaredUses.contains(use) && grants.stream().anyMatch(value ->
+                    value instanceof Map<?, ?> grant && grantee.equals(grant.get("grantee"))
+                            && grant.get("revokedAt") == null && grant.get("revoked_at") == null
+                            && grant.get("allowedUses") instanceof List<?> uses && uses.contains(use));
+            if (!granted)
+                throw new PlatformException(403, "CONNECTION_USE_NOT_GRANTED",
+                        "连接未授予当前技能所需用途: " + profileId + " / " + grantee + " / " + use);
             Object resolvedDigest = facts.get("resolutionDigest");
             if (declared != null && !declared.equals(String.valueOf(resolvedDigest)))
                 throw new PlatformException(409, "CONNECTION_BINDING_CHANGED",
                         "引用的连接在批准后已变更，请按当前批准重新取用: " + profileId);
+            // 回执只记录本次使用方真正获授的用途，不把其他 grant 的用途并集写成执行授权。
+            facts.put("grantedUses", List.of(use));
+            facts = receipts.record(actor, skillCode, facts, environment, callScope);
             Map<String, Object> entry = new LinkedHashMap<>();
             entry.put("profileId", profileId);
             entry.put("profileRev", rev.intValue());

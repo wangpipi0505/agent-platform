@@ -67,10 +67,11 @@ class ApprovedConnectionGateTest {
         node.put("authKind", authKind);
         node.put("resolutionDigest", digest);
         node.set("operationAllowlist", Json.tree(allow));
-        node.set("allowedUses", Json.tree(List.of("read")));
-        node.set("grantedUses", Json.tree(List.of("read")));
+        node.set("allowedUses", Json.tree(List.of("read", "write", "execute")));
+        node.set("grantedUses", Json.tree(List.of("read", "write", "execute")));
         node.set("bindings", Json.tree(List.of()));
-        node.set("grants", Json.tree(List.of()));
+        node.set("grants", Json.tree(List.of(Map.of("grantee", "skill.crm-read",
+                "allowedUses", List.of("read", "write", "execute")))));
         node.set("endpointPolicy", Json.object());
         node.set("authScheme", Json.tree(Map.of("kind", authKind)));
         node.set("identityPolicy", Json.tree(Map.of("mode", "SERVICE_ACCOUNT")));
@@ -232,5 +233,76 @@ class ApprovedConnectionGateTest {
                     assertThat(e.status()).isEqualTo(409);
                     assertThat(e.code()).isEqualTo("CONNECTION_BINDING_CHANGED");
                 });
+    }
+
+    @Test
+    void emptyGrantsNeverAuthorizeAnApprovedProfile() {
+        var facts = (ObjectNode) payload("crm-prod", 1, DIGEST, "NONE", List.of("customers.read"));
+        facts.set("grants", Json.tree(List.of()));
+        facts.set("grantedUses", Json.tree(List.of()));
+        when(clients.get(anyString())).thenReturn(facts);
+        assertDenied(Map.of("execution", Map.of("readonly", true)), ref("crm-prod", 1, "customers.read"));
+    }
+
+    @Test
+    void anotherGranteeAndItsUnionOfUsesCannotAuthorizeThisSkill() {
+        var facts = (ObjectNode) payload("crm-prod", 1, DIGEST, "NONE", List.of("customers.read"));
+        facts.set("grants", Json.tree(List.of(Map.of("grantee", "skill.other-reader", "allowedUses", List.of("read")))));
+        when(clients.get(anyString())).thenReturn(facts);
+        var forged = new LinkedHashMap<>(ref("crm-prod", 1, "customers.read"));
+        forged.put("grantee", "skill.other-reader");
+        forged.put("use", "read");
+        assertDenied(Map.of("execution", Map.of("readonly", true)), forged);
+    }
+
+    @Test
+    void matchingSkillCannotBorrowAnothersWritePermission() {
+        var facts = (ObjectNode) payload("crm-prod", 1, DIGEST, "NONE", List.of("customers.write"));
+        facts.set("grants", Json.tree(List.of(
+                Map.of("grantee", "skill.crm-read", "allowedUses", List.of("read")),
+                Map.of("grantee", "skill.other-writer", "allowedUses", List.of("write")))));
+        when(clients.get(anyString())).thenReturn(facts);
+        assertDenied(Map.of("execution", Map.of("sideEffect", true)), ref("crm-prod", 1, "customers.write"));
+    }
+
+    @Test
+    void profileAndGrantMustBothAllowTheDerivedUse() {
+        var facts = (ObjectNode) payload("crm-prod", 1, DIGEST, "NONE", List.of("customers.read"));
+        facts.set("allowedUses", Json.tree(List.of("write")));
+        when(clients.get(anyString())).thenReturn(facts);
+        assertDenied(Map.of("execution", Map.of("readonly", true)), ref("crm-prod", 1, "customers.read"));
+    }
+
+    @Test
+    void matchingGrantAllowsOnlyUntilItIsRevokedForContinueRetryOrObservation() {
+        var active = (ObjectNode) payload("crm-prod", 1, DIGEST, "NONE", List.of("customers.read"));
+        var revoked = active.deepCopy();
+        revoked.set("grants", Json.tree(List.of()));
+        revoked.set("grantedUses", Json.tree(List.of()));
+        when(clients.get(anyString())).thenReturn(active, revoked);
+        var contract = Map.<String, Object>of("execution", Map.of("readonly", true));
+        var ref = ref("crm-prod", 1, "customers.read");
+        assertThat((List<?>) resolver.gate(contract, Map.of("bindingRefs", List.of(ref)), "crm-read").get("refs"))
+                .hasSize(1);
+        clearInvocations(receipts);
+        for (int i = 0; i < 3; i++) assertDenied(contract, ref);
+        verify(clients, times(4)).get(anyString());
+    }
+
+    @Test
+    void serviceWideLegacyGrantDoesNotAuthorizeEverySkill() {
+        var facts = (ObjectNode) payload("crm-prod", 1, DIGEST, "NONE", List.of("customers.read"));
+        facts.set("grants", Json.tree(List.of(Map.of("grantee", "skill-registry", "allowedUses", List.of("read")))));
+        when(clients.get(anyString())).thenReturn(facts);
+        assertDenied(Map.of("execution", Map.of("readonly", true)), ref("crm-prod", 1, "customers.read"));
+    }
+
+    private void assertDenied(Map<String, Object> contract, Map<String, Object> ref) {
+        assertThatThrownBy(() -> resolver.gate(contract, Map.of("bindingRefs", List.of(ref)), "crm-read"))
+                .isInstanceOfSatisfying(PlatformException.class, e -> {
+                    assertThat(e.status()).isEqualTo(403);
+                    assertThat(e.code()).isEqualTo("CONNECTION_USE_NOT_GRANTED");
+                });
+        verify(receipts, never()).record(any(), anyString(), anyMap(), any(), anyMap());
     }
 }

@@ -28,6 +28,13 @@
 
 `connectionProfileRefs` / 运行绑定引用的精确形态：`bindingRefs[{profileId, profileRev, bindingId, bindingRev, operation, resolutionDigest}]`（INT-02 冻结实现；`resolutionDigest` 为带独立摘要的临时执行描述，与历史契约摘要分别保存，不混比）。
 
+### 2.1 受控执行的使用方与用途（CR-01）
+
+- 本轮通用执行协议的 grantee 规范为 `skill.<code>`，例如 `skill.crm-read`。`code` 必须来自 skill-registry 读取的精确不可变技能版本，并已与本次执行编码核对；不使用请求体、模型参数或 bindingRef 自报的 grantee、principal、appCode 或用途。租户和当前用户仍只来自已验签 Actor，技能 guard 继续核验当前用户的执行权限。
+- 用途由该版本的 `execution` 确定：`sideEffect=true` 为 `write`（优先），否则 `readonly=true` 为 `read`，其余为 `execute`。PREPARE 和确认后执行沿用原技能用途，不能借预演把写技能降为 read；重试、恢复和外部观察必须复查原技能的当前 grant。
+- 同时满足档案 `allowedUses` 与当前 grantee 的一条有效 grant 的 `allowedUses` 才可分发；操作还须在 `operationAllowlist` 内。零 grant、其他使用方、其他用途及已撤销授权均以 403 `CONNECTION_USE_NOT_GRANTED` 拒绝，在适配器 I/O 与通过回执之前停止。`grantedUses` 全体并集只是目录投影，不能作为本次执行授权。执行回执只记录本次匹配的用途。
+- 管理员沿既有 `/{profileId}/versions/{profileRev}/grants` API 授予精确 `skill.<code>`（既有 grantee 格式和长度已支持），无需新增角色。历史 `skill-registry`、`engine-runtime` 等自由服务级名称保留为目录记录，不隐式获得全部技能权限；需要管理员重新向精确技能授予 read/write/execute。无受控引用的存量技能保持既有执行路径。
+
 ## 3. 版本、修订与幂等规则
 
 1. 修订不可变：`profileRev` / `bindingRev` / `experienceRev` 变更即新修订，旧行永久保留可追溯；不原地 UPDATE 已生效修订的业务字段。
