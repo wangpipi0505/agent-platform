@@ -32,7 +32,7 @@ class EvaluationEnvironmentGateTest {
     volatile boolean legacyScope;
 
     @BeforeAll static void database() {
-        var ds = new DriverManagerDataSource("jdbc:postgresql://127.0.0.1:25432/agent_platform_v12", "agent_v12", System.getenv("AGENT_DB_PASSWORD"));
+        var ds = new DriverManagerDataSource(TestDatabase.url(), TestDatabase.user(), TestDatabase.password());
         Flyway.configure().dataSource(ds).schemas("app").defaultSchema("app").locations("classpath:db/migration").load().migrate();
         db = new JdbcTemplate(ds); manager = new DataSourceTransactionManager(ds);
         System.setProperty("agent.jwt.secret", "ex17-app-independent-key-0123456789abcdef");

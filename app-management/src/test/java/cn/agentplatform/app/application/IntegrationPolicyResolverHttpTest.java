@@ -28,6 +28,13 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfoHandlerMapping;
 import static org.assertj.core.api.Assertions.*;
 
+/**
+ * D2 策略解析链路 HTTP 验证。连接坐标走 {@link TestDatabase}：专用库 URL 由
+ * {@code AGENT_DB_URL_POLICY} 显式给出（与 {@link IntegrationPolicyDatabaseTest} 同一已准备专库），
+ * 账号口令走 {@code AGENT_DB_USER}/{@code AGENT_DB_PASSWORD}；未给专用坐标时整类跳过。
+ */
+@org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable(named = "AGENT_DB_PASSWORD", matches = ".+")
+@org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable(named = "AGENT_DB_URL_POLICY", matches = ".+")
 class IntegrationPolicyResolverHttpTest {
     static LoopbackAuthority fixture;
     static final String TENANT="d2-policy-tests", APP="policy-app", BIZ="partner";
@@ -40,9 +47,10 @@ class IntegrationPolicyResolverHttpTest {
     static final String LONG_USER="u".repeat(90);
     static Map<String,Object> policy(String user){return Map.of("claimLimits",Map.of("principalIds",List.of(user,LONG_USER),"roles",List.of("reader","ADMIN","EDITOR","SERVICE"),"attributes",Map.of("region",List.of("A"),"dataLabels",List.of("restricted"))),"allowedOrigins",List.of("https://embed.example.invalid"));}
     @Configuration(proxyBeanMethods=false) @EnableAutoConfiguration @EnableWebSecurity @EnableTransactionManagement
-    @Import({PolicyResolverSecurity.class,IntegrationPolicyResolverController.class,IntegrationController.class,IntegrationService.class,IntegrationPolicyResolver.class,PlatformErrors.class})
+    @Import({PolicyResolverSecurity.class,IntegrationPolicyResolverController.class,IntegrationController.class,IntegrationService.class,IntegrationPolicyResolver.class,PlatformErrors.class,OnboardingApplicationSources.class,cn.agentplatform.app.infra.AppAuthorityTransport.class})
     static class Receiver {
         @Bean TestDatabaseErrors databaseErrors(){return new TestDatabaseErrors();}
+        @Bean cn.agentplatform.app.infra.OnboardingImportSourceRepository onboardingSourcesRepository(JdbcTemplate jdbc,DataSourceTransactionManager tx){return new cn.agentplatform.app.infra.OnboardingImportSourceRepository(jdbc,tx);}
         @Bean DataSource dataSource(){return ds;}
         @Bean JdbcTemplate jdbc(){return new JdbcTemplate(ds){@Override public <T> List<T> query(String sql,RowMapper<T> mapper,Object...args){if(sql.contains("policy_revision")&&sql.contains("credentialId"))queries.incrementAndGet();return super.query(sql,mapper,args);}};}
         @Bean DataSourceTransactionManager transactions(){return new DataSourceTransactionManager(ds);}
@@ -60,7 +68,7 @@ class IntegrationPolicyResolverHttpTest {
     }
     @BeforeAll static void start()throws Exception{
         new IntegrationPolicyDatabaseTest().dedicatedDatabaseAndRevisionMigrationAreRealPostgres();
-        ds=new DriverManagerDataSource("jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_policy_v12","agent_v12",System.getenv("AGENT_DB_PASSWORD"));db=new JdbcTemplate(ds);
+        ds=new DriverManagerDataSource(TestDatabase.url("AGENT_DB_URL_POLICY"),TestDatabase.user(),TestDatabase.password());db=new JdbcTemplate(ds);
         fixture=new LoopbackAuthority();fixture.portalActor(new Actor(TENANT,"admin-d2",Set.of("ADMIN"),Map.of("dataLabels",Set.of("restricted"))));
         app=startReceiver();fixture.externalPolicy(URI.create("http://127.0.0.1:"+app.getWebServer().getPort()+PolicyRequestVerifier.PATH));
     }

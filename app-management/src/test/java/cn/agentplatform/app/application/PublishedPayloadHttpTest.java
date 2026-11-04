@@ -28,7 +28,14 @@ import org.springframework.transaction.support.*;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfoHandlerMapping;
 import static org.assertj.core.api.Assertions.*;
 
-/** Real app receiver + actual signed authority HTTP + dedicated PG. No Gateway/RunController execution. */
+/**
+ * Real app receiver + actual signed authority HTTP + dedicated PG. No Gateway/RunController execution.
+ * 连接坐标走 {@link TestDatabase}：D3B 专用库 URL 由 {@code AGENT_DB_URL_PAYLOAD} 显式给出
+ * （库名被下方断言钉死为 agent_platform_iam_app_payload_v12 且迁移定格 V104，须先行独立准备，
+ * 测试不建库）；账号口令走 {@code AGENT_DB_USER}/{@code AGENT_DB_PASSWORD}；未给专用坐标时整类跳过。
+ */
+@org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable(named = "AGENT_DB_PASSWORD", matches = ".+")
+@org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable(named = "AGENT_DB_URL_PAYLOAD", matches = ".+")
 class PublishedPayloadHttpTest {
     static final String CODE="payload-demo", SHA=Digest.sha256("stored-candidate-one"), SHA2=Digest.sha256("stored-candidate-two");
     static LoopbackAuthority fixture;
@@ -45,8 +52,9 @@ class PublishedPayloadHttpTest {
     static volatile String mode="iam";
 
     @Configuration(proxyBeanMethods=false) @EnableAutoConfiguration @EnableWebSecurity
-    @Import({PublishedMetadataController.class,PublishedMetadataService.class,AppController.class,TemplateService.class,PlatformErrors.class})
+    @Import({PublishedMetadataController.class,PublishedMetadataService.class,AppController.class,TemplateService.class,PlatformErrors.class,OnboardingApplicationSources.class,cn.agentplatform.app.infra.AppAuthorityTransport.class})
     static class Receiver {
+        @Bean cn.agentplatform.app.infra.OnboardingImportSourceRepository onboardingSourcesRepository(JdbcTemplate jdbc){return new cn.agentplatform.app.infra.OnboardingImportSourceRepository(jdbc,new DataSourceTransactionManager(ds));}
         @Bean DataSource dataSource(){return ds;}
         @Bean AuthorityProperties authorityProperties(){return mode.equals("iam")?fixture.config("app"):new AuthorityProperties(mode,"app",null,null,null,null,null,false,null);}
         @Bean JdbcTemplate jdbc(){return new JdbcTemplate(ds){
@@ -88,11 +96,8 @@ class PublishedPayloadHttpTest {
     }
     static long count(String category){return statements.stream().filter(s->s.category.equals(category)).count();}
     @BeforeAll static void start()throws Exception{
-        String password=System.getenv("AGENT_DB_PASSWORD");assertThat(password).isNotBlank();
-        var admin=new JdbcTemplate(new DriverManagerDataSource("jdbc:postgresql://127.0.0.1:25432/postgres","agent_v12",password));
-        boolean existed=Boolean.TRUE.equals(admin.queryForObject("select exists(select 1 from pg_database where datname='agent_platform_iam_app_payload_v12')",Boolean.class));
-        System.out.println("D3B_DATABASE_EXISTED="+existed);if(!existed)admin.execute("CREATE DATABASE agent_platform_iam_app_payload_v12");
-        ds=new DriverManagerDataSource("jdbc:postgresql://127.0.0.1:25432/agent_platform_iam_app_payload_v12","agent_v12",password);
+        assertThat(TestDatabase.password()).isNotBlank();
+        ds=new DriverManagerDataSource(TestDatabase.url("AGENT_DB_URL_PAYLOAD"),TestDatabase.user(),TestDatabase.password());
         Flyway.configure().dataSource(ds).schemas("app").defaultSchema("app").locations("classpath:db/migration").target("104").load().migrate();db=new JdbcTemplate(ds);
         assertThat(db.queryForObject("select current_database()",String.class)).isEqualTo("agent_platform_iam_app_payload_v12");
         fixture=new LoopbackAuthority();startReceiver();

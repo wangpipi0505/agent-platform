@@ -50,9 +50,13 @@ class CapabilityPackageApplicationsTest {
     @ComponentScan(basePackages = "cn.agentplatform.app", useDefaultFilters = false,
             includeFilters = @ComponentScan.Filter(type = FilterType.REGEX,
                     pattern = "cn\\.agentplatform\\.app\\.(api\\.CapabilityPackage(Controller|BindingController|ApplicationsController)|application\\.CapabilityPackage(Service|BindingService|ApplicationsService)|infra\\.Capability(PackageRepository|SkillClient))"))
+    @Import({OnboardingApplicationSources.class, cn.agentplatform.app.infra.AppAuthorityTransport.class})
     static class WebConfig {
         @Bean JdbcTemplate database() { return db; }
         @Bean DataSourceTransactionManager transactions() { return manager; }
+        @Bean cn.agentplatform.app.infra.OnboardingImportSourceRepository onboardingSourcesRepository() {
+            return new cn.agentplatform.app.infra.OnboardingImportSourceRepository(db, manager);
+        }
         @Bean AppService applications() { return new AppService(db, manager, origin, origin, origin, origin); }
         @Bean PlatformErrors errors() { return new PlatformErrors(); }
     }

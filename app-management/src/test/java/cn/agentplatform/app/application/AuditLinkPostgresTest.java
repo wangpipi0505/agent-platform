@@ -7,6 +7,7 @@ import cn.agentplatform.common.PlatformException;
 
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
@@ -14,27 +15,17 @@ import java.util.*;
 
 /**
  * PLAT-12 实现项 4：审计三元组 runId↔principalId↔credentialId 落在既有 app.lifecycle_log 上，
- * 从业务用户/凭据可反查运行；不新建重复表。仅连接本测试专用库。
+ * 从业务用户/凭据可反查运行；不新建重复表。连接坐标统一走 {@link TestDatabase}
+ * （{@code AGENT_DB_URL}/{@code AGENT_DB_USER}/{@code AGENT_DB_PASSWORD}），不建库、不绑定实例；
+ * 用例以随机租户隔离，与其他 DB 集成测试共用同一已准备库。
  */
+@EnabledIfEnvironmentVariable(named = "AGENT_DB_PASSWORD", matches = ".+")
 class AuditLinkPostgresTest {
-    private static final String DB = "agent_platform_iam_identity_v12";
 
     private JdbcTemplate db() {
-        String password = System.getenv("AGENT_DB_PASSWORD");
-        assertThat(password).isNotBlank();
-        var admin =
-                new JdbcTemplate(
-                        new DriverManagerDataSource(
-                                "jdbc:postgresql://127.0.0.1:25432/postgres", "agent_v12", password));
-        boolean existed =
-                Boolean.TRUE.equals(
-                        admin.queryForObject(
-                                "select exists(select 1 from pg_database where datname=?)",
-                                Boolean.class,
-                                DB));
-        if (!existed) admin.execute("CREATE DATABASE " + DB);
         var ds =
-                new DriverManagerDataSource("jdbc:postgresql://127.0.0.1:25432/" + DB, "agent_v12", password);
+                new DriverManagerDataSource(
+                        TestDatabase.url(), TestDatabase.user(), TestDatabase.password());
         Flyway.configure()
                 .dataSource(ds)
                 .schemas("app")

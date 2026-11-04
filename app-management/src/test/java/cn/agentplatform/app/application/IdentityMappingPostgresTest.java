@@ -8,6 +8,7 @@ import cn.agentplatform.common.PlatformException;
 
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
@@ -15,28 +16,17 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import java.util.*;
 
 /**
- * PLAT-12/X-5：身份映射表 V107 在专用真实PG库上的验证；映射不存在必须显式报错，禁止静默造数据。
- * 仅连接本测试专用库，绝不触开发育库或其它既有库。
+ * PLAT-12/X-5：身份映射表 V107 在真实PG库上的验证；映射不存在必须显式报错，禁止静默造数据。
+ * 连接坐标统一走 {@link TestDatabase}（{@code AGENT_DB_URL}/{@code AGENT_DB_USER}/{@code AGENT_DB_PASSWORD}），
+ * 不建库、不绑定实例；用例以随机租户隔离，与其他 DB 集成测试共用同一已准备库。
  */
+@EnabledIfEnvironmentVariable(named = "AGENT_DB_PASSWORD", matches = ".+")
 class IdentityMappingPostgresTest {
-    private static final String DB = "agent_platform_iam_identity_v12";
 
     private JdbcTemplate db() {
-        String password = System.getenv("AGENT_DB_PASSWORD");
-        assertThat(password).isNotBlank();
-        var admin =
-                new JdbcTemplate(
-                        new DriverManagerDataSource(
-                                "jdbc:postgresql://127.0.0.1:25432/postgres", "agent_v12", password));
-        boolean existed =
-                Boolean.TRUE.equals(
-                        admin.queryForObject(
-                                "select exists(select 1 from pg_database where datname=?)",
-                                Boolean.class,
-                                DB));
-        if (!existed) admin.execute("CREATE DATABASE " + DB);
         var ds =
-                new DriverManagerDataSource("jdbc:postgresql://127.0.0.1:25432/" + DB, "agent_v12", password);
+                new DriverManagerDataSource(
+                        TestDatabase.url(), TestDatabase.user(), TestDatabase.password());
         Flyway.configure()
                 .dataSource(ds)
                 .schemas("app")

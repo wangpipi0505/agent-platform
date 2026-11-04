@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import cn.agentplatform.app.application.DataHealthService;
 import cn.agentplatform.app.infra.DataHealthIndicator;
 import cn.agentplatform.common.*;
+import cn.agentplatform.app.application.TestDatabase;
 
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
@@ -34,6 +35,7 @@ import java.util.Set;
  * 安全链与鉴权语义与生产一致。
  */
 @EnabledIfEnvironmentVariable(named = "AGENT_DB_PASSWORD", matches = ".+")
+@EnabledIfEnvironmentVariable(named = "AGENT_DB_URL_HEALTH", matches = ".+")
 @SpringBootTest(
         classes = DataHealthHttpTest.Receiver.class,
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -49,23 +51,31 @@ class DataHealthHttpTest {
 
     @LocalServerPort int port;
 
+    /**
+     * 专用库名被断言钉死（健康详情展示 current_database），坐标统一走 {@code TestDatabase}：
+     * URL 由 {@code AGENT_DB_URL_HEALTH} 显式给出（本验收在 35432 实例以 dev_ap_test 属主建库），
+     * 账号口令走 {@code AGENT_DB_USER}/{@code AGENT_DB_PASSWORD}；测试不建库、不绑定实例端口。
+     */
+    static final String OLD_KEY = System.getProperty("agent.jwt.secret");
+
     @DynamicPropertySource
     static void datasource(DynamicPropertyRegistry p) {
-        var admin =
-                new JdbcTemplate(
-                        new DriverManagerDataSource(
-                                "jdbc:postgresql://127.0.0.1:25432/postgres",
-                                "agent_v12",
-                                System.getenv("AGENT_DB_PASSWORD")));
-        if (!Boolean.TRUE.equals(
-                admin.queryForObject(
-                        "select exists(select 1 from pg_database where datname=?)",
-                        Boolean.class,
-                        DB)))
-            admin.execute("CREATE DATABASE " + DB);
-        p.add("spring.datasource.url", () -> "jdbc:postgresql://127.0.0.1:25432/" + DB);
+        // 与 IdentityMappingJointTest 同约定：独立夹具密钥走 agent.jwt.secret 系统属性 +
+        // agent.security.jwt-secret 属性，缺环境变量时用固定测试值，避免嵌套占位符无法解析。
+        String key = System.getenv().getOrDefault("AGENT_JWT_SECRET", "ex-health-data-independent-key-0123456789abcdef");
+        System.setProperty("agent.jwt.secret", key);
+        p.add("agent.security.jwt-secret", () -> key);
+        // 测试实例 max_connections=20：小池避免缓存的 Spring 上下文占满连接槽，连坐后续 DB 集成类。
+        p.add("spring.datasource.hikari.maximum-pool-size", () -> "2");
+        p.add("spring.datasource.url", () -> TestDatabase.url("AGENT_DB_URL_HEALTH"));
+        p.add("spring.datasource.username", TestDatabase::user);
+        p.add("spring.datasource.password", () -> TestDatabase.password());
         // 演示/真实环境从既有环境标记进入健康详情
         p.add("AGENT_DEMO_MODE", () -> "true");
+    }
+
+    @AfterAll static void restoreKey() {
+        if (OLD_KEY == null) System.clearProperty("agent.jwt.secret"); else System.setProperty("agent.jwt.secret", OLD_KEY);
     }
 
     @Configuration(proxyBeanMethods = false)

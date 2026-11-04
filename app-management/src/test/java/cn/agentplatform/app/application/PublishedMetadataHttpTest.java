@@ -24,6 +24,8 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfoHandlerMapping;
 import static org.assertj.core.api.Assertions.*;
 
+/** 未给 {@code AGENT_DB_PASSWORD} 坐标时整类跳过（与模块内其他 DB 集成测试门控一致）。 */
+@org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable(named = "AGENT_DB_PASSWORD", matches = ".+")
 class PublishedMetadataHttpTest {
     static LoopbackAuthority fixture;
     static DataSource ds;static JdbcTemplate db;
@@ -33,9 +35,10 @@ class PublishedMetadataHttpTest {
     static final AtomicInteger metadataReads=new AtomicInteger(),payloadReads=new AtomicInteger();
     static final List<String> statements=new ArrayList<>();
     @Configuration(proxyBeanMethods=false) @EnableAutoConfiguration @EnableWebSecurity
-    @Import({PublishedMetadataController.class,PublishedMetadataService.class,AppController.class,TemplateService.class,PlatformErrors.class})
+    @Import({PublishedMetadataController.class,PublishedMetadataService.class,AppController.class,TemplateService.class,PlatformErrors.class,OnboardingApplicationSources.class,cn.agentplatform.app.infra.AppAuthorityTransport.class})
     static class Receiver {
         @Bean AuthorityProperties authorityProperties(){return fixture.config("app");}
+        @Bean cn.agentplatform.app.infra.OnboardingImportSourceRepository onboardingSourcesRepository(JdbcTemplate jdbc){return new cn.agentplatform.app.infra.OnboardingImportSourceRepository(jdbc,new DataSourceTransactionManager(ds));}
         @Bean DataSource dataSource(){return ds;}
         @Bean JdbcTemplate jdbc(){return new JdbcTemplate(ds){@Override public <T> List<T> query(String sql,RowMapper<T> mapper,Object...args){statements.add(sql);if(sql.contains("candidate_sha256")&&sql.contains("left join"))metadataReads.incrementAndGet();else payloadReads.incrementAndGet();return super.query(sql,mapper,args);}};}
         @Bean AppService apps(JdbcTemplate jdbc){return new AppService(jdbc,new DataSourceTransactionManager(ds),"http://127.0.0.1:1","http://127.0.0.1:1","http://127.0.0.1:1","http://127.0.0.1:1");}

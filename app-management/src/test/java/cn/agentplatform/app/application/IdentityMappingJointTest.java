@@ -35,9 +35,11 @@ class IdentityMappingJointTest {
     @DynamicPropertySource static void properties(DynamicPropertyRegistry p) {
         String key = System.getenv().getOrDefault("AGENT_JWT_SECRET", "ex23-independent-current-subject-0123456789abcdef");
         System.setProperty("agent.jwt.secret", key); p.add("agent.security.jwt-secret", () -> key);
-        p.add("spring.datasource.url", () -> "jdbc:postgresql://127.0.0.1:25432/agent_platform_v12");
-        p.add("spring.datasource.username", () -> "agent_v12");
-        p.add("spring.datasource.password", () -> System.getenv("AGENT_DB_PASSWORD"));
+        p.add("spring.datasource.url", TestDatabase::url);
+        p.add("spring.datasource.username", TestDatabase::user);
+        p.add("spring.datasource.password", () -> TestDatabase.password());
+        // 测试实例 max_connections=20：小池避免缓存的 Spring 上下文占满连接槽。
+        p.add("spring.datasource.hikari.maximum-pool-size", () -> "2");
         p.add("spring.flyway.default-schema", () -> "app"); p.add("spring.flyway.schemas", () -> "app");
     }
     @AfterAll static void restore() { if (OLD_KEY == null) System.clearProperty("agent.jwt.secret"); else System.setProperty("agent.jwt.secret", OLD_KEY); }
