@@ -31,11 +31,27 @@ class PublishTransactionTest {
     static AppService apps;
     static String previousDir;
     static String previousKey;
+    static String previousSecret;
     static java.nio.file.Path secretDir;
     String code;
 
     @BeforeAll
     static void database() {
+        // 模型冻结出站（/internal/model-bindings/freeze）走 ServiceTokens 自签（LEGACY dev-hmac），
+        // 需要 ≥32 字符 JWT 密钥；与 EvaluationEnvironmentGateTest 同约定给固定测试密钥（可被
+        // AGENT_JWT_SECRET 覆盖），restoreSecrets 统一恢复，不改任何断言。
+        previousSecret = System.getProperty("agent.jwt.secret");
+        if (System.getenv("AGENT_JWT_SECRET") == null || System.getenv("AGENT_JWT_SECRET").isBlank())
+            System.setProperty("agent.jwt.secret", "publish-transaction-independent-key-0123456789abcdef");
+        // 模型冻结出站走 ServiceTokens.issue：要求 deployment 已注册。历史全量回归靠同 fork 中
+        // 先执行的类（如 EvaluationEnvironmentGateTest）顺带注册 dev-hmac，类顺序/选择变化即暴露。
+        // 显式注册，与 EvaluationEnvironmentGateTest 同约定；restoreSecrets 后各后续类自注册。
+        cn.agentplatform.common.SecurityConfiguration.bindDeployment(
+                new org.springframework.mock.env.MockEnvironment()
+                        .withProperty("agent.security.mode", "dev-hmac")
+                        .withProperty("agent.security.service-id", "app")
+                        .withProperty("agent.dev-auth", "true")
+                        .withProperty("server.address", "127.0.0.1"));
         var ds =
                 new DriverManagerDataSource(
                         TestDatabase.url(),
@@ -72,6 +88,8 @@ class PublishTransactionTest {
     static void restoreSecrets() throws java.io.IOException {
         restore("agent.secret.dir", previousDir);
         restore("agent.master.key", previousKey);
+        if (previousSecret == null) System.clearProperty("agent.jwt.secret");
+        else System.setProperty("agent.jwt.secret", previousSecret);
         try (var paths = java.nio.file.Files.walk(secretDir)) {
             paths.sorted(java.util.Comparator.reverseOrder()).forEach(p -> p.toFile().delete());
         }
