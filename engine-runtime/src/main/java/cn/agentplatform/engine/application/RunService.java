@@ -37,6 +37,8 @@ public class RunService {
     private final Clock clock;
     /** 快照准备协作对象；构造期必填（没有空依赖旁路），Spring 场景由容器注入同一实例。 */
     private final RunSnapshotService snapshots;
+    /** 受理协调：开票/幂等/容量预约/事务内复核；门面只保留编排、持久化与调度。 */
+    private final RunAdmissionService admissions;
     /**
      * 可选装配：三级 token 配额闸门（PLAT-19 T19.1，agent.engine.quota-enabled 默认 false）。
      * 夹具未装配（null）即旁路，保持既有构造器不变。
@@ -74,8 +76,24 @@ public class RunService {
             FlowDriver f,
             AgentDriver a,
             RunScheduler scheduler,
+            RunSnapshotService snapshots,
+            RunAdmissionService admissions) {
+        this(s, c, f, a, scheduler, null, null, Clock.systemUTC(), null, null, snapshots, admissions);
+    }
+
+    /**
+     * 兼容夹具：显式传入快照协作对象但没有受理协作对象时，构造私有实例并在构造期回填
+     * authority/store（不新增可空依赖旁路，生产仍只认容器 bean）。
+     */
+    public RunService(
+            TraceStore s,
+            RuntimeClients c,
+            FlowDriver f,
+            AgentDriver a,
+            RunScheduler scheduler,
             RunSnapshotService snapshots) {
-        this(s, c, f, a, scheduler, null, null, Clock.systemUTC(), null, null, snapshots);
+        this(s, c, f, a, scheduler, null, null, Clock.systemUTC(), null, null, snapshots,
+                new RunAdmissionService(s, scheduler));
     }
 
     /** Explicit owned-worker assembly; legacy admission remains explicit in RuntimeClients. */
@@ -109,13 +127,13 @@ public class RunService {
             RunScheduler scheduler, RunAuthority authority, RunAuthorityStore admissionStore,
             Clock clock, ModelInputMaterials initialMaterials, ChunkBus initialChunks) {
         this(s, c, f, a, scheduler, authority, admissionStore, clock, initialMaterials, initialChunks,
-                new RunSnapshotService(c, clock));
+                new RunSnapshotService(c, clock), new RunAdmissionService(s, scheduler));
     }
 
     private RunService(TraceStore s, RuntimeClients c, FlowDriver f, AgentDriver a,
             RunScheduler scheduler, RunAuthority authority, RunAuthorityStore admissionStore,
             Clock clock, ModelInputMaterials initialMaterials, ChunkBus initialChunks,
-            RunSnapshotService snapshots) {
+            RunSnapshotService snapshots, RunAdmissionService admissions) {
         if (initialMaterials != null && (authority == null || initialChunks == null))
             throw new IllegalArgumentException("INITIAL_COMPONENT_DEPENDENCIES_REQUIRED");
         this.initialMaterials = initialMaterials;
@@ -129,6 +147,9 @@ public class RunService {
         this.scheduler = scheduler;
         this.runAuthority = authority;
         this.snapshots = Objects.requireNonNull(snapshots, "RUN_SNAPSHOT_SERVICE_REQUIRED");
+        this.admissions = Objects.requireNonNull(admissions, "RUN_ADMISSION_SERVICE_REQUIRED");
+        this.admissions.runAuthority(authority);
+        this.admissions.admissionStore(admissionStore);
         scheduler.bind(this::driveRecovered, this::renewLeases, this::resumeExternalFacts);
     }
 
@@ -188,12 +209,14 @@ public class RunService {
     @Autowired(required = false)
     public void runAuthority(RunAuthority authority) {
         this.runAuthority = authority;
+        admissions.runAuthority(authority);
     }
 
     /** 与 {@link #runAuthority(RunAuthority)} 成对装配：续期结果要写回 PG 里的运行授权登记。 */
     @Autowired(required = false)
     public void admissionStore(RunAuthorityStore store) {
         this.admissionStore = store;
+        admissions.admissionStore(store);
     }
 
     /**
@@ -208,6 +231,11 @@ public class RunService {
     /** 受控测试装配入口：返回快照协作对象，便于按子步做直接对照，不新增生产旁路。 */
     RunSnapshotService snapshots() {
         return snapshots;
+    }
+
+    /** 受控测试装配入口：返回受理协作对象，证明容器装配没有另 new 一份。 */
+    RunAdmissionService admissions() {
+        return admissions;
     }
 
     /** 绑定解析开关：字段初始 true，使直接 new RunService(...) 的夹具默认走绑定解析。 */
@@ -319,74 +347,6 @@ public class RunService {
         if (selection.isObject()) status.put("toolSelection", selection.deepCopy());
     }
 
-    private static final String REPLAY_METADATA =
-            "select id,public_id,app_code,trigger_type,mode,tenant_id,principal_id from engine.run"
-                + " where tenant_id=? and principal_id=? and request_id=?";
-
-    private RetainedAuthorization admissionProof(String code, Actor actor) {
-        if (admissionStore == null || runAuthority == null)
-            throw new PlatformException(403, "IAM_ADMISSION_UNAVAILABLE", "受理授权尚未装配");
-        MetadataSelectors.code(code);
-        var current = AuthorityContext.current();
-        var root = current.call().resource();
-        if (!"gateway".equals(current.caller())
-                || !"engine".equals(current.call().target())
-                || !"proxy.engine.post.RunController.run".equals(current.call().action())
-                || !"PORTAL".equals(current.operation().sourceKind())
-                || !"PORTAL".equals(current.operation().originKind())
-                || !"app-version".equals(root.kind())
-                || !root.equals(current.operation().resource())
-                || !root.id().matches(java.util.regex.Pattern.quote(code) + "@[1-9][0-9]*"))
-            throw RunAuthorityStore.denied();
-        return AuthorityContext.requireInitialFor(actor, root);
-    }
-
-    private static void requirePublishedRequest(
-            JsonNode request,
-            String trigger,
-            JsonNode trusted,
-            Long controlled,
-            boolean recorded,
-            RunScheduler.Admission ticket,
-            boolean reservation) {
-        if (!"TASK".equals(trigger)
-                || trusted != null
-                || controlled != null
-                || recorded
-                || ticket != null
-                || reservation
-                || !"FULL".equals(request.path("mode").asText("FULL")))
-            throw RunAuthorityStore.denied();
-        for (String key :
-                List.of(
-                        "versionNo",
-                        "candidateSha256",
-                        "draftRev",
-                        "frozenCandidate",
-                        "breakpoints",
-                        "mocks",
-                        "controlledReplay",
-                        "controlledContractDigest",
-                        "debugControls",
-                        "evalReportId",
-                        "caseId",
-                        "sessionId",
-                        "chatSession",
-                        "chatTurn",
-                        "sessionHistory",
-                        "history",
-                        "historyRefs",
-                        "materialRefs")) if (request.has(key)) throw RunAuthorityStore.denied();
-        if (request.hasNonNull("requestId")
-                && (!request.path("requestId").isTextual()
-                        || request.path("requestId").textValue().isBlank()
-                        || request.path("requestId").textValue().length() > 128))
-            throw RunAuthorityStore.denied();
-        if (request.path("inputs").hasNonNull("materialRefs")
-                || request.path("inputs").hasNonNull("historyRefs"))
-            throw RunAuthorityStore.denied();
-    }
-
     private static boolean dependency(JsonNode value) {
         return !value.isMissingNode()
                 && !value.isNull()
@@ -400,28 +360,6 @@ public class RunService {
         InitialChatRules.requireSources(snapshot, inputs);
         ModelInputMaterials.initialOutputPolicy(snapshot.path("config").path("output"));
         FrozenModels.reference(snapshot, InitialChatRules.entryId(snapshot));
-    }
-
-    private void admissionTransaction(RetainedAuthorization proof) {
-        AuthorityContext.requireBound(proof);
-        store.db().execute("set local statement_timeout='2000ms'");
-        store.db().execute("set local lock_timeout='1500ms'");
-    }
-
-    private static void requireInitialCoverage(RetainedAuthorization proof) {
-        AuthorityContext.requireBound(proof);
-        Actor initial = proof.requireInitialCeiling(), current = proof.current().actor();
-        if (!initial.tenantId().equals(current.tenantId())
-                || !initial.principalId().equals(current.principalId())
-                || !current.roles().containsAll(initial.roles())) throw RunAuthorityStore.denied();
-        initial.attributes()
-                .forEach(
-                        (key, values) -> {
-                            if (!key.equals("dataLabels")
-                                    && !current.attributes()
-                                            .getOrDefault(key, Set.of())
-                                            .containsAll(values)) throw RunAuthorityStore.denied();
-                        });
     }
 
     private Map<String, Object> replayPublished(
@@ -442,7 +380,7 @@ public class RunService {
         var view = store.statusPublished(id, actor);
         if (!metadata.get("trigger_type").equals(view.run().get("trigger_type"))
                 || !"FULL".equals(view.run().get("mode"))) throw RunAuthorityStore.denied();
-        verifyReplay(view.run(), code, request, trigger);
+        admissions.verifyReplay(view.run(), code, request, trigger);
         return composeStatus(id, actor, view);
     }
 
@@ -555,10 +493,9 @@ public class RunService {
         // REQUIRED can join an ambient transaction. Reject it before any refresh/app I/O so
         // this admission owns the real outer commit boundary (Spring 6.2.7 TransactionTemplate).
         final boolean protectedAdmission = iamEnabled();
-        if (protectedAdmission && TransactionSynchronizationManager.isActualTransactionActive())
-            throw new PlatformException(403, "AUTHORITY_TRANSACTION_FORBIDDEN", "受理不能加入调用方事务");
+        admissions.requireNoAmbientTransaction(protectedAdmission);
         if (protectedAdmission)
-            requirePublishedRequest(
+            RunAdmissionService.requirePublishedRequest(
                     req,
                     trigger,
                     trustedSnapshot,
@@ -571,7 +508,7 @@ public class RunService {
         if (req.has("versionNo") && req.path("versionNo").asInt() < 1)
             throw new PlatformException(400, "VERSION_INVALID", "版本号必须大于零");
         final RetainedAuthorization opening =
-                protectedAdmission ? admissionProof(code, actor) : null;
+                admissions.opening(code, actor, protectedAdmission);
         if (trigger.equals("DEBUG")) actor.requireRole("EDITOR");
         if (trigger.equals("EVALUATION") && trustedSnapshot != null && trustedSnapshot.has("evaluationConversation"))
             ((com.fasterxml.jackson.databind.node.ObjectNode) req).put("requestId","evt_"+Digest.sha256(Json.canonical(Map.of(
@@ -585,75 +522,27 @@ public class RunService {
                                     + req.path("evalReportId").asText()
                                     + ":"
                                     + req.path("caseId").asText());
-        if (req.hasNonNull("requestId")) {
-            var prior =
-                    store.db()
-                            .queryForList(
-                                    protectedAdmission
-                                            ? REPLAY_METADATA
-                                            : "select * from engine.run where tenant_id=? and"
-                                                  + " principal_id=? and request_id=?",
-                                    actor.tenantId(),
-                                    actor.principalId(),
-                                    req.path("requestId").asText());
-            if (!prior.isEmpty()) {
-                var existing = prior.getFirst();
-                if (protectedAdmission) return replayPublished(existing, code, req, trigger, actor);
-                verifyReplay(existing, code, req, trigger);
-                return status(existing.get("public_id").toString(), actor);
-            }
+        var prior = admissions.existing(actor, req, protectedAdmission);
+        if (prior != null) {
+            if (protectedAdmission) return replayPublished(prior, code, req, trigger, actor);
+            admissions.verifyReplay(prior, code, req, trigger);
+            return status(prior.get("public_id").toString(), actor);
         }
-        RunScheduler.Admission admission = suppliedTicket;
-        if (admission == null && !acceptedReservation && !trigger.equals("EVALUATION")) {
-            try {
-                admission = scheduler.reserveInteractive();
-            } catch (RunAdmissionRejected rejected) {
-                // Same request lock as INSERT: accepted concurrent work remains readable at
-                // capacity. No HTTP or semaphore wait is performed in this short transaction.
-                Map<String, Object> accepted =
-                        req.hasNonNull("requestId")
-                                ? store.atomic(
-                                        () -> {
-                                            if (protectedAdmission) admissionTransaction(opening);
-                                            store.db()
-                                                    .queryForList(
-                                                            "select"
-                                                                + " pg_advisory_xact_lock(hashtextextended(?,0))",
-                                                            actor.tenantId()
-                                                                    + ":"
-                                                                    + actor.principalId()
-                                                                    + ":"
-                                                                    + req.path("requestId")
-                                                                            .asText());
-                                            if (protectedAdmission)
-                                                AuthorityContext.requireBound(opening);
-                                            var rows =
-                                                    store.db()
-                                                            .queryForList(
-                                                                    protectedAdmission
-                                                                            ? REPLAY_METADATA
-                                                                            : "select * from"
-                                                                                  + " engine.run"
-                                                                                  + " where"
-                                                                                  + " tenant_id=?"
-                                                                                  + " and principal_id=?"
-                                                                                  + " and request_id=?",
-                                                                    actor.tenantId(),
-                                                                    actor.principalId(),
-                                                                    req.path("requestId").asText());
-                                            if (rows.isEmpty()) return null;
-                                            if (!protectedAdmission)
-                                                verifyReplay(rows.getFirst(), code, req, trigger);
-                                            return rows.getFirst();
-                                        })
-                                : null;
-                if (accepted != null)
-                    return protectedAdmission
-                            ? replayPublished(accepted, code, req, trigger, actor)
-                            : status(accepted.get("public_id").toString(), actor);
-                throw rejected;
-            }
-        }
+        var reservation =
+                admissions.reserve(
+                        actor,
+                        req,
+                        code,
+                        trigger,
+                        protectedAdmission,
+                        opening,
+                        suppliedTicket,
+                        acceptedReservation);
+        RunScheduler.Admission admission = reservation.slot();
+        if (reservation.replay() != null)
+            return protectedAdmission
+                    ? replayPublished(reservation.replay(), code, req, trigger, actor)
+                    : status(reservation.replay().get("public_id").toString(), actor);
         try {
             String path =
                     trigger.equals("DEBUG")
@@ -749,8 +638,8 @@ public class RunService {
             // admission 槽位由外层 finally 释放。开关关闭（默认）或夹具未装配时旁路。
             if (runQuota != null) runQuota.requireRunAdmission(actor, code, frozen);
             final RetainedAuthorization admissionProof =
-                    protectedAdmission ? admissionProof(code, actor) : null;
-            if (protectedAdmission) requireInitialCoverage(admissionProof);
+                    admissions.bind(code, actor, protectedAdmission);
+            if (protectedAdmission) admissions.requireInitialCoverage(admissionProof);
             final var created = new java.util.concurrent.atomic.AtomicBoolean(!protectedAdmission);
             String id =
                     protectedAdmission
@@ -760,46 +649,16 @@ public class RunService {
                     () ->
                             store.atomic(
                                     () -> {
-                                        if (protectedAdmission)
-                                            admissionTransaction(admissionProof);
-                                        if (req.hasNonNull("requestId"))
-                                            store.db()
-                                                    .queryForList(
-                                                            "select"
-                                                                + " pg_advisory_xact_lock(hashtextextended(?,0))",
-                                                            actor.tenantId()
-                                                                    + ":"
-                                                                    + actor.principalId()
-                                                                    + ":"
-                                                                    + req.path("requestId")
-                                                                            .asText());
-                                        if (protectedAdmission)
-                                            AuthorityContext.requireBound(admissionProof);
-                                        if (req.hasNonNull("requestId")) {
-                                            var existing =
-                                                    store.db()
-                                                            .queryForList(
-                                                                    protectedAdmission
-                                                                            ? REPLAY_METADATA
-                                                                            : "select * from"
-                                                                                  + " engine.run"
-                                                                                  + " where"
-                                                                                  + " tenant_id=?"
-                                                                                  + " and principal_id=?"
-                                                                                  + " and request_id=?",
-                                                                    actor.tenantId(),
-                                                                    actor.principalId(),
-                                                                    req.path("requestId").asText());
-                                            if (!existing.isEmpty()) {
-                                                if (!protectedAdmission)
-                                                    verifyReplay(
-                                                            existing.getFirst(),
-                                                            code,
-                                                            req,
-                                                            trigger);
-                                                return TraceStore.number(existing.getFirst(), "id");
-                                            }
-                                        }
+                                        admissions.begin(admissionProof);
+                                        Long reused =
+                                                admissions.lockAndReuse(
+                                                        actor,
+                                                        req,
+                                                        code,
+                                                        trigger,
+                                                        protectedAdmission,
+                                                        admissionProof);
+                                        if (reused != null) return reused;
                                         Map<String, Object> guard =
                                                 Map.of(
                                                         "tenantId",
@@ -975,7 +834,7 @@ public class RunService {
                                                             rid);
                                         if (protectedAdmission) {
                                             AuthorityContext.requireBound(admissionProof);
-                                            requireInitialCoverage(admissionProof);
+                                            admissions.requireInitialCoverage(admissionProof);
                                         }
                                         return rid;
                                     });
@@ -1098,33 +957,6 @@ public class RunService {
         input.put("mode", "FULL");
         input.put("controlledContractDigest", digest);
         return createInternal("skill_test_" + id, input, "DEBUG", actor, snapshot, id);
-    }
-
-    private void verifyReplay(Map<String, Object> run, String code, JsonNode req, String trigger) {
-        boolean sameTrigger =
-                run.get("trigger_type").equals(trigger)
-                        || trigger.equals("TASK") && run.get("trigger_type").equals("CHAT");
-        if (!run.get("app_code").equals(code)
-                || !sameTrigger
-                || req.has("controlledContractDigest")
-                        && !req.path("controlledContractDigest")
-                                .asText()
-                                .equals(
-                                        Objects.toString(
-                                                run.get("controlled_skill_test_digest"),
-                                                Objects.toString(
-                                                        run.get("controlled_draft_skill_digest"),
-                                                        "")))
-                || !TraceStore.json(run.get("inputs")).equals(req.path("inputs"))
-                || req.has("versionNo")
-                        && TraceStore.json(run.get("snapshot")).path("versionNo").asInt()
-                                != req.path("versionNo").asInt()
-                || req.has("candidateSha256")
-                        && !TraceStore.json(run.get("eval_candidate"))
-                                .path("candidateSha256")
-                                .asText()
-                                .equals(req.path("candidateSha256").asText()))
-            throw new PlatformException(409, "REQUEST_CONFLICT", "请求号已绑定其他版本或输入");
     }
 
     private Object versionRefs(JsonNode source, JsonNode frozen, JsonNode req) {
