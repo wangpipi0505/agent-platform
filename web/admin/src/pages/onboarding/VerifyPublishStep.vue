@@ -4,6 +4,7 @@
 import { computed, onMounted, ref } from "vue";
 import { usePageOperation } from "../../usePageOperation";
 import { normalizePreview, onboardingClient } from "../../../../shared/onboarding";
+import OnboardingErrorNotice from "./OnboardingErrorNotice.vue";
 
 const { auth, api, error } = usePageOperation();
 const client = onboardingClient(api);
@@ -118,6 +119,7 @@ async function publish() {
           {{ preflightDone ? "重新预检" : "开始预检" }}
         </el-button>
       </div>
+      <!-- ②预检/发布失败后重试：document/connection 由 v-model 保留，不丢已填内容。 -->
       <el-input
         v-model="document"
         type="textarea"
@@ -130,7 +132,7 @@ async function publish() {
         aria-label="连接引用"
         placeholder="连接引用（已批准连接档案标识）"
       />
-      <p v-if="error" class="error-text" role="alert">{{ error }}</p>
+      <OnboardingErrorNotice :error="error || null" />
       <template v-if="preflightDone && preflightResult">
         <el-alert
           v-if="preflightOk"

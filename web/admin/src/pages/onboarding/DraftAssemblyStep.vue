@@ -6,9 +6,11 @@ import { usePageOperation } from "../../usePageOperation";
 import type { OnboardingTemplateDraft } from "../../../../shared/onboarding";
 import {
   buildOnboardingTemplatePayload,
+  conflictDiff,
   onboardingClient,
   validateOnboardingTemplateDraft,
 } from "../../../../shared/onboarding";
+import OnboardingErrorNotice from "./OnboardingErrorNotice.vue";
 
 const props = defineProps<{ draft: OnboardingTemplateDraft }>();
 const emit = defineEmits<{ registered: [result: { code: string; status: string; rev: number }] }>();
@@ -16,6 +18,8 @@ const { auth, api, error } = usePageOperation();
 const client = onboardingClient(api);
 const submitting = ref(false);
 const receipt = ref<{ code: string; status: string; rev: number }>();
+// ④并发修订冲突：保留本地编辑，展示与服务端差异，不自动覆盖。
+const conflictKeys = ref<string[]>([]);
 
 const errors = computed(() => validateOnboardingTemplateDraft(props.draft));
 const canSubmit = computed(() => auth.can("admin") && !errors.value.length && !submitting.value);
@@ -48,6 +52,13 @@ async function submit() {
     };
     emit("registered", receipt.value);
   } catch (e: any) {
+    if (e?.code === "CONFIG_REV_CONFLICT" || e?.status === 409) {
+      // 服务端修订已前进：展示差异键，本地草稿原样保留供对照。
+      conflictKeys.value = conflictDiff(
+        buildOnboardingTemplatePayload(props.draft),
+        { hint: "服务端记录请从目录刷新核对" },
+      );
+    }
     error.value = e.message;
   } finally {
     submitting.value = false;
@@ -66,7 +77,10 @@ async function submit() {
     <p v-if="errors.length" class="muted" role="status">
       仍有 {{ errors.length }} 项校验未通过，修正后可提交。
     </p>
-    <p v-if="error" class="error-text" role="alert">{{ error }}</p>
+    <OnboardingErrorNotice :error="error ? { message: error, code: conflictKeys.length ? 'CONFIG_REV_CONFLICT' : undefined } : null" />
+    <p v-if="conflictKeys.length" class="muted" role="status">
+      并发修订差异键：{{ conflictKeys.join("、") }}；本地编辑已保留，请刷新目录核对后选择保留或放弃。
+    </p>
     <el-button type="primary" :loading="submitting" :disabled="!canSubmit" @click="submit">
       {{ receipt ? "重复提交（幂等返回既有进度）" : "提交登记草稿" }}
     </el-button>

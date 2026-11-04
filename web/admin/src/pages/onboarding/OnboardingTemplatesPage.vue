@@ -26,6 +26,7 @@ import {
   validateOnboardingTemplateDraft,
   useCapabilityPackageClient,
   type OnboardingTemplateDraft,
+  resumeEntryFor,
   type OnboardingTemplateRecord,
 } from "../../../../shared/onboarding";
 
@@ -41,6 +42,9 @@ const payloadPreview = ref("");
 // ONB-04：模板服务端已交付——目录读真实接口；提交/预检/发布为 ADMIN 操作。
 const templates = ref<OnboardingTemplateRecord[]>([]);
 const registered = ref<{ code: string; status: string; rev: number }>();
+// ①会话恢复：DRAFT 草稿持久化于服务端，刷新/重进后从这里继续（验证发布步骤）。
+const resumeTarget = ref<{ code: string; status: string }>();
+const showResume = computed(() => !!resumeTarget.value);
 // ONB-03：业务字段/受限映射/返回呈现步骤共享的声明式包（编辑后经校验进入登记预览）。
 const fieldsBundle = ref<FieldsBundle>(emptyFieldsBundle());
 const activeStep = ref<"fields" | "mapping" | "return">("fields");
@@ -53,6 +57,8 @@ async function load() {
     const page = await client.list({ q: query.value.trim() || undefined });
     packages.value = selectablePackages(page.items);
     templates.value = await templateClient.list({ q: query.value.trim() || undefined });
+    const draftRow = templates.value.find((row) => resumeEntryFor(row) === "verify");
+    resumeTarget.value = draftRow ? { code: draftRow.code, status: draftRow.status } : undefined;
   });
 }
 onMounted(load);
@@ -161,6 +167,14 @@ async function copyPayload() {
       模板复用能力包精确身份（版本与 SHA256）；目录按租户与权限过滤，撤回模板不影响已发布应用来源。
     </p>
   </div>
+  <el-alert
+    v-if="showResume && resumeTarget"
+    type="info"
+    :closable="true"
+    show-icon
+    title="发现未完成的登记草稿"
+    :description="`模板 ${resumeTarget.code} 处于 DRAFT 状态（服务端已持久化）；在下方「组装登记与验证发布」中选择该模板继续预检与发布，已填内容不因刷新丢失。`"
+  />
   <!-- ONB-04：服务端模板目录（真实接口）+ 组装登记 + 验证发布。 -->
   <div class="panel">
     <div class="row spread">

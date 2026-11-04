@@ -266,6 +266,125 @@ export function onboardingClient(api: OnboardingApi) {
 export { parseOnboardingTemplateList };
 export type { OnboardingTemplateRecord };
 
+/* ===================== ONB-05：会话恢复与错误恢复（错误码映射/冲突保留） ===================== */
+
+/**
+ * ③服务端错误码→可读文案与建议动作（CONFIG_* 登记集）。未知码回退原始 message
+ * 并保持可恢复——不静默、不吞错。
+ */
+export const ONBOARDING_ERROR_MESSAGES: Record<string, { message: string; action: string }> = {
+  CONFIG_REV_CONFLICT: {
+    message: "并发修订冲突：服务端模板已有更新修订，你的本地编辑已保留，未被覆盖。",
+    action: "刷新模板目录核对服务端最新内容与差异，决定保留或放弃后再重试。",
+  },
+  CONFIG_STATE_TRANSITION_INVALID: {
+    message: "当前模板状态不允许该操作（只有 DRAFT 可发布；已停用模板不能再变更）。",
+    action: "刷新目录查看最新状态；如需修改请先确认模板未被停用。",
+  },
+  CONFIG_REF_NOT_FOUND: {
+    message: "引用的模板、连接或体验配置不存在，或当前账号无权访问。",
+    action: "核对引用标识；跨租户资源不可见，请联系管理员授予。",
+  },
+  CONFIG_SCHEMA_BUDGET_EXCEEDED: {
+    message: "规格工作量超出 Schema 预算上限。",
+    action: "按服务端预算提示精简规格，或退回 OpenAPI 专业导入入口处理。",
+  },
+  CONFIG_AUTH_SCHEME_UNSUPPORTED: {
+    message: "规格声明的认证方式不在受支持子集内。",
+    action: "改用受支持的认证方式并由管理员配置引用后重试。",
+  },
+  CONFIG_SECRET_PLAINTEXT_REJECTED: {
+    message: "检测到明文凭据——登记内容禁止包含密钥明文。",
+    action: "移除明文，改用管理员已配置的凭据引用（secret_ref）。",
+  },
+  CONFIG_VERSION_UNKNOWN: {
+    message: "请求的模板版本不存在或已被撤回。",
+    action: "刷新目录后选择当前版本；撤回只影响新接入，不影响已发布应用来源。",
+  },
+};
+
+/** 错误解释视图：code 缺失时按 HTTP 状态兜底；recoverable=可原地重试。 */
+export interface OnboardingErrorView {
+  message: string
+  code: string
+  action: string
+  recoverable: boolean
+  /** ⑤阻塞类：撤权/停用/过期会话需要先解决身份或状态，不是重试能解决。 */
+  blocking: boolean
+}
+
+export function mapOnboardingError(
+  error: unknown,
+): OnboardingErrorView {
+  const record = (typeof error === "object" && error !== null ? error : {}) as {
+    message?: unknown
+    code?: unknown
+    status?: unknown
+  };
+  const code = typeof record.code === "string" ? record.code : "";
+  const status = typeof record.status === "number" ? record.status : 0;
+  const rawMessage = typeof record.message === "string" ? record.message : "";
+  const known = code ? ONBOARDING_ERROR_MESSAGES[code] : undefined;
+  if (known)
+    return {
+      message: known.message,
+      code,
+      action: known.action,
+      recoverable: code !== "CONFIG_STATE_TRANSITION_INVALID" && code !== "CONFIG_REF_NOT_FOUND",
+      blocking: code === "CONFIG_REF_NOT_FOUND" || code === "CONFIG_STATE_TRANSITION_INVALID",
+    };
+  if (status === 401)
+    return {
+      message: rawMessage || "会话已失效，请重新连接。",
+      code: "AUTH_EXPIRED",
+      action: "重新登录后继续；本地已填内容保留。",
+      recoverable: false,
+      blocking: true,
+    };
+  if (status === 403)
+    return {
+      message: rawMessage || "当前账号没有此操作权限。",
+      code: "AUTH_FORBIDDEN",
+      action: "模板登记/发布/预检需管理员权限；可复制登记 JSON 交管理员复核提交。",
+      recoverable: false,
+      blocking: true,
+    };
+  return {
+    message: rawMessage || "操作失败，请重试。",
+    code: code || "UNKNOWN",
+    action: "检查网络与输入后重试；原文已保留。",
+    recoverable: true,
+    blocking: false,
+  };
+}
+
+/** ①会话恢复推导：从服务端模板记录推导向导应回到的入口（不依赖本地缓存）。 */
+export type ResumeEntry = "wizard" | "verify" | "none";
+
+export function resumeEntryFor(record: {
+  status?: string
+}): ResumeEntry {
+  const status = String(record.status ?? "").toUpperCase();
+  if (status === "DRAFT") return "verify";
+  if (status === "PUBLISHED") return "none";
+  return "none";
+}
+
+/** ④并发修订差异摘要：本地草稿与服务端记录逐键对照（值不同即列出）。 */
+export function conflictDiff(
+  local: Record<string, unknown>,
+  server: Record<string, unknown>,
+): string[] {
+  const keys = new Set([...Object.keys(local), ...Object.keys(server)]);
+  const diff: string[] = [];
+  for (const key of keys) {
+    const left = JSON.stringify(local[key]);
+    const right = JSON.stringify(server[key]);
+    if (left !== right) diff.push(key);
+  }
+  return diff;
+}
+
 /** 兼容薄包装：preview 响应经 resource-types 边界收窄后返回规范诊断。 */
 export function normalizePreview(response: unknown): PreflightPreview {
   return parsePreflightPreview(response);
