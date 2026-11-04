@@ -3230,5 +3230,17 @@
   "source": "app-management/src/main/java/cn/agentplatform/app/api/OnboardingController.java:64",
   "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
   "reason": ""
- }
+ },
+ {
+  "method": "GET",
+  "template": "/admin/skills/semantic-catalog",
+  "caller": "gateway",
+  "target": "skill",
+  "action": "proxy.skill.get.SemanticCatalogController.list",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/SemanticCatalogController.java:13",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
+  "reason": ""
+}
 ]

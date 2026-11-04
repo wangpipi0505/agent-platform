@@ -8,6 +8,10 @@ import Artifacts from '../../shared/Artifacts.vue';
 import { outputWarning, safeMarkdown } from '../../shared/content';
 import { decodeRunStatus, protocolFailure, record } from '../../shared/run-protocol';
 import RunObservation from './RunObservation.vue';
+import RunAuthorityPanel from '../../shared/RunAuthorityPanel.vue';
+import {emptyAuthority,readRunAuthority} from '../../shared/server-authority';
+const authority=ref(emptyAuthority());
+let authoritySequence=0;
 const props = defineProps<{ runId: string; nodeId?: string }>();
 // 无router的既有嵌入用法可显式传 nodeId；缺失时回退到已解析路由query。
 const api = useApi();
@@ -179,21 +183,28 @@ let stopped = false;
 let controller: AbortController;
 let timer: ReturnType<typeof setTimeout>;
 async function refresh() {
-  const result = await api("/admin/runs/" + encodeURIComponent(props.runId), 'GET', undefined, undefined, decodeRunStatus);
-  if (current()) value.value = result;
+  const observedId=props.runId,ticket=++authoritySequence;
+  const result = await api("/admin/runs/" + encodeURIComponent(observedId), 'GET', undefined, undefined, decodeRunStatus);
+  if(!current()||props.runId!==observedId||ticket!==authoritySequence)return;
+  value.value = result;
+  authority.value=readRunAuthority(observedId,result,undefined);
+  try{const semantic=await api('/v1/runs/'+encodeURIComponent(observedId)+'/semantic-results');
+    if(current()&&ticket===authoritySequence&&props.runId===observedId)authority.value=readRunAuthority(observedId,result,semantic);
+  }catch(problem){if(current()&&ticket===authoritySequence){authority.value=emptyAuthority();authority.value.error=problem instanceof Error?problem.message:'语义回执读取失败';}}
   applyDeepLink();
 }
 async function connect() {
+  const observedId=props.runId;
   if(!current()||blocked.value)return;
   try {
     await refresh();
-    if (!current()||blocked.value||terminal(value.value.status)) return;
+    if (!current()||props.runId!==observedId||blocked.value||terminal(value.value.status)) return;
     controller = new AbortController();
     await streamEvents(
-      "/admin/runs/" + encodeURIComponent(props.runId) + "/events",
+      "/admin/runs/" + encodeURIComponent(observedId) + "/events",
       () => useAuth().token,
       value.value.eventsWatermark,
-      () => {if(current()&&!blocked.value)void refresh().catch(observationError);},
+      () => {if(current()&&props.runId===observedId&&!blocked.value)void refresh().catch(observationError);},
       controller.signal,
       () => {
         auth.invalidate(session.generation);
@@ -201,15 +212,15 @@ async function connect() {
       session,
     );
   } catch (e: any) {
-    observationError(e);
+    if(props.runId===observedId)observationError(e);
   } finally {
-    if (current()&&!blocked.value && !terminal(value.value.status))
+    if (current()&&props.runId===observedId&&!blocked.value && !terminal(value.value.status))
       timer = setTimeout(connect, 2000);
   }
 }
 function observationError(e:any){
   if(!current()||e.name==='AbortError')return;
-  if(authorityFailure(e)||protocolFailure(e)){blocked.value=true;controller?.abort();clearTimeout(timer);}
+  if(authorityFailure(e)||protocolFailure(e)){authoritySequence++;authority.value=emptyAuthority();value.value=emptyRunStatus();blocked.value=true;controller?.abort();clearTimeout(timer);}
   error.value=e.message;
 }
 function reconnect(){if(!current())return;blocked.value=false;error.value='';void connect();}
@@ -225,6 +236,8 @@ async function cancel() {
     error.value = e.message;
   }
 }
+watch(()=>auth.generation,()=>{authoritySequence++;authority.value=emptyAuthority();value.value=emptyRunStatus();controller?.abort();clearTimeout(timer);},{flush:'sync'});
+watch(()=>props.runId,()=>{authoritySequence++;authority.value=emptyAuthority();value.value=emptyRunStatus();controller?.abort();clearTimeout(timer);void connect();},{flush:'sync'});
 onMounted(connect);
 onBeforeUnmount(() => {
   stopped = true;
@@ -249,6 +262,7 @@ onBeforeUnmount(() => {
         >取消运行</el-button
       >
     </div>
+    <RunAuthorityPanel v-if="value.runId" :authority="authority" :run-status="value.status" :model-text="outputText" />
     <el-tabs v-model="active"
       ><el-tab-pane label="节点摘要" name="summary"
         ><div v-if="diagErrorView" class="diag-banner" :class="{ retryable: diagErrorView.retryable }">

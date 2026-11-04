@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { ref, onBeforeUnmount, onMounted } from "vue";
+import { ref, watch, onBeforeUnmount, onMounted } from "vue";
 import { useAuth, useApi } from "./api";
 import { safeMarkdown, finalAnswer } from "./content";
 import { streamEvents, terminal } from "../debug-panel/events";
 import { decodeRunStatus, record, eventText } from './run-protocol';
 import { observeRun } from "./run-observer";
+import RunAuthorityPanel from './RunAuthorityPanel.vue';
+import {emptyAuthority,readRunAuthority} from './server-authority';
 import InlineApprovals from "./InlineApprovals.vue";
 import Artifacts from "./Artifacts.vue";
 import SchemaInputs from "./SchemaInputs.vue";
@@ -34,6 +36,20 @@ const observing = ref(false);
 const error = ref("");
 const runId = ref("");
 const connection = ref('正在处理 ▍');
+const authority=ref(emptyAuthority()),authorityStatus=ref('');
+let authorityGeneration=0;
+async function authorityFor(api:ReturnType<typeof useApi>,base:string,id:string,snapshot:unknown){
+  const ticket=++authorityGeneration,session=auth.snapshot();
+  authority.value=readRunAuthority(id,snapshot,undefined);authorityStatus.value=String(record(snapshot)?.status??'');
+  try{const semantic=await api(base+'/v1/runs/'+encodeURIComponent(id)+'/semantic-results');
+    if(!disposed&&session.current()&&runId.value===id&&ticket===authorityGeneration)authority.value=readRunAuthority(id,snapshot,semantic);
+  }catch(problem){if(!disposed&&session.current()&&runId.value===id&&ticket===authorityGeneration){authority.value=emptyAuthority();authority.value.error=problem instanceof Error?problem.message:'语义回执读取失败';}}
+}
+function clearAuthority(){authorityGeneration++;authority.value=emptyAuthority();authorityStatus.value='';}
+watch([()=>auth.generation,()=>props.appCode,()=>props.endpoint],()=>{
+  controller?.abort();clearAuthority();messages.value=[];files.value=[];runId.value='';sessionId.value='';sessionInfo.value=undefined;ready.value=false;
+  if(auth.token)void initialize();
+},{flush:'sync'});
 let disposed = false;
 let controller: AbortController;
 let frame = 0;
@@ -95,6 +111,7 @@ async function initialize() {
           ...(terminal(r.status) ? finalAnswer(terminalOutput(r)) : { text: "" }),
         });
         runId.value = r.runId;
+        await authorityFor(api,base,r.runId,r);
         files.value = r.fileRefs || [];
         awaitingApproval.value = r.status === "WAITING_APPROVAL";
         if (!terminal(r.status)) {
@@ -127,6 +144,7 @@ onMounted(initialize);
 async function send() {
   if (!ready.value || busy.value) return;
   error.value = "";
+  clearAuthority();
   files.value=[];awaitingApproval.value=false;buffer='';
   busy.value = true;
   connection.value = '正在处理 ▍';
@@ -206,7 +224,7 @@ async function followRun(api: ReturnType<typeof useApi>, base: string, observedI
       open: async (cursor, emit) => {
         await refreshTicket();
         return streamEvents(base + '/v1/runs/' + encodeURIComponent(observedId) + '/events',
-          () => auth.token, cursor, emit, signal, () => { auth.token = ''; });
+          () => auth.token, cursor, emit, signal, () => { auth.invalidate(); });
       },
       readStatus: async () => {
         await refreshTicket();
@@ -234,6 +252,7 @@ async function followRun(api: ReturnType<typeof useApi>, base: string, observedI
           applyFinal(data?.output);
       },
       onStatus: snapshot => {
+        if(runId.value===observedId)void authorityFor(api,base,observedId,snapshot);
         awaitingApproval.value = snapshot.status === 'WAITING_APPROVAL';
         if (awaitingApproval.value) void approvalPanel.value?.refresh();
         files.value = snapshot.fileRefs || snapshot.output?.fileRefs || [];
@@ -279,6 +298,7 @@ async function newConversation() {
   sessionId.value = "";
   sessionInfo.value = undefined;
   writeSessionUrl("");
+  clearAuthority();
   messages.value = [];
   files.value = [];
   runId.value = "";
@@ -316,6 +336,7 @@ onBeforeUnmount(() => {
       :run-id="runId"
       :endpoint="endpoint"
     />
+    <RunAuthorityPanel v-if="runId" :authority="authority" :run-status="authorityStatus" :model-text="messages.at(-1)?.text" />
     <Artifacts :files="files" :run-id="runId" :endpoint="endpoint" />
     <!-- UIF-A7：审批等待期 takeover——审批卡替换输入区，用户视线不移出对话流 -->
     <SchemaInputs

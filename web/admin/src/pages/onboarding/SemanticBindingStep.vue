@@ -21,12 +21,14 @@ const props = defineProps<{
   selection: SemanticSelection;
   projection?: DefinitionProjectionLike | null;
   roles?: string[];
+  skillOptions?: readonly {code:string;version:number;sha256:string}[];
+  disabled?: boolean;
 }>();
 const emit = defineEmits<{ submit: [request: SemanticBindingRequest] }>();
 
 const roles = computed(() => props.roles ?? []);
 const readable = computed(() => canReadSemantics(roles.value));
-const writable = computed(() => canWriteSemantics(roles.value));
+const writable = computed(() => canWriteSemantics(roles.value) && !props.disabled);
 const visible = computed(() =>
   filterProjection(props.projection, {
     canRead: readable.value,
@@ -44,6 +46,9 @@ const form = reactive({
   selectedFacts: [] as string[],
 });
 const error = ref("");
+const skillKey=ref("");
+const selectedSkill=computed(()=>props.skillOptions?.find(item=>`${item.code}@${item.version}`===skillKey.value));
+watch(()=>props.skillOptions,()=>{skillKey.value='';},{flush:'sync'});
 
 const extensions = computed(() =>
   props.selection.extensions.filter(
@@ -97,8 +102,9 @@ function submit() {
         objectType: form.objectType,
         opCode: form.opCode,
         extensionId: form.extensionId,
-        skillCode: form.skillCode,
-        skillVersion: form.skillVersion,
+        skillCode: selectedSkill.value?.code ?? form.skillCode,
+        skillVersion: selectedSkill.value?.version ?? form.skillVersion,
+        skillSha256: selectedSkill.value?.sha256,
         factFields: factFields.length ? factFields : extension.descriptor.factFields,
         ruleRefs: extension.descriptor.ruleRefs,
       },
@@ -159,10 +165,13 @@ function submit() {
       </el-checkbox-group>
       <p class="muted">不勾选时使用扩展声明的字段集合；事实仍由服务端按授权回源读取。</p>
     </el-form-item>
-    <el-form-item label="技能编码" required>
+    <el-form-item v-if="props.skillOptions" label="已发布只读技能版本" required>
+      <el-select v-model="skillKey"><el-option v-for="item in props.skillOptions" :key="`${item.code}@${item.version}`" :value="`${item.code}@${item.version}`" :label="`${item.code} v${item.version}`" /></el-select>
+    </el-form-item>
+    <el-form-item v-else label="技能编码" required>
       <el-input v-model="form.skillCode" placeholder="例如 customers.read" maxlength="64" />
     </el-form-item>
-    <el-form-item label="技能版本" required>
+    <el-form-item v-if="!props.skillOptions" label="技能版本" required>
       <el-input-number v-model="form.skillVersion" :min="1" :step="1" :precision="0" />
     </el-form-item>
     <el-form-item label="校验 profile">

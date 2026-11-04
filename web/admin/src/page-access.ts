@@ -36,6 +36,7 @@ export const pageAccess: PageAccessEntry[] = [
   { key: "integration-bindings", path: "/integration/environment-bindings", title: "环境绑定", area: "平台管理", read: "session", write: "admin", menu: false },
   { key: "integration-profiles", path: "/integration/integration-profiles", title: "接入档案", area: "平台管理", read: "session", write: "admin", menu: false },
   { key: "integration-experience", path: "/integration/experiences", title: "体验编辑", area: "平台管理", read: "session", write: "admin", menu: false },
+  { key: "integration-semantics", path: "/integration/semantic-bindings", title: "语义与目标", area: "平台管理", read: "session", write: "edit", menu: true },
   { key: "integration-diagnostics", path: "/integration/diagnostics", title: "接入诊断", area: "平台管理", read: "session", write: "", menu: false },
   { key: "app-workspace", path: "/apps", route: "/apps/:code/:tabMatch(.*)*", title: "应用工作区", area: "平台管理", read: "session", write: "edit", menu: false },
   { key: "operations", path: "/operations", title: "运行中心", area: "运行与支撑", read: "session", write: "admin", menu: true },

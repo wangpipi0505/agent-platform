@@ -5,11 +5,15 @@
  * 不写任意表达式，也不把 HTTP 200 或模型自述当作目标完成。
  */
 import { computed, reactive, ref, watch } from "vue";
+import SchemaInputs from '../../../../shared/SchemaInputs.vue';
+import {schemaPaths,type SkillChoice} from '../../../../shared/semantic-configuration';
 import { buildGoalCriterion, SemanticFormError } from "../../../../shared/semantic-runtime";
 
 const props = defineProps<{
   approvedSkills: readonly string[];
   actionSkills?: readonly string[];
+  skillOptions?: readonly SkillChoice[];
+  objectTypes?: readonly string[];
   disabled?: boolean;
 }>();
 const emit = defineEmits<{ submit: [goal: ReturnType<typeof buildGoalCriterion>] }>();
@@ -33,6 +37,14 @@ const form = reactive({
   nextStep: "稍后按同一只读验证操作重新读回",
 });
 const error = ref("");
+const readbackInputs=ref<InstanceType<typeof SchemaInputs>>(),actionInputs=ref<InstanceType<typeof SchemaInputs>>();
+const readbackSkill=computed(()=>props.skillOptions?.find(item=>item.code===form.skillCode));
+const actionSkill=computed(()=>props.skillOptions?.find(item=>item.code===form.actionSkillCode));
+const inputPaths=computed(()=>schemaPaths(readbackSkill.value?.inputSchema));
+const outputPaths=computed(()=>schemaPaths(readbackSkill.value?.outputSchema));
+const actionPaths=computed(()=>schemaPaths(actionSkill.value?.inputSchema));
+watch(()=>form.skillCode,()=>{form.objectIdPath=inputPaths.value[0]??'';form.resultObjectIdPath=outputPaths.value[0]??'';form.predicatePath=outputPaths.value[0]??'';});
+watch(()=>form.actionSkillCode,()=>{form.actionObjectIdPath=actionPaths.value[0]??'';});
 const readable = computed(() => props.approvedSkills.length > 0);
 
 watch(
@@ -73,11 +85,11 @@ function submit() {
         goalId: form.goalId,
         target: { objectType: form.objectType, objectId: form.objectId },
         skillCode: form.skillCode,
-        readbackArguments: argumentsObject(form.readbackArguments),
+        readbackArguments: props.skillOptions ? readbackInputs.value!.collect() : argumentsObject(form.readbackArguments),
         objectIdPath: form.objectIdPath,
         resultObjectIdPath: form.resultObjectIdPath,
         ...(form.afterAction ? { action: { skillCode: form.actionSkillCode,
-          arguments: argumentsObject(form.actionArguments), objectIdPath: form.actionObjectIdPath } } : {}),
+          arguments: props.skillOptions ? actionInputs.value!.collect() : argumentsObject(form.actionArguments), objectIdPath: form.actionObjectIdPath } } : {}),
         predicatePath: form.predicatePath,
         operator: form.operator,
         expectedValue: form.operator === "equals" ? expectedValue() : undefined,
@@ -105,7 +117,8 @@ function submit() {
         <el-input v-model="form.goalId" placeholder="例如 refund-done" maxlength="64" />
       </el-form-item>
       <el-form-item label="目标对象类型" required>
-        <el-input v-model="form.objectType" placeholder="例如 Order" maxlength="128" />
+        <el-select v-if="props.objectTypes" v-model="form.objectType"><el-option v-for="item in props.objectTypes" :key="item" :value="item" :label="item" /></el-select>
+        <el-input v-else v-model="form.objectType" placeholder="例如 Order" maxlength="128" />
       </el-form-item>
       <el-form-item label="目标对象标识" required>
         <el-input v-model="form.objectId" placeholder="本次核验的对象标识" maxlength="256" />
@@ -115,14 +128,15 @@ function submit() {
           <el-option v-for="skill in props.approvedSkills" :key="skill" :value="skill" :label="skill" />
         </el-select>
       </el-form-item>
-      <el-form-item label="验证请求参数（JSON对象）" required>
-        <el-input v-model="form.readbackArguments" type="textarea" :rows="3" placeholder='{"id":"order-B"}' />
+      <el-form-item label="验证请求参数" required>
+        <SchemaInputs v-if="props.skillOptions&&readbackSkill" :key="form.skillCode" ref="readbackInputs" :declaration="readbackSkill.inputSchema" />
+        <el-input v-else v-model="form.readbackArguments" type="textarea" :rows="3" placeholder='{"id":"order-B"}' />
       </el-form-item>
       <el-form-item label="请求中的对象字段" required>
-        <el-input v-model="form.objectIdPath" placeholder="$.id" />
+        <el-select v-if="props.skillOptions" v-model="form.objectIdPath"><el-option v-for="item in inputPaths" :key="item" :value="item" :label="item" /></el-select><el-input v-else v-model="form.objectIdPath" placeholder="$.id" />
       </el-form-item>
       <el-form-item label="回执中的对象字段" required>
-        <el-input v-model="form.resultObjectIdPath" placeholder="$.data.id" />
+        <el-select v-if="props.skillOptions" v-model="form.resultObjectIdPath"><el-option v-for="item in outputPaths" :key="item" :value="item" :label="item" /></el-select><el-input v-else v-model="form.resultObjectIdPath" placeholder="$.data.id" />
       </el-form-item>
       <el-form-item label="核验范围">
         <el-switch v-model="form.afterAction" active-text="核对指定动作完成后的状态" inactive-text="只读当前状态" />
@@ -133,15 +147,15 @@ function submit() {
             <el-option v-for="skill in props.actionSkills ?? []" :key="skill" :value="skill" :label="skill" />
           </el-select>
         </el-form-item>
-        <el-form-item label="动作请求参数（JSON对象）" required>
-          <el-input v-model="form.actionArguments" type="textarea" :rows="3" />
+        <el-form-item label="动作请求参数" required>
+          <SchemaInputs v-if="props.skillOptions&&actionSkill" :key="form.actionSkillCode" ref="actionInputs" :declaration="actionSkill.inputSchema" /><el-input v-else v-model="form.actionArguments" type="textarea" :rows="3" />
         </el-form-item>
         <el-form-item label="动作参数中的对象字段" required>
-          <el-input v-model="form.actionObjectIdPath" placeholder="$.id" />
+          <el-select v-if="props.skillOptions" v-model="form.actionObjectIdPath"><el-option v-for="item in actionPaths" :key="item" :value="item" :label="item" /></el-select><el-input v-else v-model="form.actionObjectIdPath" placeholder="$.id" />
         </el-form-item>
       </template>
       <el-form-item label="判据字段" required>
-        <el-input v-model="form.predicatePath" placeholder="$.data.status" aria-label="判据字段路径" />
+        <el-select v-if="props.skillOptions" v-model="form.predicatePath" aria-label="判据字段路径"><el-option v-for="item in outputPaths" :key="item" :value="item" :label="item" /></el-select><el-input v-else v-model="form.predicatePath" placeholder="$.data.status" aria-label="判据字段路径" />
       </el-form-item>
       <el-form-item label="判定方式" required>
         <el-select v-model="form.operator">

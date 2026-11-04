@@ -101,6 +101,12 @@ const routes: RouteRecordRaw[] = [
     meta: { access: "integration-experience", title: "体验编辑" },
   },
   {
+    path: "/integration/semantic-bindings",
+    name: "integration-semantics",
+    component: () => import("./pages/integration/SemanticBindingsPanel.vue"),
+    meta: { access: "integration-semantics", title: "语义与目标" },
+  },
+  {
     path: "/integration/diagnostics",
     name: "integration-diagnostics",
     component: () => import("./pages/integration/IntegrationDiagnosticsPanel.vue"),

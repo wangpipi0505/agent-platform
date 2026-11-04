@@ -324,6 +324,8 @@ export interface RunNodeStatusRow {
 /** 运行状态快照外壳：decodeRunStatus（run-protocol）解析后的稳定面。
  * output/inputs/graph/observation 保持 unknown；错误信封按原语义。 */
 export interface RunStatusSnapshot {
+  /** 仅服务端顶层目标处置；动态形状由server-authority边界解码，模型output不参与。 */
+  goals?: unknown;
   runId: string
   status: string
   eventsWatermark: string

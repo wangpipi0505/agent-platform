@@ -1,3 +1,4 @@
+import * as authority from '../shared/server-authority';
 // MNT-01 AP：运行节点深链缺陷。Hash路由下 /#/runs/r1?nodeId=n1 的 nodeId 位于路由 query，
 // RunDetail 却读 window.location.search（hash路由下为空）导致定位失效。
 // 本文件锁定修复语义：路由query读取、同run query变化跟随、显式nodeId输入优先（无router嵌入）、
@@ -25,8 +26,8 @@ async function flush() {
 
 /** 与现有页面测试相同：真实SFC setup，替换HTTP、事件流与路由为受控桩。 */
 function mountRun(routeQuery: Record<string, string>, props: Record<string, unknown> = {}) {
-  const api = vi.fn(async (_path: string) => ({
-    status: 'RUNNING',
+  const api = vi.fn(async (_path: string) => _path.endsWith('/semantic-results')?{runId:'r1',results:[],rejected:[]}:({
+    runId:'r1',status: 'RUNNING',
     nodes: [
       { nodeDefId: 'n1', status: 'SUCCEEDED' },
       { nodeDefId: 'n2', status: 'RUNNING' },
@@ -71,6 +72,7 @@ function mountRun(routeQuery: Record<string, string>, props: Record<string, unkn
               ? runProtocol
               : id.endsWith('/shared/content')
                 ? content
+                : id.endsWith('/shared/server-authority') ? authority
                 // MNT-03：RunDetail 引用 resource-types 稳定外壳；本组测导航深链，
                 // 沙箱给行为等价浅实现（相对导入在 tests/ 下解析错位，不能 require）。
                 : id.includes('/shared/resource-types')

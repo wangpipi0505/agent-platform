@@ -1,3 +1,4 @@
+import * as authority from '../shared/server-authority';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { compileScript, parse } from '@vue/compiler-sfc';
@@ -38,6 +39,7 @@ function mountChat() {
   let finish!: (value: Snapshot) => void, denyCancel = false;
   const api = vi.fn(async (path: string, method = 'GET') => {
     requests.push({ path, method });
+    if(path.endsWith('/semantic-results'))return {runId:path.split('/')[3],results:[],rejected:[]};
     if (path === '/v1/apps/app/sessions/s_original' && method === 'GET')
       return { sessionId: 's_original', appCode: 'app', versionNo: 3, maxTurns: 40, nextTurn: 3,
         turns: [{ run_public_id: 'r_previous' }, { run_public_id: 'r_original' }] };
@@ -64,12 +66,13 @@ function mountChat() {
   const code = ts.transpileModule(compileScript(descriptor, { id: 'ChatSessionRestore' }).content,
     { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
   const exports = {} as { default: Vue.Component & { render: () => null } }, require = createRequire(import.meta.url);
-  const auth = { token: 'verified-local-session', snapshot: () => ({ signal: new AbortController().signal }) };
+  const auth = { token: 'verified-local-session', snapshot: () => ({ signal: new AbortController().signal, current:()=>true }) };
   new Function('require', 'exports', code)((id: string) => id === 'vue' ? Vue
     : id.endsWith('/api') ? { useApi: () => api, useAuth: () => auth }
     : id.endsWith('/content') ? content
     : id.endsWith('/run-protocol') ? protocol
     : id.endsWith('/input-schema') ? inputSchema
+    : id.endsWith('/server-authority') ? authority
     : id.endsWith('/session') ? session
     : id.endsWith('/run-observer') ? { observeRun }
     : id.endsWith('/events') ? { terminal, streamEvents: async (path: string) => { streams.push(path); } }

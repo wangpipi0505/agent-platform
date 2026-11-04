@@ -1,3 +1,5 @@
+import {renderAuthority} from './authority';
+import {readRunAuthority,emptyAuthority} from '../../shared/server-authority';
 import {
   safeMarkdown,
   outputText,
@@ -244,6 +246,9 @@ export function createRuntime(
       String(old.inputs?.message ?? JSON.stringify(old.inputs || {})) +
       "\n" +
       outputText(old.output);
+    try{const semantic=await request('/v1/runs/'+encodeURIComponent(runPublicId)+'/semantic-results');
+      if(!destroyed)renderAuthority(element,readRunAuthority(runPublicId,old,semantic));
+    }catch(failure){const view=emptyAuthority();view.error=failure instanceof Error?failure.message:'语义回执读取失败';if(!destroyed)renderAuthority(element,view);}
     const warning = outputWarning(old.output);
     if (warning) prependWarning(element, warning);
     if (before) widget.log.insertBefore(element, before);
@@ -310,7 +315,9 @@ export function createRuntime(
       frame = 0;
       const answer = finalAnswer(value);
       text = answer.text;
+      const authority=reply.querySelector('[data-run-authority]');
       reply.innerHTML = safeMarkdown(text);
+      if(authority)reply.append(authority);
       if (answer.warning) prependWarning(reply, answer.warning);
     };
     try {
@@ -457,13 +464,15 @@ export function createRuntime(
             signal,
           );
         },
-        readStatus: () =>
-          call(
-            "/v1/runs/" + encodeURIComponent(run.runId),
-            undefined,
-            signal,
-            decodeRunStatus,
-          ),
+        readStatus: async () => {
+          const snapshot=await call('/v1/runs/'+encodeURIComponent(run.runId),undefined,signal,decodeRunStatus);
+          let view=readRunAuthority(run.runId,snapshot,undefined);
+          try { const semantic=await call('/v1/runs/'+encodeURIComponent(run.runId)+'/semantic-results',undefined,signal);
+            view=readRunAuthority(run.runId,snapshot,semantic);
+          } catch(failure) { view=emptyAuthority();view.error=failure instanceof Error?failure.message:'语义回执读取失败'; }
+          if(!destroyed&&!signal.aborted)renderAuthority(reply,view);
+          return snapshot;
+        },
         onConnection: (state) => {
           widget.connection.textContent =
             state === "reconnecting"
@@ -477,7 +486,9 @@ export function createRuntime(
             text += eventText(e.data) || "";
             if (!frame)
               frame = requestAnimationFrame(() => {
+                const authority=reply.querySelector('[data-run-authority]');
                 reply.innerHTML = safeMarkdown(text);
+                if(authority)reply.append(authority);
                 frame = 0;
               });
           }

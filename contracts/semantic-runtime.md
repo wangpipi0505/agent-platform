@@ -139,3 +139,11 @@ category/retryable 语义沿用 error-envelope-boundaries.md；仅 429 retryable
 3. **摘要**：`contentDigest`（本体 bundle）/`factSetDigest`（事实投影）/`ruleDigest`（规则内容）三类摘要独立登记、不混比；扩展摘要（SEM-02）激活时回本节追加第四类并注明口径。
 4. **错误码**：执行期各卡复用 §3 登记集；确需新增（如条件专用码）回 §3 追加，不私造同义码。
 5. **降级禁止**：声明了语义约束的应用缺依赖时不得静默降级为裸工具调用；未实现 profile 的声明在发布门禁被拒绝，而不是运行期忽略。
+
+## 8. 配置与产品读口（CR-10）
+
+- `GET /admin/skills/semantic-catalog`：已验证的VIEWER/EDITOR/APPROVER/ADMIN可读。请求没有主体、目标URL、凭据或release集合参数；候选仅来自当前Actor的部署消费绑定（最多16项）。每项重新通过OR正式来源与定义投影读取校验READY、当前授权与发布四元组，返回`{releases:[{releaseRef,semanticExtensions,operations,projection,...}],errors:[{releaseId,code,message}],complete}`；撤权、版本/摘要不符或不可达只进入errors，不能继续作为可选版本。响应不含secret_ref，不缓存为业务权威。
+- AP原集成目录入口`/integration/semantic-bindings`复用SemanticConfigurationStep；配置表单从正式release、对象、动作、扩展与已发布技能Schema生成。绑定登记按既有ADMIN目录白名单提交（extensionDigest来自正式扩展），应用草稿实际使用`PUT /admin/apps/{code}/config`与draftRev保存goals/semanticBindings引用，返回修订递增后才给出保存回执。绑定目录写与应用草稿为两次独立提交，重试先复用相同已存在引用；应用评测/发布及ConfigRelease激活仍是后续操作，草稿保存不等于上线。
+- 原Chat、运行详情与assistant.js使用同一server-authority解码：目标只读服务端顶层goals，语义只读`/v1/runs/{id}/semantic-results`受控回执；不从模型output提取同名键。数字callId仅在安全整数时规范化为文本；跨run响应拒绝，撤权/切应用/切空间/退出清空旧投影。语义状态PARTIAL/NO_MATCH不冒充目标成功，原始时效仍显示。
+- OR原“发布与服务”增加“语义与身份”页签，从READY版本/不可变实体与已批准端点生成扩展选择；身份对应沿原OWNER及mapping权限、expectedDraftRev与当前spaceCode提交。切版本/空间/主体立即销毁旧上下文，迟到解析不回填。
+- 本轮只有定向必要逻辑/类型检查，不替代真实PG配置发布事务、浏览器视觉或外部模型/业务场景验收。
