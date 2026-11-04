@@ -115,7 +115,7 @@ describe("页面接线与不伪造可用", () => {
     expect(page).not.toContain('提交入口暂未启用');
     // ONB-04：提交入口解除硬禁用（DraftAssemblyStep 接真实 create）；无模拟提交路径
     expect(page).toContain('<DraftAssemblyStep :draft="draft"');
-    expect(page).toContain('<VerifyPublishStep />');
+    expect(page).toContain('<VerifyPublishStep @published=');
     expect(page).toContain('TEMPLATE_WRITE_SCOPE');
     expect(page).not.toContain('TEMPLATE_SERVICE_UNAVAILABLE');
     expect(page).not.toMatch(/mock|fixture/i);
