@@ -80,6 +80,16 @@ public class RunService {
 
     private final ModelInputMaterials initialMaterials;
     private final ChunkBus initialChunks;
+    /**
+     * SEM-08：终态后的目标读回核验。字段级可选注入，保持既有构造签名与直接 new 的测试可用；
+     * 未装配时运行终态行为不变，只是不产出目标处置记录。
+     */
+    private GoalVerificationService goalVerification;
+
+    @Autowired(required = false)
+    public void setGoalVerification(GoalVerificationService goalVerification) {
+        this.goalVerification = goalVerification;
+    }
     private final String owner = UUID.randomUUID().toString();
     private final Set<Long> activeNodes = java.util.concurrent.ConcurrentHashMap.newKeySet();
     private static final java.util.regex.Pattern UUID_PATTERN =
@@ -1473,6 +1483,7 @@ public class RunService {
 
     public void aggregate(long rid) {
         if (store.protectedRun(rid)) throw RunAuthorityStore.denied();
+        var finished = new java.util.concurrent.atomic.AtomicReference<String>();
         store.atomic(
                 () -> {
                     var run =
@@ -1549,9 +1560,27 @@ public class RunService {
                                     terminal,
                                     state.equals("FAILED") ? "NODE_FAILED" : "FINAL_ANSWER",
                                     rid);
-                    if (terminal) store.event(rid, "RUN_FINISHED", Map.of("status", state));
+                    if (terminal) {
+                        store.event(rid, "RUN_FINISHED", Map.of("status", state));
+                        finished.set(state);
+                    }
                     return null;
                 });
+        // 读回核验必须在事务提交之后：它只读运行与调用事实，失败也不能回滚终态。
+        if (finished.get() != null) verifyGoals(rid);
+    }
+
+    /**
+     * 目标读回是终态后的补充事实，不参与运行终态判定；核验异常不回写 run、不改变调用结果。
+     * 未装配核验服务时不产生处置记录，旧行为保持。
+     */
+    private void verifyGoals(long rid) {
+        if (goalVerification == null) return;
+        try {
+            goalVerification.verifyIfTerminal(rid);
+        } catch (RuntimeException ignored) {
+            // 目标核验失败不能把已终态的运行改回失败；缺失的处置记录可在恢复窗口重算。
+        }
     }
 
     public Map<String, Object> status(String id, Actor actor) {
@@ -1610,6 +1639,11 @@ public class RunService {
         result.put("eventsWatermark", run.get("event_seq"));
         result.put("inputs", TraceStore.json(run.get("inputs")));
         result.put("output", TraceStore.json(run.get("output")));
+        // SEM-08：业务目标处置与运行终态、工具回执分开呈现；未产生处置时不改变旧响应形状。
+        if (goalVerification != null) {
+            var goals = goalVerification.list(rid);
+            if (!goals.isEmpty()) result.put("goals", goals);
+        }
         result.put("fileRefs", protectedView ? List.of() : artifactRefs(rid, id));
         var error = effectiveError(run, nodes, events);
         result.put("error", error);
@@ -2101,6 +2135,7 @@ public class RunService {
     public Map<String, Object> cancel(String id, Actor actor) {
         var run = store.run(id, actor);
         long rid = TraceStore.number(run, "id");
+        var cancelled = new java.util.concurrent.atomic.AtomicBoolean();
         var targets = store.atomic(() -> {
             int n = store.db().update("update engine.run set status='CANCELLED',stop_reason='USER_CANCEL',ended_at=now()"
                     + " where id=? and status not in ('SUCCEEDED','FAILED','CANCELLED')", rid);
@@ -2134,9 +2169,11 @@ public class RunService {
                 int inFlight = store.db().queryForObject("select count(*) from engine.tool_call where run_id=? and status='SUBMITTED'", Integer.class, rid);
                 if (inFlight > 0) store.event(rid, "CANCEL_IN_FLIGHT", Map.of("submittedCalls", inFlight, "externalEffectReverted", false));
                 store.event(rid, "RUN_FINISHED", Map.of("status", "CANCELLED"));
+                cancelled.set(true);
             }
             return List.copyOf(result);
         });
+        if (cancelled.get()) verifyGoals(rid);
         var receipts = new ArrayList<Map<String, Object>>();
         long deadline = System.nanoTime() + 5_000_000_000L;
         for (var target : targets) {
