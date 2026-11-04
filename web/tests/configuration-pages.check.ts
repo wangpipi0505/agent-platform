@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { createRenderer, h, nextTick, type Component } from "vue";
 import ExperienceEditor from "../admin/src/pages/integration/ExperienceEditor.vue";
+import ConfigReleasesPanel from "../admin/src/pages/integration/ConfigReleasesPanel.vue";
 
 const fixture = vi.hoisted(() => ({ api: vi.fn(), errors: [] as unknown[] }));
 vi.mock("../admin/src/usePageOperation", async () => {
@@ -122,5 +123,41 @@ it("CR08：已批准体验追加修订仍走versions，返回新DRAFT后才可�
   await click(button(root, "保存为新草稿"));
   expect(current).toMatchObject({ status: "DRAFT", experienceRev: 4 });
   expect(text(root)).toContain("当前修订 4");
+  expect(fixture.errors).toEqual([]);
+});
+
+it("CR09：没有ACTIVE版本时可从页面创建首份配置并按服务端状态逐步激活", async () => {
+  current = experience("APPROVED", 1);
+  const releases: Record<string, unknown>[] = [];
+  const base = fixture.api.getMockImplementation()!;
+  fixture.api.mockImplementation(async (path: string, method = "GET", body?: Record<string, unknown>) => {
+    if (path === "/admin/config-releases?appCode=orders") return releases;
+    if (path === "/admin/integration-profiles?appCode=orders") return [{
+      profileId: "orders-prod", appCode: "orders", profileRev: 1, status: "APPROVED",
+      revisions: [{ profileRev: 1, environment: "production", experienceRef: { appCode: "orders", experienceRev: 1 } }],
+    }];
+    if (["/admin/connection-profiles", "/admin/environment-bindings", "/admin/semantic-bindings?appCode=orders"].includes(path)) return [];
+    if (path === "/admin/config-releases" && method === "POST") {
+      const row = { ...body, status: "DRAFT", digest: "a".repeat(64), candidateSha256: "b".repeat(64) };
+      releases.push(row); return row;
+    }
+    const action = path.match(/^\/admin\/config-releases\/[^/]+\/(validate|approve|activate)$/)?.[1];
+    if (action) {
+      const states = { validate: ["DRAFT", "VALIDATED"], approve: ["VALIDATED", "APPROVED"], activate: ["APPROVED", "ACTIVE"] } as const;
+      const [before, after] = states[action as keyof typeof states];
+      expect(releases[0].status).toBe(before);
+      releases[0].status = after; return releases[0];
+    }
+    return base(path, method, body);
+  });
+  const root = await mount(ConfigReleasesPanel);
+  await click(button(root, "新建配置发布"));
+  await click(button(root, "保存草稿"));
+  expect(releases).toHaveLength(1);
+  expect(releases[0]).toMatchObject({ appCode: "orders", appVersion: 1, experienceRev: 1, integrationProfileId: "orders-prod", activationScope: "production" });
+  await click(button(root, "重新校验"));
+  await click(button(root, "批准"));
+  await click(button(root, "激活（CAS）"));
+  expect(releases[0].status).toBe("ACTIVE");
   expect(fixture.errors).toEqual([]);
 });

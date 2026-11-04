@@ -14,6 +14,7 @@ import {
   nextRequestId,
   parseApplications,
   parseConnections,
+  parseBindings,
   parseExperiences,
   parseProfiles,
   parseReleases,
@@ -22,6 +23,8 @@ import {
   validateDraft,
   type ApplicationOption,
   type ConnectionProfile,
+  type ConnectionRef,
+  type EnvironmentBinding,
   type ExperienceView,
   type IntegrationProfileView,
   type ReleaseDraft,
@@ -38,6 +41,7 @@ const releases = ref<ReleaseView[]>([]);
 const experiences = ref<ExperienceView | null>(null);
 const profiles = ref<IntegrationProfileView[]>([]);
 const connections = ref<ConnectionProfile[]>([]);
+const bindings = ref<EnvironmentBinding[]>([]);
 const selectedId = ref("");
 const draft = ref<ReleaseDraft | null>(null);
 const draftConnectionKeys = ref<string[]>([]);
@@ -57,22 +61,47 @@ const blockers = computed(() =>
       })
     : [],
 );
-const approvedProfiles = computed(() => profiles.value.filter((profile) => profile.status === "APPROVED"));
+const approvedProfiles = computed(() => profiles.value.filter((profile) => profile.status === "APPROVED"
+  && profile.revisions.some((revision) => revision.profileRev === profile.profileRev && revision.environment === environment.value)));
 
+async function readConfiguration(code: string) {
+  const [releaseRows, profileRows, connectionRows, bindingRows] = await Promise.all([
+    client.configReleases(code), client.integrationProfiles(code), client.connectionProfiles(), client.environmentBindings(),
+  ]);
+  if (code !== appCode.value) return;
+  releases.value = parseReleases(releaseRows);
+  profiles.value = parseProfiles(profileRows);
+  connections.value = parseConnections(connectionRows);
+  bindings.value = parseBindings(bindingRows);
+  try {
+    const view = parseExperiences(await client.experience(code), code);
+    if (code !== appCode.value) return;
+    experiences.value = view;
+  } catch (failure) {
+    const e = failure as { status?: number; code?: string };
+    if (e.status !== 404 || e.code !== "CONFIG_REF_NOT_FOUND") throw failure;
+    experiences.value = null;
+  }
+  if (!selectedId.value) selectedId.value = active.value?.releaseId ?? releases.value[0]?.releaseId ?? "";
+}
 async function load() {
   if (busy.value || !appCode.value) return;
-  await operation(async () => {
-    applications.value = applications.value.length ? applications.value : parseApplications(await client.applications());
-    releases.value = parseReleases(await client.configReleases(appCode.value));
-    profiles.value = parseProfiles(await client.integrationProfiles(appCode.value));
-    connections.value = parseConnections(await client.connectionProfiles());
-    try {
-      experiences.value = parseExperiences(await client.experience(appCode.value), appCode.value);
-    } catch {
-      experiences.value = null;
-    }
-    if (!selectedId.value) selectedId.value = active.value?.releaseId ?? releases.value[0]?.releaseId ?? "";
-  });
+  await operation(() => readConfiguration(appCode.value));
+}
+
+function startNewDraft() {
+  if (!appCode.value || busy.value) return;
+  const experience = experiences.value;
+  const profile = approvedProfiles.value[0];
+  if (experience?.status !== "APPROVED" || !profile) {
+    error.value = "请先批准该应用的体验和当前环境的接入档案，再新建配置发布。";
+    return;
+  }
+  draft.value = { appCode: appCode.value,
+    appVersion: applications.value.find((a) => a.code === appCode.value)?.currentVersionNo ?? 1,
+    experienceRev: experience.experienceRev, integrationProfileId: profile.profileId,
+    integrationProfileRev: profile.profileRev, connectionProfileRefs: [], activationScope: environment.value };
+  draftConnectionKeys.value = []; exportText.value = "";
 }
 
 function startDraft() {
@@ -92,8 +121,24 @@ function setConnections(keys: string[]) {
   if (!draft.value) return;
   draft.value.connectionProfileRefs = keys.map((item) => {
     const [profileId, revision] = item.split("#");
-    return { profileId, profileRev: Number(revision) };
+    return draft.value!.connectionProfileRefs.find((ref) => ref.profileId === profileId && ref.profileRev === Number(revision))
+      ?? { profileId, profileRev: Number(revision) };
   });
+}
+
+function availableBindings(ref: ConnectionRef) {
+  return bindings.value.filter((binding) => binding.status === "APPROVED" && binding.revisions.some((revision) =>
+    revision.bindingRev === binding.currentRev && revision.connectionProfileId === ref.profileId
+    && revision.connectionProfileRev === ref.profileRev && revision.environment === environment.value));
+}
+function chooseBinding(ref: ConnectionRef, id: string) {
+  const binding = availableBindings(ref).find((b) => b.bindingId === id);
+  if (!binding) return;
+  ref.bindingId = id; ref.bindingRev = binding.currentRev; ref.environment = environment.value;
+}
+function operations(ref: ConnectionRef) {
+  return connections.value.find((connection) => connection.profileId === ref.profileId)?.revisions
+    .find((revision) => revision.profileRev === ref.profileRev)?.operationAllowlist ?? [];
 }
 
 function pickProfile(profileId: string) {
@@ -116,7 +161,7 @@ async function createDraft() {
     }
     success("配置发布草稿已创建；需重新校验并批准后才能激活");
     draft.value = null;
-    await load();
+    await readConfiguration(appCode.value);
     selectedId.value = releaseId;
   });
 }
@@ -134,7 +179,7 @@ async function step(action: "validate" | "approve" | "activate" | "disable") {
       throw new Error(actionError(failure));
     }
     success(action === "activate" ? "配置已激活；仅影响此后的新会话与新运行" : `已执行 ${action}`);
-    await load();
+    await readConfiguration(appCode.value);
   });
 }
 
@@ -165,6 +210,7 @@ onMounted(async () => {
         <el-option v-for="item in ENVIRONMENTS" :key="item" :label="item" :value="item" />
       </el-select>
       <el-button :disabled="busy || !active" @click="startDraft">复制激活版本为草稿</el-button>
+      <el-button type="primary" :disabled="busy || !appCode || !auth.can('admin')" @click="startNewDraft">新建配置发布</el-button>
     </div>
 
     <section class="panel active" aria-label="当前激活版本">
@@ -189,7 +235,7 @@ onMounted(async () => {
       </section>
 
       <section v-if="draft" class="panel" aria-label="草稿与差异">
-        <h2>新草稿（来自激活版本）</h2>
+        <h2>配置发布草稿</h2>
         <el-form label-position="top">
           <el-form-item label="应用版本"><el-input-number v-model="draft.appVersion" :min="1" /></el-form-item>
           <el-form-item label="体验修订"><el-input-number v-model="draft.experienceRev" :min="1" /></el-form-item>
@@ -198,6 +244,16 @@ onMounted(async () => {
               <el-option v-for="profile in approvedProfiles" :key="profile.profileId" :label="`${profile.profileId}@${profile.profileRev}`" :value="profile.profileId" />
             </el-select>
           </el-form-item>
+          <template v-for="ref in draft.connectionProfileRefs" :key="ref.profileId">
+            <el-form-item :label="`${ref.profileId} · 当前环境固定绑定`">
+              <el-select :model-value="ref.bindingId" @update:model-value="(id: string) => chooseBinding(ref, id)">
+                <el-option v-for="binding in availableBindings(ref)" :key="binding.bindingId" :value="binding.bindingId" :label="`${binding.bindingId}@${binding.currentRev}`" />
+              </el-select>
+            </el-form-item>
+            <el-form-item :label="`${ref.profileId} · 批准操作`">
+              <el-select v-model="ref.operation"><el-option v-for="op in operations(ref)" :key="op" :value="op" :label="op" /></el-select>
+            </el-form-item>
+          </template>
           <el-form-item label="接入档案修订"><el-input-number v-model="draft.integrationProfileRev" :min="1" /></el-form-item>
           <el-form-item label="连接引用（仅已批准）">
             <el-checkbox-group :model-value="draftConnectionKeys" @update:model-value="setConnections">

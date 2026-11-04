@@ -14,10 +14,16 @@ export const ENVIRONMENTS = ["production", "staging", "test", "development"] as 
 export interface ApplicationOption {
   code: string;
   name: string;
+  currentVersionNo?: number;
 }
 export interface ConnectionRef {
   profileId: string;
   profileRev: number;
+  bindingId?: string;
+  bindingRev?: number;
+  operation?: string;
+  environment?: string;
+  resolutionDigest?: string;
 }
 export interface SkillRef {
   code: string;
@@ -31,6 +37,7 @@ export interface ReleaseDraft {
   integrationProfileRev: number;
   connectionProfileRefs: ConnectionRef[];
   activationScope: string;
+  semanticBindings?: unknown[];
 }
 export interface ReleaseView extends ReleaseDraft {
   releaseId: string;
@@ -95,6 +102,7 @@ export interface ConnectionProfileRevision {
   authScheme: unknown;
   identityPolicy: unknown;
   allowedUses: unknown;
+  operationAllowlist?: string[];
   declarationSha256: string;
   createdBy: string;
   createdAt: string;
@@ -167,13 +175,17 @@ export function parseRows(value: unknown, label: string): Record<string, unknown
 export function parseApplications(value: unknown): ApplicationOption[] {
   return parseRows(value, "应用")
     .filter((row) => text(row.code))
-    .map((row) => ({ code: text(row.code), name: text(row.name) || text(row.code) }));
+    .map((row) => ({ code: text(row.code), name: text(row.name) || text(row.code),
+      ...(integer(row.currentVersionNo) > 0 ? { currentVersionNo: integer(row.currentVersionNo) } : {}) }));
 }
 
 function connectionRefs(value: unknown): ConnectionRef[] {
   return list(value)
     .map((raw) => object(raw, "连接引用"))
-    .map((raw) => ({ profileId: text(raw.profileId), profileRev: integer(raw.profileRev) }))
+    .map((raw) => ({ profileId: text(raw.profileId), profileRev: integer(raw.profileRev),
+      ...(raw.bindingId !== undefined ? { bindingId: text(raw.bindingId), bindingRev: integer(raw.bindingRev), operation: text(raw.operation) } : {}),
+      ...(raw.environment !== undefined ? { environment: text(raw.environment) } : {}),
+      ...(raw.resolutionDigest !== undefined ? { resolutionDigest: text(raw.resolutionDigest) } : {}) }))
     .filter((ref) => !!ref.profileId && ref.profileRev > 0);
 }
 
@@ -275,6 +287,7 @@ export function parseConnections(value: unknown): ConnectionProfile[] {
         authScheme: revision.authScheme,
         identityPolicy: revision.identityPolicy,
         allowedUses: revision.allowedUses,
+        operationAllowlist: list(revision.operationAllowlist).filter((v): v is string => typeof v === "string"),
         declarationSha256: text(revision.declarationSha256),
         createdBy: text(revision.createdBy),
         createdAt: text(revision.createdAt),
@@ -357,6 +370,7 @@ export function copyAsDraft(release: ReleaseView | null, appCode: string, enviro
     integrationProfileRev: release.integrationProfileRev,
     connectionProfileRefs: release.connectionProfileRefs.map((ref) => ({ ...ref })),
     activationScope: environment,
+    ...(release.semanticBindings.length ? { semanticBindings: release.semanticBindings.map((ref) => ({ ...object(ref, "语义绑定") })) } : {}),
   };
 }
 
