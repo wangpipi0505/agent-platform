@@ -92,7 +92,7 @@ describe("动态值保持 unknown 受校验", () => {
 /* ===================== MNT-03（onboarding 之外 DTO 族） ===================== */
 import {
   asRecordField,
-  asUnknownRecord,
+
   emptyAppDetail,
   emptyRunStatus,
   parseAppDetail,
@@ -136,15 +136,15 @@ describe("MNT-03 运行状态外壳（协议兼容）", () => {
     const envelope = parseRunStatusEnvelope({
       code: "OK", traceId: "t1", rawData: "kept", data: { status: "RUNNING", eventsWatermark: "5", chunkHint: "keep" },
     });
-    expect((envelope as Record<string, unknown>).rawData).toBe("kept");
-    expect((envelope.data as Record<string, unknown>).chunkHint).toBe("keep");
+    expect((envelope as unknown as Record<string, unknown>).rawData).toBe("kept");
+    expect((envelope.data as unknown as Record<string, unknown>).chunkHint).toBe("keep");
     expect(envelope.data.eventsWatermark).toBe("5");
   });
 
   it("无 events 键时不创建空数组（Object.hasOwn 语义由服务端事实决定）", () => {
-    const data = parseRunStatusSnapshot({ status: "RUNNING" }) as Record<string, unknown>;
+    const data = parseRunStatusSnapshot({ status: "RUNNING" }) as unknown as Record<string, unknown>;
     expect(Object.hasOwn(data, "events")).toBe(false);
-    const withEvents = parseRunStatusSnapshot({ status: "RUNNING", events: [1] }) as Record<string, unknown>;
+    const withEvents = parseRunStatusSnapshot({ status: "RUNNING", events: [1] }) as unknown as Record<string, unknown>;
     expect(Object.hasOwn(withEvents, "events")).toBe(true);
   });
 
