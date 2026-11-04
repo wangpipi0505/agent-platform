@@ -115,13 +115,22 @@ class AlgorithmMigrationPostgresTest {
             String afterHttp =
                     db.queryForObject(
                             "select"
-                                + " (to_jsonb(b)-'external_job_uid'-'external_namespace'-'external_api_sha256'-'external_identity_sha256')::text"
+                                + " (to_jsonb(b)-'external_job_uid'-'external_namespace'-'external_api_sha256'-'external_identity_sha256'"
+                                + " -'external_state'-'last_polled_at'-'remote_error_code'-'remote_error_message'-'submitted_at')::text"
                                 + " from skill.external_job_binding b where tenant_id=? and"
                                 + " call_id=102",
                             String.class,
                             tenant);
             assertEquals(
                     Json.canonical(Json.read(beforeHttp)), Json.canonical(Json.read(afterHttp)));
+            // 全部旧字段仍逐字相等；V314后来增加的HTTP空状态列另行精确核NULL，
+            // 不把合法新增列误报成旧数据变化，也不忽略新增列的实际值。
+            var addedHttpState = db.queryForMap(
+                    "select external_state,last_polled_at,remote_error_code,remote_error_message,submitted_at"
+                            + " from skill.external_job_binding where tenant_id=? and call_id=102", tenant);
+            assertEquals(Set.of("external_state", "last_polled_at", "remote_error_code",
+                    "remote_error_message", "submitted_at"), addedHttpState.keySet());
+            assertTrue(addedHttpState.values().stream().allMatch(Objects::isNull));
             assertEquals(
                     beforeProof,
                     db.queryForObject(
@@ -217,8 +226,8 @@ class AlgorithmMigrationPostgresTest {
                             .locations("classpath:db/migration")
                             .load();
             flyway.validate();
-            // AP-S06 新增 V312（fixture 审计表）后最新迁移版本为 312；V311 的行级校验在下一用例。
-            assertEquals("312", flyway.info().current().getVersion().getVersion());
+            // 本批冻结的完整迁移集最高为V320；下一用例仍独立核对V312审计迁移存在。
+            assertEquals("320", flyway.info().current().getVersion().getVersion());
         } finally {
             SecurityContextHolder.clearContext();
         }
