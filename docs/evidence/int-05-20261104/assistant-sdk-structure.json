@@ -1,0 +1,182 @@
+{
+  "fixtureOnly": true,
+  "bundle": "assistant.js/dist/assistant.js",
+  "checks": {
+    "mountContractAndShadowIsolation": true,
+    "chatFlowAndSessionHandoff": true,
+    "restoreSessionCompatibility": true,
+    "flowRunPath": true,
+    "approvalAndArtifactDownload": true
+  },
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/v1/apps/demo/input-schema",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/demo/sessions",
+      "query": "",
+      "body": {},
+      "authorization": "Bearer tok"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/demo/sessions/s_1/turns",
+      "query": "",
+      "body": {
+        "inputs": {
+          "message": "你好",
+          "context": {
+            "page": "p1"
+          }
+        },
+        "requestId": "c7979cc4-21a0-4995-b717-a5970585dab6"
+      },
+      "authorization": "Bearer tok"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/runs/r_1/events",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/runs/r_1",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/demo/sessions/s_prev",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/demo/input-schema",
+      "query": "?versionNo=7",
+      "body": null,
+      "authorization": "Bearer tok"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/runs/r_prev",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/flow_demo/input-schema",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/flow_demo/runs",
+      "query": "",
+      "body": {
+        "inputs": {
+          "message": "流程主题",
+          "context": {}
+        },
+        "requestId": "78e5cc28-3a49-4507-bb19-9f3eb050313f"
+      },
+      "authorization": "Bearer tok"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/runs/r_flow/events",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/runs/r_flow",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/demo/input-schema",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/demo/sessions",
+      "query": "",
+      "body": {},
+      "authorization": "Bearer tok"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/demo/sessions/s_1/turns",
+      "query": "",
+      "body": {
+        "inputs": {
+          "message": "执行",
+          "context": {}
+        },
+        "requestId": "22ad0e57-a5f6-4a2e-9e86-996f72ac3097"
+      },
+      "authorization": "Bearer tok"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/runs/r_2/events",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/runs/r_2/approvals",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/runs/r_2",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/runs/r_2/approvals/ni_1/decision",
+      "query": "",
+      "body": {
+        "approved": true,
+        "requestId": "324f0f7d-b18b-4d89-a8f4-b0fe607eeb68",
+        "snapshotDigest": "sha256:abc"
+      },
+      "authorization": "Bearer tok"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/runs/r_2/artifacts/a1/download",
+      "query": "",
+      "body": null,
+      "authorization": "Bearer tok"
+    }
+  ],
+  "pageErrors": [],
+  "dialogs": [
+    "确认执行当前参数快照？"
+  ],
+  "ok": true
+}
