@@ -50,7 +50,7 @@ it('unsupported native context is recoverable and does not mask error envelopes 
  expect(()=>decodeRunStatus(status('0'))).toThrow('升级 Chrome 或 Edge');
  expect(decodeRunStatus('{"code":"AUTH","message":"denied","data":null}')).toEqual({code:'AUTH',message:'denied',data:null});
  const unauthorized=vi.fn();const api=createApi(()=> 'test',async()=>new Response('{"code":"AUTH","message":"denied","data":null}',{status:401}),unauthorized);
- await expect(api('/status','GET',undefined,undefined,decodeRunStatus)).rejects.toMatchObject({status:401,message:'denied'});expect(unauthorized).toHaveBeenCalledOnce();
+ await expect(api('/status','GET',undefined,undefined,decodeRunStatus)).rejects.toMatchObject({status:401,message:'会话已失效，请重新连接',code:'AUTH'});expect(unauthorized).toHaveBeenCalledOnce();
 });
 it('preserves one optional ASCII space, multiline payload and 32 codepoint names over 64 bytes',()=>{
  const name='界'.repeat(32);expect(new TextEncoder().encode(name).length).toBeGreaterThan(64);

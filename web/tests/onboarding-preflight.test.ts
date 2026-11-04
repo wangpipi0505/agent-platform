@@ -114,7 +114,11 @@ describe("组件接线（源码断言）", () => {
     expect(step).toContain("提交入口暂未启用");
     // 零创建断言在 shared 的诊断摘要构造器内；组件展示该摘要
     expect(step).toContain("buildPreflightSummary");
-    expect(page).toContain("<ConnectionCheckStep />");
+    // CR-05（5da4d115）起页面改为会话式向导：诊断步骤组件保留但不再由该页面挂载，
+    // 接线断言对齐已交付装配（OnboardingSessionWorkspace + 草稿/发布/助手步骤）。
+    expect(page).toContain("<OnboardingSessionWorkspace />");
+    expect(page).toContain("<DraftAssemblyStep");
+    expect(page).toContain("<VerifyPublishStep");
   });
 
   it("①连接档案只列被授予（grantedConnections 接线 + ADMIN 分支说明）", () => {

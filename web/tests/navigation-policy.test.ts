@@ -20,10 +20,10 @@ const routerSource = readFileSync(
   "utf8",
 );
 
-it("单一来源：主入口（INT-08起16个）与全部页面登记齐全且字段完整", () => {
+it("单一来源：主入口（CR-10起17个）与全部页面登记齐全且字段完整", () => {
   const menu = menuEntries();
-  expect(menu.length).toBe(16);
-  expect(new Set(menu.map((e) => e.path)).size).toBe(16);
+  expect(menu.length).toBe(17);
+  expect(new Set(menu.map((e) => e.path)).size).toBe(17);
   for (const entry of pageAccess) {
     expect(entry.title.length, entry.key).toBeGreaterThan(0);
     expect(entry.area.length, entry.key).toBeGreaterThan(0);
