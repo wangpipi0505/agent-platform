@@ -50,18 +50,33 @@ function fill(view: ExperienceView) {
   draft.helpRefs = JSON.stringify(revision.helpRefs, null, 2);
 }
 
-async function load() {
-  if (busy.value || !appCode.value) return;
-  await operation(async () => {
-    experience.value = parseExperiences(await client.experience(appCode.value), appCode.value);
-    fill(experience.value);
-  });
+async function readExperience(code: string) {
+  try {
+    const view = parseExperiences(await client.experience(code), code);
+    if (code !== appCode.value) return;
+    experience.value = view;
+    fill(view);
+  } catch (failure) {
+    const e = failure as { status?: number; code?: string };
+    if (e.status !== 404 || e.code !== "CONFIG_REF_NOT_FOUND") throw failure;
+    if (code !== appCode.value) return;
+    experience.value = null;
+    Object.assign(draft, { title: "", welcomeText: "", capabilityDescriptions: "[]",
+      promptRefs: "[]", inputPresentation: "{}", resultPresentation: "{}", helpRefs: "[]" });
+  }
 }
 
-async function save(revise: boolean) {
+async function load() {
+  if (busy.value || !appCode.value) return;
+  await operation(() => readExperience(appCode.value));
+}
+
+async function save() {
   if (busy.value) return;
   await operation(async () => {
     if (!appCode.value) throw new Error("请先选择应用");
+    const code = appCode.value;
+    const previous = experience.value;
     const body: Record<string, unknown> = {
       title: draft.title.trim(),
       welcomeText: draft.welcomeText,
@@ -73,18 +88,16 @@ async function save(revise: boolean) {
       requestId: nextRequestId(),
     };
     try {
-      if (revise) {
-        if (!experience.value) throw new Error("请先加载体验草稿");
-        await client.reviseExperience(appCode.value, { ...body, expectedRev: experience.value.experienceRev });
+      if (previous) {
+        await client.reviseExperience(code, { ...body, expectedRev: previous.experienceRev });
       } else {
-        await client.createExperience(appCode.value, body);
+        await client.createExperience(code, body);
       }
     } catch (failure) {
       throw new Error(actionError(failure));
     }
-    success(revise ? "已生成新体验修订；批准后配置发布才能引用" : "体验草稿已创建");
-    draft.welcomeText = "";
-    await load();
+    success(previous ? "已生成新体验修订；批准后配置发布才能引用" : "体验草稿已创建");
+    await readExperience(code);
   });
 }
 
@@ -99,7 +112,7 @@ async function transition(action: "approve" | "disable") {
       throw new Error(actionError(failure));
     }
     success(action === "approve" ? "体验已批准" : "体验已停用；已激活发布仍按快照运行，新激活会失败");
-    await load();
+    await readExperience(appCode.value);
   });
 }
 
@@ -126,9 +139,9 @@ onMounted(async () => {
         <span class="muted">修订 {{ experience.experienceRev }} · 批准者 {{ experience.revisions.at(-1)?.createdBy || "未记录" }} · 更新 {{ experience.updatedAt || experience.createdAt }}</span>
       </template>
     </div>
-    <el-empty v-if="!experience" :description="appCode ? '该应用尚未配置体验，可在右侧创建草稿' : '请选择应用'" />
+    <el-empty v-if="!appCode" description="请选择应用" />
     <div v-else class="grid">
-      <section class="panel" aria-label="当前体验">
+      <section v-if="experience" class="panel" aria-label="当前体验">
         <h2>当前修订 {{ experience.experienceRev }}</h2>
         <p class="muted">校验摘要 {{ experience.revisions.at(-1)?.declarationSha256 || "—" }}</p>
         <h3>{{ experience.revisions.at(-1)?.title }}</h3>
@@ -139,7 +152,7 @@ onMounted(async () => {
         </div>
       </section>
       <section class="panel" aria-label="体验草稿">
-        <h2>{{ isDraft ? "继续编辑草稿" : "复制当前修订为新草稿" }}</h2>
+        <h2>{{ !experience ? "创建体验草稿" : isDraft ? "继续编辑草稿" : "复制当前修订为新草稿" }}</h2>
         <el-form label-position="top">
           <el-form-item label="标题"><el-input v-model="draft.title" maxlength="128" /></el-form-item>
           <el-form-item label="欢迎语"><el-input v-model="draft.welcomeText" type="textarea" :rows="3" maxlength="2048" show-word-limit /></el-form-item>
@@ -148,7 +161,7 @@ onMounted(async () => {
           <el-form-item label="输入呈现 JSON"><el-input v-model="draft.inputPresentation" type="textarea" :rows="3" /></el-form-item>
           <el-form-item label="结果呈现 JSON"><el-input v-model="draft.resultPresentation" type="textarea" :rows="3" /></el-form-item>
           <el-form-item label="帮助引用 JSON"><el-input v-model="draft.helpRefs" type="textarea" :rows="2" /></el-form-item>
-          <el-button type="primary" :disabled="busy" @click="save(!isDraft)">{{ isDraft ? "保存修订" : "保存为新草稿" }}</el-button>
+          <el-button type="primary" :disabled="busy || !auth.can('admin') || experience?.status === 'DISABLED'" @click="save">{{ !experience ? "创建体验草稿" : isDraft ? "保存修订" : "保存为新草稿" }}</el-button>
         </el-form>
       </section>
     </div>

@@ -88,7 +88,8 @@ public class AssistantExperienceRepository {
         throw new PlatformException(409, "CONFIG_REV_CONFLICT",
             "体验修订已变化，请重新读取: 期望 " + expectedRev + "，当前 " + current);
       }
-      if (!"DRAFT".equals(String.valueOf(head.get("status")))) {
+      String previousStatus = String.valueOf(head.get("status"));
+      if (!java.util.Set.of("DRAFT", "APPROVED").contains(previousStatus)) {
         throw new PlatformException(400, "CONFIG_STATE_TRANSITION_INVALID",
             "状态 " + head.get("status") + " 不允许新增体验修订");
       }
@@ -103,9 +104,9 @@ public class AssistantExperienceRepository {
           Json.write(revision.inputPresentation()), Json.write(revision.resultPresentation()),
           Json.write(revision.helpRefs()), revision.sha256(), actor.principalId());
       int updated = db.update("""
-          update app.assistant_experience set current_rev = ?, updated_at = now()
-           where tenant_id = ? and app_code = ? and current_rev = ? and status = 'DRAFT'
-          """, rev, actor.tenantId(), appCode, current);
+          update app.assistant_experience set current_rev = ?, status = 'DRAFT', updated_at = now()
+           where tenant_id = ? and app_code = ? and current_rev = ? and status = ?
+          """, rev, actor.tenantId(), appCode, current, previousStatus);
       if (updated != 1) {
         throw new PlatformException(409, "CONFIG_REV_CONFLICT", "体验修订已被并发修改，请重试");
       }

@@ -1,0 +1,116 @@
+[INFO] Scanning for projects...
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Build Order:
+[INFO]
+[INFO] agent-platform                                                     [pom]
+[INFO] admin-common                                                       [jar]
+[INFO] app-management                                                     [jar]
+[INFO]
+[INFO] ------------------< cn.agentplatform:agent-platform >-------------------
+[INFO] Building agent-platform 0.1.0-SNAPSHOT                             [1/3]
+[INFO]   from pom.xml
+[INFO] --------------------------------[ pom ]---------------------------------
+[INFO]
+[INFO] --- enforcer:3.5.0:enforce (default) @ agent-platform ---
+[INFO] Rule 0: org.apache.maven.enforcer.rules.version.RequireJavaVersion passed
+[INFO]
+[INFO] -------------------< cn.agentplatform:admin-common >--------------------
+[INFO] Building admin-common 0.1.0-SNAPSHOT                               [2/3]
+[INFO]   from admin-common\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO]
+[INFO] --- enforcer:3.5.0:enforce (default) @ admin-common ---
+[INFO]
+[INFO] --- resources:3.3.1:resources (default-resources) @ admin-common ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 1 resource from ..\contracts to target\classes
+[INFO]
+[INFO] --- compiler:3.14.0:compile (default-compile) @ admin-common ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO]
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ admin-common ---
+[INFO] skip non existing resourceDirectory G:\207\��Ŀ\�㷨���鹤��\����\_worktrees\upgrade-20261103\agent-platform\admin-common\src\test\resources
+[INFO]
+[INFO] --- compiler:3.14.0:testCompile (default-testCompile) @ admin-common ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO]
+[INFO] --- jar:3.4.2:test-jar (finite-test-fixtures) @ admin-common ---
+[INFO]
+[INFO] --- surefire:3.5.3:test (default-test) @ admin-common ---
+[INFO]
+[INFO] ------------------< cn.agentplatform:app-management >-------------------
+[INFO] Building app-management 0.1.0-SNAPSHOT                             [3/3]
+[INFO]   from app-management\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO]
+[INFO] --- enforcer:3.5.0:enforce (default) @ app-management ---
+[INFO]
+[INFO] --- resources:3.3.1:resources (default-resources) @ app-management ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 18 resources from src\main\resources to target\classes
+[INFO]
+[INFO] --- compiler:3.14.0:compile (default-compile) @ app-management ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 80 source files with javac [debug parameters release 21] to target\classes
+[INFO] /G:/207/��Ŀ/�㷨���鹤��/����/_worktrees/upgrade-20261103/agent-platform/app-management/src/main/java/cn/agentplatform/app/domain/CapabilityPackage.java: ĳЩ�����ļ�ʹ�û򸲸����ѹ�ʱ�� API��
+[INFO] /G:/207/��Ŀ/�㷨���鹤��/����/_worktrees/upgrade-20261103/agent-platform/app-management/src/main/java/cn/agentplatform/app/domain/CapabilityPackage.java: �й���ϸ��Ϣ, ��ʹ�� -Xlint:deprecation ���±��롣
+[INFO] /G:/207/��Ŀ/�㷨���鹤��/����/_worktrees/upgrade-20261103/agent-platform/app-management/src/main/java/cn/agentplatform/app/application/AppService.java: ĳЩ�����ļ�ʹ����δ�����򲻰�ȫ�Ĳ�����
+[INFO] /G:/207/��Ŀ/�㷨���鹤��/����/_worktrees/upgrade-20261103/agent-platform/app-management/src/main/java/cn/agentplatform/app/application/AppService.java: �й���ϸ��Ϣ, ��ʹ�� -Xlint:unchecked ���±��롣
+[INFO]
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ app-management ---
+[INFO] skip non existing resourceDirectory G:\207\��Ŀ\�㷨���鹤��\����\_worktrees\upgrade-20261103\agent-platform\app-management\src\test\resources
+[INFO]
+[INFO] --- compiler:3.14.0:testCompile (default-testCompile) @ app-management ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 48 source files with javac [debug parameters release 21] to target\test-classes
+[INFO] /G:/207/��Ŀ/�㷨���鹤��/����/_worktrees/upgrade-20261103/agent-platform/app-management/src/test/java/cn/agentplatform/app/application/PublishPinAuditPostgresTest.java: ĳЩ�����ļ�ʹ����δ�����򲻰�ȫ�Ĳ�����
+[INFO] /G:/207/��Ŀ/�㷨���鹤��/����/_worktrees/upgrade-20261103/agent-platform/app-management/src/test/java/cn/agentplatform/app/application/PublishPinAuditPostgresTest.java: �й���ϸ��Ϣ, ��ʹ�� -Xlint:unchecked ���±��롣
+[INFO]
+[INFO] --- surefire:3.5.3:test (default-test) @ app-management ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO]
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running cn.agentplatform.app.infra.AssistantExperienceRevisionPostgresTest
+17:14:13.165 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:35432/agent_cr08_20261104 (PostgreSQL 16.15)
+17:14:13.207 [main] INFO org.flywaydb.core.internal.database.base.Schema -- Creating schema "app" ...
+17:14:13.213 [main] INFO org.flywaydb.core.internal.schemahistory.JdbcTableSchemaHistory -- Creating Schema History table "app"."flyway_schema_history" ...
+17:14:13.312 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": null
+17:14:13.328 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "app" to version "100 - application"
+17:14:13.334 [main] WARN org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor -- DB: schema "app" already exists, skipping (SQL State: 42P06 - Error Code: 0)
+17:14:13.413 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "app" to version "101 - integration"
+17:14:13.436 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "app" to version "102 - separate application draft"
+17:14:13.477 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "app" to version "103 - freeze candidate models"
+17:14:13.481 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "app" to version "104 - integration policy revision"
+17:14:13.494 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "app" to version "105 - publish gate"
+17:14:13.508 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "app" to version "106 - publish pin"
+17:14:13.528 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "app" to version "107 - identity mapping"
+17:14:13.544 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "app" to version "108 - capability package intake"
+17:14:13.568 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "app" to version "109 - capability package resolution"
+17:14:13.577 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "app" to version "110 - capability applications"
+17:14:13.595 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "app" to version "111 - connection profiles and env bindings"
+17:14:13.628 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "app" to version "112 - connection profile grants"
+17:14:13.649 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "app" to version "113 - assistant experience and config release"
+17:14:13.697 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "app" to version "114 - semantic bindings"
+17:14:13.716 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "app" to version "115 - config release semantic refs"
+17:14:13.732 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "app" to version "116 - onboarding templates"
+17:14:13.755 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Successfully applied 17 migrations to schema "app", now at version v116 (execution time 00:00.332s)
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.678 s -- in cn.agentplatform.app.infra.AssistantExperienceRevisionPostgresTest
+[INFO]
+[INFO] Results:
+[INFO]
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0
+[INFO]
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Summary for agent-platform 0.1.0-SNAPSHOT:
+[INFO]
+[INFO] agent-platform ..................................... SUCCESS [  0.229 s]
+[INFO] admin-common ....................................... SUCCESS [  1.034 s]
+[INFO] app-management ..................................... SUCCESS [  8.884 s]
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  10.498 s
+[INFO] Finished at: 2026-11-04T17:14:14+08:00
+[INFO] ------------------------------------------------------------------------

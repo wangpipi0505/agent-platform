@@ -13,6 +13,7 @@
   "scripts": {
     "dev": "vite --config admin/vite.config.ts",
     "test": "vitest run",
+    "test:configuration-pages": "vitest run --config tests/configuration-pages.config.ts",
     "build": "vue-tsc --noEmit && vite build --config admin/vite.config.ts && vite build --config webapp/vite.config.ts && vite build --config assistant.js/vite.config.ts && node shared/copy-assistant.mjs",
     "api:generate": "node shared/generate-api.mjs",
     "dev:webapp": "vite --config webapp/vite.config.ts",
