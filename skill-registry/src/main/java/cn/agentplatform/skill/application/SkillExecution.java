@@ -26,6 +26,13 @@ public class SkillExecution {
     private final ApprovedConnectionResolver approvedConnections;
     private final String engineUrl;
     private final ReconciliationProofs reconciliationProofs;
+    /** SEM-07.1：可选装配；未装配时声明了条件的契约必须拒绝，不能静默放行。 */
+    private SemanticExecutionGate semanticGate;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    public void setSemanticGate(SemanticExecutionGate gate) {
+        this.semanticGate = gate;
+    }
 
     /**
      * PLAT-04 回滚开关。关闭时不向 envelope 暴露 externalJob，且 SUBMIT_NO_TASK_ID 仍按旧语义
@@ -107,7 +114,23 @@ public class SkillExecution {
     }
 
     /**
-     * INT-02：受控连接的分发前复核。
+     * SEM-07.1：在进入任何适配器之前复核冻结契约声明的语义条件。
+     *
+     * <p>声明存在而检查器未装配时拒绝（503），因为“无法核验”不能等同于“无条件约束”；
+     * 未声明条件的存量技能保持零跨服务调用。检查发生在幂等事实交付之后、适配器之前，
+     * 因此重放历史结果不会因事后撤权而失败，新的业务 I/O 则必须重新通过条件。
+     */
+    private void gateSemantic(Map<String, Object> contract) {
+        boolean declared = SemanticExecutionGate.declared(contract);
+        if (semanticGate == null) {
+            if (declared)
+                throw error(503, "SEMANTIC_CONDITION_UNAVAILABLE", "语义条件检查未装配，拒绝执行已声明条件的调用");
+            return;
+        }
+        if (declared) semanticGate.check(contract);
+    }
+
+    /**
      *
      * 未声明 bindingRefs 的技能完全不受影响（不解析、不写回执、不多一次跨服务调用）；
      * 一旦声明了引用，就必须有解析器可用——宁可拒绝，也不把"没装配"当成"没约束"。
@@ -192,6 +215,7 @@ public class SkillExecution {
         // PREPARE/EXECUTE、只读重试都经过这里；已经结束的事实走上面的 deliver（观察历史结果
         // 不产生新的外部调用，不应因事后撤权而读不出来）。
         gateApproved(contract, request, code);
+        gateSemantic(contract);
         String failure = null, reason = null;
         // PLAT-05：远端业务码与有界原文由适配器失败携带，终经 envelope 落成七字段错误对象。
         String errorCode = null, errorRaw = null;
