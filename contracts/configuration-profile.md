@@ -21,7 +21,7 @@
 | 对象 | 最小字段 | 约束要点 |
 | --- | --- | --- |
 | `ConnectionProfile` | `id, tenantId, profileRev, protocol, operationAllowlist, endpointPolicy, authScheme, identityPolicy, inputContractRefs, outputContractRefs, allowedUses, status` | 协议与操作白名单为不可变版本；`protocol` ∈ 既有四 kind；`allowedUses` 声明允许的用途子集；不保存明文凭据，凭据规则只含 secret_ref 策略 |
-| `EnvironmentBinding` | `id, environment, bindingRev, connectionProfileId, connectionProfileRev, baseEndpoint, secretRef, runtimeRef, originPolicy, healthPolicy, status` | `baseEndpoint` 受现有 URI/来源策略限制；`secretRef` 仅引用；健康探针只读；每次变更产生新 `bindingRev`，不改旧行 |
+| `EnvironmentBinding` | `id, environment, bindingRev, connectionProfileId, connectionProfileRev, baseEndpoint, secretRef, runtimeRef, originPolicy, healthPolicy, status` | `baseEndpoint` 受现有 URI/来源策略限制；按批准Profile修订核验：`authKind=NONE`时`secretRef`必须为空串，其它已支持鉴权必须为真实scheme:ref；不造占位引用；健康探针只读；每次变更产生新 `bindingRev`，不改旧行 |
 | `AssistantExperience` | `appCode, experienceRev, title, welcomeText, capabilityDescriptions, promptRefs, inputPresentation, resultPresentation, helpRefs` | `promptRefs` 复用既有 PromptTemplate 版本体系（不另造模板引擎）；能力描述由已发布能力核对，不得宣传未授权/未交付功能 |
 | `IntegrationProfile` | `id, appCode, bizSystemCode, environment, mode, allowedOrigins, contextSchema, credentialPolicyRef, experienceRef, status` | `mode` ∈ `L0/L1/L2/L3`（assistant-integration.md §2）；`allowedOrigins` 精确匹配；`contextSchema` 只含声明字段（见 assistant-integration.md §5）；禁止任意可执行 JS/HTML、任意回调 URL、新增授权角色 |
 | `ConfigRelease` | `id, appCode, appVersion, candidateSha256, experienceRev, integrationProfileRev, connectionProfileRefs, activationScope, createdBy, digest` | 不可变组合快照；`digest` 只含声明与版本引用，**不含 secret 值**；不改写 app_version/skill_version/OR 已发布 manifest |
@@ -40,7 +40,7 @@
 - 配置发布 `connectionProfileRefs` 支持精确 `{profileId,profileRev,bindingId,bindingRev,operation,environment?,resolutionDigest?}`。只含 profileId/profileRev 的历史值保留为目录引用，不推断可执行绑定。绑定字段一旦出现必须完整；发布/激活复查精确批准绑定。
 - app 的激活体验投影只附上述引用（`bindingRefs`），不暴露物理地址或 secret_ref。引擎按服务端环境校验后把精确引用写入运行快照和 `environment_binding_revs`；会话恢复从同一事实恢复。ToolCalls登记以运行快照为准，body不一致以 CALL_BINDING_CHANGED拒绝；skill再次以引擎已登记call为准，不能信请求覆盖目的地。
 - 每次受控技能执行固定一个 bindingId/bindingRev；缺少、歧义、不存在或已停用均拒绝，不能挑当前最新绑定补洞。当前目录的 APPROVED 修订不可原地变更，也没有“已批准→草稿改写”入口；切环境需新绑定/新配置，原批准绑定仍可用于旧运行，停用立即阻断。内部resolve按精确绑定和精确grantee投影，其摘要不受无关绑定/他人授权新增影响。
-- Resolver生成不可由客户端注入的 `ApprovedConnectionExecution`，派生仅本次使用的不可变contract副本：将批准baseEndpoint作为服务根前缀，保留原技能完整操作路径/查询模板；根本身应不重复填写操作路径。主入口、PREPARE、lookup/status/result和声明式文件获取必须与原技能同源，再统一转到同一批准根和凭据。实际HTTP/异步/MCP出站复查批准来源、根路径及endpointPolicy；跨来源附属入口明确拒绝，不能继续使用旧地址或旧凭据。
+- Resolver生成不可由客户端注入的 `ApprovedConnectionExecution`，派生仅本次使用的不可变contract副本：将批准baseEndpoint作为服务根前缀，保留原技能完整操作路径/查询模板；根本身应不重复填写操作路径。原生OPENAPI合同根据不可变`importSource.path`核定原服务根并只替换该根，避免合同已有/api前缀再次重复拼接；不能信请求自报来源根。主入口、PREPARE、lookup/status/result和声明式文件获取必须与原技能同源，再统一转到同一批准根和凭据。实际HTTP/异步/MCP出站复查批准来源、根路径及endpointPolicy；跨来源附属入口明确拒绝，不能继续使用旧地址或旧凭据。
 - 原始skill_version、合同sha256与运行历史不改写。首次、PREPARE、确认后、只读重试、恢复和UNKNOWN观察都重新解析原引用及当前grant，凭据值按secret_ref在实际I/O前解析；缺失、撤销或租户不匹配直接拒绝。PROCESS/ALGORITHM环境runtimeRef尚无对应受控物理执行协议，带连接引用时明确拒绝，不沿旧路径出站。无引用的既有适配器保持原路径。
 - skill V319向解析回执追加 `execution_binding`，记录实际bindingId/rev、baseEndpoint、environment和resolutionDigest，不记录凭据值；与run/call/attempt/operation同行关联。已完成事实的重复交付只读历史，不重新写业务；UNKNOWN对账只观察原调用，不重发副作用。
 
