@@ -6,6 +6,28 @@ import org.junit.jupiter.api.Test;
 
 class RoutesTest {
     @Test
+    void routesOnlyPersistentOnboardingSessionOperations() {
+        for (String path : new String[] {
+                "/admin/onboarding-sessions",
+                "/admin/onboarding-sessions/onb_123",
+                "/admin/onboarding-sessions/onb_123/preview",
+                "/admin/onboarding-sessions/onb_123/steps/ASSEMBLE/execute",
+                "/admin/onboarding-sessions/onb_123/steps/VERIFY/execute",
+                "/admin/onboarding-sessions/onb_123/steps/PUBLISH/execute",
+                "/admin/onboarding-sessions/onb_123/cancel"
+        }) assertThat(Routes.service(path)).as(path).isEqualTo("app");
+        for (String path : new String[] {
+                "/admin/onboarding-sessions-extra",
+                "/admin/onboarding-sessions/",
+                "/admin/onboarding-sessions/onb_123/secret",
+                "/admin/onboarding-sessions/onb_123/steps/UNKNOWN/execute",
+                "/admin/onboarding-sessions/onb_123/steps/PUBLISH/execute/more",
+                "/v1/onboarding-sessions"
+        }) assertThatThrownBy(() -> Routes.service(path)).as(path)
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void routesNamedInputsAndFrozenDatasetsWithoutExposingPromotionInternals() {
         assertThat(Routes.service("/admin/debug-inputs")).isEqualTo("engine");
         assertThat(Routes.service("/admin/debug-inputs/42/promote")).isEqualTo("engine");

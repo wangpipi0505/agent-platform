@@ -3082,8 +3082,7 @@
   "source": "app-management/src/main/java/cn/agentplatform/app/api/SemanticBindingsController.java:32",
   "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
   "reason": ""
- }
-,
+ },
  {
   "method": "POST",
   "template": "/admin/semantic-bindings",
@@ -3095,8 +3094,7 @@
   "source": "app-management/src/main/java/cn/agentplatform/app/api/SemanticBindingsController.java:38",
   "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
   "reason": ""
- }
-,
+ },
  {
   "method": "GET",
   "template": "/admin/semantic-bindings/{bindingId}",
@@ -3108,8 +3106,7 @@
   "source": "app-management/src/main/java/cn/agentplatform/app/api/SemanticBindingsController.java:44",
   "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
   "reason": ""
- }
-,
+ },
  {
   "method": "POST",
   "template": "/admin/semantic-bindings/{bindingId}/revisions",
@@ -3121,8 +3118,7 @@
   "source": "app-management/src/main/java/cn/agentplatform/app/api/SemanticBindingsController.java:50",
   "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
   "reason": ""
- }
-,
+ },
  {
   "method": "POST",
   "template": "/admin/semantic-bindings/{bindingId}/disable",
@@ -3242,5 +3238,137 @@
   "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/SemanticCatalogController.java:13",
   "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
   "reason": ""
-}
+ },
+ {
+  "method": "GET",
+  "template": "/admin/onboarding-sessions",
+  "caller": "gateway",
+  "target": "app",
+  "action": "proxy.app.get.OnboardingSessionsController.list",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/OnboardingSessionsController.java",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
+  "reason": ""
+ },
+ {
+  "method": "GET",
+  "template": "/admin/onboarding-sessions/templates",
+  "caller": "gateway",
+  "target": "app",
+  "action": "proxy.app.get.OnboardingSessionsController.templates",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/OnboardingSessionsController.java",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
+  "reason": ""
+ },
+ {
+  "method": "GET",
+  "template": "/admin/onboarding-sessions/{sessionId}",
+  "caller": "gateway",
+  "target": "app",
+  "action": "proxy.app.get.OnboardingSessionsController.get",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/OnboardingSessionsController.java",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
+  "reason": ""
+ },
+ {
+  "method": "POST",
+  "template": "/admin/onboarding-sessions",
+  "caller": "gateway",
+  "target": "app",
+  "action": "proxy.app.post.OnboardingSessionsController.create",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/OnboardingSessionsController.java",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
+  "reason": ""
+ },
+ {
+  "method": "PUT",
+  "template": "/admin/onboarding-sessions/{sessionId}",
+  "caller": "gateway",
+  "target": "app",
+  "action": "proxy.app.put.OnboardingSessionsController.save",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/OnboardingSessionsController.java",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
+  "reason": ""
+ },
+ {
+  "method": "POST",
+  "template": "/admin/onboarding-sessions/{sessionId}/preview",
+  "caller": "gateway",
+  "target": "app",
+  "action": "proxy.app.post.OnboardingSessionsController.preview",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/OnboardingSessionsController.java",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
+  "reason": ""
+ },
+ {
+  "method": "POST",
+  "template": "/admin/onboarding-sessions/{sessionId}/steps/{step}/execute",
+  "caller": "gateway",
+  "target": "app",
+  "action": "proxy.app.post.OnboardingSessionsController.execute",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/OnboardingSessionsController.java",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
+  "reason": ""
+ },
+ {
+  "method": "POST",
+  "template": "/admin/onboarding-sessions/{sessionId}/cancel",
+  "caller": "gateway",
+  "target": "app",
+  "action": "proxy.app.post.OnboardingSessionsController.cancel",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/OnboardingSessionsController.java",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
+  "reason": ""
+ },
+ {
+  "method": "POST",
+  "template": "/admin/debug-runs",
+  "caller": "app",
+  "target": "engine",
+  "action": "proxy.engine.post.RunController.debug",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java:29",
+  "callerSource": "app-management/src/main/java/cn/agentplatform/app/infra/OnboardingRuntimeClient.java::verify",
+  "reason": ""
+ },
+ {
+  "method": "GET",
+  "template": "/admin/debug-runs/{id}/status",
+  "caller": "app",
+  "target": "engine",
+  "action": "proxy.engine.get.RunController.status",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/RunController.java:53",
+  "callerSource": "app-management/src/main/java/cn/agentplatform/app/infra/OnboardingRuntimeClient.java::status",
+  "reason": ""
+ },
+ {
+  "method": "POST",
+  "template": "/admin/evaluations",
+  "caller": "app",
+  "target": "monitor",
+  "action": "proxy.monitor.post.EvaluationController.evaluate",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "monitor/src/main/java/cn/agentplatform/monitor/api/EvaluationController.java:18",
+  "callerSource": "app-management/src/main/java/cn/agentplatform/app/infra/OnboardingRuntimeClient.java::evaluate",
+  "reason": ""
+ }
 ]

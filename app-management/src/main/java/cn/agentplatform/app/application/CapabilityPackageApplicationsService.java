@@ -24,6 +24,44 @@ public class CapabilityPackageApplicationsService {
         this.tx.setTimeout(5);
     }
 
+    public record SessionApplication(long packageId, String packageSha, String resolutionSha,
+            Map<String,Object> source, Map<String,Object> application) {}
+
+    /** 会话独立拥有组装收据；不占用旧API的一包一次application_plan_sha256天然键。 */
+    public SessionApplication prepareForSession(long id,Map<String,Object> input) {
+        var actor=Actor.current();actor.requireRole("EDITOR");
+        var stored=packages.bindingSource(id,actor.tenantId());
+        if(!"RESOLVED".equals(stored.get("bindingStatus")))throw new PlatformException(409,"CAPABILITY_BINDING_REQUIRED","能力包尚未解析精确技能，请先完成原导入链");
+        var source=source(stored);long deadline=System.nanoTime()+5_000_000_000L;
+        for(var binding:AppService.objects(source.get("bindings"))) {
+            var actual=skills.version(binding.get("skillCode").toString(),((Number)binding.get("version")).intValue(),actor,deadline);
+            if(!binding.get("sha256").equals(actual.get("sha256"))||((Number)binding.get("skillVersionId")).longValue()!=((Number)actual.get("skillVersionId")).longValue())
+                throw new PlatformException(409,"CAPABILITY_BINDING_CONFLICT","精确发布技能与包来源不一致");
+        }
+        var prepared=prepare(input,source);apps.validateCapabilityDraft(prepared);
+        return new SessionApplication(id,stored.get("sha256").toString(),stored.get("planSha256").toString(),source,prepared);
+    }
+
+    /** 由Session行锁事务调用；本地app/来源关系/会话收据一起提交，不持锁做上面的远端验证。 */
+    public Map<String,Object> assembleForSession(SessionApplication prepared,Map<String,Object> owned) {
+        if(!org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive())
+            throw new IllegalStateException("Session assembly requires its transaction");
+        var actor=Actor.current();var current=packages.applicationSource(prepared.packageId(),actor.tenantId(),true);
+        if(!prepared.packageSha().equals(current.get("sha256"))||!prepared.resolutionSha().equals(current.get("planSha256")))
+            throw new PlatformException(409,"CAPABILITY_VERSION_CONFLICT","组装期间包声明或精确解析已改变");
+        var input=prepared.application();String code=input.get("code").toString();Map<String,Object> app;
+        if(owned==null) {
+            app=apps.create(input);packages.associateApplication(actor.tenantId(),app,prepared.packageId(),prepared.source());
+        } else {
+            app=apps.get(code);
+            if(!Objects.equals(app.get("id"),owned.get("appId"))||((Number)app.get("draftRev")).longValue()!=((Number)owned.get("draftRev")).longValue())
+                throw new PlatformException(409,"ONBOARDING_APPLICATION_CHANGED","会话应用已由人工修改，未覆盖原修改");
+        }
+        app=apps.save(code,Map.of("draftRev",app.get("draftRev"),"config",input.get("config")),false);
+        if("FLOW".equals(input.get("type")))app=apps.save(code,Map.of("draftRev",app.get("draftRev"),"definition",input.get("definition"),"layout",input.get("layout")),true);
+        return app;
+    }
+
     public Map<String, Object> create(long id, Map<String, Object> body) {
         var actor = Actor.current(); actor.requireRole("EDITOR");
         if (!body.keySet().equals(Set.of("applications"))) throw bad("仅接受完整 applications 计划");

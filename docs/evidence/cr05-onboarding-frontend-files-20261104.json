@@ -1,0 +1,60 @@
+{
+  "card": "CR-05 frontend",
+  "functionalRounds": 2,
+  "firstRound": {
+    "exit": 1,
+    "total": 9,
+    "passed": 1,
+    "failed": 8
+  },
+  "secondRound": {
+    "exit": 1,
+    "total": 13,
+    "passed": 12,
+    "failed": 1
+  },
+  "finalFixtureChange": "Render el-option.label as visible text; original assertion preserved; not functionally rerun",
+  "finalTypecheckExit": 0,
+  "files": [
+    {
+      "path": "web/admin/src/pages/onboarding/OnboardingSessionWorkspace.vue",
+      "sha256": "9e1891afbedb59e2a503161f676c6054b8623d920bde68f8a29e7a4c98803d12"
+    },
+    {
+      "path": "web/shared/onboarding-session.ts",
+      "sha256": "aecbc22bcb98fe8729ee2e5442b6cc52dd31998a2f4e3f47023b642b450b2352"
+    },
+    {
+      "path": "web/admin/src/pages/onboarding/BusinessFieldsStep.vue",
+      "sha256": "ca3a012df7ce8d4a8f50161b143ad1eabad5ae1db8f04e411ad431c0fc0ac37a"
+    },
+    {
+      "path": "web/admin/src/pages/onboarding/OnboardingTemplatesPage.vue",
+      "sha256": "0fae232bea8e415336ed81b787d90a5e90285efa0e56662e692218b2cf6b2671"
+    },
+    {
+      "path": "web/admin/src/pages/onboarding/AssistantLaunchStep.vue",
+      "sha256": "14a98669280e46712d474da5f4820d0b595aaa1ea83a60f7bdeb38ae9541bc64"
+    },
+    {
+      "path": "web/tests/onboarding-session.check.ts",
+      "sha256": "6a4dc5ebc5a430605c71159bf6cc47e477c6db28579ad770c67441c13459cde7"
+    },
+    {
+      "path": "web/tests/onboarding-session.config.ts",
+      "sha256": "4ffd26f2d2fb26e4ca003fcbc62bd6176b307b73c4d7600bf212dd075851bef7"
+    },
+    {
+      "path": "docs/evidence/cr05-onboarding-frontend-20261104.md",
+      "sha256": "33ad3b0d21a9740ac92bbf18d237d353eb5376eb7ed96a21fca06886a228418b"
+    }
+  ],
+  "backend": "Not changed by this agent; still implementing in parent team",
+  "notCovered": [
+    "real PG",
+    "real connection/model runs",
+    "actual publish",
+    "browser visual QA",
+    "historically pinned launch route"
+  ]
+}

@@ -1,17 +1,12 @@
 <script setup lang="ts">
 /** ONB-01：业务接入模板目录与登记向导。包装既有能力包目录与 INT-01/03 契约引用；
  * 模板服务端未交付前，目录区不显示任何数据，提交入口禁用并说明——不伪造已可用。 */
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import type { Ref } from "vue";
-import BusinessFieldsStep from "./BusinessFieldsStep.vue";
-import ConnectionCheckStep from "./ConnectionCheckStep.vue";
+import OnboardingSessionWorkspace from "./OnboardingSessionWorkspace.vue";
 import DraftAssemblyStep from "./DraftAssemblyStep.vue";
 import AssistantLaunchStep from "./AssistantLaunchStep.vue";
 import VerifyPublishStep from "./VerifyPublishStep.vue";
-import FieldMappingStep from "./FieldMappingStep.vue";
-import ReturnPresentationStep from "./ReturnPresentationStep.vue";
-import type { FieldsBundle } from "../../../../shared/onboarding-fields";
-import { emptyFieldsBundle } from "../../../../shared/onboarding-fields";
 import PageError from "../../PageError.vue";
 import PageHeader from "../../PageHeader.vue";
 import { usePageOperation, usePageTitle } from "../../usePageOperation";
@@ -36,6 +31,7 @@ import {
 usePageTitle(() => "接入模板");
 const { auth, api, busy, error, trace, operation } = usePageOperation();
 const client = useCapabilityPackageClient();
+const canMaintain = computed(() => auth.can("admin"));
 const packages: Ref<CapabilityPackageSummary[]> = ref([]);
 const query = ref("");
 const wizardOpen = ref(false);
@@ -50,14 +46,13 @@ const publishedApplication = ref<PublishedOnboardingApplication>();
 const resumeTarget = ref<{ code: string; status: string }>();
 const showResume = computed(() => !!resumeTarget.value);
 // ONB-03：业务字段/受限映射/返回呈现步骤共享的声明式包（编辑后经校验进入登记预览）。
-const fieldsBundle = ref<FieldsBundle>(emptyFieldsBundle());
-const activeStep = ref<"fields" | "mapping" | "return">("fields");
 
 // ②目录由服务端按租户/权限过滤——业务配置者只会看到被授予的能力包版本。
 const templateClient = onboardingClient(api);
 async function load() {
-  if (!auth.token) return;
+  if (!auth.token || !canMaintain.value) return;
   await operation(async () => {
+    // 业务工作区独立读已发布目录；管理员来源包/草稿加载失败不影响业务会话。
     const page = await client.list({ q: query.value.trim() || undefined });
     packages.value = selectablePackages(page.items);
     templates.value = await templateClient.list({ q: query.value.trim() || undefined });
@@ -76,6 +71,7 @@ const errors = computed(() => validateOnboardingTemplateDraft(draft.value));
 const steps = ["选择来源能力包", "登记契约字段", "核对并导出登记内容"];
 
 function openWizard() {
+  if (!canMaintain.value || busy.value) return;
   publishedApplication.value = undefined;
   draft.value = emptyOnboardingTemplateDraft();
   payloadPreview.value = "";
@@ -83,17 +79,20 @@ function openWizard() {
   wizardOpen.value = true;
 }
 async function verifyPublishedApplication(templateCode: string) {
+  if (!canMaintain.value) return;
   publishedApplication.value = undefined;
   await operation(async () => {
     publishedApplication.value = await publishedTemplateApplication(api, templateCode);
   });
 }
 function choosePackage(packageVersionId: number) {
+  if (!canMaintain.value) return;
   draft.value = applyPackageSelection(draft.value, {
     ...packages.value.find((row) => row.packageVersionId === packageVersionId)!,
   });
 }
 function next() {
+  if (!canMaintain.value) return;
   if (step.value === 0 && draft.value.sourcePackageVersionId === null) return;
   if (step.value === 1 && validateOnboardingTemplateDraft(draft.value).length) return;
   if (step.value === 1)
@@ -105,25 +104,38 @@ function next() {
   step.value = Math.min(step.value + 1, steps.length - 1);
 }
 async function copyPayload() {
+  if (!canMaintain.value) return;
   try {
     await navigator.clipboard.writeText(payloadPreview.value);
   } catch {
     /* 剪贴板不可用时用户可直接从预览区选择复制 */
   }
 }
+// 身份/角色失效立即清掉管理区与未确认交接，不保留上一个账号的模板草稿。
+watch([() => auth.generation, () => canMaintain.value], () => {
+  templates.value = [];
+  packages.value = [];
+  resumeTarget.value = undefined;
+  registered.value = undefined;
+  publishedApplication.value = undefined;
+  wizardOpen.value = false;
+  draft.value = emptyOnboardingTemplateDraft();
+}, { flush: "sync" });
 </script>
 <template>
   <PageHeader
     title="接入模板"
-    subtitle="面向业务配置者的可复用接入模板：引用既有能力包与集成契约，不重复建设连接。"
+    subtitle="使用已发布模板接入助手；模板登记与发布由管理员维护。"
     :busy="busy"
     @refresh="load"
   >
     <template #actions>
-      <el-button type="primary" :disabled="busy" @click="openWizard">登记模板</el-button>
+      <el-button v-if="canMaintain" type="primary" :disabled="busy" @click="openWizard">登记模板</el-button>
     </template>
   </PageHeader>
   <PageError :error="error" :trace="trace" />
+  <OnboardingSessionWorkspace />
+  <template v-if="canMaintain">
   <el-alert
     type="info"
     :closable="false"
@@ -212,7 +224,6 @@ async function copyPayload() {
       </el-table-column>
     </el-table>
   </div>
-  <ConnectionCheckStep />
   <div class="panel">
     <h2>组装登记与验证发布</h2>
     <DraftAssemblyStep :draft="draft" @registered="registered = $event" />
@@ -231,32 +242,6 @@ async function copyPayload() {
     />
     <p class="muted">
       交接内容：应用/模板精确版本、体验引用、使用范围与首跑清单；正式运行与再次消费使用当前授权身份，不复用接入人的高权身份。
-    </p>
-  </div>
-  <!-- ONB-03：业务字段表单/受限映射/返回呈现（声明式映射，无表达式执行）。 -->
-  <div class="panel fields-block">
-    <div class="row spread">
-      <h2>业务字段与返回呈现</h2>
-      <el-radio-group v-model="activeStep" size="small">
-        <el-radio-button value="fields">业务字段</el-radio-button>
-        <el-radio-button value="mapping">受限映射</el-radio-button>
-        <el-radio-button value="return">返回呈现</el-radio-button>
-      </el-radio-group>
-    </div>
-    <BusinessFieldsStep v-if="activeStep === 'fields'" :fields="fieldsBundle.fields" />
-    <FieldMappingStep
-      v-else-if="activeStep === 'mapping'"
-      :bundle="fieldsBundle"
-      @update="fieldsBundle = $event"
-    />
-    <ReturnPresentationStep
-      v-else
-      :bundle="fieldsBundle"
-      @update="fieldsBundle = $event"
-    />
-    <p class="muted">
-      三个步骤的输入与映射只保存允许字段与映射引用；提交仍随模板服务端启用（见上方登记说明），不提交
-      authority、authRef 或任意 endpoint。
     </p>
   </div>
   <el-dialog
@@ -364,6 +349,7 @@ async function copyPayload() {
       <el-button v-else @click="wizardOpen = false">完成</el-button>
     </template>
   </el-dialog>
+  </template>
 </template>
 <style scoped>
 .field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 1rem; }

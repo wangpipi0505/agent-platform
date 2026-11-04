@@ -13,7 +13,7 @@ const props = defineProps<{
   appCode: string
   /** 服务端实际应用发布号；模板修订号不能代替应用版本。 */
   appVersion?: number
-  /** 模板是否已发布（发布后才产生正式使用端）。 */
+  /** 服务端是否已确认实际应用发布；模板PUBLISHED本身不能作为应用交接事实。 */
   published: boolean
   /** 可选的 webapp 基址覆盖（测试/特殊部署注入）。 */
   webappBase?: string
@@ -35,8 +35,9 @@ const allChecked = computed(() =>
       <p>
         独立助手入口（正式使用端）：
         <a :href="entryUrl" target="_blank" rel="noopener">{{ entryUrl }}</a>
-        · 应用编码 <code>{{ appCode }}</code><span v-if="appVersion"> · 发布版本 {{ appVersion }}</span>
+        · 应用编码 <code>{{ appCode }}</code><span v-if="appVersion"> · 本次发布回执版本 {{ appVersion }}</span>
       </p>
+      <p class="muted">此入口默认打开应用当前发布版本；本次发布回执版本仅用于核对交接，链接未固定历史版本。</p>
       <p class="muted">业务内嵌交付（SDK 宿主按钮）：待集成——宿主 open/close/updateContext 接口已交付，业务侧按钮接线按各自系统集成。</p>
       <h3>使用端首跑验证清单</h3>
       <el-table :data="ONBOARDING_LAUNCH_CHECKS" size="small">

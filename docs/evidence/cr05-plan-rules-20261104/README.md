@@ -1,0 +1,9 @@
+# CR05 接入计划纯规则子步
+
+白名单：`OnboardingPlan.java`、`OnboardingPlanTest.java`与本证据目录。规则类提供已协商的五个静态方法：normalize、arguments、returnSpec、fields、selectOperations。session/CAS/真实FLOW组装由连接席负责，本子步没有改session服务、前端或包来源校验。
+
+normalize严格限制plan、fieldsBundle、connectionRef结构，拒绝客户端身份/端点覆盖和递归危险表达式。DRAFT可以保留未完成输入；arguments只允许direct一步读取原values或JSON标量constant，执行时必填键缺失拒绝，false/0/null和标量数组保持原值。returnSpec生成现有structuredPath/TEMPLATE/cardTemplate/fileRefPaths方言，只有受限字段占位符和路径，不执行表达式。fields只将已验证的object根标量/标量数组Schema转为基础表单，复杂引用/嵌套object明确拒绝。selectOperations只接受当前实际诊断supported=true的精确唯一操作集合。
+
+第一轮：新纯规则未实现时，原断言要求false/0/null/数组真实透传，执行报UnsupportedOperationException；保留red.log。第二轮：相同断言与补齐的拒绝路径共12例全部通过，见green.log与checks.json。两轮都在D:/CodexPrep/algorithm-reorg/cr05-plan-rules使用隔离javac/JUnit及依赖快照，未运行Maven test、未覆盖共享target报告。
+
+这里不是CR05产品联通验收。未访问PG、HTTP、模型、业务资源或凭据；没有session持久化/CAS/发布、实际Graph节点调用证明。返回路径这里只核语法，字段是否在实际输出Schema中、nullable和数组内容仍由既有真实技能/应用验证裁决，不能把输入字段当作输出白名单。本规则只提供数据，连接席必须把arguments写入真实FLOW输入与节点args、把受限returns写入END输出，不能只保存到plan或prompt。

@@ -1,11 +1,14 @@
 <script setup lang="ts">
 /** ONB-03：业务字段表单——按模板声明生成标签/说明/单位/枚举/文件控件；
  * false/0/null/数组根保持原值不改写；上传读取顶层 artifactId（坏回包不伪装成功）。 */
-import { reactive, watch } from "vue";
+import { reactive, ref, watch } from "vue";
 import { collectFieldValues, type BusinessFieldDef } from "../../../../shared/onboarding-fields";
 
 const props = defineProps<{
   fields: BusinessFieldDef[];
+  /** 服务端持久会话的原始业务值，恢复时保持false/0/null，不用空默认覆盖。 */
+  initialValues?: Record<string, unknown>;
+  disabled?: boolean;
   uploadArtifact?: (file: File) => Promise<string>;
 }>();
 const emit = defineEmits<{
@@ -14,23 +17,34 @@ const emit = defineEmits<{
 const values = reactive<Record<string, unknown>>({});
 const uploadState = reactive<Record<string, boolean>>({});
 const uploadIssue = ref("");
-import { ref } from "vue";
+
+function collected() {
+  const result = collectFieldValues(props.fields, values);
+  // 接入会话恢复时显式null是原始业务输入，数值控件也不能把它省略为“未提供”。
+  for (const field of props.fields) {
+    if (Object.prototype.hasOwnProperty.call(values, field.param) && values[field.param] === null)
+      result[field.param] = null;
+  }
+  return result;
+}
 
 watch(
-  () => props.fields,
-  (fields) => {
+  () => [props.fields, props.initialValues] as const,
+  ([fields, initial]) => {
+    for (const key of Object.keys(values)) if (!fields.some((field) => field.param === key)) delete values[key];
     for (const field of fields)
-      if (!(field.param in values)) values[field.param] = field.kind === "boolean" ? null : "";
-    emit("values", collectFieldValues(props.fields, values));
+      if (initial && Object.prototype.hasOwnProperty.call(initial, field.param)) values[field.param] = initial[field.param];
+      else if (!(field.param in values)) values[field.param] = field.kind === "boolean" ? null : "";
+    emit("values", collected());
   },
   { immediate: true, deep: true },
 );
-watch(values, () => emit("values", collectFieldValues(props.fields, values)), { deep: true });
+watch(values, () => emit("values", collected()), { deep: true });
 
 async function pickFile(param: string, event: Event) {
   const input = event.target as HTMLInputElement;
   const file = input.files?.[0];
-  if (!file) return;
+  if (!file || props.disabled) return;
   if (!props.uploadArtifact) {
     uploadIssue.value = "当前页面未提供文件上传入口，请填写已有 artifactId";
     input.value = "";
@@ -50,7 +64,7 @@ async function pickFile(param: string, event: Event) {
 }
 </script>
 <template>
-  <el-form label-position="top" class="business-fields">
+  <el-form label-position="top" class="business-fields" :disabled="props.disabled">
     <el-form-item
       v-for="field in fields"
       :key="field.param"
@@ -60,7 +74,11 @@ async function pickFile(param: string, event: Event) {
       <el-select v-if="field.kind === 'enum'" v-model="values[field.param]" clearable>
         <el-option v-for="item in field.enumValues ?? []" :key="item" :value="item" :label="item" />
       </el-select>
-      <el-switch v-else-if="field.kind === 'boolean'" v-model="values[field.param]" />
+      <el-select v-else-if="field.kind === 'boolean'" v-model="values[field.param]" :empty-values="[undefined]">
+        <el-option :value="true" label="是（true）" />
+        <el-option :value="false" label="否（false）" />
+        <el-option :value="null" label="未提供（null）" />
+      </el-select>
       <el-input-number
         v-else-if="field.kind === 'number'"
         v-model="values[field.param]"
@@ -70,7 +88,7 @@ async function pickFile(param: string, event: Event) {
         <input
           type="file"
           :aria-label="field.param"
-          :disabled="!uploadArtifact || uploadState[field.param]"
+          :disabled="props.disabled || !uploadArtifact || uploadState[field.param]"
           @change="pickFile(field.param, $event)"
         />
         <el-input

@@ -1,0 +1,43 @@
+{
+  "scope": "CR05 independent OnboardingPlan pure rules only",
+  "files": [
+    "app-management/src/main/java/cn/agentplatform/app/application/OnboardingPlan.java",
+    "app-management/src/test/java/cn/agentplatform/app/application/OnboardingPlanTest.java"
+  ],
+  "compilation": "isolated javac using current app/admin-common dependency snapshots; exit 0",
+  "first_round": {
+    "test": "mappingPreservesFalsyAndNull",
+    "tests": 1,
+    "failed": 1,
+    "reason": "new pure-rule method unimplemented; UnsupportedOperationException",
+    "log": "red.log"
+  },
+  "second_round": {
+    "test": "OnboardingPlanTest",
+    "tests": 12,
+    "passed": 12,
+    "failed": 0,
+    "skipped": 0,
+    "log": "green.log"
+  },
+  "execution_directory": "D:/CodexPrep/algorithm-reorg/cr05-plan-rules",
+  "covered": [
+    "false/zero/explicit null/scalar arrays survive argument mapping",
+    "incomplete DRAFT saves versus required execution inputs",
+    "direct reads original values once and constants preserve scalar types",
+    "unknown fields, malformed mappings, invalid enums and non-finite numbers rejected",
+    "authority/endpoint keys and recursive executable expressions rejected",
+    "fixed connection identifiers and positive exact revisions",
+    "field derivation from verified scalar/scalar-array object schema",
+    "existing runtime returnSpec dialect and restricted placeholders/paths",
+    "current exact supported operation selection"
+  ],
+  "not_claimed": [
+    "No PG/HTTP/resource/model/real FLOW execution in this substep",
+    "No session persistence/CAS/assembly/publish tests",
+    "No output-schema field-existence proof: helper validates return-path syntax; actual validator remains authoritative",
+    "No new authorization source: all plan values are business inputs"
+  ],
+  "maven_target_used": false,
+  "further_functional_runs": false
+}
