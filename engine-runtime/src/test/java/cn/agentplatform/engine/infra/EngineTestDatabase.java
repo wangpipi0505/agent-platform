@@ -8,6 +8,9 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
  */
 final class EngineTestDatabase {
     static String url() {
+        // 本机开发窗口：默认仍是专用 25432 引擎库；显式 ENGINE_PG_URL 才切换，保持隐式跨库为零。
+        String override = System.getenv("ENGINE_PG_URL");
+        if (override != null && !override.isBlank()) return override;
         String base =
                 System.getenv()
                         .getOrDefault(

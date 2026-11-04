@@ -36,8 +36,16 @@ class CapabilityRunSnapshotTest {
     RunScheduler scheduler;
     RunService runs;
 
+    /** 默认仍是专用 25432 引擎库；只有显式 ENGINE_PG_URL 才切换，保持隐式跨库为零。 */
+    static String engineUrl() {
+        String override = System.getenv("ENGINE_PG_URL");
+        return override == null || override.isBlank()
+                ? "jdbc:postgresql://127.0.0.1:25432/agent_platform_engine_test"
+                : override;
+    }
+
     @BeforeAll static void database() throws Exception {
-        var ds = new DriverManagerDataSource("jdbc:postgresql://127.0.0.1:25432/agent_platform_engine_test",
+        var ds = new DriverManagerDataSource(engineUrl(),
                 EngineTestDatabase.user(), EngineTestDatabase.password());
         org.flywaydb.core.Flyway.configure().dataSource(ds).schemas("engine").defaultSchema("engine")
                 .locations("classpath:db/migration").load().migrate();

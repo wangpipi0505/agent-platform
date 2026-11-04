@@ -117,11 +117,9 @@ class PromptFreezeDigestTest {
         return Json.read(Json.write(method.invoke(service, source, frozen, Json.object())));
     }
 
-    /** 开关按字段名反射设置，避免为测试在 RunService 上新增公开 API。 */
-    private static void digestCheck(RunService service, boolean enabled) throws Exception {
-        var field = RunService.class.getDeclaredField("promptDigestCheck");
-        field.setAccessible(true);
-        field.setBoolean(service, enabled);
+    /** 开关经既有装配 setter 设置：字段迁到快照协作对象后仍只走受控装配面。 */
+    private static void digestCheck(RunService service, boolean enabled) {
+        service.promptDigestCheck(enabled);
     }
 
     @Test
