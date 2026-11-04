@@ -39,6 +39,26 @@ public class RunService {
     private final RunSnapshotService snapshots;
     /** 受理协调：开票/幂等/容量预约/事务内复核；门面只保留编排、持久化与调度。 */
     private final RunAdmissionService admissions;
+    /** 恢复协调：租约续期、恢复分发与外部事实接续；执行驱动仍走本类的 drive/driveOwned。 */
+    private final RunRecoveryCoordinator recovery;
+    /** 恢复回调面：协调器按落库快照选择路径，驱动仍由门面执行。 */
+    private final RunRecoveryCoordinator.Handler recoveryHandler =
+            new RunRecoveryCoordinator.Handler() {
+                @Override
+                public void driveOwned(long id) {
+                    RunService.this.driveOwned(id);
+                }
+
+                @Override
+                public void driveLegacy(long id, Actor actor) {
+                    RunService.this.drive(id, actor);
+                }
+
+                @Override
+                public void guardRejected(long id) {
+                    stopForBudget(id, "GUARD_SNAPSHOT_INVALID");
+                }
+            };
     /**
      * 可选装配：三级 token 配额闸门（PLAT-19 T19.1，agent.engine.quota-enabled 默认 false）。
      * 夹具未装配（null）即旁路，保持既有构造器不变。
@@ -77,8 +97,10 @@ public class RunService {
             AgentDriver a,
             RunScheduler scheduler,
             RunSnapshotService snapshots,
-            RunAdmissionService admissions) {
-        this(s, c, f, a, scheduler, null, null, Clock.systemUTC(), null, null, snapshots, admissions);
+            RunAdmissionService admissions,
+            RunRecoveryCoordinator recovery) {
+        this(s, c, f, a, scheduler, null, null, Clock.systemUTC(), null, null, snapshots, admissions,
+                recovery);
     }
 
     /**
@@ -93,7 +115,7 @@ public class RunService {
             RunScheduler scheduler,
             RunSnapshotService snapshots) {
         this(s, c, f, a, scheduler, null, null, Clock.systemUTC(), null, null, snapshots,
-                new RunAdmissionService(s, scheduler));
+                new RunAdmissionService(s, scheduler), null);
     }
 
     /** Explicit owned-worker assembly; legacy admission remains explicit in RuntimeClients. */
@@ -127,13 +149,14 @@ public class RunService {
             RunScheduler scheduler, RunAuthority authority, RunAuthorityStore admissionStore,
             Clock clock, ModelInputMaterials initialMaterials, ChunkBus initialChunks) {
         this(s, c, f, a, scheduler, authority, admissionStore, clock, initialMaterials, initialChunks,
-                new RunSnapshotService(c, clock), new RunAdmissionService(s, scheduler));
+                new RunSnapshotService(c, clock), new RunAdmissionService(s, scheduler), null);
     }
 
     private RunService(TraceStore s, RuntimeClients c, FlowDriver f, AgentDriver a,
             RunScheduler scheduler, RunAuthority authority, RunAuthorityStore admissionStore,
             Clock clock, ModelInputMaterials initialMaterials, ChunkBus initialChunks,
-            RunSnapshotService snapshots, RunAdmissionService admissions) {
+            RunSnapshotService snapshots, RunAdmissionService admissions,
+            RunRecoveryCoordinator recovery) {
         if (initialMaterials != null && (authority == null || initialChunks == null))
             throw new IllegalArgumentException("INITIAL_COMPONENT_DEPENDENCIES_REQUIRED");
         this.initialMaterials = initialMaterials;
@@ -148,6 +171,8 @@ public class RunService {
         this.runAuthority = authority;
         this.snapshots = Objects.requireNonNull(snapshots, "RUN_SNAPSHOT_SERVICE_REQUIRED");
         this.admissions = Objects.requireNonNull(admissions, "RUN_ADMISSION_SERVICE_REQUIRED");
+        this.recovery =
+                recovery != null ? recovery : new RunRecoveryCoordinator(s, scheduler);
         this.admissions.runAuthority(authority);
         this.admissions.admissionStore(admissionStore);
         scheduler.bind(this::driveRecovered, this::renewLeases, this::resumeExternalFacts);
@@ -236,6 +261,11 @@ public class RunService {
     /** 受控测试装配入口：返回受理协作对象，证明容器装配没有另 new 一份。 */
     RunAdmissionService admissions() {
         return admissions;
+    }
+
+    /** 受控测试装配入口：返回恢复协作对象，证明容器装配没有另 new 一份。 */
+    RunRecoveryCoordinator recovery() {
+        return recovery;
     }
 
     /** 绑定解析开关：字段初始 true，使直接 new RunService(...) 的夹具默认走绑定解析。 */
@@ -2174,32 +2204,7 @@ public class RunService {
     }
 
     private void driveRecovered(long id) {
-        if (store.protectedRun(id)) {
-            driveOwned(id);
-            return;
-        }
-        var run = store.db().queryForMap("select * from engine.run where id=?", id);
-        JsonNode g = TraceStore.json(run.get("guard_ctx"));
-        if (!g.path("tenantId").asText().equals(run.get("tenant_id"))
-                || !g.path("principalId").asText().equals(run.get("principal_id"))) {
-            stopForBudget(TraceStore.number(run, "id"), "GUARD_SNAPSHOT_INVALID");
-            return;
-        }
-        Set<String> roles = new HashSet<>();
-        g.path("roles").forEach(r -> roles.add(r.asText()));
-        Map<String, Set<String>> attrs = new HashMap<>();
-        g.path("attributes")
-                .fields()
-                .forEachRemaining(
-                        e -> {
-                            Set<String> values = new HashSet<>();
-                            e.getValue().forEach(v -> values.add(v.asText()));
-                            attrs.put(e.getKey(), values);
-                        });
-        Actor actor =
-                new Actor(
-                        g.path("tenantId").asText(), g.path("principalId").asText(), roles, attrs);
-        drive(TraceStore.number(run, "id"), actor);
+        recovery.recovered(id, recoveryHandler);
     }
 
     private void driveOwned(long id) {
@@ -2393,91 +2398,11 @@ public class RunService {
     }
 
     public void resumeExternalFacts() {
-        // W3 (§31.2): consume durable successful/failed execution facts without repeating the
-        // skill.
-        for (var node :
-                store.db()
-                        .queryForList(
-                                "select n.id,n.run_id from engine.node_instance n join engine.run r"
-                                    + " on r.id=n.run_id where n.status='WAITING_EXTERNAL' and"
-                                    + " r.status in ('RUNNING','WAITING_EXTERNAL') and not"
-                                    + " exists(select 1 from engine.run_authority a where"
-                                    + " a.run_id=r.id) and exists(select 1 from engine.tool_call t"
-                                    + " where t.node_instance_id=n.id) and not exists(select 1 from"
-                                    + " engine.tool_call t where t.node_instance_id=n.id and"
-                                    + " t.status not in ('SUCCEEDED','FAILED')) order by n.id limit"
-                                    + " 32"))
-            store.atomic(
-                    () -> {
-                        long rid = TraceStore.number(node, "run_id");
-                        store.lockRun(rid);
-                        int changed =
-                                store.db()
-                                        .update(
-                                                "update engine.node_instance set"
-                                                    + " status='READY',released=true,lease_owner=null,lease_until=null"
-                                                    + " where id=? and status='WAITING_EXTERNAL'",
-                                                node.get("id"));
-                        if (changed > 0) {
-                            store.db()
-                                    .update(
-                                            "update engine.run set status='RUNNING',error=null where"
-                                            + " id=? and status='WAITING_EXTERNAL'",
-                                            rid);
-                            scheduler.wake(rid);
-                            store.event(
-                                    rid,
-                                    "EXTERNAL_READY",
-                                    Map.of("nodeInstanceId", node.get("id")));
-                        }
-                        return null;
-                    });
+        recovery.resumeExternalFacts();
     }
 
     public void renewLeases() {
-        for (Long node : activeNodes) {
-            try {
-                store.atomic(
-                        () -> {
-                            // Each item is a short transaction. Busy node/tool rows are skipped,
-                            // never waited on while other live workers need their leases renewed.
-                            int renewed =
-                                    store.db()
-                                            .update(
-                                                    "with renewable as (select id from"
-                                                        + " engine.node_instance where id=? and"
-                                                        + " status='RUNNING' and lease_owner like ?"
-                                                        + " and lease_until>clock_timestamp() for"
-                                                        + " update skip locked) update"
-                                                        + " engine.node_instance n set"
-                                                        + " lease_until=clock_timestamp()+interval"
-                                                        + " '90 seconds' from renewable r where"
-                                                        + " n.id=r.id",
-                                                    node,
-                                                    owner + "_%");
-                            if (renewed == 0) return null;
-                            store.db()
-                                    .update(
-                                            "with renewable as (select t.id,n.lease_until from"
-                                                + " engine.tool_call t join engine.node_instance n"
-                                                + " on n.id=t.node_instance_id where n.id=? and"
-                                                + " n.status='RUNNING' and n.lease_owner like ? and"
-                                                + " n.lease_until>clock_timestamp() and"
-                                                + " t.claimed_by=n.lease_owner and t.status in"
-                                                + " ('EXECUTING','SUBMITTED') and"
-                                                + " t.claimed_lease>now() for update of t skip"
-                                                + " locked) update engine.tool_call t set"
-                                                + " claimed_lease=r.lease_until from renewable r"
-                                                + " where t.id=r.id",
-                                            node,
-                                            owner + "_%");
-                            return null;
-                        });
-            } catch (RuntimeException failure) {
-                org.slf4j.LoggerFactory.getLogger(RunService.class)
-                        .warn("Node lease renewal failed: {}", failure.getClass().getSimpleName());
-            }
-        }
+        recovery.renewLeases(owner, activeNodes);
     }
 
     @Scheduled(fixedDelay = 60000)
