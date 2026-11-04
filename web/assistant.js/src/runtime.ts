@@ -15,20 +15,37 @@ import {
   declaredSchema,
   renderDeclaredInputs,
   collectInputs,
+  renderExperience,
+  renderExperienceFallback,
+  validatePageContext,
 } from "./experience";
 import { bubble, prependWarning } from "./widget";
 import { publishSession } from "./host-events";
-import type { AssistantOptions, ExtraInput, Widget } from "./types";
+import type {
+  AssistantEvent,
+  AssistantEventPayload,
+  AssistantOpenOptions,
+  AssistantOptions,
+  ExtraInput,
+  PageContext,
+  Widget,
+} from "./types";
+
+type Emit = <E extends AssistantEvent>(
+  event: E,
+  payload: AssistantEventPayload[E],
+) => void;
 
 /**
  * Session and run orchestration. Shared modules keep the protocol, approval,
  * artifact and observer state machines; this layer only wires them to the
- * widget and the host-supplied ticket callback.
+ * widget, the host ticket callback and the validated page context.
  */
 export function createRuntime(
   options: AssistantOptions,
   widget: Widget,
   initialSessionId: string,
+  emit: Emit,
 ) {
   let controller: AbortController | undefined;
   let running = false;
@@ -36,7 +53,88 @@ export function createRuntime(
   let sessionId = initialSessionId;
   let declaration: any;
   let hydrated = false;
+  let experienceLoaded = false;
+  let pageContext: PageContext = options.context
+    ? validatePageContext(options.context)
+    : {};
   const extraInputs = new Map<string, ExtraInput>();
+
+  /** Shared authorized request helper; HTTP status stays authoritative. */
+  async function call(
+    path: string,
+    body?: any,
+    signal?: AbortSignal,
+    decoder?: (text: string) => any,
+  ) {
+    signal?.throwIfAborted();
+    const token = await options.ticket();
+    signal?.throwIfAborted();
+    if (destroyed) throw new DOMException("观察已停止", "AbortError");
+    const r = await fetch(options.endpoint + path, {
+      method: body ? "POST" : "GET",
+      signal,
+      headers: {
+        Authorization: "Bearer " + token,
+        "Content-Type": "application/json",
+      },
+      ...(body ? { body: JSON.stringify(body) } : {}),
+    });
+    signal?.throwIfAborted();
+    // HTTP status remains authoritative even when a gateway returns no JSON.
+    let e;
+    try {
+      e = decoder && r.ok ? decoder(await r.text()) : await r.json();
+    } catch (error: any) {
+      signal?.throwIfAborted();
+      if (error?.code) throw error;
+      e = { message: `服务返回不可读响应 (${r.status})` };
+    }
+    signal?.throwIfAborted();
+    if (!r.ok || e?.code !== "OK")
+      throw Object.assign(Error(e?.message || `请求失败 (${r.status})`), {
+        status: r.status,
+        code: e?.code,
+      });
+    return e.data;
+  }
+
+  function useComposer(text: string) {
+    widget.input.value = text;
+    widget.input.focus();
+  }
+
+  /** Load the server experience projection once; failures fall back to chat. */
+  async function loadExperience() {
+    if (experienceLoaded) return;
+    experienceLoaded = true;
+    try {
+      const token = await options.ticket();
+      if (destroyed) return;
+      const response = await fetch(
+        options.endpoint +
+          "/v1/apps/" +
+          encodeURIComponent(options.appCode) +
+          "/experience",
+        { headers: { Authorization: "Bearer " + token } },
+      );
+      const envelope: any = await response.json().catch(() => null);
+      const description = envelope?.data;
+      const version = String(description?.schemaVersion ?? "");
+      if (
+        !response.ok ||
+        envelope?.code !== "OK" ||
+        !description ||
+        typeof description !== "object" ||
+        (version !== "v1" && version !== "1.0")
+      ) {
+        renderExperienceFallback(widget);
+        return;
+      }
+      renderExperience(widget, description, useComposer);
+    } catch {
+      renderExperienceFallback(widget);
+    }
+  }
 
   async function appendHistory(
     request: (path: string) => Promise<any>,
@@ -80,6 +178,7 @@ export function createRuntime(
       for (const turn of restored.session.turns || [])
         await appendHistory(request, turn.run_public_id);
       hydrated = true;
+      emit("session", { sessionId, appCode: options.appCode });
     } catch (e: any) {
       widget.error.textContent = e.message;
     } finally {
@@ -94,6 +193,7 @@ export function createRuntime(
     widget.send.disabled = true;
     widget.error.textContent = "";
     widget.connection.textContent = "正在处理 ▍";
+    widget.experience.hidden = true;
     const user = bubble(widget, input.value);
     const message = input.value;
     input.value = "";
@@ -111,55 +211,18 @@ export function createRuntime(
       if (answer.warning) prependWarning(reply, answer.warning);
     };
     try {
-      const request = async (
-        path: string,
-        body?: any,
-        signal?: AbortSignal,
-        decoder?: (text: string) => any,
-      ) => {
-        signal?.throwIfAborted();
-        const token = await options.ticket();
-        signal?.throwIfAborted();
-        if (destroyed) throw new DOMException("观察已停止", "AbortError");
-        const r = await fetch(options.endpoint + path, {
-          method: body ? "POST" : "GET",
-          signal,
-          headers: {
-            Authorization: "Bearer " + token,
-            "Content-Type": "application/json",
-          },
-          ...(body ? { body: JSON.stringify(body) } : {}),
-        });
-        signal?.throwIfAborted();
-        // HTTP status remains authoritative even when a gateway returns no JSON.
-        let e;
-        try {
-          e = decoder && r.ok ? decoder(await r.text()) : await r.json();
-        } catch (error: any) {
-          signal?.throwIfAborted();
-          if (error?.code) throw error;
-          e = { message: `服务返回不可读响应 (${r.status})` };
-        }
-        signal?.throwIfAborted();
-        if (!r.ok || e?.code !== "OK")
-          throw Object.assign(Error(e?.message || `请求失败 (${r.status})`), {
-            status: r.status,
-            code: e?.code,
-          });
-        return e.data;
-      };
       if (!declaration) {
         if (sessionId) {
           const restored = await restoreSession(
-            request,
+            call,
             options.appCode,
             sessionId,
           );
           declaration = restored.declaration;
           for (const turn of restored.session.turns || [])
-            await appendHistory(request, turn.run_public_id, user);
+            await appendHistory(call, turn.run_public_id, user);
         } else
-          declaration = await request(
+          declaration = await call(
             "/v1/apps/" +
               encodeURIComponent(options.appCode) +
               "/input-schema",
@@ -172,21 +235,22 @@ export function createRuntime(
       const inputs = collectInputs(
         declared,
         message,
-        options.context || {},
+        { ...pageContext },
         extraInputs,
       );
       if (declaration.type === "CHAT" && !sessionId) {
-        const session = await request(
+        const session = await call(
           "/v1/apps/" + encodeURIComponent(options.appCode) + "/sessions",
           {},
         );
         sessionId = session.sessionId;
         hydrated = true;
         publishSession(sessionId);
+        emit("session", { sessionId, appCode: options.appCode });
       }
       async function showApprovals(id: string) {
         try {
-          const rows = await request(
+          const rows = await call(
             "/v1/runs/" + encodeURIComponent(id) + "/approvals",
           );
           widget.root.querySelectorAll(".approval").forEach((n) => n.remove());
@@ -216,7 +280,7 @@ export function createRuntime(
                 if (!confirm(label + "当前参数快照？")) return;
                 button.disabled = true;
                 try {
-                  await request(
+                  await call(
                     "/v1/runs/" +
                       encodeURIComponent(id) +
                       "/approvals/" +
@@ -238,7 +302,7 @@ export function createRuntime(
           widget.error.textContent = e.message;
         }
       }
-      const run = await request(
+      const run = await call(
         "/v1/apps/" +
           encodeURIComponent(options.appCode) +
           (declaration.type === "CHAT"
@@ -254,7 +318,7 @@ export function createRuntime(
       const signal = controller.signal;
       const result = await observeRun({
         signal,
-        open: async (cursor, emit) => {
+        open: async (cursor, emitEvent) => {
           const token = await options.ticket();
           if (signal.aborted || destroyed)
             throw new DOMException("观察已停止", "AbortError");
@@ -265,12 +329,12 @@ export function createRuntime(
               "/events",
             () => token,
             cursor,
-            emit,
+            emitEvent,
             signal,
           );
         },
         readStatus: () =>
-          request(
+          call(
             "/v1/runs/" + encodeURIComponent(run.runId),
             undefined,
             signal,
@@ -347,10 +411,34 @@ export function createRuntime(
     }
   }
 
-  function destroy() {
-    destroyed = true;
-    controller?.abort();
+  function open(openOptions?: AssistantOpenOptions) {
+    if (destroyed) throw Error("助手已销毁，请重新初始化");
+    if (openOptions?.pageContext !== undefined)
+      pageContext = validatePageContext(openOptions.pageContext);
+    widget.drawer.style.display = "flex";
+    emit("open", { pageContext: { ...pageContext }, appCode: options.appCode });
+    void loadExperience();
+    void hydrate();
   }
 
-  return { hydrate, send, destroy };
+  function close() {
+    if (destroyed) return;
+    widget.drawer.style.display = "none";
+    emit("close", { appCode: options.appCode });
+  }
+
+  function updateContext(context: PageContext) {
+    if (destroyed) throw Error("助手已销毁，请重新初始化");
+    pageContext = validatePageContext(context);
+  }
+
+  function destroy() {
+    if (destroyed) return;
+    destroyed = true;
+    controller?.abort();
+    extraInputs.clear();
+    emit("destroy", { appCode: options.appCode });
+  }
+
+  return { hydrate, send, open, close, updateContext, destroy };
 }
