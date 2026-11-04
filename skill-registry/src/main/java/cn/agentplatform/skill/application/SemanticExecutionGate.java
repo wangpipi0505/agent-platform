@@ -77,6 +77,27 @@ public class SemanticExecutionGate {
                 409, "SEMANTIC_CONDITION_BLOCKED", "分发前条件不成立：" + kind);
     }
 
+    /**
+     * SEM-07.2：确认之后、实际分发之前的再次复核。
+     *
+     * <p>确认页展示时条件可能成立，但用户确认与真正出站之间可能已发生状态/关系变化。这里不改变
+     * 条件解释，只把“确认后已不成立/无法确认”翻译成明确的重新确认要求；依赖不可达仍按 503
+     * 处理，不能借重新确认绕过“没检查”。未声明条件时与 {@link #check} 一样零调用。
+     */
+    public void recheck(Map<String, Object> contract) {
+        try {
+            check(contract);
+        } catch (PlatformException failure) {
+            if ("SEMANTIC_CONDITION_BLOCKED".equals(failure.code())
+                    || "SEMANTIC_CONDITION_UNKNOWN".equals(failure.code()))
+                throw new PlatformException(
+                        409,
+                        "SEMANTIC_CONDITION_RECONFIRM",
+                        "审批后语义条件已变化，请重新确认后再执行");
+            throw failure;
+        }
+    }
+
     // ---- declaration parsing -------------------------------------------------
 
     private static Map<String, Object> declaration(Map<String, Object> contract) {

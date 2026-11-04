@@ -131,6 +131,17 @@ public class SkillExecution {
     }
 
     /**
+     * SEM-07.2：审批通过后的再次复核。声明与装配规则与入口预检一致——没装配就不能把“没检查”
+     * 当成“没约束”；未声明条件的技能保持零跨服务调用。
+     */
+    private void recheckSemantic(Map<String, Object> contract) {
+        if (!SemanticExecutionGate.declared(contract)) return;
+        if (semanticGate == null)
+            throw error(503, "SEMANTIC_CONDITION_UNAVAILABLE", "语义条件检查未装配，拒绝执行已声明条件的调用");
+        semanticGate.recheck(contract);
+    }
+
+    /**
      *
      * 未声明 bindingRefs 的技能完全不受影响（不解析、不写回执、不多一次跨服务调用）；
      * 一旦声明了引用，就必须有解析器可用——宁可拒绝，也不把"没装配"当成"没约束"。
@@ -280,6 +291,10 @@ public class SkillExecution {
             if (approval.path("skillVersionId").asLong() != versionId
                     || !approval.path("parametersDigest").asText().equals(digest))
                 throw error(409, "APPROVAL_MISMATCH", "批准快照与当前技能或参数不一致，请重新确认");
+            // SEM-07.2：确认页与真正出站之间可能已发生事实变化。批准校验通过后、认领前再复核一次；
+            // 不成立/无法确认翻译为重新确认，依赖不可达仍按 503 拒绝。拒绝发生在 claim 与任何
+            // 状态写入之前，因此不会产生 RESULT_UNKNOWN（那仅用于已发送后的不可判定）。
+            recheckSemantic(contract);
         }
         // 先完成参数/守卫判断，再认领失败事实或实际执行的交付权；校验失败绝不会发送SUBMITTED或触发外部调用。
         // 两键均由 engine.action_plan 下发；新业务协议仅稳定业务出站键，claim 仍绑定当前计划。

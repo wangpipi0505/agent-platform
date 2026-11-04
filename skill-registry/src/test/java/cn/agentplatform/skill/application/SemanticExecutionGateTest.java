@@ -102,6 +102,50 @@ class SemanticExecutionGateTest {
         assertEquals("SEMANTIC_CONDITION_INVALID", failure.code());
     }
 
+    @Test
+    void recheckPassesWhenConditionsStillHold() {
+        var stub = new StubDecision(pass());
+        new SemanticExecutionGate(stub).recheck(contract(true));
+        assertEquals(1, stub.calls);
+    }
+
+    @Test
+    void recheckBlockedRequiresReconfirmation() {
+        var stub = new StubDecision(result(false,
+                List.of(new SemanticDecisionClient.Condition("RELATION", "NOT_HOLDS", ""))));
+        var failure = assertThrows(PlatformException.class,
+                () -> new SemanticExecutionGate(stub).recheck(contract(true)));
+        assertEquals(409, failure.status());
+        assertEquals("SEMANTIC_CONDITION_RECONFIRM", failure.code());
+    }
+
+    @Test
+    void recheckUnknownRequiresReconfirmation() {
+        var stub = new StubDecision(result(false,
+                List.of(new SemanticDecisionClient.Condition("STATE", "UNKNOWN", "源不可达"))));
+        var failure = assertThrows(PlatformException.class,
+                () -> new SemanticExecutionGate(stub).recheck(contract(true)));
+        assertEquals(409, failure.status());
+        assertEquals("SEMANTIC_CONDITION_RECONFIRM", failure.code());
+    }
+
+    @Test
+    void recheckKeepsUnavailableAsUnavailable() {
+        var stub = new StubDecision(pass());
+        stub.failure = new PlatformException(502, "DEPENDENCY_UNAVAILABLE", "连接失败");
+        var failure = assertThrows(PlatformException.class,
+                () -> new SemanticExecutionGate(stub).recheck(contract(true)));
+        assertEquals(503, failure.status());
+        assertEquals("SEMANTIC_SOURCE_UNAVAILABLE", failure.code());
+    }
+
+    @Test
+    void recheckUndeclaredIsNoop() {
+        var stub = new StubDecision(pass());
+        new SemanticExecutionGate(stub).recheck(contract(false));
+        assertEquals(0, stub.calls);
+    }
+
     // ---- fixtures ------------------------------------------------------------
 
     private static Map<String, Object> contract(boolean declared) {
