@@ -22,8 +22,9 @@ public class ChatSessionController {
     }
 
     @PostMapping({"/v1/apps/{code}/sessions", "/admin/apps/{code}/sessions"})
-    public Object create(@PathVariable String code) {
-        return ApiResponse.ok(sessions.create(code, Actor.current()));
+    public Object create(
+            @PathVariable String code, @RequestBody(required = false) JsonNode body) {
+        return ApiResponse.ok(sessions.create(code, body, Actor.current()));
     }
 
     @GetMapping({"/v1/apps/{code}/sessions/{id}", "/admin/apps/{code}/sessions/{id}"})

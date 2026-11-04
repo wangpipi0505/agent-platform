@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, ref } from "vue";
+import { computed, onMounted, reactive, ref, watch } from "vue";
 import { useApi } from "../../../../shared/api";
 import EvaluationPanel from "../../EvaluationPanel.vue";
 import {
@@ -38,6 +38,67 @@ const emit = defineEmits<{
 }>();
 
 const api = useApi();
+// INT-06：交接区只展示服务端已激活的配置版本；浏览器提议的 configReleaseId 由引擎复核，
+// 页面既不缓存密钥也不生成明文凭据。
+const activeRelease = ref<any>(null);
+const releaseError = ref("");
+const releaseBusy = ref(false);
+
+async function loadActiveRelease() {
+  // 交接区只在已发布版本存在时出现；未发布应用不探测配置版本，也不产生额外管理端调用。
+  if (!props.published) {
+    activeRelease.value = null;
+    releaseError.value = "";
+    releaseBusy.value = false;
+    return;
+  }
+  releaseBusy.value = true;
+  releaseError.value = "";
+  try {
+    const list = await api<any[]>(
+      `/admin/config-releases?appCode=${encodeURIComponent(props.code)}`,
+    );
+    activeRelease.value = (Array.isArray(list) ? list : []).find(
+      (row: any) => row?.status === "ACTIVE",
+    ) ?? null;
+  } catch (e) {
+    activeRelease.value = null;
+    releaseError.value = e instanceof Error ? e.message : "读取激活配置版本失败";
+  } finally {
+    releaseBusy.value = false;
+  }
+}
+
+onMounted(loadActiveRelease);
+watch(() => [props.code, props.published], loadActiveRelease);
+
+const handoff = computed(() => {
+  const release = activeRelease.value;
+  if (!release) return "";
+  const scope = release.activationScope || "production";
+  return [
+    "// 1) 业务后端用自身凭据换取 300 秒运行短票（凭据只保存在后端）",
+    "POST {业务后端}/embed/ticket",
+    "Authorization: ApiKey <业务系统专属凭据>",
+    "Origin: https://<业务系统域名>",
+    "Content-Type: application/json",
+    '{"appCode":"' + props.code + '","userId":"<已登录用户>"}',
+    "",
+    "// 2) 会话创建时提议配置版本；引擎按激活版本复核后才固定到运行事实",
+    "POST /v1/apps/" + props.code + "/sessions",
+    "Authorization: Bearer <短票>",
+    '{"configReleaseId":"' + release.releaseId + '"}',
+    "",
+    "// 3) 轮次沿用会话固定版本，不得再换版本",
+    "POST /v1/apps/" + props.code + "/sessions/{sessionId}/turns",
+    '{"message":"…","requestId":"<一次性请求号>"}',
+    "",
+    "// 激活配置版本：" + release.releaseId,
+    "// 配置摘要：" + (release.digest || "未知"),
+    "// 环境作用域：" + scope,
+  ].join("\n");
+});
+
 // 豁免无查询端点（GET 列表未实现）：会话内授予/撤销的豁免留在本地展示，
 // 历史豁免只能经预检检查项带回的 waiverId/expiresAt 显示。
 const sessionWaiver = ref<WaiverView | null>(null);
@@ -356,6 +417,55 @@ const webappBase = (() => {
         @click="emit('commit')"
         >{{ demoConfirmationAvailable ? '确认非生产演示发布' : '确认发布版本' }}</el-button
       >
+    </div>
+    <div class="panel" aria-label="宿主接入交接">
+      <h2>集成交接</h2>
+      <p class="muted">
+        配置版本引用由服务端解析并固定；浏览器只能提议 configReleaseId，不能覆盖引擎权威绑定。
+        示例不含任何密钥。
+      </p>
+      <p v-if="releaseBusy" class="muted">正在读取激活配置版本…</p>
+      <p v-else-if="releaseError" class="error" role="alert">{{ releaseError }}</p>
+      <template v-else-if="activeRelease">
+        <dl style="margin: 0.75rem 0">
+          <div>
+            <dt>激活配置版本</dt>
+            <dd><code>{{ activeRelease.releaseId }}</code></dd>
+          </div>
+          <div>
+            <dt>配置摘要</dt>
+            <dd :title="activeRelease.digest">
+              <code>{{ shortSha(activeRelease.digest || "") || "未知" }}</code>
+            </dd>
+          </div>
+          <div>
+            <dt>激活作用域</dt>
+            <dd>{{ activeRelease.activationScope || "production" }}</dd>
+          </div>
+          <div>
+            <dt>应用版本</dt>
+            <dd>{{ activeRelease.appVersion ?? "未知" }}</dd>
+          </div>
+          <div>
+            <dt>接入档案修订</dt>
+            <dd>
+              {{ activeRelease.integrationProfileId || "未绑定" }}
+              <span v-if="activeRelease.integrationProfileRev">
+                · rev {{ activeRelease.integrationProfileRev }}
+              </span>
+            </dd>
+          </div>
+        </dl>
+        <h3>接入示例（不含密钥）</h3>
+        <pre>{{ handoff }}</pre>
+        <p class="muted">
+          会话创建后配置引用写入运行事实；轮次与恢复沿用同一版本。伪造或过期的
+          configReleaseId 由引擎以 CONFIG_RELEASE_NOT_ACTIVE / CONFIG_REV_CONFLICT 拒绝。
+        </p>
+      </template>
+      <p v-else class="muted">
+        当前应用还没有激活的配置版本；激活配置发布后，此处才显示可核验的版本引用与接入示例。
+      </p>
     </div>
     <div v-if="published" class="panel">
       <h2>集成四件套</h2>

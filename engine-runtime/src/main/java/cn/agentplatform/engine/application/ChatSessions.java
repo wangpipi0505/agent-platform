@@ -24,43 +24,70 @@ public class ChatSessions {
     }
 
     public Map<String, Object> create(String code, Actor actor) {
+        return create(code, null, actor);
+    }
+
+    /**
+     * INT-06：会话创建时可提议 configReleaseId，引用由引擎向 app 核验后固定；
+     * 未提议时保持旧行为（配置列保持 null，轮次不绑定配置版本）。
+     */
+    public Map<String, Object> create(String code, JsonNode body, Actor actor) {
         JsonNode snapshot = clients.get("app", "/internal/apps/" + code + "/published", actor);
         if (!snapshot.path("type").asText().equals("CHAT"))
             throw new PlatformException(409, "CHAT_REQUIRED", "只有已发布对话应用可创建会话");
         maxTurns(snapshot);
+        RunService.ConfigReference config =
+                runs == null ? null : runs.resolveConfig(code, body, actor);
         String id = "s_" + UUID.randomUUID().toString().replace("-", "");
-        store.db()
-                .update(
-                        "insert into"
-                            + " engine.chat_session(public_id,tenant_id,principal_id,app_code,snapshot)"
-                            + " values(?,?,?,?,?::jsonb)",
-                        id,
-                        actor.tenantId(),
-                        actor.principalId(),
-                        code,
-                        Json.write(snapshot));
+        if (config == null) {
+            store.db()
+                    .update(
+                            "insert into"
+                                + " engine.chat_session(public_id,tenant_id,principal_id,app_code,snapshot)"
+                                + " values(?,?,?,?,?::jsonb)",
+                            id,
+                            actor.tenantId(),
+                            actor.principalId(),
+                            code,
+                            Json.write(snapshot));
+        } else {
+            store.db()
+                    .update(
+                            "insert into"
+                                + " engine.chat_session(public_id,tenant_id,principal_id,app_code,snapshot,"
+                                + "config_release_id,config_digest,environment_binding_revs,config_environment)"
+                                + " values(?,?,?,?,?::jsonb,?,?,?::jsonb,?)",
+                            id,
+                            actor.tenantId(),
+                            actor.principalId(),
+                            code,
+                            Json.write(snapshot),
+                            config.releaseId(),
+                            config.digest(),
+                            Json.write(config.environmentBindingRevs()),
+                            config.environment());
+        }
         return get(code, id, actor);
     }
 
     public Map<String, Object> get(String code, String id, Actor actor) {
         var session = owned(code, id, actor, false);
-        return Map.of(
-                "sessionId",
-                id,
-                "appCode",
-                code,
-                "versionNo",
-                TraceStore.json(session.get("snapshot")).path("versionNo"),
-                "nextTurn",
-                session.get("next_turn"),
-                "maxTurns",
-                maxTurns(TraceStore.json(session.get("snapshot"))),
+        Map<String, Object> view = new LinkedHashMap<>();
+        view.put("sessionId", id);
+        view.put("appCode", code);
+        view.put("versionNo", TraceStore.json(session.get("snapshot")).path("versionNo"));
+        view.put("nextTurn", session.get("next_turn"));
+        view.put("maxTurns", maxTurns(TraceStore.json(session.get("snapshot"))));
+        view.put(
                 "turns",
                 store.db()
                         .queryForList(
                                 "select turn_no,request_id,run_public_id,created_at from"
                                         + " engine.chat_turn where session_id=? order by turn_no",
                                 id));
+        if (session.get("config_release_id") != null)
+            view.put("configReleaseId", session.get("config_release_id"));
+        return view;
     }
 
     public Map<String, Object> turn(String code, String id, JsonNode req, Actor actor) {
@@ -70,6 +97,8 @@ public class ChatSessions {
         var pinnedSession = owned(code, id, actor, false);
         if (TraceStore.json(pinnedSession.get("snapshot")).has("evaluationConversation"))
             throw new PlatformException(403,"EVALUATION_SESSION_ROUTE_REQUIRED","候选评测会话只能经受控EVALUATION入口续接");
+        // INT-06：轮次只能沿用会话创建时固定的配置版本；客户端在轮次里换版本一律拒绝。
+        RunService.ConfigReference pinnedConfig = pinnedConfig(pinnedSession, req);
         boolean known =
                 !store.db()
                         .queryForList(
@@ -193,8 +222,13 @@ public class ChatSessions {
                     Json.tree(Map.of("sessionId", id, "turnNo", reservation.get("turn_no"))));
             var input = (com.fasterxml.jackson.databind.node.ObjectNode) req.deepCopy();
             input.remove("sessionId");
+            input.remove("configReleaseId");
             input.put("requestId", "session:" + id + ":" + requestId);
-            var result = runs.createReservedSessionTurn(code, input, source, actor, ticket);
+            var result =
+                    pinnedConfig == null
+                            ? runs.createReservedSessionTurn(code, input, source, actor, ticket)
+                            : runs.createReservedSessionTurn(
+                                    code, input, source, actor, ticket, pinnedConfig);
             store.db()
                     .update(
                             "update engine.chat_turn set run_public_id=? where session_id=? and"
@@ -274,6 +308,30 @@ public class ChatSessions {
         var response=new LinkedHashMap<String,Object>(result);
         response.putAll(binding); response.put("conversationId",id); response.put("turnNo",turn);
         return response;
+    }
+
+    /** 会话行里固定的配置版本；会话未固定时拒绝轮次临时指定，避免同一会话先后挂到两套配置。 */
+    RunService.ConfigReference pinnedConfig(Map<String, Object> session, JsonNode req) {
+        Object releaseId = session.get("config_release_id");
+        String requested =
+                req == null ? "" : req.path("configReleaseId").asText("").trim();
+        if (releaseId == null) {
+            if (!requested.isEmpty())
+                throw new PlatformException(
+                        409, "CONFIG_REV_CONFLICT", "会话创建时未固定配置版本，轮次不能指定");
+            return null;
+        }
+        if (!requested.isEmpty() && !requested.equals(releaseId.toString()))
+            throw new PlatformException(409, "CONFIG_REV_CONFLICT", "轮次配置版本与会话固定版本不一致");
+        Object digest = session.get("config_digest");
+        Object environment = session.get("config_environment");
+        if (digest == null || environment == null)
+            throw new PlatformException(409, "CONFIG_REV_CONFLICT", "会话固定配置版本缺少完整性字段");
+        return new RunService.ConfigReference(
+                releaseId.toString(),
+                digest.toString(),
+                environment.toString(),
+                TraceStore.json(session.get("environment_binding_revs")));
     }
 
     private Map<String, Object> owned(String code, String id, Actor actor, boolean lock) {

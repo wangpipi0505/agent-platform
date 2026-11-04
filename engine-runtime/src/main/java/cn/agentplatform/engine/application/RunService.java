@@ -64,6 +64,19 @@ public class RunService {
      * 夹具未装配（null）即旁路，保持既有构造器不变。
      */
     private RunQuota runQuota;
+    /**
+     * INT-06：引擎侧的受控集成环境。只由服务端配置决定，客户端请求体不能覆盖；
+     * 解析激活配置版本时按该作用域向 app 取投影。
+     */
+    @Value("${agent.integration.environment:production}")
+    private String integrationEnvironment = "production";
+
+    private static final java.util.regex.Pattern CONFIG_DIGEST_PATTERN =
+            java.util.regex.Pattern.compile("[0-9a-f]{64}");
+
+    /** 服务端解析并核验过的配置版本引用；只用于写入运行事实，不进入 versionRefs。 */
+    public record ConfigReference(
+            String releaseId, String digest, String environment, JsonNode environmentBindingRevs) {}
 
     private final ModelInputMaterials initialMaterials;
     private final ChunkBus initialChunks;
@@ -193,7 +206,22 @@ public class RunService {
             JsonNode snapshot,
             Actor actor,
             RunScheduler.Admission ticket) {
-        return createInternal(code, request, "TASK", actor, snapshot, null, false, ticket, true);
+        return createReservedSessionTurn(code, request, snapshot, actor, ticket, null);
+    }
+
+    /**
+     * 会话轮次沿创建时固定的配置版本继续执行；引用由服务端从会话行读出，
+     * 不采信轮次请求体里可以伪造的摘要或环境。
+     */
+    public Map<String, Object> createReservedSessionTurn(
+            String code,
+            JsonNode request,
+            JsonNode snapshot,
+            Actor actor,
+            RunScheduler.Admission ticket,
+            ConfigReference config) {
+        return createInternal(
+                code, request, "TASK", actor, snapshot, null, false, ticket, true, config);
     }
 
     /** 只供本地已核归属的评测会话调用；保留EVALUATION副作用限制，IAM未迁移时明确拒绝。 */
@@ -204,7 +232,69 @@ public class RunService {
     }
 
     public Map<String, Object> create(String code, JsonNode req, String trigger, Actor actor) {
-        return createInternal(code, req, trigger, actor, null, null);
+        // 解析只发生在受理事务之前，网络调用不会进入长事务；未声明引用时保持旧行为。
+        return createInternal(
+                code, req, trigger, actor, null, null, false, null, false, resolveConfig(code, req, actor));
+    }
+
+    /**
+     * 服务端解析配置版本：客户端只能提议 releaseId，摘要、环境与绑定修订全部取自 app 的
+     * 激活配置投影。未声明 configReleaseId 返回 null（旧客户端原行为）。
+     */
+    public ConfigReference resolveConfig(String code, JsonNode req, Actor actor) {
+        String requested = req == null ? "" : req.path("configReleaseId").asText("").trim();
+        if (requested.isEmpty()) return null;
+        if (clients == null)
+            throw new PlatformException(503, "RUN_CONFIG_UNAVAILABLE", "配置版本解析暂不可用");
+        JsonNode projection =
+                clients.get(
+                        "app",
+                        "/v1/apps/" + code + "/experience?environment=" + integrationEnvironment,
+                        actor);
+        JsonNode ref = projection.path("configReleaseRef");
+        String releaseId = ref.path("configReleaseId").asText("").trim();
+        String digest = ref.path("digest").asText("").trim();
+        if (releaseId.isEmpty() || !CONFIG_DIGEST_PATTERN.matcher(digest).matches())
+            throw new PlatformException(
+                    409, "CONFIG_RELEASE_NOT_ACTIVE", "当前应用没有可核验的激活配置版本");
+        if (!requested.equals(releaseId))
+            throw new PlatformException(
+                    409, "CONFIG_RELEASE_NOT_ACTIVE", "请求的配置版本与当前激活版本不一致");
+        if (!code.equals(projection.path("appCode").asText("")))
+            throw new PlatformException(409, "CONFIG_RELEASE_NOT_ACTIVE", "激活配置版本不属于该应用");
+        JsonNode profile = projection.path("integrationProfileRef");
+        String profileId = profile.path("profileId").asText("").trim();
+        JsonNode profileRev = profile.path("profileRev");
+        String environment = profile.path("environment").asText("").trim();
+        if (profileId.isEmpty() || !profileRev.isIntegralNumber() || profileRev.asLong() < 1)
+            throw new PlatformException(409, "CONFIG_RELEASE_NOT_ACTIVE", "激活配置版本缺少接入档案修订");
+        if (environment.isEmpty()) environment = integrationEnvironment;
+        if (!environment.equals(integrationEnvironment))
+            throw new PlatformException(
+                    409, "CONFIG_RELEASE_NOT_ACTIVE", "激活配置版本的环境与引擎环境不一致");
+        JsonNode revs =
+                Json.tree(
+                        List.of(
+                                Map.of(
+                                        "kind", "integration-profile",
+                                        "profileId", profileId,
+                                        "profileRev", profileRev.asLong(),
+                                        "environment", environment)));
+        return new ConfigReference(releaseId, digest, environment, revs);
+    }
+
+    /** 只把已核验引用写入运行事实；versionRefs 保持既有版本引用不动。 */
+    private void bindConfig(long runId, ConfigReference config) {
+        if (config == null) return;
+        store.db()
+                .update(
+                        "update engine.run set config_release_id=?,config_digest=?,"
+                                + "environment_binding_revs=?::jsonb,config_environment=? where id=?",
+                        config.releaseId(),
+                        config.digest(),
+                        Json.write(config.environmentBindingRevs()),
+                        config.environment(),
+                        runId);
     }
 
     public boolean iamEnabled() {
@@ -520,6 +610,30 @@ public class RunService {
             boolean recordedReplay,
             RunScheduler.Admission suppliedTicket,
             boolean acceptedReservation) {
+        return createInternal(
+                code,
+                req,
+                trigger,
+                actor,
+                trustedSnapshot,
+                controlledDraftId,
+                recordedReplay,
+                suppliedTicket,
+                acceptedReservation,
+                null);
+    }
+
+    private Map<String, Object> createInternal(
+            String code,
+            JsonNode req,
+            String trigger,
+            Actor actor,
+            JsonNode trustedSnapshot,
+            Long controlledDraftId,
+            boolean recordedReplay,
+            RunScheduler.Admission suppliedTicket,
+            boolean acceptedReservation,
+            ConfigReference config) {
         // REQUIRED can join an ambient transaction. Reject it before any refresh/app I/O so
         // this admission owns the real outer commit boundary (Spring 6.2.7 TransactionTemplate).
         final boolean protectedAdmission = iamEnabled();
@@ -798,6 +912,7 @@ public class RunService {
                                                                                                 "requestId")
                                                                                         .asText()
                                                                                 : null);
+                                        bindConfig(rid, config);
                                         if (protectedAdmission) {
                                             created.set(true);
                                             AuthorityContext.requireBound(admissionProof);
