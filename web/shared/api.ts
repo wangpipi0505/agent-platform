@@ -196,3 +196,105 @@ export async function axiosTransport(
     headers: response.headers as Record<string, string>,
   });
 }
+
+/**
+ * INT-08：配置管理台客户端。
+ *
+ * 新端点还没有进入 `shared/routes.ts` 的生成类型（生成链在 P 窗口补齐），所以路径与本地类型
+ * 集中在本文件，页面不直接拼 URL。等生成链产出后再用 `satisfies keyof paths` 收紧。
+ * 这里只做传输，不做形状校验；形状解析在 pages/integration/integration-console.ts，
+ * 解析失败会抛可读错误，而不是把 unknown 直接渲染。
+ */
+export type ApiCall = <T = any>(
+  path: string,
+  method?: string,
+  body?: unknown,
+  signal?: AbortSignal,
+  decoder?: (text: string) => any,
+) => Promise<T>;
+
+export const integrationPaths = {
+  applications: "/admin/apps",
+  connectionProfiles: "/admin/connection-profiles",
+  environmentBindings: "/admin/environment-bindings",
+  integrationProfiles: "/admin/integration-profiles",
+  configReleases: "/admin/config-releases",
+  experiences: (appCode: string) =>
+    `/admin/apps/${encodeURIComponent(appCode)}/experiences`,
+  applicationCredential: (appCode: string) =>
+    `/admin/apps/${encodeURIComponent(appCode)}/integration`,
+} as const;
+
+export function integrationClient(call: ApiCall) {
+  const post = (path: string, body?: unknown) =>
+    call<unknown>(path, "POST", body ?? {});
+  const tenantPath = (base: string, id: string) =>
+    `${base}/${encodeURIComponent(id)}`;
+  return {
+    applications: () => call<unknown>(integrationPaths.applications),
+    connectionProfiles: () => call<unknown>(integrationPaths.connectionProfiles),
+    createConnectionProfile: (body: unknown) =>
+      post(integrationPaths.connectionProfiles, body),
+    reviseConnectionProfile: (profileId: string, body: unknown) =>
+      post(tenantPath(integrationPaths.connectionProfiles, profileId), body),
+    approveConnectionProfile: (profileId: string, body?: unknown) =>
+      post(`${tenantPath(integrationPaths.connectionProfiles, profileId)}/approve`, body),
+    disableConnectionProfile: (profileId: string, body?: unknown) =>
+      post(`${tenantPath(integrationPaths.connectionProfiles, profileId)}/disable`, body),
+    connectionProfileGrants: (profileId: string, revision: number) =>
+      call<unknown>(
+        `${tenantPath(integrationPaths.connectionProfiles, profileId)}/versions/${revision}/grants`,
+      ),
+    environmentBindings: () => call<unknown>(integrationPaths.environmentBindings),
+    createEnvironmentBinding: (body: unknown) =>
+      post(integrationPaths.environmentBindings, body),
+    reviseEnvironmentBinding: (bindingId: string, body: unknown) =>
+      post(tenantPath(integrationPaths.environmentBindings, bindingId), body),
+    approveEnvironmentBinding: (bindingId: string, body?: unknown) =>
+      post(`${tenantPath(integrationPaths.environmentBindings, bindingId)}/approve`, body),
+    disableEnvironmentBinding: (bindingId: string, body?: unknown) =>
+      post(`${tenantPath(integrationPaths.environmentBindings, bindingId)}/disable`, body),
+    experience: (appCode: string) =>
+      call<unknown>(integrationPaths.experiences(appCode)),
+    createExperience: (appCode: string, body: unknown) =>
+      post(integrationPaths.experiences(appCode), body),
+    reviseExperience: (appCode: string, body: unknown) =>
+      post(`${integrationPaths.experiences(appCode)}/versions`, body),
+    approveExperience: (appCode: string, body?: unknown) =>
+      post(`${integrationPaths.experiences(appCode)}/approve`, body),
+    disableExperience: (appCode: string, body?: unknown) =>
+      post(`${integrationPaths.experiences(appCode)}/disable`, body),
+    integrationProfiles: (appCode: string) =>
+      call<unknown>(
+        `${integrationPaths.integrationProfiles}?appCode=${encodeURIComponent(appCode)}`,
+      ),
+    createIntegrationProfile: (body: unknown) =>
+      post(integrationPaths.integrationProfiles, body),
+    reviseIntegrationProfile: (profileId: string, body: unknown) =>
+      post(`${tenantPath(integrationPaths.integrationProfiles, profileId)}/versions`, body),
+    approveIntegrationProfile: (profileId: string, body?: unknown) =>
+      post(`${tenantPath(integrationPaths.integrationProfiles, profileId)}/approve`, body),
+    disableIntegrationProfile: (profileId: string, body?: unknown) =>
+      post(`${tenantPath(integrationPaths.integrationProfiles, profileId)}/disable`, body),
+    configReleases: (appCode: string) =>
+      call<unknown>(
+        `${integrationPaths.configReleases}?appCode=${encodeURIComponent(appCode)}`,
+      ),
+    configRelease: (releaseId: string) =>
+      call<unknown>(tenantPath(integrationPaths.configReleases, releaseId)),
+    createConfigRelease: (body: unknown) =>
+      post(integrationPaths.configReleases, body),
+    validateConfigRelease: (releaseId: string, body?: unknown) =>
+      post(`${tenantPath(integrationPaths.configReleases, releaseId)}/validate`, body),
+    approveConfigRelease: (releaseId: string, body?: unknown) =>
+      post(`${tenantPath(integrationPaths.configReleases, releaseId)}/approve`, body),
+    activateConfigRelease: (releaseId: string, body?: unknown) =>
+      post(`${tenantPath(integrationPaths.configReleases, releaseId)}/activate`, body),
+    disableConfigRelease: (releaseId: string, body?: unknown) =>
+      post(`${tenantPath(integrationPaths.configReleases, releaseId)}/disable`, body),
+    applicationCredential: (appCode: string) =>
+      call<unknown>(integrationPaths.applicationCredential(appCode)),
+  };
+}
+
+export type IntegrationClient = ReturnType<typeof integrationClient>;

@@ -71,6 +71,42 @@ const routes: RouteRecordRaw[] = [
     meta: { access: "skill-detail", title: "技能详情" },
   },
   {
+    path: "/integration/config-releases",
+    name: "integration-config",
+    component: () => import("./pages/integration/ConfigReleasesPanel.vue"),
+    meta: { access: "integration-config", title: "配置发布" },
+  },
+  {
+    path: "/integration/connection-profiles",
+    name: "integration-connections",
+    component: () => import("./pages/integration/ConnectionProfilesPage.vue"),
+    meta: { access: "integration-connections", title: "连接档案" },
+  },
+  {
+    path: "/integration/environment-bindings",
+    name: "integration-bindings",
+    component: () => import("./pages/integration/EnvironmentBindingsPage.vue"),
+    meta: { access: "integration-bindings", title: "环境绑定" },
+  },
+  {
+    path: "/integration/integration-profiles",
+    name: "integration-profiles",
+    component: () => import("./pages/integration/IntegrationProfilesPanel.vue"),
+    meta: { access: "integration-profiles", title: "接入档案" },
+  },
+  {
+    path: "/integration/experiences",
+    name: "integration-experience",
+    component: () => import("./pages/integration/ExperienceEditor.vue"),
+    meta: { access: "integration-experience", title: "体验编辑" },
+  },
+  {
+    path: "/integration/diagnostics",
+    name: "integration-diagnostics",
+    component: () => import("./pages/integration/IntegrationDiagnosticsPanel.vue"),
+    meta: { access: "integration-diagnostics", title: "接入诊断" },
+  },
+  {
     path: "/model/providers",
     name: "providers",
     component: () => import("./pages/ProvidersPage.vue"),
