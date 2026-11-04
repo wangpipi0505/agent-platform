@@ -385,6 +385,69 @@ export function conflictDiff(
   return diff;
 }
 
+/* ===================== ONB-06：助手组装交接与使用端首跑清单 ===================== */
+
+/**
+ * 独立助手入口（webapp）地址：与 AppPublishPanel 同源推导——
+ * 优先 VITE_WEBAPP_BASE_URL，缺省当前主机 15174 端口；不发明新入口。
+ */
+export function assistantEntryUrl(appCode: string, base?: string): string {
+  const configured =
+    base ??
+    (typeof import.meta !== "undefined" && import.meta.env
+      ? (import.meta.env.VITE_WEBAPP_BASE_URL as string | undefined)
+      : undefined);
+  const root = configured
+    ? configured.replace(/\/+$/, "")
+    : typeof window !== "undefined"
+      ? `${window.location.protocol}//${window.location.hostname}:15174`
+      : "http://127.0.0.1:15174";
+  return `${root}/w/${encodeURIComponent(appCode)}`;
+}
+
+/** ②使用端首跑验证清单：发布后逐项人工核验，全部来自已交付链路。 */
+export interface OnboardingLaunchCheck {
+  item: string
+  expectation: string
+  where: string
+}
+
+export const ONBOARDING_LAUNCH_CHECKS: readonly OnboardingLaunchCheck[] = [
+  {
+    item: "欢迎语渲染",
+    expectation: "打开对话地址后首屏显示模板引用的 AssistantExperience 欢迎语，无占位符残留。",
+    where: "webapp 首屏",
+  },
+  {
+    item: "能力卡展示",
+    expectation: "能力描述与已发布技能一致，不宣传未授权或未交付功能。",
+    where: "webapp 欢迎区",
+  },
+  {
+    item: "推荐问法",
+    expectation: "推荐问法可点击并填入输入框；全部来自体验配置的 promptRefs/示例。",
+    where: "webapp 欢迎区",
+  },
+  {
+    item: "模板变量表单",
+    expectation: "按发布声明渲染业务字段表单（标签/单位/枚举/文件控件），false/0/null 按原类型提交。",
+    where: "webapp 输入区",
+  },
+  {
+    item: "只读调用真实执行",
+    expectation: "QUERY 模板发起一次真实受控运行并返回结果与文件引用；失败原样展示，不伪造成功。",
+    where: "webapp 会话",
+  },
+];
+
+/** ③INT-05/07 已交付项之外、本卡不覆盖的未交付项（如实登记，不用占位代替）。 */
+export const ONBOARDING_UNDELIVERED: readonly string[] = [
+  "SDK 宿主页面按钮集成示例（宿主 open/close 已交付，示例页与业务侧按钮接线未交付）",
+  "体验配置后台编辑入口（INT-03 体验编辑器归专业入口；向导只引用不编辑）",
+  "受控写入模板与文件分析模板（待确认机制/INT-02 文件链路）",
+  "内嵌交付（业务系统内嵌 SDK 部署示例）当前标注“待集成”",
+];
+
 /** 兼容薄包装：preview 响应经 resource-types 边界收窄后返回规范诊断。 */
 export function normalizePreview(response: unknown): PreflightPreview {
   return parsePreflightPreview(response);

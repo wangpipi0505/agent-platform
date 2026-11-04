@@ -18,6 +18,7 @@ const preflightResult = ref<ReturnType<typeof normalizePreview>>();
 const preflightDone = ref(false);
 const publishReceipt = ref("");
 const publishing = ref(false);
+const emit = defineEmits<{ published: [code: string] }>();
 
 function setErr(message: string) {
   error.value = message;
@@ -89,6 +90,7 @@ async function publish() {
       requestId: crypto.randomUUID(),
     });
     publishReceipt.value = `${code.value} 已发布（r${current.value.currentRev}）`;
+    emit("published", code.value);
     await load();
   } catch (e: any) {
     setErr(e.message);

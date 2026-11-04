@@ -6,6 +6,7 @@ import type { Ref } from "vue";
 import BusinessFieldsStep from "./BusinessFieldsStep.vue";
 import ConnectionCheckStep from "./ConnectionCheckStep.vue";
 import DraftAssemblyStep from "./DraftAssemblyStep.vue";
+import AssistantLaunchStep from "./AssistantLaunchStep.vue";
 import VerifyPublishStep from "./VerifyPublishStep.vue";
 import FieldMappingStep from "./FieldMappingStep.vue";
 import ReturnPresentationStep from "./ReturnPresentationStep.vue";
@@ -205,9 +206,20 @@ async function copyPayload() {
   <div class="panel">
     <h2>组装登记与验证发布</h2>
     <DraftAssemblyStep :draft="draft" @registered="registered = $event" />
-    <VerifyPublishStep />
+    <VerifyPublishStep @published="registered = { code: $event, status: 'PUBLISHED', rev: registered?.rev ?? 1 }" />
     <p v-if="registered" class="muted" role="status">
       本会话已登记：{{ registered.code }} · {{ registered.status }} · r{{ registered.rev }}。
+    </p>
+  </div>
+  <!-- ONB-06：发布后交接——独立助手入口与使用端首跑验证清单。 -->
+  <div class="panel">
+    <h2>使用端交接与首跑验证</h2>
+    <AssistantLaunchStep
+      :app-code="registered?.code || ''"
+      :published="registered?.status === 'PUBLISHED'"
+    />
+    <p class="muted">
+      交接内容：应用/模板精确版本、体验引用、使用范围与首跑清单；正式运行与再次消费使用当前授权身份，不复用接入人的高权身份。
     </p>
   </div>
   <!-- ONB-03：业务字段表单/受限映射/返回呈现（声明式映射，无表达式执行）。 -->
