@@ -31,6 +31,7 @@ class ApprovedConnectionDispatchTest {
     boolean revoked;
     String secret = "env:AGENT_SECRET_AP_CR02_BOUND";
     String code = "crm-read";
+    String bindingPath = "";
 
     @BeforeEach void setup() throws Exception {
         var jwt = Jwt.withTokenValue("verified").header("alg", "HS256").subject("operator")
@@ -112,8 +113,8 @@ class ApprovedConnectionDispatchTest {
         var node = (com.fasterxml.jackson.databind.node.ObjectNode) ApprovedConnectionGateTest.payload(
                 "crm-prod", 1, "b".repeat(64), "BEARER", List.of("customers.read"));
         node.set("bindings", Json.tree(List.of(
-                Map.of("bindingId", "crm-a", "bindingRev", 1, "environment", "dev", "baseEndpoint", base(a), "secretRef", secret),
-                Map.of("bindingId", "crm-b", "bindingRev", 1, "environment", "dev", "baseEndpoint", base(b), "secretRef", secret))));
+                Map.of("bindingId", "crm-a", "bindingRev", 1, "environment", "dev", "baseEndpoint", base(a) + bindingPath, "secretRef", secret),
+                Map.of("bindingId", "crm-b", "bindingRev", 1, "environment", "dev", "baseEndpoint", base(b) + bindingPath, "secretRef", secret))));
         node.set("grants", Json.tree(revoked ? List.of() : List.of(Map.of("grantee", "skill." + code,
                 "allowedUses", List.of("read", "write", "execute")))));
         return node;
@@ -185,8 +186,20 @@ class ApprovedConnectionDispatchTest {
     }
     @Test void unavailableBoundSecretRejectsBeforeNetworkEvenWhenLegacySecretExists() {
         secret = "env:AGENT_SECRET_AP_CR02_MISSING";
-        assertThatThrownBy(() -> execution.execute(code, request(1, "crm-b"))).isInstanceOf(PlatformException.class);
+        assertThatThrownBy(() -> execution.execute(code, request(1, "crm-b")))
+                .isInstanceOfSatisfying(PlatformException.class, denied -> assertThat(denied.status()).isEqualTo(401));
         assertThat(hits).isEmpty();
+    }
+    @Test void nativeOpenApiRootIsReplacedOnceInActualHttpRequest() {
+        bindingPath = "/api";
+        contract.put("endpoint", base(a) + "/api/execute");
+        contract.put("httpMethod", "POST");
+        contract.put("httpMapping", Map.of("path", List.of(), "query", List.of(), "body", ""));
+        contract.put("importSource", Map.of("kind", "OPENAPI", "operationId", "customers.read",
+                "method", "POST", "path", "/execute", "documentSha256", "c".repeat(64)));
+        assertThat(execution.execute(code, request(1, "crm-b")).get("status")).isEqualTo("SUCCEEDED");
+        assertThat(hits).containsExactly("B/api/execute:Bearer bound-secret");
+        assertThat(contract.get("endpoint")).isEqualTo(base(a) + "/api/execute");
     }
     @Test void existingSkillCodeAlphabetIsAcceptedWithoutProfileIdRestrictions() {
         code = "C" + "r".repeat(61) + "_1"; contract.put("code", code);

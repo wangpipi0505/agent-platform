@@ -1,4 +1,4 @@
-param([string]$Phase = 'cr01-red', [string[]]$Tests = @('cn.agentplatform.skill.application.ApprovedConnectionGateTest'), [string[]]$Sources = @(), [switch]$CompileOnly)
+param([string]$Phase = 'cr01-red', [string[]]$Tests = @('cn.agentplatform.skill.application.ApprovedConnectionGateTest'), [string[]]$Sources = @(), [switch]$CompileOnly, [switch]$FreshDependencies, [switch]$ConnectionFixtures)
 $ErrorActionPreference = 'Stop'
 $workspace = (Resolve-Path (Join-Path $PSScriptRoot '../../..')).Path
 $evidence = Join-Path 'D:/CodexPrep/algorithm-reorg/upgrade-cr01-02' $Phase
@@ -11,6 +11,7 @@ if ($Phase.StartsWith('cr02')) {
  $testCp += ';' + ($engineReport.testsuite.properties.property | Where-Object name -eq 'java.class.path').value
 }
 $dependencySnapshot = 'D:/CodexPrep/algorithm-reorg/upgrade-cr01-02/dependencies'
+if ($FreshDependencies) { $dependencySnapshot = Join-Path $evidence 'dependencies' }
 foreach ($module in @('admin-common', 'skill-registry', 'app-management', 'engine-runtime')) {
  $classes = Join-Path $workspace "$module/target/classes"
  $isolatedClasses = Join-Path $dependencySnapshot $module
@@ -34,7 +35,8 @@ import org.junit.platform.engine.discovery.DiscoverySelectors;
 public class FocusedJUnit {
  public static void main(String[] args) {
   var request = LauncherDiscoveryRequestBuilder.request();
-  for (var test : args) request.selectors(DiscoverySelectors.selectClass(test));
+  for (var test : args) request.selectors(test.contains("#")
+          ? DiscoverySelectors.selectMethod(test) : DiscoverySelectors.selectClass(test));
   var listener = new SummaryGeneratingListener();
   LauncherFactory.create().execute(request.build(), listener);
   var out = new java.io.PrintWriter(System.out, true);
@@ -77,5 +79,20 @@ $compilerArgumentFile = Join-Path $evidence 'compile.args'
 & (Join-Path $jdk 'bin/javac.exe') "@$compilerArgumentFile"
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 if ($CompileOnly) { exit 0 }
-& (Join-Path $jdk 'bin/java.exe') '-Djdk.net.unixdomain.tmpdir=D:/CodexPrep/algorithm-reorg/upgrade-cr01-02/no-unix-sockets' -cp $cp FocusedJUnit @Tests 2>&1 | Tee-Object -FilePath (Join-Path $PSScriptRoot "$Phase.log")
-exit $LASTEXITCODE
+$fixtureNames = @('AGENT_SECRET_AP_CR02_BOUND','AGENT_SECRET_AP_CR02_LEGACY','AGENT_SECRET_AP_CR02_MISSING','AGENT_SECRET_BINDINGS')
+$originalEnvironment = @{}
+foreach ($name in $fixtureNames) { $originalEnvironment[$name] = [Environment]::GetEnvironmentVariable($name, 'Process') }
+try {
+ if ($ConnectionFixtures) {
+  # 仅当前定向进程使用合成凭据；缺失引用也绑定测试租户，确保真测“不可解析”而非碰巧越权。
+  [Environment]::SetEnvironmentVariable('AGENT_SECRET_AP_CR02_BOUND','bound-secret','Process')
+  [Environment]::SetEnvironmentVariable('AGENT_SECRET_AP_CR02_LEGACY','legacy-secret','Process')
+  [Environment]::SetEnvironmentVariable('AGENT_SECRET_AP_CR02_MISSING',$null,'Process')
+  [Environment]::SetEnvironmentVariable('AGENT_SECRET_BINDINGS','{"AGENT_SECRET_AP_CR02_BOUND":"dispatch-test","AGENT_SECRET_AP_CR02_LEGACY":"dispatch-test","AGENT_SECRET_AP_CR02_MISSING":"dispatch-test"}','Process')
+ }
+ & (Join-Path $jdk 'bin/java.exe') '-Djdk.net.unixdomain.tmpdir=D:/CodexPrep/algorithm-reorg/upgrade-cr01-02/no-unix-sockets' -cp $cp FocusedJUnit @Tests 2>&1 | Tee-Object -FilePath (Join-Path $PSScriptRoot "$Phase.log")
+ $result = $LASTEXITCODE
+} finally {
+ foreach ($name in $fixtureNames) { [Environment]::SetEnvironmentVariable($name,$originalEnvironment[$name],'Process') }
+}
+exit $result
