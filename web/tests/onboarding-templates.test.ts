@@ -127,13 +127,14 @@ describe("页面接线与不伪造可用", () => {
     expect(page).toContain("applyPackageSelection");
   });
 
-  it("路由与权限走 page-access 单一来源（MNT-02 产物）", () => {
+  it("路由与权限走 page-access 单一来源（MNT-02 产物；C0-1 起挂起线：路由保留、移出菜单）", () => {
     const router = readFileSync(new URL("../admin/src/router.ts", import.meta.url), "utf8");
     const access = readFileSync(new URL("../admin/src/page-access.ts", import.meta.url), "utf8");
     expect(router).toContain('path: "/onboarding/templates"');
     expect(router).toContain('access: "onboarding-templates"');
+    // C0-1 裁剪（主方案 §2.1）：接入向导线挂起——代码保留、深链可打开，menu:false + suspended 标记
     expect(access).toContain(
-      '{ key: "onboarding-templates", path: "/onboarding/templates", title: "接入模板", area: "平台管理", read: "session", write: "admin", menu: true }',
+      '{ key: "onboarding-templates", path: "/onboarding/templates", title: "接入模板", area: "平台管理", read: "session", write: "admin", menu: false, suspended: true }',
     );
   });
 
