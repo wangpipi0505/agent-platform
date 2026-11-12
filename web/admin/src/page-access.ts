@@ -23,20 +23,30 @@ export interface PageAccessEntry {
   write: PageRole | "";
   /** 是否进入左菜单。 */
   menu: boolean;
+  /**
+   * C0-1 裁剪标记（1109 基准，主方案 §2.1）：挂起线页面——代码保留不删除、深链可打开
+   * （挂起线冒烟要求），但不进左菜单、验收主线不含。挂起线=本体协同（Semantic*）与
+   * onboarding 接入向导；明细见 docs/baseline-trim-1109.md。
+   */
+  suspended?: true;
 }
 
 export const PAGE_ACCESS_VERSION = 1;
 
 export const pageAccess: PageAccessEntry[] = [
   { key: "capability-packages", path: "/capability-packages", title: "软件能力目录", area: "平台管理", read: "session", write: "", menu: true },
-  { key: "onboarding-templates", path: "/onboarding/templates", title: "接入模板", area: "平台管理", read: "session", write: "admin", menu: true },
+  // C0-1 裁剪：onboarding 接入向导线挂起（主方案 §2.1）——构建流程归入智能体工作区，
+  // 向导组件挂起；代码保留、深链可打开，不进菜单。
+  { key: "onboarding-templates", path: "/onboarding/templates", title: "接入模板", area: "平台管理", read: "session", write: "admin", menu: false, suspended: true },
   { key: "apps", path: "/apps", title: "智能体管理", area: "平台管理", read: "session", write: "edit", menu: true },
   { key: "integration-config", path: "/integration/config-releases", title: "配置发布", area: "平台管理", read: "session", write: "admin", menu: true },
   { key: "integration-connections", path: "/integration/connection-profiles", title: "连接档案", area: "平台管理", read: "session", write: "admin", menu: false },
   { key: "integration-bindings", path: "/integration/environment-bindings", title: "环境绑定", area: "平台管理", read: "session", write: "admin", menu: false },
   { key: "integration-profiles", path: "/integration/integration-profiles", title: "接入档案", area: "平台管理", read: "session", write: "admin", menu: false },
   { key: "integration-experience", path: "/integration/experiences", title: "体验编辑", area: "平台管理", read: "session", write: "admin", menu: false },
-  { key: "integration-semantics", path: "/integration/semantic-bindings", title: "语义与目标", area: "平台管理", read: "session", write: "edit", menu: true },
+  // C0-1 裁剪：本体协同线（Semantic*/semantic-bindings）挂起（主方案 §2.1）——1109 无本体
+  // 要求；代码保留、深链可打开，不进菜单。
+  { key: "integration-semantics", path: "/integration/semantic-bindings", title: "语义与目标", area: "平台管理", read: "session", write: "edit", menu: false, suspended: true },
   { key: "integration-diagnostics", path: "/integration/diagnostics", title: "接入诊断", area: "平台管理", read: "session", write: "", menu: false },
   { key: "app-workspace", path: "/apps", route: "/apps/:code/:tabMatch(.*)*", title: "应用工作区", area: "平台管理", read: "session", write: "edit", menu: false },
   { key: "operations", path: "/operations", title: "运行中心", area: "运行与支撑", read: "session", write: "admin", menu: true },
@@ -61,7 +71,8 @@ export const pageByKey: Record<string, PageAccessEntry> = Object.fromEntries(
 );
 
 export function menuEntries(): PageAccessEntry[] {
-  return pageAccess.filter((entry) => entry.menu);
+  // C0-1：挂起线页面不进菜单（suspended 标记），深链仍可打开（挂起线冒烟要求）。
+  return pageAccess.filter((entry) => entry.menu && !entry.suspended);
 }
 
 /** 与既有 can() 同一角色映射：ADMIN 全量，edit/approve/admin 各对应专属角色。 */

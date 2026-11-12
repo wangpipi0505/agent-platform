@@ -20,10 +20,11 @@ const routerSource = readFileSync(
   "utf8",
 );
 
-it("单一来源：主入口（CR-10起17个）与全部页面登记齐全且字段完整", () => {
+it("单一来源：主入口（C0-1 裁剪后 15 个）与全部页面登记齐全且字段完整", () => {
   const menu = menuEntries();
-  expect(menu.length).toBe(17);
-  expect(new Set(menu.map((e) => e.path)).size).toBe(17);
+  // C0-1 裁剪：接入模板/语义与目标两条挂起线移出菜单（主方案 §2.1），17→15。
+  expect(menu.length).toBe(15);
+  expect(new Set(menu.map((e) => e.path)).size).toBe(15);
   for (const entry of pageAccess) {
     expect(entry.title.length, entry.key).toBeGreaterThan(0);
     expect(entry.area.length, entry.key).toBeGreaterThan(0);
@@ -32,6 +33,20 @@ it("单一来源：主入口（CR-10起17个）与全部页面登记齐全且字
   expect(pageByKey["apps"].menu).toBe(true);
   expect(pageByKey["run-detail"].menu).toBe(false);
   expect(pageByKey["run-detail"].route).toBe("/runs/:runId");
+});
+
+it("C0-1 挂起线：Semantic*/onboarding 移出菜单但代码保留、深链可打开", () => {
+  // 挂起标记：仅本体协同线与 onboarding 向导线两个入口（主方案 §2.1）
+  const suspended = pageAccess.filter((e) => e.suspended);
+  expect(suspended.map((e) => e.key).sort()).toEqual(["integration-semantics", "onboarding-templates"]);
+  for (const entry of suspended) {
+    expect(entry.menu, entry.key).toBe(false); // 不进菜单
+    expect(entry.read, entry.key).toBe("session"); // 读门不变——深链可打开（挂起线冒烟）
+  }
+  // 菜单派生排除挂起项；路由与读条件保持，代码保留不删除
+  expect(menuEntries().some((e) => e.suspended)).toBe(false);
+  expect(routerSource).toContain('"/onboarding/templates"');
+  expect(routerSource).toContain('"/integration/semantic-bindings"');
 });
 
 it("读权限本轮统一为已验证主体：不以edit替代读门", () => {
