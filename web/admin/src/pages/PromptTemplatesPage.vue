@@ -25,6 +25,15 @@ const {
 } = useResourceList("templates");
 
 const detail = ref<any>();
+async function openDetail(row: any) {
+  detail.value = row;
+  try {
+    // 列表只带摘要，详情需补版本与完整内容，避免“详情就这几个字段”。
+    detail.value = await api(`/admin/prompt-templates/${encodeURIComponent(row.code)}`, "GET");
+  } catch {
+    /* 保留列表行兜底，不阻断查看 */
+  }
+}
 const createOpen = ref(false);
 const form = ref<any>({});
 
@@ -99,7 +108,7 @@ async function save() {
       </el-table-column>
       <el-table-column label="操作" fixed="right" width="100">
         <template #default="{ row }">
-          <el-button text @click="detail = row">查看详情</el-button>
+          <el-button text @click="openDetail(row)">查看详情</el-button>
         </template>
       </el-table-column>
       <template #empty>

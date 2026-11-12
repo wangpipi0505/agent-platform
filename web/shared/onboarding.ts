@@ -403,10 +403,10 @@ export function conflictDiff(
 /* ===================== ONB-06：助手组装交接与使用端首跑清单 ===================== */
 
 /**
- * 独立助手入口（webapp）地址：与 AppPublishPanel 同源推导——
- * 优先 VITE_WEBAPP_BASE_URL，缺省当前主机 15174 端口；不发明新入口。
+ * 演示入口复用本站正式运行页；正常接入按配置推导独立webapp地址。
  */
 export function assistantEntryUrl(appCode: string, base?: string): string {
+  if (!base && import.meta.env?.VITE_MOCK === 'true') return `#/apps/${encodeURIComponent(appCode)}/run`;
   const configured =
     base ??
     (typeof import.meta !== "undefined" && import.meta.env

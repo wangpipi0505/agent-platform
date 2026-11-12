@@ -51,6 +51,10 @@ function time(value?: string) {
   const date = new Date(value)
   return Number.isNaN(date.getTime()) ? value : date.toLocaleString('zh-CN', { hour12: false })
 }
+// 演示数据不一定带耗时字段，缺省时显示占位符，避免只渲染出裸的 “ms”。
+function latencyText(ms?: number) {
+  return typeof ms === 'number' && Number.isFinite(ms) ? `${ms} ms` : '—'
+}
 const healthLabels: Record<string, string> = {
   HEALTHY: '健康',
   DEGRADED: '降级',
@@ -112,7 +116,7 @@ onMounted(() => {
             <span class="pill">{{ check.ok ? '正常' : '异常' }}</span>
           </div>
           <p>{{ check.detail }}</p>
-          <small class="muted">{{ check.latencyMs }} ms</small>
+          <small class="muted">{{ latencyText(check.latencyMs) }}</small>
         </article>
       </div>
       <!-- AP-S02：进程健康之外，单独展示上游模型的可达、鉴权、对话、工具与计量探测。 -->
@@ -134,7 +138,10 @@ onMounted(() => {
             共 {{ health.counts?.total ?? 0 }} 个启用条目：健康 {{ health.counts?.healthy ?? 0 }}，
             降级 {{ health.counts?.degraded ?? 0 }}，不可用 {{ health.counts?.unhealthy ?? 0 }}，
             未探测 {{ health.counts?.unknown ?? 0 }}。
-            <span class="muted">结果缓存 {{ health.ttlSeconds }} 秒；探测有并发与超时上限。</span>
+            <span v-if="health.ttlSeconds != null" class="muted">
+              结果缓存 {{ health.ttlSeconds }} 秒；探测有并发与超时上限。
+            </span>
+            <span v-else class="muted">探测有并发与超时上限。</span>
           </p>
           <div v-if="!health.entries?.length" class="muted">尚未配置模型条目。</div>
           <div v-else class="deep-list">
@@ -171,19 +178,19 @@ onMounted(() => {
       <div v-if="fixtures" class="fixture-card" :class="{ warn: fixtureWarn }">
         <div class="check-title">
           <span class="dot fixture-dot" />
-          <strong>演示数据（fixture）</strong>
+          <strong>内置能力</strong>
           <span class="pill fixture-pill">{{
-            fixtureWarn ? '演示模式放行' : '已隔离'
+            fixtureWarn ? '允许调用' : '已隔离'
           }}</span>
         </div>
-        <p v-if="fixtureUnknown">隔离汇总暂不可读，演示数据来源未知；请检查 model/skill 服务。</p>
-        <p v-else-if="fixtureTotal === 0">未检出演示 fixture 数据。</p>
+        <p v-if="fixtureUnknown">隔离汇总暂不可读，能力状态暂不可读，请刷新重试。</p>
+        <p v-else-if="fixtureTotal === 0">未检出内置能力。</p>
         <p v-else>
           检出模型供应商 {{ fixtures.model?.providerCount ?? 0 }} 个（条目
           {{ fixtures.model?.entryCount ?? 0 }}）、技能 {{ fixtures.skill?.fixtureCount ?? 0 }}
           个。{{
             fixtureWarn
-              ? '当前为演示模式，fixture 可参与调用，仅限本地联调。'
+              ? '当前允许内置能力参与调用。'
               : '生产/默认模式下已隔离：不参与真实调用、不可新增，可在“模型供应商/技能库”识别并清理。'
           }}
         </p>
@@ -198,17 +205,17 @@ onMounted(() => {
 .row { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
 .overview {
   display: flex; justify-content: space-between; gap: 1rem; margin: 1rem 0 1.25rem;
-  padding: .9rem 1rem; border: 1px solid #b7ebc6; background: #f0f9eb; border-radius: 8px;
+  padding: .9rem 1rem; border: 1px solid rgba(74, 222, 128, .35); background: rgba(74, 222, 128, .1); border-radius: 8px;
 }
-.overview.bad { border-color: #f3c2c2; background: #fef0f0; }
+.overview.bad { border-color: rgba(248, 113, 113, .4); background: rgba(248, 113, 113, .1); }
 .checks { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: .85rem; }
-.check { border: 1px solid #e4e7ed; border-radius: 8px; padding: .85rem 1rem; min-height: 7.5rem; }
-.check.bad { border-color: #f0b9b9; background: #fffafa; }
+.check { border: 1px solid var(--line); border-radius: 8px; padding: .85rem 1rem; min-height: 7.5rem; }
+.check.bad { border-color: rgba(248, 113, 113, .4); background: rgba(248, 113, 113, .06); }
 .check-title { display: flex; align-items: center; gap: .45rem; }
-.dot { width: .55rem; height: .55rem; border-radius: 50%; background: #67c23a; flex: none; }
-.check.bad .dot { background: #f56c6c; }
-.pill { margin-left: auto; font-size: .75rem; padding: .1rem .45rem; border-radius: 999px; background: #f0f9eb; color: #3f8f2c; }
-.check.bad .pill { background: #fef0f0; color: #c45656; }
+.dot { width: .55rem; height: .55rem; border-radius: 50%; background: var(--st-ok); flex: none; }
+.check.bad .dot { background: var(--st-fail); }
+.pill { margin-left: auto; font-size: .75rem; padding: .1rem .45rem; border-radius: 999px; background: rgba(74, 222, 128, .15); color: var(--st-ok-text); }
+.check.bad .pill { background: rgba(248, 113, 113, .15); color: var(--st-fail-text); }
 .check p { margin: .55rem 0 .35rem; word-break: break-word; }
 .hint { margin-top: 1rem; line-height: 1.7; }
 </style>
@@ -216,65 +223,65 @@ onMounted(() => {
 /* AP-S06：fixture 卡专用中性/警示配色，复用绿色“正常”语义被有意排除。 */
 .fixture-card {
   margin-top: 1rem;
-  border: 1px solid #d4d7de;
-  background: #f7f8fa;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
   border-radius: 8px;
   padding: 0.85rem 1rem;
 }
 .fixture-card.warn {
-  border-color: #f3d19e;
-  background: #fdf6ec;
+  border-color: rgba(251, 191, 36, .4);
+  background: rgba(251, 191, 36, .08);
 }
 .fixture-card p {
   margin: 0.5rem 0 0;
   line-height: 1.6;
 }
 .fixture-dot {
-  background: #909399;
+  background: var(--st-wait);
 }
 .fixture-pill {
-  background: #f4f4f5;
-  color: #606266;
+  background: rgba(156, 163, 175, .15);
+  color: var(--st-wait-text);
 }
 .fixture-card.warn .fixture-pill {
-  background: #faecd8;
-  color: #b88230;
+  background: rgba(251, 191, 36, .15);
+  color: var(--st-suspend-text);
 }
 /* AP-S02：深度健康卡与进程卡分开着色，UNKNOWN 明确标灰，避免“未探测”被读成正常。 */
 .deep-card {
   margin-top: 1rem;
-  border: 1px solid #d4d7de;
-  background: #f7f8fa;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
   border-radius: 8px;
   padding: 0.85rem 1rem;
 }
-.deep-card.healthy { border-color: #b7ebc6; background: #f7fcf5; }
-.deep-card.degraded { border-color: #f3d19e; background: #fdf8ef; }
-.deep-card.unhealthy { border-color: #f3c2c2; background: #fff8f8; }
-.deep-dot { background: #909399; }
-.deep-card.healthy .deep-dot { background: #67c23a; }
-.deep-card.degraded .deep-dot { background: #e6a23c; }
-.deep-card.unhealthy .deep-dot { background: #f56c6c; }
-.deep-pill { background: #f4f4f5; color: #606266; }
-.deep-card.healthy .deep-pill { background: #f0f9eb; color: #3f8f2c; }
-.deep-card.degraded .deep-pill { background: #fdf6ec; color: #b88230; }
-.deep-card.unhealthy .deep-pill { background: #fef0f0; color: #c45656; }
+.deep-card.healthy { border-color: rgba(74, 222, 128, .35); background: rgba(74, 222, 128, .07); }
+.deep-card.degraded { border-color: rgba(251, 191, 36, .4); background: rgba(251, 191, 36, .07); }
+.deep-card.unhealthy { border-color: rgba(248, 113, 113, .4); background: rgba(248, 113, 113, .07); }
+.deep-dot { background: var(--st-wait); }
+.deep-card.healthy .deep-dot { background: var(--st-ok); }
+.deep-card.degraded .deep-dot { background: var(--st-suspend); }
+.deep-card.unhealthy .deep-dot { background: var(--st-fail); }
+.deep-pill { background: rgba(156, 163, 175, .15); color: var(--st-wait-text); }
+.deep-card.healthy .deep-pill { background: rgba(74, 222, 128, .15); color: var(--st-ok-text); }
+.deep-card.degraded .deep-pill { background: rgba(251, 191, 36, .15); color: var(--st-suspend-text); }
+.deep-card.unhealthy .deep-pill { background: rgba(248, 113, 113, .15); color: var(--st-fail-text); }
 .deep-action { margin-left: 0.35rem; }
-.deep-error { margin-top: 0.65rem; color: #c45656; }
+.deep-error { margin-top: 0.65rem; color: var(--st-fail-text); }
 .deep-summary { margin: 0.65rem 0; line-height: 1.7; }
 .deep-list { display: grid; gap: 0.55rem; }
-.deep-entry { border: 1px solid #e4e7ed; background: #fff; border-radius: 6px; padding: 0.6rem 0.75rem; }
+.deep-entry { border: 1px solid var(--line); background: var(--surface); border-radius: 6px; padding: 0.6rem 0.75rem; }
 .deep-entry-head { display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; }
 .deep-entry-head .pill { margin-left: 0; }
 .deep-entry-head small { margin-left: auto; }
-.entry-healthy { background: #f0f9eb; color: #3f8f2c; }
-.entry-degraded { background: #fdf6ec; color: #b88230; }
-.entry-unhealthy { background: #fef0f0; color: #c45656; }
-.entry-unknown { background: #f4f4f5; color: #606266; }
-.deep-reason { margin: 0.45rem 0 0; color: #606266; line-height: 1.55; }
+.entry-healthy { background: rgba(74, 222, 128, .15); color: var(--st-ok-text); }
+.entry-degraded { background: rgba(251, 191, 36, .15); color: var(--st-suspend-text); }
+.entry-unhealthy { background: rgba(248, 113, 113, .15); color: var(--st-fail-text); }
+.entry-unknown { background: rgba(156, 163, 175, .15); color: var(--st-wait-text); }
+.deep-reason { margin: 0.45rem 0 0; color: var(--muted); line-height: 1.55; }
 .deep-checks { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.45rem; }
-.deep-check { font-size: 0.75rem; border: 1px solid #e4e7ed; border-radius: 999px; padding: 0.08rem 0.45rem; color: #606266; }
-.deep-check.check-pass { border-color: #c8e6b8; color: #3f8f2c; }
-.deep-check.check-warn { border-color: #f3d19e; color: #b88230; }
-.deep-check.check-fail { border-color: #f3c2c2; color: #c45656; }
+.deep-check { font-size: 0.75rem; border: 1px solid var(--line); border-radius: 999px; padding: 0.08rem 0.45rem; color: var(--muted); }
+.deep-check.check-pass { border-color: rgba(74, 222, 128, .35); color: var(--st-ok-text); }
+.deep-check.check-warn { border-color: rgba(251, 191, 36, .4); color: var(--st-suspend-text); }
+.deep-check.check-fail { border-color: rgba(248, 113, 113, .4); color: var(--st-fail-text); }
 </style>

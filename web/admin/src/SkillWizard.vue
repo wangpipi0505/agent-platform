@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
+import SkillBusinessFields from "./SkillBusinessFields.vue";
 import OpenApiImport from "./OpenApiImport.vue";
 import { analyzeSchema } from "../../shared/schema-dialect";
 const props = defineProps<{ initial: any }>();
@@ -92,7 +93,7 @@ function next() {
     ><el-step v-for="s in steps" :key="s" :title="s" /></el-steps
   ><el-form label-position="top" style="margin-top: 1.5rem"
     ><template v-if="step === 0"
-      ><el-form-item label="技能编码" required
+      ><SkillBusinessFields :value="value" /><el-form-item label="技能编码" required
         ><el-input v-model="value.code" /></el-form-item
       ><el-form-item label="技能名称" required
         ><el-input v-model="value.name" /></el-form-item

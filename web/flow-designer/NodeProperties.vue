@@ -6,10 +6,13 @@ import {
   nodeTypes,
   type MappingRow,
 } from "./node-metadata";
+import SkillReferencePicker from "../admin/src/SkillReferencePicker.vue";
 import MappingEditor from "./MappingEditor.vue";
 import GraphFields from "./GraphFields.vue";
 const props = defineProps<{
   value: any;
+  appCode?:string;
+  bizCategory?:string;
   definition: any;
   catalogs?: { models: any[]; skills: any[]; templates: any[] };
   readOnly?: boolean;
@@ -30,6 +33,7 @@ let resetting = false;
 function reset() {
   resetting = true;
   data.value = JSON.parse(JSON.stringify(props.value));
+  data.value.businessPolicy ||= {businessSystemCode:"GENERAL",requiredPermissions:[],roles:[],semanticConditions:[],checkTiming:"BEFORE_EXECUTION"};
   args.value = rowsFromMap(data.value.args);
   output.value = rowsFromMap(data.value.output);
   issue.value = "";
@@ -129,6 +133,7 @@ onBeforeUnmount(() => clearTimeout(timer));
             :label="n.label + ' · ' + n.type"
             :value="n.type" /></el-select
       ></el-form-item>
+      <el-collapse><el-collapse-item title="业务权限与语义条件"><el-form-item label="业务系统"><el-input v-model="data.businessPolicy.businessSystemCode" /></el-form-item><el-form-item v-for="field in [{key:'requiredPermissions',label:'所需权限'},{key:'roles',label:'业务角色'},{key:'semanticConditions',label:'语义条件'}]" :key="field.key" :label="field.label"><el-select v-model="data.businessPolicy[field.key]" multiple filterable allow-create placeholder="输入后回车"><el-option v-for="item in data.businessPolicy[field.key]" :key="item" :value="item" /></el-select></el-form-item><el-form-item label="检查时机"><el-select v-model="data.businessPolicy.checkTiming"><el-option label="节点执行前" value="BEFORE_EXECUTION" /><el-option label="人工审批前" value="BEFORE_APPROVAL" /><el-option label="提交变更前" value="BEFORE_COMMIT" /></el-select></el-form-item></el-collapse-item></el-collapse>
       <template v-if="data.type === 'START'"
         ><h2>运行输入</h2>
         <p class="muted">在这里声明的字段会自动成为正式运行表单。</p>
@@ -148,24 +153,7 @@ onBeforeUnmount(() => clearTimeout(timer));
           @update:model-value="emit('outputs', $event)"
       /></template>
       <template v-if="['SKILL', 'RETRIEVE'].includes(data.type)"
-        ><el-form-item label="调用技能"
-          ><el-select
-            :model-value="data.skillRef?.code"
-            filterable
-            allow-create
-            placeholder="选择技能编码"
-            aria-label="调用技能"
-            @update:model-value="skill"
-            ><el-option
-              v-for="s in catalogs?.skills || []"
-              :key="s.code"
-              :label="s.name || s.code"
-              :value="s.code" /></el-select></el-form-item
-        ><el-form-item v-if="data.skillRef" label="技能发布版本"
-          ><el-input-number
-            v-model="data.skillRef.version"
-            :min="1"
-            aria-label="技能发布版本" /></el-form-item
+        ><el-form-item label="调用技能与发布版本"><SkillReferencePicker v-model="data.skillRef" :skills="catalogs?.skills || []" :app-code="appCode" :biz-category="bizCategory" /></el-form-item>
       ></template>
       <template v-if="data.type === 'LLM'"
         ><el-form-item label="模型"

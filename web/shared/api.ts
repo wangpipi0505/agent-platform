@@ -77,7 +77,7 @@ export function createApi(
     checkScope(scope);
     signal=combinedSignal(signal,scope?.signal);
     signal?.throwIfAborted();
-    const requestToken = token() || (import.meta.env.DEV && typeof import.meta.env?.VITE_MOCK === 'string' && import.meta.env.VITE_MOCK !== 'false' ? 'mock-token-demo' : '');
+    const requestToken = token() || (typeof import.meta.env?.VITE_MOCK === 'string' && import.meta.env.VITE_MOCK !== 'false' ? 'mock-token-demo' : '');
     if (!requestToken) throw new Error("请先登录");
     let response:Response;
     try { response = await transport(path, {
@@ -134,7 +134,7 @@ export function useApi() {
   if(getCurrentScope())onScopeDispose(()=>disposed.abort());
   const scope={signal:combinedSignal(session.signal,disposed.signal)!,current:session.current};
   // A28/Mock：VITE_MOCK=true 时替换传输层为 mock，全页面脱离后端可用。
-  const mock = import.meta.env.DEV && typeof import.meta.env?.VITE_MOCK === 'string' && import.meta.env.VITE_MOCK !== 'false';
+  const mock = typeof import.meta.env?.VITE_MOCK === 'string' && import.meta.env.VITE_MOCK !== 'false';
   const transport = mock
     ? async (...args: Parameters<typeof fetch>) => {
         const { mockTransport } = await import('./mock-transport');
@@ -151,7 +151,7 @@ export function useApi() {
 }
 export async function login() {
   // A28/Mock：VITE_MOCK=true 跳过真实登录，返回演示 token + 身份。
-  if (import.meta.env.DEV && typeof import.meta.env?.VITE_MOCK === 'string' && import.meta.env.VITE_MOCK !== 'false') {
+  if (typeof import.meta.env?.VITE_MOCK === 'string' && import.meta.env.VITE_MOCK !== 'false') {
     const pinia=getActivePinia(),auth=pinia?useAuth(pinia):undefined;
     if (auth) {
       auth.roles=['ADMIN','EDITOR','APPROVER'];

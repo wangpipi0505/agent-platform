@@ -2,8 +2,12 @@
 import { ref, onMounted, watch } from "vue";
 import { readDraft, writeDraft } from "../../shared/drafts";
 import { createApi, useApi, useAuth } from "../../shared/api";
+import SkillReferencePicker from "./SkillReferencePicker.vue";
+import OntologyPicker from './OntologyPicker.vue';
 const props = defineProps<{
   config: any;
+  appCode?: string;
+  bizCategory?: string;
   draftKey?: string;
   draftRev?: number;
 }>();
@@ -37,11 +41,22 @@ const skills = ref<any[]>([]);
 const error = ref("");
 const advanced = ref(JSON.stringify(props.config || {}, null, 2));
 const showAdvanced = ref(false);
-value.value.modelBinding ||= {};
-value.value.promptRefs ||= [];
-value.value.skillRefs ||= [];
-value.value.guard ||= { roles: [], attributes: {} };
-value.value.requiredLabels ||= [];
+function applyConfig(source: any) {
+  value.value = JSON.parse(JSON.stringify(source || {}));
+  advanced.value = JSON.stringify(source || {}, null, 2);
+  value.value.modelBinding ||= {};
+  value.value.promptRefs ||= [];
+  value.value.skillRefs ||= [];
+  value.value.guard ||= { roles: [], attributes: {} };
+  value.value.requiredLabels ||= [];
+}
+applyConfig(props.config);
+// 壳层先挂空的 app 详情、再异步载入配置；只初始化一次会让表单永远为空。
+// 以 draftRev 或配置对象变化为准重建，避免覆盖用户正在编辑但尚未保存的内容。
+watch(
+  () => [props.draftRev, props.config] as const,
+  () => applyConfig(props.config),
+);
 onMounted(async () => {
   try {
     const results = await Promise.allSettled([
@@ -83,7 +98,7 @@ function clearPromptSha(reference: { sha256?: unknown }) {
     </div>
     <h2>对话配置</h2>
     <p class="muted">
-      绑定模型、提示词与技能。已有配置会完整保留，发布时检查引用版本。
+      绑定模型、提示词、技能与本体。已有配置会完整保留，发布时检查引用版本。
     </p>
     <p v-if="error" class="error">配置选项加载失败：{{ error }}</p>
     <el-form label-position="left" label-width="8rem"
@@ -121,28 +136,25 @@ function clearPromptSha(reference: { sha256?: unknown }) {
             >添加模板</el-button
           >
         </div></el-form-item
-      ><el-form-item label="可调用技能"
+      ><el-form-item label="关联本体"><OntologyPicker v-model="value.ontology" /></el-form-item>
+      <el-form-item label="可调用技能"
         ><div style="width: 100%">
           <div v-for="(s, i) in value.skillRefs" :key="i" class="row">
-            <el-select v-model="s.code" filterable placeholder="选择技能"
-              ><el-option
-                v-for="t in skills"
-                :key="t.code"
-                :value="t.code"
-                :label="t.name || t.code" /></el-select
-            ><el-input-number
-              v-model="s.version"
-              :min="1"
-              aria-label="技能版本"
-            /><el-button text @click="value.skillRefs.splice(i, 1)"
+            <SkillReferencePicker v-model="value.skillRefs[i]" :skills="skills" :app-code="appCode" :biz-category="bizCategory" /><el-button text @click="value.skillRefs.splice(i, 1)"
               >移除</el-button
             >
           </div>
-          <el-button @click="value.skillRefs.push({ code: '', version: 1 })"
+          <el-button @click="value.skillRefs.push({ code: '' })"
             >添加技能</el-button
           >
         </div></el-form-item
-      ><el-form-item label="允许角色"
+      ><el-form-item v-if="value.systemPrompt" label="系统提示词">
+        <div style="width:100%">
+          <el-input v-model="value.systemPrompt" type="textarea" :rows="7" aria-label="系统提示词" />
+          <p class="muted">明确目标解析、工具顺序、本体规则、人工确认与结果表达；演示问法可在对话页直接选用。</p>
+        </div>
+      </el-form-item>
+      <el-form-item label="允许角色"
         ><el-select
           v-model="value.guard.roles"
           multiple

@@ -305,7 +305,7 @@ onMounted(load);
   display: inline-block;
   padding: 2px 8px;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
 }
 .state.ready {
@@ -325,7 +325,7 @@ onMounted(load);
   background: var(--el-fill-color-light);
 }
 .small {
-  font-size: 12px;
+  font-size: 13px;
 }
 .error {
   color: var(--el-color-danger);
@@ -340,6 +340,6 @@ onMounted(load);
   background: var(--el-fill-color-light);
   white-space: pre-wrap;
   word-break: break-all;
-  font-size: 12px;
+  font-size: 13px;
 }
 </style>

@@ -15,6 +15,8 @@ export const statusLabels: Record<string, string> = {
   PENDING: "待处理",
   ACCEPTED: "已通过",
   REJECTED: "已拒绝",
+  DEPRECATED: "已废弃",
+  SUPERSEDED: "已替代",
 };
 
 export const statusLabel = (value?: string) =>

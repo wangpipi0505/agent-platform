@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onBeforeUnmount } from "vue";
+import SkillBusinessFields from "./SkillBusinessFields.vue";
 import SchemaInputs from "../../shared/SchemaInputs.vue";
 import McpToolsPanel from "./McpToolsPanel.vue";
 import { completedControlledCall } from "../../shared/controlled-test";
@@ -156,6 +157,9 @@ async function load() {
   } catch (e: any) {
     if (!disposed && generation === loadGeneration && e.name !== "AbortError") error.value = e.message;
   }
+}
+async function saveBusiness() {
+  busy.value=true;error.value='';try{await api(base(),'PUT',{...value.value});await load();}catch(problem){error.value=problem instanceof Error?problem.message:'保存失败';}finally{busy.value=false;}
 }
 async function uploadArtifact(file: File): Promise<string> {
   // R08：统一走共享上传函数（顶层回包/明确OK信封），不再各自猜包装形状。
@@ -323,7 +327,7 @@ watch(() => [props.resource.code, props.kind, auth.token, auth.user?.tenantId, a
       </template>
       <template v-else>
         <el-tabs v-model="activeSection">
-          <el-tab-pane label="契约" name="contract">
+          <el-tab-pane label="契约" name="contract"><details><summary>业务分类与访问权限</summary><SkillBusinessFields :value="value" /><el-button v-permission="'edit'" @click="saveBusiness">保存业务属性</el-button></details>
             <section v-if="service" class="service-access" aria-labelledby="service-access-title">
               <div class="service-head">
                 <div>
@@ -510,10 +514,10 @@ watch(() => [props.resource.code, props.kind, auth.token, auth.user?.tenantId, a
 .service-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
 .service-head h2 { margin: 0 0 .25rem; }
 .service-head .muted { margin: 0; }
-.service-url { display: block; margin: .75rem 0; padding: .55rem .7rem; border-radius: .45rem; background: #f6f8fb; color: #1f2a44; font-size: .82rem; overflow-wrap: anywhere; }
+.service-url { display: block; margin: .75rem 0; padding: .55rem .7rem; border-radius: .45rem; background: var(--surface-2, #f6f8fb); color: var(--ink, #1f2a44); font-size: .82rem; overflow-wrap: anywhere; }
 .service-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: .65rem .9rem; margin: .75rem 0; }
 .service-meta div { min-width: 0; }
-.service-meta dt { color: #64748b; font-size: .74rem; margin-bottom: .15rem; }
+.service-meta dt { color: var(--muted, #64748b); font-size: .74rem; margin-bottom: .15rem; }
 .service-meta dd { margin: 0; font-size: .84rem; overflow-wrap: anywhere; }
 .service-links { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem .9rem; margin-top: .6rem; }
 .service-links :deep(.el-button) { margin-left: 0; }

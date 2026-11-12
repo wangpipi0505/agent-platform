@@ -1,0 +1,1701 @@
+{
+  "sceneVersion": "demo-20261105.1",
+  "clock": "2026-11-05T09:00:00+08:00",
+  "planningDate": "2026-11-06",
+  "classifications": [
+    {
+      "id": "GENERAL",
+      "code": "GENERAL",
+      "name": "通用能力",
+      "kind": "BIZ_CATEGORY",
+      "children": []
+    },
+    {
+      "id": "SPACE_OBSERVATION",
+      "code": "SPACE_OBSERVATION",
+      "name": "观测规划",
+      "kind": "BIZ_CATEGORY",
+      "children": []
+    },
+    {
+      "id": "USER_GOVERNANCE",
+      "code": "USER_GOVERNANCE",
+      "name": "用户与权限管理",
+      "kind": "BIZ_CATEGORY",
+      "children": []
+    },
+    {
+      "id": "DATA_PROCESSING",
+      "code": "DATA_PROCESSING",
+      "name": "数据处理",
+      "kind": "BIZ_CATEGORY",
+      "children": []
+    }
+  ],
+  "businessSystem": {
+    "id": "user-mgmt",
+    "code": "user-mgmt",
+    "name": "业务用户管理系统",
+    "revision": 1
+  },
+  "departments": [
+    {
+      "id": "dept-a",
+      "name": "遥感业务部"
+    },
+    {
+      "id": "dept-b",
+      "name": "数据应用部"
+    },
+    {
+      "id": "dept-security",
+      "name": "安全管理部"
+    }
+  ],
+  "roles": [
+    {
+      "id": "ROLE_ANALYST",
+      "code": "ROLE_ANALYST",
+      "name": "业务分析员",
+      "permissionCodes": [
+        "um.user.read"
+      ],
+      "status": "ACTIVE",
+      "privileged": false,
+      "conflictsWith": [
+        "ROLE_APPROVER"
+      ]
+    },
+    {
+      "id": "ROLE_APPROVER",
+      "code": "ROLE_APPROVER",
+      "name": "业务审批员",
+      "permissionCodes": [
+        "um.user.read",
+        "um.request.approve"
+      ],
+      "status": "ACTIVE",
+      "privileged": false,
+      "conflictsWith": [
+        "ROLE_ANALYST"
+      ]
+    },
+    {
+      "id": "ROLE_ADMIN",
+      "code": "ROLE_ADMIN",
+      "name": "业务管理员",
+      "permissionCodes": [
+        "um.user.read",
+        "um.user.create",
+        "um.user.disable",
+        "um.role.assign"
+      ],
+      "status": "ACTIVE",
+      "privileged": true,
+      "conflictsWith": []
+    },
+    {
+      "id": "ROLE_RETIRED",
+      "code": "ROLE_RETIRED",
+      "name": "已停用访客角色",
+      "permissionCodes": [],
+      "status": "DISABLED",
+      "privileged": false,
+      "conflictsWith": []
+    }
+  ],
+  "permissions": [
+    {
+      "id": "um.user.read",
+      "code": "um.user.read",
+      "name": "查询账号",
+      "systemCode": "user-mgmt",
+      "status": "ACTIVE"
+    },
+    {
+      "id": "um.user.create",
+      "code": "um.user.create",
+      "name": "创建账号",
+      "systemCode": "user-mgmt",
+      "status": "ACTIVE"
+    },
+    {
+      "id": "um.user.disable",
+      "code": "um.user.disable",
+      "name": "停用账号",
+      "systemCode": "user-mgmt",
+      "status": "ACTIVE"
+    },
+    {
+      "id": "um.role.read",
+      "code": "um.role.read",
+      "name": "查询业务角色",
+      "systemCode": "user-mgmt",
+      "status": "ACTIVE"
+    },
+    {
+      "id": "um.role.assign",
+      "code": "um.role.assign",
+      "name": "授予业务角色",
+      "systemCode": "user-mgmt",
+      "status": "ACTIVE"
+    },
+    {
+      "id": "um.request.create",
+      "code": "um.request.create",
+      "name": "提交账号申请",
+      "systemCode": "user-mgmt",
+      "status": "ACTIVE"
+    },
+    {
+      "id": "um.request.approve",
+      "code": "um.request.approve",
+      "name": "部门审批",
+      "systemCode": "user-mgmt",
+      "status": "ACTIVE"
+    },
+    {
+      "id": "um.security.approve",
+      "code": "um.security.approve",
+      "name": "高权限复核",
+      "systemCode": "user-mgmt",
+      "status": "ACTIVE"
+    },
+    {
+      "id": "um.audit.read",
+      "code": "um.audit.read",
+      "name": "查看业务审计",
+      "systemCode": "user-mgmt",
+      "status": "ACTIVE"
+    },
+    {
+      "id": "space.plan",
+      "code": "space.plan",
+      "name": "执行观测规划",
+      "systemCode": "space-ground",
+      "status": "ACTIVE"
+    },
+    {
+      "id": "file.upload",
+      "code": "file.upload",
+      "name": "上传输入文件",
+      "systemCode": "space-ground",
+      "status": "ACTIVE"
+    },
+    {
+      "id": "file.download",
+      "code": "file.download",
+      "name": "下载结果文件",
+      "systemCode": "space-ground",
+      "status": "ACTIVE"
+    }
+  ],
+  "actors": [
+    {
+      "id": "operator-a",
+      "name": "张敏 · A部门操作员",
+      "departmentId": "dept-a",
+      "roles": [
+        "UM_OPERATOR",
+        "SPACE_OPERATOR"
+      ],
+      "permissions": [
+        "um.user.read",
+        "um.user.create",
+        "um.user.disable",
+        "um.role.read",
+        "um.role.assign",
+        "um.request.create",
+        "um.audit.read",
+        "space.plan",
+        "file.upload",
+        "file.download"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "manager-a",
+      "name": "李主任 · A部门负责人",
+      "departmentId": "dept-a",
+      "roles": [
+        "UM_APPROVER"
+      ],
+      "permissions": [
+        "um.user.read",
+        "um.role.read",
+        "um.request.approve",
+        "um.audit.read",
+        "file.download"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "security-a",
+      "name": "王安 · 安全复核员",
+      "departmentId": "dept-security",
+      "roles": [
+        "UM_SECURITY"
+      ],
+      "permissions": [
+        "um.user.read",
+        "um.role.read",
+        "um.security.approve",
+        "um.audit.read",
+        "file.download"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "reader-a",
+      "name": "陈阅 · 只读人员",
+      "departmentId": "dept-a",
+      "roles": [
+        "VIEWER"
+      ],
+      "permissions": [
+        "um.user.read",
+        "um.role.read",
+        "file.download"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "operator-b",
+      "name": "赵明 · B部门操作员",
+      "departmentId": "dept-b",
+      "roles": [
+        "UM_OPERATOR"
+      ],
+      "permissions": [
+        "um.user.read",
+        "um.user.create",
+        "um.role.read",
+        "um.role.assign",
+        "um.request.create",
+        "file.upload",
+        "file.download"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "disabled-a",
+      "name": "停用操作账号",
+      "departmentId": "dept-a",
+      "roles": [
+        "UM_OPERATOR"
+      ],
+      "permissions": [],
+      "status": "DISABLED"
+    }
+  ],
+  "accounts": [
+    {
+      "id": "biz-admin",
+      "username": "business.admin",
+      "name": "系统管理员",
+      "employeeNo": "EMP-0001",
+      "departmentId": "dept-a",
+      "status": "ACTIVE",
+      "roleIds": [
+        "ROLE_ADMIN"
+      ],
+      "revision": 1
+    },
+    {
+      "id": "biz-analyst-a",
+      "username": "analyst.a",
+      "name": "周晴",
+      "employeeNo": "EMP-0101",
+      "departmentId": "dept-a",
+      "status": "ACTIVE",
+      "roleIds": [
+        "ROLE_ANALYST"
+      ],
+      "revision": 2
+    },
+    {
+      "id": "biz-reviewer-a",
+      "username": "reviewer.a",
+      "name": "吴审",
+      "employeeNo": "EMP-0102",
+      "departmentId": "dept-a",
+      "status": "ACTIVE",
+      "roleIds": [
+        "ROLE_APPROVER"
+      ],
+      "revision": 1
+    },
+    {
+      "id": "biz-analyst-b",
+      "username": "analyst.b",
+      "name": "何远",
+      "employeeNo": "EMP-0201",
+      "departmentId": "dept-b",
+      "status": "ACTIVE",
+      "roleIds": [
+        "ROLE_ANALYST"
+      ],
+      "revision": 1
+    },
+    {
+      "id": "biz-disabled",
+      "username": "former.user",
+      "name": "历史离岗人员",
+      "employeeNo": "EMP-0099",
+      "departmentId": "dept-a",
+      "status": "DISABLED",
+      "roleIds": [],
+      "revision": 3
+    }
+  ],
+  "releaseRef": {
+    "space": "sp-user-governance",
+    "spaceCode": "user-governance",
+    "releaseId": "rel-user-governance-v1",
+    "version": "v1",
+    "contentDigest": "a12d718246dd1b05e6a28eba05246c6f28944883d31b900ab2174e6b87136ac0"
+  },
+  "ontology": {
+    "space": {
+      "id": "sp-user-governance",
+      "code": "user-governance",
+      "name": "用户与权限治理本体"
+    },
+    "classes": [
+      {
+        "id": "um-BusinessSystem",
+        "name": "BusinessSystem",
+        "displayName": "业务系统",
+        "description": "业务系统的业务定义"
+      },
+      {
+        "id": "um-Account",
+        "name": "Account",
+        "displayName": "业务账号",
+        "description": "业务账号的业务定义"
+      },
+      {
+        "id": "um-Department",
+        "name": "Department",
+        "displayName": "部门",
+        "description": "部门的业务定义"
+      },
+      {
+        "id": "um-Role",
+        "name": "Role",
+        "displayName": "业务角色",
+        "description": "业务角色的业务定义"
+      },
+      {
+        "id": "um-Permission",
+        "name": "Permission",
+        "displayName": "业务权限",
+        "description": "业务权限的业务定义"
+      },
+      {
+        "id": "um-RoleAssignment",
+        "name": "RoleAssignment",
+        "displayName": "角色授予",
+        "description": "角色授予的业务定义"
+      },
+      {
+        "id": "um-ManagementRequest",
+        "name": "ManagementRequest",
+        "displayName": "账号申请",
+        "description": "账号申请的业务定义"
+      },
+      {
+        "id": "um-ApprovalRecord",
+        "name": "ApprovalRecord",
+        "displayName": "审批记录",
+        "description": "审批记录的业务定义"
+      },
+      {
+        "id": "um-AuthorizationSnapshot",
+        "name": "AuthorizationSnapshot",
+        "displayName": "授权快照",
+        "description": "授权快照的业务定义"
+      },
+      {
+        "id": "um-PolicyDecision",
+        "name": "PolicyDecision",
+        "displayName": "规则判定",
+        "description": "规则判定的业务定义"
+      }
+    ],
+    "properties": [
+      {
+        "id": "um-BusinessSystem-id",
+        "classId": "um-BusinessSystem",
+        "name": "id",
+        "displayName": "稳定标识",
+        "rangeType": "STRING",
+        "required": true
+      },
+      {
+        "id": "um-BusinessSystem-name",
+        "classId": "um-BusinessSystem",
+        "name": "name",
+        "displayName": "名称",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-BusinessSystem-status",
+        "classId": "um-BusinessSystem",
+        "name": "status",
+        "displayName": "状态",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-Account-id",
+        "classId": "um-Account",
+        "name": "id",
+        "displayName": "稳定标识",
+        "rangeType": "STRING",
+        "required": true
+      },
+      {
+        "id": "um-Account-name",
+        "classId": "um-Account",
+        "name": "name",
+        "displayName": "名称",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-Account-status",
+        "classId": "um-Account",
+        "name": "status",
+        "displayName": "状态",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-Department-id",
+        "classId": "um-Department",
+        "name": "id",
+        "displayName": "稳定标识",
+        "rangeType": "STRING",
+        "required": true
+      },
+      {
+        "id": "um-Department-name",
+        "classId": "um-Department",
+        "name": "name",
+        "displayName": "名称",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-Department-status",
+        "classId": "um-Department",
+        "name": "status",
+        "displayName": "状态",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-Role-id",
+        "classId": "um-Role",
+        "name": "id",
+        "displayName": "稳定标识",
+        "rangeType": "STRING",
+        "required": true
+      },
+      {
+        "id": "um-Role-name",
+        "classId": "um-Role",
+        "name": "name",
+        "displayName": "名称",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-Role-status",
+        "classId": "um-Role",
+        "name": "status",
+        "displayName": "状态",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-Permission-id",
+        "classId": "um-Permission",
+        "name": "id",
+        "displayName": "稳定标识",
+        "rangeType": "STRING",
+        "required": true
+      },
+      {
+        "id": "um-Permission-name",
+        "classId": "um-Permission",
+        "name": "name",
+        "displayName": "名称",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-Permission-status",
+        "classId": "um-Permission",
+        "name": "status",
+        "displayName": "状态",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-RoleAssignment-id",
+        "classId": "um-RoleAssignment",
+        "name": "id",
+        "displayName": "稳定标识",
+        "rangeType": "STRING",
+        "required": true
+      },
+      {
+        "id": "um-RoleAssignment-name",
+        "classId": "um-RoleAssignment",
+        "name": "name",
+        "displayName": "名称",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-RoleAssignment-status",
+        "classId": "um-RoleAssignment",
+        "name": "status",
+        "displayName": "状态",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-ManagementRequest-id",
+        "classId": "um-ManagementRequest",
+        "name": "id",
+        "displayName": "稳定标识",
+        "rangeType": "STRING",
+        "required": true
+      },
+      {
+        "id": "um-ManagementRequest-name",
+        "classId": "um-ManagementRequest",
+        "name": "name",
+        "displayName": "名称",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-ManagementRequest-status",
+        "classId": "um-ManagementRequest",
+        "name": "status",
+        "displayName": "状态",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-ApprovalRecord-id",
+        "classId": "um-ApprovalRecord",
+        "name": "id",
+        "displayName": "稳定标识",
+        "rangeType": "STRING",
+        "required": true
+      },
+      {
+        "id": "um-ApprovalRecord-name",
+        "classId": "um-ApprovalRecord",
+        "name": "name",
+        "displayName": "名称",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-ApprovalRecord-status",
+        "classId": "um-ApprovalRecord",
+        "name": "status",
+        "displayName": "状态",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-AuthorizationSnapshot-id",
+        "classId": "um-AuthorizationSnapshot",
+        "name": "id",
+        "displayName": "稳定标识",
+        "rangeType": "STRING",
+        "required": true
+      },
+      {
+        "id": "um-AuthorizationSnapshot-name",
+        "classId": "um-AuthorizationSnapshot",
+        "name": "name",
+        "displayName": "名称",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-AuthorizationSnapshot-status",
+        "classId": "um-AuthorizationSnapshot",
+        "name": "status",
+        "displayName": "状态",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-PolicyDecision-id",
+        "classId": "um-PolicyDecision",
+        "name": "id",
+        "displayName": "稳定标识",
+        "rangeType": "STRING",
+        "required": true
+      },
+      {
+        "id": "um-PolicyDecision-name",
+        "classId": "um-PolicyDecision",
+        "name": "name",
+        "displayName": "名称",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-PolicyDecision-status",
+        "classId": "um-PolicyDecision",
+        "name": "status",
+        "displayName": "状态",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-BusinessSystem-code",
+        "classId": "um-BusinessSystem",
+        "name": "code",
+        "displayName": "code",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-BusinessSystem-revision",
+        "classId": "um-BusinessSystem",
+        "name": "revision",
+        "displayName": "业务修订",
+        "rangeType": "INTEGER",
+        "required": false
+      },
+      {
+        "id": "um-Account-username",
+        "classId": "um-Account",
+        "name": "username",
+        "displayName": "账号名",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-Account-employeeNo",
+        "classId": "um-Account",
+        "name": "employeeNo",
+        "displayName": "工号",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-Account-departmentId",
+        "classId": "um-Account",
+        "name": "departmentId",
+        "displayName": "部门",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-Account-roleIds",
+        "classId": "um-Account",
+        "name": "roleIds",
+        "displayName": "角色集合",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-Account-revision",
+        "classId": "um-Account",
+        "name": "revision",
+        "displayName": "业务修订",
+        "rangeType": "INTEGER",
+        "required": false
+      },
+      {
+        "id": "um-Department-parentId",
+        "classId": "um-Department",
+        "name": "parentId",
+        "displayName": "parentId",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-Role-permissionCodes",
+        "classId": "um-Role",
+        "name": "permissionCodes",
+        "displayName": "权限集合",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-Role-conflictsWith",
+        "classId": "um-Role",
+        "name": "conflictsWith",
+        "displayName": "互斥角色",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-Role-privileged",
+        "classId": "um-Role",
+        "name": "privileged",
+        "displayName": "高权限标识",
+        "rangeType": "BOOLEAN",
+        "required": false
+      },
+      {
+        "id": "um-Permission-systemCode",
+        "classId": "um-Permission",
+        "name": "systemCode",
+        "displayName": "systemCode",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-Permission-code",
+        "classId": "um-Permission",
+        "name": "code",
+        "displayName": "code",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-Permission-resourceType",
+        "classId": "um-Permission",
+        "name": "resourceType",
+        "displayName": "resourceType",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-Permission-action",
+        "classId": "um-Permission",
+        "name": "action",
+        "displayName": "action",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-RoleAssignment-accountId",
+        "classId": "um-RoleAssignment",
+        "name": "accountId",
+        "displayName": "accountId",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-RoleAssignment-roleId",
+        "classId": "um-RoleAssignment",
+        "name": "roleId",
+        "displayName": "roleId",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-RoleAssignment-validFrom",
+        "classId": "um-RoleAssignment",
+        "name": "validFrom",
+        "displayName": "有效开始",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-RoleAssignment-validUntil",
+        "classId": "um-RoleAssignment",
+        "name": "validUntil",
+        "displayName": "有效截止",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-RoleAssignment-revision",
+        "classId": "um-RoleAssignment",
+        "name": "revision",
+        "displayName": "业务修订",
+        "rangeType": "INTEGER",
+        "required": false
+      },
+      {
+        "id": "um-ManagementRequest-actorId",
+        "classId": "um-ManagementRequest",
+        "name": "actorId",
+        "displayName": "业务操作者",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-ManagementRequest-username",
+        "classId": "um-ManagementRequest",
+        "name": "username",
+        "displayName": "账号名",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-ManagementRequest-departmentId",
+        "classId": "um-ManagementRequest",
+        "name": "departmentId",
+        "displayName": "部门",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-ManagementRequest-roleIds",
+        "classId": "um-ManagementRequest",
+        "name": "roleIds",
+        "displayName": "角色集合",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-ManagementRequest-validityDays",
+        "classId": "um-ManagementRequest",
+        "name": "validityDays",
+        "displayName": "有效天数",
+        "rangeType": "INTEGER",
+        "required": false
+      },
+      {
+        "id": "um-ManagementRequest-expectedRevision",
+        "classId": "um-ManagementRequest",
+        "name": "expectedRevision",
+        "displayName": "预期修订",
+        "rangeType": "INTEGER",
+        "required": false
+      },
+      {
+        "id": "um-ApprovalRecord-requestId",
+        "classId": "um-ApprovalRecord",
+        "name": "requestId",
+        "displayName": "申请编号",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-ApprovalRecord-actorId",
+        "classId": "um-ApprovalRecord",
+        "name": "actorId",
+        "displayName": "业务操作者",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-ApprovalRecord-stage",
+        "classId": "um-ApprovalRecord",
+        "name": "stage",
+        "displayName": "stage",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-ApprovalRecord-decidedAt",
+        "classId": "um-ApprovalRecord",
+        "name": "decidedAt",
+        "displayName": "decidedAt",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-AuthorizationSnapshot-subjectId",
+        "classId": "um-AuthorizationSnapshot",
+        "name": "subjectId",
+        "displayName": "业务主体",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-AuthorizationSnapshot-sourceSystem",
+        "classId": "um-AuthorizationSnapshot",
+        "name": "sourceSystem",
+        "displayName": "来源系统",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-AuthorizationSnapshot-roles",
+        "classId": "um-AuthorizationSnapshot",
+        "name": "roles",
+        "displayName": "roles",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-AuthorizationSnapshot-permissions",
+        "classId": "um-AuthorizationSnapshot",
+        "name": "permissions",
+        "displayName": "permissions",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-AuthorizationSnapshot-revision",
+        "classId": "um-AuthorizationSnapshot",
+        "name": "revision",
+        "displayName": "业务修订",
+        "rangeType": "INTEGER",
+        "required": false
+      },
+      {
+        "id": "um-AuthorizationSnapshot-observedAt",
+        "classId": "um-AuthorizationSnapshot",
+        "name": "observedAt",
+        "displayName": "获取时点",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-PolicyDecision-requestId",
+        "classId": "um-PolicyDecision",
+        "name": "requestId",
+        "displayName": "申请编号",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-PolicyDecision-ruleRef",
+        "classId": "um-PolicyDecision",
+        "name": "ruleRef",
+        "displayName": "规则引用",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-PolicyDecision-ruleDigest",
+        "classId": "um-PolicyDecision",
+        "name": "ruleDigest",
+        "displayName": "规则摘要",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-PolicyDecision-conclusion",
+        "classId": "um-PolicyDecision",
+        "name": "conclusion",
+        "displayName": "规则结论",
+        "rangeType": "STRING",
+        "required": false
+      },
+      {
+        "id": "um-PolicyDecision-evaluatedAt",
+        "classId": "um-PolicyDecision",
+        "name": "evaluatedAt",
+        "displayName": "evaluatedAt",
+        "rangeType": "STRING",
+        "required": false
+      }
+    ],
+    "relations": [
+      {
+        "id": "um-rel-belongsTo",
+        "name": "belongsTo",
+        "displayName": "账号所属部门",
+        "domainClassId": "um-Account",
+        "rangeClassId": "um-Department"
+      },
+      {
+        "id": "um-rel-assignedRole",
+        "name": "assignedRole",
+        "displayName": "账号角色",
+        "domainClassId": "um-Account",
+        "rangeClassId": "um-Role"
+      },
+      {
+        "id": "um-rel-permits",
+        "name": "permits",
+        "displayName": "角色包含权限",
+        "domainClassId": "um-Role",
+        "rangeClassId": "um-Permission"
+      },
+      {
+        "id": "um-rel-managedBy",
+        "name": "managedBy",
+        "displayName": "账号来源系统",
+        "domainClassId": "um-Account",
+        "rangeClassId": "um-BusinessSystem"
+      },
+      {
+        "id": "um-rel-requestedBy",
+        "name": "requestedBy",
+        "displayName": "申请人",
+        "domainClassId": "um-ManagementRequest",
+        "rangeClassId": "um-Account"
+      },
+      {
+        "id": "um-rel-targets",
+        "name": "targets",
+        "displayName": "目标账号",
+        "domainClassId": "um-ManagementRequest",
+        "rangeClassId": "um-Account"
+      },
+      {
+        "id": "um-rel-reviewedBy",
+        "name": "reviewedBy",
+        "displayName": "审批人",
+        "domainClassId": "um-ApprovalRecord",
+        "rangeClassId": "um-Account"
+      },
+      {
+        "id": "um-rel-approves",
+        "name": "approves",
+        "displayName": "审批申请",
+        "domainClassId": "um-ApprovalRecord",
+        "rangeClassId": "um-ManagementRequest"
+      },
+      {
+        "id": "um-rel-snapshotOf",
+        "name": "snapshotOf",
+        "displayName": "主体权限快照",
+        "domainClassId": "um-AuthorizationSnapshot",
+        "rangeClassId": "um-Account"
+      },
+      {
+        "id": "um-rel-evaluates",
+        "name": "evaluates",
+        "displayName": "规则判定对象",
+        "domainClassId": "um-PolicyDecision",
+        "rangeClassId": "um-ManagementRequest"
+      }
+    ],
+    "rules": [
+      {
+        "id": "um-rule-active",
+        "name": "当前主体有效",
+        "description": "主体必须为ACTIVE，权限事实存在且有效",
+        "condition": "主体必须为ACTIVE，权限事实存在且有效",
+        "status": "ACTIVE"
+      },
+      {
+        "id": "um-rule-scope",
+        "name": "部门数据范围",
+        "description": "申请与目标必须位于被授权部门",
+        "condition": "申请与目标必须位于被授权部门",
+        "status": "ACTIVE"
+      },
+      {
+        "id": "um-rule-permission",
+        "name": "业务操作权限",
+        "description": "执行账号创建/角色授予前重新获取业务源权限",
+        "condition": "执行账号创建/角色授予前重新获取业务源权限",
+        "status": "ACTIVE"
+      },
+      {
+        "id": "um-rule-role-active",
+        "name": "角色状态有效",
+        "description": "只允许授予ACTIVE角色",
+        "condition": "只允许授予ACTIVE角色",
+        "status": "ACTIVE"
+      },
+      {
+        "id": "um-rule-conflict",
+        "name": "角色互斥",
+        "description": "ROLE_ANALYST与ROLE_APPROVER不能同时授予",
+        "condition": "ROLE_ANALYST与ROLE_APPROVER不能同时授予",
+        "status": "ACTIVE"
+      },
+      {
+        "id": "um-rule-no-self-approval",
+        "name": "申请审批职责分离",
+        "description": "申请者不能审批自己的请求",
+        "condition": "申请者不能审批自己的请求",
+        "status": "ACTIVE"
+      },
+      {
+        "id": "um-rule-security",
+        "name": "高权限追加复核",
+        "description": "ROLE_ADMIN必须经过独立安全岗位复核",
+        "condition": "ROLE_ADMIN必须经过独立安全岗位复核",
+        "status": "ACTIVE"
+      },
+      {
+        "id": "um-rule-last-admin",
+        "name": "最后管理员保护",
+        "description": "不得停用最后一个ACTIVE管理员",
+        "condition": "不得停用最后一个ACTIVE管理员",
+        "status": "ACTIVE"
+      },
+      {
+        "id": "um-rule-revision",
+        "name": "目标修订一致",
+        "description": "审批后的目标与权限变化必须重新核验",
+        "condition": "审批后的目标与权限变化必须重新核验",
+        "status": "ACTIVE"
+      },
+      {
+        "id": "um-rule-readback",
+        "name": "业务结果读回",
+        "description": "账号状态与授权角色必须和已批准计划一致",
+        "condition": "账号状态与授权角色必须和已批准计划一致",
+        "status": "ACTIVE"
+      }
+    ],
+    "operations": [
+      {
+        "code": "user-governance-facts",
+        "name": "账号与权限事实查询",
+        "kind": "OBJECT_QUERY"
+      },
+      {
+        "code": "user-governance-check",
+        "name": "账号变更规则判定",
+        "kind": "RULE_CHECK"
+      },
+      {
+        "code": "user-governance-readback",
+        "name": "账号授权读回",
+        "kind": "OBJECT_QUERY"
+      },
+      {
+        "code": "user-governance-relations",
+        "name": "账号角色部门关系",
+        "kind": "RELATION_QUERY"
+      }
+    ],
+    "instances": [
+      {
+        "className": "BusinessSystem",
+        "stableId": "user-mgmt",
+        "values": {
+          "id": "user-mgmt",
+          "name": "业务用户管理系统",
+          "status": "ACTIVE"
+        }
+      },
+      {
+        "className": "Department",
+        "stableId": "dept-a",
+        "values": {
+          "id": "dept-a",
+          "name": "遥感业务部"
+        }
+      },
+      {
+        "className": "Department",
+        "stableId": "dept-b",
+        "values": {
+          "id": "dept-b",
+          "name": "数据应用部"
+        }
+      },
+      {
+        "className": "Department",
+        "stableId": "dept-security",
+        "values": {
+          "id": "dept-security",
+          "name": "安全管理部"
+        }
+      },
+      {
+        "className": "Account",
+        "stableId": "biz-admin",
+        "values": {
+          "id": "biz-admin",
+          "username": "business.admin",
+          "name": "系统管理员",
+          "employeeNo": "EMP-0001",
+          "departmentId": "dept-a",
+          "status": "ACTIVE",
+          "roleIds": [
+            "ROLE_ADMIN"
+          ],
+          "revision": 1
+        }
+      },
+      {
+        "className": "Account",
+        "stableId": "biz-analyst-a",
+        "values": {
+          "id": "biz-analyst-a",
+          "username": "analyst.a",
+          "name": "周晴",
+          "employeeNo": "EMP-0101",
+          "departmentId": "dept-a",
+          "status": "ACTIVE",
+          "roleIds": [
+            "ROLE_ANALYST"
+          ],
+          "revision": 2
+        }
+      },
+      {
+        "className": "Account",
+        "stableId": "biz-reviewer-a",
+        "values": {
+          "id": "biz-reviewer-a",
+          "username": "reviewer.a",
+          "name": "吴审",
+          "employeeNo": "EMP-0102",
+          "departmentId": "dept-a",
+          "status": "ACTIVE",
+          "roleIds": [
+            "ROLE_APPROVER"
+          ],
+          "revision": 1
+        }
+      },
+      {
+        "className": "Account",
+        "stableId": "biz-analyst-b",
+        "values": {
+          "id": "biz-analyst-b",
+          "username": "analyst.b",
+          "name": "何远",
+          "employeeNo": "EMP-0201",
+          "departmentId": "dept-b",
+          "status": "ACTIVE",
+          "roleIds": [
+            "ROLE_ANALYST"
+          ],
+          "revision": 1
+        }
+      },
+      {
+        "className": "Account",
+        "stableId": "biz-disabled",
+        "values": {
+          "id": "biz-disabled",
+          "username": "former.user",
+          "name": "历史离岗人员",
+          "employeeNo": "EMP-0099",
+          "departmentId": "dept-a",
+          "status": "DISABLED",
+          "roleIds": [],
+          "revision": 3
+        }
+      },
+      {
+        "className": "Account",
+        "stableId": "operator-a",
+        "values": {
+          "id": "operator-a",
+          "name": "张敏 · A部门操作员",
+          "departmentId": "dept-a",
+          "roles": [
+            "UM_OPERATOR",
+            "SPACE_OPERATOR"
+          ],
+          "permissions": [
+            "um.user.read",
+            "um.user.create",
+            "um.user.disable",
+            "um.role.read",
+            "um.role.assign",
+            "um.request.create",
+            "um.audit.read",
+            "space.plan",
+            "file.upload",
+            "file.download"
+          ],
+          "status": "ACTIVE",
+          "username": "operator-a",
+          "revision": 1
+        }
+      },
+      {
+        "className": "Account",
+        "stableId": "manager-a",
+        "values": {
+          "id": "manager-a",
+          "name": "李主任 · A部门负责人",
+          "departmentId": "dept-a",
+          "roles": [
+            "UM_APPROVER"
+          ],
+          "permissions": [
+            "um.user.read",
+            "um.role.read",
+            "um.request.approve",
+            "um.audit.read",
+            "file.download"
+          ],
+          "status": "ACTIVE",
+          "username": "manager-a",
+          "revision": 1
+        }
+      },
+      {
+        "className": "Account",
+        "stableId": "security-a",
+        "values": {
+          "id": "security-a",
+          "name": "王安 · 安全复核员",
+          "departmentId": "dept-security",
+          "roles": [
+            "UM_SECURITY"
+          ],
+          "permissions": [
+            "um.user.read",
+            "um.role.read",
+            "um.security.approve",
+            "um.audit.read",
+            "file.download"
+          ],
+          "status": "ACTIVE",
+          "username": "security-a",
+          "revision": 1
+        }
+      },
+      {
+        "className": "Account",
+        "stableId": "reader-a",
+        "values": {
+          "id": "reader-a",
+          "name": "陈阅 · 只读人员",
+          "departmentId": "dept-a",
+          "roles": [
+            "VIEWER"
+          ],
+          "permissions": [
+            "um.user.read",
+            "um.role.read",
+            "file.download"
+          ],
+          "status": "ACTIVE",
+          "username": "reader-a",
+          "revision": 1
+        }
+      },
+      {
+        "className": "Account",
+        "stableId": "operator-b",
+        "values": {
+          "id": "operator-b",
+          "name": "赵明 · B部门操作员",
+          "departmentId": "dept-b",
+          "roles": [
+            "UM_OPERATOR"
+          ],
+          "permissions": [
+            "um.user.read",
+            "um.user.create",
+            "um.role.read",
+            "um.role.assign",
+            "um.request.create",
+            "file.upload",
+            "file.download"
+          ],
+          "status": "ACTIVE",
+          "username": "operator-b",
+          "revision": 1
+        }
+      },
+      {
+        "className": "Account",
+        "stableId": "disabled-a",
+        "values": {
+          "id": "disabled-a",
+          "name": "停用操作账号",
+          "departmentId": "dept-a",
+          "roles": [
+            "UM_OPERATOR"
+          ],
+          "permissions": [],
+          "status": "DISABLED",
+          "username": "disabled-a",
+          "revision": 1
+        }
+      },
+      {
+        "className": "Role",
+        "stableId": "ROLE_ANALYST",
+        "values": {
+          "id": "ROLE_ANALYST",
+          "code": "ROLE_ANALYST",
+          "name": "业务分析员",
+          "permissionCodes": [
+            "um.user.read"
+          ],
+          "status": "ACTIVE",
+          "privileged": false,
+          "conflictsWith": [
+            "ROLE_APPROVER"
+          ]
+        }
+      },
+      {
+        "className": "Role",
+        "stableId": "ROLE_APPROVER",
+        "values": {
+          "id": "ROLE_APPROVER",
+          "code": "ROLE_APPROVER",
+          "name": "业务审批员",
+          "permissionCodes": [
+            "um.user.read",
+            "um.request.approve"
+          ],
+          "status": "ACTIVE",
+          "privileged": false,
+          "conflictsWith": [
+            "ROLE_ANALYST"
+          ]
+        }
+      },
+      {
+        "className": "Role",
+        "stableId": "ROLE_ADMIN",
+        "values": {
+          "id": "ROLE_ADMIN",
+          "code": "ROLE_ADMIN",
+          "name": "业务管理员",
+          "permissionCodes": [
+            "um.user.read",
+            "um.user.create",
+            "um.user.disable",
+            "um.role.assign"
+          ],
+          "status": "ACTIVE",
+          "privileged": true,
+          "conflictsWith": []
+        }
+      },
+      {
+        "className": "Role",
+        "stableId": "ROLE_RETIRED",
+        "values": {
+          "id": "ROLE_RETIRED",
+          "code": "ROLE_RETIRED",
+          "name": "已停用访客角色",
+          "permissionCodes": [],
+          "status": "DISABLED",
+          "privileged": false,
+          "conflictsWith": []
+        }
+      },
+      {
+        "className": "Permission",
+        "stableId": "um.user.read",
+        "values": {
+          "id": "um.user.read",
+          "code": "um.user.read",
+          "name": "查询账号",
+          "systemCode": "user-mgmt",
+          "status": "ACTIVE"
+        }
+      },
+      {
+        "className": "Permission",
+        "stableId": "um.user.create",
+        "values": {
+          "id": "um.user.create",
+          "code": "um.user.create",
+          "name": "创建账号",
+          "systemCode": "user-mgmt",
+          "status": "ACTIVE"
+        }
+      },
+      {
+        "className": "Permission",
+        "stableId": "um.user.disable",
+        "values": {
+          "id": "um.user.disable",
+          "code": "um.user.disable",
+          "name": "停用账号",
+          "systemCode": "user-mgmt",
+          "status": "ACTIVE"
+        }
+      },
+      {
+        "className": "Permission",
+        "stableId": "um.role.read",
+        "values": {
+          "id": "um.role.read",
+          "code": "um.role.read",
+          "name": "查询业务角色",
+          "systemCode": "user-mgmt",
+          "status": "ACTIVE"
+        }
+      },
+      {
+        "className": "Permission",
+        "stableId": "um.role.assign",
+        "values": {
+          "id": "um.role.assign",
+          "code": "um.role.assign",
+          "name": "授予业务角色",
+          "systemCode": "user-mgmt",
+          "status": "ACTIVE"
+        }
+      },
+      {
+        "className": "Permission",
+        "stableId": "um.request.create",
+        "values": {
+          "id": "um.request.create",
+          "code": "um.request.create",
+          "name": "提交账号申请",
+          "systemCode": "user-mgmt",
+          "status": "ACTIVE"
+        }
+      },
+      {
+        "className": "Permission",
+        "stableId": "um.request.approve",
+        "values": {
+          "id": "um.request.approve",
+          "code": "um.request.approve",
+          "name": "部门审批",
+          "systemCode": "user-mgmt",
+          "status": "ACTIVE"
+        }
+      },
+      {
+        "className": "Permission",
+        "stableId": "um.security.approve",
+        "values": {
+          "id": "um.security.approve",
+          "code": "um.security.approve",
+          "name": "高权限复核",
+          "systemCode": "user-mgmt",
+          "status": "ACTIVE"
+        }
+      },
+      {
+        "className": "Permission",
+        "stableId": "um.audit.read",
+        "values": {
+          "id": "um.audit.read",
+          "code": "um.audit.read",
+          "name": "查看业务审计",
+          "systemCode": "user-mgmt",
+          "status": "ACTIVE"
+        }
+      },
+      {
+        "className": "RoleAssignment",
+        "stableId": "biz-admin-ROLE_ADMIN",
+        "values": {
+          "id": "biz-admin-ROLE_ADMIN",
+          "accountId": "biz-admin",
+          "roleId": "ROLE_ADMIN",
+          "status": "ACTIVE",
+          "revision": 1
+        }
+      },
+      {
+        "className": "RoleAssignment",
+        "stableId": "biz-analyst-a-ROLE_ANALYST",
+        "values": {
+          "id": "biz-analyst-a-ROLE_ANALYST",
+          "accountId": "biz-analyst-a",
+          "roleId": "ROLE_ANALYST",
+          "status": "ACTIVE",
+          "revision": 1
+        }
+      },
+      {
+        "className": "RoleAssignment",
+        "stableId": "biz-reviewer-a-ROLE_APPROVER",
+        "values": {
+          "id": "biz-reviewer-a-ROLE_APPROVER",
+          "accountId": "biz-reviewer-a",
+          "roleId": "ROLE_APPROVER",
+          "status": "ACTIVE",
+          "revision": 1
+        }
+      },
+      {
+        "className": "RoleAssignment",
+        "stableId": "biz-analyst-b-ROLE_ANALYST",
+        "values": {
+          "id": "biz-analyst-b-ROLE_ANALYST",
+          "accountId": "biz-analyst-b",
+          "roleId": "ROLE_ANALYST",
+          "status": "ACTIVE",
+          "revision": 1
+        }
+      },
+      {
+        "className": "ManagementRequest",
+        "stableId": "UM-HISTORY-0001",
+        "values": {
+          "id": "UM-HISTORY-0001",
+          "name": "周晴业务分析角色授予",
+          "actorId": "operator-a",
+          "username": "analyst.a",
+          "departmentId": "dept-a",
+          "roleIds": [
+            "ROLE_ANALYST"
+          ],
+          "status": "SUCCEEDED",
+          "validityDays": 30,
+          "expectedRevision": 1
+        }
+      },
+      {
+        "className": "ApprovalRecord",
+        "stableId": "um-history-approval-1",
+        "values": {
+          "id": "um-history-approval-1",
+          "name": "部门批准",
+          "requestId": "UM-HISTORY-0001",
+          "actorId": "manager-a",
+          "stage": "department",
+          "status": "APPROVED",
+          "decidedAt": "2026-11-04T10:00:00+08:00"
+        }
+      },
+      {
+        "className": "AuthorizationSnapshot",
+        "stableId": "um-history-auth-1",
+        "values": {
+          "id": "um-history-auth-1",
+          "name": "A部门操作员授权快照",
+          "subjectId": "operator-a",
+          "sourceSystem": "user-mgmt",
+          "roles": [
+            "UM_OPERATOR",
+            "SPACE_OPERATOR"
+          ],
+          "permissions": [
+            "um.user.read",
+            "um.user.create",
+            "um.user.disable",
+            "um.role.read",
+            "um.role.assign",
+            "um.request.create",
+            "um.audit.read",
+            "space.plan",
+            "file.upload",
+            "file.download"
+          ],
+          "revision": 1,
+          "observedAt": "2026-11-04T09:59:00+08:00",
+          "status": "ACTIVE"
+        }
+      },
+      {
+        "className": "PolicyDecision",
+        "stableId": "um-history-decision-1",
+        "values": {
+          "id": "um-history-decision-1",
+          "name": "历史部门范围判定",
+          "requestId": "UM-HISTORY-0001",
+          "ruleRef": "um-rule-scope",
+          "conclusion": "MATCHED",
+          "evaluatedAt": "2026-11-04T09:59:30+08:00",
+          "status": "COMPLETED"
+        }
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "um-knowledge-1",
+        "name": "账号开通规范",
+        "content": "普通账号开通须经部门审批；高权限增加安全复核。"
+      },
+      {
+        "id": "um-knowledge-2",
+        "name": "角色职责分离",
+        "content": "申请人与审批人分离，业务分析与业务审批角色互斥。"
+      }
+    ]
+  }
+}

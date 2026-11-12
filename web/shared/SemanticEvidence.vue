@@ -63,6 +63,6 @@ const tone = computed(() =>
 header { display: flex; justify-content: space-between; align-items: center; }
 .note { margin: 0; }
 .evidence ul { margin: 6px 0 0; padding-left: 18px; }
-.muted { color: var(--el-text-color-secondary); font-size: 12px; }
+.muted { color: var(--el-text-color-secondary); font-size: 13px; }
 .el-alert { margin: 0; }
 </style>

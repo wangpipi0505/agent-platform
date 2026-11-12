@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { parseJsonInput } from '../shared/json-input';
 import { ref, watch, onBeforeUnmount, nextTick } from 'vue';
 import SchemaInputs from '../shared/SchemaInputs.vue';
 import AssertionEditor from '../shared/AssertionEditor.vue';
@@ -26,7 +27,7 @@ let scope = 0, listSequence = 0, detailSequence = 0, edits = 0, alive = true;
 let requests = new AbortController();
 let promotionAttempt: { fingerprint: string; body: any } | undefined;
 function collect() {
-  const value = props.declaration !== undefined ? form.value!.collect() : JSON.parse(raw.value);
+  const value = props.declaration !== undefined ? form.value!.collect() : parseJsonInput(raw.value, "输入 JSON");
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw Error('输入必须是 JSON 对象');
   return value;
 }
@@ -81,7 +82,7 @@ async function save() {
   const current = scope; busy.value = true; error.value = '';
   try {
     if (!name.value.trim() || name.value.length > 128) throw Error('请填写 1–128 字的测试输入名称');
-    const inputs = props.declaration !== undefined ? editForm.value!.collect() : JSON.parse(editRaw.value);
+    const inputs = props.declaration !== undefined ? editForm.value!.collect() : parseJsonInput(editRaw.value, "输入 JSON");
     const item = editing.value;
     await api(item ? `/admin/debug-inputs/${item.id}` : `/admin/debug-inputs?appDraftId=${props.draftId}`, item ? 'PUT' : 'POST', {name: name.value.trim(), inputs, ...(item ? {revision: item.revision} : {})}, requests.signal);
     if (!alive || current !== scope) return;

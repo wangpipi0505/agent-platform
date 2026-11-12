@@ -8,6 +8,8 @@ import NodeProperties from "./NodeProperties.vue";
 import { nodeTypes, nodeIssues } from "./node-metadata";
 const props = defineProps<{
   definition: Definition;
+  appCode?:string;
+  bizCategory?:string;
   layout: any;
   states?: Record<string, string>;
   /** UIF-A2：运行节点明细（output 等），供边数据量标签；与 states 同源自状态接口。 */
@@ -329,6 +331,8 @@ defineExpose({ focusNode });
         :value="selectedData"
         :definition="metadata"
         :catalogs="catalogs"
+        :app-code="appCode"
+        :biz-category="bizCategory"
         :read-only="readOnly"
         @update="update"
         @inputs="metadata.inputs = $event"

@@ -78,10 +78,21 @@ export function capabilityPackageClient(api: ReturnType<typeof createApi>) {
   };
 }
 
-/** 能力目录始终请求真实 API；继承当前会话失效和组件卸载的取消边界。 */
+/**
+ * 能力目录在真实环境始终请求真实 API；演示模式（VITE_MOCK）改走 mock 传输，
+ * 由 mock 返回空目录，避免页面打到不存在的端点后把 500 当成“服务不可读”展示。
+ * 两种传输都继承当前会话失效与组件卸载的取消边界。
+ */
 export function useCapabilityPackageClient() {
   const auth = useAuth(), session = auth.snapshot(), disposed = new AbortController();
   onScopeDispose(() => disposed.abort());
-  return capabilityPackageClient(createApi(() => auth.token, axiosTransport,
+  const mock = typeof import.meta.env?.VITE_MOCK === "string" && import.meta.env.VITE_MOCK !== "false";
+  const transport = mock
+    ? async (...args: Parameters<typeof fetch>) => {
+        const { mockTransport } = await import("./mock-transport");
+        return mockTransport(...args);
+      }
+    : axiosTransport;
+  return capabilityPackageClient(createApi(() => auth.token, transport,
     () => auth.invalidate(session.generation), { signal: combinedSignal(session.signal, disposed.signal)!, current: session.current }));
 }

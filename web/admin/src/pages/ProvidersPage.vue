@@ -94,7 +94,7 @@ async function testProvider(row: any) {
               size="small"
               type="warning"
               effect="plain"
-              >演示 fixture</el-tag
+              >内置</el-tag
             >
           </div>
         </template>

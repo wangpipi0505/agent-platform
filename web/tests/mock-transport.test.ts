@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { mockTransport } from '../shared/mock-transport'
 
-describe('mock transport write guard', () => {
+describe('mock transport demo state', () => {
   it('allows the dev-token POST so the demo can sign in', async () => {
     const response = await mockTransport('/auth/dev-token', { method: 'POST' })
     const body = await response.json()
@@ -11,14 +11,16 @@ describe('mock transport write guard', () => {
     expect(body.data.expiresIn).toBeGreaterThan(0)
   })
 
-  it('rejects business writes instead of pretending they were saved', async () => {
+  it('persists demo business writes and reads back the created application', async () => {
     const response = await mockTransport('/admin/apps', {
       method: 'POST',
-      body: JSON.stringify({ name: 'demo' }),
+      body: JSON.stringify({ code: 'roundtrip-demo-app', name: 'demo' }),
     })
     const body = await response.json()
-    expect(response.status).toBe(405)
-    expect(body.code).toBe('MOCK_WRITE_DISABLED')
+    expect(response.status).toBe(200)
+    expect(body.code).toBe('OK')
+    const detail = await (await mockTransport('/admin/apps/roundtrip-demo-app')).json()
+    expect(detail.data).toMatchObject({ code: 'roundtrip-demo-app', name: 'demo', status: 'DRAFT' })
   })
 
   it('keeps read routes available', async () => {

@@ -9,7 +9,7 @@ const denied = computed(() =>
 );
 </script>
 <template>
-  <div class="panel login">
+  <div class="panel notfound">
     <div class="muted">{{ denied ? "403 · 无权访问" : "404 · 页面不存在" }}</div>
     <h1>{{ denied ? `没有访问「${denied}」的权限` : "链接指向的页面不存在或已下线" }}</h1>
     <p class="muted">
@@ -22,3 +22,21 @@ const denied = computed(() =>
     <el-button type="primary" @click="router.push('/apps')">返回工作台</el-button>
   </div>
 </template>
+<style scoped>
+/* 404/403 落在带顶栏的壳层内，不能用 100vh（会溢出裁掉返回按钮）。 */
+.notfound {
+  min-height: calc(100vh - 12rem);
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 0.75rem;
+  text-align: center;
+}
+.notfound h1 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+.notfound p {
+  max-width: 32rem;
+}
+</style>

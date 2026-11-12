@@ -1,0 +1,5 @@
+export const businessCategories=[{code:'GENERAL',name:'通用能力'},{code:'SPACE_OBSERVATION',name:'观测规划'},{code:'USER_GOVERNANCE',name:'用户与权限管理'},{code:'DATA_PROCESSING',name:'数据处理'}];
+export function categoryCode(value?:string,appCode='') {if(businessCategories.some(item=>item.code===value))return value!;if(appCode.includes('user-governance'))return 'USER_GOVERNANCE';if(/satellite|space|observation/.test(appCode))return 'SPACE_OBSERVATION';return value||'GENERAL';}
+export function publishedSkillVersions(skill:any):number[] {const versions=(skill?.versions||[]).filter((v:any)=>v.status==='PUBLISHED').map((v:any)=>Number(v.versionNo||v.version));return [...new Set<number>(versions)].filter(Number.isInteger).sort((a,b)=>b-a);}
+export function configurableSkill(skill:any,roles:string[]) {const allowed=skill.accessPolicy?.configureRoles;return roles.includes('ADMIN')||!!allowed?.some((role:string)=>roles.includes(role));}
+export function skillInCategory(skill:any,category:string) {const categories=skill.bizCategories?.length?skill.bizCategories:['GENERAL'];return categories.includes('GENERAL')||categories.includes(category);}

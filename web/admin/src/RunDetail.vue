@@ -199,6 +199,9 @@ async function connect() {
   try {
     await refresh();
     if (!current()||props.runId!==observedId||blocked.value||terminal(value.value.status)) return;
+    // 演示模式没有真实 SSE：mock 只接管普通 fetch，直连 /events 会得到 500；
+    // 交给下面的重连定时器轮询 refresh()，与真实环境的状态收敛语义一致。
+    if (import.meta.env.VITE_MOCK === 'true') return;
     controller = new AbortController();
     await streamEvents(
       "/admin/runs/" + encodeURIComponent(observedId) + "/events",
@@ -550,15 +553,15 @@ onBeforeUnmount(() => {
 .diag-banner,
 .diag-card {
   margin: 0 0 1rem;
-  border: 1px solid #f3c2c2;
-  background: #fff8f8;
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  background: rgba(248, 113, 113, 0.08);
   border-radius: 8px;
   padding: 0.75rem 0.9rem;
 }
 .diag-banner.retryable,
 .diag-card.retryable {
-  border-color: #f3d19e;
-  background: #fdf8ef;
+  border-color: rgba(251, 191, 36, 0.4);
+  background: rgba(251, 191, 36, 0.08);
 }
 .diag-banner p,
 .diag-card p {
@@ -569,7 +572,7 @@ onBeforeUnmount(() => {
   display: inline-block;
   margin-left: 0.45rem;
   font-size: 0.75rem;
-  color: #606266;
+  color: var(--muted);
 }
 .diag-card-head {
   display: flex;
@@ -581,15 +584,15 @@ onBeforeUnmount(() => {
   margin-left: auto;
 }
 .diag-card-head .pill {
-  background: #fef0f0;
-  color: #c45656;
+  background: rgba(248, 113, 113, 0.15);
+  color: var(--st-fail-text);
   border-radius: 999px;
   padding: 0.08rem 0.45rem;
   font-size: 0.75rem;
 }
 .diag-card.retryable .pill {
-  background: #fdf6ec;
-  color: #b88230;
+  background: rgba(251, 191, 36, 0.15);
+  color: var(--st-suspend-text);
 }
 .diag-meta {
   display: flex;
@@ -599,25 +602,25 @@ onBeforeUnmount(() => {
   font-size: 0.8rem;
 }
 .diag-meta dt {
-  color: #909399;
+  color: var(--muted);
 }
 .diag-meta dd {
   margin: 0;
-  color: #303133;
+  color: var(--ink);
 }
 .diag-counts {
   margin: 0.25rem 0 0.75rem;
-  color: #606266;
+  color: var(--muted);
   font-size: 0.85rem;
 }
 .severity-error {
-  color: #c45656;
+  color: var(--st-fail-text);
 }
 .severity-warning {
-  color: #b88230;
+  color: var(--st-suspend-text);
 }
 .severity-info {
-  color: #606266;
+  color: var(--muted);
 }
 .tool-detail pre {
   max-height: 18rem;

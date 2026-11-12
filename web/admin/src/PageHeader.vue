@@ -19,7 +19,8 @@ const shellMode = ref(false);
 function syncChrome() {
   if (!shellMode.value) return;
   pageChrome.title = props.title;
-  pageChrome.eyebrow = props.eyebrow || "平台管理";
+  // 页面未声明 eyebrow 时沿用路由 afterEach 依据访问表写入的分组，不能再回退成固定“平台管理”。
+  if (props.eyebrow) pageChrome.eyebrow = props.eyebrow;
   pageChrome.subtitle = props.subtitle || "";
 }
 

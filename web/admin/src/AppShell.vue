@@ -12,17 +12,12 @@ const route = useRoute();
 const menus = navMenus.map((entry) => [entry.label, entry.path]);
 const density = ref(localStorage.getItem("density") || "标准");
 const pageActionsTarget = PAGE_ACTIONS_TARGET;
-const isMock =
-  import.meta.env.DEV &&
-  typeof (import.meta as any).env?.VITE_MOCK === "string" &&
-  (import.meta as any).env.VITE_MOCK !== "false";
 
 const tab = computed(() => {
   const parts = route.params.tabMatch;
   return (Array.isArray(parts) ? parts.join("/") : String(parts || "")) || "overview";
 });
 const shellClass = computed(() => ({
-  "canvas-mode": route.name === "app-workspace" && tab.value === "orchestration/flow",
   "statistics-mode": route.path === "/statistics",
   "capability-mode": route.name === "capability-packages",
   "test-input-mode":
@@ -86,9 +81,6 @@ function logout() {
           <el-button text @click="logout">退出</el-button>
         </div>
       </header>
-      <div v-if="isMock" class="mock-banner" role="status">
-        演示模式：本页数据为本地模拟，写入不会保存。请连接真实后端后操作。
-      </div>
       <div class="content">
         <RouterView />
       </div>
@@ -112,13 +104,6 @@ function logout() {
   align-items: center;
   gap: 0.5rem;
   margin-left: auto;
-}
-.mock-banner {
-  padding: 0.65rem 1.5rem;
-  background: #fff7e6;
-  border-bottom: 1px solid #f5dab1;
-  color: #8a5a00;
-  font-size: 0.875rem;
 }
 @media (max-width: 900px) {
   .capability-mode { min-width: 0; }

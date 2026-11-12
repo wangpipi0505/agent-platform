@@ -57,6 +57,10 @@
   --el-color-primary: var(--brand-primary);
   --el-border-radius-base: 6px;
   --el-font-size-base: var(--text-table);
+  /* 方案 §3.1：元数据/代码/胶囊不得小于 13px，EP 小号字与标签统一抬到 13px。 */
+  --el-font-size-extra-small: var(--text-meta);
+  --el-font-size-small: var(--text-meta);
+  --el-tag-font-size: var(--text-meta);
   --lay-sidebar: clamp(12.5rem, 14vw, 15rem);
   font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
   font-size: 16px;
@@ -78,7 +82,7 @@ html.dark {
   --el-text-color-primary: #f1f5f9;
   --el-text-color-regular: #dbe4f0;
   --el-text-color-secondary: #94a3b8;
-  --el-text-color-placeholder: #5d6f8c;
+  --el-text-color-placeholder: #7c8ba1;
   --el-text-color-disabled: #4c5c77;
   --el-border-color: #2b3c59;
   --el-border-color-light: #243450;
@@ -92,6 +96,43 @@ html.dark {
   --el-fill-color-dark: #1e2b42;
   --el-fill-color-blank: #0f1623;
   --el-mask-color: rgba(5, 9, 16, 0.7);
+}
+/* 实心主色/危险按钮的前景独立取色：白字压 #0ea5e9 仅 2.8:1，不满足正文对比度。
+   link/text/plain 按钮保持主色文字与透明底，不能被本规则覆盖。 */
+html.dark .el-button--primary:not(.is-link):not(.is-text):not(.is-plain) {
+  --el-button-text-color: var(--on-primary);
+  --el-button-hover-text-color: var(--on-primary);
+  --el-button-active-text-color: var(--on-primary);
+  --el-button-disabled-text-color: rgba(4, 16, 25, 0.55);
+}
+/* 危险按钮改用深红底保白字可读，避免浅红 #f56c6c 上白字 2.9:1。 */
+html.dark .el-button--danger:not(.is-link):not(.is-text):not(.is-plain) {
+  --el-button-bg-color: #b91c1c;
+  --el-button-border-color: #b91c1c;
+  --el-button-hover-bg-color: #dc2626;
+  --el-button-hover-border-color: #dc2626;
+  --el-button-active-bg-color: #991b1b;
+  --el-button-active-border-color: #991b1b;
+}
+html.dark .el-radio-button.is-active .el-radio-button__inner,
+html.dark .el-radio-button__original-radio:checked + .el-radio-button__inner {
+  color: var(--on-primary);
+}
+/* 分段选择器选中项同样选主色实心底，文字改用独立前景令牌。 */
+html.dark .el-radio-button {
+  --el-radio-button-checked-text-color: var(--on-primary);
+  --el-radio-button-checked-bg-color: var(--primary);
+  --el-radio-button-checked-border-color: var(--primary);
+}
+/* EP 组件在自身作用域内写死 12px（tag/small 分段器），令牌抬升够不到，这里逐个兜底。 */
+html.dark .el-tag {
+  --el-tag-font-size: var(--text-meta);
+}
+html.dark .el-radio-button--small .el-radio-button__inner,
+html.dark .el-button--small,
+html.dark .el-checkbox--small,
+html.dark .el-select--small {
+  font-size: var(--text-meta);
 }
 /* 密度三档：显式令牌，不再缩放 html 根字号；紧凑档最小文字保持13px */
 [data-density="紧凑"] {
@@ -206,6 +247,7 @@ pre {
 }
 .nav small {
   color: var(--nav-muted);
+  font-size: var(--text-meta);
   margin: 1rem 0.5rem 0.25rem;
 }
 .nav a {
@@ -365,7 +407,8 @@ textarea {
 html.dark .el-popper.is-light {
   border-color: var(--el-border-color);
 }
-@media (max-width: 1439px) {
+/* 方案 §6 只要求 1366 及以上桌面；窄屏折叠导航从 1200 起，避免 1366 下中文菜单逐字换行。 */
+@media (max-width: 1200px) {
   .nav {
     width: 4.5rem;
     padding: 1rem 0.5rem;

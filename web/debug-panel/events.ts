@@ -107,7 +107,12 @@ export async function streamEvents(
   if (!cursor(watermark)) throw Error('事件游标无效，请重新读取运行状态');
   const requestToken = token();
   if (!requestToken) throw new Error("请先登录");
-  const response = await fetch(url, {
+  // 演示的运行观察复用本地 SSE handler；真实模式仍按原授权与游标连接服务。
+  const transport = import.meta.env?.VITE_MOCK === 'true'
+    ? (await import('../shared/mock-transport')).mockTransport
+    : fetch;
+  check();
+  const response = await transport(url, {
     headers: {
       Authorization: `Bearer ${requestToken}`,
       "Last-Event-ID": watermark,

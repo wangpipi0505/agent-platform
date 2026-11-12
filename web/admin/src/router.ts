@@ -197,6 +197,10 @@ router.beforeEach((to) => {
   if (!key) return true;
   const decision = accessDecisionByKey(key as string);
   if (decision.allow) return true;
+  // 深链冷启动时门户会话尚未建立（hasToken=false），不能直接判 404：
+  // PortalShell 只在 auth.token 存在后渲染 <App>，导航先放行、由它自己的 token 门承接；
+  // 只有"已登录但角色不足"才跳 403 入口。
+  if (decision.reason === "session") return true;
   return {
     path: "/not-found",
     query: decision.reason === "role" ? { denied: decision.entry?.title || "" } : {},

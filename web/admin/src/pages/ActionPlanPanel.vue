@@ -58,6 +58,6 @@ defineExpose({ view });
   margin: 0;
   white-space: pre-wrap;
   word-break: break-all;
-  font-size: 12px;
+  font-size: 13px;
 }
 </style>

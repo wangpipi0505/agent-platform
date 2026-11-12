@@ -54,5 +54,5 @@ const tone = (state: string) =>
 header { display: flex; gap: 12px; align-items: baseline; }
 .reasons { margin: 0; padding-left: 16px; }
 .reasons .bad { color: var(--el-color-danger); }
-.muted { color: var(--el-text-color-secondary); font-size: 12px; }
+.muted { color: var(--el-text-color-secondary); font-size: 13px; }
 </style>

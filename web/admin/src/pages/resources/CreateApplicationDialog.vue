@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import BusinessCategorySelect from "../../BusinessCategorySelect.vue";
 import { ref, watch } from "vue";
 import { useApi } from "../../../../shared/api";
 const props = defineProps<{
@@ -110,7 +111,7 @@ const emit = defineEmits<{
         <el-input v-model="form.domain" />
       </el-form-item>
       <el-form-item label="业务分类">
-        <el-input v-model="form.bizCategory" />
+        <BusinessCategorySelect v-model="form.bizCategory" />
       </el-form-item>
     </el-form>
     <template #footer>

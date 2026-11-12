@@ -2,8 +2,8 @@ import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 import { fileURLToPath } from "node:url";
 const gatewayTarget = process.env.AGENT_GATEWAY_URL || "http://127.0.0.1:18080";
-export default defineConfig({
-  base: process.env.NODE_ENV === "production" ? "/console/" : "/",
+export default defineConfig(({mode})=>({
+  base: mode==='mock' ? '/' : process.env.NODE_ENV === "production" ? "/console/" : "/",
   root: fileURLToPath(new URL(".", import.meta.url)),
   plugins: [vue()],
   server: {
@@ -18,6 +18,6 @@ export default defineConfig({
       "/v1": { target: gatewayTarget },
     },
   },
-  build: { outDir: "dist", emptyOutDir: true },
-});
+  build: { outDir: mode==='mock'?'dist-mock':"dist", emptyOutDir: true },
+}));
 

@@ -1,3 +1,4 @@
+import { mockArtifactRequest, mockArtifactsEnabled } from "./mock-artifacts";
 export function artifactPath(file: any, runId: string) {
   // A business ticket must never be sent to arbitrary URLs or to the admin download surface.
   const path = file.externalDownloadUrl;
@@ -22,11 +23,12 @@ export async function downloadArtifact(
   check();
   const path = admin ? file.downloadUrl : artifactPath(file, runId);
   if(admin&&!/^\/admin\/artifacts\/[^/?#]+\/download$/.test(path||''))throw Error('附件缺少受控下载入口');
-  const r = await fetch(endpoint + path, {
+  const init:RequestInit = {
     headers: { Authorization: "Bearer " + token },
     signal:scope?.signal,
     credentials:'omit',
-  });
+  };
+  const r=(mockArtifactsEnabled()?await mockArtifactRequest(path,init):undefined)??await fetch(endpoint+path,init);
   check();
   if (!r.ok) throw Object.assign(Error("下载附件失败 (" + r.status + ")"),{status:r.status});
   const blob=await r.blob();check();

@@ -2,6 +2,7 @@
 import { computed, onMounted, reactive, ref, watch } from "vue";
 import { useApi } from "../../../../shared/api";
 import EvaluationPanel from "../../EvaluationPanel.vue";
+const frontendDemoMode=import.meta.env.VITE_MOCK==='true';
 import type {
   AppDetail,
   EvaluationSnapshot,
@@ -422,7 +423,7 @@ const webappBase = (() => {
         服务端检查评测报告与候选摘要一致性。错误或过期报告将阻断发布。
       </p>
       <div v-if="demoConfirmationAvailable" class="panel" role="group" aria-label="非生产演示发布确认">
-        <el-alert title="仅允许非生产演示发布；演示评测不能作为生产来源证明" type="warning" :closable="false" show-icon />
+        <el-alert :title="frontendDemoMode?'发布后固定当前配置、技能与本体版本':'仅允许非生产演示发布；演示评测不能作为生产来源证明'" :type="frontendDemoMode?'info':'warning'" :closable="false" show-icon />
         <p class="muted">本次预检 {{ precheck.precheckId }} · 报告 {{ precheck.evalReportId }} · 来源摘要 {{ shortSha(precheck.environmentEvidenceSha256 || '') }}</p>
         <el-checkbox :model-value="environmentConfirmed === true" :disabled="busy || precheckStale || evaluationWorking || evaluationNeedsCheck || !precheck.passed"
           @update:model-value="emit('environment-confirm', $event === true)">我确认仅按上述预检、报告与来源摘要进行本次非生产演示发布</el-checkbox>
@@ -534,7 +535,7 @@ const webappBase = (() => {
       <h2>集成四件套</h2>
       <pre>{{ JSON.stringify(published, null, 2) }}</pre>
       <p>
-        对话地址：<a :href="`${webappBase}/w/${encodeURIComponent(code)}`" target="_blank"
+        对话地址：<a :href="frontendDemoMode ? `#/apps/${encodeURIComponent(code)}/run` : `${webappBase}/w/${encodeURIComponent(code)}`" target="_blank"
           >打开业务对话</a
         >
       </p>

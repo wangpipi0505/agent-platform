@@ -101,7 +101,7 @@ function setTolerance(value: string | number) {
 </template>
 <style scoped>
 .assertion-editor{display:block}
-.assertion-hint{margin:-.25rem 0 .75rem;color:var(--el-text-color-secondary);font-size:12px;line-height:1.5}
-.assertion-note{margin:.25rem 0;color:var(--el-color-primary);font-size:12px;line-height:1.5}
-.assertion-warning{margin:.25rem 0;color:var(--el-color-danger);font-size:12px;line-height:1.5}
+.assertion-hint{margin:-.25rem 0 .75rem;color:var(--el-text-color-secondary);font-size: 13px;line-height:1.5}
+.assertion-note{margin:.25rem 0;color:var(--el-color-primary);font-size: 13px;line-height:1.5}
+.assertion-warning{margin:.25rem 0;color:var(--el-color-danger);font-size: 13px;line-height:1.5}
 </style>

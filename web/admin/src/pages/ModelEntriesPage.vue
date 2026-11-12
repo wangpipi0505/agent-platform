@@ -29,12 +29,13 @@ const detail = ref<any>();
 const createOpen = ref(false);
 const form = ref<any>({});
 const providers = ref<any[]>([]);
+const demoMode = typeof import.meta.env.VITE_MOCK === "string" && import.meta.env.VITE_MOCK !== "false";
 
 async function create() {
   await operation(async () => {
     providers.value = await api<any[]>("/admin/model-providers");
     form.value = {
-      providerId: providerId.value ? Number(providerId.value) : null,
+      providerId: providerId.value ? (demoMode ? providers.value.find(provider => String(provider.id) === providerId.value)?.id ?? providerId.value : Number(providerId.value)) : null,
       modelName: "",
       displayName: "",
       contextWindow: 8192,
@@ -47,7 +48,9 @@ async function create() {
 }
 async function save() {
   await operation(async () => {
-    for (const key of ["providerId", "contextWindow", "maxOutputTokens"]) {
+    if (demoMode && !providers.value.some(provider => String(provider.id) === String(form.value.providerId)))
+      throw new Error("请选择已登记的供应商");
+    for (const key of demoMode ? ["contextWindow", "maxOutputTokens"] : ["providerId", "contextWindow", "maxOutputTokens"]) {
       form.value[key] = Number(form.value[key]);
       if (!Number.isFinite(form.value[key]) || form.value[key] <= 0)
         throw new Error(`${key} 必须是正数`);
@@ -112,7 +115,7 @@ async function testEntry(row: any) {
               size="small"
               type="warning"
               effect="plain"
-              >演示 fixture</el-tag
+              >内置</el-tag
             >
           </div>
         </template>

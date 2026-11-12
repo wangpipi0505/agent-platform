@@ -187,5 +187,5 @@ function submit() {
 
 <style scoped>
 .semantic-binding-step { display: grid; gap: 8px; max-width: 640px; }
-.muted { color: var(--el-text-color-secondary); font-size: 12px; margin: 4px 0 0; }
+.muted { color: var(--el-text-color-secondary); font-size: 13px; margin: 4px 0 0; }
 </style>

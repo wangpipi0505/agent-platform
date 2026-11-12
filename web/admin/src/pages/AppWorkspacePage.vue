@@ -11,6 +11,7 @@ import { buildEnvironmentConfirmation, isGateRejection, type EnvironmentConfirma
 import AppOverviewPanel from "./workspace/AppOverviewPanel.vue";
 import AppPublishPanel from "./workspace/AppPublishPanel.vue";
 import AppRunPanel from "./workspace/AppRunPanel.vue";
+import AppChatPanel from "./workspace/AppChatPanel.vue";
 import AppRunsPanel from "./workspace/AppRunsPanel.vue";
 import {
   emptyAppDetail,
@@ -42,6 +43,7 @@ const tab = computed(() => {
 const app = ref<AppDetail>(emptyAppDetail());
 usePageTitle(() => app.value?.name || code.value || "应用工作区");
 const flow = ref<any>();
+const supportsChat = computed(() => app.value.type !== 'FLOW' || code.value === 'user-governance-assistant' || flow.value?.definition?.trigger === 'CHAT');
 const catalogs = ref({
   models: [] as any[],
   skills: [] as any[],
@@ -114,9 +116,11 @@ async function load() {
     );
     if (route.fullPath !== requested) return;
     app.value = next;
-    configBaseline.value = JSON.stringify(app.value?.config ?? {});
     refreshKey.value++;
     config.value = JSON.stringify(next.config || {}, null, 2);
+    // 基线必须与编辑器里的文本完全一致（含缩进），否则 compare 永远 dirty，
+    // 离开页面时会弹出「有未保存的更改」并拦住正常导航。
+    configBaseline.value = config.value;
     if (tab.value === "orchestration/flow") {
       flow.value = await api(
         `/admin/flows/${encodeURIComponent(code.value)}`,
@@ -246,7 +250,7 @@ function onEvaluationReport(value: any) {
 }
 async function commit() {
   const demo = precheck.value?.publicationTarget === "NON_PRODUCTION" && precheck.value?.evaluationEnvironment === "DEMO";
-  if (!confirm(demo ? "确认仅进行本次非生产演示发布？该演示评测不能作为生产来源证明。" : "确认将当前候选发布为正式版本？发布后可被业务系统调用。")) {
+  if (!confirm(import.meta.env.VITE_MOCK==='true' ? '确认发布当前候选版本？发布后将保留独立的配置快照。' : demo ? "确认仅进行本次非生产演示发布？该演示评测不能作为生产来源证明。" : "确认将当前候选发布为正式版本？发布后可被业务系统调用。")) {
     environmentConfirmation.value = null;
     return;
   }
@@ -342,6 +346,8 @@ onMounted(() => void load());
       <a
         v-for="[label, next] in [
           ['概览', ''],
+          ...(supportsChat ? [['对话', 'chat'] as [string, string]] : []),
+          ...(supportsChat && app.type === 'FLOW' ? [['对话配置', 'orchestration/chat'] as [string, string]] : []),
           ['编排', app.type === 'FLOW' ? 'orchestration/flow' : 'orchestration/chat'],
           ['调试', 'orchestration/debug'],
           ['发布集成', 'orchestration/publish'],
@@ -363,10 +369,20 @@ onMounted(() => void load());
       :refresh-key="refreshKey"
       @lifecycle="lifecycle"
       @save-metadata="saveMetadata"
+      @reload="load"
+    />
+    <AppChatPanel
+      v-else-if="tab === 'chat'"
+      :app-code="code"
+      :app-name="app.name"
+      :current-version-no="app.currentVersionNo"
+      :mode="app.status === 'PUBLISHED' ? 'published' : 'draft'"
     />
     <ChatConfig
       v-else-if="tab === 'orchestration/chat'"
       :config="app.config"
+      :app-code="code"
+      :biz-category="app.bizCategory"
       :draft-rev="app.draftRev"
       :draft-key="code + ':chat'"
       @save="saveConfig"
@@ -376,6 +392,8 @@ onMounted(() => void load());
       :read-only="!auth.can('edit')"
       :definition="flow.definition"
       :catalogs="catalogs"
+      :app-code="code"
+      :biz-category="app.bizCategory"
       :layout="flow.layout || {}"
       :draft-key="code + ':flow'"
       :draft-rev="app.draftRev"
@@ -403,6 +421,13 @@ onMounted(() => void load());
       @report="onEvaluationReport"
       @activity="evaluationActivity"
       @bind="check"
+    />
+    <AppChatPanel
+      v-else-if="tab === 'run' && supportsChat"
+      :app-code="code"
+      :app-name="app.name"
+      :current-version-no="app.currentVersionNo"
+      mode="published"
     />
     <AppRunPanel
       v-else-if="tab === 'run'"

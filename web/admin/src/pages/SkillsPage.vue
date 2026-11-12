@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
+import BusinessCategorySelect from "../BusinessCategorySelect.vue";
+import {businessCategories} from "../../../shared/skill-catalog";
 import PageError from "../PageError.vue";
 import PageHeader from "../PageHeader.vue";
 import SkillWizard from "../SkillWizard.vue";
@@ -21,11 +23,14 @@ const {
   filter,
   page,
   pageSize,
-  filtered,
-  paginated,
+  filtered:baseFiltered,
   load,
 } = useResourceList("skills");
 
+const businessCategory=ref('');
+const filtered=computed(()=>baseFiltered.value.filter(row=>!businessCategory.value||(row.bizCategories||['GENERAL']).includes(businessCategory.value)));
+const paginated=computed(()=>filtered.value.slice((page.value-1)*pageSize.value,page.value*pageSize.value));
+function categories(row:any){return (row.bizCategories||['GENERAL']).map((code:string)=>businessCategories.find(item=>item.code===code)?.name||code).join('、')}
 const detail = ref<any>();
 const createOpen = ref(false);
 const form = ref<any>({});
@@ -88,7 +93,7 @@ function openImported(code: string) {
   <div class="panel">
     <div class="filters">
       <el-input v-model="filter.keyword" clearable placeholder="搜索技能名称或编码" />
-      <el-input v-model="filter.status" clearable placeholder="状态" />
+      <el-input v-model="filter.status" clearable placeholder="状态" /><BusinessCategorySelect v-model="businessCategory" /><el-button text @click="businessCategory=''">全部分类</el-button>
     </div>
     <el-skeleton v-if="busy" :rows="5" animated />
     <el-table v-else :data="paginated" stripe>
@@ -103,7 +108,7 @@ function openImported(code: string) {
             size="small"
             type="warning"
             effect="plain"
-            >演示 fixture</el-tag
+            >内置</el-tag
           >
         </template>
       </el-table-column>
@@ -114,7 +119,7 @@ function openImported(code: string) {
           }}</span>
         </template>
       </el-table-column>
-      <el-table-column prop="type" label="类型" width="80" />
+      <el-table-column prop="type" label="类型" width="80" /><el-table-column label="业务分类" min-width="140"><template #default="{row}">{{categories(row)}}</template></el-table-column><el-table-column prop="businessSystemCode" label="业务系统" min-width="120" /><el-table-column label="访问范围" min-width="110"><template #default="{row}">{{row.accessPolicy?.visibility==='PRIVATE'?'私有':row.accessPolicy?.visibility==='BUSINESS'?'业务系统':row.accessPolicy?.visibility==='RESTRICTED'?'角色可见':'公开'}}</template></el-table-column>
       <el-table-column
         prop="description"
         label="说明"

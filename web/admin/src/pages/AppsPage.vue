@@ -4,6 +4,7 @@ import { useRouter } from "vue-router";
 import {
   copyApplicationBody,
 } from "../../../shared/statistics-lifecycle";
+import BusinessCategorySelect from "../BusinessCategorySelect.vue";
 import PageError from "../PageError.vue";
 import PageHeader from "../PageHeader.vue";
 import { usePageTitle } from "../usePageOperation";
@@ -129,7 +130,7 @@ watch(filter, () => (detail.value = undefined), { deep: true });
       <el-input v-model="filter.keyword" clearable placeholder="搜索名称或运行编码" />
       <el-input v-model="filter.code" clearable placeholder="应用编码" />
       <el-input v-model="filter.domain" clearable placeholder="专业领域" />
-      <el-input v-model="filter.bizCategory" clearable placeholder="业务分类" />
+      <BusinessCategorySelect v-model="filter.bizCategory" />
       <el-input v-model="filter.tags" clearable placeholder="标签" />
       <el-select
         v-model="filter.status"
