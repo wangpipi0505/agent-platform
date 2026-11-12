@@ -31,7 +31,7 @@ const routes: RouteRecordRaw[] = [
     path: "/apps/:code/:tabMatch(.*)*",
     name: "app-workspace",
     component: () => import("./pages/AppWorkspacePage.vue"),
-    meta: { access: "app-workspace", title: "应用工作区" },
+    meta: { access: "app-workspace", title: "智能体工作区" },
   },
   {
     path: "/operations",

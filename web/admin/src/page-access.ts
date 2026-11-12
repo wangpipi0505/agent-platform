@@ -48,7 +48,7 @@ export const pageAccess: PageAccessEntry[] = [
   // 要求；代码保留、深链可打开，不进菜单。
   { key: "integration-semantics", path: "/integration/semantic-bindings", title: "语义与目标", area: "平台管理", read: "session", write: "edit", menu: false, suspended: true },
   { key: "integration-diagnostics", path: "/integration/diagnostics", title: "接入诊断", area: "平台管理", read: "session", write: "", menu: false },
-  { key: "app-workspace", path: "/apps", route: "/apps/:code/:tabMatch(.*)*", title: "应用工作区", area: "平台管理", read: "session", write: "edit", menu: false },
+  { key: "app-workspace", path: "/apps", route: "/apps/:code/:tabMatch(.*)*", title: "智能体工作区", area: "平台管理", read: "session", write: "edit", menu: false },
   { key: "operations", path: "/operations", title: "运行中心", area: "运行与支撑", read: "session", write: "admin", menu: true },
   { key: "runs", path: "/runs", title: "运行监控", area: "运行与支撑", read: "session", write: "", menu: true },
   { key: "run-detail", path: "/runs", route: "/runs/:runId", title: "运行详情", area: "运行与支撑", read: "session", write: "", menu: false },

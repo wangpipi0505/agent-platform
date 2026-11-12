@@ -41,7 +41,7 @@ const tab = computed(() => {
 
 // MNT-03：应用详情/预检/评测/发布回执稳定外壳（预检复用 publish-gate 的 PublishPrecheck）。
 const app = ref<AppDetail>(emptyAppDetail());
-usePageTitle(() => app.value?.name || code.value || "应用工作区");
+usePageTitle(() => app.value?.name || code.value || "智能体工作区");
 const flow = ref<any>();
 const supportsChat = computed(() => app.value.type !== 'FLOW' || code.value === 'user-governance-assistant' || flow.value?.definition?.trigger === 'CHAT');
 const catalogs = ref({
@@ -333,8 +333,8 @@ onMounted(() => void load());
 
 <template>
   <PageHeader
-    :title="app?.name || code || '应用工作区'"
-    eyebrow="应用工作区"
+    :title="app?.name || code || '智能体工作区'"
+    eyebrow="智能体工作区"
     :subtitle="app?.description || '配置、调试、评测并发布这个智能体。'"
     :busy="busy"
     @refresh="load"
