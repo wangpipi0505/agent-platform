@@ -86,7 +86,7 @@ onMounted(async () => {
     <PageHeader title="接入诊断" subtitle="按接入应用与环境组合只读投影，逐阶段显示安全状态；不发起业务运行，不显示凭据。" :busy="busy" @refresh="load" />
     <PageError :error="error" :trace="trace" />
     <div class="toolbar">
-      <el-select v-model="appCode" placeholder="选择应用" :disabled="busy" aria-label="选择应用">
+      <el-select v-model="appCode" placeholder="选择智能体" :disabled="busy" aria-label="选择智能体">
         <el-option v-for="application in applications" :key="application.code" :label="`${application.name}（${application.code}）`" :value="application.code" />
       </el-select>
       <el-select v-model="environment" :disabled="busy" aria-label="选择环境">

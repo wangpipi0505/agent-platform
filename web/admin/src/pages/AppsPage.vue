@@ -58,7 +58,7 @@ function create() {
 
 async function save() {
   await operation(async () => {
-    if (!form.value.name?.trim()) throw new Error("请填写应用名称");
+    if (!form.value.name?.trim()) throw new Error("请填写智能体名称");
     if (!form.value.code?.trim()) throw new Error("请填写编码");
     const { promptMode, promptTemplateRef, ...body } = form.value;
     if (promptMode === "TEMPLATE") {
@@ -99,7 +99,7 @@ async function copyApplication() {
     void router.push(`/apps/${encodeURIComponent(result.code)}`);
   } catch (e: any) {
     copyError.value =
-      e.status === 403 ? "当前账号没有复制应用的权限" : e.message;
+      e.status === 403 ? "当前账号没有复制智能体的权限" : e.message;
   } finally {
     copying.value = false;
   }
@@ -136,7 +136,7 @@ watch(filter, () => (detail.value = undefined), { deep: true });
         v-model="filter.status"
         clearable
         placeholder="状态（默认不含归档）"
-        aria-label="应用状态"
+        aria-label="智能体状态"
       >
         <el-option
           v-for="state in ['DRAFT', 'PUBLISHED', 'DISABLED', 'ARCHIVED']"
@@ -199,7 +199,7 @@ watch(filter, () => (detail.value = undefined), { deep: true });
             error
               ? '服务暂不可用，请刷新重试'
               : Object.values(filter).some((value) => String(value).trim())
-                ? '没有匹配的应用，请调整筛选'
+                ? '没有匹配的智能体，请调整筛选'
                 : '还没有智能体，创建第一个'
           "
         />

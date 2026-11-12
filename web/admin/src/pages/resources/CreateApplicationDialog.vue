@@ -75,7 +75,7 @@ const emit = defineEmits<{
       <p class="muted">
         对话型面向问答与工具调用；流程型通过画布确定步骤与分支。
       </p>
-      <el-form-item label="应用名称" required>
+      <el-form-item label="智能体名称" required>
         <el-input v-model="form.name" maxlength="100" />
       </el-form-item>
       <el-form-item label="唯一编码" required>

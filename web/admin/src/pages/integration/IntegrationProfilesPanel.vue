@@ -59,7 +59,7 @@ async function load() {
 async function save(revise: boolean) {
   if (busy.value) return;
   await operation(async () => {
-    if (!appCode.value) throw new Error("请先选择应用");
+    if (!appCode.value) throw new Error("请先选择智能体");
     const origins = draft.allowedOrigins.split(/[\s,]+/).map((item) => item.trim()).filter(Boolean);
     const body = {
       profileId: draft.profileId.trim(),
@@ -130,14 +130,14 @@ onMounted(async () => {
     <PageHeader title="接入档案" subtitle="登记业务系统、环境、接入等级、来源白名单与体验引用；不承载连接与凭据。" :busy="busy" @refresh="load" />
     <PageError :error="error" :trace="trace" />
     <div class="toolbar">
-      <el-select v-model="appCode" placeholder="选择应用" :disabled="busy" aria-label="选择应用">
+      <el-select v-model="appCode" placeholder="选择智能体" :disabled="busy" aria-label="选择智能体">
         <el-option v-for="application in applications" :key="application.code" :label="`${application.name}（${application.code}）`" :value="application.code" />
       </el-select>
       <span class="muted">体验当前修订：{{ experienceRev || "无" }}</span>
     </div>
     <div class="grid">
       <section class="panel" aria-label="接入档案列表">
-        <el-empty v-if="!rows.length" :description="appCode ? '该应用还没有接入档案' : '请选择应用'" />
+        <el-empty v-if="!rows.length" :description="appCode ? '该智能体还没有接入档案' : '请选择智能体'" />
         <article v-for="row in rows" :key="row.profileId" class="card" :class="{ selected: selected === row.profileId }">
           <h2>{{ row.profileId }}</h2>
           <p>

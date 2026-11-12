@@ -74,7 +74,7 @@ async function load() {
 async function save() {
   if (busy.value) return;
   await operation(async () => {
-    if (!appCode.value) throw new Error("请先选择应用");
+    if (!appCode.value) throw new Error("请先选择智能体");
     const code = appCode.value;
     const previous = experience.value;
     const body: Record<string, unknown> = {
@@ -131,7 +131,7 @@ onMounted(async () => {
     <PageHeader title="体验编辑" subtitle="编辑欢迎语、能力说明、推荐问法与呈现方式；选择模板只生成可编辑输入，不自动执行。" :busy="busy" @refresh="load" />
     <PageError :error="error" :trace="trace" />
     <div class="toolbar">
-      <el-select v-model="appCode" placeholder="选择应用" :disabled="busy" aria-label="选择应用">
+      <el-select v-model="appCode" placeholder="选择智能体" :disabled="busy" aria-label="选择智能体">
         <el-option v-for="application in applications" :key="application.code" :label="`${application.name}（${application.code}）`" :value="application.code" />
       </el-select>
       <template v-if="experience">
@@ -139,7 +139,7 @@ onMounted(async () => {
         <span class="muted">修订 {{ experience.experienceRev }} · 批准者 {{ experience.revisions.at(-1)?.createdBy || "未记录" }} · 更新 {{ experience.updatedAt || experience.createdAt }}</span>
       </template>
     </div>
-    <el-empty v-if="!appCode" description="请选择应用" />
+    <el-empty v-if="!appCode" description="请选择智能体" />
     <div v-else class="grid">
       <section v-if="experience" class="panel" aria-label="当前体验">
         <h2>当前修订 {{ experience.experienceRev }}</h2>

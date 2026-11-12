@@ -140,7 +140,7 @@ describe("integration console release flow", () => {
     const draft = copyAsDraft(release(), "ops", "production");
     expect(validateDraft(draft)).toEqual([]);
     expect(validateDraft({ ...draft, appVersion: 0, connectionProfileRefs: [{ profileId: "", profileRev: 0 }] })).toEqual(
-      expect.arrayContaining(["应用版本必须是正整数", "连接引用必须包含档案与正整数修订"]),
+      expect.arrayContaining(["智能体版本必须是正整数", "连接引用必须包含档案与正整数修订"]),
     );
   });
 

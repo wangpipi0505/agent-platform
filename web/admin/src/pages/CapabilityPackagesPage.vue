@@ -96,7 +96,7 @@ onMounted(load);
     <PageError :error="error" :trace="trace" />
     <el-empty v-if="!canRead" description="当前账号没有能力目录查看权限，请联系管理员。" />
     <template v-else>
-      <p class="muted">声明、绑定与应用状态分别展示；NOT_EVALUATED 表示尚未取得验证结论。</p>
+      <p class="muted">声明、绑定与智能体状态分别展示；NOT_EVALUATED 表示尚未取得验证结论。</p>
       <p v-if="reference.ontologySpace || reference.ontologyRelease" class="context" role="status">
         原声明引用筛选：空间 {{ reference.ontologySpace || '未指定' }} · 发布 {{ reference.ontologyRelease || '未指定' }}。本体权限与版本由本体工作台校验。
         <RouterLink :to="{ path: '/capability-packages', query: {} }">查看全部</RouterLink>
@@ -143,7 +143,7 @@ onMounted(load);
               {{ binding.toolId }} → <RouterLink :to="'/skills/' + encodeURIComponent(binding.skillCode)">{{ binding.skillCode }}</RouterLink> · 精确版本 {{ binding.version }}
               <details><summary>来源标识与摘要</summary><p>接口 {{ binding.interfaceId }} · 技能版本 ID {{ binding.skillVersionId }}</p><code>{{ binding.sha256 }}</code></details>
             </li></ul>
-            <details v-if="auth.can('edit')" class="next-step"><summary>提供完整计划并创建应用草稿</summary>
+            <details v-if="auth.can('edit')" class="next-step"><summary>提供完整计划并创建智能体草稿</summary>
               <p class="muted">提交 applications 对象数组；每项提供 appCode、name、type、routeProfileId、config。CHAT 使用真实模型条目；FLOW 提供完整图。系统不猜配置。</p>
               <el-input v-model="applicationsText" type="textarea" :rows="9" aria-label="完整应用草稿计划 JSON" placeholder="输入完整 applications 计划对象" :disabled="busy" />
               <p class="muted">首次计划固定；相同计划重试读取原草稿，不覆盖后续编辑。草稿仍需评测与发布。</p>

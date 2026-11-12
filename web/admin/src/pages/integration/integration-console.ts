@@ -377,7 +377,7 @@ export function copyAsDraft(release: ReleaseView | null, appCode: string, enviro
 export function validateDraft(draft: ReleaseDraft): string[] {
   const problems: string[] = [];
   if (!draft.appCode.trim()) problems.push("缺少应用编码");
-  if (!Number.isSafeInteger(draft.appVersion) || draft.appVersion < 1) problems.push("应用版本必须是正整数");
+  if (!Number.isSafeInteger(draft.appVersion) || draft.appVersion < 1) problems.push("智能体版本必须是正整数");
   if (!Number.isSafeInteger(draft.experienceRev) || draft.experienceRev < 1) problems.push("体验修订必须是正整数");
   if (!draft.integrationProfileId.trim()) problems.push("缺少接入档案");
   if (!Number.isSafeInteger(draft.integrationProfileRev) || draft.integrationProfileRev < 1) {
@@ -404,7 +404,7 @@ function describeConnections(refs: ConnectionRef[]): string {
 export function diffRelease(base: ReleaseView | null, draft: ReleaseDraft): FieldDiff[] {
   if (!base) return [];
   const fields: Array<[string, string, unknown, unknown]> = [
-    ["appVersion", "应用版本", base.appVersion, draft.appVersion],
+    ["appVersion", "智能体版本", base.appVersion, draft.appVersion],
     ["experienceRev", "体验修订", base.experienceRev, draft.experienceRev],
     ["integrationProfileId", "接入档案", base.integrationProfileId, draft.integrationProfileId],
     ["integrationProfileRev", "接入档案修订", base.integrationProfileRev, draft.integrationProfileRev],
@@ -454,7 +454,7 @@ export function activationBlockers(context: ActivationContext): string[] {
 export function releaseImpact(action: "validate" | "approve" | "activate" | "disable"): string[] {
   switch (action) {
     case "validate":
-      return ["重新核对应用版本、体验修订、接入档案与连接引用是否仍有效。", "只改变这份草稿的状态，不影响任何生产会话。"];
+      return ["重新核对智能体版本、体验修订、接入档案与连接引用是否仍有效。", "只改变这份草稿的状态，不影响任何生产会话。"];
     case "approve":
       return ["批准只代表这份发布可以进入激活候选；不会自动生效。", "激活时还会再复核一次引用，过期组合不会上线。"];
     case "activate":
@@ -545,7 +545,7 @@ export function diagnoseStages(input: DiagnosticInput): DiagnosticStage[] {
     label: "票据与凭据",
     status: !credential ? "BLOCKED" : credential.status === "ACTIVE" ? "OK" : "BLOCKED",
     detail: !credential
-      ? "该应用尚未签发集成凭据，宿主无法换取短期运行票据。"
+      ? "该智能体尚未签发集成凭据，宿主无法换取短期运行票据。"
       : credential.status === "ACTIVE"
         ? `凭据 ${credential.bizSystemCode || "（未命名）"} 有效；来源白名单 ${credential.allowedOrigins.length} 条，主体上限 ${credential.principalIds.length} 个。`
         : `凭据状态为 ${credential.status}，已撤权；续期票据会被拒绝。`,
@@ -557,7 +557,7 @@ export function diagnoseStages(input: DiagnosticInput): DiagnosticStage[] {
     status: !active ? "BLOCKED" : /^[0-9a-f]{64}$/.test(active.digest) ? "OK" : "WARN",
     detail: !active
       ? `环境 ${input.environment} 没有激活的配置发布；新会话/运行会收到 CONFIG_RELEASE_NOT_ACTIVE。`
-      : `激活发布 ${active.releaseId}（应用版本 ${active.appVersion}）状态 ${active.status}，摘要 ${active.digest.slice(0, 12)}…。`,
+      : `激活发布 ${active.releaseId}（智能体版本 ${active.appVersion}）状态 ${active.status}，摘要 ${active.digest.slice(0, 12)}…。`,
     evidence: active ? `release#${active.releaseId}` : "无激活发布",
   });
   const profile = active

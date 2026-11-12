@@ -947,7 +947,7 @@ const routes: [RegExp, Handler][] = [
       config: { model: 'deepseek-chat', temperature: 0.3, maxTurns: 8, ...(body?.config ?? {}) },
     }
     apps.unshift(created as (typeof apps)[number])
-    audit('APP_CREATE', 'APP', created.code, `创建应用「${created.name}」`)
+    audit('APP_CREATE', 'APP', created.code, `创建智能体「${created.name}」`)
     persist()
     return envelope(created)
   }],

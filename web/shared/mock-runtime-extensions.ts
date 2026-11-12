@@ -71,10 +71,10 @@ export function mockRuntimeRequest(path: string, method: string, body: Row | und
   }
   if ((m = path.match(/^\/admin\/apps\/([^/]+)\/runs$/)) && method === 'POST') {
     const app = appBy(m[1]); if (!app) return error(404, '应用不存在')
-    if (!app.currentVersionNo) return error(409, '请先发布应用版本')
+    if (!app.currentVersionNo) return error(409, '请先发布智能体版本')
     const versionNo = Number(body?.resolvedVersionNo ?? body?.versionNo ?? app.currentVersionNo)
     const snapshot = body?.resolvedSnapshot ?? state.versions[app.code]?.find((item: Row) => item.versionNo === versionNo)?.snapshot
-    if (!Number.isInteger(versionNo) || versionNo < 1 || !snapshot) return error(404, '应用版本不存在')
+    if (!Number.isInteger(versionNo) || versionNo < 1 || !snapshot) return error(404, '智能体版本不存在')
     // The active pointer can move backwards; existence is determined by immutable history.
     return save(makeRun({ ...snapshot, currentVersionNo: versionNo }, body?.inputs ?? {}))
   }

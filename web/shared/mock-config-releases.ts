@@ -202,7 +202,7 @@ export function mockConfigurationRequest(path: string, method: string, body: Row
     if (method !== 'POST') return fail(405, '仅支持GET/POST')
     if (!m[1]) {
       const app = ctx.apps.find((item: Row) => item.code === body?.appCode), version = published(ctx, state, body?.appCode, body?.appVersion)
-      if (!app || !version) return fail(409, '请先发布引用的应用版本')
+      if (!app || !version) return fail(409, '请先发布引用的智能体版本')
       if (!positive(body?.experienceRev) || !body?.integrationProfileId || !positive(body?.integrationProfileRev) || !/^[a-z][a-z0-9-]{0,31}$/.test(body?.activationScope ?? '') || !Array.isArray(body?.connectionProfileRefs)
         || body.connectionProfileRefs.some((ref: Row) => !ref || typeof ref.profileId !== 'string' || !ref.profileId || !positive(ref.profileRev))) return fail(400, '配置发布引用或环境格式不正确')
       const created: Row = { ...copy(body!), releaseId: body?.releaseId ?? ctx.nextId('release'), status: 'DRAFT', candidateSha256: version.snapshotDigest,
@@ -217,7 +217,7 @@ export function mockConfigurationRequest(path: string, method: string, body: Row
     if (row!.status === 'DISABLED' && m[2] !== 'disable') return fail(409, '已停用的配置发布不能重新启用，请复制为新草稿')
     const errors = releaseErrors(row!, ctx, state)
     if (m[2] === 'validate') {
-      row!.validation = { passed: !errors.length, errors, candidateSha256: row!.digest, checks: errors.length ? errors.map(detail => ({ result: 'ERROR', detail })) : [{ result: 'PASS', detail: '应用版本、体验、接入档案和环境连接引用一致' }] }
+      row!.validation = { passed: !errors.length, errors, candidateSha256: row!.digest, checks: errors.length ? errors.map(detail => ({ result: 'ERROR', detail })) : [{ result: 'PASS', detail: '智能体版本、体验、接入档案和环境连接引用一致' }] }
       if (!errors.length && !['ACTIVE', 'APPROVED'].includes(row!.status)) row!.status = 'VALIDATED'
       row!.updatedAt = at(); return write({ ...row, ...row!.validation }, 'CONFIG_RELEASE_VALIDATE', row!.releaseId)
     }

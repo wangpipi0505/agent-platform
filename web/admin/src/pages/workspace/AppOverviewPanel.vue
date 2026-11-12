@@ -144,7 +144,7 @@ async function versionAction(versionNo:number,action:'restore'|'activate') {
     </div>
     <div class="panel">
       <el-collapse>
-        <el-collapse-item title="编辑应用名称与分类">
+        <el-collapse-item title="编辑智能体名称与分类">
           <el-form label-position="left" label-width="6rem">
             <el-form-item label="名称"><el-input v-model="app.name" /></el-form-item>
             <el-form-item label="说明">

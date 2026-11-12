@@ -40,7 +40,7 @@ function close() {
           @update:model-value="emit('update:code', $event)"
         />
       </el-form-item>
-      <el-form-item label="新应用名称" required>
+      <el-form-item label="新智能体名称" required>
         <el-input
           :model-value="name"
           maxlength="100"

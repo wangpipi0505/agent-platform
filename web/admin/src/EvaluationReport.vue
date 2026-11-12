@@ -11,7 +11,7 @@ function pct(value:number){return `${Math.round(value*1000)/10}%`;}
     <div v-if="binding" class="evidence-binding" role="status"><p>{{evaluationEvidenceLabel(binding)}}</p><p class="muted">原报告 {{binding.evalReportId}} · 原候选 {{binding.evaluatedCandidateSha256}} · 当前预检候选 {{binding.candidateSha256}}。此处只查看原证据，不改写原报告。</p></div>
     <p>通过 {{stats.passed}} · 失败 {{stats.failed}} · 待完成 {{stats.pending}} · 共 {{stats.total}} 条 · 通过率 {{pct(stats.passRate)}}<span v-if="stats.threshold"> / 阈值 {{pct(stats.threshold)}}</span></p><p>安全用例通过 {{stats.safetyPassed}} / {{stats.safety}}<span v-if="stats.safetyFailed">，失败 {{stats.safetyFailed}} 条</span></p>
     <p v-if="report.baselineReportId">基线报告 <code>{{report.baselineReportId}}</code> · <span :class="stats.regressions?'error':'muted'">新增回归 {{stats.regressions}} 条</span></p>
-    <p v-else class="muted">这是该应用与数据集的首个评测报告，没有基线可比较。</p>
+    <p v-else class="muted">这是该智能体与数据集的首个评测报告，没有基线可比较。</p>
     <p class="muted">数据集 {{report.datasetVersion}} · 草稿修订 {{report.draftRev}}。预期与完整输出精确比较。</p>
     <div class="case-list"><article v-for="row in report.results||[]" :key="row.id" class="case-result"><div class="row"><strong>{{row.id}}</strong><span>{{row.safety?'安全用例':'普通用例'}} · {{result(row)}}<template v-if="row.regression"> · <b class="error">新增回归</b></template><template v-else-if="row.baselinePassed"> · <span class="muted">基线通过</span></template></span></div>
       <p v-if="row.status==='WAITING_APPROVAL'">评测等待明确的人工确认，页面不会自动批准。</p><p v-if="row.error" class="error">{{row.error}}</p>

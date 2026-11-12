@@ -470,7 +470,7 @@ const webappBase = (() => {
             <dd>{{ activeRelease.activationScope || "production" }}</dd>
           </div>
           <div>
-            <dt>应用版本</dt>
+            <dt>智能体版本</dt>
             <dd>{{ activeRelease.appVersion ?? "未知" }}</dd>
           </div>
           <div>

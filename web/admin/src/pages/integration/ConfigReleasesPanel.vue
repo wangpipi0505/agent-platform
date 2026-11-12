@@ -94,7 +94,7 @@ function startNewDraft() {
   const experience = experiences.value;
   const profile = approvedProfiles.value[0];
   if (experience?.status !== "APPROVED" || !profile) {
-    error.value = "请先批准该应用的体验和当前环境的接入档案，再新建配置发布。";
+    error.value = "请先批准该智能体的体验和当前环境的接入档案，再新建配置发布。";
     return;
   }
   draft.value = { appCode: appCode.value,
@@ -203,7 +203,7 @@ onMounted(async () => {
     <PageHeader title="配置发布" subtitle="从激活版本复制草稿，校验与批准后再以 CAS 激活；停用与回退先说明影响。" :busy="busy" @refresh="load" />
     <PageError :error="error" :trace="trace" />
     <div class="toolbar">
-      <el-select v-model="appCode" placeholder="选择应用" :disabled="busy" aria-label="选择应用">
+      <el-select v-model="appCode" placeholder="选择智能体" :disabled="busy" aria-label="选择智能体">
         <el-option v-for="application in applications" :key="application.code" :label="`${application.name}（${application.code}）`" :value="application.code" />
       </el-select>
       <el-select v-model="environment" :disabled="busy" aria-label="选择环境">
@@ -217,7 +217,7 @@ onMounted(async () => {
       <h2>当前激活（{{ environment }}）</h2>
       <el-empty v-if="!active" description="该环境没有激活的配置版本；新会话将回退为无配置引用。" />
       <template v-else>
-        <p><strong>{{ active.releaseId }}</strong> · 应用版本 {{ active.appVersion }} · 体验修订 {{ active.experienceRev }}</p>
+        <p><strong>{{ active.releaseId }}</strong> · 智能体版本 {{ active.appVersion }} · 体验修订 {{ active.experienceRev }}</p>
         <p class="muted">接入档案 {{ active.integrationProfileId }}@{{ active.integrationProfileRev }} · 摘要 {{ active.digest.slice(0, 16) }}… · 批准者 {{ active.createdBy || "未记录" }}</p>
       </template>
     </section>
@@ -229,7 +229,7 @@ onMounted(async () => {
         <el-table v-else :data="releases" size="small" highlight-current-row @row-click="(row: ReleaseView) => (selectedId = row.releaseId)">
           <el-table-column prop="releaseId" label="发布" min-width="150" />
           <el-table-column prop="status" label="状态" width="110" />
-          <el-table-column prop="appVersion" label="应用版本" width="90" />
+          <el-table-column prop="appVersion" label="智能体版本" width="90" />
           <el-table-column prop="activationScope" label="环境" width="100" />
         </el-table>
       </section>
@@ -237,7 +237,7 @@ onMounted(async () => {
       <section v-if="draft" class="panel" aria-label="草稿与差异">
         <h2>配置发布草稿</h2>
         <el-form label-position="top">
-          <el-form-item label="应用版本"><el-input-number v-model="draft.appVersion" :min="1" /></el-form-item>
+          <el-form-item label="智能体版本"><el-input-number v-model="draft.appVersion" :min="1" /></el-form-item>
           <el-form-item label="体验修订"><el-input-number v-model="draft.experienceRev" :min="1" /></el-form-item>
           <el-form-item label="接入档案">
             <el-select :model-value="draft.integrationProfileId" @update:model-value="pickProfile">
@@ -281,7 +281,7 @@ onMounted(async () => {
         <h2>{{ selected.releaseId }}</h2>
         <p>
           <el-tag :type="selected.status === 'ACTIVE' ? 'success' : selected.status === 'APPROVED' ? 'warning' : 'info'">{{ selected.status }}</el-tag>
-          应用版本 {{ selected.appVersion }} · 体验 {{ selected.experienceRev }} · 环境 {{ selected.activationScope }}
+          智能体版本 {{ selected.appVersion }} · 体验 {{ selected.experienceRev }} · 环境 {{ selected.activationScope }}
         </p>
         <p class="muted">摘要 {{ selected.digest }} · 批准者 {{ selected.createdBy || "未记录" }} · 更新 {{ selected.updatedAt || selected.createdAt }}</p>
         <h3>生效范围</h3>
