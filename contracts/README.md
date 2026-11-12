@@ -21,3 +21,5 @@
 
 配套交付（同属阶段 0）：`demo-seed-v901-design.md`（C0-3 种子设计）、`oracle-replay-adapter.md`（C0-4 回放适配器与行为清单）、`reg-1109-clause-map.md`（R-REG-0 条款→卡映射初表）。冲突裁决：1109 Word > 主方案 > 接口/数据库稿 > 前端稿；字段以数据库稿为准、语义以接口稿为准；发现冲突记台账"待澄清"，不得自行按理解实现。
 
+**挂起线标注（C0-1 裁剪，主方案 §2.1）**：v1.2 冻结契约中的本体协同线文件——`semantic-consumption.json`、`semantic-object-query.json`、`semantic-runtime.md`、`semantic-runtime-v1.schema.json`、`semantic-runtime-goal-v1.schema.json`——自 1109 基准起**挂起**：文件保留不删除（历史追溯），验收主线不含，1109 契约（上表四文件）与其冲突时以 1109 契约为准。
+
