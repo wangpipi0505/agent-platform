@@ -1,0 +1,165 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentplatform.local/contracts/manifest.schema.json",
+  "title": "工作区 manifest（智能体装配清单）",
+  "description": "C0-2 契约冻结（台账#C0-2，2026-11-13）。字段级定义来源：接口稿《04-接口设计-20261112》§5.5；顶层约束与存储约束：数据库稿《05-数据库设计-20261112》§4.6（app.workspace_manifest：jsonb <=1MB，顶层 object 且含 metadata/model/skills/contextPolicy/permission；digest=UNIQUE(tenant_id,app_code,digest) 内容寻址）。资源名保持 app/`{code}`/workspace_manifest 不变（名词口径：产品名=智能体，资源名=App）。扩展字段须先修订本契约再使用（契约先行纪律）。",
+  "type": "object",
+  "required": ["metadata", "model", "skills", "contextPolicy", "permission"],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "description": "智能体元数据（面向用户的展示名=智能体名）。",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "category": { "type": "string", "maxLength": 64 },
+        "tags": { "type": "array", "items": { "type": "string", "maxLength": 64 } }
+      }
+    },
+    "model": {
+      "type": "object",
+      "description": "模型绑定与推理策略（主方案 §6.7：供应商/条目/能力字段沿用 model-gateway 现状）。",
+      "required": ["defaultBinding"],
+      "properties": {
+        "defaultBinding": {
+          "type": "object",
+          "required": ["providerCode", "modelName"],
+          "properties": {
+            "providerCode": { "type": "string", "maxLength": 64 },
+            "modelName": { "type": "string", "maxLength": 128 },
+            "promptTemplateRef": {
+              "type": "object",
+              "description": "固定提示词模板引用；未配置时沿用既有发布绑定（接口稿 §5.5）。",
+              "required": ["code", "version"],
+              "properties": {
+                "code": { "type": "string", "maxLength": 64 },
+                "version": { "type": "integer", "minimum": 1 },
+                "digest": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+              }
+            }
+          }
+        },
+        "nodeBindings": {
+          "type": "object",
+          "description": "节点级模型/模板覆盖；键为节点引用，值形如 defaultBinding。",
+          "additionalProperties": { "type": "object" }
+        },
+        "inferencePolicy": {
+          "type": "object",
+          "description": "推理策略（1109 推理4）：固定采样、输出长度、超时、输出 Schema 与重试条件、预算（主方案 §5.2/§6.7）。",
+          "properties": {
+            "temperature": { "type": "number" },
+            "maxOutput": { "type": "integer", "minimum": 1 },
+            "timeoutMs": { "type": "integer", "minimum": 1 },
+            "outputSchema": { "type": "object", "description": "结构化输出 JSON Schema；校验失败按 retry.on 处理并记录 OUTPUT_SCHEMA_INVALID（A15b）。" },
+            "retry": {
+              "type": "object",
+              "properties": {
+                "max": { "type": "integer", "minimum": 0 },
+                "on": {
+                  "type": "array",
+                  "items": { "type": "string", "enum": ["TRANSPORT", "OUTPUT_SCHEMA_INVALID"] },
+                  "description": "重试条件枚举；含 OUTPUT_SCHEMA_INVALID 即为 RETRY 策略，否则为 TERMINATE（接口稿 §5.5）。"
+                }
+              }
+            },
+            "budget": {
+              "type": "object",
+              "description": "turn/模型调用次数预算（1109 §2.4 调用超时和重试条件；超出按失败终止并记录原因）。",
+              "properties": {
+                "maxTurns": { "type": "integer", "minimum": 1 },
+                "maxModelCalls": { "type": "integer", "minimum": 1 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "skills": {
+      "type": "object",
+      "description": "技能链双轨（主方案 §6.1）：指导链=GUIDE 有序引用列表；制品链/工具链=TOOL 授权列表。执行时按引用精确版本加载。",
+      "required": ["guideRefs", "toolGrants"],
+      "properties": {
+        "guideRefs": {
+          "type": "array",
+          "description": "GUIDE 技能有序引用（code@version）；同名按层遮蔽：工作区绑定 > 项目目录 > 平台内置。",
+          "items": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*@[0-9]+$" }
+        },
+        "toolGrants": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["skillCode", "version"],
+            "properties": {
+              "skillCode": { "type": "string", "maxLength": 64 },
+              "version": { "type": "integer", "minimum": 1 }
+            }
+          }
+        }
+      }
+    },
+    "plugins": {
+      "type": "array",
+      "description": "插件授权引用（可选）：来源/版本/能力清单（主方案 §6.2）。",
+      "items": {
+        "type": "object",
+        "required": ["pluginCode", "version", "capabilities"],
+        "properties": {
+          "pluginCode": { "type": "string", "maxLength": 64 },
+          "version": { "type": "string", "maxLength": 64 },
+          "capabilities": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "能力引用，元素形如 `SKILL:detect-a` / `MCP_CONNECTION:<id>` / `GUIDE_BUNDLE:<ref>`（对齐 plugin_version.capabilities 的 {type,ref,digest}）。"
+            }
+          }
+        }
+      }
+    },
+    "rules": {
+      "type": "array",
+      "description": "规则资产引用（可选，1109 §5.1\"已启用的规则提供给智能体选用\"）：code@version（主方案 §6.4）。",
+      "items": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*@[0-9]+$" }
+    },
+    "memoryPolicy": {
+      "type": "object",
+      "description": "跨会话记忆读写策略（主方案 §6.5；未配置时 read/writeScopes 均仅含 PRIVATE）。",
+      "properties": {
+        "kinds": { "type": "array", "items": { "type": "string", "enum": ["PREFERENCE", "EXPERIENCE"] } },
+        "readScopes": { "type": "array", "items": { "type": "string", "enum": ["PRIVATE", "SHARED"] } },
+        "writeScopes": { "type": "array", "items": { "type": "string", "enum": ["PRIVATE", "SHARED"] } },
+        "topK": { "type": "integer", "minimum": 1, "description": "检索条数上限（先权限过滤→相关性排序→预算截取）。" }
+      }
+    },
+    "contextPolicy": {
+      "type": "object",
+      "description": "上下文与长度控制（1109 §2.4，主方案 D10）：运行前随发布快照加载。",
+      "required": ["maxTurns", "contextBudget"],
+      "properties": {
+        "maxTurns": { "type": "integer", "minimum": 1, "description": "会话长度上限，超限提示新开会话（A15）。" },
+        "contextBudget": { "type": "integer", "minimum": 1, "description": "上下文预算（token），输入可用=窗口−输出预留−安全余量（D7）。" },
+        "compactionThreshold": { "type": "number", "exclusiveMinimum": 0, "maximum": 1, "description": "压缩触发压力阈值（pre-step 触发点）。" },
+        "historyWindow": { "type": "integer", "minimum": 1, "description": "历史引用范围（近 N 轮/水位）。" }
+      }
+    },
+    "flowRef": {
+      "type": "string",
+      "description": "可选：画布流程引用。发布快照含 flowRef 时外部 AGENT 任务走 Flow 执行链（接口稿 §3.6）。",
+      "maxLength": 160
+    },
+    "permission": {
+      "type": "object",
+      "description": "发布授予角色：决定哪些角色可在助手端见到并使用该智能体（主方案 §7.3）。",
+      "required": ["roles"],
+      "properties": {
+        "roles": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "enum": ["ADMIN", "BUILDER", "APPROVER", "OPERATOR", "USER"] }
+        }
+      }
+    }
+  },
+  "additionalProperties": true
+}
