@@ -1,0 +1,50 @@
+{
+  "comment": "C0-4 oracle 事件映射表（dsh 0.2.2-rc.2 概念事件 → session_event 归一化类型）。契约见 contracts/oracle-replay-adapter.md §2；粒度差异允许并登记映射说明，语义差异记缺陷。",
+  "reasonVocabulary": {
+    "dshToSession": {
+      "completed": "completed",
+      "aborted": "aborted",
+      "error": "error",
+      "max_tokens": "max-tokens",
+      "interrupted": "interrupted",
+      "forked": "forked"
+    }
+  },
+  "stopReasonVocabulary": {
+    "dshToSession": {
+      "COMPLETED": "COMPLETED",
+      "ABORTED": "ABORTED",
+      "ERROR": "ERROR",
+      "MAX_TOKENS": "MAX_TOKENS",
+      "REFUSAL": "REFUSAL"
+    }
+  },
+  "mappings": [
+    { "from": "turn.start", "to": "turn/start", "data": { "turn": "turn" } },
+    { "from": "turn.end", "to": "turn/end", "data": { "turn": "turn", "reason": "reason" } },
+    { "from": "step.start", "to": "step/start", "data": { "step": "step" } },
+    { "from": "step.end", "to": "step/end", "data": { "step": "step" } },
+    { "from": "message.system", "to": "system/message", "data": { "content": "content" } },
+    { "from": "message.user", "to": "user/message", "data": { "content": "content" } },
+    { "from": "message.assistant", "to": "assistant/message", "data": { "stream": "stream", "usage": "usage" }, "granularityNote": "assistant 压缩流整体比对；usage 数值容忍差异（计量口径不同）" },
+    { "from": "tool.call", "to": "tool/call", "data": { "callId": "callId", "name": "name", "args": "args" }, "granularityNote": "callId 两侧各自生成，按调用序对齐" },
+    { "from": "tool.result", "to": "tool/result", "data": { "callId": "callId", "error": "error", "meta": "meta" } },
+    { "from": "request.header", "to": "request/header", "data": { "config": "config", "tools": "tools" }, "granularityNote": "dsh 无持久 header 时由其请求记录投影，允许粒度差异" },
+    { "from": "request.context", "to": "request/context", "data": { "provider": "provider", "model": "model", "contextWindow": "contextWindow" } },
+    { "from": "plan.mode", "to": "plan/mode", "data": { "active": "active" } },
+    { "from": "approval.asked", "to": "approval/asked", "data": { "actionPlanId": "actionPlanId" } },
+    { "from": "approval.decided", "to": "approval/decided", "data": {} },
+    { "from": "approval.policy", "to": "approval/policy", "data": { "mode": "mode" } },
+    { "from": "compaction.start", "to": "compaction/start", "data": { "turn": "turn" } },
+    { "from": "compaction.summary", "to": "compaction/summary", "data": { "summary": "summary", "shadowedRange": "shadowedRange", "shadowedSeqs": "shadowedSeqs", "tokens": "tokens", "model": "model" } },
+    { "from": "compaction.end", "to": "compaction/end", "data": {} },
+    { "from": "subagent.registered", "to": "subagent/registered", "data": {} },
+    { "from": "subagent.settled", "to": "subagent/settled", "data": { "stopReason": "stopReason" } },
+    { "from": "inbox.enqueue", "to": "inbox/enqueue", "data": { "queue": "queue", "dedupeKey": "dedupeKey", "message": "message" }, "granularityNote": "dsh 无独立 inbox 事件时按其输入处理序列投影" },
+    { "from": "inbox.consume", "to": "inbox/consume", "data": { "queue": "queue", "dedupeKey": "dedupeKey", "consumedByStep": "consumedByStep" } },
+    { "from": "todo.write", "to": "todo/write", "data": {} },
+    { "from": "job.registered", "to": "job/registered", "data": {} },
+    { "from": "job.settled", "to": "job/settled", "data": {} },
+    { "from": "workingDirectory.change", "to": "working-directory/change", "data": {} }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "scenarioId": "example-recover-tool-call",
+  "title": "外部受理后回执丢失 → 重启恢复（M1-① 同款，P0）",
+  "description": "两步对话：步1 纯回复；步2 模型调用受控写工具，外部受理后注入崩溃，恢复后回执补齐。验证 B2 配对（含 synthetic UNKNOWN 补写）、B4 恢复等价、外部受理次数恒 1。",
+  "inputs": [
+    { "turn": 1, "message": "请生成差异报告的提纲" },
+    { "turn": 2, "message": "把报告提交到归档系统" }
+  ],
+  "stubs": {
+    "modelResponses": [
+      { "step": 1, "type": "MESSAGE", "content": "提纲：1) 数据源 2) 识别结果 3) 差异矩阵", "usage": { "inputTokens": 320, "outputTokens": 48 } },
+      { "step": 2, "type": "TOOL_CALLS", "toolCalls": [ { "name": "archive-report", "args": { "reportRef": "artifact-51" } } ], "usage": { "inputTokens": 512, "outputTokens": 36 } }
+    ],
+    "toolReceipts": [
+      { "callKey": "archive-report#1", "outcome": "ACCEPTED_NO_RECEIPT", "externalTaskId": "ext-9001" }
+    ]
+  },
+  "faultInjection": [
+    { "point": "AFTER_EXTERNAL_ACCEPT_BEFORE_RECEIPT", "action": "CRASH" }
+  ],
+  "expected": {
+    "behaviors": ["B2", "B4"],
+    "externalAcceptCount": 1,
+    "recoveredToolResultSemantic": "UNKNOWN"
+  }
+}
