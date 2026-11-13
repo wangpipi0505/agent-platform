@@ -57,6 +57,10 @@ export const pageAccess: PageAccessEntry[] = [
   // F3-2：管理台只读计划详情（前端稿 §5.3）——追加式登记在既有任务与运行条目后、
   // 挂起线（C0-1 标记）之前；纯只读页无写操作（write 留空），不进菜单、深链可打开。
   { key: "plan-detail", path: "/plans", route: "/plans/:planId", title: "计划详情", area: "任务与运行", read: "session", write: "", menu: false },
+  // F3-6：会话详情与步骤调用下钻——参数页（直链 /sessions/:sessionId），追加式登记；
+  // 管理台入口=/tasks 或 /runs 下钻（USER 助手端入口属 F4 域）；纯只读（write 留空），
+  // 不进菜单；会话/事件/调用/子代理的逐请求授权由服务端独立复核（前端不自判，红线8）。
+  { key: "session-detail", path: "/tasks", route: "/sessions/:sessionId", title: "会话详情", area: "任务与运行", read: "session", write: "", menu: false },
   { key: "services", path: "/services", title: "服务管理", area: "任务与运行", read: "session", write: "admin", menu: true },
   // F3-1：任务工作台（方案 §5.3 管理台侧=监控与运维；任务发起入口在助手端 F4-2，本页只读+处置）——
   // 追加式条目，既有行不重排；恢复/取消/对账处置按 §5.3 属授权 OPERATOR 语境，write 仅登记按钮上下文。

@@ -69,6 +69,15 @@ const routes: RouteRecordRaw[] = [
     component: () => import("./pages/PlanDetailPage.vue"),
     meta: { access: "plan-detail", title: "计划详情" },
   },
+  // F3-6：会话详情与步骤调用下钻（台账 §7.5 / 前端稿 §5.4）——管理台侧参数页：
+  // 入口=/tasks 或 /runs 下钻 + 直链 /sessions/:sessionId；USER 助手端入口属 F4 域。
+  // 双视角投影（USER 普通视图白名单 / OPERATOR 诊断视图），授权与字段裁剪以服务端为准。
+  {
+    path: "/sessions/:sessionId",
+    name: "session-detail",
+    component: () => import("./pages/SessionDetailPage.vue"),
+    meta: { access: "session-detail", title: "会话详情" },
+  },
   // F3-1：任务工作台（方案 §5.3 管理台侧=监控与运维）——追加式注册，既有路由不重排。
   {
     path: "/tasks",
