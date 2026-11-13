@@ -139,6 +139,9 @@ public class AppPublicationService {
                 });
         check(checks, "参数", () -> parameterChecks(app, config, definition));
         check(checks, "类型与无效引用", () -> typeChecks(config, definition));
+        // A3-1（app V122）发布预检扩展：manifest 引用核验（接口稿 §3.5）。结果进既有 checks 结构，
+        // 失效引用在报告落库后以 409 MANIFEST_REF_BLOCKED 阻断并指明对象。
+        var manifestBlock = manifestChecks(checks, code);
         check(
                 checks,
                 "引用有效性",
@@ -263,7 +266,7 @@ public class AppPublicationService {
                 checks.stream()
                         .allMatch(
                                 c ->
-                                        Set.of("PASS", "WAIVED", "ADVISORY", "SKIPPED")
+                                        Set.of("PASS", "WAIVED", "ADVISORY", "SKIPPED", "N/A")
                                                 .contains(c.get("result")));
         String evalId = eval == null ? "" : Objects.toString(eval.get("evalReportId"), "");
         db.update(
@@ -288,6 +291,11 @@ public class AppPublicationService {
             throw AppService.error(409, "EVALUATION_ENVIRONMENT_BLOCKED", "演示或未知来源评测不能用于当前发布目标；请重新评测，普通豁免无效");
         if ("ERROR".equals(gateResult) || (gate.blocking() && "BLOCKED".equals(gateResult)))
             throw AppService.error(409, "EVAL_GATE_BLOCKED", gateDetail);
+        // manifest 引用失效在报告落库后阻断：检查快照已进 publish_report，阻断清单指明失效对象。
+        if (manifestBlock != null)
+            throw AppService.error(409, "MANIFEST_REF_BLOCKED",
+                "manifest 引用失效，发布被阻断（manifestRevision=" + manifestBlock.manifestRevision()
+                        + "）: " + String.join("; ", manifestBlock.refs()));
         var result = new LinkedHashMap<String, Object>();
         result.put("precheckId", id);
         result.put("draftRev", rev);
@@ -313,6 +321,117 @@ public class AppPublicationService {
         result.put("environmentEvidenceSha256", sourceEvidence.get("evidenceSha256"));
         result.put("report", Map.of("checks", checks, "warnings", warnings));
         return result;
+    }
+
+    /** manifest 引用失效的阻断清单（包级可见：同包单测直接覆盖，业务调用点只在 precheck）。 */
+    record ManifestBlock(List<String> refs, long manifestRevision) {}
+
+    /**
+     * A3-1（app V122）发布预检扩展：manifest 引用核验（接口稿 §3.5）。应用有 manifest 头修订时，
+     * 规则引用（code@version）在本服务库内核验——主档 ENABLED 且版本 PUBLISHED，失效进入阻断清单
+     * 并指明对象；技能（guideRefs/toolGrants）与插件引用的目录在 skill-registry，app-management
+     * 本地没有技能/插件目录，跨服务核验不在本卡范围（A3-1 卡面口径），预检记 N/A 留痕不阻断——
+     * 运行端受理按钉住版本装载并逐项定位失败对象（主方案 §6.8）。应用没有 manifest 时整组
+     * SKIPPED（存量发布口径不变）。检查条目照既有 checks 形状（group/result/detail）。
+     *
+     * <p>返回失效清单（无失效返回 null）：阻断抛出延迟到预检报告落库之后，保证被阻断的预检
+     * 同样留下完整检查快照（与评测门禁同纪律）。
+     */
+    ManifestBlock manifestChecks(List<Map<String, Object>> checks, String code) {
+        var heads = db.queryForList(
+                "select revision, manifest::text from app.workspace_manifest"
+                        + " where tenant_id=? and app_code=? order by revision desc limit 1",
+                port.tenantId(),
+                code);
+        if (heads.isEmpty()) {
+            var skipped = new LinkedHashMap<String, Object>();
+            skipped.put("group", "manifest 引用");
+            skipped.put("result", "SKIPPED");
+            skipped.put("detail", "应用没有工作区 manifest，跳过 manifest 引用核验（存量发布口径不变）");
+            checks.add(skipped);
+            return null;
+        }
+        long revision = ((Number) heads.getFirst().get("revision")).longValue();
+        var manifest = Json.read(String.valueOf(heads.getFirst().get("manifest")), Map.class);
+        var blocked = new ArrayList<String>();
+        // 规则引用（可选键）：本服务库内核验（V123 rule_asset/rule_asset_version）。
+        var ruleEntry = new LinkedHashMap<String, Object>();
+        ruleEntry.put("group", "manifest 规则引用");
+        ruleEntry.put("manifestRevision", revision);
+        if (manifest.get("rules") instanceof Collection<?> rules && !rules.isEmpty()) {
+            for (Object raw : rules) {
+                checkRuleRef(blocked, String.valueOf(raw));
+            }
+            ruleEntry.put(
+                    "result", blocked.isEmpty() ? "PASS" : "BLOCKED");
+            ruleEntry.put(
+                    "detail",
+                    blocked.isEmpty()
+                            ? "已核验 " + rules.size() + " 条规则引用（主档 ENABLED 且版本 PUBLISHED）"
+                            : "失效规则引用: " + String.join("; ", blocked));
+        } else {
+            ruleEntry.put("result", "SKIPPED");
+            ruleEntry.put("detail", "manifest 未引用规则");
+        }
+        checks.add(ruleEntry);
+        // 技能与插件引用：目录在 skill-registry（跨服务），本卡核验不了 → N/A，如实留痕不阻断。
+        var skillEntry = new LinkedHashMap<String, Object>();
+        skillEntry.put("group", "manifest 技能引用");
+        skillEntry.put("result", "N/A");
+        skillEntry.put("manifestRevision", revision);
+        skillEntry.put(
+                "detail",
+                "guideRefs/toolGrants 的技能版本存在性属 skill-registry 跨服务核验（接口稿 §3.5），"
+                        + "app-management 本地无技能目录，A3-1 卡内记 N/A 不阻断；"
+                        + "运行端受理按钉住版本装载并逐项定位失败对象（主方案 §6.8）");
+        checks.add(skillEntry);
+        var pluginEntry = new LinkedHashMap<String, Object>();
+        pluginEntry.put("group", "manifest 插件引用");
+        pluginEntry.put("result", "N/A");
+        pluginEntry.put("manifestRevision", revision);
+        pluginEntry.put(
+                "detail",
+                "插件启用与授权目录在 skill-registry（跨服务），A3-1 卡内记 N/A 不阻断；"
+                        + "停用拦截后续调用与受理期装载定位由插件治理链路负责（主方案 §6.2/§6.8）");
+        checks.add(pluginEntry);
+        return blocked.isEmpty() ? null : new ManifestBlock(List.copyOf(blocked), revision);
+    }
+
+    /** 规则引用核验：code@version → 主档存在且 ENABLED、版本存在且 PUBLISHED，失效指明对象。 */
+    private void checkRuleRef(List<String> blocked, String ref) {
+        int at = ref.lastIndexOf('@');
+        if (at <= 0 || at == ref.length() - 1
+                || !ref.substring(at + 1).matches("[0-9]+")
+                || !ref.substring(0, at).matches("[A-Za-z0-9][A-Za-z0-9_-]*")) {
+            blocked.add("规则引用形状非法（应为 code@version）: " + ref);
+            return;
+        }
+        String ruleCode = ref.substring(0, at);
+        int versionNo = Integer.parseInt(ref.substring(at + 1));
+        var asset = db.queryForList(
+                "select status from app.rule_asset where tenant_id=? and code=?",
+                port.tenantId(),
+                ruleCode);
+        if (asset.isEmpty()) {
+            blocked.add("规则不存在: " + ruleCode + "（引用 " + ref + "）");
+            return;
+        }
+        String status = String.valueOf(asset.getFirst().get("status"));
+        if (!"ENABLED".equals(status)) {
+            blocked.add("规则未启用（status=" + status + "）: " + ruleCode + "（引用 " + ref + "）");
+        }
+        var version =
+                db.queryForList(
+                        "select status from app.rule_asset_version"
+                                + " where tenant_id=? and rule_code=? and version_no=?",
+                        port.tenantId(),
+                        ruleCode,
+                        versionNo);
+        if (version.isEmpty()) {
+            blocked.add("规则版本不存在: " + ref);
+        } else if (!"PUBLISHED".equals(String.valueOf(version.getFirst().get("status")))) {
+            blocked.add("规则版本未发布（status=" + version.getFirst().get("status") + "）: " + ref);
+        }
     }
 
     private boolean validPublicationEvidence(Map<String, Object> evidence, String code, long rev, String hash, String semantic) {

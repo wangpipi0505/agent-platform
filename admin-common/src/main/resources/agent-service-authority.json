@@ -2977,6 +2977,42 @@
  },
  {
   "method": "GET",
+  "template": "/admin/apps/{code}/manifest",
+  "caller": "gateway",
+  "target": "app",
+  "action": "proxy.app.get.WorkspaceManifestController.get",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/WorkspaceManifestController.java:34",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:36",
+  "reason": ""
+ },
+ {
+  "method": "PUT",
+  "template": "/admin/apps/{code}/manifest",
+  "caller": "gateway",
+  "target": "app",
+  "action": "proxy.app.put.WorkspaceManifestController.put",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/WorkspaceManifestController.java:40",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:36",
+  "reason": ""
+ },
+ {
+  "method": "GET",
+  "template": "/admin/apps/{code}/manifests",
+  "caller": "gateway",
+  "target": "app",
+  "action": "proxy.app.get.WorkspaceManifestController.versions",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/WorkspaceManifestController.java:46",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:36",
+  "reason": ""
+ },
+ {
+  "method": "GET",
   "template": "/admin/integration-profiles",
   "caller": "gateway",
   "target": "app",
