@@ -17,9 +17,12 @@ import org.springframework.web.bind.annotation.*;
 public class TaskController {
 
   private final cn.agentplatform.engine.application.Tasks tasks;
+  private final cn.agentplatform.engine.application.Plans plans;
 
-  public TaskController(cn.agentplatform.engine.application.Tasks tasks) {
+  public TaskController(cn.agentplatform.engine.application.Tasks tasks,
+          cn.agentplatform.engine.application.Plans plans) {
     this.tasks = tasks;
+    this.plans = plans;
   }
 
   /** POST /v1/apps/{code}/tasks：受理（mode 必填；requestId 幂等；TASK_INTERNAL 根会话）。 */
@@ -63,5 +66,37 @@ public class TaskController {
           @RequestParam(value = "page", defaultValue = "1") int page,
           @RequestParam(value = "pageSize", defaultValue = "20") int pageSize) {
     return ApiResponse.ok(tasks.stepCalls(taskId, stepId, page, pageSize, Actor.current()));
+  }
+
+  // T2-3：计划 API——修订追加/确认/execute/修订读（主方案 §5.6 三要素；Plans 服务）。
+  /** POST /v1/tasks/{taskId}/plans：追加计划修订（baseRevision CAS）。 */
+  @PostMapping("/v1/tasks/{taskId}/plans")
+  public Object appendPlan(@PathVariable("taskId") long taskId, @RequestBody JsonNode req) {
+    return ApiResponse.ok(plans.appendRevision(taskId, req, Actor.current()));
+  }
+
+  /** GET /v1/tasks/{taskId}/plans/{planId}/revisions/{revision}：修订读（含确认状态投影）。 */
+  @GetMapping("/v1/tasks/{taskId}/plans/{planId}/revisions/{revision}")
+  public Object planRevision(
+          @PathVariable("taskId") long taskId,
+          @PathVariable("planId") String planId,
+          @PathVariable("revision") int revision) {
+    return ApiResponse.ok(plans.revisionDetail(taskId, planId, revision, Actor.current()));
+  }
+
+  /** POST .../plans/{planId}/revisions/{revision}/confirm：计划版本级确认。 */
+  @PostMapping("/v1/tasks/{taskId}/plans/{planId}/revisions/{revision}/confirm")
+  public Object confirmPlan(
+          @PathVariable("taskId") long taskId,
+          @PathVariable("planId") String planId,
+          @PathVariable("revision") int revision,
+          @RequestBody JsonNode req) {
+    return ApiResponse.ok(plans.confirm(taskId, planId, revision, req, Actor.current()));
+  }
+
+  /** POST /v1/tasks/{taskId}/execute：选定计划执行（五项受理校验）。 */
+  @PostMapping("/v1/tasks/{taskId}/execute")
+  public Object executePlan(@PathVariable("taskId") long taskId, @RequestBody JsonNode req) {
+    return ApiResponse.ok(plans.execute(taskId, req, Actor.current()));
   }
 }
