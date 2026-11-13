@@ -508,6 +508,9 @@ public class ToolCalls {
                     // 迟到的 /fact 投递不得覆盖已采纳的 externalJob；未绑定外部任务时保持 NULL，
                     // GET 对外仍返回显式 null，调用方用字段是否存在区分两者。
                     if (n == 1) {
+                        // H1-6（contracts/h1-6-h1-8-stubs.md §1）：权威回执确认——与事实采纳同事务
+                        // 写 tool/result 会话事件（仅会话关联运行；FAILED 携带 errorSemantic）。
+                        appendResultEventIfLinked(id, status, req);
                         var externalJob = req.path("result").path("externalJob");
                         if (!externalJob.isNull() && !externalJob.isMissingNode())
                             store.db()
@@ -557,6 +560,37 @@ public class ToolCalls {
                             "late",
                             n == 0);
                 });
+    }
+
+    /**
+     * H1-6（contracts/h1-6-h1-8-stubs.md §1）：tool/result 会话事件。仅会话关联运行写入；
+     * 调用方须已在事务内（append 经 TraceStore.atomic 的 REQUIRED 传播加入当前事务）。
+     * infra→harness.session 的引用为登记事务内事件写入（台账 §3.1 分层约束仅禁 domain→application）。
+     */
+    private void appendResultEventIfLinked(long callId, String status, JsonNode req) {
+        Long runId =
+                store.db().queryForObject("select run_id from engine.tool_call where id=?", Long.class, callId);
+        var snapshot =
+                store.db()
+                        .queryForObject(
+                                "select snapshot from engine.run where id=?", String.class, runId);
+        var linked = TraceStore.json(snapshot).path("chatSession");
+        if (!linked.has("sessionId")) return;
+        var data = Json.object();
+        data.put("callId", String.valueOf(callId));
+        if ("FAILED".equals(status) && !req.path("errorSemantic").isMissingNode())
+            data.set("error", Json.tree(Map.of("semantic", req.path("errorSemantic").asText())));
+        data.set(
+                "meta",
+                Json.tree(
+                        Map.of("status", status, "durationMs", Math.max(0, req.path("durationMs").asInt()))));
+        new cn.agentplatform.engine.harness.session.SessionStore(store)
+                .append(
+                        linked.path("sessionId").asText(),
+                        null,
+                        cn.agentplatform.engine.harness.session.SessionEvents.TOOL_RESULT,
+                        data,
+                        null);
     }
 
     public Map<String, Object> get(long id, Actor actor) {

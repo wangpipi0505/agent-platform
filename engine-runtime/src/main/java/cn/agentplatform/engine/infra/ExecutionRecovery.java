@@ -211,6 +211,39 @@ public class ExecutionRecovery {
                                     lease.get("lease_until"),
                                     Json.write(proof.path("result").path("externalJob")),
                                     id);
+                    // H1-6（契约桩 §1）：受控采纳=权威回执确认——同事务写 tool/result 会话事件。
+                    var linkedRecovery =
+                            TraceStore.json(run.get("snapshot")).path("chatSession");
+                    if (linkedRecovery.has("sessionId")) {
+                        var resultData = Json.object();
+                        resultData.put("callId", String.valueOf(id));
+                        if ("FAILED".equals(status))
+                            resultData.set(
+                                    "error",
+                                    Json.tree(
+                                            Map.of(
+                                                    "semantic",
+                                                    errorSemantic == null
+                                                            ? "NON_RETRYABLE_FAILURE"
+                                                            : errorSemantic)));
+                        resultData.set(
+                                "meta",
+                                Json.tree(
+                                        Map.of(
+                                                "status",
+                                                status,
+                                                "durationMs",
+                                                Math.max(0, proof.path("durationMs").asInt()),
+                                                "recoverySource",
+                                                "AUTO")));
+                        new cn.agentplatform.engine.harness.session.SessionStore(store)
+                                .append(
+                                        linkedRecovery.path("sessionId").asText(),
+                                        null,
+                                        cn.agentplatform.engine.harness.session.SessionEvents.TOOL_RESULT,
+                                        resultData,
+                                        null);
+                    }
                     store.db()
                             .update(
                                     "insert into"

@@ -186,6 +186,23 @@ class AgentEngineShadowTest {
                     assertEquals(true, calls.claim(callId, token, a).get("claimed"));
                     calls.submitted(callId, token, a);
                     assertEquals(1, accepts.incrementAndGet(), "外部受理恰好一次");
+                    // H1-6：技能服务经 /fact 写权威回执——触发 tool/result 会话事件（登记事务链路）
+                    var factReq =
+                            Json.tree(
+                                    Map.of(
+                                            "status",
+                                            "SUCCEEDED",
+                                            "result",
+                                            Map.of("structured", Map.of("value", 42)),
+                                            "attemptId",
+                                            Json.tree(body).path("attemptId").asLong(),
+                                            "owner",
+                                            Json.tree(body).path("leaseOwner").asText(),
+                                            "durationMs",
+                                            13,
+                                            "isMock",
+                                            false));
+                    calls.fact(callId, factReq, a);
                     return Json.read("{\"status\":\"SUCCEEDED\",\"result\":{\"structured\":{\"value\":42}}}");
                 }
                 throw new AssertionError("意外出站: " + service + path);
@@ -226,14 +243,34 @@ class AgentEngineShadowTest {
                     && "lookup".equals(e.data().path("tools").path(0).path("toolId").asText()))
                 headerDeclared = true;
         assertTrue(headerDeclared, "采纳集必须声明实际执行的工具");
-        // B2（H1-4 影子口径=运行级）：外部受理恰好一次、单行登记（会话级 tool/call+tool/result
-        // 事件对由 H1-6 共用登记入口交付——卡片边界，不在本卡断言）
+        // B2（事件级，H1-6）：会话事件中 tool/call 与 tool/result 按 callId 成对——
+        // tool/call 在登记事务内（H1-6 共用登记入口）、tool/result 在权威回执确认事务内
+        Map<String, Integer> calls = new LinkedHashMap<>();
+        Map<String, Integer> results = new LinkedHashMap<>();
+        for (var e : events) {
+            if ("tool/call".equals(e.type()))
+                calls.merge(e.data().path("callId").asText(), 1, Integer::sum);
+            if ("tool/result".equals(e.type()))
+                results.merge(e.data().path("callId").asText(), 1, Integer::sum);
+        }
+        assertEquals(1, calls.size(), "唯一调用事件");
+        assertEquals(calls, results, "调用-结果必须成对");
         assertEquals(
-                1,
-                db.queryForObject("select count(*) from engine.tool_call", Integer.class),
-                "受理登记单行");
+                "lookup", events.stream().filter(e -> "tool/call".equals(e.type())).findFirst().orElseThrow().data().path("name").asText());
         // 外部受理恰好一次（桩内 assert 已验）；inbox 输入确认消费（consume 后物理删除）
         assertEquals(0, inboxRows(sid));
+
+        // H1-6 重放唯一性：同一逻辑调用（同 runId/nodeId/seq/version）幂等命中 SUCCEEDED 既有事实，
+        // 不产生第二条 tool/call 会话事件
+        var replay = driver.skill(runRow, claim, "lookup", 42, Json.read("{\"x\":1}"), 1, actor);
+        assertEquals(42, replay.path("structured").path("value").asInt());
+        long toolCallEvents =
+                events.size() > 0
+                        ? new SessionStore(store).read(sid, 0, 0).stream()
+                                .filter(e -> "tool/call".equals(e.type()))
+                                .count()
+                        : 0;
+        assertEquals(1, toolCallEvents, "重放复用首个锚点，tool/call 事件不重复");
     }
 
     /** 取消语义：取消中的 turn 不提交 system/user——aborted 收口，零模型出站。 */

@@ -395,7 +395,44 @@ public class AgentDriver {
                 TraceStore.json(run.get("snapshot")).path("config").path("bindingRefs");
         if (frozenRefs.isArray() && !frozenRefs.isEmpty())
             req.put("bindingRefs", Json.tree(frozenRefs));
-        var registration = new ToolCalls(store).register(Json.tree(req), actor);
+        var registration =
+                store.atomic(
+                        () -> {
+                            var reg = new ToolCalls(store).register(Json.tree(req), actor);
+                            // H1-6（contracts/h1-6-h1-8-stubs.md §1）：登记事务内追加唯一 tool/call
+                            // 会话事件——重放复用首锚点（仅 REGISTERED 新登记写入；既有事件存在即跳过）。
+                            var linked = TraceStore.json(run.get("snapshot")).path("chatSession");
+                            if (linked.has("sessionId") && reg.get("status").equals("REGISTERED")) {
+                                String sid = linked.path("sessionId").asText();
+                                String callId = String.valueOf(reg.get("callId"));
+                                int existing =
+                                        store.db()
+                                                .queryForObject(
+                                                        "select count(*) from engine.session_event"
+                                                            + " where session_id=? and type='tool/call'"
+                                                            + " and data->>'callId'=?",
+                                                        Integer.class,
+                                                        sid,
+                                                        callId);
+                                if (existing == 0) {
+                                    var reqNode = Json.tree(req);
+                                    var data = Json.object();
+                                    data.put("callId", callId);
+                                    data.put("name", reqNode.path("skillCode").asText());
+                                    data.set("args", reqNode.path("arguments"));
+                                    data.put("skillVersionId", reqNode.path("skillVersionId").asLong());
+                                    data.put("idempotencyKey", reqNode.path("idempotencyKey").asText());
+                                    new cn.agentplatform.engine.harness.session.SessionStore(store)
+                                            .append(
+                                                    sid,
+                                                    null,
+                                                    cn.agentplatform.engine.harness.session.SessionEvents.TOOL_CALL,
+                                                    data,
+                                                    null);
+                                }
+                            }
+                            return reg;
+                        });
         req.put("callId", registration.get("callId"));
         if (ControlledReplay.enabled(run) && registration.get("status").equals("REGISTERED"))
             return ControlledReplay.skill(
