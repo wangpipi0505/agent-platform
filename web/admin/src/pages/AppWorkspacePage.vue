@@ -12,6 +12,8 @@ import { useUnsavedChanges } from "../../../shared/useUnsavedChanges";
 import { confirmDanger } from "../../../shared/components/DangerConfirm";
 import { buildEnvironmentConfirmation, isGateRejection, type EnvironmentConfirmation, type GateRejection } from "../publish-gate";
 import AppOverviewPanel from "./workspace/AppOverviewPanel.vue";
+// F3-5：概览 manifest 分区卡编辑（七分区受控编辑/CAS 保存/预检同屏），校验状态联动智能体头。
+import ManifestPanel from "./workspace/ManifestPanel.vue";
 import AppPublishPanel from "./workspace/AppPublishPanel.vue";
 import AppRunPanel from "./workspace/AppRunPanel.vue";
 import AppChatPanel from "./workspace/AppChatPanel.vue";
@@ -58,11 +60,41 @@ const config = ref("{}");
 // saveConfig/saveFlow/saveMetadata 成功后 app.value 更新，基线随之复位不误报。
 const configBaseline = ref("{}");
 const configDirty = computed(() => config.value !== configBaseline.value);
+// F3-5：manifest 分区卡校验状态（ManifestPanel 上抛）——智能体头 [提交发布] checklist 联动口径：
+// 仅当服务端存在 manifest 头修订（exists）且当前草稿校验不过时禁用提交；
+// 无 manifest 的应用预检整组 SKIPPED（存量发布口径），联动不生效。
+const manifestPanelRef = ref<InstanceType<typeof ManifestPanel> | null>(null);
+const manifestState = ref({
+  loaded: false,
+  exists: false,
+  ok: true,
+  issues: [] as { path: string; code: string; message: string }[],
+  revision: null as number | null,
+  dirty: false,
+});
+const manifestBlocked = computed(
+  () => manifestState.value.loaded && manifestState.value.exists && !manifestState.value.ok,
+);
+const manifestBlockHint = computed(() =>
+  manifestBlocked.value
+    ? `manifest 校验未通过（${manifestState.value.issues.length} 项）：` +
+      `${manifestState.value.issues[0]?.path ?? ""} ${manifestState.value.issues[0]?.message ?? ""}` +
+      "——请在概览 manifest 分区卡修复 issues 后保存，再提交发布"
+    : "",
+);
+function onManifestState(next: typeof manifestState.value) {
+  manifestState.value = next;
+}
+function onManifestSaved() {
+  // manifest 引用已变更：既有预检结果过期，发布链必须重新预检（与配置保存同纪律）。
+  precheckStale.value = true;
+}
 useUnsavedChanges({
-  isDirty: () => configDirty.value,
+  isDirty: () => configDirty.value || manifestState.value.dirty,
   securityKey: () => auth.token ?? undefined,
   onReset: () => {
     config.value = configBaseline.value;
+    manifestPanelRef.value?.resetDraft();
   },
 });
 const refreshKey = ref(0);
@@ -151,6 +183,14 @@ function detailReset() {
   precheck.value = null;
   precheckStale.value = false;
   gateBlocked.value = null;
+  manifestState.value = {
+    loaded: false,
+    exists: false,
+    ok: true,
+    issues: [],
+    revision: null,
+    dirty: false,
+  };
   published.value = null;
   evaluation.value = null;
   evaluationNeedsCheck.value = false;
@@ -385,13 +425,24 @@ onMounted(() => void load());
       <div class="actions">
         <!-- 主要动作入口沿用发布链路的既有 check/commit（预检与提交发布），不新造 API。 -->
         <el-button :loading="busy" v-permission="'edit'" @click="check">预检</el-button>
-        <el-button
-          type="primary"
-          :loading="busy"
-          v-permission="'edit'"
-          @click="commit"
-          >提交发布</el-button
+        <!-- F3-5 checklist 联动：manifest 校验不过 → 提交发布禁用 + tooltip 指明首条 issue；
+             禁用按钮不派发鼠标事件，hover 说明包一层 span 承接。 -->
+        <el-tooltip
+          :disabled="!manifestBlocked"
+          :content="manifestBlockHint || '提交发布'"
+          placement="top"
         >
+          <span class="commit-anchor">
+            <el-button
+              type="primary"
+              :loading="busy"
+              :disabled="manifestBlocked"
+              v-permission="'edit'"
+              @click="commit"
+              >提交发布</el-button
+            >
+          </span>
+        </el-tooltip>
       </div>
     </header>
     <div class="workspace-body">
@@ -424,6 +475,19 @@ onMounted(() => void load());
         @lifecycle="lifecycle"
         @save-metadata="saveMetadata"
         @reload="load"
+      />
+      <!-- F3-5：概览 manifest 分区卡（卡面口径「概览 manifest 分区卡编辑」——紧跟概览分区同屏；
+           :key=code 切换智能体时重挂载重读；校验状态经 validation-change 联动智能体头）。 -->
+      <ManifestPanel
+        v-if="tab === 'overview'"
+        ref="manifestPanelRef"
+        :key="code"
+        :code="code"
+        :busy="busy"
+        :precheck="precheck"
+        @validation-change="onManifestState"
+        @saved="onManifestSaved"
+        @check="check"
       />
       <AppChatPanel
         v-else-if="tab === 'chat'"
@@ -538,6 +602,10 @@ onMounted(() => void load());
   align-items: center;
   gap: var(--sp-2);
   font-size: var(--text-meta);
+}
+/* F3-5：tooltip 承接层——禁用的提交发布按钮不派发鼠标事件，hover 说明由 span 接住。 */
+.commit-anchor {
+  display: inline-flex;
 }
 .workspace-body {
   flex: 1;
