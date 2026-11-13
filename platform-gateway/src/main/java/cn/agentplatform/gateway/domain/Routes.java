@@ -29,6 +29,11 @@ public final class Routes {
             return "engine";
         if (path.matches("/(?:admin|v1)/apps/[^/]+/sessions(?:/.*)?"))
             throw new IllegalArgumentException("此会话入口不存在");
+        // A3-4：跨会话记忆——五条入口显式接线（列表/单条/保存/更新审批/撤销）；
+        // 归属、读范围与写策略由 engine 按发布快照 memoryPolicy 核验，其余未登记子路径仍拒绝。
+        if (path.matches("/v1/apps/[A-Za-z0-9_-]+/memories(?:/[A-Za-z0-9_-]+)?")) return "engine";
+        if (path.matches("/v1/apps/[^/]+/memories(?:/.*)?"))
+            throw new IllegalArgumentException("此记忆入口不存在");
         if (path.matches("/admin/reproductions/[A-Za-z0-9_-]+")) return "engine";
         if (path.equals("/admin/artifacts")
                 || path.matches("/admin/artifacts/[A-Za-z0-9_-]+/download")

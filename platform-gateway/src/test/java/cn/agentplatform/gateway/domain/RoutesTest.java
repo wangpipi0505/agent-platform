@@ -90,6 +90,17 @@ class RoutesTest {
     }
 
     @Test
+    void routesMemoryCrudToEngineWithUnknownSubpathsRejected() {
+        // A3-4：记忆列表/单条/保存/更新/撤销五条入口指向 engine；未登记子路径仍拒绝。
+        assertThat(Routes.service("/v1/apps/ops/memories")).isEqualTo("engine");
+        assertThat(Routes.service("/v1/apps/ops/memories/m_abc123")).isEqualTo("engine");
+        assertThatThrownBy(() -> Routes.service("/v1/apps/ops/memories/m_abc123/extra"))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> Routes.service("/v1/apps/ops/memories/"))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void routesRuleAssetsToApplicationServiceOnBothPathFamilies() {
         // A3-3：应用侧目录走 /admin/apps 前缀；版本链与启停走独立 /admin/rules 前缀，都指向 app。
         for (String path : new String[] {
