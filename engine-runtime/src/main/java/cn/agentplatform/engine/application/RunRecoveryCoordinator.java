@@ -174,4 +174,111 @@ public class RunRecoveryCoordinator {
                         return null;
                     });
     }
+
+    /**
+     * H1-8（契约桩 contracts/h1-6-h1-8-stubs.md §3）：只读恢复事实出口——按 run 事件事实推导
+     * 恢复来源/原因/检查点/复用步骤/阻塞原因，可重复取得（重启后同一事实）。手动与自动恢复
+     * 共用事件写入路径（TASK_RESUMED 语义在任务层，引擎层以 RESUMED/EXTERNAL_FACT_ADOPTED/
+     * 接管事实为准）。角色投影：USER 仅来源/原因/摘要（{@code privileged=false}）。
+     */
+    public cn.agentplatform.engine.harness.loop.RecoveryFact recoveryFact(long runId, boolean privileged) {
+        var run = store.db().queryForMap("select * from engine.run where id=?", runId);
+        String publicId = String.valueOf(run.get("public_id"));
+        var types =
+                store.db()
+                        .queryForList(
+                                "select type from engine.run_event where run_id=? order by seq",
+                                String.class,
+                                runId);        String source = "AUTO";
+        String reason = "EXECUTION_INTERRUPTED";
+        for (String type : types) {
+            if (type.equals("EXTERNAL_FACT_ADOPTED")) {
+                source = "AUTO";
+                reason = "EXTERNAL_RESULT_UNKNOWN";
+            } else if (type.equals("RESUMED")) {
+                source = "MANUAL";
+                reason = "MANUAL_REQUEST";
+            }
+        }
+        if (reason.equals("EXECUTION_INTERRUPTED") && !types.contains("EXTERNAL_FACT_ADOPTED")
+                && run.get("status").toString().equals("RUNNING"))
+            reason = "LEASE_EXPIRED";
+
+        // 检查点：会话水位优先（H1-2 注入的 chatSession），无会话回退 run 事件水位
+        long watermark =
+                store.db()
+                        .queryForObject(
+                                "select coalesce((select max(se.seq) from engine.session_event se"
+                                    + " join engine.chat_session cs on cs.public_id=se.session_id"
+                                    + " where cs.app_code=? and cs.tenant_id=? and"
+                                    + " cs.principal_id=? and"
+                                    + " cs.public_id = (select (snapshot->'chatSession'->>'sessionId')"
+                                    + " from engine.run where id=?)),"
+                                    + " (select coalesce(max(seq),0) from engine.run_event"
+                                    + " where run_id=?))",
+                                Long.class,
+                                run.get("app_code"),
+                                run.get("tenant_id"),
+                                run.get("principal_id"),
+                                runId,
+                                runId);
+
+        // 复用步骤：已提交节点（result 事实）
+        var reused =
+                store.db()
+                        .queryForList(
+                                "select node_def_id,output_digest from engine.node_instance"
+                                    + " where run_id=? and status='SUCCEEDED' and"
+                                    + " committed_attempt_id is not null order by step_seq",
+                                runId)
+                        .stream()
+                        .map(
+                                row ->
+                                        new cn.agentplatform.engine.harness.loop.RecoveryFact
+                                                .ReusedStep(
+                                                String.valueOf(row.get("node_def_id")),
+                                                String.valueOf(row.get("output_digest"))))
+                        .toList();
+
+        // 阻塞原因：WAITING 类节点
+        var blocked =
+                store.db()
+                        .queryForList(
+                                "select distinct status from engine.node_instance where run_id=?"
+                                    + " and status like 'WAITING%' order by status",
+                                String.class,
+                                runId);
+
+        var fact =
+                new cn.agentplatform.engine.harness.loop.RecoveryFact(
+                        source,
+                        reason,
+                        summaryOf(reason),
+                        new cn.agentplatform.engine.harness.loop.RecoveryFact.Checkpoint(
+                                watermark, List.of(publicId)),
+                        reused,
+                        blocked);
+        return privileged ? fact : onlyUserView(fact);
+    }
+
+    private cn.agentplatform.engine.harness.loop.RecoveryFact onlyUserView(
+            cn.agentplatform.engine.harness.loop.RecoveryFact fact) {
+        return new cn.agentplatform.engine.harness.loop.RecoveryFact(
+                fact.recoverySource(),
+                fact.reasonCode(),
+                fact.reasonSummary(),
+                new cn.agentplatform.engine.harness.loop.RecoveryFact.Checkpoint(0, List.of()),
+                List.of(),
+                List.of());
+    }
+
+    private String summaryOf(String reason) {
+        return switch (reason) {
+            case "EXTERNAL_RESULT_UNKNOWN" -> "外部结果未确认，已按持久事实接续";
+            case "LEASE_EXPIRED" -> "执行租约到期，已自动接续";
+            case "EXECUTION_INTERRUPTED" -> "执行被中断，已恢复";
+            case "MANUAL_REQUEST" -> "按请求手动恢复";
+            default -> "已恢复";
+        };
+    }
 }
