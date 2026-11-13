@@ -103,6 +103,16 @@ class RoutesTest {
     }
 
     @Test
+    void routesWorkspaceManifestToApplicationService() {
+        // A3-1：manifest 读/写与版本列表都在 /admin/apps 前缀下（既有前缀规则决定方向，
+        // 权威目录补三条 delegate 能力行）；不放权，会话等特殊前缀仍按既有优先级分流。
+        for (String path : new String[] {
+                "/admin/apps/weather/manifest",
+                "/admin/apps/weather/manifests"
+        }) assertThat(Routes.service(path)).as(path).isEqualTo("app");
+    }
+
+    @Test
     void routesOnlyExactCapabilityPackageEndpointsToApplicationService() {
         for (String path : new String[] {
                 "/admin/capability-packages",

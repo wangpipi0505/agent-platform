@@ -119,6 +119,10 @@ public class IntegrationConfigReleases {
     // 绑定修订在创建时钉住：只核对存在与所属应用；撤权状态留到 validate/activate 再拒绝，
     // 这样配置者能看到"先建后校验失败"的明确错误，而不是创建时被含糊地挡住。
     requireSemanticRevisions(actor, appCode, semantic);
+    // A3-1（app V122）：发布固化 manifest 头修订——服务端按当前头取数（不信任客户端自报，
+    // 接口稿 §3.5 "integration_config_release 固化(manifest_revision+digest)"）；应用没有
+    // manifest 时两列同空（成对 CHECK 兜底，存量发布口径不变）。
+    ConfigReleaseRepository.ManifestPin manifest = store.manifestPin(actor, appCode);
     String candidate = String.valueOf(version.get("candidate_sha256"));
     String digest = digest(appCode, appVersion, candidate, experienceRev, profileId, profileRev, refs,
         semantic);
@@ -141,6 +145,8 @@ public class IntegrationConfigReleases {
     release.put("semanticBindings", semantic);
     release.put("activationScope", scope);
     release.put("digest", digest);
+    release.put("manifestRevision", manifest == null ? null : manifest.revision());
+    release.put("manifestDigest", manifest == null ? null : manifest.digest());
     store.insert(actor, release);
     Map<String, Object> out = view(actor, releaseId, requestId);
     writes.remember(actor.tenantId(), "config-release.create", releaseId, requestId, sha, out);

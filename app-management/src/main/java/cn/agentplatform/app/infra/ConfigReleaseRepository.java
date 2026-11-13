@@ -52,13 +52,15 @@ public class ConfigReleaseRepository {
         db.update("""
             insert into app.integration_config_release(tenant_id, release_id, app_code, app_version,
               candidate_sha256, experience_rev, integration_profile_id, integration_profile_rev,
-              connection_profile_refs, activation_scope, digest, created_by)
-            values (?, ?, ?, ?, ?, ?, ?, ?, ?::jsonb, ?, ?, ?)
+              connection_profile_refs, activation_scope, digest, created_by,
+              manifest_revision, manifest_digest)
+            values (?, ?, ?, ?, ?, ?, ?, ?, ?::jsonb, ?, ?, ?, ?, ?)
             """, actor.tenantId(), release.get("releaseId"), release.get("appCode"),
             release.get("appVersion"), release.get("candidateSha256"), release.get("experienceRev"),
             release.get("integrationProfileId"), release.get("integrationProfileRev"),
             Json.write(release.get("connectionProfileRefs")), release.get("activationScope"),
-            release.get("digest"), actor.principalId());
+            release.get("digest"), actor.principalId(),
+            release.get("manifestRevision"), release.get("manifestDigest"));
       } catch (DuplicateKeyException e) {
         throw new PlatformException(409, "CONFIG_REV_CONFLICT",
             "配置发布已存在: " + release.get("releaseId"));
@@ -76,11 +78,29 @@ public class ConfigReleaseRepository {
     });
   }
 
+  /** 发布时钉住的 manifest 头修订（A3-1，库稿 §4.6 扩列）：应用没有 manifest 时为 null（两列同空）。 */
+  public record ManifestPin(int revision, String digest) {}
+
+  /**
+   * 服务端取当前 manifest 头修订供发布固化（不信任客户端自报，同 candidate_sha256 口径）。
+   * 修订链不可变，钉住后该 (app_code, revision) 的装配内容永远可回查；char(64) 右补空格需裁剪。
+   */
+  public ManifestPin manifestPin(Actor actor, String appCode) {
+    var rows = db.queryForList("""
+        select revision, trim(trailing from digest) as digest from app.workspace_manifest
+         where tenant_id = ? and app_code = ? order by revision desc limit 1
+        """, actor.tenantId(), appCode);
+    return rows.isEmpty() ? null
+        : new ManifestPin(((Number) rows.get(0).get("revision")).intValue(),
+            String.valueOf(rows.get(0).get("digest")));
+  }
+
   public Map<String, Object> find(Actor actor, String releaseId) {
     var rows = db.queryForList("""
         select release_id, app_code, app_version, candidate_sha256, experience_rev,
                integration_profile_id, integration_profile_rev, connection_profile_refs::text as connection_profile_refs,
-               activation_scope, status, digest, created_by, created_at, updated_at
+               activation_scope, status, digest, created_by, created_at, updated_at,
+               manifest_revision, trim(trailing from manifest_digest) as manifest_digest
           from app.integration_config_release where tenant_id = ? and release_id = ?
         """, actor.tenantId(), releaseId);
     return rows.isEmpty() ? null : withSemantic(actor, view(rows.get(0)));
@@ -90,7 +110,8 @@ public class ConfigReleaseRepository {
     return db.queryForList("""
         select release_id, app_code, app_version, candidate_sha256, experience_rev,
                integration_profile_id, integration_profile_rev, connection_profile_refs::text as connection_profile_refs,
-               activation_scope, status, digest, created_by, created_at, updated_at
+               activation_scope, status, digest, created_by, created_at, updated_at,
+               manifest_revision, trim(trailing from manifest_digest) as manifest_digest
           from app.integration_config_release where tenant_id = ? and app_code = ?
          order by created_at desc
         """, actor.tenantId(), appCode).stream()
@@ -255,6 +276,9 @@ public class ConfigReleaseRepository {
     out.put("activationScope", row.get("activation_scope"));
     out.put("status", row.get("status"));
     out.put("digest", row.get("digest"));
+    // A3-1：发布钉住的 manifest 头修订（成对列；无 manifest 的存量发布同空）。
+    out.put("manifestRevision", row.get("manifest_revision"));
+    out.put("manifestDigest", row.get("manifest_digest"));
     out.put("createdBy", row.get("created_by"));
     out.put("createdAt", String.valueOf(row.get("created_at")));
     out.put("updatedAt", String.valueOf(row.get("updated_at")));
