@@ -257,6 +257,158 @@ public class ChatSessions {
         }
     }
 
+    /**
+     * S2-1（接口稿 §5.1 第一段）：本人会话列表——webapp 会话列表数据源。
+     *
+     * <p>可见性：仅 tenant+principal=当前用户的会话，且排除 origin='TASK_INTERNAL'
+     *（内部根会话，接口稿：不出现在本人会话列表）；本端点只做本人过滤——mine=true 首期固定，
+     * 缺省或其他值一律 400，跨用户查询不开放。重命名/删除不在本期契约。
+     *
+     * <p>lastActiveAt=最近 chat_turn.created_at（无轮次→chat_session.created_at），按其倒序；
+     * before 为排他游标（返回 lastActiveAt 早于该值的行）；limit 默认 50、显式 1..200。
+     * nextBefore 仅在还有更多行时返回（=本页最后一条的 lastActiveAt），末页省略该键。
+     * state 为"活跃/终态轮次摘要"：最近轮次的 run 到达终态（SUCCEEDED/FAILED/CANCELLED）时
+     * 返回该终态，否则（无轮次、run 缺失或仍在执行/恢复）返回 ACTIVE。
+     */
+    public Map<String, Object> list(
+            String code, String mine, String limit, String before, Actor actor) {
+        if (!"true".equals(mine))
+            throw new PlatformException(
+                    400, "SESSION_LIST_MINE_REQUIRED", "会话列表仅支持 mine=true（首期固定，跨用户查询不开放）");
+        int size = 50;
+        if (limit != null && !limit.isBlank()) {
+            if (!limit.matches("[0-9]{1,4}"))
+                throw new PlatformException(400, "SESSION_LIST_LIMIT_INVALID", "limit 必须为 1 至 200 的整数");
+            size = Integer.parseInt(limit);
+            if (size < 1 || size > 200)
+                throw new PlatformException(400, "SESSION_LIST_LIMIT_INVALID", "limit 必须为 1 至 200 的整数");
+        }
+        java.time.Instant cursor = null;
+        if (before != null && !before.isBlank()) {
+            try {
+                cursor = java.time.Instant.parse(before);
+            } catch (java.time.format.DateTimeParseException invalid) {
+                throw new PlatformException(400, "SESSION_LIST_CURSOR_INVALID", "before 必须为 ISO-8601 时间");
+            }
+        }
+        var args = new ArrayList<Object>(List.of(actor.tenantId(), actor.principalId(), code));
+        StringBuilder sql =
+                new StringBuilder(
+                        "select s.public_id,"
+                            + " coalesce(max(t.created_at), s.created_at) as last_active_at,"
+                            + " s.created_at as created_at"
+                            + " from engine.chat_session s"
+                            + " left join engine.chat_turn t on t.session_id=s.public_id"
+                            + " where s.tenant_id=? and s.principal_id=? and s.app_code=?"
+                            + " and s.origin<>'TASK_INTERNAL'"
+                            + " group by s.public_id");
+        if (cursor != null) {
+            sql.append(" having coalesce(max(t.created_at), s.created_at)<?");
+            args.add(java.sql.Timestamp.from(cursor));
+        }
+        // 同 lastActiveAt 时按会话号稳定排序；多取一行探测"还有更多"。
+        sql.append(" order by last_active_at desc, s.public_id desc limit ?");
+        args.add(size + 1);
+        var rows = store.db().queryForList(sql.toString(), args.toArray());
+        boolean more = rows.size() > size;
+        if (more) rows = rows.subList(0, size);
+        var ids = rows.stream().map(row -> row.get("public_id").toString()).toList();
+        var titles = firstTurnInputs(ids);
+        var lastStatus = lastTurnRunStatus(ids);
+        var sessions = new ArrayList<Map<String, Object>>();
+        for (var row : rows) {
+            var item = new LinkedHashMap<String, Object>();
+            item.put("sessionId", row.get("public_id").toString());
+            item.put("appCode", code);
+            item.put("title", title(TraceStore.json(titles.get(row.get("public_id").toString()))));
+            item.put("lastActiveAt", text(row.get("last_active_at")));
+            item.put("createdAt", text(row.get("created_at")));
+            String status = lastStatus.get(row.get("public_id").toString());
+            item.put(
+                    "state",
+                    status != null && Set.of("SUCCEEDED", "FAILED", "CANCELLED").contains(status)
+                            ? status
+                            : "ACTIVE");
+            sessions.add(item);
+        }
+        var data = new LinkedHashMap<String, Object>();
+        data.put("sessions", sessions);
+        if (more) data.put("nextBefore", text(rows.getLast().get("last_active_at")));
+        return data;
+    }
+
+    /**
+     * title 稳定规则（接口稿 §5.1：首条用户消息截断 ≤48 字）：取 turn_no 最小的 chat_turn.inputs——
+     * 文本标量直接采用；对象时优先取其中 message 字段（文本时），其次 text 字段（文本时），
+     * 两者都不可用时回退为该对象的整体规范 JSON 文本；其余类型取其 JSON 文本。
+     * 无轮次或 inputs 为空对象→空串。截断按 Java 字符（UTF-16 单元）计，超长截到 48。
+     */
+    static String title(JsonNode inputs) {
+        if (inputs == null || inputs.isMissingNode() || inputs.isNull()
+                || (inputs.isObject() && inputs.isEmpty()))
+            return "";
+        String text;
+        if (inputs.isTextual()) text = inputs.asText();
+        else if (inputs.isObject()) {
+            JsonNode message = inputs.get("message");
+            JsonNode chosen =
+                    message != null && message.isTextual()
+                            ? message
+                            : inputs.get("text");
+            text = chosen != null && chosen.isTextual() ? chosen.asText() : Json.canonical(inputs);
+        } else text = Json.write(inputs);
+        return text.length() <= 48 ? text : text.substring(0, 48);
+    }
+
+    /** 页内首条轮次（turn_no 最小）的 inputs，键为会话号；页有界（≤200），一次批查。 */
+    private Map<String, Object> firstTurnInputs(List<String> ids) {
+        if (ids.isEmpty()) return Map.of();
+        String placeholders = String.join(",", Collections.nCopies(ids.size(), "?"));
+        var rows =
+                store.db()
+                        .queryForList(
+                                "select distinct on (t.session_id) t.session_id,t.inputs"
+                                    + " from engine.chat_turn t where t.session_id in ("
+                                        + placeholders
+                                        + ") order by t.session_id,t.turn_no",
+                                ids.toArray());
+        var result = new LinkedHashMap<String, Object>();
+        for (var row : rows) result.put(row.get("session_id").toString(), row.get("inputs"));
+        return result;
+    }
+
+    /** 页内最近轮次（turn_no 最大）关联 run 的状态，键为会话号；无轮次或 run 缺失时无该键。 */
+    private Map<String, String> lastTurnRunStatus(List<String> ids) {
+        if (ids.isEmpty()) return Map.of();
+        String placeholders = String.join(",", Collections.nCopies(ids.size(), "?"));
+        var rows =
+                store.db()
+                        .queryForList(
+                                "select distinct on (t.session_id) t.session_id,r.status"
+                                    + " from engine.chat_turn t"
+                                    + " left join engine.run r on r.public_id=t.run_public_id"
+                                    + " where t.session_id in ("
+                                        + placeholders
+                                        + ") order by t.session_id,t.turn_no desc",
+                                ids.toArray());
+        var result = new LinkedHashMap<String, String>();
+        for (var row : rows) {
+            if (row.get("status") != null)
+                result.put(row.get("session_id").toString(), row.get("status").toString());
+        }
+        return result;
+    }
+
+    /** timestamptz 读回可能是 Timestamp/OffsetDateTime/Instant；统一为 ISO-8601 UTC 文本。 */
+    private static String text(Object value) {
+        java.time.Instant instant;
+        if (value instanceof java.time.Instant direct) instant = direct;
+        else if (value instanceof java.sql.Timestamp stamp) instant = stamp.toInstant();
+        else if (value instanceof java.time.OffsetDateTime dateTime) instant = dateTime.toInstant();
+        else instant = java.time.Instant.parse(value.toString());
+        return instant.toString();
+    }
+
     /** 仅已验内部评测主体；固定候选会话不读取published，也不走TASK/FULL受理。 */
     public Map<String,Object> evaluationTurn(JsonNode req,Actor actor) {
         if (!actor.roles().contains("SERVICE")) throw new PlatformException(403,"EVALUATION_SERVICE_REQUIRED","仅内部评测调用可受理候选轮次");

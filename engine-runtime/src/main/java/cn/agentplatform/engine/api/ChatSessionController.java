@@ -37,4 +37,14 @@ public class ChatSessionController {
             @PathVariable String code, @PathVariable String id, @RequestBody JsonNode req) {
         return ApiResponse.ok(sessions.turn(code, id, req, Actor.current()));
     }
+
+    /** S2-1（接口稿 §5.1）：本人会话列表——mine=true 首期固定，跨用户查询不开放。 */
+    @GetMapping("/v1/apps/{code}/sessions")
+    public Object list(
+            @PathVariable String code,
+            @RequestParam(required = false) String mine,
+            @RequestParam(required = false) String limit,
+            @RequestParam(required = false) String before) {
+        return ApiResponse.ok(sessions.list(code, mine, limit, before, Actor.current()));
+    }
 }
