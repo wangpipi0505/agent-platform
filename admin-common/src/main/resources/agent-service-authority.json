@@ -600,6 +600,18 @@
   "reason": ""
  },
  {
+  "method": "GET",
+  "template": "/v1/apps/{code}/sessions",
+  "caller": "gateway",
+  "target": "engine",
+  "action": "proxy.engine.get.ChatSessionController.list",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/ChatSessionController.java:42",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
+  "reason": ""
+ },
+ {
   "method": "POST",
   "template": "/admin/apps/{code}/sessions",
   "caller": "gateway",
