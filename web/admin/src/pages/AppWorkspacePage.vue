@@ -4,7 +4,9 @@ import { useRoute } from "vue-router";
 import ChatConfig from "../ChatConfig.vue";
 import PageError from "../PageError.vue";
 import PageHeader from "../PageHeader.vue";
-import RunDetail from "../RunDetail.vue";
+// F2-1：records/:runId 跳出为独立路由（app-run-record，见 router.ts），
+// 工作区内嵌 RunDetail 分支随之移除；智能体头复用 resource-format 的状态文案。
+import { statusLabel } from "./resources/resource-format";
 import { usePageOperation, usePageTitle } from "../usePageOperation";
 import { useUnsavedChanges } from "../../../shared/useUnsavedChanges";
 import { confirmDanger } from "../../../shared/components/DangerConfirm";
@@ -363,100 +365,214 @@ onMounted(() => void load());
   />
   <PageError :error="error" :trace="trace" />
   <div v-if="!app && busy" class="panel"><el-skeleton :rows="8" animated /></div>
-  <template v-if="app">
-    <nav class="tabs">
-      <a
-        v-for="[label, next] in [
-          ['概览', ''],
-          ...(supportsChat ? [['对话', 'chat'] as [string, string]] : []),
-          ...(supportsChat && app.type === 'FLOW' ? [['对话配置', 'orchestration/chat'] as [string, string]] : []),
-          ['编排', app.type === 'FLOW' ? 'orchestration/flow' : 'orchestration/chat'],
-          ['调试', 'orchestration/debug'],
-          ['发布集成', 'orchestration/publish'],
-          ['正式运行', 'run'],
-          ['运行记录', 'runs'],
-        ]"
-        :key="next"
-        :href="'#/apps/' + code + (next ? '/' + next : '')"
-        :class="{ active: tab === (next || 'overview') }"
-        >{{ label }}</a
-      >
-    </nav>
-    <AppOverviewPanel
-      v-if="tab === 'overview'"
-      :app="app"
-      :code="code"
-      :versions="versions"
-      :busy="busy"
-      :refresh-key="refreshKey"
-      @lifecycle="lifecycle"
-      @save-metadata="saveMetadata"
-      @reload="load"
-    />
-    <AppChatPanel
-      v-else-if="tab === 'chat'"
-      :app-code="code"
-      :app-name="app.name"
-      :current-version-no="app.currentVersionNo"
-      :mode="app.status === 'PUBLISHED' ? 'published' : 'draft'"
-    />
-    <ChatConfig
-      v-else-if="tab === 'orchestration/chat'"
-      :config="app.config"
-      :app-code="code"
-      :biz-category="app.bizCategory"
-      :draft-rev="app.draftRev"
-      :draft-key="code + ':chat'"
-      @save="saveConfig"
-    />
-    <FlowDesigner
-      v-else-if="tab === 'orchestration/flow' && flow?.definition"
-      :read-only="!auth.can('edit')"
-      :definition="flow.definition"
-      :catalogs="catalogs"
-      :app-code="code"
-      :biz-category="app.bizCategory"
-      :layout="flow.layout || {}"
-      :draft-key="code + ':flow'"
-      :draft-rev="app.draftRev"
-      @save="saveFlow"
-    />
-    <DebugPanel v-else-if="tab === 'orchestration/debug'" :key="code" :app-code="code" />
-    <RunDetail v-else-if="tab.startsWith('records/')" :run-id="tab.split('/')[1]" />
-    <AppPublishPanel
-      v-else-if="tab === 'orchestration/publish'"
-      :app="app"
-      :code="code"
-      :busy="busy"
-      :precheck="precheck"
-      :precheck-stale="precheckStale"
-      :published="published"
-      :evaluation="evaluation"
-      :evaluation-working="evaluationWorking"
-      :evaluation-needs-check="evaluationNeedsCheck"
-      :gate-blocked="gateBlocked"
-      :is-admin="auth.roles.includes('ADMIN')"
-      :environment-confirmed="environmentConfirmed"
-      @environment-confirm="confirmEnvironment"
-      @check="check"
-      @commit="commit"
-      @report="onEvaluationReport"
-      @activity="evaluationActivity"
-      @bind="check"
-    />
-    <AppChatPanel
-      v-else-if="tab === 'run' && supportsChat"
-      :app-code="code"
-      :app-name="app.name"
-      :current-version-no="app.currentVersionNo"
-      mode="published"
-    />
-    <AppRunPanel
-      v-else-if="tab === 'run'"
-      :app="app"
-      :code="code"
-      :versions="versions"
-    />
-    <AppRunsPanel v-else-if="tab === 'runs'" :app-code="code" />
-  </template>
+  <!-- F2-1 工作区壳层（前端稿 §5.2/§7.1）：顶部智能体头（名称/编码/状态/版本摘要/主要动作）
+       + 左锚点导航 + 右内容区。锚点=既有面板分区（复用现有 API 与组件，不重写面板内部），
+       key 即路由 tabMatch，点击切换定位、当前锚点高亮。 -->
+  <div v-if="app" class="workspace">
+    <header class="agent-head">
+      <div class="agent-id">
+        <span class="agent-name">{{ app.name }}</span>
+        <span class="agent-code font-mono">{{ code }}</span>
+        <span :class="['status', app.status]">{{ statusLabel(app.status) }}</span>
+      </div>
+      <div class="agent-versions muted">
+        <span>草稿 {{ app.draftRev || "—" }}</span>
+        <span aria-hidden="true">·</span>
+        <span>{{
+          app.currentVersionNo ? "已发布 v" + app.currentVersionNo : "尚未发布"
+        }}</span>
+      </div>
+      <div class="actions">
+        <!-- 主要动作入口沿用发布链路的既有 check/commit（预检与提交发布），不新造 API。 -->
+        <el-button :loading="busy" v-permission="'edit'" @click="check">预检</el-button>
+        <el-button
+          type="primary"
+          :loading="busy"
+          v-permission="'edit'"
+          @click="commit"
+          >提交发布</el-button
+        >
+      </div>
+    </header>
+    <div class="workspace-body">
+      <nav class="anchor-rail" aria-label="工作区锚点">
+        <a
+          v-for="[label, next] in [
+            ['概览', ''],
+            ...(supportsChat ? [['对话', 'chat'] as [string, string]] : []),
+            ...(supportsChat && app.type === 'FLOW' ? [['对话配置', 'orchestration/chat'] as [string, string]] : []),
+            ['编排', app.type === 'FLOW' ? 'orchestration/flow' : 'orchestration/chat'],
+            ['调试', 'orchestration/debug'],
+            ['发布集成', 'orchestration/publish'],
+            ['正式运行', 'run'],
+            ['运行记录', 'runs'],
+          ]"
+          :key="next"
+          :href="'#/apps/' + code + (next ? '/' + next : '')"
+          :class="{ active: tab === (next || 'overview') }"
+          >{{ label }}</a
+        >
+      </nav>
+      <section class="workspace-content page-scroll">
+      <AppOverviewPanel
+        v-if="tab === 'overview'"
+        :app="app"
+        :code="code"
+        :versions="versions"
+        :busy="busy"
+        :refresh-key="refreshKey"
+        @lifecycle="lifecycle"
+        @save-metadata="saveMetadata"
+        @reload="load"
+      />
+      <AppChatPanel
+        v-else-if="tab === 'chat'"
+        :app-code="code"
+        :app-name="app.name"
+        :current-version-no="app.currentVersionNo"
+        :mode="app.status === 'PUBLISHED' ? 'published' : 'draft'"
+      />
+      <ChatConfig
+        v-else-if="tab === 'orchestration/chat'"
+        :config="app.config"
+        :app-code="code"
+        :biz-category="app.bizCategory"
+        :draft-rev="app.draftRev"
+        :draft-key="code + ':chat'"
+        @save="saveConfig"
+      />
+      <FlowDesigner
+        v-else-if="tab === 'orchestration/flow' && flow?.definition"
+        :read-only="!auth.can('edit')"
+        :definition="flow.definition"
+        :catalogs="catalogs"
+        :app-code="code"
+        :biz-category="app.bizCategory"
+        :layout="flow.layout || {}"
+        :draft-key="code + ':flow'"
+        :draft-rev="app.draftRev"
+        @save="saveFlow"
+      />
+      <DebugPanel v-else-if="tab === 'orchestration/debug'" :key="code" :app-code="code" />
+      <!-- F2-1：records/:runId 改独立路由 app-run-record（/apps/:code/records/:runId），
+           不再内嵌在工作区 tab 里；运行记录锚点内的行链接跳该独立页并带面包屑返回。 -->
+      <AppPublishPanel
+        v-else-if="tab === 'orchestration/publish'"
+        :app="app"
+        :code="code"
+        :busy="busy"
+        :precheck="precheck"
+        :precheck-stale="precheckStale"
+        :published="published"
+        :evaluation="evaluation"
+        :evaluation-working="evaluationWorking"
+        :evaluation-needs-check="evaluationNeedsCheck"
+        :gate-blocked="gateBlocked"
+        :is-admin="auth.roles.includes('ADMIN')"
+        :environment-confirmed="environmentConfirmed"
+        @environment-confirm="confirmEnvironment"
+        @check="check"
+        @commit="commit"
+        @report="onEvaluationReport"
+        @activity="evaluationActivity"
+        @bind="check"
+      />
+      <AppChatPanel
+        v-else-if="tab === 'run' && supportsChat"
+        :app-code="code"
+        :app-name="app.name"
+        :current-version-no="app.currentVersionNo"
+        mode="published"
+      />
+      <AppRunPanel
+        v-else-if="tab === 'run'"
+        :app="app"
+        :code="code"
+        :versions="versions"
+      />
+      <AppRunsPanel v-else-if="tab === 'runs'" :app-code="code" />
+      </section>
+    </div>
+  </div>
 </template>
+
+<style scoped>
+/* F2-1 工作区壳层高度模型（前端稿 §7.1）：智能体头 auto + body flex row
+   （锚点列 auto 自身可滚 + 内容 .page-scroll 唯一滚动容器，min-height:0 贯穿高度链）。
+   色板/间距/圆角只用 tokens 变量，不新增裸色值（红线）。 */
+.workspace {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.agent-head {
+  flex-shrink: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  margin-bottom: var(--sp-4);
+}
+.agent-id {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+.agent-name {
+  font-size: var(--text-module);
+  font-weight: 650;
+}
+.agent-code {
+  color: var(--muted);
+  font-size: var(--text-meta);
+}
+.agent-versions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--text-meta);
+}
+.workspace-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: row;
+  gap: var(--sp-4);
+}
+/* 锚点导航列（§5.2：页内分区定位，不再平级 Tab）：自身可滚（§7.1 锚点列 auto），
+   当前锚点高亮。 */
+.anchor-rail {
+  flex-shrink: 0;
+  width: 9rem;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+.anchor-rail a {
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius);
+  color: var(--muted);
+  white-space: nowrap;
+}
+.anchor-rail a.active {
+  background: var(--surface-2);
+  color: var(--ink);
+  font-weight: 650;
+}
+/* 面板内容区=工作区内唯一滚动容器（.page-scroll 语义，min-height:0）；
+   画布类面板（FlowDesigner 58vh/DebugPanel）不依赖容器滚动，布局不参与三级滚动。 */
+.workspace-content {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+</style>
