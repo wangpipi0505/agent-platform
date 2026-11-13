@@ -12,6 +12,7 @@ import {
   type MockConfirmationCounts,
 } from "../../shared/mock-confirmation-counts";
 import CommandPalette from "./CommandPalette.vue";
+import { useTheme } from "../../shared/theme";
 
 const auth = useAuth();
 const route = useRoute();
@@ -19,6 +20,10 @@ const route = useRoute();
 // F1-2：按五分组（§3.1）渲染，分组常显、可折叠（折叠后 tooltip 显示分组名）。
 const density = ref(localStorage.getItem("density") || "标准");
 const pageActionsTarget = PAGE_ACTIONS_TARGET;
+
+// F4-4 亮色切换（方案 §7.3）：顶栏按钮翻转 dark/light 并持久 localStorage，
+// 初始跟随系统（shared/theme.ts）；系统偏好变化仅在没有手动覆盖时跟随。
+const { resolved: themeResolved, toggleTheme, dispose: disposeTheme } = useTheme();
 
 const tab = computed(() => {
   const parts = route.params.tabMatch;
@@ -89,6 +94,23 @@ function onGlobalKey(event: KeyboardEvent) {
   }
 }
 
+// —— F4-4 断点体系（方案 §7.2 断点表：≥1440 全量 / 1280 侧栏自动折叠 / <768 抽屉） ——
+// ≤1280 侧栏收窄为图标列（复用 F1-2 分组折叠语义：组头只留图标+tooltip；菜单项取
+// data-short 首字代字）；<768 侧栏整体收抽屉（照 webapp 先例：matchMedia+scrim，
+// 抽屉内恢复全量菜单）。matchMedia 驱动而非纯 CSS media，抽屉/图标列互斥由类计算保证。
+const iconMode = ref(false);
+const mobile = ref(false);
+const drawerOpen = ref(false);
+let desktopQuery: MediaQueryList | null = null;
+let mobileQuery: MediaQueryList | null = null;
+function onDesktopChange(e: MediaQueryListEvent) {
+  iconMode.value = e.matches;
+}
+function onMobileChange(e: MediaQueryListEvent) {
+  mobile.value = e.matches;
+  if (!e.matches) drawerOpen.value = false;
+}
+
 // —— 待办角标：15s 轮询 mock 数据源（接口稿 GET /admin/confirmation-center/counts 形状；
 // B4-1 真实端点就绪后切换客户端），角标渲染在确认中心菜单项上显示 total。 ——
 const counts = ref<MockConfirmationCounts | null>(null);
@@ -109,10 +131,20 @@ onMounted(() => {
   const offCountsChanged = onConfirmationCountsChanged(loadCounts);
   window.addEventListener("keydown", onGlobalKey);
   onUnmounted(() => offCountsChanged());
+  // F4-4 断点接线：初始值先落（刷新即正确形态），再监听变化。
+  desktopQuery = matchMedia("(max-width: 1280px)");
+  iconMode.value = desktopQuery.matches;
+  desktopQuery.addEventListener("change", onDesktopChange);
+  mobileQuery = matchMedia("(max-width: 768px)");
+  mobile.value = mobileQuery.matches;
+  mobileQuery.addEventListener("change", onMobileChange);
 });
 onUnmounted(() => {
   if (pollTimer !== undefined) window.clearInterval(pollTimer);
   window.removeEventListener("keydown", onGlobalKey);
+  desktopQuery?.removeEventListener("change", onDesktopChange);
+  mobileQuery?.removeEventListener("change", onMobileChange);
+  disposeTheme();
 });
 
 watch(
@@ -133,7 +165,12 @@ function logout() {
 
 <template>
   <div class="shell" :class="shellClass">
-    <aside class="nav">
+    <!-- F4-4 断点形态：icon-mode（≤1280 图标列，与 mobile 互斥——抽屉内恢复全量菜单）、
+         drawer-open（<768 抽屉展开）；tokens.css ≤1280 规则为 CSS 兜底。 -->
+    <aside
+      class="nav"
+      :class="{ 'icon-mode': iconMode && !mobile, 'drawer-open': drawerOpen }"
+    >
       <div class="logo">◈ 智能体平台</div>
       <small>构建与管理</small>
       <section v-for="section in groups" :key="section.group" class="nav-group">
@@ -171,6 +208,7 @@ function logout() {
             :aria-label="item.label"
             :title="item.label"
             :class="{ active: isActive(item.path) }"
+            @click="drawerOpen = false"
             >{{ item.label
             }}<span v-if="item.key === 'approvals' && counts" class="nav-badge">{{
               counts.total
@@ -182,6 +220,15 @@ function logout() {
     </aside>
     <main class="main">
       <header class="topbar">
+        <!-- F4-4：<768 抽屉触发钮（仅窄屏渲染）；点击菜单项/scrim 关闭抽屉。 -->
+        <el-button
+          v-if="mobile"
+          text
+          class="drawer-trigger"
+          aria-label="打开导航菜单"
+          @click="drawerOpen = true"
+          >☰ 菜单</el-button
+        >
         <!-- F1-2：顶栏左侧两级面包屑（page-chrome.area + title）；中间挂载点承接本页
              PageHeader 的 Teleport 操作（随路由卸载自动清理），右侧命令面板入口/密度/身份/退出。 -->
         <nav class="breadcrumb" aria-label="面包屑">
@@ -194,6 +241,18 @@ function logout() {
           <el-button text class="palette-trigger" @click="paletteOpen = true">
             搜索<kbd class="kbd">Ctrl K</kbd>
           </el-button>
+          <!-- F4-4 亮色切换（§7.3）：解析结果间翻转并持久覆盖，初始跟随系统。 -->
+          <el-button
+            text
+            class="theme-toggle"
+            data-testid="theme-toggle"
+            :title="themeResolved === 'dark' ? '切换为亮色主题' : '切换为暗色主题'"
+            :aria-label="
+              '切换主题，当前' + (themeResolved === 'dark' ? '暗色' : '亮色')
+            "
+            @click="toggleTheme"
+            >{{ themeResolved === "dark" ? "☾ 暗色" : "☀ 亮色" }}</el-button
+          >
           <span class="muted">显示密度</span>
           <el-select v-model="density" style="width: 6rem" aria-label="显示密度">
             <el-option v-for="d in ['紧凑', '标准', '宽松']" :key="d" :value="d" />
@@ -208,6 +267,13 @@ function logout() {
     </main>
     <!-- F1-2 全局命令面板：Ctrl+K/⌘K 唤起，Esc 关闭 -->
     <CommandPalette :open="paletteOpen" @close="paletteOpen = false" />
+    <!-- F4-4 <768 抽屉遮罩：点击关闭抽屉（webapp 同款 scrim 机制） -->
+    <div
+      v-if="mobile && drawerOpen"
+      class="scrim"
+      aria-hidden="true"
+      @click="drawerOpen = false"
+    ></div>
   </div>
 </template>
 
@@ -318,15 +384,77 @@ function logout() {
   gap: var(--sp-2);
   margin-left: auto;
 }
-/* 窄屏侧栏（tokens.css <1200px 收窄至 4.5rem）：分组头只留图标，tooltip 显示分组名 */
-@media (max-width: 1200px) {
-  .nav-group-head {
-    justify-content: center;
-    padding: var(--sp-1);
+/* —— F4-4 断点①：≤1280 图标列（§7.2 断点表；nav 宽 4.5rem 由 tokens.css ≤1280 媒体查询兜底，
+   这里按 icon-mode 类补齐形态：组头只留图标 tooltip=分组名（复用 F1-2 折叠语义），
+   菜单项取 data-short 首字代字，角标/页脚收纳）—— */
+.nav.icon-mode .nav-group-head {
+  justify-content: center;
+  padding: var(--sp-1);
+}
+.nav.icon-mode .nav-group-head .glabel,
+.nav.icon-mode .nav-group-head .gchev {
+  display: none;
+}
+.nav.icon-mode .nav-group-items a {
+  font-size: 0;
+  text-align: center;
+}
+.nav.icon-mode .nav-group-items a::before {
+  content: attr(data-short);
+  font-size: var(--text-table);
+}
+.nav.icon-mode .nav-badge {
+  position: static;
+  display: block;
+  width: fit-content;
+  margin: 0.15rem auto 0;
+  transform: none;
+}
+.nav.icon-mode .logo {
+  font-size: 0;
+}
+.nav.icon-mode .logo::before {
+  content: "◈";
+  font-size: var(--text-module);
+}
+.nav.icon-mode .nav-footer {
+  visibility: hidden;
+}
+/* —— F4-4 断点②：<768 抽屉（照 webapp 先例：matchMedia+fixed+translateX+scrim），
+   抽屉内恢复全量菜单字级/内距（覆盖 tokens.css ≤1280 收窄兜底）—— */
+.scrim {
+  position: fixed;
+  inset: 0;
+  background: var(--el-mask-color);
+  z-index: 20;
+}
+.drawer-trigger {
+  display: none;
+}
+@media (max-width: 768px) {
+  .drawer-trigger {
+    display: inline-flex;
   }
-  .nav-group-head .glabel,
-  .nav-group-head .gchev {
+  .breadcrumb {
     display: none;
+  }
+  .nav {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 30;
+    width: min(80vw, 20rem);
+    padding: 1.5rem 1rem;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+  }
+  .nav.drawer-open {
+    transform: translateX(0);
+  }
+  .nav a {
+    padding: 0.7rem 0.75rem;
+    font-size: inherit;
   }
 }
 @media (max-width: 900px) {
