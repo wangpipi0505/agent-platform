@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.stream.StreamSupport;
 
 @Component
 public class AgentDriver {
@@ -232,6 +233,25 @@ public class AgentDriver {
                         break;
                     }
                 if (tool == null) throw new IllegalArgumentException("TOOL_NOT_DECLARED");
+
+                // H1-6 半卡③：会话审批策略重放生效——never 在服务层拦截（后注册的工具不能绕过），
+                // 拒绝发生在登记之前（零出站）。策略=最后一个 approval/policy 事件。
+                var policySession = TraceStore.json(run.get("snapshot")).path("chatSession");
+                if (policySession.has("sessionId")
+                        && approvalPolicyNever(policySession.path("sessionId").asText())
+                        && !tool.path("execution").path("confirmRoles").isEmpty()) {
+                    throw new cn.agentplatform.engine.domain.RuntimeFault(
+                            "APPROVAL_DENIED",
+                            "toolCall.policy",
+                            "会话审批策略为 never：需审批工具被拒绝",
+                            Map.of(
+                                    "semantic",
+                                    "APPROVAL_DENIED",
+                                    "userMessage",
+                                    "会话审批策略为 never，已拒绝需审批工具",
+                                    "retryable",
+                                    false));
+                }
 
                 JsonNode result;
                 try {
@@ -463,6 +483,38 @@ public class AgentDriver {
         try {
             // pre 链在登记/认领之后、外部派发之前：策略环节（超时/审计）可抛异常
             // 短路本次调用；已登记事实由既有恢复路径对账，链不负责回滚。
+            // H1-6 半卡③（服务层拦截，派发前）：会话策略 never 重放生效——即使工具在策略
+            // 设置后才注册/派发也不能绕过；拒绝发生在出站之前（零外呼）。
+            var policySession = TraceStore.json(run.get("snapshot")).path("chatSession");
+            final long frozenVersion = version;
+            var frozenSkill =
+                    StreamSupport.stream(
+                                    TraceStore.json(run.get("snapshot"))
+                                            .path("config")
+                                            .path("tools")
+                                            .spliterator(),
+                                    false)
+                            .filter(
+                                    t ->
+                                            t.path("code").asText().equals(code)
+                                                    && t.path("skillVersionId").asLong() == frozenVersion)
+                            .findFirst()
+                            .orElseGet(() -> Json.read("{}"));
+            if (policySession.has("sessionId")
+                    && approvalPolicyNever(policySession.path("sessionId").asText())
+                    && !frozenSkill.path("execution").path("confirmRoles").isEmpty()) {
+                throw new cn.agentplatform.engine.domain.RuntimeFault(
+                        "APPROVAL_DENIED",
+                        "toolCall.policy",
+                        "会话审批策略为 never：需审批工具被拒绝",
+                        Map.of(
+                                "semantic",
+                                "APPROVAL_DENIED",
+                                "userMessage",
+                                "会话审批策略为 never，已拒绝需审批工具",
+                                "retryable",
+                                false));
+            }
             interceptors.preDispatch(code, version, args, actor);
             result = clients.post("skill", "/internal/skills/" + code + "/execute", req, actor);
         } catch (org.springframework.web.client.RestClientException transport) {
@@ -479,11 +531,43 @@ public class AgentDriver {
             throw transport;
         }
         if (result.path("status").asText().equals("WAITING_APPROVAL")) {
-            new ToolCalls(store)
-                    .requestApproval(
-                            ((Number) registration.get("callId")).longValue(),
-                            result.path("confirmation"),
-                            actor);
+            // H1-6 半卡③（fail-closed，主方案 §5.7）：审批通道不可用＝拒绝出站——记录后按
+            // APPROVAL_UNAVAILABLE（接口稿 §2 已登记）上抛，不降级为放行。
+            try {
+                new ToolCalls(store)
+                        .requestApproval(
+                                ((Number) registration.get("callId")).longValue(),
+                                result.path("confirmation"),
+                                actor);
+            } catch (RuntimeException unavailable) {
+                throw new cn.agentplatform.engine.domain.RuntimeFault(
+                        "APPROVAL_UNAVAILABLE",
+                        "toolCall." + registration.get("callId"),
+                        "审批通道不可用，已拒绝出站（fail-closed）: " + unavailable.getClass().getSimpleName() + ":" + unavailable.getMessage(),
+                        Map.of(
+                                "semantic",
+                                "APPROVAL_UNAVAILABLE",
+                                "userMessage",
+                                "审批通道暂不可用，操作未执行",
+                                "retryable",
+                                false));
+            }
+            // H1-6 半卡③：approval/asked 会话事件关联原确认对象（actionPlanId，不另建确认对象）。
+            var linkedAsk = TraceStore.json(run.get("snapshot")).path("chatSession");
+            if (linkedAsk.has("sessionId")) {
+                var asked = Json.object();
+                asked.put("callId", String.valueOf(registration.get("callId")));
+                var context = TraceStore.json(registration.get("approval_context"));
+                if (context.has("actionPlanId")) asked.put("actionPlanId", context.path("actionPlanId").asLong());
+                asked.set("roles", result.path("confirmation").path("roles"));
+                new cn.agentplatform.engine.harness.session.SessionStore(store)
+                        .append(
+                                linkedAsk.path("sessionId").asText(),
+                                null,
+                                cn.agentplatform.engine.harness.session.SessionEvents.APPROVAL_ASKED,
+                                asked,
+                                null);
+            }
             throw new cn.agentplatform.engine.domain.RuntimeFault(
                     "WAITING_APPROVAL", "toolCall." + registration.get("callId"), "技能需要指定角色确认");
         }
@@ -561,6 +645,17 @@ public class AgentDriver {
                 if (!value.isBlank()) return value;
             }
         return fallback;
+    }
+
+    /** H1-6 半卡③：重放会话 approval/policy 事件取生效策略（最后一个事件生效；无事件=默认 ask）。 */
+    private boolean approvalPolicyNever(String sessionId) {
+        for (var e :
+                new cn.agentplatform.engine.harness.session.SessionStore(store)
+                        .read(sessionId, 0, 0)) {
+            if (cn.agentplatform.engine.harness.session.SessionEvents.APPROVAL_POLICY.equals(e.type())
+                    && "never".equals(e.data().path("mode").asText())) return true;
+        }
+        return false;
     }
 
     public Map<String, Object> preview(JsonNode config, JsonNode inputs) {
