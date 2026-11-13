@@ -208,7 +208,9 @@ router.beforeEach((to) => {
 });
 
 // MNT-02子步1：左菜单与路由同源（capability 目录可见性沿用既有角色判断由 AppShell 保留）。
+// F1-2：补 key 供壳层定位条目（确认中心待办角标），area=五分组名（§3.1）供分组渲染。
 export const navMenus = menuEntries().map((entry) => ({
+  key: entry.key,
   label: entry.title,
   path: entry.path,
   area: entry.area,
