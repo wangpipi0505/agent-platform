@@ -11,7 +11,10 @@ import {
   type ConnectionProfile,
 } from "./integration-console";
 
-usePageTitle(() => "连接档案");
+// F3-4 集成控制台嵌入模式（前端稿 §5.7）：embedded 时页头由控制台承载（本页无智能体
+// 上下文——连接档案全局共享）；缺省 standalone 行为不变。
+const props = defineProps<{ embedded?: boolean }>();
+if (!props.embedded) usePageTitle(() => "连接档案");
 const { auth, api, busy, error, trace, operation, success } = usePageOperation();
 const client = integrationClient(api);
 const rows = ref<ConnectionProfile[]>([]);
@@ -90,7 +93,7 @@ onMounted(load);
 
 <template>
   <div class="integration-connections">
-    <PageHeader title="连接档案" subtitle="连接能力只登记协议、端点策略与认证方式引用；明文凭据不属于配置台。" :busy="busy" @refresh="load" />
+    <PageHeader v-if="!embedded" title="连接档案" subtitle="连接能力只登记协议、端点策略与认证方式引用；明文凭据不属于配置台。" :busy="busy" @refresh="load" />
     <PageError :error="error" :trace="trace" />
     <p class="muted">修订不可变：修改生成新修订，旧修订永久保留；批准后才能被环境绑定与配置发布引用。</p>
     <div class="grid">

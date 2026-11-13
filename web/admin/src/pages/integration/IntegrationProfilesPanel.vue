@@ -15,11 +15,18 @@ import {
   type IntegrationProfileView,
 } from "./integration-console";
 
-usePageTitle(() => "接入档案");
+// F3-4 集成控制台嵌入模式（前端稿 §5.7）：embedded 时 appCode 取控制台页头的共享上下文
+// （路由 query 持久），页头与智能体选择器由控制台承载；缺省 standalone 行为不变。
+const props = defineProps<{ embedded?: boolean; appCode?: string }>();
+if (!props.embedded) usePageTitle(() => "接入档案");
 const { auth, api, busy, error, trace, operation, success } = usePageOperation();
 const client = integrationClient(api);
 const applications = ref<ApplicationOption[]>([]);
-const appCode = ref("");
+const localAppCode = ref("");
+const appCode = computed({
+  get: () => (props.embedded ? props.appCode || "" : localAppCode.value),
+  set: (value) => { localAppCode.value = value; },
+});
 const rows = ref<IntegrationProfileView[]>([]);
 const experienceRev = ref(0);
 const selected = ref("");
@@ -46,7 +53,7 @@ function parseJson(value: string, label: string): unknown {
 async function load() {
   if (busy.value || !appCode.value) return;
   await operation(async () => {
-    applications.value = applications.value.length ? applications.value : parseApplications(await client.applications());
+    if (!props.embedded && !applications.value.length) applications.value = parseApplications(await client.applications());
     rows.value = parseProfiles(await client.integrationProfiles(appCode.value));
     try {
       experienceRev.value = parseExperiences(await client.experience(appCode.value), appCode.value).experienceRev;
@@ -117,6 +124,7 @@ function edit(profile: IntegrationProfileView) {
 
 watch(appCode, () => { selected.value = ""; void load(); });
 onMounted(async () => {
+  if (props.embedded) { await load(); return; }
   await operation(async () => {
     applications.value = parseApplications(await client.applications());
     if (!appCode.value && applications.value.length) appCode.value = applications.value[0].code;
@@ -127,10 +135,10 @@ onMounted(async () => {
 
 <template>
   <div class="integration-profiles">
-    <PageHeader title="接入档案" subtitle="登记业务系统、环境、接入等级、来源白名单与体验引用；不承载连接与凭据。" :busy="busy" @refresh="load" />
+    <PageHeader v-if="!embedded" title="接入档案" subtitle="登记业务系统、环境、接入等级、来源白名单与体验引用；不承载连接与凭据。" :busy="busy" @refresh="load" />
     <PageError :error="error" :trace="trace" />
     <div class="toolbar">
-      <el-select v-model="appCode" placeholder="选择智能体" :disabled="busy" aria-label="选择智能体">
+      <el-select v-if="!embedded" v-model="appCode" placeholder="选择智能体" :disabled="busy" aria-label="选择智能体">
         <el-option v-for="application in applications" :key="application.code" :label="`${application.name}（${application.code}）`" :value="application.code" />
       </el-select>
       <span class="muted">体验当前修订：{{ experienceRev || "无" }}</span>

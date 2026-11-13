@@ -13,11 +13,19 @@ import {
   type ExperienceView,
 } from "./integration-console";
 
-usePageTitle(() => "体验编辑");
+// F3-4 集成控制台嵌入模式（前端稿 §5.7）：embedded 时 appCode 取控制台页头的共享上下文
+// （路由 query 持久），页头与智能体选择器由控制台承载；缺省 standalone 行为不变
+// （回归锚 tests/configuration-pages.check.ts 直接挂载本组件）。
+const props = defineProps<{ embedded?: boolean; appCode?: string }>();
+if (!props.embedded) usePageTitle(() => "体验编辑");
 const { auth, api, busy, error, trace, operation, success } = usePageOperation();
 const client = integrationClient(api);
 const applications = ref<ApplicationOption[]>([]);
-const appCode = ref("");
+const localAppCode = ref("");
+const appCode = computed({
+  get: () => (props.embedded ? props.appCode || "" : localAppCode.value),
+  set: (value) => { localAppCode.value = value; },
+});
 const experience = ref<ExperienceView | null>(null);
 const draft = reactive({
   title: "",
@@ -118,6 +126,7 @@ async function transition(action: "approve" | "disable") {
 
 watch(appCode, () => { experience.value = null; void load(); });
 onMounted(async () => {
+  if (props.embedded) { await load(); return; }
   await operation(async () => {
     applications.value = parseApplications(await client.applications());
     if (!appCode.value && applications.value.length) appCode.value = applications.value[0].code;
@@ -128,10 +137,10 @@ onMounted(async () => {
 
 <template>
   <div class="experience-editor">
-    <PageHeader title="体验编辑" subtitle="编辑欢迎语、能力说明、推荐问法与呈现方式；选择模板只生成可编辑输入，不自动执行。" :busy="busy" @refresh="load" />
+    <PageHeader v-if="!embedded" title="体验编辑" subtitle="编辑欢迎语、能力说明、推荐问法与呈现方式；选择模板只生成可编辑输入，不自动执行。" :busy="busy" @refresh="load" />
     <PageError :error="error" :trace="trace" />
     <div class="toolbar">
-      <el-select v-model="appCode" placeholder="选择智能体" :disabled="busy" aria-label="选择智能体">
+      <el-select v-if="!embedded" v-model="appCode" placeholder="选择智能体" :disabled="busy" aria-label="选择智能体">
         <el-option v-for="application in applications" :key="application.code" :label="`${application.name}（${application.code}）`" :value="application.code" />
       </el-select>
       <template v-if="experience">

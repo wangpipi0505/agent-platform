@@ -62,24 +62,22 @@ export const pageAccess: PageAccessEntry[] = [
   { key: "skills", path: "/skills", title: "技能库", area: "构建资产", read: "session", write: "builder", menu: true },
   { key: "skill-detail", path: "/skills", route: "/skills/:code", title: "技能详情", area: "构建资产", read: "session", write: "builder", menu: false },
   { key: "templates", path: "/model/prompt-templates", title: "提示词模板", area: "构建资产", read: "session", write: "builder", menu: true },
-  // ④ 集成与治理（ADMIN/APPROVER：集成控制台七路由，F3-4 合并为两页）
-  { key: "integration-config", path: "/integration/config-releases", title: "配置发布", area: "集成与治理", read: "session", write: "admin", menu: true },
-  { key: "integration-connections", path: "/integration/connection-profiles", title: "连接档案", area: "集成与治理", read: "session", write: "admin", menu: false },
-  { key: "integration-bindings", path: "/integration/environment-bindings", title: "环境绑定", area: "集成与治理", read: "session", write: "admin", menu: false },
-  { key: "integration-profiles", path: "/integration/integration-profiles", title: "接入档案", area: "集成与治理", read: "session", write: "admin", menu: false },
-  { key: "integration-experience", path: "/integration/experiences", title: "体验编辑", area: "集成与治理", read: "session", write: "admin", menu: false },
+  // ④ 集成与治理（F3-4：集成控制台 7 路由并一页——六面板共用页头智能体上下文选择器
+  // （?app=），旧 6 条深链路由 redirect 到 ?panel= 锚点；write=admin 与页内 can('admin') 一致。
+  // 语义绑定（挂起线）仍独立路由深链可达，不并入）
+  { key: "integration-console", path: "/integration/console", title: "集成控制台", area: "集成与治理", read: "session", write: "admin", menu: true },
   // C0-1 裁剪：本体协同线（Semantic*/semantic-bindings）挂起（主方案 §2.1）——1109 无本体
   // 要求；代码保留、深链可打开，不进菜单。
   { key: "integration-semantics", path: "/integration/semantic-bindings", title: "语义与目标", area: "集成与治理", read: "session", write: "builder", menu: false, suspended: true },
-  { key: "integration-diagnostics", path: "/integration/diagnostics", title: "接入诊断", area: "集成与治理", read: "session", write: "", menu: false },
   // ⑤ 平台管理（ADMIN，OPERATOR 只读子集：模型/确认中心/统计/审计/系统）
   { key: "capability-packages", path: "/capability-packages", title: "软件能力目录", area: "平台管理", read: "session", write: "", menu: true },
   // C0-1 裁剪：onboarding 接入向导线挂起（主方案 §2.1）——构建流程归入智能体工作区，
   // 向导组件挂起；代码保留、深链可打开，不进菜单。
   { key: "onboarding-templates", path: "/onboarding/templates", title: "接入模板", area: "平台管理", read: "session", write: "admin", menu: false, suspended: true },
-  { key: "providers", path: "/model/providers", title: "模型供应商", area: "平台管理", read: "session", write: "builder", menu: true },
-  { key: "provider-entries", path: "/model/providers", route: "/model/providers/:providerId/entries", title: "模型条目", area: "平台管理", read: "session", write: "builder", menu: false },
-  { key: "entries", path: "/model/entries", title: "模型条目", area: "平台管理", read: "session", write: "builder", menu: true },
+  // F3-4 模型管理 master-detail（前端稿 §5.8）：替代 providers+entries 两级跳转两条菜单；
+  // write=admin 与页内 v-permission('admin') 一致（旧 providers 条目登记 builder 系历史口径，
+  // 合并页以实际用法为准）。旧 /model/providers、/model/entries 路由 redirect 到本页。
+  { key: "model-management", path: "/model/management", title: "模型管理", area: "平台管理", read: "session", write: "admin", menu: true },
   { key: "approvals", path: "/approvals", title: "确认中心", area: "平台管理", read: "session", write: "approve", menu: true },
   { key: "statistics", path: "/statistics", title: "统计分析", area: "平台管理", read: "session", write: "", menu: true },
   { key: "audit", path: "/audit", title: "审计记录", area: "平台管理", read: "session", write: "", menu: true },

@@ -31,11 +31,19 @@ import {
   type ReleaseView,
 } from "./integration-console";
 
-usePageTitle(() => "配置发布");
+// F3-4 集成控制台嵌入模式（前端稿 §5.7）：embedded 时 appCode 取控制台页头的共享上下文
+// （路由 query 持久，选一次全面板共享），页头与智能体选择器由控制台承载；缺省
+// standalone 行为不变（回归锚 tests/configuration-pages.check.ts 直接挂载本组件）。
+const props = defineProps<{ embedded?: boolean; appCode?: string }>();
+if (!props.embedded) usePageTitle(() => "配置发布");
 const { auth, api, busy, error, trace, operation, success } = usePageOperation();
 const client = integrationClient(api);
 const applications = ref<ApplicationOption[]>([]);
-const appCode = ref("");
+const localAppCode = ref("");
+const appCode = computed({
+  get: () => (props.embedded ? props.appCode || "" : localAppCode.value),
+  set: (value) => { localAppCode.value = value; },
+});
 const environment = ref("production");
 const releases = ref<ReleaseView[]>([]);
 const experiences = ref<ExperienceView | null>(null);
@@ -190,6 +198,7 @@ function showExport() {
 
 watch([appCode, environment], () => { draft.value = null; selectedId.value = ""; exportText.value = ""; void load(); });
 onMounted(async () => {
+  if (props.embedded) { await load(); return; }
   await operation(async () => {
     applications.value = parseApplications(await client.applications());
     if (!appCode.value && applications.value.length) appCode.value = applications.value[0].code;
@@ -200,10 +209,10 @@ onMounted(async () => {
 
 <template>
   <div class="config-releases">
-    <PageHeader title="配置发布" subtitle="从激活版本复制草稿，校验与批准后再以 CAS 激活；停用与回退先说明影响。" :busy="busy" @refresh="load" />
+    <PageHeader v-if="!embedded" title="配置发布" subtitle="从激活版本复制草稿，校验与批准后再以 CAS 激活；停用与回退先说明影响。" :busy="busy" @refresh="load" />
     <PageError :error="error" :trace="trace" />
     <div class="toolbar">
-      <el-select v-model="appCode" placeholder="选择智能体" :disabled="busy" aria-label="选择智能体">
+      <el-select v-if="!embedded" v-model="appCode" placeholder="选择智能体" :disabled="busy" aria-label="选择智能体">
         <el-option v-for="application in applications" :key="application.code" :label="`${application.name}（${application.code}）`" :value="application.code" />
       </el-select>
       <el-select v-model="environment" :disabled="busy" aria-label="选择环境">
