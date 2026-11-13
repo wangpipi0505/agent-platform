@@ -71,7 +71,11 @@ async function formalRun() {
       versionNo: form.value.versionNo || props.app.currentVersionNo,
       requestId: (requestNo.value ||= crypto.randomUUID()),
     });
-    void router.push(`/runs/${result.runId}`);
+    // F2-1：正式运行提交后跳工作区语境的独立记录页（可面包屑锚回「运行记录」锚点），
+    // 不再跳全局 /runs/:runId（返回语境是运行监控）。
+    void router.push(
+      `/apps/${encodeURIComponent(props.code)}/records/${encodeURIComponent(result.runId)}`,
+    );
   });
 }
 </script>

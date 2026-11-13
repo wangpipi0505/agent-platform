@@ -47,6 +47,9 @@ export const pageAccess: PageAccessEntry[] = [
   // ① 智能体（前端稿 §3.1：列表+详情=智能体工作区）
   { key: "apps", path: "/apps", title: "智能体管理", area: "智能体", read: "session", write: "builder", menu: true },
   { key: "app-workspace", path: "/apps", route: "/apps/:code/:tabMatch(.*)*", title: "智能体工作区", area: "智能体", read: "session", write: "builder", menu: false },
+  // F2-1：运行记录独立页（/apps/:code/records/:runId）——不与全局 run-detail（/runs/:runId，
+  // 返回语境=运行监控）合并：本页保留「返回工作区运行记录锚点」面包屑，详情实现复用 RunDetail。
+  { key: "app-run-record", path: "/apps", route: "/apps/:code/records/:runId", title: "运行记录详情", area: "智能体", read: "session", write: "", menu: false },
   // ② 任务与运行
   { key: "operations", path: "/operations", title: "运行中心", area: "任务与运行", read: "session", write: "admin", menu: true },
   { key: "runs", path: "/runs", title: "运行监控", area: "任务与运行", read: "session", write: "", menu: true },

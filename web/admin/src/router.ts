@@ -33,6 +33,15 @@ const routes: RouteRecordRaw[] = [
     component: () => import("./pages/AppWorkspacePage.vue"),
     meta: { access: "app-workspace", title: "智能体工作区" },
   },
+  // F2-1：智能体运行记录独立路由（静态段 records 优先于上方 tabMatch 通配，旧深链
+  // /apps/:code/records/:runId 由工作区内嵌分支自然迁移到本页）。不复用全局 run-detail
+  // （/runs/:runId 的返回语境是运行监控）：本页面包屑锚回工作区「运行记录」锚点。
+  {
+    path: "/apps/:code/records/:runId",
+    name: "app-run-record",
+    component: () => import("./pages/AppRunRecordPage.vue"),
+    meta: { access: "app-run-record", title: "运行记录详情" },
+  },
   {
     path: "/operations",
     name: "operations",

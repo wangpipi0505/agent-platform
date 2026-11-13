@@ -32,7 +32,9 @@ onMounted(() => void load());
     <el-table v-loading="busy" :data="items">
       <el-table-column label="运行编码" min-width="260">
         <template #default="{ row }">
-          <a :href="'#/runs/' + row.runId">{{ row.runId }}</a>
+          <!-- F2-1：跳工作区语境的独立记录页（app-run-record），面包屑可锚回本面板；
+               不再跳全局 /runs/:runId（其返回语境是运行监控）。 -->
+          <a :href="'#/apps/' + encodeURIComponent(props.appCode) + '/records/' + encodeURIComponent(row.runId)">{{ row.runId }}</a>
         </template>
       </el-table-column>
       <el-table-column label="状态" width="120">
