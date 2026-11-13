@@ -30,7 +30,9 @@
   --st-ok-text: #86efac;
   --st-fail: #f87171;
   --st-fail-text: #fca5a5;
-  --st-suspend: #fbbf24;
+  /* warning 语义对（方案 §7.3：--st-suspend(+ -text)=新增 warning，暗 #f59e0b/亮 #b45309）。
+     -text 文档未给暗色值，保留原亮黄 #fcd34d 作暗底文字色——自定待评审确认。 */
+  --st-suspend: #f59e0b;
   --st-suspend-text: #fcd34d;
   /* 兼容别名：历史 -dark 后缀变量接通同值，避免未知外部引用断链。 */
   --surface-dark: #0f1623;
@@ -41,7 +43,7 @@
   --st-run-dark: #60a5fa;
   --st-ok-dark: #4ade80;
   --st-fail-dark: #f87171;
-  --st-suspend-dark: #fbbf24;
+  --st-suspend-dark: #f59e0b;
   /* 字号梯度（§3.1）：正文/导航/输入15px，表格/按钮/标签14px，元数据/代码/胶囊≥13px */
   --text-body: 0.9375rem;
   --text-table: 0.875rem;
@@ -53,6 +55,41 @@
   --space-3: 0.75rem;
   --space-4: 1rem;
   --space-6: 1.5rem;
+  /* 间距六档（方案 §7.2：4/8/12/16/24/32 → --sp-1..6，重构线新页面统一用这套；
+     旧 --space-* 保留供存量页面，密度档不改六档值——密度由使用侧选 24/16 表达）。 */
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.5rem;
+  --sp-6: 2rem;
+  /* 阴影三档（方案 §7.3：暗色层次靠 surface 分级+边框，禁重投影，故暗档极轻）。
+     文档只定档数未给值，以下为自定值——待评审确认。 */
+  --elev-1: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --elev-2: 0 4px 12px rgba(0, 0, 0, 0.45);
+  --elev-3: 0 8px 24px rgba(0, 0, 0, 0.55);
+  /* 等宽字体：标识符（编码/ID/digest）用（方案 §7.3 排版表）。
+     文档未给字体栈，以下为自定值——待评审确认。 */
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  /* 方案 §7.3 配色词表（新命名，供重构线新卡引用；暗色默认值=文档"暗色值"列。
+     旧名（--canvas/--surface/…）不动，双词表并行，迁移在后续卡完成。
+     注意：本文件首块被 assistant.js 整块截取注入 :host，新令牌必须留在本块内。 */
+  --brand: #0ea5e9;
+  --brand-hover: #38bdf8;
+  --brand-active: #075985;
+  --btn-primary-bg: #0369a1;
+  --brand-subtle: rgba(14, 165, 233, 0.12);
+  --on-brand: #ffffff;
+  --bg-canvas: #0b1220;
+  --bg-surface-1: #111a2c;
+  --bg-surface-2: #182338;
+  --bg-surface-3: #1f2d47;
+  --border-subtle: #24314d;
+  --border-strong: #3b4d75;
+  --text-primary: #e6ecf7;
+  --text-secondary: #a9b6cd;
+  --text-tertiary: #6f7f9e;
+  --text-disabled: #4a5670;
   --radius: 0.5rem;
   --el-color-primary: var(--brand-primary);
   --el-border-radius-base: 6px;
@@ -96,6 +133,63 @@ html.dark {
   --el-fill-color-dark: #1e2b42;
   --el-fill-color-blank: #0f1623;
   --el-mask-color: rgba(5, 9, 16, 0.7);
+}
+/* 亮色主题段（方案 §7.3"暗色默认，亮色可切"）：html.light 一套 token 映射；
+   切换开关（顶栏按钮+localStorage+跟随系统）随 F4-4 落地，本卡只交付 token 段。
+   EP 组件亮色映射（--el-*）不在本卡范围，随 F4-4 补齐——当前 html.light 下 EP 变量未覆盖。 */
+html.light {
+  color-scheme: light;
+  /* 品牌（§7.3 文档指定亮色值列） */
+  --brand: #0284c7;
+  --brand-hover: #0369a1;
+  --brand-active: #075985;
+  --btn-primary-bg: #075985;
+  --brand-subtle: rgba(2, 132, 199, 0.08);
+  --on-brand: #ffffff;
+  /* 中性（§7.3 文档指定亮色值列） */
+  --bg-canvas: #f5f7fa;
+  --bg-surface-1: #ffffff;
+  --bg-surface-2: #eef1f6;
+  --bg-surface-3: #e3e8ef;
+  --border-subtle: #dfe3ea;
+  --border-strong: #c3cad6;
+  --text-primary: #101828;
+  --text-secondary: #475467;
+  --text-tertiary: #667085;
+  --text-disabled: #98a2b3;
+  /* 语义状态亮色：文档给基色（暗/亮同源第二列）；-text 在亮底上直接取基色（自定待评审） */
+  --st-ok: #15803d;
+  --st-ok-text: #15803d;
+  --st-fail: #dc2626;
+  --st-fail-text: #dc2626;
+  --st-run: #0284c7;
+  --st-run-text: #0284c7;
+  --st-suspend: #b45309;
+  --st-suspend-text: #b45309;
+  /* wait/neutral 文档只写"中性灰"未给值——自定取三级文本灰，待评审确认 */
+  --st-wait: #667085;
+  --st-wait-text: #475467;
+  /* 阴影三档亮色：白底下需可见投影（文档未给值，自定——待评审确认） */
+  --elev-1: 0 1px 2px rgba(16, 24, 40, 0.06);
+  --elev-2: 0 4px 8px rgba(16, 24, 40, 0.1);
+  --elev-3: 0 8px 24px rgba(16, 24, 40, 0.16);
+  /* 旧名映射：存量页面仍引用旧令牌，亮色切换时按 §7.3 亮色列一并覆盖，
+     否则旧页面在 html.light 下仍是暗值。映射对象=新词表，单点维护。 */
+  --canvas: var(--bg-canvas);
+  --surface: var(--bg-surface-1);
+  --surface-2: var(--bg-surface-2);
+  --surface-3: var(--bg-surface-3);
+  --line: var(--border-subtle);
+  --ink: var(--text-primary);
+  --muted: var(--text-secondary);
+  --brand-primary: var(--brand);
+  --brand-primary-hover: var(--brand-hover);
+  /* 侧栏亮色：文档未定义 nav 令牌，取表面一/文本系——自定待评审确认 */
+  --nav: var(--bg-surface-1);
+  --nav-text: var(--text-secondary);
+  --nav-text-active: var(--text-primary);
+  --nav-muted: var(--text-tertiary);
+  --nav-active-bg: var(--brand-subtle);
 }
 /* 实心主色/危险按钮的前景独立取色：白字压 #0ea5e9 仅 2.8:1，不满足正文对比度。
    link/text/plain 按钮保持主色文字与透明底，不能被本规则覆盖。 */
@@ -224,10 +318,31 @@ pre {
   max-height: 45vh;
   overflow: auto;
 }
+/* 应用壳=100dvh 网格，永不横向强扩（方案 §7.1 高度铁律①；删 min-width:85.375rem，
+   1280px 视口不再被强制 1366px 宽 → 无横向滚动的壳层机制）。
+   行模板 auto 1fr（顶栏/主体）为 F1-2 壳层重排预留：现顶栏仍在 .main 内部，
+   故 nav/main 两个直接子元素纵跨两行，渲染与原 flex 布局等价；
+   html,body 的 overflow:hidden 与 .page-scroll 接线随 F1-2 启用（§7.4 断言7：老页面暂许整页滚动）。 */
 .shell {
-  display: flex;
-  min-height: 100vh;
-  min-width: 85.375rem;
+  height: 100dvh;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  grid-template-columns: auto 1fr;
+}
+.shell > .nav {
+  grid-column: 1;
+  grid-row: 1 / -1;
+}
+.shell > .main {
+  grid-column: 2;
+  grid-row: 1 / -1;
+  min-height: 0;
+}
+/* 全站唯一内容滚动容器（方案 §7.1 高度铁律②）：只有它出现滚动条；
+   供 F1-2/F1-3 接线详情页/表格页，本卡仅交付类定义。 */
+.page-scroll {
+  overflow-y: auto;
+  min-height: 0;
 }
 .nav {
   width: var(--lay-sidebar);
@@ -262,6 +377,7 @@ pre {
 .main {
   flex: 1;
   min-width: 0;
+  min-height: 0;
 }
 .topbar {
   height: 3.5rem;
@@ -322,6 +438,14 @@ pre {
 .stat {
   font-size: 1.6rem;
   font-variant-numeric: tabular-nums;
+}
+/* 数字等宽工具类（方案 §7.3 排版表）：表格数值列、耗时、token 数、计数一律挂本类。 */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+/* 标识符（编码/ID/digest）等宽工具类（方案 §7.3 排版表）。 */
+.font-mono {
+  font-family: var(--font-mono);
 }
 /* 状态胶囊：暗色底混合（不再混白），文字用成对的 -text 亮色并保留状态文字 */
 .status {
@@ -398,7 +522,7 @@ pre {
   background: var(--surface-2) !important;
 }
 textarea {
-  font-family: Consolas, monospace;
+  font-family: var(--font-mono);
 }
 .el-dialog {
   width: clamp(28rem, 50vw, 60rem) !important;
