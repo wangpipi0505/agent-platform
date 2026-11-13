@@ -55,4 +55,13 @@ public class TaskController {
   public Object resume(@PathVariable("taskId") long taskId, @RequestBody(required = false) JsonNode req) {
     return ApiResponse.ok(tasks.resume(taskId, req, Actor.current()));
   }
+  /** GET /v1/tasks/{taskId}/steps/{stepId}/calls：步骤调用列表（锚点定位，接口稿 §5.7）。 */
+  @GetMapping("/v1/tasks/{taskId}/steps/{stepId}/calls")
+  public Object stepCalls(
+          @PathVariable("taskId") long taskId,
+          @PathVariable("stepId") String stepId,
+          @RequestParam(value = "page", defaultValue = "1") int page,
+          @RequestParam(value = "pageSize", defaultValue = "20") int pageSize) {
+    return ApiResponse.ok(tasks.stepCalls(taskId, stepId, page, pageSize, Actor.current()));
+  }
 }

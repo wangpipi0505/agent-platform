@@ -284,6 +284,93 @@ public class Tasks {
     return detail(taskId, actor);
   }
 
+  /**
+   * 步骤调用列表（接口稿 §5.7）：依次核对任务/步骤/运行归属再分页列举。
+   * 锚点形状 {callId,skillCode,skillVersion,status,errorSummary,appCode,sessionId,eventSeq,
+   * startedAt,durationMs}——appCode/sessionId/eventSeq 来自 tool/call 会话事件（H1-6 链路），
+   * 无锚点（appCode/sessionId/eventSeq 为 null）如实返回 null（前端隐藏跳转保留错误摘要）。
+   * 直接任务的入口步骤经 task_step.run_id 反查；查询人须为任务归属主体（F3-1 消费同口径）。
+   */
+  public Map<String, Object> stepCalls(long taskId, String stepId, int page, int pageSize, Actor actor) {
+    var task = ownedTask(taskId, actor);
+    if (pageSize < 1 || pageSize > 100)
+      throw new PlatformException(400, "TASK_PAGE_INVALID", "pageSize 上限 100");
+    var step =
+            store.db()
+                    .queryForList(
+                            "select step_id,run_id,state from engine.task_step where task_id=? and step_id=?",
+                            taskId,
+                            stepId);
+    if (step.isEmpty())
+      throw new PlatformException(404, "TASK_STEP_NOT_FOUND", "任务步骤不存在: " + stepId);
+    Long runId = (Long) step.getFirst().get("run_id");
+    if (runId == null)
+      return Map.of(
+              "taskId",
+              task.get("public_id"),
+              "stepId",
+              stepId,
+              "calls",
+              List.of(),
+              "total",
+              0,
+              "page",
+              page);
+    var run = store.db().queryForMap("select public_id,app_code from engine.run where id=?", runId);
+    int total =
+            store.db()
+                    .queryForObject(
+                            "select count(*) from engine.tool_call where run_id=?", Integer.class, runId);
+    var rows =
+            store.db()
+                    .queryForList(
+                            "select id,skill_code,skill_version_id,status,error_semantic,duration_ms,created_at"
+                                + " from engine.tool_call where run_id=? order by id limit ? offset ?",
+                            runId,
+                            pageSize,
+                            (page - 1) * pageSize);
+    var calls = new ArrayList<Map<String, Object>>();
+    for (var row : rows) {
+      long callId = TraceStore.number(row, "id");
+      // 锚点：tool/call 会话事件（H1-6 登记，按 callId 唯一）——无会话关联则为 null 三件
+      var anchor =
+              store.db()
+                      .queryForList(
+                              "select se.session_id,se.seq,cs.app_code from engine.session_event se"
+                                  + " join engine.chat_session cs on cs.public_id=se.session_id"
+                                  + " where se.type='tool/call' and se.data->>'callId'=?"
+                                  + " order by se.seq limit 1",
+                              String.valueOf(callId));
+      var call = new LinkedHashMap<String, Object>();
+      call.put("callId", String.valueOf(callId));
+      call.put("skillCode", row.get("skill_code"));
+      call.put("skillVersion", row.get("skill_version_id"));
+      call.put("status", row.get("status"));
+      call.put(
+              "errorSummary",
+              row.get("error_semantic") == null ? null : String.valueOf(row.get("error_semantic")));
+      call.put("durationMs", row.get("duration_ms"));
+      if (anchor.isEmpty()) {
+        call.put("appCode", null);
+        call.put("sessionId", null);
+        call.put("eventSeq", null);
+      } else {
+        call.put("appCode", anchor.getFirst().get("app_code"));
+        call.put("sessionId", anchor.getFirst().get("session_id"));
+        call.put("eventSeq", anchor.getFirst().get("seq"));
+      }
+      calls.add(call);
+    }
+    return Map.of(
+            "taskId", task.get("public_id"),
+            "stepId", stepId,
+            "runId", run.get("public_id"),
+            "calls", calls,
+            "total", total,
+            "page", page,
+            "pageSize", pageSize);
+  }
+
   private Map<String, Object> ownedTask(long taskId, Actor actor) {
     var rows =
             store.db()

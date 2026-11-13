@@ -54,6 +54,8 @@ class TasksApiTest {
     @AfterEach
     void clean() {
         db.update("delete from engine.task_event where task_id in(select id from engine.task where tenant_id='engine-test')");
+        db.update("delete from engine.task_step where task_id in(select id from engine.task where tenant_id='engine-test')");
+        db.update("delete from engine.task_event where task_id in(select id from engine.task where tenant_id='engine-test')");
         db.update("delete from engine.task where tenant_id='engine-test'");
         db.update("delete from engine.session_event where session_id like 'ti-%'");
         db.update("delete from engine.chat_session where public_id like 'ti-%'");
@@ -145,5 +147,46 @@ class TasksApiTest {
     private long taskId(Map<String, Object> detail) {
         String publicId = detail.get("taskId").toString();
         return db.queryForObject("select id from engine.task where public_id=?", Long.class, publicId);
+    }
+
+    @Test
+    void stepCallsAnchorFromToolCallSessionEvent() {
+        var t = tasks.create("t2-app", req("r-5", "AGENT"), actor);
+        long tid = taskId(t);
+        // 运行（直接任务 entry 归属）
+        long runId =
+                db.queryForObject(
+                        "insert into engine.run(public_id,app_code,debug_snapshot,trigger_type,status,principal_id,tenant_id,input_ref,version_refs,guard_ctx,budget,snapshot,inputs,mode)"
+                            + " values(?,'t2-app','{}','DEBUG','RUNNING','alice','engine-test','pg:test','{}','{}','{}','{}','{}','STEP') returning id",
+                        Long.class,
+                        "r_h_t2_" + UUID.randomUUID());
+        long nid =
+                db.queryForObject(
+                        "insert into engine.node_instance(run_id,node_def_id,step_seq,node_type,status,definition)"
+                            + " values(?,'n1',1,'CODE','RUNNING','{\"type\":\"CODE\"}') returning id",
+                        Long.class,
+                        runId);
+        db.update("insert into engine.task_step(task_id,step_id,state,run_id) values(?,?,'RUNNING',?)", tid, "entry", runId);
+        // 一个 SUCCEEDED 调用（无会话关联——独立任务锚点三件为 null）
+        var claim = store.claim(nid, "w");
+        db.update(
+                "insert into engine.tool_call(run_id,node_instance_id,call_seq,skill_version_id,args_digest,args_ref,idempotency_key,status,skill_code,args,attempt_id)"
+                    + " values(?,?,1,42,?,'pg:fixture',?,'SUCCEEDED','lookup','{}'::jsonb,?)",
+                runId,
+                nid,
+                Digest.sha256("t2:" + nid + ":1:42"),
+                Digest.sha256(nid + ":fixture"),
+                TraceStore.number(claim, "attemptId"));
+        // 查询 calls 列表
+        var out = tasks.stepCalls(tid, "entry", 1, 20, actor);
+        assertEquals(1, ((Number) out.get("total")).intValue());
+        var calls = (java.util.List<?>) out.get("calls");
+        assertEquals(1, calls.size());
+        var call = (Map<?, ?>) calls.get(0);
+        assertEquals("lookup", call.get("skillCode"));
+        assertEquals("SUCCEEDED", call.get("status"));
+        assertNull(call.get("appCode"), "独立任务无会话锚点三件为 null");
+        assertNull(call.get("sessionId"));
+        assertNull(call.get("eventSeq"));
     }
 }
