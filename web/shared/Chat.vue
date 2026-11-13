@@ -12,6 +12,7 @@ import Artifacts from "./Artifacts.vue";
 import SchemaInputs from "./SchemaInputs.vue";
 import { inputFields } from "./input-schema";
 import { restoreSession, writeSessionUrl } from "./session";
+import { confirmDanger } from "./components/DangerConfirm";
 const sessionId = ref(
   new URLSearchParams(location.search).get("sessionId") || "",
 );
@@ -269,7 +270,15 @@ async function followRun(api: ReturnType<typeof useApi>, base: string, observedI
 }
 async function stop() {
   if (!runId.value || !busy.value || !observing.value) return;
-  if (!confirm("确认停止当前运行？")) return;
+  // F1-3：原生 confirm 清零，停止运行改走 DangerConfirm。
+  if (
+    !(await confirmDanger({
+      title: "停止运行",
+      message: "确认停止当前运行？",
+      confirmText: "停止",
+    }))
+  )
+    return;
   const id = runId.value, owned = controller, message = messages.value.at(-1);
   try {
     const cancelled = await useApi()(

@@ -72,6 +72,8 @@ function mountChat() {
     : id.endsWith('/content') ? content
     : id.endsWith('/run-protocol') ? protocol
     : id.endsWith('/input-schema') ? inputSchema
+    // F1-3：停止确认改走 DangerConfirm.confirmDanger；沙箱委托给被 stub 的原生 confirm。
+    : id.includes('/DangerConfirm') ? { confirmDanger: async () => (globalThis.confirm as ((m: string) => boolean) | undefined)?.('confirm') ?? true }
     : id.endsWith('/server-authority') ? authority
     : id.endsWith('/session') ? session
     : id.endsWith('/run-observer') ? { observeRun }

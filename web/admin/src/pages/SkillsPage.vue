@@ -2,10 +2,12 @@
 import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
 import BusinessCategorySelect from "../BusinessCategorySelect.vue";
-import {businessCategories} from "../../../shared/skill-catalog";
-import PageError from "../PageError.vue";
+import { businessCategories } from "../../../shared/skill-catalog";
 import PageHeader from "../PageHeader.vue";
 import SkillWizard from "../SkillWizard.vue";
+import DataPage from "../../../shared/components/DataPage.vue";
+import EmptyState from "../../../shared/components/EmptyState.vue";
+import ErrorBanner from "../../../shared/components/ErrorBanner.vue";
 import { usePageTitle } from "../usePageOperation";
 import ResourceDetailPanel from "./resources/ResourceDetailPanel.vue";
 import { displayTime, statusLabel } from "./resources/resource-format";
@@ -23,17 +25,65 @@ const {
   filter,
   page,
   pageSize,
-  filtered:baseFiltered,
+  filtered: baseFiltered,
   load,
 } = useResourceList("skills");
 
-const businessCategory=ref('');
-const filtered=computed(()=>baseFiltered.value.filter(row=>!businessCategory.value||(row.bizCategories||['GENERAL']).includes(businessCategory.value)));
-const paginated=computed(()=>filtered.value.slice((page.value-1)*pageSize.value,page.value*pageSize.value));
-function categories(row:any){return (row.bizCategories||['GENERAL']).map((code:string)=>businessCategories.find(item=>item.code===code)?.name||code).join('、')}
+// F1-3：分页收敛到 20/50/100 单一规格（方案 §4）；本页为四段高度模型样板页②。
+pageSize.value = 20;
+
+const businessCategory = ref("");
+const filtered = computed(
+  () =>
+    baseFiltered.value.filter(
+      (row) =>
+        !businessCategory.value ||
+        (row.bizCategories || ["GENERAL"]).includes(businessCategory.value),
+    ),
+);
+const paginated = computed(() =>
+  filtered.value.slice((page.value - 1) * pageSize.value, page.value * pageSize.value),
+);
+function categories(row: any) {
+  return (row.bizCategories || ["GENERAL"])
+    .map((code: string) => businessCategories.find((item) => item.code === code)?.name || code)
+    .join("、");
+}
 const detail = ref<any>();
 const createOpen = ref(false);
 const form = ref<any>({});
+
+// —— 已生效筛选 chip 回显（方案 §4）：本页为客户端过滤，chips 即实时筛选状态，可单个移除。
+const hasFilter = computed(() =>
+  Boolean(filter.keyword || filter.status || businessCategory.value),
+);
+const chips = computed(() => {
+  const list: { key: string; label: string; clear: () => void }[] = [];
+  if (filter.keyword)
+    list.push({
+      key: "keyword",
+      label: `搜索：${filter.keyword}`,
+      clear: () => (filter.keyword = ""),
+    });
+  if (filter.status)
+    list.push({
+      key: "status",
+      label: `状态：${filter.status}`,
+      clear: () => (filter.status = ""),
+    });
+  if (businessCategory.value)
+    list.push({
+      key: "bizCategory",
+      label: `业务分类：${businessCategory.value}`,
+      clear: () => (businessCategory.value = ""),
+    });
+  return list;
+});
+function clearFilters() {
+  filter.keyword = "";
+  filter.status = "";
+  businessCategory.value = "";
+}
 
 function create() {
   form.value = {
@@ -73,30 +123,59 @@ function openImported(code: string) {
 </script>
 
 <template>
-  <PageHeader
-    title="技能库"
-    subtitle="注册、校验并复用可调用的业务能力。"
-    :busy="busy"
-    @refresh="load"
+  <DataPage
+    v-model:page="page"
+    v-model:page-size="pageSize"
+    :total="filtered.length"
   >
-    <!-- UI-03/UI-02遗留补迁移：主操作经PageHeader actions插槽迁入AppShell顶栏挂载点。 -->
-    <template #actions>
-      <el-button type="primary" v-permission="'edit'" @click="create()"
-        >注册技能</el-button
+    <template #header>
+      <PageHeader
+        title="技能库"
+        subtitle="注册、校验并复用可调用的业务能力。"
+        :busy="busy"
+        @refresh="load"
+      >
+        <!-- UI-03/UI-02遗留补迁移：主操作经PageHeader actions插槽迁入AppShell顶栏挂载点。 -->
+        <template #actions>
+          <el-button type="primary" v-permission="'edit'" @click="create()"
+            >注册技能</el-button
+          >
+        </template>
+      </PageHeader>
+    </template>
+    <template #error>
+      <ErrorBanner :error="error" :trace="trace" />
+    </template>
+    <template #filters>
+      <el-input
+        v-model="filter.keyword"
+        clearable
+        placeholder="搜索技能名称或编码"
+        style="width: 16rem"
+      />
+      <el-input
+        v-model="filter.status"
+        clearable
+        placeholder="状态"
+        style="width: 10rem"
+      />
+      <BusinessCategorySelect v-model="businessCategory" />
+      <el-button text @click="businessCategory = ''">全部分类</el-button>
+    </template>
+    <template #chips>
+      <el-tag
+        v-for="chip in chips"
+        :key="chip.key"
+        closable
+        @close="chip.clear()"
+        >{{ chip.label }}</el-tag
+      >
+      <el-button v-if="hasFilter" text size="small" @click="clearFilters"
+        >清除筛选</el-button
       >
     </template>
-  </PageHeader>
-  <PageError :error="error" :trace="trace" />
-  <div class="row">
-    <div class="muted">共 {{ filtered.length }} 条记录</div>
-  </div>
-  <div class="panel">
-    <div class="filters">
-      <el-input v-model="filter.keyword" clearable placeholder="搜索技能名称或编码" />
-      <el-input v-model="filter.status" clearable placeholder="状态" /><BusinessCategorySelect v-model="businessCategory" /><el-button text @click="businessCategory=''">全部分类</el-button>
-    </div>
     <el-skeleton v-if="busy" :rows="5" animated />
-    <el-table v-else :data="paginated" stripe>
+    <el-table v-else :data="paginated" stripe height="100%">
       <el-table-column label="名称 / 编码" min-width="200">
         <template #default="{ row }">
           <a :href="'#/skills/' + encodeURIComponent(row.code)">{{
@@ -137,21 +216,17 @@ function openImported(code: string) {
         </template>
       </el-table-column>
       <template #empty>
-        <el-empty
-          :description="error ? '服务暂不可用，请刷新重试' : '暂无技能；注册后可在流程中调用。'"
+        <EmptyState
+          :variant="error ? 'error' : hasFilter ? 'filtered' : 'create'"
+          :description="
+            error ? error : hasFilter ? '' : '暂无技能；注册后可在流程中调用。'
+          "
+          :action-text="error ? '刷新重试' : hasFilter ? '清除筛选' : '注册技能'"
+          @action="error ? load() : hasFilter ? clearFilters() : create()"
         />
       </template>
     </el-table>
-    <el-pagination
-      v-model:current-page="page"
-      v-model:page-size="pageSize"
-      :page-sizes="[12, 24, 48]"
-      :total="filtered.length"
-      layout="sizes,prev,pager,next,total"
-      style="margin-top: 1rem"
-      @size-change="page = 1"
-    />
-  </div>
+  </DataPage>
   <ResourceDetailPanel :detail="detail" />
   <el-dialog
     v-model="createOpen"

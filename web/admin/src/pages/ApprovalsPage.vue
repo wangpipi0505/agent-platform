@@ -6,6 +6,7 @@ import { usePageTitle } from "../usePageOperation";
 import ResourceDetailPanel from "./resources/ResourceDetailPanel.vue";
 import ActionPlanPanel from "./ActionPlanPanel.vue";
 import { approvePayload } from "../../../shared/approval";
+import { confirmDanger } from "../../../shared/components/DangerConfirm";
 import { statusLabel } from "./resources/resource-format";
 import { useResourceList } from "./resources/useResourceList";
 
@@ -33,12 +34,16 @@ async function approval(row: any, action: string) {
       action === "APPROVE",
       crypto.randomUUID(),
     );
+    // F1-3：原生 confirm 清零，批准/拒绝执行改走 DangerConfirm（快照全文随弹窗展示）。
     if (
-      !confirm(
-        action === "APPROVE"
-          ? `确认按上述行动计划执行？当前服务端快照：\n${JSON.stringify(row, null, 2)}`
-          : "确认拒绝此次执行？",
-      )
+      !(await confirmDanger({
+        title: action === "APPROVE" ? "批准执行" : "拒绝执行",
+        message:
+          action === "APPROVE"
+            ? `确认按上述行动计划执行？当前服务端快照：\n${JSON.stringify(row, null, 2)}`
+            : "确认拒绝此次执行？",
+        confirmText: action === "APPROVE" ? "允许执行" : "拒绝",
+      }))
     )
       return;
     await api(
