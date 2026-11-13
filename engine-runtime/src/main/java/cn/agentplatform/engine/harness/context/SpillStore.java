@@ -175,6 +175,8 @@ public final class SpillStore {
     String ref = sink.finish();
     String spillId = "s_" + UUID.randomUUID().toString().replace("-", "");
     String preview = stream.previewText();
+    // MessageDigest.digest() 返回后自复位——摘要只取一次并复用（行与回填必须同值）。
+    String sha256 = stream.hexDigest();
     Instant expires = Instant.now().plus(DEFAULT_RETENTION);
     tx.execute(
             status ->
@@ -189,7 +191,7 @@ public final class SpillStore {
                               KIND_TOOL_RESULT,
                               ref,
                               stream.total,
-                              stream.hexDigest(),
+                              sha256,
                               preview,
                               Timestamp.from(expires));
                       return null;
@@ -200,7 +202,7 @@ public final class SpillStore {
     backfill.put("locator", ref);
     backfill.put("preview", preview);
     backfill.put("bytes", stream.total);
-    backfill.put("sha256", stream.hexDigest());
+    backfill.put("sha256", sha256);
     return backfill;
   }
 
