@@ -60,6 +60,15 @@ const routes: RouteRecordRaw[] = [
     component: () => import("./pages/RunDetailPage.vue"),
     meta: { access: "run-detail", title: "运行详情" },
   },
+  // F3-2：管理台只读计划详情（前端稿 §5.3：管理台供运维查看对应计划与执行链路）。
+  // 追加式注册：排在既有任务与运行条目（run-detail）之后；确认/执行入口属助手端
+  // 计划卡（F4-3），本页只读、不进菜单（深链 /plans/:planId，同 run-detail 的参数页模式）。
+  {
+    path: "/plans/:planId",
+    name: "plan-detail",
+    component: () => import("./pages/PlanDetailPage.vue"),
+    meta: { access: "plan-detail", title: "计划详情" },
+  },
   {
     path: "/skills",
     name: "skills",
