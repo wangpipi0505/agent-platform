@@ -1,8 +1,13 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, watch } from "vue";
-import Chat from "../../shared/Chat.vue";
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useAuth, login } from "../../shared/api";
+import { truncateTitle } from "../../shared/mock-session";
 import { connectHostChannel, type HostChannelHandle } from "./host-channel";
+import SessionList from "./SessionList.vue";
+import MyMemories from "./MyMemories.vue";
+import AssistantChat from "./AssistantChat.vue";
+import type { SessionView } from "./demo-flow";
+
 const auth = useAuth();
 const error = ref("");
 const code = decodeURIComponent(
@@ -26,18 +31,204 @@ async function enter() {
     error.value = e.message;
   }
 }
+
+/** F4-1/F4-2 侧栏：会话列表（切换/新建）与我的记忆两 tab；<768px 侧栏收抽屉（前端稿 §5.4 断点）。 */
+const sideTab = ref<"sessions" | "memories">("sessions");
+const drawerOpen = ref(false);
+const narrow = ref(false);
+let mediaQuery: MediaQueryList | null = null;
+function onMediaChange(e: MediaQueryListEvent) {
+  narrow.value = e.matches;
+  if (!e.matches) drawerOpen.value = false;
+}
+const stopMedia = () => mediaQuery?.removeEventListener("change", onMediaChange);
+
+/** 当前会话（sessionId=""=新建草稿）；新建会话首次发送后由 session-created 回填侧栏。 */
+const current = ref<SessionView | null>(null);
+const localRows = ref<SessionView[]>([]);
+function selectRow(row: SessionView) {
+  current.value = row;
+  drawerOpen.value = false;
+}
+function createSession() {
+  current.value = { sessionId: "", title: "新会话", lastActiveAt: "", state: "活跃", appCode: code };
+  sideTab.value = "sessions";
+  drawerOpen.value = false;
+}
+function onSessionCreated(sessionId: string, title: string) {
+  const row: SessionView = {
+    sessionId,
+    title: truncateTitle(title),
+    lastActiveAt: new Date().toISOString().slice(0, 16),
+    state: "活跃",
+    appCode: code,
+  };
+  localRows.value.unshift(row);
+  current.value = row;
+}
+
+/** 消息操作「保存为记忆」→侧栏我的记忆保存表单（回填正文+当前会话 ID）。 */
+const memoriesRef = ref<InstanceType<typeof MyMemories>>();
+async function openMemoryForm(text: string) {
+  sideTab.value = "memories";
+  if (narrow.value) drawerOpen.value = true;
+  await nextTick();
+  memoriesRef.value?.openSaveForm({ content: text, sessionId: current.value?.sessionId ?? "" });
+}
+
+onMounted(() => {
+  mediaQuery = matchMedia("(max-width: 768px)");
+  narrow.value = mediaQuery.matches;
+  mediaQuery.addEventListener("change", onMediaChange);
+});
+onBeforeUnmount(stopMedia);
 </script>
 <template>
-  <header class="topbar">
-    <strong>{{ code }} · 业务对话</strong><span class="muted">智能体平台</span>
-  </header>
-  <main class="content">
-    <div v-if="!auth.token" class="panel">
-      <h1>开始对话</h1>
-      <p class="muted">请先获取当前环境的身份票据。</p>
-      <el-button type="primary" @click="enter">开发登录</el-button>
-      <p v-if="error" role="alert">{{ error }}</p>
-    </div>
-    <Chat v-else :app-code="code" />
-  </main>
+  <div class="app">
+    <header class="topbar">
+      <span class="topbar-left">
+        <el-button
+          v-if="narrow && auth.token"
+          class="menu-btn"
+          size="small"
+          @click="drawerOpen = true"
+        >
+          会话/记忆
+        </el-button>
+        <strong>{{ code }} · 业务对话</strong><span class="muted">智能体平台</span>
+      </span>
+    </header>
+    <main class="assistant-shell">
+      <div v-if="!auth.token" class="panel">
+        <h1>开始对话</h1>
+        <p class="muted">请先获取当前环境的身份票据。</p>
+        <el-button type="primary" @click="enter">开发登录</el-button>
+        <p v-if="error" role="alert">{{ error }}</p>
+      </div>
+      <template v-else>
+        <aside :class="['sidebar', { open: drawerOpen }]">
+          <nav class="side-tabs" aria-label="侧栏切换">
+            <button
+              type="button"
+              :class="['side-tab', { active: sideTab === 'sessions' }]"
+              @click="sideTab = 'sessions'"
+            >
+              会话
+            </button>
+            <button
+              type="button"
+              :class="['side-tab', { active: sideTab === 'memories' }]"
+              @click="sideTab = 'memories'"
+            >
+              我的记忆
+            </button>
+          </nav>
+          <SessionList
+            v-show="sideTab === 'sessions'"
+            :active-id="current?.sessionId ?? ''"
+            :local-rows="localRows"
+            @select="selectRow"
+            @create="createSession"
+          />
+          <MyMemories
+            v-show="sideTab === 'memories'"
+            ref="memoriesRef"
+            :session-id="current?.sessionId ?? ''"
+          />
+        </aside>
+        <div
+          v-if="narrow && drawerOpen"
+          class="scrim"
+          @click="drawerOpen = false"
+        />
+        <AssistantChat
+          class="chat-pane"
+          :session="current"
+          @save-memory="openMemoryForm"
+          @session-created="onSessionCreated"
+        />
+      </template>
+    </main>
+  </div>
 </template>
+<style scoped>
+.app {
+  height: 100dvh;
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.assistant-shell {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 17rem minmax(0, 1fr);
+}
+.sidebar {
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  background: var(--nav);
+  border-right: 1px solid var(--line);
+}
+.side-tabs {
+  display: flex;
+  gap: var(--sp-1);
+}
+.side-tab {
+  flex: 1;
+  padding: var(--sp-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--nav-text);
+  cursor: pointer;
+  font-size: var(--text-meta);
+}
+.side-tab.active {
+  background: var(--nav-active-bg);
+  color: var(--nav-text-active);
+  border-color: var(--brand-primary);
+}
+.chat-pane {
+  min-width: 0;
+  min-height: 0;
+}
+.scrim {
+  position: fixed;
+  inset: 0;
+  background: var(--el-mask-color);
+  z-index: 20;
+}
+.menu-btn {
+  display: none;
+}
+/* 窄屏断点（前端稿 §5.4）：<768px 会话列表收抽屉，主列占满、无 clamp 固定宽。 */
+@media (max-width: 768px) {
+  .assistant-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: min(80vw, 20rem);
+    z-index: 30;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+  }
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  .menu-btn {
+    display: inline-flex;
+  }
+}
+</style>

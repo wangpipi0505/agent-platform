@@ -100,8 +100,9 @@ describe("Shadow DOM 与 webapp 视觉统一", () => {
       expect(widgetCssSource).toContain(rule);
   });
 
-  it("webapp 复用全局令牌与 Chat 组件（登记：复用主题无需修改核心结构）", () => {
-    expect(appVueSource).toContain('import Chat from "../../shared/Chat.vue"');
+  it("webapp 复用全局令牌与自有助手端结构（F4 mock 期登记更新：SessionList/AssistantChat/三卡替换 Chat 直连；tokens 复用与顶栏/面板结构不变）", () => {
+    expect(appVueSource).toContain('import SessionList from "./SessionList.vue"');
+    expect(appVueSource).toContain('import AssistantChat from "./AssistantChat.vue"');
     expect(appVueSource).toContain('class="topbar"');
     expect(appVueSource).toContain('class="panel"');
   });
