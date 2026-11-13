@@ -47,8 +47,10 @@ class SessionStoreContractTest {
     }
 
     @BeforeEach
+    @AfterEach
     void clean() {
         // session_event 追加不可变（触发器守护）——测试清理期临时禁用，删完即复启。
+        // AfterEach 同样清理：防止本类残留行污染其他对 chat_session 做无界清理的测试类（FK）。
         db.execute("ALTER TABLE engine.session_event DISABLE TRIGGER session_event_append_only_guard");
         db.update("delete from engine.session_event where session_id like 'hs_t_%'");
         db.execute("ALTER TABLE engine.session_event ENABLE TRIGGER session_event_append_only_guard");
