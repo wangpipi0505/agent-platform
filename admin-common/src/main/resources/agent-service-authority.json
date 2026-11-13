@@ -612,6 +612,42 @@
   "reason": ""
  },
  {
+  "method": "GET",
+  "template": "/v1/apps/{code}/sessions/{id}/events",
+  "caller": "gateway",
+  "target": "engine",
+  "action": "proxy.engine.get.ChatSessionController.events",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/ChatSessionController.java:52",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
+  "reason": ""
+ },
+ {
+  "method": "POST",
+  "template": "/v1/apps/{code}/sessions/{id}/control",
+  "caller": "gateway",
+  "target": "engine",
+  "action": "proxy.engine.post.ChatSessionController.control",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/ChatSessionController.java:64",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
+  "reason": ""
+ },
+ {
+  "method": "GET",
+  "template": "/v1/apps/{code}/sessions/{id}/events/stream",
+  "caller": "gateway",
+  "target": "engine",
+  "action": "proxy.engine.get.ChatSessionController.stream",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/ChatSessionController.java:71",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
+  "reason": ""
+ },
+ {
   "method": "POST",
   "template": "/admin/apps/{code}/sessions",
   "caller": "gateway",
