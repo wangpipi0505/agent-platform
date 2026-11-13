@@ -2,6 +2,7 @@
 import { ref, watch } from "vue";
 import { useApi } from "./api";
 import { approvePayload } from "./approval";
+import { confirmDanger } from "./components/DangerConfirm";
 const props = defineProps<{ runId: string; endpoint?: string }>();
 const rows = ref<any[]>([]);
 const error = ref("");
@@ -27,7 +28,13 @@ watch(
   { immediate: true },
 );
 async function decide(row: any, approved: boolean) {
-  if (!confirm(approved ? "确认依据此参数快照允许执行？" : "确认拒绝执行？"))
+  if (
+    !(await confirmDanger({
+      title: approved ? "批准执行" : "拒绝执行",
+      message: approved ? "确认依据此参数快照允许执行？" : "确认拒绝此次执行？",
+      confirmText: approved ? "允许执行" : "拒绝",
+    }))
+  )
     return;
   busy.value = true;
   try {

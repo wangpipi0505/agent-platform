@@ -17,6 +17,7 @@ import {
   type PublishPrecheck,
   type WaiverView,
 } from "../../publish-gate";
+import { confirmDanger } from "../../../../shared/components/DangerConfirm";
 
 const props = defineProps<{
   app: AppDetail;
@@ -174,10 +175,14 @@ async function applyWaiver() {
     waiverError.value = "当前没有评测门禁拦截，无需申请豁免。";
     return;
   }
+  // F1-3：原生 confirm 清零，豁免申请改走 DangerConfirm。
   if (
-    !confirm(
-      "确认豁免发布门禁？豁免最长 24 小时、仅覆盖评测门禁，绑定当前候选摘要，撤销或到期立即失效。",
-    )
+    !(await confirmDanger({
+      title: "申请发布豁免",
+      message:
+        "确认豁免发布门禁？豁免最长 24 小时、仅覆盖评测门禁，绑定当前候选摘要，撤销或到期立即失效。",
+      confirmText: "申请豁免",
+    }))
   )
     return;
   waiverBusy.value = true;
@@ -209,7 +214,15 @@ async function applyWaiver() {
 async function revokeWaiver() {
   const target = sessionWaiver.value?.id ?? gate.value.waiver?.id;
   if (!target || waiverBusy.value) return;
-  if (!confirm("确认撤销该豁免？撤销后评测门禁立即恢复约束。")) return;
+  // F1-3：原生 confirm 清零，豁免撤销改走 DangerConfirm。
+  if (
+    !(await confirmDanger({
+      title: "撤销发布豁免",
+      message: "确认撤销该豁免？撤销后评测门禁立即恢复约束。",
+      confirmText: "撤销",
+    }))
+  )
+    return;
   waiverBusy.value = true;
   waiverError.value = "";
   try {

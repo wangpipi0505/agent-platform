@@ -7,6 +7,7 @@ import PageHeader from "../PageHeader.vue";
 import RunDetail from "../RunDetail.vue";
 import { usePageOperation, usePageTitle } from "../usePageOperation";
 import { useUnsavedChanges } from "../../../shared/useUnsavedChanges";
+import { confirmDanger } from "../../../shared/components/DangerConfirm";
 import { buildEnvironmentConfirmation, isGateRejection, type EnvironmentConfirmation, type GateRejection } from "../publish-gate";
 import AppOverviewPanel from "./workspace/AppOverviewPanel.vue";
 import AppPublishPanel from "./workspace/AppPublishPanel.vue";
@@ -250,7 +251,19 @@ function onEvaluationReport(value: any) {
 }
 async function commit() {
   const demo = precheck.value?.publicationTarget === "NON_PRODUCTION" && precheck.value?.evaluationEnvironment === "DEMO";
-  if (!confirm(import.meta.env.VITE_MOCK==='true' ? '确认发布当前候选版本？发布后将保留独立的配置快照。' : demo ? "确认仅进行本次非生产演示发布？该演示评测不能作为生产来源证明。" : "确认将当前候选发布为正式版本？发布后可被业务系统调用。")) {
+  // F1-3：原生 confirm 清零，候选发布改走 DangerConfirm（文案按目标环境区分）。
+  if (
+    !(await confirmDanger({
+      title: "发布候选版本",
+      message:
+        import.meta.env.VITE_MOCK === 'true'
+          ? "确认发布当前候选版本？发布后将保留独立的配置快照。"
+          : demo
+            ? "确认仅进行本次非生产演示发布？该演示评测不能作为生产来源证明。"
+            : "确认将当前候选发布为正式版本？发布后可被业务系统调用。",
+      confirmText: "发布",
+    }))
+  ) {
     environmentConfirmation.value = null;
     return;
   }
@@ -304,7 +317,16 @@ async function lifecycle(action: string) {
   const label = (
     { disable: "停用", enable: "启用", archive: "归档" } as Record<string, string>
   )[action];
-  if (!confirm(`确认${label}应用？停用或归档后外部调用将不可用。`)) return;
+  // F1-3：原生 confirm 清零，停用/启用/归档改走 DangerConfirm（启用非危险态）。
+  if (
+    !(await confirmDanger({
+      title: `${label}应用`,
+      message: `确认${label}应用？停用或归档后外部调用将不可用。`,
+      confirmText: label,
+      danger: action !== "enable",
+    }))
+  )
+    return;
   await operation(async () => {
     await api(`/admin/apps/${code.value}/${action}`, "POST", {});
     await load();

@@ -8,6 +8,7 @@ import { probeView, serviceAccess } from "../../shared/service-access";
 import { uploadArtifact as uploadArtifactFile } from "../../shared/artifact-upload";
 import { useAuth, useApi } from "../../shared/api";
 import { useUnsavedChanges } from "../../shared/useUnsavedChanges";
+import { confirmDanger } from "../../shared/components/DangerConfirm";
 import type { ResourceVersionInfo } from "../../shared/resource-types";
 const props = defineProps<{ resource: any; kind: "skill" | "template" }>();
 const api = useApi();
@@ -171,7 +172,15 @@ async function execute(action: string) {
   try {
     if (!selected.value && action !== "save") throw new Error("请选择真实版本");
     if (action === "publish") {
-      if (!confirm("确认发布此版本？发布后内容不可修改。")) return;
+      // F1-3：原生 confirm 清零，发布改走 DangerConfirm（发布后内容不可修改）。
+      if (
+        !(await confirmDanger({
+          title: "发布版本",
+          message: "确认发布此版本？发布后内容不可修改。",
+          confirmText: "发布",
+        }))
+      )
+        return;
       result.value = await api(
         base() + "/versions/" + selected.value + "/publish",
         "POST",

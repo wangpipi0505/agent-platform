@@ -62,7 +62,10 @@ function mountRun(routeQuery: Record<string, string>, props: Record<string, unkn
         ? { useRoute: () => route }
         : id.endsWith('/shared/api')
           ? { useApi: () => api, useAuth: () => auth }
-          : id.endsWith('/debug-panel/events')
+          // F1-3：RunDetail 取消运行改走 DangerConfirm；本组只测导航深链，确认桩恒真。
+          : id.includes('/DangerConfirm')
+            ? { confirmDanger: async () => true }
+            : id.endsWith('/debug-panel/events')
             ? {
                 terminal: (s: string) => ['SUCCEEDED', 'FAILED', 'CANCELLED'].includes(s),
                 streamEvents,

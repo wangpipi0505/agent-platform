@@ -29,7 +29,6 @@ it("治理页主操作经PageHeader actions插槽迁入顶栏", () => {
   // 运行/确认/评测/服务/统计/审计/系统页主操作=刷新，由PageHeader内置并已接入；
   // 页内不再重复主操作行（此前已迁移的 Operations/ServiceManagement 同模式）。
   for (const page of [
-    "admin/src/pages/RunsPage.vue",
     "admin/src/pages/ApprovalsPage.vue",
     "admin/src/pages/EvaluationsPage.vue",
     "admin/src/pages/StatisticsPage.vue",
@@ -37,6 +36,9 @@ it("治理页主操作经PageHeader actions插槽迁入顶栏", () => {
     "admin/src/pages/SystemPage.vue",
   ])
     expect(read(page)).toContain("<PageHeader");
+  // F1-3：RunsPage 改为四段高度样板页——页头（含刷新）内嵌于 RunList 载体的
+  // DataPage 四段模型，页源码层面以 <RunList> 断言承接。
+  expect(read("admin/src/pages/RunsPage.vue")).toContain("<RunList");
 });
 
 it("ECharts主题helper从语义令牌解析轴/图例/tooltip配色", () => {

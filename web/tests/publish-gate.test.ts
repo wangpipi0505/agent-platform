@@ -320,6 +320,9 @@ describe("AppPublishPanel gate actions", () => {
       if (id === "vue") return Vue;
       if (id.endsWith("/api")) return { useApi: () => options.api, useAuth: () => auth };
       if (id.endsWith("/publish-gate")) return gate;
+      // F1-3：面板确认改走 DangerConfirm.confirmDanger；沙箱委托给被 stub 的原生 confirm，
+      // 各用例既有的 vi.stubGlobal("confirm", …) 语义（true 放行 / false 拦截）保持不变。
+      if (id.includes("/DangerConfirm")) return { confirmDanger: async () => (globalThis.confirm as ((m: string) => boolean) | undefined)?.("confirm") ?? true };
       if (id.endsWith(".vue")) return {};
       return require(id);
     }, exports);

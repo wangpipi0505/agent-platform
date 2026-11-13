@@ -1,5 +1,6 @@
 import { onBeforeUnmount, watch } from "vue";
 import { onBeforeRouteLeave } from "vue-router";
+import { confirmDanger } from "./components/DangerConfirm";
 
 /** 离开决策：pass=无未保存更改直接放行；block=用户取消留在本页；discard-pass=放弃更改放行。 */
 export type LeaveAction = "pass" | "block" | "discard-pass";
@@ -46,11 +47,18 @@ export function useUnsavedChanges(options: {
         { flush: "sync" },
       )
     : undefined;
-  onBeforeRouteLeave(() => {
+  // F1-3：原生 confirm 清零——离开确认改走 DangerConfirm（异步弹窗）；
+  // 守卫返回 Promise，vue-router 等待用户决策后再放行/拦截。
+  onBeforeRouteLeave(async () => {
+    const confirmed = await confirmDanger({
+      title: "未保存的更改",
+      message: "有未保存的更改，离开将丢弃。确认离开？",
+      confirmText: "离开并丢弃",
+    });
     const action = resolveLeaveAction({
       dirty: options.isDirty(),
       security,
-      confirmed: window.confirm("有未保存的更改，离开将丢弃。确认离开？"),
+      confirmed,
     });
     if (action === "discard-pass") options.onReset?.();
     security = false;

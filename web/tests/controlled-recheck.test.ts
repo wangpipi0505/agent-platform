@@ -36,6 +36,8 @@ function mountResource(statusBody: Record<string, unknown>) {
   const auth = { token: 't', user: { tenantId: 'tenant', principalId: 'operator' } };
   new Function('require', 'exports', code)((id: string) => id === 'vue' ? Vue
     : id.endsWith('/shared/api') ? { useApi: () => api, useAuth: () => auth }
+    // F1-3：ResourceDetail 发布确认改走 DangerConfirm；本组只测重检提交边界，确认桩恒真。
+    : id.includes('/DangerConfirm') ? { confirmDanger: async () => true }
     : id.endsWith('/shared/controlled-test') ? controlled
     : id.endsWith('/shared/service-access') ? serviceAccess
     : id.endsWith('/shared/artifact-upload') ? artifactUpload

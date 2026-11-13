@@ -14,7 +14,8 @@ import {mockArtifactRequest,registerMockArtifact,mockArtifactsEnabled} from '../
 import Artifacts from '../../../../shared/Artifacts.vue'
 import SchemaInputs from '../../../../shared/SchemaInputs.vue'
 import { inputFields } from '../../../../shared/input-schema'
-import BusinessContextPanel from './BusinessContextPanel.vue' 
+import { confirmDanger } from '../../../../shared/components/DangerConfirm'
+import BusinessContextPanel from './BusinessContextPanel.vue'
 
 const props = defineProps<{ appCode: string; appName?: string; mode?: 'draft' | 'published'; currentVersionNo?:number|null }>()
 const published = () => props.mode === 'published'
@@ -134,7 +135,15 @@ function newConversation() {
   input.value = ''; error.value = ''; busy.value = false
 }
 async function resetDemo() {
-  if (!window.confirm('重置本标签页的全部配置、业务申请与任务，恢复初始示例数据？')) return
+  // F1-3：原生 confirm 清零，演示重置改走 DangerConfirm。
+  if (
+    !(await confirmDanger({
+      title: '重置演示数据',
+      message: '重置本标签页的全部配置、业务申请与任务，恢复初始示例数据？',
+      confirmText: '重置',
+    }))
+  )
+    return
   try { await api('/admin/_demo/reset', 'POST', {}); window.location.reload() }
   catch (problem) { error.value = problem instanceof Error ? problem.message : '重置失败' }
 }

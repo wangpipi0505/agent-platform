@@ -10,6 +10,7 @@ import { decodeRunStatus, protocolFailure, record } from '../../shared/run-proto
 import RunObservation from './RunObservation.vue';
 import RunAuthorityPanel from '../../shared/RunAuthorityPanel.vue';
 import {emptyAuthority,readRunAuthority} from '../../shared/server-authority';
+import { confirmDanger } from '../../shared/components/DangerConfirm';
 const authority=ref(emptyAuthority());
 let authoritySequence=0;
 const props = defineProps<{ runId: string; nodeId?: string }>();
@@ -228,7 +229,15 @@ function observationError(e:any){
 }
 function reconnect(){if(!current())return;blocked.value=false;error.value='';void connect();}
 async function cancel() {
-  if (!confirm("确认取消本次正式运行？已产生的外部效果不会自动撤销。")) return;
+  // F1-3：原生 confirm 清零，取消正式运行改走 DangerConfirm。
+  if (
+    !(await confirmDanger({
+      title: "取消运行",
+      message: "确认取消本次正式运行？已产生的外部效果不会自动撤销。",
+      confirmText: "取消运行",
+    }))
+  )
+    return;
   try {
     await api(
       "/admin/runs/" + encodeURIComponent(props.runId) + "/cancel",

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from "vue";
-import { ElMessageBox } from "element-plus";
 import PageError from "../PageError.vue";
 import PageHeader from "../PageHeader.vue";
+import { confirmDanger } from "../../../shared/components/DangerConfirm";
 import { usePageOperation, usePageTitle } from "../usePageOperation";
 import {
   commandFromText,
@@ -103,17 +103,19 @@ async function start(row: any) {
 
 async function confirmAction(row: any, action: "stop" | "restart" | "delete") {
   const label = action === "stop" ? "停止" : action === "restart" ? "重启" : "删除";
-  try {
-    await ElMessageBox.confirm(
-      action === "delete"
-        ? `删除服务 ${row.name}（${row.code}）的配置和运行态记录？运行中的服务必须先停止。`
-        : `${label}服务 ${row.name}（${row.code}）？平台只会终止自己记录并核对过启动时间的进程。`,
-      `${label}服务`,
-      { type: action === "delete" ? "warning" : "info", confirmButtonText: label, cancelButtonText: "取消" },
-    );
-  } catch {
+  // F1-3：统一改走 DangerConfirm（原为本地 ElMessageBox 直调，删除为危险态）。
+  if (
+    !(await confirmDanger({
+      title: `${label}服务`,
+      message:
+        action === "delete"
+          ? `删除服务 ${row.name}（${row.code}）的配置和运行态记录？运行中的服务必须先停止。`
+          : `${label}服务 ${row.name}（${row.code}）？平台只会终止自己记录并核对过启动时间的进程。`,
+      confirmText: label,
+      danger: action === "delete",
+    }))
+  )
     return;
-  }
   await operation(async () => {
     const method = action === "delete" ? "DELETE" : "POST";
     await api(serviceActionPath(row.code, action), method);
