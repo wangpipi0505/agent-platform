@@ -18,11 +18,14 @@ public class TaskController {
 
   private final cn.agentplatform.engine.application.Tasks tasks;
   private final cn.agentplatform.engine.application.Plans plans;
+  private final cn.agentplatform.engine.application.TaskReconciliation reconciliation;
 
   public TaskController(cn.agentplatform.engine.application.Tasks tasks,
-          cn.agentplatform.engine.application.Plans plans) {
+          cn.agentplatform.engine.application.Plans plans,
+          cn.agentplatform.engine.application.TaskReconciliation reconciliation) {
     this.tasks = tasks;
     this.plans = plans;
+    this.reconciliation = reconciliation;
   }
 
   /** POST /v1/apps/{code}/tasks：受理（mode 必填；requestId 幂等；TASK_INTERNAL 根会话）。 */
@@ -58,6 +61,16 @@ public class TaskController {
   public Object resume(@PathVariable("taskId") long taskId, @RequestBody(required = false) JsonNode req) {
     return ApiResponse.ok(tasks.resume(taskId, req, Actor.current()));
   }
+  /** POST /v1/tasks/{taskId}/steps/{stepId}/calls/{callId}/reconcile：对账处置提交（T2-12）。 */
+  @PostMapping("/v1/tasks/{taskId}/steps/{stepId}/calls/{callId}/reconcile")
+  public Object reconcile(
+          @PathVariable("taskId") long taskId,
+          @PathVariable("stepId") String stepId,
+          @PathVariable("callId") String callId,
+          @RequestBody JsonNode req) {
+    return ApiResponse.ok(reconciliation.reconcile(taskId, stepId, callId, req, Actor.current()));
+  }
+
   /** GET /v1/tasks/{taskId}/steps/{stepId}/calls：步骤调用列表（锚点定位，接口稿 §5.7）。 */
   @GetMapping("/v1/tasks/{taskId}/steps/{stepId}/calls")
   public Object stepCalls(
