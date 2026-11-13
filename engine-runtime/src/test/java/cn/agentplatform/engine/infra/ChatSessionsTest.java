@@ -23,6 +23,12 @@ class ChatSessionsTest {
 
     @BeforeEach
     void clean() {
+        // H1-2 起 chat 轮次同事务写 session_event（FK→chat_session）——先清事件（触发器临时禁用）再清会话。
+        TracePostgresTest.db.execute(
+                "ALTER TABLE engine.session_event DISABLE TRIGGER session_event_append_only_guard");
+        TracePostgresTest.db.update("delete from engine.session_event");
+        TracePostgresTest.db.execute(
+                "ALTER TABLE engine.session_event ENABLE TRIGGER session_event_append_only_guard");
         TracePostgresTest.db.update("delete from engine.chat_turn");
         TracePostgresTest.db.update("delete from engine.chat_session");
         fixture.clean();
