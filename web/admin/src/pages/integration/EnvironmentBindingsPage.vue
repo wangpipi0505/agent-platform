@@ -12,7 +12,10 @@ import {
   type EnvironmentBinding,
 } from "./integration-console";
 
-usePageTitle(() => "环境绑定");
+// F3-4 集成控制台嵌入模式（前端稿 §5.7）：embedded 时页头由控制台承载（本页无智能体
+// 上下文——环境绑定全局共享）；缺省 standalone 行为不变。
+const props = defineProps<{ embedded?: boolean }>();
+if (!props.embedded) usePageTitle(() => "环境绑定");
 const { auth, api, busy, error, trace, operation, success } = usePageOperation();
 const client = integrationClient(api);
 const rows = ref<EnvironmentBinding[]>([]);
@@ -92,7 +95,7 @@ onMounted(load);
 
 <template>
   <div class="integration-bindings">
-    <PageHeader title="环境绑定" subtitle="把已批准连接档案钉到环境与物理端点；密钥只以引用保存，界面不回显。" :busy="busy" @refresh="load" />
+    <PageHeader v-if="!embedded" title="环境绑定" subtitle="把已批准连接档案钉到环境与物理端点；密钥只以引用保存，界面不回显。" :busy="busy" @refresh="load" />
     <PageError :error="error" :trace="trace" />
     <p class="muted">NONE 鉴权须将密钥引用留空；其它鉴权只填引用（如 <code>env:ERP_PROD_TOKEN</code>）。服务端按批准的连接档案校验，不保存凭据明文。</p>
     <div class="grid">

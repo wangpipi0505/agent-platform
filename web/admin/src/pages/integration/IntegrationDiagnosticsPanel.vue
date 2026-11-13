@@ -22,11 +22,18 @@ import {
   type ReleaseView,
 } from "./integration-console";
 
-usePageTitle(() => "接入诊断");
+// F3-4 集成控制台嵌入模式（前端稿 §5.7）：embedded 时 appCode 取控制台页头的共享上下文
+// （路由 query 持久），页头与智能体选择器由控制台承载；缺省 standalone 行为不变。
+const props = defineProps<{ embedded?: boolean; appCode?: string }>();
+if (!props.embedded) usePageTitle(() => "接入诊断");
 const { api, busy, error, trace, operation } = usePageOperation();
 const client = integrationClient(api);
 const applications = ref<ApplicationOption[]>([]);
-const appCode = ref("");
+const localAppCode = ref("");
+const appCode = computed({
+  get: () => (props.embedded ? props.appCode || "" : localAppCode.value),
+  set: (value) => { localAppCode.value = value; },
+});
 const environment = ref("production");
 const releases = ref<ReleaseView[]>([]);
 const profiles = ref<IntegrationProfileView[]>([]);
@@ -49,7 +56,7 @@ const stages = computed<DiagnosticStage[]>(() =>
 async function load() {
   if (busy.value || !appCode.value) return;
   await operation(async () => {
-    applications.value = applications.value.length ? applications.value : parseApplications(await client.applications());
+    if (!props.embedded && !applications.value.length) applications.value = parseApplications(await client.applications());
     releases.value = parseReleases(await client.configReleases(appCode.value));
     profiles.value = parseProfiles(await client.integrationProfiles(appCode.value));
     connections.value = parseConnections(await client.connectionProfiles());
@@ -73,6 +80,7 @@ function tagType(status: DiagnosticStage["status"]): "success" | "warning" | "da
 
 watch([appCode, environment], load);
 onMounted(async () => {
+  if (props.embedded) { await load(); return; }
   await operation(async () => {
     applications.value = parseApplications(await client.applications());
     if (!appCode.value && applications.value.length) appCode.value = applications.value[0].code;
@@ -83,10 +91,10 @@ onMounted(async () => {
 
 <template>
   <div class="integration-diagnostics">
-    <PageHeader title="接入诊断" subtitle="按接入应用与环境组合只读投影，逐阶段显示安全状态；不发起业务运行，不显示凭据。" :busy="busy" @refresh="load" />
+    <PageHeader v-if="!embedded" title="接入诊断" subtitle="按接入应用与环境组合只读投影，逐阶段显示安全状态；不发起业务运行，不显示凭据。" :busy="busy" @refresh="load" />
     <PageError :error="error" :trace="trace" />
     <div class="toolbar">
-      <el-select v-model="appCode" placeholder="选择智能体" :disabled="busy" aria-label="选择智能体">
+      <el-select v-if="!embedded" v-model="appCode" placeholder="选择智能体" :disabled="busy" aria-label="选择智能体">
         <el-option v-for="application in applications" :key="application.code" :label="`${application.name}（${application.code}）`" :value="application.code" />
       </el-select>
       <el-select v-model="environment" :disabled="busy" aria-label="选择环境">

@@ -24,11 +24,13 @@ const routerSource = readFileSync(
   "utf8",
 );
 
-it("单一来源：主入口（C0-1 裁剪后 15 个）与全部页面登记齐全且字段完整", () => {
+it("单一来源：主入口（C0-1 裁剪+F3-4 收敛后 14 个）与全部页面登记齐全且字段完整", () => {
   const menu = menuEntries();
-  // C0-1 裁剪：接入模板/语义与目标两条挂起线移出菜单（主方案 §2.1），17→15。
-  expect(menu.length).toBe(15);
-  expect(new Set(menu.map((e) => e.path)).size).toBe(15);
+  // C0-1 裁剪：接入模板/语义与目标两条挂起线移出菜单（主方案 §2.1），17→15；
+  // F3-4 菜单收敛（前端稿 §5.7/§5.8）：集成控制台 1 条替代配置发布 1 条（其余深链页本就
+  // menu:false），模型管理 1 条替代模型供应商+模型条目 2 条，15→14。
+  expect(menu.length).toBe(14);
+  expect(new Set(menu.map((e) => e.path)).size).toBe(14);
   for (const entry of pageAccess) {
     expect(entry.title.length, entry.key).toBeGreaterThan(0);
     expect(entry.area.length, entry.key).toBeGreaterThan(0);
@@ -84,6 +86,17 @@ it("路由源码：全部页面登记access键，未知路径命中404而非重�
   expect(routerSource).not.toContain('"/:pathMatch(.*)*", redirect');
   // 菜单同源：AppShell 从 router 派生 navMenus，不再手写入口数组
   expect(routerSource).toContain("export const navMenus = menuEntries()");
+  // F3-4：旧集成/模型深链收敛为控制台 redirect（锚点映射见 router.ts 注释）；
+  // 挂起线 semantic-bindings 不并入控制台，仍为独立路由（上方挂起线断言继续锁定）。
+  expect(routerSource).toContain('path: "/integration/console"');
+  expect(routerSource).toContain('redirect: { path: "/integration/console", query: { panel: "releases" } }');
+  expect(routerSource).toContain('query: { panel: "connections" }');
+  expect(routerSource).toContain('query: { panel: "bindings" }');
+  expect(routerSource).toContain('query: { panel: "profiles" }');
+  expect(routerSource).toContain('query: { panel: "experience" }');
+  expect(routerSource).toContain('query: { panel: "diagnostics" }');
+  expect(routerSource).toContain('path: "/model/management"');
+  expect(routerSource).toContain("String(to.params.providerId");
 });
 
 it("导航决策：已验证主体放行，未验证拦截并给出入口原因", () => {
@@ -120,7 +133,7 @@ it("F1-2 五分组菜单：分组名与渲染顺序固定，每组菜单条目 �
     expect(section.entries.length, section.group).toBeLessThanOrEqual(10);
     expect(section.entries.every((e) => e.area === section.group), section.group).toBe(true);
   }
-  // 全部条目（26 条，含挂起线与参数页）都落在五分组内——area 即分组唯一来源
+  // 全部条目（F3-4 收敛后 20 条，含挂起线与参数页）都落在五分组内——area 即分组唯一来源
   expect(pageAccess.every((e) => (MENU_GROUP_ORDER as readonly string[]).includes(e.area))).toBe(
     true,
   );

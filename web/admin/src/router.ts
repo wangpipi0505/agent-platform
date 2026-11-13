@@ -79,66 +79,45 @@ const routes: RouteRecordRaw[] = [
     component: () => import("./pages/SkillDetailPage.vue"),
     meta: { access: "skill-detail", title: "技能详情" },
   },
+  // F3-4 集成控制台（前端稿 §5.7）：原 7 条集成路由并成一页内左导航（六面板懒挂载），
+  // 智能体上下文选择器持久页头（?app=）；语义绑定（Semantic*）为挂起线不并入，路由保留。
   {
-    path: "/integration/config-releases",
-    name: "integration-config",
-    component: () => import("./pages/integration/ConfigReleasesPanel.vue"),
-    meta: { access: "integration-config", title: "配置发布" },
+    path: "/integration/console",
+    name: "integration-console",
+    component: () => import("./pages/integration/IntegrationConsolePage.vue"),
+    meta: { access: "integration-console", title: "集成控制台" },
   },
-  {
-    path: "/integration/connection-profiles",
-    name: "integration-connections",
-    component: () => import("./pages/integration/ConnectionProfilesPage.vue"),
-    meta: { access: "integration-connections", title: "连接档案" },
-  },
-  {
-    path: "/integration/environment-bindings",
-    name: "integration-bindings",
-    component: () => import("./pages/integration/EnvironmentBindingsPage.vue"),
-    meta: { access: "integration-bindings", title: "环境绑定" },
-  },
-  {
-    path: "/integration/integration-profiles",
-    name: "integration-profiles",
-    component: () => import("./pages/integration/IntegrationProfilesPanel.vue"),
-    meta: { access: "integration-profiles", title: "接入档案" },
-  },
-  {
-    path: "/integration/experiences",
-    name: "integration-experience",
-    component: () => import("./pages/integration/ExperienceEditor.vue"),
-    meta: { access: "integration-experience", title: "体验编辑" },
-  },
+  // F3-4 旧集成深链重定向映射（锚点=控制台左导航 query.panel）：
+  //   config-releases→releases  connection-profiles→connections  environment-bindings→bindings
+  //   integration-profiles→profiles  experiences→experience  diagnostics→diagnostics
+  // 旧页面组件保留（控制台 embedded 复用），仅路由收敛；挂起线 semantic-bindings 不在此列。
+  { path: "/integration/config-releases", redirect: { path: "/integration/console", query: { panel: "releases" } } },
+  { path: "/integration/connection-profiles", redirect: { path: "/integration/console", query: { panel: "connections" } } },
+  { path: "/integration/environment-bindings", redirect: { path: "/integration/console", query: { panel: "bindings" } } },
+  { path: "/integration/integration-profiles", redirect: { path: "/integration/console", query: { panel: "profiles" } } },
+  { path: "/integration/experiences", redirect: { path: "/integration/console", query: { panel: "experience" } } },
+  { path: "/integration/diagnostics", redirect: { path: "/integration/console", query: { panel: "diagnostics" } } },
   {
     path: "/integration/semantic-bindings",
     name: "integration-semantics",
     component: () => import("./pages/integration/SemanticBindingsPanel.vue"),
     meta: { access: "integration-semantics", title: "语义与目标" },
   },
+  // F3-4 模型管理（前端稿 §5.8）：providers+entries 两级跳转并成 master-detail 一页，
+  // 供应商选择经 query ?provider= 持久。
   {
-    path: "/integration/diagnostics",
-    name: "integration-diagnostics",
-    component: () => import("./pages/integration/IntegrationDiagnosticsPanel.vue"),
-    meta: { access: "integration-diagnostics", title: "接入诊断" },
+    path: "/model/management",
+    name: "model-management",
+    component: () => import("./pages/ModelManagementPage.vue"),
+    meta: { access: "model-management", title: "模型管理" },
   },
-  {
-    path: "/model/providers",
-    name: "providers",
-    component: () => import("./pages/ProvidersPage.vue"),
-    meta: { access: "providers", title: "模型供应商" },
-  },
+  // F3-4 旧模型页重定向（providerId 深链映射 ?provider=<id>；旧页面文件保留为回归锚，仅路由与菜单收敛）。
   {
     path: "/model/providers/:providerId/entries",
-    name: "provider-entries",
-    component: () => import("./pages/ModelEntriesPage.vue"),
-    meta: { access: "entries", title: "模型条目" },
+    redirect: (to) => ({ path: "/model/management", query: { provider: String(to.params.providerId ?? "") } }),
   },
-  {
-    path: "/model/entries",
-    name: "entries",
-    component: () => import("./pages/ModelEntriesPage.vue"),
-    meta: { access: "entries", title: "模型条目" },
-  },
+  { path: "/model/providers", redirect: { path: "/model/management" } },
+  { path: "/model/entries", redirect: { path: "/model/management" } },
   {
     path: "/model/prompt-templates",
     name: "templates",
