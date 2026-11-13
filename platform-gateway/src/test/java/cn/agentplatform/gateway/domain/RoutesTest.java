@@ -78,6 +78,18 @@ class RoutesTest {
     }
 
     @Test
+    void routesSessionEventControlAndStreamSubpathsToEngine() {
+        // H1-9：会话事件增量/控制/SSE 子路径显式接线；其余未登记子路径仍拒绝。
+        assertThat(Routes.service("/v1/apps/ops/sessions/s_1/events")).isEqualTo("engine");
+        assertThat(Routes.service("/v1/apps/ops/sessions/s_1/events/stream")).isEqualTo("engine");
+        assertThat(Routes.service("/v1/apps/ops/sessions/s_1/control")).isEqualTo("engine");
+        assertThatThrownBy(() -> Routes.service("/v1/apps/ops/sessions/s_1/events/other"))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> Routes.service("/v1/apps/ops/sessions/s_1/control/extra"))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void routesRuleAssetsToApplicationServiceOnBothPathFamilies() {
         // A3-3：应用侧目录走 /admin/apps 前缀；版本链与启停走独立 /admin/rules 前缀，都指向 app。
         for (String path : new String[] {

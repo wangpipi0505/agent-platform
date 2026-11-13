@@ -22,8 +22,10 @@ public final class Routes {
         // 对外体验投影：只读、脱敏，且由 app 服务按激活发布裁剪，因此提前于会话/运行前缀匹配。
         if (path.matches("/v1/apps/[A-Za-z0-9_-]+/experience")) return "app";
         // 会话所有权与固定版本由运行时校验，不能被后面的应用CRUD前缀吞掉。
+        // H1-9：会话事件/控制/SSE 子路径显式接线（events、events/stream、control）。
         if (path.matches(
-                "/(?:admin|v1)/apps/[A-Za-z0-9_-]+/sessions(?:/[A-Za-z0-9_-]+(?:/turns)?)?"))
+                "/(?:admin|v1)/apps/[A-Za-z0-9_-]+/sessions(?:/[A-Za-z0-9_-]+"
+                    + "(?:/turns|/events(?:/stream)?|/control)?)?"))
             return "engine";
         if (path.matches("/(?:admin|v1)/apps/[^/]+/sessions(?:/.*)?"))
             throw new IllegalArgumentException("此会话入口不存在");

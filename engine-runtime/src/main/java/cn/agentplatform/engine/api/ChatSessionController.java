@@ -47,4 +47,33 @@ public class ChatSessionController {
             @RequestParam(required = false) String before) {
         return ApiResponse.ok(sessions.list(code, mine, limit, before, Actor.current()));
     }
+
+    /** H1-9（接口稿 §5.1）：事件增量——afterSeq 排他游标+limit（默认200上限1000）+surfaceOnly 视图门。 */
+    @GetMapping("/v1/apps/{code}/sessions/{id}/events")
+    public Object events(
+            @PathVariable String code,
+            @PathVariable String id,
+            @RequestParam(required = false) String afterSeq,
+            @RequestParam(required = false) String limit,
+            @RequestParam(required = false) String surfaceOnly) {
+        return ApiResponse.ok(
+                sessions.events(code, id, afterSeq, limit, surfaceOnly, Actor.current()));
+    }
+
+    /** H1-9（接口稿 §5.1）：会话控制——CANCEL_TURN/STEER/SET_PLAN_MODE/COMPACT，{requestId,action,payload}。 */
+    @PostMapping("/v1/apps/{code}/sessions/{id}/control")
+    public Object control(
+            @PathVariable String code, @PathVariable String id, @RequestBody JsonNode req) {
+        return ApiResponse.ok(sessions.control(code, id, req, Actor.current()));
+    }
+
+    /** H1-9（接口稿 §5.1/§7）：会话事件 SSE——Last-Event-ID 排他续读，15s :ping，断开不取消 turn。 */
+    @GetMapping("/v1/apps/{code}/sessions/{id}/events/stream")
+    public org.springframework.web.servlet.mvc.method.annotation.SseEmitter stream(
+            @PathVariable String code,
+            @PathVariable String id,
+            @RequestHeader(value = "Last-Event-ID", required = false) String lastEventId,
+            @RequestParam(value = "Last-Event-ID", required = false) String lastEventIdParam) {
+        return sessions.eventStream(code, id, lastEventId, lastEventIdParam, Actor.current());
+    }
 }

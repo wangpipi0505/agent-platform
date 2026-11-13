@@ -47,8 +47,10 @@ public final class SessionEvents {
   public static final String INBOX_CONSUME = "inbox/consume";
   public static final String WORKING_DIRECTORY_CHANGE = "working-directory/change";
 
-  /** turn/end 收尾原因（主方案 §5.1）。 */
+  /** turn/end 收尾原因（主方案 §5.1；completed/error/max-tokens/forked 由调用方按目录字面量补常量）。 */
   public static final String TURN_REASON_INTERRUPTED = "interrupted";
+  /** 用户显式取消（H1-9 control CANCEL_TURN；AgentEngine 取消分支同一字面量）。 */
+  public static final String TURN_REASON_ABORTED = "aborted";
 
   /** 恢复补写 tool/result 的固定标注（契约④：只 UNKNOWN，禁止 error 表述失败）。 */
   public static final boolean SYNTHETIC = true;
