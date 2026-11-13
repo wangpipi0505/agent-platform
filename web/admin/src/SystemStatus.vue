@@ -205,17 +205,17 @@ onMounted(() => {
 .row { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
 .overview {
   display: flex; justify-content: space-between; gap: 1rem; margin: 1rem 0 1.25rem;
-  padding: .9rem 1rem; border: 1px solid rgba(74, 222, 128, .35); background: rgba(74, 222, 128, .1); border-radius: 8px;
+  padding: .9rem 1rem; border: 1px solid color-mix(in srgb, var(--st-ok) 35%, transparent); background: color-mix(in srgb, var(--st-ok) 10%, transparent); border-radius: 8px;
 }
-.overview.bad { border-color: rgba(248, 113, 113, .4); background: rgba(248, 113, 113, .1); }
+.overview.bad { border-color: color-mix(in srgb, var(--st-fail) 40%, transparent); background: color-mix(in srgb, var(--st-fail) 10%, transparent); }
 .checks { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: .85rem; }
 .check { border: 1px solid var(--line); border-radius: 8px; padding: .85rem 1rem; min-height: 7.5rem; }
-.check.bad { border-color: rgba(248, 113, 113, .4); background: rgba(248, 113, 113, .06); }
+.check.bad { border-color: color-mix(in srgb, var(--st-fail) 40%, transparent); background: color-mix(in srgb, var(--st-fail) 6%, transparent); }
 .check-title { display: flex; align-items: center; gap: .45rem; }
 .dot { width: .55rem; height: .55rem; border-radius: 50%; background: var(--st-ok); flex: none; }
 .check.bad .dot { background: var(--st-fail); }
-.pill { margin-left: auto; font-size: .75rem; padding: .1rem .45rem; border-radius: 999px; background: rgba(74, 222, 128, .15); color: var(--st-ok-text); }
-.check.bad .pill { background: rgba(248, 113, 113, .15); color: var(--st-fail-text); }
+.pill { margin-left: auto; font-size: .75rem; padding: .1rem .45rem; border-radius: 999px; background: color-mix(in srgb, var(--st-ok) 15%, transparent); color: var(--st-ok-text); }
+.check.bad .pill { background: color-mix(in srgb, var(--st-fail) 15%, transparent); color: var(--st-fail-text); }
 .check p { margin: .55rem 0 .35rem; word-break: break-word; }
 .hint { margin-top: 1rem; line-height: 1.7; }
 </style>
@@ -229,8 +229,8 @@ onMounted(() => {
   padding: 0.85rem 1rem;
 }
 .fixture-card.warn {
-  border-color: rgba(251, 191, 36, .4);
-  background: rgba(251, 191, 36, .08);
+  border-color: color-mix(in srgb, var(--st-suspend) 40%, transparent);
+  background: color-mix(in srgb, var(--st-suspend) 8%, transparent);
 }
 .fixture-card p {
   margin: 0.5rem 0 0;
@@ -240,11 +240,11 @@ onMounted(() => {
   background: var(--st-wait);
 }
 .fixture-pill {
-  background: rgba(156, 163, 175, .15);
+  background: color-mix(in srgb, var(--st-wait) 15%, transparent);
   color: var(--st-wait-text);
 }
 .fixture-card.warn .fixture-pill {
-  background: rgba(251, 191, 36, .15);
+  background: color-mix(in srgb, var(--st-suspend) 15%, transparent);
   color: var(--st-suspend-text);
 }
 /* AP-S02：深度健康卡与进程卡分开着色，UNKNOWN 明确标灰，避免“未探测”被读成正常。 */
@@ -255,17 +255,17 @@ onMounted(() => {
   border-radius: 8px;
   padding: 0.85rem 1rem;
 }
-.deep-card.healthy { border-color: rgba(74, 222, 128, .35); background: rgba(74, 222, 128, .07); }
-.deep-card.degraded { border-color: rgba(251, 191, 36, .4); background: rgba(251, 191, 36, .07); }
-.deep-card.unhealthy { border-color: rgba(248, 113, 113, .4); background: rgba(248, 113, 113, .07); }
+.deep-card.healthy { border-color: color-mix(in srgb, var(--st-ok) 35%, transparent); background: color-mix(in srgb, var(--st-ok) 7%, transparent); }
+.deep-card.degraded { border-color: color-mix(in srgb, var(--st-suspend) 40%, transparent); background: color-mix(in srgb, var(--st-suspend) 7%, transparent); }
+.deep-card.unhealthy { border-color: color-mix(in srgb, var(--st-fail) 40%, transparent); background: color-mix(in srgb, var(--st-fail) 7%, transparent); }
 .deep-dot { background: var(--st-wait); }
 .deep-card.healthy .deep-dot { background: var(--st-ok); }
 .deep-card.degraded .deep-dot { background: var(--st-suspend); }
 .deep-card.unhealthy .deep-dot { background: var(--st-fail); }
-.deep-pill { background: rgba(156, 163, 175, .15); color: var(--st-wait-text); }
-.deep-card.healthy .deep-pill { background: rgba(74, 222, 128, .15); color: var(--st-ok-text); }
-.deep-card.degraded .deep-pill { background: rgba(251, 191, 36, .15); color: var(--st-suspend-text); }
-.deep-card.unhealthy .deep-pill { background: rgba(248, 113, 113, .15); color: var(--st-fail-text); }
+.deep-pill { background: color-mix(in srgb, var(--st-wait) 15%, transparent); color: var(--st-wait-text); }
+.deep-card.healthy .deep-pill { background: color-mix(in srgb, var(--st-ok) 15%, transparent); color: var(--st-ok-text); }
+.deep-card.degraded .deep-pill { background: color-mix(in srgb, var(--st-suspend) 15%, transparent); color: var(--st-suspend-text); }
+.deep-card.unhealthy .deep-pill { background: color-mix(in srgb, var(--st-fail) 15%, transparent); color: var(--st-fail-text); }
 .deep-action { margin-left: 0.35rem; }
 .deep-error { margin-top: 0.65rem; color: var(--st-fail-text); }
 .deep-summary { margin: 0.65rem 0; line-height: 1.7; }
@@ -274,14 +274,14 @@ onMounted(() => {
 .deep-entry-head { display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; }
 .deep-entry-head .pill { margin-left: 0; }
 .deep-entry-head small { margin-left: auto; }
-.entry-healthy { background: rgba(74, 222, 128, .15); color: var(--st-ok-text); }
-.entry-degraded { background: rgba(251, 191, 36, .15); color: var(--st-suspend-text); }
-.entry-unhealthy { background: rgba(248, 113, 113, .15); color: var(--st-fail-text); }
-.entry-unknown { background: rgba(156, 163, 175, .15); color: var(--st-wait-text); }
+.entry-healthy { background: color-mix(in srgb, var(--st-ok) 15%, transparent); color: var(--st-ok-text); }
+.entry-degraded { background: color-mix(in srgb, var(--st-suspend) 15%, transparent); color: var(--st-suspend-text); }
+.entry-unhealthy { background: color-mix(in srgb, var(--st-fail) 15%, transparent); color: var(--st-fail-text); }
+.entry-unknown { background: color-mix(in srgb, var(--st-wait) 15%, transparent); color: var(--st-wait-text); }
 .deep-reason { margin: 0.45rem 0 0; color: var(--muted); line-height: 1.55; }
 .deep-checks { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.45rem; }
 .deep-check { font-size: 0.75rem; border: 1px solid var(--line); border-radius: 999px; padding: 0.08rem 0.45rem; color: var(--muted); }
-.deep-check.check-pass { border-color: rgba(74, 222, 128, .35); color: var(--st-ok-text); }
-.deep-check.check-warn { border-color: rgba(251, 191, 36, .4); color: var(--st-suspend-text); }
-.deep-check.check-fail { border-color: rgba(248, 113, 113, .4); color: var(--st-fail-text); }
+.deep-check.check-pass { border-color: color-mix(in srgb, var(--st-ok) 35%, transparent); color: var(--st-ok-text); }
+.deep-check.check-warn { border-color: color-mix(in srgb, var(--st-suspend) 40%, transparent); color: var(--st-suspend-text); }
+.deep-check.check-fail { border-color: color-mix(in srgb, var(--st-fail) 40%, transparent); color: var(--st-fail-text); }
 </style>

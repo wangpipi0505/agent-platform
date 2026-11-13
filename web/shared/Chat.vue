@@ -378,7 +378,8 @@ onBeforeUnmount(() => {
 </template>
 <style scoped>
 .chat {
-  width: min(100%, clamp(45rem, 60vw, 65rem));
+  /* F4-4 clamp 清零：min/max 组合与原 clamp(45rem,60vw,65rem) 逐值等价，min(100%) 保窄屏不溢出。 */
+  width: min(100%, 65rem, max(45rem, 60vw));
   margin: auto;
 }
 .messages {

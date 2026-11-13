@@ -631,15 +631,15 @@ onBeforeUnmount(() => {
 .diag-banner,
 .diag-card {
   margin: 0 0 1rem;
-  border: 1px solid rgba(248, 113, 113, 0.4);
-  background: rgba(248, 113, 113, 0.08);
+  border: 1px solid color-mix(in srgb, var(--st-fail) 40%, transparent);
+  background: color-mix(in srgb, var(--st-fail) 8%, transparent);
   border-radius: 8px;
   padding: 0.75rem 0.9rem;
 }
 .diag-banner.retryable,
 .diag-card.retryable {
-  border-color: rgba(251, 191, 36, 0.4);
-  background: rgba(251, 191, 36, 0.08);
+  border-color: color-mix(in srgb, var(--st-suspend) 40%, transparent);
+  background: color-mix(in srgb, var(--st-suspend) 8%, transparent);
 }
 .diag-banner p,
 .diag-card p {
@@ -662,14 +662,14 @@ onBeforeUnmount(() => {
   margin-left: auto;
 }
 .diag-card-head .pill {
-  background: rgba(248, 113, 113, 0.15);
+  background: color-mix(in srgb, var(--st-fail) 15%, transparent);
   color: var(--st-fail-text);
   border-radius: 999px;
   padding: 0.08rem 0.45rem;
   font-size: 0.75rem;
 }
 .diag-card.retryable .pill {
-  background: rgba(251, 191, 36, 0.15);
+  background: color-mix(in srgb, var(--st-suspend) 15%, transparent);
   color: var(--st-suspend-text);
 }
 .diag-meta {

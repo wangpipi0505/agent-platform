@@ -64,21 +64,22 @@ function onConfirm() {
 
 <style>
 /* ElMessageBox/ElDialog 均 Teleport 到 body：红色主题类必须是全局样式。
-   取色沿用 tokens.css 危险按钮既有深红实底口径（#b91c1c，保白字对比度）。 */
+   F4-4：取色接通 tokens.css danger 实底令牌（--danger-solid*，两主题同值深红实底，
+   保白字对比度）；白字前景用 --on-brand。 */
 .danger-confirm-dialog.is-danger .el-message-box__btns .el-button--primary,
 .danger-confirm-panel.is-danger .el-dialog__footer .el-button--primary {
-  --el-button-bg-color: #b91c1c;
-  --el-button-border-color: #b91c1c;
-  --el-button-hover-bg-color: #dc2626;
-  --el-button-hover-border-color: #dc2626;
-  --el-button-active-bg-color: #991b1b;
-  --el-button-active-border-color: #991b1b;
-  --el-button-text-color: #ffffff;
-  --el-button-hover-text-color: #ffffff;
+  --el-button-bg-color: var(--danger-solid);
+  --el-button-border-color: var(--danger-solid);
+  --el-button-hover-bg-color: var(--danger-solid-hover);
+  --el-button-hover-border-color: var(--danger-solid-hover);
+  --el-button-active-bg-color: var(--danger-solid-active);
+  --el-button-active-border-color: var(--danger-solid-active);
+  --el-button-text-color: var(--on-brand);
+  --el-button-hover-text-color: var(--on-brand);
 }
 html.light .danger-confirm-dialog.is-danger .el-message-box__btns .el-button--primary,
 html.light .danger-confirm-panel.is-danger .el-dialog__footer .el-button--primary {
-  --el-button-bg-color: #b91c1c;
-  --el-button-border-color: #b91c1c;
+  --el-button-bg-color: var(--danger-solid);
+  --el-button-border-color: var(--danger-solid);
 }
 </style>

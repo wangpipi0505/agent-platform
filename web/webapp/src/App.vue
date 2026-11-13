@@ -3,12 +3,16 @@ import { nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useAuth, login } from "../../shared/api";
 import { truncateTitle } from "../../shared/mock-session";
 import { connectHostChannel, type HostChannelHandle } from "./host-channel";
+import { useTheme } from "../../shared/theme";
 import SessionList from "./SessionList.vue";
 import MyMemories from "./MyMemories.vue";
 import AssistantChat from "./AssistantChat.vue";
 import type { SessionView } from "./demo-flow";
 
 const auth = useAuth();
+// F4-4 亮色切换（方案 §7.3）：顶栏按钮翻转 dark/light 并持久 localStorage，初始跟随系统。
+const { resolved: themeResolved, toggleTheme, dispose: disposeTheme } = useTheme();
+onBeforeUnmount(disposeTheme);
 const error = ref("");
 const code = decodeURIComponent(
   location.pathname.split("/").filter(Boolean).pop() || "",
@@ -97,6 +101,17 @@ onBeforeUnmount(stopMedia);
         </el-button>
         <strong>{{ code }} · 业务对话</strong><span class="muted">智能体平台</span>
       </span>
+      <!-- F4-4 亮色切换：与 admin 顶栏同源（shared/theme.ts），解析结果间翻转并持久覆盖 -->
+      <el-button
+        text
+        size="small"
+        class="theme-toggle"
+        data-testid="theme-toggle"
+        :title="themeResolved === 'dark' ? '切换为亮色主题' : '切换为暗色主题'"
+        :aria-label="'切换主题，当前' + (themeResolved === 'dark' ? '暗色' : '亮色')"
+        @click="toggleTheme"
+        >{{ themeResolved === "dark" ? "☾ 暗色" : "☀ 亮色" }}</el-button
+      >
     </header>
     <main class="assistant-shell">
       <div v-if="!auth.token" class="panel">

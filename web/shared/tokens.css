@@ -98,7 +98,14 @@
   --el-font-size-extra-small: var(--text-meta);
   --el-font-size-small: var(--text-meta);
   --el-tag-font-size: var(--text-meta);
-  --lay-sidebar: clamp(12.5rem, 14vw, 15rem);
+  /* 侧栏基础宽度：F4-4 断点体系接管（§7.2：≥1440 全量 / ≤1280 图标列 / <768 抽屉），
+     不再随视口 clamp 缩放——窄形态由断点类切换（AppShell matchMedia）。 */
+  --lay-sidebar: 14rem;
+  /* danger 实底三态（方案 §7.3：danger 实底统一 #b91c1c 保白字对比度，两主题同值；
+     供 tokens 危险按钮段与 DangerConfirm 引用，token 名自定——待评审确认）。 */
+  --danger-solid: #b91c1c;
+  --danger-solid-hover: #dc2626;
+  --danger-solid-active: #991b1b;
   font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
   font-size: 16px;
   color: var(--ink);
@@ -134,9 +141,8 @@ html.dark {
   --el-fill-color-blank: #0f1623;
   --el-mask-color: rgba(5, 9, 16, 0.7);
 }
-/* 亮色主题段（方案 §7.3"暗色默认，亮色可切"）：html.light 一套 token 映射；
-   切换开关（顶栏按钮+localStorage+跟随系统）随 F4-4 落地，本卡只交付 token 段。
-   EP 组件亮色映射（--el-*）不在本卡范围，随 F4-4 补齐——当前 html.light 下 EP 变量未覆盖。 */
+  /* 亮色主题段（方案 §7.3"暗色默认，亮色可切"）：html.light 一套 token 映射；
+     切换开关（顶栏按钮+localStorage+跟随系统）在 F4-4 落地（shared/theme.ts）。 */
 html.light {
   color-scheme: light;
   /* 品牌（§7.3 文档指定亮色值列） */
@@ -190,6 +196,37 @@ html.light {
   --nav-text-active: var(--text-primary);
   --nav-muted: var(--text-tertiary);
   --nav-active-bg: var(--brand-subtle);
+  /* EP 组件亮色映射（F4-4 补齐 §7.4 断言4：亮色下全部页面达标）。
+     主色走 §7.3 亮色值列 #0284c7；light-N/dark-2 按 EP 官方公式（与白/黑混合）由
+     #0284c7 推导：light-3=#4ea9d8 light-5=#81c2e3 light-7=#b3dbee light-8=#cce6f4
+     light-9=#e6f3f9 dark-2=#026a9f。表面/文本/边框/填充逐项对齐 §7.3 亮色词表。 */
+  --el-color-primary: var(--brand);
+  --el-color-primary-dark-2: #026a9f;
+  --el-color-primary-light-3: #4ea9d8;
+  --el-color-primary-light-5: #81c2e3;
+  --el-color-primary-light-7: #b3dbee;
+  --el-color-primary-light-8: #cce6f4;
+  --el-color-primary-light-9: #e6f3f9;
+  --el-bg-color: var(--bg-surface-1);
+  --el-bg-color-page: var(--bg-canvas);
+  --el-bg-color-overlay: var(--bg-surface-1);
+  --el-text-color-primary: var(--text-primary);
+  --el-text-color-regular: var(--text-primary);
+  --el-text-color-secondary: var(--text-secondary);
+  --el-text-color-placeholder: var(--text-tertiary);
+  --el-text-color-disabled: var(--text-disabled);
+  --el-border-color: var(--border-strong);
+  --el-border-color-light: var(--border-subtle);
+  --el-border-color-lighter: var(--bg-surface-2);
+  --el-border-color-extra-light: var(--bg-canvas);
+  --el-border-color-dark: var(--border-strong);
+  --el-fill-color: var(--bg-surface-2);
+  --el-fill-color-light: var(--bg-canvas);
+  --el-fill-color-lighter: var(--bg-canvas);
+  --el-fill-color-extra-light: var(--bg-surface-1);
+  --el-fill-color-dark: var(--bg-surface-3);
+  --el-fill-color-blank: var(--bg-surface-1);
+  --el-mask-color: rgba(16, 24, 40, 0.45);
 }
 /* 实心主色/危险按钮的前景独立取色：白字压 #0ea5e9 仅 2.8:1，不满足正文对比度。
    link/text/plain 按钮保持主色文字与透明底，不能被本规则覆盖。 */
@@ -199,14 +236,28 @@ html.dark .el-button--primary:not(.is-link):not(.is-text):not(.is-plain) {
   --el-button-active-text-color: var(--on-primary);
   --el-button-disabled-text-color: rgba(4, 16, 25, 0.55);
 }
-/* 危险按钮改用深红底保白字可读，避免浅红 #f56c6c 上白字 2.9:1。 */
-html.dark .el-button--danger:not(.is-link):not(.is-text):not(.is-plain) {
-  --el-button-bg-color: #b91c1c;
-  --el-button-border-color: #b91c1c;
-  --el-button-hover-bg-color: #dc2626;
-  --el-button-hover-border-color: #dc2626;
-  --el-button-active-bg-color: #991b1b;
-  --el-button-active-border-color: #991b1b;
+/* 危险按钮改用深红底保白字可读（§7.3：danger 实底统一 #b91c1c，白字 6.29:1，
+   两主题同值——选择器不分主题，亮色下同样生效）。 */
+.el-button--danger:not(.is-link):not(.is-text):not(.is-plain) {
+  --el-button-bg-color: var(--danger-solid);
+  --el-button-border-color: var(--danger-solid);
+  --el-button-hover-bg-color: var(--danger-solid-hover);
+  --el-button-hover-border-color: var(--danger-solid-hover);
+  --el-button-active-bg-color: var(--danger-solid-active);
+  --el-button-active-border-color: var(--danger-solid-active);
+}
+html.light .el-button--primary:not(.is-link):not(.is-text):not(.is-plain) {
+  /* 亮色主按钮实底走 --btn-primary-bg=#075985（白字 7.56:1，§7.4 断言4 评审九轮口径）；
+     EP 默认实底 #0284c7 白字仅 4.10:1 不达标。link/text/plain 不受影响。 */
+  --el-button-bg-color: var(--btn-primary-bg);
+  --el-button-border-color: var(--btn-primary-bg);
+  --el-button-hover-bg-color: var(--brand-hover);
+  --el-button-hover-border-color: var(--brand-hover);
+  --el-button-active-bg-color: var(--brand-active);
+  --el-button-active-border-color: var(--brand-active);
+  --el-button-text-color: var(--on-brand);
+  --el-button-hover-text-color: var(--on-brand);
+  --el-button-active-text-color: var(--on-brand);
 }
 html.dark .el-radio-button.is-active .el-radio-button__inner,
 html.dark .el-radio-button__original-radio:checked + .el-radio-button__inner {
@@ -218,14 +269,30 @@ html.dark .el-radio-button {
   --el-radio-button-checked-bg-color: var(--primary);
   --el-radio-button-checked-border-color: var(--primary);
 }
-/* EP 组件在自身作用域内写死 12px（tag/small 分段器），令牌抬升够不到，这里逐个兜底。 */
-html.dark .el-tag {
+/* 亮色分段选择器选中项：#0284c7 白字不达标，实底换 --btn-primary-bg。 */
+html.light .el-radio-button.is-active .el-radio-button__inner,
+html.light .el-radio-button__original-radio:checked + .el-radio-button__inner {
+  color: var(--on-brand);
+}
+html.light .el-radio-button {
+  --el-radio-button-checked-text-color: var(--on-brand);
+  --el-radio-button-checked-bg-color: var(--btn-primary-bg);
+  --el-radio-button-checked-border-color: var(--btn-primary-bg);
+}
+/* EP 组件在自身作用域内写死 12px（tag/small 分段器），令牌抬升够不到，这里逐个兜底
+   （字号与主题无关，dark/light 两态都挂）。 */
+html.dark .el-tag,
+html.light .el-tag {
   --el-tag-font-size: var(--text-meta);
 }
 html.dark .el-radio-button--small .el-radio-button__inner,
 html.dark .el-button--small,
 html.dark .el-checkbox--small,
-html.dark .el-select--small {
+html.dark .el-select--small,
+html.light .el-radio-button--small .el-radio-button__inner,
+html.light .el-button--small,
+html.light .el-checkbox--small,
+html.light .el-select--small {
   font-size: var(--text-meta);
 }
 /* 密度三档：显式令牌，不再缩放 html 根字号；紧凑档最小文字保持13px */
@@ -533,14 +600,18 @@ textarea {
   font-family: var(--font-mono);
 }
 .el-dialog {
-  width: clamp(28rem, 50vw, 60rem) !important;
+  /* F4-4 clamp 清零：min/max 组合与原 clamp(28rem,50vw,60rem) 逐值等价
+     （下限 28rem / 随视口 50vw / 上限 60rem），窄视口不产生横向溢出。 */
+  width: min(60rem, max(50vw, 28rem)) !important;
 }
 /* Teleport 到 body 的弹层由 html.dark 的 EP 变量覆盖；此处只补边框对比 */
 html.dark .el-popper.is-light {
   border-color: var(--el-border-color);
 }
-/* 方案 §6 只要求 1366 及以上桌面；窄屏折叠导航从 1200 起，避免 1366 下中文菜单逐字换行。 */
-@media (max-width: 1200px) {
+/* F4-4 断点体系（§7.2 断点表）：≤1280 侧栏收窄为图标列（CSS 兜底；AppShell 另以
+   matchMedia 挂 icon-mode 类做标签隐藏/字母代字/tooltip），≥1440 全量，<768 由
+   AppShell 抽屉形态接管（抽屉内本段收窄规则被组件样式覆盖回全量菜单）。 */
+@media (max-width: 1280px) {
   .nav {
     width: 4.5rem;
     padding: 1rem 0.5rem;
