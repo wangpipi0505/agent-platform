@@ -26,6 +26,7 @@ public class AgentDriver {
         clients = c;
         assembler = a;
         this.chunks = chunks;
+        this.d2 = new cn.agentplatform.engine.harness.session.SessionStore(s);
     }
 
     /**
@@ -33,6 +34,8 @@ public class AgentDriver {
      * 空链零开销；Spring 环境注入按 @Order 排序的链。
      */
     private ToolInterceptorChain interceptors = ToolInterceptorChain.EMPTY;
+    // H1-5：D2 请求材料落库入口（复用 TraceStore 事务边界；每轮请求在出流前写 header+context）。
+    private final cn.agentplatform.engine.harness.session.SessionStore d2;
 
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     public void interceptors(ToolInterceptorChain chain) {
@@ -112,6 +115,42 @@ public class AgentDriver {
             request.put("runId", run.get("public_id"));
             request.put("attemptId", attempt);
             request.put("invocationRef", attempt + ":" + round);
+            // H1-5（D2，主方案 §5.1"模型可见即已记录"）：最终请求材料（含工具采纳集）先持久化
+            // 成功，再发送模型请求。有会话关联的运行写入 session_event（request/header +
+            // request/context）；独立运行无会话，事实仅保留运行链路（attempt.request_snapshot）。
+            // 会话标识由 ChatSessions 在受理时注入快照（chatSession.sessionId）。
+            var linkedSession = TraceStore.json(run.get("snapshot")).path("chatSession");
+            if (linkedSession.has("sessionId")) {
+                var adopted = new java.util.ArrayList<>();
+                for (var t : config.path("tools"))
+                    adopted.add(
+                            Map.of(
+                                    "toolId",
+                                    t.path("name").asText(t.path("code").asText()),
+                                    "versionRef",
+                                    t.path("skillVersionId").asLong(0),
+                                    "schemaDigest",
+                                    t.path("contractDigest").asText("")));
+                d2.append(
+                        linkedSession.path("sessionId").asText(),
+                        null,
+                        cn.agentplatform.engine.harness.session.SessionEvents.REQUEST_HEADER,
+                        Json.tree(Map.of("config", Json.read(Json.write(request)), "tools", adopted)),
+                        null);
+                d2.append(
+                        linkedSession.path("sessionId").asText(),
+                        null,
+                        cn.agentplatform.engine.harness.session.SessionEvents.REQUEST_CONTEXT,
+                        Json.tree(
+                                Map.of(
+                                        "modelEntryId",
+                                        request.get("modelEntryId"),
+                                        "modelBindingRef",
+                                        String.valueOf(request.get("modelBindingRef")),
+                                        "invocationRef",
+                                        request.get("invocationRef"))),
+                        null);
+            }
             JsonNode answer =
                     new ModelExchange(store, clients)
                             .exchange(
