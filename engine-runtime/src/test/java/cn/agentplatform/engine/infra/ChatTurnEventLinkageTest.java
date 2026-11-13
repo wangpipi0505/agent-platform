@@ -194,7 +194,7 @@ class ChatTurnEventLinkageTest {
                         "h2-r1");
         assertEquals(1, ((Number) turn.get("turn_no")).intValue());
         assertEquals(runId, turn.get("run_public_id"));
-        assertEquals(2, watermark(sid));
+        assertEquals(4, watermark(sid)); // H1-5：turn对2件+request对2件
         assertEquals(
                 "turn/start",
                 db.queryForObject(
@@ -213,7 +213,7 @@ class ChatTurnEventLinkageTest {
         var replay = restarted.turn("h2-app", sid, req, actor);
         assertEquals(runId, replay.get("runId").toString());
         assertEquals(1, chatTurns(sid, "h2-r1"));
-        assertEquals(2, watermark(sid), "重放不得重复写轮次事件");
+        assertEquals(4, watermark(sid), "重放不得重复写轮次事件");
     }
 
     /** 第二轮次：事件续写 seq 3,4（turn=2），轮次序严格递增；重启后各轮重放各归各运行。 */
@@ -228,11 +228,11 @@ class ChatTurnEventLinkageTest {
         var r2 = chats.turn("h2-app", sid, Json.tree(Map.of("requestId", "h2-r2", "inputs", Map.of("q", "b"))), actor);
         awaitTerminal(r2.get("runId").toString(), clients);
         assertNotEquals(r1.get("runId"), r2.get("runId"));
-        assertEquals(4, watermark(sid));
+        assertEquals(8, watermark(sid)); // 两轮各4件
         assertEquals(
                 "2",
                 db.queryForObject(
-                        "select data->>'turn' from engine.session_event where session_id=? and seq=3",
+                        "select data->>'turn' from engine.session_event where session_id=? and seq=5",
                         String.class,
                         sid));
 
@@ -247,7 +247,7 @@ class ChatTurnEventLinkageTest {
                 restarted
                         .turn("h2-app", sid, Json.tree(Map.of("requestId", "h2-r2", "inputs", Map.of("q", "b"))), actor)
                         .get("runId"));
-        assertEquals(4, watermark(sid), "重放零重复事件");
+        assertEquals(8, watermark(sid), "重放零重复事件");
     }
 
     /** 运行失败（P2 后）：重放归原失败运行，不重试、不产生第二轮次/重复事件（运行层受理恒 1 由 H1-0 证）。 */
@@ -271,7 +271,7 @@ class ChatTurnEventLinkageTest {
         var replay = restarted.turn("h2-app", sid, req, actor);
         assertEquals(first.get("runId"), replay.get("runId"));
         assertEquals(1, chatTurns(sid, "h2-f1"));
-        assertEquals(2, watermark(sid), "失败重放零重复事件");
+        assertEquals(4, watermark(sid), "失败重放零重复事件（request材料已落，运行层失败不影响D2）");
     }
 
     private void awaitTerminal(String runId, RuntimeClients clients) throws Exception {
