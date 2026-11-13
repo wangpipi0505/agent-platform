@@ -1,0 +1,17 @@
+A3-3(app): V123规则资产——空库自建链验证证据（2026-11-13，worktree wt-a3-03，分支 a3-03-rule-assets）
+
+## 1) 专用空库 drop/create（专用 PG 16.15 @127.0.0.1:25432，agent_v12 属主）
+DROP DATABASE
+CREATE DATABASE
+
+## 2) Flyway 空库建链 + A3-3 测试（mvn -pl app-management test -Dtest=RuleAssetsPostgresTest）
+[A3-3] url=jdbc:postgresql://127.0.0.1:25432/agent_platform_v123_test -> migratedTo=123 (migrations applied this run: 23)
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 6.922 s -- in cn.agentplatform.app.application.RuleAssetsPostgresTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+
+## 3) 网关 RoutesTest（含新增规则路径断言）+ 构建期路由目录校验
+[INFO] Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.061 s -- in cn.agentplatform.gateway.domain.RoutesTest
+[INFO] Tests run: 9, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+通过：服务票据面没有 MISSING（blocking=false）。

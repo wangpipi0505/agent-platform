@@ -45,6 +45,9 @@ public final class Routes {
                 // 体验描述、接入档案与配置发布同样是 app 持有的配置面资源，转发方向与权限分离。
                 || path.startsWith("/admin/integration-profiles")
                 || path.startsWith("/admin/config-releases")
+                // 规则资产（A3-3）：/admin/apps/{code}/rules 随上方 /admin/apps 前缀进入 app；
+                // 版本链与启停走独立 /admin/rules/{code}/... 前缀，同样只决定转发方向，不放权。
+                || path.startsWith("/admin/rules")
                 // 语义绑定目录与配置发布同属 app 持有的配置面资源；转发方向不等于放权。
                 || path.startsWith("/admin/semantic-bindings")
                 // 业务接入模板目录同属 app 持有的配置面资源；转发方向不等于放权。

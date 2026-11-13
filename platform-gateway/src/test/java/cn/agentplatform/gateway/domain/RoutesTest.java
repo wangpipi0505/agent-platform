@@ -78,6 +78,19 @@ class RoutesTest {
     }
 
     @Test
+    void routesRuleAssetsToApplicationServiceOnBothPathFamilies() {
+        // A3-3：应用侧目录走 /admin/apps 前缀；版本链与启停走独立 /admin/rules 前缀，都指向 app。
+        for (String path : new String[] {
+                "/admin/apps/weather/rules",
+                "/admin/rules/no-direct-delete/draft",
+                "/admin/rules/no-direct-delete/versions",
+                "/admin/rules/no-direct-delete/versions/2/publish",
+                "/admin/rules/no-direct-delete/enable",
+                "/admin/rules/no-direct-delete/disable"
+        }) assertThat(Routes.service(path)).as(path).isEqualTo("app");
+    }
+
+    @Test
     void routesOnlyExactCapabilityPackageEndpointsToApplicationService() {
         for (String path : new String[] {
                 "/admin/capability-packages",
