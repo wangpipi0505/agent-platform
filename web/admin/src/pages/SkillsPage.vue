@@ -12,6 +12,12 @@ import { usePageTitle } from "../usePageOperation";
 import ResourceDetailPanel from "./resources/ResourceDetailPanel.vue";
 import { displayTime, statusLabel } from "./resources/resource-format";
 import { useResourceList } from "./resources/useResourceList";
+import {
+  matchesKindFilter,
+  skillKindOf,
+  SKILL_KIND_FILTERS,
+  type SkillKind,
+} from "../../../shared/mock-skill-precheck";
 
 const router = useRouter();
 usePageTitle(() => "技能库");
@@ -33,14 +39,20 @@ const {
 pageSize.value = 20;
 
 const businessCategory = ref("");
+// F2-2（方案 §5.5）：kind（TOOL/GUIDE）chips 筛选——客户端过滤既有列表数据，
+// 分型判定与过滤语义统一走 mock-skill-precheck 助手（GUIDE=kind==='GUIDE'，其余皆 TOOL）。
+const kindFilter = ref<SkillKind | "">("");
 const filtered = computed(
   () =>
     baseFiltered.value.filter(
       (row) =>
-        !businessCategory.value ||
-        (row.bizCategories || ["GENERAL"]).includes(businessCategory.value),
+        matchesKindFilter(row, kindFilter.value) &&
+        (!businessCategory.value ||
+          (row.bizCategories || ["GENERAL"]).includes(businessCategory.value)),
     ),
 );
+const kindCount = (kind: SkillKind) =>
+  baseFiltered.value.filter((row) => matchesKindFilter(row, kind)).length;
 const paginated = computed(() =>
   filtered.value.slice((page.value - 1) * pageSize.value, page.value * pageSize.value),
 );
@@ -55,7 +67,7 @@ const form = ref<any>({});
 
 // —— 已生效筛选 chip 回显（方案 §4）：本页为客户端过滤，chips 即实时筛选状态，可单个移除。
 const hasFilter = computed(() =>
-  Boolean(filter.keyword || filter.status || businessCategory.value),
+  Boolean(filter.keyword || filter.status || businessCategory.value || kindFilter.value),
 );
 const chips = computed(() => {
   const list: { key: string; label: string; clear: () => void }[] = [];
@@ -71,6 +83,12 @@ const chips = computed(() => {
       label: `状态：${filter.status}`,
       clear: () => (filter.status = ""),
     });
+  if (kindFilter.value)
+    list.push({
+      key: "kind",
+      label: `类型：${kindFilter.value}`,
+      clear: () => (kindFilter.value = ""),
+    });
   if (businessCategory.value)
     list.push({
       key: "bizCategory",
@@ -83,6 +101,7 @@ function clearFilters() {
   filter.keyword = "";
   filter.status = "";
   businessCategory.value = "";
+  kindFilter.value = "";
 }
 
 function create() {
@@ -159,6 +178,18 @@ function openImported(code: string) {
         placeholder="状态"
         style="width: 10rem"
       />
+      <!-- F2-2（方案 §5.5）：kind（TOOL/GUIDE）chips 筛选，客户端过滤，计数随当前列表。 -->
+      <el-check-tag
+        v-for="option in SKILL_KIND_FILTERS"
+        :key="option.value || 'all'"
+        :checked="kindFilter === option.value"
+        @change="kindFilter = option.value"
+        >{{
+          option.value
+            ? `${option.label} ${kindCount(option.value)}`
+            : option.label
+        }}</el-check-tag
+      >
       <BusinessCategorySelect v-model="businessCategory" />
       <el-button text @click="businessCategory = ''">全部分类</el-button>
     </template>
@@ -198,7 +229,18 @@ function openImported(code: string) {
           }}</span>
         </template>
       </el-table-column>
-      <el-table-column prop="type" label="类型" width="80" /><el-table-column label="业务分类" min-width="140"><template #default="{row}">{{categories(row)}}</template></el-table-column><el-table-column prop="businessSystemCode" label="业务系统" min-width="120" /><el-table-column label="访问范围" min-width="110"><template #default="{row}">{{row.accessPolicy?.visibility==='PRIVATE'?'私有':row.accessPolicy?.visibility==='BUSINESS'?'业务系统':row.accessPolicy?.visibility==='RESTRICTED'?'角色可见':'公开'}}</template></el-table-column>
+      <el-table-column prop="type" label="类型" width="110">
+        <template #default="{ row }">
+          <!-- F2-2：kind 分型标识（TOOL/GUIDE）；TOOL 行仍显示技术类型（HTTP/MCP/…）。 -->
+          <el-tag
+            v-if="skillKindOf(row) === 'GUIDE'"
+            size="small"
+            effect="plain"
+            >GUIDE</el-tag
+          >
+          <template v-else>{{ row.type || "TOOL" }}</template>
+        </template>
+      </el-table-column><el-table-column label="业务分类" min-width="140"><template #default="{row}">{{categories(row)}}</template></el-table-column><el-table-column prop="businessSystemCode" label="业务系统" min-width="120" /><el-table-column label="访问范围" min-width="110"><template #default="{row}">{{row.accessPolicy?.visibility==='PRIVATE'?'私有':row.accessPolicy?.visibility==='BUSINESS'?'业务系统':row.accessPolicy?.visibility==='RESTRICTED'?'角色可见':'公开'}}</template></el-table-column>
       <el-table-column
         prop="description"
         label="说明"
