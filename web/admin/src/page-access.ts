@@ -3,9 +3,19 @@
  * 读写分离：read 是"打开页面"的条件（本轮统一为已验证主体，不以 can('edit') 替代读权限，
  * 读接口由后端独立鉴权）；write 只登记页内写操作所需的按钮上下文（证据=页面内
  * can()/v-permission 现有用法），同样不是授权依据——后端对每次操作独立鉴权。
+ *
+ * F1-2（主方案 §7.2）：PageRole 从 session/edit/approve/admin 扩展为六角色
+ * session/builder/approve/operator/admin/user（保留 session 作为登录门）；既有 edit 值
+ * 迁移为 builder（BUILDER=现 EDITOR 扩展）。本卡 read 条件保持 "session" 不变——按角色
+ * 隐藏菜单的 enforcement 留待 B4-1 后端角色就绪（F4 联调期），本卡只交付类型/映射/分组结构。
+ * 菜单五分组（前端稿 §3.1 角色导航树）：①智能体 ②任务与运行 ③构建资产 ④集成与治理 ⑤平台管理。
  */
 
-export type PageRole = "session" | "edit" | "approve" | "admin";
+export type PageRole = "session" | "builder" | "approve" | "operator" | "admin" | "user";
+
+/** F1-2 菜单五分组（前端稿 §3.1，数组顺序=侧栏渲染顺序，分组名=面包屑一级）。 */
+export const MENU_GROUP_ORDER = ["智能体", "任务与运行", "构建资产", "集成与治理", "平台管理"] as const;
+export type MenuGroup = (typeof MENU_GROUP_ORDER)[number];
 
 export interface PageAccessEntry {
   /** 稳定键：路由 meta.access 引用。 */
@@ -15,8 +25,8 @@ export interface PageAccessEntry {
   /** 参数化路由（非菜单项时提供）。 */
   route?: string;
   title: string;
-  /** 顶栏 eyebrow 分组。 */
-  area: string;
+  /** 顶栏面包屑一级分组（F1-2 起为五分组之一，前端稿 §3.1）。 */
+  area: MenuGroup;
   /** 打开页面的条件：session=任意已验证主体。 */
   read: PageRole;
   /** 页内写操作所需角色；空串=页面无统一写操作。 */
@@ -34,36 +44,42 @@ export interface PageAccessEntry {
 export const PAGE_ACCESS_VERSION = 1;
 
 export const pageAccess: PageAccessEntry[] = [
+  // ① 智能体（前端稿 §3.1：列表+详情=智能体工作区）
+  { key: "apps", path: "/apps", title: "智能体管理", area: "智能体", read: "session", write: "builder", menu: true },
+  { key: "app-workspace", path: "/apps", route: "/apps/:code/:tabMatch(.*)*", title: "智能体工作区", area: "智能体", read: "session", write: "builder", menu: false },
+  // ② 任务与运行
+  { key: "operations", path: "/operations", title: "运行中心", area: "任务与运行", read: "session", write: "admin", menu: true },
+  { key: "runs", path: "/runs", title: "运行监控", area: "任务与运行", read: "session", write: "", menu: true },
+  { key: "run-detail", path: "/runs", route: "/runs/:runId", title: "运行详情", area: "任务与运行", read: "session", write: "", menu: false },
+  { key: "services", path: "/services", title: "服务管理", area: "任务与运行", read: "session", write: "admin", menu: true },
+  // ③ 构建资产（BUILDER/ADMIN：技能库/提示词模板；画布流程在工作区内，无独立菜单）
+  { key: "skills", path: "/skills", title: "技能库", area: "构建资产", read: "session", write: "builder", menu: true },
+  { key: "skill-detail", path: "/skills", route: "/skills/:code", title: "技能详情", area: "构建资产", read: "session", write: "builder", menu: false },
+  { key: "templates", path: "/model/prompt-templates", title: "提示词模板", area: "构建资产", read: "session", write: "builder", menu: true },
+  // ④ 集成与治理（ADMIN/APPROVER：集成控制台七路由，F3-4 合并为两页）
+  { key: "integration-config", path: "/integration/config-releases", title: "配置发布", area: "集成与治理", read: "session", write: "admin", menu: true },
+  { key: "integration-connections", path: "/integration/connection-profiles", title: "连接档案", area: "集成与治理", read: "session", write: "admin", menu: false },
+  { key: "integration-bindings", path: "/integration/environment-bindings", title: "环境绑定", area: "集成与治理", read: "session", write: "admin", menu: false },
+  { key: "integration-profiles", path: "/integration/integration-profiles", title: "接入档案", area: "集成与治理", read: "session", write: "admin", menu: false },
+  { key: "integration-experience", path: "/integration/experiences", title: "体验编辑", area: "集成与治理", read: "session", write: "admin", menu: false },
+  // C0-1 裁剪：本体协同线（Semantic*/semantic-bindings）挂起（主方案 §2.1）——1109 无本体
+  // 要求；代码保留、深链可打开，不进菜单。
+  { key: "integration-semantics", path: "/integration/semantic-bindings", title: "语义与目标", area: "集成与治理", read: "session", write: "builder", menu: false, suspended: true },
+  { key: "integration-diagnostics", path: "/integration/diagnostics", title: "接入诊断", area: "集成与治理", read: "session", write: "", menu: false },
+  // ⑤ 平台管理（ADMIN，OPERATOR 只读子集：模型/确认中心/统计/审计/系统）
   { key: "capability-packages", path: "/capability-packages", title: "软件能力目录", area: "平台管理", read: "session", write: "", menu: true },
   // C0-1 裁剪：onboarding 接入向导线挂起（主方案 §2.1）——构建流程归入智能体工作区，
   // 向导组件挂起；代码保留、深链可打开，不进菜单。
   { key: "onboarding-templates", path: "/onboarding/templates", title: "接入模板", area: "平台管理", read: "session", write: "admin", menu: false, suspended: true },
-  { key: "apps", path: "/apps", title: "智能体管理", area: "平台管理", read: "session", write: "edit", menu: true },
-  { key: "integration-config", path: "/integration/config-releases", title: "配置发布", area: "平台管理", read: "session", write: "admin", menu: true },
-  { key: "integration-connections", path: "/integration/connection-profiles", title: "连接档案", area: "平台管理", read: "session", write: "admin", menu: false },
-  { key: "integration-bindings", path: "/integration/environment-bindings", title: "环境绑定", area: "平台管理", read: "session", write: "admin", menu: false },
-  { key: "integration-profiles", path: "/integration/integration-profiles", title: "接入档案", area: "平台管理", read: "session", write: "admin", menu: false },
-  { key: "integration-experience", path: "/integration/experiences", title: "体验编辑", area: "平台管理", read: "session", write: "admin", menu: false },
-  // C0-1 裁剪：本体协同线（Semantic*/semantic-bindings）挂起（主方案 §2.1）——1109 无本体
-  // 要求；代码保留、深链可打开，不进菜单。
-  { key: "integration-semantics", path: "/integration/semantic-bindings", title: "语义与目标", area: "平台管理", read: "session", write: "edit", menu: false, suspended: true },
-  { key: "integration-diagnostics", path: "/integration/diagnostics", title: "接入诊断", area: "平台管理", read: "session", write: "", menu: false },
-  { key: "app-workspace", path: "/apps", route: "/apps/:code/:tabMatch(.*)*", title: "智能体工作区", area: "平台管理", read: "session", write: "edit", menu: false },
-  { key: "operations", path: "/operations", title: "运行中心", area: "运行与支撑", read: "session", write: "admin", menu: true },
-  { key: "runs", path: "/runs", title: "运行监控", area: "运行与支撑", read: "session", write: "", menu: true },
-  { key: "run-detail", path: "/runs", route: "/runs/:runId", title: "运行详情", area: "运行与支撑", read: "session", write: "", menu: false },
-  { key: "skills", path: "/skills", title: "技能库", area: "平台管理", read: "session", write: "edit", menu: true },
-  { key: "skill-detail", path: "/skills", route: "/skills/:code", title: "技能详情", area: "平台管理", read: "session", write: "edit", menu: false },
-  { key: "services", path: "/services", title: "服务管理", area: "运行与支撑", read: "session", write: "admin", menu: true },
-  { key: "providers", path: "/model/providers", title: "模型供应商", area: "模型与模板", read: "session", write: "edit", menu: true },
-  { key: "provider-entries", path: "/model/providers", route: "/model/providers/:providerId/entries", title: "模型条目", area: "模型与模板", read: "session", write: "edit", menu: false },
-  { key: "entries", path: "/model/entries", title: "模型条目", area: "模型与模板", read: "session", write: "edit", menu: true },
-  { key: "templates", path: "/model/prompt-templates", title: "提示词模板", area: "模型与模板", read: "session", write: "edit", menu: true },
-  { key: "approvals", path: "/approvals", title: "确认中心", area: "运行与支撑", read: "session", write: "approve", menu: true },
-  { key: "evaluations", path: "/evaluations", title: "评测中心", area: "运行与支撑", read: "session", write: "", menu: true },
-  { key: "statistics", path: "/statistics", title: "统计分析", area: "运行与支撑", read: "session", write: "", menu: true },
-  { key: "audit", path: "/audit", title: "审计记录", area: "治理", read: "session", write: "", menu: true },
-  { key: "system", path: "/system", title: "系统管理", area: "治理", read: "session", write: "admin", menu: true },
+  { key: "providers", path: "/model/providers", title: "模型供应商", area: "平台管理", read: "session", write: "builder", menu: true },
+  { key: "provider-entries", path: "/model/providers", route: "/model/providers/:providerId/entries", title: "模型条目", area: "平台管理", read: "session", write: "builder", menu: false },
+  { key: "entries", path: "/model/entries", title: "模型条目", area: "平台管理", read: "session", write: "builder", menu: true },
+  { key: "approvals", path: "/approvals", title: "确认中心", area: "平台管理", read: "session", write: "approve", menu: true },
+  { key: "statistics", path: "/statistics", title: "统计分析", area: "平台管理", read: "session", write: "", menu: true },
+  { key: "audit", path: "/audit", title: "审计记录", area: "平台管理", read: "session", write: "", menu: true },
+  { key: "system", path: "/system", title: "系统管理", area: "平台管理", read: "session", write: "admin", menu: true },
+  // 评测中心：前端稿 §3.1 移入"内部工具"子组（属平台管理分组，独立子组随 F3 落地）
+  { key: "evaluations", path: "/evaluations", title: "评测中心", area: "平台管理", read: "session", write: "", menu: true },
 ];
 
 export const pageByKey: Record<string, PageAccessEntry> = Object.fromEntries(
@@ -75,12 +91,29 @@ export function menuEntries(): PageAccessEntry[] {
   return pageAccess.filter((entry) => entry.menu && !entry.suspended);
 }
 
-/** 与既有 can() 同一角色映射：ADMIN 全量，edit/approve/admin 各对应专属角色。 */
+/** F1-2 五分组视图：按 MENU_GROUP_ORDER 归组的菜单条目（AppShell 分组渲染唯一来源）。 */
+export function groupedMenuEntries(): { group: MenuGroup; entries: PageAccessEntry[] }[] {
+  return MENU_GROUP_ORDER.map((group) => ({
+    group,
+    entries: menuEntries().filter((entry) => entry.area === group),
+  })).filter((section) => section.entries.length > 0);
+}
+
+/**
+ * F1-2 六角色映射（主方案 §7.2，与既有 can() 同一口径：ADMIN 全量）：
+ * builder→BUILDER 或 EDITOR（现行 claims 仍发 EDITOR，BUILDER 为扩展名——双兼容）；
+ * approve→APPROVER；operator→OPERATOR；admin→ADMIN；user→USER。
+ */
 export function roleAllows(read: PageRole, roles: readonly string[]): boolean {
   if (read === "session") return true;
-  // 与既有 can() 同一映射表（approve→APPROVER，非大写化），避免"APPROVE"错配。
-  const mapped = { edit: "EDITOR", approve: "APPROVER", admin: "ADMIN" } as Record<string, string>;
-  return roles.includes("ADMIN") || roles.includes(mapped[read] || "");
+  const mapped: Record<Exclude<PageRole, "session">, readonly string[]> = {
+    builder: ["BUILDER", "EDITOR"],
+    approve: ["APPROVER"],
+    operator: ["OPERATOR"],
+    admin: ["ADMIN"],
+    user: ["USER"],
+  };
+  return roles.includes("ADMIN") || mapped[read].some((role) => roles.includes(role));
 }
 
 /**
