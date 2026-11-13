@@ -3682,5 +3682,113 @@
   "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/OpenApiImportController.java:20",
   "callerSource": "app-management/src/main/java/cn/agentplatform/app/infra/OnboardingSkillImportsClient.java",
   "reason": ""
+ },
+ {
+  "method": "POST",
+  "template": "/admin/plugin-sources",
+  "caller": "gateway",
+  "target": "skill",
+  "action": "proxy.skill.post.PluginGovernanceController.create",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/PluginGovernanceController.java",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:58",
+  "reason": "A3-2 插件治理数据面（ADMIN，接口稿 §5.6）：来源登记/读取与发现触发、读取两条路径均经网关登记，授权与启停由 skill 服务校验"
+ },
+ {
+  "method": "GET",
+  "template": "/admin/plugin-sources",
+  "caller": "gateway",
+  "target": "skill",
+  "action": "proxy.skill.get.PluginGovernanceController.sources",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/PluginGovernanceController.java",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:58",
+  "reason": "A3-2 插件治理数据面（ADMIN，接口稿 §5.6）：来源登记/读取与发现触发、读取两条路径均经网关登记，授权与启停由 skill 服务校验"
+ },
+ {
+  "method": "POST",
+  "template": "/admin/plugin-sources/{id}/discover",
+  "caller": "gateway",
+  "target": "skill",
+  "action": "proxy.skill.post.PluginGovernanceController.discover",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/PluginGovernanceController.java",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:58",
+  "reason": "A3-2 插件治理数据面（ADMIN，接口稿 §5.6）：来源登记/读取与发现触发、读取两条路径均经网关登记，授权与启停由 skill 服务校验"
+ },
+ {
+  "method": "GET",
+  "template": "/admin/plugin-sources/{id}/discoveries/{discoveryId}",
+  "caller": "gateway",
+  "target": "skill",
+  "action": "proxy.skill.get.PluginGovernanceController.discovery",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/PluginGovernanceController.java",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:58",
+  "reason": "A3-2 插件治理数据面（ADMIN，接口稿 §5.6）：来源登记/读取与发现触发、读取两条路径均经网关登记，授权与启停由 skill 服务校验"
+ },
+ {
+  "method": "GET",
+  "template": "/admin/plugins",
+  "caller": "gateway",
+  "target": "skill",
+  "action": "proxy.skill.get.PluginGovernanceController.plugins",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/PluginGovernanceController.java",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:58",
+  "reason": "A3-2 插件治理数据面（ADMIN，接口稿 §5.6）：来源登记/读取与发现触发、读取两条路径均经网关登记，授权与启停由 skill 服务校验"
+ },
+ {
+  "method": "POST",
+  "template": "/admin/plugins/{versionId}/enable",
+  "caller": "gateway",
+  "target": "skill",
+  "action": "proxy.skill.post.PluginGovernanceController.enable",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/PluginGovernanceController.java",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:58",
+  "reason": "A3-2 插件治理数据面（ADMIN，接口稿 §5.6）：来源登记/读取与发现触发、读取两条路径均经网关登记，授权与启停由 skill 服务校验"
+ },
+ {
+  "method": "POST",
+  "template": "/admin/plugins/{versionId}/disable",
+  "caller": "gateway",
+  "target": "skill",
+  "action": "proxy.skill.post.PluginGovernanceController.disable",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/PluginGovernanceController.java",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:58",
+  "reason": "A3-2 插件治理数据面（ADMIN，接口稿 §5.6）：来源登记/读取与发现触发、读取两条路径均经网关登记，授权与启停由 skill 服务校验"
+ },
+ {
+  "method": "POST",
+  "template": "/admin/plugins/{versionId}/grants",
+  "caller": "gateway",
+  "target": "skill",
+  "action": "proxy.skill.post.PluginGovernanceController.grants",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/PluginGovernanceController.java",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:58",
+  "reason": "A3-2 插件治理数据面（ADMIN，接口稿 §5.6）：来源登记/读取与发现触发、读取两条路径均经网关登记，授权与启停由 skill 服务校验"
+ },
+ {
+  "method": "DELETE",
+  "template": "/admin/plugins/grants/{grantId}",
+  "caller": "gateway",
+  "target": "skill",
+  "action": "proxy.skill.delete.PluginGovernanceController.revoke",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "skill-registry/src/main/java/cn/agentplatform/skill/api/PluginGovernanceController.java",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:58",
+  "reason": "A3-2 插件治理数据面（ADMIN，接口稿 §5.6）：来源登记/读取与发现触发、读取两条路径均经网关登记，授权与启停由 skill 服务校验"
  }
 ]
