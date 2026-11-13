@@ -66,12 +66,15 @@ public class AgentDriver {
                 runId = TraceStore.number(run, "id"),
                 nid = TraceStore.number(node, "id");
         List<Map<String, Object>> history = new ArrayList<>();
-        List<Object> tools = new ArrayList<>();
-        config.path("tools").forEach(t -> tools.add(t.path("definition")));
+        // 会话关联（H1-5 口径）：受理时注入快照（chatSession.sessionId）。提升到循环外，
+        // 供 H1-7 步骤工具快照绑定（恢复只收窄）在解析阶段复用。
+        var linkedSession = TraceStore.json(run.get("snapshot")).path("chatSession");
+        // H1-7 需要前序 attempt 的 id 以定位其 request/header 事件，查询从只取 checkpoint
+        // 扩展为取 id+checkpoint（原有恢复语义不变）。
         var prior =
                 store.db()
                         .queryForList(
-                                "select checkpoint from engine.attempt where node_instance_id=? and"
+                                "select id, checkpoint from engine.attempt where node_instance_id=? and"
                                         + " id<>? and response is not null order by attempt_no desc"
                                         + " limit 1",
                                 nid,
@@ -80,6 +83,14 @@ public class AgentDriver {
                 prior.isEmpty()
                         ? Json.read("{}")
                         : TraceStore.json(prior.getFirst().get("checkpoint"));
+        long originalAttempt =
+                prior.isEmpty() ? 0 : ((Number) prior.getFirst().get("id")).longValue();
+        // H1-7（步骤工具快照绑定，主方案 §5.3）：重启恢复的同一步从原 request/header 读回
+        // 采纳集清单恢复工具面，实时授权复核只允许收窄、不得放宽（详见 bindStepToolSnapshot）。
+        // 工具定义表必须在该绑定之后从 config 重建，保证模型可见面与 D2 采纳集同源。
+        var snapshotBinding = bindStepToolSnapshot(config, recovered, linkedSession, originalAttempt);
+        List<Object> tools = new ArrayList<>();
+        config.path("tools").forEach(t -> tools.add(t.path("definition")));
         // 契约 trace-model 终止规则情形6的判定状态：无进展 = 同一工具调用指纹
         // "连续"重复的轮数，指纹变化即重置（不跨恢复记忆，与检查点恢复语义一致）。
         String lastFingerprint = null;
@@ -120,7 +131,6 @@ public class AgentDriver {
             // 成功，再发送模型请求。有会话关联的运行写入 session_event（request/header +
             // request/context）；独立运行无会话，事实仅保留运行链路（attempt.request_snapshot）。
             // 会话标识由 ChatSessions 在受理时注入快照（chatSession.sessionId）。
-            var linkedSession = TraceStore.json(run.get("snapshot")).path("chatSession");
             if (linkedSession.has("sessionId")) {
                 var adopted = new java.util.ArrayList<>();
                 for (var t : config.path("tools"))
@@ -132,11 +142,17 @@ public class AgentDriver {
                                     t.path("skillVersionId").asLong(0),
                                     "schemaDigest",
                                     t.path("contractDigest").asText("")));
+                // H1-7：恢复绑定生效时在 header 上附带 snapshotBinding（收窄/恢复原集的
+                // 原因记录），与采纳集同事务落库，可审计"为什么这轮工具面变了"。
+                var headerPayload = Json.object();
+                headerPayload.set("config", Json.read(Json.write(request)));
+                headerPayload.set("tools", Json.tree(adopted));
+                if (snapshotBinding != null) headerPayload.set("snapshotBinding", snapshotBinding);
                 d2.append(
                         linkedSession.path("sessionId").asText(),
                         null,
                         cn.agentplatform.engine.harness.session.SessionEvents.REQUEST_HEADER,
-                        Json.tree(Map.of("config", Json.read(Json.write(request)), "tools", adopted)),
+                        headerPayload,
                         null);
                 d2.append(
                         linkedSession.path("sessionId").asText(),
@@ -255,6 +271,32 @@ public class AgentDriver {
 
                 JsonNode result;
                 try {
+                    // H1-7（调用级复核，主方案 §5.3 三层表第三层）：冻结词表核对——config 声明的
+                    // (code, skillVersionId, contractDigest) 三元组不在冻结快照 config.tools 内
+                    // （旧版本停用/撤权/契约摘要变化）＝当前授权已不含该工具，未分发调用结构化
+                    // 拒绝并记录原因，零出站、零登记。拒绝在登记之前抛出，经既有 PLAT-05 可解释
+                    // 链回给模型（有界），不终止 turn。冻结词表缺失或为空（旧快照/独立评测运行）
+                    // 不启用本复核。
+                    var frozenWord =
+                            TraceStore.json(run.get("snapshot")).path("config").path("tools");
+                    if (frozenWord.isArray()
+                            && !frozenWord.isEmpty()
+                            && !frozenAuthorized(frozenWord, tool))
+                        throw new cn.agentplatform.engine.domain.RuntimeFault(
+                                "TOOL_NOT_DECLARED",
+                                "toolCall.snapshotBinding",
+                                "工具已撤权或契约变更（与冻结快照不一致），未分发调用已拒绝",
+                                Map.of(
+                                        "semantic",
+                                        "TOOL_NOT_DECLARED",
+                                        "userMessage",
+                                        "工具已撤权或版本停用，操作未执行",
+                                        "retryable",
+                                        false,
+                                        "toolId",
+                                        name,
+                                        "declaredDigest",
+                                        tool.path("contractDigest").asText("")));
                     result =
                             skill(
                                     run,
@@ -655,6 +697,95 @@ public class AgentDriver {
             if (cn.agentplatform.engine.harness.session.SessionEvents.APPROVAL_POLICY.equals(e.type())
                     && "never".equals(e.data().path("mode").asText())) return true;
         }
+        return false;
+    }
+
+    /**
+     * H1-7 步骤工具快照绑定（主方案 §5.3"步骤工具快照绑定"）：仅当本步为重启恢复（同节点
+     * 存在前序 attempt 的 checkpoint）且有会话关联时，从原 attempt 的 request/header 事件
+     * 读回采纳集清单恢复工具面。
+     *
+     * <p>读回源选择 <b>request/header 事件</b>（经 SessionStore.read 按会话读，取原 attempt
+     * 首个 request/header）而非 checkpoint，理由：①主方案明文"进程重启后同一步从原
+     * request/header 读回原清单恢复工具面"；②D2 先落库后出流，header 覆盖"派发后、响应前"
+     * 的崩溃窗口，checkpoint 在响应之后才写、该窗口内不存在；③不改 checkpoint 形状，H1-8
+     * 恢复事实与既有恢复读法零影响。
+     *
+     * <p><b>实时授权复核只允许收窄、不得放宽</b>：当前集与原集按 toolId 求交——
+     * <ul>
+     *   <li>当前集含原集没有的工具（放宽）→ 剔除，按原集执行（以原集覆盖当前集）；</li>
+     *   <li>原集工具在当前集缺失（如撤权后收窄）→ 使用收窄集；</li>
+     *   <li>原因记录在本轮 request/header 的 snapshotBinding 字段（工具不可用/不予放宽）。</li>
+     * </ul>
+     * 同步重试（同 attempt 内）共用同一 config，无前序 checkpoint，不进本分支；工具不可用
+     * 的派发级拒绝由调用环的冻结词表复核（frozenAuthorized）承担。原清单缺失（无 header 的
+     * 旧数据）时维持现状 fail-open。
+     *
+     * @param config 就地施加约束的有效配置（effectiveConfig 产物，可变 ObjectNode）
+     * @return 非空时为本轮 request/header 附带的 snapshotBinding 记录；绑定未生效返回 null
+     */
+    private JsonNode bindStepToolSnapshot(
+            JsonNode config, JsonNode recovered, JsonNode linkedSession, long originalAttempt) {
+        boolean resumed = recovered != null && recovered.isObject() && recovered.size() > 0;
+        if (!resumed || originalAttempt <= 0 || !linkedSession.has("sessionId")) return null;
+        JsonNode original = null;
+        for (var event : d2.read(linkedSession.path("sessionId").asText(), 0, 0)) {
+            if (!cn.agentplatform.engine.harness.session.SessionEvents.REQUEST_HEADER.equals(
+                    event.type())) continue;
+            if (event.data().path("config").path("attemptId").asLong() != originalAttempt) continue;
+            original = event.data().path("tools");
+            break;
+        }
+        if (original == null || !original.isArray()) return null; // 原清单缺失：维持现状
+        Set<String> originalIds = new LinkedHashSet<>();
+        for (JsonNode t : original) {
+            String id = t.path("toolId").asText("");
+            if (!id.isBlank()) originalIds.add(id);
+        }
+        // 求交：只保留 toolId 仍在原采纳集内的当前条目，两个方向的差集分别记录原因。
+        List<JsonNode> kept = new ArrayList<>();
+        Set<String> widened = new LinkedHashSet<>(); // 当前多出（放宽被拒）
+        for (JsonNode t : config.path("tools")) {
+            String id = t.path("name").asText(t.path("code").asText());
+            if (originalIds.contains(id)) kept.add(t);
+            else widened.add(id);
+        }
+        Set<String> narrowed = new LinkedHashSet<>(originalIds); // 原集缺失（收窄生效）
+        for (JsonNode t : kept)
+            narrowed.remove(t.path("name").asText(t.path("code").asText()));
+        if (widened.isEmpty() && narrowed.isEmpty()) return null; // 集合一致，无绑定动作
+        if (!widened.isEmpty()) {
+            var surface = ((com.fasterxml.jackson.databind.node.ObjectNode) config).putArray("tools");
+            for (JsonNode t : kept) surface.add(t);
+        }
+        var binding = Json.object();
+        binding.put("recovery", true);
+        binding.put("source", "request/header");
+        binding.put("originalAttempt", originalAttempt);
+        if (!narrowed.isEmpty()) {
+            binding.set("narrowed", Json.tree(narrowed));
+            binding.put("reason", "原采纳集中的工具当前不可用，已按收窄集执行（实时复核只收窄）");
+        }
+        if (!widened.isEmpty()) {
+            binding.set("restored", Json.tree(widened));
+            if (!binding.has("reason")) binding.put("reason", "恢复不得放宽：超出原采纳集的工具已按原集覆盖");
+        }
+        return binding;
+    }
+
+    /**
+     * H1-7：config 工具的 (code, skillVersionId, contractDigest) 三元组是否仍在冻结词表内。
+     * code 回退口径与派发键一致（skill() 的 tool.code→name 回退）；三元组任一不符即视为
+     * 旧版本停用/撤权/契约变更。纯函数便于直接验证。
+     */
+    private static boolean frozenAuthorized(JsonNode frozenWord, JsonNode tool) {
+        String code = tool.path("code").asText(tool.path("name").asText());
+        for (JsonNode f : frozenWord)
+            if (f.path("code").asText().equals(code)
+                    && f.path("skillVersionId").asLong() == tool.path("skillVersionId").asLong()
+                    && f.path("contractDigest")
+                            .asText("")
+                            .equals(tool.path("contractDigest").asText(""))) return true;
         return false;
     }
 
