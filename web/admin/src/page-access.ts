@@ -54,6 +54,9 @@ export const pageAccess: PageAccessEntry[] = [
   { key: "operations", path: "/operations", title: "运行中心", area: "任务与运行", read: "session", write: "admin", menu: true },
   { key: "runs", path: "/runs", title: "运行监控", area: "任务与运行", read: "session", write: "", menu: true },
   { key: "run-detail", path: "/runs", route: "/runs/:runId", title: "运行详情", area: "任务与运行", read: "session", write: "", menu: false },
+  // F3-2：管理台只读计划详情（前端稿 §5.3）——追加式登记在既有任务与运行条目后、
+  // 挂起线（C0-1 标记）之前；纯只读页无写操作（write 留空），不进菜单、深链可打开。
+  { key: "plan-detail", path: "/plans", route: "/plans/:planId", title: "计划详情", area: "任务与运行", read: "session", write: "", menu: false },
   { key: "services", path: "/services", title: "服务管理", area: "任务与运行", read: "session", write: "admin", menu: true },
   // ③ 构建资产（BUILDER/ADMIN：技能库/提示词模板；画布流程在工作区内，无独立菜单）
   { key: "skills", path: "/skills", title: "技能库", area: "构建资产", read: "session", write: "builder", menu: true },
