@@ -179,6 +179,33 @@ const routes: RouteRecordRaw[] = [
     component: () => import("./pages/SystemPage.vue"),
     meta: { access: "system", title: "系统管理" },
   },
+  // F3-3 资产管理四页（前端稿 §3.1/§5.9；接口稿 §5.4-5.6 mock 驱动）——追加式注册，
+  // 既有路由不重排：/assets/memories 记忆、/assets/rules 规则、/assets/plugins 插件、
+  // /assets/mcp MCP 连接；确认中心四类待办矩阵在既有 /approvals 页内扩展（不新增路由）。
+  {
+    path: "/assets/memories",
+    name: "memories",
+    component: () => import("./pages/assets/MemoriesPage.vue"),
+    meta: { access: "memories", title: "记忆管理" },
+  },
+  {
+    path: "/assets/rules",
+    name: "rules",
+    component: () => import("./pages/assets/RulesPage.vue"),
+    meta: { access: "rules", title: "规则管理" },
+  },
+  {
+    path: "/assets/plugins",
+    name: "plugins",
+    component: () => import("./pages/assets/PluginsPage.vue"),
+    meta: { access: "plugins", title: "插件与来源" },
+  },
+  {
+    path: "/assets/mcp",
+    name: "mcp",
+    component: () => import("./pages/assets/McpConnectionsPage.vue"),
+    meta: { access: "mcp", title: "MCP 连接" },
+  },
   // MNT-02子步1：未知路径显式404（带返回工作台入口），不再静默重定向。
   {
     path: "/:pathMatch(.*)*",

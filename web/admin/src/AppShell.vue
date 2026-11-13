@@ -8,6 +8,7 @@ import { MENU_GROUP_ORDER, type MenuGroup } from "./page-access";
 import { canReadCapabilityPackages } from "../../shared/capability-package";
 import {
   fetchMockConfirmationCounts,
+  onConfirmationCountsChanged,
   type MockConfirmationCounts,
 } from "../../shared/mock-confirmation-counts";
 import CommandPalette from "./CommandPalette.vue";
@@ -103,7 +104,11 @@ function loadCounts() {
 onMounted(() => {
   loadCounts();
   pollTimer = window.setInterval(loadCounts, 15_000);
+  // F3-3：确认中心处置后立即刷新角标（不等 15s 轮询）——角标与四类列表同源（计数由
+  // 四类待办矩阵实时推导），处置页调用 notifyConfirmationCountsChanged 触发本重读。
+  const offCountsChanged = onConfirmationCountsChanged(loadCounts);
   window.addEventListener("keydown", onGlobalKey);
+  onUnmounted(() => offCountsChanged());
 });
 onUnmounted(() => {
   if (pollTimer !== undefined) window.clearInterval(pollTimer);

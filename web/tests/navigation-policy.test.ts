@@ -24,14 +24,16 @@ const routerSource = readFileSync(
   "utf8",
 );
 
-it("单一来源：主入口（C0-1 裁剪+F3-4 收敛+F3-1 任务工作台后 15 个）与全部页面登记齐全且字段完整", () => {
+it("单一来源：主入口（C0-1 裁剪+F3-4 收敛+F3-1 任务工作台+F3-3 资产管理后 19 个）与全部页面登记齐全且字段完整", () => {
   const menu = menuEntries();
   // C0-1 裁剪：接入模板/语义与目标两条挂起线移出菜单（主方案 §2.1），17→15；
   // F3-4 菜单收敛（前端稿 §5.7/§5.8）：集成控制台 1 条替代配置发布 1 条（其余深链页本就
   // menu:false），模型管理 1 条替代模型供应商+模型条目 2 条，15→14；
   // F3-1：任务工作台（方案 §5.3 管理台侧）入「任务与运行」组菜单，14→15。
-  expect(menu.length).toBe(15);
-  expect(new Set(menu.map((e) => e.path)).size).toBe(15);
+  // F3-3：资产管理四页（前端稿 §3.1：规则管理→构建资产；插件与来源/MCP 连接/记忆管理→
+  // 集成与治理）入菜单，15→19（每组 ≤10 断言保持：构建资产 3、集成与治理 4）。
+  expect(menu.length).toBe(19);
+  expect(new Set(menu.map((e) => e.path)).size).toBe(19);
   for (const entry of pageAccess) {
     expect(entry.title.length, entry.key).toBeGreaterThan(0);
     expect(entry.area.length, entry.key).toBeGreaterThan(0);

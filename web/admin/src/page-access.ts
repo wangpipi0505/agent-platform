@@ -69,10 +69,18 @@ export const pageAccess: PageAccessEntry[] = [
   { key: "skills", path: "/skills", title: "技能库", area: "构建资产", read: "session", write: "builder", menu: true },
   { key: "skill-detail", path: "/skills", route: "/skills/:code", title: "技能详情", area: "构建资产", read: "session", write: "builder", menu: false },
   { key: "templates", path: "/model/prompt-templates", title: "提示词模板", area: "构建资产", read: "session", write: "builder", menu: true },
+  // F3-3：规则管理（前端稿 §3.1 构建资产·规则管理（新））——追加式条目，既有行不重排。
+  // write=builder 与页内三字段草稿编辑/发布/启停（构建资产 BUILDER 语境）一致。
+  { key: "rules", path: "/assets/rules", title: "规则管理", area: "构建资产", read: "session", write: "builder", menu: true },
   // ④ 集成与治理（F3-4：集成控制台 7 路由并一页——六面板共用页头智能体上下文选择器
   // （?app=），旧 6 条深链路由 redirect 到 ?panel= 锚点；write=admin 与页内 can('admin') 一致。
   // 语义绑定（挂起线）仍独立路由深链可达，不并入）
   { key: "integration-console", path: "/integration/console", title: "集成控制台", area: "集成与治理", read: "session", write: "admin", menu: true },
+  // F3-3 资产管理三页（前端稿 §3.1 集成与治理：插件与来源/MCP 连接/记忆管理（共享层，新））——
+  // 追加式条目；write=admin 与页内启停/审批/登记（ADMIN 语境）一致，每组 ≤10 断言保持（1+3=4）。
+  { key: "plugins", path: "/assets/plugins", title: "插件与来源", area: "集成与治理", read: "session", write: "admin", menu: true },
+  { key: "mcp", path: "/assets/mcp", title: "MCP 连接", area: "集成与治理", read: "session", write: "admin", menu: true },
+  { key: "memories", path: "/assets/memories", title: "记忆管理", area: "集成与治理", read: "session", write: "admin", menu: true },
   // C0-1 裁剪：本体协同线（Semantic*/semantic-bindings）挂起（主方案 §2.1）——1109 无本体
   // 要求；代码保留、深链可打开，不进菜单。
   { key: "integration-semantics", path: "/integration/semantic-bindings", title: "语义与目标", area: "集成与治理", read: "session", write: "builder", menu: false, suspended: true },
