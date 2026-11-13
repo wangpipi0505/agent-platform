@@ -38,11 +38,22 @@ public class SessionStore {
 
   private final JdbcTemplate db;
   private final TransactionTemplate tx;
+  private cn.agentplatform.engine.infra.TraceStore trace;
 
   public SessionStore(JdbcTemplate db, PlatformTransactionManager manager) {
     this.db = db;
     this.tx = new TransactionTemplate(manager);
     this.tx.setTimeout(5);
+    this.trace = null;
+  }
+
+  /**
+   * 复用 TraceStore 的事务边界（H1-2）：append 走 trace.atomic，与调用方（如 ChatSessions 的
+   * 轮次预留事务）共享同一事务——满足"chat_turn 创建与 turn/start+user/message 同事务"（主方案 §5.1）。
+   */
+  public SessionStore(cn.agentplatform.engine.infra.TraceStore trace) {
+    this(trace.db(), null);
+    this.trace = trace;
   }
 
   /** 会话事件行（occurredAt 为库端落库时刻；data/surface_op 为 JSON 树）。 */
@@ -65,33 +76,35 @@ public class SessionStore {
    */
   public long append(String sessionId, Integer expectedSeq, String type, JsonNode data, JsonNode surfaceOp) {
     Long seq =
-            tx.execute(
-                    status -> {
-                      // 契约③：per-session 单写者锁——写事务内锁定会话行，写者串行。
-                      db.queryForObject(
-                              "select 1 from engine.chat_session where public_id=? for update",
-                              Long.class,
-                              sessionId);
-                      long next = nextSeq(sessionId);
-                      if (expectedSeq != null && expectedSeq.longValue() != next)
-                        throw new PlatformException(
-                                409,
-                                "SESSION_SEQ_MISMATCH",
-                                "会话事件 seq 不连续：期望 "
-                                        + expectedSeq
-                                        + "，实际下一序号 "
-                                        + next);
-                      db.update(
-                              "insert into engine.session_event(session_id,seq,type,data,surface_op)"
-                                  + " values(?,?,?,?::jsonb,?::jsonb)",
-                              sessionId,
-                              next,
-                              type,
-                              Json.write(data),
-                              surfaceOp == null ? null : Json.write(surfaceOp));
-                      return next;
-                    });
+            trace != null
+                    ? trace.atomic(
+                            () -> appendLocked(sessionId, expectedSeq, type, data, surfaceOp))
+                    : tx.execute(
+                            status -> appendLocked(sessionId, expectedSeq, type, data, surfaceOp));
     return seq == null ? -1 : seq;
+  }
+
+  /** 仅在活动事务内执行（trace.atomic 或 tx.execute 已开启边界）。 */
+  private Long appendLocked(
+      String sessionId, Integer expectedSeq, String type, JsonNode data, JsonNode surfaceOp) {
+    // 契约③：per-session 单写者锁——写事务内锁定会话行，写者串行。
+    db.queryForObject(
+            "select 1 from engine.chat_session where public_id=? for update", Long.class, sessionId);
+    long next = nextSeq(sessionId);
+    if (expectedSeq != null && expectedSeq.longValue() != next)
+      throw new PlatformException(
+              409,
+              "SESSION_SEQ_MISMATCH",
+              "会话事件 seq 不连续：期望 " + expectedSeq + "，实际下一序号 " + next);
+    db.update(
+            "insert into engine.session_event(session_id,seq,type,data,surface_op)"
+                + " values(?,?,?,?::jsonb,?::jsonb)",
+            sessionId,
+            next,
+            type,
+            Json.write(data),
+            surfaceOp == null ? null : Json.write(surfaceOp));
+    return next;
   }
 
   /** 当前事件水位（最大 seq；空会话为 0）。检查点与 H1-9 快照水位共用。 */

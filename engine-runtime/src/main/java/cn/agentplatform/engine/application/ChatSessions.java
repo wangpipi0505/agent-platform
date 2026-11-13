@@ -16,11 +16,14 @@ public class ChatSessions {
     private final TraceStore store;
     private final RuntimeClients clients;
     private final RunService runs;
+    // H1-2：会话事件日志写入口（复用 TraceStore 事务边界，轮次预留事务内同事务落 turn/start+user/message）。
+    private final cn.agentplatform.engine.harness.session.SessionStore turnEvents;
 
     public ChatSessions(TraceStore store, RuntimeClients clients, RunService runs) {
         this.store = store;
         this.clients = clients;
         this.runs = runs;
+        this.turnEvents = new cn.agentplatform.engine.harness.session.SessionStore(store);
     }
 
     public Map<String, Object> create(String code, Actor actor) {
@@ -200,6 +203,18 @@ public class ChatSessions {
                                                                 + " next_turn=next_turn+1 where"
                                                                 + " public_id=?",
                                                         id);
+                                        // H1-2（主方案 §5.1）：chat_turn 创建与 turn/start+user/message
+                                        // 同事务——重放/恢复以事务为界，日志重建必回到原轮次。
+                                        // turnEvents 复用本 reserve 的 TraceStore 事务（SessionStore(TraceStore)），
+                                        // 此处已在 store.atomic 内，append 直接加入当前事务。
+                                        turnEvents.append(
+                                                id, null,
+                                                cn.agentplatform.engine.harness.session.SessionEvents.TURN_START,
+                                                Json.tree(Map.of("turn", turn)), null);
+                                        turnEvents.append(
+                                                id, null,
+                                                cn.agentplatform.engine.harness.session.SessionEvents.USER_MESSAGE,
+                                                Json.tree(Map.of("content", req.path("inputs"))), null);
                                         return store.db()
                                                 .queryForMap(
                                                         "select * from engine.chat_turn where"
