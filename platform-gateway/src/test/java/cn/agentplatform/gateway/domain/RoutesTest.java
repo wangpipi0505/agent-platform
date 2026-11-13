@@ -113,6 +113,29 @@ class RoutesTest {
     }
 
     @Test
+    void routesPluginGovernanceToSkillService() {
+        // A3-2：插件治理数据面（来源/发现/版本/授权）指向 skill；GUIDE 双轨沿用 /admin/skills 前缀，
+        // 权威目录补九条 gateway→skill delegate 能力行；登记/触发/授权由 skill 服务按 ADMIN 校验。
+        for (String path : new String[] {
+                "/admin/plugin-sources",
+                "/admin/plugin-sources/1",
+                "/admin/plugin-sources/1/discover",
+                "/admin/plugin-sources/1/discoveries/disc_0123456789abcdef0123456789abcdef",
+                "/admin/plugins",
+                "/admin/plugins/7/enable",
+                "/admin/plugins/7/disable",
+                "/admin/plugins/7/grants",
+                "/admin/plugins/grants/3"
+        }) assertThat(Routes.service(path)).as(path).isEqualTo("skill");
+        // 拼写相近但未登记的入口不得被新前缀吞进去（/admin/plugins-x 与既有前缀规则同属
+        // startsWith 语义，命中后由 skill 服务按精确模板 404，这里只断言未登记形状不入新方向）。
+        assertThatThrownBy(() -> Routes.service("/admin/plugin-source"))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> Routes.service("/admin/plugin-discoveries"))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void routesOnlyExactCapabilityPackageEndpointsToApplicationService() {
         for (String path : new String[] {
                 "/admin/capability-packages",

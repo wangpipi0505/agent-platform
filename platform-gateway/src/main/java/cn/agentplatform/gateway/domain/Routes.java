@@ -55,6 +55,10 @@ public final class Routes {
                 // 业务接入模板目录同属 app 持有的配置面资源；转发方向不等于放权。
                 || path.startsWith("/admin/onboarding-templates")) return "app";
         if (path.startsWith("/admin/skills")) return "skill";
+        // A3-2：插件治理数据面（来源/发现/版本/授权）指向 skill；GUIDE 双轨沿用上方 /admin/skills 前缀。
+        // 只决定转发方向，登记/触发/授权仍由 skill 服务按 ADMIN 角色校验。
+        if (path.startsWith("/admin/plugin-sources") || path.startsWith("/admin/plugins"))
+            return "skill";
         if (path.startsWith("/admin/services")) return "skill";
         if (path.startsWith("/admin/model-providers")
                 || path.startsWith("/admin/model-entries")

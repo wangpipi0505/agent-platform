@@ -59,9 +59,10 @@ public class SkillController {
     }
 
     @GetMapping("/admin/skills")
-    public Object list() {
+    public Object list(@RequestParam(required = false) String kind) {
         // AP-S06：列表携带 source=FIXTURE|MANAGED，前端据此区分演示数据，不误标“可用”。
-        return ApiResponse.ok(FixtureSkills.withSource(publicView(catalog.list())));
+        // V321 技能双轨：kind= 过滤目录（GUIDE 供 manifest 技能链引用），缺省返回全部。
+        return ApiResponse.ok(FixtureSkills.withSource(publicView(catalog.list(kind))));
     }
 
     @PostMapping("/admin/skills")

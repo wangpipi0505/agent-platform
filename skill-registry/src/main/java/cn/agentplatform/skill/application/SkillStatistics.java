@@ -170,6 +170,15 @@ public final class SkillStatistics {
                     result.put("consistency", "REPEATABLE_READ");
                     result.put("grain", "LOGICAL_SKILL_CALL");
                     result.put("successRateBasis", "REAL_FORMAL_CALLS");
+                    // 接口稿 §5.6：现有统计响应区分 kind（V321 技能双轨）；跨技能聚合无单一 kind。
+                    if (code != null)
+                        result.put(
+                                "kind",
+                                db.queryForObject(
+                                        "select kind from skill.skill where tenant_id=? and code=?",
+                                        String.class,
+                                        actor.tenantId(),
+                                        code));
                     return result;
                 });
     }

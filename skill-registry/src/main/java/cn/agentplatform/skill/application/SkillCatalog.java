@@ -298,16 +298,74 @@ public class SkillCatalog {
                 main.get("current_version_id") == null ? null : selected.get("versionNo"));
         result.put("currentVersionId", main.get("current_version_id"));
         result.put("versions", versions);
+        // V321 双轨：kind 随公共视图返回，前端与技能链配置据此区分 GUIDE/TOOL。
+        result.put("kind", main.get("kind"));
         result.put("category", main.get("category"));
         result.put("tags", Json.read(main.get("tags").toString(), Object.class));
         return result;
     }
 
-    public List<Map<String, Object>> list() {
+    /** V321 技能双轨 kind 的唯一入口校验：缺省 TOOL 保持存量语义零变化。 */
+    static final Set<String> SKILL_KINDS = Set.of("TOOL", "GUIDE");
+
+    static String skillKind(Map<String, Object> body) {
+        String kind = Objects.toString(body.get("kind"), "TOOL");
+        if (!SKILL_KINDS.contains(kind))
+            throw error(400, "INVALID_SKILL", "kind 只允许 TOOL 或 GUIDE，收到: " + kind);
+        return kind;
+    }
+
+    /**
+     * V321 GUIDE（SKILL.md 形状）契约的唯一解释器：五字段白名单 name/description/whenToUse/
+     * modelInvocable/content。name/description 必填、content 非空（上限 256KB，对齐插件 manifest
+     * 与库稿 jsonb 上限惯例）、modelInvocable 必须显式布尔、whenToUse 可选。行字段
+     * （code/kind/category/tags）不进契约；TOOL 专属字段混入一律拒绝，避免双轨形状互串。
+     * GUIDE 不建正文表——契约整体存 skill_version.contract jsonb，版本/sha256/发布/统计链路复用。
+     */
+    static Map<String, Object> guideContract(Map<String, Object> body) {
+        for (String key : body.keySet())
+            if (!Set.of(
+                            "code",
+                            "kind",
+                            "category",
+                            "tags",
+                            "name",
+                            "description",
+                            "whenToUse",
+                            "modelInvocable",
+                            "content")
+                    .contains(key))
+                throw error(
+                        400,
+                        "INVALID_SKILL",
+                        "GUIDE 契约不接受字段: "
+                                + key
+                                + "（SKILL.md 形状只含 name/description/whenToUse/modelInvocable/content）");
+        var result = new LinkedHashMap<String, Object>();
+        result.put("name", text(body, "name"));
+        result.put("description", text(body, "description"));
+        if (!(body.get("modelInvocable") instanceof Boolean modelInvocable))
+            throw error(400, "INVALID_SKILL", "GUIDE 契约 modelInvocable 必须为显式布尔");
+        result.put("modelInvocable", modelInvocable);
+        if (body.containsKey("whenToUse")) result.put("whenToUse", text(body, "whenToUse"));
+        if (!(body.get("content") instanceof String content) || content.isBlank())
+            throw error(400, "INVALID_SKILL", "GUIDE 契约 content 不能为空（SKILL.md 正文）");
+        if (content.length() > 262144)
+            throw error(400, "INVALID_SKILL", "GUIDE 契约 content 超过 256KB 上限");
+        result.put("content", content);
+        return result;
+    }
+
+    public List<Map<String, Object>> list(String kind) {
+        // GET /admin/skills?kind= 过滤（接口稿 §5.6）：GUIDE 供技能链配置目录引用，TOOL 为存量默认。
+        if (kind != null && !SKILL_KINDS.contains(kind))
+            throw error(400, "INVALID_SKILL", "kind 过滤只允许 TOOL 或 GUIDE，收到: " + kind);
         return db
                 .queryForList(
-                        "select code from skill.skill where tenant_id=? order by updated_at desc",
-                        tenant())
+                        "select code from skill.skill where tenant_id=?"
+                                + (kind == null ? "" : " and kind=?")
+                                + " order by updated_at desc",
+                        kind == null ? new Object[] {tenant()} : new Object[] {tenant(), kind})
                 .stream()
                 .map(r -> get(r.get("code").toString(), null))
                 .toList();
@@ -317,6 +375,14 @@ public class SkillCatalog {
         String code = text(body, "code"), name = text(body, "name");
         if (!code.matches("[A-Za-z][A-Za-z0-9_-]{0,63}") || name.length() > 128)
             throw error(400, "INVALID_SKILL", "编码或名称无效");
+        String kind = skillKind(body);
+        // 两个指纹取同一个规范化对象：TOOL 沿用既有归一化入口，GUIDE 走 SKILL.md 形状解释器。
+        var contract =
+                "GUIDE".equals(kind)
+                        ? guideContract(body)
+                        : body.containsKey("type") || body.containsKey("invocation")
+                                ? normalize(body)
+                                : Map.<String, Object>of();
         try {
             return tx.execute(
                     status -> {
@@ -329,17 +395,14 @@ public class SkillCatalog {
                                 .isEmpty())
                             throw error(409, "SKILL_CODE_CONFLICT", "同租户已存在同编码技能；重复导入请使用新编码");
                         db.update(
-                                "insert into skill.skill(tenant_id,code,name,category,tags)"
-                                        + " values(?,?,?,?,?::jsonb)",
+                                "insert into skill.skill(tenant_id,code,name,kind,category,tags)"
+                                        + " values(?,?,?,?,?,?::jsonb)",
                                 tenant(),
                                 code,
                                 name,
+                                kind,
                                 Objects.toString(body.get("category"), ""),
                                 Json.write(body.getOrDefault("tags", List.of())));
-                        var contract =
-                                body.containsKey("type") || body.containsKey("invocation")
-                                        ? normalize(body)
-                                        : Map.<String, Object>of();
                         // 两个指纹一起写、取同一个规范化对象：sha 覆盖整份契约（含展示文案），
                         // semanticDigest 只覆盖语义字段（排除集在 SkillDigest 内唯一实现）。
                         db.update(
@@ -371,47 +434,18 @@ public class SkillCatalog {
     public Map<String, Object> save(String code, Map<String, Object> body) {
         return tx.execute(
                 status -> {
-                    main(code, true);
+                    var main = main(code, true);
                     var all = versions(code);
                     int version = ((Number) all.getFirst().get("versionNo")).intValue();
                     var effective = new LinkedHashMap<String, Object>(body);
-                    var previous = object(all.getFirst().get("definition"));
-                    // 旧编辑器省略新增字段不等于删除来源/执行映射；在行锁内补回，避免并发草稿覆盖。
-                    if (previous.containsKey("importSource")) {
-                        if (effective.containsKey("importSource")
-                                && !Json.tree(previous.get("importSource"))
-                                        .equals(Json.tree(effective.get("importSource"))))
-                            throw error(400, "IMPORT_SOURCE_IMMUTABLE", "导入来源不能通过编辑替换；请重新导入为独立草稿");
-                        effective.putIfAbsent("importSource", previous.get("importSource"));
+                    Map<String, Object> contract;
+                    if ("GUIDE".equals(Objects.toString(main.get("kind"), "TOOL"))) {
+                        // V321 双轨：GUIDE 草稿按 SKILL.md 形状整体替换，没有 TOOL 契约的“省略补回”
+                        // 合并语义——正文与 frontmatter 是一份完整文档，局部拼接只会制造半旧契约。
+                        contract = guideContract(effective);
+                    } else {
+                        contract = normalize(toolEffective(all, effective));
                     }
-                    if (previous.containsKey("httpMapping")
-                            && !effective.containsKey("httpMapping"))
-                        effective.put("httpMapping", previous.get("httpMapping"));
-                    // authScheme 同属“旧编辑器省略不等于删除”的字段：局部保存若把 API_KEY 静默降级成
-                    // 默认 BEARER，出站凭据形态会在一次无关编辑后改变且不留痕迹；显式声明过的契约
-                    // 以旧值为准，本次提交若带新值仍以新值为准（putIfAbsent 语义）。
-                    if (previous.containsKey(AuthScheme.FIELD)
-                            && !effective.containsKey(AuthScheme.FIELD))
-                        effective.put(AuthScheme.FIELD, previous.get(AuthScheme.FIELD));
-                    // identity 出站声明同理（PLAT-12）：旧编辑器局部保存静默丢掉 identity，出站
-                    // X-User-* 会在一次无关编辑后消失且不留痕；已保存的声明以旧值为准补回。
-                    if (previous.containsKey(SkillRules.IDENTITY_FIELD)
-                            && !effective.containsKey(SkillRules.IDENTITY_FIELD))
-                        effective.put(
-                                SkillRules.IDENTITY_FIELD, previous.get(SkillRules.IDENTITY_FIELD));
-                    // 省略不等于删除新声明；显式null仍留给纯规则拒绝，不用putIfAbsent吞掉坏输入。
-                    for (String field : List.of("exposure", "pagination"))
-                        if (previous.containsKey(field) && !effective.containsKey(field))
-                            effective.put(field, previous.get(field));
-                    boolean projected =
-                            previous.containsKey("exposure")
-                                    || (previous.get("importSource") instanceof Map<?, ?> source
-                                            && "ONTOLOGY".equals(source.get("kind")));
-                    if (projected
-                            && !effective.containsKey("riskLevel")
-                            && "CONFIRM_REQUIRED".equals(previous.get("riskLevel")))
-                        effective.put("riskLevel", previous.get("riskLevel"));
-                    var contract = normalize(effective);
                     String sha = Digest.sha256(Json.canonical(contract));
                     String semanticDigest = SkillDigest.of(contract);
                     if (all.getFirst().get("status").equals("DRAFT")) {
@@ -446,6 +480,50 @@ public class SkillCatalog {
                             code);
                     return version(code, version);
                 });
+    }
+
+    /**
+     * TOOL 草稿的“省略不等于删除”合并：旧编辑器局部保存不得静默丢掉导入来源/HTTP 映射/authScheme/
+     * identity/exposure/pagination 与既有风险底线。V321 拆出为独立方法后，GUIDE 保存路径不再触碰
+     * 这些 TOOL 专属字段，双轨合并语义互不渗透。行锁内执行，并发草稿覆盖仍由主行锁串行化。
+     */
+    private Map<String, Object> toolEffective(List<Map<String, Object>> all, LinkedHashMap<String, Object> effective) {
+        var previous = object(all.getFirst().get("definition"));
+        if (previous.containsKey("importSource")) {
+            if (effective.containsKey("importSource")
+                    && !Json.tree(previous.get("importSource"))
+                            .equals(Json.tree(effective.get("importSource"))))
+                throw error(400, "IMPORT_SOURCE_IMMUTABLE", "导入来源不能通过编辑替换；请重新导入为独立草稿");
+            effective.putIfAbsent("importSource", previous.get("importSource"));
+        }
+        if (previous.containsKey("httpMapping")
+                && !effective.containsKey("httpMapping"))
+            effective.put("httpMapping", previous.get("httpMapping"));
+        // authScheme 同属“旧编辑器省略不等于删除”的字段：局部保存若把 API_KEY 静默降级成
+        // 默认 BEARER，出站凭据形态会在一次无关编辑后改变且不留痕迹；显式声明过的契约
+        // 以旧值为准，本次提交若带新值仍以新值为准（putIfAbsent 语义）。
+        if (previous.containsKey(AuthScheme.FIELD)
+                && !effective.containsKey(AuthScheme.FIELD))
+            effective.put(AuthScheme.FIELD, previous.get(AuthScheme.FIELD));
+        // identity 出站声明同理（PLAT-12）：旧编辑器局部保存静默丢掉 identity，出站
+        // X-User-* 会在一次无关编辑后消失且不留痕；已保存的声明以旧值为准补回。
+        if (previous.containsKey(SkillRules.IDENTITY_FIELD)
+                && !effective.containsKey(SkillRules.IDENTITY_FIELD))
+            effective.put(
+                    SkillRules.IDENTITY_FIELD, previous.get(SkillRules.IDENTITY_FIELD));
+        // 省略不等于删除新声明；显式null仍留给纯规则拒绝，不用putIfAbsent吞掉坏输入。
+        for (String field : List.of("exposure", "pagination"))
+            if (previous.containsKey(field) && !effective.containsKey(field))
+                effective.put(field, previous.get(field));
+        boolean projected =
+                previous.containsKey("exposure")
+                        || (previous.get("importSource") instanceof Map<?, ?> source
+                                && "ONTOLOGY".equals(source.get("kind")));
+        if (projected
+                && !effective.containsKey("riskLevel")
+                && "CONFIRM_REQUIRED".equals(previous.get("riskLevel")))
+            effective.put("riskLevel", previous.get("riskLevel"));
+        return effective;
     }
 
     /** 本体导入使用实际注册表预检组合；注册单元不是binding_ref名义绑定目录。 */
@@ -869,10 +947,17 @@ public class SkillCatalog {
                     "APPROVAL_MODE_INVALID",
                     "execution.approval.mode 只允许 PREPARE_EXECUTE 或 SINGLE_STEP，收到: " + mode);
         if (approval.containsKey("businessIntentInput")) {
-            if (!SkillRules.APPROVAL_MODE_TWO_PHASE.equals(mode)
+            // V321 双轨约定字段放宽（主方案 §6.1）：businessIntentInput 是副作用技能的意图输入
+            // 声明（冻结 run.inputs 顶层字段名），不再限定两段审批——SINGLE_STEP 写技能同样需要
+            // 声明才能通过发布预检；非副作用技能声明它没有语义，仍拒绝。显式 null 落不进
+            // String 分支，同被拒绝（评审七轮 03：null 分支移出首期，现有校验沿用）。
+            if (!Boolean.TRUE.equals(execution.get("sideEffect"))
                     || !(approval.get("businessIntentInput") instanceof String field)
                     || !field.matches("[A-Za-z_][A-Za-z0-9_]{0,63}"))
-                throw error(400, "BUSINESS_INTENT_INPUT_INVALID", "execution.approval.businessIntentInput 只能是两段审批的冻结 run.inputs 顶层字段");
+                throw error(
+                        400,
+                        "BUSINESS_INTENT_INPUT_INVALID",
+                        "execution.approval.businessIntentInput 只能是副作用技能冻结 run.inputs 的顶层字段名");
         }
         if (!SkillRules.APPROVAL_MODE_TWO_PHASE.equals(mode)) return;
         if (!"HTTP".equals(type) || !"SYNC".equals(kind))
@@ -934,29 +1019,54 @@ public class SkillCatalog {
     public Map<String, Object> publish(String code, int version) {
         return tx.execute(
                 status -> {
-                    main(code, true);
+                    var main = main(code, true);
                     var candidate = version(code, version);
                     long id = ((Number) candidate.get("skillVersionId")).longValue();
                     if (candidate.get("status").equals("PUBLISHED")) return candidate;
                     if (!candidate.get("status").equals("DRAFT"))
                         throw error(409, "SKILL_STATE", "只有草稿可发布");
-                    // PROCESS 的自检放在发布口：command 指向不存在文件、workDirRoot 不可达是配置错误，
-                    // 放它进 PUBLISHED 只会把失败推迟到第一次真实调用（而且那次可能已经产生外部影响）。
-                    processPrecheck(candidate);
-                    var execution = object(candidate.get("execution"));
-                    var guard = object(candidate.get("guard"));
-                    if ("CONFIRM_REQUIRED".equals(candidate.get("riskLevel"))
-                            && (!(execution.get("confirmRoles") instanceof Collection<?> roles)
-                                    || roles.isEmpty()
-                                    || roles.stream()
-                                            .anyMatch(
-                                                    r ->
-                                                            !(r instanceof String role)
-                                                                    || role.isBlank())))
-                        throw error(409, "CONFIRM_ROLES_REQUIRED", "需确认的技能必须声明明确confirmRoles");
-                    if (Boolean.TRUE.equals(execution.get("readonly"))
-                            && object(guard.getOrDefault("attributes", Map.of())).isEmpty())
-                        throw error(409, "QUERY_GUARD_REQUIRED", "查询技能必须声明守卫属性");
+                    boolean guide = "GUIDE".equals(Objects.toString(main.get("kind"), "TOOL"));
+                    if (guide) {
+                        // V321 双轨：GUIDE 沿用现有发布链路（证据门禁与指针交换完全一致）；六维契约的
+                        // 执行预检（process/确认角色/查询守卫/业务意图声明）只对 TOOL 契约成立。
+                    } else {
+                        // PROCESS 的自检放在发布口：command 指向不存在文件、workDirRoot 不可达是配置错误，
+                        // 放它进 PUBLISHED 只会把失败推迟到第一次真实调用（而且那次可能已经产生外部影响）。
+                        processPrecheck(candidate);
+                        var execution = object(candidate.get("execution"));
+                        var guard = object(candidate.get("guard"));
+                        if ("CONFIRM_REQUIRED".equals(candidate.get("riskLevel"))
+                                && (!(execution.get("confirmRoles") instanceof Collection<?> roles)
+                                        || roles.isEmpty()
+                                        || roles.stream()
+                                                .anyMatch(
+                                                        r ->
+                                                                !(r instanceof String role)
+                                                                        || role.isBlank())))
+                            throw error(409, "CONFIRM_ROLES_REQUIRED", "需确认的技能必须声明明确confirmRoles");
+                        if (Boolean.TRUE.equals(execution.get("readonly"))
+                                && object(guard.getOrDefault("attributes", Map.of())).isEmpty())
+                            throw error(409, "QUERY_GUARD_REQUIRED", "查询技能必须声明守卫属性");
+                        // V321 业务动作重提保护（主方案 §6.1，评审七轮 03：null 分支移出首期）：
+                        // 副作用技能必须声明非 null 的意图输入字段名（execution.approval.
+                        // businessIntentInput，冻结 run.inputs 顶层字段），未声明或显式 null 一律拒绝
+                        // 发布——不存在“无可稳定意图却自动分发”的写技能；错误定位到字段路径。
+                        // 非副作用技能不检。
+                        if (Boolean.TRUE.equals(execution.get("sideEffect"))) {
+                            var approval = execution.get("approval");
+                            if (!(approval instanceof Map<?, ?> declared)
+                                    || !(declared.get("businessIntentInput")
+                                            instanceof String intentField)
+                                    || !intentField.matches("[A-Za-z_][A-Za-z0-9_]{0,63}"))
+                                throw error(
+                                        409,
+                                        "BUSINESS_INTENT_INPUT_REQUIRED",
+                                        "副作用技能发布预检失败：execution.approval.businessIntentInput"
+                                                + " 必须声明非 null 的意图输入字段名"
+                                                + "（[A-Za-z_][A-Za-z0-9_]{0,63}，冻结 run.inputs 顶层字段）；"
+                                                + "未声明或显式 null 一律拒绝发布");
+                        }
+                    }
                     // T10：门禁从“只比 candidate_sha256”升级为“sha + semanticDigest + passed”三条同时成立。
                     // 理由：sha 覆盖整份契约，只改 description/title 也会让证据失效；只比 sha 又无法识别
                     // “拿旧字节的通过记录冒充新语义”。两个指纹分别证明“同一份草稿字节”和“同一份语义”。

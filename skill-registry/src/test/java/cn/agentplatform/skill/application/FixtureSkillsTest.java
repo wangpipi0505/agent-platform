@@ -203,7 +203,7 @@ class FixtureSkillsTest {
     void sourceDecorationMarksFixtureSkillsOnly() {
         String fixture = create("smoke_purge_mark_" + UUID.randomUUID().toString().substring(0, 6));
         String managed = create("managed_mark_" + UUID.randomUUID().toString().substring(0, 6));
-        var decorated = FixtureSkills.withSource(catalog.list());
+        var decorated = FixtureSkills.withSource(catalog.list(null));
         @SuppressWarnings("unchecked")
         var rows = (List<Map<String, Object>>) decorated;
         var fixtureRow =
