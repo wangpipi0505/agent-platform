@@ -600,6 +600,66 @@
   "reason": ""
  },
  {
+  "method": "POST",
+  "template": "/v1/apps/{code}/tasks",
+  "caller": "gateway",
+  "target": "engine",
+  "action": "proxy.engine.post.TaskController.create",
+  "mode": "delegated",
+  "integrationAllowed": true,
+  "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/TaskController.java:17",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java",
+  "reason": "T2-2 任务受理（SERVICE 首期仅 AGENT，票据面另行约束）"
+ },
+ {
+  "method": "GET",
+  "template": "/v1/tasks/{taskId}",
+  "caller": "gateway",
+  "target": "engine",
+  "action": "proxy.engine.get.TaskController.detail",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/TaskController.java:23",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java",
+  "reason": "T2-2 任务详情"
+ },
+ {
+  "method": "GET",
+  "template": "/v1/tasks/{taskId}/events",
+  "caller": "gateway",
+  "target": "engine",
+  "action": "proxy.engine.get.TaskController.events",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/TaskController.java:29",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java",
+  "reason": "T2-2 任务事件增量"
+ },
+ {
+  "method": "POST",
+  "template": "/v1/tasks/{taskId}/cancel",
+  "caller": "gateway",
+  "target": "engine",
+  "action": "proxy.engine.post.TaskController.cancel",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/TaskController.java:35",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java",
+  "reason": "T2-2 任务取消"
+ },
+ {
+  "method": "POST",
+  "template": "/v1/tasks/{taskId}/resume",
+  "caller": "gateway",
+  "target": "engine",
+  "action": "proxy.engine.post.TaskController.resume",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/TaskController.java:41",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java",
+  "reason": "T2-2 任务恢复"
+ },
+ {
   "method": "GET",
   "template": "/v1/apps/{code}/memories",
   "caller": "gateway",
