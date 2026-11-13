@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
+import { computed, reactive, ref, watch } from "vue";
 import { useApi } from "../../shared/api";
 import { record } from "../../shared/run-protocol";
+import { useLiveList } from "../../shared/hooks/useLiveList";
 import RunObservation from "./RunObservation.vue";
 import PageHeader from "./PageHeader.vue";
 import DataPage from "../../shared/components/DataPage.vue";
@@ -10,19 +11,22 @@ import ErrorBanner from "../../shared/components/ErrorBanner.vue";
 
 // F1-3 样板页①（方案 §7.1 表格页四段高度模型）：RunList 即 RunsPage 的 DataPage 载体——
 // 页头/筛选(含已生效筛选 chip 回显)/表格(height=100% 表体滚动)/分页 20/50/100 钉底。
+// F2-3（方案 §5.6 运行中心）：数据面改挂 useLiveList 轮询（默认 15s）——状态列实时变色、
+// 失败行内联错误摘要列；分页/筛选参数在 fetcher 闭包内读取，total/traceId 由闭包旁路落位，
+// 行数据/加载/错误/轮询生命周期全部交给 hook（onUnmounted 清理定时器）。
 const props = defineProps<{ appCode?: string; title?: string; subtitle?: string }>();
 const emit = defineEmits<{ (e: "refresh"): void }>();
 const api = useApi();
-type RunRow = { runId: string; appCode: string; status?: string; statusLabel?: string; triggerType?: string; startedAt?: string; endedAt?: string; durationMs?: number; observation?: unknown };
-const items = ref<RunRow[]>([]);
+type RunRow = {
+  runId: string; appCode: string; status?: string; statusLabel?: string; triggerType?: string;
+  startedAt?: string; endedAt?: string; durationMs?: number; observation?: unknown;
+  error?: unknown; errorSemantic?: string; errorMessage?: string;
+};
 const total = ref(0);
 const page = ref(1);
 const size = ref(20);
-const busy = ref(false);
-const error = ref("");
 const trace = ref("");
 const filter = reactive({ q: "", status: "", range: [] as string[], appCode: "", packageId: "", routeProfileId: "", toolId: "", releaseId: "", traceId: "" });
-let sequence = 0;
 const statuses = [
   ["", "全部状态"],
   ["QUEUED", "排队中"], ["RUNNING", "运行中"], ["WAITING_APPROVAL", "等待确认"],
@@ -49,36 +53,59 @@ const sourceText = (observation: unknown) => {
   const value = record(observation)?.capabilityPackages;
   return Array.isArray(value) ? `${value.length} 个包来源` : "未记录";
 };
-async function load() {
-  const ticket = ++sequence;
-  busy.value = true;
-  error.value = "";
-  trace.value = "";
+const str = (value: unknown) => (typeof value === "string" ? value.trim() : "");
+// —— F2-3 失败行内联错误摘要（方案 §5.6：reasonCode+首行错误，仅失败行显示）——
+// 字段优先级：errorSemantic / error{reasonCode|code,message}（服务端结构化或演示补形）
+// → error 字符串 → errorMessage（既有文本，"CODE: 文本"原样首行）。无详情时如实给占位。
+const failureOf = (row: RunRow): { code: string; text: string } | null => {
+  if (row.status !== "FAILED") return null;
+  const err = record(row.error);
+  const code = str(row.errorSemantic) || str(err?.reasonCode) || str(err?.code);
+  const raw =
+    str(err?.message) ||
+    (typeof row.error === "string" ? row.error.trim() : "") ||
+    str(row.errorMessage);
+  const firstLine = raw.split("\n", 1)[0]?.trim() ?? "";
+  if (!code && !firstLine) return { code: "FAILED", text: "服务端未返回错误详情" };
+  // 既有文本已带 "CODE: " 前缀时不重复拼码。
+  if (firstLine.startsWith(`${code}:`) || firstLine.startsWith(`${code}：`))
+    return { code, text: firstLine };
+  return { code: code || "FAILED", text: firstLine || "服务端未返回错误详情" };
+};
+async function fetchPage(): Promise<RunRow[]> {
+  const query = new URLSearchParams({ page: String(page.value), size: String(size.value) });
+  const appCode = props.appCode || filter.appCode.trim();
+  if (appCode) query.set("appCode", appCode);
+  if (filter.q) query.set("q", filter.q);
+  if (filter.status) query.set("status", filter.status);
+  if (filter.range?.[0]) query.set("from", filter.range[0]);
+  if (filter.range?.[1]) query.set("to", filter.range[1]);
+  for (const key of ["packageId", "routeProfileId", "toolId", "releaseId", "traceId"] as const)
+    if (filter[key].trim()) query.set(key, filter[key].trim());
   try {
-    const query = new URLSearchParams({ page: String(page.value), size: String(size.value) });
-    const appCode = props.appCode || filter.appCode.trim();
-    if (appCode) query.set("appCode", appCode);
-    if (filter.q) query.set("q", filter.q);
-    if (filter.status) query.set("status", filter.status);
-    if (filter.range?.[0]) query.set("from", filter.range[0]);
-    if (filter.range?.[1]) query.set("to", filter.range[1]);
-    for (const key of ["packageId", "routeProfileId", "toolId", "releaseId", "traceId"] as const)
-      if (filter[key].trim()) query.set(key, filter[key].trim());
     const data = await api<{ items: RunRow[]; total: number }>(`/admin/runs/page?${query.toString()}`);
-    if (ticket !== sequence) return;
     if (!Array.isArray(data?.items) || typeof data.total !== "number" || !Number.isFinite(data.total))
       throw new Error("运行记录响应不完整，请刷新重试");
-    items.value = data.items;
     total.value = data.total;
+    trace.value = "";
+    return data.items;
   } catch (e: unknown) {
-    if (ticket !== sequence || record(e)?.name === "AbortError") return;
-    const failure = record(e);
-    error.value = typeof failure?.message === "string" ? failure.message : "运行记录加载失败";
-    trace.value = typeof failure?.traceId === "string" ? failure.traceId : "";
-  } finally {
-    if (ticket === sequence) busy.value = false;
+    // traceId 旁路落位后原样上抛：错误消息由 hook 统一收口（保留上次数据）。
+    if (record(e)?.name !== "AbortError") trace.value = str(record(e)?.traceId);
+    throw e;
   }
 }
+const { rows: items, loading: busy, error, refresh: reload } = useLiveList<RunRow>(fetchPage);
+const load = () => reload();
+// 失败行摘要一次求值（模板内不重复调用）；轮询换行后随 rows 重算。
+const failureSummaries = computed(() => {
+  const map = new Map<string, { code: string; text: string }>();
+  for (const row of items.value) {
+    const summary = failureOf(row);
+    if (summary) map.set(row.runId, summary);
+  }
+  return map;
+});
 // —— 已生效筛选 chip 回显（方案 §4 DataPage 行）：折叠的高级筛选生效后仍可见、可单个移除。
 // chips 拍“查询”时点的快照（服务端筛选按查询语义生效），不是输入框实时值。
 type FilterKey = Exclude<keyof typeof filter, "range">;
@@ -110,6 +137,7 @@ function snapshotChips(): Chip[] {
 function search() {
   page.value = 1;
   applied.value = snapshotChips();
+  error.value = ""; // 换筛选即视为放弃旧错误；新一轮失败由 hook 如实回填。
   void load();
 }
 function onPage(value: number) {
@@ -134,9 +162,9 @@ function reset() {
   Object.assign(filter, { q: "", status: "", range: [], appCode: "", packageId: "", routeProfileId: "", toolId: "", releaseId: "", traceId: "" });
   search();
 }
-onMounted(load);
+// F2-3：首轮拉取与 15s 轮询由 useLiveList 在装配时启动，卸载时清理定时器；
+// 这里只保留 appCode 变化（外部宿主切换上下文）的立即重取。
 watch(() => props.appCode, () => { page.value = 1; void load(); });
-onBeforeUnmount(() => { sequence++; });
 </script>
 
 <template>
@@ -198,7 +226,20 @@ onBeforeUnmount(() => { sequence++; });
       <el-table-column prop="appCode" label="应用" min-width="150" show-overflow-tooltip />
       <el-table-column label="冻结能力来源" min-width="140"><template #default="{ row }">{{ sourceText(row.observation) }}</template></el-table-column>
       <el-table-column label="关联 Trace" min-width="220" show-overflow-tooltip><template #default="{ row }">{{ traceText(row.observation) }}</template></el-table-column>
-      <el-table-column label="状态" width="110"><template #default="{ row }">{{ row.statusLabel || statusLabel(row.status) }}</template></el-table-column>
+      <!-- F2-3：状态列实时变色——轮询刷新后状态随 tokens 语义色即时切换
+           （.status.* 全局映射：SUCCEEDED 绿 --st-ok-text / FAILED 红 --st-fail-text /
+             RUNNING --st-run / WAITING_* 悬置黄 --st-suspend-text，与 RunDetail、确认中心共用）。 -->
+      <el-table-column label="状态" width="120"><template #default="{ row }"><span :class="['status', row.status]" class="status-cell"><i class="status-dot" aria-hidden="true" />{{ row.statusLabel || statusLabel(row.status) }}</span></template></el-table-column>
+      <!-- F2-3：失败行内联错误摘要列（方案 §5.6：reasonCode+首行错误；仅失败行显示）。 -->
+      <el-table-column label="错误摘要" min-width="200" show-overflow-tooltip>
+        <template #default="{ row }">
+          <span v-if="failureSummaries.get(row.runId)" class="error-summary">
+            <code class="error-reason">{{ failureSummaries.get(row.runId)?.code }}</code>
+            <span>{{ failureSummaries.get(row.runId)?.text }}</span>
+          </span>
+          <span v-else class="muted">—</span>
+        </template>
+      </el-table-column>
       <el-table-column prop="triggerType" label="用途" width="100" />
       <el-table-column label="开始时间" width="180"><template #default="{ row }">{{ formatTime(row.startedAt) }}</template></el-table-column>
       <el-table-column label="结束时间" width="180"><template #default="{ row }">{{ formatTime(row.endedAt) }}</template></el-table-column>
@@ -221,6 +262,20 @@ onBeforeUnmount(() => { sequence++; });
 .advanced-fields { display: flex; flex-wrap: wrap; gap: var(--sp-3); }
 .advanced-fields > * { min-width: 12rem; }
 .observation-detail { padding: var(--sp-3) var(--sp-4); }
+/* F2-3：状态列实时变色——色点取 currentColor（随 .status.<STATE> 的 tokens 语义色联动）。 */
+.status-cell { display: inline-flex; align-items: center; gap: var(--sp-2); white-space: nowrap; }
+.status-dot { width: 8px; height: 8px; border-radius: 999px; background: currentColor; flex: none; }
+/* F2-3：失败行内联错误摘要——reasonCode 用 mono 码样式，正文单行省略交给列 tooltip。 */
+.error-summary { display: inline-flex; align-items: baseline; gap: var(--sp-2); min-width: 0; }
+.error-reason {
+  flex: none;
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  color: var(--st-fail-text);
+  background: color-mix(in srgb, var(--st-fail) 12%, transparent);
+  border-radius: 4px;
+  padding: 0 var(--sp-2);
+}
 @media (max-width: 600px) {
   .advanced-fields > * { min-width: 100%; }
   .observation-detail { padding: var(--sp-2); }

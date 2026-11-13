@@ -36,6 +36,8 @@ const error = ref("");
 const active = ref("summary");
 const selected = ref<RunNodeStatusRow>();
 const replay = ref(0);
+// F2-3 诊断优先（方案 §5.6）：节点检查器展开状态——失败节点锚定/手动选中行即展开。
+const inspectorOpen = ref<string[]>([]);
 // UIF-A1 深链：?nodeId=<nodeDefId> 由日志/告警/审批通知构造，进入即过滤定位
 // 该节点（表格过滤 + 自动选中检查器 + 事件回放跳到该节点首个事件）。
 // MNT-01：Hash路由下参数位于路由query而非 location.search——统一从已解析路由读取；
@@ -64,6 +66,22 @@ const nodeStates = computed(() =>
     (value.value.nodes || []).map((n: RunNodeStatusRow) => [n.nodeDefId || n.id, n.status]),
   ),
 );
+// F2-3：节点错误摘要文本——语义码优先；error 为对象取 message/reasonCode，
+// 字符串原样截断，绝不渲染 [object Object]（演示补形 error 为结构化对象）。
+function nodeErrorText(n: RunNodeStatusRow): string {
+  if (n.errorSemantic) return n.errorSemantic;
+  const raw = n.error;
+  if (!raw || raw === "{}") return "";
+  if (typeof raw === "string") return raw.slice(0, 200);
+  const err = asUnknownRecord(raw);
+  const text =
+    typeof err.message === "string" && err.message
+      ? err.message
+      : typeof err.reasonCode === "string" && err.reasonCode
+        ? err.reasonCode
+        : "";
+  return (text || JSON.stringify(raw)).slice(0, 200);
+}
 // UIF-A5：执行时间线行（nodeInstanceId 顺序 = 执行顺序；耗时仅用持久起止值，
 // 缺失显示 —，绝不推算）；点行联动画布选中与节点检查器。
 const timeline = computed(() =>
@@ -80,15 +98,31 @@ const timeline = computed(() =>
       label: n.nodeDefId,
       status: n.status,
       duration,
-      errorMessage: n.error && n.error !== "{}" ? String(n.error).slice(0, 200) : "",
+      errorMessage: nodeErrorText(n),
       raw: n,
     };
   }),
 );
 function timelineSelect(row: any) {
-  selected.value = row.raw;
+  selectNode(row.raw);
   if (value.value.graph) nodeFilter.value = "";
 }
+// F2-3：节点选中统一入口——选中即展开检查器（输入/输出独立展示随展开可见）。
+function selectNode(row: RunNodeStatusRow) {
+  selected.value = row;
+  inspectorOpen.value = ["node"];
+}
+function hasPayload(value: unknown): boolean {
+  if (value == null) return false;
+  if (typeof value === "string") return value.trim().length > 0;
+  if (Array.isArray(value)) return value.length > 0;
+  if (typeof value === "object") return Object.keys(value).length > 0;
+  return true;
+}
+// F2-3：检查器输入/输出分块判空（unknown 逐块收窄，{}与空串如实显示"无记录"，不臆造）。
+const hasNodeInput = computed(() => hasPayload(selected.value?.input));
+const nodeOutput = computed(() => selected.value?.output);
+const hasNodeOutput = computed(() => hasPayload(nodeOutput.value));
 function timelineRowClass({ row }: { row: any }) {
   return row.status === "FAILED" ? "timeline-failed" : "";
 }
@@ -168,7 +202,7 @@ function applyDeepLink() {
   if (!target || deepApplied || !(value.value.nodes || []).length) return;
   deepApplied = true;
   const row = (value.value.nodes || []).find((n: RunNodeStatusRow) => n.nodeDefId === target);
-  if (row) selected.value = row;
+  if (row) selectNode(row);
   const index = (value.value.events || []).findIndex(
     (e: any) => {
       const data = record?.(e?.data) || e?.data || {};
@@ -179,6 +213,27 @@ function applyDeepLink() {
     active.value = "replay";
     replay.value = index;
   }
+}
+// F2-3 诊断优先（方案 §5.6）：失败运行默认落"诊断"锚点，并自动展开失败节点
+// （定位 error/errorSemantic 非空节点，退回 status=FAILED 节点）。每次运行只锚定一次，
+// 用户手动切换 Tab 后轮询不再抢焦点；深链 ?nodeId= 优先于本锚点。
+let diagnosticAnchored = false;
+function failedNodeRow(): RunNodeStatusRow | undefined {
+  const nodes = value.value.nodes || [];
+  return (
+    nodes.find(
+      (n: RunNodeStatusRow) =>
+        n.status === "FAILED" && ((n.error && n.error !== "{}") || n.errorSemantic),
+    ) || nodes.find((n: RunNodeStatusRow) => n.status === "FAILED")
+  );
+}
+function anchorDiagnostics() {
+  if (diagnosticAnchored || deepApplied) return;
+  const failed = failedNodeRow();
+  if (value.value.status !== "FAILED" && !failed) return;
+  diagnosticAnchored = true;
+  active.value = "diagnostics";
+  if (failed) selectNode(failed);
 }
 let stopped = false;
 let controller: AbortController;
@@ -193,6 +248,7 @@ async function refresh() {
     if(current()&&ticket===authoritySequence&&props.runId===observedId)authority.value=readRunAuthority(observedId,result,semantic);
   }catch(problem){if(current()&&ticket===authoritySequence){authority.value=emptyAuthority();authority.value.error=problem instanceof Error?problem.message:'语义回执读取失败';}}
   applyDeepLink();
+  anchorDiagnostics();
 }
 async function connect() {
   const observedId=props.runId;
@@ -249,7 +305,7 @@ async function cancel() {
   }
 }
 watch(()=>auth.generation,()=>{authoritySequence++;authority.value=emptyAuthority();value.value=emptyRunStatus();controller?.abort();clearTimeout(timer);},{flush:'sync'});
-watch(()=>props.runId,()=>{authoritySequence++;authority.value=emptyAuthority();value.value=emptyRunStatus();controller?.abort();clearTimeout(timer);void connect();},{flush:'sync'});
+watch(()=>props.runId,()=>{authoritySequence++;authority.value=emptyAuthority();value.value=emptyRunStatus();diagnosticAnchored=false;inspectorOpen.value=[];controller?.abort();clearTimeout(timer);void connect();},{flush:'sync'});
 onMounted(connect);
 onBeforeUnmount(() => {
   stopped = true;
@@ -275,76 +331,9 @@ onBeforeUnmount(() => {
       >
     </div>
     <RunAuthorityPanel v-if="value.runId" :authority="authority" :run-status="value.status" :model-text="outputText" />
+    <!-- F2-3 诊断优先（方案 §5.6）：5 Tab 重组——诊断与工具提至首位，失败运行（见
+         anchorDiagnostics）默认激活本 Tab 并自动展开失败节点；成功运行仍默认落节点摘要。 -->
     <el-tabs v-model="active"
-      ><el-tab-pane label="节点摘要" name="summary"
-        ><div v-if="diagErrorView" class="diag-banner" :class="{ retryable: diagErrorView.retryable }">
-          <div>
-            <strong>{{ diagErrorView.code || diagErrorView.semantic || "运行失败" }}</strong>
-            <span class="diag-stage">{{ diagErrorView.stage }}</span>
-            <span v-if="diagErrorView.retryable" class="pill">可重试</span>
-          </div>
-          <p>{{ diagErrorView.message }}</p>
-          <p v-if="diagErrorView.hint" class="muted">{{ diagErrorView.hint }}</p>
-          <el-button link type="primary" @click="active = 'diagnostics'">查看完整诊断与工具调用</el-button>
-        </div>
-        <!-- UIF-A5：只读画布复用主设计器组件（provide 隔离由组件自身 readOnly 保证），
-             节点状态来自本次运行快照；点击节点行联动选中。 -->
-        <FlowDesigner
-          v-if="hasGraph && graphDefinition"
-          :definition="graphDefinition"
-          :layout="graphLayout"
-          :states="nodeStates"
-          :run-nodes="value.nodes || []"
-          read-only
-        />
-        <!-- 深链/过滤条：来自 ?nodeId= 或手动筛选，提示当前只看单节点并可一键清除 -->
-        <p v-if="nodeFilter" class="muted" role="status">
-          只看节点 <code>{{ nodeFilter }}</code>（来自链接定位）
-          <el-button link type="primary" @click="nodeFilter = ''">查看全部节点</el-button>
-        </p>
-        <el-table :data="visibleNodes" highlight-current-row @row-click="selected = $event"
-          ><el-table-column prop="nodeDefId" label="节点" /><el-table-column
-            prop="node_type"
-            label="类型" /><el-table-column label="状态"
-            ><template #default="{ row }"
-              ><span :class="['status', row.status]">{{
-                row.status
-              }}</span></template
-            ></el-table-column
-          ><el-table-column
-            prop="started_at"
-            label="开始时间" /><el-table-column
-            prop="ended_at"
-            label="结束时间"
-        /></el-table>
-        <h2>运行输出</h2>
-        <p v-if="outputWarning(value.output)" class="output-warning" role="status">{{ outputWarning(value.output) }}</p>
-        <Artifacts :files="fileRefsList" :run-id="runId" admin/>
-        <div v-if="outputText" class="output-text" data-testid="run-output-text" v-html="safeMarkdown(outputText)"></div>
-        <details v-if="outputText" class="output-raw">
-          <summary>查看原始输出 JSON</summary>
-          <pre>{{ JSON.stringify(value.output, null, 2) }}</pre>
-        </details>
-        <pre v-else>{{
-          JSON.stringify(
-            value.output ??
-              (terminal(value.status)
-                ? "运行完成，未返回输出"
-                : "运行尚无输出"),
-            null,
-            2,
-          )
-        }}</pre>
-        <details
-          v-if="
-            value.error &&
-            (typeof value.error === 'string' || Object.keys(asUnknownRecord(value.error)).length)
-          "
-          class="output-raw"
-        >
-          <summary>查看原始错误 JSON</summary>
-          <pre class="error">{{ json(value.error) }}</pre>
-        </details></el-tab-pane
       ><el-tab-pane label="诊断与工具" name="diagnostics">
         <template v-if="hasDiagnostics">
           <div v-if="diagErrorView" class="diag-card" :class="{ retryable: diagErrorView.retryable }">
@@ -448,6 +437,75 @@ onBeforeUnmount(() => {
           </el-table>
         </template>
         <el-empty v-else description="本次运行没有错误、尝试或工具调用诊断记录" /></el-tab-pane
+      ><el-tab-pane label="节点摘要" name="summary"
+        ><div v-if="diagErrorView" class="diag-banner" :class="{ retryable: diagErrorView.retryable }">
+          <div>
+            <strong>{{ diagErrorView.code || diagErrorView.semantic || "运行失败" }}</strong>
+            <span class="diag-stage">{{ diagErrorView.stage }}</span>
+            <span v-if="diagErrorView.retryable" class="pill">可重试</span>
+          </div>
+          <p>{{ diagErrorView.message }}</p>
+          <p v-if="diagErrorView.hint" class="muted">{{ diagErrorView.hint }}</p>
+          <el-button link type="primary" @click="active = 'diagnostics'">查看完整诊断与工具调用</el-button>
+        </div>
+        <!-- UIF-A5：只读画布复用主设计器组件（provide 隔离由组件自身 readOnly 保证），
+             节点状态来自本次运行快照；点击节点行联动选中。 -->
+        <FlowDesigner
+          v-if="hasGraph && graphDefinition"
+          :definition="graphDefinition"
+          :layout="graphLayout"
+          :states="nodeStates"
+          :run-nodes="value.nodes || []"
+          read-only
+        />
+        <!-- 深链/过滤条：来自 ?nodeId= 或手动筛选，提示当前只看单节点并可一键清除 -->
+        <p v-if="nodeFilter" class="muted" role="status">
+          只看节点 <code>{{ nodeFilter }}</code>（来自链接定位）
+          <el-button link type="primary" @click="nodeFilter = ''">查看全部节点</el-button>
+        </p>
+        <el-table :data="visibleNodes" highlight-current-row @row-click="selectNode"
+          ><el-table-column prop="nodeDefId" label="节点" /><el-table-column
+            prop="node_type"
+            label="类型" /><el-table-column label="状态"
+            ><template #default="{ row }"
+              ><span :class="['status', row.status]">{{
+                row.status
+              }}</span></template
+            ></el-table-column
+          ><el-table-column
+            prop="started_at"
+            label="开始时间" /><el-table-column
+            prop="ended_at"
+            label="结束时间"
+        /></el-table>
+        <h2>运行输出</h2>
+        <p v-if="outputWarning(value.output)" class="output-warning" role="status">{{ outputWarning(value.output) }}</p>
+        <Artifacts :files="fileRefsList" :run-id="runId" admin/>
+        <div v-if="outputText" class="output-text" data-testid="run-output-text" v-html="safeMarkdown(outputText)"></div>
+        <details v-if="outputText" class="output-raw">
+          <summary>查看原始输出 JSON</summary>
+          <pre>{{ JSON.stringify(value.output, null, 2) }}</pre>
+        </details>
+        <pre v-else>{{
+          JSON.stringify(
+            value.output ??
+              (terminal(value.status)
+                ? "运行完成，未返回输出"
+                : "运行尚无输出"),
+            null,
+            2,
+          )
+        }}</pre>
+        <details
+          v-if="
+            value.error &&
+            (typeof value.error === 'string' || Object.keys(asUnknownRecord(value.error)).length)
+          "
+          class="output-raw"
+        >
+          <summary>查看原始错误 JSON</summary>
+          <pre class="error">{{ json(value.error) }}</pre>
+        </details></el-tab-pane
       ><el-tab-pane label="版本与依赖" name="versions">
         <h3>本次运行冻结来源</h3>
         <RunObservation :observation="value.observation" />
@@ -486,12 +544,23 @@ onBeforeUnmount(() => {
             ></el-table-column
           ></el-table
         ></el-tab-pane></el-tabs
-    ><el-collapse v-if="selected"
+    ><el-collapse v-if="selected" v-model="inspectorOpen"
       ><el-collapse-item
         :title="'节点检查器 · ' + selected.nodeDefId"
         name="node"
       >
-        <pre>{{ JSON.stringify(selected, null, 2) }}</pre>
+        <!-- F2-3（方案 §5.6）：输入独立展示——输入与输出分两块呈现，缺省如实给
+             "没有记录"，不臆造；原始整包 JSON 折叠兜底（诊断信息不丢）。 -->
+        <h3 class="inspector-heading">输入</h3>
+        <pre v-if="hasNodeInput" class="inspector-pre">{{ json(selected.input) }}</pre>
+        <p v-else class="muted">本节点没有输入记录。</p>
+        <h3 class="inspector-heading">输出</h3>
+        <pre v-if="hasNodeOutput" class="inspector-pre">{{ json(nodeOutput) }}</pre>
+        <p v-else class="muted">本节点还没有输出。</p>
+        <details class="output-raw">
+          <summary>查看节点原始 JSON（含状态与时间线字段）</summary>
+          <pre>{{ JSON.stringify(selected, null, 2) }}</pre>
+        </details>
       </el-collapse-item></el-collapse
     >
   </div>
@@ -634,5 +703,19 @@ onBeforeUnmount(() => {
 .tool-detail pre {
   max-height: 18rem;
   overflow: auto;
+}
+/* F2-3：检查器输入/输出独立展示——分块小标题与等宽载荷块（限高独立滚动，不撑破面板）。 */
+.inspector-heading {
+  margin: 0.5rem 0 0.25rem;
+  font-size: 0.85rem;
+}
+.inspector-pre {
+  margin: 0 0 0.5rem;
+  max-height: 16rem;
+  overflow: auto;
+  background: var(--el-fill-color-lighter);
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+  font-size: 12px;
 }
 </style>

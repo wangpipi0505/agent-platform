@@ -14,6 +14,8 @@ import { governanceApp, governanceSkills, governanceScenario, governanceState, r
 import { mockRuntimeRequest } from './mock-runtime-extensions'
 import { mockArtifactRequest, resetMockArtifacts } from './mock-artifacts'
 import { preparePlanningAttachments, planningFileSkills } from './planning-attachments'
+// F2-3：运行域演示补形（失败行 error/errorSemantic、节点 input）独立成文件（§8 mock 按域拆文件），此处仅委托。
+import { withRunFailureSummaries, withRunNodeInputs } from './mock-run-failures'
 import { materializeResponseArtifacts } from './mock-response-artifacts'
 import { validateMockSkillCalls } from './mock-skill-access'
 import { planningSeed, planningAppCodes, planningOntologyConfig, planningTool, planningState, restorePlanningState, planningTurn, decidePlanningRun, cancelPlanningRun, planningRunNodes, planningRunEvents, type PlanningResponse } from './satellite-planning'
@@ -310,7 +312,7 @@ const runStatus = (id: string) => {
         : []
       return { app: `${row?.appCode ?? 'unknown'}@${version}`, skills: Object.fromEntries(skillRefs) }
     })(),
-    nodes: runNodes(row?.status ?? 'SUCCEEDED', failedNode, row?.appCode),
+    nodes: withRunNodeInputs(row?.appCode, runNodes(row?.status ?? 'SUCCEEDED', failedNode, row?.appCode)),
     error: failedNode
       ? {
           code: row?.appCode === 'space-visibility-agent' ? 'TLE_CHECKSUM' : 'SKILL_TIMEOUT',
@@ -1233,7 +1235,8 @@ const routes: [RegExp, Handler][] = [
   }],
 
   // ── 运行与调试 ──
-  [/^\/admin\/runs\/page$/, (_m, method) => (method === 'GET' ? envelope({ items: runs, total: runs.length, page: 1, size: 20 }) : envelope(null))],
+  // F2-3：失败行经 withRunFailureSummaries 补 errorSemantic/error（demo 形状见 mock-run-failures）。
+  [/^\/admin\/runs\/page$/, (_m, method) => (method === 'GET' ? envelope({ items: withRunFailureSummaries(runs), total: runs.length, page: 1, size: 20 }) : envelope(null))],
   [/^\/admin\/runs$/, (_m, method, body) => {
     if (method === 'GET') return envelope(runs)
     const appCode = String(body?.appCode ?? apps[0].code)

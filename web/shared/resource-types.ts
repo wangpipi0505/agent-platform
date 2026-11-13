@@ -309,12 +309,16 @@ export function parsePublishedPointer(value: unknown): PublishedPointer | null {
   };
 }
 
-/** 运行状态节点行（状态接口 nodes[]；output 保持 unknown）。 */
+/** 运行状态节点行（状态接口 nodes[]；output/inputs 保持 unknown）。 */
 export interface RunNodeStatusRow {
   nodeDefId: string
   id: string
   status: string
   output?: unknown
+  /** F2-3：节点输入快照（与输出独立展示）；服务端可能缺省，缺省显示无输入记录。 */
+  input?: unknown
+  /** F2-3：失败语义码（诊断锚点按 error/errorSemantic 非空定位失败节点）。 */
+  errorSemantic?: string
   /** 时间线字段：服务端可能缺省；缺省显示 —，不推算。 */
   started_at?: string
   ended_at?: string
@@ -365,6 +369,8 @@ export function parseRunNodes(value: unknown): RunNodeStatusRow[] {
       id: id || nodeDefId,
       status: asStringOr(item.status),
       output: item.output,
+      input: item.input,
+      errorSemantic: typeof item.errorSemantic === "string" ? item.errorSemantic : undefined,
       started_at: typeof item.started_at === "string" ? item.started_at : undefined,
       ended_at: typeof item.ended_at === "string" ? item.ended_at : undefined,
       error: item.error,
