@@ -69,6 +69,13 @@ const routes: RouteRecordRaw[] = [
     component: () => import("./pages/PlanDetailPage.vue"),
     meta: { access: "plan-detail", title: "计划详情" },
   },
+  // F3-1：任务工作台（方案 §5.3 管理台侧=监控与运维）——追加式注册，既有路由不重排。
+  {
+    path: "/tasks",
+    name: "tasks",
+    component: () => import("./pages/TasksPage.vue"),
+    meta: { access: "tasks", title: "任务工作台" },
+  },
   {
     path: "/skills",
     name: "skills",
