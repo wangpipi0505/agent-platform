@@ -62,6 +62,11 @@ public class AgentDriver {
             Actor actor,
             boolean single) {
         config = effectiveConfig(config, node);
+        // A15b（主方案 §6.7/接口稿 §5.5）：装配层翻译——config.model.inferencePolicy 含
+        // outputSchema 时转换为既有 OutputPolicy 契约（retry.on 含 OUTPUT_SCHEMA_INVALID=
+        // RETRY，否则 TERMINATE），由 ModelExchange 统一执行重试与预算扣减；已有显式
+        // output 契约（存量发布）优先，沿用原 onInvalid 行为。
+        OutputValidationPolicy.applyFromManifest(config);
         long attempt = TraceStore.number(node, "attemptId"),
                 runId = TraceStore.number(run, "id"),
                 nid = TraceStore.number(node, "id");

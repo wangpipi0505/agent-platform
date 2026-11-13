@@ -69,7 +69,12 @@ public final class ModelExchange {
             Map<String, Object> raw,
             Actor actor,
             Consumer<String> chunks) {
-        var policy = new OutputPolicy(Json.tree(raw.get("params")).path("output"));
+        var outputNode = Json.tree(raw.get("params")).path("output");
+        var policy = new OutputPolicy(outputNode);
+        // A15b（主方案 §6.7）：新结构化输出策略启用时诊断映射 OUTPUT_INVALID →
+        // OUTPUT_SCHEMA_INVALID（OutputValidationPolicy 翻译产物携带 reasonCode 标记）；
+        // 存量发布无标记，保持原 OUTPUT_INVALID。ModelExchange 是重试的唯一执行处。
+        String reasonCode = OutputValidationPolicy.reasonCode(outputNode);
         Map<String, Object> request = new LinkedHashMap<>(raw);
         for (int outputAttempt = 0; ; outputAttempt++) {
             JsonNode answer =
@@ -109,7 +114,8 @@ public final class ModelExchange {
                 accountMainUsage(run, node, round, outputAttempt);
                 throw new RuntimeFault("OUTPUT_POLICY_INVALID", "output", reason);
             }
-            var diagnostic = policy.diagnostic(verdict, outputAttempt);
+            var diagnostic =
+                    OutputValidationPolicy.annotate(policy.diagnostic(verdict, outputAttempt), outputNode);
             recordValidation(run, node, round, outputAttempt, diagnostic);
             accountMainUsage(run, node, round, outputAttempt);
             if (verdict.valid() || policy.onInvalid().equals("PASS_WITH_FLAG")) {
@@ -119,8 +125,9 @@ public final class ModelExchange {
                 else result.remove("structured");
                 return result;
             }
+            // 终止路径同一原因码投影：新策略=OUTPUT_SCHEMA_INVALID，存量=OUTPUT_INVALID。
             if (!policy.onInvalid().equals("RETRY") || outputAttempt >= policy.maxRetries())
-                throw new RuntimeFault("OUTPUT_INVALID", "output", verdict.reason());
+                throw new RuntimeFault(reasonCode, "output", verdict.reason());
             // This is an explicit new engine call. Its correction and prior invalid answer become
             // durable source material before dispatch; replay traverses these same attempts.
             var messages = new ArrayList<Object>();
